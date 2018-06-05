@@ -49,7 +49,8 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 func startRESTServerFn(cdc *wire.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		listenAddr := viper.GetString(flagListenAddr)
-		handler := createHandler(cdc)
+		ctx := context.NewCoreContextFromViper()
+		handler := createHandler(ctx, cdc)
 		logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
 			With("module", "rest-server")
 		listener, err := tmserver.StartHTTPServer(listenAddr, handler, logger)
@@ -67,7 +68,7 @@ func startRESTServerFn(cdc *wire.Codec) func(cmd *cobra.Command, args []string) 
 	}
 }
 
-func createHandler(cdc *wire.Codec) http.Handler {
+func createHandler(ctx context.CoreContext, cdc *wire.Codec) http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/version", version.RequestHandler).Methods("GET")
 
@@ -75,8 +76,6 @@ func createHandler(cdc *wire.Codec) http.Handler {
 	if err != nil {
 		panic(err)
 	}
-
-	ctx := context.NewCoreContextFromViper()
 
 	// TODO make more functional? aka r = keys.RegisterRoutes(r)
 	keys.RegisterRoutes(r)

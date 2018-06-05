@@ -9,6 +9,7 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 
+	"github.com/cosmos/cosmos-sdk/merkle"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -132,10 +133,10 @@ func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 // If latest-1 is not present, use latest (which must be present)
 // if you care to have the latest data to see a tx results, you must
 // explicitly set the height you want to see
-func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
+func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery, prf merkle.Proof) {
 	if len(req.Data) == 0 {
 		msg := "Query cannot be zero length"
-		return sdk.ErrTxDecode(msg).QueryResult()
+		return sdk.ErrTxDecode(msg).QueryResult(), nil
 	}
 
 	tree := st.tree
@@ -154,7 +155,6 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	switch req.Path {
 	case "/store", "/key": // Get by key
 		key := req.Data // Data holds the key bytes
-		res.Key = key
 		if req.Prove {
 			value, proof, err := tree.GetVersionedWithProof(key, height)
 			if err != nil {
@@ -162,7 +162,7 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 				break
 			}
 			res.Value = value
-			res.Proof = proof.Bytes()
+			prf = merkle.Proof([]merkle.Op{merkle.FromIAVLKey(proof, string(key))})
 		} else {
 			_, res.Value = tree.GetVersioned(key, height)
 		}
@@ -178,7 +178,7 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		res.Value = cdc.MustMarshalBinary(KVs)
 	default:
 		msg := fmt.Sprintf("Unexpected Query path: %v", req.Path)
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		return sdk.ErrUnknownRequest(msg).QueryResult(), nil
 	}
 	return
 }

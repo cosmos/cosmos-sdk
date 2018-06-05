@@ -6,14 +6,21 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/tendermint/lite"
+	liteclient "github.com/tendermint/tendermint/lite/client"
+	"github.com/tendermint/tendermint/lite/files"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 	cmn "github.com/tendermint/tmlibs/common"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/merkle"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // Broadcast the transaction bytes to Tendermint
@@ -44,22 +51,79 @@ func (ctx CoreContext) BroadcastTx(tx []byte) (*ctypes.ResultBroadcastTxCommit, 
 
 // Query from Tendermint with the provided key and storename
 func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, err error) {
-	return ctx.query(key, storeName, "key")
+	resp, err := ctx.query(key, storeName, "key")
+	if err != nil {
+		return
+	}
+	if ctx.TrustNode {
+		return
+	}
+
+	cdc := wire.NewCodec()
+	merkle.RegisterWire(cdc)
+	store.RegisterWire(cdc)
+
+	proof, err := merkle.DecodeProof(cdc, resp.Proof, store.WrapOpDecoder(merkle.DefaultOpDecoder))
+	if err != nil {
+		return
+	}
+
+	source := liteclient.NewHTTPProvider(ctx.NodeURI)
+	trusted := lite.NewCacheProvider(lite.NewMemStoreProvider(), files.NewProvider(ctx.ProviderPath))
+
+	genesis, err := tmtypes.GenesisDocFromFile(ctx.GenesisFile)
+	if err != nil {
+		return
+	}
+
+	vals := make([]*tmtypes.Validator, len(genesis.Validators))
+	for i, val := range genesis.Validators {
+		vals[i] = tmtypes.NewValidator(val.PubKey, val.Power)
+	}
+	valset := tmtypes.NewValidatorSet(vals)
+
+	genfc := lite.FullCommit{
+		Commit: lite.Commit{
+			Header: &tmtypes.Header{
+				Height:         0,
+				ValidatorsHash: valset.Hash(),
+			},
+		},
+		Validators: valset,
+	}
+
+	cert, err := lite.NewInquiringCertifier(ctx.ChainID, genfc, trusted, source)
+	if err != nil {
+		return
+	}
+
+	fc, err := source.GetByHeight(resp.Height + 1)
+	if err != nil {
+		return
+	}
+
+	err = cert.Certify(fc.Commit)
+	if err != nil {
+		return
+	}
+	err = proof.Verify(fc.Header.AppHash, [][]byte{resp.Value}, string(key), storeName)
+	return resp.Value, nil
 }
 
 // Query from Tendermint with the provided storename and subspace
 func (ctx CoreContext) QuerySubspace(cdc *wire.Codec, subspace []byte, storeName string) (res []sdk.KVPair, err error) {
-	resRaw, err := ctx.query(subspace, storeName, "subspace")
+	resp, err := ctx.query(subspace, storeName, "subspace")
 	if err != nil {
 		return res, err
 	}
-	cdc.MustUnmarshalBinary(resRaw, &res)
+	cdc.MustUnmarshalBinary(resp.Value, &res)
 	return
 }
 
 // Query from Tendermint with the provided storename and path
-func (ctx CoreContext) query(key cmn.HexBytes, storeName, endPath string) (res []byte, err error) {
+func (ctx CoreContext) query(key cmn.HexBytes, storeName, endPath string) (res abci.ResponseQuery, err error) {
 	path := fmt.Sprintf("/store/%s/%s", storeName, endPath)
+
 	node, err := ctx.GetNode()
 	if err != nil {
 		return res, err
@@ -73,11 +137,11 @@ func (ctx CoreContext) query(key cmn.HexBytes, storeName, endPath string) (res [
 	if err != nil {
 		return res, err
 	}
-	resp := result.Response
-	if resp.Code != uint32(0) {
-		return res, errors.Errorf("Query failed: (%d) %s", resp.Code, resp.Log)
+	res = result.Response
+	if res.Code != uint32(0) {
+		return res, errors.Errorf("Query failed: (%d) %s", res.Code, res.Log)
 	}
-	return resp.Value, nil
+	return res, nil
 }
 
 // Get the from address from the name flag

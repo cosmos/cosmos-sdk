@@ -17,6 +17,8 @@ type CoreContext struct {
 	Client          rpcclient.Client
 	Decoder         auth.AccountDecoder
 	AccountStore    string
+	GenesisFile     string
+	ProviderPath    string
 }
 
 // WithChainID - return a copy of the context with an updated chainID
@@ -71,5 +73,17 @@ func (c CoreContext) WithDecoder(decoder auth.AccountDecoder) CoreContext {
 // WithAccountStore - return a copy of the context with an updated AccountStore
 func (c CoreContext) WithAccountStore(accountStore string) CoreContext {
 	c.AccountStore = accountStore
+	return c
+}
+
+// WithGenesisFile - return a copy of the context with an updated GenesisFile
+func (c CoreContext) WithGenesisFile(genesisFile string) CoreContext {
+	c.GenesisFile = genesisFile
+	return c
+}
+
+// WithProviderPath - return a copy of the context with an updated ProviderPath
+func (c CoreContext) WithProviderPath(providerPath string) CoreContext {
+	c.ProviderPath = providerPath
 	return c
 }

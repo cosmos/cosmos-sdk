@@ -12,6 +12,7 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
+	"github.com/cosmos/cosmos-sdk/merkle"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -355,7 +356,17 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			return sdk.ErrUnknownRequest(msg).QueryResult()
 		}
 		req.Path = "/" + strings.Join(path[1:], "/")
-		return queryable.Query(req)
+		res, proof := queryable.Query(req)
+
+		cdc := wire.NewCodec()
+		merkle.RegisterWire(cdc)
+		store.RegisterWire(cdc)
+		proofbz, err := proof.Bytes(cdc)
+		if err != nil {
+			return sdk.ErrInternal(err.Error()).QueryResult()
+		}
+		res.Proof = proofbz
+		return res
 	}
 	// "/p2p" prefix for p2p queries
 	if len(path) >= 4 && path[0] == "p2p" {

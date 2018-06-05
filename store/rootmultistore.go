@@ -1,21 +1,24 @@
 package store
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
 	"golang.org/x/crypto/ripemd160"
 
 	abci "github.com/tendermint/abci/types"
+	libmerkle "github.com/tendermint/go-crypto/merkle"
 	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/merkle"
 
+	"github.com/cosmos/cosmos-sdk/merkle"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
-	latestVersionKey = "s/latest"
-	commitInfoKeyFmt = "s/%d" // s/<version>
+	latestVersionKey      = "s/latest"
+	commitInfoKeyFmt      = "s/%d" // s/<version>
+	defaultRootNumHistory = 2
 )
 
 // rootMultiStore is composed of many CommitStores.
@@ -23,11 +26,13 @@ const (
 // other MultiStores.
 // Implements MultiStore.
 type rootMultiStore struct {
-	db           dbm.DB
-	lastCommitID CommitID
-	storesParams map[StoreKey]storeParams
-	stores       map[StoreKey]CommitStore
-	keysByName   map[string]StoreKey
+	db            dbm.DB
+	lastCommitID  CommitID
+	storesParams  map[StoreKey]storeParams
+	stores        map[StoreKey]CommitStore
+	keysByName    map[string]StoreKey
+	opsNumHistory int
+	opsMaps       map[int64]map[string][]merkle.Op
 }
 
 var _ CommitMultiStore = (*rootMultiStore)(nil)
@@ -36,10 +41,12 @@ var _ Queryable = (*rootMultiStore)(nil)
 // nolint
 func NewCommitMultiStore(db dbm.DB) *rootMultiStore {
 	return &rootMultiStore{
-		db:           db,
-		storesParams: make(map[StoreKey]storeParams),
-		stores:       make(map[StoreKey]CommitStore),
-		keysByName:   make(map[string]StoreKey),
+		db:            db,
+		storesParams:  make(map[StoreKey]storeParams),
+		stores:        make(map[StoreKey]CommitStore),
+		keysByName:    make(map[string]StoreKey),
+		opsNumHistory: defaultRootNumHistory,
+		opsMaps:       make(map[int64]map[string][]merkle.Op),
 	}
 }
 
@@ -151,6 +158,12 @@ func (rs *rootMultiStore) Commit() CommitID {
 	setLatestVersion(batch, version)
 	batch.Write()
 
+	// Cache subproof ops
+	rs.opsMaps[version] = commitInfo.Proofs()
+	if len(rs.opsMaps) > rs.opsNumHistory {
+		delete(rs.opsMaps, version-int64(rs.opsNumHistory))
+	}
+
 	// Prepare for next version.
 	commitID := CommitID{
 		Version: version,
@@ -207,29 +220,42 @@ func (rs *rootMultiStore) getStoreByName(name string) Store {
 // modified to remove the substore prefix.
 // Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
 // TODO: add proof for `multistore -> substore`.
-func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
+func (rs *rootMultiStore) Query(req abci.RequestQuery) (abci.ResponseQuery, merkle.Proof) {
 	// Query just routes this to a substore.
 	path := req.Path
 	storeName, subpath, err := parsePath(path)
 	if err != nil {
-		return err.QueryResult()
+		return err.QueryResult(), nil
 	}
 
 	store := rs.getStoreByName(storeName)
 	if store == nil {
 		msg := fmt.Sprintf("no such store: %s", storeName)
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		return sdk.ErrUnknownRequest(msg).QueryResult(), nil
 	}
 	queryable, ok := store.(Queryable)
 	if !ok {
 		msg := fmt.Sprintf("store %s doesn't support queries", storeName)
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		return sdk.ErrUnknownRequest(msg).QueryResult(), nil
 	}
 
 	// trim the path and make the query
 	req.Path = subpath
-	res := queryable.Query(req)
-	return res
+	res, prf := queryable.Query(req)
+
+	if req.Prove && prf != nil {
+		opsMap, ok := rs.opsMaps[res.Height]
+		if !ok {
+			ci, err := getCommitInfo(rs.db, res.Height)
+			if err != nil {
+				return sdk.ErrInternal(err.Error()).QueryResult(), nil
+			}
+			opsMap = ci.Proofs()
+		}
+		prf = append(prf, opsMap[storeName]...)
+	}
+
+	return res, prf
 }
 
 // parsePath expects a format like /<storeName>[/<subpath>]
@@ -306,11 +332,11 @@ type commitInfo struct {
 // Hash returns the simple merkle root hash of the stores sorted by name.
 func (ci commitInfo) Hash() []byte {
 	// TODO cache to ci.hash []byte
-	m := make(map[string]merkle.Hasher, len(ci.StoreInfos))
+	m := make(map[string]libmerkle.Hasher, len(ci.StoreInfos))
 	for _, storeInfo := range ci.StoreInfos {
 		m[storeInfo.Name] = storeInfo
 	}
-	return merkle.SimpleHashFromMap(m)
+	return libmerkle.SimpleHashFromMap(m)
 }
 
 func (ci commitInfo) CommitID() CommitID {
@@ -318,6 +344,24 @@ func (ci commitInfo) CommitID() CommitID {
 		Version: ci.Version,
 		Hash:    ci.Hash(),
 	}
+}
+
+func (ci commitInfo) Proofs() (res map[string][]merkle.Op) {
+	m := make(map[string]libmerkle.Hasher, len(ci.StoreInfos))
+	for _, storeInfo := range ci.StoreInfos {
+		m[storeInfo.Name] = storeInfo
+	}
+	_, proofs, keys := libmerkle.SimpleProofsFromMap(m)
+
+	res = make(map[string][]merkle.Op)
+	for i, key := range keys {
+		si := m[key].(storeInfo)
+		res[key] = []merkle.Op{
+			RootMultistoreOp{si.Name, si.Core.CommitID.Version},
+			merkle.FromSimpleProof(proofs[key], i, len(keys)),
+		}
+	}
+	return
 }
 
 //----------------------------------------
@@ -345,6 +389,62 @@ func (si storeInfo) Hash() []byte {
 	hasher := ripemd160.New()
 	hasher.Write(bz)
 	return hasher.Sum(nil)
+}
+
+type RootMultistoreOp struct {
+	Name    string
+	Version int64
+}
+
+const RootMultistoreOpType = merkle.OpType("rootmultistore")
+
+func (op RootMultistoreOp) Run(value [][]byte) ([][]byte, error) {
+	if len(value) != 1 {
+		return nil, fmt.Errorf("Value size is not 1")
+	}
+
+	si := storeInfo{
+		Name: op.Name,
+		Core: storeCore{
+			CommitID: CommitID{
+				Version: op.Version,
+				Hash:    value[0],
+			},
+		},
+	}
+	kvp := libmerkle.KVPair{[]byte(op.Name), si.Hash()}
+	return [][]byte{kvp.Hash()}, nil
+}
+
+func (op RootMultistoreOp) GetKey() string {
+	return op.Name
+}
+
+func (op RootMultistoreOp) Raw() (res merkle.RawOp, err error) {
+	bz, err := json.Marshal(op)
+	if err != nil {
+		return
+	}
+
+	return merkle.RawOp{
+		Type: RootMultistoreOpType,
+		Data: string(bz),
+		Key:  op.Name,
+	}, nil
+}
+
+func WrapOpDecoder(decode merkle.OpDecoder) merkle.OpDecoder {
+	return func(ro merkle.RawOp) (res merkle.Op, err error) {
+		switch ro.Type {
+		case RootMultistoreOpType:
+			var op RootMultistoreOp
+			err = json.Unmarshal([]byte(ro.Data), &op)
+			res = op
+		default:
+			return decode(ro)
+		}
+		return
+	}
 }
 
 //----------------------------------------

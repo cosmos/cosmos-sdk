@@ -32,6 +32,7 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	client "github.com/cosmos/cosmos-sdk/client"
+	context "github.com/cosmos/cosmos-sdk/client/context"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -58,7 +59,6 @@ var (
 )
 
 func TestKeys(t *testing.T) {
-
 	// empty keys
 	// XXX: the test comes with a key setup
 	/*
@@ -134,7 +134,6 @@ func TestKeys(t *testing.T) {
 }
 
 func TestVersion(t *testing.T) {
-
 	// node info
 	res, body := request(t, port, "GET", "/version", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -146,7 +145,6 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNodeStatus(t *testing.T) {
-
 	// node info
 	res, body := request(t, port, "GET", "/node_info", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -167,7 +165,6 @@ func TestNodeStatus(t *testing.T) {
 }
 
 func TestBlock(t *testing.T) {
-
 	tests.WaitForHeight(2, port)
 
 	var resultBlock ctypes.ResultBlock
@@ -197,7 +194,6 @@ func TestBlock(t *testing.T) {
 }
 
 func TestValidators(t *testing.T) {
-
 	var resultVals ctypes.ResultValidators
 
 	res, body := request(t, port, "GET", "/validatorsets/latest", nil)
@@ -225,10 +221,10 @@ func TestValidators(t *testing.T) {
 }
 
 func TestCoinSend(t *testing.T) {
-
 	// query empty
 	//res, body := request(t, port, "GET", "/accounts/8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6", nil)
 	res, body := request(t, port, "GET", "/accounts/8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6", nil)
+
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	acc := getAccount(t, sendAddr)
@@ -456,6 +452,18 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	}
 	genDoc.AppStateJSON = appState
 
+	// store genesis file for testing query
+	cdc := wire.NewCodec()
+	crypto.RegisterAmino(cdc)
+	jsonBlob, err := cdc.MarshalJSON(genDoc)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if err = ioutil.WriteFile(genesisFile, jsonBlob, 0777); err != nil {
+		return nil, nil, err
+	}
+
 	// LCD listen address
 	var listenAddr string
 	listenAddr, port, err = server.FreeTCPAddr()
@@ -471,7 +479,8 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	lcd, err := startLCD(logger, listenAddr, cdc)
+	ctx := context.NewCoreContextFromViper().WithGenesisFile(genesisFile)
+	lcd, err := startLCD(ctx, logger, listenAddr, cdc)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -510,8 +519,8 @@ func startTM(cfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc, p
 }
 
 // start the LCD. note this blocks!
-func startLCD(logger log.Logger, listenAddr string, cdc *wire.Codec) (net.Listener, error) {
-	handler := createHandler(cdc)
+func startLCD(ctx context.CoreContext, logger log.Logger, listenAddr string, cdc *wire.Codec) (net.Listener, error) {
+	handler := createHandler(ctx, cdc)
 	return tmrpc.StartHTTPServer(listenAddr, handler, logger)
 }
 

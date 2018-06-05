@@ -283,11 +283,11 @@ func TestIAVLStoreQuery(t *testing.T) {
 
 	cid := iavlStore.Commit()
 	ver := cid.Version
-	query := abci.RequestQuery{Path: "/key", Data: k1, Height: ver}
+	query := abci.RequestQuery{Path: "/key", Data: k1, Height: ver, Prove: true}
 	querySub := abci.RequestQuery{Path: "/subspace", Data: ksub, Height: ver}
 
 	// query subspace before anything set
-	qres := iavlStore.Query(querySub)
+	qres, _ := iavlStore.Query(querySub)
 	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	assert.Equal(t, valExpSubEmpty, qres.Value)
 
@@ -296,24 +296,29 @@ func TestIAVLStoreQuery(t *testing.T) {
 	iavlStore.Set(k2, v2)
 
 	// set data without commit, doesn't show up
-	qres = iavlStore.Query(query)
+	qres, proof := iavlStore.Query(query)
 	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	assert.Nil(t, qres.Value)
+	// Absent proof not implemented
+	// assert.Nil(t, proof.Verify(cid.Hash, [][]byte{qres.Value}, string(query.Data)))
 
 	// commit it, but still don't see on old version
 	cid = iavlStore.Commit()
-	qres = iavlStore.Query(query)
+	qres, proof = iavlStore.Query(query)
 	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	assert.Nil(t, qres.Value)
+	// Absent proof not implemented
+	// assert.Nil(t, proof.Verify(cid.Hash, [][]byte{qres.Value}, string(query.Data)))
 
 	// but yes on the new version
 	query.Height = cid.Version
-	qres = iavlStore.Query(query)
+	qres, proof = iavlStore.Query(query)
 	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	assert.Equal(t, v1, qres.Value)
+	assert.Nil(t, proof.Verify(cid.Hash, [][]byte{qres.Value}, string(query.Data)))
 
 	// and for the subspace
-	qres = iavlStore.Query(querySub)
+	qres, _ = iavlStore.Query(querySub)
 	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	assert.Equal(t, valExpSub1, qres.Value)
 
@@ -322,27 +327,30 @@ func TestIAVLStoreQuery(t *testing.T) {
 	cid = iavlStore.Commit()
 
 	// query will return old values, as height is fixed
-	qres = iavlStore.Query(query)
+	qres, _ = iavlStore.Query(query)
 	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	assert.Equal(t, v1, qres.Value)
 
 	// update to latest in the query and we are happy
 	query.Height = cid.Version
-	qres = iavlStore.Query(query)
+	qres, proof = iavlStore.Query(query)
 	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	assert.Equal(t, v3, qres.Value)
-	query2 := abci.RequestQuery{Path: "/key", Data: k2, Height: cid.Version}
-	qres = iavlStore.Query(query2)
+	assert.Nil(t, proof.Verify(cid.Hash, [][]byte{qres.Value}, string(query.Data)))
+
+	query2 := abci.RequestQuery{Path: "/key", Data: k2, Height: cid.Version, Prove: true}
+	qres, proof = iavlStore.Query(query2)
 	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	assert.Equal(t, v2, qres.Value)
+	assert.Nil(t, proof.Verify(cid.Hash, [][]byte{qres.Value}, string(query2.Data)))
 	// and for the subspace
-	qres = iavlStore.Query(querySub)
+	qres, proof = iavlStore.Query(querySub)
 	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	assert.Equal(t, valExpSub2, qres.Value)
 
 	// default (height 0) will show latest -1
 	query0 := abci.RequestQuery{Path: "/store", Data: k1}
-	qres = iavlStore.Query(query0)
+	qres, _ = iavlStore.Query(query0)
 	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	assert.Equal(t, v1, qres.Value)
 }

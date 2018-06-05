@@ -44,7 +44,7 @@ Nice. We can also lookup the validator set:
 
 ::
 
-    gaiacli advanced tendermint validatorset
+    gaiacli advanced tendermint validator-set
 
 Then, we try to transfer some ``steak`` to another account:
 

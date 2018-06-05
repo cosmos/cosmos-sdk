@@ -260,11 +260,11 @@ the first part will look like:
 
 and you want the ``pub_key`` ``data`` that starts with ``96864CE``.
 
-Now ``bob`` can declare candidacy to that pubkey:
+Now ``bob`` can create a validator with that pubkey.
 
 ::
 
-    gaiacli stake create-validator --amount=10mycoin --name=bob --pubkey=<pub_key data> --moniker=bobby
+    gaiacli stake create-validator --amount=10mycoin --name=bob --address-validator=<address> --pub-key=<pubkey> --moniker=bobby
 
 with an output like:
 
@@ -312,7 +312,7 @@ Then ``charlie`` will delegate some mycoin to ``bob``:
 
 ::
 
-    gaiacli advanced tendermint tx delegate --amount=10mycoin --name=charlie --pubkey=<pub_key data>
+    gaiacli stake delegate --amount=10mycoin --address-delegator=<charlie's address> --address-validator=<bob's address> --name=charlie
 
 You'll see output like:
 
@@ -334,7 +334,7 @@ To get more information about the candidate, try:
 
 ::
 
-    gaiacli stake validator --pubkey=<pub_key data>
+    gaiacli stake validator <address>
 
 and you'll see output similar to:
 
@@ -367,7 +367,7 @@ It's also possible the query the delegator's bond like so:
 
 ::
 
-    gaiacli stake delegation --delegator-address 48F74F48281C89E5E4BE9092F735EA519768E8EF --pubkey 52D6FCD8C92A97F7CCB01205ADF310A18411EA8FDCC10E65BF2FCDB05AD1689B
+    gaiacli stake delegation --address-delegator=<address> --address-validator=<address>
 
 with an output similar to:
 
@@ -385,7 +385,7 @@ with an output similar to:
     }
 
 
-where the ``--delegator-address`` is ``charlie``'s address and the ``-pubkey`` is the same as we've been using.
+where the ``--address-delegator`` is ``charlie``'s address and the ``--address-validator`` is ``bob``'s address.
 
 
 Unbonding
@@ -396,7 +396,7 @@ your VotingPower reduce and your account balance increase.
 
 ::
 
-    gaiacli stake unbond --amount=5mycoin --name=charlie --pubkey=<pub_key data>
+    gaiacli stake unbond --amount=5mycoin --name=charlie --address-delegator=<address> --address-validator=<address>
     gaiacli account 48F74F48281C89E5E4BE9092F735EA519768E8EF
 
-See the bond decrease with ``gaiacli query delegator-bond`` like above.
+See the bond decrease with ``gaiacli stake delegation`` like above.

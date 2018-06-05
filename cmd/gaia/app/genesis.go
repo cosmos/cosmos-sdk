@@ -3,13 +3,12 @@ package app
 import (
 	"encoding/json"
 	"errors"
-
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	crypto "github.com/tendermint/go-crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/server"
+	gc "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -50,25 +49,15 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 	}
 }
 
-var (
-	flagName       = "name"
-	flagClientHome = "home-client"
-	flagOWK        = "owk"
-
-	// bonded tokens given to genesis validators/accounts
-	freeFermionVal  = int64(100)
-	freeFermionsAcc = int64(50)
-)
-
 // get app init parameters for server init command
 func GaiaAppInit() server.AppInit {
 	fsAppGenState := pflag.NewFlagSet("", pflag.ContinueOnError)
 
 	fsAppGenTx := pflag.NewFlagSet("", pflag.ContinueOnError)
-	fsAppGenTx.String(flagName, "", "validator moniker, required")
-	fsAppGenTx.String(flagClientHome, DefaultCLIHome,
+	fsAppGenTx.String(server.FlagName, "", "validator moniker, required")
+	fsAppGenTx.String(server.FlagClientHome, DefaultCLIHome,
 		"home directory for the client, used for key generation")
-	fsAppGenTx.Bool(flagOWK, false, "overwrite the accounts created")
+	fsAppGenTx.Bool(server.FlagOWK, false, "overwrite the accounts created")
 
 	return server.AppInit{
 		FlagsAppGenState: fsAppGenState,
@@ -86,18 +75,15 @@ type GaiaGenTx struct {
 }
 
 // Generate a gaia genesis transaction with flags
-func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
+func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTxConfig) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
-	clientRoot := viper.GetString(flagClientHome)
-	overwrite := viper.GetBool(flagOWK)
-	name := viper.GetString(flagName)
-	if name == "" {
+	if genTxConfig.Name == "" {
 		return nil, nil, tmtypes.GenesisValidator{}, errors.New("Must specify --name (validator moniker)")
 	}
 
 	var addr sdk.Address
 	var secret string
-	addr, secret, err = server.GenerateSaveCoinKey(clientRoot, name, "1234567890", overwrite)
+	addr, secret, err = server.GenerateSaveCoinKey(genTxConfig.CliRoot, genTxConfig.Name, "1234567890", genTxConfig.Overwrite)
 	if err != nil {
 		return
 	}
@@ -107,8 +93,10 @@ func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
 	if err != nil {
 		return
 	}
+
 	cliPrint = json.RawMessage(bz)
-	return GaiaAppGenTxNF(cdc, pk, addr, name, overwrite)
+	appGenTx, _, validator, err = GaiaAppGenTxNF(cdc, pk, addr, genTxConfig.Name, genTxConfig.Overwrite)
+	return
 }
 
 // Generate a gaia genesis transaction without flags
@@ -129,7 +117,7 @@ func GaiaAppGenTxNF(cdc *wire.Codec, pk crypto.PubKey, addr sdk.Address, name st
 
 	validator = tmtypes.GenesisValidator{
 		PubKey: pk,
-		Power:  freeFermionVal,
+		Power:  server.FreeFermionVal,
 	}
 	return
 }
@@ -160,21 +148,21 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		accAuth := auth.NewBaseAccountWithAddress(genTx.Address)
 		accAuth.Coins = sdk.Coins{
 			{genTx.Name + "Token", 1000},
-			{"steak", freeFermionsAcc},
+			{"steak", server.FreeFermionsAcc},
 		}
 		acc := NewGenesisAccount(&accAuth)
 		genaccs[i] = acc
-		stakeData.Pool.LooseUnbondedTokens += freeFermionsAcc // increase the supply
+		stakeData.Pool.LooseUnbondedTokens += server.FreeFermionsAcc // increase the supply
 
 		// add the validator
 		if len(genTx.Name) > 0 {
 			desc := stake.NewDescription(genTx.Name, "", "", "")
 			validator := stake.NewValidator(genTx.Address, genTx.PubKey, desc)
-			validator.PoolShares = stake.NewBondedShares(sdk.NewRat(freeFermionVal))
+			validator.PoolShares = stake.NewBondedShares(sdk.NewRat(server.FreeFermionVal))
 			stakeData.Validators = append(stakeData.Validators, validator)
 
 			// pool logic
-			stakeData.Pool.BondedTokens += freeFermionVal
+			stakeData.Pool.BondedTokens += server.FreeFermionVal
 			stakeData.Pool.BondedShares = sdk.NewRat(stakeData.Pool.BondedTokens)
 		}
 	}

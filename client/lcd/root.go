@@ -43,6 +43,8 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().String(flagCORS, "", "Set to domains that can make CORS requests (* for all)")
 	cmd.Flags().StringP(client.FlagChainID, "c", "", "ID of chain we connect to")
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
+	// TODO: make this default false when we support proofs
+	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
 	return cmd
 }
 

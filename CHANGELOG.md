@@ -17,6 +17,7 @@ FIXES
 * [cli] fixed cli-bash tests
 * [ci] added cli-bash tests
 * [basecoin] updated basecoin for stake and slashing
+* [docs] fixed references to old cli commands
 
 ## 0.18.1
 
@@ -32,7 +33,7 @@ BREAKING CHANGES
 * [x/auth] removed the FeeHandler function from the AnteHandler, Replaced with FeeKeeper
 * [x/auth] Removed GetSignatures() from Tx interface (as different Tx styles might use something different than StdSignature)
 * [store] Removed SubspaceIterator and ReverseSubspaceIterator from KVStore interface and replaced them with helper functions in /types
-* Switch to bech32cosmos on all human readable inputs and outputs 
+* Switch to bech32cosmos on all human readable inputs and outputs
 
 BUG FIXES
 

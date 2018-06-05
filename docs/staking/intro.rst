@@ -203,7 +203,7 @@ where the ``--sequence`` flag is to be incremented for each transaction, the ``-
 
 ::
 
-    Please enter passphrase for alice: 
+    Please enter passphrase for alice:
     {
       "check_tx": {
         "gas": 30
@@ -250,7 +250,7 @@ First, we need the pub_key data:
 
 ::
 
-    cat $HOME/.gaia2/priv_validator.json 
+    cat $HOME/.gaia2/priv_validator.json
 
 the first part will look like:
 
@@ -260,17 +260,17 @@ the first part will look like:
 
 and you want the ``pub_key`` ``data`` that starts with ``96864CE``.
 
-Now ``bob`` can declare candidacy to that pubkey:
+Now ``bob`` can create a validator with that pubkey.
 
 ::
 
-    gaiacli declare-candidacy --amount=10mycoin --name=bob --pubkey=<pub_key data> --moniker=bobby
+    gaiacli stake create-validator --amount=10mycoin --name=bob --address-validator=<address> --pub-key=<pubkey> --moniker=bobby
 
 with an output like:
 
 ::
 
-    Please enter passphrase for bob: 
+    Please enter passphrase for bob:
     {
       "check_tx": {
         "gas": 30
@@ -285,7 +285,7 @@ We should see ``bob``'s account balance decrease by 10 mycoin:
 
 ::
 
-    gaiacli account 5D93A6059B6592833CBC8FA3DA90EE0382198985 
+    gaiacli account 5D93A6059B6592833CBC8FA3DA90EE0382198985
 
 To confirm for certain the new validator is active, ask the tendermint node:
 
@@ -306,19 +306,19 @@ First let's have ``alice`` send some coins to ``charlie``:
 
 ::
 
-    gaiacli tx --amount=1000mycoin --sequence=2 --name=alice --to=48F74F48281C89E5E4BE9092F735EA519768E8EF
+    gaiacli send --amount=1000mycoin --sequence=2 --name=alice --to=48F74F48281C89E5E4BE9092F735EA519768E8EF
 
 Then ``charlie`` will delegate some mycoin to ``bob``:
 
 ::
 
-    gaiacli tx delegate --amount=10mycoin --name=charlie --pubkey=<pub_key data>
+    gaiacli stake delegate --amount=10mycoin --address-delegator=<charlie's address> --address-validator=<bob's address> --name=charlie
 
 You'll see output like:
 
 ::
 
-    Please enter passphrase for charlie: 
+    Please enter passphrase for charlie:
     {
       "check_tx": {
         "gas": 30
@@ -334,7 +334,7 @@ To get more information about the candidate, try:
 
 ::
 
-    gaiacli query candidate --pubkey=<pub_key data>
+    gaiacli stake validator <address>
 
 and you'll see output similar to:
 
@@ -367,7 +367,7 @@ It's also possible the query the delegator's bond like so:
 
 ::
 
-    gaiacli query delegator-bond --delegator-address 48F74F48281C89E5E4BE9092F735EA519768E8EF --pubkey 52D6FCD8C92A97F7CCB01205ADF310A18411EA8FDCC10E65BF2FCDB05AD1689B
+    gaiacli stake delegation --address-delegator=<address> --address-validator=<address>
 
 with an output similar to:
 
@@ -383,9 +383,9 @@ with an output similar to:
         "Shares": 20
       }
     }
- 
 
-where the ``--delegator-address`` is ``charlie``'s address and the ``-pubkey`` is the same as we've been using.
+
+where the ``--address-delegator`` is ``charlie``'s address and the ``--address-validator`` is ``bob``'s address.
 
 
 Unbonding
@@ -396,7 +396,7 @@ your VotingPower reduce and your account balance increase.
 
 ::
 
-    gaiacli unbond --amount=5mycoin --name=charlie --pubkey=<pub_key data>
+    gaiacli stake unbond --amount=5mycoin --name=charlie --address-delegator=<address> --address-validator=<address>
     gaiacli account 48F74F48281C89E5E4BE9092F735EA519768E8EF
 
-See the bond decrease with ``gaiacli query delegator-bond`` like above.
+See the bond decrease with ``gaiacli stake delegation`` like above.

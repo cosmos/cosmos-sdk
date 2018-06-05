@@ -52,6 +52,7 @@ const (
     ProposalStatusActive    = 0x2   // MinDeposit is reachhed, participants can vote
     ProposalStatusAccepted  = 0x3   // Proposal has been accepted
     ProposalStatusRejected  = 0x4   // Proposal has been rejected
+    ProposalStatusClosed.   = 0x5   // Proposal never reached MinDeposit 
 )
 ```
 
@@ -90,7 +91,6 @@ type Proposal struct {
   Submitter             sdk.Address      //  Address of the submitter
   
   VotingStartBlock      int64               //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
-  InitProcedure         Procedure           //  Active Procedure when proposal enters voting period
   CurrentStatus         ProposalStatus      //  Current status of the proposal
 
   YesVotes              sdk.Rat
@@ -112,8 +112,8 @@ We also mention a method to update the tally for a given proposal:
 
 We will use one KVStore `Governance` to store two mappings:
 
-* A mapping from `proposalID` to `Proposal`
-* A mapping from `proposalID:addresses:address` to `Vote`. This mapping allows us to query all addresses that voted on the proposal along with their vote by doing a range query on `proposalID:addresses`
+* A mapping from `proposalID|'proposal'` to `Proposal`
+* A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows us to query all addresses that voted on the proposal along with their vote by doing a range query on `proposalID:addresses`
 
 
 For pseudocode purposes, here are the two function we will use to read or write in stores:
@@ -127,7 +127,7 @@ For pseudocode purposes, here are the two function we will use to read or write 
 * `ProposalProcessingQueue`: A queue `queue[proposalID]` containing all the 
   `ProposalIDs` of proposals that reached `MinDeposit`. Each round, the oldest 
   element of `ProposalProcessingQueue` is checked during `BeginBlock` to see if
-  `CurrentBlock == VotingStartBlock + InitProcedure.VotingPeriod`. If it is, 
+  `CurrentBlock == VotingStartBlock + activeProcedure.VotingPeriod`. If it is, 
   then the application tallies the votes, compute the votes of each validator and checks if every validator in the valdiator set have voted
   and, if not, applies `GovernancePenalty`. If the proposal is accepted, deposits are refunded.
   After that proposal is ejected from `ProposalProcessingQueue` and the next element of the queue is evaluated. 
@@ -146,9 +146,10 @@ And the pseudocode for the `ProposalProcessingQueue`:
     if (proposalID == nil)
       return
 
-    proposal = load(Governance, proposalID) 
+    proposal = load(Governance, <proposalID|'proposal'>) // proposal is a const key
+    activeProcedure = load(params, 'ActiveProcedure')
 
-    if (CurrentBlock == proposal.VotingStartBlock + proposal.Procedure.VotingPeriod && proposal.CurrentStatus == ProposalStatusActive)
+    if (CurrentBlock == proposal.VotingStartBlock + activeProcedure.VotingPeriod && proposal.CurrentStatus == ProposalStatusActive)
 
     // End of voting period, tally
 
@@ -163,7 +164,7 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
 
       // Tally
-      voterIterator = rangeQuery(Governance, <proposalID|addresses>) //return all the addresses that voted on the proposal
+      voterIterator = rangeQuery(Governance, <proposalID|'addresses'>) //return all the addresses that voted on the proposal
       for each (voterAddress, vote) in voterIterator
         delegations = stakeKeeper.getDelegations(voterAddress) // get all delegations for current voter
 
@@ -188,7 +189,7 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
       // Check if proposal is accepted or rejected
       totalNonAbstain := proposal.YesVotes + proposal.NoVotes + proposal.NoWithVetoVotes
-      if (proposal.Votes.YesVotes/totalNonAbstain > proposal.InitProcedure.Threshold AND proposal.Votes.NoWithVetoVotes/totalNonAbstain  < proposal.InitProcedure.Veto)
+      if (proposal.Votes.YesVotes/totalNonAbstain > activeProcedure.Threshold AND proposal.Votes.NoWithVetoVotes/totalNonAbstain  < activeProcedure.Veto)
         //  proposal was accepted at the end of the voting period
         //  refund deposits (non-voters already punished)
         proposal.CurrentStatus = ProposalStatusAccepted
@@ -199,6 +200,6 @@ And the pseudocode for the `ProposalProcessingQueue`:
         // proposal was rejected
         proposal.CurrentStatus = ProposalStatusRejected
 
-      store(Governance, proposalID, proposal)
+      store(Governance, <proposalID|'proposal'>, proposal)
       checkProposal()        
 ```

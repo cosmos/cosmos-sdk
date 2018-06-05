@@ -65,17 +65,15 @@ upon receiving txGovSubmitProposal from sender do
     // MinDeposit is not reached
     
     proposal.CurrentStatus = ProposalStatusOpen
-    proposal.VotingStartBlock = -1
   
   else  
     // MinDeposit is reached
     
     proposal.CurrentStatus = ProposalStatusActive
     proposal.VotingStartBlock = CurrentBlock
-    proposal.InitProcedure = activeProcedure
     ProposalProcessingQueue.push(proposalID)
   
-  store(Proposals, proposalID, proposal) // Store proposal in Proposals mapping
+  store(Proposals, <proposalID|'proposal'>, proposal) // Store proposal in Proposals mapping
   return proposalID
 ```
 
@@ -112,7 +110,7 @@ upon receiving txGovDeposit from sender do
   if !correctlyFormatted(txGovDeposit) 
     throw
   
-  proposal = load(Proposals, txGovDeposit.ProposalID)
+  proposal = load(Proposals, <txGovDeposit.ProposalID|'proposal'>) // proposal is a const key, proposalID is variable
 
   if (proposal == nil) 
     // There is no proposal for this proposalID
@@ -120,29 +118,32 @@ upon receiving txGovDeposit from sender do
 
   activeProcedure = load(params, 'ActiveProcedure')
   
-  if (txGovDeposit.Deposit.Atoms <= 0) OR (sender.AtomBalance < txGovDeposit.Deposit.Atoms) OR (proposal.TotalDeposit >= activeProcedure.MinDeposit) OR (CurrentBlock >= proposal.SubmitBlock + activeProcedure.MaxDepositPeriod)
+  if (txGovDeposit.Deposit.Atoms <= 0) OR (sender.AtomBalance < txGovDeposit.Deposit.Atoms) OR (proposal.CurrentStatus != ProposalStatusOpen)
+
     // deposit is negative or null 
     // OR sender has insufficient funds
-    // OR minDeposit has already been reached
-    // OR Maximum deposit period reached
+    // OR proposal is not open for deposit anymore
 
     throw
-  
-  // sender can deposit
-  sender.AtomBalance -= txGovDeposit.Deposit.Atoms
 
-  proposal.Deposits.append({txGovVote.Deposit, sender})
-  proposal.TotalDeposit.Plus(txGovDeposit.Deposit)
-  
-  if (proposal.TotalDeposit >= activeProcedure.MinDeposit)   
-    // MinDeposit is reached, vote opens
+  if (CurrentBlock >= proposal.SubmitBlock + activeProcedure.MaxDepositPeriod)
+    proposal.CurrentStatus = ProposalStatusClosed
+
+  else
+    // sender can deposit
+    sender.AtomBalance -= txGovDeposit.Deposit.Atoms
+
+    proposal.Deposits.append({txGovVote.Deposit, sender})
+    proposal.TotalDeposit.Plus(txGovDeposit.Deposit)
     
-    proposal.VotingStartBlock = CurrentBlock
-    proposal.CurrentStatus = ProposalStatusActive
-    proposal.InitProcedure = activeProcedure
-    ProposalProcessingQueue.push(txGovDeposit.ProposalID)  
+    if (proposal.TotalDeposit >= activeProcedure.MinDeposit)   
+      // MinDeposit is reached, vote opens
+      
+      proposal.VotingStartBlock = CurrentBlock
+      proposal.CurrentStatus = ProposalStatusActive
+      ProposalProcessingQueue.push(txGovDeposit.ProposalID)  
 
-  store(Proposals, txGovVote.ProposalID, proposal)
+  store(Proposals, <txGovVote.ProposalID|'proposal'>, proposal)
 ```
 
 ### Vote
@@ -153,7 +154,7 @@ vote on the proposal.
 
 ```go
   type TxGovVote struct {
-    ProposalID           int64           //  proposalID of the proposal
+    ProposalID           int64         //  proposalID of the proposal
     Vote                 byte          //  option from OptionSet chosen by the voter
   }
 ```
@@ -176,21 +177,18 @@ handled:
     if !correctlyFormatted(txGovDeposit)   
       throw
     
-    proposal = load(Proposals, txGovDeposit.ProposalID)
+    proposal = load(Proposals, <txGovDeposit.ProposalID|'proposal'>)
 
     if (proposal == nil)   
       // There is no proposal for this proposalID
       throw
     
 
-    if  (proposal.VotingStartBlock >= 0) AND  
-        (CurrentBlock <= proposal.VotingStartBlock + proposal.InitProcedure.VotingPeriod)
+    if  (proposal.CurrentStatus == ProposalStatusActive)
 
-        // Sender can vote if
-        // Vote has started AND if
-        // Vote had notended 
+        // Sender can vote 
 
-        store(Governance, <txGovVote.ProposalID|addresses|sender>, txGovVote.Vote)   // Voters can vote multiple times. Re-voting overrides previous vote. This is ok because tallying is done once at the end.
+        store(Governance, <txGovVote.ProposalID|'addresses'|sender>, txGovVote.Vote)   // Voters can vote multiple times. Re-voting overrides previous vote. This is ok because tallying is done once at the end.
 
     
 ```

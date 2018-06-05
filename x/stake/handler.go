@@ -104,18 +104,18 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	}
 
 	// replace all editable fields (clients should autofill existing values)
-	d, err := validator.Description.UpdateDescription(msg.Description)
+	description, err := validator.Description.UpdateDescription(msg.Description)
 	if err != nil {
 		return err.Result()
 	}
-	validator.Description = d
+	validator.Description = description
 
 	k.UpdateValidator(ctx, validator)
 	tags := sdk.NewTags(
 		"action", []byte("editValidator"),
 		"validator", msg.ValidatorAddr.Bytes(),
-		"moniker", []byte(msg.Description.Moniker),
-		"identity", []byte(msg.Description.Identity),
+		"moniker", []byte(description.Moniker),
+		"identity", []byte(description.Identity),
 	)
 	return sdk.Result{
 		Tags: tags,

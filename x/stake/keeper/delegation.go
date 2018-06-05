@@ -103,6 +103,33 @@ func (k PrivlegedKeeper) Delegate(ctx sdk.Context, delegatorAddr sdk.Address,
 	k.SetPool(ctx, pool)
 	k.SetDelegation(ctx, bond)
 	k.UpdateValidator(ctx, validator)
-	tags := sdk.NewTags("action", []byte("delegate"), "delegator", delegatorAddr.Bytes(), "validator", validator.Owner.Bytes())
+	tags := sdk.NewTags(
+		"action", []byte("delegate"),
+		"delegator", delegatorAddr.Bytes(),
+		"validator", validator.Owner.Bytes(),
+	)
 	return tags, nil
+}
+
+//_____________________________________________________________________________________
+
+// load a delegator bond
+func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
+	delegationKey []byte) (bond types.UnbondingDelegation, found bool) {
+
+	store := ctx.KVStore(k.storeKey)
+	delegatorBytes := store.Get(delegationKey)
+	if delegatorBytes == nil {
+		return bond, false
+	}
+
+	k.cdc.MustUnmarshalBinary(delegatorBytes, &bond)
+	return bond, true
+}
+
+// set the delegation
+func (k PrivlegedKeeper) SetUnbondingDelegation(ctx sdk.Context, bond types.UnbondingDelegation) {
+	store := ctx.KVStore(k.storeKey)
+	b := k.cdc.MustMarshalBinary(bond)
+	store.Set(GetDelegationKey(bond.DelegatorAddr, bond.ValidatorAddr, k.cdc), b)
 }

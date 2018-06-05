@@ -53,7 +53,7 @@ func (k PrivlegedKeeper) SetValidatorByPubKeyIndex(ctx sdk.Context, validator ty
 // validator index
 func (k PrivlegedKeeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Validator, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(GetValidatorsByPowerKey(validator, pool), validator.Owner)
+	store.Set(GetValidatorsByPowerIndexKey(validator, pool), validator.Owner)
 }
 
 // Get the set of all validators with no limits, used during genesis dump
@@ -107,7 +107,7 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validat
 	maxValidators := k.GetParams(ctx).MaxValidators
 	validators = make([]types.Validator, maxValidators)
 
-	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedKey)
+	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedIndexKey)
 	i := 0
 	for ; iterator.Valid(); iterator.Next() {
 
@@ -133,7 +133,7 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
 	validators := make([]types.Validator, maxValidators)
-	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerKey) // largest to smallest
+	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey) // largest to smallest
 	i := 0
 	for {
 		if !iterator.Valid() || i > int(maxValidators-1) {
@@ -230,9 +230,9 @@ func (k PrivlegedKeeper) UpdateValidator(ctx sdk.Context, validator types.Valida
 
 	// update the list ordered by voting power
 	if oldFound {
-		store.Delete(GetValidatorsByPowerKey(oldValidator, pool))
+		store.Delete(GetValidatorsByPowerIndexKey(oldValidator, pool))
 	}
-	valPower := GetValidatorsByPowerKey(validator, pool)
+	valPower := GetValidatorsByPowerIndexKey(validator, pool)
 	store.Set(valPower, validator.Owner)
 
 	// efficiency case:
@@ -266,9 +266,9 @@ func (k PrivlegedKeeper) UpdateValidator(ctx sdk.Context, validator types.Valida
 // updatedValidatorAddr term.
 //
 // The correct subset is retrieved by iterating through an index of the
-// validators sorted by power, stored using the ValidatorsByPowerKey.
+// validators sorted by power, stored using the ValidatorsByPowerIndexKey.
 // Simultaneously the current validator records are updated in store with the
-// ValidatorsBondedKey. This store is used to determine if a validator is a
+// ValidatorsBondedIndexKey. This store is used to determine if a validator is a
 // validator without needing to iterate over the subspace as we do in
 // GetValidators.
 //
@@ -281,7 +281,7 @@ func (k PrivlegedKeeper) UpdateBondedValidators(ctx sdk.Context, store sdk.KVSto
 
 	// add the actual validator power sorted store
 	maxValidators := k.GetParams(ctx).MaxValidators
-	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerKey) // largest to smallest
+	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey) // largest to smallest
 	bondedValidatorsCount := 0
 	var validator types.Validator
 	for {
@@ -346,7 +346,7 @@ func (k PrivlegedKeeper) UpdateBondedValidators(ctx sdk.Context, store sdk.KVSto
 func (k PrivlegedKeeper) UpdateBondedValidatorsFull(ctx sdk.Context, store sdk.KVStore) {
 	// clear the current validators store, add to the ToKickOut temp store
 	toKickOut := make(map[string]byte)
-	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedKey)
+	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedIndexKey)
 	for ; iterator.Valid(); iterator.Next() {
 		ownerAddr := iterator.Value()
 		toKickOut[string(ownerAddr)] = 0 // set anything
@@ -355,7 +355,7 @@ func (k PrivlegedKeeper) UpdateBondedValidatorsFull(ctx sdk.Context, store sdk.K
 
 	// add the actual validator power sorted store
 	maxValidators := k.GetParams(ctx).MaxValidators
-	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerKey) // largest to smallest
+	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey) // largest to smallest
 	bondedValidatorsCount := 0
 	var validator types.Validator
 	for {
@@ -433,7 +433,7 @@ func (k PrivlegedKeeper) unbondValidator(ctx sdk.Context, store sdk.KVStore, val
 	store.Set(GetTendermintUpdatesKey(validator.Owner), bzABCI)
 
 	// also remove from the Bonded types.Validators Store
-	store.Delete(GetValidatorsBondedKey(validator.PubKey))
+	store.Delete(GetValidatorsBondedIndexKey(validator.PubKey))
 	return validator
 }
 
@@ -453,7 +453,7 @@ func (k PrivlegedKeeper) bondValidator(ctx sdk.Context, store sdk.KVStore, valid
 	// save the now bonded validator record to the three referenced stores
 	bzVal := k.cdc.MustMarshalBinary(validator)
 	store.Set(GetValidatorKey(validator.Owner), bzVal)
-	store.Set(GetValidatorsBondedKey(validator.PubKey), validator.Owner)
+	store.Set(GetValidatorsBondedIndexKey(validator.PubKey), validator.Owner)
 
 	// add to accumulated changes for tendermint
 	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidator(k.cdc))
@@ -476,14 +476,14 @@ func (k PrivlegedKeeper) RemoveValidator(ctx sdk.Context, address sdk.Address) {
 	pool := k.getPool(store)
 	store.Delete(GetValidatorKey(address))
 	store.Delete(GetValidatorByPubKeyIndexKey(validator.PubKey))
-	store.Delete(GetValidatorsByPowerKey(validator, pool))
+	store.Delete(GetValidatorsByPowerIndexKey(validator, pool))
 
 	// delete from the current and power weighted validator groups if the validator
 	// is bonded - and add validator with zero power to the validator updates
-	if store.Get(GetValidatorsBondedKey(validator.PubKey)) == nil {
+	if store.Get(GetValidatorsBondedIndexKey(validator.PubKey)) == nil {
 		return
 	}
-	store.Delete(GetValidatorsBondedKey(validator.PubKey))
+	store.Delete(GetValidatorsBondedIndexKey(validator.PubKey))
 
 	bz := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero(k.cdc))
 	store.Set(GetTendermintUpdatesKey(address), bz)
@@ -494,7 +494,7 @@ func (k PrivlegedKeeper) RemoveValidator(ctx sdk.Context, address sdk.Address) {
 // get the current validator on the cliff
 func (k Keeper) getCliffValidator(ctx sdk.Context) []byte {
 	store := ctx.KVStore(k.storeKey)
-	return store.Get(ValidatorCliffKey)
+	return store.Get(ValidatorCliffIndexKey)
 }
 
 // get the current power of the validator on the cliff
@@ -506,14 +506,14 @@ func (k Keeper) getCliffValidatorPower(ctx sdk.Context) []byte {
 // set the current validator and power of the validator on the cliff
 func (k PrivlegedKeeper) setCliffValidator(ctx sdk.Context, validator types.Validator, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := GetValidatorsByPowerKey(validator, pool)
+	bz := GetValidatorsByPowerIndexKey(validator, pool)
 	store.Set(ValidatorPowerCliffKey, bz)
-	store.Set(ValidatorCliffKey, validator.Owner)
+	store.Set(ValidatorCliffIndexKey, validator.Owner)
 }
 
 // clear the current validator and power of the validator on the cliff
 func (k PrivlegedKeeper) clearCliffValidator(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(ValidatorPowerCliffKey)
-	store.Delete(ValidatorCliffKey)
+	store.Delete(ValidatorCliffIndexKey)
 }

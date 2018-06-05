@@ -19,9 +19,9 @@ var (
 	PoolKey                    = []byte{0x01} // key for the staking pools
 	ValidatorsKey              = []byte{0x02} // prefix for each key to a validator
 	ValidatorsByPubKeyIndexKey = []byte{0x03} // prefix for each key to a validator by pubkey
-	ValidatorsBondedKey        = []byte{0x04} // prefix for each key to bonded/actively validating validators
-	ValidatorsByPowerKey       = []byte{0x05} // prefix for each key to a validator sorted by power
-	ValidatorCliffKey          = []byte{0x06} // key for block-local tx index
+	ValidatorsBondedIndexKey   = []byte{0x04} // prefix for each key to bonded/actively validating validators
+	ValidatorsByPowerIndexKey  = []byte{0x05} // prefix for each key to a validator sorted by power
+	ValidatorCliffIndexKey     = []byte{0x06} // key for block-local tx index
 	ValidatorPowerCliffKey     = []byte{0x07} // key for block-local tx index
 	TendermintUpdatesKey       = []byte{0x08} // prefix for each key to a validator which is being updated
 	DelegationKey              = []byte{0x09} // prefix for each key to a delegator's bond
@@ -41,13 +41,18 @@ func GetValidatorByPubKeyIndexKey(pubkey crypto.PubKey) []byte {
 }
 
 // get the key for the current validator group, ordered like tendermint
-func GetValidatorsBondedKey(pk crypto.PubKey) []byte {
+func GetValidatorsBondedIndexKey(pk crypto.PubKey) []byte {
 	addr := pk.Address()
-	return append(ValidatorsBondedKey, addr.Bytes()...)
+	return append(ValidatorsBondedIndexKey, addr.Bytes()...)
 }
 
-// get the key for the validator used in the power-store
-func GetValidatorsByPowerKey(validator types.Validator, pool types.Pool) []byte {
+// get the power which is the key for the validator used in the power-store
+func GetValidatorsByPowerIndexKey(validator types.Validator, pool types.Pool) []byte {
+	return GetValidatorsByPower(validator, pool)
+}
+
+// get the power of a validator
+func GetValidatorsByPower(validator types.Validator, pool types.Pool) []byte {
 
 	power := validator.EquivalentBondedShares(pool)
 	powerBytes := []byte(power.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
@@ -58,10 +63,11 @@ func GetValidatorsByPowerKey(validator types.Validator, pool types.Pool) []byte 
 	binary.BigEndian.PutUint64(heightBytes, ^uint64(validator.BondHeight)) // invert height (older validators first)
 	counterBytes := make([]byte, 2)
 	binary.BigEndian.PutUint16(counterBytes, ^uint16(validator.BondIntraTxCounter)) // invert counter (first txns have priority)
-	return append(ValidatorsByPowerKey,
+
+	// NOTE the address doesn't need to be stored because counter bytes must always be different
+	return append(ValidatorsByPowerIndexKey,
 		append(powerBytes,
-			append(heightBytes,
-				append(counterBytes, validator.Owner.Bytes()...)...)...)...) // TODO don't technically need to store owner
+			append(heightBytes, counterBytes...)...)...)
 }
 
 // get the key for the accumulated update validators

@@ -19,7 +19,7 @@ func (k PrivlegedKeeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		k.SetValidatorByPubKeyIndex(ctx, validator)
 		k.SetValidatorByPowerIndex(ctx, validator, data.Pool)
 		if validator.Status() == sdk.Bonded {
-			store.Set(GetValidatorsBondedKey(validator.PubKey), validator.Owner)
+			store.Set(GetValidatorsBondedIndexKey(validator.PubKey), validator.Owner)
 		}
 	}
 	for _, bond := range data.Bonds {

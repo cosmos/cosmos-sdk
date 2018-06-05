@@ -31,8 +31,8 @@ var (
 	NewPrivlegedKeeper           = keeper.NewPrivlegedKeeper
 	GetValidatorKey              = keeper.GetValidatorKey
 	GetValidatorByPubKeyIndexKey = keeper.GetValidatorByPubKeyIndexKey
-	GetValidatorsBondedKey       = keeper.GetValidatorsBondedKey
-	GetValidatorsByPowerKey      = keeper.GetValidatorsByPowerKey
+	GetValidatorsBondedIndexKey  = keeper.GetValidatorsBondedIndexKey
+	GetValidatorsByPowerIndexKey = keeper.GetValidatorsByPowerIndexKey
 	GetTendermintUpdatesKey      = keeper.GetTendermintUpdatesKey
 	GetDelegationKey             = keeper.GetDelegationKey
 	GetDelegationsKey            = keeper.GetDelegationsKey
@@ -40,9 +40,9 @@ var (
 	PoolKey                      = keeper.PoolKey
 	ValidatorsKey                = keeper.ValidatorsKey
 	ValidatorsByPubKeyIndexKey   = keeper.ValidatorsByPubKeyIndexKey
-	ValidatorsBondedKey          = keeper.ValidatorsBondedKey
-	ValidatorsByPowerKey         = keeper.ValidatorsByPowerKey
-	ValidatorCliffKey            = keeper.ValidatorCliffKey
+	ValidatorsBondedIndexKey     = keeper.ValidatorsBondedIndexKey
+	ValidatorsByPowerIndexKey    = keeper.ValidatorsByPowerIndexKey
+	ValidatorCliffIndexKey       = keeper.ValidatorCliffIndexKey
 	ValidatorPowerCliffKey       = keeper.ValidatorPowerCliffKey
 	TendermintUpdatesKey         = keeper.TendermintUpdatesKey
 	DelegationKey                = keeper.DelegationKey

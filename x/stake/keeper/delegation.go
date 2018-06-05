@@ -115,10 +115,10 @@ func (k PrivlegedKeeper) Delegate(ctx sdk.Context, delegatorAddr sdk.Address,
 
 // load a delegator bond
 func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
-	delegationKey []byte) (bond types.UnbondingDelegation, found bool) {
+	DelegatorAddr, ValidatorAddr sdk.Address) (bond types.UnbondingDelegation, found bool) {
 
 	store := ctx.KVStore(k.storeKey)
-	delegatorBytes := store.Get(delegationKey)
+	delegatorBytes := store.Get(UnbondingDelegationKey)
 	if delegatorBytes == nil {
 		return bond, false
 	}

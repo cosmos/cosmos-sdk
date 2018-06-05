@@ -15,17 +15,21 @@ import (
 //nolint
 var (
 	// Keys for store prefixes
-	ParamKey                   = []byte{0x00} // key for parameters relating to staking
-	PoolKey                    = []byte{0x01} // key for the staking pools
-	ValidatorsKey              = []byte{0x02} // prefix for each key to a validator
-	ValidatorsByPubKeyIndexKey = []byte{0x03} // prefix for each key to a validator by pubkey
-	ValidatorsBondedIndexKey   = []byte{0x04} // prefix for each key to bonded/actively validating validators
-	ValidatorsByPowerIndexKey  = []byte{0x05} // prefix for each key to a validator sorted by power
-	ValidatorCliffIndexKey     = []byte{0x06} // key for block-local tx index
-	ValidatorPowerCliffKey     = []byte{0x07} // key for block-local tx index
-	TendermintUpdatesKey       = []byte{0x08} // prefix for each key to a validator which is being updated
-	DelegationKey              = []byte{0x09} // prefix for each key to a delegator's bond
-	IntraTxCounterKey          = []byte{0x10} // key for block-local tx index
+	ParamKey                         = []byte{0x00} // key for parameters relating to staking
+	PoolKey                          = []byte{0x01} // key for the staking pools
+	ValidatorsKey                    = []byte{0x02} // prefix for each key to a validator
+	ValidatorsByPubKeyIndexKey       = []byte{0x03} // prefix for each key to a validator index, by pubkey
+	ValidatorsBondedIndexKey         = []byte{0x04} // prefix for each key to a validator index, for bonded validators
+	ValidatorsByPowerIndexKey        = []byte{0x05} // prefix for each key to a validator index, sorted by power
+	ValidatorCliffIndexKey           = []byte{0x06} // key for the validator index of the cliff validator
+	ValidatorPowerCliffKey           = []byte{0x07} // key for the power of the validator on the cliff
+	TendermintUpdatesKey             = []byte{0x08} // prefix for each key to a validator which is being updated
+	DelegationKey                    = []byte{0x09} // key for a delegation
+	UnbondingDelegationKey           = []byte{0x0A} // key for an unbonding-delegation
+	UnbondingDelegationByValIndexKey = []byte{0x0B} // prefix for each key for an unbonding-delegation, by validator owner
+	RedelegationKey                  = []byte{0x0C} // key for a redelegation
+	RedelegationByValIndexKey        = []byte{0x0D} // prefix for each key for an redelegation, by validator owner
+	IntraTxCounterKey                = []byte{0x0E} // key for intra-block tx index
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch

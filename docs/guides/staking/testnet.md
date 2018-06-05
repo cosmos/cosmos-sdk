@@ -55,7 +55,7 @@ peak at your logs with `tail gaia1.log`, or follow them for a bit with
 Nice. We can also lookup the validator set:
 
 ```
-gaiacli validatorset
+gaiacli advanced tendermint validator-set
 ```
 
 Then, we try to transfer some `steak` to another account:
@@ -84,11 +84,12 @@ Finally, to relinquish all your power, unbond some coins. You should see
 your VotingPower reduce and your account balance increase.
 
 ```
-gaiacli unbond --chain-id=<chain-id> --name=test
+gaiacli stake unbond --chain-id=<chain-id> --name=test
 ```
 
 That's it!
 
-**Note:** TODO demonstrate edit-candidacy **Note:** TODO demonstrate
-delegation **Note:** TODO demonstrate unbond of delegation **Note:**
-TODO demonstrate unbond candidate
+**Note:** TODO demonstrate edit-candidacy
+**Note:** TODO demonstrate delegation
+**Note:** TODO demonstrate unbond of delegation
+**Note:** TODO demonstrate unbond candidate

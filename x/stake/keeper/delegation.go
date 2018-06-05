@@ -115,21 +115,22 @@ func (k PrivlegedKeeper) Delegate(ctx sdk.Context, delegatorAddr sdk.Address,
 
 // load a delegator bond
 func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
-	DelegatorAddr, ValidatorAddr sdk.Address) (bond types.UnbondingDelegation, found bool) {
+	DelegatorAddr, ValidatorAddr sdk.Address) (ubd types.UnbondingDelegation, found bool) {
 
 	store := ctx.KVStore(k.storeKey)
-	delegatorBytes := store.Get(UnbondingDelegationKey)
-	if delegatorBytes == nil {
-		return bond, false
+	bz := store.Get(GetUBDKey())
+	if bz == nil {
+		return ubd, false
 	}
 
-	k.cdc.MustUnmarshalBinary(delegatorBytes, &bond)
-	return bond, true
+	k.cdc.MustUnmarshalBinary(bz, &ubd)
+	return ubd, true
 }
 
 // set the delegation
-func (k PrivlegedKeeper) SetUnbondingDelegation(ctx sdk.Context, bond types.UnbondingDelegation) {
+func (k PrivlegedKeeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinary(bond)
-	store.Set(GetDelegationKey(bond.DelegatorAddr, bond.ValidatorAddr, k.cdc), b)
+	b := k.cdc.MustMarshalBinary(ubd)
+	store.Set(GetUBDKey(ubd.DelegatorAddr, ubd.ValidatorAddr, k.cdc), b)
+	store.Set(GetUBDByValKey(ubd.DelegatorAddr, ubd.ValidatorAddr, k.cdc), b)
 }

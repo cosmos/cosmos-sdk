@@ -6,25 +6,27 @@
 
 The Cosmos Hub is a Tendermint-based Delegated Proof of Stake (DPos) blockchain
 system that serves as a backbone of the Cosmos ecosystem. It is operated and
-secured by an open and globally decentralized set of validators. Tendermint
-consensus is a Byzantine fault-tolerant distributed protocol that involves all
-validators in the process of exchanging protocol messages in the production of
-each block. To avoid Nothing-at-Stake problem, a validator in Tendermint needs
-to lock up coins in a bond deposit. Tendermint protocol messages are signed by
-the validator's private key, and this is a basis for Tendermint strict
-accountability that allows punishing misbehaving validators by slashing
-(burning) their bonded Atoms. On the other hand, validators are rewarded for
-their service of securing blockchain network by the inflationary provisions and
-transactions fees. This incentives correct behavior of the validators and
-provides the economic security of the network.
+secured by an open and globally decentralized set of validators. Tendermint is
+a Byzantine fault-tolerant distributed protocol for consensus among distrusting
+parties, in this case the group of validators which produce the blocks for
+cosmos.  To avoid the nothing-at-stake problem, a validator in Tendermint needs
+to lock up coins in a bond deposit. Each bond's atoms are illiquid, they cannot
+be transferred however they can be unbonded to become liquid, this process
+takes the unbonding-period which will be 3 weeks by default at Cosmos-Hub
+launch. Tendermint protocol messages are signed by the validator's private key,
+and this is a basis for Tendermint strict accountability that allows punishing
+misbehaving validators by slashing (burning) their bonded Atoms. On the other
+hand, validators are rewarded for their service of securing blockchain network
+by the inflationary provisions and transactions fees. This incentivizes correct
+behavior of the validators and provides the economic security of the network.
 
-The native token of the Cosmos Hub is called Atom; becoming a validator of the
+The native token of the Cosmos Hub is called the Atom; becoming a validator of the
 Cosmos Hub requires holding Atoms. However, not all Atom holders are validators
 of the Cosmos Hub. More precisely, there is a selection process that determines
 the validator set as a subset of all validators (Atom holders that
 wants to become a validator). The other option for Atom holder is to delegate
 their atoms to validators, i.e., being a delegator. A delegator is an Atom
-holder that has bonded its Atoms by delegating it to a validator. By bonding
+holder that has put its Atoms at stake by delegating it to a validator. By bonding
 Atoms to secure the network (and taking a risk of being slashed in case of
 misbehaviour), a user is rewarded with inflationary provisions and transaction
 fees proportional to the amount of its bonded Atoms.  The Cosmos Hub is

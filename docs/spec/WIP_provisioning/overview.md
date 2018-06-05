@@ -13,15 +13,14 @@ withdraw all fees they are entitled too before they can bond or unbond Atoms.
 
 Because fees are optimized to note
 
-Commission on Atom Provisions and having atoms autobonded are mutually exclusive (we can’t have both). The reason
-for this is that 
-
-if there are atoms commissions and autobonding, the portion of
-atoms the fee distribution calculation would become very large as the atom
-portion for each delegator would change each block making a withdrawal of fees
-for a delegator require a calculation for every single block since the last
-withdrawal. Conclusion we can only have atom commission and unbonded atoms
-provisions, or bonded atom provisions and no atom commission
+Commission on Atom Provisions and having atoms autobonded are mutually
+exclusive (we can’t have both). The reason for this is that if there are atoms
+commissions and autobonding, the portion of atoms the fee distribution
+calculation would become very large as the atom portion for each delegator
+would change each block making a withdrawal of fees for a delegator require a
+calculation for every single block since the last withdrawal. Conclusion we can
+only have atom commission and unbonded atoms provisions, or bonded atom
+provisions and no atom commission
 
 ## Fee Calculations
 

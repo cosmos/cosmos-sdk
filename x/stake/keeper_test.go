@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -463,8 +464,8 @@ func TestGetTendermintUpdatesAllNone(t *testing.T) {
 
 	updates = keeper.getTendermintUpdates(ctx)
 	require.Equal(t, 2, len(updates))
-	assert.Equal(t, validators[0].PubKey.Bytes(), updates[0].PubKey)
-	assert.Equal(t, validators[1].PubKey.Bytes(), updates[1].PubKey)
+	assert.Equal(t, tmtypes.TM2PB.PubKey(validators[0].PubKey), updates[0].PubKey)
+	assert.Equal(t, tmtypes.TM2PB.PubKey(validators[1].PubKey), updates[1].PubKey)
 	assert.Equal(t, int64(0), updates[0].Power)
 	assert.Equal(t, int64(0), updates[1].Power)
 }

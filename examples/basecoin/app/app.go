@@ -130,7 +130,7 @@ func (app *BasecoinApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) ab
 
 // Custom logic for basecoin initialization
 func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	stateJSON := req.GenesisBytes
+	stateJSON := req.AppStateBytes
 
 	genesisState := new(types.GenesisState)
 	err := app.cdc.UnmarshalJSON(stateJSON, genesisState)

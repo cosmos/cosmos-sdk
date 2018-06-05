@@ -103,12 +103,12 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 		return ErrBadValidatorAddr(k.Codespace()).Result()
 	}
 
-	// XXX move to types
 	// replace all editable fields (clients should autofill existing values)
-	validator.Description.Moniker = msg.Description.Moniker
-	validator.Description.Identity = msg.Description.Identity
-	validator.Description.Website = msg.Description.Website
-	validator.Description.Details = msg.Description.Details
+	d, err := validator.Description.UpdateDescription(msg.Description)
+	if err != nil {
+		return err.Result()
+	}
+	validator.Description = d
 
 	k.UpdateValidator(ctx, validator)
 	tags := sdk.NewTags(
@@ -144,10 +144,6 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Privlege
 }
 
 func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k keeper.PrivlegedKeeper) sdk.Result {
-
-	//msg = NewMsgBeginUnbonding(msg.DelegatorAddr, msg.ValidatorAddr, sdk.NewRat(1, 10), sdk.NewRat(1))
-	//msgJson, _ := types.MsgCdc.MarshalJSON(msg)
-	//panic(fmt.Sprintf("debug msg: %v\n", string(msgJson)))
 
 	// check if bond has any shares in it unbond
 	bond, found := k.GetDelegation(ctx, msg.DelegatorAddr, msg.ValidatorAddr)

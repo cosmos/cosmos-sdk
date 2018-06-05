@@ -95,6 +95,45 @@ func NewDescription(moniker, identity, website, details string) Description {
 	}
 }
 
+// update the description based on input
+func (d Description) UpdateDescription(d2 Description) (Description, sdk.Error) {
+	if d.Moniker == "[do-not-modify]" {
+		d2.Moniker = d.Moniker
+	}
+	if d.Identity == "[do-not-modify]" {
+		d2.Identity = d.Identity
+	}
+	if d.Website == "[do-not-modify]" {
+		d2.Website = d.Website
+	}
+	if d.Details == "[do-not-modify]" {
+		d2.Details = d.Details
+	}
+	return Description{
+		Moniker:  d2.Moniker,
+		Identity: d2.Identity,
+		Website:  d2.Website,
+		Details:  d2.Details,
+	}.EnsureLength()
+}
+
+// ensure the length of the description
+func (d Description) EnsureLength() (Description, sdk.Error) {
+	if len(d.Moniker) > 70 {
+		return d, ErrDescriptionLength(DefaultCodespace, "moniker", len(d.Moniker), 70)
+	}
+	if len(d.Identity) > 3000 {
+		return d, ErrDescriptionLength(DefaultCodespace, "identity", len(d.Identity), 3000)
+	}
+	if len(d.Website) > 140 {
+		return d, ErrDescriptionLength(DefaultCodespace, "website", len(d.Website), 140)
+	}
+	if len(d.Details) > 280 {
+		return d, ErrDescriptionLength(DefaultCodespace, "details", len(d.Details), 280)
+	}
+	return d, nil
+}
+
 //XXX updateDescription function which enforce limit to number of description characters
 
 // abci validator from stake validator type

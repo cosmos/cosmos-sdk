@@ -84,3 +84,7 @@ func ErrInsufficientFunds(codespace sdk.CodespaceType) sdk.Error {
 func ErrBadRemoveValidator(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidValidator, "Error removing validator")
 }
+func ErrDescriptionLength(codespace sdk.CodespaceType, descriptor string, got, max int) sdk.Error {
+	msg := fmt.Sprintf("Bad description length for %v, got length %v, max is %v", descriptor, got, max)
+	return sdk.NewError(codespace, CodeInvalidValidator, msg)
+}

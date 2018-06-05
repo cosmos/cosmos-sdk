@@ -50,7 +50,7 @@ func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 	if !msg.InitialDeposit.IsValid() {
 		return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
 	}
-	if !msg.InitialDeposit.IsPositive() {
+	if !msg.InitialDeposit.IsNotNegative() {
 		return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
 	}
 	return nil
@@ -87,7 +87,7 @@ type MsgDeposit struct {
 	Amount     sdk.Coins   `json:"amount"`      // Coins to add to the proposal's deposit
 }
 
-func NewMsgDeposit(proposalID int64, depositer sdk.Address, amount sdk.Coins) MsgDeposit {
+func NewMsgDeposit(depositer sdk.Address, proposalID int64, amount sdk.Coins) MsgDeposit {
 	return MsgDeposit{
 		ProposalID: proposalID,
 		Depositer:  depositer,
@@ -106,8 +106,11 @@ func (msg MsgDeposit) ValidateBasic() sdk.Error {
 	if !msg.Amount.IsValid() {
 		return sdk.ErrInvalidCoins(msg.Amount.String())
 	}
-	if !msg.Amount.IsPositive() {
+	if !msg.Amount.IsNotNegative() {
 		return sdk.ErrInvalidCoins(msg.Amount.String())
+	}
+	if msg.ProposalID < 0 {
+		return ErrUnknownProposal(msg.ProposalID)
 	}
 	return nil
 }
@@ -158,6 +161,9 @@ func (msg MsgVote) Type() string { return MsgType }
 func (msg MsgVote) ValidateBasic() sdk.Error {
 	if len(msg.Voter.Bytes()) == 0 {
 		return sdk.ErrInvalidAddress(msg.Voter.String())
+	}
+	if msg.ProposalID < 0 {
+		return ErrUnknownProposal(msg.ProposalID)
 	}
 	if (msg.Option != "Yes") && (msg.Option != "No") && (msg.Option != "NoWithVeto") && (msg.Option != "Abstain") {
 		return ErrInvalidVote(msg.Option)

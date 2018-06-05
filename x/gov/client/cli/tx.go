@@ -93,7 +93,7 @@ func DepositCmd(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// create the message
-			msg := gov.NewMsgDeposit(proposalID, depositer, amount)
+			msg := gov.NewMsgDeposit(depositer, proposalID, amount)
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 

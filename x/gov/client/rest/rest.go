@@ -70,7 +70,7 @@ func depositHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext)
 
 		Depositer := sdk.Address(bz)
 		// create the message
-		msg := gov.NewMsgDeposit(req.ProposalID, Depositer, req.Amount)
+		msg := gov.NewMsgDeposit(Depositer, req.ProposalID, req.Amount)
 
 		// sign
 		signAndBuild(w, ctx, req.BaseReq, msg, cdc)

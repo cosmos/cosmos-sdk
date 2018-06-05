@@ -606,27 +606,31 @@ func getDelegation(t *testing.T, delegatorAddr, candidateAddr string) stake.Dele
 func doBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxCommit) {
 	// get the account to get the sequence
 	acc := getAccount(t, sendAddr)
-	sequence := acc.GetSequence()
 
 	// send
-	jsonStr := fmt.Sprintf(`{
-		"name": "%s",
-		"password": "%s",
-		"sequence": %d,
-		"delegations": [
-			{
-				"delegator_addr": "%x",
-				"validator_addr": "%s",
-				"bond": { "denom": "%s", "amount": 10 }
-			}
-		],
-		"unbond": []
-	}`, name, password, sequence, acc.GetAddress(), validatorAddrStr1, coinDenom)
-	res, body := request(t, port, "POST", "/stake/delegations", []byte(jsonStr))
+	req := stakerest.EditDelegationsBody{
+		LocalAccountName: name,
+		Password:         password,
+		Sequence:         acc.GetSequence(),
+		//ChainID:        , //XXX
+		Delegations: []stake.MsgDelegate{{
+			DelegatorAddr: acc.GetAddress(),
+			ValidatorAddr: validatorAddr1,
+			Bond: sdk.Coin{
+				Denom:  coinDenom,
+				Amount: 10,
+			},
+		}},
+		BeginUnbondings: []stake.MsgBeginUnbonding{},
+	}
+	bz, err := cdc.MarshalJSON(req)
+	require.NoError(t, err)
+	res, body := request(t, port, "POST", "/stake/delegations", bz)
+
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var results []ctypes.ResultBroadcastTxCommit
-	err := cdc.UnmarshalJSON([]byte(body), &results)
+	err = cdc.UnmarshalJSON([]byte(body), &results)
 	require.Nil(t, err)
 
 	return results[0]
@@ -637,20 +641,6 @@ func doUnbond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastT
 	acc := getAccount(t, sendAddr)
 
 	// send
-	//jsonStr := fmt.Sprintf(`{
-	//"name": "%s",
-	//"password": "%s",
-	//"sequence": %d,
-	//"bond": [],
-	//"unbond": [
-	//{
-	//"delegator_addr": "%x",
-	//"validator_addr": "%s",
-	//"shares_amount": "1/1",
-	//"shares_percent": "0/1"
-	//}
-	//]
-	//}`, name, password, sequence, acc.GetAddress(), validatorAddrStr1)
 	req := stakerest.EditDelegationsBody{
 		LocalAccountName: name,
 		Password:         password,

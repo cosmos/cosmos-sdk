@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/pflag"
 	crypto "github.com/tendermint/go-crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
+	gaiacfg "github.com/cosmos/cosmos-sdk/config"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	gc "github.com/cosmos/cosmos-sdk/server/config"
@@ -75,15 +76,31 @@ type GaiaGenTx struct {
 }
 
 // Generate a gaia genesis transaction with flags
+<<<<<<< HEAD
 func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTxConfig) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 	if genTxConfig.Name == "" {
+=======
+func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, config *gaiacfg.Config) (
+	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
+	if config == nil {
+		config = gaiacfg.DefaultConfig()
+		config.Name = viper.GetString(flagName)
+		config.CliRoot = viper.GetString(flagClientHome)
+		config.GenTx.Overwrite = viper.GetBool(flagOWK)
+	}
+	if config.Name == "" {
+>>>>>>> Added testnet command
 		return nil, nil, tmtypes.GenesisValidator{}, errors.New("Must specify --name (validator moniker)")
 	}
 
 	var addr sdk.Address
 	var secret string
+<<<<<<< HEAD
 	addr, secret, err = server.GenerateSaveCoinKey(genTxConfig.CliRoot, genTxConfig.Name, "1234567890", genTxConfig.Overwrite)
+=======
+	addr, secret, err = server.GenerateSaveCoinKey(config.CliRoot, config.Name, "1234567890", config.GenTx.Overwrite)
+>>>>>>> Added testnet command
 	if err != nil {
 		return
 	}
@@ -95,7 +112,11 @@ func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTxConfig)
 	}
 
 	cliPrint = json.RawMessage(bz)
+<<<<<<< HEAD
 	appGenTx, _, validator, err = GaiaAppGenTxNF(cdc, pk, addr, genTxConfig.Name, genTxConfig.Overwrite)
+=======
+	appGenTx, _, validator, err = GaiaAppGenTxNF(cdc, pk, addr, config.Name, config.GenTx.Overwrite)
+>>>>>>> Added testnet command
 	return
 }
 

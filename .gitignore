@@ -14,7 +14,11 @@ docs/_build
 # Data - ideally these don't exist
 examples/basecoin/app/data
 baseapp/data/*
+<<<<<<< HEAD
 client/lcd/keys/*
+=======
+mytestnet
+>>>>>>> Added testnet command
 
 # Testing
 coverage.txt

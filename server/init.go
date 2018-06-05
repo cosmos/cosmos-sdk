@@ -18,6 +18,7 @@ import (
 	"github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/go-crypto/keys/words"
 	cfg "github.com/tendermint/tendermint/config"
+	gaiacfg "github.com/cosmos/cosmos-sdk/config"
 	"github.com/tendermint/tendermint/p2p"
 	tmtypes "github.com/tendermint/tendermint/types"
 	pvm "github.com/tendermint/tendermint/privval"
@@ -54,50 +55,11 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 		RunE: func(_ *cobra.Command, args []string) error {
 
 			config := ctx.Config
-			nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
+			config.SetRoot(viper.GetString(tmcli.HomeFlag))
+			cliPrint, genTxFile, err := gentxWithConfig(config,nil,ctx,cdc,appInit)
 			if err != nil {
 				return err
 			}
-			nodeID := string(nodeKey.ID())
-			pubKey := readOrCreatePrivValidator(config)
-
-			appGenTx, cliPrint, validator, err := appInit.AppGenTx(cdc, pubKey)
-			if err != nil {
-				return err
-			}
-
-			ip := viper.GetString(flagIP)
-			if len(ip) == 0 {
-				ip, err = externalIP()
-				if err != nil {
-					return err
-				}
-			}
-
-			tx := GenesisTx{
-				NodeID:    nodeID,
-				IP:        ip,
-				Validator: validator,
-				AppGenTx:  appGenTx,
-			}
-			bz, err := wire.MarshalJSONIndent(cdc, tx)
-			if err != nil {
-				return err
-			}
-			genTxFile := json.RawMessage(bz)
-			name := fmt.Sprintf("gentx-%v.json", nodeID)
-			writePath := filepath.Join(viper.GetString(tmcli.HomeFlag), "config", "gentx")
-			file := filepath.Join(writePath, name)
-			err = cmn.EnsureDir(writePath, 0700)
-			if err != nil {
-				return err
-			}
-			err = cmn.WriteFile(file, bz, 0644)
-			if err != nil {
-				return err
-			}
-
-			// print out some key information
 			toPrint := struct {
 				AppMessage json.RawMessage `json:"app_message"`
 				GenTxFile  json.RawMessage `json:"gen_tx_file"`
@@ -118,6 +80,54 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	return cmd
 }
 
+func gentxWithConfig(config *cfg.Config, gaiaConfig *gaiacfg.Config, ctx *Context, cdc *wire.Codec, appInit AppInit) (
+	cliPrint json.RawMessage, genTxFile json.RawMessage, err error) {
+	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
+	if err != nil {
+		return
+	}
+	nodeID := string(nodeKey.ID())
+	pubKey := readOrCreatePrivValidator(config)
+
+	appGenTx, cliPrint, validator, err := appInit.AppGenTx(cdc, pubKey, gaiaConfig)
+	if err != nil {
+		return
+	}
+
+	ip := viper.GetString(flagIP)
+	if len(ip) == 0 {
+		ip, err = externalIP()
+		if err != nil {
+			return
+		}
+	}
+
+	tx := GenesisTx{
+		NodeID:    nodeID,
+		IP:        ip,
+		Validator: validator,
+		AppGenTx:  appGenTx,
+	}
+	bz, err := wire.MarshalJSONIndent(cdc, tx)
+	if err != nil {
+		return
+	}
+	genTxFile = json.RawMessage(bz)
+	name := fmt.Sprintf("gentx-%v.json", nodeID)
+	writePath := filepath.Join(config.RootDir, "config", "gentx")
+	file := filepath.Join(writePath, name)
+	err = cmn.EnsureDir(writePath, 0700)
+	if err != nil {
+		return
+	}
+	err = cmn.WriteFile(file, bz, 0644)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 // get cmd to initialize all files for tendermint and application
 func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	cmd := &cobra.Command{
@@ -127,58 +137,11 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 		RunE: func(_ *cobra.Command, _ []string) error {
 
 			config := ctx.Config
-			nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
+			config.SetRoot(viper.GetString(tmcli.HomeFlag))
+			chainID, nodeID, appMessage, err := initWithConfig(config,nil, ctx,cdc,appInit)
 			if err != nil {
 				return err
 			}
-			nodeID := string(nodeKey.ID())
-			pubKey := readOrCreatePrivValidator(config)
-
-			chainID := viper.GetString(flagChainID)
-			if chainID == "" {
-				chainID = cmn.Fmt("test-chain-%v", cmn.RandStr(6))
-			}
-
-			genFile := config.GenesisFile()
-			if !viper.GetBool(flagOverwrite) && cmn.FileExists(genFile) {
-				return fmt.Errorf("genesis.json file already exists: %v", genFile)
-			}
-
-			// process genesis transactions, or otherwise create one for defaults
-			var appMessage json.RawMessage
-			var appGenTxs []json.RawMessage
-			var validators []tmtypes.GenesisValidator
-			var persistentPeers string
-
-			if viper.GetBool(flagGenTxs) {
-				genTxsDir := filepath.Join(viper.GetString(tmcli.HomeFlag), "config", "gentx")
-				validators, appGenTxs, persistentPeers, err = processGenTxs(genTxsDir, cdc, appInit)
-				if err != nil {
-					return err
-				}
-				config.P2P.PersistentPeers = persistentPeers
-				configFilePath := filepath.Join(viper.GetString(tmcli.HomeFlag), "config", "config.toml")
-				cfg.WriteConfigFile(configFilePath, config)
-			} else {
-				appGenTx, am, validator, err := appInit.AppGenTx(cdc, pubKey)
-				appMessage = am
-				if err != nil {
-					return err
-				}
-				validators = []tmtypes.GenesisValidator{validator}
-				appGenTxs = []json.RawMessage{appGenTx}
-			}
-
-			appState, err := appInit.AppGenState(cdc, appGenTxs)
-			if err != nil {
-				return err
-			}
-
-			err = writeGenesisFile(cdc, genFile, chainID, validators, appState)
-			if err != nil {
-				return err
-			}
-
 			// print out some key information
 			toPrint := struct {
 				ChainID    string          `json:"chain_id"`
@@ -194,7 +157,6 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				return err
 			}
 			fmt.Println(string(out))
-
 			return nil
 		},
 	}
@@ -205,6 +167,70 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	cmd.Flags().AddFlagSet(appInit.FlagsAppGenTx) // need to add this flagset for when no GenTx's provided
 	cmd.AddCommand(GenTxCmd(ctx, cdc, appInit))
 	return cmd
+}
+
+func initWithConfig(config *cfg.Config, gaiaConfig *gaiacfg.Config, ctx *Context, cdc *wire.Codec, appInit AppInit) (
+	chainID string, nodeID string, appMessage json.RawMessage, err error) {
+	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
+	if err != nil {
+		return
+	}
+	nodeID = string(nodeKey.ID())
+	pubKey := readOrCreatePrivValidator(config)
+	if gaiaConfig == nil {
+		gaiaConfig = gaiacfg.DefaultConfig()
+		gaiaConfig.Init.ChainID = viper.GetString(flagChainID)
+		gaiaConfig.Init.Overwrite = viper.GetBool(flagOverwrite)
+		gaiaConfig.Init.GenTxs = viper.GetBool(flagGenTxs)
+		gaiaConfig.Init.GenTxsDir = filepath.Join(config.RootDir, "config", "gentx")
+	}
+
+	if gaiaConfig.Init.ChainID == "" {
+		gaiaConfig.Init.ChainID = cmn.Fmt("test-chain-%v", cmn.RandStr(6))
+	}
+	chainID = gaiaConfig.Init.ChainID
+
+	genFile := config.GenesisFile()
+	if !gaiaConfig.Init.Overwrite && cmn.FileExists(genFile) {
+		err = fmt.Errorf("genesis.json file already exists: %v", genFile)
+		return
+	}
+
+	// process genesis transactions, or otherwise create one for defaults
+	var appGenTxs []json.RawMessage
+	var validators []tmtypes.GenesisValidator
+	var persistentPeers string
+
+	if gaiaConfig.Init.GenTxs {
+		genTxsDir := gaiaConfig.Init.GenTxsDir
+		validators, appGenTxs, persistentPeers, err = processGenTxs(genTxsDir, cdc, appInit)
+		if err != nil {
+			return
+		}
+		config.P2P.PersistentPeers = persistentPeers
+		configFilePath := filepath.Join(config.RootDir, "config", "config.toml")
+		cfg.WriteConfigFile(configFilePath, config)
+	} else {
+		appGenTx, am, validator, err := appInit.AppGenTx(cdc, pubKey, nil)
+		appMessage = am
+		if err != nil {
+			return "", "", nil, err
+		}
+		validators = []tmtypes.GenesisValidator{validator}
+		appGenTxs = []json.RawMessage{appGenTx}
+	}
+
+	appState, err := appInit.AppGenState(cdc, appGenTxs)
+	if err != nil {
+		return
+	}
+
+	err = writeGenesisFile(cdc, genFile, gaiaConfig.Init.ChainID, validators, appState)
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 // append a genesis-piece
@@ -315,7 +341,7 @@ type AppInit struct {
 	FlagsAppGenTx    *pflag.FlagSet
 
 	// create the application genesis tx
-	AppGenTx func(cdc *wire.Codec, pk crypto.PubKey) (
+	AppGenTx func(cdc *wire.Codec, pk crypto.PubKey, gaiaConfig *gaiacfg.Config) (
 		appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error)
 
 	// AppGenState creates the core parameters initialization. It takes in a
@@ -337,7 +363,7 @@ type SimpleGenTx struct {
 }
 
 // Generate a genesis transaction
-func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
+func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey, gaiaConfig *gaiacfg.Config) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
 	var addr sdk.Address

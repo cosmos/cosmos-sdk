@@ -1,6 +1,7 @@
 package stake
 
 import (
+	"math/rand"
 	"strconv"
 	"testing"
 
@@ -8,6 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+//change the int in NewSource to generate random input for tests that use r for randomization
+var r = rand.New(rand.NewSource(505))
 
 func TestGetInflation(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
@@ -97,11 +101,8 @@ func TestProcessProvisions(t *testing.T) {
 // Cycles through the whole gambit of starting at 7% inflation, up to 20%, back down to 7% (it takes ~11.4 years)
 func TestHourlyInflationRateOfChange(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
-	// params := defaultParams()
-	// keeper.setParams(ctx, params)
 	pool := keeper.GetPool(ctx)
 
-	// test setUpCandidates returned the token values by passing these vars into checkCandidateSetup()
 	var (
 		initialTotalTokens    int64 = 550000000
 		initialBondedTokens   int64 = 150000000
@@ -113,7 +114,7 @@ func TestHourlyInflationRateOfChange(t *testing.T) {
 		bondedValidators      uint16 = 1
 	)
 
-	// create some candidates some bonded, some unbonded
+	// create some validators some bonded, some unbonded
 	_, keeper, pool = setupTestValidators(pool, keeper, ctx, tokensForValidators, bondedValidators)
 	checkValidatorSetup(t, pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens)
 
@@ -132,6 +133,58 @@ func TestHourlyInflationRateOfChange(t *testing.T) {
 	checkFinalPoolValues(t, pool, initialTotalTokens,
 		initialUnbondedTokens, cumulativeExpProvs,
 		0, 0, bondedShares, unbondedShares)
+}
+
+//Test that a large unbonding will significantly lower the bonded ratio
+func TestLargeUnbond(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, false, 0)
+	// params := defaultParams()
+	// keeper.setParams(ctx, params)
+	pool := keeper.GetPool(ctx)
+
+	var (
+		initialTotalTokens    int64 = 1200000000
+		initialBondedTokens   int64 = 900000000
+		initialUnbondedTokens int64 = 300000000
+		val0UnbondedTokens    int64
+		bondedShares                 = sdk.NewRat(900000000, 1)
+		unbondedShares               = sdk.NewRat(300000000, 1)
+		bondSharesVal0               = sdk.NewRat(300000000, 1)
+		tokensForValidators          = []int64{300000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000}
+		bondedValidators      uint16 = 7
+	)
+
+	_, keeper, pool = setupTestValidators(pool, keeper, ctx, tokensForValidators, bondedValidators)
+	checkValidatorSetup(t, pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens)
+
+	pool = keeper.GetPool(ctx)
+	validator, found := keeper.GetValidator(ctx, addrs[0])
+	assert.True(t, found)
+
+	// initialBondedRatio that we can use to compare to the new values after the unbond
+	initialBondedRatio := pool.bondedRatio()
+	// validator[0] will be unbonded, bringing us from 75% to ~50%
+	// This func will unbond 300,000,000 tokens that were previously bonded
+	pool, validator, _, _ = OpBondOrUnbond(r, pool, validator)
+	keeper.setPool(ctx, pool)
+
+	// process provisions after the bonding, to compare the difference in expProvisions and expInflation
+	_, expProvisionsAfter, pool := checkAndProcessProvisions(t, keeper, pool, ctx, 0)
+
+	bondedShares = bondedShares.Sub(bondSharesVal0)
+	val0UnbondedTokens = pool.unbondedShareExRate().Mul(validator.PoolShares.Unbonded()).Evaluate()
+	unbondedShares = unbondedShares.Add(sdk.NewRat(val0UnbondedTokens, 1).Mul(pool.unbondedShareExRate()))
+
+	// unbonded shares should increase
+	assert.True(t, unbondedShares.GT(sdk.NewRat(150000000, 1)))
+	// Ensure that new bonded ratio is less than old bonded ratio , because before they were increasing (i.e. 55 < 72)
+	assert.True(t, (pool.bondedRatio().LT(initialBondedRatio)))
+
+	// Final check that the pool equals initial values + provisions and adjustments we recorded
+	pool = keeper.GetPool(ctx)
+	checkFinalPoolValues(t, pool, initialTotalTokens,
+		initialUnbondedTokens, expProvisionsAfter,
+		-val0UnbondedTokens, val0UnbondedTokens, bondedShares, unbondedShares)
 }
 
 ////////////////////////////////HELPER FUNCTIONS BELOW/////////////////////////////////////
@@ -154,7 +207,7 @@ func checkFinalPoolValues(t *testing.T, pool Pool, initialTotalTokens, initialUn
 	assert.Equal(t, calculatedBondedTokens, pool.BondedTokens)
 	assert.Equal(t, calculatedUnbondedTokens, pool.UnbondedTokens)
 
-	// test the value of candidate shares
+	// test the value of validator shares
 	assert.True(t, pool.bondedShareExRate().Mul(bondedShares).Equal(sdk.NewRat(calculatedBondedTokens)), "%v", pool.bondedShareExRate())
 	assert.True(t, pool.unbondedShareExRate().Mul(unbondedShares).Equal(sdk.NewRat(calculatedUnbondedTokens)), "%v", pool.unbondedShareExRate())
 }
@@ -199,7 +252,7 @@ func setupTestValidators(pool Pool, keeper Keeper, ctx sdk.Context, validatorTok
 	return validators, keeper, pool
 }
 
-// Checks that the deterministic candidate setup you wanted matches the values in the pool
+// Checks that the deterministic validator setup you wanted matches the values in the pool
 func checkValidatorSetup(t *testing.T, pool Pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens int64) {
 
 	assert.Equal(t, initialTotalTokens, pool.TokenSupply())
@@ -208,7 +261,7 @@ func checkValidatorSetup(t *testing.T, pool Pool, initialTotalTokens, initialBon
 
 	// test initial bonded ratio
 	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(initialBondedTokens, initialTotalTokens)), "%v", pool.bondedRatio())
-	// test the value of candidate shares
+	// test the value of validator shares
 	assert.True(t, pool.bondedShareExRate().Equal(sdk.OneRat()), "%v", pool.bondedShareExRate())
 }
 

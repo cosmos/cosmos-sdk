@@ -1,5 +1,9 @@
 # Changelog
 
+BREAKING CHANGES
+
+- Switch to bech32 for addresses on all human readable inputs and outputs
+
 ## 0.18.0
 
 _2018-06-05_
@@ -21,12 +25,13 @@ BREAKING CHANGES
   - Introduction of Unbonding fields, lowlevel logic throughout (not fully implemented with queue)
   - Introduction of PoolShares type within validators,
     replaces three rational fields (BondedShares, UnbondingShares, UnbondedShares
+
 * [x/auth] move stuff specific to auth anteHandler to the auth module rather than the types folder. This includes:
-  * StdTx (and its related stuff i.e. StdSignDoc, etc)
-  * StdFee
-  * StdSignature
-  * Account interface
-  * Related to this organization, I also:
+  - StdTx (and its related stuff i.e. StdSignDoc, etc)
+  - StdFee
+  - StdSignature
+  - Account interface
+  - Related to this organization, I also:
 * [x/auth] got rid of AccountMapper interface (in favor of the struct already in auth module)
 * [x/auth] removed the FeeHandler function from the AnteHandler, Replaced with FeeKeeper
 * [x/auth] Removed GetSignatures() from Tx interface (as different Tx styles might use something different than StdSignature)
@@ -34,7 +39,6 @@ BREAKING CHANGES
 * [cli] rearranged commands under subcommands
 * [stake] remove Tick and add EndBlocker
 * Switch to bech32cosmos on all human readable inputs and outputs
-
 
 FEATURES
 
@@ -51,22 +55,19 @@ FEATURES
 - [stake] Added REST API
 - [Makefile] Added terraform/ansible playbooks to easily create remote testnets on Digital Ocean
 
-
 BUG FIXES
 
-* [stake] staking delegator shares exchange rate now relative to equivalent-bonded-tokens the validator has instead of bonded tokens
+- [stake] staking delegator shares exchange rate now relative to equivalent-bonded-tokens the validator has instead of bonded tokens
   ^ this is important for unbonded validators in the power store!
-* [cli] fixed cli-bash tests
-* [ci] added cli-bash tests
-* [basecoin] updated basecoin for stake and slashing
-* [docs] fixed references to old cli commands
-* [docs] Downgraded Swagger to v2 for downstream compatibility
-* auto-sequencing transactions correctly
-* query sequence via account store
-* fixed duplicate pub_key in stake.Validator
-* Auto-sequencing now works correctly
-
-
+- [cli] fixed cli-bash tests
+- [ci] added cli-bash tests
+- [basecoin] updated basecoin for stake and slashing
+- [docs] fixed references to old cli commands
+- [docs] Downgraded Swagger to v2 for downstream compatibility
+- auto-sequencing transactions correctly
+- query sequence via account store
+- fixed duplicate pub_key in stake.Validator
+- Auto-sequencing now works correctly
 
 ## 0.17.2
 
@@ -106,7 +107,6 @@ BUG FIXES
 
 - Auto-sequencing now works correctly
 
-
 ## 0.16.0 (May 14th, 2018)
 
 BREAKING CHANGES
@@ -141,13 +141,11 @@ BUG FIXES
 
 - Gaia now uses stake, ported from github.com/cosmos/gaia
 
-
 ## 0.15.1 (April 29, 2018)
 
 IMPROVEMENTS:
 
 - Update Tendermint to v0.19.1 (includes many rpc fixes)
-
 
 ## 0.15.0 (April 29, 2018)
 

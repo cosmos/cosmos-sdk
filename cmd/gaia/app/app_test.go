@@ -430,6 +430,42 @@ func TestStakeMsgs(t *testing.T) {
 	require.False(t, found)
 }
 
+func TestExportValidators(t *testing.T) {
+	gapp := newGaiaApp()
+
+	genCoins, err := sdk.ParseCoins("42steak")
+	require.Nil(t, err)
+	bondCoin, err := sdk.ParseCoin("10steak")
+	require.Nil(t, err)
+
+	acc1 := &auth.BaseAccount{
+		Address: addr1,
+		Coins:   genCoins,
+	}
+	acc2 := &auth.BaseAccount{
+		Address: addr2,
+		Coins:   genCoins,
+	}
+
+	err = setGenesis(gapp, acc1, acc2)
+	require.Nil(t, err)
+
+	// Create Validator
+	description := stake.NewDescription("foo_moniker", "", "", "")
+	createValidatorMsg := stake.NewMsgCreateValidator(
+		addr1, priv1.PubKey(), bondCoin, description,
+	)
+	SignCheckDeliver(t, gapp, createValidatorMsg, []int64{0}, true, priv1)
+	gapp.Commit()
+
+	// Export validator set
+	_, validators, err := gapp.ExportAppStateAndValidators()
+	require.Nil(t, err)
+	require.Equal(t, 1, len(validators)) // 1 validator
+	require.Equal(t, priv1.PubKey(), validators[0].PubKey)
+	require.Equal(t, int64(10), validators[0].Power)
+}
+
 //____________________________________________________________________________________
 
 func CheckBalance(t *testing.T, gapp *GaiaApp, addr sdk.Address, balExpected string) {

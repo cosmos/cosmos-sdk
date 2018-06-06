@@ -11,7 +11,7 @@ import (
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/p2p"
-	pvm "github.com/tendermint/tendermint/types/priv_validator"
+	pvm "github.com/tendermint/tendermint/privval"
 )
 
 // ShowNodeIDCmd - ported from Tendermint, dump node ID to stdout

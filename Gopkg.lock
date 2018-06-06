@@ -164,8 +164,8 @@
 [[projects]]
   name = "github.com/pelletier/go-toml"
   packages = ["."]
-  revision = "acdc4509485b587f5e675510c4f2c63e90ff68a8"
-  version = "v1.1.0"
+  revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
+  version = "v1.2.0"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -327,6 +327,7 @@
     "p2p/conn",
     "p2p/pex",
     "p2p/upnp",
+    "privval",
     "proxy",
     "rpc/client",
     "rpc/core",
@@ -341,11 +342,10 @@
     "state/txindex/kv",
     "state/txindex/null",
     "types",
-    "types/priv_validator",
     "version"
   ]
-  revision = "a017f2fdd41496a81e04a2216630a405189da6e2"
-  version = "v0.19.7-rc0"
+  revision = "775fef31c2b8fb7ea36f0d57bae3bfa74d353100"
+  version = "v0.19.9-rc0"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -360,8 +360,8 @@
     "log",
     "merkle"
   ]
-  revision = "d970af87248a4e162590300dbb74e102183a417d"
-  version = "v0.8.3"
+  revision = "692f1d86a6e2c0efa698fd1e4541b68c74ffaf38"
+  version = "v0.8.4"
 
 [[projects]]
   branch = "master"
@@ -377,7 +377,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "ab813273cd59e1333f7ae7bff5d027d4aadf528c"
+  revision = "78e79280f680f7dd6b8e48c751887111ebdbcbd8"
 
 [[projects]]
   branch = "master"
@@ -458,6 +458,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a3a75136fb6921c4c4d413e4c8366f203b77367762763c97b8669ea854fbd62d"
+  inputs-digest = "71d11bd2a8f3f46ba3fd16759b501ad5b6b48037717d82020ebb25e021b67117"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -74,11 +74,11 @@
 
 [[constraint]]
   name = "github.com/tendermint/tendermint"
-  version = "0.19.7-rc0"
+  version = "0.19.9-rc0"
 
 [[override]]
   name = "github.com/tendermint/tmlibs"
-  version = "~0.8.3-rc0"
+  version = "~0.8.4"
   
 # this got updated and broke, so locked to an old working commit ...
 [[override]]

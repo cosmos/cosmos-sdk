@@ -25,7 +25,7 @@ func (k PrivlegedKeeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	for _, bond := range data.Bonds {
 		k.SetDelegation(ctx, bond)
 	}
-	k.UpdateBondedValidatorsFull(ctx, store)
+	k.UpdateBondedValidatorsFull(ctx)
 }
 
 // WriteGenesis - output genesis parameters

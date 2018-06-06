@@ -5,6 +5,12 @@
 BREAKING CHANGES
 * [cli] rearranged commands under subcommands
 * [stake] remove Tick and add EndBlocker
+* [stake] introduce concept of unbonding for delegations and validators
+  * `gaiacli stake unbond` replaced with `gaiacli stake begin-unbonding`
+  * introduced: 
+    * `gaiacli stake complete-unbonding`
+    * `gaiacli stake begin-redelegation`
+    * `gaiacli stake complete-redelegation`
 
 FEATURES
 
@@ -12,12 +18,16 @@ IMPROVEMENTS
 * bank module uses go-wire codec instead of 'encoding/json'
 * auth module uses go-wire codec instead of 'encoding/json'
 * revised use of endblock and beginblock
+* [stake] module reorganized to include `types` and `keeper` package
+* [stake] keeper always loads the store (instead passing around which doesn't really boost efficiency)
+* [stake] edit-validator changes now can use the keyword [do-not-modify] to not modify unspecified `--flag` (aka won't set them to `""` value)
 
 FIXES
 * [cli] fixed cli-bash tests
 * [ci] added cli-bash tests
 * [basecoin] updated basecoin for stake and slashing
 * [docs] fixed references to old cli commands
+* [lcd] tests now don't depend on raw json text
 
 ## 0.18.1
 

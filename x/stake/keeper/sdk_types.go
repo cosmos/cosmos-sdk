@@ -36,7 +36,7 @@ func (k Keeper) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, va
 	i := int64(0)
 	for ; iterator.Valid(); iterator.Next() {
 		address := iterator.Value()
-		validator, found := k.getValidator(store, address)
+		validator, found := k.GetValidator(ctx, address)
 		if !found {
 			panic(fmt.Sprintf("validator record not found for address: %v\n", address))
 		}
@@ -51,8 +51,8 @@ func (k Keeper) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, va
 }
 
 // get the sdk.validator for a particular address
-func (k Keeper) Validator(ctx sdk.Context, addr sdk.Address) sdk.Validator {
-	val, found := k.GetValidator(ctx, addr)
+func (k Keeper) Validator(ctx sdk.Context, address sdk.Address) sdk.Validator {
+	val, found := k.GetValidator(ctx, address)
 	if !found {
 		return nil
 	}

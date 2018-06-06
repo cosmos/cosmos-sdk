@@ -57,12 +57,12 @@ func (b Delegation) HumanReadableString() (string, error) {
 
 // element stored to represent the passive unbonding queue
 type UnbondingDelegation struct {
-	DelegatorAddr   sdk.Address `json:"delegator_addr"`    // delegator
-	ValidatorAddr   sdk.Address `json:"validator_addr"`    // validator unbonding from owner addr
-	InitTime        int64       `json:"init_time"`         // unix time at unbonding initation
-	InitHeight      int64       `json:"init_height"`       // block height at unbonding initation
-	ExpectedTokens  sdk.Coins   `json:"expected_tokens"`   // the value in Atoms of the amount of shares which are unbonding
-	StartSlashRatio sdk.Rat     `json:"start_slash_ratio"` // validator slash ratio at unbonding initiation
+	DelegatorAddr sdk.Address `json:"delegator_addr"` // delegator
+	ValidatorAddr sdk.Address `json:"validator_addr"` // validator unbonding from owner addr
+	MinTime       int64       `json:"min_time"`       // unix time for unbonding completion
+	MinHeight     int64       `json:"min_height"`     // min height for unbonding completion
+	Balance       sdk.Coins   `json:"balance"`        // atoms to receive at completion
+	Slashed       sdk.Coins   `json:"slashed"`        // slashed tokens during unbonding
 }
 
 //__________________________________________________________________

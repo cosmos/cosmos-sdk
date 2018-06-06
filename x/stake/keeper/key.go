@@ -53,11 +53,13 @@ func GetValidatorsBondedIndexKey(pk crypto.PubKey) []byte {
 
 // get the power which is the key for the validator used in the power-store
 func GetValidatorsByPowerIndexKey(validator types.Validator, pool types.Pool) []byte {
-	return GetValidatorsByPower(validator, pool)
+
+	// NOTE the address doesn't need to be stored because counter bytes must always be different
+	return GetValidatorPowerRank(validator, pool)
 }
 
 // get the power of a validator
-func GetValidatorsByPower(validator types.Validator, pool types.Pool) []byte {
+func GetValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 
 	power := validator.EquivalentBondedShares(pool)
 	powerBytes := []byte(power.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
@@ -69,7 +71,6 @@ func GetValidatorsByPower(validator types.Validator, pool types.Pool) []byte {
 	counterBytes := make([]byte, 2)
 	binary.BigEndian.PutUint16(counterBytes, ^uint16(validator.BondIntraTxCounter)) // invert counter (first txns have priority)
 
-	// NOTE the address doesn't need to be stored because counter bytes must always be different
 	return append(ValidatorsByPowerIndexKey,
 		append(powerBytes,
 			append(heightBytes, counterBytes...)...)...)
@@ -129,7 +130,7 @@ func GetREDKey(delegatorAddr, validatorSrcAddr,
 		GetREDsKey(delegatorAddr, cdc),
 		append(
 			validatorSrcAddr.Bytes(),
-			validatorDstAddr.Bytes()...),
+			validatorDstAddr.Bytes()...)...,
 	)
 }
 
@@ -141,7 +142,7 @@ func GetREDByValSrcIndexKey(delegatorAddr, validatorSrcAddr,
 		GetREDsKey(validatorSrcAddr, cdc),
 		append(
 			delegatorAddr.Bytes(),
-			validatorDstAddr.Bytes()...),
+			validatorDstAddr.Bytes()...)...,
 	)
 }
 
@@ -153,7 +154,7 @@ func GetREDByValDstIndexKey(delegatorAddr, validatorSrcAddr,
 		GetREDsKey(validatorDstAddr, cdc),
 		append(
 			delegatorAddr.Bytes(),
-			validatorSrcAddr.Bytes()...),
+			validatorSrcAddr.Bytes()...)...,
 	)
 }
 

@@ -153,7 +153,7 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 
 	var delShares sdk.Rat
 
-	// retrieve the amount of bonds to remove
+	// retrieve the amount to remove
 	if !msg.SharesPercent.IsZero() {
 		delShares = bond.Shares.Mul(msg.SharesPercent)
 		if !bond.Shares.GT(sdk.ZeroRat()) {
@@ -190,11 +190,25 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 		k.SetDelegation(ctx, bond)
 	}
 
-	// Add the coins
+	// remove the coins from the validator
 	pool := k.GetPool(ctx)
 	validator, pool, returnAmount := validator.RemoveDelShares(pool, delShares)
 	k.SetPool(ctx, pool)
-	k.AddCoins(ctx, returnAmount, bond.DelegatorAddr)
+
+	// create the unbonding delegation
+	params := k.GetParams()
+	minTime := ctx.BlockHeader().Time + params.UnbondingTime()
+	minHeight := ctx.BlockHeight() + params.MinUnbondingBlocks()
+
+	ubd := UnbondingDelegation{
+		DelegatorAddr: bond.DelegatorAddr,
+		ValidatorAddr: bond.ValidatorAddr,
+		MinTime:       minTime,
+		MinHeight:     minHeight,
+		Balance:       sdk.Coin{params.BondDenom, returnAmount},
+		Slashed:       sdk.Coin{},
+	}
+	k.SetUnbondingDelegation(ctx, ubd)
 
 	/////////////////////////////////////
 	// revoke validator if necessary
@@ -205,14 +219,23 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 		k.RemoveValidator(ctx, validator.Owner)
 	}
 
-	tags := sdk.NewTags("action", []byte("unbond"), "delegator", msg.DelegatorAddr.Bytes(), "validator", msg.ValidatorAddr.Bytes())
+	tags := sdk.NewTags(
+		"action", []byte("unbond"),
+		"delegator", msg.DelegatorAddr.Bytes(),
+		"validator", msg.ValidatorAddr.Bytes(),
+	)
 	return sdk.Result{
 		Tags: tags,
 	}
 }
 
 func handleMsgCompleteUnbonding(ctx sdk.Context, msg types.MsgCompleteUnbonding, k keeper.PrivlegedKeeper) sdk.Result {
-	// XXX
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX XXX
+	// add the coins to the delegation account
+	k.AddCoins(ctx, returnAmount, bond.DelegatorAddr)
+
+	ubd, delegation, found := k.GetUnbondingDelegationDel(ctx, msg.DelegatorAddr, msg.ValidatorAddr)
 	return sdk.Result{}
 }
 

@@ -64,11 +64,9 @@ func (k Keeper) Codespace() sdk.CodespaceType {
 // some generic reads/writes that don't need their own files
 
 // load/save the global staking params
-func (k Keeper) GetParams(ctx sdk.Context) types.Params {
+func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	store := ctx.KVStore(k.storeKey)
-	return k.getParams(store)
-}
-func (k Keeper) getParams(store sdk.KVStore) (params types.Params) {
+
 	b := store.Get(ParamKey)
 	if b == nil {
 		panic("Stored params should not have been nil")
@@ -91,11 +89,11 @@ func (k PrivlegedKeeper) SetNewParams(ctx sdk.Context, params types.Params) {
 // set the params
 func (k PrivlegedKeeper) SetParams(ctx sdk.Context, params types.Params) {
 	store := ctx.KVStore(k.storeKey)
-	exParams := k.getParams(store)
+	exParams := k.GetParams(ctx)
 
 	// if max validator count changes, must recalculate validator set
 	if exParams.MaxValidators != params.MaxValidators {
-		k.UpdateBondedValidatorsFull(ctx, store)
+		k.UpdateBondedValidatorsFull(ctx)
 	}
 	b := k.cdc.MustMarshalBinary(params)
 	store.Set(ParamKey, b)
@@ -106,9 +104,6 @@ func (k PrivlegedKeeper) SetParams(ctx sdk.Context, params types.Params) {
 // load/save the pool
 func (k Keeper) GetPool(ctx sdk.Context) (pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
-	return k.getPool(store)
-}
-func (k Keeper) getPool(store sdk.KVStore) (pool types.Pool) {
 	b := store.Get(PoolKey)
 	if b == nil {
 		panic("Stored pool should not have been nil")

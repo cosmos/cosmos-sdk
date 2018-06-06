@@ -1,3 +1,4 @@
+// nolint
 package stake
 
 import (
@@ -5,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
-// nolint - types is a collection of aliases to the subpackages of this module
+// types is a collection of aliases to the subpackages of this module
 type Validator = types.Validator
 type Description = types.Description
 type Delegation = types.Delegation
@@ -25,7 +26,7 @@ type MsgBeginRedelegate = types.MsgBeginRedelegate
 type MsgCompleteRedelegate = types.MsgCompleteRedelegate
 type GenesisState = types.GenesisState
 
-//function/variable aliases
+// function/variable aliases
 var (
 	NewKeeper                    = keeper.NewKeeper
 	NewPrivlegedKeeper           = keeper.NewPrivlegedKeeper
@@ -81,7 +82,6 @@ const (
 	CodeUnknownRequest   = types.CodeUnknownRequest
 )
 
-// nolint
 var (
 	ErrNotEnoughBondShares   = types.ErrNotEnoughBondShares
 	ErrValidatorEmpty        = types.ErrValidatorEmpty

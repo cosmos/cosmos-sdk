@@ -105,7 +105,7 @@ func setGenesis(bapp *BasecoinApp, accs ...auth.BaseAccount) error {
 
 	// Initialize the chain
 	vals := []abci.Validator{}
-	bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
+	bapp.InitChain(abci.RequestInitChain{Validators: vals, AppStateBytes: stateBytes})
 	bapp.Commit()
 
 	return nil
@@ -165,7 +165,7 @@ func TestSortGenesis(t *testing.T) {
 
 	// Initialize the chain
 	vals := []abci.Validator{}
-	bapp.InitChain(abci.RequestInitChain{vals, []byte(genState)})
+	bapp.InitChain(abci.RequestInitChain{Validators: vals, AppStateBytes: []byte(genState)})
 	bapp.Commit()
 
 	// Unsorted coins means invalid
@@ -427,7 +427,7 @@ func TestMsgQuiz(t *testing.T) {
 
 	// Initialize the chain (nil)
 	vals := []abci.Validator{}
-	bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
+	bapp.InitChain(abci.RequestInitChain{Validators: vals, AppStateBytes: stateBytes})
 	bapp.Commit()
 
 	// A checkTx context (true)

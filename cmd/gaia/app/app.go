@@ -130,7 +130,7 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 
 // custom logic for gaia initialization
 func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	stateJSON := req.GenesisBytes
+	stateJSON := req.AppStateBytes
 	// TODO is this now the whole genesis file?
 
 	var genesisState GenesisState

@@ -56,6 +56,7 @@ func startRESTServerFn(cdc *wire.Codec) func(cmd *cobra.Command, args []string) 
 		if err != nil {
 			return err
 		}
+		logger.Info("REST server started")
 
 		// Wait forever and cleanup
 		cmn.TrapSignal(func() {

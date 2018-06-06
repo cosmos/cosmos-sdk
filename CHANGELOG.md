@@ -2,7 +2,7 @@
 
 BREAKING CHANGES
 
-- Switch to bech32 for addresses on all human readable inputs and outputs
+- [lcd] Switch to bech32 for addresses on all human readable inputs and outputs
 
 ## 0.18.0
 
@@ -25,20 +25,19 @@ BREAKING CHANGES
   - Introduction of Unbonding fields, lowlevel logic throughout (not fully implemented with queue)
   - Introduction of PoolShares type within validators,
     replaces three rational fields (BondedShares, UnbondingShares, UnbondedShares
-
-* [x/auth] move stuff specific to auth anteHandler to the auth module rather than the types folder. This includes:
+- [x/auth] move stuff specific to auth anteHandler to the auth module rather than the types folder. This includes:
   - StdTx (and its related stuff i.e. StdSignDoc, etc)
   - StdFee
   - StdSignature
   - Account interface
   - Related to this organization, I also:
-* [x/auth] got rid of AccountMapper interface (in favor of the struct already in auth module)
-* [x/auth] removed the FeeHandler function from the AnteHandler, Replaced with FeeKeeper
-* [x/auth] Removed GetSignatures() from Tx interface (as different Tx styles might use something different than StdSignature)
-* [store] Removed SubspaceIterator and ReverseSubspaceIterator from KVStore interface and replaced them with helper functions in /types
-* [cli] rearranged commands under subcommands
-* [stake] remove Tick and add EndBlocker
-* Switch to bech32cosmos on all human readable inputs and outputs
+- [x/auth] got rid of AccountMapper interface (in favor of the struct already in auth module)
+- [x/auth] removed the FeeHandler function from the AnteHandler, Replaced with FeeKeeper
+- [x/auth] Removed GetSignatures() from Tx interface (as different Tx styles might use something different than StdSignature)
+- [store] Removed SubspaceIterator and ReverseSubspaceIterator from KVStore interface and replaced them with helper functions in /types
+- [cli] rearranged commands under subcommands
+- [stake] remove Tick and add EndBlocker
+- Switch to bech32cosmos on all human readable inputs and outputs
 
 FEATURES
 

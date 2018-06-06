@@ -170,7 +170,13 @@ func executeGetAddrPK(t *testing.T, cmdStr string) (sdk.Address, crypto.PubKey) 
 	var ko keys.KeyOutput
 	keys.UnmarshalJSON([]byte(out), &ko)
 
-	return ko.Address, ko.PubKey
+	address, err := sdk.GetAccAddressBech32(ko.Address)
+	require.NoError(t, err)
+
+	pk, err := sdk.GetAccPubKeyBech32(ko.PubKey)
+	require.NoError(t, err)
+
+	return address, pk
 }
 
 func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {

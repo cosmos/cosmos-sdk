@@ -138,8 +138,6 @@ func TestHourlyInflationRateOfChange(t *testing.T) {
 //Test that a large unbonding will significantly lower the bonded ratio
 func TestLargeUnbond(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
-	// params := defaultParams()
-	// keeper.setParams(ctx, params)
 	pool := keeper.GetPool(ctx)
 
 	var (
@@ -176,7 +174,7 @@ func TestLargeUnbond(t *testing.T) {
 	unbondedShares = unbondedShares.Add(sdk.NewRat(val0UnbondedTokens, 1).Mul(pool.unbondedShareExRate()))
 
 	// unbonded shares should increase
-	assert.True(t, unbondedShares.GT(sdk.NewRat(150000000, 1)))
+	assert.True(t, unbondedShares.GT(sdk.NewRat(300000000, 1)))
 	// Ensure that new bonded ratio is less than old bonded ratio , because before they were increasing (i.e. 55 < 72)
 	assert.True(t, (pool.bondedRatio().LT(initialBondedRatio)))
 
@@ -185,6 +183,63 @@ func TestLargeUnbond(t *testing.T) {
 	checkFinalPoolValues(t, pool, initialTotalTokens,
 		initialUnbondedTokens, expProvisionsAfter,
 		-val0UnbondedTokens, val0UnbondedTokens, bondedShares, unbondedShares)
+}
+
+//Test that a large bonding will significantly increase the bonded ratio
+func TestLargeBond(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, false, 0)
+	pool := keeper.GetPool(ctx)
+
+	var (
+		initialTotalTokens    int64 = 1600000000
+		initialBondedTokens   int64 = 400000000
+		initialUnbondedTokens int64 = 1200000000
+		val9UnbondedTokens    int64 = 400000000
+		val9BondedTokens      int64
+		bondedShares                 = sdk.NewRat(400000000, 1)
+		unbondedShares               = sdk.NewRat(1200000000, 1)
+		unbondedSharesVal9           = sdk.NewRat(400000000, 1)
+		tokensForValidators          = []int64{400000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 400000000}
+		bondedValidators      uint16 = 1
+	)
+
+	_, keeper, pool = setupTestValidators(pool, keeper, ctx, tokensForValidators, bondedValidators)
+	checkValidatorSetup(t, pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens)
+
+	pool = keeper.GetPool(ctx)
+	validator, found := keeper.GetValidator(ctx, addrs[9])
+	assert.True(t, found)
+
+	// initialBondedRatio that we can use to compare to the new values after the unbond
+	initialBondedRatio := pool.bondedRatio()
+
+	params := defaultParams()
+	params.MaxValidators = bondedValidators + 1 //must do this to allow for an extra validator to bond
+	keeper.setParams(ctx, params)
+
+	// validator[9] will be bonded, bringing us from 25% to ~50%
+	// This func will bond 400,000,000 tokens that were previously unbonded
+	pool, validator, _, _ = OpBondOrUnbond(r, pool, validator)
+	keeper.setPool(ctx, pool)
+
+	// process provisions after the bonding, to compare the difference in expProvisions and expInflation
+	_, expProvisionsAfter, pool := checkAndProcessProvisions(t, keeper, pool, ctx, 0)
+	unbondedShares = unbondedShares.Sub(unbondedSharesVal9)
+	val9BondedTokens = val9UnbondedTokens
+	val9UnbondedTokens = 0
+	bondedTokens := initialBondedTokens + val9BondedTokens + expProvisionsAfter
+	bondedShares = sdk.NewRat(bondedTokens, 1).Quo(pool.bondedShareExRate())
+
+	// unbonded shares should decrease
+	assert.True(t, unbondedShares.LT(sdk.NewRat(1200000000, 1)))
+	// Ensure that new bonded ratio is greater than old bonded ratio (i.e. 50% > 25%)
+	assert.True(t, (pool.bondedRatio().GT(initialBondedRatio)))
+	// Final check that the pool equals initial values + provisions and adjustments we recorded
+	pool = keeper.GetPool(ctx)
+
+	checkFinalPoolValues(t, pool, initialTotalTokens,
+		initialUnbondedTokens, expProvisionsAfter,
+		val9BondedTokens, -val9BondedTokens, bondedShares, unbondedShares)
 }
 
 ////////////////////////////////HELPER FUNCTIONS BELOW/////////////////////////////////////
@@ -245,7 +300,7 @@ func setupTestValidators(pool Pool, keeper Keeper, ctx sdk.Context, validatorTok
 		validators[i] = NewValidator(addrs[i], pks[i], Description{})
 		validators[i], pool, _ = validators[i].addTokensFromDel(pool, validatorTokens[i])
 		keeper.setPool(ctx, pool)
-		validators[i] = keeper.updateValidator(ctx, validators[i])
+		validators[i] = keeper.updateValidator(ctx, validators[i]) //will kick out lower power validators. must keep in mind when setting up the test validators order
 		pool = keeper.GetPool(ctx)
 	}
 

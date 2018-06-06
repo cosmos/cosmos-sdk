@@ -18,6 +18,7 @@ var (
 	SrcValidator = types.TagSrcValidator
 	DstValidator = types.TagDstValidator
 	Delegator    = types.TagDelegator
+	Slashed      = []byte("slashed")
 	Moniker      = []byte("moniker")
 	Identity     = []byte("Identity")
 )

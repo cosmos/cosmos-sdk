@@ -91,9 +91,9 @@ func testAddr(addr string) sdk.Address {
 
 func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt int64) stake.MsgCreateValidator {
 	return stake.MsgCreateValidator{
-		Description:   stake.Description{},
-		ValidatorAddr: address,
-		PubKey:        pubKey,
-		Bond:          sdk.Coin{"steak", amt},
+		Description:    stake.Description{},
+		ValidatorAddr:  address,
+		PubKey:         pubKey,
+		SelfDelegation: sdk.Coin{"steak", amt},
 	}
 }

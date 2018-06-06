@@ -83,6 +83,16 @@ func ErrBadSharesPercent(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "shares percent must be >0 and <=1")
 }
 
+// redelegation
+func ErrNotMature(codespace sdk.CodespaceType, operation, descriptor string, got, min int64) sdk.Error {
+	msg := fmt.Sprintf("%v is not mature requires a min %v of %v, currently it is %v",
+		operation, descriptor, got, min)
+	return sdk.NewError(codespace, CodeUnauthorized, msg)
+}
+func ErrNoRedelegation(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDelegation, "no redelegation found")
+}
+
 // messages
 func ErrBothShareMsgsGiven(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidInput, "both shares amount and shares percent provided")

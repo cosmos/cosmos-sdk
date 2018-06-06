@@ -21,8 +21,8 @@ func (t Tags) AppendTag(k string, v []byte) Tags {
 }
 
 // Append two lists of tags
-func (t Tags) AppendTags(a Tags) Tags {
-	return append(t, a...)
+func (t Tags) AppendTags(tags Tags) Tags {
+	return append(t, tags...)
 }
 
 // Turn tags into KVPair list

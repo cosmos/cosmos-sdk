@@ -131,21 +131,6 @@ func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
 	return ubd, true
 }
 
-// load a unbonding delegation and the associated delegation
-func (k Keeper) GetUnbondingDelegationDel(ctx sdk.Context, DelegatorAddr,
-	ValidatorAddr sdk.Address) (ubd types.UnbondingDelegation, delegation types.Delegation, found bool) {
-
-	ubd, found = k.GetUnbondingDelegation(ctx, DelegatorAddr, ValidatorAddr)
-	if !found {
-		return ubd, delegation, false
-	}
-	delegation, found = k.GetDelegation(ctx, ubd.DelegatorAddr, ubd.ValidatorAddr)
-	if !found {
-		panic("found unbonding delegation but not delegation object")
-	}
-	return ubd, delegation, true
-}
-
 // set the unbonding delegation and associated index
 func (k PrivlegedKeeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)

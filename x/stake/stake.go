@@ -88,14 +88,15 @@ const (
 )
 
 var (
-	ErrNilValidatorAddr          = types.ErrNilValidatorAddr
-	ErrNoValidatorFound          = types.ErrNoValidatorFound
-	ErrValidatorAlreadyExists    = types.ErrValidatorAlreadyExists
-	ErrValidatorRevoked          = types.ErrValidatorRevoked
-	ErrBadRemoveValidator        = types.ErrBadRemoveValidator
-	ErrDescriptionLength         = types.ErrDescriptionLength
-	ErrCommissionNegative        = types.ErrCommissionNegative
-	ErrCommissionHuge            = types.ErrCommissionHuge
+	ErrNilValidatorAddr       = types.ErrNilValidatorAddr
+	ErrNoValidatorFound       = types.ErrNoValidatorFound
+	ErrValidatorAlreadyExists = types.ErrValidatorAlreadyExists
+	ErrValidatorRevoked       = types.ErrValidatorRevoked
+	ErrBadRemoveValidator     = types.ErrBadRemoveValidator
+	ErrDescriptionLength      = types.ErrDescriptionLength
+	ErrCommissionNegative     = types.ErrCommissionNegative
+	ErrCommissionHuge         = types.ErrCommissionHuge
+
 	ErrNilDelegatorAddr          = types.ErrNilDelegatorAddr
 	ErrBadDenom                  = types.ErrBadDenom
 	ErrBadDelegationAmount       = types.ErrBadDelegationAmount
@@ -107,9 +108,13 @@ var (
 	ErrNotEnoughDelegationShares = types.ErrNotEnoughDelegationShares
 	ErrBadSharesAmount           = types.ErrBadSharesAmount
 	ErrBadSharesPercent          = types.ErrBadSharesPercent
-	ErrBothShareMsgsGiven        = types.ErrBothShareMsgsGiven
-	ErrNeitherShareMsgsGiven     = types.ErrNeitherShareMsgsGiven
-	ErrMissingSignature          = types.ErrMissingSignature
+
+	ErrNotMature      = types.ErrNotMature
+	ErrNoRedelegation = types.ErrNoRedelegation
+
+	ErrBothShareMsgsGiven    = types.ErrBothShareMsgsGiven
+	ErrNeitherShareMsgsGiven = types.ErrNeitherShareMsgsGiven
+	ErrMissingSignature      = types.ErrMissingSignature
 )
 
 // tags
@@ -121,9 +126,12 @@ var (
 	ActionCompleteUnbonding    = tags.ActionCompleteUnbonding
 	ActionBeginRedelegation    = tags.ActionBeginRedelegation
 	ActionCompleteRedelegation = tags.ActionCompleteRedelegation
-	TagSrcValidator            = tags.SrcValidator
-	TagDstValidator            = tags.DstValidator
-	TagDelegator               = tags.Delegator
-	TagMoniker                 = tags.Moniker
-	TagIdentity                = tags.Identity
+
+	TagAction       = tags.Action
+	TagSrcValidator = tags.SrcValidator
+	TagDstValidator = tags.DstValidator
+	TagDelegator    = tags.Delegator
+	TagMoniker      = tags.Moniker
+	TagIdentity     = tags.Identity
+	TagSlashed      = tags.Slashed
 )

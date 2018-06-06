@@ -2,9 +2,9 @@ swagger: '2.0'
 info:
   version: '1.1.0'
   title: Light client daemon to interface with Cosmos baseserver via REST
-  description: Specification for the LCD provided by `gaiacli rest-server`
+  description: Specification for the LCD provided by `gaiacli advanced rest-server`
 
- 
+
 securityDefinitions:
   kms:
     type: basic
@@ -58,7 +58,7 @@ paths:
       responses:
         200:
           description: '"true" or "false"'
-          
+
   /keys:
     get:
       summary: List of accounts stored locally
@@ -102,7 +102,7 @@ paths:
         - application/json
       responses:
         200:
-          description: 12 word Seed
+          description: 16 word Seed
           schema:
             type: string
   /keys/{name}:
@@ -199,12 +199,12 @@ paths:
   #         description: Tx was send and will probably be added to the next block
   #       400:
   #         description: The Tx was malformated
-    
+
   /accounts/{address}:
     parameters:
       - in: path
         name: address
-        description: Account address
+        description: Account address in bech32 format
         required: true
         type: string
     get:
@@ -222,7 +222,7 @@ paths:
     parameters:
       - in: path
         name: address
-        description: Account address
+        description: Account address in bech32 format
         required: true
         type: string
     post:
@@ -255,18 +255,6 @@ paths:
           description: Tx was send and will probably be added to the next block
         400:
           description: The Tx was malformated
-  /accounts/{address}/nonce:
-    parameters:
-      - in: path
-        name: address
-        description: Account address
-        required: true
-        type: string
-    get:
-      summary: Get the nonce for a certain account
-      responses:
-        200:
-          description: Plaintext nonce i.e. "4" defaults to "0"
   /blocks/latest:
     get:
       summary: Get the latest block
@@ -304,9 +292,14 @@ paths:
         200:
           description: The validator set at the latest block height
           schema:
-            type: array
-            items:
-              $ref: "#/definitions/Delegate"
+            type: object
+            properties:
+              block_height:
+                type: number
+              validators:
+                type: array
+                items:
+                  $ref: "#/definitions/Validator"
   /validatorsets/{height}:
     parameters:
       - in: path
@@ -322,9 +315,14 @@ paths:
         200:
           description: The validator set at a specific block height
           schema:
-            type: array
-            items:
-              $ref: "#/definitions/Delegate"
+            type: object
+            properties:
+              block_height:
+                type: number
+              validators:
+                type: array
+                items:
+                  $ref: "#/definitions/Validator"
         404:
           description: Block at height not available
   # /txs:
@@ -545,11 +543,24 @@ paths:
   #         description: Tx was send and will probably be added to the next block
   #       400:
   #         description: The Tx was malformated
-  
+
 definitions:
   Address:
     type: string
-    example: DF096FDE8D380FA5B2AD20DB2962C82DDEA1ED9B
+    description: bech32 encoded addres
+    example: cosmosaccaddr:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
+  ValidatorAddress:
+    type: string
+    description: bech32 encoded addres
+    example: cosmosvaladdr:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
+  PubKey:
+    type: string
+    description: bech32 encoded public key
+    example: cosmosaccpub:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
+  ValidatorPubKey:
+    type: string
+    description: bech32 encoded public key
+    example: cosmosvalpub:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
   Coins:
     type: object
     properties:
@@ -630,7 +641,7 @@ definitions:
               Sig:
                 type: string
                 default: ''
-              Pubkey: 
+              Pubkey:
                 type: string
                 default: ''
   TxSigned:
@@ -652,16 +663,6 @@ definitions:
                 example: 81B11E717789600CC192B26F452A983DF13B985EE75ABD9DD9E68D7BA007A958
               Pubkey:
                 $ref: "#/definitions/PubKey"
-  PubKey:
-    type: object
-    properties:
-      type:
-        type: string
-        enum:
-          - ed25519
-      data:
-        type: string
-        example: 81B11E717789600CC192B26F452A983DF13B985EE75ABD9DD9E68D7BA007A958
   Account:
     type: object
     properties:
@@ -704,17 +705,17 @@ definitions:
     properties:
       header:
         type: object
-        properties: 
+        properties:
           chain_id:
             type: string
             example: gaia-2
-          height: 
+          height:
             type: number
             example: 1
-          time: 
+          time:
             type: string
             example: '2017-12-30T05:53:09.287+01:00'
-          num_txs: 
+          num_txs:
             type: number
             example: 0
           last_block_id:
@@ -753,17 +754,19 @@ definitions:
             type: array
             items:
               type: object
-  Delegate:
+  Validator:
     type: object
     properties:
+      address:
+        $ref: '#/definitions/ValidatorAddress'
       pub_key:
-        $ref: "#/definitions/PubKey"
+        $ref: "#/definitions/ValidatorPubKey"
       power:
         type: number
         example: 1000
-      name:
-        type: string
-        example: "159.89.3.34"
+      accum:
+        type: number
+        example: 1000
 # Added by API Auto Mocking Plugin
 host: virtserver.swaggerhub.com
 basePath: /faboweb1/Cosmos-LCD-2/1.0.0

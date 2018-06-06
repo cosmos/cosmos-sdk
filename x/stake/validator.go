@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // Validator defines the total amount of bond shares and their exchange rate to
@@ -47,6 +48,7 @@ func NewValidator(owner sdk.Address, pubKey crypto.PubKey, description Descripti
 	return Validator{
 		Owner:                 owner,
 		PubKey:                pubKey,
+		Revoked:               false,
 		PoolShares:            NewUnbondedShares(sdk.ZeroRat()),
 		DelegatorShares:       sdk.ZeroRat(),
 		Description:           description,
@@ -100,7 +102,7 @@ func NewDescription(moniker, identity, website, details string) Description {
 // abci validator from stake validator type
 func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
 	return abci.Validator{
-		PubKey: v.PubKey.Bytes(),
+		PubKey: tmtypes.TM2PB.PubKey(v.PubKey),
 		Power:  v.PoolShares.Bonded().Evaluate(),
 	}
 }
@@ -109,7 +111,7 @@ func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
 // with zero power used for validator updates
 func (v Validator) abciValidatorZero(cdc *wire.Codec) abci.Validator {
 	return abci.Validator{
-		PubKey: v.PubKey.Bytes(),
+		PubKey: tmtypes.TM2PB.PubKey(v.PubKey),
 		Power:  0,
 	}
 }
@@ -152,6 +154,23 @@ func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator,
 		pool, v.PoolShares = pool.addTokensBonded(tokens)
 	}
 	return v, pool
+}
+
+// Remove pool shares
+// Returns corresponding tokens, which could be burned (e.g. when slashing
+// a validator) or redistributed elsewhere
+func (v Validator) removePoolShares(pool Pool, poolShares sdk.Rat) (Validator, Pool, int64) {
+	var tokens int64
+	switch v.Status() {
+	case sdk.Unbonded:
+		pool, tokens = pool.removeSharesUnbonded(poolShares)
+	case sdk.Unbonding:
+		pool, tokens = pool.removeSharesUnbonding(poolShares)
+	case sdk.Bonded:
+		pool, tokens = pool.removeSharesBonded(poolShares)
+	}
+	v.PoolShares.Amount = v.PoolShares.Amount.Sub(poolShares)
+	return v, pool, tokens
 }
 
 // XXX TEST
@@ -232,6 +251,7 @@ func (v Validator) DelegatorShareExRate(pool Pool) sdk.Rat {
 var _ sdk.Validator = Validator{}
 
 // nolint - for sdk.Validator
+func (v Validator) GetMoniker() string        { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus { return v.Status() }
 func (v Validator) GetOwner() sdk.Address     { return v.Owner }
 func (v Validator) GetPubKey() crypto.PubKey  { return v.PubKey }
@@ -240,11 +260,11 @@ func (v Validator) GetBondHeight() int64      { return v.BondHeight }
 
 //Human Friendly pretty printer
 func (v Validator) HumanReadableString() (string, error) {
-	bechOwner, err := sdk.Bech32CosmosifyAcc(v.Owner)
+	bechOwner, err := sdk.Bech32ifyAcc(v.Owner)
 	if err != nil {
 		return "", err
 	}
-	bechVal, err := sdk.Bech32CosmosifyValPub(v.PubKey)
+	bechVal, err := sdk.Bech32ifyValPub(v.PubKey)
 	if err != nil {
 		return "", err
 	}

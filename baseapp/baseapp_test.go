@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -12,6 +11,7 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
+	tmtypes "github.com/tendermint/tendermint/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
@@ -83,18 +83,36 @@ func TestLoadVersion(t *testing.T) {
 	header := abci.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	res := app.Commit()
-	commitID := sdk.CommitID{1, res.Data}
+	commitID1 := sdk.CommitID{1, res.Data}
+	header = abci.Header{Height: 2}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res = app.Commit()
+	commitID2 := sdk.CommitID{2, res.Data}
 
-	// reload
+	// reload with LoadLatestVersion
 	app = NewBaseApp(name, nil, logger, db)
 	app.MountStoresIAVL(capKey)
-	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	err = app.LoadLatestVersion(capKey)
 	assert.Nil(t, err)
+	testLoadVersionHelper(t, app, int64(2), commitID2)
 
-	lastHeight = app.LastBlockHeight()
-	lastID = app.LastCommitID()
-	assert.Equal(t, int64(1), lastHeight)
-	assert.Equal(t, commitID, lastID)
+	// reload with LoadVersion, see if you can commit the same block and get
+	// the same result
+	app = NewBaseApp(name, nil, logger, db)
+	app.MountStoresIAVL(capKey)
+	err = app.LoadVersion(1, capKey)
+	assert.Nil(t, err)
+	testLoadVersionHelper(t, app, int64(1), commitID1)
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	app.Commit()
+	testLoadVersionHelper(t, app, int64(2), commitID2)
+}
+
+func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, expectedID sdk.CommitID) {
+	lastHeight := app.LastBlockHeight()
+	lastID := app.LastCommitID()
+	assert.Equal(t, expectedHeight, lastHeight)
+	assert.Equal(t, expectedID, lastID)
 }
 
 // Test that the app hash is static
@@ -206,11 +224,91 @@ func TestInitChainer(t *testing.T) {
 	assert.Equal(t, value, res.Value)
 }
 
+func getStateCheckingHandler(t *testing.T, capKey *sdk.KVStoreKey, txPerHeight int, checkHeader bool) func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	counter := 0
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		store := ctx.KVStore(capKey)
+		// Checking state gets updated between checkTx's / DeliverTx's
+		// on the store within a block.
+		if counter > 0 {
+			// check previous value in store
+			counterBytes := []byte{byte(counter - 1)}
+			prevBytes := store.Get(counterBytes)
+			assert.Equal(t, counterBytes, prevBytes)
+		}
+
+		// set the current counter in the store
+		counterBytes := []byte{byte(counter)}
+		store.Set(counterBytes, counterBytes)
+
+		// check that we can see the current header
+		// wrapped in an if, so it can be reused between CheckTx and DeliverTx tests.
+		if checkHeader {
+			thisHeader := ctx.BlockHeader()
+			height := int64((counter / txPerHeight) + 1)
+			assert.Equal(t, height, thisHeader.Height)
+		}
+
+		counter++
+		return sdk.Result{}
+	}
+}
+
+// A mock transaction that has a validation which can fail.
+type testTx struct {
+	positiveNum int64
+}
+
+const msgType2 = "testTx"
+
+func (tx testTx) Type() string                       { return msgType2 }
+func (tx testTx) GetMsg() sdk.Msg                    { return tx }
+func (tx testTx) GetSignBytes() []byte               { return nil }
+func (tx testTx) GetSigners() []sdk.Address          { return nil }
+func (tx testTx) GetSignatures() []auth.StdSignature { return nil }
+func (tx testTx) ValidateBasic() sdk.Error {
+	if tx.positiveNum >= 0 {
+		return nil
+	}
+	return sdk.ErrTxDecode("positiveNum should be a non-negative integer.")
+}
+
 // Test that successive CheckTx can see each others' effects
 // on the store within a block, and that the CheckTx state
 // gets reset to the latest Committed state during Commit
 func TestCheckTx(t *testing.T) {
-	// TODO
+	// Initialize an app for testing
+	app := newBaseApp(t.Name())
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
+
+	txPerHeight := 3
+	app.Router().AddRoute(msgType, getStateCheckingHandler(t, capKey, txPerHeight, false)).
+		AddRoute(msgType2, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
+	tx := testUpdatePowerTx{} // doesn't matter
+	for i := 0; i < txPerHeight; i++ {
+		app.Check(tx)
+	}
+	// If it gets to this point, then successive CheckTx's can see the effects of
+	// other CheckTx's on the block. The following checks that if another block
+	// is committed, the CheckTx State will reset.
+	app.BeginBlock(abci.RequestBeginBlock{})
+	tx2 := testTx{}
+	for i := 0; i < txPerHeight; i++ {
+		app.Deliver(tx2)
+	}
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+
+	checkStateStore := app.checkState.ctx.KVStore(capKey)
+	for i := 0; i < txPerHeight; i++ {
+		storedValue := checkStateStore.Get([]byte{byte(i)})
+		assert.Nil(t, storedValue)
+	}
 }
 
 // Test that successive DeliverTx can see each others' effects
@@ -224,30 +322,9 @@ func TestDeliverTx(t *testing.T) {
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	assert.Nil(t, err)
 
-	counter := 0
 	txPerHeight := 2
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
-	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		store := ctx.KVStore(capKey)
-		if counter > 0 {
-			// check previous value in store
-			counterBytes := []byte{byte(counter - 1)}
-			prevBytes := store.Get(counterBytes)
-			assert.Equal(t, prevBytes, counterBytes)
-		}
-
-		// set the current counter in the store
-		counterBytes := []byte{byte(counter)}
-		store.Set(counterBytes, counterBytes)
-
-		// check we can see the current header
-		thisHeader := ctx.BlockHeader()
-		height := int64((counter / txPerHeight) + 1)
-		assert.Equal(t, height, thisHeader.Height)
-
-		counter++
-		return sdk.Result{}
-	})
+	app.Router().AddRoute(msgType, getStateCheckingHandler(t, capKey, txPerHeight, true))
 
 	tx := testUpdatePowerTx{} // doesn't matter
 	header := abci.Header{AppHash: []byte("apphash")}
@@ -323,6 +400,27 @@ func TestSimulateTx(t *testing.T) {
 		app.EndBlock(abci.RequestEndBlock{})
 		app.Commit()
 	}
+}
+
+func TestRunInvalidTransaction(t *testing.T) {
+	// Initialize an app for testing
+	app := newBaseApp(t.Name())
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
+	app.Router().AddRoute(msgType2, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
+	app.BeginBlock(abci.RequestBeginBlock{})
+	// Transaction where validate fails
+	invalidTx := testTx{-1}
+	err1 := app.Deliver(invalidTx)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeTxDecode), err1.Code)
+	// Transaction with no known route
+	unknownRouteTx := testUpdatePowerTx{}
+	err2 := app.Deliver(unknownRouteTx)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), err2.Code)
 }
 
 // Test that transactions exceeding gas limits fail
@@ -510,15 +608,20 @@ func TestValidatorChange(t *testing.T) {
 
 	// Assert that validator updates are correct.
 	for _, val := range valSet {
+
+		pubkey, err := tmtypes.PB2TM.PubKey(val.PubKey)
 		// Sanity
-		assert.NotEqual(t, len(val.PubKey), 0)
+		assert.Nil(t, err)
 
 		// Find matching update and splice it out.
-		for j := 0; j < len(valUpdates); {
+		for j := 0; j < len(valUpdates); j++ {
 			valUpdate := valUpdates[j]
 
+			updatePubkey, err := tmtypes.PB2TM.PubKey(valUpdate.PubKey)
+			assert.Nil(t, err)
+
 			// Matched.
-			if bytes.Equal(valUpdate.PubKey, val.PubKey) {
+			if updatePubkey.Equals(pubkey) {
 				assert.Equal(t, valUpdate.Power, val.Power+1)
 				if j < len(valUpdates)-1 {
 					// Splice it out.
@@ -528,7 +631,6 @@ func TestValidatorChange(t *testing.T) {
 			}
 
 			// Not matched.
-			j++
 		}
 	}
 	assert.Equal(t, len(valUpdates), 0, "Some validator updates were unexpected")
@@ -542,7 +644,7 @@ func randPower() int64 {
 
 func makeVal(secret string) abci.Validator {
 	return abci.Validator{
-		PubKey: makePubKey(secret).Bytes(),
+		PubKey: tmtypes.TM2PB.PubKey(makePubKey(secret)),
 		Power:  randPower(),
 	}
 }

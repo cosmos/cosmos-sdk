@@ -2,6 +2,7 @@ package lcd
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -16,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/abci/types"
+	crypto "github.com/tendermint/go-crypto"
 	cryptoKeys "github.com/tendermint/go-crypto/keys"
 	tmcfg "github.com/tendermint/tendermint/config"
 	nm "github.com/tendermint/tendermint/node"
@@ -31,21 +33,30 @@ import (
 
 	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
-	bapp "github.com/cosmos/cosmos-sdk/examples/basecoin/app"
-	btypes "github.com/cosmos/cosmos-sdk/examples/basecoin/types"
+	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
+	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/server"
 	tests "github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/stake"
+	stakerest "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 )
 
 var (
-	coinDenom  = "mycoin"
+	coinDenom  = "steak"
 	coinAmount = int64(10000000)
+
+	validatorAddr1Hx = ""
+	validatorAddr2Hx = ""
+	validatorAddr1   = ""
+	validatorAddr2   = ""
 
 	// XXX bad globals
 	name     = "test"
 	password = "0123456789"
-	port     string // XXX: but it's the int ...
+	port     string
 	seed     string
 	sendAddr string
 )
@@ -92,13 +103,13 @@ func TestKeys(t *testing.T) {
 	err = cdc.UnmarshalJSON([]byte(body), &m)
 	require.Nil(t, err)
 
-	sendAddrAcc, _ := sdk.GetAccAddressHex(sendAddr)
 	addrAcc, _ := sdk.GetAccAddressHex(addr)
+	addrBech32, _ := sdk.Bech32ifyAcc(addrAcc)
 
-	assert.Equal(t, m[0].Name, name, "Did not serve keys name correctly")
-	assert.Equal(t, m[0].Address, sendAddrAcc, "Did not serve keys Address correctly")
-	assert.Equal(t, m[1].Name, newName, "Did not serve keys name correctly")
-	assert.Equal(t, m[1].Address, addrAcc, "Did not serve keys Address correctly")
+	assert.Equal(t, name, m[0].Name, "Did not serve keys name correctly")
+	assert.Equal(t, sendAddr, m[0].Address, "Did not serve keys Address correctly")
+	assert.Equal(t, newName, m[1].Name, "Did not serve keys name correctly")
+	assert.Equal(t, addrBech32, m[1].Address, "Did not serve keys Address correctly")
 
 	// select key
 	keyEndpoint := fmt.Sprintf("/keys/%s", newName)
@@ -109,7 +120,7 @@ func TestKeys(t *testing.T) {
 	require.Nil(t, err)
 
 	assert.Equal(t, newName, m2.Name, "Did not serve keys name correctly")
-	assert.Equal(t, addrAcc, m2.Address, "Did not serve keys Address correctly")
+	assert.Equal(t, addrBech32, m2.Address, "Did not serve keys Address correctly")
 
 	// update key
 	jsonStr = []byte(fmt.Sprintf(`{"old_password":"%s", "new_password":"12345678901"}`, newPassword))
@@ -191,7 +202,7 @@ func TestBlock(t *testing.T) {
 
 func TestValidators(t *testing.T) {
 
-	var resultVals ctypes.ResultValidators
+	var resultVals rpc.ResultValidatorsOutput
 
 	res, body := request(t, port, "GET", "/validatorsets/latest", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -199,7 +210,10 @@ func TestValidators(t *testing.T) {
 	err := cdc.UnmarshalJSON([]byte(body), &resultVals)
 	require.Nil(t, err, "Couldn't parse validatorset")
 
-	assert.NotEqual(t, ctypes.ResultValidators{}, resultVals)
+	assert.NotEqual(t, rpc.ResultValidatorsOutput{}, resultVals)
+
+	assert.Contains(t, resultVals.Validators[0].Address, "cosmosvaladdr")
+	assert.Contains(t, resultVals.Validators[0].PubKey, "cosmosvalpub")
 
 	// --
 
@@ -209,7 +223,7 @@ func TestValidators(t *testing.T) {
 	err = cdc.UnmarshalJSON([]byte(body), &resultVals)
 	require.Nil(t, err, "Couldn't parse validatorset")
 
-	assert.NotEqual(t, ctypes.ResultValidators{}, resultVals)
+	assert.NotEqual(t, rpc.ResultValidatorsOutput{}, resultVals)
 
 	// --
 
@@ -218,9 +232,11 @@ func TestValidators(t *testing.T) {
 }
 
 func TestCoinSend(t *testing.T) {
+	bz, _ := hex.DecodeString("8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6")
+	someFakeAddr, _ := sdk.Bech32ifyAcc(bz)
 
 	// query empty
-	res, body := request(t, port, "GET", "/accounts/8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6", nil)
+	res, body := request(t, port, "GET", "/accounts/"+someFakeAddr, nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	acc := getAccount(t, sendAddr)
@@ -309,6 +325,62 @@ func TestTxs(t *testing.T) {
 	// assert.NotEqual(t, "[]", body)
 }
 
+func TestValidatorsQuery(t *testing.T) {
+	validators := getValidators(t)
+	assert.Equal(t, len(validators), 2)
+
+	// make sure all the validators were found (order unknown because sorted by owner addr)
+	foundVal1, foundVal2 := false, false
+	if validators[0].Owner == validatorAddr1 || validators[1].Owner == validatorAddr1 {
+		foundVal1 = true
+	}
+	if validators[0].Owner == validatorAddr2 || validators[1].Owner == validatorAddr2 {
+		foundVal2 = true
+	}
+	assert.True(t, foundVal1, "validatorAddr1 %v, owner1 %v, owner2 %v", validatorAddr1, validators[0].Owner, validators[1].Owner)
+	assert.True(t, foundVal2, "validatorAddr2 %v, owner1 %v, owner2 %v", validatorAddr2, validators[0].Owner, validators[1].Owner)
+}
+
+func TestBond(t *testing.T) {
+
+	// create bond TX
+	resultTx := doBond(t, port, seed)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// check if tx was commited
+	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+
+	// query sender
+	acc := getAccount(t, sendAddr)
+	coins := acc.GetCoins()
+	assert.Equal(t, int64(87), coins.AmountOf(coinDenom))
+
+	// query candidate
+	bond := getDelegation(t, sendAddr, validatorAddr1)
+	assert.Equal(t, "10/1", bond.Shares.String())
+}
+
+func TestUnbond(t *testing.T) {
+
+	// create unbond TX
+	resultTx := doUnbond(t, port, seed)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// check if tx was commited
+	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+
+	// query sender
+	acc := getAccount(t, sendAddr)
+	coins := acc.GetCoins()
+	assert.Equal(t, int64(98), coins.AmountOf(coinDenom))
+
+	// query candidate
+	bond := getDelegation(t, sendAddr, validatorAddr1)
+	assert.Equal(t, "9/1", bond.Shares.String())
+}
+
 //__________________________________________________________
 // helpers
 
@@ -324,26 +396,18 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	var info cryptoKeys.Info
-	info, seed, err = kb.Create(name, password, cryptoKeys.AlgoEd25519) // XXX global seed
-	if err != nil {
-		return nil, nil, err
-	}
-
-	pubKey := info.PubKey
-	sendAddr = pubKey.Address().String() // XXX global
 
 	config := GetConfig()
 	config.Consensus.TimeoutCommit = 1000
 	config.Consensus.SkipTimeoutCommit = false
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	// logger = log.NewFilter(logger, log.AllowError())
+	logger = log.NewFilter(logger, log.AllowError())
 	privValidatorFile := config.PrivValidatorFile()
 	privVal := pvm.LoadOrGenFilePV(privValidatorFile)
 	db := dbm.NewMemDB()
-	app := bapp.NewBasecoinApp(logger, db)
-	cdc = bapp.MakeCodec() // XXX
+	app := gapp.NewGaiaApp(logger, db)
+	cdc = gapp.MakeCodec() // XXX
 
 	genesisFile := config.GenesisFile()
 	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
@@ -351,25 +415,63 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 		return nil, nil, err
 	}
 
-	coins := sdk.Coins{{coinDenom, coinAmount}}
-	appState := map[string]interface{}{
-		"accounts": []*btypes.GenesisAccount{
-			{
-				Name:    "tester",
-				Address: pubKey.Address(),
-				Coins:   coins,
-			},
+	genDoc.Validators = append(genDoc.Validators,
+		tmtypes.GenesisValidator{
+			PubKey: crypto.GenPrivKeyEd25519().PubKey(),
+			Power:  1,
+			Name:   "val",
 		},
-	}
-	stateBytes, err := json.Marshal(appState)
+	)
+
+	pk1 := genDoc.Validators[0].PubKey
+	pk2 := genDoc.Validators[1].PubKey
+	validatorAddr1Hx = hex.EncodeToString(pk1.Address())
+	validatorAddr2Hx = hex.EncodeToString(pk2.Address())
+	validatorAddr1, _ = sdk.Bech32ifyVal(pk1.Address())
+	validatorAddr2, _ = sdk.Bech32ifyVal(pk2.Address())
+
+	// NOTE it's bad practice to reuse pk address for the owner address but doing in the
+	// test for simplicity
+	var appGenTxs [2]json.RawMessage
+	appGenTxs[0], _, _, err = gapp.GaiaAppGenTxNF(cdc, pk1, pk1.Address(), "test_val1", true)
 	if err != nil {
 		return nil, nil, err
 	}
-	genDoc.AppStateJSON = stateBytes
+	appGenTxs[1], _, _, err = gapp.GaiaAppGenTxNF(cdc, pk2, pk2.Address(), "test_val2", true)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	genesisState, err := gapp.GaiaAppGenState(cdc, appGenTxs[:])
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// add the sendAddr to genesis
+	var info cryptoKeys.Info
+	info, seed, err = kb.Create(name, password, cryptoKeys.AlgoEd25519) // XXX global seed
+	if err != nil {
+		return nil, nil, err
+	}
+	sendAddrHex, _ := sdk.GetAccAddressHex(info.PubKey.Address().String())
+	sendAddr, _ = sdk.Bech32ifyAcc(sendAddrHex) // XXX global
+	accAuth := auth.NewBaseAccountWithAddress(info.PubKey.Address())
+	accAuth.Coins = sdk.Coins{{"steak", 100}}
+	acc := gapp.NewGenesisAccount(&accAuth)
+	genesisState.Accounts = append(genesisState.Accounts, acc)
+
+	appState, err := wire.MarshalJSONIndent(cdc, genesisState)
+	if err != nil {
+		return nil, nil, err
+	}
+	genDoc.AppStateJSON = appState
 
 	// LCD listen address
-	port = fmt.Sprintf("%d", 17377)                       // XXX
-	listenAddr := fmt.Sprintf("tcp://localhost:%s", port) // XXX
+	var listenAddr string
+	listenAddr, port, err = server.FreeTCPAddr()
+	if err != nil {
+		return nil, nil, err
+	}
 
 	// XXX: need to set this so LCD knows the tendermint node address!
 	viper.Set(client.FlagNode, config.RPC.ListenAddress)
@@ -379,7 +481,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	lcd, err := startLCD(logger, listenAddr)
+	lcd, err := startLCD(logger, listenAddr, cdc)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -418,7 +520,7 @@ func startTM(cfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc, p
 }
 
 // start the LCD. note this blocks!
-func startLCD(logger log.Logger, listenAddr string) (net.Listener, error) {
+func startLCD(logger log.Logger, listenAddr string, cdc *wire.Codec) (net.Listener, error) {
 	handler := createHandler(cdc)
 	return tmrpc.StartHTTPServer(listenAddr, handler, logger)
 }
@@ -456,7 +558,7 @@ func doSend(t *testing.T, port, seed string) (receiveAddr string, resultTx ctype
 	kb := client.MockKeyBase()
 	receiveInfo, _, err := kb.Create("receive_address", "1234567890", cryptoKeys.CryptoAlgo("ed25519"))
 	require.Nil(t, err)
-	receiveAddr = receiveInfo.PubKey.Address().String()
+	receiveAddr, _ = sdk.Bech32ifyAcc(receiveInfo.PubKey.Address())
 
 	acc := getAccount(t, sendAddr)
 	sequence := acc.GetSequence()
@@ -473,12 +575,11 @@ func doSend(t *testing.T, port, seed string) (receiveAddr string, resultTx ctype
 }
 
 func doIBCTransfer(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxCommit) {
-
 	// create receive address
 	kb := client.MockKeyBase()
 	receiveInfo, _, err := kb.Create("receive_address", "1234567890", cryptoKeys.CryptoAlgo("ed25519"))
 	require.Nil(t, err)
-	receiveAddr := receiveInfo.PubKey.Address().String()
+	receiveAddr, _ := sdk.Bech32ifyAcc(receiveInfo.PubKey.Address())
 
 	// get the account to get the sequence
 	acc := getAccount(t, sendAddr)
@@ -493,4 +594,82 @@ func doIBCTransfer(t *testing.T, port, seed string) (resultTx ctypes.ResultBroad
 	require.Nil(t, err)
 
 	return resultTx
+}
+
+func getDelegation(t *testing.T, delegatorAddr, candidateAddr string) stake.Delegation {
+	// get the account to get the sequence
+	res, body := request(t, port, "GET", "/stake/"+delegatorAddr+"/bonding_status/"+candidateAddr, nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var bond stake.Delegation
+	err := cdc.UnmarshalJSON([]byte(body), &bond)
+	require.Nil(t, err)
+	return bond
+}
+
+func doBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxCommit) {
+	// get the account to get the sequence
+	acc := getAccount(t, sendAddr)
+	sequence := acc.GetSequence()
+
+	// send
+	jsonStr := []byte(fmt.Sprintf(`{
+		"name": "%s",
+		"password": "%s",
+		"sequence": %d,
+		"delegate": [
+			{
+				"delegator_addr": "%s",
+				"validator_addr": "%s",
+				"bond": { "denom": "%s", "amount": 10 }
+			}
+		],
+		"unbond": []
+	}`, name, password, sequence, sendAddr, validatorAddr1, coinDenom))
+	res, body := request(t, port, "POST", "/stake/delegations", jsonStr)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var results []ctypes.ResultBroadcastTxCommit
+	err := cdc.UnmarshalJSON([]byte(body), &results)
+	require.Nil(t, err)
+
+	return results[0]
+}
+
+func doUnbond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxCommit) {
+	// get the account to get the sequence
+	acc := getAccount(t, sendAddr)
+	sequence := acc.GetSequence()
+
+	// send
+	jsonStr := []byte(fmt.Sprintf(`{
+		"name": "%s",
+		"password": "%s",
+		"sequence": %d,
+		"bond": [],
+		"unbond": [
+			{
+				"delegator_addr": "%s",
+				"validator_addr": "%s",
+				"shares": "1"
+			}
+		]
+	}`, name, password, sequence, sendAddr, validatorAddr1))
+	res, body := request(t, port, "POST", "/stake/delegations", jsonStr)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var results []ctypes.ResultBroadcastTxCommit
+	err := cdc.UnmarshalJSON([]byte(body), &results)
+	require.Nil(t, err)
+
+	return results[0]
+}
+
+func getValidators(t *testing.T) []stakerest.StakeValidatorOutput {
+	// get the account to get the sequence
+	res, body := request(t, port, "GET", "/stake/validators", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var validators []stakerest.StakeValidatorOutput
+	err := cdc.UnmarshalJSON([]byte(body), &validators)
+	require.Nil(t, err)
+	return validators
 }

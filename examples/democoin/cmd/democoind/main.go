@@ -47,7 +47,7 @@ func newApp(logger log.Logger, db dbm.DB) abci.Application {
 	return app.NewDemocoinApp(logger, db)
 }
 
-func exportAppState(logger log.Logger, db dbm.DB) (json.RawMessage, []tmtypes.GenesisValidator, error) {
+func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB) (json.RawMessage, []tmtypes.GenesisValidator, error) {
 	dapp := app.NewDemocoinApp(logger, db)
 	return dapp.ExportAppStateAndValidators()
 }
@@ -64,7 +64,7 @@ func main() {
 
 	server.AddCommands(ctx, cdc, rootCmd, CoolAppInit,
 		server.ConstructAppCreator(newApp, "democoin"),
-		server.ConstructAppExporter(exportAppState, "democoin"))
+		server.ConstructAppExporter(exportAppStateAndTMValidators, "democoin"))
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.democoind")

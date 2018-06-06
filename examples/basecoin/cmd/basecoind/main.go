@@ -28,7 +28,7 @@ func main() {
 
 	server.AddCommands(ctx, cdc, rootCmd, server.DefaultAppInit,
 		server.ConstructAppCreator(newApp, "basecoin"),
-		server.ConstructAppExporter(exportAppState, "basecoin"))
+		server.ConstructAppExporter(exportAppStateAndTMValidators, "basecoin"))
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.basecoind")
@@ -40,7 +40,7 @@ func newApp(logger log.Logger, db dbm.DB) abci.Application {
 	return app.NewBasecoinApp(logger, db)
 }
 
-func exportAppState(logger log.Logger, db dbm.DB) (json.RawMessage, []tmtypes.GenesisValidator, error) {
+func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB) (json.RawMessage, []tmtypes.GenesisValidator, error) {
 	bapp := app.NewBasecoinApp(logger, db)
 	return bapp.ExportAppStateAndValidators()
 }

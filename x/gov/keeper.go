@@ -44,6 +44,19 @@ func (keeper Keeper) WireCodec() *wire.Codec {
 	return keeper.cdc
 }
 
+// Creates a NewProposal
+func (keeper Keeper) NewProposal(ctx sdk.Context, title string, description string, proposalType string, initialDeposit Deposit) *Proposal {
+	return &Proposal{
+		ProposalID:       keeper.getNewProposalID(ctx),
+		Title:            title,
+		Description:      description,
+		ProposalType:     proposalType,
+		TotalDeposit:     initialDeposit.Amount,
+		SubmitBlock:      ctx.BlockHeight(),
+		VotingStartBlock: -1, // TODO: Make Time
+	}
+}
+
 // Get Proposal from store by ProposalID
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID int64) *Proposal {
 	store := ctx.KVStore(keeper.storeKey)
@@ -106,6 +119,15 @@ func (keeper Keeper) getNewProposalID(ctx sdk.Context) int64 {
 	return *proposalID
 }
 
+func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal *Proposal) {
+	proposal.VotingStartBlock = ctx.BlockHeight()
+	keeper.SetProposal(ctx, proposal)
+	keeper.ActiveProposalQueuePush(ctx, proposal)
+}
+
+// =====================================================
+// Procedures
+
 // Gets procedure from store. TODO: move to global param store and allow for updating of this
 func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) *DepositProcedure {
 	return &DepositProcedure{
@@ -130,24 +152,8 @@ func (keeper Keeper) GetTallyingProcedure(ctx sdk.Context) *TallyingProcedure {
 	}
 }
 
-func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal *Proposal) {
-	proposal.VotingStartBlock = ctx.BlockHeight()
-	keeper.SetProposal(ctx, proposal)
-	keeper.ActiveProposalQueuePush(ctx, proposal)
-}
-
-// Creates a NewProposal
-func (keeper Keeper) NewProposal(ctx sdk.Context, title string, description string, proposalType string, initialDeposit Deposit) *Proposal {
-	return &Proposal{
-		ProposalID:       keeper.getNewProposalID(ctx),
-		Title:            title,
-		Description:      description,
-		ProposalType:     proposalType,
-		TotalDeposit:     initialDeposit.Amount,
-		SubmitBlock:      ctx.BlockHeight(),
-		VotingStartBlock: -1, // TODO: Make Time
-	}
-}
+// =====================================================
+// Votes
 
 // Gets the vote of a specific voter on a specific proposal
 func (keeper Keeper) GetVote(ctx sdk.Context, proposalID int64, voter sdk.Address) *Vote {
@@ -174,6 +180,9 @@ func (keeper Keeper) GetVotes(ctx sdk.Context, proposalID int64) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
 	return sdk.KVStorePrefixIterator(store, []byte(fmt.Sprintf("%d", proposalID)+":votes:"))
 }
+
+// =====================================================
+// Deposits
 
 // Gets the vote of a specific voter on a specific proposal
 func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID int64, depositer sdk.Address) *Deposit {
@@ -219,11 +228,10 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID int64) {
 	}
 
 	depositsIterator.Close()
-
 }
 
 // =====================================================
-// ProposalQueue
+// ProposalQueues
 
 func (keeper Keeper) getActiveProposalQueue(ctx sdk.Context) ProposalQueue {
 	store := ctx.KVStore(keeper.storeKey)

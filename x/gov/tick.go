@@ -18,16 +18,17 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 	}
 
 	// Check if earliest Active Proposal ended voting period yet
-	peekProposal := keeper.ActiveProposalQueuePeek(ctx)
 
-	keeper.GetVotingProcedure(ctx)
+	for shouldPopActiveProposalQueue(ctx, keeper) {
+		activeProposal := keeper.ActiveProposalQueuePop(ctx)
 
-	if ctx.BlockHeight() > peekProposal.VotingStartBlock+keeper.GetVotingProcedure(ctx).VotingPeriod {
-		passes, _ := tally(ctx, keeper, peekProposal)
-		if passes {
-			keeper.RefundDeposits(ctx, peekProposal.ProposalID)
+		if ctx.BlockHeight() >= activeProposal.VotingStartBlock+keeper.GetVotingProcedure(ctx).VotingPeriod {
+			passes, _ := tally(ctx, keeper, activeProposal)
+			if passes {
+				keeper.RefundDeposits(ctx, activeProposal.ProposalID)
+			}
+			keeper.DeleteProposal(ctx, activeProposal)
 		}
-		keeper.DeleteProposal(ctx, peekProposal)
 	}
 
 	return

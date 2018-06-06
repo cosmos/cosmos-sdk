@@ -150,7 +150,7 @@ func createTestAddrs(numAddrs int) []sdk.Address {
 
 		buffer.WriteString(numString) //adding on final two digits to make addresses unique
 		res, _ := sdk.GetAccAddressHex(buffer.String())
-		bech, _ := sdk.Bech32CosmosifyAcc(res)
+		bech, _ := sdk.Bech32ifyAcc(res)
 		addresses = append(addresses, testAddr(buffer.String(), bech))
 		buffer.Reset()
 	}

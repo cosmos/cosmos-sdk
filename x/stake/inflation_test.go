@@ -214,7 +214,7 @@ func TestLargeBond(t *testing.T) {
 	// initialBondedRatio that we can use to compare to the new values after the unbond
 	initialBondedRatio := pool.bondedRatio()
 
-	params := defaultParams()
+	params := DefaultParams()
 	params.MaxValidators = bondedValidators + 1 //must do this to allow for an extra validator to bond
 	keeper.setParams(ctx, params)
 
@@ -245,7 +245,7 @@ func TestLargeBond(t *testing.T) {
 // Tests that inflation increases or decreases as expected when we do a random operation on 20 different validators
 func TestInflationWithRandomOperations(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
-	params := defaultParams()
+	params := DefaultParams()
 	keeper.setParams(ctx, params)
 	numValidators := 20
 
@@ -343,7 +343,7 @@ func updateProvisions(t *testing.T, keeper Keeper, pool Pool, ctx sdk.Context, h
 // Allows you to decide how many validators to setup
 // Allows you to pick which validators are bonded by adjusting the MaxValidators of params
 func setupTestValidators(pool Pool, keeper Keeper, ctx sdk.Context, validatorTokens []int64, maxValidators uint16) ([]Validator, Keeper, Pool) {
-	params := defaultParams()
+	params := DefaultParams()
 	params.MaxValidators = maxValidators
 	keeper.setParams(ctx, params)
 	numValidators := len(validatorTokens)

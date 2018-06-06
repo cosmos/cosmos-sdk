@@ -1,6 +1,7 @@
 package stake
 
 import (
+	"strconv"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -92,6 +93,47 @@ func TestProcessProvisions(t *testing.T) {
 		0, 0, initialBondedShares, initialUnbondedShares)
 }
 
+// Tests that the hourly rate of change will be positive, negative, or zero, depending on bonded ratio and inflation rate
+// Cycles through the whole gambit of starting at 7% inflation, up to 20%, back down to 7% (it takes ~11.4 years)
+func TestHourlyInflationRateOfChange(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, false, 0)
+	// params := defaultParams()
+	// keeper.setParams(ctx, params)
+	pool := keeper.GetPool(ctx)
+
+	// test setUpCandidates returned the token values by passing these vars into checkCandidateSetup()
+	var (
+		initialTotalTokens    int64 = 550000000
+		initialBondedTokens   int64 = 150000000
+		initialUnbondedTokens int64 = 400000000
+		cumulativeExpProvs    int64
+		bondedShares                 = sdk.NewRat(150000000, 1)
+		unbondedShares               = sdk.NewRat(400000000, 1)
+		tokensForValidators          = []int64{150000000, 100000000, 100000000, 100000000, 100000000}
+		bondedValidators      uint16 = 1
+	)
+
+	// create some candidates some bonded, some unbonded
+	_, keeper, pool = setupTestValidators(pool, keeper, ctx, tokensForValidators, bondedValidators)
+	checkValidatorSetup(t, pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens)
+
+	// ~11.4 years to go from 7%, up to 20%, back down to 7%
+	for hr := 0; hr < 100000; hr++ {
+		pool := keeper.GetPool(ctx)
+		previousInflation := pool.Inflation
+		updatedInflation, expProvisions, pool := checkAndProcessProvisions(t, keeper, pool, ctx, hr)
+		cumulativeExpProvs = cumulativeExpProvs + expProvisions
+		msg := strconv.Itoa(hr)
+		checkInflation(t, pool, previousInflation, updatedInflation, msg)
+	}
+
+	// Final check that the pool equals initial values + cumulative provisions and adjustments we recorded
+	pool = keeper.GetPool(ctx)
+	checkFinalPoolValues(t, pool, initialTotalTokens,
+		initialUnbondedTokens, cumulativeExpProvs,
+		0, 0, bondedShares, unbondedShares)
+}
+
 ////////////////////////////////HELPER FUNCTIONS BELOW/////////////////////////////////////
 
 // Final check on the global pool values for what the total tokens accumulated from each hour of provisions and other functions
@@ -168,4 +210,39 @@ func checkValidatorSetup(t *testing.T, pool Pool, initialTotalTokens, initialBon
 	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(initialBondedTokens, initialTotalTokens)), "%v", pool.bondedRatio())
 	// test the value of candidate shares
 	assert.True(t, pool.bondedShareExRate().Equal(sdk.OneRat()), "%v", pool.bondedShareExRate())
+}
+
+// Checks that The inflation will correctly increase or decrease after an update to the pool
+func checkInflation(t *testing.T, pool Pool, previousInflation, updatedInflation sdk.Rat, msg string) {
+
+	inflationChange := updatedInflation.Sub(previousInflation)
+
+	switch {
+	//BELOW 67% - Rate of change positive and increasing, while we are between 7% <= and < 20% inflation
+	case pool.bondedRatio().LT(sdk.NewRat(67, 100)) && updatedInflation.LT(sdk.NewRat(20, 100)):
+		assert.Equal(t, true, inflationChange.GT(sdk.ZeroRat()), msg)
+
+	//BELOW 67% - Rate of change should be 0 while inflation continually stays at 20% until we reach 67% bonded ratio
+	case pool.bondedRatio().LT(sdk.NewRat(67, 100)) && updatedInflation.Equal(sdk.NewRat(20, 100)):
+		if previousInflation.Equal(sdk.NewRat(20, 100)) {
+			assert.Equal(t, true, inflationChange.IsZero(), msg)
+			//This else statement covers the one off case where we first hit 20%, but we still needed a positive ROC to get to 67% bonded ratio (i.e. we went from 19.99999% to 20%)
+		} else {
+			assert.Equal(t, true, inflationChange.GT(sdk.ZeroRat()), msg)
+		}
+
+	//ABOVE 67% - Rate of change should be negative while the bond is above 67, and should stay negative until we reach inflation of 7%
+	case pool.bondedRatio().GT(sdk.NewRat(67, 100)) && updatedInflation.LT(sdk.NewRat(20, 100)) && updatedInflation.GT(sdk.NewRat(7, 100)):
+		assert.Equal(t, true, inflationChange.LT(sdk.ZeroRat()), msg)
+
+	//ABOVE 67% - Rate of change should be 0 while inflation continually stays at 7%.
+	case pool.bondedRatio().GT(sdk.NewRat(67, 100)) && updatedInflation.Equal(sdk.NewRat(7, 100)):
+		if previousInflation.Equal(sdk.NewRat(7, 100)) {
+			assert.Equal(t, true, inflationChange.IsZero(), msg)
+			//This else statement covers the one off case where we first hit 7%, but we still needed a negative ROC to continue to get down to 67%. (i.e. we went from 7.00001% to 7%)
+		} else {
+			assert.Equal(t, true, inflationChange.LT(sdk.ZeroRat()), msg)
+		}
+	}
+
 }

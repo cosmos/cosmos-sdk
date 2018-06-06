@@ -69,9 +69,14 @@ type UnbondingDelegation struct {
 
 // element stored to represent the passive redelegation queue
 type Redelegation struct {
-	SourceDelegation      sdk.Address // source delegation key
-	DestinationDelegation sdk.Address // destination delegation key
-	InitTime              int64       // unix time at redelegation
-	InitHeight            int64       // block height at redelegation
-	Shares                sdk.Rat     // amount of shares redelegating
+	DelegatorAddr    sdk.Address `json:"delegator_addr"`     // delegator
+	ValidatorSrcAddr sdk.Address `json:"validator_src_addr"` // validator redelegation source owner addr
+	ValidatorDstAddr sdk.Address `json:"validator_dst_addr"` // validator redelegation destination owner addr
+	InitTime         int64       `json:"init_time"`          // unix time at redelegation
+	InitHeight       int64       `json:"init_height"`        // block height at redelegation
+	Shares           sdk.Rat     `json:"shares`              // amount of shares redelegating
 }
+
+//TODO implement value as functions
+//SourceDelegation      sdk.Address // source delegation key
+//DestinationDelegation sdk.Address // destination delegation key

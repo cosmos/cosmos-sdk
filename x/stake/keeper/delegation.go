@@ -113,12 +113,13 @@ func (k PrivlegedKeeper) Delegate(ctx sdk.Context, delegatorAddr sdk.Address,
 
 //_____________________________________________________________________________________
 
-// load a delegator bond
+// load a unbonding delegation
 func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
 	DelegatorAddr, ValidatorAddr sdk.Address) (ubd types.UnbondingDelegation, found bool) {
 
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(GetUBDKey())
+	ubdKey := GetUBDKey(ubd.DelegatorAddr, ubd.ValidatorAddr, k.cdc)
+	bz := store.Get(ubdKey)
 	if bz == nil {
 		return ubd, false
 	}
@@ -127,10 +128,38 @@ func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
 	return ubd, true
 }
 
-// set the delegation
+// set the unbonding delegation and associated index
 func (k PrivlegedKeeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinary(ubd)
-	store.Set(GetUBDKey(ubd.DelegatorAddr, ubd.ValidatorAddr, k.cdc), b)
-	store.Set(GetUBDByValKey(ubd.DelegatorAddr, ubd.ValidatorAddr, k.cdc), b)
+	bz := k.cdc.MustMarshalBinary(ubd)
+	ubdKey := GetUBDKey(ubd.DelegatorAddr, ubd.ValidatorAddr, k.cdc)
+	store.Set(ubdKey, bz)
+	store.Set(GetUBDByValIndexKey(ubd.DelegatorAddr, ubd.ValidatorAddr, k.cdc), ubdKey)
+}
+
+//_____________________________________________________________________________________
+
+// load a redelegation
+func (k Keeper) GetRedelegation(ctx sdk.Context,
+	DelegatorAddr, ValidatorSrcAddr, ValidatorDstAddr sdk.Address) (red types.Redelegation, found bool) {
+
+	store := ctx.KVStore(k.storeKey)
+	redKey := GetREDKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr, k.cdc)
+	bz := store.Get(redKey)
+	if bz == nil {
+		return red, false
+	}
+
+	k.cdc.MustUnmarshalBinary(bz, &red)
+	return red, true
+}
+
+// set a redelegation and associated index
+func (k PrivlegedKeeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshalBinary(red)
+	redKey := GetREDKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr, k.cdc)
+	store.Set(redKey, bz)
+	store.Set(GetREDByValSrcIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr, k.cdc), redKey)
+	store.Set(GetREDByValDstIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr, k.cdc), redKey)
 }

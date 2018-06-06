@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.17.5
+
+*June 5, 2018*
+
+Update to Tendermint v0.19.9 (Fix evidence reactor, mempool deadlock, WAL panic,
+memory leak)
+
 ## 0.17.4
 
 *May 31, 2018*

@@ -35,11 +35,11 @@ func (b Delegation) GetBondShares() sdk.Rat    { return b.Shares }
 
 //Human Friendly pretty printer
 func (b Delegation) HumanReadableString() (string, error) {
-	bechAcc, err := sdk.Bech32CosmosifyAcc(b.DelegatorAddr)
+	bechAcc, err := sdk.Bech32ifyAcc(b.DelegatorAddr)
 	if err != nil {
 		return "", err
 	}
-	bechVal, err := sdk.Bech32CosmosifyAcc(b.ValidatorAddr)
+	bechVal, err := sdk.Bech32ifyAcc(b.ValidatorAddr)
 	if err != nil {
 		return "", err
 	}

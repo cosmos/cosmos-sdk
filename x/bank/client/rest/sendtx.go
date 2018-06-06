@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/bank/client"
 )
 
@@ -29,12 +30,25 @@ type sendBody struct {
 	Sequence         int64     `json:"sequence"`
 }
 
+var msgCdc = wire.NewCodec()
+
+func init() {
+	bank.RegisterWire(msgCdc)
+}
+
 // SendRequestHandlerFn - http request handler to send coins to a address
 func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collect data
 		vars := mux.Vars(r)
-		address := vars["address"]
+		bech32addr := vars["address"]
+
+		address, err := sdk.GetAccAddressBech32(bech32addr)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
 
 		var m sendBody
 		body, err := ioutil.ReadAll(r.Body)
@@ -43,7 +57,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 			w.Write([]byte(err.Error()))
 			return
 		}
-		err = json.Unmarshal(body, &m)
+		err = msgCdc.UnmarshalJSON(body, &m)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -57,7 +71,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 			return
 		}
 
-		to, err := sdk.GetAccAddressHex(address)
+		to, err := sdk.GetAccAddressHex(address.String())
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))

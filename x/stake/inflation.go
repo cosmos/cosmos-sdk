@@ -2,7 +2,6 @@ package stake
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/abci/types"
 )
 
 const (
@@ -11,30 +10,6 @@ const (
 )
 
 var hrsPerYrRat = sdk.NewRat(hrsPerYr) // as defined by a julian year of 365.25 days
-
-// Tick - called at the end of every block
-func (k Keeper) Tick(ctx sdk.Context) (change []abci.Validator) {
-	p := k.GetPool(ctx)
-
-	// Process Validator Provisions
-	blockTime := ctx.BlockHeader().Time // XXX assuming in seconds, confirm
-	if p.InflationLastTime+blockTime >= 3600 {
-		p.InflationLastTime = blockTime
-		p = k.processProvisions(ctx)
-	}
-
-	// save the params
-	k.setPool(ctx, p)
-
-	// reset the intra-transaction counter
-	k.setIntraTxCounter(ctx, 0)
-
-	// calculate validator set changes
-	change = k.getTendermintUpdates(ctx)
-	k.clearTendermintUpdates(ctx)
-
-	return change
-}
 
 // process provisions for an hour period
 func (k Keeper) processProvisions(ctx sdk.Context) Pool {

@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"encoding/json"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	crypto "github.com/tendermint/go-crypto"
 )
@@ -30,7 +28,7 @@ func (msg MsgChangeKey) ValidateBasic() sdk.Error {
 
 // Implements Msg.
 func (msg MsgChangeKey) GetSignBytes() []byte {
-	b, err := json.Marshal(msg) // XXX: ensure some canonical form
+	b, err := msgCdc.MarshalJSON(msg) // XXX: ensure some canonical form
 	if err != nil {
 		panic(err)
 	}

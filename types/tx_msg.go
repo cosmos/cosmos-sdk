@@ -35,7 +35,7 @@ type Tx interface {
 
 //__________________________________________________________
 
-// TxDeocder unmarshals transaction bytes
+// TxDecoder unmarshals transaction bytes
 type TxDecoder func(txBytes []byte) (Tx, Error)
 
 //__________________________________________________________

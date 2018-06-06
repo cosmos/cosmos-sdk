@@ -169,7 +169,7 @@ func randomValidator(r *rand.Rand, i int) Validator {
 
 // generate a random staking state
 func randomSetup(r *rand.Rand, numValidators int) (Pool, Validators) {
-	pool := initialPool()
+	pool := InitialPool()
 
 	validators := make([]Validator, numValidators)
 	for i := 0; i < numValidators; i++ {

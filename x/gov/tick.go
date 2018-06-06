@@ -10,15 +10,24 @@ import (
 // Called every block, process inflation, update validator set
 func EndBlocker(ctx sdk.Context, keeper Keeper) {
 
-	peekProposal := keeper.ProposalQueuePeek(ctx)
+	// Delete proposals that haven't met minDeposit
 
-	keeper.GetVotingProcedure()
+	for shouldPopInactiveProposalQueue(ctx, keeper) {
+		inactiveProposal := keeper.InactiveProposalQueuePop(ctx)
+		keeper.DeleteProposal(ctx, inactiveProposal)
+	}
 
-	if ctx.BlockHeight() > peekProposal.VotingStartBlock+keeper.GetVotingProcedure().VotingPeriod {
+	// Check if earliest Active Proposal ended voting period yet
+	peekProposal := keeper.ActiveProposalQueuePeek(ctx)
+
+	keeper.GetVotingProcedure(ctx)
+
+	if ctx.BlockHeight() > peekProposal.VotingStartBlock+keeper.GetVotingProcedure(ctx).VotingPeriod {
 		passes, _ := tally(ctx, keeper, peekProposal)
 		if passes {
 			keeper.RefundDeposits(ctx, peekProposal.ProposalID)
 		}
+		keeper.DeleteProposal(ctx, peekProposal)
 	}
 
 	return
@@ -74,7 +83,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal *Proposal) (passes bool, non
 		}
 	}
 
-	tallyingProcedure := keeper.GetTallyingProcedure()
+	tallyingProcedure := keeper.GetTallyingProcedure(ctx)
 
 	if results["NoWithVeto"].Quo(totalVotingPower).GT(tallyingProcedure.Veto) {
 		return false, nonVoting
@@ -85,76 +94,28 @@ func tally(ctx sdk.Context, keeper Keeper, proposal *Proposal) (passes bool, non
 	}
 }
 
+func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
+	depositProcedure := keeper.GetDepositProcedure(ctx)
+	peekProposal := keeper.InactiveProposalQueuePeek(ctx)
+
+	if peekProposal.isActive() {
+		return true
+	} else if peekProposal.SubmitBlock+depositProcedure.MaxDepositPeriod >= ctx.BlockHeight() {
+		return true
+	}
+	return false
+}
+
+func shouldPopActiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
+	votingProcedure := keeper.GetVotingProcedure(ctx)
+	peekProposal := keeper.ActiveProposalQueuePeek(ctx)
+
+	if peekProposal.VotingStartBlock+votingProcedure.VotingPeriod >= ctx.BlockHeight() {
+		return true
+	}
+	return false
+}
+
 func addressToString(addr sdk.Address) string {
 	return fmt.Sprintf("%s", addr.Bytes())
 }
-
-// type Delegation struct {
-// 	DelegatorAddr sdk.Address `json:"delegator_addr"`
-// 	ValidatorAddr sdk.Address `json:"validator_addr"`
-// 	Shares        sdk.Rat     `json:"shares"`
-// 	Height        int64       `json:"height"` // Last height bond updated
-// }
-
-/*
-// Procedure around Tallying votes in governance
-type TallyingProcedure struct {
-	Threshold         sdk.Rat `json:"threshold"`          //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
-	Veto              sdk.Rat `json:"veto"`               //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
-	GovernancePenalty sdk.Rat `json:"governance_penalty"` //  Penalty if validator does not vote
-}
-
-
-
-func NewBeginBlocker(gm governanceMapper) sdk.BeginBlocker {
-	return func(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-		proposal := gm.ProposalQueuePeek(ctx)
-		if proposal == nil {
-			return abci.ResponseBeginBlock{} // TODO
-		}
-
-		// Don't want to do urgent for now
-
-		// // Urgent proposal accepted
-		// if proposal.Votes.YesVotes/proposal.InitTotalVotingPower >= 2/3 {
-		// 	gm.PopProposalQueue(ctx)
-		// 	refund(ctx, gm, proposalID, proposal)
-		// 	return checkProposal()
-		// }
-
-		// Proposal reached the end of the voting period
-		if ctx.BlockHeight() == proposal.VotingStartBlock+proposal.Procedure.VotingPeriod {
-			gm.ProposalQueuePop(ctx)
-
-			// Slash validators if not voted
-			for _, validatorGovInfo := range proposal.ValidatorGovInfos {
-				if validatorOption.LastVoteWeight < 0 {
-					// TODO: SLASH MWAHAHAHAHAHA
-				}
-			}
-
-			//Proposal was accepted
-			nonAbstainTotal := proposal.Votes.YesVotes + proposal.Votes.NoVotes + proposal.Votes.NoWithVetoVotes
-			if proposal.YesVotes/nonAbstainTotal > 0.5 && proposal.NoWithVetoVotes/nonAbstainTotal < 1/3 { // TODO: Deal with decimals
-
-				//  TODO:  Act upon accepting of proposal
-
-				// Refund deposits
-				for _, deposit := range proposal.Deposits {
-					gm.ck.AddCoins(ctx, deposit.Depositer, deposit.Amount)
-					if err != nil {
-						panic("should not happen")
-					}
-				}
-
-				// check next proposal recursively
-				checkProposal()
-			}
-
-			//  TODO: Prune proposal
-		}
-		return abci.ResponseBeginBlock{}
-	}
-}
-
-*/

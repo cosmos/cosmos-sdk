@@ -61,80 +61,111 @@ func TestGetInflation(t *testing.T) {
 
 func TestProcessProvisions(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
-	params := defaultParams()
-	params.MaxValidators = 2
-	keeper.setParams(ctx, params)
 	pool := keeper.GetPool(ctx)
 
-	var tokenSupply int64 = 550000000
-	var bondedShares int64 = 150000000
-	var unbondedShares int64 = 400000000
+	var (
+		initialTotalTokens    int64 = 550000000
+		initialBondedTokens   int64 = 250000000
+		initialUnbondedTokens int64 = 300000000
+		cumulativeExpProvs    int64
+		initialBondedShares          = sdk.NewRat(250000000, 1)
+		initialUnbondedShares        = sdk.NewRat(300000000, 1)
+		tokensForValidators          = []int64{150000000, 100000000, 100000000, 100000000, 100000000}
+		bondedValidators      uint16 = 2
+	)
 
 	// create some validators some bonded, some unbonded
-	var validators [5]Validator
-	validators[0] = NewValidator(addrs[0], pks[0], Description{})
-	validators[0], pool, _ = validators[0].addTokensFromDel(pool, 150000000)
-	keeper.setPool(ctx, pool)
-	validators[0] = keeper.updateValidator(ctx, validators[0])
-	pool = keeper.GetPool(ctx)
-	require.Equal(t, bondedShares, pool.BondedTokens, "%v", pool)
+	_, keeper, pool = setupTestValidators(pool, keeper, ctx, tokensForValidators, bondedValidators)
+	checkValidatorSetup(t, pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens)
 
-	validators[1] = NewValidator(addrs[1], pks[1], Description{})
-	validators[1], pool, _ = validators[1].addTokensFromDel(pool, 100000000)
-	keeper.setPool(ctx, pool)
-	validators[1] = keeper.updateValidator(ctx, validators[1])
-	validators[2] = NewValidator(addrs[2], pks[2], Description{})
-	validators[2], pool, _ = validators[2].addTokensFromDel(pool, 100000000)
-	keeper.setPool(ctx, pool)
-	validators[2] = keeper.updateValidator(ctx, validators[2])
-	validators[3] = NewValidator(addrs[3], pks[3], Description{})
-	validators[3], pool, _ = validators[3].addTokensFromDel(pool, 100000000)
-	keeper.setPool(ctx, pool)
-	validators[3] = keeper.updateValidator(ctx, validators[3])
-	validators[4] = NewValidator(addrs[4], pks[4], Description{})
-	validators[4], pool, _ = validators[4].addTokensFromDel(pool, 100000000)
-	keeper.setPool(ctx, pool)
-	validators[4] = keeper.updateValidator(ctx, validators[4])
-
-	assert.Equal(t, tokenSupply, pool.TokenSupply())
-	assert.Equal(t, bondedShares, pool.BondedTokens)
-	assert.Equal(t, unbondedShares, pool.UnbondedTokens)
-
-	// initial bonded ratio ~ 27%
-	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(bondedShares, tokenSupply)), "%v", pool.bondedRatio())
-
-	// test the value of validator shares
-	assert.True(t, pool.bondedShareExRate().Equal(sdk.OneRat()), "%v", pool.bondedShareExRate())
-
-	initialSupply := pool.TokenSupply()
-	initialUnbonded := pool.TokenSupply() - pool.BondedTokens
-
-	// process the provisions a year
+	// process the provisions for a year
 	for hr := 0; hr < 8766; hr++ {
 		pool := keeper.GetPool(ctx)
-		expInflation := keeper.nextInflation(ctx)
-		expProvisions := (expInflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat)).Evaluate()
-		startBondedTokens := pool.BondedTokens
-		startTotalSupply := pool.TokenSupply()
-		pool = keeper.processProvisions(ctx)
-		keeper.setPool(ctx, pool)
-		//fmt.Printf("hr %v, startBondedTokens %v, expProvisions %v, pool.BondedTokens %v\n", hr, startBondedTokens, expProvisions, pool.BondedTokens)
-		require.Equal(t, startBondedTokens+expProvisions, pool.BondedTokens, "hr %v", hr)
-		require.Equal(t, startTotalSupply+expProvisions, pool.TokenSupply())
+		_, expProvisions, _ := checkAndProcessProvisions(t, keeper, pool, ctx, hr)
+		cumulativeExpProvs = cumulativeExpProvs + expProvisions
 	}
+
+	//get the pool and do the final value checks from checkFinalPoolValues
 	pool = keeper.GetPool(ctx)
-	assert.NotEqual(t, initialSupply, pool.TokenSupply())
-	assert.Equal(t, initialUnbonded, pool.UnbondedTokens)
-	//panic(fmt.Sprintf("debug total %v, bonded  %v, diff %v\n", p.TotalSupply, p.BondedTokens, pool.TokenSupply()-pool.BondedTokens))
+	checkFinalPoolValues(t, pool, initialTotalTokens,
+		initialUnbondedTokens, cumulativeExpProvs,
+		0, 0, initialBondedShares, initialUnbondedShares)
+}
 
-	// initial bonded ratio ~ from 27% to 40% increase for bonded holders ownership of total supply
-	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(211813022, 611813022)), "%v", pool.bondedRatio())
+////////////////////////////////HELPER FUNCTIONS BELOW/////////////////////////////////////
 
-	// global supply
-	assert.Equal(t, int64(611813022), pool.TokenSupply())
-	assert.Equal(t, int64(211813022), pool.BondedTokens)
-	assert.Equal(t, unbondedShares, pool.UnbondedTokens)
+// Final check on the global pool values for what the total tokens accumulated from each hour of provisions and other functions
+// bondedAdjustment and unbondedAdjustment are the accumulated changes for the operations of the test (i.e. if three unbonds happened, their total value would be passed as unbondedAdjustment)
+func checkFinalPoolValues(t *testing.T, pool Pool, initialTotalTokens, initialUnbondedTokens,
+	cumulativeExpProvs, bondedAdjustment, unbondedAdjustment int64, bondedShares, unbondedShares sdk.Rat) {
 
-	// test the value of validator shares
-	assert.True(t, pool.bondedShareExRate().Mul(sdk.NewRat(bondedShares)).Equal(sdk.NewRat(211813022)), "%v", pool.bondedShareExRate())
+	initialBonded := initialTotalTokens - initialUnbondedTokens
+	calculatedTotalTokens := initialTotalTokens + cumulativeExpProvs
+	calculatedBondedTokens := initialBonded + cumulativeExpProvs + bondedAdjustment
+	calculatedUnbondedTokens := initialUnbondedTokens + unbondedAdjustment
+
+	// test that the bonded ratio the pool has is equal to what we calculated for tokens
+	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(calculatedBondedTokens, calculatedTotalTokens)), "%v", pool.bondedRatio())
+
+	// test global supply
+	assert.Equal(t, calculatedTotalTokens, pool.TokenSupply())
+	assert.Equal(t, calculatedBondedTokens, pool.BondedTokens)
+	assert.Equal(t, calculatedUnbondedTokens, pool.UnbondedTokens)
+
+	// test the value of candidate shares
+	assert.True(t, pool.bondedShareExRate().Mul(bondedShares).Equal(sdk.NewRat(calculatedBondedTokens)), "%v", pool.bondedShareExRate())
+	assert.True(t, pool.unbondedShareExRate().Mul(unbondedShares).Equal(sdk.NewRat(calculatedUnbondedTokens)), "%v", pool.unbondedShareExRate())
+}
+
+// Checks provisions are added to the pool correctly every hour
+// Returns expected Provisions, expected Inflation, and pool, to help with cumulative calculations back in main Tests
+func checkAndProcessProvisions(t *testing.T, keeper Keeper, pool Pool, ctx sdk.Context, hr int) (sdk.Rat, int64, Pool) {
+
+	//If we are not doing a random operation, just check that normal provisions are working for each hour
+	expInflation := keeper.nextInflation(ctx)
+	expProvisions := (expInflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat)).Evaluate()
+	startBondedPool := pool.BondedTokens
+	startTotalSupply := pool.TokenSupply()
+	pool = keeper.processProvisions(ctx)
+	keeper.setPool(ctx, pool)
+
+	//check provisions were added to pool
+	require.Equal(t, startBondedPool+expProvisions, pool.BondedTokens, "hr %v", hr)
+	require.Equal(t, startTotalSupply+expProvisions, pool.TokenSupply())
+
+	return expInflation, expProvisions, pool
+}
+
+// Deterministic setup of validators, which updates the pool and choose maxValidators to be bonded
+// Allows you to decide how many validators to setup, and which ones you want bonded
+// You choose bonded validators by setting params.MaxValidators. If you choose 2, the first 2 Validators in the arrray will be bonded, the rest unbonded
+func setupTestValidators(pool Pool, keeper Keeper, ctx sdk.Context, validatorTokens []int64, maxValidators uint16) ([]Validator, Keeper, Pool) {
+	params := defaultParams()
+	params.MaxValidators = maxValidators //set to limit the amount of validators we want bonded
+	keeper.setParams(ctx, params)
+	numValidators := len(validatorTokens)
+	validators := make([]Validator, numValidators)
+
+	for i := 0; i < numValidators; i++ {
+		validators[i] = NewValidator(addrs[i], pks[i], Description{})
+		validators[i], pool, _ = validators[i].addTokensFromDel(pool, validatorTokens[i])
+		keeper.setPool(ctx, pool)
+		validators[i] = keeper.updateValidator(ctx, validators[i])
+		pool = keeper.GetPool(ctx)
+	}
+
+	return validators, keeper, pool
+}
+
+// Checks that the deterministic candidate setup you wanted matches the values in the pool
+func checkValidatorSetup(t *testing.T, pool Pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens int64) {
+
+	assert.Equal(t, initialTotalTokens, pool.TokenSupply())
+	assert.Equal(t, initialBondedTokens, pool.BondedTokens)
+	assert.Equal(t, initialUnbondedTokens, pool.UnbondedTokens)
+
+	// test initial bonded ratio
+	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(initialBondedTokens, initialTotalTokens)), "%v", pool.bondedRatio())
+	// test the value of candidate shares
+	assert.True(t, pool.bondedShareExRate().Equal(sdk.OneRat()), "%v", pool.bondedShareExRate())
 }

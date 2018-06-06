@@ -21,6 +21,7 @@ IMPROVEMENTS
 * [stake] module reorganized to include `types` and `keeper` package
 * [stake] keeper always loads the store (instead passing around which doesn't really boost efficiency)
 * [stake] edit-validator changes now can use the keyword [do-not-modify] to not modify unspecified `--flag` (aka won't set them to `""` value)
+* [types] added common tag constants
 
 FIXES
 * [cli] fixed cli-bash tests
@@ -28,6 +29,7 @@ FIXES
 * [basecoin] updated basecoin for stake and slashing
 * [docs] fixed references to old cli commands
 * [lcd] tests now don't depend on raw json text
+* [stake] error strings lower case
 
 ## 0.18.1
 

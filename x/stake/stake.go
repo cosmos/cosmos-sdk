@@ -3,10 +3,20 @@ package stake
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
+	"github.com/cosmos/cosmos-sdk/x/stake/tags"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
-// types is a collection of aliases to the subpackages of this module
+// keeper
+type Keeper = keeper.Keeper
+type PrivlegedKeeper = keeper.PrivlegedKeeper
+
+var (
+	NewKeeper          = keeper.NewKeeper
+	NewPrivlegedKeeper = keeper.NewPrivlegedKeeper
+)
+
+// types
 type Validator = types.Validator
 type Description = types.Description
 type Delegation = types.Delegation
@@ -15,8 +25,6 @@ type Redelegation = types.Redelegation
 type Params = types.Params
 type Pool = types.Pool
 type PoolShares = types.PoolShares
-type Keeper = keeper.Keeper
-type PrivlegedKeeper = keeper.PrivlegedKeeper
 type MsgCreateValidator = types.MsgCreateValidator
 type MsgEditValidator = types.MsgEditValidator
 type MsgDelegate = types.MsgDelegate
@@ -26,10 +34,7 @@ type MsgBeginRedelegate = types.MsgBeginRedelegate
 type MsgCompleteRedelegate = types.MsgCompleteRedelegate
 type GenesisState = types.GenesisState
 
-// function/variable aliases
 var (
-	NewKeeper                    = keeper.NewKeeper
-	NewPrivlegedKeeper           = keeper.NewPrivlegedKeeper
 	GetValidatorKey              = keeper.GetValidatorKey
 	GetValidatorByPubKeyIndexKey = keeper.GetValidatorByPubKeyIndexKey
 	GetValidatorsBondedIndexKey  = keeper.GetValidatorsBondedIndexKey
@@ -72,35 +77,53 @@ var (
 
 // errors
 const (
-	DefaultCodespace     = types.DefaultCodespace
-	CodeInvalidValidator = types.CodeInvalidValidator
-	CodeInvalidBond      = types.CodeInvalidBond
-	CodeInvalidInput     = types.CodeInvalidInput
-	CodeValidatorJailed  = types.CodeValidatorJailed
-	CodeUnauthorized     = types.CodeUnauthorized
-	CodeInternal         = types.CodeInternal
-	CodeUnknownRequest   = types.CodeUnknownRequest
+	DefaultCodespace      = types.DefaultCodespace
+	CodeInvalidValidator  = types.CodeInvalidValidator
+	CodeInvalidDelegation = types.CodeInvalidDelegation
+	CodeInvalidInput      = types.CodeInvalidInput
+	CodeValidatorJailed   = types.CodeValidatorJailed
+	CodeUnauthorized      = types.CodeUnauthorized
+	CodeInternal          = types.CodeInternal
+	CodeUnknownRequest    = types.CodeUnknownRequest
 )
 
 var (
-	ErrNotEnoughBondShares   = types.ErrNotEnoughBondShares
-	ErrValidatorEmpty        = types.ErrValidatorEmpty
-	ErrBadBondingDenom       = types.ErrBadBondingDenom
-	ErrBadBondingAmount      = types.ErrBadBondingAmount
-	ErrBadSharesPercent      = types.ErrBadSharesPercent
-	ErrNoBondingAcct         = types.ErrNoBondingAcct
-	ErrCommissionNegative    = types.ErrCommissionNegative
-	ErrCommissionHuge        = types.ErrCommissionHuge
-	ErrBadValidatorAddr      = types.ErrBadValidatorAddr
-	ErrBothShareMsgsGiven    = types.ErrBothShareMsgsGiven
-	ErrNeitherShareMsgsGiven = types.ErrNeitherShareMsgsGiven
-	ErrBadDelegatorAddr      = types.ErrBadDelegatorAddr
-	ErrValidatorExistsAddr   = types.ErrValidatorExistsAddr
-	ErrValidatorRevoked      = types.ErrValidatorRevoked
-	ErrMissingSignature      = types.ErrMissingSignature
-	ErrBondNotNominated      = types.ErrBondNotNominated
-	ErrNoValidatorForAddress = types.ErrNoValidatorForAddress
-	ErrNoDelegatorForAddress = types.ErrNoDelegatorForAddress
-	ErrInsufficientFunds     = types.ErrInsufficientFunds
-	ErrBadRemoveValidator    = types.ErrBadRemoveValidator
+	ErrNilValidatorAddr          = types.ErrNilValidatorAddr
+	ErrNoValidatorFound          = types.ErrNoValidatorFound
+	ErrValidatorAlreadyExists    = types.ErrValidatorAlreadyExists
+	ErrValidatorRevoked          = types.ErrValidatorRevoked
+	ErrBadRemoveValidator        = types.ErrBadRemoveValidator
+	ErrDescriptionLength         = types.ErrDescriptionLength
+	ErrCommissionNegative        = types.ErrCommissionNegative
+	ErrCommissionHuge            = types.ErrCommissionHuge
+	ErrNilDelegatorAddr          = types.ErrNilDelegatorAddr
+	ErrBadDenom                  = types.ErrBadDenom
+	ErrBadDelegationAmount       = types.ErrBadDelegationAmount
+	ErrNoDelegation              = types.ErrNoDelegation
+	ErrBadDelegatorAddr          = types.ErrBadDelegatorAddr
+	ErrNoDelegatorForAddress     = types.ErrNoDelegatorForAddress
+	ErrInsufficientShares        = types.ErrInsufficientShares
+	ErrDelegationValidatorEmpty  = types.ErrDelegationValidatorEmpty
+	ErrNotEnoughDelegationShares = types.ErrNotEnoughDelegationShares
+	ErrBadSharesAmount           = types.ErrBadSharesAmount
+	ErrBadSharesPercent          = types.ErrBadSharesPercent
+	ErrBothShareMsgsGiven        = types.ErrBothShareMsgsGiven
+	ErrNeitherShareMsgsGiven     = types.ErrNeitherShareMsgsGiven
+	ErrMissingSignature          = types.ErrMissingSignature
+)
+
+// tags
+var (
+	ActionCreateValidator      = tags.ActionCreateValidator
+	ActionEditValidator        = tags.ActionEditValidator
+	ActionDelegate             = tags.ActionDelegate
+	ActionBeginUnbonding       = tags.ActionBeginUnbonding
+	ActionCompleteUnbonding    = tags.ActionCompleteUnbonding
+	ActionBeginRedelegation    = tags.ActionBeginRedelegation
+	ActionCompleteRedelegation = tags.ActionCompleteRedelegation
+	TagSrcValidator            = tags.SrcValidator
+	TagDstValidator            = tags.DstValidator
+	TagDelegator               = tags.Delegator
+	TagMoniker                 = tags.Moniker
+	TagIdentity                = tags.Identity
 )

@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
+	"github.com/cosmos/cosmos-sdk/x/stake/tags"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
@@ -67,25 +68,25 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	// check to see if the pubkey or sender has been registered before
 	_, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if found {
-		return ErrValidatorExistsAddr(k.Codespace()).Result()
+		return ErrValidatorAlreadyExists(k.Codespace()).Result()
 	}
-	if msg.Bond.Denom != k.GetParams(ctx).BondDenom {
-		return ErrBadBondingDenom(k.Codespace()).Result()
+	if msg.SelfDelegation.Denom != k.GetParams(ctx).BondDenom {
+		return ErrBadDenom(k.Codespace()).Result()
 	}
 
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPubKeyIndex(ctx, validator)
 	tags := sdk.NewTags(
-		"action", []byte("createValidator"),
-		"validator", msg.ValidatorAddr.Bytes(),
-		"moniker", []byte(msg.Description.Moniker),
-		"identity", []byte(msg.Description.Identity),
+		tags.Action, tags.ActionCreateValidator,
+		tags.DstValidator, msg.ValidatorAddr.Bytes(),
+		tags.Moniker, []byte(msg.Description.Moniker),
+		tags.Identity, []byte(msg.Description.Identity),
 	)
 
 	// move coins from the msg.Address account to a (self-bond) delegator account
 	// the validator account and global shares are updated within here
-	delegateTags, err := k.Delegate(ctx, msg.ValidatorAddr, msg.Bond, validator)
+	delegateTags, err := k.Delegate(ctx, msg.ValidatorAddr, msg.SelfDelegation, validator)
 	if err != nil {
 		return err.Result()
 	}
@@ -100,7 +101,7 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if !found {
-		return ErrBadValidatorAddr(k.Codespace()).Result()
+		return ErrNoValidatorFound(k.Codespace()).Result()
 	}
 
 	// replace all editable fields (clients should autofill existing values)
@@ -112,10 +113,10 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 
 	k.UpdateValidator(ctx, validator)
 	tags := sdk.NewTags(
-		"action", []byte("editValidator"),
-		"validator", msg.ValidatorAddr.Bytes(),
-		"moniker", []byte(description.Moniker),
-		"identity", []byte(description.Identity),
+		tags.Action, tags.ActionEditValidator,
+		tags.DstValidator, msg.ValidatorAddr.Bytes(),
+		tags.Moniker, []byte(description.Moniker),
+		tags.Identity, []byte(description.Identity),
 	)
 	return sdk.Result{
 		Tags: tags,
@@ -126,10 +127,10 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Privlege
 
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if !found {
-		return ErrBadValidatorAddr(k.Codespace()).Result()
+		return ErrNoValidatorFound(k.Codespace()).Result()
 	}
 	if msg.Bond.Denom != k.GetParams(ctx).BondDenom {
-		return ErrBadBondingDenom(k.Codespace()).Result()
+		return ErrBadDenom(k.Codespace()).Result()
 	}
 	if validator.Revoked == true {
 		return ErrValidatorRevoked(k.Codespace()).Result()
@@ -157,19 +158,19 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 	if !msg.SharesPercent.IsZero() {
 		delShares = bond.Shares.Mul(msg.SharesPercent)
 		if !bond.Shares.GT(sdk.ZeroRat()) {
-			return ErrNotEnoughBondShares(k.Codespace(), bond.Shares.String()).Result()
+			return ErrNotEnoughDelegationShares(k.Codespace(), bond.Shares.String()).Result()
 		}
 	} else {
 		delShares = msg.SharesAmount
 		if bond.Shares.LT(msg.SharesAmount) {
-			return ErrNotEnoughBondShares(k.Codespace(), bond.Shares.String()).Result()
+			return ErrNotEnoughDelegationShares(k.Codespace(), bond.Shares.String()).Result()
 		}
 	}
 
 	// get validator
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if !found {
-		return ErrNoValidatorForAddress(k.Codespace()).Result()
+		return ErrNoValidatorFound(k.Codespace()).Result()
 	}
 
 	// subtract bond tokens from delegator bond
@@ -196,9 +197,9 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 	k.SetPool(ctx, pool)
 
 	// create the unbonding delegation
-	params := k.GetParams()
-	minTime := ctx.BlockHeader().Time + params.UnbondingTime()
-	minHeight := ctx.BlockHeight() + params.MinUnbondingBlocks()
+	params := k.GetParams(ctx)
+	minTime := ctx.BlockHeader().Time + params.UnbondingTime
+	minHeight := ctx.BlockHeight() + params.MinUnbondingBlocks
 
 	ubd := UnbondingDelegation{
 		DelegatorAddr: bond.DelegatorAddr,
@@ -214,15 +215,14 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 	// revoke validator if necessary
 
 	validator = k.UpdateValidator(ctx, validator)
-
 	if validator.DelegatorShares.IsZero() {
 		k.RemoveValidator(ctx, validator.Owner)
 	}
 
 	tags := sdk.NewTags(
-		"action", []byte("unbond"),
-		"delegator", msg.DelegatorAddr.Bytes(),
-		"validator", msg.ValidatorAddr.Bytes(),
+		tags.Action, tags.ActionBeginUnbonding,
+		tags.Delegator, msg.DelegatorAddr.Bytes(),
+		tags.SrcValidator, msg.ValidatorAddr.Bytes(),
 	)
 	return sdk.Result{
 		Tags: tags,
@@ -231,11 +231,18 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 
 func handleMsgCompleteUnbonding(ctx sdk.Context, msg types.MsgCompleteUnbonding, k keeper.PrivlegedKeeper) sdk.Result {
 
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX XXX
-	// add the coins to the delegation account
-	k.AddCoins(ctx, returnAmount, bond.DelegatorAddr)
-
 	ubd, delegation, found := k.GetUnbondingDelegationDel(ctx, msg.DelegatorAddr, msg.ValidatorAddr)
+
+	// ensure that enough time has passed
+	ctxTime := ctx.BlockHeader().Time
+	ctxHeight := ctx.BlockHeight()
+	if ubd.MinTime < ctxTime {
+		return sdk.Result{}
+	}
+
+	// add the coins to the delegation account
+	k.CoinKeeper().AddCoins(ctx, ubd.DelegatorAddr, sdk.Coins{ubd.Balance})
+
 	return sdk.Result{}
 }
 

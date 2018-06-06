@@ -51,3 +51,13 @@ func NewTags(tags ...interface{}) Tags {
 func MakeTag(k string, v []byte) Tag {
 	return Tag{Key: []byte(k), Value: v}
 }
+
+//__________________________________________________
+
+// common tags
+var (
+	TagAction       = []byte("action")
+	TagSrcValidator = []byte("source-validator")
+	TagDstValidator = []byte("destination-validator")
+	TagDelegator    = []byte("delegator")
+)

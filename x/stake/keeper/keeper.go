@@ -60,6 +60,11 @@ func (k Keeper) Codespace() sdk.CodespaceType {
 	return k.codespace
 }
 
+// return the codespace
+func (k PrivlegedKeeper) CoinKeeper() bank.Keeper {
+	return k.coinKeeper
+}
+
 //_________________________________________________________________________
 // some generic reads/writes that don't need their own files
 

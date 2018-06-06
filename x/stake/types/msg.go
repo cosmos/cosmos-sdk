@@ -24,18 +24,18 @@ var _, _ sdk.Msg = &MsgBeginRedelegate{}, &MsgCompleteRedelegate{}
 // MsgCreateValidator - struct for unbonding transactions
 type MsgCreateValidator struct {
 	Description
-	ValidatorAddr sdk.Address   `json:"address"`
-	PubKey        crypto.PubKey `json:"pubkey"`
-	Bond          sdk.Coin      `json:"bond"`
+	ValidatorAddr  sdk.Address   `json:"address"`
+	PubKey         crypto.PubKey `json:"pubkey"`
+	SelfDelegation sdk.Coin      `json:"self_delegation"`
 }
 
 func NewMsgCreateValidator(validatorAddr sdk.Address, pubkey crypto.PubKey,
-	bond sdk.Coin, description Description) MsgCreateValidator {
+	selfDelegation sdk.Coin, description Description) MsgCreateValidator {
 	return MsgCreateValidator{
-		Description:   description,
-		ValidatorAddr: validatorAddr,
-		PubKey:        pubkey,
-		Bond:          bond,
+		Description:    description,
+		ValidatorAddr:  validatorAddr,
+		PubKey:         pubkey,
+		SelfDelegation: selfDelegation,
 	}
 }
 
@@ -53,13 +53,13 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
-		return ErrValidatorEmpty(DefaultCodespace)
+		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if msg.Bond.Denom != StakingToken {
-		return ErrBadBondingDenom(DefaultCodespace)
+	if msg.SelfDelegation.Denom != StakingToken {
+		return ErrBadDenom(DefaultCodespace)
 	}
-	if msg.Bond.Amount <= 0 {
-		return ErrBadBondingAmount(DefaultCodespace)
+	if msg.SelfDelegation.Amount <= 0 {
+		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	empty := Description{}
 	if msg.Description == empty {
@@ -101,11 +101,11 @@ func (msg MsgEditValidator) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
-		return ErrValidatorEmpty(DefaultCodespace)
+		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "nil validator address")
 	}
 	empty := Description{}
 	if msg.Description == empty {
-		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "Transaction must include some information to modify")
+		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
 	}
 	return nil
 }
@@ -145,16 +145,16 @@ func (msg MsgDelegate) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.DelegatorAddr == nil {
-		return ErrBadDelegatorAddr(DefaultCodespace)
+		return ErrNilDelegatorAddr(DefaultCodespace)
 	}
 	if msg.ValidatorAddr == nil {
-		return ErrBadValidatorAddr(DefaultCodespace)
+		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	if msg.Bond.Denom != StakingToken {
-		return ErrBadBondingDenom(DefaultCodespace)
+		return ErrBadDenom(DefaultCodespace)
 	}
 	if msg.Bond.Amount <= 0 {
-		return ErrBadBondingAmount(DefaultCodespace)
+		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	return nil
 }
@@ -200,13 +200,13 @@ func (msg MsgBeginRedelegate) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
 	if msg.DelegatorAddr == nil {
-		return ErrBadDelegatorAddr(DefaultCodespace)
+		return ErrNilDelegatorAddr(DefaultCodespace)
 	}
 	if msg.ValidatorSrcAddr == nil {
-		return ErrBadValidatorAddr(DefaultCodespace)
+		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	if msg.ValidatorDstAddr == nil {
-		return ErrBadValidatorAddr(DefaultCodespace)
+		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	err := testShares(msg.SharesAmount, msg.SharesPercent)
 	if err != nil {
@@ -266,13 +266,13 @@ func (msg MsgCompleteRedelegate) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgCompleteRedelegate) ValidateBasic() sdk.Error {
 	if msg.DelegatorAddr == nil {
-		return ErrBadDelegatorAddr(DefaultCodespace)
+		return ErrNilDelegatorAddr(DefaultCodespace)
 	}
 	if msg.ValidatorSrcAddr == nil {
-		return ErrBadValidatorAddr(DefaultCodespace)
+		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	if msg.ValidatorDstAddr == nil {
-		return ErrBadValidatorAddr(DefaultCodespace)
+		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	return nil
 }
@@ -312,10 +312,10 @@ func (msg MsgBeginUnbonding) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgBeginUnbonding) ValidateBasic() sdk.Error {
 	if msg.DelegatorAddr == nil {
-		return ErrBadDelegatorAddr(DefaultCodespace)
+		return ErrNilDelegatorAddr(DefaultCodespace)
 	}
 	if msg.ValidatorAddr == nil {
-		return ErrBadValidatorAddr(DefaultCodespace)
+		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	err := testShares(msg.SharesAmount, msg.SharesPercent)
 	if err != nil {
@@ -353,10 +353,10 @@ func (msg MsgCompleteUnbonding) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgCompleteUnbonding) ValidateBasic() sdk.Error {
 	if msg.DelegatorAddr == nil {
-		return ErrBadDelegatorAddr(DefaultCodespace)
+		return ErrNilDelegatorAddr(DefaultCodespace)
 	}
 	if msg.ValidatorAddr == nil {
-		return ErrBadValidatorAddr(DefaultCodespace)
+		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	return nil
 }

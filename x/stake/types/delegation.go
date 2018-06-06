@@ -61,8 +61,8 @@ type UnbondingDelegation struct {
 	ValidatorAddr sdk.Address `json:"validator_addr"` // validator unbonding from owner addr
 	MinTime       int64       `json:"min_time"`       // unix time for unbonding completion
 	MinHeight     int64       `json:"min_height"`     // min height for unbonding completion
-	Balance       sdk.Coins   `json:"balance"`        // atoms to receive at completion
-	Slashed       sdk.Coins   `json:"slashed"`        // slashed tokens during unbonding
+	Balance       sdk.Coin    `json:"balance"`        // atoms to receive at completion
+	Slashed       sdk.Coin    `json:"slashed"`        // slashed tokens during unbonding
 }
 
 //__________________________________________________________________

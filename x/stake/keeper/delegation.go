@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/stake/tags"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
@@ -106,9 +107,9 @@ func (k PrivlegedKeeper) Delegate(ctx sdk.Context, delegatorAddr sdk.Address,
 	k.SetDelegation(ctx, delegation)
 	k.UpdateValidator(ctx, validator)
 	tags := sdk.NewTags(
-		"action", []byte("delegate"),
-		"delegator", delegatorAddr.Bytes(),
-		"validator", validator.Owner.Bytes(),
+		tags.Action, tags.ActionDelegate,
+		tags.Delegator, delegatorAddr.Bytes(),
+		tags.DstValidator, validator.Owner.Bytes(),
 	)
 	return tags, nil
 }

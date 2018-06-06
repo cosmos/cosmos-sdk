@@ -44,7 +44,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	keeper.SetProposal(ctx, proposal)
 
 	keeper.setDeposit(ctx, proposal.ProposalID, msg.Proposer, initialDeposit)
-	if proposal.TotalDeposit.IsGTE(keeper.GetDepositProcedure().MinDeposit) {
+	if proposal.TotalDeposit.IsGTE(keeper.GetDepositProcedure(ctx).MinDeposit) {
 		keeper.activateVotingPeriod(ctx, proposal)
 	}
 
@@ -86,7 +86,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 
 	keeper.SetProposal(ctx, proposal)
 
-	if proposal.TotalDeposit.IsGTE(keeper.GetDepositProcedure().MinDeposit) {
+	if proposal.TotalDeposit.IsGTE(keeper.GetDepositProcedure(ctx).MinDeposit) {
 		keeper.activateVotingPeriod(ctx, proposal)
 	}
 
@@ -104,7 +104,7 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 		return ErrUnknownProposal(msg.ProposalID).Result()
 	}
 
-	if !proposal.isActive() || ctx.BlockHeight() > proposal.VotingStartBlock+keeper.GetVotingProcedure().VotingPeriod {
+	if !proposal.isActive() || ctx.BlockHeight() > proposal.VotingStartBlock+keeper.GetVotingProcedure(ctx).VotingPeriod {
 		return ErrInactiveProposal(msg.ProposalID).Result()
 	}
 

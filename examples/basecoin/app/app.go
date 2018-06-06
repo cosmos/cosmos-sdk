@@ -178,5 +178,6 @@ func (app *BasecoinApp) ExportAppStateAndValidators() (appState json.RawMessage,
 	if err != nil {
 		return nil, nil, err
 	}
+	validators = stake.WriteValidators(ctx, app.stakeKeeper)
 	return appState, validators, err
 }

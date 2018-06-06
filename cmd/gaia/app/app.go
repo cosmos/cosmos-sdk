@@ -174,5 +174,6 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 	if err != nil {
 		return nil, nil, err
 	}
+	validators = stake.WriteValidators(ctx, app.stakeKeeper)
 	return appState, validators, nil
 }

@@ -12,6 +12,7 @@ IMPROVEMENTS
 * bank module uses go-wire codec instead of 'encoding/json'
 * auth module uses go-wire codec instead of 'encoding/json'
 * revised use of endblock and beginblock
+* export command now writes current validator set for Tendermint
 
 FIXES
 * [cli] fixed cli-bash tests

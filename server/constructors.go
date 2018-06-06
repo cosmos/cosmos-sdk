@@ -14,7 +14,7 @@ import (
 // and other flags (?) to start
 type AppCreator func(string, log.Logger) (abci.Application, error)
 
-// AppExporter dumps all app state to JSON-serializable structure
+// AppExporter dumps all app state to JSON-serializable structure and returns the current validator set
 type AppExporter func(home string, log log.Logger) (json.RawMessage, []tmtypes.GenesisValidator, error)
 
 // ConstructAppCreator returns an application generation function

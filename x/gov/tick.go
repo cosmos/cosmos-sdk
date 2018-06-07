@@ -99,7 +99,7 @@ func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 	depositProcedure := keeper.GetDepositProcedure(ctx)
 	peekProposal := keeper.InactiveProposalQueuePeek(ctx)
 
-	if peekProposal.isActive() {
+	if peekProposal.Status != "Pending" {
 		return true
 	} else if peekProposal.SubmitBlock+depositProcedure.MaxDepositPeriod >= ctx.BlockHeight() {
 		return true

@@ -76,28 +76,28 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 // Handle SendMsg.
 func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 
-	proposal := keeper.GetProposal(ctx, msg.ProposalID)
-	if proposal == nil {
-		return ErrUnknownProposal(msg.ProposalID).Result()
-	}
-
-	if !proposal.isActive() || ctx.BlockHeight() > proposal.VotingStartBlock+keeper.GetVotingProcedure(ctx).VotingPeriod {
-		return ErrInactiveProposal(msg.ProposalID).Result()
-	}
-
 	if ctx.IsCheckTx() {
+		proposal := keeper.GetProposal(ctx, msg.ProposalID)
+
+		if proposal == nil {
+			return ErrUnknownProposal(msg.ProposalID).Result()
+		}
+		if (proposal.Status != "Pending") && (proposal.Status != "Active") {
+			return ErrAlreadyFinishedProposal(msg.ProposalID).Result()
+		}
+
 		return sdk.Result{} // TODO
 	}
 
 	vote := Vote{
-		ProposalID: proposal.ProposalID,
+		ProposalID: msg.ProposalID,
 		Voter:      msg.Voter,
 		Option:     msg.Option,
 	}
 
-	keeper.setVote(ctx, proposal.ProposalID, msg.Voter, vote)
+	keeper.AddVote(ctx, msg.ProposalID, msg.Voter, vote)
 
-	tags := sdk.NewTags("action", []byte("vote"), "voter", msg.Voter.Bytes(), "proposalId", []byte{byte(proposal.ProposalID)})
+	tags := sdk.NewTags("action", []byte("vote"), "voter", msg.Voter.Bytes(), "proposalId", []byte{byte(msg.ProposalID)})
 	return sdk.Result{
 		Tags: tags,
 	}

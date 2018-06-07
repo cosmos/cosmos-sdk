@@ -25,14 +25,13 @@ type Proposal struct {
 	Description  string `json:"description"`   //  Description of the proposal
 	ProposalType string `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 
+	Status string `json:"string"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
+
 	SubmitBlock  int64     `json:"submit_block"`  //  Height of the block where TxGovSubmitProposal was included
 	TotalDeposit sdk.Coins `json:"total_deposit"` //  Current deposit on this proposal. Initial value is set at InitialDeposit
 
 	VotingStartBlock int64 `json:"voting_start_block"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
-}
 
-func (proposal Proposal) isActive() bool {
-	return proposal.VotingStartBlock >= 0
 }
 
 // Procedure around Deposits for governance

@@ -148,6 +148,14 @@ func (keeper Keeper) GetTallyingProcedure(ctx sdk.Context) *TallyingProcedure {
 // Votes
 
 // Gets the vote of a specific voter on a specific proposal
+func (keeper Keeper) AddVote(ctx sdk.Context, proposalID int64, voter sdk.Address, vote Vote) {
+	store := ctx.KVStore(keeper.storeKey)
+	bz := keeper.cdc.MustMarshalBinary(vote)
+	key := []byte(fmt.Sprintf("%d", proposalID) + ":votes:" + fmt.Sprintf("%s", voter))
+	store.Set(key, bz)
+}
+
+// Gets the vote of a specific voter on a specific proposal
 func (keeper Keeper) GetVote(ctx sdk.Context, proposalID int64, voter sdk.Address) *Vote {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get([]byte(fmt.Sprintf("%d", proposalID) + ":votes:" + fmt.Sprintf("%s", voter)))
@@ -198,6 +206,21 @@ func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID int64, depositer sdk
 
 // Gets the vote of a specific voter on a specific proposal
 func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositer sdk.Address, depositAmount sdk.Coins) sdk.Error {
+	proposal := keeper.GetProposal(ctx, proposalID)
+	if proposal == nil {
+		return ErrUnknownProposal(proposalID)
+	}
+
+	if (proposal.Status != "Pending") && (proposal.Status != "Active") {
+		return ErrAlreadyFinishedProposal(proposalID)
+	}
+
+	proposal.TotalDeposit = proposal.TotalDeposit.Plus(depositAmount)
+	keeper.SetProposal(ctx, proposal)
+	if proposal.TotalDeposit.IsGTE(keeper.GetDepositProcedure(ctx).MinDeposit) {
+		keeper.activateVotingPeriod(ctx, proposal)
+	}
+
 	currDeposit := keeper.GetDeposit(ctx, proposalID, depositer)
 	if currDeposit == nil {
 		newDeposit := Deposit{depositer, depositAmount}
@@ -207,15 +230,6 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositer sdk
 		keeper.setDeposit(ctx, proposalID, depositer, *currDeposit)
 	}
 
-	proposal := keeper.GetProposal(ctx, proposalID)
-	if proposal == nil {
-		return ErrUnknownProposal(proposalID)
-	}
-	proposal.TotalDeposit = proposal.TotalDeposit.Plus(depositAmount)
-	keeper.SetProposal(ctx, proposal)
-	if proposal.TotalDeposit.IsGTE(keeper.GetDepositProcedure(ctx).MinDeposit) {
-		keeper.activateVotingPeriod(ctx, proposal)
-	}
 	return nil
 }
 

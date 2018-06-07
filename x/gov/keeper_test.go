@@ -57,7 +57,6 @@ func TestActivateVotingPeriod(t *testing.T) {
 }
 
 func TestDeposits(t *testing.T) {
-
 	ctx, _, keeper := createTestInput(t, false, 100)
 
 	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
@@ -93,4 +92,74 @@ func TestDeposits(t *testing.T) {
 	assert.NotNil(t, keeper.ActiveProposalQueuePeek(ctx))
 	assert.Equal(t, proposalID, keeper.ActiveProposalQueuePeek(ctx).ProposalID)
 
+	depositsIterator := keeper.GetDeposits(ctx, proposalID)
+	assert.True(t, depositsIterator.Valid())
+	nextDeposit := Deposit{}
+	keeper.cdc.MustUnmarshalBinary(depositsIterator.Value(), &nextDeposit)
+	assert.Equal(t, addrs[0], nextDeposit.Depositer)
+	assert.Equal(t, fourSteak.Plus(fiveSteak), nextDeposit.Amount)
+	depositsIterator.Next()
+	keeper.cdc.MustUnmarshalBinary(depositsIterator.Value(), &nextDeposit)
+	assert.Equal(t, addrs[1], nextDeposit.Depositer)
+	assert.Equal(t, fourSteak, nextDeposit.Amount)
+	depositsIterator.Next()
+	assert.False(t, depositsIterator.Valid())
+
+	assert.Equal(t, fourSteak, keeper.GetDeposit(ctx, proposalID, addrs[1]).Amount)
+	keeper.RefundDeposits(ctx, proposalID)
+	assert.Nil(t, keeper.GetDeposit(ctx, proposalID, addrs[1]))
+}
+
+func TestVotes(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, false, 100)
+
+	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
+	proposalID := proposal.ProposalID
+
+	fourSteak := sdk.Coins{sdk.Coin{"steak", 4}}
+	fiveSteak := sdk.Coins{sdk.Coin{"steak", 5}}
+
+	assert.True(t, proposal.TotalDeposit.IsEqual(sdk.Coins{}))
+	assert.Nil(t, keeper.GetDeposit(ctx, proposal.ProposalID, addrs[0]))
+	assert.Equal(t, keeper.GetProposal(ctx, proposalID).VotingStartBlock, int64(-1))
+	assert.Nil(t, keeper.ActiveProposalQueuePeek(ctx))
+
+	err := keeper.AddDeposit(ctx, proposalID, addrs[0], fourSteak)
+	assert.Nil(t, err)
+	assert.Equal(t, fourSteak, keeper.GetDeposit(ctx, proposalID, addrs[0]).Amount)
+	assert.Equal(t, addrs[0], keeper.GetDeposit(ctx, proposalID, addrs[0]).Depositer)
+	assert.Equal(t, fourSteak, keeper.GetProposal(ctx, proposalID).TotalDeposit)
+
+	err = keeper.AddDeposit(ctx, proposalID, addrs[0], fiveSteak)
+	assert.Nil(t, err)
+	assert.Equal(t, fourSteak.Plus(fiveSteak), keeper.GetDeposit(ctx, proposalID, addrs[0]).Amount)
+	assert.Equal(t, addrs[0], keeper.GetDeposit(ctx, proposalID, addrs[0]).Depositer)
+	assert.Equal(t, fourSteak.Plus(fiveSteak), keeper.GetProposal(ctx, proposalID).TotalDeposit)
+
+	err = keeper.AddDeposit(ctx, proposalID, addrs[1], fourSteak)
+	assert.Nil(t, err)
+	assert.Equal(t, fourSteak, keeper.GetDeposit(ctx, proposalID, addrs[1]).Amount)
+	assert.Equal(t, addrs[1], keeper.GetDeposit(ctx, proposalID, addrs[1]).Depositer)
+	assert.Equal(t, fourSteak.Plus(fiveSteak).Plus(fourSteak), keeper.GetProposal(ctx, proposalID).TotalDeposit)
+
+	assert.Equal(t, ctx.BlockHeight(), keeper.GetProposal(ctx, proposalID).VotingStartBlock)
+	assert.NotNil(t, keeper.ActiveProposalQueuePeek(ctx))
+	assert.Equal(t, proposalID, keeper.ActiveProposalQueuePeek(ctx).ProposalID)
+
+	depositsIterator := keeper.GetDeposits(ctx, proposalID)
+	assert.True(t, depositsIterator.Valid())
+	nextDeposit := Deposit{}
+	keeper.cdc.MustUnmarshalBinary(depositsIterator.Value(), &nextDeposit)
+	assert.Equal(t, addrs[0], nextDeposit.Depositer)
+	assert.Equal(t, fourSteak.Plus(fiveSteak), nextDeposit.Amount)
+	depositsIterator.Next()
+	keeper.cdc.MustUnmarshalBinary(depositsIterator.Value(), &nextDeposit)
+	assert.Equal(t, addrs[1], nextDeposit.Depositer)
+	assert.Equal(t, fourSteak, nextDeposit.Amount)
+	depositsIterator.Next()
+	assert.False(t, depositsIterator.Valid())
+
+	assert.Equal(t, fourSteak, keeper.GetDeposit(ctx, proposalID, addrs[1]).Amount)
+	keeper.RefundDeposits(ctx, proposalID)
+	assert.Nil(t, keeper.GetDeposit(ctx, proposalID, addrs[1]))
 }

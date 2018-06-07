@@ -33,7 +33,7 @@ func (msg MsgUnrevoke) GetSignBytes() []byte {
 	b, err := cdc.MarshalJSON(struct {
 		ValidatorAddr string `json:"address"`
 	}{
-		ValidatorAddr: sdk.MustBech32ifyAcc(msg.ValidatorAddr),
+		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
 	})
 	if err != nil {
 		panic(err)

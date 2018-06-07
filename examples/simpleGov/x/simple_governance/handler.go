@@ -1,11 +1,13 @@
 package simpleGovernance
 
 import (
+	"encoding/binary"
 	"reflect"
 
 	// stake "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simplestake"
-	stake "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simplestake"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 // NewHandler creates a new handler for all simple_gov type messages.
@@ -24,12 +26,15 @@ func NewHandler(k Keeper) sdk.Handler {
 }
 
 // NewBeginBlocker checks if the
-func NewBeginBlocker(k Keeper) sdk.BeginBlocker {
-	return func(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-		checkProposal(ctx, k)
-		return abci.ResponseBeginBlock{}
-	}
-}
+// func NewBeginBlocker(k Keeper) (sdk.BeginBlocker, sdk.Error) {
+// 	return func(ctx sdk.Context, req abci.RequestBeginBlock) (abci.ResponseBeginBlock, sdk.Error) {
+// 		err := checkProposal(ctx, k)
+// 		if err != nil {
+// 			return abci.ResponseBeginBlock{}, err
+// 		}
+// 		return abci.ResponseBeginBlock{}, nil
+// 	}
+// }
 
 // func checkProposal() {
 //
@@ -93,56 +98,51 @@ func NewBeginBlocker(k Keeper) sdk.BeginBlocker {
 //
 // 			checkProposal()
 
-func checkProposal(ctx sdk.Context, k Keeper) {
-	proposal := k.ProposalQueueHead(ctx)
-	if proposal == nil {
-		return nil
+func checkProposal(ctx sdk.Context, k Keeper) sdk.Error {
+	proposal, err := k.ProposalQueueHead(ctx)
+	if err != nil {
+		return err
 	}
 
 	// Proposal reached the end of the voting period
 	if ctx.BlockHeight() == proposal.SubmitBlock+proposal.BlockLimit {
 		k.ProposalQueuePop(ctx)
 
-		nonAbstainTotal := proposal.Votes.YesVotes + proposal.Votes.NoVotes
-		if proposal.YesVotes/nonAbstainTotal > 0.5 { // TODO: Deal with decimals
+		nonAbstainTotal := proposal.YesVotes + proposal.NoVotes
+		if float64(proposal.YesVotes)/float64(nonAbstainTotal) > float64(0.5) { // TODO: Deal with decimals
 
 			// Refund deposit
-			_, err := k.ck.AddCoins(ctx, proposal.Submitter, proposal.Deposit.AmountOf("Atom"))
+			_, _, err := k.ck.AddCoins(ctx, proposal.Submitter, proposal.Deposit)
 			if err != nil {
-				// TODO return proper error
-				panic("Should not be possible")
+				return err
 			}
 			proposal.State = "Accepted"
 		} else {
 			proposal.State = "Rejected"
 		}
-		return checkProposal() // XXX where's this function defined ? why no params ?
+		// return checkProposal() // XXX where's this function defined ? why no params ?
 	}
+	return nil
 }
 
 const minDeposit = 100 // How do you set the min deposit
 
-func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg sdk.Msg) sdk.Result {
-	_, err := k.ck.SubstractCoins(ctx, msg.Submitter, msg.Deposit)
-
+func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg SubmitProposalMsg) sdk.Result {
+	_, _, err := k.ck.SubtractCoins(ctx, msg.Submitter, msg.Deposit)
 	if err != nil {
 		return err.Result() // Code and Log of the error
 	}
 
 	if msg.Deposit.AmountOf("Atom") >= minDeposit {
-		proposal := Proposal{
-			Title:        msg.Title,
-			Description:  msg.Description,
-			Submitter:    msg.Submitter,
-			SubmitBlock:  ctx.BlockHeight(),
-			State:        "Open",
-			Deposit:      msg.Deposit,
-			YesVotes:     0,
-			NoVotes:      0,
-			AbstainVotes: 0,
-		}
-
-		k.SetProposal(ctx, k.NewProposalID, proposal)
+		proposal := NewProposal(
+			msg.Title,
+			msg.Description,
+			msg.Submitter,
+			ctx.BlockHeight(),
+			msg.VotingWindow,
+			msg.Deposit)
+		proposalID := k.NewProposalID(ctx)
+		k.SetProposal(ctx, proposalID, proposal)
 	}
 
 	return sdk.Result{} // return proper result
@@ -150,38 +150,58 @@ func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg sdk.Msg) sdk.Result 
 
 // TODO func proposal IsOpen()
 
-func handleVoteMsg(ctx sdk.Context, k Keeper, msg sdk.Msg) sdk.Result {
-	proposal := k.GetProposal(ctx, msg.ProposalID)
-
-	if proposal == nil {
-		return ErrInvalidProposalID().Result()
+func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
+	proposal, err := k.GetProposal(ctx, msg.ProposalID)
+	if err != nil {
+		return err.Result()
 	}
 
-	if ctx.BlockHeight() > proposal.SubmitBlock+1209600 {
+	if ctx.BlockHeight() > proposal.SubmitBlock+proposal.BlockLimit {
 		return ErrVotingPeriodClosed().Result()
 	}
 
-	delegatedTo := k.sm.getValidators(msg.Voter)
-	if len(delegatedTo) <= 0 {
-		return stake.ErrNoDelegatorForAddress().Result()
+	delegatedTo := k.sm.GetDelegations(ctx, msg.Voter, 10)
+
+	if len(delegatedTo) == 0 {
+		return stake.ErrNoDelegatorForAddress(DefaultCodespace).Result()
 	}
 
-	key := append(msg.ProposalID, msg.Voter...)
-	voterOption := k.GetOption(ctx, key)
-	// XXX could we define the nil obtion as an abstention by default ?
-	// Otherwise why would you send a voteMsg with no option
-	if voterOption == nil {
-		// voter has not voted yet
+	var key []byte
 
+	proposalIDBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(proposalIDBytes, uint64(msg.ProposalID))
+
+	key = append(proposalIDBytes, msg.Voter.Bytes()...)
+	voterOption, err := k.GetOption(ctx, key)
+
+	if err != nil {
+		return err.Result()
+	}
+	// TODO check if this line is OK
+	// nil option return error in ValidateBasic
+	if voterOption == "" {
+		// voter has not voted yet
 		for _, delegation := range delegatedTo {
-			proposal.updateTally(msg.Option, delegation.amount)
+			bondShares := delegation.GetBondShares().Denom()
+			err = proposal.updateTally(msg.Option, bondShares)
+			if err != nil {
+				return err.Result()
+			}
 		}
 	} else {
 		// voter has already voted
 
 		for _, delegation := range delegatedTo {
-			proposal.updateTally(voterOption, -delegation.amount)
-			proposal.updateTally(msg.Option, delegation.amount)
+			bondShares := delegation.GetBondShares().Evaluate()
+			// update previous vote with new one
+			err = proposal.updateTally(voterOption, -bondShares)
+			if err != nil {
+				return err.Result()
+			}
+			err = proposal.updateTally(msg.Option, bondShares)
+			if err != nil {
+				return err.Result()
+			}
 		}
 	}
 

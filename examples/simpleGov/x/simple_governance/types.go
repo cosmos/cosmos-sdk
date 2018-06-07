@@ -13,6 +13,7 @@ type Proposal struct {
 	Description string      `json:"description"`
 	Submitter   sdk.Address `json:"submitter"`
 	SubmitBlock int64       `json:"submit_block"`
+	BlockLimit  int64       `json:"block_limit"`
 	State       string      `json:"state"`
 	Deposit     sdk.Coins   `json:"deposit"`
 
@@ -30,7 +31,7 @@ func NewProposal(
 	description string,
 	submitter sdk.Address,
 	blockHeight int64,
-	votingWindow uint64, // defines a window of time measured in blocks to vote
+	votingWindow int64, // defines a window of time measured in blocks to vote
 	deposit sdk.Coins) Proposal {
 	return Proposal{
 		Title:        title,
@@ -46,19 +47,19 @@ func NewProposal(
 	}
 }
 
-func (p Proposal) updateTally(option string, amount int64) {
+func (p Proposal) updateTally(option string, amount int64) sdk.Error {
 	switch option {
 	case "Yes":
-		proposal.YesVotes += amount
+		p.YesVotes += amount
 		return nil
 	case "No":
-		proposal.NoVotes += amount
+		p.NoVotes += amount
 		return nil
 	case "Abstain":
-		proposal.AbstainVotes += amount
+		p.AbstainVotes += amount
+		return nil
 	default:
-		// TODO should return an SDK error
-		panic("Should not happen, update tally only takes option that comes from vote_msg, options should be checked in ValidateBasic()")
+		return ErrInvalidOption("Invalid option: " + option)
 	}
 }
 
@@ -78,19 +79,21 @@ func (pq ProposalQueue) IsEmpty() bool {
 
 //SubmitProposalMsg defines a
 type SubmitProposalMsg struct {
-	Title       string
-	Description string
-	Deposit     sdk.Coins
-	Submitter   sdk.Address
+	Title        string
+	Description  string
+	VotingWindow int64
+	Deposit      sdk.Coins
+	Submitter    sdk.Address
 }
 
 // NewSubmitProposalMsg submits a message with a new proposal
-func NewSubmitProposalMsg(title string, description string, deposit sdk.Coins, submitter sdk.Address) SubmitProposalMsg {
+func NewSubmitProposalMsg(title string, description string, votingWindow int64, deposit sdk.Coins, submitter sdk.Address) SubmitProposalMsg {
 	return SubmitProposalMsg{
-		Title:       title,
-		Description: description,
-		Deposit:     deposit,
-		Submitter:   submitter,
+		Title:        title,
+		Description:  description,
+		VotingWindow: votingWindow,
+		Deposit:      deposit,
+		Submitter:    submitter,
 	}
 }
 
@@ -121,7 +124,7 @@ func (msg SubmitProposalMsg) GetSigners() []sdk.Address {
 // Implements Msg
 func (msg SubmitProposalMsg) ValidateBasic() sdk.Error {
 	if len(msg.Submitter) == 0 {
-		return sdk.ErrUnrecognizedAddress(msg.Submitter).Trace("")
+		return sdk.ErrInvalidAddress("Invalid address: " + msg.Submitter.String())
 	}
 	if len(msg.Title) <= 0 {
 		return ErrInvalidTitle()
@@ -129,6 +132,10 @@ func (msg SubmitProposalMsg) ValidateBasic() sdk.Error {
 
 	if len(msg.Description) <= 0 {
 		return ErrInvalidDescription()
+	}
+
+	if msg.VotingWindow <= 0 {
+		return ErrInvalidVotingWindow("")
 	}
 
 	if !msg.Deposit.IsValid() {
@@ -159,6 +166,10 @@ type VoteMsg struct {
 
 // NewVoteMsg creates a VoteMsg instance
 func NewVoteMsg(proposalID int64, option string, voter sdk.Address) VoteMsg {
+	// by default a nil option is an abstention
+	if option == "" {
+		option = "Abstain"
+	}
 	return VoteMsg{
 		ProposalID: proposalID,
 		Option:     option,
@@ -173,7 +184,6 @@ func (msg VoteMsg) Type() string {
 
 // Implements Msg
 func (msg VoteMsg) Get(key interface{}) (value interface{}) {
-	// TODO
 	return nil
 }
 
@@ -194,10 +204,10 @@ func (msg VoteMsg) GetSigners() []sdk.Address {
 // Implements Msg
 func (msg VoteMsg) ValidateBasic() sdk.Error {
 	if len(msg.Voter) == 0 {
-		return sdk.ErrUnrecognizedAddress(msg.Voter).Trace("")
+		return sdk.ErrInvalidAddress("Invalid address: " + msg.Voter.String())
 	}
-	if len(msg.ProposalID) <= 0 {
-		return sdk.ErrInvalidProposalID("ProposalID cannot be negative")
+	if msg.ProposalID <= 0 {
+		return ErrInvalidProposalID("ProposalID cannot be negative")
 	}
 	//
 	if msg.Option != "Yes" || msg.Option != "No" || msg.Option != "Abstain" {

@@ -1,10 +1,10 @@
 package simpleGovernance
 
 import (
-	stake "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simplestake"
+	stake "github.com/cosmos/cosmos-sdk/examples/democoin/x/simplestake"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	bank "github.com/cosmos/cosmos/sdk/x/bank"
+	bank "github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 // nolint
@@ -23,12 +23,12 @@ type KeeperRead struct {
 }
 
 // NewKeeper crates a new keeper with write and read access
-func NewKeeper(proposalStoreKey sdk.StoreKey, ck bank.CoinKeeper, sm stake.KeeperRead, codespace sdk.CodespaceType) Keeper {
-	cdc = wire.NewCodec()
+func NewKeeper(proposalStoreKey sdk.StoreKey, ck bank.Keeper, sm stake.Keeper, codespace sdk.CodespaceType) Keeper {
+	cdc := wire.NewCodec()
 
 	return Keeper{
 		ProposalStoreKey: proposalStoreKey,
-		Cdc:              cdc,
+		cdc:              cdc,
 		ck:               ck,
 		sm:               sm,
 		codespace:        codespace,
@@ -36,40 +36,39 @@ func NewKeeper(proposalStoreKey sdk.StoreKey, ck bank.CoinKeeper, sm stake.Keepe
 }
 
 // NewKeeperRead crates a new keeper with read access
-func NewKeeperRead(proposalStoreKey sdk.StoreKey, ck bank.CoinKeeper, sm stake.KeeperRead, codespace sdk.CodespaceType) KeeperRead {
-	cdc = wire.NewCodec()
+func NewKeeperRead(proposalStoreKey sdk.StoreKey, ck bank.Keeper, sm stake.Keeper, codespace sdk.CodespaceType) KeeperRead {
+	cdc := wire.NewCodec()
 
-	return KeeperRead{
+	return KeeperRead{Keeper{
 		ProposalStoreKey: proposalStoreKey,
-		Cdc:              cdc,
+		cdc:              cdc,
 		ck:               ck,
 		sm:               sm,
 		codespace:        codespace,
-	}
+	}}
 }
 
 // GetProposal gets the proposal with the given id from the context
-func (k Keeper) GetProposal(ctx sdk.Context, proposalID int64) Proposal {
+func (k Keeper) GetProposal(ctx sdk.Context, proposalID int64) (Proposal, sdk.Error) {
 	store := ctx.KVStore(k.ProposalStoreKey)
 
 	bpi, err := k.cdc.MarshalBinary(proposalID)
 	if err != nil {
-		panic(error)
+		panic(err)
 	}
-
-	bp = store.Get(bpi)
+	bp := store.Get(bpi)
 	if bp == nil {
-		return nil
+		return Proposal{}, ErrProposalNotFound(proposalID)
 	}
 
 	proposal := Proposal{}
 
-	err := k.cdc.UnmarshalBinary(bp, proposal)
+	err = k.cdc.UnmarshalBinary(bp, proposal)
 	if err != nil {
-		panic(error)
+		panic(err)
 	}
 
-	return proposal
+	return proposal, nil
 }
 
 // SetProposal sets a proposal to the context
@@ -78,15 +77,15 @@ func (k Keeper) SetProposal(ctx sdk.Context, proposalID int64, proposal Proposal
 
 	bp, err := k.cdc.MarshalBinary(proposal)
 	if err != nil {
-		panic(error) // return proper error
+		panic(err) // return proper error
 	}
 
 	bpi, err := k.cdc.MarshalBinary(proposalID)
 	if err != nil {
-		panic(error) // return proper error
+		panic(err) // return proper error
 	}
 
-	store.set(bpi, bp)
+	store.Set(bpi, bp)
 	return nil
 }
 
@@ -106,44 +105,42 @@ func (k Keeper) NewProposalID(ctx sdk.Context) int64 {
 	totalID := new(int64)
 	err := k.cdc.UnmarshalBinary(bid, totalID)
 	if err != nil {
-		panic(error)
+		panic(err)
 	}
 
-	return (totalID + 1)
+	return (*totalID + 1)
 }
 
 //--------------------------------------------------------------------------------------
 
 // GetOption returns the given option of a proposal stored in the keeper
-func (k Keeper) GetOption(ctx sdk.Context, key []byte) string {
-	store := ctx.KVStore(k.proposalStoreKey)
+func (k Keeper) GetOption(ctx sdk.Context, key []byte) (string, sdk.Error) {
+	store := ctx.KVStore(k.ProposalStoreKey)
 
-	bv = store.Get(key)
+	bv := store.Get(key)
 	if bv == nil {
-		return nil
+		return "", ErrOptionNotFound()
 	}
 
 	option := new(string)
 
 	err := k.cdc.UnmarshalBinary(bv, option)
 	if err != nil {
-		panic(error)
+		panic(err)
 	}
 
-	return option
+	return *option, nil
 }
 
 // SetOption sets the option to the propposal stored in the context store
 func (k Keeper) SetOption(ctx sdk.Context, key []byte, option string) {
-	store := ctx.KVStore(k.proposalStoreKey)
+	store := ctx.KVStore(k.ProposalStoreKey)
 
 	bv, err := k.cdc.MarshalBinary(option)
 	if err != nil {
-		panic(error)
+		panic(err)
 	}
-
-	store.set(key, bv)
-	return nil
+	store.Set(key, bv)
 }
 
 // IMO not even necessary
@@ -153,30 +150,31 @@ func (k Keeper) SetOption(ctx sdk.Context, key []byte, option string) {
 
 //--------------------------------------------------------------------------------------
 
-func (k Keeper) getProposalQueue(ctx sdk.Context) ProposalQueue {
-	store := ctx.KVStore(k.proposalStoreKey)
+// getProposalQueue gets the ProposalQueue from the context
+func (k Keeper) getProposalQueue(ctx sdk.Context) (ProposalQueue, sdk.Error) {
+	store := ctx.KVStore(k.ProposalStoreKey)
 	bpq := store.Get([]byte("proposalQueue"))
-	if bz == nil {
-		return nil
+	if bpq == nil {
+		return ProposalQueue{}, ErrProposalQueueNotFound()
 	}
 
-	proposalQueue := &ProposalQueue{}
+	proposalQueue := ProposalQueue{}
 	err := k.cdc.UnmarshalBinaryBare(bpq, proposalQueue)
 	if err != nil {
 		panic(err)
 	}
 
-	return proposalQueue
+	return proposalQueue, nil
 }
 
+// setProposalQueue sets the ProposalQueue to the context
 func (k Keeper) setProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) {
-	store := ctx.KVStore(k.proposalStoreKey)
+	store := ctx.KVStore(k.ProposalStoreKey)
 	bpq, err := k.cdc.MarshalBinaryBare(proposalQueue)
 	if err != nil {
 		panic(err)
 	}
 	store.Set([]byte("proposalQueue"), bpq)
-	return nil
 }
 
 // func (k KeeperRead) setProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) sdk.Error {
@@ -185,29 +183,45 @@ func (k Keeper) setProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) {
 
 // ProposalQueueHead returns the head of the FIFO Proposal queue
 func (k Keeper) ProposalQueueHead(ctx sdk.Context) (Proposal, sdk.Error) {
-	proposalQueue := k.getProposalQueue(ctx)
-	if proposalQueue.IsEmpty() {
-		return nil, ErrEmptyProposalQueue()
+	proposalQueue, err := k.getProposalQueue(ctx)
+	if err != nil {
+		return Proposal{}, err
 	}
-	return k.GetProposal(ctx, proposalQueue[0]), nil
+	if proposalQueue.IsEmpty() {
+		return Proposal{}, ErrEmptyProposalQueue()
+	}
+	proposal, err := k.GetProposal(ctx, proposalQueue[0])
+	if err != nil {
+		return Proposal{}, err
+	}
+	return proposal, nil
 }
 
 // ProposalQueuePop pops the head from the Proposal queue
 func (k Keeper) ProposalQueuePop(ctx sdk.Context) (Proposal, sdk.Error) {
-	proposalQueue := k.getProposalQueue(ctx)
-	if proposalQueue.IsEmpty() {
-		return nil, ErrEmptyProposalQueue()
-	}
-	headElement, tailProposalQueue = proposalQueue[0], proposalQueue[1:]
-	err := k.setProposalQueue(ctx, tailProposalQueue)
+	proposalQueue, err := k.getProposalQueue(ctx)
 	if err != nil {
-		return nil, err
+		return Proposal{}, err
 	}
-	return k.GetProposal(ctx, headElement), nil
+	if proposalQueue.IsEmpty() {
+		return Proposal{}, ErrEmptyProposalQueue()
+	}
+	headElement, tailProposalQueue := proposalQueue[0], proposalQueue[1:]
+	k.setProposalQueue(ctx, tailProposalQueue)
+	proposal, err := k.GetProposal(ctx, headElement)
+	if err != nil {
+		return Proposal{}, err
+	}
+	return proposal, nil
 }
 
 // ProposalQueuePush pushes a proposal to the tail of the FIFO Proposal queue
-func (k Keeper) ProposalQueuePush(ctx sdk.Context, proposaID int64) {
-	proposalQueue := append(k.getProposalQueue(ctx), proposalID)
+func (k Keeper) ProposalQueuePush(ctx sdk.Context, proposaID int64) sdk.Error {
+	proposalQueue, err := k.getProposalQueue(ctx)
+	if err != nil {
+		return err
+	}
+	proposalQueue = append(proposalQueue, proposaID)
 	k.setProposalQueue(ctx, proposalQueue)
+	return nil
 }

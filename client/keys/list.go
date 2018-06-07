@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-crypto/keys"
@@ -76,9 +75,11 @@ func QueryKeysRequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("[]"))
 		return
 	}
-	keysOutput := make([]KeyOutput, len(infos))
-	for i, info := range infos {
-		keysOutput[i] = KeyOutput{Name: info.Name, Address: sdk.Address(info.PubKey.Address().Bytes())}
+	keysOutput, err := Bech32KeysOutput(infos)
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
 	}
 	output, err := json.MarshalIndent(keysOutput, "", "  ")
 	if err != nil {

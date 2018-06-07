@@ -45,16 +45,18 @@ func (keeper Keeper) WireCodec() *wire.Codec {
 }
 
 // Creates a NewProposal
-func (keeper Keeper) NewProposal(ctx sdk.Context, title string, description string, proposalType string, initialDeposit Deposit) *Proposal {
-	return &Proposal{
+func (keeper Keeper) NewProposal(ctx sdk.Context, title string, description string, proposalType string) *Proposal {
+	proposal := &Proposal{
 		ProposalID:       keeper.getNewProposalID(ctx),
 		Title:            title,
 		Description:      description,
 		ProposalType:     proposalType,
-		TotalDeposit:     initialDeposit.Amount,
+		TotalDeposit:     sdk.Coins{},
 		SubmitBlock:      ctx.BlockHeight(),
 		VotingStartBlock: -1, // TODO: Make Time
 	}
+	keeper.SetProposal(ctx, proposal)
+	return proposal
 }
 
 // Get Proposal from store by ProposalID
@@ -96,27 +98,17 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposal *Proposal) {
 	store.Delete(key)
 }
 
-func (keeper Keeper) getNewProposalID(ctx sdk.Context) int64 {
+func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID int64) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get([]byte("newProposalID"))
 	if bz == nil {
-		return 0
+		proposalID = 0
+	} else {
+		keeper.cdc.MustUnmarshalBinary(bz, &proposalID) // TODO: switch to UnmarshalBinaryBare when new go-amino gets added
 	}
-
-	proposalID := new(int64)
-	err := keeper.cdc.UnmarshalBinary(bz, proposalID) // TODO: switch to UnmarshalBinaryBare when new go-amino gets added
-	if err != nil {
-		panic("should not happen")
-	}
-
-	bz, err = keeper.cdc.MarshalBinary(*proposalID + 1) // TODO: switch to MarshalBinaryBare when new go-amino gets added
-	if err != nil {
-		panic("should not happen")
-	}
-
+	bz = keeper.cdc.MustMarshalBinary(proposalID + 1) // TODO: switch to MarshalBinaryBare when new go-amino gets added
 	store.Set([]byte("newProposalID"), bz)
-
-	return *proposalID
+	return proposalID
 }
 
 func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal *Proposal) {
@@ -131,7 +123,7 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal *Proposal) {
 // Gets procedure from store. TODO: move to global param store and allow for updating of this
 func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) *DepositProcedure {
 	return &DepositProcedure{
-		MinDeposit:       sdk.Coins{{"atom", 10}},
+		MinDeposit:       sdk.Coins{{"steak", 10}},
 		MaxDepositPeriod: 200,
 	}
 }
@@ -202,6 +194,29 @@ func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID int64, depositer sdk
 	bz := keeper.cdc.MustMarshalBinary(deposit)
 	key := []byte(fmt.Sprintf("%d", proposalID) + ":deposits:" + fmt.Sprintf("%s", depositer))
 	store.Set(key, bz)
+}
+
+// Gets the vote of a specific voter on a specific proposal
+func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositer sdk.Address, depositAmount sdk.Coins) sdk.Error {
+	currDeposit := keeper.GetDeposit(ctx, proposalID, depositer)
+	if currDeposit == nil {
+		newDeposit := Deposit{depositer, depositAmount}
+		keeper.setDeposit(ctx, proposalID, depositer, newDeposit)
+	} else {
+		currDeposit.Amount = currDeposit.Amount.Plus(depositAmount)
+		keeper.setDeposit(ctx, proposalID, depositer, *currDeposit)
+	}
+
+	proposal := keeper.GetProposal(ctx, proposalID)
+	if proposal == nil {
+		return ErrUnknownProposal(proposalID)
+	}
+	proposal.TotalDeposit = proposal.TotalDeposit.Plus(depositAmount)
+	keeper.SetProposal(ctx, proposal)
+	if proposal.TotalDeposit.IsGTE(keeper.GetDepositProcedure(ctx).MinDeposit) {
+		keeper.activateVotingPeriod(ctx, proposal)
+	}
+	return nil
 }
 
 // Gets the vote of a specific voter on a specific proposal

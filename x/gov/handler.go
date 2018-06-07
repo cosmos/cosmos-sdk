@@ -35,17 +35,11 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 		return sdk.Result{}
 	}
 
-	initialDeposit := Deposit{
-		Depositer: msg.Proposer,
-		Amount:    msg.InitialDeposit,
-	}
+	proposal := keeper.NewProposal(ctx, msg.Title, msg.Description, msg.ProposalType)
 
-	proposal := keeper.NewProposal(ctx, msg.Title, msg.Description, msg.ProposalType, initialDeposit)
-	keeper.SetProposal(ctx, proposal)
-
-	keeper.setDeposit(ctx, proposal.ProposalID, msg.Proposer, initialDeposit)
-	if proposal.TotalDeposit.IsGTE(keeper.GetDepositProcedure(ctx).MinDeposit) {
-		keeper.activateVotingPeriod(ctx, proposal)
+	err = keeper.AddDeposit(ctx, proposal.ProposalID, msg.Proposer, msg.InitialDeposit)
+	if err != nil {
+		return err.Result()
 	}
 
 	tags := sdk.NewTags("action", []byte("submitProposal"), "proposer", msg.Proposer.Bytes(), "proposalId", []byte{byte(proposal.ProposalID)})
@@ -63,34 +57,17 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 		return err.Result()
 	}
 
-	proposal := keeper.GetProposal(ctx, msg.ProposalID)
-	if proposal == nil {
-		return ErrUnknownProposal(msg.ProposalID).Result()
-	}
-
-	if proposal.isActive() {
-		return ErrAlreadyActiveProposal(msg.ProposalID).Result()
-	}
-
 	if ctx.IsCheckTx() {
 		return sdk.Result{} // TODO
 	}
 
-	deposit := Deposit{
-		Depositer: msg.Depositer,
-		Amount:    msg.Amount,
+	err = keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositer, msg.Amount)
+	if err != nil {
+		return err.Result()
 	}
 
-	keeper.setDeposit(ctx, proposal.ProposalID, deposit.Depositer, deposit)
-	proposal.TotalDeposit = proposal.TotalDeposit.Plus(deposit.Amount)
-
-	keeper.SetProposal(ctx, proposal)
-
-	if proposal.TotalDeposit.IsGTE(keeper.GetDepositProcedure(ctx).MinDeposit) {
-		keeper.activateVotingPeriod(ctx, proposal)
-	}
-
-	tags := sdk.NewTags("action", []byte("deposit"), "depositer", msg.Depositer.Bytes(), "proposalId", []byte{byte(proposal.ProposalID)})
+	// TODO: Add tag for if voting period started
+	tags := sdk.NewTags("action", []byte("deposit"), "depositer", msg.Depositer.Bytes(), "proposalId", []byte{byte(msg.ProposalID)})
 	return sdk.Result{
 		Tags: tags,
 	}

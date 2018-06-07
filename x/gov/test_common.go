@@ -3,20 +3,21 @@ package gov
 import (
 	"bytes"
 	"encoding/hex"
-	// "testing"
+	"testing"
 
-	// "github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/require"
 
-	// abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
-	// dbm "github.com/tendermint/tmlibs/db"
-	// "github.com/tendermint/tmlibs/log"
+	dbm "github.com/tendermint/tmlibs/db"
+	"github.com/tendermint/tmlibs/log"
 
-	// "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 // dummy addresses used for testing
@@ -73,40 +74,42 @@ func makeTestCodec() *wire.Codec {
 	return cdc
 }
 
-// // hogpodge of all sorts of input required for testing
-// func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountMapper, Keeper) {
+// hogpodge of all sorts of input required for testing
+func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountMapper, Keeper) {
 
-// 	keyStake := sdk.NewKVStoreKey("stake")
-// 	keyAcc := sdk.NewKVStoreKey("acc")
+	keyAcc := sdk.NewKVStoreKey("acc")
+	keyStake := sdk.NewKVStoreKey("stake")
+	keyGov := sdk.NewKVStoreKey("gov")
 
-// 	db := dbm.NewMemDB()
-// 	ms := store.NewCommitMultiStore(db)
-// 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
-// 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
-// 	err := ms.LoadLatestVersion()
-// 	require.Nil(t, err)
+	db := dbm.NewMemDB()
+	ms := store.NewCommitMultiStore(db)
 
-// 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil, log.NewNopLogger())
-// 	cdc := makeTestCodec()
-// 	accountMapper := auth.NewAccountMapper(
-// 		cdc,                 // amino codec
-// 		keyAcc,              // target store
-// 		&auth.BaseAccount{}, // prototype
-// 	)
-// 	ck := bank.NewKeeper(accountMapper)
-// 	keeper := NewKeeper(cdc, keyStake, ck, DefaultCodespace)
-// 	keeper.setPool(ctx, InitialPool())
-// 	keeper.setNewParams(ctx, DefaultParams())
+	ms.MountStoreWithDB(keyGov, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
+	err := ms.LoadLatestVersion()
+	require.Nil(t, err)
 
-// 	// fill all the addresses with some coins
-// 	for _, addr := range addrs {
-// 		ck.AddCoins(ctx, addr, sdk.Coins{
-// 			{keeper.GetParams(ctx).BondDenom, initCoins},
-// 		})
-// 	}
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil, log.NewNopLogger())
+	cdc := makeTestCodec()
+	accountMapper := auth.NewAccountMapper(
+		cdc,                 // amino codec
+		keyAcc,              // target store
+		&auth.BaseAccount{}, // prototype
+	)
+	ck := bank.NewKeeper(accountMapper)
+	sk := stake.NewKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
+	keeper := NewKeeper(cdc, keyGov, ck, sk, DefaultCodespace)
 
-// 	return ctx, accountMapper, keeper
-// }
+	// fill all the addresses with some coins
+	for _, addr := range addrs {
+		ck.AddCoins(ctx, addr, sdk.Coins{
+			{"steak", initCoins},
+		})
+	}
+
+	return ctx, accountMapper, keeper
+}
 
 func newPubKey(pk string) (res crypto.PubKey) {
 	pkBytes, err := hex.DecodeString(pk)

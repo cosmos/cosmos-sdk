@@ -79,7 +79,7 @@ func (p Proof) Verify(root []byte, value [][]byte, keys ...string) (err error) {
 		}
 	}
 	if !bytes.Equal(root, value[0]) {
-		return fmt.Errorf("Calculated root hash is invalid: expected %+v but %+v\n", root, value[0])
+		return fmt.Errorf("Calculated root hash is invalid: expected %+v but %+v", root, value[0])
 	}
 
 	return nil

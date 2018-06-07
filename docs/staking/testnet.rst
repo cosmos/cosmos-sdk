@@ -16,7 +16,7 @@ First, generate a couple of genesis transactions to be incorparated into the gen
     gaiacli keys list
 
 **Note:** If you've already run these tests you may need to overwrite keys using the ``--OWK`` flag
-When you list the keys you should see two addresses, we'll need these later so take note. 
+When you list the keys you should see two addresses, we'll need these later so take note.
 Now let's actually create the genesis files for both nodes:
 
 ::
@@ -44,7 +44,7 @@ Nice. We can also lookup the validator set:
 
 ::
 
-    gaiacli validatorset
+    gaiacli advanced tendermint validator-set
 
 Then, we try to transfer some ``steak`` to another account:
 
@@ -72,7 +72,7 @@ Finally, to relinquish all your power, unbond some coins. You should see your Vo
 
 ::
 
-    gaiacli unbond --chain-id=<chain-id> --name=test
+    gaiacli stake unbond --chain-id=<chain-id> --name=test
 
 That's it!
 

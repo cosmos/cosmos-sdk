@@ -30,7 +30,7 @@ func TestSetValidator(t *testing.T) {
 
 	// test how the validator is set from a purely unbonbed pool
 	validator := NewValidator(addrVals[0], pks[0], Description{})
-	validator, pool, _ = validator.addTokensFromDel(pool, 10)
+	validator, pool, _ = validator.AddTokensFromDel(pool, 10)
 	require.Equal(t, sdk.Unbonded, validator.Status())
 	assert.True(sdk.RatEq(t, sdk.NewRat(10), validator.PoolShares.Unbonded()))
 	assert.True(sdk.RatEq(t, sdk.NewRat(10), validator.DelegatorShares))
@@ -73,7 +73,7 @@ func TestValidatorBasics(t *testing.T) {
 	for i, amt := range amts {
 		validators[i] = NewValidator(addrVals[i], pks[i], Description{})
 		validators[i].PoolShares = NewUnbondedShares(sdk.ZeroRat())
-		validators[i].addTokensFromDel(pool, amt)
+		validators[i].AddTokensFromDel(pool, amt)
 	}
 
 	// check the empty keeper first

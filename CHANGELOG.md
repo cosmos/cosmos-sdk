@@ -15,6 +15,7 @@ IMPROVEMENTS
 FIXES
 * [lcd] Switch to bech32 for addresses on all human readable inputs and outputs
 * [cli] Added `--gas` flag to specify transaction gas limit
+* [gaia] Added self delegation for validators in the genesis creation
 
 ## 0.18.0
 

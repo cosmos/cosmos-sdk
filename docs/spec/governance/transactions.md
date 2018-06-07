@@ -184,9 +184,11 @@ handled:
       throw
     
 
-    if  (proposal.CurrentStatus == ProposalStatusActive)
+    if  (proposal.CurrentStatus == ProposalStatusActive && len(stakeKeeper.GetDelegations(sender)) > 0)
 
-        // Sender can vote 
+        // Sender can vote if
+        // Proposal is active
+        // Sender has some bonds
 
         store(Governance, <txGovVote.ProposalID|'addresses'|sender>, txGovVote.Vote)   // Voters can vote multiple times. Re-voting overrides previous vote. This is ok because tallying is done once at the end.
 

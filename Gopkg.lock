@@ -351,7 +351,7 @@
   version = "v0.20.0-rc3"
 
 [[projects]]
-  branch = "develop"
+  branch = "jae/errors_simplification"
   name = "github.com/tendermint/tmlibs"
   packages = [
     "autofile",
@@ -366,7 +366,7 @@
     "merkle",
     "merkle/tmhash"
   ]
-  revision = "44f1bdb0d55cc6527e38d0a7aab406e2580f56a4"
+  revision = "c56c05b5213b565e8a820671ab8ac0a2fa283928"
 
 [[projects]]
   branch = "master"
@@ -463,6 +463,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ccb2ab7644a38c2d0326280582f758256e37fc98c3ef0403581e3b85cff42188"
+  inputs-digest = "30cd8c97c0e9126b2e2ac48116cbf308b848eb9bf9b398dc0b6ae44649cd61d4"
   solver-name = "gps-cdcl"
   solver-version = 1

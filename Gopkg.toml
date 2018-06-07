@@ -74,7 +74,7 @@
 
 [[override]]
   name = "github.com/tendermint/tmlibs"
-  branch = "develop"
+  branch = "jae/errors_simplification"
 
 # this got updated and broke, so locked to an old working commit ...
 [[override]]

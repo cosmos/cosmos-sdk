@@ -150,6 +150,7 @@ type Input struct {
 	Coins   sdk.Coins   `json:"coins"`
 }
 
+// Return bytes to sign for Input
 func (in Input) GetSignBytes() []byte {
 	bin, err := msgCdc.MarshalJSON(struct {
 		Address string    `json:"address"`
@@ -196,6 +197,7 @@ type Output struct {
 	Coins   sdk.Coins   `json:"coins"`
 }
 
+// Return bytes to sign for Output
 func (out Output) GetSignBytes() []byte {
 	bin, err := msgCdc.MarshalJSON(struct {
 		Address string    `json:"address"`

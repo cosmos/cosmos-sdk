@@ -17,18 +17,18 @@ import (
 
 func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt int64) MsgCreateValidator {
 	return MsgCreateValidator{
-		Description:   Description{},
-		ValidatorAddr: address,
-		PubKey:        pubKey,
-		Bond:          sdk.Coin{"steak", amt},
+		Description:    Description{},
+		ValidatorAddr:  address,
+		PubKey:         pubKey,
+		SelfDelegation: sdk.Coin{"steak", amt},
 	}
 }
 
 func newTestMsgDelegate(delegatorAddr, validatorAddr sdk.Address, amt int64) MsgDelegate {
 	return MsgDelegate{
-		DelegatorAddr: delegatorAddr,
-		ValidatorAddr: validatorAddr,
-		Bond:          sdk.Coin{"steak", amt},
+		DelegatorAddr:  delegatorAddr,
+		ValidatorAddr:  validatorAddr,
+		SelfDelegation: sdk.Coin{"steak", amt},
 	}
 }
 

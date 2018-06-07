@@ -651,7 +651,6 @@ func doUnbond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastT
 			DelegatorAddr: acc.GetAddress(),
 			ValidatorAddr: validatorAddr1,
 			SharesAmount:  sdk.OneRat(),
-			SharesPercent: sdk.ZeroRat(),
 		}},
 	}
 	bz, err := cdc.MarshalJSON(req)

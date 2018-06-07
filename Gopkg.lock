@@ -148,12 +148,6 @@
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/howeyc/crc16"
-  packages = ["."]
-  revision = "2b2a61e366a66d3efb279e46176e7291001e0354"
-
-[[projects]]
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
@@ -323,12 +317,6 @@
   revision = "0d5a0ceb10cf9ab89fdd744cc8c50a83134f6697"
 
 [[projects]]
-  name = "github.com/tendermint/abci"
-  packages = ["types"]
-  revision = "198dccf0ddfd1bb176f87657e3286a05a6ed9540"
-  version = "v0.12.0"
-
-[[projects]]
   branch = "master"
   name = "github.com/tendermint/ed25519"
   packages = [
@@ -343,19 +331,6 @@
   packages = ["."]
   revision = "2106ca61d91029c931fd54968c2bb02dc96b1412"
   version = "0.10.1"
-
-[[projects]]
-  name = "github.com/tendermint/go-crypto"
-  packages = [
-    ".",
-    "keys",
-    "keys/bcrypt",
-    "keys/words",
-    "keys/words/wordlist",
-    "tmhash"
-  ]
-  revision = "e4e3f8d8084637493b3208cf174a8338cbf618ac"
-  version = "v0.8.0"
 
 [[projects]]
   name = "github.com/tendermint/iavl"
@@ -430,7 +405,8 @@
     "merkle",
     "merkle/tmhash"
   ]
-  revision = "0c98d10b4ffbd87978d79c160e835b3d3df241ec"
+  revision = "49596e0a1f48866603813df843c9409fc19805c6"
+  version = "v0.9.0"
 
 [[projects]]
   name = "github.com/zondax/ledger-goclient"
@@ -535,6 +511,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "130ff00d3b4f8f665ba3845c8d9710c8dd63af4d3a8899a1dfb0b7c6bcd149b6"
+  inputs-digest = "b2a9f26aa38750b50abe925070f8c58d22c35ba60e12c9166b505e221d0d0bf6"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -56,7 +56,7 @@
   name = "github.com/tendermint/go-amino"
   version = "=0.10.1"
 
-[[constraint]]
+[[override]]
   name = "github.com/tendermint/iavl"
   version = "=0.8.0"
 
@@ -64,14 +64,9 @@
   name = "github.com/tendermint/tendermint"
   revision = "8412b75b1070ac023405e8228e017ed36531fe1b"
 
-[[override]]
+[[constraint]]
   name = "github.com/tendermint/tmlibs"
-  revision = "0c98d10b4ffbd87978d79c160e835b3d3df241ec"
-
-# this got updated and broke, so locked to an old working commit ...
-[[override]]
-  name = "google.golang.org/genproto"
-  revision = "7fd901a49ba6a7f87732eb344f6e3c5b19d1b200"
+  version = "=0.9.0"
 
 [[constraint]]
   name = "github.com/bartekn/go-bip39"
@@ -80,6 +75,11 @@
 [[constraint]]
   name = "github.com/zondax/ledger-goclient"
   revision = "065cbf938a16f20335c40cfe180f9cd4955c6a5a"
+
+# this got updated and broke, so locked to an old working commit ...
+[[override]]
+  name = "google.golang.org/genproto"
+  revision = "7fd901a49ba6a7f87732eb344f6e3c5b19d1b200"
 
 [prune]
   go-tests = true

@@ -1,8 +1,9 @@
 package keeper
 
 import (
+	"bytes"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake/tags"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
@@ -78,8 +79,9 @@ func (k PrivlegedKeeper) RemoveDelegation(ctx sdk.Context, delegation types.Dele
 }
 
 // common functionality between handlers
-func (k PrivlegedKeeper) Delegate(ctx sdk.Context, delegatorAddr sdk.Address,
-	bondAmt sdk.Coin, validator types.Validator) (sdk.Tags, sdk.Error) {
+func (k PrivlegedKeeper) Delegate(ctx sdk.Context, delegatorAddr sdk.Address, bondAmt sdk.Coin,
+	validator types.Validator) (newShares sdk.Rat, delegation types.Delegation,
+	validator2 types.Validator, pool types.Pool, err sdk.Error) {
 
 	// Get or create the delegator delegation
 	delegation, found := k.GetDelegation(ctx, delegatorAddr, validator.Owner)
@@ -92,26 +94,18 @@ func (k PrivlegedKeeper) Delegate(ctx sdk.Context, delegatorAddr sdk.Address,
 	}
 
 	// Account new shares, save
-	pool := k.GetPool(ctx)
-	_, _, err := k.coinKeeper.SubtractCoins(ctx, delegation.DelegatorAddr, sdk.Coins{bondAmt})
+	pool = k.GetPool(ctx)
+	_, _, err = k.coinKeeper.SubtractCoins(ctx, delegation.DelegatorAddr, sdk.Coins{bondAmt})
 	if err != nil {
-		return nil, err
+		return
 	}
-	validator, pool, newShares := validator.AddTokensFromDel(pool, bondAmt.Amount)
+	validator, pool, newShares = validator.AddTokensFromDel(pool, bondAmt.Amount)
 	delegation.Shares = delegation.Shares.Add(newShares)
 
 	// Update delegation height
 	delegation.Height = ctx.BlockHeight()
 
-	k.SetPool(ctx, pool)
-	k.SetDelegation(ctx, delegation)
-	k.UpdateValidator(ctx, validator)
-	tags := sdk.NewTags(
-		tags.Action, tags.ActionDelegate,
-		tags.Delegator, delegatorAddr.Bytes(),
-		tags.DstValidator, validator.Owner.Bytes(),
-	)
-	return tags, nil
+	return
 }
 
 //_____________________________________________________________________________________
@@ -146,6 +140,56 @@ func (k PrivlegedKeeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.Un
 	ubdKey := GetUBDKey(ubd.DelegatorAddr, ubd.ValidatorAddr, k.cdc)
 	store.Delete(ubdKey)
 	store.Delete(GetUBDByValIndexKey(ubd.DelegatorAddr, ubd.ValidatorAddr, k.cdc))
+}
+
+// unbond the the delegation return
+func (k PrivlegedKeeper) UnbondDelegation(ctx sdk.Context, delegatorAddr, validatorAddr sdk.Address,
+	shares sdk.Rat) (delegation types.Delegation, validator types.Validator, pool types.Pool, amount int64, err sdk.Error) {
+
+	// check if delegation has any shares in it unbond
+	found := false
+	delegation, found = k.GetDelegation(ctx, delegatorAddr, validatorAddr)
+	if !found {
+		err = types.ErrNoDelegatorForAddress(k.Codespace())
+		return
+	}
+
+	// retrieve the amount to remove
+	if delegation.Shares.LT(shares) {
+		err = types.ErrNotEnoughDelegationShares(k.Codespace(), delegation.Shares.String())
+		return
+	}
+
+	// get validator
+	validator, found = k.GetValidator(ctx, validatorAddr)
+	if !found {
+		err = types.ErrNoValidatorFound(k.Codespace())
+		return
+	}
+
+	// subtract shares from delegator
+	delegation.Shares = delegation.Shares.Sub(shares)
+
+	// remove the delegation
+	if delegation.Shares.IsZero() {
+
+		// if the delegation is the owner of the validator then
+		// trigger a revoke validator
+		if bytes.Equal(delegation.DelegatorAddr, validator.Owner) && validator.Revoked == false {
+			validator.Revoked = true
+		}
+		k.RemoveDelegation(ctx, delegation)
+	} else {
+		// Update height
+		delegation.Height = ctx.BlockHeight()
+		k.SetDelegation(ctx, delegation)
+	}
+
+	// remove the coins from the validator
+	pool = k.GetPool(ctx)
+	validator, pool, amount = validator.RemoveDelShares(pool, shares)
+
+	return delegation, validator, pool, amount, nil
 }
 
 //_____________________________________________________________________________________

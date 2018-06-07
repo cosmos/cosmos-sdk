@@ -109,8 +109,10 @@ var (
 	ErrBadSharesAmount           = types.ErrBadSharesAmount
 	ErrBadSharesPercent          = types.ErrBadSharesPercent
 
-	ErrNotMature      = types.ErrNotMature
-	ErrNoRedelegation = types.ErrNoRedelegation
+	ErrNotMature             = types.ErrNotMature
+	ErrNoUnbondingDelegation = types.ErrNoUnbondingDelegation
+	ErrNoRedelegation        = types.ErrNoRedelegation
+	ErrBadRedelegationDst    = types.ErrBadRedelegationDst
 
 	ErrBothShareMsgsGiven    = types.ErrBothShareMsgsGiven
 	ErrNeitherShareMsgsGiven = types.ErrNeitherShareMsgsGiven

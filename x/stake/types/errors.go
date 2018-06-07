@@ -89,8 +89,14 @@ func ErrNotMature(codespace sdk.CodespaceType, operation, descriptor string, got
 		operation, descriptor, got, min)
 	return sdk.NewError(codespace, CodeUnauthorized, msg)
 }
+func ErrNoUnbondingDelegation(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDelegation, "no unbonding delegation found")
+}
 func ErrNoRedelegation(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "no redelegation found")
+}
+func ErrBadRedelegationDst(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDelegation, "redelegation validator not found")
 }
 
 // messages

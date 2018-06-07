@@ -167,18 +167,16 @@ type MsgBeginRedelegate struct {
 	ValidatorSrcAddr sdk.Address `json:"validator_source_addr"`
 	ValidatorDstAddr sdk.Address `json:"validator_destination_addr"`
 	SharesAmount     sdk.Rat     `json:"shares_amount"`
-	SharesPercent    sdk.Rat     `json:"shares_percent"`
 }
 
 func NewMsgBeginRedelegate(delegatorAddr, validatorSrcAddr,
-	validatorDstAddr sdk.Address, sharesAmount, sharesPercent sdk.Rat) MsgBeginRedelegate {
+	validatorDstAddr sdk.Address, sharesAmount sdk.Rat) MsgBeginRedelegate {
 
 	return MsgBeginRedelegate{
 		DelegatorAddr:    delegatorAddr,
 		ValidatorSrcAddr: validatorSrcAddr,
 		ValidatorDstAddr: validatorDstAddr,
 		SharesAmount:     sharesAmount,
-		SharesPercent:    sharesPercent,
 	}
 }
 
@@ -208,28 +206,28 @@ func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorDstAddr == nil {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	err := testShares(msg.SharesAmount, msg.SharesPercent)
-	if err != nil {
-		return err
+	if !msg.SharesAmount.IsZero() && msg.SharesAmount.LTE(sdk.ZeroRat()) {
+		return ErrBadSharesAmount(DefaultCodespace)
 	}
 	return nil
 }
 
-func testShares(sharesAmount, sharesPercent sdk.Rat) sdk.Error {
-	if !sharesAmount.IsZero() && !sharesPercent.IsZero() {
-		return ErrBothShareMsgsGiven(DefaultCodespace)
-	}
-	if sharesAmount.IsZero() && sharesPercent.IsZero() {
-		return ErrNeitherShareMsgsGiven(DefaultCodespace)
-	}
-	if sharesPercent.IsZero() && !sharesAmount.IsZero() && sharesAmount.LTE(sdk.ZeroRat()) {
-		return ErrBadSharesAmount(DefaultCodespace)
-	}
-	if sharesAmount.IsZero() && (sharesPercent.LTE(sdk.ZeroRat()) || sharesPercent.GT(sdk.OneRat())) {
-		return ErrBadSharesPercent(DefaultCodespace)
-	}
-	return nil
-}
+// TODO move this testing to the CLI
+//func testShares(sharesAmount, sharesPercent sdk.Rat) sdk.Error {
+//if !sharesAmount.IsZero() && !sharesPercent.IsZero() {
+//return ErrBothShareMsgsGiven(DefaultCodespace)
+//}
+//if sharesAmount.IsZero() && sharesPercent.IsZero() {
+//return ErrNeitherShareMsgsGiven(DefaultCodespace)
+//}
+//if sharesPercent.IsZero() && !sharesAmount.IsZero() && sharesAmount.LTE(sdk.ZeroRat()) {
+//return ErrBadSharesAmount(DefaultCodespace)
+//}
+//if sharesAmount.IsZero() && (sharesPercent.LTE(sdk.ZeroRat()) || sharesPercent.GT(sdk.OneRat())) {
+//return ErrBadSharesPercent(DefaultCodespace)
+//}
+//return nil
+//}
 
 // MsgDelegate - struct for bonding transactions
 type MsgCompleteRedelegate struct {
@@ -284,7 +282,6 @@ type MsgBeginUnbonding struct {
 	DelegatorAddr sdk.Address `json:"delegator_addr"`
 	ValidatorAddr sdk.Address `json:"validator_addr"`
 	SharesAmount  sdk.Rat     `json:"shares_amount"`
-	SharesPercent sdk.Rat     `json:"shares_percent"`
 }
 
 func NewMsgBeginUnbonding(delegatorAddr, validatorAddr sdk.Address, sharesAmount, sharesPercent sdk.Rat) MsgBeginUnbonding {
@@ -292,7 +289,6 @@ func NewMsgBeginUnbonding(delegatorAddr, validatorAddr sdk.Address, sharesAmount
 		DelegatorAddr: delegatorAddr,
 		ValidatorAddr: validatorAddr,
 		SharesAmount:  sharesAmount,
-		SharesPercent: sharesPercent,
 	}
 }
 
@@ -317,9 +313,8 @@ func (msg MsgBeginUnbonding) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	err := testShares(msg.SharesAmount, msg.SharesPercent)
-	if err != nil {
-		return err
+	if !msg.SharesAmount.IsZero() && msg.SharesAmount.LTE(sdk.ZeroRat()) {
+		return ErrBadSharesAmount(DefaultCodespace)
 	}
 	return nil
 }

@@ -57,12 +57,13 @@ func (b Delegation) HumanReadableString() (string, error) {
 
 // element stored to represent the passive unbonding queue
 type UnbondingDelegation struct {
-	DelegatorAddr sdk.Address `json:"delegator_addr"` // delegator
-	ValidatorAddr sdk.Address `json:"validator_addr"` // validator unbonding from owner addr
-	MinTime       int64       `json:"min_time"`       // unix time for unbonding completion
-	MinHeight     int64       `json:"min_height"`     // min height for unbonding completion
-	Balance       sdk.Coin    `json:"balance"`        // atoms to receive at completion
-	Slashed       sdk.Coin    `json:"slashed"`        // slashed tokens during unbonding
+	DelegatorAddr  sdk.Address `json:"delegator_addr"`  // delegator
+	ValidatorAddr  sdk.Address `json:"validator_addr"`  // validator unbonding from owner addr
+	CreationHeight int64       `json:"creation_height"` // height which the unbonding took place
+	MinHeight      int64       `json:"min_height"`      // min height for unbonding completion
+	MinTime        int64       `json:"min_time"`        // unix time for unbonding completion
+	Balance        sdk.Coin    `json:"balance"`         // atoms to receive at completion
+	Slashed        sdk.Coin    `json:"slashed"`         // slashed tokens during unbonding
 }
 
 //__________________________________________________________________
@@ -72,11 +73,9 @@ type Redelegation struct {
 	DelegatorAddr    sdk.Address `json:"delegator_addr"`     // delegator
 	ValidatorSrcAddr sdk.Address `json:"validator_src_addr"` // validator redelegation source owner addr
 	ValidatorDstAddr sdk.Address `json:"validator_dst_addr"` // validator redelegation destination owner addr
-	InitTime         int64       `json:"init_time"`          // unix time at redelegation
-	InitHeight       int64       `json:"init_height"`        // block height at redelegation
-	Shares           sdk.Rat     `json:"shares`              // amount of shares redelegating
+	CreationHeight   int64       `json:"creation_height"`    // height which the redelegation took place
+	MinHeight        int64       `json:"min_height"`         // min height for redelegation completion
+	MinTime          int64       `json:"min_time"`           // unix time for redelegation completion
+	SharesSrc        sdk.Rat     `json:"shares`              // amount of source shares redelegating
+	SharesDst        sdk.Rat     `json:"shares`              // amount of destination shares redelegating
 }
-
-//TODO implement value as functions
-//SourceDelegation      sdk.Address // source delegation key
-//DestinationDelegation sdk.Address // destination delegation key

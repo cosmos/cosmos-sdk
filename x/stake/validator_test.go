@@ -5,9 +5,13 @@ import (
 	"math/rand"
 	"testing"
 
+	tests "github.com/cosmos/cosmos-sdk/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	crypto "github.com/tendermint/go-crypto"
 )
 
 func TestAddTokensValidatorBonded(t *testing.T) {
@@ -160,6 +164,7 @@ func randomValidator(r *rand.Rand) Validator {
 		pShares = NewUnbondedShares(poolSharesAmt)
 	}
 	return Validator{
+		// TODO: Check if new key needs to be used here.
 		Owner:           addrs[0],
 		PubKey:          pks[0],
 		PoolShares:      pShares,
@@ -344,6 +349,60 @@ func TestPossibleOverflow(t *testing.T) {
 	require.False(t, newValidator.DelegatorShareExRate(pool).LT(sdk.ZeroRat()),
 		"Applying operation \"%s\" resulted in negative DelegatorShareExRate(): %v",
 		msg, newValidator.DelegatorShareExRate(pool))
+}
+
+var testModKey = "stake"
+
+type stakingTestModule struct {
+	validators []Validator
+}
+
+func (mod stakingTestModule) RegisterWire(cdc *wire.Codec) {
+	RegisterWire(cdc)
+}
+
+func (mod stakingTestModule) InitGenesis(ctx sdk.Context, keeperStore map[string]tests.KeeperStorage) sdk.Error {
+	return nil
+}
+
+func (mod stakingTestModule) RandomSetup(t *testing.T, r *rand.Rand, app *tests.MockApp, size []int,
+	privkeyList []crypto.PrivKey, keeperStore map[string]tests.KeeperStorage) (name string) {
+	assert.True(t, len(size) == 1)
+	numValidators := size[0]
+	// Setup loading keeper
+	key := sdk.NewKVStoreKey("stake")
+	keeper := setKeeper(app, key, keeperStore)
+
+	// Set router
+	app.Router().AddRoute("stake", NewHandler(keeper))
+
+	// Set initial values
+	pool := InitialPool()
+	mod.validators = make([]Validator, numValidators)
+	for i := 0; i < numValidators; i++ {
+		validator := randomValidator(r)
+		if validator.Status() == sdk.Bonded {
+			pool.BondedShares = pool.BondedShares.Add(validator.PoolShares.Bonded())
+			pool.BondedTokens += validator.PoolShares.Bonded().Evaluate()
+		} else if validator.Status() == sdk.Unbonded {
+			pool.UnbondedShares = pool.UnbondedShares.Add(validator.PoolShares.Unbonded())
+			pool.UnbondedTokens += validator.PoolShares.Unbonded().Evaluate()
+		}
+		mod.validators[i] = validator
+	}
+	return testModKey
+}
+
+func setKeeper(app *tests.MockApp, key *sdk.KVStoreKey, keeperStore map[string]tests.KeeperStorage) Keeper {
+	var bankKeeper bank.Keeper
+	if keeperStore, ok := keeperStore["bank"]; ok {
+		bankKeeper = keeperStore.Keeper.(bank.Keeper)
+	} else {
+		bankKeeper = bank.NewKeeper(app.AccountMapper)
+	}
+	keeper := NewKeeper(app.Cdc, key, bankKeeper, app.RegisterCodespace(DefaultCodespace))
+	keeperStore[testModKey] = tests.KeeperStorage{Key: key, Keeper: keeper}
+	return keeper
 }
 
 // run random operations in a random order on a random single-validator state, assert invariants hold

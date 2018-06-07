@@ -10,15 +10,27 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
+	"io/ioutil"
+	"os"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-// NewApp creates a simple mock kvstore app for testing. It should work
-// similar to a real app. Make sure rootDir is empty before running the test,
-// in order to guarantee consistent results
+// Extended ABCI application
+type MockApp struct {
+	*bam.BaseApp
+	Cdc             *wire.Codec // public since the codec is passed into the module anyways.
+	KeyMain         *sdk.KVStoreKey
+	KeyAccountStore *sdk.KVStoreKey
+	// TODO: Abstract this out from not needing to be auth specifically
+	AccountMapper       auth.AccountMapper
+	FeeCollectionKeeper auth.FeeCollectionKeeper
+}
+
+// NewApp is used for testing the server. For the internal mock app stuff, it uses code in helpers.go
 func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	db, err := dbm.NewGoLevelDB("mock", filepath.Join(rootDir, "data"))
 	if err != nil {
@@ -26,28 +38,59 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	}
 
 	// Capabilities key to access the main KVStore.
-	capKeyMainStore := sdk.NewKVStoreKey("main")
+	capKeyMainStore := sdk.NewKVStoreKey("mock")
 
-	// Create BaseApp.
-	baseApp := bam.NewBaseApp("kvstore", nil, logger, db)
+	// Create MockApp.
+	mApp := &MockApp{
+		BaseApp:         bam.NewBaseApp("mockApp", nil, logger, db),
+		Cdc:             wire.NewCodec(),
+		KeyMain:         capKeyMainStore,
+		KeyAccountStore: sdk.NewKVStoreKey("acc"),
+	}
+
+	// Define the accountMapper.
+	mApp.AccountMapper = auth.NewAccountMapper(
+		mApp.Cdc,
+		mApp.KeyAccountStore, // target store
+		&auth.BaseAccount{},  // prototype
+	)
 
 	// Set mounts for BaseApp's MultiStore.
-	baseApp.MountStoresIAVL(capKeyMainStore)
+	mApp.MountStoresIAVL(capKeyMainStore)
 
 	// Set Tx decoder
-	baseApp.SetTxDecoder(decodeTx)
+	mApp.SetTxDecoder(decodeTx)
 
-	baseApp.SetInitChainer(InitChainer(capKeyMainStore))
+	mApp.SetInitChainer(InitChainer(capKeyMainStore))
 
 	// Set a handler Route.
-	baseApp.Router().AddRoute("kvstore", KVStoreHandler(capKeyMainStore))
+	// TODO:
+	mApp.Router().AddRoute("kvstore", KVStoreHandler(capKeyMainStore))
 
 	// Load latest version.
-	if err := baseApp.LoadLatestVersion(capKeyMainStore); err != nil {
+	if err := mApp.LoadLatestVersion(capKeyMainStore); err != nil {
 		return nil, err
 	}
 
-	return baseApp, nil
+	return mApp, nil
+}
+
+// SetupApp returns an application as well as a clean-up function
+// to be used to quickly setup a test case with an app
+func SetupApp() (*MockApp, func(), error) {
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
+		With("module", "mock")
+	rootDir, err := ioutil.TempDir("", "mock-sdk")
+	if err != nil {
+		return &MockApp{}, nil, err
+	}
+
+	cleanup := func() {
+		os.RemoveAll(rootDir)
+	}
+
+	app, err := NewApp(rootDir, logger)
+	return app.(*MockApp), cleanup, err
 }
 
 // KVStoreHandler is a simple handler that takes kvstoreTx and writes

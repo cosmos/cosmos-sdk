@@ -1,6 +1,8 @@
 package bank
 
 import (
+	"encoding/json"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -53,7 +55,20 @@ func (msg MsgSend) ValidateBasic() sdk.Error {
 
 // Implements Msg.
 func (msg MsgSend) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(msg) // XXX: ensure some canonical form
+	var inputs, outputs []json.RawMessage
+	for _, input := range msg.Inputs {
+		inputs = append(inputs, input.GetSignBytes())
+	}
+	for _, output := range msg.Outputs {
+		outputs = append(outputs, output.GetSignBytes())
+	}
+	b, err := msgCdc.MarshalJSON(struct {
+		Inputs  []json.RawMessage `json:"inputs"`
+		Outputs []json.RawMessage `json:"outputs"`
+	}{
+		Inputs:  inputs,
+		Outputs: outputs,
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -123,6 +138,24 @@ type Input struct {
 	Coins   sdk.Coins   `json:"coins"`
 }
 
+func (in Input) GetSignBytes() []byte {
+	addr, err := sdk.Bech32ifyAcc(in.Address)
+	if err != nil {
+		panic(err)
+	}
+	bin, err := msgCdc.MarshalJSON(struct {
+		Address string    `json:"address"`
+		Coins   sdk.Coins `json:"coins"`
+	}{
+		Address: addr,
+		Coins:   in.Coins,
+	})
+	if err != nil {
+		panic(err)
+	}
+	return bin
+}
+
 // ValidateBasic - validate transaction input
 func (in Input) ValidateBasic() sdk.Error {
 	if len(in.Address) == 0 {
@@ -153,6 +186,24 @@ func NewInput(addr sdk.Address, coins sdk.Coins) Input {
 type Output struct {
 	Address sdk.Address `json:"address"`
 	Coins   sdk.Coins   `json:"coins"`
+}
+
+func (out Output) GetSignBytes() []byte {
+	addr, err := sdk.Bech32ifyAcc(out.Address)
+	if err != nil {
+		panic(err)
+	}
+	bin, err := msgCdc.MarshalJSON(struct {
+		Address string    `json:"address"`
+		Coins   sdk.Coins `json:"coins"`
+	}{
+		Address: addr,
+		Coins:   out.Coins,
+	})
+	if err != nil {
+		panic(err)
+	}
+	return bin
 }
 
 // ValidateBasic - validate transaction output

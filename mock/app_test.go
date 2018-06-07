@@ -9,6 +9,8 @@ import (
 	abci "github.com/tendermint/abci/types"
 )
 
+var expectedStorePath = "/store/mock/key"
+
 // TestInitApp makes sure we can initialize this thing without an error
 func TestInitApp(t *testing.T) {
 	// set up an app
@@ -33,7 +35,7 @@ func TestInitApp(t *testing.T) {
 
 	// make sure we can query these values
 	query := abci.RequestQuery{
-		Path: "/store/main/key",
+		Path: expectedStorePath,
 		Data: []byte("foo"),
 	}
 	qres := app.Query(query)
@@ -69,7 +71,7 @@ func TestDeliverTx(t *testing.T) {
 
 	// make sure we can query these values
 	query := abci.RequestQuery{
-		Path: "/store/main/key",
+		Path: expectedStorePath,
 		Data: []byte(key),
 	}
 	qres := app.Query(query)

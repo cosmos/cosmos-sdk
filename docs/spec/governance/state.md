@@ -11,21 +11,30 @@ has to be created and the previous one rendered inactive.
 
 
 ```go
-type Procedure struct {
-  VotingPeriod      int64               //  Length of the voting period. Initial value: 2 weeks
+type DepositProcedure struct {
   MinDeposit        sdk.Coins           //  Minimum deposit for a proposal to enter voting period. 
-  Threshold         rational.Rational   //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
-  Veto              rational.Rational   //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
   MaxDepositPeriod  int64               //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
-  GovernancePenalty sdk.Rat               //  Penalty if validator does not vote
-  
-  IsActive          bool                //  If true, procedure is active. Only one procedure can have isActive true.
 }
 ```
 
-The current active procedure is stored in a global `params` KVStore.
+```go
+type VotingProcedure struct {
+  VotingPeriod      int64               //  Length of the voting period. Initial value: 2 weeks
+}
+```
 
-And some basic types:
+```go
+type TallyingProcedure struct {
+  Threshold         rational.Rational   //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
+  Veto              rational.Rational   //  Minimum proportion of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
+  GovernancePenalty sdk.Rat             //  Penalty if validator does not vote
+  GracePeriod       int64               //  If validator entered validator set in this period of blocks before vote ended, governance penalty does not apply
+}
+```
+
+Procedures are stored in a global `GlobalParams` KVStore.
+
+Additionally, we introduce some basic types:
 
 ```go
 
@@ -169,6 +178,7 @@ And the pseudocode for the `ProposalProcessingQueue`:
         delegations = stakeKeeper.getDelegations(voterAddress) // get all delegations for current voter
 
         for each delegation in delegations
+          // make sure delegation.Shares does NOT include shares being unbonded
           tmpValMap(delegation.ValidatorAddr).Minus += delegation.Shares
           proposal.updateTally(vote, delegation.Shares)
 
@@ -180,10 +190,12 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
       // Slash validators that did not vote, or update tally if they voted
       for each validator in validators
-        if (!tmpValMap(validator).HasVoted)
-          slash validator by proposal.Procedure.GovernancePenalty
-        else
-          proposal.updateTally(tmpValMap(validator).Vote, (validator.TotalShares - tmpValMap(validator).Minus))
+        if (validator.bondHeight < CurrentBlock - activeProcedure.GracePeriod)
+        // only slash if validator entered validator set before grace period
+          if (!tmpValMap(validator).HasVoted)
+            slash validator by activeProcedure.GovernancePenalty
+          else
+            proposal.updateTally(tmpValMap(validator).Vote, (validator.TotalShares - tmpValMap(validator).Minus))
 
 
 

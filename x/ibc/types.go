@@ -1,10 +1,19 @@
 package ibc
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"encoding/json"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
+
+var (
+	msgCdc *wire.Codec
+)
+
+func init() {
+	msgCdc = wire.NewCodec()
+}
 
 // ------------------------------
 // IBCPacket
@@ -30,6 +39,26 @@ func NewIBCPacket(srcAddr sdk.Address, destAddr sdk.Address, coins sdk.Coins,
 		SrcChain:  srcChain,
 		DestChain: destChain,
 	}
+}
+
+func (p IBCPacket) GetSignBytes() []byte {
+	b, err := msgCdc.MarshalJSON(struct {
+		SrcAddr   string
+		DestAddr  string
+		Coins     sdk.Coins
+		SrcChain  string
+		DestChain string
+	}{
+		SrcAddr:   sdk.MustBech32ifyAcc(p.SrcAddr),
+		DestAddr:  sdk.MustBech32ifyAcc(p.DestAddr),
+		Coins:     p.Coins,
+		SrcChain:  p.SrcChain,
+		DestChain: p.DestChain,
+	})
+	if err != nil {
+		panic(err)
+	}
+	return b
 }
 
 // validator the ibc packey
@@ -60,12 +89,7 @@ func (msg IBCTransferMsg) GetSigners() []sdk.Address { return []sdk.Address{msg.
 
 // get the sign bytes for ibc transfer message
 func (msg IBCTransferMsg) GetSignBytes() []byte {
-	cdc := wire.NewCodec()
-	bz, err := cdc.MarshalBinary(msg)
-	if err != nil {
-		panic(err)
-	}
-	return bz
+	return msg.IBCPacket.GetSignBytes()
 }
 
 // validate ibc transfer message
@@ -94,10 +118,17 @@ func (msg IBCReceiveMsg) GetSigners() []sdk.Address { return []sdk.Address{msg.R
 
 // get the sign bytes for ibc receive message
 func (msg IBCReceiveMsg) GetSignBytes() []byte {
-	cdc := wire.NewCodec()
-	bz, err := cdc.MarshalBinary(msg)
+	b, err := msgCdc.MarshalJSON(struct {
+		IBCPacket json.RawMessage
+		Relayer   string
+		Sequence  int64
+	}{
+		IBCPacket: json.RawMessage(msg.IBCPacket.GetSignBytes()),
+		Relayer:   sdk.MustBech32ifyAcc(msg.Relayer),
+		Sequence:  msg.Sequence,
+	})
 	if err != nil {
 		panic(err)
 	}
-	return bz
+	return b
 }

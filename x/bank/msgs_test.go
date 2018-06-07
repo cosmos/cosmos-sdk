@@ -187,13 +187,6 @@ func TestMsgSendGetSignBytes(t *testing.T) {
 	}
 	res := msg.GetSignBytes()
 
-	// TODO Why did we assert this?
-	/*
-		unmarshaledMsg := &MsgSend{}
-		msgCdc.UnmarshalJSON(res, unmarshaledMsg)
-		assert.Equal(t, &msg, unmarshaledMsg)
-	*/
-
 	expected := `{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"denom":"atom","amount":10}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"denom":"atom","amount":10}]}]}`
 	assert.Equal(t, expected, string(res))
 }

@@ -93,6 +93,8 @@ type MsgIssue struct {
 	Outputs []Output    `json:"outputs"`
 }
 
+var _ sdk.Msg = MsgIssue{}
+
 // NewMsgIssue - construct arbitrary multi-in, multi-out send msg.
 func NewMsgIssue(banker sdk.Address, out []Output) MsgIssue {
 	return MsgIssue{Banker: banker, Outputs: out}
@@ -117,7 +119,17 @@ func (msg MsgIssue) ValidateBasic() sdk.Error {
 
 // Implements Msg.
 func (msg MsgIssue) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(msg) // XXX: ensure some canonical form
+	var outputs []json.RawMessage
+	for _, output := range msg.Outputs {
+		outputs = append(outputs, output.GetSignBytes())
+	}
+	b, err := msgCdc.MarshalJSON(struct {
+		Banker  string            `json:"banker"`
+		Outputs []json.RawMessage `json:"outputs"`
+	}{
+		Banker:  sdk.MustBech32ifyAcc(msg.Banker),
+		Outputs: outputs,
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -139,15 +151,11 @@ type Input struct {
 }
 
 func (in Input) GetSignBytes() []byte {
-	addr, err := sdk.Bech32ifyAcc(in.Address)
-	if err != nil {
-		panic(err)
-	}
 	bin, err := msgCdc.MarshalJSON(struct {
 		Address string    `json:"address"`
 		Coins   sdk.Coins `json:"coins"`
 	}{
-		Address: addr,
+		Address: sdk.MustBech32ifyAcc(in.Address),
 		Coins:   in.Coins,
 	})
 	if err != nil {
@@ -189,15 +197,11 @@ type Output struct {
 }
 
 func (out Output) GetSignBytes() []byte {
-	addr, err := sdk.Bech32ifyAcc(out.Address)
-	if err != nil {
-		panic(err)
-	}
 	bin, err := msgCdc.MarshalJSON(struct {
 		Address string    `json:"address"`
 		Coins   sdk.Coins `json:"coins"`
 	}{
-		Address: addr,
+		Address: sdk.MustBech32ifyAcc(out.Address),
 		Coins:   out.Coins,
 	})
 	if err != nil {

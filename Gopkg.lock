@@ -301,7 +301,7 @@
     "keys/words",
     "keys/words/wordlist"
   ]
-  revision = "e6d0ade0e1a8315613e026fe64b006f24f58beab"
+  revision = "eabd703880acfd919cd595c0ba73aef53ebaaad7"
 
 [[projects]]
   name = "github.com/tendermint/iavl"
@@ -374,7 +374,6 @@
   revision = "44f1bdb0d55cc6527e38d0a7aab406e2580f56a4"
 
 [[projects]]
-  branch = "master"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
   revision = "3e2146609cdb97894c064d59e9d00accd8c2b1dd"
@@ -474,6 +473,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "59785c3b8c654fb928d16c292872baf3958b6f1c56e637ec19383baec4928756"
+  inputs-digest = "a25922d467e0c083abb858c376664ea971b0b682c756dc81b3e65dfa80f535cd"
   solver-name = "gps-cdcl"
   solver-version = 1

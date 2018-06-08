@@ -51,15 +51,22 @@ func GetValidatorsByPowerKey(validator Validator, pool Pool) []byte {
 	powerBytes := []byte(power.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
 
 	// TODO ensure that the key will be a readable string.. probably should add seperators and have
+	revokedBytes := make([]byte, 1)
+	if validator.Revoked {
+		revokedBytes[0] = byte(0x01)
+	} else {
+		revokedBytes[0] = byte(0x00)
+	}
 	// heightBytes and counterBytes represent strings like powerBytes does
 	heightBytes := make([]byte, binary.MaxVarintLen64)
 	binary.BigEndian.PutUint64(heightBytes, ^uint64(validator.BondHeight)) // invert height (older validators first)
 	counterBytes := make([]byte, 2)
 	binary.BigEndian.PutUint16(counterBytes, ^uint16(validator.BondIntraTxCounter)) // invert counter (first txns have priority)
 	return append(ValidatorsByPowerKey,
-		append(powerBytes,
-			append(heightBytes,
-				append(counterBytes, validator.Owner.Bytes()...)...)...)...) // TODO don't technically need to store owner
+		append(revokedBytes,
+			append(powerBytes,
+				append(heightBytes,
+					append(counterBytes, validator.Owner.Bytes()...)...)...)...)...) // TODO don't technically need to store owner
 }
 
 // get the key for the accumulated update validators

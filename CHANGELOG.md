@@ -9,6 +9,7 @@ IMPROVEMENTS
 
 FIXES
 * [lcd] Switch to bech32 for addresses on all human readable inputs and outputs
+* [lcd] Switch to bech32 for addresses on all human readable inputs and outputs
 
 ## 0.18.0
 

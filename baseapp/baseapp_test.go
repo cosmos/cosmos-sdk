@@ -424,6 +424,8 @@ func TestRunInvalidTransaction(t *testing.T) {
 }
 
 // Test that transactions exceeding gas limits fail
+// With an ante handler that takes 0 fee, and a msgHandler that consumes 10 gas
+// It therefore only fails on app.Deliver(tx), since msgHandler is only run on Deliver
 func TestTxGasLimits(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
@@ -448,8 +450,41 @@ func TestTxGasLimits(t *testing.T) {
 	header := abci.Header{AppHash: []byte("apphash")}
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	res := app.Deliver(tx)
-	assert.Equal(t, res.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), "Expected transaction to run out of gas")
+	resCheck := app.Check(tx)
+	assert.Equal(t, resCheck.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), "Expected abci Codetype == 0, for CodeOK")
+	resDeliver := app.Deliver(tx)
+	assert.Equal(t, resDeliver.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), "Expected transaction to run out of gas due to fee in msg handler")
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+}
+
+//Ante handler uses gas, and should trigger a failure for CheckTx() and DeliverTx(). DeliverTx()'s msg handler should never run
+func TestFeeFailureCheckTx(t *testing.T) {
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	app := NewBaseApp(t.Name(), nil, logger, db)
+
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(0))
+		//will panic here, and will then enter the runTx() defer statement
+		newCtx.GasMeter().ConsumeGas(10, "counter")
+		return
+	})
+
+	tx := testUpdatePowerTx{} // doesn't matter
+	header := abci.Header{AppHash: []byte("apphash")}
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	resCheck := app.Check(tx)
+	assert.Equal(t, resCheck.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), "Expected transaction to run out of gas due to fee in ante handler")
+	resDeliver := app.Deliver(tx)
+	assert.Equal(t, resDeliver.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), "Expected transaction to run out of gas due to fee in ante handler")
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
 }

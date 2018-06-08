@@ -477,19 +477,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		}
 	}()
 
-	// Get the Msg.
-	var msg = tx.GetMsg()
-	if msg == nil {
-		return sdk.ErrInternal("Tx.GetMsg() returned nil").Result()
-	}
-
-	// Validate the Msg.
-	err := msg.ValidateBasic()
-	if err != nil {
-		err = err.WithDefaultCodespace(sdk.CodespaceRoot)
-		return err.Result()
-	}
-
 	// Get the context
 	var ctx sdk.Context
 	if mode == runTxModeCheck || mode == runTxModeSimulate {
@@ -512,16 +499,11 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		}
 		if !newCtx.IsZero() {
 			ctx = newCtx
+			// MIGHT NEED TO ADD result.Fee here
+			// like how the msg handler has: 		result.GasUsed = ctx.GasMeter().GasConsumed()
+
 		}
 	}
-
-	// Match route.
-	msgType := msg.Type()
-	handler := app.router.Route(msgType)
-	if handler == nil {
-		return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
-	}
-
 	// Get the correct cache
 	var msCache sdk.CacheMultiStore
 	if mode == runTxModeCheck || mode == runTxModeSimulate {
@@ -534,10 +516,32 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		ctx = ctx.WithMultiStore(msCache)
 	}
 
-	result = handler(ctx, msg)
+	// No need to run Msg checks when running CheckTx(), since CheckTx() only needs to validate that fees can be paid
+	// Then when DeliverTx() is called, this will run, preventing us from doing the same checks twice
+	if mode != runTxModeCheck {
+		var msg = tx.GetMsg()
+		if msg == nil {
+			return sdk.ErrInternal("Tx.GetMsg() returned nil").Result()
+		}
 
-	// Set gas utilized
-	result.GasUsed = ctx.GasMeter().GasConsumed()
+		// Validate the Msg.
+		err := msg.ValidateBasic()
+		if err != nil {
+			err = err.WithDefaultCodespace(sdk.CodespaceRoot)
+			return err.Result()
+		}
+
+		// Match route.
+		msgType := msg.Type()
+		handler := app.router.Route(msgType)
+		if handler == nil {
+			return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
+		}
+		result = handler(ctx, msg)
+
+		// Set gas utilized
+		result.GasUsed = ctx.GasMeter().GasConsumed()
+	}
 
 	// If not a simulated run and result was successful, write to app.checkState.ms or app.deliverState.ms
 	if mode != runTxModeSimulate && result.IsOK() {

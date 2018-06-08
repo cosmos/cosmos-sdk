@@ -612,12 +612,14 @@ func getDelegation(t *testing.T, delegatorAddr, candidateAddr string) stake.Dele
 func doBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxCommit) {
 	// get the account to get the sequence
 	acc := getAccount(t, sendAddr)
+	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 
 	// send
 	jsonStr := []byte(fmt.Sprintf(`{
 		"name": "%s",
 		"password": "%s",
+		"account-number": %d,
 		"sequence": %d,
 		"delegate": [
 			{
@@ -627,7 +629,7 @@ func doBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxC
 			}
 		],
 		"unbond": []
-	}`, name, password, sequence, sendAddr, validatorAddr1, coinDenom))
+	}`, name, password, accnum, sequence, sendAddr, validatorAddr1, coinDenom))
 	res, body := request(t, port, "POST", "/stake/delegations", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -641,12 +643,14 @@ func doBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxC
 func doUnbond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxCommit) {
 	// get the account to get the sequence
 	acc := getAccount(t, sendAddr)
+	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 
 	// send
 	jsonStr := []byte(fmt.Sprintf(`{
 		"name": "%s",
 		"password": "%s",
+		"account-number": %d,
 		"sequence": %d,
 		"bond": [],
 		"unbond": [
@@ -656,7 +660,7 @@ func doUnbond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastT
 				"shares": "1"
 			}
 		]
-	}`, name, password, sequence, sendAddr, validatorAddr1))
+	}`, name, password, accnum, sequence, sendAddr, validatorAddr1))
 	res, body := request(t, port, "POST", "/stake/delegations", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 

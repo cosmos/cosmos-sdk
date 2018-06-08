@@ -4,14 +4,15 @@ import "github.com/spf13/cobra"
 
 // nolint
 const (
-	FlagChainID   = "chain-id"
-	FlagNode      = "node"
-	FlagHeight    = "height"
-	FlagGas       = "gas"
-	FlagTrustNode = "trust-node"
-	FlagName      = "name"
-	FlagSequence  = "sequence"
-	FlagFee       = "fee"
+	FlagChainID       = "chain-id"
+	FlagNode          = "node"
+	FlagHeight        = "height"
+	FlagGas           = "gas"
+	FlagTrustNode     = "trust-node"
+	FlagName          = "name"
+	FlagAccountNumber = "acccount-number"
+	FlagSequence      = "sequence"
+	FlagFee           = "fee"
 )
 
 // LineBreak can be included in a command list to provide a blank line

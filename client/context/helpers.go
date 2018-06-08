@@ -168,6 +168,30 @@ func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg sdk.Msg, cdc *w
 }
 
 // get the next sequence for the account address
+func (ctx CoreContext) GetAccountNumber(address []byte) (int64, error) {
+	if ctx.Decoder == nil {
+		return 0, errors.New("AccountDecoder required but not provided")
+	}
+
+	res, err := ctx.Query(address, ctx.AccountStore)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(res) == 0 {
+		fmt.Printf("No account found.  Returning -1.\n")
+		return -1, err
+	}
+
+	account, err := ctx.Decoder(res)
+	if err != nil {
+		panic(err)
+	}
+
+	return account.GetAccountNumber(), nil
+}
+
+// get the next sequence for the account address
 func (ctx CoreContext) NextSequence(address []byte) (int64, error) {
 	if ctx.Decoder == nil {
 		return 0, errors.New("AccountDecoder required but not provided")

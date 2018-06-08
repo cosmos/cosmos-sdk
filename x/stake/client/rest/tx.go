@@ -39,6 +39,7 @@ type editDelegationsBody struct {
 	LocalAccountName string             `json:"name"`
 	Password         string             `json:"password"`
 	ChainID          string             `json:"chain_id"`
+	AccountNumber    int64              `json:"account-number"`
 	Sequence         int64              `json:"sequence"`
 	Delegate         []msgDelegateInput `json:"delegate"`
 	Unbond           []msgUnbondInput   `json:"unbond"`
@@ -125,6 +126,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 		signedTxs := make([][]byte, len(messages[:]))
 		for i, msg := range messages {
 			// increment sequence for each message
+			ctx = ctx.WithAccountNumber(m.AccountNumber)
 			ctx = ctx.WithSequence(m.Sequence)
 			m.Sequence++
 

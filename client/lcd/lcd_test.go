@@ -235,7 +235,7 @@ func TestCoinSend(t *testing.T) {
 	initialBalance := acc.GetCoins()
 
 	// create TX
-	receiveAddr, resultTx := doSend(t, port, seed)
+	receiveAddr, resultTx := doSend(t, port)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was commited
@@ -287,7 +287,7 @@ func TestTxs(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, res.StatusCode, body)
 
 	// query empty
-	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=coin.sender='%s'", "8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6"), nil)
+	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=sender='%s'", "8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6"), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	assert.Equal(t, "[]", body)
@@ -300,15 +300,16 @@ func TestTxs(t *testing.T) {
 	// check if tx is findable
 	res, body = request(t, port, "GET", fmt.Sprintf("/txs/%s", resultTx.Hash), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	// res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=tx.hash='%s'", resultTx.Hash), nil)
 
 	// query sender
-	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=coin.sender='%s'", sendAddr), nil)
+	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=sender='%s'", resultTx.Hash), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	assert.NotEqual(t, "[]", body)
 
 	// query receiver
-	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=coin.receiver='%s'", receiveAddr), nil)
+	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=recipient='%s'", receiveAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	assert.NotEqual(t, "[]", body)
@@ -390,6 +391,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	config := GetConfig()
 	config.Consensus.TimeoutCommit = 1000
 	config.Consensus.SkipTimeoutCommit = false
+	config.TxIndex.IndexAllTags = true
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	logger = log.NewFilter(logger, log.AllowError())

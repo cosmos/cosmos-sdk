@@ -107,6 +107,7 @@ func SearchTxRequestHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Han
 		}
 
 		tags := []string{tag}
+		fmt.Println("TAGS", tags)
 		output, err := searchTx(ctx, cdc, tags)
 		if err != nil {
 			w.WriteHeader(500)

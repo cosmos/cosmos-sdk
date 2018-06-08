@@ -19,12 +19,10 @@ import (
 	"github.com/tendermint/tmlibs/log"
 )
 
-var accName = "foobart"
-
 func setGenesis(bapp *BasecoinApp, accs ...auth.BaseAccount) error {
 	genaccs := make([]*types.GenesisAccount, len(accs))
 	for i, acc := range accs {
-		genaccs[i] = types.NewGenesisAccount(&types.AppAccount{acc, accName})
+		genaccs[i] = types.NewGenesisAccount(&types.AppAccount{acc, "foobart"})
 	}
 
 	genesisState := types.GenesisState{

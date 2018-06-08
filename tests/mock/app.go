@@ -39,6 +39,7 @@ func NewApp() *App {
 	cdc := wire.NewCodec()
 	sdk.RegisterWire(cdc)
 	wire.RegisterCrypto(cdc)
+	auth.RegisterWire(cdc)
 
 	// create your application object
 	app := &App{
@@ -64,7 +65,7 @@ func NewApp() *App {
 }
 
 // complete the application setup after the routes have been registered
-func (app App) CompleteSetup(t *testing.T, newKeys []*sdk.KVStoreKey) {
+func (app *App) CompleteSetup(t *testing.T, newKeys []*sdk.KVStoreKey) {
 
 	newKeys = append(newKeys, app.KeyMain)
 	newKeys = append(newKeys, app.KeyAccount)
@@ -74,7 +75,7 @@ func (app App) CompleteSetup(t *testing.T, newKeys []*sdk.KVStoreKey) {
 }
 
 // custom logic for initialization
-func (app App) initChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.ResponseInitChain {
+func (app *App) initChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.ResponseInitChain {
 
 	// load the accounts
 	for _, acc := range app.GenesisAccounts {

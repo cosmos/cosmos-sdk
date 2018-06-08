@@ -18,8 +18,6 @@ import (
 var (
 	chainID = "" // TODO
 
-	accName = "foobart"
-
 	priv1     = crypto.GenPrivKeyEd25519()
 	addr1     = priv1.PubKey().Address()
 	priv2     = crypto.GenPrivKeyEd25519()
@@ -30,7 +28,8 @@ var (
 	coins     = sdk.Coins{{"foocoin", 10}}
 	halfCoins = sdk.Coins{{"foocoin", 5}}
 	manyCoins = sdk.Coins{{"foocoin", 1}, {"barcoin", 1}}
-	fee       = auth.StdFee{
+
+	freeFee = auth.StdFee{ // no fees for a buncha gas
 		sdk.Coins{{"foocoin", 0}},
 		100000,
 	}
@@ -39,11 +38,47 @@ var (
 		Inputs:  []Input{NewInput(addr1, coins)},
 		Outputs: []Output{NewOutput(addr2, coins)},
 	}
+
+	sendMsg2 = MsgSend{
+		Inputs: []Input{NewInput(addr1, coins)},
+		Outputs: []Output{
+			NewOutput(addr2, halfCoins),
+			NewOutput(addr3, halfCoins),
+		},
+	}
+
+	sendMsg3 = MsgSend{
+		Inputs: []Input{
+			NewInput(addr1, coins),
+			NewInput(addr4, coins),
+		},
+		Outputs: []Output{
+			NewOutput(addr2, coins),
+			NewOutput(addr3, coins),
+		},
+	}
+
+	sendMsg4 = MsgSend{
+		Inputs: []Input{
+			NewInput(addr2, coins),
+		},
+		Outputs: []Output{
+			NewOutput(addr1, coins),
+		},
+	}
+
+	sendMsg5 = MsgSend{
+		Inputs: []Input{
+			NewInput(addr1, manyCoins),
+		},
+		Outputs: []Output{
+			NewOutput(addr2, manyCoins),
+		},
+	}
 )
 
-func TestMsgSendWithAccounts(t *testing.T) {
-
-	// initialize the mock application
+// initialize the mock application for this module
+func getMockApp(t *testing.T) *mock.App {
 	mapp := mock.NewApp()
 
 	RegisterWire(mapp.Cdc)
@@ -51,34 +86,33 @@ func TestMsgSendWithAccounts(t *testing.T) {
 	mapp.Router().AddRoute("bank", NewHandler(coinKeeper))
 
 	mapp.CompleteSetup(t, []*sdk.KVStoreKey{})
+	return mapp
+}
+
+func TestMsgSendWithAccounts(t *testing.T) {
+	mapp := getMockApp(t)
 
 	// Add an account at genesis
-	coins, err := sdk.ParseCoins("77foocoin")
-	require.Nil(t, err)
-	//acc := auth.NewAccountWithAddress(addr1)
-	//acc.SetCoins(coins)
-	//accs := []auth.Account{acc}
-
-	baseAcc := &auth.BaseAccount{
+	acc := &auth.BaseAccount{
 		Address: addr1,
-		Coins:   coins,
+		Coins:   sdk.Coins{{"foocoin", 67}},
 	}
-	baseAccs := []auth.Account{baseAcc}
+	accs := []auth.Account{acc}
 
 	// Construct genesis state
-	mock.SetGenesis(mapp, baseAccs)
+	mock.SetGenesis(mapp, accs)
 
 	// A checkTx context (true)
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	res1 := mapp.AccountMapper.GetAccount(ctxCheck, addr1)
 	require.NotNil(t, res1)
-	assert.Equal(t, baseAcc, res1.(*auth.BaseAccount))
+	assert.Equal(t, acc, res1.(*auth.BaseAccount))
 
 	// Run a CheckDeliver
 	mock.SignCheckDeliver(t, mapp, sendMsg1, []int64{0}, true, priv1)
 
 	// Check balances
-	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"foocoin", 67}})
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"foocoin", 57}})
 	mock.CheckBalance(t, mapp, addr2, sdk.Coins{{"foocoin", 10}})
 
 	// Delivering again should cause replay error
@@ -93,4 +127,83 @@ func TestMsgSendWithAccounts(t *testing.T) {
 
 	// resigning the tx with the bumped sequence should work
 	mock.SignCheckDeliver(t, mapp, sendMsg1, []int64{1}, true, priv1)
+}
+
+func TestMsgSendMultipleOut(t *testing.T) {
+	mapp := getMockApp(t)
+
+	acc1 := &auth.BaseAccount{
+		Address: addr1,
+		Coins:   sdk.Coins{{"foocoin", 42}},
+	}
+
+	acc2 := &auth.BaseAccount{
+		Address: addr2,
+		Coins:   sdk.Coins{{"foocoin", 42}},
+	}
+	accs := []auth.Account{acc1, acc2}
+
+	mock.SetGenesis(mapp, accs)
+
+	// Simulate a Block
+	mock.SignCheckDeliver(t, mapp, sendMsg2, []int64{0}, true, priv1)
+
+	// Check balances
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"foocoin", 32}})
+	mock.CheckBalance(t, mapp, addr2, sdk.Coins{{"foocoin", 47}})
+	mock.CheckBalance(t, mapp, addr3, sdk.Coins{{"foocoin", 5}})
+}
+
+func TestSengMsgMultipleInOut(t *testing.T) {
+	mapp := getMockApp(t)
+
+	acc1 := &auth.BaseAccount{
+		Address: addr1,
+		Coins:   sdk.Coins{{"foocoin", 42}},
+	}
+	acc2 := &auth.BaseAccount{
+		Address: addr2,
+		Coins:   sdk.Coins{{"foocoin", 42}},
+	}
+	acc4 := &auth.BaseAccount{
+		Address: addr4,
+		Coins:   sdk.Coins{{"foocoin", 42}},
+	}
+	accs := []auth.Account{acc1, acc2, acc4}
+
+	mock.SetGenesis(mapp, accs)
+
+	// CheckDeliver
+	mock.SignCheckDeliver(t, mapp, sendMsg3, []int64{0, 0}, true, priv1, priv4)
+
+	// Check balances
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"foocoin", 32}})
+	mock.CheckBalance(t, mapp, addr4, sdk.Coins{{"foocoin", 32}})
+	mock.CheckBalance(t, mapp, addr2, sdk.Coins{{"foocoin", 52}})
+	mock.CheckBalance(t, mapp, addr3, sdk.Coins{{"foocoin", 10}})
+}
+
+func TestMsgSendDependent(t *testing.T) {
+	mapp := getMockApp(t)
+
+	acc1 := &auth.BaseAccount{
+		Address: addr1,
+		Coins:   sdk.Coins{{"foocoin", 42}},
+	}
+	accs := []auth.Account{acc1}
+
+	mock.SetGenesis(mapp, accs)
+
+	// CheckDeliver
+	mock.SignCheckDeliver(t, mapp, sendMsg1, []int64{0}, true, priv1)
+
+	// Check balances
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"foocoin", 32}})
+	mock.CheckBalance(t, mapp, addr2, sdk.Coins{{"foocoin", 10}})
+
+	// Simulate a Block
+	mock.SignCheckDeliver(t, mapp, sendMsg4, []int64{0}, true, priv2)
+
+	// Check balances
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"foocoin", 42}})
 }

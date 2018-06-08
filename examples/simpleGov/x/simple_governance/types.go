@@ -47,7 +47,7 @@ func NewProposal(
 	}
 }
 
-func (p Proposal) updateTally(option string, amount int64) sdk.Error {
+func (p *Proposal) updateTally(option string, amount int64) sdk.Error {
 	switch option {
 	case "Yes":
 		p.YesVotes += amount
@@ -63,11 +63,19 @@ func (p Proposal) updateTally(option string, amount int64) sdk.Error {
 	}
 }
 
+// IsOpen checks if proposal is open for votations
+func (p Proposal) IsOpen() bool {
+	if p.State == "Open" {
+		return true
+	}
+	return false
+}
+
 // ProposalQueue stores the proposals IDs
 type ProposalQueue []int64
 
 // IsEmpty checks if the ProposalQueue is empty
-func (pq ProposalQueue) IsEmpty() bool {
+func (pq ProposalQueue) isEmpty() bool {
 	if len(pq) == 0 {
 		return true
 	}
@@ -201,6 +209,16 @@ func (msg VoteMsg) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.Voter}
 }
 
+func isValidOption(option string) bool {
+	options := []string{"Yes", "No", "Abstain"}
+	for _, value := range options {
+		if value == option {
+			return true
+		}
+	}
+	return false
+}
+
 // Implements Msg
 func (msg VoteMsg) ValidateBasic() sdk.Error {
 	if len(msg.Voter) == 0 {
@@ -209,8 +227,7 @@ func (msg VoteMsg) ValidateBasic() sdk.Error {
 	if msg.ProposalID <= 0 {
 		return ErrInvalidProposalID("ProposalID cannot be negative")
 	}
-	//
-	if msg.Option != "Yes" || msg.Option != "No" || msg.Option != "Abstain" {
+	if !isValidOption(msg.Option) {
 		return ErrInvalidOption("Invalid voting option: " + msg.Option)
 	}
 

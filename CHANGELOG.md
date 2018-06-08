@@ -17,6 +17,7 @@ FIXES
 * [cli] fixed cli-bash tests
 * [ci] added cli-bash tests
 * [basecoin] updated basecoin for stake and slashing
+* fixed tx indexing/querying
 
 ## 0.18.1
 

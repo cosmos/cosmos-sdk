@@ -148,6 +148,10 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 // sign and build the transaction from the msg
 func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
 
+	ctx, err = EnsureAccountNumber(ctx)
+	if err != nil {
+		return nil, err
+	}
 	// default to next sequence number if none provided
 	ctx, err = EnsureSequence(ctx)
 	if err != nil {
@@ -179,8 +183,8 @@ func (ctx CoreContext) GetAccountNumber(address []byte) (int64, error) {
 	}
 
 	if len(res) == 0 {
-		fmt.Printf("No account found.  Returning -1.\n")
-		return -1, err
+		fmt.Printf("No account found.  Returning 0.\n")
+		return 0, err
 	}
 
 	account, err := ctx.Decoder(res)

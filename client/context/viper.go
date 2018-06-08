@@ -58,7 +58,7 @@ func defaultChainID() (string, error) {
 // EnsureSequence - automatically set sequence number if none provided
 func EnsureAccountNumber(ctx CoreContext) (CoreContext, error) {
 	// Should be viper.IsSet, but this does not work - https://github.com/spf13/viper/pull/331
-	if viper.GetInt64(client.FlagAccountNumber) != -1 {
+	if viper.GetInt64(client.FlagAccountNumber) != 0 {
 		return ctx, nil
 	}
 	from, err := ctx.GetFromAddress()

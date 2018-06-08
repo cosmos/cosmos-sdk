@@ -177,7 +177,7 @@ func (ctx CoreContext) GetAccountNumber(address []byte) (int64, error) {
 		return 0, errors.New("AccountDecoder required but not provided")
 	}
 
-	res, err := ctx.Query(address, ctx.AccountStore)
+	res, err := ctx.Query(auth.AddressStoreKey(address), ctx.AccountStore)
 	if err != nil {
 		return 0, err
 	}
@@ -201,7 +201,7 @@ func (ctx CoreContext) NextSequence(address []byte) (int64, error) {
 		return 0, errors.New("AccountDecoder required but not provided")
 	}
 
-	res, err := ctx.Query(address, ctx.AccountStore)
+	res, err := ctx.Query(auth.AddressStoreKey(address), ctx.AccountStore)
 	if err != nil {
 		return 0, err
 	}

@@ -1,56 +1,73 @@
 package simpleGovernance
 
 import (
-	stake "github.com/cosmos/cosmos-sdk/examples/democoin/x/simplestake"
+	"encoding/binary"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	bank "github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 )
+
+// util functions
+
+func generateKey(proposalID int64, voterAddr sdk.Address) []byte {
+	var key []byte
+	proposalIDBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(proposalIDBytes, uint64(proposalID))
+
+	// key is of the form proposalID|"addresses"|voterAddress
+	key = append(proposalIDBytes, []byte("addresses")...)
+	key = append(key, voterAddr.Bytes()...)
+	return key
+}
+
+//--------------------------------------------------------------------------------------
 
 // nolint
 type Keeper struct {
-	ProposalStoreKey sdk.StoreKey
-	codespace        sdk.CodespaceType
-	cdc              *wire.Codec
+	SimpleGov sdk.StoreKey
+	codespace sdk.CodespaceType
+	cdc       *wire.Codec
 
 	ck bank.Keeper
 	sm stake.Keeper
 }
 
-// nolint
-type KeeperRead struct {
-	Keeper
-}
-
 // NewKeeper crates a new keeper with write and read access
-func NewKeeper(proposalStoreKey sdk.StoreKey, ck bank.Keeper, sm stake.Keeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(SimpleGov sdk.StoreKey, ck bank.Keeper, sm stake.Keeper, codespace sdk.CodespaceType) Keeper {
 	cdc := wire.NewCodec()
 
 	return Keeper{
-		ProposalStoreKey: proposalStoreKey,
-		cdc:              cdc,
-		ck:               ck,
-		sm:               sm,
-		codespace:        codespace,
+		SimpleGov: SimpleGov,
+		cdc:       cdc,
+		ck:        ck,
+		sm:        sm,
+		codespace: codespace,
 	}
 }
 
-// NewKeeperRead crates a new keeper with read access
-func NewKeeperRead(proposalStoreKey sdk.StoreKey, ck bank.Keeper, sm stake.Keeper, codespace sdk.CodespaceType) KeeperRead {
-	cdc := wire.NewCodec()
+// NewProposalID creates a new id for a proposal
+func (k Keeper) NewProposalID(ctx sdk.Context) int64 {
+	store := ctx.KVStore(k.SimpleGov)
 
-	return KeeperRead{Keeper{
-		ProposalStoreKey: proposalStoreKey,
-		cdc:              cdc,
-		ck:               ck,
-		sm:               sm,
-		codespace:        codespace,
-	}}
+	bid := store.Get([]byte("TotalID"))
+	if bid == nil {
+		return 0
+	}
+
+	totalID := new(int64)
+	err := k.cdc.UnmarshalBinary(bid, totalID)
+	if err != nil {
+		panic(err)
+	}
+
+	return (*totalID + 1)
 }
 
-// GetProposal gets the proposal with the given id from the context
+// GetProposal gets the proposal with the given id from the context.
 func (k Keeper) GetProposal(ctx sdk.Context, proposalID int64) (Proposal, sdk.Error) {
-	store := ctx.KVStore(k.ProposalStoreKey)
+	store := ctx.KVStore(k.SimpleGov)
 
 	bpi, err := k.cdc.MarshalBinary(proposalID)
 	if err != nil {
@@ -73,7 +90,7 @@ func (k Keeper) GetProposal(ctx sdk.Context, proposalID int64) (Proposal, sdk.Er
 
 // SetProposal sets a proposal to the context
 func (k Keeper) SetProposal(ctx sdk.Context, proposalID int64, proposal Proposal) sdk.Error {
-	store := ctx.KVStore(k.ProposalStoreKey)
+	store := ctx.KVStore(k.SimpleGov)
 
 	bp, err := k.cdc.MarshalBinary(proposal)
 	if err != nil {
@@ -89,53 +106,28 @@ func (k Keeper) SetProposal(ctx sdk.Context, proposalID int64, proposal Proposal
 	return nil
 }
 
-// func (k KeeperRead) SetProposal(ctx sdk.Context, proposalID int64, proposal Proposal) sdk.Error {
-// 	return sdk.ErrUnauthorized("").Trace("This keeper does not have write access for the simple governance store")
-// }
-
-// NewProposalID creates a new id for a proposal
-func (k Keeper) NewProposalID(ctx sdk.Context) int64 {
-	store := ctx.KVStore(k.ProposalStoreKey)
-
-	bid := store.Get([]byte("TotalID"))
-	if bid == nil {
-		return 0
-	}
-
-	totalID := new(int64)
-	err := k.cdc.UnmarshalBinary(bid, totalID)
-	if err != nil {
-		panic(err)
-	}
-
-	return (*totalID + 1)
-}
-
-//--------------------------------------------------------------------------------------
-
 // GetOption returns the given option of a proposal stored in the keeper
-func (k Keeper) GetOption(ctx sdk.Context, key []byte) (string, sdk.Error) {
-	store := ctx.KVStore(k.ProposalStoreKey)
+// Used to check if an address already voted
+func (k Keeper) GetOption(ctx sdk.Context, proposalID int64, voter sdk.Address) (string, sdk.Error) {
 
+	key := generateKey(proposalID, voter)
+	store := ctx.KVStore(k.SimpleGov)
 	bv := store.Get(key)
 	if bv == nil {
 		return "", ErrOptionNotFound()
 	}
-
 	option := new(string)
-
 	err := k.cdc.UnmarshalBinary(bv, option)
 	if err != nil {
 		panic(err)
 	}
-
 	return *option, nil
 }
 
-// SetOption sets the option to the propposal stored in the context store
-func (k Keeper) SetOption(ctx sdk.Context, key []byte, option string) {
-	store := ctx.KVStore(k.ProposalStoreKey)
-
+// SetOption sets the option to the proposal stored in the context store
+func (k Keeper) SetOption(ctx sdk.Context, proposalID int64, voter sdk.Address, option string) {
+	key := generateKey(proposalID, voter)
+	store := ctx.KVStore(k.SimpleGov)
 	bv, err := k.cdc.MarshalBinary(option)
 	if err != nil {
 		panic(err)
@@ -143,16 +135,11 @@ func (k Keeper) SetOption(ctx sdk.Context, key []byte, option string) {
 	store.Set(key, bv)
 }
 
-// IMO not even necessary
-// func (k KeeperRead) SetOption(ctx sdk.Context, key []byte, option string) sdk.Error {
-// 	return sdk.ErrUnauthorized("").Trace("This keeper does not have write access for the simple governance store")
-// }
-
 //--------------------------------------------------------------------------------------
 
 // getProposalQueue gets the ProposalQueue from the context
 func (k Keeper) getProposalQueue(ctx sdk.Context) (ProposalQueue, sdk.Error) {
-	store := ctx.KVStore(k.ProposalStoreKey)
+	store := ctx.KVStore(k.SimpleGov)
 	bpq := store.Get([]byte("proposalQueue"))
 	if bpq == nil {
 		return ProposalQueue{}, ErrProposalQueueNotFound()
@@ -169,7 +156,7 @@ func (k Keeper) getProposalQueue(ctx sdk.Context) (ProposalQueue, sdk.Error) {
 
 // setProposalQueue sets the ProposalQueue to the context
 func (k Keeper) setProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) {
-	store := ctx.KVStore(k.ProposalStoreKey)
+	store := ctx.KVStore(k.SimpleGov)
 	bpq, err := k.cdc.MarshalBinaryBare(proposalQueue)
 	if err != nil {
 		panic(err)
@@ -177,17 +164,13 @@ func (k Keeper) setProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) {
 	store.Set([]byte("proposalQueue"), bpq)
 }
 
-// func (k KeeperRead) setProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) sdk.Error {
-// 	return sdk.ErrUnauthorized("").Trace("This keeper does not have write access for the simple governance store")
-// }
-
 // ProposalQueueHead returns the head of the FIFO Proposal queue
 func (k Keeper) ProposalQueueHead(ctx sdk.Context) (Proposal, sdk.Error) {
 	proposalQueue, err := k.getProposalQueue(ctx)
 	if err != nil {
 		return Proposal{}, err
 	}
-	if proposalQueue.IsEmpty() {
+	if proposalQueue.isEmpty() {
 		return Proposal{}, ErrEmptyProposalQueue()
 	}
 	proposal, err := k.GetProposal(ctx, proposalQueue[0])
@@ -203,7 +186,7 @@ func (k Keeper) ProposalQueuePop(ctx sdk.Context) (Proposal, sdk.Error) {
 	if err != nil {
 		return Proposal{}, err
 	}
-	if proposalQueue.IsEmpty() {
+	if proposalQueue.isEmpty() {
 		return Proposal{}, ErrEmptyProposalQueue()
 	}
 	headElement, tailProposalQueue := proposalQueue[0], proposalQueue[1:]
@@ -224,4 +207,44 @@ func (k Keeper) ProposalQueuePush(ctx sdk.Context, proposaID int64) sdk.Error {
 	proposalQueue = append(proposalQueue, proposaID)
 	k.setProposalQueue(ctx, proposalQueue)
 	return nil
+}
+
+//--------------------------------------------------------------------------------------
+
+// KeeperRead is a Keeper only with read access
+type KeeperRead struct {
+	Keeper
+}
+
+// NewKeeperRead crates a new keeper with read access
+func NewKeeperRead(SimpleGov sdk.StoreKey, ck bank.Keeper, sm stake.Keeper, codespace sdk.CodespaceType) KeeperRead {
+	cdc := wire.NewCodec()
+
+	return KeeperRead{Keeper{
+		SimpleGov: SimpleGov,
+		cdc:       cdc,
+		ck:        ck,
+		sm:        sm,
+		codespace: codespace,
+	}}
+}
+
+// NewProposalID creates a new id for a proposal
+func (k KeeperRead) NewProposalID(ctx sdk.Context) sdk.Error {
+	return sdk.ErrUnauthorized("").Trace("This keeper does not have write access for the simple governance store")
+}
+
+// SetProposal sets a proposal to the context
+func (k KeeperRead) SetProposal(ctx sdk.Context, proposalID int64, proposal Proposal) sdk.Error {
+	return sdk.ErrUnauthorized("").Trace("This keeper does not have write access for the simple governance store")
+}
+
+// SetOption sets the option to the proposal stored in the context store
+func (k KeeperRead) SetOption(ctx sdk.Context, key []byte, option string) sdk.Error {
+	return sdk.ErrUnauthorized("").Trace("This keeper does not have write access for the simple governance store")
+}
+
+// setProposalQueue sets the ProposalQueue to the context
+func (k KeeperRead) setProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) sdk.Error {
+	return sdk.ErrUnauthorized("").Trace("This keeper does not have write access for the simple governance store")
 }

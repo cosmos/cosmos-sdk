@@ -1,13 +1,12 @@
 package simpleGovernance
 
 import (
-	"encoding/binary"
 	"reflect"
 
 	// stake "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simplestake"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	abci "github.com/tendermint/abci/types"
 )
 
 // NewHandler creates a new handler for all simple_gov type messages.
@@ -25,78 +24,17 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-// NewBeginBlocker checks if the
-// func NewBeginBlocker(k Keeper) (sdk.BeginBlocker, sdk.Error) {
-// 	return func(ctx sdk.Context, req abci.RequestBeginBlock) (abci.ResponseBeginBlock, sdk.Error) {
-// 		err := checkProposal(ctx, k)
-// 		if err != nil {
-// 			return abci.ResponseBeginBlock{}, err
-// 		}
-// 		return abci.ResponseBeginBlock{}, nil
-// 	}
-// }
-
-// func checkProposal() {
-//
-// }
-// 	proposalID = ProposalProcessingQueue.Peek()
-// 	if (proposalID == nil)
-// 		return
-//
-// 	proposal = load(Proposals, proposalID)
-//
-// 	if (proposal.Votes.YesVotes/proposal.InitTotalVotingPower > 2/3)
-//
-// 		// proposal accepted early by super-majority
-// 		// no punishments; refund deposits
-//
-// 		ProposalProcessingQueue.pop()
-//
-// 		var newDeposits []Deposits
-//
-// 		// XXX: why do we need to reset deposits? cant we just clear it ?
-// 		for each (amount, depositer) in proposal.Deposits
-// 			newDeposits.append[{0, depositer}]
-// 			depositer.AtomBalance += amount
-//
-// 		proposal.Deposits = newDeposits
-// 		store(Proposals, proposalID, proposal)
-//
-// 		checkProposal()
-//
-// 	else if (CurrentBlock == proposal.VotingStartBlock + proposal.Procedure.VotingPeriod)
-//
-// 		ProposalProcessingQueue.pop()
-// 		activeProcedure = load(params, 'ActiveProcedure')
-//
-// 		for each validator in CurrentBondedValidators
-// 			validatorGovInfo = load(ValidatorGovInfos, <proposalID | validator.Address>)
-//
-// 			if (validatorGovInfo.InitVotingPower != nil)
-// 				// validator was bonded when vote started
-//
-// 				validatorOption = load(Options, <proposalID | validator.Address>)
-// 				if (validatorOption == nil)
-// 					// validator did not vote
-// 					slash validator by activeProcedure.GovernancePenalty
-//
-//
-// 		totalNonAbstain = proposal.Votes.YesVotes + proposal.Votes.NoVotes + proposal.Votes.NoWithVetoVotes
-// 		if( proposal.Votes.YesVotes/totalNonAbstain > 0.5 AND proposal.Votes.NoWithVetoVotes/totalNonAbstain  < 1/3)
-//
-// 			//  proposal was accepted at the end of the voting period
-// 			//  refund deposits (non-voters already punished)
-//
-// 			var newDeposits []Deposits
-//
-// 			for each (amount, depositer) in proposal.Deposits
-// 				newDeposits.append[{0, depositer}]
-// 				depositer.AtomBalance += amount
-//
-// 			proposal.Deposits = newDeposits
-// 			store(Proposals, proposalID, proposal)
-//
-// 			checkProposal()
+// NewBeginBlocker checks proposal and creates a BeginBlock
+func NewBeginBlocker(k Keeper) sdk.BeginBlocker {
+	// TODO cannot use func literal (type func("github.com/cosmos/cosmos-sdk/types".Context, "github.com/tendermint/abci/types".RequestBeginBlock) "github.com/tendermint/abci/types".ResponseBeginBlock) as type "github.com/cosmos/cosmos-sdk/types".BeginBlocker in return argument
+	return func(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+		err := checkProposal(ctx, k)
+		if err != nil {
+			panic(err)
+		}
+		return abci.ResponseBeginBlock{}
+	}
+}
 
 func checkProposal(ctx sdk.Context, k Keeper) sdk.Error {
 	proposal, err := k.ProposalQueueHead(ctx)
@@ -105,7 +43,8 @@ func checkProposal(ctx sdk.Context, k Keeper) sdk.Error {
 	}
 
 	// Proposal reached the end of the voting period
-	if ctx.BlockHeight() == proposal.SubmitBlock+proposal.BlockLimit {
+	if ctx.BlockHeight() >= proposal.SubmitBlock+proposal.BlockLimit &&
+		proposal.IsOpen() {
 		k.ProposalQueuePop(ctx)
 
 		nonAbstainTotal := proposal.YesVotes + proposal.NoVotes
@@ -120,7 +59,7 @@ func checkProposal(ctx sdk.Context, k Keeper) sdk.Error {
 		} else {
 			proposal.State = "Rejected"
 		}
-		// return checkProposal() // XXX where's this function defined ? why no params ?
+		return checkProposal(ctx, k)
 	}
 	return nil
 }
@@ -166,13 +105,7 @@ func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
 		return stake.ErrNoDelegatorForAddress(DefaultCodespace).Result()
 	}
 
-	var key []byte
-
-	proposalIDBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(proposalIDBytes, uint64(msg.ProposalID))
-
-	key = append(proposalIDBytes, msg.Voter.Bytes()...)
-	voterOption, err := k.GetOption(ctx, key)
+	voterOption, err := k.GetOption(ctx, msg.ProposalID, msg.Voter)
 
 	if err != nil {
 		return err.Result()
@@ -205,7 +138,7 @@ func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
 		}
 	}
 
-	k.SetOption(ctx, key, msg.Option)
+	k.SetOption(ctx, msg.ProposalID, msg.Voter, msg.Option)
 	k.SetProposal(ctx, msg.ProposalID, proposal)
 
 	return sdk.Result{} // return proper result

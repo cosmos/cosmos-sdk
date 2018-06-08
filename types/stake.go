@@ -65,6 +65,72 @@ type ValidatorSet interface {
 	Unrevoke(Context, crypto.PubKey)          // unrevoke a validator
 }
 
+// ViewValidatorSet only allows reading validator informations, without slashing/revoking
+type ViewValidatorSet struct {
+	valset ValidatorSet
+}
+
+func NewViewValidatorSet(valset ValidatorSet) ViewValidatorSet {
+	return ViewValidatorSet{
+		valset: valset,
+	}
+}
+
+func (valset ViewValidatorSet) IterateValidators(ctx Context, fn func(int64, Validator) bool) {
+	valset.valset.IterateValidators(ctx, fn)
+}
+
+func (valset ViewValidatorSet) IterateValidatorsBonded(ctx Context, fn func(int64, Validator) bool) {
+	valset.valset.IterateValidatorsBonded(ctx, fn)
+}
+
+func (valset ViewValidatorSet) Validator(ctx Context, addr Address) Validator {
+	return valset.valset.Validator(ctx, addr)
+}
+
+func (valset ViewValidatorSet) TotalPower(ctx Context) Rat {
+	return valset.valset.TotalPower(ctx)
+}
+
+// FullValidatorSet allows all activity on ValidatorSet but prevent type assertion/switching
+type FullValidatorSet struct {
+	valset ValidatorSet
+}
+
+func NewFullValidatorSet(valset ValidatorSet) FullValidatorSet {
+	return FullValidatorSet{
+		valset: valset,
+	}
+}
+
+func (valset FullValidatorSet) IterateValidators(ctx Context, fn func(int64, Validator) bool) {
+	valset.valset.IterateValidators(ctx, fn)
+}
+
+func (valset FullValidatorSet) IterateValidatorsBonded(ctx Context, fn func(int64, Validator) bool) {
+	valset.valset.IterateValidatorsBonded(ctx, fn)
+}
+
+func (valset FullValidatorSet) Validator(ctx Context, addr Address) Validator {
+	return valset.valset.Validator(ctx, addr)
+}
+
+func (valset FullValidatorSet) TotalPower(ctx Context) Rat {
+	return valset.valset.TotalPower(ctx)
+}
+
+func (valset FullValidatorSet) Slash(ctx Context, pubkey crypto.PubKey, height int64, fraction Rat) {
+	valset.valset.Slash(ctx, pubkey, height, fraction)
+}
+
+func (valset FullValidatorSet) Revoke(ctx Context, pubkey crypto.PubKey) {
+	valset.valset.Revoke(ctx, pubkey)
+}
+
+func (valset FullValidatorSet) Unrevoke(ctx Context, pubkey crypto.PubKey) {
+	valset.valset.Unrevoke(ctx, pubkey)
+}
+
 //_______________________________________________________________________________
 
 // delegation bond for a delegated proof of stake system

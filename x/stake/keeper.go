@@ -758,6 +758,16 @@ func (k Keeper) TotalPower(ctx sdk.Context) sdk.Rat {
 	return pool.BondedShares
 }
 
+// wrap the keeper to sdk.FullValidatorSet
+func (k Keeper) Full() sdk.FullValidatorSet {
+	return sdk.NewFullValidatorSet(k)
+}
+
+// wrap the keeper to sdk.ViewValidatorSet
+func (k Keeper) View() sdk.ViewValidatorSet {
+	return sdk.NewViewValidatorSet(k)
+}
+
 //__________________________________________________________________________
 
 // Implements DelegationSet

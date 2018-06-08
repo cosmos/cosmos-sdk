@@ -1,13 +1,23 @@
 package simpleGovernance
 
 import (
+	"encoding/binary"
 	"reflect"
 
+	abci "github.com/tendermint/abci/types"
 	// stake "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simplestake"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	abci "github.com/tendermint/abci/types"
 )
+
+// Minimum proposal deposit
+const minDeposit = 100
+
+func int64ToBytes(i int64) []byte {
+	b := make([]byte, 8)
+	binary.LittleEndian.PutUint64(b, uint64(i))
+	return b
+}
 
 // NewHandler creates a new handler for all simple_gov type messages.
 func NewHandler(k Keeper) sdk.Handler {
@@ -27,12 +37,12 @@ func NewHandler(k Keeper) sdk.Handler {
 // NewBeginBlocker checks proposal and creates a BeginBlock
 func NewBeginBlocker(k Keeper) sdk.BeginBlocker {
 	// TODO cannot use func literal (type func("github.com/cosmos/cosmos-sdk/types".Context, "github.com/tendermint/abci/types".RequestBeginBlock) "github.com/tendermint/abci/types".ResponseBeginBlock) as type "github.com/cosmos/cosmos-sdk/types".BeginBlocker in return argument
-	return func(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	return func(ctx sdk.Context, req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 		err := checkProposal(ctx, k)
 		if err != nil {
 			panic(err)
 		}
-		return abci.ResponseBeginBlock{}
+		return
 	}
 }
 
@@ -64,12 +74,11 @@ func checkProposal(ctx sdk.Context, k Keeper) sdk.Error {
 	return nil
 }
 
-const minDeposit = 100 // How do you set the min deposit
-
 func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg SubmitProposalMsg) sdk.Result {
+	// TODO check if have to set coins
 	_, _, err := k.ck.SubtractCoins(ctx, msg.Submitter, msg.Deposit)
 	if err != nil {
-		return err.Result() // Code and Log of the error
+		return err.Result()
 	}
 
 	if msg.Deposit.AmountOf("Atom") >= minDeposit {
@@ -82,12 +91,16 @@ func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg SubmitProposalMsg) s
 			msg.Deposit)
 		proposalID := k.NewProposalID(ctx)
 		k.SetProposal(ctx, proposalID, proposal)
+		return sdk.Result{
+			Tags: sdk.NewTags(
+				"action", []byte("propose"),
+				"proposal", int64ToBytes(proposalID),
+				"submitter", msg.Submitter.Bytes(),
+			),
+		}
 	}
-
-	return sdk.Result{} // return proper result
+	return ErrMinimumDeposit().Result()
 }
-
-// TODO func proposal IsOpen()
 
 func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
 	proposal, err := k.GetProposal(ctx, msg.ProposalID)
@@ -95,7 +108,8 @@ func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
 		return err.Result()
 	}
 
-	if ctx.BlockHeight() > proposal.SubmitBlock+proposal.BlockLimit {
+	if ctx.BlockHeight() > proposal.SubmitBlock+proposal.BlockLimit ||
+		!proposal.IsOpen() {
 		return ErrVotingPeriodClosed().Result()
 	}
 
@@ -104,18 +118,12 @@ func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
 	if len(delegatedTo) == 0 {
 		return stake.ErrNoDelegatorForAddress(DefaultCodespace).Result()
 	}
-
+	// Check if address already voted
 	voterOption, err := k.GetOption(ctx, msg.ProposalID, msg.Voter)
-
-	if err != nil {
-		return err.Result()
-	}
-	// TODO check if this line is OK
-	// nil option return error in ValidateBasic
-	if voterOption == "" {
+	if voterOption == "" && err != nil {
 		// voter has not voted yet
 		for _, delegation := range delegatedTo {
-			bondShares := delegation.GetBondShares().Denom()
+			bondShares := delegation.GetBondShares().Evaluate()
 			err = proposal.updateTally(msg.Option, bondShares)
 			if err != nil {
 				return err.Result()
@@ -123,7 +131,6 @@ func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
 		}
 	} else {
 		// voter has already voted
-
 		for _, delegation := range delegatedTo {
 			bondShares := delegation.GetBondShares().Evaluate()
 			// update previous vote with new one
@@ -141,6 +148,13 @@ func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
 	k.SetOption(ctx, msg.ProposalID, msg.Voter, msg.Option)
 	k.SetProposal(ctx, msg.ProposalID, proposal)
 
-	return sdk.Result{} // return proper result
+	return sdk.Result{
+		Tags: sdk.NewTags(
+			"action", []byte("vote"),
+			"proposal", int64ToBytes(msg.ProposalID),
+			"voter", msg.Voter.Bytes(),
+			"option", []byte(msg.Option),
+		),
+	}
 
 }

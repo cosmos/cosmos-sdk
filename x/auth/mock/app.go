@@ -30,7 +30,7 @@ type App struct {
 	GenesisAccounts []auth.Account
 }
 
-// NewApp is used for testing the server. For the internal mock app stuff, it uses code in helpers.go
+// partially construct a new app on the memstore for module and genesis testing
 func NewApp() *App {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 	db := dbm.NewMemDB()

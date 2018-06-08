@@ -117,6 +117,7 @@ func TestMsgSendWithAccounts(t *testing.T) {
 	mock.SignCheckDeliver(t, mapp.BaseApp, sendMsg1, []int64{0}, false, priv1)
 
 	// bumping the txnonce number without resigning should be an auth error
+	mapp.BeginBlock(abci.RequestBeginBlock{})
 	tx := mock.GenTx(sendMsg1, []int64{0}, priv1)
 	tx.Signatures[0].Sequence = 1
 	res := mapp.Deliver(tx)

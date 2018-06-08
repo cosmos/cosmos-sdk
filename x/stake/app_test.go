@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/abci/types"
@@ -65,6 +66,30 @@ func getInitChainer(mapp *mock.App, keeper Keeper) sdk.InitChainer {
 	}
 }
 
+//__________________________________________________________________________________________
+
+func checkValidator(t *testing.T, mapp *mock.App, keeper Keeper,
+	addr sdk.Address, expFound bool) Validator {
+
+	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
+	validator, found := keeper.GetValidator(ctxCheck, addr1)
+	assert.Equal(t, expFound, found)
+	return validator
+}
+
+func checkDelegation(t *testing.T, mapp *mock.App, keeper Keeper, delegatorAddr,
+	validatorAddr sdk.Address, expFound bool, expShares sdk.Rat) {
+
+	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
+	delegation, found := keeper.GetDelegation(ctxCheck, delegatorAddr, validatorAddr)
+	if expFound {
+		assert.True(t, found)
+		assert.True(sdk.RatEq(t, expShares, delegation.Shares))
+		return
+	}
+	assert.False(t, found)
+}
+
 func TestStakeMsgs(t *testing.T) {
 	mapp, keeper := getMockApp(t)
 
@@ -82,14 +107,10 @@ func TestStakeMsgs(t *testing.T) {
 	accs := []auth.Account{acc1, acc2}
 
 	mock.SetGenesis(mapp, accs)
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin})
+	mock.CheckBalance(t, mapp, addr2, sdk.Coins{genCoin})
 
-	// A checkTx context (true)
-	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
-	res1 := mapp.AccountMapper.GetAccount(ctxCheck, addr1)
-	res2 := mapp.AccountMapper.GetAccount(ctxCheck, addr2)
-	require.Equal(t, acc1, res1)
-	require.Equal(t, acc2, res2)
-
+	////////////////////
 	// Create Validator
 
 	description := NewDescription("foo_moniker", "", "", "")
@@ -97,56 +118,40 @@ func TestStakeMsgs(t *testing.T) {
 		addr1, priv1.PubKey(), bondCoin, description,
 	)
 	mock.SignCheckDeliver(t, mapp.BaseApp, createValidatorMsg, []int64{0}, true, priv1)
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin.Minus(bondCoin)})
+	mapp.BeginBlock(abci.RequestBeginBlock{})
 
-	ctxDeliver := mapp.BaseApp.NewContext(false, abci.Header{})
-	res1 = mapp.AccountMapper.GetAccount(ctxDeliver, addr1)
-	require.Equal(t, sdk.Coins{genCoin.Minus(bondCoin)}, res1.GetCoins())
-	validator, found := keeper.GetValidator(ctxDeliver, addr1)
-	require.True(t, found)
+	validator := checkValidator(t, mapp, keeper, addr1, true)
 	require.Equal(t, addr1, validator.Owner)
 	require.Equal(t, sdk.Bonded, validator.Status())
 	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.PoolShares.Bonded()))
 
 	// check the bond that should have been created as well
-	bond, found := keeper.GetDelegation(ctxDeliver, addr1, addr1)
-	require.True(sdk.RatEq(t, sdk.NewRat(10), bond.Shares))
+	checkDelegation(t, mapp, keeper, addr1, addr1, true, sdk.NewRat(10))
 
+	////////////////////
 	// Edit Validator
 
 	description = NewDescription("bar_moniker", "", "", "")
-	editValidatorMsg := NewMsgEditValidator(
-		addr1, description,
-	)
-	mock.SignDeliver(t, mapp.BaseApp, editValidatorMsg, []int64{1}, true, priv1)
-
-	validator, found = keeper.GetValidator(ctxDeliver, addr1)
-	require.True(t, found)
+	editValidatorMsg := NewMsgEditValidator(addr1, description)
+	mock.SignCheckDeliver(t, mapp.BaseApp, editValidatorMsg, []int64{1}, true, priv1)
+	validator = checkValidator(t, mapp, keeper, addr1, true)
 	require.Equal(t, description, validator.Description)
 
+	////////////////////
 	// Delegate
 
-	delegateMsg := NewMsgDelegate(
-		addr2, addr1, bondCoin,
-	)
-	mock.SignDeliver(t, mapp.BaseApp, delegateMsg, []int64{0}, true, priv2)
+	mock.CheckBalance(t, mapp, addr2, sdk.Coins{genCoin})
+	delegateMsg := NewMsgDelegate(addr2, addr1, bondCoin)
+	mock.SignCheckDeliver(t, mapp.BaseApp, delegateMsg, []int64{0}, true, priv2)
+	mock.CheckBalance(t, mapp, addr2, sdk.Coins{genCoin.Minus(bondCoin)})
+	checkDelegation(t, mapp, keeper, addr2, addr1, true, sdk.NewRat(10))
 
-	res2 = mapp.AccountMapper.GetAccount(ctxDeliver, addr2)
-	require.Equal(t, sdk.Coins{genCoin.Minus(bondCoin)}, res2.GetCoins())
-	bond, found = keeper.GetDelegation(ctxDeliver, addr2, addr1)
-	require.True(t, found)
-	require.Equal(t, addr2, bond.DelegatorAddr)
-	require.Equal(t, addr1, bond.ValidatorAddr)
-	require.True(sdk.RatEq(t, sdk.NewRat(10), bond.Shares))
-
+	////////////////////
 	// Unbond
 
-	unbondMsg := NewMsgUnbond(
-		addr2, addr1, "MAX",
-	)
-	mock.SignDeliver(t, mapp.BaseApp, unbondMsg, []int64{1}, true, priv2)
-
-	res2 = mapp.AccountMapper.GetAccount(ctxDeliver, addr2)
-	require.Equal(t, sdk.Coins{genCoin}, res2.GetCoins())
-	_, found = keeper.GetDelegation(ctxDeliver, addr2, addr1)
-	require.False(t, found)
+	unbondMsg := NewMsgUnbond(addr2, addr1, "MAX")
+	mock.SignCheckDeliver(t, mapp.BaseApp, unbondMsg, []int64{1}, true, priv2)
+	mock.CheckBalance(t, mapp, addr2, sdk.Coins{genCoin})
+	checkDelegation(t, mapp, keeper, addr2, addr1, false, sdk.Rat{})
 }

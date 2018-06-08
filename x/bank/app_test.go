@@ -145,7 +145,7 @@ func bankTestInvariants() mock.AssertInvariants {
 }
 
 func checkNonnegativeBalances(t *testing.T, app *mock.App, ctx sdk.Context, log string) {
-	accts := mock.GetAllAccounts(app, ctx)
+	accts := mock.GetAllAccounts(app.AccountMapper, ctx)
 	for _, acc := range accts {
 		for _, coin := range acc.GetCoins() {
 			assert.True(t, coin.IsNotNegative(), acc.GetAddress().String()+

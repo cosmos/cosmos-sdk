@@ -16,26 +16,14 @@ import (
 
 var chainID = "" // TODO
 
-func CreateRandomGenesisAccounts(r *rand.Rand, addrs []sdk.Address, denoms []string) []auth.BaseAccount {
-	accts := make([]auth.BaseAccount, len(addrs), len(addrs))
-	maxNumCoins := 2 << 50
-	for i := 0; i < len(accts); i++ {
-		coins := make([]sdk.Coin, len(denoms), len(denoms))
-		for j := 0; j < len(denoms); j++ {
-			coins[j] = sdk.Coin{Denom: denoms[j], Amount: int64(r.Intn(maxNumCoins))}
-		}
-		accts[i] = auth.NewBaseAccountWithAddress(addrs[i])
-		accts[i].SetCoins(coins)
-	}
-	return accts
-}
-
-// set the mock app genesis
+// Set genesis accounts with random coin values using the provided addresses and
+// coin denominations
 func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.Address, denoms []string) {
 	accts := make([]auth.Account, len(addrs), len(addrs))
 	maxNumCoins := 2 << 50
 	for i := 0; i < len(accts); i++ {
 		coins := make([]sdk.Coin, len(denoms), len(denoms))
+		// generate a random coin for each denomination
 		for j := 0; j < len(denoms); j++ {
 			coins[j] = sdk.Coin{Denom: denoms[j], Amount: int64(r.Intn(maxNumCoins))}
 		}
@@ -46,19 +34,21 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.Address, denoms []stri
 	SetGenesis(app, accts)
 }
 
-func GenerateNPrivKeys(N int) (keys []crypto.PrivKey) {
+// Generate n Private Keys
+func GenerateNPrivKeys(n int) (keys []crypto.PrivKey) {
 	// TODO Randomize this between ed25519 and secp256k1
-	keys = make([]crypto.PrivKey, N, N)
-	for i := 0; i < N; i++ {
+	keys = make([]crypto.PrivKey, n, n)
+	for i := 0; i < n; i++ {
 		keys[i] = crypto.GenPrivKeyEd25519()
 	}
 	return
 }
 
-func GenerateNPrivKeyAddressPairs(N int) (keys []crypto.PrivKey, addrs []sdk.Address) {
-	keys = make([]crypto.PrivKey, N, N)
-	addrs = make([]sdk.Address, N, N)
-	for i := 0; i < N; i++ {
+// Generate n pairs of Private Keys, and Addresses
+func GenerateNPrivKeyAddressPairs(n int) (keys []crypto.PrivKey, addrs []sdk.Address) {
+	keys = make([]crypto.PrivKey, n, n)
+	addrs = make([]sdk.Address, n, n)
+	for i := 0; i < n; i++ {
 		keys[i] = crypto.GenPrivKeyEd25519()
 		addrs[i] = keys[i].PubKey().Address()
 	}
@@ -67,7 +57,6 @@ func GenerateNPrivKeyAddressPairs(N int) (keys []crypto.PrivKey, addrs []sdk.Add
 
 // set the mock app genesis
 func SetGenesis(app *App, accs []auth.Account) {
-
 	// pass the accounts in via the application (lazy) instead of through RequestInitChain
 	app.GenesisAccounts = accs
 
@@ -149,12 +138,13 @@ func SignDeliver(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, seq []int64, e
 	app.EndBlock(abci.RequestEndBlock{})
 }
 
-func GetAllAccounts(app *App, ctx sdk.Context) []auth.Account {
+// Get all accounts in the accountMapper
+func GetAllAccounts(mapper auth.AccountMapper, ctx sdk.Context) []auth.Account {
 	accounts := []auth.Account{}
 	appendAccount := func(acc auth.Account) (stop bool) {
 		accounts = append(accounts, acc)
 		return false
 	}
-	app.AccountMapper.IterateAccounts(ctx, appendAccount)
+	mapper.IterateAccounts(ctx, appendAccount)
 	return accounts
 }

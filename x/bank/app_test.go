@@ -87,6 +87,15 @@ func getMockApp(t *testing.T) *mock.App {
 	return mapp
 }
 
+func TestBankWithRandomMessages(t *testing.T) {
+	mapp := getMockApp(t)
+
+}
+
+func bankRandomMsgSetup(keeper Keeper) mock.RandSetup {
+
+}
+
 func TestMsgSendWithAccounts(t *testing.T) {
 	mapp := getMockApp(t)
 

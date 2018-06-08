@@ -11,9 +11,59 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 
 	abci "github.com/tendermint/abci/types"
+	"math/rand"
 )
 
 var chainID = "" // TODO
+
+func CreateRandomGenesisAccounts(r *rand.Rand, addrs []sdk.Address, denoms []string) []auth.BaseAccount {
+	accts := make([]auth.BaseAccount, len(addrs), len(addrs))
+	maxNumCoins := 2 << 50
+	for i := 0; i < len(accts); i++ {
+		coins := make([]sdk.Coin, len(denoms), len(denoms))
+		for j := 0; j < len(denoms); j++ {
+			coins[j] = sdk.Coin{Denom: denoms[j], Amount: int64(r.Intn(maxNumCoins))}
+		}
+		accts[i] = auth.NewBaseAccountWithAddress(addrs[i])
+		accts[i].SetCoins(coins)
+	}
+	return accts
+}
+
+// set the mock app genesis
+func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.Address, denoms []string) {
+	accts := make([]auth.Account, len(addrs), len(addrs))
+	maxNumCoins := 2 << 50
+	for i := 0; i < len(accts); i++ {
+		coins := make([]sdk.Coin, len(denoms), len(denoms))
+		for j := 0; j < len(denoms); j++ {
+			coins[j] = sdk.Coin{Denom: denoms[j], Amount: int64(r.Intn(maxNumCoins))}
+		}
+		baseAcc := auth.NewBaseAccountWithAddress(addrs[i])
+		(&baseAcc).SetCoins(coins)
+		accts[i] = &baseAcc
+	}
+	SetGenesis(app, accts)
+}
+
+func GenerateNPrivKeys(N int) (keys []crypto.PrivKey) {
+	// TODO Randomize this between ed25519 and secp256k1
+	keys = make([]crypto.PrivKey, N, N)
+	for i := 0; i < N; i++ {
+		keys[i] = crypto.GenPrivKeyEd25519()
+	}
+	return
+}
+
+func GenerateNPrivKeyAddressPairs(N int) (keys []crypto.PrivKey, addrs []sdk.Address) {
+	keys = make([]crypto.PrivKey, N, N)
+	addrs = make([]sdk.Address, N, N)
+	for i := 0; i < N; i++ {
+		keys[i] = crypto.GenPrivKeyEd25519()
+		addrs[i] = keys[i].PubKey().Address()
+	}
+	return
+}
 
 // set the mock app genesis
 func SetGenesis(app *App, accs []auth.Account) {

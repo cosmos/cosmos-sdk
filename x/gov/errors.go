@@ -13,15 +13,15 @@ const (
 	DefaultCodespace sdk.CodespaceType = 5
 
 	// Gov errors reserve 401 ~ 499.
-	CodeUnknownProposal         sdk.CodeType = 401
-	CodeInactiveProposal        sdk.CodeType = 402
-	CodeAlreadyActiveProposal   sdk.CodeType = 403
-	CodeAlreadyFinishedProposal sdk.CodeType = 404
-	CodeAddressNotStaked        sdk.CodeType = 405
-	CodeInvalidTitle            sdk.CodeType = 406
-	CodeInvalidDescription      sdk.CodeType = 407
-	CodeInvalidProposalType     sdk.CodeType = 408
-	CodeInvalidVote             sdk.CodeType = 409
+	CodeUnknownProposal         sdk.CodeType = 1
+	CodeInactiveProposal        sdk.CodeType = 2
+	CodeAlreadyActiveProposal   sdk.CodeType = 3
+	CodeAlreadyFinishedProposal sdk.CodeType = 4
+	CodeAddressNotStaked        sdk.CodeType = 5
+	CodeInvalidTitle            sdk.CodeType = 6
+	CodeInvalidDescription      sdk.CodeType = 7
+	CodeInvalidProposalType     sdk.CodeType = 8
+	CodeInvalidVote             sdk.CodeType = 9
 )
 
 //----------------------------------------

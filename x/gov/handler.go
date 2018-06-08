@@ -89,13 +89,7 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 		return sdk.Result{} // TODO
 	}
 
-	vote := Vote{
-		ProposalID: msg.ProposalID,
-		Voter:      msg.Voter,
-		Option:     msg.Option,
-	}
-
-	keeper.AddVote(ctx, msg.ProposalID, msg.Voter, vote)
+	keeper.AddVote(ctx, msg.ProposalID, msg.Voter, msg.Option)
 
 	tags := sdk.NewTags("action", []byte("vote"), "voter", msg.Voter.Bytes(), "proposalId", []byte{byte(msg.ProposalID)})
 	return sdk.Result{

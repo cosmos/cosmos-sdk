@@ -51,6 +51,7 @@ func (keeper Keeper) NewProposal(ctx sdk.Context, title string, description stri
 		Title:            title,
 		Description:      description,
 		ProposalType:     proposalType,
+		Status:           "Pending",
 		TotalDeposit:     sdk.Coins{},
 		SubmitBlock:      ctx.BlockHeight(),
 		VotingStartBlock: -1, // TODO: Make Time
@@ -148,11 +149,27 @@ func (keeper Keeper) GetTallyingProcedure(ctx sdk.Context) *TallyingProcedure {
 // Votes
 
 // Gets the vote of a specific voter on a specific proposal
-func (keeper Keeper) AddVote(ctx sdk.Context, proposalID int64, voter sdk.Address, vote Vote) {
-	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinary(vote)
-	key := []byte(fmt.Sprintf("%d", proposalID) + ":votes:" + fmt.Sprintf("%s", voter))
-	store.Set(key, bz)
+func (keeper Keeper) AddVote(ctx sdk.Context, proposalID int64, voter sdk.Address, option string) sdk.Error {
+	proposal := keeper.GetProposal(ctx, proposalID)
+	if proposal == nil {
+		return ErrUnknownProposal(proposalID)
+	}
+	if proposal.Status != "Active" {
+		return ErrInactiveProposal(proposalID)
+	}
+
+	if option != "Yes" && option != "Abstain" && option != "No" && option != "NoWithVeto" {
+		return ErrInvalidVote(option)
+	}
+
+	vote := Vote{
+		ProposalID: proposalID,
+		Voter:      voter,
+		Option:     option,
+	}
+	keeper.setVote(ctx, proposalID, voter, vote)
+
+	return nil
 }
 
 // Gets the vote of a specific voter on a specific proposal

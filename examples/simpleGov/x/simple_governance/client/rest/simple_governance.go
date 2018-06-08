@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/gorilla/mux"
 	"github.com/tendermint/go-crypto/keys"
@@ -14,15 +15,55 @@ import (
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/accounts/{address}/propose", SubmitProposalHandlerFn(cdc, kb, ctx)).Methods("POST")
+	r.HandleFunc("/proposals/{id}", GetProposalHandlerFn(cdc, kb, ctx)).Methods("GET")
+	r.HandleFunc("/proposals/{id}/vote", VoteProposalHandlerFn(cdc, kb, ctx)).Methods("POST")
+	r.HandleFunc("/accounts/{address}/proposals/{id}", GetAccountProposalHandlerFn(cdc, kb, ctx)).Methods("GET")
+	r.HandleFunc("/accounts/{address}/proposals", SubmitProposalHandlerFn(cdc, kb, ctx)).Methods("POST")
+}
+
+type getProposalBody struct {
+	ProposalID int64 `json:"proposal_id"`
 }
 
 type proposeBody struct {
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	Deposit     sdk.Coins `json:"deposit"`
-	ChainID     string    `json:"chain_id"`
-	Sequence    int64     `json:"sequence"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Deposit     string `json:"deposit"`
+}
+
+type voteBody struct {
+	ProposalID int64  `json:"proposal_id"`
+	Option     string `json:"option"`
+	Voter      string `json:"voter"`
+}
+
+// GetProposalHandlerFn - http request handler to get a current proposal
+func GetProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		proposalID := vars["id"]
+
+		var getProp getProposalBody
+
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		err = json.Unmarshal(body, &getProp)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		// TODO handle obtain a proposal
+
+		// w.Write(output)
+
+	}
 }
 
 // SubmitProposalHandlerFn - http request handler to create a proposal
@@ -53,7 +94,7 @@ func SubmitProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreC
 			w.Write([]byte(err.Error()))
 			return
 		}
-		to := sdk.Address(bz)
+		proposerAddr := sdk.Address(bz)
 
 		// // build message
 		// msg := client.BuildMsg(info.PubKey.Address(), to, m.Amount)
@@ -81,12 +122,47 @@ func SubmitProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreC
 		// 	return
 		// }
 
-		output, err := json.MarshalIndent(res, "", "  ")
+		// output, err := json.MarshalIndent(res, "", "  ")
+		// if err != nil {
+		// 	w.WriteHeader(http.StatusInternalServerError)
+		// 	w.Write([]byte(err.Error()))
+		// 	return
+		// }
+
+		w.Write(output)
+	}
+}
+
+// VoteProposalHandlerFn - http request handler to vote on a proposal
+func VoteProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		proposalID := vars["id"]
+
+		var vote voteBody
+
+		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
+
+		err = json.Unmarshal(body, &vote)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		// Get address of proposer
+		bz, err := hex.DecodeString(vote.Voter)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		voterAddr := sdk.Address(bz)
 
 		w.Write(output)
 	}

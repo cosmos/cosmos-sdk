@@ -9,9 +9,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/mock"
+	"math/rand"
 
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
+	"strconv"
 )
 
 // test bank module in a mock application
@@ -89,11 +91,67 @@ func getMockApp(t *testing.T) *mock.App {
 
 func TestBankWithRandomMessages(t *testing.T) {
 	mapp := getMockApp(t)
-
+	setup := func(r *rand.Rand, keys []crypto.PrivKey) {
+		return
+	}
+	mapp.RandomizedTesting(t, []mock.TestAndRunTx{randSingleSendTx}, []mock.RandSetup{setup},
+		[]mock.AssertInvariants{bankTestInvariants()}, 100, 30, 30)
 }
 
-func bankRandomMsgSetup(keeper Keeper) mock.RandSetup {
+// Send a random "Send" Transaction
+func randSingleSendTx(t *testing.T, r *rand.Rand, app *mock.App, ctx sdk.Context, keys []crypto.PrivKey, log string) (action string, err sdk.Error) {
+	fromKey := keys[r.Intn(len(keys))]
+	fromAddr := fromKey.PubKey().Address()
+	toKey := keys[r.Intn(len(keys))]
+	// Disallow setting money to yourself
+	for {
+		if !fromKey.Equals(toKey) {
+			break
+		}
+		toKey = keys[r.Intn(len(keys))]
+	}
+	toAddr := toKey.PubKey().Address()
+	initFromAcc := app.AccountMapper.GetAccount(ctx, fromAddr)
+	initToCoins := app.AccountMapper.GetAccount(ctx, toAddr).GetCoins()
+	initFromCoins := initFromAcc.GetCoins()
+	denomIndex := r.Intn(len(initFromCoins))
+	amt := r.Int63n(initFromCoins[denomIndex].Amount)
+	action = (fromAddr.String() + " is sending " + strconv.Itoa(int(amt)) +
+		initFromCoins[denomIndex].Denom + " to " + toAddr.String())
+	log += "\n" + action
 
+	coins := sdk.Coins{{initFromCoins[denomIndex].Denom, amt}}
+	var msg = MsgSend{
+		Inputs:  []Input{NewInput(initFromAcc.GetAddress(), coins)},
+		Outputs: []Output{NewOutput(toAddr, coins)},
+	}
+	tx := mock.GenTx(msg, []int64{int64(initFromAcc.GetSequence())}, fromKey)
+	app.Deliver(tx)
+
+	resultantFromAcc := app.AccountMapper.GetAccount(ctx, fromAddr)
+	resultantToAcc := app.AccountMapper.GetAccount(ctx, toAddr)
+	require.Equal(t, initFromCoins.Minus(coins), resultantFromAcc.GetCoins(), log)
+	require.Equal(t, initToCoins.Plus(coins), resultantToAcc.GetCoins(), log)
+
+	return action, nil
+}
+
+func bankTestInvariants() mock.AssertInvariants {
+	return func(t *testing.T, app *mock.App, log string) {
+		// Check that noone has negative money
+		ctx := app.NewContext(false, abci.Header{})
+		checkNonnegativeBalances(t, app, ctx, log)
+	}
+}
+
+func checkNonnegativeBalances(t *testing.T, app *mock.App, ctx sdk.Context, log string) {
+	accts := mock.GetAllAccounts(app, ctx)
+	for _, acc := range accts {
+		for _, coin := range acc.GetCoins() {
+			assert.True(t, coin.IsNotNegative(), acc.GetAddress().String()+
+				" has a negative denomination of "+coin.Denom+"\n"+log)
+		}
+	}
 }
 
 func TestMsgSendWithAccounts(t *testing.T) {

@@ -1,7 +1,6 @@
 package mock
 
 import (
-	// "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/abci/types"
 	"math/rand"
@@ -24,12 +23,13 @@ func (app *App) RandomizedTesting(t *testing.T, ops []TestAndRunTx, setups []Ran
 	RandomSetGenesis(r, app, addrs, []string{"foocoin"})
 	header := abci.Header{Height: 0}
 	for i := 0; i < numBlocks; i++ {
+		app.BeginBlock(abci.RequestBeginBlock{})
 		// Make sure invariants hold at begnning of block / when nothing was done.
 		app.assertAllInvariants(t, invariants, log)
-		app.BeginBlock(abci.RequestBeginBlock{})
 		ctx := app.NewContext(false, header)
+		// TODO: Add modes to simulate "no load", "medium load", and "high load" blocks
 		for j := 0; j < blockSize; j++ {
-			logUpdate, err := ops[r.Intn(len(ops))](r, app, ctx)
+			logUpdate, err := ops[r.Intn(len(ops))](t, r, app, ctx, keys, log)
 			// Add this to log
 			log += "\n" + logUpdate
 			require.Nil(t, err, log)

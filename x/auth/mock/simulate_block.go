@@ -83,7 +83,7 @@ func CheckBalance(t *testing.T, app *App, addr sdk.Address, exp sdk.Coins) {
 }
 
 // generate a signed transaction
-func GenTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) auth.StdTx {
+func GenTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKey) auth.StdTx {
 
 	// make the transaction free
 	fee := auth.StdFee{
@@ -103,7 +103,7 @@ func GenTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) auth.StdTx {
 }
 
 // simulate a block
-func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
+func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKey) {
 
 	// Sign the tx
 	tx := GenTx(msg, seq, priv...)
@@ -127,4 +127,34 @@ func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, seq []int
 	app.EndBlock(abci.RequestEndBlock{})
 
 	app.Commit()
+}
+
+// XXX the only reason we are using Sign Deliver here is because the tests
+// break on check tx the second time you use SignCheckDeliver in a test because
+// the checktx state has not been updated likely because commit is not being
+// called!
+func SignDeliver(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKey) {
+
+	// Sign the tx
+	tx := GenTx(msg, seq, priv...)
+
+	// Simulate a Block
+	app.BeginBlock(abci.RequestBeginBlock{})
+	res := app.Deliver(tx)
+	if expPass {
+		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
+	} else {
+		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
+	}
+	app.EndBlock(abci.RequestEndBlock{})
+}
+
+func GetAllAccounts(app *App, ctx sdk.Context) []auth.Account {
+	accounts := []auth.Account{}
+	appendAccount := func(acc auth.Account) (stop bool) {
+		accounts = append(accounts, acc)
+		return false
+	}
+	app.AccountMapper.IterateAccounts(ctx, appendAccount)
+	return accounts
 }

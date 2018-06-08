@@ -8,8 +8,8 @@ import (
 )
 
 // Produce a random transaction
-type TestAndRunTx func(r *rand.Rand, app *App, ctx sdk.Context) (action string, err sdk.Error)
+type TestAndRunTx func(t *testing.T, r *rand.Rand, app *App, ctx sdk.Context, privKeys []crypto.PrivKey, log string) (action string, err sdk.Error)
 
-type RandSetup func(r *rand.Rand, privKey []crypto.PrivKey)
+type RandSetup func(r *rand.Rand, privKeys []crypto.PrivKey)
 
-type AssertInvariants func(t *testing.T, app *App, log string) bool
+type AssertInvariants func(t *testing.T, app *App, log string)

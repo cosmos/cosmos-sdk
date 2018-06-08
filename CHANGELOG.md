@@ -1,6 +1,7 @@
 # Changelog
 
 BREAKING CHANGES
+* msg.GetSignBytes() now returns bech32-encoded addresses in all cases
 
 FEATURES
 

@@ -1,0 +1,133 @@
+{
+  "genesis_time": "2018-05-15T12:44:39.048868214-04:00",
+  "chain_id": "test-chain-AgHNNF",
+  "app_state": {
+    "accounts": [
+      {
+        "address": "14D08668EED53E95C3CEF610B38BFFA2D926871A",
+        "coins": [
+          {
+            "denom": "Token",
+            "amount": 1000
+          },
+          {
+            "denom": "steak",
+            "amount": 50
+          }
+        ]
+      },
+      {
+        "address": "1DBFCB0F597282B8004511644E2A9E847D9F3DE2",
+        "coins": [
+          {
+            "denom": "Token",
+            "amount": 1000
+          },
+          {
+            "denom": "steak",
+            "amount": 50
+          }
+        ]
+      },
+      {
+        "address": "657316D58B7F8AC4DC66D4B1E24F7B6BF0928751",
+        "coins": [
+          {
+            "denom": "Token",
+            "amount": 1000
+          },
+          {
+            "denom": "steak",
+            "amount": 50
+          }
+        ]
+      },
+      {
+        "address": "DA1F755E1154D471ECDD2FBE6899593DDEDFF21A",
+        "coins": [
+          {
+            "denom": "Token",
+            "amount": 1000
+          },
+          {
+            "denom": "steak",
+            "amount": 50
+          }
+        ]
+      }
+    ],
+    "stake": {
+      "pool": {
+        "total_supply": 50,
+        "bonded_shares": "0",
+        "unbonded_shares": "0",
+        "bonded_pool": 0,
+        "unbonded_pool": 0,
+        "inflation_last_time": 0,
+        "inflation": "7/100"
+      },
+      "params": {
+        "inflation_rate_change": "13/100",
+        "inflation_max": "1/5",
+        "inflation_min": "7/100",
+        "goal_bonded": "67/100",
+        "max_validators": 100,
+        "bond_denom": "steak"
+      },
+      "candidates": null,
+      "bonds": null
+    }
+  },
+  "consensus_params": {
+    "block_size_params": {
+      "max_bytes": 22020096,
+      "max_txs": 100000,
+      "max_gas": -1
+    },
+    "tx_size_params": {
+      "max_bytes": 10240,
+      "max_gas": -1
+    },
+    "block_gossip_params": {
+      "block_part_size_bytes": 65536
+    },
+    "evidence_params": {
+      "max_age": 100000
+    }
+  },
+  "validators": [
+    {
+      "pub_key": {
+        "type": "AC26791624DE60",
+        "value": "J8IaHnPvRJmkKMOTj4VFwSxZOYNn+Ta1YkY8Gw5wohk="
+      },
+      "power": 100,
+      "name": ""
+    },
+    {
+      "pub_key": {
+        "type": "AC26791624DE60",
+        "value": "MsY/eDeJpHQUbyeMZONAVhgg/ZcJkbZpaqdsS9e7ZXg="
+      },
+      "power": 100,
+      "name": ""
+    },
+    {
+      "pub_key": {
+        "type": "AC26791624DE60",
+        "value": "/HrTVbfSE9MOkrnTXZMmQvKgqr/RSZVEHB/yPZJXqBk="
+      },
+      "power": 100,
+      "name": ""
+    },
+    {
+      "pub_key": {
+        "type": "AC26791624DE60",
+        "value": "yF4yRuTeYf2IkF0uXfxOTOASOvBHbrDT01N6789ApE0="
+      },
+      "power": 100,
+      "name": ""
+    }
+  ],
+  "app_hash": ""
+}

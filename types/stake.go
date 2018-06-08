@@ -3,6 +3,7 @@ package types
 import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-crypto"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // status of a validator
@@ -31,6 +32,7 @@ func BondStatusToString(b BondStatus) string {
 
 // validator for a delegated proof of stake system
 type Validator interface {
+	GetMoniker() string       // moniker of the validator
 	GetStatus() BondStatus    // status of the validator
 	GetOwner() Address        // owner address to receive/return validators coins
 	GetPubKey() crypto.PubKey // validation pubkey
@@ -41,7 +43,7 @@ type Validator interface {
 // validator which fulfills abci validator interface for use in Tendermint
 func ABCIValidator(v Validator) abci.Validator {
 	return abci.Validator{
-		PubKey: v.GetPubKey().Bytes(),
+		PubKey: tmtypes.TM2PB.PubKey(v.GetPubKey()),
 		Power:  v.GetPower().Evaluate(),
 	}
 }

@@ -32,7 +32,7 @@ func Bech32ifyAccPub(pub crypto.PubKey) (string, error) {
 }
 
 // Bech32ifyVal returns the bech32 encoded string for a validator address
-func bech32ifyVal(addr Address) (string, error) {
+func Bech32ifyVal(addr Address) (string, error) {
 	return bech32.ConvertAndEncode(Bech32PrefixValAddr, addr.Bytes())
 }
 
@@ -60,6 +60,21 @@ func GetAccAddressBech32(address string) (addr Address, err error) {
 		return nil, err
 	}
 	return Address(bz), nil
+}
+
+// create a Pubkey from a string
+func GetAccPubKeyBech32(address string) (pk crypto.PubKey, err error) {
+	bz, err := getFromBech32(address, Bech32PrefixAccPub)
+	if err != nil {
+		return nil, err
+	}
+
+	pk, err = crypto.PubKeyFromBytes(bz)
+	if err != nil {
+		return nil, err
+	}
+
+	return pk, nil
 }
 
 // create an Address from a hex string

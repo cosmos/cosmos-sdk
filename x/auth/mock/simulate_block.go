@@ -76,26 +76,5 @@ func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, seq []int
 	}
 	app.EndBlock(abci.RequestEndBlock{})
 
-	// XXX fix code or add explaination as to why using commit breaks a bunch of these tests
 	app.Commit()
 }
-
-// XXX the only reason we are using Sign Deliver here is because the tests
-// break on check tx the second time you use SignCheckDeliver in a test because
-// the checktx state has not been updated likely because commit is not being
-// called!
-//func SignDeliver(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
-
-//// Sign the tx
-//tx := GenTx(msg, seq, priv...)
-
-//// Simulate a Block
-//app.BeginBlock(abci.RequestBeginBlock{})
-//res := app.Deliver(tx)
-//if expPass {
-//require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
-//} else {
-//require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
-//}
-//app.EndBlock(abci.RequestEndBlock{})
-//}

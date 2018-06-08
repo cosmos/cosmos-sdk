@@ -237,10 +237,7 @@ func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
 		return sdk.NewContext(app.checkState.ms, header, true, nil, app.Logger)
 	}
-	aa := app.deliverState
-	a := aa.ms
-	b := app.Logger
-	return sdk.NewContext(a, header, false, nil, b)
+	return sdk.NewContext(app.deliverState.ms, header, false, nil, app.Logger)
 }
 
 type state struct {

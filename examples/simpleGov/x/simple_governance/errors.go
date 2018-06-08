@@ -22,6 +22,7 @@ const (
 	CodeProposalNotFound      CodeType = 708
 	CodeOptionNotFound        CodeType = 709
 	CodeProposalQueueNotFound CodeType = 710
+	CodeInvalidDeposit        CodeType = 711
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
@@ -47,6 +48,8 @@ func codeToDefaultMsg(code CodeType) string {
 		return "Option not found"
 	case CodeProposalQueueNotFound:
 		return "Proposal Queue not found"
+	case CodeInvalidDeposit:
+		return "Invalid deposit"
 	default:
 		return sdk.CodeToDefaultMsg(code)
 	}
@@ -113,6 +116,11 @@ func ErrInvalidVotingWindow(msg string) sdk.Error {
 		return newError(DefaultCodespace, CodeInvalidVotingWindow, msg)
 	}
 	return newError(DefaultCodespace, CodeInvalidVotingWindow, "Voting window is not positive")
+}
+
+// nolint
+func ErrMinimumDeposit() sdk.Error {
+	return newError(DefaultCodespace, CodeInvalidDeposit, "Deposit is lower than the minimum")
 }
 
 //----------------------------------------

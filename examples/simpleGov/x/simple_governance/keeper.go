@@ -1,28 +1,11 @@
 package simpleGovernance
 
 import (
-	"encoding/binary"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
-
-// util functions
-
-func generateKey(proposalID int64, voterAddr sdk.Address) []byte {
-	var key []byte
-	proposalIDBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(proposalIDBytes, uint64(proposalID))
-
-	// key is of the form proposalID|"addresses"|voterAddress
-	key = append(proposalIDBytes, []byte("addresses")...)
-	key = append(key, voterAddr.Bytes()...)
-	return key
-}
-
-//--------------------------------------------------------------------------------------
 
 // nolint
 type Keeper struct {
@@ -50,7 +33,6 @@ func NewKeeper(SimpleGov sdk.StoreKey, ck bank.Keeper, sm stake.Keeper, codespac
 // NewProposalID creates a new id for a proposal
 func (k Keeper) NewProposalID(ctx sdk.Context) int64 {
 	store := ctx.KVStore(k.SimpleGov)
-
 	bid := store.Get([]byte("TotalID"))
 	if bid == nil {
 		return 0
@@ -106,11 +88,11 @@ func (k Keeper) SetProposal(ctx sdk.Context, proposalID int64, proposal Proposal
 	return nil
 }
 
-// GetOption returns the given option of a proposal stored in the keeper
+// GetVote returns the given option of a proposal stored in the keeper
 // Used to check if an address already voted
-func (k Keeper) GetOption(ctx sdk.Context, proposalID int64, voter sdk.Address) (string, sdk.Error) {
+func (k Keeper) GetVote(ctx sdk.Context, proposalID int64, voter sdk.Address) (string, sdk.Error) {
 
-	key := generateKey(proposalID, voter)
+	key := GenerateAccountProposalKey(proposalID, voter)
 	store := ctx.KVStore(k.SimpleGov)
 	bv := store.Get(key)
 	if bv == nil {
@@ -124,9 +106,9 @@ func (k Keeper) GetOption(ctx sdk.Context, proposalID int64, voter sdk.Address) 
 	return *option, nil
 }
 
-// SetOption sets the option to the proposal stored in the context store
-func (k Keeper) SetOption(ctx sdk.Context, proposalID int64, voter sdk.Address, option string) {
-	key := generateKey(proposalID, voter)
+// SetVote sets the vote option to the proposal stored in the context store
+func (k Keeper) SetVote(ctx sdk.Context, proposalID int64, voter sdk.Address, option string) {
+	key := GenerateAccountProposalsVoteKey(proposalID, voter)
 	store := ctx.KVStore(k.SimpleGov)
 	bv, err := k.cdc.MarshalBinary(option)
 	if err != nil {
@@ -239,8 +221,8 @@ func (k KeeperRead) SetProposal(ctx sdk.Context, proposalID int64, proposal Prop
 	return sdk.ErrUnauthorized("").Trace("This keeper does not have write access for the simple governance store")
 }
 
-// SetOption sets the option to the proposal stored in the context store
-func (k KeeperRead) SetOption(ctx sdk.Context, key []byte, option string) sdk.Error {
+// SetVote sets the vote option to the proposal stored in the context store
+func (k KeeperRead) SetVote(ctx sdk.Context, key []byte, option string) sdk.Error {
 	return sdk.ErrUnauthorized("").Trace("This keeper does not have write access for the simple governance store")
 }
 

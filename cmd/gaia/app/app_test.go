@@ -1,17 +1,16 @@
 package app
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	abci "github.com/tendermint/abci/types"
@@ -20,42 +19,19 @@ import (
 	"github.com/tendermint/tmlibs/log"
 )
 
-// Construct some global addrs and txs for tests.
 var (
 	chainID = "" // TODO
 
-	accName = "foobart"
-
-	priv1     = crypto.GenPrivKeyEd25519()
-	addr1     = priv1.PubKey().Address()
-	priv2     = crypto.GenPrivKeyEd25519()
-	addr2     = priv2.PubKey().Address()
-	addr3     = crypto.GenPrivKeyEd25519().PubKey().Address()
-	priv4     = crypto.GenPrivKeyEd25519()
-	addr4     = priv4.PubKey().Address()
-	coins     = sdk.Coins{{"foocoin", 10}}
-	halfCoins = sdk.Coins{{"foocoin", 5}}
-	manyCoins = sdk.Coins{{"foocoin", 1}, {"barcoin", 1}}
-	fee       = auth.StdFee{
-		sdk.Coins{{"foocoin", 0}},
-		100000,
-	}
-
-	sendMsg1 = bank.MsgSend{
-		Inputs:  []bank.Input{bank.NewInput(addr1, coins)},
-		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
-	}
+	priv1 = crypto.GenPrivKeyEd25519()
+	addr1 = priv1.PubKey().Address()
+	priv2 = crypto.GenPrivKeyEd25519()
+	addr2 = priv2.PubKey().Address()
 )
 
 func loggerAndDB() (log.Logger, dbm.DB) {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 	db := dbm.NewMemDB()
 	return logger, db
-}
-
-func newGaiaApp() *GaiaApp {
-	logger, db := loggerAndDB()
-	return NewGaiaApp(logger, db)
 }
 
 func setGenesis(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
@@ -83,22 +59,6 @@ func setGenesis(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
 }
 
 //_______________________________________________________________________
-
-func TestMsgs(t *testing.T) {
-	gapp := newGaiaApp()
-	require.Nil(t, setGenesis(gapp))
-
-	msgs := []struct {
-		msg sdk.Msg
-	}{
-		{sendMsg1},
-	}
-
-	for i, m := range msgs {
-		// Run a CheckDeliver
-		SignCheckDeliver(t, gapp, m.msg, []int64{int64(i)}, false, priv1)
-	}
-}
 
 func TestGenesis(t *testing.T) {
 	logger, dbs := loggerAndDB()
@@ -129,96 +89,9 @@ func TestGenesis(t *testing.T) {
 	assert.Equal(t, baseAcc, res1)
 }
 
-func TestStakeMsgs(t *testing.T) {
-	gapp := newGaiaApp()
-
-	genCoins, err := sdk.ParseCoins("42steak")
-	require.Nil(t, err)
-	bondCoin, err := sdk.ParseCoin("10steak")
-	require.Nil(t, err)
-
-	acc1 := &auth.BaseAccount{
-		Address: addr1,
-		Coins:   genCoins,
-	}
-	acc2 := &auth.BaseAccount{
-		Address: addr2,
-		Coins:   genCoins,
-	}
-
-	err = setGenesis(gapp, acc1, acc2)
-	require.Nil(t, err)
-
-	// A checkTx context (true)
-	ctxCheck := gapp.BaseApp.NewContext(true, abci.Header{})
-	res1 := gapp.accountMapper.GetAccount(ctxCheck, addr1)
-	res2 := gapp.accountMapper.GetAccount(ctxCheck, addr2)
-	require.Equal(t, acc1, res1)
-	require.Equal(t, acc2, res2)
-
-	// Create Validator
-
-	description := stake.NewDescription("foo_moniker", "", "", "")
-	createValidatorMsg := stake.NewMsgCreateValidator(
-		addr1, priv1.PubKey(), bondCoin, description,
-	)
-	SignCheckDeliver(t, gapp, createValidatorMsg, []int64{0}, true, priv1)
-
-	ctxDeliver := gapp.BaseApp.NewContext(false, abci.Header{})
-	res1 = gapp.accountMapper.GetAccount(ctxDeliver, addr1)
-	require.Equal(t, genCoins.Minus(sdk.Coins{bondCoin}), res1.GetCoins())
-	validator, found := gapp.stakeKeeper.GetValidator(ctxDeliver, addr1)
-	require.True(t, found)
-	require.Equal(t, addr1, validator.Owner)
-	require.Equal(t, sdk.Bonded, validator.Status())
-	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.PoolShares.Bonded()))
-
-	// check the bond that should have been created as well
-	bond, found := gapp.stakeKeeper.GetDelegation(ctxDeliver, addr1, addr1)
-	require.True(sdk.RatEq(t, sdk.NewRat(10), bond.Shares))
-
-	// Edit Validator
-
-	description = stake.NewDescription("bar_moniker", "", "", "")
-	editValidatorMsg := stake.NewMsgEditValidator(
-		addr1, description,
-	)
-	SignDeliver(t, gapp, editValidatorMsg, []int64{1}, true, priv1)
-
-	validator, found = gapp.stakeKeeper.GetValidator(ctxDeliver, addr1)
-	require.True(t, found)
-	require.Equal(t, description, validator.Description)
-
-	// Delegate
-
-	delegateMsg := stake.NewMsgDelegate(
-		addr2, addr1, bondCoin,
-	)
-	SignDeliver(t, gapp, delegateMsg, []int64{0}, true, priv2)
-
-	res2 = gapp.accountMapper.GetAccount(ctxDeliver, addr2)
-	require.Equal(t, genCoins.Minus(sdk.Coins{bondCoin}), res2.GetCoins())
-	bond, found = gapp.stakeKeeper.GetDelegation(ctxDeliver, addr2, addr1)
-	require.True(t, found)
-	require.Equal(t, addr2, bond.DelegatorAddr)
-	require.Equal(t, addr1, bond.ValidatorAddr)
-	require.True(sdk.RatEq(t, sdk.NewRat(10), bond.Shares))
-
-	// Unbond
-
-	unbondMsg := stake.NewMsgUnbond(
-		addr2, addr1, "MAX",
-	)
-	SignDeliver(t, gapp, unbondMsg, []int64{1}, true, priv2)
-
-	res2 = gapp.accountMapper.GetAccount(ctxDeliver, addr2)
-	require.Equal(t, genCoins, res2.GetCoins())
-	_, found = gapp.stakeKeeper.GetDelegation(ctxDeliver, addr2, addr1)
-	require.False(t, found)
-}
-
 func TestExportValidators(t *testing.T) {
-	gapp := newGaiaApp()
+	logger, dbs := loggerAndDB()
+	gapp := NewGaiaApp(logger, dbs)
 
 	genCoins, err := sdk.ParseCoins("42steak")
 	require.Nil(t, err)
@@ -242,7 +115,7 @@ func TestExportValidators(t *testing.T) {
 	createValidatorMsg := stake.NewMsgCreateValidator(
 		addr1, priv1.PubKey(), bondCoin, description,
 	)
-	SignCheckDeliver(t, gapp, createValidatorMsg, []int64{0}, true, priv1)
+	mock.SignCheckDeliver(t, gapp.BaseApp, createValidatorMsg, []int64{0}, true, priv1)
 	gapp.Commit()
 
 	// Export validator set
@@ -251,73 +124,4 @@ func TestExportValidators(t *testing.T) {
 	require.Equal(t, 1, len(validators)) // 1 validator
 	require.Equal(t, priv1.PubKey(), validators[0].PubKey)
 	require.Equal(t, int64(10), validators[0].Power)
-}
-
-//____________________________________________________________________________________
-
-func CheckBalance(t *testing.T, gapp *GaiaApp, addr sdk.Address, balExpected string) {
-	ctxDeliver := gapp.BaseApp.NewContext(false, abci.Header{})
-	res2 := gapp.accountMapper.GetAccount(ctxDeliver, addr)
-	assert.Equal(t, balExpected, fmt.Sprintf("%v", res2.GetCoins()))
-}
-
-func genTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) auth.StdTx {
-	sigs := make([]auth.StdSignature, len(priv))
-	for i, p := range priv {
-		sigs[i] = auth.StdSignature{
-			PubKey:    p.PubKey(),
-			Signature: p.Sign(auth.StdSignBytes(chainID, seq, fee, msg)),
-			Sequence:  seq[i],
-		}
-	}
-
-	return auth.NewStdTx(msg, fee, sigs)
-
-}
-
-func SignCheckDeliver(t *testing.T, gapp *GaiaApp, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
-
-	// Sign the tx
-	tx := genTx(msg, seq, priv...)
-
-	// Run a Check
-	res := gapp.Check(tx)
-	if expPass {
-		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
-	} else {
-		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
-	}
-
-	// Simulate a Block
-	gapp.BeginBlock(abci.RequestBeginBlock{})
-	res = gapp.Deliver(tx)
-	if expPass {
-		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
-	} else {
-		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
-	}
-	gapp.EndBlock(abci.RequestEndBlock{})
-
-	// XXX fix code or add explaination as to why using commit breaks a bunch of these tests
-	//gapp.Commit()
-}
-
-// XXX the only reason we are using Sign Deliver here is because the tests
-// break on check tx the second time you use SignCheckDeliver in a test because
-// the checktx state has not been updated likely because commit is not being
-// called!
-func SignDeliver(t *testing.T, gapp *GaiaApp, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
-
-	// Sign the tx
-	tx := genTx(msg, seq, priv...)
-
-	// Simulate a Block
-	gapp.BeginBlock(abci.RequestBeginBlock{})
-	res := gapp.Deliver(tx)
-	if expPass {
-		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
-	} else {
-		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
-	}
-	gapp.EndBlock(abci.RequestEndBlock{})
 }

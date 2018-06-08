@@ -3,6 +3,7 @@ package mock
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/stretchr/testify/assert"
@@ -52,7 +53,7 @@ func GenTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) auth.StdTx {
 }
 
 // simulate a block
-func SignCheckDeliver(t *testing.T, app *App, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
+func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
 
 	// Sign the tx
 	tx := GenTx(msg, seq, priv...)
@@ -83,7 +84,7 @@ func SignCheckDeliver(t *testing.T, app *App, msg sdk.Msg, seq []int64, expPass 
 // break on check tx the second time you use SignCheckDeliver in a test because
 // the checktx state has not been updated likely because commit is not being
 // called!
-func SignDeliver(t *testing.T, app App, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
+func SignDeliver(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
 
 	// Sign the tx
 	tx := GenTx(msg, seq, priv...)

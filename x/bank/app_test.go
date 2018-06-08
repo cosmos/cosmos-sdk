@@ -6,9 +6,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/tests/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
@@ -16,8 +16,6 @@ import (
 
 // test bank module in a mock application
 var (
-	chainID = "" // TODO
-
 	priv1     = crypto.GenPrivKeyEd25519()
 	addr1     = priv1.PubKey().Address()
 	priv2     = crypto.GenPrivKeyEd25519()
@@ -109,14 +107,14 @@ func TestMsgSendWithAccounts(t *testing.T) {
 	assert.Equal(t, acc, res1.(*auth.BaseAccount))
 
 	// Run a CheckDeliver
-	mock.SignCheckDeliver(t, mapp, sendMsg1, []int64{0}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, sendMsg1, []int64{0}, true, priv1)
 
 	// Check balances
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"foocoin", 57}})
 	mock.CheckBalance(t, mapp, addr2, sdk.Coins{{"foocoin", 10}})
 
 	// Delivering again should cause replay error
-	mock.SignCheckDeliver(t, mapp, sendMsg1, []int64{0}, false, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, sendMsg1, []int64{0}, false, priv1)
 
 	// bumping the txnonce number without resigning should be an auth error
 	tx := mock.GenTx(sendMsg1, []int64{0}, priv1)
@@ -126,7 +124,7 @@ func TestMsgSendWithAccounts(t *testing.T) {
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
 
 	// resigning the tx with the bumped sequence should work
-	mock.SignCheckDeliver(t, mapp, sendMsg1, []int64{1}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, sendMsg1, []int64{1}, true, priv1)
 }
 
 func TestMsgSendMultipleOut(t *testing.T) {
@@ -146,7 +144,7 @@ func TestMsgSendMultipleOut(t *testing.T) {
 	mock.SetGenesis(mapp, accs)
 
 	// Simulate a Block
-	mock.SignCheckDeliver(t, mapp, sendMsg2, []int64{0}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, sendMsg2, []int64{0}, true, priv1)
 
 	// Check balances
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"foocoin", 32}})
@@ -174,7 +172,7 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 	mock.SetGenesis(mapp, accs)
 
 	// CheckDeliver
-	mock.SignCheckDeliver(t, mapp, sendMsg3, []int64{0, 0}, true, priv1, priv4)
+	mock.SignCheckDeliver(t, mapp.BaseApp, sendMsg3, []int64{0, 0}, true, priv1, priv4)
 
 	// Check balances
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"foocoin", 32}})
@@ -195,14 +193,14 @@ func TestMsgSendDependent(t *testing.T) {
 	mock.SetGenesis(mapp, accs)
 
 	// CheckDeliver
-	mock.SignCheckDeliver(t, mapp, sendMsg1, []int64{0}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, sendMsg1, []int64{0}, true, priv1)
 
 	// Check balances
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"foocoin", 32}})
 	mock.CheckBalance(t, mapp, addr2, sdk.Coins{{"foocoin", 10}})
 
 	// Simulate a Block
-	mock.SignCheckDeliver(t, mapp, sendMsg4, []int64{0}, true, priv2)
+	mock.SignCheckDeliver(t, mapp.BaseApp, sendMsg4, []int64{0}, true, priv2)
 
 	// Check balances
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"foocoin", 42}})

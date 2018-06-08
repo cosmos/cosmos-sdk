@@ -57,7 +57,7 @@ func NewApp() *App {
 	)
 
 	// initialize the app, the chainers and blockers can be overwritten before calling complete setup
-	app.SetInitChainer(app.initChainer)
+	app.SetInitChainer(app.InitChainer)
 
 	app.SetAnteHandler(auth.NewAnteHandler(app.AccountMapper, app.FeeCollectionKeeper))
 
@@ -75,7 +75,7 @@ func (app *App) CompleteSetup(t *testing.T, newKeys []*sdk.KVStoreKey) {
 }
 
 // custom logic for initialization
-func (app *App) initChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.ResponseInitChain {
+func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.ResponseInitChain {
 
 	// load the accounts
 	for _, acc := range app.GenesisAccounts {

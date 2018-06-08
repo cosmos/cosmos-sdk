@@ -304,17 +304,16 @@ func TestTxs(t *testing.T) {
 	// check if tx is queryable
 	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=tx.hash='%s'", resultTx.Hash), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	assert.NotEqual(t, "[]", body)
 
 	// query sender
-	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=sender='%s'", resultTx.Hash), nil)
+	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=sender='%s'", sendAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
 	assert.NotEqual(t, "[]", body)
 
 	// query receiver
 	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=recipient='%s'", receiveAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
 	assert.NotEqual(t, "[]", body)
 }
 

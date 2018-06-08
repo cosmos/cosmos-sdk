@@ -2,6 +2,7 @@
 
 BREAKING CHANGES
 * msg.GetSignBytes() now returns bech32-encoded addresses in all cases
+* [lcd] REST end-points now include gas
 
 FEATURES
 
@@ -9,6 +10,7 @@ IMPROVEMENTS
 * export command now writes current validator set for Tendermint
 * [tests] Application module tests now use a mock application
 * [gaiacli] Fix error message when account isn't found when running gaiacli account
+* [lcd] refactored to eliminate use of global variables, and interdependent tests
 
 FIXES
 * [lcd] Switch to bech32 for addresses on all human readable inputs and outputs

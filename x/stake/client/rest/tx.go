@@ -39,7 +39,7 @@ type editDelegationsBody struct {
 	LocalAccountName string             `json:"name"`
 	Password         string             `json:"password"`
 	ChainID          string             `json:"chain_id"`
-	AccountNumber    int64              `json:"account-number"`
+	AccountNumber    int64              `json:"account_number"`
 	Sequence         int64              `json:"sequence"`
 	Delegate         []msgDelegateInput `json:"delegate"`
 	Unbond           []msgUnbondInput   `json:"unbond"`

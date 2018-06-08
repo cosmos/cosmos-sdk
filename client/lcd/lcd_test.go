@@ -619,7 +619,7 @@ func doBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxC
 	jsonStr := []byte(fmt.Sprintf(`{
 		"name": "%s",
 		"password": "%s",
-		"account-number": %d,
+		"account_number": %d,
 		"sequence": %d,
 		"delegate": [
 			{
@@ -650,7 +650,7 @@ func doUnbond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastT
 	jsonStr := []byte(fmt.Sprintf(`{
 		"name": "%s",
 		"password": "%s",
-		"account-number": %d,
+		"account_number": %d,
 		"sequence": %d,
 		"bond": [],
 		"unbond": [

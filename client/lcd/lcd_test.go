@@ -300,20 +300,41 @@ func TestTxs(t *testing.T) {
 	res, body = request(t, port, "GET", fmt.Sprintf("/txs/%s", resultTx.Hash), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
+	type txInfo struct {
+		Height int64                  `json:"height"`
+		Tx     sdk.Tx                 `json:"tx"`
+		Result abci.ResponseDeliverTx `json:"result"`
+	}
+	var indexedTxs []txInfo
+
 	// check if tx is queryable
 	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=tx.hash='%s'", resultTx.Hash), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	assert.NotEqual(t, "[]", body)
+
+	err := cdc.UnmarshalJSON([]byte(body), &indexedTxs)
+	require.NoError(t, err)
+	assert.Equal(t, len(indexedTxs), 1)
 
 	// query sender
 	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=sender='%s'", sendAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	assert.NotEqual(t, "[]", body)
 
+	err = cdc.UnmarshalJSON([]byte(body), &indexedTxs)
+	require.NoError(t, err)
+	assert.Equal(t, len(indexedTxs), 2) // there are 2 txs created with doSend
+	assert.Equal(t, indexedTxs[1].Height, resultTx.Height)
+
 	// query receiver
 	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=recipient='%s'", receiveAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	assert.NotEqual(t, "[]", body)
+
+	err = cdc.UnmarshalJSON([]byte(body), &indexedTxs)
+	require.NoError(t, err)
+	assert.Equal(t, len(indexedTxs), 1)
+	assert.Equal(t, indexedTxs[0].Height, resultTx.Height)
 }
 
 func TestValidatorsQuery(t *testing.T) {

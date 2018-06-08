@@ -98,15 +98,6 @@ func GetAccAddressBech32(address string) (addr Address, err error) {
 	return Address(bz), nil
 }
 
-// must create an Address from a string
-func MustGetAccAddressBech32(address string) Address {
-	addr, err := GetAccAddressBech32(address)
-	if err != nil {
-		panic(err)
-	}
-	return addr
-}
-
 // create a Pubkey from a string
 func GetAccPubKeyBech32(address string) (pk crypto.PubKey, err error) {
 	bz, err := getFromBech32(address, Bech32PrefixAccPub)
@@ -120,15 +111,6 @@ func GetAccPubKeyBech32(address string) (pk crypto.PubKey, err error) {
 	}
 
 	return pk, nil
-}
-
-// must create a Pubkey from a string
-func MustGetAccPubkeyBec32(address string) crypto.PubKey {
-	pk, err := GetAccPubKeyBech32(address)
-	if err != nil {
-		panic(err)
-	}
-	return pk
 }
 
 // create an Address from a hex string
@@ -152,15 +134,6 @@ func GetValAddressBech32(address string) (addr Address, err error) {
 	return Address(bz), nil
 }
 
-// must create an Address from a bech32 string
-func MustGetValAddressBech32(address string) Address {
-	addr, err := GetValAddressBech32(address)
-	if err != nil {
-		panic(err)
-	}
-	return addr
-}
-
 // decode a validator public key into a PubKey
 func GetValPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
 	bz, err := getFromBech32(pubkey, Bech32PrefixValPub)
@@ -174,15 +147,6 @@ func GetValPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
 	}
 
 	return pk, nil
-}
-
-// must decode a validator public key into a PubKey
-func MustGetValPubKeyBech32(pubkey string) crypto.PubKey {
-	pk, err := GetValPubKeyBech32(pubkey)
-	if err != nil {
-		panic(err)
-	}
-	return pk
 }
 
 func getFromBech32(bech32str, prefix string) ([]byte, error) {

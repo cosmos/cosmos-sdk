@@ -227,7 +227,6 @@ func TestValidators(t *testing.T) {
 func TestCoinSend(t *testing.T) {
 
 	// query empty
-	//res, body := request(t, port, "GET", "/accounts/8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6", nil)
 	res, body := request(t, port, "GET", "/accounts/8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6", nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 

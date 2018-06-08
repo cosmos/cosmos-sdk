@@ -41,6 +41,7 @@ func NewIBCPacket(srcAddr sdk.Address, destAddr sdk.Address, coins sdk.Coins,
 	}
 }
 
+//nolint
 func (p IBCPacket) GetSignBytes() []byte {
 	b, err := msgCdc.MarshalJSON(struct {
 		SrcAddr   string
@@ -62,11 +63,11 @@ func (p IBCPacket) GetSignBytes() []byte {
 }
 
 // validator the ibc packey
-func (ibcp IBCPacket) ValidateBasic() sdk.Error {
-	if ibcp.SrcChain == ibcp.DestChain {
+func (p IBCPacket) ValidateBasic() sdk.Error {
+	if p.SrcChain == p.DestChain {
 		return ErrIdenticalChains(DefaultCodespace).Trace("")
 	}
-	if !ibcp.Coins.IsValid() {
+	if !p.Coins.IsValid() {
 		return sdk.ErrInvalidCoins("")
 	}
 	return nil

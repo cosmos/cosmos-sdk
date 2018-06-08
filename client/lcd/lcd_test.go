@@ -300,7 +300,10 @@ func TestTxs(t *testing.T) {
 	// check if tx is findable
 	res, body = request(t, port, "GET", fmt.Sprintf("/txs/%s", resultTx.Hash), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	// res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=tx.hash='%s'", resultTx.Hash), nil)
+
+	// check if tx is queryable
+	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=tx.hash='%s'", resultTx.Hash), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	// query sender
 	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=sender='%s'", resultTx.Hash), nil)

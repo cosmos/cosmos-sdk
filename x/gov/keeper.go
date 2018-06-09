@@ -44,6 +44,9 @@ func (keeper Keeper) WireCodec() *wire.Codec {
 	return keeper.cdc
 }
 
+// =====================================================
+// Proposals
+
 // Creates a NewProposal
 func (keeper Keeper) NewProposal(ctx sdk.Context, title string, description string, proposalType string) *Proposal {
 	proposal := &Proposal{

@@ -49,6 +49,8 @@ func tally(ctx sdk.Context, keeper Keeper, proposal *Proposal) (passes bool, non
 	results["No"] = sdk.ZeroRat()
 	results["NoWithVeto"] = sdk.ZeroRat()
 
+	pool := keeper.sk.GetPool(ctx)
+
 	totalVotingPower := sdk.ZeroRat()
 	currValidators := make(map[string]validatorGovInfo)
 	for _, val := range keeper.sk.GetValidatorsBonded(ctx) {
@@ -66,11 +68,13 @@ func tally(ctx sdk.Context, keeper Keeper, proposal *Proposal) (passes bool, non
 		if val, ok := currValidators[addressToString(vote.Voter)]; ok {
 			val.Vote = vote.Option
 		} else {
-			for _, delegation := range keeper.sk.GetDelegations(ctx, vote.Voter, math.MaxInt16) {
+			for _, delegation := range keeper.sk.GetDelegations(ctx, vote.Voter, math.MaxInt16) { // TODO: Replace with MaxValidators from Stake params
 				val := currValidators[addressToString(delegation.ValidatorAddr)]
 				val.Minus = val.Minus.Add(delegation.Shares)
 
-				votingPower := val.ValidatorInfo.PoolShares.Amount.Mul(delegation.Shares)
+				validatorPower := val.ValidatorInfo.EquivalentBondedShares(pool)
+				delegatorShare := delegation.Shares.Quo(val.ValidatorInfo.DelegatorShares)
+				votingPower := validatorPower.Mul(delegatorShare)
 				results[vote.Option] = results[vote.Option].Add(votingPower)
 				totalVotingPower = totalVotingPower.Add(votingPower)
 			}
@@ -85,8 +89,11 @@ func tally(ctx sdk.Context, keeper Keeper, proposal *Proposal) (passes bool, non
 		if len(val.Vote) == 0 {
 			nonVoting = append(nonVoting, val.ValidatorInfo.Owner)
 		} else {
+
+			validatorPower := val.ValidatorInfo.EquivalentBondedShares(pool)
 			sharesAfterMinus := val.ValidatorInfo.DelegatorShares.Sub(val.Minus)
-			votingPower := sharesAfterMinus.Mul(val.ValidatorInfo.PoolShares.Amount)
+			percentAfterMinus := sharesAfterMinus.Quo(val.ValidatorInfo.DelegatorShares)
+			votingPower := validatorPower.Mul(percentAfterMinus)
 
 			results[val.Vote] = results[val.Vote].Add(votingPower)
 			totalVotingPower = totalVotingPower.Add(votingPower)

@@ -256,7 +256,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "5d6fca44a948d2be89a9702de7717f0168403d3d"
+  revision = "e2150783cd35f5b607daca48afd8c57ec54cc995"
 
 [[projects]]
   name = "github.com/tendermint/abci"
@@ -267,8 +267,8 @@
     "server",
     "types"
   ]
-  revision = "9af8b7a7c87478869f8c280ed9539470b8f470b4"
-  version = "v0.11.0-rc4"
+  revision = "ebee2fe114020aa49c70bbbae50b7079fc7e7b90"
+  version = "v0.11.0"
 
 [[projects]]
   branch = "master"
@@ -347,13 +347,8 @@
     "types",
     "version"
   ]
-<<<<<<< HEAD
-  revision = "b5baab0238c9ec26e3b2d229b0243f9ff9220bdb"
-  version = "v0.20.0-rc3"
-=======
-  revision = "775fef31c2b8fb7ea36f0d57bae3bfa74d353100"
-  version = "v0.19.9-rc0"
->>>>>>> master
+  revision = "27bd1deabe4ba6a2d9b463b8f3e3f1e31b993e61"
+  version = "v0.20.0"
 
 [[projects]]
   branch = "develop"
@@ -368,17 +363,10 @@
     "db",
     "flowrate",
     "log",
-<<<<<<< HEAD
     "merkle",
     "merkle/tmhash"
   ]
-  revision = "44f1bdb0d55cc6527e38d0a7aab406e2580f56a4"
-=======
-    "merkle"
-  ]
-  revision = "692f1d86a6e2c0efa698fd1e4541b68c74ffaf38"
-  version = "v0.8.4"
->>>>>>> master
+  revision = "640af0205d98d1f45fb2f912f9c35c8bf816adc9"
 
 [[projects]]
   branch = "master"
@@ -394,11 +382,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-<<<<<<< HEAD
-  revision = "5ba7f63082460102a45837dbd1827e10f9479ac0"
-=======
-  revision = "78e79280f680f7dd6b8e48c751887111ebdbcbd8"
->>>>>>> master
+  revision = "8ac0e0d97ce45cd83d1d7243c060cb8461dda5e9"
 
 [[projects]]
   branch = "master"
@@ -418,7 +402,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "c11f84a56e43e20a78cee75a7c034031ecf57d1f"
+  revision = "9527bec2660bd847c050fda93a0f0c6dee0800bb"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -479,10 +463,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-<<<<<<< HEAD
-  inputs-digest = "ccb2ab7644a38c2d0326280582f758256e37fc98c3ef0403581e3b85cff42188"
-=======
-  inputs-digest = "71d11bd2a8f3f46ba3fd16759b501ad5b6b48037717d82020ebb25e021b67117"
->>>>>>> master
+  inputs-digest = "31f69b235b2d8f879a215c9e8ca0919adc62d21f6830b17931a3a0efb058721f"
   solver-name = "gps-cdcl"
   solver-version = 1

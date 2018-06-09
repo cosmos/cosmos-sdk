@@ -198,6 +198,13 @@ func (keeper Keeper) GetVotes(ctx sdk.Context, proposalID int64) sdk.Iterator {
 	return sdk.KVStorePrefixIterator(store, []byte(fmt.Sprintf("%d", proposalID)+":votes:"))
 }
 
+// Gets the vote of a specific voter on a specific proposal
+func (keeper Keeper) deleteVote(ctx sdk.Context, proposalID int64, voter sdk.Address) {
+	store := ctx.KVStore(keeper.storeKey)
+	key := []byte(fmt.Sprintf("%d", proposalID) + ":votes:" + fmt.Sprintf("%s", voter))
+	store.Delete(key)
+}
+
 // =====================================================
 // Deposits
 
@@ -230,6 +237,11 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositer sdk
 
 	if (proposal.Status != "Pending") && (proposal.Status != "Active") {
 		return ErrAlreadyFinishedProposal(proposalID)
+	}
+
+	_, _, err := keeper.ck.SubtractCoins(ctx, depositer, depositAmount)
+	if err != nil {
+		return err
 	}
 
 	proposal.TotalDeposit = proposal.TotalDeposit.Plus(depositAmount)
@@ -270,6 +282,18 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID int64) {
 			panic("should not happen")
 		}
 
+		store.Delete(depositsIterator.Key())
+	}
+
+	depositsIterator.Close()
+}
+
+// Gets the vote of a specific voter on a specific proposal
+func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID int64) {
+	store := ctx.KVStore(keeper.storeKey)
+	depositsIterator := keeper.GetDeposits(ctx, proposalID)
+
+	for ; depositsIterator.Valid(); depositsIterator.Next() {
 		store.Delete(depositsIterator.Key())
 	}
 

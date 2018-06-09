@@ -66,6 +66,9 @@ func TestDeposits(t *testing.T) {
 	fourSteak := sdk.Coins{sdk.Coin{"steak", 4}}
 	fiveSteak := sdk.Coins{sdk.Coin{"steak", 5}}
 
+	addr0Initial := keeper.ck.GetCoins(ctx, addrs[0])
+	addr1Initial := keeper.ck.GetCoins(ctx, addrs[1])
+
 	assert.True(t, proposal.TotalDeposit.IsEqual(sdk.Coins{}))
 	assert.Nil(t, keeper.GetDeposit(ctx, proposal.ProposalID, addrs[0]))
 	assert.Equal(t, keeper.GetProposal(ctx, proposalID).VotingStartBlock, int64(-1))
@@ -76,18 +79,21 @@ func TestDeposits(t *testing.T) {
 	assert.Equal(t, fourSteak, keeper.GetDeposit(ctx, proposalID, addrs[0]).Amount)
 	assert.Equal(t, addrs[0], keeper.GetDeposit(ctx, proposalID, addrs[0]).Depositer)
 	assert.Equal(t, fourSteak, keeper.GetProposal(ctx, proposalID).TotalDeposit)
+	assert.Equal(t, addr0Initial.Minus(fourSteak), keeper.ck.GetCoins(ctx, addrs[0]))
 
 	err = keeper.AddDeposit(ctx, proposalID, addrs[0], fiveSteak)
 	assert.Nil(t, err)
 	assert.Equal(t, fourSteak.Plus(fiveSteak), keeper.GetDeposit(ctx, proposalID, addrs[0]).Amount)
 	assert.Equal(t, addrs[0], keeper.GetDeposit(ctx, proposalID, addrs[0]).Depositer)
 	assert.Equal(t, fourSteak.Plus(fiveSteak), keeper.GetProposal(ctx, proposalID).TotalDeposit)
+	assert.Equal(t, addr0Initial.Minus(fourSteak).Minus(fiveSteak), keeper.ck.GetCoins(ctx, addrs[0]))
 
 	err = keeper.AddDeposit(ctx, proposalID, addrs[1], fourSteak)
 	assert.Nil(t, err)
 	assert.Equal(t, fourSteak, keeper.GetDeposit(ctx, proposalID, addrs[1]).Amount)
 	assert.Equal(t, addrs[1], keeper.GetDeposit(ctx, proposalID, addrs[1]).Depositer)
 	assert.Equal(t, fourSteak.Plus(fiveSteak).Plus(fourSteak), keeper.GetProposal(ctx, proposalID).TotalDeposit)
+	assert.Equal(t, addr1Initial.Minus(fourSteak), keeper.ck.GetCoins(ctx, addrs[1]))
 
 	assert.Equal(t, ctx.BlockHeight(), keeper.GetProposal(ctx, proposalID).VotingStartBlock)
 	assert.NotNil(t, keeper.ActiveProposalQueuePeek(ctx))
@@ -109,6 +115,9 @@ func TestDeposits(t *testing.T) {
 	assert.Equal(t, fourSteak, keeper.GetDeposit(ctx, proposalID, addrs[1]).Amount)
 	keeper.RefundDeposits(ctx, proposalID)
 	assert.Nil(t, keeper.GetDeposit(ctx, proposalID, addrs[1]))
+	assert.Equal(t, addr0Initial, keeper.ck.GetCoins(ctx, addrs[0]))
+	assert.Equal(t, addr1Initial, keeper.ck.GetCoins(ctx, addrs[1]))
+
 }
 
 func TestVotes(t *testing.T) {

@@ -26,18 +26,9 @@ func NewHandler(keeper Keeper) sdk.Handler {
 // Handle MsgSubmitProposal.
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
 
-	_, _, err := keeper.ck.SubtractCoins(ctx, msg.Proposer, msg.InitialDeposit)
-	if err != nil {
-		return err.Result()
-	}
-
-	if ctx.IsCheckTx() {
-		return sdk.Result{}
-	}
-
 	proposal := keeper.NewProposal(ctx, msg.Title, msg.Description, msg.ProposalType)
 
-	err = keeper.AddDeposit(ctx, proposal.ProposalID, msg.Proposer, msg.InitialDeposit)
+	err := keeper.AddDeposit(ctx, proposal.ProposalID, msg.Proposer, msg.InitialDeposit)
 	if err != nil {
 		return err.Result()
 	}
@@ -52,16 +43,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 // Handle MsgDeposit.
 func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {
 
-	_, _, err := keeper.ck.SubtractCoins(ctx, msg.Depositer, msg.Amount)
-	if err != nil {
-		return err.Result()
-	}
-
-	if ctx.IsCheckTx() {
-		return sdk.Result{} // TODO
-	}
-
-	err = keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositer, msg.Amount)
+	err := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositer, msg.Amount)
 	if err != nil {
 		return err.Result()
 	}
@@ -76,20 +58,10 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 // Handle SendMsg.
 func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 
-	if ctx.IsCheckTx() {
-		proposal := keeper.GetProposal(ctx, msg.ProposalID)
-
-		if proposal == nil {
-			return ErrUnknownProposal(msg.ProposalID).Result()
-		}
-		if (proposal.Status != "Pending") && (proposal.Status != "Active") {
-			return ErrAlreadyFinishedProposal(msg.ProposalID).Result()
-		}
-
-		return sdk.Result{} // TODO
+	err := keeper.AddVote(ctx, msg.ProposalID, msg.Voter, msg.Option)
+	if err != nil {
+		return err.Result()
 	}
-
-	keeper.AddVote(ctx, msg.ProposalID, msg.Voter, msg.Option)
 
 	tags := sdk.NewTags("action", []byte("vote"), "voter", msg.Voter.Bytes(), "proposalId", []byte{byte(msg.ProposalID)})
 	return sdk.Result{

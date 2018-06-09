@@ -14,7 +14,9 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 
 	for shouldPopInactiveProposalQueue(ctx, keeper) {
 		inactiveProposal := keeper.InactiveProposalQueuePop(ctx)
-		keeper.DeleteProposal(ctx, inactiveProposal)
+		if inactiveProposal.Status == "Pending" {
+			keeper.DeleteProposal(ctx, inactiveProposal)
+		}
 	}
 
 	// Check if earliest Active Proposal ended voting period yet
@@ -26,8 +28,13 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 			passes, _ := tally(ctx, keeper, activeProposal)
 			if passes {
 				keeper.RefundDeposits(ctx, activeProposal.ProposalID)
+				activeProposal.Status = "Passed"
+			} else {
+				keeper.DeleteDeposits(ctx, activeProposal.ProposalID)
+				activeProposal.Status = "Rejected"
 			}
-			keeper.DeleteProposal(ctx, activeProposal)
+
+			keeper.SetProposal(ctx, activeProposal)
 		}
 	}
 
@@ -68,6 +75,8 @@ func tally(ctx sdk.Context, keeper Keeper, proposal *Proposal) (passes bool, non
 				totalVotingPower = totalVotingPower.Add(votingPower)
 			}
 		}
+
+		keeper.deleteVote(ctx, vote.ProposalID, vote.Voter)
 	}
 	votesIterator.Close()
 

@@ -56,8 +56,8 @@ var (
 	flagOWK        = "owk"
 
 	// bonded tokens given to genesis validators/accounts
-	freeFermionVal  = int64(100)
-	freeFermionsAcc = int64(50)
+	freeFermionVal  = sdk.NewInt(100)
+	freeFermionsAcc = sdk.NewInt(50)
 )
 
 // get app init parameters for server init command
@@ -130,7 +130,7 @@ func GaiaAppGenTxNF(cdc *wire.Codec, pk crypto.PubKey, addr sdk.Address, name st
 
 	validator = tmtypes.GenesisValidator{
 		PubKey: pk,
-		Power:  freeFermionVal,
+		Power:  freeFermionVal.Int64(),
 	}
 	return
 }
@@ -160,23 +160,23 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		// create the genesis account, give'm few steaks and a buncha token with there name
 		accAuth := auth.NewBaseAccountWithAddress(genTx.Address)
 		accAuth.Coins = sdk.Coins{
-			{genTx.Name + "Token", 1000},
+			{genTx.Name + "Token", sdk.NewInt(1000)},
 			{"steak", freeFermionsAcc},
 		}
 		acc := NewGenesisAccount(&accAuth)
 		genaccs[i] = acc
-		stakeData.Pool.LooseUnbondedTokens += freeFermionsAcc // increase the supply
+		stakeData.Pool.LooseUnbondedTokens = stakeData.Pool.LooseUnbondedTokens.Add(freeFermionsAcc) // increase the supply
 
 		// add the validator
 		if len(genTx.Name) > 0 {
 			desc := stake.NewDescription(genTx.Name, "", "", "")
 			validator := stake.NewValidator(genTx.Address, genTx.PubKey, desc)
-			validator.PoolShares = stake.NewBondedShares(sdk.NewRat(freeFermionVal))
+			validator.PoolShares = stake.NewBondedShares(sdk.NewRatFromInt(freeFermionVal))
 			stakeData.Validators = append(stakeData.Validators, validator)
 
 			// pool logic
-			stakeData.Pool.BondedTokens += freeFermionVal
-			stakeData.Pool.BondedShares = sdk.NewRat(stakeData.Pool.BondedTokens)
+			stakeData.Pool.BondedTokens = stakeData.Pool.BondedTokens.Add(freeFermionVal)
+			stakeData.Pool.BondedShares = sdk.NewRatFromInt(stakeData.Pool.BondedTokens)
 		}
 	}
 

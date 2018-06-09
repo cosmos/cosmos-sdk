@@ -19,14 +19,14 @@ func newTestMsg(addrs ...sdk.Address) *sdk.TestMsg {
 
 func newStdFee() StdFee {
 	return NewStdFee(100,
-		sdk.Coin{"atom", 150},
+		sdk.NewCoin("atom", 150),
 	)
 }
 
 // coins to more than cover the fee
 func newCoins() sdk.Coins {
 	return sdk.Coins{
-		{"atom", 10000000},
+		sdk.NewCoin("atom", 10000000),
 	}
 }
 
@@ -253,24 +253,24 @@ func TestAnteHandlerFees(t *testing.T) {
 	msg := newTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []int64{0}, []int64{0}
 	fee := NewStdFee(100,
-		sdk.Coin{"atom", 150},
+		sdk.NewCoin("atom", 150),
 	)
 
 	// signer does not have enough funds to pay the fee
 	tx = newTestTx(ctx, msg, privs, accnums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInsufficientFunds)
 
-	acc1.SetCoins(sdk.Coins{{"atom", 149}})
+	acc1.SetCoins(sdk.Coins{sdk.NewCoin("atom", 149)})
 	mapper.SetAccount(ctx, acc1)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInsufficientFunds)
 
 	assert.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(emptyCoins))
 
-	acc1.SetCoins(sdk.Coins{{"atom", 150}})
+	acc1.SetCoins(sdk.Coins{sdk.NewCoin("atom", 150)})
 	mapper.SetAccount(ctx, acc1)
 	checkValidTx(t, anteHandler, ctx, tx)
 
-	assert.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(sdk.Coins{{"atom", 150}}))
+	assert.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(sdk.Coins{sdk.NewCoin("atom", 150)}))
 }
 
 func TestAnteHandlerBadSignBytes(t *testing.T) {
@@ -301,7 +301,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	fee2 := newStdFee()
 	fee2.Gas += 100
 	fee3 := newStdFee()
-	fee3.Amount[0].Amount += 100
+	fee3.Amount[0].Amount = fee3.Amount[0].Amount.AddRaw(100)
 
 	// test good tx and signBytes
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []int64{0}, []int64{0}

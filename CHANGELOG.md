@@ -14,6 +14,7 @@ BREAKING CHANGES
 BREAKING CHANGES
 * msg.GetSignBytes() now returns bech32-encoded addresses in all cases
 * [lcd] REST end-points now include gas
+* sdk.Coin now uses sdk.Int, a big.Int wrapper with 256bit range cap
 
 FEATURES
 * [x/auth] Added AccountNumbers to BaseAccount and StdTxs to allow for replay protection with account pruning

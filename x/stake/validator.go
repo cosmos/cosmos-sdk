@@ -123,7 +123,7 @@ func (v Validator) Status() sdk.BondStatus {
 
 // update the location of the shares within a validator if its bond status has changed
 func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator, Pool) {
-	var tokens int64
+	var tokens sdk.Int
 
 	switch v.Status() {
 	case sdk.Unbonded:
@@ -159,8 +159,8 @@ func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator,
 // Remove pool shares
 // Returns corresponding tokens, which could be burned (e.g. when slashing
 // a validator) or redistributed elsewhere
-func (v Validator) removePoolShares(pool Pool, poolShares sdk.Rat) (Validator, Pool, int64) {
-	var tokens int64
+func (v Validator) removePoolShares(pool Pool, poolShares sdk.Rat) (Validator, Pool, sdk.Int) {
+	var tokens sdk.Int
 	switch v.Status() {
 	case sdk.Unbonded:
 		pool, tokens = pool.removeSharesUnbonded(poolShares)
@@ -187,7 +187,7 @@ func (v Validator) EquivalentBondedShares(pool Pool) (eqBondedShares sdk.Rat) {
 // XXX Audit this function further to make sure it's correct
 // add tokens to a validator
 func (v Validator) addTokensFromDel(pool Pool,
-	amount int64) (validator2 Validator, p2 Pool, issuedDelegatorShares sdk.Rat) {
+	amount sdk.Int) (validator2 Validator, p2 Pool, issuedDelegatorShares sdk.Rat) {
 
 	exRate := v.DelegatorShareExRate(pool) // bshr/delshr
 
@@ -213,7 +213,7 @@ func (v Validator) addTokensFromDel(pool Pool,
 // remove delegator shares from a validator
 // NOTE this function assumes the shares have already been updated for the validator status
 func (v Validator) removeDelShares(pool Pool,
-	delShares sdk.Rat) (validator2 Validator, p2 Pool, createdCoins int64) {
+	delShares sdk.Rat) (validator2 Validator, p2 Pool, createdCoins sdk.Int) {
 
 	amount := v.DelegatorShareExRate(pool).Mul(delShares)
 	eqBondedSharesToRemove := NewBondedShares(amount)

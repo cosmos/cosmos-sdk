@@ -30,7 +30,7 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tags := viper.GetStringSlice(flagTags)
 
-			txs, err := searchTags(context.NewCoreContextFromViper(), cdc, tags)
+			txs, err := searchTxs(context.NewCoreContextFromViper(), cdc, tags)
 			if err != nil {
 				return err
 			}
@@ -52,7 +52,7 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func searchTags(ctx context.CoreContext, cdc *wire.Codec, tags []string) ([]txInfo, error) {
+func searchTxs(ctx context.CoreContext, cdc *wire.Codec, tags []string) ([]txInfo, error) {
 	if len(tags) == 0 {
 		return nil, errors.New("Must declare at least one tag to search")
 	}
@@ -110,13 +110,13 @@ func SearchTxRequestHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Han
 				w.Write([]byte(err.Error()))
 				return
 			}
-			senderTxs, err := searchTags(ctx, cdc, []string{"sender='" + hexAddress.String() + "'"})
+			senderTxs, err := searchTxs(ctx, cdc, []string{"sender='" + hexAddress.String() + "'"})
 			if err != nil {
 				w.WriteHeader(500)
 				w.Write([]byte(err.Error()))
 				return
 			}
-			recipientTxs, err := searchTags(ctx, cdc, []string{"recipient='" + hexAddress.String() + "'"})
+			recipientTxs, err := searchTxs(ctx, cdc, []string{"recipient='" + hexAddress.String() + "'"})
 			if err != nil {
 				w.WriteHeader(500)
 				w.Write([]byte(err.Error()))
@@ -124,7 +124,7 @@ func SearchTxRequestHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Han
 			}
 			txs = append(senderTxs, recipientTxs...)
 		} else if tag != "" {
-			txs, err = searchTags(ctx, cdc, []string{tag})
+			txs, err = searchTxs(ctx, cdc, []string{tag})
 			if err != nil {
 				w.WriteHeader(500)
 				w.Write([]byte(err.Error()))

@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
@@ -29,16 +30,19 @@ type BasecoinApp struct {
 	cdc *wire.Codec
 
 	// keys to access the substores
-	keyMain    *sdk.KVStoreKey
-	keyAccount *sdk.KVStoreKey
-	keyIBC     *sdk.KVStoreKey
-	keyStake   *sdk.KVStoreKey
+	keyMain     *sdk.KVStoreKey
+	keyAccount  *sdk.KVStoreKey
+	keyIBC      *sdk.KVStoreKey
+	keyStake    *sdk.KVStoreKey
+	keySlashing *sdk.KVStoreKey
 
 	// Manage getting and setting accounts
-	accountMapper sdk.AccountMapper
-	coinKeeper    bank.Keeper
-	ibcMapper     ibc.Mapper
-	stakeKeeper   stake.Keeper
+	accountMapper       auth.AccountMapper
+	feeCollectionKeeper auth.FeeCollectionKeeper
+	coinKeeper          bank.Keeper
+	ibcMapper           ibc.Mapper
+	stakeKeeper         stake.Keeper
+	slashingKeeper      slashing.Keeper
 }
 
 func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
@@ -48,12 +52,13 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 
 	// Create your application object.
 	var app = &BasecoinApp{
-		BaseApp:    bam.NewBaseApp(appName, cdc, logger, db),
-		cdc:        cdc,
-		keyMain:    sdk.NewKVStoreKey("main"),
-		keyAccount: sdk.NewKVStoreKey("acc"),
-		keyIBC:     sdk.NewKVStoreKey("ibc"),
-		keyStake:   sdk.NewKVStoreKey("stake"),
+		BaseApp:     bam.NewBaseApp(appName, cdc, logger, db),
+		cdc:         cdc,
+		keyMain:     sdk.NewKVStoreKey("main"),
+		keyAccount:  sdk.NewKVStoreKey("acc"),
+		keyIBC:      sdk.NewKVStoreKey("ibc"),
+		keyStake:    sdk.NewKVStoreKey("stake"),
+		keySlashing: sdk.NewKVStoreKey("slashing"),
 	}
 
 	// Define the accountMapper.
@@ -67,17 +72,21 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
+	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.RegisterCodespace(slashing.DefaultCodespace))
 
 	// register message routes
 	app.Router().
+		AddRoute("auth", auth.NewHandler(app.accountMapper)).
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
 
 	// Initialize BaseApp.
 	app.SetInitChainer(app.initChainer)
-	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.BurnFeeHandler))
+	app.SetBeginBlocker(app.BeginBlocker)
+	app.SetEndBlocker(app.EndBlocker)
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
+	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake, app.keySlashing)
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
 		cmn.Exit(err.Error())
@@ -92,12 +101,31 @@ func MakeCodec() *wire.Codec {
 	sdk.RegisterWire(cdc)    // Register Msgs
 	bank.RegisterWire(cdc)
 	stake.RegisterWire(cdc)
+	slashing.RegisterWire(cdc)
 	ibc.RegisterWire(cdc)
 
 	// register custom AppAccount
-	cdc.RegisterInterface((*sdk.Account)(nil), nil)
+	cdc.RegisterInterface((*auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&types.AppAccount{}, "basecoin/Account", nil)
 	return cdc
+}
+
+// application updates every end block
+func (app *BasecoinApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
+
+	return abci.ResponseBeginBlock{
+		Tags: tags.ToKVPairs(),
+	}
+}
+
+// application updates every end block
+func (app *BasecoinApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
+
+	return abci.ResponseEndBlock{
+		ValidatorUpdates: validatorUpdates,
+	}
 }
 
 // Custom logic for basecoin initialization
@@ -119,6 +147,10 @@ func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) 
 		}
 		app.accountMapper.SetAccount(ctx, acc)
 	}
+
+	// load the initial stake information
+	stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
+
 	return abci.ResponseInitChain{}
 }
 
@@ -128,7 +160,7 @@ func (app *BasecoinApp) ExportAppStateJSON() (appState json.RawMessage, err erro
 
 	// iterate to get the accounts
 	accounts := []*types.GenesisAccount{}
-	appendAccount := func(acc sdk.Account) (stop bool) {
+	appendAccount := func(acc auth.Account) (stop bool) {
 		account := &types.GenesisAccount{
 			Address: acc.GetAddress(),
 			Coins:   acc.GetCoins(),

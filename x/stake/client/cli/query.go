@@ -1,13 +1,11 @@
 package cli
 
 import (
-	"encoding/hex"
 	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tmlibs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,70 +13,90 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
-// get the command to query a candidate
-func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
+// get the command to query a validator
+func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "candidate",
-		Short: "Query a validator-candidate account",
+		Use:   "validator [owner-addr]",
+		Short: "Query a validator",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			addr, err := sdk.GetAddress(viper.GetString(FlagAddressCandidate))
+			addr, err := sdk.GetAccAddressBech32(args[0])
 			if err != nil {
 				return err
 			}
-
-			key := stake.GetCandidateKey(addr)
+			key := stake.GetValidatorKey(addr)
 			ctx := context.NewCoreContextFromViper()
 			res, err := ctx.Query(key, storeName)
 			if err != nil {
 				return err
 			}
+			validator := new(stake.Validator)
+			cdc.MustUnmarshalBinary(res, validator)
 
-			// parse out the candidate
-			candidate := new(stake.Candidate)
-			cdc.MustUnmarshalBinary(res, candidate)
-			output, err := wire.MarshalJSONIndent(cdc, candidate)
-			if err != nil {
-				return err
+			switch viper.Get(cli.OutputFlag) {
+			case "text":
+				human, err := validator.HumanReadableString()
+				if err != nil {
+					return err
+				}
+				fmt.Println(human)
+
+			case "json":
+				// parse out the validator
+				output, err := wire.MarshalJSONIndent(cdc, validator)
+				if err != nil {
+					return err
+				}
+				fmt.Println(string(output))
 			}
-			fmt.Println(string(output))
-			return nil
-
 			// TODO output with proofs / machine parseable etc.
+			return nil
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsCandidate)
 	return cmd
 }
 
-// get the command to query a candidate
-func GetCmdQueryCandidates(storeName string, cdc *wire.Codec) *cobra.Command {
+// get the command to query a validator
+func GetCmdQueryValidators(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "candidates",
-		Short: "Query for all validator-candidate accounts",
+		Use:   "validators",
+		Short: "Query for all validators",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			key := stake.CandidatesKey
+			key := stake.ValidatorsKey
 			ctx := context.NewCoreContextFromViper()
 			resKVs, err := ctx.QuerySubspace(cdc, key, storeName)
 			if err != nil {
 				return err
 			}
 
-			// parse out the candidates
-			var candidates []stake.Candidate
+			// parse out the validators
+			var validators []stake.Validator
 			for _, KV := range resKVs {
-				var candidate stake.Candidate
-				cdc.MustUnmarshalBinary(KV.Value, &candidate)
-				candidates = append(candidates, candidate)
+				var validator stake.Validator
+				cdc.MustUnmarshalBinary(KV.Value, &validator)
+				validators = append(validators, validator)
 			}
 
-			output, err := wire.MarshalJSONIndent(cdc, candidates)
-			if err != nil {
-				return err
+			switch viper.Get(cli.OutputFlag) {
+			case "text":
+				for _, validator := range validators {
+					resp, err := validator.HumanReadableString()
+					if err != nil {
+						return err
+					}
+					fmt.Println(resp)
+				}
+			case "json":
+				output, err := wire.MarshalJSONIndent(cdc, validators)
+				if err != nil {
+					return err
+				}
+				fmt.Println(string(output))
+				return nil
 			}
-			fmt.Println(string(output))
 			return nil
 
 			// TODO output with proofs / machine parseable etc.
@@ -87,25 +105,24 @@ func GetCmdQueryCandidates(storeName string, cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-// get the command to query a single delegator bond
-func GetCmdQueryDelegatorBond(storeName string, cdc *wire.Codec) *cobra.Command {
+// get the command to query a single delegation bond
+func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delegator-bond",
-		Short: "Query a delegators bond based on address and candidate pubkey",
+		Use:   "delegation",
+		Short: "Query a delegations bond based on address and validator address",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			addr, err := sdk.GetAddress(viper.GetString(FlagAddressCandidate))
+			addr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
 
-			bz, err := hex.DecodeString(viper.GetString(FlagAddressDelegator))
+			delAddr, err := sdk.GetValAddressHex(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}
-			delegator := crypto.Address(bz)
 
-			key := stake.GetDelegatorBondKey(delegator, addr, cdc)
+			key := stake.GetDelegationKey(delAddr, addr, cdc)
 			ctx := context.NewCoreContextFromViper()
 			res, err := ctx.Query(key, storeName)
 			if err != nil {
@@ -113,51 +130,61 @@ func GetCmdQueryDelegatorBond(storeName string, cdc *wire.Codec) *cobra.Command 
 			}
 
 			// parse out the bond
-			bond := new(stake.DelegatorBond)
-			cdc.MustUnmarshalBinary(res, bond)
-			output, err := wire.MarshalJSONIndent(cdc, bond)
-			if err != nil {
-				return err
-			}
-			fmt.Println(string(output))
-			return nil
+			bond := new(stake.Delegation)
 
-			// TODO output with proofs / machine parseable etc.
+			switch viper.Get(cli.OutputFlag) {
+			case "text":
+				resp, err := bond.HumanReadableString()
+				if err != nil {
+					return err
+				}
+				fmt.Println(resp)
+			case "json":
+				cdc.MustUnmarshalBinary(res, bond)
+				output, err := wire.MarshalJSONIndent(cdc, bond)
+				if err != nil {
+					return err
+				}
+				fmt.Println(string(output))
+				return nil
+			}
+			return nil
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsCandidate)
+	cmd.Flags().AddFlagSet(fsValidator)
 	cmd.Flags().AddFlagSet(fsDelegator)
 	return cmd
 }
 
-// get the command to query all the candidates bonded to a delegator
-func GetCmdQueryDelegatorBonds(storeName string, cdc *wire.Codec) *cobra.Command {
+// get the command to query all the validators bonded to a delegation
+func GetCmdQueryDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delegator-candidates",
-		Short: "Query all delegators bonds based on delegator-address",
+		Use:   "delegations [delegator-addr]",
+		Short: "Query all delegations made from one delegator",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			delegatorAddr, err := sdk.GetAddress(viper.GetString(FlagAddressDelegator))
+			delegatorAddr, err := sdk.GetAccAddressBech32(args[0])
 			if err != nil {
 				return err
 			}
-			key := stake.GetDelegatorBondsKey(delegatorAddr, cdc)
+			key := stake.GetDelegationsKey(delegatorAddr, cdc)
 			ctx := context.NewCoreContextFromViper()
 			resKVs, err := ctx.QuerySubspace(cdc, key, storeName)
 			if err != nil {
 				return err
 			}
 
-			// parse out the candidates
-			var delegators []stake.DelegatorBond
+			// parse out the validators
+			var delegations []stake.Delegation
 			for _, KV := range resKVs {
-				var delegator stake.DelegatorBond
-				cdc.MustUnmarshalBinary(KV.Value, &delegator)
-				delegators = append(delegators, delegator)
+				var delegation stake.Delegation
+				cdc.MustUnmarshalBinary(KV.Value, &delegation)
+				delegations = append(delegations, delegation)
 			}
 
-			output, err := wire.MarshalJSONIndent(cdc, delegators)
+			output, err := wire.MarshalJSONIndent(cdc, delegations)
 			if err != nil {
 				return err
 			}
@@ -167,6 +194,5 @@ func GetCmdQueryDelegatorBonds(storeName string, cdc *wire.Codec) *cobra.Command
 			// TODO output with proofs / machine parseable etc.
 		},
 	}
-	cmd.Flags().AddFlagSet(fsDelegator)
 	return cmd
 }

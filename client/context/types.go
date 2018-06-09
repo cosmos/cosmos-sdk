@@ -3,19 +3,20 @@ package context
 import (
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // typical context created in sdk modules for transactions/queries
 type CoreContext struct {
 	ChainID         string
 	Height          int64
+	Gas             int64
 	TrustNode       bool
 	NodeURI         string
 	FromAddressName string
 	Sequence        int64
 	Client          rpcclient.Client
-	Decoder         sdk.AccountDecoder
+	Decoder         auth.AccountDecoder
 	AccountStore    string
 }
 
@@ -28,6 +29,12 @@ func (c CoreContext) WithChainID(chainID string) CoreContext {
 // WithHeight - return a copy of the context with an updated height
 func (c CoreContext) WithHeight(height int64) CoreContext {
 	c.Height = height
+	return c
+}
+
+// WithGas - return a copy of the context with an updated gas
+func (c CoreContext) WithGas(gas int64) CoreContext {
+	c.Gas = gas
 	return c
 }
 
@@ -63,7 +70,7 @@ func (c CoreContext) WithClient(client rpcclient.Client) CoreContext {
 }
 
 // WithDecoder - return a copy of the context with an updated Decoder
-func (c CoreContext) WithDecoder(decoder sdk.AccountDecoder) CoreContext {
+func (c CoreContext) WithDecoder(decoder auth.AccountDecoder) CoreContext {
 	c.Decoder = decoder
 	return c
 }

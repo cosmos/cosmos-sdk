@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/tendermint/go-crypto/keys"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,14 +13,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
-// RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/stake/{delegator}/bonding_status/{candidate}", BondingStatusHandlerFn("stake", cdc, kb, ctx)).Methods("GET")
+func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
+	r.HandleFunc(
+		"/stake/{delegator}/bonding_status/{validator}",
+		bondingStatusHandlerFn(ctx, "stake", cdc),
+	).Methods("GET")
+	r.HandleFunc(
+		"/stake/validators",
+		validatorsHandlerFn(ctx, "stake", cdc),
+	).Methods("GET")
 }
 
-// BondingStatusHandlerFn - http request handler to query delegator bonding status
-func BondingStatusHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+// http request handler to query delegator bonding status
+func bondingStatusHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		// read parameters
 		vars := mux.Vars(r)
 		delegator := vars["delegator"]
@@ -41,9 +47,9 @@ func BondingStatusHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 			w.Write([]byte(err.Error()))
 			return
 		}
-		candidateAddr := sdk.Address(bz)
+		validatorAddr := sdk.Address(bz)
 
-		key := stake.GetDelegatorBondKey(delegatorAddr, candidateAddr, cdc)
+		key := stake.GetDelegationKey(delegatorAddr, validatorAddr, cdc)
 
 		res, err := ctx.Query(key, storeName)
 		if err != nil {
@@ -58,7 +64,7 @@ func BondingStatusHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 			return
 		}
 
-		var bond stake.DelegatorBond
+		var bond stake.Delegation
 		err = cdc.UnmarshalBinary(res, &bond)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -67,6 +73,46 @@ func BondingStatusHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 		}
 
 		output, err := cdc.MarshalJSON(bond)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		w.Write(output)
+	}
+}
+
+// http request handler to query list of validators
+func validatorsHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		kvs, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("Couldn't query validators. Error: %s", err.Error())))
+			return
+		}
+
+		// the query will return empty if there are no validators
+		if len(kvs) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		// parse out the validators
+		validators := make([]stake.Validator, len(kvs))
+		for i, kv := range kvs {
+			var validator stake.Validator
+			err = cdc.UnmarshalBinary(kv.Value, &validator)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
+				return
+			}
+			validators[i] = validator
+		}
+
+		output, err := cdc.MarshalJSON(validators)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

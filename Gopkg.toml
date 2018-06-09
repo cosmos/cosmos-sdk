@@ -54,15 +54,11 @@
 
 [[constraint]]
   name = "github.com/tendermint/abci"
-  version = "~0.10.3"
+  version = "=0.11.0"
 
 [[constraint]]
   name = "github.com/tendermint/go-crypto"
   version = "~0.6.2"
-
-[[override]]
-  name = "github.com/tendermint/go-wire"
-  version = "0.7.3"
 
 [[constraint]]
   name = "github.com/tendermint/go-amino"
@@ -70,16 +66,16 @@
 
 [[constraint]]
   name = "github.com/tendermint/iavl"
-  version = "~0.7.0"
+  version = "0.8.0-rc0"
 
 [[constraint]]
   name = "github.com/tendermint/tendermint"
-  version = "0.19.9-rc0"
+  version = "=0.20.0"
 
 [[override]]
   name = "github.com/tendermint/tmlibs"
-  version = "~0.8.4"
-  
+  branch = "develop"
+
 # this got updated and broke, so locked to an old working commit ...
 [[override]]
   name = "google.golang.org/genproto"
@@ -88,4 +84,3 @@
 [prune]
   go-tests = true
   unused-packages = true
-

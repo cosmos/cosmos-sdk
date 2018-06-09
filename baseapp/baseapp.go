@@ -3,6 +3,7 @@ package baseapp
 import (
 	"fmt"
 	"runtime/debug"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // Key to store the header in the DB itself.
@@ -22,11 +24,24 @@ import (
 // and to avoid affecting the Merkle root.
 var dbHeaderKey = []byte("header")
 
+// Enum mode for app.runTx
+type runTxMode uint8
+
+const (
+	// Check a transaction
+	runTxModeCheck runTxMode = iota
+	// Simulate a transaction
+	runTxModeSimulate runTxMode = iota
+	// Deliver a transaction
+	runTxModeDeliver runTxMode = iota
+)
+
 // The ABCI application
 type BaseApp struct {
 	// initialized on creation
 	Logger     log.Logger
 	name       string               // application name from abci.Info
+	cdc        *wire.Codec          // Amino codec
 	db         dbm.DB               // common DB backend
 	cms        sdk.CommitMultiStore // Main (uncached) state
 	router     Router               // handle any kind of message
@@ -37,9 +52,11 @@ type BaseApp struct {
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
 
 	// may be nil
-	initChainer  sdk.InitChainer  // initialize state with validators and state blob
-	beginBlocker sdk.BeginBlocker // logic to run before any txs
-	endBlocker   sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
+	initChainer      sdk.InitChainer  // initialize state with validators and state blob
+	beginBlocker     sdk.BeginBlocker // logic to run before any txs
+	endBlocker       sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
+	addrPeerFilter   sdk.PeerFilter   // filter peers by address and port
+	pubkeyPeerFilter sdk.PeerFilter   // filter peers by public key
 
 	//--------------------
 	// Volatile
@@ -48,9 +65,10 @@ type BaseApp struct {
 	// See methods setCheckState and setDeliverState.
 	// .valUpdates accumulate in DeliverTx and are reset in BeginBlock.
 	// QUESTION: should we put valUpdates in the deliverState.ctx?
-	checkState   *state           // for CheckTx
-	deliverState *state           // for DeliverTx
-	valUpdates   []abci.Validator // cached validator changes from DeliverTx
+	checkState       *state                  // for CheckTx
+	deliverState     *state                  // for DeliverTx
+	valUpdates       []abci.Validator        // cached validator changes from DeliverTx
+	signedValidators []abci.SigningValidator // absent validators from begin block
 }
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -61,6 +79,7 @@ func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB) *Bas
 	app := &BaseApp{
 		Logger:     logger,
 		name:       name,
+		cdc:        cdc,
 		db:         db,
 		cms:        store.NewCommitMultiStore(db),
 		router:     NewRouter(),
@@ -108,7 +127,7 @@ func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 // default custom logic for transaction decoding
 func defaultTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
-		var tx = sdk.StdTx{}
+		var tx = auth.StdTx{}
 
 		if len(txBytes) == 0 {
 			return nil, sdk.ErrTxDecode("txBytes are empty")
@@ -136,6 +155,12 @@ func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 }
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	app.anteHandler = ah
+}
+func (app *BaseApp) SetAddrPeerFilter(pf sdk.PeerFilter) {
+	app.addrPeerFilter = pf
+}
+func (app *BaseApp) SetPubKeyPeerFilter(pf sdk.PeerFilter) {
+	app.pubkeyPeerFilter = pf
 }
 func (app *BaseApp) Router() Router { return app.router }
 
@@ -277,15 +302,74 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	return
 }
 
+// Filter peers by address / port
+func (app *BaseApp) FilterPeerByAddrPort(info string) abci.ResponseQuery {
+	if app.addrPeerFilter != nil {
+		return app.addrPeerFilter(info)
+	}
+	return abci.ResponseQuery{}
+}
+
+// Filter peers by public key
+func (app *BaseApp) FilterPeerByPubKey(info string) abci.ResponseQuery {
+	if app.pubkeyPeerFilter != nil {
+		return app.pubkeyPeerFilter(info)
+	}
+	return abci.ResponseQuery{}
+}
+
 // Implements ABCI.
 // Delegates to CommitMultiStore if it implements Queryable
 func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
-	queryable, ok := app.cms.(sdk.Queryable)
-	if !ok {
-		msg := "application doesn't support queries"
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+	path := strings.Split(req.Path, "/")
+	// first element is empty string
+	if len(path) > 0 && path[0] == "" {
+		path = path[1:]
 	}
-	return queryable.Query(req)
+	// "/app" prefix for special application queries
+	if len(path) >= 2 && path[0] == "app" {
+		var result sdk.Result
+		switch path[1] {
+		case "simulate":
+			txBytes := req.Data
+			tx, err := app.txDecoder(txBytes)
+			if err != nil {
+				result = err.Result()
+			} else {
+				result = app.Simulate(tx)
+			}
+		default:
+			result = sdk.ErrUnknownRequest(fmt.Sprintf("Unknown query: %s", path)).Result()
+		}
+		value := app.cdc.MustMarshalBinary(result)
+		return abci.ResponseQuery{
+			Code:  uint32(sdk.ABCICodeOK),
+			Value: value,
+		}
+	}
+	// "/store" prefix for store queries
+	if len(path) >= 1 && path[0] == "store" {
+		queryable, ok := app.cms.(sdk.Queryable)
+		if !ok {
+			msg := "multistore doesn't support queries"
+			return sdk.ErrUnknownRequest(msg).QueryResult()
+		}
+		req.Path = "/" + strings.Join(path[1:], "/")
+		return queryable.Query(req)
+	}
+	// "/p2p" prefix for p2p queries
+	if len(path) >= 4 && path[0] == "p2p" {
+		if path[1] == "filter" {
+			if path[2] == "addr" {
+				return app.FilterPeerByAddrPort(path[3])
+			}
+			if path[2] == "pubkey" {
+				return app.FilterPeerByPubKey(path[3])
+			}
+		}
+	}
+	msg := "unknown query path"
+	return sdk.ErrUnknownRequest(msg).QueryResult()
 }
 
 // Implements ABCI
@@ -301,6 +385,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)
 	}
+	// set the signed validators for addition to context in deliverTx
+	app.signedValidators = req.Validators
 	return
 }
 
@@ -312,7 +398,7 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(true, txBytes, tx)
+		result = app.runTx(runTxModeCheck, txBytes, tx)
 	}
 
 	return abci.ResponseCheckTx{
@@ -320,6 +406,7 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 		Data:      result.Data,
 		Log:       result.Log,
 		GasWanted: result.GasWanted,
+		GasUsed:   result.GasUsed,
 		Fee: cmn.KI64Pair{
 			[]byte(result.FeeDenom),
 			result.FeeAmount,
@@ -336,7 +423,7 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(false, txBytes, tx)
+		result = app.runTx(runTxModeDeliver, txBytes, tx)
 	}
 
 	// After-handler hooks.
@@ -358,22 +445,35 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	}
 }
 
-// nolint- Mostly for testing
+// nolint - Mostly for testing
 func (app *BaseApp) Check(tx sdk.Tx) (result sdk.Result) {
-	return app.runTx(true, nil, tx)
+	return app.runTx(runTxModeCheck, nil, tx)
 }
+
+// nolint - full tx execution
+func (app *BaseApp) Simulate(tx sdk.Tx) (result sdk.Result) {
+	return app.runTx(runTxModeSimulate, nil, tx)
+}
+
+// nolint
 func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
-	return app.runTx(false, nil, tx)
+	return app.runTx(runTxModeDeliver, nil, tx)
 }
 
 // txBytes may be nil in some cases, eg. in tests.
 // Also, in the future we may support "internal" transactions.
-func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
+func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
 	// Handle any panics.
 	defer func() {
 		if r := recover(); r != nil {
-			log := fmt.Sprintf("Recovered: %v\nstack:\n%v", r, string(debug.Stack()))
-			result = sdk.ErrInternal(log).Result()
+			switch r.(type) {
+			case sdk.ErrorOutOfGas:
+				log := fmt.Sprintf("Out of gas in location: %v", r.(sdk.ErrorOutOfGas).Descriptor)
+				result = sdk.ErrOutOfGas(log).Result()
+			default:
+				log := fmt.Sprintf("Recovered: %v\nstack:\n%v", r, string(debug.Stack()))
+				result = sdk.ErrInternal(log).Result()
+			}
 		}
 	}()
 
@@ -392,10 +492,16 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// Get the context
 	var ctx sdk.Context
-	if isCheckTx {
+	if mode == runTxModeCheck || mode == runTxModeSimulate {
 		ctx = app.checkState.ctx.WithTxBytes(txBytes)
 	} else {
 		ctx = app.deliverState.ctx.WithTxBytes(txBytes)
+		ctx = ctx.WithSigningValidators(app.signedValidators)
+	}
+
+	// Simulate a DeliverTx for gas calculation
+	if mode == runTxModeSimulate {
+		ctx = ctx.WithIsCheckTx(false)
 	}
 
 	// Run the ante handler.
@@ -418,7 +524,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// Get the correct cache
 	var msCache sdk.CacheMultiStore
-	if isCheckTx == true {
+	if mode == runTxModeCheck || mode == runTxModeSimulate {
 		// CacheWrap app.checkState.ms in case it fails.
 		msCache = app.checkState.CacheMultiStore()
 		ctx = ctx.WithMultiStore(msCache)
@@ -426,13 +532,15 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 		// CacheWrap app.deliverState.ms in case it fails.
 		msCache = app.deliverState.CacheMultiStore()
 		ctx = ctx.WithMultiStore(msCache)
-
 	}
 
 	result = handler(ctx, msg)
 
-	// If result was successful, write to app.checkState.ms or app.deliverState.ms
-	if result.IsOK() {
+	// Set gas utilized
+	result.GasUsed = ctx.GasMeter().GasConsumed()
+
+	// If not a simulated run and result was successful, write to app.checkState.ms or app.deliverState.ms
+	if mode != runTxModeSimulate && result.IsOK() {
 		msCache.Write()
 	}
 

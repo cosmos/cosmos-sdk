@@ -1,13 +1,65 @@
 package stake
 
 import (
+	"bytes"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Pool - dynamic parameters of the current state
+type Pool struct {
+	LooseUnbondedTokens int64   `json:"loose_unbonded_tokens"` // tokens not associated with any validator
+	UnbondedTokens      int64   `json:"unbonded_tokens"`       // reserve of unbonded tokens held with validators
+	UnbondingTokens     int64   `json:"unbonding_tokens"`      // tokens moving from bonded to unbonded pool
+	BondedTokens        int64   `json:"bonded_tokens"`         // reserve of bonded tokens
+	UnbondedShares      sdk.Rat `json:"unbonded_shares"`       // sum of all shares distributed for the Unbonded Pool
+	UnbondingShares     sdk.Rat `json:"unbonding_shares"`      // shares moving from Bonded to Unbonded Pool
+	BondedShares        sdk.Rat `json:"bonded_shares"`         // sum of all shares distributed for the Bonded Pool
+	InflationLastTime   int64   `json:"inflation_last_time"`   // block which the last inflation was processed // TODO make time
+	Inflation           sdk.Rat `json:"inflation"`             // current annual inflation rate
+
+	DateLastCommissionReset int64 `json:"date_last_commission_reset"` // unix timestamp for last commission accounting reset (daily)
+
+	// Fee Related
+	PrevBondedShares sdk.Rat `json:"prev_bonded_shares"` // last recorded bonded shares - for fee calcualtions
+}
+
+func (p Pool) equal(p2 Pool) bool {
+	bz1 := msgCdc.MustMarshalBinary(&p)
+	bz2 := msgCdc.MustMarshalBinary(&p2)
+	return bytes.Equal(bz1, bz2)
+}
+
+// initial pool for testing
+func InitialPool() Pool {
+	return Pool{
+		LooseUnbondedTokens:     0,
+		BondedTokens:            0,
+		UnbondingTokens:         0,
+		UnbondedTokens:          0,
+		BondedShares:            sdk.ZeroRat(),
+		UnbondingShares:         sdk.ZeroRat(),
+		UnbondedShares:          sdk.ZeroRat(),
+		InflationLastTime:       0,
+		Inflation:               sdk.NewRat(7, 100),
+		DateLastCommissionReset: 0,
+		PrevBondedShares:        sdk.ZeroRat(),
+	}
+}
+
+//____________________________________________________________________
+
+// Sum total of all staking tokens in the pool
+func (p Pool) TokenSupply() int64 {
+	return p.LooseUnbondedTokens + p.UnbondedTokens + p.UnbondingTokens + p.BondedTokens
+}
+
+//____________________________________________________________________
+
 // get the bond ratio of the global state
 func (p Pool) bondedRatio() sdk.Rat {
-	if p.TotalSupply > 0 {
-		return sdk.NewRat(p.BondedPool, p.TotalSupply)
+	if p.TokenSupply() > 0 {
+		return sdk.NewRat(p.BondedTokens, p.TokenSupply())
 	}
 	return sdk.ZeroRat()
 }
@@ -17,102 +69,65 @@ func (p Pool) bondedShareExRate() sdk.Rat {
 	if p.BondedShares.IsZero() {
 		return sdk.OneRat()
 	}
-	return sdk.NewRat(p.BondedPool).Quo(p.BondedShares)
+	return sdk.NewRat(p.BondedTokens).Quo(p.BondedShares)
 }
 
-// get the exchange rate of unbonded tokens held in candidates per issued share
+// get the exchange rate of unbonding tokens held in validators per issued share
+func (p Pool) unbondingShareExRate() sdk.Rat {
+	if p.UnbondingShares.IsZero() {
+		return sdk.OneRat()
+	}
+	return sdk.NewRat(p.UnbondingTokens).Quo(p.UnbondingShares)
+}
+
+// get the exchange rate of unbonded tokens held in validators per issued share
 func (p Pool) unbondedShareExRate() sdk.Rat {
 	if p.UnbondedShares.IsZero() {
 		return sdk.OneRat()
 	}
-	return sdk.NewRat(p.UnbondedPool).Quo(p.UnbondedShares)
-}
-
-// move a candidates asset pool from bonded to unbonded pool
-func (p Pool) bondedToUnbondedPool(candidate Candidate) (Pool, Candidate) {
-
-	// replace bonded shares with unbonded shares
-	p, tokens := p.removeSharesBonded(candidate.Assets)
-	p, candidate.Assets = p.addTokensUnbonded(tokens)
-	candidate.Status = Unbonded
-	return p, candidate
-}
-
-// move a candidates asset pool from unbonded to bonded pool
-func (p Pool) unbondedToBondedPool(candidate Candidate) (Pool, Candidate) {
-
-	// replace unbonded shares with bonded shares
-	p, tokens := p.removeSharesUnbonded(candidate.Assets)
-	p, candidate.Assets = p.addTokensBonded(tokens)
-	candidate.Status = Bonded
-	return p, candidate
+	return sdk.NewRat(p.UnbondedTokens).Quo(p.UnbondedShares)
 }
 
 //_______________________________________________________________________
 
-func (p Pool) addTokensBonded(amount int64) (p2 Pool, issuedShares sdk.Rat) {
-	issuedShares = sdk.NewRat(amount).Quo(p.bondedShareExRate()) // tokens * (shares/tokens)
-	p.BondedPool += amount
-	p.BondedShares = p.BondedShares.Add(issuedShares)
-	return p, issuedShares
-}
-
-func (p Pool) removeSharesBonded(shares sdk.Rat) (p2 Pool, removedTokens int64) {
-	removedTokens = p.bondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
-	p.BondedShares = p.BondedShares.Sub(shares)
-	p.BondedPool = p.BondedPool - removedTokens
-	return p, removedTokens
-}
-
-func (p Pool) addTokensUnbonded(amount int64) (p2 Pool, issuedShares sdk.Rat) {
-	issuedShares = sdk.NewRat(amount).Quo(p.unbondedShareExRate()) // tokens * (shares/tokens)
-	p.UnbondedShares = p.UnbondedShares.Add(issuedShares)
-	p.UnbondedPool += amount
-	return p, issuedShares
+func (p Pool) addTokensUnbonded(amount int64) (p2 Pool, issuedShares PoolShares) {
+	issuedSharesAmount := sdk.NewRat(amount).Quo(p.unbondedShareExRate()) // tokens * (shares/tokens)
+	p.UnbondedShares = p.UnbondedShares.Add(issuedSharesAmount)
+	p.UnbondedTokens += amount
+	return p, NewUnbondedShares(issuedSharesAmount)
 }
 
 func (p Pool) removeSharesUnbonded(shares sdk.Rat) (p2 Pool, removedTokens int64) {
 	removedTokens = p.unbondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
 	p.UnbondedShares = p.UnbondedShares.Sub(shares)
-	p.UnbondedPool -= removedTokens
+	p.UnbondedTokens -= removedTokens
 	return p, removedTokens
 }
 
-//_______________________________________________________________________
-
-// add tokens to a candidate
-func (p Pool) candidateAddTokens(candidate Candidate,
-	amount int64) (p2 Pool, candidate2 Candidate, issuedDelegatorShares sdk.Rat) {
-
-	exRate := candidate.delegatorShareExRate()
-
-	var receivedGlobalShares sdk.Rat
-	if candidate.Status == Bonded {
-		p, receivedGlobalShares = p.addTokensBonded(amount)
-	} else {
-		p, receivedGlobalShares = p.addTokensUnbonded(amount)
-	}
-	candidate.Assets = candidate.Assets.Add(receivedGlobalShares)
-
-	issuedDelegatorShares = exRate.Mul(receivedGlobalShares)
-	candidate.Liabilities = candidate.Liabilities.Add(issuedDelegatorShares)
-
-	return p, candidate, issuedDelegatorShares
+func (p Pool) addTokensUnbonding(amount int64) (p2 Pool, issuedShares PoolShares) {
+	issuedSharesAmount := sdk.NewRat(amount).Quo(p.unbondingShareExRate()) // tokens * (shares/tokens)
+	p.UnbondingShares = p.UnbondingShares.Add(issuedSharesAmount)
+	p.UnbondingTokens += amount
+	return p, NewUnbondingShares(issuedSharesAmount)
 }
 
-// remove shares from a candidate
-func (p Pool) candidateRemoveShares(candidate Candidate,
-	shares sdk.Rat) (p2 Pool, candidate2 Candidate, createdCoins int64) {
+func (p Pool) removeSharesUnbonding(shares sdk.Rat) (p2 Pool, removedTokens int64) {
+	removedTokens = p.unbondingShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
+	p.UnbondingShares = p.UnbondingShares.Sub(shares)
+	p.UnbondingTokens -= removedTokens
+	return p, removedTokens
+}
 
-	//exRate := candidate.delegatorShareExRate() //XXX make sure not used
+func (p Pool) addTokensBonded(amount int64) (p2 Pool, issuedShares PoolShares) {
+	issuedSharesAmount := sdk.NewRat(amount).Quo(p.bondedShareExRate()) // tokens * (shares/tokens)
+	p.BondedShares = p.BondedShares.Add(issuedSharesAmount)
+	p.BondedTokens += amount
+	return p, NewBondedShares(issuedSharesAmount)
+}
 
-	globalPoolSharesToRemove := candidate.delegatorShareExRate().Mul(shares)
-	if candidate.Status == Bonded {
-		p, createdCoins = p.removeSharesBonded(globalPoolSharesToRemove)
-	} else {
-		p, createdCoins = p.removeSharesUnbonded(globalPoolSharesToRemove)
-	}
-	candidate.Assets = candidate.Assets.Sub(globalPoolSharesToRemove)
-	candidate.Liabilities = candidate.Liabilities.Sub(shares)
-	return p, candidate, createdCoins
+func (p Pool) removeSharesBonded(shares sdk.Rat) (p2 Pool, removedTokens int64) {
+	removedTokens = p.bondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
+	p.BondedShares = p.BondedShares.Sub(shares)
+	p.BondedTokens -= removedTokens
+	return p, removedTokens
 }

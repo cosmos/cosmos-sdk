@@ -54,11 +54,11 @@
 
 [[constraint]]
   name = "github.com/tendermint/abci"
-  version = "=0.11.0-rc4"
+  version = "~0.11.0"
 
 [[override]]
   name = "github.com/tendermint/go-crypto"
-  revision = "eabd703880acfd919cd595c0ba73aef53ebaaad7"
+  branch = "cwgoes/unified-ledger-keybase"
 
 [[constraint]]
   name = "github.com/tendermint/go-amino"
@@ -68,9 +68,9 @@
   name = "github.com/tendermint/iavl"
   version = "0.8.0-rc0"
 
-[[constraint]]
+[[override]]
   name = "github.com/tendermint/tendermint"
-  version = "=0.20.0-rc3"
+  branch = "cwgoes/go-crypto-interface-changes"
 
 [[override]]
   name = "github.com/tendermint/tmlibs"

@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
@@ -29,7 +30,11 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tags := viper.GetStringSlice(flagTags)
 
-			output, err := searchTx(context.NewCoreContextFromViper(), cdc, tags)
+			txs, err := searchTags(context.NewCoreContextFromViper(), cdc, tags)
+			if err != nil {
+				return err
+			}
+			output, err := cdc.MarshalJSON(txs)
 			if err != nil {
 				return err
 			}
@@ -47,13 +52,12 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func searchTx(ctx context.CoreContext, cdc *wire.Codec, tags []string) ([]byte, error) {
+func searchTags(ctx context.CoreContext, cdc *wire.Codec, tags []string) ([]txInfo, error) {
 	if len(tags) == 0 {
 		return nil, errors.New("Must declare at least one tag to search")
 	}
 	// XXX: implement ANY
 	query := strings.Join(tags, " AND ")
-
 	// get the node
 	node, err := ctx.GetNode()
 	if err != nil {
@@ -74,11 +78,7 @@ func searchTx(ctx context.CoreContext, cdc *wire.Codec, tags []string) ([]byte, 
 		return nil, err
 	}
 
-	output, err := cdc.MarshalJSON(info)
-	if err != nil {
-		return nil, err
-	}
-	return output, nil
+	return info, nil
 }
 
 func formatTxResults(cdc *wire.Codec, res []*ctypes.ResultTx) ([]txInfo, error) {
@@ -99,20 +99,55 @@ func formatTxResults(cdc *wire.Codec, res []*ctypes.ResultTx) ([]txInfo, error) 
 // Search Tx REST Handler
 func SearchTxRequestHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		bech32Address := r.FormValue("address")
 		tag := r.FormValue("tag")
-		if tag == "" {
+		var txs []txInfo
+		var err error
+		if bech32Address != "" {
+			hexAddress, err := sdk.GetAccAddressBech32(bech32Address)
+			if err != nil {
+				w.WriteHeader(400)
+				w.Write([]byte(err.Error()))
+				return
+			}
+			senderTxs, err := searchTags(ctx, cdc, []string{"sender='" + hexAddress.String() + "'"})
+			if err != nil {
+				w.WriteHeader(500)
+				w.Write([]byte(err.Error()))
+				return
+			}
+			recipientTxs, err := searchTags(ctx, cdc, []string{"recipient='" + hexAddress.String() + "'"})
+			if err != nil {
+				w.WriteHeader(500)
+				w.Write([]byte(err.Error()))
+				return
+			}
+			txs = append(senderTxs, recipientTxs...)
+		} else if tag != "" {
+			txs, err = searchTags(ctx, cdc, []string{tag})
+			if err != nil {
+				w.WriteHeader(500)
+				w.Write([]byte(err.Error()))
+				return
+			}
+		} else {
 			w.WriteHeader(400)
-			w.Write([]byte("You need to provide a tag to search for."))
+			w.Write([]byte("You need to provide a tag or an address to search for."))
 			return
 		}
 
-		tags := []string{tag}
-		output, err := searchTx(ctx, cdc, tags)
+		output, err := cdc.MarshalJSON(txs)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		w.Write(output)
+
+		if len(txs) == 0 {
+			w.Write([]byte("[]"))
+			return
+		} else {
+			w.Write(output)
+		}
 	}
 }

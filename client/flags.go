@@ -26,7 +26,6 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().String(FlagChainID, "", "Chain ID of tendermint node")
 		c.Flags().String(FlagNode, "tcp://localhost:46657", "<host>:<port> to tendermint rpc interface for this chain")
 		c.Flags().Int64(FlagHeight, 0, "block height to query, omit to get most recent provable block")
-		c.Flags().Int64(FlagGas, 200000, "gas limit to set per-transaction")
 	}
 	return cmds
 }
@@ -39,6 +38,7 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().String(FlagFee, "", "Fee to pay along with transaction")
 		c.Flags().String(FlagChainID, "", "Chain ID of tendermint node")
 		c.Flags().String(FlagNode, "tcp://localhost:46657", "<host>:<port> to tendermint rpc interface for this chain")
+		c.Flags().Int64(FlagGas, 200000, "gas limit to set per-transaction")
 	}
 	return cmds
 }

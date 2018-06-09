@@ -93,7 +93,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		printCreate(info, "")
 	} else {
 		algo := keys.CryptoAlgo(viper.GetString(flagType))
-		info, seed, err := kb.Create(name, pass, algo)
+		info, seed, err := kb.CreateMnemonic(name, pass, algo)
 		if err != nil {
 			return err
 		}
@@ -181,7 +181,7 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	// check if already exists
 	infos, err := kb.List()
 	for _, i := range infos {
-		if i.Name == m.Name {
+		if i.GetName() == m.Name {
 			w.WriteHeader(http.StatusConflict)
 			w.Write([]byte(fmt.Sprintf("Account with name %s already exists.", m.Name)))
 			return
@@ -195,7 +195,7 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	w.Write([]byte(info.PubKey.Address().String()))
+	w.Write([]byte(info.GetPubKey().Address().String()))
 }
 
 // function to just a new seed to display in the UI before actually persisting it in the keybase
@@ -204,7 +204,7 @@ func getSeed(algo keys.CryptoAlgo) string {
 	pass := "throwing-this-key-away"
 	name := "inmemorykey"
 
-	_, seed, _ := kb.Create(name, pass, algo)
+	_, seed, _ := kb.CreateMnemonic(name, pass, algo)
 	return seed
 }
 

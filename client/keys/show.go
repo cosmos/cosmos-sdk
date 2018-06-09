@@ -28,7 +28,7 @@ var showKeysCmd = &cobra.Command{
 func getKey(name string) (keys.Info, error) {
 	kb, err := GetKeyBase()
 	if err != nil {
-		return keys.Info{}, err
+		return nil, err
 	}
 
 	return kb.Get(name)

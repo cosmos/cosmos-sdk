@@ -84,13 +84,17 @@ func (ctx CoreContext) query(key cmn.HexBytes, storeName, endPath string) (res [
 // Get the from address from the name flag
 func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 
+	// TODO XXX
 	if ctx.UseLedger {
 		path := []uint32{44, 60, 0, 0, 0} // TODO
 		priv, err := crypto.NewPrivKeyLedgerSecp256k1(path)
 		if err != nil {
 			return nil, err
 		}
-		pubkey := priv.PubKey()
+		pubkey, err := priv.PubKey()
+		if err != nil {
+			return nil, err
+		}
 		return pubkey.Address(), nil
 	}
 
@@ -109,7 +113,7 @@ func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 		return nil, errors.Errorf("No key for: %s", name)
 	}
 
-	return info.PubKey.Address(), nil
+	return info.GetPubKey().Address(), nil
 
 }
 
@@ -174,8 +178,14 @@ func (ctx CoreContext) SignAndBuildLedger(msg sdk.Msg, cdc *wire.Codec) ([]byte,
 	if err != nil {
 		return nil, err
 	}
-	sig := priv.Sign(bz)
-	pubkey := priv.PubKey()
+	sig, err := priv.Sign(bz)
+	if err != nil {
+		return nil, err
+	}
+	pubkey, err := priv.PubKey()
+	if err != nil {
+		return nil, err
+	}
 	sigs := []auth.StdSignature{{
 		PubKey:    pubkey,
 		Signature: sig,

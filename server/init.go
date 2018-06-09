@@ -19,8 +19,8 @@ import (
 	"github.com/tendermint/go-crypto/keys/words"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/p2p"
-	tmtypes "github.com/tendermint/tendermint/types"
 	pvm "github.com/tendermint/tendermint/privval"
+	tmtypes "github.com/tendermint/tendermint/types"
 	tmcli "github.com/tendermint/tmlibs/cli"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -414,11 +414,11 @@ func GenerateCoinKey() (sdk.Address, string, error) {
 	)
 
 	// generate a private key, with recovery phrase
-	info, secret, err := keybase.Create("name", "pass", keys.AlgoEd25519)
+	info, secret, err := keybase.CreateMnemonic("name", "pass", keys.AlgoEd25519)
 	if err != nil {
 		return nil, "", err
 	}
-	addr := info.PubKey.Address()
+	addr := info.GetPubKey().Address()
 	return addr, secret, nil
 }
 
@@ -441,10 +441,10 @@ func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (s
 	}
 
 	// generate a private key, with recovery phrase
-	info, secret, err := keybase.Create(keyName, keyPass, keys.AlgoEd25519)
+	info, secret, err := keybase.CreateMnemonic(keyName, keyPass, keys.AlgoEd25519)
 	if err != nil {
 		return nil, "", err
 	}
-	addr := info.PubKey.Address()
+	addr := info.GetPubKey().Address()
 	return addr, secret, nil
 }

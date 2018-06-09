@@ -67,16 +67,16 @@ func Bech32KeysOutput(infos []keys.Info) ([]KeyOutput, error) {
 
 // create a KeyOutput in bech32 format
 func Bech32KeyOutput(info keys.Info) (KeyOutput, error) {
-	bechAccount, err := sdk.Bech32ifyAcc(sdk.Address(info.PubKey.Address().Bytes()))
+	bechAccount, err := sdk.Bech32ifyAcc(sdk.Address(info.GetPubKey().Address().Bytes()))
 	if err != nil {
 		return KeyOutput{}, err
 	}
-	bechPubKey, err := sdk.Bech32ifyAccPub(info.PubKey)
+	bechPubKey, err := sdk.Bech32ifyAccPub(info.GetPubKey())
 	if err != nil {
 		return KeyOutput{}, err
 	}
 	return KeyOutput{
-		Name:    info.Name,
+		Name:    info.GetName(),
 		Address: bechAccount,
 		PubKey:  bechPubKey,
 	}, nil

@@ -22,11 +22,11 @@ import (
 	tmcfg "github.com/tendermint/tendermint/config"
 	nm "github.com/tendermint/tendermint/node"
 	p2p "github.com/tendermint/tendermint/p2p"
+	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
 	tmtypes "github.com/tendermint/tendermint/types"
-	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tmlibs/cli"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
@@ -385,6 +385,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 		return nil, nil, err
 	}
 	viper.Set(cli.HomeFlag, dir)
+	viper.Set(client.FlagGas, 200000)
 	kb, err := keys.GetKeyBase() // dbm.NewMemDB()) // :(
 	if err != nil {
 		return nil, nil, err

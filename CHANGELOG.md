@@ -11,6 +11,7 @@ IMPROVEMENTS
 
 FIXES
 * [lcd] Switch to bech32 for addresses on all human readable inputs and outputs
+* [cli] Added `--gas` flag to specify transaction gas limit
 
 ## 0.18.0
 

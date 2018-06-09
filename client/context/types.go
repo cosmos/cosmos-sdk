@@ -10,6 +10,7 @@ import (
 type CoreContext struct {
 	ChainID         string
 	Height          int64
+	Gas             int64
 	TrustNode       bool
 	NodeURI         string
 	FromAddressName string
@@ -28,6 +29,12 @@ func (c CoreContext) WithChainID(chainID string) CoreContext {
 // WithHeight - return a copy of the context with an updated height
 func (c CoreContext) WithHeight(height int64) CoreContext {
 	c.Height = height
+	return c
+}
+
+// WithGas - return a copy of the context with an updated gas
+func (c CoreContext) WithGas(gas int64) CoreContext {
+	c.Gas = gas
 	return c
 }
 

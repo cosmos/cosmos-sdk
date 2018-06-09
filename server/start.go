@@ -10,7 +10,7 @@ import (
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/proxy"
-	pvm "github.com/tendermint/tendermint/types/priv_validator"
+	pvm "github.com/tendermint/tendermint/privval"
 	cmn "github.com/tendermint/tmlibs/common"
 )
 

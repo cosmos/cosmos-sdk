@@ -88,15 +88,20 @@ func (msg MsgIssue) Type() string { return "bank" } // TODO: "bank/issue"
 
 // Implements Msg.
 func (msg MsgIssue) ValidateBasic() sdk.Error {
-	// XXX
+	if msg.Banker == nil {
+		return ErrNoBanker(DefaultCodespace).Trace("")
+	}
+
 	if len(msg.Outputs) == 0 {
 		return ErrNoOutputs(DefaultCodespace).Trace("")
 	}
+
 	for _, out := range msg.Outputs {
 		if err := out.ValidateBasic(); err != nil {
 			return err.Trace("")
 		}
 	}
+
 	return nil
 }
 

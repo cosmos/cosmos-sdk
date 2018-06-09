@@ -17,12 +17,20 @@ const (
 
 // Keeper manages transfers between accounts
 type Keeper struct {
-	am auth.AccountMapper
+	am     auth.AccountMapper
+	banker sdk.Address
 }
 
 // NewKeeper returns a new Keeper
-func NewKeeper(am auth.AccountMapper) Keeper {
-	return Keeper{am: am}
+func NewKeeper(am auth.AccountMapper, banker sdk.Address) Keeper {
+	return Keeper{
+		am:     am,
+		banker: banker,
+	}
+}
+
+func (keeper Keeper) GetBanker() sdk.Address {
+	return keeper.banker
 }
 
 // GetCoins returns the coins at the addr.

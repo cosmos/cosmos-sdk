@@ -16,24 +16,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
+func setupAccountMapper() (sdk.Context, auth.AccountMapper) {
 	db := dbm.NewMemDB()
 	authKey := sdk.NewKVStoreKey("authkey")
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(authKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
-	return ms, authKey
-}
-
-func TestKeeper(t *testing.T) {
-	ms, authKey := setupMultiStore()
 
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
-	coinKeeper := NewKeeper(accountMapper)
+
+	return ctx, accountMapper
+}
+
+func TestKeeper(t *testing.T) {
+	ctx, accountMapper := setupAccountMapper()
+
+	coinKeeper := NewKeeper(accountMapper, nil)
 
 	addr := sdk.Address([]byte("addr1"))
 	addr2 := sdk.Address([]byte("addr2"))
@@ -111,14 +113,9 @@ func TestKeeper(t *testing.T) {
 }
 
 func TestSendKeeper(t *testing.T) {
-	ms, authKey := setupMultiStore()
+	ctx, accountMapper := setupAccountMapper()
 
-	cdc := wire.NewCodec()
-	auth.RegisterBaseAccount(cdc)
-
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
-	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
-	coinKeeper := NewKeeper(accountMapper)
+	coinKeeper := NewKeeper(accountMapper, nil)
 	sendKeeper := NewSendKeeper(accountMapper)
 
 	addr := sdk.Address([]byte("addr1"))
@@ -180,14 +177,9 @@ func TestSendKeeper(t *testing.T) {
 }
 
 func TestViewKeeper(t *testing.T) {
-	ms, authKey := setupMultiStore()
+	ctx, accountMapper := setupAccountMapper()
 
-	cdc := wire.NewCodec()
-	auth.RegisterBaseAccount(cdc)
-
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
-	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
-	coinKeeper := NewKeeper(accountMapper)
+	coinKeeper := NewKeeper(accountMapper, nil)
 	viewKeeper := NewViewKeeper(accountMapper)
 
 	addr := sdk.Address([]byte("addr1"))

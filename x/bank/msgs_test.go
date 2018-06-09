@@ -232,9 +232,7 @@ func TestMsgSendSigners(t *testing.T) {
 // ----------------------------------------
 // MsgIssue Tests
 
-func TestNewMsgIssue(t *testing.T) {
-	// TODO
-}
+func TestNewMsgIssue(t *testing.T) {}
 
 func TestMsgIssueType(t *testing.T) {
 	// Construct an MsgIssue
@@ -250,7 +248,29 @@ func TestMsgIssueType(t *testing.T) {
 }
 
 func TestMsgIssueValidation(t *testing.T) {
-	// TODO
+	banker := sdk.Address([]byte("banker"))
+	addr := sdk.Address([]byte{7, 8})
+	atoms := sdk.Coins{{"atom", 123}}
+
+	output := NewOutput(addr, atoms)
+
+	cases := []struct {
+		valid bool
+		tx    MsgIssue
+	}{
+		{false, MsgIssue{}},
+		{true, MsgIssue{Banker: banker, Outputs: []Output{output}}},
+		{false, MsgIssue{Banker: nil, Outputs: []Output{output}}},
+	}
+
+	for i, tc := range cases {
+		err := tc.tx.ValidateBasic()
+		if tc.valid {
+			assert.Nil(t, err, "%d: %+v", i, err)
+		} else {
+			assert.NotNil(t, err, "%d", i)
+		}
+	}
 }
 
 func TestMsgIssueGetSignBytes(t *testing.T) {

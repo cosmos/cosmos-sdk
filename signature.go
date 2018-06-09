@@ -80,3 +80,9 @@ func (sig SignatureSecp256k1) Equals(other Signature) bool {
 		return false
 	}
 }
+
+func SignatureSecp256k1FromBytes(data []byte) Signature {
+	sig := make(SignatureSecp256k1, len(data))
+	copy(sig[:], data)
+	return sig
+}

@@ -57,6 +57,10 @@
   name = "github.com/tyler-smith/go-bip39"
   branch = "master"
 
+[[constraint]]
+  name = "github.com/zondax/ledger-goclient"
+  revision = "3e2146609cdb97894c064d59e9d00accd8c2b1dd"
+
 [prune]
   go-tests = true
   unused-packages = true

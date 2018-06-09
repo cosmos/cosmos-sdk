@@ -136,6 +136,11 @@ func SearchTxRequestHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Han
 			return
 		}
 
+		if len(txs) == 0 {
+			w.Write([]byte("[]"))
+			return
+		}
+
 		output, err := cdc.MarshalJSON(txs)
 		if err != nil {
 			w.WriteHeader(500)
@@ -143,11 +148,6 @@ func SearchTxRequestHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Han
 			return
 		}
 
-		if len(txs) == 0 {
-			w.Write([]byte("[]"))
-			return
-		} else {
-			w.Write(output)
-		}
+		w.Write(output)
 	}
 }

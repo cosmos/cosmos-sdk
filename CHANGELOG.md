@@ -1,5 +1,17 @@
 # Changelog
 
+BREAKING CHANGES
+* msg.GetSignBytes() now returns bech32-encoded addresses in all cases
+
+FEATURES
+
+IMPROVEMENTS
+* export command now writes current validator set for Tendermint
+* [tests] Application module tests now use a mock application
+
+FIXES
+* [lcd] Switch to bech32 for addresses on all human readable inputs and outputs
+
 ## 0.18.0
 
 _2018-06-05_
@@ -65,7 +77,7 @@ BUG FIXES
 * query sequence via account store
 * fixed duplicate pub_key in stake.Validator
 * Auto-sequencing now works correctly
-
+* [gaiacli] Fix error message when account isn't found when running gaiacli account
 
 
 ## 0.17.5

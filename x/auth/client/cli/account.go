@@ -52,6 +52,12 @@ func GetAccountCmd(storeName string, cdc *wire.Codec, decoder auth.AccountDecode
 				return err
 			}
 
+			// Check if account was found
+			if res == nil {
+				return sdk.ErrUnknownAddress("No account with address " + addr +
+					" was found in the state.\nAre you sure there has been a transaction involving it?")
+			}
+
 			// decode the value
 			account, err := decoder(res)
 			if err != nil {

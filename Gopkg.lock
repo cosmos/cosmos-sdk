@@ -170,8 +170,8 @@
 [[projects]]
   name = "github.com/pelletier/go-toml"
   packages = ["."]
-  revision = "acdc4509485b587f5e675510c4f2c63e90ff68a8"
-  version = "v1.1.0"
+  revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
+  version = "v1.2.0"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -330,6 +330,7 @@
     "p2p/conn",
     "p2p/pex",
     "p2p/upnp",
+    "privval",
     "proxy",
     "rpc/client",
     "rpc/core",
@@ -344,11 +345,15 @@
     "state/txindex/kv",
     "state/txindex/null",
     "types",
-    "types/priv_validator",
     "version"
   ]
+<<<<<<< HEAD
   revision = "b5baab0238c9ec26e3b2d229b0243f9ff9220bdb"
   version = "v0.20.0-rc3"
+=======
+  revision = "775fef31c2b8fb7ea36f0d57bae3bfa74d353100"
+  version = "v0.19.9-rc0"
+>>>>>>> master
 
 [[projects]]
   branch = "develop"
@@ -363,10 +368,17 @@
     "db",
     "flowrate",
     "log",
+<<<<<<< HEAD
     "merkle",
     "merkle/tmhash"
   ]
   revision = "44f1bdb0d55cc6527e38d0a7aab406e2580f56a4"
+=======
+    "merkle"
+  ]
+  revision = "692f1d86a6e2c0efa698fd1e4541b68c74ffaf38"
+  version = "v0.8.4"
+>>>>>>> master
 
 [[projects]]
   branch = "master"
@@ -382,7 +394,11 @@
     "ripemd160",
     "salsa20/salsa"
   ]
+<<<<<<< HEAD
   revision = "5ba7f63082460102a45837dbd1827e10f9479ac0"
+=======
+  revision = "78e79280f680f7dd6b8e48c751887111ebdbcbd8"
+>>>>>>> master
 
 [[projects]]
   branch = "master"
@@ -463,6 +479,10 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
+<<<<<<< HEAD
   inputs-digest = "ccb2ab7644a38c2d0326280582f758256e37fc98c3ef0403581e3b85cff42188"
+=======
+  inputs-digest = "71d11bd2a8f3f46ba3fd16759b501ad5b6b48037717d82020ebb25e021b67117"
+>>>>>>> master
   solver-name = "gps-cdcl"
   solver-version = 1

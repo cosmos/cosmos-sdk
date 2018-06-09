@@ -70,12 +70,16 @@
 
 [[constraint]]
   name = "github.com/tendermint/tendermint"
-  version = "=0.20.0-rc3"
+  version = "=0.20.0"
 
 [[override]]
   name = "github.com/tendermint/tmlibs"
   branch = "develop"
 
+[[override]]
+  name = "github.com/tendermint/tmlibs"
+  version = "~0.8.4"
+  
 # this got updated and broke, so locked to an old working commit ...
 [[override]]
   name = "google.golang.org/genproto"

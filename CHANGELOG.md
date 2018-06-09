@@ -15,7 +15,7 @@ FIXES
 
 ## 0.18.0
 
-_2018-06-05_
+*June 9, 2018*
 
 BREAKING CHANGES
 

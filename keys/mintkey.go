@@ -13,24 +13,40 @@ import (
 const (
 	blockTypePrivKey = "TENDERMINT PRIVATE KEY"
 	blockTypeKeyInfo = "TENDERMINT KEY INFO"
+	blockTypePubKey  = "TENDERMINT PUBLIC KEY"
 )
 
 func armorInfoBytes(bz []byte) string {
+	return armorBytes(bz, blockTypeKeyInfo)
+}
+
+func armorPubKeyBytes(bz []byte) string {
+	return armorBytes(bz, blockTypePubKey)
+}
+
+func armorBytes(bz []byte, blockType string) string {
 	header := map[string]string{
 		"type":    "Info",
 		"version": "0.0.0",
 	}
-	armorStr := crypto.EncodeArmor(blockTypeKeyInfo, header, bz)
-	return armorStr
+	return crypto.EncodeArmor(blockType, header, bz)
 }
 
 func unarmorInfoBytes(armorStr string) (bz []byte, err error) {
-	blockType, header, bz, err := crypto.DecodeArmor(armorStr)
+	return unarmorBytes(armorStr, blockTypeKeyInfo)
+}
+
+func unarmorPubKeyBytes(armorStr string) (bz []byte, err error) {
+	return unarmorBytes(armorStr, blockTypePubKey)
+}
+
+func unarmorBytes(armorStr, blockType string) (bz []byte, err error) {
+	bType, header, bz, err := crypto.DecodeArmor(armorStr)
 	if err != nil {
 		return
 	}
-	if blockType != blockTypeKeyInfo {
-		err = fmt.Errorf("Unrecognized armor type: %v", blockType)
+	if bType != blockType {
+		err = fmt.Errorf("Unrecognized armor type %q, expected: %q", bType, blockType)
 		return
 	}
 	if header["version"] != "0.0.0" {

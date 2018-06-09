@@ -91,8 +91,8 @@ func TestSignVerify(t *testing.T) {
 	)
 	algo := keys.AlgoSecp256k1
 
-	n1, n2 := "some dude", "a dudette"
-	p1, p2 := "1234", "foobar"
+	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
+	p1, p2, p3 := "1234", "foobar", "foobar"
 
 	// create two users and get their info
 	i1, _, err := cstore.Create(n1, p1, algo)
@@ -101,9 +101,18 @@ func TestSignVerify(t *testing.T) {
 	i2, _, err := cstore.Create(n2, p2, algo)
 	require.Nil(t, err)
 
+	// Import a public key
+	armor, err := cstore.ExportPubKey(n2)
+	require.Nil(t, err)
+	cstore.ImportPubKey(n3, armor)
+	i3, err := cstore.Get(n3)
+	require.Nil(t, err)
+	require.Equal(t, i3.PrivKeyArmor, "")
+
 	// let's try to sign some messages
 	d1 := []byte("my first message")
 	d2 := []byte("some other important info!")
+	d3 := []byte("feels like I forgot something...")
 
 	// try signing both data with both keys...
 	s11, pub1, err := cstore.Sign(n1, p1, d1)
@@ -145,6 +154,10 @@ func TestSignVerify(t *testing.T) {
 		valid := tc.key.VerifyBytes(tc.data, tc.sig)
 		assert.Equal(t, tc.valid, valid, "%d", i)
 	}
+
+	// Now try to sign data with a secret-less key
+	_, _, err = cstore.Sign(n3, p3, d3)
+	assert.NotNil(t, err)
 }
 
 /*
@@ -241,6 +254,48 @@ func TestExportImport(t *testing.T) {
 	assert.Equal(t, john.PubKey.Address(), addr)
 	assert.Equal(t, john.Name, "john")
 	assert.Equal(t, john, john2)
+}
+
+func TestExportImportPubKey(t *testing.T) {
+	// make the storage with reasonable defaults
+	db := dbm.NewMemDB()
+	cstore := keys.New(
+		db,
+		words.MustLoadCodec("english"),
+	)
+
+	// Create a private-public key pair and ensure consistency
+	info, _, err := cstore.Create("john", "passphrase", keys.AlgoEd25519)
+	assert.Nil(t, err)
+	assert.NotEqual(t, info.PrivKeyArmor, "")
+	assert.Equal(t, info.Name, "john")
+	addr := info.PubKey.Address()
+	john, err := cstore.Get("john")
+	assert.Nil(t, err)
+	assert.Equal(t, john.Name, "john")
+	assert.Equal(t, john.PubKey.Address(), addr)
+
+	// Export the public key only
+	armor, err := cstore.ExportPubKey("john")
+	assert.Nil(t, err)
+	// Import it under a different name
+	err = cstore.ImportPubKey("john-pubkey-only", armor)
+	assert.Nil(t, err)
+	// Ensure consistency
+	john2, err := cstore.Get("john-pubkey-only")
+	assert.Nil(t, err)
+	assert.Equal(t, john2.PrivKeyArmor, "")
+	// Compare the public keys
+	assert.True(t, john.PubKey.Equals(john2.PubKey))
+	// Ensure the original key hasn't changed
+	john, err = cstore.Get("john")
+	assert.Nil(t, err)
+	assert.Equal(t, john.PubKey.Address(), addr)
+	assert.Equal(t, john.Name, "john")
+
+	// Ensure keys cannot be overwritten
+	err = cstore.ImportPubKey("john-pubkey-only", armor)
+	assert.NotNil(t, err)
 }
 
 // TestAdvancedKeyManagement verifies update, import, export functionality

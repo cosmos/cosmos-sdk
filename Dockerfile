@@ -27,6 +27,7 @@ ADD . $REPO_PATH
 # Install minimum necessary dependencies, build Cosmos SDK, remove packages
 RUN apk add --no-cache $PACKAGES && \
     cd $REPO_PATH && make get_tools && make get_vendor_deps && make build && make install && \
+    apk add python3 && \
     apk del $PACKAGES
 
 # Set entrypoint

@@ -101,7 +101,7 @@ func testnetWithConfig(config *cfg.Config, ctx *Context, cdc *wire.Codec, appIni
 		}
 
 		// Run `init gen-tx` and generate initial transactions
-		cliPrint, genTxFile, err := gentxWithConfig(config, genTxConfig, ctx, cdc, appInit)
+		cliPrint, genTxFile, err := gentxWithConfig(ctx, cdc, appInit, config, genTxConfig)
 		if err != nil {
 			return err
 		}
@@ -151,7 +151,7 @@ func testnetWithConfig(config *cfg.Config, ctx *Context, cdc *wire.Codec, appIni
 		config.SetRoot(nodeDir)
 
 		// Run `init` and generate genesis.json and config.toml
-		_, _, _, err := initWithConfig(config, gaiaInitConfig, ctx, cdc, appInit)
+		_, _, _, err := initWithConfig(ctx, cdc, appInit, config, gaiaInitConfig)
 		if err != nil {
 			return err
 		}

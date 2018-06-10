@@ -1,6 +1,3 @@
-/*
- * Ported from Tendermint
- */
 package server
 
 import (

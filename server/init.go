@@ -47,6 +47,7 @@ type GenTxFlagNames struct {
 	FlagIP         string
 }
 
+// Storage for init command input parameters
 type InitConfig struct {
 	ChainID   string
 	GenTxs    bool

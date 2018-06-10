@@ -2,6 +2,12 @@
 
 This document explains how to connect to the Testnet of a [Cosmos-SDK](https://github.com/cosmos/cosmos-sdk/) based blockchain. It can be used to connect to the latest Testnet for the Cosmos Hub.
 
+NOTE: We are aware this documentation is sub-par and are actively working to
+improve both the tooling and the documentation to make this as painless as
+possible. In the meantime, join the
+[chat](https://riot.im/app/#/room/#cosmos_validators:matrix.org) for technical support. Thanks very
+much for your patience :)
+
 ## Software Setup (Manual Installation)
 
 Follow these instructions to install the Cosmos-SDK and connect to the latest Testnet. This instructions work for both a local machine and a VM in a cloud server.
@@ -52,7 +58,7 @@ Now we can fetch the correct versions of each dependency by running:
 ```
 mkdir -p $GOPATH/src/github.com/cosmos/cosmos-sdk
 git clone https://github.com/cosmos/cosmos-sdk.git
-git checkout v0.18.0-rc0
+git checkout v0.18.0
 make get_tools // run $ make update_tools if already installed
 make get_vendor_deps
 make install
@@ -67,7 +73,7 @@ gaiad version
 You should see:
 
 ```
-0.18.0-dev-af15f89
+0.18.0-eceb56b7
 ```
 
 And also:
@@ -79,22 +85,20 @@ gaiacli version
 You should see:
 
 ```
-0.18.0-dev-af15f89
+0.18.0-eceb56b7
 ```
 
 ## Full Node Setup
 
-Clone the testnet repo.
+Copy the testnet initialization files to a new data directory:
 
 ```
-git clone https://github.com/cosmos/testnets
-
 mkdir -p $HOME/.gaiad/config
-cp -a testnets/gaia-6001/genesis.json $HOME/.gaiad/config/genesis.json
+cp -a cmd/gaia/testnets/gaia-6001/genesis.json $HOME/.gaiad/config/genesis.json
 gaiad unsafe_reset_all
 ```
 
-Add a seed node by changing `seed = ""` in `config.toml` to `seed = "80a35a46ce09cfb31ee220c8141a25e73e0b239b@35.198.166.171:46656"`.
+Add a seed node by changing `seed = ""` in `config.toml` to `seed = "38aa9bec3998f12ae9088b21a2d910d19d565c27@gaia-6001.coinculture.net:46656"
 
 Lastly change the `moniker` string in the`config.toml`to identify your node.
 
@@ -123,25 +127,24 @@ Now it is time to upgrade the software.
 ```
 cd $GOPATH/src/github.com/cosmos/cosmos-sdk
 git fetch --all
-git checkout v0.18.0-rc0
+git checkout v0.18.0
 make update_tools
 make get_vendor_deps
 make install
 ```
 
-The next step is to obtain the new genesis file from `https://github.com/cosmos/testnets`.
-```
-cd $HOME/testnets
-git pull origin master
+The next step is to copy the new genesis file:
 
-cp -a gaia-6001/genesis.json $HOME/.gaiad/config
+```
+cp -a cmd/gaia/testnets/gaia-6001/genesis.json $HOME/.gaiad/config/genesis.json
 ```
 
 The last step is the adjust the `config.toml`. Make sure that you are connected to healthy peers or seed nodes.
 These are some seeds nodes and they can be put into the config under the `seeds` key. Alternatively you can also
 ask user validators directly for a persistent peer and add it under the `persisent_peers` key.
+
 ```
-80a35a46ce09cfb31ee220c8141a25e73e0b239b@cosmos.cryptium.ch:46656
+38aa9bec3998f12ae9088b21a2d910d19d565c27@gaia-6001.coinculture.net:46656"
 ```
 
 ## Run a Full Node

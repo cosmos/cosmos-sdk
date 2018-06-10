@@ -6,9 +6,13 @@ package config
 // For example: init, init gen-tx and testnet commands need similar input and run the same code
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 // Storage for init gen-tx command input parameters
 =======
 >>>>>>> Separated GenTxConfig into a server/config package so both the server package and the mock package can use it
+=======
+// Storage for init gen-tx command input parameters
+>>>>>>> Fixed linting
 type GenTxConfig struct {
 	Name      string
 	CliRoot   string

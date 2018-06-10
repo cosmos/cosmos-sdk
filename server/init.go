@@ -72,6 +72,7 @@ type InitConfig struct {
 >>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
 }
 
+// Storage for init command input parameters
 type InitConfig struct {
 	ChainID   string
 	GenTxs    bool

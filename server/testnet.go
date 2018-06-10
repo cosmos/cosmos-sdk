@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 package server
 
 import (
@@ -31,6 +32,8 @@ const nodeDirPerm = 0755
 /*
  * Ported from Tendermint
  */
+=======
+>>>>>>> Fixed linting
 package server
 
 import (

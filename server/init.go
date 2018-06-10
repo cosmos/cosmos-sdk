@@ -123,8 +123,12 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				viper.GetBool(appInit.FlagsNames.FlagOWK),
 				ip,
 			}
+<<<<<<< HEAD
 			cliPrint, genTxFile, err := gentxWithConfig(config, genTxConfig, ctx, cdc, appInit)
 >>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+			cliPrint, genTxFile, err := gentxWithConfig(ctx, cdc, appInit, config, genTxConfig)
+>>>>>>> Fixed function parameter list - now starts with ctx
 			if err != nil {
 				return err
 			}
@@ -150,6 +154,7 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 func gentxWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, genTxConfig gc.GenTxConfig) (
 =======
 func gentxWithConfig(config *cfg.Config, gaiaConfig *gaiacfg.Config, ctx *Context, cdc *wire.Codec, appInit AppInit) (
@@ -157,6 +162,9 @@ func gentxWithConfig(config *cfg.Config, gaiaConfig *gaiacfg.Config, ctx *Contex
 =======
 func gentxWithConfig(config *cfg.Config, genTxConfig GenTxConfig, ctx *Context, cdc *wire.Codec, appInit AppInit) (
 >>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+func gentxWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, genTxConfig GenTxConfig) (
+>>>>>>> Fixed function parameter list - now starts with ctx
 	cliPrint json.RawMessage, genTxFile json.RawMessage, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {

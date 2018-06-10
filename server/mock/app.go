@@ -13,10 +13,14 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 <<<<<<< HEAD
+<<<<<<< HEAD
 	gc "github.com/cosmos/cosmos-sdk/server/config"
 =======
 	"github.com/cosmos/cosmos-sdk/server"
 >>>>>>> Fixed tests
+=======
+	gc "github.com/cosmos/cosmos-sdk/server/config"
+>>>>>>> Separated GenTxConfig into a server/config package so both the server package and the mock package can use it
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
@@ -130,10 +134,14 @@ func AppGenState(_ *wire.Codec, _ []json.RawMessage) (appState json.RawMessage, 
 
 // Return a validator, not much else
 <<<<<<< HEAD
+<<<<<<< HEAD
 func AppGenTx(_ *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTxConfig) (
 =======
 func AppGenTx(_ *wire.Codec, pk crypto.PubKey, genTxConfig server.GenTxConfig) (
 >>>>>>> Fixed tests
+=======
+func AppGenTx(_ *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTxConfig) (
+>>>>>>> Separated GenTxConfig into a server/config package so both the server package and the mock package can use it
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
 	validator = tmtypes.GenesisValidator{

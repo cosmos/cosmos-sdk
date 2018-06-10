@@ -41,6 +41,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	gc "github.com/cosmos/cosmos-sdk/server/config"
+
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
@@ -282,7 +284,7 @@ func testnetWithConfig(config *cfg.Config, ctx *Context, cdc *wire.Codec, appIni
 			ip = calculateIP(ip, i)
 		}
 
-		genTxConfig := GenTxConfig{
+		genTxConfig := gc.GenTxConfig{
 			nodeDirName,
 			clientDir,
 			true,

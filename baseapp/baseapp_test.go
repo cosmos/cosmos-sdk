@@ -468,7 +468,7 @@ func TestFeeFailureCheckTx(t *testing.T) {
 	capKey := sdk.NewKVStoreKey("main")
 	app.MountStoresIAVL(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
 		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(0))
@@ -485,6 +485,56 @@ func TestFeeFailureCheckTx(t *testing.T) {
 	assert.Equal(t, resCheck.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), "Expected transaction to run out of gas due to fee in ante handler")
 	resDeliver := app.Deliver(tx)
 	assert.Equal(t, resDeliver.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), "Expected transaction to run out of gas due to fee in ante handler")
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+}
+
+//Ante handler uses gas, and should trigger a failure for CheckTx() and DeliverTx(). DeliverTx()'s msg handler should never run
+func TestMultiCheckTx(t *testing.T) {
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	app := NewBaseApp(t.Name(), nil, logger, db)
+
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	require.Nil(t, err)
+
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		var amount int64 = 5
+
+		// Grab gas from the checkState ctx
+		gasConsumed := ctx.GasMeter().GasConsumed()
+		// create a new gas meter to tally against the infinite gas meter
+		newGasMeter := sdk.NewGasMeter(15)
+
+		// the new "temp-meter" will fail after 3 CheckTx() go through
+		newGasMeter.ConsumeGas(gasConsumed+amount, "temp-meter")
+		// The actual gas meter will not consume more because it is panicing above
+		ctx.GasMeter().ConsumeGas(5, "ctx-meter")
+
+		newCtx = ctx
+
+		return
+	})
+
+	tx := testUpdatePowerTx{} // doesn't matter
+	header := abci.Header{AppHash: []byte("apphash")}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	// These Tx's will pass
+	for i := 0; i < 3; i++ {
+		resCheckPass := app.Check(tx)
+		assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), resCheckPass.Code, "Expected abci Codetype == 0, for CodeOK")
+	}
+
+	// These Tx's will fail
+	for i := 0; i < 10; i++ {
+		resCheckFail := app.Check(tx)
+		assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), resCheckFail.Code, "Expected tx to fail since there is only enough gas for 1 tx")
+	}
+
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
 }

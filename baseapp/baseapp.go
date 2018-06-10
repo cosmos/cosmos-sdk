@@ -499,9 +499,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		}
 		if !newCtx.IsZero() {
 			ctx = newCtx
-			// MIGHT NEED TO ADD result.Fee here
-			// like how the msg handler has: 		result.GasUsed = ctx.GasMeter().GasConsumed()
-
 		}
 	}
 	// Get the correct cache

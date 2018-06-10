@@ -84,6 +84,7 @@ type GaiaGenTx struct {
 // Generate a gaia genesis transaction with flags
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTxConfig) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 	if genTxConfig.Name == "" {
@@ -100,6 +101,9 @@ func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, config *gaiacfg.Config) (
 >>>>>>> Added testnet command
 =======
 func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig server.GenTxConfig) (
+=======
+func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTxConfig) (
+>>>>>>> Adding server/config to app package
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 	if genTxConfig.Name == "" {
 >>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image

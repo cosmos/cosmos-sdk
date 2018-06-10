@@ -18,7 +18,6 @@ import (
 	"github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/go-crypto/keys/words"
 	cfg "github.com/tendermint/tendermint/config"
-	gaiacfg "github.com/cosmos/cosmos-sdk/config"
 	"github.com/tendermint/tendermint/p2p"
 	tmtypes "github.com/tendermint/tendermint/types"
 	pvm "github.com/tendermint/tendermint/privval"
@@ -39,6 +38,14 @@ type GenesisTx struct {
 	AppGenTx  json.RawMessage          `json:"app_gen_tx"`
 }
 
+// Names of input parameters coming from app
+type GenTxFlagNames struct {
+	FlagName       string
+	FlagClientHome string
+	FlagOWK        string
+	FlagIP         string
+}
+
 var (
 	flagOverwrite = "overwrite"
 	flagGenTxs    = "gen-txs"
@@ -56,7 +63,23 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 
 			config := ctx.Config
 			config.SetRoot(viper.GetString(tmcli.HomeFlag))
-			cliPrint, genTxFile, err := gentxWithConfig(config,nil,ctx,cdc,appInit)
+
+			ip := viper.GetString(appInit.FlagsNames.FlagIP)
+			if len(ip) == 0 {
+				eip, err := externalIP()
+				if err != nil {
+					return err
+				}
+				ip = eip
+			}
+
+			genTxConfig := GenTxConfig{
+				viper.GetString(appInit.FlagsNames.FlagName),
+				viper.GetString(appInit.FlagsNames.FlagClientHome),
+				viper.GetBool(appInit.FlagsNames.FlagOWK),
+				ip,
+			}
+			cliPrint, genTxFile, err := gentxWithConfig(config, genTxConfig, ctx, cdc, appInit)
 			if err != nil {
 				return err
 			}
@@ -80,7 +103,7 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	return cmd
 }
 
-func gentxWithConfig(config *cfg.Config, gaiaConfig *gaiacfg.Config, ctx *Context, cdc *wire.Codec, appInit AppInit) (
+func gentxWithConfig(config *cfg.Config, genTxConfig GenTxConfig, ctx *Context, cdc *wire.Codec, appInit AppInit) (
 	cliPrint json.RawMessage, genTxFile json.RawMessage, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
@@ -89,22 +112,14 @@ func gentxWithConfig(config *cfg.Config, gaiaConfig *gaiacfg.Config, ctx *Contex
 	nodeID := string(nodeKey.ID())
 	pubKey := readOrCreatePrivValidator(config)
 
-	appGenTx, cliPrint, validator, err := appInit.AppGenTx(cdc, pubKey, gaiaConfig)
+	appGenTx, cliPrint, validator, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
 	if err != nil {
 		return
 	}
 
-	ip := viper.GetString(flagIP)
-	if len(ip) == 0 {
-		ip, err = externalIP()
-		if err != nil {
-			return
-		}
-	}
-
 	tx := GenesisTx{
 		NodeID:    nodeID,
-		IP:        ip,
+		IP:        genTxConfig.IP,
 		Validator: validator,
 		AppGenTx:  appGenTx,
 	}
@@ -138,7 +153,14 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 
 			config := ctx.Config
 			config.SetRoot(viper.GetString(tmcli.HomeFlag))
-			chainID, nodeID, appMessage, err := initWithConfig(config,nil, ctx,cdc,appInit)
+			gaiaInitConfig := InitConfig{
+				viper.GetString(flagChainID),
+				viper.GetBool(flagGenTxs),
+				filepath.Join(config.RootDir, "config", "gentx"),
+				viper.GetBool(flagOverwrite),
+			}
+
+			chainID, nodeID, appMessage, err := initWithConfig(ctx, cdc, appInit, config, gaiaInitConfig)
 			if err != nil {
 				return err
 			}
@@ -169,7 +191,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	return cmd
 }
 
-func initWithConfig(config *cfg.Config, gaiaConfig *gaiacfg.Config, ctx *Context, cdc *wire.Codec, appInit AppInit) (
+func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, gaiaInitConfig InitConfig) (
 	chainID string, nodeID string, appMessage json.RawMessage, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
@@ -177,21 +199,14 @@ func initWithConfig(config *cfg.Config, gaiaConfig *gaiacfg.Config, ctx *Context
 	}
 	nodeID = string(nodeKey.ID())
 	pubKey := readOrCreatePrivValidator(config)
-	if gaiaConfig == nil {
-		gaiaConfig = gaiacfg.DefaultConfig()
-		gaiaConfig.Init.ChainID = viper.GetString(flagChainID)
-		gaiaConfig.Init.Overwrite = viper.GetBool(flagOverwrite)
-		gaiaConfig.Init.GenTxs = viper.GetBool(flagGenTxs)
-		gaiaConfig.Init.GenTxsDir = filepath.Join(config.RootDir, "config", "gentx")
-	}
 
-	if gaiaConfig.Init.ChainID == "" {
-		gaiaConfig.Init.ChainID = cmn.Fmt("test-chain-%v", cmn.RandStr(6))
+	if gaiaInitConfig.ChainID == "" {
+		gaiaInitConfig.ChainID = fmt.Sprintf("test-chain-%v", cmn.RandStr(6))
 	}
-	chainID = gaiaConfig.Init.ChainID
+	chainID = gaiaInitConfig.ChainID
 
 	genFile := config.GenesisFile()
-	if !gaiaConfig.Init.Overwrite && cmn.FileExists(genFile) {
+	if !gaiaInitConfig.Overwrite && cmn.FileExists(genFile) {
 		err = fmt.Errorf("genesis.json file already exists: %v", genFile)
 		return
 	}
@@ -201,9 +216,8 @@ func initWithConfig(config *cfg.Config, gaiaConfig *gaiacfg.Config, ctx *Context
 	var validators []tmtypes.GenesisValidator
 	var persistentPeers string
 
-	if gaiaConfig.Init.GenTxs {
-		genTxsDir := gaiaConfig.Init.GenTxsDir
-		validators, appGenTxs, persistentPeers, err = processGenTxs(genTxsDir, cdc, appInit)
+	if gaiaInitConfig.GenTxs {
+		validators, appGenTxs, persistentPeers, err = processGenTxs(gaiaInitConfig.GenTxsDir, cdc, appInit)
 		if err != nil {
 			return
 		}
@@ -211,7 +225,13 @@ func initWithConfig(config *cfg.Config, gaiaConfig *gaiacfg.Config, ctx *Context
 		configFilePath := filepath.Join(config.RootDir, "config", "config.toml")
 		cfg.WriteConfigFile(configFilePath, config)
 	} else {
-		appGenTx, am, validator, err := appInit.AppGenTx(cdc, pubKey, nil)
+		genTxConfig := GenTxConfig{
+			viper.GetString(appInit.FlagsNames.FlagName),
+			viper.GetString(appInit.FlagsNames.FlagClientHome),
+			viper.GetBool(appInit.FlagsNames.FlagOWK),
+			"127.0.0.1",
+		}
+		appGenTx, am, validator, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
 		appMessage = am
 		if err != nil {
 			return "", "", nil, err
@@ -225,7 +245,7 @@ func initWithConfig(config *cfg.Config, gaiaConfig *gaiacfg.Config, ctx *Context
 		return
 	}
 
-	err = writeGenesisFile(cdc, genFile, gaiaConfig.Init.ChainID, validators, appState)
+	err = writeGenesisFile(cdc, genFile, gaiaInitConfig.ChainID, validators, appState)
 	if err != nil {
 		return
 	}
@@ -339,9 +359,11 @@ type AppInit struct {
 	// flags required for application init functions
 	FlagsAppGenState *pflag.FlagSet
 	FlagsAppGenTx    *pflag.FlagSet
+	// Name of the flags required for application init functions
+	FlagsNames GenTxFlagNames
 
 	// create the application genesis tx
-	AppGenTx func(cdc *wire.Codec, pk crypto.PubKey, gaiaConfig *gaiacfg.Config) (
+	AppGenTx func(cdc *wire.Codec, pk crypto.PubKey, genTxConfig GenTxConfig) (
 		appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error)
 
 	// AppGenState creates the core parameters initialization. It takes in a
@@ -363,7 +385,7 @@ type SimpleGenTx struct {
 }
 
 // Generate a genesis transaction
-func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey, gaiaConfig *gaiacfg.Config) (
+func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig GenTxConfig) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
 	var addr sdk.Address
@@ -473,4 +495,23 @@ func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (s
 	}
 	addr := info.PubKey.Address()
 	return addr, secret, nil
+}
+
+//_____________________________________________________________________
+
+// Configuration structure for command functions that share configuration.
+// For example: init, init gen-tx and testnet commands need similar input and run the same code
+
+type InitConfig struct {
+	ChainID   string
+	GenTxs    bool
+	GenTxsDir string
+	Overwrite bool
+}
+
+type GenTxConfig struct {
+	Name      string
+	CliRoot   string
+	Overwrite bool
+	IP        string
 }

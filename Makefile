@@ -130,11 +130,26 @@ devdoc_update:
 
 
 ########################################
-### Remote validator nodes using terraform and ansible
+### Local validator nodes using docker and docker-compose
 
 # Build linux binary
 build-linux:
 	GOOS=linux GOARCH=amd64 $(MAKE) build
+
+build-docker-gaiadnode:
+	$(MAKE) -C networks/local
+
+# Run a 4-node testnet locally
+localnet-start: localnet-stop
+	@if ! [ -f build/node0/gaiad/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/gaiad:Z tendermint/gaiadnode testnet --v 4 --o . --starting-ip-address 192.168.10.2 ; fi
+	docker-compose up
+
+# Stop testnet
+localnet-stop:
+	docker-compose down
+
+########################################
+### Remote validator nodes using terraform and ansible
 
 TESTNET_NAME?=remotenet
 SERVERS?=4

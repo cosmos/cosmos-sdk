@@ -16,7 +16,11 @@ IMPROVEMENTS
 * bank module uses go-wire codec instead of 'encoding/json'
 * auth module uses go-wire codec instead of 'encoding/json'
 * revised use of endblock and beginblock
+<<<<<<< HEAD
 >>>>>>> Updated CHANGELOG.md
+=======
+* added testnet command
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
 
 FIXES
 * [lcd] Switch to bech32 for addresses on all human readable inputs and outputs

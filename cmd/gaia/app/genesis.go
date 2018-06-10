@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	crypto "github.com/tendermint/go-crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
-	gaiacfg "github.com/cosmos/cosmos-sdk/config"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -70,9 +68,16 @@ func GaiaAppInit() server.AppInit {
 		"home directory for the client, used for key generation")
 	fsAppGenTx.Bool(flagOWK, false, "overwrite the accounts created")
 
+	flagNames := server.GenTxFlagNames{
+		FlagName:       flagName,
+		FlagClientHome: flagClientHome,
+		FlagOWK:        flagOWK,
+	}
+
 	return server.AppInit{
 		FlagsAppGenState: fsAppGenState,
 		FlagsAppGenTx:    fsAppGenTx,
+		FlagsNames:       flagNames,
 		AppGenTx:         GaiaAppGenTx,
 		AppGenState:      GaiaAppGenStateJSON,
 	}
@@ -86,21 +91,15 @@ type GaiaGenTx struct {
 }
 
 // Generate a gaia genesis transaction with flags
-func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, config *gaiacfg.Config) (
+func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig server.GenTxConfig) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
-	if config == nil {
-		config = gaiacfg.DefaultConfig()
-		config.Name = viper.GetString(flagName)
-		config.CliRoot = viper.GetString(flagClientHome)
-		config.GenTx.Overwrite = viper.GetBool(flagOWK)
-	}
-	if config.Name == "" {
+	if genTxConfig.Name == "" {
 		return nil, nil, tmtypes.GenesisValidator{}, errors.New("Must specify --name (validator moniker)")
 	}
 
 	var addr sdk.Address
 	var secret string
-	addr, secret, err = server.GenerateSaveCoinKey(config.CliRoot, config.Name, "1234567890", config.GenTx.Overwrite)
+	addr, secret, err = server.GenerateSaveCoinKey(genTxConfig.CliRoot, genTxConfig.Name, "1234567890", genTxConfig.Overwrite)
 	if err != nil {
 		return
 	}
@@ -112,7 +111,7 @@ func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, config *gaiacfg.Config) (
 	}
 
 	cliPrint = json.RawMessage(bz)
-	appGenTx, _, validator, err = GaiaAppGenTxNF(cdc, pk, addr, config.Name, config.GenTx.Overwrite)
+	appGenTx, _, validator, err = GaiaAppGenTxNF(cdc, pk, addr, genTxConfig.Name, genTxConfig.Overwrite)
 	return
 }
 

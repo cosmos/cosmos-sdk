@@ -24,7 +24,6 @@
 #   go-tests = true
 #   unused-packages = true
 
-
 [[constraint]]
   name = "github.com/btcsuite/btcutil"
   branch = "master"
@@ -59,7 +58,7 @@
 
 [[constraint]]
   name = "github.com/zondax/ledger-goclient"
-  revision = "3e2146609cdb97894c064d59e9d00accd8c2b1dd"
+  revision = "065cbf938a16f20335c40cfe180f9cd4955c6a5a"
 
 [prune]
   go-tests = true

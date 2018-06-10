@@ -6,7 +6,6 @@ import (
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/tendermint/ed25519"
 	"github.com/tendermint/ed25519/extra25519"
-	. "github.com/tendermint/tmlibs/common"
 )
 
 func PrivKeyFromBytes(privKeyBytes []byte) (privKey PrivKey, err error) {
@@ -18,8 +17,8 @@ func PrivKeyFromBytes(privKeyBytes []byte) (privKey PrivKey, err error) {
 
 type PrivKey interface {
 	Bytes() []byte
-	Sign(msg []byte) Signature
-	PubKey() PubKey
+	Sign(msg []byte) (Signature, error)
+	PubKey() (PubKey, error)
 	Equals(PrivKey) bool
 }
 
@@ -31,23 +30,19 @@ var _ PrivKey = PrivKeyEd25519{}
 type PrivKeyEd25519 [64]byte
 
 func (privKey PrivKeyEd25519) Bytes() []byte {
-	bz, err := cdc.MarshalBinaryBare(privKey)
-	if err != nil {
-		panic(err)
-	}
-	return bz
+	return cdc.MustMarshalBinaryBare(privKey)
 }
 
-func (privKey PrivKeyEd25519) Sign(msg []byte) Signature {
+func (privKey PrivKeyEd25519) Sign(msg []byte) (Signature, error) {
 	privKeyBytes := [64]byte(privKey)
 	signatureBytes := ed25519.Sign(&privKeyBytes, msg)
-	return SignatureEd25519(*signatureBytes)
+	return SignatureEd25519(*signatureBytes), nil
 }
 
-func (privKey PrivKeyEd25519) PubKey() PubKey {
+func (privKey PrivKeyEd25519) PubKey() (PubKey, error) {
 	privKeyBytes := [64]byte(privKey)
 	pubBytes := *ed25519.MakePublicKey(&privKeyBytes)
-	return PubKeyEd25519(pubBytes)
+	return PubKeyEd25519(pubBytes), nil
 }
 
 // Equals - you probably don't need to use this.
@@ -66,12 +61,6 @@ func (privKey PrivKeyEd25519) ToCurve25519() *[32]byte {
 	extra25519.PrivateKeyToCurve25519(keyCurve25519, &privKeyBytes)
 	return keyCurve25519
 }
-
-/*
-func (privKey PrivKeyEd25519) String() string {
-	return Fmt("PrivKeyEd25519{*****}")
-}
-*/
 
 // Deterministically generates new priv-key bytes from key.
 func (privKey PrivKeyEd25519) Generate(index int) PrivKeyEd25519 {
@@ -114,27 +103,23 @@ var _ PrivKey = PrivKeySecp256k1{}
 type PrivKeySecp256k1 [32]byte
 
 func (privKey PrivKeySecp256k1) Bytes() []byte {
-	bz, err := cdc.MarshalBinaryBare(privKey)
-	if err != nil {
-		panic(err)
-	}
-	return bz
+	return cdc.MustMarshalBinaryBare(privKey)
 }
 
-func (privKey PrivKeySecp256k1) Sign(msg []byte) Signature {
+func (privKey PrivKeySecp256k1) Sign(msg []byte) (Signature, error) {
 	priv__, _ := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKey[:])
 	sig__, err := priv__.Sign(Sha256(msg))
 	if err != nil {
-		PanicSanity(err)
+		return nil, err
 	}
-	return SignatureSecp256k1(sig__.Serialize())
+	return SignatureSecp256k1(sig__.Serialize()), nil
 }
 
-func (privKey PrivKeySecp256k1) PubKey() PubKey {
+func (privKey PrivKeySecp256k1) PubKey() (PubKey, error) {
 	_, pub__ := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKey[:])
 	var pub PubKeySecp256k1
 	copy(pub[:], pub__.SerializeCompressed())
-	return pub
+	return pub, nil
 }
 
 // Equals - you probably don't need to use this.
@@ -146,12 +131,6 @@ func (privKey PrivKeySecp256k1) Equals(other PrivKey) bool {
 		return false
 	}
 }
-
-/*
-func (privKey PrivKeySecp256k1) String() string {
-	return Fmt("PrivKeySecp256k1{*****}")
-}
-*/
 
 /*
 // Deterministically generates new priv-key bytes from key.

@@ -2,14 +2,14 @@ package keys
 
 import "fmt"
 
-type CryptoAlgo string
+type SignAlgo string
 
 const (
-	AlgoEd25519   = CryptoAlgo("ed25519")
-	AlgoSecp256k1 = CryptoAlgo("secp256k1")
+	AlgoEd25519   = SignAlgo("ed25519")
+	AlgoSecp256k1 = SignAlgo("secp256k1")
 )
 
-func cryptoAlgoToByte(key CryptoAlgo) byte {
+func cryptoAlgoToByte(key SignAlgo) byte {
 	switch key {
 	case AlgoEd25519:
 		return 0x01
@@ -20,7 +20,7 @@ func cryptoAlgoToByte(key CryptoAlgo) byte {
 	}
 }
 
-func byteToCryptoAlgo(b byte) CryptoAlgo {
+func byteToSignAlgo(b byte) SignAlgo {
 	switch b {
 	case 0x01:
 		return AlgoEd25519

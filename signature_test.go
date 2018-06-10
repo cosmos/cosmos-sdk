@@ -12,10 +12,12 @@ import (
 func TestSignAndValidateEd25519(t *testing.T) {
 
 	privKey := GenPrivKeyEd25519()
-	pubKey := privKey.PubKey()
+	pubKey, err := privKey.PubKey()
+	require.Nil(t, err)
 
 	msg := CRandBytes(128)
-	sig := privKey.Sign(msg)
+	sig, err := privKey.Sign(msg)
+	require.Nil(t, err)
 
 	// Test the signature
 	assert.True(t, pubKey.VerifyBytes(msg, sig))
@@ -30,10 +32,12 @@ func TestSignAndValidateEd25519(t *testing.T) {
 
 func TestSignAndValidateSecp256k1(t *testing.T) {
 	privKey := GenPrivKeySecp256k1()
-	pubKey := privKey.PubKey()
+	pubKey, err := privKey.PubKey()
+	require.Nil(t, err)
 
 	msg := CRandBytes(128)
-	sig := privKey.Sign(msg)
+	sig, err := privKey.Sign(msg)
+	require.Nil(t, err)
 
 	assert.True(t, pubKey.VerifyBytes(msg, sig))
 
@@ -65,10 +69,12 @@ func TestSignatureEncodings(t *testing.T) {
 
 	for _, tc := range cases {
 		// note we embed them from the beginning....
-		pubKey := tc.privKey.PubKey()
+		pubKey, err := tc.privKey.PubKey()
+		require.Nil(t, err)
 
 		msg := CRandBytes(128)
-		sig := tc.privKey.Sign(msg)
+		sig, err := tc.privKey.Sign(msg)
+		require.Nil(t, err)
 
 		// store as amino
 		bin, err := cdc.MarshalBinaryBare(sig)

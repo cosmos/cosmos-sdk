@@ -33,9 +33,11 @@ func TestPubKeySecp256k1Address(t *testing.T) {
 		var priv PrivKeySecp256k1
 		copy(priv[:], privB)
 
-		pubT := priv.PubKey().(PubKeySecp256k1)
+		pubKey, err := priv.PubKey()
+		assert.NoError(t, err)
+		pubT, _ := pubKey.(PubKeySecp256k1)
 		pub := pubT[:]
-		addr := priv.PubKey().Address()
+		addr := pubKey.Address()
 
 		assert.Equal(t, pub, pubB, "Expected pub keys to match")
 		assert.Equal(t, addr, addrB, "Expected addresses to match")

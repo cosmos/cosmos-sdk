@@ -119,7 +119,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "5d6fca44a948d2be89a9702de7717f0168403d3d"
+  revision = "e2150783cd35f5b607daca48afd8c57ec54cc995"
 
 [[projects]]
   branch = "master"
@@ -142,10 +142,11 @@
   packages = [
     "common",
     "db",
-    "log"
+    "log",
+    "test"
   ]
-  revision = "d970af87248a4e162590300dbb74e102183a417d"
-  version = "v0.8.3"
+  revision = "692f1d86a6e2c0efa698fd1e4541b68c74ffaf38"
+  version = "v0.8.4"
 
 [[projects]]
   branch = "master"
@@ -156,7 +157,7 @@
 [[projects]]
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
-  revision = "3e2146609cdb97894c064d59e9d00accd8c2b1dd"
+  revision = "065cbf938a16f20335c40cfe180f9cd4955c6a5a"
 
 [[projects]]
   branch = "master"
@@ -164,6 +165,8 @@
   packages = [
     "bcrypt",
     "blowfish",
+    "chacha20poly1305",
+    "internal/chacha20",
     "nacl/secretbox",
     "openpgp/armor",
     "openpgp/errors",
@@ -172,11 +175,17 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "5ba7f63082460102a45837dbd1827e10f9479ac0"
+  revision = "8ac0e0d97ce45cd83d1d7243c060cb8461dda5e9"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = ["cpu"]
+  revision = "9527bec2660bd847c050fda93a0f0c6dee0800bb"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "365c3bca75ced49eb0ebcdc5c98fd47b534850684fcc94c16d1bc6a671116395"
+  inputs-digest = "f20e34cd998442d4ffe2f9aa45ab87a55ba6e4cd19f29009adaadac3b5dccf26"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -86,10 +86,14 @@ func AddCommands(
 	rootCmd.AddCommand(
 		InitCmd(ctx, cdc, appInit),
 <<<<<<< HEAD
+<<<<<<< HEAD
 		TestnetFilesCmd(ctx, cdc, appInit),
 =======
 		TestnetFilesCmd(ctx,cdc,appInit),
 >>>>>>> Added testnet command
+=======
+		TestnetFilesCmd(ctx, cdc, appInit),
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
 		StartCmd(ctx, appCreator),
 		UnsafeResetAllCmd(ctx),
 		client.LineBreak,

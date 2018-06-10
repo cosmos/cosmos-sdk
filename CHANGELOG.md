@@ -7,29 +7,10 @@ BREAKING CHANGES
 FEATURES
 
 IMPROVEMENTS
-<<<<<<< HEAD
 * export command now writes current validator set for Tendermint
 * [tests] Application module tests now use a mock application
 * [gaiacli] Fix error message when account isn't found when running gaiacli account
 * [lcd] refactored to eliminate use of global variables, and interdependent tests
-* bank module uses go-wire codec instead of 'encoding/json'
-* auth module uses go-wire codec instead of 'encoding/json'
-* revised use of endblock and beginblock
-* added testnet command
-=======
-* bank module uses go-wire codec instead of 'encoding/json'
-* auth module uses go-wire codec instead of 'encoding/json'
-* revised use of endblock and beginblock
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> Updated CHANGELOG.md
-=======
-* added testnet command
->>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
-=======
-* added testnet command
->>>>>>> Updated CHANGELOG.md
->>>>>>> Updated CHANGELOG.md
 
 FIXES
 * [lcd] Switch to bech32 for addresses on all human readable inputs and outputs

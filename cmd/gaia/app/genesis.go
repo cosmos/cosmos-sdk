@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/pflag"
 	crypto "github.com/tendermint/go-crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
-	gaiacfg "github.com/cosmos/cosmos-sdk/config"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	gc "github.com/cosmos/cosmos-sdk/server/config"
@@ -60,9 +59,16 @@ func GaiaAppInit() server.AppInit {
 		"home directory for the client, used for key generation")
 	fsAppGenTx.Bool(server.FlagOWK, false, "overwrite the accounts created")
 
+	flagNames := server.GenTxFlagNames{
+		FlagName:       flagName,
+		FlagClientHome: flagClientHome,
+		FlagOWK:        flagOWK,
+	}
+
 	return server.AppInit{
 		FlagsAppGenState: fsAppGenState,
 		FlagsAppGenTx:    fsAppGenTx,
+		FlagsNames:       flagNames,
 		AppGenTx:         GaiaAppGenTx,
 		AppGenState:      GaiaAppGenStateJSON,
 	}
@@ -76,6 +82,7 @@ type GaiaGenTx struct {
 }
 
 // Generate a gaia genesis transaction with flags
+<<<<<<< HEAD
 <<<<<<< HEAD
 func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTxConfig) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
@@ -91,16 +98,25 @@ func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, config *gaiacfg.Config) (
 	}
 	if config.Name == "" {
 >>>>>>> Added testnet command
+=======
+func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig server.GenTxConfig) (
+	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
+	if genTxConfig.Name == "" {
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
 		return nil, nil, tmtypes.GenesisValidator{}, errors.New("Must specify --name (validator moniker)")
 	}
 
 	var addr sdk.Address
 	var secret string
 <<<<<<< HEAD
+<<<<<<< HEAD
 	addr, secret, err = server.GenerateSaveCoinKey(genTxConfig.CliRoot, genTxConfig.Name, "1234567890", genTxConfig.Overwrite)
 =======
 	addr, secret, err = server.GenerateSaveCoinKey(config.CliRoot, config.Name, "1234567890", config.GenTx.Overwrite)
 >>>>>>> Added testnet command
+=======
+	addr, secret, err = server.GenerateSaveCoinKey(genTxConfig.CliRoot, genTxConfig.Name, "1234567890", genTxConfig.Overwrite)
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
 	if err != nil {
 		return
 	}
@@ -113,10 +129,14 @@ func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, config *gaiacfg.Config) (
 
 	cliPrint = json.RawMessage(bz)
 <<<<<<< HEAD
+<<<<<<< HEAD
 	appGenTx, _, validator, err = GaiaAppGenTxNF(cdc, pk, addr, genTxConfig.Name, genTxConfig.Overwrite)
 =======
 	appGenTx, _, validator, err = GaiaAppGenTxNF(cdc, pk, addr, config.Name, config.GenTx.Overwrite)
 >>>>>>> Added testnet command
+=======
+	appGenTx, _, validator, err = GaiaAppGenTxNF(cdc, pk, addr, genTxConfig.Name, genTxConfig.Overwrite)
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
 	return
 }
 

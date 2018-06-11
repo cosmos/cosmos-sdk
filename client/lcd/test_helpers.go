@@ -38,8 +38,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-var globalConfig *tmcfg.Config
-
 // f**ing long, but unique for each test
 func makePathname() string {
 	// get path
@@ -53,7 +51,6 @@ func makePathname() string {
 
 // GetConfig returns a config for the test cases as a singleton
 func GetConfig() *tmcfg.Config {
-	//if globalConfig == nil {
 	pathname := makePathname()
 	config := tmcfg.ResetTestRoot(pathname)
 
@@ -69,7 +66,6 @@ func GetConfig() *tmcfg.Config {
 	config.P2P.ListenAddress = tmAddr
 	config.RPC.ListenAddress = rcpAddr
 	config.TxIndex.IndexTags = "app.creator" // see kvstore application
-	//}
 	return config
 }
 

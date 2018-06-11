@@ -53,14 +53,16 @@ func GenTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) auth.StdTx {
 }
 
 // simulate a block
-func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
+// expPassCheck : Set to true if you expect Check() to pass i.e. the ante handler will pass
+// expPassDeliver : Set to true if you expect Deliver() to pass i.e. the ante handler and the msg handler will pass
+func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, seq []int64, expPassCheck bool, expPassDeliver bool, priv ...crypto.PrivKeyEd25519) {
 
 	// Sign the tx
 	tx := GenTx(msg, seq, priv...)
 
 	// Run a Check
 	res := app.Check(tx)
-	if expPass {
+	if expPassCheck {
 		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
 	} else {
 		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
@@ -69,7 +71,7 @@ func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, seq []int
 	// Simulate a Block
 	app.BeginBlock(abci.RequestBeginBlock{})
 	res = app.Deliver(tx)
-	if expPass {
+	if expPassDeliver {
 		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
 	} else {
 		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)

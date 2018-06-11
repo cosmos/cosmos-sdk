@@ -18,16 +18,7 @@ import (
 var (
 	priv1 = crypto.GenPrivKeyEd25519()
 	addr1 = priv1.PubKey().Address()
-	priv2 = crypto.GenPrivKeyEd25519()
-	addr2 = priv2.PubKey().Address()
-	addr3 = crypto.GenPrivKeyEd25519().PubKey().Address()
-	priv4 = crypto.GenPrivKeyEd25519()
-	addr4 = priv4.PubKey().Address()
 	coins = sdk.Coins{{"foocoin", 10}}
-	fee   = auth.StdFee{
-		sdk.Coins{{"foocoin", 0}},
-		100000,
-	}
 )
 
 // initialize the mock application for this module
@@ -95,12 +86,7 @@ func TestSlashingMsgs(t *testing.T) {
 		Address: addr1,
 		Coins:   sdk.Coins{genCoin},
 	}
-	acc2 := &auth.BaseAccount{
-		Address: addr2,
-		Coins:   sdk.Coins{genCoin},
-	}
-	accs := []auth.Account{acc1, acc2}
-
+	accs := []auth.Account{acc1}
 	mock.SetGenesis(mapp, accs)
 	description := stake.NewDescription("foo_moniker", "", "", "")
 	createValidatorMsg := stake.NewMsgCreateValidator(

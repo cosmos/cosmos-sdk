@@ -13,6 +13,8 @@ IMPROVEMENTS
 FIXES
 * [lcd] Switch to bech32 for addresses on all human readable inputs and outputs
 * [cli] Added `--gas` flag to specify transaction gas limit
+* [gaia] Registered slashing message handler
+* [x/slashing] Set signInfo.StartHeight correctly for newly bonded validators
 
 ## 0.18.0
 

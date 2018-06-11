@@ -23,6 +23,7 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	ibc "github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
 	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
+	ckeys "github.com/tendermint/go-crypto/keys"
 )
 
 const (
@@ -30,14 +31,17 @@ const (
 	flagCORS       = "cors"
 )
 
+// RestRegister is a callback for CLI programs to pass extra routes to the LCD server
+type RestRegister func(context.CoreContext, *mux.Router, *wire.Codec, ckeys.Keybase)
+
 // ServeCommand will generate a long-running rest server
 // (aka Light Client Daemon) that exposes functionality similar
 // to the cli, but over rest
-func ServeCommand(cdc *wire.Codec) *cobra.Command {
+func ServeCommand(cdc *wire.Codec, register ...RestRegister) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rest-server",
 		Short: "Start LCD (light-client daemon), a local REST server",
-		RunE:  startRESTServerFn(cdc),
+		RunE:  startRESTServerFn(cdc, register...),
 	}
 	cmd.Flags().StringP(flagListenAddr, "a", "tcp://localhost:1317", "Address for server to listen on")
 	cmd.Flags().String(flagCORS, "", "Set to domains that can make CORS requests (* for all)")
@@ -46,10 +50,10 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func startRESTServerFn(cdc *wire.Codec) func(cmd *cobra.Command, args []string) error {
+func startRESTServerFn(cdc *wire.Codec, register ...RestRegister) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		listenAddr := viper.GetString(flagListenAddr)
-		handler := createHandler(cdc)
+		handler := createHandler(cdc, register...)
 		logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
 			With("module", "rest-server")
 		listener, err := tmserver.StartHTTPServer(listenAddr, handler, logger)
@@ -67,7 +71,7 @@ func startRESTServerFn(cdc *wire.Codec) func(cmd *cobra.Command, args []string) 
 	}
 }
 
-func createHandler(cdc *wire.Codec) http.Handler {
+func createHandler(cdc *wire.Codec, register ...RestRegister) http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/version", version.RequestHandler).Methods("GET")
 
@@ -86,5 +90,8 @@ func createHandler(cdc *wire.Codec) http.Handler {
 	bank.RegisterRoutes(ctx, r, cdc, kb)
 	ibc.RegisterRoutes(ctx, r, cdc, kb)
 	stake.RegisterRoutes(ctx, r, cdc, kb)
+	for _, reg := range register {
+		reg(ctx, r, cdc, kb)
+	}
 	return r
 }

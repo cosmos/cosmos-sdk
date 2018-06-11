@@ -38,7 +38,7 @@ func getMockApp(t *testing.T) (*mock.App, stake.Keeper, Keeper) {
 	keyStake := sdk.NewKVStoreKey("stake")
 	keySlashing := sdk.NewKVStoreKey("slashing")
 	coinKeeper := bank.NewKeeper(mapp.AccountMapper)
-	stakeKeeper := stake.NewKeeper(mapp.Cdc, keyStake, coinKeeper, mapp.RegisterCodespace(DefaultCodespace))
+	stakeKeeper := stake.NewKeeper(mapp.Cdc, keyStake, coinKeeper, mapp.RegisterCodespace(stake.DefaultCodespace))
 	keeper := NewKeeper(mapp.Cdc, keySlashing, stakeKeeper, mapp.RegisterCodespace(DefaultCodespace))
 	mapp.Router().AddRoute("stake", stake.NewHandler(stakeKeeper))
 	mapp.Router().AddRoute("slashing", NewHandler(keeper))
@@ -119,6 +119,7 @@ func TestSlashingMsgs(t *testing.T) {
 	// no signing info yet
 	checkValidatorSigningInfo(t, mapp, keeper, addr1, false)
 
-	// unrevoke should fail
-	mock.SignCheckDeliver(t, mapp.BaseApp, unrevokeMsg, []int64{1}, false, priv1)
+	// unrevoke should fail with unknown validator
+	res := mock.SignCheck(t, mapp.BaseApp, unrevokeMsg, []int64{1}, priv1)
+	require.Equal(t, sdk.ToABCICode(DefaultCodespace, CodeInvalidValidator), res.Code)
 }

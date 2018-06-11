@@ -128,15 +128,16 @@
 [[projects]]
   name = "github.com/tendermint/go-amino"
   packages = ["."]
-  revision = "42246108ff925a457fb709475070a03dfd3e2b5c"
-  version = "0.9.6"
+  revision = "1715b7b78c65d6adcc5937315be4710234cefe09"
+  version = "0.10.0-rc2"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
   packages = [
     "common",
     "db",
-    "log"
+    "log",
+    "test"
   ]
   revision = "2e24b64fc121dcdf1cabceab8dc2f7257675483c"
   version = "v0.8.1"
@@ -153,6 +154,8 @@
   packages = [
     "bcrypt",
     "blowfish",
+    "chacha20poly1305",
+    "internal/chacha20",
     "nacl/secretbox",
     "openpgp/armor",
     "openpgp/errors",
@@ -166,6 +169,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f9ccfa2cadfcbfb43bf729b871a0ad2f8d4f4acb118cd859e6faf9b24842b840"
+  inputs-digest = "b34cf043cab77178eebff1b7cfce8b31b6c2b6b3318c6d01add271b68f550345"
   solver-name = "gps-cdcl"
   solver-version = 1

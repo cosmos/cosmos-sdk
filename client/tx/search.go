@@ -102,7 +102,7 @@ func SearchTxRequestHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Han
 		tag := r.FormValue("tag")
 		if tag == "" {
 			w.WriteHeader(400)
-			w.Write([]byte("You need to provide a tag or an address to search for."))
+			w.Write([]byte("You need to provide at least a tag as a key=value pair to search for. Postfix the key with _bech32 to search bech32-encoded addresses or public keys"))
 			return
 		}
 		keyValue := strings.Split(tag, "=")

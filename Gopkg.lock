@@ -203,8 +203,8 @@
     ".",
     "mem"
   ]
-  revision = "63644898a8da0bc22138abf860edaf5277b6102e"
-  version = "v1.1.0"
+  revision = "787d034dfe70e44075ccc060d346146ef53270ad"
+  version = "v1.1.1"
 
 [[projects]]
   name = "github.com/spf13/cast"
@@ -242,8 +242,8 @@
     "assert",
     "require"
   ]
-  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
-  version = "v1.2.1"
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
 
 [[projects]]
   branch = "master"
@@ -293,7 +293,7 @@
   version = "0.9.9"
 
 [[projects]]
-  branch = "cwgoes/unified-ledger-keybase"
+  branch = "develop"
   name = "github.com/tendermint/go-crypto"
   packages = [
     ".",
@@ -302,7 +302,7 @@
     "keys/words",
     "keys/words/wordlist"
   ]
-  revision = "94d6b8dcd64c1775111670781a8e9af35c3b42e5"
+  revision = "66794a174ac0f0a03235ba1348321e247f391822"
 
 [[projects]]
   name = "github.com/tendermint/iavl"
@@ -354,7 +354,7 @@
     "types",
     "version"
   ]
-  revision = "14f6291fad56e59628dd343feb5513891641905c"
+  revision = "79695089004f0f660bcbc43957bf23a387dad5d9"
 
 [[projects]]
   branch = "develop"
@@ -372,10 +372,9 @@
     "merkle",
     "merkle/tmhash"
   ]
-  revision = "640af0205d98d1f45fb2f912f9c35c8bf816adc9"
+  revision = "0c98d10b4ffbd87978d79c160e835b3d3df241ec"
 
 [[projects]]
-  branch = "master"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
   revision = "065cbf938a16f20335c40cfe180f9cd4955c6a5a"
@@ -408,13 +407,13 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "1e491301e022f8f977054da4c2d852decd59571f"
+  revision = "db08ff08e8622530d9ed3a0e8ac279f6d4c02196"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "9527bec2660bd847c050fda93a0f0c6dee0800bb"
+  revision = "bff228c7b664c5fce602223a05fb708fd8654986"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -475,6 +474,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ccda9f352ec73cbccb106d229557b1261b98913e0c3553b7d0adf7289aa2c990"
+  inputs-digest = "d771956d029dc5d8aa1c61b65bba39eb392b9063cd02f36f5248e0501504f254"
   solver-name = "gps-cdcl"
   solver-version = 1

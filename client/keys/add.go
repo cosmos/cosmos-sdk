@@ -92,7 +92,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		viper.Set(flagNoBackup, true)
 		printCreate(info, "")
 	} else {
-		algo := keys.CryptoAlgo(viper.GetString(flagType))
+		algo := keys.SignAlgo(viper.GetString(flagType))
 		info, seed, err := kb.CreateMnemonic(name, pass, algo)
 		if err != nil {
 			return err
@@ -199,7 +199,7 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // function to just a new seed to display in the UI before actually persisting it in the keybase
-func getSeed(algo keys.CryptoAlgo) string {
+func getSeed(algo keys.SignAlgo) string {
 	kb := client.MockKeyBase()
 	pass := "throwing-this-key-away"
 	name := "inmemorykey"
@@ -216,7 +216,7 @@ func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
 	if algoType == "" {
 		algoType = "ed25519"
 	}
-	algo := keys.CryptoAlgo(algoType)
+	algo := keys.SignAlgo(algoType)
 
 	seed := getSeed(algo)
 	w.Write([]byte(seed))

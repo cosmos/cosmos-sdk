@@ -22,11 +22,11 @@ import (
 	tmcfg "github.com/tendermint/tendermint/config"
 	nm "github.com/tendermint/tendermint/node"
 	p2p "github.com/tendermint/tendermint/p2p"
+	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
 	tmtypes "github.com/tendermint/tendermint/types"
-	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tmlibs/cli"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
@@ -243,7 +243,7 @@ func TestCoinSend(t *testing.T) {
 	initialBalance := acc.GetCoins()
 
 	// create TX
-	receiveAddr, resultTx := doSend(t, port, seed)
+	receiveAddr, resultTx := doSend(t, port)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was commited
@@ -290,39 +290,57 @@ func TestIBCTransfer(t *testing.T) {
 }
 
 func TestTxs(t *testing.T) {
-
-	// TODO: re-enable once we can get txs by tag
-
 	// query wrong
-	// res, body := request(t, port, "GET", "/txs", nil)
-	// require.Equal(t, http.StatusBadRequest, res.StatusCode, body)
+	res, body := request(t, port, "GET", "/txs", nil)
+	require.Equal(t, http.StatusBadRequest, res.StatusCode, body)
 
 	// query empty
-	// res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=coin.sender='%s'", "8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6"), nil)
-	// require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	// assert.Equal(t, "[]", body)
+	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=sender_bech32='%s'", "cosmosaccaddr1jawd35d9aq4u76sr3fjalmcqc8hqygs9gtnmv3"), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	assert.Equal(t, "[]", body)
 
 	// create TX
-	_, resultTx := doSend(t, port, seed)
+	receiveAddr, resultTx := doSend(t, port)
 
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx is findable
-	res, body := request(t, port, "GET", fmt.Sprintf("/txs/%s", resultTx.Hash), nil)
+	res, body = request(t, port, "GET", fmt.Sprintf("/txs/%s", resultTx.Hash), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	// // query sender
-	// res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=coin.sender='%s'", addr), nil)
-	// require.Equal(t, http.StatusOK, res.StatusCode, body)
+	type txInfo struct {
+		Height int64                  `json:"height"`
+		Tx     sdk.Tx                 `json:"tx"`
+		Result abci.ResponseDeliverTx `json:"result"`
+	}
+	var indexedTxs []txInfo
 
-	// assert.NotEqual(t, "[]", body)
+	// check if tx is queryable
+	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=tx.hash='%s'", resultTx.Hash), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	assert.NotEqual(t, "[]", body)
 
-	// // query receiver
-	// res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=coin.receiver='%s'", receiveAddr), nil)
-	// require.Equal(t, http.StatusOK, res.StatusCode, body)
+	err := cdc.UnmarshalJSON([]byte(body), &indexedTxs)
+	require.NoError(t, err)
+	assert.Equal(t, len(indexedTxs), 1)
 
-	// assert.NotEqual(t, "[]", body)
+	// query sender
+	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=sender_bech32='%s'", sendAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	err = cdc.UnmarshalJSON([]byte(body), &indexedTxs)
+	require.NoError(t, err)
+	assert.Equal(t, 2, len(indexedTxs)) // there are 2 txs created with doSend
+	assert.Equal(t, resultTx.Height, indexedTxs[1].Height)
+
+	// query recipient
+	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=recipient_bech32='%s'", receiveAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	err = cdc.UnmarshalJSON([]byte(body), &indexedTxs)
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(indexedTxs))
+	assert.Equal(t, resultTx.Height, indexedTxs[0].Height)
 }
 
 func TestValidatorsQuery(t *testing.T) {
@@ -392,6 +410,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 		return nil, nil, err
 	}
 	viper.Set(cli.HomeFlag, dir)
+	viper.Set(client.FlagGas, 200000)
 	kb, err := keys.GetKeyBase() // dbm.NewMemDB()) // :(
 	if err != nil {
 		return nil, nil, err
@@ -400,6 +419,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	config := GetConfig()
 	config.Consensus.TimeoutCommit = 1000
 	config.Consensus.SkipTimeoutCommit = false
+	config.TxIndex.IndexAllTags = true
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	logger = log.NewFilter(logger, log.AllowError())
@@ -552,7 +572,7 @@ func getAccount(t *testing.T, sendAddr string) auth.Account {
 	return acc
 }
 
-func doSend(t *testing.T, port, seed string) (receiveAddr string, resultTx ctypes.ResultBroadcastTxCommit) {
+func doSend(t *testing.T, port string) (receiveAddr string, resultTx ctypes.ResultBroadcastTxCommit) {
 
 	// create receive address
 	kb := client.MockKeyBase()

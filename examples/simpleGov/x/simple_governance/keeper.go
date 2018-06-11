@@ -51,18 +51,15 @@ func (k Keeper) NewProposalID(ctx sdk.Context) int64 {
 func (k Keeper) GetProposal(ctx sdk.Context, proposalID int64) (Proposal, sdk.Error) {
 	store := ctx.KVStore(k.SimpleGov)
 
-	bpi, err := k.cdc.MarshalBinary(proposalID)
-	if err != nil {
-		panic(err)
-	}
-	bp := store.Get(bpi)
+	key := GenerateProposalKey(proposalID)
+	bp := store.Get(key)
 	if bp == nil {
 		return Proposal{}, ErrProposalNotFound(proposalID)
 	}
 
 	proposal := Proposal{}
 
-	err = k.cdc.UnmarshalBinary(bp, proposal)
+	err := k.cdc.UnmarshalBinary(bp, proposal)
 	if err != nil {
 		panic(err)
 	}
@@ -79,12 +76,9 @@ func (k Keeper) SetProposal(ctx sdk.Context, proposalID int64, proposal Proposal
 		panic(err) // return proper error
 	}
 
-	bpi, err := k.cdc.MarshalBinary(proposalID)
-	if err != nil {
-		panic(err) // return proper error
-	}
+	key := GenerateProposalKey(proposalID)
 
-	store.Set(bpi, bp)
+	store.Set(key, bp)
 	return nil
 }
 
@@ -92,7 +86,7 @@ func (k Keeper) SetProposal(ctx sdk.Context, proposalID int64, proposal Proposal
 // Used to check if an address already voted
 func (k Keeper) GetVote(ctx sdk.Context, proposalID int64, voter sdk.Address) (string, sdk.Error) {
 
-	key := GenerateAccountProposalKey(proposalID, voter)
+	key := GenerateProposalVoteKey(proposalID, voter)
 	store := ctx.KVStore(k.SimpleGov)
 	bv := store.Get(key)
 	if bv == nil {
@@ -108,7 +102,7 @@ func (k Keeper) GetVote(ctx sdk.Context, proposalID int64, voter sdk.Address) (s
 
 // SetVote sets the vote option to the proposal stored in the context store
 func (k Keeper) SetVote(ctx sdk.Context, proposalID int64, voter sdk.Address, option string) {
-	key := GenerateAccountProposalsVoteKey(proposalID, voter)
+	key := GenerateProposalVoteKey(proposalID, voter)
 	store := ctx.KVStore(k.SimpleGov)
 	bv, err := k.cdc.MarshalBinary(option)
 	if err != nil {

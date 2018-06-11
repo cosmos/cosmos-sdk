@@ -24,7 +24,7 @@ For more information on connecting to the testnet, see
 [cmd/gaia/testnets](/cmd/gaia/testnets)
 
 For the latest status of the testnet, see the [status
-file](/cmd/gaia/testnets/status.md).
+file](/cmd/gaia/testnets/STATUS.md).
 
 
 ## Overview

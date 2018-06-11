@@ -144,12 +144,15 @@ func TestHandleNewValidator(t *testing.T) {
 	// 1000 first blocks not a validator
 	ctx = ctx.WithBlockHeight(1001)
 
-	// Now a validator
+	// Now a validator, for two blocks
 	keeper.handleValidatorSignature(ctx, val, true)
+	ctx = ctx.WithBlockHeight(1002)
+	keeper.handleValidatorSignature(ctx, val, false)
+
 	info, found := keeper.getValidatorSigningInfo(ctx, val.Address())
 	require.True(t, found)
 	require.Equal(t, int64(1001), info.StartHeight)
-	require.Equal(t, int64(1), info.IndexOffset)
+	require.Equal(t, int64(2), info.IndexOffset)
 	require.Equal(t, int64(1), info.SignedBlocksCounter)
 	require.Equal(t, int64(0), info.JailedUntil)
 

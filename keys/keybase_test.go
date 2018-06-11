@@ -33,9 +33,9 @@ func TestKeyManagement(t *testing.T) {
 	assert.Empty(t, l)
 
 	// create some keys
-	_, err = cstore.Get(n1)
-	assert.NotNil(t, err)
-	i, _, err := cstore.Create(n1, p1, algo)
+	i, err := cstore.Get(n1)
+	assert.Equal(t, i, keys.Info{})
+	i, _, err = cstore.Create(n1, p1, algo)
 	require.Equal(t, n1, i.Name)
 	require.Nil(t, err)
 	_, _, err = cstore.Create(n2, p2, algo)
@@ -44,8 +44,8 @@ func TestKeyManagement(t *testing.T) {
 	// we can get these keys
 	i2, err := cstore.Get(n2)
 	assert.Nil(t, err)
-	_, err = cstore.Get(n3)
-	assert.NotNil(t, err)
+	i, err = cstore.Get(n3)
+	assert.Equal(t, i, keys.Info{})
 
 	// list shows them in order
 	keyS, err := cstore.List()
@@ -64,8 +64,8 @@ func TestKeyManagement(t *testing.T) {
 	keyS, err = cstore.List()
 	require.Nil(t, err)
 	assert.Equal(t, 1, len(keyS))
-	_, err = cstore.Get(n1)
-	assert.NotNil(t, err)
+	i, err = cstore.Get(n1)
+	assert.Equal(t, i, keys.Info{})
 
 	// make sure that it only signs with the right password
 	// tx := mock.NewSig([]byte("mytransactiondata"))
@@ -370,8 +370,8 @@ func TestSeedPhrase(t *testing.T) {
 	// now, let us delete this key
 	err = cstore.Delete(n1, p1)
 	require.Nil(t, err, "%+v", err)
-	_, err = cstore.Get(n1)
-	require.NotNil(t, err)
+	i, err := cstore.Get(n1)
+	require.Equal(t, i, keys.Info{}, "expected empty info")
 
 	// let us re-create it from the seed-phrase
 	newInfo, err := cstore.Recover(n2, p2, seed)

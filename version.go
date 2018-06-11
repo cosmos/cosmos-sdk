@@ -1,3 +1,3 @@
 package crypto
 
-const Version = "0.6.2"
+const Version = "0.8.0-dev"

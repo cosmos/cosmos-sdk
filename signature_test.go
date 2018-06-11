@@ -3,16 +3,19 @@ package crypto
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSignAndValidateEd25519(t *testing.T) {
 
 	privKey := GenPrivKeyEd25519()
-	pubKey := privKey.PubKey()
+	pubKey, err := privKey.PubKey()
+	require.Nil(t, err)
 
 	msg := CRandBytes(128)
-	sig := privKey.Sign(msg)
+	sig, err := privKey.Sign(msg)
+	require.Nil(t, err)
 
 	// Test the signature
 	assert.True(t, pubKey.VerifyBytes(msg, sig))
@@ -27,10 +30,12 @@ func TestSignAndValidateEd25519(t *testing.T) {
 
 func TestSignAndValidateSecp256k1(t *testing.T) {
 	privKey := GenPrivKeySecp256k1()
-	pubKey := privKey.PubKey()
+	pubKey, err := privKey.PubKey()
+	require.Nil(t, err)
 
 	msg := CRandBytes(128)
-	sig := privKey.Sign(msg)
+	sig, err := privKey.Sign(msg)
+	require.Nil(t, err)
 
 	assert.True(t, pubKey.VerifyBytes(msg, sig))
 

@@ -3,15 +3,21 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/brejski/hid"
+  packages = ["."]
+  revision = "06112dcfcc50a7e0e4fd06e17f9791e788fdaafc"
+
+[[projects]]
+  branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "2be2f12b358dc57d70b8f501b00be450192efbc3"
+  revision = "86fed781132ac890ee03e906e4ecd5d6fa180c64"
 
 [[projects]]
   branch = "master"
   name = "github.com/btcsuite/btcutil"
   packages = ["base58"]
-  revision = "501929d3d046174c3d39f0ea54ece471aa17238c"
+  revision = "d4cc87b860166d00d6b5b9e0d3b3d71d6088d4d4"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -55,7 +61,7 @@
   branch = "master"
   name = "github.com/golang/snappy"
   packages = ["."]
-  revision = "553a641470496b2327abcac10b36396bd98e45c9"
+  revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
 
 [[projects]]
   branch = "master"
@@ -113,7 +119,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "714f901b98fdb3aa954b4193d8cbd64a28d80cad"
+  revision = "e2150783cd35f5b607daca48afd8c57ec54cc995"
 
 [[projects]]
   branch = "master"
@@ -139,14 +145,19 @@
     "log",
     "test"
   ]
-  revision = "2e24b64fc121dcdf1cabceab8dc2f7257675483c"
-  version = "v0.8.1"
+  revision = "692f1d86a6e2c0efa698fd1e4541b68c74ffaf38"
+  version = "v0.8.4"
 
 [[projects]]
   branch = "master"
   name = "github.com/tyler-smith/go-bip39"
   packages = ["."]
   revision = "8e7a99b3e716f36d3b080a9a70f9eb45abe4edcc"
+
+[[projects]]
+  name = "github.com/zondax/ledger-goclient"
+  packages = ["."]
+  revision = "065cbf938a16f20335c40cfe180f9cd4955c6a5a"
 
 [[projects]]
   branch = "master"
@@ -164,11 +175,17 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "b2aa35443fbc700ab74c586ae79b81c171851023"
+  revision = "8ac0e0d97ce45cd83d1d7243c060cb8461dda5e9"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = ["cpu"]
+  revision = "9527bec2660bd847c050fda93a0f0c6dee0800bb"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b34cf043cab77178eebff1b7cfce8b31b6c2b6b3318c6d01add271b68f550345"
+  inputs-digest = "f20e34cd998442d4ffe2f9aa45ab87a55ba6e4cd19f29009adaadac3b5dccf26"
   solver-name = "gps-cdcl"
   solver-version = 1

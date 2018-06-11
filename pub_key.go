@@ -5,11 +5,16 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	"golang.org/x/crypto/ripemd160"
+
 	secp256k1 "github.com/btcsuite/btcd/btcec"
+
 	"github.com/tendermint/ed25519"
 	"github.com/tendermint/ed25519/extra25519"
+
 	cmn "github.com/tendermint/tmlibs/common"
-	"golang.org/x/crypto/ripemd160"
+
+	"github.com/tendermint/go-crypto/tmhash"
 )
 
 // An address is a []byte, but hex-encoded even in JSON.
@@ -38,11 +43,9 @@ var _ PubKey = PubKeyEd25519{}
 // Implements PubKeyInner
 type PubKeyEd25519 [32]byte
 
+// Address is the SHA256-20 of the raw pubkey bytes.
 func (pubKey PubKeyEd25519) Address() Address {
-	// append type byte
-	hasher := ripemd160.New()
-	hasher.Write(pubKey.Bytes()) // does not error
-	return Address(hasher.Sum(nil))
+	return Address(tmhash.Sum(pubKey[:]))
 }
 
 func (pubKey PubKeyEd25519) Bytes() []byte {

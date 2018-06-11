@@ -295,12 +295,12 @@ func TestTxs(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, res.StatusCode, body)
 
 	// query empty
-	res, body = request(t, port, "GET", fmt.Sprintf("/txs?address=%s", "cosmosaccaddr1jawd35d9aq4u76sr3fjalmcqc8hqygs9gtnmv3"), nil)
+	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=sender_bech32='%s'", "cosmosaccaddr1jawd35d9aq4u76sr3fjalmcqc8hqygs9gtnmv3"), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	assert.Equal(t, "[]", body)
 
 	// create TX
-	_, resultTx := doSend(t, port)
+	receiveAddr, resultTx := doSend(t, port)
 
 	tests.WaitForHeight(resultTx.Height+1, port)
 
@@ -324,14 +324,23 @@ func TestTxs(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, len(indexedTxs), 1)
 
-	// query address
-	res, body = request(t, port, "GET", fmt.Sprintf("/txs?address=%s", sendAddr), nil)
+	// query sender
+	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=sender_bech32='%s'", sendAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err = cdc.UnmarshalJSON([]byte(body), &indexedTxs)
 	require.NoError(t, err)
 	assert.Equal(t, 2, len(indexedTxs)) // there are 2 txs created with doSend
 	assert.Equal(t, resultTx.Height, indexedTxs[1].Height)
+
+	// query recipient
+	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=recipient_bech32='%s'", receiveAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	err = cdc.UnmarshalJSON([]byte(body), &indexedTxs)
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(indexedTxs))
+	assert.Equal(t, resultTx.Height, indexedTxs[0].Height)
 }
 
 func TestValidatorsQuery(t *testing.T) {

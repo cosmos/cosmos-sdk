@@ -99,40 +99,32 @@ func formatTxResults(cdc *wire.Codec, res []*ctypes.ResultTx) ([]txInfo, error) 
 // Search Tx REST Handler
 func SearchTxRequestHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		bech32Address := r.FormValue("address")
 		tag := r.FormValue("tag")
-		var txs []txInfo
-		var err error
-		if bech32Address != "" {
-			hexAddress, err := sdk.GetAccAddressBech32(bech32Address)
+		if tag == "" {
+			w.WriteHeader(400)
+			w.Write([]byte("You need to provide a tag or an address to search for."))
+			return
+		}
+		keyValue := strings.Split(tag, "=")
+		key := keyValue[0]
+		value := keyValue[1]
+		if strings.HasSuffix(key, "_bech32") {
+			bech32address := strings.Trim(value, "'")
+			prefix := strings.Split(bech32address, "1")[0]
+			bz, err := sdk.GetFromBech32(bech32address, prefix)
 			if err != nil {
 				w.WriteHeader(400)
 				w.Write([]byte(err.Error()))
 				return
 			}
-			senderTxs, err := searchTxs(ctx, cdc, []string{"sender='" + hexAddress.String() + "'"})
-			if err != nil {
-				w.WriteHeader(500)
-				w.Write([]byte(err.Error()))
-				return
-			}
-			recipientTxs, err := searchTxs(ctx, cdc, []string{"recipient='" + hexAddress.String() + "'"})
-			if err != nil {
-				w.WriteHeader(500)
-				w.Write([]byte(err.Error()))
-				return
-			}
-			txs = append(senderTxs, recipientTxs...)
-		} else if tag != "" {
-			txs, err = searchTxs(ctx, cdc, []string{tag})
-			if err != nil {
-				w.WriteHeader(500)
-				w.Write([]byte(err.Error()))
-				return
-			}
-		} else {
-			w.WriteHeader(400)
-			w.Write([]byte("You need to provide a tag or an address to search for."))
+
+			tag = strings.TrimRight(key, "_bech32") + "='" + sdk.Address(bz).String() + "'"
+		}
+
+		txs, err := searchTxs(ctx, cdc, []string{tag})
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
 			return
 		}
 

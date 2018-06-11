@@ -1,0 +1,20 @@
+{
+  "node_id": "aabf05a67b2f399807dc602d05bf97b0ed283ac2",
+  "ip": "116.62.62.39",
+  "validator": {
+    "pub_key": {
+      "type": "AC26791624DE60",
+      "value": "7SaH/LyM+qdz9ovD/pvqIf2q7LC7tc5v0ZJxsA2CGTw="
+    },
+    "power": 100,
+    "name": "iris"
+  },
+  "app_gen_tx": {
+    "name": "=suyu",
+    "address": "4B5BE759EB23B0D76C6A60636BD0E3111178794E",
+    "pub_key": {
+      "type": "AC26791624DE60",
+      "value": "7SaH/LyM+qdz9ovD/pvqIf2q7LC7tc5v0ZJxsA2CGTw="
+    }
+  }
+}

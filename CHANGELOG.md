@@ -1,15 +1,19 @@
 # Changelog
 
 BREAKING CHANGES
+* msg.GetSignBytes() now returns bech32-encoded addresses in all cases
 
 FEATURES
 
 IMPROVEMENTS
 * export command now writes current validator set for Tendermint
+* [tests] Application module tests now use a mock application
+* [gaiacli] Fix error message when account isn't found when running gaiacli account
 
 FIXES
 * [lcd] Switch to bech32 for addresses on all human readable inputs and outputs
 * fixed tx indexing/querying
+* [cli] Added `--gas` flag to specify transaction gas limit
 
 ## 0.18.0
 
@@ -78,6 +82,25 @@ BUG FIXES
 * Auto-sequencing now works correctly
 
 
+
+## 0.17.5
+
+*June 5, 2018*
+
+Update to Tendermint v0.19.9 (Fix evidence reactor, mempool deadlock, WAL panic,
+memory leak)
+
+## 0.17.4
+
+*May 31, 2018*
+
+Update to Tendermint v0.19.7 (WAL fixes and more)
+
+## 0.17.3
+
+*May 29, 2018*
+
+Update to Tendermint v0.19.6 (fix fast-sync halt)
 
 ## 0.17.2
 

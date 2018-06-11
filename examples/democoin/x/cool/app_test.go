@@ -92,7 +92,7 @@ func TestMsgQuiz(t *testing.T) {
 	mock.SignCheckDeliver(t, mapp.BaseApp, setTrendMsg1, []int64{0}, true, true, priv1)
 	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg1, []int64{1}, true, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", 69}})
-	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg2, []int64{2}, true, false, priv1) // result without reward //DKFAIL
+	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg2, []int64{2}, true, false, priv1) // result without reward
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", 69}})
 	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg1, []int64{3}, true, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", 138}})

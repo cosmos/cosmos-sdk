@@ -1,8 +1,6 @@
 package app
 
 import (
-	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 
@@ -13,8 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	abci "github.com/tendermint/abci/types"
@@ -23,74 +19,10 @@ import (
 	"github.com/tendermint/tmlibs/log"
 )
 
-// Construct some global addrs and txs for tests.
-var (
-	chainID = "" // TODO
-
-	accName = "foobart"
-
-	priv1     = crypto.GenPrivKeyEd25519()
-	addr1     = priv1.PubKey().Address()
-	priv2     = crypto.GenPrivKeyEd25519()
-	addr2     = priv2.PubKey().Address()
-	addr3     = crypto.GenPrivKeyEd25519().PubKey().Address()
-	priv4     = crypto.GenPrivKeyEd25519()
-	addr4     = priv4.PubKey().Address()
-	coins     = sdk.Coins{{"foocoin", 10}}
-	halfCoins = sdk.Coins{{"foocoin", 5}}
-	manyCoins = sdk.Coins{{"foocoin", 1}, {"barcoin", 1}}
-	fee       = auth.StdFee{
-		sdk.Coins{{"foocoin", 0}},
-		100000,
-	}
-
-	sendMsg1 = bank.MsgSend{
-		Inputs:  []bank.Input{bank.NewInput(addr1, coins)},
-		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
-	}
-
-	sendMsg2 = bank.MsgSend{
-		Inputs: []bank.Input{bank.NewInput(addr1, coins)},
-		Outputs: []bank.Output{
-			bank.NewOutput(addr2, halfCoins),
-			bank.NewOutput(addr3, halfCoins),
-		},
-	}
-
-	sendMsg3 = bank.MsgSend{
-		Inputs: []bank.Input{
-			bank.NewInput(addr1, coins),
-			bank.NewInput(addr4, coins),
-		},
-		Outputs: []bank.Output{
-			bank.NewOutput(addr2, coins),
-			bank.NewOutput(addr3, coins),
-		},
-	}
-
-	sendMsg4 = bank.MsgSend{
-		Inputs: []bank.Input{
-			bank.NewInput(addr2, coins),
-		},
-		Outputs: []bank.Output{
-			bank.NewOutput(addr1, coins),
-		},
-	}
-
-	sendMsg5 = bank.MsgSend{
-		Inputs: []bank.Input{
-			bank.NewInput(addr1, manyCoins),
-		},
-		Outputs: []bank.Output{
-			bank.NewOutput(addr2, manyCoins),
-		},
-	}
-)
-
 func setGenesis(bapp *BasecoinApp, accs ...auth.BaseAccount) error {
 	genaccs := make([]*types.GenesisAccount, len(accs))
 	for i, acc := range accs {
-		genaccs[i] = types.NewGenesisAccount(&types.AppAccount{acc, accName})
+		genaccs[i] = types.NewGenesisAccount(&types.AppAccount{acc, "foobart"})
 	}
 
 	genesisState := types.GenesisState{
@@ -111,79 +43,11 @@ func setGenesis(bapp *BasecoinApp, accs ...auth.BaseAccount) error {
 	return nil
 }
 
-func loggerAndDB() (log.Logger, dbm.DB) {
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
-	db := dbm.NewMemDB()
-	return logger, db
-}
-
-func newBasecoinApp() *BasecoinApp {
-	logger, db := loggerAndDB()
-	return NewBasecoinApp(logger, db)
-}
-
 //_______________________________________________________________________
 
-func TestMsgs(t *testing.T) {
-	bapp := newBasecoinApp()
-	require.Nil(t, setGenesis(bapp))
-
-	msgs := []struct {
-		msg sdk.Msg
-	}{
-		{sendMsg1},
-	}
-
-	for i, m := range msgs {
-		// Run a CheckDeliver
-		SignCheckDeliver(t, bapp, m.msg, []int64{int64(i)}, false, priv1)
-	}
-}
-
-func TestSortGenesis(t *testing.T) {
-	logger, db := loggerAndDB()
-	bapp := NewBasecoinApp(logger, db)
-
-	// Note the order: the coins are unsorted!
-	coinDenom1, coinDenom2 := "foocoin", "barcoin"
-
-	genState := fmt.Sprintf(`{
-      "accounts": [{
-        "address": "%s",
-        "coins": [
-          {
-            "denom": "%s",
-            "amount": 10
-          },
-          {
-            "denom": "%s",
-            "amount": 20
-          }
-        ]
-      }]
-    }`, addr1.String(), coinDenom1, coinDenom2)
-
-	// Initialize the chain
-	vals := []abci.Validator{}
-	bapp.InitChain(abci.RequestInitChain{Validators: vals, AppStateBytes: []byte(genState)})
-	bapp.Commit()
-
-	// Unsorted coins means invalid
-	err := sendMsg5.ValidateBasic()
-	require.Equal(t, sdk.CodeInvalidCoins, err.Code(), err.ABCILog())
-
-	// Sort coins, should be valid
-	sendMsg5.Inputs[0].Coins.Sort()
-	sendMsg5.Outputs[0].Coins.Sort()
-	err = sendMsg5.ValidateBasic()
-	require.Nil(t, err)
-
-	// Ensure we can send
-	SignCheckDeliver(t, bapp, sendMsg5, []int64{0}, true, priv1)
-}
-
 func TestGenesis(t *testing.T) {
-	logger, db := loggerAndDB()
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
+	db := dbm.NewMemDB()
 	bapp := NewBasecoinApp(logger, db)
 
 	// Construct some genesis bytes to reflect basecoin/types/AppAccount
@@ -211,6 +75,7 @@ func TestGenesis(t *testing.T) {
 	res1 = bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
 	assert.Equal(t, acc, res1)
 }
+<<<<<<< HEAD
 
 func TestMsgChangePubKey(t *testing.T) {
 
@@ -536,3 +401,5 @@ func CheckBalance(t *testing.T, bapp *BasecoinApp, addr sdk.Address, balExpected
 	res2 := bapp.accountMapper.GetAccount(ctxDeliver, addr)
 	assert.Equal(t, balExpected, fmt.Sprintf("%v", res2.GetCoins()))
 }
+=======
+>>>>>>> fc0e4013278d41fab4f3ac73f28a42bc45889106

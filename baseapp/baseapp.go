@@ -494,6 +494,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// Run the ante handler.
 	if app.anteHandler != nil {
 		newCtx, result, abort := app.anteHandler(ctx, tx)
+		fmt.Println(abort, "hFDGSFARFgsfdfdgsfdfhgGFDGD")
 		if abort {
 			return result
 		}

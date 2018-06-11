@@ -232,7 +232,10 @@ func TestMsgChangePubKey(t *testing.T) {
 	// A checkTx context (true)
 	ctxCheck := bapp.BaseApp.NewContext(true, abci.Header{})
 	res1 := bapp.accountMapper.GetAccount(ctxCheck, addr1)
+	fmt.Println("acct1: ", res1)
 	assert.Equal(t, baseAcc, res1.(*types.AppAccount).BaseAccount)
+
+	// CheckBalance(t, bapp, addr1, "77foocoin") //get an error, prob cuz the account doesnt exist yet in the state
 
 	// Run a CheckDeliver
 	SignCheckDeliver(t, bapp, sendMsg1, []int64{0}, true, priv1)
@@ -245,23 +248,26 @@ func TestMsgChangePubKey(t *testing.T) {
 		Address:   addr1,
 		NewPubKey: priv2.PubKey(),
 	}
+	fmt.Println("changePubKeyMsg: ", changePubKeyMsg)
 
 	ctxDeliver := bapp.BaseApp.NewContext(false, abci.Header{})
 	acc := bapp.accountMapper.GetAccount(ctxDeliver, addr1)
+	fmt.Println("acct1.5: ", acc)
 
 	// send a MsgChangePubKey
 	SignCheckDeliver(t, bapp, changePubKeyMsg, []int64{1}, true, priv1)
 	acc = bapp.accountMapper.GetAccount(ctxDeliver, addr1)
+	fmt.Println("acct2: ", acc)
 
 	assert.True(t, priv2.PubKey().Equals(acc.GetPubKey()))
 
 	// signing a SendMsg with the old privKey should be an auth error
 	tx := genTx(sendMsg1, []int64{2}, priv1)
-	res := bapp.Deliver(tx)
+	res := bapp.Deliver(tx) //FAIL
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
 
 	// resigning the tx with the new correct priv key should work
-	SignCheckDeliver(t, bapp, sendMsg1, []int64{2}, true, priv2)
+	SignCheckDeliver(t, bapp, sendMsg1, []int64{2}, true, priv2) //FAIL
 
 	// Check balances
 	CheckBalance(t, bapp, addr1, "57foocoin")
@@ -502,7 +508,11 @@ func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq []int64,
 	// Sign the tx
 	tx := genTx(msg, seq, priv...)
 	// Run a Check
+
 	res := bapp.Check(tx)
+	fmt.Println("res: ", res)
+	fmt.Println("GO")
+
 	if expPass {
 		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
 	} else {

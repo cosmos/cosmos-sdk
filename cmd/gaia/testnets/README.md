@@ -98,9 +98,13 @@ cp -a cmd/gaia/testnets/gaia-6001/genesis.json $HOME/.gaiad/config/genesis.json
 gaiad unsafe_reset_all
 ```
 
-Add a seed node by changing `seed = ""` in `config.toml` to `seed = "38aa9bec3998f12ae9088b21a2d910d19d565c27@gaia-6001.coinculture.net:46656"
+Add a seed node by changing `seed = ""` in `$HOME/.gaiad/config/config.toml` to 
 
-Lastly change the `moniker` string in the`config.toml`to identify your node.
+```
+seed = "38aa9bec3998f12ae9088b21a2d910d19d565c27@gaia-6001.coinculture.net:46656,80a35a46ce09cfb31ee220c8141a25e73e0b239b@seed.cosmos.cryptium.ch:46656,80a35a46ce09cfb31ee220c8141a25e73e0b239b@35.198.166.171:46656,032fa56301de335d835057fb6ad9f7ce2242a66d@165.227.236.213:46656"
+```
+
+Lastly change the `moniker` string in the `$HOME/.gaiad/config/config.toml`to identify your node.
 
 ```
 # A custom human readable name for this node
@@ -139,12 +143,12 @@ The next step is to copy the new genesis file:
 cp -a cmd/gaia/testnets/gaia-6001/genesis.json $HOME/.gaiad/config/genesis.json
 ```
 
-The last step is the adjust the `config.toml`. Make sure that you are connected to healthy peers or seed nodes.
+The last step is the adjust the `$HOME/.gaiad/config/config.toml`. Make sure that you are connected to healthy peers or seed nodes.
 These are some seeds nodes and they can be put into the config under the `seeds` key. Alternatively you can also
 ask user validators directly for a persistent peer and add it under the `persisent_peers` key.
 
 ```
-38aa9bec3998f12ae9088b21a2d910d19d565c27@gaia-6001.coinculture.net:46656"
+38aa9bec3998f12ae9088b21a2d910d19d565c27@gaia-6001.coinculture.net:46656,80a35a46ce09cfb31ee220c8141a25e73e0b239b@seed.cosmos.cryptium.ch:46656,80a35a46ce09cfb31ee220c8141a25e73e0b239b@35.198.166.171:46656,032fa56301de335d835057fb6ad9f7ce2242a66d@165.227.236.213:46656
 ```
 
 ## Run a Full Node

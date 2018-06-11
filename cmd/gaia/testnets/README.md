@@ -98,10 +98,10 @@ cp -a cmd/gaia/testnets/gaia-6001/genesis.json $HOME/.gaiad/config/genesis.json
 gaiad unsafe_reset_all
 ```
 
-Add a seed node by changing `seed = ""` in `$HOME/.gaiad/config/config.toml` to 
+Add a seed node by changing `seeds = ""` in `$HOME/.gaiad/config/config.toml` to 
 
 ```
-seed = "38aa9bec3998f12ae9088b21a2d910d19d565c27@gaia-6001.coinculture.net:46656,80a35a46ce09cfb31ee220c8141a25e73e0b239b@seed.cosmos.cryptium.ch:46656,80a35a46ce09cfb31ee220c8141a25e73e0b239b@35.198.166.171:46656,032fa56301de335d835057fb6ad9f7ce2242a66d@165.227.236.213:46656"
+seeds = "38aa9bec3998f12ae9088b21a2d910d19d565c27@gaia-6001.coinculture.net:46656,80a35a46ce09cfb31ee220c8141a25e73e0b239b@seed.cosmos.cryptium.ch:46656,80a35a46ce09cfb31ee220c8141a25e73e0b239b@35.198.166.171:46656,032fa56301de335d835057fb6ad9f7ce2242a66d@165.227.236.213:46656"
 ```
 
 Lastly change the `moniker` string in the `$HOME/.gaiad/config/config.toml`to identify your node.

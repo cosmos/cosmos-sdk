@@ -134,8 +134,8 @@
 [[projects]]
   name = "github.com/tendermint/go-amino"
   packages = ["."]
-  revision = "3c22a7a539411f89a96738fcfa14c1027e24e5ec"
-  version = "0.9.10"
+  revision = "1715b7b78c65d6adcc5937315be4710234cefe09"
+  version = "0.10.0-rc2"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"

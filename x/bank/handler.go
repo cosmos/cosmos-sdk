@@ -1,6 +1,7 @@
 package bank
 
 import (
+	"bytes"
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,5 +38,27 @@ func handleMsgSend(ctx sdk.Context, k Keeper, msg MsgSend) sdk.Result {
 
 // Handle MsgIssue.
 func handleMsgIssue(ctx sdk.Context, k Keeper, msg MsgIssue) sdk.Result {
-	panic("not implemented yet")
+	banker := k.GetBanker()
+	tags := sdk.EmptyTags()
+
+	// No banker was set and hence it's not possible to issue coins.
+	if banker == nil {
+		return ErrNoBanker(DefaultCodespace).Result()
+	}
+
+	if !bytes.Equal(banker, msg.Banker) {
+		return ErrInvalidBanker(DefaultCodespace).Result()
+	}
+
+	for _, out := range msg.Outputs {
+		_, subtags, err := k.AddCoins(ctx, out.Address, out.Coins)
+		if err != nil {
+			return err.Result()
+		}
+		tags = tags.AppendTags(subtags)
+	}
+
+	return sdk.Result{
+		Tags: tags,
+	}
 }

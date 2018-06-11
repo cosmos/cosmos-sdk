@@ -11,6 +11,8 @@ const (
 
 	CodeInvalidInput  sdk.CodeType = 101
 	CodeInvalidOutput sdk.CodeType = 102
+	CodeInvalidBanker sdk.CodeType = 103
+	CodeNoBanker      sdk.CodeType = 104
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
@@ -20,6 +22,10 @@ func codeToDefaultMsg(code sdk.CodeType) string {
 		return "Invalid input coins"
 	case CodeInvalidOutput:
 		return "Invalid output coins"
+	case CodeInvalidBanker:
+		return "Invalid banker"
+	case CodeNoBanker:
+		return "No banker"
 	default:
 		return sdk.CodeToDefaultMsg(code)
 	}
@@ -42,6 +48,14 @@ func ErrInvalidOutput(codespace sdk.CodespaceType, msg string) sdk.Error {
 
 func ErrNoOutputs(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeInvalidOutput, "")
+}
+
+func ErrInvalidBanker(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeInvalidBanker, "")
+}
+
+func ErrNoBanker(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeNoBanker, "")
 }
 
 //----------------------------------------

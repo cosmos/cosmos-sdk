@@ -11,6 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
+// Test that a validator is slashed correctly
+// when we discover evidence of equivocation
 func TestHandleDoubleSign(t *testing.T) {
 
 	// initial setup
@@ -32,6 +34,8 @@ func TestHandleDoubleSign(t *testing.T) {
 	require.Equal(t, sdk.NewRat(amt).Mul(sdk.NewRat(19).Quo(sdk.NewRat(20))), sk.Validator(ctx, addr).GetPower())
 }
 
+// Test a validator through uptime, downtime, revocation,
+// unrevocation, starting height reset, and revocation again
 func TestHandleAbsentValidator(t *testing.T) {
 
 	// initial setup
@@ -130,6 +134,9 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, sdk.Unbonded, validator.GetStatus())
 }
 
+// Test a new validator entering the validator set
+// Ensure that SigningInfo.StartHeight is set correctly
+// and that they are not immediately revoked
 func TestHandleNewValidator(t *testing.T) {
 	// initial setup
 	ctx, ck, sk, keeper := createTestInput(t)

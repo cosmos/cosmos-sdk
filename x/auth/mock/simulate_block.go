@@ -52,6 +52,7 @@ func GenTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) auth.StdTx {
 	return auth.NewStdTx(msg, fee, sigs)
 }
 
+// check a transaction result
 func SignCheck(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.Result {
 	tx := GenTx(msg, seq, priv...)
 	res := app.Check(tx)

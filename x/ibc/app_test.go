@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 
 	abci "github.com/tendermint/abci/types"
@@ -35,7 +35,9 @@ func TestIBCMsgs(t *testing.T) {
 	destChain := "dest-chain"
 
 	priv1 := crypto.GenPrivKeyEd25519()
-	addr1 := priv1.PubKey().Address()
+	pubKey, err := priv1.PubKey()
+	assert.Nil(t, err)
+	addr1 := pubKey.Address()
 	coins := sdk.Coins{{"foocoin", 10}}
 	var emptyCoins sdk.Coins
 

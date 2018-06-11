@@ -17,12 +17,12 @@ import (
 // test bank module in a mock application
 var (
 	priv1     = crypto.GenPrivKeyEd25519()
-	addr1     = priv1.PubKey().Address()
+	addr1     = mock.MustPubKey(priv1).Address()
 	priv2     = crypto.GenPrivKeyEd25519()
-	addr2     = priv2.PubKey().Address()
-	addr3     = crypto.GenPrivKeyEd25519().PubKey().Address()
+	addr2     = mock.MustPubKey(priv2).Address()
+	addr3     = mock.MustPubKey(crypto.GenPrivKeyEd25519()).Address()
 	priv4     = crypto.GenPrivKeyEd25519()
-	addr4     = priv4.PubKey().Address()
+	addr4     = mock.MustPubKey(priv4).Address()
 	coins     = sdk.Coins{{"foocoin", 10}}
 	halfCoins = sdk.Coins{{"foocoin", 5}}
 	manyCoins = sdk.Coins{{"foocoin", 1}, {"barcoin", 1}}

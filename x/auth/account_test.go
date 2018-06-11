@@ -13,7 +13,10 @@ import (
 
 func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.Address) {
 	key := crypto.GenPrivKeyEd25519()
-	pub := key.PubKey()
+	pub, err := key.PubKey()
+	if err != nil {
+		panic(err)
+	}
 	addr := pub.Address()
 	return key, pub, addr
 }

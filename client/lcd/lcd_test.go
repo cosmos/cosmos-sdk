@@ -435,9 +435,13 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 		return nil, nil, err
 	}
 
+	pubKey, err := crypto.GenPrivKeyEd25519().PubKey()
+	if err != nil {
+		panic(err)
+	}
 	genDoc.Validators = append(genDoc.Validators,
 		tmtypes.GenesisValidator{
-			PubKey: crypto.GenPrivKeyEd25519().PubKey(),
+			PubKey: pubKey,
 			Power:  1,
 			Name:   "val",
 		},
@@ -469,13 +473,13 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 
 	// add the sendAddr to genesis
 	var info cryptoKeys.Info
-	info, seed, err = kb.Create(name, password, cryptoKeys.AlgoEd25519) // XXX global seed
+	info, seed, err = kb.CreateMnemonic(name, password, cryptoKeys.AlgoEd25519) // XXX global seed
 	if err != nil {
 		return nil, nil, err
 	}
-	sendAddrHex, _ := sdk.GetAccAddressHex(info.PubKey.Address().String())
+	sendAddrHex, _ := sdk.GetAccAddressHex(info.GetPubKey().Address().String())
 	sendAddr, _ = sdk.Bech32ifyAcc(sendAddrHex) // XXX global
-	accAuth := auth.NewBaseAccountWithAddress(info.PubKey.Address())
+	accAuth := auth.NewBaseAccountWithAddress(info.GetPubKey().Address())
 	accAuth.Coins = sdk.Coins{{"steak", 100}}
 	acc := gapp.NewGenesisAccount(&accAuth)
 	genesisState.Accounts = append(genesisState.Accounts, acc)
@@ -576,9 +580,9 @@ func doSend(t *testing.T, port string) (receiveAddr string, resultTx ctypes.Resu
 
 	// create receive address
 	kb := client.MockKeyBase()
-	receiveInfo, _, err := kb.Create("receive_address", "1234567890", cryptoKeys.CryptoAlgo("ed25519"))
+	receiveInfo, _, err := kb.CreateMnemonic("receive_address", "1234567890", cryptoKeys.SignAlgo("ed25519"))
 	require.Nil(t, err)
-	receiveAddr, _ = sdk.Bech32ifyAcc(receiveInfo.PubKey.Address())
+	receiveAddr, _ = sdk.Bech32ifyAcc(receiveInfo.GetPubKey().Address())
 
 	acc := getAccount(t, sendAddr)
 	sequence := acc.GetSequence()
@@ -597,9 +601,9 @@ func doSend(t *testing.T, port string) (receiveAddr string, resultTx ctypes.Resu
 func doIBCTransfer(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxCommit) {
 	// create receive address
 	kb := client.MockKeyBase()
-	receiveInfo, _, err := kb.Create("receive_address", "1234567890", cryptoKeys.CryptoAlgo("ed25519"))
+	receiveInfo, _, err := kb.CreateMnemonic("receive_address", "1234567890", cryptoKeys.SignAlgo("ed25519"))
 	require.Nil(t, err)
-	receiveAddr, _ := sdk.Bech32ifyAcc(receiveInfo.PubKey.Address())
+	receiveAddr, _ := sdk.Bech32ifyAcc(receiveInfo.GetPubKey().Address())
 
 	// get the account to get the sequence
 	acc := getAccount(t, sendAddr)

@@ -48,7 +48,8 @@ func TestGenesis(t *testing.T) {
 	gapp := NewGaiaApp(logger, db)
 
 	// Construct some genesis bytes to reflect GaiaAccount
-	pk := crypto.GenPrivKeyEd25519().PubKey()
+	pk, err := crypto.GenPrivKeyEd25519().PubKey()
+	require.Nil(t, err)
 	addr := pk.Address()
 	coins, err := sdk.ParseCoins("77foocoin,99barcoin")
 	require.Nil(t, err)

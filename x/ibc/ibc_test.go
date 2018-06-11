@@ -29,7 +29,11 @@ func defaultContext(key sdk.StoreKey) sdk.Context {
 }
 
 func newAddress() crypto.Address {
-	return crypto.GenPrivKeyEd25519().PubKey().Address()
+	pubKey, err := crypto.GenPrivKeyEd25519().PubKey()
+	if err != nil {
+		panic(err)
+	}
+	return pubKey.Address()
 }
 
 func getCoins(ck bank.Keeper, ctx sdk.Context, addr crypto.Address) (sdk.Coins, sdk.Error) {

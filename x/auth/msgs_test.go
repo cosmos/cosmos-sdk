@@ -13,7 +13,8 @@ func TestNewMsgChangeKey(t *testing.T) {}
 
 func TestMsgChangeKeyType(t *testing.T) {
 	addr1 := sdk.Address([]byte("input"))
-	newPubKey := crypto.GenPrivKeyEd25519().PubKey()
+	newPubKey, err := crypto.GenPrivKeyEd25519().PubKey()
+	assert.Nil(t, err)
 
 	var msg = MsgChangeKey{
 		Address:   addr1,
@@ -38,7 +39,8 @@ func TestMsgChangeKeyValidation(t *testing.T) {
 
 	// assert.NotNil(t, msg.ValidateBasic())
 
-	newPubKey := crypto.GenPrivKeyEd25519().PubKey()
+	newPubKey, err := crypto.GenPrivKeyEd25519().PubKey()
+	assert.Nil(t, err)
 	msg := MsgChangeKey{
 		Address:   addr1,
 		NewPubKey: newPubKey,

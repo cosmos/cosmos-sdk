@@ -650,7 +650,11 @@ func makeVal(secret string) abci.Validator {
 }
 
 func makePubKey(secret string) crypto.PubKey {
-	return makePrivKey(secret).PubKey()
+	pubKey, err := makePrivKey(secret).PubKey()
+	if err != nil {
+		panic(err)
+	}
+	return pubKey
 }
 
 func makePrivKey(secret string) crypto.PrivKey {

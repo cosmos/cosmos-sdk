@@ -15,8 +15,9 @@ import (
 )
 
 var (
-	priv1 = crypto.GenPrivKeyEd25519()
-	addr1 = priv1.PubKey().Address()
+	priv1     = crypto.GenPrivKeyEd25519()
+	pubKey, _ = priv1.PubKey()
+	addr1     = pubKey.Address()
 )
 
 // initialize the mock application for this module

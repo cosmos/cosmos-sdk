@@ -33,7 +33,11 @@ func newCoins() sdk.Coins {
 // generate a priv key and return it with its address
 func privAndAddr() (crypto.PrivKey, sdk.Address) {
 	priv := crypto.GenPrivKeyEd25519()
-	addr := priv.PubKey().Address()
+	pubKey, err := priv.PubKey()
+	if err != nil {
+		panic(err)
+	}
+	addr := pubKey.Address()
 	return priv, addr
 }
 
@@ -60,7 +64,15 @@ func newTestTx(ctx sdk.Context, msg sdk.Msg, privs []crypto.PrivKey, seqs []int6
 func newTestTxWithSignBytes(msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, fee StdFee, signBytes []byte) sdk.Tx {
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), Sequence: seqs[i]}
+		pubKey, err := priv.PubKey()
+		if err != nil {
+			panic(err)
+		}
+		sig, err := priv.Sign(signBytes)
+		if err != nil {
+			panic(err)
+		}
+		sigs[i] = StdSignature{PubKey: pubKey, Signature: sig, Sequence: seqs[i]}
 	}
 	tx := NewStdTx(msg, fee, sigs)
 	return tx
@@ -326,7 +338,9 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	checkValidTx(t, anteHandler, ctx, tx)
 
 	acc1 = mapper.GetAccount(ctx, addr1)
-	require.Equal(t, acc1.GetPubKey(), priv1.PubKey())
+	pubKey, err := priv1.PubKey()
+	require.Nil(t, err)
+	require.Equal(t, acc1.GetPubKey(), pubKey)
 
 	// test public key not found
 	msg = newTestMsg(addr2)

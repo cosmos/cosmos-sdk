@@ -15,8 +15,9 @@ import (
 )
 
 var (
-	priv1 = crypto.GenPrivKeyEd25519()
-	addr1 = priv1.PubKey().Address()
+	priv1  = crypto.GenPrivKeyEd25519()
+	pubKey = mock.MustPubKey(priv1)
+	addr1  = pubKey.Address()
 
 	quizMsg1 = MsgQuiz{
 		Sender:     addr1,

@@ -17,9 +17,9 @@ import (
 
 var (
 	priv1 = crypto.GenPrivKeyEd25519()
-	addr1 = priv1.PubKey().Address()
+	addr1 = MustPubKey(priv1).Address()
 	priv2 = crypto.GenPrivKeyEd25519()
-	addr2 = priv2.PubKey().Address()
+	addr2 = MustPubKey(priv2).Address()
 
 	coins    = sdk.Coins{{"foocoin", 10}}
 	sendMsg1 = bank.MsgSend{
@@ -69,7 +69,7 @@ func TestMsgChangePubKey(t *testing.T) {
 
 	changePubKeyMsg := auth.MsgChangeKey{
 		Address:   addr1,
-		NewPubKey: priv2.PubKey(),
+		NewPubKey: MustPubKey(priv2),
 	}
 
 	mapp.BeginBlock(abci.RequestBeginBlock{})
@@ -80,7 +80,7 @@ func TestMsgChangePubKey(t *testing.T) {
 	SignCheckDeliver(t, mapp.BaseApp, changePubKeyMsg, []int64{1}, true, priv1)
 	acc2 = mapp.AccountMapper.GetAccount(ctxDeliver, addr1)
 
-	assert.True(t, priv2.PubKey().Equals(acc2.GetPubKey()))
+	assert.True(t, MustPubKey(priv2).Equals(acc2.GetPubKey()))
 
 	// signing a SendMsg with the old privKey should be an auth error
 	mapp.BeginBlock(abci.RequestBeginBlock{})

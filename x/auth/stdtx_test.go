@@ -18,7 +18,9 @@ import (
 
 func TestStdTx(t *testing.T) {
 	priv := crypto.GenPrivKeyEd25519()
-	addr := priv.PubKey().Address()
+	pubKey, err := priv.PubKey()
+	assert.Nil(t, err)
+	addr := pubKey.Address()
 	msg := sdk.NewTestMsg(addr)
 	fee := newStdFee()
 	sigs := []StdSignature{}

@@ -43,9 +43,17 @@ func GenTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) auth.StdTx {
 
 	sigs := make([]auth.StdSignature, len(priv))
 	for i, p := range priv {
+		pubKey, err := p.PubKey()
+		if err != nil {
+			panic(err)
+		}
+		sig, err := p.Sign(auth.StdSignBytes(chainID, seq, fee, msg))
+		if err != nil {
+			panic(err)
+		}
 		sigs[i] = auth.StdSignature{
-			PubKey:    p.PubKey(),
-			Signature: p.Sign(auth.StdSignBytes(chainID, seq, fee, msg)),
+			PubKey:    pubKey,
+			Signature: sig,
 			Sequence:  seq[i],
 		}
 	}
@@ -77,4 +85,22 @@ func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, seq []int
 	app.EndBlock(abci.RequestEndBlock{})
 
 	app.Commit()
+}
+
+// panic on sign errors
+func MustSign(priv crypto.PrivKey, bytes []byte) crypto.Signature {
+	sig, err := priv.Sign(bytes)
+	if err != nil {
+		panic(err)
+	}
+	return sig
+}
+
+// panic on pubkey errors
+func MustPubKey(priv crypto.PrivKey) crypto.PubKey {
+	pubKey, err := priv.PubKey()
+	if err != nil {
+		panic(err)
+	}
+	return pubKey
 }

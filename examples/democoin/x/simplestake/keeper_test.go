@@ -44,12 +44,14 @@ func TestKeeperGetSet(t *testing.T) {
 	assert.Equal(t, bi, bondInfo{})
 
 	privKey := crypto.GenPrivKeyEd25519()
+	pubKey, err := privKey.PubKey()
+	assert.NoError(t, err)
 
 	bi = bondInfo{
-		PubKey: privKey.PubKey(),
+		PubKey: pubKey,
 		Power:  int64(10),
 	}
-	fmt.Printf("Pubkey: %v\n", privKey.PubKey())
+	fmt.Printf("Pubkey: %v\n", pubKey)
 	stakeKeeper.setBondInfo(ctx, addr, bi)
 
 	savedBi := stakeKeeper.getBondInfo(ctx, addr)
@@ -70,9 +72,10 @@ func TestBonding(t *testing.T) {
 	stakeKeeper := NewKeeper(capKey, coinKeeper, DefaultCodespace)
 	addr := sdk.Address([]byte("some-address"))
 	privKey := crypto.GenPrivKeyEd25519()
-	pubKey := privKey.PubKey()
+	pubKey, err := privKey.PubKey()
+	assert.Nil(t, err)
 
-	_, _, err := stakeKeeper.unbondWithoutCoins(ctx, addr)
+	_, _, err = stakeKeeper.unbondWithoutCoins(ctx, addr)
 	assert.Equal(t, err, ErrInvalidUnbond(DefaultCodespace))
 
 	_, err = stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.Coin{"steak", 10})

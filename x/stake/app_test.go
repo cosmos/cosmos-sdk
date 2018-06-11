@@ -16,12 +16,12 @@ import (
 
 var (
 	priv1 = crypto.GenPrivKeyEd25519()
-	addr1 = priv1.PubKey().Address()
+	addr1 = mock.MustPubKey(priv1).Address()
 	priv2 = crypto.GenPrivKeyEd25519()
-	addr2 = priv2.PubKey().Address()
-	addr3 = crypto.GenPrivKeyEd25519().PubKey().Address()
+	addr2 = mock.MustPubKey(priv2).Address()
+	addr3 = mock.MustPubKey(crypto.GenPrivKeyEd25519()).Address()
 	priv4 = crypto.GenPrivKeyEd25519()
-	addr4 = priv4.PubKey().Address()
+	addr4 = mock.MustPubKey(priv4).Address()
 	coins = sdk.Coins{{"foocoin", 10}}
 	fee   = auth.StdFee{
 		sdk.Coins{{"foocoin", 0}},
@@ -113,9 +113,11 @@ func TestStakeMsgs(t *testing.T) {
 	////////////////////
 	// Create Validator
 
+	pubKey, err := priv1.PubKey()
+	require.Nil(t, err)
 	description := NewDescription("foo_moniker", "", "", "")
 	createValidatorMsg := NewMsgCreateValidator(
-		addr1, priv1.PubKey(), bondCoin, description,
+		addr1, pubKey, bondCoin, description,
 	)
 	mock.SignCheckDeliver(t, mapp.BaseApp, createValidatorMsg, []int64{0}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin.Minus(bondCoin)})

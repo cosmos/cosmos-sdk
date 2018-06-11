@@ -10,47 +10,54 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/simpleGov"
+	"github.com/cosmos/cosmos-sdk/x/simpleGovernance"
 	"github.com/gorilla/mux"
 	"github.com/tendermint/go-crypto/keys"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
+	// GET /proposals
+	r.HandleFunc("/proposals",
+		GetProposalsHandlerFn(cdc, kb, ctx)).Methods("GET")
+	// POST /proposals
+	r.HandleFunc("/proposals",
+		SubmitProposalHandlerFn(cdc, kb, ctx)).Methods("POST")
 	// GET /proposals/{id}
 	r.HandleFunc("/proposals/{id}",
 		GetProposalHandlerFn(cdc, kb, ctx)).Methods("GET")
-	// GET /accounts/{address}/proposals
-	r.HandleFunc("/accounts/{address}/proposals",
-		GetAccountProposalHandlerFn(cdc, kb, ctx)).Methods("GET")
-	// POST /accounts/{address}/proposals
-	r.HandleFunc("/accounts/{address}/proposals",
-		SubmitProposalHandlerFn(cdc, kb, ctx)).Methods("POST")
-	// GET /accounts/{address}/proposals/{id}/vote
-	r.HandleFunc("/accounts/{address}/proposals/{id}/vote",
-		GetAccountProposalsVoteHandlerFn(cdc, kb, ctx)).Methods("GET")
-	// POST /accounts/{address}/proposals/{id}/vote
-	r.HandleFunc("/accounts/{address}/proposals/{id}/vote",
+	// GET /proposals/{id}/votes
+	r.HandleFunc("/proposals/{id}/votes",
+		GetProposalVotesHandlerFn(cdc, kb, ctx)).Methods("GET")
+	// POST /proposals/{id}/votes
+	r.HandleFunc("/proposals/{id}/votes",
 		SubmitVoteHandlerFn(cdc, kb, ctx)).Methods("POST")
+	// GET /proposals/{id}/votes/{address}
+	r.HandleFunc("/proposals/{id}/votes/{address}",
+		GetProposalVoteHandlerFn(cdc, kb, ctx)).Methods("GET")
 }
 
 type proposeBody struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Deposit     string `json:"deposit"`
+	Title            string    `json:"title"`
+	Description      string    `json:"description"`
+	Deposit          sdk.Coins `json:"deposit"` // use
+	BlockLimit       int64     `json:"block_limit"`
+	LocalAccountName string    `json:"name"`
+	Password         string    `json:"password"`
+	ChainID          string    `json:"chain_id"`
+	Sequence         int64     `json:"sequence"`
 }
 
 type voteBody struct {
-	ProposalID int64  `json:"proposal_id"`
-	Option     string `json:"option"`
-	Voter      string `json:"voter"`
+	Option           string `json:"option"`
+	LocalAccountName string `json:"name"`
+	Password         string `json:"password"`
+	ChainID          string `json:"chain_id"`
 }
 
-// GetProposalHandlerFn - http request handler to get a proposal
-func GetProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+// GetProposalsHandlerFn - http request handler to get a proposal
+func GetProposalsHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		proposalID := vars["id"]
 
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -59,7 +66,7 @@ func GetProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 			return
 		}
 
-		key := simpleGov.GenerateProposalKey(int64(proposalID))
+		key := []byte("proposals")
 
 		res, err := ctx.Query(key, "proposal")
 		if err != nil {
@@ -86,23 +93,19 @@ func GetProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 	}
 }
 
-// GetAccountProposalHandlerFn - http request handler to get all proposals from an account
-func GetAccountProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+// GetProposalHandlerFn - http request handler to get a proposal
+func GetProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// collect data
 		vars := mux.Vars(r)
-		address := vars["address"]
-
-		// Get address of proposer
-		bz, err := hex.DecodeString(address)
+		proposalID := vars["id"]
+		proposalID, err := strconv.Atoi(vars["id"])
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		proposerAddr := sdk.Address(bz)
 
-		key := simpleGov.GenerateAccountProposalsKey(proposerAddr)
+		key := simpleGovernance.GenerateProposalKey(int64(proposalID))
 
 		res, err := ctx.Query(key, "proposal")
 		if err != nil {
@@ -125,15 +128,13 @@ func GetAccountProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.C
 		}
 
 		w.Write(output)
+
 	}
 }
 
 // SubmitProposalHandlerFn - http request handler to create a proposal
 func SubmitProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// collect data
-		vars := mux.Vars(r)
-		address := vars["address"]
 
 		var m proposeBody
 		body, err := ioutil.ReadAll(r.Body)
@@ -149,75 +150,63 @@ func SubmitProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreC
 			return
 		}
 
-		// Get address of proposer
-		bz, err := hex.DecodeString(address)
+		// get local account Name
+		info, err := kb.Get(proposeBody.LocalAccountName)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		proposerAddr := sdk.Address(bz)
+		proposerAddr := info.PubKey.Address()
 
-		// TODO submit proposal
-		// TODO check which key corresponds
+		// build message
+		msg := simpleGovernace.NewSubmitProposalMsg(title, description, proposeBody.BlockLimit, proposeBody.Deposit, proposerAddr)
 
-		// // build message
-		// msg := client.BuildMsg(info.PubKey.Address(), to, m.Amount)
-		// if err != nil { // XXX rechecking same error ?
-		// 	w.WriteHeader(http.StatusInternalServerError)
-		// 	w.Write([]byte(err.Error()))
-		// 	return
-		// }
+		// sign Msg
+		ctx = ctx.WithSequence(proposeBody.Sequence)
+		ctx = ctx.WithChainID(proposeBody.ChainID)
+		txBytes, err := ctx.SignAndBuild(proposeBody.LocalAccountName, proposeBody.Password, msg, cdc)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(err.Error()))
+			return
+		}
 
-		// // sign
-		// ctx = ctx.WithSequence(m.Sequence)
-		// txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, msg, cdc)
-		// if err != nil {
-		// 	w.WriteHeader(http.StatusUnauthorized)
-		// 	w.Write([]byte(err.Error()))
-		// 	return
-		// }
+		// send Tx
+		res, err := ctx.BroadcastTx(txBytes)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
 
-		// send
-		// res, err := ctx.BroadcastTx(txBytes)
-		// ctx.
-		// if err != nil {
-		// 	w.WriteHeader(http.StatusInternalServerError)
-		// 	w.Write([]byte(err.Error()))
-		// 	return
-		// }
+		output, err := json.MarshalIndent(res, "", "  ")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
 
-		// output, err := json.MarshalIndent(res, "", "  ")
-		// if err != nil {
-		// 	w.WriteHeader(http.StatusInternalServerError)
-		// 	w.Write([]byte(err.Error()))
-		// 	return
-		// }
-
-		// w.Write(output)
+		w.Write(output)
 	}
 }
 
-// GetAccountProposalsVoteHandlerFn -  http request handler to get an account vote on a proposal
-func GetAccountProposalsVoteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+// GetProposalVotesHandlerFn - http request handler to get all proposals from an account
+func GetProposalVotesHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// collect data
 		vars := mux.Vars(r)
-		address := vars["address"]
+		address := vars["id"]
+
 		proposalID, err := strconv.Atoi(vars["id"])
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		bz, err := hex.DecodeString(address)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-		voterAddr := sdk.Address(bz)
 
-		key := simpleGov.GenerateAccountProposalsVoteKey(int64(proposalID), voterAddr)
+		key := simpleGovernance.GenerateProposalVotesVoteKey(proposalID)
+
 		res, err := ctx.Query(key, "proposal")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -246,7 +235,8 @@ func GetAccountProposalsVoteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx cont
 func SubmitVoteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		address := vars["address"]
+
+		// Get proposalID
 		proposalID, err := strconv.Atoi(vars["id"])
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -270,7 +260,62 @@ func SubmitVoteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreConte
 			return
 		}
 
-		// Get address of proposer
+		// get local account Name
+		info, err := kb.Get(vote.LocalAccountName)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		voter := info.PubKey.Address()
+
+		// TODO submit vote
+
+		// build message
+		msg := simpleGovernance.NewVoteMsg(proposalID, vote.Option, voter)
+
+		// sign
+		ctx = ctx.WithChainID(vote.ChainID)
+		txBytes, err := ctx.SignAndBuild(vote.LocalAccountName, vote.Password, msg, cdc)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		// send
+		res, err := ctx.BroadcastTx(txBytes)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		output, err := json.MarshalIndent(res, "", "  ")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		w.Write(output)
+	}
+}
+
+// GetAccountProposalsVoteHandlerFn -  http request handler to get an account vote on a proposal
+func GetAccountProposalsVoteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		proposalID := vars["id"]
+		address := vars["address"]
+
+		proposalID, err := strconv.Atoi(proposalID)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
 		bz, err := hex.DecodeString(address)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -279,9 +324,27 @@ func SubmitVoteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreConte
 		}
 		voterAddr := sdk.Address(bz)
 
-		key := simpleGov.GenerateAccountProposalsVoteKey(int64(proposalID), voterAddr)
+		key := simpleGovernance.GenerateAccountProposalsVoteKey(int64(proposalID), voterAddr)
+		res, err := ctx.Query(key, "proposal")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
 
-		// TODO submit vote
-		// w.Write(output)
+		// the query will return empty if there is no data for this bond
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		output, err := json.MarshalIndent(res, "", "  ")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		w.Write(output)
 	}
 }

@@ -129,3 +129,33 @@ func TestHandleAbsentValidator(t *testing.T) {
 	validator, _ = sk.GetValidatorByPubKey(ctx, val)
 	require.Equal(t, sdk.Unbonded, validator.GetStatus())
 }
+
+func TestHandleNewValidator(t *testing.T) {
+	// initial setup
+	ctx, ck, sk, keeper := createTestInput(t)
+	addr, val, amt := addrs[0], pks[0], int64(100)
+	sh := stake.NewHandler(sk)
+	got := sh(ctx, newTestMsgCreateValidator(addr, val, amt))
+	require.True(t, got.IsOK())
+	stake.EndBlocker(ctx, sk)
+	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins - amt}})
+	require.Equal(t, sdk.NewRat(amt), sk.Validator(ctx, addr).GetPower())
+
+	// 1000 first blocks not a validator
+	ctx = ctx.WithBlockHeight(1001)
+
+	// Now a validator
+	keeper.handleValidatorSignature(ctx, val, true)
+	info, found := keeper.getValidatorSigningInfo(ctx, val.Address())
+	require.True(t, found)
+	require.Equal(t, int64(1001), info.StartHeight)
+	require.Equal(t, int64(1), info.IndexOffset)
+	require.Equal(t, int64(1), info.SignedBlocksCounter)
+	require.Equal(t, int64(0), info.JailedUntil)
+
+	// validator should be bonded still, should not have been revoked or slashed
+	validator, _ := sk.GetValidatorByPubKey(ctx, val)
+	require.Equal(t, sdk.Bonded, validator.GetStatus())
+	pool := sk.GetPool(ctx)
+	require.Equal(t, int64(100), pool.BondedTokens)
+}

@@ -132,6 +132,7 @@ const (
 	contextKeyLogger
 	contextKeySigningValidators
 	contextKeyGasMeter
+	contextKeyMsgType
 )
 
 // NOTE: Do not expose MultiStore.
@@ -166,6 +167,9 @@ func (c Context) SigningValidators() []abci.SigningValidator {
 func (c Context) GasMeter() GasMeter {
 	return c.Value(contextKeyGasMeter).(GasMeter)
 }
+func (c Context) MsgType() string {
+	return c.Value(contextKeyMsgType).(string)
+}
 func (c Context) WithMultiStore(ms MultiStore) Context {
 	return c.withValue(contextKeyMultiStore, ms)
 }
@@ -193,6 +197,9 @@ func (c Context) WithSigningValidators(SigningValidators []abci.SigningValidator
 }
 func (c Context) WithGasMeter(meter GasMeter) Context {
 	return c.withValue(contextKeyGasMeter, meter)
+}
+func (c Context) WithMsgType(ty string) Context {
+	return c.withValue(contextKeyMsgType, ty)
 }
 
 // Cache the multistore and return a new cached context. The cached context is

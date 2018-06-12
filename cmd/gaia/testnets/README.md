@@ -304,12 +304,12 @@ gaiacli stake delegation --address-delegator=<your_address> --address-candidate=
 
 ### Submitting updates to the genesis file.
 
-From `gaia-6000` onward, we are intializing new testnets wtih delegated stake. In the near term we intend to have updated tooling that allows folks in a starting account distribution to self delegate in the mean time here are some tips on submitting a manual pool requests. Merges will be granted on a case by case basis. No promises.
+From `gaia-6000` onward, we are initializing new testnets wtih delegated stake. In the near term, we intend to have updated tooling that allows folks in a starting account distribution to self delegate. In the meantime, here are some tips on submitting a manual pool requests. Merges will be granted on a case by case basis. No promises.
 
 
-Steps to add yourself to `genesis.json`
+#### Steps to add yourself to `genesis.json`
 
-1. Add your validator public key, name and voting power to `validators`. This is tendermint configuration portion. Should become uncessary soon.
+1. Add your validator public key, name and voting power to `validators`. This is tendermint configuration portion. Should become unnecessary soon.
 2. Add an account and some steak and other coins to `app_state: accounts`
 3. Add a bond under `app_state: bonds`. Use your account address for `delegator_addr` and `validator_addr`. `shares` should equal voting power above and `height =0`
 4. Under `app_state: stake: pool` increment `bonded_tokens` and `bonded_shares` incremented by voting power and `loose_unbonded_tokens` should be incremented by that amount of steak added to your account.

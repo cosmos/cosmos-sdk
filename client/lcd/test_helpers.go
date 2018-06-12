@@ -65,7 +65,6 @@ func GetConfig() *tmcfg.Config {
 
 	config.P2P.ListenAddress = tmAddr
 	config.RPC.ListenAddress = rcpAddr
-	config.TxIndex.IndexTags = "app.creator" // see kvstore application
 	return config
 }
 
@@ -98,6 +97,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 	config := GetConfig()
 	config.Consensus.TimeoutCommit = 1000
 	config.Consensus.SkipTimeoutCommit = false
+	config.TxIndex.IndexAllTags = true
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	logger = log.NewFilter(logger, log.AllowError())

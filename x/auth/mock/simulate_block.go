@@ -54,8 +54,8 @@ func GenTx(msg sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKeyEd25
 }
 
 // check a transaction result
-func SignCheck(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.Result {
-	tx := GenTx(msg, seq, priv...)
+func SignCheck(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.Result {
+	tx := GenTx(msg, accnums, seq, priv...)
 	res := app.Check(tx)
 	return res
 }

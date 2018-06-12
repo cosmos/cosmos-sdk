@@ -68,7 +68,7 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, Keep
 			{sk.GetParams(ctx).BondDenom, initCoins},
 		})
 	}
-	keeper := NewKeeper(cdc, keySlashing, sk, DefaultCodespace)
+	keeper := NewKeeper(cdc, keySlashing, sk.Full(), DefaultCodespace)
 	return ctx, ck, sk, keeper
 }
 

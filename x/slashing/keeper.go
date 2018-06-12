@@ -12,14 +12,14 @@ import (
 type Keeper struct {
 	storeKey     sdk.StoreKey
 	cdc          *wire.Codec
-	validatorSet sdk.ValidatorSet
+	validatorSet sdk.FullValidatorSet
 
 	// codespace
 	codespace sdk.CodespaceType
 }
 
 // NewKeeper creates a slashing keeper
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, vs sdk.FullValidatorSet, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:     key,
 		cdc:          cdc,

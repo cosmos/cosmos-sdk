@@ -21,6 +21,8 @@ const KeyDBName = "keys"
 // keybase is used to make GetKeyBase a singleton
 var keybase keys.Keybase
 
+// TODO make keybase take a database not load from the directory
+
 // initialize a keybase based on the configuration
 func GetKeyBase() (keys.Keybase, error) {
 	rootDir := viper.GetString(cli.HomeFlag)

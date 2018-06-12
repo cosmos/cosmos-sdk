@@ -26,6 +26,7 @@ type transferBody struct {
 	Password         string    `json:"password"`
 	SrcChainID       string    `json:"src_chain_id"`
 	Sequence         int64     `json:"sequence"`
+	Gas              int64     `json:"gas"`
 }
 
 // TransferRequestHandler - http request handler to transfer coins to a address
@@ -76,6 +77,9 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.Core
 		// build message
 		packet := ibc.NewIBCPacket(info.PubKey.Address(), to, m.Amount, m.SrcChainID, destChainID)
 		msg := ibc.IBCTransferMsg{packet}
+
+		// add gas to context
+		ctx = ctx.WithGas(m.Gas)
 
 		// sign
 		ctx = ctx.WithSequence(m.Sequence)

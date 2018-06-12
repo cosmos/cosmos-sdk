@@ -18,8 +18,7 @@ import (
 
 func TestStdTx(t *testing.T) {
 	priv := crypto.GenPrivKeyEd25519()
-	pubKey, err := priv.PubKey()
-	assert.Nil(t, err)
+	pubKey := priv.PubKey()
 	addr := pubKey.Address()
 	msg := sdk.NewTestMsg(addr)
 	fee := newStdFee()

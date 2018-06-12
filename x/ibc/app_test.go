@@ -35,8 +35,7 @@ func TestIBCMsgs(t *testing.T) {
 	destChain := "dest-chain"
 
 	priv1 := crypto.GenPrivKeyEd25519()
-	pubKey, err := priv1.PubKey()
-	assert.Nil(t, err)
+	pubKey := priv1.PubKey()
 	addr1 := pubKey.Address()
 	coins := sdk.Coins{{"foocoin", 10}}
 	var emptyCoins sdk.Coins
@@ -72,7 +71,7 @@ func TestIBCMsgs(t *testing.T) {
 		Sequence:  0,
 	}
 
-	mock.SignCheckDeliver(t, mapp.BaseApp, transferMsg, []int64{0},[]int64{0}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, transferMsg, []int64{0}, []int64{0}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, emptyCoins)
 	mock.SignCheckDeliver(t, mapp.BaseApp, transferMsg, []int64{0}, []int64{1}, false, priv1)
 	mock.SignCheckDeliver(t, mapp.BaseApp, receiveMsg, []int64{0}, []int64{2}, true, priv1)

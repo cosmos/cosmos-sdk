@@ -29,10 +29,7 @@ func defaultContext(key sdk.StoreKey) sdk.Context {
 }
 
 func newAddress() crypto.Address {
-	pubKey, err := crypto.GenPrivKeyEd25519().PubKey()
-	if err != nil {
-		panic(err)
-	}
+	pubKey := crypto.GenPrivKeyEd25519().PubKey()
 	return pubKey.Address()
 }
 

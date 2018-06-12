@@ -16,12 +16,12 @@ import (
 
 var (
 	priv1 = crypto.GenPrivKeyEd25519()
-	addr1 = mock.MustPubKey(priv1).Address()
+	addr1 = priv1.PubKey().Address()
 	priv2 = crypto.GenPrivKeyEd25519()
-	addr2 = mock.MustPubKey(priv2).Address()
-	addr3 = mock.MustPubKey(crypto.GenPrivKeyEd25519()).Address()
+	addr2 = priv2.PubKey().Address()
+	addr3 = crypto.GenPrivKeyEd25519().PubKey().Address()
 	priv4 = crypto.GenPrivKeyEd25519()
-	addr4 = mock.MustPubKey(priv4).Address()
+	addr4 = priv4.PubKey().Address()
 	coins = sdk.Coins{{"foocoin", 10}}
 	fee   = auth.StdFee{
 		sdk.Coins{{"foocoin", 0}},
@@ -113,8 +113,7 @@ func TestStakeMsgs(t *testing.T) {
 	////////////////////
 	// Create Validator
 
-	pubKey, err := priv1.PubKey()
-	require.Nil(t, err)
+	pubKey := priv1.PubKey()
 	description := NewDescription("foo_moniker", "", "", "")
 	createValidatorMsg := NewMsgCreateValidator(
 		addr1, pubKey, bondCoin, description,

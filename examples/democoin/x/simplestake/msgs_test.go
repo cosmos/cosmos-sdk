@@ -12,8 +12,7 @@ import (
 
 func TestBondMsgValidation(t *testing.T) {
 	privKey := crypto.GenPrivKeyEd25519()
-	pubKey, err := privKey.PubKey()
-	assert.Nil(t, err)
+	pubKey := privKey.PubKey()
 	cases := []struct {
 		valid   bool
 		msgBond MsgBond

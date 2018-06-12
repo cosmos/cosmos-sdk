@@ -43,11 +43,8 @@ func GenTx(msg sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKeyEd25
 
 	sigs := make([]auth.StdSignature, len(priv))
 	for i, p := range priv {
-		pubKey, err := p.PubKey()
-		if err != nil {
-			panic(err)
-		}
-		sig, err := p.Sign(auth.StdSignBytes(chainID, seq, fee, msg))
+		pubKey := p.PubKey()
+		sig, err := p.Sign(auth.StdSignBytes(chainID, accnums, seq, fee, msg))
 		if err != nil {
 			panic(err)
 		}
@@ -102,13 +99,4 @@ func MustSign(priv crypto.PrivKey, bytes []byte) crypto.Signature {
 		panic(err)
 	}
 	return sig
-}
-
-// panic on pubkey errors
-func MustPubKey(priv crypto.PrivKey) crypto.PubKey {
-	pubKey, err := priv.PubKey()
-	if err != nil {
-		panic(err)
-	}
-	return pubKey
 }

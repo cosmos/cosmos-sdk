@@ -24,8 +24,7 @@ func TestGenesis(t *testing.T) {
 	bapp := NewDemocoinApp(logger, db)
 
 	// Construct some genesis bytes to reflect democoin/types/AppAccount
-	pk, err := crypto.GenPrivKeyEd25519().PubKey()
-	require.NoError(t, err)
+	pk := crypto.GenPrivKeyEd25519().PubKey()
 	addr := pk.Address()
 	coins, err := sdk.ParseCoins("77foocoin,99barcoin")
 	require.Nil(t, err)

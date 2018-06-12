@@ -423,12 +423,14 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.Address) (
 	receiveAddrBech := sdk.MustBech32ifyAcc(receiveAddr)
 
 	acc := getAccount(t, port, addr)
+	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 
 	// send
 	jsonStr := []byte(fmt.Sprintf(`{
 		"name":"%s", 
-		"password":"%s", 
+		"password":"%s",
+		"account_number":%d, 
 		"sequence":%d, 
 		"gas": 10000,
 		"amount":[
@@ -437,7 +439,7 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.Address) (
 				"amount": 1 
 			}
 		] 
-	}`, name, password, sequence, "steak"))
+	}`, name, password, accnum, sequence, "steak"))
 	res, body := Request(t, port, "POST", "/accounts/"+receiveAddrBech+"/send", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -457,12 +459,14 @@ func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Add
 
 	// get the account to get the sequence
 	acc := getAccount(t, port, addr)
+	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 
 	// send
 	jsonStr := []byte(fmt.Sprintf(`{ 
 		"name":"%s", 
 		"password": "%s", 
+		"account_number":%d,
 		"sequence": %d, 
 		"gas": 100000,
 		"amount":[
@@ -471,7 +475,7 @@ func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Add
 				"amount": 1 
 			}
 		] 
-	}`, name, password, sequence, "steak"))
+	}`, name, password, accnum, sequence, "steak"))
 	res, body := Request(t, port, "POST", "/ibc/testchain/"+receiveAddrBech+"/send", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -498,6 +502,7 @@ func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.A
 func doBond(t *testing.T, port, seed, name, password string, delegatorAddr, validatorAddr sdk.Address) (resultTx ctypes.ResultBroadcastTxCommit) {
 	// get the account to get the sequence
 	acc := getAccount(t, port, delegatorAddr)
+	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 
 	delegatorAddrBech := sdk.MustBech32ifyAcc(delegatorAddr)
@@ -507,6 +512,7 @@ func doBond(t *testing.T, port, seed, name, password string, delegatorAddr, vali
 	jsonStr := []byte(fmt.Sprintf(`{
 		"name": "%s",
 		"password": "%s",
+		"account_number": %d,
 		"sequence": %d,
 		"gas": 10000,
 		"delegate": [
@@ -517,7 +523,7 @@ func doBond(t *testing.T, port, seed, name, password string, delegatorAddr, vali
 			}
 		],
 		"unbond": []
-	}`, name, password, sequence, delegatorAddrBech, validatorAddrBech, "steak"))
+	}`, name, password, accnum, sequence, delegatorAddrBech, validatorAddrBech, "steak"))
 	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -531,6 +537,7 @@ func doBond(t *testing.T, port, seed, name, password string, delegatorAddr, vali
 func doUnbond(t *testing.T, port, seed, name, password string, delegatorAddr, validatorAddr sdk.Address) (resultTx ctypes.ResultBroadcastTxCommit) {
 	// get the account to get the sequence
 	acc := getAccount(t, port, delegatorAddr)
+	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 
 	delegatorAddrBech := sdk.MustBech32ifyAcc(delegatorAddr)
@@ -540,6 +547,7 @@ func doUnbond(t *testing.T, port, seed, name, password string, delegatorAddr, va
 	jsonStr := []byte(fmt.Sprintf(`{
 		"name": "%s",
 		"password": "%s",
+		"account_number": %d,
 		"sequence": %d,
 		"gas": 10000,
 		"delegate": [],
@@ -550,7 +558,7 @@ func doUnbond(t *testing.T, port, seed, name, password string, delegatorAddr, va
 				"shares": "30"
 			}
 		]
-	}`, name, password, sequence, delegatorAddrBech, validatorAddrBech))
+	}`, name, password, accnum, sequence, delegatorAddrBech, validatorAddrBech))
 	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 

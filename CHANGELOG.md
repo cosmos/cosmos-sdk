@@ -7,6 +7,7 @@ BREAKING CHANGES
 * [stake] remove Tick and add EndBlocker
 
 FEATURES
+* [x/auth] Added AccountNumbers to BaseAccount and StdTxs to allow for replay protection with account pruning
 
 IMPROVEMENTS
 * bank module uses go-wire codec instead of 'encoding/json'

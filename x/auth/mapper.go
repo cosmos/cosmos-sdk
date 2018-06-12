@@ -9,6 +9,8 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 )
 
+var globalAccountNumberKey = []byte("globalAccountNumber")
+
 // This AccountMapper encodes/decodes accounts using the
 // go-amino (binary) encoding/decoding library.
 type AccountMapper struct {
@@ -38,13 +40,25 @@ func NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto Account) AccountM
 func (am AccountMapper) NewAccountWithAddress(ctx sdk.Context, addr sdk.Address) Account {
 	acc := am.clonePrototype()
 	acc.SetAddress(addr)
+	acc.SetAccountNumber(am.GetNextAccountNumber(ctx))
 	return acc
+}
+
+// New Account
+func (am AccountMapper) NewAccount(ctx sdk.Context, acc Account) Account {
+	acc.SetAccountNumber(am.GetNextAccountNumber(ctx))
+	return acc
+}
+
+// Turn an address to key used to get it from the account store
+func AddressStoreKey(addr sdk.Address) []byte {
+	return append([]byte("account:"), addr.Bytes()...)
 }
 
 // Implements sdk.AccountMapper.
 func (am AccountMapper) GetAccount(ctx sdk.Context, addr sdk.Address) Account {
 	store := ctx.KVStore(am.key)
-	bz := store.Get(addr)
+	bz := store.Get(AddressStoreKey(addr))
 	if bz == nil {
 		return nil
 	}
@@ -57,13 +71,13 @@ func (am AccountMapper) SetAccount(ctx sdk.Context, acc Account) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(am.key)
 	bz := am.encodeAccount(acc)
-	store.Set(addr, bz)
+	store.Set(AddressStoreKey(addr), bz)
 }
 
 // Implements sdk.AccountMapper.
 func (am AccountMapper) IterateAccounts(ctx sdk.Context, process func(Account) (stop bool)) {
 	store := ctx.KVStore(am.key)
-	iter := store.Iterator(nil, nil)
+	iter := sdk.KVStorePrefixIterator(store, []byte("account:"))
 	for {
 		if !iter.Valid() {
 			return
@@ -114,6 +128,26 @@ func (am AccountMapper) setSequence(ctx sdk.Context, addr sdk.Address, newSequen
 	acc.SetSequence(newSequence)
 	am.SetAccount(ctx, acc)
 	return nil
+}
+
+// Returns and increments the global account number counter
+func (am AccountMapper) GetNextAccountNumber(ctx sdk.Context) int64 {
+	var accNumber int64
+	store := ctx.KVStore(am.key)
+	bz := store.Get(globalAccountNumberKey)
+	if bz == nil {
+		accNumber = 0
+	} else {
+		err := am.cdc.UnmarshalBinary(bz, &accNumber)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	bz = am.cdc.MustMarshalBinary(accNumber + 1)
+	store.Set(globalAccountNumberKey, bz)
+
+	return accNumber
 }
 
 //----------------------------------------

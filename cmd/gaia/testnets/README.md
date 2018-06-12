@@ -57,7 +57,9 @@ Now we can fetch the correct versions of each dependency by running:
 
 ```
 mkdir -p $GOPATH/src/github.com/cosmos/cosmos-sdk
+cd $GOPATH/src/github.com/cosmos/
 git clone https://github.com/cosmos/cosmos-sdk.git
+cd $GOPATH/src/github.com/cosmos/cosmos-sdk
 git checkout v0.18.0
 make get_tools // run $ make update_tools if already installed
 make get_vendor_deps

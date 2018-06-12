@@ -351,7 +351,7 @@ func setupTestValidators(pool Pool, keeper Keeper, ctx sdk.Context, validatorTok
 
 	for i := 0; i < numValidators; i++ {
 		validators[i] = NewValidator(addrs[i], pks[i], Description{})
-		validators[i], pool, _ = validators[i].addTokensFromDel(pool, validatorTokens[i])
+		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, validatorTokens[i])
 		keeper.setPool(ctx, pool)
 		validators[i] = keeper.updateValidator(ctx, validators[i]) //will kick out lower power validators. Keep this in mind when setting up the test validators order
 		pool = keeper.GetPool(ctx)

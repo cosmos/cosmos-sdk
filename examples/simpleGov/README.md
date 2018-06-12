@@ -1,6 +1,6 @@
-# Tutorial: How to code a Cosmos-SDK module
+# Tutorial: How to code a Cosmos-SDK application
 
-In this tutorial, we will learn the basics of coding a Cosmos-SDK module. Before getting into the bulk of it, let us remind some high level concepts about the Cosmos-SDK.
+In this tutorial, we will learn the basics of coding a Cosmos-SDK application. Before getting into the bulk of it, let us remind some high level concepts about the Cosmos-SDK.
 
 ## Tendermint and Cosmos
 
@@ -18,11 +18,12 @@ Tendermint connects the blockchain engine (Networking and Consensus Layers) to t
 - **Performance.** Tendermint is a state of the art blockchain engine. Tendermint Core can have a block time on the order of 1 second and handle thousands of transactions per second.
 - **Instant finality.** A property of the Tendermint consensus algorithm is instant finality, meaning that forks are never created, as long as less than a third of the validators are malicious (byzantine). Users can be sure their transactions are finalized as soon as a block is created.
 - **Security.** Tendermint consensus is not only fault tolerant, it’s optimally Byzantine fault-tolerant, with accountability. If the blockchain forks, there is a way to determine liability.
+- **Light-client support**. Tendermint provides built-in light-clients.
 
 But most importantly, Tendermint is natively compatible with the Inter Blockchain Communication Protocol. This means that any Tendermint blockchain, whether public or private, can be natively connected to the Cosmos ecosystem and securely exchange tokens with other blockchains in the ecosystem. Note that benefiting from interoperability via IBC and Cosmos preserves the sovereignty of your Tendermint chain. Non-Tendermint chains can also be connected to Cosmos via IBC adapters or Peg-Zones, but this is out of scope for this document.
 
 
-## Introduciton to the Cosmos-SDK
+## Introduction to the Cosmos-SDK
 
 Developing a Tendermint-based blockchain means that you only have to code the application (i.e. the business logic). But that in itself can prove to be rather difficult. This is why the Cosmos-SDK exists.
 
@@ -37,7 +38,30 @@ Now that we have a better understanding of the high level principles of the SDK,
 
 ## Reminder on Tendermint and ABCI
 
-Todo
+Cosmos-SDK is a framework to develop the *Application* layer of the blockchain. This application can be plugged on any consensus engine (*Consensus* + *Networking* layers) that supports a simple protocol called the ABCI, short for [Application-Blockchain Interface](https://github.com/tendermint/abci). 
+
+Tendermint is the default consensus engine on which the Cosmos-SDK is being built. It is important to have a good understanding of the respective responsibilities of both the Application and the Consensus Engine. 
+
+Responsibilities of the Consensus Engine:
+- Propagate transactions
+- Agree on the order of valid transactions
+
+Reponsibilities of the Application layer:
+- Generate Transactions
+- Check if transactions are valid
+- Process Transactions (includes state changes)
+
+It is worth underlining that the Consensus Engine has knowledge of a given validator set for each block, but that it is the responsiblity of the *Application* to trigger validator set changes (by processing appropriate transactions). This is the reason why it is possible to build both **public and private chains** with the Cosmos-SDK and Tendermint. A chain will be public or private depending on the rules, defined at *application level*, that govern validator set changes.
+
+The ABCI establishes the connection between the Consensus Engine and the Application. Essentially, it boils down to two messages:
+- `CheckTx`: Ask the application if the transaction is valid. When a node receives a transaction, it will run `CheckTx` on it. If the transaction is valid, it is added to the mempool.
+- `DeliverTx`: Ask the application to process the transaction. Returns a new state.
+
+Finally, let us give a high-level overview of a round to showcase how the consensus engine and the application interract with each other.
+
+- At all times, when the consensus engine of a validator node receives a transaction, it passes it to the application via `CheckTx` to check its validity. If valid, the transaction is added to the mempool. 
+- At block N, there is a validator set V. A proposer is selected by the consensus engine from V to propose the next block. The proposer gathers valid transaction from its mempool and forms a block. Then, the block is gossiped to other validators to be signed. The block becomes block N+1 once 2/3+ of V have signed a *precommit* on it (For a more detailed explanation of the consensus algorithm, click [here](https://github.com/tendermint/tendermint/wiki/Byzantine-Consensus-Algorithm)).
+- When block N+1 is signed by 2/3+ of V, it is gossipped to full-nodes. When full-nodes receive the block, they confirm its validity. A block is valid if it it holds valid signatures from more than 2/3 of V and if all the transactions in the block are valid. To check the validity of transactions, the consensus engine transfers them to the application via `DeliverTx`. After each transaction, `DeliverTx` returns a new state if the transaction was valid. At the end of the block, a final state is committed. Of course, this means that the order of transaction within a block matters. 
 
 ## Architecture of a SDK-app
 
@@ -483,7 +507,7 @@ For our simple governance messages, this means:
 - As for other methods, less customization is required. You can check the code to see a standard way of implementing these.
 
 
-### keeper
+### Keeper
 
 #### Short intro to keepers
 

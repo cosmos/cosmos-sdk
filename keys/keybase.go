@@ -68,10 +68,7 @@ func (kb dbKeybase) CreateLedger(name string, path crypto.DerivationPath, algo S
 	if err != nil {
 		return nil, err
 	}
-	pub, err := priv.PubKey()
-	if err != nil {
-		return nil, err
-	}
+	pub := priv.PubKey()
 	return kb.writeLedgerKey(pub, path, name), nil
 }
 
@@ -169,10 +166,7 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig crypto.Signat
 	if err != nil {
 		return nil, nil, err
 	}
-	pub, err = priv.PubKey()
-	if err != nil {
-		return nil, nil, err
-	}
+	pub = priv.PubKey()
 	return sig, pub, nil
 }
 
@@ -290,10 +284,7 @@ func (kb dbKeybase) writeLocalKey(priv crypto.PrivKey, name, passphrase string) 
 	// encrypt private key using passphrase
 	privArmor := encryptArmorPrivKey(priv, passphrase)
 	// make Info
-	pub, err := priv.PubKey()
-	if err != nil {
-		panic(err)
-	}
+	pub := priv.PubKey()
 	info := newLocalInfo(name, pub, privArmor)
 	kb.writeInfo(info, name)
 	return info

@@ -70,8 +70,7 @@ func TestKeyManagement(t *testing.T) {
 	// create an offline key
 	o1 := "offline"
 	priv1 := crypto.GenPrivKeyEd25519()
-	pub1, err := priv1.PubKey()
-	require.Nil(t, err)
+	pub1 := priv1.PubKey()
 	i, err = cstore.CreateOffline(o1, pub1)
 	require.Nil(t, err)
 	require.Equal(t, pub1, i.GetPubKey())

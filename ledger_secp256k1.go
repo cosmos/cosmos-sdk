@@ -44,10 +44,12 @@ type PrivKeyLedgerSecp256k1 struct {
 func NewPrivKeyLedgerSecp256k1(path DerivationPath) (PrivKey, error) {
 	var pk PrivKeyLedgerSecp256k1
 	pk.Path = path
-	// getPubKey will cache the pubkey for later use,
-	// this allows us to return an error early if the ledger
-	// is not plugged in
-	_, err := pk.getPubKey()
+	// cache the pubkey for later use
+	pubKey, err := pk.getPubKey()
+	if err != nil {
+		return nil, err
+	}
+	pk.CachedPubKey = pubKey
 	return &pk, err
 }
 
@@ -55,8 +57,7 @@ func NewPrivKeyLedgerSecp256k1(path DerivationPath) (PrivKey, error) {
 // after loading it from disk
 func (pk PrivKeyLedgerSecp256k1) ValidateKey() error {
 	// getPubKey will return an error if the ledger is not
-	// properly set up...
-	pub, err := pk.forceGetPubKey()
+	pub, err := pk.getPubKey()
 	if err != nil {
 		return err
 	}
@@ -86,45 +87,22 @@ func (pk PrivKeyLedgerSecp256k1) Sign(msg []byte) (Signature, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	sig, err := signLedgerSecp256k1(dev, pk.Path, msg)
 	if err != nil {
 		return nil, err
-	}
-
-	pub, err := pubkeyLedgerSecp256k1(dev, pk.Path)
-	if err != nil {
-		return nil, err
-	}
-
-	// if we have no pubkey yet, store it for future queries
-	if pk.CachedPubKey == nil {
-		pk.CachedPubKey = pub
-	} else if !pk.CachedPubKey.Equals(pub) {
-		return nil, fmt.Errorf("stored key does not match signing key")
 	}
 	return sig, nil
 }
 
 // PubKey returns the stored PubKey
-func (pk PrivKeyLedgerSecp256k1) PubKey() (PubKey, error) {
-	return pk.getPubKey()
+func (pk PrivKeyLedgerSecp256k1) PubKey() PubKey {
+	return pk.CachedPubKey
 }
 
-// getPubKey reads the pubkey from cache or from the ledger itself
+// getPubKey reads the pubkey the ledger itself
 // since this involves IO, it may return an error, which is not exposed
 // in the PubKey interface, so this function allows better error handling
 func (pk PrivKeyLedgerSecp256k1) getPubKey() (key PubKey, err error) {
-	// if we have no pubkey, set it
-	if pk.CachedPubKey == nil {
-		pk.CachedPubKey, err = pk.forceGetPubKey()
-	}
-	return pk.CachedPubKey, err
-}
-
-// forceGetPubKey is like getPubKey but ignores any cached key
-// and ensures we get it from the ledger itself.
-func (pk PrivKeyLedgerSecp256k1) forceGetPubKey() (key PubKey, err error) {
 	dev, err := getLedger()
 	if err != nil {
 		return key, fmt.Errorf("cannot connect to Ledger device - error: %v", err)

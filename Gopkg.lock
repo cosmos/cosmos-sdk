@@ -99,8 +99,8 @@
     "assert",
     "require"
   ]
-  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
-  version = "v1.2.1"
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
 
 [[projects]]
   branch = "master"
@@ -181,11 +181,11 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["cpu"]
-  revision = "9527bec2660bd847c050fda93a0f0c6dee0800bb"
+  revision = "a9e25c09b96b8870693763211309e213c6ef299d"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f20e34cd998442d4ffe2f9aa45ab87a55ba6e4cd19f29009adaadac3b5dccf26"
+  inputs-digest = "1731880d432026bbd22865582cf7c7dd6d5c65618149de586e30ce156d338c01"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -91,8 +91,7 @@ func TestKeyEncodings(t *testing.T) {
 		assert.EqualValues(t, sig1, sig3)
 
 		// Check (de/en)codings of PubKeys.
-		pubKey, err := tc.privKey.PubKey()
-		assert.NoError(t, err)
+		pubKey := tc.privKey.PubKey()
 		var pub2, pub3 PubKey
 		checkAminoBinary(t, pubKey, &pub2, tc.pubSize)
 		assert.EqualValues(t, pubKey, pub2)

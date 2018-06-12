@@ -19,8 +19,7 @@ func TestRealLedgerSecp256k1(t *testing.T) {
 
 	priv, err := NewPrivKeyLedgerSecp256k1(path)
 	require.Nil(t, err, "%+v", err)
-	pub, err := priv.PubKey()
-	require.Nil(t, err)
+	pub := priv.PubKey()
 	sig, err := priv.Sign(msg)
 	require.Nil(t, err)
 
@@ -33,8 +32,7 @@ func TestRealLedgerSecp256k1(t *testing.T) {
 	require.Nil(t, err, "%+v", err)
 
 	// make sure we get the same pubkey when we load from disk
-	pub2, err := priv2.PubKey()
-	require.Nil(t, err)
+	pub2 := priv2.PubKey()
 	require.Equal(t, pub, pub2)
 
 	// signing with the loaded key should match the original pubkey

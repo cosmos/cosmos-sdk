@@ -18,7 +18,7 @@ func PrivKeyFromBytes(privKeyBytes []byte) (privKey PrivKey, err error) {
 type PrivKey interface {
 	Bytes() []byte
 	Sign(msg []byte) (Signature, error)
-	PubKey() (PubKey, error)
+	PubKey() PubKey
 	Equals(PrivKey) bool
 }
 
@@ -39,10 +39,10 @@ func (privKey PrivKeyEd25519) Sign(msg []byte) (Signature, error) {
 	return SignatureEd25519(*signatureBytes), nil
 }
 
-func (privKey PrivKeyEd25519) PubKey() (PubKey, error) {
+func (privKey PrivKeyEd25519) PubKey() PubKey {
 	privKeyBytes := [64]byte(privKey)
 	pubBytes := *ed25519.MakePublicKey(&privKeyBytes)
-	return PubKeyEd25519(pubBytes), nil
+	return PubKeyEd25519(pubBytes)
 }
 
 // Equals - you probably don't need to use this.
@@ -115,11 +115,11 @@ func (privKey PrivKeySecp256k1) Sign(msg []byte) (Signature, error) {
 	return SignatureSecp256k1(sig__.Serialize()), nil
 }
 
-func (privKey PrivKeySecp256k1) PubKey() (PubKey, error) {
+func (privKey PrivKeySecp256k1) PubKey() PubKey {
 	_, pub__ := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKey[:])
 	var pub PubKeySecp256k1
 	copy(pub[:], pub__.SerializeCompressed())
-	return pub, nil
+	return pub
 }
 
 // Equals - you probably don't need to use this.

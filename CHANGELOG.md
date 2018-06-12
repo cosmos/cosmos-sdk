@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.0
+
+BREAKING CHANGES
+
+- `priv.PubKey()` no longer returns an error. Any applicable errors (such as when fetching the public key from a hardware wallet) should be checked and returned when constructing the private key.
+
 ## 0.8.0
 
 **TBD**

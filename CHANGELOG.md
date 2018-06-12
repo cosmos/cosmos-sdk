@@ -2,18 +2,23 @@
 
 BREAKING CHANGES
 * msg.GetSignBytes() now returns bech32-encoded addresses in all cases
+* [lcd] REST end-points now include gas
 
 FEATURES
+* [x/auth] Added AccountNumbers to BaseAccount and StdTxs to allow for replay protection with account pruning
 
 IMPROVEMENTS
 * export command now writes current validator set for Tendermint
 * [tests] Application module tests now use a mock application
 * [gaiacli] Fix error message when account isn't found when running gaiacli account
+* [lcd] refactored to eliminate use of global variables, and interdependent tests
 
 FIXES
 * [lcd] Switch to bech32 for addresses on all human readable inputs and outputs
-* fixed tx indexing/querying
+* [lcd] fixed tx indexing/querying
 * [cli] Added `--gas` flag to specify transaction gas limit
+* [gaia] Registered slashing message handler
+* [x/slashing] Set signInfo.StartHeight correctly for newly bonded validators
 
 ## 0.18.0
 

@@ -41,15 +41,22 @@ type GenesisTx struct {
 
 // Names of input parameters coming from app
 <<<<<<< HEAD
+<<<<<<< HEAD
 /*type GenTxFlagNames struct {
 =======
 type GenTxFlagNames struct {
 >>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+/*type GenTxFlagNames struct {
+>>>>>>> Fixes requested by Rigel
 	FlagName       string
 	FlagClientHome string
 	FlagOWK        string
 	FlagIP         string
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> Fixes requested by Rigel
 }*/
 
 var (
@@ -61,6 +68,7 @@ var (
 	FreeFermionVal  = int64(100)
 	FreeFermionsAcc = int64(50)
 )
+<<<<<<< HEAD
 
 // Storage for init command input parameters
 type InitConfig struct {
@@ -71,6 +79,8 @@ type InitConfig struct {
 =======
 >>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
 }
+=======
+>>>>>>> Fixes requested by Rigel
 
 // Storage for init command input parameters
 type InitConfig struct {
@@ -103,8 +113,12 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 			ip := viper.GetString(FlagIP)
 =======
 
+<<<<<<< HEAD
 			ip := viper.GetString(appInit.FlagsNames.FlagIP)
 >>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+			ip := viper.GetString(FlagIP)
+>>>>>>> Fixes requested by Rigel
 			if len(ip) == 0 {
 				eip, err := externalIP()
 				if err != nil {
@@ -119,6 +133,7 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				viper.GetString(FlagName),
 				viper.GetString(FlagClientHome),
 				viper.GetBool(FlagOWK),
+<<<<<<< HEAD
 				ip,
 			}
 			cliPrint, genTxFile, err := gentxWithConfig(ctx, cdc, appInit, config, genTxConfig)
@@ -133,6 +148,8 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				viper.GetString(appInit.FlagsNames.FlagName),
 				viper.GetString(appInit.FlagsNames.FlagClientHome),
 				viper.GetBool(appInit.FlagsNames.FlagOWK),
+=======
+>>>>>>> Fixes requested by Rigel
 				ip,
 			}
 <<<<<<< HEAD
@@ -260,16 +277,21 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 			config.SetRoot(viper.GetString(tmcli.HomeFlag))
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 			initConfig := InitConfig{
 =======
 			gaiaInitConfig := InitConfig{
 >>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+			initConfig := InitConfig{
+>>>>>>> Fixes requested by Rigel
 				viper.GetString(flagChainID),
 				viper.GetBool(flagGenTxs),
 				filepath.Join(config.RootDir, "config", "gentx"),
 				viper.GetBool(flagOverwrite),
 			}
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 			chainID, nodeID, appMessage, err := initWithConfig(ctx, cdc, appInit, config, initConfig)
 =======
@@ -278,6 +300,9 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 =======
 			chainID, nodeID, appMessage, err := initWithConfig(ctx, cdc, appInit, config, gaiaInitConfig)
 >>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+			chainID, nodeID, appMessage, err := initWithConfig(ctx, cdc, appInit, config, initConfig)
+>>>>>>> Fixes requested by Rigel
 			if err != nil {
 				return err
 			}
@@ -310,6 +335,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, initConfig InitConfig) (
 =======
 func initWithConfig(config *cfg.Config, gaiaConfig *gaiacfg.Config, ctx *Context, cdc *wire.Codec, appInit AppInit) (
@@ -317,6 +343,9 @@ func initWithConfig(config *cfg.Config, gaiaConfig *gaiacfg.Config, ctx *Context
 =======
 func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, gaiaInitConfig InitConfig) (
 >>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, initConfig InitConfig) (
+>>>>>>> Fixes requested by Rigel
 	chainID string, nodeID string, appMessage json.RawMessage, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
@@ -345,18 +374,22 @@ func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.
 =======
 >>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
 
-	if gaiaInitConfig.ChainID == "" {
-		gaiaInitConfig.ChainID = fmt.Sprintf("test-chain-%v", cmn.RandStr(6))
+	if initConfig.ChainID == "" {
+		initConfig.ChainID = fmt.Sprintf("test-chain-%v", cmn.RandStr(6))
 	}
-	chainID = gaiaInitConfig.ChainID
+	chainID = initConfig.ChainID
 
 	genFile := config.GenesisFile()
+<<<<<<< HEAD
 <<<<<<< HEAD
 	if !gaiaConfig.Init.Overwrite && cmn.FileExists(genFile) {
 >>>>>>> Added testnet command
 =======
 	if !gaiaInitConfig.Overwrite && cmn.FileExists(genFile) {
 >>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+	if !initConfig.Overwrite && cmn.FileExists(genFile) {
+>>>>>>> Fixes requested by Rigel
 		err = fmt.Errorf("genesis.json file already exists: %v", genFile)
 		return
 	}
@@ -366,6 +399,7 @@ func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.
 	var validators []tmtypes.GenesisValidator
 	var persistentPeers string
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 	if initConfig.GenTxs {
@@ -379,6 +413,10 @@ func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.
 	if gaiaInitConfig.GenTxs {
 		validators, appGenTxs, persistentPeers, err = processGenTxs(gaiaInitConfig.GenTxsDir, cdc, appInit)
 >>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+	if initConfig.GenTxs {
+		validators, appGenTxs, persistentPeers, err = processGenTxs(initConfig.GenTxsDir, cdc, appInit)
+>>>>>>> Fixes requested by Rigel
 		if err != nil {
 			return
 		}
@@ -393,6 +431,7 @@ func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.
 			viper.GetString(FlagName),
 			viper.GetString(FlagClientHome),
 			viper.GetBool(FlagOWK),
+<<<<<<< HEAD
 			"127.0.0.1",
 		}
 		appGenTx, am, validator, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
@@ -407,6 +446,8 @@ func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.
 			viper.GetString(appInit.FlagsNames.FlagName),
 			viper.GetString(appInit.FlagsNames.FlagClientHome),
 			viper.GetBool(appInit.FlagsNames.FlagOWK),
+=======
+>>>>>>> Fixes requested by Rigel
 			"127.0.0.1",
 		}
 		appGenTx, am, validator, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
@@ -426,6 +467,7 @@ func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 	err = writeGenesisFile(cdc, genFile, initConfig.ChainID, validators, appState)
 =======
 	err = writeGenesisFile(cdc, genFile, gaiaConfig.Init.ChainID, validators, appState)
@@ -433,6 +475,9 @@ func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.
 =======
 	err = writeGenesisFile(cdc, genFile, gaiaInitConfig.ChainID, validators, appState)
 >>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+	err = writeGenesisFile(cdc, genFile, initConfig.ChainID, validators, appState)
+>>>>>>> Fixes requested by Rigel
 	if err != nil {
 		return
 	}
@@ -546,8 +591,6 @@ type AppInit struct {
 	// flags required for application init functions
 	FlagsAppGenState *pflag.FlagSet
 	FlagsAppGenTx    *pflag.FlagSet
-	// Name of the flags required for application init functions
-	FlagsNames GenTxFlagNames
 
 	// create the application genesis tx
 <<<<<<< HEAD

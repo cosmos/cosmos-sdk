@@ -58,17 +58,19 @@ func GaiaAppInit() server.AppInit {
 	fsAppGenTx.String(server.FlagClientHome, DefaultCLIHome,
 		"home directory for the client, used for key generation")
 	fsAppGenTx.Bool(server.FlagOWK, false, "overwrite the accounts created")
+<<<<<<< HEAD
 
 	flagNames := server.GenTxFlagNames{
 		FlagName:       flagName,
 		FlagClientHome: flagClientHome,
 		FlagOWK:        flagOWK,
 	}
+=======
+>>>>>>> Fixes requested by Rigel
 
 	return server.AppInit{
 		FlagsAppGenState: fsAppGenState,
 		FlagsAppGenTx:    fsAppGenTx,
-		FlagsNames:       flagNames,
 		AppGenTx:         GaiaAppGenTx,
 		AppGenState:      GaiaAppGenStateJSON,
 	}

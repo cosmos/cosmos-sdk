@@ -37,9 +37,9 @@ const nodeDirPerm = 0755
 package server
 
 import (
+	"errors"
 	"fmt"
 	"net"
-	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -50,6 +50,7 @@ import (
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
 	cmn "github.com/tendermint/tmlibs/common"
+	"os"
 )
 
 var (
@@ -233,7 +234,7 @@ Optionally, it will fill in persistent_peers list in config file using either ho
 >>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
 Example:
 
-	gaiad testnet --v 4 --o ./output --starting-ip-address 192.168.10.2
+	gaiad testnet --v 4 --output-dir ./output --starting-ip-address 192.168.10.2
 	`,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			config := ctx.Config
@@ -243,7 +244,7 @@ Example:
 	}
 	cmd.Flags().Int(nValidators, 4,
 		"Number of validators to initialize the testnet with")
-	cmd.Flags().String("o", "./mytestnet",
+	cmd.Flags().String(outputDir, "./mytestnet",
 		"Directory to store initialization data for the testnet")
 	cmd.Flags().String(nodeDirPrefix, "node",
 		"Prefix the directory name for each node with (node results in node0, node1, ...)")
@@ -255,23 +256,24 @@ Example:
 
 func testnetWithConfig(config *cfg.Config, ctx *Context, cdc *wire.Codec, appInit AppInit) error {
 
+	outDir := viper.GetString(outputDir)
 	// Generate private key, node ID, initial transaction
 	for i := 0; i < viper.GetInt(nValidators); i++ {
 		nodeDirName := fmt.Sprintf("%s%d", viper.GetString(nodeDirPrefix), i)
-		nodeDir := filepath.Join(viper.GetString(outputDir), nodeDirName, "gaiad")
-		clientDir := filepath.Join(viper.GetString(outputDir), nodeDirName, "gaiacli")
-		gentxsDir := filepath.Join(viper.GetString(outputDir), "gentxs")
+		nodeDir := filepath.Join(outDir, nodeDirName, "gaiad")
+		clientDir := filepath.Join(outDir, nodeDirName, "gaiacli")
+		gentxsDir := filepath.Join(outDir, "gentxs")
 		config.SetRoot(nodeDir)
 
 		err := os.MkdirAll(filepath.Join(nodeDir, "config"), nodeDirPerm)
 		if err != nil {
-			_ = os.RemoveAll(viper.GetString(outputDir))
+			_ = os.RemoveAll(outDir)
 			return err
 		}
 
 		err = os.MkdirAll(clientDir, nodeDirPerm)
 		if err != nil {
-			_ = os.RemoveAll(viper.GetString(outputDir))
+			_ = os.RemoveAll(outDir)
 			return err
 		}
 
@@ -284,7 +286,10 @@ func testnetWithConfig(config *cfg.Config, ctx *Context, cdc *wire.Codec, appIni
 				return err
 			}
 		} else {
-			ip = calculateIP(ip, i)
+			ip, err = calculateIP(ip, i)
+			if err != nil {
+				return err
+			}
 		}
 
 		genTxConfig := gc.GenTxConfig{
@@ -333,9 +338,9 @@ func testnetWithConfig(config *cfg.Config, ctx *Context, cdc *wire.Codec, appIni
 	for i := 0; i < viper.GetInt(nValidators); i++ {
 
 		nodeDirName := fmt.Sprintf("%s%d", viper.GetString(nodeDirPrefix), i)
-		nodeDir := filepath.Join(viper.GetString(outputDir), nodeDirName, "gaiad")
-		gentxsDir := filepath.Join(viper.GetString(outputDir), "gentxs")
-		gaiaInitConfig := InitConfig{
+		nodeDir := filepath.Join(outDir, nodeDirName, "gaiad")
+		gentxsDir := filepath.Join(outDir, "gentxs")
+		initConfig := InitConfig{
 			chainID,
 			true,
 			gentxsDir,
@@ -345,7 +350,7 @@ func testnetWithConfig(config *cfg.Config, ctx *Context, cdc *wire.Codec, appIni
 		config.SetRoot(nodeDir)
 
 		// Run `init` and generate genesis.json and config.toml
-		_, _, _, err := initWithConfig(ctx, cdc, appInit, config, gaiaInitConfig)
+		_, _, _, err := initWithConfig(ctx, cdc, appInit, config, initConfig)
 		if err != nil {
 			return err
 		}
@@ -356,15 +361,14 @@ func testnetWithConfig(config *cfg.Config, ctx *Context, cdc *wire.Codec, appIni
 >>>>>>> Added testnet command
 }
 
-func calculateIP(ip string, i int) string {
+func calculateIP(ip string, i int) (string, error) {
 	ipv4 := net.ParseIP(ip).To4()
 	if ipv4 == nil {
-		fmt.Printf("%v: non ipv4 address\n", ip)
-		os.Exit(1)
+		return "", errors.New(fmt.Sprintf("%v: non ipv4 address\n", ip))
 	}
 
 	for j := 0; j < i; j++ {
 		ipv4[3]++
 	}
-	return ipv4.String()
+	return ipv4.String(), nil
 }

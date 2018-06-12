@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/tendermint/abci/types"
 	cryptoKeys "github.com/tendermint/go-crypto/keys"
 	p2p "github.com/tendermint/tendermint/p2p"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -38,7 +39,7 @@ func TestKeys(t *testing.T) {
 	reg, err := regexp.Compile(`([a-z]+ ){12}`)
 	require.Nil(t, err)
 	match := reg.MatchString(seed)
-	assert.True(t, match, "Returned seed has wrong foramt", seed)
+	assert.True(t, match, "Returned seed has wrong format", seed)
 
 	newName := "test_newname"
 	newPassword := "0987654321"
@@ -276,38 +277,59 @@ func TestTxs(t *testing.T) {
 	cleanup, _, port := InitializeTestLCD(t, 2, []sdk.Address{addr})
 	defer cleanup()
 
-	// TODO: re-enable once we can get txs by tag
-
 	// query wrong
-	// res, body := Request(t, port, "GET", "/txs", nil)
-	// require.Equal(t, http.StatusBadRequest, res.StatusCode, body)
+	res, body := Request(t, port, "GET", "/txs", nil)
+	require.Equal(t, http.StatusBadRequest, res.StatusCode, body)
 
 	// query empty
-	// res, body = Request(t, port, "GET", fmt.Sprintf("/txs?tag=coin.sender='%s'", "8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6"), nil)
-	// require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	// assert.Equal(t, "[]", body)
+	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?tag=sender_bech32='%s'", "cosmosaccaddr1jawd35d9aq4u76sr3fjalmcqc8hqygs9gtnmv3"), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	assert.Equal(t, "[]", body)
 
 	// create TX
-	_, resultTx := doSend(t, port, seed, name, password, addr)
+	receiveAddr, resultTx := doSend(t, port, seed, name, password, addr)
 
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx is findable
-	res, body := Request(t, port, "GET", fmt.Sprintf("/txs/%s", resultTx.Hash), nil)
+	res, body = Request(t, port, "GET", fmt.Sprintf("/txs/%s", resultTx.Hash), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	// // query sender
-	// res, body = Request(t, port, "GET", fmt.Sprintf("/txs?tag=coin.sender='%s'", addr), nil)
-	// require.Equal(t, http.StatusOK, res.StatusCode, body)
+	type txInfo struct {
+		Height int64                  `json:"height"`
+		Tx     sdk.Tx                 `json:"tx"`
+		Result abci.ResponseDeliverTx `json:"result"`
+	}
+	var indexedTxs []txInfo
 
-	// assert.NotEqual(t, "[]", body)
+	// check if tx is queryable
+	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?tag=tx.hash='%s'", resultTx.Hash), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	assert.NotEqual(t, "[]", body)
 
-	// // query receiver
-	// res, body = Request(t, port, "GET", fmt.Sprintf("/txs?tag=coin.receiver='%s'", receiveAddr), nil)
-	// require.Equal(t, http.StatusOK, res.StatusCode, body)
+	err := cdc.UnmarshalJSON([]byte(body), &indexedTxs)
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(indexedTxs))
 
-	// assert.NotEqual(t, "[]", body)
+	// query sender
+	addrBech := sdk.MustBech32ifyAcc(addr)
+	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?tag=sender_bech32='%s'", addrBech), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	err = cdc.UnmarshalJSON([]byte(body), &indexedTxs)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(indexedTxs), "%v", indexedTxs) // there are 2 txs created with doSend
+	assert.Equal(t, resultTx.Height, indexedTxs[0].Height)
+
+	// query recipient
+	receiveAddrBech := sdk.MustBech32ifyAcc(receiveAddr)
+	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?tag=recipient_bech32='%s'", receiveAddrBech), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	err = cdc.UnmarshalJSON([]byte(body), &indexedTxs)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(indexedTxs))
+	assert.Equal(t, resultTx.Height, indexedTxs[0].Height)
 }
 
 func TestValidatorsQuery(t *testing.T) {
@@ -333,7 +355,7 @@ func TestValidatorsQuery(t *testing.T) {
 }
 
 func TestBonding(t *testing.T) {
-	name, password := "test", "1234567890"
+	name, password, denom := "test", "1234567890", "steak"
 	addr, seed := CreateAddr(t, "test", password, GetKB(t))
 	cleanup, pks, port := InitializeTestLCD(t, 2, []sdk.Address{addr})
 	defer cleanup()
@@ -351,7 +373,7 @@ func TestBonding(t *testing.T) {
 	// query sender
 	acc := getAccount(t, port, addr)
 	coins := acc.GetCoins()
-	assert.Equal(t, int64(40), coins.AmountOf("steak"))
+	assert.Equal(t, int64(40), coins.AmountOf(denom))
 
 	// query validator
 	bond := getDelegation(t, port, addr, validator1Owner)
@@ -372,11 +394,11 @@ func TestBonding(t *testing.T) {
 	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
-	// XXX fix unbond math
-	//// query sender
+	// TODO fix shares fn in staking
+	// query sender
 	//acc = getAccount(t, port, addr)
 	//coins = acc.GetCoins()
-	//assert.Equal(t, int64(70), coins.AmountOf("steak"))
+	//assert.Equal(t, int64(70), coins.AmountOf(denom))
 }
 
 //_____________________________________________________________________________

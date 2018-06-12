@@ -117,8 +117,8 @@ func TestValidatorBasics(t *testing.T) {
 	resVals = keeper.GetValidatorsBonded(ctx)
 	require.Equal(t, 3, len(resVals))
 	assert.True(ValEq(t, validators[0], resVals[2])) // order doesn't matter here
-	assert.True(ValEq(t, validators[1], resVals[0]))
-	assert.True(ValEq(t, validators[2], resVals[1]))
+	assert.True(ValEq(t, validators[1], resVals[1]))
+	assert.True(ValEq(t, validators[2], resVals[0]))
 
 	// remove a record
 	keeper.removeValidator(ctx, validators[1].Owner)

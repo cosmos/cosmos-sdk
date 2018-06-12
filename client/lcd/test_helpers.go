@@ -17,8 +17,7 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
-	cryptoKeys "github.com/tendermint/go-crypto/keys"
-	cfg "github.com/tendermint/tendermint/config"
+	crkeys "github.com/tendermint/go-crypto/keys"
 	tmcfg "github.com/tendermint/tendermint/config"
 	nm "github.com/tendermint/tendermint/node"
 	pvm "github.com/tendermint/tendermint/privval"
@@ -29,18 +28,15 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
-	client "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/server"
-	tests "github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	crkeys "github.com/tendermint/go-crypto/keys"
 )
-
-var globalConfig *cfg.Config
 
 // f**ing long, but unique for each test
 func makePathname() string {
@@ -49,48 +45,45 @@ func makePathname() string {
 	if err != nil {
 		panic(err)
 	}
-	// fmt.Println(p)
 	sep := string(filepath.Separator)
 	return strings.Replace(p, sep, "_", -1)
 }
 
 // GetConfig returns a config for the test cases as a singleton
-func GetConfig() *cfg.Config {
-	if globalConfig == nil {
-		pathname := makePathname()
-		globalConfig = cfg.ResetTestRoot(pathname)
+func GetConfig() *tmcfg.Config {
+	pathname := makePathname()
+	config := tmcfg.ResetTestRoot(pathname)
 
-		tmAddr, _, err := server.FreeTCPAddr()
-		if err != nil {
-			panic(err)
-		}
-		rcpAddr, _, err := server.FreeTCPAddr()
-		if err != nil {
-			panic(err)
-		}
-
-		globalConfig.P2P.ListenAddress = tmAddr
-		globalConfig.RPC.ListenAddress = rcpAddr
-		globalConfig.TxIndex.IndexTags = "app.creator" // see kvstore application
+	tmAddr, _, err := server.FreeTCPAddr()
+	if err != nil {
+		panic(err)
 	}
-	return globalConfig
+	rcpAddr, _, err := server.FreeTCPAddr()
+	if err != nil {
+		panic(err)
+	}
+
+	config.P2P.ListenAddress = tmAddr
+	config.RPC.ListenAddress = rcpAddr
+	return config
 }
 
 // get the lcd test keybase
+// note can't use a memdb because the request is expecting to interact with the default location
 func GetKB(t *testing.T) crkeys.Keybase {
 	dir, err := ioutil.TempDir("", "lcd_test")
 	require.NoError(t, err)
 	viper.Set(cli.HomeFlag, dir)
-	kb, err := keys.GetKeyBase() // dbm.NewMemDB()) // :(
+	keybase, err := keys.GetKeyBase() // dbm.NewMemDB()) // :(
 	require.NoError(t, err)
-	return kb
+	return keybase
 }
 
 // add an address to the store return name and password
 func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (addr sdk.Address, seed string) {
-	var info cryptoKeys.Info
+	var info crkeys.Info
 	var err error
-	info, seed, err = kb.Create(name, password, cryptoKeys.AlgoEd25519)
+	info, seed, err = kb.Create(name, password, crkeys.AlgoEd25519)
 	require.NoError(t, err)
 	addr = info.PubKey.Address()
 	return
@@ -104,6 +97,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 	config := GetConfig()
 	config.Consensus.TimeoutCommit = 1000
 	config.Consensus.SkipTimeoutCommit = false
+	config.TxIndex.IndexAllTags = true
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	logger = log.NewFilter(logger, log.AllowError())
@@ -190,10 +184,10 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 // Create & start in-process tendermint node with memdb
 // and in-process abci application.
 // TODO: need to clean up the WAL dir or enable it to be not persistent
-func startTM(cfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc, privVal tmtypes.PrivValidator, app abci.Application) (*nm.Node, error) {
+func startTM(tmcfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc, privVal tmtypes.PrivValidator, app abci.Application) (*nm.Node, error) {
 	genDocProvider := func() (*tmtypes.GenesisDoc, error) { return genDoc, nil }
 	dbProvider := func(*nm.DBContext) (dbm.DB, error) { return dbm.NewMemDB(), nil }
-	n, err := nm.NewNode(cfg,
+	n, err := nm.NewNode(tmcfg,
 		privVal,
 		proxy.NewLocalClientCreator(app),
 		genDocProvider,
@@ -209,7 +203,7 @@ func startTM(cfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc, p
 	}
 
 	// wait for rpc
-	tests.WaitForRPC(GetConfig().RPC.ListenAddress)
+	tests.WaitForRPC(tmcfg.RPC.ListenAddress)
 
 	logger.Info("Tendermint running!")
 	return n, err

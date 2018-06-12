@@ -117,7 +117,7 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 		AccountNumbers: []int64{accnum},
 		Sequences:      []int64{sequence},
 		Msg:            msg,
-		Fee:            auth.NewStdFee(10000, sdk.Coin{}), // TODO run simulate to estimate gas?
+		Fee:            auth.NewStdFee(ctx.Gas, sdk.Coin{}), // TODO run simulate to estimate gas?
 	}
 
 	keybase, err := keys.GetKeyBase()

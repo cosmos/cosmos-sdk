@@ -91,10 +91,7 @@ func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 		if err != nil {
 			return nil, err
 		}
-		pubkey, err := priv.PubKey()
-		if err != nil {
-			return nil, err
-		}
+		pubkey := priv.PubKey()
 		return pubkey.Address(), nil
 	}
 
@@ -164,38 +161,6 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 // sign and build the transaction from the msg
 func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
 
-	ctx, err = EnsureAccountNumber(ctx)
-	if err != nil {
-		return nil, err
-	}
-	// default to next sequence number if none provided
-	ctx, err = EnsureSequence(ctx)
-	if err != nil {
-		return nil, err
-	}
-	sig, err := priv.Sign(bz)
-	if err != nil {
-		return nil, err
-	}
-	pubkey, err := priv.PubKey()
-	if err != nil {
-		return nil, err
-	}
-	sigs := []auth.StdSignature{{
-		PubKey:    pubkey,
-		Signature: sig,
-		Sequence:  sequence,
-	}}
-
-	// marshal bytes
-	tx := auth.NewStdTx(signMsg.Msg, signMsg.Fee, sigs)
-
-	return cdc.MarshalBinary(tx)
-}
-
-// sign and build the transaction from the msg
-func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
-
 	// default to next sequence number if none provided
 	ctx, err = EnsureSequence(ctx)
 	if err != nil {
@@ -203,20 +168,13 @@ func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg sdk.Msg, cdc *w
 	}
 
 	var txBytes []byte
-	if ctx.UseLedger {
-		txBytes, err = ctx.SignAndBuildLedger(msg, cdc)
-		if err != nil {
-			return nil, fmt.Errorf("Error signing with Ledger: %v", err)
-		}
-	} else {
-		passphrase, err := ctx.GetPassphraseFromStdin(name)
-		if err != nil {
-			return nil, fmt.Errorf("Error fetching passphrase: %v", err)
-		}
-		txBytes, err = ctx.SignAndBuild(name, passphrase, msg, cdc)
-		if err != nil {
-			return nil, fmt.Errorf("Error signing transaction: %v", err)
-		}
+	passphrase, err := ctx.GetPassphraseFromStdin(name)
+	if err != nil {
+		return nil, fmt.Errorf("Error fetching passphrase: %v", err)
+	}
+	txBytes, err = ctx.SignAndBuild(name, passphrase, msg, cdc)
+	if err != nil {
+		return nil, fmt.Errorf("Error signing transaction: %v", err)
 	}
 
 	return ctx.BroadcastTx(txBytes)

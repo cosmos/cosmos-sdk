@@ -33,7 +33,7 @@ func CheckBalance(t *testing.T, app *App, addr sdk.Address, exp sdk.Coins) {
 }
 
 // generate a signed transaction
-func GenTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) auth.StdTx {
+func GenTx(msg sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKeyEd25519) auth.StdTx {
 
 	// make the transaction free
 	fee := auth.StdFee{
@@ -44,19 +44,20 @@ func GenTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) auth.StdTx {
 	sigs := make([]auth.StdSignature, len(priv))
 	for i, p := range priv {
 		sigs[i] = auth.StdSignature{
-			PubKey:    p.PubKey(),
-			Signature: p.Sign(auth.StdSignBytes(chainID, seq, fee, msg)),
-			Sequence:  seq[i],
+			PubKey:        p.PubKey(),
+			Signature:     p.Sign(auth.StdSignBytes(chainID, accnums, seq, fee, msg)),
+			AccountNumber: accnums[i],
+			Sequence:      seq[i],
 		}
 	}
 	return auth.NewStdTx(msg, fee, sigs)
 }
 
 // simulate a block
-func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
+func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, accnums []int64, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
 
 	// Sign the tx
-	tx := GenTx(msg, seq, priv...)
+	tx := GenTx(msg, accnums, seq, priv...)
 
 	// Run a Check
 	res := app.Check(tx)

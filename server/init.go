@@ -26,6 +26,7 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 
 	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
+	gc "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
@@ -38,11 +39,62 @@ type GenesisTx struct {
 	AppGenTx  json.RawMessage          `json:"app_gen_tx"`
 }
 
+// Names of input parameters coming from app
+<<<<<<< HEAD
+<<<<<<< HEAD
+/*type GenTxFlagNames struct {
+=======
+type GenTxFlagNames struct {
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+/*type GenTxFlagNames struct {
+>>>>>>> Fixes requested by Rigel
+	FlagName       string
+	FlagClientHome string
+	FlagOWK        string
+	FlagIP         string
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> Fixes requested by Rigel
+}*/
+
 var (
-	flagOverwrite = "overwrite"
-	flagGenTxs    = "gen-txs"
-	flagIP        = "ip"
-	flagChainID   = "chain-id"
+	FlagName       = "name"
+	FlagClientHome = "home-client"
+	FlagOWK        = "owk"
+
+	// bonded tokens given to genesis validators/accounts
+	FreeFermionVal  = int64(100)
+	FreeFermionsAcc = int64(50)
+)
+<<<<<<< HEAD
+
+// Storage for init command input parameters
+type InitConfig struct {
+	ChainID   string
+	GenTxs    bool
+	GenTxsDir string
+	Overwrite bool
+=======
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+}
+=======
+>>>>>>> Fixes requested by Rigel
+
+// Storage for init command input parameters
+type InitConfig struct {
+	ChainID   string
+	GenTxs    bool
+	GenTxsDir string
+	Overwrite bool
+}
+
+var (
+	FlagOverwrite = "overwrite"
+	FlagGenTxs    = "gen-txs"
+	FlagIP        = "ip"
+	FlagChainID   = "chain-id"
 )
 
 // get cmd to initialize all files for tendermint and application
@@ -54,50 +106,61 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 		RunE: func(_ *cobra.Command, args []string) error {
 
 			config := ctx.Config
-			nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
-			if err != nil {
-				return err
-			}
-			nodeID := string(nodeKey.ID())
-			pubKey := readOrCreatePrivValidator(config)
+			config.SetRoot(viper.GetString(tmcli.HomeFlag))
+<<<<<<< HEAD
+<<<<<<< HEAD
 
-			appGenTx, cliPrint, validator, err := appInit.AppGenTx(cdc, pubKey)
-			if err != nil {
-				return err
-			}
+			ip := viper.GetString(FlagIP)
+=======
 
-			ip := viper.GetString(flagIP)
+<<<<<<< HEAD
+			ip := viper.GetString(appInit.FlagsNames.FlagIP)
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+			ip := viper.GetString(FlagIP)
+>>>>>>> Fixes requested by Rigel
 			if len(ip) == 0 {
-				ip, err = externalIP()
+				eip, err := externalIP()
 				if err != nil {
 					return err
 				}
+				ip = eip
 			}
 
-			tx := GenesisTx{
-				NodeID:    nodeID,
-				IP:        ip,
-				Validator: validator,
-				AppGenTx:  appGenTx,
+<<<<<<< HEAD
+<<<<<<< HEAD
+			genTxConfig := gc.GenTxConfig{
+				viper.GetString(FlagName),
+				viper.GetString(FlagClientHome),
+				viper.GetBool(FlagOWK),
+<<<<<<< HEAD
+				ip,
 			}
-			bz, err := wire.MarshalJSONIndent(cdc, tx)
+			cliPrint, genTxFile, err := gentxWithConfig(ctx, cdc, appInit, config, genTxConfig)
+=======
+			cliPrint, genTxFile, err := gentxWithConfig(config,nil,ctx,cdc,appInit)
+>>>>>>> Added testnet command
+=======
+			genTxConfig := GenTxConfig{
+=======
+			genTxConfig := gc.GenTxConfig{
+>>>>>>> Separated GenTxConfig into a server/config package so both the server package and the mock package can use it
+				viper.GetString(appInit.FlagsNames.FlagName),
+				viper.GetString(appInit.FlagsNames.FlagClientHome),
+				viper.GetBool(appInit.FlagsNames.FlagOWK),
+=======
+>>>>>>> Fixes requested by Rigel
+				ip,
+			}
+<<<<<<< HEAD
+			cliPrint, genTxFile, err := gentxWithConfig(config, genTxConfig, ctx, cdc, appInit)
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+			cliPrint, genTxFile, err := gentxWithConfig(ctx, cdc, appInit, config, genTxConfig)
+>>>>>>> Fixed function parameter list - now starts with ctx
 			if err != nil {
 				return err
 			}
-			genTxFile := json.RawMessage(bz)
-			name := fmt.Sprintf("gentx-%v.json", nodeID)
-			writePath := filepath.Join(viper.GetString(tmcli.HomeFlag), "config", "gentx")
-			file := filepath.Join(writePath, name)
-			err = cmn.EnsureDir(writePath, 0700)
-			if err != nil {
-				return err
-			}
-			err = cmn.WriteFile(file, bz, 0644)
-			if err != nil {
-				return err
-			}
-
-			// print out some key information
 			toPrint := struct {
 				AppMessage json.RawMessage `json:"app_message"`
 				GenTxFile  json.RawMessage `json:"gen_tx_file"`
@@ -113,9 +176,93 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().String(flagIP, "", "external facing IP to use if left blank IP will be retrieved from this machine")
+	cmd.Flags().String(FlagIP, "", "external facing IP to use if left blank IP will be retrieved from this machine")
 	cmd.Flags().AddFlagSet(appInit.FlagsAppGenTx)
 	return cmd
+}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+func gentxWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, genTxConfig gc.GenTxConfig) (
+=======
+func gentxWithConfig(config *cfg.Config, gaiaConfig *gaiacfg.Config, ctx *Context, cdc *wire.Codec, appInit AppInit) (
+>>>>>>> Added testnet command
+=======
+func gentxWithConfig(config *cfg.Config, genTxConfig GenTxConfig, ctx *Context, cdc *wire.Codec, appInit AppInit) (
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+func gentxWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, genTxConfig GenTxConfig) (
+>>>>>>> Fixed function parameter list - now starts with ctx
+=======
+func gentxWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, genTxConfig gc.GenTxConfig) (
+>>>>>>> Separated GenTxConfig into a server/config package so both the server package and the mock package can use it
+	cliPrint json.RawMessage, genTxFile json.RawMessage, err error) {
+	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
+	if err != nil {
+		return
+	}
+	nodeID := string(nodeKey.ID())
+	pubKey := readOrCreatePrivValidator(config)
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+	appGenTx, cliPrint, validator, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
+=======
+	appGenTx, cliPrint, validator, err := appInit.AppGenTx(cdc, pubKey, gaiaConfig)
+>>>>>>> Added testnet command
+=======
+	appGenTx, cliPrint, validator, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+	if err != nil {
+		return
+	}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+	tx := GenesisTx{
+		NodeID:    nodeID,
+		IP:        genTxConfig.IP,
+=======
+	ip := viper.GetString(flagIP)
+	if len(ip) == 0 {
+		ip, err = externalIP()
+		if err != nil {
+			return
+		}
+	}
+
+	tx := GenesisTx{
+		NodeID:    nodeID,
+		IP:        ip,
+>>>>>>> Added testnet command
+=======
+	tx := GenesisTx{
+		NodeID:    nodeID,
+		IP:        genTxConfig.IP,
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+		Validator: validator,
+		AppGenTx:  appGenTx,
+	}
+	bz, err := wire.MarshalJSONIndent(cdc, tx)
+	if err != nil {
+		return
+	}
+	genTxFile = json.RawMessage(bz)
+	name := fmt.Sprintf("gentx-%v.json", nodeID)
+	writePath := filepath.Join(config.RootDir, "config", "gentx")
+	file := filepath.Join(writePath, name)
+	err = cmn.EnsureDir(writePath, 0700)
+	if err != nil {
+		return
+	}
+	err = cmn.WriteFile(file, bz, 0644)
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 // get cmd to initialize all files for tendermint and application
@@ -127,58 +274,38 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 		RunE: func(_ *cobra.Command, _ []string) error {
 
 			config := ctx.Config
-			nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
+			config.SetRoot(viper.GetString(tmcli.HomeFlag))
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+			initConfig := InitConfig{
+=======
+			gaiaInitConfig := InitConfig{
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+			initConfig := InitConfig{
+>>>>>>> Fixes requested by Rigel
+				viper.GetString(flagChainID),
+				viper.GetBool(flagGenTxs),
+				filepath.Join(config.RootDir, "config", "gentx"),
+				viper.GetBool(flagOverwrite),
+			}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+			chainID, nodeID, appMessage, err := initWithConfig(ctx, cdc, appInit, config, initConfig)
+=======
+			chainID, nodeID, appMessage, err := initWithConfig(config,nil, ctx,cdc,appInit)
+>>>>>>> Added testnet command
+=======
+			chainID, nodeID, appMessage, err := initWithConfig(ctx, cdc, appInit, config, gaiaInitConfig)
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+			chainID, nodeID, appMessage, err := initWithConfig(ctx, cdc, appInit, config, initConfig)
+>>>>>>> Fixes requested by Rigel
 			if err != nil {
 				return err
 			}
-			nodeID := string(nodeKey.ID())
-			pubKey := readOrCreatePrivValidator(config)
-
-			chainID := viper.GetString(flagChainID)
-			if chainID == "" {
-				chainID = cmn.Fmt("test-chain-%v", cmn.RandStr(6))
-			}
-
-			genFile := config.GenesisFile()
-			if !viper.GetBool(flagOverwrite) && cmn.FileExists(genFile) {
-				return fmt.Errorf("genesis.json file already exists: %v", genFile)
-			}
-
-			// process genesis transactions, or otherwise create one for defaults
-			var appMessage json.RawMessage
-			var appGenTxs []json.RawMessage
-			var validators []tmtypes.GenesisValidator
-			var persistentPeers string
-
-			if viper.GetBool(flagGenTxs) {
-				genTxsDir := filepath.Join(viper.GetString(tmcli.HomeFlag), "config", "gentx")
-				validators, appGenTxs, persistentPeers, err = processGenTxs(genTxsDir, cdc, appInit)
-				if err != nil {
-					return err
-				}
-				config.P2P.PersistentPeers = persistentPeers
-				configFilePath := filepath.Join(viper.GetString(tmcli.HomeFlag), "config", "config.toml")
-				cfg.WriteConfigFile(configFilePath, config)
-			} else {
-				appGenTx, am, validator, err := appInit.AppGenTx(cdc, pubKey)
-				appMessage = am
-				if err != nil {
-					return err
-				}
-				validators = []tmtypes.GenesisValidator{validator}
-				appGenTxs = []json.RawMessage{appGenTx}
-			}
-
-			appState, err := appInit.AppGenState(cdc, appGenTxs)
-			if err != nil {
-				return err
-			}
-
-			err = writeGenesisFile(cdc, genFile, chainID, validators, appState)
-			if err != nil {
-				return err
-			}
-
 			// print out some key information
 			toPrint := struct {
 				ChainID    string          `json:"chain_id"`
@@ -194,7 +321,6 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				return err
 			}
 			fmt.Println(string(out))
-
 			return nil
 		},
 	}
@@ -205,6 +331,158 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	cmd.Flags().AddFlagSet(appInit.FlagsAppGenTx) // need to add this flagset for when no GenTx's provided
 	cmd.AddCommand(GenTxCmd(ctx, cdc, appInit))
 	return cmd
+}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, initConfig InitConfig) (
+=======
+func initWithConfig(config *cfg.Config, gaiaConfig *gaiacfg.Config, ctx *Context, cdc *wire.Codec, appInit AppInit) (
+>>>>>>> Added testnet command
+=======
+func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, gaiaInitConfig InitConfig) (
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, initConfig InitConfig) (
+>>>>>>> Fixes requested by Rigel
+	chainID string, nodeID string, appMessage json.RawMessage, err error) {
+	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
+	if err != nil {
+		return
+	}
+	nodeID = string(nodeKey.ID())
+	pubKey := readOrCreatePrivValidator(config)
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+	if initConfig.ChainID == "" {
+		initConfig.ChainID = fmt.Sprintf("test-chain-%v", cmn.RandStr(6))
+	}
+	chainID = initConfig.ChainID
+
+	genFile := config.GenesisFile()
+	if !initConfig.Overwrite && cmn.FileExists(genFile) {
+=======
+	if gaiaConfig == nil {
+		gaiaConfig = gaiacfg.DefaultConfig()
+		gaiaConfig.Init.ChainID = viper.GetString(flagChainID)
+		gaiaConfig.Init.Overwrite = viper.GetBool(flagOverwrite)
+		gaiaConfig.Init.GenTxs = viper.GetBool(flagGenTxs)
+		gaiaConfig.Init.GenTxsDir = filepath.Join(config.RootDir, "config", "gentx")
+	}
+=======
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+
+	if initConfig.ChainID == "" {
+		initConfig.ChainID = fmt.Sprintf("test-chain-%v", cmn.RandStr(6))
+	}
+	chainID = initConfig.ChainID
+
+	genFile := config.GenesisFile()
+<<<<<<< HEAD
+<<<<<<< HEAD
+	if !gaiaConfig.Init.Overwrite && cmn.FileExists(genFile) {
+>>>>>>> Added testnet command
+=======
+	if !gaiaInitConfig.Overwrite && cmn.FileExists(genFile) {
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+	if !initConfig.Overwrite && cmn.FileExists(genFile) {
+>>>>>>> Fixes requested by Rigel
+		err = fmt.Errorf("genesis.json file already exists: %v", genFile)
+		return
+	}
+
+	// process genesis transactions, or otherwise create one for defaults
+	var appGenTxs []json.RawMessage
+	var validators []tmtypes.GenesisValidator
+	var persistentPeers string
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+	if initConfig.GenTxs {
+		validators, appGenTxs, persistentPeers, err = processGenTxs(initConfig.GenTxsDir, cdc, appInit)
+=======
+	if gaiaConfig.Init.GenTxs {
+		genTxsDir := gaiaConfig.Init.GenTxsDir
+		validators, appGenTxs, persistentPeers, err = processGenTxs(genTxsDir, cdc, appInit)
+>>>>>>> Added testnet command
+=======
+	if gaiaInitConfig.GenTxs {
+		validators, appGenTxs, persistentPeers, err = processGenTxs(gaiaInitConfig.GenTxsDir, cdc, appInit)
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+	if initConfig.GenTxs {
+		validators, appGenTxs, persistentPeers, err = processGenTxs(initConfig.GenTxsDir, cdc, appInit)
+>>>>>>> Fixes requested by Rigel
+		if err != nil {
+			return
+		}
+		config.P2P.PersistentPeers = persistentPeers
+		configFilePath := filepath.Join(config.RootDir, "config", "config.toml")
+		cfg.WriteConfigFile(configFilePath, config)
+	} else {
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+		genTxConfig := gc.GenTxConfig{
+			viper.GetString(FlagName),
+			viper.GetString(FlagClientHome),
+			viper.GetBool(FlagOWK),
+<<<<<<< HEAD
+			"127.0.0.1",
+		}
+		appGenTx, am, validator, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
+=======
+		appGenTx, am, validator, err := appInit.AppGenTx(cdc, pubKey, nil)
+>>>>>>> Added testnet command
+=======
+		genTxConfig := GenTxConfig{
+=======
+		genTxConfig := gc.GenTxConfig{
+>>>>>>> Separated GenTxConfig into a server/config package so both the server package and the mock package can use it
+			viper.GetString(appInit.FlagsNames.FlagName),
+			viper.GetString(appInit.FlagsNames.FlagClientHome),
+			viper.GetBool(appInit.FlagsNames.FlagOWK),
+=======
+>>>>>>> Fixes requested by Rigel
+			"127.0.0.1",
+		}
+		appGenTx, am, validator, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+		appMessage = am
+		if err != nil {
+			return "", "", nil, err
+		}
+		validators = []tmtypes.GenesisValidator{validator}
+		appGenTxs = []json.RawMessage{appGenTx}
+	}
+
+	appState, err := appInit.AppGenState(cdc, appGenTxs)
+	if err != nil {
+		return
+	}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+	err = writeGenesisFile(cdc, genFile, initConfig.ChainID, validators, appState)
+=======
+	err = writeGenesisFile(cdc, genFile, gaiaConfig.Init.ChainID, validators, appState)
+>>>>>>> Added testnet command
+=======
+	err = writeGenesisFile(cdc, genFile, gaiaInitConfig.ChainID, validators, appState)
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+	err = writeGenesisFile(cdc, genFile, initConfig.ChainID, validators, appState)
+>>>>>>> Fixes requested by Rigel
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 // append a genesis-piece
@@ -315,7 +593,19 @@ type AppInit struct {
 	FlagsAppGenTx    *pflag.FlagSet
 
 	// create the application genesis tx
-	AppGenTx func(cdc *wire.Codec, pk crypto.PubKey) (
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+	AppGenTx func(cdc *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTxConfig) (
+=======
+	AppGenTx func(cdc *wire.Codec, pk crypto.PubKey, gaiaConfig *gaiacfg.Config) (
+>>>>>>> Added testnet command
+=======
+	AppGenTx func(cdc *wire.Codec, pk crypto.PubKey, genTxConfig GenTxConfig) (
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+	AppGenTx func(cdc *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTxConfig) (
+>>>>>>> Separated GenTxConfig into a server/config package so both the server package and the mock package can use it
 		appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error)
 
 	// AppGenState creates the core parameters initialization. It takes in a
@@ -337,7 +627,19 @@ type SimpleGenTx struct {
 }
 
 // Generate a genesis transaction
-func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTxConfig) (
+=======
+func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey, gaiaConfig *gaiacfg.Config) (
+>>>>>>> Added testnet command
+=======
+func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig GenTxConfig) (
+>>>>>>> Finished testnet command and introduced localnet targets in Makefile, together with gaiadnode Docker image
+=======
+func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTxConfig) (
+>>>>>>> Separated GenTxConfig into a server/config package so both the server package and the mock package can use it
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
 	var addr sdk.Address

@@ -29,6 +29,7 @@ type sendBody struct {
 	ChainID          string    `json:"chain_id"`
 	AccountNumber    int64     `json:"account_number"`
 	Sequence         int64     `json:"sequence"`
+	Gas              int64     `json:"gas"`
 }
 
 var msgCdc = wire.NewCodec()
@@ -86,6 +87,9 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 			w.Write([]byte(err.Error()))
 			return
 		}
+
+		// add gas to context
+		ctx = ctx.WithGas(m.Gas)
 
 		// sign
 		ctx = ctx.WithAccountNumber(m.AccountNumber)

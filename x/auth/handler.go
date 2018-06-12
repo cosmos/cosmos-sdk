@@ -29,6 +29,6 @@ func handleMsgChangeKey(ctx sdk.Context, am AccountMapper, msg MsgChangeKey) sdk
 	}
 
 	return sdk.Result{
-		Tags: sdk.NewTags("action", []byte("changePubkey"), "address", msg.Address.Bytes(), "pubkey", msg.NewPubKey.Bytes()),
+		Tags: sdk.NewTags("action", []byte("changePubkey"), "address", sdk.AddressToBytes(msg.Address), "pubkey", msg.NewPubKey.Bytes()),
 	}
 }

@@ -72,7 +72,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg MsgCreateValidator, k Keeper)
 	k.setValidatorByPubKeyIndex(ctx, validator)
 	tags := sdk.NewTags(
 		"action", []byte("createValidator"),
-		"validator", msg.ValidatorAddr.Bytes(),
+		"validator", sdk.AddressToBytes(msg.ValidatorAddr),
 		"moniker", []byte(msg.Description.Moniker),
 		"identity", []byte(msg.Description.Identity),
 	)
@@ -110,7 +110,7 @@ func handleMsgEditValidator(ctx sdk.Context, msg MsgEditValidator, k Keeper) sdk
 	k.updateValidator(ctx, validator)
 	tags := sdk.NewTags(
 		"action", []byte("editValidator"),
-		"validator", msg.ValidatorAddr.Bytes(),
+		"validator", sdk.AddressToBytes(msg.ValidatorAddr),
 		"moniker", []byte(msg.Description.Moniker),
 		"identity", []byte(msg.Description.Identity),
 	)
@@ -172,7 +172,7 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	k.setPool(ctx, pool)
 	k.setDelegation(ctx, bond)
 	k.updateValidator(ctx, validator)
-	tags := sdk.NewTags("action", []byte("delegate"), "delegator", delegatorAddr.Bytes(), "validator", validator.Owner.Bytes())
+	tags := sdk.NewTags("action", []byte("delegate"), "delegator", sdk.AddressToBytes(delegatorAddr), "validator", sdk.AddressToBytes(validator.Owner))
 	return tags, nil
 }
 
@@ -257,7 +257,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 		k.removeValidator(ctx, validator.Owner)
 	}
 
-	tags := sdk.NewTags("action", []byte("unbond"), "delegator", msg.DelegatorAddr.Bytes(), "validator", msg.ValidatorAddr.Bytes())
+	tags := sdk.NewTags("action", []byte("unbond"), "delegator", sdk.AddressToBytes(msg.DelegatorAddr), "validator", sdk.AddressToBytes(msg.ValidatorAddr))
 	return sdk.Result{
 		Tags: tags,
 	}

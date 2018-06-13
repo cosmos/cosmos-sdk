@@ -116,7 +116,7 @@ OUTER:
 		lengthKey := ibc.EgressLengthKey(toChainID)
 		egressLengthbz, err := query(fromChainNode, lengthKey, c.ibcStore)
 		if err != nil {
-			c.logger.Error("Error querying outgoing packet list length", "err", err)
+			c.logger.Error("error querying outgoing packet list length", "err", err)
 			continue OUTER //TODO replace with continue (I think it should just to the correct place where OUTER is now)
 		}
 		var egressLength int64
@@ -134,14 +134,14 @@ OUTER:
 		for i := processed; i < egressLength; i++ {
 			egressbz, err := query(fromChainNode, ibc.EgressKey(toChainID, i), c.ibcStore)
 			if err != nil {
-				c.logger.Error("Error querying egress packet", "err", err)
+				c.logger.Error("error querying egress packet", "err", err)
 				continue OUTER // TODO replace to break, will break first loop then send back to the beginning (aka OUTER)
 			}
 
 			err = c.broadcastTx(seq, toChainNode, c.refine(egressbz, i, passphrase))
 			seq++
 			if err != nil {
-				c.logger.Error("Error broadcasting ingress packet", "err", err)
+				c.logger.Error("error broadcasting ingress packet", "err", err)
 				continue OUTER // TODO replace to break, will break first loop then send back to the beginning (aka OUTER)
 			}
 

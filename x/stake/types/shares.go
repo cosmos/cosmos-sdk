@@ -119,9 +119,9 @@ func (s PoolShares) ToBonded(p Pool) PoolShares {
 func (s PoolShares) Tokens(p Pool) sdk.Rat {
 	switch s.Status {
 	case sdk.Bonded:
-		return p.UnbondedShareExRate().Mul(s.Amount) // (tokens/shares) * shares
+		return p.BondedShareExRate().Mul(s.Amount) // (tokens/shares) * shares
 	case sdk.Unbonding:
-		return p.UnbondedShareExRate().Mul(s.Amount)
+		return p.UnbondingShareExRate().Mul(s.Amount)
 	case sdk.Unbonded:
 		return p.UnbondedShareExRate().Mul(s.Amount)
 	default:

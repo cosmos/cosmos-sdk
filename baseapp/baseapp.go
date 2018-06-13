@@ -517,6 +517,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// Match route.
 	msgType := msg.Type()
+	ctx = ctx.WithMsgType(msgType)
+
 	handler := app.router.Route(msgType)
 	if handler == nil {
 		return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()

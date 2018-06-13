@@ -7,6 +7,7 @@
   new testnet, Gaia-6002
 - Gaia-6002 has the same genesis file as Gaia-6001, just with the chain-id
   updated
+- Update from previous testnet [here](https://github.com/cosmos/cosmos-sdk/tree/master/cmd/gaia/testnets#upgrading-from-previous-testnet)
 
 ## *June 13, 2018, 4:30 EST* - New Release
 

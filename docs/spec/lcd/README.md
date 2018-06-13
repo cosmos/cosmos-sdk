@@ -143,6 +143,24 @@ Cosmos-SDK lcd (lite client daemon) acts as a rest-server. It provides a set of 
           Example parameters:
           Example return:
         ```
+    2. **url: /broadcast_tx_commit, Method: POST**
+        ```
+          Functionality: Directly send a transaction and wait until on-chain
+          Example parameters:
+          Example return:
+        ```
+    3. **url: /broadcast_tx_sync, Method: POST**
+        ```
+          Functionality: Directly send a transaction and wait until checkTX is done
+          Example parameters:
+          Example return:
+        ```
+    4. **url: /broadcast_tx_async, Method: POST**
+        ```
+          Functionality: Directly send a transaction asynchronous without wait for anything
+          Example parameters:
+          Example return:
+        ```
 
 4.  **Auth module**
 
@@ -188,27 +206,6 @@ Cosmos-SDK lcd (lite client daemon) acts as a rest-server. It provides a set of 
     3. **url: /stake/delegations, Method: POST**
         ```
           Functionality: send a delegate transaction
-          Example parameters:
-          Example return:
-        ```
-
-8.  **Directly send transactions**
-
-    1. **url: /broadcast_tx_commit, Method: POST**
-        ```
-          Functionality: Directly send a transaction and wait until on-chain
-          Example parameters:
-          Example return:
-        ```
-    2. **url: /broadcast_tx_sync, Method: POST**
-        ```
-          Functionality: Directly send a transaction and wait until checkTX is done
-          Example parameters:
-          Example return:
-        ```
-    3. **url: /broadcast_tx_async, Method: POST**
-        ```
-          Functionality: Directly send a transaction asynchronous without wait for anything
           Example parameters:
           Example return:
         ```

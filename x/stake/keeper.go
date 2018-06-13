@@ -78,6 +78,12 @@ func (k Keeper) setValidatorByPowerIndex(ctx sdk.Context, validator Validator, p
 	store.Set(GetValidatorsByPowerKey(validator, pool), validator.Owner)
 }
 
+// used in testing
+func (k Keeper) validatorByPowerIndexExists(ctx sdk.Context, power []byte) bool {
+	store := ctx.KVStore(k.storeKey)
+	return store.Get(power) != nil
+}
+
 // Get the set of all validators with no limits, used during genesis dump
 func (k Keeper) getAllValidators(ctx sdk.Context) (validators Validators) {
 	store := ctx.KVStore(k.storeKey)

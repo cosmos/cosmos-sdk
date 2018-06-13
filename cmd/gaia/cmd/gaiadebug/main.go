@@ -17,6 +17,7 @@ import (
 func init() {
 	rootCmd.AddCommand(txCmd)
 	rootCmd.AddCommand(pubkeyCmd)
+	rootCmd.AddCommand(hackCmd)
 }
 
 var rootCmd = &cobra.Command{
@@ -35,6 +36,12 @@ var pubkeyCmd = &cobra.Command{
 	Use:   "pubkey",
 	Short: "Decode a pubkey from hex or base64",
 	RunE:  runPubKeyCmd,
+}
+
+var hackCmd = &cobra.Command{
+	Use:   "hack",
+	Short: "Boilerplate to Hack on an existing state by scripting some Go...",
+	RunE:  runHackCmd,
 }
 
 func runPubKeyCmd(cmd *cobra.Command, args []string) error {

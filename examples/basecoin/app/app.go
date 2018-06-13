@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	abci "github.com/tendermint/abci/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
@@ -130,7 +131,7 @@ func (app *BasecoinApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) ab
 
 // Custom logic for basecoin initialization
 func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	stateJSON := req.GenesisBytes
+	stateJSON := req.AppStateBytes
 
 	genesisState := new(types.GenesisState)
 	err := app.cdc.UnmarshalJSON(stateJSON, genesisState)
@@ -145,6 +146,7 @@ func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) 
 			panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 			//	return sdk.ErrGenesisParse("").TraceCause(err, "")
 		}
+		acc.AccountNumber = app.accountMapper.GetNextAccountNumber(ctx)
 		app.accountMapper.SetAccount(ctx, acc)
 	}
 
@@ -155,7 +157,7 @@ func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) 
 }
 
 // Custom logic for state export
-func (app *BasecoinApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
+func (app *BasecoinApp) ExportAppStateAndValidators() (appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
 	ctx := app.NewContext(true, abci.Header{})
 
 	// iterate to get the accounts
@@ -173,5 +175,10 @@ func (app *BasecoinApp) ExportAppStateJSON() (appState json.RawMessage, err erro
 	genState := types.GenesisState{
 		Accounts: accounts,
 	}
-	return wire.MarshalJSONIndent(app.cdc, genState)
+	appState, err = wire.MarshalJSONIndent(app.cdc, genState)
+	if err != nil {
+		return nil, nil, err
+	}
+	validators = stake.WriteValidators(ctx, app.stakeKeeper)
+	return appState, validators, err
 }

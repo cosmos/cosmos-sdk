@@ -14,6 +14,7 @@ docs/_build
 # Data - ideally these don't exist
 examples/basecoin/app/data
 baseapp/data/*
+client/lcd/keys/*
 
 # Testing
 coverage.txt
@@ -25,6 +26,9 @@ profile.out
 *.log
 vagrant
 
-### IDE ###
+# IDE
 .idea/
 *.iml
+
+# Graphviz
+dependency-graph.png

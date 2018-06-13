@@ -167,6 +167,12 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []Validator {
 		if !found {
 			panic(fmt.Sprintf("validator record not found for address: %v\n", address))
 		}
+
+		// Reached to revoked validators, stop iterating
+		if validator.Revoked {
+			iterator.Close()
+			break
+		}
 		if validator.Status() == sdk.Bonded {
 			validators[i] = validator
 			i++

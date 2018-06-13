@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.20.0
+
+*TBD*
+
+## 0.19.0
+
+*June 13, 2018*
+
 BREAKING CHANGES
 * msg.GetSignBytes() now returns bech32-encoded addresses in all cases
 * [lcd] REST end-points now include gas
@@ -14,8 +22,11 @@ IMPROVEMENTS
 * [lcd] refactored to eliminate use of global variables, and interdependent tests
 * Added testnet command to gaiad
 * Added localnet targets to Makefile
+* [x/stake] More stake tests added to test ByPower index
 
 FIXES
+* Fixes consensus fault on testnet - see postmortem [here](https://github.com/cosmos/cosmos-sdk/issues/1197#issuecomment-396823021)
+* [x/stake] bonded inflation removed, non-bonded inflation partially implemented 
 * [lcd] Switch to bech32 for addresses on all human readable inputs and outputs
 * [lcd] fixed tx indexing/querying
 * [cli] Added `--gas` flag to specify transaction gas limit
@@ -24,7 +35,7 @@ FIXES
 
 ## 0.18.0
 
-_2018-06-05_
+*June 9, 2018*
 
 BREAKING CHANGES
 
@@ -87,8 +98,27 @@ BUG FIXES
 * query sequence via account store
 * fixed duplicate pub_key in stake.Validator
 * Auto-sequencing now works correctly
+* [gaiacli] Fix error message when account isn't found when running gaiacli account
 
 
+## 0.17.5
+
+*June 5, 2018*
+
+Update to Tendermint v0.19.9 (Fix evidence reactor, mempool deadlock, WAL panic,
+memory leak)
+
+## 0.17.4
+
+*May 31, 2018*
+
+Update to Tendermint v0.19.7 (WAL fixes and more)
+
+## 0.17.3
+
+*May 29, 2018*
+
+Update to Tendermint v0.19.6 (fix fast-sync halt)
 
 ## 0.17.5
 

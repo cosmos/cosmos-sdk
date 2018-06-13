@@ -33,6 +33,78 @@ func newTestMsgDelegate(delegatorAddr, validatorAddr sdk.Address, amt int64) Msg
 
 //______________________________________________________________________
 
+func TestValidatorByPowerIndex(t *testing.T) {
+	validatorAddr, validatorAddr3 := addrs[0], addrs[1]
+
+	initBond := int64(1000000)
+	initBondStr := "1000"
+	ctx, _, keeper := createTestInput(t, false, initBond)
+
+	// create validator
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, pks[0], initBond)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	assert.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
+
+	// verify the self-delegation exists
+	bond, found := keeper.GetDelegation(ctx, validatorAddr, validatorAddr)
+	require.True(t, found)
+	gotBond := bond.Shares.Evaluate()
+	require.Equal(t, initBond, gotBond,
+		"initBond: %v\ngotBond: %v\nbond: %v\n",
+		initBond, gotBond, bond)
+
+	// verify that the by power index exists
+	validator, found := keeper.GetValidator(ctx, validatorAddr)
+	require.True(t, found)
+	pool := keeper.GetPool(ctx)
+	power := GetValidatorsByPowerKey(validator, pool)
+	require.True(t, keeper.validatorByPowerIndexExists(ctx, power))
+
+	// create a second validator keep it bonded
+	msgCreateValidator = newTestMsgCreateValidator(validatorAddr3, pks[2], int64(1000000))
+	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	assert.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
+
+	// slash and revoke the first validator
+	keeper.Slash(ctx, pks[0], 0, sdk.NewRat(1, 2))
+	keeper.Revoke(ctx, pks[0])
+	validator, found = keeper.GetValidator(ctx, validatorAddr)
+	require.True(t, found)
+	require.Equal(t, sdk.Unbonded, validator.PoolShares.Status)             // ensure is unbonded
+	require.Equal(t, int64(500000), validator.PoolShares.Amount.Evaluate()) // ensure is unbonded
+
+	// the old power record should have been deleted as the power changed
+	assert.False(t, keeper.validatorByPowerIndexExists(ctx, power))
+
+	// but the new power record should have been created
+	validator, found = keeper.GetValidator(ctx, validatorAddr)
+	require.True(t, found)
+	pool = keeper.GetPool(ctx)
+	power2 := GetValidatorsByPowerKey(validator, pool)
+	require.True(t, keeper.validatorByPowerIndexExists(ctx, power2))
+
+	// inflate a bunch
+	for i := 0; i < 20000; i++ {
+		pool = keeper.processProvisions(ctx)
+		keeper.setPool(ctx, pool)
+	}
+
+	// now the new record power index should be the same as the original record
+	power3 := GetValidatorsByPowerKey(validator, pool)
+	assert.Equal(t, power2, power3)
+
+	// unbond self-delegation
+	msgUnbond := NewMsgUnbond(validatorAddr, validatorAddr, "MAX")
+	got = handleMsgUnbond(ctx, msgUnbond, keeper)
+	assert.True(t, got.IsOK(),
+		"got: %v\nmsgUnbond: %v\ninitBondStr: %v\n", got, msgUnbond, initBondStr)
+
+	// verify that by power key nolonger exists
+	_, found = keeper.GetValidator(ctx, validatorAddr)
+	require.False(t, found)
+	assert.False(t, keeper.validatorByPowerIndexExists(ctx, power3))
+}
+
 func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 1000)
 
@@ -42,6 +114,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	assert.True(t, got.IsOK(), "%v", got)
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
+
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status())
 	assert.Equal(t, validatorAddr, validator.Owner)

@@ -12,8 +12,10 @@ IMPROVEMENTS
 * [tests] Application module tests now use a mock application
 * [gaiacli] Fix error message when account isn't found when running gaiacli account
 * [lcd] refactored to eliminate use of global variables, and interdependent tests
+* [x/stake] More stake tests added to test ByPower index
 
 FIXES
+* [x/stake] bonded inflation removed, non-bonded inflation partially implemented 
 * [lcd] Switch to bech32 for addresses on all human readable inputs and outputs
 * [lcd] fixed tx indexing/querying
 * [cli] Added `--gas` flag to specify transaction gas limit

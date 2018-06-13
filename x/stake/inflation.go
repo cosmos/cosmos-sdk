@@ -22,7 +22,9 @@ func (k Keeper) processProvisions(ctx sdk.Context) Pool {
 	// which needs to be updated is the `BondedPool`. So for each previsions cycle:
 
 	provisions := pool.Inflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat).Evaluate()
-	pool.BondedTokens += provisions
+
+	// TODO add to the fees provisions
+	pool.LooseUnbondedTokens += provisions
 	return pool
 }
 

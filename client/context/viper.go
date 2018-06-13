@@ -34,6 +34,7 @@ func NewCoreContextFromViper() CoreContext {
 		TrustNode:       viper.GetBool(client.FlagTrustNode),
 		FromAddressName: viper.GetString(client.FlagName),
 		NodeURI:         nodeURI,
+		AccountNumber:   viper.GetInt64(client.FlagAccountNumber),
 		Sequence:        viper.GetInt64(client.FlagSequence),
 		Client:          rpc,
 		Decoder:         nil,
@@ -52,6 +53,25 @@ func defaultChainID() (string, error) {
 		return "", err
 	}
 	return doc.ChainID, nil
+}
+
+// EnsureSequence - automatically set sequence number if none provided
+func EnsureAccountNumber(ctx CoreContext) (CoreContext, error) {
+	// Should be viper.IsSet, but this does not work - https://github.com/spf13/viper/pull/331
+	if viper.GetInt64(client.FlagAccountNumber) != 0 {
+		return ctx, nil
+	}
+	from, err := ctx.GetFromAddress()
+	if err != nil {
+		return ctx, err
+	}
+	accnum, err := ctx.GetAccountNumber(from)
+	if err != nil {
+		return ctx, err
+	}
+	fmt.Printf("Defaulting to account number: %d\n", accnum)
+	ctx = ctx.WithAccountNumber(accnum)
+	return ctx, nil
 }
 
 // EnsureSequence - automatically set sequence number if none provided

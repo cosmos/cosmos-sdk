@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	hrsPerYr  = 8766 // as defined by a julian year of 365.25 days
-	precision = 1000000000
+	hrsPerYr  = 8766         // as defined by a julian year of 365.25 days
+	precision = 100000000000 // increased to this precision for accuracy with tests on tick_test.go
 )
 
 var hrsPerYrRat = sdk.NewRat(hrsPerYr) // as defined by a julian year of 365.25 days
@@ -22,7 +22,9 @@ func (k Keeper) processProvisions(ctx sdk.Context) Pool {
 	// which needs to be updated is the `BondedPool`. So for each previsions cycle:
 
 	provisions := pool.Inflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat).Evaluate()
-	pool.BondedTokens += provisions
+
+	// TODO add to the fees provisions
+	pool.LooseUnbondedTokens += provisions
 	return pool
 }
 
@@ -32,7 +34,7 @@ func (k Keeper) nextInflation(ctx sdk.Context) (inflation sdk.Rat) {
 	params := k.GetParams(ctx)
 	pool := k.GetPool(ctx)
 	// The target annual inflation rate is recalculated for each previsions cycle. The
-	// inflation is also subject to a rate change (positive of negative) depending or
+	// inflation is also subject to a rate change (positive or negative) depending on
 	// the distance from the desired ratio (67%). The maximum rate change possible is
 	// defined to be 13% per year, however the annual inflation is capped as between
 	// 7% and 20%.

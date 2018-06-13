@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"encoding/json"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	crypto "github.com/tendermint/go-crypto"
 )
@@ -83,21 +85,23 @@ func (fee StdFee) Bytes() []byte {
 // and the Sequence numbers for each signature (prevent
 // inchain replay and enforce tx ordering per account).
 type StdSignDoc struct {
-	ChainID   string  `json:"chain_id"`
-	Sequences []int64 `json:"sequences"`
-	FeeBytes  []byte  `json:"fee_bytes"`
-	MsgBytes  []byte  `json:"msg_bytes"`
-	AltBytes  []byte  `json:"alt_bytes"`
+	ChainID        string  `json:"chain_id"`
+	AccountNumbers []int64 `json:"account_numbers"`
+	Sequences      []int64 `json:"sequences"`
+	FeeBytes       []byte  `json:"fee_bytes"`
+	MsgBytes       []byte  `json:"msg_bytes"`
+	AltBytes       []byte  `json:"alt_bytes"`
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
 // TODO: change the API to just take a chainID and StdTx ?
-func StdSignBytes(chainID string, sequences []int64, fee StdFee, msg sdk.Msg) []byte {
-	bz, err := msgCdc.MarshalJSON(StdSignDoc{
-		ChainID:   chainID,
-		Sequences: sequences,
-		FeeBytes:  fee.Bytes(),
-		MsgBytes:  msg.GetSignBytes(),
+func StdSignBytes(chainID string, accnums []int64, sequences []int64, fee StdFee, msg sdk.Msg) []byte {
+	bz, err := json.Marshal(StdSignDoc{
+		ChainID:        chainID,
+		AccountNumbers: accnums,
+		Sequences:      sequences,
+		FeeBytes:       fee.Bytes(),
+		MsgBytes:       msg.GetSignBytes(),
 	})
 	if err != nil {
 		panic(err)
@@ -109,21 +113,23 @@ func StdSignBytes(chainID string, sequences []int64, fee StdFee, msg sdk.Msg) []
 // a Msg with the other requirements for a StdSignDoc before
 // it is signed. For use in the CLI.
 type StdSignMsg struct {
-	ChainID   string
-	Sequences []int64
-	Fee       StdFee
-	Msg       sdk.Msg
+	ChainID        string
+	AccountNumbers []int64
+	Sequences      []int64
+	Fee            StdFee
+	Msg            sdk.Msg
 	// XXX: Alt
 }
 
 // get message bytes
 func (msg StdSignMsg) Bytes() []byte {
-	return StdSignBytes(msg.ChainID, msg.Sequences, msg.Fee, msg.Msg)
+	return StdSignBytes(msg.ChainID, msg.AccountNumbers, msg.Sequences, msg.Fee, msg.Msg)
 }
 
 // Standard Signature
 type StdSignature struct {
 	crypto.PubKey    `json:"pub_key"` // optional
 	crypto.Signature `json:"signature"`
+	AccountNumber    int64 `json:"account_number"`
 	Sequence         int64 `json:"sequence"`
 }

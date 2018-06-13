@@ -20,8 +20,10 @@ Install `go` by following the [official docs](https://golang.org/doc/install).
 Next, let's install the testnet's version of the Cosmos SDK. 
 
 ```
-go get github.com/cosmos/cosmos-sdk
-cd $GOPATH/src/github.com/cosmos/cosmos-sdk && git checkout v0.18.0
+mkdir -p $GOPATH/src/github.com/cosmos
+cd $GOPATH/src/github.com/cosmos
+git clone https://github.com/cosmos/cosmos-sdk
+cd cosmos-sdk && git checkout v0.18.0
 make get_tools && make get_vendor_deps && make install
 ```
 
@@ -62,7 +64,9 @@ rm $HOME/.gaiad/config/addrbook.json $HOME/.gaiad/config/genesis.json
 gaiad unsafe_reset_all
 ```
 
-Your node is now in a pristine state while keeping the original `priv_validator.json`. If you had any sentry nodes or full nodes setup before, they should continue to work.
+Your node is now in a pristine state while keeping the original `priv_validator.json` and `config.toml`. If you had any sentry nodes or full nodes setup before, 
+your node will still try to connect to them, but may fail if they haven't also
+been upgraded.
 
 **WARNING:** Make sure that every node has a unique `priv_validator.json`. Do not copy the `priv_validator.json` from an old node to multiple new nodes. Running two nodes with the same `priv_validator.json` will cause you to double sign.
 
@@ -226,7 +230,7 @@ gaiacli advanced tendermint validator-set
 
 ## Delegating to a Validator
 
-On the upcoming mainnet, you can delegate `atom` to a validator. These [delegators](https://cosmos.network/resources/delegators) can receive part of the validator's fee revenue in `photon`. Read more more about the [Cosmos Token Model](https://github.com/cosmos/cosmos/raw/master/Cosmos_Token_Model.pdf).
+On the upcoming mainnet, you can delegate `atom` to a validator. These [delegators](https://cosmos.network/resources/delegators) can receive part of the validator's fee revenue. Read more about the [Cosmos Token Model](https://github.com/cosmos/cosmos/raw/master/Cosmos_Token_Model.pdf).
 
 ### Bond Tokens
 

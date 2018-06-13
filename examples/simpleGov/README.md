@@ -82,6 +82,13 @@ Upon receiving a transaction from the Tendermint Core engine, here is whatthe ap
 
 Steps 1, 2 and 4 are handled by the root application. Step 3 is handled by the appropriate module. 
 
+Some example of already-built modules include:
+- `auth`: Module for accounts and signatures
+- `bank`: Module for tokens
+- `stake`: Module for the blockchain to be run as a public Proof-Of-Stake blockchain
+- `governance`: Module to handle on-chain proposals and votes
+- `ibc`: Modules to allow the blockchain to exchange tokens with other chains.
+
 ### SDK Components 
 
 With this in mind, let us go through the important directories of the SDK:

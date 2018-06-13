@@ -19,7 +19,7 @@ func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb 
 	r.HandleFunc("/gov/proposal", postProposalHandlerFn(cdc, kb, ctx)).Methods("POST")
 	r.HandleFunc("/gov/deposit", depositHandlerFn(cdc, kb, ctx)).Methods("POST")
 	r.HandleFunc("/gov/vote", voteHandlerFn(cdc, kb, ctx)).Methods("POST")
-	r.HandleFunc("/gov/{proposalId}/proposal", queryProposalHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
+	r.HandleFunc("/gov/{proposalID}/proposal", queryProposalHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
 }
 
 func postProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
@@ -104,7 +104,7 @@ func voteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) ht
 func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		proposalID := vars["proposalId"]
+		proposalID := vars["proposalID"]
 
 		if len(proposalID) == 0 {
 			w.WriteHeader(http.StatusBadRequest)

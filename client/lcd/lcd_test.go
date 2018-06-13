@@ -604,7 +604,7 @@ func getValidators(t *testing.T, port string) []stakerest.StakeValidatorOutput {
 
 func getProposal(t *testing.T, port string, proposalID int64) gov.Proposal {
 
-	res, body := Request(t, port, "GET", "/gov/"+fmt.Sprintf("%d", proposalID)+"/proposal/", nil)
+	res, body := Request(t, port, "GET", "/gov/"+fmt.Sprintf("%d", proposalID)+"/proposal", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var proposal gov.Proposal
 	err := cdc.UnmarshalJSON([]byte(body), &proposal)
@@ -624,7 +624,7 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 	jsonStr := []byte(fmt.Sprintf(`{
 		"title": "Test",
 		"description": "test",
-		"proposalType": "Text",
+		"proposal_type": "Text",
 		"proposer": "%s",
 		"initial_deposit": [{ "denom": "steak", "amount": 5 }],
 		"base_req": {
@@ -639,9 +639,9 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 	fmt.Println(res)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var results []ctypes.ResultBroadcastTxCommit
+	var results ctypes.ResultBroadcastTxCommit
 	err := cdc.UnmarshalJSON([]byte(body), &results)
 	require.Nil(t, err)
 
-	return results[0]
+	return results
 }

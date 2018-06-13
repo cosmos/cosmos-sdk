@@ -27,7 +27,7 @@ type baseReq struct {
 type postProposalReq struct {
 	Title          string    `json:"title"`           //  Title of the proposal
 	Description    string    `json:"description"`     //  Description of the proposal
-	ProposalType   string    `json:"proposalType"`    //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	ProposalType   string    `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 	Proposer       string    `json:"proposer"`        //  Address of the proposer
 	InitialDeposit sdk.Coins `json:"initial_deposit"` // Coins to add to the proposal's deposit
 	BaseReq        baseReq   `json:"base_req"`

@@ -1,5 +1,11 @@
 # TESTNET STATUS
 
+## *June 13, 2018, 2:30 EST* - Published Postmortem of Gaia-6001 failure
+
+- A bug in the design of the staking data model caused a sanity check to fail
+- Full writeup
+  [here](https://github.com/cosmos/cosmos-sdk/issues/1197#issuecomment-396823021)
+
 ## *June 10, 2018, 8:30 EST* - Gaia-6001 consensus failure
 
 - Validator unbonding and revocation activity caused a consensus failure

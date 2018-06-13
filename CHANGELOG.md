@@ -24,7 +24,7 @@ FIXES
 
 ## 0.18.0
 
-_2018-06-05_
+*June 9, 2018*
 
 BREAKING CHANGES
 
@@ -87,8 +87,27 @@ BUG FIXES
 * query sequence via account store
 * fixed duplicate pub_key in stake.Validator
 * Auto-sequencing now works correctly
+* [gaiacli] Fix error message when account isn't found when running gaiacli account
 
 
+## 0.17.5
+
+*June 5, 2018*
+
+Update to Tendermint v0.19.9 (Fix evidence reactor, mempool deadlock, WAL panic,
+memory leak)
+
+## 0.17.4
+
+*May 31, 2018*
+
+Update to Tendermint v0.19.7 (WAL fixes and more)
+
+## 0.17.3
+
+*May 29, 2018*
+
+Update to Tendermint v0.19.6 (fix fast-sync halt)
 
 ## 0.17.5
 

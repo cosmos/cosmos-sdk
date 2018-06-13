@@ -396,9 +396,10 @@ func TestBonding(t *testing.T) {
 
 	// TODO fix shares fn in staking
 	// query sender
-	//acc = getAccount(t, port, addr)
-	//coins = acc.GetCoins()
-	//assert.Equal(t, int64(70), coins.AmountOf(denom))
+	//acc := getAccount(t, sendAddr)
+	//coins := acc.GetCoins()
+	//assert.Equal(t, int64(98), coins.AmountOf(coinDenom))
+
 }
 
 //_____________________________________________________________________________

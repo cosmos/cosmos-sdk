@@ -40,7 +40,7 @@ func TestStartStandAlone(t *testing.T) {
 	svrAddr, _, err := FreeTCPAddr()
 	require.Nil(t, err)
 	svr, err := server.NewServer(svrAddr, "socket", app)
-	require.Nil(t, err, "Error creating listener")
+	require.Nil(t, err, "error creating listener")
 	svr.SetLogger(logger.With("module", "abci-server"))
 	svr.Start()
 

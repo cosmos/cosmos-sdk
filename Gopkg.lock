@@ -273,8 +273,8 @@
     "server",
     "types"
   ]
-  revision = "ebee2fe114020aa49c70bbbae50b7079fc7e7b90"
-  version = "v0.11.0"
+  revision = "198dccf0ddfd1bb176f87657e3286a05a6ed9540"
+  version = "v0.12.0"
 
 [[projects]]
   branch = "master"
@@ -289,8 +289,8 @@
 [[projects]]
   name = "github.com/tendermint/go-amino"
   packages = ["."]
-  revision = "1715b7b78c65d6adcc5937315be4710234cefe09"
-  version = "0.10.0-rc2"
+  revision = "3029a19e28956a5cf1e959f69c16542fe7dcb696"
+  version = "0.10.0"
 
 [[projects]]
   branch = "develop"
@@ -355,7 +355,7 @@
     "types",
     "version"
   ]
-  revision = "3aa5546cd6323a6fb2c139b1941544c09d6f382d"
+  revision = "48cbb48acbddcbdae3122e72f92449dd887a1c68"
 
 [[projects]]
   branch = "develop"
@@ -386,6 +386,7 @@
   packages = [
     "blowfish",
     "curve25519",
+    "internal/subtle",
     "nacl/box",
     "nacl/secretbox",
     "openpgp/armor",
@@ -394,7 +395,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "8ac0e0d97ce45cd83d1d7243c060cb8461dda5e9"
+  revision = "37a17fe027db43f76fd88b056ddf588563fc8722"
 
 [[projects]]
   branch = "master"
@@ -414,7 +415,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "a9e25c09b96b8870693763211309e213c6ef299d"
+  revision = "56ede360ec1c541828fb88741b3f1049406d28f5"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -475,6 +476,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "335b522a7e0d5613069348476d443d160f26b92e501404f9c042093477e2ac6a"
+  inputs-digest = "fab3a7952b5339a01ef4e6a5e303e71003875702a2f05925cb035549ff47e9a5"
   solver-name = "gps-cdcl"
   solver-version = 1

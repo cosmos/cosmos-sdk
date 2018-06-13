@@ -255,7 +255,7 @@ func processGenTxs(genTxsDir string, cdc *wire.Codec, appInit AppInit) (
 		if len(persistentPeers) == 0 {
 			comma = ""
 		}
-		persistentPeers += fmt.Sprintf("%s%s@%s:46656", comma, genTx.NodeID, genTx.IP)
+		persistentPeers += fmt.Sprintf("%s%s@%s:26656", comma, genTx.NodeID, genTx.IP)
 	}
 
 	return

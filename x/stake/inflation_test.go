@@ -74,8 +74,6 @@ func TestProcessProvisions(t *testing.T) {
 		initialBondedTokens   int64 = 250000000
 		initialUnbondedTokens int64 = 300000000
 		cumulativeExpProvs    int64
-		initialBondedShares          = sdk.NewRat(250000000, 1)
-		initialUnbondedShares        = sdk.NewRat(300000000, 1)
 		validatorTokens              = []int64{150000000, 100000000, 100000000, 100000000, 100000000}
 		bondedValidators      uint16 = 2
 	)
@@ -93,9 +91,7 @@ func TestProcessProvisions(t *testing.T) {
 
 	//get the pool and do the final value checks from checkFinalPoolValues
 	pool = keeper.GetPool(ctx)
-	checkFinalPoolValues(t, pool, initialTotalTokens,
-		initialUnbondedTokens, cumulativeExpProvs,
-		0, 0, initialBondedShares, initialUnbondedShares)
+	checkFinalPoolValues(t, pool, initialTotalTokens, cumulativeExpProvs)
 }
 
 // Tests that the hourly rate of change of inflation will be positive, negative, or zero, depending on bonded ratio and inflation rate
@@ -109,8 +105,6 @@ func TestHourlyInflationRateOfChange(t *testing.T) {
 		initialBondedTokens   int64 = 150000000
 		initialUnbondedTokens int64 = 400000000
 		cumulativeExpProvs    int64
-		bondedShares                 = sdk.NewRat(150000000, 1)
-		unbondedShares               = sdk.NewRat(400000000, 1)
 		validatorTokens              = []int64{150000000, 100000000, 100000000, 100000000, 100000000}
 		bondedValidators      uint16 = 1
 	)
@@ -131,9 +125,7 @@ func TestHourlyInflationRateOfChange(t *testing.T) {
 
 	// Final check that the pool equals initial values + cumulative provisions and adjustments we recorded
 	pool = keeper.GetPool(ctx)
-	checkFinalPoolValues(t, pool, initialTotalTokens,
-		initialUnbondedTokens, cumulativeExpProvs,
-		0, 0, bondedShares, unbondedShares)
+	checkFinalPoolValues(t, pool, initialTotalTokens, cumulativeExpProvs)
 }
 
 //Test that a large unbonding will significantly lower the bonded ratio
@@ -181,9 +173,7 @@ func TestLargeUnbond(t *testing.T) {
 
 	// Final check that the pool equals initial values + provisions and adjustments we recorded
 	pool = keeper.GetPool(ctx)
-	checkFinalPoolValues(t, pool, initialTotalTokens,
-		initialUnbondedTokens, expProvisionsAfter,
-		-val0UnbondedTokens, val0UnbondedTokens, bondedShares, unbondedShares)
+	checkFinalPoolValues(t, pool, initialTotalTokens, expProvisionsAfter)
 }
 
 //Test that a large bonding will significantly increase the bonded ratio
@@ -192,12 +182,9 @@ func TestLargeBond(t *testing.T) {
 	pool := keeper.GetPool(ctx)
 
 	var (
-		initialTotalTokens    int64 = 1600000000
-		initialBondedTokens   int64 = 400000000
-		initialUnbondedTokens int64 = 1200000000
-		val9UnbondedTokens    int64 = 400000000
-		val9BondedTokens      int64
-		bondedShares                 = sdk.NewRat(400000000, 1)
+		initialTotalTokens    int64  = 1600000000
+		initialBondedTokens   int64  = 400000000
+		initialUnbondedTokens int64  = 1200000000
 		unbondedShares               = sdk.NewRat(1200000000, 1)
 		unbondedSharesVal9           = sdk.NewRat(400000000, 1)
 		validatorTokens              = []int64{400000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 400000000}
@@ -225,10 +212,6 @@ func TestLargeBond(t *testing.T) {
 	// process provisions after the bonding, to compare the difference in expProvisions and expInflation
 	_, expProvisionsAfter, pool := updateProvisions(t, keeper, pool, ctx, 0)
 	unbondedShares = unbondedShares.Sub(unbondedSharesVal9)
-	val9BondedTokens = val9UnbondedTokens
-	val9UnbondedTokens = 0
-	bondedTokens := initialBondedTokens + val9BondedTokens + expProvisionsAfter
-	bondedShares = sdk.NewRat(bondedTokens, 1).Quo(pool.bondedShareExRate())
 
 	// unbonded shares should decrease
 	assert.True(t, unbondedShares.LT(sdk.NewRat(1200000000, 1)))
@@ -237,9 +220,7 @@ func TestLargeBond(t *testing.T) {
 	// Final check that the pool equals initial values + provisions and adjustments we recorded
 	pool = keeper.GetPool(ctx)
 
-	checkFinalPoolValues(t, pool, initialTotalTokens,
-		initialUnbondedTokens, expProvisionsAfter,
-		val9BondedTokens, -val9BondedTokens, bondedShares, unbondedShares)
+	checkFinalPoolValues(t, pool, initialTotalTokens, expProvisionsAfter)
 }
 
 // Tests that inflation increases or decreases as expected when we do a random operation on 20 different validators
@@ -296,30 +277,13 @@ func TestInflationWithRandomOperations(t *testing.T) {
 	}
 }
 
+//_________________________________________________________________________________________
 ////////////////////////////////HELPER FUNCTIONS BELOW/////////////////////////////////////
 
-// Final check on the global pool values for what the total tokens accumulated from each hour of provisions and other functions
-// bondedAdjustment and unbondedAdjustment are the accumulated changes for the operations of the test
-// (i.e. if three unbond operations happened, their total value would be passed as unbondedAdjustment)
-func checkFinalPoolValues(t *testing.T, pool Pool, initialTotalTokens, initialUnbondedTokens,
-	cumulativeExpProvs, bondedAdjustment, unbondedAdjustment int64, bondedShares, unbondedShares sdk.Rat) {
-
-	initialBonded := initialTotalTokens - initialUnbondedTokens
+// Final check on the global pool values for what the total tokens accumulated from each hour of provisions
+func checkFinalPoolValues(t *testing.T, pool Pool, initialTotalTokens, cumulativeExpProvs int64) {
 	calculatedTotalTokens := initialTotalTokens + cumulativeExpProvs
-	calculatedBondedTokens := initialBonded + cumulativeExpProvs + bondedAdjustment
-	calculatedUnbondedTokens := initialUnbondedTokens + unbondedAdjustment
-
-	// test that the bonded ratio the pool has is equal to what we calculated for tokens
-	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(calculatedBondedTokens, calculatedTotalTokens)), "%v", pool.bondedRatio())
-
-	// test global supply
 	assert.Equal(t, calculatedTotalTokens, pool.TokenSupply())
-	assert.Equal(t, calculatedBondedTokens, pool.BondedTokens)
-	assert.Equal(t, calculatedUnbondedTokens, pool.UnbondedTokens)
-
-	// test the value of validator shares
-	assert.True(t, pool.bondedShareExRate().Mul(bondedShares).Equal(sdk.NewRat(calculatedBondedTokens)), "%v", pool.bondedShareExRate())
-	assert.True(t, pool.unbondedShareExRate().Mul(unbondedShares).Equal(sdk.NewRat(calculatedUnbondedTokens)), "%v", pool.unbondedShareExRate())
 }
 
 // Processes provisions are added to the pool correctly every hour
@@ -327,13 +291,11 @@ func checkFinalPoolValues(t *testing.T, pool Pool, initialTotalTokens, initialUn
 func updateProvisions(t *testing.T, keeper Keeper, pool Pool, ctx sdk.Context, hr int) (sdk.Rat, int64, Pool) {
 	expInflation := keeper.nextInflation(ctx)
 	expProvisions := (expInflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat)).Evaluate()
-	startBondedPool := pool.BondedTokens
 	startTotalSupply := pool.TokenSupply()
 	pool = keeper.processProvisions(ctx)
 	keeper.setPool(ctx, pool)
 
 	//check provisions were added to pool
-	require.Equal(t, startBondedPool+expProvisions, pool.BondedTokens, "hr %v", hr)
 	require.Equal(t, startTotalSupply+expProvisions, pool.TokenSupply())
 
 	return expInflation, expProvisions, pool
@@ -405,5 +367,4 @@ func checkInflation(t *testing.T, pool Pool, previousInflation, updatedInflation
 			assert.Equal(t, true, inflationChange.LT(sdk.ZeroRat()), msg)
 		}
 	}
-
 }

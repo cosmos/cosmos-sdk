@@ -36,7 +36,7 @@ func initClientCommand() *cobra.Command {
 		RunE:  todoNotImplemented,
 	}
 	cmd.Flags().StringP(client.FlagChainID, "c", "", "ID of chain we connect to")
-	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
+	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	cmd.Flags().String(flagGenesis, "", "Genesis file to verify header validity")
 	cmd.Flags().String(flagCommit, "", "File with trusted and signed header")
 	cmd.Flags().String(flagValHash, "", "Hash of trusted validator set (hex-encoded)")

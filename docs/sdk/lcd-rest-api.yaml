@@ -41,7 +41,7 @@ paths:
                 type: string
               listen_addr:
                 type: string
-                example: 192.168.56.1:46656
+                example: 192.168.56.1:26656
               version:
                 description: Tendermint version
                 type: string

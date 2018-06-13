@@ -4,6 +4,9 @@
 
 *TBD*
 
+BREAKING CHANGES
+* Change default ports from 466xx to 266xx
+
 ## 0.19.0
 
 *June 13, 2018*
@@ -24,7 +27,7 @@ IMPROVEMENTS
 
 FIXES
 * Fixes consensus fault on testnet - see postmortem [here](https://github.com/cosmos/cosmos-sdk/issues/1197#issuecomment-396823021)
-* [x/stake] bonded inflation removed, non-bonded inflation partially implemented 
+* [x/stake] bonded inflation removed, non-bonded inflation partially implemented
 * [lcd] Switch to bech32 for addresses on all human readable inputs and outputs
 * [lcd] fixed tx indexing/querying
 * [cli] Added `--gas` flag to specify transaction gas limit

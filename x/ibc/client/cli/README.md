@@ -58,7 +58,7 @@ I[04-02|14:09:14.453] Generated genesis file                       module=main p
 }
 > ADDR2=DC26002735D3AA9573707CFA6D77C12349E49868
 > ID2=test-chain-4XHTPn
-> NODE2=tcp://0.0.0.0:46657
+> NODE2=tcp://0.0.0.0:26657
 > basecli keys add key2 --recover
 Enter a passphrase for your key:
 Repeat the passphrase:
@@ -70,7 +70,7 @@ key2        DC26002735D3AA9573707CFA6D77C12349E49868
 > basecoind start --home ~/.chain1 --address tcp://0.0.0.0:36658 --rpc.laddr tcp://0.0.0.0:36657 --p2p.laddr tcp://0.0.0.0:36656
 ...
 
-> basecoind start --home ~/.chain2 # --address tcp://0.0.0.0:46658 --rpc.laddr tcp://0.0.0.0:46657 --p2p.laddr tcp://0.0.0.0:46656
+> basecoind start --home ~/.chain2 # --address tcp://0.0.0.0:26658 --rpc.laddr tcp://0.0.0.0:26657 --p2p.laddr tcp://0.0.0.0:26656
 ...
 ```
 ## Check balance

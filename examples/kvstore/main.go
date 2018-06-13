@@ -50,7 +50,7 @@ func main() {
 	}
 
 	// Start the ABCI server
-	srv, err := server.NewServer("0.0.0.0:46658", "socket", baseApp)
+	srv, err := server.NewServer("0.0.0.0:26658", "socket", baseApp)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

@@ -6,7 +6,7 @@ This paper specifies the lcd (lite client daemon) module of Cosmos-SDK. This mod
 
 All consumers can deploy their own lcd nodes on their own personal computers, even on their smart phones. Then without trusting any blockchain fullnodes or any single validator node, just trusting their own lcd node and the whole validator set, they can verify all blockchain state. For instance, a cosmos consumer wants to check how many Atom coins he/she has. He/she can send a coin query request to his/her own lcd node, then the lcd node send another query request to a fullnode to get coin quantity and related Merkle proof. Finally the lcd node verify the proof. If the proof is valid, then the coin quantity the consumer has is definitely right.
 
-## Provider interfaces
+## Lcd REST-SERVER interfaces
 
 Cosmos-SDK lcd (lite client daemon) acts as a REST-SERVER. It provides a set of APIs which cover key management, tendermint blockchain monitor and other cosmos modules related interfaces.
 
@@ -212,4 +212,4 @@ Cosmos-SDK lcd (lite client daemon) acts as a REST-SERVER. It provides a set of 
           Example parameters:
           Example return:
         ```
-## Proof
+## Build and Verify Merkle Proof

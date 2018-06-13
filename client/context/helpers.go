@@ -30,12 +30,12 @@ func (ctx CoreContext) BroadcastTx(tx []byte) (*ctypes.ResultBroadcastTxCommit, 
 	}
 
 	if res.CheckTx.Code != uint32(0) {
-		return res, errors.Errorf("CheckTx failed: (%d) %s",
+		return res, errors.Errorf("checkTx failed: (%d) %s",
 			res.CheckTx.Code,
 			res.CheckTx.Log)
 	}
 	if res.DeliverTx.Code != uint32(0) {
-		return res, errors.Errorf("DeliverTx failed: (%d) %s",
+		return res, errors.Errorf("deliverTx failed: (%d) %s",
 			res.DeliverTx.Code,
 			res.DeliverTx.Log)
 	}
@@ -75,7 +75,7 @@ func (ctx CoreContext) query(key cmn.HexBytes, storeName, endPath string) (res [
 	}
 	resp := result.Response
 	if resp.Code != uint32(0) {
-		return res, errors.Errorf("Query failed: (%d) %s", resp.Code, resp.Log)
+		return res, errors.Errorf("query failed: (%d) %s", resp.Code, resp.Log)
 	}
 	return resp.Value, nil
 }
@@ -95,7 +95,7 @@ func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 
 	info, err := keybase.Get(name)
 	if err != nil {
-		return nil, errors.Errorf("No key for: %s", name)
+		return nil, errors.Errorf("no key for: %s", name)
 	}
 
 	return info.PubKey.Address(), nil
@@ -107,7 +107,7 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 	// build the Sign Messsage from the Standard Message
 	chainID := ctx.ChainID
 	if chainID == "" {
-		return nil, errors.Errorf("Chain ID required but not specified")
+		return nil, errors.Errorf("chain ID required but not specified")
 	}
 	accnum := ctx.AccountNumber
 	sequence := ctx.Sequence
@@ -174,7 +174,7 @@ func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg sdk.Msg, cdc *w
 // get the next sequence for the account address
 func (ctx CoreContext) GetAccountNumber(address []byte) (int64, error) {
 	if ctx.Decoder == nil {
-		return 0, errors.New("AccountDecoder required but not provided")
+		return 0, errors.New("accountDecoder required but not provided")
 	}
 
 	res, err := ctx.Query(auth.AddressStoreKey(address), ctx.AccountStore)
@@ -198,7 +198,7 @@ func (ctx CoreContext) GetAccountNumber(address []byte) (int64, error) {
 // get the next sequence for the account address
 func (ctx CoreContext) NextSequence(address []byte) (int64, error) {
 	if ctx.Decoder == nil {
-		return 0, errors.New("AccountDecoder required but not provided")
+		return 0, errors.New("accountDecoder required but not provided")
 	}
 
 	res, err := ctx.Query(auth.AddressStoreKey(address), ctx.AccountStore)
@@ -229,7 +229,7 @@ func (ctx CoreContext) GetPassphraseFromStdin(name string) (pass string, err err
 // GetNode prepares a simple rpc.Client
 func (ctx CoreContext) GetNode() (rpcclient.Client, error) {
 	if ctx.Client == nil {
-		return nil, errors.New("Must define node URI")
+		return nil, errors.New("must define node URI")
 	}
 	return ctx.Client, nil
 }

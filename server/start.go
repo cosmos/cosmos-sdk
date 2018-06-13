@@ -9,8 +9,8 @@ import (
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/node"
-	"github.com/tendermint/tendermint/proxy"
 	pvm "github.com/tendermint/tendermint/privval"
+	"github.com/tendermint/tendermint/proxy"
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
@@ -55,7 +55,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 
 	svr, err := server.NewServer(addr, "socket", app)
 	if err != nil {
-		return errors.Errorf("Error creating listener: %v\n", err)
+		return errors.Errorf("error creating listener: %v\n", err)
 	}
 	svr.SetLogger(ctx.Logger.With("module", "abci-server"))
 	svr.Start()

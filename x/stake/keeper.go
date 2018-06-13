@@ -804,7 +804,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, fract
 	logger := ctx.Logger().With("module", "x/stake")
 	val, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
-		panic(fmt.Errorf("Attempted to slash a nonexistent validator with address %s", pubkey.Address()))
+		panic(fmt.Errorf("attempted to slash a nonexistent validator with address %s", pubkey.Address()))
 	}
 	sharesToRemove := val.PoolShares.Amount.Mul(fraction)
 	pool := k.GetPool(ctx)
@@ -820,7 +820,7 @@ func (k Keeper) Revoke(ctx sdk.Context, pubkey crypto.PubKey) {
 	logger := ctx.Logger().With("module", "x/stake")
 	val, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
-		panic(fmt.Errorf("Validator with pubkey %s not found, cannot revoke", pubkey))
+		panic(fmt.Errorf("validator with pubkey %s not found, cannot revoke", pubkey))
 	}
 	val.Revoked = true
 	k.updateValidator(ctx, val) // update the validator, now revoked
@@ -833,7 +833,7 @@ func (k Keeper) Unrevoke(ctx sdk.Context, pubkey crypto.PubKey) {
 	logger := ctx.Logger().With("module", "x/stake")
 	val, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
-		panic(fmt.Errorf("Validator with pubkey %s not found, cannot unrevoke", pubkey))
+		panic(fmt.Errorf("validator with pubkey %s not found, cannot unrevoke", pubkey))
 	}
 	val.Revoked = false
 	k.updateValidator(ctx, val) // update the validator, now unrevoked

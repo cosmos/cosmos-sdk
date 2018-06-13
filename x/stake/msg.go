@@ -122,7 +122,7 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 	}
 	empty := Description{}
 	if msg.Description == empty {
-		return newError(DefaultCodespace, CodeInvalidInput, "Transaction must include some information to modify")
+		return newError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
 	}
 	return nil
 }

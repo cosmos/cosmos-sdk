@@ -1,7 +1,6 @@
 package gov
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -126,12 +125,11 @@ func TestVotes(t *testing.T) {
 	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
 	proposalID := proposal.ProposalID
 
-	proposal.Status = "Active"
+	proposal.Status = "VotingPeriod"
 	keeper.SetProposal(ctx, proposal)
 
 	keeper.AddVote(ctx, proposalID, addrs[0], "Abstain")
 	vote := keeper.GetVote(ctx, proposalID, addrs[0])
-	fmt.Println(vote)
 	assert.Equal(t, addrs[0], vote.Voter)
 	assert.Equal(t, proposalID, vote.ProposalID)
 	assert.Equal(t, "Abstain", vote.Option)
@@ -169,24 +167,27 @@ func TestVotes(t *testing.T) {
 func TestProposalQueues(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 100)
 
+	assert.Nil(t, keeper.InactiveProposalQueuePeek(ctx))
+	assert.Nil(t, keeper.ActiveProposalQueuePeek(ctx))
+
 	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
 	proposal2 := keeper.NewProposal(ctx, "Test2", "description", "Text")
 	proposal3 := keeper.NewProposal(ctx, "Test3", "description", "Text")
 	proposal4 := keeper.NewProposal(ctx, "Test4", "description", "Text")
 
-	keeper.ActiveProposalQueuePush(ctx, proposal)
-	keeper.ActiveProposalQueuePush(ctx, proposal2)
-	keeper.ActiveProposalQueuePush(ctx, proposal3)
-	keeper.ActiveProposalQueuePush(ctx, proposal4)
+	keeper.InactiveProposalQueuePush(ctx, proposal)
+	keeper.InactiveProposalQueuePush(ctx, proposal2)
+	keeper.InactiveProposalQueuePush(ctx, proposal3)
+	keeper.InactiveProposalQueuePush(ctx, proposal4)
 
-	assert.Equal(t, keeper.ActiveProposalQueuePeek(ctx).ProposalID, proposal.ProposalID)
-	assert.Equal(t, keeper.ActiveProposalQueuePop(ctx).ProposalID, proposal.ProposalID)
-	assert.Equal(t, keeper.ActiveProposalQueuePeek(ctx).ProposalID, proposal2.ProposalID)
-	assert.Equal(t, keeper.ActiveProposalQueuePop(ctx).ProposalID, proposal2.ProposalID)
-	assert.Equal(t, keeper.ActiveProposalQueuePeek(ctx).ProposalID, proposal3.ProposalID)
-	assert.Equal(t, keeper.ActiveProposalQueuePop(ctx).ProposalID, proposal3.ProposalID)
-	assert.Equal(t, keeper.ActiveProposalQueuePeek(ctx).ProposalID, proposal4.ProposalID)
-	assert.Equal(t, keeper.ActiveProposalQueuePop(ctx).ProposalID, proposal4.ProposalID)
+	assert.Equal(t, keeper.InactiveProposalQueuePeek(ctx).ProposalID, proposal.ProposalID)
+	assert.Equal(t, keeper.InactiveProposalQueuePop(ctx).ProposalID, proposal.ProposalID)
+	assert.Equal(t, keeper.InactiveProposalQueuePeek(ctx).ProposalID, proposal2.ProposalID)
+	assert.Equal(t, keeper.InactiveProposalQueuePop(ctx).ProposalID, proposal2.ProposalID)
+	assert.Equal(t, keeper.InactiveProposalQueuePeek(ctx).ProposalID, proposal3.ProposalID)
+	assert.Equal(t, keeper.InactiveProposalQueuePop(ctx).ProposalID, proposal3.ProposalID)
+	assert.Equal(t, keeper.InactiveProposalQueuePeek(ctx).ProposalID, proposal4.ProposalID)
+	assert.Equal(t, keeper.InactiveProposalQueuePop(ctx).ProposalID, proposal4.ProposalID)
 
 	keeper.ActiveProposalQueuePush(ctx, proposal)
 	keeper.ActiveProposalQueuePush(ctx, proposal2)

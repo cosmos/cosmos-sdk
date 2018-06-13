@@ -33,9 +33,11 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 		return err.Result()
 	}
 
-	tags := sdk.NewTags("action", []byte("submitProposal"), "proposer", msg.Proposer.Bytes(), "proposalId", []byte{byte(proposal.ProposalID)})
+	proposalIDBytes, _ := keeper.cdc.MarshalBinaryBare(proposal.ProposalID)
+
+	tags := sdk.NewTags("action", []byte("submitProposal"), "proposer", msg.Proposer.Bytes(), "proposalId", proposalIDBytes)
 	return sdk.Result{
-		Data: []byte{byte(proposal.ProposalID)},
+		Data: proposalIDBytes,
 		Tags: tags,
 	}
 }

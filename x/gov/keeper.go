@@ -54,12 +54,13 @@ func (keeper Keeper) NewProposal(ctx sdk.Context, title string, description stri
 		Title:            title,
 		Description:      description,
 		ProposalType:     proposalType,
-		Status:           "Pending",
+		Status:           "DepositPeriod",
 		TotalDeposit:     sdk.Coins{},
 		SubmitBlock:      ctx.BlockHeight(),
 		VotingStartBlock: -1, // TODO: Make Time
 	}
 	keeper.SetProposal(ctx, proposal)
+	keeper.InactiveProposalQueuePush(ctx, proposal)
 	return proposal
 }
 
@@ -117,6 +118,7 @@ func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID int64) {
 
 func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal *Proposal) {
 	proposal.VotingStartBlock = ctx.BlockHeight()
+	proposal.Status = "VotingPeriod"
 	keeper.SetProposal(ctx, proposal)
 	keeper.ActiveProposalQueuePush(ctx, proposal)
 }
@@ -157,7 +159,7 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID int64, voter sdk.Addres
 	if proposal == nil {
 		return ErrUnknownProposal(proposalID)
 	}
-	if proposal.Status != "Active" {
+	if proposal.Status != "VotingPeriod" {
 		return ErrInactiveProposal(proposalID)
 	}
 
@@ -238,7 +240,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositer sdk
 		return ErrUnknownProposal(proposalID)
 	}
 
-	if (proposal.Status != "Pending") && (proposal.Status != "Active") {
+	if (proposal.Status != "DepositPeriod") && (proposal.Status != "VotingPeriod") {
 		return ErrAlreadyFinishedProposal(proposalID)
 	}
 
@@ -388,7 +390,7 @@ func (keeper Keeper) setInactiveProposalQueue(ctx sdk.Context, proposalQueue Pro
 
 // Return the Proposal at the front of the ProposalQueue
 func (keeper Keeper) InactiveProposalQueuePeek(ctx sdk.Context) *Proposal {
-	proposalQueue := keeper.getActiveProposalQueue(ctx)
+	proposalQueue := keeper.getInactiveProposalQueue(ctx)
 	if len(proposalQueue) == 0 {
 		return nil
 	}
@@ -397,17 +399,17 @@ func (keeper Keeper) InactiveProposalQueuePeek(ctx sdk.Context) *Proposal {
 
 // Remove and return a Proposal from the front of the ProposalQueue
 func (keeper Keeper) InactiveProposalQueuePop(ctx sdk.Context) *Proposal {
-	proposalQueue := keeper.getActiveProposalQueue(ctx)
+	proposalQueue := keeper.getInactiveProposalQueue(ctx)
 	if len(proposalQueue) == 0 {
 		return nil
 	}
 	frontElement, proposalQueue := proposalQueue[0], proposalQueue[1:]
-	keeper.setActiveProposalQueue(ctx, proposalQueue)
+	keeper.setInactiveProposalQueue(ctx, proposalQueue)
 	return keeper.GetProposal(ctx, frontElement)
 }
 
 // Add a proposalID to the back of the ProposalQueue
 func (keeper Keeper) InactiveProposalQueuePush(ctx sdk.Context, proposal *Proposal) {
-	proposalQueue := append(keeper.getActiveProposalQueue(ctx), proposal.ProposalID)
-	keeper.setActiveProposalQueue(ctx, proposalQueue)
+	proposalQueue := append(keeper.getInactiveProposalQueue(ctx), proposal.ProposalID)
+	keeper.setInactiveProposalQueue(ctx, proposalQueue)
 }

@@ -2,12 +2,13 @@ package rest
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/pkg/errors"
-	"net/http"
-	"io/ioutil"
 )
 
 //type request interface {
@@ -15,10 +16,11 @@ import (
 //}
 
 type baseReq struct {
-	Name     string `json:"name"`
-	Password string `json:"password"`
-	ChainID  string `json:"chain_id"`
-	Sequence int64  `json:"sequence"`
+	Name          string `json:"name"`
+	Password      string `json:"password"`
+	ChainID       string `json:"chain_id"`
+	AccountNumber int64  `json:"account_number"`
+	Sequence      int64  `json:"sequence"`
 }
 
 type postProposalReq struct {
@@ -44,7 +46,7 @@ type voteReq struct {
 	BaseReq    baseReq `json:"base_req"`
 }
 
-func buildReq(w http.ResponseWriter, r *http.Request,req interface{}) error{
+func buildReq(w http.ResponseWriter, r *http.Request, req interface{}) error {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

@@ -99,6 +99,9 @@ func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	)
 	ck := bank.NewKeeper(accountMapper)
 	sk := stake.NewKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
+	sk.SetPool(ctx, stake.InitialPool())
+	sk.SetNewParams(ctx, stake.DefaultParams())
+
 	keeper := NewKeeper(cdc, keyGov, ck, sk, DefaultCodespace)
 
 	// fill all the addresses with some coins

@@ -608,6 +608,13 @@ func (k Keeper) setNewParams(ctx sdk.Context, params Params) {
 	store.Set(ParamKey, b)
 }
 
+// Public version of setNewParams
+func (k Keeper) SetNewParams(ctx sdk.Context, params Params) {
+	store := ctx.KVStore(k.storeKey)
+	b := k.cdc.MustMarshalBinary(params)
+	store.Set(ParamKey, b)
+}
+
 func (k Keeper) setParams(ctx sdk.Context, params Params) {
 	store := ctx.KVStore(k.storeKey)
 	exParams := k.getParams(store)
@@ -637,6 +644,13 @@ func (k Keeper) getPool(store sdk.KVStore) (pool Pool) {
 }
 
 func (k Keeper) setPool(ctx sdk.Context, pool Pool) {
+	store := ctx.KVStore(k.storeKey)
+	b := k.cdc.MustMarshalBinary(pool)
+	store.Set(PoolKey, b)
+}
+
+// Public version of setpool
+func (k Keeper) SetPool(ctx sdk.Context, pool Pool) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(pool)
 	store.Set(PoolKey, b)

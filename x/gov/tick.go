@@ -14,7 +14,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 
 	for shouldPopInactiveProposalQueue(ctx, keeper) {
 		inactiveProposal := keeper.InactiveProposalQueuePop(ctx)
-		if inactiveProposal.Status == "Pending" {
+		if inactiveProposal.Status == "DepositPeriod" {
 			keeper.DeleteProposal(ctx, inactiveProposal)
 		}
 	}
@@ -67,10 +67,12 @@ func tally(ctx sdk.Context, keeper Keeper, proposal *Proposal) (passes bool, non
 
 		if val, ok := currValidators[addressToString(vote.Voter)]; ok {
 			val.Vote = vote.Option
+			currValidators[addressToString(vote.Voter)] = val
 		} else {
 			for _, delegation := range keeper.sk.GetDelegations(ctx, vote.Voter, math.MaxInt16) { // TODO: Replace with MaxValidators from Stake params
 				val := currValidators[addressToString(delegation.ValidatorAddr)]
 				val.Minus = val.Minus.Add(delegation.Shares)
+				currValidators[addressToString(delegation.ValidatorAddr)] = val
 
 				validatorPower := val.ValidatorInfo.EquivalentBondedShares(pool)
 				delegatorShare := delegation.Shares.Quo(val.ValidatorInfo.DelegatorShares)
@@ -89,7 +91,6 @@ func tally(ctx sdk.Context, keeper Keeper, proposal *Proposal) (passes bool, non
 		if len(val.Vote) == 0 {
 			nonVoting = append(nonVoting, val.ValidatorInfo.Owner)
 		} else {
-
 			validatorPower := val.ValidatorInfo.EquivalentBondedShares(pool)
 			sharesAfterMinus := val.ValidatorInfo.DelegatorShares.Sub(val.Minus)
 			percentAfterMinus := sharesAfterMinus.Quo(val.ValidatorInfo.DelegatorShares)
@@ -102,22 +103,25 @@ func tally(ctx sdk.Context, keeper Keeper, proposal *Proposal) (passes bool, non
 
 	tallyingProcedure := keeper.GetTallyingProcedure(ctx)
 
-	if results["NoWithVeto"].Quo(totalVotingPower).GT(tallyingProcedure.Veto) {
+	if totalVotingPower.Sub(results["Abstain"]).Equal(sdk.ZeroRat()) {
+		return false, nonVoting
+	} else if results["NoWithVeto"].Quo(totalVotingPower).GT(tallyingProcedure.Veto) {
 		return false, nonVoting
 	} else if results["Yes"].Quo(totalVotingPower.Sub(results["Abstain"])).GT(tallyingProcedure.Threshold) {
 		return true, nonVoting
-	} else {
-		return false, nonVoting
 	}
+	return false, nonVoting
 }
 
 func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 	depositProcedure := keeper.GetDepositProcedure(ctx)
 	peekProposal := keeper.InactiveProposalQueuePeek(ctx)
 
-	if peekProposal.Status != "Pending" {
+	if peekProposal == nil {
+		return false
+	} else if peekProposal.Status != "DepositPeriod" {
 		return true
-	} else if peekProposal.SubmitBlock+depositProcedure.MaxDepositPeriod >= ctx.BlockHeight() {
+	} else if ctx.BlockHeight() >= peekProposal.SubmitBlock+depositProcedure.MaxDepositPeriod {
 		return true
 	}
 	return false
@@ -127,7 +131,9 @@ func shouldPopActiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 	votingProcedure := keeper.GetVotingProcedure(ctx)
 	peekProposal := keeper.ActiveProposalQueuePeek(ctx)
 
-	if peekProposal.VotingStartBlock+votingProcedure.VotingPeriod >= ctx.BlockHeight() {
+	if peekProposal == nil {
+		return false
+	} else if ctx.BlockHeight() >= peekProposal.VotingStartBlock+votingProcedure.VotingPeriod {
 		return true
 	}
 	return false

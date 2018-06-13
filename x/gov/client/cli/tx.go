@@ -6,13 +6,14 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/pkg/errors"
-	"strconv"
 )
 
 const (
@@ -73,7 +74,7 @@ func SubmitProposalCmd(cdc *wire.Codec) *cobra.Command {
 func DepositCmd(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deposit [depositer] [proposalID] [amount]",
-		Short: "deposit your token [steak] for activing proposalI",
+		Short: "deposit your token [steak] for activing proposal",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// get the from address from the name flag

@@ -13,33 +13,21 @@
 
 ```bash
 > go get -u github.com/cosmos/cosmos-sdk
-package github.com/cosmos/cosmos-sdk: no Go files in /home/mossid/go/src/github.com/cosmos/cosmos-sdk
 > cd $GOPATH/src/github.com/cosmos/cosmos-sdk
 > git checkout develop
-Branch develop set up to track remote branch develop from origin.
-Switched to a new branch 'develop'
 > dep ensure
 > make install
-go install -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=be7ec5b" ./cmd/gaia/cmd/gaiad
-go install -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=be7ec5b" ./cmd/gaia/cmd/gaiacli
 ```
 
 ### Run node and server
 
+If you are going to connect to an external node(e.g. testnet), skip this part
+
 ```bash
-# If your are going to connect to an external node(e.g. testnet), skip gaiad init and gaiad start
+
 > gaiad init --name myname
-{
-  "chain_id": "test-chain-vFxi71",
-  "node_id": "ef0dcdf3b4c90b9f5a1f09975730ae7708861ed6",
-  "app_message": null
-}
 > gaiad start
-...
-# If your are going to connect to an external node, speficy node address with --node flag
 > gaiacli advanced rest-server
-I[06-05|04:26:30.739] Starting RPC HTTP server on tcp://localhost:1317 module=rest-server 
-I[06-05|04:26:30.739] REST server started                          module=rest-server
 ```
 
 ### Test getting account

@@ -107,7 +107,7 @@ func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID int64) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get([]byte("newProposalID"))
 	if bz == nil {
-		proposalID = 0
+		proposalID = 1
 	} else {
 		keeper.cdc.MustUnmarshalBinary(bz, &proposalID) // TODO: switch to UnmarshalBinaryBare when new go-amino gets added
 	}

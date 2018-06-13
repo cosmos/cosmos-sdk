@@ -20,6 +20,7 @@ func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb 
 	r.HandleFunc("/gov/deposit", depositHandlerFn(cdc, kb, ctx)).Methods("POST")
 	r.HandleFunc("/gov/vote", voteHandlerFn(cdc, kb, ctx)).Methods("POST")
 	r.HandleFunc("/gov/{proposalID}/proposal", queryProposalHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
+	r.HandleFunc("/gov/{proposalID}/votes/{voterAddress}", queryVoteHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
 }
 
 func postProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
@@ -104,25 +105,25 @@ func voteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) ht
 func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		proposalID := vars["proposalID"]
+		strProposalID := vars["proposalID"]
 
-		if len(proposalID) == 0 {
+		if len(strProposalID) == 0 {
 			w.WriteHeader(http.StatusBadRequest)
 			err := errors.Errorf("proposalId required but not specified")
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		id, err := strconv.ParseInt(proposalID, 10, 64)
+		proposalID, err := strconv.ParseInt(strProposalID, 10, 64)
 		if err != nil {
-			err := errors.Errorf("proposalID [%s] is not positive", proposalID)
+			err := errors.Errorf("proposalID [%d] is not positive", proposalID)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
 		ctx := context.NewCoreContextFromViper()
 
-		key := []byte(fmt.Sprintf("%d", id) + ":proposal")
+		key := []byte(fmt.Sprintf("%d", proposalID) + ":proposal")
 		res, err := ctx.Query(key, storeName)
 		if len(res) == 0 || err != nil {
 			err := errors.Errorf("proposalID [%d] does not exist", proposalID)
@@ -133,6 +134,64 @@ func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 		proposal := new(gov.Proposal)
 		cdc.MustUnmarshalBinary(res, proposal)
 		output, err := wire.MarshalJSONIndent(cdc, proposal)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write(output)
+	}
+}
+func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		strProposalID := vars["proposalID"]
+		bechVoterAddr := vars["voterAddress"]
+
+		if len(strProposalID) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			err := errors.Errorf("proposalId required but not specified")
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		proposalID, err := strconv.ParseInt(strProposalID, 10, 64)
+		if err != nil {
+			err := errors.Errorf("proposalID [%s] is not positive", proposalID)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		voterAddr, err := sdk.GetAccAddressBech32(vars["voterAddress"])
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			err := errors.Errorf("voterAddress needs to be bech32 encoded")
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		ctx := context.NewCoreContextFromViper()
+
+		key := []byte(fmt.Sprintf("%d", proposalID) + ":votes:" + fmt.Sprintf("%s", voterAddr))
+		res, err := ctx.Query(key, storeName)
+		if len(res) == 0 || err != nil {
+
+			key := []byte(fmt.Sprintf("%d", proposalID) + ":proposal")
+			res, err := ctx.Query(key, storeName)
+			if len(res) == 0 || err != nil {
+				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
+				w.Write([]byte(err.Error()))
+				return
+			}
+			err = errors.Errorf("voter [%s] did not vote on proposalID [%d]", bechVoterAddr, proposalID)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		vote := new(gov.Vote)
+		cdc.MustUnmarshalBinary(res, vote)
+
+		output, err := wire.MarshalJSONIndent(cdc, vote)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))

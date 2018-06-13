@@ -17,11 +17,15 @@ import (
 )
 
 const (
-	flagTitle          = "title"
-	flagDescription    = "description"
-	flagProposalType   = "type"
-	flagInitialDeposit = "deposit"
-	flagproposer       = "proposer"
+	flagProposalID   = "proposalID"
+	flagTitle        = "title"
+	flagDescription  = "description"
+	flagProposalType = "type"
+	flagDeposit      = "deposit"
+	flagProposer     = "proposer"
+	flagDepositer    = "depositer"
+	flagVoter        = "voter"
+	flagOption       = "option"
 )
 
 // submit a proposal tx
@@ -33,10 +37,10 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 			title := viper.GetString(flagTitle)
 			description := viper.GetString(flagDescription)
 			proposalType := viper.GetString(flagProposalType)
-			initialDeposit := viper.GetString(flagInitialDeposit)
+			initialDeposit := viper.GetString(flagDeposit)
 
 			// get the from address from the name flag
-			from, err := sdk.GetAccAddressBech32(viper.GetString(flagproposer))
+			from, err := sdk.GetAccAddressBech32(viper.GetString(flagProposer))
 			if err != nil {
 				return err
 			}
@@ -64,8 +68,8 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().String(flagTitle, "", "title of proposal")
 	cmd.Flags().String(flagDescription, "", "description of proposal")
 	cmd.Flags().String(flagProposalType, "", "proposalType of proposal")
-	cmd.Flags().String(flagInitialDeposit, "", "deposit of proposal")
-	cmd.Flags().String(flagproposer, "", "proposer of proposal")
+	cmd.Flags().String(flagDeposit, "", "deposit of proposal")
+	cmd.Flags().String(flagProposer, "", "proposer of proposal")
 
 	return cmd
 }
@@ -73,22 +77,21 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 // set a new Deposit transaction
 func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "deposit [depositer] [proposalID] [amount]",
+		Use:   "deposit",
 		Short: "deposit your token [steak] for activing proposal",
-		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// get the from address from the name flag
-			depositer, err := sdk.GetAccAddressBech32(args[0])
+			depositer, err := sdk.GetAccAddressBech32(viper.GetString(flagDepositer))
 			if err != nil {
 				return err
 			}
 
-			proposalID, err := strconv.ParseInt(args[1], 10, 64)
+			proposalID, err := strconv.ParseInt(viper.GetString(flagProposalID), 10, 64)
 			if err != nil {
 				return err
 			}
 
-			amount, err := sdk.ParseCoins(args[2])
+			amount, err := sdk.ParseCoins(viper.GetString(flagDeposit))
 			if err != nil {
 				return err
 			}
@@ -106,27 +109,32 @@ func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.Flags().String(flagProposalID, "", "proposalID of proposal depositing on")
+	cmd.Flags().String(flagDepositer, "", "depositer of deposit")
+	cmd.Flags().String(flagDeposit, "", "amount of deposit")
+
 	return cmd
 }
 
 // set a new Vote transaction
 func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "vote [voter] [proposalID] [option]",
+		Use:   "vote",
 		Short: "vote for current actived proposal,option:Yes/NO/NoWithVeto/Abstain",
-		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			voter, err := sdk.GetAccAddressBech32(args[0])
+
+			voter, err := sdk.GetAccAddressBech32(viper.GetString(flagVoter))
 			if err != nil {
 				return err
 			}
 
-			proposalID, err := strconv.ParseInt(args[1], 10, 64)
+			proposalID, err := strconv.ParseInt(viper.GetString(flagProposalID), 10, 64)
 			if err != nil {
 				return err
 			}
 
-			option := args[2]
+			option := viper.GetString(flagOption)
 			// create the message
 			msg := gov.NewMsgVote(voter, proposalID, option)
 
@@ -145,23 +153,27 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.Flags().String(flagProposalID, "", "proposalID of proposal voting on")
+	cmd.Flags().String(flagVoter, "", "bech32 voter address")
+	cmd.Flags().String(flagOption, "", "vote option {Yes, No, NoWithVeto, Abstain}")
+
 	return cmd
 }
 
 // Command to Get a Proposal Information
 func GetCmdQueryProposal(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "proposal [proposalID]",
+		Use:   "queryproposal",
 		Short: "query proposal details",
-		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			proposalID, err := strconv.ParseInt(args[0], 10, 64)
+			proposalID, err := strconv.ParseInt(viper.GetString(flagProposalID), 10, 64)
 			if err != nil {
 				return err
 			}
 			ctx := context.NewCoreContextFromViper()
 
-			key, _ := cdc.MarshalBinary(proposalID)
+			key := []byte(fmt.Sprintf("%d", proposalID) + ":proposal")
 			res, err := ctx.Query(key, storeName)
 			if len(res) == 0 || err != nil {
 				return errors.Errorf("proposalID [%d] is not existed", proposalID)
@@ -177,5 +189,49 @@ func GetCmdQueryProposal(storeName string, cdc *wire.Codec) *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.Flags().String(flagProposalID, "", "proposalID of proposal being queried")
+
+	return cmd
+}
+
+// Command to Get a Proposal Information
+func GetCmdQueryVote(storeName string, cdc *wire.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "queryvote",
+		Short: "query vote",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			proposalID, err := strconv.ParseInt(viper.GetString(flagProposalID), 10, 64)
+			if err != nil {
+				return err
+			}
+
+			voterAddr, err := sdk.GetAccAddressBech32(viper.GetString(flagVoter))
+			if err != nil {
+				return err
+			}
+
+			ctx := context.NewCoreContextFromViper()
+
+			key := []byte(fmt.Sprintf("%d", proposalID) + ":votes:" + fmt.Sprintf("%s", voterAddr))
+			res, err := ctx.Query(key, storeName)
+			if len(res) == 0 || err != nil {
+				return errors.Errorf("proposalID [%d] does not exist", proposalID)
+			}
+
+			vote := new(gov.Vote)
+			cdc.MustUnmarshalBinary(res, vote)
+			output, err := wire.MarshalJSONIndent(cdc, vote)
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(output))
+			return nil
+		},
+	}
+
+	cmd.Flags().String(flagProposalID, "", "proposalID of proposal voting on")
+	cmd.Flags().String(flagVoter, "", "bech32 voter address")
+
 	return cmd
 }

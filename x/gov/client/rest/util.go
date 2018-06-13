@@ -34,16 +34,16 @@ type postProposalReq struct {
 }
 
 type depositReq struct {
-	ProposalID int64     `json:"proposal_id"` // ID of the proposal
-	Depositer  string    `json:"depositer"`   // Address of the depositer
-	Amount     sdk.Coins `json:"amount"`      // Coins to add to the proposal's deposit
+	ProposalID int64     `json:"proposalID"` // ID of the proposal
+	Depositer  string    `json:"depositer"`  // Address of the depositer
+	Amount     sdk.Coins `json:"amount"`     // Coins to add to the proposal's deposit
 	BaseReq    baseReq   `json:"base_req"`
 }
 
 type voteReq struct {
-	Voter      string  `json:"voter"`       //  address of the voter
-	ProposalID int64   `json:"proposal_iD"` //  proposalID of the proposal
-	Option     string  `json:"option"`      //  option from OptionSet chosen by the voter
+	Voter      string  `json:"voter"`      //  address of the voter
+	ProposalID int64   `json:"proposalID"` //  proposalID of the proposal
+	Option     string  `json:"option"`     //  option from OptionSet chosen by the voter
 	BaseReq    baseReq `json:"base_req"`
 }
 

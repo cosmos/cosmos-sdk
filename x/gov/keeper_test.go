@@ -36,9 +36,9 @@ func TestIncrementProposalNumber(t *testing.T) {
 	keeper.NewProposal(ctx, "Test", "description", "Text")
 	keeper.NewProposal(ctx, "Test", "description", "Text")
 	keeper.NewProposal(ctx, "Test", "description", "Text")
-	proposal5 := keeper.NewProposal(ctx, "Test", "description", "Text")
+	proposal6 := keeper.NewProposal(ctx, "Test", "description", "Text")
 
-	assert.Equal(t, proposal5.ProposalID, int64(5))
+	assert.Equal(t, proposal6.ProposalID, int64(6))
 }
 
 func TestActivateVotingPeriod(t *testing.T) {

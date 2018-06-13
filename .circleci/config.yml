@@ -28,12 +28,6 @@ jobs:
             export PATH="$GOBIN:$PATH"
             make get_vendor_deps
       - run:
-          name: linter
-          command: |
-            export PATH="$GOBIN:$PATH"
-            go get -u github.com/tendermint/lint/golint
-            go get -u github.com/alecthomas/gometalinter
-      - run:
           name: binaries
           command: |
             export PATH="$GOBIN:$PATH"
@@ -63,6 +57,12 @@ jobs:
           key: v1-pkg-cache
       - restore_cache:
           key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Get metalinter
+          command: |
+            export PATH="$GOBIN:$PATH"
+            go get -u github.com/tendermint/lint/golint
+            go get -u github.com/alecthomas/gometalinter
       - run:
           name: Lint source
           command: |

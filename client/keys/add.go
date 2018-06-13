@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/tmlibs/cli"
 )
@@ -21,6 +22,8 @@ const (
 	flagRecover  = "recover"
 	flagNoBackup = "no-backup"
 	flagDryRun   = "dry-run"
+	flagAccount  = "account"
+	flagIndex    = "index"
 )
 
 func addKeyCommand() *cobra.Command {
@@ -32,10 +35,13 @@ If you select --seed/-s you can recover a key from the seed
 phrase, otherwise, a new key will be generated.`,
 		RunE: runAddCmd,
 	}
-	cmd.Flags().StringP(flagType, "t", "ed25519", "Type of private key (ed25519|secp256k1|ledger)")
+	cmd.Flags().StringP(flagType, "t", "secp256k1", "Type of private key (secp256k1|ed25519)")
+	cmd.Flags().Bool(client.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
 	cmd.Flags().Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")
+	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
+	cmd.Flags().Uint32(flagIndex, 0, "Index number for HD derivation")
 	return cmd
 }
 
@@ -70,15 +76,28 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		pass, err = client.GetCheckPassword(
-			"Enter a passphrase for your key:",
-			"Repeat the passphrase:", buf)
-		if err != nil {
-			return err
+		// ask for a password when generating a local key
+		if !viper.GetBool(client.FlagUseLedger) {
+			pass, err = client.GetCheckPassword(
+				"Enter a passphrase for your key:",
+				"Repeat the passphrase:", buf)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
-	if viper.GetBool(flagRecover) {
+	if viper.GetBool(client.FlagUseLedger) {
+		account := uint32(viper.GetInt(flagAccount))
+		index := uint32(viper.GetInt(flagIndex))
+		path := crypto.DerivationPath{44, 118, account, 0, index}
+		algo := keys.SignAlgo(viper.GetString(flagType))
+		info, err := kb.CreateLedger(name, path, algo)
+		if err != nil {
+			return err
+		}
+		printCreate(info, "")
+	} else if viper.GetBool(flagRecover) {
 		seed, err := client.GetSeed(
 			"Enter your recovery seed phrase:", buf)
 		if err != nil {
@@ -108,7 +127,7 @@ func printCreate(info keys.Info, seed string) {
 	case "text":
 		printInfo(info)
 		// print seed unless requested not to.
-		if !viper.GetBool(flagNoBackup) {
+		if !viper.GetBool(client.FlagUseLedger) && !viper.GetBool(flagNoBackup) {
 			fmt.Println("**Important** write this seed phrase in a safe place.")
 			fmt.Println("It is the only way to recover your account if you ever forget your password.")
 			fmt.Println()

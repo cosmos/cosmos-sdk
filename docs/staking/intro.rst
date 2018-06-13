@@ -157,7 +157,7 @@ The ``genesis.json`` should look something like:
       "validators": [
         {
           "pub_key": {
-            "type": "AC26791624DE60",
+            "type": "tendermint/PubKeyEd25519",
             "value": "rgpc/ctVld6RpSfwN5yxGBF17R1PwMTdhQ9gKVUZp5g="
           },
           "power": 10,

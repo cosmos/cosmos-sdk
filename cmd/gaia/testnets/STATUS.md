@@ -1,5 +1,19 @@
 # TESTNET STATUS
 
+## *June 13, 2018, 4:30 EST* - New Testnet Gaia-6002
+
+- After fixing bugs from gaia-6001, especially [issue
+  #1197](https://github.com/cosmos/cosmos-sdk/issues/1197), we are announcing a
+  new testnet, Gaia-6002
+- Gaia-6002 has the same genesis file as Gaia-6001, just with the chain-id
+  updated
+
+## *June 13, 2018, 4:30 EST* - New Release
+
+- Released gaia
+  [v0.19.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.19.0)
+- Includes various bug-fixes for staking found on Gaia-6001
+
 ## *June 13, 2018, 2:30 EST* - Published Postmortem of Gaia-6001 failure
 
 - A bug in the design of the staking data model caused a sanity check to fail

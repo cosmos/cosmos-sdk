@@ -17,15 +17,11 @@ const (
 	FlagDeposit     = "deposit"
 	FlagTitle       = "title"
 	FlagDescription = "description"
+	FlagBlockLimit  = "block-limit"
 
 	FlagProposalID = "proposal-id"
 	FlagOption     = "option"
 )
-
-// // GetSimpleGovCmdDefault gets the cmd for the simpleGov. type
-// func GetSimpleGovCmdDefault(storeName string, cdc *wire.Codec) *cobra.Command {
-// 	return SimpleGovCmd(storeName, cdc)
-// }
 
 // ProposeCmd is the command to create proposals
 func ProposeCmd(storeName string, cdc *wire.Codec) *cobra.Command {
@@ -42,13 +38,21 @@ func ProposeCmd(storeName string, cdc *wire.Codec) *cobra.Command {
 			title := viper.GetString(FlagTitle)
 			description := viper.GetString(FlagDescription)
 			coins := viper.GetString(FlagDeposit)
+			if viper.IsSet(FlagBlockLimit) {
+				blockLimit := viper.GetInt64(FlagBlockLimit)
+			} else {
+				blockLimit := 1209600 // default value
+			}
 			deposit, err := sdk.ParseCoins(coins)
 			if err != nil {
 				return err
 			}
 
-			// TODO build msg
-
+			msg := simpleGovernance.NewSubmitProposalMsg(title, description, blockLimit, deposit, proposer)
+			res, err := ctx.EnsureSignBuildBroadcast(ctx.GetFromAddress(), msg, cdc)
+			if err != nil {
+				return err
+			}
 			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
 			return nil
 		},
@@ -56,6 +60,7 @@ func ProposeCmd(storeName string, cdc *wire.Codec) *cobra.Command {
 	proposeCmd.Flags().String(FlagTitle, "", "Title of the proposal")
 	proposeCmd.Flags().String(FlagDescription, "", "Description of the proposal")
 	proposeCmd.Flags().String(FlagDeposit, "1steak", "Amount of coins to deposit on the proposal")
+	proposeCmd.Flags().Int64(FlagBlockLimit, 1209600, "Window measured in blocks to allow vote submission")
 	proposeCmd.MarkFlagRequired(FlagTitle)
 	proposeCmd.MarkFlagRequired(FlagDescription)
 	proposeCmd.MarkFlagRequired(FlagDeposit)
@@ -78,8 +83,11 @@ func VoteCmd(storeName string, cdc *wire.Codec) *cobra.Command {
 			option := viper.GetString(FlagOption)
 			proposalID := viper.GetInt64(FlagProposalID)
 
-			// TODO build msg
-
+			msg := simpleGovernance.NewVoteMsg(proposalID, option, voter)
+			res, err := ctx.EnsureSignBuildBroadcast(ctx.GetFromAddress(), msg, cdc)
+			if err != nil {
+				return err
+			}
 			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
 			return nil
 		},

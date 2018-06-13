@@ -93,7 +93,20 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 
 		// sign
 		ctx = ctx.WithAccountNumber(m.AccountNumber)
-		ctx = ctx.WithSequence(m.Sequence)
+
+		ctx, err := context.EnsureSequence(ctx)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		if m.Gas == 0 {
+			m.Gas = 20000
+		}
+
+		ctx = ctx.WithGas(m.Gas)
+
 		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, msg, cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)

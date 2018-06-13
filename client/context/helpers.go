@@ -168,9 +168,23 @@ func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg sdk.Msg, cdc *w
 	}
 
 	var txBytes []byte
-	passphrase, err := ctx.GetPassphraseFromStdin(name)
+
+	keybase, err := keys.GetKeyBase()
 	if err != nil {
-		return nil, fmt.Errorf("Error fetching passphrase: %v", err)
+		return nil, err
+	}
+
+	info, err := keybase.Get(name)
+	if err != nil {
+		return nil, err
+	}
+	var passphrase string
+	// Only need a passphrase for locally-stored keys
+	if info.GetType() == "local" {
+		passphrase, err = ctx.GetPassphraseFromStdin(name)
+		if err != nil {
+			return nil, fmt.Errorf("Error fetching passphrase: %v", err)
+		}
 	}
 	txBytes, err = ctx.SignAndBuild(name, passphrase, msg, cdc)
 	if err != nil {

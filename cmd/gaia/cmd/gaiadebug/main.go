@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	gaia "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -18,6 +20,7 @@ func init() {
 	rootCmd.AddCommand(txCmd)
 	rootCmd.AddCommand(pubkeyCmd)
 	rootCmd.AddCommand(hackCmd)
+	rootCmd.AddCommand(rawBytesCmd)
 }
 
 var rootCmd = &cobra.Command{
@@ -42,6 +45,33 @@ var hackCmd = &cobra.Command{
 	Use:   "hack",
 	Short: "Boilerplate to Hack on an existing state by scripting some Go...",
 	RunE:  runHackCmd,
+}
+
+var rawBytesCmd = &cobra.Command{
+	Use:   "raw-bytes",
+	Short: "Convert raw bytes output (eg. [10 21 13 255]) to hex",
+	RunE:  runRawBytesCmd,
+}
+
+func runRawBytesCmd(cmd *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return fmt.Errorf("Expected single arg")
+	}
+	stringBytes := args[0]
+	stringBytes = strings.Trim(stringBytes, "[")
+	stringBytes = strings.Trim(stringBytes, "]")
+	spl := strings.Split(stringBytes, " ")
+
+	byteArray := []byte{}
+	for _, s := range spl {
+		b, err := strconv.Atoi(s)
+		if err != nil {
+			return err
+		}
+		byteArray = append(byteArray, byte(b))
+	}
+	fmt.Printf("%X\n", byteArray)
+	return nil
 }
 
 func runPubKeyCmd(cmd *cobra.Command, args []string) error {

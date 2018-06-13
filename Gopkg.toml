@@ -54,7 +54,7 @@
 
 [[constraint]]
   name = "github.com/tendermint/abci"
-  version = "=0.11.0"
+  version = "=0.12.0"
 
 [[constraint]]
   name = "github.com/tendermint/go-crypto"
@@ -70,7 +70,7 @@
 
 [[constraint]]
   name = "github.com/tendermint/tendermint"
-  version = "=0.20.0"
+  revision = "696e8c6f9e950eec15f150f314d2dd9ddf6bc601"
 
 [[override]]
   name = "github.com/tendermint/tmlibs"

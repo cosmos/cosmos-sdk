@@ -28,6 +28,7 @@ type sendBody struct {
 	Password         string    `json:"password"`
 	ChainID          string    `json:"chain_id"`
 	Sequence         int64     `json:"sequence"`
+	Gas              int64     `json:"gas"`
 }
 
 var msgCdc = wire.NewCodec()
@@ -74,7 +75,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 		to, err := sdk.GetAccAddressHex(address.String())
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			w.Write([]byte("Error decoding address from bech32 into bytes"))
 			return
 		}
 
@@ -88,6 +89,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 
 		// sign
 		ctx = ctx.WithSequence(m.Sequence)
+		ctx = ctx.WithGas(m.Gas)
 		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, msg, cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)

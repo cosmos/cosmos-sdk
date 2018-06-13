@@ -42,6 +42,7 @@ type editDelegationsBody struct {
 	Sequence         int64              `json:"sequence"`
 	Delegate         []msgDelegateInput `json:"delegate"`
 	Unbond           []msgUnbondInput   `json:"unbond"`
+	Gas              int64              `json:"gas"`
 }
 
 func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
@@ -68,6 +69,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 		}
 
 		// build messages
+		ctx = ctx.WithGas(m.Gas)
 		messages := make([]sdk.Msg, len(m.Delegate)+len(m.Unbond))
 		i := 0
 		for _, msg := range m.Delegate {

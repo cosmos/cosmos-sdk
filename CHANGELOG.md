@@ -14,6 +14,7 @@ FIXES
 * [lcd] Switch to bech32 for addresses on all human readable inputs and outputs
 * fixed tx indexing/querying
 * [cli] Added `--gas` flag to specify transaction gas limit
+* [lcd] Added gas to transactions
 
 ## 0.18.0
 

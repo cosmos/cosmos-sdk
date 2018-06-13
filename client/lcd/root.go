@@ -49,7 +49,7 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 			// Wait forever and cleanup
 			cmn.TrapSignal(func() {
 				err := listener.Close()
-				logger.Error("Error closing listener", "err", err)
+				logger.Error("error closing listener", "err", err)
 			})
 			return nil
 		},

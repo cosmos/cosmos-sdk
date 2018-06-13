@@ -5,15 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
-	crypto "github.com/tendermint/go-crypto"
 )
-
-func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.Address) {
-	key := crypto.GenPrivKeyEd25519()
-	pub := key.PubKey()
-	addr := sdk.Address(pub.Address())
-	return key, pub, addr
-}
 
 func TestNewSubmitProposalMsg(t *testing.T) {
 	goodTitle := "Photons at launch"

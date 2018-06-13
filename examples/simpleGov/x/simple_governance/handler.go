@@ -34,10 +34,9 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-// NewBeginBlocker checks proposal and creates a BeginBlock
-func NewBeginBlocker(k Keeper) sdk.BeginBlocker {
-	// TODO cannot use func literal (type func("github.com/cosmos/cosmos-sdk/types".Context, "github.com/tendermint/abci/types".RequestBeginBlock) "github.com/tendermint/abci/types".ResponseBeginBlock) as type "github.com/cosmos/cosmos-sdk/types".BeginBlocker in return argument
-	return func(ctx sdk.Context, req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
+// NewEndBlocker checks proposals and generates a EndBlocker
+func NewEndBlocker(k Keeper) sdk.EndBlocker {
+	return func(ctx sdk.Context, req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 		err := checkProposal(ctx, k)
 		if err != nil {
 			panic(err)
@@ -119,7 +118,7 @@ func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
 		return stake.ErrNoDelegatorForAddress(DefaultCodespace).Result()
 	}
 	// Check if address already voted
-	voterOption, err := k.GetOption(ctx, msg.ProposalID, msg.Voter)
+	voterOption, err := k.GetVote(ctx, msg.ProposalID, msg.Voter)
 	if voterOption == "" && err != nil {
 		// voter has not voted yet
 		for _, delegation := range delegatedTo {
@@ -145,7 +144,7 @@ func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
 		}
 	}
 
-	k.SetOption(ctx, msg.ProposalID, msg.Voter, msg.Option)
+	k.SetVote(ctx, msg.ProposalID, msg.Voter, msg.Option)
 	k.SetProposal(ctx, msg.ProposalID, proposal)
 
 	return sdk.Result{

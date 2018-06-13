@@ -6,9 +6,9 @@ This paper specifies the lcd (lite client daemon) module of Cosmos-SDK. This mod
 
 All consumers can deploy their own lcd nodes on their own personal computers, even on their smart phones. Then without trusting any blockchain fullnodes or any single validator node, just trusting their own lcd node and the whole validator set, they can verify all blockchain state. For instance, a cosmos consumer wants to check how many Atom coins he/she has. He/she can send a coin query request to his/her own lcd node, then the lcd node send another query request to a fullnode to get coin quantity and related Merkle proof. Finally the lcd node verify the proof. If the proof is valid, then the coin quantity the consumer has is definitely right.
 
-## Lcd REST-SERVER interfaces
+## Lcd rest-server interfaces
 
-Cosmos-SDK lcd (lite client daemon) acts as a REST-SERVER. It provides a set of APIs which cover key management, tendermint blockchain monitor and other cosmos modules related interfaces.
+Cosmos-SDK lcd (lite client daemon) acts as a rest-server. It provides a set of APIs which cover key management, tendermint blockchain monitor and other cosmos modules related interfaces.
 
 1.  **Key management**
 
@@ -144,7 +144,7 @@ Cosmos-SDK lcd (lite client daemon) acts as a REST-SERVER. It provides a set of 
           Example return:
         ```
 
-4.  **auth module:query account information**
+4.  **Auth module**
 
     1. **url: /accounts/{address}, Method: GET**
         ```
@@ -153,7 +153,7 @@ Cosmos-SDK lcd (lite client daemon) acts as a REST-SERVER. It provides a set of 
           Example return:
         ```
 
-5.  **bank module**
+5.  **Bank module**
 
     1. **url: /accounts/{address}/send, Method: POST**
         ```
@@ -162,7 +162,7 @@ Cosmos-SDK lcd (lite client daemon) acts as a REST-SERVER. It provides a set of 
           Example return:
         ```
 
-6.  **ibc module**
+6.  **Ibc module**
 
     1. **url: /ibc/{destchain}/{address}/send, Method: POST**
         ```
@@ -171,7 +171,7 @@ Cosmos-SDK lcd (lite client daemon) acts as a REST-SERVER. It provides a set of 
           Example return:
         ```
 
-7.  **stake module**
+7.  **Stake module**
 
     1. **url: /stake/{delegator}/bonding_status/{validator}, Method: GET**
         ```
@@ -196,13 +196,13 @@ Cosmos-SDK lcd (lite client daemon) acts as a REST-SERVER. It provides a set of 
 
     1. **url: /broadcast_tx_commit, Method: POST**
         ```
-          Functionality: Directly send a transaction and wait for on-chain
+          Functionality: Directly send a transaction and wait until on-chain
           Example parameters:
           Example return:
         ```
     2. **url: /broadcast_tx_sync, Method: POST**
         ```
-          Functionality: Directly send a transaction and wait for checkTX
+          Functionality: Directly send a transaction and wait until checkTX is done
           Example parameters:
           Example return:
         ```
@@ -212,4 +212,7 @@ Cosmos-SDK lcd (lite client daemon) acts as a REST-SERVER. It provides a set of 
           Example parameters:
           Example return:
         ```
-## Build and Verify Merkle Proof
+
+## Build Merkle Proof
+
+## Verify Merkle Proof

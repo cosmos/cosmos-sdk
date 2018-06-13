@@ -21,6 +21,7 @@ type baseReq struct {
 	ChainID       string `json:"chain_id"`
 	AccountNumber int64  `json:"account_number"`
 	Sequence      int64  `json:"sequence"`
+	Gas           int64  `json:"gas"`
 }
 
 type postProposalReq struct {
@@ -77,9 +78,16 @@ func (req baseReq) baseReqValidate(w http.ResponseWriter) bool {
 		return false
 	}
 
-	if len(req.ChainID) == 0 {
+	// if len(req.ChainID) == 0 {
+	// 	w.WriteHeader(http.StatusUnauthorized)
+	// 	err := errors.Errorf("ChainID required but not specified")
+	// 	w.Write([]byte(err.Error()))
+	// 	return false
+	// }
+
+	if req.AccountNumber < 0 {
 		w.WriteHeader(http.StatusUnauthorized)
-		err := errors.Errorf("ChainID required but not specified")
+		err := errors.Errorf("Account Number required but not specified")
 		w.Write([]byte(err.Error()))
 		return false
 	}
@@ -159,7 +167,12 @@ func (req voteReq) Validate(w http.ResponseWriter) bool {
 }
 
 func signAndBuild(w http.ResponseWriter, ctx context.CoreContext, baseReq baseReq, msg sdk.Msg, cdc *wire.Codec) {
+	ctx = ctx.WithAccountNumber(baseReq.AccountNumber)
 	ctx = ctx.WithSequence(baseReq.Sequence)
+
+	// add gas to context
+	ctx = ctx.WithGas(baseReq.Gas)
+
 	txBytes, err := ctx.SignAndBuild(baseReq.Name, baseReq.Password, msg, cdc)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)

@@ -1,7 +1,10 @@
 package rest
 
 import (
-	"encoding/hex"
+	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -9,8 +12,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/tendermint/go-crypto/keys"
-	"net/http"
-	"strconv"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
@@ -33,14 +34,13 @@ func postProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCon
 			return
 		}
 
-		bz, err := hex.DecodeString(req.Proposer)
+		proposer, err := sdk.GetAccAddressBech32(req.Proposer)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		proposer := sdk.Address(bz)
 		// create the message
 		msg := gov.NewMsgSubmitProposal(req.Title, req.Description, req.ProposalType, proposer, req.InitialDeposit)
 
@@ -61,16 +61,15 @@ func depositHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext)
 			return
 		}
 
-		bz, err := hex.DecodeString(req.Depositer)
+		depositer, err := sdk.GetAccAddressBech32(req.Depositer)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		Depositer := sdk.Address(bz)
 		// create the message
-		msg := gov.NewMsgDeposit(Depositer, req.ProposalID, req.Amount)
+		msg := gov.NewMsgDeposit(depositer, req.ProposalID, req.Amount)
 
 		// sign
 		signAndBuild(w, ctx, req.BaseReq, msg, cdc)
@@ -89,14 +88,13 @@ func voteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) ht
 			return
 		}
 
-		bz, err := hex.DecodeString(req.Voter)
+		voter, err := sdk.GetAccAddressBech32(req.Voter)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		voter := sdk.Address(bz)
 		// create the message
 		msg := gov.NewMsgVote(voter, req.ProposalID, req.Option)
 		// sign
@@ -124,10 +122,10 @@ func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 
 		ctx := context.NewCoreContextFromViper()
 
-		key, _ := cdc.MarshalBinary(id)
+		key := []byte(fmt.Sprintf("%d", id) + ":proposal")
 		res, err := ctx.Query(key, storeName)
 		if len(res) == 0 || err != nil {
-			err := errors.Errorf("proposalID [%d] is not existed", proposalID)
+			err := errors.Errorf("proposalID [%d] does not exist", proposalID)
 			w.Write([]byte(err.Error()))
 			return
 		}

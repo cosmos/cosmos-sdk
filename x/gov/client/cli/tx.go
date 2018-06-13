@@ -25,7 +25,7 @@ const (
 )
 
 // submit a proposal tx
-func SubmitProposalCmd(cdc *wire.Codec) *cobra.Command {
+func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submitproposal",
 		Short: "Submit a proposal along with an initial deposit",
@@ -71,7 +71,7 @@ func SubmitProposalCmd(cdc *wire.Codec) *cobra.Command {
 }
 
 // set a new Deposit transaction
-func DepositCmd(cdc *wire.Codec) *cobra.Command {
+func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deposit [depositer] [proposalID] [amount]",
 		Short: "deposit your token [steak] for activing proposal",
@@ -110,7 +110,7 @@ func DepositCmd(cdc *wire.Codec) *cobra.Command {
 }
 
 // set a new Vote transaction
-func VoteCmd(cdc *wire.Codec) *cobra.Command {
+func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "vote [voter] [proposalID] [option]",
 		Short: "vote for current actived proposal,option:Yes/NO/NoWithVeto/Abstain",
@@ -149,7 +149,7 @@ func VoteCmd(cdc *wire.Codec) *cobra.Command {
 }
 
 // Command to Get a Proposal Information
-func GetProposalCmd(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryProposal(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "proposal [proposalID]",
 		Short: "query proposal details",

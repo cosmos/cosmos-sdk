@@ -50,8 +50,10 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 		return err.Result()
 	}
 
+	proposalIDBytes, _ := keeper.cdc.MarshalBinaryBare(msg.ProposalID)
+
 	// TODO: Add tag for if voting period started
-	tags := sdk.NewTags("action", []byte("deposit"), "depositer", msg.Depositer.Bytes(), "proposalId", []byte{byte(msg.ProposalID)})
+	tags := sdk.NewTags("action", []byte("deposit"), "depositer", msg.Depositer.Bytes(), "proposalId", proposalIDBytes)
 	return sdk.Result{
 		Tags: tags,
 	}
@@ -65,7 +67,9 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 		return err.Result()
 	}
 
-	tags := sdk.NewTags("action", []byte("vote"), "voter", msg.Voter.Bytes(), "proposalId", []byte{byte(msg.ProposalID)})
+	proposalIDBytes, _ := keeper.cdc.MarshalBinaryBare(msg.ProposalID)
+
+	tags := sdk.NewTags("action", []byte("vote"), "voter", msg.Voter.Bytes(), "proposalId", proposalIDBytes)
 	return sdk.Result{
 		Tags: tags,
 	}

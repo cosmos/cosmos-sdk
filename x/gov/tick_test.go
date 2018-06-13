@@ -20,9 +20,6 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	res := govHandler(ctx, newProposalMsg)
 	assert.True(t, res.IsOK())
 
-	// var proposalID int
-	// keeper.cdc.UnmarshalBinaryBare(res.Data, &proposalID)
-
 	EndBlocker(ctx, keeper)
 	assert.NotNil(t, keeper.InactiveProposalQueuePeek(ctx))
 	assert.False(t, shouldPopInactiveProposalQueue(ctx, keeper))

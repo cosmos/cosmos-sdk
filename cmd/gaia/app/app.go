@@ -96,7 +96,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
-	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake, app.keySlashing)
+	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake, app.keySlashing, app.keyGov)
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
 		cmn.Exit(err.Error())
@@ -112,6 +112,7 @@ func MakeCodec() *wire.Codec {
 	bank.RegisterWire(cdc)
 	stake.RegisterWire(cdc)
 	slashing.RegisterWire(cdc)
+	gov.RegisterWire(cdc)
 	auth.RegisterWire(cdc)
 	sdk.RegisterWire(cdc)
 	wire.RegisterCrypto(cdc)

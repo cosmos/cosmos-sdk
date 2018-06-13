@@ -1,5 +1,11 @@
 # TESTNET STATUS
 
+## *June 13, 2018, 17:00 EST* - Gaia-6002 is making blocks!
+
+- Gaia-6002 is live and making blocks
+- Absent validators have been slashed and revoked 
+- Currently live with 17 validators
+
 ## *June 13, 2018, 4:30 EST* - New Testnet Gaia-6002
 
 - After fixing bugs from gaia-6001, especially [issue

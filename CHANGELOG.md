@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.19.0
+
+*June 13, 2018*
+
 BREAKING CHANGES
 * msg.GetSignBytes() now returns bech32-encoded addresses in all cases
 * [lcd] REST end-points now include gas
@@ -15,6 +19,7 @@ IMPROVEMENTS
 * [x/stake] More stake tests added to test ByPower index
 
 FIXES
+* Fixes consensus fault on testnet - see postmortem [here](https://github.com/cosmos/cosmos-sdk/issues/1197#issuecomment-396823021)
 * [x/stake] bonded inflation removed, non-bonded inflation partially implemented 
 * [lcd] Switch to bech32 for addresses on all human readable inputs and outputs
 * [lcd] fixed tx indexing/querying

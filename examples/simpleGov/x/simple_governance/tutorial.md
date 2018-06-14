@@ -369,14 +369,7 @@ git rebase upstream/master
 We will also create a branch dedicated to our module:
 
 ```bash
-git checkout -b my_new_module
-```
-
-Finally, let us create the repository for our module:
-
-```bash
-cd x
-mkdir module_tutorial
+git checkout -b my_new_application
 ```
 
 We are all set! 
@@ -470,7 +463,17 @@ type VoteMsg struct {
 
 ## Implementation
 
-Now that we have our types defined, we can start actually implementing the module. Let us start by adding the files we will need. Your module folder should look something like that:
+Now that we have our types defined, we can start actually implementing the module. 
+
+First, let us go into the module's folder and create a folder for our module.
+
+```bash
+cd x/
+mkdir simple_governance
+cd simple_governance
+```
+
+Let us start by adding the files we will need. Your module's folder should look something like that:
 
 ```
 - types.go
@@ -679,11 +682,148 @@ Note that the errors of our module inherit from the `sdk.Error` interface and th
 
 ### Application - Bridging it all together
 
-#### Integration
+Now that we have built all the pieces that we need, it is time to integrate them into the application. Let us exit the `/x` director go back at the root of the SDK directory.
 
-#### Running the App
+Then, let us create an `app` folder.
+
+```bash 
+// At root level of directory
+mkdir app 
+cd app
+```
+
+We are ready to create our simple governance application!
+
+
+*Note: You can check the full file (with comments!) [here](link)*
+
+First, create an `app.go` file. This is the main file that defines your application. In it, you will declare all the modules you need, their keepers, handlers, stores, etc. Let us take a look at each section of this file to see how the application is constructed.
+
+First, we need to define the name of our application.
+
+```go 
+const (
+    appName = "SimpleGovApp"
+)
+```
+
+Then, let us define the structure of our application.
+
+```go 
+// Extended ABCI application
+type SimpleGovApp struct {
+    *bam.BaseApp
+    cdc *wire.Codec
+
+    // keys to access the substores
+    capKeyMainStore      *sdk.KVStoreKey
+    capKeyAccountStore   *sdk.KVStoreKey
+    capKeyStakingStore   *sdk.KVStoreKey
+    capKeySimpleGovStore *sdk.KVStoreKey
+
+    // keepers
+    feeCollectionKeeper auth.FeeCollectionKeeper
+    coinKeeper          bank.Keeper
+    stakeKeeper         simplestake.Keeper
+    simpleGovKeeper     simpleGov.Keeper
+
+    // Manage getting and setting accounts
+    accountMapper auth.AccountMapper
+}
+```
+
+- Each application builds on top of the `BaseApp` template, hence the pointer.
+- `cdc` is the codec used in our application.
+- Then come the keys to the stores we need in our application. For our simple governance app, we need 3 stores + the main store.
+- Then come the keepers and mappers.
+
+Let us do a quick reminder so that it is perfectly clear why we need these stores and keeper. Our application is primarily based on the `simple_governance` module. However, we have established in section [Keepers for our app](#keepers_for_our_app) that our module needs access to two other modules: the `bank` module and the `stake` module. We also need the `auth` module for basic account functionalities. Finally, we need access to the main multistore to declare the stores of each of the module we use.
+
+Then, we need to define the constructor for our application.
+
+```go
+func NewSimpleGovApp(logger log.Logger, db dbm.DB) *SimpleGovApp
+```
+
+In this function, we will:
+
+- Create the codec
+
+```go 
+var cdc = MakeCodec()
+```
+
+- Instantiate our application. This includes creating the keys to access each of the substores.
+
+```go
+// Create your application object.
+    var app = &SimpleGovApp{
+        BaseApp:              bam.NewBaseApp(appName, cdc, logger, db),
+        cdc:                  cdc,
+        capKeyMainStore:      sdk.NewKVStoreKey("main"),
+        capKeyAccountStore:   sdk.NewKVStoreKey("acc"),
+        capKeyStakingStore:   sdk.NewKVStoreKey("stake"),
+        capKeySimpleGovStore: sdk.NewKVStoreKey("simpleGov"),
+    }
+```
+
+- Instantiate the keepers. Note that keepers generally need access to other module's keepers. In this case, make sure you only pass an instance of the keeper for the functionality that is needed. If a keeper only needs to read in another module's store, a read-only keeper should be passed to it.
+
+```go
+app.coinKeeper = bank.NewKeeper(app.accountMapper)
+app.stakeKeeper = simplestake.NewKeeper(app.capKeyStakingStore, app.coinKeeper,app.RegisterCodespace(simplestake.DefaultCodespace))
+app.simpleGovKeeper = simpleGov.NewKeeper(app.capKeySimpleGovStore, app.coinKeeper, app.stakeKeeper, app.RegisterCodespace(simpleGov.DefaultCodespace))
+```
+
+- Declare the handlers.
+
+```go 
+app.Router().
+        AddRoute("bank", bank.NewHandler(app.coinKeeper)).
+        AddRoute("simplestake", simplestake.NewHandler(app.stakeKeeper)).
+        AddRoute("simpleGov", simpleGov.NewHandler(app.simpleGovKeeper))
+```
+
+- Initialize the application.
+
+```go
+// Initialize BaseApp.
+    app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeySimpleGovStore, app.capKeyStakingStore)
+    app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
+    err := app.LoadLatestVersion(app.capKeyMainStore)
+    if err != nil {
+        cmn.Exit(err.Error())
+    }
+    return app
+```
+
+Finally, we need to define the `MakeCodec()` function and register the concrete types and interface from the various modules.
+
+```go 
+func MakeCodec() *wire.Codec {
+    var cdc = wire.NewCodec()
+    wire.RegisterCrypto(cdc) // Register crypto.
+    sdk.RegisterWire(cdc)    // Register Msgs
+    bank.RegisterWire(cdc)
+    simplestake.RegisterWire(cdc)
+    simpleGov.RegisterWire(cdc)
+
+    // Register AppAccount
+    cdc.RegisterInterface((*auth.Account)(nil), nil)
+    cdc.RegisterConcrete(&types.AppAccount{}, "simpleGov/Account", nil)
+    return cdc
+}
+```
 
 ### Commands/Rest
+
+
+
+### Running the app
+
+Describe how to finalize the app (makefile, deps, ...)
+How tu run the app
+Maybe pass a few txs through CLI
 
 ### Testnet 
 

@@ -82,13 +82,6 @@ Upon receiving a transaction from the Tendermint Core engine, here is whatthe ap
 
 Steps 1, 2 and 4 are handled by the root application. Step 3 is handled by the appropriate module. 
 
-Some example of already-built modules include:
-- `auth`: Module for accounts and signatures
-- `bank`: Module for tokens
-- `stake`: Module for the blockchain to be run as a public Proof-Of-Stake blockchain
-- `governance`: Module to handle on-chain proposals and votes
-- `ibc`: Modules to allow the blockchain to exchange tokens with other chains.
-
 ### SDK Components 
 
 With this in mind, let us go through the important directories of the SDK:
@@ -376,14 +369,7 @@ git rebase upstream/master
 We will also create a branch dedicated to our module:
 
 ```bash
-git checkout -b my_new_module
-```
-
-Finally, let us create the repository for our module:
-
-```bash
-cd x
-mkdir module_tutorial
+git checkout -b my_new_application
 ```
 
 We are all set! 
@@ -477,7 +463,17 @@ type VoteMsg struct {
 
 ## Implementation
 
-Now that we have our types defined, we can start actually implementing the module. Let us start by adding the files we will need. Your module folder should look something like that:
+Now that we have our types defined, we can start actually implementing the module. 
+
+First, let us go into the module's folder and create a folder for our module.
+
+```bash
+cd x/
+mkdir simple_governance
+cd simple_governance
+```
+
+Let us start by adding the files we will need. Your module's folder should look something like that:
 
 ```
 - types.go
@@ -491,7 +487,7 @@ Now that we have our types defined, we can start actually implementing the modul
 
 Let us go into the detail of each of these files.
 
-### types
+### Types
 
 In this file, you define the custom types for your module. This includes the types from the [State](#State) section and the custom message types for your module defined in the [Transactions](#Transactions) section.
 
@@ -595,6 +591,8 @@ The last thing that needs to be done is to override certain methods for the `Kee
 
 ### Handler
 
+#### Constructore and core handlers
+
 Handlers implement the core logic of the state-machine. When a transaction is routed from the app to the module, it is run by the `handler` function. 
 
 In practice, one `handler` will be implemented for each message of the module. In our case, we have two message types. We will therefore need two `handler` functions. We will also need a constructor function to route the message to the correct `handler`:
@@ -615,15 +613,217 @@ func NewHandler(k Keeper) sdk.Handler {
 }
 ```
 
+The messages are routed to the appropriate `handler` depending on their type. For our simple governance module, we only have two `handlers`, that correspond to our two message types. They have similar signatures:
 
+```go
+func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg SubmitProposalMsg) sdk.Result
+```
+
+Let us take a look at the parameters of this function:
+
+- The context `ctx` provides useful information on the current state such as the current block height and allows the keeper `k` to access the KVStore. You can check all the methods of `ctx` [here](https://github.com/cosmos/cosmos-sdk/blob/develop/types/context.go#L144-L168)
+- The keeper `k` allows the handler to read and write from the different stores, including the module's store (`SimpleGovernance` in our case) and all the stores from other modules that the keeper `k` has been granted an access to (`stake` and `bank` in our case).
+- The message `msg` that holds all the information provided by the sender of the transaction. 
+
+The function returns a `Result` that is returned to the application. It contains several useful information such as the amount of `Gas` for this transaction and wether the message was succesfully processed or not. At this point, we exit the boundaries of our simple governance module and go back to root application level. The `Result` will differ from application to application. You can [check the `sdk.Result` type directly](https://github.com/cosmos/cosmos-sdk/blob/develop/types/result.go) for more info.
+
+#### BeginBlocker and EndBlocker
+
+Contrary to most Smart-Contracts platform, it is possible to perform automatic (i.e. not triggered by a transaction sent by an end-user) execution of logic in Cosmos-SDK applications.
+
+This automatic execution of code takes place in the `BeginBlock` and `EndBlock` functions that are called at the beginning and at the end of every block. They are powerful tools, but it is important for application developers to be careful with them. For example, it is crutial that developers control the amount of computing that happens in these functions, as expensive computation could delay the block time, and never-ending loop freeze the chain altogether. 
+
+`BeginBlock` and `EndBlock` are composable functions, meaning that each module can implement its own `BeginBlock` and `EndBlock` logic. When needed, `BeginBlock` and `EndBlock` logic is implemented in the module's `handler`. Here is the standard way to proceed for `BeginBlock` (`EndBlock` follows the exact same pattern):
+
+```go 
+func NewBeginBlocker(k Keeper) sdk.BeginBlocker {
+    // TODO cannot use func literal (type func("github.com/cosmos/cosmos-sdk/types".Context, "github.com/tendermint/abci/types".RequestBeginBlock) "github.com/tendermint/abci/types".ResponseBeginBlock) as type "github.com/cosmos/cosmos-sdk/types".BeginBlocker in return argument
+    return func(ctx sdk.Context, req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
+        err := checkProposal(ctx, k)
+        if err != nil {
+            panic(err)
+        }
+        return
+    }
+}
+```
+
+Do not forget that each module has to declare its `BeginBlock` and `EndBlock` constructors at application level. See the [Application - Bridging it all together](#application_-_bridging_it_all_together).
+
+For the purpose of our simple governance application, we will use `EndBlock` to automatically tally the results of the vote. Here are the different steps that will be performed:
+
+1. Get the oldest proposal from the `ProposalProcessingQueue`
+2. Check if the `CurrentBlock` is the block at which the voting period for this proposal ends. If Yes, go to 3.. If no, exit.
+3. Check if proposal is accepted or rejected. Update the proposal status.
+4. Pop the proposal from the `ProposalProcessingQueue` and go back to 1.
+
+Let us perform a quick safety analysis on this process.
+- The loop will not run forever because the number of proposals in `ProposalProcessingQueue` is finite
+- The computation should not be too expensive because tallying is not expensive and the number of proposals is expected be relatively low. That is because proposals require a `Deposit` to be accepted. `Deposit` should be high enough so that we don't have too many `Proposals` in the queue.
+- In the eventuality where the application becomes so successful that the `ProposalProcessingQueue` ends up containing so many proposals that the blockchain starts slowing down, the module should be modified to mitigate the situation. One clever way of doing that is to cap the number of iteration per individual `EndBlock` at `MaxIteration`. This way, tallying will be spread over many blocks if the number of proposals is too important and block time should remain stable. This would require to modify the current check `if (CurrentBlock == Proposal.SubmitBlock + VotingPeriod)` to `if (CurrentBlock > Proposal.SubmitBlock + VotingPeriod) AND (Proposal.Status == ProposalStatusActive)`.
 
 ### Wire
 
+The `wire.go` file allows developers to register the concrete message types of their module into the codec. In our case, we have two messages to declare:
+
+```go 
+func RegisterWire(cdc *wire.Codec) {
+    cdc.RegisterConcrete(SubmitProposalMsg{}, "simple_governance/SubmitProposalMsg", nil)
+    cdc.RegisterConcrete(VoteMsg{}, "simple_governance/VoteMsg", nil)
+}
+```
+Don't forget to call this function in `app.go` (see [Application - Bridging it all together](#application_-_bridging_it_all_together) for more).
+
 ### Errors
 
-### App - Bridging it all together
+The `error.go` file allows us to define custom error messages for our module.  Declaring errors should be relatively similar in all modules. You can look in the [error.go](./error.go) file of our simple governance module for a concrete example. The code is self-explanatory. 
+
+Note that the errors of our module inherit from the `sdk.Error` interface and therefore possess the method `Result()`. This method is useful when there is an error in the `handler` and an error has to be returned in place of an actual result.
+
+### Application - Bridging it all together
+
+Now that we have built all the pieces that we need, it is time to integrate them into the application. Let us exit the `/x` director go back at the root of the SDK directory.
+
+Then, let us create an `app` folder.
+
+```bash 
+// At root level of directory
+mkdir app 
+cd app
+```
+
+We are ready to create our simple governance application!
+
+
+*Note: You can check the full file (with comments!) [here](link)*
+
+First, create an `app.go` file. This is the main file that defines your application. In it, you will declare all the modules you need, their keepers, handlers, stores, etc. Let us take a look at each section of this file to see how the application is constructed.
+
+First, we need to define the name of our application.
+
+```go 
+const (
+    appName = "SimpleGovApp"
+)
+```
+
+Then, let us define the structure of our application.
+
+```go 
+// Extended ABCI application
+type SimpleGovApp struct {
+    *bam.BaseApp
+    cdc *wire.Codec
+
+    // keys to access the substores
+    capKeyMainStore      *sdk.KVStoreKey
+    capKeyAccountStore   *sdk.KVStoreKey
+    capKeyStakingStore   *sdk.KVStoreKey
+    capKeySimpleGovStore *sdk.KVStoreKey
+
+    // keepers
+    feeCollectionKeeper auth.FeeCollectionKeeper
+    coinKeeper          bank.Keeper
+    stakeKeeper         simplestake.Keeper
+    simpleGovKeeper     simpleGov.Keeper
+
+    // Manage getting and setting accounts
+    accountMapper auth.AccountMapper
+}
+```
+
+- Each application builds on top of the `BaseApp` template, hence the pointer.
+- `cdc` is the codec used in our application.
+- Then come the keys to the stores we need in our application. For our simple governance app, we need 3 stores + the main store.
+- Then come the keepers and mappers.
+
+Let us do a quick reminder so that it is perfectly clear why we need these stores and keeper. Our application is primarily based on the `simple_governance` module. However, we have established in section [Keepers for our app](#keepers_for_our_app) that our module needs access to two other modules: the `bank` module and the `stake` module. We also need the `auth` module for basic account functionalities. Finally, we need access to the main multistore to declare the stores of each of the module we use.
+
+Then, we need to define the constructor for our application.
+
+```go
+func NewSimpleGovApp(logger log.Logger, db dbm.DB) *SimpleGovApp
+```
+
+In this function, we will:
+
+- Create the codec
+
+```go 
+var cdc = MakeCodec()
+```
+
+- Instantiate our application. This includes creating the keys to access each of the substores.
+
+```go
+// Create your application object.
+    var app = &SimpleGovApp{
+        BaseApp:              bam.NewBaseApp(appName, cdc, logger, db),
+        cdc:                  cdc,
+        capKeyMainStore:      sdk.NewKVStoreKey("main"),
+        capKeyAccountStore:   sdk.NewKVStoreKey("acc"),
+        capKeyStakingStore:   sdk.NewKVStoreKey("stake"),
+        capKeySimpleGovStore: sdk.NewKVStoreKey("simpleGov"),
+    }
+```
+
+- Instantiate the keepers. Note that keepers generally need access to other module's keepers. In this case, make sure you only pass an instance of the keeper for the functionality that is needed. If a keeper only needs to read in another module's store, a read-only keeper should be passed to it.
+
+```go
+app.coinKeeper = bank.NewKeeper(app.accountMapper)
+app.stakeKeeper = simplestake.NewKeeper(app.capKeyStakingStore, app.coinKeeper,app.RegisterCodespace(simplestake.DefaultCodespace))
+app.simpleGovKeeper = simpleGov.NewKeeper(app.capKeySimpleGovStore, app.coinKeeper, app.stakeKeeper, app.RegisterCodespace(simpleGov.DefaultCodespace))
+```
+
+- Declare the handlers.
+
+```go 
+app.Router().
+        AddRoute("bank", bank.NewHandler(app.coinKeeper)).
+        AddRoute("simplestake", simplestake.NewHandler(app.stakeKeeper)).
+        AddRoute("simpleGov", simpleGov.NewHandler(app.simpleGovKeeper))
+```
+
+- Initialize the application.
+
+```go
+// Initialize BaseApp.
+    app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeySimpleGovStore, app.capKeyStakingStore)
+    app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
+    err := app.LoadLatestVersion(app.capKeyMainStore)
+    if err != nil {
+        cmn.Exit(err.Error())
+    }
+    return app
+```
+
+Finally, we need to define the `MakeCodec()` function and register the concrete types and interface from the various modules.
+
+```go 
+func MakeCodec() *wire.Codec {
+    var cdc = wire.NewCodec()
+    wire.RegisterCrypto(cdc) // Register crypto.
+    sdk.RegisterWire(cdc)    // Register Msgs
+    bank.RegisterWire(cdc)
+    simplestake.RegisterWire(cdc)
+    simpleGov.RegisterWire(cdc)
+
+    // Register AppAccount
+    cdc.RegisterInterface((*auth.Account)(nil), nil)
+    cdc.RegisterConcrete(&types.AppAccount{}, "simpleGov/Account", nil)
+    return cdc
+}
+```
 
 ### Commands/Rest
+
+
+
+### Running the app
+
+Describe how to finalize the app (makefile, deps, ...)
+How tu run the app
+Maybe pass a few txs through CLI
 
 ### Testnet 
 

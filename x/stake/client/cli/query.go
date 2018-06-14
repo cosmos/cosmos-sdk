@@ -27,7 +27,7 @@ func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 			}
 			key := stake.GetValidatorKey(addr)
 			ctx := context.NewCoreContextFromViper()
-			res, err := ctx.Query(key, storeName)
+			res, err := ctx.QueryStore(key, storeName)
 			if err != nil {
 				return err
 			}
@@ -124,7 +124,7 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 
 			key := stake.GetDelegationKey(delAddr, addr, cdc)
 			ctx := context.NewCoreContextFromViper()
-			res, err := ctx.Query(key, storeName)
+			res, err := ctx.QueryStore(key, storeName)
 			if err != nil {
 				return err
 			}

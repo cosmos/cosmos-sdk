@@ -17,6 +17,7 @@ BREAKING CHANGES
 
 FEATURES
 * [x/auth] Added AccountNumbers to BaseAccount and StdTxs to allow for replay protection with account pruning
+* [lcd] added an endpoint to query for the SDK version of the connected node
 
 IMPROVEMENTS
 * export command now writes current validator set for Tendermint

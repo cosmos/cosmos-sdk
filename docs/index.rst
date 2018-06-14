@@ -17,8 +17,9 @@ SDK
 .. toctree::
    :maxdepth: 1
    
-   sdk/install.rst
-   sdk/key-management.rst
+   guides/sdk/install.md
+   guides/sdk/key-management.md
+
 .. sdk/overview.rst # needs to be updated
 .. old/glossary.rst # not completely up to date but has good content
 
@@ -47,7 +48,7 @@ Staking
 .. toctree::
    :maxdepth: 1
 
-   staking/testnet.rst
+   guides/staking/testnet.md
 .. staking/intro.rst
 .. staking/key-management.rst
 .. staking/local-testnet.rst

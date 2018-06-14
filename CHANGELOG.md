@@ -35,7 +35,11 @@ FIXES
 * [gaia] Registered slashing message handler
 * [x/slashing] Set signInfo.StartHeight correctly for newly bonded validators
 
-## 0.18.0
+FEATURES
+* [docs] Reorganize documentation
+* [docs] Update staking spec, create WIP spec for slashing, and fees
+
+## 0.18.0 
 
 *June 9, 2018*
 

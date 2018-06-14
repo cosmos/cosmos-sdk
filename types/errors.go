@@ -68,31 +68,31 @@ const (
 func CodeToDefaultMsg(code CodeType) string {
 	switch code {
 	case CodeInternal:
-		return "Internal error"
+		return "internal error"
 	case CodeTxDecode:
-		return "Tx parse error"
+		return "tx parse error"
 	case CodeInvalidSequence:
-		return "Invalid sequence"
+		return "invalid sequence"
 	case CodeUnauthorized:
-		return "Unauthorized"
+		return "unauthorized"
 	case CodeInsufficientFunds:
-		return "Insufficent funds"
+		return "insufficent funds"
 	case CodeUnknownRequest:
-		return "Unknown request"
+		return "unknown request"
 	case CodeInvalidAddress:
-		return "Invalid address"
+		return "invalid address"
 	case CodeInvalidPubKey:
-		return "Invalid pubkey"
+		return "invalid pubkey"
 	case CodeUnknownAddress:
-		return "Unknown address"
+		return "unknown address"
 	case CodeInsufficientCoins:
-		return "Insufficient coins"
+		return "insufficient coins"
 	case CodeInvalidCoins:
-		return "Invalid coins"
+		return "invalid coins"
 	case CodeOutOfGas:
-		return "Out of gas"
+		return "out of gas"
 	default:
-		return fmt.Sprintf("Unknown code %d", code)
+		return fmt.Sprintf("unknown code %d", code)
 	}
 }
 
@@ -183,7 +183,7 @@ type sdkError struct {
 
 // Implements ABCIError.
 func (err *sdkError) Error() string {
-	return fmt.Sprintf("Error{%d:%d,%#v}", err.codespace, err.code, err.err)
+	return fmt.Sprintf("error{%d:%d,%#v}", err.codespace, err.code, err.err)
 }
 
 // Implements ABCIError.

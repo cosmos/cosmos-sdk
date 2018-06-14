@@ -43,7 +43,7 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
+	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 
 	// TODO: change this to false once proofs built in
 	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
@@ -54,7 +54,7 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 
 func searchTxs(ctx context.CoreContext, cdc *wire.Codec, tags []string) ([]txInfo, error) {
 	if len(tags) == 0 {
-		return nil, errors.New("Must declare at least one tag to search")
+		return nil, errors.New("must declare at least one tag to search")
 	}
 	// XXX: implement ANY
 	query := strings.Join(tags, " AND ")

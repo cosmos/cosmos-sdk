@@ -10,7 +10,6 @@ import (
 // Delegation represents the bond with tokens held by an account.  It is
 // owned by one delegator, and is associated with the voting power of one
 // pubKey.
-// TODO better way of managing space
 type Delegation struct {
 	DelegatorAddr sdk.Address `json:"delegator_addr"`
 	ValidatorAddr sdk.Address `json:"validator_addr"`
@@ -50,5 +49,4 @@ func (b Delegation) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Height: %d", b.Height)
 
 	return resp, nil
-
 }

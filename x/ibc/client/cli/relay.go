@@ -151,7 +151,7 @@ OUTER:
 }
 
 func query(node string, key []byte, storeName string) (res []byte, err error) {
-	return context.NewCoreContextFromViper().WithNodeURI(node).Query(key, storeName)
+	return context.NewCoreContextFromViper().WithNodeURI(node).QueryStore(key, storeName)
 }
 
 func (c relayCommander) broadcastTx(seq int64, node string, tx []byte) error {

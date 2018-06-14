@@ -8,6 +8,8 @@ information about the total amounts of Atoms in all states, representative
 validator shares for stake in the global pools, moving Atom inflation
 information, etc.
 
+ - stored object:
+
 ```golang
 type Pool struct {
     LooseUnbondedTokens int64   // tokens not associated with any validator
@@ -35,6 +37,8 @@ type PoolShares struct {
 Params is global data structure that stores system parameters and defines
 overall functioning of the stake module. 
 
+ - stored object:
+
 ```golang
 type Params struct {
     InflationRateChange sdk.Rat // maximum annual change in inflation rate
@@ -58,6 +62,8 @@ Related Store which holds Validator.ABCIValidator()
 
 The `Validator` holds the current state and some historical actions of the
 validator.
+
+ - stored object:
 
 ```golang
 type Validator struct {
@@ -98,6 +104,8 @@ funds are held in a `Delegation` data structure. It is owned by one
 delegator, and is associated with the shares for one validator. The sender of 
 the transaction is the owner of the bond.
 
+ - stored object:
+
 ```golang
 type Delegation struct {
 	DelegatorAddr sdk.Address // delegation owner address
@@ -113,6 +121,8 @@ type Delegation struct {
 A UnbondingDelegation object is created every time an unbonding is initiated.
 The unbond must be completed with a second transaction provided by the
 delegation owner after the unbonding period has passed.
+
+ - stored object:
 
 ```golang
 type UnbondingDelegation struct {
@@ -134,6 +144,8 @@ redelegation must be completed with a second transaction provided by the
 delegation owner after the unbonding period has passed.  The destination
 delegation of a redelegation may not itself undergo a new redelegation until
 the original redelegation has been completed.
+
+ - stored object:
 
 ```golang
 type Redelegation struct {

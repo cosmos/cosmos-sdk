@@ -8,23 +8,24 @@ The Cosmos Hub is a Tendermint-based Delegated Proof of Stake (DPos) blockchain
 system that serves as a backbone of the Cosmos ecosystem. It is operated and
 secured by an open and globally decentralized set of validators. Tendermint is
 a Byzantine fault-tolerant distributed protocol for consensus among distrusting
-parties, in this case the group of validators which produce the blocks for
-cosmos.  To avoid the nothing-at-stake problem, a validator in Tendermint needs
-to lock up coins in a bond deposit. Each bond's atoms are illiquid, they cannot
-be transferred however they can be unbonded to become liquid, this process
-takes the unbonding-period which will be 3 weeks by default at Cosmos-Hub
-launch. Tendermint protocol messages are signed by the validator's private key,
-and this is a basis for Tendermint strict accountability that allows punishing
-misbehaving validators by slashing (burning) their bonded Atoms. On the other
-hand, validators are rewarded for their service of securing blockchain network
-by the inflationary provisions and transactions fees. This incentivizes correct
-behavior of the validators and provides the economic security of the network.
+parties, in this case the group of validators which produce the blocks for the
+Cosmos Hub.  To avoid the nothing-at-stake problem, a validator in Tendermint
+needs to lock up coins in a bond deposit. Each bond's atoms are illiquid, they
+cannot be transferred - in order to become liquid, they must be unbonded, a
+process which will take 3 weeks by default at Cosmos Hub launch. Tendermint
+protocol messages are signed by the validator's private key and are therefor
+attributable.  Validators acting outside protocol specifications can be made
+accountable through punishing by slashing (burning) their bonded Atoms. On the
+other hand, validators are rewarded for their service of securing blockchain
+network by the inflationary provisions and transactions fees. This incentivizes
+correct behavior of the validators and provides the economic security of the
+network.
 
 The native token of the Cosmos Hub is called the Atom; becoming a validator of the
 Cosmos Hub requires holding Atoms. However, not all Atom holders are validators
 of the Cosmos Hub. More precisely, there is a selection process that determines
 the validator set as a subset of all validators (Atom holders that
-wants to become a validator). The other option for Atom holder is to delegate
+want to become a validator). The other option for Atom holders is to delegate
 their atoms to validators, i.e., being a delegator. A delegator is an Atom
 holder that has put its Atoms at stake by delegating it to a validator. By bonding
 Atoms to secure the network (and taking a risk of being slashed in case of
@@ -59,20 +60,22 @@ transaction fees.
     bonded the shares must first remain in an inbetween unbonding state for the
     duration of the unbonding period
 * Redelegating Shares - Process of redelegating atoms from one validator to
-    another. This process is instantanious, the redelegated delegation is
-    slashible to the old validator for all blocks before the redelegation and to
-    the new validator for all new blocks.
+    another. This process is instantaneous, but the redelegated atoms are
+    retrospecively slashable if the old validator is found to misbehave for any
+    blocks before the redelegation. These atoms are simultaniously slashable
+    for any new blocks which the new validator misbehavess
 * Validator - entity with atoms which is either actively validating the Tendermint
     protocol (bonded validator) or vying to validate .
 * Bonded Validator - a validator whose atoms are currently bonded and liable to
-    be slashed. These validators are to be able to sign protocol messages in the
-    Tendermint consensus protocol. There are limited number of bonded validators
-    at Cosmos Hub genesis there is a maximum of 100 bonded validators. Only Bonded
-    Validators receive atom provisions and fee rewards. 
+    be slashed. These validators are to be able to sign protocol messages for
+    Tendermint consensus. At Cosmos Hub genesis there is a maximum of 100
+    bonded validator positions. Only Bonded Validators receive atom provisions
+    and fee rewards. 
 * Delegator - an Atom holder that has bonded Atoms to a validator
 * Unbonding period - time required in the unbonding state when unbonding
     shares. Time slashable to old validator after a redelegation. Time for which
-    validators can be slashed after an infraction
+    validators can be slashed after an infraction. To provide the requisite
+    cryptoeconomic security guarantees, all of these must be equal.
 * Atom provisions - The process of increasing the Atom supply.  Atoms are
     periodically created on the Cosmos Hub and issued to bonded Atom holders.
     The goal of inflation is to incentize most of the Atoms in existence to be
@@ -90,7 +93,7 @@ At the core of the Staking module is the concept of a pool which denotes a
 collection of Atoms contributed by different Atom holders. There are three
 pools in the Staking module: the bonded, unbonding, and unbonded pool.  Bonded
 Atoms are part of the global bonded pool. If a validator or delegator wants to
-unbond its Shares, these Shares are moved to the the unbonding pool for the
+unbond its shares, these Shares are moved to the the unbonding pool for the
 duration of the unbonding period. From here normally Atoms will be moved
 directly into the delegators wallet, however under the situation thatn an
 entire validator gets unbonded, the Atoms of the delegations will remain with
@@ -169,17 +172,17 @@ delegators (we will explain this in section X).
 
 #### Delegator shares
 
-A validator is, depending on its status, contributing Atoms to either the bond,
+A validator is, depending on its status, contributing Atoms to either the
 unbonding or unbonded pool - the validator in turn holds some amount of pool
-shares.  Not all of a validators Atoms (and respective shares) are owned by the
-validator, some may be owned by delegators to that validator. The mechanism for
-distribution of Atoms (and shares) between a validator and its delegators is
-based on a notion of delegator shares. More precisely, every validator is
-issuing (local) delegator shares (`Validator.IssuedDelegatorShares`) that
-represents some portion of global shares managed by the validator
-(`Validator.GlobalStakeShares`). The principle behind managing delegator shares
-is the same as described in [Section](#The pool and the share). We now
-illustrate it with an example.
+shares.  Not all of a validator's Atoms (and respective shares) are necessarily
+owned by the validator, some may be owned by delegators to that validator. The
+mechanism for distribution of Atoms (and shares) between a validator and its
+delegators is based on a notion of delegator shares. More precisely, every
+validator is issuing (local) delegator shares
+(`Validator.IssuedDelegatorShares`) that represents some portion of global
+shares managed by the validator (`Validator.GlobalStakeShares`). The principle
+behind managing delegator shares is the same as described in [Section](#The
+pool and the share). We now illustrate it with an example.
 
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 XXX TODO make way less verbose lets use bullet points to describe the example

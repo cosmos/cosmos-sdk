@@ -44,7 +44,7 @@ createValidator(tx TxCreateValidator):
     if validator != nil return // only one validator per address
    	
     validator = NewValidator(OwnerAddr, ConsensusPubKey, GovernancePubKey, Description)
-    init validator poolShares, delegatorShares set to 0 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    init validator poolShares, delegatorShares set to 0
     init validator commision fields from tx
     validator.PoolShares = 0
    	
@@ -71,8 +71,8 @@ type TxEditCandidacy struct {
 editCandidacy(tx TxEditCandidacy):
     validator = getValidator(tx.ValidatorAddr)
     
-    if tx.Commission > CommissionMax ||  tx.Commission < 0 return halt tx
-    if rateChange(tx.Commission) > CommissionMaxChange return halt tx
+    if tx.Commission > CommissionMax ||  tx.Commission < 0 then fail 
+    if rateChange(tx.Commission) > CommissionMaxChange then fail
     validator.Commission = tx.Commission
 
     if tx.GovernancePubKey != nil validator.GovernancePubKey = tx.GovernancePubKey
@@ -126,28 +126,16 @@ startUnbonding(tx TxStartUnbonding):
     delegation, found = getDelegatorBond(store, sender, tx.PubKey)
     if !found == nil return 
     
-	if tx.Shares == "MAX" {
-		if !bond.Shares.GT(sdk.ZeroRat()) {
-			return ErrNotEnoughBondShares
-    else 
-		var err sdk.Error
-		delShares, err = sdk.NewRatFromDecimal(tx.Shares)
-		if err != nil 
-            return err
-		if bond.Shares.LT(delShares) 
+		if bond.Shares < tx.Shares
 			return ErrNotEnoughBondShares
 
-	validator, found := GetValidator(tx.ValidatorAddr)
+	validator, found = GetValidator(tx.ValidatorAddr)
 	if !found {
 		return err 
 
-	if tx.Shares == "MAX" 
-		delShares = bond.Shares
+	bond.Shares -= tx.Shares
 
-	bond.Shares -= delShares
-    
-
-	revokeCandidacy := false
+	revokeCandidacy = false
 	if bond.Shares.IsZero() {
 
 		if bond.DelegatorAddr == validator.Owner && validator.Revoked == false 
@@ -158,8 +146,8 @@ startUnbonding(tx TxStartUnbonding):
 		bond.Height = currentBlockHeight
 		setDelegation(bond)
 
-	pool := GetPool()
-	validator, pool, returnAmount := validator.removeDelShares(pool, delShares)
+	pool = GetPool()
+	validator, pool, returnAmount = validator.removeDelShares(pool, tx.Shares)
 	setPool( pool)
 
     unbondingDelegation = NewUnbondingDelegation(sender, returnAmount, currentHeight/Time, startSlashRatio)
@@ -261,13 +249,13 @@ Tendermint.
 ```golang
 updateBondedValidators(newValidator Validator) (updatedVal Validator)
 
-	kickCliffValidator := false
-	oldCliffValidatorAddr := getCliffValidator(ctx)
+	kickCliffValidator = false
+	oldCliffValidatorAddr = getCliffValidator(ctx)
 
 	// add the actual validator power sorted store
-	maxValidators := GetParams(ctx).MaxValidators
-	iterator := ReverseSubspaceIterator(ValidatorsByPowerKey) // largest to smallest
-	bondedValidatorsCount := 0
+	maxValidators = GetParams(ctx).MaxValidators
+	iterator = ReverseSubspaceIterator(ValidatorsByPowerKey) // largest to smallest
+	bondedValidatorsCount = 0
 	var validator Validator
 	for {
 		if !iterator.Valid() || bondedValidatorsCount > int(maxValidators-1) {
@@ -282,7 +270,7 @@ updateBondedValidators(newValidator Validator) (updatedVal Validator)
 		// use the validator provided because it has not yet been updated
 		// in the main validator store
 
-		ownerAddr := iterator.Value()
+		ownerAddr = iterator.Value()
 		if bytes.Equal(ownerAddr, newValidator.Owner) {
 			validator = newValidator
         else
@@ -290,7 +278,7 @@ updateBondedValidators(newValidator Validator) (updatedVal Validator)
 
 		// if not previously a validator (and unrevoked),
 		// kick the cliff validator / bond this new validator
-		if validator.Status() != sdk.Bonded && !validator.Revoked {
+		if validator.Status() != Bonded && !validator.Revoked {
 			kickCliffValidator = true
 
 			validator = bondValidator(ctx, store, validator)
@@ -302,16 +290,16 @@ updateBondedValidators(newValidator Validator) (updatedVal Validator)
 
 	// perform the actual kicks
 	if oldCliffValidatorAddr != nil && kickCliffValidator {
-		validator := getValidator(store, oldCliffValidatorAddr)
+		validator = getValidator(store, oldCliffValidatorAddr)
 		unbondValidator(ctx, store, validator)
 	return
 
 // perform all the store operations for when a validator status becomes unbonded
-unbondValidator(ctx sdk.Context, store sdk.KVStore, validator Validator)
-	pool := GetPool(ctx)
+unbondValidator(ctx Context, store KVStore, validator Validator)
+	pool = GetPool(ctx)
 
 	// set the status
-	validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
+	validator, pool = validator.UpdateStatus(pool, Unbonded)
 	setPool(ctx, pool)
 
 	// save the now unbonded validator record
@@ -325,11 +313,11 @@ unbondValidator(ctx sdk.Context, store sdk.KVStore, validator Validator)
 }
 
 // perform all the store operations for when a validator status becomes bonded
-bondValidator(ctx sdk.Context, store sdk.KVStore, validator Validator) Validator 
-	pool := GetPool(ctx)
+bondValidator(ctx Context, store KVStore, validator Validator) Validator 
+	pool = GetPool(ctx)
 
 	// set the status
-	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
+	validator, pool = validator.UpdateStatus(pool, Bonded)
 	setPool(ctx, pool)
 
 	// save the now bonded validator record to the three referenced stores

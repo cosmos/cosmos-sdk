@@ -10,7 +10,7 @@ NOTE: the specifications are not yet complete and very much a work in progress.
 - [Governance](governance) - Governance related specifications including 
   proposals and voting.
 - [IBC](ibc) - Specification of the Cosmos inter-blockchain communication (IBC) protocol.
-- [Staking](staking) - Proof of Stake related specifications including bonding 
+- [Staking](staking) - Proof-of-stake related specifications including bonding 
   and delegation transactions, inflation, etc.
 - [Slashing](slashing) - Specifications of validator punishment mechanisms
 - [Provisioning](provisioning) - Fee distribution, and atom provision distribution specification

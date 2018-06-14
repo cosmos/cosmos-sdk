@@ -17,6 +17,13 @@ paths:
       responses:
         200:
           description: Plaintext version i.e. "v0.5.0"
+  /node_version:
+    get:
+      summary: Version of the connected node
+      description: Get the version of the SDK running on the connected node to compare against expected
+      responses:
+        200:
+          description: Plaintext version i.e. "v0.5.0"
   /node_info:
     get:
       description: Only the node info. Block information can be queried via /block/latest
@@ -41,7 +48,7 @@ paths:
                 type: string
               listen_addr:
                 type: string
-                example: 192.168.56.1:46656
+                example: 192.168.56.1:26656
               version:
                 description: Tendermint version
                 type: string

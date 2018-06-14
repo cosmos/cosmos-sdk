@@ -280,7 +280,7 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 
 	matches := reCoin.FindStringSubmatch(coinStr)
 	if matches == nil {
-		err = fmt.Errorf("Invalid coin expression: %s", coinStr)
+		err = fmt.Errorf("invalid coin expression: %s", coinStr)
 		return
 	}
 	denomStr, amountStr := matches[2], matches[1]
@@ -316,7 +316,7 @@ func ParseCoins(coinsStr string) (coins Coins, err error) {
 
 	// Validate coins before returning.
 	if !coins.IsValid() {
-		return nil, fmt.Errorf("ParseCoins invalid: %#v", coins)
+		return nil, fmt.Errorf("parseCoins invalid: %#v", coins)
 	}
 
 	return coins, nil

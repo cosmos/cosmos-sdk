@@ -49,7 +49,7 @@ initialize the light-client and send a transaction:
 
 ::
 
-    countercli init --node=tcp://localhost:46657 --genesis=$HOME/.counter/genesis.json
+    countercli init --node=tcp://localhost:26657 --genesis=$HOME/.counter/genesis.json
 
     YOU=$(countercli keys get friend | awk '{print $2}')
     countercli tx send --name=cool --amount=1000mycoin --to=$YOU --sequence=1

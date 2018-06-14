@@ -19,21 +19,21 @@ const (
 )
 
 func ErrNoValidatorForAddress(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidValidator, "That address is not associated with any known validator")
+	return newError(codespace, CodeInvalidValidator, "that address is not associated with any known validator")
 }
 func ErrBadValidatorAddr(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidValidator, "Validator does not exist for that address")
+	return newError(codespace, CodeInvalidValidator, "validator does not exist for that address")
 }
 func ErrValidatorJailed(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeValidatorJailed, "Validator jailed, cannot yet be unrevoked")
+	return newError(codespace, CodeValidatorJailed, "validator jailed, cannot yet be unrevoked")
 }
 
 func codeToDefaultMsg(code CodeType) string {
 	switch code {
 	case CodeInvalidValidator:
-		return "Invalid Validator"
+		return "invalid Validator"
 	case CodeValidatorJailed:
-		return "Validator Jailed"
+		return "validator Jailed"
 	default:
 		return sdk.CodeToDefaultMsg(code)
 	}

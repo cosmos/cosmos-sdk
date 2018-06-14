@@ -48,7 +48,7 @@ func bondingStatusHandlerFn(ctx context.CoreContext, storeName string, cdc *wire
 
 		key := stake.GetDelegationKey(delegatorAddr, validatorAddr, cdc)
 
-		res, err := ctx.Query(key, storeName)
+		res, err := ctx.QueryStore(key, storeName)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("couldn't query bond. Error: %s", err.Error())))

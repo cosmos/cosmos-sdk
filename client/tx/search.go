@@ -43,7 +43,7 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
+	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 
 	// TODO: change this to false once proofs built in
 	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")

@@ -34,7 +34,7 @@ func QueryAccountRequestHandlerFn(storeName string, cdc *wire.Codec, decoder aut
 			return
 		}
 
-		res, err := ctx.Query(auth.AddressStoreKey(addr), storeName)
+		res, err := ctx.QueryStore(auth.AddressStoreKey(addr), storeName)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("couldn't query account. Error: %s", err.Error())))

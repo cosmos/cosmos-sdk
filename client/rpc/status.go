@@ -18,7 +18,7 @@ func statusCommand() *cobra.Command {
 		Short: "Query remote node for status",
 		RunE:  printNodeStatus,
 	}
-	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
+	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	return cmd
 }
 

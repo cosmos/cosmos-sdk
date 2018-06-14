@@ -54,7 +54,7 @@ func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().String(FlagFromChainID, "", "Chain ID for ibc node to check outgoing packets")
-	cmd.Flags().String(FlagFromChainNode, "tcp://localhost:46657", "<host>:<port> to tendermint rpc interface for this chain")
+	cmd.Flags().String(FlagFromChainNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 	cmd.Flags().String(FlagToChainID, "", "Chain ID for ibc node to broadcast incoming packets")
 	cmd.Flags().String(FlagToChainNode, "tcp://localhost:36657", "<host>:<port> to tendermint rpc interface for this chain")
 
@@ -151,7 +151,7 @@ OUTER:
 }
 
 func query(node string, key []byte, storeName string) (res []byte, err error) {
-	return context.NewCoreContextFromViper().WithNodeURI(node).Query(key, storeName)
+	return context.NewCoreContextFromViper().WithNodeURI(node).QueryStore(key, storeName)
 }
 
 func (c relayCommander) broadcastTx(seq int64, node string, tx []byte) error {

@@ -6,8 +6,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"strconv"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -78,7 +76,7 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deposit",
-		Short: "deposit your token [steak] for activing proposal",
+		Short: "deposit tokens for activing proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// get the from address from the name flag
 			depositer, err := sdk.GetAccAddressBech32(viper.GetString(flagDepositer))
@@ -86,10 +84,7 @@ func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			proposalID, err := strconv.ParseInt(viper.GetString(flagProposalID), 10, 64)
-			if err != nil {
-				return err
-			}
+			proposalID := viper.GetInt64(flagProposalID)
 
 			amount, err := sdk.ParseCoins(viper.GetString(flagDeposit))
 			if err != nil {
@@ -129,10 +124,7 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			proposalID, err := strconv.ParseInt(viper.GetString(flagProposalID), 10, 64)
-			if err != nil {
-				return err
-			}
+			proposalID := viper.GetInt64(flagProposalID)
 
 			option := viper.GetString(flagOption)
 			// create the message
@@ -164,13 +156,11 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 // Command to Get a Proposal Information
 func GetCmdQueryProposal(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "queryproposal",
+		Use:   "query-proposal",
 		Short: "query proposal details",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			proposalID, err := strconv.ParseInt(viper.GetString(flagProposalID), 10, 64)
-			if err != nil {
-				return err
-			}
+			proposalID := viper.GetInt64(flagProposalID)
+
 			ctx := context.NewCoreContextFromViper()
 
 			key := []byte(fmt.Sprintf("%d", proposalID) + ":proposal")
@@ -198,13 +188,10 @@ func GetCmdQueryProposal(storeName string, cdc *wire.Codec) *cobra.Command {
 // Command to Get a Proposal Information
 func GetCmdQueryVote(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "queryvote",
+		Use:   "query-vote",
 		Short: "query vote",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			proposalID, err := strconv.ParseInt(viper.GetString(flagProposalID), 10, 64)
-			if err != nil {
-				return err
-			}
+			proposalID := viper.GetInt64(flagProposalID)
 
 			voterAddr, err := sdk.GetAccAddressBech32(viper.GetString(flagVoter))
 			if err != nil {

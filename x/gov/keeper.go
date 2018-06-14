@@ -54,7 +54,7 @@ func (keeper Keeper) NewProposal(ctx sdk.Context, title string, description stri
 		Title:            title,
 		Description:      description,
 		ProposalType:     proposalType,
-		Status:           "DepositPeriod",
+		Status:           StatusDepositPeriod,
 		TotalDeposit:     sdk.Coins{},
 		SubmitBlock:      ctx.BlockHeight(),
 		VotingStartBlock: -1, // TODO: Make Time
@@ -74,10 +74,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID int64) *Proposal {
 	}
 
 	proposal := &Proposal{}
-	err := keeper.cdc.UnmarshalBinary(bz, proposal)
-	if err != nil {
-		panic(err)
-	}
+	keeper.cdc.MustUnmarshalBinary(bz, proposal)
 
 	return proposal
 }
@@ -85,14 +82,8 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID int64) *Proposal {
 // Implements sdk.AccountMapper.
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal *Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
-
-	bz, err := keeper.cdc.MarshalBinary(proposal)
-	if err != nil {
-		panic(err)
-	}
-
+	bz := keeper.cdc.MustMarshalBinary(proposal)
 	key := []byte(fmt.Sprintf("%d", proposal.ProposalID) + ":proposal")
-
 	store.Set(key, bz)
 }
 
@@ -118,7 +109,7 @@ func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID int64) {
 
 func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal *Proposal) {
 	proposal.VotingStartBlock = ctx.BlockHeight()
-	proposal.Status = "VotingPeriod"
+	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 	keeper.ActiveProposalQueuePush(ctx, proposal)
 }
@@ -159,7 +150,7 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID int64, voter sdk.Addres
 	if proposal == nil {
 		return ErrUnknownProposal(proposalID)
 	}
-	if proposal.Status != "VotingPeriod" {
+	if proposal.Status != StatusVotingPeriod {
 		return ErrInactiveProposal(proposalID)
 	}
 
@@ -240,7 +231,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositer sdk
 		return ErrUnknownProposal(proposalID)
 	}
 
-	if (proposal.Status != "DepositPeriod") && (proposal.Status != "VotingPeriod") {
+	if (proposal.Status != StatusDepositPeriod) && (proposal.Status != StatusVotingPeriod) {
 		return ErrAlreadyFinishedProposal(proposalID)
 	}
 

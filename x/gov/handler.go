@@ -1,8 +1,6 @@
 package gov
 
 import (
-	"reflect"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -17,13 +15,12 @@ func NewHandler(keeper Keeper) sdk.Handler {
 		case MsgVote:
 			return handleMsgVote(ctx, keeper, msg)
 		default:
-			errMsg := "Unrecognized gov Msg type: " + reflect.TypeOf(msg).Name()
+			errMsg := "Unrecognized gov msg type"
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
 }
 
-// Handle MsgSubmitProposal.
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
 
 	proposal := keeper.NewProposal(ctx, msg.Title, msg.Description, msg.ProposalType)
@@ -33,16 +30,19 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 		return err.Result()
 	}
 
-	proposalIDBytes, _ := keeper.cdc.MarshalBinaryBare(proposal.ProposalID)
+	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(proposal.ProposalID)
 
-	tags := sdk.NewTags("action", []byte("submitProposal"), "proposer", msg.Proposer.Bytes(), "proposalId", proposalIDBytes)
+	tags := sdk.NewTags(
+		"action", []byte("submitProposal"),
+		"proposer", []byte(msg.Proposer.String()),
+		"proposalId", proposalIDBytes,
+	)
 	return sdk.Result{
 		Data: proposalIDBytes,
 		Tags: tags,
 	}
 }
 
-// Handle MsgDeposit.
 func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {
 
 	err := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositer, msg.Amount)
@@ -50,16 +50,19 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 		return err.Result()
 	}
 
-	proposalIDBytes, _ := keeper.cdc.MarshalBinaryBare(msg.ProposalID)
+	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(msg.ProposalID)
 
 	// TODO: Add tag for if voting period started
-	tags := sdk.NewTags("action", []byte("deposit"), "depositer", msg.Depositer.Bytes(), "proposalId", proposalIDBytes)
+	tags := sdk.NewTags(
+		"action", []byte("deposit"),
+		"depositer", []byte(msg.Depositer.String()),
+		"proposalId", proposalIDBytes,
+	)
 	return sdk.Result{
 		Tags: tags,
 	}
 }
 
-// Handle SendMsg.
 func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 
 	err := keeper.AddVote(ctx, msg.ProposalID, msg.Voter, msg.Option)
@@ -67,9 +70,13 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 		return err.Result()
 	}
 
-	proposalIDBytes, _ := keeper.cdc.MarshalBinaryBare(msg.ProposalID)
+	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(msg.ProposalID)
 
-	tags := sdk.NewTags("action", []byte("vote"), "voter", msg.Voter.Bytes(), "proposalId", proposalIDBytes)
+	tags := sdk.NewTags(
+		"action", []byte("vote"),
+		"voter", []byte(msg.Voter.String()),
+		"proposalId", proposalIDBytes,
+	)
 	return sdk.Result{
 		Tags: tags,
 	}

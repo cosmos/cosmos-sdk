@@ -12,7 +12,6 @@ import (
 const (
 	DefaultCodespace sdk.CodespaceType = 5
 
-	// Gov errors reserve 401 ~ 499.
 	CodeUnknownProposal         sdk.CodeType = 1
 	CodeInactiveProposal        sdk.CodeType = 2
 	CodeAlreadyActiveProposal   sdk.CodeType = 3

@@ -1,7 +1,6 @@
 package gov
 
 import (
-	"fmt"
 	"math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +13,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 
 	for shouldPopInactiveProposalQueue(ctx, keeper) {
 		inactiveProposal := keeper.InactiveProposalQueuePop(ctx)
-		if inactiveProposal.Status == "DepositPeriod" {
+		if inactiveProposal.Status == StatusDepositPeriod {
 			keeper.DeleteProposal(ctx, inactiveProposal)
 		}
 	}
@@ -28,10 +27,10 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 			passes, _ := tally(ctx, keeper, activeProposal)
 			if passes {
 				keeper.RefundDeposits(ctx, activeProposal.ProposalID)
-				activeProposal.Status = "Passed"
+				activeProposal.Status = StatusPassed
 			} else {
 				keeper.DeleteDeposits(ctx, activeProposal.ProposalID)
-				activeProposal.Status = "Rejected"
+				activeProposal.Status = StatusRejected
 			}
 
 			keeper.SetProposal(ctx, activeProposal)
@@ -54,7 +53,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal *Proposal) (passes bool, non
 	totalVotingPower := sdk.ZeroRat()
 	currValidators := make(map[string]validatorGovInfo)
 	for _, val := range keeper.sk.GetValidatorsBonded(ctx) {
-		currValidators[addressToString(val.Owner)] = validatorGovInfo{
+		currValidators[string(val.Owner)] = validatorGovInfo{
 			ValidatorInfo: val,
 			Minus:         sdk.ZeroRat(),
 		}
@@ -65,14 +64,14 @@ func tally(ctx sdk.Context, keeper Keeper, proposal *Proposal) (passes bool, non
 		vote := &Vote{}
 		keeper.cdc.MustUnmarshalBinary(votesIterator.Value(), vote)
 
-		if val, ok := currValidators[addressToString(vote.Voter)]; ok {
+		if val, ok := currValidators[string(vote.Voter)]; ok {
 			val.Vote = vote.Option
-			currValidators[addressToString(vote.Voter)] = val
+			currValidators[string(vote.Voter)] = val
 		} else {
 			for _, delegation := range keeper.sk.GetDelegations(ctx, vote.Voter, math.MaxInt16) { // TODO: Replace with MaxValidators from Stake params
-				val := currValidators[addressToString(delegation.ValidatorAddr)]
+				val := currValidators[string(delegation.ValidatorAddr)]
 				val.Minus = val.Minus.Add(delegation.Shares)
-				currValidators[addressToString(delegation.ValidatorAddr)] = val
+				currValidators[string(delegation.ValidatorAddr)] = val
 
 				validatorPower := val.ValidatorInfo.EquivalentBondedShares(pool)
 				delegatorShare := delegation.Shares.Quo(val.ValidatorInfo.DelegatorShares)
@@ -119,7 +118,7 @@ func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 
 	if peekProposal == nil {
 		return false
-	} else if peekProposal.Status != "DepositPeriod" {
+	} else if peekProposal.Status != StatusDepositPeriod {
 		return true
 	} else if ctx.BlockHeight() >= peekProposal.SubmitBlock+depositProcedure.MaxDepositPeriod {
 		return true
@@ -137,8 +136,4 @@ func shouldPopActiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 		return true
 	}
 	return false
-}
-
-func addressToString(addr sdk.Address) string {
-	return fmt.Sprintf("%s", addr.Bytes())
 }

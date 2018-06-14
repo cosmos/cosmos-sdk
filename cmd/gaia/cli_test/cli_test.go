@@ -172,23 +172,23 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
 	assert.Equal(t, int64(45), fooAcc.GetCoins().AmountOf("steak"))
 
-	proposal1 := executeGetProposal(t, fmt.Sprintf("gaiacli gov queryproposal --proposalID=1 --output=json %v", flags))
+	proposal1 := executeGetProposal(t, fmt.Sprintf("gaiacli gov query-proposal --proposalID=1 --output=json %v", flags))
 	assert.Equal(t, int64(1), proposal1.ProposalID)
-	assert.Equal(t, "DepositPeriod", proposal1.Status)
+	assert.Equal(t, gov.StatusDepositPeriod, proposal1.Status)
 
 	executeWrite(t, fmt.Sprintf("gaiacli gov deposit %v --depositer=%v --deposit=10steak --proposalID=1 --name=foo", flags, fooCech), pass)
 	time.Sleep(time.Second * 2) // waiting for some blocks to pass
 
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
 	assert.Equal(t, int64(35), fooAcc.GetCoins().AmountOf("steak"))
-	proposal1 = executeGetProposal(t, fmt.Sprintf("gaiacli gov queryproposal --proposalID=1 --output=json %v", flags))
+	proposal1 = executeGetProposal(t, fmt.Sprintf("gaiacli gov query-proposal --proposalID=1 --output=json %v", flags))
 	assert.Equal(t, int64(1), proposal1.ProposalID)
-	assert.Equal(t, "VotingPeriod", proposal1.Status)
+	assert.Equal(t, gov.StatusVotingPeriod, proposal1.Status)
 
 	executeWrite(t, fmt.Sprintf("gaiacli gov vote %v --proposalID=1 --voter=%v --option=Yes --name=foo", flags, fooCech), pass)
 	time.Sleep(time.Second * 2) // waiting for some blocks to pass
 
-	vote := executeGetVote(t, fmt.Sprintf("gaiacli gov queryvote  --proposalID=1 --voter=%v --output=json %v", fooCech, flags))
+	vote := executeGetVote(t, fmt.Sprintf("gaiacli gov query-vote  --proposalID=1 --voter=%v --output=json %v", fooCech, flags))
 	assert.Equal(t, int64(1), vote.ProposalID)
 	assert.Equal(t, "Yes", vote.Option)
 }

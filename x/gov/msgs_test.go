@@ -98,35 +98,3 @@ func TestMsgVote(t *testing.T) {
 		}
 	}
 }
-
-// // MsgVote
-// type MsgVote struct {
-// 	Voter      sdk.Address //  address of the voter
-// 	ProposalID int64       //  proposalID of the proposal
-// 	Option     string      //  option from OptionSet chosen by the voter
-// }
-
-// func NewMsgVote(voter sdk.Address, proposalID int64, option string) MsgVote {
-// 	return MsgVote{
-// 		Voter:      voter,
-// 		ProposalID: proposalID,
-// 		Option:     option,
-// 	}
-// }
-
-// // Implements Msg.
-// func (msg MsgVote) Type() string { return MsgType }
-
-// // Implements Msg.
-// func (msg MsgVote) ValidateBasic() sdk.Error {
-// 	if len(msg.Voter.Bytes()) == 0 {
-// 		return sdk.ErrInvalidAddress(msg.Voter.String())
-// 	}
-// 	if msg.ProposalID < 0 {
-// 		return ErrUnknownProposal(msg.ProposalID)
-// 	}
-// 	if (msg.Option != "Yes") && (msg.Option != "No") && (msg.Option != "NoWithVeto") && (msg.Option != "Abstain") {
-// 		return ErrInvalidVote(msg.Option)
-// 	}
-// 	return nil
-// }

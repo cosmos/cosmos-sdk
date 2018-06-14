@@ -11,10 +11,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-//type request interface {
-//	Validate(w http.ResponseWriter) bool
-//}
-
 type baseReq struct {
 	Name          string `json:"name"`
 	Password      string `json:"password"`
@@ -25,26 +21,26 @@ type baseReq struct {
 }
 
 type postProposalReq struct {
+	BaseReq        baseReq   `json:"base_req"`
 	Title          string    `json:"title"`           //  Title of the proposal
 	Description    string    `json:"description"`     //  Description of the proposal
 	ProposalType   string    `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 	Proposer       string    `json:"proposer"`        //  Address of the proposer
 	InitialDeposit sdk.Coins `json:"initial_deposit"` // Coins to add to the proposal's deposit
-	BaseReq        baseReq   `json:"base_req"`
 }
 
 type depositReq struct {
+	BaseReq    baseReq   `json:"base_req"`
 	ProposalID int64     `json:"proposalID"` // ID of the proposal
 	Depositer  string    `json:"depositer"`  // Address of the depositer
 	Amount     sdk.Coins `json:"amount"`     // Coins to add to the proposal's deposit
-	BaseReq    baseReq   `json:"base_req"`
 }
 
 type voteReq struct {
+	BaseReq    baseReq `json:"base_req"`
 	Voter      string  `json:"voter"`      //  address of the voter
 	ProposalID int64   `json:"proposalID"` //  proposalID of the proposal
 	Option     string  `json:"option"`     //  option from OptionSet chosen by the voter
-	BaseReq    baseReq `json:"base_req"`
 }
 
 func buildReq(w http.ResponseWriter, r *http.Request, req interface{}) error {
@@ -166,6 +162,7 @@ func (req voteReq) Validate(w http.ResponseWriter) bool {
 	return req.BaseReq.baseReqValidate(w)
 }
 
+// TODO: Build this function out into a more generic base-request (probably should live in client/lcd)
 func signAndBuild(w http.ResponseWriter, ctx context.CoreContext, baseReq baseReq, msg sdk.Msg, cdc *wire.Codec) {
 	ctx = ctx.WithAccountNumber(baseReq.AccountNumber)
 	ctx = ctx.WithSequence(baseReq.Sequence)

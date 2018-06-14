@@ -1,7 +1,6 @@
 package gov
 
 import (
-	"encoding/json"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -67,7 +66,19 @@ func (msg MsgSubmitProposal) Get(key interface{}) (value interface{}) {
 
 // Implements Msg.
 func (msg MsgSubmitProposal) GetSignBytes() []byte {
-	b, err := json.Marshal(msg) // XXX: ensure some canonical form
+	b, err := msgCdc.MarshalJSON(struct {
+		Title          string    `json:"title"`
+		Description    string    `json:"description"`
+		ProposalType   string    `json:"proposal_type"`
+		Proposer       string    `json:"proposer"`
+		InitialDeposit sdk.Coins `json:"deposit"`
+	}{
+		Title:          msg.Title,
+		Description:    msg.Description,
+		ProposalType:   msg.ProposalType,
+		Proposer:       sdk.MustBech32ifyVal(msg.Proposer),
+		InitialDeposit: msg.InitialDeposit,
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -82,9 +93,9 @@ func (msg MsgSubmitProposal) GetSigners() []sdk.Address {
 //-----------------------------------------------------------
 // MsgDeposit
 type MsgDeposit struct {
-	ProposalID int64       `json:"proposal_id"` // ID of the proposal
-	Depositer  sdk.Address `json:"depositer"`   // Address of the depositer
-	Amount     sdk.Coins   `json:"amount"`      // Coins to add to the proposal's deposit
+	ProposalID int64       `json:"proposalID"` // ID of the proposal
+	Depositer  sdk.Address `json:"depositer"`  // Address of the depositer
+	Amount     sdk.Coins   `json:"amount"`     // Coins to add to the proposal's deposit
 }
 
 func NewMsgDeposit(depositer sdk.Address, proposalID int64, amount sdk.Coins) MsgDeposit {
@@ -126,7 +137,15 @@ func (msg MsgDeposit) Get(key interface{}) (value interface{}) {
 
 // Implements Msg.
 func (msg MsgDeposit) GetSignBytes() []byte {
-	b, err := json.Marshal(msg) // XXX: ensure some canonical form
+	b, err := msgCdc.MarshalJSON(struct {
+		ProposalID int64     `json:"proposalID"`
+		Depositer  string    `json:"proposer"`
+		Amount     sdk.Coins `json:"deposit"`
+	}{
+		ProposalID: msg.ProposalID,
+		Depositer:  sdk.MustBech32ifyVal(msg.Depositer),
+		Amount:     msg.Amount,
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -141,15 +160,15 @@ func (msg MsgDeposit) GetSigners() []sdk.Address {
 //-----------------------------------------------------------
 // MsgVote
 type MsgVote struct {
-	Voter      sdk.Address //  address of the voter
 	ProposalID int64       //  proposalID of the proposal
+	Voter      sdk.Address //  address of the voter
 	Option     string      //  option from OptionSet chosen by the voter
 }
 
 func NewMsgVote(voter sdk.Address, proposalID int64, option string) MsgVote {
 	return MsgVote{
-		Voter:      voter,
 		ProposalID: proposalID,
+		Voter:      voter,
 		Option:     option,
 	}
 }
@@ -182,7 +201,15 @@ func (msg MsgVote) Get(key interface{}) (value interface{}) {
 
 // Implements Msg.
 func (msg MsgVote) GetSignBytes() []byte {
-	b, err := json.Marshal(msg) // XXX: ensure some canonical form
+	b, err := msgCdc.MarshalJSON(struct {
+		ProposalID int64  `json:"proposalID"`
+		Voter      string `json:"voter"`
+		Option     string `json:"option"`
+	}{
+		ProposalID: msg.ProposalID,
+		Voter:      sdk.MustBech32ifyVal(msg.Voter),
+		Option:     msg.Option,
+	})
 	if err != nil {
 		panic(err)
 	}

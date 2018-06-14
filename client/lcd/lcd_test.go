@@ -481,7 +481,7 @@ func TestVote(t *testing.T) {
 
 	// query proposal
 	proposal = getProposal(t, port, proposalID)
-	assert.Equal(t, "VotingPeriod", proposal.Status)
+	assert.Equal(t, gov.StatusVotingPeriod, proposal.Status)
 
 	// create SubmitProposal TX
 	resultTx = doVote(t, port, seed, name, password, addr, proposalID)
@@ -490,10 +490,6 @@ func TestVote(t *testing.T) {
 	vote := getVote(t, port, proposalID, addr)
 	assert.Equal(t, proposalID, vote.ProposalID)
 	assert.Equal(t, "Yes", vote.Option)
-
-	// vote = getVote(t, port, proposalID, addr)
-	// assert.Equal(t, "Yes", vote.Option)
-
 }
 
 //_____________________________________________________________________________

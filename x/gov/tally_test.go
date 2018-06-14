@@ -23,7 +23,7 @@ func TestTallyNoOneVotes(t *testing.T) {
 
 	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
 	proposalID := proposal.ProposalID
-	proposal.Status = "VotingPeriod"
+	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
@@ -43,7 +43,7 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 
 	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
 	proposalID := proposal.ProposalID
-	proposal.Status = "VotingPeriod"
+	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
@@ -68,7 +68,7 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 
 	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
 	proposalID := proposal.ProposalID
-	proposal.Status = "VotingPeriod"
+	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
@@ -95,7 +95,7 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 
 	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
 	proposalID := proposal.ProposalID
-	proposal.Status = "VotingPeriod"
+	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
@@ -124,7 +124,7 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 
 	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
 	proposalID := proposal.ProposalID
-	proposal.Status = "VotingPeriod"
+	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
@@ -153,7 +153,7 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 
 	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
 	proposalID := proposal.ProposalID
-	proposal.Status = "VotingPeriod"
+	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Abstain")
@@ -182,7 +182,7 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 
 	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
 	proposalID := proposal.ProposalID
-	proposal.Status = "VotingPeriod"
+	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Abstain")
@@ -211,7 +211,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 
 	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
 	proposalID := proposal.ProposalID
-	proposal.Status = "VotingPeriod"
+	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[1], "Yes")
@@ -244,7 +244,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 
 	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
 	proposalID := proposal.ProposalID
-	proposal.Status = "VotingPeriod"
+	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
@@ -279,7 +279,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 
 	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
 	proposalID := proposal.ProposalID
-	proposal.Status = "VotingPeriod"
+	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "No")
@@ -314,7 +314,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 
 	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
 	proposalID := proposal.ProposalID
-	proposal.Status = "VotingPeriod"
+	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
@@ -350,7 +350,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 
 	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
 	proposalID := proposal.ProposalID
-	proposal.Status = "VotingPeriod"
+	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")

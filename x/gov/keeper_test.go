@@ -125,7 +125,7 @@ func TestVotes(t *testing.T) {
 	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
 	proposalID := proposal.ProposalID
 
-	proposal.Status = "VotingPeriod"
+	proposal.Status = StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	keeper.AddVote(ctx, proposalID, addrs[0], "Abstain")

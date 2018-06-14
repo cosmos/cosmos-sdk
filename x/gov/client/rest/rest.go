@@ -162,7 +162,7 @@ func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx 
 			return
 		}
 
-		voterAddr, err := sdk.GetAccAddressBech32(vars["voterAddress"])
+		voterAddr, err := sdk.GetAccAddressBech32(bechVoterAddr)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			err := errors.Errorf("voterAddress needs to be bech32 encoded")

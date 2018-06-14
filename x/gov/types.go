@@ -5,6 +5,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
+//nolint
+const (
+	StatusDepositPeriod = "DepositPeriod"
+	StatusVotingPeriod  = "VotingPeriod"
+	StatusPassed        = "Passed"
+	StatusRejected      = "Rejected"
+)
+
 var (
 	proposalTypes = []string{"Text", "ParameterChange", "SoftwareUpgrade"}
 )

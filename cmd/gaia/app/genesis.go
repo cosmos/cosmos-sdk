@@ -171,12 +171,22 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		if len(genTx.Name) > 0 {
 			desc := stake.NewDescription(genTx.Name, "", "", "")
 			validator := stake.NewValidator(genTx.Address, genTx.PubKey, desc)
-			validator.PoolShares = stake.NewBondedShares(sdk.NewRat(freeFermionVal))
+
+			// add some new shares to the validator
+			var issuedDelShares sdk.Rat
+			validator, stakeData.Pool, issuedDelShares = validator.AddTokensFromDel(stakeData.Pool, freeFermionVal)
 			stakeData.Validators = append(stakeData.Validators, validator)
 
-			// pool logic
-			stakeData.Pool.BondedTokens += freeFermionVal
-			stakeData.Pool.BondedShares = sdk.NewRat(stakeData.Pool.BondedTokens)
+			// create the self delegation from the issuedDelShares
+			delegation := stake.Delegation{
+				DelegatorAddr: validator.Owner,
+				ValidatorAddr: validator.Owner,
+				Shares:        issuedDelShares,
+				Height:        0,
+			}
+
+			stakeData.Bonds = append(stakeData.Bonds, delegation)
+
 		}
 	}
 

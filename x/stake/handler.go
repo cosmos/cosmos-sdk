@@ -163,7 +163,7 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	if err != nil {
 		return nil, err
 	}
-	validator, pool, newShares := validator.addTokensFromDel(pool, bondAmt.Amount)
+	validator, pool, newShares := validator.AddTokensFromDel(pool, bondAmt.Amount)
 	bond.Shares = bond.Shares.Add(newShares)
 
 	// Update bond height

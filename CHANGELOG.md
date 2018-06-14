@@ -7,6 +7,10 @@
 BREAKING CHANGES
 * Change default ports from 466xx to 266xx
 
+FIXES
+* [gaia] Added self delegation for validators in the genesis creation
+
+
 ## 0.19.0
 
 *June 13, 2018*

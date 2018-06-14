@@ -186,7 +186,7 @@ func (v Validator) EquivalentBondedShares(pool Pool) (eqBondedShares sdk.Rat) {
 
 // XXX Audit this function further to make sure it's correct
 // add tokens to a validator
-func (v Validator) addTokensFromDel(pool Pool,
+func (v Validator) AddTokensFromDel(pool Pool,
 	amount int64) (validator2 Validator, p2 Pool, issuedDelegatorShares sdk.Rat) {
 
 	exRate := v.DelegatorShareExRate(pool) // bshr/delshr

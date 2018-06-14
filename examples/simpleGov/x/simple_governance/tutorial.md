@@ -730,7 +730,7 @@ For a detailed implementation of the commands of the simple governance module, c
 
 #### Rest API
 
-The Rest Server, also called [Light-Client Daemon (LCD)](https://github.com/cosmos/cosmos-sdk/tree/master/client/lcd), provides support for HTTP queries. 
+The Rest Server, also called [Light-Client Daemon (LCD)](https://github.com/cosmos/cosmos-sdk/tree/master/client/lcd), provides support for **HTTP queries**. 
 
 ========================================================
 
@@ -740,9 +740,9 @@ USER INTERFACE <=======> REST SERVER <=======> FULL-NODE
 
 It allows end-users that do not want to run full-nodes themselves to interract with the chain. The LCD can be configured to perform **Light-Client verification** via the flag `--trust-node`, which can be set to `true` or `false`. 
 
-If *light-client verification* is enabled, the Rest Server acts as a light-client and needs to be run on the end-user's machine. It allows them to interract with the chain in a trustless way without having to store the whole chain locally. 
+- If *light-client verification* is enabled, the Rest Server acts as a light-client and needs to be run on the end-user's machine. It allows them to interract with the chain in a trustless way without having to store the whole chain locally. 
 
-If *light-client verification* is diabled, the Rest Server acts as a simple relayer for HTTP calls. In this setting, the Rest server needs not be run on the end-user's machine. Instead, it will probably be run by the same entity that operates the full-node the server connects to. This mode is useful if end-users trust the full-node operator and do not want to store anything locally. 
+- If *light-client verification* is diabled, the Rest Server acts as a simple relayer for HTTP calls. In this setting, the Rest server needs not be run on the end-user's machine. Instead, it will probably be run by the same entity that operates the full-node the server connects to. This mode is useful if end-users trust the full-node operator and do not want to store anything locally. 
 
 Now, let us define endpoints that will be available for users to query through HTTP requests. These endpoints will be defined in a `simple_governance.go` file stored in the `rest` folder.
 

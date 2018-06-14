@@ -27,14 +27,19 @@ But most importantly, Tendermint is natively compatible with the Inter Blockchai
 
 Developing a Tendermint-based blockchain means that you only have to code the application (i.e. the business logic). But that in itself can prove to be rather difficult. This is why the Cosmos-SDK exists.
 
-The Cosmos-SDK is a template framework to build secure blockchain applications on top of Tendermint. It is based on two major principles:
+The Cosmos-SDK is a platform for building multi-asset Proof-of-Stake (PoS) blockchains, like the Cosmos Hub. It is both a library for building and securely interacting with blockchain applications.
 
-- **Composability:**  The goal of the Cosmos-SDK is to create an ecosystem of modules that allow developers to easily spin up sidechains without having to code every single functionality of their application. Anyone can create a module for the Cosmos-SDK, and using already-built modules in your blockchain is as simple as importing them into your application. For example, the Tendermint team is building a set of basic modules that are needed for the Cosmos Hub, like accounts, staking, IBC, governance. Now if you want to develop a public Tendermint blockchain compatible with Cosmos that has the aforementioned functionalities, you just have to import these already-built modules. As a developer, you only have to create the modules required by your application that do not already exist. As the Cosmos ecosystem develops, we expect the modules ecosystem to gracefully develop, making it easier and easier to develop complex blockchain applications.
-- **Capabilities:** Most developers will need to access other modules when building their own modules. The Cosmos-SDK being an open framework, it is likely that some of these modules will be malicious. To address these threats, the Cosmos-SDK is designed to be the foundation of a capabilities-based system. In practice, this means that instead of having each module keep an access control list to give access to other modules, each module implement `mappers` that can be passed to other modules to grant a pre-defined set of capabilities. For example, if an instance of module A's `mapper` is passed to module B, module B will be able to call a restricted set of module A's functions. The *capabilities* of each mapper are defined by the module's developer, and it is the job of the application developer to instanciate and pass mappers from module to module properly. For a deeper look at capabilities, you can read this cool [article](http://habitatchronicles.com/2017/05/what-are-capabilities/)
+The goal of the Cosmos-SDK is to allow developers to easily create custom interoperable blockchain applications within the Cosmos Network without having to recreate common blockchain functionality, thus abstracting away the complexities of building a Tendermint ABCI application. We envision the SDK as the npm-like framework to build secure blockchain applications on top of Tendermint.
 
-Now that we have a better understanding of the high level principles of the SDK, let us take a deeper look at how a Cosmos-SDK application is constructed.
+In terms of its design, the SDK optimizes flexibility and security. The framework is designed around a modular execution stack which allows applications to mix and match elements as desired. In addition, all modules are sandboxed for greater application security.
 
-*Note: For now the Cosmos-SDK only exists in Golang, which means that module developers can only develop SDK modules in Golang. In the future, we expect that Cosmos-SDK in other programming languages will pop up*
+It is based on two major principles:
+
+- **Composability:** Anyone can create a module for the Cosmos-SDK and integrating the already-built modules is as simple as importing them into your blockchain application.
+
+- **Capabilities:** The SDK is inspired by capabilities-based security, and informed by years of wrestling with blockchain state machines. Most developers will need to access other 3rd party modules when building their own modules. Given that the Cosmos-SDK is an open framework and that we assume that some those modules may be malicious, we designed the SDK using object-capabilities (ocaps) based principles. In practice, this means that instead of having each module keep an access control list for other modules, each module implements keepers that can be passed to other modules to grant a pre-defined set of capabilities. For example, if an instance of module A's keepers is passed to module B, the latter will be able to call a restricted set of module A's functions. The capabilities of each keeper are defined by the module's developer, and it's their job to understand and audit the safety of foreign code from 3rd party modules based on the capabilities they are passing into each 3rd party module. For a deeper look at capabilities, you can read this article.
+
+Note: For now the Cosmos-SDK only exists in Golang, which means that developers can only develop SDK modules in Golang. In the future, we expect that the SDK will be implemented in other programming languages. Funding opportunities supported by the Tendermint team may be available eventually.
 
 ## Reminder on Tendermint and ABCI
 
@@ -680,6 +685,80 @@ The `error.go` file allows us to define custom error messages for our module.  D
 
 Note that the errors of our module inherit from the `sdk.Error` interface and therefore possess the method `Result()`. This method is useful when there is an error in the `handler` and an error has to be returned in place of an actual result.
 
+### Command-Line Interface and Rest API
+
+Each module can define a set of commands for the Command-Line Interface and endpoints for the REST API. Let us create a `client` repository to define the commands and endpoints for our simple governance module.
+
+```bash
+mkdir client 
+cd client 
+mkdir cli
+mkdir rest 
+```
+#### Command-Line Interface (CLI)
+
+Go in the `cli` folder and create a `simple_governance.go` file. This is where we will define the commands for our module. 
+
+The CLI builds on top of [Cobra](https://github.com/spf13/cobra). Here is the schema to build a command on top of Cobra:
+
+```go
+    // Declare flags
+    const( 
+        Flag = "flag"
+        ...
+    )
+
+    // Main command function. One function for each command.
+    func Command(codec *wire.Codec) *cobra.Command {
+        // Create the command to return
+        command := &cobra.Command{
+            Use: "actual command",
+            Short: "Short description",
+            Run: func(cmd *cobra.Command, args []string) error {
+                // Actual function to run when command is used
+            },
+        }
+
+        // Add flags to the command
+        command.Flags.Type(Flag, "", "")
+
+        return command
+    }
+```
+
+For a detailed implementation of the commands of the simple governance module, click [here](../client/cli/simple_governance.go).
+
+#### Rest API
+
+The Rest Server, also called [Light-Client Daemon (LCD)](https://github.com/cosmos/cosmos-sdk/tree/master/client/lcd), provides support for **HTTP queries**. 
+
+========================================================
+
+USER INTERFACE <=======> REST SERVER <=======> FULL-NODE
+
+========================================================
+
+It allows end-users that do not want to run full-nodes themselves to interract with the chain. The LCD can be configured to perform **Light-Client verification** via the flag `--trust-node`, which can be set to `true` or `false`. 
+
+- If *light-client verification* is enabled, the Rest Server acts as a light-client and needs to be run on the end-user's machine. It allows them to interract with the chain in a trustless way without having to store the whole chain locally. 
+
+- If *light-client verification* is diabled, the Rest Server acts as a simple relayer for HTTP calls. In this setting, the Rest server needs not be run on the end-user's machine. Instead, it will probably be run by the same entity that operates the full-node the server connects to. This mode is useful if end-users trust the full-node operator and do not want to store anything locally. 
+
+Now, let us define endpoints that will be available for users to query through HTTP requests. These endpoints will be defined in a `simple_governance.go` file stored in the `rest` folder.
+
+| Method | URL                             | Description                                                 |
+|--------|---------------------------------|-------------------------------------------------------------|
+| GET    | /proposals                      | Range query to get all submitted proposals                  |
+| GET    | /proposals/{id}                 | Returns a proposal given its ID                             |
+| GET    | /proposals/{id}/votes           | Range query to get all the votes casted on a given proposal |
+| GET    | /proposals/{id}/votes/{address} | Returns the vote of a given address on a given proposal     |
+| POST   | /submit-proposal/{proposal}           | Submit a new proposal                                       |
+| POST   | /submit-vote/{id}/{vote}          | Cast a vote on a given proposal                             |
+
+It is the job of the module developer to provide sensible endpoints so that front-end developers and service providers can properly interact with it.
+
+As for the actual in-code implementation of the endpoints for our simple governance module, you can take a look at [this file](../client/rest/simple_governance.go). 
+
 ### Application - Bridging it all together
 
 Now that we have built all the pieces that we need, it is time to integrate them into the application. Let us exit the `/x` director go back at the root of the SDK directory.
@@ -814,9 +893,6 @@ func MakeCodec() *wire.Codec {
     return cdc
 }
 ```
-
-### Commands/Rest
-
 
 
 ### Running the app

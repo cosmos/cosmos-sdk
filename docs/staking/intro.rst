@@ -291,7 +291,7 @@ To confirm for certain the new validator is active, ask the tendermint node:
 
 ::
 
-    curl localhost:46657/validators
+    curl localhost:26657/validators
 
 If you now kill either node, blocks will stop streaming in, because
 there aren't enough validators online. Turn it back on and they will

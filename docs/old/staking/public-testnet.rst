@@ -49,7 +49,7 @@ Finally, let's initialize the gaia client to interact with the testnet:
 
 ::
 
-    gaia client init --chain-id=gaia-1 --node=tcp://localhost:46657
+    gaia client init --chain-id=gaia-1 --node=tcp://localhost:26657
 
 and check our balance:
 

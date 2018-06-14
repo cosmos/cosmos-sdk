@@ -14,6 +14,7 @@ type CoreContext struct {
 	TrustNode       bool
 	NodeURI         string
 	FromAddressName string
+	AccountNumber   int64
 	Sequence        int64
 	Client          rpcclient.Client
 	Decoder         auth.AccountDecoder
@@ -54,6 +55,12 @@ func (c CoreContext) WithNodeURI(nodeURI string) CoreContext {
 // WithFromAddressName - return a copy of the context with an updated from address
 func (c CoreContext) WithFromAddressName(fromAddressName string) CoreContext {
 	c.FromAddressName = fromAddressName
+	return c
+}
+
+// WithSequence - return a copy of the context with an account number
+func (c CoreContext) WithAccountNumber(accnum int64) CoreContext {
+	c.AccountNumber = accnum
 	return c
 }
 

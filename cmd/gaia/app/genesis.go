@@ -92,7 +92,7 @@ func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
 	overwrite := viper.GetBool(flagOWK)
 	name := viper.GetString(flagName)
 	if name == "" {
-		return nil, nil, tmtypes.GenesisValidator{}, errors.New("Must specify --name (validator moniker)")
+		return nil, nil, tmtypes.GenesisValidator{}, errors.New("must specify --name (validator moniker)")
 	}
 
 	var addr sdk.Address
@@ -108,7 +108,8 @@ func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
 		return
 	}
 	cliPrint = json.RawMessage(bz)
-	return GaiaAppGenTxNF(cdc, pk, addr, name, overwrite)
+	appGenTx,_,validator,err = GaiaAppGenTxNF(cdc, pk, addr, name, overwrite)
+	return
 }
 
 // Generate a gaia genesis transaction without flags

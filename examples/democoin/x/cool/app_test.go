@@ -89,17 +89,17 @@ func TestMsgQuiz(t *testing.T) {
 	assert.Equal(t, acc1, res1)
 
 	// Set the trend, submit a really cool quiz and check for reward
-	mock.SignCheckDeliver(t, mapp.BaseApp, setTrendMsg1, []int64{0}, true, priv1)
-	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg1, []int64{1}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, setTrendMsg1, []int64{0}, []int64{0}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg1, []int64{0}, []int64{1}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", 69}})
-	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg2, []int64{2}, false, priv1) // result without reward
+	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg2, []int64{0}, []int64{2}, false, priv1) // result without reward
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", 69}})
-	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg1, []int64{3}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg1, []int64{0}, []int64{3}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", 138}})
-	mock.SignCheckDeliver(t, mapp.BaseApp, setTrendMsg2, []int64{4}, true, priv1) // reset the trend
-	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg1, []int64{5}, false, priv1)    // the same answer will nolonger do!
+	mock.SignCheckDeliver(t, mapp.BaseApp, setTrendMsg2, []int64{0}, []int64{4}, true, priv1) // reset the trend
+	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg1, []int64{0}, []int64{5}, false, priv1)    // the same answer will nolonger do!
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", 138}})
-	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg2, []int64{6}, true, priv1) // earlier answer now relavent again
+	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg2, []int64{0}, []int64{6}, true, priv1) // earlier answer now relavent again
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"badvibesonly", 69}, {"icecold", 138}})
-	mock.SignCheckDeliver(t, mapp.BaseApp, setTrendMsg3, []int64{7}, false, priv1) // expect to fail to set the trend to something which is not cool
+	mock.SignCheckDeliver(t, mapp.BaseApp, setTrendMsg3, []int64{0}, []int64{7}, false, priv1) // expect to fail to set the trend to something which is not cool
 }

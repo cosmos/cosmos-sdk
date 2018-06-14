@@ -1,0 +1,20 @@
+{
+    "node_id": "b0dd378c3fbc4c156cd6d302a799f0d2e4227201",
+    "ip": "159.89.121.174",
+    "validator": {
+      "pub_key": {
+        "type": "AC26791624DE60",
+        "value": "0aNTDL49987ZNRi3FtJIi0jk93ybHuYg1FjWrfP9H2o="
+      },
+      "power": 100,
+      "name": "bucky"
+    },
+    "app_gen_tx": {
+      "name": "bucky",
+      "address": "935E48ED79F1006ED135553768E1D9A768747CF6",
+      "pub_key": {
+        "type": "AC26791624DE60",
+        "value": "0aNTDL49987ZNRi3FtJIi0jk93ybHuYg1FjWrfP9H2o="
+      }
+    }
+}

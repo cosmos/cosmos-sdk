@@ -17,6 +17,9 @@ type Account interface {
 	GetPubKey() crypto.PubKey // can return nil.
 	SetPubKey(crypto.PubKey) error
 
+	GetAccountNumber() int64
+	SetAccountNumber(int64) error
+
 	GetSequence() int64
 	SetSequence(int64) error
 
@@ -36,10 +39,11 @@ var _ Account = (*BaseAccount)(nil)
 // Extend this by embedding this in your AppAccount.
 // See the examples/basecoin/types/account.go for an example.
 type BaseAccount struct {
-	Address  sdk.Address   `json:"address"`
-	Coins    sdk.Coins     `json:"coins"`
-	PubKey   crypto.PubKey `json:"public_key"`
-	Sequence int64         `json:"sequence"`
+	Address       sdk.Address   `json:"address"`
+	Coins         sdk.Coins     `json:"coins"`
+	PubKey        crypto.PubKey `json:"public_key"`
+	AccountNumber int64         `json:"account_number"`
+	Sequence      int64         `json:"sequence"`
 }
 
 func NewBaseAccountWithAddress(addr sdk.Address) BaseAccount {
@@ -81,6 +85,17 @@ func (acc *BaseAccount) GetCoins() sdk.Coins {
 // Implements sdk.Account.
 func (acc *BaseAccount) SetCoins(coins sdk.Coins) error {
 	acc.Coins = coins
+	return nil
+}
+
+// Implements Account
+func (acc *BaseAccount) GetAccountNumber() int64 {
+	return acc.AccountNumber
+}
+
+// Implements Account
+func (acc *BaseAccount) SetAccountNumber(accNumber int64) error {
+	acc.AccountNumber = accNumber
 	return nil
 }
 

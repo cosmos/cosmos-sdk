@@ -53,7 +53,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		name = "inmemorykey"
 	} else {
 		if len(args) != 1 || len(args[0]) == 0 {
-			return errors.New("You must provide a name for the key")
+			return errors.New("you must provide a name for the key")
 		}
 		name = args[0]
 		kb, err = GetKeyBase()

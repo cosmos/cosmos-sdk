@@ -256,3 +256,18 @@ You can check your balance and your stake delegation to see that the unbonding w
 gaiacli account <your_address>
 gaiacli stake delegation --address-delegator=<your_address> --address-validator=<bonded_validator_address> --chain-id=<name_of_testnet_chain>
 ```
+
+### Submitting updates to the genesis file.
+
+From `gaia-6000` onward, we are initializing new testnets wtih delegated stake. In the near term, we intend to have updated tooling that allows folks in a starting account distribution to self delegate. In the meantime, here are some tips on submitting a manual pool requests. Merges will be granted on a case by case basis. No promises.
+
+
+#### Steps to add yourself to `genesis.json`
+
+1. Add your validator public key, name and voting power to `validators`. This is tendermint configuration portion. Should become unnecessary soon.
+2. Add an account and some steak and other coins to `app_state: accounts`
+3. Add a bond under `app_state: bonds`. Use your account address for `delegator_addr` and `validator_addr`. `shares` should equal voting power above and `height =0`
+4. Under `app_state: stake: pool` increment `bonded_tokens` and `bonded_shares` incremented by voting power and `loose_unbonded_tokens` should be incremented by that amount of steak added to your account.
+5. Create a entry for yourself in `app_state:validators` following the pattern. Use your `address` that you used in creating accounts as owner and the pub_key from step as pub_key.
+
+

@@ -30,7 +30,11 @@ func (msg MsgUnrevoke) GetSigners() []sdk.Address { return []sdk.Address{msg.Val
 
 // get the bytes for the message signer to sign on
 func (msg MsgUnrevoke) GetSignBytes() []byte {
-	b, err := cdc.MarshalJSON(msg)
+	b, err := cdc.MarshalJSON(struct {
+		ValidatorAddr string `json:"address"`
+	}{
+		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
+	})
 	if err != nil {
 		panic(err)
 	}

@@ -10,6 +10,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // TODO these next two functions feel kinda hacky based on their placement
@@ -22,10 +24,42 @@ func ValidatorCommand() *cobra.Command {
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  printValidators,
 	}
-	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
+	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	// TODO: change this to false when we can
 	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
 	return cmd
+}
+
+// Validator output in bech32 format
+type ValidatorOutput struct {
+	Address     string `json:"address"` // in bech32
+	PubKey      string `json:"pub_key"` // in bech32
+	Accum       int64  `json:"accum"`
+	VotingPower int64  `json:"voting_power"`
+}
+
+// Validators at a certain height output in bech32 format
+type ResultValidatorsOutput struct {
+	BlockHeight int64             `json:"block_height"`
+	Validators  []ValidatorOutput `json:"validators"`
+}
+
+func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
+	bechAddress, err := sdk.Bech32ifyVal(validator.Address)
+	if err != nil {
+		return ValidatorOutput{}, err
+	}
+	bechValPubkey, err := sdk.Bech32ifyValPub(validator.PubKey)
+	if err != nil {
+		return ValidatorOutput{}, err
+	}
+
+	return ValidatorOutput{
+		Address:     bechAddress,
+		PubKey:      bechValPubkey,
+		Accum:       validator.Accum,
+		VotingPower: validator.VotingPower,
+	}, nil
 }
 
 func getValidators(ctx context.CoreContext, height *int64) ([]byte, error) {
@@ -35,12 +69,23 @@ func getValidators(ctx context.CoreContext, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
-	res, err := node.Validators(height)
+	validatorsRes, err := node.Validators(height)
 	if err != nil {
 		return nil, err
 	}
 
-	output, err := cdc.MarshalJSON(res)
+	outputValidatorsRes := ResultValidatorsOutput{
+		BlockHeight: validatorsRes.BlockHeight,
+		Validators:  make([]ValidatorOutput, len(validatorsRes.Validators)),
+	}
+	for i := 0; i < len(validatorsRes.Validators); i++ {
+		outputValidatorsRes.Validators[i], err = bech32ValidatorOutput(validatorsRes.Validators[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	output, err := cdc.MarshalJSON(outputValidatorsRes)
 	if err != nil {
 		return nil, err
 	}
@@ -96,6 +141,7 @@ func ValidatorSetRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
+
 		w.Write(output)
 	}
 }

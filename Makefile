@@ -46,6 +46,9 @@ install_examples:
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democoind
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democli
 
+install_debug:
+	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiadebug
+
 dist:
 	@bash publish/dist.sh
 	@bash publish/publish.sh
@@ -91,6 +94,9 @@ test_cli:
 
 test_unit:
 	@go test $(PACKAGES_NOCLITEST)
+
+test_race:
+	@go test -race $(PACKAGES_NOCLITEST)
 
 test_cover:
 	@bash tests/test_cover.sh
@@ -154,4 +160,4 @@ remotenet-status:
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: build build_examples install install_examples dist check_tools get_tools get_vendor_deps draw_deps test test_cli test_unit test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update remotenet-start remotenet-stop remotenet-status
+.PHONY: build build_examples install install_examples install_debug dist check_tools get_tools get_vendor_deps draw_deps test test_cli test_unit test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update remotenet-start remotenet-stop remotenet-status

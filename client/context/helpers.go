@@ -30,12 +30,12 @@ func (ctx CoreContext) BroadcastTx(tx []byte) (*ctypes.ResultBroadcastTxCommit, 
 	}
 
 	if res.CheckTx.Code != uint32(0) {
-		return res, errors.Errorf("CheckTx failed: (%d) %s",
+		return res, errors.Errorf("checkTx failed: (%d) %s",
 			res.CheckTx.Code,
 			res.CheckTx.Log)
 	}
 	if res.DeliverTx.Code != uint32(0) {
-		return res, errors.Errorf("DeliverTx failed: (%d) %s",
+		return res, errors.Errorf("deliverTx failed: (%d) %s",
 			res.DeliverTx.Code,
 			res.DeliverTx.Log)
 	}
@@ -75,7 +75,7 @@ func (ctx CoreContext) query(key cmn.HexBytes, storeName, endPath string) (res [
 	}
 	resp := result.Response
 	if resp.Code != uint32(0) {
-		return res, errors.Errorf("Query failed: (%d) %s", resp.Code, resp.Log)
+		return res, errors.Errorf("query failed: (%d) %s", resp.Code, resp.Log)
 	}
 	return resp.Value, nil
 }
@@ -95,7 +95,7 @@ func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 
 	info, err := keybase.Get(name)
 	if err != nil {
-		return nil, errors.Errorf("No key for: %s", name)
+		return nil, errors.Errorf("no key for: %s", name)
 	}
 
 	return info.PubKey.Address(), nil
@@ -107,14 +107,17 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 	// build the Sign Messsage from the Standard Message
 	chainID := ctx.ChainID
 	if chainID == "" {
-		return nil, errors.Errorf("Chain ID required but not specified")
+		return nil, errors.Errorf("chain ID required but not specified")
 	}
+	accnum := ctx.AccountNumber
 	sequence := ctx.Sequence
+
 	signMsg := auth.StdSignMsg{
-		ChainID:   chainID,
-		Sequences: []int64{sequence},
-		Msg:       msg,
-		Fee:       auth.NewStdFee(10000, sdk.Coin{}), // TODO run simulate to estimate gas?
+		ChainID:        chainID,
+		AccountNumbers: []int64{accnum},
+		Sequences:      []int64{sequence},
+		Msg:            msg,
+		Fee:            auth.NewStdFee(ctx.Gas, sdk.Coin{}), // TODO run simulate to estimate gas?
 	}
 
 	keybase, err := keys.GetKeyBase()
@@ -130,9 +133,10 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 		return nil, err
 	}
 	sigs := []auth.StdSignature{{
-		PubKey:    pubkey,
-		Signature: sig,
-		Sequence:  sequence,
+		PubKey:        pubkey,
+		Signature:     sig,
+		AccountNumber: accnum,
+		Sequence:      sequence,
 	}}
 
 	// marshal bytes
@@ -144,6 +148,10 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 // sign and build the transaction from the msg
 func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
 
+	ctx, err = EnsureAccountNumber(ctx)
+	if err != nil {
+		return nil, err
+	}
 	// default to next sequence number if none provided
 	ctx, err = EnsureSequence(ctx)
 	if err != nil {
@@ -164,12 +172,36 @@ func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg sdk.Msg, cdc *w
 }
 
 // get the next sequence for the account address
-func (ctx CoreContext) NextSequence(address []byte) (int64, error) {
+func (ctx CoreContext) GetAccountNumber(address []byte) (int64, error) {
 	if ctx.Decoder == nil {
-		return 0, errors.New("AccountDecoder required but not provided")
+		return 0, errors.New("accountDecoder required but not provided")
 	}
 
-	res, err := ctx.Query(address, ctx.AccountStore)
+	res, err := ctx.Query(auth.AddressStoreKey(address), ctx.AccountStore)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(res) == 0 {
+		fmt.Printf("No account found.  Returning 0.\n")
+		return 0, err
+	}
+
+	account, err := ctx.Decoder(res)
+	if err != nil {
+		panic(err)
+	}
+
+	return account.GetAccountNumber(), nil
+}
+
+// get the next sequence for the account address
+func (ctx CoreContext) NextSequence(address []byte) (int64, error) {
+	if ctx.Decoder == nil {
+		return 0, errors.New("accountDecoder required but not provided")
+	}
+
+	res, err := ctx.Query(auth.AddressStoreKey(address), ctx.AccountStore)
 	if err != nil {
 		return 0, err
 	}
@@ -197,7 +229,7 @@ func (ctx CoreContext) GetPassphraseFromStdin(name string) (pass string, err err
 // GetNode prepares a simple rpc.Client
 func (ctx CoreContext) GetNode() (rpcclient.Client, error) {
 	if ctx.Client == nil {
-		return nil, errors.New("Must define node URI")
+		return nil, errors.New("must define node URI")
 	}
 	return ctx.Client, nil
 }

@@ -232,12 +232,14 @@ a standard form:
     type StdSignature struct {
     	crypto.PubKey // optional
     	crypto.Signature
-    	Sequence int64
+    	AccountNumber int64
+        Sequence int64
     }
 
-It contains the signature itself, as well as the corresponding account's
-sequence number.  The sequence number is expected to increment every time a
-message is signed by a given account.  This prevents "replay attacks", where
+It contains the signature itself, as well as the corresponding account's account and 
+sequence numbers.  The sequence number is expected to increment every time a
+message is signed by a given account. The account number stays the same and is assigned
+when the account is first generated.  These prevent "replay attacks", where
 the same message could be executed over and over again.
 
 The ``StdSignature`` can also optionally include the public key for verifying the

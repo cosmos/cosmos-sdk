@@ -53,7 +53,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		name = "inmemorykey"
 	} else {
 		if len(args) != 1 || len(args[0]) == 0 {
-			return errors.New("You must provide a name for the key")
+			return errors.New("you must provide a name for the key")
 		}
 		name = args[0]
 		kb, err = GetKeyBase()
@@ -102,12 +102,6 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// addOutput lets us json format the data
-type addOutput struct {
-	Key  keys.Info `json:"key"`
-	Seed string    `json:"seed"`
-}
-
 func printCreate(info keys.Info, seed string) {
 	output := viper.Get(cli.OutputFlag)
 	switch output {
@@ -121,7 +115,10 @@ func printCreate(info keys.Info, seed string) {
 			fmt.Println(seed)
 		}
 	case "json":
-		out := addOutput{Key: info}
+		out, err := Bech32KeyOutput(info)
+		if err != nil {
+			panic(err)
+		}
 		if !viper.GetBool(flagNoBackup) {
 			out.Seed = seed
 		}

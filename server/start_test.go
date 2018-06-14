@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/mock"
+	"github.com/cosmos/cosmos-sdk/server/mock"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
@@ -40,7 +40,7 @@ func TestStartStandAlone(t *testing.T) {
 	svrAddr, _, err := FreeTCPAddr()
 	require.Nil(t, err)
 	svr, err := server.NewServer(svrAddr, "socket", app)
-	require.Nil(t, err, "Error creating listener")
+	require.Nil(t, err, "error creating listener")
 	svr.SetLogger(logger.With("module", "abci-server"))
 	svr.Start()
 

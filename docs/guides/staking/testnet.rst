@@ -66,7 +66,7 @@ To confirm for certain the new validator is active, check tendermint:
 
 ::
 
-    curl localhost:46657/validators
+    curl localhost:26657/validators
 
 Finally, to relinquish all your power, unbond some coins. You should see your VotingPower reduce and your account balance increase.
 

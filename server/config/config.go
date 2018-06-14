@@ -6,7 +6,7 @@ package config
 // For example: init, init gen-tx and testnet commands need similar input and run the same code
 
 // Storage for init gen-tx command input parameters
-type GenTxConfig struct {
+type GenTx struct {
 	Name      string
 	CliRoot   string
 	Overwrite bool

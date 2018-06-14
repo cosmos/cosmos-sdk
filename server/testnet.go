@@ -96,7 +96,7 @@ func testnetWithConfig(config *cfg.Config, ctx *Context, cdc *wire.Codec, appIni
 			}
 		}
 
-		genTxConfig := gc.GenTxConfig{
+		genTxConfig := gc.GenTx{
 			nodeDirName,
 			clientDir,
 			true,

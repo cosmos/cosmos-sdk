@@ -26,9 +26,24 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 
 	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
-	gc "github.com/cosmos/cosmos-sdk/server/config"
+	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+)
+
+//Parameter names, for init gen-tx command
+var (
+	FlagName       = "name"
+	FlagClientHome = "home-client"
+	FlagOWK        = "owk"
+)
+
+//parameter names, init command
+var (
+	FlagOverwrite = "overwrite"
+	FlagGenTxs    = "gen-txs"
+	FlagIP        = "ip"
+	FlagChainID   = "chain-id"
 )
 
 // genesis piece structure for creating combined genesis
@@ -39,20 +54,6 @@ type GenesisTx struct {
 	AppGenTx  json.RawMessage          `json:"app_gen_tx"`
 }
 
-var (
-	//--name parameter name, init gen-tx command
-	FlagName = "name"
-	//--home-client parameter name, init gen-tx command
-	FlagClientHome = "home-client"
-	//--owk parameter name, init gen-tx command
-	FlagOWK = "owk"
-
-	// bonded tokens given to genesis validators/accounts
-	FreeFermionVal = int64(100)
-	// ...
-	FreeFermionsAcc = int64(50)
-)
-
 // Storage for init command input parameters
 type InitConfig struct {
 	ChainID   string
@@ -60,17 +61,6 @@ type InitConfig struct {
 	GenTxsDir string
 	Overwrite bool
 }
-
-var (
-	//--overwrite parameter name, init command
-	FlagOverwrite = "overwrite"
-	//--gen-txs parameter name, init command
-	FlagGenTxs = "gen-txs"
-	//--ip parameter name, init command
-	FlagIP = "ip"
-	//--chain-id parameter name, init command
-	FlagChainID = "chain-id"
-)
 
 // get cmd to initialize all files for tendermint and application
 func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
@@ -92,7 +82,7 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				ip = eip
 			}
 
-			genTxConfig := gc.GenTxConfig{
+			genTxConfig := serverconfig.GenTx{
 				viper.GetString(FlagName),
 				viper.GetString(FlagClientHome),
 				viper.GetBool(FlagOWK),
@@ -122,7 +112,7 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	return cmd
 }
 
-func gentxWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, genTxConfig gc.GenTxConfig) (
+func gentxWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, genTxConfig serverconfig.GenTx) (
 	cliPrint json.RawMessage, genTxFile json.RawMessage, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
@@ -244,7 +234,7 @@ func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.
 		configFilePath := filepath.Join(config.RootDir, "config", "config.toml")
 		cfg.WriteConfigFile(configFilePath, config)
 	} else {
-		genTxConfig := gc.GenTxConfig{
+		genTxConfig := serverconfig.GenTx{
 			viper.GetString(FlagName),
 			viper.GetString(FlagClientHome),
 			viper.GetBool(FlagOWK),
@@ -380,7 +370,7 @@ type AppInit struct {
 	FlagsAppGenTx    *pflag.FlagSet
 
 	// create the application genesis tx
-	AppGenTx func(cdc *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTxConfig) (
+	AppGenTx func(cdc *wire.Codec, pk crypto.PubKey, genTxConfig serverconfig.GenTx) (
 		appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error)
 
 	// AppGenState creates the core parameters initialization. It takes in a
@@ -402,7 +392,7 @@ type SimpleGenTx struct {
 }
 
 // Generate a genesis transaction
-func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTxConfig) (
+func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig serverconfig.GenTx) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
 	var addr sdk.Address

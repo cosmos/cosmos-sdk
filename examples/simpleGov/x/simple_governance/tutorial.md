@@ -30,11 +30,11 @@ For a more detailed overview of the Cosmos ecosystem, you can read [this article
 
 ## Introduction to the Cosmos-SDK
 
-Developing a Tendermint-based blockchain means that you only have to code the application (i.e. the business logic). But that in itself can prove to be rather difficult. This is why the Cosmos-SDK exists.
+Developing a Tendermint-based blockchain means that you only have to code the application (i.e. the state-machine). But that in itself can prove to be rather difficult. This is why the Cosmos-SDK exists.
 
-The Cosmos-SDK is a platform for building multi-asset Proof-of-Stake (PoS) blockchains, like the Cosmos Hub. It is both a library for building and securely interacting with blockchain applications.
+The [Cosmos-SDK](https://github.com/cosmos/cosmos-sdk) is a platform for building multi-asset Proof-of-Stake (PoS) blockchains, like the Cosmos Hub, as well as Proof-Of-Authority (PoA) blockchains. 
 
-The goal of the Cosmos-SDK is to allow developers to easily create custom interoperable blockchain applications within the Cosmos Network without having to recreate common blockchain functionality, thus abstracting away the complexities of building a Tendermint ABCI application. We envision the SDK as the npm-like framework to build secure blockchain applications on top of Tendermint.
+The goal of the Cosmos-SDK is to allow developers to easily create custom interoperable blockchain applications within the Cosmos Network without having to recreate common blockchain functionality, thus abstracting away the complexity of building a Tendermint ABCI application. We envision the SDK as the npm-like framework to build secure blockchain applications on top of Tendermint.
 
 In terms of its design, the SDK optimizes flexibility and security. The framework is designed around a modular execution stack which allows applications to mix and match elements as desired. In addition, all modules are sandboxed for greater application security.
 
@@ -44,46 +44,47 @@ It is based on two major principles:
 
 - **Capabilities:** The SDK is inspired by capabilities-based security, and informed by years of wrestling with blockchain state machines. Most developers will need to access other 3rd party modules when building their own modules. Given that the Cosmos-SDK is an open framework and that we assume that some those modules may be malicious, we designed the SDK using object-capabilities (ocaps) based principles. In practice, this means that instead of having each module keep an access control list for other modules, each module implements keepers that can be passed to other modules to grant a pre-defined set of capabilities. For example, if an instance of module A's keepers is passed to module B, the latter will be able to call a restricted set of module A's functions. The capabilities of each keeper are defined by the module's developer, and it's their job to understand and audit the safety of foreign code from 3rd party modules based on the capabilities they are passing into each 3rd party module. For a deeper look at capabilities, you can read this article.
 
-Note: For now the Cosmos-SDK only exists in Golang, which means that developers can only develop SDK modules in Golang. In the future, we expect that the SDK will be implemented in other programming languages. Funding opportunities supported by the Tendermint team may be available eventually.
+*Note: For now the Cosmos-SDK only exists in Golang, which means that developers can only develop SDK modules in Golang. In the future, we expect that the SDK will be implemented in other programming languages. Funding opportunities supported by the Tendermint team may be available eventually.*
 
 ## Reminder on Tendermint and ABCI
 
-Cosmos-SDK is a framework to develop the *Application* layer of the blockchain. This application can be plugged on any consensus engine (*Consensus* + *Networking* layers) that supports a simple protocol called the ABCI, short for [Application-Blockchain Interface](https://github.com/tendermint/abci). 
+Cosmos-SDK is a framework to develop the *application* layer of the blockchain. This application can be plugged on any consensus engine (*consensus* + *networking* layers) that supports a simple protocol called the ABCI, short for [Application-Blockchain Interface](https://github.com/tendermint/abci). 
 
-Tendermint is the default consensus engine on which the Cosmos-SDK is being built. It is important to have a good understanding of the respective responsibilities of both the Application and the Consensus Engine. 
+Tendermint is the default consensus engine on which the Cosmos-SDK is built. It is important to have a good understanding of the respective responsibilities of both the *Application* and the *Consensus Engine*. 
 
-Responsibilities of the Consensus Engine:
+Responsibilities of the *Consensus Engine*:
 - Propagate transactions
 - Agree on the order of valid transactions
 
-Reponsibilities of the Application layer:
+Reponsibilities of the *Application*:
 - Generate Transactions
 - Check if transactions are valid
 - Process Transactions (includes state changes)
 
-It is worth underlining that the Consensus Engine has knowledge of a given validator set for each block, but that it is the responsiblity of the *Application* to trigger validator set changes (by processing appropriate transactions). This is the reason why it is possible to build both **public and private chains** with the Cosmos-SDK and Tendermint. A chain will be public or private depending on the rules, defined at *application level*, that govern validator set changes.
+It is worth underlining that the *Consensus Engine* has knowledge of a given validator set for each block, but that it is the responsiblity of the *Application* to trigger validator set changes. This is the reason why it is possible to build both **public and private chains** with the Cosmos-SDK and Tendermint. A chain will be public or private depending on the rules, defined at application level, that govern validator set changes.
 
-The ABCI establishes the connection between the Consensus Engine and the Application. Essentially, it boils down to two messages:
+The ABCI establishes the connection between the *Consensus Engine* and the *Application*. Essentially, it boils down to two messages:
+
 - `CheckTx`: Ask the application if the transaction is valid. When a node receives a transaction, it will run `CheckTx` on it. If the transaction is valid, it is added to the mempool.
 - `DeliverTx`: Ask the application to process the transaction. Returns a new state.
 
-Finally, let us give a high-level overview of a round to showcase how the consensus engine and the application interract with each other.
+Let us give a high-level overview of  how the *Consensus Engine* and the *Application* interract with each other.
 
-- At all times, when the consensus engine of a validator node receives a transaction, it passes it to the application via `CheckTx` to check its validity. If valid, the transaction is added to the mempool. 
-- At block N, there is a validator set V. A proposer is selected by the consensus engine from V to propose the next block. The proposer gathers valid transaction from its mempool and forms a block. Then, the block is gossiped to other validators to be signed. The block becomes block N+1 once 2/3+ of V have signed a *precommit* on it (For a more detailed explanation of the consensus algorithm, click [here](https://github.com/tendermint/tendermint/wiki/Byzantine-Consensus-Algorithm)).
-- When block N+1 is signed by 2/3+ of V, it is gossipped to full-nodes. When full-nodes receive the block, they confirm its validity. A block is valid if it it holds valid signatures from more than 2/3 of V and if all the transactions in the block are valid. To check the validity of transactions, the consensus engine transfers them to the application via `DeliverTx`. After each transaction, `DeliverTx` returns a new state if the transaction was valid. At the end of the block, a final state is committed. Of course, this means that the order of transaction within a block matters. 
+- At all times, when the consensus engine of a validator node receives a transaction, it passes it to the application via `CheckTx` to check its validity. If it is valid, the transaction is added to the mempool. 
+- Let us say we are at block N. There is a validator set V. A proposer is selected from V by the *Consensus Engine* to propose the next block. The proposer gathers valid transaction from its mempool and forms a block. Then, the block is gossiped to other validators to be signed. The block becomes block N+1 once 2/3+ of V have signed a *precommit* on it (For a more detailed explanation of the consensus algorithm, click [here](https://github.com/tendermint/tendermint/wiki/Byzantine-Consensus-Algorithm)).
+- When block N+1 is signed by 2/3+ of V, it is gossipped to full-nodes. When full-nodes receive the block, they confirm its validity. A block is valid if it it holds valid signatures from more than 2/3 of V and if all the transactions in the block are valid. To check the validity of transactions, the *Consensus Engine* transfers them to the application via `DeliverTx`. After each transaction, `DeliverTx` returns a new state if the transaction was valid. At the end of the block, a final state is committed. Of course, this means that the order of transaction within a block matters. 
 
 ## Architecture of a SDK-app
 
-The Cosmos-SDK gives the basic template for your application architecture. You can find this template [here](https://github.com/cosmos/cosmos-sdk).
+The Cosmos-SDK gives the basic template for an application architecture. You can find this template [here](https://github.com/cosmos/cosmos-sdk).
 
 In essence, a blockchain application is simply a replicated state machine. There is a state (e.g. for a cryptocurrency, how many coins each account holds), and transactions that trigger state transitions. As the application developer, your job is just define the state, the transactions types and how different transactions modify the state. 
 
 ### Modularity
 
-The Cosmos-SDK is a module-based framework. Each module is in itself a little state-machine that can be gracefully combined with other modules to produce a coherent application. In other words, modules define a sub-section of the global state and of the transaction types. Then, it is the job of the root application to route messages to the correct modules depending on their respective types. To understand this process, let us take a look at a simplified standard cycle of the state-machine.
+The Cosmos-SDK is a module-based framework. Each module is in itself a little state-machine that can be gracefully combined with other modules to produce a coherent application. In other words, modules define a sub-section of the global state and of the transaction types. Then, it is the job of the root application to route transactions to the correct modules depending on their respective types. To understand this process, let us take a look at a simplified standard cycle of the state-machine.
 
-Upon receiving a transaction from the Tendermint Core engine, here is whatthe application does:
+Upon receiving a transaction from the Tendermint Core engine, here is what the *Application* does:
 
 1. Decode the transaction and get the message
 2. Route the message to the appropriate module using the `Msg.Type()` method
@@ -143,7 +144,6 @@ type KVStore interface {
     // GetSubKVStore(key *storeKey) KVStore 
  } 
 ```
-
 
 You can mount multiple KVStores onto your application, e.g. one for staking, one for accounts, one for IBC, and so on.
 
@@ -342,10 +342,10 @@ https://github.com/cosmos/cosmos-sdk/tree/develop/x/stake (staking module)
 
 #### Start working
 
-So by now you should have realized how easy it is to build a Tendermint blockchain on top of the Cosmos-SDK. You just have to follow these simple steps:
+To get started, you just have to follow these simple steps:
 
-1. Clone the Cosmos-SDK repo
-2. Code the modules needed by your application that do not already exist
+1. Clone the [Cosmos-SDK](https://github.com/cosmos/cosmos-sdk/tree/develop) repo
+2. Code the modules needed by your application that do not already exist.
 3. Create your app directory. In the app main file, import the module you need and instantiate the different stores.
 4. Launch your blockchain.
 
@@ -386,11 +386,11 @@ We are all set!
 
 ## Designing the app
 
-### Simple governance app
+### Simple governance application
 
-For this tutorial, we will code a simple governance application, and a simple governance module. It will allow us to show all the basic notions required to build a functioning module. Note that this is not the module used for the governance of the Cosmos Hub. A much more [advanced governance module](https://github.com/cosmos/cosmos-sdk/tree/develop/x/gov) for the Cosmos-SDK is available. 
+For this tutorial, we will code a **simple governance application**, accompagnied by a **simple governance module**. It will allow us to explain most of the basic notions required to build a functioning application. Note that this is not the governance module used for the Cosmos Hub. A much more [advanced governance module](https://github.com/cosmos/cosmos-sdk/tree/develop/x/gov) will be used instead. 
 
-All the code for the simple_governance application can be found [here](https://github.com/gamarin2/cosmos-sdk/tree/module_tutorial/examples/basecoin/x/simple_governance). You'll notice that the module and app aren't located at the root level of the repo but in the examples directory. This is just for convenience, you can code your module and app in the base repos. 
+All the code for the simple_governance application can be found [here](https://github.com/gamarin2/cosmos-sdk/tree/module_tutorial/examples/basecoin/x/simple_governance). You'll notice that the module and app aren't located at the root level of the repo but in the examples directory. This is just for convenience, you can code your module and application directly in the root directory. 
 
 Without further talk, let's get into it!
 
@@ -398,16 +398,16 @@ Without further talk, let's get into it!
 
 We will start by writting down our module's requirements. We are designing a simple governance module, in which we want:
 
-- Simple text proposals, that any coin holder can submit
+- Simple text proposals, that any coin holder can submit.
 - Proposals must be submitted with a deposit in Atoms. If the deposit is superior to a predefined value called `MinDeposit`, the proposal enters the voting period. Otherwise it is rejected.
 - Bonded Atom holders can vote on proposal on a 1 bonded Atom 1 vote basis
 - Bonded Atom holders can choose between 3 options when casting a vote: `Yes`, `No` and `Abstain`.
 - If, at the end of the voting period, there are more `Yes` votes than `No` votes, the proposal is accepted. Otherwise, it is rejected.
 - Voting period is 2 weeks
 
-When designing a module, it is good to adopt a certain methodology. Remember that a blockchain application is just a replicated deterministic state-machine. The state is just the representation of the application at a given time. It is up to the application devleper to define what the state will represent, depending on the goal of the application. For example, the state of a simple cryptocurrency application will just be a mapping of addresses to balances. 
+When designing a module, it is good to adopt a certain methodology. Remember that a blockchain application is just a replicated state-machine. The state is the representation of the application at a given time. It is up to the application developer to define what the state represents, depending on the goal of the application. For example, the state of a simple cryptocurrency application will be a mapping of addresses to balances. 
 
-The state can be updated according to predefined rules. Given a state and a transaction, the state-machine (i.e. the application) will return a new state. In a blockchain, transactions are bundled in blocks, but the logic is the same. Given a state and a set of transactions (a block), the application returns a new state. A SDK-module is just a subset of the application, but it is based on the same principles. As a result, module developers only have to define a subset of the state and a subset of the transaction types, which trigger state transitions. 
+The state can be updated according to predefined rules. Given a state and a transaction, the state-machine (i.e. the application) will return a new state. In a blockchain application, transactions are bundled in blocks, but the logic is the same. Given a state and a set of transactions (a block), the application returns a new state. A SDK-module is just a subset of the application, but it is based on the same principles. As a result, module developers only have to define a subset of the state and a subset of the transaction types, which trigger state transitions. 
 
 In summary, we have to define:
 
@@ -419,7 +419,7 @@ In summary, we have to define:
 
 Here, we will define the types we need (excluding transaction types), as well as the stores in the multistore. 
 
-Our voting module is very simple, we only need a single type: `Proposals`. `Proposals` are item to be voted upon. They can be submitted by any users who have to provide a deposit.
+Our voting module is very simple, we only need a single type: `Proposal`. `Proposals` are item to be voted upon. They can be submitted by any user. A deposit has to be provided.
 
 ```go
 type Proposal struct {
@@ -435,20 +435,20 @@ type Proposal struct {
 }
 ```
 
-In terms of store, we will just create one KVStore in the multistore to store `Proposals`. We will also store the option (`Yes`, `No` or `Abstain`) chosen by each voter on each proposal.
+In terms of store, we will just create one KVStore in the multistore to store `Proposals`. We will also store the vote (`Yes`, `No` or `Abstain`) chosen by each voter on each proposal.
 
 - `Proposals` will be indexed by `<proposalID|'proposal'>`.
-- `Options` (`Yes`, `No`, `Abstain`) will be indexed by `<proposalID>|'addresses'|voterAddress`.
+- `Votes` (`Yes`, `No`, `Abstain`) will be indexed by `<proposalID>|'addresses'|voterAddress`.
 
-Notice the quote mark on `'proposal'` and `'addresses'`. This means that these are constant keywords. So, for example, the option casted by voter with address `0x01` on proposal `0101` will be stored at index `0101|'addresses'|0x01`.
+Notice the quote mark on `'proposal'` and `'addresses'`. They indicate that these are constant keywords. So, for example, the option casted by voter with address `0x01` on proposal `0101` will be stored at index `0101|'addresses'|0x01`.
 
-These keywords are used to faciliate range queries. Range queries (TODO: Link to formal spec) allow developer to query a subspace of the store, and return an iterator. They are made possible by the nice properties of the [IAVL+ tree](https://github.com/tendermint/iavl) that is used in the background. In practice, this means that it is possible to store and query a KV pair in O(1) while still being able to iterate over a given subspace of KV pairs. For example, we can query all the addresses that voted on a given proposal, along with their options, by calling `rangeQuery(SimpleGovStore, <proposalID|'addresses'>)`.
+These keywords are used to faciliate range queries. Range queries (TODO: Link to formal spec) allow developer to query a subspace of the store, and return an iterator. They are made possible by the nice properties of the [IAVL+ tree](https://github.com/tendermint/iavl) that is used in the background. In practice, this means that it is possible to store and query a Key-Value pair in O(1), while still being able to iterate over a given subspace of Key-Value pairs. For example, we can query all the addresses that voted on a given proposal, along with their votes, by calling `rangeQuery(SimpleGovStore, <proposalID|'addresses'>)`.
 
 ### Transactions
 
-The title of this section is a bit misleading. Indeed, what you as a module developer have to define is not `transactions`, but `messages`. Both transactions and messages exist in the Cosmos-SDK. A transaction differs from a message in that a message is contained in a transaction.  Transactions wrap around messages and add standard information like signatures and fees. As a module developer, you do not have to worry about transactions, only messages. 
+The title of this section is a bit misleading. Indeed, what you, as a module developer, have to define are not `transactions`, but `messages`. Both transactions and messages exist in the Cosmos-SDK, but a transaction differs from a message in that a message is contained in a transaction.  Transactions wrap around messages and add standard information like signatures and fees. As a module developer, you do not have to worry about transactions, only messages. 
 
-Let us define the messages that we need in order to modify the state. Based on our features, we only need two messages:
+Let us define the messages we need in order to modify the state. Based on our features, we only need two messages:
 
 - `SubmitProposalMsg`: to submit proposals
 - `VoteMsg`: to vote on proposals
@@ -499,15 +499,15 @@ Let us go into the detail of each of these files.
 
 ### Types
 
-In this file, you define the custom types for your module. This includes the types from the [State](#State) section and the custom message types for your module defined in the [Transactions](#Transactions) section.
+In this file, we define the custom types for our module. This includes the types from the [State](#State) section and the custom message types defined in the [Transactions](#Transactions) section.
 
-For each new type that it not a message, you can add methods that make sense in the context of your application. In our case, we will implement an `updateTally` function to easily update the tally of a given proposal as vote messages come in.
+For each new type that is not a message, it is possible to add methods that make sense in the context of the application. In our case, we will implement an `updateTally` function to easily update the tally of a given proposal as vote messages come in.
 
 Messages are a bit different. They implement the `Message` interface defined in the SDK's `types` folder. Here are the methods you need to implement when you define a custom message type:
 
-- `Type()`: This function returns the route name of your module. When messages are processed by the application, they are routed using the string returned by the `Type() method.
-- `GetSignBytes()`: Return the byte representation of the message. Is used to sign the message. 
-- `GetSigners()`: Return addresses of the signer(s).  
+- `Type()`: This function returns the name of our module's route. When messages are processed by the application, they are routed using the string returned by the `Type()` method.
+- `GetSignBytes()`: Returns the byte representation of the message. It is used to sign the message. 
+- `GetSigners()`: Returns address(es) of the signer(s).  
 - `ValidateBasic()`: This function is used to discard obviously invalid messages. It is called at the beginning of `runTx()` in the baseapp file. If `ValidateBasic()` does not return `nil`, the app stops running the transaction.
 - `Get()`: A basic getter, returns some property of the message. 
 - `String()`: Returns a human-readable version of the message
@@ -524,29 +524,31 @@ For our simple governance messages, this means:
 
 #### Short intro to keepers
 
-Keepers handles read and writes for your module's stores. This is where the notion of capability enters into play.
+Keepers handles read and writes for modules' stores. This is where the notion of capability enters into play.
 
 As module developers, we have to define keepers to interact with our module's store(s) not only from within our module, but also from other modules. When another module wants to access one of our module's store(s), a keeper for this store has to be passed to it at the application level. In practice, it will look like that:
 
-```
+```go
+// in app.go
+
+// instanciate keepers
 keeperA = moduleA.newKeeper(app.moduleAStoreKey)
 keeperB = moduleB.newKeeper(app.moduleBStoreKey)
 
+// pass instance of keeperA to handler of module B
 app.Router().
         AddRoute("moduleA", moduleA.NewHandler(keeperA)).
         AddRoute("moduleB", moduleB.NewHandler(keeperB, keeperA))   // Here module B can access one of module A's store via the keeperA instance
 ```
 
-`KeeperA` grants a set of capabilities to the handler of module B. When developing a module, it is good practice to think about the sensitivity of the different capabilities that can be granted through keepers. For example, some module may need to read and write to module A's main store, while others only need to read it. If your module has multiple stores, then some keepers could grant access to all of them, while others would only grant access to specific sub-stores. It is the job of the module developer to make sure it is easy for the application developer to instanciate a keeper with the right capabilities. Of course, the handler of your module will most likely get an unrestricted instance of the module's keeper. 
+`KeeperA` grants a set of capabilities to the handler of module B. When developing a module, it is good practice to think about the sensitivity of the different capabilities that can be granted through keepers. For example, some module may need to read and write to module A's main store, while others only need to read it. If a module has multiple stores, then some keepers could grant access to all of them, while others would only grant access to specific sub-stores. It is the job of the module developer to make sure it is easy for  application developers to instanciate a keeper with the right capabilities. Of course, the handler of a module will most likely get an unrestricted instance of that module's keeper. 
 
 #### Keepers for our app
 
-In our case, we only have one store to access, the `Proposals` store. We will need to set and get values inside this store via our keeper. However, these two actions do not have the same impact in terms of security. While there should no problem  granting read access to our store to other modules, write access is way more sensitive. So ideally application developers should be able to create either a governance mapper that can only get values from the store, or one that can both get and set values. To this end, we will introduce two keepers: `Keeper` and `KeeperRead`. When application developers create their application, they will be able to decide which of our module's keeper to use. 
+In our case, we only have one store to access, the `SimpleGov` store. We will need to set and get values inside this store via our keeper. However, these two actions do not have the same impact in terms of security. While there should no problem in granting read access to our store to other modules, write access is way more sensitive. So ideally application developers should be able to create either a governance mapper that can only get values from the store, or one that can both get and set values. To this end, we will introduce two keepers: `Keeper` and `KeeperRead`. When application developers create their application, they will be able to decide which of our module's keeper to use. 
 
-Now let us try to think about which keepr from **external** modules our keepers need to have access to. 
-Each proposal requires a deposit. This means our module needs to be able to both read and write to the module that handles tokens, which is the `bank` module. We only accept deposits in `Atoms` so, if possible, the application developer should pass a keeper of the `bank` module that can read and write to Atom balance only, and not other tokens, to our module's handler.
-
-We also need to be able to determine the voting power of each voter based on their stake. To this end, we need read access to the store of the `staking` module. However, we don't need write access to this store. We should therefore indicate that in our module, and the application developer should be careful to only pass a read-only keeper of the `staking` module to our module's handler.
+Now let us try to think about which keeper from **external** modules our module's keepers need access to. 
+Each proposal requires a deposit. This means our module needs to be able to both read and write to the module that handles tokens, which is the `bank` module. We also need to be able to determine the voting power of each voter based on their stake. To this end, we need read access to the store of the `staking` module. However, we don't need write access to this store. We should therefore indicate that in our module, and the application developer should be careful to only pass a read-only keeper of the `staking` module to our module's handler.
 
 With all that in mind, we can define the structure of our `Keeper`:
 
@@ -586,9 +588,9 @@ func NewKeeperRead(proposalStoreKey sdk.StoreKey, ck bank.CoinKeeper, sm stake.K
 
 Depending on the needs of the application and its modules, either `Keeper`, `KeeperRead`, or both, will be instanciated at application level. 
 
-*Note: Both the `Keeper` type name and `NewKeeper()` function's name are standard names used in every module. It is no requirement to follow this standard, but doing so can facilitate the life of the application developer*
+*Note: Both the `Keeper` type name and `NewKeeper()` function's name are standard names used in every module. It is no requirement to follow this standard, but doing so can facilitate the life of application developers*
 
-Now, let us describe the methods that we need for our module's `Keeper`. For the full implementation, please refer to `keeper.go`.
+Now, let us describe the methods we need for our module's `Keeper`. For the full implementation, please refer to `keeper.go`.
 
 - `GetProposal`: Get a `Proposal` given a `proposalID`. Proposals need to be decoded from `byte` before they can be read.
 - `SetProposal`: Set a `Proposal` at index `proposalID|'proposal'`. Proposals need to be encoded to `byte` before they can be stored. 
@@ -598,6 +600,8 @@ Now, let us describe the methods that we need for our module's `Keeper`. For the
 - Proposal Queue methods: These methods implement a standard proposal queue to store `Proposals` on a First-In First-Out basis. It is used to tally the votes at the end of the voting period.
 
 The last thing that needs to be done is to override certain methods for the `KeeperRead` type. `KeeperRead` should not have write access to the stores. Therefore, we will override the methods `SetProposal()`, `SetOption()` and `NewProposalID()`, as well as `setProposalQueue()` from the Proposal Queue's methods. For `KeeperRead`, these methods will just throw an error.
+
+*Note: If you look at the code, you'll notice that the context `ctx` is a parameter of many of the methods. The context `ctx` provides useful information on the current state such as the current block height and allows the keeper `k` to access the KVStore. You can check all the methods of `ctx` [here](https://github.com/cosmos/cosmos-sdk/blob/develop/types/context.go#L144-L168)*
 
 ### Handler
 
@@ -631,7 +635,7 @@ func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg SubmitProposalMsg) s
 
 Let us take a look at the parameters of this function:
 
-- The context `ctx` provides useful information on the current state such as the current block height and allows the keeper `k` to access the KVStore. You can check all the methods of `ctx` [here](https://github.com/cosmos/cosmos-sdk/blob/develop/types/context.go#L144-L168)
+- The context `ctx` to access the stores.
 - The keeper `k` allows the handler to read and write from the different stores, including the module's store (`SimpleGovernance` in our case) and all the stores from other modules that the keeper `k` has been granted an access to (`stake` and `bank` in our case).
 - The message `msg` that holds all the information provided by the sender of the transaction. 
 
@@ -643,12 +647,11 @@ Contrary to most Smart-Contracts platform, it is possible to perform automatic (
 
 This automatic execution of code takes place in the `BeginBlock` and `EndBlock` functions that are called at the beginning and at the end of every block. They are powerful tools, but it is important for application developers to be careful with them. For example, it is crutial that developers control the amount of computing that happens in these functions, as expensive computation could delay the block time, and never-ending loop freeze the chain altogether. 
 
-`BeginBlock` and `EndBlock` are composable functions, meaning that each module can implement its own `BeginBlock` and `EndBlock` logic. When needed, `BeginBlock` and `EndBlock` logic is implemented in the module's `handler`. Here is the standard way to proceed for `BeginBlock` (`EndBlock` follows the exact same pattern):
+`BeginBlock` and `EndBlock` are composable functions, meaning that each module can implement its own `BeginBlock` and `EndBlock` logic. When needed, `BeginBlock` and `EndBlock` logic is implemented in the module's `handler`. Here is the standard way to proceed for `EndBlock` (`BeginBlock` follows the exact same pattern):
 
 ```go 
-func NewBeginBlocker(k Keeper) sdk.BeginBlocker {
-    // TODO cannot use func literal (type func("github.com/cosmos/cosmos-sdk/types".Context, "github.com/tendermint/abci/types".RequestBeginBlock) "github.com/tendermint/abci/types".ResponseBeginBlock) as type "github.com/cosmos/cosmos-sdk/types".BeginBlocker in return argument
-    return func(ctx sdk.Context, req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
+func NewEndBlocker(k Keeper) sdk.EndBlocker {
+    return func(ctx sdk.Context, req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
         err := checkProposal(ctx, k)
         if err != nil {
             panic(err)
@@ -658,7 +661,7 @@ func NewBeginBlocker(k Keeper) sdk.BeginBlocker {
 }
 ```
 
-Do not forget that each module has to declare its `BeginBlock` and `EndBlock` constructors at application level. See the [Application - Bridging it all together](#application_-_bridging_it_all_together).
+Do not forget that each module need to declare its `BeginBlock` and `EndBlock` constructors at application level. See the [Application - Bridging it all together](#application_-_bridging_it_all_together).
 
 For the purpose of our simple governance application, we will use `EndBlock` to automatically tally the results of the vote. Here are the different steps that will be performed:
 
@@ -669,8 +672,8 @@ For the purpose of our simple governance application, we will use `EndBlock` to 
 
 Let us perform a quick safety analysis on this process.
 - The loop will not run forever because the number of proposals in `ProposalProcessingQueue` is finite
-- The computation should not be too expensive because tallying is not expensive and the number of proposals is expected be relatively low. That is because proposals require a `Deposit` to be accepted. `Deposit` should be high enough so that we don't have too many `Proposals` in the queue.
-- In the eventuality where the application becomes so successful that the `ProposalProcessingQueue` ends up containing so many proposals that the blockchain starts slowing down, the module should be modified to mitigate the situation. One clever way of doing that is to cap the number of iteration per individual `EndBlock` at `MaxIteration`. This way, tallying will be spread over many blocks if the number of proposals is too important and block time should remain stable. This would require to modify the current check `if (CurrentBlock == Proposal.SubmitBlock + VotingPeriod)` to `if (CurrentBlock > Proposal.SubmitBlock + VotingPeriod) AND (Proposal.Status == ProposalStatusActive)`.
+- The computation should not be too expensive because tallying of individual proposals is not expensive and the number of proposals is expected be relatively low. That is because proposals require a `Deposit` to be accepted. `MinDeposit` should be high enough so that we don't have too many `Proposals` in the queue.
+- In the eventuality that the application becomes so successful that the `ProposalProcessingQueue` ends up containing so many proposals that the blockchain starts slowing down, the module should be modified to mitigate the situation. One clever way of doing it is to cap the number of iteration per individual `EndBlock` at `MaxIteration`. This way, tallying will be spread over many blocks if the number of proposals is too important and block time should remain stable. This would require to modify the current check `if (CurrentBlock == Proposal.SubmitBlock + VotingPeriod)` to `if (CurrentBlock > Proposal.SubmitBlock + VotingPeriod) AND (Proposal.Status == ProposalStatusActive)`.
 
 ### Wire
 
@@ -747,7 +750,7 @@ It allows end-users that do not want to run full-nodes themselves to interract w
 
 - If *light-client verification* is enabled, the Rest Server acts as a light-client and needs to be run on the end-user's machine. It allows them to interract with the chain in a trustless way without having to store the whole chain locally. 
 
-- If *light-client verification* is diabled, the Rest Server acts as a simple relayer for HTTP calls. In this setting, the Rest server needs not be run on the end-user's machine. Instead, it will probably be run by the same entity that operates the full-node the server connects to. This mode is useful if end-users trust the full-node operator and do not want to store anything locally. 
+- If *light-client verification* is disabled, the Rest Server acts as a simple relayer for HTTP calls. In this setting, the Rest server needs not be run on the end-user's machine. Instead, it will probably be run by the same entity that operates the full-node the server connects to. This mode is useful if end-users trust the full-node operator and do not want to store anything locally. 
 
 Now, let us define endpoints that will be available for users to query through HTTP requests. These endpoints will be defined in a `simple_governance.go` file stored in the `rest` folder.
 
@@ -760,7 +763,7 @@ Now, let us define endpoints that will be available for users to query through H
 | POST   | /proposals/{proposal}           | Submit a new proposal                                       |
 | POST   | /proposals/{id}/{vote}          | Cast a vote on a given proposal                             |
 
-It is the job of the module developer to provide sensible endpoints so that front-end developers and service providers can properly interact with it.
+It is the job of module developers to provide sensible endpoints so that front-end developers and service providers can properly interact with it.
 
 As for the actual in-code implementation of the endpoints for our simple governance module, you can take a look at [this file](../client/rest/simple_governance.go). Additionaly, here is a [link](https://hackernoon.com/restful-api-designing-guidelines-the-best-practices-60e1d954e7c9) for REST APIs best practices.
 
@@ -778,6 +781,7 @@ cd app
 
 We are ready to create our simple governance application!
 
+#### App structure
 
 *Note: You can check the full file (with comments!) [here](link)*
 
@@ -821,9 +825,11 @@ type SimpleGovApp struct {
 - Then come the keys to the stores we need in our application. For our simple governance app, we need 3 stores + the main store.
 - Then come the keepers and mappers.
 
-Let us do a quick reminder so that it is perfectly clear why we need these stores and keeper. Our application is primarily based on the `simple_governance` module. However, we have established in section [Keepers for our app](#keepers_for_our_app) that our module needs access to two other modules: the `bank` module and the `stake` module. We also need the `auth` module for basic account functionalities. Finally, we need access to the main multistore to declare the stores of each of the module we use.
+Let us do a quick reminder so that it is  clear why we need these stores and keepers. Our application is primarily based on the `simple_governance` module. However, we have established in section [Keepers for our app](#keepers_for_our_app) that our module needs access to two other modules: the `bank` module and the `stake` module. We also need the `auth` module for basic account functionalities. Finally, we need access to the main multistore to declare the stores of each of the module we use.
 
-Then, we need to define the constructor for our application.
+#### App constructor
+
+Now, we need to define the constructor for our application.
 
 ```go
 func NewSimpleGovApp(logger log.Logger, db dbm.DB) *SimpleGovApp
@@ -880,6 +886,8 @@ app.Router().
     }
     return app
 ```
+
+#### App codec
 
 Finally, we need to define the `MakeCodec()` function and register the concrete types and interface from the various modules.
 

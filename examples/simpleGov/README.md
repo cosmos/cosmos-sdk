@@ -1,18 +1,21 @@
 # Tutorial: How to code a Cosmos-SDK application
 
-In this tutorial, we will learn the basics of coding a Cosmos-SDK application. Before getting into the bulk of it, let us remind some high level concepts about the Cosmos-SDK.
+In this tutorial, we will learn the basics of coding a Cosmos-SDK application. We will start by an introduction to Tendermint and the Cosmos ecosystem, followed by a high-level overview of the Tendermint software and the Cosmos-SDK framework. After that, we will delve into the code and build a simple application on top of the Cosmos-SDK. 
 
 ## Tendermint and Cosmos
 
 Blockchains can be divided in three conceptual layers: 
 
-- **Networking:** Responsible for message propagation.
-- **Consensus:** Enables validator nodes to agree on the next set of transactions to process (i.e. add blocks to the blockchain).
-- **Application:** Responsible for processing transactions, which modify the state.
+- **Networking:** Responsible for propagating transactions.
+- **Consensus:** Enables validator nodes to agree on the next set of transactions to process (i.e. add blocks of transactions to the blockchain).
+- **Application:** Responsible for updating the state given a set of transactions, i.e. processing transactions
 
-Before Tendermint, building a blockchain required building all three layers from the ground up. What Tendermint does is providing a generic blockchain engine responsible for Networking and Consensus. With Tendermint, developer can enjoy a high-performance consensus engine and only worry about the application part.
+The *networking* layer makes sure that each node receives transactions. The *consensus* layer makes sure that each node agrees on the same transactions to modify their local state. As for the *application* layer, it processes transactions. Given a transaction and a state, the application will return a new state. In Bitcoin for example, the state is a list of balances for each account (in reality, it's a list of UTXO, short for Unspent Transaction Output, but let's call them balances for the sake of simplicity), and transactions modify the state by changing these balances. In the case of Ethereum, the application is a virtual machine. Each transaction goes through this virtual machine and modifies the state according to the specific smart contract that is called within it.
 
-Tendermint connects the blockchain engine (Networking and Consensus Layers) to the Application via a protocol called ABCI. Developers only have to implement a few messages to build an ABCI-application that runs on top of the Tendermint engine. ABCI is language agnostic, meaning that developers can build the application part of their blockchain in any programming language. Building on top of Tendermint also provides the following benefits:
+Before Tendermint, building a blockchain required building all three layers from the ground up. It was such a tedious task that most developers preferred forking the Bitcoin codebase, thereby being constrained by the limitations of the Bitcoin protocol. Then, Ethereum came in and greatly simplified the development of decentralised applications by providing a Virtual-Machine blockchain on which anyone could deploy custom logic in the form of Smart Contracts. But it did not simplify the development of blockchains themselves, as Go-Ethereum remained a very monolithic tech stack that is difficult to hard-fork from, much like Bitcoin. That is where Tendermint came in.
+The goal of Tendermint is to provide the *networking* and *consensus* layers of a blockchain as a generic engine on which arbitrary applications can be built. With Tendermint, developers only have to worry about the *application* layer of their blockchain, thereby saving them hundreds of hours of development work. Note that Tendermint also designates the name of the byzantine fault tolerant consensus algorithm used within the Tendermint Core engine.
+
+Tendermint connects the blockchain engine (*networking* and *consensus* layers) to the Application via a protocol called the [ABCI](https://github.com/tendermint/abci), short for Application-Blockchain Inteface. Developers only have to implement a few messages to build an ABCI-application that runs on top of the Tendermint engine. ABCI is language agnostic, meaning that developers can build the application part of their blockchain in any programming language. Building on top of Tendermint also provides the following benefits:
 
 - **Public or private blockchain capable.** Since developers can deploy arbitrary applications on top of Tendermint, it is possible to develop both permissioned and permissionless blockchains on top of it.
 - **Performance.** Tendermint is a state of the art blockchain engine. Tendermint Core can have a block time on the order of 1 second and handle thousands of transactions per second.
@@ -20,7 +23,9 @@ Tendermint connects the blockchain engine (Networking and Consensus Layers) to t
 - **Security.** Tendermint consensus is not only fault tolerant, it’s optimally Byzantine fault-tolerant, with accountability. If the blockchain forks, there is a way to determine liability.
 - **Light-client support**. Tendermint provides built-in light-clients.
 
-But most importantly, Tendermint is natively compatible with the Inter Blockchain Communication Protocol. This means that any Tendermint blockchain, whether public or private, can be natively connected to the Cosmos ecosystem and securely exchange tokens with other blockchains in the ecosystem. Note that benefiting from interoperability via IBC and Cosmos preserves the sovereignty of your Tendermint chain. Non-Tendermint chains can also be connected to Cosmos via IBC adapters or Peg-Zones, but this is out of scope for this document.
+But most importantly, Tendermint is natively compatible with the [Inter-Blockchain Communication Protocol](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/ibc) (IBC). This means that any Tendermint blockchain, whether public or private, can be natively connected to the Cosmos ecosystem and securely exchange tokens with other blockchains in the ecosystem. Note that benefiting from interoperability via IBC and Cosmos preserves the sovereignty of your Tendermint chain. Non-Tendermint chains can also be connected to Cosmos via IBC adapters or Peg-Zones, but this is out of scope for this document.
+
+For a more detailed overview of the Cosmos ecosystem, you can read [this article](https://blog.cosmos.network/understanding-the-value-proposition-of-cosmos-ecaef63350d).
 
 
 ## Introduction to the Cosmos-SDK
@@ -752,12 +757,12 @@ Now, let us define endpoints that will be available for users to query through H
 | GET    | /proposals/{id}                 | Returns a proposal given its ID                             |
 | GET    | /proposals/{id}/votes           | Range query to get all the votes casted on a given proposal |
 | GET    | /proposals/{id}/votes/{address} | Returns the vote of a given address on a given proposal     |
-| POST   | /submit-proposal/{proposal}           | Submit a new proposal                                       |
-| POST   | /submit-vote/{id}/{vote}          | Cast a vote on a given proposal                             |
+| POST   | /proposals/{proposal}           | Submit a new proposal                                       |
+| POST   | /proposals/{id}/{vote}          | Cast a vote on a given proposal                             |
 
 It is the job of the module developer to provide sensible endpoints so that front-end developers and service providers can properly interact with it.
 
-As for the actual in-code implementation of the endpoints for our simple governance module, you can take a look at [this file](../client/rest/simple_governance.go). 
+As for the actual in-code implementation of the endpoints for our simple governance module, you can take a look at [this file](../client/rest/simple_governance.go). Additionaly, here is a [link](https://hackernoon.com/restful-api-designing-guidelines-the-best-practices-60e1d954e7c9) for REST APIs best practices.
 
 ### Application - Bridging it all together
 

@@ -17,6 +17,7 @@ BREAKING CHANGES
 
 FEATURES
 * [x/auth] Added AccountNumbers to BaseAccount and StdTxs to allow for replay protection with account pruning
+* [lcd] added an endpoint to query for the SDK version of the connected node
 
 IMPROVEMENTS
 * export command now writes current validator set for Tendermint
@@ -34,7 +35,11 @@ FIXES
 * [gaia] Registered slashing message handler
 * [x/slashing] Set signInfo.StartHeight correctly for newly bonded validators
 
-## 0.18.0
+FEATURES
+* [docs] Reorganize documentation
+* [docs] Update staking spec, create WIP spec for slashing, and fees
+
+## 0.18.0 
 
 *June 9, 2018*
 

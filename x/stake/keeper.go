@@ -294,16 +294,14 @@ func (k Keeper) updateValidator(ctx sdk.Context, validator Validator) Validator 
 	return validator
 }
 
-// XXX TODO build in consideration for revoked
-//
 // Update the validator group and kick out any old validators. In addition this
 // function adds (or doesn't add) a validator which has updated its bonded
 // tokens to the validator group. -> this validator is specified through the
 // updatedValidatorAddr term.
 //
 // The correct subset is retrieved by iterating through an index of the
-// validators sorted by power, stored using the ValidatorsByPowerKey. Simultaniously
-// the current validator records are updated in store with the
+// validators sorted by power, stored using the ValidatorsByPowerKey.
+// Simultaneously the current validator records are updated in store with the
 // ValidatorsBondedKey. This store is used to determine if a validator is a
 // validator without needing to iterate over the subspace as we do in
 // GetValidators.
@@ -331,10 +329,10 @@ func (k Keeper) updateBondedValidators(ctx sdk.Context, store sdk.KVStore,
 			break
 		}
 
-		// either retrieve the original validator from the store,
-		// or under the situation that this is the "new validator" just
-		// use the validator provided because it has not yet been updated
-		// in the main validator store
+		// either retrieve the original validator from the store, or under the
+		// situation that this is the "new validator" just use the validator
+		// provided because it has not yet been updated in the main validator
+		// store
 		ownerAddr := iterator.Value()
 		if bytes.Equal(ownerAddr, newValidator.Owner) {
 			validator = newValidator
@@ -804,7 +802,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, fract
 	logger := ctx.Logger().With("module", "x/stake")
 	val, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
-		panic(fmt.Errorf("Attempted to slash a nonexistent validator with address %s", pubkey.Address()))
+		panic(fmt.Errorf("attempted to slash a nonexistent validator with address %s", pubkey.Address()))
 	}
 	sharesToRemove := val.PoolShares.Amount.Mul(fraction)
 	pool := k.GetPool(ctx)
@@ -820,7 +818,7 @@ func (k Keeper) Revoke(ctx sdk.Context, pubkey crypto.PubKey) {
 	logger := ctx.Logger().With("module", "x/stake")
 	val, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
-		panic(fmt.Errorf("Validator with pubkey %s not found, cannot revoke", pubkey))
+		panic(fmt.Errorf("validator with pubkey %s not found, cannot revoke", pubkey))
 	}
 	val.Revoked = true
 	k.updateValidator(ctx, val) // update the validator, now revoked
@@ -833,7 +831,7 @@ func (k Keeper) Unrevoke(ctx sdk.Context, pubkey crypto.PubKey) {
 	logger := ctx.Logger().With("module", "x/stake")
 	val, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
-		panic(fmt.Errorf("Validator with pubkey %s not found, cannot unrevoke", pubkey))
+		panic(fmt.Errorf("validator with pubkey %s not found, cannot unrevoke", pubkey))
 	}
 	val.Revoked = false
 	k.updateValidator(ctx, val) // update the validator, now unrevoked

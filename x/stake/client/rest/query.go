@@ -48,10 +48,10 @@ func bondingStatusHandlerFn(ctx context.CoreContext, storeName string, cdc *wire
 
 		key := stake.GetDelegationKey(delegatorAddr, validatorAddr, cdc)
 
-		res, err := ctx.Query(key, storeName)
+		res, err := ctx.QueryStore(key, storeName)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Couldn't query bond. Error: %s", err.Error())))
+			w.Write([]byte(fmt.Sprintf("couldn't query bond. Error: %s", err.Error())))
 			return
 		}
 
@@ -65,7 +65,7 @@ func bondingStatusHandlerFn(ctx context.CoreContext, storeName string, cdc *wire
 		err = cdc.UnmarshalBinary(res, &bond)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Couldn't decode bond. Error: %s", err.Error())))
+			w.Write([]byte(fmt.Sprintf("couldn't decode bond. Error: %s", err.Error())))
 			return
 		}
 
@@ -142,7 +142,7 @@ func validatorsHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Co
 		kvs, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Couldn't query validators. Error: %s", err.Error())))
+			w.Write([]byte(fmt.Sprintf("couldn't query validators. Error: %s", err.Error())))
 			return
 		}
 
@@ -163,7 +163,7 @@ func validatorsHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Co
 			}
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
+				w.Write([]byte(fmt.Sprintf("couldn't decode validator. Error: %s", err.Error())))
 				return
 			}
 			validators[i] = bech32Validator

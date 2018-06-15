@@ -1,8 +1,8 @@
 version: '3'
 
 services:
-  node0:
-    container_name: node0
+  gaiadnode0:
+    container_name: gaiadnode0
     image: "tendermint/gaiadnode"
     ports:
       - "46656-46657:46656-46657"
@@ -15,8 +15,8 @@ services:
       localnet:
         ipv4_address: 192.168.10.2
 
-  node1:
-    container_name: node1
+  gaiadnode1:
+    container_name: gaiadnode1
     image: "tendermint/gaiadnode"
     ports:
       - "46659-46660:46656-46657"
@@ -29,8 +29,8 @@ services:
       localnet:
         ipv4_address: 192.168.10.3
 
-  node2:
-    container_name: node2
+  gaiadnode2:
+    container_name: gaiadnode2
     image: "tendermint/gaiadnode"
     environment:
       - ID=2
@@ -43,8 +43,8 @@ services:
       localnet:
         ipv4_address: 192.168.10.4
 
-  node3:
-    container_name: node3
+  gaiadnode3:
+    container_name: gaiadnode3
     image: "tendermint/gaiadnode"
     environment:
       - ID=3

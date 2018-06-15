@@ -321,8 +321,9 @@ func TestTxs(t *testing.T) {
 	assert.Equal(t, 1, len(indexedTxs))
 
 	// query sender
+	// also tests url decoding
 	addrBech := sdk.MustBech32ifyAcc(addr)
-	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?tag=sender_bech32='%s'", addrBech), nil)
+	res, body = Request(t, port, "GET", "/txs?tag=sender_bech32=%27"+addrBech+"%27", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err = cdc.UnmarshalJSON([]byte(body), &indexedTxs)

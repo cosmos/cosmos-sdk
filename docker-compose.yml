@@ -5,7 +5,7 @@ services:
     container_name: gaiadnode0
     image: "tendermint/gaiadnode"
     ports:
-      - "46656-46657:46656-46657"
+      - "26656-26657:26656-26657"
     environment:
       - ID=0
       - LOG=$${LOG:-gaiad.log}
@@ -19,7 +19,7 @@ services:
     container_name: gaiadnode1
     image: "tendermint/gaiadnode"
     ports:
-      - "46659-46660:46656-46657"
+      - "26659-26660:26656-26657"
     environment:
       - ID=1
       - LOG=$${LOG:-gaiad.log}
@@ -36,7 +36,7 @@ services:
       - ID=2
       - LOG=$${LOG:-gaiad.log}
     ports:
-      - "46661-46662:46656-46657"
+      - "26661-26662:26656-26657"
     volumes:
       - ./build:/gaiad:Z
     networks:
@@ -50,7 +50,7 @@ services:
       - ID=3
       - LOG=$${LOG:-gaiad.log}
     ports:
-      - "46663-46664:46656-46657"
+      - "26663-26664:26656-26657"
     volumes:
       - ./build:/gaiad:Z
     networks:

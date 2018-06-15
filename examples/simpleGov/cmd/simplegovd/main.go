@@ -11,43 +11,44 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
+	"github.com/cosmos/cosmos-sdk/examples/simpleGov/app"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
-// init parameters
-var CoolAppInit = server.AppInit{
-	AppGenState: CoolAppGenState,
+// SimpleGovAppInit initial parameters
+var SimpleGovAppInit = server.AppInit{
+	AppGenState: SimpleGovAppGenState,
 	AppGenTx:    server.SimpleAppGenTx,
 }
 
-// coolGenAppParams sets up the app_state and appends the cool app state
-func CoolAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
+// SimpleGovAppGenState sets up the app_state and appends the simpleGov app state
+func SimpleGovAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
 	appState, err = server.SimpleAppGenState(cdc, appGenTxs)
 	if err != nil {
 		return
 	}
-	key := "cool"
-	value := json.RawMessage(`{
-        "trend": "ice-cold"
-      }`)
-	appState, err = server.AppendJSON(cdc, appState, key, value)
-	key = "pow"
-	value = json.RawMessage(`{
-        "difficulty": 1,
-        "count": 0
-      }`)
-	appState, err = server.AppendJSON(cdc, appState, key, value)
+	// // TODO change kv
+	// key := "cool"
+	// value := json.RawMessage(`{
+	//       "trend": "ice-cold"
+	//     }`)
+	// appState, err = server.AppendJSON(cdc, appState, key, value)
+	// key = "pow"
+	// value = json.RawMessage(`{
+	//       "difficulty": 1,
+	//       "count": 0
+	//     }`)
+	// appState, err = server.AppendJSON(cdc, appState, key, value)
 	return
 }
 
 func newApp(logger log.Logger, db dbm.DB) abci.Application {
-	return app.NewDemocoinApp(logger, db)
+	return app.NewSimpleGovApp(logger, db)
 }
 
 func exportAppState(logger log.Logger, db dbm.DB) (json.RawMessage, error) {
-	dapp := app.NewDemocoinApp(logger, db)
+	dapp := app.NewSimpleGovApp(logger, db)
 	return dapp.ExportAppStateJSON()
 }
 
@@ -61,7 +62,7 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	server.AddCommands(ctx, cdc, rootCmd, CoolAppInit,
+	server.AddCommands(ctx, cdc, rootCmd, SimpleGovAppInit,
 		server.ConstructAppCreator(newApp, "simplegov"),
 		server.ConstructAppExporter(exportAppState, "simplegov"))
 

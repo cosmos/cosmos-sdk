@@ -24,7 +24,7 @@ where `evidence.Timestamp` is the timestamp in the block at height
 `evidence.Height` and `block.Timestamp` is the current block timestamp.
 
 If valid evidence is included in a block, the validator's stake is reduced by `SLASH_PROPORTION` of 
-what there stake was at the eqiuvocation occurred (rather than when it was found):
+what their stake was when the equivocation occurred (rather than when the evidence was discovered):
 
 ```
 curVal := validator
@@ -32,7 +32,7 @@ oldVal := loadValidator(evidence.Height, evidence.Address)
 
 slashAmount := SLASH_PROPORTION * oldVal.Shares
 
-curVal.Shares -= slashAmount
+curVal.Shares = max(0, curVal.Shares - slashAmount)
 ```
 
 This ensures that offending validators are punished the same amount whether they
@@ -50,7 +50,7 @@ for unbond in unbondings {
     }
     unbond.InitialTokens
     burn := unbond.InitialTokens * SLASH_PROPORTION
-    unbond.Tokens -= burn
+    unbond.Tokens = max(0, unbond.Tokens - burn)
 }
 
 // only care if source gets slashed because we're already bonded to destination

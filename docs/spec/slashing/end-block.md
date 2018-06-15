@@ -23,18 +23,52 @@ For some `evidence` to be valid, it must satisfy:
 where `evidence.Timestamp` is the timestamp in the block at height
 `evidence.Height` and `block.Timestamp` is the current block timestamp.
 
-If valid evidence is included in a block, the offending validator loses
-a constant `SLASH_PROPORTION` of their current stake at the beginning of the block:
+If valid evidence is included in a block, the validator's stake is reduced by `SLASH_PROPORTION` of 
+what there stake was at the eqiuvocation occurred (rather than when it was found):
 
 ```
-oldShares = validator.shares
-validator.shares = oldShares * (1 - SLASH_PROPORTION)
+curVal := validator
+oldVal := loadValidator(evidence.Height, evidence.Address)
+
+slashAmount := SLASH_PROPORTION * oldVal.Shares
+
+curVal.Shares -= slashAmount
 ```
 
 This ensures that offending validators are punished the same amount whether they
 act as a single validator with X stake or as N validators with collectively X
 stake.
 
+We also need to loop through the unbondings and redelegations to slash them as
+well:
+
+```
+unbondings := getUnbondings(validator.Address)
+for unbond in unbondings {
+    if was not bonded before evidence.Height {
+        continue
+    }
+    unbond.InitialTokens
+    burn := unbond.InitialTokens * SLASH_PROPORTION
+    unbond.Tokens -= burn
+}
+
+// only care if source gets slashed because we're already bonded to destination
+// so if destination validator gets slashed our delegation just has same shares
+// of smaller pool.
+redels := getRedelegationsBySource(validator.Address)
+for redel in redels {
+
+    if was not bonded before evidence.Height {
+        continue
+    }
+
+    burn := redel.InitialTokens * SLASH_PROPORTION
+
+    amount := unbondFromValidator(redel.Destination, burn)
+    destroy(amount)
+}
+```
 
 ## Automatic Unbonding
 
@@ -49,6 +83,11 @@ LastCommit and +2/3 (see [TODO](https://github.com/cosmos/cosmos-sdk/issues/967)
 Validators are penalized for failing to be included in the LastCommit for some
 number of blocks by being automatically unbonded.
 
+Maps:
+
+- map1: < prefix-info | tm val addr > -> <validator signing info>
+- map2: < prefix-bit-array | tm val addr | LE uint64 index in sign bit array > -> < signed bool >
+
 The following information is stored with each validator candidate, and is only non-zero if the candidate becomes an active validator:
 
 ```go
@@ -57,8 +96,8 @@ type ValidatorSigningInfo struct {
   IndexOffset           int64
   JailedUntil           int64
   SignedBlocksCounter   int64
-  SignedBlocksBitArray  BitArray
 }
+
 ```
 
 Where:
@@ -66,8 +105,13 @@ Where:
 * `IndexOffset` is incremented each time the candidate was a bonded validator in a block (and may have signed a precommit or not).
 * `JailedUntil` is set whenever the candidate is revoked due to downtime
 * `SignedBlocksCounter` is a counter kept to avoid unnecessary array reads. `SignedBlocksBitArray.Sum() == SignedBlocksCounter` always.
-* `SignedBlocksBitArray` is a bit-array of size `SIGNED_BLOCKS_WINDOW` that records, for each of the last `SIGNED_BLOCKS_WINDOW` blocks,
-whether or not this validator was included in the LastCommit. It uses a `1` if the validator was included, and a `0` if it was not. Note it is initialized with all 0s.
+
+
+Map2 simulates a bit array - better to do the lookup rather than read/write the
+bitarray every time. Size of bit-array is `SIGNED_BLOCKS_WINDOW`. It records, for each of the last `SIGNED_BLOCKS_WINDOW` blocks,
+whether or not this validator was included in the LastCommit. 
+It sets the value to true if the validator was included and false if not.
+Note it is not explicilty initialized (the keys wont exist).
 
 At the beginning of each block, we update the signing info for each validator and check if they should be automatically unbonded:
 
@@ -75,17 +119,21 @@ At the beginning of each block, we update the signing info for each validator an
 height := block.Height
 
 for val in block.Validators:
-  signInfo = val.SignInfo
+  signInfo = getSignInfo(val.Address)
+  if signInfo == nil{
+        signInfo.StartHeight = height
+  }
+
   index := signInfo.IndexOffset % SIGNED_BLOCKS_WINDOW
   signInfo.IndexOffset++
-  previous = signInfo.SignedBlocksBitArray.Get(index)
+  previous = getDidSign(val.Address, index)
 
   // update counter if array has changed
   if previous and val in block.AbsentValidators:
-    signInfo.SignedBlocksBitArray.Set(index, 0)
+    setDidSign(val.Address, index, false)
     signInfo.SignedBlocksCounter--
   else if !previous and val not in block.AbsentValidators:
-    signInfo.SignedBlocksBitArray.Set(index, 1)
+    setDidSign(val.Address, index, true)
     signInfo.SignedBlocksCounter++
   // else previous == val not in block.AbsentValidators, no change
 
@@ -96,5 +144,8 @@ for val in block.Validators:
   minSigned = SIGNED_BLOCKS_WINDOW / 2
   if height > minHeight AND signInfo.SignedBlocksCounter < minSigned:
     signInfo.JailedUntil = block.Time + DOWNTIME_UNBOND_DURATION
+
     slash & unbond the validator
+
+  setSignInfo(val.Address, signInfo)
 ```

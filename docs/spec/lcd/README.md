@@ -8,75 +8,80 @@ All consumers can deploy their own lcd nodes on their own personal computers, ev
 
 ## Lcd rest-server interfaces
 
-Cosmos-SDK lcd (lite client daemon) acts as a rest-server. It provides a set of APIs which cover key management, tendermint blockchain monitor and other cosmos modules related interfaces.
+Cosmos-SDK LCD (lite client daemon) acts as a rest-server. It provides a set of APIs which cover key management, tendermint blockchain monitor and other cosmos modules related interfaces.
 
 1.  **Key management**
 
     1. **url: /keys, Method: GET**
         ```
           Functionality: Get all keys
-          Example parameters:
+          Example parameters: nil
           Example return:
-          [
-            {
-              "name": "monkey",
-              "address": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
-              "pub_key": "cosmosaccpub1zcjduc3q8s8ha96ry4xc5xvjp9tr9w9p0e5lk5y0rpjs5epsfxs4wmf72x3shvus0t"
-            },
-            {
-              "name": "test",
-              "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-              "pub_key": "cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
-            }
-          ]
+            [
+              {
+                "name": "monkey",
+                "address": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
+                "pub_key": "cosmosaccpub1zcjduc3q8s8ha96ry4xc5xvjp9tr9w9p0e5lk5y0rpjs5epsfxs4wmf72x3shvus0t"
+              },
+              {
+                "name": "test",
+                "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
+                "pub_key": "cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
+              }
+            ]
         ```
     2. **url: /keys, Method: POST**
         ```
           Functionality: Recover your key from seed and persist it with your password protection
           Example parameters:
-          {
-            "name":"test3",
-            "password":"12345678",
-            "seed":"electric opera balcony clever square coconut typical orbit wonder initial tragic year ride spread angle abandon"
+            {
+              "name":"test3",
+              "password":"12345678",
+              "seed":"electric opera balcony clever square coconut typical orbit wonder initial tragic year ride spread angle abandon"
 
-          }
-          Example return: BD607C37147656A507A5A521AA9446EB72B2C907
+            }
+          Example return:
+            BD607C37147656A507A5A521AA9446EB72B2C907
         ```
     3. **url: /keys/seed, Method: GET**
         ```
           Functionality: Create new seed
-          Example parameters:
+          Example parameters: nil
           Example return:
-          crime carpet recycle erase simple prepare moral dentist fee cause pitch trigger when velvet animal abandon
+            crime carpet recycle erase simple prepare moral dentist fee cause pitch trigger when velvet animal abandon
         ```
     4. **url: /keys/{name}, Method: GET**
         ```
           Functionality: Get key information according to the specific key name
-          Example parameters:
+          Example parameters: /keys/test
           Example return:
-          {
-            "name": "test",
-            "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-            "pub_key": "cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
-          }
+            {
+              "name": "test",
+              "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
+              "pub_key": "cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
+            }
         ```
     5. **url: /keys/{name}, Method: PUT**
         ```
           Functionality: Update key password
           Example parameters:
-          {
-            "old_password":"12345678",
-            "new_password":"123456789"
-          }
+            url parameter: /keys/test
+            json parameter:
+            {
+              "old_password":"12345678",
+              "new_password":"123456789"
+            }
           Example return:
         ```
     6. **url: /keys/{name}, Method: DELETE**
         ```
           Functionality: Delete key from keystore
           Example parameters:
-          {
-            "password":"12345678"
-          }
+            url parameter: /keys/test
+            json parameter:
+            {
+              "password":"12345678"
+            }
           Example return:
         ```
 
@@ -87,22 +92,22 @@ Cosmos-SDK lcd (lite client daemon) acts as a rest-server. It provides a set of 
           Functionality: Get lcd node status
           Example parameters:
           Example return:
-          {
-              "id": "992e24f5761b37de48536cecff0a0687937049a3",
-              "listen_addr": "10.0.2.15:46656",
-              "network": "test-chain-F0bln0",
-              "version": "0.19.7-dev",
-              "channels": "4020212223303800",
-              "moniker": "lhy-ubuntu",
-              "other": [
-                  "amino_version=0.9.9",
-                  "p2p_version=0.5.0",
-                  "consensus_version=v1/0.2.2",
-                  "rpc_version=0.7.0/3",
-                  "tx_index=on",
-                  "rpc_addr=tcp://0.0.0.0:46657"
-              ]
-          }
+            {
+                "id": "992e24f5761b37de48536cecff0a0687937049a3",
+                "listen_addr": "10.0.2.15:46656",
+                "network": "test-chain-F0bln0",
+                "version": "0.19.7-dev",
+                "channels": "4020212223303800",
+                "moniker": "lhy-ubuntu",
+                "other": [
+                    "amino_version=0.9.9",
+                    "p2p_version=0.5.0",
+                    "consensus_version=v1/0.2.2",
+                    "rpc_version=0.7.0/3",
+                    "tx_index=on",
+                    "rpc_addr=tcp://0.0.0.0:46657"
+                ]
+            }
         ```
     2. **url: /syncing, Method: GET**
         ```
@@ -153,27 +158,27 @@ Cosmos-SDK lcd (lite client daemon) acts as a rest-server. It provides a set of 
         ```
           Functionality: Directly send a transaction and wait until on-chain
           Example parameters:
-          {
-            "tx": base64 code
-          }
+            {
+              "tx": base64 code
+            }
           Example return:
         ```
     4. **url: /broadcast_tx_sync, Method: POST**
         ```
           Functionality: Directly send a transaction and wait until checkTX is done
           Example parameters:
-          {
-            "tx": base64 code
-          }
+            {
+              "tx": base64 code
+            }
           Example return:
         ```
     5. **url: /broadcast_tx_async, Method: POST**
         ```
           Functionality: Directly send a transaction asynchronous without wait for anything
           Example parameters:
-          {
-            "tx": base64 code
-          }
+            {
+              "tx": base64 code
+            }
           Example return:
         ```
 
@@ -192,15 +197,15 @@ Cosmos-SDK lcd (lite client daemon) acts as a rest-server. It provides a set of 
         ```
           Functionality: transfer asset
           Example parameters:
-          {
-          	"amount":[{"denom":"monkeyToken","amount":5}],
-          	"name":"test1",
-          	"password":"12345678",
-          	"chain_id":"test-chain-F0bln0",
-          	"address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-          	"sequence":2,
-          	"gas":100
-          }
+            {
+              "amount":[{"denom":"monkeyToken","amount":5}],
+              "name":"test1",
+              "password":"12345678",
+              "chain_id":"test-chain-F0bln0",
+              "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
+              "sequence":2,
+              "gas":100
+            }
           Example return:
         ```
 
@@ -208,18 +213,18 @@ Cosmos-SDK lcd (lite client daemon) acts as a rest-server. It provides a set of 
 
     1. **url: /ibc/send, Method: POST**
         ```
-          Functionality: transfer asset across chain
+          Functionality: transfer asset across chains
           Example parameters:
-          {
-          	"amount":[{"denom":"monkeyToken","amount":5}],
-          	"name":"test1",
-          	"password":"12345678",
-          	"src_chain_id":"test-chain-F0bln0",
-          	"dest_chain_id":"test-chain-E1abcd",
-          	"dest_address":"cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-          	"sequence":2,
-          	"gas":100
-          }
+            {
+              "amount":[{"denom":"monkeyToken","amount":5}],
+              "name":"test1",
+              "password":"12345678",
+              "src_chain_id":"test-chain-F0bln0",
+              "dest_chain_id":"test-chain-E1abcd",
+              "dest_address":"cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
+              "sequence":2,
+              "gas":100
+            }
           Example return:
         ```
 

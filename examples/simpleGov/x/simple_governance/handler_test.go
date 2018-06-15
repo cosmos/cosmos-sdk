@@ -3,56 +3,106 @@ package simpleGovernance
 import (
 	// 	"os"
 
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHandleSubmitProposalMsg(t *testing.T) {
-	//TODO bad coins, bad address
 
-	title := "Photons at launch"
-	description := "Should we include Photons at launch?"
-	addr1 := sdk.Address([]byte{1, 2})
-	multiCoins := sdk.Coins{{"atom", 123}, {"eth", 20}}
+	//TODO Test:
+	// Good proposal --> OK
+	// deposit greater than account balance --> error
 
-	msg := NewSubmitProposalMsg(title, description, int64(20), multiCoins, addr1)
+	// crete context and proposalKeeper each address has 200 Atoms
+	ctx, _, k := createTestInput(t, true, int64(200))
 
-	// res := handleSubmitProposalMsg(ctx, k, msg)
+	err := checkProposal(ctx, k) // No proposal
+	assert.NotNil(t, err)
 
-	// tags := sdk.NewTags(
-	// 	"action", []byte("propose"),
-	// 	"proposal", int64ToBytes(proposalID),
-	// 	"submitter", submitter.Bytes(),
-	// )
-	// kvpairs := res.Tags.ToKVPairs()
-	// fmt.Println(kvpairs)
+	cases := []struct {
+		valid bool
+		msg   SubmitProposalMsg
+	}{
+		{true, NewSubmitProposalMsg(titles[0], descriptions[0], ctx.BlockHeight(), coinsHandlerTest[0], addrs[0])},
+		{false, NewSubmitProposalMsg(titles[1], descriptions[1], ctx.BlockHeight(), coinsHandlerTest[1], addrs[1])}, // empty coins
+		{false, NewSubmitProposalMsg(titles[2], descriptions[2], ctx.BlockHeight(), coinsHandlerTest[2], addrs[2])}, // balance below deposit
+	}
 
-	// assert.Equal(t, , res)
-}
+	for i := range cases {
+		res := handleSubmitProposalMsg(ctx, k, cases[i].msg)
+		if cases[i].valid {
+			fmt.Println(res.Tags)
+			kvPair := res.Tags.ToKVPairs()
+			fmt.Println(kvPair)
+			assert.True(t, res.IsOK(), "%d: %+v", i, res)
+		} else {
+			assert.False(t, res.IsOK(), "%d", i)
+		}
+	}
 
-func TestCheckProposal(t *testing.T) {
-	//TODO
-}
+	// Test if the proposal reached the end of voting period
+	err = checkProposal(ctx, k)
+	assert.Nil(t, err)
 
-func TestHandleVoteMsg(t *testing.T) {
-	//TODO
-	// Proposal is not open
-	// BlockHeight > Limit
+	// Voting Handler
+
+	// TODO get proposalID from handleSubmitProposalMsg response
+
+	//TODO Test:
+	// Valid Msg ->
 	// Invalid ProposalID
+	// Proposal is not open
+	// No delegations for the address
 
-	// No delegators ? for the address
-	// voter option not found
-	// invalid Option value
-	// msg := NewVoteMsg(proposalID, option, voter)
-	// res := handleVoteMsg(ctx, k, msg)
-	// assert.Equal(t, sdk.Result{}, res)
-}
+	validatorBond := sdk.Coin{"Atom", 80}
+	declareDescription := stake.NewDescription("moniker", "identity", "website", "details")
+	declareMsg := stake.NewMsgCreateValidator(addrs[0], pks[0], validatorBond, declareDescription)
 
-func TestNewHandler(t *testing.T) {
-	//TODO
-	// create keeper, context and msgs
-	// msg submmit proposal
-	// msg vote
-	// another msg
+	delegateBond := sdk.Coin{"Atom", 20}
+	delegateMsg := stake.NewMsgDelegate(addrs[1], addrs[0], delegateBond)
+
+	// TODO handle delegation
+
+	voteCases := []struct {
+		valid bool
+		msg   VoteMsg
+	}{
+		{true, NewVoteMsg(1, options[0], addrs[1])},
+		{false, NewVoteMsg(2, options[1], addrs[1])}, // invalid proposalID
+		{false, NewVoteMsg(1, options[1], addrs[2])}, // voter has no delegations
+	}
+
+	for i := range cases {
+		res := handleVoteMsg(ctx, k, voteCases[i].msg)
+		if voteCases[i].valid {
+			fmt.Println(res.Tags)
+			kvPair := res.Tags.ToKVPairs()
+			fmt.Println(kvPair)
+			assert.True(t, res.IsOK(), "%d: %+v", i, res)
+		} else {
+			assert.False(t, res.IsOK(), "%d", i)
+		}
+	}
+
+	// Proposal is not open
+	proposal, err := k.GetProposal(ctx, 1)
+	require.NotNil(t, err)
+	proposal.State = "Accepted"
+	err = k.SetProposal(ctx, 1, proposal)
+	require.NotNil(t, err)
+	msg := NewVoteMsg(1, options[1], addrs[6])
+	res := handleVoteMsg(ctx, k, msg)
+	assert.False(t, res.IsOK())
+
+	proposal.State = "Open"
+
+	err = k.SetProposal(ctx, 1, proposal)
+
+	require.NotNil(t, err)
+
 }

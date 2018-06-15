@@ -12,6 +12,7 @@ import (
 
 // Minimum proposal deposit
 const minDeposit = 100
+const votingPeriod = 1209600
 
 func int64ToBytes(i int64) []byte {
 	b := make([]byte, 8)
@@ -52,8 +53,7 @@ func checkProposal(ctx sdk.Context, k Keeper) sdk.Error {
 	}
 
 	// Proposal reached the end of the voting period
-	if ctx.BlockHeight() >= proposal.SubmitBlock+proposal.BlockLimit &&
-		proposal.IsOpen() {
+	if ctx.BlockHeight() >= proposal.SubmitBlock+votingPeriod && proposal.IsOpen() {
 		k.ProposalQueuePop(ctx)
 
 		nonAbstainTotal := proposal.YesVotes + proposal.NoVotes
@@ -74,8 +74,13 @@ func checkProposal(ctx sdk.Context, k Keeper) sdk.Error {
 }
 
 func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg SubmitProposalMsg) sdk.Result {
-	// TODO check if have to set coins
-	_, _, err := k.ck.SubtractCoins(ctx, msg.Submitter, msg.Deposit)
+	err := msg.ValidateBasic()
+	if err != nil {
+		return err.Result()
+	}
+
+	// Subtract coins from the submitter balance and updates it
+	_, _, err = k.ck.SubtractCoins(ctx, msg.Submitter, msg.Deposit)
 	if err != nil {
 		return err.Result()
 	}
@@ -86,7 +91,6 @@ func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg SubmitProposalMsg) s
 			msg.Description,
 			msg.Submitter,
 			ctx.BlockHeight(),
-			msg.VotingWindow,
 			msg.Deposit)
 		proposalID := k.NewProposalID(ctx)
 		k.SetProposal(ctx, proposalID, proposal)
@@ -102,19 +106,24 @@ func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg SubmitProposalMsg) s
 }
 
 func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
+	err := msg.ValidateBasic()
+	if err != nil {
+		return err.Result()
+	}
+
 	proposal, err := k.GetProposal(ctx, msg.ProposalID)
 	if err != nil {
 		return err.Result()
 	}
 
-	if ctx.BlockHeight() > proposal.SubmitBlock+proposal.BlockLimit ||
+	if ctx.BlockHeight() > proposal.SubmitBlock+votingPeriod ||
 		!proposal.IsOpen() {
 		return ErrVotingPeriodClosed().Result()
 	}
 
 	delegatedTo := k.sm.GetDelegations(ctx, msg.Voter, 10)
 
-	if len(delegatedTo) == 0 {
+	if len(delegatedTo) <= 0 {
 		return stake.ErrNoDelegatorForAddress(DefaultCodespace).Result()
 	}
 	// Check if address already voted

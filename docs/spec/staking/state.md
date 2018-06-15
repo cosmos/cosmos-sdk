@@ -52,13 +52,21 @@ type Params struct {
 ```
 
 ### Validator
- - index 1: validator owner address
- - index 2: validator Tendermint PubKey
- - index 3: bonded validators only
- - index 4: voting power
 
-Related Store which holds Validator.ABCIValidator()
- - index: validator owner address
+val owner address: SDK account addresss of the owner of the validator :)
+tm val pubkey: Public Key of the Tendermint Validator 
+
+ - map1: <val owner address> -> <validator>
+ - map2: <tm val address> -> <val owner address>  
+ - map3: <power | block height | block tx > -> <val owner address> 
+
+ map1 is the main lookup. each owner can have only one validator.
+ delegators point to an immutable owner
+ owners can change their TM val pubkey
+ need map2 so we can do lookups for slashing !
+ need map3 so we have sorted vals to know the top 100
+
+-----------
 
 The `Validator` holds the current state and some historical actions of the
 validator.
@@ -67,7 +75,6 @@ validator.
 
 ```golang
 type Validator struct {
-	Owner           sdk.Address    // sender of BondTx - UnbondTx returns here
 	ConsensusPubKey crypto.PubKey  // Tendermint consensus pubkey of validator
 	Revoked         bool           // has the validator been revoked?
 
@@ -75,17 +82,26 @@ type Validator struct {
 	DelegatorShares sdk.Rat        // total shares issued to a validator's delegators
 	SlashRatio      sdk.Rat        // increases each time the validator is slashed
 
-	Description        Description // description terms for the validator
-	BondHeight         int64       // earliest height as a bonded validator
-	BondIntraTxCounter int16       // block-local tx index of validator change
-	ProposerRewardPool sdk.Coins   // reward pool collected from being the proposer
+	Description        Description  // description terms for the validator
 
-	Commission            sdk.Rat  // the commission rate of fees charged to any delegators
-	CommissionMax         sdk.Rat  // maximum commission rate which this validator can ever charge
-	CommissionChangeRate  sdk.Rat  // maximum daily increase of the validator commission
-	CommissionChangeToday sdk.Rat  // commission rate change today, reset each day (UTC time)
+    // Needed for ordering vals in the bypower key
+	BondHeight         int64        // earliest height as a bonded validator
+	BondIntraTxCounter int16        // block-local tx index of validator change
 
-	PrevPoolShares PoolShares      // total shares of a global hold pools
+    CommissionInfo      CommissionInfo // info about the validator's commission
+
+	ProposerRewardPool sdk.Coins    // reward pool collected from being the proposer
+
+    // TODO: maybe this belongs in distribution module ?
+	PrevPoolShares PoolShares  // total shares of a global hold pools
+}
+
+type CommissionInfo struct {
+	Rate        sdk.Rat  // the commission rate of fees charged to any delegators
+	Max         sdk.Rat  // maximum commission rate which this validator can ever charge
+	ChangeRate  sdk.Rat  // maximum daily increase of the validator commission
+	ChangeToday sdk.Rat  // commission rate change today, reset each day (UTC time)
+    LastChange  int64    // unix timestamp of last commission change
 }
 
 type Description struct {
@@ -97,7 +113,8 @@ type Description struct {
 ```
 
 ### Delegation
- - index: delegation address
+
+ - map1: < delegator address | val owner address > -> < delegation >
 
 Atom holders may delegate coins to validators; under this circumstance their
 funds are held in a `Delegation` data structure. It is owned by one 
@@ -108,15 +125,18 @@ the transaction is the owner of the bond.
 
 ```golang
 type Delegation struct {
-	DelegatorAddr sdk.Address // delegation owner address
-	ValidatorAddr sdk.Address // validator owner address
-	Shares        sdk.Rat     // delegation shares recieved 
-	Height        int64       // last height bond updated
+	Shares        sdk.Rat      // delegation shares recieved 
+	Height        int64        // last height bond updated
 }
 ```
 
 ### UnbondingDelegation
- - index: delegation address
+
+ - map1: < prefix-unbonding | delegator address | val owner address > -> < unbonding delegation >
+ - map2: < prefix-unbonding | val owner address | delegator address > -> nil
+
+ map1 for queries.
+ map2 for eager slashing
 
 A UnbondingDelegation object is created every time an unbonding is initiated.
 The unbond must be completed with a second transaction provided by the
@@ -126,18 +146,23 @@ delegation owner after the unbonding period has passed.
 
 ```golang
 type UnbondingDelegation struct {
-    DelegationKey    sdk.Address // key of the delegation
-    ExpectedTokens   sdk.Coins   // the value in Atoms of the amount of shares which are unbonding
-    StartSlashRatio  sdk.Rat     // validator slash ratio at unbonding initiation
+    Tokens           sdk.Coins   // the value in Atoms of the amount of shares which are unbonding
     CompleteTime     int64       // unix time to complete redelegation
-    CompleteHeight   int64       // block height to complete redelegation
 }
 ``` 
 
 ### Redelegation
- - index 1: delegation address
- - index 2: source validator owner address
- - index 3: destination validator owner address
+
+ - map1: < prefix-redelegation | delegator address | from val owner address | to
+   val owner address > -> < redelegation >
+ - map2: < prefix-redelegation | from val owner address | to
+   val owner address | delegator > -> nil
+ - map2: < prefix-redelegation | to val owner address | from
+   val owner address | delegator > -> nil
+
+ map1: queries
+ map2: slash for from validator
+ map3: slash for to validator
 
 A redelegation object is created every time a redelegation occurs. The
 redelegation must be completed with a second transaction provided by the
@@ -149,12 +174,8 @@ the original redelegation has been completed.
 
 ```golang
 type Redelegation struct {
-    SourceDelegation       sdk.Address // source delegation key
-    DestinationDelegation  sdk.Address // destination delegation key
     SourceShares           sdk.Rat     // amount of source shares redelegating
     DestinationShares      sdk.Rat     // amount of destination shares created at redelegation
-    SourceStartSlashRatio  sdk.Rat     // source validator slash ratio at unbonding initiation
     CompleteTime           int64       // unix time to complete redelegation
-    CompleteHeight         int64       // block height to complete redelegation
 }
 ```

@@ -13,23 +13,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
+	simplegovcmd "github.com/cosmos/cosmos-sdk/examples/x/simpleGov/client/cli"
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
+	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
-	"github.com/cosmos/cosmos-sdk/examples/democoin/types"
-	coolcmd "github.com/cosmos/cosmos-sdk/examples/democoin/x/cool/client/cli"
-	powcmd "github.com/cosmos/cosmos-sdk/examples/democoin/x/pow/client/cli"
-	simplestakingcmd "github.com/cosmos/cosmos-sdk/examples/democoin/x/simplestake/client/cli"
 )
 
 // rootCmd is the entry point for this binary
 var (
 	rootCmd = &cobra.Command{
-		Use:   "democli",
-		Short: "Democoin light-client",
+		Use:   "simplegovcli",
+		Short: "Simple Governance light-client",
 	}
 )
 
@@ -52,33 +50,38 @@ func main() {
 
 	// add query/post commands (custom to binary)
 	// start with commands common to basecoin
+	// add query/post commands (custom to binary)
 	rootCmd.AddCommand(
 		client.GetCommands(
-			authcmd.GetAccountCmd("acc", cdc, types.GetAccountDecoder(cdc)),
+			authcmd.GetAccountCmd("acc", cdc, authcmd.GetAccountDecoder(cdc)),
+			stakecmd.GetCmdQueryValidator("stake", cdc),
+			stakecmd.GetCmdQueryValidators("stake", cdc),
+			stakecmd.GetCmdQueryDelegation("stake", cdc),
+			stakecmd.GetCmdQueryDelegations("stake", cdc),
 		)...)
 	rootCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),
-		)...)
-	rootCmd.AddCommand(
-		client.PostCommands(
 			ibccmd.IBCTransferCmd(cdc),
-		)...)
-	rootCmd.AddCommand(
-		client.PostCommands(
 			ibccmd.IBCRelayCmd(cdc),
-			simplestakingcmd.BondTxCmd(cdc),
+			stakecmd.GetCmdDeclareCandidacy(cdc),
+			stakecmd.GetCmdEditCandidacy(cdc),
+			stakecmd.GetCmdDelegate(cdc),
+			stakecmd.GetCmdUnbond(cdc),
+		)...)
+	// and now simplegov specific commands
+	// TODO Add commands
+	rootCmd.AddCommand(
+		client.GetCommands(
+			simplegovcmd.GetCmdQueryProposal("proposals", cdc),
+			simplegovcmd.GetCmdQueryProposals("proposals", cdc),
+			simplegovcmd.GetCmdQueryProposalVotes("proposals", cdc),
+			simplegovcmd.GetCmdQueryProposalVote("proposals", cdc),
 		)...)
 	rootCmd.AddCommand(
 		client.PostCommands(
-			simplestakingcmd.UnbondTxCmd(cdc),
-		)...)
-	// and now democoin specific commands
-	rootCmd.AddCommand(
-		client.PostCommands(
-			coolcmd.QuizTxCmd(cdc),
-			coolcmd.SetTrendTxCmd(cdc),
-			powcmd.MineCmd(cdc),
+			simplegovcmd.PostCmdPropose(cdc),
+			simplegovcmd.PostCmdVote(cdc),
 		)...)
 
 	// add proxy, version and key info
@@ -91,6 +94,6 @@ func main() {
 	)
 
 	// prepare and add flags
-	executor := cli.PrepareMainCmd(rootCmd, "BC", os.ExpandEnv("$HOME/.democli"))
+	executor := cli.PrepareMainCmd(rootCmd, "BC", os.ExpandEnv("$HOME/.simplegovcli"))
 	executor.Execute()
 }

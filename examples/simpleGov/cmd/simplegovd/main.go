@@ -56,17 +56,17 @@ func main() {
 	ctx := server.NewDefaultContext()
 
 	rootCmd := &cobra.Command{
-		Use:               "democoind",
-		Short:             "Democoin Daemon (server)",
+		Use:               "simplegovd",
+		Short:             "Simple Governance Daemon (server)",
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
 	server.AddCommands(ctx, cdc, rootCmd, CoolAppInit,
-		server.ConstructAppCreator(newApp, "democoin"),
-		server.ConstructAppExporter(exportAppState, "democoin"))
+		server.ConstructAppCreator(newApp, "simplegov"),
+		server.ConstructAppExporter(exportAppState, "simplegov"))
 
 	// prepare and add flags
-	rootDir := os.ExpandEnv("$HOME/.democoind")
+	rootDir := os.ExpandEnv("$HOME/.simplegovd")
 	executor := cli.PrepareBaseCmd(rootCmd, "BC", rootDir)
 	executor.Execute()
 }

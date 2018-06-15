@@ -36,10 +36,10 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 				true
 		}
 
-		msg := tx.GetMsg()
+		msgs := tx.GetMsgs()
 
 		// Assert that number of signatures is correct.
-		var signerAddrs = msg.GetSigners()
+		var signerAddrs = stdTx.GetSigners()
 		if len(sigs) != len(signerAddrs) {
 			return ctx,
 				sdk.ErrUnauthorized("wrong number of signers").Result(),
@@ -61,8 +61,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		// into the app right away (#565)
 		if chainID == "" {
 			chainID = viper.GetString("chain-id")
-		}
-		signBytes := StdSignBytes(ctx.ChainID(), accNums, sequences, fee, msg)
+		} 
 
 		// Check sig and nonce and collect signer accounts.
 		var signerAccs = make([]Account, len(signerAddrs))
@@ -70,6 +69,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			signerAddr, sig := signerAddrs[i], sigs[i]
 
 			// check signature, return account with incremented nonce
+			signBytes := StdSignBytes(ctx.ChainID(), accNums[i], sequences[i], fee, msgs)
 			signerAcc, res := processSig(
 				ctx, am,
 				signerAddr, sig, signBytes,

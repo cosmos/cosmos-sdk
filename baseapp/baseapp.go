@@ -544,7 +544,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		}
 
 		result = handler(ctx, msg)
-		
+
 		// Set gas utilized
 		result.GasUsed = ctx.GasMeter().GasConsumed()
 

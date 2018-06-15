@@ -12,7 +12,7 @@ var _ sdk.Tx = (*StdTx)(nil)
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
 // NOTE: the first signature is the FeePayer (Signatures must not be nil).
 type StdTx struct {
-	Msgs       []sdk.Msg        `json:"msg"`
+	Msgs       []sdk.Msg      `json:"msg"`
 	Fee        StdFee         `json:"fee"`
 	Signatures []StdSignature `json:"signatures"`
 	Memo       string         `json:"memo"`
@@ -20,7 +20,7 @@ type StdTx struct {
 
 func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdTx {
 	return StdTx{
-		Msgs:        msgs,
+		Msgs:       msgs,
 		Fee:        fee,
 		Signatures: sigs,
 		Memo:       memo,
@@ -110,12 +110,12 @@ func (fee StdFee) Bytes() []byte {
 // and the Sequence numbers for each signature (prevent
 // inchain replay and enforce tx ordering per account).
 type StdSignDoc struct {
-	ChainID        string  `json:"chain_id"`
-	AccountNumber int64 `json:"account_number"`
-	Sequence      int64 `json:"sequence"`
-	FeeBytes       []byte  `json:"fee_bytes"`
-	MsgsBytes       []byte  `json:"msg_bytes"`
-	Memo       string  `json:"alt_bytes"`
+	ChainID       string `json:"chain_id"`
+	AccountNumber int64  `json:"account_number"`
+	Sequence      int64  `json:"sequence"`
+	FeeBytes      []byte `json:"fee_bytes"`
+	MsgsBytes     []byte `json:"msg_bytes"`
+	Memo          []byte `json:"alt_bytes"`
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
@@ -127,11 +127,11 @@ func StdSignBytes(chainID string, accnum int64, sequence int64, fee StdFee, msgs
 	}
 
 	bz, err := json.Marshal(StdSignDoc{
-		ChainID:        chainID,
+		ChainID:       chainID,
 		AccountNumber: accnum,
 		Sequence:      sequence,
-		FeeBytes:       fee.Bytes(),
-		MsgsBytes:       msgBytes,
+		FeeBytes:      fee.Bytes(),
+		MsgsBytes:     msgBytes,
 	})
 	if err != nil {
 		panic(err)
@@ -143,7 +143,7 @@ func StdSignBytes(chainID string, accnum int64, sequence int64, fee StdFee, msgs
 // a Msg with the other requirements for a StdSignDoc before
 // it is signed. For use in the CLI.
 type StdSignMsg struct {
-	ChainID        string
+	ChainID       string
 	AccountNumber int64
 	Sequence      int64
 	Fee            StdFee

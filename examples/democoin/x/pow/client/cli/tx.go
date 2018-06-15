@@ -9,9 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/pow"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // command to mine some pow!

@@ -114,7 +114,7 @@ func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 }
 
 // sign and build the transaction from the msg
-func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *wire.Codec) ([]byte, error) {
+func (ctx CoreContext) SignAndBuild(name, passphrase string, msgs []sdk.Msg, cdc *wire.Codec) ([]byte, error) {
 
 	// build the Sign Messsage from the Standard Message
 	chainID := ctx.ChainID
@@ -126,9 +126,9 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 
 	signMsg := auth.StdSignMsg{
 		ChainID:        chainID,
-		AccountNumbers: []int64{accnum},
-		Sequences:      []int64{sequence},
-		Msg:            msg,
+		AccountNumber: int64(accnum),
+		Sequence:      int64(sequence),
+		Msgs:            msgs,
 		Fee:            auth.NewStdFee(ctx.Gas, sdk.Coin{}), // TODO run simulate to estimate gas?
 	}
 
@@ -152,13 +152,13 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 	}}
 
 	// marshal bytes
-	tx := auth.NewStdTx(signMsg.Msg, signMsg.Fee, sigs)
+	tx := auth.NewStdTx(signMsg.Msgs, signMsg.Fee, sigs)
 
 	return cdc.MarshalBinary(tx)
 }
 
 // sign and build the transaction from the msg
-func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
+func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
 
 	ctx, err = EnsureAccountNumber(ctx)
 	if err != nil {
@@ -175,7 +175,7 @@ func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg sdk.Msg, cdc *w
 		return nil, err
 	}
 
-	txBytes, err := ctx.SignAndBuild(name, passphrase, msg, cdc)
+	txBytes, err := ctx.SignAndBuild(name, passphrase, msgs, cdc)
 	if err != nil {
 		return nil, err
 	}

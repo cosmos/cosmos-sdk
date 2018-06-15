@@ -34,7 +34,17 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 // in the order they appear in tx.GetMsgs().
 // Duplicate addresses will be ommitted.
 func (tx StdTx) GetSigners() []sdk.Address {
-	return getSigners(tx.GetMsgs())
+	seen := map[string]bool{}
+	var signers []sdk.Address
+	for _, msg := range tx.GetMsgs() {
+		for _, addr := range msg.GetSigners() {
+			if !seen[addr.String()] {
+				signers = append(signers, addr)
+				seen[addr.String()] = true
+			}
+		}
+	}
+	return signers
 }
 
 // GetSignatures returns the signature of signers who signed the Msg.
@@ -84,22 +94,6 @@ func (fee StdFee) Bytes() []byte {
 		panic(err)
 	}
 	return bz
-}
-
-
-// Helper function used in multiple contexts
-func getSigners(msgs []sdk.Msg) []sdk.Address {
-	seen := map[string]bool{}
-	var signers []sdk.Address
-	for _, msg := range msgs {
-		for _, addr := range msg.GetSigners() {
-			if !seen[addr.String()] {
-				signers = append(signers, addr)
-				seen[addr.String()] = true
-			}
-		}
-	}
-	return signers
 }
 
 //__________________________________________________________

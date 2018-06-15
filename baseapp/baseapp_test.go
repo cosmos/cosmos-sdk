@@ -262,7 +262,7 @@ type testTx struct {
 const msgType2 = "testTx"
 
 func (tx testTx) Type() string                       { return msgType2 }
-func (tx testTx) GetMsg() sdk.Msg                    { return tx }
+func (tx testTx) GetMsgs() []sdk.Msg                    { return []sdk.Msg{tx} }
 func (tx testTx) GetSignBytes() []byte               { return nil }
 func (tx testTx) GetSigners() []sdk.Address          { return nil }
 func (tx testTx) GetSignatures() []auth.StdSignature { return nil }
@@ -546,7 +546,7 @@ type testUpdatePowerTx struct {
 const msgType = "testUpdatePowerTx"
 
 func (tx testUpdatePowerTx) Type() string                       { return msgType }
-func (tx testUpdatePowerTx) GetMsg() sdk.Msg                    { return tx }
+func (tx testUpdatePowerTx) GetMsgs() []sdk.Msg                    { return []sdk.Msg{tx} }
 func (tx testUpdatePowerTx) GetSignBytes() []byte               { return nil }
 func (tx testUpdatePowerTx) ValidateBasic() sdk.Error           { return nil }
 func (tx testUpdatePowerTx) GetSigners() []sdk.Address          { return nil }
@@ -635,6 +635,38 @@ func TestValidatorChange(t *testing.T) {
 	}
 	assert.Equal(t, len(valUpdates), 0, "Some validator updates were unexpected")
 }
+
+//----------------------------------------
+
+// Use to test multiple msgs in one tx
+type testBurnTx struct {
+	Addr sdk.Address
+	Amount sdk.Coins
+}
+
+const msgType3 = "burn"
+
+func (tx testBurnTx) Type() string                       { return msgType3 }
+func (tx testBurnTx) GetMsgs() []sdk.Msg                    { return []sdk.Msg{tx} }
+func (tx testBurnTx) GetSignBytes() []byte               { return nil }
+func (tx testBurnTx) ValidateBasic() sdk.Error           { return nil }
+func (tx testBurnTx) GetSigners() []sdk.Address          { return nil }
+func (tx testBurnTx) GetSignatures() []auth.StdSignature { return nil }
+
+type testSendTx struct {
+	Sender sdk.Address
+	Receiver sdk.Address
+	Amount sdk.Coins
+}
+
+const msgType4 = "send"
+
+func (tx testSendTx) Type() string                       { return msgType4 }
+func (tx testSendTx) GetMsgs() []sdk.Msg                    { return []sdk.Msg{tx} }
+func (tx testSendTx) GetSignBytes() []byte               { return nil }
+func (tx testSendTx) ValidateBasic() sdk.Error           { return nil }
+func (tx testSendTx) GetSigners() []sdk.Address          { return nil }
+func (tx testSendTx) GetSignatures() []auth.StdSignature { return nil }
 
 //----------------------------------------
 

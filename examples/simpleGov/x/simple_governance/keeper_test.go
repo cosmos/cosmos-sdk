@@ -47,7 +47,7 @@ func TestSimpleGovKeeper(t *testing.T) {
 	addr1 := sdk.Address([]byte{1, 2})
 	multiCoins := sdk.Coins{{"atom", 123}, {"eth", 20}}
 
-	proposal1 := NewProposal(title, description, addr1, 0, 20, multiCoins)
+	proposal1 := NewProposal(title, description, addr1, 20, multiCoins)
 
 	authKey := sdk.NewKVStoreKey("authKey")
 

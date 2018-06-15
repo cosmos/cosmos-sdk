@@ -1,4 +1,4 @@
-# Validator Set Changes
+# End-Block 
 
 ## Slashing
 
@@ -72,68 +72,27 @@ for redel in redels {
 
 ## Automatic Unbonding
 
-Every block includes a set of precommits by the validators for the previous block, 
-known as the LastCommit. A LastCommit is valid so long as it contains precommits from +2/3 of voting power.
-
-Proposers are incentivized to include precommits from all
-validators in the LastCommit by receiving additional fees
-proportional to the difference between the voting power included in the
-LastCommit and +2/3 (see [TODO](https://github.com/cosmos/cosmos-sdk/issues/967)).
-
-Validators are penalized for failing to be included in the LastCommit for some
-number of blocks by being automatically unbonded.
-
-Maps:
-
-- map1: < prefix-info | tm val addr > -> <validator signing info>
-- map2: < prefix-bit-array | tm val addr | LE uint64 index in sign bit array > -> < signed bool >
-
-The following information is stored with each validator candidate, and is only non-zero if the candidate becomes an active validator:
-
-```go
-type ValidatorSigningInfo struct {
-  StartHeight           int64
-  IndexOffset           int64
-  JailedUntil           int64
-  SignedBlocksCounter   int64
-}
-
-```
-
-Where:
-* `StartHeight` is set to the height that the candidate became an active validator (with non-zero voting power).
-* `IndexOffset` is incremented each time the candidate was a bonded validator in a block (and may have signed a precommit or not).
-* `JailedUntil` is set whenever the candidate is revoked due to downtime
-* `SignedBlocksCounter` is a counter kept to avoid unnecessary array reads. `SignedBlocksBitArray.Sum() == SignedBlocksCounter` always.
-
-
-Map2 simulates a bit array - better to do the lookup rather than read/write the
-bitarray every time. Size of bit-array is `SIGNED_BLOCKS_WINDOW`. It records, for each of the last `SIGNED_BLOCKS_WINDOW` blocks,
-whether or not this validator was included in the LastCommit. 
-It sets the value to true if the validator was included and false if not.
-Note it is not explicilty initialized (the keys wont exist).
-
 At the beginning of each block, we update the signing info for each validator and check if they should be automatically unbonded:
 
 ```
 height := block.Height
 
 for val in block.Validators:
-  signInfo = getSignInfo(val.Address)
+  signInfo = SigningInfo.Get(val.Address)
   if signInfo == nil{
         signInfo.StartHeight = height
   }
 
   index := signInfo.IndexOffset % SIGNED_BLOCKS_WINDOW
   signInfo.IndexOffset++
-  previous = getDidSign(val.Address, index)
+  previous = SigningBitArray.Get(val.Address, index)
 
   // update counter if array has changed
   if previous and val in block.AbsentValidators:
-    setDidSign(val.Address, index, false)
+    SigningBitArray.Set(val.Address, index, false)
     signInfo.SignedBlocksCounter--
   else if !previous and val not in block.AbsentValidators:
-    setDidSign(val.Address, index, true)
+    SigningBitArray.Set(val.Address, index, true)
     signInfo.SignedBlocksCounter++
   // else previous == val not in block.AbsentValidators, no change
 
@@ -147,5 +106,5 @@ for val in block.Validators:
 
     slash & unbond the validator
 
-  setSignInfo(val.Address, signInfo)
+  SigningInfo.Set(val.Address, signInfo)
 ```

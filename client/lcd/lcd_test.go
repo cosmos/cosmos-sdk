@@ -671,7 +671,7 @@ func getValidators(t *testing.T, port string) []stakerest.StakeValidatorOutput {
 }
 
 func getProposal(t *testing.T, port string, proposalID int64) gov.Proposal {
-	res, body := Request(t, port, "GET", "/gov/"+fmt.Sprintf("%d", proposalID)+"/proposal", nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d", proposalID), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var proposal gov.Proposal
 	err := cdc.UnmarshalJSON([]byte(body), &proposal)
@@ -681,7 +681,7 @@ func getProposal(t *testing.T, port string, proposalID int64) gov.Proposal {
 
 func getVote(t *testing.T, port string, proposalID int64, voterAddr sdk.Address) gov.Vote {
 	bechVoterAddr := sdk.MustBech32ifyAcc(voterAddr)
-	res, body := Request(t, port, "GET", "/gov/"+fmt.Sprintf("%d", proposalID)+"/votes/"+fmt.Sprintf("%s", bechVoterAddr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/votes/%d/%s", proposalID, bechVoterAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var vote gov.Vote
 	err := cdc.UnmarshalJSON([]byte(body), &vote)
@@ -712,7 +712,7 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 			"gas": 100000
 		}
 	}`, bechProposerAddr, name, password, accnum, sequence))
-	res, body := Request(t, port, "POST", "/gov/proposal", jsonStr)
+	res, body := Request(t, port, "POST", "/gov/submitproposal", jsonStr)
 	fmt.Println(res)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 

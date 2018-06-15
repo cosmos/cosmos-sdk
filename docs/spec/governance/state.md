@@ -50,8 +50,9 @@ const (
 type ProposalType  byte
 
 const (
-    ProposalTypePlainText       = 0x1
-    ProposalTypeSoftwareUpgrade = 0x2
+    ProposalTypePlainText       = 0x1 // Plain text proposals
+    ProposalTypeSoftwareUpgrade = 0x2 // Text proposal inducing a software upgrade
+    ProposalTypeParameterChange = 0x3 // Add or change a parameter in GlobalParams store
 )
 
 type ProposalStatus byte
@@ -156,14 +157,17 @@ And the pseudocode for the `ProposalProcessingQueue`:
       return
 
     proposal = load(Governance, <proposalID|'proposal'>) // proposal is a const key
-    activeProcedure = load(params, 'ActiveProcedure')
+    votingProcedure = load(GlobalParams, 'VotingProcedure')
 
-    if (CurrentBlock == proposal.VotingStartBlock + activeProcedure.VotingPeriod && proposal.CurrentStatus == ProposalStatusActive)
+    if (CurrentBlock == proposal.VotingStartBlock + votingProcedure.VotingPeriod && proposal.CurrentStatus == ProposalStatusActive)
 
     // End of voting period, tally
 
       ProposalProcessingQueue.pop()
-      validators = stakeKeeper.getAllValidators()
+      validators = 
+
+
+      Keeper.getAllValidators()
       tmpValMap := map(sdk.Address)ValidatorGovInfo
 
       // Initiate mapping at 0. Validators that remain at 0 at the end of tally will be punished
@@ -184,16 +188,16 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
         _, isVal = stakeKeeper.getValidator(voterAddress)
         if (isVal)
-        tmpValMap(voterAddress).Vote = vote
+          tmpValMap(voterAddress).Vote = vote
 
-
+      tallyingProcedure = load(GlobalParams, 'TallyingProcedure')
 
       // Slash validators that did not vote, or update tally if they voted
       for each validator in validators
-        if (validator.bondHeight < CurrentBlock - activeProcedure.GracePeriod)
+        if (validator.bondHeight < CurrentBlock - tallyingProcedure.GracePeriod)
         // only slash if validator entered validator set before grace period
           if (!tmpValMap(validator).HasVoted)
-            slash validator by activeProcedure.GovernancePenalty
+            slash validator by tallyingProcedure.GovernancePenalty
           else
             proposal.updateTally(tmpValMap(validator).Vote, (validator.TotalShares - tmpValMap(validator).Minus))
 
@@ -201,7 +205,7 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
       // Check if proposal is accepted or rejected
       totalNonAbstain := proposal.YesVotes + proposal.NoVotes + proposal.NoWithVetoVotes
-      if (proposal.Votes.YesVotes/totalNonAbstain > activeProcedure.Threshold AND proposal.Votes.NoWithVetoVotes/totalNonAbstain  < activeProcedure.Veto)
+      if (proposal.Votes.YesVotes/totalNonAbstain > tallyingProcedure.Threshold AND proposal.Votes.NoWithVetoVotes/totalNonAbstain  < tallyingProcedure.Veto)
         //  proposal was accepted at the end of the voting period
         //  refund deposits (non-voters already punished)
         proposal.CurrentStatus = ProposalStatusAccepted

@@ -41,6 +41,8 @@ upon receiving txGovSubmitProposal from sender do
   if (initialDeposit.Atoms <= 0) OR (sender.AtomBalance < initialDeposit.Atoms)  
     // InitialDeposit is negative or null OR sender has insufficient funds
     throw
+
+  if (txGovSubmitProposal.Type != ProposalTypePlainText) OR (txGovSubmitProposal.Type != ProposalTypeSoftwareUpgrade)
   
   sender.AtomBalance -= initialDeposit.Atoms
   
@@ -59,9 +61,9 @@ upon receiving txGovSubmitProposal from sender do
   proposal.NoWithVetoVotes = 0
   proposal.AbstainVotes = 0
   
-  activeProcedure = load(params, 'ActiveProcedure')
+  depositProcedure = load(GlobalParams, 'DepositProcedure')
   
-  if (initialDeposit < activeProcedure.MinDeposit)  
+  if (initialDeposit < depositProcedure.MinDeposit)  
     // MinDeposit is not reached
     
     proposal.CurrentStatus = ProposalStatusOpen
@@ -115,8 +117,6 @@ upon receiving txGovDeposit from sender do
   if (proposal == nil) 
     // There is no proposal for this proposalID
     throw
-
-  activeProcedure = load(params, 'ActiveProcedure')
   
   if (txGovDeposit.Deposit.Atoms <= 0) OR (sender.AtomBalance < txGovDeposit.Deposit.Atoms) OR (proposal.CurrentStatus != ProposalStatusOpen)
 
@@ -126,7 +126,9 @@ upon receiving txGovDeposit from sender do
 
     throw
 
-  if (CurrentBlock >= proposal.SubmitBlock + activeProcedure.MaxDepositPeriod)
+  depositProcedure = load(GlobalParams, 'DepositProcedure')
+
+  if (CurrentBlock >= proposal.SubmitBlock + depositProcedure.MaxDepositPeriod)
     proposal.CurrentStatus = ProposalStatusClosed
 
   else
@@ -136,7 +138,7 @@ upon receiving txGovDeposit from sender do
     proposal.Deposits.append({txGovVote.Deposit, sender})
     proposal.TotalDeposit.Plus(txGovDeposit.Deposit)
     
-    if (proposal.TotalDeposit >= activeProcedure.MinDeposit)   
+    if (proposal.TotalDeposit >= depositProcedure.MinDeposit)   
       // MinDeposit is reached, vote opens
       
       proposal.VotingStartBlock = CurrentBlock

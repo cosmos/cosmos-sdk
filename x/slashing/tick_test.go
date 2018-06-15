@@ -14,18 +14,18 @@ import (
 
 func TestBeginBlocker(t *testing.T) {
 	ctx, ck, sk, keeper := createTestInput(t)
-	addr, pk, amt := addrs[2], pks[2], int64(100)
+	addr, pk, amt := addrs[2], pks[2], sdk.NewInt(100)
 
 	// bond the validator
 	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, pk, amt))
 	require.True(t, got.IsOK())
 	stake.EndBlocker(ctx, sk)
-	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins - amt}})
-	require.Equal(t, sdk.NewRat(amt), sk.Validator(ctx, addr).GetPower())
+	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
+	require.True(t, sdk.NewRatFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
 
 	val := abci.Validator{
 		PubKey: tmtypes.TM2PB.PubKey(pk),
-		Power:  amt,
+		Power:  amt.Int64(),
 	}
 
 	// mark the validator as having signed

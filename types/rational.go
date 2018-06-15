@@ -80,6 +80,30 @@ func NewRatFromDecimal(decimalStr string) (f Rat, err Error) {
 	return NewRat(int64(num), denom), nil
 }
 
+// NewRatFromBigInt constructs Rat from big.Int
+func NewRatFromBigInt(num *big.Int, denom ...*big.Int) Rat {
+	switch len(denom) {
+	case 0:
+		return Rat{*new(big.Rat).SetInt(num)}
+	case 1:
+		return Rat{*new(big.Rat).SetFrac(num, denom[0])}
+	default:
+		panic("improper use of NewRatFromBigInt, can only have one denominator")
+	}
+}
+
+// NewRatFromInt constructs Rat from Int
+func NewRatFromInt(num Int, denom ...Int) Rat {
+	switch len(denom) {
+	case 0:
+		return Rat{*new(big.Rat).SetInt(num.BigInt())}
+	case 1:
+		return Rat{*new(big.Rat).SetFrac(num.BigInt(), denom[0].BigInt())}
+	default:
+		panic("improper use of NewRatFromBigInt, can only have one denominator")
+	}
+}
+
 //nolint
 func (r Rat) Num() int64        { return r.Rat.Num().Int64() }   // Num - return the numerator
 func (r Rat) Denom() int64      { return r.Rat.Denom().Int64() } // Denom  - return the denominator
@@ -135,6 +159,11 @@ func (r Rat) EvaluateBig() *big.Int {
 // evaluate the rational using bankers rounding
 func (r Rat) Evaluate() int64 {
 	return r.EvaluateBig().Int64()
+}
+
+// EvaulateInt evaludates the rational using EvaluateBig
+func (r Rat) EvaluateInt() Int {
+	return NewIntFromBigInt(r.EvaluateBig())
 }
 
 // round Rat with the provided precisionFactor

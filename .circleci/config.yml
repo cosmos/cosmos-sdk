@@ -1,0 +1,28 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.10.3
+        environment:
+          GOBIN: /tmp/workspace/bin
+
+    working_directory: /go/src/github.com/tendermint/go-crypto
+
+    steps:
+      - run: mkdir -p /tmp/workspace/bin
+      - run: mkdir -p /tmp/workspace/profiles
+      - checkout
+      - restore_cache:
+              keys:
+              - v1-dep-{{ .Branch }}
+      - run:
+              name: test
+              command: |
+                export PATH="$GOBIN:$PATH"
+                go env
+                go version
+                make get_tools && make all
+      - save_cache:
+          key: v1-dep-{{ .Branch }}
+          paths:
+            - /go/pkg

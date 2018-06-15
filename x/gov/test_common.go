@@ -62,14 +62,13 @@ func makeTestCodec() *wire.Codec {
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(bank.MsgSend{}, "test/gov/Send", nil)
 	cdc.RegisterConcrete(bank.MsgIssue{}, "test/gov/Issue", nil)
-	cdc.RegisterConcrete(MsgSubmitProposal{}, "test/gov/SubmitProposal", nil)
-	cdc.RegisterConcrete(MsgDeposit{}, "test/gov/Deposit", nil)
-	cdc.RegisterConcrete(MsgVote{}, "test/gov/Vote", nil)
 
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/gov/Account", nil)
 	wire.RegisterCrypto(cdc)
+
+	RegisterWire(cdc)
 
 	return cdc
 }

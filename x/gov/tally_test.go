@@ -21,9 +21,9 @@ func TestTallyNoOneVotes(t *testing.T) {
 	val2CreateMsg := stake.NewMsgCreateValidator(addrs[1], crypto.GenPrivKeyEd25519().PubKey(), sdk.Coin{"steak", 5}, dummyDescription)
 	stakeHandler(ctx, val2CreateMsg)
 
-	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
-	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
+	proposalID := proposal.GetProposalID()
+	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
 	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
@@ -41,9 +41,9 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	val2CreateMsg := stake.NewMsgCreateValidator(addrs[1], crypto.GenPrivKeyEd25519().PubKey(), sdk.Coin{"steak", 5}, dummyDescription)
 	stakeHandler(ctx, val2CreateMsg)
 
-	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
-	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
+	proposalID := proposal.GetProposalID()
+	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
@@ -66,9 +66,9 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 	val2CreateMsg := stake.NewMsgCreateValidator(addrs[1], crypto.GenPrivKeyEd25519().PubKey(), sdk.Coin{"steak", 6}, dummyDescription)
 	stakeHandler(ctx, val2CreateMsg)
 
-	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
-	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
+	proposalID := proposal.GetProposalID()
+	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
@@ -93,9 +93,9 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 	val3CreateMsg := stake.NewMsgCreateValidator(addrs[2], crypto.GenPrivKeyEd25519().PubKey(), sdk.Coin{"steak", 7}, dummyDescription)
 	stakeHandler(ctx, val3CreateMsg)
 
-	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
-	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
+	proposalID := proposal.GetProposalID()
+	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
@@ -122,9 +122,9 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	val3CreateMsg := stake.NewMsgCreateValidator(addrs[2], crypto.GenPrivKeyEd25519().PubKey(), sdk.Coin{"steak", 7}, dummyDescription)
 	stakeHandler(ctx, val3CreateMsg)
 
-	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
-	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
+	proposalID := proposal.GetProposalID()
+	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
@@ -151,9 +151,9 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	val3CreateMsg := stake.NewMsgCreateValidator(addrs[2], crypto.GenPrivKeyEd25519().PubKey(), sdk.Coin{"steak", 7}, dummyDescription)
 	stakeHandler(ctx, val3CreateMsg)
 
-	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
-	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
+	proposalID := proposal.GetProposalID()
+	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Abstain")
@@ -180,9 +180,9 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	val3CreateMsg := stake.NewMsgCreateValidator(addrs[2], crypto.GenPrivKeyEd25519().PubKey(), sdk.Coin{"steak", 7}, dummyDescription)
 	stakeHandler(ctx, val3CreateMsg)
 
-	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
-	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
+	proposalID := proposal.GetProposalID()
+	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Abstain")
@@ -209,9 +209,9 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	val3CreateMsg := stake.NewMsgCreateValidator(addrs[2], crypto.GenPrivKeyEd25519().PubKey(), sdk.Coin{"steak", 7}, dummyDescription)
 	stakeHandler(ctx, val3CreateMsg)
 
-	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
-	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
+	proposalID := proposal.GetProposalID()
+	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[1], "Yes")
@@ -242,9 +242,9 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.Coin{"steak", 30})
 	stakeHandler(ctx, delegator1Msg)
 
-	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
-	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
+	proposalID := proposal.GetProposalID()
+	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
@@ -277,9 +277,9 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.Coin{"steak", 30})
 	stakeHandler(ctx, delegator1Msg)
 
-	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
-	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
+	proposalID := proposal.GetProposalID()
+	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "No")
@@ -312,9 +312,9 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], addrs[1], sdk.Coin{"steak", 10})
 	stakeHandler(ctx, delegator1Msg2)
 
-	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
-	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
+	proposalID := proposal.GetProposalID()
+	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
@@ -348,9 +348,9 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], addrs[1], sdk.Coin{"steak", 10})
 	stakeHandler(ctx, delegator1Msg2)
 
-	proposal := keeper.NewProposal(ctx, "Test", "description", "Text")
-	proposalID := proposal.ProposalID
-	proposal.Status = StatusVotingPeriod
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
+	proposalID := proposal.GetProposalID()
+	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
 	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")

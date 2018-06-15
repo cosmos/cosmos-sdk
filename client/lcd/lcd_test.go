@@ -421,7 +421,7 @@ func TestSubmitProposal(t *testing.T) {
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
-	assert.Equal(t, "Test", proposal.Title)
+	assert.Equal(t, "Test", proposal.GetTitle())
 }
 
 func TestDeposit(t *testing.T) {
@@ -443,7 +443,7 @@ func TestDeposit(t *testing.T) {
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
-	assert.Equal(t, "Test", proposal.Title)
+	assert.Equal(t, "Test", proposal.GetTitle())
 
 	// create SubmitProposal TX
 	resultTx = doDeposit(t, port, seed, name, password, addr, proposalID)
@@ -451,7 +451,7 @@ func TestDeposit(t *testing.T) {
 
 	// query proposal
 	proposal = getProposal(t, port, proposalID)
-	assert.True(t, proposal.TotalDeposit.IsEqual(sdk.Coins{sdk.Coin{"steak", 10}}))
+	assert.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{sdk.Coin{"steak", 10}}))
 }
 
 func TestVote(t *testing.T) {
@@ -473,7 +473,7 @@ func TestVote(t *testing.T) {
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
-	assert.Equal(t, "Test", proposal.Title)
+	assert.Equal(t, "Test", proposal.GetTitle())
 
 	// create SubmitProposal TX
 	resultTx = doDeposit(t, port, seed, name, password, addr, proposalID)
@@ -481,7 +481,7 @@ func TestVote(t *testing.T) {
 
 	// query proposal
 	proposal = getProposal(t, port, proposalID)
-	assert.Equal(t, gov.StatusVotingPeriod, proposal.Status)
+	assert.Equal(t, gov.StatusVotingPeriod, proposal.GetStatus())
 
 	// create SubmitProposal TX
 	resultTx = doVote(t, port, seed, name, password, addr, proposalID)

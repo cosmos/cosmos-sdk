@@ -13,7 +13,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 
 	for shouldPopInactiveProposalQueue(ctx, keeper) {
 		inactiveProposal := keeper.InactiveProposalQueuePop(ctx)
-		if inactiveProposal.Status == StatusDepositPeriod {
+		if inactiveProposal.GetStatus() == StatusDepositPeriod {
 			keeper.DeleteProposal(ctx, inactiveProposal)
 		}
 	}
@@ -23,14 +23,14 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 	for shouldPopActiveProposalQueue(ctx, keeper) {
 		activeProposal := keeper.ActiveProposalQueuePop(ctx)
 
-		if ctx.BlockHeight() >= activeProposal.VotingStartBlock+keeper.GetVotingProcedure(ctx).VotingPeriod {
+		if ctx.BlockHeight() >= activeProposal.GetVotingStartBlock()+keeper.GetVotingProcedure(ctx).VotingPeriod {
 			passes, _ := tally(ctx, keeper, activeProposal)
 			if passes {
-				keeper.RefundDeposits(ctx, activeProposal.ProposalID)
-				activeProposal.Status = StatusPassed
+				keeper.RefundDeposits(ctx, activeProposal.GetProposalID())
+				activeProposal.SetStatus(StatusPassed)
 			} else {
-				keeper.DeleteDeposits(ctx, activeProposal.ProposalID)
-				activeProposal.Status = StatusRejected
+				keeper.DeleteDeposits(ctx, activeProposal.GetProposalID())
+				activeProposal.SetStatus(StatusRejected)
 			}
 
 			keeper.SetProposal(ctx, activeProposal)
@@ -40,7 +40,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 	return
 }
 
-func tally(ctx sdk.Context, keeper Keeper, proposal *Proposal) (passes bool, nonVoting []sdk.Address) {
+func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, nonVoting []sdk.Address) {
 
 	results := make(map[string]sdk.Rat)
 	results["Yes"] = sdk.ZeroRat()
@@ -59,7 +59,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal *Proposal) (passes bool, non
 		}
 	}
 
-	votesIterator := keeper.GetVotes(ctx, proposal.ProposalID)
+	votesIterator := keeper.GetVotes(ctx, proposal.GetProposalID())
 	for ; votesIterator.Valid(); votesIterator.Next() {
 		vote := &Vote{}
 		keeper.cdc.MustUnmarshalBinary(votesIterator.Value(), vote)
@@ -118,9 +118,9 @@ func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 
 	if peekProposal == nil {
 		return false
-	} else if peekProposal.Status != StatusDepositPeriod {
+	} else if peekProposal.GetStatus() != StatusDepositPeriod {
 		return true
-	} else if ctx.BlockHeight() >= peekProposal.SubmitBlock+depositProcedure.MaxDepositPeriod {
+	} else if ctx.BlockHeight() >= peekProposal.GetSubmitBlock()+depositProcedure.MaxDepositPeriod {
 		return true
 	}
 	return false
@@ -132,7 +132,7 @@ func shouldPopActiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 
 	if peekProposal == nil {
 		return false
-	} else if ctx.BlockHeight() >= peekProposal.VotingStartBlock+votingProcedure.VotingPeriod {
+	} else if ctx.BlockHeight() >= peekProposal.GetVotingStartBlock()+votingProcedure.VotingPeriod {
 		return true
 	}
 	return false

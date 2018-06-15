@@ -23,14 +23,14 @@ func NewHandler(keeper Keeper) sdk.Handler {
 
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
 
-	proposal := keeper.NewProposal(ctx, msg.Title, msg.Description, msg.ProposalType)
+	proposal := keeper.NewTextProposal(ctx, msg.Title, msg.Description, msg.ProposalType)
 
-	err := keeper.AddDeposit(ctx, proposal.ProposalID, msg.Proposer, msg.InitialDeposit)
+	err := keeper.AddDeposit(ctx, proposal.GetProposalID(), msg.Proposer, msg.InitialDeposit)
 	if err != nil {
 		return err.Result()
 	}
 
-	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(proposal.ProposalID)
+	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(proposal.GetProposalID())
 
 	tags := sdk.NewTags(
 		"action", []byte("submitProposal"),

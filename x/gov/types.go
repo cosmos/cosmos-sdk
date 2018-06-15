@@ -25,9 +25,36 @@ type Vote struct {
 }
 
 //-----------------------------------------------------------
+// Proposal Interface
+type Proposal interface {
+	GetProposalID() int64
+	SetProposalID(int64)
 
-// Proposal
-type Proposal struct {
+	GetTitle() string
+	SetTitle(string)
+
+	GetDescription() string
+	SetDescription(string)
+
+	GetProposalType() string
+	SetProposalType(string)
+
+	GetStatus() string
+	SetStatus(string)
+
+	GetSubmitBlock() int64
+	SetSubmitBlock(int64)
+
+	GetTotalDeposit() sdk.Coins
+	SetTotalDeposit(sdk.Coins)
+
+	GetVotingStartBlock() int64
+	SetVotingStartBlock(int64)
+}
+
+//-----------------------------------------------------------
+// Text Proposal
+type TextProposal struct {
 	ProposalID   int64  `json:"proposal_id"`   //  ID of the proposal
 	Title        string `json:"title"`         //  Title of the proposal
 	Description  string `json:"description"`   //  Description of the proposal
@@ -39,8 +66,33 @@ type Proposal struct {
 	TotalDeposit sdk.Coins `json:"total_deposit"` //  Current deposit on this proposal. Initial value is set at InitialDeposit
 
 	VotingStartBlock int64 `json:"voting_start_block"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
-
 }
+
+// Implements Proposal Interface
+var _ Proposal = (*TextProposal)(nil)
+
+// nolint
+func (tp TextProposal) GetProposalID() int64                    { return tp.ProposalID }
+func (tp *TextProposal) SetProposalID(proposalID int64)         { tp.ProposalID = proposalID }
+func (tp TextProposal) GetTitle() string                        { return tp.Title }
+func (tp *TextProposal) SetTitle(title string)                  { tp.Title = title }
+func (tp TextProposal) GetDescription() string                  { return tp.Description }
+func (tp *TextProposal) SetDescription(description string)      { tp.Description = description }
+func (tp TextProposal) GetProposalType() string                 { return tp.ProposalType }
+func (tp *TextProposal) SetProposalType(proposalType string)    { tp.ProposalType = proposalType }
+func (tp TextProposal) GetStatus() string                       { return tp.Status }
+func (tp *TextProposal) SetStatus(status string)                { tp.Status = status }
+func (tp TextProposal) GetSubmitBlock() int64                   { return tp.SubmitBlock }
+func (tp *TextProposal) SetSubmitBlock(submitBlock int64)       { tp.SubmitBlock = submitBlock }
+func (tp TextProposal) GetTotalDeposit() sdk.Coins              { return tp.TotalDeposit }
+func (tp *TextProposal) SetTotalDeposit(totalDeposit sdk.Coins) { tp.TotalDeposit = totalDeposit }
+func (tp TextProposal) GetVotingStartBlock() int64              { return tp.VotingStartBlock }
+func (tp *TextProposal) SetVotingStartBlock(votingStartBlock int64) {
+	tp.VotingStartBlock = votingStartBlock
+}
+
+//-----------------------------------------------------------
+// Procedures
 
 // Procedure around Deposits for governance
 type DepositProcedure struct {

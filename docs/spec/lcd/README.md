@@ -51,7 +51,7 @@ Cosmos-SDK lcd (lite client daemon) acts as a rest-server. It provides a set of 
         ```
     4. **url: /keys/{name}, Method: GET**
         ```
-          Functionality: Get key information according to the specified key name
+          Functionality: Get key information according to the specific key name
           Example parameters:
           Example return:
           {
@@ -118,7 +118,7 @@ Cosmos-SDK lcd (lite client daemon) acts as a rest-server. It provides a set of 
         ```
     4. **url: /blocks/{height}, Method: GET**
         ```
-          Functionality: Get the block at specified height and verify it
+          Functionality: Get the block at specific height and verify it
           Example parameters:
           Example return:
         ```
@@ -130,7 +130,7 @@ Cosmos-SDK lcd (lite client daemon) acts as a rest-server. It provides a set of 
         ```
     6. **url: /validatorsets/{height}, Method: GET**
         ```
-          Functionality: Get the validatorsets at specified block height and verify it
+          Functionality: Get the validatorsets at specific block height and verify it
           Example parameters:
           Example return:
         ```
@@ -143,22 +143,37 @@ Cosmos-SDK lcd (lite client daemon) acts as a rest-server. It provides a set of 
           Example parameters:
           Example return:
         ```
-    2. **url: /broadcast_tx_commit, Method: POST**
+    2. **url: /tx_search/query=?&prove=?&page=?&per_page=?", Method: GET**
+        ```
+          Functionality: Query for multiple transactions results according to specific conditions
+          Example parameters: tx_search?query=\"account.owner=\'Ivan\'\"&page=1&per_page=10
+          Example return:
+        ```
+    3. **url: /broadcast_tx_commit, Method: POST**
         ```
           Functionality: Directly send a transaction and wait until on-chain
           Example parameters:
+          {
+            "tx": base64 code
+          }
           Example return:
         ```
-    3. **url: /broadcast_tx_sync, Method: POST**
+    4. **url: /broadcast_tx_sync, Method: POST**
         ```
           Functionality: Directly send a transaction and wait until checkTX is done
           Example parameters:
+          {
+            "tx": base64 code
+          }
           Example return:
         ```
-    4. **url: /broadcast_tx_async, Method: POST**
+    5. **url: /broadcast_tx_async, Method: POST**
         ```
           Functionality: Directly send a transaction asynchronous without wait for anything
           Example parameters:
+          {
+            "tx": base64 code
+          }
           Example return:
         ```
 
@@ -173,19 +188,38 @@ Cosmos-SDK lcd (lite client daemon) acts as a rest-server. It provides a set of 
 
 5.  **Bank module**
 
-    1. **url: /accounts/{address}/send, Method: POST**
+    1. **url: /accounts/send, Method: POST**
         ```
           Functionality: transfer asset
           Example parameters:
+          {
+          	"amount":[{"denom":"monkeyToken","amount":5}],
+          	"name":"test1",
+          	"password":"12345678",
+          	"chain_id":"test-chain-F0bln0",
+          	"address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
+          	"sequence":2,
+          	"gas":100
+          }
           Example return:
         ```
 
 6.  **Ibc module**
 
-    1. **url: /ibc/{destchain}/{address}/send, Method: POST**
+    1. **url: /ibc/send, Method: POST**
         ```
           Functionality: transfer asset across chain
           Example parameters:
+          {
+          	"amount":[{"denom":"monkeyToken","amount":5}],
+          	"name":"test1",
+          	"password":"12345678",
+          	"src_chain_id":"test-chain-F0bln0",
+          	"dest_chain_id":"test-chain-E1abcd",
+          	"dest_address":"cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
+          	"sequence":2,
+          	"gas":100
+          }
           Example return:
         ```
 

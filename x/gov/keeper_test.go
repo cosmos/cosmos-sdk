@@ -17,14 +17,7 @@ func TestGetSetProposal(t *testing.T) {
 	keeper.SetProposal(ctx, proposal)
 
 	gotProposal := keeper.GetProposal(ctx, proposalID)
-
-	assert.Equal(t, proposal.GetProposalID(), gotProposal.GetProposalID())
-	assert.Equal(t, proposal.GetTitle(), gotProposal.GetTitle())
-	assert.Equal(t, proposal.GetDescription(), gotProposal.GetDescription())
-	assert.Equal(t, proposal.GetProposalType(), gotProposal.GetProposalType())
-	assert.Equal(t, proposal.GetSubmitBlock(), gotProposal.GetSubmitBlock())
-	assert.True(t, proposal.GetTotalDeposit().IsEqual(gotProposal.GetTotalDeposit()))
-	assert.Equal(t, proposal.GetSubmitBlock(), gotProposal.GetSubmitBlock())
+	assert.True(t, ProposalEqual(proposal, gotProposal))
 }
 
 func TestIncrementProposalNumber(t *testing.T) {
@@ -70,11 +63,13 @@ func TestDeposits(t *testing.T) {
 
 	assert.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{}))
 
+	// Check no deposits at beginning
 	deposit, found := keeper.GetDeposit(ctx, proposalID, addrs[1])
 	assert.False(t, found)
 	assert.Equal(t, keeper.GetProposal(ctx, proposalID).GetVotingStartBlock(), int64(-1))
 	assert.Nil(t, keeper.ActiveProposalQueuePeek(ctx))
 
+	// Check first deposit
 	err, votingStarted := keeper.AddDeposit(ctx, proposalID, addrs[0], fourSteak)
 	assert.Nil(t, err)
 	assert.False(t, votingStarted)
@@ -85,6 +80,7 @@ func TestDeposits(t *testing.T) {
 	assert.Equal(t, fourSteak, keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
 	assert.Equal(t, addr0Initial.Minus(fourSteak), keeper.ck.GetCoins(ctx, addrs[0]))
 
+	// Check a second deposit from same address
 	err, votingStarted = keeper.AddDeposit(ctx, proposalID, addrs[0], fiveSteak)
 	assert.Nil(t, err)
 	assert.False(t, votingStarted)
@@ -95,6 +91,7 @@ func TestDeposits(t *testing.T) {
 	assert.Equal(t, fourSteak.Plus(fiveSteak), keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
 	assert.Equal(t, addr0Initial.Minus(fourSteak).Minus(fiveSteak), keeper.ck.GetCoins(ctx, addrs[0]))
 
+	// Check third deposit from a new address
 	err, votingStarted = keeper.AddDeposit(ctx, proposalID, addrs[1], fourSteak)
 	assert.Nil(t, err)
 	assert.True(t, votingStarted)
@@ -105,10 +102,12 @@ func TestDeposits(t *testing.T) {
 	assert.Equal(t, fourSteak.Plus(fiveSteak).Plus(fourSteak), keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
 	assert.Equal(t, addr1Initial.Minus(fourSteak), keeper.ck.GetCoins(ctx, addrs[1]))
 
+	// Check that proposal moved to voting period
 	assert.Equal(t, ctx.BlockHeight(), keeper.GetProposal(ctx, proposalID).GetVotingStartBlock())
 	assert.NotNil(t, keeper.ActiveProposalQueuePeek(ctx))
 	assert.Equal(t, proposalID, keeper.ActiveProposalQueuePeek(ctx).GetProposalID())
 
+	// Test deposit iterator
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
 	assert.True(t, depositsIterator.Valid())
 	keeper.cdc.MustUnmarshalBinary(depositsIterator.Value(), &deposit)
@@ -121,6 +120,7 @@ func TestDeposits(t *testing.T) {
 	depositsIterator.Next()
 	assert.False(t, depositsIterator.Valid())
 
+	// Test Refund Deposits
 	deposit, found = keeper.GetDeposit(ctx, proposalID, addrs[1])
 	assert.True(t, found)
 	assert.Equal(t, fourSteak, deposit.Amount)
@@ -141,41 +141,45 @@ func TestVotes(t *testing.T) {
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
-	keeper.AddVote(ctx, proposalID, addrs[0], "Abstain")
+	// Test first vote
+	keeper.AddVote(ctx, proposalID, addrs[0], OptionAbstain)
 	vote, found := keeper.GetVote(ctx, proposalID, addrs[0])
 	assert.True(t, found)
 	assert.Equal(t, addrs[0], vote.Voter)
 	assert.Equal(t, proposalID, vote.ProposalID)
-	assert.Equal(t, "Abstain", vote.Option)
+	assert.Equal(t, OptionAbstain, vote.Option)
 
-	keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
+	// Test change of vote
+	keeper.AddVote(ctx, proposalID, addrs[0], OptionYes)
 	vote, found = keeper.GetVote(ctx, proposalID, addrs[0])
 	assert.True(t, found)
 	assert.Equal(t, addrs[0], vote.Voter)
 	assert.Equal(t, proposalID, vote.ProposalID)
-	assert.Equal(t, "Yes", vote.Option)
+	assert.Equal(t, OptionYes, vote.Option)
 
-	keeper.AddVote(ctx, proposalID, addrs[1], "NoWithVeto")
+	// Test second vote
+	keeper.AddVote(ctx, proposalID, addrs[1], OptionNoWithVeto)
 	vote, found = keeper.GetVote(ctx, proposalID, addrs[1])
 	assert.True(t, found)
 	assert.Equal(t, addrs[1], vote.Voter)
 	assert.Equal(t, proposalID, vote.ProposalID)
-	assert.Equal(t, "NoWithVeto", vote.Option)
+	assert.Equal(t, OptionNoWithVeto, vote.Option)
 
+	// Test vote iterator
 	votesIterator := keeper.GetVotes(ctx, proposalID)
 	assert.True(t, votesIterator.Valid())
 	keeper.cdc.MustUnmarshalBinary(votesIterator.Value(), &vote)
 	assert.True(t, votesIterator.Valid())
 	assert.Equal(t, addrs[0], vote.Voter)
 	assert.Equal(t, proposalID, vote.ProposalID)
-	assert.Equal(t, "Yes", vote.Option)
+	assert.Equal(t, OptionYes, vote.Option)
 	votesIterator.Next()
 	assert.True(t, votesIterator.Valid())
 	keeper.cdc.MustUnmarshalBinary(votesIterator.Value(), &vote)
 	assert.True(t, votesIterator.Valid())
 	assert.Equal(t, addrs[1], vote.Voter)
 	assert.Equal(t, proposalID, vote.ProposalID)
-	assert.Equal(t, "NoWithVeto", vote.Option)
+	assert.Equal(t, OptionNoWithVeto, vote.Option)
 	votesIterator.Next()
 	assert.False(t, votesIterator.Valid())
 }
@@ -186,16 +190,19 @@ func TestProposalQueues(t *testing.T) {
 	assert.Nil(t, keeper.InactiveProposalQueuePeek(ctx))
 	assert.Nil(t, keeper.ActiveProposalQueuePeek(ctx))
 
+	// create test proposals
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
 	proposal2 := keeper.NewTextProposal(ctx, "Test2", "description", "Text")
 	proposal3 := keeper.NewTextProposal(ctx, "Test3", "description", "Text")
 	proposal4 := keeper.NewTextProposal(ctx, "Test4", "description", "Text")
 
+	// test pushing to inactive proposal queue
 	keeper.InactiveProposalQueuePush(ctx, proposal)
 	keeper.InactiveProposalQueuePush(ctx, proposal2)
 	keeper.InactiveProposalQueuePush(ctx, proposal3)
 	keeper.InactiveProposalQueuePush(ctx, proposal4)
 
+	// test peeking and popping from inactive proposal queue
 	assert.Equal(t, keeper.InactiveProposalQueuePeek(ctx).GetProposalID(), proposal.GetProposalID())
 	assert.Equal(t, keeper.InactiveProposalQueuePop(ctx).GetProposalID(), proposal.GetProposalID())
 	assert.Equal(t, keeper.InactiveProposalQueuePeek(ctx).GetProposalID(), proposal2.GetProposalID())
@@ -205,11 +212,13 @@ func TestProposalQueues(t *testing.T) {
 	assert.Equal(t, keeper.InactiveProposalQueuePeek(ctx).GetProposalID(), proposal4.GetProposalID())
 	assert.Equal(t, keeper.InactiveProposalQueuePop(ctx).GetProposalID(), proposal4.GetProposalID())
 
+	// test pushing to active proposal queue
 	keeper.ActiveProposalQueuePush(ctx, proposal)
 	keeper.ActiveProposalQueuePush(ctx, proposal2)
 	keeper.ActiveProposalQueuePush(ctx, proposal3)
 	keeper.ActiveProposalQueuePush(ctx, proposal4)
 
+	// test peeking and popping from active proposal queue
 	assert.Equal(t, keeper.ActiveProposalQueuePeek(ctx).GetProposalID(), proposal.GetProposalID())
 	assert.Equal(t, keeper.ActiveProposalQueuePop(ctx).GetProposalID(), proposal.GetProposalID())
 	assert.Equal(t, keeper.ActiveProposalQueuePeek(ctx).GetProposalID(), proposal2.GetProposalID())

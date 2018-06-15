@@ -139,18 +139,18 @@ func (keeper Keeper) GetTallyingProcedure(ctx sdk.Context) TallyingProcedure {
 // =====================================================
 // Votes
 
-// Gets the vote of a specific voter on a specific proposal
+// Adds a vote on a specific proposal
 func (keeper Keeper) AddVote(ctx sdk.Context, proposalID int64, voterAddr sdk.Address, option string) sdk.Error {
 	proposal := keeper.GetProposal(ctx, proposalID)
 	if proposal == nil {
-		return ErrUnknownProposal(proposalID)
+		return ErrUnknownProposal(keeper.codespace, proposalID)
 	}
 	if proposal.GetStatus() != StatusVotingPeriod {
-		return ErrInactiveProposal(proposalID)
+		return ErrInactiveProposal(keeper.codespace, proposalID)
 	}
 
-	if option != "Yes" && option != "Abstain" && option != "No" && option != "NoWithVeto" {
-		return ErrInvalidVote(option)
+	if option != OptionYes && option != OptionAbstain && option != OptionNo && option != OptionNoWithVeto {
+		return ErrInvalidVote(keeper.codespace, option)
 	}
 
 	vote := Vote{
@@ -175,20 +175,18 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID int64, voterAddr sdk.Ad
 	return vote, true
 }
 
-// Gets the vote of a specific voter on a specific proposal
 func (keeper Keeper) setVote(ctx sdk.Context, proposalID int64, voterAddr sdk.Address, vote Vote) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinary(vote)
 	store.Set(KeyVote(proposalID, voterAddr), bz)
 }
 
-// Gets the vote of a specific voter on a specific proposal
+// Gets all the votes on a specific proposal
 func (keeper Keeper) GetVotes(ctx sdk.Context, proposalID int64) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
 	return sdk.KVStorePrefixIterator(store, KeyVotesSubspace(proposalID))
 }
 
-// Gets the vote of a specific voter on a specific proposal
 func (keeper Keeper) deleteVote(ctx sdk.Context, proposalID int64, voterAddr sdk.Address) {
 	store := ctx.KVStore(keeper.storeKey)
 	store.Delete(KeyVote(proposalID, voterAddr))
@@ -220,11 +218,11 @@ func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr sdk.Address, depositAmount sdk.Coins) (sdk.Error, bool) {
 	proposal := keeper.GetProposal(ctx, proposalID)
 	if proposal == nil {
-		return ErrUnknownProposal(proposalID), false
+		return ErrUnknownProposal(keeper.codespace, proposalID), false
 	}
 
 	if (proposal.GetStatus() != StatusDepositPeriod) && (proposal.GetStatus() != StatusVotingPeriod) {
-		return ErrAlreadyFinishedProposal(proposalID), false
+		return ErrAlreadyFinishedProposal(keeper.codespace, proposalID), false
 	}
 
 	_, _, err := keeper.ck.SubtractCoins(ctx, depositerAddr, depositAmount)
@@ -301,19 +299,20 @@ func (keeper Keeper) getActiveProposalQueue(ctx sdk.Context) ProposalQueue {
 		return nil
 	}
 
-	proposalQueue := &ProposalQueue{}
-	err := keeper.cdc.UnmarshalBinary(bz, proposalQueue) // TODO: switch to UnmarshalBinaryBare when new go-amino gets added
+	var proposalQueue ProposalQueue
+
+	err := keeper.cdc.UnmarshalBinary(bz, &proposalQueue)
 	if err != nil {
 		panic(err)
 	}
 
-	return *proposalQueue
+	return proposalQueue
 }
 
 func (keeper Keeper) setActiveProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) {
 	store := ctx.KVStore(keeper.storeKey)
 
-	bz, err := keeper.cdc.MarshalBinary(proposalQueue) // TODO: switch to MarshalBinaryBare when new go-amino gets added
+	bz, err := keeper.cdc.MarshalBinary(proposalQueue)
 	if err != nil {
 		panic(err)
 	}
@@ -354,13 +353,14 @@ func (keeper Keeper) getInactiveProposalQueue(ctx sdk.Context) ProposalQueue {
 		return nil
 	}
 
-	proposalQueue := &ProposalQueue{}
-	err := keeper.cdc.UnmarshalBinary(bz, proposalQueue) // TODO: switch to UnmarshalBinaryBare when new go-amino gets added
+	var proposalQueue ProposalQueue
+
+	err := keeper.cdc.UnmarshalBinary(bz, &proposalQueue) // TODO: switch to UnmarshalBinaryBare when new go-amino gets added
 	if err != nil {
 		panic(err)
 	}
 
-	return *proposalQueue
+	return proposalQueue
 }
 
 func (keeper Keeper) setInactiveProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) {

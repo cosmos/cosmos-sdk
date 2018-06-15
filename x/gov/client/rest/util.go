@@ -99,28 +99,28 @@ func (req baseReq) baseReqValidate(w http.ResponseWriter) bool {
 
 func (req postProposalReq) Validate(w http.ResponseWriter) bool {
 	if len(req.Title) == 0 {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		err := errors.Errorf("Title required but not specified")
 		w.Write([]byte(err.Error()))
 		return false
 	}
 
 	if len(req.ProposalType) == 0 {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		err := errors.Errorf("ProposalType required but not specified")
 		w.Write([]byte(err.Error()))
 		return false
 	}
 
 	if len(req.Proposer) == 0 {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		err := errors.Errorf("Proposer required but not specified")
 		w.Write([]byte(err.Error()))
 		return false
 	}
 
 	if len(req.InitialDeposit) == 0 {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		err := errors.Errorf("InitialDeposit required but not specified")
 		w.Write([]byte(err.Error()))
 		return false

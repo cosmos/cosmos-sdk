@@ -11,10 +11,15 @@ const (
 	StatusVotingPeriod  = "VotingPeriod"
 	StatusPassed        = "Passed"
 	StatusRejected      = "Rejected"
-)
 
-var (
-	proposalTypes = []string{"Text", "ParameterChange", "SoftwareUpgrade"}
+	OptionYes        = "Yes"
+	OptionAbstain    = "Abstain"
+	OptionNo         = "No"
+	OptionNoWithVeto = "NoWithVeto"
+
+	ProposalTypeText            = "Text"
+	ProposalTypeParameterChange = "ParameterChange"
+	ProposalTypeSoftwareUpgrade = "SoftwareUpgrade"
 )
 
 // Vote
@@ -50,6 +55,21 @@ type Proposal interface {
 
 	GetVotingStartBlock() int64
 	SetVotingStartBlock(int64)
+}
+
+// checks if two proposals are equal
+func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
+	if proposalA.GetProposalID() != proposalB.GetProposalID() ||
+		proposalA.GetTitle() != proposalB.GetTitle() ||
+		proposalA.GetDescription() != proposalB.GetDescription() ||
+		proposalA.GetProposalType() != proposalB.GetProposalType() ||
+		proposalA.GetStatus() != proposalB.GetStatus() ||
+		proposalA.GetSubmitBlock() != proposalB.GetSubmitBlock() ||
+		!(proposalA.GetTotalDeposit().IsEqual(proposalB.GetTotalDeposit())) ||
+		proposalA.GetVotingStartBlock() != proposalB.GetVotingStartBlock() {
+		return false
+	}
+	return true
 }
 
 //-----------------------------------------------------------
@@ -116,10 +136,10 @@ type VotingProcedure struct {
 type ProposalTypes []string
 
 func validProposalType(proposalType string) bool {
-	for _, p := range proposalTypes {
-		if p == proposalType {
-			return true
-		}
+	if proposalType == ProposalTypeText ||
+		proposalType == ProposalTypeParameterChange ||
+		proposalType == ProposalTypeSoftwareUpgrade {
+		return true
 	}
 	return false
 }

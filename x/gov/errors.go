@@ -24,39 +24,39 @@ const (
 //----------------------------------------
 // Error constructors
 
-func ErrUnknownProposal(proposalID int64) sdk.Error {
-	return sdk.NewError(DefaultCodespace, CodeUnknownProposal, fmt.Sprintf("Unknown proposal - %d", proposalID))
+func ErrUnknownProposal(codespace sdk.CodespaceType, proposalID int64) sdk.Error {
+	return sdk.NewError(codespace, CodeUnknownProposal, fmt.Sprintf("Unknown proposal - %d", proposalID))
 }
 
-func ErrInactiveProposal(proposalID int64) sdk.Error {
-	return sdk.NewError(DefaultCodespace, CodeInactiveProposal, fmt.Sprintf("Inactive proposal - %d", proposalID))
+func ErrInactiveProposal(codespace sdk.CodespaceType, proposalID int64) sdk.Error {
+	return sdk.NewError(codespace, CodeInactiveProposal, fmt.Sprintf("Inactive proposal - %d", proposalID))
 }
 
-func ErrAlreadyActiveProposal(proposalID int64) sdk.Error {
-	return sdk.NewError(DefaultCodespace, CodeAlreadyActiveProposal, fmt.Sprintf("Proposal %d has been already active", proposalID))
+func ErrAlreadyActiveProposal(codespace sdk.CodespaceType, proposalID int64) sdk.Error {
+	return sdk.NewError(codespace, CodeAlreadyActiveProposal, fmt.Sprintf("Proposal %d has been already active", proposalID))
 }
 
-func ErrAlreadyFinishedProposal(proposalID int64) sdk.Error {
-	return sdk.NewError(DefaultCodespace, CodeAlreadyFinishedProposal, fmt.Sprintf("Proposal %d has already passed its voting period", proposalID))
+func ErrAlreadyFinishedProposal(codespace sdk.CodespaceType, proposalID int64) sdk.Error {
+	return sdk.NewError(codespace, CodeAlreadyFinishedProposal, fmt.Sprintf("Proposal %d has already passed its voting period", proposalID))
 }
 
-func ErrAddressNotStaked(address sdk.Address) sdk.Error {
+func ErrAddressNotStaked(codespace sdk.CodespaceType, address sdk.Address) sdk.Error {
 	bechAddr, _ := sdk.Bech32ifyAcc(address)
-	return sdk.NewError(DefaultCodespace, CodeAddressNotStaked, fmt.Sprintf("Address %s is not staked and is thus ineligible to vote", bechAddr))
+	return sdk.NewError(codespace, CodeAddressNotStaked, fmt.Sprintf("Address %s is not staked and is thus ineligible to vote", bechAddr))
 }
 
-func ErrInvalidTitle(title string) sdk.Error {
-	return sdk.NewError(DefaultCodespace, CodeInvalidTitle, fmt.Sprintf("Proposal Title '%s' is not valid", title))
+func ErrInvalidTitle(codespace sdk.CodespaceType, title string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidTitle, fmt.Sprintf("Proposal Title '%s' is not valid", title))
 }
 
-func ErrInvalidDescription(description string) sdk.Error {
-	return sdk.NewError(DefaultCodespace, CodeInvalidDescription, fmt.Sprintf("Proposal Desciption '%s' is not valid", description))
+func ErrInvalidDescription(codespace sdk.CodespaceType, description string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDescription, fmt.Sprintf("Proposal Desciption '%s' is not valid", description))
 }
 
-func ErrInvalidProposalType(proposalType string) sdk.Error {
-	return sdk.NewError(DefaultCodespace, CodeInvalidProposalType, fmt.Sprintf("Proposal Type '%s' is not valid", proposalType))
+func ErrInvalidProposalType(codespace sdk.CodespaceType, proposalType string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidProposalType, fmt.Sprintf("Proposal Type '%s' is not valid", proposalType))
 }
 
-func ErrInvalidVote(voteOption string) sdk.Error {
-	return sdk.NewError(DefaultCodespace, CodeInvalidVote, fmt.Sprintf("'%s' is not a valid voting option", voteOption))
+func ErrInvalidVote(codespace sdk.CodespaceType, voteOption string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidVote, fmt.Sprintf("'%s' is not a valid voting option", voteOption))
 }

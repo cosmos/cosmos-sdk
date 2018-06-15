@@ -489,7 +489,7 @@ func TestVote(t *testing.T) {
 
 	vote := getVote(t, port, proposalID, addr)
 	assert.Equal(t, proposalID, vote.ProposalID)
-	assert.Equal(t, "Yes", vote.Option)
+	assert.Equal(t, gov.OptionYes, vote.Option)
 }
 
 //_____________________________________________________________________________

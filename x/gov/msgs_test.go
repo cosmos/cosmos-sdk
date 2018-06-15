@@ -80,12 +80,12 @@ func TestMsgVote(t *testing.T) {
 		option     string
 		expectPass bool
 	}{
-		{0, addrs[0], "Yes", true},
-		{-1, addrs[0], "Yes", false},
-		{0, sdk.Address{}, "Yes", false},
-		{0, addrs[0], "No", true},
-		{0, addrs[0], "NoWithVeto", true},
-		{0, addrs[0], "Abstain", true},
+		{0, addrs[0], OptionYes, true},
+		{-1, addrs[0], OptionYes, false},
+		{0, sdk.Address{}, OptionYes, false},
+		{0, addrs[0], OptionNo, true},
+		{0, addrs[0], OptionNoWithVeto, true},
+		{0, addrs[0], OptionAbstain, true},
 		{0, addrs[0], "Meow", false},
 	}
 

@@ -190,7 +190,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	vote := executeGetVote(t, fmt.Sprintf("gaiacli gov query-vote  --proposalID=1 --voter=%v --output=json %v", fooCech, flags))
 	assert.Equal(t, int64(1), vote.ProposalID)
-	assert.Equal(t, "Yes", vote.Option)
+	assert.Equal(t, gov.OptionYes, vote.Option)
 }
 
 //___________________________________________________________________________________

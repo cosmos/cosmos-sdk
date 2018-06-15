@@ -7,46 +7,56 @@ import (
 )
 
 // Called every block, process inflation, update validator set
-func EndBlocker(ctx sdk.Context, keeper Keeper) {
+func EndBlocker(ctx sdk.Context, keeper Keeper) (tags sdk.Tags, nonVotingVals []sdk.Address) {
+
+	tags = sdk.NewTags()
 
 	// Delete proposals that haven't met minDeposit
-
 	for shouldPopInactiveProposalQueue(ctx, keeper) {
 		inactiveProposal := keeper.InactiveProposalQueuePop(ctx)
 		if inactiveProposal.GetStatus() == StatusDepositPeriod {
+			proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(inactiveProposal.GetProposalID())
 			keeper.DeleteProposal(ctx, inactiveProposal)
+			tags.AppendTag("action", []byte("proposalDropped"))
+			tags.AppendTag("proposalId", proposalIDBytes)
 		}
 	}
 
-	// Check if earliest Active Proposal ended voting period yet
+	var passes bool
 
+	// Check if earliest Active Proposal ended voting period yet
 	for shouldPopActiveProposalQueue(ctx, keeper) {
 		activeProposal := keeper.ActiveProposalQueuePop(ctx)
 
 		if ctx.BlockHeight() >= activeProposal.GetVotingStartBlock()+keeper.GetVotingProcedure(ctx).VotingPeriod {
-			passes, _ := tally(ctx, keeper, activeProposal)
+			passes, nonVotingVals = tally(ctx, keeper, activeProposal)
+			proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(activeProposal.GetProposalID())
 			if passes {
 				keeper.RefundDeposits(ctx, activeProposal.GetProposalID())
 				activeProposal.SetStatus(StatusPassed)
+				tags.AppendTag("action", []byte("proposalPassed"))
+				tags.AppendTag("proposalId", proposalIDBytes)
 			} else {
 				keeper.DeleteDeposits(ctx, activeProposal.GetProposalID())
 				activeProposal.SetStatus(StatusRejected)
+				tags.AppendTag("action", []byte("proposalRejected"))
+				tags.AppendTag("proposalId", proposalIDBytes)
 			}
 
 			keeper.SetProposal(ctx, activeProposal)
 		}
 	}
 
-	return
+	return tags, nonVotingVals
 }
 
 func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, nonVoting []sdk.Address) {
 
 	results := make(map[string]sdk.Rat)
-	results["Yes"] = sdk.ZeroRat()
-	results["Abstain"] = sdk.ZeroRat()
-	results["No"] = sdk.ZeroRat()
-	results["NoWithVeto"] = sdk.ZeroRat()
+	results[OptionYes] = sdk.ZeroRat()
+	results[OptionAbstain] = sdk.ZeroRat()
+	results[OptionNo] = sdk.ZeroRat()
+	results[OptionNoWithVeto] = sdk.ZeroRat()
 
 	pool := keeper.sk.GetPool(ctx)
 
@@ -102,13 +112,19 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, nonV
 
 	tallyingProcedure := keeper.GetTallyingProcedure(ctx)
 
-	if totalVotingPower.Sub(results["Abstain"]).Equal(sdk.ZeroRat()) {
+	// If no one votes, proposal fails
+	if totalVotingPower.Sub(results[OptionAbstain]).Equal(sdk.ZeroRat()) {
 		return false, nonVoting
-	} else if results["NoWithVeto"].Quo(totalVotingPower).GT(tallyingProcedure.Veto) {
+	}
+	// If more than 1/3 of voters veto, proposal fails
+	if results[OptionNoWithVeto].Quo(totalVotingPower).GT(tallyingProcedure.Veto) {
 		return false, nonVoting
-	} else if results["Yes"].Quo(totalVotingPower.Sub(results["Abstain"])).GT(tallyingProcedure.Threshold) {
+	}
+	// If more than 1/2 of non-abstaining voters vote Yes, proposal passes
+	if results[OptionYes].Quo(totalVotingPower.Sub(results[OptionAbstain])).GT(tallyingProcedure.Threshold) {
 		return true, nonVoting
 	}
+	// If more than 1/2 of non-abstaining voters vote No, proposal fails
 	return false, nonVoting
 }
 

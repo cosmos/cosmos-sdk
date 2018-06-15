@@ -46,9 +46,9 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
-	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
+	err := keeper.AddVote(ctx, proposalID, addrs[0], OptionYes)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[1], "Yes")
+	err = keeper.AddVote(ctx, proposalID, addrs[1], OptionYes)
 	assert.Nil(t, err)
 
 	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
@@ -71,9 +71,9 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
-	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
+	err := keeper.AddVote(ctx, proposalID, addrs[0], OptionYes)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[1], "No")
+	err = keeper.AddVote(ctx, proposalID, addrs[1], OptionNo)
 	assert.Nil(t, err)
 
 	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
@@ -98,11 +98,11 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
-	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
+	err := keeper.AddVote(ctx, proposalID, addrs[0], OptionYes)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[1], "Yes")
+	err = keeper.AddVote(ctx, proposalID, addrs[1], OptionYes)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[2], "No")
+	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNo)
 	assert.Nil(t, err)
 
 	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
@@ -127,11 +127,11 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
-	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
+	err := keeper.AddVote(ctx, proposalID, addrs[0], OptionYes)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[1], "Yes")
+	err = keeper.AddVote(ctx, proposalID, addrs[1], OptionYes)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[2], "NoWithVeto")
+	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNoWithVeto)
 	assert.Nil(t, err)
 
 	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
@@ -156,11 +156,11 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
-	err := keeper.AddVote(ctx, proposalID, addrs[0], "Abstain")
+	err := keeper.AddVote(ctx, proposalID, addrs[0], OptionAbstain)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[1], "No")
+	err = keeper.AddVote(ctx, proposalID, addrs[1], OptionNo)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[2], "Yes")
+	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionYes)
 	assert.Nil(t, err)
 
 	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
@@ -185,11 +185,11 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
-	err := keeper.AddVote(ctx, proposalID, addrs[0], "Abstain")
+	err := keeper.AddVote(ctx, proposalID, addrs[0], OptionAbstain)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[1], "Yes")
+	err = keeper.AddVote(ctx, proposalID, addrs[1], OptionYes)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[2], "No")
+	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNo)
 	assert.Nil(t, err)
 
 	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
@@ -214,9 +214,9 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
-	err := keeper.AddVote(ctx, proposalID, addrs[1], "Yes")
+	err := keeper.AddVote(ctx, proposalID, addrs[1], OptionYes)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[2], "No")
+	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNo)
 	assert.Nil(t, err)
 
 	passes, nonVoting := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
@@ -247,13 +247,13 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
-	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
+	err := keeper.AddVote(ctx, proposalID, addrs[0], OptionYes)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[1], "Yes")
+	err = keeper.AddVote(ctx, proposalID, addrs[1], OptionYes)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[2], "Yes")
+	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionYes)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[3], "No")
+	err = keeper.AddVote(ctx, proposalID, addrs[3], OptionNo)
 	assert.Nil(t, err)
 
 	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
@@ -282,11 +282,11 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
-	err := keeper.AddVote(ctx, proposalID, addrs[0], "No")
+	err := keeper.AddVote(ctx, proposalID, addrs[0], OptionNo)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[1], "No")
+	err = keeper.AddVote(ctx, proposalID, addrs[1], OptionNo)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[2], "Yes")
+	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionYes)
 	assert.Nil(t, err)
 
 	passes, nonVoting := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
@@ -317,13 +317,13 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
-	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
+	err := keeper.AddVote(ctx, proposalID, addrs[0], OptionYes)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[1], "Yes")
+	err = keeper.AddVote(ctx, proposalID, addrs[1], OptionYes)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[2], "Yes")
+	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionYes)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[3], "No")
+	err = keeper.AddVote(ctx, proposalID, addrs[3], OptionNo)
 	assert.Nil(t, err)
 
 	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
@@ -353,11 +353,11 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
-	err := keeper.AddVote(ctx, proposalID, addrs[0], "Yes")
+	err := keeper.AddVote(ctx, proposalID, addrs[0], OptionYes)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[1], "No")
+	err = keeper.AddVote(ctx, proposalID, addrs[1], OptionNo)
 	assert.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, addrs[2], "No")
+	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNo)
 	assert.Nil(t, err)
 
 	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))

@@ -35,13 +35,13 @@ func (msg MsgSubmitProposal) Type() string { return MsgType }
 // Implements Msg.
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 	if len(msg.Title) == 0 {
-		return ErrInvalidTitle(msg.Title) // TODO: Proper Error
+		return ErrInvalidTitle(DefaultCodespace, msg.Title) // TODO: Proper Error
 	}
 	if len(msg.Description) == 0 {
-		return ErrInvalidDescription(msg.Description) // TODO: Proper Error
+		return ErrInvalidDescription(DefaultCodespace, msg.Description) // TODO: Proper Error
 	}
 	if !validProposalType(msg.ProposalType) {
-		return ErrInvalidProposalType(msg.ProposalType)
+		return ErrInvalidProposalType(DefaultCodespace, msg.ProposalType)
 	}
 	if len(msg.Proposer) == 0 {
 		return sdk.ErrInvalidAddress(msg.Proposer.String())
@@ -121,7 +121,7 @@ func (msg MsgDeposit) ValidateBasic() sdk.Error {
 		return sdk.ErrInvalidCoins(msg.Amount.String())
 	}
 	if msg.ProposalID < 0 {
-		return ErrUnknownProposal(msg.ProposalID)
+		return ErrUnknownProposal(DefaultCodespace, msg.ProposalID)
 	}
 	return nil
 }
@@ -182,10 +182,10 @@ func (msg MsgVote) ValidateBasic() sdk.Error {
 		return sdk.ErrInvalidAddress(msg.Voter.String())
 	}
 	if msg.ProposalID < 0 {
-		return ErrUnknownProposal(msg.ProposalID)
+		return ErrUnknownProposal(DefaultCodespace, msg.ProposalID)
 	}
-	if (msg.Option != "Yes") && (msg.Option != "No") && (msg.Option != "NoWithVeto") && (msg.Option != "Abstain") {
-		return ErrInvalidVote(msg.Option)
+	if (msg.Option != OptionYes) && (msg.Option != OptionAbstain) && (msg.Option != OptionNo) && (msg.Option != OptionNoWithVeto) {
+		return ErrInvalidVote(DefaultCodespace, msg.Option)
 	}
 	return nil
 }

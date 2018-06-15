@@ -1,7 +1,7 @@
 PACKAGES=$(shell go list ./... | grep -v '/vendor/')
 PACKAGES_NOCLITEST=$(shell go list ./... | grep -v '/vendor/' | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test)
 COMMIT_HASH := $(shell git rev-parse --short HEAD)
-BUILD_FLAGS = -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
+BUILD_FLAGS = -tags netgo -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
 
 all: check_tools get_vendor_deps install install_examples test_lint test
 

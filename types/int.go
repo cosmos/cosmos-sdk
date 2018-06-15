@@ -89,6 +89,7 @@ func NewIntFromString(s string) (res Int, ok bool) {
 	}
 	// Check overflow
 	if i.BitLen() > 255 {
+		ok = false
 		return
 	}
 	return Int{*i}, true
@@ -269,6 +270,7 @@ func NewUintFromString(s string) (res Uint, ok bool) {
 	}
 	// Check overflow
 	if i.Sign() == -1 || i.Sign() == 1 && i.BitLen() > 256 {
+		ok = false
 		return
 	}
 	return Uint{*i}, true

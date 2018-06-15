@@ -15,11 +15,8 @@ func TestNewSubmitProposalMsg(t *testing.T) {
 	addr2 := sdk.Address([]byte{7, 8})
 	someCoins := sdk.Coins{{"atom", 123}}
 	multiCoins := sdk.Coins{{"atom", 123}, {"eth", 20}}
-	var votingWindow1 int64 = 15
 
 	emptyAddr := sdk.Address{}
-	var zeroVotingWindow int64 = 0
-	var negVotingWindow int64 = -20
 	emptyCoins := sdk.Coins{}
 	emptyCoins2 := sdk.Coins{sdk.Coin{"eth", 0}}
 	someEmptyCoins := sdk.Coins{{"eth", 10}, {"atom", 0}}
@@ -30,20 +27,18 @@ func TestNewSubmitProposalMsg(t *testing.T) {
 		valid bool
 		spMsg SubmitProposalMsg
 	}{
-		{true, NewSubmitProposalMsg(goodTitle, goodDescription, votingWindow1, someCoins, addr1)},
-		{true, NewSubmitProposalMsg(goodTitle, goodDescription, votingWindow1, multiCoins, addr2)},
+		{true, NewSubmitProposalMsg(goodTitle, goodDescription, someCoins, addr1)},
+		{true, NewSubmitProposalMsg(goodTitle, goodDescription, multiCoins, addr2)},
 
-		{false, NewSubmitProposalMsg(emptyStr, goodDescription, votingWindow1, multiCoins, addr1)},             // empty title
-		{false, NewSubmitProposalMsg(goodTitle, emptyStr, votingWindow1, multiCoins, addr2)},                   // empty description
-		{false, NewSubmitProposalMsg(emptyStr, emptyStr, votingWindow1, someCoins, addr2)},                     // invalid title and description
-		{false, NewSubmitProposalMsg(goodTitle, goodDescription, votingWindow1, emptyCoins, addr1)},            // empty coins
-		{false, NewSubmitProposalMsg(goodTitle, goodDescription, votingWindow1, emptyCoins2, addr1)},           // zero balance coins
-		{false, NewSubmitProposalMsg(goodTitle, goodDescription, votingWindow1, someEmptyCoins, addr1)},        // zero balance coin
-		{false, NewSubmitProposalMsg(goodTitle, goodDescription, negVotingWindow, emptyCoins2, addr1)},         // negative votingWindow
-		{false, NewSubmitProposalMsg(goodTitle, goodDescription, zeroVotingWindow, someMinusCoins, emptyAddr)}, // zero VotingWindow
-		{false, NewSubmitProposalMsg(goodTitle, goodDescription, votingWindow1, minusCoins, emptyAddr)},        // negative coin
-		{false, NewSubmitProposalMsg(goodTitle, goodDescription, votingWindow1, someMinusCoins, emptyAddr)},    // negative coins
-		{false, NewSubmitProposalMsg(emptyStr, emptyStr, zeroVotingWindow, someEmptyCoins, emptyAddr)},         // empty everything
+		{false, NewSubmitProposalMsg(emptyStr, goodDescription, multiCoins, addr1)},          // empty title
+		{false, NewSubmitProposalMsg(goodTitle, emptyStr, multiCoins, addr2)},                // empty description
+		{false, NewSubmitProposalMsg(emptyStr, emptyStr, someCoins, addr2)},                  // invalid title and description
+		{false, NewSubmitProposalMsg(goodTitle, goodDescription, emptyCoins, addr1)},         // empty coins
+		{false, NewSubmitProposalMsg(goodTitle, goodDescription, emptyCoins2, addr1)},        // zero balance coins
+		{false, NewSubmitProposalMsg(goodTitle, goodDescription, someEmptyCoins, addr1)},     // zero balance coin
+		{false, NewSubmitProposalMsg(goodTitle, goodDescription, minusCoins, emptyAddr)},     // negative coin
+		{false, NewSubmitProposalMsg(goodTitle, goodDescription, someMinusCoins, emptyAddr)}, // negative coins
+		{false, NewSubmitProposalMsg(emptyStr, emptyStr, someEmptyCoins, emptyAddr)},         // empty everything
 	}
 
 	for i, msg := range cases {
@@ -121,7 +116,7 @@ func TestUpdateTally(t *testing.T) {
 	someCoins := sdk.Coins{{"atom", 123}}
 	var votingWindow1 int64 = 15
 
-	proposal := NewProposal(goodTitle, goodDescription, addr1, 10, votingWindow1, someCoins)
+	proposal := NewProposal(goodTitle, goodDescription, addr1, 10, someCoins)
 	proposalPtr := &proposal
 	assert.Equal(t, int64(0), proposalPtr.YesVotes)
 	assert.Equal(t, int64(0), proposalPtr.NoVotes)

@@ -3,27 +3,24 @@ package simpleGovernance
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Proposal defines the basic propierties of a staking proposal
 type Proposal struct {
-	Title       string      `json:"title"`
-	Description string      `json:"description"`
-	Submitter   sdk.Address `json:"submitter"`
-	SubmitBlock int64       `json:"submit_block"`
-	BlockLimit  int64       `json:"block_limit"`
-	State       string      `json:"state"`
-	Deposit     sdk.Coins   `json:"deposit"`
+	Title       string      `json:"title"`        // Title of the proposal
+	Description string      `json:"description"`  // Description of the proposal
+	Submitter   sdk.Address `json:"submitter"`    // Account address of the proposer
+	SubmitBlock int64       `json:"submit_block"` // Block height from which the proposal is open for votations
+	State       string      `json:"state"`        // One of Open, Accepted, Rejected
+	Deposit     sdk.Coins   `json:"deposit"`      // Coins deposited in escrow
 
-	YesVotes     int64 `json:"yes_votes"`
-	NoVotes      int64 `json:"no_votes"`
-	AbstainVotes int64 `json:"abstain_votes"`
+	YesVotes     int64 `json:"yes_votes"`     // Total Yes votes
+	NoVotes      int64 `json:"no_votes"`      // Total No votes
+	AbstainVotes int64 `json:"abstain_votes"` // Total Abstain votes
 }
-
-// NewProposal validates deposit and creates a new proposal with default block
-// limit equal to 1209600
 
 // NewProposal validates deposit and creates a new proposal
 func NewProposal(
@@ -31,14 +28,12 @@ func NewProposal(
 	description string,
 	submitter sdk.Address,
 	blockHeight int64,
-	votingWindow int64, // defines a window of time measured in blocks to vote
 	deposit sdk.Coins) Proposal {
 	return Proposal{
 		Title:        title,
 		Description:  description,
 		Submitter:    submitter,
 		SubmitBlock:  blockHeight,
-		BlockLimit:   int64(votingWindow),
 		State:        "Open",
 		Deposit:      deposit,
 		YesVotes:     0,
@@ -87,21 +82,19 @@ func (pq ProposalQueue) isEmpty() bool {
 
 //SubmitProposalMsg defines a
 type SubmitProposalMsg struct {
-	Title        string
-	Description  string
-	VotingWindow int64
-	Deposit      sdk.Coins
-	Submitter    sdk.Address
+	Title       string
+	Description string
+	Deposit     sdk.Coins
+	Submitter   sdk.Address
 }
 
 // NewSubmitProposalMsg submits a message with a new proposal
 func NewSubmitProposalMsg(title string, description string, votingWindow int64, deposit sdk.Coins, submitter sdk.Address) SubmitProposalMsg {
 	return SubmitProposalMsg{
-		Title:        title,
-		Description:  description,
-		VotingWindow: votingWindow,
-		Deposit:      deposit,
-		Submitter:    submitter,
+		Title:       title,
+		Description: description,
+		Deposit:     deposit,
+		Submitter:   submitter,
 	}
 }
 
@@ -134,16 +127,12 @@ func (msg SubmitProposalMsg) ValidateBasic() sdk.Error {
 	if len(msg.Submitter) == 0 {
 		return sdk.ErrInvalidAddress("Invalid address: " + msg.Submitter.String())
 	}
-	if len(msg.Title) <= 0 {
+	if len(strings.TrimSpace(msg.Title)) <= 0 {
 		return ErrInvalidTitle()
 	}
 
-	if len(msg.Description) <= 0 {
+	if len(strings.TrimSpace(msg.Description)) <= 0 {
 		return ErrInvalidDescription()
-	}
-
-	if msg.VotingWindow <= 0 {
-		return ErrInvalidVotingWindow("")
 	}
 
 	if !msg.Deposit.IsValid() {
@@ -229,6 +218,9 @@ func (msg VoteMsg) ValidateBasic() sdk.Error {
 	}
 	if !isValidOption(msg.Option) {
 		return ErrInvalidOption("Invalid voting option: " + msg.Option)
+	}
+	if len(strings.TrimSpace(msg.Option)) <= 0 {
+		return ErrInvalidOption("Option can't be blank")
 	}
 
 	return nil

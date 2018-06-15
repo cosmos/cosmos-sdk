@@ -20,7 +20,7 @@ const (
 	CodeInvalidDescription    CodeType = 706
 	CodeInvalidVotingWindow   CodeType = 707
 	CodeProposalNotFound      CodeType = 708
-	CodeOptionNotFound        CodeType = 709
+	CodeVoteNotFound          CodeType = 709
 	CodeProposalQueueNotFound CodeType = 710
 	CodeInvalidDeposit        CodeType = 711
 )
@@ -44,7 +44,7 @@ func codeToDefaultMsg(code CodeType) string {
 		return "Invalid voting window"
 	case CodeProposalNotFound:
 		return "Proposal not found"
-	case CodeOptionNotFound:
+	case CodeVoteNotFound:
 		return "Option not found"
 	case CodeProposalQueueNotFound:
 		return "Proposal Queue not found"
@@ -101,8 +101,8 @@ func ErrProposalNotFound(proposalID int64) sdk.Error {
 }
 
 // nolint
-func ErrOptionNotFound() sdk.Error {
-	return newError(DefaultCodespace, CodeOptionNotFound, "Option not found")
+func ErrVoteNotFound() sdk.Error {
+	return newError(DefaultCodespace, CodeVoteNotFound, "Vote not found")
 }
 
 // nolint

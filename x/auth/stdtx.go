@@ -18,7 +18,7 @@ type StdTx struct {
 	Memo       string         `json:"memo"`
 }
 
-func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature), memo string StdTx {
+func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdTx {
 	return StdTx{
 		Msgs:        msgs,
 		Fee:        fee,
@@ -36,7 +36,17 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 // in the order they appear in tx.GetMsgs().
 // Duplicate addresses will be ommitted.
 func (tx StdTx) GetSigners() []sdk.Address {
-	return getSigners(tx.GetMsgs())
+	seen := map[string]bool{}
+	var signers []sdk.Address
+	for _, msg := range tx.GetMsgs() {
+		for _, addr := range msg.GetSigners() {
+			if !seen[addr.String()] {
+				signers = append(signers, addr)
+				seen[addr.String()] = true
+			}
+		}
+	}
+	return signers
 }
 
 //nolint
@@ -90,22 +100,6 @@ func (fee StdFee) Bytes() []byte {
 		panic(err)
 	}
 	return bz
-}
-
-
-// Helper function used in multiple contexts
-func getSigners(msgs []sdk.Msg) []sdk.Address {
-	seen := map[string]bool{}
-	var signers []sdk.Address
-	for _, msg := range msgs {
-		for _, addr := range msg.GetSigners() {
-			if !seen[addr.String()] {
-				signers = append(signers, addr)
-				seen[addr.String()] = true
-			}
-		}
-	}
-	return signers
 }
 
 //__________________________________________________________

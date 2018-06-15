@@ -38,7 +38,6 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 				true
 		}
 
-<<<<<<< HEAD
 		memo := tx.GetMemo()
 
 		if len(memo) > maxMemoCharacters {
@@ -53,10 +52,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		// charge gas for the memo
 		ctx.GasMeter().ConsumeGas(memoCostPerByte*sdk.Gas(len(memo)), "memo")
 
-		msg := tx.GetMsg()
-=======
 		msgs := tx.GetMsgs()
->>>>>>> Started work on multiple msgs, types and x/auth tests pass
 
 		// Assert that number of signatures is correct.
 		var signerAddrs = stdTx.GetSigners()
@@ -81,12 +77,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		// into the app right away (#565)
 		if chainID == "" {
 			chainID = viper.GetString("chain-id")
-<<<<<<< HEAD
-		}
-		signBytes := StdSignBytes(ctx.ChainID(), accNums, sequences, fee, msg, memo)
-=======
 		} 
->>>>>>> Started work on multiple msgs, types and x/auth tests pass
 
 		// Check sig and nonce and collect signer accounts.
 		var signerAccs = make([]Account, len(signerAddrs))
@@ -94,7 +85,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			signerAddr, sig := signerAddrs[i], sigs[i]
 
 			// check signature, return account with incremented nonce
-			signBytes := StdSignBytes(ctx.ChainID(), accNums[i], sequences[i], fee, msgs)
+			signBytes := StdSignBytes(ctx.ChainID(), accNums[i], sequences[i], fee, msgs, tx.GetMemo())
 			signerAcc, res := processSig(
 				ctx, am,
 				signerAddr, sig, signBytes,

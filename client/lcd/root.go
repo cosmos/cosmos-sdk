@@ -17,7 +17,6 @@ import (
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	tx "github.com/cosmos/cosmos-sdk/client/tx"
-	version "github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/wire"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
@@ -63,7 +62,6 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 
 func createHandler(cdc *wire.Codec) http.Handler {
 	r := mux.NewRouter()
-	r.HandleFunc("/version", version.RequestHandler).Methods("GET")
 
 	kb, err := keys.GetKeyBase() //XXX
 	if err != nil {
@@ -73,6 +71,8 @@ func createHandler(cdc *wire.Codec) http.Handler {
 	ctx := context.NewCoreContextFromViper()
 
 	// TODO make more functional? aka r = keys.RegisterRoutes(r)
+	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
+	r.HandleFunc("/node_version", NodeVersionRequestHandler(cdc, ctx)).Methods("GET")
 	keys.RegisterRoutes(r)
 	rpc.RegisterRoutes(ctx, r)
 	tx.RegisterRoutes(ctx, r, cdc)

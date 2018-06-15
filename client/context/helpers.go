@@ -3,6 +3,8 @@ package context
 import (
 	"fmt"
 
+	"github.com/tendermint/tmlibs/common"
+
 	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -42,14 +44,19 @@ func (ctx CoreContext) BroadcastTx(tx []byte) (*ctypes.ResultBroadcastTxCommit, 
 	return res, err
 }
 
-// Query from Tendermint with the provided key and storename
-func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, err error) {
-	return ctx.query(key, storeName, "key")
+// Query information about the connected node
+func (ctx CoreContext) Query(path string) (res []byte, err error) {
+	return ctx.query(path, nil)
+}
+
+// QueryStore from Tendermint with the provided key and storename
+func (ctx CoreContext) QueryStore(key cmn.HexBytes, storeName string) (res []byte, err error) {
+	return ctx.queryStore(key, storeName, "key")
 }
 
 // Query from Tendermint with the provided storename and subspace
 func (ctx CoreContext) QuerySubspace(cdc *wire.Codec, subspace []byte, storeName string) (res []sdk.KVPair, err error) {
-	resRaw, err := ctx.query(subspace, storeName, "subspace")
+	resRaw, err := ctx.queryStore(subspace, storeName, "subspace")
 	if err != nil {
 		return res, err
 	}
@@ -58,8 +65,7 @@ func (ctx CoreContext) QuerySubspace(cdc *wire.Codec, subspace []byte, storeName
 }
 
 // Query from Tendermint with the provided storename and path
-func (ctx CoreContext) query(key cmn.HexBytes, storeName, endPath string) (res []byte, err error) {
-	path := fmt.Sprintf("/store/%s/%s", storeName, endPath)
+func (ctx CoreContext) query(path string, key common.HexBytes) (res []byte, err error) {
 	node, err := ctx.GetNode()
 	if err != nil {
 		return res, err
@@ -78,6 +84,12 @@ func (ctx CoreContext) query(key cmn.HexBytes, storeName, endPath string) (res [
 		return res, errors.Errorf("query failed: (%d) %s", resp.Code, resp.Log)
 	}
 	return resp.Value, nil
+}
+
+// Query from Tendermint with the provided storename and path
+func (ctx CoreContext) queryStore(key cmn.HexBytes, storeName, endPath string) (res []byte, err error) {
+	path := fmt.Sprintf("/store/%s/%s", storeName, endPath)
+	return ctx.query(path, key)
 }
 
 // Get the from address from the name flag
@@ -177,7 +189,7 @@ func (ctx CoreContext) GetAccountNumber(address []byte) (int64, error) {
 		return 0, errors.New("accountDecoder required but not provided")
 	}
 
-	res, err := ctx.Query(auth.AddressStoreKey(address), ctx.AccountStore)
+	res, err := ctx.QueryStore(auth.AddressStoreKey(address), ctx.AccountStore)
 	if err != nil {
 		return 0, err
 	}
@@ -201,7 +213,7 @@ func (ctx CoreContext) NextSequence(address []byte) (int64, error) {
 		return 0, errors.New("accountDecoder required but not provided")
 	}
 
-	res, err := ctx.Query(auth.AddressStoreKey(address), ctx.AccountStore)
+	res, err := ctx.QueryStore(auth.AddressStoreKey(address), ctx.AccountStore)
 	if err != nil {
 		return 0, err
 	}

@@ -1,67 +1,61 @@
 
 ### Transaction Overview
 
-Available Transactions: 
-* TxDeclareCandidacy
-* TxEditCandidacy 
-* TxDelegate
-* TxUnbond 
-* TxRedelegate
-* TxProveLive
+In this section we describe the processing of the transactions and the
+corresponding updates to the state. Transactions: 
+ - TxCreateValidator
+ - TxEditValidator
+ - TxDelegation
+ - TxStartUnbonding
+ - TxCompleteUnbonding
+ - TxRedelegate
+ - TxCompleteRedelegation
 
-## Transaction processing
+Other important state changes:
+ - Update Validators
 
-In this section we describe the processing of the transactions and the 
-corresponding updates to the global state. In the following text we will use 
-`gs` to refer to the `GlobalState` data structure, `unbondDelegationQueue` is a
-reference to the queue of unbond delegations, `reDelegationQueue` is the 
-reference for the queue of redelegations. We use `tx` to denote a 
-reference to a transaction that is being processed, and `sender` to denote the 
-address of the sender of the transaction. We use function 
-`loadCandidate(store, PubKey)` to obtain a Candidate structure from the store, 
-and `saveCandidate(store, candidate)` to save it. Similarly, we use 
-`loadDelegatorBond(store, sender, PubKey)` to load a delegator bond with the 
-key (sender and PubKey) from the store, and 
-`saveDelegatorBond(store, sender, bond)` to save it. 
-`removeDelegatorBond(store, sender, bond)` is used to remove the bond from the 
-store.
+Other notes:
+ - `tx` denotes a reference to the transaction being processed
+ - `sender` denotes the address of the sender of the transaction
+ - `getXxx`, `setXxx`, and `removeXxx` functions are used to retrieve and
+    modify objects from the store
+ - `sdk.Rat` refers to a rational numeric type specified by the SDK.
  
-### TxDeclareCandidacy
+### TxCreateValidator
 
-A validator candidacy is declared using the `TxDeclareCandidacy` transaction.
+A validator is created using the `TxCreateValidator` transaction.
 
 ```golang
-type TxDeclareCandidacy struct {
+type TxCreateValidator struct {
+	OwnerAddr           sdk.Address
     ConsensusPubKey     crypto.PubKey
-    Amount              coin.Coin       
     GovernancePubKey    crypto.PubKey
-    Commission          rational.Rat
-    CommissionMax       int64 
-    CommissionMaxChange int64 
+    SelfDelegation      coin.Coin       
+
     Description         Description
+    Commission          sdk.Rat
+    CommissionMax       sdk.Rat 
+    CommissionMaxChange sdk.Rat 
 }
+	
 
-declareCandidacy(tx TxDeclareCandidacy):
-    candidate = loadCandidate(store, tx.PubKey)
-    if candidate != nil return // candidate with that public key already exists 
+createValidator(tx TxCreateValidator):
+    validator = getValidator(tx.OwnerAddr)
+    if validator != nil return // only one validator per address
    	
-    candidate = NewCandidate(tx.PubKey)
-    candidate.Status = Unbonded
-    candidate.Owner = sender
-    init candidate VotingPower, GlobalStakeShares, IssuedDelegatorShares, RedelegatingShares and Adjustment to rational.Zero
-    init commision related fields based on the values from tx
-    candidate.ProposerRewardPool = Coin(0)  
-    candidate.Description = tx.Description
+    validator = NewValidator(OwnerAddr, ConsensusPubKey, GovernancePubKey, Description)
+    init validator poolShares, delegatorShares set to 0
+    init validator commision fields from tx
+    validator.PoolShares = 0
    	
-    saveCandidate(store, candidate)
+    setValidator(validator)
    
-    txDelegate = TxDelegate(tx.PubKey, tx.Amount)
-    return delegateWithCandidate(txDelegate, candidate) 
-
-// see delegateWithCandidate function in [TxDelegate](TxDelegate)
+    txDelegate = TxDelegate(tx.OwnerAddr, tx.OwnerAddr, tx.SelfDelegation) 
+    delegate(txDelegate, validator) // see delegate function in [TxDelegate](TxDelegate)
+    return
 ``` 
 
-### TxEditCandidacy
+### TxEditValidator
 
 If either the `Description` (excluding `DateBonded` which is constant),
 `Commission`, or the `GovernancePubKey` need to be updated, the
@@ -70,214 +64,268 @@ If either the `Description` (excluding `DateBonded` which is constant),
 ```golang
 type TxEditCandidacy struct {
     GovernancePubKey    crypto.PubKey
-    Commission          int64  
+    Commission          sdk.Rat
     Description         Description
 }
  
 editCandidacy(tx TxEditCandidacy):
-    candidate = loadCandidate(store, tx.PubKey)
-    if candidate == nil or candidate.Status == Revoked return 
+    validator = getValidator(tx.ValidatorAddr)
     
-    if tx.GovernancePubKey != nil candidate.GovernancePubKey = tx.GovernancePubKey
-    if tx.Commission >= 0 candidate.Commission = tx.Commission
-    if tx.Description != nil candidate.Description = tx.Description
+    if tx.Commission > CommissionMax ||  tx.Commission < 0 then fail 
+    if rateChange(tx.Commission) > CommissionMaxChange then fail
+    validator.Commission = tx.Commission
+
+    if tx.GovernancePubKey != nil validator.GovernancePubKey = tx.GovernancePubKey
+    if tx.Description != nil validator.Description = tx.Description
     
-    saveCandidate(store, candidate)
+    setValidator(store, validator)
     return
 ```
      	
-### TxDelegate
+### TxDelegation
 
-Delegator bonds are created using the `TxDelegate` transaction. Within this 
-transaction the delegator provides an amount of coins, and in return receives 
-some amount of candidate's delegator shares that are assigned to 
-`DelegatorBond.Shares`. 
+Within this transaction the delegator provides coins, and in return receives
+some amount of their validator's delegator-shares that are assigned to
+`Delegation.Shares`. 
 
 ```golang
 type TxDelegate struct {
-    PubKey crypto.PubKey
-    Amount coin.Coin       
+	DelegatorAddr sdk.Address 
+	ValidatorAddr sdk.Address 
+	Amount        sdk.Coin  
 }
 
 delegate(tx TxDelegate):
-    candidate = loadCandidate(store, tx.PubKey)
-    if candidate == nil return
-	return delegateWithCandidate(tx, candidate)
+    pool = getPool()
+    if validator.Status == Revoked return
 
-delegateWithCandidate(tx TxDelegate, candidate Candidate):
-    if candidate.Status == Revoked return
-
-    if candidate.Status == Bonded 
-	    poolAccount = params.HoldBonded
-    else 
-	    poolAccount = params.HoldUnbonded
+    delegation = getDelegatorBond(DelegatorAddr, ValidatorAddr)
+    if delegation == nil then delegation = NewDelegation(DelegatorAddr, ValidatorAddr)
 	
-    err = transfer(sender, poolAccount, tx.Amount)
-    if err != nil return 
-
-    bond = loadDelegatorBond(store, sender, tx.PubKey)
-    if bond == nil then bond = DelegatorBond(tx.PubKey, rational.Zero, Coin(0), Coin(0))
-	
-    issuedDelegatorShares = addTokens(tx.Amount, candidate)
-    bond.Shares += issuedDelegatorShares
-	
-    saveCandidate(store, candidate)
-    saveDelegatorBond(store, sender, bond)
-    saveGlobalState(store, gs)
-    return 
-
-addTokens(amount coin.Coin, candidate Candidate):
-    if candidate.Status == Bonded 
-	    gs.BondedPool += amount
-	    issuedShares = amount / exchangeRate(gs.BondedShares, gs.BondedPool)
-	    gs.BondedShares += issuedShares
-    else 
-	    gs.UnbondedPool += amount
-	    issuedShares = amount / exchangeRate(gs.UnbondedShares, gs.UnbondedPool)
-	    gs.UnbondedShares += issuedShares
-	
-    candidate.GlobalStakeShares += issuedShares
+    validator, pool, issuedDelegatorShares = validator.addTokensFromDel(tx.Amount, pool)
+    delegation.Shares += issuedDelegatorShares
     
-    if candidate.IssuedDelegatorShares.IsZero() 
-        exRate = rational.One
-    else
-        exRate = candidate.GlobalStakeShares / candidate.IssuedDelegatorShares
-	
-    issuedDelegatorShares = issuedShares / exRate
-    candidate.IssuedDelegatorShares += issuedDelegatorShares
-    return issuedDelegatorShares
-	
-exchangeRate(shares rational.Rat, tokenAmount int64):
-    if shares.IsZero() then return rational.One
-    return tokenAmount / shares
-    	
+    setDelegation(delegation)
+    updateValidator(validator)
+    setPool(pool)
+    return 
 ```
 
-### TxUnbond 
+### TxStartUnbonding
 
 Delegator unbonding is defined with the following transaction:
 
 ```golang
-type TxUnbond struct {
-    PubKey crypto.PubKey
-    Shares rational.Rat 
+type TxStartUnbonding struct {
+	DelegatorAddr sdk.Address 
+	ValidatorAddr sdk.Address 
+	Shares        string      
 }
 
-unbond(tx TxUnbond):    
-    bond = loadDelegatorBond(store, sender, tx.PubKey)
-    if bond == nil return 
-    if bond.Shares < tx.Shares return 
-	
-    bond.Shares -= tx.Shares
-
-    candidate = loadCandidate(store, tx.PubKey)
-	
-    revokeCandidacy = false
-    if bond.Shares.IsZero() 
-	    if sender == candidate.Owner and candidate.Status != Revoked then revokeCandidacy = true then removeDelegatorBond(store, sender, bond)
-    else 
-	    saveDelegatorBond(store, sender, bond)
-
-    if candidate.Status == Bonded 
-        poolAccount = params.HoldBonded
-    else 
-        poolAccount = params.HoldUnbonded
-
-    returnedCoins = removeShares(candidate, shares)
-	
-    unbondDelegationElem = QueueElemUnbondDelegation(tx.PubKey, currentHeight(), sender, returnedCoins, startSlashRatio)
-    unbondDelegationQueue.add(unbondDelegationElem)
-	
-    transfer(poolAccount, unbondingPoolAddress, returnCoins)  
+startUnbonding(tx TxStartUnbonding):    
+    delegation, found = getDelegatorBond(store, sender, tx.PubKey)
+    if !found == nil return 
     
-    if revokeCandidacy 
-	    if candidate.Status == Bonded then bondedToUnbondedPool(candidate)
-	    candidate.Status = Revoked
+		if bond.Shares < tx.Shares
+			return ErrNotEnoughBondShares
 
-    if candidate.IssuedDelegatorShares.IsZero() 
-	    removeCandidate(store, tx.PubKey)
-    else 
-	    saveCandidate(store, candidate)
+	validator, found = GetValidator(tx.ValidatorAddr)
+	if !found {
+		return err 
 
-    saveGlobalState(store, gs)
-    return 
+	bond.Shares -= tx.Shares
 
-removeShares(candidate Candidate, shares rational.Rat):
-    globalPoolSharesToRemove = delegatorShareExRate(candidate) * shares
+	revokeCandidacy = false
+	if bond.Shares.IsZero() {
 
-    if candidate.Status == Bonded 
-	    gs.BondedShares -= globalPoolSharesToRemove
-	    removedTokens = exchangeRate(gs.BondedShares, gs.BondedPool) * globalPoolSharesToRemove
-	    gs.BondedPool -= removedTokens
-    else 
-	    gs.UnbondedShares -= globalPoolSharesToRemove
-	    removedTokens = exchangeRate(gs.UnbondedShares, gs.UnbondedPool) * globalPoolSharesToRemove
-	    gs.UnbondedPool -= removedTokens
-	
-    candidate.GlobalStakeShares -= removedTokens
-    candidate.IssuedDelegatorShares -= shares
-    return returnedCoins
+		if bond.DelegatorAddr == validator.Owner && validator.Revoked == false 
+			revokeCandidacy = true
 
-delegatorShareExRate(candidate Candidate):
-    if candidate.IssuedDelegatorShares.IsZero() then return rational.One
-    return candidate.GlobalStakeShares / candidate.IssuedDelegatorShares
-	
-bondedToUnbondedPool(candidate Candidate):
-    removedTokens = exchangeRate(gs.BondedShares, gs.BondedPool) * candidate.GlobalStakeShares 
-    gs.BondedShares -= candidate.GlobalStakeShares
-    gs.BondedPool -= removedTokens
-	
-    gs.UnbondedPool += removedTokens
-    issuedShares = removedTokens / exchangeRate(gs.UnbondedShares, gs.UnbondedPool)
-    gs.UnbondedShares += issuedShares
-    
-    candidate.GlobalStakeShares = issuedShares
-    candidate.Status = Unbonded
+		removeDelegation( bond)
+	else
+		bond.Height = currentBlockHeight
+		setDelegation(bond)
 
-    return transfer(address of the bonded pool, address of the unbonded pool, removedTokens)
+	pool = GetPool()
+	validator, pool, returnAmount = validator.removeDelShares(pool, tx.Shares)
+	setPool( pool)
+
+    unbondingDelegation = NewUnbondingDelegation(sender, returnAmount, currentHeight/Time, startSlashRatio)
+    setUnbondingDelegation(unbondingDelegation)
+
+	if revokeCandidacy
+		validator.Revoked = true
+
+	validator = updateValidator(validator)
+
+	if validator.DelegatorShares == 0 {
+		removeValidator(validator.Owner)
+
+    return
 ```
 
-### TxRedelegate
+### TxCompleteUnbonding
 
-The re-delegation command allows delegators to switch validators while still
-receiving equal reward to as if they had never unbonded.
+Complete the unbonding and transfer the coins to the delegate. Perform any
+slashing that occured during the unbonding period.
 
 ```golang
-type TxRedelegate struct {
-    PubKeyFrom crypto.PubKey
-    PubKeyTo   crypto.PubKey
-    Shares     rational.Rat 
+type TxUnbondingComplete struct {
+    DelegatorAddr sdk.Address
+    ValidatorAddr sdk.Address
 }
 
-redelegate(tx TxRedelegate):
-    bond = loadDelegatorBond(store, sender, tx.PubKey)
-    if bond == nil then return 
-    
-    if bond.Shares < tx.Shares return 
-    candidate = loadCandidate(store, tx.PubKeyFrom)
-    if candidate == nil return
-    
-    candidate.RedelegatingShares += tx.Shares
-    reDelegationElem = QueueElemReDelegate(tx.PubKeyFrom, currentHeight(), sender, tx.Shares, tx.PubKeyTo)
-    redelegationQueue.add(reDelegationElem)
+redelegationComplete(tx TxRedelegate):
+    unbonding = getUnbondingDelegation(tx.DelegatorAddr, tx.Validator)
+    if unbonding.CompleteTime >= CurrentBlockTime && unbonding.CompleteHeight >= CurrentBlockHeight
+        validator = GetValidator(tx.ValidatorAddr)
+        returnTokens = ExpectedTokens * tx.startSlashRatio/validator.SlashRatio
+	    AddCoins(unbonding.DelegatorAddr, returnTokens)
+        removeUnbondingDelegation(unbonding)
     return     
 ```
 
-### TxProveLive
+### TxRedelegation
 
-If a validator was automatically unbonded due to liveness issues and wishes to
-assert it is still online, it can send `TxProveLive`:
+The redelegation command allows delegators to instantly switch validators. Once
+the unbonding period has passed, the redelegation must be completed with
+txRedelegationComplete.
 
 ```golang
-type TxProveLive struct {
-    PubKey crypto.PubKey
+type TxRedelegate struct {
+    DelegatorAddr Address
+    ValidatorFrom Validator
+    ValidatorTo   Validator
+    Shares        sdk.Rat 
+    CompletedTime int64 
 }
+
+redelegate(tx TxRedelegate):
+
+    pool = getPool()
+    delegation = getDelegatorBond(tx.DelegatorAddr, tx.ValidatorFrom.Owner)
+    if delegation == nil
+        return 
+    
+    if delegation.Shares < tx.Shares 
+        return 
+    delegation.shares -= Tx.Shares
+    validator, pool, createdCoins = validator.RemoveShares(pool, tx.Shares)
+    setPool(pool)
+    
+    redelegation = newRedelegation(tx.DelegatorAddr, tx.validatorFrom, 
+        tx.validatorTo, tx.Shares, createdCoins, tx.CompletedTime)
+    setRedelegation(redelegation)
+    return     
 ```
 
-All delegators in the temporary unbonding pool which have not
-transacted to move will be bonded back to the now-live validator and begin to
-once again collect provisions and rewards. 
+### TxCompleteRedelegation
 
+Note that unlike TxCompleteUnbonding slashing of redelegating shares does not
+take place during completion. Slashing on redelegated shares takes place
+actively as a slashing occurs.
+
+```golang
+type TxRedelegationComplete struct {
+    DelegatorAddr Address
+    ValidatorFrom Validator
+    ValidatorTo   Validator
+}
+
+redelegationComplete(tx TxRedelegate):
+    redelegation = getRedelegation(tx.DelegatorAddr, tx.validatorFrom, tx.validatorTo)
+    if redelegation.CompleteTime >= CurrentBlockTime && redelegation.CompleteHeight >= CurrentBlockHeight
+        removeRedelegation(redelegation)
+    return     
 ```
-TODO: pseudo-code
+
+### Update Validators
+
+Within many transactions the validator set must be updated based on changes in
+power to a single validator. This process also updates the Tendermint-Updates
+store for use in end-block when validators are either added or kicked from the
+Tendermint.
+
+```golang
+updateBondedValidators(newValidator Validator) (updatedVal Validator)
+
+	kickCliffValidator = false
+	oldCliffValidatorAddr = getCliffValidator(ctx)
+
+	// add the actual validator power sorted store
+	maxValidators = GetParams(ctx).MaxValidators
+	iterator = ReverseSubspaceIterator(ValidatorsByPowerKey) // largest to smallest
+	bondedValidatorsCount = 0
+	var validator Validator
+	for {
+		if !iterator.Valid() || bondedValidatorsCount > int(maxValidators-1) {
+
+			if bondedValidatorsCount == int(maxValidators) { // is cliff validator
+				setCliffValidator(ctx, validator, GetPool(ctx))
+			iterator.Close()
+			break
+
+		// either retrieve the original validator from the store,
+		// or under the situation that this is the "new validator" just
+		// use the validator provided because it has not yet been updated
+		// in the main validator store
+
+		ownerAddr = iterator.Value()
+		if bytes.Equal(ownerAddr, newValidator.Owner) {
+			validator = newValidator
+        else
+			validator = getValidator(ownerAddr)
+
+		// if not previously a validator (and unrevoked),
+		// kick the cliff validator / bond this new validator
+		if validator.Status() != Bonded && !validator.Revoked {
+			kickCliffValidator = true
+
+			validator = bondValidator(ctx, store, validator)
+			if bytes.Equal(ownerAddr, newValidator.Owner) {
+				updatedVal = validator
+
+		bondedValidatorsCount++
+		iterator.Next()
+
+	// perform the actual kicks
+	if oldCliffValidatorAddr != nil && kickCliffValidator {
+		validator = getValidator(store, oldCliffValidatorAddr)
+		unbondValidator(ctx, store, validator)
+	return
+
+// perform all the store operations for when a validator status becomes unbonded
+unbondValidator(ctx Context, store KVStore, validator Validator)
+	pool = GetPool(ctx)
+
+	// set the status
+	validator, pool = validator.UpdateStatus(pool, Unbonded)
+	setPool(ctx, pool)
+
+	// save the now unbonded validator record
+	setValidator(validator)
+
+	// add to accumulated changes for tendermint
+	setTendermintUpdates(validator.abciValidatorZero)
+
+	// also remove from the bonded validators index
+	removeValidatorsBonded(validator)
+}
+
+// perform all the store operations for when a validator status becomes bonded
+bondValidator(ctx Context, store KVStore, validator Validator) Validator 
+	pool = GetPool(ctx)
+
+	// set the status
+	validator, pool = validator.UpdateStatus(pool, Bonded)
+	setPool(ctx, pool)
+
+	// save the now bonded validator record to the three referenced stores
+	setValidator(validator)
+	setValidatorsBonded(validator)
+
+	// add to accumulated changes for tendermint
+	setTendermintUpdates(validator.abciValidator)
+
+	return validator
 ```

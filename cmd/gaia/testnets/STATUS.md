@@ -1,5 +1,26 @@
 # TESTNET STATUS
 
+## *June 13, 2018, 17:00 EST* - Gaia-6002 is making blocks!
+
+- Gaia-6002 is live and making blocks
+- Absent validators have been slashed and revoked 
+- Currently live with 17 validators
+
+## *June 13, 2018, 4:30 EST* - New Testnet Gaia-6002
+
+- After fixing bugs from gaia-6001, especially [issue
+  #1197](https://github.com/cosmos/cosmos-sdk/issues/1197), we are announcing a
+  new testnet, Gaia-6002
+- Gaia-6002 has the same genesis file as Gaia-6001, just with the chain-id
+  updated
+- Update from previous testnet [here](https://github.com/cosmos/cosmos-sdk/tree/master/cmd/gaia/testnets#upgrading-from-previous-testnet)
+
+## *June 13, 2018, 4:30 EST* - New Release
+
+- Released gaia
+  [v0.19.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.19.0)
+- Includes various bug-fixes for staking found on Gaia-6001
+
 ## *June 13, 2018, 2:30 EST* - Published Postmortem of Gaia-6001 failure
 
 - A bug in the design of the staking data model caused a sanity check to fail

@@ -14,6 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
@@ -337,6 +338,11 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 				result = err.Result()
 			} else {
 				result = app.Simulate(tx)
+			}
+		case "version":
+			return abci.ResponseQuery{
+				Code:  uint32(sdk.ABCICodeOK),
+				Value: []byte(version.GetVersion()),
 			}
 		default:
 			result = sdk.ErrUnknownRequest(fmt.Sprintf("Unknown query: %s", path)).Result()

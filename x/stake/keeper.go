@@ -294,16 +294,14 @@ func (k Keeper) updateValidator(ctx sdk.Context, validator Validator) Validator 
 	return validator
 }
 
-// XXX TODO build in consideration for revoked
-//
 // Update the validator group and kick out any old validators. In addition this
 // function adds (or doesn't add) a validator which has updated its bonded
 // tokens to the validator group. -> this validator is specified through the
 // updatedValidatorAddr term.
 //
 // The correct subset is retrieved by iterating through an index of the
-// validators sorted by power, stored using the ValidatorsByPowerKey. Simultaniously
-// the current validator records are updated in store with the
+// validators sorted by power, stored using the ValidatorsByPowerKey.
+// Simultaneously the current validator records are updated in store with the
 // ValidatorsBondedKey. This store is used to determine if a validator is a
 // validator without needing to iterate over the subspace as we do in
 // GetValidators.
@@ -331,10 +329,10 @@ func (k Keeper) updateBondedValidators(ctx sdk.Context, store sdk.KVStore,
 			break
 		}
 
-		// either retrieve the original validator from the store,
-		// or under the situation that this is the "new validator" just
-		// use the validator provided because it has not yet been updated
-		// in the main validator store
+		// either retrieve the original validator from the store, or under the
+		// situation that this is the "new validator" just use the validator
+		// provided because it has not yet been updated in the main validator
+		// store
 		ownerAddr := iterator.Value()
 		if bytes.Equal(ownerAddr, newValidator.Owner) {
 			validator = newValidator

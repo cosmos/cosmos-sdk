@@ -2,7 +2,7 @@
 
 ## 0.20.0
 
-*TBD*
+*TBD* 
 
 BREAKING CHANGES
 * Change default ports from 466xx to 266xx
@@ -24,6 +24,8 @@ IMPROVEMENTS
 * [tests] Application module tests now use a mock application
 * [gaiacli] Fix error message when account isn't found when running gaiacli account
 * [lcd] refactored to eliminate use of global variables, and interdependent tests
+* [tests] Added testnet command to gaiad
+* [tests] Added localnet targets to Makefile
 * [x/stake] More stake tests added to test ByPower index
 
 FIXES

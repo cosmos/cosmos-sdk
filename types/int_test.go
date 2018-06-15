@@ -66,6 +66,9 @@ func TestInt(t *testing.T) {
 	assert.NotPanics(t, func() { intmin.Sub(ZeroInt()) })
 	assert.Panics(t, func() { intmax.Add(OneInt()) })
 	assert.Panics(t, func() { intmin.Sub(OneInt()) })
+
+	// Division-by-zero check
+	assert.Panics(t, func() { i1.Div(NewInt(0)) })
 }
 
 func TestUint(t *testing.T) {
@@ -103,4 +106,6 @@ func TestUint(t *testing.T) {
 	assert.Panics(t, func() { uintmax.Add(OneUint()) })
 	assert.Panics(t, func() { uintmin.Sub(OneUint()) })
 
+	// Division-by-zero check
+	assert.Panics(t, func() { i1.Div(uintmin) })
 }

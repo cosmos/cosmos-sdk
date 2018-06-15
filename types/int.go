@@ -378,7 +378,7 @@ func (i Uint) MulRaw(i2 uint64) Uint {
 func (i Uint) Div(i2 Uint) (res Uint) {
 	// Check division-by-zero
 	if i2.Sign() == 0 {
-		return
+		panic("division-by-zero")
 	}
 	return Uint{*div(&(i.i), &(i2.i))}
 }

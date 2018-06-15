@@ -50,6 +50,12 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 
 			// create the message
 			msg := gov.NewMsgSubmitProposal(title, description, proposalType, from, amount)
+
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
@@ -93,6 +99,12 @@ func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 
 			// create the message
 			msg := gov.NewMsgDeposit(depositer, proposalID, amount)
+
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
@@ -130,6 +142,11 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 			// create the message
 			msg := gov.NewMsgVote(voter, proposalID, option)
 
+			err = msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+
 			bechAddr, _ := sdk.Bech32ifyAcc(msg.Voter)
 
 			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]", bechAddr, msg.ProposalID, msg.Option)
@@ -163,8 +180,7 @@ func GetCmdQueryProposal(storeName string, cdc *wire.Codec) *cobra.Command {
 
 			ctx := context.NewCoreContextFromViper()
 
-			key := []byte(fmt.Sprintf("%d", proposalID) + ":proposal")
-			res, err := ctx.Query(key, storeName)
+			res, err := ctx.Query(gov.KeyProposal(proposalID), storeName)
 			if len(res) == 0 || err != nil {
 				return errors.Errorf("proposalID [%d] is not existed", proposalID)
 			}
@@ -200,8 +216,7 @@ func GetCmdQueryVote(storeName string, cdc *wire.Codec) *cobra.Command {
 
 			ctx := context.NewCoreContextFromViper()
 
-			key := []byte(fmt.Sprintf("%d", proposalID) + ":votes:" + fmt.Sprintf("%s", voterAddr))
-			res, err := ctx.Query(key, storeName)
+			res, err := ctx.Query(gov.KeyVote(proposalID, voterAddr), storeName)
 			if len(res) == 0 || err != nil {
 				return errors.Errorf("proposalID [%d] does not exist", proposalID)
 			}

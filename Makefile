@@ -156,7 +156,7 @@ localnet-stop:
 
 TESTNET_NAME?=remotenet
 SERVERS?=4
-BINARY=$(CURDIR)/build/gaiad
+BINARY?=$(CURDIR)/build/gaiad
 remotenet-start:
 	@if [ -z "$(DO_API_TOKEN)" ]; then echo "DO_API_TOKEN environment variable not set." ; false ; fi
 	@if ! [ -f $(HOME)/.ssh/id_rsa.pub ]; then ssh-keygen ; fi
@@ -188,7 +188,7 @@ awsnet-start:
 
 awsnet-stop:
 	cd networks/remote/terraform-aws && terraform destroy -force -var SSH_PUBLIC_FILE="$(HOME)/.ssh/id_rsa.pub" -var SSH_PRIVATE_FILE="$(HOME)/.ssh/id_rsa"
-	rm -rf networks/remote/ansible/keys/
+	rm -rf networks/remote/ansible/keys/ networks/remote/ansible/files/
 
 awsnet-status:
 	cd networks/remote/ansible && ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(TESTNET_NAME)" status.yml

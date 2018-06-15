@@ -37,8 +37,8 @@ resource "aws_security_group" "secgroup" {
   }
 
   ingress {
-    from_port = 46656
-    to_port = 46657
+    from_port = 26656
+    to_port = 26657
     protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }

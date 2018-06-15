@@ -23,6 +23,29 @@ func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb 
 	r.HandleFunc("/gov/votes/{proposalID}/{voterAddress}", queryVoteHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
 }
 
+type postProposalReq struct {
+	BaseReq        baseReq   `json:"base_req"`
+	Title          string    `json:"title"`           //  Title of the proposal
+	Description    string    `json:"description"`     //  Description of the proposal
+	ProposalType   string    `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	Proposer       string    `json:"proposer"`        //  Address of the proposer
+	InitialDeposit sdk.Coins `json:"initial_deposit"` // Coins to add to the proposal's deposit
+}
+
+type depositReq struct {
+	BaseReq    baseReq   `json:"base_req"`
+	ProposalID int64     `json:"proposalID"` // ID of the proposal
+	Depositer  string    `json:"depositer"`  // Address of the depositer
+	Amount     sdk.Coins `json:"amount"`     // Coins to add to the proposal's deposit
+}
+
+type voteReq struct {
+	BaseReq    baseReq `json:"base_req"`
+	Voter      string  `json:"voter"`      //  address of the voter
+	ProposalID int64   `json:"proposalID"` //  proposalID of the proposal
+	Option     string  `json:"option"`     //  option from OptionSet chosen by the voter
+}
+
 func postProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req postProposalReq
@@ -31,7 +54,7 @@ func postProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCon
 			return
 		}
 
-		if !req.Validate(w) {
+		if !req.BaseReq.baseReqValidate(w) {
 			return
 		}
 
@@ -44,6 +67,13 @@ func postProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCon
 
 		// create the message
 		msg := gov.NewMsgSubmitProposal(req.Title, req.Description, req.ProposalType, proposer, req.InitialDeposit)
+		err = msg.ValidateBasic()
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			err2 := errors.Errorf(err.Error())
+			w.Write([]byte(err2.Error()))
+			return
+		}
 
 		// sign
 		signAndBuild(w, ctx, req.BaseReq, msg, cdc)
@@ -58,7 +88,7 @@ func depositHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext)
 			return
 		}
 
-		if !req.Validate(w) {
+		if !req.BaseReq.baseReqValidate(w) {
 			return
 		}
 
@@ -71,6 +101,13 @@ func depositHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext)
 
 		// create the message
 		msg := gov.NewMsgDeposit(depositer, req.ProposalID, req.Amount)
+		err = msg.ValidateBasic()
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			err2 := errors.Errorf(err.Error())
+			w.Write([]byte(err2.Error()))
+			return
+		}
 
 		// sign
 		signAndBuild(w, ctx, req.BaseReq, msg, cdc)
@@ -85,7 +122,7 @@ func voteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) ht
 			return
 		}
 
-		if !req.Validate(w) {
+		if !req.BaseReq.baseReqValidate(w) {
 			return
 		}
 
@@ -98,6 +135,14 @@ func voteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) ht
 
 		// create the message
 		msg := gov.NewMsgVote(voter, req.ProposalID, req.Option)
+		err = msg.ValidateBasic()
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			err2 := errors.Errorf(err.Error())
+			w.Write([]byte(err2.Error()))
+			return
+		}
+
 		// sign
 		signAndBuild(w, ctx, req.BaseReq, msg, cdc)
 	}

@@ -62,6 +62,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, nonV
 
 	totalVotingPower := sdk.ZeroRat()
 	currValidators := make(map[string]validatorGovInfo)
+	// Gets the info on each validator and load the map
 	for _, val := range keeper.sk.GetValidatorsBonded(ctx) {
 		currValidators[string(val.Owner)] = validatorGovInfo{
 			ValidatorInfo: val,
@@ -69,11 +70,14 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, nonV
 		}
 	}
 
+	// iterate over all the votes
 	votesIterator := keeper.GetVotes(ctx, proposal.GetProposalID())
 	for ; votesIterator.Valid(); votesIterator.Next() {
 		vote := &Vote{}
 		keeper.cdc.MustUnmarshalBinary(votesIterator.Value(), vote)
 
+		// if validator, just record it in the map
+		// if delegator tally voting power
 		if val, ok := currValidators[string(vote.Voter)]; ok {
 			val.Vote = vote.Option
 			currValidators[string(vote.Voter)] = val
@@ -95,19 +99,20 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, nonV
 	}
 	votesIterator.Close()
 
+	// Iterate over the validators again to tally their voting power and see who didn't vote
 	nonVoting = []sdk.Address{}
 	for _, val := range currValidators {
 		if len(val.Vote) == 0 {
 			nonVoting = append(nonVoting, val.ValidatorInfo.Owner)
-		} else {
-			validatorPower := val.ValidatorInfo.EquivalentBondedShares(pool)
-			sharesAfterMinus := val.ValidatorInfo.DelegatorShares.Sub(val.Minus)
-			percentAfterMinus := sharesAfterMinus.Quo(val.ValidatorInfo.DelegatorShares)
-			votingPower := validatorPower.Mul(percentAfterMinus)
-
-			results[val.Vote] = results[val.Vote].Add(votingPower)
-			totalVotingPower = totalVotingPower.Add(votingPower)
+			continue
 		}
+		validatorPower := val.ValidatorInfo.EquivalentBondedShares(pool)
+		sharesAfterMinus := val.ValidatorInfo.DelegatorShares.Sub(val.Minus)
+		percentAfterMinus := sharesAfterMinus.Quo(val.ValidatorInfo.DelegatorShares)
+		votingPower := validatorPower.Mul(percentAfterMinus)
+
+		results[val.Vote] = results[val.Vote].Add(votingPower)
+		totalVotingPower = totalVotingPower.Add(votingPower)
 	}
 
 	tallyingProcedure := keeper.GetTallyingProcedure(ctx)

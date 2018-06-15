@@ -128,7 +128,7 @@ func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "vote",
-		Short: "vote for current actived proposal,option:Yes/NO/NoWithVeto/Abstain",
+		Short: "vote for an active proposal, options: Yes/No/NoWithVeto/Abstain",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			voter, err := sdk.GetAccAddressBech32(viper.GetString(flagVoter))

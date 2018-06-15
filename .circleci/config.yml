@@ -16,7 +16,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - v1-pkg-cache
+            - v2-pkg-cache
       - run:
           name: tools
           command: |
@@ -39,11 +39,11 @@ jobs:
             - bin
             - profiles
       - save_cache:
-          key: v1-pkg-cache
+          key: v2-pkg-cache
           paths:
             - /go/pkg
       - save_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+          key: v2-tree-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - /go/src/github.com/cosmos/cosmos-sdk
 
@@ -54,9 +54,9 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - restore_cache:
-          key: v1-pkg-cache
+          key: v2-pkg-cache
       - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+          key: v2-tree-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: Get metalinter
           command: |
@@ -76,9 +76,9 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - restore_cache:
-          key: v1-pkg-cache
+          key: v2-pkg-cache
       - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+          key: v2-tree-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: Test unit
           command: |
@@ -92,9 +92,9 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - restore_cache:
-          key: v1-pkg-cache
+          key: v2-pkg-cache
       - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+          key: v2-tree-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: Test cli
           command: |
@@ -108,9 +108,9 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - restore_cache:
-          key: v1-pkg-cache
+          key: v2-pkg-cache
       - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+          key: v2-tree-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: Run tests
           command: |
@@ -132,7 +132,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+          key: v2-tree-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: gather
           command: |

@@ -25,7 +25,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 
 	proposal := keeper.NewTextProposal(ctx, msg.Title, msg.Description, msg.ProposalType)
 
-	err := keeper.AddDeposit(ctx, proposal.GetProposalID(), msg.Proposer, msg.InitialDeposit)
+	err, votingStarted := keeper.AddDeposit(ctx, proposal.GetProposalID(), msg.Proposer, msg.InitialDeposit)
 	if err != nil {
 		return err.Result()
 	}
@@ -37,6 +37,11 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 		"proposer", []byte(msg.Proposer.String()),
 		"proposalId", proposalIDBytes,
 	)
+
+	if votingStarted {
+		tags.AppendTag("votingPeriodStart", proposalIDBytes)
+	}
+
 	return sdk.Result{
 		Data: proposalIDBytes,
 		Tags: tags,
@@ -45,7 +50,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 
 func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {
 
-	err := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositer, msg.Amount)
+	err, votingStarted := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositer, msg.Amount)
 	if err != nil {
 		return err.Result()
 	}
@@ -58,6 +63,11 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 		"depositer", []byte(msg.Depositer.String()),
 		"proposalId", proposalIDBytes,
 	)
+
+	if votingStarted {
+		tags.AppendTag("votingPeriodStart", proposalIDBytes)
+	}
+
 	return sdk.Result{
 		Tags: tags,
 	}

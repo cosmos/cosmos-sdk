@@ -217,25 +217,28 @@ func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 }
 
 // Gets the vote of a specific voter on a specific proposal
-func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr sdk.Address, depositAmount sdk.Coins) sdk.Error {
+func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr sdk.Address, depositAmount sdk.Coins) (sdk.Error, bool) {
 	proposal := keeper.GetProposal(ctx, proposalID)
 	if proposal == nil {
-		return ErrUnknownProposal(proposalID)
+		return ErrUnknownProposal(proposalID), false
 	}
 
 	if (proposal.GetStatus() != StatusDepositPeriod) && (proposal.GetStatus() != StatusVotingPeriod) {
-		return ErrAlreadyFinishedProposal(proposalID)
+		return ErrAlreadyFinishedProposal(proposalID), false
 	}
 
 	_, _, err := keeper.ck.SubtractCoins(ctx, depositerAddr, depositAmount)
 	if err != nil {
-		return err
+		return err, false
 	}
 
 	proposal.SetTotalDeposit(proposal.GetTotalDeposit().Plus(depositAmount))
 	keeper.SetProposal(ctx, proposal)
+
+	activatedVotingPeriod := false
 	if proposal.GetTotalDeposit().IsGTE(keeper.GetDepositProcedure(ctx).MinDeposit) {
 		keeper.activateVotingPeriod(ctx, proposal)
+		activatedVotingPeriod = true
 	}
 
 	currDeposit, found := keeper.GetDeposit(ctx, proposalID, depositerAddr)
@@ -247,7 +250,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 		keeper.setDeposit(ctx, proposalID, depositerAddr, currDeposit)
 	}
 
-	return nil
+	return nil, activatedVotingPeriod
 }
 
 // Gets the vote of a specific voter on a specific proposal

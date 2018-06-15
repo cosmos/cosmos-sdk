@@ -102,6 +102,7 @@ func voteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) ht
 		signAndBuild(w, ctx, req.BaseReq, msg, cdc)
 	}
 }
+
 func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -109,7 +110,7 @@ func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 
 		if len(strProposalID) == 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			err := errors.Errorf("proposalId required but not specified")
+			err := errors.New("proposalId required but not specified")
 			w.Write([]byte(err.Error()))
 			return
 		}
@@ -141,6 +142,7 @@ func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 		w.Write(output)
 	}
 }
+
 func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -149,7 +151,7 @@ func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx 
 
 		if len(strProposalID) == 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			err := errors.Errorf("proposalId required but not specified")
+			err := errors.New("proposalId required but not specified")
 			w.Write([]byte(err.Error()))
 			return
 		}

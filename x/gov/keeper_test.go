@@ -75,8 +75,9 @@ func TestDeposits(t *testing.T) {
 	assert.Equal(t, keeper.GetProposal(ctx, proposalID).GetVotingStartBlock(), int64(-1))
 	assert.Nil(t, keeper.ActiveProposalQueuePeek(ctx))
 
-	err := keeper.AddDeposit(ctx, proposalID, addrs[0], fourSteak)
+	err, votingStarted := keeper.AddDeposit(ctx, proposalID, addrs[0], fourSteak)
 	assert.Nil(t, err)
+	assert.False(t, votingStarted)
 	deposit, found = keeper.GetDeposit(ctx, proposalID, addrs[0])
 	assert.True(t, found)
 	assert.Equal(t, fourSteak, deposit.Amount)
@@ -84,8 +85,9 @@ func TestDeposits(t *testing.T) {
 	assert.Equal(t, fourSteak, keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
 	assert.Equal(t, addr0Initial.Minus(fourSteak), keeper.ck.GetCoins(ctx, addrs[0]))
 
-	err = keeper.AddDeposit(ctx, proposalID, addrs[0], fiveSteak)
+	err, votingStarted = keeper.AddDeposit(ctx, proposalID, addrs[0], fiveSteak)
 	assert.Nil(t, err)
+	assert.False(t, votingStarted)
 	deposit, found = keeper.GetDeposit(ctx, proposalID, addrs[0])
 	assert.True(t, found)
 	assert.Equal(t, fourSteak.Plus(fiveSteak), deposit.Amount)
@@ -93,8 +95,9 @@ func TestDeposits(t *testing.T) {
 	assert.Equal(t, fourSteak.Plus(fiveSteak), keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
 	assert.Equal(t, addr0Initial.Minus(fourSteak).Minus(fiveSteak), keeper.ck.GetCoins(ctx, addrs[0]))
 
-	err = keeper.AddDeposit(ctx, proposalID, addrs[1], fourSteak)
+	err, votingStarted = keeper.AddDeposit(ctx, proposalID, addrs[1], fourSteak)
 	assert.Nil(t, err)
+	assert.True(t, votingStarted)
 	deposit, found = keeper.GetDeposit(ctx, proposalID, addrs[1])
 	assert.True(t, found)
 	assert.Equal(t, addrs[1], deposit.Depositer)

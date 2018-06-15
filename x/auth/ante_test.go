@@ -348,18 +348,18 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 
 	cases := []struct {
 		chainID string
-		accnum int64
-		seq    int64
+		accnum  int64
+		seq     int64
 		fee     StdFee
-		msgs     []sdk.Msg
+		msgs    []sdk.Msg
 		code    sdk.CodeType
 	}{
-		{chainID2, int64(0), int64(1), fee, msgs, codeUnauth},              // test wrong chain_id
-		{chainID, int64(0), int64(2), fee, msgs, codeUnauth},               // test wrong seqs
-		{chainID, int64(1), int64(1), fee, msgs, codeUnauth},               // test wrong accnum
+		{chainID2, int64(0), int64(1), fee, msgs, codeUnauth},                        // test wrong chain_id
+		{chainID, int64(0), int64(2), fee, msgs, codeUnauth},                         // test wrong seqs
+		{chainID, int64(1), int64(1), fee, msgs, codeUnauth},                         // test wrong accnum
 		{chainID, int64(0), int64(1), fee, []sdk.Msg{newTestMsg(addr2)}, codeUnauth}, // test wrong msg
-		{chainID, int64(0), int64(1), fee2, msgs, codeUnauth},              // test wrong fee
-		{chainID, int64(0), int64(1), fee3, msgs, codeUnauth},              // test wrong fee
+		{chainID, int64(0), int64(1), fee2, msgs, codeUnauth},                        // test wrong fee
+		{chainID, int64(0), int64(1), fee3, msgs, codeUnauth},                        // test wrong fee
 	}
 
 	privs, seqs = []crypto.PrivKey{priv1}, []int64{1}

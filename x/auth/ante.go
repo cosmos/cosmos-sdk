@@ -61,7 +61,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		// into the app right away (#565)
 		if chainID == "" {
 			chainID = viper.GetString("chain-id")
-		} 
+		}
 
 		// Check sig and nonce and collect signer accounts.
 		var signerAccs = make([]Account, len(signerAddrs))

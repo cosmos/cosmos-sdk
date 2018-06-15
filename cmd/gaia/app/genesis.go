@@ -108,7 +108,7 @@ func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
 		return
 	}
 	cliPrint = json.RawMessage(bz)
-	appGenTx,_,validator,err = GaiaAppGenTxNF(cdc, pk, addr, name, overwrite)
+	appGenTx, _, validator, err = GaiaAppGenTxNF(cdc, pk, addr, name, overwrite)
 	return
 }
 

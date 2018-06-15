@@ -105,12 +105,11 @@ type KVStore interface {
 
 	// Iterator over a domain of keys in ascending order. End is exclusive.
 	// Start must be less than end, or the Iterator is invalid.
-	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+	// To iterate over entire domain -> store.Iterator(nil, nil)
 	Iterator(start, end []byte) Iterator
 
 	// Iterator over a domain of keys in descending order. End is exclusive.
 	// Start must be greater than end, or the Iterator is invalid.
-	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	ReverseIterator(start, end []byte) Iterator
 
 	// TODO Not yet implemented.

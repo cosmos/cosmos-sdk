@@ -2,11 +2,14 @@
 
 ## 0.20.0
 
-*TBD* 
+*TBD*
 
 BREAKING CHANGES
 * Change default ports from 466xx to 266xx
 * AltBytes renamed to Memo, now a string, max 100 characters
+
+FIXES
+* \#1259 - fix bug where certain tests that could have a nil pointer in defer
 
 ## 0.19.0
 
@@ -43,7 +46,7 @@ FEATURES
 * [docs] Reorganize documentation
 * [docs] Update staking spec, create WIP spec for slashing, and fees
 
-## 0.18.0 
+## 0.18.0
 
 *June 9, 2018*
 

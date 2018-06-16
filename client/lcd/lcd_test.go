@@ -481,7 +481,7 @@ func TestVote(t *testing.T) {
 
 	// query proposal
 	proposal = getProposal(t, port, proposalID)
-	assert.Equal(t, gov.StatusVotingPeriod, proposal.GetStatus())
+	assert.Equal(t, byte(gov.StatusVotingPeriod), proposal.GetStatus())
 
 	// create SubmitProposal TX
 	resultTx = doVote(t, port, seed, name, password, addr, proposalID)

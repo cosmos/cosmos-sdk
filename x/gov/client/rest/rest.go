@@ -14,13 +14,20 @@ import (
 	"github.com/tendermint/go-crypto/keys"
 )
 
+// REST Variable names
+// nolint
+const (
+	RestProposalID = "proposalID"
+	RestVoter      = "voterAddress"
+)
+
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
 	r.HandleFunc("/gov/submitproposal", postProposalHandlerFn(cdc, kb, ctx)).Methods("POST")
 	r.HandleFunc("/gov/deposit", depositHandlerFn(cdc, kb, ctx)).Methods("POST")
 	r.HandleFunc("/gov/vote", voteHandlerFn(cdc, kb, ctx)).Methods("POST")
-	r.HandleFunc("/gov/proposals/{proposalID}", queryProposalHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
-	r.HandleFunc("/gov/votes/{proposalID}/{voterAddress}", queryVoteHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}", RestProposalID), queryProposalHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/gov/votes/{%s}/{%s}", RestProposalID, RestVoter), queryVoteHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
 }
 
 type postProposalReq struct {
@@ -148,7 +155,7 @@ func voteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) ht
 func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		strProposalID := vars["proposalID"]
+		strProposalID := vars[RestProposalID]
 
 		if len(strProposalID) == 0 {
 			w.WriteHeader(http.StatusBadRequest)
@@ -188,8 +195,8 @@ func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		strProposalID := vars["proposalID"]
-		bechVoterAddr := vars["voterAddress"]
+		strProposalID := vars[RestProposalID]
+		bechVoterAddr := vars[RestVoter]
 
 		if len(strProposalID) == 0 {
 			w.WriteHeader(http.StatusBadRequest)

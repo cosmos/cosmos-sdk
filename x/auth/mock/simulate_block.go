@@ -45,12 +45,12 @@ func GenTx(msg sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKeyEd25
 	for i, p := range priv {
 		sigs[i] = auth.StdSignature{
 			PubKey:        p.PubKey(),
-			Signature:     p.Sign(auth.StdSignBytes(chainID, accnums, seq, fee, msg)),
+			Signature:     p.Sign(auth.StdSignBytes(chainID, accnums, seq, fee, msg, "")),
 			AccountNumber: accnums[i],
 			Sequence:      seq[i],
 		}
 	}
-	return auth.NewStdTx(msg, fee, sigs)
+	return auth.NewStdTx(msg, fee, sigs, "")
 }
 
 // check a transaction result

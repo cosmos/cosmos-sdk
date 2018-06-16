@@ -53,7 +53,7 @@ func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, 
 }
 
 func newTestTx(ctx sdk.Context, msg sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee) sdk.Tx {
-	signBytes := StdSignBytes(ctx.ChainID(), accNums, seqs, fee, msg)
+	signBytes := StdSignBytes(ctx.ChainID(), accNums, seqs, fee, msg, "")
 	return newTestTxWithSignBytes(msg, privs, accNums, seqs, fee, signBytes)
 }
 
@@ -62,7 +62,7 @@ func newTestTxWithSignBytes(msg sdk.Msg, privs []crypto.PrivKey, accNums []int64
 	for i, priv := range privs {
 		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), AccountNumber: accNums[i], Sequence: seqs[i]}
 	}
-	tx := NewStdTx(msg, fee, sigs)
+	tx := NewStdTx(msg, fee, sigs, "")
 	return tx
 }
 
@@ -333,7 +333,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	for _, cs := range cases {
 		tx := newTestTxWithSignBytes(
 			msg, privs, accnums, seqs, fee,
-			StdSignBytes(cs.chainID, cs.accnums, cs.seqs, cs.fee, cs.msg),
+			StdSignBytes(cs.chainID, cs.accnums, cs.seqs, cs.fee, cs.msg, ""),
 		)
 		checkInvalidTx(t, anteHandler, ctx, tx, cs.code)
 	}

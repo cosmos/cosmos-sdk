@@ -1,12 +1,13 @@
 package types
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
-	"github.com/cosmos/cosmos-sdk/examples/democoin/x/cool"
-	"github.com/cosmos/cosmos-sdk/examples/democoin/x/pow"
+	simpleGovernance "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simple_governance"
 )
 
 var _ auth.Account = (*AppAccount)(nil)
@@ -44,9 +45,8 @@ func GetAccountDecoder(cdc *wire.Codec) auth.AccountDecoder {
 
 // State to Unmarshal
 type GenesisState struct {
-	Accounts    []*GenesisAccount `json:"accounts"`
-	POWGenesis  pow.Genesis       `json:"pow"`
-	CoolGenesis cool.Genesis      `json:"cool"`
+	Accounts         []*GenesisAccount        `json:"accounts"`
+	simpleGovGenesis simpleGovernance.Genesis `json:"simple_governance"`
 }
 
 // GenesisAccount doesn't need pubkey or sequence
@@ -56,6 +56,7 @@ type GenesisAccount struct {
 	Coins   sdk.Coins   `json:"coins"`
 }
 
+// NewGenesisAccount creates a GenesisAccount
 func NewGenesisAccount(aa *AppAccount) *GenesisAccount {
 	return &GenesisAccount{
 		Name:    aa.Name,
@@ -65,10 +66,15 @@ func NewGenesisAccount(aa *AppAccount) *GenesisAccount {
 }
 
 // ValidateBasic validates fields of the genesis account
-// func (ga *GenesisAccount) ValidateBasic() (err sdk.Error) {
-// 	if !ga.Coins.IsValid() {
-// 	}
-// }
+func (ga *GenesisAccount) ValidateBasic() (err sdk.Error) {
+	if !ga.Coins.IsValid() {
+		return sdk.ErrInvalidCoins("")
+	}
+	if len(strings.TrimSpace(ga.Name)) <= 0 {
+		return ErrInvalidName("Genesis name can't be blank")
+	}
+	return nil
+}
 
 // ToAppAccount converts a GenesisAccount to an AppAccount
 func (ga *GenesisAccount) ToAppAccount() (acc *AppAccount, err error) {

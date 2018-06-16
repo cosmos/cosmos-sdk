@@ -13,8 +13,8 @@ const (
 
 	// SignedBlocksWindow - sliding window for downtime slashing
 	// TODO Governance parameter?
-	// TODO Temporarily set to 100 blocks for testnets
-	SignedBlocksWindow int64 = 100
+	// TODO Temporarily set to 10000 blocks for testnets
+	SignedBlocksWindow int64 = 10000
 
 	// Downtime slashing threshold - 50%
 	// TODO Governance parameter?
@@ -22,8 +22,8 @@ const (
 
 	// Downtime unbond duration
 	// TODO Governance parameter?
-	// TODO Temporarily set to 10 minutes for testnets
-	DowntimeUnbondDuration int64 = 60 * 10
+	// TODO Temporarily set to 1 hour for testnets
+	DowntimeUnbondDuration int64 = 60 * 60
 )
 
 var (

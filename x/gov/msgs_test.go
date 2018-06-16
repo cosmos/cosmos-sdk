@@ -82,7 +82,7 @@ func TestMsgVote(t *testing.T) {
 	tests := []struct {
 		proposalID int64
 		voterAddr  sdk.Address
-		option     string
+		option     VoteOption
 		expectPass bool
 	}{
 		{0, addrs[0], OptionYes, true},
@@ -91,7 +91,7 @@ func TestMsgVote(t *testing.T) {
 		{0, addrs[0], OptionNo, true},
 		{0, addrs[0], OptionNoWithVeto, true},
 		{0, addrs[0], OptionAbstain, true},
-		{0, addrs[0], "Meow", false},
+		{0, addrs[0], VoteOption(0x13), false},
 	}
 
 	for i, tc := range tests {

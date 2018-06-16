@@ -58,8 +58,8 @@ func ErrInvalidProposalType(codespace sdk.CodespaceType, strProposalType string)
 	return sdk.NewError(codespace, CodeInvalidProposalType, fmt.Sprintf("Proposal Type '%s' is not valid", strProposalType))
 }
 
-func ErrInvalidVote(codespace sdk.CodespaceType, voteOption string) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidVote, fmt.Sprintf("'%s' is not a valid voting option", voteOption))
+func ErrInvalidVote(codespace sdk.CodespaceType, strOption string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidVote, fmt.Sprintf("'%s' is not a valid voting option", strOption))
 }
 
 func ErrInvalidGenesis(codespace sdk.CodespaceType, msg string) sdk.Error {

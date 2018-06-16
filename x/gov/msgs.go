@@ -12,14 +12,14 @@ const MsgType = "gov"
 //-----------------------------------------------------------
 // MsgSubmitProposal
 type MsgSubmitProposal struct {
-	Title          string      //  Title of the proposal
-	Description    string      //  Description of the proposal
-	ProposalType   byte        //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-	Proposer       sdk.Address //  Address of the proposer
-	InitialDeposit sdk.Coins   //  Initial deposit paid by sender. Must be strictly positive.
+	Title          string       //  Title of the proposal
+	Description    string       //  Description of the proposal
+	ProposalType   ProposalKind //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	Proposer       sdk.Address  //  Address of the proposer
+	InitialDeposit sdk.Coins    //  Initial deposit paid by sender. Must be strictly positive.
 }
 
-func NewMsgSubmitProposal(title string, description string, proposalType byte, proposer sdk.Address, initialDeposit sdk.Coins) MsgSubmitProposal {
+func NewMsgSubmitProposal(title string, description string, proposalType ProposalKind, proposer sdk.Address, initialDeposit sdk.Coins) MsgSubmitProposal {
 	return MsgSubmitProposal{
 		Title:          title,
 		Description:    description,
@@ -162,10 +162,10 @@ func (msg MsgDeposit) GetSigners() []sdk.Address {
 type MsgVote struct {
 	ProposalID int64       //  proposalID of the proposal
 	Voter      sdk.Address //  address of the voter
-	Option     string      //  option from OptionSet chosen by the voter
+	Option     VoteOption  //  option from OptionSet chosen by the voter
 }
 
-func NewMsgVote(voter sdk.Address, proposalID int64, option string) MsgVote {
+func NewMsgVote(voter sdk.Address, proposalID int64, option VoteOption) MsgVote {
 	return MsgVote{
 		ProposalID: proposalID,
 		Voter:      voter,
@@ -185,7 +185,7 @@ func (msg MsgVote) ValidateBasic() sdk.Error {
 		return ErrUnknownProposal(DefaultCodespace, msg.ProposalID)
 	}
 	if (msg.Option != OptionYes) && (msg.Option != OptionAbstain) && (msg.Option != OptionNo) && (msg.Option != OptionNoWithVeto) {
-		return ErrInvalidVote(DefaultCodespace, msg.Option)
+		return ErrInvalidVote(DefaultCodespace, VoteOptionToString(msg.Option))
 	}
 	return nil
 }
@@ -208,7 +208,7 @@ func (msg MsgVote) GetSignBytes() []byte {
 	}{
 		ProposalID: msg.ProposalID,
 		Voter:      sdk.MustBech32ifyVal(msg.Voter),
-		Option:     msg.Option,
+		Option:     VoteOptionToString(msg.Option),
 	})
 	if err != nil {
 		panic(err)

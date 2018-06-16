@@ -174,7 +174,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	proposal1 := executeGetProposal(t, fmt.Sprintf("gaiacli gov query-proposal --proposalID=1 --output=json %v", flags))
 	assert.Equal(t, int64(1), proposal1.GetProposalID())
-	assert.Equal(t, byte(gov.StatusDepositPeriod), proposal1.GetStatus())
+	assert.Equal(t, gov.StatusDepositPeriod, proposal1.GetStatus())
 
 	executeWrite(t, fmt.Sprintf("gaiacli gov deposit %v --depositer=%v --deposit=10steak --proposalID=1 --name=foo", flags, fooCech), pass)
 	time.Sleep(time.Second * 2) // waiting for some blocks to pass
@@ -183,7 +183,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	assert.Equal(t, int64(35), fooAcc.GetCoins().AmountOf("steak"))
 	proposal1 = executeGetProposal(t, fmt.Sprintf("gaiacli gov query-proposal --proposalID=1 --output=json %v", flags))
 	assert.Equal(t, int64(1), proposal1.GetProposalID())
-	assert.Equal(t, byte(gov.StatusVotingPeriod), proposal1.GetStatus())
+	assert.Equal(t, gov.StatusVotingPeriod, proposal1.GetStatus())
 
 	executeWrite(t, fmt.Sprintf("gaiacli gov vote %v --proposalID=1 --voter=%v --option=Yes --name=foo", flags, fooCech), pass)
 	time.Sleep(time.Second * 2) // waiting for some blocks to pass

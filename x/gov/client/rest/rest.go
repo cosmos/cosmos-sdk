@@ -139,8 +139,14 @@ func voteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) ht
 			return
 		}
 
+		voteOptionByte, err := gov.StringToVoteOption(req.Option)
+		if err != nil {
+			writeErr(&w, http.StatusBadRequest, err.Error())
+			return
+		}
+
 		// create the message
-		msg := gov.NewMsgVote(voter, req.ProposalID, req.Option)
+		msg := gov.NewMsgVote(voter, req.ProposalID, voteOptionByte)
 		err = msg.ValidateBasic()
 		if err != nil {
 			writeErr(&w, http.StatusBadRequest, err.Error())

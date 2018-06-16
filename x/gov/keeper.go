@@ -154,7 +154,7 @@ func (keeper Keeper) GetTallyingProcedure(ctx sdk.Context) TallyingProcedure {
 // Votes
 
 // Adds a vote on a specific proposal
-func (keeper Keeper) AddVote(ctx sdk.Context, proposalID int64, voterAddr sdk.Address, option string) sdk.Error {
+func (keeper Keeper) AddVote(ctx sdk.Context, proposalID int64, voterAddr sdk.Address, option VoteOption) sdk.Error {
 	proposal := keeper.GetProposal(ctx, proposalID)
 	if proposal == nil {
 		return ErrUnknownProposal(keeper.codespace, proposalID)
@@ -164,7 +164,7 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID int64, voterAddr sdk.Ad
 	}
 
 	if option != OptionYes && option != OptionAbstain && option != OptionNo && option != OptionNoWithVeto {
-		return ErrInvalidVote(keeper.codespace, option)
+		return ErrInvalidVote(keeper.codespace, VoteOptionToString(option))
 	}
 
 	vote := Vote{

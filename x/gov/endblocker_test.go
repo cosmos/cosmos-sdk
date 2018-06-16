@@ -54,9 +54,6 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	res := govHandler(ctx, newProposalMsg)
 	assert.True(t, res.IsOK())
 
-	// var proposalID int
-	// keeper.cdc.UnmarshalBinaryBare(res.Data, &proposalID)
-
 	EndBlocker(ctx, keeper)
 	assert.NotNil(t, keeper.InactiveProposalQueuePeek(ctx))
 	assert.False(t, shouldPopInactiveProposalQueue(ctx, keeper))
@@ -159,7 +156,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
 	assert.True(t, depositsIterator.Valid())
 	depositsIterator.Close()
-	assert.Equal(t, byte(StatusVotingPeriod), keeper.GetProposal(ctx, proposalID).GetStatus())
+	assert.Equal(t, StatusVotingPeriod, keeper.GetProposal(ctx, proposalID).GetStatus())
 
 	EndBlocker(ctx, keeper)
 
@@ -167,5 +164,5 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	depositsIterator = keeper.GetDeposits(ctx, proposalID)
 	assert.False(t, depositsIterator.Valid())
 	depositsIterator.Close()
-	assert.Equal(t, byte(StatusRejected), keeper.GetProposal(ctx, proposalID).GetStatus())
+	assert.Equal(t, StatusRejected, keeper.GetProposal(ctx, proposalID).GetStatus())
 }

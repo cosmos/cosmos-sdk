@@ -64,8 +64,14 @@ func postProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCon
 			return
 		}
 
+		proposalTypeByte, err := gov.StringToProposalType(req.ProposalType)
+		if err != nil {
+			writeErr(&w, http.StatusBadRequest, err.Error())
+			return
+		}
+
 		// create the message
-		msg := gov.NewMsgSubmitProposal(req.Title, req.Description, req.ProposalType, proposer, req.InitialDeposit)
+		msg := gov.NewMsgSubmitProposal(req.Title, req.Description, proposalTypeByte, proposer, req.InitialDeposit)
 		err = msg.ValidateBasic()
 		if err != nil {
 			writeErr(&w, http.StatusBadRequest, err.Error())

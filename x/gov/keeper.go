@@ -46,7 +46,7 @@ func (keeper Keeper) WireCodec() *wire.Codec {
 // Proposals
 
 // Creates a NewProposal
-func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description string, proposalType string) Proposal {
+func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description string, proposalType byte) Proposal {
 	proposalID, err := keeper.getNewProposalID(ctx)
 	if err != nil {
 		return nil

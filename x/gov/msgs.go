@@ -14,12 +14,12 @@ const MsgType = "gov"
 type MsgSubmitProposal struct {
 	Title          string      //  Title of the proposal
 	Description    string      //  Description of the proposal
-	ProposalType   string      //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	ProposalType   byte        //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 	Proposer       sdk.Address //  Address of the proposer
 	InitialDeposit sdk.Coins   //  Initial deposit paid by sender. Must be strictly positive.
 }
 
-func NewMsgSubmitProposal(title string, description string, proposalType string, proposer sdk.Address, initialDeposit sdk.Coins) MsgSubmitProposal {
+func NewMsgSubmitProposal(title string, description string, proposalType byte, proposer sdk.Address, initialDeposit sdk.Coins) MsgSubmitProposal {
 	return MsgSubmitProposal{
 		Title:          title,
 		Description:    description,
@@ -41,7 +41,7 @@ func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 		return ErrInvalidDescription(DefaultCodespace, msg.Description) // TODO: Proper Error
 	}
 	if !validProposalType(msg.ProposalType) {
-		return ErrInvalidProposalType(DefaultCodespace, msg.ProposalType)
+		return ErrInvalidProposalType(DefaultCodespace, ProposalTypeToString(msg.ProposalType))
 	}
 	if len(msg.Proposer) == 0 {
 		return sdk.ErrInvalidAddress(msg.Proposer.String())
@@ -56,7 +56,7 @@ func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgSubmitProposal) String() string {
-	return fmt.Sprintf("MsgSubmitProposal{%v, %v, %v, %v}", msg.Title, msg.Description, msg.ProposalType, msg.InitialDeposit)
+	return fmt.Sprintf("MsgSubmitProposal{%v, %v, %v, %v}", msg.Title, msg.Description, ProposalTypeToString(msg.ProposalType), msg.InitialDeposit)
 }
 
 // Implements Msg.
@@ -75,7 +75,7 @@ func (msg MsgSubmitProposal) GetSignBytes() []byte {
 	}{
 		Title:          msg.Title,
 		Description:    msg.Description,
-		ProposalType:   msg.ProposalType,
+		ProposalType:   ProposalTypeToString(msg.ProposalType),
 		Proposer:       sdk.MustBech32ifyVal(msg.Proposer),
 		InitialDeposit: msg.InitialDeposit,
 	})

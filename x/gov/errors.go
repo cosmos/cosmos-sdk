@@ -54,8 +54,8 @@ func ErrInvalidDescription(codespace sdk.CodespaceType, description string) sdk.
 	return sdk.NewError(codespace, CodeInvalidDescription, fmt.Sprintf("Proposal Desciption '%s' is not valid", description))
 }
 
-func ErrInvalidProposalType(codespace sdk.CodespaceType, proposalType string) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidProposalType, fmt.Sprintf("Proposal Type '%s' is not valid", proposalType))
+func ErrInvalidProposalType(codespace sdk.CodespaceType, strProposalType string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidProposalType, fmt.Sprintf("Proposal Type '%s' is not valid", strProposalType))
 }
 
 func ErrInvalidVote(codespace sdk.CodespaceType, voteOption string) sdk.Error {

@@ -5,6 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
+// Type of a proposal (ie. Text, ParameterChange, etc)
+type ProposalType byte
+
 //nolint
 const (
 	StatusDepositPeriod = "DepositPeriod"
@@ -17,10 +20,45 @@ const (
 	OptionNo         = "No"
 	OptionNoWithVeto = "NoWithVeto"
 
-	ProposalTypeText            = "Text"
-	ProposalTypeParameterChange = "ParameterChange"
-	ProposalTypeSoftwareUpgrade = "SoftwareUpgrade"
+	ProposalTypeText            byte = 0x00
+	ProposalTypeParameterChange byte = 0x01
+	ProposalTypeSoftwareUpgrade byte = 0x02
 )
+
+// ProposalTypeToString for pretty prints of ProposalType
+func ProposalTypeToString(proposalType byte) string {
+	switch proposalType {
+	case 0x00:
+		return "Text"
+	case 0x01:
+		return "ParameterChange"
+	case 0x02:
+		return "SoftwareUpgrade"
+	default:
+		return ""
+	}
+}
+
+func validProposalType(proposalType byte) bool {
+	if proposalType == ProposalTypeText ||
+		proposalType == ProposalTypeParameterChange ||
+		proposalType == ProposalTypeSoftwareUpgrade {
+		return true
+	}
+	return false
+}
+
+// String to proposalType byte.  Returns ff if invalid.
+func StringToProposalType(str string) (byte, sdk.Error) {
+	if str == "Text" {
+		return ProposalTypeText, nil
+	} else if str == "ParameterChange" {
+		return ProposalTypeParameterChange, nil
+	} else if str == "SoftwareUpgrade" {
+		return ProposalTypeSoftwareUpgrade, nil
+	}
+	return 0xff, ErrInvalidProposalType(DefaultCodespace, str)
+}
 
 // Vote
 type Vote struct {
@@ -41,8 +79,8 @@ type Proposal interface {
 	GetDescription() string
 	SetDescription(string)
 
-	GetProposalType() string
-	SetProposalType(string)
+	GetProposalType() byte
+	SetProposalType(byte)
 
 	GetStatus() string
 	SetStatus(string)
@@ -78,7 +116,7 @@ type TextProposal struct {
 	ProposalID   int64  `json:"proposal_id"`   //  ID of the proposal
 	Title        string `json:"title"`         //  Title of the proposal
 	Description  string `json:"description"`   //  Description of the proposal
-	ProposalType string `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	ProposalType byte   `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 
 	Status string `json:"string"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
 
@@ -98,8 +136,8 @@ func (tp TextProposal) GetTitle() string                        { return tp.Titl
 func (tp *TextProposal) SetTitle(title string)                  { tp.Title = title }
 func (tp TextProposal) GetDescription() string                  { return tp.Description }
 func (tp *TextProposal) SetDescription(description string)      { tp.Description = description }
-func (tp TextProposal) GetProposalType() string                 { return tp.ProposalType }
-func (tp *TextProposal) SetProposalType(proposalType string)    { tp.ProposalType = proposalType }
+func (tp TextProposal) GetProposalType() byte                   { return tp.ProposalType }
+func (tp *TextProposal) SetProposalType(proposalType byte)      { tp.ProposalType = proposalType }
 func (tp TextProposal) GetStatus() string                       { return tp.Status }
 func (tp *TextProposal) SetStatus(status string)                { tp.Status = status }
 func (tp TextProposal) GetSubmitBlock() int64                   { return tp.SubmitBlock }
@@ -130,18 +168,6 @@ type TallyingProcedure struct {
 // Procedure around Voting in governance
 type VotingProcedure struct {
 	VotingPeriod int64 `json:"voting_period"` //  Length of the voting period.
-}
-
-// List of valid proposal types
-type ProposalTypes []string
-
-func validProposalType(proposalType string) bool {
-	if proposalType == ProposalTypeText ||
-		proposalType == ProposalTypeParameterChange ||
-		proposalType == ProposalTypeSoftwareUpgrade {
-		return true
-	}
-	return false
 }
 
 // Deposit

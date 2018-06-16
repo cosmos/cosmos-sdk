@@ -34,7 +34,7 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			title := viper.GetString(flagTitle)
 			description := viper.GetString(flagDescription)
-			proposalType := viper.GetString(flagProposalType)
+			strProposalType := viper.GetString(flagProposalType)
 			initialDeposit := viper.GetString(flagDeposit)
 
 			// get the from address from the name flag
@@ -44,6 +44,11 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 			}
 
 			amount, err := sdk.ParseCoins(initialDeposit)
+			if err != nil {
+				return err
+			}
+
+			proposalType, err := gov.StringToProposalType(strProposalType)
 			if err != nil {
 				return err
 			}

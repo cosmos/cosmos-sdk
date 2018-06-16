@@ -15,7 +15,7 @@ func TestGetSetProposal(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
 	keeper.SetProposal(ctx, proposal)
 
@@ -28,12 +28,12 @@ func TestIncrementProposalNumber(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	keeper.NewTextProposal(ctx, "Test", "description", "Text")
-	keeper.NewTextProposal(ctx, "Test", "description", "Text")
-	keeper.NewTextProposal(ctx, "Test", "description", "Text")
-	keeper.NewTextProposal(ctx, "Test", "description", "Text")
-	keeper.NewTextProposal(ctx, "Test", "description", "Text")
-	proposal6 := keeper.NewTextProposal(ctx, "Test", "description", "Text")
+	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	proposal6 := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 
 	assert.Equal(t, int64(6), proposal6.GetProposalID())
 }
@@ -43,7 +43,7 @@ func TestActivateVotingPeriod(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 
 	assert.Equal(t, int64(-1), proposal.GetVotingStartBlock())
 	assert.Nil(t, keeper.ActiveProposalQueuePeek(ctx))
@@ -60,7 +60,7 @@ func TestDeposits(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
 
 	fourSteak := sdk.Coins{sdk.Coin{"steak", 4}}
@@ -149,7 +149,7 @@ func TestVotes(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
 
 	proposal.SetStatus(StatusVotingPeriod)
@@ -208,10 +208,10 @@ func TestProposalQueues(t *testing.T) {
 	assert.Nil(t, keeper.ActiveProposalQueuePeek(ctx))
 
 	// create test proposals
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
-	proposal2 := keeper.NewTextProposal(ctx, "Test2", "description", "Text")
-	proposal3 := keeper.NewTextProposal(ctx, "Test3", "description", "Text")
-	proposal4 := keeper.NewTextProposal(ctx, "Test4", "description", "Text")
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	proposal2 := keeper.NewTextProposal(ctx, "Test2", "description", ProposalTypeText)
+	proposal3 := keeper.NewTextProposal(ctx, "Test3", "description", ProposalTypeText)
+	proposal4 := keeper.NewTextProposal(ctx, "Test4", "description", ProposalTypeText)
 
 	// test pushing to inactive proposal queue
 	keeper.InactiveProposalQueuePush(ctx, proposal)

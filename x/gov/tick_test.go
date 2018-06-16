@@ -18,7 +18,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	assert.Nil(t, keeper.InactiveProposalQueuePeek(ctx))
 	assert.False(t, shouldPopInactiveProposalQueue(ctx, keeper))
 
-	newProposalMsg := NewMsgSubmitProposal("Test", "test", "Text", addrs[0], sdk.Coins{sdk.Coin{"steak", 5}})
+	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.Coin{"steak", 5}})
 
 	res := govHandler(ctx, newProposalMsg)
 	assert.True(t, res.IsOK())
@@ -49,7 +49,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	assert.Nil(t, keeper.InactiveProposalQueuePeek(ctx))
 	assert.False(t, shouldPopInactiveProposalQueue(ctx, keeper))
 
-	newProposalMsg := NewMsgSubmitProposal("Test", "test", "Text", addrs[0], sdk.Coins{sdk.Coin{"steak", 5}})
+	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.Coin{"steak", 5}})
 
 	res := govHandler(ctx, newProposalMsg)
 	assert.True(t, res.IsOK())
@@ -66,7 +66,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	assert.NotNil(t, keeper.InactiveProposalQueuePeek(ctx))
 	assert.False(t, shouldPopInactiveProposalQueue(ctx, keeper))
 
-	newProposalMsg2 := NewMsgSubmitProposal("Test2", "test2", "Text", addrs[1], sdk.Coins{sdk.Coin{"steak", 5}})
+	newProposalMsg2 := NewMsgSubmitProposal("Test2", "test2", ProposalTypeText, addrs[1], sdk.Coins{sdk.Coin{"steak", 5}})
 	res = govHandler(ctx, newProposalMsg2)
 	assert.True(t, res.IsOK())
 
@@ -96,7 +96,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	assert.Nil(t, keeper.ActiveProposalQueuePeek(ctx))
 	assert.False(t, shouldPopActiveProposalQueue(ctx, keeper))
 
-	newProposalMsg := NewMsgSubmitProposal("Test", "test", "Text", addrs[0], sdk.Coins{sdk.Coin{"steak", 5}})
+	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.Coin{"steak", 5}})
 
 	res := govHandler(ctx, newProposalMsg)
 	assert.True(t, res.IsOK())
@@ -140,7 +140,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	assert.Nil(t, keeper.ActiveProposalQueuePeek(ctx))
 	assert.False(t, shouldPopActiveProposalQueue(ctx, keeper))
 
-	newProposalMsg := NewMsgSubmitProposal("Test", "test", "Text", addrs[0], sdk.Coins{sdk.Coin{"steak", 5}})
+	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.Coin{"steak", 5}})
 
 	res := govHandler(ctx, newProposalMsg)
 	assert.True(t, res.IsOK())

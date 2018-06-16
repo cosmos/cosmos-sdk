@@ -21,21 +21,22 @@ var (
 func TestMsgSubmitProposal(t *testing.T) {
 	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.Coins{})
 	tests := []struct {
-		title, description, proposalType string
-		proposerAddr                     sdk.Address
-		initialDeposit                   sdk.Coins
-		expectPass                       bool
+		title, description string
+		proposalType       byte
+		proposerAddr       sdk.Address
+		initialDeposit     sdk.Coins
+		expectPass         bool
 	}{
-		{"Test Proposal", "the purpose of this proposal is to test", "Text", addrs[0], coinsPos, true},
-		{"", "the purpose of this proposal is to test", "Text", addrs[0], coinsPos, false},
-		{"Test Proposal", "", "Text", addrs[0], coinsPos, false},
-		{"Test Proposal", "the purpose of this proposal is to test", "ParameterChange", addrs[0], coinsPos, true},
-		{"Test Proposal", "the purpose of this proposal is to test", "SoftwareUpgrade", addrs[0], coinsPos, true},
-		{"Test Proposal", "the purpose of this proposal is to test", "Other", addrs[0], coinsPos, false},
-		{"Test Proposal", "the purpose of this proposal is to test", "Text", sdk.Address{}, coinsPos, false},
-		{"Test Proposal", "the purpose of this proposal is to test", "Text", addrs[0], coinsZero, true},
-		{"Test Proposal", "the purpose of this proposal is to test", "Text", addrs[0], coinsNeg, false},
-		{"Test Proposal", "the purpose of this proposal is to test", "Text", addrs[0], coinsMulti, true},
+		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsPos, true},
+		{"", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsPos, false},
+		{"Test Proposal", "", ProposalTypeText, addrs[0], coinsPos, false},
+		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeParameterChange, addrs[0], coinsPos, true},
+		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeSoftwareUpgrade, addrs[0], coinsPos, true},
+		{"Test Proposal", "the purpose of this proposal is to test", 0x05, addrs[0], coinsPos, false},
+		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, sdk.Address{}, coinsPos, false},
+		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsZero, true},
+		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsNeg, false},
+		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsMulti, true},
 	}
 
 	for i, tc := range tests {

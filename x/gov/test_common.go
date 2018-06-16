@@ -2,7 +2,6 @@ package gov
 
 import (
 	"bytes"
-	"encoding/hex"
 	"log"
 	"sort"
 	"testing"
@@ -196,101 +195,4 @@ func SortByteArrays(src [][]byte) [][]byte {
 	sorted := sortByteArrays(src)
 	sort.Sort(sorted)
 	return sorted
-}
-
-//_______________________________________________________________________________________
-
-// func makeTestCodec() *wire.Codec {
-// 	var cdc = wire.NewCodec()
-
-// 	// Register Msgs
-// 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-// 	cdc.RegisterConcrete(bank.MsgSend{}, "test/gov/Send", nil)
-// 	cdc.RegisterConcrete(bank.MsgIssue{}, "test/gov/Issue", nil)
-
-// 	// Register AppAccount
-// 	cdc.RegisterInterface((*auth.Account)(nil), nil)
-// 	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/gov/Account", nil)
-// 	wire.RegisterCrypto(cdc)
-
-// 	RegisterWire(cdc)
-
-// 	return cdc
-// }
-
-// // hogpodge of all sorts of input required for testing
-// func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountMapper, Keeper) {
-
-// 	keyAcc := sdk.NewKVStoreKey("acc")
-// 	keyStake := sdk.NewKVStoreKey("stake")
-// 	keyGov := sdk.NewKVStoreKey("gov")
-
-// 	db := dbm.NewMemDB()
-// 	ms := store.NewCommitMultiStore(db)
-
-// 	ms.MountStoreWithDB(keyGov, sdk.StoreTypeIAVL, db)
-// 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
-// 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
-// 	err := ms.LoadLatestVersion()
-// 	require.Nil(t, err)
-
-// 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil, log.NewNopLogger())
-// 	cdc := makeTestCodec()
-// 	accountMapper := auth.NewAccountMapper(
-// 		cdc,                 // amino codec
-// 		keyAcc,              // target store
-// 		&auth.BaseAccount{}, // prototype
-// 	)
-// 	ck := bank.NewKeeper(accountMapper)
-// 	sk := stake.NewKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
-// 	sk.SetPool(ctx, stake.InitialPool())
-// 	sk.SetNewParams(ctx, stake.DefaultParams())
-
-// 	keeper := NewKeeper(cdc, keyGov, ck, sk, DefaultCodespace)
-
-// 	// fill all the addresses with some coins
-// 	for _, addr := range addrs {
-// 		ck.AddCoins(ctx, addr, sdk.Coins{
-// 			{"steak", initCoins},
-// 		})
-// 	}
-
-// 	return ctx, accountMapper, keeper
-// }
-
-func newPubKey(pk string) (res crypto.PubKey) {
-	pkBytes, err := hex.DecodeString(pk)
-	if err != nil {
-		panic(err)
-	}
-	//res, err = crypto.PubKeyFromBytes(pkBytes)
-	var pkEd crypto.PubKeyEd25519
-	copy(pkEd[:], pkBytes[:])
-	return pkEd
-}
-
-// for incode address generation
-func testAddr(addr string, bech string) sdk.Address {
-
-	res, err := sdk.GetAccAddressHex(addr)
-	if err != nil {
-		panic(err)
-	}
-	bechexpected, err := sdk.Bech32ifyAcc(res)
-	if err != nil {
-		panic(err)
-	}
-	if bech != bechexpected {
-		panic("Bech encoding doesn't match reference")
-	}
-
-	bechres, err := sdk.GetAccAddressBech32(bech)
-	if err != nil {
-		panic(err)
-	}
-	if bytes.Compare(bechres, res) != 0 {
-		panic("Bech decode and hex decode don't match")
-	}
-
-	return res
 }

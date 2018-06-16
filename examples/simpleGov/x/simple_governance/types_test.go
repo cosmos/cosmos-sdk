@@ -70,6 +70,7 @@ func TestNewVoteMsg(t *testing.T) {
 	nay := "No"
 	abstain := "Abstain"
 	other := "Other"
+	blank := "     "
 
 	var posPropID int64 = 3
 	var negPropID int64 = -8
@@ -85,6 +86,7 @@ func TestNewVoteMsg(t *testing.T) {
 
 		{false, NewVoteMsg(negPropID, yay, addr1)},          // negative ProposalID
 		{false, NewVoteMsg(posPropID, other, addr1)},        // other Option
+		{false, NewVoteMsg(posPropID, blank, addr1)},        // blank Option
 		{false, NewVoteMsg(posPropID, nay, emptyAddr)},      // empty Address
 		{false, NewVoteMsg(negPropID, other, emptyAddr)},    // all wrong
 		{false, NewVoteMsg(negPropID, emptyStr, emptyAddr)}, // all wrong
@@ -136,5 +138,8 @@ func TestUpdateTally(t *testing.T) {
 	assert.Equal(t, int64(10), proposalPtr.AbstainVotes)
 	// invalid Option
 	err = proposalPtr.updateTally("Whatever", 10)
+	assert.NotNil(t, err)
+	// blank Option
+	err = proposalPtr.updateTally("     ", 10)
 	assert.NotNil(t, err)
 }

@@ -163,6 +163,7 @@ func makeTestCodec() *wire.Codec {
 
 // hogpodge of all sorts of input required for testing
 func createTestInput(t *testing.T, initCoins int64) (sdk.Context, auth.AccountMapper, Keeper) {
+
 	app := newSimpleGovApp()
 	keyStake := sdk.NewKVStoreKey("stake")
 	keyAuth := sdk.NewKVStoreKey("auth")

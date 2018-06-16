@@ -1,83 +1,134 @@
 package simpleGovernance
 
 import (
-
-	// 	"os"
-	"os"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
-	abci "github.com/tendermint/abci/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
-	auth "github.com/cosmos/cosmos-sdk/x/auth"
-	bank "github.com/cosmos/cosmos-sdk/x/bank"
-	stake "github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/stretchr/testify/assert"
-	db "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
 )
-
-// func setupMultiStore(name string) (sdk.MultiStore, *sdk.KVStoreKey) {
-// 	db := dbm.NewDB(name, backend, dir)
-// 	storeKey := sdk.NewKVStoreKey(name)
-// 	ms := store.NewCommitMultiStore(db)
-// 	ms.MountStoreWithDB(storeKey, sdk.StoreTypeIAVL, db)
-// 	ms.LoadLatestVersion()
-// 	return ms, storeKey
-// }
-
-func loggerAndDB() (log.Logger, db.DB) {
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
-	dB := db.NewMemDB()
-	return logger, dB
-}
-
-func newDemocoinApp() *app.DemocoinApp {
-	logger, dB := loggerAndDB()
-	return app.NewDemocoinApp(logger, dB)
-}
 
 func TestSimpleGovKeeper(t *testing.T) {
 
-	// create Proposals
-	title := "Photons at launch"
-	description := "Should we include Photons at launch?"
-	addr1 := sdk.Address([]byte{1, 2})
-	multiCoins := sdk.Coins{{"atom", 123}, {"eth", 20}}
+	ctx, _, k := createTestInput(t, int64(200))
+	assert.NotNil(t, k)
 
-	proposal1 := NewProposal(title, description, addr1, 20, multiCoins)
+	// create proposals
+	proposal := NewProposal(titles[1], description[1], addrs[1], ctx.BlockHeight(), sdk.Coins{{"Atom": 200}})
+	proposal2 := NewProposal(titles[2], description[2], addrs[4], ctx.BlockHeight(), sdk.Coins{{"Atom": 150}})
 
-	authKey := sdk.NewKVStoreKey("authKey")
+	// –––––––––––––––––––––––––––––––––––––––
+	//                KEEPER
+	// –––––––––––––––––––––––––––––––––––––––
 
-	cdc := wire.NewCodec()
-	app := newDemocoinApp()
-	ctx := app.NewContext(true, abci.Header{})
-	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.BaseAccount{})
-	coinKeeper := bank.NewKeeper(accountMapper)
-
-	stakeKey := sdk.NewKVStoreKey("stakeKey")
-
-	stakeKeeper := stake.NewKeeper(cdc, stakeKey, coinKeeper, DefaultCodespace)
-
-	proposalKey := sdk.NewKVStoreKey("proposalKey")
-	// ms.MountStoreWithDB() // XXX why this ?
-
-	// new proposal Keeper
-	proposalKeeper := NewKeeper(proposalKey, coinKeeper, stakeKeeper, DefaultCodespace)
-	assert.NotNil(t, proposalKeeper)
-
-	err := proposalKeeper.SetProposal(ctx, 1, proposal1)
-	resProposal, err := proposalKeeper.GetProposal(ctx, 1)
-	assert.NotNil(t, resProposal)
-	assert.NoError(t, err)
+	// ––––––– Test SetProposal –––––––
+	err := k.SetProposal(ctx, 1, proposal)
 	assert.Nil(t, err)
-	assert.Equal(t, proposal1, resProposal)
 
-	// new poposal KeeperRead
+	// ––––––– Test GetProposal –––––––
 
-	proposalKeeperRead := NewKeeperRead(proposalKey, coinKeeper, stakeKeeper, DefaultCodespace)
-	assert.NotNil(t, proposalKeeperRead)
+	// Case 1: valid request
+	resProposal, err := k.GetProposal(ctx, 1)
+	assert.NotNil(t, resProposal)
+	assert.Nil(t, err)
+	assert.Equal(t, proposal, resProposal)
 
+	// Case 2: invalid proposalID
+	resProposal, err := k.GetProposal(ctx, 2)
+	assert.NotNil(t, err)
+
+	k.SetVote(ctx, 1, addrs[2], options[1])
+
+	// ––––––– Test GetVote –––––––
+
+	// Case 1: existing proposal, valid voter
+	option, err := k.GetVote(ctx, 1, addrs[2])
+	assert.Equal(t, options[1], option)
+	assert.Nil(t, err)
+
+	// Case 2: existing proposal, invalid voter
+	option, err = k.GetVote(ctx, 1, addrs[3]) // existing proposal, invalid voter
+	assert.Equal(t, "", option)
+	assert.NotNil(t, err)
+
+	// Case 3: invalid proposal, valid voter
+	option, err := k.GetVote(ctx, 2, addrs[2])
+	assert.Equal(t, "", option)
+	assert.NotNil(t, err)
+
+	// Case 4: invalid proposal, invalid voter
+	option, err = k.GetVote(ctx, 2, addrs[3])
+	assert.Equal(t, "", option)
+	assert.NotNil(t, err)
+
+	// –––––––––––––––––––––––––––––––––––––––
+	//             KEEPER READ
+	// –––––––––––––––––––––––––––––––––––––––
+
+	simpleGovKey := sdk.NewKVStoreKey("simpleGov")
+	keeperRead := NewKeeperRead(simpleGovKey, k.ck, k.sm, DefaultCodespace)
+
+	// ––––––– Test GetProposal –––––––
+
+	// Case 1: valid request
+	resProposal, err := keeperRead.GetProposal(ctx, 1)
+	assert.NotNil(t, resProposal)
+	assert.Nil(t, err)
+	assert.Equal(t, proposal, resProposal)
+
+	// Case 2: invalid proposalID
+	resProposal, err := keeperRead.GetProposal(ctx, 2)
+	assert.NotNil(t, err)
+
+	// ––––––– Test SetProposal –––––––
+
+	err = keeperRead.SetProposal(ctx, 2, proposal2) // Error Unauthorized
+	assert.NotNil(t, err)
+
+	// ––––––– Test GetVote –––––––
+
+	// Case 1: existing proposal, valid voter
+	option, err := keeperRead.GetVote(ctx, 1, addrs[2])
+	assert.Equal(t, options[1], option)
+	assert.Nil(t, err)
+
+	// Case 2: existing proposal, invalid voter
+	option, err = keeperRead.GetVote(ctx, 1, addrs[3]) // existing proposal, invalid voter
+	assert.Equal(t, "", option)
+	assert.NotNil(t, err)
+
+	// Case 3: invalid proposal, valid voter
+	option, err := keeperRead.GetVote(ctx, 2, addrs[2])
+	assert.Equal(t, "", option)
+	assert.NotNil(t, err)
+
+	// Case 4: invalid proposal, invalid voter
+	option, err = keeperRead.GetVote(ctx, 2, addrs[3])
+	assert.Equal(t, "", option)
+	assert.NotNil(t, err)
+
+	// –––––––––––––––––––––––––––––––––––––––
+	//            PROPOSAL QUEUE
+	// –––––––––––––––––––––––––––––––––––––––
+
+	err = k.ProposalQueuePush(ctx, 1) // ProposalQueue not set
+	assert.NotNil(t, err)
+
+	k.setProposalQueue(ctx, ProposalQueue{})
+
+	err = k.ProposalQueuePush(ctx, 1)
+	assert.Nil(t, err)
+
+	resProposal, err = k.ProposalQueueHead(ctx) // Gets first proposal
+	assert.NotNil(t, resProposal)
+	assert.Nil(t, err)
+	assert.Equal(t, proposal, resProposal)
+
+	err = k.ProposalQueuePop(ctx) // Pops first proposal
+	assert.Nil(t, err)
+
+	err = k.ProposalQueuePop(ctx) // Empty queue --> error
+	assert.NotNil(t, err)
+
+	resProposal, err = k.ProposalQueueHead(ctx) // Empty queue --> error
+	assert.NotNil(t, err)
 }

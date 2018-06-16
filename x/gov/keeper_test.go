@@ -5,12 +5,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	abci "github.com/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestGetSetProposal(t *testing.T) {
-
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, _, _, _ := getMockApp(t, 0)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
 	proposalID := proposal.GetProposalID()
@@ -21,8 +24,9 @@ func TestGetSetProposal(t *testing.T) {
 }
 
 func TestIncrementProposalNumber(t *testing.T) {
-
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, _, _, _ := getMockApp(t, 0)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	keeper.NewTextProposal(ctx, "Test", "description", "Text")
 	keeper.NewTextProposal(ctx, "Test", "description", "Text")
@@ -35,8 +39,9 @@ func TestIncrementProposalNumber(t *testing.T) {
 }
 
 func TestActivateVotingPeriod(t *testing.T) {
-
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, _, _, _ := getMockApp(t, 0)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
 
@@ -50,7 +55,10 @@ func TestActivateVotingPeriod(t *testing.T) {
 }
 
 func TestDeposits(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 2)
+	SortAddresses(addrs)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
 	proposalID := proposal.GetProposalID()
@@ -60,6 +68,9 @@ func TestDeposits(t *testing.T) {
 
 	addr0Initial := keeper.ck.GetCoins(ctx, addrs[0])
 	addr1Initial := keeper.ck.GetCoins(ctx, addrs[1])
+
+	// assert.True(t, addr0Initial.IsEqual(sdk.Coins{sdk.Coin{"steak", 42}}))
+	assert.Equal(t, sdk.Coins{sdk.Coin{"steak", 42}}, addr0Initial)
 
 	assert.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{}))
 
@@ -133,7 +144,10 @@ func TestDeposits(t *testing.T) {
 }
 
 func TestVotes(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 2)
+	SortAddresses(addrs)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", "Text")
 	proposalID := proposal.GetProposalID()
@@ -185,7 +199,10 @@ func TestVotes(t *testing.T) {
 }
 
 func TestProposalQueues(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, _, _, _ := getMockApp(t, 0)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
+	mapp.InitChainer(ctx, abci.RequestInitChain{})
 
 	assert.Nil(t, keeper.InactiveProposalQueuePeek(ctx))
 	assert.Nil(t, keeper.ActiveProposalQueuePeek(ctx))

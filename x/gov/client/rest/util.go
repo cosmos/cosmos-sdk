@@ -23,14 +23,12 @@ type baseReq struct {
 func buildReq(w http.ResponseWriter, r *http.Request, req interface{}) error {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
+		writeErr(&w, http.StatusBadRequest, err.Error())
 		return err
 	}
 	err = json.Unmarshal(body, &req)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
+		writeErr(&w, http.StatusBadRequest, err.Error())
 		return err
 	}
 	return nil
@@ -38,40 +36,36 @@ func buildReq(w http.ResponseWriter, r *http.Request, req interface{}) error {
 
 func (req baseReq) baseReqValidate(w http.ResponseWriter) bool {
 	if len(req.Name) == 0 {
-		w.WriteHeader(http.StatusUnauthorized)
-		err := errors.Errorf("Name required but not specified")
-		w.Write([]byte(err.Error()))
+		writeErr(&w, http.StatusUnauthorized, "Name required but not specified")
 		return false
 	}
 
 	if len(req.Password) == 0 {
-		w.WriteHeader(http.StatusUnauthorized)
-		err := errors.Errorf("Password required but not specified")
-		w.Write([]byte(err.Error()))
+		writeErr(&w, http.StatusUnauthorized, "Password required but not specified")
 		return false
 	}
 
 	// if len(req.ChainID) == 0 {
-	// 	w.WriteHeader(http.StatusUnauthorized)
-	// 	err := errors.Errorf("ChainID required but not specified")
-	// 	w.Write([]byte(err.Error()))
+	// 	writeErr(&w, http.StatusUnauthorized, "ChainID required but not specified")
 	// 	return false
 	// }
 
 	if req.AccountNumber < 0 {
-		w.WriteHeader(http.StatusUnauthorized)
-		err := errors.Errorf("Account Number required but not specified")
-		w.Write([]byte(err.Error()))
+		writeErr(&w, http.StatusUnauthorized, "Account Number required but not specified")
 		return false
 	}
 
 	if req.Sequence < 0 {
-		w.WriteHeader(http.StatusUnauthorized)
-		err := errors.Errorf("Sequence required but not specified")
-		w.Write([]byte(err.Error()))
+		writeErr(&w, http.StatusUnauthorized, "Sequence required but not specified")
 		return false
 	}
 	return true
+}
+
+func writeErr(w *http.ResponseWriter, status int, msg string) {
+	(*w).WriteHeader(status)
+	err := errors.New(msg)
+	(*w).Write([]byte(err.Error()))
 }
 
 // TODO: Build this function out into a more generic base-request (probably should live in client/lcd)
@@ -84,23 +78,20 @@ func signAndBuild(w http.ResponseWriter, ctx context.CoreContext, baseReq baseRe
 
 	txBytes, err := ctx.SignAndBuild(baseReq.Name, baseReq.Password, msg, cdc)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(err.Error()))
+		writeErr(&w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
 	// send
 	res, err := ctx.BroadcastTx(txBytes)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		writeErr(&w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	output, err := json.MarshalIndent(res, "", "  ")
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		writeErr(&w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

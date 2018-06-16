@@ -47,8 +47,12 @@ func (keeper Keeper) WireCodec() *wire.Codec {
 
 // Creates a NewProposal
 func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description string, proposalType string) Proposal {
+	proposalID, err := keeper.getNewProposalID(ctx)
+	if err != nil {
+		return nil
+	}
 	var proposal Proposal = &TextProposal{
-		ProposalID:       keeper.getNewProposalID(ctx),
+		ProposalID:       proposalID,
 		Title:            title,
 		Description:      description,
 		ProposalType:     proposalType,
@@ -89,17 +93,27 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposal Proposal) {
 	store.Delete(KeyProposal(proposal.GetProposalID()))
 }
 
-func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID int64) {
+func (keeper Keeper) setInitialProposalID(ctx sdk.Context, proposalID int64) sdk.Error {
+	store := ctx.KVStore(keeper.storeKey)
+	bz := store.Get(KeyNextProposalID)
+	if bz != nil {
+		return ErrInvalidGenesis(keeper.codespace, "Initial ProposalID already set")
+	}
+	bz = keeper.cdc.MustMarshalBinary(proposalID) // TODO: switch to MarshalBinaryBare when new go-amino gets added
+	store.Set(KeyNextProposalID, bz)
+	return nil
+}
+
+func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID int64, err sdk.Error) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyNextProposalID)
 	if bz == nil {
-		proposalID = 1
-	} else {
-		keeper.cdc.MustUnmarshalBinary(bz, &proposalID) // TODO: switch to UnmarshalBinaryBare when new go-amino gets added
+		return -1, ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
 	}
+	keeper.cdc.MustUnmarshalBinary(bz, &proposalID)   // TODO: switch to UnmarshalBinaryBare when new go-amino gets added
 	bz = keeper.cdc.MustMarshalBinary(proposalID + 1) // TODO: switch to MarshalBinaryBare when new go-amino gets added
 	store.Set(KeyNextProposalID, bz)
-	return proposalID
+	return proposalID, nil
 }
 
 func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {

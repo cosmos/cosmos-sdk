@@ -6,13 +6,16 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 func TestTallyNoOneVotes(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakeHandler := stake.NewHandler(keeper.sk)
 
 	dummyDescription := stake.NewDescription("T", "E", "S", "T")
@@ -32,7 +35,9 @@ func TestTallyNoOneVotes(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAllYes(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakeHandler := stake.NewHandler(keeper.sk)
 
 	dummyDescription := stake.NewDescription("T", "E", "S", "T")
@@ -57,7 +62,9 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 }
 
 func TestTallyOnlyValidators51No(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakeHandler := stake.NewHandler(keeper.sk)
 
 	dummyDescription := stake.NewDescription("T", "E", "S", "T")
@@ -82,7 +89,9 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 }
 
 func TestTallyOnlyValidators51Yes(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakeHandler := stake.NewHandler(keeper.sk)
 
 	dummyDescription := stake.NewDescription("T", "E", "S", "T")
@@ -111,7 +120,9 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsVetoed(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakeHandler := stake.NewHandler(keeper.sk)
 
 	dummyDescription := stake.NewDescription("T", "E", "S", "T")
@@ -140,7 +151,9 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakeHandler := stake.NewHandler(keeper.sk)
 
 	dummyDescription := stake.NewDescription("T", "E", "S", "T")
@@ -169,7 +182,9 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakeHandler := stake.NewHandler(keeper.sk)
 
 	dummyDescription := stake.NewDescription("T", "E", "S", "T")
@@ -198,7 +213,9 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakeHandler := stake.NewHandler(keeper.sk)
 
 	dummyDescription := stake.NewDescription("T", "E", "S", "T")
@@ -227,8 +244,9 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 }
 
 func TestTallyDelgatorOverride(t *testing.T) {
-
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakeHandler := stake.NewHandler(keeper.sk)
 
 	dummyDescription := stake.NewDescription("T", "E", "S", "T")
@@ -262,8 +280,9 @@ func TestTallyDelgatorOverride(t *testing.T) {
 }
 
 func TestTallyDelgatorInherit(t *testing.T) {
-
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakeHandler := stake.NewHandler(keeper.sk)
 
 	dummyDescription := stake.NewDescription("T", "E", "S", "T")
@@ -296,7 +315,9 @@ func TestTallyDelgatorInherit(t *testing.T) {
 }
 
 func TestTallyDelgatorMultipleOverride(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakeHandler := stake.NewHandler(keeper.sk)
 
 	dummyDescription := stake.NewDescription("T", "E", "S", "T")
@@ -332,7 +353,9 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 }
 
 func TestTallyDelgatorMultipleInherit(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 100)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakeHandler := stake.NewHandler(keeper.sk)
 
 	dummyDescription := stake.NewDescription("T", "E", "S", "T")

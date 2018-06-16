@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 )
 
 var (
@@ -18,6 +19,7 @@ var (
 
 // test ValidateBasic for MsgCreateValidator
 func TestMsgSubmitProposal(t *testing.T) {
+	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.Coins{})
 	tests := []struct {
 		title, description, proposalType string
 		proposerAddr                     sdk.Address
@@ -48,6 +50,7 @@ func TestMsgSubmitProposal(t *testing.T) {
 
 // test ValidateBasic for MsgDeposit
 func TestMsgDeposit(t *testing.T) {
+	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.Coins{})
 	tests := []struct {
 		proposalID    int64
 		depositerAddr sdk.Address
@@ -74,6 +77,7 @@ func TestMsgDeposit(t *testing.T) {
 
 // test ValidateBasic for MsgDeposit
 func TestMsgVote(t *testing.T) {
+	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.Coins{})
 	tests := []struct {
 		proposalID int64
 		voterAddr  sdk.Address

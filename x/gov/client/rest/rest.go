@@ -60,8 +60,7 @@ func postProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCon
 
 		proposer, err := sdk.GetAccAddressBech32(req.Proposer)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			writeErr(&w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -69,9 +68,7 @@ func postProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCon
 		msg := gov.NewMsgSubmitProposal(req.Title, req.Description, req.ProposalType, proposer, req.InitialDeposit)
 		err = msg.ValidateBasic()
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			err2 := errors.Errorf(err.Error())
-			w.Write([]byte(err2.Error()))
+			writeErr(&w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -94,8 +91,7 @@ func depositHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext)
 
 		depositer, err := sdk.GetAccAddressBech32(req.Depositer)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			writeErr(&w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -103,9 +99,7 @@ func depositHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext)
 		msg := gov.NewMsgDeposit(depositer, req.ProposalID, req.Amount)
 		err = msg.ValidateBasic()
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			err2 := errors.Errorf(err.Error())
-			w.Write([]byte(err2.Error()))
+			writeErr(&w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -128,8 +122,7 @@ func voteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) ht
 
 		voter, err := sdk.GetAccAddressBech32(req.Voter)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			writeErr(&w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -137,9 +130,7 @@ func voteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) ht
 		msg := gov.NewMsgVote(voter, req.ProposalID, req.Option)
 		err = msg.ValidateBasic()
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			err2 := errors.Errorf(err.Error())
-			w.Write([]byte(err2.Error()))
+			writeErr(&w, http.StatusBadRequest, err.Error())
 			return
 		}
 

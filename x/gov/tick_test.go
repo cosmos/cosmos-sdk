@@ -3,13 +3,16 @@ package gov
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	abci "github.com/tendermint/abci/types"
 )
 
 func TestTickExpiredDepositPeriod(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 100)
-	// stakeHandler := stake.NewHandler(keeper.sk)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	govHandler := NewHandler(keeper)
 
 	assert.Nil(t, keeper.InactiveProposalQueuePeek(ctx))
@@ -38,8 +41,9 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 100)
-	// stakeHandler := stake.NewHandler(keeper.sk)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	govHandler := NewHandler(keeper)
 
 	assert.Nil(t, keeper.InactiveProposalQueuePeek(ctx))
@@ -82,8 +86,9 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickPassedDepositPeriod(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 100)
-	// stakeHandler := stake.NewHandler(keeper.sk)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	govHandler := NewHandler(keeper)
 
 	assert.Nil(t, keeper.InactiveProposalQueuePeek(ctx))
@@ -124,8 +129,10 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 }
 
 func TestTickPassedVotingPeriod(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 100)
-	// stakeHandler := stake.NewHandler(keeper.sk)
+	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	SortAddresses(addrs)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	govHandler := NewHandler(keeper)
 
 	assert.Nil(t, keeper.InactiveProposalQueuePeek(ctx))

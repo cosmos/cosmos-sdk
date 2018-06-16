@@ -19,6 +19,7 @@ const (
 	CodeInvalidDescription      sdk.CodeType = 7
 	CodeInvalidProposalType     sdk.CodeType = 8
 	CodeInvalidVote             sdk.CodeType = 9
+	CodeInvalidGenesis          sdk.CodeType = 10
 )
 
 //----------------------------------------
@@ -59,4 +60,8 @@ func ErrInvalidProposalType(codespace sdk.CodespaceType, proposalType string) sd
 
 func ErrInvalidVote(codespace sdk.CodespaceType, voteOption string) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidVote, fmt.Sprintf("'%s' is not a valid voting option", voteOption))
+}
+
+func ErrInvalidGenesis(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidVote, msg)
 }

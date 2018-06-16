@@ -175,3 +175,30 @@ func StringToStatus(status string) VoteStatus {
 		return VoteStatus(0xff)
 	}
 }
+
+//-----------------------------------------------------------
+// Rest Proposals
+type ProposalRest struct {
+	ProposalID       int64     `json:"proposal_id"`        //  ID of the proposal
+	Title            string    `json:"title"`              //  Title of the proposal
+	Description      string    `json:"description"`        //  Description of the proposal
+	ProposalType     string    `json:"proposal_type"`      //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	Status           string    `json:"string"`             //  Status of the Proposal {Pending, Active, Passed, Rejected}
+	SubmitBlock      int64     `json:"submit_block"`       //  Height of the block where TxGovSubmitProposal was included
+	TotalDeposit     sdk.Coins `json:"total_deposit"`      //  Current deposit on this proposal. Initial value is set at InitialDeposit
+	VotingStartBlock int64     `json:"voting_start_block"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+}
+
+// Turn any Proposal to a ProposalRest
+func ProposalToRest(proposal Proposal) ProposalRest {
+	return ProposalRest{
+		ProposalID:       proposal.GetProposalID(),
+		Title:            proposal.GetTitle(),
+		Description:      proposal.GetDescription(),
+		ProposalType:     ProposalTypeToString(proposal.GetProposalType()),
+		Status:           StatusToString(proposal.GetStatus()),
+		SubmitBlock:      proposal.GetSubmitBlock(),
+		TotalDeposit:     proposal.GetTotalDeposit(),
+		VotingStartBlock: proposal.GetVotingStartBlock(),
+	}
+}

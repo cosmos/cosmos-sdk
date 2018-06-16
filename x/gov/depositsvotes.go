@@ -70,3 +70,21 @@ func StringToVoteOption(str string) (VoteOption, sdk.Error) {
 		return VoteOption(0xff), ErrInvalidVote(DefaultCodespace, str)
 	}
 }
+
+//-----------------------------------------------------------
+// Rest Votes
+type VoteRest struct {
+	Voter      string `json:"voter"`       //  address of the voter
+	ProposalID int64  `json:"proposal_id"` //  proposalID of the proposal
+	Option     string `json:"option"`
+}
+
+// Turn any Vote to a ProposalRest
+func VoteToRest(vote Vote) VoteRest {
+	bechAddr, _ := sdk.Bech32ifyAcc(vote.Voter)
+	return VoteRest{
+		Voter:      bechAddr,
+		ProposalID: vote.ProposalID,
+		Option:     VoteOptionToString(vote.Option),
+	}
+}

@@ -23,7 +23,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	stakerest "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 )
@@ -422,7 +421,7 @@ func TestSubmitProposal(t *testing.T) {
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
-	assert.Equal(t, "Test", proposal.GetTitle())
+	assert.Equal(t, "Test", proposal.Title)
 }
 
 func TestDeposit(t *testing.T) {
@@ -444,7 +443,7 @@ func TestDeposit(t *testing.T) {
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
-	assert.Equal(t, "Test", proposal.GetTitle())
+	assert.Equal(t, "Test", proposal.Title)
 
 	// create SubmitProposal TX
 	resultTx = doDeposit(t, port, seed, name, password, addr, proposalID)
@@ -452,7 +451,7 @@ func TestDeposit(t *testing.T) {
 
 	// query proposal
 	proposal = getProposal(t, port, proposalID)
-	assert.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{sdk.Coin{"steak", 10}}))
+	assert.True(t, proposal.TotalDeposit.IsEqual(sdk.Coins{sdk.Coin{"steak", 10}}))
 }
 
 func TestVote(t *testing.T) {
@@ -474,7 +473,7 @@ func TestVote(t *testing.T) {
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
-	assert.Equal(t, "Test", proposal.GetTitle())
+	assert.Equal(t, "Test", proposal.Title)
 
 	// create SubmitProposal TX
 	resultTx = doDeposit(t, port, seed, name, password, addr, proposalID)
@@ -482,7 +481,7 @@ func TestVote(t *testing.T) {
 
 	// query proposal
 	proposal = getProposal(t, port, proposalID)
-	assert.Equal(t, gov.StatusVotingPeriod, proposal.GetStatus())
+	assert.Equal(t, gov.StatusToString(gov.StatusVotingPeriod), proposal.Status)
 
 	// create SubmitProposal TX
 	resultTx = doVote(t, port, seed, name, password, addr, proposalID)
@@ -671,20 +670,20 @@ func getValidators(t *testing.T, port string) []stakerest.StakeValidatorOutput {
 	return validators
 }
 
-func getProposal(t *testing.T, port string, proposalID int64) govrest.ProposalRest {
+func getProposal(t *testing.T, port string, proposalID int64) gov.ProposalRest {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d", proposalID), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var proposal govrest.ProposalRest
+	var proposal gov.ProposalRest
 	err := cdc.UnmarshalJSON([]byte(body), &proposal)
 	require.Nil(t, err)
 	return proposal
 }
 
-func getVote(t *testing.T, port string, proposalID int64, voterAddr sdk.Address) govrest.VoteRest {
+func getVote(t *testing.T, port string, proposalID int64, voterAddr sdk.Address) gov.VoteRest {
 	bechVoterAddr := sdk.MustBech32ifyAcc(voterAddr)
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/votes/%d/%s", proposalID, bechVoterAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var vote govrest.VoteRest
+	var vote gov.VoteRest
 	err := cdc.UnmarshalJSON([]byte(body), &vote)
 	require.Nil(t, err)
 	return vote

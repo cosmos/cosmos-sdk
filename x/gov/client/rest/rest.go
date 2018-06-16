@@ -188,7 +188,7 @@ func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 
 		var proposal gov.Proposal
 		cdc.MustUnmarshalBinary(res, &proposal)
-		proposalRest := ProposalToRest(proposal)
+		proposalRest := gov.ProposalToRest(proposal)
 		output, err := wire.MarshalJSONIndent(cdc, proposalRest)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -247,7 +247,7 @@ func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx 
 
 		var vote gov.Vote
 		cdc.MustUnmarshalBinary(res, &vote)
-		voteRest := VoteToRest(vote)
+		voteRest := gov.VoteToRest(vote)
 		output, err := wire.MarshalJSONIndent(cdc, voteRest)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -255,82 +255,5 @@ func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx 
 			return
 		}
 		w.Write(output)
-	}
-}
-
-//-----------------------------------------------------------
-// Rest Proposals
-type ProposalRest struct {
-	ProposalID       int64     `json:"proposal_id"`        //  ID of the proposal
-	Title            string    `json:"title"`              //  Title of the proposal
-	Description      string    `json:"description"`        //  Description of the proposal
-	ProposalType     string    `json:"proposal_type"`      //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-	Status           string    `json:"string"`             //  Status of the Proposal {Pending, Active, Passed, Rejected}
-	SubmitBlock      int64     `json:"submit_block"`       //  Height of the block where TxGovSubmitProposal was included
-	TotalDeposit     sdk.Coins `json:"total_deposit"`      //  Current deposit on this proposal. Initial value is set at InitialDeposit
-	VotingStartBlock int64     `json:"voting_start_block"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
-}
-
-// Implements Proposal Interface
-var _ gov.Proposal = (*ProposalRest)(nil)
-
-// nolint
-func (tp ProposalRest) GetProposalID() int64               { return tp.ProposalID }
-func (tp *ProposalRest) SetProposalID(proposalID int64)    { tp.ProposalID = proposalID }
-func (tp ProposalRest) GetTitle() string                   { return tp.Title }
-func (tp *ProposalRest) SetTitle(title string)             { tp.Title = title }
-func (tp ProposalRest) GetDescription() string             { return tp.Description }
-func (tp *ProposalRest) SetDescription(description string) { tp.Description = description }
-func (tp ProposalRest) GetProposalType() gov.ProposalKind {
-	str, _ := gov.StringToProposalType(tp.ProposalType)
-	return str
-}
-func (tp *ProposalRest) SetProposalType(proposalType gov.ProposalKind) {
-	tp.ProposalType = gov.ProposalTypeToString(proposalType)
-}
-func (tp ProposalRest) GetStatus() gov.VoteStatus {
-	return gov.StringToStatus(tp.Status)
-}
-func (tp *ProposalRest) SetStatus(status gov.VoteStatus) {
-	tp.Status = gov.StatusToString(status)
-}
-func (tp ProposalRest) GetSubmitBlock() int64                   { return tp.SubmitBlock }
-func (tp *ProposalRest) SetSubmitBlock(submitBlock int64)       { tp.SubmitBlock = submitBlock }
-func (tp ProposalRest) GetTotalDeposit() sdk.Coins              { return tp.TotalDeposit }
-func (tp *ProposalRest) SetTotalDeposit(totalDeposit sdk.Coins) { tp.TotalDeposit = totalDeposit }
-func (tp ProposalRest) GetVotingStartBlock() int64              { return tp.VotingStartBlock }
-func (tp *ProposalRest) SetVotingStartBlock(votingStartBlock int64) {
-	tp.VotingStartBlock = votingStartBlock
-}
-
-// Turn any Proposal to a ProposalRest
-func ProposalToRest(proposal gov.Proposal) ProposalRest {
-	return ProposalRest{
-		ProposalID:       proposal.GetProposalID(),
-		Title:            proposal.GetTitle(),
-		Description:      proposal.GetDescription(),
-		ProposalType:     gov.ProposalTypeToString(proposal.GetProposalType()),
-		Status:           gov.StatusToString(proposal.GetStatus()),
-		SubmitBlock:      proposal.GetSubmitBlock(),
-		TotalDeposit:     proposal.GetTotalDeposit(),
-		VotingStartBlock: proposal.GetVotingStartBlock(),
-	}
-}
-
-//-----------------------------------------------------------
-// Rest Votes
-type VoteRest struct {
-	Voter      string `json:"voter"`       //  address of the voter
-	ProposalID int64  `json:"proposal_id"` //  proposalID of the proposal
-	Option     string `json:"option"`
-}
-
-// Turn any Vote to a ProposalRest
-func VoteToRest(vote gov.Vote) VoteRest {
-	bechAddr, _ := sdk.Bech32ifyAcc(vote.Voter)
-	return VoteRest{
-		Voter:      bechAddr,
-		ProposalID: vote.ProposalID,
-		Option:     gov.VoteOptionToString(vote.Option),
 	}
 }

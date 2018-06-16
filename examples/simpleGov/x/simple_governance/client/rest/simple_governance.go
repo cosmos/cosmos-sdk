@@ -8,9 +8,9 @@ import (
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simpleGovernance"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/simpleGovernance"
 	"github.com/gorilla/mux"
 	"github.com/tendermint/go-crypto/keys"
 )
@@ -205,7 +205,7 @@ func GetProposalVotesHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.Cor
 			return
 		}
 
-		key := simpleGovernance.GenerateProposalVotesVoteKey(proposalID)
+		key := simpleGovernance.GenerateProposalVotesVoteKey(int64(proposalID))
 
 		res, err := ctx.Query(key, "proposal")
 		if err != nil {
@@ -272,7 +272,7 @@ func SubmitVoteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreConte
 		// TODO submit vote
 
 		// build message
-		msg := simpleGovernance.NewVoteMsg(proposalID, vote.Option, voter)
+		msg := simpleGovernance.NewVoteMsg(int64(proposalID), vote.Option, voter)
 
 		// sign
 		ctx = ctx.WithChainID(vote.ChainID)

@@ -256,3 +256,51 @@ func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx 
 		w.Write(output)
 	}
 }
+
+//-----------------------------------------------------------
+// Rest Proposals
+type RestProposal struct {
+	ProposalID       int64     `json:"proposal_id"`        //  ID of the proposal
+	Title            string    `json:"title"`              //  Title of the proposal
+	Description      string    `json:"description"`        //  Description of the proposal
+	ProposalType     string    `json:"proposal_type"`      //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	Status           string    `json:"string"`             //  Status of the Proposal {Pending, Active, Passed, Rejected}
+	SubmitBlock      int64     `json:"submit_block"`       //  Height of the block where TxGovSubmitProposal was included
+	TotalDeposit     sdk.Coins `json:"total_deposit"`      //  Current deposit on this proposal. Initial value is set at InitialDeposit
+	VotingStartBlock int64     `json:"voting_start_block"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+}
+
+// Implements Proposal Interface
+var _ gov.Proposal = (*RestProposal)(nil)
+
+// nolint
+func (tp RestProposal) GetProposalID() int64               { return tp.ProposalID }
+func (tp *RestProposal) SetProposalID(proposalID int64)    { tp.ProposalID = proposalID }
+func (tp RestProposal) GetTitle() string                   { return tp.Title }
+func (tp *RestProposal) SetTitle(title string)             { tp.Title = title }
+func (tp RestProposal) GetDescription() string             { return tp.Description }
+func (tp *RestProposal) SetDescription(description string) { tp.Description = description }
+func (tp RestProposal) GetProposalType() gov.ProposalKind {
+	return gov.StringToProposalType(tp.ProposalType)
+}
+func (tp *RestProposal) SetProposalType(proposalType gov.ProposalKind) {
+	tp.ProposalType = gov.StringToProposalType(proposalType)
+}
+func (tp RestProposal) GetStatus() gov.VoteStatus {
+	return gov.StringToStatus(tp.Status)
+}
+func (tp *RestProposal) SetStatus(status gov.VoteStatus) {
+	tp.Status = gov.StatusToString(status)
+}
+func (tp RestProposal) GetSubmitBlock() int64                   { return tp.SubmitBlock }
+func (tp *RestProposal) SetSubmitBlock(submitBlock int64)       { tp.SubmitBlock = submitBlock }
+func (tp RestProposal) GetTotalDeposit() sdk.Coins              { return tp.TotalDeposit }
+func (tp *RestProposal) SetTotalDeposit(totalDeposit sdk.Coins) { tp.TotalDeposit = totalDeposit }
+func (tp RestProposal) GetVotingStartBlock() int64              { return tp.VotingStartBlock }
+func (tp *RestProposal) SetVotingStartBlock(votingStartBlock int64) {
+	tp.VotingStartBlock = votingStartBlock
+}
+
+func proposalToRest(proposal Proposal) {
+	return RestProposal{}
+}

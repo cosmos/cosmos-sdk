@@ -12,6 +12,8 @@ import (
 	rpcclient "github.com/tendermint/tendermint/rpc/lib/client"
 )
 
+// Wait for the next tendermint block from the Tendermint RPC
+// on localhost
 func WaitForNextHeightTM(port string) {
 	url := fmt.Sprintf("http://localhost:%v", port)
 	cl := tmclient.NewHTTP(url, "/websocket")
@@ -22,6 +24,8 @@ func WaitForNextHeightTM(port string) {
 	waitForHeightTM(resBlock.Block.Height+1, url)
 }
 
+// Wait for the given height from the Tendermint RPC
+// on localhost
 func WaitForHeightTM(height int64, port string) {
 	url := fmt.Sprintf("http://localhost:%v", port)
 	waitForHeightTM(height, url)
@@ -54,7 +58,7 @@ func waitForHeightTM(height int64, url string) {
 	}
 }
 
-// Uses localhost
+// Wait for height from the LCD API on localhost
 func WaitForHeight(height int64, port string) {
 	url := fmt.Sprintf("http://localhost:%v/blocks/latest", port)
 	waitForHeight(height, url)

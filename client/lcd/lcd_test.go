@@ -23,6 +23,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	stakerest "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 )
@@ -481,7 +482,7 @@ func TestVote(t *testing.T) {
 
 	// query proposal
 	proposal = getProposal(t, port, proposalID)
-	assert.Equal(t, byte(gov.StatusVotingPeriod), proposal.GetStatus())
+	assert.Equal(t, gov.StatusVotingPeriod, proposal.GetStatus())
 
 	// create SubmitProposal TX
 	resultTx = doVote(t, port, seed, name, password, addr, proposalID)
@@ -489,7 +490,7 @@ func TestVote(t *testing.T) {
 
 	vote := getVote(t, port, proposalID, addr)
 	assert.Equal(t, proposalID, vote.ProposalID)
-	assert.Equal(t, gov.OptionYes, vote.Option)
+	assert.Equal(t, gov.VoteOptionToString(gov.OptionYes), vote.Option)
 }
 
 //_____________________________________________________________________________
@@ -670,20 +671,20 @@ func getValidators(t *testing.T, port string) []stakerest.StakeValidatorOutput {
 	return validators
 }
 
-func getProposal(t *testing.T, port string, proposalID int64) gov.Proposal {
+func getProposal(t *testing.T, port string, proposalID int64) govrest.ProposalRest {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d", proposalID), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var proposal gov.Proposal
+	var proposal govrest.ProposalRest
 	err := cdc.UnmarshalJSON([]byte(body), &proposal)
 	require.Nil(t, err)
 	return proposal
 }
 
-func getVote(t *testing.T, port string, proposalID int64, voterAddr sdk.Address) gov.Vote {
+func getVote(t *testing.T, port string, proposalID int64, voterAddr sdk.Address) govrest.VoteRest {
 	bechVoterAddr := sdk.MustBech32ifyAcc(voterAddr)
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/votes/%d/%s", proposalID, bechVoterAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var vote gov.Vote
+	var vote govrest.VoteRest
 	err := cdc.UnmarshalJSON([]byte(body), &vote)
 	require.Nil(t, err)
 	return vote

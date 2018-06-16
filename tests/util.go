@@ -12,6 +12,7 @@ import (
 	rpcclient "github.com/tendermint/tendermint/rpc/lib/client"
 )
 
+// Waits for very next TM height
 func WaitForNextHeightTM(port string) {
 	url := fmt.Sprintf("http://localhost:%v", port)
 	cl := tmclient.NewHTTP(url, "/websocket")
@@ -22,6 +23,7 @@ func WaitForNextHeightTM(port string) {
 	waitForHeightTM(resBlock.Block.Height+1, url)
 }
 
+// Waits for a TM height
 func WaitForHeightTM(height int64, port string) {
 	url := fmt.Sprintf("http://localhost:%v", port)
 	waitForHeightTM(height, url)

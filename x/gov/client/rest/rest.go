@@ -17,7 +17,7 @@ import (
 // REST Variable names
 // nolint
 const (
-	RestProposalID = "proposalID"
+	ProposalRestID = "proposalID"
 	RestVoter      = "voterAddress"
 )
 
@@ -26,8 +26,8 @@ func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb 
 	r.HandleFunc("/gov/submitproposal", postProposalHandlerFn(cdc, kb, ctx)).Methods("POST")
 	r.HandleFunc("/gov/deposit", depositHandlerFn(cdc, kb, ctx)).Methods("POST")
 	r.HandleFunc("/gov/vote", voteHandlerFn(cdc, kb, ctx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}", RestProposalID), queryProposalHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/gov/votes/{%s}/{%s}", RestProposalID, RestVoter), queryVoteHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}", ProposalRestID), queryProposalHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/gov/votes/{%s}/{%s}", ProposalRestID, RestVoter), queryVoteHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
 }
 
 type postProposalReq struct {
@@ -161,7 +161,7 @@ func voteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) ht
 func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		strProposalID := vars[RestProposalID]
+		strProposalID := vars[ProposalRestID]
 
 		if len(strProposalID) == 0 {
 			w.WriteHeader(http.StatusBadRequest)
@@ -186,9 +186,10 @@ func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 			return
 		}
 
-		proposal := new(gov.Proposal)
-		cdc.MustUnmarshalBinary(res, proposal)
-		output, err := wire.MarshalJSONIndent(cdc, proposal)
+		var proposal gov.Proposal
+		cdc.MustUnmarshalBinary(res, &proposal)
+		proposalRest := ProposalToRest(proposal)
+		output, err := wire.MarshalJSONIndent(cdc, proposalRest)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -201,7 +202,7 @@ func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		strProposalID := vars[RestProposalID]
+		strProposalID := vars[ProposalRestID]
 		bechVoterAddr := vars[RestVoter]
 
 		if len(strProposalID) == 0 {
@@ -244,10 +245,10 @@ func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx 
 			return
 		}
 
-		vote := new(gov.Vote)
-		cdc.MustUnmarshalBinary(res, vote)
-
-		output, err := wire.MarshalJSONIndent(cdc, vote)
+		var vote gov.Vote
+		cdc.MustUnmarshalBinary(res, &vote)
+		voteRest := VoteToRest(vote)
+		output, err := wire.MarshalJSONIndent(cdc, voteRest)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -259,7 +260,7 @@ func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx 
 
 //-----------------------------------------------------------
 // Rest Proposals
-type RestProposal struct {
+type ProposalRest struct {
 	ProposalID       int64     `json:"proposal_id"`        //  ID of the proposal
 	Title            string    `json:"title"`              //  Title of the proposal
 	Description      string    `json:"description"`        //  Description of the proposal
@@ -271,36 +272,65 @@ type RestProposal struct {
 }
 
 // Implements Proposal Interface
-var _ gov.Proposal = (*RestProposal)(nil)
+var _ gov.Proposal = (*ProposalRest)(nil)
 
 // nolint
-func (tp RestProposal) GetProposalID() int64               { return tp.ProposalID }
-func (tp *RestProposal) SetProposalID(proposalID int64)    { tp.ProposalID = proposalID }
-func (tp RestProposal) GetTitle() string                   { return tp.Title }
-func (tp *RestProposal) SetTitle(title string)             { tp.Title = title }
-func (tp RestProposal) GetDescription() string             { return tp.Description }
-func (tp *RestProposal) SetDescription(description string) { tp.Description = description }
-func (tp RestProposal) GetProposalType() gov.ProposalKind {
-	return gov.StringToProposalType(tp.ProposalType)
+func (tp ProposalRest) GetProposalID() int64               { return tp.ProposalID }
+func (tp *ProposalRest) SetProposalID(proposalID int64)    { tp.ProposalID = proposalID }
+func (tp ProposalRest) GetTitle() string                   { return tp.Title }
+func (tp *ProposalRest) SetTitle(title string)             { tp.Title = title }
+func (tp ProposalRest) GetDescription() string             { return tp.Description }
+func (tp *ProposalRest) SetDescription(description string) { tp.Description = description }
+func (tp ProposalRest) GetProposalType() gov.ProposalKind {
+	str, _ := gov.StringToProposalType(tp.ProposalType)
+	return str
 }
-func (tp *RestProposal) SetProposalType(proposalType gov.ProposalKind) {
-	tp.ProposalType = gov.StringToProposalType(proposalType)
+func (tp *ProposalRest) SetProposalType(proposalType gov.ProposalKind) {
+	tp.ProposalType = gov.ProposalTypeToString(proposalType)
 }
-func (tp RestProposal) GetStatus() gov.VoteStatus {
+func (tp ProposalRest) GetStatus() gov.VoteStatus {
 	return gov.StringToStatus(tp.Status)
 }
-func (tp *RestProposal) SetStatus(status gov.VoteStatus) {
+func (tp *ProposalRest) SetStatus(status gov.VoteStatus) {
 	tp.Status = gov.StatusToString(status)
 }
-func (tp RestProposal) GetSubmitBlock() int64                   { return tp.SubmitBlock }
-func (tp *RestProposal) SetSubmitBlock(submitBlock int64)       { tp.SubmitBlock = submitBlock }
-func (tp RestProposal) GetTotalDeposit() sdk.Coins              { return tp.TotalDeposit }
-func (tp *RestProposal) SetTotalDeposit(totalDeposit sdk.Coins) { tp.TotalDeposit = totalDeposit }
-func (tp RestProposal) GetVotingStartBlock() int64              { return tp.VotingStartBlock }
-func (tp *RestProposal) SetVotingStartBlock(votingStartBlock int64) {
+func (tp ProposalRest) GetSubmitBlock() int64                   { return tp.SubmitBlock }
+func (tp *ProposalRest) SetSubmitBlock(submitBlock int64)       { tp.SubmitBlock = submitBlock }
+func (tp ProposalRest) GetTotalDeposit() sdk.Coins              { return tp.TotalDeposit }
+func (tp *ProposalRest) SetTotalDeposit(totalDeposit sdk.Coins) { tp.TotalDeposit = totalDeposit }
+func (tp ProposalRest) GetVotingStartBlock() int64              { return tp.VotingStartBlock }
+func (tp *ProposalRest) SetVotingStartBlock(votingStartBlock int64) {
 	tp.VotingStartBlock = votingStartBlock
 }
 
-func proposalToRest(proposal Proposal) {
-	return RestProposal{}
+// Turn any Proposal to a ProposalRest
+func ProposalToRest(proposal gov.Proposal) ProposalRest {
+	return ProposalRest{
+		ProposalID:       proposal.GetProposalID(),
+		Title:            proposal.GetTitle(),
+		Description:      proposal.GetDescription(),
+		ProposalType:     gov.ProposalTypeToString(proposal.GetProposalType()),
+		Status:           gov.StatusToString(proposal.GetStatus()),
+		SubmitBlock:      proposal.GetSubmitBlock(),
+		TotalDeposit:     proposal.GetTotalDeposit(),
+		VotingStartBlock: proposal.GetVotingStartBlock(),
+	}
+}
+
+//-----------------------------------------------------------
+// Rest Votes
+type VoteRest struct {
+	Voter      string `json:"voter"`       //  address of the voter
+	ProposalID int64  `json:"proposal_id"` //  proposalID of the proposal
+	Option     string `json:"option"`
+}
+
+// Turn any Vote to a ProposalRest
+func VoteToRest(vote gov.Vote) VoteRest {
+	bechAddr, _ := sdk.Bech32ifyAcc(vote.Voter)
+	return VoteRest{
+		Voter:      bechAddr,
+		ProposalID: vote.ProposalID,
+		Option:     gov.VoteOptionToString(vote.Option),
+	}
 }

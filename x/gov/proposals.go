@@ -147,13 +147,13 @@ func StringToProposalType(str string) (ProposalKind, sdk.Error) {
 // StatusToString for pretty prints of Status
 func StatusToString(status VoteStatus) string {
 	switch status {
-	case 0x00:
+	case StatusDepositPeriod:
 		return "DepositPeriod"
-	case 0x01:
+	case StatusVotingPeriod:
 		return "VotingPeriod"
-	case 0x02:
+	case StatusPassed:
 		return "Passed"
-	case 0x03:
+	case StatusRejected:
 		return "Rejected"
 	default:
 		return ""

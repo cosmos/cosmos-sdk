@@ -1,0 +1,20 @@
+{
+  "node_id": "aef085c4bfed0c1ffc6705f2e1e3bf85e5164600",
+  "ip": "45.77.53.208",
+  "validator": {
+    "pub_key": {
+      "type": "AC26791624DE60",
+      "value": "RpX+xkwnCNw5DpBelscz4//TiODyC9RDiyIuD6NEwx0="
+    },
+    "power": 100,
+    "name": "aurel"
+  },
+  "app_gen_tx": {
+    "name": "aurel",
+    "address": "10B0899E05A486AE4E5589C39587DF7E9A185872",
+    "pub_key": {
+      "type": "AC26791624DE60",
+      "value": "RpX+xkwnCNw5DpBelscz4//TiODyC9RDiyIuD6NEwx0="
+    }
+  }
+}

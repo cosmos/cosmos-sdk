@@ -54,7 +54,7 @@ func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().String(FlagFromChainID, "", "Chain ID for ibc node to check outgoing packets")
-	cmd.Flags().String(FlagFromChainNode, "tcp://localhost:46657", "<host>:<port> to tendermint rpc interface for this chain")
+	cmd.Flags().String(FlagFromChainNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 	cmd.Flags().String(FlagToChainID, "", "Chain ID for ibc node to broadcast incoming packets")
 	cmd.Flags().String(FlagToChainNode, "tcp://localhost:36657", "<host>:<port> to tendermint rpc interface for this chain")
 
@@ -116,7 +116,7 @@ OUTER:
 		lengthKey := ibc.EgressLengthKey(toChainID)
 		egressLengthbz, err := query(fromChainNode, lengthKey, c.ibcStore)
 		if err != nil {
-			c.logger.Error("Error querying outgoing packet list length", "err", err)
+			c.logger.Error("error querying outgoing packet list length", "err", err)
 			continue OUTER //TODO replace with continue (I think it should just to the correct place where OUTER is now)
 		}
 		var egressLength int64
@@ -134,14 +134,14 @@ OUTER:
 		for i := processed; i < egressLength; i++ {
 			egressbz, err := query(fromChainNode, ibc.EgressKey(toChainID, i), c.ibcStore)
 			if err != nil {
-				c.logger.Error("Error querying egress packet", "err", err)
+				c.logger.Error("error querying egress packet", "err", err)
 				continue OUTER // TODO replace to break, will break first loop then send back to the beginning (aka OUTER)
 			}
 
 			err = c.broadcastTx(seq, toChainNode, c.refine(egressbz, i, passphrase))
 			seq++
 			if err != nil {
-				c.logger.Error("Error broadcasting ingress packet", "err", err)
+				c.logger.Error("error broadcasting ingress packet", "err", err)
 				continue OUTER // TODO replace to break, will break first loop then send back to the beginning (aka OUTER)
 			}
 
@@ -151,7 +151,7 @@ OUTER:
 }
 
 func query(node string, key []byte, storeName string) (res []byte, err error) {
-	return context.NewCoreContextFromViper().WithNodeURI(node).Query(key, storeName)
+	return context.NewCoreContextFromViper().WithNodeURI(node).QueryStore(key, storeName)
 }
 
 func (c relayCommander) broadcastTx(seq int64, node string, tx []byte) error {

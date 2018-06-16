@@ -24,18 +24,18 @@ var _, _ sdk.Msg = &MsgBeginRedelegate{}, &MsgCompleteRedelegate{}
 // MsgCreateValidator - struct for unbonding transactions
 type MsgCreateValidator struct {
 	Description
-	ValidatorAddr  sdk.Address   `json:"address"`
-	PubKey         crypto.PubKey `json:"pubkey"`
-	SelfDelegation sdk.Coin      `json:"self_delegation"`
+	ValidatorAddr sdk.Address   `json:"address"`
+	PubKey        crypto.PubKey `json:"pubkey"`
+	Bond          sdk.Coin      `json:"bond"`
 }
 
 func NewMsgCreateValidator(validatorAddr sdk.Address, pubkey crypto.PubKey,
-	selfDelegation sdk.Coin, description Description) MsgCreateValidator {
+	bond sdk.Coin, description Description) MsgCreateValidator {
 	return MsgCreateValidator{
-		Description:    description,
-		ValidatorAddr:  validatorAddr,
-		PubKey:         pubkey,
-		SelfDelegation: selfDelegation,
+		Description:   description,
+		ValidatorAddr: validatorAddr,
+		PubKey:        pubkey,
+		Bond:          bond,
 	}
 }
 
@@ -47,23 +47,36 @@ func (msg MsgCreateValidator) GetSigners() []sdk.Address {
 
 // get the bytes for the message signer to sign on
 func (msg MsgCreateValidator) GetSignBytes() []byte {
-	return MsgCdc.MustMarshalBinary(msg)
+	b, err := msgCdc.MarshalJSON(struct {
+		Description
+		ValidatorAddr string   `json:"address"`
+		PubKey        string   `json:"pubkey"`
+		Bond          sdk.Coin `json:"bond"`
+	}{
+		Description:   msg.Description,
+		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
+		PubKey:        sdk.MustBech32ifyValPub(msg.PubKey),
+	})
+	if err != nil {
+		panic(err)
+	}
+	return b
 }
 
 // quick validity check
 func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
-		return ErrNilValidatorAddr(DefaultCodespace)
+		return ErrValidatorEmpty(DefaultCodespace)
 	}
-	if msg.SelfDelegation.Denom != StakingToken {
-		return ErrBadDenom(DefaultCodespace)
+	if msg.Bond.Denom != StakingToken {
+		return ErrBadBondingDenom(DefaultCodespace)
 	}
-	if msg.SelfDelegation.Amount <= 0 {
-		return ErrBadDelegationAmount(DefaultCodespace)
+	if msg.Bond.Amount <= 0 {
+		return ErrBadBondingAmount(DefaultCodespace)
 	}
 	empty := Description{}
 	if msg.Description == empty {
-		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "description must be included")
+		return newError(DefaultCodespace, CodeInvalidInput, "description must be included")
 	}
 	return nil
 }
@@ -91,7 +104,13 @@ func (msg MsgEditValidator) GetSigners() []sdk.Address {
 
 // get the bytes for the message signer to sign on
 func (msg MsgEditValidator) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
+	b, err := msgCdc.MarshalJSON(struct {
+		Description
+		ValidatorAddr string `json:"address"`
+	}{
+		Description:   msg.Description,
+		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -101,11 +120,11 @@ func (msg MsgEditValidator) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
-		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "nil validator address")
+		return ErrValidatorEmpty(DefaultCodespace)
 	}
 	empty := Description{}
 	if msg.Description == empty {
-		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
+		return newError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
 	}
 	return nil
 }
@@ -135,7 +154,15 @@ func (msg MsgDelegate) GetSigners() []sdk.Address {
 
 // get the bytes for the message signer to sign on
 func (msg MsgDelegate) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
+	b, err := msgCdc.MarshalJSON(struct {
+		DelegatorAddr string   `json:"delegator_addr"`
+		ValidatorAddr string   `json:"validator_addr"`
+		Bond          sdk.Coin `json:"bond"`
+	}{
+		DelegatorAddr: sdk.MustBech32ifyAcc(msg.DelegatorAddr),
+		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
+		Bond:          msg.Bond,
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -145,16 +172,16 @@ func (msg MsgDelegate) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.DelegatorAddr == nil {
-		return ErrNilDelegatorAddr(DefaultCodespace)
+		return ErrBadDelegatorAddr(DefaultCodespace)
 	}
 	if msg.ValidatorAddr == nil {
-		return ErrNilValidatorAddr(DefaultCodespace)
+		return ErrBadValidatorAddr(DefaultCodespace)
 	}
 	if msg.Bond.Denom != StakingToken {
-		return ErrBadDenom(DefaultCodespace)
+		return ErrBadBondingDenom(DefaultCodespace)
 	}
 	if msg.Bond.Amount <= 0 {
-		return ErrBadDelegationAmount(DefaultCodespace)
+		return ErrBadBondingAmount(DefaultCodespace)
 	}
 	return nil
 }
@@ -188,7 +215,17 @@ func (msg MsgBeginRedelegate) GetSigners() []sdk.Address {
 
 // get the bytes for the message signer to sign on
 func (msg MsgBeginRedelegate) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
+	b, err := msgCdc.MarshalJSON(struct {
+		DelegatorAddr    string `json:"delegator_addr"`
+		ValidatorSrcAddr string `json:"validator_src_addr"`
+		ValidatorDstAddr string `json:"validator_dst_addr"`
+		Shares           string `json:"shares"`
+	}{
+		DelegatorAddr:    sdk.MustBech32ifyAcc(msg.DelegatorAddr),
+		ValidatorSrcAddr: sdk.MustBech32ifyVal(msg.ValidatorSrcAddr),
+		ValidatorDstAddr: sdk.MustBech32ifyVal(msg.ValidatorDstAddr),
+		Shares:           msg.Shares,
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -254,7 +291,15 @@ func (msg MsgCompleteRedelegate) GetSigners() []sdk.Address {
 
 // get the bytes for the message signer to sign on
 func (msg MsgCompleteRedelegate) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
+	b, err := msgCdc.MarshalJSON(struct {
+		DelegatorAddr    string `json:"delegator_addr"`
+		ValidatorSrcAddr string `json:"validator_src_addr"`
+		ValidatorDstAddr string `json:"validator_dst_addr"`
+	}{
+		DelegatorAddr:    sdk.MustBech32ifyAcc(msg.DelegatorAddr),
+		ValidatorSrcAddr: sdk.MustBech32ifyVal(msg.ValidatorSrcAddr),
+		ValidatorDstAddr: sdk.MustBech32ifyVal(msg.ValidatorDstAddr),
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -298,7 +343,15 @@ func (msg MsgBeginUnbonding) GetSigners() []sdk.Address { return []sdk.Address{m
 
 // get the bytes for the message signer to sign on
 func (msg MsgBeginUnbonding) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
+	b, err := msgCdc.MarshalJSON(struct {
+		DelegatorAddr string `json:"delegator_addr"`
+		ValidatorAddr string `json:"validator_addr"`
+		SharesAmount  string `json:"shares_amount"`
+	}{
+		DelegatorAddr: sdk.MustBech32ifyAcc(msg.DelegatorAddr),
+		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
+		SharesAmount:  msg.SharesAmount.String(),
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -338,7 +391,13 @@ func (msg MsgCompleteUnbonding) GetSigners() []sdk.Address { return []sdk.Addres
 
 // get the bytes for the message signer to sign on
 func (msg MsgCompleteUnbonding) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
+	b, err := msgCdc.MarshalJSON(struct {
+		DelegatorAddr string `json:"delegator_addr"`
+		ValidatorAddr string `json:"validator_src_addr"`
+	}{
+		DelegatorAddr: sdk.MustBech32ifyAcc(msg.DelegatorAddr),
+		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
+	})
 	if err != nil {
 		panic(err)
 	}

@@ -170,8 +170,8 @@
 [[projects]]
   name = "github.com/pelletier/go-toml"
   packages = ["."]
-  revision = "acdc4509485b587f5e675510c4f2c63e90ff68a8"
-  version = "v1.1.0"
+  revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
+  version = "v1.2.0"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -197,8 +197,8 @@
     ".",
     "mem"
   ]
-  revision = "63644898a8da0bc22138abf860edaf5277b6102e"
-  version = "v1.1.0"
+  revision = "787d034dfe70e44075ccc060d346146ef53270ad"
+  version = "v1.1.1"
 
 [[projects]]
   name = "github.com/spf13/cast"
@@ -236,8 +236,8 @@
     "assert",
     "require"
   ]
-  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
-  version = "v1.2.1"
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
 
 [[projects]]
   branch = "master"
@@ -256,7 +256,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "5d6fca44a948d2be89a9702de7717f0168403d3d"
+  revision = "e2150783cd35f5b607daca48afd8c57ec54cc995"
 
 [[projects]]
   name = "github.com/tendermint/abci"
@@ -267,8 +267,8 @@
     "server",
     "types"
   ]
-  revision = "9af8b7a7c87478869f8c280ed9539470b8f470b4"
-  version = "v0.11.0-rc4"
+  revision = "198dccf0ddfd1bb176f87657e3286a05a6ed9540"
+  version = "v0.12.0"
 
 [[projects]]
   branch = "master"
@@ -330,6 +330,7 @@
     "p2p/conn",
     "p2p/pex",
     "p2p/upnp",
+    "privval",
     "proxy",
     "rpc/client",
     "rpc/core",
@@ -344,11 +345,9 @@
     "state/txindex/kv",
     "state/txindex/null",
     "types",
-    "types/priv_validator",
     "version"
   ]
-  revision = "b5baab0238c9ec26e3b2d229b0243f9ff9220bdb"
-  version = "v0.20.0-rc3"
+  revision = "696e8c6f9e950eec15f150f314d2dd9ddf6bc601"
 
 [[projects]]
   branch = "develop"
@@ -366,7 +365,7 @@
     "merkle",
     "merkle/tmhash"
   ]
-  revision = "44f1bdb0d55cc6527e38d0a7aab406e2580f56a4"
+  revision = "0c98d10b4ffbd87978d79c160e835b3d3df241ec"
 
 [[projects]]
   branch = "master"
@@ -382,7 +381,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "5ba7f63082460102a45837dbd1827e10f9479ac0"
+  revision = "8ac0e0d97ce45cd83d1d7243c060cb8461dda5e9"
 
 [[projects]]
   branch = "master"
@@ -396,13 +395,13 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "1e491301e022f8f977054da4c2d852decd59571f"
+  revision = "db08ff08e8622530d9ed3a0e8ac279f6d4c02196"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "c11f84a56e43e20a78cee75a7c034031ecf57d1f"
+  revision = "bff228c7b664c5fce602223a05fb708fd8654986"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -463,6 +462,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ccb2ab7644a38c2d0326280582f758256e37fc98c3ef0403581e3b85cff42188"
+  inputs-digest = "d02a24bcfd8bded901e1b154e19b81ff797d3921046ede19d1d11eed61e871e7"
   solver-name = "gps-cdcl"
   solver-version = 1

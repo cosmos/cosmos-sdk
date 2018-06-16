@@ -9,7 +9,7 @@
   - name: Gather status
     uri:
       body_format: json
-      url: "http://{{inventory_hostname}}:46657/status"
+      url: "http://{{inventory_hostname}}:26657/status"
     register: status
 
   - name: Print status

@@ -140,7 +140,7 @@ func TestUpdateStatus(t *testing.T) {
 // TODO refactor this random setup
 
 // generate a random validator
-func randomValidator(r *rand.Rand) Validator {
+func randomValidator(r *rand.Rand, i int) Validator {
 
 	poolSharesAmt := sdk.NewRat(int64(r.Int31n(10000)))
 	delShares := sdk.NewRat(int64(r.Int31n(10000)))
@@ -165,7 +165,7 @@ func randomSetup(r *rand.Rand, numValidators int) (Pool, []Validator) {
 
 	validators := make([]Validator, numValidators)
 	for i := 0; i < numValidators; i++ {
-		validator := randomValidator(r)
+		validator := randomValidator(r, i)
 		if validator.Status() == sdk.Bonded {
 			pool.BondedShares = pool.BondedShares.Add(validator.PoolShares.Bonded())
 			pool.BondedTokens += validator.PoolShares.Bonded().Evaluate()

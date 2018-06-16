@@ -115,6 +115,7 @@ func (s PoolShares) ToBonded(p Pool) PoolShares {
 
 //_________________________________________________________________________________________________________
 
+// TODO better tests
 // get the equivalent amount of tokens contained by the shares
 func (s PoolShares) Tokens(p Pool) sdk.Rat {
 	switch s.Status {

@@ -20,7 +20,7 @@ import (
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/p2p"
 	tmtypes "github.com/tendermint/tendermint/types"
-	pvm "github.com/tendermint/tendermint/types/priv_validator"
+	pvm "github.com/tendermint/tendermint/privval"
 	tmcli "github.com/tendermint/tmlibs/cli"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -255,7 +255,7 @@ func processGenTxs(genTxsDir string, cdc *wire.Codec, appInit AppInit) (
 		if len(persistentPeers) == 0 {
 			comma = ""
 		}
-		persistentPeers += fmt.Sprintf("%s%s@%s:46656", comma, genTx.NodeID, genTx.IP)
+		persistentPeers += fmt.Sprintf("%s%s@%s:26656", comma, genTx.NodeID, genTx.IP)
 	}
 
 	return

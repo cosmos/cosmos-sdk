@@ -1,6 +1,11 @@
 # Changelog
 
-## Pending
+*TBD*
+
+BREAKING CHANGES
+* Change default ports from 466xx to 266xx
+
+## 0.20.0
 
 BREAKING CHANGES
 * [cli] rearranged commands under subcommands
@@ -11,8 +16,6 @@ BREAKING CHANGES
     * `gaiacli stake complete-unbonding`
     * `gaiacli stake begin-redelegation`
     * `gaiacli stake complete-redelegation`
-
-FEATURES
 
 IMPROVEMENTS
 * bank module uses go-wire codec instead of 'encoding/json'
@@ -32,31 +35,41 @@ FIXES
 * [lcd] tests now don't depend on raw json text
 * [stake] error strings lower case
 
-## 0.18.1
+## 0.19.0
+
+*June 13, 2018*
 
 BREAKING CHANGES
+* msg.GetSignBytes() now returns bech32-encoded addresses in all cases
+* [lcd] REST end-points now include gas
 
-* [x/auth] move stuff specific to auth anteHandler to the auth module rather than the types folder. This includes:
-  * StdTx (and its related stuff i.e. StdSignDoc, etc)
-  * StdFee
-  * StdSignature
-  * Account interface
-  * Related to this organization, I also:
-* [x/auth] got rid of AccountMapper interface (in favor of the struct already in auth module)
-* [x/auth] removed the FeeHandler function from the AnteHandler, Replaced with FeeKeeper
-* [x/auth] Removed GetSignatures() from Tx interface (as different Tx styles might use something different than StdSignature)
-* [store] Removed SubspaceIterator and ReverseSubspaceIterator from KVStore interface and replaced them with helper functions in /types
-* Switch to bech32cosmos on all human readable inputs and outputs
+FEATURES
+* [x/auth] Added AccountNumbers to BaseAccount and StdTxs to allow for replay protection with account pruning
+* [lcd] added an endpoint to query for the SDK version of the connected node
 
-BUG FIXES
+IMPROVEMENTS
+* export command now writes current validator set for Tendermint
+* [tests] Application module tests now use a mock application
+* [gaiacli] Fix error message when account isn't found when running gaiacli account
+* [lcd] refactored to eliminate use of global variables, and interdependent tests
+* [x/stake] More stake tests added to test ByPower index
 
-* auto-sequencing transactions correctly
-* query sequence via account store
-* fixed duplicate pub_key in stake.Validator
+FIXES
+* Fixes consensus fault on testnet - see postmortem [here](https://github.com/cosmos/cosmos-sdk/issues/1197#issuecomment-396823021)
+* [x/stake] bonded inflation removed, non-bonded inflation partially implemented
+* [lcd] Switch to bech32 for addresses on all human readable inputs and outputs
+* [lcd] fixed tx indexing/querying
+* [cli] Added `--gas` flag to specify transaction gas limit
+* [gaia] Registered slashing message handler
+* [x/slashing] Set signInfo.StartHeight correctly for newly bonded validators
 
-## 0.18.0
+FEATURES
+* [docs] Reorganize documentation
+* [docs] Update staking spec, create WIP spec for slashing, and fees
 
-_TBD_
+## 0.18.0 
+
+*June 9, 2018*
 
 BREAKING CHANGES
 
@@ -75,6 +88,20 @@ BREAKING CHANGES
   * Introduction of Unbonding fields, lowlevel logic throughout (not fully implemented with queue)
   * Introduction of PoolShares type within validators,
     replaces three rational fields (BondedShares, UnbondingShares, UnbondedShares
+* [x/auth] move stuff specific to auth anteHandler to the auth module rather than the types folder. This includes:
+  * StdTx (and its related stuff i.e. StdSignDoc, etc)
+  * StdFee
+  * StdSignature
+  * Account interface
+  * Related to this organization, I also:
+* [x/auth] got rid of AccountMapper interface (in favor of the struct already in auth module)
+* [x/auth] removed the FeeHandler function from the AnteHandler, Replaced with FeeKeeper
+* [x/auth] Removed GetSignatures() from Tx interface (as different Tx styles might use something different than StdSignature)
+* [store] Removed SubspaceIterator and ReverseSubspaceIterator from KVStore interface and replaced them with helper functions in /types
+* [cli] rearranged commands under subcommands
+* [stake] remove Tick and add EndBlocker
+* Switch to bech32cosmos on all human readable inputs and outputs
+
 
 FEATURES
 
@@ -91,12 +118,60 @@ FEATURES
 * [stake] Added REST API
 * [Makefile] Added terraform/ansible playbooks to easily create remote testnets on Digital Ocean
 
+
 BUG FIXES
 
-* Auto-sequencing now works correctly
 * [stake] staking delegator shares exchange rate now relative to equivalent-bonded-tokens the validator has instead of bonded tokens
   ^ this is important for unbonded validators in the power store!
+* [cli] fixed cli-bash tests
+* [ci] added cli-bash tests
+* [basecoin] updated basecoin for stake and slashing
+* [docs] fixed references to old cli commands
 * [docs] Downgraded Swagger to v2 for downstream compatibility
+* auto-sequencing transactions correctly
+* query sequence via account store
+* fixed duplicate pub_key in stake.Validator
+* Auto-sequencing now works correctly
+* [gaiacli] Fix error message when account isn't found when running gaiacli account
+
+
+## 0.17.5
+
+*June 5, 2018*
+
+Update to Tendermint v0.19.9 (Fix evidence reactor, mempool deadlock, WAL panic,
+memory leak)
+
+## 0.17.4
+
+*May 31, 2018*
+
+Update to Tendermint v0.19.7 (WAL fixes and more)
+
+## 0.17.3
+
+*May 29, 2018*
+
+Update to Tendermint v0.19.6 (fix fast-sync halt)
+
+## 0.17.5
+
+*June 5, 2018*
+
+Update to Tendermint v0.19.9 (Fix evidence reactor, mempool deadlock, WAL panic,
+memory leak)
+
+## 0.17.4
+
+*May 31, 2018*
+
+Update to Tendermint v0.19.7 (WAL fixes and more)
+
+## 0.17.3
+
+*May 29, 2018*
+
+Update to Tendermint v0.19.6 (fix fast-sync halt)
 
 ## 0.17.2
 
@@ -136,6 +211,7 @@ BUG FIXES
 
 * Auto-sequencing now works correctly
 
+
 ## 0.16.0 (May 14th, 2018)
 
 BREAKING CHANGES
@@ -170,11 +246,13 @@ BUG FIXES
 
 * Gaia now uses stake, ported from github.com/cosmos/gaia
 
+
 ## 0.15.1 (April 29, 2018)
 
 IMPROVEMENTS:
 
 * Update Tendermint to v0.19.1 (includes many rpc fixes)
+
 
 ## 0.15.0 (April 29, 2018)
 

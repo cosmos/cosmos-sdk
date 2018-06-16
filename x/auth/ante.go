@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	deductFeesCost sdk.Gas = 10
-	verifyCost             = 100
+	deductFeesCost    sdk.Gas = 10
+	verifyCost                = 100
+	maxMemoCharacters         = 100
 )
 
 // NewAnteHandler returns an AnteHandler that checks
@@ -38,6 +39,12 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 		msg := tx.GetMsg()
 		memo := tx.GetMemo()
+
+		if len(memo) > maxMemoCharacters {
+			return ctx,
+				sdk.ErrMemoTooLarge(fmt.Sprintf("maximum %d characters but was %d characters", maxMemoCharacters, len(memo))).Result(),
+				true
+		}
 
 		// Assert that number of signatures is correct.
 		var signerAddrs = msg.GetSigners()

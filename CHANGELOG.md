@@ -6,6 +6,7 @@
 
 BREAKING CHANGES
 * Change default ports from 466xx to 266xx
+* AltBytes renamed to Memo, now a string, max 100 characters
 
 ## 0.19.0
 

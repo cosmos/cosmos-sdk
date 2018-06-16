@@ -6,8 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-
-	simpleGovernance "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simple_governance"
 )
 
 var _ auth.Account = (*AppAccount)(nil)
@@ -45,8 +43,7 @@ func GetAccountDecoder(cdc *wire.Codec) auth.AccountDecoder {
 
 // State to Unmarshal
 type GenesisState struct {
-	Accounts         []*GenesisAccount        `json:"accounts"`
-	simpleGovGenesis simpleGovernance.Genesis `json:"simple_governance"`
+	Accounts []*GenesisAccount `json:"accounts"`
 }
 
 // GenesisAccount doesn't need pubkey or sequence

@@ -2,19 +2,11 @@
 
 ## Slashing
 
-Messges which may compromise the safety of the underlying consensus protocol ("equivocations")
-result in some amount of the offending validator's shares being removed ("slashed").
-
-Currently, such messages include only the following:
-
-- prevotes by the same validator for more than one BlockID at the same
-  Height and Round 
-- precommits by the same validator for more than one BlockID at the same
-  Height and Round 
-
-We call any such pair of conflicting votes `Evidence`. Full nodes in the network prioritize the 
-detection and gossipping of `Evidence` so that it may be rapidly included in blocks and the offending
-validators punished.
+Tendermint blocks can include
+[Evidence](https://github.com/tendermint/tendermint/blob/develop/docs/spec/blockchain/blockchain.md#evidence), which indicates that a validator
+committed malicious behaviour. The relevant information is forwarded to the
+application as [ABCI
+Evidence](https://github.com/tendermint/abci/blob/develop/types/types.proto#L259), so the validator an be accordingly punished.
 
 For some `evidence` to be valid, it must satisfy: 
 

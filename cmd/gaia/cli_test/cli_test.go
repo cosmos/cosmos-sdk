@@ -173,8 +173,8 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	assert.Equal(t, int64(45), fooAcc.GetCoins().AmountOf("steak"))
 
 	proposal1 := executeGetProposal(t, fmt.Sprintf("gaiacli gov query-proposal --proposalID=1 --output=json %v", flags))
-	assert.Equal(t, int64(1), proposal1.GetProposalID())
-	assert.Equal(t, gov.StatusDepositPeriod, proposal1.GetStatus())
+	assert.Equal(t, int64(1), proposal1.ProposalID)
+	assert.Equal(t, gov.StatusToString(gov.StatusDepositPeriod), proposal1.Status)
 
 	executeWrite(t, fmt.Sprintf("gaiacli gov deposit %v --depositer=%v --deposit=10steak --proposalID=1 --name=foo", flags, fooCech), pass)
 	tests.WaitForNextHeightTM(port)
@@ -182,15 +182,15 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
 	assert.Equal(t, int64(35), fooAcc.GetCoins().AmountOf("steak"))
 	proposal1 = executeGetProposal(t, fmt.Sprintf("gaiacli gov query-proposal --proposalID=1 --output=json %v", flags))
-	assert.Equal(t, int64(1), proposal1.GetProposalID())
-	assert.Equal(t, gov.StatusVotingPeriod, proposal1.GetStatus())
+	assert.Equal(t, int64(1), proposal1.ProposalID)
+	assert.Equal(t, gov.StatusToString(gov.StatusVotingPeriod), proposal1.Status)
 
 	executeWrite(t, fmt.Sprintf("gaiacli gov vote %v --proposalID=1 --voter=%v --option=Yes --name=foo", flags, fooCech), pass)
 	tests.WaitForNextHeightTM(port)
 
 	vote := executeGetVote(t, fmt.Sprintf("gaiacli gov query-vote  --proposalID=1 --voter=%v --output=json %v", fooCech, flags))
 	assert.Equal(t, int64(1), vote.ProposalID)
-	assert.Equal(t, gov.OptionYes, vote.Option)
+	assert.Equal(t, gov.VoteOptionToString(gov.OptionYes), vote.Option)
 }
 
 //___________________________________________________________________________________
@@ -256,18 +256,18 @@ func executeGetValidator(t *testing.T, cmdStr string) stake.Validator {
 	return validator
 }
 
-func executeGetProposal(t *testing.T, cmdStr string) gov.Proposal {
+func executeGetProposal(t *testing.T, cmdStr string) gov.ProposalRest {
 	out := tests.ExecuteT(t, cmdStr)
-	var proposal gov.Proposal
+	var proposal gov.ProposalRest
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &proposal)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
 	return proposal
 }
 
-func executeGetVote(t *testing.T, cmdStr string) gov.Vote {
+func executeGetVote(t *testing.T, cmdStr string) gov.VoteRest {
 	out := tests.ExecuteT(t, cmdStr)
-	var vote gov.Vote
+	var vote gov.VoteRest
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &vote)
 	require.NoError(t, err, "out %v\n, err %v", out, err)

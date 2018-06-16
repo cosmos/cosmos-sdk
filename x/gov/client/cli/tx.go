@@ -196,9 +196,10 @@ func GetCmdQueryProposal(storeName string, cdc *wire.Codec) *cobra.Command {
 				return errors.Errorf("proposalID [%d] is not existed", proposalID)
 			}
 
-			proposal := new(gov.Proposal)
-			cdc.MustUnmarshalBinary(res, proposal)
-			output, err := wire.MarshalJSONIndent(cdc, proposal)
+			var proposal gov.Proposal
+			cdc.MustUnmarshalBinary(res, &proposal)
+			proposalRest := gov.ProposalToRest(proposal)
+			output, err := wire.MarshalJSONIndent(cdc, proposalRest)
 			if err != nil {
 				return err
 			}
@@ -232,9 +233,10 @@ func GetCmdQueryVote(storeName string, cdc *wire.Codec) *cobra.Command {
 				return errors.Errorf("proposalID [%d] does not exist", proposalID)
 			}
 
-			vote := new(gov.Vote)
-			cdc.MustUnmarshalBinary(res, vote)
-			output, err := wire.MarshalJSONIndent(cdc, vote)
+			var vote gov.Vote
+			cdc.MustUnmarshalBinary(res, &vote)
+			voteRest := gov.VoteToRest(vote)
+			output, err := wire.MarshalJSONIndent(cdc, voteRest)
 			if err != nil {
 				return err
 			}

@@ -159,7 +159,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
 	assert.True(t, depositsIterator.Valid())
 	depositsIterator.Close()
-	assert.Equal(t, StatusVotingPeriod, keeper.GetProposal(ctx, proposalID).GetStatus())
+	assert.Equal(t, byte(StatusVotingPeriod), keeper.GetProposal(ctx, proposalID).GetStatus())
 
 	EndBlocker(ctx, keeper)
 
@@ -167,5 +167,5 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	depositsIterator = keeper.GetDeposits(ctx, proposalID)
 	assert.False(t, depositsIterator.Valid())
 	depositsIterator.Close()
-	assert.Equal(t, StatusRejected, keeper.GetProposal(ctx, proposalID).GetStatus())
+	assert.Equal(t, byte(StatusRejected), keeper.GetProposal(ctx, proposalID).GetStatus())
 }

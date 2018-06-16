@@ -5,15 +5,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
-// Type of a proposal (ie. Text, ParameterChange, etc)
-type ProposalType byte
-
 //nolint
 const (
-	StatusDepositPeriod = "DepositPeriod"
-	StatusVotingPeriod  = "VotingPeriod"
-	StatusPassed        = "Passed"
-	StatusRejected      = "Rejected"
+	StatusDepositPeriod = 0x00
+	StatusVotingPeriod  = 0x01
+	StatusPassed        = 0x02
+	StatusRejected      = 0x03
 
 	OptionYes        = "Yes"
 	OptionAbstain    = "Abstain"
@@ -50,14 +47,32 @@ func validProposalType(proposalType byte) bool {
 
 // String to proposalType byte.  Returns ff if invalid.
 func StringToProposalType(str string) (byte, sdk.Error) {
-	if str == "Text" {
+	switch str {
+	case "Text":
 		return ProposalTypeText, nil
-	} else if str == "ParameterChange" {
+	case "ParameterChange":
 		return ProposalTypeParameterChange, nil
-	} else if str == "SoftwareUpgrade" {
+	case "SoftwareUpgrade":
 		return ProposalTypeSoftwareUpgrade, nil
+	default:
+		return 0xff, ErrInvalidProposalType(DefaultCodespace, str)
 	}
-	return 0xff, ErrInvalidProposalType(DefaultCodespace, str)
+}
+
+// StatusToString for pretty prints of Status
+func StatusToString(status byte) string {
+	switch status {
+	case 0x00:
+		return "DepositPeriod"
+	case 0x01:
+		return "VotingPeriod"
+	case 0x02:
+		return "Passed"
+	case 0x03:
+		return "Rejected"
+	default:
+		return ""
+	}
 }
 
 // Vote
@@ -82,8 +97,8 @@ type Proposal interface {
 	GetProposalType() byte
 	SetProposalType(byte)
 
-	GetStatus() string
-	SetStatus(string)
+	GetStatus() byte
+	SetStatus(byte)
 
 	GetSubmitBlock() int64
 	SetSubmitBlock(int64)
@@ -118,7 +133,7 @@ type TextProposal struct {
 	Description  string `json:"description"`   //  Description of the proposal
 	ProposalType byte   `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 
-	Status string `json:"string"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
+	Status byte `json:"string"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
 
 	SubmitBlock  int64     `json:"submit_block"`  //  Height of the block where TxGovSubmitProposal was included
 	TotalDeposit sdk.Coins `json:"total_deposit"` //  Current deposit on this proposal. Initial value is set at InitialDeposit
@@ -138,8 +153,8 @@ func (tp TextProposal) GetDescription() string                  { return tp.Desc
 func (tp *TextProposal) SetDescription(description string)      { tp.Description = description }
 func (tp TextProposal) GetProposalType() byte                   { return tp.ProposalType }
 func (tp *TextProposal) SetProposalType(proposalType byte)      { tp.ProposalType = proposalType }
-func (tp TextProposal) GetStatus() string                       { return tp.Status }
-func (tp *TextProposal) SetStatus(status string)                { tp.Status = status }
+func (tp TextProposal) GetStatus() byte                         { return tp.Status }
+func (tp *TextProposal) SetStatus(status byte)                  { tp.Status = status }
 func (tp TextProposal) GetSubmitBlock() int64                   { return tp.SubmitBlock }
 func (tp *TextProposal) SetSubmitBlock(submitBlock int64)       { tp.SubmitBlock = submitBlock }
 func (tp TextProposal) GetTotalDeposit() sdk.Coins              { return tp.TotalDeposit }

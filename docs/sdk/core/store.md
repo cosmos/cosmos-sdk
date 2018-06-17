@@ -52,3 +52,18 @@ cat KVStore are stored separately in catDB with the prefix of
 disambiguate store items from other items of non-storage concern.
 
 
+
+## 
+
+Mounting an IAVLStore
+TODO:
+
+IAVLStore: Fast balanced dynamic Merkle store.
+supports iteration.
+MultiStore: multiple Merkle tree backends in a single store
+allows using Ethereum Patricia Trie and Tendermint IAVL in same app
+Provide caching for intermediate state during execution of blocks and
+transactions (including for iteration)
+Historical state pruning and snapshotting.
+Query proofs (existence, absence, range, etc.) on current and retained
+historical state.

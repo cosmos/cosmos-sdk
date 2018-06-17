@@ -6,7 +6,7 @@ the Cosmos Hub.
 NOTE: the specifications are not yet complete and very much a work in progress.
 
 - [Store](store) - The core Merkle store that holds the state.
-- [Auth](auth) - The structure and authnentication of accounts and transactions.
+- [Auth](auth) - The structure and authentication of accounts and transactions.
 - [Bank](bank) - Sending tokens.
 - [Governance](governance) - Proposals and voting.
 - [IBC](ibc) - Inter-Blockchain Communication (IBC) protocol.

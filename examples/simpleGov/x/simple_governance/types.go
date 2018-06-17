@@ -42,6 +42,7 @@ func NewProposal(
 	}
 }
 
+// updateTally updates the counter for each of the available options
 func (p *Proposal) updateTally(option string, amount int64) sdk.Error {
 	switch option {
 	case "Yes":
@@ -80,12 +81,12 @@ func (pq ProposalQueue) isEmpty() bool {
 //--------------------------------------------------------
 //--------------------------------------------------------
 
-//SubmitProposalMsg defines a
+//SubmitProposalMsg defines a message to create a proposal
 type SubmitProposalMsg struct {
-	Title       string
-	Description string
-	Deposit     sdk.Coins
-	Submitter   sdk.Address
+	Title       string      // Title of the proposal
+	Description string      // Description of the proposal
+	Deposit     sdk.Coins   // Deposit paid by submitter. Must be > MinDeposit to enter voting period
+	Submitter   sdk.Address // Address of the submitter
 }
 
 // NewSubmitProposalMsg submits a message with a new proposal
@@ -156,9 +157,9 @@ func (msg SubmitProposalMsg) String() string {
 // VoteMsg defines the msg of a staker containing the vote option to an
 // specific proposal
 type VoteMsg struct {
-	ProposalID int64
-	Option     string
-	Voter      sdk.Address
+	ProposalID int64       // ID of the proposal
+	Option     string      // Option chosen by voter
+	Voter      sdk.Address // Address of the voter
 }
 
 // NewVoteMsg creates a VoteMsg instance

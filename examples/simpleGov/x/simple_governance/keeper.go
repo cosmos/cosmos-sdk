@@ -9,12 +9,12 @@ import (
 
 // nolint
 type Keeper struct {
-	SimpleGov sdk.StoreKey
-	codespace sdk.CodespaceType
-	cdc       *wire.Codec
+	SimpleGov sdk.StoreKey      // Key to our module's store
+	codespace sdk.CodespaceType // Reserves space for error codes
+	cdc       *wire.Codec       // Codec to encore/decode structs
 
-	ck bank.Keeper
-	sm stake.Keeper
+	ck bank.Keeper  // Needed to handle deposits. This module onlyl requires read/writes to Atom balance
+	sm stake.Keeper // Needed to compute voting power. This module only needs read access to the staking store
 }
 
 // NewKeeper crates a new keeper with write and read access

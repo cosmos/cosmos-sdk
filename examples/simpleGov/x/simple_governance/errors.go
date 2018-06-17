@@ -25,7 +25,6 @@ const (
 	CodeInvalidDeposit        CodeType = 711
 )
 
-// NOTE: Don't stringer this, we'll put better messages in later.
 func codeToDefaultMsg(code CodeType) string {
 	switch code {
 	case CodeInvalidOption:

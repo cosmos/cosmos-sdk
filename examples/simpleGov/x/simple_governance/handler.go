@@ -46,6 +46,8 @@ func NewEndBlocker(k Keeper) sdk.EndBlocker {
 	}
 }
 
+// checkProposal checks if the proposal reached the end of the voting period
+// and handles the logic of closing it
 func checkProposal(ctx sdk.Context, k Keeper) sdk.Error {
 	proposal, err := k.ProposalQueueHead(ctx)
 	if err != nil {
@@ -73,6 +75,7 @@ func checkProposal(ctx sdk.Context, k Keeper) sdk.Error {
 	return nil
 }
 
+// handleVoteMsg handles the logic of a SubmitProposalMsg
 func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg SubmitProposalMsg) sdk.Result {
 	err := msg.ValidateBasic()
 	if err != nil {
@@ -105,6 +108,7 @@ func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg SubmitProposalMsg) s
 	return ErrMinimumDeposit().Result()
 }
 
+// handleVoteMsg handles the logic of a VoteMsg
 func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
 	err := msg.ValidateBasic()
 	if err != nil {

@@ -9,7 +9,7 @@ NOTE: This documentation is a work-in-progress!
     - [Application Architecture](overview/apps.md) - Layers in the application architecture
 - [Install](install.md) - Install the library and example applications
 - [Core](core)
-    - [BaseApp](core/baseapp.md) - BaseApp is the base layer of the appication
+    - [BaseApp](core/baseapp.md) - BaseApp is the base layer of the application
     - [The MultiStore](core/multistore.md) - MultiStore is a rich Merkle database
     - [Messages](core/messages.md) - Messages contain the content of a transaction
     - [Handlers](core/handlers.md) - Handlers are the workhorse of the app!

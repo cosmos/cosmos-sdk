@@ -1,5 +1,4 @@
-
-## Accounts and x/auth
+# Accounts 
 
 ### auth.Account
 

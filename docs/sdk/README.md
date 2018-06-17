@@ -1,5 +1,7 @@
 # Cosmos SDK Documentation
 
+NOTE: This documentation is a work-in-progress!
+
 - [Overview](overview) 
     - [Overview](overview/overview.md) - An overview of the Cosmos-SDK
     - [The Object-Capability Model](overview/capabilities.md) - 

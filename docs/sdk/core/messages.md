@@ -1,7 +1,7 @@
+# Messages
 
-### Messages
-
-Users can create messages containing arbitrary information by
+Messages are the primary inputs to application state machines.
+Developers can create messages containing arbitrary information by
 implementing the `Msg` interface:
 
 ```go
@@ -31,7 +31,7 @@ correspond to the messages handler, so there can be many messages with the same
 type.
 
 Messages must also specify how they are to be authenticated. The `GetSigners()`
-method return a list of addresses that must sign the message, while the
+method return a list of SDK addresses that must sign the message, while the
 `GetSignBytes()` method returns the bytes that must be signed for a signature
 to be valid.
 
@@ -45,11 +45,13 @@ begins.
 For instance, the `Basecoin` message types are defined in `x/bank/tx.go`: 
 
 ```go
+// Send coins from many inputs to many outputs.
 type MsgSend struct {
 	Inputs  []Input  `json:"inputs"`
 	Outputs []Output `json:"outputs"`
 }
 
+// Issue new coins to many outputs.
 type MsgIssue struct {
 	Banker  sdk.Address `json:"banker"`
 	Outputs []Output       `json:"outputs"`

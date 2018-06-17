@@ -1,6 +1,4 @@
-## Storage
-
-## MultiStore
+# MultiStore
 
 The Cosmos-SDK provides a special Merkle database called a `MultiStore` to be used for all application
 storage. The MultiStore consists of multiple Stores that must be mounted to the
@@ -34,23 +32,26 @@ barKey := sdk.NewKVStoreKey("bar")
 catKey := sdk.NewKVStoreKey("cat")
 ```
 
-Stores can either specify there own database, or share a primary one.
-In this example, `foo` and `bar` will share a primary database, while `cat` will
+Stores are mounted directly on the BaseApp.
+They can either specify their own database, or share the primary one already
+passed to the BaseApp.
+
+In this example, `foo` and `bar` will share the primary database, while `cat` will
 specify its own:
 
 ```
-mainDB, catDB := dbm.NewMemDB(), dbm.NewMemDB()
-ms := NewCommitMultiStore(mainDB)
-ms.MountStoreWithDB(fooKey, sdk.StoreTypeIAVL, nil)
-ms.MountStoreWithDB(barKey, sdk.StoreTypeIAVL, nil)
-ms.MountStoreWithDB(catKey, sdk.StoreTypeIAVL, catDB)
+catDB := dbm.NewMemDB()
+app.MountStore(fooKey, sdk.StoreTypeIAVL)
+app.MountStore(barKey, sdk.StoreTypeIAVL)
+app.MountStoreWithDB(catKey, sdk.StoreTypeIAVL, catDB)
 ```
 
 ## Accessing Stores
 
 In the Cosmos-SDK, the only way to access a store is with a capability-key.
 Only modules given explicit access to the capability-key will 
-be able to access the corresponding store.
+be able to access the corresponding store. Access to the MultiStore is mediated
+through the `Context`.
 
 ## Notes 
 

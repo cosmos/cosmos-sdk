@@ -1,9 +1,9 @@
 package baseapp
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 	"os"
 	"testing"
 
@@ -643,46 +643,46 @@ func TestValidatorChange(t *testing.T) {
 
 // Use burn and send msg types to test multiple msgs in one tx
 type testBurnMsg struct {
-	Addr   sdk.Address
+	Addr sdk.Address
 	Amount sdk.Coins
 }
 
 const msgType3 = "burn"
 
-func (msg testBurnMsg) Type() string { return msgType3 }
+func (msg testBurnMsg) Type() string                       { return msgType3 }
 func (msg testBurnMsg) GetSignBytes() []byte {
 	bz, _ := json.Marshal(msg)
 	return bz
 }
-func (msg testBurnMsg) ValidateBasic() sdk.Error {
+func (msg testBurnMsg) ValidateBasic() sdk.Error { 
 	if msg.Addr == nil {
 		return sdk.ErrInvalidAddress("Cannot use nil as Address")
 	}
 	return nil
-}
+ }
 func (msg testBurnMsg) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.Addr}
 }
 
 type testSendMsg struct {
-	Sender   sdk.Address
+	Sender sdk.Address
 	Receiver sdk.Address
-	Amount   sdk.Coins
+	Amount sdk.Coins
 }
 
 const msgType4 = "send"
 
-func (msg testSendMsg) Type() string { return msgType4 }
+func (msg testSendMsg) Type() string                       { return msgType4 }
 func (msg testSendMsg) GetSignBytes() []byte {
 	bz, _ := json.Marshal(msg)
 	return bz
 }
-func (msg testSendMsg) ValidateBasic() sdk.Error {
+func (msg testSendMsg) ValidateBasic() sdk.Error { 
 	if msg.Sender == nil || msg.Receiver == nil {
 		return sdk.ErrInvalidAddress("Cannot use nil as Address")
 	}
 	return nil
-}
+ }
 func (msg testSendMsg) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.Sender}
 }
@@ -798,7 +798,7 @@ func TestMultipleBurn(t *testing.T) {
 	msg := testBurnMsg{addr, sdk.Coins{{"foocoin", int64(50)}}}
 
 	tx := GenTx(t.Name(), []sdk.Msg{msg, msg}, []int64{0}, []int64{0}, priv)
-
+	
 	res := app.Deliver(tx)
 
 	assert.Equal(t, true, res.IsOK(), res.Log)
@@ -933,7 +933,7 @@ func TestSendBurn(t *testing.T) {
 
 	// Check that state is being updated after each individual msg
 	app.accountKeeper.AddCoins(app.deliverState.ctx, addr1, sdk.Coins{{"foocoin", int64(50)}})
-
+	
 	tx = GenTx(t.Name(), []sdk.Msg{msg1, sendMsg}, []int64{0}, []int64{1}, priv1)
 
 	res = app.Deliver(tx)

@@ -36,7 +36,8 @@ See the [install instructions](/docs/install.md)
 
 ## Quick Start
 
-TODO
+- [Documentation](/docs/sdk)
+- [Examples](/examples)
 
 ## Disambiguation
 

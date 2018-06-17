@@ -169,7 +169,7 @@ func createTestAddrs(numAddrs int) []sdk.Address {
 		buffer.WriteString(numString) //adding on final two digits to make addresses unique
 		res, _ := sdk.GetAccAddressHex(buffer.String())
 		bech, _ := sdk.Bech32ifyAcc(res)
-		addresses = append(addresses, testAddr(buffer.String(), bech))
+		addresses = append(addresses, TestAddr(buffer.String(), bech))
 		buffer.Reset()
 	}
 	return addresses
@@ -184,7 +184,7 @@ func createTestPubKeys(numPubKeys int) []crypto.PubKey {
 		numString := strconv.Itoa(i)
 		buffer.WriteString("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AF") //base pubkey string
 		buffer.WriteString(numString)                                                       //adding on final two digits to make pubkeys unique
-		publicKeys = append(publicKeys, newPubKey(buffer.String()))
+		publicKeys = append(publicKeys, NewPubKey(buffer.String()))
 		buffer.Reset()
 	}
 	return publicKeys

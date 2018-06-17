@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
@@ -40,4 +42,17 @@ func (k PrivlegedKeeper) WriteGenesis(ctx sdk.Context) types.GenesisState {
 		validators,
 		bonds,
 	}
+}
+
+// WriteValidators - output current validator set
+func (k Keeper) WriteValidators(ctx sdk.Context) (vals []tmtypes.GenesisValidator) {
+	k.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
+		vals = append(vals, tmtypes.GenesisValidator{
+			PubKey: validator.GetPubKey(),
+			Power:  validator.GetPower().Evaluate(),
+			Name:   validator.GetMoniker(),
+		})
+		return false
+	})
+	return
 }

@@ -720,11 +720,11 @@ Now, let us define endpoints that will be available for users to query through H
 | Method | URL                             | Description                                                 |
 |--------|---------------------------------|-------------------------------------------------------------|
 | GET    | /proposals                      | Range query to get all submitted proposals                  |
+| POST   | /proposals                      | Submit a new proposal                                       |
 | GET    | /proposals/{id}                 | Returns a proposal given its ID                             |
 | GET    | /proposals/{id}/votes           | Range query to get all the votes casted on a given proposal |
+| POST   | /proposals/{id}/votes           | Cast a vote on a given proposal                             |
 | GET    | /proposals/{id}/votes/{address} | Returns the vote of a given address on a given proposal     |
-| POST   | /proposals/{proposal}           | Submit a new proposal                                       |
-| POST   | /proposals/{id}/{vote}          | Cast a vote on a given proposal                             |
 
 It is the job of module developers to provide sensible endpoints so that front-end developers and service providers can properly interact with it.
 
@@ -879,4 +879,4 @@ Maybe pass a few txs through CLI
 
 ### Testnet
 
-Nothing to see yet. Come back later! :3 
+Nothing to see yet. Come back later! :3

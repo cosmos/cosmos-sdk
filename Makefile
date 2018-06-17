@@ -29,22 +29,28 @@ ifeq ($(OS),Windows_NT)
 	go build $(BUILD_FLAGS) -o build/basecli.exe ./examples/basecoin/cmd/basecli
 	go build $(BUILD_FLAGS) -o build/democoind.exe ./examples/democoin/cmd/democoind
 	go build $(BUILD_FLAGS) -o build/democli.exe ./examples/democoin/cmd/democli
+	go build $(BUILD_FLAGS) -o build/simplegovd.exe ./examples/simpleGov/cmd/simplegovd
+	go build $(BUILD_FLAGS) -o build/simplegovcli.exe ./examples/simpleGov/cmd/simplegovcli
 else
 	go build $(BUILD_FLAGS) -o build/basecoind ./examples/basecoin/cmd/basecoind
 	go build $(BUILD_FLAGS) -o build/basecli ./examples/basecoin/cmd/basecli
 	go build $(BUILD_FLAGS) -o build/democoind ./examples/democoin/cmd/democoind
 	go build $(BUILD_FLAGS) -o build/democli ./examples/democoin/cmd/democli
+	go build $(BUILD_FLAGS) -o build/simplegovd ./examples/simpleGov/cmd/simplegovd
+	go build $(BUILD_FLAGS) -o build/simplegovcli ./examples/simpleGov/cmd/simplegovcli
 endif
 
-install: 
+install:
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
 
-install_examples: 
+install_examples:
 	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecoind
 	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecli
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democoind
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democli
+	go install $(BUILD_FLAGS) ./examples/simpleGov/cmd/simplegovd
+	go install $(BUILD_FLAGS) ./examples/simpleGov/cmd/simplegovcli
 
 dist:
 	@bash publish/dist.sh
@@ -86,7 +92,7 @@ godocs:
 
 test: test_unit
 
-test_cli: 
+test_cli:
 	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test`
 
 test_unit:

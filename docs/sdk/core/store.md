@@ -1,48 +1,58 @@
-
 ## Storage
 
-### MultiStore
+## MultiStore
 
-MultiStore is like a root filesystem of an operating system, except
-all the entries are fully Merkleized.  You mount onto a MultiStore
-any number of Stores.  Currently only KVStores are supported, but in
-the future we may support more kinds of stores, such as a HeapStore
+The Cosmos-SDK provides a special Merkle database called a `MultiStore` to be used for all application
+storage. The MultiStore consists of multiple Stores that must be mounted to the
+MultiStore during application setup. Stores are mounted to the MultiStore using a capabilities key, 
+ensuring that only parts of the program with access to the key can access the store.
+
+The goals of the MultiStore are as follows:
+
+- Enforce separation of concerns at the storage level
+- Restrict access to storage using capabilities
+- Support multiple Store implementations in a single MultiStore, for instance the Tendermint IAVL tree and
+  the Ethereum Patricia Trie
+- Merkle proofs for various queries (existence, absence, range, etc.) on current and retained historical state
+- Allow for iteration within Stores
+- Provide caching for intermediate state during execution of blocks and transactions (including for iteration)
+- Support historical state pruning and snapshotting
+
+Currently, all Stores in the MultiStore must satisfy the `KVStore` interface,
+which defines a simple key-value store. In the future, 
+we may support more kinds of stores, such as a HeapStore
 or a NDStore for multidimensional storage.
 
-The MultiStore as well as all mounted stores provide caching (aka
-cache-wrapping) for intermediate state (aka software transactional
-memory) during the execution of transactions.  In the case of the
-KVStore, this also works for iterators.  For example, after running
-the app's AnteHandler, the MultiStore is cache-wrapped (and each
-store is also cache-wrapped) so that should processing of the
-transaction fail, at least the transaction fees are paid and
-sequence incremented.
+## Mounting Stores
 
-The MultiStore as well as all stores support (or will support)
-historical state pruning and snapshotting and various kinds of
-queries with proofs.
+Stores are mounted during application setup. To mount some stores, first create
+their capability-keys:
 
-### KVStore
-
-Here we'll focus on the IAVLStore, which is a kind of KVStore.
-
-IAVLStore is a fast balanced dynamic Merkle store that also supports
-iteration, and of course cache-wrapping, state pruning, and various
-queries with proofs, such as proofs of existence, absence, range,
-and so on.
-
-Here's how you mount them to a MultiStore.
-
-```go
-mainDB, catDB := dbm.NewMemDB(), dbm.NewMemDB()
+```
 fooKey := sdk.NewKVStoreKey("foo")
 barKey := sdk.NewKVStoreKey("bar")
 catKey := sdk.NewKVStoreKey("cat")
+```
+
+Stores can either specify there own database, or share a primary one.
+In this example, `foo` and `bar` will share a primary database, while `cat` will
+specify its own:
+
+```
+mainDB, catDB := dbm.NewMemDB(), dbm.NewMemDB()
 ms := NewCommitMultiStore(mainDB)
 ms.MountStoreWithDB(fooKey, sdk.StoreTypeIAVL, nil)
 ms.MountStoreWithDB(barKey, sdk.StoreTypeIAVL, nil)
 ms.MountStoreWithDB(catKey, sdk.StoreTypeIAVL, catDB)
 ```
+
+## Accessing Stores
+
+In the Cosmos-SDK, the only way to access a store is with a capability-key.
+Only modules given explicit access to the capability-key will 
+be able to access the corresponding store.
+
+## Notes 
 
 In the example above, all IAVL nodes (inner and leaf) will be stored
 in mainDB with the prefix of "s/k:foo/" and "s/k:bar/" respectively,
@@ -50,20 +60,3 @@ thus sharing the mainDB.  All IAVL nodes (inner and leaf) for the
 cat KVStore are stored separately in catDB with the prefix of
 "s/\_/".  The "s/k:KEY/" and "s/\_/" prefixes are there to
 disambiguate store items from other items of non-storage concern.
-
-
-
-## 
-
-Mounting an IAVLStore
-TODO:
-
-IAVLStore: Fast balanced dynamic Merkle store.
-supports iteration.
-MultiStore: multiple Merkle tree backends in a single store
-allows using Ethereum Patricia Trie and Tendermint IAVL in same app
-Provide caching for intermediate state during execution of blocks and
-transactions (including for iteration)
-Historical state pruning and snapshotting.
-Query proofs (existence, absence, range, etc.) on current and retained
-historical state.

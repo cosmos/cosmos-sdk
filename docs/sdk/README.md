@@ -4,12 +4,13 @@ NOTE: This documentation is a work-in-progress!
 
 - [Overview](overview) 
     - [Overview](overview/overview.md) - An overview of the Cosmos-SDK
-    - [The Object-Capability Model](overview/capabilities.md) - 
-    - [Application Architecture](overview/apps.md) - Understanding SDK
-      application architecture
-- [Install](install.md) - Install the SDK library and example applications
+    - [The Object-Capability Model](overview/capabilities.md) - Security by
+      least-privilege
+    - [Application Architecture](overview/apps.md) - Layers in the application architecture
+- [Install](install.md) - Install the library and example applications
 - [Core](core)
-    - [The Store](core/store.md) - How to work with the database 
+    - [BaseApp](core/baseapp.md) - BaseApp is the base layer of the appication
+    - [The MultiStore](core/multistore.md) - MultiStore is a rich Merkle database
     - [Messages](core/messages.md) - Messages contain the content of a transaction
     - [Handlers](core/handlers.md) - Handlers are the workhorse of the app!
     - [Amino](core/amino.md) - Amino is the primary serialization library used in the SDK

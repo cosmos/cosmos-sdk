@@ -22,7 +22,6 @@ var _, _, _, _ sdk.Msg = &MsgCreateValidator{}, &MsgEditValidator{}, &MsgDelegat
 // MsgCreateValidator - struct for unbonding transactions
 type MsgCreateValidator struct {
 	Description
-	FeePayer      sdk.Address   `json:"feepayer"`
 	ValidatorAddr sdk.Address   `json:"address"`
 	PubKey        crypto.PubKey `json:"pubkey"`
 	Bond          sdk.Coin      `json:"bond"`
@@ -32,18 +31,6 @@ func NewMsgCreateValidator(validatorAddr sdk.Address, pubkey crypto.PubKey,
 	bond sdk.Coin, description Description) MsgCreateValidator {
 	return MsgCreateValidator{
 		Description:   description,
-		FeePayer:      validatorAddr,
-		ValidatorAddr: validatorAddr,
-		PubKey:        pubkey,
-		Bond:          bond,
-	}
-}
-
-func NewMsgCreateValidatorForAddr(feePayerAddr sdk.Address, validatorAddr sdk.Address, pubkey crypto.PubKey,
-	bond sdk.Coin, description Description) MsgCreateValidator {
-	return MsgCreateValidator{
-		Description:   description,
-		FeePayer:      feePayerAddr,
 		ValidatorAddr: validatorAddr,
 		PubKey:        pubkey,
 		Bond:          bond,
@@ -82,7 +69,7 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if msg.Bond.Denom != StakingToken {
 		return ErrBadBondingDenom(DefaultCodespace)
 	}
-	if msg.Bond.Amount < 0 {
+	if msg.Bond.Amount <= 0 {
 		return ErrBadBondingAmount(DefaultCodespace)
 	}
 	empty := Description{}

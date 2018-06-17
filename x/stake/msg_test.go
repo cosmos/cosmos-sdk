@@ -22,33 +22,29 @@ var (
 func TestMsgCreateValidator(t *testing.T) {
 	tests := []struct {
 		name, moniker, identity, website, details string
-		feepayer                                  sdk.Address
 		validatorAddr                             sdk.Address
 		pubkey                                    crypto.PubKey
 		bond                                      sdk.Coin
 		expectPass                                bool
 	}{
-		{"basic good", "a", "b", "c", "d", addrs[0], addrs[0], pks[0], coinPos, true},
-		{"partial description", "", "", "c", "", addrs[0], addrs[0], pks[0], coinPos, true},
-		{"empty description", "", "", "", "", addrs[0], addrs[0], pks[0], coinPos, false},
-		{"empty address", "a", "b", "c", "d", addrs[0], emptyAddr, pks[0], coinPos, false},
-		{"empty pubkey", "a", "b", "c", "d", addrs[0], addrs[0], emptyPubkey, coinPos, true},
-		{"empty bond", "a", "b", "c", "d", addrs[0], addrs[0], pks[0], coinZero, true},
-		{"negative bond", "a", "b", "c", "d", addrs[0], addrs[0], pks[0], coinNeg, false},
-		{"wrong staking token", "a", "b", "c", "d", addrs[0], addrs[0], pks[0], coinPosNotAtoms, false},
-		{"different feepayer", "a", "b", "c", "d", addrs[1], addrs[0], pks[0], coinPos, true},
+		{"basic good", "a", "b", "c", "d", addrs[0], pks[0], coinPos, true},
+		{"partial description", "", "", "c", "", addrs[0], pks[0], coinPos, true},
+		{"empty description", "", "", "", "", addrs[0], pks[0], coinPos, false},
+		{"empty address", "a", "b", "c", "d", emptyAddr, pks[0], coinPos, false},
+		{"empty pubkey", "a", "b", "c", "d", addrs[0], emptyPubkey, coinPos, true},
+		{"empty bond", "a", "b", "c", "d", addrs[0], pks[0], coinZero, false},
+		{"negative bond", "a", "b", "c", "d", addrs[0], pks[0], coinNeg, false},
+		{"negative bond", "a", "b", "c", "d", addrs[0], pks[0], coinNeg, false},
+		{"wrong staking token", "a", "b", "c", "d", addrs[0], pks[0], coinPosNotAtoms, false},
 	}
 
 	for _, tc := range tests {
 		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
-		msg1 := NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description)
-		msg2 := NewMsgCreateValidatorForAddr(tc.feepayer, tc.validatorAddr, tc.pubkey, tc.bond, description)
+		msg := NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description)
 		if tc.expectPass {
-			assert.Nil(t, msg1.ValidateBasic(), "test: %v", tc.name)
-			assert.Nil(t, msg2.ValidateBasic(), "test: %v", tc.name)
+			assert.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
-			assert.NotNil(t, msg1.ValidateBasic(), "test: %v", tc.name)
-			assert.NotNil(t, msg2.ValidateBasic(), "test: %v", tc.name)
+			assert.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		}
 	}
 }

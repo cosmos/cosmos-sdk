@@ -1,1 +1,0 @@
-[Moved](/docs/sdk)

@@ -222,3 +222,56 @@ func NewOutput(addr sdk.AccAddress, coins sdk.Coins) Output {
 	}
 	return output
 }
+
+//------------------------------------
+// MsgIBCSend - IBC transaction of the coin module
+
+// Implements sdk.Msg
+type MsgIBCSend struct {
+	PayloadSend `json:"payload-send"`
+	DestChain   string `json:"dest-chain"`
+}
+
+func (msg MsgIBCSend) GetSignBytes() []byte {
+	bin, err := msgCdc.MarshalJSON(msg)
+	if err != nil {
+		panic(err)
+	}
+	return bin
+}
+
+func (msg MsgIBCSend) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.PayloadSend.SrcAddr}
+}
+
+//------------------------------------
+// PayloadSend - payload for IBC sending
+
+// Implements ibc.Payload
+type PayloadSend struct {
+	SrcAddr  sdk.AccAddress `json:"src-addr"`
+	DestAddr sdk.AccAddress `json:"dest-addr"`
+	Coins    sdk.Coins      `json:"coins"`
+}
+
+func (p PayloadSend) Type() string {
+	return "bank"
+}
+
+func (p PayloadSend) ValidateBasic() sdk.Error {
+	if !p.Coins.IsValid() {
+		return sdk.ErrInvalidCoins(p.Coins.String())
+	}
+	if !p.Coins.IsPositive() {
+		return sdk.ErrInvalidCoins(p.Coins.String())
+	}
+	return nil
+}
+
+//-=-------------------------------------
+// ReceiptSendFail
+
+// Implements sdk.Receipt
+type ReceiptSendFail struct {
+	PayloadSend
+}

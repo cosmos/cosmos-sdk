@@ -993,8 +993,6 @@ func MakeCodec() *wire.Codec {
 
 ### Running the app
 
-It's time to finally test our implementatio
-
 #### Installation
 
 Once you have finallized your application, install it using `go get`. The following commands will install the pre-built modules and examples of the SDK as well as your `simpleGov` application:

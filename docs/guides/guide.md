@@ -92,21 +92,12 @@ func (msg MsgIssue) GetSigners() []sdk.Address {
 
 ### Transactions
 
-A transaction is a message with additional information for authentication:
+A transaction is a list of messages with additional information for authentication:
 
 ```go
 type Tx interface {
 
-	GetMsg() Msg
-
-	// Signatures returns the signature of signers who signed the Msg.
-	// CONTRACT: Length returned is same as length of
-	// pubkeys returned from MsgKeySigners, and the order
-	// matches.
-	// CONTRACT: If the signature is missing (ie the Msg is
-	// invalid), then the corresponding signature is
-	// .Empty().
-	GetSignatures() []StdSignature
+	GetMsgs() Msg
 }
 ```
 

@@ -733,6 +733,7 @@ func GenTx(chainID string, msgs []sdk.Msg, accnums []int64, seq []int64, priv ..
 	return auth.NewStdTx(msgs, fee, sigs)
 }
 
+// spin up simple app for testing
 type testApp struct {
 	*BaseApp
 	accountMapper auth.AccountMapper
@@ -790,11 +791,9 @@ func TestMultipleBurn(t *testing.T) {
 	addr := priv.PubKey().Address()
 
 	app.accountKeeper.AddCoins(app.deliverState.ctx, addr, sdk.Coins{{"foocoin", int64(100)}})
-
 	assert.Equal(t, sdk.Coins{{"foocoin", int64(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr), "Balance did not update")
 
 	msg := testBurnMsg{addr, sdk.Coins{{"foocoin", int64(50)}}}
-
 	tx := GenTx(t.Name(), []sdk.Msg{msg, msg}, []int64{0}, []int64{0}, priv)
 
 	res := app.Deliver(tx)
@@ -920,10 +919,10 @@ func TestSendBurn(t *testing.T) {
 	msg1 := testBurnMsg{addr1, sdk.Coins{{"foocoin", int64(50)}}}
 	msg2 := testBurnMsg{addr2, sdk.Coins{{"foocoin", int64(50)}}}
 
+	// send then burn
 	tx := GenTx(t.Name(), []sdk.Msg{sendMsg, msg2, msg1}, []int64{0, 1}, []int64{0, 0}, priv1, priv2)
 
 	res := app.Deliver(tx)
-
 	assert.Equal(t, true, res.IsOK(), res.Log)
 
 	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not change after valid tx")
@@ -932,6 +931,7 @@ func TestSendBurn(t *testing.T) {
 	// Check that state is being updated after each individual msg
 	app.accountKeeper.AddCoins(app.deliverState.ctx, addr1, sdk.Coins{{"foocoin", int64(50)}})
 
+	// burn then send
 	tx = GenTx(t.Name(), []sdk.Msg{msg1, sendMsg}, []int64{0}, []int64{1}, priv1)
 
 	res = app.Deliver(tx)

@@ -15,7 +15,7 @@ func TestMsgSendType(t *testing.T) {
 	// Construct a MsgSend
 	addr1 := sdk.Address([]byte("input"))
 	addr2 := sdk.Address([]byte("output"))
-	coins := sdk.Coins{{"atom", 10}}
+	coins := sdk.Coins{sdk.NewCoin("atom", 10)}
 	var msg = MsgSend{
 		Inputs:  []Input{NewInput(addr1, coins)},
 		Outputs: []Output{NewOutput(addr2, coins)},
@@ -28,16 +28,16 @@ func TestMsgSendType(t *testing.T) {
 func TestInputValidation(t *testing.T) {
 	addr1 := sdk.Address([]byte{1, 2})
 	addr2 := sdk.Address([]byte{7, 8})
-	someCoins := sdk.Coins{{"atom", 123}}
-	multiCoins := sdk.Coins{{"atom", 123}, {"eth", 20}}
+	someCoins := sdk.Coins{sdk.NewCoin("atom", 123)}
+	multiCoins := sdk.Coins{sdk.NewCoin("atom", 123), sdk.NewCoin("eth", 20)}
 
 	var emptyAddr sdk.Address
 	emptyCoins := sdk.Coins{}
-	emptyCoins2 := sdk.Coins{{"eth", 0}}
-	someEmptyCoins := sdk.Coins{{"eth", 10}, {"atom", 0}}
-	minusCoins := sdk.Coins{{"eth", -34}}
-	someMinusCoins := sdk.Coins{{"atom", 20}, {"eth", -34}}
-	unsortedCoins := sdk.Coins{{"eth", 1}, {"atom", 1}}
+	emptyCoins2 := sdk.Coins{sdk.NewCoin("eth", 0)}
+	someEmptyCoins := sdk.Coins{sdk.NewCoin("eth", 10), sdk.NewCoin("atom", 0)}
+	minusCoins := sdk.Coins{sdk.NewCoin("eth", -34)}
+	someMinusCoins := sdk.Coins{sdk.NewCoin("atom", 20), sdk.NewCoin("eth", -34)}
+	unsortedCoins := sdk.Coins{sdk.NewCoin("eth", 1), sdk.NewCoin("atom", 1)}
 
 	cases := []struct {
 		valid bool
@@ -70,16 +70,16 @@ func TestInputValidation(t *testing.T) {
 func TestOutputValidation(t *testing.T) {
 	addr1 := sdk.Address([]byte{1, 2})
 	addr2 := sdk.Address([]byte{7, 8})
-	someCoins := sdk.Coins{{"atom", 123}}
-	multiCoins := sdk.Coins{{"atom", 123}, {"eth", 20}}
+	someCoins := sdk.Coins{sdk.NewCoin("atom", 123)}
+	multiCoins := sdk.Coins{sdk.NewCoin("atom", 123), sdk.NewCoin("eth", 20)}
 
 	var emptyAddr sdk.Address
 	emptyCoins := sdk.Coins{}
-	emptyCoins2 := sdk.Coins{{"eth", 0}}
-	someEmptyCoins := sdk.Coins{{"eth", 10}, {"atom", 0}}
-	minusCoins := sdk.Coins{{"eth", -34}}
-	someMinusCoins := sdk.Coins{{"atom", 20}, {"eth", -34}}
-	unsortedCoins := sdk.Coins{{"eth", 1}, {"atom", 1}}
+	emptyCoins2 := sdk.Coins{sdk.NewCoin("eth", 0)}
+	someEmptyCoins := sdk.Coins{sdk.NewCoin("eth", 10), sdk.NewCoin("atom", 0)}
+	minusCoins := sdk.Coins{sdk.NewCoin("eth", -34)}
+	someMinusCoins := sdk.Coins{sdk.NewCoin("atom", 20), sdk.NewCoin("eth", -34)}
+	unsortedCoins := sdk.Coins{sdk.NewCoin("eth", 1), sdk.NewCoin("atom", 1)}
 
 	cases := []struct {
 		valid bool
@@ -112,10 +112,10 @@ func TestOutputValidation(t *testing.T) {
 func TestMsgSendValidation(t *testing.T) {
 	addr1 := sdk.Address([]byte{1, 2})
 	addr2 := sdk.Address([]byte{7, 8})
-	atom123 := sdk.Coins{{"atom", 123}}
-	atom124 := sdk.Coins{{"atom", 124}}
-	eth123 := sdk.Coins{{"eth", 123}}
-	atom123eth123 := sdk.Coins{{"atom", 123}, {"eth", 123}}
+	atom123 := sdk.Coins{sdk.NewCoin("atom", 123)}
+	atom124 := sdk.Coins{sdk.NewCoin("atom", 124)}
+	eth123 := sdk.Coins{sdk.NewCoin("eth", 123)}
+	atom123eth123 := sdk.Coins{sdk.NewCoin("atom", 123), sdk.NewCoin("eth", 123)}
 
 	input1 := NewInput(addr1, atom123)
 	input2 := NewInput(addr1, eth123)
@@ -180,7 +180,7 @@ func TestMsgSendValidation(t *testing.T) {
 func TestMsgSendGetSignBytes(t *testing.T) {
 	addr1 := sdk.Address([]byte("input"))
 	addr2 := sdk.Address([]byte("output"))
-	coins := sdk.Coins{{"atom", 10}}
+	coins := sdk.Coins{sdk.NewCoin("atom", 10)}
 	var msg = MsgSend{
 		Inputs:  []Input{NewInput(addr1, coins)},
 		Outputs: []Output{NewOutput(addr2, coins)},
@@ -213,7 +213,7 @@ func TestMsgSendSigners(t *testing.T) {
 		{7, 8, 9},
 	}
 
-	someCoins := sdk.Coins{{"atom", 123}}
+	someCoins := sdk.Coins{sdk.NewCoin("atom", 123)}
 	inputs := make([]Input, len(signers))
 	for i, signer := range signers {
 		inputs[i] = NewInput(signer, someCoins)
@@ -234,7 +234,7 @@ func TestNewMsgIssue(t *testing.T) {
 func TestMsgIssueType(t *testing.T) {
 	// Construct an MsgIssue
 	addr := sdk.Address([]byte("loan-from-bank"))
-	coins := sdk.Coins{{"atom", 10}}
+	coins := sdk.Coins{sdk.NewCoin("atom", 10)}
 	var msg = MsgIssue{
 		Banker:  sdk.Address([]byte("input")),
 		Outputs: []Output{NewOutput(addr, coins)},
@@ -250,7 +250,7 @@ func TestMsgIssueValidation(t *testing.T) {
 
 func TestMsgIssueGetSignBytes(t *testing.T) {
 	addr := sdk.Address([]byte("loan-from-bank"))
-	coins := sdk.Coins{{"atom", 10}}
+	coins := sdk.Coins{sdk.NewCoin("atom", 10)}
 	var msg = MsgIssue{
 		Banker:  sdk.Address([]byte("input")),
 		Outputs: []Output{NewOutput(addr, coins)},

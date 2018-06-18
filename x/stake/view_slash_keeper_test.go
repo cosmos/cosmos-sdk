@@ -11,7 +11,7 @@ import (
 
 // tests GetDelegation, GetDelegations
 func TestViewSlashBond(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
+	ctx, _, keeper := createTestInput(t, false, sdk.NewInt(0))
 
 	//construct the validators
 	amts := []int64{9, 8, 7}

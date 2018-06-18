@@ -18,10 +18,10 @@ import (
 // protocol is either tcp, http, etc
 func FreeTCPAddr() (addr, port string, err error) {
 	l, err := net.Listen("tcp", "0.0.0.0:0")
-	defer l.Close()
 	if err != nil {
 		return "", "", err
 	}
+	defer l.Close()
 
 	portI := l.Addr().(*net.TCPAddr).Port
 	port = fmt.Sprintf("%d", portI)

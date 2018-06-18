@@ -16,8 +16,8 @@ func TestBondMsgValidation(t *testing.T) {
 		valid   bool
 		msgBond MsgBond
 	}{
-		{true, NewMsgBond(sdk.Address{}, sdk.Coin{"mycoin", 5}, privKey.PubKey())},
-		{false, NewMsgBond(sdk.Address{}, sdk.Coin{"mycoin", 0}, privKey.PubKey())},
+		{true, NewMsgBond(sdk.Address{}, sdk.NewCoin("mycoin", 5), privKey.PubKey())},
+		{false, NewMsgBond(sdk.Address{}, sdk.NewCoin("mycoin", 0), privKey.PubKey())},
 	}
 
 	for i, tc := range cases {

@@ -92,13 +92,17 @@ func (msg MsgIssue) GetSigners() []sdk.Address {
 
 ### Transactions
 
-A transaction is a message with additional information for authentication:
+A transaction is a list of messages with additional information for authentication:
 
 ```go
 type Tx interface {
 
+<<<<<<< HEAD
 	GetMsg() Msg
 
+=======
+	GetMsgs() Msg
+>>>>>>> Documentation fixes
 }
 ```
 

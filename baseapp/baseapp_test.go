@@ -927,6 +927,13 @@ func TestSendBurn(t *testing.T) {
 	res := app.Deliver(tx)
 	assert.Equal(t, true, res.IsOK(), res.Log)
 
+	// Double check that state change of first message persists after block is committed
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+
+	app.BeginBlock(abci.RequestBeginBlock{})
+	app.deliverState.ctx = app.deliverState.ctx.WithChainID(t.Name())
+
 	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not change after valid tx")
 	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 did not change after valid tx")
 

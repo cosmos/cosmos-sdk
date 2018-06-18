@@ -719,7 +719,7 @@ func newHandleSpend(keeper bank.Keeper) sdk.Handler {
 func GenTx(chainID string, msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKey) auth.StdTx {
 	// make the transaction free
 	fee := auth.StdFee{
-		sdk.Coins{{"foocoin", 0}},
+		sdk.Coins{{"foocoin", sdk.NewInt(0)}},
 		100000,
 	}
 
@@ -792,10 +792,10 @@ func TestMultipleBurn(t *testing.T) {
 	priv := makePrivKey("my secret")
 	addr := priv.PubKey().Address()
 
-	app.accountKeeper.AddCoins(app.deliverState.ctx, addr, sdk.Coins{{"foocoin", int64(100)}})
-	assert.Equal(t, sdk.Coins{{"foocoin", int64(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr), "Balance did not update")
+	app.accountKeeper.AddCoins(app.deliverState.ctx, addr, sdk.Coins{{"foocoin", sdk.NewInt(100)}})
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr), "Balance did not update")
 
-	msg := testBurnMsg{addr, sdk.Coins{{"foocoin", int64(50)}}}
+	msg := testBurnMsg{addr, sdk.Coins{{"foocoin", sdk.NewInt(50)}}}
 	tx := GenTx(t.Name(), []sdk.Msg{msg, msg}, []int64{0}, []int64{0}, priv)
 
 	res := app.Deliver(tx)
@@ -843,14 +843,14 @@ func TestBurnMultipleOwners(t *testing.T) {
 	addr2 := priv2.PubKey().Address()
 
 	// fund accounts
-	app.accountKeeper.AddCoins(app.deliverState.ctx, addr1, sdk.Coins{{"foocoin", int64(100)}})
-	app.accountKeeper.AddCoins(app.deliverState.ctx, addr2, sdk.Coins{{"foocoin", int64(100)}})
+	app.accountKeeper.AddCoins(app.deliverState.ctx, addr1, sdk.Coins{{"foocoin", sdk.NewInt(100)}})
+	app.accountKeeper.AddCoins(app.deliverState.ctx, addr2, sdk.Coins{{"foocoin", sdk.NewInt(100)}})
 
-	assert.Equal(t, sdk.Coins{{"foocoin", int64(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not update")
-	assert.Equal(t, sdk.Coins{{"foocoin", int64(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 did not update")
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not update")
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 did not update")
 
-	msg1 := testBurnMsg{addr1, sdk.Coins{{"foocoin", int64(100)}}}
-	msg2 := testBurnMsg{addr2, sdk.Coins{{"foocoin", int64(100)}}}
+	msg1 := testBurnMsg{addr1, sdk.Coins{{"foocoin", sdk.NewInt(100)}}}
+	msg2 := testBurnMsg{addr2, sdk.Coins{{"foocoin", sdk.NewInt(100)}}}
 
 	// test wrong signers: Address 1 signs both messages
 	tx := GenTx(t.Name(), []sdk.Msg{msg1, msg2}, []int64{0, 0}, []int64{0, 0}, priv1, priv1)
@@ -858,8 +858,8 @@ func TestBurnMultipleOwners(t *testing.T) {
 	res := app.Deliver(tx)
 	assert.Equal(t, sdk.ABCICodeType(0x10003), res.Code, "Wrong signatures passed")
 
-	assert.Equal(t, sdk.Coins{{"foocoin", int64(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 changed after invalid sig")
-	assert.Equal(t, sdk.Coins{{"foocoin", int64(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 changed after invalid sig")
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 changed after invalid sig")
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 changed after invalid sig")
 
 	// test valid tx
 	tx = GenTx(t.Name(), []sdk.Msg{msg1, msg2}, []int64{0, 1}, []int64{1, 0}, priv1, priv2)
@@ -910,16 +910,16 @@ func TestSendBurn(t *testing.T) {
 	addr2 := priv2.PubKey().Address()
 
 	// fund accounts
-	app.accountKeeper.AddCoins(app.deliverState.ctx, addr1, sdk.Coins{{"foocoin", int64(100)}})
+	app.accountKeeper.AddCoins(app.deliverState.ctx, addr1, sdk.Coins{{"foocoin", sdk.NewInt(100)}})
 	acc := app.accountMapper.NewAccountWithAddress(app.deliverState.ctx, addr2)
 	app.accountMapper.SetAccount(app.deliverState.ctx, acc)
 
-	assert.Equal(t, sdk.Coins{{"foocoin", int64(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not update")
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not update")
 
-	sendMsg := testSendMsg{addr1, addr2, sdk.Coins{{"foocoin", int64(50)}}}
+	sendMsg := testSendMsg{addr1, addr2, sdk.Coins{{"foocoin", sdk.NewInt(50)}}}
 
-	msg1 := testBurnMsg{addr1, sdk.Coins{{"foocoin", int64(50)}}}
-	msg2 := testBurnMsg{addr2, sdk.Coins{{"foocoin", int64(50)}}}
+	msg1 := testBurnMsg{addr1, sdk.Coins{{"foocoin", sdk.NewInt(50)}}}
+	msg2 := testBurnMsg{addr2, sdk.Coins{{"foocoin", sdk.NewInt(50)}}}
 
 	// send then burn
 	tx := GenTx(t.Name(), []sdk.Msg{sendMsg, msg2, msg1}, []int64{0, 1}, []int64{0, 0}, priv1, priv2)
@@ -931,7 +931,7 @@ func TestSendBurn(t *testing.T) {
 	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 did not change after valid tx")
 
 	// Check that state is being updated after each individual msg
-	app.accountKeeper.AddCoins(app.deliverState.ctx, addr1, sdk.Coins{{"foocoin", int64(50)}})
+	app.accountKeeper.AddCoins(app.deliverState.ctx, addr1, sdk.Coins{{"foocoin", sdk.NewInt(50)}})
 
 	// burn then send
 	tx = GenTx(t.Name(), []sdk.Msg{msg1, sendMsg}, []int64{0}, []int64{1}, priv1)

@@ -21,7 +21,6 @@ const (
 	FlagDeposit     = "deposit"
 	FlagTitle       = "title"
 	FlagDescription = "description"
-	FlagBlockLimit  = "block-limit"
 
 	FlagProposalID = "proposal-id"
 	FlagOption     = "option"
@@ -196,17 +195,12 @@ func PostCmdPropose(cdc *wire.Codec) *cobra.Command {
 			title := viper.GetString(FlagTitle)
 			description := viper.GetString(FlagDescription)
 			coins := viper.GetString(FlagDeposit)
-			if viper.IsSet(FlagBlockLimit) {
-				blockLimit := viper.GetInt64(FlagBlockLimit)
-			} else {
-				blockLimit := 1209600 // default value
-			}
 			deposit, err := sdk.ParseCoins(coins)
 			if err != nil {
 				return err
 			}
 
-			msg := simpleGovernance.NewSubmitProposalMsg(title, description, blockLimit, deposit, proposer)
+			msg := simpleGovernance.NewSubmitProposalMsg(title, description, deposit, proposer)
 			res, err := ctx.EnsureSignBuildBroadcast(ctx.GetFromAddress(), msg, cdc)
 			if err != nil {
 				return err
@@ -218,7 +212,6 @@ func PostCmdPropose(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().String(FlagTitle, "", "Title of the proposal")
 	cmd.Flags().String(FlagDescription, "", "Description of the proposal")
 	cmd.Flags().String(FlagDeposit, "1steak", "Amount of coins to deposit on the proposal")
-	cmd.Flags().Int64(FlagBlockLimit, 1209600, "Window measured in blocks to allow vote submission")
 	cmd.MarkFlagRequired(FlagTitle)
 	cmd.MarkFlagRequired(FlagDescription)
 	cmd.MarkFlagRequired(FlagDeposit)

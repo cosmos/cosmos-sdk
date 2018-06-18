@@ -346,7 +346,7 @@ We are all set!
 
 For this tutorial, we will code a **simple governance application**, accompagnied by a **simple governance module**. It will allow us to explain most of the basic notions required to build a functioning application. Note that this is not the governance module used for the Cosmos Hub. A much more [advanced governance module](https://github.com/cosmos/cosmos-sdk/tree/develop/x/gov) will be used instead.
 
-All the code for the `simple_governance` application can be found [here](https://github.com/gamarin2/cosmos-sdk/tree/module_tutorial/examples/basecoin/x/simple_governance). You'll notice that the module and app aren't located at the root level of the repo but in the examples directory. This is just for convenience, you can code your module and application directly in the root directory.
+All the code for the `simple_governance` application can be found [here](https://github.com/gamarin2/cosmos-sdk/tree/module_tutorial/examples/simpleGov/x/simple_governance). You'll notice that the module and app aren't located at the root level of the repo but in the examples directory. This is just for convenience, you can code your module and application directly in the root directory.
 
 Without further talk, let's get into it!
 
@@ -456,7 +456,7 @@ x
       ├─── test_common.go
       ├─── types_test.go
       ├─── types.go
-      └── wire.go
+      └─── wire.go
 ```
 
 Let us go into the detail of each of these files.
@@ -568,7 +568,7 @@ The last thing that needs to be done is to override certain methods for the `Kee
 
 ### Handler
 
-#### Constructore and core handlers
+#### Constructor and core handlers
 
 Handlers implement the core logic of the state-machine. When a transaction is routed from the app to the module, it is run by the `handler` function.
 
@@ -666,6 +666,7 @@ cd client
 mkdir cli
 mkdir rest
 ```
+
 #### Command-Line Interface (CLI)
 
 Go in the `cli` folder and create a `simple_governance.go` file. This is where we will define the commands for our module.
@@ -691,7 +692,7 @@ The CLI builds on top of [Cobra](https://github.com/spf13/cobra). Here is the sc
         }
 
         // Add flags to the command
-        command.Flags.Type(Flag, "", "")
+        command.Flags().<Type>(FlagNameConstant, <example_value>, "<Description>")
 
         return command
     }
@@ -790,6 +791,126 @@ type SimpleGovApp struct {
 
 Let us do a quick reminder so that it is  clear why we need these stores and keepers. Our application is primarily based on the `simple_governance` module. However, we have established in section [Keepers for our app](#keepers_for_our_app) that our module needs access to two other modules: the `bank` module and the `stake` module. We also need the `auth` module for basic account functionalities. Finally, we need access to the main multistore to declare the stores of each of the module we use.
 
+#### App commands
+
+We will need to add the newly created commands to our application. Create a `cmd` folder inside your root  directory:
+
+```bash
+// At root level of directory
+mkdir cmd
+cd cmd
+mkdir simplegovd
+mkdir simplegovcli
+```
+Now within each of the `simplegov...` folders create a `main.go` file:
+
+```bash
+touch main.go
+```
+
+`simplegovd` is the folder that stores the command for running the server daemon, whereas `simplegovcli` defines the commands of your application.
+
+##### CLI
+
+To interact with out application we'll have to add the commands from the `simple_governance` module to our `simpleGov` application, as well as the pre-built SDK commands:
+
+```go
+//  cmd/simplegovcli/main.go
+...
+	rootCmd.AddCommand(
+		client.GetCommands(
+			simplegovcmd.GetCmdQueryProposal("proposals", cdc),
+			simplegovcmd.GetCmdQueryProposals("proposals", cdc),
+			simplegovcmd.GetCmdQueryProposalVotes("proposals", cdc),
+			simplegovcmd.GetCmdQueryProposalVote("proposals", cdc),
+		)...)
+	rootCmd.AddCommand(
+		client.PostCommands(
+			simplegovcmd.PostCmdPropose(cdc),
+			simplegovcmd.PostCmdVote(cdc),
+		)...)
+...
+```
+
+##### Daemon server
+
+The `simplegovd` command will run the daemon server as a background process. First, create some util functions:
+
+```go
+//  cmd/simplegovd/main.go
+// SimpleGovAppInit initial parameters
+var SimpleGovAppInit = server.AppInit{
+	AppGenState: SimpleGovAppGenState,
+	AppGenTx:    server.SimpleAppGenTx,
+}
+
+// SimpleGovAppGenState sets up the app_state and appends the simpleGov app state
+func SimpleGovAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
+	appState, err = server.SimpleAppGenState(cdc, appGenTxs)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func newApp(logger log.Logger, db dbm.DB) abci.Application {
+	return app.NewSimpleGovApp(logger, db)
+}
+
+func exportAppState(logger log.Logger, db dbm.DB) (json.RawMessage, error) {
+	dapp := app.NewSimpleGovApp(logger, db)
+	return dapp.ExportAppStateJSON()
+}
+```
+
+Now let's define the command for the daemon server within the `main()` function:
+
+```go
+//  cmd/simplegovd/main.go
+func main() {
+	cdc := app.MakeCodec()
+	ctx := server.NewDefaultContext()
+
+	rootCmd := &cobra.Command{
+		Use:               "simplegovd",
+		Short:             "Simple Governance Daemon (server)",
+		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
+	}
+
+	server.AddCommands(ctx, cdc, rootCmd, SimpleGovAppInit,
+		server.ConstructAppCreator(newApp, "simplegov"),
+		server.ConstructAppExporter(exportAppState, "simplegov"))
+
+	// prepare and add flags
+	rootDir := os.ExpandEnv("$HOME/.simplegovd")
+	executor := cli.PrepareBaseCmd(rootCmd, "BC", rootDir)
+	executor.Execute()
+}
+```
+
+##### Makefile
+
+The [Makefile](https://en.wikipedia.org/wiki/Makefile) compiles the Go program by defining a set of rules with targets and recipes. We'll need to add our application commands to it:
+
+```
+// Makefile
+build_examples:
+ifeq ($(OS),Windows_NT)
+	...
+	go build $(BUILD_FLAGS) -o build/simplegovd.exe ./examples/simpleGov/cmd/simplegovd
+	go build $(BUILD_FLAGS) -o build/simplegovcli.exe ./examples/simpleGov/cmd/simplegovcli
+else
+	...
+	go build $(BUILD_FLAGS) -o build/simplegovd ./examples/simpleGov/cmd/simplegovd
+	go build $(BUILD_FLAGS) -o build/simplegovcli ./examples/simpleGov/cmd/simplegovcli
+endif
+...
+install_examples:
+    ...
+	go install $(BUILD_FLAGS) ./examples/simpleGov/cmd/simplegovd
+	go install $(BUILD_FLAGS) ./examples/simpleGov/cmd/simplegovcli
+```
+
 #### App constructor
 
 Now, we need to define the constructor for our application.
@@ -870,13 +991,76 @@ func MakeCodec() *wire.Codec {
 }
 ```
 
-
 ### Running the app
 
-Describe how to finalize the app (makefile, deps, ...)
-How tu run the app
-Maybe pass a few txs through CLI
+It's time to finally test our implementatio
+
+#### Installation
+
+Once you have finallized your application, install it using `go get`. The following commands will install the pre-built modules and examples of the SDK as well as your `simpleGov` application:
+
+```bash
+go get github.com/<your_username>/cosmos-sdk
+cd $GOPATH/src/github.com/<your_username>/cosmos-sdk
+make get_vendor_deps
+make install
+make install_examples
+```
+
+Check that the app is correctly installed by typing:
+
+```bash
+simplegovcli -h
+simplegovd -h
+```
+
+#### Submit a proposal
+
+Uuse the CLI to create a new proposal:
+
+```bash
+simplegovcli propose --title="Voting Period update" --description="Should we change the proposal voting period to 3 weeks?" --deposit=300Atoms
+```
+
+Get the details of your newly created proposal:
+
+```bash
+simplegovcli proposal 1
+```
+
+You can also check all the existing open proposals:
+
+```bash
+simplegovcli proposals --active=true
+```
+
+#### Cast a vote to an existing proposal
+
+Let's cast a vote on the created proposal:
+
+```bash
+simplegovcli vote --proposal-id=1 --option="No"
+```
+
+Get the value of the option from your casted vote :
+
+```bash
+simplegovcli proposal-vote 1 <your_address>
+```
+
+You can also check all the casted votes of a proposal:
+
+```bash
+simplegovcli proposals-votes 1
+```
 
 ### Testnet
 
-Nothing to see yet. Come back later! :3
+WIP
+
+### Conclusion
+
+Congratulations ! You have succesfully created your first application and module with the Cosmos-SDK. If you have any question regarding this tutorial or about development on the SDK, please reach out us through our official communication channels:
+
+- [Cosmos-SDK Riot Channel](https://riot.im/app/#/room/#cosmos-sdk:matrix.org)
+- [Telegram](https://t.me/cosmosproject)

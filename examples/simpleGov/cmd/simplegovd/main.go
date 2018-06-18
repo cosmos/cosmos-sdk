@@ -28,18 +28,6 @@ func SimpleGovAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appStat
 	if err != nil {
 		return
 	}
-	// // TODO change kv
-	// key := "cool"
-	// value := json.RawMessage(`{
-	//       "trend": "ice-cold"
-	//     }`)
-	// appState, err = server.AppendJSON(cdc, appState, key, value)
-	// key = "pow"
-	// value = json.RawMessage(`{
-	//       "difficulty": 1,
-	//       "count": 0
-	//     }`)
-	// appState, err = server.AppendJSON(cdc, appState, key, value)
 	return
 }
 

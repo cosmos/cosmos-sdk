@@ -70,7 +70,6 @@ func main() {
 			stakecmd.GetCmdUnbond(cdc),
 		)...)
 	// and now simplegov specific commands
-	// TODO Add commands
 	rootCmd.AddCommand(
 		client.GetCommands(
 			simplegovcmd.GetCmdQueryProposal("proposals", cdc),

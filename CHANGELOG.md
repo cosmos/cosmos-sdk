@@ -8,6 +8,7 @@ BREAKING CHANGES
 * Change default ports from 466xx to 266xx
 
 FIXES
+* \#1243 - fix bug where getting external ip returned local IPv4 addresses
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer
 
 ## 0.19.0

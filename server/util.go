@@ -136,15 +136,30 @@ func externalIP() (string, error) {
 			case *net.IPAddr:
 				ip = v.IP
 			}
-			if ip == nil || ip.IsLoopback() {
-				continue
+			if external_ip := isPublicIP(ip); ip != nil {
+				return external_ip.String(), nil
 			}
-			ip = ip.To4()
-			if ip == nil {
-				continue // not an ipv4 address
-			}
-			return ip.String(), nil
 		}
 	}
 	return "", errors.New("are you connected to the network?")
+}
+
+// Taken from https://stackoverflow.com/questions/41670155/get-public-ip-in-golang
+func isPublicIP(IP net.IP) net.IP {
+	if IP.IsLoopback() || IP.IsLinkLocalMulticast() || IP.IsLinkLocalUnicast() {
+		return nil
+	}
+	if ip4 := IP.To4(); ip4 != nil {
+		switch true {
+		case ip4[0] == 10:
+			return nil
+		case ip4[0] == 172 && ip4[1] >= 16 && ip4[1] <= 31:
+			return nil
+		case ip4[0] == 192 && ip4[1] == 168:
+			return nil
+		default:
+			return ip4
+		}
+	}
+	return nil
 }

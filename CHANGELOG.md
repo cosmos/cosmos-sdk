@@ -8,6 +8,7 @@ BREAKING CHANGES
 * Change default ports from 466xx to 266xx
 
 FIXES
+* \#1243 - fix bug where getting external ip returned local IPv4 addresses
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer
 * Retry on HTTP request failure in CLI tests, add option to retry tests in Makefile
 

@@ -18,7 +18,7 @@ func newTestMsg(addrs ...sdk.Address) *sdk.TestMsg {
 }
 
 func newStdFee() StdFee {
-	return NewStdFee(100,
+	return NewStdFee(5000,
 		sdk.NewCoin("atom", 150),
 	)
 }
@@ -252,9 +252,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	var tx sdk.Tx
 	msg := newTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []int64{0}, []int64{0}
-	fee := NewStdFee(100,
-		sdk.NewCoin("atom", 150),
-	)
+	fee := newStdFee()
 
 	// signer does not have enough funds to pay the fee
 	tx = newTestTx(ctx, msg, privs, accnums, seqs, fee)

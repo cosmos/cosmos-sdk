@@ -64,36 +64,43 @@ func WaitForHeight(height int64, port string) {
 	waitForHeight(height, url)
 }
 
+func StatusOK(statusCode int) bool {
+	switch statusCode {
+	case http.StatusOK:
+	case http.StatusCreated:
+	case http.StatusNoContent:
+		return true
+	}
+	return false
+}
+
 func waitForHeight(height int64, url string) {
 	for {
 		// get url, try a few times
 		var res *http.Response
 		var err error
-		var resultBlock ctypes.ResultBlock
 		for i := 0; i < 5; i++ {
 			res, err = http.Get(url)
-			if err != nil {
-				time.Sleep(time.Millisecond * 200)
-				continue
-			}
-
-			body, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				panic(err)
-			}
-			res.Body.Close()
-
-			err = cdc.UnmarshalJSON([]byte(body), &resultBlock)
-			if err == nil {
+			if err == nil && StatusOK(res.StatusCode) {
 				break
 			}
-
-			fmt.Println("RES", res)
-			fmt.Println("BODY", string(body))
 			time.Sleep(time.Millisecond * 200)
 		}
-
 		if err != nil {
+			panic(err)
+		}
+
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			panic(err)
+		}
+		res.Body.Close()
+
+		var resultBlock ctypes.ResultBlock
+		err = cdc.UnmarshalJSON([]byte(body), &resultBlock)
+		if err != nil {
+			fmt.Println("RES", res)
+			fmt.Println("BODY", string(body))
 			panic(err)
 		}
 

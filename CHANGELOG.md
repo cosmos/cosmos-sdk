@@ -9,6 +9,7 @@ BREAKING CHANGES
 
 FIXES
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer
+* Retry on HTTP request failure in CLI tests
 
 ## 0.19.0
 

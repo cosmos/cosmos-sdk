@@ -18,6 +18,7 @@ import (
 
 func TestStartStandAlone(t *testing.T) {
 	home, err := ioutil.TempDir("", "mock-sdk-cmd")
+	require.Nil(t, err)
 	defer func() {
 		os.RemoveAll(home)
 	}()

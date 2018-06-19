@@ -548,15 +548,16 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		// Set gas utilized
 		result.GasUsed = ctx.GasMeter().GasConsumed()
 
-		// If not a simulated run and result was successful, write to app.checkState.ms or app.deliverState.ms
-		if mode != runTxModeSimulate && result.IsOK() {
-			msCache.Write()
-		}
-
-		// Stop execution and return on first failed message. Later messages are not executed.
+		// Stop execution and return on first failed message.
 		if !result.IsOK() {
 			return result
 		}
+	}
+
+	// If not a simulated run and result was successful, write to app.checkState.ms or app.deliverState.ms
+	// Only update state if all messages pass.
+	if mode != runTxModeSimulate && result.IsOK() {
+		msCache.Write()
 	}
 
 	return result

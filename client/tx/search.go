@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -107,7 +108,12 @@ func SearchTxRequestHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Han
 		}
 		keyValue := strings.Split(tag, "=")
 		key := keyValue[0]
-		value := keyValue[1]
+		value, err := url.QueryUnescape(keyValue[1])
+		if err != nil {
+			w.WriteHeader(400)
+			w.Write([]byte("Could not decode address: " + err.Error()))
+			return
+		}
 		if strings.HasSuffix(key, "_bech32") {
 			bech32address := strings.Trim(value, "'")
 			prefix := strings.Split(bech32address, "1")[0]

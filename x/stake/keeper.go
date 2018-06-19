@@ -809,7 +809,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, fract
 	val, pool, burned := val.removePoolShares(pool, sharesToRemove)
 	k.setPool(ctx, pool)        // update the pool
 	k.updateValidator(ctx, val) // update the validator, possibly kicking it out
-	logger.Info(fmt.Sprintf("Validator %s slashed by fraction %v, removed %v shares and burned %d tokens", pubkey.Address(), fraction, sharesToRemove, burned))
+	logger.Info(fmt.Sprintf("Validator %s slashed by fraction %v, removed %v shares and burned %v tokens", pubkey.Address(), fraction, sharesToRemove, burned))
 	return
 }
 

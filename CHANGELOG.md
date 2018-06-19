@@ -7,6 +7,9 @@
 BREAKING CHANGES
 * Change default ports from 466xx to 266xx
 
+FIXES
+* \#1259 - fix bug where certain tests that could have a nil pointer in defer
+
 ## 0.19.0
 
 *June 13, 2018*
@@ -14,6 +17,7 @@ BREAKING CHANGES
 BREAKING CHANGES
 * msg.GetSignBytes() now returns bech32-encoded addresses in all cases
 * [lcd] REST end-points now include gas
+* sdk.Coin now uses sdk.Int, a big.Int wrapper with 256bit range cap
 
 FEATURES
 * [x/auth] Added AccountNumbers to BaseAccount and StdTxs to allow for replay protection with account pruning
@@ -24,6 +28,8 @@ IMPROVEMENTS
 * [tests] Application module tests now use a mock application
 * [gaiacli] Fix error message when account isn't found when running gaiacli account
 * [lcd] refactored to eliminate use of global variables, and interdependent tests
+* [tests] Added testnet command to gaiad
+* [tests] Added localnet targets to Makefile
 * [x/stake] More stake tests added to test ByPower index
 
 FIXES
@@ -39,7 +45,7 @@ FEATURES
 * [docs] Reorganize documentation
 * [docs] Update staking spec, create WIP spec for slashing, and fees
 
-## 0.18.0 
+## 0.18.0
 
 *June 9, 2018*
 

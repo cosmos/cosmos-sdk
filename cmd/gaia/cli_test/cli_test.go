@@ -46,24 +46,24 @@ func TestGaiaCLISend(t *testing.T) {
 	require.NoError(t, err)
 
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
-	assert.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak"))
+	assert.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
 
 	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo", flags, barCech), pass)
 	tests.WaitForNextHeightTM(port)
 
 	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
-	assert.Equal(t, int64(10), barAcc.GetCoins().AmountOf("steak"))
+	assert.Equal(t, int64(10), barAcc.GetCoins().AmountOf("steak").Int64())
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
-	assert.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("steak"))
+	assert.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("steak").Int64())
 
 	// test autosequencing
 	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo", flags, barCech), pass)
 	tests.WaitForNextHeightTM(port)
 
 	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
-	assert.Equal(t, int64(20), barAcc.GetCoins().AmountOf("steak"))
+	assert.Equal(t, int64(20), barAcc.GetCoins().AmountOf("steak").Int64())
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
-	assert.Equal(t, int64(30), fooAcc.GetCoins().AmountOf("steak"))
+	assert.Equal(t, int64(30), fooAcc.GetCoins().AmountOf("steak").Int64())
 }
 
 func TestGaiaCLICreateValidator(t *testing.T) {
@@ -98,9 +98,9 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	tests.WaitForNextHeightTM(port)
 
 	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
-	assert.Equal(t, int64(10), barAcc.GetCoins().AmountOf("steak"))
+	assert.Equal(t, int64(10), barAcc.GetCoins().AmountOf("steak").Int64())
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
-	assert.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("steak"))
+	assert.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("steak").Int64())
 
 	// create validator
 	cvStr := fmt.Sprintf("gaiacli stake create-validator %v", flags)
@@ -114,7 +114,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	tests.WaitForNextHeightTM(port)
 
 	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
-	require.Equal(t, int64(8), barAcc.GetCoins().AmountOf("steak"), "%v", barAcc)
+	require.Equal(t, int64(8), barAcc.GetCoins().AmountOf("steak").Int64(), "%v", barAcc)
 
 	validator := executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %v --output=json %v", barCech, flags))
 	assert.Equal(t, validator.Owner, barAddr)
@@ -133,7 +133,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	tests.WaitForNextHeightTM(port)
 
 	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
-	require.Equal(t, int64(9), barAcc.GetCoins().AmountOf("steak"), "%v", barAcc)
+	require.Equal(t, int64(9), barAcc.GetCoins().AmountOf("steak").Int64(), "%v", barAcc)
 	validator = executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %v --output=json %v", barCech, flags))
 	assert.Equal(t, "1/1", validator.PoolShares.Amount.String())
 }

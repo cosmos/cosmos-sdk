@@ -6,26 +6,26 @@ This document specifies the LCD (lite client daemon) module of Cosmos-SDK. This 
 
 From an exahange's perspective, LCD will decrease the difficulty and latency of verifying the authenticity of any type of transaction. A typical architecture for using LCD is the following:
 
-![architecture](/Users/suyu/Documents/bianjie/exchange/architecture.png)
+![architecture](https://github.com/irisnet/cosmos-sdk/raw/suyu/lcd/docs/spec/lcd/pics/architecture.png)
 
 ## Use case
 
 1. Users make a deposit
 
-![deposit](/Users/suyu/Documents/bianjie/exchange/deposit.png)
+![deposit](https://github.com/irisnet/cosmos-sdk/raw/suyu/lcd/docs/spec/lcd/pics/deposit.png)
 
 2. User make a withdraw
 
-![withdraw](/Users/suyu/Documents/bianjie/exchange/withdraw.png)
+![withdraw](https://github.com/irisnet/cosmos-sdk/raw/suyu/lcd/docs/spec/lcd/pics/withdraw.png)
 
 3. Transfer Atom from hot wallet to cold wallet
-![H2C](/Users/suyu/Documents/bianjie/exchange/H2C.png)
+![H2C](https://github.com/irisnet/cosmos-sdk/raw/suyu/lcd/docs/spec/lcd/pics/H2C.png)
 
 4. Transfer Atom from cold wallet to hot wallet
-![C2H](/Users/suyu/Documents/bianjie/exchange/C2H.png)
+![C2H](https://github.com/irisnet/cosmos-sdk/raw/suyu/lcd/docs/spec/lcd/pics/C2H.png)
 
 5. Monitor Accounts
-![MA](/Users/suyu/Documents/bianjie/exchange/MA.png)
+![MA](https://github.com/irisnet/cosmos-sdk/raw/suyu/lcd/docs/spec/lcd/pics/MA.png)
 
 
 

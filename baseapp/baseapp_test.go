@@ -936,7 +936,7 @@ func TestSendBurn(t *testing.T) {
 
 	res = app.Deliver(tx)
 
-	// Double check that state change of first message persists after block is committed
+	// Double check that state is correct after Commit.
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
 

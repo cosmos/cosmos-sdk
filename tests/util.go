@@ -64,6 +64,7 @@ func WaitForHeight(height int64, port string) {
 	waitForHeight(height, url)
 }
 
+// Whether or not an HTTP status code was "successful"
 func StatusOK(statusCode int) bool {
 	switch statusCode {
 	case http.StatusOK:

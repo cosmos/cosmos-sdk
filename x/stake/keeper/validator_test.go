@@ -49,7 +49,7 @@ func TestSetValidator(t *testing.T) {
 }
 
 func TestUpdateValidatorByPowerIndex(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 
 	// create a random pool
@@ -59,33 +59,33 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	pool.UnbondingShares = sdk.NewRat(145)
 	pool.UnbondedTokens = 154
 	pool.UnbondedShares = sdk.NewRat(1333)
-	keeper.setPool(ctx, pool)
+	keeper.SetPool(ctx, pool)
 
 	// add a validator
-	validator := NewValidator(addrVals[0], pks[0], Description{})
-	validator, pool, delSharesCreated := validator.addTokensFromDel(pool, 100)
+	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	validator, pool, delSharesCreated := validator.AddTokensFromDel(pool, 100)
 	require.Equal(t, sdk.Unbonded, validator.Status())
 	assert.Equal(t, int64(100), validator.PoolShares.Tokens(pool).Evaluate())
-	keeper.setPool(ctx, pool)
-	keeper.updateValidator(ctx, validator)
+	keeper.SetPool(ctx, pool)
+	keeper.UpdateValidator(ctx, validator)
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	assert.Equal(t, int64(100), validator.PoolShares.Tokens(pool).Evaluate(), "\nvalidator %v\npool %v", validator, pool)
 
 	pool = keeper.GetPool(ctx)
-	power := GetValidatorsByPowerKey(validator, pool)
+	power := GetValidatorsByPowerIndexKey(validator, pool)
 	assert.True(t, keeper.validatorByPowerIndexExists(ctx, power))
 
 	// burn half the delegator shares
-	validator, pool, burned := validator.removeDelShares(pool, delSharesCreated.Quo(sdk.NewRat(2)))
+	validator, pool, burned := validator.RemoveDelShares(pool, delSharesCreated.Quo(sdk.NewRat(2)))
 	assert.Equal(t, int64(50), burned)
-	keeper.setPool(ctx, pool)              // update the pool
-	keeper.updateValidator(ctx, validator) // update the validator, possibly kicking it out
+	keeper.SetPool(ctx, pool)              // update the pool
+	keeper.UpdateValidator(ctx, validator) // update the validator, possibly kicking it out
 	assert.False(t, keeper.validatorByPowerIndexExists(ctx, power))
 
 	pool = keeper.GetPool(ctx)
 	validator, found = keeper.GetValidator(ctx, addrVals[0])
-	power = GetValidatorsByPowerKey(validator, pool)
+	power = GetValidatorsByPowerIndexKey(validator, pool)
 	assert.True(t, keeper.validatorByPowerIndexExists(ctx, power))
 }
 

@@ -77,7 +77,7 @@ func checkValidator(t *testing.T, mapp *mock.App, keeper PrivilegedKeeper,
 	return validator
 }
 
-func checkDelegation(t *testing.T, mapp *mock.App, keeper Keeper, delegatorAddr,
+func checkDelegation(t *testing.T, mapp *mock.App, keeper PrivilegedKeeper, delegatorAddr,
 	validatorAddr sdk.Address, expFound bool, expShares sdk.Rat) {
 
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})

@@ -189,3 +189,11 @@ func createTestPubKeys(numPubKeys int) []crypto.PubKey {
 	}
 	return publicKeys
 }
+
+//_____________________________________________________________________________________
+
+// does a certain by-power index record exist
+func ValidatorByPowerIndexExists(ctx sdk.Context, keeper PrivilegedKeeper, power []byte) bool {
+	store := ctx.KVStore(keeper.storeKey)
+	return store.Get(power) != nil
+}

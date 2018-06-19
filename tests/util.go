@@ -64,6 +64,17 @@ func WaitForHeight(height int64, port string) {
 	waitForHeight(height, url)
 }
 
+// Whether or not an HTTP status code was "successful"
+func StatusOK(statusCode int) bool {
+	switch statusCode {
+	case http.StatusOK:
+	case http.StatusCreated:
+	case http.StatusNoContent:
+		return true
+	}
+	return false
+}
+
 func waitForHeight(height int64, url string) {
 	for {
 		// get url, try a few times
@@ -71,7 +82,7 @@ func waitForHeight(height int64, url string) {
 		var err error
 		for i := 0; i < 5; i++ {
 			res, err = http.Get(url)
-			if err == nil {
+			if err == nil && StatusOK(res.StatusCode) {
 				break
 			}
 			time.Sleep(time.Millisecond * 200)

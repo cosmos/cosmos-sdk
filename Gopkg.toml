@@ -58,13 +58,13 @@
 
 [[override]]
   name = "github.com/tendermint/go-crypto"
-  branch = "develop"
+  version = "~0.9.0"
 
 [[override]]
   name = "github.com/tendermint/go-amino"
-  version = "~0.10.0-rc2"
+  version = "~0.10.1"
 
-[[constraint]]
+[[override]]
   name = "github.com/tendermint/iavl"
   version = "0.8.0-rc0"
 

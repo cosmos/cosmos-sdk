@@ -289,11 +289,10 @@
 [[projects]]
   name = "github.com/tendermint/go-amino"
   packages = ["."]
-  revision = "3029a19e28956a5cf1e959f69c16542fe7dcb696"
-  version = "0.10.0"
+  revision = "2106ca61d91029c931fd54968c2bb02dc96b1412"
+  version = "0.10.1"
 
 [[projects]]
-  branch = "develop"
   name = "github.com/tendermint/go-crypto"
   packages = [
     ".",
@@ -303,7 +302,8 @@
     "keys/words/wordlist",
     "tmhash"
   ]
-  revision = "8e273220a35e200caa63ad6d1fbe5a91a49b45e2"
+  revision = "6a6b591a3d7592a04b46af95451cb5be3b114f76"
+  version = "v0.9.0"
 
 [[projects]]
   name = "github.com/tendermint/iavl"
@@ -378,7 +378,7 @@
 [[projects]]
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
-  revision = "065cbf938a16f20335c40cfe180f9cd4955c6a5a"
+  revision = "3e2146609cdb97894c064d59e9d00accd8c2b1dd"
 
 [[projects]]
   branch = "master"
@@ -476,6 +476,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fab3a7952b5339a01ef4e6a5e303e71003875702a2f05925cb035549ff47e9a5"
+  inputs-digest = "8993da533b9dc75fe4a523047a723f5f6198bd309903b1aeed1739030144ffc9"
   solver-name = "gps-cdcl"
   solver-version = 1

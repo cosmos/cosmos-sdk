@@ -222,8 +222,14 @@ func Request(t *testing.T, port, method, path string, payload []byte) (*http.Res
 	url := fmt.Sprintf("http://localhost:%v%v", port, path)
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(payload))
 	require.Nil(t, err)
-	res, err = http.DefaultClient.Do(req)
-	//	res, err = http.Post(url, "application/json", bytes.NewBuffer(payload))
+	// Retry request up to five times
+	for i := 0; i < 5; i++ {
+		res, err = http.DefaultClient.Do(req)
+		if err == nil && (res.StatusCode == http.StatusOK || res.StatusCode == http.StatusCreated) {
+			continue
+		}
+		fmt.Printf("Warning, HTTP request failed: response %v\n", res)
+	}
 	require.Nil(t, err)
 
 	output, err := ioutil.ReadAll(res.Body)

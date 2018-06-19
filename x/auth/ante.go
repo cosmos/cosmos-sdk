@@ -10,6 +10,7 @@ import (
 
 const (
 	deductFeesCost    sdk.Gas = 10
+	memoCostPerByte   sdk.Gas = 1
 	verifyCost                = 100
 	maxMemoCharacters         = 100
 )
@@ -37,7 +38,6 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 				true
 		}
 
-		msg := tx.GetMsg()
 		memo := tx.GetMemo()
 
 		if len(memo) > maxMemoCharacters {
@@ -45,6 +45,14 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 				sdk.ErrMemoTooLarge(fmt.Sprintf("maximum %d characters but was %d characters", maxMemoCharacters, len(memo))).Result(),
 				true
 		}
+
+		// set the gas meter
+		ctx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
+
+		// charge gas for the memo
+		ctx.GasMeter().ConsumeGas(memoCostPerByte*sdk.Gas(len(memo)), "memo")
+
+		msg := tx.GetMsg()
 
 		// Assert that number of signatures is correct.
 		var signerAddrs = msg.GetSigners()
@@ -106,9 +114,6 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 		// cache the signer accounts in the context
 		ctx = WithSigners(ctx, signerAccs)
-
-		// set the gas meter
-		ctx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
 
 		// TODO: tx tags (?)
 

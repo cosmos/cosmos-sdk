@@ -745,7 +745,7 @@ cd app
 
 We are ready to create our simple governance application!
 
-#### App structure
+#### Application structure
 
 *Note: You can check the full file (with comments!) [here](link)*
 
@@ -812,7 +812,7 @@ touch main.go
 
 ##### CLI
 
-To interact with out application, we'll have to add the commands from the `simple_governance` module to our `simpleGov` application, as well as the pre-built SDK commands:
+To interact with our application, let us add the commands from the `simple_governance` module to our `simpleGov` application, as well as the pre-built SDK commands:
 
 ```go
 //  cmd/simplegovcli/main.go
@@ -834,7 +834,7 @@ To interact with out application, we'll have to add the commands from the `simpl
 
 ##### Daemon server
 
-The `simplegovd` command will run the daemon server as a background process. First, create some util functions:
+The `simplegovd` command will run the daemon server as a background process. First, let us create some `utils` functions:
 
 ```go
 //  cmd/simplegovd/main.go
@@ -863,7 +863,7 @@ func exportAppState(logger log.Logger, db dbm.DB) (json.RawMessage, error) {
 }
 ```
 
-Now, let's define the command for the daemon server within the `main()` function:
+Now, let us define the command for the daemon server within the `main()` function:
 
 ```go
 //  cmd/simplegovd/main.go

@@ -1,30 +1,30 @@
 # Tutorial: How to code a Cosmos-SDK application
 
-In this tutorial, we will learn the basics of coding a Cosmos-SDK application. We will start by an introduction to Tendermint and the Cosmos ecosystem, followed by a high-level overview of the Tendermint software and the Cosmos-SDK framework. After that, we will delve into the code and build a simple application on top of the Cosmos-SDK.
+In this tutorial, you will learn the basics of coding an application with the Cosmos-SDK. Let's start with an introduction to Tendermint and the Cosmos Ecosystem, followed by a high-level overview of the Tendermint software and the Cosmos-SDK framework. After that, we will delve into the code and walk you through how to build a simple application on top of the Cosmos-SDK.
 
 ## Tendermint and Cosmos
 
-Blockchains can be divided in three conceptual layers:
+Blockchains can be divided into three conceptual layers:
 
 - **Networking:** Responsible for propagating transactions.
 - **Consensus:** Enables validator nodes to agree on the next set of transactions to process (i.e. add blocks of transactions to the blockchain).
-- **Application:** Responsible for updating the state given a set of transactions, i.e. processing transactions
+- **Application:** Responsible for updating the state given a set of transactions, i.e. processing transactions.
 
-The *networking* layer makes sure that each node receives transactions. The *consensus* layer makes sure that each node agrees on the same transactions to modify their local state. As for the *application* layer, it processes transactions. Given a transaction and a state, the application will return a new state. In Bitcoin for example, the state is a list of balances for each account (in reality, it's a list of UTXO, short for Unspent Transaction Output, but let's call them balances for the sake of simplicity), and transactions modify the state by changing these balances. In the case of Ethereum, the application is a virtual machine. Each transaction goes through this virtual machine and modifies the state according to the specific smart contract that is called within it.
+The *networking* layer makes sure that each node receives transactions. The *consensus* layer makes sure that each node agrees on the same transactions to modify their local state. As for the *application* layer, it processes transactions. Given a transaction and a state, the application will return a new state. In Bitcoin for example, the application state is a ledger or list of balances for each account (in reality, it's a list of UTXO, short for Unspent Transaction Output, but let's call them balances for the sake of simplicity), and the transactions modify the application's state by changing these list of balances. In the case of Ethereum, the application is a virtual machine. Each transaction goes through this virtual machine and modifies the application state according to the the smart contract that is called within it. 
 
-Before Tendermint, building a blockchain required building all three layers from the ground up. It was such a tedious task that most developers preferred forking the Bitcoin codebase, thereby being constrained by the limitations of the Bitcoin protocol. Then, Ethereum came in and greatly simplified the development of decentralised applications by providing a Virtual-Machine blockchain on which anyone could deploy custom logic in the form of Smart Contracts. But it did not simplify the development of blockchains themselves, as Go-Ethereum remained a very monolithic tech stack that is difficult to hard-fork from, much like Bitcoin. That is where Tendermint came in.
+Before Tendermint, building a blockchain required building all three layers from the ground up. It was such a tedious task that most developers preferred to fork or replicate the Bitcoin codebase, but were constrainted by the limitations of Bitcoin's protocol. The Ethereum Virtual Machine (EVM) was designed to solve this problem and simplify decentralized application development by allowing customizable logic to be executed through smart contracts. But it did not resolve the limitations (interoperability, scalability and customization) of blockchains themselves. Go-Ethereum remains a very monolithic tech stack that is difficult to hard-fork much like Bitcoin's codebase. 
 
-The goal of Tendermint is to provide the *networking* and *consensus* layers of a blockchain as a generic engine on which arbitrary applications can be built. With Tendermint, developers only have to worry about the *application* layer of their blockchain, thereby saving them hundreds of hours of development work. Note that Tendermint also designates the name of the byzantine fault tolerant consensus algorithm used within the Tendermint Core engine.
+Tendermint was designed to address these issues and provide developers with an laternative. The goal of Tendermint is to provide the *networking* and *consensus* layers of a blockchain as a generic engine to power any application developers want to build. With Tendermint, developers only have to focus on the *application* layer, thereby saving hundreds of hours of work and costly development set-ups. For reference, Tendermint also designates the name of the byzantine fault tolerant consensus algorithm used within the Tendermint Core engine.
 
-Tendermint connects the blockchain engine (*networking* and *consensus* layers) to the Application via a protocol called the [ABCI](https://github.com/tendermint/abci), short for Application-Blockchain Inteface. Developers only have to implement a few messages to build an ABCI-application that runs on top of the Tendermint engine. ABCI is language agnostic, meaning that developers can build the application part of their blockchain in any programming language. Building on top of Tendermint also provides the following benefits:
+Tendermint connects the blockchain engine, Tendermint Core (*networking* and *consensus* layers), to the *application* layer via a socket protocol called the  [ABCI](https://github.com/tendermint/abci), short for Application-BlockChain Interface. Developers only have to implement a few messages to build an ABCI-enabled application that runs on top of the Tendermint Core engine. ABCI is language agnostic, meaning that developers can build the *application* part of their blockchain in any programming language. Building on top of the Tendermint Core engine also provides the following benefits:
 
-- **Public or private blockchain capable.** Since developers can deploy arbitrary applications on top of Tendermint, it is possible to develop both permissioned and permissionless blockchains on top of it.
-- **Performance.** Tendermint is a state of the art blockchain engine. Tendermint Core can have a block time on the order of 1 second and handle thousands of transactions per second.
+- **Public or private blockchain capable.** Developers can deploy any blockchain application, permissioned (private) and permissionless (public), on top of Tendermint Core. 
+- **Performance.** Tendermint Core is a state-of-the-art blockchain consensus engine able to handle large number of transactions in short timespan. A block time on Tendermint Core can be as low as one second and can process thousands of transactions in that time period.
 - **Instant finality.** A property of the Tendermint consensus algorithm is instant finality, meaning that forks are never created, as long as less than a third of the validators are malicious (byzantine). Users can be sure their transactions are finalized as soon as a block is created.
-- **Security.** Tendermint consensus is not only fault tolerant, it’s optimally Byzantine fault-tolerant, with accountability. If the blockchain forks, there is a way to determine liability.
+- **Security.** Tendermint Core's consensus is not only fault tolerant, it’s optimally Byzantine fault-tolerant (BFT), with accountability. If the blockchain forks, there is a way to determine liability.
 - **Light-client support**. Tendermint provides built-in light-clients.
 
-But most importantly, Tendermint is natively compatible with the [Inter-Blockchain Communication Protocol](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/ibc) (IBC). This means that any Tendermint blockchain, whether public or private, can be natively connected to the Cosmos ecosystem and securely exchange tokens with other blockchains in the ecosystem. Note that benefiting from interoperability via IBC and Cosmos preserves the sovereignty of your Tendermint chain. Non-Tendermint chains can also be connected to Cosmos via IBC adapters or Peg-Zones, but this is out of scope for this document.
+But most importantly, Tendermint is natively compatible with the [Inter-Blockchain Communication Protocol](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/ibc) (IBC). This means that any Tendermint-based blockchain, whether public or private, can be natively connected to the Cosmos ecosystem and securely exchange tokens with other blockchains in the ecosystem. Note that benefiting from interoperability via IBC and Cosmos preserves the sovereignty of your Tendermint chain. Non-Tendermint chains can also be connected to Cosmos via IBC adapters or Peg-Zones, but this is out of scope for this document.
 
 For a more detailed overview of the Cosmos ecosystem, you can read [this article](https://blog.cosmos.network/understanding-the-value-proposition-of-cosmos-ecaef63350d).
 
@@ -35,7 +35,7 @@ Developing a Tendermint-based blockchain means that you only have to code the ap
 
 The [Cosmos-SDK](https://github.com/cosmos/cosmos-sdk) is a platform for building multi-asset Proof-of-Stake (PoS) blockchains, like the Cosmos Hub, as well as Proof-Of-Authority (PoA) blockchains.
 
-The goal of the Cosmos-SDK is to allow developers to easily create custom interoperable blockchain applications within the Cosmos Network without having to recreate common blockchain functionality, thus abstracting away the complexity of building a Tendermint ABCI application. We envision the SDK as the npm-like framework to build secure blockchain applications on top of Tendermint.
+The goal of the Cosmos-SDK is to allow developers to easily create custom interoperable blockchain applications within the Cosmos Network without having to recreate common blockchain functionality, thus removing the complexity of building a Tendermint ABCI application. We envision the SDK as the npm-like framework to build secure blockchain applications on top of Tendermint.
 
 In terms of its design, the SDK optimizes flexibility and security. The framework is designed around a modular execution stack which allows applications to mix and match elements as desired. In addition, all modules are sandboxed for greater application security.
 
@@ -43,7 +43,7 @@ It is based on two major principles:
 
 - **Composability:** Anyone can create a module for the Cosmos-SDK and integrating the already-built modules is as simple as importing them into your blockchain application.
 
-- **Capabilities:** The SDK is inspired by capabilities-based security, and informed by years of wrestling with blockchain state machines. Most developers will need to access other 3rd party modules when building their own modules. Given that the Cosmos-SDK is an open framework and that we assume that some those modules may be malicious, we designed the SDK using object-capabilities (ocaps) based principles. In practice, this means that instead of having each module keep an access control list for other modules, each module implements keepers that can be passed to other modules to grant a pre-defined set of capabilities. For example, if an instance of module A's keepers is passed to module B, the latter will be able to call a restricted set of module A's functions. The capabilities of each keeper are defined by the module's developer, and it's their job to understand and audit the safety of foreign code from 3rd party modules based on the capabilities they are passing into each 3rd party module. For a deeper look at capabilities, you can read this article.
+- **Capabilities:** The SDK is inspired by capabilities-based security, and informed by years of wrestling with blockchain state-machines. Most developers will need to access other 3rd party modules when building their own modules. Given that the Cosmos-SDK is an open framework and that we assume that some of those modules may be malicious, we designed the SDK using object-capabilities (ocaps) based principles. In practice, this means that instead of having each module keep an access control list for other modules, each module implements special objects called keepers that can be passed to other modules to grant a pre-defined set of capabilities. For example, if an instance of module A's keepers is passed to module B, the latter will be able to call a restricted set of module A's functions. The capabilities of each keeper are defined by the module's developer, and it's the developer's job to understand and audit the safety of foreign code from 3rd party modules based on the capabilities they are passing into each 3rd party module. For a deeper look at capabilities, you can read this [article](http://habitatchronicles.com/2017/05/what-are-capabilities/).
 
 *Note: For now the Cosmos-SDK only exists in Golang, which means that developers can only develop SDK modules in Golang. In the future, we expect that the SDK will be implemented in other programming languages. Funding opportunities supported by the Tendermint team may be available eventually.*
 
@@ -51,7 +51,7 @@ It is based on two major principles:
 
 Cosmos-SDK is a framework to develop the *application* layer of the blockchain. This application can be plugged on any consensus engine (*consensus* + *networking* layers) that supports a simple protocol called the ABCI, short for [Application-Blockchain Interface](https://github.com/tendermint/abci).
 
-Tendermint is the default consensus engine on which the Cosmos-SDK is built. It is important to have a good understanding of the respective responsibilities of both the *Application* and the *Consensus Engine*.
+Tendermint Core is the default consensus engine on which the Cosmos-SDK is built. It is important to have a good understanding of the respective responsibilities of both the *Application* and the *Consensus Engine*.
 
 Responsibilities of the *Consensus Engine*:
 - Propagate transactions
@@ -62,28 +62,28 @@ Reponsibilities of the *Application*:
 - Check if transactions are valid
 - Process Transactions (includes state changes)
 
-It is worth underlining that the *Consensus Engine* has knowledge of a given validator set for each block, but that it is the responsiblity of the *Application* to trigger validator set changes. This is the reason why it is possible to build both **public and private chains** with the Cosmos-SDK and Tendermint. A chain will be public or private depending on the rules, defined at application level, that govern validator set changes.
+It is worth underlining that the *Consensus Engine* has knowledge of a given validator set for each block, but that it is the responsiblity of the *Application* to trigger validator set changes. This is the reason why it is possible to build both **public and private chains** with the Cosmos-SDK and Tendermint. A chain will be public or private depending on the rules, defined at application level, that governs a validator's set changes.
 
 The ABCI establishes the connection between the *Consensus Engine* and the *Application*. Essentially, it boils down to two messages:
 
-- `CheckTx`: Ask the application if the transaction is valid. When a node receives a transaction, it will run `CheckTx` on it. If the transaction is valid, it is added to the mempool.
-- `DeliverTx`: Ask the application to process the transaction. Returns a new state.
+- `CheckTx`: Ask the application if the transaction is valid. When a validator's node receives a transaction, it will run `CheckTx` on it. If the transaction is valid, it is added to the mempool.
+- `DeliverTx`: Ask the application to process the transaction and update the state.
 
 Let us give a high-level overview of  how the *Consensus Engine* and the *Application* interract with each other.
 
-- At all times, when the consensus engine of a validator node receives a transaction, it passes it to the application via `CheckTx` to check its validity. If it is valid, the transaction is added to the mempool.
-- Let us say we are at block N. There is a validator set V. A proposer is selected from V by the *Consensus Engine* to propose the next block. The proposer gathers valid transaction from its mempool and forms a block. Then, the block is gossiped to other validators to be signed. The block becomes block N+1 once 2/3+ of V have signed a *precommit* on it (For a more detailed explanation of the consensus algorithm, click [here](https://github.com/tendermint/tendermint/wiki/Byzantine-Consensus-Algorithm)).
+- At all times, when the consensus engine (Tendermint Core) of a validator node receives a transaction, it passes it to the application via `CheckTx` to check its validity. If it is valid, the transaction is added to the mempool.
+- Let us say we are at block N. There is a validator set V. A proposer of the next block is selected from V by the *Consensus Engine*. The proposer gathers valid transaction from its mempool to form a new block. Then, the block is gossiped to other validators to be signed/commited. The block becomes block N+1 once 2/3+ of V have signed a *precommit* on it (For a more detailed explanation of the consensus algorithm, click [here](https://github.com/tendermint/tendermint/wiki/Byzantine-Consensus-Algorithm)).
 - When block N+1 is signed by 2/3+ of V, it is gossipped to full-nodes. When full-nodes receive the block, they confirm its validity. A block is valid if it it holds valid signatures from more than 2/3 of V and if all the transactions in the block are valid. To check the validity of transactions, the *Consensus Engine* transfers them to the application via `DeliverTx`. After each transaction, `DeliverTx` returns a new state if the transaction was valid. At the end of the block, a final state is committed. Of course, this means that the order of transaction within a block matters.
 
 ## Architecture of a SDK-app
 
 The Cosmos-SDK gives the basic template for an application architecture. You can find this template [here](https://github.com/cosmos/cosmos-sdk).
 
-In essence, a blockchain application is simply a replicated state machine. There is a state (e.g. for a cryptocurrency, how many coins each account holds), and transactions that trigger state transitions. As the application developer, your job is just define the state, the transactions types and how different transactions modify the state.
+In essence, a blockchain application is simply a replicated state-machine. There is a state (e.g. for a cryptocurrency, how many coins each account holds), and transactions that trigger a state transition. As the application developer you define the state, the transaction types and how different transactions modify the state.
 
 ### Modularity
 
-The Cosmos-SDK is a module-based framework. Each module is in itself a little state-machine that can be gracefully combined with other modules to produce a coherent application. In other words, modules define a sub-section of the global state and of the transaction types. Then, it is the job of the root application to route transactions to the correct modules depending on their respective types. To understand this process, let us take a look at a simplified standard cycle of the state-machine.
+The Cosmos-SDK is a module-based framework. Each module is in itself a little state-machine that can be easily combined with other modules to produce a coherent application. In other words, modules define a sub-section of the global state and of the transaction types. Then, it is the job of the root application to route transactions to the correct modules depending on their respective types. To understand this process, let us take a look at a simplified standard cycle of the state-machine.
 
 Upon receiving a transaction from the Tendermint Core engine, here is what the *Application* does:
 
@@ -166,7 +166,7 @@ The Cosmos-SDK uses [go-amino](https://github.com/cosmos/cosmos-sdk/blob/96451b5
 
 Go-amino (e.g. over https://github.com/golang/protobuf) uses reflection to encode/decode any Go object.  This lets the SDK developer focus on defining data structures in Go without the need to maintain a separate schema for Proto3. In addition, Amino extends Proto3 with native support for interfaces and concrete types.
 
-For example, the Cosmos SDK's `x/auth` package imports the PubKey interface from `tendermint/go-crypto` , where PubKey implementations include those for _Ed25519_ and _Secp256k1_.  Each `auth.BaseAccount` has a PubKey.
+For example, the Cosmos-SDK's `x/auth` package imports the PubKey interface from `tendermint/go-crypto` , where PubKey implementations include those for _Ed25519_ and _Secp256k1_.  Each `auth.BaseAccount` has a PubKey.
 
 ```go
  // BaseAccount - base account structure.
@@ -192,7 +192,7 @@ For more information on Go-Amino, see https://github.com/tendermint/go-amino.
 
 #### Keys, Keepers, and Mappers
 
-The Cosmos SDK is designed to enable an ecosystem of libraries that can be imported together to form a whole application. To make this ecosystem more secure, we've developed a design pattern that follows the principle of least-authority.
+The Cosmos-SDK is designed to enable an ecosystem of libraries that can be imported together to form a whole application. To make this ecosystem more secure, we've developed a design pattern that follows the principle of least-authority.
 
 `Mappers` and `Keepers` provide access to KV stores via the context. The only difference between the two is that a `Mapper` provides a lower-level API, so generally a `Keeper` might hold references to other Keepers and `Mappers` but not vice versa.
 
@@ -344,7 +344,7 @@ We are all set!
 
 ### Simple governance application
 
-For this tutorial, we will code a **simple governance application**, accompagnied by a **simple governance module**. It will allow us to explain most of the basic notions required to build a functioning application. Note that this is not the governance module used for the Cosmos Hub. A much more [advanced governance module](https://github.com/cosmos/cosmos-sdk/tree/develop/x/gov) will be used instead.
+For this tutorial, we will code a **simple governance application**, accompagnied by a **simple governance module**. It will allow us to explain most of the basic notions required to build a functioning application on the Cosmos-SDK. Note that this is not the governance module used for the Cosmos Hub. A much more [advanced governance module](https://github.com/cosmos/cosmos-sdk/tree/develop/x/gov) will be used instead.
 
 All the code for the `simple_governance` application can be found [here](https://github.com/gamarin2/cosmos-sdk/tree/module_tutorial/examples/simpleGov/x/simple_governance). You'll notice that the module and app aren't located at the root level of the repo but in the examples directory. This is just for convenience, you can code your module and application directly in the root directory.
 
@@ -352,7 +352,7 @@ Without further talk, let's get into it!
 
 ### Requirements
 
-We will start by writting down our module's requirements. We are designing a simple governance module, in which we want:
+We will start by writting down your module's requirements. We are designing a simple governance module, in which we want:
 
 - Simple text proposals, that any coin holder can submit.
 - Proposals must be submitted with a deposit in Atoms. If the deposit is superior to a predefined value called `MinDeposit`, the proposal enters the voting period. Otherwise it is rejected.
@@ -427,7 +427,7 @@ type VoteMsg struct {
 
 ## Implementation
 
-Now that we have our types defined, we can start actually implementing the module.
+Now, that we have our types defined, we can start actually implementing the module.
 
 First, let us go into the module's folder and create a folder for our module.
 
@@ -510,7 +510,7 @@ app.Router().
 
 In our case, we only have one store to access, the `SimpleGov` store. We will need to set and get values inside this store via our keeper. However, these two actions do not have the same impact in terms of security. While there should no problem in granting read access to our store to other modules, write access is way more sensitive. So ideally application developers should be able to create either a governance mapper that can only get values from the store, or one that can both get and set values. To this end, we will introduce two keepers: `Keeper` and `KeeperRead`. When application developers create their application, they will be able to decide which of our module's keeper to use.
 
-Now let us try to think about which keeper from **external** modules our module's keepers need access to.
+Now, let us try to think about which keeper from **external** modules our module's keepers need access to.
 Each proposal requires a deposit. This means our module needs to be able to both read and write to the module that handles tokens, which is the `bank` module. We also need to be able to determine the voting power of each voter based on their stake. To this end, we need read access to the store of the `staking` module. However, we don't need write access to this store. We should therefore indicate that in our module, and the application developer should be careful to only pass a read-only keeper of the `staking` module to our module's handler.
 
 With all that in mind, we can define the structure of our `Keeper`:
@@ -606,7 +606,7 @@ The function returns a `Result` that is returned to the application. It contains
 
 #### BeginBlocker and EndBlocker
 
-Contrary to most Smart-Contracts platform, it is possible to perform automatic (i.e. not triggered by a transaction sent by an end-user) execution of logic in Cosmos-SDK applications.
+In contrast to most smart-contracts platform, it is possible to perform automatic (i.e. not triggered by a transaction sent by an end-user) execution of logic in Cosmos-SDK applications.
 
 This automatic execution of code takes place in the `BeginBlock` and `EndBlock` functions that are called at the beginning and at the end of every block. They are powerful tools, but it is important for application developers to be careful with them. For example, it is crutial that developers control the amount of computing that happens in these functions, as expensive computation could delay the block time, and never-ending loop freeze the chain altogether.
 
@@ -733,7 +733,7 @@ As for the actual in-code implementation of the endpoints for our simple governa
 
 ### Application - Bridging it all together
 
-Now that we have built all the pieces that we need, it is time to integrate them into the application. Let us exit the `/x` director go back at the root of the SDK directory.
+Now, that we have built all the pieces we need, it is time to integrate them into the application. Let us exit the `/x` director go back at the root of the SDK directory.
 
 Then, let us create an `app` folder.
 
@@ -745,13 +745,13 @@ cd app
 
 We are ready to create our simple governance application!
 
-#### App structure
+#### Application structure
 
 *Note: You can check the full file (with comments!) [here](link)*
 
 First, create an `app.go` file. This is the main file that defines your application. In it, you will declare all the modules you need, their keepers, handlers, stores, etc. Let us take a look at each section of this file to see how the application is constructed.
 
-First, we need to define the name of our application.
+Secondly, we need to define the name of our application.
 
 ```go
 const (
@@ -812,79 +812,79 @@ touch main.go
 
 ##### CLI
 
-To interact with out application we'll have to add the commands from the `simple_governance` module to our `simpleGov` application, as well as the pre-built SDK commands:
+To interact with our application, let us add the commands from the `simple_governance` module to our `simpleGov` application, as well as the pre-built SDK commands:
 
 ```go
 //  cmd/simplegovcli/main.go
 ...
-	rootCmd.AddCommand(
-		client.GetCommands(
-			simplegovcmd.GetCmdQueryProposal("proposals", cdc),
-			simplegovcmd.GetCmdQueryProposals("proposals", cdc),
-			simplegovcmd.GetCmdQueryProposalVotes("proposals", cdc),
-			simplegovcmd.GetCmdQueryProposalVote("proposals", cdc),
-		)...)
-	rootCmd.AddCommand(
-		client.PostCommands(
-			simplegovcmd.PostCmdPropose(cdc),
-			simplegovcmd.PostCmdVote(cdc),
-		)...)
+    rootCmd.AddCommand(
+        client.GetCommands(
+            simplegovcmd.GetCmdQueryProposal("proposals", cdc),
+            simplegovcmd.GetCmdQueryProposals("proposals", cdc),
+            simplegovcmd.GetCmdQueryProposalVotes("proposals", cdc),
+            simplegovcmd.GetCmdQueryProposalVote("proposals", cdc),
+        )...)
+    rootCmd.AddCommand(
+        client.PostCommands(
+            simplegovcmd.PostCmdPropose(cdc),
+            simplegovcmd.PostCmdVote(cdc),
+        )...)
 ...
 ```
 
 ##### Daemon server
 
-The `simplegovd` command will run the daemon server as a background process. First, create some util functions:
+The `simplegovd` command will run the daemon server as a background process. First, let us create some `utils` functions:
 
 ```go
 //  cmd/simplegovd/main.go
 // SimpleGovAppInit initial parameters
 var SimpleGovAppInit = server.AppInit{
-	AppGenState: SimpleGovAppGenState,
-	AppGenTx:    server.SimpleAppGenTx,
+    AppGenState: SimpleGovAppGenState,
+    AppGenTx:    server.SimpleAppGenTx,
 }
 
 // SimpleGovAppGenState sets up the app_state and appends the simpleGov app state
 func SimpleGovAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
-	appState, err = server.SimpleAppGenState(cdc, appGenTxs)
-	if err != nil {
-		return
-	}
-	return
+    appState, err = server.SimpleAppGenState(cdc, appGenTxs)
+    if err != nil {
+        return
+    }
+    return
 }
 
 func newApp(logger log.Logger, db dbm.DB) abci.Application {
-	return app.NewSimpleGovApp(logger, db)
+    return app.NewSimpleGovApp(logger, db)
 }
 
 func exportAppState(logger log.Logger, db dbm.DB) (json.RawMessage, error) {
-	dapp := app.NewSimpleGovApp(logger, db)
-	return dapp.ExportAppStateJSON()
+    dapp := app.NewSimpleGovApp(logger, db)
+    return dapp.ExportAppStateJSON()
 }
 ```
 
-Now let's define the command for the daemon server within the `main()` function:
+Now, let us define the command for the daemon server within the `main()` function:
 
 ```go
 //  cmd/simplegovd/main.go
 func main() {
-	cdc := app.MakeCodec()
-	ctx := server.NewDefaultContext()
+    cdc := app.MakeCodec()
+    ctx := server.NewDefaultContext()
 
-	rootCmd := &cobra.Command{
-		Use:               "simplegovd",
-		Short:             "Simple Governance Daemon (server)",
-		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
-	}
+    rootCmd := &cobra.Command{
+        Use:               "simplegovd",
+        Short:             "Simple Governance Daemon (server)",
+        PersistentPreRunE: server.PersistentPreRunEFn(ctx),
+    }
 
-	server.AddCommands(ctx, cdc, rootCmd, SimpleGovAppInit,
-		server.ConstructAppCreator(newApp, "simplegov"),
-		server.ConstructAppExporter(exportAppState, "simplegov"))
+    server.AddCommands(ctx, cdc, rootCmd, SimpleGovAppInit,
+        server.ConstructAppCreator(newApp, "simplegov"),
+        server.ConstructAppExporter(exportAppState, "simplegov"))
 
-	// prepare and add flags
-	rootDir := os.ExpandEnv("$HOME/.simplegovd")
-	executor := cli.PrepareBaseCmd(rootCmd, "BC", rootDir)
-	executor.Execute()
+    // prepare and add flags
+    rootDir := os.ExpandEnv("$HOME/.simplegovd")
+    executor := cli.PrepareBaseCmd(rootCmd, "BC", rootDir)
+    executor.Execute()
 }
 ```
 
@@ -896,19 +896,19 @@ The [Makefile](https://en.wikipedia.org/wiki/Makefile) compiles the Go program b
 // Makefile
 build_examples:
 ifeq ($(OS),Windows_NT)
-	...
-	go build $(BUILD_FLAGS) -o build/simplegovd.exe ./examples/simpleGov/cmd/simplegovd
-	go build $(BUILD_FLAGS) -o build/simplegovcli.exe ./examples/simpleGov/cmd/simplegovcli
+    ...
+    go build $(BUILD_FLAGS) -o build/simplegovd.exe ./examples/simpleGov/cmd/simplegovd
+    go build $(BUILD_FLAGS) -o build/simplegovcli.exe ./examples/simpleGov/cmd/simplegovcli
 else
-	...
-	go build $(BUILD_FLAGS) -o build/simplegovd ./examples/simpleGov/cmd/simplegovd
-	go build $(BUILD_FLAGS) -o build/simplegovcli ./examples/simpleGov/cmd/simplegovcli
+    ...
+    go build $(BUILD_FLAGS) -o build/simplegovd ./examples/simpleGov/cmd/simplegovd
+    go build $(BUILD_FLAGS) -o build/simplegovcli ./examples/simpleGov/cmd/simplegovcli
 endif
 ...
 install_examples:
     ...
-	go install $(BUILD_FLAGS) ./examples/simpleGov/cmd/simplegovd
-	go install $(BUILD_FLAGS) ./examples/simpleGov/cmd/simplegovcli
+    go install $(BUILD_FLAGS) ./examples/simpleGov/cmd/simplegovd
+    go install $(BUILD_FLAGS) ./examples/simpleGov/cmd/simplegovcli
 ```
 
 #### App constructor

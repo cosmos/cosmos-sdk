@@ -38,7 +38,6 @@ Cosmos-SDK LCD (lite client daemon) acts as a rest-server. It provides a set of 
               "name":"test3",
               "password":"12345678",
               "seed":"electric opera balcony clever square coconut typical orbit wonder initial tragic year ride spread angle abandon"
-
             }
           Example return:
             BD607C37147656A507A5A521AA9446EB72B2C907
@@ -193,7 +192,7 @@ Cosmos-SDK LCD (lite client daemon) acts as a rest-server. It provides a set of 
 
 5.  **Bank module**
 
-    1. **url: /accounts/send, Method: POST**
+    1. **url: /accounts/{address}/send, Method: POST**
         ```
           Functionality: transfer asset
           Example parameters:
@@ -202,7 +201,6 @@ Cosmos-SDK LCD (lite client daemon) acts as a rest-server. It provides a set of 
               "name":"test1",
               "password":"12345678",
               "chain_id":"test-chain-F0bln0",
-              "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
               "sequence":2,
               "gas":100
             }
@@ -211,7 +209,7 @@ Cosmos-SDK LCD (lite client daemon) acts as a rest-server. It provides a set of 
 
 6.  **Ibc module**
 
-    1. **url: /ibc/send, Method: POST**
+    1. **url: /ibc/{destchain}/{address}/send, Method: POST**
         ```
           Functionality: transfer asset across chains
           Example parameters:
@@ -220,8 +218,6 @@ Cosmos-SDK LCD (lite client daemon) acts as a rest-server. It provides a set of 
               "name":"test1",
               "password":"12345678",
               "src_chain_id":"test-chain-F0bln0",
-              "dest_chain_id":"test-chain-E1abcd",
-              "dest_address":"cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
               "sequence":2,
               "gas":100
             }

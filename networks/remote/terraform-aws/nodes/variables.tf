@@ -16,6 +16,10 @@ variable "region" {
   description = "AWS region to use"
 }
 
+variable "multiplier" {
+  description = "Multiplier for node identification"
+}
+
 variable "execute" {
   description = "Set to false to disable the module"
   default = true

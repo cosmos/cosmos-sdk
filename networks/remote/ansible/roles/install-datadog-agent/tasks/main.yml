@@ -1,0 +1,15 @@
+---
+
+- name: Remove old datadog.yaml, if exist
+  file: path=/etc/datadog-agent/datadog.yaml state=absent
+  notify: restart datadog-agent
+
+- name: Download DataDog agent script
+  get_url: url=https://raw.githubusercontent.com/DataDog/datadog-agent/master/cmd/agent/install_script.sh dest=/tmp/datadog-agent-install.sh mode=0755
+
+- name: Install DataDog agent
+  command: "/tmp/datadog-agent-install.sh"
+  environment:
+    DD_API_KEY: "{{DD_API_KEY}}"
+    DD_HOST_TAGS: "testnet:{{TESTNET_NAME}},cluster:{{CLUSTER_NAME}}"
+

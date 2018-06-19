@@ -27,7 +27,7 @@
 
 - name: Get wallet word seed from result of initial transaction locally
   when: gentxresult["changed"]
-  shell: "echo '{{gentxresult.stdout}}' | python -c 'import json,string,sys ; print json.loads(string.join(sys.stdin.readlines()))[\"app_message\"][\"secret\"]'"
+  shell: "echo '{{gentxresult.stdout}}' | python -c 'import json,sys ; print json.loads(\"\".join(sys.stdin.readlines()))[\"app_message\"][\"secret\"]'"
   changed_when: false
   register: walletkey
   connection: local

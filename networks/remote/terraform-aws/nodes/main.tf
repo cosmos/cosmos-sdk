@@ -43,6 +43,13 @@ resource "aws_security_group" "secgroup" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    from_port = 26660
+    to_port = 26660
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port = 0
     to_port = 0
@@ -95,7 +102,7 @@ resource "aws_instance" "node" {
     inline = [
       "sudo cp /tmp/gaiad.service /etc/systemd/system/gaiad.service",
       "chmod +x /tmp/terraform.sh",
-      "sudo /tmp/terraform.sh ${var.name} ${count.index}",
+      "sudo /tmp/terraform.sh ${var.name} ${var.multiplier} ${count.index}",
     ]
   }
 

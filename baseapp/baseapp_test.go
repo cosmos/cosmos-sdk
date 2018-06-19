@@ -925,13 +925,6 @@ func TestSendBurn(t *testing.T) {
 	res := app.Deliver(tx)
 	assert.Equal(t, true, res.IsOK(), res.Log)
 
-	// Double check that state change of first message persists after block is committed
-	app.EndBlock(abci.RequestEndBlock{})
-	app.Commit()
-
-	app.BeginBlock(abci.RequestBeginBlock{})
-	app.deliverState.ctx = app.deliverState.ctx.WithChainID(t.Name())
-
 	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not change after valid tx")
 	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 did not change after valid tx")
 
@@ -943,9 +936,16 @@ func TestSendBurn(t *testing.T) {
 
 	res = app.Deliver(tx)
 
+	// Double check that state change of first message persists after block is committed
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+
+	app.BeginBlock(abci.RequestBeginBlock{})
+	app.deliverState.ctx = app.deliverState.ctx.WithChainID(t.Name())
+
 	assert.Equal(t, sdk.ABCICodeType(0x1000a), res.Code, "Allowed tx to pass with insufficient funds")
 
-	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Did not allow first valid msg to pass")
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(50)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Allowed valid msg to pass in invalid tx")
 	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 change after valid tx")
 }
 

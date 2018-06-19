@@ -9,7 +9,7 @@ import (
 
 // Implements ValidatorSet
 var _ sdk.ValidatorSet = Keeper{}
-var _ sdk.SlashValidatorSet = PrivlegedKeeper{}
+var _ sdk.SlashValidatorSet = PrivilegedKeeper{}
 
 // iterate through the active validator set and perform the provided function
 func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validator sdk.Validator) (stop bool)) {

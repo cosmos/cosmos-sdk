@@ -31,7 +31,7 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.
 //_________________________________________________________________________
 
 // full permission keeper of the stake store
-type PrivlegedKeeper struct {
+type PrivilegedKeeper struct {
 	Keeper
 
 	storeKey   sdk.StoreKey
@@ -42,8 +42,8 @@ type PrivlegedKeeper struct {
 	codespace sdk.CodespaceType
 }
 
-func NewPrivlegedKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) PrivlegedKeeper {
-	keeper := PrivlegedKeeper{
+func NewPrivilegedKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) PrivilegedKeeper {
+	keeper := PrivilegedKeeper{
 		Keeper:     NewKeeper(cdc, key, ck, codespace),
 		storeKey:   key,
 		cdc:        cdc,
@@ -61,7 +61,7 @@ func (k Keeper) Codespace() sdk.CodespaceType {
 }
 
 // return the codespace
-func (k PrivlegedKeeper) CoinKeeper() bank.Keeper {
+func (k PrivilegedKeeper) CoinKeeper() bank.Keeper {
 	return k.coinKeeper
 }
 
@@ -85,14 +85,14 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 // record of params to exist (to check if maxValidators has changed) - and we
 // panic on retrieval if it doesn't exist - hence if we use setParams for the very
 // first params set it will panic.
-func (k PrivlegedKeeper) SetNewParams(ctx sdk.Context, params types.Params) {
+func (k PrivilegedKeeper) SetNewParams(ctx sdk.Context, params types.Params) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(params)
 	store.Set(ParamKey, b)
 }
 
 // set the params
-func (k PrivlegedKeeper) SetParams(ctx sdk.Context, params types.Params) {
+func (k PrivilegedKeeper) SetParams(ctx sdk.Context, params types.Params) {
 	store := ctx.KVStore(k.storeKey)
 	exParams := k.GetParams(ctx)
 
@@ -118,7 +118,7 @@ func (k Keeper) GetPool(ctx sdk.Context) (pool types.Pool) {
 }
 
 // set the pool
-func (k PrivlegedKeeper) SetPool(ctx sdk.Context, pool types.Pool) {
+func (k PrivilegedKeeper) SetPool(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(pool)
 	store.Set(PoolKey, b)
@@ -139,7 +139,7 @@ func (k Keeper) GetIntraTxCounter(ctx sdk.Context) int16 {
 }
 
 // set the current in-block validator operation counter
-func (k PrivlegedKeeper) SetIntraTxCounter(ctx sdk.Context, counter int16) {
+func (k PrivilegedKeeper) SetIntraTxCounter(ctx sdk.Context, counter int16) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(counter)
 	store.Set(IntraTxCounterKey, bz)

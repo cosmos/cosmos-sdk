@@ -30,13 +30,13 @@ var (
 )
 
 // initialize the mock application for this module
-func getMockApp(t *testing.T) (*mock.App, PrivlegedKeeper) {
+func getMockApp(t *testing.T) (*mock.App, PrivilegedKeeper) {
 	mapp := mock.NewApp()
 
 	RegisterWire(mapp.Cdc)
 	keyStake := sdk.NewKVStoreKey("stake")
 	coinKeeper := bank.NewKeeper(mapp.AccountMapper)
-	keeper := NewPrivlegedKeeper(mapp.Cdc, keyStake, coinKeeper, mapp.RegisterCodespace(DefaultCodespace))
+	keeper := NewPrivilegedKeeper(mapp.Cdc, keyStake, coinKeeper, mapp.RegisterCodespace(DefaultCodespace))
 	mapp.Router().AddRoute("stake", NewHandler(keeper))
 
 	mapp.SetEndBlocker(getEndBlocker(keeper))
@@ -47,7 +47,7 @@ func getMockApp(t *testing.T) (*mock.App, PrivlegedKeeper) {
 }
 
 // stake endblocker
-func getEndBlocker(keeper PrivlegedKeeper) sdk.EndBlocker {
+func getEndBlocker(keeper PrivilegedKeeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 		validatorUpdates := EndBlocker(ctx, keeper)
 		return abci.ResponseEndBlock{
@@ -57,7 +57,7 @@ func getEndBlocker(keeper PrivlegedKeeper) sdk.EndBlocker {
 }
 
 // overwrite the mock init chainer
-func getInitChainer(mapp *mock.App, keeper PrivlegedKeeper) sdk.InitChainer {
+func getInitChainer(mapp *mock.App, keeper PrivilegedKeeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 		keeper.InitGenesis(ctx, DefaultGenesisState())
@@ -68,7 +68,7 @@ func getInitChainer(mapp *mock.App, keeper PrivlegedKeeper) sdk.InitChainer {
 
 //__________________________________________________________________________________________
 
-func checkValidator(t *testing.T, mapp *mock.App, keeper Keeper,
+func checkValidator(t *testing.T, mapp *mock.App, keeper PrivilegedKeeper,
 	addr sdk.Address, expFound bool) Validator {
 
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})

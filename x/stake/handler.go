@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
-func NewHandler(k keeper.PrivlegedKeeper) sdk.Handler {
+func NewHandler(k keeper.PrivilegedKeeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		// NOTE msg already has validate basic run
 		switch msg := msg.(type) {
@@ -36,7 +36,7 @@ func NewHandler(k keeper.PrivlegedKeeper) sdk.Handler {
 }
 
 // Called every block, process inflation, update validator set
-func EndBlocker(ctx sdk.Context, k keeper.PrivlegedKeeper) (ValidatorUpdates []abci.Validator) {
+func EndBlocker(ctx sdk.Context, k keeper.PrivilegedKeeper) (ValidatorUpdates []abci.Validator) {
 	pool := k.GetPool(ctx)
 
 	// Process types.Validator Provisions
@@ -63,7 +63,7 @@ func EndBlocker(ctx sdk.Context, k keeper.PrivlegedKeeper) (ValidatorUpdates []a
 // These functions assume everything has been authenticated,
 // now we just perform action and save
 
-func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k keeper.PrivlegedKeeper) sdk.Result {
+func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k keeper.PrivilegedKeeper) sdk.Result {
 
 	// check to see if the pubkey or sender has been registered before
 	_, found := k.GetValidator(ctx, msg.ValidatorAddr)
@@ -99,7 +99,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	}
 }
 
-func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keeper.PrivlegedKeeper) sdk.Result {
+func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keeper.PrivilegedKeeper) sdk.Result {
 
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
@@ -126,7 +126,7 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	}
 }
 
-func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.PrivlegedKeeper) sdk.Result {
+func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.PrivilegedKeeper) sdk.Result {
 
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if !found {
@@ -155,7 +155,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Privlege
 	}
 }
 
-func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k keeper.PrivlegedKeeper) sdk.Result {
+func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k keeper.PrivilegedKeeper) sdk.Result {
 
 	delegation, validator, pool, returnAmount, err := k.UnbondDelegation(ctx, msg.DelegatorAddr, msg.ValidatorAddr, msg.SharesAmount)
 	if err != nil {
@@ -193,7 +193,7 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 	return sdk.Result{Tags: tags}
 }
 
-func handleMsgCompleteUnbonding(ctx sdk.Context, msg types.MsgCompleteUnbonding, k keeper.PrivlegedKeeper) sdk.Result {
+func handleMsgCompleteUnbonding(ctx sdk.Context, msg types.MsgCompleteUnbonding, k keeper.PrivilegedKeeper) sdk.Result {
 
 	ubd, found := k.GetUnbondingDelegation(ctx, msg.DelegatorAddr, msg.ValidatorAddr)
 	if !found {
@@ -230,7 +230,7 @@ func handleMsgCompleteUnbonding(ctx sdk.Context, msg types.MsgCompleteUnbonding,
 	return sdk.Result{Tags: tags}
 }
 
-func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k keeper.PrivlegedKeeper) sdk.Result {
+func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k keeper.PrivilegedKeeper) sdk.Result {
 
 	delegation, srcValidator, pool, returnAmount, err := k.UnbondDelegation(ctx, msg.DelegatorAddr, msg.ValidatorSrcAddr, msg.SharesAmount)
 	if err != nil {
@@ -278,7 +278,7 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 	return sdk.Result{Tags: tags}
 }
 
-func handleMsgCompleteRedelegate(ctx sdk.Context, msg types.MsgCompleteRedelegate, k keeper.PrivlegedKeeper) sdk.Result {
+func handleMsgCompleteRedelegate(ctx sdk.Context, msg types.MsgCompleteRedelegate, k keeper.PrivilegedKeeper) sdk.Result {
 
 	red, found := k.GetRedelegation(ctx, msg.DelegatorAddr, msg.ValidatorSrcAddr, msg.ValidatorDstAddr)
 	if !found {

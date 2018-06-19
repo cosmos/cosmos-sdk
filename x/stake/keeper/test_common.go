@@ -86,7 +86,7 @@ func ParamsNoInflation() types.Params {
 }
 
 // hogpodge of all sorts of input required for testing
-func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountMapper, PrivlegedKeeper) {
+func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountMapper, PrivilegedKeeper) {
 
 	keyStake := sdk.NewKVStoreKey("stake")
 	keyAcc := sdk.NewKVStoreKey("acc")
@@ -106,7 +106,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 		&auth.BaseAccount{}, // prototype
 	)
 	ck := bank.NewKeeper(accountMapper)
-	keeper := NewPrivlegedKeeper(cdc, keyStake, ck, types.DefaultCodespace)
+	keeper := NewPrivilegedKeeper(cdc, keyStake, ck, types.DefaultCodespace)
 	keeper.SetPool(ctx, types.InitialPool())
 	keeper.SetNewParams(ctx, types.DefaultParams())
 

@@ -46,7 +46,7 @@ func createTestCodec() *wire.Codec {
 	return cdc
 }
 
-func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.PrivlegedKeeper, Keeper) {
+func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.PrivilegedKeeper, Keeper) {
 	keyAcc := sdk.NewKVStoreKey("acc")
 	keyStake := sdk.NewKVStoreKey("stake")
 	keySlashing := sdk.NewKVStoreKey("slashing")
@@ -61,7 +61,7 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.PrivlegedKee
 	cdc := createTestCodec()
 	accountMapper := auth.NewAccountMapper(cdc, keyAcc, &auth.BaseAccount{})
 	ck := bank.NewKeeper(accountMapper)
-	sk := stake.NewPrivlegedKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
+	sk := stake.NewPrivilegedKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
 	genesis.Pool.LooseUnbondedTokens = initCoins * int64(len(addrs))
 	sk.InitGenesis(ctx, genesis)

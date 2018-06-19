@@ -9,11 +9,11 @@ import (
 
 // keeper
 type Keeper = keeper.Keeper
-type PrivlegedKeeper = keeper.PrivlegedKeeper
+type PrivilegedKeeper = keeper.PrivilegedKeeper
 
 var (
 	NewKeeper          = keeper.NewKeeper
-	NewPrivlegedKeeper = keeper.NewPrivlegedKeeper
+	NewPrivilegedKeeper = keeper.NewPrivilegedKeeper
 )
 
 // types

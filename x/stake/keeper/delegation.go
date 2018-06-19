@@ -22,7 +22,7 @@ func (k Keeper) GetDelegation(ctx sdk.Context,
 }
 
 // load all delegations used during genesis dump
-func (k PrivlegedKeeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegation) {
+func (k PrivilegedKeeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, DelegationKey)
 
@@ -66,20 +66,20 @@ func (k Keeper) GetDelegations(ctx sdk.Context, delegator sdk.Address,
 }
 
 // set the delegation
-func (k PrivlegedKeeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
+func (k PrivilegedKeeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(delegation)
 	store.Set(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr, k.cdc), b)
 }
 
 // remove the delegation
-func (k PrivlegedKeeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
+func (k PrivilegedKeeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr, k.cdc))
 }
 
 // common functionality between handlers
-func (k PrivlegedKeeper) Delegate(ctx sdk.Context, delegatorAddr sdk.Address, bondAmt sdk.Coin,
+func (k PrivilegedKeeper) Delegate(ctx sdk.Context, delegatorAddr sdk.Address, bondAmt sdk.Coin,
 	validator types.Validator) (newShares sdk.Rat, delegation types.Delegation,
 	validator2 types.Validator, pool types.Pool, err sdk.Error) {
 
@@ -126,7 +126,7 @@ func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
 }
 
 // set the unbonding delegation and associated index
-func (k PrivlegedKeeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
+func (k PrivilegedKeeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(ubd)
 	ubdKey := GetUBDKey(ubd.DelegatorAddr, ubd.ValidatorAddr, k.cdc)
@@ -135,7 +135,7 @@ func (k PrivlegedKeeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.Unbon
 }
 
 // remove the unbonding delegation object and associated index
-func (k PrivlegedKeeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
+func (k PrivilegedKeeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
 	ubdKey := GetUBDKey(ubd.DelegatorAddr, ubd.ValidatorAddr, k.cdc)
 	store.Delete(ubdKey)
@@ -143,7 +143,7 @@ func (k PrivlegedKeeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.Un
 }
 
 // unbond the the delegation return
-func (k PrivlegedKeeper) UnbondDelegation(ctx sdk.Context, delegatorAddr, validatorAddr sdk.Address,
+func (k PrivilegedKeeper) UnbondDelegation(ctx sdk.Context, delegatorAddr, validatorAddr sdk.Address,
 	shares sdk.Rat) (delegation types.Delegation, validator types.Validator, pool types.Pool, amount int64, err sdk.Error) {
 
 	// check if delegation has any shares in it unbond
@@ -229,7 +229,7 @@ func (k Keeper) GetRedelegationDel(ctx sdk.Context, DelegatorAddr, ValidatorSrcA
 }
 
 // set a redelegation and associated index
-func (k PrivlegedKeeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
+func (k PrivilegedKeeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(red)
 	redKey := GetREDKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr, k.cdc)
@@ -239,7 +239,7 @@ func (k PrivlegedKeeper) SetRedelegation(ctx sdk.Context, red types.Redelegation
 }
 
 // remove a redelegation object and associated index
-func (k PrivlegedKeeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
+func (k PrivilegedKeeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store := ctx.KVStore(k.storeKey)
 	redKey := GetREDKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr, k.cdc)
 	store.Delete(redKey)

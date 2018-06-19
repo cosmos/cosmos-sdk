@@ -1,10 +1,10 @@
-# Cosmos-SDK LCD(lite client daemon) Specifications
+# Cosmos-SDK LCD(light client daemon) Specifications
 
 ## Intro
 
-This document specifies the LCD (lite client daemon) module of Cosmos-SDK. This module enables consumers to query and verify transactions and blocks, as well as other abci application states like coin quantity, without deploying a fullnode which requires much computing resource and storage space.
+This document specifies the LCD (light client daemon) module of Cosmos-SDK. The LCD is a separate process that starts a server, which exposes a REST api to query and interact with a fullnode. It authenticates all data that a fullnode returns against a recent state root and follows the header chain to stay up to date on the latest state root. This module allows application developers to easily write their develop their own LCD for their own application. This module is used to build the LCD for the Cosmos Hub.
 
-From an exahange's perspective, LCD will decrease the difficulty and latency of verifying the authenticity of any type of transaction. A typical architecture for using LCD is the following:
+From a client implementor's perspective, LCD will decrease the difficulty and latency of verifying the authenticity of any type of transaction. A typical architecture for using LCD is the following:
 
 ![architecture](https://github.com/irisnet/cosmos-sdk/raw/suyu/lcd/docs/spec/lcd/pics/architecture.png)
 
@@ -34,7 +34,7 @@ From an exahange's perspective, LCD will decrease the difficulty and latency of 
 
 Cosmos-SDK LCD acts as a rest-server. It provides a set of APIs which cover key management, tendermint blockchain monitor and other cosmos modules related interfaces.
 
-1. **Key management**
+1. **Key Management**
 
 1.1  url: /keys, Method: GET
 Parameters: null

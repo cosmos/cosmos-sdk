@@ -30,13 +30,13 @@ var (
 )
 
 // initialize the mock application for this module
-func getMockApp(t *testing.T) (*mock.App, Keeper) {
+func getMockApp(t *testing.T) (*mock.App, PrivlegedKeeper) {
 	mapp := mock.NewApp()
 
 	RegisterWire(mapp.Cdc)
 	keyStake := sdk.NewKVStoreKey("stake")
 	coinKeeper := bank.NewKeeper(mapp.AccountMapper)
-	keeper := NewKeeper(mapp.Cdc, keyStake, coinKeeper, mapp.RegisterCodespace(DefaultCodespace))
+	keeper := NewPrivlegedKeeper(mapp.Cdc, keyStake, coinKeeper, mapp.RegisterCodespace(DefaultCodespace))
 	mapp.Router().AddRoute("stake", NewHandler(keeper))
 
 	mapp.SetEndBlocker(getEndBlocker(keeper))
@@ -47,7 +47,7 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 }
 
 // stake endblocker
-func getEndBlocker(keeper Keeper) sdk.EndBlocker {
+func getEndBlocker(keeper PrivlegedKeeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 		validatorUpdates := EndBlocker(ctx, keeper)
 		return abci.ResponseEndBlock{
@@ -57,10 +57,10 @@ func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 }
 
 // overwrite the mock init chainer
-func getInitChainer(mapp *mock.App, keeper Keeper) sdk.InitChainer {
+func getInitChainer(mapp *mock.App, keeper PrivlegedKeeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
-		InitGenesis(ctx, keeper, DefaultGenesisState())
+		keeper.InitGenesis(ctx, DefaultGenesisState())
 
 		return abci.ResponseInitChain{}
 	}
@@ -147,11 +147,12 @@ func TestStakeMsgs(t *testing.T) {
 	mock.CheckBalance(t, mapp, addr2, sdk.Coins{genCoin.Minus(bondCoin)})
 	checkDelegation(t, mapp, keeper, addr2, addr1, true, sdk.NewRat(10))
 
+	// XXX add new transaction types
 	////////////////////
-	// Unbond
+	// Complete Unbonding
 
-	unbondMsg := NewMsgUnbond(addr2, addr1, "MAX")
-	mock.SignCheckDeliver(t, mapp.BaseApp, unbondMsg, []int64{1}, []int64{1}, true, priv2)
-	mock.CheckBalance(t, mapp, addr2, sdk.Coins{genCoin})
-	checkDelegation(t, mapp, keeper, addr2, addr1, false, sdk.Rat{})
+	//unbondMsg := NewMsgCompleteUnbonding(addr2, addr1, "MAX")
+	//mock.SignCheckDeliver(t, mapp.BaseApp, unbondMsg, []int64{1}, []int64{1}, true, priv2)
+	//mock.CheckBalance(t, mapp, addr2, sdk.Coins{genCoin})
+	//checkDelegation(t, mapp, keeper, addr2, addr1, false, sdk.Rat{})
 }

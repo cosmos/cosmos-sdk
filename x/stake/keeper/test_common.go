@@ -24,7 +24,7 @@ import (
 // dummy addresses used for testing
 var (
 	Addrs       = createTestAddrs(100)
-	Pks         = createTestPubKeys(100)
+	PKs         = createTestPubKeys(100)
 	emptyAddr   sdk.Address
 	emptyPubkey crypto.PubKey
 

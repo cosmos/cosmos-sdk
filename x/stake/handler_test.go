@@ -26,23 +26,23 @@ func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt in
 
 func newTestMsgDelegate(delegatorAddr, validatorAddr sdk.Address, amt int64) MsgDelegate {
 	return MsgDelegate{
-		DelegatorAddr:  delegatorAddr,
-		ValidatorAddr:  validatorAddr,
-		SelfDelegation: sdk.Coin{"steak", amt},
+		DelegatorAddr: delegatorAddr,
+		ValidatorAddr: validatorAddr,
+		Bond:          sdk.Coin{"steak", amt},
 	}
 }
 
 //______________________________________________________________________
 
 func TestValidatorByPowerIndex(t *testing.T) {
-	validatorAddr, validatorAddr3 := addrs[0], addrs[1]
+	validatorAddr, validatorAddr3 := keep.Addrs[0], keep.Addrs[1]
 
 	initBond := int64(1000000)
 	initBondStr := "1000"
-	ctx, _, keeper := createTestInput(t, false, initBond)
+	ctx, _, keeper := keep.CreateTestInput(t, false, initBond)
 
 	// create validator
-	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, pks[0], initBond)
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, keep.PKs[0], initBond)
 	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	assert.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
 
@@ -58,17 +58,17 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	pool := keeper.GetPool(ctx)
-	power := GetValidatorsByPowerKey(validator, pool)
+	power := keep.GetValidatorsByPowerIndexKey(validator, pool)
 	require.True(t, keeper.validatorByPowerIndexExists(ctx, power))
 
 	// create a second validator keep it bonded
-	msgCreateValidator = newTestMsgCreateValidator(validatorAddr3, pks[2], int64(1000000))
+	msgCreateValidator = newTestMsgCreateValidator(validatorAddr3, keep.PKs[2], int64(1000000))
 	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	assert.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
 
 	// slash and revoke the first validator
-	keeper.Slash(ctx, pks[0], 0, sdk.NewRat(1, 2))
-	keeper.Revoke(ctx, pks[0])
+	keeper.Slash(ctx, keep.PKs[0], 0, sdk.NewRat(1, 2))
+	keeper.Revoke(ctx, keep.PKs[0])
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	require.Equal(t, sdk.Unbonded, validator.PoolShares.Status)             // ensure is unbonded

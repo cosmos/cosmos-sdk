@@ -5,9 +5,11 @@ import (
 	"strconv"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 //changing the int in NewSource will allow you to test different, deterministic, sets of operations
@@ -66,7 +68,7 @@ func TestGetInflation(t *testing.T) {
 
 // Test that provisions are correctly added to the pool and validators each hour for 1 year
 func TestProcessProvisions(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 
 	var (
@@ -97,7 +99,7 @@ func TestProcessProvisions(t *testing.T) {
 // Tests that the hourly rate of change of inflation will be positive, negative, or zero, depending on bonded ratio and inflation rate
 // Cycles through the whole gambit of inflation possibilities, starting at 7% inflation, up to 20%, back down to 7% (it takes ~11.4 years)
 func TestHourlyInflationRateOfChange(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 
 	var (
@@ -130,7 +132,7 @@ func TestHourlyInflationRateOfChange(t *testing.T) {
 
 //Test that a large unbonding will significantly lower the bonded ratio
 func TestLargeUnbond(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 
 	var (
@@ -178,7 +180,7 @@ func TestLargeUnbond(t *testing.T) {
 
 //Test that a large bonding will significantly increase the bonded ratio
 func TestLargeBond(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 
 	var (
@@ -225,7 +227,7 @@ func TestLargeBond(t *testing.T) {
 
 // Tests that inflation increases or decreases as expected when we do a random operation on 20 different validators
 func TestInflationWithRandomOperations(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 0)
 	params := DefaultParams()
 	keeper.setParams(ctx, params)
 	numValidators := 20
@@ -281,14 +283,14 @@ func TestInflationWithRandomOperations(t *testing.T) {
 ////////////////////////////////HELPER FUNCTIONS BELOW/////////////////////////////////////
 
 // Final check on the global pool values for what the total tokens accumulated from each hour of provisions
-func checkFinalPoolValues(t *testing.T, pool Pool, initialTotalTokens, cumulativeExpProvs int64) {
+func checkFinalPoolValues(t *testing.T, pool types.Pool, initialTotalTokens, cumulativeExpProvs int64) {
 	calculatedTotalTokens := initialTotalTokens + cumulativeExpProvs
 	assert.Equal(t, calculatedTotalTokens, pool.TokenSupply())
 }
 
 // Processes provisions are added to the pool correctly every hour
 // Returns expected Provisions, expected Inflation, and pool, to help with cumulative calculations back in main Tests
-func updateProvisions(t *testing.T, keeper Keeper, pool Pool, ctx sdk.Context, hr int) (sdk.Rat, int64, Pool) {
+func updateProvisions(t *testing.T, keeper Keeper, pool types.Pool, ctx sdk.Context, hr int) (sdk.Rat, int64, types.Pool) {
 	expInflation := keeper.nextInflation(ctx)
 	expProvisions := (expInflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat)).Evaluate()
 	startTotalSupply := pool.TokenSupply()
@@ -304,7 +306,7 @@ func updateProvisions(t *testing.T, keeper Keeper, pool Pool, ctx sdk.Context, h
 // Deterministic setup of validators and pool
 // Allows you to decide how many validators to setup
 // Allows you to pick which validators are bonded by adjusting the MaxValidators of params
-func setupTestValidators(pool Pool, keeper Keeper, ctx sdk.Context, validatorTokens []int64, maxValidators uint16) ([]Validator, Keeper, Pool) {
+func setupTestValidators(pool types.Pool, keeper Keeper, ctx sdk.Context, validatorTokens []int64, maxValidators uint16) ([]types.Validator, Keeper, types.Pool) {
 	params := DefaultParams()
 	params.MaxValidators = maxValidators
 	keeper.setParams(ctx, params)
@@ -323,7 +325,7 @@ func setupTestValidators(pool Pool, keeper Keeper, ctx sdk.Context, validatorTok
 }
 
 // Checks that the deterministic validator setup you wanted matches the values in the pool
-func checkValidatorSetup(t *testing.T, pool Pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens int64) {
+func checkValidatorSetup(t *testing.T, pool types.Pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens int64) {
 	assert.Equal(t, initialTotalTokens, pool.TokenSupply())
 	assert.Equal(t, initialBondedTokens, pool.BondedTokens)
 	assert.Equal(t, initialUnbondedTokens, pool.UnbondedTokens)
@@ -335,7 +337,7 @@ func checkValidatorSetup(t *testing.T, pool Pool, initialTotalTokens, initialBon
 }
 
 // Checks that The inflation will correctly increase or decrease after an update to the pool
-func checkInflation(t *testing.T, pool Pool, previousInflation, updatedInflation sdk.Rat, msg string) {
+func checkInflation(t *testing.T, pool types.Pool, previousInflation, updatedInflation sdk.Rat, msg string) {
 	inflationChange := updatedInflation.Sub(previousInflation)
 
 	switch {

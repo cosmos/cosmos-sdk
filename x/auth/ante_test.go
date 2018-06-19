@@ -354,12 +354,12 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 		msgs    []sdk.Msg
 		code    sdk.CodeType
 	}{
-		{chainID2, int64(0), int64(1), fee, msgs, codeUnauth},                        // test wrong chain_id
-		{chainID, int64(0), int64(2), fee, msgs, codeUnauth},                         // test wrong seqs
-		{chainID, int64(1), int64(1), fee, msgs, codeUnauth},                         // test wrong accnum
-		{chainID, int64(0), int64(1), fee, []sdk.Msg{newTestMsg(addr2)}, codeUnauth}, // test wrong msg
-		{chainID, int64(0), int64(1), fee2, msgs, codeUnauth},                        // test wrong fee
-		{chainID, int64(0), int64(1), fee3, msgs, codeUnauth},                        // test wrong fee
+		{chainID2, 0, 1, fee, msgs, codeUnauth},                        // test wrong chain_id
+		{chainID, 0, 2, fee, msgs, codeUnauth},                         // test wrong seqs
+		{chainID, 1, 1, fee, msgs, codeUnauth},                         // test wrong accnum
+		{chainID, 0, 1, fee, []sdk.Msg{newTestMsg(addr2)}, codeUnauth}, // test wrong msg
+		{chainID, 0, 1, fee2, msgs, codeUnauth},                        // test wrong fee
+		{chainID, 0, 1, fee3, msgs, codeUnauth},                        // test wrong fee
 	}
 
 	privs, seqs = []crypto.PrivKey{priv1}, []int64{1}

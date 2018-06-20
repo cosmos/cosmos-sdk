@@ -1,0 +1,20 @@
+{
+  "node_id": "30b45459e4881680c0ef1750fde136fefa6c3b98",
+  "ip": "35.184.182.143",
+  "validator": {
+    "pub_key": {
+      "type": "AC26791624DE60",
+      "value": "CDF/8aD8Lt+ikR3LyCg9c7DwWBA51NH+MUkH7tzxrfY="
+    },
+    "power": 100,
+    "name": "zaki"
+  },
+  "app_gen_tx": {
+    "name": "zaki",
+    "address": "ECE57661F0CDCF28EED257B72F86240E57F4A612",
+    "pub_key": {
+      "type": "AC26791624DE60",
+      "value": "CDF/8aD8Lt+ikR3LyCg9c7DwWBA51NH+MUkH7tzxrfY="
+    }
+  }
+}

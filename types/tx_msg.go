@@ -31,11 +31,14 @@ type Tx interface {
 
 	// Gets the Msg.
 	GetMsg() Msg
+
+	// Gets the memo.
+	GetMemo() string
 }
 
 //__________________________________________________________
 
-// TxDeocder unmarshals transaction bytes
+// TxDecoder unmarshals transaction bytes
 type TxDecoder func(txBytes []byte) (Tx, Error)
 
 //__________________________________________________________

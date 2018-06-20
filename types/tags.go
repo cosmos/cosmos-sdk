@@ -25,6 +25,11 @@ func (t Tags) AppendTags(a Tags) Tags {
 	return append(t, a...)
 }
 
+// Turn tags into KVPair list
+func (t Tags) ToKVPairs() []cmn.KVPair {
+	return []cmn.KVPair(t)
+}
+
 // New variadic tags, must be k string, v []byte repeating
 func NewTags(tags ...interface{}) Tags {
 	var ret Tags

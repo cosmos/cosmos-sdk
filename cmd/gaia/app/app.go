@@ -5,6 +5,7 @@ import (
 	"os"
 
 	abci "github.com/tendermint/abci/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
@@ -15,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
@@ -34,10 +36,11 @@ type GaiaApp struct {
 	cdc *wire.Codec
 
 	// keys to access the substores
-	keyMain    *sdk.KVStoreKey
-	keyAccount *sdk.KVStoreKey
-	keyIBC     *sdk.KVStoreKey
-	keyStake   *sdk.KVStoreKey
+	keyMain     *sdk.KVStoreKey
+	keyAccount  *sdk.KVStoreKey
+	keyIBC      *sdk.KVStoreKey
+	keyStake    *sdk.KVStoreKey
+	keySlashing *sdk.KVStoreKey
 
 	// Manage getting and setting accounts
 	accountMapper       auth.AccountMapper
@@ -45,6 +48,7 @@ type GaiaApp struct {
 	coinKeeper          bank.Keeper
 	ibcMapper           ibc.Mapper
 	stakeKeeper         stake.Keeper
+	slashingKeeper      slashing.Keeper
 }
 
 func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
@@ -52,12 +56,13 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 
 	// create your application object
 	var app = &GaiaApp{
-		BaseApp:    bam.NewBaseApp(appName, cdc, logger, db),
-		cdc:        cdc,
-		keyMain:    sdk.NewKVStoreKey("main"),
-		keyAccount: sdk.NewKVStoreKey("acc"),
-		keyIBC:     sdk.NewKVStoreKey("ibc"),
-		keyStake:   sdk.NewKVStoreKey("stake"),
+		BaseApp:     bam.NewBaseApp(appName, cdc, logger, db),
+		cdc:         cdc,
+		keyMain:     sdk.NewKVStoreKey("main"),
+		keyAccount:  sdk.NewKVStoreKey("acc"),
+		keyIBC:      sdk.NewKVStoreKey("ibc"),
+		keyStake:    sdk.NewKVStoreKey("stake"),
+		keySlashing: sdk.NewKVStoreKey("slashing"),
 	}
 
 	// define the accountMapper
@@ -71,18 +76,21 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
+	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.RegisterCodespace(slashing.DefaultCodespace))
 
 	// register message routes
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
-		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
+		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
+		AddRoute("slashing", slashing.NewHandler(app.slashingKeeper))
 
 	// initialize BaseApp
 	app.SetInitChainer(app.initChainer)
-	app.SetEndBlocker(stake.NewEndBlocker(app.stakeKeeper))
-	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake)
+	app.SetBeginBlocker(app.BeginBlocker)
+	app.SetEndBlocker(app.EndBlocker)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
+	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake, app.keySlashing)
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
 		cmn.Exit(err.Error())
@@ -97,15 +105,35 @@ func MakeCodec() *wire.Codec {
 	ibc.RegisterWire(cdc)
 	bank.RegisterWire(cdc)
 	stake.RegisterWire(cdc)
+	slashing.RegisterWire(cdc)
 	auth.RegisterWire(cdc)
 	sdk.RegisterWire(cdc)
 	wire.RegisterCrypto(cdc)
 	return cdc
 }
 
+// application updates every end block
+func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
+
+	return abci.ResponseBeginBlock{
+		Tags: tags.ToKVPairs(),
+	}
+}
+
+// application updates every end block
+func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
+
+	return abci.ResponseEndBlock{
+		ValidatorUpdates: validatorUpdates,
+	}
+}
+
 // custom logic for gaia initialization
 func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	stateJSON := req.AppStateBytes
+	// TODO is this now the whole genesis file?
 
 	var genesisState GenesisState
 	err := app.cdc.UnmarshalJSON(stateJSON, &genesisState)
@@ -117,6 +145,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	// load the accounts
 	for _, gacc := range genesisState.Accounts {
 		acc := gacc.ToAccount()
+		acc.AccountNumber = app.accountMapper.GetNextAccountNumber(ctx)
 		app.accountMapper.SetAccount(ctx, acc)
 	}
 
@@ -126,8 +155,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	return abci.ResponseInitChain{}
 }
 
-// export the state of gaia for a genesis f
-func (app *GaiaApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
+// export the state of gaia for a genesis file
+func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
 	ctx := app.NewContext(true, abci.Header{})
 
 	// iterate to get the accounts
@@ -143,5 +172,10 @@ func (app *GaiaApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
 		Accounts:  accounts,
 		StakeData: stake.WriteGenesis(ctx, app.stakeKeeper),
 	}
-	return wire.MarshalJSONIndent(app.cdc, genState)
+	appState, err = wire.MarshalJSONIndent(app.cdc, genState)
+	if err != nil {
+		return nil, nil, err
+	}
+	validators = stake.WriteValidators(ctx, app.stakeKeeper)
+	return appState, validators, nil
 }

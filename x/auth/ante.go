@@ -9,12 +9,14 @@ import (
 )
 
 const (
-	deductFeesCost sdk.Gas = 10
-	verifyCost             = 100
+	deductFeesCost    sdk.Gas = 10
+	memoCostPerByte   sdk.Gas = 1
+	verifyCost                = 100
+	maxMemoCharacters         = 100
 )
 
 // NewAnteHandler returns an AnteHandler that checks
-// and increments sequence numbers, checks signatures,
+// and increments sequence numbers, checks signatures & account numbers,
 // and deducts fees from the first signer.
 func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
@@ -36,6 +38,20 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 				true
 		}
 
+		memo := tx.GetMemo()
+
+		if len(memo) > maxMemoCharacters {
+			return ctx,
+				sdk.ErrMemoTooLarge(fmt.Sprintf("maximum number of characters is %d but received %d characters", maxMemoCharacters, len(memo))).Result(),
+				true
+		}
+
+		// set the gas meter
+		ctx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
+
+		// charge gas for the memo
+		ctx.GasMeter().ConsumeGas(memoCostPerByte*sdk.Gas(len(memo)), "memo")
+
 		msg := tx.GetMsg()
 
 		// Assert that number of signatures is correct.
@@ -46,10 +62,14 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 				true
 		}
 
-		// Get the sign bytes (requires all sequence numbers and the fee)
+		// Get the sign bytes (requires all account & sequence numbers and the fee)
 		sequences := make([]int64, len(signerAddrs))
 		for i := 0; i < len(signerAddrs); i++ {
 			sequences[i] = sigs[i].Sequence
+		}
+		accNums := make([]int64, len(signerAddrs))
+		for i := 0; i < len(signerAddrs); i++ {
+			accNums[i] = sigs[i].AccountNumber
 		}
 		fee := stdTx.Fee
 		chainID := ctx.ChainID()
@@ -58,7 +78,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		if chainID == "" {
 			chainID = viper.GetString("chain-id")
 		}
-		signBytes := StdSignBytes(ctx.ChainID(), sequences, fee, msg)
+		signBytes := StdSignBytes(ctx.ChainID(), accNums, sequences, fee, msg, memo)
 
 		// Check sig and nonce and collect signer accounts.
 		var signerAccs = make([]Account, len(signerAddrs))
@@ -95,9 +115,6 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		// cache the signer accounts in the context
 		ctx = WithSigners(ctx, signerAccs)
 
-		// set the gas meter
-		ctx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
-
 		// TODO: tx tags (?)
 
 		return ctx, sdk.Result{}, false // continue...
@@ -115,6 +132,13 @@ func processSig(
 	acc = am.GetAccount(ctx, addr)
 	if acc == nil {
 		return nil, sdk.ErrUnknownAddress(addr.String()).Result()
+	}
+
+	// Check account number.
+	accnum := acc.GetAccountNumber()
+	if accnum != sig.AccountNumber {
+		return nil, sdk.ErrInvalidSequence(
+			fmt.Sprintf("Invalid account number. Got %d, expected %d", sig.AccountNumber, accnum)).Result()
 	}
 
 	// Check and increment sequence number.

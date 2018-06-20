@@ -26,7 +26,7 @@ func NewMsgBond(addr sdk.Address, stake sdk.Coin, pubKey crypto.PubKey) MsgBond 
 }
 
 //nolint
-func (msg MsgBond) Type() string              { return moduleName } //TODO update "stake/declarecandidacy"
+func (msg MsgBond) Type() string              { return moduleName } //TODO update "stake/createvalidator"
 func (msg MsgBond) GetSigners() []sdk.Address { return []sdk.Address{msg.Address} }
 
 // basic validation of the bond message
@@ -65,7 +65,7 @@ func NewMsgUnbond(addr sdk.Address) MsgUnbond {
 }
 
 //nolint
-func (msg MsgUnbond) Type() string              { return moduleName } //TODO update "stake/declarecandidacy"
+func (msg MsgUnbond) Type() string              { return moduleName } //TODO update "stake/createvalidator"
 func (msg MsgUnbond) GetSigners() []sdk.Address { return []sdk.Address{msg.Address} }
 func (msg MsgUnbond) ValidateBasic() sdk.Error  { return nil }
 

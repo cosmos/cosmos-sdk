@@ -18,12 +18,13 @@ type Params struct {
 }
 
 func (p Params) equal(p2 Params) bool {
-	bz1 := cdcEmpty.MustMarshalBinary(&p)
-	bz2 := cdcEmpty.MustMarshalBinary(&p2)
+	bz1 := msgCdc.MustMarshalBinary(&p)
+	bz2 := msgCdc.MustMarshalBinary(&p2)
 	return bytes.Equal(bz1, bz2)
 }
 
-func defaultParams() Params {
+// default params
+func DefaultParams() Params {
 	return Params{
 		InflationRateChange: sdk.NewRat(13, 100),
 		InflationMax:        sdk.NewRat(20, 100),

@@ -18,6 +18,14 @@ master    | [![CircleCI](https://circleci.com/gh/cosmos/cosmos-sdk/tree/master.s
 
 **Note**: Requires [Go 1.10+](https://golang.org/dl/)
 
+## Testnet
+
+For more information on connecting to the testnet, see
+[cmd/gaia/testnets](/cmd/gaia/testnets)
+
+For the latest status of the testnet, see the [status
+file](/cmd/gaia/testnets/STATUS.md).
+
 
 ## Overview
 

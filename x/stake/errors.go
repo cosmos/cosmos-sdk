@@ -16,6 +16,7 @@ const (
 	CodeInvalidValidator CodeType = 201
 	CodeInvalidBond      CodeType = 202
 	CodeInvalidInput     CodeType = 203
+	CodeValidatorJailed  CodeType = 204
 	CodeUnauthorized     CodeType = sdk.CodeUnauthorized
 	CodeInternal         CodeType = sdk.CodeInternal
 	CodeUnknownRequest   CodeType = sdk.CodeUnknownRequest
@@ -25,17 +26,17 @@ const (
 func codeToDefaultMsg(code CodeType) string {
 	switch code {
 	case CodeInvalidValidator:
-		return "Invalid Validator"
+		return "invalid Validator"
 	case CodeInvalidBond:
-		return "Invalid Bond"
+		return "invalid Bond"
 	case CodeInvalidInput:
-		return "Invalid Input"
+		return "invalid Input"
 	case CodeUnauthorized:
-		return "Unauthorized"
+		return "unauthorized"
 	case CodeInternal:
-		return "Internal Error"
+		return "internal Error"
 	case CodeUnknownRequest:
-		return "Unknown request"
+		return "unknown request"
 	default:
 		return sdk.CodeToDefaultMsg(code)
 	}
@@ -48,55 +49,55 @@ func ErrNotEnoughBondShares(codespace sdk.CodespaceType, shares string) sdk.Erro
 	return newError(codespace, CodeInvalidBond, fmt.Sprintf("not enough shares only have %v", shares))
 }
 func ErrValidatorEmpty(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidValidator, "Cannot bond to an empty validator")
+	return newError(codespace, CodeInvalidValidator, "cannot bond to an empty validator")
 }
 func ErrBadBondingDenom(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidBond, "Invalid coin denomination")
+	return newError(codespace, CodeInvalidBond, "invalid coin denomination")
 }
 func ErrBadBondingAmount(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidBond, "Amount must be > 0")
+	return newError(codespace, CodeInvalidBond, "amount must be > 0")
 }
 func ErrNoBondingAcct(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidValidator, "No bond account for this (address, validator) pair")
+	return newError(codespace, CodeInvalidValidator, "no bond account for this (address, validator) pair")
 }
 func ErrCommissionNegative(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidValidator, "Commission must be positive")
+	return newError(codespace, CodeInvalidValidator, "commission must be positive")
 }
 func ErrCommissionHuge(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidValidator, "Commission cannot be more than 100%")
+	return newError(codespace, CodeInvalidValidator, "commission cannot be more than 100%")
 }
 func ErrBadValidatorAddr(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidValidator, "Validator does not exist for that address")
+	return newError(codespace, CodeInvalidValidator, "validator does not exist for that address")
 }
 func ErrBadDelegatorAddr(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidValidator, "Delegator does not exist for that address")
+	return newError(codespace, CodeInvalidValidator, "delegator does not exist for that address")
 }
 func ErrValidatorExistsAddr(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidValidator, "Validator already exist, cannot re-declare candidacy")
+	return newError(codespace, CodeInvalidValidator, "validator already exist, cannot re-create validator")
 }
 func ErrValidatorRevoked(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidValidator, "Candidacy for this address is currently revoked")
+	return newError(codespace, CodeInvalidValidator, "validator for this address is currently revoked")
 }
 func ErrMissingSignature(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidValidator, "Missing signature")
+	return newError(codespace, CodeInvalidValidator, "missing signature")
 }
 func ErrBondNotNominated(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidValidator, "Cannot bond to non-nominated account")
+	return newError(codespace, CodeInvalidValidator, "cannot bond to non-nominated account")
 }
 func ErrNoValidatorForAddress(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidValidator, "Validator does not exist for that address")
+	return newError(codespace, CodeInvalidValidator, "validator does not exist for that address")
 }
 func ErrNoDelegatorForAddress(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidValidator, "Delegator does not contain validator bond")
+	return newError(codespace, CodeInvalidValidator, "delegator does not contain validator bond")
 }
 func ErrInsufficientFunds(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidInput, "Insufficient bond shares")
+	return newError(codespace, CodeInvalidInput, "insufficient bond shares")
 }
 func ErrBadShares(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeInvalidInput, "bad shares provided as input, must be MAX or decimal")
 }
 func ErrBadRemoveValidator(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidValidator, "Error removing validator")
+	return newError(codespace, CodeInvalidValidator, "error removing validator")
 }
 
 //----------------------------------------

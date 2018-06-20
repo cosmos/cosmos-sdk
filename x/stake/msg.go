@@ -1,10 +1,7 @@
 package stake
 
 import (
-	"encoding/json"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	crypto "github.com/tendermint/go-crypto"
 )
 
@@ -18,27 +15,21 @@ const MsgType = "stake"
 const StakingToken = "steak"
 
 //Verify interface at compile time
-var _, _, _, _ sdk.Msg = &MsgDeclareCandidacy{}, &MsgEditCandidacy{}, &MsgDelegate{}, &MsgUnbond{}
-
-var msgCdc = wire.NewCodec()
-
-func init() {
-	wire.RegisterCrypto(msgCdc)
-}
+var _, _, _, _ sdk.Msg = &MsgCreateValidator{}, &MsgEditValidator{}, &MsgDelegate{}, &MsgUnbond{}
 
 //______________________________________________________________________
 
-// MsgDeclareCandidacy - struct for unbonding transactions
-type MsgDeclareCandidacy struct {
+// MsgCreateValidator - struct for unbonding transactions
+type MsgCreateValidator struct {
 	Description
 	ValidatorAddr sdk.Address   `json:"address"`
 	PubKey        crypto.PubKey `json:"pubkey"`
 	Bond          sdk.Coin      `json:"bond"`
 }
 
-func NewMsgDeclareCandidacy(validatorAddr sdk.Address, pubkey crypto.PubKey,
-	bond sdk.Coin, description Description) MsgDeclareCandidacy {
-	return MsgDeclareCandidacy{
+func NewMsgCreateValidator(validatorAddr sdk.Address, pubkey crypto.PubKey,
+	bond sdk.Coin, description Description) MsgCreateValidator {
+	return MsgCreateValidator{
 		Description:   description,
 		ValidatorAddr: validatorAddr,
 		PubKey:        pubkey,
@@ -47,23 +38,38 @@ func NewMsgDeclareCandidacy(validatorAddr sdk.Address, pubkey crypto.PubKey,
 }
 
 //nolint
-func (msg MsgDeclareCandidacy) Type() string              { return MsgType } //TODO update "stake/declarecandidacy"
-func (msg MsgDeclareCandidacy) GetSigners() []sdk.Address { return []sdk.Address{msg.ValidatorAddr} }
+func (msg MsgCreateValidator) Type() string { return MsgType }
+func (msg MsgCreateValidator) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.ValidatorAddr}
+}
 
 // get the bytes for the message signer to sign on
-func (msg MsgDeclareCandidacy) GetSignBytes() []byte {
-	return msgCdc.MustMarshalBinary(msg)
+func (msg MsgCreateValidator) GetSignBytes() []byte {
+	b, err := msgCdc.MarshalJSON(struct {
+		Description
+		ValidatorAddr string   `json:"address"`
+		PubKey        string   `json:"pubkey"`
+		Bond          sdk.Coin `json:"bond"`
+	}{
+		Description:   msg.Description,
+		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
+		PubKey:        sdk.MustBech32ifyValPub(msg.PubKey),
+	})
+	if err != nil {
+		panic(err)
+	}
+	return b
 }
 
 // quick validity check
-func (msg MsgDeclareCandidacy) ValidateBasic() sdk.Error {
+func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return ErrValidatorEmpty(DefaultCodespace)
 	}
 	if msg.Bond.Denom != StakingToken {
 		return ErrBadBondingDenom(DefaultCodespace)
 	}
-	if msg.Bond.Amount <= 0 {
+	if msg.Bond.Amount.Sign() != 1 {
 		return ErrBadBondingAmount(DefaultCodespace)
 	}
 	empty := Description{}
@@ -75,26 +81,34 @@ func (msg MsgDeclareCandidacy) ValidateBasic() sdk.Error {
 
 //______________________________________________________________________
 
-// MsgEditCandidacy - struct for editing a validator
-type MsgEditCandidacy struct {
+// MsgEditValidator - struct for editing a validator
+type MsgEditValidator struct {
 	Description
 	ValidatorAddr sdk.Address `json:"address"`
 }
 
-func NewMsgEditCandidacy(validatorAddr sdk.Address, description Description) MsgEditCandidacy {
-	return MsgEditCandidacy{
+func NewMsgEditValidator(validatorAddr sdk.Address, description Description) MsgEditValidator {
+	return MsgEditValidator{
 		Description:   description,
 		ValidatorAddr: validatorAddr,
 	}
 }
 
 //nolint
-func (msg MsgEditCandidacy) Type() string              { return MsgType } //TODO update "stake/msgeditcandidacy"
-func (msg MsgEditCandidacy) GetSigners() []sdk.Address { return []sdk.Address{msg.ValidatorAddr} }
+func (msg MsgEditValidator) Type() string { return MsgType }
+func (msg MsgEditValidator) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.ValidatorAddr}
+}
 
 // get the bytes for the message signer to sign on
-func (msg MsgEditCandidacy) GetSignBytes() []byte {
-	b, err := json.Marshal(msg)
+func (msg MsgEditValidator) GetSignBytes() []byte {
+	b, err := msgCdc.MarshalJSON(struct {
+		Description
+		ValidatorAddr string `json:"address"`
+	}{
+		Description:   msg.Description,
+		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -102,13 +116,13 @@ func (msg MsgEditCandidacy) GetSignBytes() []byte {
 }
 
 // quick validity check
-func (msg MsgEditCandidacy) ValidateBasic() sdk.Error {
+func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return ErrValidatorEmpty(DefaultCodespace)
 	}
 	empty := Description{}
 	if msg.Description == empty {
-		return newError(DefaultCodespace, CodeInvalidInput, "Transaction must include some information to modify")
+		return newError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
 	}
 	return nil
 }
@@ -117,8 +131,8 @@ func (msg MsgEditCandidacy) ValidateBasic() sdk.Error {
 
 // MsgDelegate - struct for bonding transactions
 type MsgDelegate struct {
-	DelegatorAddr sdk.Address `json:"address"`
-	ValidatorAddr sdk.Address `json:"address"`
+	DelegatorAddr sdk.Address `json:"delegator_addr"`
+	ValidatorAddr sdk.Address `json:"validator_addr"`
 	Bond          sdk.Coin    `json:"bond"`
 }
 
@@ -131,12 +145,22 @@ func NewMsgDelegate(delegatorAddr, validatorAddr sdk.Address, bond sdk.Coin) Msg
 }
 
 //nolint
-func (msg MsgDelegate) Type() string              { return MsgType } //TODO update "stake/msgeditcandidacy"
-func (msg MsgDelegate) GetSigners() []sdk.Address { return []sdk.Address{msg.DelegatorAddr} }
+func (msg MsgDelegate) Type() string { return MsgType }
+func (msg MsgDelegate) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.DelegatorAddr}
+}
 
 // get the bytes for the message signer to sign on
 func (msg MsgDelegate) GetSignBytes() []byte {
-	b, err := json.Marshal(msg)
+	b, err := msgCdc.MarshalJSON(struct {
+		DelegatorAddr string   `json:"delegator_addr"`
+		ValidatorAddr string   `json:"validator_addr"`
+		Bond          sdk.Coin `json:"bond"`
+	}{
+		DelegatorAddr: sdk.MustBech32ifyAcc(msg.DelegatorAddr),
+		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
+		Bond:          msg.Bond,
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -154,7 +178,7 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.Bond.Denom != StakingToken {
 		return ErrBadBondingDenom(DefaultCodespace)
 	}
-	if msg.Bond.Amount <= 0 {
+	if msg.Bond.Amount.Sign() != 1 {
 		return ErrBadBondingAmount(DefaultCodespace)
 	}
 	return nil
@@ -164,8 +188,8 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 
 // MsgUnbond - struct for unbonding transactions
 type MsgUnbond struct {
-	DelegatorAddr sdk.Address `json:"address"`
-	ValidatorAddr sdk.Address `json:"address"`
+	DelegatorAddr sdk.Address `json:"delegator_addr"`
+	ValidatorAddr sdk.Address `json:"validator_addr"`
 	Shares        string      `json:"shares"`
 }
 
@@ -178,12 +202,20 @@ func NewMsgUnbond(delegatorAddr, validatorAddr sdk.Address, shares string) MsgUn
 }
 
 //nolint
-func (msg MsgUnbond) Type() string              { return MsgType } //TODO update "stake/msgeditcandidacy"
+func (msg MsgUnbond) Type() string              { return MsgType }
 func (msg MsgUnbond) GetSigners() []sdk.Address { return []sdk.Address{msg.DelegatorAddr} }
 
 // get the bytes for the message signer to sign on
 func (msg MsgUnbond) GetSignBytes() []byte {
-	b, err := json.Marshal(msg)
+	b, err := msgCdc.MarshalJSON(struct {
+		DelegatorAddr string `json:"delegator_addr"`
+		ValidatorAddr string `json:"validator_addr"`
+		Shares        string `json:"shares"`
+	}{
+		DelegatorAddr: sdk.MustBech32ifyAcc(msg.DelegatorAddr),
+		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
+		Shares:        msg.Shares,
+	})
 	if err != nil {
 		panic(err)
 	}

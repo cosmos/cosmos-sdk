@@ -3,7 +3,7 @@ version: 2
 defaults: &defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
-    - image: circleci/golang:1.10.0
+    - image: circleci/golang:1.10.3
   environment:
     GOBIN: /tmp/workspace/bin
 
@@ -27,12 +27,6 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make get_vendor_deps
-      - run:
-          name: linter
-          command: |
-            export PATH="$GOBIN:$PATH"
-            go get -u github.com/tendermint/lint/golint
-            go get -u github.com/alecthomas/gometalinter
       - run:
           name: binaries
           command: |
@@ -64,6 +58,12 @@ jobs:
       - restore_cache:
           key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
       - run:
+          name: Get metalinter
+          command: |
+            export PATH="$GOBIN:$PATH"
+            go get -u github.com/tendermint/lint/golint
+            go get -u github.com/alecthomas/gometalinter
+      - run:
           name: Lint source
           command: |
             export PATH="$GOBIN:$PATH"
@@ -84,6 +84,22 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make test_unit
+  
+  test_cli:
+    <<: *defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - restore_cache:
+          key: v1-pkg-cache
+      - restore_cache:
+          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Test cli
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make test_cli_retry
   
   test_cover:
     <<: *defaults
@@ -136,6 +152,9 @@ workflows:
     jobs:
       - setup_dependencies
       - lint:
+          requires:
+            - setup_dependencies
+      - test_cli:
           requires:
             - setup_dependencies
       - test_unit:

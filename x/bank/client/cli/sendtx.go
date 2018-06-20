@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/hex"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -34,12 +33,11 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 			}
 
 			toStr := viper.GetString(flagTo)
-			bz, err := hex.DecodeString(toStr)
+
+			to, err := sdk.GetAccAddressBech32(toStr)
 			if err != nil {
 				return err
 			}
-			to := sdk.Address(bz)
-
 			// parse coins
 			amount := viper.GetString(flagAmount)
 			coins, err := sdk.ParseCoins(amount)

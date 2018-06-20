@@ -2,6 +2,7 @@ package simplestake
 
 import (
 	abci "github.com/tendermint/abci/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -27,7 +28,7 @@ func handleMsgBond(ctx sdk.Context, k Keeper, msg MsgBond) sdk.Result {
 	}
 
 	valSet := abci.Validator{
-		PubKey: msg.PubKey.Bytes(),
+		PubKey: tmtypes.TM2PB.PubKey(msg.PubKey),
 		Power:  power,
 	}
 
@@ -44,7 +45,7 @@ func handleMsgUnbond(ctx sdk.Context, k Keeper, msg MsgUnbond) sdk.Result {
 	}
 
 	valSet := abci.Validator{
-		PubKey: pubKey.Bytes(),
+		PubKey: tmtypes.TM2PB.PubKey(pubKey),
 		Power:  int64(0),
 	}
 

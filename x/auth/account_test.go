@@ -18,7 +18,7 @@ func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.Address) {
 	return key, pub, addr
 }
 
-func TestBaseAccountAddressPubKey(t *testing.T) {
+func TestBaseAddressPubKey(t *testing.T) {
 	_, pub1, addr1 := keyPubAddr()
 	_, pub2, addr2 := keyPubAddr()
 	acc := NewBaseAccountWithAddress(addr1)
@@ -55,7 +55,7 @@ func TestBaseAccountCoins(t *testing.T) {
 	_, _, addr := keyPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
-	someCoins := sdk.Coins{{"atom", 123}, {"eth", 246}}
+	someCoins := sdk.Coins{sdk.NewCoin("atom", 123), sdk.NewCoin("eth", 246)}
 
 	err := acc.SetCoins(someCoins)
 	assert.Nil(t, err)
@@ -77,7 +77,7 @@ func TestBaseAccountMarshal(t *testing.T) {
 	_, pub, addr := keyPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
-	someCoins := sdk.Coins{{"atom", 123}, {"eth", 246}}
+	someCoins := sdk.Coins{sdk.NewCoin("atom", 123), sdk.NewCoin("eth", 246)}
 	seq := int64(7)
 
 	// set everything on the account

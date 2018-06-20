@@ -10,24 +10,24 @@ import (
 )
 
 func TestBondedRatio(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
+	ctx, _, keeper := createTestInput(t, false, sdk.NewInt(0))
 	pool := keeper.GetPool(ctx)
-	pool.LooseUnbondedTokens = 1
-	pool.BondedTokens = 2
+	pool.LooseUnbondedTokens = sdk.NewInt(1)
+	pool.BondedTokens = sdk.NewInt(2)
 
 	// bonded pool / total supply
 	require.Equal(t, pool.bondedRatio(), sdk.NewRat(2).Quo(sdk.NewRat(3)))
 
 	// avoids divide-by-zero
-	pool.LooseUnbondedTokens = 0
-	pool.BondedTokens = 0
+	pool.LooseUnbondedTokens = sdk.NewInt(0)
+	pool.BondedTokens = sdk.NewInt(0)
 	require.Equal(t, pool.bondedRatio(), sdk.ZeroRat())
 }
 
 func TestBondedShareExRate(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
+	ctx, _, keeper := createTestInput(t, false, sdk.NewInt(0))
 	pool := keeper.GetPool(ctx)
-	pool.BondedTokens = 3
+	pool.BondedTokens = sdk.NewInt(3)
 	pool.BondedShares = sdk.NewRat(10)
 
 	// bonded pool / bonded shares
@@ -39,9 +39,9 @@ func TestBondedShareExRate(t *testing.T) {
 }
 
 func TestUnbondingShareExRate(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
+	ctx, _, keeper := createTestInput(t, false, sdk.NewInt(0))
 	pool := keeper.GetPool(ctx)
-	pool.UnbondingTokens = 3
+	pool.UnbondingTokens = sdk.NewInt(3)
 	pool.UnbondingShares = sdk.NewRat(10)
 
 	// unbonding pool / unbonding shares
@@ -53,9 +53,9 @@ func TestUnbondingShareExRate(t *testing.T) {
 }
 
 func TestUnbondedShareExRate(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
+	ctx, _, keeper := createTestInput(t, false, sdk.NewInt(0))
 	pool := keeper.GetPool(ctx)
-	pool.UnbondedTokens = 3
+	pool.UnbondedTokens = sdk.NewInt(3)
 	pool.UnbondedShares = sdk.NewRat(10)
 
 	// unbonded pool / unbonded shares
@@ -67,23 +67,23 @@ func TestUnbondedShareExRate(t *testing.T) {
 }
 
 func TestAddTokensBonded(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
+	ctx, _, keeper := createTestInput(t, false, sdk.NewInt(0))
 
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat())
-	poolB, sharesB := poolA.addTokensBonded(10)
+	poolB, sharesB := poolA.addTokensBonded(sdk.NewInt(10))
 	assert.Equal(t, poolB.bondedShareExRate(), sdk.OneRat())
 
 	// correct changes to bonded shares and bonded pool
 	assert.Equal(t, poolB.BondedShares, poolA.BondedShares.Add(sharesB.Amount))
-	assert.Equal(t, poolB.BondedTokens, poolA.BondedTokens+10)
+	assert.Equal(t, poolB.BondedTokens, poolA.BondedTokens.Add(sdk.NewInt(10)))
 
 	// same number of bonded shares / tokens when exchange rate is one
-	assert.True(t, poolB.BondedShares.Equal(sdk.NewRat(poolB.BondedTokens)))
+	assert.True(t, poolB.BondedShares.Equal(sdk.NewRatFromInt(poolB.BondedTokens)))
 }
 
 func TestRemoveSharesBonded(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
+	ctx, _, keeper := createTestInput(t, false, sdk.NewInt(0))
 
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat())
@@ -92,30 +92,30 @@ func TestRemoveSharesBonded(t *testing.T) {
 
 	// correct changes to bonded shares and bonded pool
 	assert.Equal(t, poolB.BondedShares, poolA.BondedShares.Sub(sdk.NewRat(10)))
-	assert.Equal(t, poolB.BondedTokens, poolA.BondedTokens-tokensB)
+	assert.Equal(t, poolB.BondedTokens, poolA.BondedTokens.Sub(tokensB))
 
 	// same number of bonded shares / tokens when exchange rate is one
-	assert.True(t, poolB.BondedShares.Equal(sdk.NewRat(poolB.BondedTokens)))
+	assert.True(t, poolB.BondedShares.Equal(sdk.NewRatFromInt(poolB.BondedTokens)))
 }
 
 func TestAddTokensUnbonded(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
+	ctx, _, keeper := createTestInput(t, false, sdk.NewInt(0))
 
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat())
-	poolB, sharesB := poolA.addTokensUnbonded(10)
+	poolB, sharesB := poolA.addTokensUnbonded(sdk.NewInt(10))
 	assert.Equal(t, poolB.unbondedShareExRate(), sdk.OneRat())
 
 	// correct changes to unbonded shares and unbonded pool
 	assert.Equal(t, poolB.UnbondedShares, poolA.UnbondedShares.Add(sharesB.Amount))
-	assert.Equal(t, poolB.UnbondedTokens, poolA.UnbondedTokens+10)
+	assert.Equal(t, poolB.UnbondedTokens, poolA.UnbondedTokens.Add(sdk.NewInt(10)))
 
 	// same number of unbonded shares / tokens when exchange rate is one
-	assert.True(t, poolB.UnbondedShares.Equal(sdk.NewRat(poolB.UnbondedTokens)))
+	assert.True(t, poolB.UnbondedShares.Equal(sdk.NewRatFromInt(poolB.UnbondedTokens)))
 }
 
 func TestRemoveSharesUnbonded(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
+	ctx, _, keeper := createTestInput(t, false, sdk.NewInt(0))
 
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat())
@@ -124,8 +124,8 @@ func TestRemoveSharesUnbonded(t *testing.T) {
 
 	// correct changes to unbonded shares and bonded pool
 	assert.Equal(t, poolB.UnbondedShares, poolA.UnbondedShares.Sub(sdk.NewRat(10)))
-	assert.Equal(t, poolB.UnbondedTokens, poolA.UnbondedTokens-tokensB)
+	assert.Equal(t, poolB.UnbondedTokens, poolA.UnbondedTokens.Sub(tokensB))
 
 	// same number of unbonded shares / tokens when exchange rate is one
-	assert.True(t, poolB.UnbondedShares.Equal(sdk.NewRat(poolB.UnbondedTokens)))
+	assert.True(t, poolB.UnbondedShares.Equal(sdk.NewRatFromInt(poolB.UnbondedTokens)))
 }

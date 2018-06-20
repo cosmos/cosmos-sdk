@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/wire"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
@@ -72,13 +73,25 @@ func AddCommands(
 
 	rootCmd.PersistentFlags().String("log_level", ctx.Config.LogLevel, "Log level")
 
-	rootCmd.AddCommand(
-		InitCmd(ctx, cdc, appInit),
-		StartCmd(ctx, appCreator),
-		UnsafeResetAllCmd(ctx),
+	tendermintCmd := &cobra.Command{
+		Use:   "tendermint",
+		Short: "Tendermint subcommands",
+	}
+
+	tendermintCmd.AddCommand(
 		ShowNodeIDCmd(ctx),
 		ShowValidatorCmd(ctx),
+	)
+
+	rootCmd.AddCommand(
+		InitCmd(ctx, cdc, appInit),
+		TestnetFilesCmd(ctx, cdc, appInit),
+		StartCmd(ctx, appCreator),
+		UnsafeResetAllCmd(ctx),
+		client.LineBreak,
+		tendermintCmd,
 		ExportCmd(ctx, cdc, appExport),
+		client.LineBreak,
 		version.VersionCmd,
 	)
 }

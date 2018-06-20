@@ -486,14 +486,14 @@ Parameters: null
 
 Functionality: transfer asset
 
-```
+
 | Parameter | Type   | Default | Required | Description                 |
 | --------- | ------ | ------- | -------- | --------------------------- |
 | from  | string | null    | true     | address from                |
 | to  | string | null    | true     | address want to send to     |
 | amount  | int    | null    | true     | amount of the token         |
 | denomonation  | string | null    | true     | denomonation of the token   |
-```
+
 
 - The above command returns JSON structured like this if success:
 
@@ -523,11 +523,11 @@ Functionality: transfer asset
 
 Functionality: transfer asset
 
-```
-| Parameter       | Type   | Default | Required | Description                                     |
+
+| Parameter       | Type   | Default | Required | Description            |
 | ------------    | ------ | ------- | -------- | ----------------------------------------------- |
 | signed_transfer | []byte | null    | true     | bytes of a valid transaction and it's signature |
-```
+
 
 - The above command returns JSON structured like this if success:
 

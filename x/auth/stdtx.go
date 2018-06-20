@@ -15,18 +15,23 @@ type StdTx struct {
 	Msg        sdk.Msg        `json:"msg"`
 	Fee        StdFee         `json:"fee"`
 	Signatures []StdSignature `json:"signatures"`
+	Memo       string         `json:"memo"`
 }
 
-func NewStdTx(msg sdk.Msg, fee StdFee, sigs []StdSignature) StdTx {
+func NewStdTx(msg sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdTx {
 	return StdTx{
 		Msg:        msg,
 		Fee:        fee,
 		Signatures: sigs,
+		Memo:       memo,
 	}
 }
 
 //nolint
 func (tx StdTx) GetMsg() sdk.Msg { return tx.Msg }
+
+//nolint
+func (tx StdTx) GetMemo() string { return tx.Memo }
 
 // Signatures returns the signature of signers who signed the Msg.
 // CONTRACT: Length returned is same as length of
@@ -85,23 +90,24 @@ func (fee StdFee) Bytes() []byte {
 // and the Sequence numbers for each signature (prevent
 // inchain replay and enforce tx ordering per account).
 type StdSignDoc struct {
-	ChainID        string  `json:"chain_id"`
-	AccountNumbers []int64 `json:"account_numbers"`
-	Sequences      []int64 `json:"sequences"`
-	FeeBytes       []byte  `json:"fee_bytes"`
-	MsgBytes       []byte  `json:"msg_bytes"`
-	AltBytes       []byte  `json:"alt_bytes"`
+	ChainID        string          `json:"chain_id"`
+	AccountNumbers []int64         `json:"account_numbers"`
+	Sequences      []int64         `json:"sequences"`
+	Fee            json.RawMessage `json:"fee"`
+	Msg            json.RawMessage `json:"msg"`
+	Memo           string          `json:"memo"`
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
 // TODO: change the API to just take a chainID and StdTx ?
-func StdSignBytes(chainID string, accnums []int64, sequences []int64, fee StdFee, msg sdk.Msg) []byte {
+func StdSignBytes(chainID string, accnums []int64, sequences []int64, fee StdFee, msg sdk.Msg, memo string) []byte {
 	bz, err := json.Marshal(StdSignDoc{
 		ChainID:        chainID,
 		AccountNumbers: accnums,
 		Sequences:      sequences,
-		FeeBytes:       fee.Bytes(),
-		MsgBytes:       msg.GetSignBytes(),
+		Fee:            json.RawMessage(fee.Bytes()),
+		Msg:            json.RawMessage(msg.GetSignBytes()),
+		Memo:           memo,
 	})
 	if err != nil {
 		panic(err)
@@ -118,12 +124,12 @@ type StdSignMsg struct {
 	Sequences      []int64
 	Fee            StdFee
 	Msg            sdk.Msg
-	// XXX: Alt
+	Memo           string
 }
 
 // get message bytes
 func (msg StdSignMsg) Bytes() []byte {
-	return StdSignBytes(msg.ChainID, msg.AccountNumbers, msg.Sequences, msg.Fee, msg.Msg)
+	return StdSignBytes(msg.ChainID, msg.AccountNumbers, msg.Sequences, msg.Fee, msg.Msg, msg.Memo)
 }
 
 // Standard Signature

@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -440,6 +441,7 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.Address) (
 	acc := getAccount(t, port, addr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
+	chainID := viper.GetString(client.FlagChainID)
 
 	// send
 	coinbz, err := json.Marshal(sdk.NewCoin("steak", 1))
@@ -453,8 +455,9 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.Address) (
 		"account_number":%d,
 		"sequence":%d,
 		"gas": 10000,
-		"amount":[%s]
-	}`, name, password, accnum, sequence, coinbz))
+		"amount":[%s],
+		"chain_id":"%s"
+	}`, name, password, accnum, sequence, coinbz, chainID))
 	res, body := Request(t, port, "POST", "/accounts/"+receiveAddrBech+"/send", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 

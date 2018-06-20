@@ -1,5 +1,3 @@
-#Cosmos-SDK LCD Overview
-
 ## ABCI Full Node vs ABCI Light Client
 
 A light client has all the security of a full node with minimal bandwidth requirements. It is used as the basis of Cosmos IBC. The minimal bandwidth requirements allows developers to build fully secure, efficient and usable mobile apps.

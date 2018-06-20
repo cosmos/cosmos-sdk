@@ -13,8 +13,8 @@ func TestSimpleGovKeeper(t *testing.T) {
 	assert.NotNil(t, k)
 
 	// create proposals
-	proposal := NewProposal(titles[1], descriptions[1], addrs[1], ctx.BlockHeight(), sdk.Coins{{"Atom": sdk.NewInt(int64(200))}})
-	proposal2 := NewProposal(titles[2], descriptions[2], addrs[4], ctx.BlockHeight(), sdk.Coins{{"Atom": sdk.NewInt(int64(150))}})
+	proposal := NewProposal(titles[1], descriptions[1], addrs[1], ctx.BlockHeight(), sdk.Coins{{"Atom", sdk.NewInt(int64(200))}})
+	proposal2 := NewProposal(titles[2], descriptions[2], addrs[4], ctx.BlockHeight(), sdk.Coins{{"Atom", sdk.NewInt(int64(150))}})
 
 	// –––––––––––––––––––––––––––––––––––––––
 	//                KEEPER
@@ -123,11 +123,13 @@ func TestSimpleGovKeeper(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, proposal, resProposal)
 
-	err = k.ProposalQueuePop(ctx) // Pops first proposal
+	resProposal, err = k.ProposalQueuePop(ctx) // Pops first proposal
 	assert.Nil(t, err)
+	assert.Equal(t, proposal, resProposal)
 
-	err = k.ProposalQueuePop(ctx) // Empty queue --> error
+	resProposal, err = k.ProposalQueuePop(ctx) // Empty queue --> error
 	assert.NotNil(t, err)
+	assert.Equal(t, proposal, Proposal{})
 
 	resProposal, err = k.ProposalQueueHead(ctx) // Empty queue --> error
 	assert.NotNil(t, err)

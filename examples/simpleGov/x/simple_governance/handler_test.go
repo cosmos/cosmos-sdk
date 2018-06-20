@@ -19,7 +19,7 @@ func TestHandleSubmitProposalMsg(t *testing.T) {
 	// deposit greater than account balance --> error
 
 	// crete context and proposalKeeper each address has 200 Atoms
-	ctx, _, k := createTestInput(t, true, int64(200))
+	ctx, _, k := createTestInput(t, int64(200))
 
 	err := checkProposal(ctx, k) // No proposal
 	assert.NotNil(t, err)
@@ -28,9 +28,9 @@ func TestHandleSubmitProposalMsg(t *testing.T) {
 		valid bool
 		msg   SubmitProposalMsg
 	}{
-		{true, NewSubmitProposalMsg(titles[0], descriptions[0], ctx.BlockHeight(), coinsHandlerTest[0], addrs[0])},
-		{false, NewSubmitProposalMsg(titles[1], descriptions[1], ctx.BlockHeight(), coinsHandlerTest[1], addrs[1])}, // empty coins
-		{false, NewSubmitProposalMsg(titles[2], descriptions[2], ctx.BlockHeight(), coinsHandlerTest[2], addrs[2])}, // balance below deposit
+		{true, NewSubmitProposalMsg(titles[0], descriptions[0], coinsHandlerTest[0], addrs[0])},
+		{false, NewSubmitProposalMsg(titles[1], descriptions[1], coinsHandlerTest[1], addrs[1])}, // empty coins
+		{false, NewSubmitProposalMsg(titles[2], descriptions[2], coinsHandlerTest[2], addrs[2])}, // balance below deposit
 	}
 
 	for i := range cases {

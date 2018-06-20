@@ -116,7 +116,6 @@ func TestUpdateTally(t *testing.T) {
 	goodDescription := "Should we include Photons at launch?"
 	addr1 := sdk.Address([]byte{1, 2})
 	someCoins := sdk.Coins{{"atom", sdk.NewInt(int64(123))}}
-	var votingWindow1 int64 = 15
 
 	proposal := NewProposal(goodTitle, goodDescription, addr1, 10, someCoins)
 	proposalPtr := &proposal

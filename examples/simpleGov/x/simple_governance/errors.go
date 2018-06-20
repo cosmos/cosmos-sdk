@@ -18,11 +18,10 @@ const (
 	CodeEmptyProposalQueue    CodeType = 704
 	CodeInvalidTitle          CodeType = 705
 	CodeInvalidDescription    CodeType = 706
-	CodeInvalidVotingWindow   CodeType = 707
-	CodeProposalNotFound      CodeType = 708
-	CodeVoteNotFound          CodeType = 709
-	CodeProposalQueueNotFound CodeType = 710
-	CodeInvalidDeposit        CodeType = 711
+	CodeProposalNotFound      CodeType = 707
+	CodeVoteNotFound          CodeType = 708
+	CodeProposalQueueNotFound CodeType = 709
+	CodeInvalidDeposit        CodeType = 710
 )
 
 func codeToDefaultMsg(code CodeType) string {
@@ -39,12 +38,10 @@ func codeToDefaultMsg(code CodeType) string {
 		return "Invalid proposal title"
 	case CodeInvalidDescription:
 		return "Invalid proposal description"
-	case CodeInvalidVotingWindow:
-		return "Invalid voting window"
 	case CodeProposalNotFound:
 		return "Proposal not found"
 	case CodeVoteNotFound:
-		return "Option not found"
+		return "Vote not found"
 	case CodeProposalQueueNotFound:
 		return "Proposal Queue not found"
 	case CodeInvalidDeposit:
@@ -57,67 +54,53 @@ func codeToDefaultMsg(code CodeType) string {
 //----------------------------------------
 // Error constructors
 
-// nolint
+// ErrInvalidOption throws an error on invalid option
 func ErrInvalidOption(msg string) sdk.Error {
-	if msg != "" {
-		return newError(DefaultCodespace, CodeInvalidOption, msg)
-	}
-	return newError(DefaultCodespace, CodeInvalidOption, "The chosen option is invalid")
+	return newError(DefaultCodespace, CodeInvalidOption, msg)
 }
 
-// nolint
+// ErrInvalidProposalID throws an error on invalid proposaID
 func ErrInvalidProposalID(msg string) sdk.Error {
-	if msg != "" {
-		return newError(DefaultCodespace, CodeInvalidProposalID, msg)
-	}
-	return newError(DefaultCodespace, CodeInvalidProposalID, "ProposalID is not valid")
+	return newError(DefaultCodespace, CodeInvalidProposalID, msg)
 }
 
-// nolint
-func ErrInvalidTitle() sdk.Error {
-	return newError(DefaultCodespace, CodeInvalidTitle, "Cannot submit a proposal with empty title")
+// ErrInvalidTitle throws an error on invalid title
+func ErrInvalidTitle(msg string) sdk.Error {
+	return newError(DefaultCodespace, CodeInvalidTitle, msg)
 }
 
-// nolint
-func ErrInvalidDescription() sdk.Error {
-	return newError(DefaultCodespace, CodeInvalidDescription, "Cannot submit a proposal with empty description")
+// ErrInvalidDescription throws an error on invalid description
+func ErrInvalidDescription(msg string) sdk.Error {
+	return newError(DefaultCodespace, CodeInvalidDescription, msg)
 }
 
-// nolint
+// ErrVotingPeriodClosed throws an error when voting period is closed
 func ErrVotingPeriodClosed() sdk.Error {
 	return newError(DefaultCodespace, CodeVotingPeriodClosed, "Voting period is closed for this proposal")
 }
 
-// nolint
-func ErrEmptyProposalQueue() sdk.Error {
-	return newError(DefaultCodespace, CodeEmptyProposalQueue, "Can't get element from an empty proposal queue")
+// ErrEmptyProposalQueue throws an error when ProposalQueue is empty
+func ErrEmptyProposalQueue(msg string) sdk.Error {
+	return newError(DefaultCodespace, CodeEmptyProposalQueue, msg)
 }
 
-// nolint
+// ErrProposalNotFound throws an error when the searched proposal is not found
 func ErrProposalNotFound(proposalID int64) sdk.Error {
 	return newError(DefaultCodespace, CodeProposalNotFound, "Proposal with id "+
 		strconv.Itoa(int(proposalID))+" not found")
 }
 
-// nolint
-func ErrVoteNotFound() sdk.Error {
-	return newError(DefaultCodespace, CodeVoteNotFound, "Vote not found")
+// ErrVoteNotFound throws an error when the searched vote is not found
+func ErrVoteNotFound(msg string) sdk.Error {
+	return newError(DefaultCodespace, CodeVoteNotFound, msg)
 }
 
-// nolint
-func ErrProposalQueueNotFound() sdk.Error {
-	return newError(DefaultCodespace, CodeProposalQueueNotFound, "Proposal Queue not found")
+// ErrProposalQueueNotFound throws an error on when the searched ProposalQueue is not found
+func ErrProposalQueueNotFound(msg string) sdk.Error {
+	return newError(DefaultCodespace, CodeProposalQueueNotFound, msg)
 }
 
-// nolint
-func ErrInvalidVotingWindow(msg string) sdk.Error {
-	if msg != "" {
-		return newError(DefaultCodespace, CodeInvalidVotingWindow, msg)
-	}
-	return newError(DefaultCodespace, CodeInvalidVotingWindow, "Voting window is not positive")
-}
-
-// nolint
+// ErrMinimumDeposit throws an error when deposit is less than the default minimum
 func ErrMinimumDeposit() sdk.Error {
 	return newError(DefaultCodespace, CodeInvalidDeposit, "Deposit is lower than the minimum")
 }

@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Proposal defines the basic propierties of a staking proposal
+// Proposal defines the basic properties of a staking proposal
 type Proposal struct {
 	Title       string      `json:"title"`        // Title of the proposal
 	Description string      `json:"description"`  // Description of the proposal
@@ -90,7 +90,7 @@ type SubmitProposalMsg struct {
 }
 
 // NewSubmitProposalMsg submits a message with a new proposal
-func NewSubmitProposalMsg(title string, description string, votingWindow int64, deposit sdk.Coins, submitter sdk.Address) SubmitProposalMsg {
+func NewSubmitProposalMsg(title string, description string, deposit sdk.Coins, submitter sdk.Address) SubmitProposalMsg {
 	return SubmitProposalMsg{
 		Title:       title,
 		Description: description,
@@ -99,17 +99,17 @@ func NewSubmitProposalMsg(title string, description string, votingWindow int64, 
 	}
 }
 
-// Implements Msg
+// Type Implements Msg
 func (msg SubmitProposalMsg) Type() string {
 	return "simpleGov"
 }
 
-// Implements Msg
+// Get Implements Msg
 func (msg SubmitProposalMsg) Get(key interface{}) (value interface{}) {
 	return nil
 }
 
-// Implements Msg
+// GetSignBytes Implements Msg
 func (msg SubmitProposalMsg) GetSignBytes() []byte {
 	b, err := json.Marshal(msg)
 	if err != nil {
@@ -118,22 +118,22 @@ func (msg SubmitProposalMsg) GetSignBytes() []byte {
 	return b
 }
 
-// Implements Msg
+// GetSigners Implements Msg
 func (msg SubmitProposalMsg) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.Submitter}
 }
 
-// Implements Msg
+// ValidateBasic Implements Msg
 func (msg SubmitProposalMsg) ValidateBasic() sdk.Error {
 	if len(msg.Submitter) == 0 {
 		return sdk.ErrInvalidAddress("Invalid address: " + msg.Submitter.String())
 	}
 	if len(strings.TrimSpace(msg.Title)) <= 0 {
-		return ErrInvalidTitle()
+		return ErrInvalidTitle("Cannot submit a proposal with empty title")
 	}
 
 	if len(strings.TrimSpace(msg.Description)) <= 0 {
-		return ErrInvalidDescription()
+		return ErrInvalidDescription("Cannot submit a proposal with empty description")
 	}
 
 	if !msg.Deposit.IsValid() {
@@ -175,17 +175,17 @@ func NewVoteMsg(proposalID int64, option string, voter sdk.Address) VoteMsg {
 	}
 }
 
-// Implements Msg
+// Type Implements Msg
 func (msg VoteMsg) Type() string {
 	return "simpleGov"
 }
 
-// Implements Msg
+// Get Implements Msg
 func (msg VoteMsg) Get(key interface{}) (value interface{}) {
 	return nil
 }
 
-// Implements Msg
+// GetSignBytes Implements Msg
 func (msg VoteMsg) GetSignBytes() []byte {
 	b, err := json.Marshal(msg)
 	if err != nil {
@@ -194,7 +194,7 @@ func (msg VoteMsg) GetSignBytes() []byte {
 	return b
 }
 
-// Implements Msg
+// GetSigners Implements Msg
 func (msg VoteMsg) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.Voter}
 }
@@ -209,7 +209,7 @@ func isValidOption(option string) bool {
 	return false
 }
 
-// Implements Msg
+// ValidateBasic Implements Msg
 func (msg VoteMsg) ValidateBasic() sdk.Error {
 	if len(msg.Voter) == 0 {
 		return sdk.ErrInvalidAddress("Invalid address: " + msg.Voter.String())
@@ -227,7 +227,7 @@ func (msg VoteMsg) ValidateBasic() sdk.Error {
 	return nil
 }
 
-// Implements Msg
+// String Implements Msg
 func (msg VoteMsg) String() string {
 	return fmt.Sprintf("VoteMsg{%v, %v, %v}", msg.ProposalID, msg.Voter, msg.Option)
 }

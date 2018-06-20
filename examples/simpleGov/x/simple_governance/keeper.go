@@ -113,7 +113,7 @@ func (k Keeper) GetVote(ctx sdk.Context, proposalID int64, voter sdk.Address) (s
 	store := ctx.KVStore(k.SimpleGov)
 	bv := store.Get(key)
 	if bv == nil {
-		return "", ErrVoteNotFound()
+		return "", ErrVoteNotFound("")
 	}
 	option := new(string)
 	err := k.cdc.UnmarshalBinary(bv, option)
@@ -163,7 +163,7 @@ func (k Keeper) getProposalQueue(ctx sdk.Context) (ProposalQueue, sdk.Error) {
 	store := ctx.KVStore(k.SimpleGov)
 	bpq := store.Get([]byte("proposalQueue"))
 	if bpq == nil {
-		return ProposalQueue{}, ErrProposalQueueNotFound()
+		return ProposalQueue{}, ErrProposalQueueNotFound("")
 	}
 
 	proposalQueue := ProposalQueue{}
@@ -192,7 +192,7 @@ func (k Keeper) ProposalQueueHead(ctx sdk.Context) (Proposal, sdk.Error) {
 		return Proposal{}, err
 	}
 	if proposalQueue.isEmpty() {
-		return Proposal{}, ErrEmptyProposalQueue()
+		return Proposal{}, ErrEmptyProposalQueue("Can't get element from an empty proposal queue")
 	}
 	proposal, err := k.GetProposal(ctx, proposalQueue[0])
 	if err != nil {
@@ -208,7 +208,7 @@ func (k Keeper) ProposalQueuePop(ctx sdk.Context) (Proposal, sdk.Error) {
 		return Proposal{}, err
 	}
 	if proposalQueue.isEmpty() {
-		return Proposal{}, ErrEmptyProposalQueue()
+		return Proposal{}, ErrEmptyProposalQueue("Can't get element from an empty proposal queue")
 	}
 	headElement, tailProposalQueue := proposalQueue[0], proposalQueue[1:]
 	k.setProposalQueue(ctx, tailProposalQueue)

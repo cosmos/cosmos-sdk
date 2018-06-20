@@ -4,10 +4,9 @@ import (
 	"encoding/binary"
 	"reflect"
 
-	abci "github.com/tendermint/abci/types"
-	// stake "github.com/gamarin/cosmos-sdk/examples/simpleGov/x/simplestake"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	abci "github.com/tendermint/abci/types"
 )
 
 // Minimum proposal deposit
@@ -130,7 +129,7 @@ func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
 	delegatedTo := k.sm.GetDelegations(ctx, msg.Voter, 10)
 
 	if len(delegatedTo) <= 0 {
-		return stake.ErrNoDelegatorForAddress(DefaultCodespace).Result()
+		return stake.ErrNoDelegatorForAddress(stake.DefaultCodespace).Result()
 	}
 	// Check if address already voted
 	voterOption, err := k.GetVote(ctx, msg.ProposalID, msg.Voter)

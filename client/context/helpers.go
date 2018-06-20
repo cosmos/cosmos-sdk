@@ -123,12 +123,14 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 	}
 	accnum := ctx.AccountNumber
 	sequence := ctx.Sequence
+	memo := ctx.Memo
 
 	signMsg := auth.StdSignMsg{
 		ChainID:        chainID,
 		AccountNumbers: []int64{accnum},
 		Sequences:      []int64{sequence},
 		Msg:            msg,
+		Memo:           memo,
 		Fee:            auth.NewStdFee(ctx.Gas, sdk.Coin{}), // TODO run simulate to estimate gas?
 	}
 
@@ -152,7 +154,6 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 	}}
 
 	// marshal bytes
-	memo := ctx.Memo
 	tx := auth.NewStdTx(signMsg.Msg, signMsg.Fee, sigs, memo)
 
 	return cdc.MarshalBinary(tx)

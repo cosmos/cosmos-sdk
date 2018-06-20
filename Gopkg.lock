@@ -197,8 +197,8 @@
     ".",
     "mem"
   ]
-  revision = "63644898a8da0bc22138abf860edaf5277b6102e"
-  version = "v1.1.0"
+  revision = "787d034dfe70e44075ccc060d346146ef53270ad"
+  version = "v1.1.1"
 
 [[projects]]
   name = "github.com/spf13/cast"
@@ -236,8 +236,8 @@
     "assert",
     "require"
   ]
-  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
-  version = "v1.2.1"
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
 
 [[projects]]
   branch = "master"
@@ -267,8 +267,8 @@
     "server",
     "types"
   ]
-  revision = "ebee2fe114020aa49c70bbbae50b7079fc7e7b90"
-  version = "v0.11.0"
+  revision = "198dccf0ddfd1bb176f87657e3286a05a6ed9540"
+  version = "v0.12.0"
 
 [[projects]]
   branch = "master"
@@ -347,8 +347,7 @@
     "types",
     "version"
   ]
-  revision = "27bd1deabe4ba6a2d9b463b8f3e3f1e31b993e61"
-  version = "v0.20.0"
+  revision = "696e8c6f9e950eec15f150f314d2dd9ddf6bc601"
 
 [[projects]]
   branch = "develop"
@@ -366,7 +365,7 @@
     "merkle",
     "merkle/tmhash"
   ]
-  revision = "640af0205d98d1f45fb2f912f9c35c8bf816adc9"
+  revision = "0c98d10b4ffbd87978d79c160e835b3d3df241ec"
 
 [[projects]]
   branch = "master"
@@ -396,13 +395,13 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "1e491301e022f8f977054da4c2d852decd59571f"
+  revision = "db08ff08e8622530d9ed3a0e8ac279f6d4c02196"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "9527bec2660bd847c050fda93a0f0c6dee0800bb"
+  revision = "bff228c7b664c5fce602223a05fb708fd8654986"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -463,6 +462,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "31f69b235b2d8f879a215c9e8ca0919adc62d21f6830b17931a3a0efb058721f"
+  inputs-digest = "d02a24bcfd8bded901e1b154e19b81ff797d3921046ede19d1d11eed61e871e7"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -21,7 +21,7 @@ var (
 	priv2 = crypto.GenPrivKeyEd25519()
 	addr2 = priv2.PubKey().Address()
 
-	coins    = sdk.Coins{{"foocoin", 10}}
+	coins    = sdk.Coins{sdk.NewCoin("foocoin", 10)}
 	sendMsg1 = bank.MsgSend{
 		Inputs:  []bank.Input{bank.NewInput(addr1, coins)},
 		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
@@ -45,7 +45,7 @@ func TestMsgChangePubKey(t *testing.T) {
 
 	// Construct some genesis bytes to reflect basecoin/types/AppAccount
 	// Give 77 foocoin to the first key
-	coins := sdk.Coins{{"foocoin", 77}}
+	coins := sdk.Coins{sdk.NewCoin("foocoin", 77)}
 	acc1 := &auth.BaseAccount{
 		Address: addr1,
 		Coins:   coins,
@@ -61,11 +61,11 @@ func TestMsgChangePubKey(t *testing.T) {
 	assert.Equal(t, acc1, res1.(*auth.BaseAccount))
 
 	// Run a CheckDeliver
-	SignCheckDeliver(t, mapp.BaseApp, sendMsg1, []int64{0}, true, true, priv1)
+	SignCheckDeliver(t, mapp.BaseApp, sendMsg1, []int64{0}, []int64{0}, true, true, priv1)
 
 	// Check balances
-	CheckBalance(t, mapp, addr1, sdk.Coins{{"foocoin", 67}})
-	CheckBalance(t, mapp, addr2, sdk.Coins{{"foocoin", 10}})
+	CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("foocoin", 67)})
+	CheckBalance(t, mapp, addr2, sdk.Coins{sdk.NewCoin("foocoin", 10)})
 
 	changePubKeyMsg := auth.MsgChangeKey{
 		Address:   addr1,
@@ -77,21 +77,21 @@ func TestMsgChangePubKey(t *testing.T) {
 	acc2 := mapp.AccountMapper.GetAccount(ctxDeliver, addr1)
 
 	// send a MsgChangePubKey
-	SignCheckDeliver(t, mapp.BaseApp, changePubKeyMsg, []int64{1}, true, true, priv1)
+	SignCheckDeliver(t, mapp.BaseApp, changePubKeyMsg, []int64{0}, []int64{1}, true, true, priv1)
 	acc2 = mapp.AccountMapper.GetAccount(ctxDeliver, addr1)
 
 	assert.True(t, priv2.PubKey().Equals(acc2.GetPubKey()))
 
 	// signing a SendMsg with the old privKey should be an auth error
 	mapp.BeginBlock(abci.RequestBeginBlock{})
-	tx := GenTx(sendMsg1, []int64{2}, priv1)
+	tx := GenTx(sendMsg1, []int64{0}, []int64{2}, priv1)
 	res := mapp.Deliver(tx)
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
 
 	// resigning the tx with the new correct priv key should work
-	SignCheckDeliver(t, mapp.BaseApp, sendMsg1, []int64{2}, true, true, priv2)
+	SignCheckDeliver(t, mapp.BaseApp, sendMsg1, []int64{0}, []int64{2}, true, true, priv2)
 
 	// Check balances
-	CheckBalance(t, mapp, addr1, sdk.Coins{{"foocoin", 57}})
-	CheckBalance(t, mapp, addr2, sdk.Coins{{"foocoin", 20}})
+	CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("foocoin", 57)})
+	CheckBalance(t, mapp, addr2, sdk.Coins{sdk.NewCoin("foocoin", 20)})
 }

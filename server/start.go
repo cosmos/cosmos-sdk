@@ -9,8 +9,8 @@ import (
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/node"
-	"github.com/tendermint/tendermint/proxy"
 	pvm "github.com/tendermint/tendermint/privval"
+	"github.com/tendermint/tendermint/proxy"
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
@@ -37,7 +37,7 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 
 	// basic flags for abci app
 	cmd.Flags().Bool(flagWithTendermint, true, "run abci app embedded in-process with tendermint")
-	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:46658", "Listen address")
+	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
 
 	// AddNodeFlags adds support for all tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
@@ -55,7 +55,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 
 	svr, err := server.NewServer(addr, "socket", app)
 	if err != nil {
-		return errors.Errorf("Error creating listener: %v\n", err)
+		return errors.Errorf("error creating listener: %v\n", err)
 	}
 	svr.SetLogger(ctx.Logger.With("module", "abci-server"))
 	svr.Start()

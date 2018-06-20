@@ -89,17 +89,17 @@ func TestMsgQuiz(t *testing.T) {
 	assert.Equal(t, acc1, res1)
 
 	// Set the trend, submit a really cool quiz and check for reward
-	mock.SignCheckDeliver(t, mapp.BaseApp, setTrendMsg1, []int64{0}, true, true, priv1)
-	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg1, []int64{1}, true, true, priv1)
-	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", 69}})
-	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg2, []int64{2}, true, false, priv1) // result without reward
-	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", 69}})
-	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg1, []int64{3}, true, true, priv1)
-	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", 138}})
-	mock.SignCheckDeliver(t, mapp.BaseApp, setTrendMsg2, []int64{4}, true, true, priv1) // reset the trend
-	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg1, []int64{5}, true, false, priv1)    // the same answer will nolonger do!
-	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", 138}})
-	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg2, []int64{6}, true, true, priv1) // earlier answer now relavent again
-	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"badvibesonly", 69}, {"icecold", 138}})
-	mock.SignCheckDeliver(t, mapp.BaseApp, setTrendMsg3, []int64{7}, true, false, priv1) // expect to fail to set the trend to something which is not cool
+	mock.SignCheckDeliver(t, mapp.BaseApp, setTrendMsg1, []int64{0}, []int64{0}, true, true priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg1, []int64{0}, []int64{1}, true, true priv1)
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("icecold", 69)})
+	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg2, []int64{0}, []int64{2}, true, false, priv1) // result without reward
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("icecold", 69)})
+	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg1, []int64{0}, []int64{3}, true, true priv1)
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("icecold", 138)})
+	mock.SignCheckDeliver(t, mapp.BaseApp, setTrendMsg2, []int64{0}, []int64{4}, true, true priv1) // reset the trend
+	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg1, []int64{0}, []int64{5}, true, false, priv1)    // the same answer will nolonger do!
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("icecold", 138)})
+	mock.SignCheckDeliver(t, mapp.BaseApp, quizMsg2, []int64{0}, []int64{6}, true, true priv1) // earlier answer now relavent again
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("badvibesonly", 69), sdk.NewCoin("icecold", 138)})
+	mock.SignCheckDeliver(t, mapp.BaseApp, setTrendMsg3, []int64{0}, []int64{7}, true, false, priv1) // expect to fail to set the trend to something which is not cool
 }

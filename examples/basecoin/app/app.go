@@ -146,6 +146,7 @@ func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) 
 			panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 			//	return sdk.ErrGenesisParse("").TraceCause(err, "")
 		}
+		acc.AccountNumber = app.accountMapper.GetNextAccountNumber(ctx)
 		app.accountMapper.SetAccount(ctx, acc)
 	}
 

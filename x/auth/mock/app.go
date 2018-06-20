@@ -78,7 +78,9 @@ func (app *App) CompleteSetup(t *testing.T, newKeys []*sdk.KVStoreKey) {
 func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.ResponseInitChain {
 
 	// load the accounts
-	for _, acc := range app.GenesisAccounts {
+	for _, genacc := range app.GenesisAccounts {
+		acc := app.AccountMapper.NewAccountWithAddress(ctx, genacc.GetAddress())
+		acc.SetCoins(genacc.GetCoins())
 		app.AccountMapper.SetAccount(ctx, acc)
 	}
 

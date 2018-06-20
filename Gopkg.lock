@@ -166,6 +166,7 @@
     "bcrypt",
     "blowfish",
     "chacha20poly1305",
+    "hkdf",
     "internal/chacha20",
     "nacl/secretbox",
     "openpgp/armor",
@@ -186,6 +187,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1731880d432026bbd22865582cf7c7dd6d5c65618149de586e30ce156d338c01"
+  inputs-digest = "684746f2b651a722ee32eae056b437baf7a2213d68ddbfcefe04a1c3df27c93b"
   solver-name = "gps-cdcl"
   solver-version = 1

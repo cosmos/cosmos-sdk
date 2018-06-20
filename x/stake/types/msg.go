@@ -249,23 +249,6 @@ func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
 	return nil
 }
 
-// TODO move this testing to the CLI
-//func testShares(sharesAmount, sharesPercent sdk.Rat) sdk.Error {
-//if !sharesAmount.IsZero() && !sharesPercent.IsZero() {
-//return ErrBothShareMsgsGiven(DefaultCodespace)
-//}
-//if sharesAmount.IsZero() && sharesPercent.IsZero() {
-//return ErrNeitherShareMsgsGiven(DefaultCodespace)
-//}
-//if sharesPercent.IsZero() && !sharesAmount.IsZero() && sharesAmount.LTE(sdk.ZeroRat()) {
-//return ErrBadSharesAmount(DefaultCodespace)
-//}
-//if sharesAmount.IsZero() && (sharesPercent.LTE(sdk.ZeroRat()) || sharesPercent.GT(sdk.OneRat())) {
-//return ErrBadSharesPercent(DefaultCodespace)
-//}
-//return nil
-//}
-
 // MsgDelegate - struct for bonding transactions
 type MsgCompleteRedelegate struct {
 	DelegatorAddr    sdk.Address `json:"delegator_addr"`
@@ -329,7 +312,7 @@ type MsgBeginUnbonding struct {
 	SharesAmount  sdk.Rat     `json:"shares_amount"`
 }
 
-func NewMsgBeginUnbonding(delegatorAddr, validatorAddr sdk.Address, sharesAmount, sharesPercent sdk.Rat) MsgBeginUnbonding {
+func NewMsgBeginUnbonding(delegatorAddr, validatorAddr sdk.Address, sharesAmount sdk.Rat) MsgBeginUnbonding {
 	return MsgBeginUnbonding{
 		DelegatorAddr: delegatorAddr,
 		ValidatorAddr: validatorAddr,

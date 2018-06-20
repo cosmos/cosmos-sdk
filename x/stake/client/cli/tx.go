@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -143,56 +144,44 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 }
 
 // create edit validator command
-func GetCmdRedelegate(cdc *wire.Codec) *cobra.Command {
+func GetCmdRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegate",
 		Short: "redelegate illiquid tokens from one validator to another",
 	}
 	cmd.AddCommand(
-		GetCmdBeginRedelegate(cdc),
+		GetCmdBeginRedelegate(storeName, cdc),
 		GetCmdCompleteRedelegate(cdc),
 	)
 	return cmd
 }
 
 // redelegate command
-func GetCmdBeginRedelegate(cdc *wire.Codec) *cobra.Command {
+func GetCmdBeginRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "begin",
 		Short: "begin redelegation",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			// check the shares before broadcasting
-			var sharesAmount, sharesPercent sdk.Rat
 			var err error
-			sharesAmountStr := viper.GetString(FlagSharesAmount)
-			sharesPercentStr := viper.GetString(FlagSharesPercent)
-			switch {
-			case sharesAmountStr != "" && sharesPercentStr != "":
-				return fmt.Errorf("can either specify the amount OR the percent of the shares, not both")
-			case sharesAmountStr == "" && sharesPercentStr == "":
-				return fmt.Errorf("can either specify the amount OR the percent of the shares, not both")
-			case sharesAmountStr != "":
-				sharesAmount, err = sdk.NewRatFromDecimal(sharesAmountStr)
-				if err != nil {
-					return err
-				}
-				if !sharesAmount.GT(sdk.ZeroRat()) {
-					return fmt.Errorf("shares amount must be positive number (ex. 123, 1.23456789)")
-				}
-			case sharesPercentStr != "":
-				sharesPercent, err = sdk.NewRatFromDecimal(sharesPercentStr)
-				if err != nil {
-					return err
-				}
-				if !sharesPercent.GT(sdk.ZeroRat()) || !sharesPercent.LTE(sdk.OneRat()) {
-					return fmt.Errorf("shares percent must be >0 and <=1 (ex. 0.01, 0.75, 1)")
-				}
+			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			if err != nil {
+				return err
+			}
+			validatorSrcAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidatorSrc))
+			if err != nil {
+				return err
+			}
+			validatorDstAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidatorDst))
+			if err != nil {
+				return err
 			}
 
-			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
-			validatorSrcAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidatorSrc))
-			validatorDstAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidatorDst))
+			// get the shares amount
+			sharesAmountStr := viper.GetString(FlagSharesAmount)
+			sharesPercentStr := viper.GetString(FlagSharesPercent)
+			sharesAmount, err := getShares(storeName, cdc, sharesAmountStr, sharesPercentStr,
+				delegatorAddr, validatorSrcAddr)
 			if err != nil {
 				return err
 			}
@@ -216,6 +205,50 @@ func GetCmdBeginRedelegate(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().AddFlagSet(fsDelegator)
 	cmd.Flags().AddFlagSet(fsRedelegation)
 	return cmd
+}
+
+func getShares(storeName string, cdc *wire.Codec, sharesAmountStr, sharesPercentStr string,
+	delegatorAddr, validatorAddr sdk.Address) (sharesAmount sdk.Rat, err error) {
+
+	switch {
+	case sharesAmountStr != "" && sharesPercentStr != "":
+		return sharesAmount, errors.Errorf("can either specify the amount OR the percent of the shares, not both")
+	case sharesAmountStr == "" && sharesPercentStr == "":
+		return sharesAmount, errors.Errorf("can either specify the amount OR the percent of the shares, not both")
+	case sharesAmountStr != "":
+		sharesAmount, err = sdk.NewRatFromDecimal(sharesAmountStr)
+		if err != nil {
+			return sharesAmount, err
+		}
+		if !sharesAmount.GT(sdk.ZeroRat()) {
+			return sharesAmount, errors.Errorf("shares amount must be positive number (ex. 123, 1.23456789)")
+		}
+	case sharesPercentStr != "":
+		var sharesPercent sdk.Rat
+		sharesPercent, err = sdk.NewRatFromDecimal(sharesPercentStr)
+		if err != nil {
+			return sharesAmount, err
+		}
+		if !sharesPercent.GT(sdk.ZeroRat()) || !sharesPercent.LTE(sdk.OneRat()) {
+			return sharesAmount, errors.Errorf("shares percent must be >0 and <=1 (ex. 0.01, 0.75, 1)")
+		}
+
+		// make a query to get the existing delegation shares
+		key := stake.GetDelegationKey(delegatorAddr, validatorAddr, cdc)
+		ctx := context.NewCoreContextFromViper()
+		resQuery, err := ctx.QueryStore(key, storeName)
+		if err != nil {
+			return sharesAmount, err
+		}
+		var delegation stake.Delegation
+		err = cdc.UnmarshalBinary(resQuery, &delegation)
+		if err != nil {
+			return sharesAmount, errors.Errorf("cannot find delegation to determine percent Error: %v", err)
+		}
+
+		sharesAmount = sharesPercent.Mul(delegation.Shares)
+	}
+	return
 }
 
 // redelegate command
@@ -252,60 +285,44 @@ func GetCmdCompleteRedelegate(cdc *wire.Codec) *cobra.Command {
 }
 
 // create edit validator command
-func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
+func GetCmdUnbond(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbond",
 		Short: "begin or complete unbonding shares from a validator",
 	}
 	cmd.AddCommand(
-		GetCmdBeginUnbonding(cdc),
+		GetCmdBeginUnbonding(storeName, cdc),
 		GetCmdCompleteUnbonding(cdc),
 	)
 	return cmd
 }
 
 // create edit validator command
-func GetCmdBeginUnbonding(cdc *wire.Codec) *cobra.Command {
+func GetCmdBeginUnbonding(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "begin",
 		Short: "begin unbonding",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			// check the shares before broadcasting
-			var sharesAmount, sharesPercent sdk.Rat
-			var err error
-			sharesAmountStr := viper.GetString(FlagSharesAmount)
-			sharesPercentStr := viper.GetString(FlagSharesPercent)
-			switch {
-			case sharesAmountStr != "" && sharesPercentStr != "":
-				return fmt.Errorf("can either specify the amount OR the percent of the shares, not both")
-			case sharesAmountStr == "" && sharesPercentStr == "":
-				return fmt.Errorf("can either specify the amount OR the percent of the shares, not both")
-			case sharesAmountStr != "":
-				sharesAmount, err = sdk.NewRatFromDecimal(sharesAmountStr)
-				if err != nil {
-					return err
-				}
-				if !sharesAmount.GT(sdk.ZeroRat()) {
-					return fmt.Errorf("shares amount must be positive number (ex. 123, 1.23456789)")
-				}
-			case sharesPercentStr != "":
-				sharesPercent, err = sdk.NewRatFromDecimal(sharesPercentStr)
-				if err != nil {
-					return err
-				}
-				if !sharesPercent.GT(sdk.ZeroRat()) || !sharesPercent.LTE(sdk.OneRat()) {
-					return fmt.Errorf("shares percent must be >0 and <=1 (ex. 0.01, 0.75, 1)")
-				}
-			}
-
 			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			if err != nil {
+				return err
+			}
 			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
 
-			msg := stake.NewMsgBeginUnbonding(delegatorAddr, validatorAddr, sharesAmount, sharesPercent)
+			// get the shares amount
+			sharesAmountStr := viper.GetString(FlagSharesAmount)
+			sharesPercentStr := viper.GetString(FlagSharesPercent)
+			sharesAmount, err := getShares(storeName, cdc, sharesAmountStr, sharesPercentStr,
+				delegatorAddr, validatorAddr)
+			if err != nil {
+				return err
+			}
+
+			msg := stake.NewMsgBeginUnbonding(delegatorAddr, validatorAddr, sharesAmount)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))

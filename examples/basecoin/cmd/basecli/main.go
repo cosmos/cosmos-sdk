@@ -51,6 +51,10 @@ func main() {
 	// add query/post commands (custom to binary)
 	rootCmd.AddCommand(
 		client.GetCommands(
+			stakecmd.GetCmdQueryValidator("stake", cdc),
+			stakecmd.GetCmdQueryValidators("stake", cdc),
+			stakecmd.GetCmdQueryDelegation("stake", cdc),
+			stakecmd.GetCmdQueryDelegations("stake", cdc),
 			authcmd.GetAccountCmd("acc", cdc, types.GetAccountDecoder(cdc)),
 		)...)
 
@@ -62,7 +66,7 @@ func main() {
 			stakecmd.GetCmdCreateValidator(cdc),
 			stakecmd.GetCmdEditValidator(cdc),
 			stakecmd.GetCmdDelegate(cdc),
-			stakecmd.GetCmdUnbond(cdc),
+			stakecmd.GetCmdUnbond("stake", cdc),
 		)...)
 
 	// add proxy, version and key info

@@ -533,14 +533,14 @@ func doBond(t *testing.T, port, seed, name, password string, delegatorAddr, vali
 		"account_number": %d,
 		"sequence": %d,
 		"gas": 10000,
-		"delegate": [
+		"delegations": [
 			{
 				"delegator_addr": "%s",
 				"validator_addr": "%s",
 				"bond": { "denom": "%s", "amount": 60 }
 			}
 		],
-		"unbond": []
+		"begin_unbondings": []
 	}`, name, password, accnum, sequence, delegatorAddrBech, validatorAddrBech, "steak"))
 	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)

@@ -42,6 +42,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 
 	// create validator
 	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, keep.PKs[0], initBond)
+	fmt.Printf("debug msgCreateValidator: %v\n", msgCreateValidator)
 	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	assert.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
 

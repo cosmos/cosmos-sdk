@@ -62,7 +62,7 @@ type ValidatorSet interface {
 	TotalPower(Context) Rat               // total power of the validator set
 }
 
-// Privileged ValidatorSet that can slash and revoke (affect the validator set)
+// ValidatorSet that can slash and revoke (affect the validator set)
 type SlashValidatorSet interface {
 	ValidatorSet
 	Slash(Context, crypto.PubKey, int64, Rat) // slash the validator and delegators of the validator, specifying offence height & slash fraction

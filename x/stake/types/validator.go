@@ -134,8 +134,6 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 	return d, nil
 }
 
-//XXX updateDescription function which enforce limit to number of description characters
-
 // abci validator from stake validator type
 func (v Validator) ABCIValidator(cdc *wire.Codec) abci.Validator {
 	return abci.Validator{

@@ -3,18 +3,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/bartekn/go-bip39"
-  packages = ["."]
-  revision = "a05967ea095d81c8fe4833776774cfaff8e5036c"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/brejski/hid"
-  packages = ["."]
-  revision = "06112dcfcc50a7e0e4fd06e17f9791e788fdaafc"
-
-[[projects]]
-  branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
   revision = "86fed781132ac890ee03e906e4ecd5d6fa180c64"
@@ -65,18 +53,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/golang/snappy"
-  packages = ["."]
-  revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/jmhodges/levigo"
-  packages = ["."]
-  revision = "c42d9e0ca023e2198120196f842701bb4c55d7b9"
-
-[[projects]]
-  branch = "master"
   name = "github.com/kr/logfmt"
   packages = ["."]
   revision = "b84e30acd515aadc4b783ad4ff83aff3299bdfe0"
@@ -104,25 +80,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/syndtr/goleveldb"
-  packages = [
-    "leveldb",
-    "leveldb/cache",
-    "leveldb/comparer",
-    "leveldb/errors",
-    "leveldb/filter",
-    "leveldb/iterator",
-    "leveldb/journal",
-    "leveldb/memdb",
-    "leveldb/opt",
-    "leveldb/storage",
-    "leveldb/table",
-    "leveldb/util"
-  ]
-  revision = "e2150783cd35f5b607daca48afd8c57ec54cc995"
-
-[[projects]]
-  branch = "master"
   name = "github.com/tendermint/ed25519"
   packages = [
     ".",
@@ -134,30 +91,18 @@
 [[projects]]
   name = "github.com/tendermint/go-amino"
   packages = ["."]
-  revision = "1715b7b78c65d6adcc5937315be4710234cefe09"
-  version = "0.10.0-rc2"
+  revision = "2106ca61d91029c931fd54968c2bb02dc96b1412"
+  version = "0.10.1"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
   packages = [
     "common",
-    "db",
     "log",
     "test"
   ]
   revision = "692f1d86a6e2c0efa698fd1e4541b68c74ffaf38"
   version = "v0.8.4"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/tyler-smith/go-bip39"
-  packages = ["."]
-  revision = "8e7a99b3e716f36d3b080a9a70f9eb45abe4edcc"
-
-[[projects]]
-  name = "github.com/zondax/ledger-goclient"
-  packages = ["."]
-  revision = "065cbf938a16f20335c40cfe180f9cd4955c6a5a"
 
 [[projects]]
   branch = "master"
@@ -168,25 +113,25 @@
     "chacha20poly1305",
     "hkdf",
     "internal/chacha20",
+    "internal/subtle",
     "nacl/secretbox",
     "openpgp/armor",
     "openpgp/errors",
-    "pbkdf2",
     "poly1305",
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "8ac0e0d97ce45cd83d1d7243c060cb8461dda5e9"
+  revision = "7f39a6fea4fe9364fb61e1def6a268a51b4f3a06"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["cpu"]
-  revision = "a9e25c09b96b8870693763211309e213c6ef299d"
+  revision = "ad87a3a340fa7f3bed189293fbfa7a9b7e021ae1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "684746f2b651a722ee32eae056b437baf7a2213d68ddbfcefe04a1c3df27c93b"
+  inputs-digest = "027b22b86396a971d5d5c1d298947f531f39743975d65a22e98601140aa1b1a1"
   solver-name = "gps-cdcl"
   solver-version = 1

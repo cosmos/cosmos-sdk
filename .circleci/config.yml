@@ -3,7 +3,7 @@ version: 2
 defaults: &defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
-    - image: circleci/golang:1.10.0
+    - image: circleci/golang:1.10.3
   environment:
     GOBIN: /tmp/workspace/bin
 
@@ -99,7 +99,7 @@ jobs:
           name: Test cli
           command: |
             export PATH="$GOBIN:$PATH"
-            make test_cli
+            make test_cli_retry
   
   test_cover:
     <<: *defaults

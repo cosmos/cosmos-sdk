@@ -81,10 +81,11 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 // common functionality between handlers
 func (k Keeper) Delegate(ctx sdk.Context, delegatorAddr sdk.Address, bondAmt sdk.Coin,
 	validator types.Validator) (newShares sdk.Rat, delegation types.Delegation,
-	validator2 types.Validator, pool types.Pool, err sdk.Error) {
+	validatorOut types.Validator, pool types.Pool, err sdk.Error) {
 
 	// Get or create the delegator delegation
-	delegation, found := k.GetDelegation(ctx, delegatorAddr, validator.Owner)
+	found := false
+	delegation, found = k.GetDelegation(ctx, delegatorAddr, validator.Owner)
 	if !found {
 		delegation = types.Delegation{
 			DelegatorAddr: delegatorAddr,
@@ -99,7 +100,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delegatorAddr sdk.Address, bondAmt sdk
 	if err != nil {
 		return
 	}
-	validator, pool, newShares = validator.AddTokensFromDel(pool, bondAmt.Amount.Int64())
+	validatorOut, pool, newShares = validator.AddTokensFromDel(pool, bondAmt.Amount.Int64())
 	delegation.Shares = delegation.Shares.Add(newShares)
 
 	// Update delegation height

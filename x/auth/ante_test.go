@@ -289,8 +289,8 @@ func TestAnteHandlerFees(t *testing.T) {
 	assert.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(sdk.Coins{sdk.NewCoin("atom", 150)}))
 }
 
-// Test logic around gas consumption.
-func TestAnteHandlerGas(t *testing.T) {
+// Test logic around memo gas consumption.
+func TestAnteHandlerMemoGas(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
@@ -321,6 +321,11 @@ func TestAnteHandlerGas(t *testing.T) {
 	fee = NewStdFee(1001, sdk.NewCoin("atom", 0))
 	tx = newTestTxWithMemo(ctx, msg, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeOutOfGas)
+
+	// memo too large
+	fee = NewStdFee(2001, sdk.NewCoin("atom", 0))
+	tx = newTestTxWithMemo(ctx, msg, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
+	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeMemoTooLarge)
 
 	// tx has enough gas
 	fee = NewStdFee(1000, sdk.NewCoin("atom", 0))

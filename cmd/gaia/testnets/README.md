@@ -102,7 +102,7 @@ Your node needs to know how to find peers. You'll need to add healthy seed nodes
 seeds = "38aa9bec3998f12ae9088b21a2d910d19d565c27@gaia-6002.coinculture.net:46656,80a35a46ce09cfb31ee220c8141a25e73e0b239b@seed.cosmos.cryptium.ch:46656,80a35a46ce09cfb31ee220c8141a25e73e0b239b@35.198.166.171:46656,032fa56301de335d835057fb6ad9f7ce2242a66d@165.227.236.213:46656"
 ```
 
-You can also [ask other validators](https://riot.im/app/#/room/#cosmos_validators:matrix.org) for a persistent peer and add it under the `persistent_peers` key. For more information on seeds and peers, [read this](https://github.com/tendermint/tendermint/blob/develop/docs/using-tendermint.md#peers).
+If those seeds aren't working, you can find more seeds and persistent peers on the [Cosmos Explorer](https://explorecosmos.network/nodes). For more information on seeds and peers, [read this](https://github.com/tendermint/tendermint/blob/develop/docs/using-tendermint.md#peers).
 
 ## Run a Full Node
 
@@ -227,6 +227,56 @@ gaiacli advanced tendermint validator-set
 ```
 
 **Note:** To be in the validator set, you need to have more total voting power than the 100th validator.
+
+### Problem #1: My validator has `voting_power: 0`
+
+Your validator has become auto-unbonded. In `gaia-6002`, we unbond validators if they do not vote on `50` of the last `100` blocks. Since blocks are proposed every ~2 seconds, a validator unresponsive for ~100 seconds will become unbonded. This usually happens when your `gaiad` process crashes.
+
+Here's how you can return the voting power back to your validator. First, if `gaiad` is not running, start it up again:
+
+```
+gaiad start
+```
+
+Wait for your full node to catch up to the latest block. Next, run the following command. Note that `<cosmosaccaddr>` is the address of your validator account, and `<name>` is the name of the validator account. You can find this info by running `gaiacli keys list`.
+
+```
+gaiacli stake unrevoke <cosmosaccaddr> --chain-id=gaia-6002 --name=<name>
+```
+
+**WARNING:** If you don't wait for `gaiad` to sync before running `unrevoke`, you will receive an error message telling you your validator is still jailed.
+
+Lastly, check your validator again to see if your voting power is back.
+
+```
+gaiacli status
+```
+
+You may notice that your voting power is less than it used to be. That's because you got slashed for downtime!
+
+### Problem #2: My `gaiad` crashes because of `too many open files`
+
+The default number of files Linux can open (per-process) is `1024`. `gaiad` is known to open more than `1024` files. This causes the process to crash. Here's how you can fix it.
+
+```
+# find out your system's max open files (per-process)
+ulimit -Sn
+
+# find out gaiad's current open files
+ls /proc/(pidof gaiad)/fd/ | wc -l
+
+# edit limits config file
+sudo vi /etc/security/limits.conf
+
+# add this line to increase your <username>'s max open files to 2048
+<username>        soft nofile 2048
+
+# reboot to apply this new open file limit
+reboot
+
+# review the new per-process max open files (should be 2048)
+ulimit -Sn
+```
 
 ## Delegating to a Validator
 

@@ -23,7 +23,7 @@ func TestStdTx(t *testing.T) {
 	fee := newStdFee()
 	sigs := []StdSignature{}
 
-	tx := NewStdTx(msg, fee, sigs)
+	tx := NewStdTx(msg, fee, sigs, "")
 	assert.Equal(t, msg, tx.GetMsg())
 	assert.Equal(t, sigs, tx.GetSignatures())
 

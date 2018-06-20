@@ -9,8 +9,10 @@ import (
 )
 
 const (
-	deductFeesCost sdk.Gas = 10
-	verifyCost             = 100
+	deductFeesCost    sdk.Gas = 10
+	memoCostPerByte   sdk.Gas = 1
+	verifyCost                = 100
+	maxMemoCharacters         = 100
 )
 
 // NewAnteHandler returns an AnteHandler that checks
@@ -35,6 +37,20 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 				sdk.ErrUnauthorized("no signers").Result(),
 				true
 		}
+
+		memo := tx.GetMemo()
+
+		if len(memo) > maxMemoCharacters {
+			return ctx,
+				sdk.ErrMemoTooLarge(fmt.Sprintf("maximum number of characters is %d but received %d characters", maxMemoCharacters, len(memo))).Result(),
+				true
+		}
+
+		// set the gas meter
+		ctx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
+
+		// charge gas for the memo
+		ctx.GasMeter().ConsumeGas(memoCostPerByte*sdk.Gas(len(memo)), "memo")
 
 		msg := tx.GetMsg()
 
@@ -62,7 +78,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		if chainID == "" {
 			chainID = viper.GetString("chain-id")
 		}
-		signBytes := StdSignBytes(ctx.ChainID(), accNums, sequences, fee, msg)
+		signBytes := StdSignBytes(ctx.ChainID(), accNums, sequences, fee, msg, memo)
 
 		// Check sig and nonce and collect signer accounts.
 		var signerAccs = make([]Account, len(signerAddrs))
@@ -98,9 +114,6 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 		// cache the signer accounts in the context
 		ctx = WithSigners(ctx, signerAccs)
-
-		// set the gas meter
-		ctx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
 
 		// TODO: tx tags (?)
 

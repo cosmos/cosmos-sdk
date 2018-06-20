@@ -102,7 +102,7 @@ Your node needs to know how to find peers. You'll need to add healthy seed nodes
 seeds = "38aa9bec3998f12ae9088b21a2d910d19d565c27@gaia-6002.coinculture.net:46656,80a35a46ce09cfb31ee220c8141a25e73e0b239b@seed.cosmos.cryptium.ch:46656,80a35a46ce09cfb31ee220c8141a25e73e0b239b@35.198.166.171:46656,032fa56301de335d835057fb6ad9f7ce2242a66d@165.227.236.213:46656"
 ```
 
-If those seeds aren't working, you can find more seeds and persistent peers on the [Cosmos Explorer](https://explorecosmos.network/nodes/167-99-69-153). For more information on seeds and peers, [read this](https://github.com/tendermint/tendermint/blob/develop/docs/using-tendermint.md#peers).
+If those seeds aren't working, you can find more seeds and persistent peers on the [Cosmos Explorer](https://explorecosmos.network/nodes). For more information on seeds and peers, [read this](https://github.com/tendermint/tendermint/blob/develop/docs/using-tendermint.md#peers).
 
 ## Run a Full Node
 
@@ -252,7 +252,7 @@ Lastly, check your validator again to see if your voting power is back.
 gaiacli status
 ```
 
-You may notice that your voting power is less than it used to be. That's because you got slashed for liveness!
+You may notice that your voting power is less than it used to be. That's because you got slashed for downtime!
 
 ### Problem #2: My `gaiad` crashes because of `too many open files`
 

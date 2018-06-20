@@ -136,7 +136,8 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 		Short: "vote for an active proposal, options: Yes/No/NoWithVeto/Abstain",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			voter, err := sdk.GetAccAddressBech32(viper.GetString(flagVoter))
+			bechVoter := viper.GetString(flagVoter)
+			voter, err := sdk.GetAccAddressBech32(bechVoter)
 			if err != nil {
 				return err
 			}
@@ -158,9 +159,7 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			bechAddr, _ := sdk.Bech32ifyAcc(msg.Voter)
-
-			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]", bechAddr, msg.ProposalID, gov.VoteOptionToString(msg.Option))
+			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]", bechVoter, msg.ProposalID, gov.VoteOptionToString(msg.Option))
 
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))

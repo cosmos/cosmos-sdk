@@ -184,7 +184,7 @@ func (msg MsgVote) ValidateBasic() sdk.Error {
 	if msg.ProposalID < 0 {
 		return ErrUnknownProposal(DefaultCodespace, msg.ProposalID)
 	}
-	if (msg.Option != OptionYes) && (msg.Option != OptionAbstain) && (msg.Option != OptionNo) && (msg.Option != OptionNoWithVeto) {
+	if !validVoteOption(msg.Option) {
 		return ErrInvalidVote(DefaultCodespace, VoteOptionToString(msg.Option))
 	}
 	return nil

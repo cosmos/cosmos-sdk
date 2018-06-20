@@ -222,7 +222,7 @@ func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx 
 		voterAddr, err := sdk.GetAccAddressBech32(bechVoterAddr)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			err := errors.Errorf("voterAddress needs to be bech32 encoded")
+			err := errors.Errorf("'%s' needs to be bech32 encoded", RestVoter)
 			w.Write([]byte(err.Error()))
 			return
 		}
@@ -233,8 +233,7 @@ func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx 
 		res, err := ctx.Query(key, storeName)
 		if len(res) == 0 || err != nil {
 
-			key := []byte(fmt.Sprintf("%d", proposalID) + ":proposal")
-			res, err := ctx.Query(key, storeName)
+			res, err := ctx.Query(gov.KeyProposal(proposalID), storeName)
 			if len(res) == 0 || err != nil {
 				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
 				w.Write([]byte(err.Error()))

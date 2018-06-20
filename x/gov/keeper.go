@@ -230,29 +230,36 @@ func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 
 // Gets the vote of a specific voter on a specific proposal
 func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr sdk.Address, depositAmount sdk.Coins) (sdk.Error, bool) {
+	// Checks to see if proposal exists
 	proposal := keeper.GetProposal(ctx, proposalID)
 	if proposal == nil {
 		return ErrUnknownProposal(keeper.codespace, proposalID), false
 	}
 
+	// Check if proposal is still depositable
 	if (proposal.GetStatus() != StatusDepositPeriod) && (proposal.GetStatus() != StatusVotingPeriod) {
 		return ErrAlreadyFinishedProposal(keeper.codespace, proposalID), false
 	}
 
+	// Subtract coins from depositers account
 	_, _, err := keeper.ck.SubtractCoins(ctx, depositerAddr, depositAmount)
 	if err != nil {
 		return err, false
 	}
 
+	// Update Proposal
 	proposal.SetTotalDeposit(proposal.GetTotalDeposit().Plus(depositAmount))
 	keeper.SetProposal(ctx, proposal)
 
+	// Check if deposit tipped proposal into voting period
+	// Active voting period if so
 	activatedVotingPeriod := false
-	if proposal.GetTotalDeposit().IsGTE(keeper.GetDepositProcedure(ctx).MinDeposit) {
+	if proposal.GetStatus() == StatusDepositPeriod && proposal.GetTotalDeposit().IsGTE(keeper.GetDepositProcedure(ctx).MinDeposit) {
 		keeper.activateVotingPeriod(ctx, proposal)
 		activatedVotingPeriod = true
 	}
 
+	// Add or update deposit object
 	currDeposit, found := keeper.GetDeposit(ctx, proposalID, depositerAddr)
 	if !found {
 		newDeposit := Deposit{depositerAddr, depositAmount}
@@ -314,11 +321,7 @@ func (keeper Keeper) getActiveProposalQueue(ctx sdk.Context) ProposalQueue {
 	}
 
 	var proposalQueue ProposalQueue
-
-	err := keeper.cdc.UnmarshalBinary(bz, &proposalQueue)
-	if err != nil {
-		panic(err)
-	}
+	keeper.cdc.MustUnmarshalBinary(bz, &proposalQueue)
 
 	return proposalQueue
 }
@@ -326,10 +329,7 @@ func (keeper Keeper) getActiveProposalQueue(ctx sdk.Context) ProposalQueue {
 func (keeper Keeper) setActiveProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) {
 	store := ctx.KVStore(keeper.storeKey)
 
-	bz, err := keeper.cdc.MarshalBinary(proposalQueue)
-	if err != nil {
-		panic(err)
-	}
+	bz := keeper.cdc.MustMarshalBinary(proposalQueue)
 
 	store.Set(KeyActiveProposalQueue, bz)
 }
@@ -369,10 +369,7 @@ func (keeper Keeper) getInactiveProposalQueue(ctx sdk.Context) ProposalQueue {
 
 	var proposalQueue ProposalQueue
 
-	err := keeper.cdc.UnmarshalBinary(bz, &proposalQueue) // TODO: switch to UnmarshalBinaryBare when new go-amino gets added
-	if err != nil {
-		panic(err)
-	}
+	err := keeper.cdc.MustUnmarshalBinary(bz, &proposalQueue) // TODO: switch to UnmarshalBinaryBare when new go-amino gets added
 
 	return proposalQueue
 }
@@ -380,10 +377,7 @@ func (keeper Keeper) getInactiveProposalQueue(ctx sdk.Context) ProposalQueue {
 func (keeper Keeper) setInactiveProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) {
 	store := ctx.KVStore(keeper.storeKey)
 
-	bz, err := keeper.cdc.MarshalBinary(proposalQueue) // TODO: switch to MarshalBinaryBare when new go-amino gets added
-	if err != nil {
-		panic(err)
-	}
+	bz := keeper.cdc.MustMarshalBinary(proposalQueue) // TODO: switch to MarshalBinaryBare when new go-amino gets added
 
 	store.Set(KeyInactiveProposalQueue, bz)
 }

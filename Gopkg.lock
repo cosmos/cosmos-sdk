@@ -20,6 +20,56 @@
   revision = "d4cc87b860166d00d6b5b9e0d3b3d71d6088d4d4"
 
 [[projects]]
+  branch = "develop"
+  name = "github.com/cosmos/cosmos-sdk"
+  packages = [
+    "baseapp",
+    "client",
+    "client/context",
+    "client/keys",
+    "client/lcd",
+    "client/rpc",
+    "client/tx",
+    "cmd/gaia/app",
+    "examples/basecoin/app",
+    "examples/basecoin/types",
+    "examples/democoin/app",
+    "examples/democoin/types",
+    "examples/democoin/x/cool",
+    "examples/democoin/x/cool/client/cli",
+    "examples/democoin/x/pow",
+    "examples/democoin/x/pow/client/cli",
+    "examples/democoin/x/simplestake",
+    "examples/democoin/x/simplestake/client/cli",
+    "examples/democoin/x/sketchy",
+    "server",
+    "server/config",
+    "server/mock",
+    "store",
+    "tests",
+    "types",
+    "version",
+    "wire",
+    "x/auth",
+    "x/auth/client/cli",
+    "x/auth/client/rest",
+    "x/auth/mock",
+    "x/bank",
+    "x/bank/client",
+    "x/bank/client/cli",
+    "x/bank/client/rest",
+    "x/ibc",
+    "x/ibc/client/cli",
+    "x/ibc/client/rest",
+    "x/slashing",
+    "x/slashing/client/cli",
+    "x/stake",
+    "x/stake/client/cli",
+    "x/stake/client/rest"
+  ]
+  revision = "918e217e1f52daa6f30a19468a04f9b1893eee82"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -267,8 +317,8 @@
     "server",
     "types"
   ]
-  revision = "ebee2fe114020aa49c70bbbae50b7079fc7e7b90"
-  version = "v0.11.0"
+  revision = "198dccf0ddfd1bb176f87657e3286a05a6ed9540"
+  version = "v0.12.0"
 
 [[projects]]
   branch = "master"
@@ -347,8 +397,7 @@
     "types",
     "version"
   ]
-  revision = "27bd1deabe4ba6a2d9b463b8f3e3f1e31b993e61"
-  version = "v0.20.0"
+  revision = "696e8c6f9e950eec15f150f314d2dd9ddf6bc601"
 
 [[projects]]
   branch = "develop"
@@ -463,6 +512,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "31f69b235b2d8f879a215c9e8ca0919adc62d21f6830b17931a3a0efb058721f"
+  inputs-digest = "a0467029497f88b5a0eb716ce20b72907c5feaf96e5482545bde859ffc344d05"
   solver-name = "gps-cdcl"
   solver-version = 1

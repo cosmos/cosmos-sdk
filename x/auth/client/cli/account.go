@@ -47,7 +47,7 @@ func GetAccountCmd(storeName string, cdc *wire.Codec, decoder auth.AccountDecode
 
 			// perform query
 			ctx := context.NewCoreContextFromViper()
-			res, err := ctx.Query(auth.AddressStoreKey(key), storeName)
+			res, err := ctx.QueryStore(auth.AddressStoreKey(key), storeName)
 			if err != nil {
 				return err
 			}

@@ -160,7 +160,7 @@ func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 	}
 
 	if hrp != prefix {
-		return nil, fmt.Errorf("Invalid bech32 prefix. Expected %s, Got %s", prefix, hrp)
+		return nil, fmt.Errorf("invalid bech32 prefix. Expected %s, Got %s", prefix, hrp)
 	}
 
 	return bz, nil

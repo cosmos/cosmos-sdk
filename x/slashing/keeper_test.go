@@ -17,21 +17,21 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, keeper := createTestInput(t)
-	addr, val, amt := addrs[0], pks[0], int64(100)
+	addr, val, amt := addrs[0], pks[0], sdk.NewInt(100)
 	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, val, amt))
 	require.True(t, got.IsOK())
 	stake.EndBlocker(ctx, sk)
-	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins - amt}})
-	require.Equal(t, sdk.NewRat(amt), sk.Validator(ctx, addr).GetPower())
+	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
+	require.True(t, sdk.NewRatFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
 
 	// double sign less than max age
 	keeper.handleDoubleSign(ctx, 0, 0, val)
-	require.Equal(t, sdk.NewRat(amt).Mul(sdk.NewRat(19).Quo(sdk.NewRat(20))), sk.Validator(ctx, addr).GetPower())
+	require.Equal(t, sdk.NewRatFromInt(amt).Mul(sdk.NewRat(19).Quo(sdk.NewRat(20))), sk.Validator(ctx, addr).GetPower())
 	ctx = ctx.WithBlockHeader(abci.Header{Time: 300})
 
 	// double sign past max age
 	keeper.handleDoubleSign(ctx, 0, 0, val)
-	require.Equal(t, sdk.NewRat(amt).Mul(sdk.NewRat(19).Quo(sdk.NewRat(20))), sk.Validator(ctx, addr).GetPower())
+	require.Equal(t, sdk.NewRatFromInt(amt).Mul(sdk.NewRat(19).Quo(sdk.NewRat(20))), sk.Validator(ctx, addr).GetPower())
 }
 
 // Test a validator through uptime, downtime, revocation,
@@ -40,14 +40,14 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, keeper := createTestInput(t)
-	addr, val, amt := addrs[0], pks[0], int64(100)
+	addr, val, amt := addrs[0], pks[0], sdk.NewInt(100)
 	sh := stake.NewHandler(sk)
 	slh := NewHandler(keeper)
 	got := sh(ctx, newTestMsgCreateValidator(addr, val, amt))
 	require.True(t, got.IsOK())
 	stake.EndBlocker(ctx, sk)
-	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins - amt}})
-	require.Equal(t, sdk.NewRat(amt), sk.Validator(ctx, addr).GetPower())
+	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
+	require.True(t, sdk.NewRatFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
 	info, found := keeper.getValidatorSigningInfo(ctx, val.Address())
 	require.False(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
@@ -80,7 +80,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	validator, _ := sk.GetValidatorByPubKey(ctx, val)
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 	pool := sk.GetPool(ctx)
-	require.Equal(t, int64(100), pool.BondedTokens)
+	require.Equal(t, int64(100), pool.BondedTokens.Int64())
 
 	// 51st block missed
 	ctx = ctx.WithBlockHeight(height)
@@ -109,7 +109,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should have been slashed
 	pool = sk.GetPool(ctx)
-	require.Equal(t, int64(99), pool.BondedTokens)
+	require.Equal(t, int64(99), pool.BondedTokens.Int64())
 
 	// validator start height should have been changed
 	info, found = keeper.getValidatorSigningInfo(ctx, val.Address())
@@ -142,10 +142,10 @@ func TestHandleNewValidator(t *testing.T) {
 	ctx, ck, sk, keeper := createTestInput(t)
 	addr, val, amt := addrs[0], pks[0], int64(100)
 	sh := stake.NewHandler(sk)
-	got := sh(ctx, newTestMsgCreateValidator(addr, val, amt))
+	got := sh(ctx, newTestMsgCreateValidator(addr, val, sdk.NewInt(amt)))
 	require.True(t, got.IsOK())
 	stake.EndBlocker(ctx, sk)
-	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins - amt}})
+	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.SubRaw(amt)}})
 	require.Equal(t, sdk.NewRat(amt), sk.Validator(ctx, addr).GetPower())
 
 	// 1000 first blocks not a validator
@@ -167,5 +167,5 @@ func TestHandleNewValidator(t *testing.T) {
 	validator, _ := sk.GetValidatorByPubKey(ctx, val)
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 	pool := sk.GetPool(ctx)
-	require.Equal(t, int64(100), pool.BondedTokens)
+	require.Equal(t, int64(100), pool.BondedTokens.Int64())
 }

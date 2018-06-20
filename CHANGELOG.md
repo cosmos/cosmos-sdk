@@ -6,7 +6,7 @@
 
 BREAKING CHANGES
 * Change default ports from 466xx to 266xx
-* AltBytes renamed to Memo, now a string, max 100 characters
+* AltBytes renamed to Memo, now a string, max 100 characters, costs a bit of gas
 
 FIXES
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer

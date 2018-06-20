@@ -116,7 +116,7 @@ func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
 	DelegatorAddr, ValidatorAddr sdk.Address) (ubd types.UnbondingDelegation, found bool) {
 
 	store := ctx.KVStore(k.storeKey)
-	ubdKey := GetUBDKey(ubd.DelegatorAddr, ubd.ValidatorAddr, k.cdc)
+	ubdKey := GetUBDKey(DelegatorAddr, ValidatorAddr, k.cdc)
 	bz := store.Get(ubdKey)
 	if bz == nil {
 		return ubd, false

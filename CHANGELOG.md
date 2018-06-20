@@ -6,6 +6,10 @@
 
 BREAKING CHANGES
 * Change default ports from 466xx to 266xx
+* AltBytes renamed to Memo, now a string, max 100 characters, costs a bit of gas
+
+FEATURES
+* [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
 
 FIXES
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer

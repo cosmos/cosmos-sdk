@@ -263,6 +263,7 @@ const msgType2 = "testTx"
 
 func (tx testTx) Type() string                       { return msgType2 }
 func (tx testTx) GetMsg() sdk.Msg                    { return tx }
+func (tx testTx) GetMemo() string                    { return "" }
 func (tx testTx) GetSignBytes() []byte               { return nil }
 func (tx testTx) GetSigners() []sdk.Address          { return nil }
 func (tx testTx) GetSignatures() []auth.StdSignature { return nil }
@@ -547,6 +548,7 @@ const msgType = "testUpdatePowerTx"
 
 func (tx testUpdatePowerTx) Type() string                       { return msgType }
 func (tx testUpdatePowerTx) GetMsg() sdk.Msg                    { return tx }
+func (tx testUpdatePowerTx) GetMemo() string                    { return "" }
 func (tx testUpdatePowerTx) GetSignBytes() []byte               { return nil }
 func (tx testUpdatePowerTx) ValidateBasic() sdk.Error           { return nil }
 func (tx testUpdatePowerTx) GetSigners() []sdk.Address          { return nil }

@@ -79,7 +79,7 @@ func (k Keeper) Bond(ctx sdk.Context, addr sdk.Address, pubKey crypto.PubKey, st
 		}
 	}
 
-	bi.Power = bi.Power + stake.Amount
+	bi.Power = bi.Power + stake.Amount.Int64()
 
 	k.setBondInfo(ctx, addr, bi)
 	return bi.Power, nil
@@ -93,7 +93,7 @@ func (k Keeper) Unbond(ctx sdk.Context, addr sdk.Address) (crypto.PubKey, int64,
 	}
 	k.deleteBondInfo(ctx, addr)
 
-	returnedBond := sdk.Coin{stakingToken, bi.Power}
+	returnedBond := sdk.NewCoin(stakingToken, bi.Power)
 
 	_, _, err := k.ck.AddCoins(ctx, addr, []sdk.Coin{returnedBond})
 	if err != nil {
@@ -118,7 +118,7 @@ func (k Keeper) bondWithoutCoins(ctx sdk.Context, addr sdk.Address, pubKey crypt
 		}
 	}
 
-	bi.Power = bi.Power + stake.Amount
+	bi.Power = bi.Power + stake.Amount.Int64()
 
 	k.setBondInfo(ctx, addr, bi)
 	return bi.Power, nil

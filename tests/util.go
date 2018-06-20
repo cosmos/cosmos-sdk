@@ -12,7 +12,8 @@ import (
 	rpcclient "github.com/tendermint/tendermint/rpc/lib/client"
 )
 
-// Waits for very next TM height
+// Wait for the next tendermint block from the Tendermint RPC
+// on localhost
 func WaitForNextHeightTM(port string) {
 	url := fmt.Sprintf("http://localhost:%v", port)
 	cl := tmclient.NewHTTP(url, "/websocket")
@@ -23,7 +24,8 @@ func WaitForNextHeightTM(port string) {
 	waitForHeightTM(resBlock.Block.Height+1, url)
 }
 
-// Waits for a TM height
+// Wait for the given height from the Tendermint RPC
+// on localhost
 func WaitForHeightTM(height int64, port string) {
 	url := fmt.Sprintf("http://localhost:%v", port)
 	waitForHeightTM(height, url)
@@ -56,10 +58,21 @@ func waitForHeightTM(height int64, url string) {
 	}
 }
 
-// Uses localhost
+// Wait for height from the LCD API on localhost
 func WaitForHeight(height int64, port string) {
 	url := fmt.Sprintf("http://localhost:%v/blocks/latest", port)
 	waitForHeight(height, url)
+}
+
+// Whether or not an HTTP status code was "successful"
+func StatusOK(statusCode int) bool {
+	switch statusCode {
+	case http.StatusOK:
+	case http.StatusCreated:
+	case http.StatusNoContent:
+		return true
+	}
+	return false
 }
 
 func waitForHeight(height int64, url string) {
@@ -69,7 +82,7 @@ func waitForHeight(height int64, url string) {
 		var err error
 		for i := 0; i < 5; i++ {
 			res, err = http.Get(url)
-			if err == nil {
+			if err == nil && StatusOK(res.StatusCode) {
 				break
 			}
 			time.Sleep(time.Millisecond * 200)

@@ -10,7 +10,7 @@ From a client implementor's perspective, LCD will decrease the difficulty and la
 
 ## Contents
 
-1. **Design overview**
-2. **API Document**
+1. [**Design overview**](https://github.com/irisnet/cosmos-sdk/blob/suyu/lcd/docs/spec/lcd/LCD%20Overview.md)
+2. [**API Document**](https://github.com/irisnet/cosmos-sdk/blob/suyu/lcd/docs/spec/lcd/api.md)
 
 

@@ -274,7 +274,7 @@ sudo vi /etc/security/limits.conf
 # reboot to apply this new open file limit
 reboot
 
-# check the new per-proces open file limit (it should be 2048)
+# review the new per-process max open files (should be 2048)
 ulimit -Sn
 ```
 

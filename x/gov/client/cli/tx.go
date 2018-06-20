@@ -190,7 +190,7 @@ func GetCmdQueryProposal(storeName string, cdc *wire.Codec) *cobra.Command {
 
 			ctx := context.NewCoreContextFromViper()
 
-			res, err := ctx.Query(gov.KeyProposal(proposalID), storeName)
+			res, err := ctx.QueryStore(gov.KeyProposal(proposalID), storeName)
 			if len(res) == 0 || err != nil {
 				return errors.Errorf("proposalID [%d] is not existed", proposalID)
 			}
@@ -227,7 +227,7 @@ func GetCmdQueryVote(storeName string, cdc *wire.Codec) *cobra.Command {
 
 			ctx := context.NewCoreContextFromViper()
 
-			res, err := ctx.Query(gov.KeyVote(proposalID, voterAddr), storeName)
+			res, err := ctx.QueryStore(gov.KeyVote(proposalID, voterAddr), storeName)
 			if len(res) == 0 || err != nil {
 				return errors.Errorf("proposalID [%d] does not exist", proposalID)
 			}

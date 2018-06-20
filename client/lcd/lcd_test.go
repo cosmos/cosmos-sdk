@@ -466,7 +466,7 @@ func TestDeposit(t *testing.T) {
 
 	// query proposal
 	proposal = getProposal(t, port, proposalID)
-	assert.True(t, proposal.TotalDeposit.IsEqual(sdk.Coins{sdk.Coin{"steak", 10}}))
+	assert.True(t, proposal.TotalDeposit.IsEqual(sdk.Coins{sdk.NewCoin("steak", 10)}))
 }
 
 func TestVote(t *testing.T) {

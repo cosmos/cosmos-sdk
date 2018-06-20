@@ -163,13 +163,13 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.NoError(t, err)
 
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
-	assert.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak"))
+	assert.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
 
 	executeWrite(t, fmt.Sprintf("gaiacli gov submitproposal %v --proposer=%v --deposit=5steak --type=Text --title=Test --description=test --name=foo", flags, fooCech), pass)
 	tests.WaitForNextHeightTM(port)
 
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
-	assert.Equal(t, int64(45), fooAcc.GetCoins().AmountOf("steak"))
+	assert.Equal(t, int64(45), fooAcc.GetCoins().AmountOf("steak").Int64())
 
 	proposal1 := executeGetProposal(t, fmt.Sprintf("gaiacli gov query-proposal --proposalID=1 --output=json %v", flags))
 	assert.Equal(t, int64(1), proposal1.ProposalID)
@@ -179,7 +179,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	tests.WaitForNextHeightTM(port)
 
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
-	assert.Equal(t, int64(35), fooAcc.GetCoins().AmountOf("steak"))
+	assert.Equal(t, int64(35), fooAcc.GetCoins().AmountOf("steak").Int64())
 	proposal1 = executeGetProposal(t, fmt.Sprintf("gaiacli gov query-proposal --proposalID=1 --output=json %v", flags))
 	assert.Equal(t, int64(1), proposal1.ProposalID)
 	assert.Equal(t, gov.StatusToString(gov.StatusVotingPeriod), proposal1.Status)

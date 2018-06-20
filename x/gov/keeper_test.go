@@ -63,14 +63,14 @@ func TestDeposits(t *testing.T) {
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
 
-	fourSteak := sdk.Coins{sdk.Coin{"steak", 4}}
-	fiveSteak := sdk.Coins{sdk.Coin{"steak", 5}}
+	fourSteak := sdk.Coins{sdk.NewCoin("steak", 4)}
+	fiveSteak := sdk.Coins{sdk.NewCoin("steak", 5)}
 
 	addr0Initial := keeper.ck.GetCoins(ctx, addrs[0])
 	addr1Initial := keeper.ck.GetCoins(ctx, addrs[1])
 
-	// assert.True(t, addr0Initial.IsEqual(sdk.Coins{sdk.Coin{"steak", 42}}))
-	assert.Equal(t, sdk.Coins{sdk.Coin{"steak", 42}}, addr0Initial)
+	// assert.True(t, addr0Initial.IsEqual(sdk.Coins{sdk.NewCoin("steak", 42)}))
+	assert.Equal(t, sdk.Coins{sdk.NewCoin("steak", 42)}, addr0Initial)
 
 	assert.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{}))
 

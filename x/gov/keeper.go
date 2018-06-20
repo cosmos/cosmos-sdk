@@ -129,7 +129,7 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 // Gets procedure from store. TODO: move to global param store and allow for updating of this
 func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) DepositProcedure {
 	return DepositProcedure{
-		MinDeposit:       sdk.Coins{{"steak", 10}},
+		MinDeposit:       sdk.Coins{sdk.NewCoin("steak", 10)},
 		MaxDepositPeriod: 200,
 	}
 }

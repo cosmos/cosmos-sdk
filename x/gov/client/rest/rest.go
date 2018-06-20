@@ -179,7 +179,7 @@ func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 
 		ctx := context.NewCoreContextFromViper()
 
-		res, err := ctx.Query(gov.KeyProposal(proposalID), storeName)
+		res, err := ctx.QueryStore(gov.KeyProposal(proposalID), storeName)
 		if len(res) == 0 || err != nil {
 			err := errors.Errorf("proposalID [%d] does not exist", proposalID)
 			w.Write([]byte(err.Error()))
@@ -230,10 +230,10 @@ func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx 
 		ctx := context.NewCoreContextFromViper()
 
 		key := []byte(gov.KeyVote(proposalID, voterAddr))
-		res, err := ctx.Query(key, storeName)
+		res, err := ctx.QueryStore(key, storeName)
 		if len(res) == 0 || err != nil {
 
-			res, err := ctx.Query(gov.KeyProposal(proposalID), storeName)
+			res, err := ctx.QueryStore(gov.KeyProposal(proposalID), storeName)
 			if len(res) == 0 || err != nil {
 				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
 				w.Write([]byte(err.Error()))

@@ -35,7 +35,7 @@ func getMockApp(t *testing.T, numGenAccs int64) (*mock.App, Keeper, []sdk.Addres
 	mapp.SetEndBlocker(getEndBlocker(keeper))
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk))
 
-	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.Coin{"steak", 42}})
+	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewCoin("steak", 42)})
 	mock.SetGenesis(mapp, genAccs)
 
 	return mapp, keeper, addrs, pubKeys, privKeys

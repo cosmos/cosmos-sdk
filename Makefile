@@ -15,7 +15,7 @@ check: check_tools
 # Command to generate the workd list (kept here for documentation purposes only):
 wordlist:
 	# To re-generate wordlist.go run:
-	# go-bindata -ignore ".*\.go" -o keys/words/wordlist/wordlist.go -pkg "wordlist" keys/words/wordlist/...
+	# go-bindata -ignore ".*\.go" -o keys/words/bip39/wordlist.go -pkg "wordlist" keys/bip39/wordlist/...
 
 build: wordlist
 	# Nothing else to build!

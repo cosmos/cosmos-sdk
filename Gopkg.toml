@@ -29,10 +29,6 @@
   branch = "master"
 
 [[constraint]]
-  name = "github.com/howeyc/crc16"
-  branch = "master"
-
-[[constraint]]
   name = "github.com/pkg/errors"
   version = "0.8.0"
 

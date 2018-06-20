@@ -88,7 +88,7 @@ type hashed struct {
 // to compare the returned hashed password with its cleartext version.
 func GenerateFromPassword(salt []byte, password []byte, cost int) ([]byte, error) {
 	if len(salt) != maxSaltSize {
-		return nil, fmt.Errorf("Salt len must be %v", maxSaltSize)
+		return nil, fmt.Errorf("salt len must be %v", maxSaltSize)
 	}
 	p, err := newFromPassword(salt, password, cost)
 	if err != nil {

@@ -15,6 +15,7 @@ func init() {
 	RegisterAmino(cdc)
 }
 
+// RegisterAmino registers all go-crypto related types in the given (amino) codec.
 func RegisterAmino(cdc *amino.Codec) {
 	cdc.RegisterInterface((*PubKey)(nil), nil)
 	cdc.RegisterConcrete(PubKeyEd25519{},

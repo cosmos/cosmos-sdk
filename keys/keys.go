@@ -1,32 +1,12 @@
 package keys
 
-import "fmt"
-
-type SignAlgo string
+// SigningAlgo defines an algorithm to derive key-pairs which can be used for cryptographic signing.
+type SigningAlgo string
 
 const (
-	AlgoEd25519   = SignAlgo("ed25519")
-	AlgoSecp256k1 = SignAlgo("secp256k1")
+	// Secp256k1 uses the Bitcoin secp256k1 ECDSA parameters.
+	Secp256k1 = SigningAlgo("secp256k1")
+	// Ed25519 represents the Ed25519 signature system.
+	// It is currently not supported for end-user keys (wallets/ledgers).
+	Ed25519 = SigningAlgo("ed25519")
 )
-
-func cryptoAlgoToByte(key SignAlgo) byte {
-	switch key {
-	case AlgoEd25519:
-		return 0x01
-	case AlgoSecp256k1:
-		return 0x02
-	default:
-		panic(fmt.Sprintf("Unexpected type key %v", key))
-	}
-}
-
-func byteToSignAlgo(b byte) SignAlgo {
-	switch b {
-	case 0x01:
-		return AlgoEd25519
-	case 0x02:
-		return AlgoSecp256k1
-	default:
-		panic(fmt.Sprintf("Unexpected type byte %X", b))
-	}
-}

@@ -22,7 +22,7 @@ A full node of ABCI is different from its light client in the following ways:
 
 ## Design 
 
-![light-client-architecture](/Users/suyu/Documents/bianjie/exchange/light-client-architecture.png)
+![light-client-architecture](https://github.com/irisnet/cosmos-sdk/raw/suyu/lcd/docs/spec/lcd/pics/light-client-architecture.png)
 
 Router will redirect the requests. It will directly send some of the requests to Tendermint Endpoint, like `query for validator set `or `broadcast_tx_commit`. Certifier is reponsible for tracking the voting power of validators. `Warpper engine` will collect all the related info about verifying certain information. 
 

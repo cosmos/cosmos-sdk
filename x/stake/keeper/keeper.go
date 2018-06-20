@@ -30,37 +30,12 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.
 
 //_________________________________________________________________________
 
-// full permission keeper of the stake store
-type Keeper struct {
-	Keeper
-
-	storeKey   sdk.StoreKey
-	cdc        *wire.Codec
-	coinKeeper bank.Keeper
-
-	// codespace
-	codespace sdk.CodespaceType
-}
-
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
-	keeper := Keeper{
-		Keeper:     NewKeeper(cdc, key, ck, codespace),
-		storeKey:   key,
-		cdc:        cdc,
-		coinKeeper: ck,
-		codespace:  codespace,
-	}
-	return keeper
-}
-
-//_________________________________________________________________________
-
 // return the codespace
 func (k Keeper) Codespace() sdk.CodespaceType {
 	return k.codespace
 }
 
-// return the codespace
+// return the coinkeeper
 func (k Keeper) CoinKeeper() bank.Keeper {
 	return k.coinKeeper
 }

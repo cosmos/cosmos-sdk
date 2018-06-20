@@ -9,12 +9,8 @@ import (
 
 // keeper
 type Keeper = keeper.Keeper
-type Keeper = keeper.Keeper
 
-var (
-	NewKeeper          = keeper.NewKeeper
-	NewKeeper = keeper.NewKeeper
-)
+var NewKeeper = keeper.NewKeeper
 
 // types
 type Validator = types.Validator

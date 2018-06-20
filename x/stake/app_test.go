@@ -22,9 +22,9 @@ var (
 	addr3 = crypto.GenPrivKeyEd25519().PubKey().Address()
 	priv4 = crypto.GenPrivKeyEd25519()
 	addr4 = priv4.PubKey().Address()
-	coins = sdk.Coins{{"foocoin", 10}}
+	coins = sdk.Coins{{"foocoin", sdk.NewInt(10)}}
 	fee   = auth.StdFee{
-		sdk.Coins{{"foocoin", 0}},
+		sdk.Coins{{"foocoin", sdk.NewInt(0)}},
 		100000,
 	}
 )
@@ -93,8 +93,8 @@ func checkDelegation(t *testing.T, mapp *mock.App, keeper PrivilegedKeeper, dele
 func TestStakeMsgs(t *testing.T) {
 	mapp, keeper := getMockApp(t)
 
-	genCoin := sdk.Coin{"steak", 42}
-	bondCoin := sdk.Coin{"steak", 10}
+	genCoin := sdk.Coin{"steak", sdk.NewInt(42)}
+	bondCoin := sdk.Coin{"steak", sdk.NewInt(10)}
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,

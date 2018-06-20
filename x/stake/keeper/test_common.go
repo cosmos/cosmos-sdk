@@ -113,7 +113,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	// fill all the addresses with some coins
 	for _, addr := range Addrs {
 		ck.AddCoins(ctx, addr, sdk.Coins{
-			{keeper.GetParams(ctx).BondDenom, initCoins},
+			{keeper.GetParams(ctx).BondDenom, sdk.NewInt(initCoins)},
 		})
 	}
 

@@ -71,7 +71,7 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if msg.SelfDelegation.Denom != StakingToken {
 		return ErrBadDenom(DefaultCodespace)
 	}
-	if msg.SelfDelegation.Amount <= 0 {
+	if !(msg.SelfDelegation.Amount.GT(sdk.ZeroInt())) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	empty := Description{}
@@ -180,7 +180,7 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.Bond.Denom != StakingToken {
 		return ErrBadDenom(DefaultCodespace)
 	}
-	if msg.Bond.Amount <= 0 {
+	if !(msg.Bond.Amount.GT(sdk.ZeroInt())) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	return nil

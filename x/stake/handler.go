@@ -174,7 +174,7 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 		ValidatorAddr: delegation.ValidatorAddr,
 		MinTime:       minTime,
 		MinHeight:     minHeight,
-		Balance:       sdk.Coin{params.BondDenom, returnAmount},
+		Balance:       sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)},
 		Slashed:       sdk.Coin{},
 	}
 	k.SetUnbondingDelegation(ctx, ubd)
@@ -244,7 +244,7 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 	}
 
 	params := k.GetParams(ctx)
-	returnCoin := sdk.Coin{params.BondDenom, returnAmount}
+	returnCoin := sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)}
 	dstValidator, found := k.GetValidator(ctx, msg.ValidatorSrcAddr)
 	if !found {
 		return ErrBadRedelegationDst(k.Codespace()).Result()

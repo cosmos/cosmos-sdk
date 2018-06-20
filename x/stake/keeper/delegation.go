@@ -99,7 +99,7 @@ func (k PrivilegedKeeper) Delegate(ctx sdk.Context, delegatorAddr sdk.Address, b
 	if err != nil {
 		return
 	}
-	validator, pool, newShares = validator.AddTokensFromDel(pool, bondAmt.Amount)
+	validator, pool, newShares = validator.AddTokensFromDel(pool, bondAmt.Amount.Int64())
 	delegation.Shares = delegation.Shares.Add(newShares)
 
 	// Update delegation height

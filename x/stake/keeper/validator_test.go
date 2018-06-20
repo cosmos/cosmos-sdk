@@ -144,8 +144,8 @@ func TestValidatorBasics(t *testing.T) {
 	resVals = keeper.GetValidatorsBonded(ctx)
 	require.Equal(t, 3, len(resVals))
 	assert.True(ValEq(t, validators[0], resVals[2])) // order doesn't matter here
-	assert.True(ValEq(t, validators[1], resVals[0]))
-	assert.True(ValEq(t, validators[2], resVals[1]))
+	assert.True(ValEq(t, validators[1], resVals[1]))
+	assert.True(ValEq(t, validators[2], resVals[0]))
 
 	// remove a record
 	keeper.RemoveValidator(ctx, validators[1].Owner)
@@ -491,8 +491,8 @@ func TestGetTendermintUpdatesAllNone(t *testing.T) {
 
 	updates = keeper.GetTendermintUpdates(ctx)
 	require.Equal(t, 2, len(updates))
-	assert.Equal(t, validators[0].PubKey.Bytes(), updates[0].PubKey)
-	assert.Equal(t, validators[1].PubKey.Bytes(), updates[1].PubKey)
+	assert.Equal(t, validators[1].PubKey.Bytes(), updates[0].PubKey) // order doesn't matter (by address)
+	assert.Equal(t, validators[0].PubKey.Bytes(), updates[1].PubKey)
 	assert.Equal(t, int64(0), updates[0].Power)
 	assert.Equal(t, int64(0), updates[1].Power)
 }

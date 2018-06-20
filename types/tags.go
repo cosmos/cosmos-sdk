@@ -56,8 +56,8 @@ func MakeTag(k string, v []byte) Tag {
 
 // common tags
 var (
-	TagAction       = []byte("action")
-	TagSrcValidator = []byte("source-validator")
-	TagDstValidator = []byte("destination-validator")
-	TagDelegator    = []byte("delegator")
+	TagAction       = "action"
+	TagSrcValidator = "source-validator"
+	TagDstValidator = "destination-validator"
+	TagDelegator    = "delegator"
 )

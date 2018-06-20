@@ -16,9 +16,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
-	"github.com/gamarin/cosmos-sdk/examples/simpleGov/types"
-	simpleGov "github.com/gamarin/cosmos-sdk/examples/simpleGov/x/simple_governance"
-	"github.com/gamarin/cosmos-sdk/x/stake"
+	"github.com/gamarin2/cosmos-sdk/examples/simpleGov/types"
+	simpleGov "github.com/gamarin2/cosmos-sdk/examples/simpleGov/x/simple_governance"
+	"github.com/gamarin2/cosmos-sdk/x/stake"
 )
 
 const (

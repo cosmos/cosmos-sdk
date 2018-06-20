@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	// "github.com/gamarin/cosmos-sdk/examples/simpleGov/app"
+	// "github.com/gamarin2/cosmos-sdk/examples/simpleGov/app"
 )
 
 // dummy addresses used for testing

@@ -13,7 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/gamarin/cosmos-sdk/examples/simpleGov/app"
+	"github.com/gamarin2/cosmos-sdk/examples/simpleGov/app"
 )
 
 // SimpleGovAppInit initial parameters

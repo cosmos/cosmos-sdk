@@ -1,195 +1,33 @@
-## LCD Rest Interfaces
+# Cosmos Hub (Gaia) LCD API
 
-Cosmos-SDK LCD acts as a rest-server. It provides a set of APIs which cover key management, tendermint blockchain monitor and other cosmos modules related interfaces.
+This document describes the API that is exposed by the specific LCD implementation of the Cosmos
+Hub (Gaia). Those APIs are exposed by a REST server and can easily be accessed over HTTP/WS
+connections. 
 
-1. **Key Management**
+The complete API is comprised of the sub-APIs of different modules. The modules in the Cosmos Hub
+(Gaia) API are:
+    * ICS0 (TendermintAPI)
+    * ICS1 (KeyAPI)
+    * ICS20 (TokenAPI)
+    * ICS21 (StakingAPI)
+    * ICS22 (GovernanceAPI)
 
-1.1  url: /keys, Method: GET
-Parameters: null
-Functionality: Get all keys
-* The above command returns JSON structured like this if success:
-```
-{
-  "jsonrpc": "2.0",
-  "code":200,
-  "error": "",
-  "result": {
-        "keys": [
-          {
-            "name": "monkey",
-            "address": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
-            "pub_key": "cosmosaccpub1zcjduc3q8s8ha96ry4xc5xvjp9tr9w9p0e5lk5y0rpjs5epsfxs4wmf72x3shvus0t"
-          },
-   		 {
-            "name": "test",
-            "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-            "pub_key": "cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
-         }
-	],
-    "block_height": 5241
-    }   
-}
-```
-* The above command returns JSON structured like this if fails:
-```
-{
-"jsonrpc": "2.0",
-"code":500,
-"error":"no keys available",
-"result":{}
-}
-```
-1.2  url: /keys, Method: POST
 
-Parameters: null
+## ICS0 - TendermintAPI
 
-Functionality: Recover your key from seed and persist it with your password protection
+The TendermintAPI describes all the endpoints that a full node exposes in order to learn about the
+status of the network.
 
-| Parameter | Type   | Default | Required | Description      |
-| --------- | ------ | ------- | -------- | ---------------- |
-| name      | string | null    | true     | name of keys     |
-| password  | string | null    | true     | password of keys |
-| seed      | string | null    | true     | seed of keys     |
+### /node_info - GET
 
-* The above command returns JSON structured like this if success:
+url: /node_info, Method: GET
 
-```
-{
-    "error": "",
-    "code":200,
-    "result": {
-    	"address":BD607C37147656A507A5A521AA9446EB72B2C907
-    },
-    "jsonrpc": "2.0"
-}
-        
-```
-* The above command returns JSON structured like this if fails:
-```
-{
-    "error": "invalid inputs",
-    "code":500,
-    "result": {},
-    "rest api": "2.0"
-}
-        
-```
-1.3 url: /keys/seed, Method: **GET**
-Functionality: Create new seed
-Parameters: null
-* The above command returns JSON structured like this if success:
-```
-{
-    "error": "",
-    "code":200,
-    "result": {
-    	"seed":crime carpet recycle erase simple prepare moral dentist fee cause pitch trigger when velvet animal abandon
-    },
-    "rest api": "2.0"
-}
-
-```
-* The above command returns JSON structured like this if fails:
-```
-{
-    "error": "cannot generate new seed",
-    "code":500,
-    "result": {},
-    "rest api": "2.0"
-}
-        
-```
-1.4  url: /keys/{name}, Method: GET
-Functionality: Get key information according to the specified key name
-Parameters: null
-* The above command returns JSON structured like this if success:
-```
-{
-    "error": "",
-    "code":200,
-    "result": {
-    	"name": "test",
-          "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-          "pub_key": "cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
-    },
-    "rest api": "2.0"
-}
-
-```
-* The above command returns JSON structured like this if fails:
-```
-{
-    "error": "cannot find corresponding name",
-    "code":500,
-    "result": {},
-    "rest api": "2.0"
-}
-```
-1.5 url: /keys/{name}, Method: **PUT**
-
-Functionality: Update key password
-
-| Parameter       | Type   | Default | Required | Description     |
-| --------------- | ------ | ------- | -------- | --------------- |
-| old_password    | string | null    | true     | password before |
-| new_password    | string | null    | true     | password before |
-| repeat_password | string | null    | true     | password before |
-* The above command returns JSON structured like this if success:
-```
-{
-    "error": "",
-    "code":200,
-    "result": {
-     "updated":name
-    },
-    "rest api": "2.0"
-}
-```
-* The above command returns JSON structured like this if fails:
-```
-{
-    "error": "cannot update the corresponding key",
-    "code":500,
-    "result": {},
-    "rest api": "2.0"
-}
-```
-1.6 url: /keys/{name}, Method: **DELETE**
-
-Functionality: Delete key from keystore
-
-Parameters: null
-
-| Parameter | Type   | Default | Required | Description      |
-| --------- | ------ | ------- | -------- | ---------------- |
-| password  | string | null    | true     | password of keys |
-* The above command returns JSON structured like this if success:
-```
-{
-    "error": "",
-    "code":200,
-    "result": {
-     "deleted":name
-    },
-    "rest api": "2.0"
-}
-```
-* The above command returns JSON structured like this if fails:
-```
-{
-    "error": "cannot delete the corresponding key",
-    "code":500,
-    "result": {},
-    "rest api": "2.0"
-}
-```
-
-2. **Blockchain Monitor**
-
-2.1  url: /node_info, Method: **GET**
 Functionality: Get LCD node status
+
 Parameters: null
+
 * The above command returns JSON structured like this if success:
+
 ```
 {
     "error": "",
@@ -213,7 +51,9 @@ Parameters: null
     "rest api": "2.0"
 }
 ```
+
 * The above command returns JSON structured like this if fails:
+
 ```
 {
     "error": "cannot get the node info",
@@ -224,10 +64,16 @@ Parameters: null
 ```
 
 
-2.2  url: /syncing, Method: **GET**
+### /syncing - GET
+
+url: /syncing, Method: GET
+
 Functionality: Check syncing status of the fullnode which is connecting with the LCD node
+
 Parameters: null
+
 * The above command returns JSON structured like this if success:
+
 ```
 {
     "error": "",
@@ -238,7 +84,9 @@ Parameters: null
     "rest api": "2.0"
 }
 ```
+
 * The above command returns JSON structured like this if fails:
+
 ```
 {
     "error": "cannot get the syncing info",
@@ -248,10 +96,16 @@ Parameters: null
 }
 ```
 
-2.3 url: /blocks/latest, Method: **GET**
+### /blocks/latest - GET
+
+url: /blocks/latest, Method: GET
+
 Functionality: Get the lasted block and verify it
+
 Parameters: null
+
 * The above command returns JSON structured like this if success:
+
 ```
 {
     "error": "",
@@ -262,7 +116,9 @@ Parameters: null
     "rest api": "2.0"
 }
 ```
+
 * The above command returns JSON structured like this if fails:
+
 ```
 {
     "error": "cannot verify the latest block",
@@ -272,12 +128,17 @@ Parameters: null
 }
 ```
 
-2.4  url: /blocks/{height}, Method: **GET**
+
+### /blocks/{height} - GET
+
+url: /blocks/{height}, Method: GET
+
 Functionality: Get the block at specified height and verify it
 
 Parameters: null
 
 * The above command returns JSON structured like this if success:
+
 ```
 {
     "error": "",
@@ -288,7 +149,9 @@ Parameters: null
     "rest api": "2.0"
 }
 ```
+
 * The above command returns JSON structured like this if fails:
+
 ```
 {
     "error": "cannot verify the block at this height",
@@ -297,12 +160,18 @@ Parameters: null
     "rest api": "2.0"
 }
 ```
-2.5 url: /validatorsets/latest, Method: **GET**
+
+
+### /validatorsets/latest - GET
+
+url: /validatorsets/latest, Method: GET
+
 Functionality: Get the lasted validatorsets and verify it
 
 Parameters: null
 
 * The above command returns JSON structured like this if success:
+
 ```
 {
     "error": "",
@@ -313,7 +182,9 @@ Parameters: null
     "rest api": "2.0"
 }
 ```
+
 * The above command returns JSON structured like this if fails:
+
 ```
 {
     "error": "cannot verify the latest block",
@@ -322,12 +193,18 @@ Parameters: null
     "rest api": "2.0"
 }
 ```
-2.6  url: /validatorsets/{height}, Method: **GET**
+
+
+### /validatorsets/{height} - GET
+
+url: /validatorsets/{height}, Method: GET
+
 Functionality: Get the validatorsets at specified block height and verify it
 
 Parameters: null
 
 * The above command returns JSON structured like this if success:
+
 ```
 {
     "error": "",
@@ -338,7 +215,9 @@ Parameters: null
     "rest api": "2.0"
 }
 ```
+
 * The above command returns JSON structured like this if fails:
+
 ```
 {
     "error": "cannot verify the validatorset at this height",
@@ -347,14 +226,17 @@ Parameters: null
     "rest api": "2.0"
 }
 ```
-3. **Transaction**
 
-3.1  url: /txs/{hash}, Method: ** GET**
- Functionality: Get the transaction by its hash and verify it
+### /txs/{hash} - GET
+
+url: /txs/{hash}, Method: GET
+
+Functionality: Get the transaction by its hash and verify it
 
 Parameters: null
 
 * The above command returns JSON structured like this if success:
+
 ```
 {
     "error": "",
@@ -365,7 +247,9 @@ Parameters: null
     "rest api": "2.0"
 }
 ```
+
 * The above command returns JSON structured like this if fails:
+
 ```
 {
     "error": "cannot verify the tx hash",
@@ -375,12 +259,17 @@ Parameters: null
 }
 ```
 
-3.2  url: /broadcast_tx_commit, Method: **POST**
+
+### /broadcast_tx_commit - POST
+
+url: /broadcast_tx_commit, Method: POST
+
 Functionality: Directly send a transaction and wait until on-chain
 
 Parameters: null
 
 * The above command returns JSON structured like this if success:
+
 ```
 {
     "error": "",
@@ -391,7 +280,9 @@ Parameters: null
     "rest api": "2.0"
 }
 ```
+
 * The above command returns JSON structured like this if fails:
+
 ```
 {
     "error": "cannot send the tx to the blockchain",
@@ -400,12 +291,18 @@ Parameters: null
     "rest api": "2.0"
 }
 ```
-3.3  url: /broadcast_tx_sync, Method: **POST**
+
+
+### /broadcast_tx_sync - POST
+
+url: /broadcast_tx_sync, Method: POST
+
 Functionality: Directly send a transaction and wait until checkTX is done
 
 Parameters: null
 
 * The above command returns JSON structured like this if success:
+
 ```
 {
     "error": "",
@@ -416,7 +313,9 @@ Parameters: null
     "rest api": "2.0"
 }
 ```
+
 * The above command returns JSON structured like this if fails:
+
 ```
 {
     "error": "cannot send the tx to the blockchain",
@@ -425,11 +324,18 @@ Parameters: null
     "rest api": "2.0"
 }
 ```
-3.4 url: /broadcast_tx_async, Method: **POST**
-  Functionality: Directly send a transaction asynchronous without wait for anything
 
-  Parameters: null
+
+### /broadcast_tx_async - POST
+
+url: /broadcast_tx_async, Method: POST
+
+Functionality: Directly send a transaction asynchronous without wait for anything
+
+Parameters: null
+
 * The above command returns JSON structured like this if success:
+
 ```
 {
     "error": "",
@@ -440,7 +346,9 @@ Parameters: null
     "rest api": "2.0"
 }
 ```
+
 * The above command returns JSON structured like this if fails:
+
 ```
 {
     "error": "cannot send the tx to the blockchain",
@@ -450,11 +358,258 @@ Parameters: null
 }
 ```
 
-4. Token API
 
-4.1  url: /balance/{account}, Method: **GET**
+## ICS1 - KeyAPI
 
-- The above command returns JSON structured like this if success:
+This API exposes all functionality needed for key creation, signing and management.
+
+
+### /keys - GET
+
+url: /keys, Method: GET
+
+Functionality: Get all keys
+
+Parameters: null
+
+* The above command returns JSON structured like this if success:
+
+```
+{
+  "jsonrpc": "2.0",
+  "code":200,
+  "error": "",
+  "result": {
+        "keys": [
+          {
+            "name": "monkey",
+            "address": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
+            "pub_key": "cosmosaccpub1zcjduc3q8s8ha96ry4xc5xvjp9tr9w9p0e5lk5y0rpjs5epsfxs4wmf72x3shvus0t"
+          },
+   		 {
+            "name": "test",
+            "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
+            "pub_key": "cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
+         }
+	],
+    "block_height": 5241
+    }   
+}
+```
+
+* The above command returns JSON structured like this if fails:
+
+```
+{
+"jsonrpc": "2.0",
+"code":500,
+"error":"no keys available",
+"result":{}
+}
+```
+
+
+### /keys - POST
+
+url: /keys, Method: POST
+
+Functionality: Recover your key from seed and persist it with your password protection
+
+| Parameter | Type   | Default | Required | Description      |
+| --------- | ------ | ------- | -------- | ---------------- |
+| name      | string | null    | true     | name of keys     |
+| password  | string | null    | true     | password of keys |
+| seed      | string | null    | true     | seed of keys     |
+
+Parameters: null
+
+* The above command returns JSON structured like this if success:
+
+```
+{
+    "error": "",
+    "code":200,
+    "result": {
+    	"address":BD607C37147656A507A5A521AA9446EB72B2C907
+    },
+    "jsonrpc": "2.0"
+}
+        
+```
+
+* The above command returns JSON structured like this if fails:
+
+```
+{
+    "error": "invalid inputs",
+    "code":500,
+    "result": {},
+    "rest api": "2.0"
+}
+        
+```
+
+
+### /keys/seed - GET
+
+url: /keys/seed, Method: GET
+
+Functionality: Create new seed
+
+Parameters: null
+
+* The above command returns JSON structured like this if success:
+
+```
+{
+    "error": "",
+    "code":200,
+    "result": {
+    	"seed":crime carpet recycle erase simple prepare moral dentist fee cause pitch trigger when velvet animal abandon
+    },
+    "rest api": "2.0"
+}
+
+```
+
+* The above command returns JSON structured like this if fails:
+
+```
+{
+    "error": "cannot generate new seed",
+    "code":500,
+    "result": {},
+    "rest api": "2.0"
+}
+        
+```
+
+
+### /keys/{name} - GET
+
+url: /keys/{name}, Method: GET
+
+Functionality: Get key information according to the specified key name
+
+Parameters: null
+
+* The above command returns JSON structured like this if success:
+
+```
+{
+    "error": "",
+    "code":200,
+    "result": {
+    	"name": "test",
+          "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
+          "pub_key": "cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
+    },
+    "rest api": "2.0"
+}
+
+```
+
+* The above command returns JSON structured like this if fails:
+
+```
+{
+    "error": "cannot find corresponding name",
+    "code":500,
+    "result": {},
+    "rest api": "2.0"
+}
+```
+
+
+### /keys/{name} - PUT
+
+url: /keys/{name}, Method: PUT
+
+Functionality: Update key password
+
+Parameters: 
+
+| Parameter       | Type   | Default | Required | Description     |
+| --------------- | ------ | ------- | -------- | --------------- |
+| old_password    | string | null    | true     | password before |
+| new_password    | string | null    | true     | password before |
+| repeat_password | string | null    | true     | password before |
+
+* The above command returns JSON structured like this if success:
+
+```
+{
+    "error": "",
+    "code":200,
+    "result": {
+     "updated":name
+    },
+    "rest api": "2.0"
+}
+```
+
+* The above command returns JSON structured like this if fails:
+
+```
+{
+    "error": "cannot update the corresponding key",
+    "code":500,
+    "result": {},
+    "rest api": "2.0"
+}
+```
+
+
+### /keys/{name} - DELETE
+
+url: /keys/{name}, Method: DELETE
+
+Functionality: Delete key from keystore
+
+Parameters:
+
+| Parameter | Type   | Default | Required | Description      |
+| --------- | ------ | ------- | -------- | ---------------- |
+| password  | string | null    | true     | password of keys |
+
+* The above command returns JSON structured like this if success:
+
+```
+{
+    "error": "",
+    "code":200,
+    "result": {
+     "deleted":name
+    },
+    "rest api": "2.0"
+}
+```
+
+* The above command returns JSON structured like this if fails:
+
+```
+{
+    "error": "cannot delete the corresponding key",
+    "code":500,
+    "result": {},
+    "rest api": "2.0"
+}
+```
+
+
+## ICS20 - TokenAPI
+
+The TokenAPI exposes all functionality needed to query account balances and send transactions.
+
+### /balance/{account} - GET
+
+url: /balance/{account}, Method: GET
+
+Functionality:
+
+Parameters:
+
+* The above command returns JSON structured like this if success:
 
 ```
 {
@@ -471,7 +626,7 @@ Parameters: null
 }
 ```
 
-- The above command returns JSON structured like this if fails:
+* The above command returns JSON structured like this if fails:
 
 ```
 {
@@ -482,10 +637,14 @@ Parameters: null
 }
 ```
 
-4.2  url: /create_transfer, Method: **POST**
+
+### /create_transfer - POST
+
+url: /create_transfer, Method: **POST**
 
 Functionality: transfer asset
 
+Parameters:
 
 | Parameter | Type   | Default | Required | Description                 |
 | --------- | ------ | ------- | -------- | --------------------------- |
@@ -495,7 +654,7 @@ Functionality: transfer asset
 | denomonation  | string | null    | true     | denomonation of the token   |
 
 
-- The above command returns JSON structured like this if success:
+* The above command returns JSON structured like this if success:
 
 ```
 {
@@ -508,7 +667,7 @@ Functionality: transfer asset
 }
 ```
 
-- The above command returns JSON structured like this if fails:
+* The above command returns JSON structured like this if fails:
 
 ```
 {
@@ -519,17 +678,20 @@ Functionality: transfer asset
 }
 ```
 
-4.3  url: /signed_transfer, Method: **POST**
+
+### /signed_transfer - POST
+
+url: /signed_transfer, Method: POST
 
 Functionality: transfer asset
 
+Parameters:
 
 | Parameter       | Type   | Default | Required | Description            |
 | ------------    | ------ | ------- | -------- | ----------------------------------------------- |
 | signed_transfer | []byte | null    | true     | bytes of a valid transaction and it's signature |
 
-
-- The above command returns JSON structured like this if success:
+* The above command returns JSON structured like this if success:
 
 ```
 {
@@ -542,7 +704,7 @@ Functionality: transfer asset
 }
 ```
 
-- The above command returns JSON structured like this if fails:
+* The above command returns JSON structured like this if fails:
 
 ```
 {
@@ -554,12 +716,22 @@ Functionality: transfer asset
 ```
 
 
-5. **Stake module**
+## ICS21 - StakingAPI
 
-5.1 url: /stake/{delegator}/bonding_status/{validator}, Method: **GET**
+The StakingAPI exposes all functionality needed to stake tokens. It is exposed by the staking
+module.
+
+
+### /stake/{delegator}/bonding_status/{validator} - GET
+
+url: /stake/{delegator}/bonding_status/{validator}, Method: GET
+
 Functionality: get delegator information and verify returned proof
+
 Parameters: null
+
 * The above command returns JSON structured like this if success:
+
 ```
 {
     "error": "",
@@ -572,7 +744,9 @@ Parameters: null
     "rest api": "2.0"
 }
 ```
+
 * The above command returns JSON structured like this if fails:
+
 ```
 {
     "error": "cannot send asset to the account",
@@ -582,10 +756,17 @@ Parameters: null
 }
 ```
 
-5.2 url: /stake/validators, Method: **GET**
+
+### /stake/validators - GET
+
+url: /stake/validators, Method: GET
+
 Functionality: get all validators information in stake module and verify returned proof
+
 Parameters: null
+
 * The above command returns JSON structured like this if success:
+
 ```
 {
     "error": "",
@@ -611,7 +792,9 @@ Parameters: null
     "rest api": "2.0"
 }
 ```
+
 * The above command returns JSON structured like this if fails:
+
 ```
 {
     "error": "cannot send asset to the account",
@@ -621,9 +804,14 @@ Parameters: null
 }
 ```
 
-5.3. url: /stake/delegations, Method: **POST**
+
+### /stake/delegations - POST
+
+url: /stake/delegations, Method: POST
 
 Functionality: send a delegate transaction
+
+Parameters:
 
 | Parameter    | Type   | Default | Required | Description               |
 | ------------ | ------ | ------- | -------- | ------------------------- |
@@ -634,6 +822,7 @@ Functionality: send a delegate transaction
 | password     | string | null    | true     | passsword of from address |
 
 * The above command returns JSON structured like this if success:
+
 ```
 {
     "error": "",
@@ -644,7 +833,9 @@ Functionality: send a delegate transaction
     "rest api": "2.0"
 }
 ```
+
 * The above command returns JSON structured like this if fails:
+
 ```
 {
     "error": "cannot get all the delegation",
@@ -654,15 +845,3 @@ Functionality: send a delegate transaction
 }
 
 ```
-
-## Configuration
-
-To start a rest server, we need to specify the following parameters:
-
-| Parameter | Type   | Default | Required | Description                          |
-| --------- | ------ | ------- | -------- | ------------------------------------ |
-| Chain-id  | string | null    | true     | chain id of the full node to connect |
-| node      | URL | null    | true     | address of the full node to connect  |
-| laddr      | URL | null    | true     | address to run the rest server on  |
-| trust-store      | DIRECTORY | null    | true     | directory for save checkpoints and validator sets |
-

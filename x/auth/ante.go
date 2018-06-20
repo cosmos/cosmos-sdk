@@ -42,7 +42,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 		if len(memo) > maxMemoCharacters {
 			return ctx,
-				sdk.ErrMemoTooLarge(fmt.Sprintf("maximum %d characters but was %d characters", maxMemoCharacters, len(memo))).Result(),
+				sdk.ErrMemoTooLarge(fmt.Sprintf("maximum number of characters is %d but received %d characters", maxMemoCharacters, len(memo))).Result(),
 				true
 		}
 

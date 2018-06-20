@@ -4,6 +4,8 @@ import (
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
+
+	"github.com/cosmos/cosmos-sdk/lcd"
 )
 
 // typical context created in sdk modules for transactions/queries
@@ -19,6 +21,7 @@ type CoreContext struct {
 	Client          rpcclient.Client
 	Decoder         auth.AccountDecoder
 	AccountStore    string
+	Cert 			lcd.Certifier
 }
 
 // WithChainID - return a copy of the context with an updated chainID
@@ -85,5 +88,10 @@ func (c CoreContext) WithDecoder(decoder auth.AccountDecoder) CoreContext {
 // WithAccountStore - return a copy of the context with an updated AccountStore
 func (c CoreContext) WithAccountStore(accountStore string) CoreContext {
 	c.AccountStore = accountStore
+	return c
+}
+
+func (c CoreContext) WithCert(cert lcd.Certifier) CoreContext {
+	c.Cert = cert
 	return c
 }

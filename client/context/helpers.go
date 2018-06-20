@@ -16,6 +16,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/iavl"
+	"github.com/tendermint/tmlibs/merkle"
+	"bytes"
+	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/lcd/proxy"
 )
 
 // Broadcast the transaction bytes to Tendermint
@@ -87,9 +92,117 @@ func (ctx CoreContext) query(path string, key common.HexBytes) (res []byte, err 
 }
 
 // Query from Tendermint with the provided storename and path
+func (ctx CoreContext) queryAndVerifyProof(path string, key common.HexBytes) (res []byte, err error) {
+	node, err := ctx.GetNode()
+	if err != nil {
+		return res, err
+	}
+
+	opts := rpcclient.ABCIQueryOptions{
+		Height:  ctx.Height,
+		Trusted: ctx.TrustNode,
+	}
+	result, err := node.ABCIQueryWithOptions(path, key, opts)
+	if err != nil {
+		return res, err
+	}
+	resp := result.Response
+	if resp.Code != uint32(0) {
+		return res, errors.Errorf("query failed: (%d) %s", resp.Code, resp.Log)
+	}
+
+	// AppHash for height H is in header H+1
+	commit, err := proxy.GetCertifiedCommit(resp.Height+1, node, ctx.Cert)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.Value) > 0 {
+		// The key was found, construct a proof of existence.
+		proof, err := iavl.ReadKeyProof(resp.Proof)
+		if err != nil {
+			return  nil, errors.Wrap(err, "Error reading proof")
+		}
+
+		eproof, ok := proof.(*iavl.KeyExistsProof)
+		if !ok {
+			return  nil, errors.New("Expected KeyExistsProof for non-empty value")
+		}
+
+		// Validate the proof against the certified header to ensure data integrity.
+		err = eproof.Verify(resp.Key, resp.Value, eproof.RootHash)
+		if err != nil {
+			return  nil, errors.Wrap(err, "Couldn't verify proof")
+		}
+		storeInfo := store.StoreInfo{
+			Core:store.StoreCore{
+				CommitID:sdk.CommitID{
+					Version: resp.Height,
+					Hash: eproof.RootHash,
+				},
+			},
+		}
+		hash := store.KvPairHash(merkle.SimpleHashFromBytes([]byte(eproof.StoreName)),storeInfo.Hash())
+
+		for _,merkleHashNode := range eproof.SimpleMerkleHashPath {
+			if merkleHashNode.LeftOrRight {
+				hash=store.KvPairHash(hash,merkleHashNode.Hash)
+			} else {
+				hash=store.KvPairHash(merkleHashNode.Hash,hash)
+			}
+		}
+
+		if !bytes.Equal(commit.Header.AppHash,hash) {
+			return  nil, errors.Wrap(err, "Invalid exist proof")
+		}
+		return resp.Value, nil
+	}
+	// The key wasn't found, construct a proof of non-existence.
+	proof, err := iavl.ReadKeyProof(resp.Proof)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error reading proof")
+	}
+
+	aproof, ok := proof.(*iavl.KeyAbsentProof)
+	if !ok {
+		return nil, errors.New("Expected KeyAbsentProof for empty Value")
+	}
+
+	// Validate the proof against the certified header to ensure data integrity.
+	err = aproof.Verify(resp.Key, nil, aproof.RootHash)
+	if err != nil {
+		return nil, errors.Wrap(err, "Couldn't verify proof")
+	}
+
+	storeInfo := store.StoreInfo{
+		Core:store.StoreCore{
+			CommitID:sdk.CommitID{
+				Version: resp.Height,
+				Hash: aproof.RootHash,
+			},
+		},
+	}
+	hash := store.KvPairHash(merkle.SimpleHashFromBytes([]byte(aproof.StoreName)),storeInfo.Hash())
+
+	for _,merkleHashNode := range aproof.SimpleMerkleHashPath {
+		if merkleHashNode.LeftOrRight {
+			hash=store.KvPairHash(hash,merkleHashNode.Hash)
+		} else {
+			hash=store.KvPairHash(merkleHashNode.Hash,hash)
+		}
+	}
+
+	if !bytes.Equal(commit.Header.AppHash,hash) {
+		return  nil, errors.Wrap(err, "Invalid absence proof")
+	}
+
+	return resp.Value, nil
+}
+
+// Query from Tendermint with the provided storename and path
 func (ctx CoreContext) queryStore(key cmn.HexBytes, storeName, endPath string) (res []byte, err error) {
 	path := fmt.Sprintf("/store/%s/%s", storeName, endPath)
-	return ctx.query(path, key)
+	return ctx.queryAndVerifyProof(path, key)
 }
 
 // Get the from address from the name flag

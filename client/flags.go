@@ -13,6 +13,7 @@ const (
 	FlagAccountNumber = "account-number"
 	FlagSequence      = "sequence"
 	FlagFee           = "fee"
+	FlagTrustStore    = "trust-store"
 )
 
 // LineBreak can be included in a command list to provide a blank line

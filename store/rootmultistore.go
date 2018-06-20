@@ -11,6 +11,12 @@ import (
 	"github.com/tendermint/tmlibs/merkle"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	cmn "github.com/tendermint/tmlibs/common"
+	"encoding/binary"
+	"github.com/tendermint/iavl"
+	"bytes"
+	"io"
+	"github.com/tendermint/tmlibs/merkle/tmhash"
 )
 
 const (
@@ -229,7 +235,157 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 	// trim the path and make the query
 	req.Path = subpath
 	res := queryable.Query(req)
+	if ! req.Prove {
+		return res
+	}
+	//exist proofd
+	var eproof *iavl.KeyExistsProof
+	var aproof *iavl.KeyAbsentProof
+	if len(res.Value) > 0 {
+		proof, err := iavl.ReadKeyProof(res.Proof)
+		if err != nil {
+			return sdk.ErrUnknownRequest("Error reading proof").QueryResult()
+		}
+		eproof, ok = proof.(*iavl.KeyExistsProof)
+		if !ok {
+			return sdk.ErrUnknownRequest("Expected KeyExistsProof for non-empty value").QueryResult()
+		}
+	} else { //absence proof
+		// The key wasn't found, construct a proof of non-existence.
+		proof, err := iavl.ReadKeyProof(res.Proof)
+		if err != nil {
+			return sdk.ErrUnknownRequest("Error reading proof").QueryResult()
+		}
+		aproof, ok = proof.(*iavl.KeyAbsentProof)
+		if !ok {
+			return sdk.ErrUnknownRequest("Expected KeyAbsentProof for empty Value").QueryResult()
+		}
+	}
+
+	//Load commit info from db
+	commitInfo, erro := getCommitInfo(rs.db,res.Height)
+	if erro != nil {
+		return sdk.ErrUnknownRequest(erro.Error()).QueryResult()
+	}
+	//Calculate store name hash and store info hash, then save the two hash into a kvPair, finally sort the kvPair list
+	var kvPairs cmn.KVPairs
+	var targetStoreNameHash []byte
+	var targetStoreInfo StoreInfo
+	for _, storeInfo := range commitInfo.StoreInfos {
+		khash := merkle.SimpleHashFromBytes([]byte(storeInfo.Name))
+		vhash := storeInfo.Hash()
+		kvPairs = append(kvPairs, cmn.KVPair{
+			Key:   khash,
+			Value: vhash,
+		})
+		if storeName == storeInfo.Name {
+			targetStoreNameHash = khash
+			targetStoreInfo=storeInfo
+		}
+	}
+	if kvPairs == nil {
+		return sdk.ErrUnknownRequest("commitInfo is empty").QueryResult()
+	}
+	//sort the kvPair list
+	kvPairs.Sort()
+
+	//Rebuild simple merkle hash tree
+	var hashNodeList []hashNode
+	for _, kvPair := range kvPairs {
+		hashResult := KvPairHash(kvPair.Key,kvPair.Value)
+		hashNodeList=append(hashNodeList,hashNode{
+			encounter:	bytes.Equal(targetStoreNameHash, kvPair.Key),
+			hash:	hashResult,
+		})
+	}
+
+	var hashPath hashPath
+	if hashNodeList != nil {
+		//Find the path from the Merkle root to target store
+		simpleHashFromHashes(hashNodeList, &hashPath)
+		if eproof != nil {
+			eproof.StoreName = targetStoreInfo.Name
+			eproof.SimpleMerkleHashPath = hashPath.innerHashNodeList
+			res.Proof = eproof.Bytes()
+		} else if aproof != nil {
+			aproof.StoreName = targetStoreInfo.Name
+			aproof.Version = targetStoreInfo.Core.CommitID.Version
+			aproof.SimpleMerkleHashPath = hashPath.innerHashNodeList
+			res.Proof = aproof.Bytes()
+		}
+	}
+
 	return res
+}
+
+
+type hashNode struct {
+	encounter   bool
+	hash		[]byte
+}
+
+type hashPath struct {
+	innerHashNodeList		[]iavl.SimpleMerkleHashNode
+}
+
+func simpleHashFromHashes(hashes []hashNode, path *hashPath) hashNode {
+	// Recursive impl.
+	switch len(hashes) {
+	case 0:
+		return hashNode{}
+	case 1:
+		return hashes[0]
+	default:
+		left := simpleHashFromHashes(hashes[:(len(hashes)+1)/2],path)
+		right := simpleHashFromHashes(hashes[(len(hashes)+1)/2:],path)
+		if left.encounter {
+			path.innerHashNodeList = append(path.innerHashNodeList,iavl.SimpleMerkleHashNode{
+				LeftOrRight:true,
+				Hash:right.hash,
+			})
+		} else if right.encounter {
+
+			path.innerHashNodeList = append(path.innerHashNodeList,
+				iavl.SimpleMerkleHashNode{
+					LeftOrRight: false,
+					Hash:        left.hash,
+				})
+		}
+		return hashNode {
+			encounter: 	left.encounter || right.encounter,
+			hash:		KvPairHash(left.hash, right.hash),
+		}
+	}
+}
+
+func KvPairHash(part1, part2 []byte) []byte {
+	hasher := tmhash.New()
+
+	err := encodeByteSlice(hasher, part1)
+	if err != nil {
+		panic(err)
+	}
+	err = encodeByteSlice(hasher, part2)
+	if err != nil {
+		panic(err)
+	}
+	return hasher.Sum(nil)
+}
+
+func encodeByteSlice(w io.Writer, bz []byte) (err error) {
+	err = encodeUvarint(w, uint64(len(bz)))
+	if err != nil {
+		return
+	}
+	_, err = w.Write(bz)
+	return
+}
+
+func encodeUvarint(w io.Writer, i uint64) (err error) {
+	var buf [10]byte
+	n := binary.PutUvarint(buf[:], i)
+	_, err = w.Write(buf[0:n])
+	return
 }
 
 // parsePath expects a format like /<storeName>[/<subpath>]
@@ -300,7 +456,7 @@ type commitInfo struct {
 	Version int64
 
 	// Store info for
-	StoreInfos []storeInfo
+	StoreInfos []StoreInfo
 }
 
 // Hash returns the simple merkle root hash of the stores sorted by name.
@@ -326,19 +482,19 @@ func (ci commitInfo) CommitID() CommitID {
 // storeInfo contains the name and core reference for an
 // underlying store.  It is the leaf of the rootMultiStores top
 // level simple merkle tree.
-type storeInfo struct {
+type StoreInfo struct {
 	Name string
-	Core storeCore
+	Core StoreCore
 }
 
-type storeCore struct {
+type StoreCore struct {
 	// StoreType StoreType
 	CommitID CommitID
 	// ... maybe add more state
 }
 
 // Implements merkle.Hasher.
-func (si storeInfo) Hash() []byte {
+func (si StoreInfo) Hash() []byte {
 	// Doesn't write Name, since merkle.SimpleHashFromMap() will
 	// include them via the keys.
 	bz, _ := cdc.MarshalBinary(si.Core) // Does not error
@@ -371,14 +527,14 @@ func setLatestVersion(batch dbm.Batch, version int64) {
 
 // Commits each store and returns a new commitInfo.
 func commitStores(version int64, storeMap map[StoreKey]CommitStore) commitInfo {
-	storeInfos := make([]storeInfo, 0, len(storeMap))
+	storeInfos := make([]StoreInfo, 0, len(storeMap))
 
 	for key, store := range storeMap {
 		// Commit
 		commitID := store.Commit()
 
 		// Record CommitID
-		si := storeInfo{}
+		si := StoreInfo{}
 		si.Name = key.Name()
 		si.Core.CommitID = commitID
 		// si.Core.StoreType = store.GetStoreType()

@@ -22,6 +22,9 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	ibc "github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
 	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
+	"github.com/cosmos/cosmos-sdk/lcd"
+	"github.com/cosmos/cosmos-sdk/lcd/files"
+	certclient "github.com/cosmos/cosmos-sdk/lcd/client"
 )
 
 // ServeCommand will generate a long-running rest server
@@ -57,6 +60,7 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().String(flagCORS, "", "Set to domains that can make CORS requests (* for all)")
 	cmd.Flags().StringP(client.FlagChainID, "c", "", "ID of chain we connect to")
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	cmd.Flags().StringP(client.FlagTrustStore, "t", "~/.lcd", "Directory for trust store")
 	return cmd
 }
 
@@ -68,7 +72,25 @@ func createHandler(cdc *wire.Codec) http.Handler {
 		panic(err)
 	}
 
-	ctx := context.NewCoreContextFromViper()
+	rootDir := viper.GetString(client.FlagTrustStore)
+	nodeAddr := viper.GetString(client.FlagNode)
+	chainID := viper.GetString(client.FlagChainID)
+
+	trust := lcd.NewCacheProvider(
+		lcd.NewMemStoreProvider(),
+		files.NewProvider(rootDir),
+	)
+	source := certclient.NewHTTPProvider(nodeAddr)
+	// TODO this is just for proto type.
+	fc,err := source.GetByHeight(1)
+	if err != nil {
+		panic(err)
+	}
+	cert,err := lcd.NewInquiringCertifier(chainID, fc, trust, source)
+	if err != nil {
+		panic(err)
+	}
+	ctx := context.NewCoreContextFromViper().WithCert(cert)
 
 	// TODO make more functional? aka r = keys.RegisterRoutes(r)
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")

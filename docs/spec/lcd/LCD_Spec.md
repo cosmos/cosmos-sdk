@@ -1,4 +1,4 @@
-# Cosmos-SDK LCD(lite client daemon) Specifications
+# Cosmos-SDK LCD( light client daemon) Spec
 
 ## Intro
 
@@ -19,12 +19,15 @@ From an exahange's perspective, LCD will decrease the difficulty and latency of 
 ![withdraw](https://github.com/irisnet/cosmos-sdk/raw/suyu/lcd/docs/spec/lcd/pics/withdraw.png)
 
 3. Transfer Atom from hot wallet to cold wallet
+
 ![H2C](https://github.com/irisnet/cosmos-sdk/raw/suyu/lcd/docs/spec/lcd/pics/H2C.png)
 
 4. Transfer Atom from cold wallet to hot wallet
+
 ![C2H](https://github.com/irisnet/cosmos-sdk/raw/suyu/lcd/docs/spec/lcd/pics/C2H.png)
 
 5. Monitor Accounts
+
 ![MA](https://github.com/irisnet/cosmos-sdk/raw/suyu/lcd/docs/spec/lcd/pics/MA.png)
 
 
@@ -158,7 +161,9 @@ Parameters: null
 }
 ```
 1.5 url: /keys/{name}, Method: **PUT**
+2.
 Functionality: Update key password
+
 | Parameter | Type   | Default | Required | Description                 |
 | --------- | ------ | ------- | -------- | --------------------------- |
 | old_password      | string | null   | true    | password before |
@@ -185,8 +190,11 @@ Functionality: Update key password
 }
 ```
 1.6 url: /keys/{name}, Method: **DELETE**
+
 Functionality: Delete key from keystore
+
 Parameters: null
+
 | Parameter | Type   | Default | Required | Description                 |
 | --------- | ------ | ------- | -------- | --------------------------- |
 | password      | string | null   | true    | password of keys |
@@ -504,14 +512,17 @@ Parameters: null
 ```
 5. **Bank module**
 
-5.1  url: /accounts/{address}/send, Method: POST
+5.1  url: /accounts/{address}/send, Method: **POST**
+
 Functionality: transfer asset
+
 | Parameter | Type   | Default | Required | Description                 |
 | --------- | ------ | ------- | -------- | --------------------------- |
 | from      | string | null   | true    | address from |
 | to      | string | null   | true    |  address want to send to |
 | amount      | int | null   | true    |amount of the token |
 | denomonation      | string | null   | true  |denomonation of the token|
+
 * The above command returns JSON structured like this if success:
 ```
 {
@@ -601,7 +612,9 @@ Parameters: null
 ```
 
 6.3. url: /stake/delegations, Method: **POST**
+
 Functionality: send a delegate transaction
+
 | Parameter | Type   | Default | Required | Description                 |
 | --------- | ------ | ------- | -------- | --------------------------- |
 | from      | string | null   | true    | address from |
@@ -609,6 +622,7 @@ Functionality: send a delegate transaction
 | amount      | int | null   | true    |amount of the token |
 | denomonation      | string | null   | true  |denomonation of the token|
 | password      | string | null   | true  |passsword of from address|
+
 * The above command returns JSON structured like this if success:
 ```
 {

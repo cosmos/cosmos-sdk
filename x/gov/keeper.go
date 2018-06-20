@@ -369,7 +369,7 @@ func (keeper Keeper) getInactiveProposalQueue(ctx sdk.Context) ProposalQueue {
 
 	var proposalQueue ProposalQueue
 
-	err := keeper.cdc.MustUnmarshalBinary(bz, &proposalQueue) // TODO: switch to UnmarshalBinaryBare when new go-amino gets added
+	keeper.cdc.MustUnmarshalBinary(bz, &proposalQueue) // TODO: switch to UnmarshalBinaryBare when new go-amino gets added
 
 	return proposalQueue
 }

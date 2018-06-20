@@ -59,11 +59,11 @@ func TestHandleSubmitProposalMsg(t *testing.T) {
 	// Proposal is not open
 	// No delegations for the address
 
-	validatorBond := sdk.Coin{"Atom", 80}
+	validatorBond := sdk.Coin{"Atom", sdk.NewInt(int64(80))}
 	declareDescription := stake.NewDescription("moniker", "identity", "website", "details")
 	declareMsg := stake.NewMsgCreateValidator(addrs[0], pks[0], validatorBond, declareDescription)
 
-	delegateBond := sdk.Coin{"Atom", 20}
+	delegateBond := sdk.Coin{"Atom", sdk.NewInt(int64(20))}
 	delegateMsg := stake.NewMsgDelegate(addrs[1], addrs[0], delegateBond)
 
 	// TODO handle delegation

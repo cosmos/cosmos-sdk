@@ -13,12 +13,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
-	simplegovcmd "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simple_governance/client/cli"
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
+	simplegovcmd "github.com/gamarin/cosmos-sdk/examples/simpleGov/x/simple_governance/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
 )

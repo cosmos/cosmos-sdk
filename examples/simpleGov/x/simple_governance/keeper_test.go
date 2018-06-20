@@ -13,8 +13,8 @@ func TestSimpleGovKeeper(t *testing.T) {
 	assert.NotNil(t, k)
 
 	// create proposals
-	proposal := NewProposal(titles[1], description[1], addrs[1], ctx.BlockHeight(), sdk.Coins{{"Atom": 200}})
-	proposal2 := NewProposal(titles[2], description[2], addrs[4], ctx.BlockHeight(), sdk.Coins{{"Atom": 150}})
+	proposal := NewProposal(titles[1], descriptions[1], addrs[1], ctx.BlockHeight(), sdk.Coins{{"Atom": sdk.NewInt(int64(200))}})
+	proposal2 := NewProposal(titles[2], descriptions[2], addrs[4], ctx.BlockHeight(), sdk.Coins{{"Atom": sdk.NewInt(int64(150))}})
 
 	// –––––––––––––––––––––––––––––––––––––––
 	//                KEEPER
@@ -33,7 +33,7 @@ func TestSimpleGovKeeper(t *testing.T) {
 	assert.Equal(t, proposal, resProposal)
 
 	// Case 2: invalid proposalID
-	resProposal, err := k.GetProposal(ctx, 2)
+	resProposal, err = k.GetProposal(ctx, 2)
 	assert.NotNil(t, err)
 
 	k.SetVote(ctx, 1, addrs[2], options[1])
@@ -51,7 +51,7 @@ func TestSimpleGovKeeper(t *testing.T) {
 	assert.NotNil(t, err)
 
 	// Case 3: invalid proposal, valid voter
-	option, err := k.GetVote(ctx, 2, addrs[2])
+	option, err = k.GetVote(ctx, 2, addrs[2])
 	assert.Equal(t, "", option)
 	assert.NotNil(t, err)
 
@@ -70,13 +70,13 @@ func TestSimpleGovKeeper(t *testing.T) {
 	// ––––––– Test GetProposal –––––––
 
 	// Case 1: valid request
-	resProposal, err := keeperRead.GetProposal(ctx, 1)
+	resProposal, err = keeperRead.GetProposal(ctx, 1)
 	assert.NotNil(t, resProposal)
 	assert.Nil(t, err)
 	assert.Equal(t, proposal, resProposal)
 
 	// Case 2: invalid proposalID
-	resProposal, err := keeperRead.GetProposal(ctx, 2)
+	resProposal, err = keeperRead.GetProposal(ctx, 2)
 	assert.NotNil(t, err)
 
 	// ––––––– Test SetProposal –––––––
@@ -87,7 +87,7 @@ func TestSimpleGovKeeper(t *testing.T) {
 	// ––––––– Test GetVote –––––––
 
 	// Case 1: existing proposal, valid voter
-	option, err := keeperRead.GetVote(ctx, 1, addrs[2])
+	option, err = keeperRead.GetVote(ctx, 1, addrs[2])
 	assert.Equal(t, options[1], option)
 	assert.Nil(t, err)
 
@@ -97,7 +97,7 @@ func TestSimpleGovKeeper(t *testing.T) {
 	assert.NotNil(t, err)
 
 	// Case 3: invalid proposal, valid voter
-	option, err := keeperRead.GetVote(ctx, 2, addrs[2])
+	option, err = keeperRead.GetVote(ctx, 2, addrs[2])
 	assert.Equal(t, "", option)
 	assert.NotNil(t, err)
 

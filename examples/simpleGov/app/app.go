@@ -9,23 +9,23 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/examples/democoin/x/simplestake"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 
-	"github.com/cosmos/cosmos-sdk/examples/democoin/x/cool"
-	"github.com/cosmos/cosmos-sdk/examples/democoin/x/pow"
-	"github.com/cosmos/cosmos-sdk/examples/simpleGov/types"
-	simpleGov "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simple_governance"
-	"github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simplestake"
+	"github.com/gamarin/cosmos-sdk/examples/simpleGov/types"
+	simpleGov "github.com/gamarin/cosmos-sdk/examples/simpleGov/x/simple_governance"
+	"github.com/gamarin/cosmos-sdk/x/stake"
 )
 
 const (
 	appName = "SimpleGovApp"
 )
 
-// Extended ABCI application
+// SimpleGovApp extends Basecoin ABCI application
 type SimpleGovApp struct {
 	*bam.BaseApp
 	cdc *wire.Codec
@@ -39,7 +39,7 @@ type SimpleGovApp struct {
 	// keepers
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	coinKeeper          bank.Keeper
-	stakeKeeper         simplestake.Keeper
+	stakeKeeper         stake.Keeper
 	simpleGovKeeper     simpleGov.Keeper
 
 	// Manage getting and setting accounts
@@ -71,11 +71,11 @@ func NewSimpleGovApp(logger log.Logger, db dbm.DB) *SimpleGovApp {
 
 	// Add handlers.
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
-	app.stakeKeeper = simplestake.NewKeeper(app.capKeyStakingStore, app.coinKeeper, app.RegisterCodespace(simplestake.DefaultCodespace))
+	app.stakeKeeper = stake.NewKeeper(app.capKeyStakingStore, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
 	app.simpleGovKeeper = simpleGov.NewKeeper(app.capKeySimpleGovStore, app.coinKeeper, app.stakeKeeper, app.RegisterCodespace(simpleGov.DefaultCodespace))
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
-		AddRoute("simplestake", simplestake.NewHandler(app.stakeKeeper)).
+		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
 		AddRoute("simpleGov", simpleGov.NewHandler(app.simpleGovKeeper))
 
 	// Initialize BaseApp.
@@ -88,7 +88,7 @@ func NewSimpleGovApp(logger log.Logger, db dbm.DB) *SimpleGovApp {
 	return app
 }
 
-// custom tx codec
+// MakeCodec creates a custom tx codec
 func MakeCodec() *wire.Codec {
 	var cdc = wire.NewCodec()
 	wire.RegisterCrypto(cdc) // Register crypto.
@@ -103,7 +103,7 @@ func MakeCodec() *wire.Codec {
 	return cdc
 }
 
-// Custom logic for state export
+// ExportAppStateJSON handles the custom logic for state export
 func (app *SimpleGovApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
 	ctx := app.NewContext(true, abci.Header{})
 
@@ -120,9 +120,7 @@ func (app *SimpleGovApp) ExportAppStateJSON() (appState json.RawMessage, err err
 	app.accountMapper.IterateAccounts(ctx, appendAccount)
 
 	genState := types.GenesisState{
-		Accounts:    accounts,
-		POWGenesis:  pow.WriteGenesis(ctx, app.powKeeper),
-		CoolGenesis: cool.WriteGenesis(ctx, app.coolKeeper),
+		Accounts: accounts,
 	}
 	return wire.MarshalJSONIndent(app.cdc, genState)
 }

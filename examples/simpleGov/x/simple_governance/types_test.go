@@ -13,15 +13,15 @@ func TestNewSubmitProposalMsg(t *testing.T) {
 	goodDescription := "Should we include Photons at launch?"
 	addr1 := sdk.Address([]byte{1, 2})
 	addr2 := sdk.Address([]byte{7, 8})
-	someCoins := sdk.Coins{{"atom", 123}}
-	multiCoins := sdk.Coins{{"atom", 123}, {"eth", 20}}
+	someCoins := sdk.Coins{{"atom", sdk.NewInt(int64(123))}}
+	multiCoins := sdk.Coins{{"atom", sdk.NewInt(int64(123))}, {"eth", sdk.NewInt(int64(20))}}
 
 	emptyAddr := sdk.Address{}
 	emptyCoins := sdk.Coins{}
-	emptyCoins2 := sdk.Coins{sdk.Coin{"eth", 0}}
-	someEmptyCoins := sdk.Coins{{"eth", 10}, {"atom", 0}}
-	minusCoins := sdk.Coins{{"eth", -34}}
-	someMinusCoins := sdk.Coins{{"atom", 20}, {"eth", -34}}
+	emptyCoins2 := sdk.Coins{sdk.Coin{"eth", sdk.NewInt(int64(0))}}
+	someEmptyCoins := sdk.Coins{{"eth", sdk.NewInt(int64(10))}, {"atom", sdk.NewInt(int64(0))}}
+	minusCoins := sdk.Coins{{"eth", sdk.NewInt(int64(-34))}}
+	someMinusCoins := sdk.Coins{{"atom", sdk.NewInt(int64(20))}, {"eth", sdk.NewInt(int64(-34))}}
 
 	cases := []struct {
 		valid bool
@@ -115,7 +115,7 @@ func TestUpdateTally(t *testing.T) {
 	goodTitle := "Photons at launch"
 	goodDescription := "Should we include Photons at launch?"
 	addr1 := sdk.Address([]byte{1, 2})
-	someCoins := sdk.Coins{{"atom", 123}}
+	someCoins := sdk.Coins{{"atom", sdk.NewInt(int64(123))}}
 	var votingWindow1 int64 = 15
 
 	proposal := NewProposal(goodTitle, goodDescription, addr1, 10, someCoins)

@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simpleGovernance"
+	"github.com/gamarin/cosmos-sdk/examples/simpleGov/x/simpleGovernance"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"

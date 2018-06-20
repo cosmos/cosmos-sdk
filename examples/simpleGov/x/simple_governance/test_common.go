@@ -12,13 +12,13 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/cosmos/cosmos-sdk/examples/simpleGov/app"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	// "github.com/gamarin/cosmos-sdk/examples/simpleGov/app"
 )
 
 // dummy addresses used for testing
@@ -73,9 +73,9 @@ var (
 	}
 
 	coinsHandlerTest = []sdk.Coins{
-		sdk.Coins{{"Atom", 101}, {"eth", 20}}, // ok
-		sdk.Coins{{"eth", 10}, {"Atom", 0}},   // empty coins
-		sdk.Coins{{"BTC", 15}, {"Atom", 50}},  // balance below deposit
+		sdk.Coins{{"Atom", sdk.NewInt(int64(101))}, {"eth", sdk.NewInt(int64(20))}}, // ok
+		sdk.Coins{{"eth", sdk.NewInt(int64(10))}, {"Atom", sdk.NewInt(int64(0))}},   // empty coins
+		sdk.Coins{{"BTC", sdk.NewInt(int64(15))}, {"Atom", sdk.NewInt(int64(50))}},  // balance below deposit
 	}
 
 	options = []string{
@@ -96,16 +96,16 @@ var (
 // 	return t, exp.equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
 // }
 
-func loggerAndDB() (log.Logger, db.DB) {
+func loggerAndDB() (log.Logger, dbm.DB) {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
-	dB := db.NewMemDB()
+	dB := dbm.NewMemDB()
 	return logger, dB
 }
 
-func newSimpleGovApp() *app.SimpleGovApp {
-	logger, dB := loggerAndDB()
-	return app.NewSimpleGovApp(logger, dB)
-}
+// func newSimpleGovApp() *app.SimpleGovApp {
+// 	logger, dB := loggerAndDB()
+// 	return app.NewSimpleGovApp(logger, dB)
+// }
 
 func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.Address) {
 	key := crypto.GenPrivKeyEd25519()
@@ -116,10 +116,10 @@ func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.Address) {
 
 func initialPool() stake.Pool {
 	return stake.Pool{
-		LooseUnbondedTokens:     0,
-		BondedTokens:            0,
-		UnbondingTokens:         0,
-		UnbondedTokens:          0,
+		LooseUnbondedTokens:     sdk.NewInt(int64(0)),
+		BondedTokens:            sdk.NewInt(int64(0)),
+		UnbondingTokens:         sdk.NewInt(int64(0)),
+		UnbondedTokens:          sdk.NewInt(int64(0)),
 		BondedShares:            sdk.ZeroRat(),
 		UnbondingShares:         sdk.ZeroRat(),
 		UnbondedShares:          sdk.ZeroRat(),
@@ -137,7 +137,7 @@ func defaultParams() stake.Params {
 		InflationMin:        sdk.NewRat(7, 100),
 		GoalBonded:          sdk.NewRat(67, 100),
 		MaxValidators:       100,
-		BondDenom:           "steak",
+		BondDenom:           "Atom",
 	}
 }
 
@@ -193,7 +193,7 @@ func createTestInput(t *testing.T, initCoins int64) (sdk.Context, auth.AccountMa
 	// fill all the addresses with some coins
 	for _, addr := range addrs {
 		ck.AddCoins(ctx, addr, sdk.Coins{
-			{"Atom", initCoins},
+			{"Atom", sdk.NewInt(initCoins)},
 		})
 	}
 

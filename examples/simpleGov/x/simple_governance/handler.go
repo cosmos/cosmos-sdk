@@ -5,13 +5,14 @@ import (
 	"reflect"
 
 	abci "github.com/tendermint/abci/types"
-	// stake "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simplestake"
+	// stake "github.com/gamarin/cosmos-sdk/examples/simpleGov/x/simplestake"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 // Minimum proposal deposit
-const minDeposit = 100
+var minDeposit = sdk.NewInt(int64(100))
+
 const votingPeriod = 1209600
 
 func int64ToBytes(i int64) []byte {
@@ -88,7 +89,8 @@ func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg SubmitProposalMsg) s
 		return err.Result()
 	}
 
-	if msg.Deposit.AmountOf("Atom") >= minDeposit {
+	if msg.Deposit.AmountOf("Atom").GT(minDeposit) ||
+		msg.Deposit.AmountOf("Atom").Equal(minDeposit) {
 		proposal := NewProposal(
 			msg.Title,
 			msg.Description,

@@ -268,13 +268,13 @@ ls /proc/(pidof gaiad)/fd/ | wc -l
 # edit limits config file
 sudo vi /etc/security/limits.conf
 
-# add this line to increase your user's max open files to 2048
-pz        soft nofile 2048
+# add this line to increase your <username>'s max open files to 2048
+<username>        soft nofile 2048
 
 # reboot to apply this new open file limit
 reboot
 
-# check the limit again, it should be 2048
+# check the new per-proces open file limit (it should be 2048)
 ulimit -Sn
 ```
 

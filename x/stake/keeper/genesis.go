@@ -8,7 +8,7 @@ import (
 )
 
 // InitGenesis - store genesis parameters
-func (k PrivilegedKeeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
+func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	store := ctx.KVStore(k.storeKey)
 	k.SetPool(ctx, data.Pool)
 	k.SetNewParams(ctx, data.Params)
@@ -31,7 +31,7 @@ func (k PrivilegedKeeper) InitGenesis(ctx sdk.Context, data types.GenesisState) 
 }
 
 // WriteGenesis - output genesis parameters
-func (k PrivilegedKeeper) WriteGenesis(ctx sdk.Context) types.GenesisState {
+func (k Keeper) WriteGenesis(ctx sdk.Context) types.GenesisState {
 	pool := k.GetPool(ctx)
 	params := k.GetParams(ctx)
 	validators := k.GetAllValidators(ctx)

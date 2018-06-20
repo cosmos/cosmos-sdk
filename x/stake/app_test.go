@@ -30,13 +30,13 @@ var (
 )
 
 // initialize the mock application for this module
-func getMockApp(t *testing.T) (*mock.App, PrivilegedKeeper) {
+func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	mapp := mock.NewApp()
 
 	RegisterWire(mapp.Cdc)
 	keyStake := sdk.NewKVStoreKey("stake")
 	coinKeeper := bank.NewKeeper(mapp.AccountMapper)
-	keeper := NewPrivilegedKeeper(mapp.Cdc, keyStake, coinKeeper, mapp.RegisterCodespace(DefaultCodespace))
+	keeper := NewKeeper(mapp.Cdc, keyStake, coinKeeper, mapp.RegisterCodespace(DefaultCodespace))
 	mapp.Router().AddRoute("stake", NewHandler(keeper))
 
 	mapp.SetEndBlocker(getEndBlocker(keeper))
@@ -47,7 +47,7 @@ func getMockApp(t *testing.T) (*mock.App, PrivilegedKeeper) {
 }
 
 // stake endblocker
-func getEndBlocker(keeper PrivilegedKeeper) sdk.EndBlocker {
+func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 		validatorUpdates := EndBlocker(ctx, keeper)
 		return abci.ResponseEndBlock{
@@ -57,7 +57,7 @@ func getEndBlocker(keeper PrivilegedKeeper) sdk.EndBlocker {
 }
 
 // overwrite the mock init chainer
-func getInitChainer(mapp *mock.App, keeper PrivilegedKeeper) sdk.InitChainer {
+func getInitChainer(mapp *mock.App, keeper Keeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 		keeper.InitGenesis(ctx, DefaultGenesisState())
@@ -68,7 +68,7 @@ func getInitChainer(mapp *mock.App, keeper PrivilegedKeeper) sdk.InitChainer {
 
 //__________________________________________________________________________________________
 
-func checkValidator(t *testing.T, mapp *mock.App, keeper PrivilegedKeeper,
+func checkValidator(t *testing.T, mapp *mock.App, keeper Keeper,
 	addr sdk.Address, expFound bool) Validator {
 
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
@@ -77,7 +77,7 @@ func checkValidator(t *testing.T, mapp *mock.App, keeper PrivilegedKeeper,
 	return validator
 }
 
-func checkDelegation(t *testing.T, mapp *mock.App, keeper PrivilegedKeeper, delegatorAddr,
+func checkDelegation(t *testing.T, mapp *mock.App, keeper Keeper, delegatorAddr,
 	validatorAddr sdk.Address, expFound bool, expShares sdk.Rat) {
 
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})

@@ -47,7 +47,7 @@ type GaiaApp struct {
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	coinKeeper          bank.Keeper
 	ibcMapper           ibc.Mapper
-	stakeKeeper         stake.PrivilegedKeeper
+	stakeKeeper         stake.Keeper
 	slashingKeeper      slashing.Keeper
 }
 
@@ -75,7 +75,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 	// add handlers
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
-	app.stakeKeeper = stake.NewPrivilegedKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
+	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.RegisterCodespace(slashing.DefaultCodespace))
 
 	// register message routes

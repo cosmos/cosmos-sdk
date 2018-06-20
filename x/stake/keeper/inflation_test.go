@@ -290,7 +290,7 @@ func checkFinalPoolValues(t *testing.T, pool types.Pool, initialTotalTokens, cum
 
 // Processes provisions are added to the pool correctly every hour
 // Returns expected Provisions, expected Inflation, and pool, to help with cumulative calculations back in main Tests
-func updateProvisions(t *testing.T, keeper PrivilegedKeeper, pool types.Pool, ctx sdk.Context, hr int) (sdk.Rat, int64, types.Pool) {
+func updateProvisions(t *testing.T, keeper Keeper, pool types.Pool, ctx sdk.Context, hr int) (sdk.Rat, int64, types.Pool) {
 	expInflation := keeper.NextInflation(ctx)
 	expProvisions := (expInflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat)).Evaluate()
 	startTotalSupply := pool.TokenSupply()
@@ -306,8 +306,8 @@ func updateProvisions(t *testing.T, keeper PrivilegedKeeper, pool types.Pool, ct
 // Deterministic setup of validators and pool
 // Allows you to decide how many validators to setup
 // Allows you to pick which validators are bonded by adjusting the MaxValidators of params
-func setupTestValidators(pool types.Pool, keeper PrivilegedKeeper, ctx sdk.Context, validatorTokens []int64,
-	maxValidators uint16) ([]types.Validator, PrivilegedKeeper, types.Pool) {
+func setupTestValidators(pool types.Pool, keeper Keeper, ctx sdk.Context, validatorTokens []int64,
+	maxValidators uint16) ([]types.Validator, Keeper, types.Pool) {
 
 	params := types.DefaultParams()
 	params.MaxValidators = maxValidators

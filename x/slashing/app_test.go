@@ -22,14 +22,14 @@ var (
 )
 
 // initialize the mock application for this module
-func getMockApp(t *testing.T) (*mock.App, stake.PrivilegedKeeper, Keeper) {
+func getMockApp(t *testing.T) (*mock.App, stake.Keeper, Keeper) {
 	mapp := mock.NewApp()
 
 	RegisterWire(mapp.Cdc)
 	keyStake := sdk.NewKVStoreKey("stake")
 	keySlashing := sdk.NewKVStoreKey("slashing")
 	coinKeeper := bank.NewKeeper(mapp.AccountMapper)
-	stakeKeeper := stake.NewPrivilegedKeeper(mapp.Cdc, keyStake, coinKeeper, mapp.RegisterCodespace(stake.DefaultCodespace))
+	stakeKeeper := stake.NewKeeper(mapp.Cdc, keyStake, coinKeeper, mapp.RegisterCodespace(stake.DefaultCodespace))
 	keeper := NewKeeper(mapp.Cdc, keySlashing, stakeKeeper, mapp.RegisterCodespace(DefaultCodespace))
 	mapp.Router().AddRoute("stake", stake.NewHandler(stakeKeeper))
 	mapp.Router().AddRoute("slashing", NewHandler(keeper))
@@ -42,7 +42,7 @@ func getMockApp(t *testing.T) (*mock.App, stake.PrivilegedKeeper, Keeper) {
 }
 
 // stake endblocker
-func getEndBlocker(keeper stake.PrivilegedKeeper) sdk.EndBlocker {
+func getEndBlocker(keeper stake.Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 		validatorUpdates := stake.EndBlocker(ctx, keeper)
 		return abci.ResponseEndBlock{
@@ -52,7 +52,7 @@ func getEndBlocker(keeper stake.PrivilegedKeeper) sdk.EndBlocker {
 }
 
 // overwrite the mock init chainer
-func getInitChainer(mapp *mock.App, keeper stake.PrivilegedKeeper) sdk.InitChainer {
+func getInitChainer(mapp *mock.App, keeper stake.Keeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 		keeper.InitGenesis(ctx, stake.DefaultGenesisState())
@@ -60,7 +60,7 @@ func getInitChainer(mapp *mock.App, keeper stake.PrivilegedKeeper) sdk.InitChain
 	}
 }
 
-func checkValidator(t *testing.T, mapp *mock.App, keeper stake.PrivilegedKeeper,
+func checkValidator(t *testing.T, mapp *mock.App, keeper stake.Keeper,
 	addr sdk.Address, expFound bool) stake.Validator {
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	validator, found := keeper.GetValidator(ctxCheck, addr1)

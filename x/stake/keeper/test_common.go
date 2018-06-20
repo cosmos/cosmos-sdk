@@ -86,7 +86,7 @@ func ParamsNoInflation() types.Params {
 }
 
 // hogpodge of all sorts of input required for testing
-func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountMapper, PrivilegedKeeper) {
+func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountMapper, Keeper) {
 
 	keyStake := sdk.NewKVStoreKey("stake")
 	keyAcc := sdk.NewKVStoreKey("acc")
@@ -106,7 +106,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 		&auth.BaseAccount{}, // prototype
 	)
 	ck := bank.NewKeeper(accountMapper)
-	keeper := NewPrivilegedKeeper(cdc, keyStake, ck, types.DefaultCodespace)
+	keeper := NewKeeper(cdc, keyStake, ck, types.DefaultCodespace)
 	keeper.SetPool(ctx, types.InitialPool())
 	keeper.SetNewParams(ctx, types.DefaultParams())
 
@@ -193,7 +193,7 @@ func createTestPubKeys(numPubKeys int) []crypto.PubKey {
 //_____________________________________________________________________________________
 
 // does a certain by-power index record exist
-func ValidatorByPowerIndexExists(ctx sdk.Context, keeper PrivilegedKeeper, power []byte) bool {
+func ValidatorByPowerIndexExists(ctx sdk.Context, keeper Keeper, power []byte) bool {
 	store := ctx.KVStore(keeper.storeKey)
 	return store.Get(power) != nil
 }

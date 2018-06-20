@@ -33,7 +33,7 @@ func (k Keeper) GetValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) (val
 }
 
 // set the main record holding validator details
-func (k PrivilegedKeeper) SetValidator(ctx sdk.Context, validator types.Validator) {
+func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	// set main store
 	bz := k.cdc.MustMarshalBinary(validator)
@@ -41,14 +41,14 @@ func (k PrivilegedKeeper) SetValidator(ctx sdk.Context, validator types.Validato
 }
 
 // validator index
-func (k PrivilegedKeeper) SetValidatorByPubKeyIndex(ctx sdk.Context, validator types.Validator) {
+func (k Keeper) SetValidatorByPubKeyIndex(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	// set pointer by pubkey
 	store.Set(GetValidatorByPubKeyIndexKey(validator.PubKey), validator.Owner)
 }
 
 // validator index
-func (k PrivilegedKeeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Validator, pool types.Pool) {
+func (k Keeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Validator, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(GetValidatorsByPowerIndexKey(validator, pool), validator.Owner)
 }
@@ -60,7 +60,7 @@ func (k Keeper) validatorByPowerIndexExists(ctx sdk.Context, power []byte) bool 
 }
 
 // Get the set of all validators with no limits, used during genesis dump
-func (k PrivilegedKeeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator) {
+func (k Keeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
 
@@ -176,7 +176,7 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.Validator)
 }
 
 // remove all validator update entries after applied to Tendermint
-func (k PrivilegedKeeper) ClearTendermintUpdates(ctx sdk.Context) {
+func (k Keeper) ClearTendermintUpdates(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 
 	// delete subspace
@@ -192,7 +192,7 @@ func (k PrivilegedKeeper) ClearTendermintUpdates(ctx sdk.Context) {
 // perfom all the nessisary steps for when a validator changes its power
 // updates all validator stores as well as tendermint update store
 // may kick out validators if new validator is entering the bonded validator group
-func (k PrivilegedKeeper) UpdateValidator(ctx sdk.Context, validator types.Validator) types.Validator {
+func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
 	ownerAddr := validator.Owner
@@ -276,7 +276,7 @@ func (k PrivilegedKeeper) UpdateValidator(ctx sdk.Context, validator types.Valid
 // GetValidators.
 //
 // Optionally also return the validator from a retrieve address if the validator has been bonded
-func (k PrivilegedKeeper) UpdateBondedValidators(ctx sdk.Context,
+func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 	newValidator types.Validator) (updatedVal types.Validator) {
 
 	store := ctx.KVStore(k.storeKey)
@@ -348,7 +348,7 @@ func (k PrivilegedKeeper) UpdateBondedValidators(ctx sdk.Context,
 }
 
 // full update of the bonded validator set, many can be added/kicked
-func (k PrivilegedKeeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
+func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 
 	store := ctx.KVStore(k.storeKey)
 
@@ -420,7 +420,7 @@ func (k PrivilegedKeeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 }
 
 // perform all the store operations for when a validator status becomes unbonded
-func (k PrivilegedKeeper) unbondValidator(ctx sdk.Context, validator types.Validator) types.Validator {
+func (k Keeper) unbondValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
@@ -448,7 +448,7 @@ func (k PrivilegedKeeper) unbondValidator(ctx sdk.Context, validator types.Valid
 }
 
 // perform all the store operations for when a validator status becomes bonded
-func (k PrivilegedKeeper) bondValidator(ctx sdk.Context, validator types.Validator) types.Validator {
+func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
@@ -475,7 +475,7 @@ func (k PrivilegedKeeper) bondValidator(ctx sdk.Context, validator types.Validat
 }
 
 // remove the validator record and associated indexes
-func (k PrivilegedKeeper) RemoveValidator(ctx sdk.Context, address sdk.Address) {
+func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.Address) {
 
 	// first retreive the old validator record
 	validator, found := k.GetValidator(ctx, address)
@@ -516,7 +516,7 @@ func (k Keeper) getCliffValidatorPower(ctx sdk.Context) []byte {
 }
 
 // set the current validator and power of the validator on the cliff
-func (k PrivilegedKeeper) setCliffValidator(ctx sdk.Context, validator types.Validator, pool types.Pool) {
+func (k Keeper) setCliffValidator(ctx sdk.Context, validator types.Validator, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := GetValidatorsByPowerIndexKey(validator, pool)
 	store.Set(ValidatorPowerCliffKey, bz)
@@ -524,7 +524,7 @@ func (k PrivilegedKeeper) setCliffValidator(ctx sdk.Context, validator types.Val
 }
 
 // clear the current validator and power of the validator on the cliff
-func (k PrivilegedKeeper) clearCliffValidator(ctx sdk.Context) {
+func (k Keeper) clearCliffValidator(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(ValidatorPowerCliffKey)
 	store.Delete(ValidatorCliffIndexKey)

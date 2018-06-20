@@ -8,7 +8,7 @@ import (
 )
 
 // slash a validator
-func (k PrivilegedKeeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, fraction sdk.Rat) {
+func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, fraction sdk.Rat) {
 
 	// TODO height ignored for now, see https://github.com/cosmos/cosmos-sdk/pull/1011#issuecomment-390253957
 	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
@@ -27,7 +27,7 @@ func (k PrivilegedKeeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height in
 }
 
 // revoke a validator
-func (k PrivilegedKeeper) Revoke(ctx sdk.Context, pubkey crypto.PubKey) {
+func (k Keeper) Revoke(ctx sdk.Context, pubkey crypto.PubKey) {
 
 	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
@@ -42,7 +42,7 @@ func (k PrivilegedKeeper) Revoke(ctx sdk.Context, pubkey crypto.PubKey) {
 }
 
 // unrevoke a validator
-func (k PrivilegedKeeper) Unrevoke(ctx sdk.Context, pubkey crypto.PubKey) {
+func (k Keeper) Unrevoke(ctx sdk.Context, pubkey crypto.PubKey) {
 
 	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {

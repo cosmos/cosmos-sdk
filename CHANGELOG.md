@@ -10,6 +10,7 @@ BREAKING CHANGES
 FIXES
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer
 * Retry on HTTP request failure in CLI tests, add option to retry tests in Makefile
+* Fixed bug where chain ID wasn't passed properly in x/bank REST handler
 
 ## 0.19.0
 

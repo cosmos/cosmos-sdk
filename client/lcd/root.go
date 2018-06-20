@@ -22,9 +22,7 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	ibc "github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
 	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
-	"github.com/cosmos/cosmos-sdk/lcd"
-	"github.com/cosmos/cosmos-sdk/lcd/files"
-	certclient "github.com/cosmos/cosmos-sdk/lcd/client"
+	"github.com/cosmos/cosmos-sdk/lcd/proxy"
 )
 
 // ServeCommand will generate a long-running rest server
@@ -76,17 +74,7 @@ func createHandler(cdc *wire.Codec) http.Handler {
 	nodeAddr := viper.GetString(client.FlagNode)
 	chainID := viper.GetString(client.FlagChainID)
 
-	trust := lcd.NewCacheProvider(
-		lcd.NewMemStoreProvider(),
-		files.NewProvider(rootDir),
-	)
-	source := certclient.NewHTTPProvider(nodeAddr)
-	// TODO this is just for proto type.
-	fc,err := source.GetByHeight(1)
-	if err != nil {
-		panic(err)
-	}
-	cert,err := lcd.NewInquiringCertifier(chainID, fc, trust, source)
+	cert,err := proxy.GetCertifier(chainID, rootDir, nodeAddr)
 	if err != nil {
 		panic(err)
 	}

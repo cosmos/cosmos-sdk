@@ -13,15 +13,9 @@ func GetCertifier(chainID, rootDir, nodeAddr string) (*lcd.InquiringCertifier, e
 	)
 
 	source := certclient.NewHTTPProvider(nodeAddr)
+	//TODO this is just for proto type, here we should load the latest checkpoint. In the first run time, we should trust the validator set in genesis block
+	fc, err := source.GetByHeight(1)
 
-	// XXX: total insecure hack to avoid `init`
-	fc, err := source.LatestCommit()
-	/* XXX
-	// this gets the most recent verified commit
-	fc, err := trust.LatestCommit()
-	if certerr.IsCommitNotFoundErr(err) {
-		return nil, errors.New("Please run init first to establish a root of trust")
-	}*/
 	if err != nil {
 		return nil, err
 	}

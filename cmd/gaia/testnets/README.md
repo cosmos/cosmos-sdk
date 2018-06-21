@@ -221,7 +221,7 @@ gaiacli stake create-validator \
   --name=<key_name>
 ```
 
-You can edit your validator's public description. This information will be used by delegators to decide which validators to stake to. Make sure to provide input for every flag below, otherwise the field will default to empty (`--moniker` defaults to the machine name).
+You can edit your validator's public description. This information will be used by delegators to decide which validators to stake to. Make sure to provide input for every flag below, otherwise the field will default to empty (`--moniker` defaults to the machine name). A `keybase-sig` is a 16 digit string that is generated with a [keybase.io](https://keybase.io) account. It's a good way of verifying your identity across multiple online networks.
 
 ```bash
 gaiacli stake edit-validator

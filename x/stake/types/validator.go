@@ -208,7 +208,7 @@ func (v Validator) RemovePoolShares(pool Pool, poolShares sdk.Rat) (Validator, P
 	return v, pool, tokens
 }
 
-// XXX TEST
+// TODO remove should only be tokens
 // get the power or potential power for a validator
 // if bonded, the power is the BondedShares
 // if not bonded, the power is the amount of bonded shares which the
@@ -219,7 +219,6 @@ func (v Validator) EquivalentBondedShares(pool Pool) (eqBondedShares sdk.Rat) {
 
 //_________________________________________________________________________________________________________
 
-// XXX Audit this function further to make sure it's correct
 // add tokens to a validator
 func (v Validator) AddTokensFromDel(pool Pool,
 	amount int64) (validator2 Validator, p2 Pool, issuedDelegatorShares sdk.Rat) {

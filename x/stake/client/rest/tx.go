@@ -29,22 +29,40 @@ type msgDelegationsInput struct {
 	ValidatorAddr string   `json:"validator_addr"` // in bech32
 	Bond          sdk.Coin `json:"bond"`
 }
+type msgBeginRedelegateInput struct {
+	DelegatorAddr    string  `json:"delegator_addr"`     // in bech32
+	ValidatorSrcAddr string  `json:"validator_src_addr"` // in bech32
+	ValidatorDstAddr string  `json:"validator_dst_addr"` // in bech32
+	SharesAmount     sdk.Rat `json:"shares"`
+}
+type msgCompleteRedelegateInput struct {
+	DelegatorAddr    string `json:"delegator_addr"`     // in bech32
+	ValidatorSrcAddr string `json:"validator_src_addr"` // in bech32
+	ValidatorDstAddr string `json:"validator_dst_addr"` // in bech32
+}
 type msgBeginUnbondingInput struct {
 	DelegatorAddr string  `json:"delegator_addr"` // in bech32
 	ValidatorAddr string  `json:"validator_addr"` // in bech32
 	SharesAmount  sdk.Rat `json:"shares"`
 }
+type msgCompleteUnbondingInput struct {
+	DelegatorAddr string `json:"delegator_addr"` // in bech32
+	ValidatorAddr string `json:"validator_addr"` // in bech32
+}
 
 // request body for edit delegations
 type EditDelegationsBody struct {
-	LocalAccountName string                   `json:"name"`
-	Password         string                   `json:"password"`
-	ChainID          string                   `json:"chain_id"`
-	AccountNumber    int64                    `json:"account_number"`
-	Sequence         int64                    `json:"sequence"`
-	Gas              int64                    `json:"gas"`
-	Delegations      []msgDelegationsInput    `json:"delegations"`
-	BeginUnbondings  []msgBeginUnbondingInput `json:"begin_unbondings"`
+	LocalAccountName    string                       `json:"name"`
+	Password            string                       `json:"password"`
+	ChainID             string                       `json:"chain_id"`
+	AccountNumber       int64                        `json:"account_number"`
+	Sequence            int64                        `json:"sequence"`
+	Gas                 int64                        `json:"gas"`
+	Delegations         []msgDelegationsInput        `json:"delegations"`
+	BeginUnbondings     []msgBeginUnbondingInput     `json:"begin_unbondings"`
+	CompleteUnbondings  []msgCompleteUnbondingInput  `json:"complete_unbondings"`
+	BeginRedelegates    []msgBeginRedelegateInput    `json:"begin_redelegatess"`
+	CompleteRedelegates []msgCompleteRedelegateInput `json:"complete_redelegates"`
 }
 
 func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
@@ -71,7 +89,12 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 		}
 
 		// build messages
-		messages := make([]sdk.Msg, len(m.Delegations)+len(m.BeginUnbondings))
+		messages := make([]sdk.Msg, len(m.Delegations)+
+			len(m.BeginRedelegates)+
+			len(m.CompleteRedelegates)+
+			len(m.BeginUnbondings)+
+			len(m.CompleteUnbondings))
+
 		i := 0
 		for _, msg := range m.Delegations {
 			delegatorAddr, err := sdk.GetAccAddressBech32(msg.DelegatorAddr)
@@ -98,6 +121,72 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 			}
 			i++
 		}
+
+		for _, msg := range m.BeginRedelegates {
+			delegatorAddr, err := sdk.GetAccAddressBech32(msg.DelegatorAddr)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error())))
+				return
+			}
+			validatorSrcAddr, err := sdk.GetValAddressBech32(msg.ValidatorSrcAddr)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
+				return
+			}
+			validatorDstAddr, err := sdk.GetValAddressBech32(msg.ValidatorDstAddr)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
+				return
+			}
+			if !bytes.Equal(info.Address(), delegatorAddr) {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte("Must use own delegator address"))
+				return
+			}
+			messages[i] = stake.MsgBeginRedelegate{
+				DelegatorAddr:    delegatorAddr,
+				ValidatorSrcAddr: validatorSrcAddr,
+				ValidatorDstAddr: validatorDstAddr,
+				SharesAmount:     msg.SharesAmount,
+			}
+			i++
+		}
+
+		for _, msg := range m.CompleteRedelegates {
+			delegatorAddr, err := sdk.GetAccAddressBech32(msg.DelegatorAddr)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error())))
+				return
+			}
+			validatorSrcAddr, err := sdk.GetValAddressBech32(msg.ValidatorSrcAddr)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
+				return
+			}
+			validatorDstAddr, err := sdk.GetValAddressBech32(msg.ValidatorDstAddr)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
+				return
+			}
+			if !bytes.Equal(info.Address(), delegatorAddr) {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte("Must use own delegator address"))
+				return
+			}
+			messages[i] = stake.MsgCompleteRedelegate{
+				DelegatorAddr:    delegatorAddr,
+				ValidatorSrcAddr: validatorSrcAddr,
+				ValidatorDstAddr: validatorDstAddr,
+			}
+			i++
+		}
+
 		for _, msg := range m.BeginUnbondings {
 			delegatorAddr, err := sdk.GetAccAddressBech32(msg.DelegatorAddr)
 			if err != nil {
@@ -120,6 +209,31 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 				DelegatorAddr: delegatorAddr,
 				ValidatorAddr: validatorAddr,
 				SharesAmount:  msg.SharesAmount,
+			}
+			i++
+		}
+
+		for _, msg := range m.CompleteUnbondings {
+			delegatorAddr, err := sdk.GetAccAddressBech32(msg.DelegatorAddr)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error())))
+				return
+			}
+			validatorAddr, err := sdk.GetValAddressBech32(msg.ValidatorAddr)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
+				return
+			}
+			if !bytes.Equal(info.Address(), delegatorAddr) {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte("Must use own delegator address"))
+				return
+			}
+			messages[i] = stake.MsgCompleteUnbonding{
+				DelegatorAddr: delegatorAddr,
+				ValidatorAddr: validatorAddr,
 			}
 			i++
 		}

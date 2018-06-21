@@ -441,8 +441,7 @@ func TestUnbondingPeriod(t *testing.T) {
 
 	// set the unbonding time
 	params := keeper.GetParams(ctx)
-	params.UnbondingTime = 0
-	params.MinUnbondingBlocks = 0
+	params.UnbondingTime = 7
 	keeper.SetParams(ctx, params)
 
 	// create the validator
@@ -450,11 +449,28 @@ func TestUnbondingPeriod(t *testing.T) {
 	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
 
-	// test that the delegator can still withdraw their bonds
-	msgBeginUnbondingDelegator := NewMsgBeginUnbonding(delegatorAddr, validatorAddr, sdk.NewRat(10))
-	msgCompleteUnbondingDelegator := NewMsgCompleteUnbonding(delegatorAddr, validatorAddr)
-	got = handleMsgBeginUnbonding(ctx, msgBeginUnbondingDelegator, keeper)
+	// begin unbonding
+	msgBeginUnbonding := NewMsgBeginUnbonding(validatorAddr, validatorAddr, sdk.NewRat(10))
+	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 	require.True(t, got.IsOK(), "expected no error")
-	got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbondingDelegator, keeper)
+
+	// cannot complete unbonding at same time
+	msgCompleteUnbonding := NewMsgCompleteUnbonding(validatorAddr, validatorAddr)
+	got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbonding, keeper)
+	require.True(t, !got.IsOK(), "expected no error")
+
+	// cannot complete unbonding at time 6 seconds later
+	origHeader := ctx.BlockHeader()
+	headerTime6 := origHeader
+	headerTime6.Time += 6
+	ctx = ctx.WithBlockHeader(headerTime6)
+	got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbonding, keeper)
+	require.True(t, !got.IsOK(), "expected no error")
+
+	// can complete unbonding at time 7 seconds later
+	headerTime7 := origHeader
+	headerTime7.Time += 7
+	ctx = ctx.WithBlockHeader(headerTime7)
+	got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbonding, keeper)
 	require.True(t, got.IsOK(), "expected no error")
 }

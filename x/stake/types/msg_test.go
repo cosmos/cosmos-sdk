@@ -4,18 +4,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	crypto "github.com/tendermint/go-crypto"
 )
 
 var (
-	coinPos          = sdk.Coin{"steak", sdk.NewInt(1000)}
-	coinZero         = sdk.Coin{"steak", sdk.NewInt(0)}
-	coinNeg          = sdk.Coin{"steak", sdk.NewInt(-10000)}
-	coinPosNotAtoms  = sdk.Coin{"foo", sdk.NewInt(10000)}
-	coinZeroNotAtoms = sdk.Coin{"foo", sdk.NewInt(0)}
-	coinNegNotAtoms  = sdk.Coin{"foo", sdk.NewInt(-10000)}
+	coinPos  = sdk.Coin{"steak", sdk.NewInt(1000)}
+	coinZero = sdk.Coin{"steak", sdk.NewInt(0)}
+	coinNeg  = sdk.Coin{"steak", sdk.NewInt(-10000)}
 )
 
 // test ValidateBasic for MsgCreateValidator
@@ -35,7 +33,6 @@ func TestMsgCreateValidator(t *testing.T) {
 		{"empty bond", "a", "b", "c", "d", addr1, pk1, coinZero, false},
 		{"negative bond", "a", "b", "c", "d", addr1, pk1, coinNeg, false},
 		{"negative bond", "a", "b", "c", "d", addr1, pk1, coinNeg, false},
-		{"wrong staking token", "a", "b", "c", "d", addr1, pk1, coinPosNotAtoms, false},
 	}
 
 	for _, tc := range tests {
@@ -88,7 +85,6 @@ func TestMsgDelegate(t *testing.T) {
 		{"empty validator", addr1, emptyAddr, coinPos, false},
 		{"empty bond", addr1, addr2, coinZero, false},
 		{"negative bond", addr1, addr2, coinNeg, false},
-		{"wrong staking token", addr1, addr2, coinPosNotAtoms, false},
 	}
 
 	for _, tc := range tests {
@@ -101,31 +97,26 @@ func TestMsgDelegate(t *testing.T) {
 	}
 }
 
-// XXX fix test
-/*
 // test ValidateBasic for MsgUnbond
-func TestMsgBeginUnbonding(t *testing.T) {
+func TestMsgBeginRedelegate(t *testing.T) {
 	tests := []struct {
-		name          string
-		delegatorAddr sdk.Address
-		validatorAddr sdk.Address
-		sharesAmount  sdk.Rat
-		sharesPercent sdk.Rat
-		expectPass    bool
+		name             string
+		delegatorAddr    sdk.Address
+		validatorSrcAddr sdk.Address
+		validatorDstAddr sdk.Address
+		sharesAmount     sdk.Rat
+		expectPass       bool
 	}{
-		{"100 percent unbond", addr1, addr2, sdk.ZeroRat(), sdk.OneRat(), true},
-		{"10 percent unbond", addr1, addr2, sdk.ZeroRat(), sdk.NewRat(1, 10), true},
-		{"-10 percent unbond", addr1, addr2, sdk.ZeroRat(), sdk.NewRat(-1, 10), false},
-		{"amount and percent unbond", addr1, addr2, sdk.OneRat(), sdk.OneRat(), false},
-		{"decimal unbond", addr1, addr2, sdk.NewRat(1, 10), sdk.ZeroRat(), true},
-		{"negative decimal unbond", addr1, addr2, sdk.NewRat(-1, 10), sdk.ZeroRat(), false},
-		{"zero unbond", addr1, addr2, sdk.ZeroRat(), sdk.ZeroRat(), false},
-		{"empty delegator", emptyAddr, addr1, sdk.NewRat(1, 10), sdk.ZeroRat(), false},
-		{"empty validator", addr1, emptyAddr, sdk.NewRat(1, 10), sdk.ZeroRat(), false},
+		{"regular", addr1, addr2, addr3, sdk.NewRat(1, 10), true},
+		{"negative decimal", addr1, addr2, addr3, sdk.NewRat(-1, 10), false},
+		{"zero amount", addr1, addr2, addr3, sdk.ZeroRat(), false},
+		{"empty delegator", emptyAddr, addr1, addr3, sdk.NewRat(1, 10), false},
+		{"empty source validator", addr1, emptyAddr, addr3, sdk.NewRat(1, 10), false},
+		{"empty destination validator", addr1, addr2, emptyAddr, sdk.NewRat(1, 10), false},
 	}
 
 	for _, tc := range tests {
-		msg := NewMsgBeginUnbonding(tc.delegatorAddr, tc.validatorAddr, tc.sharesAmount, tc.sharesPercent)
+		msg := NewMsgBeginRedelegate(tc.delegatorAddr, tc.validatorSrcAddr, tc.validatorDstAddr, tc.sharesAmount)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
@@ -133,7 +124,80 @@ func TestMsgBeginUnbonding(t *testing.T) {
 		}
 	}
 }
-*/
+
+// test ValidateBasic for MsgUnbond
+func TestMsgCompleteRedelegate(t *testing.T) {
+	tests := []struct {
+		name             string
+		delegatorAddr    sdk.Address
+		validatorSrcAddr sdk.Address
+		validatorDstAddr sdk.Address
+		expectPass       bool
+	}{
+		{"regular", addr1, addr2, addr3, true},
+		{"empty delegator", emptyAddr, addr1, addr3, false},
+		{"empty source validator", addr1, emptyAddr, addr3, false},
+		{"empty destination validator", addr1, addr2, emptyAddr, false},
+	}
+
+	for _, tc := range tests {
+		msg := NewMsgCompleteRedelegate(tc.delegatorAddr, tc.validatorSrcAddr, tc.validatorDstAddr)
+		if tc.expectPass {
+			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
+		} else {
+			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
+		}
+	}
+}
+
+// test ValidateBasic for MsgUnbond
+func TestMsgBeginUnbonding(t *testing.T) {
+	tests := []struct {
+		name          string
+		delegatorAddr sdk.Address
+		validatorAddr sdk.Address
+		sharesAmount  sdk.Rat
+		expectPass    bool
+	}{
+		{"regular", addr1, addr2, sdk.NewRat(1, 10), true},
+		{"negative decimal", addr1, addr2, sdk.NewRat(-1, 10), false},
+		{"zero amount", addr1, addr2, sdk.ZeroRat(), false},
+		{"empty delegator", emptyAddr, addr1, sdk.NewRat(1, 10), false},
+		{"empty validator", addr1, emptyAddr, sdk.NewRat(1, 10), false},
+	}
+
+	for _, tc := range tests {
+		msg := NewMsgBeginUnbonding(tc.delegatorAddr, tc.validatorAddr, tc.sharesAmount)
+		if tc.expectPass {
+			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
+		} else {
+			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
+		}
+	}
+}
+
+// test ValidateBasic for MsgUnbond
+func TestMsgCompleteUnbonding(t *testing.T) {
+	tests := []struct {
+		name          string
+		delegatorAddr sdk.Address
+		validatorAddr sdk.Address
+		expectPass    bool
+	}{
+		{"regular", addr1, addr2, true},
+		{"empty delegator", emptyAddr, addr1, false},
+		{"empty validator", addr1, emptyAddr, false},
+	}
+
+	for _, tc := range tests {
+		msg := NewMsgCompleteUnbonding(tc.delegatorAddr, tc.validatorAddr)
+		if tc.expectPass {
+			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
+		} else {
+			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
+		}
+	}
+}
 
 // TODO introduce with go-amino
 //func TestSerializeMsg(t *testing.T) {

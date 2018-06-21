@@ -40,7 +40,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 	pool := k.GetPool(ctx)
 
 	// Process types.Validator Provisions
-	blockTime := ctx.BlockHeader().Time // XXX assuming in seconds, confirm
+	blockTime := ctx.BlockHeader().Time
 	if pool.InflationLastTime+blockTime >= 3600 {
 		pool.InflationLastTime = blockTime
 		pool = k.ProcessProvisions(ctx)

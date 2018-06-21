@@ -153,13 +153,9 @@ func TestStakeMsgs(t *testing.T) {
 	beginUnbondingMsg := NewMsgBeginUnbonding(addr2, addr1, sdk.NewRat(10))
 	mock.SignCheckDeliver(t, mapp.BaseApp, beginUnbondingMsg, []int64{1}, []int64{1}, true, priv2)
 
-	// not enough time has passed to complete the unbonding
-	completeUnbondingMsg := NewMsgCompleteUnbonding(addr2, addr1)
-	mock.SignCheckDeliver(t, mapp.BaseApp, completeUnbondingMsg, []int64{1}, []int64{2}, false, priv2)
-
-	// set a later context
-	mock.SignCheckDeliver(t, mapp.BaseApp, completeUnbondingMsg, []int64{1}, []int64{2}, false, priv2)
-
-	mock.CheckBalance(t, mapp, addr2, sdk.Coins{genCoin})
+	// delegation should exist anymore
 	checkDelegation(t, mapp, keeper, addr2, addr1, false, sdk.Rat{})
+
+	// balance should be the same because bonding not yet complete
+	mock.CheckBalance(t, mapp, addr2, sdk.Coins{genCoin.Minus(bondCoin)})
 }

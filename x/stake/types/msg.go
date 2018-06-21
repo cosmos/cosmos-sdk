@@ -8,12 +8,6 @@ import (
 // name to idetify transaction types
 const MsgType = "stake"
 
-// XXX remove: think it makes more sense belonging with the Params so we can
-// initialize at genesis - to allow for the same tests we should should make
-// the ValidateBasic() function a return from an initializable function
-// ValidateBasic(bondDenom string) function
-const StakingToken = "steak"
-
 //Verify interface at compile time
 var _, _, _ sdk.Msg = &MsgCreateValidator{}, &MsgEditValidator{}, &MsgDelegate{}
 var _, _ sdk.Msg = &MsgBeginUnbonding{}, &MsgCompleteUnbonding{}
@@ -67,9 +61,6 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return ErrNilValidatorAddr(DefaultCodespace)
-	}
-	if msg.SelfDelegation.Denom != StakingToken {
-		return ErrBadDenom(DefaultCodespace)
 	}
 	if !(msg.SelfDelegation.Amount.GT(sdk.ZeroInt())) {
 		return ErrBadDelegationAmount(DefaultCodespace)
@@ -177,9 +168,6 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if msg.Bond.Denom != StakingToken {
-		return ErrBadDenom(DefaultCodespace)
-	}
 	if !(msg.Bond.Amount.GT(sdk.ZeroInt())) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
@@ -243,7 +231,7 @@ func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorDstAddr == nil {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if !msg.SharesAmount.IsZero() && msg.SharesAmount.LTE(sdk.ZeroRat()) {
+	if msg.SharesAmount.LTE(sdk.ZeroRat()) {
 		return ErrBadSharesAmount(DefaultCodespace)
 	}
 	return nil
@@ -349,7 +337,7 @@ func (msg MsgBeginUnbonding) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if !msg.SharesAmount.IsZero() && msg.SharesAmount.LTE(sdk.ZeroRat()) {
+	if msg.SharesAmount.LTE(sdk.ZeroRat()) {
 		return ErrBadSharesAmount(DefaultCodespace)
 	}
 	return nil

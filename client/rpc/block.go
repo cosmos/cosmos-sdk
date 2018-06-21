@@ -7,9 +7,12 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
+	"github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 const (
@@ -31,6 +34,18 @@ func BlockCommand() *cobra.Command {
 	return cmd
 }
 
+type OutputBlock struct {
+	Header     *types.Header      `json:"header"`
+	Evidence   types.EvidenceData `json:"evidence"`
+	TXs        []sdk.Tx           `json:"txs"`
+	LastCommit *types.Commit      `json:"last_commit"`
+}
+
+type OutputResultBlock struct {
+	BlockMeta *types.BlockMeta `json:"block_meta"`
+	Block     OutputBlock      `json:"block"`
+}
+
 func getBlock(ctx context.CoreContext, height *int64) ([]byte, error) {
 	// get the node
 	node, err := ctx.GetNode()
@@ -47,9 +62,29 @@ func getBlock(ctx context.CoreContext, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
+	txs := make([]sdk.Tx, len(res.Block.Data.Txs))
+	for i, txBytes := range res.Block.Data.Txs {
+		var tx auth.StdTx
+		err := cdc.UnmarshalBinary(txBytes, &tx)
+		if err != nil {
+			return nil, err
+		}
+		txs[i] = tx
+	}
+
+	outputResultBlock := OutputResultBlock{
+		BlockMeta: res.BlockMeta,
+		Block: OutputBlock{
+			Header:     res.Block.Header,
+			Evidence:   res.Block.Evidence,
+			TXs:        txs,
+			LastCommit: res.Block.LastCommit,
+		},
+	}
+
 	// TODO move maarshalling into cmd/rest functions
 	// output, err := tmwire.MarshalJSON(res)
-	output, err := cdc.MarshalJSON(res)
+	output, err := cdc.MarshalJSON(outputResultBlock)
 	if err != nil {
 		return nil, err
 	}

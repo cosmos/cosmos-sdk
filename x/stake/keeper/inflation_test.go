@@ -54,7 +54,7 @@ func TestGetInflation(t *testing.T) {
 		{"test 8", 67, 33, sdk.NewRat(15, 100), sdk.ZeroRat()},
 	}
 	for _, tc := range tests {
-		pool.BondedTokens, pool.LooseUnbondedTokens = tc.setBondedTokens, tc.setLooseTokens
+		pool.BondedTokens, pool.LooseTokens = tc.setBondedTokens, tc.setLooseTokens
 		pool.Inflation = tc.setInflation
 		keeper.SetPool(ctx, pool)
 
@@ -79,6 +79,7 @@ func TestProcessProvisions(t *testing.T) {
 		validatorTokens              = []int64{150000000, 100000000, 100000000, 100000000, 100000000}
 		bondedValidators      uint16 = 2
 	)
+	pool.LooseTokens = initialTotalTokens
 
 	// create some validators some bonded, some unbonded
 	_, keeper, pool = setupTestValidators(pool, keeper, ctx, validatorTokens, bondedValidators)
@@ -110,6 +111,7 @@ func TestHourlyInflationRateOfChange(t *testing.T) {
 		validatorTokens              = []int64{150000000, 100000000, 100000000, 100000000, 100000000}
 		bondedValidators      uint16 = 1
 	)
+	pool.LooseTokens = initialTotalTokens
 
 	// create some validators some bonded, some unbonded
 	_, keeper, pool = setupTestValidators(pool, keeper, ctx, validatorTokens, bondedValidators)
@@ -146,6 +148,7 @@ func TestLargeUnbond(t *testing.T) {
 		validatorTokens              = []int64{300000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000}
 		bondedValidators      uint16 = 7
 	)
+	pool.LooseTokens = initialTotalTokens
 
 	_, keeper, pool = setupTestValidators(pool, keeper, ctx, validatorTokens, bondedValidators)
 	checkValidatorSetup(t, pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens)
@@ -192,6 +195,7 @@ func TestLargeBond(t *testing.T) {
 		validatorTokens              = []int64{400000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 400000000}
 		bondedValidators      uint16 = 1
 	)
+	pool.LooseTokens = initialTotalTokens
 
 	_, keeper, pool = setupTestValidators(pool, keeper, ctx, validatorTokens, bondedValidators)
 	checkValidatorSetup(t, pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens)
@@ -328,9 +332,9 @@ func setupTestValidators(pool types.Pool, keeper Keeper, ctx sdk.Context, valida
 
 // Checks that the deterministic validator setup you wanted matches the values in the pool
 func checkValidatorSetup(t *testing.T, pool types.Pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens int64) {
-	assert.Equal(t, initialTotalTokens, pool.TokenSupply())
-	assert.Equal(t, initialBondedTokens, pool.BondedTokens)
-	assert.Equal(t, initialUnbondedTokens, pool.UnbondedTokens)
+	assert.Equal(t, initialTotalTokens, pool.TokenSupply(), "%v", pool)
+	assert.Equal(t, initialBondedTokens, pool.BondedTokens, "%v", pool)
+	assert.Equal(t, initialUnbondedTokens, pool.UnbondedTokens, "%v", pool)
 
 	// test initial bonded ratio
 	assert.True(t, pool.BondedRatio().Equal(sdk.NewRat(initialBondedTokens, initialTotalTokens)), "%v", pool.BondedRatio())

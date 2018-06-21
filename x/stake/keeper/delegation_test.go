@@ -10,22 +10,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// tests GetDelegation, GetDelegations, SetDelegation, RemoveDelegation, GetBonds
+// tests GetDelegation, GetDelegations, SetDelegation, RemoveDelegation, GetDelegations
 func TestDelegation(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 10)
+	pool := keeper.GetPool(ctx)
 
 	//construct the validators
 	amts := []int64{9, 8, 7}
 	var validators [3]types.Validator
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(addrVals[i], PKs[i], types.Description{})
-		validators[i].PoolShares = types.NewUnbondedShares(sdk.NewRat(amt))
-		validators[i].DelegatorShares = sdk.NewRat(amt)
+		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
 	}
 
-	// first add a validators[0] to delegate too
+	keeper.SetPool(ctx, pool)
 	validators[0] = keeper.UpdateValidator(ctx, validators[0])
+	validators[1] = keeper.UpdateValidator(ctx, validators[1])
+	validators[2] = keeper.UpdateValidator(ctx, validators[2])
 
+	// first add a validators[0] to delegate too
 	bond1to1 := types.Delegation{
 		DelegatorAddr: addrDels[0],
 		ValidatorAddr: addrVals[0],
@@ -50,8 +53,6 @@ func TestDelegation(t *testing.T) {
 	assert.True(t, bond1to1.Equal(resBond))
 
 	// add some more records
-	validators[1] = keeper.UpdateValidator(ctx, validators[1])
-	validators[2] = keeper.UpdateValidator(ctx, validators[2])
 	bond1to2 := types.Delegation{addrDels[0], addrVals[1], sdk.NewRat(9), 0}
 	bond1to3 := types.Delegation{addrDels[0], addrVals[2], sdk.NewRat(9), 1}
 	bond2to1 := types.Delegation{addrDels[1], addrVals[0], sdk.NewRat(9), 2}
@@ -105,4 +106,105 @@ func TestDelegation(t *testing.T) {
 	assert.False(t, found)
 	resBonds = keeper.GetDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 0, len(resBonds))
+}
+
+// tests Get/Set/Remove UnbondingDelegation
+func TestUnbondingDelegation(t *testing.T) {
+	ctx, _, keeper := CreateTestInput(t, false, 0)
+
+	ubd := types.UnbondingDelegation{
+		DelegatorAddr:  addrDels[0],
+		ValidatorAddr:  addrVals[0],
+		CreationHeight: 0,
+		MinTime:        0,
+		Balance:        sdk.NewCoin("steak", 5),
+		Slashed:        sdk.NewCoin("steak", 0),
+	}
+
+	// set and retrieve a record
+	keeper.SetUnbondingDelegation(ctx, ubd)
+	resBond, found := keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
+	assert.True(t, found)
+	assert.True(t, ubd.Equal(resBond))
+
+	// modify a records, save, and retrieve
+	ubd.Balance = sdk.NewCoin("steak", 21)
+	keeper.SetUnbondingDelegation(ctx, ubd)
+	resBond, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
+	assert.True(t, found)
+	assert.True(t, ubd.Equal(resBond))
+
+	// delete a record
+	keeper.RemoveUnbondingDelegation(ctx, ubd)
+	_, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
+	assert.False(t, found)
+}
+
+func TestUnbondDelegation(t *testing.T) {
+	ctx, _, keeper := CreateTestInput(t, false, 0)
+	pool := keeper.GetPool(ctx)
+	pool.LooseTokens = 10
+
+	//create a validator and a delegator to that validator
+	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	validator, pool, issuedShares := validator.AddTokensFromDel(pool, 10)
+	require.Equal(t, int64(10), issuedShares.Evaluate())
+	keeper.SetPool(ctx, pool)
+	validator = keeper.UpdateValidator(ctx, validator)
+
+	pool = keeper.GetPool(ctx)
+	require.Equal(t, int64(10), pool.BondedTokens)
+	require.Equal(t, int64(10), validator.PoolShares.Bonded().Evaluate())
+
+	delegation := types.Delegation{
+		DelegatorAddr: addrDels[0],
+		ValidatorAddr: addrVals[0],
+		Shares:        issuedShares,
+	}
+	keeper.SetDelegation(ctx, delegation)
+
+	var err error
+	var amount int64
+	delegation, validator, pool, amount, err = keeper.UnbondDelegation(ctx, addrDels[0], addrVals[0], sdk.NewRat(6))
+	require.NoError(t, err)
+
+	assert.Equal(t, int64(4), delegation.Shares.Evaluate())
+	assert.Equal(t, int64(4), validator.PoolShares.Bonded().Evaluate())
+	assert.Equal(t, int64(6), pool.LooseTokens, "%v", pool)
+	assert.Equal(t, int64(4), pool.BondedTokens)
+	assert.Equal(t, int64(6), amount) // shares to be added to an unbonding delegation / redelegation
+}
+
+// tests Get/Set/Remove UnbondingDelegation
+func TestRedelegation(t *testing.T) {
+	ctx, _, keeper := CreateTestInput(t, false, 0)
+
+	rd := types.Redelegation{
+		DelegatorAddr:    addrDels[0],
+		ValidatorSrcAddr: addrVals[0],
+		ValidatorDstAddr: addrVals[1],
+		CreationHeight:   0,
+		MinTime:          0,
+		SharesSrc:        sdk.NewRat(5),
+		SharesDst:        sdk.NewRat(5),
+	}
+
+	// set and retrieve a record
+	keeper.SetRedelegation(ctx, rd)
+	resBond, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	assert.True(t, found)
+	assert.True(t, rd.Equal(resBond))
+
+	// modify a records, save, and retrieve
+	rd.SharesSrc = sdk.NewRat(21)
+	rd.SharesDst = sdk.NewRat(21)
+	keeper.SetRedelegation(ctx, rd)
+	resBond, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	assert.True(t, found)
+	assert.True(t, rd.Equal(resBond))
+
+	// delete a record
+	keeper.RemoveRedelegation(ctx, rd)
+	_, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	assert.False(t, found)
 }

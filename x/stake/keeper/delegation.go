@@ -200,7 +200,7 @@ func (k Keeper) GetRedelegation(ctx sdk.Context,
 	DelegatorAddr, ValidatorSrcAddr, ValidatorDstAddr sdk.Address) (red types.Redelegation, found bool) {
 
 	store := ctx.KVStore(k.storeKey)
-	redKey := GetREDKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr, k.cdc)
+	redKey := GetREDKey(DelegatorAddr, ValidatorSrcAddr, ValidatorDstAddr, k.cdc)
 	bz := store.Get(redKey)
 	if bz == nil {
 		return red, false
@@ -208,25 +208,6 @@ func (k Keeper) GetRedelegation(ctx sdk.Context,
 
 	k.cdc.MustUnmarshalBinary(bz, &red)
 	return red, true
-}
-
-// load a unbonding delegation and the associated delegation
-func (k Keeper) GetRedelegationDel(ctx sdk.Context, DelegatorAddr, ValidatorSrcAddr,
-	ValidatorDstAddr sdk.Address) (red types.Redelegation, srcDelegation, dstDelegation types.Delegation, found bool) {
-
-	red, found = k.GetRedelegation(ctx, DelegatorAddr, ValidatorSrcAddr, ValidatorDstAddr)
-	if !found {
-		return red, srcDelegation, dstDelegation, false
-	}
-	srcDelegation, found = k.GetDelegation(ctx, red.DelegatorAddr, red.ValidatorSrcAddr)
-	if !found {
-		panic("found redelegation but not source delegation object")
-	}
-	dstDelegation, found = k.GetDelegation(ctx, red.DelegatorAddr, red.ValidatorDstAddr)
-	if !found {
-		panic("found redelegation but not source delegation object")
-	}
-	return red, srcDelegation, dstDelegation, true
 }
 
 // set a redelegation and associated index

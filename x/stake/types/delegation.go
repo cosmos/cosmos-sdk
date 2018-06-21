@@ -18,36 +18,36 @@ type Delegation struct {
 }
 
 // two are equal
-func (b Delegation) Equal(b2 Delegation) bool {
-	return bytes.Equal(b.DelegatorAddr, b2.DelegatorAddr) &&
-		bytes.Equal(b.ValidatorAddr, b2.ValidatorAddr) &&
-		b.Height == b2.Height &&
-		b.Shares.Equal(b2.Shares)
+func (d Delegation) Equal(d2 Delegation) bool {
+	return bytes.Equal(d.DelegatorAddr, d2.DelegatorAddr) &&
+		bytes.Equal(d.ValidatorAddr, d2.ValidatorAddr) &&
+		d.Height == d2.Height &&
+		d.Shares.Equal(d2.Shares)
 }
 
 // ensure fulfills the sdk validator types
 var _ sdk.Delegation = Delegation{}
 
 // nolint - for sdk.Delegation
-func (b Delegation) GetDelegator() sdk.Address { return b.DelegatorAddr }
-func (b Delegation) GetValidator() sdk.Address { return b.ValidatorAddr }
-func (b Delegation) GetBondShares() sdk.Rat    { return b.Shares }
+func (d Delegation) GetDelegator() sdk.Address { return d.DelegatorAddr }
+func (d Delegation) GetValidator() sdk.Address { return d.ValidatorAddr }
+func (d Delegation) GetBondShares() sdk.Rat    { return d.Shares }
 
 //Human Friendly pretty printer
-func (b Delegation) HumanReadableString() (string, error) {
-	bechAcc, err := sdk.Bech32ifyAcc(b.DelegatorAddr)
+func (d Delegation) HumanReadableString() (string, error) {
+	bechAcc, err := sdk.Bech32ifyAcc(d.DelegatorAddr)
 	if err != nil {
 		return "", err
 	}
-	bechVal, err := sdk.Bech32ifyAcc(b.ValidatorAddr)
+	bechVal, err := sdk.Bech32ifyAcc(d.ValidatorAddr)
 	if err != nil {
 		return "", err
 	}
 	resp := "Delegation \n"
 	resp += fmt.Sprintf("Delegator: %s\n", bechAcc)
 	resp += fmt.Sprintf("Validator: %s\n", bechVal)
-	resp += fmt.Sprintf("Shares: %s", b.Shares.String())
-	resp += fmt.Sprintf("Height: %d", b.Height)
+	resp += fmt.Sprintf("Shares: %s", d.Shares.String())
+	resp += fmt.Sprintf("Height: %d", d.Height)
 
 	return resp, nil
 
@@ -65,6 +65,13 @@ type UnbondingDelegation struct {
 	Slashed        sdk.Coin    `json:"slashed"`         // slashed tokens during unbonding
 }
 
+// nolint
+func (d UnbondingDelegation) Equal(d2 UnbondingDelegation) bool {
+	bz1 := MsgCdc.MustMarshalBinary(&d)
+	bz2 := MsgCdc.MustMarshalBinary(&d2)
+	return bytes.Equal(bz1, bz2)
+}
+
 //__________________________________________________________________
 
 // element stored to represent the passive redelegation queue
@@ -76,4 +83,11 @@ type Redelegation struct {
 	MinTime          int64       `json:"min_time"`           // unix time for redelegation completion
 	SharesSrc        sdk.Rat     `json:"shares`              // amount of source shares redelegating
 	SharesDst        sdk.Rat     `json:"shares`              // amount of destination shares redelegating
+}
+
+// nolint
+func (d Redelegation) Equal(d2 Redelegation) bool {
+	bz1 := MsgCdc.MustMarshalBinary(&d)
+	bz2 := MsgCdc.MustMarshalBinary(&d2)
+	return bytes.Equal(bz1, bz2)
 }

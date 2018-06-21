@@ -38,6 +38,7 @@ FIXES
 * [docs] fixed references to old cli commands
 * [lcd] tests now don't depend on raw json text
 * [stake] error strings lower case
+* [stake] pool loose tokens now accounts for unbonding and unbonding tokens not associated with any validator
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer
 * Retry on HTTP request failure in CLI tests, add option to retry tests in Makefile
 * Fixed bug where chain ID wasn't passed properly in x/bank REST handler

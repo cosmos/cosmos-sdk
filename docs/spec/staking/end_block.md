@@ -37,8 +37,8 @@ processProvisions():
         
         provisions = pool.Inflation * (pool.TotalSupply / hrsPerYr)
         
-        pool.LooseUnbondedTokens += provisions
-        feePool += LooseUnbondedTokens
+        pool.LooseTokens += provisions
+        feePool += LooseTokens
         
         setPool(pool)
 

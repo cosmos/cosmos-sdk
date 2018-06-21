@@ -183,6 +183,7 @@ func randomValidator(r *rand.Rand, i int) Validator {
 // generate a random staking state
 func RandomSetup(r *rand.Rand, numValidators int) (Pool, []Validator) {
 	pool := InitialPool()
+	pool.LooseTokens = 100000
 
 	validators := make([]Validator, numValidators)
 	for i := 0; i < numValidators; i++ {

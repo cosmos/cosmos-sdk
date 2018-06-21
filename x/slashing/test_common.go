@@ -63,7 +63,7 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, Keep
 	ck := bank.NewKeeper(accountMapper)
 	sk := stake.NewKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
-	genesis.Pool.LooseUnbondedTokens = initCoins.MulRaw(int64(len(addrs))).Int64()
+	genesis.Pool.LooseTokens = initCoins.MulRaw(int64(len(addrs))).Int64()
 	sk.InitGenesis(ctx, genesis)
 	for _, addr := range addrs {
 		ck.AddCoins(ctx, addr, sdk.Coins{

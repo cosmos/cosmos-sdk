@@ -13,6 +13,7 @@ import (
 
 func TestAddTokensValidatorBonded(t *testing.T) {
 	pool := InitialPool()
+	pool.LooseTokens = 10
 	val := NewValidator(addr1, pk1, Description{})
 	val, pool = val.UpdateStatus(pool, sdk.Bonded)
 	val, pool, delShares := val.AddTokensFromDel(pool, 10)
@@ -28,6 +29,7 @@ func TestAddTokensValidatorBonded(t *testing.T) {
 
 func TestAddTokensValidatorUnbonding(t *testing.T) {
 	pool := InitialPool()
+	pool.LooseTokens = 10
 	val := NewValidator(addr1, pk1, Description{})
 	val, pool = val.UpdateStatus(pool, sdk.Unbonding)
 	val, pool, delShares := val.AddTokensFromDel(pool, 10)
@@ -43,6 +45,7 @@ func TestAddTokensValidatorUnbonding(t *testing.T) {
 
 func TestAddTokensValidatorUnbonded(t *testing.T) {
 	pool := InitialPool()
+	pool.LooseTokens = 10
 	val := NewValidator(addr1, pk1, Description{})
 	val, pool = val.UpdateStatus(pool, sdk.Unbonded)
 	val, pool, delShares := val.AddTokensFromDel(pool, 10)
@@ -59,6 +62,7 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 // TODO refactor to make simpler like the AddToken tests above
 func TestRemoveDelShares(t *testing.T) {
 	poolA := InitialPool()
+	poolA.LooseTokens = 10
 	valA := Validator{
 		Owner:           addr1,
 		PubKey:          pk1,
@@ -109,6 +113,7 @@ func TestRemoveDelShares(t *testing.T) {
 
 func TestUpdateStatus(t *testing.T) {
 	pool := InitialPool()
+	pool.LooseTokens = 100
 
 	val := NewValidator(addr1, pk1, Description{})
 	val, pool, _ = val.AddTokensFromDel(pool, 100)
@@ -146,6 +151,7 @@ func TestPossibleOverflow(t *testing.T) {
 		DelegatorShares: delShares,
 	}
 	pool := Pool{
+		LooseTokens:       100,
 		BondedShares:      poolShares,
 		UnbondedShares:    sdk.ZeroRat(),
 		BondedTokens:      poolShares.Evaluate(),

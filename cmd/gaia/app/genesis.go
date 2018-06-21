@@ -159,7 +159,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		}
 		acc := NewGenesisAccount(&accAuth)
 		genaccs[i] = acc
-		stakeData.Pool.LooseUnbondedTokens = stakeData.Pool.LooseUnbondedTokens + freeFermionsAcc // increase the supply
+		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens + freeFermionsAcc // increase the supply
 
 		// add the validator
 		if len(genTx.Name) > 0 {

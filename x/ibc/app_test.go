@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -24,7 +25,7 @@ func getMockApp(t *testing.T) *mock.App {
 	coinKeeper := bank.NewKeeper(mapp.AccountMapper)
 	mapp.Router().AddRoute("ibc", NewHandler(ibcMapper, coinKeeper))
 
-	mapp.CompleteSetup(t, []*sdk.KVStoreKey{keyIBC})
+	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyIBC}))
 	return mapp
 }
 

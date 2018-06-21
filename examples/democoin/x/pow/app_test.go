@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -32,7 +33,7 @@ func getMockApp(t *testing.T) *mock.App {
 
 	mapp.SetInitChainer(getInitChainer(mapp, keeper))
 
-	mapp.CompleteSetup(t, []*sdk.KVStoreKey{keyPOW})
+	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyPOW}))
 	return mapp
 }
 

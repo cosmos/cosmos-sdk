@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
@@ -56,7 +57,7 @@ func getMockApp(t *testing.T) *mock.App {
 
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, "ice-cold"))
 
-	mapp.CompleteSetup(t, []*sdk.KVStoreKey{keyCool})
+	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyCool}))
 	return mapp
 }
 

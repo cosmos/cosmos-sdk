@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -24,7 +25,7 @@ func getMockApp(t *testing.T) *mock.App {
 	coinKeeper := bank.NewKeeper(mapp.AccountMapper)
 	mapp.Router().AddRoute("ibc", NewHandler(ibcMapper, coinKeeper))
 
-	mapp.CompleteSetup(t, []*sdk.KVStoreKey{keyIBC})
+	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyIBC}))
 	return mapp
 }
 
@@ -70,7 +71,7 @@ func TestIBCMsgs(t *testing.T) {
 		Sequence:  0,
 	}
 
-	mock.SignCheckDeliver(t, mapp.BaseApp, transferMsg, []int64{0},[]int64{0}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, transferMsg, []int64{0}, []int64{0}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, emptyCoins)
 	mock.SignCheckDeliver(t, mapp.BaseApp, transferMsg, []int64{0}, []int64{1}, false, priv1)
 	mock.SignCheckDeliver(t, mapp.BaseApp, receiveMsg, []int64{0}, []int64{2}, true, priv1)

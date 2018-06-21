@@ -36,7 +36,7 @@ func getMockApp(t *testing.T) (*mock.App, stake.Keeper, Keeper) {
 
 	mapp.SetEndBlocker(getEndBlocker(stakeKeeper))
 	mapp.SetInitChainer(getInitChainer(mapp, stakeKeeper))
-	mapp.CompleteSetup(t, []*sdk.KVStoreKey{keyStake, keySlashing})
+	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keySlashing}))
 
 	return mapp, stakeKeeper, keeper
 }

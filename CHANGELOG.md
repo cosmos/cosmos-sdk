@@ -10,6 +10,7 @@ BREAKING CHANGES
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
+* [mockapp] CompleteSetup() no longer takes a testing parameter
 
 FIXES
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer

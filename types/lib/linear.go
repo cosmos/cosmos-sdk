@@ -20,9 +20,6 @@ type LinearKeys struct {
 	LengthKey []byte
 	ElemKey   []byte
 	TopKey    []byte
-
-	// once true forever true
-	valid bool
 }
 
 // Should never be modified
@@ -34,10 +31,7 @@ func DefaultLinearKeys() *LinearKeys {
 		LengthKey: []byte{0x00},
 		ElemKey:   []byte{0x01},
 		TopKey:    []byte{0x02},
-
-		valid: true,
 	}
-
 	return &keys
 }
 
@@ -45,11 +39,9 @@ func DefaultLinearKeys() *LinearKeys {
 func NewLinear(cdc *wire.Codec, store sdk.KVStore, keys *LinearKeys) Linear {
 	if keys == nil {
 		keys = cachedDefaultLinearKeys
-	} else if !keys.valid {
-		if keys.LengthKey == nil || keys.ElemKey == nil || keys.TopKey == nil {
-			panic("Invalid LinearKeys")
-		}
-		keys.valid = true
+	}
+	if keys.LengthKey == nil || keys.ElemKey == nil || keys.TopKey == nil {
+		panic("Invalid LinearKeys")
 	}
 	return Linear{
 		cdc:   cdc,

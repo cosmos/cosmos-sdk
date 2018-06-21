@@ -1,7 +1,6 @@
 package stake
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -37,7 +36,6 @@ func newTestMsgDelegate(delegatorAddr, validatorAddr sdk.Address, amt int64) Msg
 func setInstantUnbondPeriod(keeper keep.Keeper, ctx sdk.Context) types.Params {
 	params := keeper.GetParams(ctx)
 	params.UnbondingTime = 0
-	params.MinUnbondingBlocks = 0
 	keeper.SetParams(ctx, params)
 	return params
 }
@@ -49,6 +47,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 
 	initBond := int64(1000000)
 	ctx, _, keeper := keep.CreateTestInput(t, false, initBond)
+	_ = setInstantUnbondPeriod(keeper, ctx)
 
 	// create validator
 	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, keep.PKs[0], initBond)
@@ -103,17 +102,18 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	power3 := GetValidatorsByPowerIndexKey(validator, pool)
 	assert.Equal(t, power2, power3)
 
-	// XXX fix
-	//// unbond self-delegation
-	//msgUnbond := NewMsgUnbond(validatorAddr, validatorAddr, "MAX")
-	//got = handleMsgUnbond(ctx, msgUnbond, keeper)
-	//assert.True(t, got.IsOK(),
-	//"got: %v\nmsgUnbond: %v\ninitBondStr: %v\n", got, msgUnbond, initBondStr)
+	// unbond self-delegation
+	msgBeginUnbonding := NewMsgBeginUnbonding(validatorAddr, validatorAddr, sdk.NewRat(1000000))
+	msgCompleteUnbonding := NewMsgCompleteUnbonding(validatorAddr, validatorAddr)
+	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
+	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
+	got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbonding, keeper)
+	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 
-	//// verify that by power key nolonger exists
-	//_, found = keeper.GetValidator(ctx, validatorAddr)
-	//require.False(t, found)
-	//assert.False(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power3))
+	// verify that by power key nolonger exists
+	_, found = keeper.GetValidator(ctx, validatorAddr)
+	require.False(t, found)
+	assert.False(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power3))
 }
 
 func TestDuplicatesMsgCreateValidator(t *testing.T) {
@@ -405,7 +405,6 @@ func TestRevokeValidator(t *testing.T) {
 	require.True(t, got.IsOK(), "expected ok, got %v", got)
 
 	validator, _ := keeper.GetValidator(ctx, validatorAddr)
-	fmt.Printf("debug validator: %v\n", validator)
 
 	// unbond the validators bond portion
 	msgBeginUnbondingValidator := NewMsgBeginUnbonding(validatorAddr, validatorAddr, sdk.NewRat(10))
@@ -434,4 +433,28 @@ func TestRevokeValidator(t *testing.T) {
 	// verify that the pubkey can now be reused
 	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	assert.True(t, got.IsOK(), "expected ok, got %v", got)
+}
+
+func TestUnbondingPeriod(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	validatorAddr := keep.Addrs[0]
+
+	// set the unbonding time
+	params := keeper.GetParams(ctx)
+	params.UnbondingTime = 0
+	params.MinUnbondingBlocks = 0
+	keeper.SetParams(ctx, params)
+
+	// create the validator
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, keep.PKs[0], 10)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	// test that the delegator can still withdraw their bonds
+	msgBeginUnbondingDelegator := NewMsgBeginUnbonding(delegatorAddr, validatorAddr, sdk.NewRat(10))
+	msgCompleteUnbondingDelegator := NewMsgCompleteUnbonding(delegatorAddr, validatorAddr)
+	got = handleMsgBeginUnbonding(ctx, msgBeginUnbondingDelegator, keeper)
+	require.True(t, got.IsOK(), "expected no error")
+	got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbondingDelegator, keeper)
+	require.True(t, got.IsOK(), "expected no error")
 }

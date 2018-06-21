@@ -13,8 +13,7 @@ type Params struct {
 	InflationMin        sdk.Rat `json:"inflation_min"`         // minimum inflation rate
 	GoalBonded          sdk.Rat `json:"goal_bonded"`           // Goal of percent bonded atoms
 
-	UnbondingTime      int64 `json:"unbonding_time"`
-	MinUnbondingBlocks int64 `json:"min_unbonding_blocks"`
+	UnbondingTime int64 `json:"unbonding_time"`
 
 	MaxValidators uint16 `json:"max_validators"` // maximum number of validators
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
@@ -34,8 +33,7 @@ func DefaultParams() Params {
 		InflationMax:        sdk.NewRat(20, 100),
 		InflationMin:        sdk.NewRat(7, 100),
 		GoalBonded:          sdk.NewRat(67, 100),
-		UnbondingTime:       60 * 60 * 24 * 3,       // 3 weeks in seconds
-		MinUnbondingBlocks:  (60 * 60 * 24 * 3) / 5, // 3 weeks at 5s block times
+		UnbondingTime:       60 * 60 * 24 * 3, // 3 weeks in seconds
 		MaxValidators:       100,
 		BondDenom:           "steak",
 	}

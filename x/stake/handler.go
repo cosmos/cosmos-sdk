@@ -167,13 +167,11 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 	// create the unbonding delegation
 	params := k.GetParams(ctx)
 	minTime := ctx.BlockHeader().Time + params.UnbondingTime
-	minHeight := ctx.BlockHeight() + params.MinUnbondingBlocks
 
 	ubd := UnbondingDelegation{
 		DelegatorAddr: delegation.DelegatorAddr,
 		ValidatorAddr: delegation.ValidatorAddr,
 		MinTime:       minTime,
-		MinHeight:     minHeight,
 		Balance:       sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)},
 		Slashed:       sdk.Coin{},
 	}
@@ -202,12 +200,8 @@ func handleMsgCompleteUnbonding(ctx sdk.Context, msg types.MsgCompleteUnbonding,
 
 	// ensure that enough time has passed
 	ctxTime := ctx.BlockHeader().Time
-	ctxHeight := ctx.BlockHeight()
 	if ubd.MinTime > ctxTime {
 		return ErrNotMature(k.Codespace(), "unbonding", "unit-time", ubd.MinTime, ctxTime).Result()
-	}
-	if ubd.MinHeight > ctxHeight {
-		return ErrNotMature(k.Codespace(), "unbonding", "block-height", ubd.MinHeight, ctxHeight).Result()
 	}
 
 	k.CoinKeeper().AddCoins(ctx, ubd.DelegatorAddr, sdk.Coins{ubd.Balance})
@@ -256,14 +250,12 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 
 	// create the unbonding delegation
 	minTime := ctx.BlockHeader().Time + params.UnbondingTime
-	minHeight := ctx.BlockHeight() + params.MinUnbondingBlocks
 
 	red := Redelegation{
 		DelegatorAddr:    msg.DelegatorAddr,
 		ValidatorSrcAddr: msg.ValidatorSrcAddr,
 		ValidatorDstAddr: msg.ValidatorDstAddr,
 		MinTime:          minTime,
-		MinHeight:        minHeight,
 		SharesDst:        sharesCreated,
 		SharesSrc:        msg.SharesAmount,
 	}
@@ -287,12 +279,8 @@ func handleMsgCompleteRedelegate(ctx sdk.Context, msg types.MsgCompleteRedelegat
 
 	// ensure that enough time has passed
 	ctxTime := ctx.BlockHeader().Time
-	ctxHeight := ctx.BlockHeight()
 	if red.MinTime > ctxTime {
 		return ErrNotMature(k.Codespace(), "redelegation", "unit-time", red.MinTime, ctxTime).Result()
-	}
-	if red.MinHeight > ctxHeight {
-		return ErrNotMature(k.Codespace(), "redelegation", "block-height", red.MinHeight, ctxHeight).Result()
 	}
 
 	k.RemoveRedelegation(ctx, red)

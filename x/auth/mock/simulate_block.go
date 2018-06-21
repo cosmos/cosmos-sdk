@@ -54,6 +54,25 @@ func GenTx(msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKeyE
 	return auth.NewStdTx(msgs, fee, sigs, memo)
 }
 
+// generate a set of signed transactions a msg, that differ only by having the
+// sequence numbers incremented between every transaction.
+func GenSequenceOfTxs(msgs []sdk.Msg, accnums []int64, init_seq_nums []int64, num_to_generate int, priv ...crypto.PrivKeyEd25519) []auth.StdTx {
+	copy_of_init_seq_nums := make([]int64, len(init_seq_nums), len(init_seq_nums))
+	copy(copy_of_init_seq_nums, init_seq_nums)
+	txs := make([]auth.StdTx, num_to_generate, num_to_generate)
+	for i := 0; i < num_to_generate; i++ {
+		txs[i] = GenTx(msgs, accnums, copy_of_init_seq_nums, priv...)
+		incrementAllSequenceNumbers(copy_of_init_seq_nums)
+	}
+	return txs
+}
+
+func incrementAllSequenceNumbers(init_seq_nums []int64) {
+	for i := 0; i < len(init_seq_nums); i++ {
+		init_seq_nums[i] += 1
+	}
+}
+
 // check a transaction result
 func SignCheck(t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.Result {
 	tx := GenTx(msgs, accnums, seq, priv...)
@@ -62,7 +81,7 @@ func SignCheck(t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accnums []int
 }
 
 // simulate a block
-func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accnums []int64, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
+func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accnums []int64, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) sdk.Result {
 
 	// Sign the tx
 	tx := GenTx(msgs, accnums, seq, priv...)
@@ -86,4 +105,5 @@ func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accnum
 	app.EndBlock(abci.RequestEndBlock{})
 
 	app.Commit()
+	return res
 }

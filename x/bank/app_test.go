@@ -77,13 +77,8 @@ var (
 
 // initialize the mock application for this module
 func getMockApp(t *testing.T) *mock.App {
-	mapp := mock.NewApp()
-
-	RegisterWire(mapp.Cdc)
-	coinKeeper := NewKeeper(mapp.AccountMapper)
-	mapp.Router().AddRoute("bank", NewHandler(coinKeeper))
-
-	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{}))
+	mapp, err := GetBenchmarkMockApp()
+	require.NoError(t, err)
 	return mapp
 }
 

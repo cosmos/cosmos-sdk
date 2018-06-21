@@ -371,6 +371,57 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	checkValidTx(t, anteHandler, ctx, tx)
 }
 
+func TestAnteHandlerMultiSigner(t *testing.T) {
+	// setup
+	ms, capKey, capKey2 := setupMultiStore()
+	cdc := wire.NewCodec()
+	RegisterBaseAccount(cdc)
+	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(mapper, feeCollector)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
+
+	// keys and addresses
+	priv1, addr1 := privAndAddr()
+	priv2, addr2 := privAndAddr()
+	priv3, addr3 := privAndAddr()
+
+	// set the accounts
+	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
+	acc1.SetCoins(newCoins())
+	mapper.SetAccount(ctx, acc1)
+	acc2 := mapper.NewAccountWithAddress(ctx, addr2)
+	acc2.SetCoins(newCoins())
+	mapper.SetAccount(ctx, acc2)
+	acc3 := mapper.NewAccountWithAddress(ctx, addr3)
+	acc3.SetCoins(newCoins())
+	mapper.SetAccount(ctx, acc3)
+
+	// set up msgs and fee
+	var tx sdk.Tx
+	msg1 := newTestMsg(addr1, addr2)
+	msg2 := newTestMsg(addr3, addr1)
+	msg3 := newTestMsg(addr2, addr3)
+	msgs := []sdk.Msg{msg1, msg2, msg3}
+	fee := newStdFee()
+
+	// signers in order
+	privs, accnums, seqs := []crypto.PrivKey{priv1, priv2, priv3}, []int64{0, 1, 2}, []int64{0, 0, 0}
+	tx = newTestTxWithMemo(ctx, msgs, privs, accnums, seqs, fee, "Check signers are in expected order and different account numbers works")
+
+	checkValidTx(t, anteHandler, ctx, tx)
+
+	// change sequence numbers
+	tx = newTestTx(ctx, []sdk.Msg{msg1}, []crypto.PrivKey{priv1, priv2}, []int64{0, 1}, []int64{1, 1}, fee)
+	checkValidTx(t, anteHandler, ctx, tx)
+	tx = newTestTx(ctx, []sdk.Msg{msg2}, []crypto.PrivKey{priv3, priv1}, []int64{2, 0}, []int64{1, 2}, fee)
+	checkValidTx(t, anteHandler, ctx, tx)
+
+	// expected seqs = [3, 2, 2]
+	tx = newTestTxWithMemo(ctx, msgs, privs, accnums, []int64{3, 2, 2}, fee, "Check signers are in expected order and different account numbers and sequence numbers works")
+	checkValidTx(t, anteHandler, ctx, tx)
+}
+
 func TestAnteHandlerBadSignBytes(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()

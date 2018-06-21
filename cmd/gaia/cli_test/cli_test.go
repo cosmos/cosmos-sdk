@@ -64,6 +64,15 @@ func TestGaiaCLISend(t *testing.T) {
 	assert.Equal(t, int64(20), barAcc.GetCoins().AmountOf("steak").Int64())
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
 	assert.Equal(t, int64(30), fooAcc.GetCoins().AmountOf("steak").Int64())
+
+	// test memo
+	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo --memo 'testmemo'", flags, barCech), pass)
+	tests.WaitForNextHeightTM(port)
+
+	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
+	assert.Equal(t, int64(30), barAcc.GetCoins().AmountOf("steak").Int64())
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
+	assert.Equal(t, int64(20), fooAcc.GetCoins().AmountOf("steak").Int64())
 }
 
 func TestGaiaCLICreateValidator(t *testing.T) {

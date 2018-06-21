@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,7 +19,7 @@ func newTestMsg(addrs ...sdk.Address) *sdk.TestMsg {
 }
 
 func newStdFee() StdFee {
-	return NewStdFee(100,
+	return NewStdFee(5000,
 		sdk.NewCoin("atom", 150),
 	)
 }
@@ -47,22 +48,39 @@ func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx
 
 // run the tx through the anteHandler and ensure it fails with the given code
 func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, code sdk.CodeType) {
+	defer func() {
+		if r := recover(); r != nil {
+			switch r.(type) {
+			case sdk.ErrorOutOfGas:
+				assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas),
+					fmt.Sprintf("Expected ErrorOutOfGas, got %v", r))
+			default:
+				panic(r)
+			}
+		}
+	}()
 	_, result, abort := anteHandler(ctx, tx)
 	assert.True(t, abort)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), result.Code)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), result.Code,
+		fmt.Sprintf("Expected %v, got %v", sdk.ToABCICode(sdk.CodespaceRoot, code), result))
 }
 
 func newTestTx(ctx sdk.Context, msg sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee) sdk.Tx {
-	signBytes := StdSignBytes(ctx.ChainID(), accNums, seqs, fee, msg)
-	return newTestTxWithSignBytes(msg, privs, accNums, seqs, fee, signBytes)
+	signBytes := StdSignBytes(ctx.ChainID(), accNums, seqs, fee, msg, "")
+	return newTestTxWithSignBytes(msg, privs, accNums, seqs, fee, signBytes, "")
 }
 
-func newTestTxWithSignBytes(msg sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee, signBytes []byte) sdk.Tx {
+func newTestTxWithMemo(ctx sdk.Context, msg sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee, memo string) sdk.Tx {
+	signBytes := StdSignBytes(ctx.ChainID(), accNums, seqs, fee, msg, memo)
+	return newTestTxWithSignBytes(msg, privs, accNums, seqs, fee, signBytes, memo)
+}
+
+func newTestTxWithSignBytes(msg sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee, signBytes []byte, memo string) sdk.Tx {
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
 		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), AccountNumber: accNums[i], Sequence: seqs[i]}
 	}
-	tx := NewStdTx(msg, fee, sigs)
+	tx := NewStdTx(msg, fee, sigs, memo)
 	return tx
 }
 
@@ -252,9 +270,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	var tx sdk.Tx
 	msg := newTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []int64{0}, []int64{0}
-	fee := NewStdFee(100,
-		sdk.NewCoin("atom", 150),
-	)
+	fee := newStdFee()
 
 	// signer does not have enough funds to pay the fee
 	tx = newTestTx(ctx, msg, privs, accnums, seqs, fee)
@@ -271,6 +287,50 @@ func TestAnteHandlerFees(t *testing.T) {
 	checkValidTx(t, anteHandler, ctx, tx)
 
 	assert.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(sdk.Coins{sdk.NewCoin("atom", 150)}))
+}
+
+// Test logic around memo gas consumption.
+func TestAnteHandlerMemoGas(t *testing.T) {
+	// setup
+	ms, capKey, capKey2 := setupMultiStore()
+	cdc := wire.NewCodec()
+	RegisterBaseAccount(cdc)
+	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(mapper, feeCollector)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
+
+	// keys and addresses
+	priv1, addr1 := privAndAddr()
+
+	// set the accounts
+	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
+	mapper.SetAccount(ctx, acc1)
+
+	// msg and signatures
+	var tx sdk.Tx
+	msg := newTestMsg(addr1)
+	privs, accnums, seqs := []crypto.PrivKey{priv1}, []int64{0}, []int64{0}
+	fee := NewStdFee(0, sdk.NewCoin("atom", 0))
+
+	// tx does not have enough gas
+	tx = newTestTx(ctx, msg, privs, accnums, seqs, fee)
+	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeOutOfGas)
+
+	// tx with memo doesn't have enough gas
+	fee = NewStdFee(1001, sdk.NewCoin("atom", 0))
+	tx = newTestTxWithMemo(ctx, msg, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
+	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeOutOfGas)
+
+	// memo too large
+	fee = NewStdFee(2001, sdk.NewCoin("atom", 0))
+	tx = newTestTxWithMemo(ctx, msg, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
+	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeMemoTooLarge)
+
+	// tx with memo has enough gas
+	fee = NewStdFee(1100, sdk.NewCoin("atom", 0))
+	tx = newTestTxWithMemo(ctx, msg, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
+	checkValidTx(t, anteHandler, ctx, tx)
 }
 
 func TestAnteHandlerBadSignBytes(t *testing.T) {
@@ -333,7 +393,8 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	for _, cs := range cases {
 		tx := newTestTxWithSignBytes(
 			msg, privs, accnums, seqs, fee,
-			StdSignBytes(cs.chainID, cs.accnums, cs.seqs, cs.fee, cs.msg),
+			StdSignBytes(cs.chainID, cs.accnums, cs.seqs, cs.fee, cs.msg, ""),
+			"",
 		)
 		checkInvalidTx(t, anteHandler, ctx, tx, cs.code)
 	}

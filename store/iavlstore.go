@@ -115,6 +115,11 @@ func (st *iavlStore) Delete(key []byte) {
 	st.tree.Remove(key)
 }
 
+// Implements KVStore
+func (st *iavlStore) Prefix(prefix []byte) KVStore {
+	return prefixStore{st, prefix}
+}
+
 // Implements KVStore.
 func (st *iavlStore) Iterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, true)

@@ -111,6 +111,10 @@ func (ctx CoreContext) queryAndVerifyProof(path string, key common.HexBytes) (re
 		return res, errors.Errorf("query failed: (%d) %s", resp.Code, resp.Log)
 	}
 
+	if ctx.Cert == nil {
+		return resp.Value,nil
+	}
+
 	// AppHash for height H is in header H+1
 	commit, err := proxy.GetCertifiedCommit(resp.Height+1, node, ctx.Cert)
 	if err != nil {

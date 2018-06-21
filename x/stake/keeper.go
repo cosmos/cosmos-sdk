@@ -791,8 +791,13 @@ func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.Address, addrVal sdk.Add
 	return bond
 }
 
+// Returns self as it is both a validatorset and delegationset
+func (k Keeper) GetValidatorSet() sdk.ValidatorSet {
+	return k
+}
+
 // iterate through the active validator set and perform the provided function
-func (k Keeper) IterateDelegators(ctx sdk.Context, delAddr sdk.Address, fn func(index int64, delegation sdk.Delegation) (stop bool)) {
+func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.Address, fn func(index int64, delegation sdk.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	key := GetDelegationsKey(delAddr, k.cdc)
 	iterator := sdk.KVStorePrefixIterator(store, key)

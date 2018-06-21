@@ -4,8 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-
-	stake "github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 // Governance Keeper
@@ -13,8 +11,11 @@ type Keeper struct {
 	// The reference to the CoinKeeper to modify balances
 	ck bank.Keeper
 
-	// The reference to the StakeMapper to get information about stakers
-	sk stake.Keeper
+	// The ValidatorSet to get information about validators
+	vs sdk.ValidatorSet
+
+	// The reference to the DelegationSet to get information about delegators
+	ds sdk.DelegationSet
 
 	// The (unexposed) keys used to access the stores from the Context.
 	storeKey sdk.StoreKey
@@ -27,11 +28,12 @@ type Keeper struct {
 }
 
 // NewGovernanceMapper returns a mapper that uses go-wire to (binary) encode and decode gov types.
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, sk stake.Keeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
 		storeKey:  key,
 		ck:        ck,
-		sk:        sk,
+		ds:        ds,
+		vs:        ds.GetValidatorSet(),
 		cdc:       cdc,
 		codespace: codespace,
 	}

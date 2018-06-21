@@ -10,7 +10,7 @@ import (
 )
 
 func TestTickExpiredDepositPeriod(t *testing.T) {
-	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	govHandler := NewHandler(keeper)
@@ -41,7 +41,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
-	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	govHandler := NewHandler(keeper)
@@ -83,7 +83,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickPassedDepositPeriod(t *testing.T) {
-	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	govHandler := NewHandler(keeper)
@@ -126,7 +126,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 }
 
 func TestTickPassedVotingPeriod(t *testing.T) {
-	mapp, keeper, addrs, _, _ := getMockApp(t, 10)
+	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10)
 	SortAddresses(addrs)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})

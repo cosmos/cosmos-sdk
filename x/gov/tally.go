@@ -1,18 +1,16 @@
 package gov
 
 import (
-	"math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 // validatorGovInfo used for tallying
 type validatorGovInfo struct {
-	ValidatorInfo stake.Validator //  Voting power of validator when proposal enters voting period
-	Minus         sdk.Rat         //  Minus of validator, used to compute validator's voting power
-	Vote          VoteOption      // Vote of the validator
-	Power         sdk.Rat         // Power of a Validator
+	Address         sdk.Address // sdk.Address of the validator owner
+	Power           sdk.Rat     // Power of a Validator
+	DelegatorShares sdk.Rat     // Total outstanding delegator shares
+	Minus           sdk.Rat     // Minus of validator, used to compute validator's voting power
+	Vote            VoteOption  // Vote of the validator
 }
 
 func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, nonVoting []sdk.Address) {
@@ -22,17 +20,19 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, nonV
 	results[OptionNo] = sdk.ZeroRat()
 	results[OptionNoWithVeto] = sdk.ZeroRat()
 
-	pool := keeper.sk.GetPool(ctx)
-
 	totalVotingPower := sdk.ZeroRat()
 	currValidators := make(map[string]validatorGovInfo)
-	// Gets the info on each validator and load the map
-	for _, val := range keeper.sk.GetValidatorsBonded(ctx) {
-		currValidators[string(val.Owner)] = validatorGovInfo{
-			ValidatorInfo: val,
-			Minus:         sdk.ZeroRat(),
+
+	keeper.vs.IterateValidatorsBonded(ctx, func(index int64, validator sdk.Validator) (stop bool) {
+		currValidators[validator.GetOwner().String()] = validatorGovInfo{
+			Address:         validator.GetOwner(),
+			Power:           validator.GetPower(),
+			DelegatorShares: validator.GetDelegatorShares(),
+			Minus:           sdk.ZeroRat(),
+			Vote:            OptionEmpty,
 		}
-	}
+		return false
+	})
 
 	// iterate over all the votes
 	votesIterator := keeper.GetVotes(ctx, proposal.GetProposalID())
@@ -42,21 +42,24 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, nonV
 
 		// if validator, just record it in the map
 		// if delegator tally voting power
-		if val, ok := currValidators[string(vote.Voter)]; ok {
+		if val, ok := currValidators[vote.Voter.String()]; ok {
 			val.Vote = vote.Option
-			currValidators[string(vote.Voter)] = val
+			currValidators[vote.Voter.String()] = val
 		} else {
-			for _, delegation := range keeper.sk.GetDelegations(ctx, vote.Voter, math.MaxInt16) { // TODO: Replace with MaxValidators from Stake params
-				val := currValidators[string(delegation.ValidatorAddr)]
-				val.Minus = val.Minus.Add(delegation.Shares)
-				currValidators[string(delegation.ValidatorAddr)] = val
 
-				validatorPower := val.ValidatorInfo.EquivalentBondedShares(pool)
-				delegatorShare := delegation.Shares.Quo(val.ValidatorInfo.DelegatorShares)
-				votingPower := validatorPower.Mul(delegatorShare)
+			keeper.ds.IterateDelegations(ctx, vote.Voter, func(index int64, delegation sdk.Delegation) (stop bool) {
+				val := currValidators[delegation.GetValidator().String()]
+				val.Minus = val.Minus.Add(delegation.GetBondShares())
+				currValidators[delegation.GetValidator().String()] = val
+
+				delegatorShare := delegation.GetBondShares().Quo(val.DelegatorShares)
+				votingPower := val.Power.Mul(delegatorShare)
+
 				results[vote.Option] = results[vote.Option].Add(votingPower)
 				totalVotingPower = totalVotingPower.Add(votingPower)
-			}
+
+				return false
+			})
 		}
 
 		keeper.deleteVote(ctx, vote.ProposalID, vote.Voter)
@@ -67,13 +70,12 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, nonV
 	nonVoting = []sdk.Address{}
 	for _, val := range currValidators {
 		if val.Vote == OptionEmpty {
-			nonVoting = append(nonVoting, val.ValidatorInfo.Owner)
+			nonVoting = append(nonVoting, val.Address)
 			continue
 		}
-		validatorPower := val.ValidatorInfo.EquivalentBondedShares(pool)
-		sharesAfterMinus := val.ValidatorInfo.DelegatorShares.Sub(val.Minus)
-		percentAfterMinus := sharesAfterMinus.Quo(val.ValidatorInfo.DelegatorShares)
-		votingPower := validatorPower.Mul(percentAfterMinus)
+		sharesAfterMinus := val.DelegatorShares.Sub(val.Minus)
+		percentAfterMinus := sharesAfterMinus.Quo(val.DelegatorShares)
+		votingPower := val.Power.Mul(percentAfterMinus)
 
 		results[val.Vote] = results[val.Vote].Add(votingPower)
 		totalVotingPower = totalVotingPower.Add(votingPower)

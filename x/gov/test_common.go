@@ -16,7 +16,7 @@ import (
 )
 
 // initialize the mock application for this module
-func getMockApp(t *testing.T, numGenAccs int64) (*mock.App, Keeper, []sdk.Address, []crypto.PubKey, []crypto.PrivKey) {
+func getMockApp(t *testing.T, numGenAccs int64) (*mock.App, Keeper, stake.Keeper, []sdk.Address, []crypto.PubKey, []crypto.PrivKey) {
 	mapp := mock.NewApp()
 
 	stake.RegisterWire(mapp.Cdc)
@@ -38,7 +38,7 @@ func getMockApp(t *testing.T, numGenAccs int64) (*mock.App, Keeper, []sdk.Addres
 	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewCoin("steak", 42)})
 	mock.SetGenesis(mapp, genAccs)
 
-	return mapp, keeper, addrs, pubKeys, privKeys
+	return mapp, keeper, sk, addrs, pubKeys, privKeys
 }
 
 // gov and stake endblocker

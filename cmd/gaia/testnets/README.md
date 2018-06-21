@@ -201,6 +201,8 @@ gaiacli account <account_cosmosaccaddr>
 
 [Validators](https://cosmos.network/validators) are responsible for committing new blocks to the blockchain through voting. A validator's stake is slashed if they become unavailable, double sign a transaction, or don't cast their votes. If you only want to run a full node, a VM in the cloud is fine. However, if you are want to become a validator for the Hub's `mainnet`, you should research hardened setups. Please read [Sentry Node Architecture](https://github.com/cosmos/cosmos/blob/master/VALIDATORS_FAQ.md#how-can-validators-protect-themselves-from-denial-of-service-attacks) to protect your node from DDOS and ensure high-availability. Also see the [technical requirements](https://github.com/cosmos/cosmos/blob/master/VALIDATORS_FAQ.md#technical-requirements)). There's also more info on our [website](https://cosmos.network/validators).
 
+### Create Your Validator
+
 Your `cosmosvalpub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
 
 ```bash
@@ -216,19 +218,29 @@ gaiacli stake create-validator \
   --amount=5steak \
   --pubkey=$(gaiad tendermint show_validator) \
   --address-validator=<account_cosmosaccaddr>
-  --moniker=<choose_a_moniker> \
+  --moniker="choose a moniker" \
   --chain-id=gaia-6002 \
   --name=<key_name>
 ```
 
-You can add more information to the validator, such as`--website`, `--keybase-sig`, or `--details`. Here's how:
+### Edit Validator Description
+
+You can edit your validator's public description. This info is to identify your validator, and will be relied on by delegators to decide which validators to stake to. Make sure to provide input for every flag below, otherwise the field will default to empty (`--moniker` defaults to the machine name).
+
+The `--keybase-sig` is a 16-digit string that is generated with a [keybase.io](https://keybase.io) account. It's a cryptographically secure method of verifying your identity across multiple online networks. The Keybase API allows us to retrieve your Keybase avatar. This is how you can add a logo to your validator profile.
 
 ```bash
-gaiacli stake edit-validator \
-  --details="To the cosmos!" \
-  --website="https://cosmos.network"
+gaiacli stake edit-validator
+  --address-validator=<account_cosmosaccaddr>
+  --moniker="choose a moniker" \
+  --website="https://cosmos.network" \
+  --keybase-sig="6A0D65E29A4CBC8E"
+  --details="To infinity and beyond!"
+  --chain-id=gaia-6002 \
+  --name=<key_name>
 ```
 
+### View Validator Description
 View the validator's information with this command:
 
 ```bash

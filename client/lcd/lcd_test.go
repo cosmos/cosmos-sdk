@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/tendermint/tmlibs/common"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -296,6 +298,7 @@ func TestTxs(t *testing.T) {
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	type txInfo struct {
+		Hash   common.HexBytes        `json:"hash"`
 		Height int64                  `json:"height"`
 		Tx     sdk.Tx                 `json:"tx"`
 		Result abci.ResponseDeliverTx `json:"result"`
@@ -310,6 +313,10 @@ func TestTxs(t *testing.T) {
 	err := cdc.UnmarshalJSON([]byte(body), &indexedTxs)
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(indexedTxs))
+
+	// XXX should this move into some other testfile for txs in general?
+	// test if created TX hash is the correct hash
+	assert.Equal(t, resultTx.Hash, indexedTxs[0].Hash)
 
 	// query sender
 	addrBech := sdk.MustBech32ifyAcc(addr)

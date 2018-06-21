@@ -727,12 +727,12 @@ func GenTx(chainID string, msgs []sdk.Msg, accnums []int64, seq []int64, priv ..
 	for i, p := range priv {
 		sigs[i] = auth.StdSignature{
 			PubKey:        p.PubKey(),
-			Signature:     p.Sign(auth.StdSignBytes(chainID, accnums[i], seq[i], fee, msgs)),
+			Signature:     p.Sign(auth.StdSignBytes(chainID, accnums[i], seq[i], fee, msgs, "")),
 			AccountNumber: accnums[i],
 			Sequence:      seq[i],
 		}
 	}
-	return auth.NewStdTx(msgs, fee, sigs)
+	return auth.NewStdTx(msgs, fee, sigs, "")
 }
 
 // spin up simple app for testing

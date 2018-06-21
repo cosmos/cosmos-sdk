@@ -68,21 +68,30 @@ func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, 
 func newTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee) sdk.Tx {
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
-		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs)
+		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, "")
 		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), AccountNumber: accNums[i], Sequence: seqs[i]}
 	}
-	tx := NewStdTx(msgs, fee, sigs)
+	tx := NewStdTx(msgs, fee, sigs, "")
+	return tx
+}
+
+func newTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee, memo string) sdk.Tx {
+	sigs := make([]StdSignature, len(privs))
+	for i, priv := range privs {
+		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, memo)
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), AccountNumber: accNums[i], Sequence: seqs[i]}
+	}
+	tx := NewStdTx(msgs, fee, sigs, memo)
 	return tx
 }
 
 // All signers sign over the same StdSignDoc. Should always create invalid signatures
-func newTestTxWithSignBytes(msgs []sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee, signBytes []byte) sdk.Tx {
+func newTestTxWithSignBytes(msgs []sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee, signBytes []byte, memo string) sdk.Tx {
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
 		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), AccountNumber: accNums[i], Sequence: seqs[i]}
 	}
-
-	tx := NewStdTx(msgs, fee, sigs)
+	tx := NewStdTx(msgs, fee, sigs, memo)
 	return tx
 }
 
@@ -299,6 +308,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	msg := newTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []int64{0}, []int64{0}
 	fee := newStdFee()
+	msgs := []sdk.Msg{msg}
 
 	// signer does not have enough funds to pay the fee
 	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
@@ -342,22 +352,22 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	fee := NewStdFee(0, sdk.NewCoin("atom", 0))
 
 	// tx does not have enough gas
-	tx = newTestTx(ctx, msg, privs, accnums, seqs, fee)
+	tx = newTestTx(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeOutOfGas)
 
 	// tx with memo doesn't have enough gas
 	fee = NewStdFee(1001, sdk.NewCoin("atom", 0))
-	tx = newTestTxWithMemo(ctx, msg, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
+	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeOutOfGas)
 
 	// memo too large
 	fee = NewStdFee(2001, sdk.NewCoin("atom", 0))
-	tx = newTestTxWithMemo(ctx, msg, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
+	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeMemoTooLarge)
 
 	// tx with memo has enough gas
 	fee = NewStdFee(1100, sdk.NewCoin("atom", 0))
-	tx = newTestTxWithMemo(ctx, msg, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
+	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 	checkValidTx(t, anteHandler, ctx, tx)
 }
 
@@ -423,6 +433,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 
 			msgs, privs, accnums, seqs, fee,
 			StdSignBytes(cs.chainID, cs.accnum, cs.seq, cs.fee, cs.msgs, ""),
+			"",
 		)
 		checkInvalidTx(t, anteHandler, ctx, tx, cs.code)
 	}

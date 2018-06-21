@@ -209,7 +209,7 @@ func (keeper Keeper) deleteVote(ctx sdk.Context, proposalID int64, voterAddr sdk
 // =====================================================
 // Deposits
 
-// Gets the vote of a specific voter on a specific proposal
+// Gets the deposit of a specific depositer on a specific proposal
 func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID int64, depositerAddr sdk.Address) (Deposit, bool) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyDeposit(proposalID, depositerAddr))
@@ -221,14 +221,14 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 	return deposit, true
 }
 
-// Gets the vote of a specific voter on a specific proposal
 func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID int64, depositerAddr sdk.Address, deposit Deposit) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinary(deposit)
 	store.Set(KeyDeposit(proposalID, depositerAddr), bz)
 }
 
-// Gets the vote of a specific voter on a specific proposal
+// Adds or updates a deposit of a specific depositer on a specific proposal
+// Activates voting period when appropriate
 func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr sdk.Address, depositAmount sdk.Coins) (sdk.Error, bool) {
 	// Checks to see if proposal exists
 	proposal := keeper.GetProposal(ctx, proposalID)
@@ -272,13 +272,13 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 	return nil, activatedVotingPeriod
 }
 
-// Gets the vote of a specific voter on a specific proposal
+// Gets all the deposits on a specific proposal
 func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID int64) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
 	return sdk.KVStorePrefixIterator(store, KeyDepositsSubspace(proposalID))
 }
 
-// Gets the vote of a specific voter on a specific proposal
+// Returns and deletes all the deposits on a specific proposal
 func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID int64) {
 	store := ctx.KVStore(keeper.storeKey)
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
@@ -298,7 +298,7 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID int64) {
 	depositsIterator.Close()
 }
 
-// Gets the vote of a specific voter on a specific proposal
+// Deletes all the deposits on a specific proposal without refunding them
 func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID int64) {
 	store := ctx.KVStore(keeper.storeKey)
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
@@ -328,9 +328,7 @@ func (keeper Keeper) getActiveProposalQueue(ctx sdk.Context) ProposalQueue {
 
 func (keeper Keeper) setActiveProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) {
 	store := ctx.KVStore(keeper.storeKey)
-
 	bz := keeper.cdc.MustMarshalBinary(proposalQueue)
-
 	store.Set(KeyActiveProposalQueue, bz)
 }
 
@@ -369,16 +367,14 @@ func (keeper Keeper) getInactiveProposalQueue(ctx sdk.Context) ProposalQueue {
 
 	var proposalQueue ProposalQueue
 
-	keeper.cdc.MustUnmarshalBinary(bz, &proposalQueue) // TODO: switch to UnmarshalBinaryBare when new go-amino gets added
+	keeper.cdc.MustUnmarshalBinary(bz, &proposalQueue)
 
 	return proposalQueue
 }
 
 func (keeper Keeper) setInactiveProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) {
 	store := ctx.KVStore(keeper.storeKey)
-
-	bz := keeper.cdc.MustMarshalBinary(proposalQueue) // TODO: switch to MarshalBinaryBare when new go-amino gets added
-
+	bz := keeper.cdc.MustMarshalBinary(proposalQueue)
 	store.Set(KeyInactiveProposalQueue, bz)
 }
 

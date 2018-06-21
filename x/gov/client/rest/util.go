@@ -45,10 +45,10 @@ func (req baseReq) baseReqValidate(w http.ResponseWriter) bool {
 		return false
 	}
 
-	// if len(req.ChainID) == 0 {
-	// 	writeErr(&w, http.StatusUnauthorized, "ChainID required but not specified")
-	// 	return false
-	// }
+	if len(req.ChainID) == 0 {
+		writeErr(&w, http.StatusUnauthorized, "ChainID required but not specified")
+		return false
+	}
 
 	if req.AccountNumber < 0 {
 		writeErr(&w, http.StatusUnauthorized, "Account Number required but not specified")
@@ -72,6 +72,7 @@ func writeErr(w *http.ResponseWriter, status int, msg string) {
 func signAndBuild(w http.ResponseWriter, ctx context.CoreContext, baseReq baseReq, msg sdk.Msg, cdc *wire.Codec) {
 	ctx = ctx.WithAccountNumber(baseReq.AccountNumber)
 	ctx = ctx.WithSequence(baseReq.Sequence)
+	ctx = ctx.WithChainID(baseReq.ChainID)
 
 	// add gas to context
 	ctx = ctx.WithGas(baseReq.Gas)

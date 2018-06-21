@@ -713,9 +713,11 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 
+	chainID := viper.GetString(client.FlagChainID)
+
 	bechProposerAddr := sdk.MustBech32ifyAcc(proposerAddr)
 
-	// send
+	// submitproposal
 	jsonStr := []byte(fmt.Sprintf(`{
 		"title": "Test",
 		"description": "test",
@@ -725,11 +727,12 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 		"base_req": {
 			"name": "%s",
 			"password": "%s",
+			"chain_id": "%s",
 			"account_number": %d,
 			"sequence": %d,
 			"gas": 100000
 		}
-	}`, bechProposerAddr, name, password, accnum, sequence))
+	}`, bechProposerAddr, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", "/gov/submitproposal", jsonStr)
 	fmt.Println(res)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -747,9 +750,11 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 
+	chainID := viper.GetString(client.FlagChainID)
+
 	bechProposerAddr := sdk.MustBech32ifyAcc(proposerAddr)
 
-	// send
+	// deposit on proposal
 	jsonStr := []byte(fmt.Sprintf(`{
 		"depositer": "%s",
 		"proposalID": %d,
@@ -757,11 +762,12 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 		"base_req": {
 			"name": "%s",
 			"password": "%s",
+			"chain_id": "%s",
 			"account_number": %d,
 			"sequence": %d,
 			"gas": 100000
 		}
-	}`, bechProposerAddr, proposalID, name, password, accnum, sequence))
+	}`, bechProposerAddr, proposalID, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", "/gov/deposit", jsonStr)
 	fmt.Println(res)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -779,9 +785,11 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ad
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 
+	chainID := viper.GetString(client.FlagChainID)
+
 	bechProposerAddr := sdk.MustBech32ifyAcc(proposerAddr)
 
-	// send
+	// vote on proposal
 	jsonStr := []byte(fmt.Sprintf(`{
 		"voter": "%s",
 		"proposalID": %d,
@@ -789,11 +797,12 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ad
 		"base_req": {
 			"name": "%s",
 			"password": "%s",
+			"chain_id": "%s",
 			"account_number": %d,
 			"sequence": %d,
 			"gas": 100000
 		}
-	}`, bechProposerAddr, proposalID, name, password, accnum, sequence))
+	}`, bechProposerAddr, proposalID, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", "/gov/vote", jsonStr)
 	fmt.Println(res)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)

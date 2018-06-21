@@ -16,6 +16,7 @@ import (
 	cryptoKeys "github.com/tendermint/go-crypto/keys"
 	p2p "github.com/tendermint/tendermint/p2p"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/tendermint/tmlibs/common"
 
 	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
@@ -309,6 +310,7 @@ func TestTxs(t *testing.T) {
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	type txInfo struct {
+		Hash   common.HexBytes        `json:"hash"`
 		Height int64                  `json:"height"`
 		Tx     sdk.Tx                 `json:"tx"`
 		Result abci.ResponseDeliverTx `json:"result"`
@@ -323,6 +325,10 @@ func TestTxs(t *testing.T) {
 	err := cdc.UnmarshalJSON([]byte(body), &indexedTxs)
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(indexedTxs))
+
+	// XXX should this move into some other testfile for txs in general?
+	// test if created TX hash is the correct hash
+	assert.Equal(t, resultTx.Hash, indexedTxs[0].Hash)
 
 	// query sender
 	// also tests url decoding

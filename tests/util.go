@@ -7,25 +7,85 @@ import (
 	"time"
 
 	amino "github.com/tendermint/go-amino"
+	tmclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/lib/client"
 )
 
-// Uses localhost
-func WaitForHeight(height int64, port string) {
+// Wait for the next tendermint block from the Tendermint RPC
+// on localhost
+func WaitForNextHeightTM(port string) {
+	url := fmt.Sprintf("http://localhost:%v", port)
+	cl := tmclient.NewHTTP(url, "/websocket")
+	resBlock, err := cl.Block(nil)
+	if err != nil {
+		panic(err)
+	}
+	waitForHeightTM(resBlock.Block.Height+1, url)
+}
+
+// Wait for the given height from the Tendermint RPC
+// on localhost
+func WaitForHeightTM(height int64, port string) {
+	url := fmt.Sprintf("http://localhost:%v", port)
+	waitForHeightTM(height, url)
+}
+
+func waitForHeightTM(height int64, url string) {
+	cl := tmclient.NewHTTP(url, "/websocket")
 	for {
+		// get url, try a few times
+		var resBlock *ctypes.ResultBlock
+		var err error
+	INNER:
+		for i := 0; i < 5; i++ {
+			resBlock, err = cl.Block(nil)
+			if err == nil {
+				break INNER
+			}
+			time.Sleep(time.Millisecond * 200)
+		}
+		if err != nil {
+			panic(err)
+		}
 
-		url := fmt.Sprintf("http://localhost:%v/blocks/latest", port)
+		if resBlock.Block != nil &&
+			resBlock.Block.Height >= height {
+			fmt.Println("HEIGHT", resBlock.Block.Height)
+			return
+		}
+		time.Sleep(time.Millisecond * 100)
+	}
+}
 
+// Wait for height from the LCD API on localhost
+func WaitForHeight(height int64, port string) {
+	url := fmt.Sprintf("http://localhost:%v/blocks/latest", port)
+	waitForHeight(height, url)
+}
+
+// Whether or not an HTTP status code was "successful"
+func StatusOK(statusCode int) bool {
+	switch statusCode {
+	case http.StatusOK:
+	case http.StatusCreated:
+	case http.StatusNoContent:
+		return true
+	}
+	return false
+}
+
+func waitForHeight(height int64, url string) {
+	for {
 		// get url, try a few times
 		var res *http.Response
 		var err error
 		for i := 0; i < 5; i++ {
 			res, err = http.Get(url)
-			if err == nil {
+			if err == nil && StatusOK(res.StatusCode) {
 				break
 			}
-			time.Sleep(time.Second)
+			time.Sleep(time.Millisecond * 200)
 		}
 		if err != nil {
 			panic(err)
@@ -45,7 +105,8 @@ func WaitForHeight(height int64, port string) {
 			panic(err)
 		}
 
-		if resultBlock.Block.Height >= height {
+		if resultBlock.Block != nil &&
+			resultBlock.Block.Height >= height {
 			return
 		}
 		time.Sleep(time.Millisecond * 100)

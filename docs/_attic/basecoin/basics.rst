@@ -78,7 +78,7 @@ window. Here run:
 
 ::
 
-    basecli init --node=tcp://localhost:46657 --genesis=$HOME/.basecoin/genesis.json
+    basecli init --node=tcp://localhost:26657 --genesis=$HOME/.basecoin/genesis.json
 
 If you provide the genesis file to basecli, it can calculate the proper
 chainID and validator hash. Basecli needs to get this information from

@@ -26,7 +26,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) (tags 
 		case tmtypes.ABCIEvidenceTypeDuplicateVote:
 			sk.handleDoubleSign(ctx, evidence.Height, evidence.Time, pk)
 		default:
-			ctx.Logger().With("module", "x/slashing").Error(fmt.Sprintf("Ignored unknown evidence type: %s", string(evidence.Type)))
+			ctx.Logger().With("module", "x/slashing").Error(fmt.Sprintf("ignored unknown evidence type: %s", string(evidence.Type)))
 		}
 	}
 

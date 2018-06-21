@@ -35,6 +35,10 @@ func (tx kvstoreTx) GetMsg() sdk.Msg {
 	return tx
 }
 
+func (tx kvstoreTx) GetMemo() string {
+	return ""
+}
+
 func (tx kvstoreTx) GetSignBytes() []byte {
 	return tx.bytes
 }

@@ -21,7 +21,7 @@ var (
 	priv2 = crypto.GenPrivKeyEd25519()
 	addr2 = priv2.PubKey().Address()
 
-	coins    = sdk.Coins{{"foocoin", 10}}
+	coins    = sdk.Coins{sdk.NewCoin("foocoin", 10)}
 	sendMsg1 = bank.MsgSend{
 		Inputs:  []bank.Input{bank.NewInput(addr1, coins)},
 		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
@@ -45,7 +45,7 @@ func TestMsgChangePubKey(t *testing.T) {
 
 	// Construct some genesis bytes to reflect basecoin/types/AppAccount
 	// Give 77 foocoin to the first key
-	coins := sdk.Coins{{"foocoin", 77}}
+	coins := sdk.Coins{sdk.NewCoin("foocoin", 77)}
 	acc1 := &auth.BaseAccount{
 		Address: addr1,
 		Coins:   coins,
@@ -64,8 +64,8 @@ func TestMsgChangePubKey(t *testing.T) {
 	SignCheckDeliver(t, mapp.BaseApp, sendMsg1, []int64{0}, []int64{0}, true, priv1)
 
 	// Check balances
-	CheckBalance(t, mapp, addr1, sdk.Coins{{"foocoin", 67}})
-	CheckBalance(t, mapp, addr2, sdk.Coins{{"foocoin", 10}})
+	CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("foocoin", 67)})
+	CheckBalance(t, mapp, addr2, sdk.Coins{sdk.NewCoin("foocoin", 10)})
 
 	changePubKeyMsg := auth.MsgChangeKey{
 		Address:   addr1,
@@ -92,6 +92,6 @@ func TestMsgChangePubKey(t *testing.T) {
 	SignCheckDeliver(t, mapp.BaseApp, sendMsg1, []int64{0}, []int64{2}, true, priv2)
 
 	// Check balances
-	CheckBalance(t, mapp, addr1, sdk.Coins{{"foocoin", 57}})
-	CheckBalance(t, mapp, addr2, sdk.Coins{{"foocoin", 20}})
+	CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("foocoin", 57)})
+	CheckBalance(t, mapp, addr2, sdk.Coins{sdk.NewCoin("foocoin", 20)})
 }

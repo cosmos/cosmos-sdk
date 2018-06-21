@@ -16,6 +16,7 @@ type CoreContext struct {
 	FromAddressName string
 	AccountNumber   int64
 	Sequence        int64
+	Memo            string
 	Client          rpcclient.Client
 	Decoder         auth.AccountDecoder
 	AccountStore    string
@@ -67,6 +68,12 @@ func (c CoreContext) WithAccountNumber(accnum int64) CoreContext {
 // WithSequence - return a copy of the context with an updated sequence number
 func (c CoreContext) WithSequence(sequence int64) CoreContext {
 	c.Sequence = sequence
+	return c
+}
+
+// WithMemo - return a copy of the context with an updated memo
+func (c CoreContext) WithMemo(memo string) CoreContext {
+	c.Memo = memo
 	return c
 }
 

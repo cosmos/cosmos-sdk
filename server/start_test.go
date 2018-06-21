@@ -18,6 +18,7 @@ import (
 
 func TestStartStandAlone(t *testing.T) {
 	home, err := ioutil.TempDir("", "mock-sdk-cmd")
+	require.Nil(t, err)
 	defer func() {
 		os.RemoveAll(home)
 	}()
@@ -40,7 +41,7 @@ func TestStartStandAlone(t *testing.T) {
 	svrAddr, _, err := FreeTCPAddr()
 	require.Nil(t, err)
 	svr, err := server.NewServer(svrAddr, "socket", app)
-	require.Nil(t, err, "Error creating listener")
+	require.Nil(t, err, "error creating listener")
 	svr.SetLogger(logger.With("module", "abci-server"))
 	svr.Start()
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.20.0
+
+*TBD*
+
+BREAKING CHANGES
+* Change default ports from 466xx to 266xx
+* AltBytes renamed to Memo, now a string, max 100 characters, costs a bit of gas
+
+FEATURES
+* [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
+
+FIXES
+* \#1259 - fix bug where certain tests that could have a nil pointer in defer
+* Retry on HTTP request failure in CLI tests, add option to retry tests in Makefile
+* Fixed bug where chain ID wasn't passed properly in x/bank REST handler
+
 ## 0.19.0
 
 *June 13, 2018*
@@ -7,25 +23,33 @@
 BREAKING CHANGES
 * msg.GetSignBytes() now returns bech32-encoded addresses in all cases
 * [lcd] REST end-points now include gas
+* sdk.Coin now uses sdk.Int, a big.Int wrapper with 256bit range cap
 
 FEATURES
 * [x/auth] Added AccountNumbers to BaseAccount and StdTxs to allow for replay protection with account pruning
+* [lcd] added an endpoint to query for the SDK version of the connected node
 
 IMPROVEMENTS
 * export command now writes current validator set for Tendermint
 * [tests] Application module tests now use a mock application
 * [gaiacli] Fix error message when account isn't found when running gaiacli account
 * [lcd] refactored to eliminate use of global variables, and interdependent tests
+* [tests] Added testnet command to gaiad
+* [tests] Added localnet targets to Makefile
 * [x/stake] More stake tests added to test ByPower index
 
 FIXES
 * Fixes consensus fault on testnet - see postmortem [here](https://github.com/cosmos/cosmos-sdk/issues/1197#issuecomment-396823021)
-* [x/stake] bonded inflation removed, non-bonded inflation partially implemented 
+* [x/stake] bonded inflation removed, non-bonded inflation partially implemented
 * [lcd] Switch to bech32 for addresses on all human readable inputs and outputs
 * [lcd] fixed tx indexing/querying
 * [cli] Added `--gas` flag to specify transaction gas limit
 * [gaia] Registered slashing message handler
 * [x/slashing] Set signInfo.StartHeight correctly for newly bonded validators
+
+FEATURES
+* [docs] Reorganize documentation
+* [docs] Update staking spec, create WIP spec for slashing, and fees
 
 ## 0.18.0
 

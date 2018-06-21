@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"runtime/debug"
 	"strings"
-	"reflect"
 
 	"github.com/pkg/errors"
 
@@ -65,11 +64,8 @@ type BaseApp struct {
 	// checkState is set on initialization and reset on Commit.
 	// deliverState is set in InitChain and BeginBlock and cleared on Commit.
 	// See methods setCheckState and setDeliverState.
-	// .valUpdates accumulate in DeliverTx and are reset in BeginBlock.
-	// QUESTION: should we put valUpdates in the deliverState.ctx?
 	checkState       *state                  // for CheckTx
 	deliverState     *state                  // for DeliverTx
-	valUpdates       []abci.Validator        // cached validator changes from DeliverTx
 	signedValidators []abci.SigningValidator // absent validators from begin block
 }
 
@@ -388,7 +384,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	if app.deliverState == nil {
 		app.setDeliverState(req.Header)
 	}
-	app.valUpdates = nil
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)
 	}
@@ -433,13 +428,8 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 		result = app.runTx(runTxModeDeliver, txBytes, tx)
 	}
 
-	// After-handler hooks.
-	if result.IsOK() {
-		app.valUpdates = append(app.valUpdates, result.ValidatorUpdates...)
-	} else {
-		// Even though the Result.Code is not OK, there are still effects,
-		// namely fee deductions and sequence incrementing.
-	}
+	// Even though the Result.Code is not OK, there are still effects,
+	// namely fee deductions and sequence incrementing.
 
 	// Tell the blockchain engine (i.e. Tendermint).
 	return abci.ResponseDeliverTx{
@@ -559,20 +549,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		// Construct usable logs in multi-message transactions. Messages are 1-indexed in logs.
 		logs = append(logs, fmt.Sprintf("Msg %d: %s", i + 1, finalResult.Log))
 
-		// Cumulate Validator updates
-		for _, val := range result.ValidatorUpdates {
-			seen := false
-			for _, updated := range finalResult.ValidatorUpdates {
-				if reflect.DeepEqual(updated.Address, val.Address) {
-					seen = true
-					updated.Power += val.Power
-				} 
-			}
-			if !seen {
-				finalResult.ValidatorUpdates = append(finalResult.ValidatorUpdates, val)
-			}
-		}
-
 		// Stop execution and return on first failed message.
 		if !result.IsOK() {
 			result.GasUsed = finalResult.GasUsed
@@ -596,8 +572,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	if app.endBlocker != nil {
 		res = app.endBlocker(app.deliverState.ctx, req)
-	} else {
-		res.ValidatorUpdates = app.valUpdates
 	}
 	return
 }

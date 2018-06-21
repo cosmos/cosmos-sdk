@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/tendermint/tmlibs/common"
+
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/types"
@@ -34,10 +36,15 @@ func BlockCommand() *cobra.Command {
 	return cmd
 }
 
+type OutputTxEntry struct {
+	TX   sdk.Tx          `json:"tx"`
+	Hash common.HexBytes `json:"hash"`
+}
+
 type OutputBlock struct {
 	Header     *types.Header      `json:"header"`
 	Evidence   types.EvidenceData `json:"evidence"`
-	TXs        []sdk.Tx           `json:"txs"`
+	Data       []OutputTxEntry    `json:"data"`
 	LastCommit *types.Commit      `json:"last_commit"`
 }
 
@@ -62,14 +69,17 @@ func getBlock(ctx context.CoreContext, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
-	txs := make([]sdk.Tx, len(res.Block.Data.Txs))
-	for i, txBytes := range res.Block.Data.Txs {
+	data := make([]OutputTxEntry, len(res.Block.Data.Txs))
+	for i, dataTx := range res.Block.Data.Txs {
 		var tx auth.StdTx
-		err := cdc.UnmarshalBinary(txBytes, &tx)
+		err := cdc.UnmarshalBinary(dataTx, &tx)
 		if err != nil {
 			return nil, err
 		}
-		txs[i] = tx
+		data[i] = OutputTxEntry{
+			TX:   tx,
+			Hash: dataTx.Hash(),
+		}
 	}
 
 	outputResultBlock := OutputResultBlock{
@@ -77,7 +87,7 @@ func getBlock(ctx context.CoreContext, height *int64) ([]byte, error) {
 		Block: OutputBlock{
 			Header:     res.Block.Header,
 			Evidence:   res.Block.Evidence,
-			TXs:        txs,
+			Data:       data,
 			LastCommit: res.Block.LastCommit,
 		},
 	}

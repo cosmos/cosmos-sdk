@@ -6,6 +6,8 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 
@@ -30,7 +32,7 @@ func getMockApp(t *testing.T, numGenAccs int64) (*mock.App, Keeper, stake.Keeper
 	keeper := NewKeeper(mapp.Cdc, keyGov, ck, sk, DefaultCodespace)
 	mapp.Router().AddRoute("gov", NewHandler(keeper))
 
-	mapp.CompleteSetup(t, []*sdk.KVStoreKey{keyStake, keyGov})
+	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyGov}))
 
 	mapp.SetEndBlocker(getEndBlocker(keeper))
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk))

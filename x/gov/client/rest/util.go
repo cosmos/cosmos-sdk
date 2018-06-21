@@ -77,7 +77,7 @@ func signAndBuild(w http.ResponseWriter, ctx context.CoreContext, baseReq baseRe
 	// add gas to context
 	ctx = ctx.WithGas(baseReq.Gas)
 
-	txBytes, err := ctx.SignAndBuild(baseReq.Name, baseReq.Password, msg, cdc)
+	txBytes, err := ctx.SignAndBuild(baseReq.Name, baseReq.Password, []sdk.Msg{msg}, cdc)
 	if err != nil {
 		writeErr(&w, http.StatusUnauthorized, err.Error())
 		return

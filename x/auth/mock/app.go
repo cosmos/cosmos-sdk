@@ -1,11 +1,8 @@
 package mock
 
 import (
-	"testing"
-
 	"os"
 
-	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -66,13 +63,12 @@ func NewApp() *App {
 }
 
 // complete the application setup after the routes have been registered
-func (app *App) CompleteSetup(t *testing.T, newKeys []*sdk.KVStoreKey) {
-
+func (app *App) CompleteSetup(newKeys []*sdk.KVStoreKey) error {
 	newKeys = append(newKeys, app.KeyMain)
 	newKeys = append(newKeys, app.KeyAccount)
 	app.MountStoresIAVL(newKeys...)
 	err := app.LoadLatestVersion(app.KeyMain)
-	require.NoError(t, err)
+	return err
 }
 
 // custom logic for initialization

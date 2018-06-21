@@ -7,9 +7,13 @@
 BREAKING CHANGES
 * Change default ports from 466xx to 266xx
 * AltBytes renamed to Memo, now a string, max 100 characters, costs a bit of gas
+* Transactions now take a list of Messages
+* Signers of a transaction now only sign over their account and sequence number
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
+* [lcd] Queried TXs now include the tx hash to identify each tx
+* [mockapp] CompleteSetup() no longer takes a testing parameter
 
 FIXES
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer

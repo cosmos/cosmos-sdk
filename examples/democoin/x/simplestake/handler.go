@@ -1,9 +1,6 @@
 package simplestake
 
 import (
-	abci "github.com/tendermint/abci/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -22,35 +19,15 @@ func NewHandler(k Keeper) sdk.Handler {
 }
 
 func handleMsgBond(ctx sdk.Context, k Keeper, msg MsgBond) sdk.Result {
-	power, err := k.Bond(ctx, msg.Address, msg.PubKey, msg.Stake)
-	if err != nil {
-		return err.Result()
-	}
-
-	valSet := abci.Validator{
-		PubKey: tmtypes.TM2PB.PubKey(msg.PubKey),
-		Power:  power,
-	}
-
+	// Removed ValidatorSet from result because it does not get used.
+	// TODO: Implement correct bond/unbond handling
 	return sdk.Result{
-		Code:             sdk.ABCICodeOK,
-		ValidatorUpdates: abci.Validators{valSet},
+		Code: sdk.ABCICodeOK,
 	}
 }
 
 func handleMsgUnbond(ctx sdk.Context, k Keeper, msg MsgUnbond) sdk.Result {
-	pubKey, _, err := k.Unbond(ctx, msg.Address)
-	if err != nil {
-		return err.Result()
-	}
-
-	valSet := abci.Validator{
-		PubKey: tmtypes.TM2PB.PubKey(pubKey),
-		Power:  int64(0),
-	}
-
 	return sdk.Result{
-		Code:             sdk.ABCICodeOK,
-		ValidatorUpdates: abci.Validators{valSet},
+		Code: sdk.ABCICodeOK,
 	}
 }

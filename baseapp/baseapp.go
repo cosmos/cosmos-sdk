@@ -563,7 +563,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		for _, val := range result.ValidatorUpdates {
 			seen := false
 			for _, updated := range finalResult.ValidatorUpdates {
-				if reflect.DeepEqual(updated.PubKey, val.PubKey) {
+				if reflect.DeepEqual(updated.Address, val.Address) {
 					seen = true
 					updated.Power += val.Power
 				} 

@@ -3,7 +3,7 @@
 Note: We are aware this documentation is a work in progress. We are actively
 working to improve the tooling and the documentation to make this process as painless as
 possible. In the meantime, join the [Validator Chat](https://riot.im/app/#/room/#cosmos_validators:matrix.org)
-for technical support, and [open issues](https://github.com/cosmos/cosmos-sdk) if run into any! Thanks very much for your patience and support. :)
+for technical support, and [open issues](https://github.com/cosmos/cosmos-sdk) if you run into any! Thanks very much for your patience and support. :)
 
 ## Setting Up a New Node
 
@@ -37,10 +37,10 @@ That will install the `gaiad` and `gaiacli` binaries. Verify that everything is 
 
 ```bash
 $ gaiad version
-0.19.0-<commit>
+0.19.0-c6711810
 
 $ gaiacli version
-0.19.0-<commit>
+0.19.0-c6711810
 ```
 
 ### Node Setup
@@ -149,25 +149,26 @@ There are three types of key representations that are used in this tutorial:
   * e.g. `cosmosaccpub1zcjduc3q7fu03jnlu2xpl75s2nkt7krm6grh4cc5aqth73v0zwmea25wj2hsqhlqzm`
 
 - `cosmosvalpub`
-  * Generated when the node is created with `gaiad init`. Needed when staking.
+  * Generated when the node is created with `gaiad init`.
+  * Get this value with `gaiad tendermint show_validator`
   * e.g. `cosmosvalpub1zcjduc3qcyj09qc03elte23zwshdx92jm6ce88fgc90rtqhjx8v0608qh5ssp0w94c`
 
 ### Key Generation
 
-You'll need a private and public key pair \(a.k.a. `sk, pk` respectively\) to be able to receive funds, send txs, bond tx, etc.
+You'll need an account private and public key pair \(a.k.a. `sk, pk` respectively\) to be able to receive funds, send txs, bond tx, etc.
 
 To generate a new key \(default _ed25519_ elliptic curve\):
 
 ```bash
-gaiacli keys add <key_name>
+gaiacli keys add <account_name>
 ```
 
 Next, you will have to create a passphrase to protect the key on disk. The output of the above command will contain a _seed phrase_. Save the _seed phrase_ in a safe place in case you forget the password!
 
-If you check your private keys, you'll now see `<key_name>`:
+If you check your private keys, you'll now see `<account_name>`:
 
 ```bash
-gaiacli keys show <key_name>
+gaiacli keys show <account_name>
 ```
 
 You can see all your available keys by typing:
@@ -186,15 +187,15 @@ gaiad tendermint show_validator
 
 ## Fund your account
 
-The best way to get tokens is from the [Cosmos Testnet Faucet](https://faucetcosmos.network). If the faucet is not working for you, try asking [#cosmos-validators](https://riot.im/app/#/room/#cosmos-validators:matrix.org). The facuet needs the `cosmosaccaddr` from the key you wish to use for staking.
+The best way to get tokens is from the [Cosmos Testnet Faucet](https://faucetcosmos.network). If the faucet is not working for you, try asking [#cosmos-validators](https://riot.im/app/#/room/#cosmos-validators:matrix.org). The faucet needs the `cosmosaccaddr` from the account you wish to use for staking.
 
 After receiving tokens to your address, you can view your account's balance by typing:
 
 ```bash
-gaiacli account <key_cosmosaccaddr>
+gaiacli account <account_cosmosaccaddr>
 ```
 
-> _*Note:*_ When you query an account balance with zero tokens, you will get this error: `No account with address <key_cosmosaccaddr> was found in the state.` This can also happen if you fund the account before your node has fully synced with the chain. These are both normal. Also, we're working on improving our error messages!
+> _*Note:*_ When you query an account balance with zero tokens, you will get this error: `No account with address <account_cosmosaccaddr> was found in the state.` This can also happen if you fund the account before your node has fully synced with the chain. These are both normal. Also, we're working on improving our error messages!
 
 ## Run a Validator Node
 
@@ -214,7 +215,7 @@ Next, craft your `gaiacli stake create-validator` command:
 gaiacli stake create-validator \
   --amount=5steak \
   --pubkey=$(gaiad tendermint show_validator) \
-  --address-validator=<key_cosmosaccaddr>
+  --address-validator=<account_cosmosaccaddr>
   --moniker=<choose_a_moniker> \
   --chain-id=gaia-6002 \
   --name=<key_name>
@@ -232,7 +233,7 @@ View the validator's information with this command:
 
 ```bash
 gaiacli stake validator \
-  --address-validator=<your_address> \
+  --address-validator=<account_cosmosaccaddr> \
   --chain-id=gaia-6002
 ```
 
@@ -306,7 +307,7 @@ On the testnet, we delegate `steak` instead of `atom`. Here's how you can bond t
 ```bash
 gaiacli stake delegate \
   --amount=10steak \
-  --address-delegator=<key_cosmosaccaddr> \
+  --address-delegator=<account_cosmosaccaddr> \
   --address-validator=$(gaiad tendermint show_validator) \
   --name=<key_name> \
   --chain-id=gaia-6002
@@ -322,7 +323,7 @@ If for any reason the validator misbehaves, or you want to unbond a certain amou
 
 ```bash
 gaiacli stake unbond \
-  --address-delegator=<key_cosmosaccaddr> \
+  --address-delegator=<account_cosmosaccaddr> \
   --address-validator=$(gaiad tendermint show_validator) \
   --shares=MAX \
   --name=<key_name> \
@@ -332,10 +333,10 @@ gaiacli stake unbond \
 You can check your balance and your stake delegation to see that the unbonding went through successfully.
 
 ```bash
-gaiacli account <key_cosmosaccaddr>
+gaiacli account <account_cosmosaccaddr>
 
 gaiacli stake delegation \
-  --address-delegator=<key_cosmosaccaddr> \
+  --address-delegator=<account_cosmosaccaddr> \
   --address-validator=$(gaiad tendermint show_validator) \
   --chain-id=gaia-6002
 ```
@@ -357,12 +358,12 @@ gaiacli send \
 Now, view the updated balances of the origin and destination accounts:
 
 ```bash
-gaiacli account <key_cosmosaccaddr>
+gaiacli account <account_cosmosaccaddr>
 gaiacli account <destination_cosmosaccaddr>
 ```
 
 You can also check your balance at a given block by using the `--block` flag:
 
 ```bash
-gaiacli account <key_cosmosaccaddr> --block=<block_height>
+gaiacli account <account_cosmosaccaddr> --block=<block_height>
 ```

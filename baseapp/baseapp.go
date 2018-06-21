@@ -551,8 +551,15 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 		// Stop execution and return on first failed message.
 		if !result.IsOK() {
+			if len(msgs) == 1 {
+				return result	
+			}
 			result.GasUsed = finalResult.GasUsed
-			result.Log = fmt.Sprintf("Msg 1-%d Passed. Msg %d failed: %s", i, i + 1, result.Log)
+			if i == 0 {
+				result.Log = fmt.Sprintf("Msg 1 failed: %s", result.Log)
+			} else {
+				result.Log = fmt.Sprintf("Msg 1-%d Passed. Msg %d failed: %s", i, i + 1, result.Log)
+			}
 			return result
 		}
 	}

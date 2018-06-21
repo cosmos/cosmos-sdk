@@ -115,7 +115,7 @@ type StdSignDoc struct {
 	Sequence      int64  `json:"sequence"`
 	FeeBytes      []byte `json:"fee_bytes"`
 	MsgsBytes     []byte `json:"msg_bytes"`
-	Memo          []byte `json:"alt_bytes"`
+	Memo          string `json:"memo"`
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
@@ -132,6 +132,7 @@ func StdSignBytes(chainID string, accnum int64, sequence int64, fee StdFee, msgs
 		Sequence:      sequence,
 		FeeBytes:      fee.Bytes(),
 		MsgsBytes:     msgBytes,
+		Memo:          memo,
 	})
 	if err != nil {
 		panic(err)
@@ -146,9 +147,9 @@ type StdSignMsg struct {
 	ChainID       string
 	AccountNumber int64
 	Sequence      int64
-	Fee            StdFee
-	Msgs            []sdk.Msg
-	Memo           string
+	Fee           StdFee
+	Msgs          []sdk.Msg
+	Memo          string
 }
 
 // get message bytes

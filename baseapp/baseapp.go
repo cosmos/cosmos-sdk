@@ -547,18 +547,18 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		finalResult.Tags = append(finalResult.Tags, result.Tags...)
 
 		// Construct usable logs in multi-message transactions. Messages are 1-indexed in logs.
-		logs = append(logs, fmt.Sprintf("Msg %d: %s", i + 1, finalResult.Log))
+		logs = append(logs, fmt.Sprintf("Msg %d: %s", i+1, finalResult.Log))
 
 		// Stop execution and return on first failed message.
 		if !result.IsOK() {
 			if len(msgs) == 1 {
-				return result	
+				return result
 			}
 			result.GasUsed = finalResult.GasUsed
 			if i == 0 {
 				result.Log = fmt.Sprintf("Msg 1 failed: %s", result.Log)
 			} else {
-				result.Log = fmt.Sprintf("Msg 1-%d Passed. Msg %d failed: %s", i, i + 1, result.Log)
+				result.Log = fmt.Sprintf("Msg 1-%d Passed. Msg %d failed: %s", i, i+1, result.Log)
 			}
 			return result
 		}

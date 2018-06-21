@@ -189,7 +189,7 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 	}
 
 	ctx := context.NewCoreContextFromViper().WithSequence(sequence)
-	res, err := ctx.SignAndBuild(ctx.FromAddressName, passphrase, msg, c.cdc)
+	res, err := ctx.SignAndBuild(ctx.FromAddressName, passphrase, []sdk.Msg{msg}, c.cdc)
 	if err != nil {
 		panic(err)
 	}

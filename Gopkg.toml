@@ -66,7 +66,7 @@
 
 [[constraint]]
   name = "github.com/tendermint/iavl"
-  revision = "b5f083930ce0ea0250ff926b514583c97de197f1"
+  revision = "ba9967e4a7799564c61d1fc3360c04719b1d9754"
   source = "github.com/HaoyangLiu/iavl"
 
 [[constraint]]

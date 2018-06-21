@@ -17,8 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/iavl"
-	"github.com/tendermint/tmlibs/merkle"
-	"bytes"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/lcd/proxy"
 )
@@ -138,27 +136,11 @@ func (ctx CoreContext) queryAndVerifyProof(path string, key common.HexBytes) (re
 		if err != nil {
 			return  nil, errors.Wrap(err, "Couldn't verify proof")
 		}
-		storeInfo := store.StoreInfo{
-			Core:store.StoreCore{
-				CommitID:sdk.CommitID{
-					Version: resp.Height,
-					Hash: eproof.RootHash,
-				},
-			},
-		}
-		hash := store.KvPairHash(merkle.SimpleHashFromBytes([]byte(eproof.StoreName)),storeInfo.Hash())
-
-		for _,merkleHashNode := range eproof.SimpleMerkleHashPath {
-			if merkleHashNode.LeftOrRight {
-				hash=store.KvPairHash(hash,merkleHashNode.Hash)
-			} else {
-				hash=store.KvPairHash(merkleHashNode.Hash,hash)
-			}
-		}
-
-		if !bytes.Equal(commit.Header.AppHash,hash) {
+		leafCommitHash := store.BuildStoreInfoAndReturnHash(eproof.Height,eproof.RootHash)
+		if !store.VerifyProofForMultiStore(commit.Header.AppHash, leafCommitHash, eproof.StoreName, eproof.SimpleProof) {
 			return  nil, errors.Wrap(err, "Invalid exist proof")
 		}
+
 		return resp.Value, nil
 	}
 	// The key wasn't found, construct a proof of non-existence.
@@ -178,26 +160,9 @@ func (ctx CoreContext) queryAndVerifyProof(path string, key common.HexBytes) (re
 		return nil, errors.Wrap(err, "Couldn't verify proof")
 	}
 
-	storeInfo := store.StoreInfo{
-		Core:store.StoreCore{
-			CommitID:sdk.CommitID{
-				Version: resp.Height,
-				Hash: aproof.RootHash,
-			},
-		},
-	}
-	hash := store.KvPairHash(merkle.SimpleHashFromBytes([]byte(aproof.StoreName)),storeInfo.Hash())
-
-	for _,merkleHashNode := range aproof.SimpleMerkleHashPath {
-		if merkleHashNode.LeftOrRight {
-			hash=store.KvPairHash(hash,merkleHashNode.Hash)
-		} else {
-			hash=store.KvPairHash(merkleHashNode.Hash,hash)
-		}
-	}
-
-	if !bytes.Equal(commit.Header.AppHash,hash) {
-		return  nil, errors.Wrap(err, "Invalid absence proof")
+	leafCommitHash := store.BuildStoreInfoAndReturnHash(aproof.Height,aproof.RootHash)
+	if !store.VerifyProofForMultiStore(commit.Header.AppHash, leafCommitHash, aproof.StoreName, aproof.SimpleProof) {
+		return  nil, errors.Wrap(err, "Invalid exist proof")
 	}
 
 	return resp.Value, nil

@@ -43,7 +43,7 @@ func IBCTransferCmd(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// get password
-			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
+			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}

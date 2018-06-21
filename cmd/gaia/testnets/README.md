@@ -216,17 +216,22 @@ gaiacli stake create-validator \
   --amount=5steak \
   --pubkey=$(gaiad tendermint show_validator) \
   --address-validator=<account_cosmosaccaddr>
-  --moniker=<choose_a_moniker> \
+  --moniker="choose a moniker" \
   --chain-id=gaia-6002 \
   --name=<key_name>
 ```
 
-You can add more information to the validator, such as`--website`, `--keybase-sig`, or `--details`. Here's how:
+You can edit your validator's public description. This information will be used by delegators to decide which validators to stake to. Make sure to provide input for every flag below, otherwise the field will default to empty (`--moniker` defaults to the machine name).
 
 ```bash
-gaiacli stake edit-validator \
-  --details="To the cosmos!" \
-  --website="https://cosmos.network"
+gaiacli stake edit-validator
+  --address-validator=<account_cosmosaccaddr>
+  --moniker="choose a moniker" \
+  --website="https://cosmos.network" \
+  --keybase-sig="6A0D65E29A4CBC8E"
+  --details="To infinity and beyond!"
+  --chain-id=gaia-6002 \
+  --name=<key_name>
 ```
 
 View the validator's information with this command:

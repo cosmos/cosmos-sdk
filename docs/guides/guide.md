@@ -15,7 +15,7 @@ The design of the Cosmos SDK is based on the principles of "capabilities systems
 ## Tx & Msg
 
 The SDK distinguishes between transactions (Tx) and messages
-(Msg).  A Tx is a Msg wrapped with authentication and fee data.
+(Msg).  A Tx is a list of Msgs wrapped with authentication and fee data.
 
 ### Messages
 
@@ -97,12 +97,7 @@ A transaction is a list of messages with additional information for authenticati
 ```go
 type Tx interface {
 
-<<<<<<< HEAD
-	GetMsg() Msg
-
-=======
 	GetMsgs() Msg
->>>>>>> Documentation fixes
 }
 ```
 

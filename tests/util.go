@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	amino "github.com/tendermint/go-amino"
 	tmclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -97,7 +98,7 @@ func waitForHeight(height int64, url string) {
 		}
 		res.Body.Close()
 
-		var resultBlock ctypes.ResultBlock
+		var resultBlock rpc.OutputResultBlock
 		err = cdc.UnmarshalJSON([]byte(body), &resultBlock)
 		if err != nil {
 			fmt.Println("RES", res)

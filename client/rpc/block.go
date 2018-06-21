@@ -41,16 +41,10 @@ type OutputTxEntry struct {
 	Hash common.HexBytes `json:"hash"`
 }
 
-type OutputBlock struct {
-	Header     *types.Header      `json:"header"`
-	Evidence   types.EvidenceData `json:"evidence"`
-	Data       []OutputTxEntry    `json:"data"`
-	LastCommit *types.Commit      `json:"last_commit"`
-}
-
 type OutputResultBlock struct {
 	BlockMeta *types.BlockMeta `json:"block_meta"`
-	Block     OutputBlock      `json:"block"`
+	Block     *types.Block     `json:"block"`
+	TXs       []OutputTxEntry  `json:"txs"`
 }
 
 func getBlock(ctx context.CoreContext, height *int64) ([]byte, error) {
@@ -69,14 +63,14 @@ func getBlock(ctx context.CoreContext, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
-	data := make([]OutputTxEntry, len(res.Block.Data.Txs))
+	txEntries := make([]OutputTxEntry, len(res.Block.Data.Txs))
 	for i, dataTx := range res.Block.Data.Txs {
 		var tx auth.StdTx
 		err := cdc.UnmarshalBinary(dataTx, &tx)
 		if err != nil {
 			return nil, err
 		}
-		data[i] = OutputTxEntry{
+		txEntries[i] = OutputTxEntry{
 			TX:   tx,
 			Hash: dataTx.Hash(),
 		}
@@ -84,12 +78,8 @@ func getBlock(ctx context.CoreContext, height *int64) ([]byte, error) {
 
 	outputResultBlock := OutputResultBlock{
 		BlockMeta: res.BlockMeta,
-		Block: OutputBlock{
-			Header:     res.Block.Header,
-			Evidence:   res.Block.Evidence,
-			Data:       data,
-			LastCommit: res.Block.LastCommit,
-		},
+		Block:     res.Block,
+		TXs:       txEntries,
 	}
 
 	// TODO move maarshalling into cmd/rest functions

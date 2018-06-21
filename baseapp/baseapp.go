@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"runtime/debug"
 	"strings"
+	"reflect"
 
 	"github.com/pkg/errors"
 
@@ -485,8 +486,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// Get the Msg.
 	var msgs = tx.GetMsgs()
-	if msgs == nil {
-		return sdk.ErrInternal("Tx.GetMsg() returned nil").Result()
+	if msgs == nil || len(msgs) == 0 {
+		return sdk.ErrInternal("Tx.GetMsgs() must return at least one message in list").Result()
 	}
 
 	for _, msg := range msgs {
@@ -535,7 +536,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		ctx = ctx.WithMultiStore(msCache)
 	}
 
-	for _, msg := range msgs {
+	finalResult := sdk.Result{}
+	var logs []string
+	for i, msg := range msgs {
 		// Match route.
 		msgType := msg.Type()
 		handler := app.router.Route(msgType)
@@ -546,10 +549,34 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		result = handler(ctx, msg)
 
 		// Set gas utilized
-		result.GasUsed = ctx.GasMeter().GasConsumed()
+		finalResult.GasUsed += ctx.GasMeter().GasConsumed()
+		finalResult.GasWanted += result.GasWanted
+
+		// Append Data and Tags
+		finalResult.Data = append(finalResult.Data, result.Data...)
+		finalResult.Tags = append(finalResult.Tags, result.Tags...)
+
+		// Construct usable logs in multi-message transactions. Messages are 1-indexed in logs.
+		logs = append(logs, fmt.Sprintf("Msg %d: %s", i + 1, finalResult.Log))
+
+		// Cumulate Validator updates
+		for _, val := range result.ValidatorUpdates {
+			seen := false
+			for _, updated := range finalResult.ValidatorUpdates {
+				if reflect.DeepEqual(updated.PubKey, val.PubKey) {
+					seen = true
+					updated.Power += val.Power
+				} 
+			}
+			if !seen {
+				finalResult.ValidatorUpdates = append(finalResult.ValidatorUpdates, val)
+			}
+		}
 
 		// Stop execution and return on first failed message.
 		if !result.IsOK() {
+			result.GasUsed = finalResult.GasUsed
+			result.Log = fmt.Sprintf("Msg 1-%d Passed. Msg %d failed: %s", i, i + 1, result.Log)
 			return result
 		}
 	}
@@ -560,7 +587,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		msCache.Write()
 	}
 
-	return result
+	finalResult.Log = strings.Join(logs, "\n")
+
+	return finalResult
 }
 
 // Implements ABCI

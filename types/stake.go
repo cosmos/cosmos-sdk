@@ -65,9 +65,10 @@ type ValidatorSet interface {
 // ValidatorSet that can slash and revoke (affect the validator set)
 type SlashValidatorSet interface {
 	ValidatorSet
-	Slash(Context, crypto.PubKey, int64, Rat) // slash the validator and delegators of the validator, specifying offence height & slash fraction
-	Revoke(Context, crypto.PubKey)            // revoke a validator
-	Unrevoke(Context, crypto.PubKey)          // unrevoke a validator
+	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
+	Slash(Context, crypto.PubKey, int64, int64, Rat)
+	Revoke(Context, crypto.PubKey)   // revoke a validator
+	Unrevoke(Context, crypto.PubKey) // unrevoke a validator
 }
 
 //_______________________________________________________________________________

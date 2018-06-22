@@ -8,7 +8,7 @@ import (
 )
 
 // slash a validator
-func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, fraction sdk.Rat) {
+func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power int64, fraction sdk.Rat) {
 
 	// TODO height ignored for now, see https://github.com/cosmos/cosmos-sdk/pull/1011#issuecomment-390253957
 	validator, found := k.GetValidatorByPubKey(ctx, pubkey)

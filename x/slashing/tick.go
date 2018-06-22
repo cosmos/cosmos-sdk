@@ -17,13 +17,13 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) (tags 
 	tags = sdk.NewTags("height", heightBytes)
 
 	// Iterate over all the validators  which *should* have signed this block
-	for _, validator := range req.Validators {
-		present := validator.SignedLastBlock
-		pubkey, err := tmtypes.PB2TM.PubKey(validator.Validator.PubKey)
+	for _, signingValidator := range req.Validators {
+		present := signingValidator.SignedLastBlock
+		pubkey, err := tmtypes.PB2TM.PubKey(signingValidator.Validator.PubKey)
 		if err != nil {
 			panic(err)
 		}
-		sk.handleValidatorSignature(ctx, pubkey, present)
+		sk.handleValidatorSignature(ctx, pubkey, signingValidator.Validator.Power, present)
 	}
 
 	// Deal with any equivocation evidence
@@ -34,7 +34,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) (tags 
 		}
 		switch string(evidence.Type) {
 		case tmtypes.ABCIEvidenceTypeDuplicateVote:
-			sk.handleDoubleSign(ctx, evidence.Height, evidence.Time, pk)
+			sk.handleDoubleSign(ctx, pk, evidence.Height, evidence.Time, evidence.Validator.Power)
 		default:
 			ctx.Logger().With("module", "x/slashing").Error(fmt.Sprintf("ignored unknown evidence type: %s", string(evidence.Type)))
 		}

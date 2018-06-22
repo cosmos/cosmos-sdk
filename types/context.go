@@ -30,7 +30,7 @@ type Context struct {
 }
 
 // create a new context
-func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byte, logger log.Logger) Context {
+func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Logger) Context {
 
 	c := Context{
 		Context: context.Background(),
@@ -42,7 +42,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byt
 	c = c.WithBlockHeight(header.Height)
 	c = c.WithChainID(header.ChainID)
 	c = c.WithIsCheckTx(isCheckTx)
-	c = c.WithTxBytes(txBytes)
+	c = c.WithTxBytes(nil)
 	c = c.WithLogger(logger)
 	c = c.WithSigningValidators(nil)
 	c = c.WithGasMeter(NewInfiniteGasMeter())

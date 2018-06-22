@@ -490,6 +490,12 @@ func TestFeeFailureCheckTx(t *testing.T) {
 	app.Commit()
 }
 
+// A mock transaction to drain gas out of an account
+//type testGasDrain struct {
+//	Addr     []byte
+//	Gas int64
+//}
+
 //Ante handler uses gas, and should trigger a failure for CheckTx() and DeliverTx(). DeliverTx()'s msg handler should never run
 func TestMultiCheckTx(t *testing.T) {
 	logger := defaultLogger()
@@ -501,6 +507,11 @@ func TestMultiCheckTx(t *testing.T) {
 	app.MountStoresIAVL(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	require.Nil(t, err)
+
+	//NEED TO INSTANTIATE THE STATE of one of these guys
+	//NOTE - this test is actually too simple to implement account state. you are just calling app.CheckTx()
+		//bcuz you are not using the traditonal txBytes which contains account, sequence, etc.
+		// so how to get a similar implemntation
 
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
 		var amount int64 = 5
@@ -527,18 +538,94 @@ func TestMultiCheckTx(t *testing.T) {
 	// These Tx's will pass
 	for i := 0; i < 3; i++ {
 		resCheckPass := app.Check(tx)
+		//fmt.Println("CHECK: ", resCheckPass)
 		assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), resCheckPass.Code, "Expected abci Codetype == 0, for CodeOK")
 	}
 
 	// These Tx's will fail
 	for i := 0; i < 10; i++ {
 		resCheckFail := app.Check(tx)
+		//fmt.Println("DELIVER: ", resCheckFail)
+
 		assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), resCheckFail.Code, "Expected tx to fail since there is only enough gas for 1 tx")
 	}
 
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
 }
+
+
+//Ante handler uses gas, and should trigger a failure for CheckTx() and DeliverTx(). DeliverTx()'s msg handler should never run
+func TestMultiCheckTx2(t *testing.T) {
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	app := NewBaseApp(t.Name(), nil, logger, db)
+	fmt.Println("BASEAPP0: ", app)
+
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	require.Nil(t, err)
+
+	//NEED TO INSTANTIATE THE STATE of one of these guys
+	//NOTE - this test is actually too simple to implement account state. you are just calling app.CheckTx()
+	//bcuz you are not using the traditonal txBytes which contains account, sequence, etc.
+	// so how to get a similar implemntation
+	fmt.Println("BASEAPP1: ", app)
+
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		var consumeGas int64 = 5
+
+		// Grab gas from the checkState ctx
+		//gasConsumed := ctx.GasMeter().GasConsumed()
+		//// create a new gas meter to tally against the infinite gas meter
+		//newGasMeter := sdk.NewGasMeter(15)
+
+		// set the gas meter
+		ctx = ctx.WithGasMeter(sdk.NewGasMeter(15))
+
+		// charge gas for the memo
+		ctx.GasMeter().ConsumeGas(consumeGas, "test")
+
+		//// the new "temp-meter" will fail after 3 CheckTx() go through
+		//newGasMeter.ConsumeGas(gasConsumed+amount, "temp-meter")
+		//// The actual gas meter will not consume more because it is panicing above
+		//ctx.GasMeter().ConsumeGas(5, "ctx-meter")
+
+		newCtx = ctx
+		//fmt.Println("NEWCTX: ", newCtx)
+
+		return
+	})
+	fmt.Println("BASEAPP2: ", app)
+
+	tx := testUpdatePowerTx{} // doesn't matter
+	header := abci.Header{AppHash: []byte("apphash")}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	// These Tx's will pass
+	for i := 0; i < 3; i++ {
+		resCheckPass := app.Check(tx)
+		//fmt.Println("CHECK: ", resCheckPass)
+		assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), resCheckPass.Code, "Expected abci Codetype == 0, for CodeOK")
+	}
+	fmt.Println("BASEAPP3: ", app)
+
+	// These Tx's will fail
+	for i := 0; i < 10; i++ {
+		resCheckFail := app.Check(tx)
+		//fmt.Println("DELIVER: ", resCheckFail)
+
+		assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), resCheckFail.Code, "Expected tx to fail since there is only enough gas for 1 tx")
+	}
+	fmt.Println("BASEAPP4: ", app)
+
+
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+}
+
 
 // Test that we can only query from the latest committed state.
 func TestQuery(t *testing.T) {

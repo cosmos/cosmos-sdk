@@ -41,7 +41,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	baseApp.SetInitChainer(InitChainer(capKeyMainStore))
 
 	// Set a handler Route.
-	baseApp.Router().AddRoute("kvstore", KVStoreHandler(capKeyMainStore))
+	baseApp.Router().AddRoute(NewKVStoreHandler(capKeyMainStore))
 
 	// Load latest version.
 	if err := baseApp.LoadLatestVersion(capKeyMainStore); err != nil {
@@ -51,27 +51,40 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	return baseApp, nil
 }
 
+// KVStoreHandler handles "kvstore" type messages
+type KVStoreHandler struct {
+	storeKey sdk.StoreKey
+}
+
 // KVStoreHandler is a simple handler that takes kvstoreTx and writes
 // them to the db
-func KVStoreHandler(storeKey sdk.StoreKey) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		dTx, ok := msg.(kvstoreTx)
-		if !ok {
-			panic("KVStoreHandler should only receive kvstoreTx")
-		}
+func NewKVStoreHandler(storeKey sdk.StoreKey) sdk.Handler {
+	return KVStoreHandler{storeKey}
+}
 
-		// tx is already unmarshalled
-		key := dTx.key
-		value := dTx.value
-
-		store := ctx.KVStore(storeKey)
-		store.Set(key, value)
-
-		return sdk.Result{
-			Code: 0,
-			Log:  fmt.Sprintf("set %s=%s", key, value),
-		}
+// Implements sdk.Handler
+func (h KVStoreHandler) Handle(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	dTx, ok := msg.(kvstoreTx)
+	if !ok {
+		panic("KVStoreHandler should only receive kvstoreTx")
 	}
+
+	// tx is already unmarshalled
+	key := dTx.key
+	value := dTx.value
+
+	store := ctx.KVStore(h.storeKey)
+	store.Set(key, value)
+
+	return sdk.Result{
+		Code: 0,
+		Log:  fmt.Sprintf("set %s=%s", key, value),
+	}
+}
+
+// Implements sdk.Handler
+func (h KVStoreHandler) Type() string {
+	return "kvstore"
 }
 
 // basic KV structure

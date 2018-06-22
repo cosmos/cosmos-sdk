@@ -8,28 +8,41 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func NewHandler(k keeper.Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		// NOTE msg already has validate basic run
-		switch msg := msg.(type) {
-		case types.MsgCreateValidator:
-			return handleMsgCreateValidator(ctx, msg, k)
-		case types.MsgEditValidator:
-			return handleMsgEditValidator(ctx, msg, k)
-		case types.MsgDelegate:
-			return handleMsgDelegate(ctx, msg, k)
-		case types.MsgBeginRedelegate:
-			return handleMsgBeginRedelegate(ctx, msg, k)
-		case types.MsgCompleteRedelegate:
-			return handleMsgCompleteRedelegate(ctx, msg, k)
-		case types.MsgBeginUnbonding:
-			return handleMsgBeginUnbonding(ctx, msg, k)
-		case types.MsgCompleteUnbonding:
-			return handleMsgCompleteUnbonding(ctx, msg, k)
-		default:
-			return sdk.ErrTxDecode("invalid message parse in staking module").Result()
-		}
+// Handler struct handles "stake" type messages
+type Handler struct {
+	k Keeper
+}
+
+// NewHandler returns a handler for "stake" type messages
+func NewHandler(k Keeper) sdk.Handler {
+	return Handler{k}
+}
+
+func (h Handler) Handle(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	// NOTE msg already has validate basic run
+	switch msg := msg.(type) {
+	case types.MsgCreateValidator:
+		return handleMsgCreateValidator(ctx, msg, h.k)
+	case types.MsgEditValidator:
+		return handleMsgEditValidator(ctx, msg, h.k)
+	case types.MsgDelegate:
+		return handleMsgDelegate(ctx, msg, h.k)
+	case types.MsgBeginRedelegate:
+		return handleMsgBeginRedelegate(ctx, msg, h.k)
+	case types.MsgCompleteRedelegate:
+		return handleMsgCompleteRedelegate(ctx, msg, h.k)
+	case types.MsgBeginUnbonding:
+		return handleMsgBeginUnbonding(ctx, msg, h.k)
+	case types.MsgCompleteUnbonding:
+		return handleMsgCompleteUnbonding(ctx, msg, h.k)
+	default:
+		return sdk.ErrTxDecode("invalid message parse in staking module").Result()
 	}
+}
+
+// Implmenets sdk.Handler
+func (h Handler) Type() string {
+	return types.MsgType
 }
 
 // Called every block, process inflation, update validator set

@@ -25,7 +25,7 @@ func TestPowHandler(t *testing.T) {
 	ck := bank.NewKeeper(am)
 	keeper := NewKeeper(capKey, config, ck, DefaultCodespace)
 
-	handler := keeper.Handler
+	handler := keeper.Handle
 
 	addr := sdk.Address([]byte("sender"))
 	count := uint64(1)

@@ -70,8 +70,8 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 
 	// register message routes
 	app.Router().
-		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
-		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper))
+		AddRoute(bank.NewHandler(app.coinKeeper)).
+		AddRoute(ibc.NewHandler(app.ibcMapper, app.coinKeeper))
 
 	// perform initialization logic
 	app.SetInitChainer(app.initChainer)

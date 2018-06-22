@@ -283,6 +283,28 @@ func (tx testTx) ValidateBasic() sdk.Error {
 	return sdk.ErrTxDecode("positiveNum should be a non-negative integer.")
 }
 
+type testHandler struct {
+	h func(ctx sdk.Context, msg sdk.Msg) sdk.Result
+}
+
+func (h testHandler) Handle(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) {
+	return h.h(ctx, msg)
+}
+
+func (h testHandler) Type() string {
+	return msgType
+}
+
+type testHandler2 struct{}
+
+func (h testHandler2) Handle(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) {
+	return
+}
+
+func (h testHandler2) Type() string {
+	return msgType2
+}
+
 // Test that successive CheckTx can see each others' effects
 // on the store within a block, and that the CheckTx state
 // gets reset to the latest Committed state during Commit
@@ -297,8 +319,8 @@ func TestCheckTx(t *testing.T) {
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
 
 	txPerHeight := 3
-	app.Router().AddRoute(msgType, getStateCheckingHandler(t, capKey, txPerHeight, false)).
-		AddRoute(msgType2, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
+	app.Router().AddRoute(testHandler{getStateCheckingHandler(t, capKey, txPerHeight, false)}).
+		AddRoute(testHandler2{})
 	tx := testUpdatePowerTx{} // doesn't matter
 	for i := 0; i < txPerHeight; i++ {
 		app.Check(tx)
@@ -334,7 +356,7 @@ func TestDeliverTx(t *testing.T) {
 
 	txPerHeight := 2
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
-	app.Router().AddRoute(msgType, getStateCheckingHandler(t, capKey, txPerHeight, true))
+	app.Router().AddRoute(testHandler{getStateCheckingHandler(t, capKey, txPerHeight, true)})
 
 	tx := testUpdatePowerTx{} // doesn't matter
 	header := abci.Header{AppHash: []byte("apphash")}
@@ -363,7 +385,7 @@ func TestSimulateTx(t *testing.T) {
 
 	counter := 0
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
-	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	app.Router().AddRoute(testHandler{func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		ctx.GasMeter().ConsumeGas(10, "test")
 		store := ctx.KVStore(capKey)
 		// ensure store is never written
@@ -375,7 +397,7 @@ func TestSimulateTx(t *testing.T) {
 		require.Equal(t, height, thisHeader.Height)
 		counter++
 		return sdk.Result{}
-	})
+	}})
 
 	tx := testUpdatePowerTx{} // doesn't matter
 	header := abci.Header{AppHash: []byte("apphash")}
@@ -423,7 +445,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	require.Nil(t, err)
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
-	app.Router().AddRoute(msgType2, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
+	app.Router().AddRoute(testHandler2{})
 	app.BeginBlock(abci.RequestBeginBlock{})
 	// Transaction where validate fails
 	invalidTx := testTx{-1}
@@ -451,10 +473,10 @@ func TestTxGasLimits(t *testing.T) {
 		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(0))
 		return
 	})
-	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	app.Router().AddRoute(testHandler{func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		ctx.GasMeter().ConsumeGas(10, "counter")
 		return sdk.Result{}
-	})
+	}})
 
 	tx := testUpdatePowerTx{} // doesn't matter
 	header := abci.Header{AppHash: []byte("apphash")}
@@ -479,11 +501,11 @@ func TestQuery(t *testing.T) {
 	key, value := []byte("hello"), []byte("goodbye")
 
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
-	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	app.Router().AddRoute(testHandler{func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		store := ctx.KVStore(capKey)
 		store.Set(key, value)
 		return sdk.Result{}
-	})
+	}})
 
 	query := abci.RequestQuery{
 		Path: "/store/main/key",
@@ -578,10 +600,10 @@ func TestValidatorChange(t *testing.T) {
 	})
 
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
-	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	app.Router().AddRoute(testHandler{func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		// TODO
 		return sdk.Result{}
-	})
+	}})
 
 	// Load latest state, which should be empty.
 	err := app.LoadLatestVersion(capKey)
@@ -699,30 +721,44 @@ func (msg testSendMsg) GetSigners() []sdk.Address {
 
 // Simple Handlers for burn and send
 
-func newHandleBurn(keeper bank.Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		burnMsg := msg.(testBurnMsg)
-		_, _, err := keeper.SubtractCoins(ctx, burnMsg.Addr, burnMsg.Amount)
-		if err != nil {
-			return err.Result()
-		}
-		return sdk.Result{}
-	}
+type testBurnHandler struct {
+	k bank.Keeper
 }
 
-func newHandleSpend(keeper bank.Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		spendMsg := msg.(testSendMsg)
-		_, _, err := keeper.SubtractCoins(ctx, spendMsg.Sender, spendMsg.Amount)
-		if err != nil {
-			return err.Result()
-		}
-		_, _, err = keeper.AddCoins(ctx, spendMsg.Receiver, spendMsg.Amount)
-		if err != nil {
-			return err.Result()
-		}
-		return sdk.Result{}
+func (h testBurnHandler) Handle(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	burnMsg := msg.(testBurnMsg)
+	_, _, err := h.k.SubtractCoins(ctx, burnMsg.Addr, burnMsg.Amount)
+	if err != nil {
+		return err.Result()
 	}
+	return sdk.Result{}
+
+}
+
+func (h testBurnHandler) Type() string {
+	return msgType3
+}
+
+type testSpendHandler struct {
+	k bank.Keeper
+}
+
+func (h testSpendHandler) Handle(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	spendMsg := msg.(testSendMsg)
+	_, _, err := h.k.SubtractCoins(ctx, spendMsg.Sender, spendMsg.Amount)
+	if err != nil {
+		return err.Result()
+	}
+	_, _, err = h.k.AddCoins(ctx, spendMsg.Receiver, spendMsg.Amount)
+	if err != nil {
+		return err.Result()
+	}
+	return sdk.Result{}
+
+}
+
+func (h testSpendHandler) Type() string {
+	return msgType4
 }
 
 // generate a signed transaction
@@ -796,8 +832,8 @@ func TestMultipleBurn(t *testing.T) {
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.FeeCollectionKeeper{}))
 
 	app.Router().
-		AddRoute("burn", newHandleBurn(app.accountKeeper)).
-		AddRoute("send", newHandleSpend(app.accountKeeper))
+		AddRoute(testBurnHandler{app.accountKeeper}).
+		AddRoute(testSpendHandler{app.accountKeeper})
 
 	app.InitChain(abci.RequestInitChain{})
 	app.BeginBlock(abci.RequestBeginBlock{})
@@ -843,8 +879,8 @@ func TestBurnMultipleOwners(t *testing.T) {
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.FeeCollectionKeeper{}))
 
 	app.Router().
-		AddRoute("burn", newHandleBurn(app.accountKeeper)).
-		AddRoute("send", newHandleSpend(app.accountKeeper))
+		AddRoute(testBurnHandler{app.accountKeeper}).
+		AddRoute(testSpendHandler{app.accountKeeper})
 
 	app.InitChain(abci.RequestInitChain{})
 	app.BeginBlock(abci.RequestBeginBlock{})
@@ -910,8 +946,8 @@ func TestSendBurn(t *testing.T) {
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.FeeCollectionKeeper{}))
 
 	app.Router().
-		AddRoute("burn", newHandleBurn(app.accountKeeper)).
-		AddRoute("send", newHandleSpend(app.accountKeeper))
+		AddRoute(testBurnHandler{app.accountKeeper}).
+		AddRoute(testSpendHandler{app.accountKeeper})
 
 	app.InitChain(abci.RequestInitChain{})
 	app.BeginBlock(abci.RequestBeginBlock{})

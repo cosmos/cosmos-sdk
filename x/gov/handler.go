@@ -4,21 +4,34 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Handle all "gov" type messages.
+// Handler handles all "gov" type messages.
+type Handler struct {
+	k Keeper
+}
+
+// NewHandler constructs a Handler
 func NewHandler(keeper Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		switch msg := msg.(type) {
-		case MsgDeposit:
-			return handleMsgDeposit(ctx, keeper, msg)
-		case MsgSubmitProposal:
-			return handleMsgSubmitProposal(ctx, keeper, msg)
-		case MsgVote:
-			return handleMsgVote(ctx, keeper, msg)
-		default:
-			errMsg := "Unrecognized gov msg type"
-			return sdk.ErrUnknownRequest(errMsg).Result()
-		}
+	return Handler{keeper}
+}
+
+// Implements sdk.Handler
+func (h Handler) Handle(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	switch msg := msg.(type) {
+	case MsgDeposit:
+		return handleMsgDeposit(ctx, h.k, msg)
+	case MsgSubmitProposal:
+		return handleMsgSubmitProposal(ctx, h.k, msg)
+	case MsgVote:
+		return handleMsgVote(ctx, h.k, msg)
+	default:
+		errMsg := "Unrecognized gov msg type"
+		return sdk.ErrUnknownRequest(errMsg).Result()
 	}
+}
+
+// Implements sdk.Handler
+func (h Handler) Type() string {
+	return "gov"
 }
 
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {

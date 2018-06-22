@@ -28,7 +28,7 @@ func getMockApp(t *testing.T) *mock.App {
 	coinKeeper := bank.NewKeeper(mapp.AccountMapper)
 	config := Config{"pow", 1}
 	keeper := NewKeeper(keyPOW, config, coinKeeper, mapp.RegisterCodespace(DefaultCodespace))
-	mapp.Router().AddRoute("pow", keeper.Handler)
+	mapp.Router().AddRoute(keeper)
 
 	mapp.SetInitChainer(getInitChainer(mapp, keeper))
 

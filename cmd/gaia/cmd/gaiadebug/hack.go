@@ -169,9 +169,9 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 
 	// register message routes
 	app.Router().
-		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
-		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
-		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
+		AddRoute(bank.NewHandler(app.coinKeeper)).
+		AddRoute(ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
+		AddRoute(stake.NewHandler(app.stakeKeeper))
 
 	// initialize BaseApp
 	app.SetInitChainer(app.initChainer)

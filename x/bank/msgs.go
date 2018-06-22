@@ -6,6 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// MsgType idenfitifs transaction types
+const MsgType = "bank"
+
 // MsgSend - high level transaction of the coin module
 type MsgSend struct {
 	Inputs  []Input  `json:"inputs"`
@@ -20,7 +23,7 @@ func NewMsgSend(in []Input, out []Output) MsgSend {
 }
 
 // Implements Msg.
-func (msg MsgSend) Type() string { return "bank" } // TODO: "bank/send"
+func (msg MsgSend) Type() string { return MsgType } // TODO: "bank/send"
 
 // Implements Msg.
 func (msg MsgSend) ValidateBasic() sdk.Error {
@@ -101,7 +104,7 @@ func NewMsgIssue(banker sdk.Address, out []Output) MsgIssue {
 }
 
 // Implements Msg.
-func (msg MsgIssue) Type() string { return "bank" } // TODO: "bank/issue"
+func (msg MsgIssue) Type() string { return MsgType } // TODO: "bank/issue"
 
 // Implements Msg.
 func (msg MsgIssue) ValidateBasic() sdk.Error {

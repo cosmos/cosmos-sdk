@@ -6,8 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Implements sdk.Handler
+func (pk Keeper) Type() string {
+	return MsgType
+}
+
 // POW handler
-func (pk Keeper) Handler(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+func (pk Keeper) Handle(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 	switch msg := msg.(type) {
 	case MsgMine:
 		return handleMsgMine(ctx, pk, msg)

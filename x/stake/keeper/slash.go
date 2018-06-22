@@ -10,12 +10,19 @@ import (
 // slash a validator
 func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power int64, fraction sdk.Rat) {
 
-	// TODO height ignored for now, see https://github.com/cosmos/cosmos-sdk/pull/1011#issuecomment-390253957
+	// Amount of slashing = slash fraction * power at time of equivocation
+	slashAmount := sdk.NewRat(power).Mul(fraction)
+	// hmm, https://github.com/cosmos/cosmos-sdk/issues/1348
+
 	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
 		panic(fmt.Errorf("Attempted to slash a nonexistent validator with address %s", pubkey.Address()))
 	}
-	sharesToRemove := validator.PoolShares.Amount.Mul(fraction)
+	sharesToRemove := slashAmount
+	// Cannot decrease balance below zero
+	if sharesToRemove.GT(validator.PoolShares.Amount) {
+		sharesToRemove = validator.PoolShares.Amount
+	}
 	pool := k.GetPool(ctx)
 	validator, pool, burned := validator.RemovePoolShares(pool, sharesToRemove)
 	k.SetPool(ctx, pool)              // update the pool

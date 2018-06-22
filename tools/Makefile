@@ -32,28 +32,28 @@ get_tools:
 ifdef DEP_CHECK
 	@echo "Dep is already installed.  Run 'make update_tools' to update."
 else
-	@echo "$(ansi_grn)Installing dep$(ansi_end)"
+	@echo "Installing dep"
 	go get -v $(DEP)
 endif
 ifdef GOLINT_CHECK
 	@echo "Golint is already installed.  Run 'make update_tools' to update."
 else
-	@echo "$(ansi_grn)Installing golint$(ansi_end)"
+	@echo "Installing golint"
 	go get -v $(GOLINT)
 endif
 ifdef GOMETALINTER_CHECK
 	@echo "Gometalinter is already installed.  Run 'make update_tools' to update."
 else
-	@echo "$(ansi_grn)Installing gometalinter$(ansi_end)"
+	@echo "Installing gometalinter"
 	go get -v $(GOMETALINTER)
 endif
 
 update_tools:
-	@echo "$(ansi_grn)Updating dep$(ansi_end)"
+	@echo "Updating dep"
 	go get -u -v $(DEP)
-	@echo "$(ansi_grn)Updating tendermint/golint $(ansi_end)"
+	@echo "Updating tendermint/golint"
 	go get -u -v $(GOLINT)
-	@echo "$(ansi_grn)Updating gometalinter $(ansi_end)"
+	@echo "Updating gometalinter"
 	go get -u -v $(GOMETALINTER)
 
 
@@ -67,24 +67,14 @@ get_vendor_deps: check_tools
 	@dep ensure -v
 
 install: get_vendor_deps
-	@echo "$(ansi_grn)Installing tools$(ansi_end)"
-	@echo "$(ansi_yel)Install go-vendorinstall$(ansi_end)"
+	@echo "Installing tools"
+	@echo "Install go-vendorinstall"
 	go build -o bin/go-vendorinstall go-vendorinstall/*.go
 
-	@echo "$(ansi_yel)Install gometalinter.v2$(ansi_end)"
+	@echo "Install gometalinter.v2"
 	GOBIN="$(CURDIR)/bin" ./bin/go-vendorinstall github.com/alecthomas/gometalinter
 
-	@echo "$(ansi_grn)Done installing tools$(ansi_end)"
-
-
-########################################
-# ANSI colors
-
-ansi_red=\033[0;31m
-ansi_grn=\033[0;32m
-ansi_yel=\033[0;33m
-ansi_end=\033[0m
-
+	@echo "Done installing tools"
 
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.

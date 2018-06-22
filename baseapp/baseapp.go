@@ -503,7 +503,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	if mode == runTxModeCheck || mode == runTxModeSimulate {
 		// CacheWrap app.checkState.ms in case it fails.
 		msCache = app.checkState.CacheMultiStore()
-		fmt.Println("mschanse: ", msCache)
 		ctx = ctx.WithMultiStore(msCache)
 	} else {
 		// CacheWrap app.deliverState.ms in case it fails.
@@ -568,7 +567,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 			}
 		}
 		finalResult.Log = strings.Join(logs, "\n")
-		return finalResult
+		result = finalResult
 
 	}
 

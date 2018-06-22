@@ -461,170 +461,124 @@ func TestTxGasLimits(t *testing.T) {
 	app.Commit()
 }
 
-//Ante handler uses gas, and should trigger a failure for CheckTx() and DeliverTx(). DeliverTx()'s msg handler should never run
-func TestFeeFailureCheckTx(t *testing.T) {
-	logger := defaultLogger()
-	db := dbm.NewMemDB()
-	app := NewBaseApp(t.Name(), nil, logger, db)
+// Tests failure on sending multiple checkTx, where the fee.Amount empties the accounts checkState coins, and limits the txs to 4
+func TestMultiCheckTxFailFee(t *testing.T) {
+	app := newTestApp(t.Name())
+	capKey := sdk.NewKVStoreKey("key")
+	capKey2 := sdk.NewKVStoreKey("feekeeper")
 
-	// make a cap key and mount the store
-	capKey := sdk.NewKVStoreKey("main")
 	app.MountStoresIAVL(capKey)
-	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
-	require.Nil(t, err)
-
-	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
-		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(0))
-		//will panic here, and will then enter the runTx() defer statement
-		newCtx.GasMeter().ConsumeGas(10, "counter")
-		return
+	app.MountStoresIAVL(capKey2)
+	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {
+		var tx auth.StdTx
+		fromJSON(txBytes, &tx)
+		return tx, nil
 	})
 
-	tx := testUpdatePowerTx{} // doesn't matter
-	header := abci.Header{AppHash: []byte("apphash")}
+	err := app.LoadLatestVersion(capKey)
+	if err != nil {
+		panic(err)
+	}
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	resCheck := app.Check(tx)
-	assert.Equal(t, resCheck.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), "Expected transaction to run out of gas due to fee in ante handler")
-	resDeliver := app.Deliver(tx)
-	assert.Equal(t, resDeliver.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), "Expected transaction to run out of gas due to fee in ante handler")
+	app.accountMapper = auth.NewAccountMapper(app.cdc, capKey, &auth.BaseAccount{})
+	app.accountKeeper = bank.NewKeeper(app.accountMapper)
+	fck := auth.NewFeeCollectionKeeper(app.cdc, capKey2)
+
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, fck))
+
+	app.InitChain(abci.RequestInitChain{})
+	app.BeginBlock(abci.RequestBeginBlock{})
+
+	app.checkState.ctx = app.checkState.ctx.WithChainID(t.Name())
+
+	priv := makePrivKey("secret")
+	addr := priv.PubKey().Address()
+
+	// We add 20 coins to the account. tx takes 5. 4 will be successful, and the last will fail
+	app.accountKeeper.AddCoins(app.checkState.ctx, addr, sdk.Coins{{"foocoin", sdk.NewInt(20)}})
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(20)}}, app.accountKeeper.GetCoins(app.checkState.ctx, addr), "Balance did not update")
+
+
+	//won't actually run in checkTx(), but needed to generate the tx
+	msg := testBurnMsg{addr, sdk.Coins{{"foocoin", sdk.NewInt(1)}}}
+
+
+	// First four pass, last one fails
+	for i := 0; i < 5; i++ {
+		tx := GenTx(5, 100000, t.Name(), []sdk.Msg{msg}, []int64{0}, []int64{int64(i)}, priv) //single message
+		resCheck := app.Check(tx)
+		if i < 4 {
+			assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), resCheck.Code, "Expected abci Codetype == 0, for CodeOK")
+		}
+		if i == 4 {
+			assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeInsufficientFunds), resCheck.Code, "Expected tx to fail since the account ran out of coins")
+		}
+	}
+
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
 }
 
-// A mock transaction to drain gas out of an account
-//type testGasDrain struct {
-//	Addr     []byte
-//	Gas int64
-//}
+// Tests failure on sending multiple checkTx, where the fee.Gas continues to get lower each tx, until it triggers an out of gas error
+func TestMultiCheckTxFailGas(t *testing.T) {
+	app := newTestApp(t.Name())
+	capKey := sdk.NewKVStoreKey("key")
+	capKey2 := sdk.NewKVStoreKey("feekeeper")
 
-//Ante handler uses gas, and should trigger a failure for CheckTx() and DeliverTx(). DeliverTx()'s msg handler should never run
-// func TestMultiCheckTx(t *testing.T) {
-// 	logger := defaultLogger()
-// 	db := dbm.NewMemDB()
-// 	app := NewBaseApp(t.Name(), nil, logger, db)
+	app.MountStoresIAVL(capKey)
+	app.MountStoresIAVL(capKey2)
+	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {
+		var tx auth.StdTx
+		fromJSON(txBytes, &tx)
+		return tx, nil
+	})
 
-// 	// make a cap key and mount the store
-// 	capKey := sdk.NewKVStoreKey("main")
-// 	app.MountStoresIAVL(capKey)
-// 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
-// 	require.Nil(t, err)
+	err := app.LoadLatestVersion(capKey)
+	if err != nil {
+		panic(err)
+	}
 
-// 	//NEED TO INSTANTIATE THE STATE of one of these guys
-// 	//NOTE - this test is actually too simple to implement account state. you are just calling app.CheckTx()
-// 		//bcuz you are not using the traditonal txBytes which contains account, sequence, etc.
-// 		// so how to get a similar implemntation
+	app.accountMapper = auth.NewAccountMapper(app.cdc, capKey, &auth.BaseAccount{})
+	app.accountKeeper = bank.NewKeeper(app.accountMapper)
+	fck := auth.NewFeeCollectionKeeper(app.cdc, capKey2)
 
-// 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
-// 		var amount int64 = 5
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, fck))
 
-// 		// Grab gas from the checkState ctx
-// 		gasConsumed := ctx.GasMeter().GasConsumed()
-// 		// create a new gas meter to tally against the infinite gas meter
-// 		newGasMeter := sdk.NewGasMeter(15)
+	app.InitChain(abci.RequestInitChain{})
+	app.BeginBlock(abci.RequestBeginBlock{})
 
-// 		// the new "temp-meter" will fail after 3 CheckTx() go through
-// 		newGasMeter.ConsumeGas(gasConsumed+amount, "temp-meter")
-// 		// The actual gas meter will not consume more because it is panicing above
-// 		ctx.GasMeter().ConsumeGas(5, "ctx-meter")
+	app.checkState.ctx = app.checkState.ctx.WithChainID(t.Name())
 
-// 		newCtx = ctx
+	priv := makePrivKey("secret")
+	addr := priv.PubKey().Address()
 
-// 		return
-// 	})
+	//enough coins so it won't fail on running out of coins
+	app.accountKeeper.AddCoins(app.checkState.ctx, addr, sdk.Coins{{"foocoin", sdk.NewInt(100)}})
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.checkState.ctx, addr), "Balance did not update")
 
-// 	tx := testUpdatePowerTx{} // doesn't matter
-// 	header := abci.Header{AppHash: []byte("apphash")}
-// 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	//won't actually run in checkTx(), but needed to generate the tx
+	msg := testBurnMsg{addr, sdk.Coins{{"foocoin", sdk.NewInt(1)}}}
 
-// 	// These Tx's will pass
-// 	for i := 0; i < 3; i++ {
-// 		resCheckPass := app.Check(tx)
-// 		//fmt.Println("CHECK: ", resCheckPass)
-// 		assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), resCheckPass.Code, "Expected abci Codetype == 0, for CodeOK")
-// 	}
+	// Draining gas from this variable, as right now there isn't a variable for an account in accountKeeper that states how much gas it has to do txs
+	// the ante handler right now burns around 1300-1400 gas per tx for this GenTx(). So with 6000 gas we expect to fail on the forth
+	var accountGas int64 = 1500*4
 
-// 	// These Tx's will fail
-// 	for i := 0; i < 10; i++ {
-// 		resCheckFail := app.Check(tx)
-// 		//fmt.Println("DELIVER: ", resCheckFail)
+	// First four pass, last one fails
+	for i := 0; i < 5; i++ {
+		tx := GenTx(5, accountGas, t.Name(), []sdk.Msg{msg}, []int64{0}, []int64{int64(i)}, priv) //single message
+		resCheck := app.Check(tx)
+		if i < 4 {
+			assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), resCheck.Code, "Expected abci Codetype == 0, for CodeOK")
+		}
+		if i == 4 {
+			assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), resCheck.Code, "Expected tx to fail since the account ran out of gas")
+		}
+		accountGas -=1500 //represents gas being drained from the keeper account
+	}
 
-// 		assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), resCheckFail.Code, "Expected tx to fail since there is only enough gas for 1 tx")
-// 	}
-
-// 	app.EndBlock(abci.RequestEndBlock{})
-// 	app.Commit()
-// }
-
-// //Ante handler uses gas, and should trigger a failure for CheckTx() and DeliverTx(). DeliverTx()'s msg handler should never run
-// func TestMultiCheckTx2(t *testing.T) {
-// 	logger := defaultLogger()
-// 	db := dbm.NewMemDB()
-// 	app := NewBaseApp(t.Name(), nil, logger, db)
-// 	fmt.Println("BASEAPP0: ", app)
-
-// 	// make a cap key and mount the store
-// 	capKey := sdk.NewKVStoreKey("main")
-// 	app.MountStoresIAVL(capKey)
-// 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
-// 	require.Nil(t, err)
-
-// 	//NEED TO INSTANTIATE THE STATE of one of these guys
-// 	//NOTE - this test is actually too simple to implement account state. you are just calling app.CheckTx()
-// 	//bcuz you are not using the traditonal txBytes which contains account, sequence, etc.
-// 	// so how to get a similar implemntation
-// 	fmt.Println("BASEAPP1: ", app)
-
-// 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
-// 		var consumeGas int64 = 5
-
-// 		// Grab gas from the checkState ctx
-// 		//gasConsumed := ctx.GasMeter().GasConsumed()
-// 		//// create a new gas meter to tally against the infinite gas meter
-// 		//newGasMeter := sdk.NewGasMeter(15)
-
-// 		// set the gas meter
-// 		ctx = ctx.WithGasMeter(sdk.NewGasMeter(15))
-
-// 		// charge gas for the memo
-// 		ctx.GasMeter().ConsumeGas(consumeGas, "test")
-
-// 		//// the new "temp-meter" will fail after 3 CheckTx() go through
-// 		//newGasMeter.ConsumeGas(gasConsumed+amount, "temp-meter")
-// 		//// The actual gas meter will not consume more because it is panicing above
-// 		//ctx.GasMeter().ConsumeGas(5, "ctx-meter")
-
-// 		newCtx = ctx
-// 		//fmt.Println("NEWCTX: ", newCtx)
-
-// 		return
-// 	})
-// 	fmt.Println("BASEAPP2: ", app)
-
-// 	tx := testUpdatePowerTx{} // doesn't matter
-// 	header := abci.Header{AppHash: []byte("apphash")}
-// 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-
-// 	// These Tx's will pass
-// 	for i := 0; i < 3; i++ {
-// 		resCheckPass := app.Check(tx)
-// 		//fmt.Println("CHECK: ", resCheckPass)
-// 		assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), resCheckPass.Code, "Expected abci Codetype == 0, for CodeOK")
-// 	}
-// 	fmt.Println("BASEAPP3: ", app)
-
-// 	// These Tx's will fail
-// 	for i := 0; i < 10; i++ {
-// 		resCheckFail := app.Check(tx)
-// 		//fmt.Println("DELIVER: ", resCheckFail)
-
-// 		assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), resCheckFail.Code, "Expected tx to fail since there is only enough gas for 1 tx")
-// 	}
-// 	fmt.Println("BASEAPP4: ", app)
-
-// 	app.EndBlock(abci.RequestEndBlock{})
-// 	app.Commit()
-// }
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+}
 
 // Test that we can only query from the latest committed state.
 func TestQuery(t *testing.T) {
@@ -886,11 +840,11 @@ func newHandleSpend(keeper bank.Keeper) sdk.Handler {
 }
 
 // generate a signed transaction
-func GenTx(chainID string, msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKey) auth.StdTx {
+func GenTx(feeAmount int64, gasAmount int64, chainID string, msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKey) auth.StdTx {
 	// make the transaction free
 	fee := auth.StdFee{
-		sdk.Coins{{"foocoin", sdk.NewInt(0)}},
-		100000,
+		sdk.Coins{{"foocoin", sdk.NewInt(feeAmount)}},
+		gasAmount,
 	}
 
 	sigs := make([]auth.StdSignature, len(priv))
@@ -966,7 +920,7 @@ func TestMultipleBurn(t *testing.T) {
 	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr), "Balance did not update")
 
 	msg := testBurnMsg{addr, sdk.Coins{{"foocoin", sdk.NewInt(50)}}}
-	tx := GenTx(t.Name(), []sdk.Msg{msg, msg}, []int64{0}, []int64{0}, priv)
+	tx := GenTx(0, 100000, t.Name(), []sdk.Msg{msg, msg}, []int64{0}, []int64{0}, priv)
 
 	res := app.Deliver(tx)
 
@@ -1023,7 +977,7 @@ func TestBurnMultipleOwners(t *testing.T) {
 	msg2 := testBurnMsg{addr2, sdk.Coins{{"foocoin", sdk.NewInt(100)}}}
 
 	// test wrong signers: Address 1 signs both messages
-	tx := GenTx(t.Name(), []sdk.Msg{msg1, msg2}, []int64{0, 0}, []int64{0, 0}, priv1, priv1)
+	tx := GenTx(0, 100000, t.Name(), []sdk.Msg{msg1, msg2}, []int64{0, 0}, []int64{0, 0}, priv1, priv1)
 
 	res := app.Deliver(tx)
 	assert.Equal(t, sdk.ABCICodeType(0x10003), res.Code, "Wrong signatures passed")
@@ -1032,7 +986,7 @@ func TestBurnMultipleOwners(t *testing.T) {
 	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 changed after invalid sig")
 
 	// test valid tx
-	tx = GenTx(t.Name(), []sdk.Msg{msg1, msg2}, []int64{0, 1}, []int64{1, 0}, priv1, priv2)
+	tx = GenTx(0, 100000, t.Name(), []sdk.Msg{msg1, msg2}, []int64{0, 1}, []int64{1, 0}, priv1, priv2)
 
 	res = app.Deliver(tx)
 	assert.Equal(t, true, res.IsOK(), res.Log)
@@ -1092,7 +1046,7 @@ func TestSendBurn(t *testing.T) {
 	msg2 := testBurnMsg{addr2, sdk.Coins{{"foocoin", sdk.NewInt(50)}}}
 
 	// send then burn
-	tx := GenTx(t.Name(), []sdk.Msg{sendMsg, msg2, msg1}, []int64{0, 1}, []int64{0, 0}, priv1, priv2)
+	tx := GenTx(0, 100000, t.Name(), []sdk.Msg{sendMsg, msg2, msg1}, []int64{0, 1}, []int64{0, 0}, priv1, priv2)
 
 	res := app.Deliver(tx)
 	assert.Equal(t, true, res.IsOK(), res.Log)
@@ -1104,7 +1058,7 @@ func TestSendBurn(t *testing.T) {
 	app.accountKeeper.AddCoins(app.deliverState.ctx, addr1, sdk.Coins{{"foocoin", sdk.NewInt(50)}})
 
 	// burn then send
-	tx = GenTx(t.Name(), []sdk.Msg{msg1, sendMsg}, []int64{0}, []int64{1}, priv1)
+	tx = GenTx(0, 100000, t.Name(), []sdk.Msg{msg1, sendMsg}, []int64{0}, []int64{1}, priv1)
 
 	res = app.Deliver(tx)
 

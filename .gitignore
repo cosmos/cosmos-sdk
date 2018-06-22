@@ -28,5 +28,9 @@ profile.out
 *.log
 vagrant
 
+# IDE
+.idea/
+*.iml
+
 # Graphviz
 dependency-graph.png

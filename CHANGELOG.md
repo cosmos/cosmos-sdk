@@ -14,7 +14,11 @@ FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
 * [lcd] Queried TXs now include the tx hash to identify each tx
 * [mockapp] CompleteSetup() no longer takes a testing parameter
-* Add benchmarking folder
+* [governance] Implemented MVP
+  * Supported proposal types: just binary (pass/fail) TextProposals for now
+  * Proposals need deposits to be votable; deposits are burned if proposal fails
+  * Delegators delegate votes to validator by default but can override (for their stake)
+* Add benchmarks for signing and delivering a block with a single bank transaction
 
 FIXES
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer

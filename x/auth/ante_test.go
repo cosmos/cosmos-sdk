@@ -104,7 +104,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -157,7 +157,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -216,7 +216,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -294,7 +294,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -336,7 +336,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -379,7 +379,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -430,7 +430,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -511,7 +511,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()

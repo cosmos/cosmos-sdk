@@ -117,7 +117,7 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			delAddr, err := sdk.GetValAddressHex(viper.GetString(FlagAddressDelegator))
+			delAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}

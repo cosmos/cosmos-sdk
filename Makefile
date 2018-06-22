@@ -108,7 +108,7 @@ test_cover:
 	@bash tests/test_cover.sh
 
 test_lint:
-	gometalinter --disable-all --enable='golint' --vendor ./...
+	gometalinter.v2 --disable-all --enable='golint' --vendor ./...
 
 benchmark:
 	@go test -bench=. $(PACKAGES_NOCLITEST)

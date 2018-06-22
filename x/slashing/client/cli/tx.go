@@ -29,7 +29,7 @@ func GetCmdUnrevoke(cdc *wire.Codec) *cobra.Command {
 			msg := slashing.NewMsgUnrevoke(validatorAddr)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
+			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}

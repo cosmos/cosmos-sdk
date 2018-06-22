@@ -12,23 +12,48 @@ var _ sdk.Tx = (*StdTx)(nil)
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
 // NOTE: the first signature is the FeePayer (Signatures must not be nil).
 type StdTx struct {
-	Msg        sdk.Msg        `json:"msg"`
+	Msgs       []sdk.Msg      `json:"msg"`
 	Fee        StdFee         `json:"fee"`
 	Signatures []StdSignature `json:"signatures"`
+	Memo       string         `json:"memo"`
 }
 
-func NewStdTx(msg sdk.Msg, fee StdFee, sigs []StdSignature) StdTx {
+func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdTx {
 	return StdTx{
-		Msg:        msg,
+		Msgs:       msgs,
 		Fee:        fee,
 		Signatures: sigs,
+		Memo:       memo,
 	}
 }
 
 //nolint
-func (tx StdTx) GetMsg() sdk.Msg { return tx.Msg }
+func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
+
+// GetSigners returns the addresses that must sign the transaction.
+// Addresses are returned in a determistic order.
+// They are accumulated from the GetSigners method for each Msg
+// in the order they appear in tx.GetMsgs().
+// Duplicate addresses will be ommitted.
+func (tx StdTx) GetSigners() []sdk.Address {
+	seen := map[string]bool{}
+	var signers []sdk.Address
+	for _, msg := range tx.GetMsgs() {
+		for _, addr := range msg.GetSigners() {
+			if !seen[addr.String()] {
+				signers = append(signers, addr)
+				seen[addr.String()] = true
+			}
+		}
+	}
+	return signers
+}
+
+//nolint
+func (tx StdTx) GetMemo() string { return tx.Memo }
 
 // Signatures returns the signature of signers who signed the Msg.
+// GetSignatures returns the signature of signers who signed the Msg.
 // CONTRACT: Length returned is same as length of
 // pubkeys returned from MsgKeySigners, and the order
 // matches.
@@ -41,7 +66,7 @@ func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 // for the transactions. It's the first address returned by msg.GetSigners().
 // If GetSigners() is empty, this panics.
 func FeePayer(tx sdk.Tx) sdk.Address {
-	return tx.GetMsg().GetSigners()[0]
+	return tx.GetMsgs()[0].GetSigners()[0]
 }
 
 //__________________________________________________________
@@ -85,23 +110,29 @@ func (fee StdFee) Bytes() []byte {
 // and the Sequence numbers for each signature (prevent
 // inchain replay and enforce tx ordering per account).
 type StdSignDoc struct {
-	ChainID        string  `json:"chain_id"`
-	AccountNumbers []int64 `json:"account_numbers"`
-	Sequences      []int64 `json:"sequences"`
-	FeeBytes       []byte  `json:"fee_bytes"`
-	MsgBytes       []byte  `json:"msg_bytes"`
-	AltBytes       []byte  `json:"alt_bytes"`
+	ChainID       string `json:"chain_id"`
+	AccountNumber int64  `json:"account_number"`
+	Sequence      int64  `json:"sequence"`
+	FeeBytes      []byte `json:"fee_bytes"`
+	MsgsBytes     []byte `json:"msg_bytes"`
+	Memo          string `json:"memo"`
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
 // TODO: change the API to just take a chainID and StdTx ?
-func StdSignBytes(chainID string, accnums []int64, sequences []int64, fee StdFee, msg sdk.Msg) []byte {
+func StdSignBytes(chainID string, accnum int64, sequence int64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
+	var msgBytes []byte
+	for _, msg := range msgs {
+		msgBytes = append(msgBytes, msg.GetSignBytes()...)
+	}
+
 	bz, err := json.Marshal(StdSignDoc{
-		ChainID:        chainID,
-		AccountNumbers: accnums,
-		Sequences:      sequences,
-		FeeBytes:       fee.Bytes(),
-		MsgBytes:       msg.GetSignBytes(),
+		ChainID:       chainID,
+		AccountNumber: accnum,
+		Sequence:      sequence,
+		FeeBytes:      fee.Bytes(),
+		MsgsBytes:     msgBytes,
+		Memo:          memo,
 	})
 	if err != nil {
 		panic(err)
@@ -113,17 +144,17 @@ func StdSignBytes(chainID string, accnums []int64, sequences []int64, fee StdFee
 // a Msg with the other requirements for a StdSignDoc before
 // it is signed. For use in the CLI.
 type StdSignMsg struct {
-	ChainID        string
-	AccountNumbers []int64
-	Sequences      []int64
-	Fee            StdFee
-	Msg            sdk.Msg
-	// XXX: Alt
+	ChainID       string
+	AccountNumber int64
+	Sequence      int64
+	Fee           StdFee
+	Msgs          []sdk.Msg
+	Memo          string
 }
 
 // get message bytes
 func (msg StdSignMsg) Bytes() []byte {
-	return StdSignBytes(msg.ChainID, msg.AccountNumbers, msg.Sequences, msg.Fee, msg.Msg)
+	return StdSignBytes(msg.ChainID, msg.AccountNumber, msg.Sequence, msg.Fee, msg.Msgs, msg.Memo)
 }
 
 // Standard Signature

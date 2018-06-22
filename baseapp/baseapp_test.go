@@ -3,6 +3,7 @@ package baseapp
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"os"
 	"testing"
 
@@ -29,7 +30,7 @@ func newBaseApp(name string) *BaseApp {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	codec := wire.NewCodec()
-	wire.RegisterCrypto(codec)
+	auth.RegisterBaseAccount(codec)
 	return NewBaseApp(name, codec, logger, db)
 }
 
@@ -262,7 +263,8 @@ type testTx struct {
 const msgType2 = "testTx"
 
 func (tx testTx) Type() string                       { return msgType2 }
-func (tx testTx) GetMsg() sdk.Msg                    { return tx }
+func (tx testTx) GetMemo() string                    { return "" }
+func (tx testTx) GetMsgs() []sdk.Msg                 { return []sdk.Msg{tx} }
 func (tx testTx) GetSignBytes() []byte               { return nil }
 func (tx testTx) GetSigners() []sdk.Address          { return nil }
 func (tx testTx) GetSignatures() []auth.StdSignature { return nil }
@@ -546,7 +548,8 @@ type testUpdatePowerTx struct {
 const msgType = "testUpdatePowerTx"
 
 func (tx testUpdatePowerTx) Type() string                       { return msgType }
-func (tx testUpdatePowerTx) GetMsg() sdk.Msg                    { return tx }
+func (tx testUpdatePowerTx) GetMemo() string                    { return "" }
+func (tx testUpdatePowerTx) GetMsgs() []sdk.Msg                 { return []sdk.Msg{tx} }
 func (tx testUpdatePowerTx) GetSignBytes() []byte               { return nil }
 func (tx testUpdatePowerTx) ValidateBasic() sdk.Error           { return nil }
 func (tx testUpdatePowerTx) GetSigners() []sdk.Address          { return nil }
@@ -634,6 +637,318 @@ func TestValidatorChange(t *testing.T) {
 		}
 	}
 	assert.Equal(t, len(valUpdates), 0, "Some validator updates were unexpected")
+}
+
+//----------------------------------------
+
+// Use burn and send msg types to test multiple msgs in one tx
+type testBurnMsg struct {
+	Addr   sdk.Address
+	Amount sdk.Coins
+}
+
+const msgType3 = "burn"
+
+func (msg testBurnMsg) Type() string { return msgType3 }
+func (msg testBurnMsg) GetSignBytes() []byte {
+	bz, _ := json.Marshal(msg)
+	return bz
+}
+func (msg testBurnMsg) ValidateBasic() sdk.Error {
+	if msg.Addr == nil {
+		return sdk.ErrInvalidAddress("Cannot use nil as Address")
+	}
+	return nil
+}
+func (msg testBurnMsg) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.Addr}
+}
+
+type testSendMsg struct {
+	Sender   sdk.Address
+	Receiver sdk.Address
+	Amount   sdk.Coins
+}
+
+const msgType4 = "send"
+
+func (msg testSendMsg) Type() string { return msgType4 }
+func (msg testSendMsg) GetSignBytes() []byte {
+	bz, _ := json.Marshal(msg)
+	return bz
+}
+func (msg testSendMsg) ValidateBasic() sdk.Error {
+	if msg.Sender == nil || msg.Receiver == nil {
+		return sdk.ErrInvalidAddress("Cannot use nil as Address")
+	}
+	return nil
+}
+func (msg testSendMsg) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.Sender}
+}
+
+// Simple Handlers for burn and send
+
+func newHandleBurn(keeper bank.Keeper) sdk.Handler {
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		burnMsg := msg.(testBurnMsg)
+		_, _, err := keeper.SubtractCoins(ctx, burnMsg.Addr, burnMsg.Amount)
+		if err != nil {
+			return err.Result()
+		}
+		return sdk.Result{}
+	}
+}
+
+func newHandleSpend(keeper bank.Keeper) sdk.Handler {
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		spendMsg := msg.(testSendMsg)
+		_, _, err := keeper.SubtractCoins(ctx, spendMsg.Sender, spendMsg.Amount)
+		if err != nil {
+			return err.Result()
+		}
+		_, _, err = keeper.AddCoins(ctx, spendMsg.Receiver, spendMsg.Amount)
+		if err != nil {
+			return err.Result()
+		}
+		return sdk.Result{}
+	}
+}
+
+// generate a signed transaction
+func GenTx(chainID string, msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKey) auth.StdTx {
+	// make the transaction free
+	fee := auth.StdFee{
+		sdk.Coins{{"foocoin", sdk.NewInt(0)}},
+		100000,
+	}
+
+	sigs := make([]auth.StdSignature, len(priv))
+	for i, p := range priv {
+		sigs[i] = auth.StdSignature{
+			PubKey:        p.PubKey(),
+			Signature:     p.Sign(auth.StdSignBytes(chainID, accnums[i], seq[i], fee, msgs, "")),
+			AccountNumber: accnums[i],
+			Sequence:      seq[i],
+		}
+	}
+	return auth.NewStdTx(msgs, fee, sigs, "")
+}
+
+// spin up simple app for testing
+type testApp struct {
+	*BaseApp
+	accountMapper auth.AccountMapper
+	accountKeeper bank.Keeper
+}
+
+func newTestApp(name string) testApp {
+	return testApp{
+		BaseApp: newBaseApp(name),
+	}
+}
+
+func MakeCodec() *wire.Codec {
+	cdc := wire.NewCodec()
+	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
+	crypto.RegisterAmino(cdc)
+	cdc.RegisterInterface((*auth.Account)(nil), nil)
+	cdc.RegisterConcrete(&auth.BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
+	return cdc
+}
+
+// tests multiple msgs of same type from same address in single tx
+func TestMultipleBurn(t *testing.T) {
+	// Create app.
+	app := newTestApp(t.Name())
+	capKey := sdk.NewKVStoreKey("key")
+	app.MountStoresIAVL(capKey)
+	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {
+		var tx auth.StdTx
+		fromJSON(txBytes, &tx)
+		return tx, nil
+	})
+
+	err := app.LoadLatestVersion(capKey)
+	if err != nil {
+		panic(err)
+	}
+
+	app.accountMapper = auth.NewAccountMapper(app.cdc, capKey, &auth.BaseAccount{})
+	app.accountKeeper = bank.NewKeeper(app.accountMapper)
+
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.FeeCollectionKeeper{}))
+
+	app.Router().
+		AddRoute("burn", newHandleBurn(app.accountKeeper)).
+		AddRoute("send", newHandleSpend(app.accountKeeper))
+
+	app.InitChain(abci.RequestInitChain{})
+	app.BeginBlock(abci.RequestBeginBlock{})
+
+	// Set chain-id
+	app.deliverState.ctx = app.deliverState.ctx.WithChainID(t.Name())
+
+	priv := makePrivKey("my secret")
+	addr := priv.PubKey().Address()
+
+	app.accountKeeper.AddCoins(app.deliverState.ctx, addr, sdk.Coins{{"foocoin", sdk.NewInt(100)}})
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr), "Balance did not update")
+
+	msg := testBurnMsg{addr, sdk.Coins{{"foocoin", sdk.NewInt(50)}}}
+	tx := GenTx(t.Name(), []sdk.Msg{msg, msg}, []int64{0}, []int64{0}, priv)
+
+	res := app.Deliver(tx)
+
+	assert.Equal(t, true, res.IsOK(), res.Log)
+	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr), "Double burn did not work")
+}
+
+// tests multiples msgs of same type from different addresses in single tx
+func TestBurnMultipleOwners(t *testing.T) {
+	// Create app.
+	app := newTestApp(t.Name())
+	capKey := sdk.NewKVStoreKey("key")
+	app.MountStoresIAVL(capKey)
+	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {
+		var tx auth.StdTx
+		fromJSON(txBytes, &tx)
+		return tx, nil
+	})
+
+	err := app.LoadLatestVersion(capKey)
+	if err != nil {
+		panic(err)
+	}
+
+	app.accountMapper = auth.NewAccountMapper(app.cdc, capKey, &auth.BaseAccount{})
+	app.accountKeeper = bank.NewKeeper(app.accountMapper)
+
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.FeeCollectionKeeper{}))
+
+	app.Router().
+		AddRoute("burn", newHandleBurn(app.accountKeeper)).
+		AddRoute("send", newHandleSpend(app.accountKeeper))
+
+	app.InitChain(abci.RequestInitChain{})
+	app.BeginBlock(abci.RequestBeginBlock{})
+
+	// Set chain-id
+	app.deliverState.ctx = app.deliverState.ctx.WithChainID(t.Name())
+
+	priv1 := makePrivKey("my secret 1")
+	addr1 := priv1.PubKey().Address()
+
+	priv2 := makePrivKey("my secret 2")
+	addr2 := priv2.PubKey().Address()
+
+	// fund accounts
+	app.accountKeeper.AddCoins(app.deliverState.ctx, addr1, sdk.Coins{{"foocoin", sdk.NewInt(100)}})
+	app.accountKeeper.AddCoins(app.deliverState.ctx, addr2, sdk.Coins{{"foocoin", sdk.NewInt(100)}})
+
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not update")
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 did not update")
+
+	msg1 := testBurnMsg{addr1, sdk.Coins{{"foocoin", sdk.NewInt(100)}}}
+	msg2 := testBurnMsg{addr2, sdk.Coins{{"foocoin", sdk.NewInt(100)}}}
+
+	// test wrong signers: Address 1 signs both messages
+	tx := GenTx(t.Name(), []sdk.Msg{msg1, msg2}, []int64{0, 0}, []int64{0, 0}, priv1, priv1)
+
+	res := app.Deliver(tx)
+	assert.Equal(t, sdk.ABCICodeType(0x10003), res.Code, "Wrong signatures passed")
+
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 changed after invalid sig")
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 changed after invalid sig")
+
+	// test valid tx
+	tx = GenTx(t.Name(), []sdk.Msg{msg1, msg2}, []int64{0, 1}, []int64{1, 0}, priv1, priv2)
+
+	res = app.Deliver(tx)
+	assert.Equal(t, true, res.IsOK(), res.Log)
+
+	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not change after valid tx")
+	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 did not change after valid tx")
+}
+
+// tests different msg types in single tx with different addresses
+func TestSendBurn(t *testing.T) {
+	// Create app.
+	app := newTestApp(t.Name())
+	capKey := sdk.NewKVStoreKey("key")
+	app.MountStoresIAVL(capKey)
+	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {
+		var tx auth.StdTx
+		fromJSON(txBytes, &tx)
+		return tx, nil
+	})
+
+	err := app.LoadLatestVersion(capKey)
+	if err != nil {
+		panic(err)
+	}
+
+	app.accountMapper = auth.NewAccountMapper(app.cdc, capKey, &auth.BaseAccount{})
+	app.accountKeeper = bank.NewKeeper(app.accountMapper)
+
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.FeeCollectionKeeper{}))
+
+	app.Router().
+		AddRoute("burn", newHandleBurn(app.accountKeeper)).
+		AddRoute("send", newHandleSpend(app.accountKeeper))
+
+	app.InitChain(abci.RequestInitChain{})
+	app.BeginBlock(abci.RequestBeginBlock{})
+
+	// Set chain-id
+	app.deliverState.ctx = app.deliverState.ctx.WithChainID(t.Name())
+
+	priv1 := makePrivKey("my secret 1")
+	addr1 := priv1.PubKey().Address()
+
+	priv2 := makePrivKey("my secret 2")
+	addr2 := priv2.PubKey().Address()
+
+	// fund accounts
+	app.accountKeeper.AddCoins(app.deliverState.ctx, addr1, sdk.Coins{{"foocoin", sdk.NewInt(100)}})
+	acc := app.accountMapper.NewAccountWithAddress(app.deliverState.ctx, addr2)
+	app.accountMapper.SetAccount(app.deliverState.ctx, acc)
+
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not update")
+
+	sendMsg := testSendMsg{addr1, addr2, sdk.Coins{{"foocoin", sdk.NewInt(50)}}}
+
+	msg1 := testBurnMsg{addr1, sdk.Coins{{"foocoin", sdk.NewInt(50)}}}
+	msg2 := testBurnMsg{addr2, sdk.Coins{{"foocoin", sdk.NewInt(50)}}}
+
+	// send then burn
+	tx := GenTx(t.Name(), []sdk.Msg{sendMsg, msg2, msg1}, []int64{0, 1}, []int64{0, 0}, priv1, priv2)
+
+	res := app.Deliver(tx)
+	assert.Equal(t, true, res.IsOK(), res.Log)
+
+	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not change after valid tx")
+	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 did not change after valid tx")
+
+	// Check that state is only updated if all msgs in tx pass.
+	app.accountKeeper.AddCoins(app.deliverState.ctx, addr1, sdk.Coins{{"foocoin", sdk.NewInt(50)}})
+
+	// burn then send
+	tx = GenTx(t.Name(), []sdk.Msg{msg1, sendMsg}, []int64{0}, []int64{1}, priv1)
+
+	res = app.Deliver(tx)
+
+	// Double check that state is correct after Commit.
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+
+	app.BeginBlock(abci.RequestBeginBlock{})
+	app.deliverState.ctx = app.deliverState.ctx.WithChainID(t.Name())
+
+	assert.Equal(t, sdk.ABCICodeType(0x1000a), res.Code, "Allowed tx to pass with insufficient funds")
+
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(50)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Allowed valid msg to pass in invalid tx")
+	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 changed after invalid tx")
 }
 
 //----------------------------------------

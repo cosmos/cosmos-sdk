@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -15,6 +16,7 @@ import (
 	cryptoKeys "github.com/tendermint/go-crypto/keys"
 	p2p "github.com/tendermint/tendermint/p2p"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/tendermint/tmlibs/common"
 
 	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
@@ -22,6 +24,7 @@ import (
 	tests "github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	stakerest "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 )
@@ -308,6 +311,7 @@ func TestTxs(t *testing.T) {
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	type txInfo struct {
+		Hash   common.HexBytes        `json:"hash"`
 		Height int64                  `json:"height"`
 		Tx     sdk.Tx                 `json:"tx"`
 		Result abci.ResponseDeliverTx `json:"result"`
@@ -322,6 +326,10 @@ func TestTxs(t *testing.T) {
 	err := cdc.UnmarshalJSON([]byte(body), &indexedTxs)
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(indexedTxs))
+
+	// XXX should this move into some other testfile for txs in general?
+	// test if created TX hash is the correct hash
+	assert.Equal(t, resultTx.Hash, indexedTxs[0].Hash)
 
 	// query sender
 	// also tests url decoding
@@ -416,6 +424,96 @@ func TestBonding(t *testing.T) {
 
 }
 
+func TestSubmitProposal(t *testing.T) {
+	name, password := "test", "1234567890"
+	addr, seed := CreateAddr(t, "test", password, GetKB(t))
+	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.Address{addr})
+	defer cleanup()
+
+	// create SubmitProposal TX
+	resultTx := doSubmitProposal(t, port, seed, name, password, addr)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// check if tx was commited
+	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+
+	var proposalID int64
+	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID)
+
+	// query proposal
+	proposal := getProposal(t, port, proposalID)
+	assert.Equal(t, "Test", proposal.Title)
+}
+
+func TestDeposit(t *testing.T) {
+	name, password := "test", "1234567890"
+	addr, seed := CreateAddr(t, "test", password, GetKB(t))
+	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.Address{addr})
+	defer cleanup()
+
+	// create SubmitProposal TX
+	resultTx := doSubmitProposal(t, port, seed, name, password, addr)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// check if tx was commited
+	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+
+	var proposalID int64
+	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID)
+
+	// query proposal
+	proposal := getProposal(t, port, proposalID)
+	assert.Equal(t, "Test", proposal.Title)
+
+	// create SubmitProposal TX
+	resultTx = doDeposit(t, port, seed, name, password, addr, proposalID)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// query proposal
+	proposal = getProposal(t, port, proposalID)
+	assert.True(t, proposal.TotalDeposit.IsEqual(sdk.Coins{sdk.NewCoin("steak", 10)}))
+}
+
+func TestVote(t *testing.T) {
+	name, password := "test", "1234567890"
+	addr, seed := CreateAddr(t, "test", password, GetKB(t))
+	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.Address{addr})
+	defer cleanup()
+
+	// create SubmitProposal TX
+	resultTx := doSubmitProposal(t, port, seed, name, password, addr)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// check if tx was commited
+	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+
+	var proposalID int64
+	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID)
+
+	// query proposal
+	proposal := getProposal(t, port, proposalID)
+	assert.Equal(t, "Test", proposal.Title)
+
+	// create SubmitProposal TX
+	resultTx = doDeposit(t, port, seed, name, password, addr, proposalID)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// query proposal
+	proposal = getProposal(t, port, proposalID)
+	assert.Equal(t, gov.StatusToString(gov.StatusVotingPeriod), proposal.Status)
+
+	// create SubmitProposal TX
+	resultTx = doVote(t, port, seed, name, password, addr, proposalID)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	vote := getVote(t, port, proposalID, addr)
+	assert.Equal(t, proposalID, vote.ProposalID)
+	assert.Equal(t, gov.VoteOptionToString(gov.OptionYes), vote.Option)
+}
+
 //_____________________________________________________________________________
 // get the account to get the sequence
 func getAccount(t *testing.T, port string, addr sdk.Address) auth.Account {
@@ -440,6 +538,7 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.Address) (
 	acc := getAccount(t, port, addr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
+	chainID := viper.GetString(client.FlagChainID)
 
 	// send
 	coinbz, err := json.Marshal(sdk.NewCoin("steak", 1))
@@ -453,8 +552,9 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.Address) (
 		"account_number":%d,
 		"sequence":%d,
 		"gas": 10000,
-		"amount":[%s]
-	}`, name, password, accnum, sequence, coinbz))
+		"amount":[%s],
+		"chain_id":"%s"
+	}`, name, password, accnum, sequence, coinbz, chainID))
 	res, body := Request(t, port, "POST", "/accounts/"+receiveAddrBech+"/send", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -592,4 +692,130 @@ func getValidators(t *testing.T, port string) []stakerest.StakeValidatorOutput {
 	err := cdc.UnmarshalJSON([]byte(body), &validators)
 	require.Nil(t, err)
 	return validators
+}
+
+func getProposal(t *testing.T, port string, proposalID int64) gov.ProposalRest {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d", proposalID), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var proposal gov.ProposalRest
+	err := cdc.UnmarshalJSON([]byte(body), &proposal)
+	require.Nil(t, err)
+	return proposal
+}
+
+func getVote(t *testing.T, port string, proposalID int64, voterAddr sdk.Address) gov.VoteRest {
+	bechVoterAddr := sdk.MustBech32ifyAcc(voterAddr)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/votes/%d/%s", proposalID, bechVoterAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var vote gov.VoteRest
+	err := cdc.UnmarshalJSON([]byte(body), &vote)
+	require.Nil(t, err)
+	return vote
+}
+
+func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerAddr sdk.Address) (resultTx ctypes.ResultBroadcastTxCommit) {
+	// get the account to get the sequence
+	acc := getAccount(t, port, proposerAddr)
+	accnum := acc.GetAccountNumber()
+	sequence := acc.GetSequence()
+
+	chainID := viper.GetString(client.FlagChainID)
+
+	bechProposerAddr := sdk.MustBech32ifyAcc(proposerAddr)
+
+	// submitproposal
+	jsonStr := []byte(fmt.Sprintf(`{
+		"title": "Test",
+		"description": "test",
+		"proposal_type": "Text",
+		"proposer": "%s",
+		"initial_deposit": [{ "denom": "steak", "amount": 5 }],
+		"base_req": {
+			"name": "%s",
+			"password": "%s",
+			"chain_id": "%s",
+			"account_number": %d,
+			"sequence": %d,
+			"gas": 100000
+		}
+	}`, bechProposerAddr, name, password, chainID, accnum, sequence))
+	res, body := Request(t, port, "POST", "/gov/submitproposal", jsonStr)
+	fmt.Println(res)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var results ctypes.ResultBroadcastTxCommit
+	err := cdc.UnmarshalJSON([]byte(body), &results)
+	require.Nil(t, err)
+
+	return results
+}
+
+func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk.Address, proposalID int64) (resultTx ctypes.ResultBroadcastTxCommit) {
+	// get the account to get the sequence
+	acc := getAccount(t, port, proposerAddr)
+	accnum := acc.GetAccountNumber()
+	sequence := acc.GetSequence()
+
+	chainID := viper.GetString(client.FlagChainID)
+
+	bechProposerAddr := sdk.MustBech32ifyAcc(proposerAddr)
+
+	// deposit on proposal
+	jsonStr := []byte(fmt.Sprintf(`{
+		"depositer": "%s",
+		"proposalID": %d,
+		"amount": [{ "denom": "steak", "amount": 5 }],
+		"base_req": {
+			"name": "%s",
+			"password": "%s",
+			"chain_id": "%s",
+			"account_number": %d,
+			"sequence": %d,
+			"gas": 100000
+		}
+	}`, bechProposerAddr, proposalID, name, password, chainID, accnum, sequence))
+	res, body := Request(t, port, "POST", "/gov/deposit", jsonStr)
+	fmt.Println(res)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var results ctypes.ResultBroadcastTxCommit
+	err := cdc.UnmarshalJSON([]byte(body), &results)
+	require.Nil(t, err)
+
+	return results
+}
+
+func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Address, proposalID int64) (resultTx ctypes.ResultBroadcastTxCommit) {
+	// get the account to get the sequence
+	acc := getAccount(t, port, proposerAddr)
+	accnum := acc.GetAccountNumber()
+	sequence := acc.GetSequence()
+
+	chainID := viper.GetString(client.FlagChainID)
+
+	bechProposerAddr := sdk.MustBech32ifyAcc(proposerAddr)
+
+	// vote on proposal
+	jsonStr := []byte(fmt.Sprintf(`{
+		"voter": "%s",
+		"proposalID": %d,
+		"option": "Yes",
+		"base_req": {
+			"name": "%s",
+			"password": "%s",
+			"chain_id": "%s",
+			"account_number": %d,
+			"sequence": %d,
+			"gas": 100000
+		}
+	}`, bechProposerAddr, proposalID, name, password, chainID, accnum, sequence))
+	res, body := Request(t, port, "POST", "/gov/vote", jsonStr)
+	fmt.Println(res)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var results ctypes.ResultBroadcastTxCommit
+	err := cdc.UnmarshalJSON([]byte(body), &results)
+	require.Nil(t, err)
+
+	return results
 }

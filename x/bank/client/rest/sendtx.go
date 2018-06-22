@@ -90,11 +90,13 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 
 		// add gas to context
 		ctx = ctx.WithGas(m.Gas)
+		// add chain-id to context
+		ctx = ctx.WithChainID(m.ChainID)
 
 		// sign
 		ctx = ctx.WithAccountNumber(m.AccountNumber)
 		ctx = ctx.WithSequence(m.Sequence)
-		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, msg, cdc)
+		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, []sdk.Msg{msg}, cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(err.Error()))

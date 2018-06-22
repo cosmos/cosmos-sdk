@@ -101,7 +101,7 @@ func (am AccountMapper) GetPubKey(ctx sdk.Context, addr sdk.Address) (crypto.Pub
 }
 
 // Sets the PubKey of the account at address
-func (am AccountMapper) SetPubKey(ctx sdk.Context, addr sdk.Address, newPubKey crypto.PubKey) sdk.Error {
+func (am AccountMapper) setPubKey(ctx sdk.Context, addr sdk.Address, newPubKey crypto.PubKey) sdk.Error {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return sdk.ErrUnknownAddress(addr.String())

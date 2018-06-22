@@ -5,13 +5,27 @@ all: install
 ### DEP
 
 DEP = github.com/golang/dep/cmd/dep
+GOLINT = github.com/tendermint/lint/golint
+GOMETALINTER = github.com/alecthomas/gometalinter
 DEP_CHECK := $(shell command -v dep 2> /dev/null)
+GOLINT_CHECK := $(shell command -v golint 2> /dev/null)
+GOMETALINTER_CHECK := $(shell command -v gometalinter 2> /dev/null)
 
 check_tools:
 ifndef DEP_CHECK
 	@echo "No dep in path.  Install with 'make get_tools'."
 else
 	@echo "Found dep in path."
+endif
+ifndef GOLINT_CHECK
+	@echo "No golint in path.  Install with 'make get_tools'."
+else
+	@echo "Found golint in path."
+endif
+ifndef GOMETALINTER_CHECK
+	@echo "No gometalinter in path.  Install with 'make get_tools'."
+else
+	@echo "Found gometalinter in path."
 endif
 
 get_tools:
@@ -21,10 +35,26 @@ else
 	@echo "$(ansi_grn)Installing dep$(ansi_end)"
 	go get -v $(DEP)
 endif
+ifdef GOLINT_CHECK
+	@echo "Golint is already installed.  Run 'make update_tools' to update."
+else
+	@echo "$(ansi_grn)Installing golint$(ansi_end)"
+	go get -v $(GOLINT)
+endif
+ifdef GOMETALINTER_CHECK
+	@echo "Gometalinter is already installed.  Run 'make update_tools' to update."
+else
+	@echo "$(ansi_grn)Installing gometalinter$(ansi_end)"
+	go get -v $(GOMETALINTER)
+endif
 
 update_tools:
 	@echo "$(ansi_grn)Updating dep$(ansi_end)"
 	go get -u -v $(DEP)
+	@echo "$(ansi_grn)Updating tendermint/golint $(ansi_end)"
+	go get -u -v $(GOLINT)
+	@echo "$(ansi_grn)Updating gometalinter $(ansi_end)"
+	go get -u -v $(GOMETALINTER)
 
 
 ########################################

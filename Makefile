@@ -3,7 +3,7 @@ PACKAGES_NOCLITEST=$(shell go list ./... | grep -v '/vendor/' | grep -v github.c
 COMMIT_HASH := $(shell git rev-parse --short HEAD)
 BUILD_FLAGS = -tags netgo -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
 
-all: check_tools get_vendor_deps install install_examples test_lint test
+all: get_tools get_vendor_deps install install_examples test_lint test
 
 ########################################
 ### CI
@@ -36,11 +36,11 @@ else
 	go build $(BUILD_FLAGS) -o build/democli ./examples/democoin/cmd/democli
 endif
 
-install: 
+install:
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
 
-install_examples: 
+install_examples:
 	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecoind
 	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecli
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democoind
@@ -89,7 +89,7 @@ godocs:
 
 test: test_unit
 
-test_cli: 
+test_cli:
 	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test`
 
 test_cli_retry:

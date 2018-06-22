@@ -127,7 +127,7 @@ before passing the message to its respective handler.
 
 The AnteHandler only runs `CheckTx()`, and `DeliverTx()` will only be run after `CheckTx()` has passed.
 This is done to separate the message logic away from the ante handler, since the ante handler is
-independent from the type of message that is being committed. 
+independent from the type of message that is being committed.
 
 ```go
 type AnteHandler func(ctx Context, tx Tx) (newCtx Context, result Result, abort bool)

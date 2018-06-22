@@ -28,14 +28,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power
 
 // revoke a validator
 func (k Keeper) Revoke(ctx sdk.Context, pubkey crypto.PubKey) {
-
-	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
-	if !found {
-		panic(fmt.Errorf("Validator with pubkey %s not found, cannot revoke", pubkey))
-	}
-	validator.Revoked = true
-	k.UpdateValidator(ctx, validator) // update the validator, now revoked
-
+	k.setRevoked(ctx, pubkey, true)
 	logger := ctx.Logger().With("module", "x/stake")
 	logger.Info(fmt.Sprintf("Validator %s revoked", pubkey.Address()))
 	return
@@ -43,15 +36,19 @@ func (k Keeper) Revoke(ctx sdk.Context, pubkey crypto.PubKey) {
 
 // unrevoke a validator
 func (k Keeper) Unrevoke(ctx sdk.Context, pubkey crypto.PubKey) {
-
-	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
-	if !found {
-		panic(fmt.Errorf("Validator with pubkey %s not found, cannot unrevoke", pubkey))
-	}
-	validator.Revoked = false
-	k.UpdateValidator(ctx, validator) // update the validator, now unrevoked
-
+	k.setRevoked(ctx, pubkey, false)
 	logger := ctx.Logger().With("module", "x/stake")
 	logger.Info(fmt.Sprintf("Validator %s unrevoked", pubkey.Address()))
+	return
+}
+
+// set the revoked flag on a validator
+func (k Keeper) setRevoked(ctx sdk.Context, pubkey crypto.PubKey, revoked bool) {
+	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
+	if !found {
+		panic(fmt.Errorf("Validator with pubkey %s not found, cannot set revoked to %v", pubkey, revoked))
+	}
+	validator.Revoked = revoked
+	k.UpdateValidator(ctx, validator)
 	return
 }

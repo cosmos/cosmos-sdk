@@ -56,20 +56,18 @@ func GenTx(msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKeyE
 
 // generate a set of signed transactions a msg, that differ only by having the
 // sequence numbers incremented between every transaction.
-func GenSequenceOfTxs(msgs []sdk.Msg, accnums []int64, init_seq_nums []int64, num_to_generate int, priv ...crypto.PrivKeyEd25519) []auth.StdTx {
-	copy_of_init_seq_nums := make([]int64, len(init_seq_nums), len(init_seq_nums))
-	copy(copy_of_init_seq_nums, init_seq_nums)
-	txs := make([]auth.StdTx, num_to_generate, num_to_generate)
-	for i := 0; i < num_to_generate; i++ {
-		txs[i] = GenTx(msgs, accnums, copy_of_init_seq_nums, priv...)
-		incrementAllSequenceNumbers(copy_of_init_seq_nums)
+func GenSequenceOfTxs(msgs []sdk.Msg, accnums []int64, initSeqNums []int64, numToGenerate int, priv ...crypto.PrivKeyEd25519) []auth.StdTx {
+	txs := make([]auth.StdTx, numToGenerate, numToGenerate)
+	for i := 0; i < numToGenerate; i++ {
+		txs[i] = GenTx(msgs, accnums, initSeqNums, priv...)
+		incrementAllSequenceNumbers(initSeqNums)
 	}
 	return txs
 }
 
-func incrementAllSequenceNumbers(init_seq_nums []int64) {
-	for i := 0; i < len(init_seq_nums); i++ {
-		init_seq_nums[i] += 1
+func incrementAllSequenceNumbers(initSeqNums []int64) {
+	for i := 0; i < len(initSeqNums); i++ {
+		initSeqNums[i]++
 	}
 }
 

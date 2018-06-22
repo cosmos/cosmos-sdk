@@ -16,6 +16,16 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) (tags 
 	binary.LittleEndian.PutUint64(heightBytes, uint64(req.Header.Height))
 	tags = sdk.NewTags("height", heightBytes)
 
+	// Iterate over all the validators  which *should* have signed this block
+	for _, validator := range req.Validators {
+		present := validator.SignedLastBlock
+		pubkey, err := tmtypes.PB2TM.PubKey(validator.Validator.PubKey)
+		if err != nil {
+			panic(err)
+		}
+		sk.handleValidatorSignature(ctx, pubkey, present)
+	}
+
 	// Deal with any equivocation evidence
 	for _, evidence := range req.ByzantineValidators {
 		pk, err := tmtypes.PB2TM.PubKey(evidence.Validator.PubKey)
@@ -28,16 +38,6 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) (tags 
 		default:
 			ctx.Logger().With("module", "x/slashing").Error(fmt.Sprintf("ignored unknown evidence type: %s", string(evidence.Type)))
 		}
-	}
-
-	// Iterate over all the validators  which *should* have signed this block
-	for _, validator := range req.Validators {
-		present := validator.SignedLastBlock
-		pubkey, err := tmtypes.PB2TM.PubKey(validator.Validator.PubKey)
-		if err != nil {
-			panic(err)
-		}
-		sk.handleValidatorSignature(ctx, pubkey, present)
 	}
 
 	return

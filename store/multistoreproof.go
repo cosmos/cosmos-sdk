@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"io"
 	"bytes"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func BuildProofForMultiStore(commitInfo commitInfo, storeName string) (int64, []iavl.SimpleMerkleHashNode, error){
@@ -51,8 +52,8 @@ func BuildProofForMultiStore(commitInfo commitInfo, storeName string) (int64, []
 
 }
 
-func VerifyProofForMultiStore(appHash,leftHash []byte,storeName string, proof []iavl.SimpleMerkleHashNode) (bool){
-	hash := kvPairHash(merkle.SimpleHashFromBytes([]byte(storeName)),leftHash);
+func VerifyProofForMultiStore(appHash,leftHash []byte, proof []iavl.SimpleMerkleHashNode) (bool){
+	hash := leftHash;
 	for _,merkleHashNode := range proof {
 		if merkleHashNode.IsLeft {
 			hash=kvPairHash(hash,merkleHashNode.Hash)
@@ -61,6 +62,18 @@ func VerifyProofForMultiStore(appHash,leftHash []byte,storeName string, proof []
 		}
 	}
 	return bytes.Equal(appHash,hash)
+}
+
+func BuildStoreInfoAndReturnHash(storeName string, height int64, rootHash []byte) []byte {
+	storeInfo := storeInfo{
+		Core:storeCore{
+			CommitID:sdk.CommitID{
+				Version: height,
+				Hash: rootHash,
+			},
+		},
+	}
+	return kvPairHash(merkle.SimpleHashFromBytes([]byte(storeName)),storeInfo.Hash());
 }
 
 type hashNode struct {

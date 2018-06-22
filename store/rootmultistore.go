@@ -391,18 +391,6 @@ func (si storeInfo) Hash() []byte {
 	return hasher.Sum(nil)
 }
 
-func BuildStoreInfoAndReturnHash(height int64, rootHash []byte) []byte {
-	storeInfo := storeInfo{
-		Core:storeCore{
-			CommitID:sdk.CommitID{
-				Version: height,
-				Hash: rootHash,
-			},
-		},
-	}
-	return storeInfo.Hash()
-}
-
 //----------------------------------------
 // Misc.
 

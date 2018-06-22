@@ -136,8 +136,8 @@ func (ctx CoreContext) queryAndVerifyProof(path string, key common.HexBytes) (re
 		if err != nil {
 			return  nil, errors.Wrap(err, "Couldn't verify proof")
 		}
-		leafCommitHash := store.BuildStoreInfoAndReturnHash(eproof.Height,eproof.RootHash)
-		if !store.VerifyProofForMultiStore(commit.Header.AppHash, leafCommitHash, eproof.StoreName, eproof.SimpleProof) {
+		leafCommitHash := store.BuildStoreInfoAndReturnHash(eproof.StoreName, eproof.Height,eproof.RootHash)
+		if !store.VerifyProofForMultiStore(commit.Header.AppHash, leafCommitHash, eproof.SimpleProof) {
 			return  nil, errors.Wrap(err, "Invalid exist proof")
 		}
 
@@ -160,8 +160,8 @@ func (ctx CoreContext) queryAndVerifyProof(path string, key common.HexBytes) (re
 		return nil, errors.Wrap(err, "Couldn't verify proof")
 	}
 
-	leafCommitHash := store.BuildStoreInfoAndReturnHash(aproof.Height,aproof.RootHash)
-	if !store.VerifyProofForMultiStore(commit.Header.AppHash, leafCommitHash, aproof.StoreName, aproof.SimpleProof) {
+	leafCommitHash := store.BuildStoreInfoAndReturnHash(aproof.StoreName, aproof.Height,aproof.RootHash)
+	if !store.VerifyProofForMultiStore(commit.Header.AppHash, leafCommitHash, aproof.SimpleProof) {
 		return  nil, errors.Wrap(err, "Invalid exist proof")
 	}
 

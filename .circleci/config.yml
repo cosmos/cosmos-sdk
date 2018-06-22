@@ -49,7 +49,7 @@ jobs:
 
   lint:
     <<: *defaults
-    parallelism: 4
+    parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
@@ -70,7 +70,7 @@ jobs:
 
   test_unit:
     <<: *defaults
-    parallelism: 4
+    parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
@@ -102,7 +102,7 @@ jobs:
 
   test_cover:
     <<: *defaults
-    parallelism: 4
+    parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace

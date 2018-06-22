@@ -474,21 +474,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		}
 	}()
 
-	// Get the Msg.
-	var msgs = tx.GetMsgs()
-	if msgs == nil || len(msgs) == 0 {
-		return sdk.ErrInternal("Tx.GetMsgs() must return at least one message in list").Result()
-	}
-
-	for _, msg := range msgs {
-		// Validate the Msg
-		err := msg.ValidateBasic()
-		if err != nil {
-			err = err.WithDefaultCodespace(sdk.CodespaceRoot)
-			return err.Result()
-		}
-	}
-
 	// Get the context
 	var ctx sdk.Context
 	if mode == runTxModeCheck || mode == runTxModeSimulate {
@@ -513,7 +498,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 			ctx = newCtx
 		}
 	}
-
 	// Get the correct cache
 	var msCache sdk.CacheMultiStore
 	if mode == runTxModeCheck || mode == runTxModeSimulate {
@@ -526,42 +510,65 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		ctx = ctx.WithMultiStore(msCache)
 	}
 
-	finalResult := sdk.Result{}
-	var logs []string
-	for i, msg := range msgs {
-		// Match route.
-		msgType := msg.Type()
-		handler := app.router.Route(msgType)
-		if handler == nil {
-			return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
+	// No need to run Msg checks when running CheckTx(), since CheckTx() only needs to validate that fees can be paid
+	// Then when DeliverTx() is called, this will run, preventing us from doing the same checks twice
+	if mode != runTxModeCheck {
+
+		// Get the Msg.
+		var msgs = tx.GetMsgs()
+		if msgs == nil || len(msgs) == 0 {
+			return sdk.ErrInternal("Tx.GetMsgs() must return at least one message in list").Result()
 		}
 
-		result = handler(ctx, msg)
+		for _, msg := range msgs {
+			// Validate the Msg
+			err := msg.ValidateBasic()
+			if err != nil {
+				err = err.WithDefaultCodespace(sdk.CodespaceRoot)
+				return err.Result()
+			}
+		}
 
-		// Set gas utilized
-		finalResult.GasUsed += ctx.GasMeter().GasConsumed()
-		finalResult.GasWanted += result.GasWanted
+		finalResult := sdk.Result{}
+		var logs []string
+		for i, msg := range msgs {
+			// Match route.
+			msgType := msg.Type()
+			handler := app.router.Route(msgType)
+			if handler == nil {
+				return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
+			}
 
-		// Append Data and Tags
-		finalResult.Data = append(finalResult.Data, result.Data...)
-		finalResult.Tags = append(finalResult.Tags, result.Tags...)
+			result = handler(ctx, msg)
 
-		// Construct usable logs in multi-message transactions. Messages are 1-indexed in logs.
-		logs = append(logs, fmt.Sprintf("Msg %d: %s", i+1, finalResult.Log))
+			// Set gas utilized
+			finalResult.GasUsed += ctx.GasMeter().GasConsumed()
+			finalResult.GasWanted += result.GasWanted
 
-		// Stop execution and return on first failed message.
-		if !result.IsOK() {
-			if len(msgs) == 1 {
+			// Append Data and Tags
+			finalResult.Data = append(finalResult.Data, result.Data...)
+			finalResult.Tags = append(finalResult.Tags, result.Tags...)
+
+			// Construct usable logs in multi-message transactions. Messages are 1-indexed in logs.
+			logs = append(logs, fmt.Sprintf("Msg %d: %s", i+1, finalResult.Log))
+
+			// Stop execution and return on first failed message.
+			if !result.IsOK() {
+				if len(msgs) == 1 {
+					return result
+				}
+				result.GasUsed = finalResult.GasUsed
+				if i == 0 {
+					result.Log = fmt.Sprintf("Msg 1 failed: %s", result.Log)
+				} else {
+					result.Log = fmt.Sprintf("Msg 1-%d Passed. Msg %d failed: %s", i, i+1, result.Log)
+				}
 				return result
 			}
-			result.GasUsed = finalResult.GasUsed
-			if i == 0 {
-				result.Log = fmt.Sprintf("Msg 1 failed: %s", result.Log)
-			} else {
-				result.Log = fmt.Sprintf("Msg 1-%d Passed. Msg %d failed: %s", i, i+1, result.Log)
-			}
-			return result
 		}
+		finalResult.Log = strings.Join(logs, "\n")
+		result = finalResult
+
 	}
 
 	// If not a simulated run and result was successful, write to app.checkState.ms or app.deliverState.ms
@@ -569,10 +576,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	if mode != runTxModeSimulate && result.IsOK() {
 		msCache.Write()
 	}
+	return result
 
-	finalResult.Log = strings.Join(logs, "\n")
-
-	return finalResult
 }
 
 // Implements ABCI

@@ -62,7 +62,7 @@ func TestMsgChangePubKey(t *testing.T) {
 	assert.Equal(t, acc1, res1.(*auth.BaseAccount))
 
 	// Run a CheckDeliver
-	SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{sendMsg1}, []int64{0}, []int64{0}, true, priv1)
+	SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{sendMsg1}, []int64{0}, []int64{0}, true, true, priv1)
 
 	// Check balances
 	CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("foocoin", 67)})
@@ -78,7 +78,7 @@ func TestMsgChangePubKey(t *testing.T) {
 	acc2 := mapp.AccountMapper.GetAccount(ctxDeliver, addr1)
 
 	// send a MsgChangePubKey
-	SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{changePubKeyMsg}, []int64{0}, []int64{1}, true, priv1)
+	SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{changePubKeyMsg}, []int64{0}, []int64{1}, true, true, priv1)
 	acc2 = mapp.AccountMapper.GetAccount(ctxDeliver, addr1)
 
 	assert.True(t, priv2.PubKey().Equals(acc2.GetPubKey()))
@@ -90,7 +90,7 @@ func TestMsgChangePubKey(t *testing.T) {
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
 
 	// resigning the tx with the new correct priv key should work
-	SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{sendMsg1}, []int64{0}, []int64{2}, true, priv2)
+	SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{sendMsg1}, []int64{0}, []int64{2}, true, true, priv2)
 
 	// Check balances
 	CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("foocoin", 57)})

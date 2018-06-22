@@ -62,14 +62,14 @@ func SignCheck(t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accnums []int
 }
 
 // simulate a block
-func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accnums []int64, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
+func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accnums []int64, seq []int64, expPassCheck bool, expPassDeliver bool, priv ...crypto.PrivKeyEd25519) {
 
 	// Sign the tx
 	tx := GenTx(msgs, accnums, seq, priv...)
 
 	// Run a Check
 	res := app.Check(tx)
-	if expPass {
+	if expPassCheck {
 		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
 	} else {
 		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
@@ -78,7 +78,7 @@ func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accnum
 	// Simulate a Block
 	app.BeginBlock(abci.RequestBeginBlock{})
 	res = app.Deliver(tx)
-	if expPass {
+	if expPassDeliver {
 		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
 	} else {
 		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)

@@ -74,3 +74,8 @@ func (msg MsgIssue) GetSigners() []sdk.Address {
 }
 ```
 
+Message logic is only handled by the `DeliverTx()` function of a transaction. For example,
+when the ante handler runs, it only checks if the account has enough fees to pay for the
+basic handling of any message. This is done in `CheckTx()`. Then after `CheckTx()` is
+confirmed, `DeliverTx()` is run, and will charge fees based on the type of `msg` being
+delivered.

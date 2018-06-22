@@ -31,7 +31,7 @@ var (
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51"),
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
 	}
-	initCoins int64 = 200
+	initCoins sdk.Int = sdk.NewInt(200)
 )
 
 func createTestCodec() *wire.Codec {
@@ -55,13 +55,13 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, Keep
 	ms.MountStoreWithDB(keySlashing, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewTMLogger(os.Stdout))
+	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewTMLogger(os.Stdout))
 	cdc := createTestCodec()
 	accountMapper := auth.NewAccountMapper(cdc, keyAcc, &auth.BaseAccount{})
 	ck := bank.NewKeeper(accountMapper)
 	sk := stake.NewKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
-	genesis.Pool.LooseUnbondedTokens = initCoins * int64(len(addrs))
+	genesis.Pool.LooseUnbondedTokens = initCoins.MulRaw(int64(len(addrs)))
 	stake.InitGenesis(ctx, sk, genesis)
 	for _, addr := range addrs {
 		ck.AddCoins(ctx, addr, sdk.Coins{
@@ -87,7 +87,7 @@ func testAddr(addr string) sdk.Address {
 	return res
 }
 
-func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt int64) stake.MsgCreateValidator {
+func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
 	return stake.MsgCreateValidator{
 		Description:   stake.Description{},
 		ValidatorAddr: address,

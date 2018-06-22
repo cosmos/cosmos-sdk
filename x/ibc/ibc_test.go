@@ -24,7 +24,7 @@ func defaultContext(key sdk.StoreKey) sdk.Context {
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
 	cms.LoadLatestVersion()
-	ctx := sdk.NewContext(cms, abci.Header{}, false, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 	return ctx
 }
 
@@ -69,7 +69,7 @@ func TestIBC(t *testing.T) {
 	dest := newAddress()
 	chainid := "ibcchain"
 	zero := sdk.Coins(nil)
-	mycoins := sdk.Coins{sdk.Coin{"mycoin", 10}}
+	mycoins := sdk.Coins{sdk.NewCoin("mycoin", 10)}
 
 	coins, _, err := ck.AddCoins(ctx, src, mycoins)
 	assert.Nil(t, err)

@@ -37,7 +37,7 @@ func TestKeeperGetSet(t *testing.T) {
 
 	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
 	stakeKeeper := NewKeeper(capKey, bank.NewKeeper(accountMapper), DefaultCodespace)
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	addr := sdk.Address([]byte("some-address"))
 
 	bi := stakeKeeper.getBondInfo(ctx, addr)
@@ -63,7 +63,7 @@ func TestBonding(t *testing.T) {
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 
 	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
 	coinKeeper := bank.NewKeeper(accountMapper)
@@ -75,10 +75,10 @@ func TestBonding(t *testing.T) {
 	_, _, err := stakeKeeper.unbondWithoutCoins(ctx, addr)
 	assert.Equal(t, err, ErrInvalidUnbond(DefaultCodespace))
 
-	_, err = stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.Coin{"steak", 10})
+	_, err = stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewCoin("steak", 10))
 	assert.Nil(t, err)
 
-	power, err := stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.Coin{"steak", 10})
+	power, err := stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewCoin("steak", 10))
 	assert.Equal(t, int64(20), power)
 
 	pk, _, err := stakeKeeper.unbondWithoutCoins(ctx, addr)

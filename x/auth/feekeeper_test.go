@@ -14,8 +14,8 @@ import (
 
 var (
 	emptyCoins = sdk.Coins{}
-	oneCoin    = sdk.Coins{{"foocoin", 1}}
-	twoCoins   = sdk.Coins{{"foocoin", 2}}
+	oneCoin    = sdk.Coins{sdk.NewCoin("foocoin", 1)}
+	twoCoins   = sdk.Coins{sdk.NewCoin("foocoin", 2)}
 )
 
 func TestFeeCollectionKeeperGetSet(t *testing.T) {
@@ -23,7 +23,7 @@ func TestFeeCollectionKeeperGetSet(t *testing.T) {
 	cdc := wire.NewCodec()
 
 	// make context and keeper
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	fck := NewFeeCollectionKeeper(cdc, capKey2)
 
 	// no coins initially
@@ -42,7 +42,7 @@ func TestFeeCollectionKeeperAdd(t *testing.T) {
 	cdc := wire.NewCodec()
 
 	// make context and keeper
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	fck := NewFeeCollectionKeeper(cdc, capKey2)
 
 	// no coins initially
@@ -62,7 +62,7 @@ func TestFeeCollectionKeeperClear(t *testing.T) {
 	cdc := wire.NewCodec()
 
 	// make context and keeper
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	fck := NewFeeCollectionKeeper(cdc, capKey2)
 
 	// set coins initially

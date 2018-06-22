@@ -14,6 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
@@ -63,11 +64,8 @@ type BaseApp struct {
 	// checkState is set on initialization and reset on Commit.
 	// deliverState is set in InitChain and BeginBlock and cleared on Commit.
 	// See methods setCheckState and setDeliverState.
-	// .valUpdates accumulate in DeliverTx and are reset in BeginBlock.
-	// QUESTION: should we put valUpdates in the deliverState.ctx?
 	checkState       *state                  // for CheckTx
 	deliverState     *state                  // for DeliverTx
-	valUpdates       []abci.Validator        // cached validator changes from DeliverTx
 	signedValidators []abci.SigningValidator // absent validators from begin block
 }
 
@@ -193,7 +191,7 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 	// TODO: we don't actually need the main store here
 	main := app.cms.GetKVStore(mainKey)
 	if main == nil {
-		return errors.New("BaseApp expects MultiStore with 'main' KVStore")
+		return errors.New("baseapp expects MultiStore with 'main' KVStore")
 	}
 
 	// XXX: Do we really need the header? What does it have that we want
@@ -216,11 +214,11 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 			}
 			err := proto.Unmarshal(headerBytes, &header)
 			if err != nil {
-				return errors.Wrap(err, "Failed to parse Header")
+				return errors.Wrap(err, "failed to parse Header")
 			}
 			lastVersion := lastCommitID.Version
 			if header.Height != lastVersion {
-				errStr := fmt.Sprintf("Expected db://%s.Height %v but got %v", dbHeaderKey, lastVersion, header.Height)
+				errStr := fmt.Sprintf("expected db://%s.Height %v but got %v", dbHeaderKey, lastVersion, header.Height)
 				return errors.New(errStr)
 			}
 		}
@@ -235,9 +233,9 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, header, true, nil, app.Logger)
+		return sdk.NewContext(app.checkState.ms, header, true, app.Logger)
 	}
-	return sdk.NewContext(app.deliverState.ms, header, false, nil, app.Logger)
+	return sdk.NewContext(app.deliverState.ms, header, false, app.Logger)
 }
 
 type state struct {
@@ -253,7 +251,7 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, nil, app.Logger),
+		ctx: sdk.NewContext(ms, header, true, app.Logger),
 	}
 }
 
@@ -261,7 +259,7 @@ func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, nil, app.Logger),
+		ctx: sdk.NewContext(ms, header, false, app.Logger),
 	}
 }
 
@@ -338,6 +336,11 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			} else {
 				result = app.Simulate(tx)
 			}
+		case "version":
+			return abci.ResponseQuery{
+				Code:  uint32(sdk.ABCICodeOK),
+				Value: []byte(version.GetVersion()),
+			}
 		default:
 			result = sdk.ErrUnknownRequest(fmt.Sprintf("Unknown query: %s", path)).Result()
 		}
@@ -381,7 +384,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	if app.deliverState == nil {
 		app.setDeliverState(req.Header)
 	}
-	app.valUpdates = nil
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)
 	}
@@ -426,13 +428,8 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 		result = app.runTx(runTxModeDeliver, txBytes, tx)
 	}
 
-	// After-handler hooks.
-	if result.IsOK() {
-		app.valUpdates = append(app.valUpdates, result.ValidatorUpdates...)
-	} else {
-		// Even though the Result.Code is not OK, there are still effects,
-		// namely fee deductions and sequence incrementing.
-	}
+	// Even though the Result.Code is not OK, there are still effects,
+	// namely fee deductions and sequence incrementing.
 
 	// Tell the blockchain engine (i.e. Tendermint).
 	return abci.ResponseDeliverTx{
@@ -468,26 +465,28 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		if r := recover(); r != nil {
 			switch r.(type) {
 			case sdk.ErrorOutOfGas:
-				log := fmt.Sprintf("Out of gas in location: %v", r.(sdk.ErrorOutOfGas).Descriptor)
+				log := fmt.Sprintf("out of gas in location: %v", r.(sdk.ErrorOutOfGas).Descriptor)
 				result = sdk.ErrOutOfGas(log).Result()
 			default:
-				log := fmt.Sprintf("Recovered: %v\nstack:\n%v", r, string(debug.Stack()))
+				log := fmt.Sprintf("recovered: %v\nstack:\n%v", r, string(debug.Stack()))
 				result = sdk.ErrInternal(log).Result()
 			}
 		}
 	}()
 
 	// Get the Msg.
-	var msg = tx.GetMsg()
-	if msg == nil {
-		return sdk.ErrInternal("Tx.GetMsg() returned nil").Result()
+	var msgs = tx.GetMsgs()
+	if msgs == nil || len(msgs) == 0 {
+		return sdk.ErrInternal("Tx.GetMsgs() must return at least one message in list").Result()
 	}
 
-	// Validate the Msg.
-	err := msg.ValidateBasic()
-	if err != nil {
-		err = err.WithDefaultCodespace(sdk.CodespaceRoot)
-		return err.Result()
+	for _, msg := range msgs {
+		// Validate the Msg
+		err := msg.ValidateBasic()
+		if err != nil {
+			err = err.WithDefaultCodespace(sdk.CodespaceRoot)
+			return err.Result()
+		}
 	}
 
 	// Get the context
@@ -515,13 +514,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		}
 	}
 
-	// Match route.
-	msgType := msg.Type()
-	handler := app.router.Route(msgType)
-	if handler == nil {
-		return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
-	}
-
 	// Get the correct cache
 	var msCache sdk.CacheMultiStore
 	if mode == runTxModeCheck || mode == runTxModeSimulate {
@@ -534,25 +526,59 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		ctx = ctx.WithMultiStore(msCache)
 	}
 
-	result = handler(ctx, msg)
+	finalResult := sdk.Result{}
+	var logs []string
+	for i, msg := range msgs {
+		// Match route.
+		msgType := msg.Type()
+		handler := app.router.Route(msgType)
+		if handler == nil {
+			return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
+		}
 
-	// Set gas utilized
-	result.GasUsed = ctx.GasMeter().GasConsumed()
+		result = handler(ctx, msg)
+
+		// Set gas utilized
+		finalResult.GasUsed += ctx.GasMeter().GasConsumed()
+		finalResult.GasWanted += result.GasWanted
+
+		// Append Data and Tags
+		finalResult.Data = append(finalResult.Data, result.Data...)
+		finalResult.Tags = append(finalResult.Tags, result.Tags...)
+
+		// Construct usable logs in multi-message transactions. Messages are 1-indexed in logs.
+		logs = append(logs, fmt.Sprintf("Msg %d: %s", i+1, finalResult.Log))
+
+		// Stop execution and return on first failed message.
+		if !result.IsOK() {
+			if len(msgs) == 1 {
+				return result
+			}
+			result.GasUsed = finalResult.GasUsed
+			if i == 0 {
+				result.Log = fmt.Sprintf("Msg 1 failed: %s", result.Log)
+			} else {
+				result.Log = fmt.Sprintf("Msg 1-%d Passed. Msg %d failed: %s", i, i+1, result.Log)
+			}
+			return result
+		}
+	}
 
 	// If not a simulated run and result was successful, write to app.checkState.ms or app.deliverState.ms
+	// Only update state if all messages pass.
 	if mode != runTxModeSimulate && result.IsOK() {
 		msCache.Write()
 	}
 
-	return result
+	finalResult.Log = strings.Join(logs, "\n")
+
+	return finalResult
 }
 
 // Implements ABCI
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	if app.endBlocker != nil {
 		res = app.endBlocker(app.deliverState.ctx, req)
-	} else {
-		res.ValidatorUpdates = app.valUpdates
 	}
 	return
 }

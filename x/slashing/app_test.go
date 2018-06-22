@@ -18,7 +18,7 @@ import (
 var (
 	priv1 = crypto.GenPrivKeyEd25519()
 	addr1 = priv1.PubKey().Address()
-	coins = sdk.Coins{{"foocoin", 10}}
+	coins = sdk.Coins{sdk.NewCoin("foocoin", 10)}
 )
 
 // initialize the mock application for this module
@@ -36,7 +36,7 @@ func getMockApp(t *testing.T) (*mock.App, stake.Keeper, Keeper) {
 
 	mapp.SetEndBlocker(getEndBlocker(stakeKeeper))
 	mapp.SetInitChainer(getInitChainer(mapp, stakeKeeper))
-	mapp.CompleteSetup(t, []*sdk.KVStoreKey{keyStake, keySlashing})
+	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keySlashing}))
 
 	return mapp, stakeKeeper, keeper
 }
@@ -79,8 +79,8 @@ func checkValidatorSigningInfo(t *testing.T, mapp *mock.App, keeper Keeper,
 func TestSlashingMsgs(t *testing.T) {
 	mapp, stakeKeeper, keeper := getMockApp(t)
 
-	genCoin := sdk.Coin{"steak", 42}
-	bondCoin := sdk.Coin{"steak", 10}
+	genCoin := sdk.NewCoin("steak", 42)
+	bondCoin := sdk.NewCoin("steak", 10)
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,
@@ -92,7 +92,7 @@ func TestSlashingMsgs(t *testing.T) {
 	createValidatorMsg := stake.NewMsgCreateValidator(
 		addr1, priv1.PubKey(), bondCoin, description,
 	)
-	mock.SignCheckDeliver(t, mapp.BaseApp, createValidatorMsg, []int64{0}, []int64{0}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{createValidatorMsg}, []int64{0}, []int64{0}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin.Minus(bondCoin)})
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 
@@ -106,6 +106,6 @@ func TestSlashingMsgs(t *testing.T) {
 	checkValidatorSigningInfo(t, mapp, keeper, addr1, false)
 
 	// unrevoke should fail with unknown validator
-	res := mock.SignCheck(t, mapp.BaseApp, unrevokeMsg, []int64{0}, []int64{1}, priv1)
+	res := mock.SignCheck(t, mapp.BaseApp, []sdk.Msg{unrevokeMsg}, []int64{0}, []int64{1}, priv1)
 	require.Equal(t, sdk.ToABCICode(DefaultCodespace, CodeInvalidValidator), res.Code)
 }

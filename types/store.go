@@ -103,13 +103,19 @@ type KVStore interface {
 	// Delete deletes the key. Panics on nil key.
 	Delete(key []byte)
 
+	// Prefix applied keys with the argument
+	Prefix(prefix []byte) KVStore
+
 	// Iterator over a domain of keys in ascending order. End is exclusive.
 	// Start must be less than end, or the Iterator is invalid.
+	// Iterator must be closed by caller.
+	// To iterate over entire domain, use store.Iterator(nil, nil)
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	Iterator(start, end []byte) Iterator
 
 	// Iterator over a domain of keys in descending order. End is exclusive.
 	// Start must be greater than end, or the Iterator is invalid.
+	// Iterator must be closed by caller.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	ReverseIterator(start, end []byte) Iterator
 
@@ -147,6 +153,11 @@ type CacheKVStore interface {
 type CommitKVStore interface {
 	Committer
 	KVStore
+}
+
+// Wrapper for StoreKeys to get KVStores
+type KVStoreGetter interface {
+	KVStore(Context) KVStore
 }
 
 //----------------------------------------
@@ -201,6 +212,7 @@ const (
 	StoreTypeMulti StoreType = iota
 	StoreTypeDB
 	StoreTypeIAVL
+	StoreTypePrefix
 )
 
 //----------------------------------------
@@ -234,6 +246,11 @@ func (key *KVStoreKey) String() string {
 	return fmt.Sprintf("KVStoreKey{%p, %s}", key, key.name)
 }
 
+// Implements KVStoreGetter
+func (key *KVStoreKey) KVStore(ctx Context) KVStore {
+	return ctx.KVStore(key)
+}
+
 // PrefixEndBytes returns the []byte that would end a
 // range query for all []byte with a certain prefix
 // Deals with last byte of prefix being FF without overflowing
@@ -260,7 +277,24 @@ func PrefixEndBytes(prefix []byte) []byte {
 	return end
 }
 
+// Getter struct for prefixed stores
+type PrefixStoreGetter struct {
+	key    StoreKey
+	prefix []byte
+}
+
+func NewPrefixStoreGetter(key StoreKey, prefix []byte) PrefixStoreGetter {
+	return PrefixStoreGetter{key, prefix}
+}
+
+// Implements sdk.KVStoreGetter
+func (getter PrefixStoreGetter) KVStore(ctx Context) KVStore {
+	return ctx.KVStore(getter.key).Prefix(getter.prefix)
+}
+
 //----------------------------------------
 
 // key-value result for iterator queries
 type KVPair cmn.KVPair
+
+//----------------------------------------

@@ -1,10 +1,9 @@
 # Connect to the `gaia-6002` Testnet
 
-Note: We are aware this documentation is sub-par. We are working to
-improve the tooling and the documentation to make this process as painless as
-possible. In the meantime, join the
-[Validator Chat](https://riot.im/app/#/room/#cosmos_validators:matrix.org)
-for technical support. Thanks very much for your patience. :)
+Note: We are aware this documentation is a work in progress. We are actively
+working to improve the tooling and the documentation to make this process as painless as
+possible. In the meantime, join the [Validator Chat](https://riot.im/app/#/room/#cosmos_validators:matrix.org)
+for technical support, and [open issues](https://github.com/cosmos/cosmos-sdk) if you run into any! Thanks very much for your patience and support. :)
 
 ## Setting Up a New Node
 
@@ -13,13 +12,20 @@ These instructions are for setting up a brand new full node from scratch. If you
 ### Install Go
 
 Install `go` by following the [official docs](https://golang.org/doc/install).
-**Go 1.10+** is required for the Cosmos SDK.
+**Go 1.10+** is required for the Cosmos SDK. Remember to properly setup your `$GOPATH`, `$GOBIN`, and `$PATH` variables, for example:
+
+```bash
+mkdir -p $HOME/go/bin
+echo "export GOPATH=$HOME/go" >> ~/.bash_profile
+echo "export GOBIN=$GOPATH/bin" >> ~/.bash_profile
+echo "export PATH=$PATH:$GOBIN" >> ~/.bash_profile
+```
 
 ### Install Cosmos SDK
 
-Next, let's install the testnet's version of the Cosmos SDK. 
+Next, let's install the testnet's version of the Cosmos SDK.
 
-```
+```bash
 mkdir -p $GOPATH/src/github.com/cosmos
 cd $GOPATH/src/github.com/cosmos
 git clone https://github.com/cosmos/cosmos-sdk
@@ -29,22 +35,27 @@ make get_tools && make get_vendor_deps && make install
 
 That will install the `gaiad` and `gaiacli` binaries. Verify that everything is OK:
 
-```
-gaiad version
-0.19.0-<commit>
+```bash
+$ gaiad version
+0.19.0-c6711810
+
+$ gaiacli version
+0.19.0-c6711810
 ```
 
 ### Node Setup
 
-Create the required configuration files:
+Create the required configuration files, and initialize the node:
 
-```
-gaiad init
+```bash
+gaiad init --name <your_custom_name>
 ```
 
-Name your node by editing the `moniker` in `$HOME/.gaiad/config/config.toml`. Note that only ASCII characters are supported. Using Unicode renders your node unconnectable.
+> *NOTE:* Note that only ASCII characters are supported for the `--name`. Using Unicode renders your node unreachable.
 
-```
+You can also edit this `name` in the `~/.gaiad/config/config.toml` file:
+
+```toml
 # A custom human readable name for this node
 moniker = "<your_custom_name>"
 ```
@@ -59,12 +70,12 @@ These instructions are for full nodes that have ran on previous testnets and wou
 
 First, remove the outdated files and reset the data.
 
-```
+```bash
 rm $HOME/.gaiad/config/addrbook.json $HOME/.gaiad/config/genesis.json
 gaiad unsafe_reset_all
 ```
 
-Your node is now in a pristine state while keeping the original `priv_validator.json` and `config.toml`. If you had any sentry nodes or full nodes setup before, 
+Your node is now in a pristine state while keeping the original `priv_validator.json` and `config.toml`. If you had any sentry nodes or full nodes setup before,
 your node will still try to connect to them, but may fail if they haven't also
 been upgraded.
 
@@ -74,7 +85,7 @@ been upgraded.
 
 Now it is time to upgrade the software:
 
-```
+```bash
 cd $GOPATH/src/github.com/cosmos/cosmos-sdk
 git fetch --all && git checkout v0.19.0
 make update_tools && make get_vendor_deps && make install
@@ -88,145 +99,214 @@ Your full node has been cleanly upgraded!
 
 Copy the testnet's `genesis.json` file and place it in `gaiad`'s config directory.
 
-```
+```bash
 mkdir -p $HOME/.gaiad/config
 cp -a $GOPATH/src/github.com/cosmos/cosmos-sdk/cmd/gaia/testnets/gaia-6002/genesis.json $HOME/.gaiad/config/genesis.json
 ```
 
 ### Add Seed Nodes
 
-Your node needs to know how to find peers. You'll need to add healthy seed nodes to `$HOME/.gaiad/config/config.toml`. Here are some seed nodes you can use: 
+Your node needs to know how to find peers. You'll need to add healthy seed nodes to `$HOME/.gaiad/config/config.toml`. Here are some seed nodes you can use:
 
-```
+```toml
 # Comma separated list of seed nodes to connect to
 seeds = "38aa9bec3998f12ae9088b21a2d910d19d565c27@gaia-6002.coinculture.net:46656,80a35a46ce09cfb31ee220c8141a25e73e0b239b@seed.cosmos.cryptium.ch:46656,80a35a46ce09cfb31ee220c8141a25e73e0b239b@35.198.166.171:46656,032fa56301de335d835057fb6ad9f7ce2242a66d@165.227.236.213:46656"
 ```
 
-You can also [ask other validators](https://riot.im/app/#/room/#cosmos_validators:matrix.org) for a persistent peer and add it under the `persistent_peers` key. For more information on seeds and peers, [read this](https://github.com/tendermint/tendermint/blob/develop/docs/using-tendermint.md#peers).
+If those seeds aren't working, you can find more seeds and persistent peers on the [Cosmos Explorer](https://explorecosmos.network/nodes). Open the the `Full Nodes` pane and select nodes that do not have private (`10.x.x.x`) or [local IP addresses](https://en.wikipedia.org/wiki/Private_network). The `Persistent Peer` field contains the connection string. For best results use 4-6.
+
+For more information on seeds and peers, [read this](https://github.com/tendermint/tendermint/blob/develop/docs/using-tendermint.md#peers).
 
 ## Run a Full Node
 
 Start the full node with this command:
 
-```
+```bash
 gaiad start
 ```
 
 Check that everything is running smoothly:
 
-```
+```bash
 gaiacli status
 ```
 
 View the status of the network with the [Cosmos Explorer](https://explorecosmos.network). Once your full node syncs up to the current block height, you should see it appear on the [list of full nodes](https://explorecosmos.network/validators). If it doesn't show up, that's ok--the Explorer does not connect to every node.
 
-## Generate Keys
+## Generating Keys
 
-You'll need a private and public key pair \(a.k.a. `sk, pk` respectively\) to be able to receive funds, send txs, bond tx, etc.
+### A Note on Keys in Cosmos:
+
+There are three types of key representations that are used in this tutorial:
+
+- `cosmosaccaddr`
+  * Derived from account keys generated by `gaiacli keys add`
+  * Used to receive funds
+  * e.g. `cosmosaccaddr15h6vd5f0wqps26zjlwrc6chah08ryu4hzzdwhc`
+
+- `cosmosaccpub`
+  * Derived from account keys generated by `gaiacli keys add`
+  * e.g. `cosmosaccpub1zcjduc3q7fu03jnlu2xpl75s2nkt7krm6grh4cc5aqth73v0zwmea25wj2hsqhlqzm`
+
+- `cosmosvalpub`
+  * Generated when the node is created with `gaiad init`.
+  * Get this value with `gaiad tendermint show_validator`
+  * e.g. `cosmosvalpub1zcjduc3qcyj09qc03elte23zwshdx92jm6ce88fgc90rtqhjx8v0608qh5ssp0w94c`
+
+### Key Generation
+
+You'll need an account private and public key pair \(a.k.a. `sk, pk` respectively\) to be able to receive funds, send txs, bond tx, etc.
 
 To generate a new key \(default _ed25519_ elliptic curve\):
 
-```
-gaiacli keys add <your_key_name>
+```bash
+gaiacli keys add <account_name>
 ```
 
-Next, you will have to create a passphrase. Save the _seed_ _phrase_ in a safe place in case you forget the password.
+Next, you will have to create a passphrase to protect the key on disk. The output of the above command will contain a _seed phrase_. Save the _seed phrase_ in a safe place in case you forget the password!
 
-If you check your private keys, you'll now see `<your_key_name>`:
+If you check your private keys, you'll now see `<account_name>`:
 
-```
-gaiacli keys show <your_key_name>
+```bash
+gaiacli keys show <account_name>
 ```
 
 You can see all your available keys by typing:
 
-```
+```bash
 gaiacli keys list
 ```
 
 View the validator pubkey for your node by typing:
 
-```
+```bash
 gaiad tendermint show_validator
-```
-
-Save your address and pubkey to environment variables for later use:
-
-```
-MYADDR=<your_newly_generated_address>
-MYPUBKEY=<your_newly_generated_public_key>
 ```
 
 **WARNING:** We strongly recommend NOT using the same passphrase for multiple keys. The Tendermint team and the Interchain Foundation will not be responsible for the loss of funds.
 
-## Get Tokens
+## Fund your account
 
-The best way to get tokens is from the [Cosmos Testnet Faucet](https://faucetcosmos.network). If the faucet is not working for you, try asking [#cosmos-validators](https://riot.im/app/#/room/#cosmos-validators:matrix.org).
+The best way to get tokens is from the [Cosmos Testnet Faucet](https://faucetcosmos.network). If the faucet is not working for you, try asking [#cosmos-validators](https://riot.im/app/#/room/#cosmos-validators:matrix.org). The faucet needs the `cosmosaccaddr` from the account you wish to use for staking.
 
-After receiving tokens to your address, you can view your account's balance by typing: 
+After receiving tokens to your address, you can view your account's balance by typing:
 
-```
-gaiacli account <your_newly_generated_address>
-```
-
-Note: When you query an account balance with zero tokens, you will get this error: `No account with address <your_newly_generated_address> was found in the state.` This is expected! We're working on improving our error messages.
-
-## Send Tokens
-
-```
-gaiacli send --amount=10faucetToken --chain-id=<name_of_testnet_chain> --name=<key_name> --to=<destination_address>
+```bash
+gaiacli account <account_cosmosaccaddr>
 ```
 
-Note: The `--amount` flag accepts the format `--amount=<value|coin_name>`.
-
-Now, view the updated balances of the origin and destination accounts:
-
-```
-gaiacli account <origin_address>
-gaiacli account <destination_address>
-```
-
-You can also check your balance at a given block by using the `--block` flag:
-
-```
-gaiacli account <your_address> --block=<block_height>
-```
+> _*Note:*_ When you query an account balance with zero tokens, you will get this error: `No account with address <account_cosmosaccaddr> was found in the state.` This can also happen if you fund the account before your node has fully synced with the chain. These are both normal. Also, we're working on improving our error messages!
 
 ## Run a Validator Node
 
 [Validators](https://cosmos.network/validators) are responsible for committing new blocks to the blockchain through voting. A validator's stake is slashed if they become unavailable, double sign a transaction, or don't cast their votes. If you only want to run a full node, a VM in the cloud is fine. However, if you are want to become a validator for the Hub's `mainnet`, you should research hardened setups. Please read [Sentry Node Architecture](https://github.com/cosmos/cosmos/blob/master/VALIDATORS_FAQ.md#how-can-validators-protect-themselves-from-denial-of-service-attacks) to protect your node from DDOS and ensure high-availability. Also see the [technical requirements](https://github.com/cosmos/cosmos/blob/master/VALIDATORS_FAQ.md#technical-requirements)). There's also more info on our [website](https://cosmos.network/validators).
 
-Your `pubkey` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
+### Create Your Validator
 
-```
+Your `cosmosvalpub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
+
+```bash
 gaiad tendermint show_validator
 ```
 
 Next, craft your `gaiacli stake create-validator` command:
 
-```
-gaiacli stake create-validator --amount=5steak --pubkey=<your_node_pubkey> --address-validator=<your_address> --moniker=satoshi --chain-id=<name_of_the_testnet_chain> --name=<key_name>
+> _*NOTE:*_  Don't use more `steak` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
+
+```bash
+gaiacli stake create-validator \
+  --amount=5steak \
+  --pubkey=$(gaiad tendermint show_validator) \
+  --address-validator=<account_cosmosaccaddr>
+  --moniker="choose a moniker" \
+  --chain-id=gaia-6002 \
+  --name=<key_name>
 ```
 
-You can add more information to the validator, such as`--website`, `--keybase-sig`, or `--details`. Here's how:
+### Edit Validator Description
 
-```
-gaiacli stake edit-validator --details="To the cosmos !" --website="https://cosmos.network"
+You can edit your validator's public description. This info is to identify your validator, and will be relied on by delegators to decide which validators to stake to. Make sure to provide input for every flag below, otherwise the field will default to empty (`--moniker` defaults to the machine name).
+
+The `--keybase-sig` is a 16-digit string that is generated with a [keybase.io](https://keybase.io) account. It's a cryptographically secure method of verifying your identity across multiple online networks. The Keybase API allows us to retrieve your Keybase avatar. This is how you can add a logo to your validator profile.
+
+```bash
+gaiacli stake edit-validator
+  --address-validator=<account_cosmosaccaddr>
+  --moniker="choose a moniker" \
+  --website="https://cosmos.network" \
+  --keybase-sig="6A0D65E29A4CBC8E"
+  --details="To infinity and beyond!"
+  --chain-id=gaia-6002 \
+  --name=<key_name>
 ```
 
+### View Validator Description
 View the validator's information with this command:
 
-```
-gaiacli stake validator --address-validator=<your_address> --chain-id=<name_of_the_testnet_chain>
-```
-
-To check that the validator is active, look for it here:
-
-```
-gaiacli advanced tendermint validator-set
+```bash
+gaiacli stake validator \
+  --address-validator=<account_cosmosaccaddr> \
+  --chain-id=gaia-6002
 ```
 
-**Note:** To be in the validator set, you need to have more total voting power than the 100th validator.
+Your validator is active if the following command returns anything:
+
+```bash
+gaiacli advanced tendermint validator-set | grep "$(gaiad tendermint show_validator)"
+```
+
+You should also be able to see your validator on the [Explorer](https://explorecosmos.network/validators). You are looking for the `bech32` encoded `address` in the `~/.gaiad/config/priv_validator.json` file.
+
+> _*Note:*_ To be in the validator set, you need to have more total voting power than the 100th validator. This is not normally an issue.
+
+### Problem #1: My validator has `voting_power: 0`
+
+Your validator has become auto-unbonded. In `gaia-6002`, we unbond validators if they do not vote on `50` of the last `100` blocks. Since blocks are proposed every ~2 seconds, a validator unresponsive for ~100 seconds will become unbonded. This usually happens when your `gaiad` process crashes.
+
+Here's how you can return the voting power back to your validator. First, if `gaiad` is not running, start it up again:
+
+```bash
+gaiad start
+```
+
+Wait for your full node to catch up to the latest block. Next, run the following command. Note that `<cosmosaccaddr>` is the address of your validator account, and `<name>` is the name of the validator account. You can find this info by running `gaiacli keys list`.
+
+```bash
+gaiacli stake unrevoke <cosmosaccaddr> --chain-id=gaia-6002 --name=<name>
+```
+
+**WARNING:** If you don't wait for `gaiad` to sync before running `unrevoke`, you will receive an error message telling you your validator is still jailed.
+
+Lastly, check your validator again to see if your voting power is back.
+
+```bash
+gaiacli status
+```
+
+You may notice that your voting power is less than it used to be. That's because you got slashed for downtime!
+
+### Problem #2: My `gaiad` crashes because of `too many open files`
+
+The default number of files Linux can open (per-process) is `1024`. `gaiad` is known to open more than `1024` files. This causes the process to crash. A quick fix is to run `ulimit -n 4096` (increase the number of open files allowed) and then restart the process with `gaiad start`. If you are using `systemd` or another process manager to launch `gaiad` this may require some configuration at that level. A sample `systemd` file to fix this issue is below:
+
+```toml
+# /etc/systemd/system/gaiad.service
+[Unit]
+Description=Cosmos Gaia Node
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu
+ExecStart=/home/ubuntu/go/bin/gaiad start
+Restart=on-failure
+RestartSec=3
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target
+```
 
 ## Delegating to a Validator
 
@@ -236,23 +316,66 @@ On the upcoming mainnet, you can delegate `atom` to a validator. These [delegato
 
 On the testnet, we delegate `steak` instead of `atom`. Here's how you can bond tokens to a testnet validator:
 
-```
-gaiacli stake delegate --amount=10steak --address-delegator=<your_address> --address-validator=<bonded_validator_address> --name=<key_name> --chain-id=<name_of_testnet_chain>
+```bash
+gaiacli stake delegate \
+  --amount=10steak \
+  --address-delegator=<account_cosmosaccaddr> \
+  --address-validator=$(gaiad tendermint show_validator) \
+  --name=<key_name> \
+  --chain-id=gaia-6002
 ```
 
-While tokens are bonded, they are pooled with all the other bonded tokens in the network. Validators and delegators obtain a percentage of shares that equal their stake in this pool. 
+While tokens are bonded, they are pooled with all the other bonded tokens in the network. Validators and delegators obtain a percentage of shares that equal their stake in this pool.
+
+> _*NOTE:*_  Don't use more `steak` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
 
 ### Unbond Tokens
 
 If for any reason the validator misbehaves, or you want to unbond a certain amount of tokens, use this following command. You can unbond a specific amount of`shares`\(eg:`12.1`\) or all of them \(`MAX`\).
 
-```
-gaiacli stake unbond --address-delegator=<your_address> --address-validator=<bonded_validator_address> --shares=MAX --name=<key_name> --chain-id=<name_of_testnet_chain>
+```bash
+gaiacli stake unbond \
+  --address-delegator=<account_cosmosaccaddr> \
+  --address-validator=$(gaiad tendermint show_validator) \
+  --shares=MAX \
+  --name=<key_name> \
+  --chain-id=gaia-6002
 ```
 
 You can check your balance and your stake delegation to see that the unbonding went through successfully.
 
+```bash
+gaiacli account <account_cosmosaccaddr>
+
+gaiacli stake delegation \
+  --address-delegator=<account_cosmosaccaddr> \
+  --address-validator=$(gaiad tendermint show_validator) \
+  --chain-id=gaia-6002
 ```
-gaiacli account <your_address>
-gaiacli stake delegation --address-delegator=<your_address> --address-validator=<bonded_validator_address> --chain-id=<name_of_testnet_chain>
+
+## Other Operations
+
+### Send Tokens
+
+```bash
+gaiacli send \
+  --amount=10faucetToken \
+  --chain-id=gaia-6002 \
+  --name=<key_name> \
+  --to=<destination_cosmosaccaddr>
+```
+
+> _*Note:*_ The `--amount` flag accepts the format `--amount=<value|coin_name>`.
+
+Now, view the updated balances of the origin and destination accounts:
+
+```bash
+gaiacli account <account_cosmosaccaddr>
+gaiacli account <destination_cosmosaccaddr>
+```
+
+You can also check your balance at a given block by using the `--block` flag:
+
+```bash
+gaiacli account <account_cosmosaccaddr> --block=<block_height>
 ```

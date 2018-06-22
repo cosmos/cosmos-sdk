@@ -76,18 +76,18 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 			delegatorAddr, err := sdk.GetAccAddressBech32(msg.DelegatorAddr)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error())))
+				w.Write([]byte(fmt.Sprintf("couldn't decode delegator. Error: %s", err.Error())))
 				return
 			}
 			validatorAddr, err := sdk.GetValAddressBech32(msg.ValidatorAddr)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
+				w.Write([]byte(fmt.Sprintf("couldn't decode validator. Error: %s", err.Error())))
 				return
 			}
 			if !bytes.Equal(info.Address(), delegatorAddr) {
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte("Must use own delegator address"))
+				w.Write([]byte("must use own delegator address"))
 				return
 			}
 			messages[i] = stake.MsgDelegate{
@@ -101,18 +101,18 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 			delegatorAddr, err := sdk.GetAccAddressBech32(msg.DelegatorAddr)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error())))
+				w.Write([]byte(fmt.Sprintf("couldn't decode delegator. Error: %s", err.Error())))
 				return
 			}
 			validatorAddr, err := sdk.GetValAddressBech32(msg.ValidatorAddr)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
+				w.Write([]byte(fmt.Sprintf("couldn't decode validator. Error: %s", err.Error())))
 				return
 			}
 			if !bytes.Equal(info.Address(), delegatorAddr) {
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte("Must use own delegator address"))
+				w.Write([]byte("must use own delegator address"))
 				return
 			}
 			messages[i] = stake.MsgUnbond{
@@ -134,7 +134,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 			ctx = ctx.WithSequence(m.Sequence)
 			m.Sequence++
 
-			txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, msg, cdc)
+			txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				w.WriteHeader(http.StatusUnauthorized)
 				w.Write([]byte(err.Error()))

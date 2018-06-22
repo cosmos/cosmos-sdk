@@ -68,7 +68,7 @@ func paramsNoInflation() Params {
 }
 
 // hogpodge of all sorts of input required for testing
-func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountMapper, Keeper) {
+func createTestInput(t *testing.T, isCheckTx bool, initCoins sdk.Int) (sdk.Context, auth.AccountMapper, Keeper) {
 
 	keyStake := sdk.NewKVStoreKey("stake")
 	keyAcc := sdk.NewKVStoreKey("acc")
@@ -80,7 +80,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	cdc := makeTestCodec()
 	accountMapper := auth.NewAccountMapper(
 		cdc,                 // amino codec

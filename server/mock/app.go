@@ -12,6 +12,7 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	gc "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
@@ -124,7 +125,7 @@ func AppGenState(_ *wire.Codec, _ []json.RawMessage) (appState json.RawMessage, 
 }
 
 // Return a validator, not much else
-func AppGenTx(_ *wire.Codec, pk crypto.PubKey) (
+func AppGenTx(_ *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTx) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
 	validator = tmtypes.GenesisValidator{

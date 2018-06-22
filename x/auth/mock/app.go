@@ -1,12 +1,10 @@
 package mock
 
 import (
-	"testing"
-
 	"os"
 
-	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/abci/types"
+	crypto "github.com/tendermint/go-crypto"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
@@ -65,13 +63,12 @@ func NewApp() *App {
 }
 
 // complete the application setup after the routes have been registered
-func (app *App) CompleteSetup(t *testing.T, newKeys []*sdk.KVStoreKey) {
-
+func (app *App) CompleteSetup(newKeys []*sdk.KVStoreKey) error {
 	newKeys = append(newKeys, app.KeyMain)
 	newKeys = append(newKeys, app.KeyAccount)
 	app.MountStoresIAVL(newKeys...)
 	err := app.LoadLatestVersion(app.KeyMain)
-	require.NoError(t, err)
+	return err
 }
 
 // custom logic for initialization
@@ -85,4 +82,25 @@ func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.Respo
 	}
 
 	return abci.ResponseInitChain{}
+}
+
+// Generate genesis accounts loaded with coins, and returns their addresses, pubkeys, and privkeys
+func CreateGenAccounts(numAccs int64, genCoins sdk.Coins) (genAccs []auth.Account, addrs []sdk.Address, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
+	for i := int64(0); i < numAccs; i++ {
+		privKey := crypto.GenPrivKeyEd25519()
+		pubKey := privKey.PubKey()
+		addr := pubKey.Address()
+
+		genAcc := &auth.BaseAccount{
+			Address: addr,
+			Coins:   genCoins,
+		}
+
+		genAccs = append(genAccs, genAcc)
+		privKeys = append(privKeys, privKey)
+		pubKeys = append(pubKeys, pubKey)
+		addrs = append(addrs, addr)
+	}
+
+	return
 }

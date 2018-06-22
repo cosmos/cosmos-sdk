@@ -69,7 +69,7 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if msg.Bond.Denom != StakingToken {
 		return ErrBadBondingDenom(DefaultCodespace)
 	}
-	if msg.Bond.Amount <= 0 {
+	if msg.Bond.Amount.Sign() != 1 {
 		return ErrBadBondingAmount(DefaultCodespace)
 	}
 	empty := Description{}
@@ -122,7 +122,7 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 	}
 	empty := Description{}
 	if msg.Description == empty {
-		return newError(DefaultCodespace, CodeInvalidInput, "Transaction must include some information to modify")
+		return newError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
 	}
 	return nil
 }
@@ -178,7 +178,7 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.Bond.Denom != StakingToken {
 		return ErrBadBondingDenom(DefaultCodespace)
 	}
-	if msg.Bond.Amount <= 0 {
+	if msg.Bond.Amount.Sign() != 1 {
 		return ErrBadBondingAmount(DefaultCodespace)
 	}
 	return nil

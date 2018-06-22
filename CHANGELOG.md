@@ -10,6 +10,10 @@ BREAKING CHANGES
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
+* Implemented Governance MVP
+  * Can do Binary (pass/fail) TextProposals
+  * Proposals need deposits to be votable which are burned if proposal fails
+  * Delegators delegate votes to validator but can override
 
 FIXES
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer

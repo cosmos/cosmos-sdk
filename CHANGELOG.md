@@ -18,9 +18,11 @@ FEATURES
   * Supported proposal types: just binary (pass/fail) TextProposals for now
   * Proposals need deposits to be votable; deposits are burned if proposal fails
   * Delegators delegate votes to validator by default but can override (for their stake)
+* [tools] make get_tools installs tendermint's linter, and gometalinter
 
 FIXES
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer
+* \#1052 - Make all now works
 * Retry on HTTP request failure in CLI tests, add option to retry tests in Makefile
 * Fixed bug where chain ID wasn't passed properly in x/bank REST handler
 

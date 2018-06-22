@@ -61,7 +61,7 @@ type EditDelegationsBody struct {
 	Delegations         []msgDelegationsInput        `json:"delegations"`
 	BeginUnbondings     []msgBeginUnbondingInput     `json:"begin_unbondings"`
 	CompleteUnbondings  []msgCompleteUnbondingInput  `json:"complete_unbondings"`
-	BeginRedelegates    []msgBeginRedelegateInput    `json:"begin_redelegatess"`
+	BeginRedelegates    []msgBeginRedelegateInput    `json:"begin_redelegates"`
 	CompleteRedelegates []msgCompleteRedelegateInput `json:"complete_redelegates"`
 }
 

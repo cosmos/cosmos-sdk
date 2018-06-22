@@ -179,8 +179,8 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 // MsgDelegate - struct for bonding transactions
 type MsgBeginRedelegate struct {
 	DelegatorAddr    sdk.Address `json:"delegator_addr"`
-	ValidatorSrcAddr sdk.Address `json:"validator_source_addr"`
-	ValidatorDstAddr sdk.Address `json:"validator_destination_addr"`
+	ValidatorSrcAddr sdk.Address `json:"validator_src_addr"`
+	ValidatorDstAddr sdk.Address `json:"validator_dst_addr"`
 	SharesAmount     sdk.Rat     `json:"shares_amount"`
 }
 

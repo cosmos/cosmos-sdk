@@ -49,6 +49,16 @@ var (
 	TendermintUpdatesKey         = keeper.TendermintUpdatesKey
 	DelegationKey                = keeper.DelegationKey
 	IntraTxCounterKey            = keeper.IntraTxCounterKey
+	GetUBDKey                    = keeper.GetUBDKey
+	GetUBDByValIndexKey          = keeper.GetUBDByValIndexKey
+	GetUBDsKey                   = keeper.GetUBDsKey
+	GetUBDsByValIndexKey         = keeper.GetUBDsByValIndexKey
+	GetREDKey                    = keeper.GetREDKey
+	GetREDByValSrcIndexKey       = keeper.GetREDByValSrcIndexKey
+	GetREDByValDstIndexKey       = keeper.GetREDByValDstIndexKey
+	GetREDsKey                   = keeper.GetREDsKey
+	GetREDsByValSrcIndexKey      = keeper.GetREDsByValSrcIndexKey
+	GetREDsByValDstIndexKey      = keeper.GetREDsByValDstIndexKey
 
 	DefaultParams       = types.DefaultParams
 	InitialPool         = types.InitialPool

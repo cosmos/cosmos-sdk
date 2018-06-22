@@ -239,7 +239,7 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 
 	params := k.GetParams(ctx)
 	returnCoin := sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)}
-	dstValidator, found := k.GetValidator(ctx, msg.ValidatorSrcAddr)
+	dstValidator, found := k.GetValidator(ctx, msg.ValidatorDstAddr)
 	if !found {
 		return ErrBadRedelegationDst(k.Codespace()).Result()
 	}

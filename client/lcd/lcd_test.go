@@ -384,7 +384,7 @@ func TestBonding(t *testing.T) {
 	validator1Owner := pks[0].Address()
 
 	// create bond TX
-	resultTx := doBond(t, port, seed, name, password, addr, validator1Owner)
+	resultTx := doDelegate(t, port, seed, name, password, addr, validator1Owner)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was commited
@@ -405,7 +405,7 @@ func TestBonding(t *testing.T) {
 	// testing unbonding
 
 	// create unbond TX
-	resultTx = doUnbond(t, port, seed, name, password, addr, validator1Owner)
+	resultTx = doBeginUnbonding(t, port, seed, name, password, addr, validator1Owner)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// query validator
@@ -524,7 +524,7 @@ func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.A
 	return bond
 }
 
-func doBond(t *testing.T, port, seed, name, password string, delegatorAddr, validatorAddr sdk.Address) (resultTx ctypes.ResultBroadcastTxCommit) {
+func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, validatorAddr sdk.Address) (resultTx ctypes.ResultBroadcastTxCommit) {
 	// get the account to get the sequence
 	acc := getAccount(t, port, delegatorAddr)
 	accnum := acc.GetAccountNumber()
@@ -547,7 +547,10 @@ func doBond(t *testing.T, port, seed, name, password string, delegatorAddr, vali
 				"bond": { "denom": "%s", "amount": 60 }
 			}
 		],
-		"begin_unbondings": []
+		"begin_unbondings": [], 
+		"complete_unbondings": [], 
+		"begin_redelegates": [], 
+		"complete_redelegates": []
 	}`, name, password, accnum, sequence, delegatorAddrBech, validatorAddrBech, "steak"))
 	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -559,7 +562,9 @@ func doBond(t *testing.T, port, seed, name, password string, delegatorAddr, vali
 	return results[0]
 }
 
-func doUnbond(t *testing.T, port, seed, name, password string, delegatorAddr, validatorAddr sdk.Address) (resultTx ctypes.ResultBroadcastTxCommit) {
+func doBeginUnbonding(t *testing.T, port, seed, name, password string,
+	delegatorAddr, validatorAddr sdk.Address) (resultTx ctypes.ResultBroadcastTxCommit) {
+
 	// get the account to get the sequence
 	acc := getAccount(t, port, delegatorAddr)
 	accnum := acc.GetAccountNumber()
@@ -575,15 +580,60 @@ func doUnbond(t *testing.T, port, seed, name, password string, delegatorAddr, va
 		"account_number": %d,
 		"sequence": %d,
 		"gas": 10000,
-		"delegate": [],
-		"unbond": [
+		"delegations": [],
+		"begin_unbondings": [
 			{
 				"delegator_addr": "%s",
 				"validator_addr": "%s",
 				"shares": "30"
 			}
-		]
+		], 
+		"complete_unbondings": [], 
+		"begin_redelegates": [], 
+		"complete_redelegates": []
 	}`, name, password, accnum, sequence, delegatorAddrBech, validatorAddrBech))
+	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var results []ctypes.ResultBroadcastTxCommit
+	err := cdc.UnmarshalJSON([]byte(body), &results)
+	require.Nil(t, err)
+
+	return results[0]
+}
+
+func doBeginRedelegation(t *testing.T, port, seed, name, password string,
+	delegatorAddr, validatorSrcAddr, validatorDstAddr sdk.Address) (resultTx ctypes.ResultBroadcastTxCommit) {
+
+	// get the account to get the sequence
+	acc := getAccount(t, port, delegatorAddr)
+	accnum := acc.GetAccountNumber()
+	sequence := acc.GetSequence()
+
+	delegatorAddrBech := sdk.MustBech32ifyAcc(delegatorAddr)
+	validatorSrcAddrBech := sdk.MustBech32ifyVal(validatorSrcAddr)
+	validatorDstAddrBech := sdk.MustBech32ifyVal(validatorDstAddr)
+
+	// send
+	jsonStr := []byte(fmt.Sprintf(`{
+		"name": "%s",
+		"password": "%s",
+		"account_number": %d,
+		"sequence": %d,
+		"gas": 10000,
+		"delegations": [],
+		"begin_unbondings": [], 
+		"complete_unbondings": [], 
+		"begin_redelegates": [
+			{
+				"delegator_addr": "%s",
+				"validator_src_addr": "%s",
+				"validator_dst_addr": "%s",
+				"shares": "30"
+			}
+		], 
+		"complete_redelegates": []
+	}`, name, password, accnum, sequence, delegatorAddrBech, validatorSrcAddrBech, validatorDstAddrBech))
 	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 

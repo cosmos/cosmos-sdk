@@ -474,3 +474,47 @@ func TestUnbondingPeriod(t *testing.T) {
 	got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbonding, keeper)
 	require.True(t, got.IsOK(), "expected no error")
 }
+
+func TestRedelegationPeriod(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	validatorAddr, validatorAddr2 := keep.Addrs[0], keep.Addrs[1]
+
+	// set the unbonding time
+	params := keeper.GetParams(ctx)
+	params.UnbondingTime = 7
+	keeper.SetParams(ctx, params)
+
+	// create the validators
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, keep.PKs[0], 10)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	msgCreateValidator = newTestMsgCreateValidator(validatorAddr2, keep.PKs[1], 10)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	// begin redelegate
+	msgBeginRedelegate := NewMsgBeginRedelegate(validatorAddr, validatorAddr, validatorAddr2, sdk.NewRat(10))
+	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
+	require.True(t, got.IsOK(), "expected no error, %v", got)
+
+	// cannot complete unbonding at same time
+	msgCompleteRedelegate := NewMsgCompleteRedelegate(validatorAddr, validatorAddr, validatorAddr2)
+	got = handleMsgCompleteRedelegate(ctx, msgCompleteRedelegate, keeper)
+	require.True(t, !got.IsOK(), "expected no error")
+
+	// cannot complete unbonding at time 6 seconds later
+	origHeader := ctx.BlockHeader()
+	headerTime6 := origHeader
+	headerTime6.Time += 6
+	ctx = ctx.WithBlockHeader(headerTime6)
+	got = handleMsgCompleteRedelegate(ctx, msgCompleteRedelegate, keeper)
+	require.True(t, !got.IsOK(), "expected no error")
+
+	// can complete unbonding at time 7 seconds later
+	headerTime7 := origHeader
+	headerTime7.Time += 7
+	ctx = ctx.WithBlockHeader(headerTime7)
+	got = handleMsgCompleteRedelegate(ctx, msgCompleteRedelegate, keeper)
+	require.True(t, got.IsOK(), "expected no error")
+}

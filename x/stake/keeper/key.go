@@ -148,7 +148,7 @@ func GetREDByValSrcIndexKey(delegatorAddr, validatorSrcAddr,
 	validatorDstAddr sdk.Address, cdc *wire.Codec) []byte {
 
 	return append(
-		GetREDsKey(validatorSrcAddr, cdc),
+		GetREDsByValSrcIndexKey(validatorSrcAddr, cdc),
 		append(
 			delegatorAddr.Bytes(),
 			validatorDstAddr.Bytes()...)...,
@@ -160,7 +160,7 @@ func GetREDByValDstIndexKey(delegatorAddr, validatorSrcAddr,
 	validatorDstAddr sdk.Address, cdc *wire.Codec) []byte {
 
 	return append(
-		GetREDsKey(validatorDstAddr, cdc),
+		GetREDsByValDstIndexKey(validatorDstAddr, cdc),
 		append(
 			delegatorAddr.Bytes(),
 			validatorSrcAddr.Bytes()...)...,

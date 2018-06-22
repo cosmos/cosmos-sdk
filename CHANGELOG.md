@@ -11,6 +11,9 @@ FEATURES
 * [lcd] Queried TXs now include the tx hash to identify each tx
 * [mockapp] CompleteSetup() no longer takes a testing parameter
 
+FIXES 
+* [gaia] Added self delegation for validators in the genesis creation
+
 ## 0.20.0
 
 BREAKING CHANGES

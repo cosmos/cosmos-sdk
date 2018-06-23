@@ -18,18 +18,31 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power
 	if !found {
 		panic(fmt.Errorf("Attempted to slash a nonexistent validator with address %s", pubkey.Address()))
 	}
-	sharesToRemove := slashAmount
+
+	// Track remaining slash amount
+	remainingSlashAmount := slashAmount
+
+	// TODO Iterate through unbondings
+
+	// TODO Iterate through redelegations
+
+	sharesToRemove := remainingSlashAmount
 	// Cannot decrease balance below zero
 	if sharesToRemove.GT(validator.PoolShares.Amount) {
 		sharesToRemove = validator.PoolShares.Amount
 	}
+
+	// Slash the validator & burn tokens
 	pool := k.GetPool(ctx)
 	validator, pool, burned := validator.RemovePoolShares(pool, sharesToRemove)
 	k.SetPool(ctx, pool)              // update the pool
 	k.UpdateValidator(ctx, validator) // update the validator, possibly kicking it out
 
+	// Log that a slash occurred!
 	logger := ctx.Logger().With("module", "x/stake")
 	logger.Info(fmt.Sprintf("Validator %s slashed by fraction %v, removed %v shares and burned %d tokens", pubkey.Address(), fraction, sharesToRemove, burned))
+
+	// TODO Return event(s)
 	return
 }
 

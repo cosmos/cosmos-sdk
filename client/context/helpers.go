@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	crypto "github.com/tendermint/go-crypto"
 )
 
 // Broadcast the transaction bytes to Tendermint
@@ -96,17 +95,6 @@ func (ctx CoreContext) queryStore(key cmn.HexBytes, storeName, endPath string) (
 // Get the from address from the name flag
 func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 
-	// TODO XXX
-	if ctx.UseLedger {
-		path := []uint32{44, 60, 0, 0, 0} // TODO
-		priv, err := crypto.NewPrivKeyLedgerSecp256k1(path)
-		if err != nil {
-			return nil, err
-		}
-		pubkey := priv.PubKey()
-		return pubkey.Address(), nil
-	}
-
 	keybase, err := keys.GetKeyBase()
 	if err != nil {
 		return nil, err
@@ -127,7 +115,7 @@ func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 }
 
 // sign and build the transaction from the msg
-func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *wire.Codec) ([]byte, error) {
+func (ctx CoreContext) SignAndBuild(name, passphrase string, msgs []sdk.Msg, cdc *wire.Codec) ([]byte, error) {
 
 	// build the Sign Messsage from the Standard Message
 	chainID := ctx.ChainID
@@ -139,12 +127,12 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 	memo := ctx.Memo
 
 	signMsg := auth.StdSignMsg{
-		ChainID:        chainID,
-		AccountNumbers: []int64{accnum},
-		Sequences:      []int64{sequence},
-		Msg:            msg,
-		Memo:           memo,
-		Fee:            auth.NewStdFee(ctx.Gas, sdk.Coin{}), // TODO run simulate to estimate gas?
+		ChainID:       chainID,
+		AccountNumber: int64(accnum),
+		Sequence:      int64(sequence),
+		Msgs:          msgs,
+		Memo:          memo,
+		Fee:           auth.NewStdFee(ctx.Gas, sdk.Coin{}), // TODO run simulate to estimate gas?
 	}
 
 	keybase, err := keys.GetKeyBase()
@@ -167,13 +155,13 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 	}}
 
 	// marshal bytes
-	tx := auth.NewStdTx(signMsg.Msg, signMsg.Fee, sigs, memo)
+	tx := auth.NewStdTx(signMsg.Msgs, signMsg.Fee, sigs, memo)
 
 	return cdc.MarshalBinary(tx)
 }
 
 // sign and build the transaction from the msg
-func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
+func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
 
 	// default to next sequence number if none provided
 	ctx, err = EnsureSequence(ctx)

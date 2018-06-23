@@ -18,14 +18,13 @@ import (
 
 func TestStdTx(t *testing.T) {
 	priv := crypto.GenPrivKeyEd25519()
-	pubKey := priv.PubKey()
-	addr := pubKey.Address()
-	msg := sdk.NewTestMsg(addr)
+	addr := priv.PubKey().Address()
+	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
 	fee := newStdFee()
 	sigs := []StdSignature{}
 
-	tx := NewStdTx(msg, fee, sigs, "")
-	assert.Equal(t, msg, tx.GetMsg())
+	tx := NewStdTx(msgs, fee, sigs, "")
+	assert.Equal(t, msgs, tx.GetMsgs())
 	assert.Equal(t, sigs, tx.GetSignatures())
 
 	feePayer := FeePayer(tx)

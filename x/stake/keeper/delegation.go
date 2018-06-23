@@ -29,7 +29,6 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 	i := 0
 	for ; ; i++ {
 		if !iterator.Valid() {
-			iterator.Close()
 			break
 		}
 		bondBytes := iterator.Value()
@@ -38,7 +37,8 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 		delegations = append(delegations, delegation)
 		iterator.Next()
 	}
-	return delegations[:i] // trim
+	iterator.Close()
+	return delegations
 }
 
 // load all delegations for a delegator
@@ -53,7 +53,6 @@ func (k Keeper) GetDelegations(ctx sdk.Context, delegator sdk.Address,
 	i := 0
 	for ; ; i++ {
 		if !iterator.Valid() || i > int(maxRetrieve-1) {
-			iterator.Close()
 			break
 		}
 		bondBytes := iterator.Value()
@@ -62,6 +61,7 @@ func (k Keeper) GetDelegations(ctx sdk.Context, delegator sdk.Address,
 		delegations[i] = delegation
 		iterator.Next()
 	}
+	iterator.Close()
 	return delegations[:i] // trim
 }
 
@@ -81,7 +81,7 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 // common functionality between handlers
 func (k Keeper) Delegate(ctx sdk.Context, delegatorAddr sdk.Address, bondAmt sdk.Coin,
 	validator types.Validator) (newShares sdk.Rat, delegation types.Delegation,
-	validatorOut types.Validator, pool types.Pool, err sdk.Error) {
+	validatorOut types.Validator, pool types.Pool, err, dummy sdk.Error) {
 
 	// Get or create the delegator delegation
 	found := false

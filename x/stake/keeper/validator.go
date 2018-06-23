@@ -53,6 +53,12 @@ func (k Keeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Valida
 	store.Set(GetValidatorsByPowerIndexKey(validator, pool), validator.Owner)
 }
 
+// validator index
+func (k Keeper) SetValidatorBondedIndex(ctx sdk.Context, validator types.Validator) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(GetValidatorsBondedIndexKey(validator.Owner), validator.Owner)
+}
+
 // used in testing
 func (k Keeper) validatorByPowerIndexExists(ctx sdk.Context, power []byte) bool {
 	store := ctx.KVStore(k.storeKey)
@@ -67,7 +73,6 @@ func (k Keeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator)
 	i := 0
 	for ; ; i++ {
 		if !iterator.Valid() {
-			iterator.Close()
 			break
 		}
 		bz := iterator.Value()
@@ -76,6 +81,7 @@ func (k Keeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator)
 		validators = append(validators, validator)
 		iterator.Next()
 	}
+	iterator.Close()
 	return validators
 }
 
@@ -88,7 +94,6 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve int16) (validators []
 	i := 0
 	for ; ; i++ {
 		if !iterator.Valid() || i > int(maxRetrieve-1) {
-			iterator.Close()
 			break
 		}
 		bz := iterator.Value()
@@ -97,6 +102,7 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve int16) (validators []
 		validators[i] = validator
 		iterator.Next()
 	}
+	iterator.Close()
 	return validators[:i] // trim
 }
 
@@ -140,7 +146,6 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 	i := 0
 	for {
 		if !iterator.Valid() || i > int(maxValidators-1) {
-			iterator.Close()
 			break
 		}
 		address := iterator.Value()
@@ -154,6 +159,7 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 		}
 		iterator.Next()
 	}
+	iterator.Close()
 	return validators[:i] // trim
 }
 
@@ -296,7 +302,6 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 			if bondedValidatorsCount == int(maxValidators) { // is cliff validator
 				k.setCliffValidator(ctx, validator, k.GetPool(ctx))
 			}
-			iterator.Close()
 			break
 		}
 
@@ -334,6 +339,7 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 
 		iterator.Next()
 	}
+	iterator.Close()
 
 	// perform the actual kicks
 	if oldCliffValidatorAddr != nil && kickCliffValidator {
@@ -372,7 +378,6 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 			if bondedValidatorsCount == int(maxValidators) { // is cliff validator
 				k.setCliffValidator(ctx, validator, k.GetPool(ctx))
 			}
-			iterator.Close()
 			break
 		}
 
@@ -406,6 +411,7 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 
 		iterator.Next()
 	}
+	iterator.Close()
 
 	// perform the actual kicks
 	for key := range toKickOut {
@@ -443,7 +449,7 @@ func (k Keeper) unbondValidator(ctx sdk.Context, validator types.Validator) type
 	store.Set(GetTendermintUpdatesKey(validator.Owner), bzABCI)
 
 	// also remove from the Bonded types.Validators Store
-	store.Delete(GetValidatorsBondedIndexKey(validator.PubKey))
+	store.Delete(GetValidatorsBondedIndexKey(validator.Owner))
 	return validator
 }
 
@@ -465,7 +471,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	// save the now bonded validator record to the three referenced stores
 	bzVal := k.cdc.MustMarshalBinary(validator)
 	store.Set(GetValidatorKey(validator.Owner), bzVal)
-	store.Set(GetValidatorsBondedIndexKey(validator.PubKey), validator.Owner)
+	store.Set(GetValidatorsBondedIndexKey(validator.Owner), validator.Owner)
 
 	// add to accumulated changes for tendermint
 	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidator(k.cdc))
@@ -492,10 +498,10 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.Address) {
 
 	// delete from the current and power weighted validator groups if the validator
 	// is bonded - and add validator with zero power to the validator updates
-	if store.Get(GetValidatorsBondedIndexKey(validator.PubKey)) == nil {
+	if store.Get(GetValidatorsBondedIndexKey(validator.Owner)) == nil {
 		return
 	}
-	store.Delete(GetValidatorsBondedIndexKey(validator.PubKey))
+	store.Delete(GetValidatorsBondedIndexKey(validator.Owner))
 
 	bz := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero(k.cdc))
 	store.Set(GetTendermintUpdatesKey(address), bz)

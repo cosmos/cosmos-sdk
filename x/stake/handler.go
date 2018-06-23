@@ -90,7 +90,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionCreateValidator,
-		tags.DstValidator, msg.ValidatorAddr.Bytes(),
+		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
 		tags.Moniker, []byte(msg.Description.Moniker),
 		tags.Identity, []byte(msg.Description.Identity),
 	)
@@ -117,7 +117,7 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	k.UpdateValidator(ctx, validator)
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionEditValidator,
-		tags.DstValidator, msg.ValidatorAddr.Bytes(),
+		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
 		tags.Moniker, []byte(description.Moniker),
 		tags.Identity, []byte(description.Identity),
 	)
@@ -147,8 +147,8 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	k.UpdateValidator(ctx, validator)
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionDelegate,
-		tags.Delegator, msg.DelegatorAddr.Bytes(),
-		tags.DstValidator, msg.ValidatorAddr.Bytes(),
+		tags.Delegator, []byte(msg.DelegatorAddr.String()),
+		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
 	)
 	return sdk.Result{
 		Tags: tags,
@@ -185,8 +185,8 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionBeginUnbonding,
-		tags.Delegator, msg.DelegatorAddr.Bytes(),
-		tags.SrcValidator, msg.ValidatorAddr.Bytes(),
+		tags.Delegator, []byte(msg.DelegatorAddr.String()),
+		tags.SrcValidator, []byte(msg.ValidatorAddr.String()),
 	)
 	return sdk.Result{Tags: tags}
 }
@@ -208,9 +208,9 @@ func handleMsgCompleteUnbonding(ctx sdk.Context, msg types.MsgCompleteUnbonding,
 	k.RemoveUnbondingDelegation(ctx, ubd)
 
 	tags := sdk.NewTags(
-		TagAction, ActionCompleteUnbonding,
-		TagDelegator, msg.DelegatorAddr.Bytes(),
-		TagSrcValidator, msg.ValidatorAddr.Bytes(),
+		tags.Action, ActionCompleteUnbonding,
+		tags.Delegator, []byte(msg.DelegatorAddr.String()),
+		tags.SrcValidator, []byte(msg.ValidatorAddr.String()),
 	)
 
 	// add slashed tag only if there has been some slashing
@@ -263,9 +263,9 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionBeginRedelegation,
-		tags.Delegator, msg.DelegatorAddr.Bytes(),
-		tags.SrcValidator, msg.ValidatorSrcAddr.Bytes(),
-		tags.DstValidator, msg.ValidatorDstAddr.Bytes(),
+		tags.Delegator, []byte(msg.DelegatorAddr.String()),
+		tags.SrcValidator, []byte(msg.ValidatorSrcAddr.String()),
+		tags.DstValidator, []byte(msg.ValidatorDstAddr.String()),
 	)
 	return sdk.Result{Tags: tags}
 }
@@ -287,9 +287,9 @@ func handleMsgCompleteRedelegate(ctx sdk.Context, msg types.MsgCompleteRedelegat
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionCompleteRedelegation,
-		tags.Delegator, msg.DelegatorAddr.Bytes(),
-		tags.SrcValidator, msg.ValidatorSrcAddr.Bytes(),
-		tags.DstValidator, msg.ValidatorDstAddr.Bytes(),
+		tags.Delegator, []byte(msg.DelegatorAddr.String()),
+		tags.SrcValidator, []byte(msg.ValidatorSrcAddr.String()),
+		tags.DstValidator, []byte(msg.ValidatorDstAddr.String()),
 	)
 	return sdk.Result{Tags: tags}
 }

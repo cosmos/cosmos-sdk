@@ -7,6 +7,8 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 )
 
+// NOTE the current slash functionality doesn't take into consideration unbonding/rebonding records
+//      or the time of breach. This will be updated in slashing v2
 // slash a validator
 func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, fraction sdk.Rat) {
 

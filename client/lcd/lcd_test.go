@@ -518,6 +518,80 @@ func TestVote(t *testing.T) {
 	assert.Equal(t, gov.VoteOptionToString(gov.OptionYes), vote.Option)
 }
 
+func TestProposalsQuery(t *testing.T) {
+	name, password := "test", "1234567890"
+	name2, password := "test2", "1234567890"
+	addr, seed := CreateAddr(t, "test", password, GetKB(t))
+	addr2, seed2 := CreateAddr(t, "test2", password, GetKB(t))
+	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.Address{addr, addr2})
+	defer cleanup()
+
+	// Addr1 proposes (and deposits) proposals #1 and #2
+	resultTx := doSubmitProposal(t, port, seed, name, password, addr)
+	var proposalID1 int64
+	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID1)
+	tests.WaitForHeight(resultTx.Height+1, port)
+	resultTx = doSubmitProposal(t, port, seed, name, password, addr)
+	var proposalID2 int64
+	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID2)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// Addr2 proposes (and deposits) proposals #3
+	resultTx = doSubmitProposal(t, port, seed2, name2, password, addr2)
+	var proposalID3 int64
+	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID3)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// Addr2 deposits on proposals #2 & #3
+	doDeposit(t, port, seed2, name2, password, addr2, proposalID2)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// acc := getAccount(t, port, addr2)
+	// sequence := acc.GetSequence()
+	// assert.Equal(t, int64(2), sequence)
+
+	doDeposit(t, port, seed2, name2, password, addr2, proposalID3)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// Addr1 votes on proposals #2 & #3
+	doVote(t, port, seed, name, password, addr, proposalID2)
+	tests.WaitForHeight(resultTx.Height+1, port)
+	doVote(t, port, seed, name, password, addr, proposalID3)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// Addr2 votes on proposal #3
+	doVote(t, port, seed2, name2, password, addr2, proposalID3)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// Test query all proposals
+	proposals := getProposalsAll(t, port)
+	assert.Equal(t, proposalID1, (proposals[0]).ProposalID)
+	assert.Equal(t, proposalID2, (proposals[1]).ProposalID)
+	assert.Equal(t, proposalID3, (proposals[2]).ProposalID)
+
+	// Test query deposited by addr1
+	proposals = getProposalsFilterDepositer(t, port, addr)
+	assert.Equal(t, proposalID1, (proposals[0]).ProposalID)
+
+	// Test query deposited by addr2
+	proposals = getProposalsFilterDepositer(t, port, addr2)
+	assert.Equal(t, proposalID2, (proposals[0]).ProposalID)
+	assert.Equal(t, proposalID3, (proposals[1]).ProposalID)
+
+	// Test query voted by addr1
+	proposals = getProposalsFilterVoter(t, port, addr)
+	assert.Equal(t, proposalID2, (proposals[0]).ProposalID)
+	assert.Equal(t, proposalID3, (proposals[1]).ProposalID)
+
+	// Test query voted by addr2
+	proposals = getProposalsFilterVoter(t, port, addr2)
+	assert.Equal(t, proposalID3, (proposals[0]).ProposalID)
+
+	// Test query voted and deposited by addr1
+	proposals = getProposalsFilterVoterDepositer(t, port, addr, addr)
+	assert.Equal(t, proposalID2, (proposals[0]).ProposalID)
+}
+
 //_____________________________________________________________________________
 // get the account to get the sequence
 func getAccount(t *testing.T, port string, addr sdk.Address) auth.Account {
@@ -709,7 +783,7 @@ func getProposal(t *testing.T, port string, proposalID int64) gov.ProposalRest {
 
 func getDeposit(t *testing.T, port string, proposalID int64, depositerAddr sdk.Address) gov.DepositRest {
 	bechDepositerAddr := sdk.MustBech32ifyAcc(depositerAddr)
-	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d/deposits?depositer=%s", proposalID, bechDepositerAddr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d/deposits/%s", proposalID, bechDepositerAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var deposit gov.DepositRest
 	err := cdc.UnmarshalJSON([]byte(body), &deposit)
@@ -719,12 +793,59 @@ func getDeposit(t *testing.T, port string, proposalID int64, depositerAddr sdk.A
 
 func getVote(t *testing.T, port string, proposalID int64, voterAddr sdk.Address) gov.VoteRest {
 	bechVoterAddr := sdk.MustBech32ifyAcc(voterAddr)
-	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d/votes?voter=%s", proposalID, bechVoterAddr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d/votes/%s", proposalID, bechVoterAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var vote gov.VoteRest
 	err := cdc.UnmarshalJSON([]byte(body), &vote)
 	require.Nil(t, err)
 	return vote
+}
+
+func getProposalsAll(t *testing.T, port string) []gov.ProposalRest {
+	res, body := Request(t, port, "GET", "/gov/proposals", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var proposals []gov.ProposalRest
+	err := cdc.UnmarshalJSON([]byte(body), &proposals)
+	require.Nil(t, err)
+	return proposals
+}
+
+func getProposalsFilterDepositer(t *testing.T, port string, depositerAddr sdk.Address) []gov.ProposalRest {
+	bechDepositerAddr := sdk.MustBech32ifyAcc(depositerAddr)
+
+	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals?depositer=%s", bechDepositerAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var proposals []gov.ProposalRest
+	err := cdc.UnmarshalJSON([]byte(body), &proposals)
+	require.Nil(t, err)
+	return proposals
+}
+
+func getProposalsFilterVoter(t *testing.T, port string, voterAddr sdk.Address) []gov.ProposalRest {
+	bechVoterAddr := sdk.MustBech32ifyAcc(voterAddr)
+
+	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals?voter=%s", bechVoterAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var proposals []gov.ProposalRest
+	err := cdc.UnmarshalJSON([]byte(body), &proposals)
+	require.Nil(t, err)
+	return proposals
+}
+
+func getProposalsFilterVoterDepositer(t *testing.T, port string, voterAddr sdk.Address, depositerAddr sdk.Address) []gov.ProposalRest {
+	bechVoterAddr := sdk.MustBech32ifyAcc(voterAddr)
+	bechDepositerAddr := sdk.MustBech32ifyAcc(depositerAddr)
+
+	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals?depositer=%s&voter=%s", bechDepositerAddr, bechVoterAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var proposals []gov.ProposalRest
+	err := cdc.UnmarshalJSON([]byte(body), &proposals)
+	require.Nil(t, err)
+	return proposals
 }
 
 func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerAddr sdk.Address) (resultTx ctypes.ResultBroadcastTxCommit) {

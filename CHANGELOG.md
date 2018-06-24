@@ -11,6 +11,7 @@ BREAKING CHANGES
 * Signers of a transaction now only sign over their account and sequence number
 * Removed MsgChangePubKey from auth
 * Removed setPubKey from account mapper
+* Gov module REST endpoints changed to be more RESTful
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag

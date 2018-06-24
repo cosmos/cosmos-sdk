@@ -264,7 +264,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 	// Add or update deposit object
 	currDeposit, found := keeper.GetDeposit(ctx, proposalID, depositerAddr)
 	if !found {
-		newDeposit := Deposit{depositerAddr, depositAmount}
+		newDeposit := Deposit{depositerAddr, proposalID, depositAmount}
 		keeper.setDeposit(ctx, proposalID, depositerAddr, newDeposit)
 	} else {
 		currDeposit.Amount = currDeposit.Amount.Plus(depositAmount)

@@ -17,17 +17,20 @@ import (
 // REST Variable names
 // nolint
 const (
-	ProposalRestID = "proposalID"
-	RestVoter      = "voterAddress"
+	RestProposalID = "proposalID"
+	RestDepositer  = "depositer"
+	RestVoter      = "voter"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/gov/submitproposal", postProposalHandlerFn(cdc, kb, ctx)).Methods("POST")
-	r.HandleFunc("/gov/deposit", depositHandlerFn(cdc, kb, ctx)).Methods("POST")
-	r.HandleFunc("/gov/vote", voteHandlerFn(cdc, kb, ctx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}", ProposalRestID), queryProposalHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/gov/votes/{%s}/{%s}", ProposalRestID, RestVoter), queryVoteHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
+	r.HandleFunc("/gov/proposals", postProposalHandlerFn(cdc, kb, ctx)).Methods("POST")
+	r.HandleFunc("/gov/proposals/{proposalID}/deposits", depositHandlerFn(cdc, kb, ctx)).Methods("POST")
+	r.HandleFunc("/gov/proposals/{proposalID}/votes", voteHandlerFn(cdc, kb, ctx)).Methods("POST")
+
+	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}", RestProposalID), queryProposalHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits", RestProposalID), queryDepositHandlerFn("gov", cdc, kb, ctx)).Queries(RestDepositer, fmt.Sprintf("{%s}", RestDepositer)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes", RestProposalID), queryVoteHandlerFn("gov", cdc, kb, ctx)).Queries(RestVoter, fmt.Sprintf("{%s}", RestVoter)).Methods("GET")
 }
 
 type postProposalReq struct {
@@ -161,7 +164,7 @@ func voteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) ht
 func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		strProposalID := vars[ProposalRestID]
+		strProposalID := vars[RestProposalID]
 
 		if len(strProposalID) == 0 {
 			w.WriteHeader(http.StatusBadRequest)
@@ -199,10 +202,75 @@ func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 	}
 }
 
+func queryDepositHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		strProposalID := vars[RestProposalID]
+		bechDepositerAddr := vars[RestDepositer]
+
+		if len(strProposalID) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			err := errors.New("proposalId required but not specified")
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		proposalID, err := strconv.ParseInt(strProposalID, 10, 64)
+		if err != nil {
+			err := errors.Errorf("proposalID [%s] is not positive", proposalID)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		if len(bechDepositerAddr) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			err := errors.New("depositer address required but not specified")
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		depositerAddr, err := sdk.GetAccAddressBech32(bechDepositerAddr)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			err := errors.Errorf("'%s' needs to be bech32 encoded", RestDepositer)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		ctx := context.NewCoreContextFromViper()
+
+		key := []byte(gov.KeyDeposit(proposalID, depositerAddr))
+		res, err := ctx.QueryStore(key, storeName)
+		if len(res) == 0 || err != nil {
+
+			res, err := ctx.QueryStore(gov.KeyProposal(proposalID), storeName)
+			if len(res) == 0 || err != nil {
+				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
+				w.Write([]byte(err.Error()))
+				return
+			}
+			err = errors.Errorf("depositer [%s] did not deposit on proposalID [%d]", bechDepositerAddr, proposalID)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		var deposit gov.Deposit
+		cdc.MustUnmarshalBinary(res, &deposit)
+		depositRest := gov.DepositToRest(deposit)
+		output, err := wire.MarshalJSONIndent(cdc, depositRest)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write(output)
+	}
+}
+
 func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		strProposalID := vars[ProposalRestID]
+		strProposalID := vars[RestProposalID]
 		bechVoterAddr := vars[RestVoter]
 
 		if len(strProposalID) == 0 {
@@ -215,6 +283,13 @@ func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx 
 		proposalID, err := strconv.ParseInt(strProposalID, 10, 64)
 		if err != nil {
 			err := errors.Errorf("proposalID [%s] is not positive", proposalID)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		if len(bechVoterAddr) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			err := errors.New("voter address required but not specified")
 			w.Write([]byte(err.Error()))
 			return
 		}

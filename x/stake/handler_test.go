@@ -75,7 +75,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	assert.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
 
 	// slash and revoke the first validator
-	keeper.Slash(ctx, keep.PKs[0], 0, sdk.NewRat(1, 2))
+	keeper.Slash(ctx, keep.PKs[0], 0, initBond, sdk.NewRat(1, 2))
 	keeper.Revoke(ctx, keep.PKs[0])
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)

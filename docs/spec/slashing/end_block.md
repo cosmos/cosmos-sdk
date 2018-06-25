@@ -16,13 +16,16 @@ where `evidence.Timestamp` is the timestamp in the block at height
 `evidence.Height` and `block.Timestamp` is the current block timestamp.
 
 If valid evidence is included in a block, the validator's stake is reduced by `SLASH_PROPORTION` of 
-what their stake was when the equivocation occurred (rather than when the evidence was discovered):
+what their stake was when the equivocation occurred (rather than when the evidence was discovered),
+less any stake which has since started unbonding or been redelegated:
 
 ```
 curVal := validator
 oldVal := loadValidator(evidence.Height, evidence.Address)
 
 slashAmount := SLASH_PROPORTION * oldVal.Shares
+slashAmount -= slashAmountUnbondings
+slashAmount -= slashAmountRedelegations
 
 curVal.Shares = max(0, curVal.Shares - slashAmount)
 ```
@@ -37,11 +40,14 @@ well:
 ```
 unbondings := getUnbondings(validator.Address)
 for unbond in unbondings {
+
     if was not bonded before evidence.Height {
         continue
     }
-    unbond.InitialTokens
+
     burn := unbond.InitialTokens * SLASH_PROPORTION
+    slashAmountUnbondings += burn
+
     unbond.Tokens = max(0, unbond.Tokens - burn)
 }
 
@@ -56,6 +62,7 @@ for redel in redels {
     }
 
     burn := redel.InitialTokens * SLASH_PROPORTION
+    slashAmountRedelegations += burn
 
     amount := unbondFromValidator(redel.Destination, burn)
     destroy(amount)

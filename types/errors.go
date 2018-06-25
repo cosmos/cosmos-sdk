@@ -34,6 +34,12 @@ func ToABCICode(space CodespaceType, code CodeType) ABCICodeType {
 	return ABCICodeType((uint32(space) << 16) | uint32(code))
 }
 
+func ToLocalCode(abciCode ABCICodeType) (codeSpace CodespaceType, codeType CodeType) {
+	codeSpace = CodespaceType(abciCode >> 16)
+	codeType = CodeType((abciCode << 16) >> 16)
+	return
+}
+
 // SDK error codes
 const (
 	// ABCI error codes

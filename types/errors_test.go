@@ -40,6 +40,18 @@ func TestCodeType(t *testing.T) {
 	}
 }
 
+func TestCodeConverter(t *testing.T) {
+	space := CodespaceType(53)
+	code := CodeType(32)
+
+	abciCode := ToABCICode(space, code)
+
+	localSpace, localCode := ToLocalCode(abciCode)
+
+	assert.Equal(t, space, localSpace, "ToLocalCode did not convert to local codespace correctly")
+	assert.Equal(t, code, localCode, "ToLocalCode did not convert to local code correctly")
+}
+
 func TestErrFn(t *testing.T) {
 	for i, errFn := range errFns {
 		err := errFn("")

@@ -44,10 +44,14 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, height i
 
 	// Double sign confirmed
 	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d less than max age of %d", pubkey.Address(), height, age, MaxEvidenceAge))
+
 	// Slash validator
 	k.validatorSet.Slash(ctx, pubkey, height, power, SlashFractionDoubleSign)
+
 	// Revoke validator
 	k.validatorSet.Revoke(ctx, pubkey)
+
+	// Jail validator
 	signInfo, found := k.getValidatorSigningInfo(ctx, address)
 	if !found {
 		panic(fmt.Sprintf("Expected signing info for validator %s but not found", address))

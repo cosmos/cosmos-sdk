@@ -106,7 +106,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 	privVal.Reset()
 	db := dbm.NewMemDB()
 	app := gapp.NewGaiaApp(logger, db)
-	cdc = gapp.MakeCodec() // XXX
+	cdc = gapp.MakeCodec()
 
 	genesisFile := config.GenesisFile()
 	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
@@ -146,6 +146,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 		accAuth.Coins = sdk.Coins{sdk.NewCoin("steak", 100)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)
+		genesisState.StakeData.Pool.LooseTokens += 100
 	}
 
 	appState, err := wire.MarshalJSONIndent(cdc, genesisState)

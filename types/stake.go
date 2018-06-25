@@ -61,11 +61,7 @@ type ValidatorSet interface {
 
 	Validator(Context, Address) Validator // get a particular validator by owner address
 	TotalPower(Context) Rat               // total power of the validator set
-}
 
-// ValidatorSet that can slash and revoke (affect the validator set)
-type SlashValidatorSet interface {
-	ValidatorSet
 	Slash(Context, crypto.PubKey, int64, Rat) // slash the validator and delegators of the validator, specifying offence height & slash fraction
 	Revoke(Context, crypto.PubKey)            // revoke a validator
 	Unrevoke(Context, crypto.PubKey)          // unrevoke a validator

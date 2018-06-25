@@ -36,9 +36,8 @@ All applications are expected to only run against the LCD. The LCD is the only p
 ### Comparision
 
 A full node of ABCI is different from its light client in the following ways:
-
-|Type |Full Node | LCD | Description|
-| ------------- | ----- | -------------- |
+|| Full Node | LCD | Description|
+|-| ------------- | ----- | -------------- |
 | Execute and verify transactions|Yes|No|Full node will execute and verify all transactions while LCD won't|
 | Verify and save blocks|Yes|No|Full node will verify and save all blocks while LCD won't|
 | Participate consensus| Yes|No|Only when the full node is a validtor, it will participate consensus. LCD nodes never participate consensus|

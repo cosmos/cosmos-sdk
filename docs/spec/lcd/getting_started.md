@@ -20,10 +20,14 @@ gaiacli light-client --chain-id=test --laddr=tcp://localhost:1317  --node tcp://
 
 LCD could be very helpful for related service providers. For a wallet service provider, LCD could make transaction faster and more reliable in the following cases. 
 
-1. User Creates An Account
+1. Create An Account
 
-![deposit](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd_spec/docs/spec/lcd/pics/create-account.png)
+	![deposit](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd_spec/docs/spec/lcd/pics/create-account.png)
 
-1. User Makes a Transfer
+	Please refer to this link for detailed operation:[example](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keysseed---get)
 
-![withdraw](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd_spec/docs/spec/lcd/pics/transfer.png)
+2. Transfer Asset
+
+	The first step is to build an asset transfer transaction. Here we can post all necessary parameters to /create_transfer to get the unsigned transaction byte array. Refer to this link for detailed operation: [build transaction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#create_transfer---post)
+
+	Then sign the returned transaction byte array with users' private key. Finally broadcast the signed transaction. Refer to this link for how to broadcast the signed transaction: [broadcast transaction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#create_transfer---post)

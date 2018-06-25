@@ -20,7 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
-// TODO remove dependancies on staking (should only refer to validator set type from sdk)
+// TODO remove dependencies on staking (should only refer to validator set type from sdk)
 
 var (
 	addrs = []sdk.Address{

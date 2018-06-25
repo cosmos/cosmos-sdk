@@ -31,6 +31,7 @@ After having new seed, you could generate a new account with it : [keys](https:/
   
 
 2. Transfer Asset
+
    ![transfer](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd_spec/docs/spec/lcd/pics/transfer-tokens.png)
 
 

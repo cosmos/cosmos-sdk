@@ -7,6 +7,8 @@ BREAKING CHANGES
 * AltBytes renamed to Memo, now a string, max 100 characters, costs a bit of gas
 * Transactions now take a list of Messages
 * Signers of a transaction now only sign over their account and sequence number
+* Removed MsgChangePubKey from auth
+* Removed setPubKey from account mapper
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
@@ -17,6 +19,8 @@ FEATURES
   * Proposals need deposits to be votable; deposits are burned if proposal fails
   * Delegators delegate votes to validator by default but can override (for their stake)
 * [tools] make get_tools installs tendermint's linter, and gometalinter
+* [tools] Switch gometalinter to the stable version
+* [server] Default config now creates a profiler at port 6060, and increase p2p send/recv rates
 
 FIXES 
 * [gaia] Added self delegation for validators in the genesis creation
@@ -56,6 +60,7 @@ FIXES
 * Retry on HTTP request failure in CLI tests, add option to retry tests in Makefile
 * Fixed bug where chain ID wasn't passed properly in x/bank REST handler
 * Fixed bug where `democli account` didn't decode the account data correctly
+* \#1343 - fixed unnecessary parallelism in CI
 
 ## 0.19.0
 

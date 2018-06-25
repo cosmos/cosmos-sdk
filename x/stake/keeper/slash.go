@@ -7,8 +7,6 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 )
 
-// NOTE the current slash functionality doesn't take into consideration unbonding/rebonding records
-//      or the time of breach. This will be updated in slashing v2
 // slash a validator
 func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power int64, fraction sdk.Rat) {
 
@@ -16,17 +14,59 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power
 	slashAmount := sdk.NewRat(power).Mul(fraction)
 	// hmm, https://github.com/cosmos/cosmos-sdk/issues/1348
 
+	// Current timestamp
+	now := ctx.BlockHeader().Time
+
 	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
 		panic(fmt.Errorf("Attempted to slash a nonexistent validator with address %s", pubkey.Address()))
 	}
+	address := pubkey.Address()
 
 	// Track remaining slash amount
 	remainingSlashAmount := slashAmount
 
-	// TODO Iterate through unbondings
+	// Iterate through unbonding delegations from slashed validator
+	unbondingDelegations := k.GetUnbondingDelegationsFromValidator(ctx, address)
+	for _, unbondingDelegation := range unbondingDelegations {
+		if unbondingDelegation.MinTime < now {
+			// TODO Delete element?
+			continue
+		}
 
-	// TODO Iterate through redelegations
+		// Calculate slash amount & deduct from total
+		slashAmount := sdk.NewRatFromInt(unbondingDelegation.InitialBalance.Amount, sdk.OneInt()).Mul(fraction)
+		remainingSlashAmount = remainingSlashAmount.Sub(slashAmount)
+
+		// Update unbonding delegation
+		slashAmountInt := slashAmount.EvaluateInt()
+		if slashAmountInt.GT(unbondingDelegation.Balance.Amount) {
+			slashAmountInt = unbondingDelegation.Balance.Amount
+		}
+		unbondingDelegation.Balance = unbondingDelegation.Balance.Minus(sdk.Coin{unbondingDelegation.Balance.Denom, slashAmountInt})
+		k.SetUnbondingDelegation(ctx, unbondingDelegation)
+	}
+
+	// Iterate through redelegations from slashed validator
+	redelegations := k.GetRedelegationsFromValidator(ctx, address)
+	for _, redelegation := range redelegations {
+		if redelegation.MinTime < now {
+			// TODO Delete element?
+			continue
+		}
+
+		// Calculate slash amount & deduct from total
+		slashAmount := sdk.NewRatFromInt(redelegation.InitialBalance.Amount, sdk.OneInt()).Mul(fraction)
+		remainingSlashAmount = remainingSlashAmount.Sub(slashAmount)
+
+		// Update redelegation
+		slashAmountInt := slashAmount.EvaluateInt()
+		if slashAmountInt.GT(redelegation.Balance.Amount) {
+			slashAmountInt = redelegation.Balance.Amount
+		}
+		redelegation.Balance = redelegation.Balance.Minus(sdk.Coin{redelegation.Balance.Denom, slashAmountInt})
+		k.SetRedelegation(ctx, redelegation)
+	}
 
 	sharesToRemove := remainingSlashAmount
 	// Cannot decrease balance below zero

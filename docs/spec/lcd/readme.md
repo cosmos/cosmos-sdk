@@ -2,9 +2,7 @@
 
 ## Abstract
 
-A light client has all the security of a full node with minimal bandwidth requirements. The minimal 
-bandwidth requirements allows developers to build fully secure, efficient and usable mobile apps,
-websites or any other application that does not want to download and follow the full blockchain.
+A light client can provide the same sucurity as a full node with the minimal requirements on bandwidth, computing and storage resource. Besides, it can also provide modular functionality according to users' configuration. These fantastic features allow developers to build fully secure, efficient and usable mobile apps, websites or any other applications without deploying or maintaining any full blockchin nodes.
 
 LCD will be used in the Cosmos Hub, the first Hub in the Cosmos network.
 

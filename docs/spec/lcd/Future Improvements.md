@@ -2,12 +2,12 @@
 
 * **Better ICS Support**
 
-The Cosmos Hub will initially  only support  ICS1 (KeyAPI) and  ICS20 (TokenAPI). The support of ICS0 (TendermintAPI), ICS1 (KeyAPI), ICS20 (TokenAPI), ICS21 (StakingAPI) and ICS22 (GovernanceAPI) modules will be impelmented in later versions. The supporting modules should be configurable in LCD. In this way, LCD could be used for a variable of occasions. 
+The Cosmos Hub will initially  only support  ICS1 (KeyAPI) and  ICS20 (TokenAPI). The support of ICS0 (TendermintAPI), ICS21 (StakingAPI) and ICS22 (GovernanceAPI) modules will be impelmented in later versions. The supported modules are configurable in LCD. In this way, LCD could be used for a variable of occasions.
 
 * **Efficient Improvements**
 
-We expect LCD coulld be implemented in different languages. An application developer could build LCD as in-process part of their application. In this way, the communcation between LCD and application could be more efficient and save bandwidth. Also, this kind of architecture is more secure. 
+We expect LCD coulld be implemented in different languages. Thus application developers could build LCD as in-process part of their applications. This signicant of architecture change can save network communcation cost and achieve more security.
 
 *  **Mobile Support**
 
-For now, the suppor of Golang for mobile platforms (Android and iOS) is not very friendly and not many tools are provided to build mobile applications. We expect this could change in the future.  
+For now, the ecosystem of Golang development on mobile platforms (Android and iOS) is not mature. And the growing up process of this ecosystem may be a long story. So the more promising way is that we implement LCD in mobile platforms friendly languages, such as javascript and rust. We believe this will come true in near future.

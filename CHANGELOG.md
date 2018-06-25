@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.19.1
+
+*June 25, 2018*
+
+* Update to Tendermint v0.21.0 (fixes websocket memory leak and a few other
+  things)
+
+BREAKING CHANGES:
+* Changes the default ports from `4665X` to `2665X`
+
+
 ## 0.19.0
 
 *June 13, 2018*

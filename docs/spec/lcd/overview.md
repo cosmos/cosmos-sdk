@@ -2,7 +2,7 @@
 
 ## What is a Light Client?
 
- The LCD is split into two separate components. The first component is generic for any Tendermint based application. It handles the security and connectivity aspects of following the header chain and verifying proofs from full nodes against locally trusted state roots. Furthermore it exposes exactly the same API as any Tendermint Core node. The second component is specific for the Cosmos Hub (Gaiad). It works through the query endpoint on Tendermint Core and exposes the application specific functionality, which can be arbitrary. All queries against the application state have to go through the query endpoint. The advantage of the query endpoint is that it can verify the proofs that the application returns.
+ The LCD is split into two separate components. The first component is generic for any Tendermint based application. It handles the security and connectivity aspects of following the header chain and verify proofs from full nodes against locally trusted validator set. Furthermore it exposes exactly the same API as any Tendermint Core node. The second component is specific for the Cosmos Hub (Gaiad). It works as a query endpoint and exposes the application specific functionality, which can be arbitrary. All queries against the application state have to go through the query endpoint. The advantage of the query endpoint is that it can verify the proofs that the application returns.
 
 ## High-Level Architecture
 
@@ -32,9 +32,7 @@ A full node of ABCI is different from its light client in the following ways:
   - Verify the proof in abci query result
   - Only need limited computing and storage resources, available for mobiles and personal computers
 
-
-
-## Design Details
+## How does LCD build trust?
 
 ### Trusted validator set
 

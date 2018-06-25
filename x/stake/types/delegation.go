@@ -84,8 +84,8 @@ func (d UnbondingDelegation) HumanReadableString() (string, error) {
 	resp := "Unbonding Delegation \n"
 	resp += fmt.Sprintf("Delegator: %s\n", bechAcc)
 	resp += fmt.Sprintf("Validator: %s\n", bechVal)
-	resp += fmt.Sprintf("Creation height: %s\n", d.CreationHeight)
-	resp += fmt.Sprintf("Min time to unbond (unix): %s\n", d.MinTime)
+	resp += fmt.Sprintf("Creation height: %v\n", d.CreationHeight)
+	resp += fmt.Sprintf("Min time to unbond (unix): %v\n", d.MinTime)
 	resp += fmt.Sprintf("Expected balance: %s", d.Balance.String())
 
 	return resp, nil
@@ -130,8 +130,8 @@ func (d Redelegation) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Delegator: %s\n", bechAcc)
 	resp += fmt.Sprintf("Source Validator: %s\n", bechValSrc)
 	resp += fmt.Sprintf("Destination Validator: %s\n", bechValDst)
-	resp += fmt.Sprintf("Creation height: %s\n", d.CreationHeight)
-	resp += fmt.Sprintf("Min time to unbond (unix): %s\n", d.MinTime)
+	resp += fmt.Sprintf("Creation height: %v\n", d.CreationHeight)
+	resp += fmt.Sprintf("Min time to unbond (unix): %v\n", d.MinTime)
 	resp += fmt.Sprintf("Source shares: %s", d.SharesSrc.String())
 	resp += fmt.Sprintf("Destination shares: %s", d.SharesDst.String())
 

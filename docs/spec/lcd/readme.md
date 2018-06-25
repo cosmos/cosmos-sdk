@@ -8,7 +8,7 @@ LCD will be used in the Cosmos Hub, the first Hub in the Cosmos network.
 
 ## Conetnets
 
-1. [**Overview**](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/overview.md) 
+1. [**Overview**](#Overview) 
 2. [**Get Started**](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/getting_started.md)
 3. [**API**](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md)
 4. **Specifications**
@@ -37,7 +37,7 @@ All applications are expected to only run against the LCD. The LCD is the only p
 
 A full node of ABCI is different from its light client in the following ways:
 
-| Full Node | LCD | Description|
+|Type |Full Node | LCD | Description|
 | ------------- | ----- | -------------- |
 | Execute and verify transactions|Yes|No|Full node will execute and verify all transactions while LCD won't|
 | Verify and save blocks|Yes|No|Full node will verify and save all blocks while LCD won't|

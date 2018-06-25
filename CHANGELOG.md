@@ -23,6 +23,7 @@ FEATURES
 * [tools] make get_tools installs tendermint's linter, and gometalinter
 * [tools] Switch gometalinter to the stable version
 * [tools] Add checking for misspellings and for incorrectly formatted files in circle CI
+* [server] Default config now creates a profiler at port 6060, and increase p2p send/recv rates
 
 FIXES
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer

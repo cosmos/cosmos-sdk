@@ -62,12 +62,13 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make get_tools
+            go get -u github.com/client9/misspell/cmd/misspell
       - run:
           name: Lint source
           command: |
             export PATH="$GOBIN:$PATH"
-            gometalinter.v2 --disable-all --enable='golint' --vendor ./...
-
+            gometalinter.v2 --disable-all --enable='golint' --enable='misspell' --vendor ./...
+            find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
   test_unit:
     <<: *defaults
     parallelism: 1

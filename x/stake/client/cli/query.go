@@ -273,7 +273,7 @@ func GetCmdQueryUnbondingDelegations(storeName string, cdc *wire.Codec) *cobra.C
 			for _, KV := range resKVs {
 				var ubd stake.UnbondingDelegation
 				cdc.MustUnmarshalBinary(KV.Value, &ubd)
-				delegations = append(ubds, ubd)
+				ubds = append(ubds, ubd)
 			}
 
 			output, err := wire.MarshalJSONIndent(cdc, ubds)
@@ -368,7 +368,7 @@ func GetCmdQueryRedelegations(storeName string, cdc *wire.Codec) *cobra.Command 
 			for _, KV := range resKVs {
 				var red stake.Redelegation
 				cdc.MustUnmarshalBinary(KV.Value, &red)
-				delegations = append(reds, red)
+				reds = append(reds, red)
 			}
 
 			output, err := wire.MarshalJSONIndent(cdc, reds)

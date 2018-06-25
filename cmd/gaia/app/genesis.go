@@ -102,6 +102,7 @@ func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig config.GenTx) (
 	}
 
 	cliPrint = json.RawMessage(bz)
+
 	appGenTx, _, validator, err = GaiaAppGenTxNF(cdc, pk, addr, genTxConfig.Name, genTxConfig.Overwrite)
 	return
 }
@@ -165,6 +166,8 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		if len(genTx.Name) > 0 {
 			desc := stake.NewDescription(genTx.Name, "", "", "")
 			validator := stake.NewValidator(genTx.Address, genTx.PubKey, desc)
+
+			stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens + freeFermionVal // increase the supply
 
 			// add some new shares to the validator
 			var issuedDelShares sdk.Rat

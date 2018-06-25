@@ -98,7 +98,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	cdc := MakeTestCodec()
 	accountMapper := auth.NewAccountMapper(
 		cdc,                 // amino codec
@@ -109,6 +109,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	keeper := NewKeeper(cdc, keyStake, ck, types.DefaultCodespace)
 	keeper.SetPool(ctx, types.InitialPool())
 	keeper.SetNewParams(ctx, types.DefaultParams())
+	keeper.InitIntraTxCounter(ctx)
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range Addrs {

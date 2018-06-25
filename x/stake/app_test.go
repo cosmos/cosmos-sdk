@@ -62,7 +62,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper) sdk.InitChainer {
 		mapp.InitChainer(ctx, req)
 		stakeGenesis := DefaultGenesisState()
 		stakeGenesis.Pool.LooseTokens = 100000
-		keeper.InitGenesis(ctx, stakeGenesis)
+		InitGenesis(ctx, keeper, stakeGenesis)
 
 		return abci.ResponseInitChain{}
 	}
@@ -119,7 +119,7 @@ func TestStakeMsgs(t *testing.T) {
 	createValidatorMsg := NewMsgCreateValidator(
 		addr1, priv1.PubKey(), bondCoin, description,
 	)
-	mock.SignCheckDeliver(t, mapp.BaseApp, createValidatorMsg, []int64{0}, []int64{0}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{createValidatorMsg}, []int64{0}, []int64{0}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin.Minus(bondCoin)})
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 
@@ -136,7 +136,7 @@ func TestStakeMsgs(t *testing.T) {
 
 	description = NewDescription("bar_moniker", "", "", "")
 	editValidatorMsg := NewMsgEditValidator(addr1, description)
-	mock.SignCheckDeliver(t, mapp.BaseApp, editValidatorMsg, []int64{0}, []int64{1}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{editValidatorMsg}, []int64{0}, []int64{1}, true, priv1)
 	validator = checkValidator(t, mapp, keeper, addr1, true)
 	require.Equal(t, description, validator.Description)
 
@@ -145,7 +145,7 @@ func TestStakeMsgs(t *testing.T) {
 
 	mock.CheckBalance(t, mapp, addr2, sdk.Coins{genCoin})
 	delegateMsg := NewMsgDelegate(addr2, addr1, bondCoin)
-	mock.SignCheckDeliver(t, mapp.BaseApp, delegateMsg, []int64{1}, []int64{0}, true, priv2)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{delegateMsg}, []int64{1}, []int64{0}, true, priv2)
 	mock.CheckBalance(t, mapp, addr2, sdk.Coins{genCoin.Minus(bondCoin)})
 	checkDelegation(t, mapp, keeper, addr2, addr1, true, sdk.NewRat(10))
 
@@ -153,7 +153,7 @@ func TestStakeMsgs(t *testing.T) {
 	// Begin Unbonding
 
 	beginUnbondingMsg := NewMsgBeginUnbonding(addr2, addr1, sdk.NewRat(10))
-	mock.SignCheckDeliver(t, mapp.BaseApp, beginUnbondingMsg, []int64{1}, []int64{1}, true, priv2)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{beginUnbondingMsg}, []int64{1}, []int64{1}, true, priv2)
 
 	// delegation should exist anymore
 	checkDelegation(t, mapp, keeper, addr2, addr1, false, sdk.Rat{})

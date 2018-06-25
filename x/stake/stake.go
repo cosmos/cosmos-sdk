@@ -141,5 +141,4 @@ var (
 	TagDelegator    = tags.Delegator
 	TagMoniker      = tags.Moniker
 	TagIdentity     = tags.Identity
-	TagSlashed      = tags.Slashed
 )

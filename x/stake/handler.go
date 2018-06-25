@@ -1,8 +1,6 @@
 package stake
 
 import (
-	"encoding/json"
-
 	abci "github.com/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -80,17 +78,14 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
-	_, delegation, validator, pool, err := k.Delegate(ctx, msg.ValidatorAddr, msg.SelfDelegation, validator)
-	k.SetPool(ctx, pool)
-	k.SetDelegation(ctx, delegation)
-	k.UpdateValidator(ctx, validator)
+	_, err := k.Delegate(ctx, msg.ValidatorAddr, msg.SelfDelegation, validator)
 	if err != nil {
 		return err.Result()
 	}
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionCreateValidator,
-		tags.DstValidator, msg.ValidatorAddr.Bytes(),
+		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
 		tags.Moniker, []byte(msg.Description.Moniker),
 		tags.Identity, []byte(msg.Description.Identity),
 	)
@@ -117,7 +112,7 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	k.UpdateValidator(ctx, validator)
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionEditValidator,
-		tags.DstValidator, msg.ValidatorAddr.Bytes(),
+		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
 		tags.Moniker, []byte(description.Moniker),
 		tags.Identity, []byte(description.Identity),
 	)
@@ -138,17 +133,15 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	if validator.Revoked == true {
 		return ErrValidatorRevoked(k.Codespace()).Result()
 	}
-	_, delegation, validator, pool, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Bond, validator)
+	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Bond, validator)
 	if err != nil {
 		return err.Result()
 	}
-	k.SetPool(ctx, pool)
-	k.SetDelegation(ctx, delegation)
-	k.UpdateValidator(ctx, validator)
+
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionDelegate,
-		tags.Delegator, msg.DelegatorAddr.Bytes(),
-		tags.DstValidator, msg.ValidatorAddr.Bytes(),
+		tags.Delegator, []byte(msg.DelegatorAddr.String()),
+		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
 	)
 	return sdk.Result{
 		Tags: tags,
@@ -157,36 +150,27 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 
 func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k keeper.Keeper) sdk.Result {
 
-	delegation, validator, pool, returnAmount, err := k.UnbondDelegation(ctx, msg.DelegatorAddr, msg.ValidatorAddr, msg.SharesAmount)
+	returnAmount, err := k.Unbond(ctx, msg.DelegatorAddr, msg.ValidatorAddr, msg.SharesAmount)
 	if err != nil {
 		return err.Result()
 	}
-
-	k.SetPool(ctx, pool)
 
 	// create the unbonding delegation
 	params := k.GetParams(ctx)
 	minTime := ctx.BlockHeader().Time + params.UnbondingTime
 
 	ubd := UnbondingDelegation{
-		DelegatorAddr: delegation.DelegatorAddr,
-		ValidatorAddr: delegation.ValidatorAddr,
+		DelegatorAddr: msg.DelegatorAddr,
+		ValidatorAddr: msg.ValidatorAddr,
 		MinTime:       minTime,
 		Balance:       sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)},
-		Slashed:       sdk.Coin{},
 	}
 	k.SetUnbondingDelegation(ctx, ubd)
 
-	// update then remove validator if necessary
-	validator = k.UpdateValidator(ctx, validator)
-	if validator.DelegatorShares.IsZero() {
-		k.RemoveValidator(ctx, validator.Owner)
-	}
-
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionBeginUnbonding,
-		tags.Delegator, msg.DelegatorAddr.Bytes(),
-		tags.SrcValidator, msg.ValidatorAddr.Bytes(),
+		tags.Delegator, []byte(msg.DelegatorAddr.String()),
+		tags.SrcValidator, []byte(msg.ValidatorAddr.String()),
 	)
 	return sdk.Result{Tags: tags}
 }
@@ -208,33 +192,19 @@ func handleMsgCompleteUnbonding(ctx sdk.Context, msg types.MsgCompleteUnbonding,
 	k.RemoveUnbondingDelegation(ctx, ubd)
 
 	tags := sdk.NewTags(
-		TagAction, ActionCompleteUnbonding,
-		TagDelegator, msg.DelegatorAddr.Bytes(),
-		TagSrcValidator, msg.ValidatorAddr.Bytes(),
+		tags.Action, ActionCompleteUnbonding,
+		tags.Delegator, []byte(msg.DelegatorAddr.String()),
+		tags.SrcValidator, []byte(msg.ValidatorAddr.String()),
 	)
 
-	// add slashed tag only if there has been some slashing
-	if !ubd.Slashed.IsZero() {
-		bz, err := json.Marshal(ubd.Slashed)
-		if err != nil {
-			panic(err)
-		}
-		tags = tags.AppendTag(string(TagSlashed), bz)
-	}
 	return sdk.Result{Tags: tags}
 }
 
 func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k keeper.Keeper) sdk.Result {
 
-	delegation, srcValidator, pool, returnAmount, err := k.UnbondDelegation(ctx, msg.DelegatorAddr, msg.ValidatorSrcAddr, msg.SharesAmount)
+	returnAmount, err := k.Unbond(ctx, msg.DelegatorAddr, msg.ValidatorSrcAddr, msg.SharesAmount)
 	if err != nil {
 		return err.Result()
-	}
-
-	// update then remove the source validator if necessary
-	srcValidator = k.UpdateValidator(ctx, srcValidator)
-	if srcValidator.DelegatorShares.IsZero() {
-		k.RemoveValidator(ctx, srcValidator.Owner)
 	}
 
 	params := k.GetParams(ctx)
@@ -243,10 +213,7 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 	if !found {
 		return ErrBadRedelegationDst(k.Codespace()).Result()
 	}
-	sharesCreated, delegation, dstValidator, pool, err := k.Delegate(ctx, msg.DelegatorAddr, returnCoin, dstValidator)
-	k.SetPool(ctx, pool)
-	k.SetDelegation(ctx, delegation)
-	k.UpdateValidator(ctx, dstValidator)
+	sharesCreated, err := k.Delegate(ctx, msg.DelegatorAddr, returnCoin, dstValidator)
 
 	// create the unbonding delegation
 	minTime := ctx.BlockHeader().Time + params.UnbondingTime
@@ -263,9 +230,9 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionBeginRedelegation,
-		tags.Delegator, msg.DelegatorAddr.Bytes(),
-		tags.SrcValidator, msg.ValidatorSrcAddr.Bytes(),
-		tags.DstValidator, msg.ValidatorDstAddr.Bytes(),
+		tags.Delegator, []byte(msg.DelegatorAddr.String()),
+		tags.SrcValidator, []byte(msg.ValidatorSrcAddr.String()),
+		tags.DstValidator, []byte(msg.ValidatorDstAddr.String()),
 	)
 	return sdk.Result{Tags: tags}
 }
@@ -287,9 +254,9 @@ func handleMsgCompleteRedelegate(ctx sdk.Context, msg types.MsgCompleteRedelegat
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionCompleteRedelegation,
-		tags.Delegator, msg.DelegatorAddr.Bytes(),
-		tags.SrcValidator, msg.ValidatorSrcAddr.Bytes(),
-		tags.DstValidator, msg.ValidatorDstAddr.Bytes(),
+		tags.Delegator, []byte(msg.DelegatorAddr.String()),
+		tags.SrcValidator, []byte(msg.ValidatorSrcAddr.String()),
+		tags.DstValidator, []byte(msg.ValidatorDstAddr.String()),
 	)
 	return sdk.Result{Tags: tags}
 }

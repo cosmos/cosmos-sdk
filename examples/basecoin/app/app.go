@@ -77,7 +77,6 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 
 	// register message routes
 	app.Router().
-		AddRoute("auth", auth.NewHandler(app.accountMapper)).
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
@@ -151,7 +150,7 @@ func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) 
 	}
 
 	// load the initial stake information
-	app.stakeKeeper.InitGenesis(ctx, genesisState.StakeData)
+	stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
 
 	return abci.ResponseInitChain{}
 }
@@ -179,6 +178,6 @@ func (app *BasecoinApp) ExportAppStateAndValidators() (appState json.RawMessage,
 	if err != nil {
 		return nil, nil, err
 	}
-	validators = app.stakeKeeper.WriteValidators(ctx)
+	validators = stake.WriteValidators(ctx, app.stakeKeeper)
 	return appState, validators, err
 }

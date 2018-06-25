@@ -51,7 +51,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 			msg := stake.NewMsgCreateValidator(validatorAddr, pk, amount, description)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
+			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}
@@ -90,7 +90,7 @@ func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
-			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
+			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}
@@ -127,7 +127,7 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
-			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
+			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}
@@ -191,7 +191,7 @@ func GetCmdBeginRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
-			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
+			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}
@@ -270,7 +270,7 @@ func GetCmdCompleteRedelegate(cdc *wire.Codec) *cobra.Command {
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
-			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
+			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}
@@ -327,7 +327,7 @@ func GetCmdBeginUnbonding(storeName string, cdc *wire.Codec) *cobra.Command {
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
-			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
+			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}
@@ -361,7 +361,7 @@ func GetCmdCompleteUnbonding(cdc *wire.Codec) *cobra.Command {
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
-			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
+			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}

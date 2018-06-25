@@ -102,12 +102,18 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
 //__________________________________________________________________________
 
 // get the current in-block validator operation counter
-func (k Keeper) GetIntraTxCounter(ctx sdk.Context) int16 {
+func (k Keeper) InitIntraTxCounter(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(IntraTxCounterKey)
 	if b == nil {
-		return 0
+		k.SetIntraTxCounter(ctx, 0)
 	}
+}
+
+// get the current in-block validator operation counter
+func (k Keeper) GetIntraTxCounter(ctx sdk.Context) int16 {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(IntraTxCounterKey)
 	var counter int16
 	k.cdc.MustUnmarshalBinary(b, &counter)
 	return counter

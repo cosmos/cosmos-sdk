@@ -87,7 +87,7 @@ func UnbondTxCmd(cdc *wire.Codec) *cobra.Command {
 
 func sendMsg(cdc *wire.Codec, msg sdk.Msg) error {
 	ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
-	res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
+	res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 	if err != nil {
 		return err
 	}

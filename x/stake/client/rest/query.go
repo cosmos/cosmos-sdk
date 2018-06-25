@@ -12,13 +12,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
-// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx
-// XXX add unbonding delegation / redelegation
 func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
+
 	r.HandleFunc(
-		"/stake/{delegator}/bonding_status/{validator}",
+		"/stake/{delegator}/delegation/{validator}",
 		delegationHandlerFn(ctx, "stake", cdc),
 	).Methods("GET")
+
+	r.HandleFunc(
+		"/stake/{delegator}/ubd/{validator}",
+		ubdHandlerFn(ctx, "stake", cdc),
+	).Methods("GET")
+
+	r.HandleFunc(
+		"/stake/{delegator}/red/{validator_src}/{validator_dst}",
+		redHandlerFn(ctx, "stake", cdc),
+	).Methods("GET")
+
 	r.HandleFunc(
 		"/stake/validators",
 		validatorsHandlerFn(ctx, "stake", cdc),
@@ -139,18 +149,15 @@ func ubdHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) ht
 	}
 }
 
-// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx
-// XXX add unbonding delegation / redelegation
-
-// http request handler to query an unbonding-delegation
+// http request handler to query an redelegation
 func redHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// read parameters
 		vars := mux.Vars(r)
 		bech32delegator := vars["delegator"]
-		bech32validatorSrc := vars["validator_src"] //XXX
-		bech32validatorDst := vars["validator_dst"] //XXX
+		bech32validatorSrc := vars["validator_src"]
+		bech32validatorDst := vars["validator_dst"]
 
 		delegatorAddr, err := sdk.GetAccAddressBech32(bech32delegator)
 		if err != nil {
@@ -159,19 +166,26 @@ func redHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) ht
 			return
 		}
 
-		validatorAddr, err := sdk.GetValAddressBech32(bech32validator)
+		validatorSrcAddr, err := sdk.GetValAddressBech32(bech32validatorSrc)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		key := stake.GetUBDKey(delegatorAddr, validatorAddr, cdc)
+		validatorDstAddr, err := sdk.GetValAddressBech32(bech32validatorDst)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		key := stake.GetREDKey(delegatorAddr, validatorSrcAddr, validatorDstAddr, cdc)
 
 		res, err := ctx.QueryStore(key, storeName)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't query unbonding-delegation. Error: %s", err.Error())))
+			w.Write([]byte(fmt.Sprintf("couldn't query redelegation. Error: %s", err.Error())))
 			return
 		}
 
@@ -181,15 +195,15 @@ func redHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) ht
 			return
 		}
 
-		var ubd stake.UnbondingDelegation
-		err = cdc.UnmarshalBinary(res, &ubd)
+		var red stake.Redelegation
+		err = cdc.UnmarshalBinary(res, &red)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't decode unbonding-delegation. Error: %s", err.Error())))
+			w.Write([]byte(fmt.Sprintf("couldn't decode redelegation. Error: %s", err.Error())))
 			return
 		}
 
-		output, err := cdc.MarshalJSON(ubd)
+		output, err := cdc.MarshalJSON(red)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

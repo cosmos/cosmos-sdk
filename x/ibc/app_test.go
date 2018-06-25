@@ -71,10 +71,10 @@ func TestIBCMsgs(t *testing.T) {
 		Sequence:  0,
 	}
 
-	mock.SignCheckDeliver(t, mapp.BaseApp, transferMsg, []int64{0}, []int64{0}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{transferMsg}, []int64{0}, []int64{0}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, emptyCoins)
-	mock.SignCheckDeliver(t, mapp.BaseApp, transferMsg, []int64{0}, []int64{1}, false, priv1)
-	mock.SignCheckDeliver(t, mapp.BaseApp, receiveMsg, []int64{0}, []int64{2}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{transferMsg}, []int64{0}, []int64{1}, false, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{receiveMsg}, []int64{0}, []int64{2}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, coins)
-	mock.SignCheckDeliver(t, mapp.BaseApp, receiveMsg, []int64{0}, []int64{3}, false, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{receiveMsg}, []int64{0}, []int64{2}, false, priv1)
 }

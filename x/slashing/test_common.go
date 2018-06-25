@@ -57,14 +57,14 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, Keep
 	ms.MountStoreWithDB(keySlashing, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewTMLogger(os.Stdout))
+	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewTMLogger(os.Stdout))
 	cdc := createTestCodec()
 	accountMapper := auth.NewAccountMapper(cdc, keyAcc, &auth.BaseAccount{})
 	ck := bank.NewKeeper(accountMapper)
 	sk := stake.NewKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
 	genesis.Pool.LooseTokens = initCoins.MulRaw(int64(len(addrs))).Int64()
-	sk.InitGenesis(ctx, genesis)
+	stake.InitGenesis(ctx, sk, genesis)
 	for _, addr := range addrs {
 		ck.AddCoins(ctx, addr, sdk.Coins{
 			{sk.GetParams(ctx).BondDenom, initCoins},

@@ -46,9 +46,8 @@ func GetValidatorByPubKeyIndexKey(pubkey crypto.PubKey) []byte {
 }
 
 // get the key for the current validator group, ordered like tendermint
-func GetValidatorsBondedIndexKey(pk crypto.PubKey) []byte {
-	addr := pk.Address()
-	return append(ValidatorsBondedIndexKey, addr.Bytes()...)
+func GetValidatorsBondedIndexKey(ownerAddr sdk.Address) []byte {
+	return append(ValidatorsBondedIndexKey, ownerAddr.Bytes()...)
 }
 
 // get the power which is the key for the validator used in the power-store

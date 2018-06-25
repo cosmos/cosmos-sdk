@@ -62,7 +62,6 @@ type UnbondingDelegation struct {
 	CreationHeight int64       `json:"creation_height"` // height which the unbonding took place
 	MinTime        int64       `json:"min_time"`        // unix time for unbonding completion
 	Balance        sdk.Coin    `json:"balance"`         // atoms to receive at completion
-	Slashed        sdk.Coin    `json:"slashed"`         // slashed tokens during unbonding
 }
 
 // nolint
@@ -70,6 +69,27 @@ func (d UnbondingDelegation) Equal(d2 UnbondingDelegation) bool {
 	bz1 := MsgCdc.MustMarshalBinary(&d)
 	bz2 := MsgCdc.MustMarshalBinary(&d2)
 	return bytes.Equal(bz1, bz2)
+}
+
+//Human Friendly pretty printer
+func (d UnbondingDelegation) HumanReadableString() (string, error) {
+	bechAcc, err := sdk.Bech32ifyAcc(d.DelegatorAddr)
+	if err != nil {
+		return "", err
+	}
+	bechVal, err := sdk.Bech32ifyAcc(d.ValidatorAddr)
+	if err != nil {
+		return "", err
+	}
+	resp := "Unbonding Delegation \n"
+	resp += fmt.Sprintf("Delegator: %s\n", bechAcc)
+	resp += fmt.Sprintf("Validator: %s\n", bechVal)
+	resp += fmt.Sprintf("Creation height: %v\n", d.CreationHeight)
+	resp += fmt.Sprintf("Min time to unbond (unix): %v\n", d.MinTime)
+	resp += fmt.Sprintf("Expected balance: %s", d.Balance.String())
+
+	return resp, nil
+
 }
 
 //__________________________________________________________________
@@ -90,4 +110,31 @@ func (d Redelegation) Equal(d2 Redelegation) bool {
 	bz1 := MsgCdc.MustMarshalBinary(&d)
 	bz2 := MsgCdc.MustMarshalBinary(&d2)
 	return bytes.Equal(bz1, bz2)
+}
+
+//Human Friendly pretty printer
+func (d Redelegation) HumanReadableString() (string, error) {
+	bechAcc, err := sdk.Bech32ifyAcc(d.DelegatorAddr)
+	if err != nil {
+		return "", err
+	}
+	bechValSrc, err := sdk.Bech32ifyAcc(d.ValidatorSrcAddr)
+	if err != nil {
+		return "", err
+	}
+	bechValDst, err := sdk.Bech32ifyAcc(d.ValidatorDstAddr)
+	if err != nil {
+		return "", err
+	}
+	resp := "Redelegation \n"
+	resp += fmt.Sprintf("Delegator: %s\n", bechAcc)
+	resp += fmt.Sprintf("Source Validator: %s\n", bechValSrc)
+	resp += fmt.Sprintf("Destination Validator: %s\n", bechValDst)
+	resp += fmt.Sprintf("Creation height: %v\n", d.CreationHeight)
+	resp += fmt.Sprintf("Min time to unbond (unix): %v\n", d.MinTime)
+	resp += fmt.Sprintf("Source shares: %s", d.SharesSrc.String())
+	resp += fmt.Sprintf("Destination shares: %s", d.SharesDst.String())
+
+	return resp, nil
+
 }

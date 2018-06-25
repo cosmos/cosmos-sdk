@@ -118,7 +118,6 @@ func TestUnbondingDelegation(t *testing.T) {
 		CreationHeight: 0,
 		MinTime:        0,
 		Balance:        sdk.NewCoin("steak", 5),
-		Slashed:        sdk.NewCoin("steak", 0),
 	}
 
 	// set and retrieve a record
@@ -165,14 +164,20 @@ func TestUnbondDelegation(t *testing.T) {
 
 	var err error
 	var amount int64
-	delegation, validator, pool, amount, err = keeper.UnbondDelegation(ctx, addrDels[0], addrVals[0], sdk.NewRat(6))
+	amount, err = keeper.Unbond(ctx, addrDels[0], addrVals[0], sdk.NewRat(6))
 	require.NoError(t, err)
+	assert.Equal(t, int64(6), amount) // shares to be added to an unbonding delegation / redelegation
+
+	delegation, found := keeper.GetDelegation(ctx, addrDels[0], addrVals[0])
+	require.True(t, found)
+	validator, found = keeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	pool = keeper.GetPool(ctx)
 
 	assert.Equal(t, int64(4), delegation.Shares.Evaluate())
 	assert.Equal(t, int64(4), validator.PoolShares.Bonded().Evaluate())
 	assert.Equal(t, int64(6), pool.LooseTokens, "%v", pool)
 	assert.Equal(t, int64(4), pool.BondedTokens)
-	assert.Equal(t, int64(6), amount) // shares to be added to an unbonding delegation / redelegation
 }
 
 // tests Get/Set/Remove UnbondingDelegation

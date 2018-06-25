@@ -243,7 +243,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 		return ErrAlreadyFinishedProposal(keeper.codespace, proposalID), false
 	}
 
-	// Subtract coins from depositers account
+	// Subtract coins from depositer's account
 	_, _, err := keeper.ck.SubtractCoins(ctx, depositerAddr, depositAmount)
 	if err != nil {
 		return err, false

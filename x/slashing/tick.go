@@ -26,7 +26,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) (tags 
 		sk.handleValidatorSignature(ctx, pubkey, signingValidator.Validator.Power, present)
 	}
 
-	// Deal with any equivocation evidence
+	// Deal with any infraction evidence
 	for _, evidence := range req.ByzantineValidators {
 		pk, err := tmtypes.PB2TM.PubKey(evidence.Validator.PubKey)
 		if err != nil {

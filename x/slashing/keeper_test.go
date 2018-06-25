@@ -12,7 +12,7 @@ import (
 )
 
 // Test that a validator is slashed correctly
-// when we discover evidence of equivocation
+// when we discover evidence of infraction
 func TestHandleDoubleSign(t *testing.T) {
 
 	// initial setup

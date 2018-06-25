@@ -10,7 +10,7 @@ import (
 // slash a validator
 func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power int64, fraction sdk.Rat) {
 
-	// Amount of slashing = slash fraction * power at time of equivocation
+	// Amount of slashing = slash fraction * power at time of infraction
 	slashAmount := sdk.NewRat(power).Mul(fraction)
 	// hmm, https://github.com/cosmos/cosmos-sdk/issues/1348
 
@@ -29,6 +29,11 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power
 	// Iterate through unbonding delegations from slashed validator
 	unbondingDelegations := k.GetUnbondingDelegationsFromValidator(ctx, address)
 	for _, unbondingDelegation := range unbondingDelegations {
+		// If unbonding started before this height, stake didn't contribute to infraction
+		if unbondingDelegation.CreationHeight > height {
+			continue
+		}
+
 		if unbondingDelegation.MinTime < now {
 			// TODO Delete element?
 			continue
@@ -43,6 +48,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power
 		if slashAmountInt.GT(unbondingDelegation.Balance.Amount) {
 			slashAmountInt = unbondingDelegation.Balance.Amount
 		}
+
 		unbondingDelegation.Balance = unbondingDelegation.Balance.Minus(sdk.Coin{unbondingDelegation.Balance.Denom, slashAmountInt})
 		k.SetUnbondingDelegation(ctx, unbondingDelegation)
 	}
@@ -50,6 +56,11 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power
 	// Iterate through redelegations from slashed validator
 	redelegations := k.GetRedelegationsFromValidator(ctx, address)
 	for _, redelegation := range redelegations {
+		// If redelegation started before this height, stake didn't contribute to infraction
+		if redelegation.CreationHeight < height {
+			continue
+		}
+
 		if redelegation.MinTime < now {
 			// TODO Delete element?
 			continue
@@ -64,6 +75,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power
 		if slashAmountInt.GT(redelegation.Balance.Amount) {
 			slashAmountInt = redelegation.Balance.Amount
 		}
+
 		redelegation.Balance = redelegation.Balance.Minus(sdk.Coin{redelegation.Balance.Denom, slashAmountInt})
 		k.SetRedelegation(ctx, redelegation)
 	}
@@ -84,7 +96,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power
 	logger := ctx.Logger().With("module", "x/stake")
 	logger.Info(fmt.Sprintf("Validator %s slashed by fraction %v, removed %v shares and burned %d tokens", pubkey.Address(), fraction, sharesToRemove, burned))
 
-	// TODO Return event(s)
+	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 	return
 }
 

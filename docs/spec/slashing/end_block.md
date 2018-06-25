@@ -16,32 +16,21 @@ where `evidence.Timestamp` is the timestamp in the block at height
 `evidence.Height` and `block.Timestamp` is the current block timestamp.
 
 If valid evidence is included in a block, the validator's stake is reduced by `SLASH_PROPORTION` of 
-what their stake was when the equivocation occurred (rather than when the evidence was discovered),
-less any stake which has since started unbonding or been redelegated:
+what their stake was when the infraction occurred (rather than when the evidence was discovered).
+We want to "follow the stake": the stake which contributed to the infraction should be
+slashed, even if it has since been redelegated or started unbonding. 
+
+We first need to loop through the unbondings and redelegations from the slashed validator
+and track how much stake has since moved:
 
 ```
-curVal := validator
-oldVal := loadValidator(evidence.Height, evidence.Address)
+slashAmountUnbondings := 0
+slashAmountRedelegations := 0
 
-slashAmount := SLASH_PROPORTION * oldVal.Shares
-slashAmount -= slashAmountUnbondings
-slashAmount -= slashAmountRedelegations
-
-curVal.Shares = max(0, curVal.Shares - slashAmount)
-```
-
-This ensures that offending validators are punished the same amount whether they
-act as a single validator with X stake or as N validators with collectively X
-stake.
-
-We also need to loop through the unbondings and redelegations to slash them as
-well:
-
-```
 unbondings := getUnbondings(validator.Address)
 for unbond in unbondings {
 
-    if was not bonded before evidence.Height {
+    if was not bonded before evidence.Height or started unbonding before unbonding period ago {
         continue
     }
 
@@ -57,7 +46,7 @@ for unbond in unbondings {
 redels := getRedelegationsBySource(validator.Address)
 for redel in redels {
 
-    if was not bonded before evidence.Height {
+    if was not bonded before evidence.Height or started redelegating before unbonding period ago {
         continue
     }
 
@@ -68,6 +57,23 @@ for redel in redels {
     destroy(amount)
 }
 ```
+
+We then slash the validator:
+
+```
+curVal := validator
+oldVal := loadValidator(evidence.Height, evidence.Address)
+
+slashAmount := SLASH_PROPORTION * oldVal.Shares
+slashAmount -= slashAmountUnbondings
+slashAmount -= slashAmountRedelegations
+
+curVal.Shares = max(0, curVal.Shares - slashAmount)
+```
+
+This ensures that offending validators are punished the same amount whether they
+act as a single validator with X stake or as N validators with collectively X
+stake.
 
 ## Automatic Unbonding
 

@@ -18,10 +18,6 @@ func (k Keeper) ProcessProvisions(ctx sdk.Context) types.Pool {
 	pool := k.GetPool(ctx)
 	pool.Inflation = k.NextInflation(ctx)
 
-	// Because the validators hold a relative bonded share (`GlobalStakeShare`), when
-	// more bonded tokens are added proportionally to all validators the only term
-	// which needs to be updated is the `BondedPool`. So for each previsions cycle:
-
 	provisions := pool.Inflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat).Evaluate()
 
 	// TODO add to the fees provisions

@@ -158,12 +158,14 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 	// create the unbonding delegation
 	params := k.GetParams(ctx)
 	minTime := ctx.BlockHeader().Time + params.UnbondingTime
+	returnCoin := sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)}
 
 	ubd := UnbondingDelegation{
-		DelegatorAddr: msg.DelegatorAddr,
-		ValidatorAddr: msg.ValidatorAddr,
-		MinTime:       minTime,
-		Balance:       sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)},
+		DelegatorAddr:  msg.DelegatorAddr,
+		ValidatorAddr:  msg.ValidatorAddr,
+		MinTime:        minTime,
+		Balance:        returnCoin,
+		InitialBalance: returnCoin,
 	}
 	k.SetUnbondingDelegation(ctx, ubd)
 
@@ -225,6 +227,8 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 		MinTime:          minTime,
 		SharesDst:        sharesCreated,
 		SharesSrc:        msg.SharesAmount,
+		Balance:          returnCoin,
+		InitialBalance:   returnCoin,
 	}
 	k.SetRedelegation(ctx, red)
 

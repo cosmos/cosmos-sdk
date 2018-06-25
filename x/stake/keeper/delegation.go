@@ -102,7 +102,6 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sd
 	i := 0
 	for ; ; i++ {
 		if !iterator.Valid() {
-			iterator.Close()
 			break
 		}
 		unbondingBytes := iterator.Value()
@@ -111,6 +110,7 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sd
 		unbondingDelegations = append(unbondingDelegations, unbondingDelegation)
 		iterator.Next()
 	}
+	iterator.Close()
 	return unbondingDelegations
 }
 
@@ -155,7 +155,6 @@ func (k Keeper) GetRedelegationsFromValidator(ctx sdk.Context, valAddr sdk.Addre
 	i := 0
 	for ; ; i++ {
 		if !iterator.Valid() {
-			iterator.Close()
 			break
 		}
 		redelegationBytes := iterator.Value()
@@ -164,6 +163,7 @@ func (k Keeper) GetRedelegationsFromValidator(ctx sdk.Context, valAddr sdk.Addre
 		redelegations = append(redelegations, redelegation)
 		iterator.Next()
 	}
+	iterator.Close()
 	return redelegations
 }
 

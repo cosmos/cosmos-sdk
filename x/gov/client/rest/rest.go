@@ -277,7 +277,7 @@ func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx 
 		bechVoterAddr := vars[RestVoter]
 
 		if len(strProposalID) == 0 {
-			// w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
 			err := errors.New("proposalId required but not specified")
 			w.Write([]byte(err.Error()))
 			return
@@ -285,14 +285,14 @@ func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx 
 
 		proposalID, err := strconv.ParseInt(strProposalID, 10, 64)
 		if err != nil {
-			// w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
 			err := errors.Errorf("proposalID [%s] is not positive", proposalID)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
 		if len(bechVoterAddr) == 0 {
-			// w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
 			err := errors.New("voter address required but not specified")
 			w.Write([]byte(err.Error()))
 			return
@@ -300,7 +300,7 @@ func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx 
 
 		voterAddr, err := sdk.GetAccAddressBech32(bechVoterAddr)
 		if err != nil {
-			// w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
 			err := errors.Errorf("'%s' needs to be bech32 encoded", RestVoter)
 			w.Write([]byte(err.Error()))
 			return
@@ -329,7 +329,7 @@ func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx 
 		voteRest := gov.VoteToRest(vote)
 		output, err := wire.MarshalJSONIndent(cdc, voteRest)
 		if err != nil {
-			// w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}

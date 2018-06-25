@@ -22,12 +22,18 @@ LCD could be very helpful for related service providers. For a wallet service pr
 
 1. Create An Account
 
-	![deposit](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd_spec/docs/spec/lcd/pics/create-account.png)
+  ![deposit](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd_spec/docs/spec/lcd/pics/create-account.png)
 
-	Please refer to this link for detailed operation:[example](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keysseed---get)
+First you need to get a new seed phrase :[get-seed](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keysseed---get)
+  
+After having new seed, you could generate a new account with it : [keys](:[get-seed](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keys---post))
+
+  
 
 2. Transfer Asset
+   ![transfer](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd_spec/docs/spec/lcd/pics/transfer-tokens.png)
 
-	The first step is to build an asset transfer transaction. Here we can post all necessary parameters to /create_transfer to get the unsigned transaction byte array. Refer to this link for detailed operation: [build transaction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#create_transfer---post)
 
-	Then sign the returned transaction byte array with users' private key. Finally broadcast the signed transaction. Refer to this link for how to broadcast the signed transaction: [broadcast transaction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#create_transfer---post)
+  The first step is to build an asset transfer transaction. Here we can post all necessary parameters to /create_transfer to get the unsigned transaction byte array. Refer to this link for detailed operation: [build transaction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#create_transfer---post)
+
+  Then sign the returned transaction byte array with users' private key. Finally broadcast the signed transaction. Refer to this link for how to broadcast the signed transaction: [broadcast transaction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#create_transfer---post)

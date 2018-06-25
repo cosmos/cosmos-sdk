@@ -22,11 +22,11 @@ LCD could be very helpful for related service providers. For a wallet service pr
 
 1. Create An Account
 
-  ![deposit](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd_spec/docs/spec/lcd/pics/create-account.png)
+![deposit](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd_spec/docs/spec/lcd/pics/create-account.png)
 
 First you need to get a new seed phrase :[get-seed](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keysseed---get)
-  
-After having new seed, you could generate a new account with it : [keys](:[get-seed](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keys---post))
+
+After having new seed, you could generate a new account with it : [keys](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keys---post)
 
   
 

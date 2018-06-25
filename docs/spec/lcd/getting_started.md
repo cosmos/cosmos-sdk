@@ -12,5 +12,6 @@ To start a rest server, we need to specify the following parameters:
 | --------- | ------ | ------- | -------- | ------------------------------------ |
 | Chain-id  | string | null    | true     | chain id of the full node to connect |
 | node      | URL | null    | true     | address of the full node to connect  |
+| trust-node| bool | false    | true     | trust the full node or not  |
 | laddr      | URL | null    | true     | address to run the rest server on  |
 | trust-store      | DIRECTORY | null    | true     | directory for save checkpoints and validator sets |

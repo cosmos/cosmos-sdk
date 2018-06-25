@@ -85,7 +85,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			signerAddr, sig := signerAddrs[i], sigs[i]
 
 			// check signature, return account with incremented nonce
-			signBytes := StdSignBytes(ctx.ChainID(), accNums[i], sequences[i], fee, msgs, tx.GetMemo())
+			signBytes := StdSignBytes(chainID, accNums[i], sequences[i], fee, msgs, tx.GetMemo())
 			signerAcc, res := processSig(
 				ctx, am,
 				signerAddr, sig, signBytes,

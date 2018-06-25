@@ -72,7 +72,7 @@ func UnsafeResetAllCmd(ctx *Context) *cobra.Command {
 		Short: "Reset blockchain database, priv_validator.json file, and the logger",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := ctx.Config
-			tcmd.ResetAll(cfg.DBDir(), cfg.PrivValidatorFile(), ctx.Logger)
+			tcmd.ResetAll(cfg.DBDir(), cfg.PrivValidatorFile(), cfg.P2P.AddrBookFile(), ctx.Logger)
 			return nil
 		},
 	}

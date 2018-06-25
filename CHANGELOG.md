@@ -32,6 +32,7 @@ FIXES
 * Fixed bug where chain ID wasn't passed properly in x/bank REST handler
 * Fixed bug where `democli account` didn't decode the account data correctly
 * \#1343 - fixed unnecessary parallelism in CI
+* \#1369 - Allow users to recover locally defined error codespace and code from abciCode for testing.
 
 ## 0.19.0
 

@@ -34,6 +34,7 @@ func ToABCICode(space CodespaceType, code CodeType) ABCICodeType {
 	return ABCICodeType((uint32(space) << 16) | uint32(code))
 }
 
+// recovers the local codespace and code from the provided abciCode
 func ToLocalCode(abciCode ABCICodeType) (codeSpace CodespaceType, codeType CodeType) {
 	codeSpace = CodespaceType(abciCode >> 16)
 	codeType = CodeType((abciCode << 16) >> 16)

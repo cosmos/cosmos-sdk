@@ -202,10 +202,12 @@ func TestInitChainer(t *testing.T) {
 
 	// set initChainer and try again - should see the value
 	app.SetInitChainer(initChainer)
-	app.InitChain(abci.RequestInitChain{AppStateBytes: []byte("{}")}) // must have valid JSON genesis file, even if empty
+	app.InitChain(abci.RequestInitChain{AppStateBytes: []byte("{}"), ChainId: "test-chain-id"}) // must have valid JSON genesis file, even if empty
 	app.Commit()
 	res = app.Query(query)
 	assert.Equal(t, value, res.Value)
+	chainId := app.deliverState.ctx.ChainID
+	assert.Equal(t, "test-chain-id", chainId, "ChainID not set correctly in InitChain")
 
 	// reload app
 	app = NewBaseApp(name, nil, logger, db)

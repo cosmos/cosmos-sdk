@@ -68,7 +68,6 @@ func GetValidatorsByPowerIndexKey(validator types.Validator, pool types.Pool) []
 // get the power ranking of a validator
 // NOTE the larger values are of higher value
 func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
-
 	potentialPower := validator.Tokens
 	powerBytes := []byte(potentialPower.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
 
@@ -85,12 +84,18 @@ func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 	counterBytes := make([]byte, 2)
 	binary.BigEndian.PutUint16(counterBytes, ^uint16(validator.BondIntraTxCounter)) // invert counter (first txns have priority)
 
-	return append(append(append(append(
+	lenBytes := make([]byte, binary.MaxVarintLen64)
+	n := binary.PutUvarint(lenBytes, uint64(len(validator.Owner)))
+	lenBytes = lenBytes[:n]
+
+	return append(append(append(append(append(append(
 		ValidatorsByPowerIndexKey,
 		revokedBytes...),
 		powerBytes...),
 		heightBytes...),
-		counterBytes...)
+		counterBytes...),
+		lenBytes...),
+		validator.Owner...)
 }
 
 // get the key for the accumulated update validators.

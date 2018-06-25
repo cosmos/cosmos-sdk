@@ -284,13 +284,13 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 // Implements ABCI
 // InitChain runs the initialization logic directly on the CommitMultiStore and commits it.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
-	if app.initChainer == nil {
-		return
-	}
-
 	// Initialize the deliver state and check state with ChainID and run initChain
 	app.setDeliverState(abci.Header{ChainID: req.ChainId})
 	app.setCheckState(abci.Header{ChainID: req.ChainId})
+
+	if app.initChainer == nil {
+		return
+	}
 	app.initChainer(app.deliverState.ctx, req) // no error
 
 	// NOTE: we don't commit, but BeginBlock for block 1
@@ -381,6 +381,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	// if this is a test and InitChain was never called.
 	if app.deliverState == nil {
 		app.setDeliverState(req.Header)
+	} else {
+		app.deliverState.ctx = app.deliverState.ctx.WithBlockHeader(req.Header)
 	}
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)

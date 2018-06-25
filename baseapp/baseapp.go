@@ -224,9 +224,6 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 		}
 	*/
 
-	// initialize Check state
-	app.setCheckState(abci.Header{})
-
 	return nil
 }
 
@@ -291,8 +288,9 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		return
 	}
 
-	// Initialize the deliver state with ChainID and run initChain
+	// Initialize the deliver state and check state with ChainID and run initChain
 	app.setDeliverState(abci.Header{ChainID: req.ChainId})
+	app.setCheckState(abci.Header{ChainID: req.ChainId})
 	app.initChainer(app.deliverState.ctx, req) // no error
 
 	// NOTE: we don't commit, but BeginBlock for block 1

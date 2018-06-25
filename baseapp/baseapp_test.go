@@ -206,7 +206,10 @@ func TestInitChainer(t *testing.T) {
 
 	// assert that chainID is set correctly in InitChain
 	chainID := app.deliverState.ctx.ChainID()
-	assert.Equal(t, "test-chain-id", chainID, "ChainID not set correctly in InitChain")
+	assert.Equal(t, "test-chain-id", chainID, "ChainID in deliverState not set correctly in InitChain")
+
+	chainID = app.checkState.ctx.ChainID()
+	assert.Equal(t, "test-chain-id", chainID, "ChainID in checkState not set correctly in InitChain")
 
 	app.Commit()
 	res = app.Query(query)

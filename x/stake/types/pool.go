@@ -9,15 +9,15 @@ import (
 
 // Pool - dynamic parameters of the current state
 type Pool struct {
-	LooseTokens       int64   `json:"loose_unbonded_tokens"` // tokens not associated with any validator
-	UnbondedTokens    int64   `json:"unbonded_tokens"`       // reserve of unbonded tokens held with validators
-	UnbondingTokens   int64   `json:"unbonding_tokens"`      // tokens moving from bonded to unbonded pool
-	BondedTokens      int64   `json:"bonded_tokens"`         // reserve of bonded tokens
-	UnbondedShares    sdk.Rat `json:"unbonded_shares"`       // sum of all shares distributed for the Unbonded Pool
-	UnbondingShares   sdk.Rat `json:"unbonding_shares"`      // shares moving from Bonded to Unbonded Pool
-	BondedShares      sdk.Rat `json:"bonded_shares"`         // sum of all shares distributed for the Bonded Pool
-	InflationLastTime int64   `json:"inflation_last_time"`   // block which the last inflation was processed // TODO make time
-	Inflation         sdk.Rat `json:"inflation"`             // current annual inflation rate
+	LooseTokens       int64   `json:"loose_tokens"`        // tokens not associated with any validator
+	UnbondedTokens    int64   `json:"unbonded_tokens"`     // reserve of unbonded tokens held with validators
+	UnbondingTokens   int64   `json:"unbonding_tokens"`    // tokens moving from bonded to unbonded pool
+	BondedTokens      int64   `json:"bonded_tokens"`       // reserve of bonded tokens
+	UnbondedShares    sdk.Rat `json:"unbonded_shares"`     // sum of all shares distributed for the Unbonded Pool
+	UnbondingShares   sdk.Rat `json:"unbonding_shares"`    // shares moving from Bonded to Unbonded Pool
+	BondedShares      sdk.Rat `json:"bonded_shares"`       // sum of all shares distributed for the Bonded Pool
+	InflationLastTime int64   `json:"inflation_last_time"` // block which the last inflation was processed // TODO make time
+	Inflation         sdk.Rat `json:"inflation"`           // current annual inflation rate
 
 	DateLastCommissionReset int64 `json:"date_last_commission_reset"` // unix timestamp for last commission accounting reset (daily)
 

@@ -71,6 +71,11 @@ func (k Keeper) TotalPower(ctx sdk.Context) sdk.Rat {
 
 var _ sdk.DelegationSet = Keeper{}
 
+// Returns self as it is both a validatorset and delegationset
+func (k Keeper) GetValidatorSet() sdk.ValidatorSet {
+	return k
+}
+
 // get the delegation for a particular set of delegator and validator addresses
 func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.Address, addrVal sdk.Address) sdk.Delegation {
 	bond, ok := k.GetDelegation(ctx, addrDel, addrVal)
@@ -81,7 +86,7 @@ func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.Address, addrVal sdk.Add
 }
 
 // iterate through the active validator set and perform the provided function
-func (k Keeper) IterateDelegators(ctx sdk.Context, delAddr sdk.Address, fn func(index int64, delegation sdk.Delegation) (stop bool)) {
+func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.Address, fn func(index int64, delegation sdk.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	key := GetDelegationsKey(delAddr, k.cdc)
 	iterator := sdk.KVStorePrefixIterator(store, key)

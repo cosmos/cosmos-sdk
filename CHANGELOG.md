@@ -22,6 +22,7 @@ FEATURES
   * Delegators delegate votes to validator by default but can override (for their stake)
 * [tools] make get_tools installs tendermint's linter, and gometalinter
 * [tools] Switch gometalinter to the stable version
+* [tools] Add checking for misspellings and for incorrectly formatted files in circle CI
 
 FIXES
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer

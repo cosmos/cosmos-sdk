@@ -6,7 +6,7 @@ The Cosmos Hub will initially  only support  ICS1 (KeyAPI) and  ICS20 (TokenAPI)
 
 * **Efficient Improvements**
 
-We expect LCD coulld be implemented in different languages. Thus application developers could build LCD as in-process part of their applications. This signicant of architecture change can save network communcation cost and achieve more security.
+We expect LCD coulld be implemented in different languages. Thus application developers could build LCD as in-process part of their applications. This significant of architecture change can save network communcation cost and achieve more security.
 
 *  **Mobile Support**
 

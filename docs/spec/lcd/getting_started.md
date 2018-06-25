@@ -22,8 +22,8 @@ LCD could be very helpful for related service providers. For a wallet service pr
 
 1. User Creates An Account
 
-![deposit](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd-spec/docs/spec/lcd/pics/create-account.png)
+![deposit](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd_spec/docs/spec/lcd/pics/create-account.png)
 
 1. User Makes a Transfer
 
-![withdraw](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd-spec/docs/spec/lcd/pics/transfer.png)
+![withdraw](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd_spec/docs/spec/lcd/pics/transfer.png)

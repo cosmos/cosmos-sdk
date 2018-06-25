@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.20.0
+
 *TBD*
 
 BREAKING CHANGES
@@ -9,6 +11,14 @@ BREAKING CHANGES
 * Signers of a transaction now only sign over their account and sequence number
 * Removed MsgChangePubKey from auth
 * Removed setPubKey from account mapper
+* [cli] rearranged commands under subcommands
+* [stake] remove Tick and add EndBlocker
+* [stake] introduce concept of unbonding for delegations and validators
+  * `gaiacli stake unbond` replaced with `gaiacli stake begin-unbonding`
+  * introduced: 
+    * `gaiacli stake complete-unbonding`
+    * `gaiacli stake begin-redelegation`
+    * `gaiacli stake complete-redelegation`
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
@@ -24,30 +34,6 @@ FEATURES
 
 FIXES 
 * [gaia] Added self delegation for validators in the genesis creation
-
-## 0.20.0
-
-BREAKING CHANGES
-* [cli] rearranged commands under subcommands
-* [stake] remove Tick and add EndBlocker
-* [stake] introduce concept of unbonding for delegations and validators
-  * `gaiacli stake unbond` replaced with `gaiacli stake begin-unbonding`
-  * introduced: 
-    * `gaiacli stake complete-unbonding`
-    * `gaiacli stake begin-redelegation`
-    * `gaiacli stake complete-redelegation`
-
-IMPROVEMENTS
-* bank module uses go-wire codec instead of 'encoding/json'
-* auth module uses go-wire codec instead of 'encoding/json'
-* revised use of endblock and beginblock
-* [stake] module reorganized to include `types` and `keeper` package
-* [stake] keeper always loads the store (instead passing around which doesn't really boost efficiency)
-* [stake] edit-validator changes now can use the keyword [do-not-modify] to not modify unspecified `--flag` (aka won't set them to `""` value)
-* [types] added common tag constants
-* [stake] offload more generic functionality from the handler into the keeper
-
-FIXES
 * [cli] fixed cli-bash tests
 * [ci] added cli-bash tests
 * [basecoin] updated basecoin for stake and slashing
@@ -61,6 +47,16 @@ FIXES
 * Fixed bug where chain ID wasn't passed properly in x/bank REST handler
 * Fixed bug where `democli account` didn't decode the account data correctly
 * \#1343 - fixed unnecessary parallelism in CI
+
+IMPROVEMENTS
+* bank module uses go-wire codec instead of 'encoding/json'
+* auth module uses go-wire codec instead of 'encoding/json'
+* revised use of endblock and beginblock
+* [stake] module reorganized to include `types` and `keeper` package
+* [stake] keeper always loads the store (instead passing around which doesn't really boost efficiency)
+* [stake] edit-validator changes now can use the keyword [do-not-modify] to not modify unspecified `--flag` (aka won't set them to `""` value)
+* [types] added common tag constants
+* [stake] offload more generic functionality from the handler into the keeper
 
 ## 0.19.0
 

@@ -31,7 +31,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 }
 
 // WriteGenesis - output genesis parameters
-func WriteGenesis(ctx sdk.Context, keeper keeper) types.GenesisState {
+func WriteGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	pool := keeper.GetPool(ctx)
 	params := keeper.GetParams(ctx)
 	validators := keeper.GetAllValidators(ctx)
@@ -45,7 +45,7 @@ func WriteGenesis(ctx sdk.Context, keeper keeper) types.GenesisState {
 }
 
 // WriteValidators - output current validator set
-func WriteValidators(ctx sdk.Context, keeper keeper) (vals []tmtypes.GenesisValidator) {
+func WriteValidators(ctx sdk.Context, keeper Keeper) (vals []tmtypes.GenesisValidator) {
 	keeper.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
 		vals = append(vals, tmtypes.GenesisValidator{
 			PubKey: validator.GetPubKey(),

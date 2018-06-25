@@ -106,7 +106,7 @@ func (k Keeper) InitIntraTxCounter(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(IntraTxCounterKey)
 	if b == nil {
-		b := store.Set(IntraTxCounterKey, 0)
+		k.SetIntraTxCounter(ctx, 0)
 	}
 }
 

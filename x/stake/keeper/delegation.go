@@ -78,37 +78,6 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store.Delete(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr, k.cdc))
 }
 
-// common functionality between handlers
-func (k Keeper) Delegate(ctx sdk.Context, delegatorAddr sdk.Address, bondAmt sdk.Coin,
-	validator types.Validator) (newShares sdk.Rat, delegation types.Delegation,
-	validatorOut types.Validator, pool types.Pool, err, dummy sdk.Error) {
-
-	// Get or create the delegator delegation
-	found := false
-	delegation, found = k.GetDelegation(ctx, delegatorAddr, validator.Owner)
-	if !found {
-		delegation = types.Delegation{
-			DelegatorAddr: delegatorAddr,
-			ValidatorAddr: validator.Owner,
-			Shares:        sdk.ZeroRat(),
-		}
-	}
-
-	// Account new shares, save
-	pool = k.GetPool(ctx)
-	_, _, err = k.coinKeeper.SubtractCoins(ctx, delegation.DelegatorAddr, sdk.Coins{bondAmt})
-	if err != nil {
-		return
-	}
-	validatorOut, pool, newShares = validator.AddTokensFromDel(pool, bondAmt.Amount.Int64())
-	delegation.Shares = delegation.Shares.Add(newShares)
-
-	// Update delegation height
-	delegation.Height = ctx.BlockHeight()
-
-	return
-}
-
 //_____________________________________________________________________________________
 
 // load a unbonding delegation
@@ -141,56 +110,6 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 	ubdKey := GetUBDKey(ubd.DelegatorAddr, ubd.ValidatorAddr, k.cdc)
 	store.Delete(ubdKey)
 	store.Delete(GetUBDByValIndexKey(ubd.DelegatorAddr, ubd.ValidatorAddr, k.cdc))
-}
-
-// unbond the the delegation return
-func (k Keeper) UnbondDelegation(ctx sdk.Context, delegatorAddr, validatorAddr sdk.Address,
-	shares sdk.Rat) (delegation types.Delegation, validator types.Validator, pool types.Pool, amount int64, err sdk.Error) {
-
-	// check if delegation has any shares in it unbond
-	found := false
-	delegation, found = k.GetDelegation(ctx, delegatorAddr, validatorAddr)
-	if !found {
-		err = types.ErrNoDelegatorForAddress(k.Codespace())
-		return
-	}
-
-	// retrieve the amount to remove
-	if delegation.Shares.LT(shares) {
-		err = types.ErrNotEnoughDelegationShares(k.Codespace(), delegation.Shares.String())
-		return
-	}
-
-	// get validator
-	validator, found = k.GetValidator(ctx, validatorAddr)
-	if !found {
-		err = types.ErrNoValidatorFound(k.Codespace())
-		return
-	}
-
-	// subtract shares from delegator
-	delegation.Shares = delegation.Shares.Sub(shares)
-
-	// remove the delegation
-	if delegation.Shares.IsZero() {
-
-		// if the delegation is the owner of the validator then
-		// trigger a revoke validator
-		if bytes.Equal(delegation.DelegatorAddr, validator.Owner) && validator.Revoked == false {
-			validator.Revoked = true
-		}
-		k.RemoveDelegation(ctx, delegation)
-	} else {
-		// Update height
-		delegation.Height = ctx.BlockHeight()
-		k.SetDelegation(ctx, delegation)
-	}
-
-	// remove the coins from the validator
-	pool = k.GetPool(ctx)
-	validator, pool, amount = validator.RemoveDelShares(pool, shares)
-
-	return delegation, validator, pool, amount, nil
 }
 
 //_____________________________________________________________________________________
@@ -227,4 +146,96 @@ func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store.Delete(redKey)
 	store.Delete(GetREDByValSrcIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr, k.cdc))
 	store.Delete(GetREDByValDstIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr, k.cdc))
+}
+
+//_____________________________________________________________________________________
+
+// Perform a delegation, set/update everything necessary within the store
+func (k Keeper) Delegate(ctx sdk.Context, delegatorAddr sdk.Address, bondAmt sdk.Coin,
+	validator types.Validator) (newShares sdk.Rat, err sdk.Error) {
+
+	// Get or create the delegator delegation
+	delegation, found := k.GetDelegation(ctx, delegatorAddr, validator.Owner)
+	if !found {
+		delegation = types.Delegation{
+			DelegatorAddr: delegatorAddr,
+			ValidatorAddr: validator.Owner,
+			Shares:        sdk.ZeroRat(),
+		}
+	}
+
+	// Account new shares, save
+	pool := k.GetPool(ctx)
+	_, _, err = k.coinKeeper.SubtractCoins(ctx, delegation.DelegatorAddr, sdk.Coins{bondAmt})
+	if err != nil {
+		return
+	}
+	validator, pool, newShares = validator.AddTokensFromDel(pool, bondAmt.Amount.Int64())
+	delegation.Shares = delegation.Shares.Add(newShares)
+
+	// Update delegation height
+	delegation.Height = ctx.BlockHeight()
+
+	k.SetPool(ctx, pool)
+	k.SetDelegation(ctx, delegation)
+	k.UpdateValidator(ctx, validator)
+
+	return
+}
+
+// unbond the the delegation return
+func (k Keeper) Unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.Address,
+	shares sdk.Rat) (amount int64, err sdk.Error) {
+
+	// check if delegation has any shares in it unbond
+	delegation, found := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
+	if !found {
+		err = types.ErrNoDelegatorForAddress(k.Codespace())
+		return
+	}
+
+	// retrieve the amount to remove
+	if delegation.Shares.LT(shares) {
+		err = types.ErrNotEnoughDelegationShares(k.Codespace(), delegation.Shares.String())
+		return
+	}
+
+	// get validator
+	validator, found := k.GetValidator(ctx, validatorAddr)
+	if !found {
+		err = types.ErrNoValidatorFound(k.Codespace())
+		return
+	}
+
+	// subtract shares from delegator
+	delegation.Shares = delegation.Shares.Sub(shares)
+
+	// remove the delegation
+	if delegation.Shares.IsZero() {
+
+		// if the delegation is the owner of the validator then
+		// trigger a revoke validator
+		if bytes.Equal(delegation.DelegatorAddr, validator.Owner) && validator.Revoked == false {
+			validator.Revoked = true
+		}
+		k.RemoveDelegation(ctx, delegation)
+	} else {
+		// Update height
+		delegation.Height = ctx.BlockHeight()
+		k.SetDelegation(ctx, delegation)
+	}
+
+	// remove the coins from the validator
+	pool := k.GetPool(ctx)
+	validator, pool, amount = validator.RemoveDelShares(pool, shares)
+
+	k.SetPool(ctx, pool)
+
+	// update then remove validator if necessary
+	validator = k.UpdateValidator(ctx, validator)
+	if validator.DelegatorShares.IsZero() {
+		k.RemoveValidator(ctx, validator.Owner)
+	}
+
+	return amount, nil
 }

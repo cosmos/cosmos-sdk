@@ -150,7 +150,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	}
 
 	// load the initial stake information
-	app.stakeKeeper.InitGenesis(ctx, genesisState.StakeData)
+	stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
 
 	return abci.ResponseInitChain{}
 }
@@ -170,12 +170,12 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 
 	genState := GenesisState{
 		Accounts:  accounts,
-		StakeData: app.stakeKeeper.WriteGenesis(ctx),
+		StakeData: stake.WriteGenesis(ctx, app.stakeKeeper),
 	}
 	appState, err = wire.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {
 		return nil, nil, err
 	}
-	validators = app.stakeKeeper.WriteValidators(ctx)
+	validators = stake.WriteValidators(ctx, app.stakeKeeper)
 	return appState, validators, nil
 }

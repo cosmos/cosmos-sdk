@@ -18,7 +18,6 @@ var (
 	SrcValidator = types.TagSrcValidator
 	DstValidator = types.TagDstValidator
 	Delegator    = types.TagDelegator
-	Slashed      = "slashed"
 	Moniker      = "moniker"
 	Identity     = "Identity"
 )

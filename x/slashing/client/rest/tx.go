@@ -23,6 +23,7 @@ func registerTxRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, k
 	).Methods("POST")
 }
 
+// Unrevoke TX body
 type UnrevokeBody struct {
 	LocalAccountName string `json:"name"`
 	Password         string `json:"password"`

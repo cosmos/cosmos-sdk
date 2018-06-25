@@ -67,7 +67,7 @@ jobs:
           name: Lint source
           command: |
             export PATH="$GOBIN:$PATH"
-            gometalinter.v2 --disable-all --enable='golint' --enable='misspell' --linter='vet:go vet -composites=false:PATH:LINE:MESSAGE' --enable='vet' --vendor ./...
+            gometalinter.v2 --disable-all --enable='golint' --enable='deadcode' --enable='ineffassign' --enable='goconst' --enable='maligned' --enable='errcheck' --enable='unparam' --enable='misspell' --linter='vet:go vet -composites=false:PATH:LINE:MESSAGE' --enable='vet' --vendor ./...
             find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
   test_unit:
     <<: *defaults

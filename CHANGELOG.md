@@ -11,6 +11,7 @@ BREAKING CHANGES
 * Signers of a transaction now only sign over their account and sequence number
 * Removed MsgChangePubKey from auth
 * Removed setPubKey from account mapper
+* Removed GetMemo from Tx (it is still on StdTx)
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
@@ -22,6 +23,9 @@ FEATURES
   * Delegators delegate votes to validator by default but can override (for their stake)
 * [tools] make get_tools installs tendermint's linter, and gometalinter
 * [tools] Switch gometalinter to the stable version
+* [tools] Add checking for misspellings and for incorrectly formatted files in circle CI
+* [server] Default config now creates a profiler at port 6060, and increase p2p send/recv rates
+* [tests] Add WaitForNextNBlocksTM helper method
 
 FIXES
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer
@@ -30,6 +34,7 @@ FIXES
 * Fixed bug where chain ID wasn't passed properly in x/bank REST handler
 * Fixed bug where `democli account` didn't decode the account data correctly
 * \#1343 - fixed unnecessary parallelism in CI
+* \#1258 - printing big.rat's can no longer overflow int64
 
 ## 0.19.0
 

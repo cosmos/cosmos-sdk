@@ -15,13 +15,19 @@ import (
 // Wait for the next tendermint block from the Tendermint RPC
 // on localhost
 func WaitForNextHeightTM(port string) {
+	WaitForNextNBlocksTM(1, port)
+}
+
+// Wait for N tendermint blocks to pass using the Tendermint RPC
+// on localhost
+func WaitForNextNBlocksTM(n int64, port string) {
 	url := fmt.Sprintf("http://localhost:%v", port)
 	cl := tmclient.NewHTTP(url, "/websocket")
 	resBlock, err := cl.Block(nil)
 	if err != nil {
 		panic(err)
 	}
-	waitForHeightTM(resBlock.Block.Height+1, url)
+	waitForHeightTM(resBlock.Block.Height+n, url)
 }
 
 // Wait for the given height from the Tendermint RPC

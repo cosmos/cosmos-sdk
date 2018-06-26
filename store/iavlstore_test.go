@@ -15,7 +15,8 @@ import (
 
 var (
 	cacheSize        = 100
-	numHistory int64 = 5
+	numRecent  int64 = 5
+	storeEvery int64 = 3
 )
 
 var (
@@ -45,7 +46,7 @@ func newTree(t *testing.T, db dbm.DB) (*iavl.VersionedTree, CommitID) {
 func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newTree(t, db)
-	iavlStore := newIAVLStore(tree, numHistory)
+	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
 
 	key := "hello"
 
@@ -70,7 +71,7 @@ func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 func TestIAVLIterator(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newTree(t, db)
-	iavlStore := newIAVLStore(tree, numHistory)
+	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
 	iter := iavlStore.Iterator([]byte("aloha"), []byte("hellz"))
 	expected := []string{"aloha", "hello"}
 	var i int
@@ -143,7 +144,7 @@ func TestIAVLIterator(t *testing.T) {
 func TestIAVLSubspaceIterator(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newTree(t, db)
-	iavlStore := newIAVLStore(tree, numHistory)
+	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
 
 	iavlStore.Set([]byte("test1"), []byte("test1"))
 	iavlStore.Set([]byte("test2"), []byte("test2"))
@@ -202,7 +203,7 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 func TestIAVLReverseSubspaceIterator(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newTree(t, db)
-	iavlStore := newIAVLStore(tree, numHistory)
+	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
 
 	iavlStore.Set([]byte("test1"), []byte("test1"))
 	iavlStore.Set([]byte("test2"), []byte("test2"))
@@ -261,7 +262,7 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 func TestIAVLStoreQuery(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree := iavl.NewVersionedTree(db, cacheSize)
-	iavlStore := newIAVLStore(tree, numHistory)
+	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
 
 	k1, v1 := []byte("key1"), []byte("val1")
 	k2, v2 := []byte("key2"), []byte("val2")

@@ -15,7 +15,8 @@ import (
 
 const (
 	defaultIAVLCacheSize  = 10000
-	defaultIAVLNumHistory = 1<<53 - 1 // DEPRECATED
+	defaultIAVLNumRecent  = 1000
+	defaultIAVLStoreEvery = 10000
 )
 
 // load the iavl store
@@ -25,7 +26,7 @@ func LoadIAVLStore(db dbm.DB, id CommitID) (CommitStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	store := newIAVLStore(tree, defaultIAVLNumHistory)
+	store := newIAVLStore(tree, defaultIAVLNumRecent, defaultIAVLStoreEvery)
 	return store, nil
 }
 
@@ -43,16 +44,17 @@ type iavlStore struct {
 
 	// How many old versions we hold onto.
 	// A value of 0 means keep all history.
-	numHistory int64
+	numRecent int64
+
+	storeEvery int64
 }
 
 // CONTRACT: tree should be fully loaded.
-// TODO: use more numHistory's, so the below nolint can be removed
-// nolint: unparam
-func newIAVLStore(tree *iavl.VersionedTree, numHistory int64) *iavlStore {
+func newIAVLStore(tree *iavl.VersionedTree, numRecent int64, storeEvery int64) *iavlStore {
 	st := &iavlStore{
 		tree:       tree,
-		numHistory: numHistory,
+		numRecent:  numRecent,
+		storeEvery: storeEvery,
 	}
 	return st
 }
@@ -67,13 +69,14 @@ func (st *iavlStore) Commit() CommitID {
 		panic(err)
 	}
 
-	// Release an old version of history
-	if st.numHistory > 0 && (st.numHistory < st.tree.Version64()) {
-		toRelease := version - st.numHistory
-		err := st.tree.DeleteVersion(toRelease)
-		if err != nil {
-			// TODO: Handle with #870
-			panic(err)
+	// Release an old version of history, if not a sync waypoint
+	if st.numRecent < st.tree.Version64() {
+		toRelease := version - st.numRecent
+		if toRelease%st.storeEvery != 0 {
+			err := st.tree.DeleteVersion(toRelease)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 

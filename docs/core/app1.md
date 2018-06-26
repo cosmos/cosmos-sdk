@@ -1,8 +1,10 @@
-# App1
+# The Basics
 
-The first application is a simple bank. Users have an account address and an account,
-and they can send coins around. It has no authentication, and just uses JSON for
-serialization.
+Here we introduce the basic components of an SDK by building `App1`, a simple bank.
+Users have an account address and an account, and they can send coins around. 
+It has no authentication, and just uses JSON for serialization.
+
+The complete code can be found in [app1.go](examples/app1.go).
 
 ## Messages
 
@@ -18,7 +20,7 @@ type Msg interface {
     // Must correspond to name of message handler (XXX).
 	Type() string
 
-	// Get the canonical byte representation of the Msg.
+    // Get the canonical byte representation of the Msg.
     // This is what is signed.
 	GetSignBytes() []byte
 
@@ -182,7 +184,8 @@ See the [Context API docs](TODO) for more details.
 
 ## Result
 
-Result is motivated by the corresponding [ABCI result](TODO). It contains any return values, error information, logs, and meta data about the transaction:
+Handler takes a Context and Msg and returns a Result.
+Result is motivated by the corresponding [ABCI result](TODO). It contains return values, error information, logs, and meta data about the transaction:
 
 ```go
 // Result is the union of ResponseDeliverTx and ResponseCheckTx.
@@ -211,6 +214,11 @@ type Result struct {
 	Tags Tags
 }
 ```
+
+We'll talk more about these fields later in the tutorial. For now, note that a
+`0` value for the `Code` is considered a success, and everything else is a
+failure. The `Tags` can contain meta data about the transaction that will allow
+us to easily lookup transactions that pertain to particular accounts or actions.
 
 ## Handler
 
@@ -242,12 +250,12 @@ type acc struct {
 ```
 
 Coins is a useful type provided by the SDK for multi-asset accounts. While we could just use an integer here for a single coin type,
-it's worth [getting to know `Coins`](TODO).
+it's worth [getting to know Coins](TODO).
 
 
 Now we're ready to handle the MsgSend:
 
-```
+```go
 // Handle MsgSend.
 func handleMsgSend(ctx sdk.Context, key *sdk.KVStoreKey, msg MsgSend) sdk.Result {
 	// NOTE: from, to, and amount were already validated
@@ -289,14 +297,8 @@ The BaseApp is an abstraction over the [Tendermint
 ABCI](https://github.com/tendermint/abci) that
 simplifies application development by handling common low-level concerns.
 It serves as the mediator between the two key components of an SDK app: the store
-and the message handlers.
-
-The BaseApp implements the
+and the message handlers. The BaseApp implements the
 [`abci.Application`](https://godoc.org/github.com/tendermint/abci/types#Application) interface. 
-It uses a `MultiStore` to manage the state, a `Router` for transaction handling, and 
-`Set` methods to specify functions to run at the beginning and end of every
-block. It's quite a work of art :).
-
 
 Here is the complete setup for App1:
 
@@ -383,10 +385,8 @@ This means the input to the app must be a JSON encoded `app1Tx`.
 
 In the next tutorial, we'll introduce Amino, a superior encoding scheme that lets us decode into interface types!
 
-The last step in `NewApp1` is to mount the stores and load the latest version. Since we only have one store, we only mount one:
+The last step in `NewApp1` is to mount the stores and load the latest version. Since we only have one store, we only mount one.
 
-```go
-	app.MountStoresIAVL(keyAccount)
-```
+We now have a complete implementation of a simple app! 
 
-We now have a complete implementation of a simple app. Next, we'll add another Msg type and another store, and use Amino for encoding!
+In the next section, we'll add another Msg type and another store, and use Amino for encoding transactions!

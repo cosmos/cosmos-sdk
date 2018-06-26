@@ -32,7 +32,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 
 	// make context and mapper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
+	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 
 	addr := sdk.AccAddress([]byte("some-address"))
 

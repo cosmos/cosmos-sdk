@@ -77,7 +77,7 @@ func CodeToDefaultMsg(code CodeType) string {
 	case CodeUnauthorized:
 		return "unauthorized"
 	case CodeInsufficientFunds:
-		return "insufficent funds"
+		return "insufficient funds"
 	case CodeUnknownRequest:
 		return "unknown request"
 	case CodeInvalidAddress:

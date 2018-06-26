@@ -34,7 +34,7 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 // Addresses are returned in a determistic order.
 // They are accumulated from the GetSigners method for each Msg
 // in the order they appear in tx.GetMsgs().
-// Duplicate addresses will be ommitted.
+// Duplicate addresses will be omitted.
 func (tx StdTx) GetSigners() []sdk.Address {
 	seen := map[string]bool{}
 	var signers []sdk.Address

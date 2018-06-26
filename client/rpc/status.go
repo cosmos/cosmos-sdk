@@ -1,15 +1,14 @@
 package rpc
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/spf13/cobra"
-	wire "github.com/tendermint/go-wire"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
@@ -19,13 +18,13 @@ func statusCommand() *cobra.Command {
 		Short: "Query remote node for status",
 		RunE:  printNodeStatus,
 	}
-	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
+	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	return cmd
 }
 
-func getNodeStatus() (*ctypes.ResultStatus, error) {
+func getNodeStatus(ctx context.CoreContext) (*ctypes.ResultStatus, error) {
 	// get the node
-	node, err := client.GetNode()
+	node, err := ctx.GetNode()
 	if err != nil {
 		return &ctypes.ResultStatus{}, err
 	}
@@ -35,13 +34,13 @@ func getNodeStatus() (*ctypes.ResultStatus, error) {
 // CMD
 
 func printNodeStatus(cmd *cobra.Command, args []string) error {
-	status, err := getNodeStatus()
+	status, err := getNodeStatus(context.NewCoreContextFromViper())
 	if err != nil {
 		return err
 	}
 
-	output, err := wire.MarshalJSON(status)
-	// output, err := json.MarshalIndent(res, "  ", "")
+	output, err := cdc.MarshalJSON(status)
+	// output, err := cdc.MarshalJSONIndent(res, "  ", "")
 	if err != nil {
 		return err
 	}
@@ -52,37 +51,43 @@ func printNodeStatus(cmd *cobra.Command, args []string) error {
 
 // REST
 
-func NodeInfoRequestHandler(w http.ResponseWriter, r *http.Request) {
-	status, err := getNodeStatus()
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
-	}
+// REST handler for node info
+func NodeInfoRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		status, err := getNodeStatus(ctx)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+			return
+		}
 
-	nodeInfo := status.NodeInfo
-	output, err := json.MarshalIndent(nodeInfo, "", "  ")
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
+		nodeInfo := status.NodeInfo
+		output, err := cdc.MarshalJSON(nodeInfo)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write(output)
 	}
-	w.Write(output)
 }
 
-func NodeSyncingRequestHandler(w http.ResponseWriter, r *http.Request) {
-	status, err := getNodeStatus()
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
-	}
+// REST handler for node syncing
+func NodeSyncingRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		status, err := getNodeStatus(ctx)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+			return
+		}
 
-	syncing := status.Syncing
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
+		syncing := status.SyncInfo.Syncing
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write([]byte(strconv.FormatBool(syncing)))
 	}
-	w.Write([]byte(strconv.FormatBool(syncing)))
 }

@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	keys "github.com/tendermint/go-crypto/keys"
 
 	"github.com/spf13/cobra"
@@ -15,7 +14,15 @@ var showKeysCmd = &cobra.Command{
 	Use:   "show <name>",
 	Short: "Show key info for the given name",
 	Long:  `Return public details of one local key.`,
-	RunE:  runShowCmd,
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		name := args[0]
+		info, err := getKey(name)
+		if err == nil {
+			printInfo(info)
+		}
+		return err
+	},
 }
 
 func getKey(name string) (keys.Info, error) {
@@ -27,23 +34,10 @@ func getKey(name string) (keys.Info, error) {
 	return kb.Get(name)
 }
 
-// CMD
-
-func runShowCmd(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 || len(args[0]) == 0 {
-		return errors.New("You must provide a name for the key")
-	}
-	name := args[0]
-
-	info, err := getKey(name)
-	if err == nil {
-		printInfo(info)
-	}
-	return err
-}
-
+///////////////////////////
 // REST
 
+// get key REST handler
 func GetKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
@@ -56,7 +50,12 @@ func GetKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keyOutput := KeyOutput{Name: info.Name, Address: info.PubKey.Address().String()}
+	keyOutput, err := Bech32KeyOutput(info)
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
 	output, err := json.MarshalIndent(keyOutput, "", "  ")
 	if err != nil {
 		w.WriteHeader(500)

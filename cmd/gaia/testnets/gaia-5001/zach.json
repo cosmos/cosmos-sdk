@@ -1,0 +1,20 @@
+{
+  "node_id": "8a2802fb25d352f3e7e277559a4f683780c3ef22",
+  "ip": "167.99.191.184",
+  "validator": {
+    "pub_key": {
+      "type": "AC26791624DE60",
+      "value": "NjjEQKUsq8F0gWxl3BoU2Li5n7hEz9H/LX80rfMxVyE="
+    },
+    "power": 100,
+    "name": ""
+  },
+  "app_gen_tx": {
+    "name": "zach",
+    "address": "9D5723057702E2090405AB5D3B48C45B9ABF4377",
+    "pub_key": {
+      "type": "AC26791624DE60",
+      "value": "NjjEQKUsq8F0gWxl3BoU2Li5n7hEz9H/LX80rfMxVyE="
+    }
+  }
+}

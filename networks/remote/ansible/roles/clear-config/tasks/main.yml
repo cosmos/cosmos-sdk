@@ -1,0 +1,12 @@
+---
+
+- name: Stop service
+  service: name=gaiad state=stopped
+
+- name: Delete files
+  file: "path={{item}} state=absent"
+  with_items:
+  - /usr/bin/gaiad
+  - /home/gaiad/.gaiad
+  - /home/gaiad/.gaiacli
+

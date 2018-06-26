@@ -8,38 +8,55 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	abci "github.com/tendermint/abci/types"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // Get the default command for a tx query
-func QueryTxCmd(cmdr commander) *cobra.Command {
+func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tx [hash]",
 		Short: "Matches this txhash over all committed blocks",
-		RunE:  cmdr.queryAndPrintTx,
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			// find the key to look up the account
+			hashHexStr := args[0]
+			trustNode := viper.GetBool(client.FlagTrustNode)
+
+			output, err := queryTx(cdc, context.NewCoreContextFromViper(), hashHexStr, trustNode)
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(output))
+
+			return nil
+		},
 	}
-	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
+
+	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+
 	// TODO: change this to false when we can
 	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
 	return cmd
 }
 
-func (c commander) queryTx(hashHexStr string, trustNode bool) ([]byte, error) {
+func queryTx(cdc *wire.Codec, ctx context.CoreContext, hashHexStr string, trustNode bool) ([]byte, error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
 		return nil, err
 	}
 
 	// get the node
-	node, err := client.GetNode()
+	node, err := ctx.GetNode()
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +65,7 @@ func (c commander) queryTx(hashHexStr string, trustNode bool) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	info, err := formatTxResult(c.cdc, res)
+	info, err := formatTxResult(cdc, res)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +96,7 @@ type txInfo struct {
 }
 
 func parseTx(cdc *wire.Codec, txBytes []byte) (sdk.Tx, error) {
-	var tx sdk.StdTx
+	var tx auth.StdTx
 	err := cdc.UnmarshalBinary(txBytes, &tx)
 	if err != nil {
 		return nil, err
@@ -87,31 +104,10 @@ func parseTx(cdc *wire.Codec, txBytes []byte) (sdk.Tx, error) {
 	return tx, nil
 }
 
-// CMD
-
-// command to query for a transaction
-func (c commander) queryAndPrintTx(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 || len(args[0]) == 0 {
-		return errors.New("You must provide a tx hash")
-	}
-
-	// find the key to look up the account
-	hashHexStr := args[0]
-	trustNode := viper.GetBool(client.FlagTrustNode)
-
-	output, err := c.queryTx(hashHexStr, trustNode)
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(output))
-
-	return nil
-}
-
 // REST
 
-func QueryTxRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Request) {
-	c := commander{cdc}
+// transaction query REST handler
+func QueryTxRequestHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		hashHexStr := vars["hash"]
@@ -121,7 +117,7 @@ func QueryTxRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Requ
 			trustNode = true
 		}
 
-		output, err := c.queryTx(hashHexStr, trustNode)
+		output, err := queryTx(cdc, ctx, hashHexStr, trustNode)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

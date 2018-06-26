@@ -1,7 +1,6 @@
 package rpc
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -10,28 +9,31 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
 )
 
 const (
 	flagSelect = "select"
 )
 
-func blockCommand() *cobra.Command {
+//BlockCommand returns the verified block data for a given heights
+func BlockCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block [height]",
 		Short: "Get verified data for a the block at given height",
+		Args:  cobra.MaximumNArgs(1),
 		RunE:  printBlock,
 	}
-	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
+	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	// TODO: change this to false when we can
 	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
 	cmd.Flags().StringSlice(flagSelect, []string{"header", "tx"}, "Fields to return (header|txs|results)")
 	return cmd
 }
 
-func getBlock(height *int64) ([]byte, error) {
+func getBlock(ctx context.CoreContext, height *int64) ([]byte, error) {
 	// get the node
-	node, err := client.GetNode()
+	node, err := ctx.GetNode()
 	if err != nil {
 		return nil, err
 	}
@@ -47,15 +49,16 @@ func getBlock(height *int64) ([]byte, error) {
 
 	// TODO move maarshalling into cmd/rest functions
 	// output, err := tmwire.MarshalJSON(res)
-	output, err := json.MarshalIndent(res, "", "  ")
+	output, err := cdc.MarshalJSON(res)
 	if err != nil {
 		return nil, err
 	}
 	return output, nil
 }
 
-func GetChainHeight() (int64, error) {
-	node, err := client.GetNode()
+// get the current blockchain height
+func GetChainHeight(ctx context.CoreContext) (int64, error) {
+	node, err := ctx.GetNode()
 	if err != nil {
 		return -1, err
 	}
@@ -63,7 +66,7 @@ func GetChainHeight() (int64, error) {
 	if err != nil {
 		return -1, err
 	}
-	height := status.LatestBlockHeight
+	height := status.SyncInfo.LatestBlockHeight
 	return height, nil
 }
 
@@ -83,7 +86,7 @@ func printBlock(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	output, err := getBlock(height)
+	output, err := getBlock(context.NewCoreContextFromViper(), height)
 	if err != nil {
 		return err
 	}
@@ -93,41 +96,47 @@ func printBlock(cmd *cobra.Command, args []string) error {
 
 // REST
 
-func BlockRequestHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	height, err := strconv.ParseInt(vars["height"], 10, 64)
-	if err != nil {
-		w.WriteHeader(400)
-		w.Write([]byte("ERROR: Couldn't parse block height. Assumed format is '/block/{height}'."))
-		return
+// REST handler to get a block
+func BlockRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		height, err := strconv.ParseInt(vars["height"], 10, 64)
+		if err != nil {
+			w.WriteHeader(400)
+			w.Write([]byte("ERROR: Couldn't parse block height. Assumed format is '/block/{height}'."))
+			return
+		}
+		chainHeight, err := GetChainHeight(ctx)
+		if height > chainHeight {
+			w.WriteHeader(404)
+			w.Write([]byte("ERROR: Requested block height is bigger then the chain length."))
+			return
+		}
+		output, err := getBlock(ctx, &height)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write(output)
 	}
-	chainHeight, err := GetChainHeight()
-	if height > chainHeight {
-		w.WriteHeader(404)
-		w.Write([]byte("ERROR: Requested block height is bigger then the chain length."))
-		return
-	}
-	output, err := getBlock(&height)
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
-	}
-	w.Write(output)
 }
 
-func LatestBlockRequestHandler(w http.ResponseWriter, r *http.Request) {
-	height, err := GetChainHeight()
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
+// REST handler to get the latest block
+func LatestBlockRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		height, err := GetChainHeight(ctx)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		output, err := getBlock(ctx, &height)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write(output)
 	}
-	output, err := getBlock(&height)
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
-	}
-	w.Write(output)
 }

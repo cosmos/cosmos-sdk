@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
 )
 
 const (
@@ -17,7 +18,7 @@ const (
 
 // XXX: remove this when not needed
 func todoNotImplemented(_ *cobra.Command, _ []string) error {
-	return errors.New("TODO: Command not yet implemented")
+	return errors.New("todo: Command not yet implemented")
 }
 
 // AddCommands adds a number of rpc-related subcommands
@@ -25,8 +26,6 @@ func AddCommands(cmd *cobra.Command) {
 	cmd.AddCommand(
 		initClientCommand(),
 		statusCommand(),
-		blockCommand(),
-		validatorCommand(),
 	)
 }
 
@@ -37,18 +36,19 @@ func initClientCommand() *cobra.Command {
 		RunE:  todoNotImplemented,
 	}
 	cmd.Flags().StringP(client.FlagChainID, "c", "", "ID of chain we connect to")
-	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
+	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	cmd.Flags().String(flagGenesis, "", "Genesis file to verify header validity")
 	cmd.Flags().String(flagCommit, "", "File with trusted and signed header")
 	cmd.Flags().String(flagValHash, "", "Hash of trusted validator set (hex-encoded)")
 	return cmd
 }
 
-func RegisterRoutes(r *mux.Router) {
-	r.HandleFunc("/node_info", NodeInfoRequestHandler).Methods("GET")
-	r.HandleFunc("/syncing", NodeSyncingRequestHandler).Methods("GET")
-	r.HandleFunc("/blocks/latest", LatestBlockRequestHandler).Methods("GET")
-	r.HandleFunc("/blocks/{height}", BlockRequestHandler).Methods("GET")
-	r.HandleFunc("/validatorsets/latest", LatestValidatorsetRequestHandler).Methods("GET")
-	r.HandleFunc("/validatorsets/{height}", ValidatorsetRequestHandler).Methods("GET")
+// Register REST endpoints
+func RegisterRoutes(ctx context.CoreContext, r *mux.Router) {
+	r.HandleFunc("/node_info", NodeInfoRequestHandlerFn(ctx)).Methods("GET")
+	r.HandleFunc("/syncing", NodeSyncingRequestHandlerFn(ctx)).Methods("GET")
+	r.HandleFunc("/blocks/latest", LatestBlockRequestHandlerFn(ctx)).Methods("GET")
+	r.HandleFunc("/blocks/{height}", BlockRequestHandlerFn(ctx)).Methods("GET")
+	r.HandleFunc("/validatorsets/latest", LatestValidatorSetRequestHandlerFn(ctx)).Methods("GET")
+	r.HandleFunc("/validatorsets/{height}", ValidatorSetRequestHandlerFn(ctx)).Methods("GET")
 }

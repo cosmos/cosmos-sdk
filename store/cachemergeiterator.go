@@ -151,9 +151,8 @@ func (iter *cacheMergeIterator) Close() {
 func (iter *cacheMergeIterator) compare(a, b []byte) int {
 	if iter.ascending {
 		return bytes.Compare(a, b)
-	} else {
-		return bytes.Compare(a, b) * -1
 	}
+	return bytes.Compare(a, b) * -1
 }
 
 // Skip all delete-items from the cache w/ `key < until`.  After this function,

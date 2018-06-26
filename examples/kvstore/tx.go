@@ -4,6 +4,7 @@ import (
 	"bytes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // An sdk.Tx which is its own sdk.Msg.
@@ -13,25 +14,16 @@ type kvstoreTx struct {
 	bytes []byte
 }
 
-func (tx kvstoreTx) Get(key interface{}) (value interface{}) {
-	switch k := key.(type) {
-	case string:
-		switch k {
-		case "key":
-			return tx.key
-		case "value":
-			return tx.value
-		}
-	}
-	return nil
-}
-
 func (tx kvstoreTx) Type() string {
 	return "kvstore"
 }
 
 func (tx kvstoreTx) GetMsg() sdk.Msg {
 	return tx
+}
+
+func (tx kvstoreTx) GetMemo() string {
+	return ""
 }
 
 func (tx kvstoreTx) GetSignBytes() []byte {
@@ -47,7 +39,7 @@ func (tx kvstoreTx) GetSigners() []sdk.Address {
 	return nil
 }
 
-func (tx kvstoreTx) GetSignatures() []sdk.StdSignature {
+func (tx kvstoreTx) GetSignatures() []auth.StdSignature {
 	return nil
 }
 

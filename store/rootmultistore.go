@@ -33,6 +33,7 @@ type rootMultiStore struct {
 var _ CommitMultiStore = (*rootMultiStore)(nil)
 var _ Queryable = (*rootMultiStore)(nil)
 
+// nolint
 func NewCommitMultiStore(db dbm.DB) *rootMultiStore {
 	return &rootMultiStore{
 		db:           db,
@@ -56,8 +57,9 @@ func (rs *rootMultiStore) MountStoreWithDB(key StoreKey, typ StoreType, db dbm.D
 		panic(fmt.Sprintf("rootMultiStore duplicate store key %v", key))
 	}
 	rs.storesParams[key] = storeParams{
-		db:  db,
+		key: key,
 		typ: typ,
+		db:  db,
 	}
 	rs.keysByName[key.Name()] = key
 }
@@ -87,7 +89,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 			id := CommitID{}
 			store, err := rs.loadCommitStoreFromParams(id, storeParams)
 			if err != nil {
-				return fmt.Errorf("Failed to load rootMultiStore: %v", err)
+				return fmt.Errorf("failed to load rootMultiStore: %v", err)
 			}
 			rs.stores[key] = store
 		}
@@ -110,7 +112,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 		storeParams := rs.storesParams[key]
 		store, err := rs.loadCommitStoreFromParams(commitID, storeParams)
 		if err != nil {
-			return fmt.Errorf("Failed to load rootMultiStore: %v", err)
+			return fmt.Errorf("failed to load rootMultiStore: %v", err)
 		}
 		newStores[key] = store
 	}
@@ -118,7 +120,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 	// If any CommitStoreLoaders were not used, return error.
 	for key := range rs.storesParams {
 		if _, ok := newStores[key]; !ok {
-			return fmt.Errorf("Unused CommitStoreLoader: %v", key)
+			return fmt.Errorf("unused CommitStoreLoader: %v", key)
 		}
 	}
 
@@ -181,6 +183,11 @@ func (rs *rootMultiStore) GetKVStore(key StoreKey) KVStore {
 	return rs.stores[key].(KVStore)
 }
 
+// Implements MultiStore.
+func (rs *rootMultiStore) GetKVStoreWithGas(meter sdk.GasMeter, key StoreKey) KVStore {
+	return NewGasKVStore(meter, rs.GetKVStore(key))
+}
+
 // getStoreByName will first convert the original name to
 // a special key, before looking up the CommitStore.
 // This is not exposed to the extensions (which will need the
@@ -205,18 +212,18 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 	path := req.Path
 	storeName, subpath, err := parsePath(path)
 	if err != nil {
-		return err.Result().ToQuery()
+		return err.QueryResult()
 	}
 
 	store := rs.getStoreByName(storeName)
 	if store == nil {
 		msg := fmt.Sprintf("no such store: %s", storeName)
-		return sdk.ErrUnknownRequest(msg).Result().ToQuery()
+		return sdk.ErrUnknownRequest(msg).QueryResult()
 	}
 	queryable, ok := store.(Queryable)
 	if !ok {
 		msg := fmt.Sprintf("store %s doesn't support queries", storeName)
-		return sdk.ErrUnknownRequest(msg).Result().ToQuery()
+		return sdk.ErrUnknownRequest(msg).QueryResult()
 	}
 
 	// trim the path and make the query
@@ -244,9 +251,11 @@ func parsePath(path string) (storeName string, subpath string, err sdk.Error) {
 //----------------------------------------
 
 func (rs *rootMultiStore) loadCommitStoreFromParams(id CommitID, params storeParams) (store CommitStore, err error) {
-	db := rs.db
+	var db dbm.DB
 	if params.db != nil {
-		db = params.db
+		db = dbm.NewPrefixDB(params.db, []byte("s/_/"))
+	} else {
+		db = dbm.NewPrefixDB(rs.db, []byte("s/k:"+params.key.Name()+"/"))
 	}
 	switch params.typ {
 	case sdk.StoreTypeMulti:
@@ -264,7 +273,7 @@ func (rs *rootMultiStore) loadCommitStoreFromParams(id CommitID, params storePar
 }
 
 func (rs *rootMultiStore) nameToKey(name string) StoreKey {
-	for key, _ := range rs.storesParams {
+	for key := range rs.storesParams {
 		if key.Name() == name {
 			return key
 		}
@@ -276,6 +285,7 @@ func (rs *rootMultiStore) nameToKey(name string) StoreKey {
 // storeParams
 
 type storeParams struct {
+	key StoreKey
 	db  dbm.DB
 	typ StoreType
 }
@@ -375,10 +385,11 @@ func commitStores(version int64, storeMap map[StoreKey]CommitStore) commitInfo {
 		storeInfos = append(storeInfos, si)
 	}
 
-	return commitInfo{
+	ci := commitInfo{
 		Version:    version,
 		StoreInfos: storeInfos,
 	}
+	return ci
 }
 
 // Gets commitInfo from disk.
@@ -388,14 +399,14 @@ func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, ver)
 	cInfoBytes := db.Get([]byte(cInfoKey))
 	if cInfoBytes == nil {
-		return commitInfo{}, fmt.Errorf("Failed to get rootMultiStore: no data")
+		return commitInfo{}, fmt.Errorf("failed to get rootMultiStore: no data")
 	}
 
 	// Parse bytes.
 	var cInfo commitInfo
 	err := cdc.UnmarshalBinary(cInfoBytes, &cInfo)
 	if err != nil {
-		return commitInfo{}, fmt.Errorf("Failed to get rootMultiStore: %v", err)
+		return commitInfo{}, fmt.Errorf("failed to get rootMultiStore: %v", err)
 	}
 	return cInfo, nil
 }

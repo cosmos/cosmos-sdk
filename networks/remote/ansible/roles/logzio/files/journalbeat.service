@@ -1,0 +1,15 @@
+[Unit]
+Description=journalbeat
+#propagates activation, deactivation and activation fails.
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+Restart=on-failure
+ExecStart=/usr/bin/journalbeat -c /etc/journalbeat/journalbeat.yml -path.home /usr/share/journalbeat -path.config /etc/journalbeat -path.data /var/lib/journalbeat -path.logs /var/log/journalbeat
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+

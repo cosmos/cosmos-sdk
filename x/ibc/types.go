@@ -1,14 +1,24 @@
 package ibc
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"encoding/json"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
+
+var (
+	msgCdc *wire.Codec
+)
+
+func init() {
+	msgCdc = wire.NewCodec()
+}
 
 // ------------------------------
 // IBCPacket
 
+// nolint - TODO rename to Packet as IBCPacket stutters (golint)
 // IBCPacket defines a piece of data that can be send between two separate
 // blockchains.
 type IBCPacket struct {
@@ -31,11 +41,33 @@ func NewIBCPacket(srcAddr sdk.Address, destAddr sdk.Address, coins sdk.Coins,
 	}
 }
 
-func (ibcp IBCPacket) ValidateBasic() sdk.Error {
-	if ibcp.SrcChain == ibcp.DestChain {
-		return ErrIdenticalChains().Trace("")
+//nolint
+func (p IBCPacket) GetSignBytes() []byte {
+	b, err := msgCdc.MarshalJSON(struct {
+		SrcAddr   string
+		DestAddr  string
+		Coins     sdk.Coins
+		SrcChain  string
+		DestChain string
+	}{
+		SrcAddr:   sdk.MustBech32ifyAcc(p.SrcAddr),
+		DestAddr:  sdk.MustBech32ifyAcc(p.DestAddr),
+		Coins:     p.Coins,
+		SrcChain:  p.SrcChain,
+		DestChain: p.DestChain,
+	})
+	if err != nil {
+		panic(err)
 	}
-	if !ibcp.Coins.IsValid() {
+	return b
+}
+
+// validator the ibc packey
+func (p IBCPacket) ValidateBasic() sdk.Error {
+	if p.SrcChain == p.DestChain {
+		return ErrIdenticalChains(DefaultCodespace).Trace("")
+	}
+	if !p.Coins.IsValid() {
 		return sdk.ErrInvalidCoins("")
 	}
 	return nil
@@ -44,40 +76,32 @@ func (ibcp IBCPacket) ValidateBasic() sdk.Error {
 // ----------------------------------
 // IBCTransferMsg
 
+// nolint - TODO rename to TransferMsg as folks will reference with ibc.TransferMsg
 // IBCTransferMsg defines how another module can send an IBCPacket.
 type IBCTransferMsg struct {
 	IBCPacket
 }
 
-func (msg IBCTransferMsg) Type() string {
-	return "ibc"
-}
+// nolint
+func (msg IBCTransferMsg) Type() string { return "ibc" }
 
-func (msg IBCTransferMsg) Get(key interface{}) interface{} {
-	return nil
-}
+// x/bank/tx.go MsgSend.GetSigners()
+func (msg IBCTransferMsg) GetSigners() []sdk.Address { return []sdk.Address{msg.SrcAddr} }
 
+// get the sign bytes for ibc transfer message
 func (msg IBCTransferMsg) GetSignBytes() []byte {
-	cdc := wire.NewCodec()
-	bz, err := cdc.MarshalBinary(msg)
-	if err != nil {
-		panic(err)
-	}
-	return bz
+	return msg.IBCPacket.GetSignBytes()
 }
 
+// validate ibc transfer message
 func (msg IBCTransferMsg) ValidateBasic() sdk.Error {
 	return msg.IBCPacket.ValidateBasic()
-}
-
-// x/bank/tx.go SendMsg.GetSigners()
-func (msg IBCTransferMsg) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.SrcAddr}
 }
 
 // ----------------------------------
 // IBCReceiveMsg
 
+// nolint - TODO rename to ReceiveMsg as folks will reference with ibc.ReceiveMsg
 // IBCReceiveMsg defines the message that a relayer uses to post an IBCPacket
 // to the destination chain.
 type IBCReceiveMsg struct {
@@ -86,28 +110,26 @@ type IBCReceiveMsg struct {
 	Sequence int64
 }
 
-func (msg IBCReceiveMsg) Type() string {
-	return "ibc"
-}
+// nolint
+func (msg IBCReceiveMsg) Type() string             { return "ibc" }
+func (msg IBCReceiveMsg) ValidateBasic() sdk.Error { return msg.IBCPacket.ValidateBasic() }
 
-func (msg IBCReceiveMsg) Get(key interface{}) interface{} {
-	return nil
-}
+// x/bank/tx.go MsgSend.GetSigners()
+func (msg IBCReceiveMsg) GetSigners() []sdk.Address { return []sdk.Address{msg.Relayer} }
 
+// get the sign bytes for ibc receive message
 func (msg IBCReceiveMsg) GetSignBytes() []byte {
-	cdc := wire.NewCodec()
-	bz, err := cdc.MarshalBinary(msg)
+	b, err := msgCdc.MarshalJSON(struct {
+		IBCPacket json.RawMessage
+		Relayer   string
+		Sequence  int64
+	}{
+		IBCPacket: json.RawMessage(msg.IBCPacket.GetSignBytes()),
+		Relayer:   sdk.MustBech32ifyAcc(msg.Relayer),
+		Sequence:  msg.Sequence,
+	})
 	if err != nil {
 		panic(err)
 	}
-	return bz
-}
-
-func (msg IBCReceiveMsg) ValidateBasic() sdk.Error {
-	return msg.IBCPacket.ValidateBasic()
-}
-
-// x/bank/tx.go SendMsg.GetSigners()
-func (msg IBCReceiveMsg) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.Relayer}
+	return b
 }

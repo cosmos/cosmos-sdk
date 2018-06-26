@@ -8,24 +8,25 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/mock"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tmlibs/cli"
-	"github.com/tendermint/tmlibs/log"
 )
 
 // Get a free address for a test tendermint server
 // protocol is either tcp, http, etc
-func FreeTCPAddr(t *testing.T) string {
+func FreeTCPAddr() (addr, port string, err error) {
 	l, err := net.Listen("tcp", "0.0.0.0:0")
+	if err != nil {
+		return "", "", err
+	}
 	defer l.Close()
-	require.Nil(t, err)
 
-	port := l.Addr().(*net.TCPAddr).Port
-	addr := fmt.Sprintf("tcp://0.0.0.0:%d", port)
-	return addr
+	portI := l.Addr().(*net.TCPAddr).Port
+	port = fmt.Sprintf("%d", portI)
+	addr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
+	return
 }
 
 // setupViper creates a homedir to run inside,
@@ -37,26 +38,6 @@ func setupViper(t *testing.T) func() {
 	return func() {
 		os.RemoveAll(rootDir)
 	}
-}
-
-// Begin the server pass up the channel to close
-// NOTE pass up the channel so it can be closed at the end of the process
-func StartServer(t *testing.T) chan error {
-	defer setupViper(t)()
-
-	// init server
-	initCmd := InitCmd(mock.GenInitOptions, log.NewNopLogger())
-	err := initCmd.RunE(nil, nil)
-	require.NoError(t, err)
-
-	// start server
-	viper.Set(flagWithTendermint, true)
-	startCmd := StartCmd(mock.NewApp, log.NewNopLogger())
-	startCmd.Flags().Set(flagAddress, FreeTCPAddr(t)) // set to a new free address
-	startCmd.Flags().Set("rpc.laddr", FreeTCPAddr(t)) // set to a new free address
-	timeout := time.Duration(3) * time.Second
-
-	return RunOrTimeout(startCmd, timeout, t)
 }
 
 // Run or Timout RunE of command passed in

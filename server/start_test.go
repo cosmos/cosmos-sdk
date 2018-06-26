@@ -1,55 +1,81 @@
 package server
 
 import (
-	//	"os"
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/mock"
+	"github.com/cosmos/cosmos-sdk/server/mock"
+	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/tendermint/abci/server"
+	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tmlibs/log"
 )
 
 func TestStartStandAlone(t *testing.T) {
-	defer setupViper(t)()
+	home, err := ioutil.TempDir("", "mock-sdk-cmd")
+	require.Nil(t, err)
+	defer func() {
+		os.RemoveAll(home)
+	}()
 
 	logger := log.NewNopLogger()
-	initCmd := InitCmd(mock.GenInitOptions, logger)
-	err := initCmd.RunE(nil, nil)
+	cfg, err := tcmd.ParseConfig()
+	require.Nil(t, err)
+	ctx := NewContext(cfg, logger)
+	cdc := wire.NewCodec()
+	appInit := AppInit{
+		AppGenState: mock.AppGenState,
+		AppGenTx:    mock.AppGenTx,
+	}
+	initCmd := InitCmd(ctx, cdc, appInit)
+	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 
-	// set up app and start up
-	viper.Set(flagWithTendermint, false)
-	viper.Set(flagAddress, "localhost:11122")
-	startCmd := StartCmd(mock.NewApp, logger)
-	startCmd.Flags().Set(flagAddress, FreeTCPAddr(t)) // set to a new free address
-	timeout := time.Duration(3) * time.Second
+	app, err := mock.NewApp(home, logger)
+	require.Nil(t, err)
+	svrAddr, _, err := FreeTCPAddr()
+	require.Nil(t, err)
+	svr, err := server.NewServer(svrAddr, "socket", app)
+	require.Nil(t, err, "error creating listener")
+	svr.SetLogger(logger.With("module", "abci-server"))
+	svr.Start()
 
-	RunOrTimeout(startCmd, timeout, t)
+	timer := time.NewTimer(time.Duration(5) * time.Second)
+	select {
+	case <-timer.C:
+		svr.Stop()
+	}
 }
 
-/*
 func TestStartWithTendermint(t *testing.T) {
 	defer setupViper(t)()
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
 		With("module", "mock-cmd")
-		// logger := log.NewNopLogger()
-	initCmd := InitCmd(mock.GenInitOptions, logger)
-	err := initCmd.RunE(nil, nil)
+	cfg, err := tcmd.ParseConfig()
+	require.Nil(t, err)
+	ctx := NewContext(cfg, logger)
+	cdc := wire.NewCodec()
+	appInit := AppInit{
+		AppGenState: mock.AppGenState,
+		AppGenTx:    mock.AppGenTx,
+	}
+	initCmd := InitCmd(ctx, cdc, appInit)
+	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 
 	// set up app and start up
 	viper.Set(flagWithTendermint, true)
-	startCmd := StartCmd(mock.NewApp, logger)
-	startCmd.Flags().Set(flagAddress, FreeTCPAddr(t)) // set to a new free address
-	timeout := time.Duration(3) * time.Second
+	startCmd := StartCmd(ctx, mock.NewApp)
+	svrAddr, _, err := FreeTCPAddr()
+	require.NoError(t, err)
+	startCmd.Flags().Set(flagAddress, svrAddr) // set to a new free address
+	timeout := time.Duration(5) * time.Second
 
-	//a, _ := startCmd.Flags().GetString(flagAddress)
-	//panic(a)
-
-	RunOrTimeout(startCmd, timeout, t)
+	close(RunOrTimeout(startCmd, timeout, t))
 }
-*/

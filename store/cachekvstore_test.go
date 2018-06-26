@@ -105,7 +105,7 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 		k, v := itr.Key(), itr.Value()
 		assert.Equal(t, keyFmt(i), k)
 		assert.Equal(t, valFmt(i), v)
-		i += 1
+		i++
 	}
 	assert.Equal(t, nItems, i)
 
@@ -113,7 +113,7 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 	itr = st.Iterator(bz("money"), nil)
 	i = 0
 	for ; itr.Valid(); itr.Next() {
-		i += 1
+		i++
 	}
 	assert.Equal(t, 0, i)
 
@@ -124,7 +124,7 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 		k, v := itr.Key(), itr.Value()
 		assert.Equal(t, keyFmt(i), k)
 		assert.Equal(t, valFmt(i), v)
-		i += 1
+		i++
 	}
 	assert.Equal(t, 3, i)
 
@@ -135,7 +135,7 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 		k, v := itr.Key(), itr.Value()
 		assert.Equal(t, keyFmt(i), k)
 		assert.Equal(t, valFmt(i), v)
-		i += 1
+		i++
 	}
 	assert.Equal(t, 4, i)
 }
@@ -369,7 +369,7 @@ func assertIterateDomain(t *testing.T, st KVStore, expectedN int) {
 		k, v := itr.Key(), itr.Value()
 		assert.Equal(t, keyFmt(i), k)
 		assert.Equal(t, valFmt(i), v)
-		i += 1
+		i++
 	}
 	assert.Equal(t, expectedN, i)
 }
@@ -397,7 +397,7 @@ func assertIterateDomainCheck(t *testing.T, st KVStore, mem dbm.DB, r []keyRange
 
 		itr.Next()
 		itr2.Next()
-		i += 1
+		i++
 	}
 
 	assert.False(t, itr.Valid())
@@ -479,10 +479,10 @@ func (krc *keyRangeCounter) valid() bool {
 func (krc *keyRangeCounter) next() {
 	thisKeyRange := krc.keyRanges[krc.rangeIdx]
 	if krc.idx == thisKeyRange.len()-1 {
-		krc.rangeIdx += 1
+		krc.rangeIdx++
 		krc.idx = 0
 	} else {
-		krc.idx += 1
+		krc.idx++
 	}
 }
 

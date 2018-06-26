@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	abci "github.com/tendermint/abci/types"
+	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
@@ -48,6 +49,7 @@ type MultiStore interface { //nolint
 	// Convenience for fetching substores.
 	GetStore(StoreKey) Store
 	GetKVStore(StoreKey) KVStore
+	GetKVStoreWithGas(GasMeter, StoreKey) KVStore
 }
 
 // From MultiStore.CacheMultiStore()....
@@ -82,7 +84,7 @@ type CommitMultiStore interface {
 	LoadVersion(ver int64) error
 }
 
-//----------------------------------------
+//---------subsp-------------------------------
 // KVStore
 
 // KVStore is a simple interface to get/set data
@@ -103,11 +105,14 @@ type KVStore interface {
 
 	// Iterator over a domain of keys in ascending order. End is exclusive.
 	// Start must be less than end, or the Iterator is invalid.
+	// Iterator must be closed by caller.
+	// To iterate over entire domain, use store.Iterator(nil, nil)
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	Iterator(start, end []byte) Iterator
 
 	// Iterator over a domain of keys in descending order. End is exclusive.
 	// Start must be greater than end, or the Iterator is invalid.
+	// Iterator must be closed by caller.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	ReverseIterator(start, end []byte) Iterator
 
@@ -116,11 +121,20 @@ type KVStore interface {
 
 	// TODO Not yet implemented.
 	// GetSubKVStore(key *storeKey) KVStore
-
 }
 
 // Alias iterator to db's Iterator for convenience.
 type Iterator = dbm.Iterator
+
+// Iterator over all the keys with a certain prefix in ascending order
+func KVStorePrefixIterator(kvs KVStore, prefix []byte) Iterator {
+	return kvs.Iterator(prefix, PrefixEndBytes(prefix))
+}
+
+// Iterator over all the keys with a certain prefix in descending order.
+func KVStoreReversePrefixIterator(kvs KVStore, prefix []byte) Iterator {
+	return kvs.ReverseIterator(prefix, PrefixEndBytes(prefix))
+}
 
 // CacheKVStore cache-wraps a KVStore.  After calling .Write() on
 // the CacheKVStore, all previously created CacheKVStores on the
@@ -222,3 +236,34 @@ func (key *KVStoreKey) Name() string {
 func (key *KVStoreKey) String() string {
 	return fmt.Sprintf("KVStoreKey{%p, %s}", key, key.name)
 }
+
+// PrefixEndBytes returns the []byte that would end a
+// range query for all []byte with a certain prefix
+// Deals with last byte of prefix being FF without overflowing
+func PrefixEndBytes(prefix []byte) []byte {
+	if prefix == nil {
+		return nil
+	}
+
+	end := make([]byte, len(prefix))
+	copy(end, prefix)
+
+	for {
+		if end[len(end)-1] != byte(255) {
+			end[len(end)-1]++
+			break
+		} else {
+			end = end[:len(end)-1]
+			if len(end) == 0 {
+				end = nil
+				break
+			}
+		}
+	}
+	return end
+}
+
+//----------------------------------------
+
+// key-value result for iterator queries
+type KVPair cmn.KVPair

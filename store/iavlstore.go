@@ -17,6 +17,7 @@ const (
 	defaultIAVLNumHistory = 1<<53 - 1 // DEPRECATED
 )
 
+// load the iavl store
 func LoadIAVLStore(db dbm.DB, id CommitID) (CommitStore, error) {
 	tree := iavl.NewVersionedTree(db, defaultIAVLCacheSize)
 	_, err := tree.LoadVersion(id.Version)
@@ -119,14 +120,7 @@ func (st *iavlStore) Iterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, true)
 }
 
-func (st *iavlStore) Subspace(prefix []byte) Iterator {
-	end := make([]byte, len(prefix))
-	copy(end, prefix)
-	end[len(end)-1]++
-	return st.Iterator(prefix, end)
-}
-
-// Implements IterKVStore.
+// Implements KVStore.
 func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, false)
 }
@@ -141,7 +135,7 @@ func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	if len(req.Data) == 0 {
 		msg := "Query cannot be zero length"
-		return sdk.ErrTxDecode(msg).Result().ToQuery()
+		return sdk.ErrTxDecode(msg).QueryResult()
 	}
 
 	tree := st.tree
@@ -172,10 +166,19 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		} else {
 			_, res.Value = tree.GetVersioned(key, height)
 		}
-
+	case "/subspace":
+		subspace := req.Data
+		res.Key = subspace
+		var KVs []KVPair
+		iterator := sdk.KVStorePrefixIterator(st, subspace)
+		for ; iterator.Valid(); iterator.Next() {
+			KVs = append(KVs, KVPair{iterator.Key(), iterator.Value()})
+		}
+		iterator.Close()
+		res.Value = cdc.MustMarshalBinary(KVs)
 	default:
 		msg := fmt.Sprintf("Unexpected Query path: %v", req.Path)
-		return sdk.ErrUnknownRequest(msg).Result().ToQuery()
+		return sdk.ErrUnknownRequest(msg).QueryResult()
 	}
 	return
 }
@@ -339,6 +342,9 @@ func (iter *iavlIterator) assertIsValid() {
 //----------------------------------------
 
 func cp(bz []byte) (ret []byte) {
+	if bz == nil {
+		return nil
+	}
 	ret = make([]byte, len(bz))
 	copy(ret, bz)
 	return ret

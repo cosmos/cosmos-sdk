@@ -32,7 +32,7 @@ func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {
 		return "", err
 	}
 	if len(pass) < MinPassLength {
-		return "", errors.Errorf("Password must be at least %d characters", MinPassLength)
+		return "", errors.Errorf("password must be at least %d characters", MinPassLength)
 	}
 	return pass, nil
 }
@@ -68,9 +68,31 @@ func GetCheckPassword(prompt, prompt2 string, buf *bufio.Reader) (string, error)
 		return "", err
 	}
 	if pass != pass2 {
-		return "", errors.New("Passphrases don't match")
+		return "", errors.New("passphrases don't match")
 	}
 	return pass, nil
+}
+
+// GetConfirmation will request user give the confirmation from stdin.
+// "y", "Y", "yes", "YES", and "Yes" all count as confirmations.
+// If the input is not recognized, it will ask again.
+func GetConfirmation(prompt string, buf *bufio.Reader) (bool, error) {
+	for {
+		if inputIsTty() {
+			fmt.Print(fmt.Sprintf("%s [y/n]:", prompt))
+		}
+		response, err := readLineFromBuf(buf)
+		if err != nil {
+			return false, err
+		}
+
+		response = strings.ToLower(strings.TrimSpace(response))
+		if response == "y" || response == "yes" {
+			return true, nil
+		} else if response == "n" || response == "no" {
+			return false, nil
+		}
+	}
 }
 
 // inputIsTty returns true iff we have an interactive prompt,

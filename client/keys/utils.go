@@ -2,6 +2,7 @@ package keys
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 
@@ -10,29 +11,28 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 
 	"github.com/cosmos/cosmos-sdk/client"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // KeyDBName is the directory under root where we store the keys
 const KeyDBName = "keys"
 
-var (
-	// keybase is used to make GetKeyBase a singleton
-	keybase keys.Keybase
-)
+// keybase is used to make GetKeyBase a singleton
+var keybase keys.Keybase
 
-// used for outputting keys.Info over REST
-type KeyOutput struct {
-	Name    string `json:"name"`
-	Address string `json:"address"`
-	// TODO add pubkey?
-	// Pubkey  string `json:"pubkey"`
+// TODO make keybase take a database not load from the directory
+
+// initialize a keybase based on the configuration
+func GetKeyBase() (keys.Keybase, error) {
+	rootDir := viper.GetString(cli.HomeFlag)
+	return GetKeyBaseFromDir(rootDir)
 }
 
-// GetKeyBase initializes a keybase based on the configuration
-func GetKeyBase() (keys.Keybase, error) {
+// initialize a keybase based on the configuration
+func GetKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 	if keybase == nil {
-		rootDir := viper.GetString(cli.HomeFlag)
-		db, err := dbm.NewGoLevelDB(KeyDBName, rootDir)
+		db, err := dbm.NewGoLevelDB(KeyDBName, filepath.Join(rootDir, "keys"))
 		if err != nil {
 			return nil, err
 		}
@@ -46,36 +46,82 @@ func SetKeyBase(kb keys.Keybase) {
 	keybase = kb
 }
 
+// used for outputting keys.Info over REST
+type KeyOutput struct {
+	Name    string `json:"name"`
+	Address string `json:"address"`
+	PubKey  string `json:"pub_key"`
+	Seed    string `json:"seed,omitempty"`
+}
+
+// create a list of KeyOutput in bech32 format
+func Bech32KeysOutput(infos []keys.Info) ([]KeyOutput, error) {
+	kos := make([]KeyOutput, len(infos))
+	for i, info := range infos {
+		ko, err := Bech32KeyOutput(info)
+		if err != nil {
+			return nil, err
+		}
+		kos[i] = ko
+	}
+	return kos, nil
+}
+
+// create a KeyOutput in bech32 format
+func Bech32KeyOutput(info keys.Info) (KeyOutput, error) {
+	bechAccount, err := sdk.Bech32ifyAcc(sdk.Address(info.PubKey.Address().Bytes()))
+	if err != nil {
+		return KeyOutput{}, err
+	}
+	bechPubKey, err := sdk.Bech32ifyAccPub(info.PubKey)
+	if err != nil {
+		return KeyOutput{}, err
+	}
+	return KeyOutput{
+		Name:    info.Name,
+		Address: bechAccount,
+		PubKey:  bechPubKey,
+	}, nil
+}
+
 func printInfo(info keys.Info) {
+	ko, err := Bech32KeyOutput(info)
+	if err != nil {
+		panic(err)
+	}
 	switch viper.Get(cli.OutputFlag) {
 	case "text":
-		addr := info.PubKey.Address().String()
-		sep := "\t\t"
-		if len(info.Name) > 7 {
-			sep = "\t"
-		}
-		fmt.Printf("%s%s%s\n", info.Name, sep, addr)
+		fmt.Printf("NAME:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
+		printKeyOutput(ko)
 	case "json":
-		json, err := MarshalJSON(info)
+		out, err := MarshalJSON(ko)
 		if err != nil {
-			panic(err) // really shouldn't happen...
+			panic(err)
 		}
-		fmt.Println(string(json))
+		fmt.Println(string(out))
 	}
 }
 
 func printInfos(infos []keys.Info) {
+	kos, err := Bech32KeysOutput(infos)
+	if err != nil {
+		panic(err)
+	}
 	switch viper.Get(cli.OutputFlag) {
 	case "text":
-		fmt.Println("All keys:")
-		for _, i := range infos {
-			printInfo(i)
+		fmt.Printf("NAME:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
+		for _, ko := range kos {
+			printKeyOutput(ko)
 		}
 	case "json":
-		json, err := MarshalJSON(infos)
+		out, err := MarshalJSON(kos)
 		if err != nil {
-			panic(err) // really shouldn't happen...
+			panic(err)
 		}
-		fmt.Println(string(json))
+		fmt.Println(string(out))
 	}
+}
+
+func printKeyOutput(ko KeyOutput) {
+	fmt.Printf("%s\t%s\t%s\n", ko.Name, ko.Address, ko.PubKey)
 }

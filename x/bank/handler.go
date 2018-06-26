@@ -6,14 +6,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Handle all "bank" type messages.
-func NewHandler(ck CoinKeeper) sdk.Handler {
+// NewHandler returns a handler for "bank" type messages.
+func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
-		case SendMsg:
-			return handleSendMsg(ctx, ck, msg)
-		case IssueMsg:
-			return handleIssueMsg(ctx, ck, msg)
+		case MsgSend:
+			return handleMsgSend(ctx, k, msg)
+		case MsgIssue:
+			return handleMsgIssue(ctx, k, msg)
 		default:
 			errMsg := "Unrecognized bank Msg type: " + reflect.TypeOf(msg).Name()
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -21,29 +21,21 @@ func NewHandler(ck CoinKeeper) sdk.Handler {
 	}
 }
 
-// Handle SendMsg.
-func handleSendMsg(ctx sdk.Context, ck CoinKeeper, msg SendMsg) sdk.Result {
+// Handle MsgSend.
+func handleMsgSend(ctx sdk.Context, k Keeper, msg MsgSend) sdk.Result {
 	// NOTE: totalIn == totalOut should already have been checked
 
-	for _, in := range msg.Inputs {
-		_, err := ck.SubtractCoins(ctx, in.Address, in.Coins)
-		if err != nil {
-			return err.Result()
-		}
+	tags, err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
+	if err != nil {
+		return err.Result()
 	}
 
-	for _, out := range msg.Outputs {
-		_, err := ck.AddCoins(ctx, out.Address, out.Coins)
-		if err != nil {
-			return err.Result()
-		}
+	return sdk.Result{
+		Tags: tags,
 	}
-
-	// TODO: add some tags so we can search it!
-	return sdk.Result{} // TODO
 }
 
-// Handle IssueMsg.
-func handleIssueMsg(ctx sdk.Context, ck CoinKeeper, msg IssueMsg) sdk.Result {
+// Handle MsgIssue.
+func handleMsgIssue(ctx sdk.Context, k Keeper, msg MsgIssue) sdk.Result {
 	panic("not implemented yet")
 }

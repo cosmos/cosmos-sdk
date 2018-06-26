@@ -279,7 +279,7 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Proposer Reward Pool: %s\n", v.ProposerRewardPool.String())
 	resp += fmt.Sprintf("Commission: %s\n", v.Commission.String())
 	resp += fmt.Sprintf("Max Commission Rate: %s\n", v.CommissionMax.String())
-	resp += fmt.Sprintf("Comission Change Rate: %s\n", v.CommissionChangeRate.String())
+	resp += fmt.Sprintf("Commission Change Rate: %s\n", v.CommissionChangeRate.String())
 	resp += fmt.Sprintf("Commission Change Today: %s\n", v.CommissionChangeToday.String())
 	resp += fmt.Sprintf("Previously Bonded Stares: %s\n", v.PrevBondedShares.String())
 

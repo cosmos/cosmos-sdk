@@ -11,6 +11,7 @@ BREAKING CHANGES
 * Signers of a transaction now only sign over their account and sequence number
 * Removed MsgChangePubKey from auth
 * Removed setPubKey from account mapper
+* Removed GetMemo from Tx (it is still on StdTx)
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag

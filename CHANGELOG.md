@@ -37,10 +37,6 @@ FEATURES
 
 FIXES 
 * [gaia] Added self delegation for validators in the genesis creation
-* [cli] fixed cli-bash tests
-* [ci] added cli-bash tests
-* [basecoin] updated basecoin for stake and slashing
-* [docs] fixed references to old cli commands
 * [lcd] tests now don't depend on raw json text
 * [stake] error strings lower case
 * [stake] pool loose tokens now accounts for unbonding and unbonding tokens not associated with any validator

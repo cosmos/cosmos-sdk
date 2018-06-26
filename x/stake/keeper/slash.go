@@ -77,7 +77,12 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, redelegation types.Redelegati
 	return
 }
 
-// slash a validator
+// Slash a validator for an infraction committed at a known height
+// Find the contributing stake at that height and burn the specified fraction
+// of it, updating unbonding delegation & redelegations appropriately
+//
+// CONTRACT: Infraction committed equal to or less than an unbonding period in the past,
+// so all unbonding delegations and redelegations from that height are stored
 func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power int64, fraction sdk.Rat) {
 
 	// Amount of slashing = slash fraction * power at time of infraction
@@ -112,7 +117,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power
 		for _, unbondingDelegation := range unbondingDelegations {
 			amountSlashed := k.slashUnbondingDelegation(ctx, unbondingDelegation, height, fraction)
 			remainingSlashAmount = remainingSlashAmount.Sub(amountSlashed)
-			// Burn unbonding tokens (TODO double-check correctness)
+			// Burn unbonding tokens
 			pool.LooseTokens -= amountSlashed.EvaluateInt().Int64()
 		}
 
@@ -121,7 +126,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power
 		for _, redelegation := range redelegations {
 			amountSlashed := k.slashRedelegation(ctx, redelegation, height, fraction)
 			remainingSlashAmount = remainingSlashAmount.Sub(amountSlashed)
-			// Burn unbonding shares (TODO double-check correctness)
+			// Burn unbonding shares
 			pool.UnbondingShares = pool.UnbondingShares.Sub(amountSlashed)
 		}
 
@@ -146,7 +151,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power
 	return
 }
 
-// revoke a validator
+// Revoke a validator
 func (k Keeper) Revoke(ctx sdk.Context, pubkey crypto.PubKey) {
 	k.setRevoked(ctx, pubkey, true)
 	logger := ctx.Logger().With("module", "x/stake")
@@ -154,7 +159,7 @@ func (k Keeper) Revoke(ctx sdk.Context, pubkey crypto.PubKey) {
 	return
 }
 
-// unrevoke a validator
+// Unrevoke a validator
 func (k Keeper) Unrevoke(ctx sdk.Context, pubkey crypto.PubKey) {
 	k.setRevoked(ctx, pubkey, false)
 	logger := ctx.Logger().With("module", "x/stake")

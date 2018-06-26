@@ -11,6 +11,8 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 )
 
+// setup helper function
+// creates two validators
 func setupHelper(t *testing.T) (sdk.Context, Keeper, types.Params, sdk.Address, crypto.PubKey) {
 	// setup
 	ctx, _, keeper := CreateTestInput(t, false, 10)
@@ -73,8 +75,8 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 		ValidatorAddr:  addrVals[0],
 		CreationHeight: 0,
 		MinTime:        0,
-		InitialBalance: sdk.NewCoin(params.BondDenom, 5),
-		Balance:        sdk.NewCoin(params.BondDenom, 5),
+		InitialBalance: sdk.NewCoin(params.BondDenom, 10),
+		Balance:        sdk.NewCoin(params.BondDenom, 10),
 	}
 	keeper.SetUnbondingDelegation(ctx, ubd)
 
@@ -91,13 +93,13 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	ctx = ctx.WithBlockHeader(abci.Header{Time: int64(0)})
 	keeper.SetUnbondingDelegation(ctx, ubd)
 	slashAmount = keeper.slashUnbondingDelegation(ctx, ubd, 0, fraction)
-	require.Equal(t, int64(2), slashAmount.Evaluate())
+	require.Equal(t, int64(5), slashAmount.Evaluate())
 	ubd, found := keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
 	// initialbalance unchanged
-	require.Equal(t, sdk.NewCoin(params.BondDenom, 5), ubd.InitialBalance)
+	require.Equal(t, sdk.NewCoin(params.BondDenom, 10), ubd.InitialBalance)
 	// balance decreased
-	require.Equal(t, sdk.NewCoin(params.BondDenom, 3), ubd.Balance)
+	require.Equal(t, sdk.NewCoin(params.BondDenom, 5), ubd.Balance)
 }
 
 // tests slashRedelegation
@@ -108,7 +110,7 @@ func TestSlashRedelegation(t *testing.T) {
 	del := types.Delegation{
 		DelegatorAddr: addrDels[0],
 		ValidatorAddr: addrVals[1],
-		Shares:        sdk.NewRat(5),
+		Shares:        sdk.NewRat(10),
 	}
 	keeper.SetDelegation(ctx, del)
 
@@ -118,10 +120,10 @@ func TestSlashRedelegation(t *testing.T) {
 		ValidatorDstAddr: addrVals[1],
 		CreationHeight:   0,
 		MinTime:          0,
-		SharesSrc:        sdk.NewRat(5),
-		SharesDst:        sdk.NewRat(5),
-		InitialBalance:   sdk.NewCoin(params.BondDenom, 5),
-		Balance:          sdk.NewCoin(params.BondDenom, 5),
+		SharesSrc:        sdk.NewRat(10),
+		SharesDst:        sdk.NewRat(10),
+		InitialBalance:   sdk.NewCoin(params.BondDenom, 10),
+		Balance:          sdk.NewCoin(params.BondDenom, 10),
 	}
 	keeper.SetRedelegation(ctx, rd)
 
@@ -138,15 +140,32 @@ func TestSlashRedelegation(t *testing.T) {
 	ctx = ctx.WithBlockHeader(abci.Header{Time: int64(0)})
 	keeper.SetRedelegation(ctx, rd)
 	slashAmount = keeper.slashRedelegation(ctx, rd, 0, fraction)
-	require.Equal(t, int64(2), slashAmount.Evaluate())
+	require.Equal(t, int64(5), slashAmount.Evaluate())
 	rd, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 	// initialbalance unchanged
-	require.Equal(t, sdk.NewCoin(params.BondDenom, 5), rd.InitialBalance)
+	require.Equal(t, sdk.NewCoin(params.BondDenom, 10), rd.InitialBalance)
 	// balance decreased
-	require.Equal(t, sdk.NewCoin(params.BondDenom, 3), rd.Balance)
+	require.Equal(t, sdk.NewCoin(params.BondDenom, 5), rd.Balance)
+
+	// shares decreased
+	del, found = keeper.GetDelegation(ctx, addrDels[0], addrVals[1])
+	require.True(t, found)
+	require.Equal(t, int64(5), del.Shares.Evaluate())
 }
 
-// tests Slash
-func TestSlash(t *testing.T) {
+// tests Slash at the current height
+func TestSlashAtCurrentHeight(t *testing.T) {
+}
+
+// tests Slash at a previous height with an unbonding delegation
+func TestSlashWithUnbondingDelegation(t *testing.T) {
+}
+
+// tests Slash at a previous height with a redelegation
+func TestSlashWithRedelegation(t *testing.T) {
+}
+
+// tests Slash at a previous height with a combination of unbonding delegations and redelegations
+func TestSlashComplex(t *testing.T) {
 }

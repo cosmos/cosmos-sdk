@@ -7,7 +7,7 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 
 	"github.com/tendermint/go-crypto"
-	"github.com/tendermint/go-crypto/keys/bcrypt"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
 )
 
 const (

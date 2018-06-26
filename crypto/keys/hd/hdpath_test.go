@@ -3,7 +3,7 @@ package hd
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/tendermint/go-crypto/keys/bip39"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/bip39"
 )
 
 func ExampleStringifyPathParams() {

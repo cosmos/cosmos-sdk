@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/tendermint/go-crypto/keys"
-	"github.com/tendermint/go-crypto/keys/words"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/words"
 	dbm "github.com/tendermint/tmlibs/db"
 )
 

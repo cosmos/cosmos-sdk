@@ -7,10 +7,11 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/tendermint/go-crypto"
-	"github.com/tendermint/go-crypto/keys/bip39"
-	"github.com/tendermint/go-crypto/keys/hd"
+	"github.com/cosmos/cosmos-sdk/crypto"
 	dbm "github.com/tendermint/tmlibs/db"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/bip39"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 )
 
 var _ Keybase = dbKeybase{}

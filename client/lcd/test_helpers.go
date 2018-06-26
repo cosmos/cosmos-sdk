@@ -17,7 +17,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	crypto "github.com/tendermint/tendermint/crypto"
-	crkeys "github.com/tendermint/go-crypto/keys"
+	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	tmcfg "github.com/tendermint/tendermint/config"
 	nm "github.com/tendermint/tendermint/node"
 	pvm "github.com/tendermint/tendermint/privval"

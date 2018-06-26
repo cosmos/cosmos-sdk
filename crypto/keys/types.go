@@ -2,7 +2,7 @@ package keys
 
 import (
 	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/go-crypto/keys/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 )
 
 // Keybase exposes operations on a generic keystore

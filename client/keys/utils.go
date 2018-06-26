@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	keys "github.com/tendermint/go-crypto/keys"
+	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/tendermint/tmlibs/cli"
 	dbm "github.com/tendermint/tmlibs/db"
 

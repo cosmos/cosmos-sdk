@@ -6,9 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/go-crypto"
-	"github.com/tendermint/go-crypto/keys"
-	"github.com/tendermint/go-crypto/keys/hd"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 
 	dbm "github.com/tendermint/tmlibs/db"
 )
@@ -16,11 +15,11 @@ import (
 // TestKeyManagement makes sure we can manipulate these keys well
 func TestKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
-	cstore := keys.New(
+	cstore := New(
 		dbm.NewMemDB(),
 	)
 
-	algo := keys.Secp256k1
+	algo := Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
 	p1, p2 := "1234", "really-secure!@#$"
 
@@ -29,17 +28,17 @@ func TestKeyManagement(t *testing.T) {
 	require.Nil(t, err)
 	assert.Empty(t, l)
 
-	_, _, err = cstore.CreateMnemonic(n1, keys.English, p1, keys.Ed25519)
+	_, _, err = cstore.CreateMnemonic(n1, English, p1, Ed25519)
 	assert.Error(t, err, "ed25519 keys are currently not supported by keybase")
 
 	// create some keys
 	_, err = cstore.Get(n1)
 	assert.Error(t, err)
-	i, _, err := cstore.CreateMnemonic(n1, keys.English, p1, algo)
+	i, _, err := cstore.CreateMnemonic(n1, English, p1, algo)
 
 	require.NoError(t, err)
 	require.Equal(t, n1, i.GetName())
-	_, _, err = cstore.CreateMnemonic(n2, keys.English, p2, algo)
+	_, _, err = cstore.CreateMnemonic(n2, English, p2, algo)
 	require.NoError(t, err)
 
 	// we can get these keys
@@ -93,19 +92,19 @@ func TestKeyManagement(t *testing.T) {
 // TestSignVerify does some detailed checks on how we sign and validate
 // signatures
 func TestSignVerify(t *testing.T) {
-	cstore := keys.New(
+	cstore := New(
 		dbm.NewMemDB(),
 	)
-	algo := keys.Secp256k1
+	algo := Secp256k1
 
 	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
 	p1, p2, p3 := "1234", "foobar", "foobar"
 
 	// create two users and get their info
-	i1, _, err := cstore.CreateMnemonic(n1, keys.English, p1, algo)
+	i1, _, err := cstore.CreateMnemonic(n1, English, p1, algo)
 	require.Nil(t, err)
 
-	i2, _, err := cstore.CreateMnemonic(n2, keys.English, p2, algo)
+	i2, _, err := cstore.CreateMnemonic(n2, English, p2, algo)
 	require.Nil(t, err)
 
 	// Import a public key
@@ -122,7 +121,7 @@ func TestSignVerify(t *testing.T) {
 	d2 := []byte("some other important info!")
 	d3 := []byte("feels like I forgot something...")
 
-	// try signing both data with both keys...
+	// try signing both data with both ..
 	s11, pub1, err := cstore.Sign(n1, p1, d1)
 	require.Nil(t, err)
 	require.Equal(t, i1.GetPubKey(), pub1)
@@ -168,23 +167,23 @@ func TestSignVerify(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func assertPassword(t *testing.T, cstore keys.Keybase, name, pass, badpass string) {
+func assertPassword(t *testing.T, cstore Keybase, name, pass, badpass string) {
 	err := cstore.Update(name, badpass, pass)
 	assert.NotNil(t, err)
 	err = cstore.Update(name, pass, pass)
 	assert.Nil(t, err, "%+v", err)
 }
 
-// TestExportImport tests exporting and importing keys.
+// TestExportImport tests exporting and importing
 func TestExportImport(t *testing.T) {
 
 	// make the storage with reasonable defaults
 	db := dbm.NewMemDB()
-	cstore := keys.New(
+	cstore := New(
 		db,
 	)
 
-	info, _, err := cstore.CreateMnemonic("john", keys.English,"secretcpw",  keys.Secp256k1)
+	info, _, err := cstore.CreateMnemonic("john", English,"secretcpw",  Secp256k1)
 	assert.NoError(t, err)
 	assert.Equal(t, info.GetName(), "john")
 
@@ -210,13 +209,13 @@ func TestExportImport(t *testing.T) {
 func TestExportImportPubKey(t *testing.T) {
 	// make the storage with reasonable defaults
 	db := dbm.NewMemDB()
-	cstore := keys.New(
+	cstore := New(
 		db,
 	)
 
 	// CreateMnemonic a private-public key pair and ensure consistency
 	notPasswd := "n9y25ah7"
-	info, _, err := cstore.CreateMnemonic("john", keys.English, notPasswd, keys.Secp256k1)
+	info, _, err := cstore.CreateMnemonic("john", English, notPasswd, Secp256k1)
 	assert.Nil(t, err)
 	assert.NotEqual(t, info, "")
 	assert.Equal(t, info.GetName(), "john")
@@ -252,16 +251,16 @@ func TestExportImportPubKey(t *testing.T) {
 func TestAdvancedKeyManagement(t *testing.T) {
 
 	// make the storage with reasonable defaults
-	cstore := keys.New(
+	cstore := New(
 		dbm.NewMemDB(),
 	)
 
-	algo := keys.Secp256k1
+	algo := Secp256k1
 	n1, n2 := "old-name", "new name"
 	p1, p2 := "1234", "foobar"
 
 	// make sure key works with initial password
-	_, _, err := cstore.CreateMnemonic(n1, keys.English, p1, algo)
+	_, _, err := cstore.CreateMnemonic(n1, English, p1, algo)
 	require.Nil(t, err, "%+v", err)
 	assertPassword(t, cstore, n1, p1, p2)
 
@@ -301,16 +300,16 @@ func TestAdvancedKeyManagement(t *testing.T) {
 func TestSeedPhrase(t *testing.T) {
 
 	// make the storage with reasonable defaults
-	cstore := keys.New(
+	cstore := New(
 		dbm.NewMemDB(),
 	)
 
-	algo := keys.Secp256k1
+	algo := Secp256k1
 	n1, n2 := "lost-key", "found-again"
 	p1, p2 := "1234", "foobar"
 
 	// make sure key works with initial password
-	info, mnemonic, err := cstore.CreateMnemonic(n1, keys.English, p1, algo)
+	info, mnemonic, err := cstore.CreateMnemonic(n1, English, p1, algo)
 	require.Nil(t, err, "%+v", err)
 	assert.Equal(t, n1, info.GetName())
 	assert.NotEmpty(t, mnemonic)
@@ -332,14 +331,14 @@ func TestSeedPhrase(t *testing.T) {
 
 func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
-	cstore := keys.New(
+	cstore := New(
 		dbm.NewMemDB(),
 	)
 
-	sec := keys.Secp256k1
+	sec := Secp256k1
 
 	// Add keys and see they return in alphabetical order
-	bob, _, err := cstore.CreateMnemonic("Bob", keys.English, "friend", sec)
+	bob, _, err := cstore.CreateMnemonic("Bob", English, "friend", sec)
 	if err != nil {
 		// this should never happen
 		fmt.Println(err)
@@ -347,8 +346,8 @@ func ExampleNew() {
 		// return info here just like in List
 		fmt.Println(bob.GetName())
 	}
-	cstore.CreateMnemonic("Alice", keys.English, "secret", sec)
-	cstore.CreateMnemonic("Carl", keys.English, "mitm", sec)
+	cstore.CreateMnemonic("Alice", English, "secret", sec)
+	cstore.CreateMnemonic("Carl", English, "mitm", sec)
 	info, _ := cstore.List()
 	for _, i := range info {
 		fmt.Println(i.GetName())

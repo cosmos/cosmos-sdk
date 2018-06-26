@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/viper"
 
 	crypto "github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/go-crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/tendermint/tmlibs/cli"
 )
 

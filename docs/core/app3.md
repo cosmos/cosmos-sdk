@@ -1,20 +1,11 @@
-### Transactions
+# Authentication
 
-A message is a set of instructions for a state transition.
+In the previous app, we introduced a new `Msg` type and used Amino to encode
+transactions. In that example, our `Tx` implementation was still just a simple
+wrapper of the `Msg`, providing no actual authentication. Here, in `App3`, we
+expand on `App2` to provide real authentication in the transactions.
 
-For a message to be valid, it must be accompanied by at least one 
-digital signature. The signatures required are determined solely 
-by the contents of the message.
-
-A transaction is a message with additional information for authentication:
-
-```go
-type Tx interface {
-
-	GetMsg() Msg
-
-}
-```
+## StdTx
 
 The standard way to create a transaction from a message is to use the `StdTx` struct defined in the `x/auth` module.
 
@@ -72,53 +63,6 @@ type StdFee struct {
 	Gas    int64     `json:"gas"`
 }
 ```
-
-### Encoding and Decoding Transactions
-
-Messages and transactions are designed to be generic enough for developers to
-specify their own encoding schemes.  This enables the SDK to be used as the
-framwork for constructing already specified cryptocurrency state machines, for
-instance Ethereum. 
-
-When initializing an application, a developer can specify a `TxDecoder`
-function which determines how an arbitrary byte array should be unmarshalled
-into a `Tx`: 
-
-```go
-type TxDecoder func(txBytes []byte) (Tx, error)
-```
-
-The default tx decoder is the Tendermint wire format which uses the go-amino library
-for encoding and decoding all message types.
-
-In `Basecoin`, we use the default transaction decoder.  The `go-amino` library has the nice
-property that it can unmarshal into interface types, but it requires the
-relevant types to be registered ahead of type. Registration happens on a
-`Codec` object, so as not to taint the global name space.
-
-For instance, in `Basecoin`, we wish to register the `MsgSend` and `MsgIssue`
-types:
-
-```go
-cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-cdc.RegisterConcrete(bank.MsgSend{}, "cosmos-sdk/MsgSend", nil)
-cdc.RegisterConcrete(bank.MsgIssue{}, "cosmos-sdk/MsgIssue", nil)
-```
-
-Note how each concrete type is given a name - these name determine the type's
-unique "prefix bytes" during encoding.  A registered type will always use the
-same prefix-bytes, regardless of what interface it is satisfying.  For more
-details, see the [go-amino documentation](https://github.com/tendermint/go-amino/blob/develop).
-
-If you wish to use a custom encoding scheme, you must define a TxDecoder function
-and set it as the decoder in your extended baseapp using the `SetTxDecoder(decoder sdk.TxDecoder)`.
-
-Ex:
-
-```go
-app.SetTxDecoder(CustomTxDecodeFn)
-```
-
 
 ## AnteHandler
 

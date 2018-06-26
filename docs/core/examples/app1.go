@@ -14,17 +14,17 @@ import (
 )
 
 const (
-	appName = "MyApp"
+	app1Name = "App1"
 )
 
-func NewApp(logger log.Logger, db dbm.DB) *bapp.BaseApp {
+func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 
 	// TODO: make this an interface or pass in
 	// a TxDecoder instead.
 	cdc := wire.NewCodec()
 
 	// Create the base application object.
-	app := bapp.NewBaseApp(appName, cdc, logger, db)
+	app := bapp.NewBaseApp(app1Name, cdc, logger, db)
 
 	// Create a key for accessing the account store.
 	keyAccount := sdk.NewKVStoreKey("acc")
@@ -35,7 +35,7 @@ func NewApp(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	// Register message routes.
 	// Note the handler gets access to the account store.
 	app.Router().
-		AddRoute("bank", NewHandler(keyAccount))
+		AddRoute("bank", NewApp1Handler(keyAccount))
 
 	// Mount stores and load the latest state.
 	app.MountStoresIAVL(keyAccount)
@@ -99,7 +99,7 @@ func (msg MsgSend) GetSigners() []sdk.Address {
 //------------------------------------------------------------------
 // Handler for the message
 
-func NewHandler(keyAcc *sdk.KVStoreKey) sdk.Handler {
+func NewApp1Handler(keyAcc *sdk.KVStoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
 		case MsgSend:
@@ -142,23 +142,23 @@ type acc struct {
 // Tx
 
 // Simple tx to wrap the Msg.
-type tx struct {
+type app1Tx struct {
 	MsgSend
 }
 
 // This tx only has one Msg.
-func (tx tx) GetMsgs() []sdk.Msg {
+func (tx app1Tx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{tx.MsgSend}
 }
 
 // TODO: remove the need for this
-func (tx tx) GetMemo() string {
+func (tx app1Tx) GetMemo() string {
 	return ""
 }
 
 // JSON decode MsgSend.
 func txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
-	var tx tx
+	var tx app1Tx
 	err := json.Unmarshal(txBytes, &tx)
 	if err != nil {
 		return nil, sdk.ErrTxDecode(err.Error())

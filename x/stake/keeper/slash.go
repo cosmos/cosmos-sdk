@@ -13,14 +13,14 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 	now := ctx.BlockHeader().Time
 
 	// If unbonding started before this height, stake didn't contribute to infraction
-	if unbondingDelegation.CreationHeight > height {
-		return
+	if unbondingDelegation.CreationHeight < height {
+		return sdk.ZeroRat()
 	}
 
 	if unbondingDelegation.MinTime < now {
 		// Unbonding delegation no longer eligible for slashing, skip it
 		// TODO We could settle and delete it automatically
-		return
+		return sdk.ZeroRat()
 	}
 
 	// Calculate slash amount proportional to stake contributing to infraction
@@ -45,13 +45,13 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, redelegation types.Redelegati
 
 	// If redelegation started before this height, stake didn't contribute to infraction
 	if redelegation.CreationHeight < height {
-		return
+		return sdk.ZeroRat()
 	}
 
 	if redelegation.MinTime < now {
 		// Redelegation no longer eligible for slashing, skip it
 		// TODO We could delete it automatically
-		return
+		return sdk.ZeroRat()
 	}
 
 	// Calculate slash amount proportional to stake contributing to infraction

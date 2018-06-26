@@ -1,0 +1,17 @@
+---
+
+- hosts: all
+  connection: local
+  any_errors_fatal: true
+  gather_facts: no
+
+  tasks:
+  - name: Gather status
+    uri:
+      body_format: json
+      url: "http://{{inventory_hostname}}:26657/status"
+    register: status
+
+  - name: Print status
+    debug: var=status.json.result
+

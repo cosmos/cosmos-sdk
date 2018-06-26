@@ -1,0 +1,50 @@
+---
+
+- name: Copy binary
+  copy:
+    src: "{{BINARY}}"
+    dest: /usr/bin
+    mode: 0755
+
+- name: Get node ID
+  command: "cat /etc/gaiad-nodeid"
+  changed_when: false
+  register: nodeid
+
+- name: Create initial transaction
+  command: "/usr/bin/gaiad init gen-tx --name=node{{nodeid.stdout_lines[0]}}"
+  become: yes
+  become_user: gaiad
+  args:
+    creates: /home/gaiad/.gaiad/config/gentx
+
+- name: Find gentx file
+  command: "ls /home/gaiad/.gaiad/config/gentx"
+  changed_when: false
+  register: gentxfile
+
+- name: Clear local gen-tx list
+  file: path=files/ state=absent
+  connection: local
+  run_once: yes
+
+- name: Get gen-tx
+  fetch:
+    dest: files/
+    src: "/home/gaiad/.gaiad/config/gentx/{{gentxfile.stdout_lines[0]}}"
+    flat: yes
+
+- name: Copy generated transactions to all nodes
+  copy:
+    src: files/
+    dest: /home/gaiad/.gaiad/config/gentx/
+  become: yes
+  become_user: gaiad
+
+- name: Generate genesis.json
+  command: "/usr/bin/gaiad init --gen-txs --name=node{{nodeid.stdout_lines[0]}} --chain-id={{TESTNET_NAME}}"
+  become: yes
+  become_user: gaiad
+  args:
+    creates: /home/gaiad/.gaiad/config/genesis.json
+

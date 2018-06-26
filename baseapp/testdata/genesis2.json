@@ -1,0 +1,39 @@
+{
+  "chain_id": "addr_accounts_chain",
+  "app_options": {
+    "accounts": [{
+      "name": "alice",
+      "pub_key": {
+        "type": "ed25519",
+        "data": "DBD9A46C45868F0A37C92B53113C09B048FBD87B5FBC2F8B199052973B8FAA36"
+      },
+      "coins": [
+        {
+          "denom": "one",
+          "amount": 111
+        }
+      ]
+    }, {
+      "name": "bob",
+      "address": "C471FB670E44D219EE6DF2FC284BE38793ACBCE1",
+      "coins": [
+        {
+          "denom": "two",
+          "amount": 222
+        }
+      ]
+    }, {
+      "name": "sam",
+      "pub_key": {
+        "type": "secp256k1",
+        "data": "02AA8342F63CCCCE6DDB128525BA048CE0B2993DA3B4308746E1F216361A87651E"
+      },
+      "coins": [
+        {
+          "denom": "four",
+          "amount": 444
+        }
+      ]
+    }]
+  }
+}

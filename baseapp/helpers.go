@@ -2,7 +2,7 @@ package baseapp
 
 import (
 	"github.com/tendermint/abci/server"
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 )
 

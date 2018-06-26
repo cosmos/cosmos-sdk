@@ -5,7 +5,7 @@ import (
 
 	cmn "github.com/tendermint/tmlibs/common"
 
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"reflect"
 )
 

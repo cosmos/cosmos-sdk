@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/spf13/pflag"
-	crypto "github.com/tendermint/go-crypto"
+	crypto "github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/server"

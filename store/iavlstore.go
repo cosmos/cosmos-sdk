@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"sync"
 
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/go-amino"
 	"github.com/tendermint/iavl"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -167,7 +168,13 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 				break
 			}
 			res.Value = value
-			res.Proof = proof.Bytes()
+			cdc := amino.NewCodec()
+			p, err := cdc.MarshalBinary(proof)
+			if err != nil {
+				res.Log = err.Error()
+				break
+			}
+			res.Proof = p
 		} else {
 			_, res.Value = tree.GetVersioned(key, height)
 		}

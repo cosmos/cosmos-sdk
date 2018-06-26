@@ -346,7 +346,7 @@ We are all set!
 
 For this tutorial, we will code a **simple governance application**, accompagnied by a **simple governance module**. It will allow us to explain most of the basic notions required to build a functioning application on the Cosmos-SDK. Note that this is not the governance module used for the Cosmos Hub. A much more [advanced governance module](https://github.com/cosmos/cosmos-sdk/tree/develop/x/gov) will be used instead.
 
-All the code for the `simple_governance` application can be found [here](https://github.com/gamarin2/cosmos-sdk/tree/module_tutorial/examples/simpleGov/x/simple_governance). You'll notice that the module and app aren't located at the root level of the repo but in the examples directory. This is just for convenience, you can code your module and application directly in the root directory.
+All the code for the `simple_governance` application can be found [here](https://github.com/fedekunze/cosmos-sdk/tree/module_tutorial/examples/simpleGov/x/simple_governance). You'll notice that the module and app aren't located at the root level of the repo but in the examples directory. This is just for convenience, you can code your module and application directly in the root directory.
 
 Without further talk, let's get into it!
 

@@ -725,9 +725,14 @@ func GenTx(chainID string, msgs []sdk.Msg, accnums []int64, seq []int64, priv ..
 
 	sigs := make([]auth.StdSignature, len(priv))
 	for i, p := range priv {
+		sig, err := p.Sign(auth.StdSignBytes(chainID, accnums[i], seq[i], fee, msgs, ""))
+		// TODO: replace with proper error handling:
+		if err != nil {
+			panic(err)
+		}
 		sigs[i] = auth.StdSignature{
 			PubKey:        p.PubKey(),
-			Signature:     p.Sign(auth.StdSignBytes(chainID, accnums[i], seq[i], fee, msgs, "")),
+			Signature:     sig,
 			AccountNumber: accnums[i],
 			Sequence:      seq[i],
 		}

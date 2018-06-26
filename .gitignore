@@ -1,0 +1,32 @@
+# OS
+.DS_Store
+*.swp
+*.swo
+.vscode
+.idea
+
+# Build
+vendor
+build
+tools/bin/*
+examples/build/*
+docs/_build
+
+# Data - ideally these don't exist
+examples/basecoin/app/data
+baseapp/data/*
+client/lcd/keys/*
+mytestnet
+
+# Testing
+coverage.txt
+profile.out
+
+# Vagrant
+.vagrant/
+*.box
+*.log
+vagrant
+
+# Graphviz
+dependency-graph.png

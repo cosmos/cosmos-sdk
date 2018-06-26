@@ -573,6 +573,8 @@ func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Add
 	receiveAddr := receiveInfo.PubKey.Address()
 	receiveAddrBech := sdk.MustBech32ifyAcc(receiveAddr)
 
+	chainID := viper.GetString(client.FlagChainID)
+
 	// get the account to get the sequence
 	acc := getAccount(t, port, addr)
 	accnum := acc.GetAccountNumber()
@@ -585,13 +587,14 @@ func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Add
 		"account_number":%d,
 		"sequence": %d,
 		"gas": 100000,
+		"chain_id": "%s",
 		"amount":[
 			{
 				"denom": "%s",
 				"amount": 1
 			}
 		]
-	}`, name, password, accnum, sequence, "steak"))
+	}`, name, password, accnum, sequence, chainID, "steak"))
 	res, body := Request(t, port, "POST", "/ibc/testchain/"+receiveAddrBech+"/send", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -624,6 +627,8 @@ func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, 
 	delegatorAddrBech := sdk.MustBech32ifyAcc(delegatorAddr)
 	validatorAddrBech := sdk.MustBech32ifyVal(validatorAddr)
 
+	chainID := viper.GetString(client.FlagChainID)
+
 	// send
 	jsonStr := []byte(fmt.Sprintf(`{
 		"name": "%s",
@@ -631,6 +636,7 @@ func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, 
 		"account_number": %d,
 		"sequence": %d,
 		"gas": 10000,
+		"chain_id": "%s",
 		"delegations": [
 			{
 				"delegator_addr": "%s",
@@ -642,7 +648,7 @@ func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, 
 		"complete_unbondings": [], 
 		"begin_redelegates": [], 
 		"complete_redelegates": []
-	}`, name, password, accnum, sequence, delegatorAddrBech, validatorAddrBech, "steak"))
+	}`, name, password, accnum, sequence, chainID, delegatorAddrBech, validatorAddrBech, "steak"))
 	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -664,6 +670,8 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 	delegatorAddrBech := sdk.MustBech32ifyAcc(delegatorAddr)
 	validatorAddrBech := sdk.MustBech32ifyVal(validatorAddr)
 
+	chainID := viper.GetString(client.FlagChainID)
+
 	// send
 	jsonStr := []byte(fmt.Sprintf(`{
 		"name": "%s",
@@ -671,6 +679,7 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 		"account_number": %d,
 		"sequence": %d,
 		"gas": 10000,
+		"chain_id": "%s",
 		"delegations": [],
 		"begin_unbondings": [
 			{
@@ -682,7 +691,7 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 		"complete_unbondings": [], 
 		"begin_redelegates": [], 
 		"complete_redelegates": []
-	}`, name, password, accnum, sequence, delegatorAddrBech, validatorAddrBech))
+	}`, name, password, accnum, sequence, chainID, delegatorAddrBech, validatorAddrBech))
 	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -705,6 +714,8 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 	validatorSrcAddrBech := sdk.MustBech32ifyVal(validatorSrcAddr)
 	validatorDstAddrBech := sdk.MustBech32ifyVal(validatorDstAddr)
 
+	chainID := viper.GetString(client.FlagChainID)
+
 	// send
 	jsonStr := []byte(fmt.Sprintf(`{
 		"name": "%s",
@@ -712,6 +723,7 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 		"account_number": %d,
 		"sequence": %d,
 		"gas": 10000,
+		"chain_id": "%s",
 		"delegations": [],
 		"begin_unbondings": [], 
 		"complete_unbondings": [], 
@@ -724,7 +736,7 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 			}
 		], 
 		"complete_redelegates": []
-	}`, name, password, accnum, sequence, delegatorAddrBech, validatorSrcAddrBech, validatorDstAddrBech))
+	}`, name, password, accnum, sequence, chainID, delegatorAddrBech, validatorSrcAddrBech, validatorDstAddrBech))
 	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 

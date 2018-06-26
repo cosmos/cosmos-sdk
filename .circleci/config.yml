@@ -68,7 +68,7 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             gometalinter --disable-all --enable='golint' --vendor ./...
-  
+
   test_unit:
     <<: *defaults
     parallelism: 4
@@ -84,7 +84,7 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make test_unit
-  
+
   test_cli:
     <<: *defaults
     parallelism: 1
@@ -100,7 +100,7 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make test_cli_retry
-  
+
   test_cover:
     <<: *defaults
     parallelism: 4

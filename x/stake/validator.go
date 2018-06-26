@@ -272,8 +272,8 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp := "Validator \n"
 	resp += fmt.Sprintf("Owner: %s\n", bechOwner)
 	resp += fmt.Sprintf("Validator: %s\n", bechVal)
-	resp += fmt.Sprintf("Shares: Status %s,  Amount: %s\n", sdk.BondStatusToString(v.PoolShares.Status), v.PoolShares.Amount.String())
-	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.String())
+	resp += fmt.Sprintf("Shares: Status %s,  Amount: %s\n", sdk.BondStatusToString(v.PoolShares.Status), v.PoolShares.Amount.FloatString())
+	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.FloatString())
 	resp += fmt.Sprintf("Description: %s\n", v.Description)
 	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
 	resp += fmt.Sprintf("Proposer Reward Pool: %s\n", v.ProposerRewardPool.String())

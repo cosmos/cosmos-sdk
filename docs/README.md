@@ -12,9 +12,9 @@ NOTE: This documentation is a work-in-progress!
     - [Introduction](core/intro.md) - Intro to the tutorial
     - [App1 - The Basics](core/app1.md)
         - [Messages](core/app1.md#messages) - Messages contain the content of a transaction
+        - [Stores](core/app1.md#kvstore) - KVStore is a Merkle Key-Value store. 
         - [Handlers](core/app1.md#handlers) - Handlers are the workhorse of the app!
         - [BaseApp](core/app1.md#baseapp) - BaseApp is the base layer of the application
-        - [The MultiStore](core/app1.md#multistore) - MultiStore is a rich Merkle database
     - [App2 - Amino](core/app2.md)
         - [Amino](core/app2.md#amino) - Amino is the primary serialization library used in the SDK
     - [App3 - Authentication](core/app3.md)

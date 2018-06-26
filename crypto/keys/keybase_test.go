@@ -1,4 +1,4 @@
-package keys_test
+package keys
 
 import (
 	"fmt"

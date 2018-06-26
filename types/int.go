@@ -1,7 +1,11 @@
 package types
 
 import (
+	"fmt"
 	"math/big"
+	"os"
+	"runtime/debug"
+	"runtime/pprof"
 )
 
 func newIntegerFromString(s string) (*big.Int, bool) {
@@ -43,6 +47,13 @@ func marshalAmino(i *big.Int) (string, error) {
 
 // UnmarshalAmino for custom decoding scheme
 func unmarshalAmino(i *big.Int, text string) (err error) {
+	if i == nil {
+		fmt.Println(i)
+		fo, _ := os.Create("output.txt")
+		fo.Write(debug.Stack())
+		pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+		panic("button")
+	}
 	return i.UnmarshalText([]byte(text))
 }
 
@@ -53,6 +64,13 @@ func marshalJSON(i *big.Int) ([]byte, error) {
 
 // UnmarshalJSON for custom decoding scheme
 func unmarshalJSON(i *big.Int, bz []byte) error {
+	if i == nil {
+		fmt.Println(i)
+		fo, _ := os.Create("/home/valar/Code/go/src/github.com/cosmos/cosmos-sdk/output.txt")
+		fo.Write(debug.Stack())
+		pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+		panic("button")
+	}
 	return i.UnmarshalText(bz)
 }
 
@@ -216,6 +234,9 @@ func (i Int) Neg() (res Int) {
 
 // MarshalAmino defines custom encoding scheme
 func (i Int) MarshalAmino() (string, error) {
+	if i.i == nil { // Necessary since default Uint initialization has i.i as nil
+		i.i = new(big.Int)
+	}
 	return marshalAmino(i.i)
 }
 
@@ -229,6 +250,9 @@ func (i *Int) UnmarshalAmino(text string) error {
 
 // MarshalJSON defines custom encoding scheme
 func (i Int) MarshalJSON() ([]byte, error) {
+	if i.i == nil { // Necessary since default Uint initialization has i.i as nil
+		i.i = new(big.Int)
+	}
 	return marshalJSON(i.i)
 }
 
@@ -398,6 +422,9 @@ func (i Uint) DivRaw(i2 uint64) Uint {
 
 // MarshalAmino defines custom encoding scheme
 func (i Uint) MarshalAmino() (string, error) {
+	if i.i == nil { // Necessary since default Uint initialization has i.i as nil
+		i.i = new(big.Int)
+	}
 	return marshalAmino(i.i)
 }
 
@@ -411,6 +438,9 @@ func (i *Uint) UnmarshalAmino(text string) error {
 
 // MarshalJSON defines custom encoding scheme
 func (i Uint) MarshalJSON() ([]byte, error) {
+	if i.i == nil { // Necessary since default Uint initialization has i.i as nil
+		i.i = new(big.Int)
+	}
 	return marshalJSON(i.i)
 }
 

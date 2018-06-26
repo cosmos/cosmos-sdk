@@ -221,6 +221,9 @@ func (i Int) MarshalAmino() (string, error) {
 
 // UnmarshalAmino defines custom decoding scheme
 func (i *Int) UnmarshalAmino(text string) error {
+	if i.i == nil { // Necessary since default Int initialization has i.i as nil
+		i.i = new(big.Int)
+	}
 	return unmarshalAmino(i.i, text)
 }
 
@@ -231,6 +234,9 @@ func (i Int) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON defines custom decoding scheme
 func (i *Int) UnmarshalJSON(bz []byte) error {
+	if i.i == nil { // Necessary since default Int initialization has i.i as nil
+		i.i = new(big.Int)
+	}
 	return unmarshalJSON(i.i, bz)
 }
 
@@ -397,6 +403,9 @@ func (i Uint) MarshalAmino() (string, error) {
 
 // UnmarshalAmino defines custom decoding scheme
 func (i *Uint) UnmarshalAmino(text string) error {
+	if i.i == nil { // Necessary since default Uint initialization has i.i as nil
+		i.i = new(big.Int)
+	}
 	return unmarshalAmino(i.i, text)
 }
 
@@ -407,5 +416,8 @@ func (i Uint) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON defines custom decoding scheme
 func (i *Uint) UnmarshalJSON(bz []byte) error {
+	if i.i == nil { // Necessary since default Uint initialization has i.i as nil
+		i.i = new(big.Int)
+	}
 	return unmarshalJSON(i.i, bz)
 }

@@ -14,7 +14,7 @@ The *networking* layer makes sure that each node receives transactions. The *con
 
 Before Tendermint, building a blockchain required building all three layers from the ground up. It was such a tedious task that most developers preferred to fork or replicate the Bitcoin codebase, but were constrainted by the limitations of Bitcoin's protocol. The Ethereum Virtual Machine (EVM) was designed to solve this problem and simplify decentralized application development by allowing customizable logic to be executed through smart contracts. But it did not resolve the limitations (interoperability, scalability and customization) of blockchains themselves. Go-Ethereum remains a very monolithic tech stack that is difficult to hard-fork much like Bitcoin's codebase. 
 
-Tendermint was designed to address these issues and provide developers with an alternative. The goal of Tendermint is to provide the *networking* and *consensus* layers of a blockchain as a generic engine to power any application developers want to build. With Tendermint, developers only have to focus on the *application* layer, thereby saving hundreds of hours of work and costly development set-ups. For reference, Tendermint also designates the name of the byzantine fault tolerant consensus algorithm used within the Tendermint Core engine.
+Tendermint was designed to address these issues and provide developers with an laternative. The goal of Tendermint is to provide the *networking* and *consensus* layers of a blockchain as a generic engine to power any application developers want to build. With Tendermint, developers only have to focus on the *application* layer, thereby saving hundreds of hours of work and costly development set-ups. For reference, Tendermint also designates the name of the byzantine fault tolerant consensus algorithm used within the Tendermint Core engine.
 
 Tendermint connects the blockchain engine, Tendermint Core (*networking* and *consensus* layers), to the *application* layer via a socket protocol called the  [ABCI](https://github.com/tendermint/abci), short for Application-BlockChain Interface. Developers only have to implement a few messages to build an ABCI-enabled application that runs on top of the Tendermint Core engine. ABCI is language agnostic, meaning that developers can build the *application* part of their blockchain in any programming language. Building on top of the Tendermint Core engine also provides the following benefits:
 
@@ -77,7 +77,7 @@ Let us give a high-level overview of  how the *Consensus Engine* and the *Applic
 
 ## Architecture of a SDK-app
 
-The Cosmos-SDK gives the basic template for an application architecture. You can find this template [here](https://github.com/cosmos/cosmos-sdk).
+The Cosmos-SDK gives the basic template for a Tendermint-based blockchain application. You can find this template [here](https://github.com/cosmos/cosmos-sdk).
 
 In essence, a blockchain application is simply a replicated state-machine. There is a state (e.g. for a cryptocurrency, how many coins each account holds), and transactions that trigger a state transition. As the application developer you define the state, the transaction types and how different transactions modify the state.
 
@@ -355,7 +355,7 @@ Without further talk, let's get into it!
 We will start by writting down your module's requirements. We are designing a simple governance module, in which we want:
 
 - Simple text proposals, that any coin holder can submit.
-- Proposals must be submitted with a deposit in Atoms. If the deposit is superior to a predefined value called `MinDeposit`, the proposal enters the voting period. Otherwise it is rejected.
+- Proposals must be submitted with a deposit in Atoms. If the deposit is larger than a  `MinDeposit`, the associated proposal enters the voting period. Otherwise it is rejected. 
 - Bonded Atom holders can vote on proposal on a 1 bonded Atom 1 vote basis
 - Bonded Atom holders can choose between 3 options when casting a vote: `Yes`, `No` and `Abstain`.
 - If, at the end of the voting period, there are more `Yes` votes than `No` votes, the proposal is accepted. Otherwise, it is rejected.
@@ -390,20 +390,14 @@ type Proposal struct {
 }
 ```
 
-In terms of store, we will just create one KVStore in the multistore to store `Proposals`. We will also store the vote (`Yes`, `No` or `Abstain`) chosen by each voter on each proposal.
+In terms of store, we will just create one [KVStore](#kvstore) in the multistore to store `Proposals`. We will also store the `Vote` (`Yes`, `No` or `Abstain`) chosen by each voter on each proposal.
 
-- `Proposals` will be indexed by `'proposals'|<proposalID>`.
-- `Votes` (`Yes`, `No`, `Abstain`) will be indexed by `'proposals'|<proposalID>|'votes'|<voterAddress>`.
 
-Notice the quote mark on `'proposals'` and `'votes'`. They indicate that these are constant keywords. So, for example, the option casted by voter with address `0x01` on proposal `0101` will be stored at index `'proposals'|0101|'votes'|0x01`.
+### Messages
 
-These keywords are used to faciliate range queries. Range queries (TODO: Link to formal spec) allow developer to query a subspace of the store, and return an iterator. They are made possible by the nice properties of the [IAVL+ tree](https://github.com/tendermint/iavl) that is used in the background. In practice, this means that it is possible to store and query a Key-Value pair in O(1), while still being able to iterate over a given subspace of Key-Value pairs. For example, we can query all the addresses that voted on a given proposal, along with their votes, by calling `rangeQuery(SimpleGovStore, <proposalID|'addresses'>)`.
+As a module developer, what you have to define are not `Transactions`, but `Messages`. Both transactions and messages exist in the Cosmos-SDK, but a transaction differs from a message in that a message is contained in a transaction. Transactions wrap around messages and add standard information like signatures and fees. As a module developer, you do not have to worry about transactions, only messages.
 
-### Transactions
-
-The title of this section is a bit misleading. Indeed, what you, as a module developer, have to define are not `Transactions`, but `Messages`. Both transactions and messages exist in the Cosmos-SDK, but a transaction differs from a message in that a message is contained in a transaction. Transactions wrap around messages and add standard information like signatures and fees. As a module developer, you do not have to worry about transactions, only messages.
-
-Let us define the messages we need in order to modify the state. Based on our features, we only need two messages:
+Let us define the messages we need in order to modify the state. Based on the requirements above, we need to define two types of messages: 
 
 - `SubmitProposalMsg`: to submit proposals
 - `VoteMsg`: to vote on proposals
@@ -427,7 +421,19 @@ type VoteMsg struct {
 
 ## Implementation
 
-Now, that we have our types defined, we can start actually implementing the module.
+Now, that we have our types defined, we can start actually implementing the application.
+
+In the root of your fork of the SDK, create an `app` and `cmd` folder. In this folder, we will create the main file for our application, `app.go` and the repository to handle REST and CLI commands for our app. 
+
+```bash
+mkdir app cmd 
+mkdir -p cmd/simplegovcli cmd/simplegovd
+touch app/app.go cmd/simplegovcli/main.go cmd/simplegovd/main.go
+```
+
+We will take care of these files later in the tutorial. The first step is to take care of our simple governance module.
+
+### Simple governance module
 
 First, let us go into the module's folder and create a folder for our module.
 
@@ -435,6 +441,8 @@ First, let us go into the module's folder and create a folder for our module.
 cd x/
 mkdir simple_governance
 cd simple_governance
+mkdir -p client/cli client/rest
+touch client/cli/simple_governance.go client/rest/simple_governance.go errors.go handler.go handler_test.go keeper_keys.go keeper_test.go keeper.go test_common.go test_types.go types.go wire.go
 ```
 
 Let us start by adding the files we will need. Your module's folder should look something like that:
@@ -448,20 +456,16 @@ x
       │     └─── rest
       │           └─── simple_governance.go
       ├─── errors.go
-      ├─── handler_test.go
       ├─── handler.go
       ├─── keeper_keys.go
-      ├─── keeper_test.go
       ├─── keeper.go
-      ├─── test_common.go
-      ├─── types_test.go
       ├─── types.go
       └─── wire.go
 ```
 
 Let us go into the detail of each of these files.
 
-### Types
+#### Types (`types.go`)
 
 In this file, we define the custom types for our module. This includes the types from the [State](#State) section and the custom message types defined in the [Transactions](#Transactions) section.
 
@@ -483,11 +487,12 @@ For our simple governance messages, this means:
 - For `VoteMsg`, we check that the address and option are valid and that the proposalID is not negative.
 - As for other methods, less customization is required. You can check the code to see a standard way of implementing these.
 
-### Keeper
+#### Keeper (`keeper.go`)
 
-#### Short intro to keepers
+##### Short intro to keepers
 
-`Keepers` handles read and writes for modules' stores. This is where the notion of capability enters into play.
+`Keepers` are a module abstraction that handle reading/writing to the module store. This is a practical implementation of the [`Object Capability Model`](link) for Cosmos. 
+
 
 As module developers, we have to define keepers to interact with our module's store(s) not only from within our module, but also from other modules. When another module wants to access one of our module's store(s), a keeper for this store has to be passed to it at the application level. In practice, it will look like that:
 
@@ -506,7 +511,18 @@ app.Router().
 
 `KeeperA` grants a set of capabilities to the handler of module B. When developing a module, it is good practice to think about the sensitivity of the different capabilities that can be granted through keepers. For example, some module may need to read and write to module A's main store, while others only need to read it. If a module has multiple stores, then some keepers could grant access to all of them, while others would only grant access to specific sub-stores. It is the job of the module developer to make sure it is easy for  application developers to instanciate a keeper with the right capabilities. Of course, the handler of a module will most likely get an unrestricted instance of that module's keeper.
 
-#### Keepers for our app
+##### Store for our app
+
+Before we delve into the keeper itself, let us see what objects we need to store in our governance sub-store, and how to index them.
+
+- `Proposals` will be indexed by `'proposals'|<proposalID>`.
+- `Votes` (`Yes`, `No`, `Abstain`) will be indexed by `'proposals'|<proposalID>|'votes'|<voterAddress>`.
+
+Notice the quote mark on `'proposals'` and `'votes'`. They indicate that these are constant keywords. So, for example, the option casted by voter with address `0x01` on proposal `0101` will be stored at index `'proposals'|0101|'votes'|0x01`.
+
+These keywords are used to faciliate range queries. Range queries (TODO: Link to formal spec) allow developer to query a subspace of the store, and return an iterator. They are made possible by the nice properties of the [IAVL+ tree](https://github.com/tendermint/iavl) that is used in the background. In practice, this means that it is possible to store and query a Key-Value pair in O(1), while still being able to iterate over a given subspace of Key-Value pairs. For example, we can query all the addresses that voted on a given proposal, along with their votes, by calling `rangeQuery(SimpleGovStore, <proposalID|'addresses'>)`.
+
+##### Keepers for our app
 
 In our case, we only have one store to access, the `SimpleGov` store. We will need to set and get values inside this store via our keeper. However, these two actions do not have the same impact in terms of security. While there should no problem in granting read access to our store to other modules, write access is way more sensitive. So ideally application developers should be able to create either a governance mapper that can only get values from the store, or one that can both get and set values. To this end, we will introduce two keepers: `Keeper` and `KeeperRead`. When application developers create their application, they will be able to decide which of our module's keeper to use.
 
@@ -535,7 +551,7 @@ type KeeperRead struct {
 
 `KeeperRead` will inherit all methods from `Keeper`, except those that we override. These will be the methods that perform writes to the store.
 
-#### Functions and Methods
+##### Functions and Methods
 
 The first function we have to create is the constructor.
 
@@ -566,9 +582,9 @@ The last thing that needs to be done is to override certain methods for the `Kee
 
 *Note: If you look at the code, you'll notice that the context `ctx` is a parameter of many of the methods. The context `ctx` provides useful information on the current state such as the current block height and allows the keeper `k` to access the `KVStore`. You can check all the methods of `ctx` [here](https://github.com/cosmos/cosmos-sdk/blob/develop/types/context.go#L144-L168)*.
 
-### Handler
+#### Handler (`handler.go`)
 
-#### Constructor and core handlers
+##### Constructor and core handlers
 
 Handlers implement the core logic of the state-machine. When a transaction is routed from the app to the module, it is run by the `handler` function.
 
@@ -604,7 +620,7 @@ Let us take a look at the parameters of this function:
 
 The function returns a `Result` that is returned to the application. It contains several useful information such as the amount of `Gas` for this transaction and wether the message was succesfully processed or not. At this point, we exit the boundaries of our simple governance module and go back to root application level. The `Result` will differ from application to application. You can check the `sdk.Result` type directly [here](https://github.com/cosmos/cosmos-sdk/blob/develop/types/result.go) for more info.
 
-#### BeginBlocker and EndBlocker
+##### BeginBlocker and EndBlocker
 
 In contrast to most smart-contracts platform, it is possible to perform automatic (i.e. not triggered by a transaction sent by an end-user) execution of logic in Cosmos-SDK applications.
 
@@ -638,7 +654,7 @@ Let us perform a quick safety analysis on this process.
 - The computation should not be too expensive because tallying of individual proposals is not expensive and the number of proposals is expected be relatively low. That is because proposals require a `Deposit` to be accepted. `MinDeposit` should be high enough so that we don't have too many `Proposals` in the queue.
 - In the eventuality that the application becomes so successful that the `ProposalProcessingQueue` ends up containing so many proposals that the blockchain starts slowing down, the module should be modified to mitigate the situation. One clever way of doing it is to cap the number of iteration per individual `EndBlock` at `MaxIteration`. This way, tallying will be spread over many blocks if the number of proposals is too important and block time should remain stable. This would require to modify the current check `if (CurrentBlock == Proposal.SubmitBlock + VotingPeriod)` to `if (CurrentBlock > Proposal.SubmitBlock + VotingPeriod) AND (Proposal.Status == ProposalStatusActive)`.
 
-### Wire
+#### Wire (`wire.go`)
 
 The `wire.go` file allows developers to register the concrete message types of their module into the codec. In our case, we have two messages to declare:
 
@@ -650,24 +666,17 @@ func RegisterWire(cdc *wire.Codec) {
 ```
 Don't forget to call this function in `app.go` (see [Application - Bridging it all together](#application_-_bridging_it_all_together) for more).
 
-### Errors
+#### Errors (`errors.go`)
 
 The `error.go` file allows us to define custom error messages for our module.  Declaring errors should be relatively similar in all modules. You can look in the [error.go](./error.go) file of our simple governance module for a concrete example. The code is self-explanatory.
 
 Note that the errors of our module inherit from the `sdk.Error` interface and therefore possess the method `Result()`. This method is useful when there is an error in the `handler` and an error has to be returned in place of an actual result.
 
-### Command-Line Interface and Rest API
+#### Command-Line Interface and Rest API
 
-Each module can define a set of commands for the Command-Line Interface and endpoints for the REST API. Let us create a `client` repository to define the commands and endpoints for our simple governance module.
+Each module can define a set of commands for the Command-Line Interface and endpoints for the REST API. 
 
-```bash
-mkdir client
-cd client
-mkdir cli
-mkdir rest
-```
-
-#### Command-Line Interface (CLI)
+##### Command-Line Interface (CLI)
 
 Go in the `cli` folder and create a `simple_governance.go` file. This is where we will define the commands for our module.
 
@@ -700,7 +709,7 @@ The CLI builds on top of [Cobra](https://github.com/spf13/cobra). Here is the sc
 
 For a detailed implementation of the commands of the simple governance module, click [here](../client/cli/simple_governance.go).
 
-#### Rest API
+##### Rest API
 
 The Rest Server, also called [Light-Client Daemon (LCD)](https://github.com/cosmos/cosmos-sdk/tree/master/client/lcd), provides support for **HTTP queries**.
 
@@ -735,11 +744,9 @@ As for the actual in-code implementation of the endpoints for our simple governa
 
 Now, that we have built all the pieces we need, it is time to integrate them into the application. Let us exit the `/x` director go back at the root of the SDK directory.
 
-Then, let us create an `app` folder.
 
 ```bash
 // At root level of directory
-mkdir app
 cd app
 ```
 
@@ -749,7 +756,7 @@ We are ready to create our simple governance application!
 
 *Note: You can check the full file (with comments!) [here](link)*
 
-First, create an `app.go` file. This is the main file that defines your application. In it, you will declare all the modules you need, their keepers, handlers, stores, etc. Let us take a look at each section of this file to see how the application is constructed.
+The `app.go` file is the main file that defines your application. In it, you will declare all the modules you need, their keepers, handlers, stores, etc. Let us take a look at each section of this file to see how the application is constructed.
 
 Secondly, we need to define the name of our application.
 
@@ -793,21 +800,12 @@ Let us do a quick reminder so that it is  clear why we need these stores and kee
 
 #### App commands
 
-We will need to add the newly created commands to our application. Create a `cmd` folder inside your root  directory:
+We will need to add the newly created commands to our application. To do so, go to the `cmd` folder inside your root  directory:
 
 ```bash
 // At root level of directory
-mkdir cmd
 cd cmd
-mkdir simplegovd
-mkdir simplegovcli
 ```
-Now within each of the `simplegov...` folders create a `main.go` file:
-
-```bash
-touch main.go
-```
-
 `simplegovd` is the folder that stores the command for running the server daemon, whereas `simplegovcli` defines the commands of your application.
 
 ##### CLI

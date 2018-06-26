@@ -58,7 +58,7 @@
 
 [[constraint]]
   name = "github.com/tendermint/go-crypto"
-  version = "~0.6.2"
+  version = "=0.6.2"
 
 [[constraint]]
   name = "github.com/tendermint/go-amino"
@@ -66,7 +66,7 @@
 
 [[constraint]]
   name = "github.com/tendermint/iavl"
-  version = "0.8.0-rc0"
+  version = "=0.8.0-rc0"
 
 [[constraint]]
   name = "github.com/tendermint/tendermint"
@@ -74,7 +74,7 @@
 
 [[override]]
   name = "github.com/tendermint/tmlibs"
-  branch = "develop"
+  revision = "0c98d10b4ffbd87978d79c160e835b3d3df241ec"
 
 # this got updated and broke, so locked to an old working commit ...
 [[override]]

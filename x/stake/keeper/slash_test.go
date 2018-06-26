@@ -69,7 +69,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	ctx, keeper, params, _, _ := setupHelper(t)
 	fraction := sdk.NewRat(1).Quo(sdk.NewRat(2))
 
-	// add an unbonding delegation past the current height
+	// set an unbonding delegation
 	ubd := types.UnbondingDelegation{
 		DelegatorAddr:  addrDels[0],
 		ValidatorAddr:  addrVals[0],
@@ -107,13 +107,7 @@ func TestSlashRedelegation(t *testing.T) {
 	ctx, keeper, params, _, _ := setupHelper(t)
 	fraction := sdk.NewRat(1).Quo(sdk.NewRat(2))
 
-	del := types.Delegation{
-		DelegatorAddr: addrDels[0],
-		ValidatorAddr: addrVals[1],
-		Shares:        sdk.NewRat(10),
-	}
-	keeper.SetDelegation(ctx, del)
-
+	// set a redelegation
 	rd := types.Redelegation{
 		DelegatorAddr:    addrDels[0],
 		ValidatorSrcAddr: addrVals[0],
@@ -126,6 +120,14 @@ func TestSlashRedelegation(t *testing.T) {
 		Balance:          sdk.NewCoin(params.BondDenom, 10),
 	}
 	keeper.SetRedelegation(ctx, rd)
+
+	// set the associated delegation
+	del := types.Delegation{
+		DelegatorAddr: addrDels[0],
+		ValidatorAddr: addrVals[1],
+		Shares:        sdk.NewRat(10),
+	}
+	keeper.SetDelegation(ctx, del)
 
 	// prior to the current height, stake didn't contribute
 	slashAmount := keeper.slashRedelegation(ctx, rd, 1, fraction)
@@ -184,10 +186,89 @@ func TestSlashAtCurrentHeight(t *testing.T) {
 
 // tests Slash at a previous height with an unbonding delegation
 func TestSlashWithUnbondingDelegation(t *testing.T) {
+	ctx, keeper, params, _, pk := setupHelper(t)
+	fraction := sdk.NewRat(1).Quo(sdk.NewRat(2))
+
+	// set an unbonding delegation
+	ubd := types.UnbondingDelegation{
+		DelegatorAddr:  addrDels[0],
+		ValidatorAddr:  addrVals[0],
+		CreationHeight: 11,
+		MinTime:        0,
+		InitialBalance: sdk.NewCoin(params.BondDenom, 4),
+		Balance:        sdk.NewCoin(params.BondDenom, 4),
+	}
+	keeper.SetUnbondingDelegation(ctx, ubd)
+
+	// slash validator
+	ctx = ctx.WithBlockHeight(12)
+	oldPool := keeper.GetPool(ctx)
+	validator, found := keeper.GetValidatorByPubKey(ctx, pk)
+	require.True(t, found)
+	keeper.Slash(ctx, pk, 10, 10, fraction)
+
+	// read updating unbonding delegation
+	ubd, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
+	require.True(t, found)
+	// balance decreased
+	require.Equal(t, sdk.NewInt(2), ubd.Balance.Amount)
+	// read updated pool
+	newPool := keeper.GetPool(ctx)
+	// unbonding shares burned
+	require.Equal(t, int64(2), oldPool.LooseTokens-newPool.LooseTokens)
+	// read updated validator
+	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
+	// power decreased, but not by quite half, stake was bonded since
+	require.Equal(t, sdk.NewRat(7), validator.GetPower())
 }
 
 // tests Slash at a previous height with a redelegation
 func TestSlashWithRedelegation(t *testing.T) {
+	ctx, keeper, params, _, pk := setupHelper(t)
+	fraction := sdk.NewRat(1).Quo(sdk.NewRat(2))
+
+	// set a redelegation
+	rd := types.Redelegation{
+		DelegatorAddr:    addrDels[0],
+		ValidatorSrcAddr: addrVals[0],
+		ValidatorDstAddr: addrVals[1],
+		CreationHeight:   11,
+		MinTime:          0,
+		SharesSrc:        sdk.NewRat(6),
+		SharesDst:        sdk.NewRat(6),
+		InitialBalance:   sdk.NewCoin(params.BondDenom, 6),
+		Balance:          sdk.NewCoin(params.BondDenom, 6),
+	}
+	keeper.SetRedelegation(ctx, rd)
+
+	// set the associated delegation
+	del := types.Delegation{
+		DelegatorAddr: addrDels[0],
+		ValidatorAddr: addrVals[1],
+		Shares:        sdk.NewRat(6),
+	}
+	keeper.SetDelegation(ctx, del)
+
+	// slash validator
+	ctx = ctx.WithBlockHeight(12)
+	oldPool := keeper.GetPool(ctx)
+	validator, found := keeper.GetValidatorByPubKey(ctx, pk)
+	require.True(t, found)
+	keeper.Slash(ctx, pk, 10, 10, fraction)
+
+	// read updating redelegation
+	rd, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	require.True(t, found)
+	// balance decreased
+	require.Equal(t, sdk.NewInt(3), rd.Balance.Amount)
+	// read updated pool
+	newPool := keeper.GetPool(ctx)
+	// unbonding shares burned
+	require.Equal(t, int64(3), oldPool.LooseTokens-newPool.LooseTokens)
+	// read updated validator
+	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
+	// power decreased, but not by quite half, stake was bonded since
+	require.Equal(t, sdk.NewRat(8), validator.GetPower())
 }
 
 // tests Slash at a previous height with a combination of unbonding delegations and redelegations

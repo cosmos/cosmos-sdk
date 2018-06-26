@@ -93,7 +93,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power
 	if !found {
 		panic(fmt.Errorf("attempted to slash a nonexistent validator with address %s", pubkey.Address()))
 	}
-	address := pubkey.Address()
+	ownerAddress := validator.GetOwner()
 
 	// Track remaining slash amount
 	remainingSlashAmount := slashAmount
@@ -113,7 +113,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power
 	} else if height < ctx.BlockHeight() {
 
 		// Iterate through unbonding delegations from slashed validator
-		unbondingDelegations := k.GetUnbondingDelegationsFromValidator(ctx, address)
+		unbondingDelegations := k.GetUnbondingDelegationsFromValidator(ctx, ownerAddress)
 		for _, unbondingDelegation := range unbondingDelegations {
 			amountSlashed := k.slashUnbondingDelegation(ctx, unbondingDelegation, height, fraction)
 			remainingSlashAmount = remainingSlashAmount.Sub(amountSlashed)
@@ -122,7 +122,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power
 		}
 
 		// Iterate through redelegations from slashed validator
-		redelegations := k.GetRedelegationsFromValidator(ctx, address)
+		redelegations := k.GetRedelegationsFromValidator(ctx, ownerAddress)
 		for _, redelegation := range redelegations {
 			amountSlashed := k.slashRedelegation(ctx, redelegation, height, fraction)
 			remainingSlashAmount = remainingSlashAmount.Sub(amountSlashed)
@@ -138,10 +138,10 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power
 		sharesToRemove = validator.PoolShares.Amount
 	}
 
-	// Slash the validator & burn tokens
-	validator, pool, burned := validator.RemovePoolShares(pool, sharesToRemove)
-	k.SetPool(ctx, pool)              // update the pool
-	k.UpdateValidator(ctx, validator) // update the validator, possibly kicking it out
+	validator, pool, burned := validator.RemovePoolShares(pool, sharesToRemove) // remove shares from the validator
+	pool.LooseTokens -= burned                                                  // burn tokens
+	k.SetPool(ctx, pool)                                                        // update the pool
+	k.UpdateValidator(ctx, validator)                                           // update the validator, possibly kicking it out
 
 	// Log that a slash occurred!
 	logger := ctx.Logger().With("module", "x/stake")

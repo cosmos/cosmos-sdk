@@ -5,14 +5,16 @@ import (
 
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	ledger "github.com/zondax/ledger-goclient"
+
+	tcrypto "github.com/tendermint/tendermint/crypto"
 )
 
-func pubkeyLedgerSecp256k1(device *ledger.Ledger, path DerivationPath) (pub PubKey, err error) {
+func pubkeyLedgerSecp256k1(device *ledger.Ledger, path DerivationPath) (pub tcrypto.PubKey, err error) {
 	key, err := device.GetPublicKeySECP256K1(path)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching public key: %v", err)
 	}
-	var p PubKeySecp256k1
+	var p tcrypto.PubKeySecp256k1
 	// Reserialize in the 33-byte compressed format
 	cmp, err := secp256k1.ParsePubKey(key[:], secp256k1.S256())
 	copy(p[:], cmp.SerializeCompressed())
@@ -20,12 +22,12 @@ func pubkeyLedgerSecp256k1(device *ledger.Ledger, path DerivationPath) (pub PubK
 	return
 }
 
-func signLedgerSecp256k1(device *ledger.Ledger, path DerivationPath, msg []byte) (sig Signature, err error) {
+func signLedgerSecp256k1(device *ledger.Ledger, path DerivationPath, msg []byte) (sig tcrypto.Signature, err error) {
 	bsig, err := device.SignSECP256K1(path, msg)
 	if err != nil {
 		return sig, err
 	}
-	sig = SignatureSecp256k1FromBytes(bsig)
+	sig = tcrypto.SignatureSecp256k1FromBytes(bsig)
 	return
 }
 
@@ -35,13 +37,13 @@ type PrivKeyLedgerSecp256k1 struct {
 	// PubKey should be private, but we want to encode it via go-amino
 	// so we can view the address later, even without having the ledger
 	// attached
-	CachedPubKey PubKey
+	CachedPubKey tcrypto.PubKey
 	Path         DerivationPath
 }
 
 // NewPrivKeyLedgerSecp256k1 will generate a new key and store the
 // public key for later use.
-func NewPrivKeyLedgerSecp256k1(path DerivationPath) (PrivKey, error) {
+func NewPrivKeyLedgerSecp256k1(path DerivationPath) (tcrypto.PrivKey, error) {
 	var pk PrivKeyLedgerSecp256k1
 	pk.Path = path
 	// cache the pubkey for later use
@@ -82,7 +84,7 @@ func (pk PrivKeyLedgerSecp256k1) Bytes() []byte {
 // Communication is checked on NewPrivKeyLedger and PrivKeyFromBytes,
 // returning an error, so this should only trigger if the privkey is held
 // in memory for a while before use.
-func (pk PrivKeyLedgerSecp256k1) Sign(msg []byte) (Signature, error) {
+func (pk PrivKeyLedgerSecp256k1) Sign(msg []byte) (tcrypto.Signature, error) {
 	dev, err := getLedger()
 	if err != nil {
 		return nil, err
@@ -95,14 +97,14 @@ func (pk PrivKeyLedgerSecp256k1) Sign(msg []byte) (Signature, error) {
 }
 
 // PubKey returns the stored PubKey
-func (pk PrivKeyLedgerSecp256k1) PubKey() PubKey {
+func (pk PrivKeyLedgerSecp256k1) PubKey() tcrypto.PubKey {
 	return pk.CachedPubKey
 }
 
 // getPubKey reads the pubkey the ledger itself
 // since this involves IO, it may return an error, which is not exposed
 // in the PubKey interface, so this function allows better error handling
-func (pk PrivKeyLedgerSecp256k1) getPubKey() (key PubKey, err error) {
+func (pk PrivKeyLedgerSecp256k1) getPubKey() (key tcrypto.PubKey, err error) {
 	dev, err := getLedger()
 	if err != nil {
 		return key, fmt.Errorf("cannot connect to Ledger device - error: %v", err)
@@ -116,7 +118,7 @@ func (pk PrivKeyLedgerSecp256k1) getPubKey() (key PubKey, err error) {
 
 // Equals fulfils PrivKey Interface - makes sure both keys refer to the
 // same
-func (pk PrivKeyLedgerSecp256k1) Equals(other PrivKey) bool {
+func (pk PrivKeyLedgerSecp256k1) Equals(other tcrypto.PrivKey) bool {
 	if ledger, ok := other.(*PrivKeyLedgerSecp256k1); ok {
 		return pk.CachedPubKey.Equals(ledger.CachedPubKey)
 	}

@@ -6,7 +6,7 @@ import (
 
 	cmn "github.com/tendermint/tmlibs/common"
 
-	"github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
 )
 

@@ -2,7 +2,6 @@ package client
 
 import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/words"
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
@@ -11,7 +10,6 @@ import (
 func GetKeyBase(db dbm.DB) keys.Keybase {
 	keybase := keys.New(
 		db,
-		words.MustLoadCodec("english"),
 	)
 	return keybase
 }

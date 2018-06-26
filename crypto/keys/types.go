@@ -1,7 +1,9 @@
 package keys
 
 import (
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
+	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 )
 
@@ -24,7 +26,7 @@ type Keybase interface {
 	// Derive derives a key from the passed mnemonic using a BIP44 path.
 	Derive(name, mnemonic, passwd string, params hd.BIP44Params) (Info, error)
 	// Create, store, and return a new Ledger key reference
-	CreateLedger(name string, path crypto.DerivationPath, algo SigningAlgo) (info Info, err error)
+	CreateLedger(name string, path ccrypto.DerivationPath, algo SigningAlgo) (info Info, err error)
 
 	// Create, store, and return a new offline key reference
 	CreateOffline(name string, pubkey crypto.PubKey) (info Info, err error)
@@ -82,10 +84,10 @@ func (i localInfo) GetPubKey() crypto.PubKey {
 type ledgerInfo struct {
 	Name   string                `json:"name"`
 	PubKey crypto.PubKey         `json:"pubkey"`
-	Path   crypto.DerivationPath `json:"path"`
+	Path   ccrypto.DerivationPath `json:"path"`
 }
 
-func newLedgerInfo(name string, pub crypto.PubKey, path crypto.DerivationPath) Info {
+func newLedgerInfo(name string, pub crypto.PubKey, path ccrypto.DerivationPath) Info {
 	return &ledgerInfo{
 		Name:   name,
 		PubKey: pub,

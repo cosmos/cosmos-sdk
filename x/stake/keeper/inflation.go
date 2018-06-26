@@ -7,20 +7,16 @@ import (
 
 const (
 	hrsPerYr  = 8766         // as defined by a julian year of 365.25 days
-	precision = 100000000000 // increased to this precision for accuracy with tests on tick_test.go
+	precision = 100000000000 // increased to this precision for accuracy
 )
 
-var hrsPerYrRat = sdk.NewRat(hrsPerYr) // as defined by a julian year of 365.25 days
+var hrsPerYrRat = sdk.NewRat(hrsPerYr)
 
 // process provisions for an hour period
 func (k Keeper) ProcessProvisions(ctx sdk.Context) types.Pool {
 
 	pool := k.GetPool(ctx)
 	pool.Inflation = k.NextInflation(ctx)
-
-	// Because the validators hold a relative bonded share (`GlobalStakeShare`), when
-	// more bonded tokens are added proportionally to all validators the only term
-	// which needs to be updated is the `BondedPool`. So for each previsions cycle:
 
 	provisions := pool.Inflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat).Evaluate()
 

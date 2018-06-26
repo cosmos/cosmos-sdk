@@ -32,7 +32,7 @@ import (
 func TestKeys(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKB(t))
-	cleanup, _, port := InitializeTestLCD(t, 2, []sdk.Address{addr})
+	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.Address{addr})
 	defer cleanup()
 
 	// get seed
@@ -218,7 +218,7 @@ func TestValidators(t *testing.T) {
 func TestCoinSend(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKB(t))
-	cleanup, _, port := InitializeTestLCD(t, 2, []sdk.Address{addr})
+	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.Address{addr})
 	defer cleanup()
 
 	bz, err := hex.DecodeString("8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6")
@@ -260,7 +260,7 @@ func TestCoinSend(t *testing.T) {
 func TestIBCTransfer(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKB(t))
-	cleanup, _, port := InitializeTestLCD(t, 2, []sdk.Address{addr})
+	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.Address{addr})
 	defer cleanup()
 
 	acc := getAccount(t, port, addr)
@@ -289,7 +289,7 @@ func TestIBCTransfer(t *testing.T) {
 func TestTxs(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKB(t))
-	cleanup, _, port := InitializeTestLCD(t, 2, []sdk.Address{addr})
+	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.Address{addr})
 	defer cleanup()
 
 	// query wrong
@@ -375,11 +375,10 @@ func TestValidatorsQuery(t *testing.T) {
 	assert.True(t, foundVal2, "pk2Bech %v, owner1 %v, owner2 %v", pk2Bech, validators[0].Owner, validators[1].Owner)
 }
 
-// XXX Test Redelegation
 func TestBonding(t *testing.T) {
 	name, password, denom := "test", "1234567890", "steak"
 	addr, seed := CreateAddr(t, "test", password, GetKB(t))
-	cleanup, pks, port := InitializeTestLCD(t, 2, []sdk.Address{addr})
+	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.Address{addr})
 	defer cleanup()
 
 	validator1Owner := pks[0].Address()
@@ -417,12 +416,13 @@ func TestBonding(t *testing.T) {
 	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
-	// TODO fix shares fn in staking
+	// should the sender should have not received any coins as the unbonding has only just begun
 	// query sender
-	//acc := getAccount(t, sendAddr)
-	//coins := acc.GetCoins()
-	//assert.Equal(t, int64(98), coins.AmountOf(coinDenom))
+	acc = getAccount(t, port, addr)
+	coins = acc.GetCoins()
+	assert.Equal(t, int64(40), coins.AmountOf("steak").Int64())
 
+	// TODO add redelegation, need more complex capabilities such to mock context and
 }
 
 func TestSubmitProposal(t *testing.T) {
@@ -607,7 +607,7 @@ func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.A
 	validatorAddrBech := sdk.MustBech32ifyVal(validatorAddr)
 
 	// get the account to get the sequence
-	res, body := Request(t, port, "GET", "/stake/"+delegatorAddrBech+"/bonding_status/"+validatorAddrBech, nil)
+	res, body := Request(t, port, "GET", "/stake/"+delegatorAddrBech+"/delegation/"+validatorAddrBech, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var bond stake.Delegation
 	err := cdc.UnmarshalJSON([]byte(body), &bond)

@@ -209,7 +209,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 		store.Set(GetValidatorKey(ownerAddr), bz)
 	}()
 
-	// retreive the old validator record
+	// retrieve the old validator record
 	oldValidator, oldFound := k.GetValidator(ctx, ownerAddr)
 
 	if validator.Revoked && oldValidator.Status() == sdk.Bonded {
@@ -263,7 +263,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 
 	// update the validator set for this validator
 	updatedVal := k.UpdateBondedValidators(ctx, validator)
-	if updatedVal.Owner != nil { // updates to validator occured  to be updated
+	if updatedVal.Owner != nil { // updates to validator occurred  to be updated
 		validator = updatedVal
 	}
 	return validator
@@ -433,7 +433,7 @@ func (k Keeper) unbondValidator(ctx sdk.Context, validator types.Validator) type
 
 	// sanity check
 	if validator.Status() == sdk.Unbonded {
-		panic(fmt.Sprintf("should not already be be unbonded,  validator: %v\n", validator))
+		panic(fmt.Sprintf("should not already be unbonded,  validator: %v\n", validator))
 	}
 
 	// set the status
@@ -461,7 +461,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 
 	// sanity check
 	if validator.Status() == sdk.Bonded {
-		panic(fmt.Sprintf("should not already be be bonded, validator: %v\n", validator))
+		panic(fmt.Sprintf("should not already be bonded, validator: %v\n", validator))
 	}
 
 	// set the status
@@ -483,7 +483,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 // remove the validator record and associated indexes
 func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.Address) {
 
-	// first retreive the old validator record
+	// first retrieve the old validator record
 	validator, found := k.GetValidator(ctx, address)
 	if !found {
 		return

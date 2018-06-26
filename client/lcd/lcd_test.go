@@ -543,24 +543,19 @@ func TestProposalsQuery(t *testing.T) {
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 deposits on proposals #2 & #3
-	doDeposit(t, port, seed2, name2, password, addr2, proposalID2)
+	resultTx = doDeposit(t, port, seed2, name2, password, addr2, proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
-
-	// acc := getAccount(t, port, addr2)
-	// sequence := acc.GetSequence()
-	// assert.Equal(t, int64(2), sequence)
-
-	doDeposit(t, port, seed2, name2, password, addr2, proposalID3)
+	resultTx = doDeposit(t, port, seed2, name2, password, addr2, proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr1 votes on proposals #2 & #3
-	doVote(t, port, seed, name, password, addr, proposalID2)
+	resultTx = doVote(t, port, seed, name, password, addr, proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	doVote(t, port, seed, name, password, addr, proposalID3)
+	resultTx = doVote(t, port, seed, name, password, addr, proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 votes on proposal #3
-	doVote(t, port, seed2, name2, password, addr2, proposalID3)
+	resultTx = doVote(t, port, seed2, name2, password, addr2, proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Test query all proposals

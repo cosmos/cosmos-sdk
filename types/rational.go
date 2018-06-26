@@ -18,20 +18,20 @@ import (
 // we will panic unmarshalling into the
 // nil embedded big.Rat
 type Rat struct {
-	big.Rat `json:"rat"`
+	*big.Rat `json:"rat"`
 }
 
 // nolint - common values
-func ZeroRat() Rat { return Rat{*big.NewRat(0, 1)} }
-func OneRat() Rat  { return Rat{*big.NewRat(1, 1)} }
+func ZeroRat() Rat { return Rat{big.NewRat(0, 1)} }
+func OneRat() Rat  { return Rat{big.NewRat(1, 1)} }
 
 // New - create a new Rat from integers
 func NewRat(Numerator int64, Denominator ...int64) Rat {
 	switch len(Denominator) {
 	case 0:
-		return Rat{*big.NewRat(Numerator, 1)}
+		return Rat{big.NewRat(Numerator, 1)}
 	case 1:
-		return Rat{*big.NewRat(Numerator, Denominator[0])}
+		return Rat{big.NewRat(Numerator, Denominator[0])}
 	default:
 		panic("improper use of New, can only have one denominator")
 	}
@@ -84,9 +84,9 @@ func NewRatFromDecimal(decimalStr string) (f Rat, err Error) {
 func NewRatFromBigInt(num *big.Int, denom ...*big.Int) Rat {
 	switch len(denom) {
 	case 0:
-		return Rat{*new(big.Rat).SetInt(num)}
+		return Rat{new(big.Rat).SetInt(num)}
 	case 1:
-		return Rat{*new(big.Rat).SetFrac(num, denom[0])}
+		return Rat{new(big.Rat).SetFrac(num, denom[0])}
 	default:
 		panic("improper use of NewRatFromBigInt, can only have one denominator")
 	}
@@ -96,26 +96,26 @@ func NewRatFromBigInt(num *big.Int, denom ...*big.Int) Rat {
 func NewRatFromInt(num Int, denom ...Int) Rat {
 	switch len(denom) {
 	case 0:
-		return Rat{*new(big.Rat).SetInt(num.BigInt())}
+		return Rat{new(big.Rat).SetInt(num.BigInt())}
 	case 1:
-		return Rat{*new(big.Rat).SetFrac(num.BigInt(), denom[0].BigInt())}
+		return Rat{new(big.Rat).SetFrac(num.BigInt(), denom[0].BigInt())}
 	default:
 		panic("improper use of NewRatFromBigInt, can only have one denominator")
 	}
 }
 
 //nolint
-func (r Rat) Num() int64        { return r.Rat.Num().Int64() }   // Num - return the numerator
-func (r Rat) Denom() int64      { return r.Rat.Denom().Int64() } // Denom  - return the denominator
-func (r Rat) IsZero() bool      { return r.Num() == 0 }          // IsZero - Is the Rat equal to zero
-func (r Rat) Equal(r2 Rat) bool { return (&(r.Rat)).Cmp(&(r2.Rat)) == 0 }
-func (r Rat) GT(r2 Rat) bool    { return (&(r.Rat)).Cmp(&(r2.Rat)) == 1 }              // greater than
-func (r Rat) LT(r2 Rat) bool    { return (&(r.Rat)).Cmp(&(r2.Rat)) == -1 }             // less than
-func (r Rat) Mul(r2 Rat) Rat    { return Rat{*new(big.Rat).Mul(&(r.Rat), &(r2.Rat))} } // Mul - multiplication
-func (r Rat) Quo(r2 Rat) Rat    { return Rat{*new(big.Rat).Quo(&(r.Rat), &(r2.Rat))} } // Quo - quotient
-func (r Rat) Add(r2 Rat) Rat    { return Rat{*new(big.Rat).Add(&(r.Rat), &(r2.Rat))} } // Add - addition
-func (r Rat) Sub(r2 Rat) Rat    { return Rat{*new(big.Rat).Sub(&(r.Rat), &(r2.Rat))} } // Sub - subtraction
-func (r Rat) String() string    { return r.Rat.String() }
+func (r Rat) Num() int64          { return r.Rat.Num().Int64() }   // Num - return the numerator
+func (r Rat) Denom() int64        { return r.Rat.Denom().Int64() } // Denom  - return the denominator
+func (r Rat) IsZero() bool        { return r.Num() == 0 }          // IsZero - Is the Rat equal to zero
+func (r Rat) Equal(r2 Rat) bool   { return (r.Rat).Cmp(r2.Rat) == 0 }
+func (r Rat) GT(r2 Rat) bool      { return (r.Rat).Cmp(r2.Rat) == 1 }             // greater than
+func (r Rat) LT(r2 Rat) bool      { return (r.Rat).Cmp(r2.Rat) == -1 }            // less than
+func (r Rat) Mul(r2 Rat) Rat      { return Rat{new(big.Rat).Mul(r.Rat, r2.Rat)} } // Mul - multiplication
+func (r Rat) Quo(r2 Rat) Rat      { return Rat{new(big.Rat).Quo(r.Rat, r2.Rat)} } // Quo - quotient
+func (r Rat) Add(r2 Rat) Rat      { return Rat{new(big.Rat).Add(r.Rat, r2.Rat)} } // Add - addition
+func (r Rat) Sub(r2 Rat) Rat      { return Rat{new(big.Rat).Sub(r.Rat, r2.Rat)} } // Sub - subtraction
+func (r Rat) String() string      { return r.Rat.String() }
 func (r Rat) FloatString() string { return r.Rat.FloatString(10) } // a human-friendly string format. The last digit is rounded to nearest, with halves rounded away from zero.
 
 var (
@@ -169,8 +169,8 @@ func (r Rat) EvaluateInt() Int {
 
 // round Rat with the provided precisionFactor
 func (r Rat) Round(precisionFactor int64) Rat {
-	rTen := Rat{*new(big.Rat).Mul(&(r.Rat), big.NewRat(precisionFactor, 1))}
-	return Rat{*big.NewRat(rTen.Evaluate(), precisionFactor)}
+	rTen := Rat{new(big.Rat).Mul(r.Rat, big.NewRat(precisionFactor, 1))}
+	return Rat{big.NewRat(rTen.Evaluate(), precisionFactor)}
 }
 
 // TODO panic if negative or if totalDigits < len(initStr)???
@@ -185,7 +185,10 @@ func (r Rat) ToLeftPadded(totalDigits int8) string {
 
 //Wraps r.MarshalText().
 func (r Rat) MarshalAmino() (string, error) {
-	bz, err := (&(r.Rat)).MarshalText()
+	if r.Rat == nil {
+		r.Rat = new(big.Rat)
+	}
+	bz, err := r.Rat.MarshalText()
 	return string(bz), err
 }
 
@@ -196,7 +199,7 @@ func (r *Rat) UnmarshalAmino(text string) (err error) {
 	if err != nil {
 		return err
 	}
-	r.Rat = *tempRat
+	r.Rat = tempRat
 	return nil
 }
 

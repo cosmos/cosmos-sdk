@@ -251,12 +251,13 @@ func (v Validator) DelegatorShareExRate(pool Pool) sdk.Rat {
 var _ sdk.Validator = Validator{}
 
 // nolint - for sdk.Validator
-func (v Validator) GetMoniker() string        { return v.Description.Moniker }
-func (v Validator) GetStatus() sdk.BondStatus { return v.Status() }
-func (v Validator) GetOwner() sdk.Address     { return v.Owner }
-func (v Validator) GetPubKey() crypto.PubKey  { return v.PubKey }
-func (v Validator) GetPower() sdk.Rat         { return v.PoolShares.Bonded() }
-func (v Validator) GetBondHeight() int64      { return v.BondHeight }
+func (v Validator) GetMoniker() string          { return v.Description.Moniker }
+func (v Validator) GetStatus() sdk.BondStatus   { return v.Status() }
+func (v Validator) GetOwner() sdk.Address       { return v.Owner }
+func (v Validator) GetPubKey() crypto.PubKey    { return v.PubKey }
+func (v Validator) GetPower() sdk.Rat           { return v.PoolShares.Bonded() }
+func (v Validator) GetDelegatorShares() sdk.Rat { return v.DelegatorShares }
+func (v Validator) GetBondHeight() int64        { return v.BondHeight }
 
 //Human Friendly pretty printer
 func (v Validator) HumanReadableString() (string, error) {
@@ -271,8 +272,8 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp := "Validator \n"
 	resp += fmt.Sprintf("Owner: %s\n", bechOwner)
 	resp += fmt.Sprintf("Validator: %s\n", bechVal)
-	resp += fmt.Sprintf("Shares: Status %s,  Amount: %s\n", sdk.BondStatusToString(v.PoolShares.Status), v.PoolShares.Amount.String())
-	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.String())
+	resp += fmt.Sprintf("Shares: Status %s,  Amount: %s\n", sdk.BondStatusToString(v.PoolShares.Status), v.PoolShares.Amount.FloatString())
+	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.FloatString())
 	resp += fmt.Sprintf("Description: %s\n", v.Description)
 	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
 	resp += fmt.Sprintf("Proposer Reward Pool: %s\n", v.ProposerRewardPool.String())

@@ -44,17 +44,13 @@ FEATURES
 
 FIXES 
 * [gaia] Added self delegation for validators in the genesis creation
-* [cli] fixed cli-bash tests
-* [ci] added cli-bash tests
-* [basecoin] updated basecoin for stake and slashing
-* [docs] fixed references to old cli commands
 * [lcd] tests now don't depend on raw json text
 * [stake] error strings lower case
 * [stake] pool loose tokens now accounts for unbonding and unbonding tokens not associated with any validator
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer
 * \#1052 - Make all now works
 * Retry on HTTP request failure in CLI tests, add option to retry tests in Makefile
-* Fixed bug where chain ID wasn't passed properly in x/bank REST handler
+* Fixed bug where chain ID wasn't passed properly in x/bank REST handler, removed Viper hack from ante handler
 * Fixed bug where `democli account` didn't decode the account data correctly
 * \#1343 - fixed unnecessary parallelism in CI
 * \#1353 - CLI: Show pool shares fractions in human-readable format

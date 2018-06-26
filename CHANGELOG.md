@@ -25,6 +25,7 @@ BREAKING CHANGES
   * Iterate through unbonding delegations & redelegations which contributed
     to an infraction, slash them proportional to their stake at the time
   * Add REST endpoint to unrevoke a validator previously revoked for downtime
+* Removed GetMemo from Tx (it is still on StdTx)
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
@@ -36,7 +37,9 @@ FEATURES
   * Delegators delegate votes to validator by default but can override (for their stake)
 * [tools] make get_tools installs tendermint's linter, and gometalinter
 * [tools] Switch gometalinter to the stable version
+* [tools] Add checking for misspellings and for incorrectly formatted files in circle CI
 * [server] Default config now creates a profiler at port 6060, and increase p2p send/recv rates
+* [tests] Add WaitForNextNBlocksTM helper method
 
 FIXES 
 * [gaia] Added self delegation for validators in the genesis creation
@@ -53,6 +56,7 @@ FIXES
 * Fixed bug where chain ID wasn't passed properly in x/bank REST handler
 * Fixed bug where `democli account` didn't decode the account data correctly
 * \#1343 - fixed unnecessary parallelism in CI
+* \#1258 - printing big.rat's can no longer overflow int64
 
 IMPROVEMENTS
 * bank module uses go-wire codec instead of 'encoding/json'

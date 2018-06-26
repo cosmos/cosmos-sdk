@@ -236,7 +236,7 @@ func TestCoinSend(t *testing.T) {
 	receiveAddr, resultTx := doSend(t, port, seed, name, password, addr)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
-	// check if tx was commited
+	// check if tx was committed
 	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
@@ -271,7 +271,7 @@ func TestIBCTransfer(t *testing.T) {
 
 	tests.WaitForHeight(resultTx.Height+1, port)
 
-	// check if tx was commited
+	// check if tx was committed
 	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
@@ -388,7 +388,7 @@ func TestBonding(t *testing.T) {
 	resultTx := doDelegate(t, port, seed, name, password, addr, validator1Owner)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
-	// check if tx was commited
+	// check if tx was committed
 	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
@@ -413,7 +413,7 @@ func TestBonding(t *testing.T) {
 	bond = getDelegation(t, port, addr, validator1Owner)
 	assert.Equal(t, "30/1", bond.Shares.String())
 
-	// check if tx was commited
+	// check if tx was committed
 	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
@@ -435,7 +435,7 @@ func TestSubmitProposal(t *testing.T) {
 	resultTx := doSubmitProposal(t, port, seed, name, password, addr)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
-	// check if tx was commited
+	// check if tx was committed
 	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
@@ -457,7 +457,7 @@ func TestDeposit(t *testing.T) {
 	resultTx := doSubmitProposal(t, port, seed, name, password, addr)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
-	// check if tx was commited
+	// check if tx was committed
 	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
@@ -487,7 +487,7 @@ func TestVote(t *testing.T) {
 	resultTx := doSubmitProposal(t, port, seed, name, password, addr)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
-	// check if tx was commited
+	// check if tx was committed
 	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 

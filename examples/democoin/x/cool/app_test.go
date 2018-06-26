@@ -100,7 +100,7 @@ func TestMsgQuiz(t *testing.T) {
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{setTrendMsg2}, []int64{0}, []int64{4}, true, priv1) // reset the trend
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{quizMsg1}, []int64{0}, []int64{5}, false, priv1)    // the same answer will nolonger do!
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", sdk.NewInt(138)}})
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{quizMsg2}, []int64{0}, []int64{6}, true, priv1) // earlier answer now relavent again
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{quizMsg2}, []int64{0}, []int64{6}, true, priv1) // earlier answer now relevant again
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"badvibesonly", sdk.NewInt(69)}, {"icecold", sdk.NewInt(138)}})
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{setTrendMsg3}, []int64{0}, []int64{7}, false, priv1) // expect to fail to set the trend to something which is not cool
 }

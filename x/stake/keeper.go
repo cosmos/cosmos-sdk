@@ -234,7 +234,7 @@ func (k Keeper) updateValidator(ctx sdk.Context, validator Validator) Validator 
 		store.Set(GetValidatorKey(ownerAddr), bz)
 	}()
 
-	// retreive the old validator record
+	// retrieve the old validator record
 	oldValidator, oldFound := k.GetValidator(ctx, ownerAddr)
 
 	if validator.Revoked && oldValidator.Status() == sdk.Bonded {
@@ -288,7 +288,7 @@ func (k Keeper) updateValidator(ctx sdk.Context, validator Validator) Validator 
 
 	// update the validator set for this validator
 	updatedVal := k.updateBondedValidators(ctx, store, validator)
-	if updatedVal.Owner != nil { // updates to validator occured  to be updated
+	if updatedVal.Owner != nil { // updates to validator occurred  to be updated
 		validator = updatedVal
 	}
 	return validator
@@ -498,7 +498,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, store sdk.KVStore, validator Vali
 
 func (k Keeper) removeValidator(ctx sdk.Context, address sdk.Address) {
 
-	// first retreive the old validator record
+	// first retrieve the old validator record
 	validator, found := k.GetValidator(ctx, address)
 	if !found {
 		return

@@ -300,7 +300,7 @@ func GetValidatorSortingMixed(t *testing.T) {
 	assert.Equal(t, validators[0].Owner, resValidators[4].Owner, "%v", resValidators)
 }
 
-// TODO seperate out into multiple tests
+// TODO separate out into multiple tests
 func TestGetValidatorsEdgeCases(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, sdk.NewInt(0))
 	var found bool

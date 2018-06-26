@@ -49,8 +49,12 @@
   version = "~1.0.0"
 
 [[constraint]]
+  name = "github.com/pkg/errors"
+  version = "0.8.0"
+
+[[constraint]]
   name = "github.com/stretchr/testify"
-  version = "~1.2.1"
+  version = "1.2.1"
 
 [[constraint]]
   name = "github.com/tendermint/go-amino"
@@ -72,6 +76,14 @@
 [[override]]
   name = "google.golang.org/genproto"
   revision = "7fd901a49ba6a7f87732eb344f6e3c5b19d1b200"
+
+[[constraint]]
+  name = "github.com/tyler-smith/go-bip39"
+  branch = "master"
+
+[[constraint]]
+  name = "github.com/zondax/ledger-goclient"
+  revision = "065cbf938a16f20335c40cfe180f9cd4955c6a5a"
 
 [prune]
   go-tests = true

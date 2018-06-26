@@ -14,24 +14,23 @@ Developers can create messages by implementing the `Msg` interface:
 
 ```go
 type Msg interface {
-
-	// Return the message type.
-	// Must be alphanumeric or empty.
+    // Return the message type.
+    // Must be alphanumeric or empty.
     // Must correspond to name of message handler (XXX).
-	Type() string
-
+    Type() string
+    
     // Get the canonical byte representation of the Msg.
     // This is what is signed.
-	GetSignBytes() []byte
-
-	// ValidateBasic does a simple validation check that
-	// doesn't require access to any other information.
-	ValidateBasic() error
-
-	// Signers returns the addrs of signers that must sign.
-	// CONTRACT: All signatures must be present to be valid.
-	// CONTRACT: Returns addrs in some deterministic order.
-	GetSigners() []Address
+    GetSignBytes() []byte
+    
+    // ValidateBasic does a simple validation check that
+    // doesn't require access to any other information.
+    ValidateBasic() error
+    
+    // Signers returns the addrs of signers that must sign.
+    // CONTRACT: All signatures must be present to be valid.
+    // CONTRACT: Returns addrs in some deterministic order.
+    GetSigners() []Address
 }
 ```
 

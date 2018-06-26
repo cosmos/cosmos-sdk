@@ -1,5 +1,0 @@
----
-
-- name: start service
-  service: "name={{service}} state=started"
-

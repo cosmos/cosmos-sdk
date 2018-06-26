@@ -298,6 +298,7 @@ simplifies application development by handling common low-level concerns.
 It serves as the mediator between the two key components of an SDK app: the store
 and the message handlers. The BaseApp implements the
 [`abci.Application`](https://godoc.org/github.com/tendermint/abci/types#Application) interface. 
+See the [BaseApp API documentation](TODO) for more details.
 
 Here is the complete setup for App1:
 
@@ -311,14 +312,15 @@ func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	// Create the base application object.
 	app := bapp.NewBaseApp(app1Name, cdc, logger, db)
 
-	// Create a key for accessing the account store.
+	// Create a capability key for accessing the account store.
 	keyAccount := sdk.NewKVStoreKey("acc")
 
 	// Determine how transactions are decoded.
 	app.SetTxDecoder(txDecoder)
 
 	// Register message routes.
-	// Note the handler gets access to the account store.
+	// Note the handler receives the keyAccount and thus
+    // gets access to the account store.
 	app.Router().
 		AddRoute("bank", NewApp1Handler(keyAccount))
 
@@ -382,10 +384,15 @@ func txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 
 This means the input to the app must be a JSON encoded `app1Tx`.
 
-In the next tutorial, we'll introduce Amino, a superior encoding scheme that lets us decode into interface types!
-
 The last step in `NewApp1` is to mount the stores and load the latest version. Since we only have one store, we only mount one.
+
+## Conclusion
 
 We now have a complete implementation of a simple app! 
 
-In the next section, we'll add another Msg type and another store, and use Amino for encoding transactions!
+In the next section, we'll add another Msg type and another store. Once we have multiple message types
+we'll need a better way of decoding transactions, since we'll need to decode
+into the `Msg` interface. This is where we introduce Amino, a superior encoding scheme that lets us decode into interface types!
+
+
+

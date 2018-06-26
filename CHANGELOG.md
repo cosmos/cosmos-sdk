@@ -34,6 +34,7 @@ FIXES
 * Fixed bug where chain ID wasn't passed properly in x/bank REST handler
 * Fixed bug where `democli account` didn't decode the account data correctly
 * \#1343 - fixed unnecessary parallelism in CI
+* \#1258 - printing big.rat's can no longer overflow int64
 
 ## 0.19.0
 

@@ -19,7 +19,7 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 
 	if unbondingDelegation.MinTime < now {
 		// Unbonding delegation no longer eligible for slashing, skip it
-		// TODO We could settle and delete it automatically
+		// TODO Settle and delete it automatically?
 		return sdk.ZeroRat()
 	}
 
@@ -33,7 +33,7 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 	}
 
 	// Update unbonding delegation
-	unbondingDelegation.Balance = unbondingDelegation.Balance.Minus(sdk.Coin{unbondingDelegation.Balance.Denom, slashAmountInt})
+	unbondingDelegation.Balance.Amount = unbondingDelegation.Balance.Amount.Sub(slashAmountInt)
 	k.SetUnbondingDelegation(ctx, unbondingDelegation)
 
 	return
@@ -50,7 +50,7 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, redelegation types.Redelegati
 
 	if redelegation.MinTime < now {
 		// Redelegation no longer eligible for slashing, skip it
-		// TODO We could delete it automatically
+		// TODO Delete it automatically?
 		return sdk.ZeroRat()
 	}
 
@@ -64,7 +64,7 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, redelegation types.Redelegati
 	}
 
 	// Update redelegation
-	redelegation.Balance = redelegation.Balance.Minus(sdk.Coin{redelegation.Balance.Denom, slashAmountInt})
+	redelegation.Balance.Amount = redelegation.Balance.Amount.Sub(slashAmountInt)
 	k.SetRedelegation(ctx, redelegation)
 
 	// Unbond from target validator
@@ -174,6 +174,6 @@ func (k Keeper) setRevoked(ctx sdk.Context, pubkey crypto.PubKey, revoked bool) 
 		panic(fmt.Errorf("Validator with pubkey %s not found, cannot set revoked to %v", pubkey, revoked))
 	}
 	validator.Revoked = revoked
-	k.UpdateValidator(ctx, validator)
+	k.UpdateValidator(ctx, validator) // update validator, possibly unbonding or bonding it
 	return
 }

@@ -154,8 +154,32 @@ func TestSlashRedelegation(t *testing.T) {
 	require.Equal(t, int64(5), del.Shares.Evaluate())
 }
 
+// tests Slash at a future height (must panic)
+func TestSlashAtFutureHeight(t *testing.T) {
+	ctx, keeper, _, _, pk := setupHelper(t)
+	fraction := sdk.NewRat(1).Quo(sdk.NewRat(2))
+	require.Panics(t, func() { keeper.Slash(ctx, pk, 1, 10, fraction) })
+}
+
 // tests Slash at the current height
 func TestSlashAtCurrentHeight(t *testing.T) {
+	ctx, keeper, _, _, pk := setupHelper(t)
+	fraction := sdk.NewRat(1).Quo(sdk.NewRat(2))
+
+	oldPool := keeper.GetPool(ctx)
+	validator, found := keeper.GetValidatorByPubKey(ctx, pk)
+	require.True(t, found)
+	keeper.Slash(ctx, pk, ctx.BlockHeight(), 10, fraction)
+
+	// read updated state
+	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
+	require.True(t, found)
+	newPool := keeper.GetPool(ctx)
+
+	// power decreased
+	require.Equal(t, sdk.NewRat(5), validator.GetPower())
+	// pool bonded shares decreased
+	require.Equal(t, sdk.NewRat(5).Evaluate(), oldPool.BondedShares.Sub(newPool.BondedShares).Evaluate())
 }
 
 // tests Slash at a previous height with an unbonding delegation

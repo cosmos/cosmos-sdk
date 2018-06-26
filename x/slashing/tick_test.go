@@ -46,8 +46,8 @@ func TestBeginBlocker(t *testing.T) {
 
 	height := int64(0)
 
-	// for 50 blocks, mark the validator as having signed
-	for ; height < 50; height++ {
+	// for 10000 blocks, mark the validator as having signed
+	for ; height < 1000; height++ {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
 			Validators: []abci.SigningValidator{{
@@ -58,8 +58,8 @@ func TestBeginBlocker(t *testing.T) {
 		BeginBlocker(ctx, req, keeper)
 	}
 
-	// for 51 blocks, mark the validator as having not signed
-	for ; height < 102; height++ {
+	// for 500 blocks, mark the validator as having not signed
+	for ; height < 1501; height++ {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
 			Validators: []abci.SigningValidator{{

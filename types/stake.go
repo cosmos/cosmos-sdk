@@ -32,6 +32,7 @@ func BondStatusToString(b BondStatus) string {
 
 // validator for a delegated proof of stake system
 type Validator interface {
+	GetRevoked() bool         // whether the validator is revoked
 	GetMoniker() string       // moniker of the validator
 	GetStatus() BondStatus    // status of the validator
 	GetOwner() Address        // owner address to receive/return validators coins

@@ -64,9 +64,6 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, height i
 func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, power int64, signed bool) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	height := ctx.BlockHeight()
-	if !signed {
-		logger.Info(fmt.Sprintf("Absent validator %s at height %d", pubkey.Address(), height))
-	}
 	address := pubkey.Address()
 
 	// Local index, so counts blocks validator *should* have signed
@@ -95,6 +92,9 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 		signInfo.SignedBlocksCounter++
 	}
 
+	if !signed {
+		logger.Info(fmt.Sprintf("Absent validator %s at height %d, %d signed, threshold %d", pubkey.Address(), height, signInfo.SignedBlocksCounter, MinSignedPerWindow))
+	}
 	minHeight := signInfo.StartHeight + SignedBlocksWindow
 	if height > minHeight && signInfo.SignedBlocksCounter < MinSignedPerWindow {
 		// Downtime confirmed, slash, revoke, and jail the validator

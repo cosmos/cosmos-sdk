@@ -256,7 +256,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "e2150783cd35f5b607daca48afd8c57ec54cc995"
+  revision = "0d5a0ceb10cf9ab89fdd744cc8c50a83134f6697"
 
 [[projects]]
   name = "github.com/tendermint/abci"
@@ -350,7 +350,6 @@
   revision = "696e8c6f9e950eec15f150f314d2dd9ddf6bc601"
 
 [[projects]]
-  branch = "develop"
   name = "github.com/tendermint/tmlibs"
   packages = [
     "autofile",
@@ -373,6 +372,7 @@
   packages = [
     "blowfish",
     "curve25519",
+    "internal/subtle",
     "nacl/box",
     "nacl/secretbox",
     "openpgp/armor",
@@ -381,7 +381,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "8ac0e0d97ce45cd83d1d7243c060cb8461dda5e9"
+  revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
 
 [[projects]]
   branch = "master"
@@ -395,13 +395,13 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "db08ff08e8622530d9ed3a0e8ac279f6d4c02196"
+  revision = "afe8f62b1d6bbd81f31868121a50b06d8188e1f9"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "bff228c7b664c5fce602223a05fb708fd8654986"
+  revision = "a200a19cb90b19de298170992778b1fda7217bd6"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -462,6 +462,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d02a24bcfd8bded901e1b154e19b81ff797d3921046ede19d1d11eed61e871e7"
+  inputs-digest = "8ad5e4b90e57805024944a6ee5eed246f109c18724d453093e82bac1469dbd9e"
   solver-name = "gps-cdcl"
   solver-version = 1

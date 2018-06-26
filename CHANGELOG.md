@@ -11,6 +11,7 @@ BREAKING CHANGES
 * Signers of a transaction now only sign over their account and sequence number
 * Removed MsgChangePubKey from auth
 * Removed setPubKey from account mapper
+* Removed GetMemo from Tx (it is still on StdTx)
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
@@ -34,6 +35,8 @@ FIXES
 * Fixed bug where `democli account` didn't decode the account data correctly
 * \#1343 - fixed unnecessary parallelism in CI
 * \#1367 - set ChainID in InitChain
+* \#1353 - CLI: Show pool shares fractions in human-readable format
+* \#1258 - printing big.rat's can no longer overflow int64
 
 ## 0.19.0
 

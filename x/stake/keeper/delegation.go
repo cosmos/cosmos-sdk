@@ -224,7 +224,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delegatorAddr sdk.Address, bondAmt sdk
 }
 
 // unbond the the delegation return
-func (k Keeper) Unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.Address,
+func (k Keeper) unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.Address,
 	shares sdk.Rat) (amount int64, err sdk.Error) {
 
 	// check if delegation has any shares in it unbond
@@ -278,4 +278,97 @@ func (k Keeper) Unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.Address
 	}
 
 	return
+}
+
+//______________________________________________________________________________________________________
+
+// complete unbonding an unbonding record
+func (k Keeper) BeginUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr sdk.Address, sharesAmount sdk.Rat) sdk.Error {
+
+	returnAmount, err := k.unbond(ctx, delegatorAddr, validatorAddr, sharesAmount)
+	if err != nil {
+		return err
+	}
+
+	// create the unbonding delegation
+	params := k.GetParams(ctx)
+	minTime := ctx.BlockHeader().Time + params.UnbondingTime
+
+	ubd := types.UnbondingDelegation{
+		DelegatorAddr: delegatorAddr,
+		ValidatorAddr: validatorAddr,
+		MinTime:       minTime,
+		Balance:       sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)},
+	}
+	k.SetUnbondingDelegation(ctx, ubd)
+	return nil
+}
+
+// complete unbonding an unbonding record
+func (k Keeper) CompleteUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr sdk.Address) sdk.Error {
+
+	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
+	if !found {
+		return types.ErrNoUnbondingDelegation(k.Codespace())
+	}
+
+	// ensure that enough time has passed
+	ctxTime := ctx.BlockHeader().Time
+	if ubd.MinTime > ctxTime {
+		return types.ErrNotMature(k.Codespace(), "unbonding", "unit-time", ubd.MinTime, ctxTime)
+	}
+
+	k.coinKeeper.AddCoins(ctx, ubd.DelegatorAddr, sdk.Coins{ubd.Balance})
+	k.RemoveUnbondingDelegation(ctx, ubd)
+	return nil
+}
+
+// complete unbonding an unbonding record
+func (k Keeper) BeginRedelegation(ctx sdk.Context, delegatorAddr, validatorSrcAddr,
+	validatorDstAddr sdk.Address, sharesAmount sdk.Rat) sdk.Error {
+
+	returnAmount, err := k.unbond(ctx, delegatorAddr, validatorSrcAddr, sharesAmount)
+	if err != nil {
+		return err
+	}
+
+	params := k.GetParams(ctx)
+	returnCoin := sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)}
+	dstValidator, found := k.GetValidator(ctx, validatorDstAddr)
+	if !found {
+		return types.ErrBadRedelegationDst(k.Codespace())
+	}
+	sharesCreated, err := k.Delegate(ctx, delegatorAddr, returnCoin, dstValidator)
+
+	// create the unbonding delegation
+	minTime := ctx.BlockHeader().Time + params.UnbondingTime
+
+	red := types.Redelegation{
+		DelegatorAddr:    delegatorAddr,
+		ValidatorSrcAddr: validatorSrcAddr,
+		ValidatorDstAddr: validatorDstAddr,
+		MinTime:          minTime,
+		SharesDst:        sharesCreated,
+		SharesSrc:        sharesAmount,
+	}
+	k.SetRedelegation(ctx, red)
+	return nil
+}
+
+// complete unbonding an ongoing redelegation
+func (k Keeper) CompleteRedelegation(ctx sdk.Context, delegatorAddr, validatorSrcAddr, validatorDstAddr sdk.Address) sdk.Error {
+
+	red, found := k.GetRedelegation(ctx, delegatorAddr, validatorSrcAddr, validatorDstAddr)
+	if !found {
+		return types.ErrNoRedelegation(k.Codespace())
+	}
+
+	// ensure that enough time has passed
+	ctxTime := ctx.BlockHeader().Time
+	if red.MinTime > ctxTime {
+		return types.ErrNotMature(k.Codespace(), "redelegation", "unit-time", red.MinTime, ctxTime)
+	}
+
+	k.RemoveRedelegation(ctx, red)
+	return nil
 }

@@ -17,11 +17,11 @@ const (
 )
 
 func ErrNoValidatorForAddress(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "That address is not associated with any known validator")
+	return sdk.NewError(codespace, CodeInvalidValidator, "that address is not associated with any known validator")
 }
 func ErrBadValidatorAddr(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "Validator does not exist for that address")
+	return sdk.NewError(codespace, CodeInvalidValidator, "validator does not exist for that address")
 }
 func ErrValidatorJailed(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeValidatorJailed, "Validator jailed, cannot yet be unrevoked")
+	return sdk.NewError(codespace, CodeValidatorJailed, "validator jailed, cannot yet be unrevoked")
 }

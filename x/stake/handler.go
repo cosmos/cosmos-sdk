@@ -149,8 +149,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 }
 
 func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k keeper.Keeper) sdk.Result {
-
-	returnAmount, err := k.Unbond(ctx, msg.DelegatorAddr, msg.ValidatorAddr, msg.SharesAmount)
+	err := k.BeginUnbonding(ctx, msg.DelegatorAddr, msg.ValidatorAddr, msg.SharesAmount)
 	if err != nil {
 		return err.Result()
 	}
@@ -179,19 +178,10 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 
 func handleMsgCompleteUnbonding(ctx sdk.Context, msg types.MsgCompleteUnbonding, k keeper.Keeper) sdk.Result {
 
-	ubd, found := k.GetUnbondingDelegation(ctx, msg.DelegatorAddr, msg.ValidatorAddr)
-	if !found {
-		return ErrNoUnbondingDelegation(k.Codespace()).Result()
+	err := k.CompleteUnbonding(ctx, msg.DelegatorAddr, msg.ValidatorAddr)
+	if err != nil {
+		return err.Result()
 	}
-
-	// ensure that enough time has passed
-	ctxTime := ctx.BlockHeader().Time
-	if ubd.MinTime > ctxTime {
-		return ErrNotMature(k.Codespace(), "unbonding", "unit-time", ubd.MinTime, ctxTime).Result()
-	}
-
-	k.CoinKeeper().AddCoins(ctx, ubd.DelegatorAddr, sdk.Coins{ubd.Balance})
-	k.RemoveUnbondingDelegation(ctx, ubd)
 
 	tags := sdk.NewTags(
 		tags.Action, ActionCompleteUnbonding,
@@ -203,8 +193,8 @@ func handleMsgCompleteUnbonding(ctx sdk.Context, msg types.MsgCompleteUnbonding,
 }
 
 func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k keeper.Keeper) sdk.Result {
-
-	returnAmount, err := k.Unbond(ctx, msg.DelegatorAddr, msg.ValidatorSrcAddr, msg.SharesAmount)
+	err := k.BeginRedelegation(ctx, msg.DelegatorAddr, msg.ValidatorSrcAddr,
+		msg.ValidatorDstAddr, msg.SharesAmount)
 	if err != nil {
 		return err.Result()
 	}
@@ -242,19 +232,10 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 }
 
 func handleMsgCompleteRedelegate(ctx sdk.Context, msg types.MsgCompleteRedelegate, k keeper.Keeper) sdk.Result {
-
-	red, found := k.GetRedelegation(ctx, msg.DelegatorAddr, msg.ValidatorSrcAddr, msg.ValidatorDstAddr)
-	if !found {
-		return ErrNoRedelegation(k.Codespace()).Result()
+	err := k.CompleteRedelegation(ctx, msg.DelegatorAddr, msg.ValidatorSrcAddr, msg.ValidatorDstAddr)
+	if err != nil {
+		return err.Result()
 	}
-
-	// ensure that enough time has passed
-	ctxTime := ctx.BlockHeader().Time
-	if red.MinTime > ctxTime {
-		return ErrNotMature(k.Codespace(), "redelegation", "unit-time", red.MinTime, ctxTime).Result()
-	}
-
-	k.RemoveRedelegation(ctx, red)
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionCompleteRedelegation,

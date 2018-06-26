@@ -123,18 +123,18 @@ func TestSlashRedelegation(t *testing.T) {
 	keeper.SetDelegation(ctx, del)
 
 	// prior to the current height, stake didn't contribute
-	slashAmount := keeper.slashRedelegation(ctx, rd, 1, fraction)
+	slashAmount, _ := keeper.slashRedelegation(ctx, rd, 1, fraction)
 	require.Equal(t, int64(0), slashAmount.Evaluate())
 
 	// after the expiration time, no longer eligible for slashing
 	ctx = ctx.WithBlockHeader(abci.Header{Time: int64(10)})
 	keeper.SetRedelegation(ctx, rd)
-	slashAmount = keeper.slashRedelegation(ctx, rd, 0, fraction)
+	slashAmount, _ = keeper.slashRedelegation(ctx, rd, 0, fraction)
 	require.Equal(t, int64(0), slashAmount.Evaluate())
 
 	ctx = ctx.WithBlockHeader(abci.Header{Time: int64(0)})
 	keeper.SetRedelegation(ctx, rd)
-	slashAmount = keeper.slashRedelegation(ctx, rd, 0, fraction)
+	slashAmount, _ = keeper.slashRedelegation(ctx, rd, 0, fraction)
 	require.Equal(t, int64(5), slashAmount.Evaluate())
 	rd, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
@@ -207,8 +207,8 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	require.Equal(t, sdk.NewInt(2), ubd.Balance.Amount)
 	// read updated pool
 	newPool := keeper.GetPool(ctx)
-	// unbonding shares burned
-	require.Equal(t, int64(2), oldPool.LooseTokens-newPool.LooseTokens)
+	// bonded tokens burned
+	require.Equal(t, int64(3), oldPool.BondedTokens-newPool.BondedTokens)
 	// read updated validator
 	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
 	// power decreased, but not by quite half, stake was bonded since
@@ -256,8 +256,8 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.Equal(t, sdk.NewInt(3), rd.Balance.Amount)
 	// read updated pool
 	newPool := keeper.GetPool(ctx)
-	// loose tokens burned
-	require.Equal(t, int64(3), oldPool.LooseTokens-newPool.LooseTokens)
+	// bonded tokens burned
+	require.Equal(t, int64(4), oldPool.BondedTokens-newPool.BondedTokens)
 	// read updated validator
 	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
 	// power decreased, but not by quite half, stake was bonded since
@@ -316,10 +316,10 @@ func TestSlashBoth(t *testing.T) {
 	require.Equal(t, sdk.NewInt(3), rdA.Balance.Amount)
 	// read updated pool
 	newPool := keeper.GetPool(ctx)
-	// unbonding shares burned
-	require.Equal(t, sdk.NewRat(3).Evaluate(), oldPool.UnbondingShares.Sub(newPool.UnbondingShares).Evaluate())
-	// loose tokens burned
-	require.Equal(t, int64(2), oldPool.LooseTokens-newPool.LooseTokens)
+	// unbonding tokens burned
+	require.Equal(t, int64(2), oldPool.UnbondingTokens-newPool.UnbondingTokens)
+	// bonded tokens burned
+	require.Equal(t, int64(3), oldPool.BondedTokens-newPool.BondedTokens)
 	// read updated validator
 	validator, found = keeper.GetValidatorByPubKey(ctx, PKs[0])
 	// power not decreased, all stake was bonded since

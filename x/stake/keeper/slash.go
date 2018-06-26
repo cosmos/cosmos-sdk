@@ -40,18 +40,18 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 }
 
 // slash a redelegation
-func (k Keeper) slashRedelegation(ctx sdk.Context, redelegation types.Redelegation, height int64, fraction sdk.Rat) (slashAmount sdk.Rat) {
+func (k Keeper) slashRedelegation(ctx sdk.Context, redelegation types.Redelegation, height int64, fraction sdk.Rat) (slashAmount sdk.Rat, tokensToBurn int64) {
 	now := ctx.BlockHeader().Time
 
 	// If redelegation started before this height, stake didn't contribute to infraction
 	if redelegation.CreationHeight < height {
-		return sdk.ZeroRat()
+		return sdk.ZeroRat(), 0
 	}
 
 	if redelegation.MinTime < now {
 		// Redelegation no longer eligible for slashing, skip it
 		// TODO Delete it automatically?
-		return sdk.ZeroRat()
+		return sdk.ZeroRat(), 0
 	}
 
 	// Calculate slash amount proportional to stake contributing to infraction
@@ -69,12 +69,12 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, redelegation types.Redelegati
 
 	// Unbond from target validator
 	sharesToUnbond := fraction.Mul(redelegation.SharesDst)
-	_, err := k.unbond(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr, sharesToUnbond)
+	tokensToBurn, err := k.unbond(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr, sharesToUnbond)
 	if err != nil {
 		panic(fmt.Errorf("error unbonding delegator: %v", err))
 	}
 
-	return
+	return slashAmount, tokensToBurn
 }
 
 // Slash a validator for an infraction committed at a known height
@@ -118,16 +118,16 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power
 			amountSlashed := k.slashUnbondingDelegation(ctx, unbondingDelegation, height, fraction)
 			remainingSlashAmount = remainingSlashAmount.Sub(amountSlashed)
 			// Burn unbonding tokens
-			pool.LooseTokens -= amountSlashed.EvaluateInt().Int64()
+			pool.UnbondingTokens -= amountSlashed.EvaluateInt().Int64()
 		}
 
 		// Iterate through redelegations from slashed validator
 		redelegations := k.GetRedelegationsFromValidator(ctx, ownerAddress)
 		for _, redelegation := range redelegations {
-			amountSlashed := k.slashRedelegation(ctx, redelegation, height, fraction)
+			amountSlashed, tokensToBurn := k.slashRedelegation(ctx, redelegation, height, fraction)
 			remainingSlashAmount = remainingSlashAmount.Sub(amountSlashed)
-			// Burn unbonding shares
-			pool.UnbondingShares = pool.UnbondingShares.Sub(amountSlashed)
+			// Burn bonded tokens
+			pool.BondedTokens -= tokensToBurn
 		}
 
 	}

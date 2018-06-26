@@ -15,7 +15,7 @@ import (
 
 const (
 	defaultIAVLCacheSize  = 10000
-	defaultIAVLNumRecent  = 1000
+	defaultIAVLNumRecent  = 100
 	defaultIAVLStoreEvery = 10000
 )
 
@@ -92,6 +92,11 @@ func (st *iavlStore) LastCommitID() CommitID {
 		Version: st.tree.Version64(),
 		Hash:    st.tree.Hash(),
 	}
+}
+
+// VersionExists returns whether or not a given version is stored
+func (st *iavlStore) VersionExists(version int64) bool {
+	return st.tree.VersionExists(version)
 }
 
 // Implements Store.

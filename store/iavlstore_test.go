@@ -259,6 +259,35 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 	require.Equal(t, len(expected), i)
 }
 
+func nextVersion(iavl *iavlStore) {
+	key := cmn.RandBytes(12)
+	value := cmn.RandBytes(50)
+	iavl.Set(key, value)
+	iavl.Commit()
+}
+func TestIAVLPruning(t *testing.T) {
+	db := dbm.NewMemDB()
+	tree := iavl.NewVersionedTree(db, cacheSize)
+	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
+	nextVersion(iavlStore)
+	var i, j int64
+	for i = 1; i <= 100; i++ {
+		for j = 1; j <= i; j++ {
+			if (i-j) < numRecent || j%storeEvery == int64(0) {
+				assert.True(t, iavlStore.VersionExists(j),
+					"Missing version %d with latest version %d. Should save last %d and every %d",
+					j, i, numRecent, storeEvery)
+			} else {
+				assert.False(t, iavlStore.VersionExists(j),
+					"Unpruned version %d with latest version %d. Should prune all but last %d and every %d",
+					j, i, numRecent, storeEvery)
+			}
+		}
+		nextVersion(iavlStore)
+	}
+
+}
+
 func TestIAVLStoreQuery(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree := iavl.NewVersionedTree(db, cacheSize)

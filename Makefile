@@ -36,11 +36,11 @@ else
 	go build $(BUILD_FLAGS) -o build/democli ./examples/democoin/cmd/democli
 endif
 
-install: 
+install:
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
 
-install_examples: 
+install_examples:
 	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecoind
 	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecli
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democoind
@@ -89,7 +89,7 @@ godocs:
 
 test: test_unit
 
-test_cli: 
+test_cli:
 	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test`
 
 test_cli_retry:

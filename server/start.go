@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/abci/server"
+	"github.com/tendermint/tendermint/abci/server"
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/node"

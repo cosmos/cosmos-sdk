@@ -37,10 +37,6 @@
   version = "~0.0.3"
 
 [[constraint]]
-  name = "github.com/pkg/errors"
-  version = "~0.8.0"
-
-[[constraint]]
   name = "github.com/spf13/cobra"
   version = "~0.0.1"
 
@@ -49,37 +45,41 @@
   version = "~1.0.0"
 
 [[constraint]]
-  name = "github.com/stretchr/testify"
-  version = "~1.2.1"
+  name = "github.com/pkg/errors"
+  version = "0.8.0"
 
 [[constraint]]
-  name = "github.com/tendermint/abci"
-  version = "=0.12.0"
+  name = "github.com/stretchr/testify"
+  version = "1.2.1"
 
-[[override]]
-  name = "github.com/tendermint/go-crypto"
-  version = "~0.9.0"
-
-[[override]]
+[[constraint]]
   name = "github.com/tendermint/go-amino"
-  version = "~0.10.1"
+  version = "=0.10.1"
 
-[[override]]
+[[constraint]]
   name = "github.com/tendermint/iavl"
-  version = "0.8.0-rc0"
+  version = "=0.8.0"
 
-[[override]]
+[[constraint]]
   name = "github.com/tendermint/tendermint"
-  branch = "cwgoes/go-crypto-interface-changes"
+  revision = "8412b75b1070ac023405e8228e017ed36531fe1b"
 
 [[override]]
   name = "github.com/tendermint/tmlibs"
-  branch = "develop"
+  revision = "e09e3a56f323c3efa3653e513540f1686a5374b2"
 
 # this got updated and broke, so locked to an old working commit ...
 [[override]]
   name = "google.golang.org/genproto"
   revision = "7fd901a49ba6a7f87732eb344f6e3c5b19d1b200"
+
+[[constraint]]
+  name = "github.com/bartekn/go-bip39"
+  branch = "master"
+
+[[constraint]]
+  name = "github.com/zondax/ledger-goclient"
+  revision = "065cbf938a16f20335c40cfe180f9cd4955c6a5a"
 
 [prune]
   go-tests = true

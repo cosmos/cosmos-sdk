@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	crypto "github.com/tendermint/tendermint/crypto"
 )
 
 // keeper of the staking store

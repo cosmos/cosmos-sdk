@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/abci/server"
+	"github.com/tendermint/tendermint/abci/server"
 	"github.com/tendermint/tmlibs/cli"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"

@@ -13,8 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	crypto "github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 )

@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	keys "github.com/tendermint/go-crypto/keys"
+	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
 
 	"github.com/spf13/cobra"
 )

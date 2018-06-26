@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	keybase "github.com/cosmos/cosmos-sdk/client/keys"
-	keys "github.com/tendermint/go-crypto/keys"
+	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 // REST request body

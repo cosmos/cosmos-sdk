@@ -5,7 +5,8 @@ import (
 
 	cmn "github.com/tendermint/tmlibs/common"
 
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"reflect"
 )
 
 // ABCICodeType - combined codetype / codespace
@@ -177,7 +178,7 @@ func newError(codespace CodespaceType, code CodeType, msg string) *sdkError {
 	return &sdkError{
 		codespace: codespace,
 		code:      code,
-		err:       cmn.NewErrorWithT(code, msg),
+		err:       cmn.ErrorWrap(code, msg),
 	}
 }
 
@@ -223,7 +224,7 @@ func (err *sdkError) Trace(msg string) Error {
 	return &sdkError{
 		codespace: err.codespace,
 		code:      err.code,
-		err:       err.err.Trace(msg),
+		err:       err.err.Trace(0, msg),
 	}
 }
 
@@ -241,7 +242,7 @@ func (err *sdkError) WithDefaultCodespace(cs CodespaceType) Error {
 }
 
 func (err *sdkError) T() interface{} {
-	return err.err.T()
+	return reflect.TypeOf(err.err.Data())
 }
 
 func (err *sdkError) Result() Result {

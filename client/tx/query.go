@@ -7,10 +7,12 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/tendermint/tmlibs/common"
+
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -81,6 +83,7 @@ func formatTxResult(cdc *wire.Codec, res *ctypes.ResultTx) (txInfo, error) {
 	}
 
 	info := txInfo{
+		Hash:   res.Hash,
 		Height: res.Height,
 		Tx:     tx,
 		Result: res.TxResult,
@@ -90,6 +93,7 @@ func formatTxResult(cdc *wire.Codec, res *ctypes.ResultTx) (txInfo, error) {
 
 // txInfo is used to prepare info to display
 type txInfo struct {
+	Hash   common.HexBytes        `json:"hash"`
 	Height int64                  `json:"height"`
 	Tx     sdk.Tx                 `json:"tx"`
 	Result abci.ResponseDeliverTx `json:"result"`

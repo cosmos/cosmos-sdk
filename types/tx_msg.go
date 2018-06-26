@@ -31,9 +31,6 @@ type Tx interface {
 
 	// Gets the Msg.
 	GetMsgs() []Msg
-
-	// Gets the memo.
-	GetMemo() string
 }
 
 //__________________________________________________________

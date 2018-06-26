@@ -11,6 +11,7 @@ BREAKING CHANGES
 * Signers of a transaction now only sign over their account and sequence number
 * Removed MsgChangePubKey from auth
 * Removed setPubKey from account mapper
+* Removed GetMemo from Tx (it is still on StdTx)
 * [cli] rearranged commands under subcommands
 * [stake] remove Tick and add EndBlocker
 * [stake] introduce concept of unbonding for delegations and validators
@@ -32,6 +33,7 @@ FEATURES
 * [tools] Switch gometalinter to the stable version
 * [tools] Add checking for misspellings and for incorrectly formatted files in circle CI
 * [server] Default config now creates a profiler at port 6060, and increase p2p send/recv rates
+* [tests] Add WaitForNextNBlocksTM helper method
 
 FIXES 
 * [gaia] Added self delegation for validators in the genesis creation
@@ -48,6 +50,8 @@ FIXES
 * Fixed bug where chain ID wasn't passed properly in x/bank REST handler
 * Fixed bug where `democli account` didn't decode the account data correctly
 * \#1343 - fixed unnecessary parallelism in CI
+* \#1353 - CLI: Show pool shares fractions in human-readable format
+* \#1258 - printing big.rat's can no longer overflow int64
 
 IMPROVEMENTS
 * bank module uses go-wire codec instead of 'encoding/json'

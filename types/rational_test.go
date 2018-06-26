@@ -100,7 +100,7 @@ func TestEqualities(t *testing.T) {
 
 }
 
-func TestArithmatic(t *testing.T) {
+func TestArithmetic(t *testing.T) {
 	tests := []struct {
 		r1, r2                         Rat
 		resMul, resDiv, resAdd, resSub Rat
@@ -296,4 +296,15 @@ func TestRatsEqual(t *testing.T) {
 		assert.Equal(t, tc.eq, RatsEqual(tc.r2s, tc.r1s))
 	}
 
+}
+
+func TestStringOverflow(t *testing.T) {
+	// two random 64 bit primes
+	rat1 := NewRat(5164315003622678713, 4389711697696177267)
+	rat2 := NewRat(-3179849666053572961, 8459429845579852627)
+	rat3 := rat1.Add(rat2)
+	assert.Equal(t,
+		"29728537197630860939575850336935951464/37134458148982045574552091851127630409",
+		rat3.String(),
+	)
 }

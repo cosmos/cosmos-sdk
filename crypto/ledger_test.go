@@ -6,6 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	tcrypto "github.com/tendermint/tendermint/crypto"
 )
 
 func TestRealLedgerSecp256k1(t *testing.T) {
@@ -28,7 +30,7 @@ func TestRealLedgerSecp256k1(t *testing.T) {
 
 	// now, let's serialize the key and make sure it still works
 	bs := priv.Bytes()
-	priv2, err := PrivKeyFromBytes(bs)
+	priv2, err := tcrypto.PrivKeyFromBytes(bs)
 	require.Nil(t, err, "%+v", err)
 
 	// make sure we get the same pubkey when we load from disk
@@ -43,7 +45,7 @@ func TestRealLedgerSecp256k1(t *testing.T) {
 
 	// make sure pubkeys serialize properly as well
 	bs = pub.Bytes()
-	bpub, err := PubKeyFromBytes(bs)
+	bpub, err := tcrypto.PubKeyFromBytes(bs)
 	require.NoError(t, err)
 	assert.Equal(t, pub, bpub)
 }

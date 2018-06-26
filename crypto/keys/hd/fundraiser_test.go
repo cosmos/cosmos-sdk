@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/tyler-smith/go-bip39"
+	"github.com/bartekn/go-bip39"
 
 	"github.com/tendermint/go-crypto"
 )
@@ -58,7 +58,7 @@ func TestFundraiserCompatibility(t *testing.T) {
 		master, ch := ComputeMastersFromSeed(seed)
 		priv, err := DerivePrivateKeyForPath(master, ch, "44'/118'/0'/0/0")
 		assert.NoError(t, err)
-		pub := crypto.PrivKeySecp256k1(priv).PubKey()
+		pub,_ := crypto.PrivKeySecp256k1(priv).PubKey()
 
 		t.Log("\tNODEJS GOLANG\n")
 		t.Logf("SEED \t%X %X\n", seedB, seed)

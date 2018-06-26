@@ -74,7 +74,7 @@
   revision = "7fd901a49ba6a7f87732eb344f6e3c5b19d1b200"
 
 [[constraint]]
-  name = "github.com/tyler-smith/go-bip39"
+  name = "github.com/bartekn/go-bip39"
   branch = "master"
 
 [[constraint]]

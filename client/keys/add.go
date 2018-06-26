@@ -12,8 +12,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	crypto "github.com/tendermint/tendermint/crypto"
+	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+
 	"github.com/tendermint/tmlibs/cli"
 )
 
@@ -90,8 +91,8 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	if viper.GetBool(client.FlagUseLedger) {
 		account := uint32(viper.GetInt(flagAccount))
 		index := uint32(viper.GetInt(flagIndex))
-		path := crypto.DerivationPath{44, 118, account, 0, index}
-		algo := keys.SignAlgo(viper.GetString(flagType))
+		path := ccrypto.DerivationPath{44, 118, account, 0, index}
+		algo := keys.SigningAlgo(viper.GetString(flagType))
 		info, err := kb.CreateLedger(name, path, algo)
 		if err != nil {
 			return err
@@ -103,7 +104,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		info, err := kb.Recover(name, pass, seed)
+		info, err := kb.CreateFundraiserKey(name, pass, seed)
 		if err != nil {
 			return err
 		}
@@ -111,8 +112,8 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		viper.Set(flagNoBackup, true)
 		printCreate(info, "")
 	} else {
-		algo := keys.SignAlgo(viper.GetString(flagType))
-		info, seed, err := kb.CreateMnemonic(name, pass, algo)
+		algo := keys.SigningAlgo(viper.GetString(flagType))
+		info, seed, err := kb.CreateMnemonic(name, keys.English, pass, algo)
 		if err != nil {
 			return err
 		}
@@ -208,7 +209,7 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create account
-	info, err := kb.Recover(m.Name, m.Password, m.Seed)
+	info, err := kb.CreateFundraiserKey(m.Name, m.Password, m.Seed)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -218,12 +219,12 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // function to just a new seed to display in the UI before actually persisting it in the keybase
-func getSeed(algo keys.SignAlgo) string {
+func getSeed(algo keys.SigningAlgo) string {
 	kb := client.MockKeyBase()
 	pass := "throwing-this-key-away"
 	name := "inmemorykey"
 
-	_, seed, _ := kb.CreateMnemonic(name, pass, algo)
+	_, seed, _ := kb.CreateMnemonic(name, keys.English, pass, algo)
 	return seed
 }
 
@@ -235,7 +236,7 @@ func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
 	if algoType == "" {
 		algoType = "ed25519"
 	}
-	algo := keys.SignAlgo(algoType)
+	algo := keys.SigningAlgo(algoType)
 
 	seed := getSeed(algo)
 	w.Write([]byte(seed))

@@ -164,7 +164,7 @@ func TestUnbondDelegation(t *testing.T) {
 
 	var err error
 	var amount int64
-	amount, err = keeper.Unbond(ctx, addrDels[0], addrVals[0], sdk.NewRat(6))
+	amount, err = keeper.unbond(ctx, addrDels[0], addrVals[0], sdk.NewRat(6))
 	require.NoError(t, err)
 	assert.Equal(t, int64(6), amount) // shares to be added to an unbonding delegation / redelegation
 

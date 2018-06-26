@@ -188,7 +188,7 @@ func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc
 			return nil, fmt.Errorf("Error fetching passphrase: %v", err)
 		}
 	}
-	txBytes, err = ctx.SignAndBuild(name, passphrase, msg, cdc)
+	txBytes, err = ctx.SignAndBuild(name, passphrase, msgs, cdc)
 	if err != nil {
 		return nil, fmt.Errorf("Error signing transaction: %v", err)
 	}

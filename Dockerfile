@@ -6,7 +6,7 @@
 FROM alpine:edge
 
 # Set up dependencies
-ENV PACKAGES go glide make git libc-dev bash
+ENV PACKAGES go make git libc-dev bash linux-headers
 
 # Set up GOPATH & PATH
 

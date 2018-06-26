@@ -154,20 +154,6 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 		return err.Result()
 	}
 
-	// create the unbonding delegation
-	params := k.GetParams(ctx)
-	minTime := ctx.BlockHeader().Time + params.UnbondingTime
-	returnCoin := sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)}
-
-	ubd := UnbondingDelegation{
-		DelegatorAddr:  msg.DelegatorAddr,
-		ValidatorAddr:  msg.ValidatorAddr,
-		MinTime:        minTime,
-		Balance:        returnCoin,
-		InitialBalance: returnCoin,
-	}
-	k.SetUnbondingDelegation(ctx, ubd)
-
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionBeginUnbonding,
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
@@ -198,29 +184,6 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 	if err != nil {
 		return err.Result()
 	}
-
-	params := k.GetParams(ctx)
-	returnCoin := sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)}
-	dstValidator, found := k.GetValidator(ctx, msg.ValidatorDstAddr)
-	if !found {
-		return ErrBadRedelegationDst(k.Codespace()).Result()
-	}
-	sharesCreated, err := k.Delegate(ctx, msg.DelegatorAddr, returnCoin, dstValidator)
-
-	// create the unbonding delegation
-	minTime := ctx.BlockHeader().Time + params.UnbondingTime
-
-	red := Redelegation{
-		DelegatorAddr:    msg.DelegatorAddr,
-		ValidatorSrcAddr: msg.ValidatorSrcAddr,
-		ValidatorDstAddr: msg.ValidatorDstAddr,
-		MinTime:          minTime,
-		SharesDst:        sharesCreated,
-		SharesSrc:        msg.SharesAmount,
-		Balance:          returnCoin,
-		InitialBalance:   returnCoin,
-	}
-	k.SetRedelegation(ctx, red)
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionBeginRedelegation,

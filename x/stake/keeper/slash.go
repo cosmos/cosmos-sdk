@@ -69,7 +69,7 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, redelegation types.Redelegati
 
 	// Unbond from target validator
 	sharesToUnbond := fraction.Mul(redelegation.SharesDst)
-	_, err := k.Unbond(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr, sharesToUnbond)
+	_, err := k.unbond(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr, sharesToUnbond)
 	if err != nil {
 		panic(fmt.Errorf("error unbonding delegator: %v", err))
 	}

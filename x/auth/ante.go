@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -72,7 +71,6 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			accNums[i] = sigs[i].AccountNumber
 		}
 		fee := stdTx.Fee
-		chainID := ctx.ChainID()
 
 		// Check sig and nonce and collect signer accounts.
 		var signerAccs = make([]Account, len(signerAddrs))

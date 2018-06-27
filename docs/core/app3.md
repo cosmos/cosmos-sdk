@@ -33,6 +33,10 @@ In this model, an account contains:
 - Sequence to prevent transaction replays
 - Coins to carry a balance
 
+Note that the `AccountNumber` is a unique number that is assigned when the account is
+created, and the `Sequence` is incremented by one every time a transaction is
+sent from the account.
+
 ### Account
 
 The `Account` interface captures this account model with getters and setters:
@@ -146,7 +150,21 @@ type StdSignature struct {
 }
 ```
 
-And the standard form for a transaction fee is `StdFee`:
+The signature includes both an `AccountNumber` and a `Sequence`. 
+The `Sequence` must match the one in the 
+corresponding account when the transaction is processed, and will increment by
+one with every transaction. This prevents the same
+transaction from being replayed multiple times, resolving the insecurity that
+remains in App2.
+
+The `AccountNumber` is also for replay protection - it allows accounts to be
+deleted from the store when they run out of accounts. If an account receives
+coins after it is deleted, the account will be re-created, with the Sequence
+reset to 0, but a new AccountNumber. If it weren't for the AccountNumber, the
+last sequence of transactions made by the account before it was deleted could be
+replayed!
+
+Finally, the standard form for a transaction fee is `StdFee`:
 
 ```go
 // StdFee includes the amount of coins paid in fees and the maximum
@@ -158,36 +176,71 @@ type StdFee struct {
 }
 ```
 
+The fee must be paid by the first signer. This allows us to quickly check if the
+transaction fee can be paid, and reject the transaction if not.
+
 ## Signing
 
-The standard bytes for signers to sign over is provided by:
+The `StdTx` supports multiple messages and multiple signers.
+To sign the transaction, each signer must collect the following information:
+
+- the ChainID (TODO haven't mentioned this yet)
+- the AccountNumber and Sequence for the given signer's account (from the
+  blockchain)
+- the transaction fee 
+- the list of transaction messages
+- an optional memo
+
+Then they can compute the transaction bytes to sign using the
+`auth.StdSignBytes` function:
 
 ```go
-TODO
+bytesToSign := StdSignBytes(chainID, accNum, accSequence, fee, msgs, memo)
 ```
 
 ## AnteHandler
 
-TODO
+As we saw in `App2`, we can use an `AnteHandler` to authenticate transactions
+before we handle any of their internal messages. While previously we implemented
+our own simple `AnteHandler`, the `x/auth` module provides a much more advanced
+one that uses `AccountMapper` and works with `StdTx`:
 
-The list of signatures in the `StdTx` must match the result of `GetSigners()`
-for each `Msg`. The validation rules for the `StdTx` will be defined in the 
+```go
+TODO: feekeeper :(
+app.SetAnteHandler(auth.NewAnteHandler(accountMapper, feeKeeper))
+```
 
-Recall that the `Sequence` is expected to increment every time a
-message is signed by a given account in order to prevent "replay attacks" where
-the same message could be executed over and over again. The `AccountNumber` is
-assigned when the account is created or recreated after being emptied.
+The AnteHandler provided by `x/auth` enforces the following rules:
 
-The `StdSignature` can also optionally include the public key for verifying the
-signature. The public key only needs to be included the first time a transaction
-is sent from a given account - from then on it will be stored in the `Account`
-and can be left out of transactions.
+- the memo must not be too big
+- the right number of signatures must be provided (one for each unique signer
+  returned by `msg.GetSigner` for each `msg`)
+- any account signing for the first-time must include a public key in the
+  StdSignature
+- the signatures must be valid when authenticated in the same order as specified
+  by the messages
 
-The fee is provided in a standard form as `StdFee`:
-Note that the address responsible for paying the transactions fee is the first address
-returned by msg.GetSigners() for the first `Msg`. The convenience function `FeePayer(tx Tx)` is provided
-to return this.
+Note that validating
+signatures requires checking that the correct account number and sequence was
+used by each signer, as this information is required in the `StdSignBytes`.
 
+If any of the above are not satisfied, it returns an error. 
+
+If all of the above verifications pass, the AnteHandler makes the following
+changes to the state:
+
+- increment account sequence by one for all signers
+- set the pubkey for any first-time signers
+- deduct the fee from the first signer
+
+Recall that incrementing the `Sequence` prevents "replay attacks" where
+the same message could be executed over and over again. 
+
+The PubKey is required for signature verification, but it is only required in
+the StdSignature once. From that point on, it will be stored in the account.
+
+The fee is paid by the first address returned by msg.GetSigners() for the first `Msg`. 
+The convenience function `FeePayer(tx Tx) sdk.Address` is provided to return this.
 
 ## App3
 

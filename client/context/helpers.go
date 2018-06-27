@@ -162,6 +162,10 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msgs []sdk.Msg, cdc
 // sign and build the transaction from the msg
 func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
 
+	ctx, err = EnsureAccountNumber(ctx)
+	if err != nil {
+		return nil, err
+	}
 	// default to next sequence number if none provided
 	ctx, err = EnsureSequence(ctx)
 	if err != nil {

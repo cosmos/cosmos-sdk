@@ -25,7 +25,6 @@ func runListCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	infos, err := kb.List()
-
 	if err == nil {
 		printInfos(infos)
 	}

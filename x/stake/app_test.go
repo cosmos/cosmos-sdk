@@ -115,10 +115,9 @@ func TestStakeMsgs(t *testing.T) {
 	////////////////////
 	// Create Validator
 
-	pubKey := priv1.PubKey()
 	description := NewDescription("foo_moniker", "", "", "")
 	createValidatorMsg := NewMsgCreateValidator(
-		addr1, pubKey, bondCoin, description,
+		addr1, priv1.PubKey(), bondCoin, description,
 	)
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{createValidatorMsg}, []int64{0}, []int64{0}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin.Minus(bondCoin)})

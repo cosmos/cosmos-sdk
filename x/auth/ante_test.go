@@ -34,8 +34,7 @@ func newCoins() sdk.Coins {
 // generate a priv key and return it with its address
 func privAndAddr() (crypto.PrivKey, sdk.Address) {
 	priv := crypto.GenPrivKeyEd25519()
-	pubKey := priv.PubKey()
-	addr := pubKey.Address()
+	addr := priv.PubKey().Address()
 	return priv, addr
 }
 
@@ -550,8 +549,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	checkValidTx(t, anteHandler, ctx, tx)
 
 	acc1 = mapper.GetAccount(ctx, addr1)
-	pubKey := priv1.PubKey()
-	require.Equal(t, acc1.GetPubKey(), pubKey)
+	require.Equal(t, acc1.GetPubKey(), priv1.PubKey())
 
 	// test public key not found
 	msg = newTestMsg(addr2)

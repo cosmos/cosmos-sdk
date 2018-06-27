@@ -91,12 +91,3 @@ func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accnum
 
 	app.Commit()
 }
-
-// panic on sign errors
-func MustSign(priv crypto.PrivKey, bytes []byte) crypto.Signature {
-	sig, err := priv.Sign(bytes)
-	if err != nil {
-		panic(err)
-	}
-	return sig
-}

@@ -77,14 +77,22 @@ var (
 
 // initialize the mock application for this module
 func getMockApp(t *testing.T) *mock.App {
+	mapp, err := getBenchmarkMockApp()
+	require.NoError(t, err)
+	return mapp
+}
+
+// getBenchmarkMockApp initializes a mock application for this module, for purposes of benchmarking
+// Any long term API support commitments do not apply to this function.
+func getBenchmarkMockApp() (*mock.App, error) {
 	mapp := mock.NewApp()
 
 	RegisterWire(mapp.Cdc)
 	coinKeeper := NewKeeper(mapp.AccountMapper)
 	mapp.Router().AddRoute("bank", NewHandler(coinKeeper))
 
-	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{}))
-	return mapp
+	err := mapp.CompleteSetup([]*sdk.KVStoreKey{})
+	return mapp, err
 }
 
 func TestMsgSendWithAccounts(t *testing.T) {

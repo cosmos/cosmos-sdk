@@ -1,14 +1,15 @@
-package stake
+package types
 
 import (
 	"bytes"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Validator defines the total amount of bond shares and their exchange rate to
@@ -40,9 +41,6 @@ type Validator struct {
 	PrevBondedShares sdk.Rat `json:"prev_bonded_shares"` // total shares of a global hold pools
 }
 
-// Validators - list of Validators
-type Validators []Validator
-
 // NewValidator - initialize a new validator
 func NewValidator(owner sdk.Address, pubKey crypto.PubKey, description Description) Validator {
 	return Validator{
@@ -64,7 +62,7 @@ func NewValidator(owner sdk.Address, pubKey crypto.PubKey, description Descripti
 }
 
 // only the vitals - does not check bond height of IntraTxCounter
-func (v Validator) equal(c2 Validator) bool {
+func (v Validator) Equal(c2 Validator) bool {
 	return v.PubKey.Equals(c2.PubKey) &&
 		bytes.Equal(v.Owner, c2.Owner) &&
 		v.PoolShares.Equal(c2.PoolShares) &&
@@ -97,10 +95,47 @@ func NewDescription(moniker, identity, website, details string) Description {
 	}
 }
 
-//XXX updateDescription function which enforce limit to number of description characters
+// update the description based on input
+func (d Description) UpdateDescription(d2 Description) (Description, sdk.Error) {
+	if d.Moniker == "[do-not-modify]" {
+		d2.Moniker = d.Moniker
+	}
+	if d.Identity == "[do-not-modify]" {
+		d2.Identity = d.Identity
+	}
+	if d.Website == "[do-not-modify]" {
+		d2.Website = d.Website
+	}
+	if d.Details == "[do-not-modify]" {
+		d2.Details = d.Details
+	}
+	return Description{
+		Moniker:  d2.Moniker,
+		Identity: d2.Identity,
+		Website:  d2.Website,
+		Details:  d2.Details,
+	}.EnsureLength()
+}
+
+// ensure the length of the description
+func (d Description) EnsureLength() (Description, sdk.Error) {
+	if len(d.Moniker) > 70 {
+		return d, ErrDescriptionLength(DefaultCodespace, "moniker", len(d.Moniker), 70)
+	}
+	if len(d.Identity) > 3000 {
+		return d, ErrDescriptionLength(DefaultCodespace, "identity", len(d.Identity), 3000)
+	}
+	if len(d.Website) > 140 {
+		return d, ErrDescriptionLength(DefaultCodespace, "website", len(d.Website), 140)
+	}
+	if len(d.Details) > 280 {
+		return d, ErrDescriptionLength(DefaultCodespace, "details", len(d.Details), 280)
+	}
+	return d, nil
+}
 
 // abci validator from stake validator type
-func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
+func (v Validator) ABCIValidator(cdc *wire.Codec) abci.Validator {
 	return abci.Validator{
 		PubKey: tmtypes.TM2PB.PubKey(v.PubKey),
 		Power:  v.PoolShares.Bonded().Evaluate(),
@@ -109,7 +144,7 @@ func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
 
 // abci validator from stake validator type
 // with zero power used for validator updates
-func (v Validator) abciValidatorZero(cdc *wire.Codec) abci.Validator {
+func (v Validator) ABCIValidatorZero(cdc *wire.Codec) abci.Validator {
 	return abci.Validator{
 		PubKey: tmtypes.TM2PB.PubKey(v.PubKey),
 		Power:  0,
@@ -123,7 +158,7 @@ func (v Validator) Status() sdk.BondStatus {
 
 // update the location of the shares within a validator if its bond status has changed
 func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator, Pool) {
-	var tokens sdk.Int
+	var tokens int64
 
 	switch v.Status() {
 	case sdk.Unbonded:
@@ -159,8 +194,8 @@ func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator,
 // Remove pool shares
 // Returns corresponding tokens, which could be burned (e.g. when slashing
 // a validator) or redistributed elsewhere
-func (v Validator) removePoolShares(pool Pool, poolShares sdk.Rat) (Validator, Pool, sdk.Int) {
-	var tokens sdk.Int
+func (v Validator) RemovePoolShares(pool Pool, poolShares sdk.Rat) (Validator, Pool, int64) {
+	var tokens int64
 	switch v.Status() {
 	case sdk.Unbonded:
 		pool, tokens = pool.removeSharesUnbonded(poolShares)
@@ -173,7 +208,7 @@ func (v Validator) removePoolShares(pool Pool, poolShares sdk.Rat) (Validator, P
 	return v, pool, tokens
 }
 
-// XXX TEST
+// TODO remove should only be tokens
 // get the power or potential power for a validator
 // if bonded, the power is the BondedShares
 // if not bonded, the power is the amount of bonded shares which the
@@ -184,10 +219,9 @@ func (v Validator) EquivalentBondedShares(pool Pool) (eqBondedShares sdk.Rat) {
 
 //_________________________________________________________________________________________________________
 
-// XXX Audit this function further to make sure it's correct
 // add tokens to a validator
-func (v Validator) addTokensFromDel(pool Pool,
-	amount sdk.Int) (validator2 Validator, p2 Pool, issuedDelegatorShares sdk.Rat) {
+func (v Validator) AddTokensFromDel(pool Pool,
+	amount int64) (validator2 Validator, p2 Pool, issuedDelegatorShares sdk.Rat) {
 
 	exRate := v.DelegatorShareExRate(pool) // bshr/delshr
 
@@ -212,8 +246,8 @@ func (v Validator) addTokensFromDel(pool Pool,
 
 // remove delegator shares from a validator
 // NOTE this function assumes the shares have already been updated for the validator status
-func (v Validator) removeDelShares(pool Pool,
-	delShares sdk.Rat) (validator2 Validator, p2 Pool, createdCoins sdk.Int) {
+func (v Validator) RemoveDelShares(pool Pool,
+	delShares sdk.Rat) (validator2 Validator, p2 Pool, createdCoins int64) {
 
 	amount := v.DelegatorShareExRate(pool).Mul(delShares)
 	eqBondedSharesToRemove := NewBondedShares(amount)
@@ -272,14 +306,14 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp := "Validator \n"
 	resp += fmt.Sprintf("Owner: %s\n", bechOwner)
 	resp += fmt.Sprintf("Validator: %s\n", bechVal)
-	resp += fmt.Sprintf("Shares: Status %s,  Amount: %s\n", sdk.BondStatusToString(v.PoolShares.Status), v.PoolShares.Amount.String())
-	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.String())
+	resp += fmt.Sprintf("Shares: Status %s,  Amount: %s\n", sdk.BondStatusToString(v.PoolShares.Status), v.PoolShares.Amount.FloatString())
+	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.FloatString())
 	resp += fmt.Sprintf("Description: %s\n", v.Description)
 	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
 	resp += fmt.Sprintf("Proposer Reward Pool: %s\n", v.ProposerRewardPool.String())
 	resp += fmt.Sprintf("Commission: %s\n", v.Commission.String())
 	resp += fmt.Sprintf("Max Commission Rate: %s\n", v.CommissionMax.String())
-	resp += fmt.Sprintf("Comission Change Rate: %s\n", v.CommissionChangeRate.String())
+	resp += fmt.Sprintf("Commission Change Rate: %s\n", v.CommissionChangeRate.String())
 	resp += fmt.Sprintf("Commission Change Today: %s\n", v.CommissionChangeToday.String())
 	resp += fmt.Sprintf("Previously Bonded Stares: %s\n", v.PrevBondedShares.String())
 

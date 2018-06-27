@@ -1,14 +1,14 @@
 package app
 
 import (
-	"reflect"
 	"encoding/json"
 	"fmt"
+	"reflect"
 
+	"github.com/tendermint/go-crypto"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
-	"github.com/tendermint/go-crypto"
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -63,10 +63,10 @@ func NewApp2(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 
 // Coin Metadata
 type CoinMetadata struct {
-	TotalSupply sdk.Int
+	TotalSupply   sdk.Int
 	CurrentSupply sdk.Int
-	Issuer sdk.Address
-	Decimal uint64
+	Issuer        sdk.Address
+	Decimal       uint64
 }
 
 //------------------------------------------------------------------
@@ -75,13 +75,13 @@ type CoinMetadata struct {
 // Create Output struct to allow single message to issue arbitrary coins to multiple users
 type Output struct {
 	Address sdk.Address
-	Coins sdk.Coins
+	Coins   sdk.Coins
 }
 
 // Single permissioned issuer can issue multiple outputs
 // Implements sdk.Msg Interface
 type MsgIssue struct {
-	Issuer sdk.Address
+	Issuer  sdk.Address
 	Outputs []Output
 }
 
@@ -91,7 +91,7 @@ func (msg MsgIssue) Type() string { return "bank" }
 func (msg MsgIssue) ValidateBasic() sdk.Error {
 	if len(msg.Issuer) == 0 {
 		return sdk.ErrInvalidAddress("Issuer address cannot be empty")
-	} 
+	}
 
 	for _, o := range msg.Outputs {
 		if len(o.Address) == 0 {
@@ -152,10 +152,10 @@ func handleMsgIssue(ctx sdk.Context, keyMain *sdk.KVStoreKey, keyAcc *sdk.KVStor
 					return sdk.ErrInvalidCoins("Cannot issue that many new coins").Result()
 				}
 				metadata = CoinMetadata{
-					TotalSupply: sdk.NewInt(1000000),
+					TotalSupply:   sdk.NewInt(1000000),
 					CurrentSupply: sdk.NewInt(0),
-					Issuer: msg.Issuer,
-					Decimal: 10,
+					Issuer:        msg.Issuer,
+					Decimal:       10,
 				}
 			} else {
 				// Decode coin metadata

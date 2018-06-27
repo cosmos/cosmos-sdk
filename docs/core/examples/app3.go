@@ -1,9 +1,9 @@
 package app
 
 import (
-	"reflect"
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -13,7 +13,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-
 )
 
 const (
@@ -94,7 +93,7 @@ func betterHandleMsgIssue(ctx sdk.Context, metadataMapper MetaDataMapper, accoun
 				// coin doesn't have issuer yet, set issuer to msg issuer
 				metadata.Issuer = msg.Issuer
 			}
-			
+
 			// Check that msg Issuer is authorized to issue these coins
 			if !reflect.DeepEqual(metadata.Issuer, msg.Issuer) {
 				return sdk.ErrUnauthorized(fmt.Sprintf("Msg Issuer cannot issue these coins: %s", coin.Denom)).Result()
@@ -121,8 +120,6 @@ func betterHandleMsgIssue(ctx sdk.Context, metadataMapper MetaDataMapper, accoun
 
 	return sdk.Result{}
 }
-
-
 
 //------------------------------------------------------------------
 // Mapper for Coin Metadata

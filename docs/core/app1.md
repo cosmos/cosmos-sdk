@@ -94,7 +94,7 @@ func (msg MsgSend) ValidateBasic() sdk.Error {
 }
 ```
 
-# KVStore
+## KVStore
 
 The basic persistence layer for an SDK application is the KVStore:
 
@@ -140,7 +140,7 @@ like Ethereum's radix trie.
 As we'll soon see, apps have many distinct KVStores, each with a different name and for a different concern.
 Access to a store is mediated by *object-capability keys*, which must be granted to a handler during application startup.
 
-# Handlers
+## Handlers
 
 Now that we have a message type and a store interface, we can define our state transition function using a handler:
 
@@ -150,11 +150,12 @@ type Handler func(ctx Context, msg Msg) Result
 ```
 
 Along with the message, the Handler takes environmental information (a `Context`), and returns a `Result`.
+All information necessary for processing a message should be available in the context.
 
 Where is the KVStore in all of this? Access to the KVStore in a message handler is restricted by the Context via object-capability keys.
 Only handlers which were given explict access to a store's key will be able to access that store during message processsing.
 
-## Context
+### Context
 
 The SDK uses a `Context` to propogate common information across functions. 
 Most importantly, the `Context` restricts access to KVStores based on object-capability keys.
@@ -181,7 +182,7 @@ The Context also contains the [block header](TODO), which includes the latest ti
 
 See the [Context API docs](TODO) for more details.
 
-## Result
+### Result
 
 Handler takes a Context and Msg and returns a Result.
 Result is motivated by the corresponding [ABCI result](TODO). It contains return values, error information, logs, and meta data about the transaction:
@@ -219,7 +220,7 @@ We'll talk more about these fields later in the tutorial. For now, note that a
 failure. The `Tags` can contain meta data about the transaction that will allow
 us to easily lookup transactions that pertain to particular accounts or actions.
 
-## Handler
+### Handler
 
 Let's define our handler for App1:
 
@@ -243,7 +244,7 @@ Note this handler has unfettered access to the store specified by the capability
 For this first example, we will define a simple account that is JSON encoded:
 
 ```go
-type acc struct {
+type appAccount struct {
 	Coins sdk.Coins `json:"coins"`
 }
 ```
@@ -256,35 +257,105 @@ Now we're ready to handle the MsgSend:
 
 ```go
 // Handle MsgSend.
+// NOTE: msg.From, msg.To, and msg.Amount were already validated
 func handleMsgSend(ctx sdk.Context, key *sdk.KVStoreKey, msg MsgSend) sdk.Result {
-	// NOTE: from, to, and amount were already validated
-
+	// Load the store.
 	store := ctx.KVStore(key)
-	bz := store.Get(msg.From)
-	if bz == nil {
-		// TODO
+
+	// Debit from the sender.
+	if res := handleFrom(store, msg.From, msg.Amount); !res.IsOK() {
+		return res
 	}
 
-	var acc acc
-	err := json.Unmarshal(bz, &acc)
-	if err != nil {
-		// InternalError
+	// Credit the receiver.
+	if res := handleTo(store, msg.To, msg.Amount); !res.IsOK() {
+		return res
 	}
 
-	// TODO: finish the logic
-
+	// Return a success (Code 0).
+	// Add list of key-value pair descriptors ("tags").
 	return sdk.Result{
-	// TODO: Tags
+		Tags: msg.Tags(),
 	}
 }
 ```
 
-The handler is straight forward:
+The handler is straight forward. We first load the KVStore from the context using the granted capability key.
+Then we make two state transitions: one for the sender, one for the receiver. 
+Each one involves JSON unmarshalling the account bytes from the store, mutating
+the `Coins`, and JSON marshalling back into the store:
 
-- get the KVStore from the context using the granted capability key
-- lookup the From address in the KVStore, and JSON unmarshal it into an `acc`,
-- check that the account balance is greater than the `msg.Amount`
-- transfer the `msg.Amount`
+```go
+func handleFrom(store sdk.KVStore, from sdk.Address, amt sdk.Coins) sdk.Result {
+	// Get sender account from the store.
+	accBytes := store.Get(from)
+	if accBytes == nil {
+		// Account was not added to store. Return the result of the error.
+		return sdk.NewError(2, 101, "Account not added to store").Result()
+	}
+
+	// Unmarshal the JSON account bytes.
+	var acc appAccount
+	err := json.Unmarshal(accBytes, &acc)
+	if err != nil {
+		// InternalError
+		return sdk.ErrInternal("Error when deserializing account").Result()
+	}
+
+	// Deduct msg amount from sender account.
+	senderCoins := acc.Coins.Minus(amt)
+
+	// If any coin has negative amount, return insufficient coins error.
+	if !senderCoins.IsNotNegative() {
+		return sdk.ErrInsufficientCoins("Insufficient coins in account").Result()
+	}
+
+	// Set acc coins to new amount.
+	acc.Coins = senderCoins
+
+	// Encode sender account.
+	accBytes, err = json.Marshal(acc)
+	if err != nil {
+		return sdk.ErrInternal("Account encoding error").Result()
+	}
+
+	// Update store with updated sender account
+	store.Set(from, accBytes)
+	return sdk.Result{}
+}
+
+func handleTo(store sdk.KVStore, to sdk.Address, amt sdk.Coins) sdk.Result {
+	// Add msg amount to receiver account
+	accBytes := store.Get(to)
+	var acc appAccount
+	if accBytes == nil {
+		// Receiver account does not already exist, create a new one.
+		acc = appAccount{}
+	} else {
+		// Receiver account already exists. Retrieve and decode it.
+		err := json.Unmarshal(accBytes, &acc)
+		if err != nil {
+			return sdk.ErrInternal("Account decoding error").Result()
+		}
+	}
+
+	// Add amount to receiver's old coins
+	receiverCoins := acc.Coins.Plus(amt)
+
+	// Update receiver account
+	acc.Coins = receiverCoins
+
+	// Encode receiver account
+	accBytes, err := json.Marshal(acc)
+	if err != nil {
+		return sdk.ErrInternal("Account encoding error").Result()
+	}
+
+	// Update store with updated receiver account
+	store.Set(to, accBytes)
+	return sdk.Result{}
+}
+```
 
 And that's that!
 
@@ -308,7 +379,12 @@ The `Tx` just wraps a `[]Msg`, and may include additional authentication data, l
 Applications must specify how their `Tx` is decoded, as this is the ultimate input into the application.
 We'll talk more about `Tx` types later, specifically when we introduce the `StdTx`.
 
-For this example, we have a dead-simple `Tx` type that contains the `MsgSend` and is JSON decoded:
+In this first application, we won't have any authentication at all. This might
+make sense in a private network where access is controlled by alternative means,
+like client-side TLS certificates, but in general, we'll want to bake the authentication
+right into our state machine. We'll use `Tx` to do that
+in the next app. For now, the `Tx` just embeds `MsgSend` and uses JSON:
+
 
 ```go
 // Simple tx to wrap the Msg.
@@ -332,8 +408,6 @@ func txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 }
 ```
 
-Thus, transactions in this blockchain are expected to be JSON encoded `MsgSend`.
-
 # BaseApp
 
 Finally, we stitch it all together using the `BaseApp`.
@@ -350,41 +424,43 @@ Here is the complete setup for App1:
 
 ```go
 func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
-
-	// TODO: make this an interface or pass in
-	// a TxDecoder instead.
-	cdc := wire.NewCodec()
-
-	// Create the base application object.
-	app := bapp.NewBaseApp(app1Name, cdc, logger, db)
-
-	// Create a capability key for accessing the account store.
-	keyAccount := sdk.NewKVStoreKey("acc")
-
-	// Determine how transactions are decoded.
-	app.SetTxDecoder(txDecoder)
-
-	// Register message routes.
-	// Note the handler receives the keyAccount and thus
+    // TODO: make this an interface or pass in
+    // a TxDecoder instead.
+    cdc := wire.NewCodec()
+    
+    // Create the base application object.
+    app := bapp.NewBaseApp(app1Name, cdc, logger, db)
+    
+    // Create a capability key for accessing the account store.
+    keyAccount := sdk.NewKVStoreKey("acc")
+    
+    // Determine how transactions are decoded.
+    app.SetTxDecoder(txDecoder)
+    
+    // Register message routes.
+    // Note the handler receives the keyAccount and thus
     // gets access to the account store.
-	app.Router().
-		AddRoute("bank", NewApp1Handler(keyAccount))
-
-	// Mount stores and load the latest state.
-	app.MountStoresIAVL(keyAccount)
-	err := app.LoadLatestVersion(keyAccount)
-	if err != nil {
-		cmn.Exit(err.Error())
-	}
-	return app
+    app.Router().
+    	AddRoute("bank", NewApp1Handler(keyAccount))
+    
+    // Mount stores and load the latest state.
+    app.MountStoresIAVL(keyAccount)
+    err := app.LoadLatestVersion(keyAccount)
+    if err != nil {
+    	cmn.Exit(err.Error())
+    }
+    return app
 }
 ```
 
 Every app will have such a function that defines the setup of the app.
 It will typically be contained in an `app.go` file.
 We'll talk about how to connect this app object with the CLI, a REST API, 
-the logger, and the filesystem later in the tutorial. For now, note that this is where we grant handlers access to stores.
-Here, we have only one store and one handler, and the handler is granted access by giving it the capability key.
+the logger, and the filesystem later in the tutorial. For now, note that this is where we 
+register handlers for messages and grant them access to stores.
+
+Here, we have only a single Msg type, `bank`, a single store for accounts, and a single handler.
+The handler is granted access to the store by giving it the capability key.
 In future apps, we'll have multiple stores and handlers, and not every handler will get access to every store.
 
 After setting the transaction decoder and the message handling routes, the final
@@ -398,6 +474,3 @@ We now have a complete implementation of a simple app!
 In the next section, we'll add another Msg type and another store. Once we have multiple message types
 we'll need a better way of decoding transactions, since we'll need to decode
 into the `Msg` interface. This is where we introduce Amino, a superior encoding scheme that lets us decode into interface types!
-
-
-

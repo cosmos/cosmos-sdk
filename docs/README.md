@@ -19,6 +19,7 @@ NOTE: This documentation is a work-in-progress!
         - [BaseApp](core/app1.md#baseapp) - BaseApp is the base layer of the application
     - [App2 - Transactions](core/app2.md)
         - [Amino](core/app2.md#amino) - Amino is the primary serialization library used in the SDK
+<<<<<<< HEAD
         - [Ante Handler](core/app2.md#ante-handler) - The AnteHandler
           authenticates transactions
     - [App3 - Modules](core/app3.md)
@@ -28,6 +29,20 @@ NOTE: This documentation is a work-in-progress!
           provides Account lookup on a KVStore
         - [CoinKeeper](core/app3.md#coin-keeper) - CoinKeeper allows for coin
           transfer on an underlying AccountMapper
+=======
+        - [Ante Handler](core/app2.md#antehandler) - The AnteHandler
+          authenticates transactions
+    - [App3 - Modules: Auth and Bank](core/app3.md)
+        - [auth.Account](core/app3.md#accounts) - Accounts are the prototypical object kept in the store
+        - [auth.AccountMapper](core/app3.md#account-mapper) - AccountMapper gets and sets Account on a KVStore
+        - [auth.StdTx](core/app3.md#stdtx) - `StdTx` is the default implementation of `Tx`
+        - [auth.StdSignBytes](core/app3.md#signing) - `StdTx` must be signed with certain
+          information
+        - [auth.AnteHandler](core/app3.md#antehandler) - The `AnteHandler`
+          verifies `StdTx`, manages accounts, and deducts fees
+        - [bank.CoinKeeper](core/app3.md#coin-keeper) - CoinKeeper allows for coin
+          transfers on an underlying AccountMapper
+>>>>>>> 6bbe295d7fd75fc3693f68915519b483bdd4e514
     - [App4 - Validator Set Changes](core/app4.md)
         - [InitChain](core/app4.md#init-chain) - Initialize the application
           state

@@ -22,9 +22,9 @@ var (
 	addr3 = crypto.GenPrivKeyEd25519().PubKey().Address()
 	priv4 = crypto.GenPrivKeyEd25519()
 	addr4 = priv4.PubKey().Address()
-	coins = sdk.Coins{sdk.NewCoin("foocoin", 10)}
+	coins = sdk.Coins{{"foocoin", sdk.NewInt(10)}}
 	fee   = auth.StdFee{
-		sdk.Coins{sdk.NewCoin("foocoin", 0)},
+		sdk.Coins{{"foocoin", sdk.NewInt(0)}},
 		100000,
 	}
 )
@@ -60,7 +60,9 @@ func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 func getInitChainer(mapp *mock.App, keeper Keeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
-		InitGenesis(ctx, keeper, DefaultGenesisState())
+		stakeGenesis := DefaultGenesisState()
+		stakeGenesis.Pool.LooseTokens = 100000
+		InitGenesis(ctx, keeper, stakeGenesis)
 
 		return abci.ResponseInitChain{}
 	}
@@ -93,8 +95,8 @@ func checkDelegation(t *testing.T, mapp *mock.App, keeper Keeper, delegatorAddr,
 func TestStakeMsgs(t *testing.T) {
 	mapp, keeper := getMockApp(t)
 
-	genCoin := sdk.NewCoin("steak", 42)
-	bondCoin := sdk.NewCoin("steak", 10)
+	genCoin := sdk.Coin{"steak", sdk.NewInt(42)}
+	bondCoin := sdk.Coin{"steak", sdk.NewInt(10)}
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,
@@ -148,10 +150,14 @@ func TestStakeMsgs(t *testing.T) {
 	checkDelegation(t, mapp, keeper, addr2, addr1, true, sdk.NewRat(10))
 
 	////////////////////
-	// Unbond
+	// Begin Unbonding
 
-	unbondMsg := NewMsgUnbond(addr2, addr1, "MAX")
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{unbondMsg}, []int64{1}, []int64{1}, true, priv2)
-	mock.CheckBalance(t, mapp, addr2, sdk.Coins{genCoin})
+	beginUnbondingMsg := NewMsgBeginUnbonding(addr2, addr1, sdk.NewRat(10))
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{beginUnbondingMsg}, []int64{1}, []int64{1}, true, priv2)
+
+	// delegation should exist anymore
 	checkDelegation(t, mapp, keeper, addr2, addr1, false, sdk.Rat{})
+
+	// balance should be the same because bonding not yet complete
+	mock.CheckBalance(t, mapp, addr2, sdk.Coins{genCoin.Minus(bondCoin)})
 }

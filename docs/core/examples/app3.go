@@ -21,6 +21,7 @@ const (
 
 func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 
+	// Create the codec with registered Msg types
 	cdc := NewCodec()
 
 	// Create the base application object.
@@ -32,6 +33,7 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	keyFees := sdk.NewKVStoreKey("fee")
 
 	// Set various mappers/keepers to interact easily with underlying stores
+	// TODO: Need to register Account interface or use different Codec
 	accountMapper := auth.NewAccountMapper(cdc, keyAccount, &auth.BaseAccount{})
 	accountKeeper := bank.NewKeeper(accountMapper)
 	metadataMapper := NewApp3MetaDataMapper(keyMain)

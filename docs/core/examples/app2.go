@@ -25,7 +25,6 @@ var (
 )
 
 func NewCodec() *wire.Codec {
-	// TODO register
 	cdc := wire.NewCodec()
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(MsgSend{}, "example/MsgSend", nil)
@@ -190,10 +189,10 @@ func handleMsgIssue(ctx sdk.Context, keyMain *sdk.KVStoreKey, keyAcc *sdk.KVStor
 
 		// Add coins to receiver account
 		bz := accStore.Get(o.Address)
-		var acc account
+		var acc appAccount
 		if bz == nil {
 			// Receiver account does not already exist, create a new one.
-			acc = account{}
+			acc = appAccount{}
 		} else {
 			// Receiver account already exists. Retrieve and decode it.
 			err := json.Unmarshal(bz, &acc)
@@ -219,7 +218,7 @@ func handleMsgIssue(ctx sdk.Context, keyMain *sdk.KVStoreKey, keyAcc *sdk.KVStor
 	}
 
 	return sdk.Result{
-		// TODO: Tags
+	// TODO: Tags
 	}
 
 }
@@ -236,11 +235,6 @@ type app2Tx struct {
 // This tx only has one Msg.
 func (tx app2Tx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{tx.Msg}
-}
-
-// TODO: remove the need for this
-func (tx app2Tx) GetMemo() string {
-	return ""
 }
 
 func (tx app2Tx) GetSignatures() []auth.StdSignature {

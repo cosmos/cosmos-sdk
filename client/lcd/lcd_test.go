@@ -826,15 +826,15 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 	// deposit on proposal
 	jsonStr := []byte(fmt.Sprintf(`{
 		"depositer": "%s",
-		"proposalID": %d,
+		"proposalID": "%d",
 		"amount": [{ "denom": "steak", "amount": "5" }],
 		"base_req": {
 			"name": "%s",
 			"password": "%s",
 			"chain_id": "%s",
-			"account_number": "%d",
-			"sequence": "%d",
-			"gas": "100000"
+			"account_number": %d,
+			"sequence": %d,
+			"gas": 100000
 		}
 	}`, bechProposerAddr, proposalID, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", "/gov/deposit", jsonStr)
@@ -861,15 +861,15 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ad
 	// vote on proposal
 	jsonStr := []byte(fmt.Sprintf(`{
 		"voter": "%s",
-		"proposalID": %d,
+		"proposalID": "%d",
 		"option": "Yes",
 		"base_req": {
 			"name": "%s",
 			"password": "%s",
 			"chain_id": "%s",
-			"account_number": "%d",
-			"sequence": "%d",
-			"gas": "100000"
+			"account_number": %d,
+			"sequence": %d,
+			"gas": 100000
 		}
 	}`, bechProposerAddr, proposalID, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", "/gov/vote", jsonStr)

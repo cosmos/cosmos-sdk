@@ -108,6 +108,21 @@ constructor):
 accountMapper := auth.NewAccountMapper(cdc, keyAccount, &auth.BaseAccount{})
 ```
 
+Then we can get, modify, and set accounts. For instance, we could double the
+amount of coins in an account:
+
+```go
+acc := GetAccount(ctx, addr)` 
+acc.SetCoins(acc.Coins.Plus(acc.Coins))
+acc.SetAccount(ctx, addr)
+```
+
+Note that the `AccountMapper` takes a `Context` as the first argument, and will
+load the KVStore from there using the capability key it was granted on creation.
+
+Also note that you must explicitly call `SetAccount` after mutating an account
+for the change to persist!
+
 See the [AccountMapper API docs](TODO) for more information.
 
 ## StdTx
@@ -241,6 +256,27 @@ the StdSignature once. From that point on, it will be stored in the account.
 
 The fee is paid by the first address returned by msg.GetSigners() for the first `Msg`. 
 The convenience function `FeePayer(tx Tx) sdk.Address` is provided to return this.
+
+## CoinKeeper
+
+Updating accounts is made easier by using the `Keeper` struct in the `x/bank` module.
+
+Example Initialization:
+
+```go
+// File: examples/basecoin/app/app.go
+app.coinKeeper = bank.NewKeeper(app.accountMapper)
+```
+
+Example Usage:
+
+```go
+// Finds account with addr in accountmapper
+// Adds coins to account's coin array
+// Sets updated account in accountmapper
+app.coinKeeper.AddCoins(ctx, addr, coins)
+```
+
 
 ## App3
 

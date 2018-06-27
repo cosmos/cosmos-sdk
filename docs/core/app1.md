@@ -288,6 +288,52 @@ The handler is straight forward:
 
 And that's that!
 
+# Tx
+
+The final piece before putting it all together is the `Tx`.
+While `Msg` contains the content for particular functionality in the application, the actual input
+provided by the user is a serialized `Tx`. Applications may have many implementations of the `Msg` interface, 
+but they should have only a single implementation of `Tx`:
+
+
+```go
+// Transactions wrap messages.
+type Tx interface {
+	// Gets the Msgs.
+	GetMsgs() []Msg
+}
+```
+
+The `Tx` just wraps a `[]Msg`, and may include additional authentication data, like signatures and account nonces. 
+Applications must specify how their `Tx` is decoded, as this is the ultimate input into the application.
+We'll talk more about `Tx` types later, specifically when we introduce the `StdTx`.
+
+For this example, we have a dead-simple `Tx` type that contains the `MsgSend` and is JSON decoded:
+
+```go
+// Simple tx to wrap the Msg.
+type app1Tx struct {
+	MsgSend
+}
+
+// This tx only has one Msg.
+func (tx app1Tx) GetMsgs() []sdk.Msg {
+	return []sdk.Msg{tx.MsgSend}
+}
+
+// JSON decode MsgSend.
+func txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
+	var tx app1Tx
+	err := json.Unmarshal(txBytes, &tx)
+	if err != nil {
+		return nil, sdk.ErrTxDecode(err.Error())
+	}
+	return tx, nil
+}
+```
+
+Thus, transactions in this blockchain are expected to be JSON encoded `MsgSend`.
+
 # BaseApp
 
 Finally, we stitch it all together using the `BaseApp`.
@@ -341,50 +387,9 @@ the logger, and the filesystem later in the tutorial. For now, note that this is
 Here, we have only one store and one handler, and the handler is granted access by giving it the capability key.
 In future apps, we'll have multiple stores and handlers, and not every handler will get access to every store.
 
-Note also the call to `SetTxDecoder`. While `Msg` contains the content for particular functionality in the application, the actual input
-provided by the user is a serialized `Tx`. Applications may have many implementations of the `Msg` interface, but they should have only 
-a single implementation of `Tx`:
-
-
-```go
-// Transactions wrap messages.
-type Tx interface {
-	// Gets the Msgs.
-	GetMsgs() []Msg
-}
-```
-
-The `Tx` just wraps a `[]Msg`, and may include additional authentication data, like signatures and account nonces. 
-Applications must specify how their `Tx` is decoded, as this is the ultimate input into the application.
-We'll talk more about `Tx` types later in the tutorial, specifically when we introduce the `StdTx`.
-
-For this example, we have a dead-simple `Tx` type that contains the `MsgSend` and is JSON decoded:
-
-```go
-// Simple tx to wrap the Msg.
-type app1Tx struct {
-	MsgSend
-}
-
-// This tx only has one Msg.
-func (tx app1Tx) GetMsgs() []sdk.Msg {
-	return []sdk.Msg{tx.MsgSend}
-}
-
-// JSON decode MsgSend.
-func txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
-	var tx app1Tx
-	err := json.Unmarshal(txBytes, &tx)
-	if err != nil {
-		return nil, sdk.ErrTxDecode(err.Error())
-	}
-	return tx, nil
-}
-```
-
-This means the input to the app must be a JSON encoded `app1Tx`.
-
-The last step in `NewApp1` is to mount the stores and load the latest version. Since we only have one store, we only mount one.
+After setting the transaction decoder and the message handling routes, the final
+step is to mount the stores and load the latest version.
+Since we only have one store, we only mount one.
 
 ## Conclusion
 

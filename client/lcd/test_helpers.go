@@ -83,7 +83,7 @@ func GetKB(t *testing.T) crkeys.Keybase {
 func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (addr sdk.Address, seed string) {
 	var info crkeys.Info
 	var err error
-	info, seed, err = kb.CreateMnemonic(name, crkeys.English, password, crkeys.Ed25519)
+	info, seed, err = kb.CreateMnemonic(name, crkeys.English, password, crkeys.Secp256k1)
 	require.NoError(t, err)
 	addr = info.GetPubKey().Address()
 	return

@@ -19,16 +19,16 @@ const (
 // NewMnemonic will return a string consisting of the mnemonic words for
 // the given sentence length.
 func NewMnemonic(len ValidSentenceLen) (words []string, err error) {
-	// len = (ENT + checksum) / 11
-	var ENT int
+	// len = (entropySize + checksum) / 11
+	var entropySize int
 	switch len {
 	case FundRaiser:
-		ENT = 128
+		entropySize = 128
 	case FreshKey:
-		ENT = 256
+		entropySize = 256
 	}
 	var entropy []byte
-	entropy, err = bip39.NewEntropy(ENT)
+	entropy, err = bip39.NewEntropy(entropySize)
 	if err != nil {
 		return
 	}
@@ -58,5 +58,3 @@ func MnemonicToSeedWithErrChecking(mne string) (seed []byte, err error) {
 	seed, err = bip39.NewSeedWithErrorChecking(mne, "")
 	return
 }
-
-

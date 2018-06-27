@@ -531,7 +531,7 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.Address) (
 
 	// create receive address
 	kb := client.MockKeyBase()
-	receiveInfo, _, err := kb.CreateMnemonic("receive_address", cryptoKeys.English, "1234567890", cryptoKeys.SigningAlgo("ed25519"))
+	receiveInfo, _, err := kb.CreateMnemonic("receive_address", cryptoKeys.English, "1234567890", cryptoKeys.SigningAlgo("secp256k1"))
 	require.Nil(t, err)
 	receiveAddr = receiveInfo.GetPubKey().Address()
 	receiveAddrBech := sdk.MustBech32ifyAcc(receiveAddr)
@@ -568,7 +568,7 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.Address) (
 func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Address) (resultTx ctypes.ResultBroadcastTxCommit) {
 	// create receive address
 	kb := client.MockKeyBase()
-	receiveInfo, _, err := kb.CreateMnemonic("receive_address", cryptoKeys.English, "1234567890", cryptoKeys.SigningAlgo("ed25519"))
+	receiveInfo, _, err := kb.CreateMnemonic("receive_address", cryptoKeys.English, "1234567890", cryptoKeys.SigningAlgo("secp256k1"))
 	require.Nil(t, err)
 	receiveAddr := receiveInfo.GetPubKey().Address()
 	receiveAddrBech := sdk.MustBech32ifyAcc(receiveAddr)
@@ -792,7 +792,7 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 		"description": "test",
 		"proposal_type": "Text",
 		"proposer": "%s",
-		"initial_deposit": [{ "denom": "steak", "amount": 5 }],
+		"initial_deposit": [{ "denom": "steak", "amount": "5" }],
 		"base_req": {
 			"name": "%s",
 			"password": "%s",
@@ -827,7 +827,7 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 	jsonStr := []byte(fmt.Sprintf(`{
 		"depositer": "%s",
 		"proposalID": %d,
-		"amount": [{ "denom": "steak", "amount": 5 }],
+		"amount": [{ "denom": "steak", "amount": "5" }],
 		"base_req": {
 			"name": "%s",
 			"password": "%s",

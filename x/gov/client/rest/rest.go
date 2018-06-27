@@ -230,7 +230,7 @@ func queryVoteHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 
 		ctx := context.NewCoreContextFromViper()
 
-		key := []byte(gov.KeyVote(proposalID, voterAddr))
+		key := gov.KeyVote(proposalID, voterAddr)
 		res, err := ctx.QueryStore(key, storeName)
 		if len(res) == 0 || err != nil {
 

@@ -114,7 +114,6 @@ func NewApp1Handler(keyAcc *sdk.KVStoreKey) sdk.Handler {
 // Handle MsgSend.
 func handleMsgSend(ctx sdk.Context, key *sdk.KVStoreKey, msg MsgSend) sdk.Result {
 	// NOTE: from, to, and amount were already validated
-
 	store := ctx.KVStore(key)
 
 	// deduct msg amount from sender account
@@ -155,10 +154,10 @@ func handleMsgSend(ctx sdk.Context, key *sdk.KVStoreKey, msg MsgSend) sdk.Result
 	bz = store.Get(msg.To)
 	var acc2 account
 	if bz == nil {
-		// Sender account does not already exist, create a new one.
-		acc2 = account{}
+		// Receiver account does not already exist, create a new one.
+		acc2 = account{Address: msg.To}
 	} else {
-		// Sender account already exists. Retrieve and decode it.
+		// Receiver account already exists. Retrieve and decode it.
 		err = json.Unmarshal(bz, &acc2)
 		if err != nil {
 			return sdk.ErrInternal("Account decoding error").Result()
@@ -185,7 +184,9 @@ func handleMsgSend(ctx sdk.Context, key *sdk.KVStoreKey, msg MsgSend) sdk.Result
 }
 
 type account struct {
+	Address sdk.Address `json:"address"`
 	Coins sdk.Coins `json:"coins"`
+	SequenceNumber int64 `json:"sequence"`
 }
 
 //------------------------------------------------------------------

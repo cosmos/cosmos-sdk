@@ -119,7 +119,7 @@ jobs:
             for pkg in $(go list github.com/cosmos/cosmos-sdk/... | grep -v /vendor/ | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test | circleci tests split --split-by=timings); do
               id=$(basename "$pkg")
 
-              go test -timeout 5m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic "$pkg"
+              go test -timeout 8m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic "$pkg"
             done
       - persist_to_workspace:
           root: /tmp/workspace

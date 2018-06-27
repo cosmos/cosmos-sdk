@@ -90,7 +90,7 @@ func signAndBuild(w http.ResponseWriter, ctx context.CoreContext, baseReq baseRe
 		return
 	}
 
-	output, err := cdc.MarshalJSON(res)
+	output, err := wire.MarshalJSONIndent(cdc, res)
 	if err != nil {
 		writeErr(&w, http.StatusInternalServerError, err.Error())
 		return

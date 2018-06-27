@@ -1,15 +1,19 @@
-# Transactions
+# Amino
 
-In the previous app we built a simple `bank` with one message type for sending
+In the previous app we build a simple `bank` with one message type for sending
 coins and one store for storing accounts.
-Here we build `App2`, which expands on `App1` by introducing 
+Here we build `App2`, which expands on `App1` by introducing another message type for issuing new coins, and another store
+for storing information about who can issue coins and how many.
 
-- a new message type for issuing new coins
-- a new store for coin metadata (like who can issue coins)
-- a requirement that transactions include valid signatures
+`App2` will allow us to better demonstrate the security model of the SDK, 
+using object-capability keys to determine which handlers can access which
+stores.
 
-Along the way, we'll be introduced to Amino for encoding and decoding
-transactions and to the AnteHandler for processing them.
+Having multiple implementations of `Msg` also requires a better transaction
+decoder, since we won't know before hand which type is contained in the
+serialized `Tx`. In effect, we'd like to unmarshal directly into the `Msg`
+interface, but there's no standard way to unmarshal into interfaces in Go.
+This is what Amino is for :)
 
 
 ## Message
@@ -28,17 +32,20 @@ We'll need a new handler to support the new message type:
 TODO
 ```
 
+## BaseApp
+
+```go
+TODO
+```
+
 ## Amino
 
-Now that we have two implementations of `Msg`, we won't know before hand 
-which type is contained in a serialized `Tx`. Ideally, we would use the
-`Msg` interface inside our `Tx` implementation, but the JSON decoder can't
-decode into interface types. In fact, there's no standard way to unmarshal 
-into interfaces in Go. This is one of the primary reasons we built 
-[Amino](https://github.com/tendermint/go-amino) :).
+The SDK is flexible about serialization - application developers can use any
+serialization scheme to encode transactions and state. However, the SDK provides
+a native serialization format called
+[Amino](https://github.com/tendermint/go-amino).
 
-While SDK developers can encode transactions and state objects however they
-like, Amino is the recommended format. The goal of Amino is to improve over the latest version of Protocol Buffers,
+The goal of Amino is to improve over the latest version of Protocol Buffers,
 `proto3`. To that end, Amino is compatible with the subset of `proto3` that
 excludes the `oneof` keyword.
 
@@ -62,93 +69,8 @@ Amino can also be used for persistent storage of interfaces.
 To use Amino, simply create a codec, and then register types:
 
 ```
-func NewCodec() *wire.Codec {
-	cdc := wire.NewCodec()
-	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	cdc.RegisterConcrete(MsgSend{}, "example/MsgSend", nil)
-	cdc.RegisterConcrete(MsgIssue{}, "example/MsgIssue", nil)
-	return cdc
-}
+cdc := wire.NewCodec()
+
+cdc.RegisterConcrete(MsgSend{}, "cosmos-sdk/Send", nil)
+cdc.RegisterConcrete(MsgIssue{}, "cosmos-sdk/Issue", nil)
 ```
-
-Amino supports encoding and decoding in both a binary and JSON format.
-See the [codec API docs](https://godoc.org/github.com/tendermint/go-amino#Codec) for more details.
-
-TODO: Update Amino and demo `cdc.PrintTypes`
-
-## Tx
-
-Now that we're using Amino, we can embed the `Msg` interface directly in our
-`Tx`. We can also add a public key and a signature for authentication.
-
-```go
-// Simple tx to wrap the Msg.
-type app2Tx struct {
-	sdk.Msg
-
-    PubKey    crypto.PubKey
-	Signature crypto.Signature
-}
-
-// This tx only has one Msg.
-func (tx app2Tx) GetMsgs() []sdk.Msg {
-	return []sdk.Msg{tx.Msg}
-}
-```
-
-We don't need a custom TxDecoder function anymore, since we're just using the
-Amino codec!
-
-## AnteHandler
-
-Now that we have an implementation of `Tx` that includes more than just the Msg, 
-we need to specify how that extra information is validated and processed. This
-is the role of the `AnteHandler`. The word `ante` here denotes "before", as the
-`AnteHandler` is run before a `Handler`. While an app can have many Handlers,
-one for each set of messages, it can have only a single `AnteHandler` that
-corresponds to its single implementation of `Tx`.
-
-
-The AnteHandler resembles a Handler:
-
-
-```go
-type AnteHandler func(ctx Context, tx Tx) (newCtx Context, result Result, abort bool)
-```
-
-Like Handler, AnteHandler takes a Context that restricts its access to stores
-according to whatever capability keys it was granted. Instead of a `Msg`,
-however, it takes a `Tx`.
-
-Like Handler, AnteHandler returns a `Result` type, but it also returns a new
-`Context` and an `abort bool`. TODO explain (do we still need abort? )
-
-For `App2`, we simply check if the PubKey matches the Address, and the Signature validates with the PubKey:
-
-```go
-TODO
-```
-
-## App2
-
-Let's put it all together now to get App2:
-
-```go
-TODO
-```
-
-## Conclusion
-
-We've expanded on our first app by adding a new message type for issuing coins,
-and by checking signatures. We learned how to use Amino for decoding into
-interface types, allowing us to support multiple Msg types, and we learned how
-to use the AnteHandler to validate transactions.
-
-Unfortunately, our application is still insecure, because any valid transaction
-can be replayed multiple times to drain someones account! Besides, validating
-signatures and preventing replays aren't things developers should have to think
-about.
-
-In the next section, we introduce the built-in SDK modules `auth` and `bank`,
-which respectively provide secure implementations for all our transaction authentication
-and coin transfering needs.

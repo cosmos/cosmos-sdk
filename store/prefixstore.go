@@ -46,14 +46,24 @@ func (s prefixStore) Prefix(prefix []byte) KVStore {
 
 // Implements KVStore
 func (s prefixStore) Iterator(start, end []byte) Iterator {
+	if end == nil {
+		end = sdk.PrefixEndBytes(s.prefix)
+	} else {
+		end = append(s.prefix, end...)
+	}
 	return prefixIterator{
 		prefix: s.prefix,
-		iter:   s.store.Iterator(start, end),
+		iter:   s.store.Iterator(append(s.prefix, start...), end),
 	}
 }
 
 // Implements KVStore
 func (s prefixStore) ReverseIterator(start, end []byte) Iterator {
+	if end == nil {
+		end = sdk.PrefixEndBytes(s.prefix)
+	} else {
+		end = append(s.prefix, end...)
+	}
 	return prefixIterator{
 		prefix: s.prefix,
 		iter:   s.store.ReverseIterator(start, end),

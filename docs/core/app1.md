@@ -378,7 +378,12 @@ The `Tx` just wraps a `[]Msg`, and may include additional authentication data, l
 Applications must specify how their `Tx` is decoded, as this is the ultimate input into the application.
 We'll talk more about `Tx` types later, specifically when we introduce the `StdTx`.
 
-For this example, we have a dead-simple `Tx` type that contains the `MsgSend` and is JSON decoded:
+In this first application, we won't have any authentication at all. This might
+make sense in a private network where access is controlled by alternative means,
+like client-side TLS certificates, but in general, we'll want to bake the authentication
+right into our state machine. We'll use `Tx` to do that
+in the next app. For now, the `Tx` just embeds `MsgSend` and uses JSON:
+
 
 ```go
 // Simple tx to wrap the Msg.
@@ -402,8 +407,6 @@ func txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 }
 ```
 
-Thus, transactions in this blockchain are expected to be JSON encoded `MsgSend`.
-
 # BaseApp
 
 Finally, we stitch it all together using the `BaseApp`.
@@ -420,33 +423,32 @@ Here is the complete setup for App1:
 
 ```go
 func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
-
-	// TODO: make this an interface or pass in
-	// a TxDecoder instead.
-	cdc := wire.NewCodec()
-
-	// Create the base application object.
-	app := bapp.NewBaseApp(app1Name, cdc, logger, db)
-
-	// Create a capability key for accessing the account store.
-	keyAccount := sdk.NewKVStoreKey("acc")
-
-	// Determine how transactions are decoded.
-	app.SetTxDecoder(txDecoder)
-
-	// Register message routes.
-	// Note the handler receives the keyAccount and thus
+    // TODO: make this an interface or pass in
+    // a TxDecoder instead.
+    cdc := wire.NewCodec()
+    
+    // Create the base application object.
+    app := bapp.NewBaseApp(app1Name, cdc, logger, db)
+    
+    // Create a capability key for accessing the account store.
+    keyAccount := sdk.NewKVStoreKey("acc")
+    
+    // Determine how transactions are decoded.
+    app.SetTxDecoder(txDecoder)
+    
+    // Register message routes.
+    // Note the handler receives the keyAccount and thus
     // gets access to the account store.
-	app.Router().
-		AddRoute("bank", NewApp1Handler(keyAccount))
-
-	// Mount stores and load the latest state.
-	app.MountStoresIAVL(keyAccount)
-	err := app.LoadLatestVersion(keyAccount)
-	if err != nil {
-		cmn.Exit(err.Error())
-	}
-	return app
+    app.Router().
+    	AddRoute("bank", NewApp1Handler(keyAccount))
+    
+    // Mount stores and load the latest state.
+    app.MountStoresIAVL(keyAccount)
+    err := app.LoadLatestVersion(keyAccount)
+    if err != nil {
+    	cmn.Exit(err.Error())
+    }
+    return app
 }
 ```
 
@@ -468,6 +470,3 @@ We now have a complete implementation of a simple app!
 In the next section, we'll add another Msg type and another store. Once we have multiple message types
 we'll need a better way of decoding transactions, since we'll need to decode
 into the `Msg` interface. This is where we introduce Amino, a superior encoding scheme that lets us decode into interface types!
-
-
-

@@ -21,6 +21,7 @@ their own modules.
 
 Here, we'll introduce the important types from `x/auth` and `x/bank`, and show
 how to make `App3` by using them. The complete code can be found in [app3.go](examples/app3.go).
+For more details, see the [x/auth](TODO) and [x/bank](TODO) API documentation.
 
 ## Accounts
 
@@ -112,7 +113,7 @@ Then we can get, modify, and set accounts. For instance, we could double the
 amount of coins in an account:
 
 ```go
-acc := GetAccount(ctx, addr)` 
+acc := GetAccount(ctx, addr)
 acc.SetCoins(acc.Coins.Plus(acc.Coins))
 acc.SetAccount(ctx, addr)
 ```
@@ -149,7 +150,7 @@ includes:
 - a memo of prunable additional data
 
 Details on how these components are validated is provided under
-[auth.AnteHandler](#ante-handler) below.
+[auth.AnteHandler](#antehandler) below.
 
 The standard form for signatures is `StdSignature`:
 
@@ -213,6 +214,11 @@ Then they can compute the transaction bytes to sign using the
 bytesToSign := StdSignBytes(chainID, accNum, accSequence, fee, msgs, memo)
 ```
 
+Note these bytes are unique for each signer, as they depend on the particular
+signers AccountNumber, Sequence, and optional memo. To facilitate easy
+inspection before signing, the bytes are actually just a JSON encoded form of
+all the relevant information.
+
 ## AnteHandler
 
 As we saw in `App2`, we can use an `AnteHandler` to authenticate transactions
@@ -239,14 +245,14 @@ Note that validating
 signatures requires checking that the correct account number and sequence was
 used by each signer, as this information is required in the `StdSignBytes`.
 
-If any of the above are not satisfied, it returns an error. 
+If any of the above are not satisfied, the AnteHandelr returns an error. 
 
 If all of the above verifications pass, the AnteHandler makes the following
 changes to the state:
 
 - increment account sequence by one for all signers
-- set the pubkey for any first-time signers
-- deduct the fee from the first signer
+- set the pubkey in the account for any first-time signers
+- deduct the fee from the first signer's account
 
 Recall that incrementing the `Sequence` prevents "replay attacks" where
 the same message could be executed over and over again. 
@@ -254,33 +260,64 @@ the same message could be executed over and over again.
 The PubKey is required for signature verification, but it is only required in
 the StdSignature once. From that point on, it will be stored in the account.
 
-The fee is paid by the first address returned by msg.GetSigners() for the first `Msg`. 
+The fee is paid by the first address returned by `msg.GetSigners()` for the first `Msg`. 
 The convenience function `FeePayer(tx Tx) sdk.Address` is provided to return this.
 
 ## CoinKeeper
 
-Updating accounts is made easier by using the `Keeper` struct in the `x/bank` module.
+Now that we've seen the `auth.AccountMapper` and how its used to build a
+complete AnteHandler, it's time to look at how to build higher-level
+abstractions for taking action on accounts.
 
-Example Initialization:
+Earlier, we noted that `Mappers` abstactions over a KVStore that handles marshalling and unmarshalling a
+particular data type to and from the underlying store. We can build another
+abstraction on top of `Mappers` that we call `Keepers`, which expose only
+limitted functionality on the underlying types stored by the `Mapper`.
+
+For instance, the `x/bank` module defines the canonical versions of `MsgSend`
+and `MsgIssue` for the SDK, as well as a `Handler` for processing them. However, 
+rather than passing a `KVStore` or even an `AccountMapper` directly to the handler,
+we introduce a `bank.Keeper`, which can only be used to transfer coins in and out of accounts.
+This allows us to determine up front that the only effect the bank module's
+`Handler` can have on the store is to change the amount of coins in an account -
+it can't increment sequence numbers, change PubKeys, or otherwise.
+
+
+A `bank.Keeper` is easily instantiated from an `AccountMapper`:
 
 ```go
-// File: examples/basecoin/app/app.go
-app.coinKeeper = bank.NewKeeper(app.accountMapper)
+coinKeeper = bank.NewKeeper(accountMapper)
 ```
 
-Example Usage:
+We can then use it within a handler, instead of working directly with the
+`AccountMapper`. For instance, to add coins to an account:
 
 ```go
-// Finds account with addr in accountmapper
-// Adds coins to account's coin array
-// Sets updated account in accountmapper
+// Finds account with addr in AccountMapper.
+// Adds coins to account's coin array.
+// Sets updated account in AccountMapper
 app.coinKeeper.AddCoins(ctx, addr, coins)
 ```
 
+See the [bank.Keeper API docs](TODO) for the full set of methods.
+
+Note we can refine the `bank.Keeper` by restricting it's method set. For
+instance, the `bank.ViewKeeper` is a read-only version, while the
+`bank.SendKeeper` only executes transfers of coins from input accounts to output
+accounts.
+
+We use this `Keeper` paradigm extensively in the SDK as the way to define what
+kind of functionality each module gets access to. In particular, we try to
+follow the *principle of least authority*, where modules only get access to the
+absolutely narrowest set of functionality they need to get the job done. Hence,
+rather than providing full blown access to the `KVStore` or the `AccountMapper`, 
+we restrict access to a small number of functions that do very specific things.
 
 ## App3
 
-Putting it all together, we get:
+Armed with an understanding of mappers and keepers, in particular the
+`auth.AccountMapper` and the `bank.Keeper`, we're now ready to build `App3`
+using the `x/auth` and `x/bank` modules to do all the heavy lifting:
 
 ```go
 TODO

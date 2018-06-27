@@ -7,8 +7,8 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/bartekn/go-bip39"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -21,7 +21,6 @@ type addrData struct {
 	Pub      string
 	Addr     string
 }
-
 
 func initFundraiserTestVectors(t *testing.T) []addrData {
 	// NOTE: atom fundraiser address
@@ -58,7 +57,7 @@ func TestFundraiserCompatibility(t *testing.T) {
 		master, ch := ComputeMastersFromSeed(seed)
 		priv, err := DerivePrivateKeyForPath(master, ch, "44'/118'/0'/0/0")
 		assert.NoError(t, err)
-		pub,_ := crypto.PrivKeySecp256k1(priv).PubKey()
+		pub := crypto.PrivKeySecp256k1(priv).PubKey()
 
 		t.Log("\tNODEJS GOLANG\n")
 		t.Logf("SEED \t%X %X\n", seedB, seed)
@@ -79,5 +78,3 @@ func TestFundraiserCompatibility(t *testing.T) {
 
 	}
 }
-
-

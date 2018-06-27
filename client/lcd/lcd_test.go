@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/tendermint/abci/types"
 	cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	abci "github.com/tendermint/tendermint/abci/types"
 	p2p "github.com/tendermint/tendermint/p2p"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tmlibs/common"
@@ -531,7 +531,7 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.Address) (
 
 	// create receive address
 	kb := client.MockKeyBase()
-	receiveInfo, _, err := kb.CreateMnemonic("receive_address", "1234567890", cryptoKeys.SignAlgo("ed25519"))
+	receiveInfo, _, err := kb.CreateMnemonic("receive_address", cryptoKeys.English, "1234567890", cryptoKeys.SigningAlgo("ed25519"))
 	require.Nil(t, err)
 	receiveAddr = receiveInfo.GetPubKey().Address()
 	receiveAddrBech := sdk.MustBech32ifyAcc(receiveAddr)
@@ -568,7 +568,7 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.Address) (
 func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Address) (resultTx ctypes.ResultBroadcastTxCommit) {
 	// create receive address
 	kb := client.MockKeyBase()
-	receiveInfo, _, err := kb.CreateMnemonic("receive_address", "1234567890", cryptoKeys.SignAlgo("ed25519"))
+	receiveInfo, _, err := kb.CreateMnemonic("receive_address", cryptoKeys.English, "1234567890", cryptoKeys.SigningAlgo("ed25519"))
 	require.Nil(t, err)
 	receiveAddr := receiveInfo.GetPubKey().Address()
 	receiveAddrBech := sdk.MustBech32ifyAcc(receiveAddr)

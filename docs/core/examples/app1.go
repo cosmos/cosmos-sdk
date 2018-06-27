@@ -35,7 +35,7 @@ func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	// Register message routes.
 	// Note the handler gets access to the account store.
 	app.Router().
-		AddRoute("send", NewApp1Handler(keyAccount))
+		AddRoute("bank", NewApp1Handler(keyAccount))
 
 	// Mount stores and load the latest state.
 	app.MountStoresIAVL(keyAccount)
@@ -65,7 +65,7 @@ func NewMsgSend(from, to sdk.Address, amt sdk.Coins) MsgSend {
 }
 
 // Implements Msg.
-func (msg MsgSend) Type() string { return "send" }
+func (msg MsgSend) Type() string { return "bank" }
 
 // Implements Msg. Ensure the addresses are good and the
 // amount is positive.

@@ -44,6 +44,22 @@ func (ctx CoreContext) BroadcastTx(tx []byte) (*ctypes.ResultBroadcastTxCommit, 
 	return res, err
 }
 
+// Broadcast the transaction bytes to Tendermint
+func (ctx CoreContext) BroadcastTxAsync(tx []byte) (*ctypes.ResultBroadcastTx, error) {
+
+	node, err := ctx.GetNode()
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := node.BroadcastTxAsync(tx)
+	if err != nil {
+		return res, err
+	}
+
+	return res, err
+}
+
 // Query information about the connected node
 func (ctx CoreContext) Query(path string) (res []byte, err error) {
 	return ctx.query(path, nil)
@@ -183,6 +199,32 @@ func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc
 	}
 
 	return ctx.BroadcastTx(txBytes)
+}
+
+// sign and build the transaction from the msg
+func (ctx CoreContext) EnsureSignBuildBroadcastAsync(name string, msgs []sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTx, err error) {
+
+	ctx, err = EnsureAccountNumber(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// default to next sequence number if none provided
+	ctx, err = EnsureSequence(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	passphrase, err := ctx.GetPassphraseFromStdin(name)
+	if err != nil {
+		return nil, err
+	}
+
+	txBytes, err := ctx.SignAndBuild(name, passphrase, msgs, cdc)
+	if err != nil {
+		return nil, err
+	}
+
+	return ctx.BroadcastTxAsync(txBytes)
 }
 
 // get the next sequence for the account address

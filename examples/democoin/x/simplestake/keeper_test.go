@@ -44,13 +44,12 @@ func TestKeeperGetSet(t *testing.T) {
 	assert.Equal(t, bi, bondInfo{})
 
 	privKey := crypto.GenPrivKeyEd25519()
-	pubKey := privKey.PubKey()
 
 	bi = bondInfo{
-		PubKey: pubKey,
+		PubKey: privKey.PubKey(),
 		Power:  int64(10),
 	}
-	fmt.Printf("Pubkey: %v\n", pubKey)
+	fmt.Printf("Pubkey: %v\n", privKey.PubKey())
 	stakeKeeper.setBondInfo(ctx, addr, bi)
 
 	savedBi := stakeKeeper.getBondInfo(ctx, addr)

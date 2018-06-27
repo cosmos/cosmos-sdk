@@ -483,7 +483,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		// Validate the Msg
 		err := msg.ValidateBasic()
 		if err != nil {
-			err = err.WithCodespace(sdk.CodespaceRoot)
+			err = err.WithDefaultCodespace(sdk.CodespaceRoot)
 			return err.Result()
 		}
 	}

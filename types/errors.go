@@ -56,7 +56,10 @@ const (
 	CodeMemoTooLarge      CodeType = 13
 
 	// CodespaceRoot is a codespace for error codes in this file only.
-	CodespaceRoot CodespaceType = 1
+	// Notice that 0 is an "unset" codespace, which can be overridden with
+	// Error.WithDefaultCodespace().
+	CodespaceUndefined CodespaceType = 0
+	CodespaceRoot      CodespaceType = 1
 
 	// Maximum reservable codespace (2^16 - 1)
 	MaximumCodespace CodespaceType = 65535
@@ -159,7 +162,7 @@ type Error interface {
 	TraceSDK(format string, args ...interface{}) Error
 
 	// set codespace
-	WithCodespace(CodespaceType) Error
+	WithDefaultCodespace(CodespaceType) Error
 
 	Code() CodeType
 	Codespace() CodespaceType
@@ -196,7 +199,11 @@ type sdkError struct {
 }
 
 // Implements Error.
-func (err *sdkError) WithCodespace(cs CodespaceType) Error {
+func (err *sdkError) WithDefaultCodespace(cs CodespaceType) Error {
+	codespace := err.codespace
+	if codespace == CodespaceUndefined {
+		codespace = cs
+	}
 	return &sdkError{
 		codespace: cs,
 		code:      err.code,

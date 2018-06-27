@@ -77,7 +77,6 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 
 	// register message routes
 	app.Router().
-		AddRoute("auth", auth.NewHandler(app.accountMapper)).
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
@@ -173,7 +172,8 @@ func (app *BasecoinApp) ExportAppStateAndValidators() (appState json.RawMessage,
 	app.accountMapper.IterateAccounts(ctx, appendAccount)
 
 	genState := types.GenesisState{
-		Accounts: accounts,
+		Accounts:  accounts,
+		StakeData: stake.WriteGenesis(ctx, app.stakeKeeper),
 	}
 	appState, err = wire.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {

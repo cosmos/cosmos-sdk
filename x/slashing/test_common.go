@@ -20,6 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
+// TODO remove dependencies on staking (should only refer to validator set type from sdk)
+
 var (
 	addrs = []sdk.Address{
 		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6160"),
@@ -55,13 +57,13 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, Keep
 	ms.MountStoreWithDB(keySlashing, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewTMLogger(os.Stdout))
+	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewTMLogger(os.Stdout))
 	cdc := createTestCodec()
 	accountMapper := auth.NewAccountMapper(cdc, keyAcc, &auth.BaseAccount{})
 	ck := bank.NewKeeper(accountMapper)
 	sk := stake.NewKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
-	genesis.Pool.LooseUnbondedTokens = initCoins.MulRaw(int64(len(addrs)))
+	genesis.Pool.LooseTokens = initCoins.MulRaw(int64(len(addrs))).Int64()
 	stake.InitGenesis(ctx, sk, genesis)
 	for _, addr := range addrs {
 		ck.AddCoins(ctx, addr, sdk.Coins{
@@ -89,9 +91,9 @@ func testAddr(addr string) sdk.Address {
 
 func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
 	return stake.MsgCreateValidator{
-		Description:   stake.Description{},
-		ValidatorAddr: address,
-		PubKey:        pubKey,
-		Bond:          sdk.Coin{"steak", amt},
+		Description:    stake.Description{},
+		ValidatorAddr:  address,
+		PubKey:         pubKey,
+		SelfDelegation: sdk.Coin{"steak", amt},
 	}
 }

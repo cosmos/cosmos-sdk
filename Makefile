@@ -3,7 +3,7 @@ PACKAGES_NOCLITEST=$(shell go list ./... | grep -v '/vendor/' | grep -v github.c
 COMMIT_HASH := $(shell git rev-parse --short HEAD)
 BUILD_FLAGS = -tags netgo -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
 
-all: check_tools get_vendor_deps install install_examples test_lint test
+all: get_tools get_vendor_deps install install_examples test_lint test
 
 ########################################
 ### CI
@@ -108,7 +108,7 @@ test_cover:
 	@bash tests/test_cover.sh
 
 test_lint:
-	gometalinter --disable-all --enable='golint' --vendor ./...
+	gometalinter.v2 --disable-all --enable='golint' --enable='misspell' --vendor ./...
 
 benchmark:
 	@go test -bench=. $(PACKAGES_NOCLITEST)

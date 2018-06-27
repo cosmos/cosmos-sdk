@@ -1,7 +1,5 @@
 package types
 
-import ()
-
 // Gas measured by the SDK
 type Gas = int64
 

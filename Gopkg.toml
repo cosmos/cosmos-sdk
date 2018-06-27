@@ -46,11 +46,11 @@
 
 [[constraint]]
   name = "github.com/pkg/errors"
-  version = "0.8.0"
+  version = "=0.8.0"
 
 [[constraint]]
   name = "github.com/stretchr/testify"
-  version = "1.2.1"
+  version = "=1.2.1"
 
 [[constraint]]
   name = "github.com/tendermint/go-amino"
@@ -66,7 +66,7 @@
 
 [[override]]
   name = "github.com/tendermint/tmlibs"
-  revision = "e09e3a56f323c3efa3653e513540f1686a5374b2"
+  revision = "0c98d10b4ffbd87978d79c160e835b3d3df241ec"
 
 # this got updated and broke, so locked to an old working commit ...
 [[override]]

@@ -170,9 +170,9 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 
 	iter = sdk.KVStorePrefixIterator(iavlStore, []byte{byte(55), byte(255), byte(255)})
 	expected2 := [][]byte{
-		[]byte{byte(55), byte(255), byte(255), byte(0)},
-		[]byte{byte(55), byte(255), byte(255), byte(1)},
-		[]byte{byte(55), byte(255), byte(255), byte(255)},
+		{byte(55), byte(255), byte(255), byte(0)},
+		{byte(55), byte(255), byte(255), byte(1)},
+		{byte(55), byte(255), byte(255), byte(255)},
 	}
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected2[i]
@@ -185,9 +185,9 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 
 	iter = sdk.KVStorePrefixIterator(iavlStore, []byte{byte(255), byte(255)})
 	expected2 = [][]byte{
-		[]byte{byte(255), byte(255), byte(0)},
-		[]byte{byte(255), byte(255), byte(1)},
-		[]byte{byte(255), byte(255), byte(255)},
+		{byte(255), byte(255), byte(0)},
+		{byte(255), byte(255), byte(1)},
+		{byte(255), byte(255), byte(255)},
 	}
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected2[i]
@@ -229,9 +229,9 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 
 	iter = sdk.KVStoreReversePrefixIterator(iavlStore, []byte{byte(55), byte(255), byte(255)})
 	expected2 := [][]byte{
-		[]byte{byte(55), byte(255), byte(255), byte(255)},
-		[]byte{byte(55), byte(255), byte(255), byte(1)},
-		[]byte{byte(55), byte(255), byte(255), byte(0)},
+		{byte(55), byte(255), byte(255), byte(255)},
+		{byte(55), byte(255), byte(255), byte(1)},
+		{byte(55), byte(255), byte(255), byte(0)},
 	}
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected2[i]
@@ -244,9 +244,9 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 
 	iter = sdk.KVStoreReversePrefixIterator(iavlStore, []byte{byte(255), byte(255)})
 	expected2 = [][]byte{
-		[]byte{byte(255), byte(255), byte(255)},
-		[]byte{byte(255), byte(255), byte(1)},
-		[]byte{byte(255), byte(255), byte(0)},
+		{byte(255), byte(255), byte(255)},
+		{byte(255), byte(255), byte(1)},
+		{byte(255), byte(255), byte(0)},
 	}
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected2[i]

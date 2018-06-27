@@ -100,17 +100,6 @@ func (am AccountMapper) GetPubKey(ctx sdk.Context, addr sdk.Address) (crypto.Pub
 	return acc.GetPubKey(), nil
 }
 
-// Sets the PubKey of the account at address
-func (am AccountMapper) SetPubKey(ctx sdk.Context, addr sdk.Address, newPubKey crypto.PubKey) sdk.Error {
-	acc := am.GetAccount(ctx, addr)
-	if acc == nil {
-		return sdk.ErrUnknownAddress(addr.String())
-	}
-	acc.SetPubKey(newPubKey)
-	am.SetAccount(ctx, acc)
-	return nil
-}
-
 // Returns the Sequence of the account at address
 func (am AccountMapper) GetSequence(ctx sdk.Context, addr sdk.Address) (int64, sdk.Error) {
 	acc := am.GetAccount(ctx, addr)

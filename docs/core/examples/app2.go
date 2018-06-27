@@ -131,9 +131,11 @@ func handleMsgIssue(keyMain *sdk.KVStoreKey, keyAcc *sdk.KVStoreKey) sdk.Handler
 			return sdk.NewError(2, 1, "IssueMsg is malformed").Result()
 		}
 
+		// Retrieve stores
 		store := ctx.KVStore(keyMain)
 		accStore := ctx.KVStore(keyAcc)
 
+		// Handle updating metadata
 		if res := handleMetaData(store, issueMsg.Issuer, issueMsg.Coin); !res.IsOK() {
 			return res
 		}
@@ -144,6 +146,7 @@ func handleMsgIssue(keyMain *sdk.KVStoreKey, keyAcc *sdk.KVStoreKey) sdk.Handler
 		}
 
 		return sdk.Result{
+			// Return result with Issue msg tags
 			Tags: issueMsg.Tags(),
 		}
 	}
@@ -173,6 +176,7 @@ func handleMetaData(store sdk.KVStore, issuer sdk.Address, coin sdk.Coin) sdk.Re
 		}
 	}
 
+	// Msg Issuer is not authorized to issue these coins
 	if !reflect.DeepEqual(metadata.Issuer, issuer) {
 		return sdk.ErrUnauthorized(fmt.Sprintf("Msg Issuer cannot issue tokens: %s", coin.Denom)).Result()
 	}

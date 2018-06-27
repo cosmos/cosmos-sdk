@@ -1,26 +1,4 @@
-# Message Handling
-
-## Context
-
-The SDK uses a `Context` to propogate common information across functions. The
-`Context` is modeled after the Golang `context.Context` object, which has
-become ubiquitous in networking middleware and routing applications as a means
-to easily propogate request context through handler functions.
-
-The main information stored in the `Context` includes the application
-MultiStore, the last block header, and the transaction bytes.
-Effectively, the context contains all data that may be necessary for processing
-a transaction.
-
-Many methods on SDK objects receive a context as the first argument. 
-
-## Handler
-
-Message processing in the SDK is defined through `Handler` functions:
-
-```go
-type Handler func(ctx Context, msg Msg) Result
-```
+# Handlers
 
 A handler takes a context and a message and returns a result.  All
 information necessary for processing a message should be available in the
@@ -50,3 +28,4 @@ app.Router().AddRoute("foo", newFooHandler(fooKey))
 ```
 
 Now it can only access the `foo` store, but not the `bar` or `cat` stores!
+

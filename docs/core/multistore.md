@@ -1,5 +1,7 @@
 # MultiStore
 
+TODO: reconcile this
+
 The Cosmos-SDK provides a special Merkle database called a `MultiStore` to be used for all application
 storage. The MultiStore consists of multiple Stores that must be mounted to the
 MultiStore during application setup. Stores are mounted to the MultiStore using a capabilities key, 
@@ -14,6 +16,7 @@ The goals of the MultiStore are as follows:
 - Merkle proofs for various queries (existence, absence, range, etc.) on current and retained historical state
 - Allow for iteration within Stores
 - Provide caching for intermediate state during execution of blocks and transactions (including for iteration)
+
 - Support historical state pruning and snapshotting
 
 Currently, all Stores in the MultiStore must satisfy the `KVStore` interface,
@@ -55,9 +58,12 @@ through the `Context`.
 
 ## Notes 
 
+TODO: move this to the spec
+
 In the example above, all IAVL nodes (inner and leaf) will be stored
 in mainDB with the prefix of "s/k:foo/" and "s/k:bar/" respectively,
 thus sharing the mainDB.  All IAVL nodes (inner and leaf) for the
 cat KVStore are stored separately in catDB with the prefix of
 "s/\_/".  The "s/k:KEY/" and "s/\_/" prefixes are there to
 disambiguate store items from other items of non-storage concern.
+

@@ -12,6 +12,7 @@ BREAKING CHANGES
 * Removed MsgChangePubKey from auth
 * Removed setPubKey from account mapper
 * Removed GetMemo from Tx (it is still on StdTx)
+* Keybase and Ledger support from go-crypto merged into the SDK in the `crypto` folder
 * [cli] rearranged commands under subcommands
 * [stake] remove Tick and add EndBlocker
 * [stake] introduce concept of unbonding for delegations and validators
@@ -37,6 +38,9 @@ FEATURES
 * [types] Switches internal representation of Int/Uint/Rat to use pointers
 * [gaiad] unsafe_reset_all now resets addrbook.json
 * [democoin] add x/oracle, x/assoc
+* [gaiacli] Ledger support added
+  - You can now use a Ledger with `gaiacli --ledger` for all key-related commands
+  - Ledger keys can be named and tracked locally in the key DB
 
 FIXES 
 * [gaia] Added self delegation for validators in the genesis creation

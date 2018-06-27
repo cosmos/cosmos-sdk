@@ -2,13 +2,13 @@ package app
 
 import (
 	"encoding/json"
-	"reflect"
 	"fmt"
+	"reflect"
 
+	abci "github.com/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
-	abci "github.com/tendermint/abci/types"
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -59,8 +59,8 @@ func NewApp4(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 }
 
 type GenesisState struct {
-	Accounts  []*GenesisAccount  `json:"accounts"`
-	Coins     []*GenesisCoin     `json:"coins"`
+	Accounts []*GenesisAccount `json:"accounts"`
+	Coins    []*GenesisCoin    `json:"coins"`
 }
 
 // GenesisAccount doesn't need pubkey or sequence
@@ -79,16 +79,17 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount, err error) {
 
 // GenesisCoin enforces CurrentSupply is 0 at genesis.
 type GenesisCoin struct {
-	Issuer sdk.Address `json:"issuer"`
-	TotalSupply sdk.Int `json:"total_supply`
-	Decimal     uint64   `json:"decimals"`
+	Denom       string      `json:"denom"`
+	Issuer      sdk.Address `json:"issuer"`
+	TotalSupply sdk.Int     `json:"total_supply`
+	Decimal     uint64      `json:"decimals"`
 }
 
-func (gc *GenesisCoin) ToMetaData() CoinMetadata {
-	return CoinMetadata{
-		Issuer: gc.Issuer,
+func (gc *GenesisCoin) ToMetaData() (string, CoinMetadata) {
+	return gc.Denom, CoinMetadata{
+		Issuer:      gc.Issuer,
 		TotalSupply: gc.TotalSupply,
-		Decimal: gc.Decimal,
+		Decimal:     gc.Decimal,
 	}
 }
 
@@ -113,6 +114,12 @@ func NewInitChainer(cdc *wire.Codec, accountMapper auth.AccountMapper, metadataM
 			}
 			acc.AccountNumber = accountMapper.GetNextAccountNumber(ctx)
 			accountMapper.SetAccount(ctx, acc)
+		}
+
+		// Initialize coin metadata.
+		for _, gc := range genesisState.Coins {
+			denom, metadata := gc.ToMetaData()
+			metadataMapper.SetMetaData(ctx, denom, metadata)
 		}
 
 		return abci.ResponseInitChain{}
@@ -169,7 +176,6 @@ func evenBetterHandleMsgIssue(ctx sdk.Context, metadataMapper MetaDataMapper, ac
 
 	return sdk.Result{}
 }
-
 
 //---------------------------------------------------------------------------------------------
 // Simpler MetaDataMapper no longer able to initalize default CoinMetaData

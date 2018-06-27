@@ -62,25 +62,50 @@ Amino can also be used for persistent storage of interfaces.
 To use Amino, simply create a codec, and then register types:
 
 ```
-cdc := wire.NewCodec()
-
-cdc.RegisterConcrete(MsgSend{}, "cosmos-sdk/Send", nil)
-cdc.RegisterConcrete(MsgIssue{}, "cosmos-sdk/Issue", nil)
+func NewCodec() *wire.Codec {
+	cdc := wire.NewCodec()
+	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
+	cdc.RegisterConcrete(MsgSend{}, "example/MsgSend", nil)
+	cdc.RegisterConcrete(MsgIssue{}, "example/MsgIssue", nil)
+	return cdc
+}
 ```
 
-TODO: JSON, types table
+Amino supports encoding and decoding in both a binary and JSON format.
+See the [codec API docs](https://godoc.org/github.com/tendermint/go-amino#Codec) for more details.
+
+TODO: Update Amino and demo `cdc.PrintTypes`
 
 ## Tx
 
-TODO
+Now that we're using Amino, we can embed the `Msg` interface directly in our
+`Tx`. We can also add a public key and a signature for authentication.
+
+```go
+// Simple tx to wrap the Msg.
+type app2Tx struct {
+	sdk.Msg
+
+    PubKey    crypto.PubKey
+	Signature crypto.Signature
+}
+
+// This tx only has one Msg.
+func (tx app2Tx) GetMsgs() []sdk.Msg {
+	return []sdk.Msg{tx.Msg}
+}
+```
+
+We don't need a custom TxDecoder function anymore, since we're just using the
+Amino codec!
 
 ## AnteHandler
 
-Now that we have an implementation of `Tx` that includes more than just the Msgs, 
+Now that we have an implementation of `Tx` that includes more than just the Msg, 
 we need to specify how that extra information is validated and processed. This
 is the role of the `AnteHandler`. The word `ante` here denotes "before", as the
-`AnteHandler` is run before a `Handler`. While an app may have many Handlers,
-one for each set of messages, it may have only a single `AnteHandler` that
+`AnteHandler` is run before a `Handler`. While an app can have many Handlers,
+one for each set of messages, it can have only a single `AnteHandler` that
 corresponds to its single implementation of `Tx`.
 
 

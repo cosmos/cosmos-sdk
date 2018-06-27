@@ -147,7 +147,7 @@ func GetREDByValSrcIndexKey(delegatorAddr, validatorSrcAddr,
 	validatorDstAddr sdk.Address, cdc *wire.Codec) []byte {
 
 	return append(
-		GetREDsByValSrcIndexKey(validatorSrcAddr, cdc),
+		GetREDsFromValSrcIndexKey(validatorSrcAddr, cdc),
 		append(
 			delegatorAddr.Bytes(),
 			validatorDstAddr.Bytes()...)...,
@@ -159,7 +159,7 @@ func GetREDByValDstIndexKey(delegatorAddr, validatorSrcAddr,
 	validatorDstAddr sdk.Address, cdc *wire.Codec) []byte {
 
 	return append(
-		GetREDsByValDstIndexKey(validatorDstAddr, cdc),
+		GetREDsToValDstIndexKey(validatorDstAddr, cdc),
 		append(
 			delegatorAddr.Bytes(),
 			validatorSrcAddr.Bytes()...)...,
@@ -175,13 +175,23 @@ func GetREDsKey(delegatorAddr sdk.Address, cdc *wire.Codec) []byte {
 }
 
 // get the prefix keyspace for all redelegations redelegating away from a source validator
-func GetREDsByValSrcIndexKey(validatorSrcAddr sdk.Address, cdc *wire.Codec) []byte {
+func GetREDsFromValSrcIndexKey(validatorSrcAddr sdk.Address, cdc *wire.Codec) []byte {
 	res := cdc.MustMarshalBinary(&validatorSrcAddr)
 	return append(RedelegationByValSrcIndexKey, res...)
 }
 
 // get the prefix keyspace for all redelegations redelegating towards a destination validator
-func GetREDsByValDstIndexKey(validatorDstAddr sdk.Address, cdc *wire.Codec) []byte {
+func GetREDsToValDstIndexKey(validatorDstAddr sdk.Address, cdc *wire.Codec) []byte {
 	res := cdc.MustMarshalBinary(&validatorDstAddr)
 	return append(RedelegationByValDstIndexKey, res...)
+}
+
+// get the prefix keyspace for all redelegations redelegating towards a destination validator
+// from a particular delegator
+func GetREDsByDelToValDstIndexKey(delegatorAddr sdk.Address,
+	validatorDstAddr sdk.Address, cdc *wire.Codec) []byte {
+
+	return append(
+		GetREDsToValDstIndexKey(validatorDstAddr, cdc),
+		delegatorAddr.Bytes()...)
 }

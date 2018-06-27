@@ -152,7 +152,7 @@ func (k Keeper) GetRedelegation(ctx sdk.Context,
 // load all redelegations from a particular validator
 func (k Keeper) GetRedelegationsFromValidator(ctx sdk.Context, valAddr sdk.Address) (redelegations []types.Redelegation) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, GetREDsByValSrcIndexKey(valAddr, k.cdc))
+	iterator := sdk.KVStorePrefixIterator(store, GetREDsFromValSrcIndexKey(valAddr, k.cdc))
 	i := 0
 	for ; ; i++ {
 		if !iterator.Valid() {
@@ -167,6 +167,23 @@ func (k Keeper) GetRedelegationsFromValidator(ctx sdk.Context, valAddr sdk.Addre
 	}
 	iterator.Close()
 	return redelegations
+}
+
+// has a redelegation
+func (k Keeper) HasReceivingRedelegation(ctx sdk.Context,
+	DelegatorAddr, ValidatorDstAddr sdk.Address) bool {
+
+	store := ctx.KVStore(k.storeKey)
+	prefix := GetREDsByDelToValDstIndexKey(DelegatorAddr, ValidatorDstAddr, k.cdc)
+	iterator := sdk.KVStorePrefixIterator(store, prefix) //smallest to largest
+
+	found := false
+	if iterator.Valid() {
+		//record found
+		found = true
+	}
+	iterator.Close()
+	return found
 }
 
 // set a redelegation and associated index
@@ -326,6 +343,11 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr 
 // complete unbonding an unbonding record
 func (k Keeper) BeginRedelegation(ctx sdk.Context, delegatorAddr, validatorSrcAddr,
 	validatorDstAddr sdk.Address, sharesAmount sdk.Rat) sdk.Error {
+
+	// check if this is a transitive redelegation
+	if k.HasReceivingRedelegation(ctx, delegatorAddr, validatorSrcAddr) {
+		return types.ErrTransitiveRedelegation(k.Codespace())
+	}
 
 	returnAmount, err := k.unbond(ctx, delegatorAddr, validatorSrcAddr, sharesAmount)
 	if err != nil {

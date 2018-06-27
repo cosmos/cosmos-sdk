@@ -498,23 +498,65 @@ func TestRedelegationPeriod(t *testing.T) {
 	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error, %v", got)
 
-	// cannot complete unbonding at same time
+	// cannot complete redelegation at same time
 	msgCompleteRedelegate := NewMsgCompleteRedelegate(validatorAddr, validatorAddr, validatorAddr2)
 	got = handleMsgCompleteRedelegate(ctx, msgCompleteRedelegate, keeper)
-	require.True(t, !got.IsOK(), "expected no error")
+	require.True(t, !got.IsOK(), "expected an error")
 
-	// cannot complete unbonding at time 6 seconds later
+	// cannot complete redelegation at time 6 seconds later
 	origHeader := ctx.BlockHeader()
 	headerTime6 := origHeader
 	headerTime6.Time += 6
 	ctx = ctx.WithBlockHeader(headerTime6)
 	got = handleMsgCompleteRedelegate(ctx, msgCompleteRedelegate, keeper)
-	require.True(t, !got.IsOK(), "expected no error")
+	require.True(t, !got.IsOK(), "expected an error")
 
-	// can complete unbonding at time 7 seconds later
+	// can complete redelegation at time 7 seconds later
 	headerTime7 := origHeader
 	headerTime7.Time += 7
 	ctx = ctx.WithBlockHeader(headerTime7)
 	got = handleMsgCompleteRedelegate(ctx, msgCompleteRedelegate, keeper)
+	require.True(t, got.IsOK(), "expected no error")
+}
+
+func TestTransitiveRedelegation(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	validatorAddr, validatorAddr2, validatorAddr3 := keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]
+
+	// set the unbonding time
+	params := keeper.GetParams(ctx)
+	params.UnbondingTime = 0
+	keeper.SetParams(ctx, params)
+
+	// create the validators
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, keep.PKs[0], 10)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	msgCreateValidator = newTestMsgCreateValidator(validatorAddr2, keep.PKs[1], 10)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	msgCreateValidator = newTestMsgCreateValidator(validatorAddr3, keep.PKs[2], 10)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	// begin redelegate
+	msgBeginRedelegate := NewMsgBeginRedelegate(validatorAddr, validatorAddr, validatorAddr2, sdk.NewRat(10))
+	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
+	require.True(t, got.IsOK(), "expected no error, %v", got)
+
+	// cannot redelegation to next validator while first delegation exists
+	msgBeginRedelegate = NewMsgBeginRedelegate(validatorAddr, validatorAddr2, validatorAddr3, sdk.NewRat(10))
+	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
+	require.True(t, !got.IsOK(), "expected an error, msg: %v", msgBeginRedelegate)
+
+	// complete first redelegation
+	msgCompleteRedelegate := NewMsgCompleteRedelegate(validatorAddr, validatorAddr, validatorAddr2)
+	got = handleMsgCompleteRedelegate(ctx, msgCompleteRedelegate, keeper)
+	require.True(t, got.IsOK(), "expected no error")
+
+	// now should be able to redelegate from the second validator to the third
+	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error")
 }

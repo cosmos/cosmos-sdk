@@ -214,6 +214,11 @@ func (i Int) Neg() (res Int) {
 	return Int{neg(i.i)}
 }
 
+// String converts int to string
+func (i Int) String() string {
+	return i.i.String()
+}
+
 // MarshalAmino defines custom encoding scheme
 func (i Int) MarshalAmino() (string, error) {
 	if i.i == nil { // Necessary since default Uint initialization has i.i as nil

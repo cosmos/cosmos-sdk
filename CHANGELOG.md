@@ -16,7 +16,7 @@ BREAKING CHANGES
 * [stake] remove Tick and add EndBlocker
 * [stake] introduce concept of unbonding for delegations and validators
   * `gaiacli stake unbond` replaced with `gaiacli stake begin-unbonding`
-  * introduced: 
+  * introduced:
     * `gaiacli stake complete-unbonding`
     * `gaiacli stake begin-redelegation`
     * `gaiacli stake complete-redelegation`
@@ -38,7 +38,7 @@ FEATURES
 * [gaiad] unsafe_reset_all now resets addrbook.json
 * [democoin] add x/oracle, x/assoc
 
-FIXES 
+FIXES
 * [gaia] Added self delegation for validators in the genesis creation
 * [lcd] tests now don't depend on raw json text
 * [stake] error strings lower case
@@ -51,6 +51,7 @@ FIXES
 * \#1343 - fixed unnecessary parallelism in CI
 * \#1353 - CLI: Show pool shares fractions in human-readable format
 * \#1258 - printing big.rat's can no longer overflow int64
+* \#887  - limit the size of rationals that can be passed in from user input
 
 IMPROVEMENTS
 * bank module uses go-wire codec instead of 'encoding/json'

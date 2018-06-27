@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"reflect"
 
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -35,7 +34,7 @@ func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	// Register message routes.
 	// Note the handler gets access to the account store.
 	app.Router().
-		AddRoute("bank", NewApp1Handler(keyAccount))
+		AddRoute("send", handleMsgSend(keyAccount))
 
 	// Mount stores and load the latest state.
 	app.MountStoresIAVL(keyAccount)
@@ -65,7 +64,7 @@ func NewMsgSend(from, to sdk.Address, amt sdk.Coins) MsgSend {
 }
 
 // Implements Msg.
-func (msg MsgSend) Type() string { return "bank" }
+func (msg MsgSend) Type() string { return "send" }
 
 // Implements Msg. Ensure the addresses are good and the
 // amount is positive.
@@ -105,41 +104,40 @@ func (msg MsgSend) Tags() sdk.Tags {
 //------------------------------------------------------------------
 // Handler for the message
 
-func NewApp1Handler(keyAcc *sdk.KVStoreKey) sdk.Handler {
+// Handle MsgSend.
+// NOTE: msg.From, msg.To, and msg.Amount were already validated
+func handleMsgSend(key *sdk.KVStoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		switch msg := msg.(type) {
-		case MsgSend:
-			return handleMsgSend(ctx, keyAcc, msg)
-		default:
-			errMsg := "Unrecognized bank Msg type: " + reflect.TypeOf(msg).Name()
-			return sdk.ErrUnknownRequest(errMsg).Result()
+		sendMsg, ok := msg.(MsgSend)
+		if !ok {
+			// Create custom error message and return result
+			// Note: Using unreserved error codespace
+			return sdk.NewError(2, 1, "Send Message is malformed").Result()
+		}
+
+
+		// Load the store.
+		store := ctx.KVStore(key)
+
+		// Debit from the sender.
+		if res := handleFrom(store, sendMsg.From, sendMsg.Amount); !res.IsOK() {
+			return res
+		}
+
+		// Credit the receiver.
+		if res := handleTo(store, sendMsg.To, sendMsg.Amount); !res.IsOK() {
+			return res
+		}
+
+		// Return a success (Code 0).
+		// Add list of key-value pair descriptors ("tags").
+		return sdk.Result{
+			Tags: sendMsg.Tags(),
 		}
 	}
 }
 
-// Handle MsgSend.
-// NOTE: msg.From, msg.To, and msg.Amount were already validated
-func handleMsgSend(ctx sdk.Context, key *sdk.KVStoreKey, msg MsgSend) sdk.Result {
-	// Load the store.
-	store := ctx.KVStore(key)
-
-	// Debit from the sender.
-	if res := handleFrom(store, msg.From, msg.Amount); !res.IsOK() {
-		return res
-	}
-
-	// Credit the receiver.
-	if res := handleTo(store, msg.To, msg.Amount); !res.IsOK() {
-		return res
-	}
-
-	// Return a success (Code 0).
-	// Add list of key-value pair descriptors ("tags").
-	return sdk.Result{
-		Tags: msg.Tags(),
-	}
-}
-
+// Convenience Handlers
 func handleFrom(store sdk.KVStore, from sdk.Address, amt sdk.Coins) sdk.Result {
 	// Get sender account from the store.
 	accBytes := store.Get(from)
@@ -210,6 +208,7 @@ func handleTo(store sdk.KVStore, to sdk.Address, amt sdk.Coins) sdk.Result {
 	return sdk.Result{}
 }
 
+// Simple account struct
 type appAccount struct {
 	Coins sdk.Coins `json:"coins"`
 }

@@ -11,6 +11,15 @@ BREAKING CHANGES
 * Signers of a transaction now only sign over their account and sequence number
 * Removed MsgChangePubKey from auth
 * Removed setPubKey from account mapper
+* Removed GetMemo from Tx (it is still on StdTx)
+* [cli] rearranged commands under subcommands
+* [stake] remove Tick and add EndBlocker
+* [stake] introduce concept of unbonding for delegations and validators
+  * `gaiacli stake unbond` replaced with `gaiacli stake begin-unbonding`
+  * introduced: 
+    * `gaiacli stake complete-unbonding`
+    * `gaiacli stake begin-redelegation`
+    * `gaiacli stake complete-redelegation`
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
@@ -20,18 +29,41 @@ FEATURES
   * Supported proposal types: just binary (pass/fail) TextProposals for now
   * Proposals need deposits to be votable; deposits are burned if proposal fails
   * Delegators delegate votes to validator by default but can override (for their stake)
+* Add benchmarks for signing and delivering a block with a single bank transaction
+  * Run with `cd x/bank && go test --bench=.`
 * [tools] make get_tools installs tendermint's linter, and gometalinter
 * [tools] Switch gometalinter to the stable version
 * [tools] Add checking for misspellings and for incorrectly formatted files in circle CI
 * [server] Default config now creates a profiler at port 6060, and increase p2p send/recv rates
+* [tests] Add WaitForNextNBlocksTM helper method
+* [types] Switches internal representation of Int/Uint/Rat to use pointers
+* [gaiad] unsafe_reset_all now resets addrbook.json
+* [democoin] add x/oracle, x/assoc
 
-FIXES
+FIXES 
+* [gaia] Added self delegation for validators in the genesis creation
+* [lcd] tests now don't depend on raw json text
+* [stake] error strings lower case
+* [stake] pool loose tokens now accounts for unbonding and unbonding tokens not associated with any validator
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer
 * \#1052 - Make all now works
 * Retry on HTTP request failure in CLI tests, add option to retry tests in Makefile
-* Fixed bug where chain ID wasn't passed properly in x/bank REST handler
+* Fixed bug where chain ID wasn't passed properly in x/bank REST handler, removed Viper hack from ante handler
 * Fixed bug where `democli account` didn't decode the account data correctly
 * \#1343 - fixed unnecessary parallelism in CI
+* \#1367 - set ChainID in InitChain
+* \#1353 - CLI: Show pool shares fractions in human-readable format
+* \#1258 - printing big.rat's can no longer overflow int64
+
+IMPROVEMENTS
+* bank module uses go-wire codec instead of 'encoding/json'
+* auth module uses go-wire codec instead of 'encoding/json'
+* revised use of endblock and beginblock
+* [stake] module reorganized to include `types` and `keeper` package
+* [stake] keeper always loads the store (instead passing around which doesn't really boost efficiency)
+* [stake] edit-validator changes now can use the keyword [do-not-modify] to not modify unspecified `--flag` (aka won't set them to `""` value)
+* [types] added common tag constants
+* [stake] offload more generic functionality from the handler into the keeper
 
 ## 0.19.0
 

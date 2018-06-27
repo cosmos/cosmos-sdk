@@ -224,9 +224,6 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 		}
 	*/
 
-	// initialize Check state
-	app.setCheckState(abci.Header{})
-
 	return nil
 }
 
@@ -287,12 +284,13 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 // Implements ABCI
 // InitChain runs the initialization logic directly on the CommitMultiStore and commits it.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
+	// Initialize the deliver state and check state with ChainID and run initChain
+	app.setDeliverState(abci.Header{ChainID: req.ChainId})
+	app.setCheckState(abci.Header{ChainID: req.ChainId})
+
 	if app.initChainer == nil {
 		return
 	}
-
-	// Initialize the deliver state and run initChain
-	app.setDeliverState(abci.Header{})
 	app.initChainer(app.deliverState.ctx, req) // no error
 
 	// NOTE: we don't commit, but BeginBlock for block 1
@@ -379,10 +377,15 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	// Initialize the DeliverTx state.
 	// If this is the first block, it should already
-	// be initialized in InitChain. It may also be nil
-	// if this is a test and InitChain was never called.
+	// be initialized in InitChain.
+	// Otherwise app.deliverState will be nil, since it
+	// is reset on Commit.
 	if app.deliverState == nil {
 		app.setDeliverState(req.Header)
+	} else {
+		// In the first block, app.deliverState.ctx will already be initialized
+		// by InitChain. Context is now updated with Header information.
+		app.deliverState.ctx = app.deliverState.ctx.WithBlockHeader(req.Header)
 	}
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)
@@ -598,6 +601,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// Write the Deliver state and commit the MultiStore
 	app.deliverState.ms.Write()
 	commitID := app.cms.Commit()
+	// TODO: this is missing a module identifier and dumps byte array
 	app.Logger.Debug("Commit synced",
 		"commit", commitID,
 	)

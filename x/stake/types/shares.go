@@ -1,4 +1,4 @@
-package stake
+package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -70,10 +70,10 @@ func (s PoolShares) ToUnbonded(p Pool) PoolShares {
 	var amount sdk.Rat
 	switch s.Status {
 	case sdk.Bonded:
-		exRate := p.bondedShareExRate().Quo(p.unbondedShareExRate()) // (tok/bondedshr)/(tok/unbondedshr) = unbondedshr/bondedshr
+		exRate := p.BondedShareExRate().Quo(p.UnbondedShareExRate()) // (tok/bondedshr)/(tok/unbondedshr) = unbondedshr/bondedshr
 		amount = s.Amount.Mul(exRate)                                // bondedshr*unbondedshr/bondedshr = unbondedshr
 	case sdk.Unbonding:
-		exRate := p.unbondingShareExRate().Quo(p.unbondedShareExRate()) // (tok/unbondingshr)/(tok/unbondedshr) = unbondedshr/unbondingshr
+		exRate := p.UnbondingShareExRate().Quo(p.UnbondedShareExRate()) // (tok/unbondingshr)/(tok/unbondedshr) = unbondedshr/unbondingshr
 		amount = s.Amount.Mul(exRate)                                   // unbondingshr*unbondedshr/unbondingshr = unbondedshr
 	case sdk.Unbonded:
 		amount = s.Amount
@@ -86,12 +86,12 @@ func (s PoolShares) ToUnbonding(p Pool) PoolShares {
 	var amount sdk.Rat
 	switch s.Status {
 	case sdk.Bonded:
-		exRate := p.bondedShareExRate().Quo(p.unbondingShareExRate()) // (tok/bondedshr)/(tok/unbondingshr) = unbondingshr/bondedshr
+		exRate := p.BondedShareExRate().Quo(p.UnbondingShareExRate()) // (tok/bondedshr)/(tok/unbondingshr) = unbondingshr/bondedshr
 		amount = s.Amount.Mul(exRate)                                 // bondedshr*unbondingshr/bondedshr = unbondingshr
 	case sdk.Unbonding:
 		amount = s.Amount
 	case sdk.Unbonded:
-		exRate := p.unbondedShareExRate().Quo(p.unbondingShareExRate()) // (tok/unbondedshr)/(tok/unbondingshr) = unbondingshr/unbondedshr
+		exRate := p.UnbondedShareExRate().Quo(p.UnbondingShareExRate()) // (tok/unbondedshr)/(tok/unbondingshr) = unbondingshr/unbondedshr
 		amount = s.Amount.Mul(exRate)                                   // unbondedshr*unbondingshr/unbondedshr = unbondingshr
 	}
 	return NewUnbondingShares(amount)
@@ -104,10 +104,10 @@ func (s PoolShares) ToBonded(p Pool) PoolShares {
 	case sdk.Bonded:
 		amount = s.Amount
 	case sdk.Unbonding:
-		exRate := p.unbondingShareExRate().Quo(p.bondedShareExRate()) // (tok/ubshr)/(tok/bshr) = bshr/ubshr
+		exRate := p.UnbondingShareExRate().Quo(p.BondedShareExRate()) // (tok/ubshr)/(tok/bshr) = bshr/ubshr
 		amount = s.Amount.Mul(exRate)                                 // ubshr*bshr/ubshr = bshr
 	case sdk.Unbonded:
-		exRate := p.unbondedShareExRate().Quo(p.bondedShareExRate()) // (tok/ubshr)/(tok/bshr) = bshr/ubshr
+		exRate := p.UnbondedShareExRate().Quo(p.BondedShareExRate()) // (tok/ubshr)/(tok/bshr) = bshr/ubshr
 		amount = s.Amount.Mul(exRate)                                // ubshr*bshr/ubshr = bshr
 	}
 	return NewUnbondedShares(amount)
@@ -120,11 +120,11 @@ func (s PoolShares) ToBonded(p Pool) PoolShares {
 func (s PoolShares) Tokens(p Pool) sdk.Rat {
 	switch s.Status {
 	case sdk.Bonded:
-		return p.bondedShareExRate().Mul(s.Amount) // (tokens/shares) * shares
+		return p.BondedShareExRate().Mul(s.Amount) // (tokens/shares) * shares
 	case sdk.Unbonding:
-		return p.unbondingShareExRate().Mul(s.Amount)
+		return p.UnbondingShareExRate().Mul(s.Amount)
 	case sdk.Unbonded:
-		return p.unbondedShareExRate().Mul(s.Amount)
+		return p.UnbondedShareExRate().Mul(s.Amount)
 	default:
 		panic("unknown share kind")
 	}

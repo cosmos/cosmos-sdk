@@ -167,7 +167,7 @@ startUnbonding(tx TxStartUnbonding):
 ### TxCompleteUnbonding
 
 Complete the unbonding and transfer the coins to the delegate. Perform any
-slashing that occured during the unbonding period.
+slashing that occurred during the unbonding period.
 
 ```golang
 type TxUnbondingComplete struct {

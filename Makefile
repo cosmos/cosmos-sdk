@@ -108,7 +108,7 @@ test_cover:
 	@bash tests/test_cover.sh
 
 test_lint:
-	gometalinter.v2 --disable-all --enable='golint' --enable='misspell' --linter='vet:go vet -composites=false:PATH:LINE:MESSAGE' --enable='vet' --vendor ./...
+	gometalinter.v2 --disable-all --enable='golint' --enable='misspell' --enable='unconvert' --linter='vet:go vet -composites=false:PATH:LINE:MESSAGE' --enable='vet' --vendor ./...
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 
 benchmark:

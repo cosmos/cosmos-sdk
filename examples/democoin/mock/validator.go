@@ -39,6 +39,11 @@ func (v Validator) GetDelegatorShares() sdk.Rat {
 }
 
 // Implements sdk.Validator
+func (v Validator) GetRevoked() bool {
+	return false
+}
+
+// Implements sdk.Validator
 func (v Validator) GetBondHeight() int64 {
 	return 0
 }
@@ -107,7 +112,7 @@ func (vs *ValidatorSet) RemoveValidator(addr sdk.Address) {
 }
 
 // Implements sdk.ValidatorSet
-func (vs *ValidatorSet) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, amt sdk.Rat) {
+func (vs *ValidatorSet) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power int64, amt sdk.Rat) {
 	panic("not implemented")
 }
 

@@ -26,7 +26,6 @@ BREAKING CHANGES
   * Iterate through unbonding delegations & redelegations which contributed
     to an infraction, slash them proportional to their stake at the time
   * Add REST endpoint to unrevoke a validator previously revoked for downtime
-* Removed GetMemo from Tx (it is still on StdTx)
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag

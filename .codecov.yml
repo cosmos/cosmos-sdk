@@ -11,7 +11,7 @@ coverage:
 
   status:
     # Learn more at https://codecov.io/docs#yaml_default_commit_status
-    project:
+    project: 
       default:
         threshold: 1% # allow this much decrease on project
     changes: false

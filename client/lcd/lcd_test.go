@@ -803,7 +803,6 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 		}
 	}`, bechProposerAddr, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", "/gov/submitproposal", jsonStr)
-	fmt.Println(res)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var results ctypes.ResultBroadcastTxCommit

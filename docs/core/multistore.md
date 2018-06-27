@@ -1,6 +1,9 @@
 # MultiStore
 
-TODO: reconcile this
+TODO: reconcile this with everything ... would be nice to have this explanation
+somewhere but where does it belong ? So far we've already showed how to use it
+all by creating KVStore keys and calling app.MountStoresIAVL !
+
 
 The Cosmos-SDK provides a special Merkle database called a `MultiStore` to be used for all application
 storage. The MultiStore consists of multiple Stores that must be mounted to the

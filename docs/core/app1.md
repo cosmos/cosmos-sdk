@@ -94,7 +94,7 @@ func (msg MsgSend) ValidateBasic() sdk.Error {
 }
 ```
 
-# KVStore
+## KVStore
 
 The basic persistence layer for an SDK application is the KVStore:
 
@@ -140,7 +140,7 @@ like Ethereum's radix trie.
 As we'll soon see, apps have many distinct KVStores, each with a different name and for a different concern.
 Access to a store is mediated by *object-capability keys*, which must be granted to a handler during application startup.
 
-# Handlers
+## Handlers
 
 Now that we have a message type and a store interface, we can define our state transition function using a handler:
 
@@ -150,11 +150,12 @@ type Handler func(ctx Context, msg Msg) Result
 ```
 
 Along with the message, the Handler takes environmental information (a `Context`), and returns a `Result`.
+All information necessary for processing a message should be available in the context.
 
 Where is the KVStore in all of this? Access to the KVStore in a message handler is restricted by the Context via object-capability keys.
 Only handlers which were given explict access to a store's key will be able to access that store during message processsing.
 
-## Context
+### Context
 
 The SDK uses a `Context` to propogate common information across functions. 
 Most importantly, the `Context` restricts access to KVStores based on object-capability keys.
@@ -181,7 +182,7 @@ The Context also contains the [block header](TODO), which includes the latest ti
 
 See the [Context API docs](TODO) for more details.
 
-## Result
+### Result
 
 Handler takes a Context and Msg and returns a Result.
 Result is motivated by the corresponding [ABCI result](TODO). It contains return values, error information, logs, and meta data about the transaction:
@@ -219,7 +220,7 @@ We'll talk more about these fields later in the tutorial. For now, note that a
 failure. The `Tags` can contain meta data about the transaction that will allow
 us to easily lookup transactions that pertain to particular accounts or actions.
 
-## Handler
+### Handler
 
 Let's define our handler for App1:
 
@@ -455,8 +456,11 @@ func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 Every app will have such a function that defines the setup of the app.
 It will typically be contained in an `app.go` file.
 We'll talk about how to connect this app object with the CLI, a REST API, 
-the logger, and the filesystem later in the tutorial. For now, note that this is where we grant handlers access to stores.
-Here, we have only one store and one handler, and the handler is granted access by giving it the capability key.
+the logger, and the filesystem later in the tutorial. For now, note that this is where we 
+register handlers for messages and grant them access to stores.
+
+Here, we have only a single Msg type, `bank`, a single store for accounts, and a single handler.
+The handler is granted access to the store by giving it the capability key.
 In future apps, we'll have multiple stores and handlers, and not every handler will get access to every store.
 
 After setting the transaction decoder and the message handling routes, the final

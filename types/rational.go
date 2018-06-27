@@ -110,7 +110,9 @@ func (r Rat) Denom() int64        { return r.Rat.Denom().Int64() } // Denom  - r
 func (r Rat) IsZero() bool        { return r.Num() == 0 }          // IsZero - Is the Rat equal to zero
 func (r Rat) Equal(r2 Rat) bool   { return (r.Rat).Cmp(r2.Rat) == 0 }
 func (r Rat) GT(r2 Rat) bool      { return (r.Rat).Cmp(r2.Rat) == 1 }             // greater than
+func (r Rat) GTE(r2 Rat) bool     { return !r.LT(r2) }                            // greater than or equal
 func (r Rat) LT(r2 Rat) bool      { return (r.Rat).Cmp(r2.Rat) == -1 }            // less than
+func (r Rat) LTE(r2 Rat) bool     { return !r.GT(r2) }                            // less than or equal
 func (r Rat) Mul(r2 Rat) Rat      { return Rat{new(big.Rat).Mul(r.Rat, r2.Rat)} } // Mul - multiplication
 func (r Rat) Quo(r2 Rat) Rat      { return Rat{new(big.Rat).Quo(r.Rat, r2.Rat)} } // Quo - quotient
 func (r Rat) Add(r2 Rat) Rat      { return Rat{new(big.Rat).Add(r.Rat, r2.Rat)} } // Add - addition

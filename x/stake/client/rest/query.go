@@ -13,18 +13,30 @@ import (
 )
 
 func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
+
 	r.HandleFunc(
-		"/stake/{delegator}/bonding_status/{validator}",
-		bondingStatusHandlerFn(ctx, "stake", cdc),
+		"/stake/{delegator}/delegation/{validator}",
+		delegationHandlerFn(ctx, "stake", cdc),
 	).Methods("GET")
+
+	r.HandleFunc(
+		"/stake/{delegator}/ubd/{validator}",
+		ubdHandlerFn(ctx, "stake", cdc),
+	).Methods("GET")
+
+	r.HandleFunc(
+		"/stake/{delegator}/red/{validator_src}/{validator_dst}",
+		redHandlerFn(ctx, "stake", cdc),
+	).Methods("GET")
+
 	r.HandleFunc(
 		"/stake/validators",
 		validatorsHandlerFn(ctx, "stake", cdc),
 	).Methods("GET")
 }
 
-// http request handler to query delegator bonding status
-func bondingStatusHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
+// http request handler to query a delegation
+func delegationHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// read parameters
@@ -51,25 +63,147 @@ func bondingStatusHandlerFn(ctx context.CoreContext, storeName string, cdc *wire
 		res, err := ctx.QueryStore(key, storeName)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't query bond. Error: %s", err.Error())))
+			w.Write([]byte(fmt.Sprintf("couldn't query delegation. Error: %s", err.Error())))
 			return
 		}
 
-		// the query will return empty if there is no data for this bond
+		// the query will return empty if there is no data for this record
 		if len(res) == 0 {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
-		var bond stake.Delegation
-		err = cdc.UnmarshalBinary(res, &bond)
+		var delegation stake.Delegation
+		err = cdc.UnmarshalBinary(res, &delegation)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't decode bond. Error: %s", err.Error())))
+			w.Write([]byte(fmt.Sprintf("couldn't decode delegation. Error: %s", err.Error())))
 			return
 		}
 
-		output, err := cdc.MarshalJSON(bond)
+		output, err := cdc.MarshalJSON(delegation)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		w.Write(output)
+	}
+}
+
+// http request handler to query an unbonding-delegation
+func ubdHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		// read parameters
+		vars := mux.Vars(r)
+		bech32delegator := vars["delegator"]
+		bech32validator := vars["validator"]
+
+		delegatorAddr, err := sdk.GetAccAddressBech32(bech32delegator)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		validatorAddr, err := sdk.GetValAddressBech32(bech32validator)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		key := stake.GetUBDKey(delegatorAddr, validatorAddr, cdc)
+
+		res, err := ctx.QueryStore(key, storeName)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("couldn't query unbonding-delegation. Error: %s", err.Error())))
+			return
+		}
+
+		// the query will return empty if there is no data for this record
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		var ubd stake.UnbondingDelegation
+		err = cdc.UnmarshalBinary(res, &ubd)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("couldn't decode unbonding-delegation. Error: %s", err.Error())))
+			return
+		}
+
+		output, err := cdc.MarshalJSON(ubd)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		w.Write(output)
+	}
+}
+
+// http request handler to query an redelegation
+func redHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		// read parameters
+		vars := mux.Vars(r)
+		bech32delegator := vars["delegator"]
+		bech32validatorSrc := vars["validator_src"]
+		bech32validatorDst := vars["validator_dst"]
+
+		delegatorAddr, err := sdk.GetAccAddressBech32(bech32delegator)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		validatorSrcAddr, err := sdk.GetValAddressBech32(bech32validatorSrc)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		validatorDstAddr, err := sdk.GetValAddressBech32(bech32validatorDst)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		key := stake.GetREDKey(delegatorAddr, validatorSrcAddr, validatorDstAddr, cdc)
+
+		res, err := ctx.QueryStore(key, storeName)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("couldn't query redelegation. Error: %s", err.Error())))
+			return
+		}
+
+		// the query will return empty if there is no data for this record
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		var red stake.Redelegation
+		err = cdc.UnmarshalBinary(res, &red)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("couldn't decode redelegation. Error: %s", err.Error())))
+			return
+		}
+
+		output, err := cdc.MarshalJSON(red)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

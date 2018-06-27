@@ -12,6 +12,14 @@ BREAKING CHANGES
 * Removed MsgChangePubKey from auth
 * Removed setPubKey from account mapper
 * Removed GetMemo from Tx (it is still on StdTx)
+* [cli] rearranged commands under subcommands
+* [stake] remove Tick and add EndBlocker
+* [stake] introduce concept of unbonding for delegations and validators
+  * `gaiacli stake unbond` replaced with `gaiacli stake begin-unbonding`
+  * introduced: 
+    * `gaiacli stake complete-unbonding`
+    * `gaiacli stake begin-redelegation`
+    * `gaiacli stake complete-redelegation`
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
@@ -29,7 +37,11 @@ FEATURES
 * [types] Switches internal representation of Int/Uint/Rat to use pointers
 * [gaiad] unsafe_reset_all now resets addrbook.json
 
-FIXES
+FIXES 
+* [gaia] Added self delegation for validators in the genesis creation
+* [lcd] tests now don't depend on raw json text
+* [stake] error strings lower case
+* [stake] pool loose tokens now accounts for unbonding and unbonding tokens not associated with any validator
 * \#1259 - fix bug where certain tests that could have a nil pointer in defer
 * \#1052 - Make all now works
 * Retry on HTTP request failure in CLI tests, add option to retry tests in Makefile
@@ -38,6 +50,16 @@ FIXES
 * \#1343 - fixed unnecessary parallelism in CI
 * \#1353 - CLI: Show pool shares fractions in human-readable format
 * \#1258 - printing big.rat's can no longer overflow int64
+
+IMPROVEMENTS
+* bank module uses go-wire codec instead of 'encoding/json'
+* auth module uses go-wire codec instead of 'encoding/json'
+* revised use of endblock and beginblock
+* [stake] module reorganized to include `types` and `keeper` package
+* [stake] keeper always loads the store (instead passing around which doesn't really boost efficiency)
+* [stake] edit-validator changes now can use the keyword [do-not-modify] to not modify unspecified `--flag` (aka won't set them to `""` value)
+* [types] added common tag constants
+* [stake] offload more generic functionality from the handler into the keeper
 
 ## 0.19.0
 

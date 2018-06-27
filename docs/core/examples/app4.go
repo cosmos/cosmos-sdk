@@ -138,16 +138,19 @@ func evenBetterHandleMsgIssue(metadataMapper MetaDataMapper, accountKeeper bank.
 			return sdk.NewError(2, 1, "Issue Message Malformed").Result()
 		}
 
+		// Handle updating metadata
 		if res := evenBetterHandleMetaData(ctx, metadataMapper, issueMsg.Issuer, issueMsg.Coin); !res.IsOK() {
 			return res
 		}
 
+		// Add newly issued coins to output address
 		_, _, err := accountKeeper.AddCoins(ctx, issueMsg.Receiver, []sdk.Coin{issueMsg.Coin})
 		if err != nil {
 			return err.Result()
 		}
 
 		return sdk.Result{
+			// Return result with Issue msg tags
 			Tags: issueMsg.Tags(),
 		}
 	}
@@ -156,10 +159,12 @@ func evenBetterHandleMsgIssue(metadataMapper MetaDataMapper, accountKeeper bank.
 func evenBetterHandleMetaData(ctx sdk.Context, metadataMapper MetaDataMapper, issuer sdk.Address, coin sdk.Coin) sdk.Result {
 	metadata := metadataMapper.GetMetaData(ctx, coin.Denom)
 
+	// Coin metadata does not exist in store
 	if reflect.DeepEqual(metadata, CoinMetadata{}) {
 		return sdk.ErrInvalidCoins(fmt.Sprintf("Cannot find metadata for coin: %s", coin.Denom)).Result()
 	}
 
+	// Msg Issuer not authorized to issue these coins
 	if !reflect.DeepEqual(metadata.Issuer, issuer) {
 		return sdk.ErrUnauthorized(fmt.Sprintf("Msg Issuer cannot issue tokens: %s", coin.Denom)).Result()
 	}

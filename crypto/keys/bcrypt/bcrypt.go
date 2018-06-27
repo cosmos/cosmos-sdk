@@ -19,9 +19,12 @@ import (
 )
 
 const (
-	MinCost     int = 4  // the minimum allowable cost as passed in to GenerateFromPassword
-	MaxCost     int = 31 // the maximum allowable cost as passed in to GenerateFromPassword
-	DefaultCost int = 10 // the cost that will actually be set if a cost below MinCost is passed into GenerateFromPassword
+	// the minimum allowable cost as passed in to GenerateFromPassword
+	MinCost int = 4
+	// the maximum allowable cost as passed in to GenerateFromPassword
+	MaxCost int = 31
+	// the cost that will actually be set if a cost below MinCost is passed into GenerateFromPassword
+	DefaultCost int = 10
 )
 
 // The error returned from CompareHashAndPassword when a password and hash do
@@ -43,10 +46,12 @@ func (hv HashVersionTooNewError) Error() string {
 // The error returned from CompareHashAndPassword when a hash starts with something other than '$'
 type InvalidHashPrefixError byte
 
+// Format error
 func (ih InvalidHashPrefixError) Error() string {
 	return fmt.Sprintf("crypto/bcrypt: bcrypt hashes must start with '$', but hashedSecret started with '%c'", byte(ih))
 }
 
+// Invalid bcrypt cost
 type InvalidCostError int
 
 func (ic InvalidCostError) Error() string {
@@ -238,11 +243,11 @@ func (p *hashed) Hash() []byte {
 		n = 3
 	}
 	arr[n] = '$'
-	n += 1
+	n++
 	copy(arr[n:], []byte(fmt.Sprintf("%02d", p.cost)))
 	n += 2
 	arr[n] = '$'
-	n += 1
+	n++
 	copy(arr[n:], p.salt)
 	n += encodedSaltSize
 	copy(arr[n:], p.hash)

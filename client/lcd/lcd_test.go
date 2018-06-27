@@ -832,9 +832,9 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 			"name": "%s",
 			"password": "%s",
 			"chain_id": "%s",
-			"account_number": %d,
-			"sequence": %d,
-			"gas": 100000
+			"account_number": "%d",
+			"sequence": "%d",
+			"gas": "100000"
 		}
 	}`, bechProposerAddr, proposalID, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", "/gov/deposit", jsonStr)
@@ -867,9 +867,9 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ad
 			"name": "%s",
 			"password": "%s",
 			"chain_id": "%s",
-			"account_number": %d,
-			"sequence": %d,
-			"gas": 100000
+			"account_number": "%d",
+			"sequence": "%d",
+			"gas": "100000"
 		}
 	}`, bechProposerAddr, proposalID, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", "/gov/vote", jsonStr)

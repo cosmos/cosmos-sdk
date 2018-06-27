@@ -25,12 +25,6 @@ var (
 	addr4     = priv4.PubKey().Address()
 	coins     = sdk.Coins{sdk.NewCoin("foocoin", 10)}
 	halfCoins = sdk.Coins{sdk.NewCoin("foocoin", 5)}
-	manyCoins = sdk.Coins{sdk.NewCoin("foocoin", 1), sdk.NewCoin("barcoin", 1)}
-
-	freeFee = auth.StdFee{ // no fees for a buncha gas
-		sdk.Coins{sdk.NewCoin("foocoin", 0)},
-		100000,
-	}
 
 	sendMsg1 = MsgSend{
 		Inputs:  []Input{NewInput(addr1, coins)},
@@ -64,27 +58,26 @@ var (
 			NewOutput(addr1, coins),
 		},
 	}
-
-	sendMsg5 = MsgSend{
-		Inputs: []Input{
-			NewInput(addr1, manyCoins),
-		},
-		Outputs: []Output{
-			NewOutput(addr2, manyCoins),
-		},
-	}
 )
 
 // initialize the mock application for this module
 func getMockApp(t *testing.T) *mock.App {
+	mapp, err := getBenchmarkMockApp()
+	require.NoError(t, err)
+	return mapp
+}
+
+// getBenchmarkMockApp initializes a mock application for this module, for purposes of benchmarking
+// Any long term API support commitments do not apply to this function.
+func getBenchmarkMockApp() (*mock.App, error) {
 	mapp := mock.NewApp()
 
 	RegisterWire(mapp.Cdc)
 	coinKeeper := NewKeeper(mapp.AccountMapper)
 	mapp.Router().AddRoute("bank", NewHandler(coinKeeper))
 
-	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{}))
-	return mapp
+	err := mapp.CompleteSetup([]*sdk.KVStoreKey{})
+	return mapp, err
 }
 
 func TestMsgSendWithAccounts(t *testing.T) {

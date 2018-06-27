@@ -18,7 +18,6 @@ import (
 var (
 	priv1 = crypto.GenPrivKeyEd25519()
 	addr1 = priv1.PubKey().Address()
-	coins = sdk.Coins{sdk.NewCoin("foocoin", 10)}
 )
 
 // initialize the mock application for this module

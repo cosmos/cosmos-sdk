@@ -19,14 +19,6 @@ var (
 	addr1 = priv1.PubKey().Address()
 	priv2 = crypto.GenPrivKeyEd25519()
 	addr2 = priv2.PubKey().Address()
-	addr3 = crypto.GenPrivKeyEd25519().PubKey().Address()
-	priv4 = crypto.GenPrivKeyEd25519()
-	addr4 = priv4.PubKey().Address()
-	coins = sdk.Coins{{"foocoin", sdk.NewInt(10)}}
-	fee   = auth.StdFee{
-		sdk.Coins{{"foocoin", sdk.NewInt(0)}},
-		100000,
-	}
 )
 
 // initialize the mock application for this module

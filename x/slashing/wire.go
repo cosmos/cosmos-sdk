@@ -8,5 +8,3 @@ import (
 func RegisterWire(cdc *wire.Codec) {
 	cdc.RegisterConcrete(MsgUnrevoke{}, "cosmos-sdk/MsgUnrevoke", nil)
 }
-
-var cdcEmpty = wire.NewCodec()

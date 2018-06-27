@@ -129,7 +129,7 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 // Procedures
 
 // Gets procedure from store. TODO: move to global param store and allow for updating of this
-func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) DepositProcedure {
+func (keeper Keeper) GetDepositProcedure() DepositProcedure {
 	return DepositProcedure{
 		MinDeposit:       sdk.Coins{sdk.NewCoin("steak", 10)},
 		MaxDepositPeriod: 200,
@@ -137,14 +137,14 @@ func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) DepositProcedure {
 }
 
 // Gets procedure from store. TODO: move to global param store and allow for updating of this
-func (keeper Keeper) GetVotingProcedure(ctx sdk.Context) VotingProcedure {
+func (keeper Keeper) GetVotingProcedure() VotingProcedure {
 	return VotingProcedure{
 		VotingPeriod: 200,
 	}
 }
 
 // Gets procedure from store. TODO: move to global param store and allow for updating of this
-func (keeper Keeper) GetTallyingProcedure(ctx sdk.Context) TallyingProcedure {
+func (keeper Keeper) GetTallyingProcedure() TallyingProcedure {
 	return TallyingProcedure{
 		Threshold:         sdk.NewRat(1, 2),
 		Veto:              sdk.NewRat(1, 3),
@@ -256,7 +256,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 	// Check if deposit tipped proposal into voting period
 	// Active voting period if so
 	activatedVotingPeriod := false
-	if proposal.GetStatus() == StatusDepositPeriod && proposal.GetTotalDeposit().IsGTE(keeper.GetDepositProcedure(ctx).MinDeposit) {
+	if proposal.GetStatus() == StatusDepositPeriod && proposal.GetTotalDeposit().IsGTE(keeper.GetDepositProcedure().MinDeposit) {
 		keeper.activateVotingPeriod(ctx, proposal)
 		activatedVotingPeriod = true
 	}

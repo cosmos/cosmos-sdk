@@ -101,8 +101,8 @@ type Redelegation struct {
 	ValidatorDstAddr sdk.Address `json:"validator_dst_addr"` // validator redelegation destination owner addr
 	CreationHeight   int64       `json:"creation_height"`    // height which the redelegation took place
 	MinTime          int64       `json:"min_time"`           // unix time for redelegation completion
-	SharesSrc        sdk.Rat     `json:"shares`              // amount of source shares redelegating
-	SharesDst        sdk.Rat     `json:"shares`              // amount of destination shares redelegating
+	SharesSrc        sdk.Rat     `json:"shares_src"`         // amount of source shares redelegating
+	SharesDst        sdk.Rat     `json:"shares_dst"`         // amount of destination shares redelegating
 }
 
 // nolint

@@ -63,11 +63,17 @@ jobs:
             export PATH="$GOBIN:$PATH"
             make get_tools
             go get -u github.com/client9/misspell/cmd/misspell
+            go get -u mvdan.cc/unparam
+            go get -u github.com/kisielk/errcheck
+            go get -u github.com/opennota/check/cmd/varcheck
+            go get -u github.com/gordonklaus/ineffassign
+            go get -u github.com/mdempsky/unconvert
       - run:
           name: Lint source
           command: |
             export PATH="$GOBIN:$PATH"
-            gometalinter.v2 --disable-all --enable='golint' --enable='misspell' --vendor ./...
+            gometalinter.v2 --disable-all --enable='golint' --enable='unconvert' --enable='ineffassign' --enable='varcheck' --enable='unparam' --enable='misspell' --linter='vet:go vet -composites=false:PATH:LINE:MESSAGE' --enable='vet' --deadline=600s --vendor ./...
+            gometalinter.v2 --disable-all --enable='errcheck' --vendor ./... | grep -v "client/"
             find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
   test_unit:
     <<: *defaults

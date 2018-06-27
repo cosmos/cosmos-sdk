@@ -244,11 +244,11 @@ func (coins Coins) AmountOf(denom string) Int {
 		midIdx := len(coins) / 2 // 2:1, 3:1, 4:2
 		coin := coins[midIdx]
 		if denom < coin.Denom {
-			return Coins(coins[:midIdx]).AmountOf(denom)
+			return coins[:midIdx].AmountOf(denom)
 		} else if denom == coin.Denom {
 			return coin.Amount
 		} else {
-			return Coins(coins[midIdx+1:]).AmountOf(denom)
+			return coins[midIdx+1:].AmountOf(denom)
 		}
 	}
 }

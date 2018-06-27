@@ -69,7 +69,11 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 // If a new config is created, change some of the default tendermint settings
 func interceptLoadConfig() (conf *cfg.Config, err error) {
 	tmpConf := cfg.DefaultConfig()
-	viper.Unmarshal(tmpConf)
+	err = viper.Unmarshal(tmpConf)
+	if err != nil {
+		// TODO: Handle with #870
+		panic(err)
+	}
 	rootDir := tmpConf.RootDir
 	configFilePath := filepath.Join(rootDir, "config/config.toml")
 	// Intercept only if the file doesn't already exist

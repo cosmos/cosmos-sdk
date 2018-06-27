@@ -21,8 +21,8 @@ func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params, sd
 	numVals := 3
 	pool.LooseTokens = amt * int64(numVals)
 
+	// add numVals validators
 	for i := 0; i < numVals; i++ {
-		// add a validator
 		validator := types.NewValidator(addrVals[i], PKs[i], types.Description{})
 		validator, pool, _ = validator.AddTokensFromDel(pool, amt)
 		keeper.SetPool(ctx, pool)

@@ -14,21 +14,31 @@ NOTE: This documentation is a work-in-progress!
         - [Messages](core/app1.md#messages) - Messages contain the content of a transaction
         - [Stores](core/app1.md#kvstore) - KVStore is a Merkle Key-Value store. 
         - [Handlers](core/app1.md#handlers) - Handlers are the workhorse of the app!
+        - [Tx](core/app1.md#tx) - Transactions are the ultimate input to the
+          application
         - [BaseApp](core/app1.md#baseapp) - BaseApp is the base layer of the application
-    - [App2 - Amino](core/app2.md)
+    - [App2 - Transactions](core/app2.md)
         - [Amino](core/app2.md#amino) - Amino is the primary serialization library used in the SDK
-    - [App3 - Authentication](core/app3.md)
-        - [Accounts](core/app3.md#accounts) - Accounts are the prototypical object kept in the store
-        - [Transactions](core/app3.md#transactions) - Transactions wrap messages and provide authentication
-    - [App4 - Modules and Keepers](core/app4.md)
-        - [Keepers](core/app4.md#keepers) - Keepers are the interfaces between handlers
-    - [App5 - Advanced](core/app5.md)
-        - [Validator Set Changes](core/app5.md#validators) - Change the
-          validator set 
-    - [App6 - Basecoin](core/app6.md) - 
-        - [Directory Structure](core/app6.md#directory-structure) - Keep your
+        - [Ante Handler](core/app2.md#ante-handler) - The AnteHandler
+          authenticates transactions
+    - [App3 - Modules](core/app3.md)
+        - [Account](core/app3.md#account) - Accounts are the prototypical object kept in the store
+        - [StdTx](core/app3.md#stdtx) - Transactions wrap messages and provide authentication
+        - [AccountMapper](core/app3.md#account-mapper) - AccountMapper
+          provides Account lookup on a KVStore
+        - [CoinKeeper](core/app3.md#coin-keeper) - CoinKeeper allows for coin
+          transfer on an underlying AccountMapper
+    - [App4 - Validator Set Changes](core/app4.md)
+        - [InitChain](core/app4.md#init-chain) - Initialize the application
+          state
+        - [BeginBlock](core/app4.md#begin-block) - BeginBlock logic runs at the
+          beginning of every block
+        - [EndBlock](core/app4.md#end-block) - EndBlock logic runs at the
+          end of every block
+    - [App5 - Basecoin](core/app5.md) - 
+        - [Directory Structure](core/app5.md#directory-structure) - Keep your
           application code organized
-        - [Clients](core/app6.md#clients) - Hook up your app to standard CLI and REST
+        - [Clients](core/app5.md#clients) - Hook up your app to standard CLI and REST
             interfaces for clients to use!
 
 - [Modules](modules)

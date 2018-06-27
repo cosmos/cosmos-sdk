@@ -2,13 +2,13 @@
 
 ## Abstract
 
-A light client can provide the same sucurity as a full node with the minimal requirements on bandwidth, computing and storage resource. Besides, it can also provide modular functionality according to users' configuration. These fantastic features allow developers to build fully secure, efficient and usable mobile apps, websites or any other applications without deploying or maintaining any full blockchin nodes.
+A light client can provide the same security as a full node with the minimal requirements on bandwidth, computing and storage resource. Besides, it can also provide modular functionality according to users' configuration. These fantastic features allow developers to build fully secure, efficient and usable mobile apps, websites or any other applications without deploying or maintaining any full blockchain nodes.
 
 LCD will be used in the Cosmos Hub, the first Hub in the Cosmos network.
 
-## Conetnets
+## Contents
 
-1. [**Overview**](#Overview) 
+1. [**Overview**](#Overview)
 2. [**Get Started**](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/getting_started.md)
 3. [**API**](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md)
 4. **Specifications**
@@ -41,13 +41,13 @@ A full node of ABCI is different from its light client in the following ways:
 |-| ------------- | ----- | -------------- |
 | Execute and verify transactions|Yes|No|Full node will execute and verify all transactions while LCD won't|
 | Verify and save blocks|Yes|No|Full node will verify and save all blocks while LCD won't|
-| Participate consensus| Yes|No|Only when the full node is a validtor, it will participate consensus. LCD nodes never participate consensus|
+| Participate consensus| Yes|No|Only when the full node is a validator, it will participate consensus. LCD nodes never participate consensus|
 | Bandwidth cost|Huge|Little|Full node will receive all blocks. if the bandwidth is limited, it will fall behind the main network. What's more, if it happens to be a validator,it will slow down the consensus process. LCD requires little bandwidth. Only when serving local request, it will cost bandwidth|
 | Computing resource|Huge|Little|Full node will execute all transactions and verify all blocks which require much computing resource|
 | Storage resource|Huge|Little|Full node will save all blocks and ABCI states. LCD just saves validator sets and some checkpoints|
 | Power consume|Huge|Little|Full nodes have to be deployed on machines which have high performance and will be running all the time. So power consume will be huge. LCD can be deployed on the same machines as users' applications, or on independent machines but with poor performance. Besides, LCD can be shutdown anytime when necessary. So LCD only consume very little power, even mobile devices can meet the power requirement|
 | Provide APIs|All cosmos APIs|Modular APIs|Full node supports all cosmos APIs. LCD provides modular APIs according to users' configuration|
-| Secuity level| High|High|Full node will verify all transactions and blocks by itself. LCD can't do this, but it can query any data from other full nodes and verify the data independently. So both full node and LCD don't need to trust any third nodes, they all can achieve high security|
+| Security level| High|High|Full node will verify all transactions and blocks by itself. LCD can't do this, but it can query any data from other full nodes and verify the data independently. So both full node and LCD don't need to trust any third nodes, they all can achieve high security|
 
 According to the above table, LCD can meet all users' functionality and security requirements, but only requires little resource on bandwidth, computing, storage and power.
 
@@ -57,7 +57,7 @@ According to the above table, LCD can meet all users' functionality and security
 
 The base design philosophy of lcd follows the two rules:
 
-1. **Doesn't trust any blockchin nodes, including validator nodes and other full nodes**
+1. **Doesn't trust any blockchain nodes, including validator nodes and other full nodes**
 2. **Only trusts the whole validator set**
 
 The original trusted validator set should be prepositioned into its trust store, usually this validator set comes from genesis file. During running time, if LCD detects different validator set, it will verify it and save new validated validator set to trust store.

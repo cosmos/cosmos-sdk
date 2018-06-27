@@ -7,7 +7,7 @@ The LCD will be an important bridge between service providers and cosmos blockch
 3. The system reliability will decrease.
 4. As the full node may belong to other people or associates, they may deny too frequent access from a single client.
 ```
-It is very urgent to solve this problems. Here we consider to import load balancing into LCD. By the help of load balancing, LCD can distribute millions of requests to a set of full nodes. Thus the load of each full node won't be too heavy and the unavailable full nodes will be wipped out of query list. In addition, the system reliability will increase.
+It is very urgent to solve this problems. Here we consider to import load balancing into LCD. By the help of load balancing, LCD can distribute millions of requests to a set of full nodes. Thus the load of each full node won't be too heavy and the unavailable full nodes will be wiped out of query list. In addition, the system reliability will increase.
 
 ## Design
 This module need combine with client to realize the real load balancing. It can embed into the `HTTP`(Loc:"github.com/tendermint/tendermint/rpc/lib/client/httpclient.go"). In other words，we realize the new httpclient based on `HTTP`.

@@ -3,13 +3,11 @@ package mock
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
-	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 )
 
@@ -51,7 +49,6 @@ var (
 func getMockApp(t *testing.T) *App {
 	mapp := NewApp()
 
-	mapp.Router().AddRoute("auth", auth.NewHandler(mapp.AccountMapper))
 	mapp.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
 	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{}))
 	return mapp
@@ -81,31 +78,19 @@ func TestMsgChangePubKey(t *testing.T) {
 	// Run a CheckDeliver
 	SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{testMsg1}, []int64{0}, []int64{0}, true, priv1)
 
-	changePubKeyMsg := auth.MsgChangeKey{
-		Address:   addr1,
-		NewPubKey: priv2.PubKey(),
-	}
-
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctxDeliver := mapp.BaseApp.NewContext(false, abci.Header{})
-	acc2 := mapp.AccountMapper.GetAccount(ctxDeliver, addr1)
+	acc2 := mapp.AccountMapper.GetAccount(ctxDeliver, addr2)
 
-	// send a MsgChangePubKey
-	res := SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{changePubKeyMsg}, []int64{0}, []int64{1}, true, priv1)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), res.Code, res.Log)
-
-	acc2 = mapp.AccountMapper.GetAccount(ctxDeliver, addr1)
-
-	assert.True(t, priv2.PubKey().Equals(acc2.GetPubKey()))
-
-	// signing a SendMsg with the old privKey should be an auth error
+	// signing a SendMsg with the wrong privKey should be an auth error
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	tx := GenTx([]sdk.Msg{testMsg1}, []int64{0}, []int64{2}, priv1)
 	res = mapp.Deliver(tx)
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
 
-	// resigning the tx with the new correct priv key should work
-	res = SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{testMsg1}, []int64{0}, []int64{2}, true, priv2)
+	// resigning the tx with the old priv key should still work
+	res = SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{testMsg1}, []int64{0}, []int64{2}, true, priv1)
 
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), res.Code, res.Log)
 }
+

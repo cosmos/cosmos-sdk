@@ -179,7 +179,7 @@ func handleMsgSend(ctx sdk.Context, key *sdk.KVStoreKey, msg MsgSend) sdk.Result
 	store.Set(msg.To, val)
 
 	return sdk.Result{
-	// TODO: Tags
+		// TODO: Tags
 	}
 }
 

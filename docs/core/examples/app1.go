@@ -149,7 +149,7 @@ func handleFrom(store sdk.KVStore, from sdk.Address, amt sdk.Coins) sdk.Result {
 	}
 
 	// Unmarshal the JSON account bytes.
-	var acc app1Account
+	var acc appAccount
 	err := json.Unmarshal(accBytes, &acc)
 	if err != nil {
 		// InternalError
@@ -181,10 +181,10 @@ func handleFrom(store sdk.KVStore, from sdk.Address, amt sdk.Coins) sdk.Result {
 func handleTo(store sdk.KVStore, to sdk.Address, amt sdk.Coins) sdk.Result {
 	// Add msg amount to receiver account
 	accBytes := store.Get(to)
-	var acc app1Account
+	var acc appAccount
 	if accBytes == nil {
 		// Receiver account does not already exist, create a new one.
-		acc = app1Account{}
+		acc = appAccount{}
 	} else {
 		// Receiver account already exists. Retrieve and decode it.
 		err := json.Unmarshal(accBytes, &acc)
@@ -210,7 +210,7 @@ func handleTo(store sdk.KVStore, to sdk.Address, amt sdk.Coins) sdk.Result {
 	return sdk.Result{}
 }
 
-type app1Account struct {
+type appAccount struct {
 	Coins sdk.Coins `json:"coins"`
 }
 

@@ -5,54 +5,127 @@ transactions. In that example, our `Tx` implementation was still just a simple
 wrapper of the `Msg`, providing no actual authentication. Here, in `App3`, we
 expand on `App2` to provide real authentication in the transactions.
 
+Without loss of generality, the SDK prescribes native 
+account and transaction types that are sufficient for a wide range of applications. 
+These are implemented in the `x/auth` module, where
+all authentication related data structures and logic reside. 
+Applications that use `x/auth` don't need to worry about any of the details of
+authentication and replay protection, as they are handled automatically. For
+completeness, we will explain everything here.
+
+## Account
+
+The `Account` interface provides a model of accounts that have:
+
+- Address for identification
+- PubKey for authentication
+- AccountNumber to prune empty accounts
+- Sequence to prevent transaction replays
+- Coins to carry a balance
+
+It consists of getters and setters for each of these:
+
+```go
+// Account is a standard account using a sequence number for replay protection
+// and a pubkey for authentication.
+type Account interface {
+	GetAddress() sdk.Address
+	SetAddress(sdk.Address) error // errors if already set.
+
+	GetPubKey() crypto.PubKey // can return nil.
+	SetPubKey(crypto.PubKey) error
+
+	GetAccountNumber() int64
+	SetAccountNumber(int64) error
+
+	GetSequence() int64
+	SetSequence(int64) error
+
+	GetCoins() sdk.Coins
+	SetCoins(sdk.Coins) error
+}
+```
+
+## BaseAccount
+
+The default implementation of `Account` is the `BaseAccount`:
+
+```go
+// BaseAccount - base account structure.
+// Extend this by embedding this in your AppAccount.
+// See the examples/basecoin/types/account.go for an example.
+type BaseAccount struct {
+	Address       sdk.Address   `json:"address"`
+	Coins         sdk.Coins     `json:"coins"`
+	PubKey        crypto.PubKey `json:"public_key"`
+	AccountNumber int64         `json:"account_number"`
+	Sequence      int64         `json:"sequence"`
+}
+```
+
+It simply contains a field for each of the methods.
+
+The `Address`, `PubKey`, and `AccountNumber` of the `BaseAccpunt` cannot be changed once they are set.
+
+The `Sequence` increments by one with every transaction. This ensures that a
+given transaction can only be executed once, as the `Sequence` contained in the
+transaction must match that contained in the account.
+
+The `Coins` will change according to the logic of each transaction type.
+
+If the `Coins` are ever emptied, the account will be deleted from the store. If
+coins are later sent to the same `Address`, the account will be recreated but
+with a new `AccountNumber`. This allows us to prune empty accounts from the
+store, while still preventing transaction replay if accounts become non-empty
+again in the future.
+
+
+
 ## StdTx
 
-The standard way to create a transaction from a message is to use the `StdTx` struct defined in the `x/auth` module.
+The standard way to create a transaction from a message is to use the `StdTx` struct defined in the `x/auth` module:
 
 ```go
+// StdTx is a standard way to wrap a Msg with Fee and Signatures.
+// NOTE: the first signature is the FeePayer (Signatures must not be nil).
 type StdTx struct {
-	Msg        sdk.Msg        `json:"msg"`
+	Msgs       []sdk.Msg      `json:"msg"`
 	Fee        StdFee         `json:"fee"`
 	Signatures []StdSignature `json:"signatures"`
+	Memo       string         `json:"memo"`
 }
 ```
 
-The `StdTx.GetSignatures()` method returns a list of signatures, which must match
-the list of addresses returned by `tx.Msg.GetSigners()`. The signatures come in
-a standard form:
+The `StdTx` includes a list of messages, information about the fee being paid,
+and a list of signatures. It also includes an optional `Memo` for additional
+data. Note that the list of signatures must match the result of `GetSigners()`
+for each `Msg`!
+
+The signatures are provided in a standard form as `StdSignature`:
 
 ```go
+// StdSignature wraps the Signature and includes counters for replay protection.
+// It also includes an optional public key, which must be provided at least in
+// the first transaction made by the account.
 type StdSignature struct {
-	crypto.PubKey // optional
-	crypto.Signature
-	AccountNumber int64
-	Sequence int64
+	crypto.PubKey    `json:"pub_key"` // optional
+	crypto.Signature `json:"signature"`
+	AccountNumber    int64 `json:"account_number"`
+	Sequence         int64 `json:"sequence"`
 }
 ```
 
-It contains the signature itself, as well as the corresponding account's
-sequence number.  The sequence number is expected to increment every time a
-message is signed by a given account.  This prevents "replay attacks", where
-the same message could be executed over and over again.
+Recall that the `Sequence` is expected to increment every time a
+message is signed by a given account in order to prevent "replay attacks" where
+the same message could be executed over and over again. The `AccountNumber` is
+assigned when the account is created or recreated after being emptied.
 
 The `StdSignature` can also optionally include the public key for verifying the
-signature.  An application can store the public key for each address it knows
-about, making it optional to include the public key in the transaction. In the
-case of Basecoin, the public key only needs to be included in the first
-transaction send by a given account - after that, the public key is forever
-stored by the application and can be left out of transactions.
+signature. The public key only needs to be included the first time a transaction
+is sent from a given account - from then on it will be stored in the `Account`
+and can be left out of transactions.
 
-The address responsible for paying the transactions fee is the first address
-returned by msg.GetSigners(). The convenience function `FeePayer(tx Tx)` is provided
-to return this.
-
-The standard bytes for signers to sign over is provided by:
-
-```go
-func StdSignByes(chainID string, accnums []int64, sequences []int64, fee StdFee, msg sdk.Msg) []byte
-```
-
-in `x/auth`. The standard way to construct fees to pay for the processing of transactions is:
+The fee is provided in a standard form as `StdFee`:
 
 ```go
 // StdFee includes the amount of coins paid in fees and the maximum
@@ -62,6 +135,18 @@ type StdFee struct {
 	Amount sdk.Coins `json:"amount"`
 	Gas    int64     `json:"gas"`
 }
+```
+
+Note that the address responsible for paying the transactions fee is the first address
+returned by msg.GetSigners() for the first `Msg`. The convenience function `FeePayer(tx Tx)` is provided
+to return this.
+
+## Signing
+
+The standard bytes for signers to sign over is provided by:
+
+```go
+TODO
 ```
 
 ## AnteHandler
@@ -100,47 +185,6 @@ This generally involves signature verification. The antehandler should check tha
 # Accounts 
 
 ### auth.Account
-
-```go
-// Account is a standard account using a sequence number for replay protection
-// and a pubkey for authentication.
-type Account interface {
-	GetAddress() sdk.Address
-	SetAddress(sdk.Address) error // errors if already set.
-
-	GetPubKey() crypto.PubKey // can return nil.
-	SetPubKey(crypto.PubKey) error
-
-	GetAccountNumber() int64
-	SetAccountNumber(int64) error
-
-	GetSequence() int64
-	SetSequence(int64) error
-
-	GetCoins() sdk.Coins
-	SetCoins(sdk.Coins) error
-}
-```
-
-Accounts are the standard way for an application to keep track of addresses and their associated balances.
-
-### auth.BaseAccount
-
-```go
-// BaseAccount - base account structure.
-// Extend this by embedding this in your AppAccount.
-// See the examples/basecoin/types/account.go for an example.
-type BaseAccount struct {
-	Address       sdk.Address   `json:"address"`
-	Coins         sdk.Coins     `json:"coins"`
-	PubKey        crypto.PubKey `json:"public_key"`
-	AccountNumber int64         `json:"account_number"`
-	Sequence      int64         `json:"sequence"`
-}
-```
-
-The `auth.BaseAccount` struct provides a standard implementation of the Account interface with replay protection.
-BaseAccount can be extended by embedding it in your own Account struct.
 
 ### auth.AccountMapper
 

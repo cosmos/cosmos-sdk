@@ -158,6 +158,9 @@ type Error interface {
 	// convenience
 	TraceSDK(format string, args ...interface{}) Error
 
+	// set codespace
+	WithCodespace(CodespaceType) Error
+
 	Code() CodeType
 	Codespace() CodespaceType
 	ABCILog() string
@@ -190,6 +193,15 @@ type sdkError struct {
 	codespace CodespaceType
 	code      CodeType
 	cmnError
+}
+
+// Implements Error.
+func (err *sdkError) WithCodespace(cs CodespaceType) Error {
+	return &sdkError{
+		codespace: cs,
+		code:      err.code,
+		cmnError:  err.cmnError,
+	}
 }
 
 // Implements ABCIError.

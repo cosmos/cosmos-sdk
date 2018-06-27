@@ -19,15 +19,16 @@ import (
 const (
 	ProposalRestID = "proposalID"
 	RestVoter      = "voterAddress"
+	storeName      = "gov"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/gov/submitproposal", postProposalHandlerFn(cdc, kb, ctx)).Methods("POST")
+	r.HandleFunc("/gov/submitproposal", postProposalHandlerFn(cdc, ctx)).Methods("POST")
 	r.HandleFunc("/gov/deposit", depositHandlerFn(cdc, kb, ctx)).Methods("POST")
 	r.HandleFunc("/gov/vote", voteHandlerFn(cdc, kb, ctx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}", ProposalRestID), queryProposalHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/gov/votes/{%s}/{%s}", ProposalRestID, RestVoter), queryVoteHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}", ProposalRestID), queryProposalHandlerFn(cdc)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/gov/votes/{%s}/{%s}", ProposalRestID, RestVoter), queryVoteHandlerFn(cdc)).Methods("GET")
 }
 
 type postProposalReq struct {
@@ -53,7 +54,7 @@ type voteReq struct {
 	Option     string  `json:"option"`     //  option from OptionSet chosen by the voter
 }
 
-func postProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+func postProposalHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req postProposalReq
 		err := buildReq(w, r, &req)
@@ -158,7 +159,7 @@ func voteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) ht
 	}
 }
 
-func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+func queryProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		strProposalID := vars[ProposalRestID]
@@ -199,7 +200,7 @@ func queryProposalHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 	}
 }
 
-func queryVoteHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+func queryVoteHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		strProposalID := vars[ProposalRestID]

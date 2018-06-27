@@ -29,6 +29,8 @@ FEATURES
   * Supported proposal types: just binary (pass/fail) TextProposals for now
   * Proposals need deposits to be votable; deposits are burned if proposal fails
   * Delegators delegate votes to validator by default but can override (for their stake)
+* Add benchmarks for signing and delivering a block with a single bank transaction
+  * Run with `cd x/bank && go test --bench=.`
 * [tools] make get_tools installs tendermint's linter, and gometalinter
 * [tools] Switch gometalinter to the stable version
 * [tools] Add checking for misspellings and for incorrectly formatted files in circle CI

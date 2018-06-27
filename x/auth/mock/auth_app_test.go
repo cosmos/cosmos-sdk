@@ -56,7 +56,7 @@ func getMockApp(t *testing.T) *App {
 	return mapp
 }
 
-func TestMsgChangePubKey(t *testing.T) {
+func TestMsgPrivKeys(t *testing.T) {
 	mapp := getMockApp(t)
 	mapp.Cdc.RegisterConcrete(testMsg{}, "mock/testMsg", nil)
 

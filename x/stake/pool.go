@@ -21,7 +21,7 @@ type Pool struct {
 	DateLastCommissionReset int64 `json:"date_last_commission_reset"` // unix timestamp for last commission accounting reset (daily)
 
 	// Fee Related
-	PrevBondedShares sdk.Rat `json:"prev_bonded_shares"` // last recorded bonded shares - for fee calcualtions
+	PrevBondedShares sdk.Rat `json:"prev_bonded_shares"` // last recorded bonded shares - for fee calculations
 }
 
 func (p Pool) equal(p2 Pool) bool {

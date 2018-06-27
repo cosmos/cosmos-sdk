@@ -27,7 +27,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	txs := mock.GenSequenceOfTxs([]sdk.Msg{sendMsg1}, []int64{0}, []int64{int64(0)}, b.N, priv1)
 	b.ResetTimer()
 	// Run this with a profiler, so its easy to distinguish what time comes from
-	// Commiting, and what time comes from Check/Deliver Tx.
+	// Committing, and what time comes from Check/Deliver Tx.
 	for i := 0; i < b.N; i++ {
 		benchmarkApp.BeginBlock(abci.RequestBeginBlock{})
 		x := benchmarkApp.Check(txs[i])

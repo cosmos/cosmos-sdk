@@ -25,8 +25,6 @@ import (
 var (
 	Addrs       = createTestAddrs(100)
 	PKs         = createTestPubKeys(100)
-	emptyAddr   sdk.Address
-	emptyPubkey crypto.PubKey
 
 	addrDels = []sdk.Address{
 		Addrs[0],

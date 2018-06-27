@@ -25,12 +25,6 @@ var (
 	addr4     = priv4.PubKey().Address()
 	coins     = sdk.Coins{sdk.NewCoin("foocoin", 10)}
 	halfCoins = sdk.Coins{sdk.NewCoin("foocoin", 5)}
-	manyCoins = sdk.Coins{sdk.NewCoin("foocoin", 1), sdk.NewCoin("barcoin", 1)}
-
-	freeFee = auth.StdFee{ // no fees for a buncha gas
-		sdk.Coins{sdk.NewCoin("foocoin", 0)},
-		100000,
-	}
 
 	sendMsg1 = MsgSend{
 		Inputs:  []Input{NewInput(addr1, coins)},
@@ -62,15 +56,6 @@ var (
 		},
 		Outputs: []Output{
 			NewOutput(addr1, coins),
-		},
-	}
-
-	sendMsg5 = MsgSend{
-		Inputs: []Input{
-			NewInput(addr1, manyCoins),
-		},
-		Outputs: []Output{
-			NewOutput(addr2, manyCoins),
 		},
 	}
 )

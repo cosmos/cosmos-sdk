@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"github.com/tendermint/go-crypto/keys"
 )
 
 // REST Variable names
@@ -23,10 +22,10 @@ const (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
+func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 	r.HandleFunc("/gov/submitproposal", postProposalHandlerFn(cdc, ctx)).Methods("POST")
-	r.HandleFunc("/gov/deposit", depositHandlerFn(cdc, kb, ctx)).Methods("POST")
-	r.HandleFunc("/gov/vote", voteHandlerFn(cdc, kb, ctx)).Methods("POST")
+	r.HandleFunc("/gov/deposit", depositHandlerFn(cdc, ctx)).Methods("POST")
+	r.HandleFunc("/gov/vote", voteHandlerFn(cdc, ctx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}", ProposalRestID), queryProposalHandlerFn(cdc)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/gov/votes/{%s}/{%s}", ProposalRestID, RestVoter), queryVoteHandlerFn(cdc)).Methods("GET")
 }
@@ -91,7 +90,7 @@ func postProposalHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.Handle
 	}
 }
 
-func depositHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+func depositHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req depositReq
 		err := buildReq(w, r, &req)
@@ -122,7 +121,7 @@ func depositHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext)
 	}
 }
 
-func voteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+func voteHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req voteReq
 		err := buildReq(w, r, &req)

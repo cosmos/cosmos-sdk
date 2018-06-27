@@ -19,12 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-// Key to store the header in the DB itself.
-// Use the db directly instead of a store to avoid
-// conflicts with handlers writing to the store
-// and to avoid affecting the Merkle root.
-var dbHeaderKey = []byte("header")
-
 // Enum mode for app.runTx
 type runTxMode uint8
 

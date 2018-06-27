@@ -41,7 +41,6 @@ var (
 	priv1 = crypto.GenPrivKeyEd25519()
 	addr1 = priv1.PubKey().Address()
 	priv2 = crypto.GenPrivKeyEd25519()
-	addr2 = priv2.PubKey().Address()
 
 	coins    = sdk.Coins{sdk.NewCoin("foocoin", 10)}
 	testMsg1 = testMsg{signers: []sdk.Address{addr1}, positiveNum: 1}

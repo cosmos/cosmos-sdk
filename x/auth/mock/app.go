@@ -77,7 +77,11 @@ func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.Respo
 	// load the accounts
 	for _, genacc := range app.GenesisAccounts {
 		acc := app.AccountMapper.NewAccountWithAddress(ctx, genacc.GetAddress())
-		acc.SetCoins(genacc.GetCoins())
+		err := acc.SetCoins(genacc.GetCoins())
+		if err != nil {
+			// TODO: Handle with #870
+			panic(err)
+		}
 		app.AccountMapper.SetAccount(ctx, acc)
 	}
 

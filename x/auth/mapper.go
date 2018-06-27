@@ -54,7 +54,11 @@ func (am AccountMapper) NewAccountWithAddress(ctx sdk.Context, addr sdk.Address)
 
 // New Account
 func (am AccountMapper) NewAccount(ctx sdk.Context, acc Account) Account {
-	acc.SetAccountNumber(am.GetNextAccountNumber(ctx))
+	err := acc.SetAccountNumber(am.GetNextAccountNumber(ctx))
+	if err != nil {
+		// TODO: Handle with #870
+		panic(err)
+	}
 	return acc
 }
 

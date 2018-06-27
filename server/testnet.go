@@ -43,7 +43,7 @@ Example:
 	`,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			config := ctx.Config
-			err := testnetWithConfig(config, ctx, cdc, appInit)
+			err := testnetWithConfig(config, cdc, appInit)
 			return err
 		},
 	}
@@ -59,7 +59,7 @@ Example:
 	return cmd
 }
 
-func testnetWithConfig(config *cfg.Config, ctx *Context, cdc *wire.Codec, appInit AppInit) error {
+func testnetWithConfig(config *cfg.Config, cdc *wire.Codec, appInit AppInit) error {
 
 	outDir := viper.GetString(outputDir)
 	// Generate private key, node ID, initial transaction

@@ -3,11 +3,13 @@ package mock
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
+	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 )
 
@@ -78,19 +80,14 @@ func TestMsgChangePubKey(t *testing.T) {
 	// Run a CheckDeliver
 	SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{testMsg1}, []int64{0}, []int64{0}, true, priv1)
 
-	mapp.BeginBlock(abci.RequestBeginBlock{})
-	ctxDeliver := mapp.BaseApp.NewContext(false, abci.Header{})
-	acc2 := mapp.AccountMapper.GetAccount(ctxDeliver, addr2)
-
 	// signing a SendMsg with the wrong privKey should be an auth error
 	mapp.BeginBlock(abci.RequestBeginBlock{})
-	tx := GenTx([]sdk.Msg{testMsg1}, []int64{0}, []int64{2}, priv1)
-	res = mapp.Deliver(tx)
+	tx := GenTx([]sdk.Msg{testMsg1}, []int64{0}, []int64{1}, priv2)
+	res := mapp.Deliver(tx)
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
 
-	// resigning the tx with the old priv key should still work
-	res = SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{testMsg1}, []int64{0}, []int64{2}, true, priv1)
+	// resigning the tx with the correct priv key should still work
+	res = SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{testMsg1}, []int64{0}, []int64{1}, true, priv1)
 
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), res.Code, res.Log)
 }
-

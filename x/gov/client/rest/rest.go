@@ -25,8 +25,8 @@ const (
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
 	r.HandleFunc("/gov/proposals", postProposalHandlerFn(cdc, kb, ctx)).Methods("POST")
-	r.HandleFunc("/gov/proposals/{proposalID}/deposits", depositHandlerFn(cdc, kb, ctx)).Methods("POST")
-	r.HandleFunc("/gov/proposals/{proposalID}/votes", voteHandlerFn(cdc, kb, ctx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits", RestProposalID), depositHandlerFn(cdc, kb, ctx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes", RestProposalID), voteHandlerFn(cdc, kb, ctx)).Methods("POST")
 
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}", RestProposalID), queryProposalHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits/{%s}", RestProposalID, RestDepositer), queryDepositHandlerFn("gov", cdc, kb, ctx)).Methods("GET")
@@ -45,17 +45,15 @@ type postProposalReq struct {
 }
 
 type depositReq struct {
-	BaseReq    baseReq   `json:"base_req"`
-	ProposalID int64     `json:"proposalID"` // ID of the proposal
-	Depositer  string    `json:"depositer"`  // Address of the depositer
-	Amount     sdk.Coins `json:"amount"`     // Coins to add to the proposal's deposit
+	BaseReq   baseReq   `json:"base_req"`
+	Depositer string    `json:"depositer"` // Address of the depositer
+	Amount    sdk.Coins `json:"amount"`    // Coins to add to the proposal's deposit
 }
 
 type voteReq struct {
-	BaseReq    baseReq `json:"base_req"`
-	Voter      string  `json:"voter"`      //  address of the voter
-	ProposalID int64   `json:"proposalID"` //  proposalID of the proposal
-	Option     string  `json:"option"`     //  option from OptionSet chosen by the voter
+	BaseReq baseReq `json:"base_req"`
+	Voter   string  `json:"voter"`  //  address of the voter
+	Option  string  `json:"option"` //  option from OptionSet chosen by the voter
 }
 
 func postProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
@@ -97,8 +95,25 @@ func postProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCon
 
 func depositHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		strProposalID := vars[RestProposalID]
+
+		if len(strProposalID) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			err := errors.New("proposalId required but not specified")
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		proposalID, err := strconv.ParseInt(strProposalID, 10, 64)
+		if err != nil {
+			err := errors.Errorf("proposalID [%d] is not positive", proposalID)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
 		var req depositReq
-		err := buildReq(w, r, &req)
+		err = buildReq(w, r, &req)
 		if err != nil {
 			return
 		}
@@ -114,7 +129,7 @@ func depositHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext)
 		}
 
 		// create the message
-		msg := gov.NewMsgDeposit(depositer, req.ProposalID, req.Amount)
+		msg := gov.NewMsgDeposit(depositer, proposalID, req.Amount)
 		err = msg.ValidateBasic()
 		if err != nil {
 			writeErr(&w, http.StatusBadRequest, err.Error())
@@ -128,8 +143,25 @@ func depositHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext)
 
 func voteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		strProposalID := vars[RestProposalID]
+
+		if len(strProposalID) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			err := errors.New("proposalId required but not specified")
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		proposalID, err := strconv.ParseInt(strProposalID, 10, 64)
+		if err != nil {
+			err := errors.Errorf("proposalID [%d] is not positive", proposalID)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
 		var req voteReq
-		err := buildReq(w, r, &req)
+		err = buildReq(w, r, &req)
 		if err != nil {
 			return
 		}
@@ -151,7 +183,7 @@ func voteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) ht
 		}
 
 		// create the message
-		msg := gov.NewMsgVote(voter, req.ProposalID, voteOptionByte)
+		msg := gov.NewMsgVote(voter, proposalID, voteOptionByte)
 		err = msg.ValidateBasic()
 		if err != nil {
 			writeErr(&w, http.StatusBadRequest, err.Error())

@@ -956,7 +956,6 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 	// deposit on proposal
 	jsonStr := []byte(fmt.Sprintf(`{
 		"depositer": "%s",
-		"proposalID": %d,
 		"amount": [{ "denom": "steak", "amount": 5 }],
 		"base_req": {
 			"name": "%s",
@@ -966,7 +965,7 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 			"sequence": %d,
 			"gas": 100000
 		}
-	}`, bechProposerAddr, proposalID, name, password, chainID, accnum, sequence))
+	}`, bechProposerAddr, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", fmt.Sprintf("/gov/proposals/%d/deposits", proposalID), jsonStr)
 	fmt.Println(res)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -991,7 +990,6 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ad
 	// vote on proposal
 	jsonStr := []byte(fmt.Sprintf(`{
 		"voter": "%s",
-		"proposalID": %d,
 		"option": "Yes",
 		"base_req": {
 			"name": "%s",
@@ -1001,7 +999,7 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ad
 			"sequence": %d,
 			"gas": 100000
 		}
-	}`, bechProposerAddr, proposalID, name, password, chainID, accnum, sequence))
+	}`, bechProposerAddr, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", fmt.Sprintf("/gov/proposals/%d/votes", proposalID), jsonStr)
 	fmt.Println(res)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)

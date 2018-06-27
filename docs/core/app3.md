@@ -6,9 +6,9 @@ transactions. We also introduced additional data to the `Tx`, and used a simple
 
 Here, in `App3`, we introduce two built-in SDK modules to
 replace the `Msg`, `Tx`, `Handler`, and `AnteHandler` implementations we've seen
-so far. 
+so far: `x/auth` and `x/bank`.
 
-The `x/auth` module implements `Tx` and `AnteHandler - it has everything we need to
+The `x/auth` module implements `Tx` and `AnteHandler` - it has everything we need to
 authenticate transactions. It also includes a new `Account` type that simplifies
 working with accounts in the store.
 
@@ -81,31 +81,35 @@ type BaseAccount struct {
 
 It simply contains a field for each of the methods.
 
-The `Address`, `PubKey`, and `AccountNumber` of the `BaseAccpunt` cannot be changed once they are set.
-
-The `Sequence` increments by one with every transaction. This ensures that a
-given transaction can only be executed once, as the `Sequence` contained in the
-transaction must match that contained in the account.
-
-The `Coins` will change according to the logic of each transaction type.
-
-If the `Coins` are ever emptied, the account will be deleted from the store. If
-coins are later sent to the same `Address`, the account will be recreated but
-with a new `AccountNumber`. This allows us to prune empty accounts from the
-store, while still preventing transaction replay if accounts become non-empty
-again in the future.
-
-
 ### AccountMapper
 
-TODO
+In previous apps using our `appAccount`, we handled
+marshaling/unmarshaling the account from the store ourselves, by performing
+operations directly on the KVStore. But unrestricted access to a KVStore isn't really the interface we want
+to work with in our applications. In the SDK, we use the term `Mapper` to refer
+to an abstaction over a KVStore that handles marshalling and unmarshalling a
+particular data type to and from the underlying store.
 
-## Transaction
+The `x/auth` module provides an `AccountMapper` that allows us to get and
+set `Account` types to the store. Note the benefit of using the `Account`
+interface here - developers can implement their own account type that extends
+the `BaseAccount` to store additional data without requiring another lookup from
+the store.
 
+Creating an AccountMapper is easy - we just need to specify a codec, a
+capability key, and a prototype of the object being encoded (TODO: change to
+constructor):
 
-### StdTx
+```go
+accountMapper := auth.NewAccountMapper(cdc, keyAccount, &auth.BaseAccount{})
+```
 
-The standard way to create a transaction from a message is to use the `StdTx` struct defined in the `x/auth` module:
+See the [AccountMapper API docs](TODO) for more information.
+
+## StdTx
+
+Now that we have a native model for accounts, it's time to introduce the native
+`Tx` type, the `auth.StdTx`:
 
 ```go
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
@@ -118,12 +122,17 @@ type StdTx struct {
 }
 ```
 
-The `StdTx` includes a list of messages, information about the fee being paid,
-and a list of signatures. It also includes an optional `Memo` for additional
-data. Note that the list of signatures must match the result of `GetSigners()`
-for each `Msg`!
+This is the standard form for a transaction in the SDK. Besides the Msgs, it
+includes:
 
-The signatures are provided in a standard form as `StdSignature`:
+- a fee to be paid by the first signer 
+- replay protecting nonces in the signature
+- a memo of prunable additional data
+
+Details on how these components are validated is provided under
+[auth.AnteHandler](#ante-handler) below.
+
+The standard form for signatures is `StdSignature`:
 
 ```go
 // StdSignature wraps the Signature and includes counters for replay protection.
@@ -137,17 +146,7 @@ type StdSignature struct {
 }
 ```
 
-Recall that the `Sequence` is expected to increment every time a
-message is signed by a given account in order to prevent "replay attacks" where
-the same message could be executed over and over again. The `AccountNumber` is
-assigned when the account is created or recreated after being emptied.
-
-The `StdSignature` can also optionally include the public key for verifying the
-signature. The public key only needs to be included the first time a transaction
-is sent from a given account - from then on it will be stored in the `Account`
-and can be left out of transactions.
-
-The fee is provided in a standard form as `StdFee`:
+And the standard form for a transaction fee is `StdFee`:
 
 ```go
 // StdFee includes the amount of coins paid in fees and the maximum
@@ -159,11 +158,7 @@ type StdFee struct {
 }
 ```
 
-Note that the address responsible for paying the transactions fee is the first address
-returned by msg.GetSigners() for the first `Msg`. The convenience function `FeePayer(tx Tx)` is provided
-to return this.
-
-### Signing
+## Signing
 
 The standard bytes for signers to sign over is provided by:
 
@@ -174,6 +169,25 @@ TODO
 ## AnteHandler
 
 TODO
+
+The list of signatures in the `StdTx` must match the result of `GetSigners()`
+for each `Msg`. The validation rules for the `StdTx` will be defined in the 
+
+Recall that the `Sequence` is expected to increment every time a
+message is signed by a given account in order to prevent "replay attacks" where
+the same message could be executed over and over again. The `AccountNumber` is
+assigned when the account is created or recreated after being emptied.
+
+The `StdSignature` can also optionally include the public key for verifying the
+signature. The public key only needs to be included the first time a transaction
+is sent from a given account - from then on it will be stored in the `Account`
+and can be left out of transactions.
+
+The fee is provided in a standard form as `StdFee`:
+Note that the address responsible for paying the transactions fee is the first address
+returned by msg.GetSigners() for the first `Msg`. The convenience function `FeePayer(tx Tx)` is provided
+to return this.
+
 
 ## App3
 

@@ -84,7 +84,7 @@ type DepositRest struct {
 
 // Turn any Deposit to a DepositRest
 func DepositToRest(deposit Deposit) DepositRest {
-	bechAddr, _ := sdk.Bech32ifyAcc(deposit.Depositer)
+	bechAddr := sdk.MustBech32ifyAcc(deposit.Depositer)
 	return DepositRest{
 		Depositer:  bechAddr,
 		ProposalID: deposit.ProposalID,

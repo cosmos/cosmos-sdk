@@ -96,6 +96,12 @@ func (msg MsgSend) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.From}
 }
 
+// Returns the sdk.Tags for the message
+func (msg MsgSend) Tags() sdk.Tags {
+	return sdk.NewTags("sender", []byte(msg.From.String())).
+		AppendTag("receiver", []byte(msg.To.String()))
+}
+
 //------------------------------------------------------------------
 // Handler for the message
 
@@ -112,78 +118,99 @@ func NewApp1Handler(keyAcc *sdk.KVStoreKey) sdk.Handler {
 }
 
 // Handle MsgSend.
+// NOTE: msg.From, msg.To, and msg.Amount were already validated
 func handleMsgSend(ctx sdk.Context, key *sdk.KVStoreKey, msg MsgSend) sdk.Result {
-	// NOTE: from, to, and amount were already validated
+	// Load the store.
 	store := ctx.KVStore(key)
 
-	// deduct msg amount from sender account
-	bz := store.Get(msg.From)
-	if bz == nil {
+	// Debit from the sender.
+	if res := handleFrom(store, msg.From, msg.Amount); !res.IsOK() {
+		return res
+	}
+
+	// Credit the receiver.
+	if res := handleTo(store, msg.To, msg.Amount); !res.IsOK() {
+		return res
+	}
+
+	// Return a success (Code 0).
+	// Add list of key-value pair descriptors ("tags").
+	return sdk.Result{
+		Tags: msg.Tags(),
+	}
+}
+
+func handleFrom(store sdk.KVStore, from sdk.Address, amt sdk.Coins) sdk.Result {
+	// Get sender account from the store.
+	accBytes := store.Get(from)
+	if accBytes == nil {
 		// Account was not added to store. Return the result of the error.
 		return sdk.NewError(2, 101, "Account not added to store").Result()
 	}
 
-	var acc account
-	err := json.Unmarshal(bz, &acc)
+	// Unmarshal the JSON account bytes.
+	var acc app1Account
+	err := json.Unmarshal(accBytes, &acc)
 	if err != nil {
 		// InternalError
 		return sdk.ErrInternal("Error when deserializing account").Result()
 	}
 
-	// TODO: finish the logic
-	senderCoins := acc.Coins.Minus(msg.Amount)
+	// Deduct msg amount from sender account.
+	senderCoins := acc.Coins.Minus(amt)
 
 	// If any coin has negative amount, return insufficient coins error.
 	if !senderCoins.IsNotNegative() {
 		return sdk.ErrInsufficientCoins("Insufficient coins in account").Result()
 	}
 
-	// set acc coins to new amount
+	// Set acc coins to new amount.
 	acc.Coins = senderCoins
 
-	// Encode sender account
-	val, err := json.Marshal(acc)
+	// Encode sender account.
+	accBytes, err = json.Marshal(acc)
 	if err != nil {
 		return sdk.ErrInternal("Account encoding error").Result()
 	}
 
 	// Update store with updated sender account
-	store.Set(msg.From, val)
+	store.Set(from, accBytes)
+	return sdk.Result{}
+}
 
+func handleTo(store sdk.KVStore, to sdk.Address, amt sdk.Coins) sdk.Result {
 	// Add msg amount to receiver account
-	bz = store.Get(msg.To)
-	var acc2 account
-	if bz == nil {
+	accBytes := store.Get(to)
+	var acc app1Account
+	if accBytes == nil {
 		// Receiver account does not already exist, create a new one.
-		acc2 = account{}
+		acc = app1Account{}
 	} else {
 		// Receiver account already exists. Retrieve and decode it.
-		err = json.Unmarshal(bz, &acc2)
+		err := json.Unmarshal(accBytes, &acc)
 		if err != nil {
 			return sdk.ErrInternal("Account decoding error").Result()
 		}
 	}
 
 	// Add amount to receiver's old coins
-	receiverCoins := acc2.Coins.Plus(msg.Amount)
+	receiverCoins := acc.Coins.Plus(amt)
 
 	// Update receiver account
-	acc2.Coins = receiverCoins
+	acc.Coins = receiverCoins
 
 	// Encode receiver account
-	val, err = json.Marshal(acc2)
+	accBytes, err := json.Marshal(acc)
 	if err != nil {
 		return sdk.ErrInternal("Account encoding error").Result()
 	}
 
-	store.Set(msg.To, val)
-
-	return sdk.Result{
-		// TODO: Tags
-	}
+	// Update store with updated receiver account
+	store.Set(to, accBytes)
+	return sdk.Result{}
 }
 
-type account struct {
+type app1Account struct {
 	Coins sdk.Coins `json:"coins"`
 }
 
@@ -198,11 +225,6 @@ type app1Tx struct {
 // This tx only has one Msg.
 func (tx app1Tx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{tx.MsgSend}
-}
-
-// TODO: remove the need for this
-func (tx app1Tx) GetMemo() string {
-	return ""
 }
 
 // JSON decode MsgSend.

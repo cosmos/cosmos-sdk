@@ -243,7 +243,7 @@ Note this handler has unfettered access to the store specified by the capability
 For this first example, we will define a simple account that is JSON encoded:
 
 ```go
-type acc struct {
+type app1Account struct {
 	Coins sdk.Coins `json:"coins"`
 }
 ```
@@ -256,35 +256,105 @@ Now we're ready to handle the MsgSend:
 
 ```go
 // Handle MsgSend.
+// NOTE: msg.From, msg.To, and msg.Amount were already validated
 func handleMsgSend(ctx sdk.Context, key *sdk.KVStoreKey, msg MsgSend) sdk.Result {
-	// NOTE: from, to, and amount were already validated
-
+	// Load the store.
 	store := ctx.KVStore(key)
-	bz := store.Get(msg.From)
-	if bz == nil {
-		// TODO
+
+	// Debit from the sender.
+	if res := handleFrom(store, msg.From, msg.Amount); !res.IsOK() {
+		return res
 	}
 
-	var acc acc
-	err := json.Unmarshal(bz, &acc)
-	if err != nil {
-		// InternalError
+	// Credit the receiver.
+	if res := handleTo(store, msg.To, msg.Amount); !res.IsOK() {
+		return res
 	}
 
-	// TODO: finish the logic
-
+	// Return a success (Code 0).
+	// Add list of key-value pair descriptors ("tags").
 	return sdk.Result{
-	// TODO: Tags
+		Tags: msg.Tags(),
 	}
 }
 ```
 
-The handler is straight forward:
+The handler is straight forward. We first load the KVStore from the context using the granted capability key.
+Then we make two state transitions: one for the sender, one for the receiver. 
+Each one involves JSON unmarshalling the account bytes from the store, mutating
+the `Coins`, and JSON marshalling back into the store:
 
-- get the KVStore from the context using the granted capability key
-- lookup the From address in the KVStore, and JSON unmarshal it into an `acc`,
-- check that the account balance is greater than the `msg.Amount`
-- transfer the `msg.Amount`
+```go
+func handleFrom(store sdk.KVStore, from sdk.Address, amt sdk.Coins) sdk.Result {
+	// Get sender account from the store.
+	accBytes := store.Get(from)
+	if accBytes == nil {
+		// Account was not added to store. Return the result of the error.
+		return sdk.NewError(2, 101, "Account not added to store").Result()
+	}
+
+	// Unmarshal the JSON account bytes.
+	var acc app1Account
+	err := json.Unmarshal(accBytes, &acc)
+	if err != nil {
+		// InternalError
+		return sdk.ErrInternal("Error when deserializing account").Result()
+	}
+
+	// Deduct msg amount from sender account.
+	senderCoins := acc.Coins.Minus(amt)
+
+	// If any coin has negative amount, return insufficient coins error.
+	if !senderCoins.IsNotNegative() {
+		return sdk.ErrInsufficientCoins("Insufficient coins in account").Result()
+	}
+
+	// Set acc coins to new amount.
+	acc.Coins = senderCoins
+
+	// Encode sender account.
+	accBytes, err = json.Marshal(acc)
+	if err != nil {
+		return sdk.ErrInternal("Account encoding error").Result()
+	}
+
+	// Update store with updated sender account
+	store.Set(from, accBytes)
+	return sdk.Result{}
+}
+
+func handleTo(store sdk.KVStore, to sdk.Address, amt sdk.Coins) sdk.Result {
+	// Add msg amount to receiver account
+	accBytes := store.Get(to)
+	var acc app1Account
+	if accBytes == nil {
+		// Receiver account does not already exist, create a new one.
+		acc = app1Account{}
+	} else {
+		// Receiver account already exists. Retrieve and decode it.
+		err := json.Unmarshal(accBytes, &acc)
+		if err != nil {
+			return sdk.ErrInternal("Account decoding error").Result()
+		}
+	}
+
+	// Add amount to receiver's old coins
+	receiverCoins := acc.Coins.Plus(amt)
+
+	// Update receiver account
+	acc.Coins = receiverCoins
+
+	// Encode receiver account
+	accBytes, err := json.Marshal(acc)
+	if err != nil {
+		return sdk.ErrInternal("Account encoding error").Result()
+	}
+
+	// Update store with updated receiver account
+	store.Set(to, accBytes)
+	return sdk.Result{}
+}
+```
 
 And that's that!
 

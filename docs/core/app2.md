@@ -1,5 +1,45 @@
 # Amino
 
+In the previous app we build a simple `bank` with one message type for sending
+coins and one store for storing accounts.
+Here we build `App2`, which expands on `App1` by introducing another message type for issuing new coins, and another store
+for storing information about who can issue coins and how many.
+
+`App2` will allow us to better demonstrate the security model of the SDK, 
+using object-capability keys to determine which handlers can access which
+stores.
+
+Having multiple implementations of `Msg` also requires a better transaction
+decoder, since we won't know before hand which type is contained in the
+serialized `Tx`. In effect, we'd like to unmarshal directly into the `Msg`
+interface, but there's no standard way to unmarshal into interfaces in Go.
+This is what Amino is for :)
+
+
+## Message
+
+Let's introduce a new message type for issuing coins:
+
+```go
+TODO
+```
+
+## Handler
+
+We'll need a new handler to support the new message type:
+
+```go
+TODO
+```
+
+## BaseApp
+
+```go
+TODO
+```
+
+## Amino
+
 The SDK is flexible about serialization - application developers can use any
 serialization scheme to encode transactions and state. However, the SDK provides
 a native serialization format called

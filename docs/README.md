@@ -9,18 +9,40 @@ NOTE: This documentation is a work-in-progress!
     - [Application Architecture](overview/apps.md) - Layers in the application architecture
 - [Install](install.md) - Install the library and example applications
 - [Core](core)
-    - [Messages](core/messages.md) - Messages contain the content of a transaction
-    - [Handlers](core/handlers.md) - Handlers are the workhorse of the app!
-    - [BaseApp](core/baseapp.md) - BaseApp is the base layer of the application
-    - [The MultiStore](core/multistore.md) - MultiStore is a rich Merkle database
-    - [Amino](core/amino.md) - Amino is the primary serialization library used in the SDK
-    - [Accounts](core/accounts.md) - Accounts are the prototypical object kept in the store
-    - [Transactions](core/transactions.md) - Transactions wrap messages and provide authentication
-    - [Keepers](core/keepers.md) - Keepers are the interfaces between handlers
-    - [Clients](core/clients.md) - Hook up your app to standard CLI and REST
-      interfaces for clients to use!
-    - [Advanced](core/advanced.md) - Trigger logic on a timer, use custom
-      serialization formats, advanced Merkle proofs, and more!
+    - [Introduction](core/intro.md) - Intro to the tutorial
+    - [App1 - The Basics](core/app1.md)
+        - [Messages](core/app1.md#messages) - Messages contain the content of a transaction
+        - [Stores](core/app1.md#kvstore) - KVStore is a Merkle Key-Value store. 
+        - [Handlers](core/app1.md#handlers) - Handlers are the workhorse of the app!
+        - [Tx](core/app1.md#tx) - Transactions are the ultimate input to the
+          application
+        - [BaseApp](core/app1.md#baseapp) - BaseApp is the base layer of the application
+    - [App2 - Transactions](core/app2.md)
+        - [Amino](core/app2.md#amino) - Amino is the primary serialization library used in the SDK
+        - [Ante Handler](core/app2.md#antehandler) - The AnteHandler
+          authenticates transactions
+    - [App3 - Modules: Auth and Bank](core/app3.md)
+        - [auth.Account](core/app3.md#accounts) - Accounts are the prototypical object kept in the store
+        - [auth.AccountMapper](core/app3.md#account-mapper) - AccountMapper gets and sets Account on a KVStore
+        - [auth.StdTx](core/app3.md#stdtx) - `StdTx` is the default implementation of `Tx`
+        - [auth.StdSignBytes](core/app3.md#signing) - `StdTx` must be signed with certain
+          information
+        - [auth.AnteHandler](core/app3.md#antehandler) - The `AnteHandler`
+          verifies `StdTx`, manages accounts, and deducts fees
+        - [bank.CoinKeeper](core/app3.md#coin-keeper) - CoinKeeper allows for coin
+          transfers on an underlying AccountMapper
+    - [App4 - Validator Set Changes](core/app4.md)
+        - [InitChain](core/app4.md#init-chain) - Initialize the application
+          state
+        - [BeginBlock](core/app4.md#begin-block) - BeginBlock logic runs at the
+          beginning of every block
+        - [EndBlock](core/app4.md#end-block) - EndBlock logic runs at the
+          end of every block
+    - [App5 - Basecoin](core/app5.md) - 
+        - [Directory Structure](core/app5.md#directory-structure) - Keep your
+          application code organized
+        - [Clients](core/app5.md#clients) - Hook up your app to standard CLI and REST
+            interfaces for clients to use!
 
 - [Modules](modules)
     - [Bank](modules/bank.md)

@@ -22,10 +22,10 @@ NOTE: This documentation is a work-in-progress!
         - [Ante Handler](core/app2.md#ante-handler) - The AnteHandler
           authenticates transactions
     - [App3 - Modules](core/app3.md)
-        - [Account](core/app3.md#account) - Accounts are the prototypical object kept in the store
-        - [StdTx](core/app3.md#stdtx) - Transactions wrap messages and provide authentication
-        - [AccountMapper](core/app3.md#account-mapper) - AccountMapper
+        - [Accounts](core/app3.md#accounts) - Accounts are the prototypical object kept in the store
           provides Account lookup on a KVStore
+        - [Transactions](core/app3.md#transactions) - `StdTx` is the default
+          implementation of `Tx`
         - [CoinKeeper](core/app3.md#coin-keeper) - CoinKeeper allows for coin
           transfer on an underlying AccountMapper
     - [App4 - Validator Set Changes](core/app4.md)

@@ -1,21 +1,31 @@
-# Authentication
+# Modules
 
 In the previous app, we introduced a new `Msg` type and used Amino to encode
-transactions. In that example, our `Tx` implementation was still just a simple
-wrapper of the `Msg`, providing no actual authentication. Here, in `App3`, we
-expand on `App2` to provide real authentication in the transactions.
+transactions. We also introduced additional data to the `Tx`, and used a simple 
+`AnteHandler` to validate it. 
 
-Without loss of generality, the SDK prescribes native 
-account and transaction types that are sufficient for a wide range of applications. 
-These are implemented in the `x/auth` module, where
-all authentication related data structures and logic reside. 
-Applications that use `x/auth` don't need to worry about any of the details of
-authentication and replay protection, as they are handled automatically. For
-completeness, we will explain everything here.
+Here, in `App3`, we introduce two built-in SDK modules to
+replace the `Msg`, `Tx`, `Handler`, and `AnteHandler` implementations we've seen
+so far. 
 
-## Account
+The `x/auth` module implements `Tx` and `AnteHandler - it has everything we need to
+authenticate transactions. It also includes a new `Account` type that simplifies
+working with accounts in the store.
 
-The `Account` interface provides a model of accounts that have:
+The `x/bank` module implements `Msg` and `Handler` - it has everything we need
+to transfer coins between accounts.
+
+Applications that use `x/auth` and `x/bank` thus significantly reduce the amount 
+of work they have to do so they can focus on their application specific logic in
+their own modules.
+
+Here, we'll introduce the important types from `x/auth` and `x/bank`, and show
+how to make `App3` by using them. The complete code can be found in [app3.go](examples/app3.go).
+
+## Accounts
+
+The `x/auth` module defines a model of accounts much like Ethereum.
+In this model, an account contains:
 
 - Address for identification
 - PubKey for authentication
@@ -23,7 +33,9 @@ The `Account` interface provides a model of accounts that have:
 - Sequence to prevent transaction replays
 - Coins to carry a balance
 
-It consists of getters and setters for each of these:
+### Account
+
+The `Account` interface captures this account model with getters and setters:
 
 ```go
 // Account is a standard account using a sequence number for replay protection
@@ -46,7 +58,11 @@ type Account interface {
 }
 ```
 
-## BaseAccount
+Note this is a low-level interface - it allows any of the fields to be over
+written. As we'll soon see, access can be restricted using the `Keeper`
+paradigm.
+
+### BaseAccount
 
 The default implementation of `Account` is the `BaseAccount`:
 
@@ -80,8 +96,14 @@ store, while still preventing transaction replay if accounts become non-empty
 again in the future.
 
 
+### AccountMapper
 
-## StdTx
+TODO
+
+## Transaction
+
+
+### StdTx
 
 The standard way to create a transaction from a message is to use the `StdTx` struct defined in the `x/auth` module:
 
@@ -141,7 +163,7 @@ Note that the address responsible for paying the transactions fee is the first a
 returned by msg.GetSigners() for the first `Msg`. The convenience function `FeePayer(tx Tx)` is provided
 to return this.
 
-## Signing
+### Signing
 
 The standard bytes for signers to sign over is provided by:
 
@@ -151,94 +173,12 @@ TODO
 
 ## AnteHandler
 
-The AnteHandler is used to do all transaction-level processing (i.e. Fee payment, signature verification) 
-before passing the message to its respective handler.
+TODO
+
+## App3
+
+Putting it all together, we get:
 
 ```go
-type AnteHandler func(ctx Context, tx Tx) (newCtx Context, result Result, abort bool)
+TODO
 ```
-
-The antehandler takes a Context and a transaction and returns a new Context, a Result, and the abort boolean.
-As with the handler, all information necessary for processing a message should be available in the
-context.
-
-If the transaction fails, then the application should not waste time processing the message. Thus, the antehandler should
-return an Error's Result method and set the abort boolean to `true` so that the application knows not to process the message in a handler.
-
-Most applications can use the provided antehandler implementation in `x/auth` which handles signature verification
-as well as collecting fees.
-
-Note: Signatures must be over `auth.StdSignDoc` introduced above to use the provided antehandler.
-
-```go
-// File: cosmos-sdk/examples/basecoin/app/app.go
-app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
-```
-
-### Handling Fee payment
-### Handling Authentication
-
-The antehandler is responsible for handling all authentication of a transaction before passing the message onto its handler.
-This generally involves signature verification. The antehandler should check that all of the addresses that are returned in
-`tx.GetMsg().GetSigners()` signed the message and that they signed over `tx.GetMsg().GetSignBytes()`.
-
-# Accounts 
-
-### auth.Account
-
-### auth.AccountMapper
-
-```go
-// This AccountMapper encodes/decodes accounts using the
-// go-amino (binary) encoding/decoding library.
-type AccountMapper struct {
-
-	// The (unexposed) key used to access the store from the Context.
-	key sdk.StoreKey
-
-	// The prototypical Account concrete type.
-	proto Account
-
-	// The wire codec for binary encoding/decoding of accounts.
-	cdc *wire.Codec
-}
-```
-
-The AccountMapper is responsible for managing and storing the state of all accounts in the application.
-
-Example Initialization:
-
-```go
-// File: examples/basecoin/app/app.go
-// Define the accountMapper.
-app.accountMapper = auth.NewAccountMapper(
-	cdc,
-	app.keyAccount,      // target store
-	&types.AppAccount{}, // prototype
-)
-```
-
-The accountMapper allows you to retrieve the current account state by `GetAccount(ctx Context, addr auth.Address)` and change the state by 
-`SetAccount(ctx Context, acc Account)`.
-
-Note: To update an account you will first have to get the account, update the appropriate fields with its associated setter method, and then call
-`SetAccount(ctx Context, acc updatedAccount)`.
-
-Updating accounts is made easier by using the `Keeper` struct in the `x/bank` module.
-
-Example Initialization:
-
-```go
-// File: examples/basecoin/app/app.go
-app.coinKeeper = bank.NewKeeper(app.accountMapper)
-```
-
-Example Usage:
-
-```go
-// Finds account with addr in accountmapper
-// Adds coins to account's coin array
-// Sets updated account in accountmapper
-app.coinKeeper.AddCoins(ctx, addr, coins)
-```
-

@@ -57,7 +57,7 @@ Start Nodes
 
 Now that we've initialized the chains, we can start both nodes:
 
-NOTE: each command below must be started in seperate terminal windows. Alternatively, to run this testnet across multiple machines, you'd replace the ``seeds = "0.0.0.0"`` in ``~/.gaia2.config.toml`` with the IP of the first node, and could skip the modifications we made to the config file above because port conflicts would be avoided.
+NOTE: each command below must be started in separate terminal windows. Alternatively, to run this testnet across multiple machines, you'd replace the ``seeds = "0.0.0.0"`` in ``~/.gaia2.config.toml`` with the IP of the first node, and could skip the modifications we made to the config file above because port conflicts would be avoided.
 
 ::
 

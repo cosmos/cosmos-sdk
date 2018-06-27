@@ -25,6 +25,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	stakerest "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 )
@@ -515,6 +516,20 @@ func TestVote(t *testing.T) {
 	assert.Equal(t, gov.VoteOptionToString(gov.OptionYes), vote.Option)
 }
 
+func TestUnrevoke(t *testing.T) {
+	_, password := "test", "1234567890"
+	addr, _ := CreateAddr(t, "test", password, GetKB(t))
+	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.Address{addr})
+	defer cleanup()
+
+	signingInfo := getSigningInfo(t, port, pks[0].Address())
+	tests.WaitForHeight(4, port)
+	require.Equal(t, int64(2), signingInfo.StartHeight)
+	require.Equal(t, int64(3), signingInfo.IndexOffset)
+	require.Equal(t, int64(0), signingInfo.JailedUntil)
+	require.Equal(t, int64(3), signingInfo.SignedBlocksCounter)
+}
+
 //_____________________________________________________________________________
 // get the account to get the sequence
 func getAccount(t *testing.T, port string, addr sdk.Address) auth.Account {
@@ -602,6 +617,16 @@ func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Add
 	require.Nil(t, err)
 
 	return resultTx
+}
+
+func getSigningInfo(t *testing.T, port string, validatorAddr sdk.Address) slashing.ValidatorSigningInfo {
+	validatorAddrBech := sdk.MustBech32ifyVal(validatorAddr)
+	res, body := Request(t, port, "GET", "/slashing/signing_info/"+validatorAddrBech, nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var signingInfo slashing.ValidatorSigningInfo
+	err := cdc.UnmarshalJSON([]byte(body), &signingInfo)
+	require.Nil(t, err)
+	return signingInfo
 }
 
 func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.Address) stake.Delegation {

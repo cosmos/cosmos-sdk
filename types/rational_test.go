@@ -229,7 +229,7 @@ func TestSerializationText(t *testing.T) {
 	bz, err := r.MarshalText()
 	require.NoError(t, err)
 
-	var r2 Rat = Rat{new(big.Rat)}
+	var r2 = Rat{new(big.Rat)}
 	err = r2.UnmarshalText(bz)
 	require.NoError(t, err)
 	assert.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)

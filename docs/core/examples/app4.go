@@ -59,6 +59,7 @@ func NewApp4(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	return app
 }
 
+// Application state at Genesis has accounts with starting balances and coins with starting metadata
 type GenesisState struct {
 	Accounts []*GenesisAccount `json:"accounts"`
 	Coins    []*GenesisCoin    `json:"coins"`
@@ -70,6 +71,7 @@ type GenesisAccount struct {
 	Coins   sdk.Coins   `json:"coins"`
 }
 
+// Converts GenesisAccount to auth.BaseAccount for storage in account store
 func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount, err error) {
 	baseAcc := auth.BaseAccount{
 		Address: ga.Address,
@@ -86,6 +88,7 @@ type GenesisCoin struct {
 	Decimal     uint64      `json:"decimals"`
 }
 
+// Converts GenesisCoin to its denom and metadata for storage in main store
 func (gc *GenesisCoin) ToMetaData() (string, CoinMetadata) {
 	return gc.Denom, CoinMetadata{
 		Issuer:      gc.Issuer,
@@ -129,8 +132,10 @@ func NewInitChainer(cdc *wire.Codec, accountMapper auth.AccountMapper, metadataM
 }
 
 //---------------------------------------------------------------------------------------------
-// Now that initializing coin metadata is done in InitChainer we can simplifiy handleMsgIssue
+// Now that initializing coin metadata is done in InitChainer we can simplify handleMsgIssue
 
+// New MsgIssue handler will no longer generate coin metadata on the fly.
+// Allows issuers (permissioned at genesis) to issue coin to receiver.
 func evenBetterHandleMsgIssue(metadataMapper MetaDataMapper, accountKeeper bank.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		issueMsg, ok := msg.(MsgIssue)
@@ -156,6 +161,8 @@ func evenBetterHandleMsgIssue(metadataMapper MetaDataMapper, accountKeeper bank.
 	}
 }
 
+// No longer generates metadata on the fly.
+// Returns error result when it cannot find coin metadata
 func evenBetterHandleMetaData(ctx sdk.Context, metadataMapper MetaDataMapper, issuer sdk.Address, coin sdk.Coin) sdk.Result {
 	metadata := metadataMapper.GetMetaData(ctx, coin.Denom)
 
@@ -182,16 +189,19 @@ func evenBetterHandleMetaData(ctx sdk.Context, metadataMapper MetaDataMapper, is
 }
 
 //---------------------------------------------------------------------------------------------
-// Simpler MetaDataMapper no longer able to initalize default CoinMetaData
+// Simpler MetaDataMapper no longer able to initialize default CoinMetaData
 
+// Implements MetaDataMapper
 type App4MetaDataMapper struct {
 	mainKey *sdk.KVStoreKey
 }
 
+// Constructs new App4MetaDataMapper
 func NewApp4MetaDataMapper(key *sdk.KVStoreKey) App4MetaDataMapper {
 	return App4MetaDataMapper{mainKey: key}
 }
 
+// Returns coin Metadata. If metadata not found in store, function returns empty struct.
 func (mdm App4MetaDataMapper) GetMetaData(ctx sdk.Context, denom string) CoinMetadata {
 	store := ctx.KVStore(mdm.mainKey)
 
@@ -210,6 +220,7 @@ func (mdm App4MetaDataMapper) GetMetaData(ctx sdk.Context, denom string) CoinMet
 	return metadata
 }
 
+// Sets metadata in store with key equal to coin denom. Same behavior as App3 implementation.
 func (mdm App4MetaDataMapper) SetMetaData(ctx sdk.Context, denom string, metadata CoinMetadata) {
 	store := ctx.KVStore(mdm.mainKey)
 

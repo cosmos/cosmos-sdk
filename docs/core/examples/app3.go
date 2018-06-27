@@ -135,21 +135,26 @@ func betterHandleMetaData(ctx sdk.Context, metadataMapper MetaDataMapper, issuer
 
 //------------------------------------------------------------------
 // Mapper for Coin Metadata
-// Example of a very simple user-defined mapper
 
+// Example of a very simple user-defined mapper interface
 type MetaDataMapper interface {
 	GetMetaData(sdk.Context, string) CoinMetadata
 	SetMetaData(sdk.Context, string, CoinMetadata)
 }
 
+// Implements MetaDataMapper
 type App3MetaDataMapper struct {
 	mainKey *sdk.KVStoreKey
 }
 
+// Construct new App3MetaDataMapper
 func NewApp3MetaDataMapper(key *sdk.KVStoreKey) App3MetaDataMapper {
 	return App3MetaDataMapper{mainKey: key}
 }
 
+// Implements MetaDataMpper. Returns metadata for coin
+// If metadata does not exist in store, function creates default metadata and returns it
+// without adding it to the store.
 func (mdm App3MetaDataMapper) GetMetaData(ctx sdk.Context, denom string) CoinMetadata {
 	store := ctx.KVStore(mdm.mainKey)
 
@@ -170,6 +175,7 @@ func (mdm App3MetaDataMapper) GetMetaData(ctx sdk.Context, denom string) CoinMet
 	return metadata
 }
 
+// Implements MetaDataMapper. Sets metadata in store with key equal to denom.
 func (mdm App3MetaDataMapper) SetMetaData(ctx sdk.Context, denom string, metadata CoinMetadata) {
 	store := ctx.KVStore(mdm.mainKey)
 

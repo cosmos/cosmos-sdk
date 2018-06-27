@@ -13,6 +13,7 @@ BREAKING CHANGES
 * Removed setPubKey from account mapper
 * Removed GetMemo from Tx (it is still on StdTx)
 * Keybase and Ledger support from go-crypto merged into the SDK in the `crypto` folder
+* Gov module REST endpoints changed to be more RESTful
 * [cli] rearranged commands under subcommands
 * [stake] remove Tick and add EndBlocker
 * [stake] introduce concept of unbonding for delegations and validators

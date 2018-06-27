@@ -51,7 +51,7 @@ func TestKeys(t *testing.T) {
 	var jsonStr = []byte(fmt.Sprintf(`{"name":"test_fail", "password":"%s"}`, password))
 	res, body = Request(t, port, "POST", "/keys", jsonStr)
 
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode, "Account creation should require a seed")
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode, "Account creation should require a seed "+body)
 
 	jsonStr = []byte(fmt.Sprintf(`{"name":"%s", "password":"%s", "seed": "%s"}`, newName, newPassword, newSeed))
 	res, body = Request(t, port, "POST", "/keys", jsonStr)
@@ -212,7 +212,7 @@ func TestValidators(t *testing.T) {
 	// --
 
 	res, body = Request(t, port, "GET", "/validatorsets/1000000000", nil)
-	require.Equal(t, http.StatusNotFound, res.StatusCode)
+	require.Equal(t, http.StatusNotFound, res.StatusCode, body)
 }
 
 func TestCoinSend(t *testing.T) {
@@ -644,9 +644,9 @@ func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, 
 				"bond": { "denom": "%s", "amount": 60 }
 			}
 		],
-		"begin_unbondings": [], 
-		"complete_unbondings": [], 
-		"begin_redelegates": [], 
+		"begin_unbondings": [],
+		"complete_unbondings": [],
+		"begin_redelegates": [],
 		"complete_redelegates": []
 	}`, name, password, accnum, sequence, chainID, delegatorAddrBech, validatorAddrBech, "steak"))
 	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
@@ -687,9 +687,9 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 				"validator_addr": "%s",
 				"shares": "30"
 			}
-		], 
-		"complete_unbondings": [], 
-		"begin_redelegates": [], 
+		],
+		"complete_unbondings": [],
+		"begin_redelegates": [],
 		"complete_redelegates": []
 	}`, name, password, accnum, sequence, chainID, delegatorAddrBech, validatorAddrBech))
 	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
@@ -725,8 +725,8 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 		"gas": 10000,
 		"chain_id": "%s",
 		"delegations": [],
-		"begin_unbondings": [], 
-		"complete_unbondings": [], 
+		"begin_unbondings": [],
+		"complete_unbondings": [],
 		"begin_redelegates": [
 			{
 				"delegator_addr": "%s",
@@ -734,7 +734,7 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 				"validator_dst_addr": "%s",
 				"shares": "30"
 			}
-		], 
+		],
 		"complete_redelegates": []
 	}`, name, password, accnum, sequence, chainID, delegatorAddrBech, validatorSrcAddrBech, validatorDstAddrBech))
 	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)

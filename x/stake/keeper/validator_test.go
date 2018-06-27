@@ -34,6 +34,7 @@ func TestSetValidator(t *testing.T) {
 	// Check each store for being saved
 	resVal, found := keeper.GetValidator(ctx, addrVals[0])
 	assert.True(ValEq(t, validator, resVal))
+	assert.True(t, found)
 
 	resVals := keeper.GetValidatorsBonded(ctx)
 	require.Equal(t, 1, len(resVals))
@@ -45,7 +46,7 @@ func TestSetValidator(t *testing.T) {
 
 	updates := keeper.GetTendermintUpdates(ctx)
 	require.Equal(t, 1, len(updates))
-	assert.Equal(t, validator.ABCIValidator(keeper.cdc), updates[0])
+	assert.Equal(t, validator.ABCIValidator(), updates[0])
 
 }
 
@@ -87,6 +88,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 
 	pool = keeper.GetPool(ctx)
 	validator, found = keeper.GetValidator(ctx, addrVals[0])
+	assert.True(t, found)
 	power = GetValidatorsByPowerIndexKey(validator, pool)
 	assert.True(t, keeper.validatorByPowerIndexExists(ctx, power))
 }
@@ -492,8 +494,8 @@ func TestGetTendermintUpdatesAllNone(t *testing.T) {
 
 	updates := keeper.GetTendermintUpdates(ctx)
 	require.Equal(t, 2, len(updates))
-	assert.Equal(t, validators[0].ABCIValidator(keeper.cdc), updates[0])
-	assert.Equal(t, validators[1].ABCIValidator(keeper.cdc), updates[1])
+	assert.Equal(t, validators[0].ABCIValidator(), updates[0])
+	assert.Equal(t, validators[1].ABCIValidator(), updates[1])
 
 	// test from something to nothing
 	//  tendermintUpdate set: {} -> {c1, c2, c3, c4}
@@ -558,7 +560,7 @@ func TestGetTendermintUpdatesSingleValueChange(t *testing.T) {
 	updates := keeper.GetTendermintUpdates(ctx)
 
 	require.Equal(t, 1, len(updates))
-	assert.Equal(t, validators[0].ABCIValidator(keeper.cdc), updates[0])
+	assert.Equal(t, validators[0].ABCIValidator(), updates[0])
 }
 
 func TestGetTendermintUpdatesMultipleValueChange(t *testing.T) {
@@ -588,8 +590,8 @@ func TestGetTendermintUpdatesMultipleValueChange(t *testing.T) {
 
 	updates := keeper.GetTendermintUpdates(ctx)
 	require.Equal(t, 2, len(updates))
-	require.Equal(t, validators[0].ABCIValidator(keeper.cdc), updates[0])
-	require.Equal(t, validators[1].ABCIValidator(keeper.cdc), updates[1])
+	require.Equal(t, validators[0].ABCIValidator(), updates[0])
+	require.Equal(t, validators[1].ABCIValidator(), updates[1])
 }
 
 func TestGetTendermintUpdatesInserted(t *testing.T) {
@@ -613,7 +615,7 @@ func TestGetTendermintUpdatesInserted(t *testing.T) {
 	validators[2] = keeper.UpdateValidator(ctx, validators[2])
 	updates := keeper.GetTendermintUpdates(ctx)
 	require.Equal(t, 1, len(updates))
-	require.Equal(t, validators[2].ABCIValidator(keeper.cdc), updates[0])
+	require.Equal(t, validators[2].ABCIValidator(), updates[0])
 
 	// test validtor added at the beginning
 	//  tendermintUpdate set: {} -> {c0}
@@ -621,7 +623,7 @@ func TestGetTendermintUpdatesInserted(t *testing.T) {
 	validators[3] = keeper.UpdateValidator(ctx, validators[3])
 	updates = keeper.GetTendermintUpdates(ctx)
 	require.Equal(t, 1, len(updates))
-	require.Equal(t, validators[3].ABCIValidator(keeper.cdc), updates[0])
+	require.Equal(t, validators[3].ABCIValidator(), updates[0])
 
 	// test validtor added at the end
 	//  tendermintUpdate set: {} -> {c0}
@@ -629,7 +631,7 @@ func TestGetTendermintUpdatesInserted(t *testing.T) {
 	validators[4] = keeper.UpdateValidator(ctx, validators[4])
 	updates = keeper.GetTendermintUpdates(ctx)
 	require.Equal(t, 1, len(updates))
-	require.Equal(t, validators[4].ABCIValidator(keeper.cdc), updates[0])
+	require.Equal(t, validators[4].ABCIValidator(), updates[0])
 }
 
 func TestGetTendermintUpdatesNotValidatorCliff(t *testing.T) {
@@ -669,6 +671,6 @@ func TestGetTendermintUpdatesNotValidatorCliff(t *testing.T) {
 
 	updates = keeper.GetTendermintUpdates(ctx)
 	require.Equal(t, 2, len(updates), "%v", updates)
-	require.Equal(t, validators[0].ABCIValidatorZero(keeper.cdc), updates[0])
-	require.Equal(t, validators[2].ABCIValidator(keeper.cdc), updates[1])
+	require.Equal(t, validators[0].ABCIValidatorZero(), updates[0])
+	require.Equal(t, validators[2].ABCIValidator(), updates[1])
 }

@@ -31,6 +31,7 @@ var (
 type Operation func(r *rand.Rand, pool Pool, c Validator) (Pool, Validator, int64, string)
 
 // operation: bond or unbond a validator depending on current status
+// nolint: unparam
 func OpBondOrUnbond(r *rand.Rand, pool Pool, val Validator) (Pool, Validator, int64, string) {
 	var msg string
 	var newStatus sdk.BondStatus
@@ -89,6 +90,7 @@ func RandomOperation(r *rand.Rand) Operation {
 }
 
 // ensure invariants that should always be true are true
+// nolint: unparam
 func AssertInvariants(t *testing.T, msg string,
 	pOrig Pool, cOrig []Validator, pMod Pool, vMods []Validator, tokens int64) {
 
@@ -161,6 +163,7 @@ func AssertInvariants(t *testing.T, msg string,
 // TODO refactor this random setup
 
 // generate a random validator
+// nolint: unparam
 func randomValidator(r *rand.Rand, i int) Validator {
 
 	poolSharesAmt := sdk.NewRat(int64(r.Int31n(10000)))

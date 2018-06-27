@@ -24,7 +24,11 @@ func DefaultGenesisState() GenesisState {
 
 // InitGenesis - store genesis parameters
 func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
-	k.setInitialProposalID(ctx, data.StartingProposalID)
+	err := k.setInitialProposalID(ctx, data.StartingProposalID)
+	if err != nil {
+		// TODO: Handle this with #870
+		panic(err)
+	}
 }
 
 // WriteGenesis - output genesis parameters

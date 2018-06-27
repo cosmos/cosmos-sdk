@@ -209,6 +209,11 @@ func (i Int) DivRaw(i2 int64) Int {
 	return i.Div(NewInt(i2))
 }
 
+// Mod returns i % res
+func (i Int) Mod() (res Int) {
+	return Int{mod(i.i, res.i)}
+}
+
 // Neg negates Int
 func (i Int) Neg() (res Int) {
 	return Int{neg(i.i)}
@@ -400,6 +405,11 @@ func (i Uint) Div(i2 Uint) (res Uint) {
 // Div divides Uint with int64
 func (i Uint) DivRaw(i2 uint64) Uint {
 	return i.Div(NewUint(i2))
+}
+
+// Mod returns i % res
+func (i Uint) Mod() (res Uint) {
+	return Uint{mod(i.i, res.i)}
 }
 
 // MarshalAmino defines custom encoding scheme

@@ -49,7 +49,7 @@ jobs:
 
   lint:
     <<: *defaults
-    parallelism: 4
+    parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
@@ -61,17 +61,17 @@ jobs:
           name: Get metalinter
           command: |
             export PATH="$GOBIN:$PATH"
-            go get -u github.com/tendermint/lint/golint
-            go get -u github.com/alecthomas/gometalinter
+            make get_tools
+            go get -u github.com/client9/misspell/cmd/misspell
       - run:
           name: Lint source
           command: |
             export PATH="$GOBIN:$PATH"
-            gometalinter --disable-all --enable='golint' --vendor ./...
-  
+            gometalinter.v2 --disable-all --enable='golint' --enable='misspell' --vendor ./...
+            find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
   test_unit:
     <<: *defaults
-    parallelism: 4
+    parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
@@ -84,7 +84,7 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make test_unit
-  
+
   test_cli:
     <<: *defaults
     parallelism: 1
@@ -100,10 +100,10 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make test_cli_retry
-  
+
   test_cover:
     <<: *defaults
-    parallelism: 4
+    parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace

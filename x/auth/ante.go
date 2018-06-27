@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -38,7 +37,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 				true
 		}
 
-		memo := tx.GetMemo()
+		memo := stdTx.GetMemo()
 
 		if len(memo) > maxMemoCharacters {
 			return ctx,
@@ -72,12 +71,6 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			accNums[i] = sigs[i].AccountNumber
 		}
 		fee := stdTx.Fee
-		chainID := ctx.ChainID()
-		// XXX: major hack; need to get ChainID
-		// into the app right away (#565)
-		if chainID == "" {
-			chainID = viper.GetString("chain-id")
-		}
 
 		// Check sig and nonce and collect signer accounts.
 		var signerAccs = make([]Account, len(signerAddrs))
@@ -85,7 +78,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			signerAddr, sig := signerAddrs[i], sigs[i]
 
 			// check signature, return account with incremented nonce
-			signBytes := StdSignBytes(ctx.ChainID(), accNums[i], sequences[i], fee, msgs, tx.GetMemo())
+			signBytes := StdSignBytes(ctx.ChainID(), accNums[i], sequences[i], fee, msgs, stdTx.GetMemo())
 			signerAcc, res := processSig(
 				ctx, am,
 				signerAddr, sig, signBytes,

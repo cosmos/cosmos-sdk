@@ -29,6 +29,8 @@ FEATURES
   * Supported proposal types: just binary (pass/fail) TextProposals for now
   * Proposals need deposits to be votable; deposits are burned if proposal fails
   * Delegators delegate votes to validator by default but can override (for their stake)
+* Add benchmarks for signing and delivering a block with a single bank transaction
+  * Run with `cd x/bank && go test --bench=.`
 * [tools] make get_tools installs tendermint's linter, and gometalinter
 * [tools] Switch gometalinter to the stable version
 * [tools] Add checking for misspellings and for incorrectly formatted files in circle CI
@@ -49,6 +51,7 @@ FIXES
 * Fixed bug where chain ID wasn't passed properly in x/bank REST handler, removed Viper hack from ante handler
 * Fixed bug where `democli account` didn't decode the account data correctly
 * \#1343 - fixed unnecessary parallelism in CI
+* \#1367 - set ChainID in InitChain
 * \#1353 - CLI: Show pool shares fractions in human-readable format
 * \#1258 - printing big.rat's can no longer overflow int64
 * \#887  - limit the size of rationals that can be passed in from user input

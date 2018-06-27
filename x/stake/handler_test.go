@@ -519,7 +519,7 @@ func TestRedelegationPeriod(t *testing.T) {
 	require.True(t, got.IsOK(), "expected no error")
 }
 
-func TestTransientRedelegation(t *testing.T) {
+func TestTransitiveRedelegation(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 	validatorAddr, validatorAddr2, validatorAddr3 := keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]
 

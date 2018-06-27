@@ -304,9 +304,9 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr 
 func (k Keeper) BeginRedelegation(ctx sdk.Context, delegatorAddr, validatorSrcAddr,
 	validatorDstAddr sdk.Address, sharesAmount sdk.Rat) sdk.Error {
 
-	// check if this is a transient redelegation
+	// check if this is a transitive redelegation
 	if k.HasReceivingRedelegation(ctx, delegatorAddr, validatorSrcAddr) {
-		return types.ErrTransientRedelegation(k.Codespace())
+		return types.ErrTransitiveRedelegation(k.Codespace())
 	}
 
 	returnAmount, err := k.unbond(ctx, delegatorAddr, validatorSrcAddr, sharesAmount)

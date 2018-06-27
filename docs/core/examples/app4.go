@@ -47,7 +47,8 @@ func NewApp4(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	// Register message routes.
 	// Note the handler gets access to the account store.
 	app.Router().
-		AddRoute("bank", NewApp4Handler(accountKeeper, metadataMapper))
+		AddRoute("send", betterHandleMsgSend(accountKeeper)).
+		AddRoute("issue", evenBetterHandleMsgIssue(metadataMapper, accountKeeper))
 
 	// Mount stores and load the latest state.
 	app.MountStoresIAVL(keyAccount, keyMain, keyFees)
@@ -130,50 +131,48 @@ func NewInitChainer(cdc *wire.Codec, accountMapper auth.AccountMapper, metadataM
 //---------------------------------------------------------------------------------------------
 // Now that initializing coin metadata is done in InitChainer we can simplifiy handleMsgIssue
 
-func NewApp4Handler(accountKeeper bank.Keeper, metadataMapper MetaDataMapper) sdk.Handler {
+func evenBetterHandleMsgIssue(metadataMapper MetaDataMapper, accountKeeper bank.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		switch msg := msg.(type) {
-		case MsgSend:
-			return betterHandleMsgSend(ctx, accountKeeper, msg)
-		case MsgIssue:
-			// use new MsgIssue handler
-			return evenBetterHandleMsgIssue(ctx, metadataMapper, accountKeeper, msg)
-		default:
-			errMsg := "Unrecognized bank Msg type: " + reflect.TypeOf(msg).Name()
-			return sdk.ErrUnknownRequest(errMsg).Result()
+		issueMsg, ok := msg.(MsgIssue)
+		if !ok {
+			return sdk.NewError(2, 1, "Issue Message Malformed").Result()
+		}
+
+		if res := evenBetterHandleMetaData(ctx, metadataMapper, issueMsg.Issuer, issueMsg.Coin); !res.IsOK() {
+			return res
+		}
+
+		_, _, err := accountKeeper.AddCoins(ctx, issueMsg.Receiver, []sdk.Coin{issueMsg.Coin})
+		if err != nil {
+			return err.Result()
+		}
+
+		return sdk.Result{
+			Tags: issueMsg.Tags(),
 		}
 	}
 }
 
-func evenBetterHandleMsgIssue(ctx sdk.Context, metadataMapper MetaDataMapper, accountKeeper bank.Keeper, msg MsgIssue) sdk.Result {
-	for _, o := range msg.Outputs {
-		for _, coin := range o.Coins {
-			// Metadata is no longer created on the fly since it is initalized at genesis with InitChain
-			metadata := metadataMapper.GetMetaData(ctx, coin.Denom)
-			// Check that msg Issuer is authorized to issue these coins
-			if !reflect.DeepEqual(metadata.Issuer, msg.Issuer) {
-				return sdk.ErrUnauthorized(fmt.Sprintf("Msg Issuer cannot issue these coins: %s", coin.Denom)).Result()
-			}
+func evenBetterHandleMetaData(ctx sdk.Context, metadataMapper MetaDataMapper, issuer sdk.Address, coin sdk.Coin) sdk.Result {
+	metadata := metadataMapper.GetMetaData(ctx, coin.Denom)
 
-			// Issuer cannot issue more than remaining supply
-			issuerSupply := metadata.TotalSupply.Sub(metadata.CurrentSupply)
-			if coin.Amount.GT(issuerSupply) {
-				return sdk.ErrInsufficientCoins(fmt.Sprintf("Issuer cannot issue that many coins. Current issuer supply: %d", issuerSupply.Int64())).Result()
-			}
-
-			// update metadata current circulating supply
-			metadata.CurrentSupply = metadata.CurrentSupply.Add(coin.Amount)
-
-			metadataMapper.SetMetaData(ctx, coin.Denom, metadata)
-		}
-
-		// Add newly issued coins to output address
-		_, _, err := accountKeeper.AddCoins(ctx, o.Address, o.Coins)
-		if err != nil {
-			return err.Result()
-		}
+	if reflect.DeepEqual(metadata, CoinMetadata{}) {
+		return sdk.ErrInvalidCoins(fmt.Sprintf("Cannot find metadata for coin: %s", coin.Denom)).Result()
 	}
 
+	if !reflect.DeepEqual(metadata.Issuer, issuer) {
+		return sdk.ErrUnauthorized(fmt.Sprintf("Msg Issuer cannot issue tokens: %s", coin.Denom)).Result()
+	}
+
+	// Update current circulating supply
+	metadata.CurrentSupply = metadata.CurrentSupply.Add(coin.Amount)
+
+	// Current supply cannot exceed total supply
+	if metadata.TotalSupply.LT(metadata.CurrentSupply) {
+		return sdk.ErrInsufficientCoins("Issuer cannot issue more than total supply of coin").Result()
+	}
+
+	metadataMapper.SetMetaData(ctx, coin.Denom, metadata)
 	return sdk.Result{}
 }
 

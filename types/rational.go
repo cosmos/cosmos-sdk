@@ -104,6 +104,7 @@ func NewRatFromInt(num Int, denom ...Int) Rat {
 	}
 }
 
+//nolint
 func (r Rat) Num() int64          { return r.Rat.Num().Int64() }   // Num - return the numerator
 func (r Rat) Denom() int64        { return r.Rat.Denom().Int64() } // Denom  - return the denominator
 func (r Rat) IsZero() bool        { return r.Num() == 0 }          // IsZero - Is the Rat equal to zero

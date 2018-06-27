@@ -377,11 +377,14 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	// Initialize the DeliverTx state.
 	// If this is the first block, it should already
-	// be initialized in InitChain. It may also be nil
-	// if this is a test and InitChain was never called.
+	// be initialized in InitChain.
+	// Otherwise app.deliverState will be nil, since it
+	// is reset on Commit.
 	if app.deliverState == nil {
 		app.setDeliverState(req.Header)
 	} else {
+		// In the first block, app.deliverState.ctx will already be initialized
+		// by InitChain. Context is now updated with Header information.
 		app.deliverState.ctx = app.deliverState.ctx.WithBlockHeader(req.Header)
 	}
 	if app.beginBlocker != nil {

@@ -180,7 +180,7 @@ func TestUnbondDelegation(t *testing.T) {
 	assert.Equal(t, int64(4), pool.BondedTokens)
 }
 
-// tests Get/Set/Remove UnbondingDelegation
+// tests Get/Set/Remove/Has UnbondingDelegation
 func TestRedelegation(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 
@@ -194,11 +194,19 @@ func TestRedelegation(t *testing.T) {
 		SharesDst:        sdk.NewRat(5),
 	}
 
+	// test shouldn't have and redelegations
+	has := keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])
+	assert.False(t, has)
+
 	// set and retrieve a record
 	keeper.SetRedelegation(ctx, rd)
 	resBond, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	assert.True(t, found)
 	assert.True(t, rd.Equal(resBond))
+
+	// check if has the redelegation
+	has = keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])
+	assert.True(t, has)
 
 	// modify a records, save, and retrieve
 	rd.SharesSrc = sdk.NewRat(21)

@@ -57,8 +57,9 @@ var (
 	GetREDByValSrcIndexKey       = keeper.GetREDByValSrcIndexKey
 	GetREDByValDstIndexKey       = keeper.GetREDByValDstIndexKey
 	GetREDsKey                   = keeper.GetREDsKey
-	GetREDsByValSrcIndexKey      = keeper.GetREDsByValSrcIndexKey
-	GetREDsByValDstIndexKey      = keeper.GetREDsByValDstIndexKey
+	GetREDsFromValSrcIndexKey    = keeper.GetREDsFromValSrcIndexKey
+	GetREDsToValDstIndexKey      = keeper.GetREDsToValDstIndexKey
+	GetREDsByDelToValDstIndexKey = keeper.GetREDsByDelToValDstIndexKey
 
 	DefaultParams       = types.DefaultParams
 	InitialPool         = types.InitialPool

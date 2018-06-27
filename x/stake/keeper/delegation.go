@@ -129,6 +129,23 @@ func (k Keeper) GetRedelegation(ctx sdk.Context,
 	return red, true
 }
 
+// has a redelegation
+func (k Keeper) HasReceivingRedelegation(ctx sdk.Context,
+	DelegatorAddr, ValidatorDstAddr sdk.Address) bool {
+
+	store := ctx.KVStore(k.storeKey)
+	prefix := GetREDsByDelToValDstIndexKey(DelegatorAddr, ValidatorDstAddr, k.cdc)
+	iterator := sdk.KVStorePrefixIterator(store, prefix) //smallest to largest
+
+	found := false
+	if iterator.Valid() {
+		//record found
+		found = true
+	}
+	iterator.Close()
+	return found
+}
+
 // set a redelegation and associated index
 func (k Keeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store := ctx.KVStore(k.storeKey)
@@ -286,6 +303,11 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr 
 // complete unbonding an unbonding record
 func (k Keeper) BeginRedelegation(ctx sdk.Context, delegatorAddr, validatorSrcAddr,
 	validatorDstAddr sdk.Address, sharesAmount sdk.Rat) sdk.Error {
+
+	// check if this is a transient redelegation
+	if k.HasReceivingRedelegation(ctx, delegatorAddr, validatorSrcAddr) {
+		return types.ErrTransientRedelegation(k.Codespace())
+	}
 
 	returnAmount, err := k.unbond(ctx, delegatorAddr, validatorSrcAddr, sharesAmount)
 	if err != nil {

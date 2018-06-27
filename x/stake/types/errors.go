@@ -98,6 +98,10 @@ func ErrNoRedelegation(codespace sdk.CodespaceType) sdk.Error {
 func ErrBadRedelegationDst(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "redelegation validator not found")
 }
+func ErrTransientRedelegation(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDelegation,
+		"redelegation to this validator already in progress, first redelegation to this validator must complete before next redelegation")
+}
 
 // messages
 func ErrBothShareMsgsGiven(codespace sdk.CodespaceType) sdk.Error {

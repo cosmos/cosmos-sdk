@@ -90,6 +90,7 @@ func betterHandleMsgIssue(metadataMapper MetaDataMapper, accountKeeper bank.Keep
 			return sdk.NewError(2, 1, "Issue Message Malformed").Result()
 		}
 
+		// Handle updating metadata
 		if res := betterHandleMetaData(ctx, metadataMapper, issueMsg.Issuer, issueMsg.Coin); !res.IsOK() {
 			return res
 		}
@@ -101,6 +102,7 @@ func betterHandleMsgIssue(metadataMapper MetaDataMapper, accountKeeper bank.Keep
 		}
 	
 		return sdk.Result{
+			// Return result with Issue msg tags
 			Tags: issueMsg.Tags(),
 		}
 	}
@@ -114,6 +116,7 @@ func betterHandleMetaData(ctx sdk.Context, metadataMapper MetaDataMapper, issuer
 		metadata.Issuer = issuer
 	}
 
+	// Msg Issuer is not authorized to issue these coins
 	if !reflect.DeepEqual(metadata.Issuer, issuer) {
 		return sdk.ErrUnauthorized(fmt.Sprintf("Msg Issuer cannot issue tokens: %s", coin.Denom)).Result()
 	}

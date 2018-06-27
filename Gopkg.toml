@@ -56,7 +56,7 @@
   name = "github.com/tendermint/go-amino"
   version = "=0.10.1"
 
-[[override]]
+[[constraint]]
   name = "github.com/tendermint/iavl"
   version = "=0.8.0"
 

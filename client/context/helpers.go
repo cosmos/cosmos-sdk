@@ -111,7 +111,6 @@ func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 	}
 
 	return info.GetPubKey().Address(), nil
-
 }
 
 // sign and build the transaction from the msg

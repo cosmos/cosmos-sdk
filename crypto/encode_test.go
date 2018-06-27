@@ -1,10 +1,10 @@
 package crypto
 
 import (
-	"os"
-	"testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"os"
+	"testing"
 
 	tcrypto "github.com/tendermint/tendermint/crypto"
 )
@@ -86,7 +86,7 @@ func TestKeyEncodings(t *testing.T) {
 		var sig1, sig2, sig3 tcrypto.Signature
 		sig1, err := tc.privKey.Sign([]byte("something"))
 		assert.NoError(t, err)
-		checkAminoBinary(t, sig1, &sig2, -1) // Siganture size changes for Secp anyways.
+		checkAminoBinary(t, sig1, &sig2, -1) // Signature size changes for Secp anyways.
 		assert.EqualValues(t, sig1, sig2)
 		checkAminoJSON(t, sig1, &sig3, false) // TODO also check Prefix bytes.
 		assert.EqualValues(t, sig1, sig3)

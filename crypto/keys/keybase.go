@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	dbm "github.com/tendermint/tmlibs/db"
 	tcrypto "github.com/tendermint/tendermint/crypto"
+	dbm "github.com/tendermint/tmlibs/db"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bip39"
@@ -115,6 +115,7 @@ func (kb dbKeybase) Derive(name, mnemonic, passwd string, params hd.BIP44Params)
 
 	return
 }
+
 // CreateLedger creates a new locally-stored reference to a Ledger keypair
 // It returns the created key info and an error if the Ledger could not be queried
 func (kb dbKeybase) CreateLedger(name string, path crypto.DerivationPath, algo SigningAlgo) (Info, error) {
@@ -134,7 +135,6 @@ func (kb dbKeybase) CreateLedger(name string, path crypto.DerivationPath, algo S
 func (kb dbKeybase) CreateOffline(name string, pub tcrypto.PubKey) (Info, error) {
 	return kb.writeOfflineKey(pub, name), nil
 }
-
 
 func (kb *dbKeybase) persistDerivedKey(seed []byte, passwd, name, fullHdPath string) (info Info, err error) {
 	// create master key and derive first key:
@@ -300,7 +300,7 @@ func (kb dbKeybase) Delete(name, passphrase string) error {
 	case ledgerInfo:
 	case offlineInfo:
 		if passphrase != "yes" {
-			return fmt.Errorf("enter exactly 'yes' to delete the key")
+			return fmt.Errorf("enter 'yes' exactly to delete the key - this cannot be undone")
 		}
 		kb.db.DeleteSync(infoKey(name))
 		return nil

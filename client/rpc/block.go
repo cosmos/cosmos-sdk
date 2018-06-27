@@ -5,11 +5,16 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/tendermint/tmlibs/common"
+
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
+	"github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 const (
@@ -31,6 +36,17 @@ func BlockCommand() *cobra.Command {
 	return cmd
 }
 
+type OutputTxEntry struct {
+	TX   sdk.Tx          `json:"tx"`
+	Hash common.HexBytes `json:"hash"`
+}
+
+type OutputResultBlock struct {
+	BlockMeta *types.BlockMeta `json:"block_meta"`
+	Block     *types.Block     `json:"block"`
+	TXs       []OutputTxEntry  `json:"txs"`
+}
+
 func getBlock(ctx context.CoreContext, height *int64) ([]byte, error) {
 	// get the node
 	node, err := ctx.GetNode()
@@ -47,9 +63,28 @@ func getBlock(ctx context.CoreContext, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
+	txEntries := make([]OutputTxEntry, len(res.Block.Data.Txs))
+	for i, dataTx := range res.Block.Data.Txs {
+		var tx auth.StdTx
+		err := cdc.UnmarshalBinary(dataTx, &tx)
+		if err != nil {
+			return nil, err
+		}
+		txEntries[i] = OutputTxEntry{
+			TX:   tx,
+			Hash: dataTx.Hash(),
+		}
+	}
+
+	outputResultBlock := OutputResultBlock{
+		BlockMeta: res.BlockMeta,
+		Block:     res.Block,
+		TXs:       txEntries,
+	}
+
 	// TODO move maarshalling into cmd/rest functions
 	// output, err := tmwire.MarshalJSON(res)
-	output, err := cdc.MarshalJSON(res)
+	output, err := cdc.MarshalJSON(outputResultBlock)
 	if err != nil {
 		return nil, err
 	}

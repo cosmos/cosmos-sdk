@@ -9,11 +9,12 @@ import (
 
 	gc "github.com/cosmos/cosmos-sdk/server/config"
 
+	"os"
+
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
 	cmn "github.com/tendermint/tmlibs/common"
-	"os"
 )
 
 var (
@@ -104,7 +105,7 @@ func testnetWithConfig(config *cfg.Config, ctx *Context, cdc *wire.Codec, appIni
 		}
 
 		// Run `init gen-tx` and generate initial transactions
-		cliPrint, genTxFile, err := gentxWithConfig(ctx, cdc, appInit, config, genTxConfig)
+		cliPrint, genTxFile, err := gentxWithConfig(cdc, appInit, config, genTxConfig)
 		if err != nil {
 			return err
 		}
@@ -154,7 +155,7 @@ func testnetWithConfig(config *cfg.Config, ctx *Context, cdc *wire.Codec, appIni
 		config.SetRoot(nodeDir)
 
 		// Run `init` and generate genesis.json and config.toml
-		_, _, _, err := initWithConfig(ctx, cdc, appInit, config, initConfig)
+		_, _, _, err := initWithConfig(cdc, appInit, config, initConfig)
 		if err != nil {
 			return err
 		}

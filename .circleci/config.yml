@@ -64,9 +64,7 @@ jobs:
             make get_tools
             go get -u github.com/client9/misspell/cmd/misspell
             go get -u mvdan.cc/unparam
-            go get -u github.com/ValarDragon/maligned
             go get -u github.com/kisielk/errcheck
-            go get -u github.com/jgautheron/goconst/cmd/goconst
             go get -u github.com/opennota/check/cmd/varcheck
             go get -u github.com/gordonklaus/ineffassign
             go get -u github.com/mdempsky/unconvert
@@ -74,7 +72,7 @@ jobs:
           name: Lint source
           command: |
             export PATH="$GOBIN:$PATH"
-            gometalinter.v2 --disable-all --enable='golint' --enable='unconvert' --enable='ineffassign' --enable='varcheck' --enable='goconst' --enable='errcheck' --enable='unparam' --enable='misspell' --linter='maligned:maligned -v :PATH:LINE:MESSAGE' --enable='maligned' --linter='vet:go vet -composites=false:PATH:LINE:MESSAGE' --enable='vet' --deadline=600s --vendor ./...
+            gometalinter.v2 --disable-all --enable='golint' --enable='unconvert' --enable='ineffassign' --enable='varcheck' --enable='errcheck' --enable='unparam' --enable='misspell' --linter='vet:go vet -composites=false:PATH:LINE:MESSAGE' --enable='vet' --deadline=600s --vendor ./...
             find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
   test_unit:
     <<: *defaults

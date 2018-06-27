@@ -36,6 +36,7 @@ FEATURES
 * [tests] Add WaitForNextNBlocksTM helper method
 * [types] Switches internal representation of Int/Uint/Rat to use pointers
 * [gaiad] unsafe_reset_all now resets addrbook.json
+* [democoin] add x/oracle, x/assoc
 
 FIXES 
 * [gaia] Added self delegation for validators in the genesis creation

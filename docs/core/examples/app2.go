@@ -81,9 +81,10 @@ type MsgIssue struct {
 	Coin sdk.Coin
 }
 
-// nolint
+// Implements Msg.
 func (msg MsgIssue) Type() string { return "issue" }
 
+// Implements Msg. Ensures addresses are valid and Coin is positive
 func (msg MsgIssue) ValidateBasic() sdk.Error {
 	if len(msg.Issuer) == 0 {
 		return sdk.ErrInvalidAddress("Issuer address cannot be empty")
@@ -101,6 +102,7 @@ func (msg MsgIssue) ValidateBasic() sdk.Error {
 	return nil
 }
 
+// Implements Msg. Get canonical sign bytes for MsgIssue
 func (msg MsgIssue) GetSignBytes() []byte {
 	bz, err := json.Marshal(msg)
 	if err != nil {

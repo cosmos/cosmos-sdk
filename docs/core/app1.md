@@ -70,7 +70,8 @@ func (msg MsgSend) GetSigners() []sdk.Address {
 }
 ```
 
-Note Addresses in the SDK are arbitrary byte arrays that are [Bech32](TODO) encoded
+Note Addresses in the SDK are arbitrary byte arrays that are
+[Bech32](https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki) encoded
 when displayed as a string or rendered in JSON. Typically, addresses are the hash of
 a public key, so we can use them to uniquely identify the required signers for a
 transaction.
@@ -128,11 +129,6 @@ type KVStore interface {
     // CONTRACT: No writes may happen within a domain while an iterator exists over it.
     ReverseIterator(start, end []byte) Iterator
 
-    // TODO Not yet implemented.
-    // CreateSubKVStore(key *storeKey) (KVStore, error)
-
-    // TODO Not yet implemented.
-    // GetSubKVStore(key *storeKey) KVStore
  }
 ```
 
@@ -177,19 +173,24 @@ func newFooHandler(key sdk.StoreKey) sdk.Handler {
 }
 ```
 
-`Context` is modeled after the Golang [context.Context](TODO), which has
+`Context` is modeled after the Golang
+[context.Context](https://golang.org/pkg/context/), which has
 become ubiquitous in networking middleware and routing applications as a means
 to easily propogate request context through handler functions.
 Many methods on SDK objects receive a context as the first argument. 
 
-The Context also contains the [block header](TODO), which includes the latest timestamp from the blockchain and other information about the latest block.
+The Context also contains the 
+[block header](https://github.com/tendermint/tendermint/blob/master/docs/spec/blockchain/blockchain.md#header), 
+which includes the latest timestamp from the blockchain and other information about the latest block.
 
-See the [Context API docs](TODO) for more details.
+See the [Context API
+docs](https://godoc.org/github.com/cosmos/cosmos-sdk/types#Context) for more details.
 
 ### Result
 
 Handler takes a Context and Msg and returns a Result.
-Result is motivated by the corresponding [ABCI result](TODO). It contains return values, error information, logs, and meta data about the transaction:
+Result is motivated by the corresponding [ABCI result](https://github.com/tendermint/abci/blob/master/types/types.proto#L165). 
+It contains return values, error information, logs, and meta data about the transaction:
 
 ```go
 // Result is the union of ResponseDeliverTx and ResponseCheckTx.
@@ -257,7 +258,8 @@ type appAccount struct {
 
 Coins is a useful type provided by the SDK for multi-asset accounts. 
 We could just use an integer here for a single coin type, but
-it's worth [getting to know Coins](TODO).
+it's worth [getting to know
+Coins](https://godoc.org/github.com/cosmos/cosmos-sdk/types#Coins).
 
 
 Now we're ready to handle the MsgSend:
@@ -426,14 +428,13 @@ simplifies application development by handling common low-level concerns.
 It serves as the mediator between the two key components of an SDK app: the store
 and the message handlers. The BaseApp implements the
 [`abci.Application`](https://godoc.org/github.com/tendermint/abci/types#Application) interface. 
-See the [BaseApp API documentation](TODO) for more details.
+See the [BaseApp API
+documentation](https://godoc.org/github.com/cosmos/cosmos-sdk/baseapp) for more details.
 
 Here is the complete setup for App1:
 
 ```go
 func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
-    // TODO: make this an interface or pass in
-    // a TxDecoder instead.
     cdc := wire.NewCodec()
     
     // Create the base application object.
@@ -483,7 +484,8 @@ In a real setup, the app would run as an ABCI application and
 would be driven by blocks of transactions from the Tendermint consensus engine.
 Later in the tutorial, we'll connect our app to a complete suite of components
 for running and using a live blockchain application. For complete details on 
-how ABCI applications work, see the [ABCI documentation](TODO).
+how ABCI applications work, see the [ABCI
+documentation](https://github.com/tendermint/abci/blob/master/specification.md).
 
 For now, we note the follow sequence of events occurs when a transaction is
 received (through `app.DeliverTx`):

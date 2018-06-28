@@ -11,22 +11,87 @@ Here we build `App2`, which expands on `App1` by introducing
 Along the way, we'll be introduced to Amino for encoding and decoding
 transactions and to the AnteHandler for processing them.
 
+The complete code can be found in [app2.go](examples/app2.go).
+
 
 ## Message
 
 Let's introduce a new message type for issuing coins:
 
 ```go
-TODO
+// MsgIssue to allow a registered issuer
+// to issue new coins.
+type MsgIssue struct {
+	Issuer   sdk.Address
+	Receiver sdk.Address
+	Coin     sdk.Coin
+}
+
+// Implements Msg.
+func (msg MsgIssue) Type() string { return "issue" }
 ```
+
+Note the `Type()` method returns `"issue"`, so this message is of a different
+type and will be executed by a different handler than `MsgSend`. The other
+methods for `MsgIssue` are similar to `MsgSend`.
 
 ## Handler
 
-We'll need a new handler to support the new message type:
+We'll need a new handler to support the new message type. It just checks if the
+sender of the `MsgIssue` is the correct issuer for the given coin type, as per the information 
+in the issuer store:
 
 ```go
-TODO
+// Handle MsgIssue
+func handleMsgIssue(keyIssue *sdk.KVStoreKey, keyAcc *sdk.KVStoreKey) sdk.Handler {
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		issueMsg, ok := msg.(MsgIssue)
+		if !ok {
+			return sdk.NewError(2, 1, "MsgIssue is malformed").Result()
+		}
+
+		// Retrieve stores
+		issueStore := ctx.KVStore(keyIssue)
+		accStore := ctx.KVStore(keyAcc)
+
+		// Handle updating coin info
+		if res := handleIssuer(issueStore, issueMsg.Issuer, issueMsg.Coin); !res.IsOK() {
+			return res
+		}
+
+		// Issue coins to receiver using previously defined handleTo function
+		if res := handleTo(accStore, issueMsg.Receiver, []sdk.Coin{issueMsg.Coin}); !res.IsOK() {
+			return res
+		}
+
+		return sdk.Result{
+			// Return result with Issue msg tags
+			Tags: issueMsg.Tags(),
+		}
+	}
+}
+
+func handleIssuer(store sdk.KVStore, issuer sdk.Address, coin sdk.Coin) sdk.Result {
+	// the issuer address is stored directly under the coin denomination
+	denom := []byte(coin.Denom)
+	issuerAddress := store.Get(denom)
+	if issuerAddress == nil {
+		return sdk.ErrInvalidCoins(fmt.Sprintf("Unknown coin type %s", coin.Denom)).Result()
+	}
+
+	// Msg Issuer is not authorized to issue these coins
+	if !bytes.Equal(issuerAddress, issuer) {
+		return sdk.ErrUnauthorized(fmt.Sprintf("Msg Issuer cannot issue tokens: %s", coin.Denom)).Result()
+	}
+
+	return sdk.Result{}
+}
 ```
+
+Note we're just storing the issuer address for each coin directly under the
+coin's denomination in the issuer store. We could of course use a struct with more
+fields, like the current supply of coins in existence, and the maximum supply
+allowed to be issued.
 
 ## Amino
 
@@ -74,8 +139,6 @@ func NewCodec() *wire.Codec {
 Amino supports encoding and decoding in both a binary and JSON format.
 See the [codec API docs](https://godoc.org/github.com/tendermint/go-amino#Codec) for more details.
 
-TODO: Update Amino and demo `cdc.PrintTypes`
-
 ## Tx
 
 Now that we're using Amino, we can embed the `Msg` interface directly in our
@@ -121,12 +184,47 @@ according to whatever capability keys it was granted. Instead of a `Msg`,
 however, it takes a `Tx`.
 
 Like Handler, AnteHandler returns a `Result` type, but it also returns a new
-`Context` and an `abort bool`. TODO explain (do we still need abort? )
+`Context` and an `abort bool`. 
 
 For `App2`, we simply check if the PubKey matches the Address, and the Signature validates with the PubKey:
 
 ```go
-TODO
+// Simple anteHandler that ensures msg signers have signed.
+// Provides no replay protection.
+func antehandler(ctx sdk.Context, tx sdk.Tx) (_ sdk.Context, _ sdk.Result, abort bool) {
+	appTx, ok := tx.(app2Tx)
+	if !ok {
+		// set abort boolean to true so that we don't continue to process failed tx
+		return ctx, sdk.ErrTxDecode("Tx must be of format app2Tx").Result(), true
+	}
+
+	// expect only one msg in app2Tx
+	msg := tx.GetMsgs()[0]
+
+	signerAddrs := msg.GetSigners()
+
+	if len(signerAddrs) != len(appTx.GetSignatures()) {
+		return ctx, sdk.ErrUnauthorized("Number of signatures do not match required amount").Result(), true
+	}
+
+	signBytes := msg.GetSignBytes()
+	for i, addr := range signerAddrs {
+		sig := appTx.GetSignatures()[i]
+
+		// check that submitted pubkey belongs to required address
+		if !bytes.Equal(sig.PubKey.Address(), addr) {
+			return ctx, sdk.ErrUnauthorized("Provided Pubkey does not match required address").Result(), true
+		}
+
+		// check that signature is over expected signBytes
+		if !sig.PubKey.VerifyBytes(signBytes, sig.Signature) {
+			return ctx, sdk.ErrUnauthorized("Signature verification failed").Result(), true
+		}
+	}
+
+	// authentication passed, app to continue processing by sending msg to handler
+	return ctx, sdk.Result{}, false
+}
 ```
 
 ## App2
@@ -134,8 +232,45 @@ TODO
 Let's put it all together now to get App2:
 
 ```go
-TODO
+func NewApp2(logger log.Logger, db dbm.DB) *bapp.BaseApp {
+
+	cdc := NewCodec()
+
+	// Create the base application object.
+	app := bapp.NewBaseApp(app2Name, cdc, logger, db)
+
+	// Create a key for accessing the account store.
+	keyAccount := sdk.NewKVStoreKey("acc")
+	// Create a key for accessing the issue store.
+	keyIssue := sdk.NewKVStoreKey("issue")
+
+	// set antehandler function
+	app.SetAnteHandler(antehandler)
+
+	// Register message routes.
+	// Note the handler gets access to the account store.
+	app.Router().
+		AddRoute("send", handleMsgSend(keyAccount)).
+		AddRoute("issue", handleMsgIssue(keyAccount, keyIssue))
+
+	// Mount stores and load the latest state.
+	app.MountStoresIAVL(keyAccount, keyIssue)
+	err := app.LoadLatestVersion(keyAccount)
+	if err != nil {
+		cmn.Exit(err.Error())
+	}
+	return app
+}
 ```
+
+The main difference here, compared to `App1`, is that we use a second capability
+key for a second store that is *only* passed to a second handler, the
+`handleMsgIssue`. The first `handleMsgSend` has no access to this second store and cannot read or write to
+it, ensuring a strong separation of concerns.
+
+Note also that we do not need to use `SetTxDecoder` here - now that we're using
+Amino, we simply create a codec, register our types on the codec, and pass the
+codec into `NewBaseApp`. The SDK takes care of the rest for us!
 
 ## Conclusion
 

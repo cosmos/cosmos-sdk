@@ -58,12 +58,18 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 		return errors.Errorf("error creating listener: %v\n", err)
 	}
 	svr.SetLogger(ctx.Logger.With("module", "abci-server"))
-	svr.Start()
+	err = svr.Start()
+	if err != nil {
+		cmn.Exit(err.Error())
+	}
 
 	// Wait forever
 	cmn.TrapSignal(func() {
 		// Cleanup
-		svr.Stop()
+		err = svr.Stop()
+		if err != nil {
+			cmn.Exit(err.Error())
+		}
 	})
 	return nil
 }

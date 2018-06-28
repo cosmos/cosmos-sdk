@@ -39,14 +39,26 @@ func NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto Account) AccountM
 // Implaements sdk.AccountMapper.
 func (am AccountMapper) NewAccountWithAddress(ctx sdk.Context, addr sdk.Address) Account {
 	acc := am.clonePrototype()
-	acc.SetAddress(addr)
-	acc.SetAccountNumber(am.GetNextAccountNumber(ctx))
+	err := acc.SetAddress(addr)
+	if err != nil {
+		// Handle w/ #870
+		panic(err)
+	}
+	err = acc.SetAccountNumber(am.GetNextAccountNumber(ctx))
+	if err != nil {
+		// Handle w/ #870
+		panic(err)
+	}
 	return acc
 }
 
 // New Account
 func (am AccountMapper) NewAccount(ctx sdk.Context, acc Account) Account {
-	acc.SetAccountNumber(am.GetNextAccountNumber(ctx))
+	err := acc.SetAccountNumber(am.GetNextAccountNumber(ctx))
+	if err != nil {
+		// TODO: Handle with #870
+		panic(err)
+	}
 	return acc
 }
 
@@ -114,7 +126,11 @@ func (am AccountMapper) setSequence(ctx sdk.Context, addr sdk.Address, newSequen
 	if acc == nil {
 		return sdk.ErrUnknownAddress(addr.String())
 	}
-	acc.SetSequence(newSequence)
+	err := acc.SetSequence(newSequence)
+	if err != nil {
+		// Handle w/ #870
+		panic(err)
+	}
 	am.SetAccount(ctx, acc)
 	return nil
 }

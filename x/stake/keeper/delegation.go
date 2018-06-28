@@ -295,7 +295,10 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr 
 		return types.ErrNotMature(k.Codespace(), "unbonding", "unit-time", ubd.MinTime, ctxTime)
 	}
 
-	k.coinKeeper.AddCoins(ctx, ubd.DelegatorAddr, sdk.Coins{ubd.Balance})
+	_, _, err := k.coinKeeper.AddCoins(ctx, ubd.DelegatorAddr, sdk.Coins{ubd.Balance})
+	if err != nil {
+		return err
+	}
 	k.RemoveUnbondingDelegation(ctx, ubd)
 	return nil
 }

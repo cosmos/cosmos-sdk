@@ -343,7 +343,11 @@ func (si storeInfo) Hash() []byte {
 	// include them via the keys.
 	bz, _ := cdc.MarshalBinary(si.Core) // Does not error
 	hasher := ripemd160.New()
-	hasher.Write(bz)
+	_, err := hasher.Write(bz)
+	if err != nil {
+		// TODO: Handle with #870
+		panic(err)
+	}
 	return hasher.Sum(nil)
 }
 

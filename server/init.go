@@ -88,7 +88,7 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				viper.GetBool(FlagOWK),
 				ip,
 			}
-			cliPrint, genTxFile, err := gentxWithConfig(ctx, cdc, appInit, config, genTxConfig)
+			cliPrint, genTxFile, err := gentxWithConfig(cdc, appInit, config, genTxConfig)
 			if err != nil {
 				return err
 			}
@@ -112,7 +112,7 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	return cmd
 }
 
-func gentxWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, genTxConfig serverconfig.GenTx) (
+func gentxWithConfig(cdc *wire.Codec, appInit AppInit, config *cfg.Config, genTxConfig serverconfig.GenTx) (
 	cliPrint json.RawMessage, genTxFile json.RawMessage, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
@@ -169,7 +169,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				viper.GetBool(FlagOverwrite),
 			}
 
-			chainID, nodeID, appMessage, err := initWithConfig(ctx, cdc, appInit, config, initConfig)
+			chainID, nodeID, appMessage, err := initWithConfig(cdc, appInit, config, initConfig)
 			if err != nil {
 				return err
 			}
@@ -200,7 +200,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	return cmd
 }
 
-func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, initConfig InitConfig) (
+func initWithConfig(cdc *wire.Codec, appInit AppInit, config *cfg.Config, initConfig InitConfig) (
 	chainID string, nodeID string, appMessage json.RawMessage, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {

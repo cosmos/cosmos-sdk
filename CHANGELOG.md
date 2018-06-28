@@ -40,6 +40,7 @@ FEATURES
   * go vet -composites=false
   * unconvert
   * ineffassign
+  * errcheck
 * [server] Default config now creates a profiler at port 6060, and increase p2p send/recv rates
 * [tests] Add WaitForNextNBlocksTM helper method
 * [types] Switches internal representation of Int/Uint/Rat to use pointers

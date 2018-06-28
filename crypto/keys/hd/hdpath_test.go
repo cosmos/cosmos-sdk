@@ -6,12 +6,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bip39"
 )
 
+//nolint
 func ExampleStringifyPathParams() {
 	path := NewParams(44, 0, 0, false, 0)
 	fmt.Println(path.String())
 	// Output: 44'/0'/0'/0/0
 }
 
+//nolint
 func ExampleSomeBIP32TestVecs() {
 
 	seed := bip39.MnemonicToSeed("barrel original fuel morning among eternal " +

@@ -43,6 +43,7 @@ func checkAminoJSON(t *testing.T, src interface{}, dst interface{}, isNil bool) 
 	require.Nil(t, err, "%+v", err)
 }
 
+//nolint
 func ExamplePrintRegisteredTypes() {
 	cdc.PrintTypes(os.Stdout)
 	// Output: | Type | Name | Prefix | Length | Notes |

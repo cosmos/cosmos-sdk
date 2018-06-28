@@ -8,12 +8,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
 )
 
 // setup helper function
 // creates two validators
-func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params, sdk.Address, crypto.PubKey) {
+func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params) {
 	// setup
 	ctx, _, keeper := CreateTestInput(t, false, amt)
 	params := keeper.GetParams(ctx)
@@ -30,13 +29,15 @@ func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params, sd
 		keeper.SetValidatorByPubKeyIndex(ctx, validator)
 	}
 
-	return ctx, keeper, params, addrVals[0], PKs[0]
+	return ctx, keeper, params
 }
 
 // tests Revoke, Unrevoke
 func TestRevocation(t *testing.T) {
 	// setup
-	ctx, keeper, _, addr, pk := setupHelper(t, 10)
+	ctx, keeper, _ := setupHelper(t, 10)
+	addr := addrVals[0]
+	pk := PKs[0]
 
 	// initial state
 	val, found := keeper.GetValidator(ctx, addr)
@@ -59,8 +60,8 @@ func TestRevocation(t *testing.T) {
 
 // tests slashUnbondingDelegation
 func TestSlashUnbondingDelegation(t *testing.T) {
-	ctx, keeper, params, _, _ := setupHelper(t, 10)
-	fraction := sdk.NewRat(1).Quo(sdk.NewRat(2))
+	ctx, keeper, params := setupHelper(t, 10)
+	fraction := sdk.NewRat(1, 2)
 
 	// set an unbonding delegation
 	ubd := types.UnbondingDelegation{
@@ -97,8 +98,8 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 
 // tests slashRedelegation
 func TestSlashRedelegation(t *testing.T) {
-	ctx, keeper, params, _, _ := setupHelper(t, 10)
-	fraction := sdk.NewRat(1).Quo(sdk.NewRat(2))
+	ctx, keeper, params := setupHelper(t, 10)
+	fraction := sdk.NewRat(1, 2)
 
 	// set a redelegation
 	rd := types.Redelegation{
@@ -151,15 +152,17 @@ func TestSlashRedelegation(t *testing.T) {
 
 // tests Slash at a future height (must panic)
 func TestSlashAtFutureHeight(t *testing.T) {
-	ctx, keeper, _, _, pk := setupHelper(t, 10)
-	fraction := sdk.NewRat(1).Quo(sdk.NewRat(2))
+	ctx, keeper, _ := setupHelper(t, 10)
+	pk := PKs[0]
+	fraction := sdk.NewRat(1, 2)
 	require.Panics(t, func() { keeper.Slash(ctx, pk, 1, 10, fraction) })
 }
 
 // tests Slash at the current height
 func TestSlashAtCurrentHeight(t *testing.T) {
-	ctx, keeper, _, _, pk := setupHelper(t, 10)
-	fraction := sdk.NewRat(1).Quo(sdk.NewRat(2))
+	ctx, keeper, _ := setupHelper(t, 10)
+	pk := PKs[0]
+	fraction := sdk.NewRat(1, 2)
 
 	oldPool := keeper.GetPool(ctx)
 	validator, found := keeper.GetValidatorByPubKey(ctx, pk)
@@ -179,8 +182,9 @@ func TestSlashAtCurrentHeight(t *testing.T) {
 
 // tests Slash at a previous height with an unbonding delegation
 func TestSlashWithUnbondingDelegation(t *testing.T) {
-	ctx, keeper, params, _, pk := setupHelper(t, 10)
-	fraction := sdk.NewRat(1).Quo(sdk.NewRat(2))
+	ctx, keeper, params := setupHelper(t, 10)
+	pk := PKs[0]
+	fraction := sdk.NewRat(1, 2)
 
 	// set an unbonding delegation
 	ubd := types.UnbondingDelegation{
@@ -217,8 +221,9 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 // tests Slash at a previous height with a redelegation
 func TestSlashWithRedelegation(t *testing.T) {
-	ctx, keeper, params, _, pk := setupHelper(t, 10)
-	fraction := sdk.NewRat(1).Quo(sdk.NewRat(2))
+	ctx, keeper, params := setupHelper(t, 10)
+	pk := PKs[0]
+	fraction := sdk.NewRat(1, 2)
 
 	// set a redelegation
 	rd := types.Redelegation{
@@ -266,8 +271,8 @@ func TestSlashWithRedelegation(t *testing.T) {
 
 // tests Slash at a previous height with both an unbonding delegation and a redelegation
 func TestSlashBoth(t *testing.T) {
-	ctx, keeper, params, _, _ := setupHelper(t, 10)
-	fraction := sdk.NewRat(1).Quo(sdk.NewRat(2))
+	ctx, keeper, params := setupHelper(t, 10)
+	fraction := sdk.NewRat(1, 2)
 
 	// set a redelegation
 	rdA := types.Redelegation{
@@ -316,8 +321,8 @@ func TestSlashBoth(t *testing.T) {
 	require.Equal(t, sdk.NewInt(3), rdA.Balance.Amount)
 	// read updated pool
 	newPool := keeper.GetPool(ctx)
-	// unbonding tokens burned
-	require.Equal(t, int64(2), oldPool.UnbondingTokens-newPool.UnbondingTokens)
+	// loose tokens burned
+	require.Equal(t, int64(2), oldPool.LooseTokens-newPool.LooseTokens)
 	// bonded tokens burned
 	require.Equal(t, int64(3), oldPool.BondedTokens-newPool.BondedTokens)
 	// read updated validator

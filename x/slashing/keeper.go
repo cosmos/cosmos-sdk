@@ -30,7 +30,7 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, codespace
 }
 
 // handle a validator signing two blocks at the same height
-func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, height int64, timestamp int64, power int64) {
+func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight int64, timestamp int64, power int64) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	time := ctx.BlockHeader().Time
 	age := time - timestamp
@@ -38,15 +38,15 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, height i
 
 	// Double sign too old
 	if age > MaxEvidenceAge {
-		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d", pubkey.Address(), height, age, MaxEvidenceAge))
+		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d", pubkey.Address(), infractionHeight, age, MaxEvidenceAge))
 		return
 	}
 
 	// Double sign confirmed
-	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d less than max age of %d", pubkey.Address(), height, age, MaxEvidenceAge))
+	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d less than max age of %d", pubkey.Address(), infractionHeight, age, MaxEvidenceAge))
 
 	// Slash validator
-	k.validatorSet.Slash(ctx, pubkey, height, power, SlashFractionDoubleSign)
+	k.validatorSet.Slash(ctx, pubkey, infractionHeight, power, SlashFractionDoubleSign)
 
 	// Revoke validator
 	k.validatorSet.Revoke(ctx, pubkey)

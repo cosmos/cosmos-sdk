@@ -162,6 +162,7 @@ func TestAddr(addr string, bech string) sdk.Address {
 	return res
 }
 
+// nolint: unparam
 func createTestAddrs(numAddrs int) []sdk.Address {
 	var addresses []sdk.Address
 	var buffer bytes.Buffer
@@ -180,6 +181,7 @@ func createTestAddrs(numAddrs int) []sdk.Address {
 	return addresses
 }
 
+// nolint: unparam
 func createTestPubKeys(numPubKeys int) []crypto.PubKey {
 	var publicKeys []crypto.PubKey
 	var buffer bytes.Buffer

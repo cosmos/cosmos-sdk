@@ -132,7 +132,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 	for _, gdValidator := range genDoc.Validators {
 		pk := gdValidator.PubKey
 		validatorsPKs = append(validatorsPKs, pk) // append keys for output
-		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, pk.Address(), "test_val1", true)
+		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, pk.Address(), "test_val1")
 		require.NoError(t, err)
 		appGenTxs = append(appGenTxs, appGenTx)
 	}

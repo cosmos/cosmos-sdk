@@ -120,6 +120,7 @@ func (app *BasecoinApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock
 }
 
 // application updates every end block
+// nolint: unparam
 func (app *BasecoinApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
 

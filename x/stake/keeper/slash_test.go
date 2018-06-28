@@ -129,7 +129,7 @@ func TestSlashRedelegation(t *testing.T) {
 	}
 	keeper.SetDelegation(ctx, del)
 
-	// prior to the current height, stake didn't contribute
+	// started redelegating prior to the current height, stake didn't contribute to infraction
 	slashAmount := keeper.slashRedelegation(ctx, rd, 1, fraction)
 	require.Equal(t, int64(0), slashAmount.Evaluate())
 
@@ -227,7 +227,10 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// read updated validator
 	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
 	require.True(t, found)
-	// power decreased, but not by quite half, stake was bonded since
+	// power decreased by 3 - 6 stake originally bonded at the time of infraction
+	// was still bonded at the time of discovery and was slashed by half, 4 stake
+	// bonded at the time of discovery hadn't been bonded at the time of infraction
+	// and wasn't slashed
 	require.Equal(t, sdk.NewRat(7), validator.GetPower())
 }
 
@@ -278,7 +281,10 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// read updated validator
 	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
 	require.True(t, found)
-	// power decreased, but not by quite half, stake was bonded since
+	// power decreased by 2 - 4 stake originally bonded at the time of infraction
+	// was still bonded at the time of discovery and was slashed by half, 4 stake
+	// bonded at the time of discovery hadn't been bonded at the time of infraction
+	// and wasn't slashed
 	require.Equal(t, sdk.NewRat(8), validator.GetPower())
 }
 

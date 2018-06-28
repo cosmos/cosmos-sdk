@@ -615,7 +615,7 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.Address) (
 	chainID := viper.GetString(client.FlagChainID)
 
 	// send
-	coinbz, err := json.Marshal(sdk.NewCoin("steak", 1))
+	coinbz, err := cdc.MarshalJSON(sdk.NewCoin("steak", 1))
 	if err != nil {
 		panic(err)
 	}

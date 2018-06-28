@@ -397,7 +397,7 @@ func TestSimulateTx(t *testing.T) {
 		require.Equal(t, result.Code, sdk.ABCICodeOK, result.Log)
 		require.Equal(t, int64(80), result.GasUsed)
 		counter--
-		encoded, err := json.Marshal(tx)
+		encoded, err := app.cdc.MarshalJSON(tx)
 		require.Nil(t, err)
 		query := abci.RequestQuery{
 			Path: "/app/simulate",
@@ -999,17 +999,15 @@ func copyVal(val abci.Validator) abci.Validator {
 }
 
 func toJSON(o interface{}) []byte {
-	bz, err := json.Marshal(o)
+	bz, err := wire.Cdc.MarshalJSON(o)
 	if err != nil {
 		panic(err)
 	}
-	// fmt.Println(">> toJSON:", string(bz))
 	return bz
 }
 
 func fromJSON(bz []byte, ptr interface{}) {
-	// fmt.Println(">> fromJSON:", string(bz))
-	err := json.Unmarshal(bz, ptr)
+	err := wire.Cdc.UnmarshalJSON(bz, ptr)
 	if err != nil {
 		panic(err)
 	}

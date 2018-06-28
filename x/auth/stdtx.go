@@ -125,12 +125,12 @@ func StdSignBytes(chainID string, accnum int64, sequence int64, fee StdFee, msgs
 	for _, msg := range msgs {
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
 	}
-	msgBytes, err := json.Marshal(msgsBytes)
+	msgBytes, err := msgCdc.MarshalJSON(msgsBytes)
 	if err != nil {
 		panic(err)
 	}
 
-	bz, err := json.Marshal(StdSignDoc{
+	bz, err := msgCdc.MarshalJSON(StdSignDoc{
 		ChainID:       chainID,
 		AccountNumber: accnum,
 		Sequence:      sequence,

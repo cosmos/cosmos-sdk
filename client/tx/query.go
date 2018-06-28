@@ -2,7 +2,6 @@ package tx
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -72,7 +71,7 @@ func queryTx(cdc *wire.Codec, ctx context.CoreContext, hashHexStr string, trustN
 		return nil, err
 	}
 
-	return json.MarshalIndent(info, "", "  ")
+	return wire.MarshalJSONIndent(cdc, info)
 }
 
 func formatTxResult(cdc *wire.Codec, res *ctypes.ResultTx) (txInfo, error) {

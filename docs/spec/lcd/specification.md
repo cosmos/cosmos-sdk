@@ -1,26 +1,26 @@
 # Specifications
 
-This specification describes how to implement the LCD. LCD supports modular APIs. Currently, only ICS1 (KeyAPI),ICS20 (TokenAPI) and ICS21 (StakingAPI) are supported. Later, if necessary, more APIs can be imported.
+This specification describes how to implement the LCD. LCD supports modular APIs. Currently, only ICS1 (Key API),ICS20 (Token API) and ICS21 (Staking API) are supported. Later, if necessary, more APIs can be imported.
 
 ## Build and Verify ABCI states Proof
 
-As we all know, cosmos storage architecture contains multi substores. Each substore is implemented by a IAVL store. These substores are organized by simple Merkle tree. To build the tree, we need to extract name, height and store root hash from these substores to build a set of simple Merkle leaf nodes, then calculate hash from leaf nodes to root. The root hash of the simple Merkle tree is the appHash which will be included in block header.
+As we all know, cosmos storage contains multi substores. Each substore is implemented by a IAVL store. These substores are organized by simple Merkle tree. To build the tree, we need to extract name, height and store root hash from these substores to build a set of simple Merkle leaf nodes, then calculate hash from leaf nodes to root. The root hash of the simple Merkle tree is the appHash which will be included in block header.
 
 ![Simple Merkle Tree](pics/simpleMerkleTree.png)
 
-As we have discussed in [lcd trust-propagation](https://github.com/irisnet/cosmos-sdk/tree/bianjie/lcd_spec/docs/spec/lcd#trust-propagation), the appHash can be verify by voting power checking against trusted validator set. Here we just need to build proof from ABCI state to appHash. The proof contains two part: 
+As we have discussed in [lcd trust-propagation](https://github.com/irisnet/cosmos-sdk/tree/bianjie/lcd_spec/docs/spec/lcd#trust-propagation), the AppHash can be verify by voting power checking against trusted validator set. Here we just need to build proof from ABCI state to appHash. The proof contains two part: 
 
 * IAVL proof
 * Substore to appHash proof
 
 1. **IAVL Proof**
 
-	The proof can be divided into two types: exist proof and absence proof. If the query key exist in the IAVL store, then it returns key-value and exist proof. On the other size, if the key doesn't exist, then it only return absence proof which can demostrate the key definitely doesn't exist.
+	The proof can be divided into two types: exist proof and absence proof. If the query key exists in the IAVL store, then it returns key-value and exist proof. On the other size, if the key doesn't exist, then it only return absence proof which can demostrate the key definitely doesn't exist.
 
 	1. **IAVL Exist Proof**
 
-	```
-	type CommitID struct {
+```
+type CommitID struct {
 		Version int64
 		Hash    []byte
 	}
@@ -46,40 +46,42 @@ As we have discussed in [lcd trust-propagation](https://github.com/irisnet/cosmo
 		Version  int64 //The version of the key-value in this IAVL tree
 		InnerNodes []proofInnerNode //The path from to root node to key-value leaf node
 	}
-	```
-	The data structure of exist proof is shown as above. The process to build and verify exist proof is shown as follows:
-	
-	![Exist Proof](pics/existProof.png)
+```
 
-	Steps to build proof:
-	
-		* Access the IAVL tree from the root node.
-		* Record the visited nodes in InnerNodes,
-		* Once the target leaf node is found, assign leaf node version to proof version
-		* Assign the current IAVL tree height to proof height
-		* Assign the current IAVL tree rootHash to proof rootHash
-		* Assign the current substore name to proof StoreName
-		* Read multistore commitInfo from db by height and assign it to proof StoreCommitInfo
-		
-	Steps to verify proof:
-		
-		* Build leaf node with key, value and proof version.
-		* Calculate leaf node hash
-		* Assign the hash to the first innerNode's rightHash, then calculate first innerNode hash
-		* Propagate the hash calculation process. If prior innerNode is the left child of next innerNode, then assign the prior innerNode hash to the left hash of next innerNode. Otherwise, assign the prior innerNode hash to the right hash of next innerNode.
-		* The hash of last innerNode should be equal to the rootHash of this proof. Otherwise, the proof is invalid.
-	
-	2. **IAVL Absence Proof**
 
+The data structure of exist proof is shown as above. The process to build and verify exist proof is shown as follows:
+	
+![Exist Proof](pics/existProof.png)
+	
+Steps to build proof:
+	
+* Access the IAVL tree from the root node.
+* Record the visited nodes in InnerNodes,
+* Once the target leaf node is found, assign leaf node version to proof version
+* Assign the current IAVL tree height to proof height
+* Assign the current IAVL tree rootHash to proof rootHash
+* Assign the current substore name to proof StoreName
+* Read multistore commitInfo from db by height and assign it to proof StoreCommitInfo
+
+Steps to verify proof:
+		
+* Build leaf node with key, value and proof version.
+* Calculate leaf node hash
+* Assign the hash to the first innerNode's rightHash, then calculate first innerNode hash
+* Propagate the hash calculation process. If prior innerNode is the left child of next innerNode, then assign the prior innerNode hash to the left hash of next innerNode. Otherwise, assign the prior innerNode hash to the right hash of next innerNode.
+* The hash of last innerNode should be equal to the rootHash of this proof. Otherwise, the proof is invalid.
+	
+2. **IAVL Absence Proof**
+	
 	As we all know, all IAVL leaf nodes are sorted by the key of each leaf nodes. So we can calculate the postition of the target key in the whole key set of this IAVL tree. As shown below, we can find out the left key and the right key. If we can demonstrate that both left key and right key definitely exist, and they are adjacent nodes. Thus the target key definitely doesn't exist.
-
-	![Absence Proof1](pics/absence1.png)
 	
-	If the target key is larger than the right most leaf node or less than the left most key, then the target key definitely doesn't exist. 
+![Absence Proof1](pics/absence1.png)
 	
-	![Absence Proof2](pics/absence2.png)![Absence Proof3](pics/absence3.png)
+If the target key is larger than the right most leaf node or less than the left most key, then the target key definitely doesn't exist. 
 	
-	```
+![Absence Proof2](pics/absence2.png)![Absence Proof3](pics/absence3.png)
+	
+```
 	type proofLeafNode struct {
 		KeyBytes   cmn.HexBytes
 		ValueBytes cmn.HexBytes
@@ -97,32 +99,32 @@ As we have discussed in [lcd trust-propagation](https://github.com/irisnet/cosmo
 		Left  *pathWithNode // Proof the left key exist
 		Right *pathWithNode  //Proof the right key exist
 	}
-	```
-	The above is the data structure of absence proof. Steps to build proof:
+```
+The above is the data structure of absence proof. Steps to build proof:
 	
-		* Access the IAVL tree from the root node.
-		* Get the deserved index(Marked as INDEX) of the key in whole key set.
-		* If the returned index equals to 0, the right index should be 0 and left node doesn't exist
-		* If the returned index equals to the size of the whole key set, the left node index should be INDEX-1 and the right node doesn't exist.
-		* Otherwise, the right node index should be INDEX and the left node index should be INDEX-1
-		* Assign the current IAVL tree height to proof height
-		* Assign the current IAVL tree rootHash to proof rootHash
-		* Assign the current substore name to proof StoreName
-		* Read multistore commitInfo from db by height and assign it to proof StoreCommitInfo
+* Access the IAVL tree from the root node.
+* Get the deserved index(Marked as INDEX) of the key in whole key set.
+* If the returned index equals to 0, the right index should be 0 and left node doesn't exist
+* If the returned index equals to the size of the whole key set, the left node index should be INDEX-1 and the right node doesn't exist.
+* Otherwise, the right node index should be INDEX and the left node index should be INDEX-1
+* Assign the current IAVL tree height to proof height
+* Assign the current IAVL tree rootHash to proof rootHash
+* Assign the current substore name to proof StoreName
+* Read multistore commitInfo from db by height and assign it to proof StoreCommitInfo
+	
+Steps to verify proof:
 		
-	Steps to verify proof:
-		
-		* If only right node exist, verify its exist proof and verify if it is the left most node
-		* If only left node exist, verify its exist proof and verify if it is the right most node.
-		* If both right node and left node exist, verify if they are adjacent.
+* If only right node exist, verify its exist proof and verify if it is the left most node
+* If only left node exist, verify its exist proof and verify if it is the right most node.
+* If both right node and left node exist, verify if they are adjacent.
 
 2. **Substores to AppHash Proof**
 
 	After verify the IAVL proof, then we can start to verify substore proof against AppHash. Firstly, iterate MultiStoreCommitInfo and find the substore commitID by proof StoreName. Verify if yhe Hash in commitID equals to proof RootHash. If not, the proof is invalid. Then sort the substore commitInfo array by the hash of substore name. Finally, build the simple Merkle tree with all substore commitInfo array and verify if the Merkle root hash equal to appHash.
 
-	![substore proof](pics/substoreProof.png)
-	
-	```
+![substore proof](pics/substoreProof.png)
+
+```
 	func SimpleHashFromTwoHashes(left []byte, right []byte) []byte {
 		var hasher = ripemd160.New()
 		err := encodeByteSlice(hasher, left)
@@ -148,7 +150,7 @@ As we have discussed in [lcd trust-propagation](https://github.com/irisnet/cosmo
 				return SimpleHashFromTwoHashes(left, right)
 		}
 	}
-	```
+```
 	
 
 ## Verify block header against validator set
@@ -178,18 +180,18 @@ To improve LCD reliability and TPS, we recommend to connect LCD to more than one
 ## ICS1 (KeyAPI)
 
 1. **Query keys, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keys---get)**
+* a. Load key store
 
-	* a. Load key store
-	```
+```
 	db, err := dbm.NewGoLevelDB(KeyDBName, filepath.Join(rootDir, "keys"))
 	if err != nil {
 		return nil, err
 	}
 	keybase = client.GetKeyBase(db)
-	```
-		
-	* b. Iterate the whole key store
-	```
+```
+	
+* b. Iterate the whole key store
+```
 	var res []Info
 	iter := kb.db.Iterator(nil, nil)
 	defer iter.Close()
@@ -202,9 +204,9 @@ To improve LCD reliability and TPS, we recommend to connect LCD to more than one
 		res = append(res, info)
 	}
 	return res, nil
-	```
+```
 	
-	* c. Encode address and public key to bech32 pattern
+* c. Encode address and public key to bech32 pattern
 	```
 	bechAccount, err := sdk.Bech32ifyAcc(sdk.Address(info.PubKey.Address().Bytes()))
 	if err != nil {
@@ -219,40 +221,41 @@ To improve LCD reliability and TPS, we recommend to connect LCD to more than one
 		Address: bechAccount,
 		PubKey:  bechPubKey,
 	}, nil
-	```
+
+```
 
 2. **Import key, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keys---post)**
 
-	* a. Load key store
-	* b. Parameter checking. Name, password and seed should not be empty
-	* c. Key name duplication checking
-	* d. Build key from key name, password and seed
-	* e. Persist key to key store
+* a. Load key store
+* b. Parameter checking. Name, password and seed should not be empty
+* c. Key name duplication checking
+* d. Build key from key name, password and seed
+* e. Persist key to key store
 
 3. **Generate seed, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keysseed---get)**
 
-	* a. Load mock key store to avoid key persistence
-	* b. Generate random seed and return
+* a. Load mock key store to avoid key persistence
+* b. Generate random seed and return
 
 4. **Get key info by key name, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keysname---get)**
 
-	* a. Load key store
-	* b. Iterate the whole key store to find the key by name
-	* c. Encode address and public key to bech32 pattern
+* a. Load key store
+* b. Iterate the whole key store to find the key by name
+* c. Encode address and public key to bech32 pattern
 
 5. **Update key password, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keysname---put)**
 
-	* a. Load key store
-	* b. Iterate the whole key store to find the key by name
-	* c. Verify if the old-password match the current key password
-	* d. Re-persist the key with new password
+* a. Load key store
+* b. Iterate the whole key store to find the key by name
+* c. Verify if the old-password match the current key password
+* d. Re-persist the key with new password
 
 6. **Delete key, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keysname---delete)**
 
-	* a. Load key store
-	* b. Iterate the whole key store to find the key by name
-	* c. Verify if the specified password match the current key password
-	* d. Delete the key from key store
+* a. Load key store
+* b. Iterate the whole key store to find the key by name
+* c. Verify if the specified password match the current key password
+* d. Delete the key from key store
 
 ## ICS20 (TokenAPI)
 

@@ -104,7 +104,7 @@ func waitForHeight(height int64, url string) {
 		res.Body.Close()
 
 		var resultBlock ctypes.ResultBlock
-		err = cdc.UnmarshalJSON([]byte(body), &resultBlock)
+		err = cdc.UnmarshalJSON(body, &resultBlock)
 		if err != nil {
 			fmt.Println("RES", res)
 			fmt.Println("BODY", string(body))

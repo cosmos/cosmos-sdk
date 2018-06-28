@@ -7,9 +7,12 @@ all: get_tools
 DEP = github.com/golang/dep/cmd/dep
 GOLINT = github.com/tendermint/lint/golint
 GOMETALINTER = gopkg.in/alecthomas/gometalinter.v2
+UNCONVERT = github.com/mdempsky/unconvert
+
 DEP_CHECK := $(shell command -v dep 2> /dev/null)
 GOLINT_CHECK := $(shell command -v golint 2> /dev/null)
 GOMETALINTER_CHECK := $(shell command -v gometalinter.v2 2> /dev/null)
+UNCONVERT_CHECK := $(shell command -v unconvert 2> /dev/null)
 
 check_tools:
 ifndef DEP_CHECK
@@ -26,6 +29,11 @@ ifndef GOMETALINTER_CHECK
 	@echo "No gometalinter in path.  Install with 'make get_tools'."
 else
 	@echo "Found gometalinter in path."
+endif
+ifndef UNCONVERT_CHECK
+	@echo "No unconvert in path.  Install with 'make get_tools'."
+else
+	@echo "Found unconvert in path."
 endif
 
 get_tools:
@@ -47,6 +55,12 @@ else
 	@echo "Installing gometalinter.v2"
 	go get -v $(GOMETALINTER)
 endif
+ifdef UNCONVERT_CHECK
+	@echo "Unconvert is already installed.  Run 'make update_tools' to update."
+else
+	@echo "Installing unconvert"
+	go get -v $(UNCONVERT)
+endif
 
 update_tools:
 	@echo "Updating dep"
@@ -55,6 +69,8 @@ update_tools:
 	go get -u -v $(GOLINT)
 	@echo "Updating gometalinter.v2"
 	go get -u -v $(GOMETALINTER)
+	@echo "Updating unconvert"
+	go get -u -v $(UNCONVERT)
 
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.

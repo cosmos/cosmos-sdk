@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	crypto "github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )

@@ -45,6 +45,7 @@ FEATURES
 * [types] Switches internal representation of Int/Uint/Rat to use pointers
 * [gaiad] unsafe_reset_all now resets addrbook.json
 * [democoin] add x/oracle, x/assoc
+* [gaiacli] added an --async flag to the cli to deliver transactions without waiting for a tendermint response
 
 FIXES
 * [gaia] Added self delegation for validators in the genesis creation

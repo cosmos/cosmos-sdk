@@ -8,16 +8,16 @@ As we all know,  storage of cosmos-sdk based application contains multi-substore
 
 ![Simple Merkle Tree](pics/simpleMerkleTree.png)
 
-As we have discussed in [LCD trust-propagation](https://github.com/irisnet/cosmos-sdk/tree/bianjie/lcd_spec/docs/spec/lcd#trust-propagation), the AppHash can be verified by checking voting power against trusted validator set. Here we just need to build proof from ABCI state to AppHash. The proof contains two part: 
+As we have discussed in [LCD trust-propagation](https://github.com/irisnet/cosmos-sdk/tree/bianjie/lcd_spec/docs/spec/lcd#trust-propagation), the AppHash can be verified by checking voting power against a trusted validator set. Here we just need to build proof from ABCI state to AppHash. The proof contains two parts: 
 
 * IAVL proof
-* Substore to appHash proof
+* Substore to AppHash proof
 
 1. **IAVL Proof**
 
-	The proof can be divided into two types: exist proof and absence proof. If the query key exists in the IAVL store, then it returns key-value and exist proof. On the other size, if the key doesn't exist, then it only return absence proof which can demostrate the key definitely doesn't exist.
+	The proof has two types: existance proof and absence proof. If the query key exists in the IAVL store, then it returns key-value and its existance proof. On the other hand, if the key doesn't exist, then it only returns absence proof which can demostrate the key definitely doesn't exist.
 
-	1. **IAVL Exist Proof**
+	1. **IAVL Existance Proof**
 
 ```
 type CommitID struct {
@@ -49,7 +49,7 @@ type CommitID struct {
 ```
 
 
-The data structure of exist proof is shown as above. The process to build and verify exist proof is shown as follows:
+The data structure of exist proof is shown as above. The process to build and verify existance proof is shown as follows:
 	
 ![Exist Proof](pics/existProof.png)
 	

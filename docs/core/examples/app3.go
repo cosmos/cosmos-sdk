@@ -2,8 +2,8 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"reflect"
+	"fmt"
 
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -44,7 +44,8 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	// Register message routes.
 	// Note the handler gets access to the account store.
 	app.Router().
-		AddRoute("bank", NewApp3Handler(accountKeeper, metadataMapper))
+		AddRoute("send", betterHandleMsgSend(accountKeeper)).
+		AddRoute("issue", betterHandleMsgIssue(metadataMapper, accountKeeper))
 
 	// Mount stores and load the latest state.
 	app.MountStoresIAVL(keyAccount, keyMain, keyFees)
@@ -55,91 +56,105 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	return app
 }
 
-func NewApp3Handler(accountKeeper bank.Keeper, metadataMapper MetaDataMapper) sdk.Handler {
+func betterHandleMsgSend(accountKeeper bank.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		switch msg := msg.(type) {
-		case MsgSend:
-			return betterHandleMsgSend(ctx, accountKeeper, msg)
-		case MsgIssue:
-			return betterHandleMsgIssue(ctx, metadataMapper, accountKeeper, msg)
-		default:
-			errMsg := "Unrecognized bank Msg type: " + reflect.TypeOf(msg).Name()
-			return sdk.ErrUnknownRequest(errMsg).Result()
+		sendMsg, ok := msg.(MsgSend)
+		if !ok {
+			return sdk.NewError(2, 1, "Send Message Malformed").Result()
+		}
+
+		// Subtract coins from sender account
+		_, _, err := accountKeeper.SubtractCoins(ctx, sendMsg.From, sendMsg.Amount)
+		if err != nil {
+			// if error, return its result
+			return err.Result()
+		}
+
+		// Add coins to receiver account
+		_, _, err = accountKeeper.AddCoins(ctx, sendMsg.To, sendMsg.Amount)
+		if err != nil {
+			// if error, return its result
+			return err.Result()
+		}
+
+		return sdk.Result{
+			Tags: sendMsg.Tags(),
 		}
 	}
 }
 
-func betterHandleMsgSend(ctx sdk.Context, accountKeeper bank.Keeper, msg MsgSend) sdk.Result {
-	// Subtract coins from sender account
-	_, _, err := accountKeeper.SubtractCoins(ctx, msg.From, msg.Amount)
-	if err != nil {
-		// if error, return its result
-		return err.Result()
-	}
-
-	// Add coins to receiver account
-	_, _, err = accountKeeper.AddCoins(ctx, msg.To, msg.Amount)
-	if err != nil {
-		// if error, return its result
-		return err.Result()
-	}
-
-	return sdk.Result{}
-}
-
-func betterHandleMsgIssue(ctx sdk.Context, metadataMapper MetaDataMapper, accountKeeper bank.Keeper, msg MsgIssue) sdk.Result {
-	for _, o := range msg.Outputs {
-		for _, coin := range o.Coins {
-			metadata := metadataMapper.GetMetaData(ctx, coin.Denom)
-			if len(metadata.Issuer) == 0 {
-				// coin doesn't have issuer yet, set issuer to msg issuer
-				metadata.Issuer = msg.Issuer
-			}
-
-			// Check that msg Issuer is authorized to issue these coins
-			if !reflect.DeepEqual(metadata.Issuer, msg.Issuer) {
-				return sdk.ErrUnauthorized(fmt.Sprintf("Msg Issuer cannot issue these coins: %s", coin.Denom)).Result()
-			}
-
-			// Issuer cannot issue more than remaining supply
-			issuerSupply := metadata.TotalSupply.Sub(metadata.CurrentSupply)
-			if coin.Amount.GT(issuerSupply) {
-				return sdk.ErrInsufficientCoins(fmt.Sprintf("Issuer cannot issue that many coins. Current issuer supply: %d", issuerSupply.Int64())).Result()
-			}
-
-			// update metadata current circulating supply
-			metadata.CurrentSupply = metadata.CurrentSupply.Add(coin.Amount)
-
-			metadataMapper.SetMetaData(ctx, coin.Denom, metadata)
+func betterHandleMsgIssue(metadataMapper MetaDataMapper, accountKeeper bank.Keeper) sdk.Handler {
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		issueMsg, ok := msg.(MsgIssue)
+		if !ok {
+			return sdk.NewError(2, 1, "Issue Message Malformed").Result()
 		}
 
+		// Handle updating metadata
+		if res := betterHandleMetaData(ctx, metadataMapper, issueMsg.Issuer, issueMsg.Coin); !res.IsOK() {
+			return res
+		}
+	
 		// Add newly issued coins to output address
-		_, _, err := accountKeeper.AddCoins(ctx, o.Address, o.Coins)
+		_, _, err := accountKeeper.AddCoins(ctx, issueMsg.Receiver, []sdk.Coin{issueMsg.Coin})
 		if err != nil {
 			return err.Result()
 		}
+	
+		return sdk.Result{
+			// Return result with Issue msg tags
+			Tags: issueMsg.Tags(),
+		}
+	}
+}
+
+func betterHandleMetaData(ctx sdk.Context, metadataMapper MetaDataMapper, issuer sdk.Address, coin sdk.Coin) sdk.Result {
+	metadata := metadataMapper.GetMetaData(ctx, coin.Denom)
+
+	// Metadata was created fresh, should set issuer to msg issuer
+	if len(metadata.Issuer) == 0 {
+		metadata.Issuer = issuer
 	}
 
+	// Msg Issuer is not authorized to issue these coins
+	if !reflect.DeepEqual(metadata.Issuer, issuer) {
+		return sdk.ErrUnauthorized(fmt.Sprintf("Msg Issuer cannot issue tokens: %s", coin.Denom)).Result()
+	}
+
+	// Update current circulating supply
+	metadata.CurrentSupply = metadata.CurrentSupply.Add(coin.Amount)
+
+	// Current supply cannot exceed total supply
+	if metadata.TotalSupply.LT(metadata.CurrentSupply) {
+		return sdk.ErrInsufficientCoins("Issuer cannot issue more than total supply of coin").Result()
+	}
+
+	metadataMapper.SetMetaData(ctx, coin.Denom, metadata)
 	return sdk.Result{}
 }
 
 //------------------------------------------------------------------
 // Mapper for Coin Metadata
-// Example of a very simple user-defined mapper
 
+// Example of a very simple user-defined mapper interface
 type MetaDataMapper interface {
 	GetMetaData(sdk.Context, string) CoinMetadata
 	SetMetaData(sdk.Context, string, CoinMetadata)
 }
 
+// Implements MetaDataMapper
 type App3MetaDataMapper struct {
 	mainKey *sdk.KVStoreKey
 }
 
+// Construct new App3MetaDataMapper
 func NewApp3MetaDataMapper(key *sdk.KVStoreKey) App3MetaDataMapper {
 	return App3MetaDataMapper{mainKey: key}
 }
 
+// Implements MetaDataMpper. Returns metadata for coin
+// If metadata does not exist in store, function creates default metadata and returns it
+// without adding it to the store.
 func (mdm App3MetaDataMapper) GetMetaData(ctx sdk.Context, denom string) CoinMetadata {
 	store := ctx.KVStore(mdm.mainKey)
 
@@ -160,6 +175,7 @@ func (mdm App3MetaDataMapper) GetMetaData(ctx sdk.Context, denom string) CoinMet
 	return metadata
 }
 
+// Implements MetaDataMapper. Sets metadata in store with key equal to denom.
 func (mdm App3MetaDataMapper) SetMetaData(ctx sdk.Context, denom string, metadata CoinMetadata) {
 	store := ctx.KVStore(mdm.mainKey)
 

@@ -49,7 +49,8 @@ func NewApp2(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	// Register message routes.
 	// Note the handler gets access to the account store.
 	app.Router().
-		AddRoute("bank", NewApp2Handler(keyAccount, keyMain))
+		AddRoute("send", handleMsgSend(keyAccount)).
+		AddRoute("issue", handleMsgIssue(keyAccount, keyMain))
 
 	// Mount stores and load the latest state.
 	app.MountStoresIAVL(keyAccount, keyMain)
@@ -71,39 +72,37 @@ type CoinMetadata struct {
 //------------------------------------------------------------------
 // Msgs
 
-// Create Output struct to allow single message to issue arbitrary coins to multiple users
-type Output struct {
-	Address sdk.Address
-	Coins   sdk.Coins
-}
-
-// Single permissioned issuer can issue multiple outputs
+// Single permissioned issuer can issue Coin to Receiver
+// if he is the issuer in Coin Metadata
 // Implements sdk.Msg Interface
 type MsgIssue struct {
 	Issuer  sdk.Address
-	Outputs []Output
+	Receiver sdk.Address
+	Coin sdk.Coin
 }
 
-// nolint
-func (msg MsgIssue) Type() string { return "bank" }
+// Implements Msg.
+func (msg MsgIssue) Type() string { return "issue" }
 
+// Implements Msg. Ensures addresses are valid and Coin is positive
 func (msg MsgIssue) ValidateBasic() sdk.Error {
 	if len(msg.Issuer) == 0 {
 		return sdk.ErrInvalidAddress("Issuer address cannot be empty")
 	}
 
-	for _, o := range msg.Outputs {
-		if len(o.Address) == 0 {
-			return sdk.ErrInvalidAddress("Output address cannot be empty")
-		}
-		// Cannot issue zero or negative coins
-		if !o.Coins.IsPositive() {
-			return sdk.ErrInvalidCoins("Cannot issue 0 or negative coin amounts")
-		}
+	if len(msg.Receiver) == 0 {
+		return sdk.ErrInvalidAddress("Receiver address cannot be empty")
 	}
+
+	// Cannot issue zero or negative coins
+	if !msg.Coin.IsPositive() {
+		return sdk.ErrInvalidCoins("Cannot issue 0 or negative coin amounts")
+	}
+
 	return nil
 }
 
+// Implements Msg. Get canonical sign bytes for MsgIssue
 func (msg MsgIssue) GetSignBytes() []byte {
 	bz, err := json.Marshal(msg)
 	if err != nil {
@@ -117,111 +116,92 @@ func (msg MsgIssue) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.Issuer}
 }
 
+// Returns the sdk.Tags for the message
+func (msg MsgIssue) Tags() sdk.Tags {
+	return sdk.NewTags("issuer", []byte(msg.Issuer.String())).
+		AppendTag("receiver", []byte(msg.Receiver.String()))
+}
+
 //------------------------------------------------------------------
 // Handler for the message
 
-func NewApp2Handler(keyAcc *sdk.KVStoreKey, keyMain *sdk.KVStoreKey) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		switch msg := msg.(type) {
-		case MsgSend:
-			return handleMsgSend(ctx, keyAcc, msg)
-		case MsgIssue:
-			return handleMsgIssue(ctx, keyMain, keyAcc, msg)
-		default:
-			errMsg := "Unrecognized bank Msg type: " + reflect.TypeOf(msg).Name()
-			return sdk.ErrUnknownRequest(errMsg).Result()
-		}
-	}
-}
-
 // Handle Msg Issue
-func handleMsgIssue(ctx sdk.Context, keyMain *sdk.KVStoreKey, keyAcc *sdk.KVStoreKey, msg MsgIssue) sdk.Result {
-	store := ctx.KVStore(keyMain)
-	accStore := ctx.KVStore(keyAcc)
-
-	for _, o := range msg.Outputs {
-		for _, coin := range o.Coins {
-			bz := store.Get([]byte(coin.Denom))
-			var metadata CoinMetadata
-
-			if bz == nil {
-				// Coin not set yet, initialize with issuer and default values
-				// Coin amount can't be above default value
-				if coin.Amount.GT(sdk.NewInt(1000000)) {
-					return sdk.ErrInvalidCoins("Cannot issue that many new coins").Result()
-				}
-				metadata = CoinMetadata{
-					TotalSupply:   sdk.NewInt(1000000),
-					CurrentSupply: sdk.NewInt(0),
-					Issuer:        msg.Issuer,
-					Decimal:       10,
-				}
-			} else {
-				// Decode coin metadata
-				err := json.Unmarshal(bz, &metadata)
-				if err != nil {
-					return sdk.ErrInternal("Decoding coin metadata failed").Result()
-				}
-			}
-
-			// Return error result if msg Issuer is not equal to coin issuer
-			if !reflect.DeepEqual(metadata.Issuer, msg.Issuer) {
-				return sdk.ErrUnauthorized(fmt.Sprintf("Msg issuer cannot issue these coins: %s", coin.Denom)).Result()
-			}
-
-			// Issuer cannot issue more than remaining supply
-			issuerSupply := metadata.TotalSupply.Sub(metadata.CurrentSupply)
-			if coin.Amount.GT(issuerSupply) {
-				return sdk.ErrInsufficientCoins(fmt.Sprintf("Issuer cannot issue that many coins. Current issuer supply: %d", issuerSupply.Int64())).Result()
-			}
-
-			// Update coin metadata
-			metadata.CurrentSupply = metadata.CurrentSupply.Add(coin.Amount)
-
-			val, err := json.Marshal(metadata)
-			if err != nil {
-				return sdk.ErrInternal("Encoding coin metadata failed").Result()
-			}
-
-			// Update coin metadata in store
-			store.Set([]byte(coin.Denom), val)
+func handleMsgIssue(keyMain *sdk.KVStoreKey, keyAcc *sdk.KVStoreKey) sdk.Handler {
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		issueMsg, ok := msg.(MsgIssue)
+		if !ok {
+			return sdk.NewError(2, 1, "IssueMsg is malformed").Result()
 		}
 
-		// Add coins to receiver account
-		bz := accStore.Get(o.Address)
-		var acc appAccount
-		if bz == nil {
-			// Receiver account does not already exist, create a new one.
-			acc = appAccount{}
-		} else {
-			// Receiver account already exists. Retrieve and decode it.
-			err := json.Unmarshal(bz, &acc)
-			if err != nil {
-				return sdk.ErrInternal("Account decoding error").Result()
-			}
+		// Retrieve stores
+		store := ctx.KVStore(keyMain)
+		accStore := ctx.KVStore(keyAcc)
+
+		// Handle updating metadata
+		if res := handleMetaData(store, issueMsg.Issuer, issueMsg.Coin); !res.IsOK() {
+			return res
 		}
 
-		// Add amount to receiver's old coins
-		receiverCoins := acc.Coins.Plus(o.Coins)
-
-		// Update receiver account
-		acc.Coins = receiverCoins
-
-		// Encode receiver account
-		val, err := json.Marshal(acc)
-		if err != nil {
-			return sdk.ErrInternal("Account encoding error").Result()
+		// Issue coins to receiver using previously defined handleTo function
+		if res := handleTo(accStore, issueMsg.Receiver, []sdk.Coin{issueMsg.Coin}); !res.IsOK() {
+			return res
 		}
 
-		// set account with new issued coins in store
-		store.Set(o.Address, val)
+		return sdk.Result{
+			// Return result with Issue msg tags
+			Tags: issueMsg.Tags(),
+		}
 	}
-
-	return sdk.Result{
-	// TODO: Tags
-	}
-
 }
+
+func handleMetaData(store sdk.KVStore, issuer sdk.Address, coin sdk.Coin) sdk.Result {
+	bz := store.Get([]byte(coin.Denom))
+	var metadata CoinMetadata
+
+	if bz == nil {
+		// Coin not set yet, initialize with issuer and default values
+		// Coin amount can't be above default value
+		if coin.Amount.GT(sdk.NewInt(1000000)) {
+			return sdk.ErrInvalidCoins("Cannot issue that many new coins").Result()
+		}
+		metadata = CoinMetadata{
+			TotalSupply:   sdk.NewInt(1000000),
+			CurrentSupply: sdk.NewInt(0),
+			Issuer:        issuer,
+			Decimal:       10,
+		}
+	} else {
+		// Decode coin metadata
+		err := json.Unmarshal(bz, &metadata)
+		if err != nil {
+			return sdk.ErrInternal("Decoding coin metadata failed").Result()
+		}
+	}
+
+	// Msg Issuer is not authorized to issue these coins
+	if !reflect.DeepEqual(metadata.Issuer, issuer) {
+		return sdk.ErrUnauthorized(fmt.Sprintf("Msg Issuer cannot issue tokens: %s", coin.Denom)).Result()
+	}
+
+	// Update coin current circulating supply
+	metadata.CurrentSupply = metadata.CurrentSupply.Add(coin.Amount)
+
+	// Current supply cannot exceed total supply
+	if metadata.TotalSupply.LT(metadata.CurrentSupply) {
+		return sdk.ErrInsufficientCoins("Issuer cannot issue more than total supply of coin").Result()
+	}
+
+	val, err := json.Marshal(metadata)
+	if err != nil {
+		return sdk.ErrInternal(fmt.Sprintf("Error encoding metadata: %s", err.Error())).Result()
+	}
+
+	// Update store with new metadata
+	store.Set([]byte(coin.Denom), val)
+	
+	return sdk.Result{}
+}
+
 
 //------------------------------------------------------------------
 // Tx

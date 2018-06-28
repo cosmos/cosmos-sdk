@@ -32,9 +32,11 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		slashAmountInt = unbondingDelegation.Balance.Amount
 	}
 
-	// Update unbonding delegation
-	unbondingDelegation.Balance.Amount = unbondingDelegation.Balance.Amount.Sub(slashAmountInt)
-	k.SetUnbondingDelegation(ctx, unbondingDelegation)
+	// Update unbonding delegation if necessary
+	if !slashAmountInt.IsZero() {
+		unbondingDelegation.Balance.Amount = unbondingDelegation.Balance.Amount.Sub(slashAmountInt)
+		k.SetUnbondingDelegation(ctx, unbondingDelegation)
+	}
 
 	return
 }
@@ -63,15 +65,20 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, redelegation types.Redelegati
 		slashAmountInt = redelegation.Balance.Amount
 	}
 
-	// Update redelegation
-	redelegation.Balance.Amount = redelegation.Balance.Amount.Sub(slashAmountInt)
-	k.SetRedelegation(ctx, redelegation)
+	// Update redelegation if necessary
+	if !slashAmountInt.IsZero() {
+		redelegation.Balance.Amount = redelegation.Balance.Amount.Sub(slashAmountInt)
+		k.SetRedelegation(ctx, redelegation)
+	}
 
 	// Unbond from target validator
 	sharesToUnbond := fraction.Mul(redelegation.SharesDst)
-	tokensToBurn, err := k.unbond(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr, sharesToUnbond)
-	if err != nil {
-		panic(fmt.Errorf("error unbonding delegator: %v", err))
+	var err error
+	if !sharesToUnbond.IsZero() {
+		tokensToBurn, err = k.unbond(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr, sharesToUnbond)
+		if err != nil {
+			panic(fmt.Errorf("error unbonding delegator: %v", err))
+		}
 	}
 
 	return slashAmount, tokensToBurn
@@ -116,6 +123,9 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 		unbondingDelegations := k.GetUnbondingDelegationsFromValidator(ctx, ownerAddress)
 		for _, unbondingDelegation := range unbondingDelegations {
 			amountSlashed := k.slashUnbondingDelegation(ctx, unbondingDelegation, infractionHeight, fraction)
+			if amountSlashed.IsZero() {
+				continue
+			}
 			remainingSlashAmount = remainingSlashAmount.Sub(amountSlashed)
 			// Burn unbonding tokens
 			// Ref https://github.com/cosmos/cosmos-sdk/pull/1278#discussion_r198657760
@@ -126,6 +136,9 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 		redelegations := k.GetRedelegationsFromValidator(ctx, ownerAddress)
 		for _, redelegation := range redelegations {
 			amountSlashed, tokensToBurn := k.slashRedelegation(ctx, redelegation, infractionHeight, fraction)
+			if amountSlashed.IsZero() {
+				continue
+			}
 			remainingSlashAmount = remainingSlashAmount.Sub(amountSlashed)
 			// Burn bonded tokens
 			pool.BondedTokens -= tokensToBurn

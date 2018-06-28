@@ -12,11 +12,12 @@ BREAKING CHANGES
 * Removed MsgChangePubKey from auth
 * Removed setPubKey from account mapper
 * Removed GetMemo from Tx (it is still on StdTx)
+* Gov module REST endpoints changed to be more RESTful
 * [cli] rearranged commands under subcommands
 * [stake] remove Tick and add EndBlocker
 * [stake] introduce concept of unbonding for delegations and validators
   * `gaiacli stake unbond` replaced with `gaiacli stake begin-unbonding`
-  * introduced: 
+  * introduced:
     * `gaiacli stake complete-unbonding`
     * `gaiacli stake begin-redelegation`
     * `gaiacli stake complete-redelegation`
@@ -33,14 +34,17 @@ FEATURES
   * Run with `cd x/bank && go test --bench=.`
 * [tools] make get_tools installs tendermint's linter, and gometalinter
 * [tools] Switch gometalinter to the stable version
-* [tools] Add checking for misspellings and for incorrectly formatted files in circle CI
+* [tools] Add the following linters
+  * misspell
+  * gofmt
+  * go vet -composites=false
 * [server] Default config now creates a profiler at port 6060, and increase p2p send/recv rates
 * [tests] Add WaitForNextNBlocksTM helper method
 * [types] Switches internal representation of Int/Uint/Rat to use pointers
 * [gaiad] unsafe_reset_all now resets addrbook.json
 * [democoin] add x/oracle, x/assoc
 
-FIXES 
+FIXES
 * [gaia] Added self delegation for validators in the genesis creation
 * [lcd] tests now don't depend on raw json text
 * [stake] error strings lower case

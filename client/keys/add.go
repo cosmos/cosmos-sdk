@@ -104,7 +104,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		info, err := kb.CreateFundraiserKey(name, pass, seed)
+		info, err := kb.CreateFundraiserKey(name, seed, pass)
 		if err != nil {
 			return err
 		}
@@ -159,7 +159,12 @@ func printCreate(info keys.Info, seed string) {
 type NewKeyBody struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
-	Seed     string `json:"seed"`
+}
+
+// new key response REST body
+type NewKeyResponse struct {
+	Address  string `json:"address"`
+	Mnemonic string `json:"mnemonic"`
 }
 
 // add new key REST handler
@@ -192,11 +197,6 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("You have to specify a password for the locally stored account."))
 		return
 	}
-	if m.Seed == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("You have to specify a seed for the locally stored account."))
-		return
-	}
 
 	// check if already exists
 	infos, err := kb.List()
@@ -209,13 +209,22 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create account
-	info, err := kb.CreateFundraiserKey(m.Name, m.Password, m.Seed)
+	info, mnemonic, err := kb.CreateMnemonic(m.Name, keys.English, m.Password, keys.Secp256k1)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
-	w.Write([]byte(info.GetPubKey().Address().String()))
+	bz, err := json.Marshal(NewKeyResponse{
+		Address:  info.GetPubKey().Address().String(),
+		Mnemonic: mnemonic,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Write(bz)
 }
 
 // function to just a new seed to display in the UI before actually persisting it in the keybase
@@ -223,7 +232,6 @@ func getSeed(algo keys.SigningAlgo) string {
 	kb := client.MockKeyBase()
 	pass := "throwing-this-key-away"
 	name := "inmemorykey"
-
 	_, seed, _ := kb.CreateMnemonic(name, keys.English, pass, algo)
 	return seed
 }
@@ -232,9 +240,9 @@ func getSeed(algo keys.SigningAlgo) string {
 func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	algoType := vars["type"]
-	// algo type defaults to ed25519
+	// algo type defaults to secp256k1
 	if algoType == "" {
-		algoType = "ed25519"
+		algoType = "secp256k1"
 	}
 	algo := keys.SigningAlgo(algoType)
 

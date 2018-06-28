@@ -36,9 +36,9 @@ func TestKeys(t *testing.T) {
 	defer cleanup()
 
 	// get seed
+	// TODO Do we really need this endpoint?
 	res, body := Request(t, port, "GET", "/keys/seed", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	newSeed := body
 	reg, err := regexp.Compile(`([a-z]+ ){12}`)
 	require.Nil(t, err)
 	match := reg.MatchString(seed)
@@ -48,16 +48,14 @@ func TestKeys(t *testing.T) {
 	newPassword := "0987654321"
 
 	// add key
-	var jsonStr = []byte(fmt.Sprintf(`{"name":"test_fail", "password":"%s"}`, password))
-	res, body = Request(t, port, "POST", "/keys", jsonStr)
-
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode, "Account creation should require a seed "+body)
-
-	jsonStr = []byte(fmt.Sprintf(`{"name":"%s", "password":"%s", "seed": "%s"}`, newName, newPassword, newSeed))
+	jsonStr := []byte(fmt.Sprintf(`{"name":"%s", "password":"%s"}`, newName, newPassword))
 	res, body = Request(t, port, "POST", "/keys", jsonStr)
 
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	addr2 := body
+	var resp keys.NewKeyResponse
+	err = wire.Cdc.UnmarshalJSON([]byte(body), &resp)
+	require.Nil(t, err)
+	addr2 := resp.Address
 	assert.Len(t, addr2, 40, "Returned address has wrong format", addr2)
 
 	// existing keys

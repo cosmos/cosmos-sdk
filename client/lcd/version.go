@@ -24,6 +24,6 @@ func NodeVersionRequestHandler(cdc *wire.Codec, ctx context.CoreContext) http.Ha
 			w.Write([]byte(fmt.Sprintf("Could't query version. Error: %s", err.Error())))
 			return
 		}
-		w.Write([]byte(version))
+		w.Write(version)
 	}
 }

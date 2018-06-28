@@ -321,6 +321,9 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delegatorAddr, validatorSrcAd
 		return types.ErrBadRedelegationDst(k.Codespace())
 	}
 	sharesCreated, err := k.Delegate(ctx, delegatorAddr, returnCoin, dstValidator)
+	if err != nil {
+		return err
+	}
 
 	// create the unbonding delegation
 	minTime := ctx.BlockHeader().Time + params.UnbondingTime

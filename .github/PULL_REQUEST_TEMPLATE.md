@@ -10,3 +10,4 @@ v    If a checkbox is n/a - please still include it but + a little note why
 * [ ] Updated CHANGELOG.md
 * [ ] Updated Gaia/Examples
 * [ ] Squashed all commits, uses message "Merge pull request #XYZ: [title]" ([coding standards](https://github.com/tendermint/coding/blob/master/README.md#merging-a-pr))
+* [ ] Added appropriate labels to PR (ex. wip, ready-for-review, docs)

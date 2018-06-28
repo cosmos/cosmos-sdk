@@ -18,8 +18,6 @@ const (
 
 func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 
-	// TODO: make this an interface or pass in
-	// a TxDecoder instead.
 	cdc := wire.NewCodec()
 
 	// Create the base application object.
@@ -113,7 +111,7 @@ func handleMsgSend(key *sdk.KVStoreKey) sdk.Handler {
 		if !ok {
 			// Create custom error message and return result
 			// Note: Using unreserved error codespace
-			return sdk.NewError(2, 1, "Send Message is malformed").Result()
+			return sdk.NewError(2, 1, "MsgSend is malformed").Result()
 		}
 
 		// Load the store.

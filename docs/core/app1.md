@@ -18,14 +18,14 @@ type Msg interface {
     // Must be alphanumeric or empty.
     // Must correspond to name of message handler (XXX).
     Type() string
+
+    // ValidateBasic does a simple validation check that
+    // doesn't require access to any other information.
+    ValidateBasic() error
     
     // Get the canonical byte representation of the Msg.
     // This is what is signed.
     GetSignBytes() []byte
-    
-    // ValidateBasic does a simple validation check that
-    // doesn't require access to any other information.
-    ValidateBasic() error
     
     // Signers returns the addrs of signers that must sign.
     // CONTRACT: All signatures must be present to be valid.
@@ -37,10 +37,6 @@ type Msg interface {
 
 The `Msg` interface allows messages to define basic validity checks, as well as
 what needs to be signed and who needs to sign it.
-
-Addresses in the SDK are arbitrary byte arrays that are hex-encoded when
-displayed as a string or rendered in JSON. Typically, addresses are the hash of
-a public key.
 
 For instance, take the simple token sending message type from app1.go: 
 
@@ -74,8 +70,14 @@ func (msg MsgSend) GetSigners() []sdk.Address {
 }
 ```
 
+Note Addresses in the SDK are arbitrary byte arrays that are [Bech32](TODO) encoded
+when displayed as a string or rendered in JSON. Typically, addresses are the hash of
+a public key, so we can use them to uniquely identify the required signers for a
+transaction.
+
+
 The basic validity check ensures the From and To address are specified and the
-amount is positive:
+Amount is positive:
 
 ```go
 // Implements Msg. Ensure the addresses are good and the
@@ -93,6 +95,8 @@ func (msg MsgSend) ValidateBasic() sdk.Error {
 	return nil
 }
 ```
+
+Note the `ValidateBasic` method is called automatically by the SDK!
 
 ## KVStore
 
@@ -240,8 +244,10 @@ func NewApp1Handler(keyAcc *sdk.KVStoreKey) sdk.Handler {
 
 We have only a single message type, so just one message-specific function to define, `handleMsgSend`.
 
-Note this handler has unfettered access to the store specified by the capability key `keyAcc`. So it must also define items in the store are encoded.
-For this first example, we will define a simple account that is JSON encoded:
+Note this handler has unrestricted access to the store specified by the capability key `keyAcc`,
+so it must define what to store and how to encode it. Later, we'll introduce
+higher-level abstractions so Handlers are restricted in what they can do.
+For this first example, we use a simple account that is JSON encoded:
 
 ```go
 type appAccount struct {
@@ -249,7 +255,8 @@ type appAccount struct {
 }
 ```
 
-Coins is a useful type provided by the SDK for multi-asset accounts. While we could just use an integer here for a single coin type,
+Coins is a useful type provided by the SDK for multi-asset accounts. 
+We could just use an integer here for a single coin type, but
 it's worth [getting to know Coins](TODO).
 
 
@@ -258,6 +265,7 @@ Now we're ready to handle the MsgSend:
 ```go
 // Handle MsgSend.
 // NOTE: msg.From, msg.To, and msg.Amount were already validated
+// in ValidateBasic().
 func handleMsgSend(ctx sdk.Context, key *sdk.KVStoreKey, msg MsgSend) sdk.Result {
 	// Load the store.
 	store := ctx.KVStore(key)
@@ -359,7 +367,7 @@ func handleTo(store sdk.KVStore, to sdk.Address, amt sdk.Coins) sdk.Result {
 
 And that's that!
 
-# Tx
+## Tx
 
 The final piece before putting it all together is the `Tx`.
 While `Msg` contains the content for particular functionality in the application, the actual input
@@ -408,7 +416,7 @@ func txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 }
 ```
 
-# BaseApp
+## BaseApp
 
 Finally, we stitch it all together using the `BaseApp`.
 
@@ -466,6 +474,25 @@ In future apps, we'll have multiple stores and handlers, and not every handler w
 After setting the transaction decoder and the message handling routes, the final
 step is to mount the stores and load the latest version.
 Since we only have one store, we only mount one.
+
+## Execution
+
+We're now done the core logic of the app! From here, we could write transactions
+in Go and execute them against the application using the `app.DeliverTx` method.
+In a real setup, the app would run as an ABCI application and
+would be driven by blocks of transactions from the Tendermint consensus engine.
+Later in the tutorial, we'll connect our app to a complete suite of components
+for running and using a live blockchain application. For complete details on 
+how ABCI applications work, see the [ABCI documentation](TODO).
+
+For now, we note the follow sequence of events occurs when a transaction is
+received (through `app.DeliverTx`):
+
+- serialized transaction is received by `app.DeliverTx`
+- transaction is deserialized using `TxDecoder`
+- for each message in the transaction, run `msg.ValidateBasic()` 
+- for each message in the transaction, load the appropriate handler and execute
+  it with the message
 
 ## Conclusion
 

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -172,7 +173,7 @@ func evenBetterHandleMetaData(ctx sdk.Context, metadataMapper MetaDataMapper, is
 	}
 
 	// Msg Issuer not authorized to issue these coins
-	if !reflect.DeepEqual(metadata.Issuer, issuer) {
+	if !bytes.Equal(metadata.Issuer, issuer) {
 		return sdk.ErrUnauthorized(fmt.Sprintf("Msg Issuer cannot issue tokens: %s", coin.Denom)).Result()
 	}
 

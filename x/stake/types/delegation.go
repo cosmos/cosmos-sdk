@@ -104,8 +104,8 @@ type Redelegation struct {
 	MinTime          int64       `json:"min_time"`           // unix time for redelegation completion
 	InitialBalance   sdk.Coin    `json:"initial_balance"`    // initial balance when redelegation started
 	Balance          sdk.Coin    `json:"balance"`            // current balance
-	SharesSrc        sdk.Rat     `json:"shares`              // amount of source shares redelegating
-	SharesDst        sdk.Rat     `json:"shares`              // amount of destination shares redelegating
+	SharesSrc        sdk.Rat     `json:"shares_src"`         // amount of source shares redelegating
+	SharesDst        sdk.Rat     `json:"shares_dst"`         // amount of destination shares redelegating
 }
 
 // nolint

@@ -106,9 +106,9 @@ func TestOracle(t *testing.T) {
 	addr3 := []byte("addr3")
 	addr4 := []byte("addr4")
 	valset := &mock.ValidatorSet{[]mock.Validator{
-		mock.Validator{addr1, sdk.NewRat(7)},
-		mock.Validator{addr2, sdk.NewRat(7)},
-		mock.Validator{addr3, sdk.NewRat(1)},
+		{addr1, sdk.NewRat(7)},
+		{addr2, sdk.NewRat(7)},
+		{addr3, sdk.NewRat(1)},
 	}}
 
 	key := sdk.NewKVStoreKey("testkey")

@@ -215,6 +215,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	require.Equal(t, int64(3), oldPool.BondedTokens-newPool.BondedTokens)
 	// read updated validator
 	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
+	require.True(t, found)
 	// power decreased, but not by quite half, stake was bonded since
 	require.Equal(t, sdk.NewRat(7), validator.GetPower())
 }
@@ -265,6 +266,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.Equal(t, int64(4), oldPool.BondedTokens-newPool.BondedTokens)
 	// read updated validator
 	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
+	require.True(t, found)
 	// power decreased, but not by quite half, stake was bonded since
 	require.Equal(t, sdk.NewRat(8), validator.GetPower())
 }
@@ -327,6 +329,7 @@ func TestSlashBoth(t *testing.T) {
 	require.Equal(t, int64(3), oldPool.BondedTokens-newPool.BondedTokens)
 	// read updated validator
 	validator, found = keeper.GetValidatorByPubKey(ctx, PKs[0])
+	require.True(t, found)
 	// power not decreased, all stake was bonded since
 	require.Equal(t, sdk.NewRat(10), validator.GetPower())
 }

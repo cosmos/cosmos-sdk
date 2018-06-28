@@ -3,7 +3,6 @@ package baseapp
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 	"os"
 	"testing"
 
@@ -20,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 func defaultLogger() log.Logger {
@@ -202,7 +202,15 @@ func TestInitChainer(t *testing.T) {
 
 	// set initChainer and try again - should see the value
 	app.SetInitChainer(initChainer)
-	app.InitChain(abci.RequestInitChain{AppStateBytes: []byte("{}")}) // must have valid JSON genesis file, even if empty
+	app.InitChain(abci.RequestInitChain{AppStateBytes: []byte("{}"), ChainId: "test-chain-id"}) // must have valid JSON genesis file, even if empty
+
+	// assert that chainID is set correctly in InitChain
+	chainID := app.deliverState.ctx.ChainID()
+	assert.Equal(t, "test-chain-id", chainID, "ChainID in deliverState not set correctly in InitChain")
+
+	chainID = app.checkState.ctx.ChainID()
+	assert.Equal(t, "test-chain-id", chainID, "ChainID in checkState not set correctly in InitChain")
+
 	app.Commit()
 	res = app.Query(query)
 	assert.Equal(t, value, res.Value)
@@ -378,13 +386,15 @@ func TestSimulateTx(t *testing.T) {
 		return ttx, nil
 	})
 
+	app.InitChain(abci.RequestInitChain{})
+
 	nBlocks := 3
 	for blockN := 0; blockN < nBlocks; blockN++ {
 		// block1
 		header.Height = int64(blockN + 1)
 		app.BeginBlock(abci.RequestBeginBlock{Header: header})
 		result := app.Simulate(tx)
-		require.Equal(t, result.Code, sdk.ABCICodeOK)
+		require.Equal(t, result.Code, sdk.ABCICodeOK, result.Log)
 		require.Equal(t, int64(80), result.GasUsed)
 		counter--
 		encoded, err := json.Marshal(tx)
@@ -397,8 +407,8 @@ func TestSimulateTx(t *testing.T) {
 		require.Equal(t, queryResult.Code, uint32(sdk.ABCICodeOK))
 		var res sdk.Result
 		app.cdc.MustUnmarshalBinary(queryResult.Value, &res)
-		require.Equal(t, sdk.ABCICodeOK, res.Code)
-		require.Equal(t, int64(160), res.GasUsed)
+		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
+		require.Equal(t, int64(160), res.GasUsed, res.Log)
 		app.EndBlock(abci.RequestEndBlock{})
 		app.Commit()
 	}

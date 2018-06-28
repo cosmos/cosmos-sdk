@@ -621,9 +621,9 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.Address) (
 	jsonStr := []byte(fmt.Sprintf(`{
 		"name":"%s",
 		"password":"%s",
-		"account_number":%d,
-		"sequence":%d,
-		"gas": 10000,
+		"account_number":"%d",
+		"sequence":"%d",
+		"gas": "10000",
 		"amount":[%s],
 		"chain_id":"%s"
 	}`, name, password, accnum, sequence, coinbz, chainID))
@@ -655,14 +655,14 @@ func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Add
 	jsonStr := []byte(fmt.Sprintf(`{
 		"name":"%s",
 		"password": "%s",
-		"account_number":%d,
-		"sequence": %d,
-		"gas": 100000,
+		"account_number":"%d",
+		"sequence": "%d",
+		"gas": "100000",
 		"chain_id": "%s",
 		"amount":[
 			{
 				"denom": "%s",
-				"amount": 1
+				"amount": "1"
 			}
 		]
 	}`, name, password, accnum, sequence, chainID, "steak"))
@@ -704,15 +704,15 @@ func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, 
 	jsonStr := []byte(fmt.Sprintf(`{
 		"name": "%s",
 		"password": "%s",
-		"account_number": %d,
-		"sequence": %d,
-		"gas": 10000,
+		"account_number": "%d",
+		"sequence": "%d",
+		"gas": "10000",
 		"chain_id": "%s",
 		"delegations": [
 			{
 				"delegator_addr": "%s",
 				"validator_addr": "%s",
-				"bond": { "denom": "%s", "amount": 60 }
+				"bond": { "denom": "%s", "amount": "60" }
 			}
 		],
 		"begin_unbondings": [],
@@ -747,9 +747,9 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 	jsonStr := []byte(fmt.Sprintf(`{
 		"name": "%s",
 		"password": "%s",
-		"account_number": %d,
-		"sequence": %d,
-		"gas": 10000,
+		"account_number": "%d",
+		"sequence": "%d",
+		"gas": "10000",
 		"chain_id": "%s",
 		"delegations": [],
 		"begin_unbondings": [
@@ -791,9 +791,9 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 	jsonStr := []byte(fmt.Sprintf(`{
 		"name": "%s",
 		"password": "%s",
-		"account_number": %d,
-		"sequence": %d,
-		"gas": 10000,
+		"account_number": "%d",
+		"sequence": "%d",
+		"gas": "10000",
 		"chain_id": "%s",
 		"delegations": [],
 		"begin_unbondings": [],
@@ -925,9 +925,9 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 			"name": "%s",
 			"password": "%s",
 			"chain_id": "%s",
-			"account_number": %d,
-			"sequence": %d,
-			"gas": 100000
+			"account_number":"%d",
+			"sequence":"%d",
+			"gas":"100000"
 		}
 	}`, bechProposerAddr, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", "/gov/proposals", jsonStr)
@@ -958,9 +958,9 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 			"name": "%s",
 			"password": "%s",
 			"chain_id": "%s",
-			"account_number": %d,
-			"sequence": %d,
-			"gas": 100000
+			"account_number":"%d",
+			"sequence": "%d",
+			"gas":"100000"
 		}
 	}`, bechProposerAddr, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", fmt.Sprintf("/gov/proposals/%d/deposits", proposalID), jsonStr)
@@ -991,9 +991,9 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ad
 			"name": "%s",
 			"password": "%s",
 			"chain_id": "%s",
-			"account_number": %d,
-			"sequence": %d,
-			"gas": 100000
+			"account_number": "%d",
+			"sequence": "%d",
+			"gas":"100000"
 		}
 	}`, bechProposerAddr, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", fmt.Sprintf("/gov/proposals/%d/votes", proposalID), jsonStr)

@@ -59,7 +59,7 @@ type voteReq struct {
 func postProposalHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req postProposalReq
-		err := buildReq(w, r, &req)
+		err := buildReq(w, r, cdc, &req)
 		if err != nil {
 			return
 		}
@@ -113,7 +113,7 @@ func depositHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext)
 		}
 
 		var req depositReq
-		err = buildReq(w, r, &req)
+		err = buildReq(w, r, cdc, &req)
 		if err != nil {
 			return
 		}
@@ -161,7 +161,7 @@ func voteHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) ht
 		}
 
 		var req voteReq
-		err = buildReq(w, r, &req)
+		err = buildReq(w, r, cdc, &req)
 		if err != nil {
 			return
 		}

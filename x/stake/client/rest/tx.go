@@ -2,7 +2,6 @@ package rest
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -74,7 +73,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 			w.Write([]byte(err.Error()))
 			return
 		}
-		err = json.Unmarshal(body, &m)
+		err = cdc.UnmarshalJSON(body, &m)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -285,7 +284,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 			results[i] = res
 		}
 
-		output, err := json.MarshalIndent(results[:], "", "  ")
+		output, err := wire.MarshalJSONIndent(cdc, results[:])
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

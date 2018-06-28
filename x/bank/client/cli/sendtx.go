@@ -16,6 +16,7 @@ import (
 const (
 	flagTo     = "to"
 	flagAmount = "amount"
+	flagAsync  = "async"
 )
 
 // SendTxCommand will create a send tx and sign it with the given key
@@ -47,16 +48,28 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			msg := client.BuildMsg(from, to, coins)
+
+			if viper.GetBool(flagAsync) {
+				res, err := ctx.EnsureSignBuildBroadcastAsync(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
+				if err != nil {
+					return err
+				}
+				fmt.Println("Async tx sent. tx hash: ", res.Hash.String())
+				return nil
+			}
 			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}
 			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
 			return nil
+
 		},
 	}
 
 	cmd.Flags().String(flagTo, "", "Address to send coins")
 	cmd.Flags().String(flagAmount, "", "Amount of coins to send")
+	cmd.Flags().Bool(flagAsync, false, "Pass the async flag to send a tx without waiting for the tx to be included in a block")
+
 	return cmd
 }

@@ -50,6 +50,7 @@ As we have discussed in [lcd trust-propagation](https://github.com/irisnet/cosmo
 	The data structure of exist proof is shown as above. The process to build and verify exist proof is shown as follows:
 	
 	![Exist Proof](pics/existProof.png)
+
 	Steps to build proof:
 	
 		* Access the IAVL tree from the root node.

@@ -58,7 +58,7 @@
 
 [[constraint]]
   name = "github.com/tendermint/iavl"
-  version = "=0.8.0"
+  revision = "378f495c58f9b57f120af4643d245f3170fb5311"
 
 [[constraint]]
   name = "github.com/tendermint/tendermint"

@@ -164,13 +164,19 @@ func (app *BaseApp) Router() Router { return app.router }
 
 // load latest application version
 func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
-	app.cms.LoadLatestVersion()
+	err := app.cms.LoadLatestVersion()
+	if err != nil {
+		return err
+	}
 	return app.initFromStore(mainKey)
 }
 
 // load application version
 func (app *BaseApp) LoadVersion(version int64, mainKey sdk.StoreKey) error {
-	app.cms.LoadVersion(version)
+	err := app.cms.LoadVersion(version)
+	if err != nil {
+		return err
+	}
 	return app.initFromStore(mainKey)
 }
 

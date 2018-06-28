@@ -67,7 +67,11 @@ func (st *iavlStore) Commit() CommitID {
 	// Release an old version of history
 	if st.numHistory > 0 && (st.numHistory < st.tree.Version64()) {
 		toRelease := version - st.numHistory
-		st.tree.DeleteVersion(toRelease)
+		err := st.tree.DeleteVersion(toRelease)
+		if err != nil {
+			// TODO: Handle with #870
+			panic(err)
+		}
 	}
 
 	return CommitID{

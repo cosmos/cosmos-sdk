@@ -1,9 +1,9 @@
 package app
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"reflect"
 
 	"github.com/tendermint/go-crypto"
 	cmn "github.com/tendermint/tmlibs/common"
@@ -76,9 +76,9 @@ type CoinMetadata struct {
 // if he is the issuer in Coin Metadata
 // Implements sdk.Msg Interface
 type MsgIssue struct {
-	Issuer  sdk.Address
+	Issuer   sdk.Address
 	Receiver sdk.Address
-	Coin sdk.Coin
+	Coin     sdk.Coin
 }
 
 // Implements Msg.
@@ -179,7 +179,7 @@ func handleMetaData(store sdk.KVStore, issuer sdk.Address, coin sdk.Coin) sdk.Re
 	}
 
 	// Msg Issuer is not authorized to issue these coins
-	if !reflect.DeepEqual(metadata.Issuer, issuer) {
+	if !bytes.Equal(metadata.Issuer, issuer) {
 		return sdk.ErrUnauthorized(fmt.Sprintf("Msg Issuer cannot issue tokens: %s", coin.Denom)).Result()
 	}
 
@@ -198,10 +198,9 @@ func handleMetaData(store sdk.KVStore, issuer sdk.Address, coin sdk.Coin) sdk.Re
 
 	// Update store with new metadata
 	store.Set([]byte(coin.Denom), val)
-	
+
 	return sdk.Result{}
 }
-
 
 //------------------------------------------------------------------
 // Tx
@@ -246,7 +245,7 @@ func antehandler(ctx sdk.Context, tx sdk.Tx) (_ sdk.Context, _ sdk.Result, abort
 		sig := appTx.GetSignatures()[i]
 
 		// check that submitted pubkey belongs to required address
-		if !reflect.DeepEqual(sig.PubKey.Address(), addr) {
+		if !bytes.Equal(sig.PubKey.Address(), addr) {
 			return ctx, sdk.ErrUnauthorized("Provided Pubkey does not match required address").Result(), true
 		}
 

@@ -106,6 +106,7 @@ func (msg MsgSend) Tags() sdk.Tags {
 
 // Handle MsgSend.
 // NOTE: msg.From, msg.To, and msg.Amount were already validated
+// in ValidateBasic().
 func handleMsgSend(key *sdk.KVStoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		sendMsg, ok := msg.(MsgSend)
@@ -114,7 +115,6 @@ func handleMsgSend(key *sdk.KVStoreKey) sdk.Handler {
 			// Note: Using unreserved error codespace
 			return sdk.NewError(2, 1, "Send Message is malformed").Result()
 		}
-
 
 		// Load the store.
 		store := ctx.KVStore(key)

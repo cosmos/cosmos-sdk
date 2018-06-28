@@ -113,9 +113,9 @@ Then we can get, modify, and set accounts. For instance, we could double the
 amount of coins in an account:
 
 ```go
-acc := GetAccount(ctx, addr)
+acc := accountMapper.GetAccount(ctx, addr)
 acc.SetCoins(acc.Coins.Plus(acc.Coins))
-acc.SetAccount(ctx, addr)
+accountMapper.SetAccount(ctx, addr)
 ```
 
 Note that the `AccountMapper` takes a `Context` as the first argument, and will

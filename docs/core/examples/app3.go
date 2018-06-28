@@ -1,8 +1,8 @@
 package app
 
 import (
+	"bytes"
 	"encoding/json"
-	"reflect"
 	"fmt"
 
 	cmn "github.com/tendermint/tmlibs/common"
@@ -94,13 +94,13 @@ func betterHandleMsgIssue(metadataMapper MetaDataMapper, accountKeeper bank.Keep
 		if res := betterHandleMetaData(ctx, metadataMapper, issueMsg.Issuer, issueMsg.Coin); !res.IsOK() {
 			return res
 		}
-	
+
 		// Add newly issued coins to output address
 		_, _, err := accountKeeper.AddCoins(ctx, issueMsg.Receiver, []sdk.Coin{issueMsg.Coin})
 		if err != nil {
 			return err.Result()
 		}
-	
+
 		return sdk.Result{
 			// Return result with Issue msg tags
 			Tags: issueMsg.Tags(),
@@ -117,7 +117,7 @@ func betterHandleMetaData(ctx sdk.Context, metadataMapper MetaDataMapper, issuer
 	}
 
 	// Msg Issuer is not authorized to issue these coins
-	if !reflect.DeepEqual(metadata.Issuer, issuer) {
+	if !bytes.Equal(metadata.Issuer, issuer) {
 		return sdk.ErrUnauthorized(fmt.Sprintf("Msg Issuer cannot issue tokens: %s", coin.Denom)).Result()
 	}
 

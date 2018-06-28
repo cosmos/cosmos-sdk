@@ -84,10 +84,10 @@ Now that we're using Amino, we can embed the `Msg` interface directly in our
 ```go
 // Simple tx to wrap the Msg.
 type app2Tx struct {
-	sdk.Msg
-
+    sdk.Msg
+    
     PubKey    crypto.PubKey
-	Signature crypto.Signature
+    Signature crypto.Signature
 }
 
 // This tx only has one Msg.

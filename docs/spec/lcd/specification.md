@@ -2,13 +2,13 @@
 
 This specification describes how to implement the LCD. LCD supports modular APIs. Currently, only ICS1 (Key API),ICS20 (Token API) and ICS21 (Staking API) are supported. Later, if necessary, more APIs can be imported.
 
-## Build and Verify ABCI states Proof
+## Build and Verify Proof of ABCI States 
 
-As we all know, cosmos storage contains multi substores. Each substore is implemented by a IAVL store. These substores are organized by simple Merkle tree. To build the tree, we need to extract name, height and store root hash from these substores to build a set of simple Merkle leaf nodes, then calculate hash from leaf nodes to root. The root hash of the simple Merkle tree is the appHash which will be included in block header.
+As we all know,  storage of cosmos-sdk based application contains multi-substores. Each substore is implemented by a IAVL store. These substores are organized by simple Merkle tree. To build the tree, we need to extract name, height and store root hash from these substores to build a set of simple Merkle leaf nodes, then calculate hash from leaf nodes to root. The root hash of the simple Merkle tree is the AppHash which will be included in block header.
 
 ![Simple Merkle Tree](pics/simpleMerkleTree.png)
 
-As we have discussed in [lcd trust-propagation](https://github.com/irisnet/cosmos-sdk/tree/bianjie/lcd_spec/docs/spec/lcd#trust-propagation), the AppHash can be verify by voting power checking against trusted validator set. Here we just need to build proof from ABCI state to appHash. The proof contains two part: 
+As we have discussed in [LCD trust-propagation](https://github.com/irisnet/cosmos-sdk/tree/bianjie/lcd_spec/docs/spec/lcd#trust-propagation), the AppHash can be verified by checking voting power against trusted validator set. Here we just need to build proof from ABCI state to AppHash. The proof contains two part: 
 
 * IAVL proof
 * Substore to appHash proof

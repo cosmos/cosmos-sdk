@@ -176,8 +176,7 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msgs []sdk.Msg, cdc
 }
 
 // sign and build the transaction from the msg
-func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
-
+func (ctx CoreContext) ensureSignBuild(name string, msgs []sdk.Msg, cdc *wire.Codec) (tyBytes []byte, err error) {
 	ctx, err = EnsureAccountNumber(ctx)
 	if err != nil {
 		return nil, err
@@ -194,6 +193,17 @@ func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc
 	}
 
 	txBytes, err := ctx.SignAndBuild(name, passphrase, msgs, cdc)
+	if err != nil {
+		return nil, err
+	}
+
+	return txBytes, err
+}
+
+// sign and build the transaction from the msg
+func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
+
+	txBytes, err := ctx.ensureSignBuild(name, msgs, cdc)
 	if err != nil {
 		return nil, err
 	}
@@ -201,25 +211,10 @@ func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc
 	return ctx.BroadcastTx(txBytes)
 }
 
-// sign and build the transaction from the msg
+// sign and build the async transaction from the msg
 func (ctx CoreContext) EnsureSignBuildBroadcastAsync(name string, msgs []sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTx, err error) {
 
-	ctx, err = EnsureAccountNumber(ctx)
-	if err != nil {
-		return nil, err
-	}
-	// default to next sequence number if none provided
-	ctx, err = EnsureSequence(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	passphrase, err := ctx.GetPassphraseFromStdin(name)
-	if err != nil {
-		return nil, err
-	}
-
-	txBytes, err := ctx.SignAndBuild(name, passphrase, msgs, cdc)
+	txBytes, err := ctx.ensureSignBuild(name, msgs, cdc)
 	if err != nil {
 		return nil, err
 	}

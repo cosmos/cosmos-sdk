@@ -101,7 +101,7 @@ func (keeper Keeper) setInitialProposalID(ctx sdk.Context, proposalID int64) sdk
 	if bz != nil {
 		return ErrInvalidGenesis(keeper.codespace, "Initial ProposalID already set")
 	}
-	bz = keeper.cdc.MustMarshalBinary(proposalID) // TODO: switch to MarshalBinaryBare when new go-amino gets added
+	bz = keeper.cdc.MustMarshalBinary(proposalID)
 	store.Set(KeyNextProposalID, bz)
 	return nil
 }
@@ -112,8 +112,8 @@ func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID int64, err sd
 	if bz == nil {
 		return -1, ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
 	}
-	keeper.cdc.MustUnmarshalBinary(bz, &proposalID)   // TODO: switch to UnmarshalBinaryBare when new go-amino gets added
-	bz = keeper.cdc.MustMarshalBinary(proposalID + 1) // TODO: switch to MarshalBinaryBare when new go-amino gets added
+	keeper.cdc.MustUnmarshalBinary(bz, &proposalID)
+	bz = keeper.cdc.MustMarshalBinary(proposalID + 1)
 	store.Set(KeyNextProposalID, bz)
 	return proposalID, nil
 }
@@ -264,7 +264,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 	// Add or update deposit object
 	currDeposit, found := keeper.GetDeposit(ctx, proposalID, depositerAddr)
 	if !found {
-		newDeposit := Deposit{depositerAddr, depositAmount}
+		newDeposit := Deposit{depositerAddr, proposalID, depositAmount}
 		keeper.setDeposit(ctx, proposalID, depositerAddr, newDeposit)
 	} else {
 		currDeposit.Amount = currDeposit.Amount.Plus(depositAmount)

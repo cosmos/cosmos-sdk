@@ -1,7 +1,6 @@
 package app
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -76,7 +75,7 @@ func TestGenesis(t *testing.T) {
 	bapp = NewBasecoinApp(logger, db)
 	// Initialize stake data with default genesis state
 	stakedata := gen.DefaultGenesisState()
-	genState, err := json.Marshal(stakedata)
+	genState, err := bapp.cdc.MarshalJSON(stakedata)
 	if err != nil {
 		panic(err)
 	}

@@ -97,12 +97,11 @@ func newTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, 
 func newTestTxWithSignBytes(msgs []sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee, signBytes []byte, memo string) sdk.Tx {
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
-		pubKey := priv.PubKey()
 		sig, err := priv.Sign(signBytes)
 		if err != nil {
 			panic(err)
 		}
-		sigs[i] = StdSignature{PubKey: pubKey, Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
 	}
 	tx := NewStdTx(msgs, fee, sigs, memo)
 	return tx
@@ -369,7 +368,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeOutOfGas)
 
 	// tx with memo doesn't have enough gas
-	fee = NewStdFee(1001, sdk.NewCoin("atom", 0))
+	fee = NewStdFee(801, sdk.NewCoin("atom", 0))
 	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeOutOfGas)
 

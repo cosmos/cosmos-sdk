@@ -171,6 +171,9 @@ For instance:
 * Update to 7525, Success
 * Update to 10000, Success 
 
+## Load Balancing
+
+To improve LCD reliability and TPS, we recommend to connect LCD to more than one fullnode. But the complexity will increase a lot. So load balancing module will be imported as the adapter. Please refer to this link for detailed description: [load balancing](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/loadbalance.md)
 
 ## ICS1 (KeyAPI)
 

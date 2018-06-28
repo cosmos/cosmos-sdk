@@ -11,7 +11,7 @@ LCD will be used in the Cosmos Hub, the first Hub in the Cosmos network.
 1. [**Overview**](#Overview)
 2. [**Get Started**](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/getting_started.md)
 3. [**API**](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md)
-4. **Specifications**
+4. [**Specifications**](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/specification.md)
 5. [**Future Improvements**](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/Future%20Improvements.md)
 
 

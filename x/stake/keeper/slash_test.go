@@ -77,20 +77,20 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 
 	// unbonding started prior to the infraction height, stake didn't contribute
 	slashAmount := keeper.slashUnbondingDelegation(ctx, ubd, 1, fraction)
-	require.Equal(t, int64(0), slashAmount.Evaluate())
+	require.Equal(t, int64(0), slashAmount.Int64())
 
 	// after the expiration time, no longer eligible for slashing
 	ctx = ctx.WithBlockHeader(abci.Header{Time: int64(10)})
 	keeper.SetUnbondingDelegation(ctx, ubd)
 	slashAmount = keeper.slashUnbondingDelegation(ctx, ubd, 0, fraction)
-	require.Equal(t, int64(0), slashAmount.Evaluate())
+	require.Equal(t, int64(0), slashAmount.Int64())
 
 	// test valid slash, before expiration timestamp and to which stake contributed
 	oldPool := keeper.GetPool(ctx)
 	ctx = ctx.WithBlockHeader(abci.Header{Time: int64(0)})
 	keeper.SetUnbondingDelegation(ctx, ubd)
 	slashAmount = keeper.slashUnbondingDelegation(ctx, ubd, 0, fraction)
-	require.Equal(t, int64(5), slashAmount.Evaluate())
+	require.Equal(t, int64(5), slashAmount.Int64())
 	ubd, found := keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
 	// initialbalance unchanged
@@ -131,20 +131,20 @@ func TestSlashRedelegation(t *testing.T) {
 
 	// started redelegating prior to the current height, stake didn't contribute to infraction
 	slashAmount := keeper.slashRedelegation(ctx, rd, 1, fraction)
-	require.Equal(t, int64(0), slashAmount.Evaluate())
+	require.Equal(t, int64(0), slashAmount.Int64())
 
 	// after the expiration time, no longer eligible for slashing
 	ctx = ctx.WithBlockHeader(abci.Header{Time: int64(10)})
 	keeper.SetRedelegation(ctx, rd)
 	slashAmount = keeper.slashRedelegation(ctx, rd, 0, fraction)
-	require.Equal(t, int64(0), slashAmount.Evaluate())
+	require.Equal(t, int64(0), slashAmount.Int64())
 
 	// test valid slash, before expiration timestamp and to which stake contributed
 	oldPool := keeper.GetPool(ctx)
 	ctx = ctx.WithBlockHeader(abci.Header{Time: int64(0)})
 	keeper.SetRedelegation(ctx, rd)
 	slashAmount = keeper.slashRedelegation(ctx, rd, 0, fraction)
-	require.Equal(t, int64(5), slashAmount.Evaluate())
+	require.Equal(t, int64(5), slashAmount.Int64())
 	rd, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 	// initialbalance unchanged
@@ -208,7 +208,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	}
 	keeper.SetUnbondingDelegation(ctx, ubd)
 
-	// slash validator
+	// slash validator for the first time
 	ctx = ctx.WithBlockHeight(12)
 	oldPool := keeper.GetPool(ctx)
 	validator, found := keeper.GetValidatorByPubKey(ctx, pk)
@@ -232,6 +232,43 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// bonded at the time of discovery hadn't been bonded at the time of infraction
 	// and wasn't slashed
 	require.Equal(t, sdk.NewRat(7), validator.GetPower())
+
+	// slash validator again
+	ctx = ctx.WithBlockHeight(13)
+	keeper.Slash(ctx, pk, 9, 10, fraction)
+	ubd, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
+	require.True(t, found)
+	// balance decreased again
+	require.Equal(t, sdk.NewInt(0), ubd.Balance.Amount)
+	// read updated pool
+	newPool = keeper.GetPool(ctx)
+	// bonded tokens burned again
+	require.Equal(t, int64(6), oldPool.BondedTokens-newPool.BondedTokens)
+	// read updated validator
+	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
+	require.True(t, found)
+	// power decreased by 3 again
+	require.Equal(t, sdk.NewRat(4), validator.GetPower())
+
+	// slash validator again
+	// all originally bonded stake has been slashed, so this will have no effect
+	// on the unbonding delegation, but it will slash stake bonded since the infraction
+	// this may not be the desirable behaviour, ref https://github.com/cosmos/cosmos-sdk/issues/1440
+	ctx = ctx.WithBlockHeight(13)
+	keeper.Slash(ctx, pk, 9, 10, fraction)
+	ubd, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
+	require.True(t, found)
+	// balance unchanged
+	require.Equal(t, sdk.NewInt(0), ubd.Balance.Amount)
+	// read updated pool
+	newPool = keeper.GetPool(ctx)
+	// bonded tokens burned again
+	require.Equal(t, int64(9), oldPool.BondedTokens-newPool.BondedTokens)
+	// read updated validator
+	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
+	require.True(t, found)
+	// power decreased by 3 again
+	require.Equal(t, sdk.NewRat(1), validator.GetPower())
 }
 
 // tests Slash at a previous height with a redelegation

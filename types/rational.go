@@ -62,7 +62,7 @@ func NewRatFromDecimal(decimalStr string, prec int) (f Rat, err Error) {
 			return f, ErrUnknownRequest("not a decimal string")
 		}
 		if len(str[1]) > prec {
-			str[1] = str[1][:prec]
+			return f, ErrUnknownRequest("string has too many decimals")
 		}
 		numStr = str[0] + str[1]
 		len := int64(len(str[1]))
@@ -72,7 +72,7 @@ func NewRatFromDecimal(decimalStr string, prec int) (f Rat, err Error) {
 	}
 
 	num, errConv := strconv.Atoi(numStr)
-	if errConv != nil {
+	if errConv != nil && strings.HasSuffix(errConv.Error(), "value out of range") {
 		// resort to big int, don't make this default option for efficiency
 		numBig, success := new(big.Int).SetString(numStr, 10)
 		if success != true {
@@ -84,6 +84,8 @@ func NewRatFromDecimal(decimalStr string, prec int) (f Rat, err Error) {
 		}
 
 		return NewRatFromBigInt(numBig, big.NewInt(denom)), nil
+	} else if errConv != nil {
+		return f, ErrUnknownRequest("not a decimal string")
 	}
 
 	if neg {

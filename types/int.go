@@ -214,7 +214,6 @@ func (i Int) Neg() (res Int) {
 	return Int{neg(i.i)}
 }
 
-// String converts int to string
 func (i Int) String() string {
 	return i.i.String()
 }

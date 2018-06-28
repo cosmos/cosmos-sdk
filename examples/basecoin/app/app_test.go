@@ -16,7 +16,7 @@ import (
 	gen "github.com/cosmos/cosmos-sdk/x/stake/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	crypto "github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 )

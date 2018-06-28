@@ -12,7 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	abci "github.com/tendermint/tendermint/abci/types"
-	crypto "github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var (

@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	crypto "github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // initialize the mock application for this module

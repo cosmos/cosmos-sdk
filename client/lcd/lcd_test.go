@@ -2,7 +2,6 @@ package lcd
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -23,6 +22,7 @@ import (
 	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	tests "github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -171,7 +171,7 @@ func TestBlock(t *testing.T) {
 	res, body = Request(t, port, "GET", "/blocks/1", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	err = json.Unmarshal([]byte(body), &resultBlock)
+	err = wire.Cdc.UnmarshalJSON([]byte(body), &resultBlock)
 	require.Nil(t, err, "Couldn't parse block")
 
 	assert.NotEqual(t, ctypes.ResultBlock{}, resultBlock)

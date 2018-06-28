@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	crypto "github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
 	cfg "github.com/tendermint/tendermint/config"

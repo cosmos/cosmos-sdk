@@ -43,6 +43,7 @@ func TestGenesis(t *testing.T) {
 		},
 	}
 	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
+	require.Nil(t, err)
 
 	vals := []abci.Validator{}
 	bapp.InitChain(abci.RequestInitChain{Validators: vals, AppStateBytes: stateBytes})

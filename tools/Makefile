@@ -9,12 +9,14 @@ GOLINT = github.com/tendermint/lint/golint
 GOMETALINTER = gopkg.in/alecthomas/gometalinter.v2
 UNCONVERT = github.com/mdempsky/unconvert
 INEFFASSIGN = github.com/gordonklaus/ineffassign
+MISSPELL = github.com/client9/misspell/cmd/misspell
 
 DEP_CHECK := $(shell command -v dep 2> /dev/null)
 GOLINT_CHECK := $(shell command -v golint 2> /dev/null)
 GOMETALINTER_CHECK := $(shell command -v gometalinter.v2 2> /dev/null)
 UNCONVERT_CHECK := $(shell command -v unconvert 2> /dev/null)
 INEFFASSIGN_CHECK := $(shell command -v ineffassign 2> /dev/null)
+MISSPELL_CHECK := $(shell command -v misspell 2> /dev/null)
 
 check_tools:
 ifndef DEP_CHECK
@@ -41,6 +43,11 @@ ifndef INEFFASSIGN_CHECK
 	@echo "No ineffassign in path.  Install with 'make get_tools'."
 else
 	@echo "Found ineffassign in path."
+endif
+ifndef MISSPELL_CHECK
+	@echo "No misspell in path.  Install with 'make get_tools'."
+else
+	@echo "Found misspell in path."
 endif
 
 get_tools:
@@ -72,7 +79,13 @@ ifdef INEFFASSIGN_CHECK
 	@echo "Ineffassign is already installed.  Run 'make update_tools' to update."
 else
 	@echo "Installing ineffassign"
-	go get -v $(UNCONVERT)
+	go get -v $(INEFFASSIGN)
+endif
+ifdef MISSPELL_CHECK
+	@echo "misspell is already installed.  Run 'make update_tools' to update."
+else
+	@echo "Installing misspell"
+	go get -v $(MISSPELL)
 endif
 
 update_tools:
@@ -86,6 +99,8 @@ update_tools:
 	go get -u -v $(UNCONVERT)
 	@echo "Updating ineffassign"
 	go get -u -v $(INEFFASSIGN)
+	@echo "Updating misspell"
+	go get -u -v $(MISSPELL)
 
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.

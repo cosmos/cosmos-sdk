@@ -306,7 +306,7 @@
 [[projects]]
   name = "github.com/tendermint/iavl"
   packages = ["."]
-  revision = "ba9967e4a7799564c61d1fc3360c04719b1d9754"
+  revision = "3de9107795f063945e5431eea82487c602a58cfa"
   source = "github.com/HaoyangLiu/iavl"
 
 [[projects]]
@@ -464,6 +464,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8ad5e4b90e57805024944a6ee5eed246f109c18724d453093e82bac1469dbd9e"
+  inputs-digest = "1aab34542ab29031e132219e935c55fd961a57930905875c453e4327f7870a47"
   solver-name = "gps-cdcl"
   solver-version = 1

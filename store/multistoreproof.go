@@ -11,57 +11,51 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func BuildProofForMultiStore(commitInfo commitInfo, storeName string) (int64, []iavl.SimpleMerkleHashNode, error){
+func VerifyProofForMultiStore(storeName string, substoreRootHash []byte, multiStoreCommitInfo []iavl.MultiStoreCommitID,appHash []byte) (error){
+	found :=  false
 	var kvPairs cmn.KVPairs
-	var height int64
-	storeNameHash := merkle.SimpleHashFromBytes([]byte(storeName))
-	for _, storeInfo := range commitInfo.StoreInfos {
-		kHash := merkle.SimpleHashFromBytes([]byte(storeInfo.Name))
+	for _,multiStoreCommitID := range multiStoreCommitInfo {
+		if multiStoreCommitID.Name == storeName && bytes.Equal(substoreRootHash,multiStoreCommitID.CommitHash){
+			found = true;
+		}
+		kHash := merkle.SimpleHashFromBytes([]byte(multiStoreCommitID.Name))
+
+		storeInfo := storeInfo{
+			Core:storeCore{
+				CommitID:sdk.CommitID{
+					Version: multiStoreCommitID.Version,
+					Hash: multiStoreCommitID.CommitHash,
+				},
+			},
+		}
+
 		kvPairs = append(kvPairs, cmn.KVPair{
 			Key:   kHash,
 			Value: storeInfo.Hash(),
 		})
-		if bytes.Equal(storeNameHash, kHash) {
-			height = storeInfo.Core.CommitID.Version
-		}
-		//hashToStoreInfoMap[storeInfo.Name]=storeInfo
+	}
+	if !found {
+		return cmn.NewError("Invalid proof, there is no matched multiStore in multiStoreCommitInfo")
 	}
 	if kvPairs == nil {
-		return 0,nil,cmn.NewError("Error in build kvPairs for commit storeInfos")
+		return cmn.NewError("Error in extracting information from multiStoreCommitInfo")
 	}
 	//sort the kvPair list
 	kvPairs.Sort()
 
 
 	//Rebuild simple merkle hash tree
-	var hashNodeList []hashNode
+	var hashList [][]byte
 	for _, kvPair := range kvPairs {
 		hashResult := kvPairHash(kvPair.Key,kvPair.Value)
-		hashNodeList=append(hashNodeList,hashNode{
-			encounter:	bytes.Equal(storeNameHash, kvPair.Key),
-			hash:	hashResult,
-		})
+		hashList=append(hashList,hashResult)
 	}
-	var hashPath hashPath
-	if hashNodeList != nil {
-		//Find the path from the Merkle root to target store
-		simpleHashFromHashes(hashNodeList, &hashPath)
-		return height, hashPath.innerHashNodeList, nil
-	}
-	return 0,nil,cmn.NewError("Failed to get commit proof for multistore")
 
-}
-
-func VerifyProofForMultiStore(appHash,leftHash []byte, proof []iavl.SimpleMerkleHashNode) (bool){
-	hash := leftHash;
-	for _,merkleHashNode := range proof {
-		if merkleHashNode.IsLeft {
-			hash=kvPairHash(hash,merkleHashNode.Hash)
-		} else {
-			hash=kvPairHash(merkleHashNode.Hash,hash)
-		}
+	if !bytes.Equal(appHash,simpleHashFromHashes(hashList)){
+		return cmn.NewError("AppHash doesn't match")
 	}
-	return bytes.Equal(appHash,hash)
+
+	return nil
 }
 
 func BuildStoreInfoAndReturnHash(storeName string, height int64, rootHash []byte) []byte {
@@ -76,42 +70,17 @@ func BuildStoreInfoAndReturnHash(storeName string, height int64, rootHash []byte
 	return kvPairHash(merkle.SimpleHashFromBytes([]byte(storeName)),storeInfo.Hash());
 }
 
-type hashNode struct {
-	encounter   bool
-	hash		[]byte
-}
-
-type hashPath struct {
-	innerHashNodeList		[]iavl.SimpleMerkleHashNode
-}
-
-func simpleHashFromHashes(hashes []hashNode, path *hashPath) hashNode {
+func simpleHashFromHashes(hashes [][]byte) []byte {
 	// Recursive impl.
 	switch len(hashes) {
 	case 0:
-		return hashNode{}
+		return nil
 	case 1:
 		return hashes[0]
 	default:
-		left := simpleHashFromHashes(hashes[:(len(hashes)+1)/2],path)
-		right := simpleHashFromHashes(hashes[(len(hashes)+1)/2:],path)
-		if left.encounter {
-			path.innerHashNodeList = append(path.innerHashNodeList,iavl.SimpleMerkleHashNode{
-				IsLeft:true,
-				Hash:right.hash,
-			})
-		} else if right.encounter {
-
-			path.innerHashNodeList = append(path.innerHashNodeList,
-				iavl.SimpleMerkleHashNode{
-					IsLeft: false,
-					Hash:        left.hash,
-				})
-		}
-		return hashNode {
-			encounter: 	left.encounter || right.encounter,
-			hash:		kvPairHash(left.hash, right.hash),
-		}
+		left := simpleHashFromHashes(hashes[:(len(hashes)+1)/2])
+		right := simpleHashFromHashes(hashes[(len(hashes)+1)/2:])
+		return kvPairHash(left,right)
 	}
 }
 

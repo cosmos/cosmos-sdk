@@ -240,9 +240,14 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 		return sdk.ErrUnknownRequest(errMsg.Error()).QueryResult()
 	}
 
-	height,multiStoreProof,errMsg := BuildProofForMultiStore(commitInfo,storeName)
-	if errMsg != nil {
-		return sdk.ErrUnknownRequest(errMsg.Error()).QueryResult()
+	var multiStoreCommitInfo []iavl.MultiStoreCommitID
+	for _,storeInfo := range commitInfo.StoreInfos {
+		commitId := iavl.MultiStoreCommitID{
+			Name: storeInfo.Name,
+			Version:storeInfo.Core.CommitID.Version,
+			CommitHash:storeInfo.Core.CommitID.Hash,
+		}
+		multiStoreCommitInfo = append(multiStoreCommitInfo,commitId)
 	}
 
 	if len(res.Value) > 0 {
@@ -255,8 +260,7 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 			return sdk.ErrUnknownRequest("Expected KeyExistsProof for non-empty value").QueryResult()
 		}
 		eproof.StoreName = storeName
-		eproof.Height = height
-		eproof.SimpleProof = multiStoreProof
+		eproof.MultiStoreCommitInfo = multiStoreCommitInfo
 		res.Proof = eproof.Bytes()
 	} else { //absence proof
 		// The key wasn't found, construct a proof of non-existence.
@@ -269,8 +273,7 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 			return sdk.ErrUnknownRequest("Expected KeyAbsentProof for empty Value").QueryResult()
 		}
 		aproof.StoreName = storeName
-		aproof.Height = height
-		aproof.SimpleProof = multiStoreProof
+		aproof.MultiStoreCommitInfo = multiStoreCommitInfo
 		res.Proof = aproof.Bytes()
 	}
 	return res

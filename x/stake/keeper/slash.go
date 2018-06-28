@@ -8,7 +8,7 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 )
 
-// slash an unbonding delegation
+// slash an unbonding delegation and update the pool
 func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation types.UnbondingDelegation, infractionHeight int64, fraction sdk.Rat) (slashAmount sdk.Rat) {
 	now := ctx.BlockHeader().Time
 
@@ -36,24 +36,29 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 	if !slashAmountInt.IsZero() {
 		unbondingDelegation.Balance.Amount = unbondingDelegation.Balance.Amount.Sub(slashAmountInt)
 		k.SetUnbondingDelegation(ctx, unbondingDelegation)
+		pool := k.GetPool(ctx)
+		// Burn unbonding tokens
+		// Ref https://github.com/cosmos/cosmos-sdk/pull/1278#discussion_r198657760
+		pool.LooseTokens -= slashAmountInt.Int64()
+		k.SetPool(ctx, pool)
 	}
 
 	return
 }
 
-// slash a redelegation
-func (k Keeper) slashRedelegation(ctx sdk.Context, redelegation types.Redelegation, infractionHeight int64, fraction sdk.Rat) (slashAmount sdk.Rat, tokensToBurn int64) {
+// slash a redelegation and update the pool
+func (k Keeper) slashRedelegation(ctx sdk.Context, redelegation types.Redelegation, infractionHeight int64, fraction sdk.Rat) (slashAmount sdk.Rat) {
 	now := ctx.BlockHeader().Time
 
 	// If redelegation started before this height, stake didn't contribute to infraction
 	if redelegation.CreationHeight < infractionHeight {
-		return sdk.ZeroRat(), 0
+		return sdk.ZeroRat()
 	}
 
 	if redelegation.MinTime < now {
 		// Redelegation no longer eligible for slashing, skip it
 		// TODO Delete it automatically?
-		return sdk.ZeroRat(), 0
+		return sdk.ZeroRat()
 	}
 
 	// Calculate slash amount proportional to stake contributing to infraction
@@ -73,15 +78,18 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, redelegation types.Redelegati
 
 	// Unbond from target validator
 	sharesToUnbond := fraction.Mul(redelegation.SharesDst)
-	var err error
 	if !sharesToUnbond.IsZero() {
-		tokensToBurn, err = k.unbond(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr, sharesToUnbond)
+		tokensToBurn, err := k.unbond(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr, sharesToUnbond)
 		if err != nil {
 			panic(fmt.Errorf("error unbonding delegator: %v", err))
 		}
+		pool := k.GetPool(ctx)
+		// Burn loose tokens
+		pool.LooseTokens -= tokensToBurn
+		k.SetPool(ctx, pool)
 	}
 
-	return slashAmount, tokensToBurn
+	return slashAmount
 }
 
 // Slash a validator for an infraction committed at a known height
@@ -106,9 +114,6 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	// Track remaining slash amount
 	remainingSlashAmount := slashAmount
 
-	// Get the current pool so we can update it as we go
-	pool := k.GetPool(ctx)
-
 	switch {
 	case infractionHeight > ctx.BlockHeight():
 		// Can't slash infractions in the future
@@ -127,21 +132,16 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 				continue
 			}
 			remainingSlashAmount = remainingSlashAmount.Sub(amountSlashed)
-			// Burn unbonding tokens
-			// Ref https://github.com/cosmos/cosmos-sdk/pull/1278#discussion_r198657760
-			pool.LooseTokens -= amountSlashed.EvaluateInt().Int64()
 		}
 
 		// Iterate through redelegations from slashed validator
 		redelegations := k.GetRedelegationsFromValidator(ctx, ownerAddress)
 		for _, redelegation := range redelegations {
-			amountSlashed, tokensToBurn := k.slashRedelegation(ctx, redelegation, infractionHeight, fraction)
+			amountSlashed := k.slashRedelegation(ctx, redelegation, infractionHeight, fraction)
 			if amountSlashed.IsZero() {
 				continue
 			}
 			remainingSlashAmount = remainingSlashAmount.Sub(amountSlashed)
-			// Burn bonded tokens
-			pool.BondedTokens -= tokensToBurn
 		}
 
 	}
@@ -152,6 +152,8 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 		sharesToRemove = validator.PoolShares.Amount
 	}
 
+	// Get the current pool
+	pool := k.GetPool(ctx)
 	validator, pool, burned := validator.RemovePoolShares(pool, sharesToRemove) // remove shares from the validator
 	pool.LooseTokens -= burned                                                  // burn tokens
 	k.SetPool(ctx, pool)                                                        // update the pool

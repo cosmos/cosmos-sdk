@@ -155,7 +155,7 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 	iavlStore.Set([]byte{byte(255), byte(255), byte(1)}, []byte("test4"))
 	iavlStore.Set([]byte{byte(255), byte(255), byte(255)}, []byte("test4"))
 
-	i := 0
+	var i int
 
 	iter := sdk.KVStorePrefixIterator(iavlStore, []byte("test"))
 	expected := []string{"test1", "test2", "test3"}
@@ -214,7 +214,7 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 	iavlStore.Set([]byte{byte(255), byte(255), byte(1)}, []byte("test4"))
 	iavlStore.Set([]byte{byte(255), byte(255), byte(255)}, []byte("test4"))
 
-	i := 0
+	var i int
 
 	iter := sdk.KVStoreReversePrefixIterator(iavlStore, []byte("test"))
 	expected := []string{"test3", "test2", "test1"}

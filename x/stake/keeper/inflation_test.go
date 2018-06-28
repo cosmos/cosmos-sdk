@@ -212,7 +212,7 @@ func TestLargeBond(t *testing.T) {
 	keeper.SetParams(ctx, params)
 
 	// validator[9] will be bonded, bringing us from 25% to ~50% (bonding 400,000,000 tokens)
-	pool, validator, _, _ = types.OpBondOrUnbond(r, pool, validator)
+	pool, _, _, _ = types.OpBondOrUnbond(r, pool, validator)
 	keeper.SetPool(ctx, pool)
 
 	// process provisions after the bonding, to compare the difference in expProvisions and expInflation

@@ -51,7 +51,7 @@ func TestKeys(t *testing.T) {
 	var jsonStr = []byte(fmt.Sprintf(`{"name":"test_fail", "password":"%s"}`, password))
 	res, body = Request(t, port, "POST", "/keys", jsonStr)
 
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode, "Account creation should require a seed")
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode, "Account creation should require a seed "+body)
 
 	jsonStr = []byte(fmt.Sprintf(`{"name":"%s", "password":"%s", "seed": "%s"}`, newName, newPassword, newSeed))
 	res, body = Request(t, port, "POST", "/keys", jsonStr)
@@ -212,7 +212,7 @@ func TestValidators(t *testing.T) {
 	// --
 
 	res, body = Request(t, port, "GET", "/validatorsets/1000000000", nil)
-	require.Equal(t, http.StatusNotFound, res.StatusCode)
+	require.Equal(t, http.StatusNotFound, res.StatusCode, body)
 }
 
 func TestCoinSend(t *testing.T) {
@@ -520,43 +520,43 @@ func TestVote(t *testing.T) {
 }
 
 func TestProposalsQuery(t *testing.T) {
-	name, password := "test", "1234567890"
-	name2, password := "test2", "1234567890"
-	addr, seed := CreateAddr(t, "test", password, GetKB(t))
-	addr2, seed2 := CreateAddr(t, "test2", password, GetKB(t))
+	name, password1 := "test", "1234567890"
+	name2, password2 := "test2", "1234567890"
+	addr, seed := CreateAddr(t, "test", password1, GetKB(t))
+	addr2, seed2 := CreateAddr(t, "test2", password2, GetKB(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.Address{addr, addr2})
 	defer cleanup()
 
 	// Addr1 proposes (and deposits) proposals #1 and #2
-	resultTx := doSubmitProposal(t, port, seed, name, password, addr)
+	resultTx := doSubmitProposal(t, port, seed, name, password1, addr)
 	var proposalID1 int64
 	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID1)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	resultTx = doSubmitProposal(t, port, seed, name, password, addr)
+	resultTx = doSubmitProposal(t, port, seed, name, password1, addr)
 	var proposalID2 int64
 	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 proposes (and deposits) proposals #3
-	resultTx = doSubmitProposal(t, port, seed2, name2, password, addr2)
+	resultTx = doSubmitProposal(t, port, seed2, name2, password2, addr2)
 	var proposalID3 int64
 	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 deposits on proposals #2 & #3
-	resultTx = doDeposit(t, port, seed2, name2, password, addr2, proposalID2)
+	resultTx = doDeposit(t, port, seed2, name2, password2, addr2, proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	resultTx = doDeposit(t, port, seed2, name2, password, addr2, proposalID3)
+	resultTx = doDeposit(t, port, seed2, name2, password2, addr2, proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr1 votes on proposals #2 & #3
-	resultTx = doVote(t, port, seed, name, password, addr, proposalID2)
+	resultTx = doVote(t, port, seed, name, password1, addr, proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	resultTx = doVote(t, port, seed, name, password, addr, proposalID3)
+	resultTx = doVote(t, port, seed, name, password1, addr, proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 votes on proposal #3
-	resultTx = doVote(t, port, seed2, name2, password, addr2, proposalID3)
+	resultTx = doVote(t, port, seed2, name2, password2, addr2, proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Test query all proposals
@@ -717,9 +717,9 @@ func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, 
 				"bond": { "denom": "%s", "amount": 60 }
 			}
 		],
-		"begin_unbondings": [], 
-		"complete_unbondings": [], 
-		"begin_redelegates": [], 
+		"begin_unbondings": [],
+		"complete_unbondings": [],
+		"begin_redelegates": [],
 		"complete_redelegates": []
 	}`, name, password, accnum, sequence, chainID, delegatorAddrBech, validatorAddrBech, "steak"))
 	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
@@ -760,9 +760,9 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 				"validator_addr": "%s",
 				"shares": "30"
 			}
-		], 
-		"complete_unbondings": [], 
-		"begin_redelegates": [], 
+		],
+		"complete_unbondings": [],
+		"begin_redelegates": [],
 		"complete_redelegates": []
 	}`, name, password, accnum, sequence, chainID, delegatorAddrBech, validatorAddrBech))
 	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
@@ -798,8 +798,8 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 		"gas": 10000,
 		"chain_id": "%s",
 		"delegations": [],
-		"begin_unbondings": [], 
-		"complete_unbondings": [], 
+		"begin_unbondings": [],
+		"complete_unbondings": [],
 		"begin_redelegates": [
 			{
 				"delegator_addr": "%s",
@@ -807,7 +807,7 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 				"validator_dst_addr": "%s",
 				"shares": "30"
 			}
-		], 
+		],
 		"complete_redelegates": []
 	}`, name, password, accnum, sequence, chainID, delegatorAddrBech, validatorSrcAddrBech, validatorDstAddrBech))
 	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)

@@ -61,7 +61,6 @@ func TestGenesis(t *testing.T) {
 
 	err = setGenesis(bapp, "ice-cold", baseAcc)
 	require.Nil(t, err)
-
 	// A checkTx context
 	ctx := bapp.BaseApp.NewContext(true, abci.Header{})
 	res1 := bapp.accountMapper.GetAccount(ctx, baseAcc.Address)

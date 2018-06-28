@@ -11,9 +11,9 @@ import (
 // REST request body
 // TODO does this need to be exposed?
 type SignTxBody struct {
-	Name     string `json="name"`
-	Password string `json="password"`
-	TxBytes  string `json="tx"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
+	TxBytes  string `json:"tx"`
 }
 
 // sign transaction REST Handler

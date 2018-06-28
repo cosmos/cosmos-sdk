@@ -1,10 +1,10 @@
 package app
 
 import (
-	"os"
-	"fmt"
-	"testing"
 	"encoding/json"
+	"fmt"
+	"os"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -83,7 +83,7 @@ func TestGenesis(t *testing.T) {
 
 	// InitChain with default stake data. Initializes deliverState and checkState context
 	bapp.InitChain(abci.RequestInitChain{AppStateBytes: []byte(fmt.Sprintf("{\"stake\": %s}", string(genState)))})
-	
+
 	ctx = bapp.BaseApp.NewContext(true, abci.Header{})
 	res1 = bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
 	assert.Equal(t, acc, res1)

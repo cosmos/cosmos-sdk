@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
@@ -85,7 +85,6 @@ func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB) *Bas
 		txDecoder:  defaultTxDecoder(cdc),
 	}
 	// Register the undefined & root codespaces, which should not be used by any modules
-	app.codespacer.RegisterOrPanic(sdk.CodespaceUndefined)
 	app.codespacer.RegisterOrPanic(sdk.CodespaceRoot)
 	return app
 }
@@ -135,7 +134,7 @@ func defaultTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
 		// are registered by MakeTxCodec
 		err := cdc.UnmarshalBinary(txBytes, &tx)
 		if err != nil {
-			return nil, sdk.ErrTxDecode("").Trace(err.Error())
+			return nil, sdk.ErrTxDecode("").TraceSDK(err.Error())
 		}
 		return tx, nil
 	}

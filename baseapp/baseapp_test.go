@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -397,7 +397,7 @@ func TestSimulateTx(t *testing.T) {
 		require.Equal(t, result.Code, sdk.ABCICodeOK, result.Log)
 		require.Equal(t, int64(80), result.GasUsed)
 		counter--
-		encoded, err := json.Marshal(tx)
+		encoded, err := app.cdc.MarshalJSON(tx)
 		require.Nil(t, err)
 		query := abci.RequestQuery{
 			Path: "/app/simulate",
@@ -735,9 +735,14 @@ func GenTx(chainID string, msgs []sdk.Msg, accnums []int64, seq []int64, priv ..
 
 	sigs := make([]auth.StdSignature, len(priv))
 	for i, p := range priv {
+		sig, err := p.Sign(auth.StdSignBytes(chainID, accnums[i], seq[i], fee, msgs, ""))
+		// TODO: replace with proper error handling:
+		if err != nil {
+			panic(err)
+		}
 		sigs[i] = auth.StdSignature{
 			PubKey:        p.PubKey(),
-			Signature:     p.Sign(auth.StdSignBytes(chainID, accnums[i], seq[i], fee, msgs, "")),
+			Signature:     sig,
 			AccountNumber: accnums[i],
 			Sequence:      seq[i],
 		}
@@ -994,17 +999,15 @@ func copyVal(val abci.Validator) abci.Validator {
 }
 
 func toJSON(o interface{}) []byte {
-	bz, err := json.Marshal(o)
+	bz, err := wire.Cdc.MarshalJSON(o)
 	if err != nil {
 		panic(err)
 	}
-	// fmt.Println(">> toJSON:", string(bz))
 	return bz
 }
 
 func fromJSON(bz []byte, ptr interface{}) {
-	// fmt.Println(">> fromJSON:", string(bz))
-	err := json.Unmarshal(bz, ptr)
+	err := wire.Cdc.UnmarshalJSON(bz, ptr)
 	if err != nil {
 		panic(err)
 	}

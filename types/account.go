@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tmlibs/bech32"
 	cmn "github.com/tendermint/tmlibs/common"
 )

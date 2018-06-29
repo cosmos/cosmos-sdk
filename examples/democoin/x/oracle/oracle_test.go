@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tmlibs/db"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/mock"
@@ -89,7 +89,7 @@ func handleSeqOracle(ctx sdk.Context, key sdk.StoreKey, o seqOracle) sdk.Error {
 
 	seq := getSequence(ctx, key)
 	if seq != o.Seq {
-		return sdk.NewError(sdk.CodespaceUndefined, 1, "")
+		return sdk.NewError(sdk.CodespaceRoot, 1, "")
 	}
 
 	bz := wire.NewCodec().MustMarshalBinary(seq + 1)
@@ -119,7 +119,7 @@ func TestOracle(t *testing.T) {
 	ctx = ctx.WithBlockHeader(abci.Header{ValidatorsHash: bz})
 
 	ork := NewKeeper(sdk.NewPrefixStoreGetter(key, []byte("oracle")), cdc, valset, sdk.NewRat(2, 3), 100)
-	h := seqHandler(ork, key, sdk.CodespaceUndefined)
+	h := seqHandler(ork, key, sdk.CodespaceRoot)
 
 	// Nonmock.Validator signed, transaction failed
 	msg := Msg{seqOracle{0, 0}, []byte("randomguy")}

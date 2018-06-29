@@ -305,33 +305,14 @@ return KeyOutput{
 
 ## ICS20 (TokenAPI)
 
-1. **Query asset information for specified account, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#balanceaccount---get)**
+### [/bank/balance/{account}](api.md#balanceaccount---get)
 
-	* a. Decode address from bech32 to hex
-	* b. Send query request to a full node. Assert proof required in the request if LCD works on no-trust mode
-	* c. Verify the proof against trusted validator set
-	
-2. **Build unsigned transaction for transferring asset, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#create_transfer---post)**
+1. Decode the address from bech32 to hex.
+2. Send a query request to a full node. Ask for proof if required by Gaia Light.
+3. Verify the proof against the root of trust.
+
+### [/bank/create_transfer](api.md#create_transfer---post)
   
-	* a. Parameter checking
-	* b. Build transaction with user specified parameters
-	* c. Serialize the transaction and return the byte array
-
-3. **Broadcast signed transaction for transferring asset, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#signed_transfer---post)**
-
-	* a. Users are supposed to sign the transaction byte array with their private key
-	* b. Broadcast transaction and its signature to full node
-	* c. Wait until the transaction is on chain and return the transaction hash
-
-## ICS21 (StakingAPI)
-
-1. **Get all validators' detailed information, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#stakevalidators---get)**
-
-	* a. Send query request to a full node
-	* b. Decode the query result and return
-
-2. **Get and verify the delegation information, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#stakedelegatorbonding_statusvalidator---get)**
-
-	* a. Verify and decode delegator address and validator address
-	* b. Send query request to a full node. Assert proof required in the request if LCD works on no-trust mode
-	* c. Verify the proof against trusted validator set
+1. Check the parameters.
+2. Build the transaction with the specified parameters.
+3. Serialise the transaction and return the JSON encoded sign bytes.

@@ -313,9 +313,9 @@ Returns on failure:
 
 The TokenAPI exposes all functionality needed to query account balances and send transactions.
 
-### /balance/{account} - GET
+### /bank/balance/{account} - GET
 
-url: /balance/{account}
+url: /bank/balance/{account}
 
 Functionality: Query the specified account.
 

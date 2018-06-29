@@ -340,7 +340,7 @@ Parameters:
 
 | Parameter       | Type   | Default | Required | Description            |
 | ------------    | ------ | ------- | -------- | ----------------------------------------------- |
-| signed_transfer | []byte | null    | true     | bytes of a valid transaction and it's signature |
+| transaction_data | []byte | null    | true     | bytes of a valid transaction and it's signature |
 
 * The above command returns JSON structured like this if success:
 

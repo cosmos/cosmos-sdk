@@ -17,17 +17,17 @@ func TestStore(t *testing.T) {
 	key := sdk.NewKVStoreKey("test")
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
 	err := cms.LoadLatestVersion()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	store := cms.GetKVStore(key)
-	assert.NotNil(t, store)
+	require.NotNil(t, store)
 
 	k := []byte("hello")
 	v := []byte("world")
-	assert.False(t, store.Has(k))
+	require.False(t, store.Has(k))
 	store.Set(k, v)
-	assert.True(t, store.Has(k))
-	assert.Equal(t, v, store.Get(k))
+	require.True(t, store.Has(k))
+	require.Equal(t, v, store.Get(k))
 	store.Delete(k)
-	assert.False(t, store.Has(k))
+	require.False(t, store.Has(k))
 }

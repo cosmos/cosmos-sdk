@@ -24,17 +24,17 @@ func TestContextWithSigners(t *testing.T) {
 
 	// new ctx has no signers
 	signers := GetSigners(ctx)
-	assert.Equal(t, 0, len(signers))
+	require.Equal(t, 0, len(signers))
 
 	ctx2 := WithSigners(ctx, []Account{&acc1, &acc2})
 
 	// original context is unchanged
 	signers = GetSigners(ctx)
-	assert.Equal(t, 0, len(signers))
+	require.Equal(t, 0, len(signers))
 
 	// new context has signers
 	signers = GetSigners(ctx2)
-	assert.Equal(t, 2, len(signers))
-	assert.Equal(t, acc1, *(signers[0].(*BaseAccount)))
-	assert.Equal(t, acc2, *(signers[1].(*BaseAccount)))
+	require.Equal(t, 2, len(signers))
+	require.Equal(t, acc1, *(signers[0].(*BaseAccount)))
+	require.Equal(t, acc2, *(signers[1].(*BaseAccount)))
 }

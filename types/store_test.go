@@ -24,6 +24,6 @@ func TestPrefixEndBytes(t *testing.T) {
 
 	for _, test := range testCases {
 		end := PrefixEndBytes(test.prefix)
-		assert.Equal(test.expected, end)
+		require.Equal(test.expected, end)
 	}
 }

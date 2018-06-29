@@ -14,13 +14,13 @@ func TestParams(t *testing.T) {
 
 	//check that the empty keeper loads the default
 	resParams := keeper.GetParams(ctx)
-	assert.True(t, expParams.Equal(resParams))
+	require.True(t, expParams.Equal(resParams))
 
 	//modify a params, save, and retrieve
 	expParams.MaxValidators = 777
 	keeper.SetParams(ctx, expParams)
 	resParams = keeper.GetParams(ctx)
-	assert.True(t, expParams.Equal(resParams))
+	require.True(t, expParams.Equal(resParams))
 }
 
 func TestPool(t *testing.T) {
@@ -29,11 +29,11 @@ func TestPool(t *testing.T) {
 
 	//check that the empty keeper loads the default
 	resPool := keeper.GetPool(ctx)
-	assert.True(t, expPool.Equal(resPool))
+	require.True(t, expPool.Equal(resPool))
 
 	//modify a params, save, and retrieve
 	expPool.BondedTokens = 777
 	keeper.SetPool(ctx, expPool)
 	resPool = keeper.GetPool(ctx)
-	assert.True(t, expPool.Equal(resPool))
+	require.True(t, expPool.Equal(resPool))
 }

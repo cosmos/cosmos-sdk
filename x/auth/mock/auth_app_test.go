@@ -75,7 +75,7 @@ func TestMsgPrivKeys(t *testing.T) {
 	// A checkTx context (true)
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	res1 := mapp.AccountMapper.GetAccount(ctxCheck, addr1)
-	assert.Equal(t, acc1, res1.(*auth.BaseAccount))
+	require.Equal(t, acc1, res1.(*auth.BaseAccount))
 
 	// Run a CheckDeliver
 	SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{testMsg1}, []int64{0}, []int64{0}, true, priv1)
@@ -84,10 +84,10 @@ func TestMsgPrivKeys(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	tx := GenTx([]sdk.Msg{testMsg1}, []int64{0}, []int64{1}, priv2)
 	res := mapp.Deliver(tx)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
+	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
 
 	// resigning the tx with the correct priv key should still work
 	res = SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{testMsg1}, []int64{0}, []int64{1}, true, priv1)
 
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), res.Code, res.Log)
+	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), res.Code, res.Log)
 }

@@ -40,24 +40,24 @@ func testPrefixStore(t *testing.T, baseStore KVStore, prefix []byte) {
 	buf := make([]byte, 32)
 	for i := 0; i < 20; i++ {
 		rand.Read(buf)
-		assert.False(t, prefixStore.Has(buf))
-		assert.Nil(t, prefixStore.Get(buf))
-		assert.False(t, baseStore.Has(append(prefix, buf...)))
-		assert.Nil(t, baseStore.Get(append(prefix, buf...)))
+		require.False(t, prefixStore.Has(buf))
+		require.Nil(t, prefixStore.Get(buf))
+		require.False(t, baseStore.Has(append(prefix, buf...)))
+		require.Nil(t, baseStore.Get(append(prefix, buf...)))
 	}
 
 	for i := 0; i < 20; i++ {
 		key := kvps[i].key
-		assert.True(t, prefixStore.Has(key))
-		assert.Equal(t, kvps[i].value, prefixStore.Get(key))
-		assert.True(t, baseStore.Has(append(prefix, key...)))
-		assert.Equal(t, kvps[i].value, baseStore.Get(append(prefix, key...)))
+		require.True(t, prefixStore.Has(key))
+		require.Equal(t, kvps[i].value, prefixStore.Get(key))
+		require.True(t, baseStore.Has(append(prefix, key...)))
+		require.Equal(t, kvps[i].value, baseStore.Get(append(prefix, key...)))
 
 		prefixStore.Delete(key)
-		assert.False(t, prefixStore.Has(key))
-		assert.Nil(t, prefixStore.Get(key))
-		assert.False(t, baseStore.Has(append(prefix, buf...)))
-		assert.Nil(t, baseStore.Get(append(prefix, buf...)))
+		require.False(t, prefixStore.Has(key))
+		require.Nil(t, prefixStore.Get(key))
+		require.False(t, baseStore.Has(append(prefix, buf...)))
+		require.Nil(t, baseStore.Get(append(prefix, buf...)))
 	}
 
 }
@@ -96,14 +96,14 @@ func TestPrefixStoreIterate(t *testing.T) {
 	pIter := sdk.KVStorePrefixIterator(prefixStore, nil)
 
 	for bIter.Valid() && pIter.Valid() {
-		assert.Equal(t, bIter.Key(), append(prefix, pIter.Key()...))
-		assert.Equal(t, bIter.Value(), pIter.Value())
+		require.Equal(t, bIter.Key(), append(prefix, pIter.Key()...))
+		require.Equal(t, bIter.Value(), pIter.Value())
 
 		bIter.Next()
 		pIter.Next()
 	}
 
-	assert.Equal(t, bIter.Valid(), pIter.Valid())
+	require.Equal(t, bIter.Valid(), pIter.Valid())
 	bIter.Close()
 	pIter.Close()
 }

@@ -26,7 +26,7 @@ func TestRealLedgerSecp256k1(t *testing.T) {
 	require.Nil(t, err)
 
 	valid := pub.VerifyBytes(msg, sig)
-	assert.True(t, valid)
+	require.True(t, valid)
 
 	// now, let's serialize the key and make sure it still works
 	bs := priv.Bytes()
@@ -41,13 +41,13 @@ func TestRealLedgerSecp256k1(t *testing.T) {
 	sig, err = priv2.Sign(msg)
 	require.Nil(t, err)
 	valid = pub.VerifyBytes(msg, sig)
-	assert.True(t, valid)
+	require.True(t, valid)
 
 	// make sure pubkeys serialize properly as well
 	bs = pub.Bytes()
 	bpub, err := tcrypto.PubKeyFromBytes(bs)
 	require.NoError(t, err)
-	assert.Equal(t, pub, bpub)
+	require.Equal(t, pub, bpub)
 }
 
 // TestRealLedgerErrorHandling calls. These tests assume

@@ -24,9 +24,9 @@ func TestStdTx(t *testing.T) {
 	sigs := []StdSignature{}
 
 	tx := NewStdTx(msgs, fee, sigs, "")
-	assert.Equal(t, msgs, tx.GetMsgs())
-	assert.Equal(t, sigs, tx.GetSignatures())
+	require.Equal(t, msgs, tx.GetMsgs())
+	require.Equal(t, sigs, tx.GetSignatures())
 
 	feePayer := FeePayer(tx)
-	assert.Equal(t, addr, feePayer)
+	require.Equal(t, addr, feePayer)
 }

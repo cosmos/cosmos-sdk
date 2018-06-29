@@ -32,11 +32,11 @@ var errFns = []errFn{
 }
 
 func TestCodeType(t *testing.T) {
-	assert.True(t, ABCICodeOK.IsOK())
+	require.True(t, ABCICodeOK.IsOK())
 
 	for _, c := range codeTypes {
 		msg := CodeToDefaultMsg(c)
-		assert.False(t, strings.HasPrefix(msg, "Unknown code"))
+		require.False(t, strings.HasPrefix(msg, "Unknown code"))
 	}
 }
 
@@ -44,7 +44,7 @@ func TestErrFn(t *testing.T) {
 	for i, errFn := range errFns {
 		err := errFn("")
 		codeType := codeTypes[i]
-		assert.Equal(t, err.Code(), codeType)
-		assert.Equal(t, err.Result().Code, ToABCICode(CodespaceRoot, codeType))
+		require.Equal(t, err.Code(), codeType)
+		require.Equal(t, err.Result().Code, ToABCICode(CodespaceRoot, codeType))
 	}
 }

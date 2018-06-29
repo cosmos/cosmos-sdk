@@ -46,7 +46,7 @@ func TestKeys(t *testing.T) {
 	reg, err := regexp.Compile(`([a-z]+ ){12}`)
 	require.Nil(t, err)
 	match := reg.MatchString(seed)
-	assert.True(t, match, "Returned seed has wrong format", seed)
+	require.True(t, match, "Returned seed has wrong format", seed)
 
 	newName := "test_newname"
 	newPassword := "0987654321"
@@ -74,10 +74,10 @@ func TestKeys(t *testing.T) {
 	addr2Bech32 := sdk.MustBech32ifyAcc(addr2Acc)
 	addrBech32 := sdk.MustBech32ifyAcc(addr)
 
-	assert.Equal(t, name, m[0].Name, "Did not serve keys name correctly")
-	assert.Equal(t, addrBech32, m[0].Address, "Did not serve keys Address correctly")
-	assert.Equal(t, newName, m[1].Name, "Did not serve keys name correctly")
-	assert.Equal(t, addr2Bech32, m[1].Address, "Did not serve keys Address correctly")
+	require.Equal(t, name, m[0].Name, "Did not serve keys name correctly")
+	require.Equal(t, addrBech32, m[0].Address, "Did not serve keys Address correctly")
+	require.Equal(t, newName, m[1].Name, "Did not serve keys name correctly")
+	require.Equal(t, addr2Bech32, m[1].Address, "Did not serve keys Address correctly")
 
 	// select key
 	keyEndpoint := fmt.Sprintf("/keys/%s", newName)
@@ -87,8 +87,8 @@ func TestKeys(t *testing.T) {
 	err = cdc.UnmarshalJSON([]byte(body), &m2)
 	require.Nil(t, err)
 
-	assert.Equal(t, newName, m2.Name, "Did not serve keys name correctly")
-	assert.Equal(t, addr2Bech32, m2.Address, "Did not serve keys Address correctly")
+	require.Equal(t, newName, m2.Name, "Did not serve keys name correctly")
+	require.Equal(t, addr2Bech32, m2.Address, "Did not serve keys Address correctly")
 
 	// update key
 	jsonStr = []byte(fmt.Sprintf(`{
@@ -120,7 +120,7 @@ func TestVersion(t *testing.T) {
 	reg, err := regexp.Compile(`\d+\.\d+\.\d+(-dev)?`)
 	require.Nil(t, err)
 	match := reg.MatchString(body)
-	assert.True(t, match, body)
+	require.True(t, match, body)
 
 	// node info
 	res, body = Request(t, port, "GET", "/node_version", nil)
@@ -129,7 +129,7 @@ func TestVersion(t *testing.T) {
 	reg, err = regexp.Compile(`\d+\.\d+\.\d+(-dev)?`)
 	require.Nil(t, err)
 	match = reg.MatchString(body)
-	assert.True(t, match, body)
+	require.True(t, match, body)
 }
 
 func TestNodeStatus(t *testing.T) {
@@ -144,14 +144,14 @@ func TestNodeStatus(t *testing.T) {
 	err := cdc.UnmarshalJSON([]byte(body), &nodeInfo)
 	require.Nil(t, err, "Couldn't parse node info")
 
-	assert.NotEqual(t, p2p.NodeInfo{}, nodeInfo, "res: %v", res)
+	require.NotEqual(t, p2p.NodeInfo{}, nodeInfo, "res: %v", res)
 
 	// syncing
 	res, body = Request(t, port, "GET", "/syncing", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	// we expect that there is no other node running so the syncing state is "false"
-	assert.Equal(t, "false", body)
+	require.Equal(t, "false", body)
 }
 
 func TestBlock(t *testing.T) {
@@ -166,7 +166,7 @@ func TestBlock(t *testing.T) {
 	err := cdc.UnmarshalJSON([]byte(body), &resultBlock)
 	require.Nil(t, err, "Couldn't parse block")
 
-	assert.NotEqual(t, ctypes.ResultBlock{}, resultBlock)
+	require.NotEqual(t, ctypes.ResultBlock{}, resultBlock)
 
 	// --
 
@@ -176,7 +176,7 @@ func TestBlock(t *testing.T) {
 	err = wire.Cdc.UnmarshalJSON([]byte(body), &resultBlock)
 	require.Nil(t, err, "Couldn't parse block")
 
-	assert.NotEqual(t, ctypes.ResultBlock{}, resultBlock)
+	require.NotEqual(t, ctypes.ResultBlock{}, resultBlock)
 
 	// --
 
@@ -196,10 +196,10 @@ func TestValidators(t *testing.T) {
 	err := cdc.UnmarshalJSON([]byte(body), &resultVals)
 	require.Nil(t, err, "Couldn't parse validatorset")
 
-	assert.NotEqual(t, rpc.ResultValidatorsOutput{}, resultVals)
+	require.NotEqual(t, rpc.ResultValidatorsOutput{}, resultVals)
 
-	assert.Contains(t, resultVals.Validators[0].Address, "cosmosvaladdr")
-	assert.Contains(t, resultVals.Validators[0].PubKey, "cosmosvalpub")
+	require.Contains(t, resultVals.Validators[0].Address, "cosmosvaladdr")
+	require.Contains(t, resultVals.Validators[0].PubKey, "cosmosvalpub")
 
 	// --
 
@@ -209,7 +209,7 @@ func TestValidators(t *testing.T) {
 	err = cdc.UnmarshalJSON([]byte(body), &resultVals)
 	require.Nil(t, err, "Couldn't parse validatorset")
 
-	assert.NotEqual(t, rpc.ResultValidatorsOutput{}, resultVals)
+	require.NotEqual(t, rpc.ResultValidatorsOutput{}, resultVals)
 
 	// --
 
@@ -239,24 +239,24 @@ func TestCoinSend(t *testing.T) {
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was committed
-	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	// query sender
 	acc = getAccount(t, port, addr)
 	coins := acc.GetCoins()
 	mycoins := coins[0]
 
-	assert.Equal(t, "steak", mycoins.Denom)
-	assert.Equal(t, initialBalance[0].Amount.SubRaw(1), mycoins.Amount)
+	require.Equal(t, "steak", mycoins.Denom)
+	require.Equal(t, initialBalance[0].Amount.SubRaw(1), mycoins.Amount)
 
 	// query receiver
 	acc = getAccount(t, port, receiveAddr)
 	coins = acc.GetCoins()
 	mycoins = coins[0]
 
-	assert.Equal(t, "steak", mycoins.Denom)
-	assert.Equal(t, int64(1), mycoins.Amount.Int64())
+	require.Equal(t, "steak", mycoins.Denom)
+	require.Equal(t, int64(1), mycoins.Amount.Int64())
 }
 
 func TestIBCTransfer(t *testing.T) {
@@ -274,16 +274,16 @@ func TestIBCTransfer(t *testing.T) {
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was committed
-	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	// query sender
 	acc = getAccount(t, port, addr)
 	coins := acc.GetCoins()
 	mycoins := coins[0]
 
-	assert.Equal(t, "steak", mycoins.Denom)
-	assert.Equal(t, initialBalance[0].Amount.SubRaw(1), mycoins.Amount)
+	require.Equal(t, "steak", mycoins.Denom)
+	require.Equal(t, initialBalance[0].Amount.SubRaw(1), mycoins.Amount)
 
 	// TODO: query ibc egress packet state
 }
@@ -301,7 +301,7 @@ func TestTxs(t *testing.T) {
 	// query empty
 	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?tag=sender_bech32='%s'", "cosmosaccaddr1jawd35d9aq4u76sr3fjalmcqc8hqygs9gtnmv3"), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	assert.Equal(t, "[]", body)
+	require.Equal(t, "[]", body)
 
 	// create TX
 	receiveAddr, resultTx := doSend(t, port, seed, name, password, addr)
@@ -323,15 +323,15 @@ func TestTxs(t *testing.T) {
 	// check if tx is queryable
 	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?tag=tx.hash='%s'", resultTx.Hash), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	assert.NotEqual(t, "[]", body)
+	require.NotEqual(t, "[]", body)
 
 	err := cdc.UnmarshalJSON([]byte(body), &indexedTxs)
 	require.NoError(t, err)
-	assert.Equal(t, 1, len(indexedTxs))
+	require.Equal(t, 1, len(indexedTxs))
 
 	// XXX should this move into some other testfile for txs in general?
 	// test if created TX hash is the correct hash
-	assert.Equal(t, resultTx.Hash, indexedTxs[0].Hash)
+	require.Equal(t, resultTx.Hash, indexedTxs[0].Hash)
 
 	// query sender
 	// also tests url decoding
@@ -342,7 +342,7 @@ func TestTxs(t *testing.T) {
 	err = cdc.UnmarshalJSON([]byte(body), &indexedTxs)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(indexedTxs), "%v", indexedTxs) // there are 2 txs created with doSend
-	assert.Equal(t, resultTx.Height, indexedTxs[0].Height)
+	require.Equal(t, resultTx.Height, indexedTxs[0].Height)
 
 	// query recipient
 	receiveAddrBech := sdk.MustBech32ifyAcc(receiveAddr)
@@ -352,7 +352,7 @@ func TestTxs(t *testing.T) {
 	err = cdc.UnmarshalJSON([]byte(body), &indexedTxs)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(indexedTxs))
-	assert.Equal(t, resultTx.Height, indexedTxs[0].Height)
+	require.Equal(t, resultTx.Height, indexedTxs[0].Height)
 }
 
 func TestValidatorsQuery(t *testing.T) {
@@ -361,7 +361,7 @@ func TestValidatorsQuery(t *testing.T) {
 	require.Equal(t, 2, len(pks))
 
 	validators := getValidators(t, port)
-	assert.Equal(t, len(validators), 2)
+	require.Equal(t, len(validators), 2)
 
 	// make sure all the validators were found (order unknown because sorted by owner addr)
 	foundVal1, foundVal2 := false, false
@@ -373,8 +373,8 @@ func TestValidatorsQuery(t *testing.T) {
 	if validators[0].PubKey == pk2Bech || validators[1].PubKey == pk2Bech {
 		foundVal2 = true
 	}
-	assert.True(t, foundVal1, "pk1Bech %v, owner1 %v, owner2 %v", pk1Bech, validators[0].Owner, validators[1].Owner)
-	assert.True(t, foundVal2, "pk2Bech %v, owner1 %v, owner2 %v", pk2Bech, validators[0].Owner, validators[1].Owner)
+	require.True(t, foundVal1, "pk1Bech %v, owner1 %v, owner2 %v", pk1Bech, validators[0].Owner, validators[1].Owner)
+	require.True(t, foundVal2, "pk2Bech %v, owner1 %v, owner2 %v", pk2Bech, validators[0].Owner, validators[1].Owner)
 }
 
 func TestBonding(t *testing.T) {
@@ -390,18 +390,18 @@ func TestBonding(t *testing.T) {
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was committed
-	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	// query sender
 	acc := getAccount(t, port, addr)
 	coins := acc.GetCoins()
 
-	assert.Equal(t, int64(40), coins.AmountOf(denom).Int64())
+	require.Equal(t, int64(40), coins.AmountOf(denom).Int64())
 
 	// query validator
 	bond := getDelegation(t, port, addr, validator1Owner)
-	assert.Equal(t, "60/1", bond.Shares.String())
+	require.Equal(t, "60/1", bond.Shares.String())
 
 	//////////////////////
 	// testing unbonding
@@ -412,17 +412,17 @@ func TestBonding(t *testing.T) {
 
 	// query validator
 	bond = getDelegation(t, port, addr, validator1Owner)
-	assert.Equal(t, "30/1", bond.Shares.String())
+	require.Equal(t, "30/1", bond.Shares.String())
 
 	// check if tx was committed
-	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	// should the sender should have not received any coins as the unbonding has only just begun
 	// query sender
 	acc = getAccount(t, port, addr)
 	coins = acc.GetCoins()
-	assert.Equal(t, int64(40), coins.AmountOf("steak").Int64())
+	require.Equal(t, int64(40), coins.AmountOf("steak").Int64())
 
 	// TODO add redelegation, need more complex capabilities such to mock context and
 }
@@ -438,15 +438,15 @@ func TestSubmitProposal(t *testing.T) {
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was committed
-	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	var proposalID int64
 	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID)
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
-	assert.Equal(t, "Test", proposal.Title)
+	require.Equal(t, "Test", proposal.Title)
 }
 
 func TestDeposit(t *testing.T) {
@@ -460,15 +460,15 @@ func TestDeposit(t *testing.T) {
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was committed
-	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	var proposalID int64
 	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID)
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
-	assert.Equal(t, "Test", proposal.Title)
+	require.Equal(t, "Test", proposal.Title)
 
 	// create SubmitProposal TX
 	resultTx = doDeposit(t, port, seed, name, password, addr, proposalID)
@@ -476,11 +476,11 @@ func TestDeposit(t *testing.T) {
 
 	// query proposal
 	proposal = getProposal(t, port, proposalID)
-	assert.True(t, proposal.TotalDeposit.IsEqual(sdk.Coins{sdk.NewCoin("steak", 10)}))
+	require.True(t, proposal.TotalDeposit.IsEqual(sdk.Coins{sdk.NewCoin("steak", 10)}))
 
 	// query deposit
 	deposit := getDeposit(t, port, proposalID, addr)
-	assert.True(t, deposit.Amount.IsEqual(sdk.Coins{sdk.NewCoin("steak", 10)}))
+	require.True(t, deposit.Amount.IsEqual(sdk.Coins{sdk.NewCoin("steak", 10)}))
 }
 
 func TestVote(t *testing.T) {
@@ -494,15 +494,15 @@ func TestVote(t *testing.T) {
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was committed
-	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	var proposalID int64
 	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID)
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
-	assert.Equal(t, "Test", proposal.Title)
+	require.Equal(t, "Test", proposal.Title)
 
 	// create SubmitProposal TX
 	resultTx = doDeposit(t, port, seed, name, password, addr, proposalID)
@@ -510,15 +510,15 @@ func TestVote(t *testing.T) {
 
 	// query proposal
 	proposal = getProposal(t, port, proposalID)
-	assert.Equal(t, gov.StatusToString(gov.StatusVotingPeriod), proposal.Status)
+	require.Equal(t, gov.StatusToString(gov.StatusVotingPeriod), proposal.Status)
 
 	// create SubmitProposal TX
 	resultTx = doVote(t, port, seed, name, password, addr, proposalID)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	vote := getVote(t, port, proposalID, addr)
-	assert.Equal(t, proposalID, vote.ProposalID)
-	assert.Equal(t, gov.VoteOptionToString(gov.OptionYes), vote.Option)
+	require.Equal(t, proposalID, vote.ProposalID)
+	require.Equal(t, gov.VoteOptionToString(gov.OptionYes), vote.Option)
 }
 
 func TestProposalsQuery(t *testing.T) {
@@ -563,31 +563,31 @@ func TestProposalsQuery(t *testing.T) {
 
 	// Test query all proposals
 	proposals := getProposalsAll(t, port)
-	assert.Equal(t, proposalID1, (proposals[0]).ProposalID)
-	assert.Equal(t, proposalID2, (proposals[1]).ProposalID)
-	assert.Equal(t, proposalID3, (proposals[2]).ProposalID)
+	require.Equal(t, proposalID1, (proposals[0]).ProposalID)
+	require.Equal(t, proposalID2, (proposals[1]).ProposalID)
+	require.Equal(t, proposalID3, (proposals[2]).ProposalID)
 
 	// Test query deposited by addr1
 	proposals = getProposalsFilterDepositer(t, port, addr)
-	assert.Equal(t, proposalID1, (proposals[0]).ProposalID)
+	require.Equal(t, proposalID1, (proposals[0]).ProposalID)
 
 	// Test query deposited by addr2
 	proposals = getProposalsFilterDepositer(t, port, addr2)
-	assert.Equal(t, proposalID2, (proposals[0]).ProposalID)
-	assert.Equal(t, proposalID3, (proposals[1]).ProposalID)
+	require.Equal(t, proposalID2, (proposals[0]).ProposalID)
+	require.Equal(t, proposalID3, (proposals[1]).ProposalID)
 
 	// Test query voted by addr1
 	proposals = getProposalsFilterVoter(t, port, addr)
-	assert.Equal(t, proposalID2, (proposals[0]).ProposalID)
-	assert.Equal(t, proposalID3, (proposals[1]).ProposalID)
+	require.Equal(t, proposalID2, (proposals[0]).ProposalID)
+	require.Equal(t, proposalID3, (proposals[1]).ProposalID)
 
 	// Test query voted by addr2
 	proposals = getProposalsFilterVoter(t, port, addr2)
-	assert.Equal(t, proposalID3, (proposals[0]).ProposalID)
+	require.Equal(t, proposalID3, (proposals[0]).ProposalID)
 
 	// Test query voted and deposited by addr1
 	proposals = getProposalsFilterVoterDepositer(t, port, addr, addr)
-	assert.Equal(t, proposalID2, (proposals[0]).ProposalID)
+	require.Equal(t, proposalID2, (proposals[0]).ProposalID)
 }
 
 //_____________________________________________________________________________

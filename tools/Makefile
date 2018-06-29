@@ -11,6 +11,7 @@ UNCONVERT = github.com/mdempsky/unconvert
 INEFFASSIGN = github.com/gordonklaus/ineffassign
 MISSPELL = github.com/client9/misspell/cmd/misspell
 ERRCHECK = github.com/kisielk/errcheck
+UNPARAM = mvdan.cc/unparam
 
 DEP_CHECK := $(shell command -v dep 2> /dev/null)
 GOLINT_CHECK := $(shell command -v golint 2> /dev/null)
@@ -19,6 +20,7 @@ UNCONVERT_CHECK := $(shell command -v unconvert 2> /dev/null)
 INEFFASSIGN_CHECK := $(shell command -v ineffassign 2> /dev/null)
 MISSPELL_CHECK := $(shell command -v misspell 2> /dev/null)
 ERRCHECK_CHECK := $(shell command -v errcheck 2> /dev/null)
+UNPARAM_CHECK := $(shell command -v unparam 2> /dev/null)
 
 check_tools:
 ifndef DEP_CHECK
@@ -51,10 +53,15 @@ ifndef MISSPELL_CHECK
 else
 	@echo "Found misspell in path."
 endif
-ifndef MISSPELL_CHECK
+ifndef ERRCHECK_CHECK
 	@echo "No errcheck in path.  Install with 'make get_tools'."
 else
 	@echo "Found errcheck in path."
+endif
+ifndef UNPARAM_CHECK
+	@echo "No unparam in path.  Install with 'make get_tools'."
+else
+	@echo "Found unparam in path."
 endif
 
 get_tools:
@@ -95,10 +102,16 @@ else
 	go get -v $(MISSPELL)
 endif
 ifdef ERRCHECK_CHECK
-	@echo "misspell is already installed.  Run 'make update_tools' to update."
+	@echo "errcheck is already installed.  Run 'make update_tools' to update."
 else
-	@echo "Installing misspell"
+	@echo "Installing errcheck"
 	go get -v $(ERRCHECK)
+endif
+ifdef UNPARAM_CHECK
+	@echo "unparam is already installed.  Run 'make update_tools' to update."
+else
+	@echo "Installing unparam"
+	go get -v $(UNPARAM)
 endif
 
 update_tools:
@@ -116,6 +129,8 @@ update_tools:
 	go get -u -v $(MISSPELL)
 	@echo "Updating errcheck"
 	go get -u -v $(ERRCHECK)
+	@echo "Updating unparam"
+	go get -u -v $(UNPARAM)
 
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.

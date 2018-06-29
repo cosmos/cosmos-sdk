@@ -12,7 +12,7 @@ import (
 
 func TestStore(t *testing.T) {
 	db := dbm.NewMemDB()
-	cms := NewCommitMultiStore(db)
+	cms := NewCommitMultiStore()
 
 	key := sdk.NewKVStoreKey("test")
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)

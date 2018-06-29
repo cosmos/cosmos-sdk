@@ -62,5 +62,5 @@ NOTE: This documentation is a work-in-progress!
     - [Running a Node](clients/node.md) - Run a full node!
     - [Key Management](clients/keys.md) - Managing user keys
     - [CLI](clients/cli.md) - Queries and transactions via command line
-    - [REST](clients/rest.md) - Queries and transactions via REST
+    - [REST Light Client Daemon](clients/rest.md) - Queries and transactions via REST
       API

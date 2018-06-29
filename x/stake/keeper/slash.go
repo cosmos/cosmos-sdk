@@ -47,7 +47,7 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 }
 
 // slash a redelegation and update the pool
-func (k Keeper) slashRedelegation(ctx sdk.Context, redelegation types.Redelegation, infractionHeight int64, fraction sdk.Rat) (slashAmount sdk.Int) {
+func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, redelegation types.Redelegation, infractionHeight int64, fraction sdk.Rat) (slashAmount sdk.Int) {
 	now := ctx.BlockHeader().Time
 
 	// If redelegation started before this height, stake didn't contribute to infraction
@@ -79,13 +79,20 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, redelegation types.Redelegati
 	// Unbond from target validator
 	sharesToUnbond := fraction.Mul(redelegation.SharesDst)
 	if !sharesToUnbond.IsZero() {
-		// TODO overslash
+		delegation, found := k.GetDelegation(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr)
+		if !found {
+			// If deleted, delegation has zero shares, and we can't unbond any more
+			return slashAmount
+		}
+		if sharesToUnbond.GT(delegation.Shares) {
+			sharesToUnbond = delegation.Shares
+		}
 		tokensToBurn, err := k.unbond(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr, sharesToUnbond)
 		if err != nil {
 			panic(fmt.Errorf("error unbonding delegator: %v", err))
 		}
-		pool := k.GetPool(ctx)
 		// Burn loose tokens
+		pool := k.GetPool(ctx)
 		pool.LooseTokens -= tokensToBurn
 		k.SetPool(ctx, pool)
 	}
@@ -140,7 +147,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 		// Iterate through redelegations from slashed validator
 		redelegations := k.GetRedelegationsFromValidator(ctx, ownerAddress)
 		for _, redelegation := range redelegations {
-			amountSlashed := k.slashRedelegation(ctx, redelegation, infractionHeight, fraction)
+			amountSlashed := k.slashRedelegation(ctx, validator, redelegation, infractionHeight, fraction)
 			if amountSlashed.IsZero() {
 				continue
 			}

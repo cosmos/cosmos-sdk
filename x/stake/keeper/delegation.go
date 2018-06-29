@@ -312,10 +312,11 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr sdk
 	minTime := ctx.BlockHeader().Time + params.UnbondingTime
 
 	ubd := types.UnbondingDelegation{
-		DelegatorAddr: delegatorAddr,
-		ValidatorAddr: validatorAddr,
-		MinTime:       minTime,
-		Balance:       sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)},
+		DelegatorAddr:  delegatorAddr,
+		ValidatorAddr:  validatorAddr,
+		MinTime:        minTime,
+		Balance:        sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)},
+		InitialBalance: sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)},
 	}
 	k.SetUnbondingDelegation(ctx, ubd)
 	return nil
@@ -378,6 +379,8 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delegatorAddr, validatorSrcAd
 		MinTime:          minTime,
 		SharesDst:        sharesCreated,
 		SharesSrc:        sharesAmount,
+		Balance:          returnCoin,
+		InitialBalance:   returnCoin,
 	}
 	k.SetRedelegation(ctx, red)
 	return nil

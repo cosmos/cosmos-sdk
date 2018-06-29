@@ -79,6 +79,12 @@ func ErrNotEnoughDelegationShares(codespace sdk.CodespaceType, shares string) sd
 func ErrBadSharesAmount(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "shares must be > 0")
 }
+func ErrBadSharesPrecision(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDelegation,
+		fmt.Sprintf("shares denominator must be < %s, try reducing the number of decimal points",
+			maximumBondingRationalDenominator.String()),
+	)
+}
 func ErrBadSharesPercent(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "shares percent must be >0 and <=1")
 }

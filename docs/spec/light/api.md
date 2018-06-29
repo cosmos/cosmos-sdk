@@ -245,83 +245,76 @@ The TokenAPI exposes all functionality needed to query account balances and send
 
 ### /balance/{account} - GET
 
-url: /balance/{account}, Method: GET
+url: /balance/{account}
 
-Functionality:
+Functionality: Query the specified account.
+
+Returns on success:
+
+```json
+{
+    "rest api": "2.0",
+    "code":200,
+    "error": "",
+    "result": {
+        [
+            "atom": 1000,
+            "photon": 500,
+            "ether": 20
+        ]
+    }
+}
+```
+
+Returns on error:
+
+```json
+{
+    "rest api": "2.0",
+    "code":500,
+    "error": "Could not find any balance for the specified account.",
+    "result": {}
+}
+```
+
+### /bank/create_transfer - POST
+
+url: /bank/create_transfer
+
+Functionality: Create a transfer in the bank module.
 
 Parameters:
+| Parameter    | Type   | Default | Required | Description               |
+| ------------ | ------ | ------- | -------- | ------------------------- |
+| sender       | string | null    | true     | Address of sender         |
+| receiver     | string | null    | true     | address of receiver       |
+| chain_id     | string | null    | true     | chain id                  |
+| amount       | int    | null    | true     | amount of the token       |
+| denomonation | string | null    | true     | denomonation of the token |
 
-* The above command returns JSON structured like this if success:
+Returns on success:
 
-```
+```json
 {
-    "error": "",
+    "rest api": "2.0",
     "code":200,
-    "result": {
-     {
-         "atom": 1000,
-         "photon": 500,
-         "ether": 20
-     }
-    },
-    "rest api": "2.0"
-}
-```
-
-* The above command returns JSON structured like this if fails:
-
-```
-{
-    "error": "Invalid account",
-    "code":500,
-    "result": {},
-    "rest api": "2.0"
-}
-```
-
-
-### /create_transfer - POST
-
-url: /create_transfer, Method: **POST**
-
-Functionality: transfer asset
-
-Parameters:
-
-| Parameter | Type   | Default | Required | Description                 |
-| --------- | ------ | ------- | -------- | --------------------------- |
-| from_address  | string | null    | true     | address from                |
-| from_chain_id  | string | null    | true     | chain from                |
-| to_address  | string | null    | true     | address to send to     |
-| to_chain_id  | string | null    | true     | chain to send to     |
-| amount  | int    | null    | true     | amount of the token         |
-| denomonation  | string | null    | true     | denomonation of the token   |
-
-
-* The above command returns JSON structured like this if success:
-
-```
-{
     "error": "",
-    "code":200,
     "result": {
-     ""transaction": "[]bytes of a valid transaction bytes to be signed for that zone"
-    },
-    "rest api": "2.0"
+     "transaction": "TODO:<JSON sign bytes for the transaction>"
+    }
 }
 ```
 
-* The above command returns JSON structured like this if fails:
+Returns on failure:
 
-```
+```json
 {
-    "error": "Insufficient Funds",
+    "rest api": "2.0",
     "code":500,
-    "result": {},
-    "rest api": "2.0"
+    "error": "Could not create the transaction.",
+    "result": {}
 }
 ```
-
 
 ### /signed_transfer - POST
 

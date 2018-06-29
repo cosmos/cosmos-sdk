@@ -7,7 +7,7 @@ connections.
 The complete API is comprised of the sub-APIs of different modules. The modules in the Cosmos Hub
 (Gaia) API are:
 
-* ICS0 (TendermintAPI) - not yet implemented
+* ICS0 (TendermintAPI)
 * ICS1 (KeyAPI)
 * ICS20 (TokenAPI)
 * ICS21 (StakingAPI) - not yet implemented

@@ -310,13 +310,14 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr sdk
 	// create the unbonding delegation
 	params := k.GetParams(ctx)
 	minTime := ctx.BlockHeader().Time + params.UnbondingTime
+	balance := sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)}
 
 	ubd := types.UnbondingDelegation{
 		DelegatorAddr:  delegatorAddr,
 		ValidatorAddr:  validatorAddr,
 		MinTime:        minTime,
-		Balance:        sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)},
-		InitialBalance: sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)},
+		Balance:        balance,
+		InitialBalance: balance,
 	}
 	k.SetUnbondingDelegation(ctx, ubd)
 	return nil

@@ -161,8 +161,8 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 
 	}
 
-	sharesToRemove := remainingSlashAmount
 	// Cannot decrease balance below zero
+	sharesToRemove := remainingSlashAmount
 	if sharesToRemove.GT(validator.PoolShares.Amount.EvaluateInt()) {
 		sharesToRemove = validator.PoolShares.Amount.EvaluateInt()
 	}

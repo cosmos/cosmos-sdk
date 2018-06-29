@@ -327,11 +327,9 @@ Returns on success:
     "code":200,
     "error": "",
     "result": {
-        [
-            "atom": 1000,
-            "photon": 500,
-            "ether": 20
-        ]
+        "atom": 1000,
+        "photon": 500,
+        "ether": 20
     }
 }
 ```

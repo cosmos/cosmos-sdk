@@ -2,13 +2,12 @@ package rest
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/gorilla/mux"
-	"github.com/tendermint/go-crypto/keys"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -74,7 +73,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 			w.Write([]byte(err.Error()))
 			return
 		}
-		err = json.Unmarshal(body, &m)
+		err = cdc.UnmarshalJSON(body, &m)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -109,7 +108,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
 				return
 			}
-			if !bytes.Equal(info.Address(), delegatorAddr) {
+			if !bytes.Equal(info.GetPubKey().Address(), delegatorAddr) {
 				w.WriteHeader(http.StatusUnauthorized)
 				w.Write([]byte("Must use own delegator address"))
 				return
@@ -129,7 +128,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 				w.Write([]byte(fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error())))
 				return
 			}
-			if !bytes.Equal(info.Address(), delegatorAddr) {
+			if !bytes.Equal(info.GetPubKey().Address(), delegatorAddr) {
 				w.WriteHeader(http.StatusUnauthorized)
 				w.Write([]byte("Must use own delegator address"))
 				return
@@ -180,7 +179,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
 				return
 			}
-			if !bytes.Equal(info.Address(), delegatorAddr) {
+			if !bytes.Equal(info.GetPubKey().Address(), delegatorAddr) {
 				w.WriteHeader(http.StatusUnauthorized)
 				w.Write([]byte("Must use own delegator address"))
 				return
@@ -200,7 +199,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 				w.Write([]byte(fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error())))
 				return
 			}
-			if !bytes.Equal(info.Address(), delegatorAddr) {
+			if !bytes.Equal(info.GetPubKey().Address(), delegatorAddr) {
 				w.WriteHeader(http.StatusUnauthorized)
 				w.Write([]byte("Must use own delegator address"))
 				return
@@ -238,7 +237,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
 				return
 			}
-			if !bytes.Equal(info.Address(), delegatorAddr) {
+			if !bytes.Equal(info.GetPubKey().Address(), delegatorAddr) {
 				w.WriteHeader(http.StatusUnauthorized)
 				w.Write([]byte("Must use own delegator address"))
 				return
@@ -285,7 +284,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 			results[i] = res
 		}
 
-		output, err := json.MarshalIndent(results[:], "", "  ")
+		output, err := wire.MarshalJSONIndent(cdc, results[:])
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

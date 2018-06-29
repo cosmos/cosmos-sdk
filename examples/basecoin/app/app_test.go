@@ -1,7 +1,6 @@
 package app
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -16,8 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	gen "github.com/cosmos/cosmos-sdk/x/stake/types"
 
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 )
@@ -76,7 +75,7 @@ func TestGenesis(t *testing.T) {
 	bapp = NewBasecoinApp(logger, db)
 	// Initialize stake data with default genesis state
 	stakedata := gen.DefaultGenesisState()
-	genState, err := json.Marshal(stakedata)
+	genState, err := bapp.cdc.MarshalJSON(stakedata)
 	if err != nil {
 		panic(err)
 	}

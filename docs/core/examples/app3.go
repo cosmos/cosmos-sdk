@@ -36,7 +36,7 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	// TODO: Need to register Account interface or use different Codec
 	accountMapper := auth.NewAccountMapper(cdc, keyAccount, &auth.BaseAccount{})
 	coinKeeper := bank.NewKeeper(accountMapper)
-	infoMapper := NewCoinInfoMapper(keyMain)
+	infoMapper := newCoinInfoMapper(keyMain)
 	feeKeeper := auth.NewFeeCollectionKeeper(cdc, keyFees)
 
 	app.SetAnteHandler(auth.NewAnteHandler(accountMapper, feeKeeper))
@@ -137,7 +137,7 @@ type coinInfoMapper struct {
 }
 
 // Construct new CoinInfoMapper.
-func NewCoinInfoMapper(key *sdk.KVStoreKey) coinInfoMapper {
+func newCoinInfoMapper(key *sdk.KVStoreKey) coinInfoMapper {
 	return coinInfoMapper{key: key}
 }
 

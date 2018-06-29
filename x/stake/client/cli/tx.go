@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 // create create validator command
@@ -219,7 +220,7 @@ func getShares(storeName string, cdc *wire.Codec, sharesAmountStr, sharesPercent
 	case sharesAmountStr == "" && sharesPercentStr == "":
 		return sharesAmount, errors.Errorf("can either specify the amount OR the percent of the shares, not both")
 	case sharesAmountStr != "":
-		sharesAmount, err = sdk.NewRatFromDecimal(sharesAmountStr)
+		sharesAmount, err = sdk.NewRatFromDecimal(sharesAmountStr, types.MaxBondDenominatorPrecision)
 		if err != nil {
 			return sharesAmount, err
 		}
@@ -228,7 +229,7 @@ func getShares(storeName string, cdc *wire.Codec, sharesAmountStr, sharesPercent
 		}
 	case sharesPercentStr != "":
 		var sharesPercent sdk.Rat
-		sharesPercent, err = sdk.NewRatFromDecimal(sharesPercentStr)
+		sharesPercent, err = sdk.NewRatFromDecimal(sharesPercentStr, types.MaxBondDenominatorPrecision)
 		if err != nil {
 			return sharesAmount, err
 		}

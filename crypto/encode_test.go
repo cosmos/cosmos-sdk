@@ -60,7 +60,7 @@ func ExamplePrintRegisteredTypes() {
 func TestKeyEncodings(t *testing.T) {
 	cases := []struct {
 		privKey           tcrypto.PrivKey
-		privSize, pubSize int // binary sizes
+		privSize, pubSize int // binary sizes with the amino overhead
 	}{
 		{
 			privKey:  tcrypto.GenPrivKeyEd25519(),

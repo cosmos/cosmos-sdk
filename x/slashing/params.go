@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const (
+var (
 	// MaxEvidenceAge - Max age for evidence - 21 days (3 weeks)
 	// TODO Should this be a governance parameter or just modifiable with SoftwareUpgradeProposals?
 	// MaxEvidenceAge = 60 * 60 * 24 * 7 * 3
@@ -13,8 +13,8 @@ const (
 
 	// SignedBlocksWindow - sliding window for downtime slashing
 	// TODO Governance parameter?
-	// TODO Temporarily set to 1000 blocks for testnets
-	SignedBlocksWindow int64 = 1000
+	// TODO Temporarily set to 40000 blocks for testnets
+	SignedBlocksWindow int64 = 40000
 
 	// Downtime slashing threshold - 50%
 	// TODO Governance parameter?
@@ -22,13 +22,13 @@ const (
 
 	// Downtime unbond duration
 	// TODO Governance parameter?
-	// TODO Temporarily set to 1 hour for testnets
-	DowntimeUnbondDuration int64 = 60 * 60
+	// TODO Temporarily set to zero for testnets
+	DowntimeUnbondDuration int64 = 0
 
 	// Double-sign unbond duration
 	// TODO Governance parameter?
-	// TODO Temporarily set to 1 hour for testnets
-	DoubleSignUnbondDuration int64 = 60 * 60
+	// TODO Temporarily set to zero for testnets
+	DoubleSignUnbondDuration int64 = 0
 )
 
 var (

@@ -11,6 +11,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
+// Have to change these parameters for tests
+// lest the tests take forever
+func init() {
+	SignedBlocksWindow = 1000
+	MinSignedPerWindow = SignedBlocksWindow / 2
+	DowntimeUnbondDuration = 60 * 60
+	DoubleSignUnbondDuration = 60 * 60
+}
+
 // Test that a validator is slashed correctly
 // when we discover evidence of infraction
 func TestHandleDoubleSign(t *testing.T) {

@@ -230,41 +230,6 @@ us to easily lookup transactions that pertain to particular accounts or actions.
 Let's define our handler for App1:
 
 ```go
-func NewApp1Handler(keyAcc *sdk.KVStoreKey) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		switch msg := msg.(type) {
-		case MsgSend:
-			return handleMsgSend(ctx, keyAcc, msg)
-		default:
-			errMsg := "Unrecognized bank Msg type: " + reflect.TypeOf(msg).Name()
-			return sdk.ErrUnknownRequest(errMsg).Result()
-		}
-	}
-}
-```
-
-We have only a single message type, so just one message-specific function to define, `handleMsgSend`.
-
-Note this handler has unrestricted access to the store specified by the capability key `keyAcc`,
-so it must define what to store and how to encode it. Later, we'll introduce
-higher-level abstractions so Handlers are restricted in what they can do.
-For this first example, we use a simple account that is JSON encoded:
-
-```go
-type appAccount struct {
-	Coins sdk.Coins `json:"coins"`
-}
-```
-
-Coins is a useful type provided by the SDK for multi-asset accounts. 
-We could just use an integer here for a single coin type, but
-it's worth [getting to know
-Coins](https://godoc.org/github.com/cosmos/cosmos-sdk/types#Coins).
-
-
-Now we're ready to handle the MsgSend:
-
-```go
 // Handle MsgSend.
 // NOTE: msg.From, msg.To, and msg.Amount were already validated
 // in ValidateBasic().
@@ -290,10 +255,26 @@ func handleMsgSend(ctx sdk.Context, key *sdk.KVStoreKey, msg MsgSend) sdk.Result
 }
 ```
 
-The handler is straight forward. We first load the KVStore from the context using the granted capability key.
-Then we make two state transitions: one for the sender, one for the receiver. 
-Each one involves JSON unmarshalling the account bytes from the store, mutating
-the `Coins`, and JSON marshalling back into the store:
+We have only a single message type, so just one message-specific function to define, `handleMsgSend`.
+
+Note this handler has unrestricted access to the store specified by the capability key `keyAcc`,
+so it must define what to store and how to encode it. Later, we'll introduce
+higher-level abstractions so Handlers are restricted in what they can do.
+For this first example, we use a simple account that is JSON encoded:
+
+```go
+type appAccount struct {
+	Coins sdk.Coins `json:"coins"`
+}
+```
+
+Coins is a useful type provided by the SDK for multi-asset accounts. 
+We could just use an integer here for a single coin type, but
+it's worth [getting to know
+Coins](https://godoc.org/github.com/cosmos/cosmos-sdk/types#Coins).
+
+
+Now we're ready to handle the two parts of the MsgSend:
 
 ```go
 func handleFrom(store sdk.KVStore, from sdk.Address, amt sdk.Coins) sdk.Result {
@@ -366,6 +347,11 @@ func handleTo(store sdk.KVStore, to sdk.Address, amt sdk.Coins) sdk.Result {
 	return sdk.Result{}
 }
 ```
+
+The handler is straight forward. We first load the KVStore from the context using the granted capability key.
+Then we make two state transitions: one for the sender, one for the receiver. 
+Each one involves JSON unmarshalling the account bytes from the store, mutating
+the `Coins`, and JSON marshalling back into the store.
 
 And that's that!
 

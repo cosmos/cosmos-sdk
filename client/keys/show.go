@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/gorilla/mux"
 
 	"github.com/spf13/cobra"
 )

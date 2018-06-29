@@ -1,8 +1,8 @@
 package keys
 
 import (
-	"github.com/tendermint/tendermint/crypto"
 	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
+	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 )
@@ -82,8 +82,8 @@ func (i localInfo) GetPubKey() crypto.PubKey {
 
 // ledgerInfo is the public information about a Ledger key
 type ledgerInfo struct {
-	Name   string                `json:"name"`
-	PubKey crypto.PubKey         `json:"pubkey"`
+	Name   string                 `json:"name"`
+	PubKey crypto.PubKey          `json:"pubkey"`
 	Path   ccrypto.DerivationPath `json:"path"`
 }
 

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 
 	dbm "github.com/tendermint/tmlibs/db"
 )
@@ -115,7 +115,6 @@ func TestSignVerify(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, i3.GetName(), n3)
 
-
 	// let's try to sign some messages
 	d1 := []byte("my first message")
 	d2 := []byte("some other important info!")
@@ -183,7 +182,7 @@ func TestExportImport(t *testing.T) {
 		db,
 	)
 
-	info, _, err := cstore.CreateMnemonic("john", English,"secretcpw",  Secp256k1)
+	info, _, err := cstore.CreateMnemonic("john", English, "secretcpw", Secp256k1)
 	assert.NoError(t, err)
 	assert.Equal(t, info.GetName(), "john")
 
@@ -205,6 +204,7 @@ func TestExportImport(t *testing.T) {
 	assert.Equal(t, john.GetName(), "john")
 	assert.Equal(t, john, john2)
 }
+
 //
 func TestExportImportPubKey(t *testing.T) {
 	// make the storage with reasonable defaults
@@ -321,8 +321,8 @@ func TestSeedPhrase(t *testing.T) {
 	require.NotNil(t, err)
 
 	// let us re-create it from the mnemonic-phrase
-	params := *hd.NewFundraiserParams(0 ,0 )
-	newInfo, err := cstore.Derive(n2,mnemonic, p2, params)
+	params := *hd.NewFundraiserParams(0, 0)
+	newInfo, err := cstore.Derive(n2, mnemonic, p2, params)
 	require.NoError(t, err)
 	assert.Equal(t, n2, newInfo.GetName())
 	assert.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())

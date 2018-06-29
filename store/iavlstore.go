@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"sync"
 
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/iavl"
+	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 

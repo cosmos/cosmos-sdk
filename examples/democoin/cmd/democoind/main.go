@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tmlibs/cli"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -72,5 +72,9 @@ func main() {
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.democoind")
 	executor := cli.PrepareBaseCmd(rootCmd, "BC", rootDir)
-	executor.Execute()
+	err := executor.Execute()
+	if err != nil {
+		// handle with #870
+		panic(err)
+	}
 }

@@ -8,9 +8,9 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/tendermint/go-crypto/keys"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -64,7 +64,7 @@ func unrevokeRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.Core
 			return
 		}
 
-		if !bytes.Equal(info.Address(), validatorAddr) {
+		if !bytes.Equal(info.GetPubKey().Address(), validatorAddr) {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte("Must use own validator address"))
 			return

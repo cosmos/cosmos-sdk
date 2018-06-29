@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
@@ -85,7 +85,6 @@ func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB) *Bas
 		txDecoder:  defaultTxDecoder(cdc),
 	}
 	// Register the undefined & root codespaces, which should not be used by any modules
-	app.codespacer.RegisterOrPanic(sdk.CodespaceUndefined)
 	app.codespacer.RegisterOrPanic(sdk.CodespaceRoot)
 	return app
 }
@@ -135,7 +134,7 @@ func defaultTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
 		// are registered by MakeTxCodec
 		err := cdc.UnmarshalBinary(txBytes, &tx)
 		if err != nil {
-			return nil, sdk.ErrTxDecode("").Trace(err.Error())
+			return nil, sdk.ErrTxDecode("").TraceSDK(err.Error())
 		}
 		return tx, nil
 	}
@@ -164,13 +163,19 @@ func (app *BaseApp) Router() Router { return app.router }
 
 // load latest application version
 func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
-	app.cms.LoadLatestVersion()
+	err := app.cms.LoadLatestVersion()
+	if err != nil {
+		return err
+	}
 	return app.initFromStore(mainKey)
 }
 
 // load application version
 func (app *BaseApp) LoadVersion(version int64, mainKey sdk.StoreKey) error {
-	app.cms.LoadVersion(version)
+	err := app.cms.LoadVersion(version)
+	if err != nil {
+		return err
+	}
 	return app.initFromStore(mainKey)
 }
 

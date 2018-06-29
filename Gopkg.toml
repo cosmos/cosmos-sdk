@@ -37,10 +37,6 @@
   version = "~0.0.3"
 
 [[constraint]]
-  name = "github.com/pkg/errors"
-  version = "~0.8.0"
-
-[[constraint]]
   name = "github.com/spf13/cobra"
   version = "~0.0.1"
 
@@ -49,32 +45,36 @@
   version = "~1.0.0"
 
 [[constraint]]
+  name = "github.com/pkg/errors"
+  version = "=0.8.0"
+
+[[constraint]]
   name = "github.com/stretchr/testify"
-  version = "~1.2.1"
-
-[[constraint]]
-  name = "github.com/tendermint/abci"
-  version = "=0.12.0"
-
-[[constraint]]
-  name = "github.com/tendermint/go-crypto"
-  version = "=0.6.2"
+  version = "=1.2.1"
 
 [[constraint]]
   name = "github.com/tendermint/go-amino"
-  version = "=0.9.9"
+  version = "=0.10.1"
 
 [[constraint]]
   name = "github.com/tendermint/iavl"
-  version = "=0.8.0-rc0"
+  revision = "481b89cbbe6a641f7f6cb5db92b30b20f5a2e001"
 
 [[constraint]]
   name = "github.com/tendermint/tendermint"
-  revision = "696e8c6f9e950eec15f150f314d2dd9ddf6bc601"
+  revision = "8412b75b1070ac023405e8228e017ed36531fe1b"
 
-[[override]]
+[[constraint]]
   name = "github.com/tendermint/tmlibs"
-  revision = "0c98d10b4ffbd87978d79c160e835b3d3df241ec"
+  version = "=0.9.0"
+
+[[constraint]]
+  name = "github.com/bartekn/go-bip39"
+  branch = "master"
+
+[[constraint]]
+  name = "github.com/zondax/ledger-goclient"
+  revision = "065cbf938a16f20335c40cfe180f9cd4955c6a5a"
 
 # this got updated and broke, so locked to an old working commit ...
 [[override]]

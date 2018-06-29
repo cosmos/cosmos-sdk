@@ -10,6 +10,7 @@ GOMETALINTER = gopkg.in/alecthomas/gometalinter.v2
 UNCONVERT = github.com/mdempsky/unconvert
 INEFFASSIGN = github.com/gordonklaus/ineffassign
 MISSPELL = github.com/client9/misspell/cmd/misspell
+ERRCHECK = github.com/kisielk/errcheck
 
 DEP_CHECK := $(shell command -v dep 2> /dev/null)
 GOLINT_CHECK := $(shell command -v golint 2> /dev/null)
@@ -17,6 +18,7 @@ GOMETALINTER_CHECK := $(shell command -v gometalinter.v2 2> /dev/null)
 UNCONVERT_CHECK := $(shell command -v unconvert 2> /dev/null)
 INEFFASSIGN_CHECK := $(shell command -v ineffassign 2> /dev/null)
 MISSPELL_CHECK := $(shell command -v misspell 2> /dev/null)
+ERRCHECK_CHECK := $(shell command -v errcheck 2> /dev/null)
 
 check_tools:
 ifndef DEP_CHECK
@@ -48,6 +50,11 @@ ifndef MISSPELL_CHECK
 	@echo "No misspell in path.  Install with 'make get_tools'."
 else
 	@echo "Found misspell in path."
+endif
+ifndef MISSPELL_CHECK
+	@echo "No errcheck in path.  Install with 'make get_tools'."
+else
+	@echo "Found errcheck in path."
 endif
 
 get_tools:
@@ -87,6 +94,12 @@ else
 	@echo "Installing misspell"
 	go get -v $(MISSPELL)
 endif
+ifdef ERRCHECK_CHECK
+	@echo "misspell is already installed.  Run 'make update_tools' to update."
+else
+	@echo "Installing misspell"
+	go get -v $(ERRCHECK)
+endif
 
 update_tools:
 	@echo "Updating dep"
@@ -101,6 +114,8 @@ update_tools:
 	go get -u -v $(INEFFASSIGN)
 	@echo "Updating misspell"
 	go get -u -v $(MISSPELL)
+	@echo "Updating errcheck"
+	go get -u -v $(ERRCHECK)
 
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.

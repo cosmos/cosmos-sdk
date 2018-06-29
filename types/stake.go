@@ -1,8 +1,8 @@
 package types
 
 import (
-	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/go-crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 

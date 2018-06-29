@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -16,8 +16,9 @@ import (
 )
 
 var (
-	priv1 = crypto.GenPrivKeyEd25519()
-	addr1 = priv1.PubKey().Address()
+	priv1  = crypto.GenPrivKeyEd25519()
+	pubKey = priv1.PubKey()
+	addr1  = pubKey.Address()
 
 	quizMsg1 = MsgQuiz{
 		Sender:     addr1,

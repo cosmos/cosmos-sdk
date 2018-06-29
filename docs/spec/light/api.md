@@ -13,7 +13,10 @@ The complete API is comprised of the sub-APIs of different modules. The modules 
 * ICS21 (StakingAPI) - not yet implemented
 * ICS22 (GovernanceAPI) - not yet implemented
 
-## ICS0 - TendermintAPI
+Error messages my change and should be only used for display purposes. Error messages should not be
+used for determining the error type.
+
+## ICS0 - TendermintAPI - not yet implemented
 
 Exposes the same functionality as the Tendermint RPC from a full node. It aims to have a very
 similar API.
@@ -26,234 +29,215 @@ This API exposes all functionality needed for key creation, signing and manageme
 
 url: /keys
 
-Functionality: Get all keys
+Functionality: Gets a list of all the keys.
 
-Parameters: null
+Returns on success:
 
-* The above command returns JSON structured like this if success:
-
-```
+```json
 {
-  "rest api": "2.0",
-  "code":200,
-  "error": "",
-  "result": {
+    "rest api": "2.0",
+    "code":200,
+    "error": "",
+    "result": {
         "keys": [
-          {
-            "name": "monkey",
-            "address": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
-            "pub_key": "cosmosaccpub1zcjduc3q8s8ha96ry4xc5xvjp9tr9w9p0e5lk5y0rpjs5epsfxs4wmf72x3shvus0t"
-          },
-   		 {
-            "name": "test",
-            "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-            "pub_key": "cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
-         }
-	],
-    "block_height": 5241
+           {
+                "name": "monkey",
+                "address": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
+                "pub_key": "cosmosaccpub1zcjduc3q8s8ha96ry4xc5xvjp9tr9w9p0e5lk5y0rpjs5epsfxs4wmf72x3shvus0t"
+            },
+            {
+                "name": "test",
+                "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
+                "pub_key": "cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
+            }
+        ],
+        "block_height": 5241
     }
 }
 ```
 
-* The above command returns JSON structured like this if fails:
+Returns on failure:
 
-```
+```json
 {
-"rest api": "2.0",
-"code":500,
-"error":"no keys available",
-"result":{}
+    "rest api": "2.0",
+    "code":500,
+    "error":"Could not retrieve the keys.",
+    "result":{}
 }
 ```
 
+### /keys/recover - POST
 
-### /keys - POST
+url: /keys/recover
 
-url: /keys, Method: POST
+Functionality: Recover your key from seed and persist it encrypted with the password.
 
-Functionality: Recover your key from seed and persist it with your password protection
-
+Parameter:
 | Parameter | Type   | Default | Required | Description      |
 | --------- | ------ | ------- | -------- | ---------------- |
-| name      | string | null    | true     | name of keys     |
-| password  | string | null    | true     | password of keys |
-| seed      | string | null    | true     | seed of keys     |
+| name      | string | null    | true     | name of key      |
+| password  | string | null    | true     | password of key  |
+| seed      | string | null    | true     | seed of key      |
 
-Parameters: null
+Returns on success:
 
-* The above command returns JSON structured like this if success:
-
-```
+```json
 {
-    "error": "",
+    "rest api": "2.0",
     "code":200,
-    "result": {
-    	"address":BD607C37147656A507A5A521AA9446EB72B2C907
-    },
-    "rest api": "2.0"
-}
-
-```
-
-* The above command returns JSON structured like this if fails:
-
-```
-{
-    "error": "invalid inputs",
-    "code":500,
-    "result": {},
-    "rest api": "2.0"
-}
-
-```
-
-
-### /keys/seed - GET
-
-url: /keys/seed, Method: GET
-
-Functionality: Create new seed
-
-Parameters: null
-
-* The above command returns JSON structured like this if success:
-
-```
-{
     "error": "",
-    "code":200,
     "result": {
-    	"seed":crime carpet recycle erase simple prepare moral dentist fee cause pitch trigger when velvet animal abandon
-    },
-    "rest api": "2.0"
+        "address":BD607C37147656A507A5A521AA9446EB72B2C907
+    }
 }
-
 ```
 
-* The above command returns JSON structured like this if fails:
+Returns on failure:
 
-```
+```json
 {
-    "error": "cannot generate new seed",
+    "rest api": "2.0",
     "code":500,
-    "result": {},
-    "rest api": "2.0"
+    "error": "Could not recover the key.",
+    "result": {}
 }
-
 ```
 
+### /keys/create - POST
+
+url: /keys/create
+
+Functionality: Create a new key.
+
+Parameter:
+| Parameter | Type   | Default | Required | Description      |
+| --------- | ------ | ------- | -------- | ---------------- |
+| name      | string | null    | true     | name of key      |
+| password  | string | null    | true     | password of key  |
+
+Returns on success:
+
+```json
+{
+    "rest api": "2.0",
+    "code":200,
+    "error": "",
+    "result": {
+        "seed":crime carpet recycle erase simple prepare moral dentist fee cause pitch trigger when velvet animal abandon
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api": "2.0",
+    "code":500,
+    "error": "Could not create new key.",
+    "result": {}
+}
+```
 
 ### /keys/{name} - GET
 
-url: /keys/{name}, Method: GET
+url: /keys/{name}
 
-Functionality: Get key information according to the specified key name
+Functionality: Get the information for the specified key.
 
-Parameters: null
+Returns on success:
 
-* The above command returns JSON structured like this if success:
-
-```
+```json
 {
-    "error": "",
+    "rest api": "2.0",
     "code":200,
+    "error": "",
     "result": {
-    	"name": "test",
-          "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-          "pub_key": "cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
-    },
-    "rest api": "2.0"
+        "name": "test",
+            "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
+            "pub_key": "cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
+    }
 }
-
 ```
 
-* The above command returns JSON structured like this if fails:
+Returns on failure:
 
-```
+```json
 {
-    "error": "cannot find corresponding name",
+    "rest api": "2.0",
     "code":500,
-    "result": {},
-    "rest api": "2.0"
+    "error": "Could not find information on the specified key.",
+    "result": {}
 }
 ```
-
 
 ### /keys/{name} - PUT
 
-url: /keys/{name}, Method: PUT
+url: /keys/{name}
 
-Functionality: Update key password
+Functionality: Change the encryption password for the specified key.
 
 Parameters:
-
 | Parameter       | Type   | Default | Required | Description     |
 | --------------- | ------ | ------- | -------- | --------------- |
-| old_password    | string | null    | true     | password before |
-| new_password    | string | null    | true     | password before |
-| repeat_password | string | null    | true     | password before |
+| old_password    | string | null    | true     | old password    |
+| new_password    | string | null    | true     | new password    |
 
-* The above command returns JSON structured like this if success:
+Returns on success:
 
-```
+```json
 {
-    "error": "",
+    "rest api": "2.0",
     "code":200,
-    "result": {
-     "updated":name
-    },
-    "rest api": "2.0"
+    "error": "",
+    "result": {}
 }
 ```
 
-* The above command returns JSON structured like this if fails:
+Returns on failure:
 
-```
+```json
 {
-    "error": "cannot update the corresponding key",
+    "rest api": "2.0",
     "code":500,
-    "result": {},
-    "rest api": "2.0"
+    "error": "Could not update the specified key.",
+    "result": {}
 }
 ```
-
 
 ### /keys/{name} - DELETE
 
-url: /keys/{name}, Method: DELETE
+url: /keys/{name}
 
-Functionality: Delete key from keystore
+Functionality: Delete the specified key.
 
 Parameters:
-
 | Parameter | Type   | Default | Required | Description      |
 | --------- | ------ | ------- | -------- | ---------------- |
-| password  | string | null    | true     | password of keys |
+| password  | string | null    | true     | password of key  |
 
-* The above command returns JSON structured like this if success:
+Returns on success:
 
-```
+```json
 {
-    "error": "",
+    "rest api": "2.0",
     "code":200,
-    "result": {
-     "deleted":name
-    },
-    "rest api": "2.0"
+    "error": "",
+    "result": {}
 }
 ```
 
-* The above command returns JSON structured like this if fails:
+Returns on failure:
 
-```
+```json
 {
-    "error": "cannot delete the corresponding key",
+    "rest api": "2.0",
     "code":500,
-    "result": {},
-    "rest api": "2.0"
+    "error": "Could not delete the specified key.",
+    "result": {}
 }
 ```
-
 
 ## ICS20 - TokenAPI
 

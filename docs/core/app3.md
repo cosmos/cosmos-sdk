@@ -15,14 +15,13 @@ working with accounts in the store.
 The `x/bank` module implements `Msg` and `Handler` - it has everything we need
 to transfer coins between accounts.
 
-Applications that use `x/auth` and `x/bank` thus significantly reduce the amount 
-of work they have to do so they can focus on their application specific logic in
-their own modules.
+Here, we'll introduce the important types from `x/auth` and `x/bank`, and use
+them to build `App3`, our shortest app yet. The complete code can be found in 
+[app3.go](examples/app3.go), and at the end of this section.
 
-Here, we'll introduce the important types from `x/auth` and `x/bank`, and show
-how to make `App3` by using them. The complete code can be found in [app3.go](examples/app3.go).
 For more details, see the
-[x/auth](https://godoc.org/github.com/cosmos/cosmos-sdk/x/auth) and [x/bank](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank) API documentation.
+[x/auth](https://godoc.org/github.com/cosmos/cosmos-sdk/x/auth) and 
+[x/bank](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank) API documentation.
 
 ## Accounts
 
@@ -260,8 +259,8 @@ the same message could be executed over and over again.
 The PubKey is required for signature verification, but it is only required in
 the StdSignature once. From that point on, it will be stored in the account.
 
-The fee is paid by the first address returned by `msg.GetSigners()` for the first `Msg`. 
-The convenience function `FeePayer(tx Tx) sdk.Address` is provided to return this.
+The fee is paid by the first address returned by `msg.GetSigners()` for the first `Msg`, 
+as provided by the `FeePayer(tx Tx) sdk.Address` function.
 
 ## CoinKeeper
 
@@ -269,10 +268,10 @@ Now that we've seen the `auth.AccountMapper` and how its used to build a
 complete AnteHandler, it's time to look at how to build higher-level
 abstractions for taking action on accounts.
 
-Earlier, we noted that `Mappers` abstactions over a KVStore that handles marshalling and unmarshalling a
-particular data type to and from the underlying store. We can build another
-abstraction on top of `Mappers` that we call `Keepers`, which expose only
-limitted functionality on the underlying types stored by the `Mapper`.
+Earlier, we noted that `Mappers` are abstactions over KVStores that handle 
+marshalling and unmarshalling data types to and from underlying stores. 
+We can build another abstraction on top of `Mappers` that we call `Keepers`, 
+which expose only limitted functionality on the underlying types stored by the `Mapper`.
 
 For instance, the `x/bank` module defines the canonical versions of `MsgSend`
 and `MsgIssue` for the SDK, as well as a `Handler` for processing them. However, 
@@ -303,23 +302,69 @@ See the [bank.Keeper API
 docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank#Keeper) for the full set of methods.
 
 Note we can refine the `bank.Keeper` by restricting it's method set. For
-instance, the `bank.ViewKeeper` is a read-only version, while the
-`bank.SendKeeper` only executes transfers of coins from input accounts to output
+instance, the
+[bank.ViewKeeper](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank#ViewKeeper) 
+is a read-only version, while the
+[bank.SendKeeper](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank#SendKeeper) 
+only executes transfers of coins from input accounts to output
 accounts.
 
 We use this `Keeper` paradigm extensively in the SDK as the way to define what
 kind of functionality each module gets access to. In particular, we try to
-follow the *principle of least authority*, where modules only get access to the
-absolutely narrowest set of functionality they need to get the job done. Hence,
-rather than providing full blown access to the `KVStore` or the `AccountMapper`, 
+follow the *principle of least authority*.
+Rather than providing full blown access to the `KVStore` or the `AccountMapper`, 
 we restrict access to a small number of functions that do very specific things.
 
 ## App3
 
-Armed with an understanding of mappers and keepers, in particular the
-`auth.AccountMapper` and the `bank.Keeper`, we're now ready to build `App3`
-using the `x/auth` and `x/bank` modules to do all the heavy lifting:
+With the `auth.AccountMapper` and `bank.Keeper` in hand, 
+we're now ready to build `App3`.
+The `x/auth` and `x/bank` modules do all the heavy lifting:
 
 ```go
-TODO
+func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
+
+	// Create the codec with registered Msg types
+	cdc := NewCodec()
+
+	// Create the base application object.
+	app := bapp.NewBaseApp(app3Name, cdc, logger, db)
+
+	// Create a key for accessing the account store.
+	keyAccount := sdk.NewKVStoreKey("acc")
+	keyFees := sdk.NewKVStoreKey("fee")  // TODO
+
+	// Set various mappers/keepers to interact easily with underlying stores
+	accountMapper := auth.NewAccountMapper(cdc, keyAccount, &auth.BaseAccount{})
+	coinKeeper := bank.NewKeeper(accountMapper)
+	feeKeeper := auth.NewFeeCollectionKeeper(cdc, keyFees)
+
+	app.SetAnteHandler(auth.NewAnteHandler(accountMapper, feeKeeper))
+
+	// Register message routes.
+	// Note the handler gets access to
+	app.Router().
+		AddRoute("send", bank.NewHandler(coinKeeper))
+
+	// Mount stores and load the latest state.
+	app.MountStoresIAVL(keyAccount, keyFees)
+	err := app.LoadLatestVersion(keyAccount)
+	if err != nil {
+		cmn.Exit(err.Error())
+	}
+	return app
+}
 ```
+
+Note we use `bank.NewHandler`, which handles only `bank.MsgSend`, 
+and receives only the `bank.Keeper`. See the 
+[x/bank API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank)
+for more details.
+
+## Conclusion
+
+Armed with native modules for authentication and coin transfer,
+emboldened by the paradigm of mappers and keepers, 
+and ever invigorated by the desire to build secure state-machines, 
+we find ourselves here with a full-blown, all-checks-in-place, multi-asset
+cryptocurrency - the beating heart of the Cosmos-SDK.

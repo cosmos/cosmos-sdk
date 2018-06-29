@@ -35,8 +35,8 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	// Set various mappers/keepers to interact easily with underlying stores
 	// TODO: Need to register Account interface or use different Codec
 	accountMapper := auth.NewAccountMapper(cdc, keyAccount, &auth.BaseAccount{})
-	accountKeeper := bank.NewKeeper(accountMapper)
-	metadataMapper := NewApp3MetaDataMapper(keyMain)
+	coinKeeper := bank.NewKeeper(accountMapper)
+	infoMapper := NewCoinInfoMapper(keyMain)
 	feeKeeper := auth.NewFeeCollectionKeeper(cdc, keyFees)
 
 	app.SetAnteHandler(auth.NewAnteHandler(accountMapper, feeKeeper))
@@ -44,8 +44,8 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	// Register message routes.
 	// Note the handler gets access to the account store.
 	app.Router().
-		AddRoute("send", betterHandleMsgSend(accountKeeper)).
-		AddRoute("issue", betterHandleMsgIssue(metadataMapper, accountKeeper))
+		AddRoute("send", handleMsgSendWithKeeper(coinKeeper)).
+		AddRoute("issue", handleMsgIssueWithInfoMapper(infoMapper, coinKeeper))
 
 	// Mount stores and load the latest state.
 	app.MountStoresIAVL(keyAccount, keyMain, keyFees)
@@ -56,7 +56,7 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	return app
 }
 
-func betterHandleMsgSend(accountKeeper bank.Keeper) sdk.Handler {
+func handleMsgSendWithKeeper(coinKeeper bank.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		sendMsg, ok := msg.(MsgSend)
 		if !ok {
@@ -64,14 +64,14 @@ func betterHandleMsgSend(accountKeeper bank.Keeper) sdk.Handler {
 		}
 
 		// Subtract coins from sender account
-		_, _, err := accountKeeper.SubtractCoins(ctx, sendMsg.From, sendMsg.Amount)
+		_, _, err := coinKeeper.SubtractCoins(ctx, sendMsg.From, sendMsg.Amount)
 		if err != nil {
 			// if error, return its result
 			return err.Result()
 		}
 
 		// Add coins to receiver account
-		_, _, err = accountKeeper.AddCoins(ctx, sendMsg.To, sendMsg.Amount)
+		_, _, err = coinKeeper.AddCoins(ctx, sendMsg.To, sendMsg.Amount)
 		if err != nil {
 			// if error, return its result
 			return err.Result()
@@ -83,7 +83,7 @@ func betterHandleMsgSend(accountKeeper bank.Keeper) sdk.Handler {
 	}
 }
 
-func betterHandleMsgIssue(metadataMapper MetaDataMapper, accountKeeper bank.Keeper) sdk.Handler {
+func handleMsgIssueWithInfoMapper(infoMapper coinInfoMapper, coinKeeper bank.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		issueMsg, ok := msg.(MsgIssue)
 		if !ok {
@@ -91,107 +91,70 @@ func betterHandleMsgIssue(metadataMapper MetaDataMapper, accountKeeper bank.Keep
 		}
 
 		// Handle updating metadata
-		if res := betterHandleMetaData(ctx, metadataMapper, issueMsg.Issuer, issueMsg.Coin); !res.IsOK() {
+		if res := handleCoinInfoWithMapper(ctx, infoMapper, issueMsg.Issuer, issueMsg.Coin); !res.IsOK() {
 			return res
 		}
 
 		// Add newly issued coins to output address
-		_, _, err := accountKeeper.AddCoins(ctx, issueMsg.Receiver, []sdk.Coin{issueMsg.Coin})
+		_, _, err := coinKeeper.AddCoins(ctx, issueMsg.Receiver, []sdk.Coin{issueMsg.Coin})
 		if err != nil {
 			return err.Result()
 		}
 
 		return sdk.Result{
-			// Return result with Issue msg tags
 			Tags: issueMsg.Tags(),
 		}
 	}
 }
 
-func betterHandleMetaData(ctx sdk.Context, metadataMapper MetaDataMapper, issuer sdk.Address, coin sdk.Coin) sdk.Result {
-	metadata := metadataMapper.GetMetaData(ctx, coin.Denom)
+func handleCoinInfoWithMapper(ctx sdk.Context, infoMapper CoinInfoMapper, issuer sdk.Address, coin sdk.Coin) sdk.Result {
+	coinInfo := infoMapper.GetInfo(ctx, coin.Denom)
 
 	// Metadata was created fresh, should set issuer to msg issuer
-	if len(metadata.Issuer) == 0 {
-		metadata.Issuer = issuer
+	if len(coinInfo.Issuer) == 0 {
+		coinInfo.Issuer = issuer
 	}
 
 	// Msg Issuer is not authorized to issue these coins
-	if !bytes.Equal(metadata.Issuer, issuer) {
+	if !bytes.Equal(coinInfo.Issuer, issuer) {
 		return sdk.ErrUnauthorized(fmt.Sprintf("Msg Issuer cannot issue tokens: %s", coin.Denom)).Result()
 	}
 
-	// Update current circulating supply
-	metadata.CurrentSupply = metadata.CurrentSupply.Add(coin.Amount)
-
-	// Current supply cannot exceed total supply
-	if metadata.TotalSupply.LT(metadata.CurrentSupply) {
-		return sdk.ErrInsufficientCoins("Issuer cannot issue more than total supply of coin").Result()
-	}
-
-	metadataMapper.SetMetaData(ctx, coin.Denom, metadata)
 	return sdk.Result{}
 }
 
 //------------------------------------------------------------------
-// Mapper for Coin Metadata
+// Mapper for CoinInfo
 
-// Example of a very simple user-defined mapper interface
-type MetaDataMapper interface {
-	GetMetaData(sdk.Context, string) CoinMetadata
-	SetMetaData(sdk.Context, string, CoinMetadata)
+// Example of a very simple user-defined read-only mapper interface.
+type CoinInfoMapper interface {
+	GetInfo(sdk.Context, string) coinInfo
 }
 
-// Implements MetaDataMapper
-type App3MetaDataMapper struct {
-	mainKey *sdk.KVStoreKey
+// Implements CoinInfoMapper.
+type coinInfoMapper struct {
+	key *sdk.KVStoreKey
 }
 
-// Construct new App3MetaDataMapper
-func NewApp3MetaDataMapper(key *sdk.KVStoreKey) App3MetaDataMapper {
-	return App3MetaDataMapper{mainKey: key}
+// Construct new CoinInfoMapper.
+func NewCoinInfoMapper(key *sdk.KVStoreKey) coinInfoMapper {
+	return coinInfoMapper{key: key}
 }
 
-// Implements MetaDataMpper. Returns metadata for coin
-// If metadata does not exist in store, function creates default metadata and returns it
-// without adding it to the store.
-func (mdm App3MetaDataMapper) GetMetaData(ctx sdk.Context, denom string) CoinMetadata {
-	store := ctx.KVStore(mdm.mainKey)
+// Implements CoinInfoMapper. Returns info for coin.
+func (cim coinInfoMapper) GetInfo(ctx sdk.Context, denom string) coinInfo {
+	store := ctx.KVStore(cim.key)
 
-	bz := store.Get([]byte(denom))
-	if bz == nil {
-		// Coin metadata doesn't exist, create new metadata with default params
-		return CoinMetadata{
-			TotalSupply: sdk.NewInt(1000000),
-		}
+	infoBytes := store.Get([]byte(denom))
+	if infoBytes == nil {
+		// TODO
 	}
 
-	var metadata CoinMetadata
-	err := json.Unmarshal(bz, &metadata)
+	var coinInfo coinInfo
+	err := json.Unmarshal(infoBytes, &coinInfo)
 	if err != nil {
 		panic(err)
 	}
 
-	return metadata
+	return coinInfo
 }
-
-// Implements MetaDataMapper. Sets metadata in store with key equal to denom.
-func (mdm App3MetaDataMapper) SetMetaData(ctx sdk.Context, denom string, metadata CoinMetadata) {
-	store := ctx.KVStore(mdm.mainKey)
-
-	val, err := json.Marshal(metadata)
-	if err != nil {
-		panic(err)
-	}
-
-	store.Set([]byte(denom), val)
-}
-
-//------------------------------------------------------------------
-// StdTx
-
-//------------------------------------------------------------------
-// Account
-
-//------------------------------------------------------------------
-// Ante Handler

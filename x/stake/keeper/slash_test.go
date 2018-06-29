@@ -354,7 +354,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	ctx = ctx.WithBlockHeight(12)
 	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
 	require.True(t, found)
-	keeper.Slash(ctx, pk, 10, 10, sdk.NewRat(1, 2))
+	keeper.Slash(ctx, pk, 10, 10, sdk.NewRat(3, 4))
 
 	// read updating redelegation
 	rd, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
@@ -363,13 +363,13 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.Equal(t, sdk.NewInt(0), rd.Balance.Amount)
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
-	// bonded tokens burned
-	require.Equal(t, int64(10), oldPool.BondedTokens-newPool.BondedTokens)
+	// 7 bonded tokens burned
+	require.Equal(t, int64(12), oldPool.BondedTokens-newPool.BondedTokens)
 	// read updated validator
 	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
 	require.True(t, found)
-	// power decreased by 2
-	require.Equal(t, sdk.NewRat(6), validator.GetPower())
+	// power decreased by 4
+	require.Equal(t, sdk.NewRat(4), validator.GetPower())
 
 	// slash the validator again, by 100%
 	ctx = ctx.WithBlockHeight(12)
@@ -385,12 +385,34 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// four more bonded tokens burned
-	require.Equal(t, int64(14), oldPool.BondedTokens-newPool.BondedTokens)
+	require.Equal(t, int64(16), oldPool.BondedTokens-newPool.BondedTokens)
 	// read updated validator
 	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
 	require.True(t, found)
-	// power decreased by 4
-	require.Equal(t, sdk.NewRat(2), validator.GetPower())
+	// power decreased by 4, down to 0
+	require.Equal(t, sdk.NewRat(0), validator.GetPower())
+
+	// slash the validator again, by 100%
+	// no stake remains to be slashed
+	ctx = ctx.WithBlockHeight(12)
+	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
+	require.True(t, found)
+	keeper.Slash(ctx, pk, 10, 10, sdk.OneRat())
+
+	// read updating redelegation
+	rd, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	require.True(t, found)
+	// balance still zero
+	require.Equal(t, sdk.NewInt(0), rd.Balance.Amount)
+	// read updated pool
+	newPool = keeper.GetPool(ctx)
+	// no more bonded tokens burned
+	require.Equal(t, int64(16), oldPool.BondedTokens-newPool.BondedTokens)
+	// read updated validator
+	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
+	require.True(t, found)
+	// power still zero
+	require.Equal(t, sdk.NewRat(0), validator.GetPower())
 }
 
 // tests Slash at a previous height with both an unbonding delegation and a redelegation

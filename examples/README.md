@@ -6,7 +6,7 @@ what is happening under the hood.
 
 ## Setup and Install
 
-You will need to have go installed on your computer. Please refer to the [cosmos testnet tutorial](https://cosmos.network/validators/tutorial), which will always have the most updated instructions on how to get setup with go and the cosmos repository. 
+You will need to have go installed on your computer. Please refer to the [cosmos testnet tutorial](https://cosmos.network/validators/tutorial), which will always have the most updated instructions on how to get setup with go and the cosmos repository.
 
 Once you have go installed, run the command:
 
@@ -27,7 +27,7 @@ make get_tools // run make update_tools if you already had it installed
 make get_vendor_deps
 make install_examples
 ```
-Then run `make install_examples`, which creates binaries for `basecli` and `basecoind`. You can look at the Makefile if you want to see the details on what these make commands are doing. 
+Then run `make install_examples`, which creates binaries for `basecli` and `basecoind`. You can look at the Makefile if you want to see the details on what these make commands are doing.
 
 ## Using basecli and basecoind
 
@@ -40,7 +40,7 @@ basecoind version
 
 They should read something like `0.17.1-5d18d5f`, but the versions will be constantly updating so don't worry if your version is higher that 0.17.1. That's a good thing.
 
-Note that you can always check help in the terminal by running `basecli -h` or `basecoind -h`. It is good to check these out if you are stuck, because updates to the code base might slightly change the commands, and you might find the correct command in there. 
+Note that you can always check help in the terminal by running `basecli -h` or `basecoind -h`. It is good to check these out if you are stuck, because updates to the code base might slightly change the commands, and you might find the correct command in there.
 
 Let's start by initializing the basecoind daemon. Run the command
 
@@ -60,7 +60,7 @@ And you should see something like this:
 }
 ```
 
-This creates the `~/.basecoind folder`, which has config.toml, genesis.json, node_key.json, priv_validator.json. Take some time to review what is contained in these files if you want to understand what is going on at a deeper level. 
+This creates the `~/.basecoind folder`, which has config.toml, genesis.json, node_key.json, priv_validator.json. Take some time to review what is contained in these files if you want to understand what is going on at a deeper level.
 
 
 ## Generating keys
@@ -79,7 +79,7 @@ Repeat the passphrase:
 Enter your recovery seed phrase:
 ```
 
-You just created your first locally stored key, under the name alice, and this account is linked to the private key that is running the basecoind validator node. Once you do this, the  ~/.basecli folder is created, which will hold the alice key and any other keys you make. Now that you have the key for alice, you can start up the blockchain by running 
+You just created your first locally stored key, under the name alice, and this account is linked to the private key that is running the basecoind validator node. Once you do this, the  ~/.basecli folder is created, which will hold the alice key and any other keys you make. Now that you have the key for alice, you can start up the blockchain by running
 
 ```
 basecoind start
@@ -100,7 +100,7 @@ You can see your keys with the command:
 basecli keys list
 ```
 
-You should now see alice, bob and charlie's account all show up. 
+You should now see alice, bob and charlie's account all show up.
 
 ```
 NAME: 	ADDRESS:					                PUBKEY:
@@ -123,11 +123,11 @@ Where `90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD` is alice's address we got from 
 The following command will send coins from alice, to bob:
 
 ```
-basecli send --name=alice --amount=10000mycoin --to=29D721F054537C91F618A0FDBF770DA51EF8C48D 
+basecli send --name=alice --amount=10000mycoin --to=29D721F054537C91F618A0FDBF770DA51EF8C48D
 --sequence=0 --chain-id=test-chain-AE4XQo
 ```
 
-Flag Descriptions: 
+Flag Descriptions:
 - `name` is the name you gave your key
 - `mycoin` is the name of the token for this basecoin demo, initialized in the genesis.json file
 - `sequence` is a tally of how many transactions have been made by this account. Since this is the first tx on this account, it is 0
@@ -142,7 +142,7 @@ basecli account 29D721F054537C91F618A0FDBF770DA51EF8C48D
 Now lets send some from bob to charlie. Make sure you send less than bob has, otherwise the transaction will fail:
 
 ```
-basecli send --name=bob --amount=5000mycoin --to=2E8E13EEB8E3F0411ACCBC9BE0384732C24FBD5E 
+basecli send --name=bob --amount=5000mycoin --to=2E8E13EEB8E3F0411ACCBC9BE0384732C24FBD5E
 --sequence=0 --chain-id=test-chain-AE4XQo
 ```
 
@@ -151,7 +151,7 @@ Note how we use the ``--name`` flag to select a different account to send from.
 Lets now try to send from bob back to alice:
 
 ```
-basecli send --name=bob --amount=3000mycoin --to=90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD 
+basecli send --name=bob --amount=3000mycoin --to=90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD
 --sequence=1 --chain-id=test-chain-AE4XQo
 ```
 
@@ -171,8 +171,8 @@ That is the basic implementation of basecoin!
 **WARNING:** Running these commands will wipe out any existing
 information in both the ``~/.basecli`` and ``~/.basecoind`` directories,
 including private keys. This should be no problem considering that basecoin
-is just an example, but it is always good to pay extra attention when 
-you are removing private keys, in any scenario involving a blockchain. 
+is just an example, but it is always good to pay extra attention when
+you are removing private keys, in any scenario involving a blockchain.
 
 To remove all the files created and refresh your environment (e.g., if
 starting this tutorial again or trying something new), the following
@@ -212,7 +212,7 @@ The Basecoin state consists entirely of a set of accounts. Each account
 contains an address, a public key, a balance in many different coin denominations,
 and a strictly increasing sequence number for replay protection. This
 type of account was directly inspired by accounts in Ethereum, and is
-unlike Bitcoin's use of Unspent Transaction Outputs (UTXOs). 
+unlike Bitcoin's use of Unspent Transaction Outputs (UTXOs).
 
 ```
 type BaseAccount struct {
@@ -225,7 +225,7 @@ type BaseAccount struct {
 
 You can also add more fields to accounts, and basecoin actually does so. Basecoin
 adds a Name field in order to show how easily the base account structure can be
-modified to suit any applications needs. It takes the `auth.BaseAccount` we see above, 
+modified to suit any applications needs. It takes the `auth.BaseAccount` we see above,
 and extends it with `Name`.
 
 ```
@@ -256,7 +256,7 @@ Accounts are serialized and stored in a Merkle tree under the key
 Typically, the address of the account is the 20-byte ``RIPEMD160`` hash
 of the public key, but other formats are acceptable as well, as defined
 in the `Tendermint crypto
-library <https://github.com/tendermint/go-crypto>`__. The Merkle tree
+library <https://github.com/tendermint/tendermint/crypto>`__. The Merkle tree
 used in Basecoin is a balanced, binary search tree, which we call an
 `IAVL tree <https://github.com/tendermint/iavl>`__.
 
@@ -293,15 +293,15 @@ Note the `SendTx` includes a field for `Gas` and `Fee`. The
 transaction, while the `Fee` refers to the total amount paid in fees.
 This is slightly different from Ethereum's concept of `Gas` and
 `GasPrice`, where `Fee = Gas x GasPrice`. In Basecoin, the `Gas`
-and `Fee` are independent, and the `GasPrice` is implicit. 
+and `Fee` are independent, and the `GasPrice` is implicit.
 
 In Basecoin, the `Fee` is meant to be used by the validators to inform
 the ordering of transactions, like in Bitcoin. And the `Gas` is meant
 to be used by the application plugin to control its execution. There is
 currently no means to pass `Fee` information to the Tendermint
-validators, but it will come soon... so this version of Basecoin does 
-not actually fully implement fees and gas, but it still allows us 
-to send transactions between accounts. 
+validators, but it will come soon... so this version of Basecoin does
+not actually fully implement fees and gas, but it still allows us
+to send transactions between accounts.
 
 Note also that the `PubKey` only needs to be sent for
 `Sequence == 0`. After that, it is stored under the account in the
@@ -318,4 +318,3 @@ serve as a basic unit of decentralized exchange. When using multiple
 inputs and outputs, you must make sure that the sum of coins of the
 inputs equals the sum of coins of the outputs (no creating money), and
 that all accounts that provide inputs have signed the transaction.
-

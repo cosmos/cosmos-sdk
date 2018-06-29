@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/iavl"
+	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 
@@ -155,7 +155,7 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 	iavlStore.Set([]byte{byte(255), byte(255), byte(1)}, []byte("test4"))
 	iavlStore.Set([]byte{byte(255), byte(255), byte(255)}, []byte("test4"))
 
-	i := 0
+	var i int
 
 	iter := sdk.KVStorePrefixIterator(iavlStore, []byte("test"))
 	expected := []string{"test1", "test2", "test3"}
@@ -214,7 +214,7 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 	iavlStore.Set([]byte{byte(255), byte(255), byte(1)}, []byte("test4"))
 	iavlStore.Set([]byte{byte(255), byte(255), byte(255)}, []byte("test4"))
 
-	i := 0
+	var i int
 
 	iter := sdk.KVStoreReversePrefixIterator(iavlStore, []byte("test"))
 	expected := []string{"test3", "test2", "test1"}

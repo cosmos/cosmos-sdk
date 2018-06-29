@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/abci/server"
+	"github.com/tendermint/tendermint/abci/server"
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/node"
@@ -58,12 +58,18 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 		return errors.Errorf("error creating listener: %v\n", err)
 	}
 	svr.SetLogger(ctx.Logger.With("module", "abci-server"))
-	svr.Start()
+	err = svr.Start()
+	if err != nil {
+		cmn.Exit(err.Error())
+	}
 
 	// Wait forever
 	cmn.TrapSignal(func() {
 		// Cleanup
-		svr.Stop()
+		err = svr.Stop()
+		if err != nil {
+			cmn.Exit(err.Error())
+		}
 	})
 	return nil
 }
@@ -82,6 +88,7 @@ func startInProcess(ctx *Context, appCreator AppCreator) error {
 		proxy.NewLocalClientCreator(app),
 		node.DefaultGenesisDocProviderFunc(cfg),
 		node.DefaultDBProvider,
+		node.DefaultMetricsProvider,
 		ctx.Logger.With("module", "node"))
 	if err != nil {
 		return err

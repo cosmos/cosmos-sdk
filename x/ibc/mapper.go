@@ -39,7 +39,7 @@ func (ibcm Mapper) PostIBCPacket(ctx sdk.Context, packet IBCPacket) sdk.Error {
 	}
 
 	store.Set(EgressKey(packet.DestChain, index), bz)
-	bz, err = ibcm.cdc.MarshalBinary(int64(index + 1))
+	bz, err = ibcm.cdc.MarshalBinary(index + 1)
 	if err != nil {
 		panic(err)
 	}

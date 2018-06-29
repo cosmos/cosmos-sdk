@@ -140,8 +140,11 @@ func processSig(
 		return nil, sdk.ErrInvalidSequence(
 			fmt.Sprintf("Invalid sequence. Got %d, expected %d", sig.Sequence, seq)).Result()
 	}
-	acc.SetSequence(seq + 1)
-
+	err := acc.SetSequence(seq + 1)
+	if err != nil {
+		// Handle w/ #870
+		panic(err)
+	}
 	// If pubkey is not known for account,
 	// set it from the StdSignature.
 	pubKey := acc.GetPubKey()
@@ -154,7 +157,7 @@ func processSig(
 			return nil, sdk.ErrInvalidPubKey(
 				fmt.Sprintf("PubKey does not match Signer address %v", addr)).Result()
 		}
-		err := acc.SetPubKey(pubKey)
+		err = acc.SetPubKey(pubKey)
 		if err != nil {
 			return nil, sdk.ErrInternal("setting PubKey on signer's account").Result()
 		}
@@ -181,7 +184,11 @@ func deductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 		errMsg := fmt.Sprintf("%s < %s", coins, feeAmount)
 		return nil, sdk.ErrInsufficientFunds(errMsg).Result()
 	}
-	acc.SetCoins(newCoins)
+	err := acc.SetCoins(newCoins)
+	if err != nil {
+		// Handle w/ #870
+		panic(err)
+	}
 	return acc, sdk.Result{}
 }
 

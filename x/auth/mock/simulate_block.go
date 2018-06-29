@@ -8,9 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
 
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var chainID = "" // TODO
@@ -44,9 +44,13 @@ func GenTx(msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKeyE
 	sigs := make([]auth.StdSignature, len(priv))
 	memo := "testmemotestmemo"
 	for i, p := range priv {
+		sig, err := p.Sign(auth.StdSignBytes(chainID, accnums[i], seq[i], fee, msgs, memo))
+		if err != nil {
+			panic(err)
+		}
 		sigs[i] = auth.StdSignature{
 			PubKey:        p.PubKey(),
-			Signature:     p.Sign(auth.StdSignBytes(chainID, accnums[i], seq[i], fee, msgs, memo)),
+			Signature:     sig,
 			AccountNumber: accnums[i],
 			Sequence:      seq[i],
 		}

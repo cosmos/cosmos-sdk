@@ -15,13 +15,13 @@ import (
 	client "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
-	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
-	tx "github.com/cosmos/cosmos-sdk/client/tx"
+//	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
+//	tx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/wire"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
-	ibc "github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
+//	gov "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
+//	ibc "github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
 	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 	"github.com/cosmos/cosmos-sdk/lcd/proxy"
 )
@@ -85,12 +85,13 @@ func createHandler(cdc *wire.Codec) http.Handler {
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
 	r.HandleFunc("/node_version", NodeVersionRequestHandler(cdc, ctx)).Methods("GET")
 	keys.RegisterRoutes(r)
-	rpc.RegisterRoutes(ctx, r)
-	tx.RegisterRoutes(ctx, r, cdc)
+	//rpc.RegisterRoutes(ctx, r)
+	//tx.RegisterRoutes(ctx, r, cdc)
 	auth.RegisterRoutes(ctx, r, cdc, "acc")
-	bank.RegisterRoutes(ctx, r, cdc, kb)
-	ibc.RegisterRoutes(ctx, r, cdc, kb)
+	//bank.RegisterRoutes(ctx, r, cdc, kb)
+	bank.RegisterRoutes(ctx, r, cdc)
+	//ibc.RegisterRoutes(ctx, r, cdc, kb)
 	stake.RegisterRoutes(ctx, r, cdc, kb)
-	gov.RegisterRoutes(ctx, r, cdc, kb)
+	//gov.RegisterRoutes(ctx, r, cdc, kb)
 	return r
 }

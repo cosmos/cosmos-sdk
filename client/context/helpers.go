@@ -19,6 +19,7 @@ import (
 	"github.com/tendermint/iavl"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/lcd/proxy"
+	"github.com/tendermint/go-crypto"
 )
 
 // Broadcast the transaction bytes to Tendermint
@@ -193,6 +194,81 @@ func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 	}
 
 	return info.PubKey.Address(), nil
+}
+
+// build the transaction from the msg
+func (ctx CoreContext) BuildTransaction(accnum, sequence, gas int64, msg sdk.Msg, cdc *wire.Codec) ([]byte, error) {
+	chainID := ctx.ChainID
+	if chainID == "" {
+		return nil, errors.Errorf("chain ID required but not specified")
+	}
+	memo := ctx.Memo
+
+	signMsg := auth.StdSignMsg{
+		ChainID:       chainID,
+		AccountNumber: int64(accnum),
+		Sequence:      int64(sequence),
+		Msgs:          []sdk.Msg{msg},
+		Memo:          memo,
+		Fee:           auth.NewStdFee(gas, sdk.Coin{}),
+	}
+
+	return signMsg.Bytes(),nil
+}
+
+// build the transaction from the msg
+func (ctx CoreContext) BroadcastTransaction(txData []byte, signatures [][]byte, publicKeys [][]byte, cdc *wire.Codec) (*ctypes.ResultBroadcastTxCommit, error) {
+	var stdSignDoc auth.StdSignDoc//, transactionSigs []auth.StdSignature
+	err := cdc.UnmarshalBinary(txData,&stdSignDoc)
+	if err != nil {
+		return nil, err
+	}
+
+	var msgs []sdk.Msg
+	err = cdc.UnmarshalBinary(stdSignDoc.MsgsBytes,&msgs)
+	if err != nil {
+		return nil, err
+	}
+
+	var fee auth.StdFee
+	err = cdc.UnmarshalBinary(stdSignDoc.FeeBytes,&fee)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(signatures) != len(publicKeys) {
+		return nil, errors.New("Error: signatures length doesn't equal to publicKeys length")
+	}
+
+	var stdSignatures []auth.StdSignature
+	for index,signature := range signatures {
+
+		public,err := crypto.PubKeyFromBytes(publicKeys[index])
+		if err != nil {
+			return nil, err
+		}
+
+		sig,err := crypto.SignatureFromBytes(signature)
+		if err != nil {
+			return nil, err
+		}
+
+		stdSignatures = append(stdSignatures,auth.StdSignature{
+			PubKey:        public,
+			Signature:     sig,
+			AccountNumber: stdSignDoc.AccountNumber,
+			Sequence:      stdSignDoc.Sequence,
+		})
+	}
+	// marshal bytes
+	tx := auth.NewStdTx(msgs, fee, stdSignatures, stdSignDoc.Memo)
+
+	txBytes,err := cdc.MarshalBinary(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	return ctx.BroadcastTx(txBytes)
 }
 
 // sign and build the transaction from the msg

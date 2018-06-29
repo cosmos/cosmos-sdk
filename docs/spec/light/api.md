@@ -21,6 +21,76 @@ used for determining the error type.
 Exposes the same functionality as the Tendermint RPC from a full node. It aims to have a very
 similar API.
 
+### /broadcast_tx_sync - POST
+
+url: /broadcast_tx_sync
+
+Functionality: Submit a signed transaction and wait for it to be committed.
+
+Parameters:
+| Parameter   | Type   | Default | Required | Description     |
+| ----------- | ------ | ------- | -------- | --------------- |
+| transaction | string | null    | true     | signed tx bytes |
+
+Returns on success:
+
+```json
+{
+    "rest api": "2.0",
+    "code":200,
+    "error": "",
+    "result": {
+        // TODO: What should the return format be?
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api": "2.0",
+    "code":500,
+    "error": "Could not submit the transaction synchronously.",
+    "result": {}
+}
+```
+
+### /broadcast_tx_async - POST
+
+url: /broadcast_tx_async
+
+Functionality: Submit a signed transaction asynchronously.
+
+Parameters:
+| Parameter   | Type   | Default | Required | Description     |
+| ----------- | ------ | ------- | -------- | --------------- |
+| transaction | string | null    | true     | signed tx bytes |
+
+Returns on success:
+
+```json
+{
+    "rest api": "2.0",
+    "code":200,
+    "error": "",
+    "result": {
+        // TODO: What should the return format be?
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api": "2.0",
+    "code":500,
+    "error": "Could not submit the transaction asynchronously.",
+    "result": {}
+}
+```
+
 ## ICS1 - KeyAPI
 
 This API exposes all functionality needed for key creation, signing and management.
@@ -316,41 +386,6 @@ Returns on failure:
 }
 ```
 
-### /signed_transfer - POST
-
-url: /signed_transfer, Method: POST
-
-Functionality: transfer asset
-
-Parameters:
-
-| Parameter       | Type   | Default | Required | Description            |
-| ------------    | ------ | ------- | -------- | ----------------------------------------------- |
-| signed_transfer | []byte | null    | true     | bytes of a valid transaction and it's signature |
-
-* The above command returns JSON structured like this if success:
-
-```
-{
-    "error": "",
-    "code":200,
-    "result": {
-     "tx_hash": ""
-    },
-    "rest api": "2.0"
-}
-```
-
-* The above command returns JSON structured like this if fails:
-
-```
-{
-    "error": "Invalid Signature",
-    "code":500,
-    "result": {},
-    "rest api": "2.0"
-}
-```
 ## StakingAPI
 
 This API exposes all functionality needed for staking info query.

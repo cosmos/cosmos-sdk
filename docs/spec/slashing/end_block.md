@@ -1,4 +1,4 @@
-# End-Block 
+# End-Block
 
 ## Slashing
 
@@ -6,9 +6,9 @@ Tendermint blocks can include
 [Evidence](https://github.com/tendermint/tendermint/blob/develop/docs/spec/blockchain/blockchain.md#evidence), which indicates that a validator
 committed malicious behaviour. The relevant information is forwarded to the
 application as [ABCI
-Evidence](https://github.com/tendermint/abci/blob/develop/types/types.proto#L259), so the validator an be accordingly punished.
+Evidence](https://github.com/tendermint/tendermint/abci/blob/develop/types/types.proto#L259), so the validator an be accordingly punished.
 
-For some `evidence` to be valid, it must satisfy: 
+For some `evidence` to be valid, it must satisfy:
 
 `evidence.Timestamp >= block.Timestamp - MAX_EVIDENCE_AGE`
 
@@ -102,7 +102,7 @@ for val in block.Validators:
   // else previous == val not in block.AbsentValidators, no change
 
   // validator must be active for at least SIGNED_BLOCKS_WINDOW
-  // before they can be automatically unbonded for failing to be 
+  // before they can be automatically unbonded for failing to be
   // included in 50% of the recent LastCommits
   minHeight = signInfo.StartHeight + SIGNED_BLOCKS_WINDOW
   minSigned = SIGNED_BLOCKS_WINDOW / 2

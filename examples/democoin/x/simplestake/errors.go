@@ -32,6 +32,7 @@ func ErrEmptyStake(codespace sdk.CodespaceType) sdk.Error {
 // -----------------------------
 // Helpers
 
+// nolint: unparam
 func newError(codespace sdk.CodespaceType, code sdk.CodeType, msg string) sdk.Error {
 	return sdk.NewError(codespace, code, msg)
 }

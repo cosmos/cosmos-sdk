@@ -9,7 +9,6 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Validator defines the total amount of bond shares and their exchange rate to
@@ -135,7 +134,7 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 }
 
 // abci validator from stake validator type
-func (v Validator) ABCIValidator(cdc *wire.Codec) abci.Validator {
+func (v Validator) ABCIValidator() abci.Validator {
 	return abci.Validator{
 		PubKey: tmtypes.TM2PB.PubKey(v.PubKey),
 		Power:  v.PoolShares.Bonded().Evaluate(),
@@ -144,7 +143,7 @@ func (v Validator) ABCIValidator(cdc *wire.Codec) abci.Validator {
 
 // abci validator from stake validator type
 // with zero power used for validator updates
-func (v Validator) ABCIValidatorZero(cdc *wire.Codec) abci.Validator {
+func (v Validator) ABCIValidatorZero() abci.Validator {
 	return abci.Validator{
 		PubKey: tmtypes.TM2PB.PubKey(v.PubKey),
 		Power:  0,

@@ -76,7 +76,7 @@ func incrementAllSequenceNumbers(initSeqNums []int64) {
 }
 
 // check a transaction result
-func SignCheck(t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.Result {
+func SignCheck(app *baseapp.BaseApp, msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.Result {
 	tx := GenTx(msgs, accnums, seq, priv...)
 	res := app.Check(tx)
 	return res

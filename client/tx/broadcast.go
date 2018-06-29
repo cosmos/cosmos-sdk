@@ -9,7 +9,7 @@ import (
 
 // Tx Broadcast Body
 type BroadcastTxBody struct {
-	TxBytes string `json="tx"`
+	TxBytes string `json:"tx"`
 }
 
 // BroadcastTx REST Handler

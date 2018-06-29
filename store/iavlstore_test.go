@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/iavl"
+	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 
@@ -155,7 +155,7 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 	iavlStore.Set([]byte{byte(255), byte(255), byte(1)}, []byte("test4"))
 	iavlStore.Set([]byte{byte(255), byte(255), byte(255)}, []byte("test4"))
 
-	i := 0
+	var i int
 
 	iter := sdk.KVStorePrefixIterator(iavlStore, []byte("test"))
 	expected := []string{"test1", "test2", "test3"}
@@ -170,9 +170,9 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 
 	iter = sdk.KVStorePrefixIterator(iavlStore, []byte{byte(55), byte(255), byte(255)})
 	expected2 := [][]byte{
-		[]byte{byte(55), byte(255), byte(255), byte(0)},
-		[]byte{byte(55), byte(255), byte(255), byte(1)},
-		[]byte{byte(55), byte(255), byte(255), byte(255)},
+		{byte(55), byte(255), byte(255), byte(0)},
+		{byte(55), byte(255), byte(255), byte(1)},
+		{byte(55), byte(255), byte(255), byte(255)},
 	}
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected2[i]
@@ -185,9 +185,9 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 
 	iter = sdk.KVStorePrefixIterator(iavlStore, []byte{byte(255), byte(255)})
 	expected2 = [][]byte{
-		[]byte{byte(255), byte(255), byte(0)},
-		[]byte{byte(255), byte(255), byte(1)},
-		[]byte{byte(255), byte(255), byte(255)},
+		{byte(255), byte(255), byte(0)},
+		{byte(255), byte(255), byte(1)},
+		{byte(255), byte(255), byte(255)},
 	}
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected2[i]
@@ -214,7 +214,7 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 	iavlStore.Set([]byte{byte(255), byte(255), byte(1)}, []byte("test4"))
 	iavlStore.Set([]byte{byte(255), byte(255), byte(255)}, []byte("test4"))
 
-	i := 0
+	var i int
 
 	iter := sdk.KVStoreReversePrefixIterator(iavlStore, []byte("test"))
 	expected := []string{"test3", "test2", "test1"}
@@ -229,9 +229,9 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 
 	iter = sdk.KVStoreReversePrefixIterator(iavlStore, []byte{byte(55), byte(255), byte(255)})
 	expected2 := [][]byte{
-		[]byte{byte(55), byte(255), byte(255), byte(255)},
-		[]byte{byte(55), byte(255), byte(255), byte(1)},
-		[]byte{byte(55), byte(255), byte(255), byte(0)},
+		{byte(55), byte(255), byte(255), byte(255)},
+		{byte(55), byte(255), byte(255), byte(1)},
+		{byte(55), byte(255), byte(255), byte(0)},
 	}
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected2[i]
@@ -244,9 +244,9 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 
 	iter = sdk.KVStoreReversePrefixIterator(iavlStore, []byte{byte(255), byte(255)})
 	expected2 = [][]byte{
-		[]byte{byte(255), byte(255), byte(255)},
-		[]byte{byte(255), byte(255), byte(1)},
-		[]byte{byte(255), byte(255), byte(0)},
+		{byte(255), byte(255), byte(255)},
+		{byte(255), byte(255), byte(1)},
+		{byte(255), byte(255), byte(0)},
 	}
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected2[i]

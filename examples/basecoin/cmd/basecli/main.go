@@ -51,6 +51,10 @@ func main() {
 	// add query/post commands (custom to binary)
 	rootCmd.AddCommand(
 		client.GetCommands(
+			stakecmd.GetCmdQueryValidator("stake", cdc),
+			stakecmd.GetCmdQueryValidators("stake", cdc),
+			stakecmd.GetCmdQueryDelegation("stake", cdc),
+			stakecmd.GetCmdQueryDelegations("stake", cdc),
 			authcmd.GetAccountCmd("acc", cdc, types.GetAccountDecoder(cdc)),
 		)...)
 
@@ -59,10 +63,10 @@ func main() {
 			bankcmd.SendTxCmd(cdc),
 			ibccmd.IBCTransferCmd(cdc),
 			ibccmd.IBCRelayCmd(cdc),
-			stakecmd.GetCmdDeclareCandidacy(cdc),
-			stakecmd.GetCmdEditCandidacy(cdc),
+			stakecmd.GetCmdCreateValidator(cdc),
+			stakecmd.GetCmdEditValidator(cdc),
 			stakecmd.GetCmdDelegate(cdc),
-			stakecmd.GetCmdUnbond(cdc),
+			stakecmd.GetCmdUnbond("stake", cdc),
 		)...)
 
 	// add proxy, version and key info
@@ -76,5 +80,9 @@ func main() {
 
 	// prepare and add flags
 	executor := cli.PrepareMainCmd(rootCmd, "BC", os.ExpandEnv("$HOME/.basecli"))
-	executor.Execute()
+	err := executor.Execute()
+	if err != nil {
+		// handle with #870
+		panic(err)
+	}
 }

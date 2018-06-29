@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 var _ auth.Account = (*AppAccount)(nil)
@@ -41,7 +42,8 @@ func GetAccountDecoder(cdc *wire.Codec) auth.AccountDecoder {
 
 // State to Unmarshal
 type GenesisState struct {
-	Accounts []*GenesisAccount `json:"accounts"`
+	Accounts  []*GenesisAccount  `json:"accounts"`
+	StakeData stake.GenesisState `json:"stake"`
 }
 
 // GenesisAccount doesn't need pubkey or sequence

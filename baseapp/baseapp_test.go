@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -10,8 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
+	tmtypes "github.com/tendermint/tendermint/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
@@ -19,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 func defaultLogger() log.Logger {
@@ -29,7 +30,7 @@ func newBaseApp(name string) *BaseApp {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	codec := wire.NewCodec()
-	wire.RegisterCrypto(codec)
+	auth.RegisterBaseAccount(codec)
 	return NewBaseApp(name, codec, logger, db)
 }
 
@@ -83,18 +84,36 @@ func TestLoadVersion(t *testing.T) {
 	header := abci.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	res := app.Commit()
-	commitID := sdk.CommitID{1, res.Data}
+	commitID1 := sdk.CommitID{1, res.Data}
+	header = abci.Header{Height: 2}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res = app.Commit()
+	commitID2 := sdk.CommitID{2, res.Data}
 
-	// reload
+	// reload with LoadLatestVersion
 	app = NewBaseApp(name, nil, logger, db)
 	app.MountStoresIAVL(capKey)
-	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	err = app.LoadLatestVersion(capKey)
 	assert.Nil(t, err)
+	testLoadVersionHelper(t, app, int64(2), commitID2)
 
-	lastHeight = app.LastBlockHeight()
-	lastID = app.LastCommitID()
-	assert.Equal(t, int64(1), lastHeight)
-	assert.Equal(t, commitID, lastID)
+	// reload with LoadVersion, see if you can commit the same block and get
+	// the same result
+	app = NewBaseApp(name, nil, logger, db)
+	app.MountStoresIAVL(capKey)
+	err = app.LoadVersion(1, capKey)
+	assert.Nil(t, err)
+	testLoadVersionHelper(t, app, int64(1), commitID1)
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	app.Commit()
+	testLoadVersionHelper(t, app, int64(2), commitID2)
+}
+
+func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, expectedID sdk.CommitID) {
+	lastHeight := app.LastBlockHeight()
+	lastID := app.LastCommitID()
+	assert.Equal(t, expectedHeight, lastHeight)
+	assert.Equal(t, expectedID, lastID)
 }
 
 // Test that the app hash is static
@@ -183,7 +202,15 @@ func TestInitChainer(t *testing.T) {
 
 	// set initChainer and try again - should see the value
 	app.SetInitChainer(initChainer)
-	app.InitChain(abci.RequestInitChain{AppStateBytes: []byte("{}")}) // must have valid JSON genesis file, even if empty
+	app.InitChain(abci.RequestInitChain{AppStateBytes: []byte("{}"), ChainId: "test-chain-id"}) // must have valid JSON genesis file, even if empty
+
+	// assert that chainID is set correctly in InitChain
+	chainID := app.deliverState.ctx.ChainID()
+	assert.Equal(t, "test-chain-id", chainID, "ChainID in deliverState not set correctly in InitChain")
+
+	chainID = app.checkState.ctx.ChainID()
+	assert.Equal(t, "test-chain-id", chainID, "ChainID in checkState not set correctly in InitChain")
+
 	app.Commit()
 	res = app.Query(query)
 	assert.Equal(t, value, res.Value)
@@ -206,11 +233,92 @@ func TestInitChainer(t *testing.T) {
 	assert.Equal(t, value, res.Value)
 }
 
+func getStateCheckingHandler(t *testing.T, capKey *sdk.KVStoreKey, txPerHeight int, checkHeader bool) func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	counter := 0
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		store := ctx.KVStore(capKey)
+		// Checking state gets updated between checkTx's / DeliverTx's
+		// on the store within a block.
+		if counter > 0 {
+			// check previous value in store
+			counterBytes := []byte{byte(counter - 1)}
+			prevBytes := store.Get(counterBytes)
+			assert.Equal(t, counterBytes, prevBytes)
+		}
+
+		// set the current counter in the store
+		counterBytes := []byte{byte(counter)}
+		store.Set(counterBytes, counterBytes)
+
+		// check that we can see the current header
+		// wrapped in an if, so it can be reused between CheckTx and DeliverTx tests.
+		if checkHeader {
+			thisHeader := ctx.BlockHeader()
+			height := int64((counter / txPerHeight) + 1)
+			assert.Equal(t, height, thisHeader.Height)
+		}
+
+		counter++
+		return sdk.Result{}
+	}
+}
+
+// A mock transaction that has a validation which can fail.
+type testTx struct {
+	positiveNum int64
+}
+
+const msgType2 = "testTx"
+
+func (tx testTx) Type() string                       { return msgType2 }
+func (tx testTx) GetMemo() string                    { return "" }
+func (tx testTx) GetMsgs() []sdk.Msg                 { return []sdk.Msg{tx} }
+func (tx testTx) GetSignBytes() []byte               { return nil }
+func (tx testTx) GetSigners() []sdk.Address          { return nil }
+func (tx testTx) GetSignatures() []auth.StdSignature { return nil }
+func (tx testTx) ValidateBasic() sdk.Error {
+	if tx.positiveNum >= 0 {
+		return nil
+	}
+	return sdk.ErrTxDecode("positiveNum should be a non-negative integer.")
+}
+
 // Test that successive CheckTx can see each others' effects
 // on the store within a block, and that the CheckTx state
 // gets reset to the latest Committed state during Commit
 func TestCheckTx(t *testing.T) {
-	// TODO
+	// Initialize an app for testing
+	app := newBaseApp(t.Name())
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
+
+	txPerHeight := 3
+	app.Router().AddRoute(msgType, getStateCheckingHandler(t, capKey, txPerHeight, false)).
+		AddRoute(msgType2, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
+	tx := testUpdatePowerTx{} // doesn't matter
+	for i := 0; i < txPerHeight; i++ {
+		app.Check(tx)
+	}
+	// If it gets to this point, then successive CheckTx's can see the effects of
+	// other CheckTx's on the block. The following checks that if another block
+	// is committed, the CheckTx State will reset.
+	app.BeginBlock(abci.RequestBeginBlock{})
+	tx2 := testTx{}
+	for i := 0; i < txPerHeight; i++ {
+		app.Deliver(tx2)
+	}
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+
+	checkStateStore := app.checkState.ctx.KVStore(capKey)
+	for i := 0; i < txPerHeight; i++ {
+		storedValue := checkStateStore.Get([]byte{byte(i)})
+		assert.Nil(t, storedValue)
+	}
 }
 
 // Test that successive DeliverTx can see each others' effects
@@ -224,30 +332,9 @@ func TestDeliverTx(t *testing.T) {
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	assert.Nil(t, err)
 
-	counter := 0
 	txPerHeight := 2
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
-	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		store := ctx.KVStore(capKey)
-		if counter > 0 {
-			// check previous value in store
-			counterBytes := []byte{byte(counter - 1)}
-			prevBytes := store.Get(counterBytes)
-			assert.Equal(t, prevBytes, counterBytes)
-		}
-
-		// set the current counter in the store
-		counterBytes := []byte{byte(counter)}
-		store.Set(counterBytes, counterBytes)
-
-		// check we can see the current header
-		thisHeader := ctx.BlockHeader()
-		height := int64((counter / txPerHeight) + 1)
-		assert.Equal(t, height, thisHeader.Height)
-
-		counter++
-		return sdk.Result{}
-	})
+	app.Router().AddRoute(msgType, getStateCheckingHandler(t, capKey, txPerHeight, true))
 
 	tx := testUpdatePowerTx{} // doesn't matter
 	header := abci.Header{AppHash: []byte("apphash")}
@@ -299,16 +386,18 @@ func TestSimulateTx(t *testing.T) {
 		return ttx, nil
 	})
 
+	app.InitChain(abci.RequestInitChain{})
+
 	nBlocks := 3
 	for blockN := 0; blockN < nBlocks; blockN++ {
 		// block1
 		header.Height = int64(blockN + 1)
 		app.BeginBlock(abci.RequestBeginBlock{Header: header})
 		result := app.Simulate(tx)
-		require.Equal(t, result.Code, sdk.ABCICodeOK)
+		require.Equal(t, result.Code, sdk.ABCICodeOK, result.Log)
 		require.Equal(t, int64(80), result.GasUsed)
 		counter--
-		encoded, err := json.Marshal(tx)
+		encoded, err := app.cdc.MarshalJSON(tx)
 		require.Nil(t, err)
 		query := abci.RequestQuery{
 			Path: "/app/simulate",
@@ -318,11 +407,32 @@ func TestSimulateTx(t *testing.T) {
 		require.Equal(t, queryResult.Code, uint32(sdk.ABCICodeOK))
 		var res sdk.Result
 		app.cdc.MustUnmarshalBinary(queryResult.Value, &res)
-		require.Equal(t, sdk.ABCICodeOK, res.Code)
-		require.Equal(t, int64(160), res.GasUsed)
+		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
+		require.Equal(t, int64(160), res.GasUsed, res.Log)
 		app.EndBlock(abci.RequestEndBlock{})
 		app.Commit()
 	}
+}
+
+func TestRunInvalidTransaction(t *testing.T) {
+	// Initialize an app for testing
+	app := newBaseApp(t.Name())
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
+	app.Router().AddRoute(msgType2, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
+	app.BeginBlock(abci.RequestBeginBlock{})
+	// Transaction where validate fails
+	invalidTx := testTx{-1}
+	err1 := app.Deliver(invalidTx)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeTxDecode), err1.Code)
+	// Transaction with no known route
+	unknownRouteTx := testUpdatePowerTx{}
+	err2 := app.Deliver(unknownRouteTx)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), err2.Code)
 }
 
 // Test that transactions exceeding gas limits fail
@@ -448,7 +558,8 @@ type testUpdatePowerTx struct {
 const msgType = "testUpdatePowerTx"
 
 func (tx testUpdatePowerTx) Type() string                       { return msgType }
-func (tx testUpdatePowerTx) GetMsg() sdk.Msg                    { return tx }
+func (tx testUpdatePowerTx) GetMemo() string                    { return "" }
+func (tx testUpdatePowerTx) GetMsgs() []sdk.Msg                 { return []sdk.Msg{tx} }
 func (tx testUpdatePowerTx) GetSignBytes() []byte               { return nil }
 func (tx testUpdatePowerTx) ValidateBasic() sdk.Error           { return nil }
 func (tx testUpdatePowerTx) GetSigners() []sdk.Address          { return nil }
@@ -510,15 +621,20 @@ func TestValidatorChange(t *testing.T) {
 
 	// Assert that validator updates are correct.
 	for _, val := range valSet {
+
+		pubkey, err := tmtypes.PB2TM.PubKey(val.PubKey)
 		// Sanity
-		assert.NotEqual(t, len(val.PubKey), 0)
+		assert.Nil(t, err)
 
 		// Find matching update and splice it out.
-		for j := 0; j < len(valUpdates); {
+		for j := 0; j < len(valUpdates); j++ {
 			valUpdate := valUpdates[j]
 
+			updatePubkey, err := tmtypes.PB2TM.PubKey(valUpdate.PubKey)
+			assert.Nil(t, err)
+
 			// Matched.
-			if bytes.Equal(valUpdate.PubKey, val.PubKey) {
+			if updatePubkey.Equals(pubkey) {
 				assert.Equal(t, valUpdate.Power, val.Power+1)
 				if j < len(valUpdates)-1 {
 					// Splice it out.
@@ -528,10 +644,326 @@ func TestValidatorChange(t *testing.T) {
 			}
 
 			// Not matched.
-			j++
 		}
 	}
 	assert.Equal(t, len(valUpdates), 0, "Some validator updates were unexpected")
+}
+
+//----------------------------------------
+
+// Use burn and send msg types to test multiple msgs in one tx
+type testBurnMsg struct {
+	Addr   sdk.Address
+	Amount sdk.Coins
+}
+
+const msgType3 = "burn"
+
+func (msg testBurnMsg) Type() string { return msgType3 }
+func (msg testBurnMsg) GetSignBytes() []byte {
+	bz, _ := json.Marshal(msg)
+	return bz
+}
+func (msg testBurnMsg) ValidateBasic() sdk.Error {
+	if msg.Addr == nil {
+		return sdk.ErrInvalidAddress("Cannot use nil as Address")
+	}
+	return nil
+}
+func (msg testBurnMsg) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.Addr}
+}
+
+type testSendMsg struct {
+	Sender   sdk.Address
+	Receiver sdk.Address
+	Amount   sdk.Coins
+}
+
+const msgType4 = "send"
+
+func (msg testSendMsg) Type() string { return msgType4 }
+func (msg testSendMsg) GetSignBytes() []byte {
+	bz, _ := json.Marshal(msg)
+	return bz
+}
+func (msg testSendMsg) ValidateBasic() sdk.Error {
+	if msg.Sender == nil || msg.Receiver == nil {
+		return sdk.ErrInvalidAddress("Cannot use nil as Address")
+	}
+	return nil
+}
+func (msg testSendMsg) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.Sender}
+}
+
+// Simple Handlers for burn and send
+
+func newHandleBurn(keeper bank.Keeper) sdk.Handler {
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		burnMsg := msg.(testBurnMsg)
+		_, _, err := keeper.SubtractCoins(ctx, burnMsg.Addr, burnMsg.Amount)
+		if err != nil {
+			return err.Result()
+		}
+		return sdk.Result{}
+	}
+}
+
+func newHandleSpend(keeper bank.Keeper) sdk.Handler {
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		spendMsg := msg.(testSendMsg)
+		_, _, err := keeper.SubtractCoins(ctx, spendMsg.Sender, spendMsg.Amount)
+		if err != nil {
+			return err.Result()
+		}
+		_, _, err = keeper.AddCoins(ctx, spendMsg.Receiver, spendMsg.Amount)
+		if err != nil {
+			return err.Result()
+		}
+		return sdk.Result{}
+	}
+}
+
+// generate a signed transaction
+func GenTx(chainID string, msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKey) auth.StdTx {
+	// make the transaction free
+	fee := auth.StdFee{
+		sdk.Coins{{"foocoin", sdk.NewInt(0)}},
+		100000,
+	}
+
+	sigs := make([]auth.StdSignature, len(priv))
+	for i, p := range priv {
+		sig, err := p.Sign(auth.StdSignBytes(chainID, accnums[i], seq[i], fee, msgs, ""))
+		// TODO: replace with proper error handling:
+		if err != nil {
+			panic(err)
+		}
+		sigs[i] = auth.StdSignature{
+			PubKey:        p.PubKey(),
+			Signature:     sig,
+			AccountNumber: accnums[i],
+			Sequence:      seq[i],
+		}
+	}
+	return auth.NewStdTx(msgs, fee, sigs, "")
+}
+
+// spin up simple app for testing
+type testApp struct {
+	*BaseApp
+	accountMapper auth.AccountMapper
+	accountKeeper bank.Keeper
+}
+
+func newTestApp(name string) testApp {
+	return testApp{
+		BaseApp: newBaseApp(name),
+	}
+}
+
+func MakeCodec() *wire.Codec {
+	cdc := wire.NewCodec()
+	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
+	crypto.RegisterAmino(cdc)
+	cdc.RegisterInterface((*auth.Account)(nil), nil)
+	cdc.RegisterConcrete(&auth.BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
+	return cdc
+}
+
+// tests multiple msgs of same type from same address in single tx
+func TestMultipleBurn(t *testing.T) {
+	// Create app.
+	app := newTestApp(t.Name())
+	capKey := sdk.NewKVStoreKey("key")
+	app.MountStoresIAVL(capKey)
+	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {
+		var tx auth.StdTx
+		fromJSON(txBytes, &tx)
+		return tx, nil
+	})
+
+	err := app.LoadLatestVersion(capKey)
+	if err != nil {
+		panic(err)
+	}
+
+	app.accountMapper = auth.NewAccountMapper(app.cdc, capKey, &auth.BaseAccount{})
+	app.accountKeeper = bank.NewKeeper(app.accountMapper)
+
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.FeeCollectionKeeper{}))
+
+	app.Router().
+		AddRoute("burn", newHandleBurn(app.accountKeeper)).
+		AddRoute("send", newHandleSpend(app.accountKeeper))
+
+	app.InitChain(abci.RequestInitChain{})
+	app.BeginBlock(abci.RequestBeginBlock{})
+
+	// Set chain-id
+	app.deliverState.ctx = app.deliverState.ctx.WithChainID(t.Name())
+
+	priv := makePrivKey("my secret")
+	addr := priv.PubKey().Address()
+
+	app.accountKeeper.AddCoins(app.deliverState.ctx, addr, sdk.Coins{{"foocoin", sdk.NewInt(100)}})
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr), "Balance did not update")
+
+	msg := testBurnMsg{addr, sdk.Coins{{"foocoin", sdk.NewInt(50)}}}
+	tx := GenTx(t.Name(), []sdk.Msg{msg, msg}, []int64{0}, []int64{0}, priv)
+
+	res := app.Deliver(tx)
+
+	assert.Equal(t, true, res.IsOK(), res.Log)
+	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr), "Double burn did not work")
+}
+
+// tests multiples msgs of same type from different addresses in single tx
+func TestBurnMultipleOwners(t *testing.T) {
+	// Create app.
+	app := newTestApp(t.Name())
+	capKey := sdk.NewKVStoreKey("key")
+	app.MountStoresIAVL(capKey)
+	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {
+		var tx auth.StdTx
+		fromJSON(txBytes, &tx)
+		return tx, nil
+	})
+
+	err := app.LoadLatestVersion(capKey)
+	if err != nil {
+		panic(err)
+	}
+
+	app.accountMapper = auth.NewAccountMapper(app.cdc, capKey, &auth.BaseAccount{})
+	app.accountKeeper = bank.NewKeeper(app.accountMapper)
+
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.FeeCollectionKeeper{}))
+
+	app.Router().
+		AddRoute("burn", newHandleBurn(app.accountKeeper)).
+		AddRoute("send", newHandleSpend(app.accountKeeper))
+
+	app.InitChain(abci.RequestInitChain{})
+	app.BeginBlock(abci.RequestBeginBlock{})
+
+	// Set chain-id
+	app.deliverState.ctx = app.deliverState.ctx.WithChainID(t.Name())
+
+	priv1 := makePrivKey("my secret 1")
+	addr1 := priv1.PubKey().Address()
+
+	priv2 := makePrivKey("my secret 2")
+	addr2 := priv2.PubKey().Address()
+
+	// fund accounts
+	app.accountKeeper.AddCoins(app.deliverState.ctx, addr1, sdk.Coins{{"foocoin", sdk.NewInt(100)}})
+	app.accountKeeper.AddCoins(app.deliverState.ctx, addr2, sdk.Coins{{"foocoin", sdk.NewInt(100)}})
+
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not update")
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 did not update")
+
+	msg1 := testBurnMsg{addr1, sdk.Coins{{"foocoin", sdk.NewInt(100)}}}
+	msg2 := testBurnMsg{addr2, sdk.Coins{{"foocoin", sdk.NewInt(100)}}}
+
+	// test wrong signers: Address 1 signs both messages
+	tx := GenTx(t.Name(), []sdk.Msg{msg1, msg2}, []int64{0, 0}, []int64{0, 0}, priv1, priv1)
+
+	res := app.Deliver(tx)
+	assert.Equal(t, sdk.ABCICodeType(0x10003), res.Code, "Wrong signatures passed")
+
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 changed after invalid sig")
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 changed after invalid sig")
+
+	// test valid tx
+	tx = GenTx(t.Name(), []sdk.Msg{msg1, msg2}, []int64{0, 1}, []int64{1, 0}, priv1, priv2)
+
+	res = app.Deliver(tx)
+	assert.Equal(t, true, res.IsOK(), res.Log)
+
+	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not change after valid tx")
+	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 did not change after valid tx")
+}
+
+// tests different msg types in single tx with different addresses
+func TestSendBurn(t *testing.T) {
+	// Create app.
+	app := newTestApp(t.Name())
+	capKey := sdk.NewKVStoreKey("key")
+	app.MountStoresIAVL(capKey)
+	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {
+		var tx auth.StdTx
+		fromJSON(txBytes, &tx)
+		return tx, nil
+	})
+
+	err := app.LoadLatestVersion(capKey)
+	if err != nil {
+		panic(err)
+	}
+
+	app.accountMapper = auth.NewAccountMapper(app.cdc, capKey, &auth.BaseAccount{})
+	app.accountKeeper = bank.NewKeeper(app.accountMapper)
+
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.FeeCollectionKeeper{}))
+
+	app.Router().
+		AddRoute("burn", newHandleBurn(app.accountKeeper)).
+		AddRoute("send", newHandleSpend(app.accountKeeper))
+
+	app.InitChain(abci.RequestInitChain{})
+	app.BeginBlock(abci.RequestBeginBlock{})
+
+	// Set chain-id
+	app.deliverState.ctx = app.deliverState.ctx.WithChainID(t.Name())
+
+	priv1 := makePrivKey("my secret 1")
+	addr1 := priv1.PubKey().Address()
+
+	priv2 := makePrivKey("my secret 2")
+	addr2 := priv2.PubKey().Address()
+
+	// fund accounts
+	app.accountKeeper.AddCoins(app.deliverState.ctx, addr1, sdk.Coins{{"foocoin", sdk.NewInt(100)}})
+	acc := app.accountMapper.NewAccountWithAddress(app.deliverState.ctx, addr2)
+	app.accountMapper.SetAccount(app.deliverState.ctx, acc)
+
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not update")
+
+	sendMsg := testSendMsg{addr1, addr2, sdk.Coins{{"foocoin", sdk.NewInt(50)}}}
+
+	msg1 := testBurnMsg{addr1, sdk.Coins{{"foocoin", sdk.NewInt(50)}}}
+	msg2 := testBurnMsg{addr2, sdk.Coins{{"foocoin", sdk.NewInt(50)}}}
+
+	// send then burn
+	tx := GenTx(t.Name(), []sdk.Msg{sendMsg, msg2, msg1}, []int64{0, 1}, []int64{0, 0}, priv1, priv2)
+
+	res := app.Deliver(tx)
+	assert.Equal(t, true, res.IsOK(), res.Log)
+
+	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not change after valid tx")
+	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 did not change after valid tx")
+
+	// Check that state is only updated if all msgs in tx pass.
+	app.accountKeeper.AddCoins(app.deliverState.ctx, addr1, sdk.Coins{{"foocoin", sdk.NewInt(50)}})
+
+	// burn then send
+	tx = GenTx(t.Name(), []sdk.Msg{msg1, sendMsg}, []int64{0}, []int64{1}, priv1)
+
+	res = app.Deliver(tx)
+
+	// Double check that state is correct after Commit.
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+
+	app.BeginBlock(abci.RequestBeginBlock{})
+	app.deliverState.ctx = app.deliverState.ctx.WithChainID(t.Name())
+
+	assert.Equal(t, sdk.ABCICodeType(0x1000a), res.Code, "Allowed tx to pass with insufficient funds")
+
+	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(50)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Allowed valid msg to pass in invalid tx")
+	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 changed after invalid tx")
 }
 
 //----------------------------------------
@@ -542,7 +974,7 @@ func randPower() int64 {
 
 func makeVal(secret string) abci.Validator {
 	return abci.Validator{
-		PubKey: makePubKey(secret).Bytes(),
+		PubKey: tmtypes.TM2PB.PubKey(makePubKey(secret)),
 		Power:  randPower(),
 	}
 }
@@ -567,17 +999,15 @@ func copyVal(val abci.Validator) abci.Validator {
 }
 
 func toJSON(o interface{}) []byte {
-	bz, err := json.Marshal(o)
+	bz, err := wire.Cdc.MarshalJSON(o)
 	if err != nil {
 		panic(err)
 	}
-	// fmt.Println(">> toJSON:", string(bz))
 	return bz
 }
 
 func fromJSON(bz []byte, ptr interface{}) {
-	// fmt.Println(">> fromJSON:", string(bz))
-	err := json.Unmarshal(bz, ptr)
+	err := wire.Cdc.UnmarshalJSON(bz, ptr)
 	if err != nil {
 		panic(err)
 	}

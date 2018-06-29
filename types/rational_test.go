@@ -100,7 +100,7 @@ func TestEqualities(t *testing.T) {
 
 }
 
-func TestArithmatic(t *testing.T) {
+func TestArithmetic(t *testing.T) {
 	tests := []struct {
 		r1, r2                         Rat
 		resMul, resDiv, resAdd, resSub Rat
@@ -180,8 +180,8 @@ func TestRound(t *testing.T) {
 		precFactor int64
 	}{
 		{NewRat(333, 777), NewRat(429, 1000), 1000},
-		{Rat{*new(big.Rat).SetFrac(big3, big7)}, NewRat(429, 1000), 1000},
-		{Rat{*new(big.Rat).SetFrac(big3, big7)}, Rat{*big.NewRat(4285714286, 10000000000)}, 10000000000},
+		{Rat{new(big.Rat).SetFrac(big3, big7)}, NewRat(429, 1000), 1000},
+		{Rat{new(big.Rat).SetFrac(big3, big7)}, Rat{big.NewRat(4285714286, 10000000000)}, 10000000000},
 		{NewRat(1, 2), NewRat(1, 2), 1000},
 	}
 
@@ -229,7 +229,7 @@ func TestSerializationText(t *testing.T) {
 	bz, err := r.MarshalText()
 	require.NoError(t, err)
 
-	var r2 Rat
+	var r2 = Rat{new(big.Rat)}
 	err = r2.UnmarshalText(bz)
 	require.NoError(t, err)
 	assert.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
@@ -296,4 +296,15 @@ func TestRatsEqual(t *testing.T) {
 		assert.Equal(t, tc.eq, RatsEqual(tc.r2s, tc.r1s))
 	}
 
+}
+
+func TestStringOverflow(t *testing.T) {
+	// two random 64 bit primes
+	rat1 := NewRat(5164315003622678713, 4389711697696177267)
+	rat2 := NewRat(-3179849666053572961, 8459429845579852627)
+	rat3 := rat1.Add(rat2)
+	assert.Equal(t,
+		"29728537197630860939575850336935951464/37134458148982045574552091851127630409",
+		rat3.String(),
+	)
 }

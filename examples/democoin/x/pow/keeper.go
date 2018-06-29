@@ -125,7 +125,7 @@ func (k Keeper) CheckValid(ctx sdk.Context, difficulty uint64, count uint64) (ui
 
 // Add some coins for a POW well done
 func (k Keeper) ApplyValid(ctx sdk.Context, sender sdk.Address, newDifficulty uint64, newCount uint64) sdk.Error {
-	_, _, ckErr := k.ck.AddCoins(ctx, sender, []sdk.Coin{sdk.Coin{k.config.Denomination, k.config.Reward}})
+	_, _, ckErr := k.ck.AddCoins(ctx, sender, []sdk.Coin{sdk.NewCoin(k.config.Denomination, k.config.Reward)})
 	if ckErr != nil {
 		return ckErr
 	}

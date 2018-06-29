@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/gorilla/mux"
-	"github.com/tendermint/go-crypto/keys"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,7 +25,9 @@ type transferBody struct {
 	LocalAccountName string    `json:"name"`
 	Password         string    `json:"password"`
 	SrcChainID       string    `json:"src_chain_id"`
+	AccountNumber    int64     `json:"account_number"`
 	Sequence         int64     `json:"sequence"`
+	Gas              int64     `json:"gas"`
 }
 
 // TransferRequestHandler - http request handler to transfer coins to a address
@@ -35,7 +37,14 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.Core
 		// collect data
 		vars := mux.Vars(r)
 		destChainID := vars["destchain"]
-		address := vars["address"]
+		bech32addr := vars["address"]
+
+		address, err := sdk.GetAccAddressBech32(bech32addr)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
 
 		var m transferBody
 		body, err := ioutil.ReadAll(r.Body)
@@ -58,7 +67,7 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.Core
 			return
 		}
 
-		bz, err := hex.DecodeString(address)
+		bz, err := hex.DecodeString(address.String())
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -67,12 +76,16 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.Core
 		to := sdk.Address(bz)
 
 		// build message
-		packet := ibc.NewIBCPacket(info.PubKey.Address(), to, m.Amount, m.SrcChainID, destChainID)
+		packet := ibc.NewIBCPacket(info.GetPubKey().Address(), to, m.Amount, m.SrcChainID, destChainID)
 		msg := ibc.IBCTransferMsg{packet}
 
+		// add gas to context
+		ctx = ctx.WithGas(m.Gas)
+
 		// sign
+		ctx = ctx.WithAccountNumber(m.AccountNumber)
 		ctx = ctx.WithSequence(m.Sequence)
-		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, msg, cdc)
+		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, []sdk.Msg{msg}, cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(err.Error()))

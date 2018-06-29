@@ -1,0 +1,20 @@
+{
+  "node_id": "c272ae3cff7558db2c6195eea38fd43fd08406dc",
+  "ip": "206.189.31.178",
+  "validator": {
+    "pub_key": {
+      "type": "AC26791624DE60",
+      "value": "tJlZJWjOpYvRitYFTWNPTaUtvQVf+hoNjlfI84VPqvI="
+    },
+    "power": 100,
+    "name": "anton"
+  },
+  "app_gen_tx": {
+    "name": "default",
+    "address": "E766088FD171906289617F60BF0014C46F0F85EC",
+    "pub_key": {
+      "type": "AC26791624DE60",
+      "value": "tJlZJWjOpYvRitYFTWNPTaUtvQVf+hoNjlfI84VPqvI="
+    }
+  }
+}

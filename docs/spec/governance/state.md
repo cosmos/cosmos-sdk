@@ -31,8 +31,7 @@ const (
 type Procedure struct {
   VotingPeriod      int64               //  Length of the voting period. Initial value: 2 weeks
   MinDeposit        int64               //  Minimum deposit for a proposal to enter voting period. 
-  VoteTypes         []VoteType          //  Vote types available to voters. 
-  ProposalTypes     []ProposalType      //  Proposal types available to submitters. 
+  ProposalTypes     []string            //  Types available to submitters. {PlainTextProposal, SoftwareUpgradeProposal}
   Threshold         rational.Rational   //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
   Veto              rational.Rational   //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
   MaxDepositPeriod  int64               //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
@@ -103,9 +102,9 @@ type ValidatorGovInfo struct {
 
 * `Proposals: int64 => Proposal` maps `proposalID` to the `Proposal`
   `proposalID`
-* `Options: <proposalID | voterAddress | validatorAddress> => VoteType`: maps to the vote of the `voterAddress` for `proposalID` re its delegation to `validatorAddress`.
+* `Options: <proposalID | voterAddress | Address> => VoteType`: maps to the vote of the `voterAddress` for `proposalID` re its delegation to `Address`.
    Returns 0x0 If `voterAddress` has not voted under this validator.
-* `ValidatorGovInfos: <proposalID | validatorAddress> => ValidatorGovInfo`: maps to the gov info for the `validatorAddress` and `proposalID`.
+* `ValidatorGovInfos: <proposalID | Address> => ValidatorGovInfo`: maps to the gov info for the `Address` and `proposalID`.
   Returns `nil` if proposal has not entered voting period or if `address` was not the 
   address of a validator when proposal entered voting period.
 

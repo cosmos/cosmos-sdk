@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"sync"
 
-	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/go-amino"
 	"github.com/tendermint/iavl"
+	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 
@@ -67,7 +68,11 @@ func (st *iavlStore) Commit() CommitID {
 	// Release an old version of history
 	if st.numHistory > 0 && (st.numHistory < st.tree.Version64()) {
 		toRelease := version - st.numHistory
-		st.tree.DeleteVersion(toRelease)
+		err := st.tree.DeleteVersion(toRelease)
+		if err != nil {
+			// TODO: Handle with #870
+			panic(err)
+		}
 	}
 
 	return CommitID{
@@ -113,6 +118,11 @@ func (st *iavlStore) Has(key []byte) (exists bool) {
 // Implements KVStore.
 func (st *iavlStore) Delete(key []byte) {
 	st.tree.Remove(key)
+}
+
+// Implements KVStore
+func (st *iavlStore) Prefix(prefix []byte) KVStore {
+	return prefixStore{st, prefix}
 }
 
 // Implements KVStore.
@@ -162,7 +172,13 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 				break
 			}
 			res.Value = value
-			res.Proof = proof.Bytes()
+			cdc := amino.NewCodec()
+			p, err := cdc.MarshalBinary(proof)
+			if err != nil {
+				res.Log = err.Error()
+				break
+			}
+			res.Proof = p
 		} else {
 			_, res.Value = tree.GetVersioned(key, height)
 		}

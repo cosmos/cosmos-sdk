@@ -17,9 +17,9 @@ const (
 func codeToDefaultMsg(code sdk.CodeType) string {
 	switch code {
 	case CodeInvalidInput:
-		return "Invalid input coins"
+		return "invalid input coins"
 	case CodeInvalidOutput:
-		return "Invalid output coins"
+		return "invalid output coins"
 	default:
 		return sdk.CodeToDefaultMsg(code)
 	}

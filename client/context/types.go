@@ -10,13 +10,17 @@ import (
 type CoreContext struct {
 	ChainID         string
 	Height          int64
+	Gas             int64
 	TrustNode       bool
 	NodeURI         string
 	FromAddressName string
+	AccountNumber   int64
 	Sequence        int64
+	Memo            string
 	Client          rpcclient.Client
 	Decoder         auth.AccountDecoder
 	AccountStore    string
+	UseLedger       bool
 }
 
 // WithChainID - return a copy of the context with an updated chainID
@@ -28,6 +32,12 @@ func (c CoreContext) WithChainID(chainID string) CoreContext {
 // WithHeight - return a copy of the context with an updated height
 func (c CoreContext) WithHeight(height int64) CoreContext {
 	c.Height = height
+	return c
+}
+
+// WithGas - return a copy of the context with an updated gas
+func (c CoreContext) WithGas(gas int64) CoreContext {
+	c.Gas = gas
 	return c
 }
 
@@ -50,9 +60,21 @@ func (c CoreContext) WithFromAddressName(fromAddressName string) CoreContext {
 	return c
 }
 
+// WithSequence - return a copy of the context with an account number
+func (c CoreContext) WithAccountNumber(accnum int64) CoreContext {
+	c.AccountNumber = accnum
+	return c
+}
+
 // WithSequence - return a copy of the context with an updated sequence number
 func (c CoreContext) WithSequence(sequence int64) CoreContext {
 	c.Sequence = sequence
+	return c
+}
+
+// WithMemo - return a copy of the context with an updated memo
+func (c CoreContext) WithMemo(memo string) CoreContext {
+	c.Memo = memo
 	return c
 }
 
@@ -71,5 +93,11 @@ func (c CoreContext) WithDecoder(decoder auth.AccountDecoder) CoreContext {
 // WithAccountStore - return a copy of the context with an updated AccountStore
 func (c CoreContext) WithAccountStore(accountStore string) CoreContext {
 	c.AccountStore = accountStore
+	return c
+}
+
+// WithUseLedger - return a copy of the context with an updated UseLedger
+func (c CoreContext) WithUseLedger(useLedger bool) CoreContext {
+	c.UseLedger = useLedger
 	return c
 }

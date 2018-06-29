@@ -18,17 +18,17 @@ var (
 
 	// Downtime slashing threshold - 50%
 	// TODO Governance parameter?
-	MinSignedPerWindow int64 = SignedBlocksWindow / 2
+	MinSignedPerWindow = SignedBlocksWindow / 2
 
 	// Downtime unbond duration
 	// TODO Governance parameter?
 	// TODO Temporarily set to zero for testnets
-	DowntimeUnbondDuration int64 = 0
+	DowntimeUnbondDuration int64
 
 	// Double-sign unbond duration
 	// TODO Governance parameter?
 	// TODO Temporarily set to zero for testnets
-	DoubleSignUnbondDuration int64 = 0
+	DoubleSignUnbondDuration int64
 )
 
 var (

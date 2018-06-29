@@ -11,8 +11,8 @@ import (
 type ValidatorSet struct {
 	sdk.ValidatorSet
 
-	key sdk.KVStoreGetter
-	cdc *wire.Codec
+	store sdk.KVStore
+	cdc   *wire.Codec
 
 	maxAssoc int
 	addrLen  int
@@ -21,15 +21,15 @@ type ValidatorSet struct {
 var _ sdk.ValidatorSet = ValidatorSet{}
 
 // NewValidatorSet returns new ValidatorSet with underlying ValidatorSet
-func NewValidatorSet(cdc *wire.Codec, key sdk.KVStoreGetter, valset sdk.ValidatorSet, maxAssoc int, addrLen int) ValidatorSet {
+func NewValidatorSet(cdc *wire.Codec, store sdk.KVStore, valset sdk.ValidatorSet, maxAssoc int, addrLen int) ValidatorSet {
 	if maxAssoc < 0 || addrLen < 0 {
 		panic("Cannot use negative integer for NewValidatorSet")
 	}
 	return ValidatorSet{
 		ValidatorSet: valset,
 
-		key: key,
-		cdc: cdc,
+		store: store,
+		cdc:   cdc,
 
 		maxAssoc: maxAssoc,
 		addrLen:  addrLen,
@@ -38,8 +38,7 @@ func NewValidatorSet(cdc *wire.Codec, key sdk.KVStoreGetter, valset sdk.Validato
 
 // Implements sdk.ValidatorSet
 func (valset ValidatorSet) Validator(ctx sdk.Context, addr sdk.AccAddress) (res sdk.Validator) {
-	store := valset.key.KVStore(ctx)
-	base := store.Get(GetBaseKey(addr))
+	base := valset.store.Get(GetBaseKey(addr))
 	res = valset.ValidatorSet.Validator(ctx, base)
 	if res == nil {
 		res = valset.ValidatorSet.Validator(ctx, addr)
@@ -67,13 +66,12 @@ func (valset ValidatorSet) Associate(ctx sdk.Context, base sdk.AccAddress, assoc
 	if len(base) != valset.addrLen || len(assoc) != valset.addrLen {
 		return false
 	}
-	store := valset.key.KVStore(ctx)
 	// If someone already owns the associated address
-	if store.Get(GetBaseKey(assoc)) != nil {
+	if valset.store.Get(GetBaseKey(assoc)) != nil {
 		return false
 	}
-	store.Set(GetBaseKey(assoc), base)
-	store.Set(GetAssocKey(base, assoc), []byte{0x00})
+	valset.store.Set(GetBaseKey(assoc), base)
+	valset.store.Set(GetAssocKey(base, assoc), []byte{0x00})
 	return true
 }
 
@@ -82,21 +80,19 @@ func (valset ValidatorSet) Dissociate(ctx sdk.Context, base sdk.AccAddress, asso
 	if len(base) != valset.addrLen || len(assoc) != valset.addrLen {
 		return false
 	}
-	store := valset.key.KVStore(ctx)
 	// No associated address found for given validator
-	if !bytes.Equal(store.Get(GetBaseKey(assoc)), base) {
+	if !bytes.Equal(valset.store.Get(GetBaseKey(assoc)), base) {
 		return false
 	}
-	store.Delete(GetBaseKey(assoc))
-	store.Delete(GetAssocKey(base, assoc))
+	valset.store.Delete(GetBaseKey(assoc))
+	valset.store.Delete(GetAssocKey(base, assoc))
 	return true
 }
 
 // Associations returns all associated addresses with a validator
 func (valset ValidatorSet) Associations(ctx sdk.Context, base sdk.AccAddress) (res []sdk.AccAddress) {
-	store := valset.key.KVStore(ctx)
 	res = make([]sdk.AccAddress, valset.maxAssoc)
-	iter := sdk.KVStorePrefixIterator(store, GetAssocPrefix(base))
+	iter := sdk.KVStorePrefixIterator(valset.store, GetAssocPrefix(base))
 	i := 0
 	for ; iter.Valid(); iter.Next() {
 		key := iter.Key()

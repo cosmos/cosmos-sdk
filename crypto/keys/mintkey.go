@@ -16,6 +16,21 @@ const (
 	blockTypePubKey  = "TENDERMINT PUBLIC KEY"
 )
 
+// Make bcrypt security parameter var, so it can be changed within the lcd test
+// Making the bcrypt security parameter a var shouldn't be a security issue:
+// One can't verify an invalid key by maliciously changing the bcrypt
+// parameter during a runtime vulnerability. The main security
+// threat this then exposes would be something that changes this during
+// runtime before the user creates their key. This vulnerability must
+// succeed to update this to that same value before every subsequent call
+// to gaiacli keys in future startups / or the attacker must get access
+// to the filesystem. However, with a similar threat model (changing
+// variables in runtime), one can cause the user to sign a different tx
+// than what they see, which is a significantly cheaper attack then breaking
+// a bcrypt hash. (Recall that the nonce still exists to break rainbow tables)
+// TODO: Consider increasing default
+var BcryptSecurityParameter = 12
+
 func armorInfoBytes(bz []byte) string {
 	return armorBytes(bz, blockTypeKeyInfo)
 }
@@ -91,7 +106,7 @@ func unarmorDecryptPrivKey(armorStr string, passphrase string) (crypto.PrivKey, 
 
 func encryptPrivKey(privKey crypto.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
 	saltBytes = crypto.CRandBytes(16)
-	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), 12) // TODO parameterize.  12 is good today (2016)
+	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
 	if err != nil {
 		cmn.Exit("Error generating bcrypt key from passphrase: " + err.Error())
 	}
@@ -101,7 +116,7 @@ func encryptPrivKey(privKey crypto.PrivKey, passphrase string) (saltBytes []byte
 }
 
 func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privKey crypto.PrivKey, err error) {
-	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), 12) // TODO parameterize.  12 is good today (2016)
+	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
 	if err != nil {
 		cmn.Exit("Error generating bcrypt key from passphrase: " + err.Error())
 	}

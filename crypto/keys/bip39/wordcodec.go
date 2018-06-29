@@ -12,8 +12,12 @@ type ValidSentenceLen uint8
 const (
 	// FundRaiser is the sentence length used during the cosmos fundraiser (12 words).
 	FundRaiser ValidSentenceLen = 12
+	// Size of the checksum employed for the fundraiser
+	FundRaiserChecksumSize = 4
 	// FreshKey is the sentence length used for newly created keys (24 words).
 	FreshKey ValidSentenceLen = 24
+	// Size of the checksum employed for new keys
+	FreshKeyChecksumSize = 8
 )
 
 // NewMnemonic will return a string consisting of the mnemonic words for
@@ -23,9 +27,11 @@ func NewMnemonic(len ValidSentenceLen) (words []string, err error) {
 	var entropySize int
 	switch len {
 	case FundRaiser:
-		entropySize = 128
+		// entropySize = 128
+		entropySize = int(len)*11 - FundRaiserChecksumSize
 	case FreshKey:
-		entropySize = 256
+		// entropySize = 256
+		entropySize = int(len)*11 - FreshKeyChecksumSize
 	}
 	var entropy []byte
 	entropy, err = bip39.NewEntropy(entropySize)

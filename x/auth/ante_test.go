@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -69,7 +69,11 @@ func newTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
 		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, "")
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), AccountNumber: accNums[i], Sequence: seqs[i]}
+		sig, err := priv.Sign(signBytes)
+		if err != nil {
+			panic(err)
+		}
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
 	}
 	tx := NewStdTx(msgs, fee, sigs, "")
 	return tx
@@ -79,7 +83,11 @@ func newTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, 
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
 		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, memo)
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), AccountNumber: accNums[i], Sequence: seqs[i]}
+		sig, err := priv.Sign(signBytes)
+		if err != nil {
+			panic(err)
+		}
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
 	}
 	tx := NewStdTx(msgs, fee, sigs, memo)
 	return tx
@@ -89,7 +97,11 @@ func newTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, 
 func newTestTxWithSignBytes(msgs []sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee, signBytes []byte, memo string) sdk.Tx {
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), AccountNumber: accNums[i], Sequence: seqs[i]}
+		sig, err := priv.Sign(signBytes)
+		if err != nil {
+			panic(err)
+		}
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
 	}
 	tx := NewStdTx(msgs, fee, sigs, memo)
 	return tx
@@ -356,7 +368,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeOutOfGas)
 
 	// tx with memo doesn't have enough gas
-	fee = NewStdFee(1001, sdk.NewCoin("atom", 0))
+	fee = NewStdFee(801, sdk.NewCoin("atom", 0))
 	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeOutOfGas)
 

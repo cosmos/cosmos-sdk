@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -59,7 +60,7 @@ type voteReq struct {
 func postProposalHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req postProposalReq
-		err := buildReq(w, r, &req)
+		err := buildReq(w, r, cdc, &req)
 		if err != nil {
 			return
 		}
@@ -113,7 +114,7 @@ func depositHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc
 		}
 
 		var req depositReq
-		err = buildReq(w, r, &req)
+		err = buildReq(w, r, cdc, &req)
 		if err != nil {
 			return
 		}
@@ -161,7 +162,7 @@ func voteHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
 		}
 
 		var req voteReq
-		err = buildReq(w, r, &req)
+		err = buildReq(w, r, cdc, &req)
 		if err != nil {
 			return
 		}

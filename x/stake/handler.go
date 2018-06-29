@@ -1,12 +1,11 @@
 package stake
 
 import (
-	abci "github.com/tendermint/abci/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/tags"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func NewHandler(k keeper.Keeper) sdk.Handler {

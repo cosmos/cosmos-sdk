@@ -14,9 +14,9 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/go-crypto/keys"
-	"github.com/tendermint/go-crypto/keys/words"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/tendermint/tendermint/crypto"
+
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
@@ -459,22 +459,17 @@ func SimpleAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState j
 func GenerateCoinKey() (sdk.Address, string, error) {
 
 	// construct an in-memory key store
-	codec, err := words.LoadCodec("english")
-	if err != nil {
-		return nil, "", err
-	}
 	keybase := keys.New(
 		dbm.NewMemDB(),
-		codec,
 	)
 
 	// generate a private key, with recovery phrase
-	info, secret, err := keybase.Create("name", "pass", keys.AlgoEd25519)
+	info, secret, err := keybase.CreateMnemonic("name", keys.English, "pass", keys.Secp256k1)
 	if err != nil {
 		return nil, "", err
 	}
-	addr := info.PubKey.Address()
-	return addr, secret, nil
+	addr := info.GetPubKey().Address()
+	return sdk.Address(addr), secret, nil
 }
 
 // GenerateSaveCoinKey returns the address of a public key, along with the secret
@@ -496,10 +491,10 @@ func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (s
 	}
 
 	// generate a private key, with recovery phrase
-	info, secret, err := keybase.Create(keyName, keyPass, keys.AlgoEd25519)
+	info, secret, err := keybase.CreateMnemonic(keyName, keys.English, keyPass, keys.Secp256k1)
 	if err != nil {
 		return nil, "", err
 	}
-	addr := info.PubKey.Address()
-	return addr, secret, nil
+	addr := info.GetPubKey().Address()
+	return sdk.Address(addr), secret, nil
 }

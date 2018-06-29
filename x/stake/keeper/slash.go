@@ -167,11 +167,16 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 		sharesToRemove = validator.PoolShares.Amount.EvaluateInt()
 	}
 
-	pool := k.GetPool(ctx)                                                                         // Get the current pool
-	validator, pool, burned := validator.RemovePoolShares(pool, sdk.NewRatFromInt(sharesToRemove)) // remove shares from the validator
-	pool.LooseTokens -= burned                                                                     // burn tokens
-	k.SetPool(ctx, pool)                                                                           // update the pool
-	k.UpdateValidator(ctx, validator)                                                              // update the validator, possibly kicking it out
+	// Get the current pool
+	pool := k.GetPool(ctx)
+	// remove shares from the validator
+	validator, pool, burned := validator.RemovePoolShares(pool, sdk.NewRatFromInt(sharesToRemove))
+	// burn tokens
+	pool.LooseTokens -= burned
+	// update the pool
+	k.SetPool(ctx, pool)
+	// update the validator, possibly kicking it out
+	k.UpdateValidator(ctx, validator)
 
 	// Log that a slash occurred!
 	logger.Info(fmt.Sprintf("Validator %s slashed by fraction %v, removed %v shares and burned %d tokens", pubkey.Address(), fraction, sharesToRemove, burned))

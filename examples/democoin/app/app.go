@@ -117,6 +117,7 @@ func MakeCodec() *wire.Codec {
 }
 
 // custom logic for democoin initialization
+// nolint: unparam
 func (app *DemocoinApp) initChainerFn(coolKeeper cool.Keeper, powKeeper pow.Keeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		stateJSON := req.AppStateBytes

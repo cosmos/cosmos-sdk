@@ -226,7 +226,7 @@ func initWithConfig(cdc *wire.Codec, appInit AppInit, config *cfg.Config, initCo
 	var persistentPeers string
 
 	if initConfig.GenTxs {
-		validators, appGenTxs, persistentPeers, err = processGenTxs(initConfig.GenTxsDir, cdc, appInit)
+		validators, appGenTxs, persistentPeers, err = processGenTxs(initConfig.GenTxsDir, cdc)
 		if err != nil {
 			return
 		}
@@ -263,7 +263,7 @@ func initWithConfig(cdc *wire.Codec, appInit AppInit, config *cfg.Config, initCo
 }
 
 // append a genesis-piece
-func processGenTxs(genTxsDir string, cdc *wire.Codec, appInit AppInit) (
+func processGenTxs(genTxsDir string, cdc *wire.Codec) (
 	validators []tmtypes.GenesisValidator, appGenTxs []json.RawMessage, persistentPeers string, err error) {
 
 	var fos []os.FileInfo

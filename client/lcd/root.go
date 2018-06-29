@@ -76,7 +76,7 @@ func createHandler(cdc *wire.Codec) http.Handler {
 
 	// TODO make more functional? aka r = keys.RegisterRoutes(r)
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
-	r.HandleFunc("/node_version", NodeVersionRequestHandler(cdc, ctx)).Methods("GET")
+	r.HandleFunc("/node_version", NodeVersionRequestHandler(ctx)).Methods("GET")
 	keys.RegisterRoutes(r)
 	rpc.RegisterRoutes(ctx, r)
 	tx.RegisterRoutes(ctx, r, cdc)
@@ -84,6 +84,6 @@ func createHandler(cdc *wire.Codec) http.Handler {
 	bank.RegisterRoutes(ctx, r, cdc, kb)
 	ibc.RegisterRoutes(ctx, r, cdc, kb)
 	stake.RegisterRoutes(ctx, r, cdc, kb)
-	gov.RegisterRoutes(ctx, r, cdc, kb)
+	gov.RegisterRoutes(ctx, r, cdc)
 	return r
 }

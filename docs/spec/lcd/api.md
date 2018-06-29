@@ -300,11 +300,9 @@ Parameters:
 | Parameter | Type   | Default | Required | Description                 |
 | --------- | ------ | ------- | -------- | --------------------------- |
 | from_address  | string | null    | true     | address from                |
-| from_chain_id  | string | null    | true     | chain from                |
 | to_address  | string | null    | true     | address to send to     |
-| to_chain_id  | string | null    | true     | chain to send to     |
 | amount  | int    | null    | true     | amount of the token         |
-| denomonation  | string | null    | true     | denomonation of the token   |
+| denomination  | string | null    | true     | denomination of the token   |
 
 
 * The above command returns JSON structured like this if success:

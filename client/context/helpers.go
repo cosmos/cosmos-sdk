@@ -124,9 +124,14 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msgs []sdk.Msg, cdc
 	accnum := ctx.AccountNumber
 	sequence := ctx.Sequence
 	memo := ctx.Memo
-	fee , err := sdk.ParseCoin(ctx.Fee)
-	if err != nil {
-		return nil, err
+
+	fee := sdk.Coin{}
+	if ctx.Fee != "" {
+		parsedFee, err := sdk.ParseCoin(ctx.Fee)
+		if err != nil {
+			return nil, err
+		}
+		fee = parsedFee
 	}
 
 	signMsg := auth.StdSignMsg{

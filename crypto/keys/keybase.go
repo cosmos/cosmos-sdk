@@ -92,10 +92,10 @@ func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string
 // CreateFundraiserKey converts a mnemonic to a private key and persists it,
 // encrypted with the given password.
 // TODO(ismail)
-func (kb dbKeybase) CreateFundraiserKey(name, mnemonic, passwd string) (info Info, err error) {
+func (kb dbKeybase) CreateKey(name, mnemonic, passwd string) (info Info, err error) {
 	words := strings.Split(mnemonic, " ")
-	if len(words) != 12 {
-		err = fmt.Errorf("recovering only works with 12 word (fundraiser) mnemonics, got: %v words", len(words))
+	if len(words) != 12 && len(words) != 24 {
+		err = fmt.Errorf("recovering only works with 12 word (fundraiser) or 24 word mnemonics, got: %v words", len(words))
 		return
 	}
 	seed, err := bip39.MnemonicToSeedWithErrChecking(mnemonic)

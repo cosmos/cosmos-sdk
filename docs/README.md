@@ -29,7 +29,7 @@ NOTE: This documentation is a work-in-progress!
           information
         - [auth.AnteHandler](core/app3.md#antehandler) - The `AnteHandler`
           verifies `StdTx`, manages accounts, and deducts fees
-        - [bank.CoinKeeper](core/app3.md#coin-keeper) - CoinKeeper allows for coin
+        - [bank.CoinKeeper](core/app3.md#coinkeeper) - CoinKeeper allows for coin
           transfers on an underlying AccountMapper
     - [App4 - ABCI](core/app4.md)
         - [ABCI](core/app4.md#abci) - ABCI is the interface between Tendermint
@@ -45,7 +45,9 @@ NOTE: This documentation is a work-in-progress!
     - [App5 - Basecoin](core/app5.md) - 
         - [Directory Structure](core/app5.md#directory-structure) - Keep your
           application code organized
-        - [Clients](core/app5.md#clients) - Hook up your app to standard CLI and REST
+        - [Tendermint Node](core/app5.md#tendermint-node) - Run a full
+          blockchain node with your app
+        - [Clients](core/app5.md#clients) - Hook up your app to CLI and REST
             interfaces for clients to use!
 
 - [Modules](modules)

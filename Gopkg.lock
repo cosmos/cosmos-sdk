@@ -342,6 +342,7 @@
     "rpc/lib/client",
     "rpc/lib/server",
     "rpc/lib/types",
+    "rpc/test",
     "state",
     "state/txindex",
     "state/txindex/kv",
@@ -464,6 +465,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1aab34542ab29031e132219e935c55fd961a57930905875c453e4327f7870a47"
+  inputs-digest = "03751d11d2999d4bea934a6307d3125fbc2536172a2b1b50e9b9c68c08f72501"
   solver-name = "gps-cdcl"
   solver-version = 1

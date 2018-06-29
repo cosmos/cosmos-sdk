@@ -46,6 +46,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 	c = c.WithLogger(logger)
 	c = c.WithSigningValidators(nil)
 	c = c.WithGasMeter(NewInfiniteGasMeter())
+	c = c.WithFeeCollection(0)
 	return c
 }
 
@@ -132,6 +133,7 @@ const (
 	contextKeyLogger
 	contextKeySigningValidators
 	contextKeyGasMeter
+	contextKeyFeeCollector
 )
 
 // NOTE: Do not expose MultiStore.
@@ -166,6 +168,9 @@ func (c Context) SigningValidators() []abci.SigningValidator {
 func (c Context) GasMeter() GasMeter {
 	return c.Value(contextKeyGasMeter).(GasMeter)
 }
+func (c Context) FeeCollection() int64 {
+	return c.Value(contextKeyFeeCollector).(int64)
+}
 func (c Context) WithMultiStore(ms MultiStore) Context {
 	return c.withValue(contextKeyMultiStore, ms)
 }
@@ -193,6 +198,9 @@ func (c Context) WithSigningValidators(SigningValidators []abci.SigningValidator
 }
 func (c Context) WithGasMeter(meter GasMeter) Context {
 	return c.withValue(contextKeyGasMeter, meter)
+}
+func (c Context) WithFeeCollection(fee int64) Context {
+	return c.withValue(contextKeyFeeCollector, fee)
 }
 
 // Cache the multistore and return a new cached context. The cached context is

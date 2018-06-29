@@ -333,6 +333,21 @@
   version = "0.10.1"
 
 [[projects]]
+  name = "github.com/tendermint/go-crypto"
+  packages = ["."]
+  revision = "c3e19f3ea26f5c3357e0bcbb799b0761ef923755"
+  version = "v0.5.0"
+
+[[projects]]
+  name = "github.com/tendermint/go-wire"
+  packages = [
+    ".",
+    "data"
+  ]
+  revision = "fa721242b042ecd4c6ed1a934ee740db4f74e45c"
+  version = "v0.7.3"
+
+[[projects]]
   name = "github.com/tendermint/iavl"
   packages = [
     ".",
@@ -510,6 +525,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "578ae0e0126ffd04006b6755a02bc25c95e2eb2ecb4ea99869c4ada133f29f6b"
+  inputs-digest = "cd2a63383e0802f6a00161c7ba5bbee4146e653f17fa59ee8ff3a625ccc483c2"
   solver-name = "gps-cdcl"
   solver-version = 1

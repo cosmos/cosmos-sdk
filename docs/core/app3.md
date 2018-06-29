@@ -21,7 +21,8 @@ their own modules.
 
 Here, we'll introduce the important types from `x/auth` and `x/bank`, and show
 how to make `App3` by using them. The complete code can be found in [app3.go](examples/app3.go).
-For more details, see the [x/auth](TODO) and [x/bank](TODO) API documentation.
+For more details, see the
+[x/auth](https://godoc.org/github.com/cosmos/cosmos-sdk/x/auth) and [x/bank](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank) API documentation.
 
 ## Accounts
 
@@ -102,8 +103,7 @@ the `BaseAccount` to store additional data without requiring another lookup from
 the store.
 
 Creating an AccountMapper is easy - we just need to specify a codec, a
-capability key, and a prototype of the object being encoded (TODO: change to
-constructor):
+capability key, and a prototype of the object being encoded 
 
 ```go
 accountMapper := auth.NewAccountMapper(cdc, keyAccount, &auth.BaseAccount{})
@@ -124,7 +124,8 @@ load the KVStore from there using the capability key it was granted on creation.
 Also note that you must explicitly call `SetAccount` after mutating an account
 for the change to persist!
 
-See the [AccountMapper API docs](TODO) for more information.
+See the [AccountMapper API
+docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/auth#AccountMapper) for more information.
 
 ## StdTx
 
@@ -200,7 +201,7 @@ transaction fee can be paid, and reject the transaction if not.
 The `StdTx` supports multiple messages and multiple signers.
 To sign the transaction, each signer must collect the following information:
 
-- the ChainID (TODO haven't mentioned this yet)
+- the ChainID 
 - the AccountNumber and Sequence for the given signer's account (from the
   blockchain)
 - the transaction fee 
@@ -227,7 +228,6 @@ our own simple `AnteHandler`, the `x/auth` module provides a much more advanced
 one that uses `AccountMapper` and works with `StdTx`:
 
 ```go
-TODO: feekeeper :(
 app.SetAnteHandler(auth.NewAnteHandler(accountMapper, feeKeeper))
 ```
 
@@ -299,7 +299,8 @@ We can then use it within a handler, instead of working directly with the
 app.coinKeeper.AddCoins(ctx, addr, coins)
 ```
 
-See the [bank.Keeper API docs](TODO) for the full set of methods.
+See the [bank.Keeper API
+docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank#Keeper) for the full set of methods.
 
 Note we can refine the `bank.Keeper` by restricting it's method set. For
 instance, the `bank.ViewKeeper` is a read-only version, while the

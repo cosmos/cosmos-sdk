@@ -51,16 +51,16 @@ NOTE: This documentation is a work-in-progress!
             interfaces for clients to use!
 
 - [Modules](modules)
-    - [Bank](modules/bank.md)
-    - [Staking](modules/staking.md)
-    - [Slashing](modules/slashing.md)
-    - [Provisions](modules/provisions.md)
-    - [Governance](modules/governance.md)
-    - [IBC](modules/ibc.md)
+    - [Bank](modules/README.md#bank)
+    - [Staking](modules/README.md#stake)
+    - [Slashing](modules/README.md#slashing)
+    - [Provisions](modules/README.md#provisions)
+    - [Governance](modules/README.md#governance)
+    - [IBC](modules/README.md#ibc)
 
 - [Clients](clients)
     - [Running a Node](clients/node.md) - Run a full node!
     - [Key Management](clients/keys.md) - Managing user keys
     - [CLI](clients/cli.md) - Queries and transactions via command line
-    - [Light Client Daemon](clients/lcd.md) - Queries and transactions via REST
+    - [REST](clients/rest.md) - Queries and transactions via REST
       API

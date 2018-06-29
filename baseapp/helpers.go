@@ -1,8 +1,8 @@
 package baseapp
 
 import (
-	"github.com/tendermint/abci/server"
-	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/tendermint/abci/server"
+	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
@@ -13,12 +13,20 @@ func RunForever(app abci.Application) {
 	srv, err := server.NewServer("0.0.0.0:26658", "socket", app)
 	if err != nil {
 		cmn.Exit(err.Error())
+		return
 	}
-	srv.Start()
+	err = srv.Start()
+	if err != nil {
+		cmn.Exit(err.Error())
+		return
+	}
 
 	// Wait forever
 	cmn.TrapSignal(func() {
 		// Cleanup
-		srv.Stop()
+		err := srv.Stop()
+		if err != nil {
+			cmn.Exit(err.Error())
+		}
 	})
 }

@@ -6,18 +6,25 @@ connections.
 
 The complete API is comprised of the sub-APIs of different modules. The modules in the Cosmos Hub
 (Gaia) API are:
-    * ICS19 (KeyAPI)
-    * ICS20 (TokenAPI)
-    * StakingAPI
 
-## ICS19 - KeyAPI
+* ICS0 (TendermintAPI) - not yet implemented
+* ICS1 (KeyAPI)
+* ICS20 (TokenAPI)
+* ICS21 (StakingAPI) - not yet implemented
+* ICS22 (GovernanceAPI) - not yet implemented
+
+## ICS0 - TendermintAPI
+
+Exposes the same functionality as the Tendermint RPC from a full node. It aims to have a very
+similar API.
+
+## ICS1 - KeyAPI
 
 This API exposes all functionality needed for key creation, signing and management.
 
-
 ### /keys - GET
 
-url: /keys, Method: GET
+url: /keys
 
 Functionality: Get all keys
 

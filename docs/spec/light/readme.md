@@ -2,6 +2,10 @@
 
 ## Introduction
 
+A light client allows clients, such as mobile phones, to receive proofs of the state of the
+blockchain from any full node. Light clients do not have to trust any full node, since they are able
+to verify any proof they receive and hence full nodes cannot lie about the state of the network.
+
 A light client can provide the same security as a full node with the minimal requirements on
 bandwidth, computing and storage resource. Besides, it can also provide modular functionality
 according to users' configuration. These fantastic features allow developers to build fully secure,

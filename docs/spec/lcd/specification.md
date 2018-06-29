@@ -182,16 +182,16 @@ To improve LCD reliability and TPS, we recommend to connect LCD to more than one
 1. **Query keys, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keys---get)**
 * a. Load key store
 
-```
+    ```
 	db, err := dbm.NewGoLevelDB(KeyDBName, filepath.Join(rootDir, "keys"))
 	if err != nil {
 		return nil, err
 	}
 	keybase = client.GetKeyBase(db)
-```
+    ```
 	
 * b. Iterate the whole key store
-```
+    ```
 	var res []Info
 	iter := kb.db.Iterator(nil, nil)
 	defer iter.Close()
@@ -204,7 +204,7 @@ To improve LCD reliability and TPS, we recommend to connect LCD to more than one
 		res = append(res, info)
 	}
 	return res, nil
-```
+    ```
 	
 * c. Encode address and public key to bech32 pattern
 	```
@@ -221,8 +221,7 @@ To improve LCD reliability and TPS, we recommend to connect LCD to more than one
 		Address: bechAccount,
 		PubKey:  bechPubKey,
 	}, nil
-
-```
+    ```
 
 2. **Import key, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keys---post)**
 

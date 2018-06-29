@@ -21,6 +21,8 @@ func TestNew(t *testing.T) {
 }
 
 func TestNewFromDecimal(t *testing.T) {
+	largeBigInt, success := new(big.Int).SetString("3109736052979742687701388262607869", 10)
+	require.True(t, success)
 	tests := []struct {
 		decimalStr string
 		expErr     bool
@@ -31,7 +33,13 @@ func TestNewFromDecimal(t *testing.T) {
 		{"1.1", false, NewRat(11, 10)},
 		{"0.75", false, NewRat(3, 4)},
 		{"0.8", false, NewRat(4, 5)},
-		{"0.11111", false, NewRat(11111, 100000)},
+		{"0.11111", true, NewRat(1111, 10000)},
+		{"628240629832763.5738930323617075341", true, NewRat(3141203149163817869, 5000)},
+		{"621947210595948537540277652521.5738930323617075341",
+			true, NewRatFromBigInt(largeBigInt, big.NewInt(5000))},
+		{"628240629832763.5738", false, NewRat(3141203149163817869, 5000)},
+		{"621947210595948537540277652521.5738",
+			false, NewRatFromBigInt(largeBigInt, big.NewInt(5000))},
 		{".", true, Rat{}},
 		{".0", true, Rat{}},
 		{"1.", true, Rat{}},
@@ -41,22 +49,21 @@ func TestNewFromDecimal(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-
-		res, err := NewRatFromDecimal(tc.decimalStr)
+		res, err := NewRatFromDecimal(tc.decimalStr, 4)
 		if tc.expErr {
 			assert.NotNil(t, err, tc.decimalStr)
 		} else {
-			assert.Nil(t, err)
-			assert.True(t, res.Equal(tc.exp))
+			require.Nil(t, err, tc.decimalStr)
+			require.True(t, res.Equal(tc.exp), tc.decimalStr)
 		}
 
 		// negative tc
-		res, err = NewRatFromDecimal("-" + tc.decimalStr)
+		res, err = NewRatFromDecimal("-"+tc.decimalStr, 4)
 		if tc.expErr {
 			assert.NotNil(t, err, tc.decimalStr)
 		} else {
-			assert.Nil(t, err)
-			assert.True(t, res.Equal(tc.exp.Mul(NewRat(-1))))
+			assert.Nil(t, err, tc.decimalStr)
+			assert.True(t, res.Equal(tc.exp.Mul(NewRat(-1))), tc.decimalStr)
 		}
 	}
 }
@@ -133,7 +140,7 @@ func TestArithmetic(t *testing.T) {
 		assert.True(t, tc.resAdd.Equal(tc.r1.Add(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
 		assert.True(t, tc.resSub.Equal(tc.r1.Sub(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
 
-		if tc.r2.Num() == 0 { // panic for divide by zero
+		if tc.r2.Num().IsZero() { // panic for divide by zero
 			assert.Panics(t, func() { tc.r1.Quo(tc.r2) })
 		} else {
 			assert.True(t, tc.resDiv.Equal(tc.r1.Quo(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)

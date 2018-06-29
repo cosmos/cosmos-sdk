@@ -5,7 +5,7 @@ delineated boundary between the Cosmos-SDK and Tendermint.
 It separates the logical state transition machine of your application from
 its secure replication across many physical machines.
 
-By providing a clear, language agnostic boundary between applications and consensus, 
+By providing a clear, language agnostic boundary between applications and consensus,
 ABCI provides tremendous developer flexibility and [support in many
 languages](https://tendermint.com/ecosystem). That said, it is still quite a low-level protocol, and
 requires frameworks to be built to abstract over that low-level componentry.
@@ -14,9 +14,9 @@ The Cosmos-SDK is one such framework.
 While we've already seen `DeliverTx`, the workhorse of any ABCI application,
 here we will introduce the other ABCI requests sent by Tendermint, and
 how we can use them to build more advanced applications. For a more complete
-depiction of the ABCI and how its used, see 
+depiction of the ABCI and how its used, see
 [the
-specification](https://github.com/tendermint/abci/blob/master/specification.md)
+specification](https://github.com/tendermint/tendermint/abci/blob/master/specification.md)
 
 ## InitChain
 
@@ -26,8 +26,8 @@ which is called once by Tendermint the very first time the application boots up.
 
 The InitChain request contains a variety of Tendermint information, like the consensus
 parameters and an initial validator set, but it also contains an opaque blob of
-application specific bytes - typically JSON encoded. 
-Apps can decide what to do with all of this information by calling the 
+application specific bytes - typically JSON encoded.
+Apps can decide what to do with all of this information by calling the
 `app.SetInitChainer` method.
 
 For instance, let's introduce a `GenesisAccount` struct that can be JSON encoded

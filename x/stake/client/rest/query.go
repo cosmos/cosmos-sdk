@@ -12,31 +12,33 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
+const storeName = "stake"
+
 func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 
 	r.HandleFunc(
 		"/stake/{delegator}/delegation/{validator}",
-		delegationHandlerFn(ctx, "stake", cdc),
+		delegationHandlerFn(ctx, cdc),
 	).Methods("GET")
 
 	r.HandleFunc(
 		"/stake/{delegator}/ubd/{validator}",
-		ubdHandlerFn(ctx, "stake", cdc),
+		ubdHandlerFn(ctx, cdc),
 	).Methods("GET")
 
 	r.HandleFunc(
 		"/stake/{delegator}/red/{validator_src}/{validator_dst}",
-		redHandlerFn(ctx, "stake", cdc),
+		redHandlerFn(ctx, cdc),
 	).Methods("GET")
 
 	r.HandleFunc(
 		"/stake/validators",
-		validatorsHandlerFn(ctx, "stake", cdc),
+		validatorsHandlerFn(ctx, cdc),
 	).Methods("GET")
 }
 
 // http request handler to query a delegation
-func delegationHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
+func delegationHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// read parameters
@@ -93,7 +95,7 @@ func delegationHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Co
 }
 
 // http request handler to query an unbonding-delegation
-func ubdHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
+func ubdHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// read parameters
@@ -150,7 +152,7 @@ func ubdHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) ht
 }
 
 // http request handler to query an redelegation
-func redHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
+func redHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// read parameters
@@ -271,7 +273,7 @@ func bech32StakeValidatorOutput(validator stake.Validator) (StakeValidatorOutput
 
 // TODO bech32
 // http request handler to query list of validators
-func validatorsHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
+func validatorsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		kvs, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
 		if err != nil {

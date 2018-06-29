@@ -104,14 +104,21 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 // Find the contributing stake at that height and burn the specified fraction
 // of it, updating unbonding delegation & redelegations appropriately
 //
-// CONTRACT: Infraction committed equal to or less than an unbonding period in the past,
-// so all unbonding delegations and redelegations from that height are stored
+// CONTRACT:
+//    Validator exists and can be looked up by public key
+// CONTRACT:
+//    Infraction committed equal to or less than an unbonding period in the past,
+//    so all unbonding delegations and redelegations from that height are stored
+// CONTRACT:
+//    Infraction committed at the current height or at a past height,
+//    not at a height in the future
 func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight int64, power int64, fraction sdk.Rat) {
 	logger := ctx.Logger().With("module", "x/stake")
 
 	// Amount of slashing = slash fraction * power at time of infraction
 	slashAmount := sdk.NewRat(power).Mul(fraction).EvaluateInt()
-	// hmm, https://github.com/cosmos/cosmos-sdk/issues/1348
+	// ref https://github.com/cosmos/cosmos-sdk/issues/1348
+	// ref https://github.com/cosmos/cosmos-sdk/issues/1471
 
 	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
@@ -121,8 +128,6 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 
 	// Track remaining slash amount
 	remainingSlashAmount := slashAmount
-
-	// Track
 
 	switch {
 	case infractionHeight > ctx.BlockHeight():
@@ -162,8 +167,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 		sharesToRemove = validator.PoolShares.Amount.EvaluateInt()
 	}
 
-	// Get the current pool
-	pool := k.GetPool(ctx)
+	pool := k.GetPool(ctx)                                                                         // Get the current pool
 	validator, pool, burned := validator.RemovePoolShares(pool, sdk.NewRatFromInt(sharesToRemove)) // remove shares from the validator
 	pool.LooseTokens -= burned                                                                     // burn tokens
 	k.SetPool(ctx, pool)                                                                           // update the pool
@@ -181,6 +185,7 @@ func (k Keeper) Revoke(ctx sdk.Context, pubkey crypto.PubKey) {
 	k.setRevoked(ctx, pubkey, true)
 	logger := ctx.Logger().With("module", "x/stake")
 	logger.Info(fmt.Sprintf("Validator %s revoked", pubkey.Address()))
+	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 	return
 }
 
@@ -189,6 +194,7 @@ func (k Keeper) Unrevoke(ctx sdk.Context, pubkey crypto.PubKey) {
 	k.setRevoked(ctx, pubkey, false)
 	logger := ctx.Logger().With("module", "x/stake")
 	logger.Info(fmt.Sprintf("Validator %s unrevoked", pubkey.Address()))
+	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 	return
 }
 

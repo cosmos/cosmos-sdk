@@ -338,7 +338,7 @@
     ".",
     "sha256truncated"
   ]
-  revision = "378f495c58f9b57f120af4643d245f3170fb5311"
+  revision = "481b89cbbe6a641f7f6cb5db92b30b20f5a2e001"
 
 [[projects]]
   name = "github.com/tendermint/tendermint"
@@ -510,6 +510,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8489464d1b6f86430d2cde8d60547903e185e3aaf7fe47628570872ed6867465"
+  inputs-digest = "578ae0e0126ffd04006b6755a02bc25c95e2eb2ecb4ea99869c4ada133f29f6b"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -464,14 +464,18 @@ Since we only have one store, we only mount one.
 
 ## Execution
 
-We're now done the core logic of the app! From here, we could write transactions
-in Go and execute them against the application using the `app.DeliverTx` method.
-In a real setup, the app would run as an ABCI application and
-would be driven by blocks of transactions from the Tendermint consensus engine.
-Later in the tutorial, we'll connect our app to a complete suite of components
-for running and using a live blockchain application. For complete details on 
-how ABCI applications work, see the [ABCI
-documentation](https://github.com/tendermint/abci/blob/master/specification.md).
+We're now done the core logic of the app! From here, we can write tests in Go
+that initialize the store with accounts and execute transactions by calling 
+the `app.DeliverTx` method.
+
+In a real setup, the app would run as an ABCI application on top of the
+Tendermint consensus engine. It would be initialized by a Genesis file, and it
+would be driven by blocks of transactions committed by the underlying Tendermint 
+consensus. We'll talk more about ABCI and how this all works a bit later, but
+feel free to check the 
+[specification](https://github.com/tendermint/abci/blob/master/specification.md).
+We'll also see how to connect our app to a complete suite of components
+for running and using a live blockchain application. 
 
 For now, we note the follow sequence of events occurs when a transaction is
 received (through `app.DeliverTx`):

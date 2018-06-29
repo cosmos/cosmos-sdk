@@ -31,13 +31,17 @@ NOTE: This documentation is a work-in-progress!
           verifies `StdTx`, manages accounts, and deducts fees
         - [bank.CoinKeeper](core/app3.md#coin-keeper) - CoinKeeper allows for coin
           transfers on an underlying AccountMapper
-    - [App4 - Validator Set Changes](core/app4.md)
-        - [InitChain](core/app4.md#init-chain) - Initialize the application
-          state
-        - [BeginBlock](core/app4.md#begin-block) - BeginBlock logic runs at the
-          beginning of every block
-        - [EndBlock](core/app4.md#end-block) - EndBlock logic runs at the
-          end of every block
+    - [App4 - ABCI](core/app4.md)
+        - [ABCI](core/app4.md#abci) - ABCI is the interface between Tendermint
+          and the Cosmos-SDK
+        - [InitChain](core/app4.md#initchain) - Initialize the application
+          store
+        - [BeginBlock](core/app4.md#beginblock) - BeginBlock runs at the
+          beginning of every block and updates the app about validator behaviour
+        - [EndBlock](core/app4.md#endblock) - EndBlock runs at the
+          end of every block and lets the app change the validator set.
+        - [Query](core/app4.md#query) - Query the application store
+        - [CheckTx](core/app4.md#checktx) - CheckTx only runs the AnteHandler
     - [App5 - Basecoin](core/app5.md) - 
         - [Directory Structure](core/app5.md#directory-structure) - Keep your
           application code organized

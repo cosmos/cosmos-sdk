@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/abci/server"
+	"github.com/tendermint/tendermint/abci/server"
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/node"
@@ -88,6 +88,7 @@ func startInProcess(ctx *Context, appCreator AppCreator) error {
 		proxy.NewLocalClientCreator(app),
 		node.DefaultGenesisDocProviderFunc(cfg),
 		node.DefaultDBProvider,
+		node.DefaultMetricsProvider,
 		ctx.Logger.With("module", "node"))
 	if err != nil {
 		return err

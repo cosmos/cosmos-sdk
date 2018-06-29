@@ -126,7 +126,7 @@ func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 		return nil, errors.Errorf("no key for: %s", name)
 	}
 
-	return info.PubKey.Address(), nil
+	return info.GetPubKey().Address(), nil
 }
 
 // sign and build the transaction from the msg
@@ -187,14 +187,28 @@ func (ctx CoreContext) ensureSignBuild(name string, msgs []sdk.Msg, cdc *wire.Co
 		return nil, err
 	}
 
-	passphrase, err := ctx.GetPassphraseFromStdin(name)
+	var txBytes []byte
+
+	keybase, err := keys.GetKeyBase()
 	if err != nil {
 		return nil, err
 	}
 
-	txBytes, err := ctx.SignAndBuild(name, passphrase, msgs, cdc)
+	info, err := keybase.Get(name)
 	if err != nil {
 		return nil, err
+	}
+	var passphrase string
+	// Only need a passphrase for locally-stored keys
+	if info.GetType() == "local" {
+		passphrase, err = ctx.GetPassphraseFromStdin(name)
+		if err != nil {
+			return nil, fmt.Errorf("Error fetching passphrase: %v", err)
+		}
+	}
+	txBytes, err = ctx.SignAndBuild(name, passphrase, msgs, cdc)
+	if err != nil {
+		return nil, fmt.Errorf("Error signing transaction: %v", err)
 	}
 
 	return txBytes, err

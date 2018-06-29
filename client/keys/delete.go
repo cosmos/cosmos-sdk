@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/gorilla/mux"
-	keys "github.com/tendermint/go-crypto/keys"
 
 	"github.com/spf13/cobra"
 )

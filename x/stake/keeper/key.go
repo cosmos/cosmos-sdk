@@ -35,30 +35,35 @@ var (
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
 
-// get the key for the validator with address
+// get the key for the validator with address.
+// the value at this key is of type stake/types.Validator
 func GetValidatorKey(ownerAddr sdk.Address) []byte {
 	return append(ValidatorsKey, ownerAddr.Bytes()...)
 }
 
-// get the key for the validator with pubkey
+// get the key for the validator with pubkey.
+// the value at this key should the address for a stake/types.Validator
 func GetValidatorByPubKeyIndexKey(pubkey crypto.PubKey) []byte {
 	return append(ValidatorsByPubKeyIndexKey, pubkey.Bytes()...)
 }
 
-// get the key for the current validator group, ordered like tendermint
+// get the key for the current validator group, ordered like tendermint.
+// the value at this key is the address of the owner of a validator
 func GetValidatorsBondedIndexKey(ownerAddr sdk.Address) []byte {
 	return append(ValidatorsBondedIndexKey, ownerAddr.Bytes()...)
 }
 
-// get the power which is the key for the validator used in the power-store
+// get the validator by power index. power index is the key used in the power-store,
+// and represents the relative power ranking of the validator.
+// the value at this key is of type address, the address being the Address
+// of the corresponding validator.
 func GetValidatorsByPowerIndexKey(validator types.Validator, pool types.Pool) []byte {
-
 	// NOTE the address doesn't need to be stored because counter bytes must always be different
-	return GetValidatorPowerRank(validator, pool)
+	return getValidatorPowerRank(validator, pool)
 }
 
-// get the power of a validator
-func GetValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
+// get the power ranking of a validator
+func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 
 	power := validator.EquivalentBondedShares(pool)
 	powerBytes := []byte(power.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
@@ -71,7 +76,7 @@ func GetValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 		revokedBytes[0] = byte(0x00)
 	}
 
-	// TODO ensure that the key will be a readable string.. probably should add seperators and have
+	// TODO ensure that the key will be a readable string.. probably should add separators and have
 	// heightBytes and counterBytes represent strings like powerBytes does
 	heightBytes := make([]byte, binary.MaxVarintLen64)
 	binary.BigEndian.PutUint64(heightBytes, ^uint64(validator.BondHeight)) // invert height (older validators first)
@@ -84,14 +89,16 @@ func GetValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 				append(heightBytes, counterBytes...)...)...)...)
 }
 
-// get the key for the accumulated update validators
+// get the key for the accumulated update validators.
+// The value at this key is of type stake/types.Validator
 func GetTendermintUpdatesKey(ownerAddr sdk.Address) []byte {
 	return append(TendermintUpdatesKey, ownerAddr.Bytes()...)
 }
 
 //________________________________________________________________________________
 
-// get the key for delegator bond with validator
+// get the key for delegator bond with validator.
+// The value at this key is of type stake/types.Delegation
 func GetDelegationKey(delegatorAddr, validatorAddr sdk.Address, cdc *wire.Codec) []byte {
 	return append(GetDelegationsKey(delegatorAddr, cdc), validatorAddr.Bytes()...)
 }
@@ -104,12 +111,14 @@ func GetDelegationsKey(delegatorAddr sdk.Address, cdc *wire.Codec) []byte {
 
 //________________________________________________________________________________
 
-// get the key for an unbonding delegation
+// get the key for an unbonding delegation by delegator and validator addr.
+// The value at this key is of type stake/types.UnbondingDelegation
 func GetUBDKey(delegatorAddr, validatorAddr sdk.Address, cdc *wire.Codec) []byte {
 	return append(GetUBDsKey(delegatorAddr, cdc), validatorAddr.Bytes()...)
 }
 
 // get the index-key for an unbonding delegation, stored by validator-index
+// The value at this key is a key for the corresponding unbonding delegation.
 func GetUBDByValIndexKey(delegatorAddr, validatorAddr sdk.Address, cdc *wire.Codec) []byte {
 	return append(GetUBDsByValIndexKey(validatorAddr, cdc), delegatorAddr.Bytes()...)
 }
@@ -122,7 +131,7 @@ func GetUBDsKey(delegatorAddr sdk.Address, cdc *wire.Codec) []byte {
 	return append(UnbondingDelegationKey, res...)
 }
 
-// get the prefix keyspace for the indexs of unbonding delegations for a validator
+// get the prefix keyspace for the indexes of unbonding delegations for a validator
 func GetUBDsByValIndexKey(validatorAddr sdk.Address, cdc *wire.Codec) []byte {
 	res := cdc.MustMarshalBinary(&validatorAddr)
 	return append(UnbondingDelegationByValIndexKey, res...)
@@ -131,6 +140,7 @@ func GetUBDsByValIndexKey(validatorAddr sdk.Address, cdc *wire.Codec) []byte {
 //________________________________________________________________________________
 
 // get the key for a redelegation
+// The value at this key is of type stake/types.RedelegationKey
 func GetREDKey(delegatorAddr, validatorSrcAddr,
 	validatorDstAddr sdk.Address, cdc *wire.Codec) []byte {
 
@@ -143,6 +153,7 @@ func GetREDKey(delegatorAddr, validatorSrcAddr,
 }
 
 // get the index-key for a redelegation, stored by source-validator-index
+// The value at this key is a key for the corresponding redelegation.
 func GetREDByValSrcIndexKey(delegatorAddr, validatorSrcAddr,
 	validatorDstAddr sdk.Address, cdc *wire.Codec) []byte {
 
@@ -155,6 +166,7 @@ func GetREDByValSrcIndexKey(delegatorAddr, validatorSrcAddr,
 }
 
 // get the index-key for a redelegation, stored by destination-validator-index
+// The value at this key is a key for the corresponding redelegation.
 func GetREDByValDstIndexKey(delegatorAddr, validatorSrcAddr,
 	validatorDstAddr sdk.Address, cdc *wire.Codec) []byte {
 

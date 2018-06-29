@@ -99,7 +99,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 	if ver == 0 {
 		for key, storeParams := range rs.storesParams {
 			id := CommitID{}
-			store, err := rs.loadCommitStoreFromParams(id, storeParams)
+			store, err := rs.loadCommitStoreFromParams(key, id, storeParams)
 			if err != nil {
 				return fmt.Errorf("failed to load rootMultiStore: %v", err)
 			}
@@ -122,7 +122,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 	for _, storeInfo := range cInfo.StoreInfos {
 		key, commitID := rs.nameToKey(storeInfo.Name), storeInfo.Core.CommitID
 		storeParams := rs.storesParams[key]
-		store, err := rs.loadCommitStoreFromParams(commitID, storeParams)
+		store, err := rs.loadCommitStoreFromParams(key, commitID, storeParams)
 		if err != nil {
 			return fmt.Errorf("failed to load rootMultiStore: %v", err)
 		}
@@ -242,10 +242,7 @@ func (rs *rootMultiStore) GetKVStore(key StoreKey) KVStore {
 	return store
 }
 
-// Implements MultiStore.
-func (rs *rootMultiStore) GetKVStoreWithGas(meter sdk.GasMeter, key StoreKey) KVStore {
-	return NewGasKVStore(meter, rs.GetKVStore(key))
-}
+// Implements MultiStore
 
 // getStoreByName will first convert the original name to
 // a special key, before looking up the CommitStore.
@@ -309,7 +306,7 @@ func parsePath(path string) (storeName string, subpath string, err sdk.Error) {
 
 //----------------------------------------
 
-func (rs *rootMultiStore) loadCommitStoreFromParams(id CommitID, params storeParams) (store CommitStore, err error) {
+func (rs *rootMultiStore) loadCommitStoreFromParams(key sdk.StoreKey, id CommitID, params storeParams) (store CommitStore, err error) {
 	var db dbm.DB
 	if params.db != nil {
 		db = dbm.NewPrefixDB(params.db, []byte("s/_/"))
@@ -322,10 +319,23 @@ func (rs *rootMultiStore) loadCommitStoreFromParams(id CommitID, params storePar
 		// TODO: id?
 		// return NewCommitMultiStore(db, id)
 	case sdk.StoreTypeIAVL:
+		_, ok := key.(*sdk.KVStoreKey)
+		if !ok {
+			err = fmt.Errorf("invalid StoreKey for StoreTypeIAVL: %s", key.String())
+			return
+		}
 		store, err = LoadIAVLStore(db, id, rs.pruning)
 		return
 	case sdk.StoreTypeDB:
 		panic("dbm.DB is not a CommitStore")
+	case sdk.StoreTypeTransient:
+		_, ok := key.(*sdk.TransientStoreKey)
+		if !ok {
+			err = fmt.Errorf("invalid StoreKey for StoreTypeTransient: %s", key.String())
+			return
+		}
+		store = newTransientStore()
+		return
 	default:
 		panic(fmt.Sprintf("unrecognized store type %v", params.typ))
 	}
@@ -439,6 +449,10 @@ func commitStores(version int64, storeMap map[StoreKey]CommitStore) commitInfo {
 	for key, store := range storeMap {
 		// Commit
 		commitID := store.Commit()
+
+		if commitID.IsZero() {
+			continue
+		}
 
 		// Record CommitID
 		si := storeInfo{}

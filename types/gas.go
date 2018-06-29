@@ -54,3 +54,50 @@ func (g *infiniteGasMeter) GasConsumed() Gas {
 func (g *infiniteGasMeter) ConsumeGas(amount Gas, descriptor string) {
 	g.consumed += amount
 }
+
+// GasConfig defines gas cost for each operation on KVStores
+type GasConfig struct {
+	HasCost          Gas
+	ReadCostFlat     Gas
+	ReadCostPerByte  Gas
+	WriteCostFlat    Gas
+	WriteCostPerByte Gas
+	KeyCostFlat      Gas
+	ValueCostFlat    Gas
+	ValueCostPerByte Gas
+}
+
+var (
+	cachedDefaultGasConfig   = DefaultGasConfig()
+	cachedTransientGasConfig = TransientGasConfig()
+)
+
+// Default gas config for KVStores
+func DefaultGasConfig() GasConfig {
+	return GasConfig{
+		HasCost:          10,
+		ReadCostFlat:     10,
+		ReadCostPerByte:  1,
+		WriteCostFlat:    10,
+		WriteCostPerByte: 10,
+		KeyCostFlat:      5,
+		ValueCostFlat:    10,
+		ValueCostPerByte: 1,
+	}
+}
+
+// Default gas config for TransientStores
+func TransientGasConfig() GasConfig {
+	// TODO: reduce the gas cost in transient store
+	return GasConfig{
+		HasCost:          10,
+		ReadCostFlat:     10,
+		ReadCostPerByte:  1,
+		WriteCostFlat:    10,
+		WriteCostPerByte: 10,
+		KeyCostFlat:      5,
+		ValueCostFlat:    10,
+		ValueCostPerByte: 1,
+	}
+
+}

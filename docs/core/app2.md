@@ -74,24 +74,36 @@ func handleMsgIssue(keyIssue *sdk.KVStoreKey, keyAcc *sdk.KVStoreKey) sdk.Handle
 func handleIssuer(store sdk.KVStore, issuer sdk.Address, coin sdk.Coin) sdk.Result {
 	// the issuer address is stored directly under the coin denomination
 	denom := []byte(coin.Denom)
-	issuerAddress := store.Get(denom)
-	if issuerAddress == nil {
+	infoBytes := store.Get(denom)
+	if infoBytes == nil {
 		return sdk.ErrInvalidCoins(fmt.Sprintf("Unknown coin type %s", coin.Denom)).Result()
 	}
 
+	var coinInfo coinInfo
+	err := json.Unmarshal(infoBytes, &coinInfo)
+	if err != nil {
+		return sdk.ErrInternal("Error when deserializing coinInfo").Result()
+	}
+
 	// Msg Issuer is not authorized to issue these coins
-	if !bytes.Equal(issuerAddress, issuer) {
+	if !bytes.Equal(coinInfo.Issuer, issuer) {
 		return sdk.ErrUnauthorized(fmt.Sprintf("Msg Issuer cannot issue tokens: %s", coin.Denom)).Result()
 	}
 
 	return sdk.Result{}
 }
+
+// coinInfo stores meta data about a coin
+type coinInfo struct {
+	Issuer sdk.Address `json:"issuer"`
+}
 ```
 
-Note we're just storing the issuer address for each coin directly under the
-coin's denomination in the issuer store. We could of course use a struct with more
-fields, like the current supply of coins in existence, and the maximum supply
-allowed to be issued.
+Note we've introduced the `coinInfo` type to store the issuer address for each coin.
+We JSON serialize this type and store it directly under the denomination in the
+issuer store. We could of course add more fields and logic around this,
+like including the current supply of coins in existence, and enforcing a maximum supply,
+but that's left as an excercise for the reader :).
 
 ## Amino
 

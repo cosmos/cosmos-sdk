@@ -117,7 +117,7 @@ func (msg MsgIssue) Tags() sdk.Tags {
 //------------------------------------------------------------------
 // Handler for the message
 
-// Handle MsgIssue
+// Handle MsgIssue.
 func handleMsgIssue(keyIssue *sdk.KVStoreKey, keyAcc *sdk.KVStoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		issueMsg, ok := msg.(MsgIssue)
@@ -149,17 +149,28 @@ func handleMsgIssue(keyIssue *sdk.KVStoreKey, keyAcc *sdk.KVStoreKey) sdk.Handle
 func handleIssuer(store sdk.KVStore, issuer sdk.Address, coin sdk.Coin) sdk.Result {
 	// the issuer address is stored directly under the coin denomination
 	denom := []byte(coin.Denom)
-	issuerAddress := store.Get(denom)
-	if issuerAddress == nil {
+	infoBytes := store.Get(denom)
+	if infoBytes == nil {
 		return sdk.ErrInvalidCoins(fmt.Sprintf("Unknown coin type %s", coin.Denom)).Result()
 	}
 
+	var coinInfo coinInfo
+	err := json.Unmarshal(infoBytes, &coinInfo)
+	if err != nil {
+		return sdk.ErrInternal("Error when deserializing coinInfo").Result()
+	}
+
 	// Msg Issuer is not authorized to issue these coins
-	if !bytes.Equal(issuerAddress, issuer) {
+	if !bytes.Equal(coinInfo.Issuer, issuer) {
 		return sdk.ErrUnauthorized(fmt.Sprintf("Msg Issuer cannot issue tokens: %s", coin.Denom)).Result()
 	}
 
 	return sdk.Result{}
+}
+
+// coinInfo stores meta data about a coin
+type coinInfo struct {
+	Issuer sdk.Address `json:"issuer"`
 }
 
 //------------------------------------------------------------------

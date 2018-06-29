@@ -25,7 +25,7 @@ func buildReq(w http.ResponseWriter, r *http.Request, cdc *wire.Codec, req inter
 		writeErr(&w, http.StatusBadRequest, err.Error())
 		return err
 	}
-	err = cdc.UnmarshalJSON(body, &req)
+	err = cdc.UnmarshalJSON(body, req)
 	if err != nil {
 		writeErr(&w, http.StatusBadRequest, err.Error())
 		return err

@@ -183,6 +183,9 @@ func CreateTransferTransaction(cdc *wire.Codec, ctx context.CoreContext) http.Ha
 			return
 		}
 
+		//TODO if users don't provide Accnum or Sequence, we plan to access /balance/{account} to get them
+		//TODO if users don't provide Gas, default value will be used.
+
 		txByteForSign, err := ctx.BuildTransaction(transferParam.Accnum, transferParam.Sequence, transferParam.Gas, msg, cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

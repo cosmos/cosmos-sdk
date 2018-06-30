@@ -59,7 +59,7 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().String(flagCORS, "", "Set to domains that can make CORS requests (* for all)")
 	cmd.Flags().StringP(client.FlagChainID, "c", "", "ID of chain we connect to")
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	cmd.Flags().StringP(client.FlagTrustStore, "t", "~/.lcd", "Directory for trust store")
+	cmd.Flags().StringP(client.FlagTrustStore, "t", "$HOME/.cosmos_lcd", "Directory for trust store")
 	return cmd
 }
 

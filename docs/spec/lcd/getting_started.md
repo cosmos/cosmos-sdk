@@ -13,7 +13,7 @@ To start a rest server, we need to specify the following parameters:
 **Sample command** :
 
 ```
-gaiacli light-client --chain-id=test --laddr=tcp://localhost:1317  --node tcp://localhost:46657 --trust-node=false
+gaiacli advanced rest-server --chain-id=test --laddr=tcp://localhost:1317  --node tcp://localhost:46657 --trust-node=false
 ```
 
 ## LCD Use Cases

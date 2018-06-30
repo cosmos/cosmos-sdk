@@ -267,11 +267,23 @@ Parameters:
     "error": "",
     "code":200,
     "result": {
-     {
-         "atom": 1000,
-         "photon": 500,
-         "ether": 20
-     }
+          "type": "6C54F73C9F2E08",
+          "value": {
+              "address": "4E5B78AB5C303E681C372E65EC24F4AA05E4B682",
+              "coins": [
+                  {
+                      "denom": "monkeyToken",
+                      "amount": 10000
+                  },
+                  {
+                      "denom": "steak",
+                      "amount": 1000
+                  }
+              ],
+              "public_key": null,
+              "account_number": 0,
+              "sequence": 0
+          }
     },
     "rest api": "2.0"
 }
@@ -303,6 +315,9 @@ Parameters:
 | to_address  | string | null    | true     | address to send to     |
 | amount  | int    | null    | true     | amount of the token         |
 | denomination  | string | null    | true     | denomination of the token   |
+| accnum  | int | null    | true     | account number, user can query the valid account number by accessing previous API: /balance/{account} |
+| sequence  | int    | null    | true     | sequence number, once a transaction is send from this account, the sequence number increases one. User can get the valid sequence number by accessing previous API: /balance/{account} |
+| gas  | int | null    | true     | transaction fee   |
 
 
 * The above command returns JSON structured like this if success:
@@ -340,7 +355,9 @@ Parameters:
 
 | Parameter       | Type   | Default | Required | Description            |
 | ------------    | ------ | ------- | -------- | ----------------------------------------------- |
-| transaction_data | []byte | null    | true     | bytes of a valid transaction and it's signature |
+| transaction_data | []byte | null    | true     | bytes of a valid transaction |
+| signature_list | [][]byte | null    | true     | bytes of signature list |
+| public_key_list | [][]byte | null    | true     | bytes of public key list |
 
 * The above command returns JSON structured like this if success:
 

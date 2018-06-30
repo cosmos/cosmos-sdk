@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -37,20 +36,20 @@ func TestDelegation(t *testing.T) {
 
 	// check the empty keeper first
 	_, found := keeper.GetDelegation(ctx, addrDels[0], addrVals[0])
-	assert.False(t, found)
+	require.False(t, found)
 
 	// set and retrieve a record
 	keeper.SetDelegation(ctx, bond1to1)
 	resBond, found := keeper.GetDelegation(ctx, addrDels[0], addrVals[0])
-	assert.True(t, found)
-	assert.True(t, bond1to1.Equal(resBond))
+	require.True(t, found)
+	require.True(t, bond1to1.Equal(resBond))
 
 	// modify a records, save, and retrieve
 	bond1to1.Shares = sdk.NewRat(99)
 	keeper.SetDelegation(ctx, bond1to1)
 	resBond, found = keeper.GetDelegation(ctx, addrDels[0], addrVals[0])
-	assert.True(t, found)
-	assert.True(t, bond1to1.Equal(resBond))
+	require.True(t, found)
+	require.True(t, bond1to1.Equal(resBond))
 
 	// add some more records
 	bond1to2 := types.Delegation{addrDels[0], addrVals[1], sdk.NewRat(9), 0}
@@ -67,43 +66,43 @@ func TestDelegation(t *testing.T) {
 	// test all bond retrieve capabilities
 	resBonds := keeper.GetDelegations(ctx, addrDels[0], 5)
 	require.Equal(t, 3, len(resBonds))
-	assert.True(t, bond1to1.Equal(resBonds[0]))
-	assert.True(t, bond1to2.Equal(resBonds[1]))
-	assert.True(t, bond1to3.Equal(resBonds[2]))
+	require.True(t, bond1to1.Equal(resBonds[0]))
+	require.True(t, bond1to2.Equal(resBonds[1]))
+	require.True(t, bond1to3.Equal(resBonds[2]))
 	resBonds = keeper.GetDelegations(ctx, addrDels[0], 3)
 	require.Equal(t, 3, len(resBonds))
 	resBonds = keeper.GetDelegations(ctx, addrDels[0], 2)
 	require.Equal(t, 2, len(resBonds))
 	resBonds = keeper.GetDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 3, len(resBonds))
-	assert.True(t, bond2to1.Equal(resBonds[0]))
-	assert.True(t, bond2to2.Equal(resBonds[1]))
-	assert.True(t, bond2to3.Equal(resBonds[2]))
+	require.True(t, bond2to1.Equal(resBonds[0]))
+	require.True(t, bond2to2.Equal(resBonds[1]))
+	require.True(t, bond2to3.Equal(resBonds[2]))
 	allBonds := keeper.GetAllDelegations(ctx)
 	require.Equal(t, 6, len(allBonds))
-	assert.True(t, bond1to1.Equal(allBonds[0]))
-	assert.True(t, bond1to2.Equal(allBonds[1]))
-	assert.True(t, bond1to3.Equal(allBonds[2]))
-	assert.True(t, bond2to1.Equal(allBonds[3]))
-	assert.True(t, bond2to2.Equal(allBonds[4]))
-	assert.True(t, bond2to3.Equal(allBonds[5]))
+	require.True(t, bond1to1.Equal(allBonds[0]))
+	require.True(t, bond1to2.Equal(allBonds[1]))
+	require.True(t, bond1to3.Equal(allBonds[2]))
+	require.True(t, bond2to1.Equal(allBonds[3]))
+	require.True(t, bond2to2.Equal(allBonds[4]))
+	require.True(t, bond2to3.Equal(allBonds[5]))
 
 	// delete a record
 	keeper.RemoveDelegation(ctx, bond2to3)
 	_, found = keeper.GetDelegation(ctx, addrDels[1], addrVals[2])
-	assert.False(t, found)
+	require.False(t, found)
 	resBonds = keeper.GetDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 2, len(resBonds))
-	assert.True(t, bond2to1.Equal(resBonds[0]))
-	assert.True(t, bond2to2.Equal(resBonds[1]))
+	require.True(t, bond2to1.Equal(resBonds[0]))
+	require.True(t, bond2to2.Equal(resBonds[1]))
 
 	// delete all the records from delegator 2
 	keeper.RemoveDelegation(ctx, bond2to1)
 	keeper.RemoveDelegation(ctx, bond2to2)
 	_, found = keeper.GetDelegation(ctx, addrDels[1], addrVals[0])
-	assert.False(t, found)
+	require.False(t, found)
 	_, found = keeper.GetDelegation(ctx, addrDels[1], addrVals[1])
-	assert.False(t, found)
+	require.False(t, found)
 	resBonds = keeper.GetDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 0, len(resBonds))
 }
@@ -123,20 +122,20 @@ func TestUnbondingDelegation(t *testing.T) {
 	// set and retrieve a record
 	keeper.SetUnbondingDelegation(ctx, ubd)
 	resBond, found := keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
-	assert.True(t, found)
-	assert.True(t, ubd.Equal(resBond))
+	require.True(t, found)
+	require.True(t, ubd.Equal(resBond))
 
 	// modify a records, save, and retrieve
 	ubd.Balance = sdk.NewCoin("steak", 21)
 	keeper.SetUnbondingDelegation(ctx, ubd)
 	resBond, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
-	assert.True(t, found)
-	assert.True(t, ubd.Equal(resBond))
+	require.True(t, found)
+	require.True(t, ubd.Equal(resBond))
 
 	// delete a record
 	keeper.RemoveUnbondingDelegation(ctx, ubd)
 	_, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
-	assert.False(t, found)
+	require.False(t, found)
 }
 
 func TestUnbondDelegation(t *testing.T) {
@@ -166,7 +165,7 @@ func TestUnbondDelegation(t *testing.T) {
 	var amount int64
 	amount, err = keeper.unbond(ctx, addrDels[0], addrVals[0], sdk.NewRat(6))
 	require.NoError(t, err)
-	assert.Equal(t, int64(6), amount) // shares to be added to an unbonding delegation / redelegation
+	require.Equal(t, int64(6), amount) // shares to be added to an unbonding delegation / redelegation
 
 	delegation, found := keeper.GetDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
@@ -174,10 +173,10 @@ func TestUnbondDelegation(t *testing.T) {
 	require.True(t, found)
 	pool = keeper.GetPool(ctx)
 
-	assert.Equal(t, int64(4), delegation.Shares.Evaluate())
-	assert.Equal(t, int64(4), validator.PoolShares.Bonded().Evaluate())
-	assert.Equal(t, int64(6), pool.LooseTokens, "%v", pool)
-	assert.Equal(t, int64(4), pool.BondedTokens)
+	require.Equal(t, int64(4), delegation.Shares.Evaluate())
+	require.Equal(t, int64(4), validator.PoolShares.Bonded().Evaluate())
+	require.Equal(t, int64(6), pool.LooseTokens, "%v", pool)
+	require.Equal(t, int64(4), pool.BondedTokens)
 }
 
 // tests Get/Set/Remove/Has UnbondingDelegation
@@ -196,28 +195,28 @@ func TestRedelegation(t *testing.T) {
 
 	// test shouldn't have and redelegations
 	has := keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])
-	assert.False(t, has)
+	require.False(t, has)
 
 	// set and retrieve a record
 	keeper.SetRedelegation(ctx, rd)
 	resBond, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
-	assert.True(t, found)
-	assert.True(t, rd.Equal(resBond))
+	require.True(t, found)
+	require.True(t, rd.Equal(resBond))
 
 	// check if has the redelegation
 	has = keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])
-	assert.True(t, has)
+	require.True(t, has)
 
 	// modify a records, save, and retrieve
 	rd.SharesSrc = sdk.NewRat(21)
 	rd.SharesDst = sdk.NewRat(21)
 	keeper.SetRedelegation(ctx, rd)
 	resBond, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
-	assert.True(t, found)
-	assert.True(t, rd.Equal(resBond))
+	require.True(t, found)
+	require.True(t, rd.Equal(resBond))
 
 	// delete a record
 	keeper.RemoveRedelegation(ctx, rd)
 	_, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
-	assert.False(t, found)
+	require.False(t, found)
 }

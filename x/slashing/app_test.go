@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -66,7 +65,7 @@ func checkValidator(t *testing.T, mapp *mock.App, keeper stake.Keeper,
 	addr sdk.Address, expFound bool) stake.Validator {
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	validator, found := keeper.GetValidator(ctxCheck, addr1)
-	assert.Equal(t, expFound, found)
+	require.Equal(t, expFound, found)
 	return validator
 }
 
@@ -74,7 +73,7 @@ func checkValidatorSigningInfo(t *testing.T, mapp *mock.App, keeper Keeper,
 	addr sdk.Address, expFound bool) ValidatorSigningInfo {
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	signingInfo, found := keeper.getValidatorSigningInfo(ctxCheck, addr)
-	assert.Equal(t, expFound, found)
+	require.Equal(t, expFound, found)
 	return signingInfo
 }
 

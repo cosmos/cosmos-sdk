@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -29,7 +28,7 @@ func SetGenesis(app *App, accs []auth.Account) {
 func CheckBalance(t *testing.T, app *App, addr sdk.Address, exp sdk.Coins) {
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
 	res := app.AccountMapper.GetAccount(ctxCheck, addr)
-	assert.Equal(t, exp, res.GetCoins())
+	require.Equal(t, exp, res.GetCoins())
 }
 
 // generate a signed transaction

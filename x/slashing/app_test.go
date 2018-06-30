@@ -7,12 +7,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var (
@@ -55,7 +54,9 @@ func getEndBlocker(keeper stake.Keeper) sdk.EndBlocker {
 func getInitChainer(mapp *mock.App, keeper stake.Keeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
-		stake.InitGenesis(ctx, keeper, stake.DefaultGenesisState())
+		stakeGenesis := stake.DefaultGenesisState()
+		stakeGenesis.Pool.LooseTokens = 100000
+		stake.InitGenesis(ctx, keeper, stakeGenesis)
 		return abci.ResponseInitChain{}
 	}
 }
@@ -64,7 +65,7 @@ func checkValidator(t *testing.T, mapp *mock.App, keeper stake.Keeper,
 	addr sdk.Address, expFound bool) stake.Validator {
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	validator, found := keeper.GetValidator(ctxCheck, addr1)
-	assert.Equal(t, expFound, found)
+	require.Equal(t, expFound, found)
 	return validator
 }
 
@@ -72,7 +73,7 @@ func checkValidatorSigningInfo(t *testing.T, mapp *mock.App, keeper Keeper,
 	addr sdk.Address, expFound bool) ValidatorSigningInfo {
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	signingInfo, found := keeper.getValidatorSigningInfo(ctxCheck, addr)
-	assert.Equal(t, expFound, found)
+	require.Equal(t, expFound, found)
 	return signingInfo
 }
 
@@ -92,7 +93,7 @@ func TestSlashingMsgs(t *testing.T) {
 	createValidatorMsg := stake.NewMsgCreateValidator(
 		addr1, priv1.PubKey(), bondCoin, description,
 	)
-	mock.SignCheckDeliver(t, mapp.BaseApp, createValidatorMsg, []int64{0}, []int64{0}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{createValidatorMsg}, []int64{0}, []int64{0}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin.Minus(bondCoin)})
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 
@@ -106,6 +107,6 @@ func TestSlashingMsgs(t *testing.T) {
 	checkValidatorSigningInfo(t, mapp, keeper, addr1, false)
 
 	// unrevoke should fail with unknown validator
-	res := mock.SignCheck(t, mapp.BaseApp, unrevokeMsg, []int64{0}, []int64{1}, priv1)
+	res := mock.SignCheck(mapp.BaseApp, []sdk.Msg{unrevokeMsg}, []int64{0}, []int64{1}, priv1)
 	require.Equal(t, sdk.ToABCICode(DefaultCodespace, CodeInvalidValidator), res.Code)
 }

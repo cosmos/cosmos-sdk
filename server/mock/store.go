@@ -95,6 +95,10 @@ func (kv kvStore) Delete(key []byte) {
 	delete(kv.store, string(key))
 }
 
+func (kv kvStore) Prefix(prefix []byte) sdk.KVStore {
+	panic("not implemented")
+}
+
 func (kv kvStore) Iterator(start, end []byte) sdk.Iterator {
 	panic("not implemented")
 }
@@ -111,6 +115,6 @@ func (kv kvStore) ReverseSubspaceIterator(prefix []byte) sdk.Iterator {
 	panic("not implemented")
 }
 
-func NewCommitMultiStore(db dbm.DB) sdk.CommitMultiStore {
+func NewCommitMultiStore() sdk.CommitMultiStore {
 	return multiStore{kv: make(map[sdk.StoreKey]kvStore)}
 }

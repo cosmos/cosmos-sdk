@@ -5,10 +5,10 @@ import (
 
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
@@ -37,11 +37,11 @@ func TestKeeperGetSet(t *testing.T) {
 
 	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
 	stakeKeeper := NewKeeper(capKey, bank.NewKeeper(accountMapper), DefaultCodespace)
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	addr := sdk.Address([]byte("some-address"))
 
 	bi := stakeKeeper.getBondInfo(ctx, addr)
-	assert.Equal(t, bi, bondInfo{})
+	require.Equal(t, bi, bondInfo{})
 
 	privKey := crypto.GenPrivKeyEd25519()
 
@@ -53,9 +53,9 @@ func TestKeeperGetSet(t *testing.T) {
 	stakeKeeper.setBondInfo(ctx, addr, bi)
 
 	savedBi := stakeKeeper.getBondInfo(ctx, addr)
-	assert.NotNil(t, savedBi)
+	require.NotNil(t, savedBi)
 	fmt.Printf("Bond Info: %v\n", savedBi)
-	assert.Equal(t, int64(10), savedBi.Power)
+	require.Equal(t, int64(10), savedBi.Power)
 }
 
 func TestBonding(t *testing.T) {
@@ -63,7 +63,7 @@ func TestBonding(t *testing.T) {
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 
 	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
 	coinKeeper := bank.NewKeeper(accountMapper)
@@ -73,18 +73,19 @@ func TestBonding(t *testing.T) {
 	pubKey := privKey.PubKey()
 
 	_, _, err := stakeKeeper.unbondWithoutCoins(ctx, addr)
-	assert.Equal(t, err, ErrInvalidUnbond(DefaultCodespace))
+	require.Equal(t, err, ErrInvalidUnbond(DefaultCodespace))
 
 	_, err = stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewCoin("steak", 10))
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	power, err := stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewCoin("steak", 10))
-	assert.Equal(t, int64(20), power)
+	require.Nil(t, err)
+	require.Equal(t, int64(20), power)
 
 	pk, _, err := stakeKeeper.unbondWithoutCoins(ctx, addr)
-	assert.Nil(t, err)
-	assert.Equal(t, pubKey, pk)
+	require.Nil(t, err)
+	require.Equal(t, pubKey, pk)
 
 	_, _, err = stakeKeeper.unbondWithoutCoins(ctx, addr)
-	assert.Equal(t, err, ErrInvalidUnbond(DefaultCodespace))
+	require.Equal(t, err, ErrInvalidUnbond(DefaultCodespace))
 }

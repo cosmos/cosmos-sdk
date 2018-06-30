@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	keys "github.com/tendermint/go-crypto/keys"
+	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/tendermint/tmlibs/cli"
 	dbm "github.com/tendermint/tmlibs/db"
 
@@ -49,6 +49,7 @@ func SetKeyBase(kb keys.Keybase) {
 // used for outputting keys.Info over REST
 type KeyOutput struct {
 	Name    string `json:"name"`
+	Type    string `json:"type"`
 	Address string `json:"address"`
 	PubKey  string `json:"pub_key"`
 	Seed    string `json:"seed,omitempty"`
@@ -69,16 +70,17 @@ func Bech32KeysOutput(infos []keys.Info) ([]KeyOutput, error) {
 
 // create a KeyOutput in bech32 format
 func Bech32KeyOutput(info keys.Info) (KeyOutput, error) {
-	bechAccount, err := sdk.Bech32ifyAcc(sdk.Address(info.PubKey.Address().Bytes()))
+	bechAccount, err := sdk.Bech32ifyAcc(sdk.Address(info.GetPubKey().Address().Bytes()))
 	if err != nil {
 		return KeyOutput{}, err
 	}
-	bechPubKey, err := sdk.Bech32ifyAccPub(info.PubKey)
+	bechPubKey, err := sdk.Bech32ifyAccPub(info.GetPubKey())
 	if err != nil {
 		return KeyOutput{}, err
 	}
 	return KeyOutput{
-		Name:    info.Name,
+		Name:    info.GetName(),
+		Type:    info.GetType(),
 		Address: bechAccount,
 		PubKey:  bechPubKey,
 	}, nil
@@ -91,7 +93,7 @@ func printInfo(info keys.Info) {
 	}
 	switch viper.Get(cli.OutputFlag) {
 	case "text":
-		fmt.Printf("NAME:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
+		fmt.Printf("NAME:\tTYPE:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
 		printKeyOutput(ko)
 	case "json":
 		out, err := MarshalJSON(ko)
@@ -109,7 +111,7 @@ func printInfos(infos []keys.Info) {
 	}
 	switch viper.Get(cli.OutputFlag) {
 	case "text":
-		fmt.Printf("NAME:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
+		fmt.Printf("NAME:\tTYPE:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
 		for _, ko := range kos {
 			printKeyOutput(ko)
 		}
@@ -123,5 +125,5 @@ func printInfos(infos []keys.Info) {
 }
 
 func printKeyOutput(ko KeyOutput) {
-	fmt.Printf("%s\t%s\t%s\n", ko.Name, ko.Address, ko.PubKey)
+	fmt.Printf("%s\t%s\t%s\t%s\n", ko.Name, ko.Type, ko.Address, ko.PubKey)
 }

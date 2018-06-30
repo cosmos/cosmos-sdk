@@ -3,7 +3,7 @@ package app
 import (
 	"encoding/json"
 
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -77,7 +77,6 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 
 	// register message routes
 	app.Router().
-		AddRoute("auth", auth.NewHandler(app.accountMapper)).
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
@@ -121,6 +120,7 @@ func (app *BasecoinApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock
 }
 
 // application updates every end block
+// nolint: unparam
 func (app *BasecoinApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
 
@@ -173,7 +173,8 @@ func (app *BasecoinApp) ExportAppStateAndValidators() (appState json.RawMessage,
 	app.accountMapper.IterateAccounts(ctx, appendAccount)
 
 	genState := types.GenesisState{
-		Accounts: accounts,
+		Accounts:  accounts,
+		StakeData: stake.WriteGenesis(ctx, app.stakeKeeper),
 	}
 	appState, err = wire.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {

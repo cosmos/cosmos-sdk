@@ -3,9 +3,9 @@ package auth
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -19,14 +19,14 @@ import (
 func TestStdTx(t *testing.T) {
 	priv := crypto.GenPrivKeyEd25519()
 	addr := priv.PubKey().Address()
-	msg := sdk.NewTestMsg(addr)
+	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
 	fee := newStdFee()
 	sigs := []StdSignature{}
 
-	tx := NewStdTx(msg, fee, sigs, "")
-	assert.Equal(t, msg, tx.GetMsg())
-	assert.Equal(t, sigs, tx.GetSignatures())
+	tx := NewStdTx(msgs, fee, sigs, "")
+	require.Equal(t, msgs, tx.GetMsgs())
+	require.Equal(t, sigs, tx.GetSignatures())
 
 	feePayer := FeePayer(tx)
-	assert.Equal(t, addr, feePayer)
+	require.Equal(t, addr, feePayer)
 }

@@ -74,7 +74,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	require.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
 
 	// slash and revoke the first validator
-	keeper.Slash(ctx, keep.PKs[0], 0, sdk.NewRat(1, 2))
+	keeper.Slash(ctx, keep.PKs[0], 0, initBond, sdk.NewRat(1, 2))
 	keeper.Revoke(ctx, keep.PKs[0])
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
@@ -558,4 +558,87 @@ func TestTransitiveRedelegation(t *testing.T) {
 	// now should be able to redelegate from the second validator to the third
 	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error")
+}
+
+func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	valA, valB, del := keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]
+
+	msgCreateValidator := newTestMsgCreateValidator(valA, keep.PKs[0], 10)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	msgCreateValidator = newTestMsgCreateValidator(valB, keep.PKs[1], 10)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	// delegate 10 stake
+	msgDelegate := newTestMsgDelegate(del, valA, 10)
+	got = handleMsgDelegate(ctx, msgDelegate, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgDelegate")
+
+	// a block passes
+	ctx = ctx.WithBlockHeight(1)
+
+	// begin unbonding 4 stake
+	msgBeginUnbonding := NewMsgBeginUnbonding(del, valA, sdk.NewRat(4))
+	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgBeginUnbonding")
+
+	// begin redelegate 6 stake
+	msgBeginRedelegate := NewMsgBeginRedelegate(del, valA, valB, sdk.NewRat(6))
+	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgBeginRedelegate")
+
+	// destination delegation should have 6 shares
+	delegation, found := keeper.GetDelegation(ctx, del, valB)
+	require.True(t, found)
+	require.Equal(t, sdk.NewRat(6), delegation.Shares)
+
+	// slash the validator by half
+	keeper.Slash(ctx, keep.PKs[0], 0, 20, sdk.NewRat(1, 2))
+
+	// unbonding delegation should have been slashed by half
+	unbonding, found := keeper.GetUnbondingDelegation(ctx, del, valA)
+	require.True(t, found)
+	require.Equal(t, int64(2), unbonding.Balance.Amount.Int64())
+
+	// redelegation should have been slashed by half
+	redelegation, found := keeper.GetRedelegation(ctx, del, valA, valB)
+	require.True(t, found)
+	require.Equal(t, int64(3), redelegation.Balance.Amount.Int64())
+
+	// destination delegation should have been slashed by half
+	delegation, found = keeper.GetDelegation(ctx, del, valB)
+	require.True(t, found)
+	require.Equal(t, sdk.NewRat(3), delegation.Shares)
+
+	// validator power should have been reduced by half
+	validator, found := keeper.GetValidator(ctx, valA)
+	require.True(t, found)
+	require.Equal(t, sdk.NewRat(5), validator.GetPower())
+
+	// slash the validator for an infraction committed after the unbonding and redelegation begin
+	ctx = ctx.WithBlockHeight(3)
+	keeper.Slash(ctx, keep.PKs[0], 2, 10, sdk.NewRat(1, 2))
+
+	// unbonding delegation should be unchanged
+	unbonding, found = keeper.GetUnbondingDelegation(ctx, del, valA)
+	require.True(t, found)
+	require.Equal(t, int64(2), unbonding.Balance.Amount.Int64())
+
+	// redelegation should be unchanged
+	redelegation, found = keeper.GetRedelegation(ctx, del, valA, valB)
+	require.True(t, found)
+	require.Equal(t, int64(3), redelegation.Balance.Amount.Int64())
+
+	// destination delegation should be unchanged
+	delegation, found = keeper.GetDelegation(ctx, del, valB)
+	require.True(t, found)
+	require.Equal(t, sdk.NewRat(3), delegation.Shares)
+
+	// validator power should have been reduced to zero
+	validator, found = keeper.GetValidator(ctx, valA)
+	require.True(t, found)
+	require.Equal(t, sdk.NewRat(0), validator.GetPower())
 }

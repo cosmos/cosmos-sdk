@@ -284,6 +284,7 @@ func (v Validator) DelegatorShareExRate(pool Pool) sdk.Rat {
 var _ sdk.Validator = Validator{}
 
 // nolint - for sdk.Validator
+func (v Validator) GetRevoked() bool            { return v.Revoked }
 func (v Validator) GetMoniker() string          { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus   { return v.Status() }
 func (v Validator) GetOwner() sdk.Address       { return v.Owner }

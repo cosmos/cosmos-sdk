@@ -101,7 +101,7 @@ jobs:
 
   test_cover:
     <<: *defaults
-    parallelism: 1
+    parallelism: 2
     steps:
       - attach_workspace:
           at: /tmp/workspace
@@ -126,6 +126,7 @@ jobs:
 
   upload_coverage:
     <<: *defaults
+    parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace

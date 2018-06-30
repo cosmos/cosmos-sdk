@@ -443,7 +443,7 @@
     "netutil",
     "trace"
   ]
-  revision = "e514e69ffb8bc3c76a71ae40de0118d794855992"
+  revision = "97aa3a539ec716117a9d15a4659a911f50d13c3c"
 
 [[projects]]
   branch = "master"

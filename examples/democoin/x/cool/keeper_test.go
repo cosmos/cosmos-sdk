@@ -3,7 +3,7 @@ package cool
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -35,16 +35,16 @@ func TestCoolKeeper(t *testing.T) {
 	keeper := NewKeeper(capKey, ck, DefaultCodespace)
 
 	err := InitGenesis(ctx, keeper, Genesis{"icy"})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	genesis := WriteGenesis(ctx, keeper)
-	assert.Nil(t, err)
-	assert.Equal(t, genesis, Genesis{"icy"})
+	require.Nil(t, err)
+	require.Equal(t, genesis, Genesis{"icy"})
 
 	res := keeper.GetTrend(ctx)
-	assert.Equal(t, res, "icy")
+	require.Equal(t, res, "icy")
 
 	keeper.setTrend(ctx, "fiery")
 	res = keeper.GetTrend(ctx)
-	assert.Equal(t, res, "fiery")
+	require.Equal(t, res, "fiery")
 }

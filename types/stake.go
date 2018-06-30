@@ -32,6 +32,7 @@ func BondStatusToString(b BondStatus) string {
 
 // validator for a delegated proof of stake system
 type Validator interface {
+	GetRevoked() bool         // whether the validator is revoked
 	GetMoniker() string       // moniker of the validator
 	GetStatus() BondStatus    // status of the validator
 	GetOwner() Address        // owner address to receive/return validators coins
@@ -62,9 +63,10 @@ type ValidatorSet interface {
 	Validator(Context, Address) Validator // get a particular validator by owner address
 	TotalPower(Context) Rat               // total power of the validator set
 
-	Slash(Context, crypto.PubKey, int64, Rat) // slash the validator and delegators of the validator, specifying offence height & slash fraction
-	Revoke(Context, crypto.PubKey)            // revoke a validator
-	Unrevoke(Context, crypto.PubKey)          // unrevoke a validator
+	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
+	Slash(Context, crypto.PubKey, int64, int64, Rat)
+	Revoke(Context, crypto.PubKey)   // revoke a validator
+	Unrevoke(Context, crypto.PubKey) // unrevoke a validator
 }
 
 //_______________________________________________________________________________

@@ -22,6 +22,13 @@ BREAKING CHANGES
     * `gaiacli stake complete-unbonding`
     * `gaiacli stake begin-redelegation`
     * `gaiacli stake complete-redelegation`
+* [slashing] update slashing for unbonding period
+  * Slash according to power at time of infraction instead of power at
+    time of discovery
+  * Iterate through unbonding delegations & redelegations which contributed
+    to an infraction, slash them proportional to their stake at the time
+  * Add REST endpoint to unrevoke a validator previously revoked for downtime
+  * Add REST endpoint to retrieve liveness signing information for a validator
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
@@ -42,6 +49,7 @@ FEATURES
   * unconvert
   * ineffassign
   * errcheck
+  * unparam
 * [tools] Add `make format` command to automate fixing misspell and gofmt errors.
 * [server] Default config now creates a profiler at port 6060, and increase p2p send/recv rates
 * [tests] Add WaitForNextNBlocksTM helper method
@@ -78,6 +86,7 @@ IMPROVEMENTS
 * [stake] edit-validator changes now can use the keyword [do-not-modify] to not modify unspecified `--flag` (aka won't set them to `""` value)
 * [types] added common tag constants
 * [stake] offload more generic functionality from the handler into the keeper
+* added contributing guidelines
 
 ## 0.19.0
 

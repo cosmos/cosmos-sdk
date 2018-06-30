@@ -4,11 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIsPositiveCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		expected bool
@@ -20,13 +19,11 @@ func TestIsPositiveCoin(t *testing.T) {
 
 	for _, tc := range cases {
 		res := tc.inputOne.IsPositive()
-		assert.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res)
 	}
 }
 
 func TestIsNotNegativeCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		expected bool
@@ -38,13 +35,11 @@ func TestIsNotNegativeCoin(t *testing.T) {
 
 	for _, tc := range cases {
 		res := tc.inputOne.IsNotNegative()
-		assert.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res)
 	}
 }
 
 func TestSameDenomAsCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -59,13 +54,11 @@ func TestSameDenomAsCoin(t *testing.T) {
 
 	for _, tc := range cases {
 		res := tc.inputOne.SameDenomAs(tc.inputTwo)
-		assert.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res)
 	}
 }
 
 func TestIsGTECoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -79,13 +72,11 @@ func TestIsGTECoin(t *testing.T) {
 
 	for _, tc := range cases {
 		res := tc.inputOne.IsGTE(tc.inputTwo)
-		assert.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res)
 	}
 }
 
 func TestIsEqualCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -100,13 +91,11 @@ func TestIsEqualCoin(t *testing.T) {
 
 	for _, tc := range cases {
 		res := tc.inputOne.IsEqual(tc.inputTwo)
-		assert.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res)
 	}
 }
 
 func TestPlusCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -119,7 +108,7 @@ func TestPlusCoin(t *testing.T) {
 
 	for _, tc := range cases {
 		res := tc.inputOne.Plus(tc.inputTwo)
-		assert.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res)
 	}
 
 	tc := struct {
@@ -128,12 +117,10 @@ func TestPlusCoin(t *testing.T) {
 		expected int64
 	}{NewCoin("asdf", -1), NewCoin("asdf", 1), 0}
 	res := tc.inputOne.Plus(tc.inputTwo)
-	assert.Equal(tc.expected, res.Amount.Int64())
+	require.Equal(t, tc.expected, res.Amount.Int64())
 }
 
 func TestMinusCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -147,7 +134,7 @@ func TestMinusCoin(t *testing.T) {
 
 	for _, tc := range cases {
 		res := tc.inputOne.Minus(tc.inputTwo)
-		assert.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res)
 	}
 
 	tc := struct {
@@ -156,7 +143,7 @@ func TestMinusCoin(t *testing.T) {
 		expected int64
 	}{NewCoin("A", 1), NewCoin("A", 1), 0}
 	res := tc.inputOne.Minus(tc.inputTwo)
-	assert.Equal(tc.expected, res.Amount.Int64())
+	require.Equal(t, tc.expected, res.Amount.Int64())
 
 }
 
@@ -208,8 +195,6 @@ func TestCoins(t *testing.T) {
 }
 
 func TestPlusCoins(t *testing.T) {
-	assert := assert.New(t)
-
 	one := NewInt(1)
 	zero := NewInt(0)
 	negone := NewInt(-1)
@@ -229,8 +214,8 @@ func TestPlusCoins(t *testing.T) {
 
 	for _, tc := range cases {
 		res := tc.inputOne.Plus(tc.inputTwo)
-		assert.True(res.IsValid())
-		assert.Equal(tc.expected, res)
+		assert.True(t, res.IsValid())
+		require.Equal(t, tc.expected, res)
 	}
 }
 
@@ -260,9 +245,9 @@ func TestParse(t *testing.T) {
 	for _, tc := range cases {
 		res, err := ParseCoins(tc.input)
 		if !tc.valid {
-			assert.NotNil(t, err, "%s: %#v", tc.input, res)
+			require.NotNil(t, err, "%s: %#v", tc.input, res)
 		} else if assert.Nil(t, err, "%s: %+v", tc.input, err) {
-			assert.Equal(t, tc.expected, res)
+			require.Equal(t, tc.expected, res)
 		}
 	}
 
@@ -312,9 +297,9 @@ func TestSortCoins(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		assert.Equal(t, tc.before, tc.coins.IsValid())
+		require.Equal(t, tc.before, tc.coins.IsValid())
 		tc.coins.Sort()
-		assert.Equal(t, tc.after, tc.coins.IsValid())
+		require.Equal(t, tc.after, tc.coins.IsValid())
 	}
 }
 

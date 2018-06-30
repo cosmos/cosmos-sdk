@@ -4,7 +4,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/types"
@@ -64,12 +63,12 @@ func TestGenesis(t *testing.T) {
 	// A checkTx context
 	ctx := bapp.BaseApp.NewContext(true, abci.Header{})
 	res1 := bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
-	assert.Equal(t, acc, res1)
+	require.Equal(t, acc, res1)
 
 	// reload app and ensure the account is still there
 	bapp = NewDemocoinApp(logger, db)
 	bapp.InitChain(abci.RequestInitChain{AppStateBytes: []byte("{}")})
 	ctx = bapp.BaseApp.NewContext(true, abci.Header{})
 	res1 = bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
-	assert.Equal(t, acc, res1)
+	require.Equal(t, acc, res1)
 }

@@ -15,11 +15,11 @@ package stake
 
 //// test that an empty gotValidator set doesn't have any gotValidators
 //gotValidators := keeper.GetValidators(ctx)
-//assert.Equal(t, 5, len(gotValidators))
+//require.Equal(t, 5, len(gotValidators))
 
 //totPow := keeper.GetTotalPrecommitVotingPower(ctx)
 //exp := sdk.NewRat(11111)
-//assert.True(t, exp.Equal(totPow), "exp %v, got %v", exp, totPow)
+//require.True(t, exp.Equal(totPow), "exp %v, got %v", exp, totPow)
 
 //// set absent gotValidators to be the 1st and 3rd record sorted by pubKey address
 //ctx = ctx.WithAbsentValidators([]int32{1, 3})
@@ -27,5 +27,5 @@ package stake
 
 //// XXX verify that this order should infact exclude these two records
 //exp = sdk.NewRat(11100)
-//assert.True(t, exp.Equal(totPow), "exp %v, got %v", exp, totPow)
+//require.True(t, exp.Equal(totPow), "exp %v, got %v", exp, totPow)
 //}

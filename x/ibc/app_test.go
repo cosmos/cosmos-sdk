@@ -3,7 +3,6 @@ package ibc
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -51,7 +50,7 @@ func TestIBCMsgs(t *testing.T) {
 	// A checkTx context (true)
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	res1 := mapp.AccountMapper.GetAccount(ctxCheck, addr1)
-	assert.Equal(t, acc, res1)
+	require.Equal(t, acc, res1)
 
 	packet := IBCPacket{
 		SrcAddr:   addr1,

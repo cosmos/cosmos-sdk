@@ -3,7 +3,6 @@ package cool
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -88,7 +87,7 @@ func TestMsgQuiz(t *testing.T) {
 	// A checkTx context (true)
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	res1 := mapp.AccountMapper.GetAccount(ctxCheck, addr1)
-	assert.Equal(t, acc1, res1)
+	require.Equal(t, acc1, res1)
 
 	// Set the trend, submit a really cool quiz and check for reward
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{setTrendMsg1}, []int64{0}, []int64{0}, true, priv1)

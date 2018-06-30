@@ -3,7 +3,7 @@ package ibc
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -23,9 +23,9 @@ func TestIBCPacketValidation(t *testing.T) {
 	for i, tc := range cases {
 		err := tc.packet.ValidateBasic()
 		if tc.valid {
-			assert.Nil(t, err, "%d: %+v", i, err)
+			require.Nil(t, err, "%d: %+v", i, err)
 		} else {
-			assert.NotNil(t, err, "%d", i)
+			require.NotNil(t, err, "%d", i)
 		}
 	}
 }
@@ -37,7 +37,7 @@ func TestIBCTransferMsg(t *testing.T) {
 	packet := constructIBCPacket(true)
 	msg := IBCTransferMsg{packet}
 
-	assert.Equal(t, msg.Type(), "ibc")
+	require.Equal(t, msg.Type(), "ibc")
 }
 
 func TestIBCTransferMsgValidation(t *testing.T) {
@@ -55,9 +55,9 @@ func TestIBCTransferMsgValidation(t *testing.T) {
 	for i, tc := range cases {
 		err := tc.msg.ValidateBasic()
 		if tc.valid {
-			assert.Nil(t, err, "%d: %+v", i, err)
+			require.Nil(t, err, "%d: %+v", i, err)
 		} else {
-			assert.NotNil(t, err, "%d", i)
+			require.NotNil(t, err, "%d", i)
 		}
 	}
 }
@@ -69,7 +69,7 @@ func TestIBCReceiveMsg(t *testing.T) {
 	packet := constructIBCPacket(true)
 	msg := IBCReceiveMsg{packet, sdk.Address([]byte("relayer")), 0}
 
-	assert.Equal(t, msg.Type(), "ibc")
+	require.Equal(t, msg.Type(), "ibc")
 }
 
 func TestIBCReceiveMsgValidation(t *testing.T) {
@@ -87,9 +87,9 @@ func TestIBCReceiveMsgValidation(t *testing.T) {
 	for i, tc := range cases {
 		err := tc.msg.ValidateBasic()
 		if tc.valid {
-			assert.Nil(t, err, "%d: %+v", i, err)
+			require.Nil(t, err, "%d: %+v", i, err)
 		} else {
-			assert.NotNil(t, err, "%d", i)
+			require.NotNil(t, err, "%d", i)
 		}
 	}
 }

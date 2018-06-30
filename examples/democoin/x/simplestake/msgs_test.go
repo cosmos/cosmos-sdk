@@ -3,7 +3,7 @@ package simplestake
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -23,9 +23,9 @@ func TestBondMsgValidation(t *testing.T) {
 	for i, tc := range cases {
 		err := tc.msgBond.ValidateBasic()
 		if tc.valid {
-			assert.Nil(t, err, "%d: %+v", i, err)
+			require.Nil(t, err, "%d: %+v", i, err)
 		} else {
-			assert.NotNil(t, err, "%d", i)
+			require.NotNil(t, err, "%d", i)
 		}
 	}
 }

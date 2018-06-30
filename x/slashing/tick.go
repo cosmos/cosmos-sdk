@@ -17,6 +17,8 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) (tags 
 	tags = sdk.NewTags("height", heightBytes)
 
 	// Iterate over all the validators  which *should* have signed this block
+	// Store whether or not they have actually signed it and slash/unbond any
+	// which have missed too many blocks in a row (downtime slashing)
 	for _, signingValidator := range req.Validators {
 		present := signingValidator.SignedLastBlock
 		pubkey, err := tmtypes.PB2TM.PubKey(signingValidator.Validator.PubKey)
@@ -26,7 +28,9 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) (tags 
 		sk.handleValidatorSignature(ctx, pubkey, signingValidator.Validator.Power, present)
 	}
 
-	// Deal with any infraction evidence
+	// Iterate through any newly discovered evidence of infraction
+	// Slash any validators (and since-unbonded stake within the unbonding period)
+	// who contributed to valid infractions
 	for _, evidence := range req.ByzantineValidators {
 		pk, err := tmtypes.PB2TM.PubKey(evidence.Validator.PubKey)
 		if err != nil {

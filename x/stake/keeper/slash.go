@@ -8,102 +8,12 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-// slash an unbonding delegation and update the pool
-func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation types.UnbondingDelegation, infractionHeight int64, fraction sdk.Rat) (slashAmount sdk.Int) {
-	now := ctx.BlockHeader().Time
-
-	// If unbonding started before this height, stake didn't contribute to infraction
-	if unbondingDelegation.CreationHeight < infractionHeight {
-		return sdk.ZeroInt()
-	}
-
-	if unbondingDelegation.MinTime < now {
-		// Unbonding delegation no longer eligible for slashing, skip it
-		// TODO Settle and delete it automatically?
-		return sdk.ZeroInt()
-	}
-
-	// Calculate slash amount proportional to stake contributing to infraction
-	slashAmount = sdk.NewRatFromInt(unbondingDelegation.InitialBalance.Amount, sdk.OneInt()).Mul(fraction).EvaluateInt()
-
-	// Don't slash more tokens than held
-	unbondingSlashAmount := slashAmount
-	if unbondingSlashAmount.GT(unbondingDelegation.Balance.Amount) {
-		unbondingSlashAmount = unbondingDelegation.Balance.Amount
-	}
-
-	// Update unbonding delegation if necessary
-	if !unbondingSlashAmount.IsZero() {
-		unbondingDelegation.Balance.Amount = unbondingDelegation.Balance.Amount.Sub(unbondingSlashAmount)
-		k.SetUnbondingDelegation(ctx, unbondingDelegation)
-		pool := k.GetPool(ctx)
-		// Burn loose tokens
-		// Ref https://github.com/cosmos/cosmos-sdk/pull/1278#discussion_r198657760
-		pool.LooseTokens -= slashAmount.Int64()
-		k.SetPool(ctx, pool)
-	}
-
-	return
-}
-
-// slash a redelegation and update the pool
-func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, redelegation types.Redelegation, infractionHeight int64, fraction sdk.Rat) (slashAmount sdk.Int) {
-	now := ctx.BlockHeader().Time
-
-	// If redelegation started before this height, stake didn't contribute to infraction
-	if redelegation.CreationHeight < infractionHeight {
-		return sdk.ZeroInt()
-	}
-
-	if redelegation.MinTime < now {
-		// Redelegation no longer eligible for slashing, skip it
-		// TODO Delete it automatically?
-		return sdk.ZeroInt()
-	}
-
-	// Calculate slash amount proportional to stake contributing to infraction
-	slashAmount = sdk.NewRatFromInt(redelegation.InitialBalance.Amount, sdk.OneInt()).Mul(fraction).EvaluateInt()
-
-	// Don't slash more tokens than held
-	redelegationSlashAmount := slashAmount
-	if redelegationSlashAmount.GT(redelegation.Balance.Amount) {
-		redelegationSlashAmount = redelegation.Balance.Amount
-	}
-
-	// Update redelegation if necessary
-	if !redelegationSlashAmount.IsZero() {
-		redelegation.Balance.Amount = redelegation.Balance.Amount.Sub(redelegationSlashAmount)
-		k.SetRedelegation(ctx, redelegation)
-	}
-
-	// Unbond from target validator
-	sharesToUnbond := fraction.Mul(redelegation.SharesDst)
-	if !sharesToUnbond.IsZero() {
-		delegation, found := k.GetDelegation(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr)
-		if !found {
-			// If deleted, delegation has zero shares, and we can't unbond any more
-			return slashAmount
-		}
-		if sharesToUnbond.GT(delegation.Shares) {
-			sharesToUnbond = delegation.Shares
-		}
-		tokensToBurn, err := k.unbond(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr, sharesToUnbond)
-		if err != nil {
-			panic(fmt.Errorf("error unbonding delegator: %v", err))
-		}
-		// Burn loose tokens
-		pool := k.GetPool(ctx)
-		pool.LooseTokens -= tokensToBurn
-		k.SetPool(ctx, pool)
-	}
-
-	return slashAmount
-}
-
 // Slash a validator for an infraction committed at a known height
-// Find the contributing stake at that height and burn the specified fraction
+// Find the contributing stake at that height and burn the specified slashFactor
 // of it, updating unbonding delegation & redelegations appropriately
 //
+// CONTRACT:
+//    slashFactor is non-negative
 // CONTRACT:
 //    Validator exists and can be looked up by public key
 // CONTRACT:
@@ -112,11 +22,15 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 // CONTRACT:
 //    Infraction committed at the current height or at a past height,
 //    not at a height in the future
-func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight int64, power int64, fraction sdk.Rat) {
+func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight int64, power int64, slashFactor sdk.Rat) {
 	logger := ctx.Logger().With("module", "x/stake")
 
-	// Amount of slashing = slash fraction * power at time of infraction
-	slashAmount := sdk.NewRat(power).Mul(fraction).EvaluateInt()
+	if slashFactor.LT(sdk.ZeroRat()) {
+		panic(fmt.Errorf("attempted to slash with a negative slashFactor: %v", slashFactor))
+	}
+
+	// Amount of slashing = slash slashFactor * power at time of infraction
+	slashAmount := sdk.NewRat(power).Mul(slashFactor).EvaluateInt()
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1348
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1471
 
@@ -142,7 +56,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 		// Iterate through unbonding delegations from slashed validator
 		unbondingDelegations := k.GetUnbondingDelegationsFromValidator(ctx, ownerAddress)
 		for _, unbondingDelegation := range unbondingDelegations {
-			amountSlashed := k.slashUnbondingDelegation(ctx, unbondingDelegation, infractionHeight, fraction)
+			amountSlashed := k.slashUnbondingDelegation(ctx, unbondingDelegation, infractionHeight, slashFactor)
 			if amountSlashed.IsZero() {
 				continue
 			}
@@ -152,7 +66,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 		// Iterate through redelegations from slashed validator
 		redelegations := k.GetRedelegationsFromValidator(ctx, ownerAddress)
 		for _, redelegation := range redelegations {
-			amountSlashed := k.slashRedelegation(ctx, validator, redelegation, infractionHeight, fraction)
+			amountSlashed := k.slashRedelegation(ctx, validator, redelegation, infractionHeight, slashFactor)
 			if amountSlashed.IsZero() {
 				continue
 			}
@@ -179,7 +93,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	k.UpdateValidator(ctx, validator)
 
 	// Log that a slash occurred!
-	logger.Info(fmt.Sprintf("Validator %s slashed by fraction %v, removed %v shares and burned %d tokens", pubkey.Address(), fraction, sharesToRemove, burned))
+	logger.Info(fmt.Sprintf("Validator %s slashed by slashFactor %v, removed %v shares and burned %d tokens", pubkey.Address(), slashFactor, sharesToRemove, burned))
 
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 	return
@@ -212,4 +126,110 @@ func (k Keeper) setRevoked(ctx sdk.Context, pubkey crypto.PubKey, revoked bool) 
 	validator.Revoked = revoked
 	k.UpdateValidator(ctx, validator) // update validator, possibly unbonding or bonding it
 	return
+}
+
+// slash an unbonding delegation and update the pool
+// return the amount that would have been slashed assuming
+// the unbonding delegation had enough stake to slash
+// (the amount actually slashed may be less if there's
+// insufficient stake remaining)
+func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation types.UnbondingDelegation, infractionHeight int64, slashFactor sdk.Rat) (slashAmount sdk.Int) {
+	now := ctx.BlockHeader().Time
+
+	// If unbonding started before this height, stake didn't contribute to infraction
+	if unbondingDelegation.CreationHeight < infractionHeight {
+		return sdk.ZeroInt()
+	}
+
+	if unbondingDelegation.MinTime < now {
+		// Unbonding delegation no longer eligible for slashing, skip it
+		// TODO Settle and delete it automatically?
+		return sdk.ZeroInt()
+	}
+
+	// Calculate slash amount proportional to stake contributing to infraction
+	slashAmount = sdk.NewRatFromInt(unbondingDelegation.InitialBalance.Amount, sdk.OneInt()).Mul(slashFactor).EvaluateInt()
+
+	// Don't slash more tokens than held
+	// Possible since the unbonding delegation may already
+	// have been slashed, and slash amounts are calculated
+	// according to stake held at time of infraction
+	unbondingSlashAmount := slashAmount
+	if unbondingSlashAmount.GT(unbondingDelegation.Balance.Amount) {
+		unbondingSlashAmount = unbondingDelegation.Balance.Amount
+	}
+
+	// Update unbonding delegation if necessary
+	if !unbondingSlashAmount.IsZero() {
+		unbondingDelegation.Balance.Amount = unbondingDelegation.Balance.Amount.Sub(unbondingSlashAmount)
+		k.SetUnbondingDelegation(ctx, unbondingDelegation)
+		pool := k.GetPool(ctx)
+		// Burn loose tokens
+		// Ref https://github.com/cosmos/cosmos-sdk/pull/1278#discussion_r198657760
+		pool.LooseTokens -= slashAmount.Int64()
+		k.SetPool(ctx, pool)
+	}
+
+	return
+}
+
+// slash a redelegation and update the pool
+// return the amount that would have been slashed assuming
+// the unbonding delegation had enough stake to slash
+// (the amount actually slashed may be less if there's
+// insufficient stake remaining)
+func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, redelegation types.Redelegation, infractionHeight int64, slashFactor sdk.Rat) (slashAmount sdk.Int) {
+	now := ctx.BlockHeader().Time
+
+	// If redelegation started before this height, stake didn't contribute to infraction
+	if redelegation.CreationHeight < infractionHeight {
+		return sdk.ZeroInt()
+	}
+
+	if redelegation.MinTime < now {
+		// Redelegation no longer eligible for slashing, skip it
+		// TODO Delete it automatically?
+		return sdk.ZeroInt()
+	}
+
+	// Calculate slash amount proportional to stake contributing to infraction
+	slashAmount = sdk.NewRatFromInt(redelegation.InitialBalance.Amount, sdk.OneInt()).Mul(slashFactor).EvaluateInt()
+
+	// Don't slash more tokens than held
+	// Possible since the redelegation may already
+	// have been slashed, and slash amounts are calculated
+	// according to stake held at time of infraction
+	redelegationSlashAmount := slashAmount
+	if redelegationSlashAmount.GT(redelegation.Balance.Amount) {
+		redelegationSlashAmount = redelegation.Balance.Amount
+	}
+
+	// Update redelegation if necessary
+	if !redelegationSlashAmount.IsZero() {
+		redelegation.Balance.Amount = redelegation.Balance.Amount.Sub(redelegationSlashAmount)
+		k.SetRedelegation(ctx, redelegation)
+	}
+
+	// Unbond from target validator
+	sharesToUnbond := slashFactor.Mul(redelegation.SharesDst)
+	if !sharesToUnbond.IsZero() {
+		delegation, found := k.GetDelegation(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr)
+		if !found {
+			// If deleted, delegation has zero shares, and we can't unbond any more
+			return slashAmount
+		}
+		if sharesToUnbond.GT(delegation.Shares) {
+			sharesToUnbond = delegation.Shares
+		}
+		tokensToBurn, err := k.unbond(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr, sharesToUnbond)
+		if err != nil {
+			panic(fmt.Errorf("error unbonding delegator: %v", err))
+		}
+		// Burn loose tokens
+		pool := k.GetPool(ctx)
+		pool.LooseTokens -= tokensToBurn
+		k.SetPool(ctx, pool)
+	}
+
+	return slashAmount
 }

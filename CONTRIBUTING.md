@@ -68,7 +68,7 @@ That is, these repos should be well versioned, and any merge to master requires 
 
 Libraries need not follow the model strictly, but would be wise to.
 
-The SDK adheres [semantic versioning](https://semver.org/).
+The SDK utilizes [semantic versioning](https://semver.org/).
 
 ### Development Procedure:
 - the latest state of development is on `develop`

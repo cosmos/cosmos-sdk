@@ -29,11 +29,11 @@ func TestKeyManagement(t *testing.T) {
 	assert.Empty(t, l)
 
 	_, _, err = cstore.CreateMnemonic(n1, English, p1, Ed25519)
-	assert.Error(t, err, "ed25519 keys are currently not supported by keybase")
+	require.Error(t, err, "ed25519 keys are currently not supported by keybase")
 
 	// create some keys
 	_, err = cstore.Get(n1)
-	assert.Error(t, err)
+	require.Error(t, err)
 	i, _, err := cstore.CreateMnemonic(n1, English, p1, algo)
 
 	require.NoError(t, err)
@@ -43,18 +43,18 @@ func TestKeyManagement(t *testing.T) {
 
 	// we can get these keys
 	i2, err := cstore.Get(n2)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	_, err = cstore.Get(n3)
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 
 	// list shows them in order
 	keyS, err := cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 2, len(keyS))
 	// note these are in alphabetical order
-	assert.Equal(t, n2, keyS[0].GetName())
-	assert.Equal(t, n1, keyS[1].GetName())
-	assert.Equal(t, i2.GetPubKey(), keyS[0].GetPubKey())
+	require.Equal(t, n2, keyS[0].GetName())
+	require.Equal(t, n1, keyS[1].GetName())
+	require.Equal(t, i2.GetPubKey(), keyS[0].GetPubKey())
 
 	// deleting a key removes it
 	err = cstore.Delete("bad name", "foo")
@@ -63,9 +63,9 @@ func TestKeyManagement(t *testing.T) {
 	require.NoError(t, err)
 	keyS, err = cstore.List()
 	require.NoError(t, err)
-	assert.Equal(t, 1, len(keyS))
+	require.Equal(t, 1, len(keyS))
 	_, err = cstore.Get(n1)
-	assert.Error(t, err)
+	require.Error(t, err)
 
 	// create an offline key
 	o1 := "offline"
@@ -158,19 +158,19 @@ func TestSignVerify(t *testing.T) {
 
 	for i, tc := range cases {
 		valid := tc.key.VerifyBytes(tc.data, tc.sig)
-		assert.Equal(t, tc.valid, valid, "%d", i)
+		require.Equal(t, tc.valid, valid, "%d", i)
 	}
 
 	// Now try to sign data with a secret-less key
 	_, _, err = cstore.Sign(n3, p3, d3)
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 }
 
 func assertPassword(t *testing.T, cstore Keybase, name, pass, badpass string) {
 	err := cstore.Update(name, badpass, pass)
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 	err = cstore.Update(name, pass, pass)
-	assert.Nil(t, err, "%+v", err)
+	require.Nil(t, err, "%+v", err)
 }
 
 // TestExportImport tests exporting and importing
@@ -183,26 +183,26 @@ func TestExportImport(t *testing.T) {
 	)
 
 	info, _, err := cstore.CreateMnemonic("john", English, "secretcpw", Secp256k1)
-	assert.NoError(t, err)
-	assert.Equal(t, info.GetName(), "john")
+	require.NoError(t, err)
+	require.Equal(t, info.GetName(), "john")
 
 	john, err := cstore.Get("john")
-	assert.NoError(t, err)
-	assert.Equal(t, info.GetName(), "john")
+	require.NoError(t, err)
+	require.Equal(t, info.GetName(), "john")
 	johnAddr := info.GetPubKey().Address()
 
 	armor, err := cstore.Export("john")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = cstore.Import("john2", armor)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	john2, err := cstore.Get("john2")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, john.GetPubKey().Address(), johnAddr)
-	assert.Equal(t, john.GetName(), "john")
-	assert.Equal(t, john, john2)
+	require.Equal(t, john.GetPubKey().Address(), johnAddr)
+	require.Equal(t, john.GetName(), "john")
+	require.Equal(t, john, john2)
 }
 
 //
@@ -216,35 +216,35 @@ func TestExportImportPubKey(t *testing.T) {
 	// CreateMnemonic a private-public key pair and ensure consistency
 	notPasswd := "n9y25ah7"
 	info, _, err := cstore.CreateMnemonic("john", English, notPasswd, Secp256k1)
-	assert.Nil(t, err)
-	assert.NotEqual(t, info, "")
-	assert.Equal(t, info.GetName(), "john")
+	require.Nil(t, err)
+	require.NotEqual(t, info, "")
+	require.Equal(t, info.GetName(), "john")
 	addr := info.GetPubKey().Address()
 	john, err := cstore.Get("john")
-	assert.NoError(t, err)
-	assert.Equal(t, john.GetName(), "john")
-	assert.Equal(t, john.GetPubKey().Address(), addr)
+	require.NoError(t, err)
+	require.Equal(t, john.GetName(), "john")
+	require.Equal(t, john.GetPubKey().Address(), addr)
 
 	// Export the public key only
 	armor, err := cstore.ExportPubKey("john")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	// Import it under a different name
 	err = cstore.ImportPubKey("john-pubkey-only", armor)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	// Ensure consistency
 	john2, err := cstore.Get("john-pubkey-only")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	// Compare the public keys
-	assert.True(t, john.GetPubKey().Equals(john2.GetPubKey()))
+	require.True(t, john.GetPubKey().Equals(john2.GetPubKey()))
 	// Ensure the original key hasn't changed
 	john, err = cstore.Get("john")
-	assert.NoError(t, err)
-	assert.Equal(t, john.GetPubKey().Address(), addr)
-	assert.Equal(t, john.GetName(), "john")
+	require.NoError(t, err)
+	require.Equal(t, john.GetPubKey().Address(), addr)
+	require.Equal(t, john.GetName(), "john")
 
 	// Ensure keys cannot be overwritten
 	err = cstore.ImportPubKey("john-pubkey-only", armor)
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 }
 
 // TestAdvancedKeyManagement verifies update, import, export functionality
@@ -266,34 +266,34 @@ func TestAdvancedKeyManagement(t *testing.T) {
 
 	// update password requires the existing password
 	err = cstore.Update(n1, "jkkgkg", p2)
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 	assertPassword(t, cstore, n1, p1, p2)
 
 	// then it changes the password when correct
 	err = cstore.Update(n1, p1, p2)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	// p2 is now the proper one!
 	assertPassword(t, cstore, n1, p2, p1)
 
 	// exporting requires the proper name and passphrase
 	_, err = cstore.Export(n1 + ".notreal")
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 	_, err = cstore.Export(" " + n1)
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 	_, err = cstore.Export(n1 + " ")
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 	_, err = cstore.Export("")
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 	exported, err := cstore.Export(n1)
 	require.Nil(t, err, "%+v", err)
 
 	// import succeeds
 	err = cstore.Import(n2, exported)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// second import fails
 	err = cstore.Import(n2, exported)
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 }
 
 // TestSeedPhrase verifies restoring from a seed phrase
@@ -311,7 +311,7 @@ func TestSeedPhrase(t *testing.T) {
 	// make sure key works with initial password
 	info, mnemonic, err := cstore.CreateMnemonic(n1, English, p1, algo)
 	require.Nil(t, err, "%+v", err)
-	assert.Equal(t, n1, info.GetName())
+	require.Equal(t, n1, info.GetName())
 	assert.NotEmpty(t, mnemonic)
 
 	// now, let us delete this key
@@ -324,9 +324,9 @@ func TestSeedPhrase(t *testing.T) {
 	params := *hd.NewFundraiserParams(0, 0)
 	newInfo, err := cstore.Derive(n2, mnemonic, p2, params)
 	require.NoError(t, err)
-	assert.Equal(t, n2, newInfo.GetName())
-	assert.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
-	assert.Equal(t, info.GetPubKey(), newInfo.GetPubKey())
+	require.Equal(t, n2, newInfo.GetName())
+	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
+	require.Equal(t, info.GetPubKey(), newInfo.GetPubKey())
 }
 
 func ExampleNew() {

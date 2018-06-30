@@ -3,7 +3,6 @@ package types
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -66,48 +65,48 @@ func TestAddTokensBonded(t *testing.T) {
 
 	poolA := InitialPool()
 	poolA.LooseTokens = 10
-	assert.Equal(t, poolA.BondedShareExRate(), sdk.OneRat())
+	require.Equal(t, poolA.BondedShareExRate(), sdk.OneRat())
 	poolB, sharesB := poolA.addTokensBonded(10)
-	assert.Equal(t, poolB.BondedShareExRate(), sdk.OneRat())
+	require.Equal(t, poolB.BondedShareExRate(), sdk.OneRat())
 
 	// correct changes to bonded shares and bonded pool
-	assert.Equal(t, poolB.BondedShares, poolA.BondedShares.Add(sharesB.Amount))
-	assert.Equal(t, poolB.BondedTokens, poolA.BondedTokens+10)
+	require.Equal(t, poolB.BondedShares, poolA.BondedShares.Add(sharesB.Amount))
+	require.Equal(t, poolB.BondedTokens, poolA.BondedTokens+10)
 
 	// same number of bonded shares / tokens when exchange rate is one
-	assert.True(t, poolB.BondedShares.Equal(sdk.NewRat(poolB.BondedTokens)))
+	require.True(t, poolB.BondedShares.Equal(sdk.NewRat(poolB.BondedTokens)))
 }
 
 func TestRemoveSharesBonded(t *testing.T) {
 
 	poolA := InitialPool()
 	poolA.LooseTokens = 10
-	assert.Equal(t, poolA.BondedShareExRate(), sdk.OneRat())
+	require.Equal(t, poolA.BondedShareExRate(), sdk.OneRat())
 	poolB, tokensB := poolA.removeSharesBonded(sdk.NewRat(10))
-	assert.Equal(t, poolB.BondedShareExRate(), sdk.OneRat())
+	require.Equal(t, poolB.BondedShareExRate(), sdk.OneRat())
 
 	// correct changes to bonded shares and bonded pool
-	assert.Equal(t, poolB.BondedShares, poolA.BondedShares.Sub(sdk.NewRat(10)))
-	assert.Equal(t, poolB.BondedTokens, poolA.BondedTokens-tokensB)
+	require.Equal(t, poolB.BondedShares, poolA.BondedShares.Sub(sdk.NewRat(10)))
+	require.Equal(t, poolB.BondedTokens, poolA.BondedTokens-tokensB)
 
 	// same number of bonded shares / tokens when exchange rate is one
-	assert.True(t, poolB.BondedShares.Equal(sdk.NewRat(poolB.BondedTokens)))
+	require.True(t, poolB.BondedShares.Equal(sdk.NewRat(poolB.BondedTokens)))
 }
 
 func TestAddTokensUnbonded(t *testing.T) {
 
 	poolA := InitialPool()
 	poolA.LooseTokens = 10
-	assert.Equal(t, poolA.UnbondedShareExRate(), sdk.OneRat())
+	require.Equal(t, poolA.UnbondedShareExRate(), sdk.OneRat())
 	poolB, sharesB := poolA.addTokensUnbonded(10)
-	assert.Equal(t, poolB.UnbondedShareExRate(), sdk.OneRat())
+	require.Equal(t, poolB.UnbondedShareExRate(), sdk.OneRat())
 
 	// correct changes to unbonded shares and unbonded pool
-	assert.Equal(t, poolB.UnbondedShares, poolA.UnbondedShares.Add(sharesB.Amount))
-	assert.Equal(t, poolB.UnbondedTokens, poolA.UnbondedTokens+10)
+	require.Equal(t, poolB.UnbondedShares, poolA.UnbondedShares.Add(sharesB.Amount))
+	require.Equal(t, poolB.UnbondedTokens, poolA.UnbondedTokens+10)
 
 	// same number of unbonded shares / tokens when exchange rate is one
-	assert.True(t, poolB.UnbondedShares.Equal(sdk.NewRat(poolB.UnbondedTokens)))
+	require.True(t, poolB.UnbondedShares.Equal(sdk.NewRat(poolB.UnbondedTokens)))
 }
 
 func TestRemoveSharesUnbonded(t *testing.T) {
@@ -115,14 +114,14 @@ func TestRemoveSharesUnbonded(t *testing.T) {
 	poolA := InitialPool()
 	poolA.UnbondedTokens = 10
 	poolA.UnbondedShares = sdk.NewRat(10)
-	assert.Equal(t, poolA.UnbondedShareExRate(), sdk.OneRat())
+	require.Equal(t, poolA.UnbondedShareExRate(), sdk.OneRat())
 	poolB, tokensB := poolA.removeSharesUnbonded(sdk.NewRat(10))
-	assert.Equal(t, poolB.UnbondedShareExRate(), sdk.OneRat())
+	require.Equal(t, poolB.UnbondedShareExRate(), sdk.OneRat())
 
 	// correct changes to unbonded shares and bonded pool
-	assert.Equal(t, poolB.UnbondedShares, poolA.UnbondedShares.Sub(sdk.NewRat(10)))
-	assert.Equal(t, poolB.UnbondedTokens, poolA.UnbondedTokens-tokensB)
+	require.Equal(t, poolB.UnbondedShares, poolA.UnbondedShares.Sub(sdk.NewRat(10)))
+	require.Equal(t, poolB.UnbondedTokens, poolA.UnbondedTokens-tokensB)
 
 	// same number of unbonded shares / tokens when exchange rate is one
-	assert.True(t, poolB.UnbondedShares.Equal(sdk.NewRat(poolB.UnbondedTokens)))
+	require.True(t, poolB.UnbondedShares.Equal(sdk.NewRat(poolB.UnbondedTokens)))
 }

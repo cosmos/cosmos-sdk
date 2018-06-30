@@ -37,26 +37,26 @@ func newBaseApp(name string) *BaseApp {
 func TestMountStores(t *testing.T) {
 	name := t.Name()
 	app := newBaseApp(name)
-	assert.Equal(t, name, app.Name())
+	require.Equal(t, name, app.Name())
 
 	// make some cap keys
 	capKey1 := sdk.NewKVStoreKey("key1")
 	capKey2 := sdk.NewKVStoreKey("key2")
 
 	// no stores are mounted
-	assert.Panics(t, func() { app.LoadLatestVersion(capKey1) })
+	require.Panics(t, func() { app.LoadLatestVersion(capKey1) })
 
 	app.MountStoresIAVL(capKey1, capKey2)
 
 	// stores are mounted
 	err := app.LoadLatestVersion(capKey1)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// check both stores
 	store1 := app.cms.GetCommitKVStore(capKey1)
-	assert.NotNil(t, store1)
+	require.NotNil(t, store1)
 	store2 := app.cms.GetCommitKVStore(capKey2)
-	assert.NotNil(t, store2)
+	require.NotNil(t, store2)
 }
 
 // Test that we can make commits and then reload old versions.
@@ -71,14 +71,14 @@ func TestLoadVersion(t *testing.T) {
 	capKey := sdk.NewKVStoreKey("main")
 	app.MountStoresIAVL(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	emptyCommitID := sdk.CommitID{}
 
 	lastHeight := app.LastBlockHeight()
 	lastID := app.LastCommitID()
-	assert.Equal(t, int64(0), lastHeight)
-	assert.Equal(t, emptyCommitID, lastID)
+	require.Equal(t, int64(0), lastHeight)
+	require.Equal(t, emptyCommitID, lastID)
 
 	// execute some blocks
 	header := abci.Header{Height: 1}
@@ -94,7 +94,7 @@ func TestLoadVersion(t *testing.T) {
 	app = NewBaseApp(name, nil, logger, db)
 	app.MountStoresIAVL(capKey)
 	err = app.LoadLatestVersion(capKey)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(2), commitID2)
 
 	// reload with LoadVersion, see if you can commit the same block and get
@@ -102,7 +102,7 @@ func TestLoadVersion(t *testing.T) {
 	app = NewBaseApp(name, nil, logger, db)
 	app.MountStoresIAVL(capKey)
 	err = app.LoadVersion(1, capKey)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(1), commitID1)
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	app.Commit()
@@ -112,8 +112,8 @@ func TestLoadVersion(t *testing.T) {
 func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, expectedID sdk.CommitID) {
 	lastHeight := app.LastBlockHeight()
 	lastID := app.LastCommitID()
-	assert.Equal(t, expectedHeight, lastHeight)
-	assert.Equal(t, expectedID, lastID)
+	require.Equal(t, expectedHeight, lastHeight)
+	require.Equal(t, expectedID, lastID)
 }
 
 // Test that the app hash is static
@@ -125,7 +125,7 @@ func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, exp
 	capKey := sdk.NewKVStoreKey("main")
 	app.MountStoresIAVL(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// execute some blocks
 	header := abci.Header{Height: 1}
@@ -138,7 +138,7 @@ func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, exp
 	res = app.Commit()
 	commitID2 := sdk.CommitID{2, res.Data}
 
-	assert.Equal(t, commitID1.Hash, commitID2.Hash)
+	require.Equal(t, commitID1.Hash, commitID2.Hash)
 }
 */
 
@@ -160,7 +160,7 @@ func TestInfo(t *testing.T) {
 	assert.Equal(t, "", res.Version)
 	assert.Equal(t, t.Name(), res.GetData())
 	assert.Equal(t, int64(0), res.LastBlockHeight)
-	assert.Equal(t, []uint8(nil), res.LastBlockAppHash)
+	require.Equal(t, []uint8(nil), res.LastBlockAppHash)
 
 	// ----- test a proper response -------
 	// TODO
@@ -179,7 +179,7 @@ func TestInitChainer(t *testing.T) {
 	capKey2 := sdk.NewKVStoreKey("key2")
 	app.MountStoresIAVL(capKey, capKey2)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	key, value := []byte("hello"), []byte("goodbye")
 
@@ -198,7 +198,7 @@ func TestInitChainer(t *testing.T) {
 	// initChainer is nil - nothing happens
 	app.InitChain(abci.RequestInitChain{})
 	res := app.Query(query)
-	assert.Equal(t, 0, len(res.Value))
+	require.Equal(t, 0, len(res.Value))
 
 	// set initChainer and try again - should see the value
 	app.SetInitChainer(initChainer)
@@ -206,31 +206,31 @@ func TestInitChainer(t *testing.T) {
 
 	// assert that chainID is set correctly in InitChain
 	chainID := app.deliverState.ctx.ChainID()
-	assert.Equal(t, "test-chain-id", chainID, "ChainID in deliverState not set correctly in InitChain")
+	require.Equal(t, "test-chain-id", chainID, "ChainID in deliverState not set correctly in InitChain")
 
 	chainID = app.checkState.ctx.ChainID()
-	assert.Equal(t, "test-chain-id", chainID, "ChainID in checkState not set correctly in InitChain")
+	require.Equal(t, "test-chain-id", chainID, "ChainID in checkState not set correctly in InitChain")
 
 	app.Commit()
 	res = app.Query(query)
-	assert.Equal(t, value, res.Value)
+	require.Equal(t, value, res.Value)
 
 	// reload app
 	app = NewBaseApp(name, nil, logger, db)
 	app.MountStoresIAVL(capKey, capKey2)
 	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	app.SetInitChainer(initChainer)
 
 	// ensure we can still query after reloading
 	res = app.Query(query)
-	assert.Equal(t, value, res.Value)
+	require.Equal(t, value, res.Value)
 
 	// commit and ensure we can still query
 	app.BeginBlock(abci.RequestBeginBlock{})
 	app.Commit()
 	res = app.Query(query)
-	assert.Equal(t, value, res.Value)
+	require.Equal(t, value, res.Value)
 }
 
 func getStateCheckingHandler(t *testing.T, capKey *sdk.KVStoreKey, txPerHeight int, checkHeader bool) func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
@@ -243,7 +243,7 @@ func getStateCheckingHandler(t *testing.T, capKey *sdk.KVStoreKey, txPerHeight i
 			// check previous value in store
 			counterBytes := []byte{byte(counter - 1)}
 			prevBytes := store.Get(counterBytes)
-			assert.Equal(t, counterBytes, prevBytes)
+			require.Equal(t, counterBytes, prevBytes)
 		}
 
 		// set the current counter in the store
@@ -255,7 +255,7 @@ func getStateCheckingHandler(t *testing.T, capKey *sdk.KVStoreKey, txPerHeight i
 		if checkHeader {
 			thisHeader := ctx.BlockHeader()
 			height := int64((counter / txPerHeight) + 1)
-			assert.Equal(t, height, thisHeader.Height)
+			require.Equal(t, height, thisHeader.Height)
 		}
 
 		counter++
@@ -293,7 +293,7 @@ func TestCheckTx(t *testing.T) {
 	capKey := sdk.NewKVStoreKey("main")
 	app.MountStoresIAVL(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
 
 	txPerHeight := 3
@@ -317,7 +317,7 @@ func TestCheckTx(t *testing.T) {
 	checkStateStore := app.checkState.ctx.KVStore(capKey)
 	for i := 0; i < txPerHeight; i++ {
 		storedValue := checkStateStore.Get([]byte{byte(i)})
-		assert.Nil(t, storedValue)
+		require.Nil(t, storedValue)
 	}
 }
 
@@ -330,7 +330,7 @@ func TestDeliverTx(t *testing.T) {
 	capKey := sdk.NewKVStoreKey("main")
 	app.MountStoresIAVL(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	txPerHeight := 2
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
@@ -359,7 +359,7 @@ func TestSimulateTx(t *testing.T) {
 	capKey := sdk.NewKVStoreKey("main")
 	app.MountStoresIAVL(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	counter := 0
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
@@ -372,7 +372,7 @@ func TestSimulateTx(t *testing.T) {
 		// check we can see the current header
 		thisHeader := ctx.BlockHeader()
 		height := int64(counter)
-		assert.Equal(t, height, thisHeader.Height)
+		require.Equal(t, height, thisHeader.Height)
 		counter++
 		return sdk.Result{}
 	})
@@ -421,18 +421,18 @@ func TestRunInvalidTransaction(t *testing.T) {
 	capKey := sdk.NewKVStoreKey("main")
 	app.MountStoresIAVL(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
 	app.Router().AddRoute(msgType2, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
 	app.BeginBlock(abci.RequestBeginBlock{})
 	// Transaction where validate fails
 	invalidTx := testTx{-1}
 	err1 := app.Deliver(invalidTx)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeTxDecode), err1.Code)
+	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeTxDecode), err1.Code)
 	// Transaction with no known route
 	unknownRouteTx := testUpdatePowerTx{}
 	err2 := app.Deliver(unknownRouteTx)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), err2.Code)
+	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), err2.Code)
 }
 
 // Test that transactions exceeding gas limits fail
@@ -445,7 +445,7 @@ func TestTxGasLimits(t *testing.T) {
 	capKey := sdk.NewKVStoreKey("main")
 	app.MountStoresIAVL(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
 		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(0))
@@ -461,7 +461,7 @@ func TestTxGasLimits(t *testing.T) {
 
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	res := app.Deliver(tx)
-	assert.Equal(t, res.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), "Expected transaction to run out of gas")
+	require.Equal(t, res.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), "Expected transaction to run out of gas")
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
 }
@@ -474,7 +474,7 @@ func TestQuery(t *testing.T) {
 	capKey := sdk.NewKVStoreKey("main")
 	app.MountStoresIAVL(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	key, value := []byte("hello"), []byte("goodbye")
 
@@ -492,25 +492,25 @@ func TestQuery(t *testing.T) {
 
 	// query is empty before we do anything
 	res := app.Query(query)
-	assert.Equal(t, 0, len(res.Value))
+	require.Equal(t, 0, len(res.Value))
 
 	tx := testUpdatePowerTx{} // doesn't matter
 
 	// query is still empty after a CheckTx
 	app.Check(tx)
 	res = app.Query(query)
-	assert.Equal(t, 0, len(res.Value))
+	require.Equal(t, 0, len(res.Value))
 
 	// query is still empty after a DeliverTx before we commit
 	app.BeginBlock(abci.RequestBeginBlock{})
 	app.Deliver(tx)
 	res = app.Query(query)
-	assert.Equal(t, 0, len(res.Value))
+	require.Equal(t, 0, len(res.Value))
 
 	// query returns correct value after Commit
 	app.Commit()
 	res = app.Query(query)
-	assert.Equal(t, value, res.Value)
+	require.Equal(t, value, res.Value)
 }
 
 // Test p2p filter queries
@@ -521,7 +521,7 @@ func TestP2PQuery(t *testing.T) {
 	capKey := sdk.NewKVStoreKey("main")
 	app.MountStoresIAVL(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	app.SetAddrPeerFilter(func(addrport string) abci.ResponseQuery {
 		require.Equal(t, "1.1.1.1:8000", addrport)
@@ -585,8 +585,8 @@ func TestValidatorChange(t *testing.T) {
 
 	// Load latest state, which should be empty.
 	err := app.LoadLatestVersion(capKey)
-	assert.Nil(t, err)
-	assert.Equal(t, app.LastBlockHeight(), int64(0))
+	require.Nil(t, err)
+	require.Equal(t, app.LastBlockHeight(), int64(0))
 
 	// Create the validators
 	var numVals = 3
@@ -611,7 +611,7 @@ func TestValidatorChange(t *testing.T) {
 		}
 		txBytes := toJSON(tx)
 		res := app.DeliverTx(txBytes)
-		assert.True(t, res.IsOK(), "%#v\nABCI log: %s", res, res.Log)
+		require.True(t, res.IsOK(), "%#v\nABCI log: %s", res, res.Log)
 	}
 
 	// Simulate the end of a block.
@@ -624,18 +624,18 @@ func TestValidatorChange(t *testing.T) {
 
 		pubkey, err := tmtypes.PB2TM.PubKey(val.PubKey)
 		// Sanity
-		assert.Nil(t, err)
+		require.Nil(t, err)
 
 		// Find matching update and splice it out.
 		for j := 0; j < len(valUpdates); j++ {
 			valUpdate := valUpdates[j]
 
 			updatePubkey, err := tmtypes.PB2TM.PubKey(valUpdate.PubKey)
-			assert.Nil(t, err)
+			require.Nil(t, err)
 
 			// Matched.
 			if updatePubkey.Equals(pubkey) {
-				assert.Equal(t, valUpdate.Power, val.Power+1)
+				require.Equal(t, valUpdate.Power, val.Power+1)
 				if j < len(valUpdates)-1 {
 					// Splice it out.
 					valUpdates = append(valUpdates[:j], valUpdates[j+1:]...)
@@ -646,7 +646,7 @@ func TestValidatorChange(t *testing.T) {
 			// Not matched.
 		}
 	}
-	assert.Equal(t, len(valUpdates), 0, "Some validator updates were unexpected")
+	require.Equal(t, len(valUpdates), 0, "Some validator updates were unexpected")
 }
 
 //----------------------------------------
@@ -808,15 +808,15 @@ func TestMultipleBurn(t *testing.T) {
 	addr := priv.PubKey().Address()
 
 	app.accountKeeper.AddCoins(app.deliverState.ctx, addr, sdk.Coins{{"foocoin", sdk.NewInt(100)}})
-	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr), "Balance did not update")
+	require.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr), "Balance did not update")
 
 	msg := testBurnMsg{addr, sdk.Coins{{"foocoin", sdk.NewInt(50)}}}
 	tx := GenTx(t.Name(), []sdk.Msg{msg, msg}, []int64{0}, []int64{0}, priv)
 
 	res := app.Deliver(tx)
 
-	assert.Equal(t, true, res.IsOK(), res.Log)
-	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr), "Double burn did not work")
+	require.Equal(t, true, res.IsOK(), res.Log)
+	require.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr), "Double burn did not work")
 }
 
 // tests multiples msgs of same type from different addresses in single tx
@@ -861,8 +861,8 @@ func TestBurnMultipleOwners(t *testing.T) {
 	app.accountKeeper.AddCoins(app.deliverState.ctx, addr1, sdk.Coins{{"foocoin", sdk.NewInt(100)}})
 	app.accountKeeper.AddCoins(app.deliverState.ctx, addr2, sdk.Coins{{"foocoin", sdk.NewInt(100)}})
 
-	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not update")
-	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 did not update")
+	require.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not update")
+	require.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 did not update")
 
 	msg1 := testBurnMsg{addr1, sdk.Coins{{"foocoin", sdk.NewInt(100)}}}
 	msg2 := testBurnMsg{addr2, sdk.Coins{{"foocoin", sdk.NewInt(100)}}}
@@ -871,19 +871,19 @@ func TestBurnMultipleOwners(t *testing.T) {
 	tx := GenTx(t.Name(), []sdk.Msg{msg1, msg2}, []int64{0, 0}, []int64{0, 0}, priv1, priv1)
 
 	res := app.Deliver(tx)
-	assert.Equal(t, sdk.ABCICodeType(0x10003), res.Code, "Wrong signatures passed")
+	require.Equal(t, sdk.ABCICodeType(0x10003), res.Code, "Wrong signatures passed")
 
-	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 changed after invalid sig")
-	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 changed after invalid sig")
+	require.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 changed after invalid sig")
+	require.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 changed after invalid sig")
 
 	// test valid tx
 	tx = GenTx(t.Name(), []sdk.Msg{msg1, msg2}, []int64{0, 1}, []int64{1, 0}, priv1, priv2)
 
 	res = app.Deliver(tx)
-	assert.Equal(t, true, res.IsOK(), res.Log)
+	require.Equal(t, true, res.IsOK(), res.Log)
 
-	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not change after valid tx")
-	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 did not change after valid tx")
+	require.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not change after valid tx")
+	require.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 did not change after valid tx")
 }
 
 // tests different msg types in single tx with different addresses
@@ -929,7 +929,7 @@ func TestSendBurn(t *testing.T) {
 	acc := app.accountMapper.NewAccountWithAddress(app.deliverState.ctx, addr2)
 	app.accountMapper.SetAccount(app.deliverState.ctx, acc)
 
-	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not update")
+	require.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(100)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not update")
 
 	sendMsg := testSendMsg{addr1, addr2, sdk.Coins{{"foocoin", sdk.NewInt(50)}}}
 
@@ -940,10 +940,10 @@ func TestSendBurn(t *testing.T) {
 	tx := GenTx(t.Name(), []sdk.Msg{sendMsg, msg2, msg1}, []int64{0, 1}, []int64{0, 0}, priv1, priv2)
 
 	res := app.Deliver(tx)
-	assert.Equal(t, true, res.IsOK(), res.Log)
+	require.Equal(t, true, res.IsOK(), res.Log)
 
-	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not change after valid tx")
-	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 did not change after valid tx")
+	require.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Balance1 did not change after valid tx")
+	require.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 did not change after valid tx")
 
 	// Check that state is only updated if all msgs in tx pass.
 	app.accountKeeper.AddCoins(app.deliverState.ctx, addr1, sdk.Coins{{"foocoin", sdk.NewInt(50)}})
@@ -960,10 +960,10 @@ func TestSendBurn(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{})
 	app.deliverState.ctx = app.deliverState.ctx.WithChainID(t.Name())
 
-	assert.Equal(t, sdk.ABCICodeType(0x1000a), res.Code, "Allowed tx to pass with insufficient funds")
+	require.Equal(t, sdk.ABCICodeType(0x1000a), res.Code, "Allowed tx to pass with insufficient funds")
 
-	assert.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(50)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Allowed valid msg to pass in invalid tx")
-	assert.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 changed after invalid tx")
+	require.Equal(t, sdk.Coins{{"foocoin", sdk.NewInt(50)}}, app.accountKeeper.GetCoins(app.deliverState.ctx, addr1), "Allowed valid msg to pass in invalid tx")
+	require.Equal(t, sdk.Coins(nil), app.accountKeeper.GetCoins(app.deliverState.ctx, addr2), "Balance2 changed after invalid tx")
 }
 
 //----------------------------------------

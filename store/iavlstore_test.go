@@ -3,7 +3,7 @@ package store
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -38,7 +38,7 @@ func newTree(t *testing.T, db dbm.DB) (*iavl.VersionedTree, CommitID) {
 		tree.Set(key, value)
 	}
 	hash, ver, err := tree.SaveVersion()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	return tree, CommitID{ver, hash}
 }
 
@@ -50,21 +50,21 @@ func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 	key := "hello"
 
 	exists := iavlStore.Has([]byte(key))
-	assert.True(t, exists)
+	require.True(t, exists)
 
 	value := iavlStore.Get([]byte(key))
-	assert.EqualValues(t, value, treeData[key])
+	require.EqualValues(t, value, treeData[key])
 
 	value2 := "notgoodbye"
 	iavlStore.Set([]byte(key), []byte(value2))
 
 	value = iavlStore.Get([]byte(key))
-	assert.EqualValues(t, value, value2)
+	require.EqualValues(t, value, value2)
 
 	iavlStore.Delete([]byte(key))
 
 	exists = iavlStore.Has([]byte(key))
-	assert.False(t, exists)
+	require.False(t, exists)
 }
 
 func TestIAVLIterator(t *testing.T) {
@@ -78,66 +78,66 @@ func TestIAVLIterator(t *testing.T) {
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected[i]
 		key, value := iter.Key(), iter.Value()
-		assert.EqualValues(t, key, expectedKey)
-		assert.EqualValues(t, value, treeData[expectedKey])
+		require.EqualValues(t, key, expectedKey)
+		require.EqualValues(t, value, treeData[expectedKey])
 		i++
 	}
-	assert.Equal(t, len(expected), i)
+	require.Equal(t, len(expected), i)
 
 	iter = iavlStore.Iterator([]byte("golang"), []byte("rocks"))
 	expected = []string{"hello"}
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected[i]
 		key, value := iter.Key(), iter.Value()
-		assert.EqualValues(t, key, expectedKey)
-		assert.EqualValues(t, value, treeData[expectedKey])
+		require.EqualValues(t, key, expectedKey)
+		require.EqualValues(t, value, treeData[expectedKey])
 		i++
 	}
-	assert.Equal(t, len(expected), i)
+	require.Equal(t, len(expected), i)
 
 	iter = iavlStore.Iterator(nil, []byte("golang"))
 	expected = []string{"aloha"}
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected[i]
 		key, value := iter.Key(), iter.Value()
-		assert.EqualValues(t, key, expectedKey)
-		assert.EqualValues(t, value, treeData[expectedKey])
+		require.EqualValues(t, key, expectedKey)
+		require.EqualValues(t, value, treeData[expectedKey])
 		i++
 	}
-	assert.Equal(t, len(expected), i)
+	require.Equal(t, len(expected), i)
 
 	iter = iavlStore.Iterator(nil, []byte("shalom"))
 	expected = []string{"aloha", "hello"}
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected[i]
 		key, value := iter.Key(), iter.Value()
-		assert.EqualValues(t, key, expectedKey)
-		assert.EqualValues(t, value, treeData[expectedKey])
+		require.EqualValues(t, key, expectedKey)
+		require.EqualValues(t, value, treeData[expectedKey])
 		i++
 	}
-	assert.Equal(t, len(expected), i)
+	require.Equal(t, len(expected), i)
 
 	iter = iavlStore.Iterator(nil, nil)
 	expected = []string{"aloha", "hello"}
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected[i]
 		key, value := iter.Key(), iter.Value()
-		assert.EqualValues(t, key, expectedKey)
-		assert.EqualValues(t, value, treeData[expectedKey])
+		require.EqualValues(t, key, expectedKey)
+		require.EqualValues(t, value, treeData[expectedKey])
 		i++
 	}
-	assert.Equal(t, len(expected), i)
+	require.Equal(t, len(expected), i)
 
 	iter = iavlStore.Iterator([]byte("golang"), nil)
 	expected = []string{"hello"}
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected[i]
 		key, value := iter.Key(), iter.Value()
-		assert.EqualValues(t, key, expectedKey)
-		assert.EqualValues(t, value, treeData[expectedKey])
+		require.EqualValues(t, key, expectedKey)
+		require.EqualValues(t, value, treeData[expectedKey])
 		i++
 	}
-	assert.Equal(t, len(expected), i)
+	require.Equal(t, len(expected), i)
 }
 
 func TestIAVLSubspaceIterator(t *testing.T) {
@@ -162,11 +162,11 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected[i]
 		key, value := iter.Key(), iter.Value()
-		assert.EqualValues(t, key, expectedKey)
-		assert.EqualValues(t, value, expectedKey)
+		require.EqualValues(t, key, expectedKey)
+		require.EqualValues(t, value, expectedKey)
 		i++
 	}
-	assert.Equal(t, len(expected), i)
+	require.Equal(t, len(expected), i)
 
 	iter = sdk.KVStorePrefixIterator(iavlStore, []byte{byte(55), byte(255), byte(255)})
 	expected2 := [][]byte{
@@ -177,11 +177,11 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected2[i]
 		key, value := iter.Key(), iter.Value()
-		assert.EqualValues(t, key, expectedKey)
-		assert.EqualValues(t, value, []byte("test4"))
+		require.EqualValues(t, key, expectedKey)
+		require.EqualValues(t, value, []byte("test4"))
 		i++
 	}
-	assert.Equal(t, len(expected), i)
+	require.Equal(t, len(expected), i)
 
 	iter = sdk.KVStorePrefixIterator(iavlStore, []byte{byte(255), byte(255)})
 	expected2 = [][]byte{
@@ -192,11 +192,11 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected2[i]
 		key, value := iter.Key(), iter.Value()
-		assert.EqualValues(t, key, expectedKey)
-		assert.EqualValues(t, value, []byte("test4"))
+		require.EqualValues(t, key, expectedKey)
+		require.EqualValues(t, value, []byte("test4"))
 		i++
 	}
-	assert.Equal(t, len(expected), i)
+	require.Equal(t, len(expected), i)
 }
 
 func TestIAVLReverseSubspaceIterator(t *testing.T) {
@@ -221,11 +221,11 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected[i]
 		key, value := iter.Key(), iter.Value()
-		assert.EqualValues(t, key, expectedKey)
-		assert.EqualValues(t, value, expectedKey)
+		require.EqualValues(t, key, expectedKey)
+		require.EqualValues(t, value, expectedKey)
 		i++
 	}
-	assert.Equal(t, len(expected), i)
+	require.Equal(t, len(expected), i)
 
 	iter = sdk.KVStoreReversePrefixIterator(iavlStore, []byte{byte(55), byte(255), byte(255)})
 	expected2 := [][]byte{
@@ -236,11 +236,11 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected2[i]
 		key, value := iter.Key(), iter.Value()
-		assert.EqualValues(t, key, expectedKey)
-		assert.EqualValues(t, value, []byte("test4"))
+		require.EqualValues(t, key, expectedKey)
+		require.EqualValues(t, value, []byte("test4"))
 		i++
 	}
-	assert.Equal(t, len(expected), i)
+	require.Equal(t, len(expected), i)
 
 	iter = sdk.KVStoreReversePrefixIterator(iavlStore, []byte{byte(255), byte(255)})
 	expected2 = [][]byte{
@@ -251,11 +251,11 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected2[i]
 		key, value := iter.Key(), iter.Value()
-		assert.EqualValues(t, key, expectedKey)
-		assert.EqualValues(t, value, []byte("test4"))
+		require.EqualValues(t, key, expectedKey)
+		require.EqualValues(t, value, []byte("test4"))
 		i++
 	}
-	assert.Equal(t, len(expected), i)
+	require.Equal(t, len(expected), i)
 }
 
 func TestIAVLStoreQuery(t *testing.T) {
@@ -288,8 +288,8 @@ func TestIAVLStoreQuery(t *testing.T) {
 
 	// query subspace before anything set
 	qres := iavlStore.Query(querySub)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, valExpSubEmpty, qres.Value)
+	require.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	require.Equal(t, valExpSubEmpty, qres.Value)
 
 	// set data
 	iavlStore.Set(k1, v1)
@@ -297,25 +297,25 @@ func TestIAVLStoreQuery(t *testing.T) {
 
 	// set data without commit, doesn't show up
 	qres = iavlStore.Query(query)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Nil(t, qres.Value)
+	require.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	require.Nil(t, qres.Value)
 
 	// commit it, but still don't see on old version
 	cid = iavlStore.Commit()
 	qres = iavlStore.Query(query)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Nil(t, qres.Value)
+	require.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	require.Nil(t, qres.Value)
 
 	// but yes on the new version
 	query.Height = cid.Version
 	qres = iavlStore.Query(query)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, v1, qres.Value)
+	require.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	require.Equal(t, v1, qres.Value)
 
 	// and for the subspace
 	qres = iavlStore.Query(querySub)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, valExpSub1, qres.Value)
+	require.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	require.Equal(t, valExpSub1, qres.Value)
 
 	// modify
 	iavlStore.Set(k1, v3)
@@ -323,26 +323,26 @@ func TestIAVLStoreQuery(t *testing.T) {
 
 	// query will return old values, as height is fixed
 	qres = iavlStore.Query(query)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, v1, qres.Value)
+	require.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	require.Equal(t, v1, qres.Value)
 
 	// update to latest in the query and we are happy
 	query.Height = cid.Version
 	qres = iavlStore.Query(query)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, v3, qres.Value)
+	require.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	require.Equal(t, v3, qres.Value)
 	query2 := abci.RequestQuery{Path: "/key", Data: k2, Height: cid.Version}
 	qres = iavlStore.Query(query2)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, v2, qres.Value)
+	require.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	require.Equal(t, v2, qres.Value)
 	// and for the subspace
 	qres = iavlStore.Query(querySub)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, valExpSub2, qres.Value)
+	require.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	require.Equal(t, valExpSub2, qres.Value)
 
 	// default (height 0) will show latest -1
 	query0 := abci.RequestQuery{Path: "/store", Data: k1}
 	qres = iavlStore.Query(query0)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, v1, qres.Value)
+	require.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	require.Equal(t, v1, qres.Value)
 }

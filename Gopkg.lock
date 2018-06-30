@@ -299,13 +299,15 @@
   version = "v0.6.2"
 
 [[projects]]
+  name = "github.com/tendermint/go-wire"
+  packages = ["."]
+  revision = "b6fc872b42d41158a60307db4da051dd6f179415"
+
+[[projects]]
   name = "github.com/tendermint/iavl"
-  packages = [
-    ".",
-    "sha256truncated"
-  ]
-  revision = "c9206995e8f948e99927f5084a88a7e94ca256da"
-  version = "v0.8.0-rc0"
+  packages = ["."]
+  revision = "3de9107795f063945e5431eea82487c602a58cfa"
+  source = "github.com/HaoyangLiu/iavl"
 
 [[projects]]
   name = "github.com/tendermint/tendermint"
@@ -340,6 +342,7 @@
     "rpc/lib/client",
     "rpc/lib/server",
     "rpc/lib/types",
+    "rpc/test",
     "state",
     "state/txindex",
     "state/txindex/kv",
@@ -462,6 +465,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8ad5e4b90e57805024944a6ee5eed246f109c18724d453093e82bac1469dbd9e"
+  inputs-digest = "03751d11d2999d4bea934a6307d3125fbc2536172a2b1b50e9b9c68c08f72501"
   solver-name = "gps-cdcl"
   solver-version = 1

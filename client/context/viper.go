@@ -40,6 +40,7 @@ func NewCoreContextFromViper() CoreContext {
 		Client:          rpc,
 		Decoder:         nil,
 		AccountStore:    "acc",
+		Cert:   		 nil,
 	}
 }
 

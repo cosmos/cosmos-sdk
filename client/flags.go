@@ -14,6 +14,7 @@ const (
 	FlagSequence      = "sequence"
 	FlagMemo          = "memo"
 	FlagFee           = "fee"
+	FlagTrustStore    = "trust-store"
 )
 
 // LineBreak can be included in a command list to provide a blank line

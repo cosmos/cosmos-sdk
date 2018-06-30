@@ -16,6 +16,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/iavl"
+	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/lcd/proxy"
+	"github.com/tendermint/go-crypto"
 )
 
 // Broadcast the transaction bytes to Tendermint
@@ -103,9 +107,88 @@ func (ctx CoreContext) query(path string, key common.HexBytes) (res []byte, err 
 }
 
 // Query from Tendermint with the provided storename and path
+func (ctx CoreContext) queryAndVerifyProof(path string, key common.HexBytes) (res []byte, err error) {
+	node, err := ctx.GetNode()
+	if err != nil {
+		return res, err
+	}
+
+	opts := rpcclient.ABCIQueryOptions{
+		Height:  ctx.Height,
+		Trusted: ctx.TrustNode,
+	}
+	result, err := node.ABCIQueryWithOptions(path, key, opts)
+	if err != nil {
+		return res, err
+	}
+	resp := result.Response
+	if resp.Code != uint32(0) {
+		return res, errors.Errorf("query failed: (%d) %s", resp.Code, resp.Log)
+	}
+
+	if ctx.Cert == nil {
+		return resp.Value,nil
+	}
+
+	// AppHash for height H is in header H+1
+	commit, err := proxy.GetCertifiedCommit(resp.Height+1, node, ctx.Cert)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.Value) > 0 {
+		// The key was found, construct a proof of existence.
+		proof, err := iavl.ReadKeyProof(resp.Proof)
+		if err != nil {
+			return  nil, errors.Wrap(err, "Error reading proof")
+		}
+
+		eproof, ok := proof.(*iavl.KeyExistsProof)
+		if !ok {
+			return  nil, errors.New("Expected KeyExistsProof for non-empty value")
+		}
+
+		// Validate the proof against the certified header to ensure data integrity.
+		err = eproof.Verify(resp.Key, resp.Value, eproof.RootHash)
+		if err != nil {
+			return  nil, errors.Wrap(err, "Couldn't verify proof")
+		}
+		err =  store.VerifyProofForMultiStore(eproof.StoreName,eproof.RootHash,eproof.MultiStoreCommitInfo,commit.Header.AppHash)
+		if err != nil {
+			return  nil, errors.Wrap(err, "Invalid exist proof")
+		}
+
+		return resp.Value, nil
+	}
+	// The key wasn't found, construct a proof of non-existence.
+	proof, err := iavl.ReadKeyProof(resp.Proof)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error reading proof")
+	}
+
+	aproof, ok := proof.(*iavl.KeyAbsentProof)
+	if !ok {
+		return nil, errors.New("Expected KeyAbsentProof for empty Value")
+	}
+
+	// Validate the proof against the certified header to ensure data integrity.
+	err = aproof.Verify(resp.Key, nil, aproof.RootHash)
+	if err != nil {
+		return nil, errors.Wrap(err, "Couldn't verify proof")
+	}
+
+	err =  store.VerifyProofForMultiStore(aproof.StoreName,aproof.RootHash,aproof.MultiStoreCommitInfo,commit.Header.AppHash)
+	if err != nil {
+		return  nil, errors.Wrap(err, "Invalid absence proof")
+	}
+
+	return resp.Value, nil
+}
+
+// Query from Tendermint with the provided storename and path
 func (ctx CoreContext) queryStore(key cmn.HexBytes, storeName, endPath string) (res []byte, err error) {
 	path := fmt.Sprintf("/store/%s/%s", storeName, endPath)
-	return ctx.query(path, key)
+	return ctx.queryAndVerifyProof(path, key)
 }
 
 // Get the from address from the name flag
@@ -127,6 +210,81 @@ func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 	}
 
 	return info.PubKey.Address(), nil
+}
+
+// build the transaction from the msg
+func (ctx CoreContext) BuildTransaction(accnum, sequence, gas int64, msg sdk.Msg, cdc *wire.Codec) ([]byte, error) {
+	chainID := ctx.ChainID
+	if chainID == "" {
+		return nil, errors.Errorf("chain ID required but not specified")
+	}
+	memo := ctx.Memo
+
+	signMsg := auth.StdSignMsg{
+		ChainID:       chainID,
+		AccountNumber: int64(accnum),
+		Sequence:      int64(sequence),
+		Msgs:          []sdk.Msg{msg},
+		Memo:          memo,
+		Fee:           auth.NewStdFee(gas, sdk.Coin{}),
+	}
+
+	return signMsg.Bytes(),nil
+}
+
+// build the transaction from the msg
+func (ctx CoreContext) BroadcastTransaction(txData []byte, signatures [][]byte, publicKeys [][]byte, cdc *wire.Codec) (*ctypes.ResultBroadcastTxCommit, error) {
+	var stdSignDoc auth.StdSignDoc//, transactionSigs []auth.StdSignature
+	err := cdc.UnmarshalBinary(txData,&stdSignDoc)
+	if err != nil {
+		return nil, err
+	}
+
+	var msgs []sdk.Msg
+	err = cdc.UnmarshalBinary(stdSignDoc.MsgsBytes,&msgs)
+	if err != nil {
+		return nil, err
+	}
+
+	var fee auth.StdFee
+	err = cdc.UnmarshalBinary(stdSignDoc.FeeBytes,&fee)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(signatures) != len(publicKeys) {
+		return nil, errors.New("Error: signatures length doesn't equal to publicKeys length")
+	}
+
+	var stdSignatures []auth.StdSignature
+	for index,signature := range signatures {
+
+		public,err := crypto.PubKeyFromBytes(publicKeys[index])
+		if err != nil {
+			return nil, err
+		}
+
+		sig,err := crypto.SignatureFromBytes(signature)
+		if err != nil {
+			return nil, err
+		}
+
+		stdSignatures = append(stdSignatures,auth.StdSignature{
+			PubKey:        public,
+			Signature:     sig,
+			AccountNumber: stdSignDoc.AccountNumber,
+			Sequence:      stdSignDoc.Sequence,
+		})
+	}
+	// marshal bytes
+	tx := auth.NewStdTx(msgs, fee, stdSignatures, stdSignDoc.Memo)
+
+	txBytes,err := cdc.MarshalBinary(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	return ctx.BroadcastTx(txBytes)
 }
 
 // sign and build the transaction from the msg

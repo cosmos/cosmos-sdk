@@ -22,13 +22,13 @@ var (
 
 	// Downtime unbond duration
 	// TODO Governance parameter?
-	// TODO Temporarily set to zero for testnets
-	DowntimeUnbondDuration int64
+	// TODO Temporarily set to five minutes for testnets
+	DowntimeUnbondDuration int64 = 60 * 5
 
 	// Double-sign unbond duration
 	// TODO Governance parameter?
-	// TODO Temporarily set to zero for testnets
-	DoubleSignUnbondDuration int64
+	// TODO Temporarily set to five minutes for testnets
+	DoubleSignUnbondDuration int64 = 60 * 5
 )
 
 var (

@@ -315,9 +315,9 @@ Parameters:
 | to_address  | string | null    | true     | address to send to     |
 | amount  | int    | null    | true     | amount of the token         |
 | denomination  | string | null    | true     | denomination of the token   |
-| accnum  | int | null    | true     | account number, user can query the valid account number by accessing previous API: /balance/{account} |
-| sequence  | int    | null    | true     | sequence number, once a transaction is send from this account, the sequence number increases one. User can get the valid sequence number by accessing previous API: /balance/{account} |
-| gas  | int | null    | true     | transaction fee   |
+| accnum  | int | null    | false     | account number, user can query the valid account number by accessing previous API: /balance/{account} |
+| sequence  | int    | null    | false     | sequence number, once a transaction is send from this account, the sequence number increases one. User can get the valid sequence number by accessing previous API: /balance/{account} |
+| gas  | int | null    | false     | transaction fee   |
 
 
 * The above command returns JSON structured like this if success:

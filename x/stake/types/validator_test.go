@@ -69,7 +69,7 @@ func TestRemoveDelShares(t *testing.T) {
 		PoolShares:      NewBondedShares(sdk.NewRat(100)),
 		DelegatorShares: sdk.NewRat(100),
 	}
-	poolA.BondedTokens = valA.PoolShares.Bonded().Evaluate()
+	poolA.BondedTokens = valA.PoolShares.Bonded().RoundInt64()
 	poolA.BondedShares = valA.PoolShares.Bonded()
 	require.Equal(t, valA.DelegatorShareExRate(poolA), sdk.OneRat())
 	require.Equal(t, poolA.BondedShareExRate(), sdk.OneRat())
@@ -117,25 +117,25 @@ func TestUpdateStatus(t *testing.T) {
 
 	val := NewValidator(addr1, pk1, Description{})
 	val, pool, _ = val.AddTokensFromDel(pool, 100)
-	require.Equal(t, int64(0), val.PoolShares.Bonded().Evaluate())
-	require.Equal(t, int64(0), val.PoolShares.Unbonding().Evaluate())
-	require.Equal(t, int64(100), val.PoolShares.Unbonded().Evaluate())
+	require.Equal(t, int64(0), val.PoolShares.Bonded().RoundInt64())
+	require.Equal(t, int64(0), val.PoolShares.Unbonding().RoundInt64())
+	require.Equal(t, int64(100), val.PoolShares.Unbonded().RoundInt64())
 	require.Equal(t, int64(0), pool.BondedTokens)
 	require.Equal(t, int64(0), pool.UnbondingTokens)
 	require.Equal(t, int64(100), pool.UnbondedTokens)
 
 	val, pool = val.UpdateStatus(pool, sdk.Unbonding)
-	require.Equal(t, int64(0), val.PoolShares.Bonded().Evaluate())
-	require.Equal(t, int64(100), val.PoolShares.Unbonding().Evaluate())
-	require.Equal(t, int64(0), val.PoolShares.Unbonded().Evaluate())
+	require.Equal(t, int64(0), val.PoolShares.Bonded().RoundInt64())
+	require.Equal(t, int64(100), val.PoolShares.Unbonding().RoundInt64())
+	require.Equal(t, int64(0), val.PoolShares.Unbonded().RoundInt64())
 	require.Equal(t, int64(0), pool.BondedTokens)
 	require.Equal(t, int64(100), pool.UnbondingTokens)
 	require.Equal(t, int64(0), pool.UnbondedTokens)
 
 	val, pool = val.UpdateStatus(pool, sdk.Bonded)
-	require.Equal(t, int64(100), val.PoolShares.Bonded().Evaluate())
-	require.Equal(t, int64(0), val.PoolShares.Unbonding().Evaluate())
-	require.Equal(t, int64(0), val.PoolShares.Unbonded().Evaluate())
+	require.Equal(t, int64(100), val.PoolShares.Bonded().RoundInt64())
+	require.Equal(t, int64(0), val.PoolShares.Unbonding().RoundInt64())
+	require.Equal(t, int64(0), val.PoolShares.Unbonded().RoundInt64())
 	require.Equal(t, int64(100), pool.BondedTokens)
 	require.Equal(t, int64(0), pool.UnbondingTokens)
 	require.Equal(t, int64(0), pool.UnbondedTokens)
@@ -154,7 +154,7 @@ func TestPossibleOverflow(t *testing.T) {
 		LooseTokens:       100,
 		BondedShares:      poolShares,
 		UnbondedShares:    sdk.ZeroRat(),
-		BondedTokens:      poolShares.Evaluate(),
+		BondedTokens:      poolShares.RoundInt64(),
 		UnbondedTokens:    0,
 		InflationLastTime: 0,
 		Inflation:         sdk.NewRat(7, 100),

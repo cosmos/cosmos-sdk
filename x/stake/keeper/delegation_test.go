@@ -146,13 +146,13 @@ func TestUnbondDelegation(t *testing.T) {
 	//create a validator and a delegator to that validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 	validator, pool, issuedShares := validator.AddTokensFromDel(pool, 10)
-	require.Equal(t, int64(10), issuedShares.Evaluate())
+	require.Equal(t, int64(10), issuedShares.RoundInt64())
 	keeper.SetPool(ctx, pool)
 	validator = keeper.UpdateValidator(ctx, validator)
 
 	pool = keeper.GetPool(ctx)
 	require.Equal(t, int64(10), pool.BondedTokens)
-	require.Equal(t, int64(10), validator.PoolShares.Bonded().Evaluate())
+	require.Equal(t, int64(10), validator.PoolShares.Bonded().RoundInt64())
 
 	delegation := types.Delegation{
 		DelegatorAddr: addrDels[0],
@@ -173,8 +173,8 @@ func TestUnbondDelegation(t *testing.T) {
 	require.True(t, found)
 	pool = keeper.GetPool(ctx)
 
-	require.Equal(t, int64(4), delegation.Shares.Evaluate())
-	require.Equal(t, int64(4), validator.PoolShares.Bonded().Evaluate())
+	require.Equal(t, int64(4), delegation.Shares.RoundInt64())
+	require.Equal(t, int64(4), validator.PoolShares.Bonded().RoundInt64())
 	require.Equal(t, int64(6), pool.LooseTokens, "%v", pool)
 	require.Equal(t, int64(4), pool.BondedTokens)
 }

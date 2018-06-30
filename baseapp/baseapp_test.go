@@ -157,9 +157,9 @@ func TestInfo(t *testing.T) {
 	res := app.Info(reqInfo)
 
 	// should be empty
-	require.Equal(t, "", res.Version)
-	require.Equal(t, t.Name(), res.GetData())
-	require.Equal(t, int64(0), res.LastBlockHeight)
+	assert.Equal(t, "", res.Version)
+	assert.Equal(t, t.Name(), res.GetData())
+	assert.Equal(t, int64(0), res.LastBlockHeight)
 	require.Equal(t, []uint8(nil), res.LastBlockAppHash)
 
 	// ----- test a proper response -------

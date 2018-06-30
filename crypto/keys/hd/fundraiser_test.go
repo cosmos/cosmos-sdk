@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/bartekn/go-bip39"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"
 )

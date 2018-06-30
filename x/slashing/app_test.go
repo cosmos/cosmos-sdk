@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/x/stake"

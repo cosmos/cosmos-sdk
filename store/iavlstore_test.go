@@ -3,7 +3,7 @@ package store
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"

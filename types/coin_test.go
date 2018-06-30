@@ -4,11 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIsPositiveCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		expected bool
@@ -20,13 +19,11 @@ func TestIsPositiveCoin(t *testing.T) {
 
 	for _, tc := range cases {
 		res := tc.inputOne.IsPositive()
-		require.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res)
 	}
 }
 
 func TestIsNotNegativeCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		expected bool
@@ -38,13 +35,11 @@ func TestIsNotNegativeCoin(t *testing.T) {
 
 	for _, tc := range cases {
 		res := tc.inputOne.IsNotNegative()
-		require.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res)
 	}
 }
 
 func TestSameDenomAsCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -59,13 +54,11 @@ func TestSameDenomAsCoin(t *testing.T) {
 
 	for _, tc := range cases {
 		res := tc.inputOne.SameDenomAs(tc.inputTwo)
-		require.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res)
 	}
 }
 
 func TestIsGTECoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -79,13 +72,11 @@ func TestIsGTECoin(t *testing.T) {
 
 	for _, tc := range cases {
 		res := tc.inputOne.IsGTE(tc.inputTwo)
-		require.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res)
 	}
 }
 
 func TestIsEqualCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -100,13 +91,11 @@ func TestIsEqualCoin(t *testing.T) {
 
 	for _, tc := range cases {
 		res := tc.inputOne.IsEqual(tc.inputTwo)
-		require.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res)
 	}
 }
 
 func TestPlusCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -119,7 +108,7 @@ func TestPlusCoin(t *testing.T) {
 
 	for _, tc := range cases {
 		res := tc.inputOne.Plus(tc.inputTwo)
-		require.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res)
 	}
 
 	tc := struct {
@@ -128,12 +117,10 @@ func TestPlusCoin(t *testing.T) {
 		expected int64
 	}{NewCoin("asdf", -1), NewCoin("asdf", 1), 0}
 	res := tc.inputOne.Plus(tc.inputTwo)
-	require.Equal(tc.expected, res.Amount.Int64())
+	require.Equal(t, tc.expected, res.Amount.Int64())
 }
 
 func TestMinusCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -147,7 +134,7 @@ func TestMinusCoin(t *testing.T) {
 
 	for _, tc := range cases {
 		res := tc.inputOne.Minus(tc.inputTwo)
-		require.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res)
 	}
 
 	tc := struct {
@@ -156,7 +143,7 @@ func TestMinusCoin(t *testing.T) {
 		expected int64
 	}{NewCoin("A", 1), NewCoin("A", 1), 0}
 	res := tc.inputOne.Minus(tc.inputTwo)
-	require.Equal(tc.expected, res.Amount.Int64())
+	require.Equal(t, tc.expected, res.Amount.Int64())
 
 }
 
@@ -195,21 +182,19 @@ func TestCoins(t *testing.T) {
 		{"MINERAL", NewInt(1)},
 	}
 
-	require.True(t, good.IsValid(), "Coins are valid")
-	require.True(t, good.IsPositive(), "Expected coins to be positive: %v", good)
-	require.True(t, good.IsGTE(empty), "Expected %v to be >= %v", good, empty)
-	require.False(t, neg.IsPositive(), "Expected neg coins to not be positive: %v", neg)
+	assert.True(t, good.IsValid(), "Coins are valid")
+	assert.True(t, good.IsPositive(), "Expected coins to be positive: %v", good)
+	assert.True(t, good.IsGTE(empty), "Expected %v to be >= %v", good, empty)
+	assert.False(t, neg.IsPositive(), "Expected neg coins to not be positive: %v", neg)
 	assert.Zero(t, len(sum), "Expected 0 coins")
-	require.False(t, badSort1.IsValid(), "Coins are not sorted")
-	require.False(t, badSort2.IsValid(), "Coins are not sorted")
-	require.False(t, badAmt.IsValid(), "Coins cannot include 0 amounts")
-	require.False(t, dup.IsValid(), "Duplicate coin")
+	assert.False(t, badSort1.IsValid(), "Coins are not sorted")
+	assert.False(t, badSort2.IsValid(), "Coins are not sorted")
+	assert.False(t, badAmt.IsValid(), "Coins cannot include 0 amounts")
+	assert.False(t, dup.IsValid(), "Duplicate coin")
 
 }
 
 func TestPlusCoins(t *testing.T) {
-	assert := assert.New(t)
-
 	one := NewInt(1)
 	zero := NewInt(0)
 	negone := NewInt(-1)
@@ -229,8 +214,8 @@ func TestPlusCoins(t *testing.T) {
 
 	for _, tc := range cases {
 		res := tc.inputOne.Plus(tc.inputTwo)
-		assert.True(res.IsValid())
-		require.Equal(tc.expected, res)
+		assert.True(t, res.IsValid())
+		require.Equal(t, tc.expected, res)
 	}
 }
 
@@ -261,7 +246,7 @@ func TestParse(t *testing.T) {
 		res, err := ParseCoins(tc.input)
 		if !tc.valid {
 			require.NotNil(t, err, "%s: %#v", tc.input, res)
-		} else if require.Nil(t, err, "%s: %+v", tc.input, err) {
+		} else if assert.Nil(t, err, "%s: %+v", tc.input, err) {
 			require.Equal(t, tc.expected, res)
 		}
 	}
@@ -369,10 +354,10 @@ func TestAmountOf(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		require.Equal(t, NewInt(tc.amountOf), tc.coins.AmountOf(""))
-		require.Equal(t, NewInt(tc.amountOfSpace), tc.coins.AmountOf(" "))
-		require.Equal(t, NewInt(tc.amountOfGAS), tc.coins.AmountOf("GAS"))
-		require.Equal(t, NewInt(tc.amountOfMINERAL), tc.coins.AmountOf("MINERAL"))
-		require.Equal(t, NewInt(tc.amountOfTREE), tc.coins.AmountOf("TREE"))
+		assert.Equal(t, NewInt(tc.amountOf), tc.coins.AmountOf(""))
+		assert.Equal(t, NewInt(tc.amountOfSpace), tc.coins.AmountOf(" "))
+		assert.Equal(t, NewInt(tc.amountOfGAS), tc.coins.AmountOf("GAS"))
+		assert.Equal(t, NewInt(tc.amountOfMINERAL), tc.coins.AmountOf("MINERAL"))
+		assert.Equal(t, NewInt(tc.amountOfTREE), tc.coins.AmountOf("TREE"))
 	}
 }

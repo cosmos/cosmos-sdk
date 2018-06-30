@@ -3,7 +3,7 @@ package keeper
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )

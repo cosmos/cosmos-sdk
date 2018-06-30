@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	wire "github.com/cosmos/cosmos-sdk/wire"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 

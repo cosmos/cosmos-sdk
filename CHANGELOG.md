@@ -60,6 +60,7 @@ FEATURES
   - You can now use a Ledger with `gaiacli --ledger` for all key-related commands
   - Ledger keys can be named and tracked locally in the key DB
 * [gaiacli] added an --async flag to the cli to deliver transactions without waiting for a tendermint response
+* [gaiacli] improve error messages on `send` and `account` commands
 
 FIXES
 * [gaia] Added self delegation for validators in the genesis creation

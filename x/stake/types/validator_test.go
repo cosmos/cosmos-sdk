@@ -7,9 +7,87 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+func TestValidatorEqual(t *testing.T) {
+	val1 := NewValidator(addr1, pk1, Description{})
+	val2 := NewValidator(addr1, pk1, Description{})
+
+	ok := val1.Equal(val2)
+	require.True(t, ok)
+
+	val2 = NewValidator(addr2, pk2, Description{})
+
+	ok = val1.Equal(val2)
+	require.False(t, ok)
+}
+
+func TestUpdateDescription(t *testing.T) {
+	d1 := Description{
+		Moniker:  doNotModifyDescVal,
+		Identity: doNotModifyDescVal,
+		Website:  doNotModifyDescVal,
+		Details:  doNotModifyDescVal,
+	}
+	d2 := Description{
+		Website: "https://validator.cosmos",
+		Details: "Test validator",
+	}
+
+	d, err := d1.UpdateDescription(d2)
+	require.Nil(t, err)
+	require.Equal(t, d, d1)
+}
+
+func TestABCIValidator(t *testing.T) {
+	val := NewValidator(addr1, pk1, Description{})
+
+	abciVal := val.ABCIValidator()
+	require.Equal(t, tmtypes.TM2PB.PubKey(val.PubKey), abciVal.PubKey)
+	require.Equal(t, val.PoolShares.Bonded().Evaluate(), abciVal.Power)
+}
+
+func TestABCIValidatorZero(t *testing.T) {
+	val := NewValidator(addr1, pk1, Description{})
+
+	abciVal := val.ABCIValidatorZero()
+	require.Equal(t, tmtypes.TM2PB.PubKey(val.PubKey), abciVal.PubKey)
+	require.Equal(t, int64(0), abciVal.Power)
+}
+
+func TestRemovePoolShares(t *testing.T) {
+	pool := InitialPool()
+	pool.LooseTokens = 10
+
+	val := Validator{
+		Owner:           addr1,
+		PubKey:          pk1,
+		PoolShares:      NewBondedShares(sdk.NewRat(100)),
+		DelegatorShares: sdk.NewRat(100),
+	}
+
+	pool.BondedTokens = val.PoolShares.Bonded().Evaluate()
+	pool.BondedShares = val.PoolShares.Bonded()
+
+	val, pool = val.UpdateStatus(pool, sdk.Bonded)
+	val, pool, tk := val.RemovePoolShares(pool, sdk.NewRat(10))
+	require.Equal(t, int64(90), val.PoolShares.Amount.Evaluate())
+	require.Equal(t, int64(90), pool.BondedTokens)
+	require.Equal(t, int64(90), pool.BondedShares.Evaluate())
+	require.Equal(t, int64(20), pool.LooseTokens)
+	require.Equal(t, int64(10), tk)
+
+	val, pool = val.UpdateStatus(pool, sdk.Unbonded)
+	val, pool, tk = val.RemovePoolShares(pool, sdk.NewRat(10))
+	require.Equal(t, int64(80), val.PoolShares.Amount.Evaluate())
+	require.Equal(t, int64(0), pool.BondedTokens)
+	require.Equal(t, int64(0), pool.BondedShares.Evaluate())
+	require.Equal(t, int64(30), pool.LooseTokens)
+	require.Equal(t, int64(10), tk)
+}
 
 func TestAddTokensValidatorBonded(t *testing.T) {
 	pool := InitialPool()
@@ -229,4 +307,14 @@ func TestMultiValidatorIntegrationInvariants(t *testing.T) {
 
 		}
 	}
+}
+
+func TestHumanReadableString(t *testing.T) {
+	val := NewValidator(addr1, pk1, Description{})
+
+	// NOTE: Being that the validator's keypair is random, we cannot test the
+	// actual contents of the string.
+	valStr, err := val.HumanReadableString()
+	require.Nil(t, err)
+	require.NotEmpty(t, valStr)
 }

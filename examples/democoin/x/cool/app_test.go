@@ -3,15 +3,13 @@ package cool
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 	bank "github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/mock"
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var (
@@ -90,17 +88,17 @@ func TestMsgQuiz(t *testing.T) {
 	require.Equal(t, acc1, res1)
 
 	// Set the trend, submit a really cool quiz and check for reward
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{setTrendMsg1}, []int64{0}, []int64{0}, true, priv1)
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{quizMsg1}, []int64{0}, []int64{1}, true, priv1)
+	mock.CheckAndDeliverGenTx(t, mapp.BaseApp, []sdk.Msg{setTrendMsg1}, []int64{0}, []int64{0}, true, priv1)
+	mock.CheckAndDeliverGenTx(t, mapp.BaseApp, []sdk.Msg{quizMsg1}, []int64{0}, []int64{1}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", sdk.NewInt(69)}})
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{quizMsg2}, []int64{0}, []int64{2}, false, priv1) // result without reward
+	mock.CheckAndDeliverGenTx(t, mapp.BaseApp, []sdk.Msg{quizMsg2}, []int64{0}, []int64{2}, false, priv1) // result without reward
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", sdk.NewInt(69)}})
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{quizMsg1}, []int64{0}, []int64{3}, true, priv1)
+	mock.CheckAndDeliverGenTx(t, mapp.BaseApp, []sdk.Msg{quizMsg1}, []int64{0}, []int64{3}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", sdk.NewInt(138)}})
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{setTrendMsg2}, []int64{0}, []int64{4}, true, priv1) // reset the trend
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{quizMsg1}, []int64{0}, []int64{5}, false, priv1)    // the same answer will nolonger do!
+	mock.CheckAndDeliverGenTx(t, mapp.BaseApp, []sdk.Msg{setTrendMsg2}, []int64{0}, []int64{4}, true, priv1) // reset the trend
+	mock.CheckAndDeliverGenTx(t, mapp.BaseApp, []sdk.Msg{quizMsg1}, []int64{0}, []int64{5}, false, priv1)    // the same answer will nolonger do!
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", sdk.NewInt(138)}})
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{quizMsg2}, []int64{0}, []int64{6}, true, priv1) // earlier answer now relevant again
+	mock.CheckAndDeliverGenTx(t, mapp.BaseApp, []sdk.Msg{quizMsg2}, []int64{0}, []int64{6}, true, priv1) // earlier answer now relevant again
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"badvibesonly", sdk.NewInt(69)}, {"icecold", sdk.NewInt(138)}})
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{setTrendMsg3}, []int64{0}, []int64{7}, false, priv1) // expect to fail to set the trend to something which is not cool
+	mock.CheckAndDeliverGenTx(t, mapp.BaseApp, []sdk.Msg{setTrendMsg3}, []int64{0}, []int64{7}, false, priv1) // expect to fail to set the trend to something which is not cool
 }

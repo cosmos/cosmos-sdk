@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/mock"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -71,13 +71,13 @@ func TestMsgMine(t *testing.T) {
 
 	// Mine and check for reward
 	mineMsg1 := GenerateMsgMine(addr1, 1, 2)
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{mineMsg1}, []int64{0}, []int64{0}, true, priv1)
+	mock.CheckAndDeliverGenTx(t, mapp.BaseApp, []sdk.Msg{mineMsg1}, []int64{0}, []int64{0}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"pow", sdk.NewInt(1)}})
 	// Mine again and check for reward
 	mineMsg2 := GenerateMsgMine(addr1, 2, 3)
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{mineMsg2}, []int64{0}, []int64{1}, true, priv1)
+	mock.CheckAndDeliverGenTx(t, mapp.BaseApp, []sdk.Msg{mineMsg2}, []int64{0}, []int64{1}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"pow", sdk.NewInt(2)}})
 	// Mine again - should be invalid
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{mineMsg2}, []int64{0}, []int64{1}, false, priv1)
+	mock.CheckAndDeliverGenTx(t, mapp.BaseApp, []sdk.Msg{mineMsg2}, []int64{0}, []int64{1}, false, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"pow", sdk.NewInt(2)}})
 }

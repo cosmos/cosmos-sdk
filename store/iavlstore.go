@@ -47,6 +47,8 @@ type iavlStore struct {
 }
 
 // CONTRACT: tree should be fully loaded.
+// TODO: use more numHistory's, so the below nolint can be removed
+// nolint: unparam
 func newIAVLStore(tree *iavl.VersionedTree, numHistory int64) *iavlStore {
 	st := &iavlStore{
 		tree:       tree,

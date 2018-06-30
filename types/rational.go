@@ -38,8 +38,8 @@ func NewRat(Numerator int64, Denominator ...int64) Rat {
 }
 
 // create a rational from decimal string or integer string
-func NewRatFromDecimal(decimalStr string) (f Rat, err Error) {
-
+// precision is the number of values after the decimal point which should be read
+func NewRatFromDecimal(decimalStr string, prec int) (f Rat, err Error) {
 	// first extract any negative symbol
 	neg := false
 	if string(decimalStr[0]) == "-" {
@@ -61,6 +61,9 @@ func NewRatFromDecimal(decimalStr string) (f Rat, err Error) {
 		if len(str[0]) == 0 || len(str[1]) == 0 {
 			return f, ErrUnknownRequest("not a decimal string")
 		}
+		if len(str[1]) > prec {
+			return f, ErrUnknownRequest("string has too many decimals")
+		}
 		numStr = str[0] + str[1]
 		len := int64(len(str[1]))
 		denom = new(big.Int).Exp(big.NewInt(10), big.NewInt(len), nil).Int64()
@@ -69,8 +72,20 @@ func NewRatFromDecimal(decimalStr string) (f Rat, err Error) {
 	}
 
 	num, errConv := strconv.Atoi(numStr)
-	if errConv != nil {
-		return f, ErrUnknownRequest(errConv.Error())
+	if errConv != nil && strings.HasSuffix(errConv.Error(), "value out of range") {
+		// resort to big int, don't make this default option for efficiency
+		numBig, success := new(big.Int).SetString(numStr, 10)
+		if success != true {
+			return f, ErrUnknownRequest("not a decimal string")
+		}
+
+		if neg {
+			numBig.Neg(numBig)
+		}
+
+		return NewRatFromBigInt(numBig, big.NewInt(denom)), nil
+	} else if errConv != nil {
+		return f, ErrUnknownRequest("not a decimal string")
 	}
 
 	if neg {
@@ -105,9 +120,9 @@ func NewRatFromInt(num Int, denom ...Int) Rat {
 }
 
 //nolint
-func (r Rat) Num() int64          { return r.Rat.Num().Int64() }   // Num - return the numerator
-func (r Rat) Denom() int64        { return r.Rat.Denom().Int64() } // Denom  - return the denominator
-func (r Rat) IsZero() bool        { return r.Num() == 0 }          // IsZero - Is the Rat equal to zero
+func (r Rat) Num() Int            { return Int{r.Rat.Num()} }   // Num - return the numerator
+func (r Rat) Denom() Int          { return Int{r.Rat.Denom()} } // Denom  - return the denominator
+func (r Rat) IsZero() bool        { return r.Num().IsZero() }   // IsZero - Is the Rat equal to zero
 func (r Rat) Equal(r2 Rat) bool   { return (r.Rat).Cmp(r2.Rat) == 0 }
 func (r Rat) GT(r2 Rat) bool      { return (r.Rat).Cmp(r2.Rat) == 1 }             // greater than
 func (r Rat) GTE(r2 Rat) bool     { return !r.LT(r2) }                            // greater than or equal

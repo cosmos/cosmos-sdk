@@ -66,11 +66,14 @@ includes its continuous integration status using a badge in the `README.md`.
 User-facing repos should adhere to the branching model: http://nvie.com/posts/a-successful-git-branching-model/.
 That is, these repos should be well versioned, and any merge to master requires a version bump and tagged release.
 
-Libraries need not follow the model strictly, but would be wise to
+Libraries need not follow the model strictly, but would be wise to.
+
+The SDK adheres [semantic versioning](https://semver.org/).
 
 ### Development Procedure:
 - the latest state of development is on `develop`
-- `develop` must never fail `make test`
+- `develop` must never fail `make test` or `make test_cli`
+- `develop` should not fail `make test_lint`
 - no --force onto `develop` (except when reverting a broken commit, which should seldom happen)
 - create a development branch either on github.com/cosmos/cosmos-sdk, or your fork (using `git remote add origin`)
 - before submitting a pull request, begin `git rebase` on top of `develop`

@@ -18,10 +18,10 @@ func TestAddTokensValidatorBonded(t *testing.T) {
 	val, pool = val.UpdateStatus(pool, sdk.Bonded)
 	val, pool, delShares := val.AddTokensFromDel(pool, 10)
 
-	assert.Equal(t, sdk.OneRat(), val.DelegatorShareExRate(pool))
-	assert.Equal(t, sdk.OneRat(), pool.BondedShareExRate())
-	assert.Equal(t, sdk.OneRat(), pool.UnbondingShareExRate())
-	assert.Equal(t, sdk.OneRat(), pool.UnbondedShareExRate())
+	require.Equal(t, sdk.OneRat(), val.DelegatorShareExRate(pool))
+	require.Equal(t, sdk.OneRat(), pool.BondedShareExRate())
+	require.Equal(t, sdk.OneRat(), pool.UnbondingShareExRate())
+	require.Equal(t, sdk.OneRat(), pool.UnbondedShareExRate())
 
 	assert.True(sdk.RatEq(t, sdk.NewRat(10), delShares))
 	assert.True(sdk.RatEq(t, sdk.NewRat(10), val.PoolShares.Bonded()))
@@ -34,10 +34,10 @@ func TestAddTokensValidatorUnbonding(t *testing.T) {
 	val, pool = val.UpdateStatus(pool, sdk.Unbonding)
 	val, pool, delShares := val.AddTokensFromDel(pool, 10)
 
-	assert.Equal(t, sdk.OneRat(), val.DelegatorShareExRate(pool))
-	assert.Equal(t, sdk.OneRat(), pool.BondedShareExRate())
-	assert.Equal(t, sdk.OneRat(), pool.UnbondingShareExRate())
-	assert.Equal(t, sdk.OneRat(), pool.UnbondedShareExRate())
+	require.Equal(t, sdk.OneRat(), val.DelegatorShareExRate(pool))
+	require.Equal(t, sdk.OneRat(), pool.BondedShareExRate())
+	require.Equal(t, sdk.OneRat(), pool.UnbondingShareExRate())
+	require.Equal(t, sdk.OneRat(), pool.UnbondedShareExRate())
 
 	assert.True(sdk.RatEq(t, sdk.NewRat(10), delShares))
 	assert.True(sdk.RatEq(t, sdk.NewRat(10), val.PoolShares.Unbonding()))
@@ -50,10 +50,10 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 	val, pool = val.UpdateStatus(pool, sdk.Unbonded)
 	val, pool, delShares := val.AddTokensFromDel(pool, 10)
 
-	assert.Equal(t, sdk.OneRat(), val.DelegatorShareExRate(pool))
-	assert.Equal(t, sdk.OneRat(), pool.BondedShareExRate())
-	assert.Equal(t, sdk.OneRat(), pool.UnbondingShareExRate())
-	assert.Equal(t, sdk.OneRat(), pool.UnbondedShareExRate())
+	require.Equal(t, sdk.OneRat(), val.DelegatorShareExRate(pool))
+	require.Equal(t, sdk.OneRat(), pool.BondedShareExRate())
+	require.Equal(t, sdk.OneRat(), pool.UnbondingShareExRate())
+	require.Equal(t, sdk.OneRat(), pool.UnbondedShareExRate())
 
 	assert.True(sdk.RatEq(t, sdk.NewRat(10), delShares))
 	assert.True(sdk.RatEq(t, sdk.NewRat(10), val.PoolShares.Unbonded()))
@@ -71,17 +71,17 @@ func TestRemoveDelShares(t *testing.T) {
 	}
 	poolA.BondedTokens = valA.PoolShares.Bonded().Evaluate()
 	poolA.BondedShares = valA.PoolShares.Bonded()
-	assert.Equal(t, valA.DelegatorShareExRate(poolA), sdk.OneRat())
-	assert.Equal(t, poolA.BondedShareExRate(), sdk.OneRat())
-	assert.Equal(t, poolA.UnbondedShareExRate(), sdk.OneRat())
+	require.Equal(t, valA.DelegatorShareExRate(poolA), sdk.OneRat())
+	require.Equal(t, poolA.BondedShareExRate(), sdk.OneRat())
+	require.Equal(t, poolA.UnbondedShareExRate(), sdk.OneRat())
 	valB, poolB, coinsB := valA.RemoveDelShares(poolA, sdk.NewRat(10))
 
 	// coins were created
-	assert.Equal(t, coinsB, int64(10))
+	require.Equal(t, coinsB, int64(10))
 	// pool shares were removed
-	assert.Equal(t, valB.PoolShares.Bonded(), valA.PoolShares.Bonded().Sub(sdk.NewRat(10).Mul(valA.DelegatorShareExRate(poolA))))
+	require.Equal(t, valB.PoolShares.Bonded(), valA.PoolShares.Bonded().Sub(sdk.NewRat(10).Mul(valA.DelegatorShareExRate(poolA))))
 	// conservation of tokens
-	assert.Equal(t, poolB.UnbondedTokens+poolB.BondedTokens+coinsB, poolA.UnbondedTokens+poolA.BondedTokens)
+	require.Equal(t, poolB.UnbondedTokens+poolB.BondedTokens+coinsB, poolA.UnbondedTokens+poolA.BondedTokens)
 
 	// specific case from random tests
 	poolShares := sdk.NewRat(5102)
@@ -117,28 +117,28 @@ func TestUpdateStatus(t *testing.T) {
 
 	val := NewValidator(addr1, pk1, Description{})
 	val, pool, _ = val.AddTokensFromDel(pool, 100)
-	assert.Equal(t, int64(0), val.PoolShares.Bonded().Evaluate())
-	assert.Equal(t, int64(0), val.PoolShares.Unbonding().Evaluate())
-	assert.Equal(t, int64(100), val.PoolShares.Unbonded().Evaluate())
-	assert.Equal(t, int64(0), pool.BondedTokens)
-	assert.Equal(t, int64(0), pool.UnbondingTokens)
-	assert.Equal(t, int64(100), pool.UnbondedTokens)
+	require.Equal(t, int64(0), val.PoolShares.Bonded().Evaluate())
+	require.Equal(t, int64(0), val.PoolShares.Unbonding().Evaluate())
+	require.Equal(t, int64(100), val.PoolShares.Unbonded().Evaluate())
+	require.Equal(t, int64(0), pool.BondedTokens)
+	require.Equal(t, int64(0), pool.UnbondingTokens)
+	require.Equal(t, int64(100), pool.UnbondedTokens)
 
 	val, pool = val.UpdateStatus(pool, sdk.Unbonding)
-	assert.Equal(t, int64(0), val.PoolShares.Bonded().Evaluate())
-	assert.Equal(t, int64(100), val.PoolShares.Unbonding().Evaluate())
-	assert.Equal(t, int64(0), val.PoolShares.Unbonded().Evaluate())
-	assert.Equal(t, int64(0), pool.BondedTokens)
-	assert.Equal(t, int64(100), pool.UnbondingTokens)
-	assert.Equal(t, int64(0), pool.UnbondedTokens)
+	require.Equal(t, int64(0), val.PoolShares.Bonded().Evaluate())
+	require.Equal(t, int64(100), val.PoolShares.Unbonding().Evaluate())
+	require.Equal(t, int64(0), val.PoolShares.Unbonded().Evaluate())
+	require.Equal(t, int64(0), pool.BondedTokens)
+	require.Equal(t, int64(100), pool.UnbondingTokens)
+	require.Equal(t, int64(0), pool.UnbondedTokens)
 
 	val, pool = val.UpdateStatus(pool, sdk.Bonded)
-	assert.Equal(t, int64(100), val.PoolShares.Bonded().Evaluate())
-	assert.Equal(t, int64(0), val.PoolShares.Unbonding().Evaluate())
-	assert.Equal(t, int64(0), val.PoolShares.Unbonded().Evaluate())
-	assert.Equal(t, int64(100), pool.BondedTokens)
-	assert.Equal(t, int64(0), pool.UnbondingTokens)
-	assert.Equal(t, int64(0), pool.UnbondedTokens)
+	require.Equal(t, int64(100), val.PoolShares.Bonded().Evaluate())
+	require.Equal(t, int64(0), val.PoolShares.Unbonding().Evaluate())
+	require.Equal(t, int64(0), val.PoolShares.Unbonded().Evaluate())
+	require.Equal(t, int64(100), pool.BondedTokens)
+	require.Equal(t, int64(0), pool.UnbondingTokens)
+	require.Equal(t, int64(0), pool.UnbondedTokens)
 }
 
 func TestPossibleOverflow(t *testing.T) {

@@ -1,7 +1,7 @@
 # The Basics
 
 Here we introduce the basic components of an SDK by building `App1`, a simple bank.
-Users have an account address and an account, and they can send coins around. 
+Users have an account address and an account, and they can send coins around.
 It has no authentication, and just uses JSON for serialization.
 
 The complete code can be found in [app1.go](examples/app1.go).
@@ -22,11 +22,11 @@ type Msg interface {
     // ValidateBasic does a simple validation check that
     // doesn't require access to any other information.
     ValidateBasic() error
-    
+
     // Get the canonical byte representation of the Msg.
     // This is what is signed.
     GetSignBytes() []byte
-    
+
     // Signers returns the addrs of signers that must sign.
     // CONTRACT: All signatures must be present to be valid.
     // CONTRACT: Returns addrs in some deterministic order.
@@ -38,7 +38,7 @@ type Msg interface {
 The `Msg` interface allows messages to define basic validity checks, as well as
 what needs to be signed and who needs to sign it.
 
-For instance, take the simple token sending message type from app1.go: 
+For instance, take the simple token sending message type from app1.go:
 
 ```go
 // MsgSend to send coins from Input to Output
@@ -134,7 +134,7 @@ type KVStore interface {
 
 Note it is unforgiving - it panics on nil keys!
 
-The primary implementation of the KVStore is currently the IAVL store. In the future, we plan to support other Merkle KVStores, 
+The primary implementation of the KVStore is currently the IAVL store. In the future, we plan to support other Merkle KVStores,
 like Ethereum's radix trie.
 
 As we'll soon see, apps have many distinct KVStores, each with a different name and for a different concern.
@@ -157,7 +157,7 @@ Only handlers which were given explict access to a store's key will be able to a
 
 ### Context
 
-The SDK uses a `Context` to propogate common information across functions. 
+The SDK uses a `Context` to propogate common information across functions.
 Most importantly, the `Context` restricts access to KVStores based on object-capability keys.
 Only handlers which have been given explicit access to a key will be able to access the corresponding store.
 
@@ -177,10 +177,10 @@ func newFooHandler(key sdk.StoreKey) sdk.Handler {
 [context.Context](https://golang.org/pkg/context/), which has
 become ubiquitous in networking middleware and routing applications as a means
 to easily propogate request context through handler functions.
-Many methods on SDK objects receive a context as the first argument. 
+Many methods on SDK objects receive a context as the first argument.
 
-The Context also contains the 
-[block header](https://github.com/tendermint/tendermint/blob/master/docs/spec/blockchain/blockchain.md#header), 
+The Context also contains the
+[block header](https://github.com/tendermint/tendermint/blob/master/docs/spec/blockchain/blockchain.md#header),
 which includes the latest timestamp from the blockchain and other information about the latest block.
 
 See the [Context API
@@ -189,7 +189,7 @@ docs](https://godoc.org/github.com/cosmos/cosmos-sdk/types#Context) for more det
 ### Result
 
 Handler takes a Context and Msg and returns a Result.
-Result is motivated by the corresponding [ABCI result](https://github.com/tendermint/abci/blob/master/types/types.proto#L165). 
+Result is motivated by the corresponding [ABCI result](https://github.com/tendermint/tendermint/abci/blob/master/types/types.proto#L165).
 It contains return values, error information, logs, and meta data about the transaction:
 
 ```go
@@ -268,7 +268,7 @@ type appAccount struct {
 }
 ```
 
-Coins is a useful type provided by the SDK for multi-asset accounts. 
+Coins is a useful type provided by the SDK for multi-asset accounts.
 We could just use an integer here for a single coin type, but
 it's worth [getting to know
 Coins](https://godoc.org/github.com/cosmos/cosmos-sdk/types#Coins).
@@ -349,7 +349,7 @@ func handleTo(store sdk.KVStore, to sdk.Address, amt sdk.Coins) sdk.Result {
 ```
 
 The handler is straight forward. We first load the KVStore from the context using the granted capability key.
-Then we make two state transitions: one for the sender, one for the receiver. 
+Then we make two state transitions: one for the sender, one for the receiver.
 Each one involves JSON unmarshalling the account bytes from the store, mutating
 the `Coins`, and JSON marshalling back into the store.
 
@@ -359,7 +359,7 @@ And that's that!
 
 The final piece before putting it all together is the `Tx`.
 While `Msg` contains the content for particular functionality in the application, the actual input
-provided by the user is a serialized `Tx`. Applications may have many implementations of the `Msg` interface, 
+provided by the user is a serialized `Tx`. Applications may have many implementations of the `Msg` interface,
 but they should have only a single implementation of `Tx`:
 
 
@@ -371,7 +371,7 @@ type Tx interface {
 }
 ```
 
-The `Tx` just wraps a `[]Msg`, and may include additional authentication data, like signatures and account nonces. 
+The `Tx` just wraps a `[]Msg`, and may include additional authentication data, like signatures and account nonces.
 Applications must specify how their `Tx` is decoded, as this is the ultimate input into the application.
 We'll talk more about `Tx` types later, specifically when we introduce the `StdTx`.
 
@@ -409,11 +409,11 @@ func txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 Finally, we stitch it all together using the `BaseApp`.
 
 The BaseApp is an abstraction over the [Tendermint
-ABCI](https://github.com/tendermint/abci) that
+ABCI](https://github.com/tendermint/tendermint/abci) that
 simplifies application development by handling common low-level concerns.
 It serves as the mediator between the two key components of an SDK app: the store
 and the message handlers. The BaseApp implements the
-[`abci.Application`](https://godoc.org/github.com/tendermint/abci/types#Application) interface. 
+[`abci.Application`](https://godoc.org/github.com/tendermint/tendermint/abci/types#Application) interface.
 See the [BaseApp API
 documentation](https://godoc.org/github.com/cosmos/cosmos-sdk/baseapp) for more details.
 
@@ -422,22 +422,22 @@ Here is the complete setup for App1:
 ```go
 func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
     cdc := wire.NewCodec()
-    
+
     // Create the base application object.
     app := bapp.NewBaseApp(app1Name, cdc, logger, db)
-    
+
     // Create a capability key for accessing the account store.
     keyAccount := sdk.NewKVStoreKey("acc")
-    
+
     // Determine how transactions are decoded.
     app.SetTxDecoder(txDecoder)
-    
+
     // Register message routes.
     // Note the handler receives the keyAccount and thus
     // gets access to the account store.
     app.Router().
     	AddRoute("bank", NewApp1Handler(keyAccount))
-    
+
     // Mount stores and load the latest state.
     app.MountStoresIAVL(keyAccount)
     err := app.LoadLatestVersion(keyAccount)
@@ -450,8 +450,8 @@ func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 
 Every app will have such a function that defines the setup of the app.
 It will typically be contained in an `app.go` file.
-We'll talk about how to connect this app object with the CLI, a REST API, 
-the logger, and the filesystem later in the tutorial. For now, note that this is where we 
+We'll talk about how to connect this app object with the CLI, a REST API,
+the logger, and the filesystem later in the tutorial. For now, note that this is where we
 register handlers for messages and grant them access to stores.
 
 Here, we have only a single Msg type, `bank`, a single store for accounts, and a single handler.
@@ -465,30 +465,30 @@ Since we only have one store, we only mount one.
 ## Execution
 
 We're now done the core logic of the app! From here, we can write tests in Go
-that initialize the store with accounts and execute transactions by calling 
+that initialize the store with accounts and execute transactions by calling
 the `app.DeliverTx` method.
 
 In a real setup, the app would run as an ABCI application on top of the
 Tendermint consensus engine. It would be initialized by a Genesis file, and it
-would be driven by blocks of transactions committed by the underlying Tendermint 
+would be driven by blocks of transactions committed by the underlying Tendermint
 consensus. We'll talk more about ABCI and how this all works a bit later, but
-feel free to check the 
-[specification](https://github.com/tendermint/abci/blob/master/specification.md).
+feel free to check the
+[specification](https://github.com/tendermint/tendermint/abci/blob/master/specification.md).
 We'll also see how to connect our app to a complete suite of components
-for running and using a live blockchain application. 
+for running and using a live blockchain application.
 
 For now, we note the follow sequence of events occurs when a transaction is
 received (through `app.DeliverTx`):
 
 - serialized transaction is received by `app.DeliverTx`
 - transaction is deserialized using `TxDecoder`
-- for each message in the transaction, run `msg.ValidateBasic()` 
+- for each message in the transaction, run `msg.ValidateBasic()`
 - for each message in the transaction, load the appropriate handler and execute
   it with the message
 
 ## Conclusion
 
-We now have a complete implementation of a simple app! 
+We now have a complete implementation of a simple app!
 
 In the next section, we'll add another Msg type and another store. Once we have multiple message types
 we'll need a better way of decoding transactions, since we'll need to decode

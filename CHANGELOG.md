@@ -42,6 +42,7 @@ FEATURES
   * unconvert
   * ineffassign
   * errcheck
+  * unparam
 * [tools] Add `make format` command to automate fixing misspell and gofmt errors.
 * [server] Default config now creates a profiler at port 6060, and increase p2p send/recv rates
 * [tests] Add WaitForNextNBlocksTM helper method
@@ -67,6 +68,7 @@ FIXES
 * \#1367 - set ChainID in InitChain
 * \#1353 - CLI: Show pool shares fractions in human-readable format
 * \#1258 - printing big.rat's can no longer overflow int64
+* \#887  - limit the size of rationals that can be passed in from user input
 
 IMPROVEMENTS
 * bank module uses go-wire codec instead of 'encoding/json'

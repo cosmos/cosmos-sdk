@@ -87,7 +87,6 @@ func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB) *Bas
 		txDecoder:  defaultTxDecoder(cdc),
 	}
 	// Register the undefined & root codespaces, which should not be used by any modules
-	app.codespacer.RegisterOrPanic(sdk.CodespaceUndefined)
 	app.codespacer.RegisterOrPanic(sdk.CodespaceRoot)
 	return app
 }
@@ -137,7 +136,7 @@ func defaultTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
 		// are registered by MakeTxCodec
 		err := cdc.UnmarshalBinary(txBytes, &tx)
 		if err != nil {
-			return nil, sdk.ErrTxDecode("").Trace(err.Error())
+			return nil, sdk.ErrTxDecode("").TraceSDK(err.Error())
 		}
 		return tx, nil
 	}
@@ -486,7 +485,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// Validate the Msg.
 	err := msg.ValidateBasic()
 	if err != nil {
-		err = err.WithDefaultCodespace(sdk.CodespaceRoot)
 		return err.Result()
 	}
 

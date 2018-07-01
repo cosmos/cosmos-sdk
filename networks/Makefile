@@ -11,7 +11,7 @@ CLUSTER_NAME?=$(TESTNET_NAME)
 
 # Number of servers deployed in Digital Ocean.
 # Number of servers to put in one availability zone in AWS.
-SERVERS?=4
+SERVERS?=1
 
 # Number of regions to use in AWS. One region usually contains 2-3 availability zones.
 REGION_LIMIT?=1
@@ -22,6 +22,11 @@ BINARY?=$(CURDIR)/../build/gaiad
 # Path to the genesis.json and config.toml files to deploy on full nodes.
 GENESISFILE?=$(CURDIR)/../build/genesis.json
 CONFIGFILE?=$(CURDIR)/../build/config.toml
+
+# Name of application for app deployments
+APP_NAME ?= faucettestnet1
+# Region to deploy VPC and application in AWS
+REGION ?= us-east-2
 
 all:
 	@echo "There is no all. Only sum of the ones."
@@ -160,8 +165,23 @@ remove-datadog-do:
 	@if [ -z "$(DO_API_TOKEN)" ]; then echo "DO_API_TOKEN environment variable not set." ; false ; fi
 	cd remote/ansible && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i inventory/digital_ocean.py -l "$(CLUSTER_NAME)" -u root remove-datadog-agent.yml
 
+########################################
+### Application infrastructure setup
+
+app-start-aws:
+	#Make sure you have AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY or your IAM roles set for AWS API access.
+	@if ! [ -f $(HOME)/.ssh/id_rsa.pub ]; then ssh-keygen ; fi
+	@if [ -z "`file $(BINARY) | grep 'ELF 64-bit'`" ]; then echo "Please build a linux binary using 'make build-linux'." ; false ; fi
+	cd remote/terraform-app && terraform init && (terraform workspace new "$(APP_NAME)" || terraform workspace select "$(APP_NAME)") && terraform apply -auto-approve -var SSH_PUBLIC_FILE="$(HOME)/.ssh/id_rsa.pub" -var SSH_PRIVATE_FILE="$(HOME)/.ssh/id_rsa" -var APP_NAME="$(APP_NAME)" -var SERVERS="$(SERVERS)" -var REGION="$(REGION)"
+	cd remote/ansible && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(APP_NAME)" -u centos -b -e BINARY=$(BINARY) -e TESTNET_NAME="$(TESTNET_NAME)" -e GENESISFILE="$(GENESISFILE)" -e CONFIGFILE="$(CONFIGFILE)" setup-fullnodes.yml
+	cd remote/ansible && ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(APP_NAME)" -u centos -b start.yml
+
+app-stop-aws:
+	cd remote/terraform-app && terraform workspace select "$(APP_NAME)" && terraform destroy -force -var SSH_PUBLIC_FILE="$(HOME)/.ssh/id_rsa.pub" -var SSH_PRIVATE_FILE="$(HOME)/.ssh/id_rsa" -var APP_NAME=$(APP_NAME) && terraform workspace select default && terraform workspace delete "$(APP_NAME)"
+	rm -rf remote/ansible/keys/ remote/ansible/files/
+
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: all extract-config-do extract-config-aws validators-start-do validators-stop-do validators-status-do validators-start-aws validators-stop-aws validators-status-aws fullnodes-start-do fullnodes-stop-do fullnodes-status-do fullnodes-start-aws fullnodes-stop-aws fullnodes-status-aws upgrade-gaiad-aws upgrade-gaiad-do list-aws list-do install-datadog-aws install-datadog-do remove-datadog-aws remove-datadog-do
+.PHONY: all extract-config-do extract-config-aws validators-start-do validators-stop-do validators-status-do validators-start-aws validators-stop-aws validators-status-aws fullnodes-start-do fullnodes-stop-do fullnodes-status-do fullnodes-start-aws fullnodes-stop-aws fullnodes-status-aws upgrade-gaiad-aws upgrade-gaiad-do list-aws list-do install-datadog-aws install-datadog-do remove-datadog-aws remove-datadog-do app-start-aws app-stop-aws
 

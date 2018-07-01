@@ -95,7 +95,7 @@ func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (addr sd
 func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (cleanup func(), validatorsPKs []crypto.PubKey, port string) {
 
 	config := GetConfig()
-	config.Consensus.TimeoutCommit = 1000
+	config.Consensus.TimeoutCommit = 100
 	config.Consensus.SkipTimeoutCommit = false
 	config.TxIndex.IndexAllTags = true
 

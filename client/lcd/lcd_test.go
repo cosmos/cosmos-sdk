@@ -528,6 +528,9 @@ func TestUnrevoke(t *testing.T) {
 	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.Address{addr})
 	defer cleanup()
 
+	// XXX: any less than this and it fails
+	tests.WaitForHeight(3, port)
+
 	signingInfo := getSigningInfo(t, port, pks[0].Address())
 	tests.WaitForHeight(4, port)
 	require.Equal(t, true, signingInfo.IndexOffset > 0)

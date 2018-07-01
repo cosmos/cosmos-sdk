@@ -241,7 +241,7 @@
     "nfs",
     "xfs"
   ]
-  revision = "7d6f385de8bea29190f15ba9931442a0eaef9af7"
+  revision = "40f013a808ec4fa79def444a1a56de4d1727efcb"
 
 [[projects]]
   branch = "master"
@@ -338,7 +338,8 @@
     ".",
     "sha256truncated"
   ]
-  revision = "481b89cbbe6a641f7f6cb5db92b30b20f5a2e001"
+  revision = "2de525d09cca7c45c3f43d178817947a6cfa242c"
+  version = "v0.8.1"
 
 [[projects]]
   name = "github.com/tendermint/tendermint"
@@ -387,7 +388,8 @@
     "types",
     "version"
   ]
-  revision = "8412b75b1070ac023405e8228e017ed36531fe1b"
+  revision = "3a0dff7db2628c20cb0d77db3a01fea7981e5aec"
+  version = "v0.22.0-rc0"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -443,7 +445,7 @@
     "netutil",
     "trace"
   ]
-  revision = "97aa3a539ec716117a9d15a4659a911f50d13c3c"
+  revision = "4cb1c02c05b0e749b0365f61ae859a8e0cfceed9"
 
 [[projects]]
   branch = "master"
@@ -510,6 +512,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "578ae0e0126ffd04006b6755a02bc25c95e2eb2ecb4ea99869c4ada133f29f6b"
+  inputs-digest = "5db688e81022b54f18b174b151ccb66ab9a5b373008089422a5eea1147555f3e"
   solver-name = "gps-cdcl"
   solver-version = 1

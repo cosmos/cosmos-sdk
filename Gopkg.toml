@@ -52,29 +52,29 @@
   name = "github.com/stretchr/testify"
   version = "~1.2.1"
 
-[[constraint]]
+[[override]]
   name = "github.com/tendermint/abci"
-  version = "=0.11.0"
+  version = "=0.12.0"
 
-[[constraint]]
+[[override]]
   name = "github.com/tendermint/go-crypto"
-  version = "~0.6.2"
+  version = "=0.6.2"
 
-[[constraint]]
+[[override]]
   name = "github.com/tendermint/go-amino"
   version = "=0.9.9"
 
-[[constraint]]
+[[override]]
   name = "github.com/tendermint/iavl"
-  version = "0.8.0-rc0"
+  version = "=0.8.0-rc0"
 
-[[constraint]]
+[[override]]
   name = "github.com/tendermint/tendermint"
-  version = "=0.20.0"
+  version = "=0.21.0"
 
 [[override]]
   name = "github.com/tendermint/tmlibs"
-  branch = "develop"
+  version = "=v0.9.0"
 
 # this got updated and broke, so locked to an old working commit ...
 [[override]]

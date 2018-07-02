@@ -3,7 +3,7 @@ package context
 import (
 	"fmt"
 
-	"github.com/tendermint/tmlibs/common"
+	"github.com/tendermint/tendermint/libs/common"
 
 	"github.com/pkg/errors"
 
@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	cmn "github.com/tendermint/tmlibs/common"
+	cmn "github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"

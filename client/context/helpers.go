@@ -160,6 +160,10 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msgs []sdk.Msg, cdc
 
 	sig, pubkey, err := keybase.Sign(name, passphrase, bz)
 	if err != nil {
+		// TODO: Make this error message not hardcoded
+		if err.Error() == "Ciphertext decryption failed" {
+			return nil, errors.New("decoding privatekey failed, are you sure you have the right password?")
+		}
 		return nil, err
 	}
 	sigs := []auth.StdSignature{{

@@ -37,11 +37,11 @@ func CheckGenTx(
 	return res
 }
 
-// CheckAndDeliverGenTx checks a generated signed transaction and simulates a
+// SignCheckDeliver checks a generated signed transaction and simulates a
 // block commitment with the given transaction. A test assertion is made using
 // the parameter 'expPass' against the result. A corresponding result is
 // returned.
-func CheckAndDeliverGenTx(
+func SignCheckDeliver(
 	t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accNums []int64,
 	seq []int64, expPass bool, priv ...crypto.PrivKey,
 ) sdk.Result {

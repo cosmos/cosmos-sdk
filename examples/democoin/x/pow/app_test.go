@@ -71,13 +71,13 @@ func TestMsgMine(t *testing.T) {
 
 	// Mine and check for reward
 	mineMsg1 := GenerateMsgMine(addr1, 1, 2)
-	mock.CheckAndDeliverGenTx(t, mapp.BaseApp, []sdk.Msg{mineMsg1}, []int64{0}, []int64{0}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{mineMsg1}, []int64{0}, []int64{0}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"pow", sdk.NewInt(1)}})
 	// Mine again and check for reward
 	mineMsg2 := GenerateMsgMine(addr1, 2, 3)
-	mock.CheckAndDeliverGenTx(t, mapp.BaseApp, []sdk.Msg{mineMsg2}, []int64{0}, []int64{1}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{mineMsg2}, []int64{0}, []int64{1}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"pow", sdk.NewInt(2)}})
 	// Mine again - should be invalid
-	mock.CheckAndDeliverGenTx(t, mapp.BaseApp, []sdk.Msg{mineMsg2}, []int64{0}, []int64{1}, false, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{mineMsg2}, []int64{0}, []int64{1}, false, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"pow", sdk.NewInt(2)}})
 }

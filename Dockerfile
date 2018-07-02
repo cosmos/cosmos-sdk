@@ -5,7 +5,7 @@
 FROM golang:alpine AS build-env
 
 # Set up dependencies
-ENV PACKAGES make git libc-dev bash
+ENV PACKAGES make git libc-dev bash gcc linux-headers eudev-dev
 
 # Set working directory for the build
 WORKDIR /go/src/github.com/cosmos/cosmos-sdk
@@ -18,8 +18,7 @@ RUN apk add --no-cache $PACKAGES && \
     make get_tools && \
     make get_vendor_deps && \
     make build && \
-    make install && \
-    apk del $PACKAGES
+    make install
 
 # Final image
 FROM alpine:edge

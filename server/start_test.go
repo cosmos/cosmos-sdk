@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	"github.com/tendermint/tmlibs/log"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 func TestStartStandAlone(t *testing.T) {

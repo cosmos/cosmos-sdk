@@ -62,7 +62,7 @@
 
 [[constraint]]
   name = "github.com/tendermint/tendermint"
-  version = "=0.22.0-rc1"
+  version = "=0.22.0-rc2"
 
 [[constraint]]
   name = "github.com/tendermint/tmlibs"

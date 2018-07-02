@@ -167,7 +167,7 @@ func TestLargeUnbond(t *testing.T) {
 	_, expProvisionsAfter, pool := updateProvisions(t, keeper, pool, ctx, 0)
 
 	bondedShares = bondedShares.Sub(bondSharesVal0)
-	val0UnbondedTokens = pool.UnbondedShareExRate().Mul(validator.PoolShares.Unbonded()).Evaluate()
+	val0UnbondedTokens = pool.UnbondedShareExRate().Mul(validator.PoolShares.Unbonded()).RoundInt64()
 	unbondedShares = unbondedShares.Add(sdk.NewRat(val0UnbondedTokens, 1).Mul(pool.UnbondedShareExRate()))
 
 	// unbonded shares should increase
@@ -295,7 +295,7 @@ func checkFinalPoolValues(t *testing.T, pool types.Pool, initialTotalTokens, cum
 // Returns expected Provisions, expected Inflation, and pool, to help with cumulative calculations back in main Tests
 func updateProvisions(t *testing.T, keeper Keeper, pool types.Pool, ctx sdk.Context, hr int) (sdk.Rat, int64, types.Pool) {
 	expInflation := keeper.NextInflation(ctx)
-	expProvisions := (expInflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat)).Evaluate()
+	expProvisions := (expInflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat)).RoundInt64()
 	startTotalSupply := pool.TokenSupply()
 	pool = keeper.ProcessProvisions(ctx)
 	keeper.SetPool(ctx, pool)

@@ -11,7 +11,7 @@ import (
 	"github.com/tendermint/tendermint/node"
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
-	cmn "github.com/tendermint/tmlibs/common"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 const (
@@ -31,7 +31,8 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 				return startStandAlone(ctx, appCreator)
 			}
 			ctx.Logger.Info("Starting ABCI with Tendermint")
-			return startInProcess(ctx, appCreator)
+			_, err := startInProcess(ctx, appCreator)
+			return err
 		},
 	}
 
@@ -74,12 +75,12 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	return nil
 }
 
-func startInProcess(ctx *Context, appCreator AppCreator) error {
+func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 	cfg := ctx.Config
 	home := cfg.RootDir
 	app, err := appCreator(home, ctx.Logger)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Create & start tendermint node
@@ -91,15 +92,15 @@ func startInProcess(ctx *Context, appCreator AppCreator) error {
 		node.DefaultMetricsProvider,
 		ctx.Logger.With("module", "node"))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = n.Start()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Trap signal, run forever.
 	n.RunForever()
-	return nil
+	return n, nil
 }

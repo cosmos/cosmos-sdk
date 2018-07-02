@@ -15,7 +15,7 @@ import (
 	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
-	"github.com/tendermint/tmlibs/cli"
+	"github.com/tendermint/tendermint/libs/cli"
 )
 
 const (

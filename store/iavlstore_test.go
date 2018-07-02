@@ -7,8 +7,8 @@ import (
 
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
-	cmn "github.com/tendermint/tmlibs/common"
-	dbm "github.com/tendermint/tmlibs/db"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	dbm "github.com/tendermint/tendermint/libs/db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

@@ -8,9 +8,9 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/tendermint/tmlibs/cli"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	"github.com/tendermint/tendermint/libs/cli"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/server"

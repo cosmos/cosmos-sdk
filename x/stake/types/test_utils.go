@@ -126,12 +126,12 @@ func AssertInvariants(t *testing.T, msg string,
 	// Nonnegative bonded ex rate
 	require.False(t, pMod.BondedShareExRate().LT(sdk.ZeroRat()),
 		"Applying operation \"%s\" resulted in negative BondedShareExRate: %d",
-		msg, pMod.BondedShareExRate().Evaluate())
+		msg, pMod.BondedShareExRate().RoundInt64())
 
 	// Nonnegative unbonded ex rate
 	require.False(t, pMod.UnbondedShareExRate().LT(sdk.ZeroRat()),
 		"Applying operation \"%s\" resulted in negative UnbondedShareExRate: %d",
-		msg, pMod.UnbondedShareExRate().Evaluate())
+		msg, pMod.UnbondedShareExRate().RoundInt64())
 
 	for _, vMod := range vMods {
 		// Nonnegative ex rate
@@ -199,10 +199,10 @@ func RandomSetup(r *rand.Rand, numValidators int) (Pool, []Validator) {
 
 		if validator.Status() == sdk.Bonded {
 			pool.BondedShares = pool.BondedShares.Add(validator.PoolShares.Bonded())
-			pool.BondedTokens += validator.PoolShares.Bonded().Evaluate()
+			pool.BondedTokens += validator.PoolShares.Bonded().RoundInt64()
 		} else if validator.Status() == sdk.Unbonded {
 			pool.UnbondedShares = pool.UnbondedShares.Add(validator.PoolShares.Unbonded())
-			pool.UnbondedTokens += validator.PoolShares.Unbonded().Evaluate()
+			pool.UnbondedTokens += validator.PoolShares.Unbonded().RoundInt64()
 		}
 
 		validators[i] = validator

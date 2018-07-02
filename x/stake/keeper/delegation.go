@@ -154,26 +154,24 @@ func (k Keeper) GetRedelegation(ctx sdk.Context,
 func (k Keeper) GetRedelegationsFromValidator(ctx sdk.Context, valAddr sdk.Address) (redelegations []types.Redelegation) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, GetREDsFromValSrcIndexKey(valAddr))
-	i := 0
-	for ; ; i++ {
-		fmt.Printf("debug i: %v\n", i)
+	for {
 		if !iterator.Valid() {
 			break
 		}
-		redelegationKeyOrig := iterator.Value()
-		redelegationBytes2 := store.Get(redelegationKeyOrig)
-		var redelegation2 types.Redelegation
-		k.cdc.MustUnmarshalBinary(redelegationBytes2, &redelegation2)
-		fmt.Printf("debug orig redelegation2: %v\n", redelegation2)
 
-		redelegationKey := GetREDKeyFromValSrcIndexKey(iterator.Key())
-		fmt.Printf("debug orig redelegationKey: %v\n", redelegationKeyOrig)
+		fmt.Println("called")
+		//redelegationKey := iterator.Value()
+		iKey := iterator.Key()
+		redelegationKey := GetREDKeyFromValSrcIndexKey(iKey)
+		fmt.Printf("debug iteratorValue:        %v\n", iterator.Value())
+		fmt.Printf("debug iteratorKey:          %v\n", iKey)
 		fmt.Printf("debug redelegationKey:      %v\n", redelegationKey)
-		fmt.Printf("debug iteratorKey:          %v\n", iterator.Key())
+
 		redelegationBytes := store.Get(redelegationKey)
 		var redelegation types.Redelegation
 		k.cdc.MustUnmarshalBinary(redelegationBytes, &redelegation)
 		redelegations = append(redelegations, redelegation)
+
 		iterator.Next()
 	}
 	iterator.Close()

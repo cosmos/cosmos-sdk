@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/binary"
+	"fmt"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -205,6 +206,9 @@ func GetREDKeyFromValSrcIndexKey(IndexKey []byte) []byte {
 	valSrcAddr := addrs[:split]
 	delAddr := addrs[split : 2*split]
 	valDstAddr := addrs[2*split:]
+	fmt.Printf("debug delAddr: %v\n", delAddr)
+	fmt.Printf("debug valSrcAddr: %v\n", valSrcAddr)
+	fmt.Printf("debug valDstAddr: %v\n", valDstAddr)
 	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
 }
 

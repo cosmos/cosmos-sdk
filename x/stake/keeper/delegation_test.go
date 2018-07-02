@@ -181,6 +181,40 @@ func TestUnbondDelegation(t *testing.T) {
 }
 
 // tests Get/Set/Remove/Has UnbondingDelegation
+func TestGetRedelegationsFromValidator(t *testing.T) {
+	ctx, _, keeper := CreateTestInput(t, false, 0)
+
+	rd := types.Redelegation{
+		DelegatorAddr:    addrDels[0],
+		ValidatorSrcAddr: addrVals[0],
+		ValidatorDstAddr: addrVals[1],
+		CreationHeight:   0,
+		MinTime:          0,
+		SharesSrc:        sdk.NewRat(5),
+		SharesDst:        sdk.NewRat(5),
+	}
+
+	// set and retrieve a record
+	keeper.SetRedelegation(ctx, rd)
+	resBond, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	require.True(t, found)
+	fmt.Printf("debug addrDels[0]: %v\n", addrDels[0])
+	fmt.Printf("debug addrVals[0]: %v\n", addrVals[0])
+	fmt.Printf("debug addrVals[1]: %v\n", addrVals[1])
+
+	fmt.Println("zoo0")
+	redelegations := keeper.GetRedelegationsFromValidator(ctx, addrVals[0])
+	require.Equal(t, 1, len(redelegations))
+	require.True(t, redelegations[0].Equal(resBond))
+
+	fmt.Println("zoo1")
+	redelegations = keeper.GetRedelegationsFromValidator(ctx, addrVals[0])
+	require.Equal(t, 1, len(redelegations))
+	require.True(t, redelegations[0].Equal(resBond))
+	fmt.Println("zoo2")
+}
+
+// tests Get/Set/Remove/Has UnbondingDelegation
 func TestRedelegation(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 
@@ -203,21 +237,13 @@ func TestRedelegation(t *testing.T) {
 	resBond, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 
-	fmt.Println("zoo0")
 	redelegations := keeper.GetRedelegationsFromValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
 	require.True(t, redelegations[0].Equal(resBond))
 
-	fmt.Println("zoo1")
-	redelegations = keeper.GetRedelegationsFromValidator(ctx, addrVals[0])
-	require.Equal(t, 1, len(redelegations))
-	require.True(t, redelegations[0].Equal(resBond))
-	fmt.Println("zoo2")
-
 	// check if has the redelegation
 	has = keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])
 	require.True(t, has)
-	fmt.Println("hoolahoop")
 
 	// modify a records, save, and retrieve
 	rd.SharesSrc = sdk.NewRat(21)
@@ -228,12 +254,10 @@ func TestRedelegation(t *testing.T) {
 	resBond, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 	require.True(t, rd.Equal(resBond))
-	fmt.Println("hippo2")
 
 	redelegations = keeper.GetRedelegationsFromValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
 	require.True(t, redelegations[0].Equal(resBond))
-	fmt.Println("zzzzzzzzzzzzzzzzzzebra")
 
 	// delete a record
 	keeper.RemoveRedelegation(ctx, rd)

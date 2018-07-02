@@ -43,9 +43,16 @@ type iavlStore struct {
 	tree *iavl.VersionedTree
 
 	// How many old versions we hold onto.
-	// A value of 0 means keep all history.
+	// A value of 0 means keep no recent states
 	numRecent int64
 
+	// Distance between state-sync waypoint states to be stored
+	// See https://github.com/tendermint/tendermint/issues/828
+	// A value of 1 means store every state
+	// A value of 0 means store no waypoints (node cannot assist in state-sync)
+	// By default this value should be set the same across all nodes,
+	// so that nodes can know the waypoints their peers store
+	// TODO if set to non-default, signal to peers that the node is not suitable as a state sync source
 	storeEvery int64
 }
 
@@ -70,9 +77,10 @@ func (st *iavlStore) Commit() CommitID {
 	}
 
 	// Release an old version of history, if not a sync waypoint
-	if st.numRecent < st.tree.Version64() {
-		toRelease := version - st.numRecent
-		if toRelease%st.storeEvery != 0 {
+	previous := version - 1
+	if st.numRecent < previous {
+		toRelease := previous - st.numRecent
+		if st.storeEvery == 0 || toRelease%st.storeEvery != 0 {
 			err := st.tree.DeleteVersion(toRelease)
 			if err != nil {
 				panic(err)

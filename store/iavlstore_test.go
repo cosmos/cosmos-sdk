@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -260,32 +261,82 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 }
 
 func nextVersion(iavl *iavlStore) {
-	key := cmn.RandBytes(12)
-	value := cmn.RandBytes(50)
+	key := []byte(fmt.Sprintf("Key for tree: %d", iavl.LastCommitID().Version))
+	value := []byte(fmt.Sprintf("Value for tree: %d", iavl.LastCommitID().Version))
 	iavl.Set(key, value)
 	iavl.Commit()
 }
-func TestIAVLPruning(t *testing.T) {
+func TestIAVLDefaultPruning(t *testing.T) {
+	//Expected stored / deleted version numbers for:
+	//numRecent = 5, storeEvery = 3
+	var states = []struct {
+		stored  []int64
+		deleted []int64
+	}{
+		{[]int64{}, []int64{}},
+		{[]int64{1}, []int64{}},
+		{[]int64{1, 2}, []int64{}},
+		{[]int64{1, 2, 3}, []int64{}},
+		{[]int64{1, 2, 3, 4}, []int64{}},
+		{[]int64{1, 2, 3, 4, 5}, []int64{}},
+		{[]int64{1, 2, 3, 4, 5, 6}, []int64{}},
+		{[]int64{2, 3, 4, 5, 6, 7}, []int64{1}},
+		{[]int64{3, 4, 5, 6, 7, 8}, []int64{1, 2}},
+		{[]int64{3, 4, 5, 6, 7, 8, 9}, []int64{1, 2}},
+		{[]int64{3, 5, 6, 7, 8, 9, 10}, []int64{1, 2, 4}},
+		{[]int64{3, 6, 7, 8, 9, 10, 11}, []int64{1, 2, 4, 5}},
+		{[]int64{3, 6, 7, 8, 9, 10, 11, 12}, []int64{1, 2, 4, 5}},
+		{[]int64{3, 6, 8, 9, 10, 11, 12, 13}, []int64{1, 2, 4, 5, 7}},
+		{[]int64{3, 6, 9, 10, 11, 12, 13, 14}, []int64{1, 2, 4, 5, 7, 8}},
+		{[]int64{3, 6, 9, 10, 11, 12, 13, 14, 15}, []int64{1, 2, 4, 5, 7, 8}},
+	}
 	db := dbm.NewMemDB()
 	tree := iavl.NewVersionedTree(db, cacheSize)
 	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
-	nextVersion(iavlStore)
-	var i, j int64
-	for i = 1; i <= 100; i++ {
-		for j = 1; j <= i; j++ {
-			if (i-j) < numRecent || j%storeEvery == int64(0) {
-				assert.True(t, iavlStore.VersionExists(j),
-					"Missing version %d with latest version %d. Should save last %d and every %d",
-					j, i, numRecent, storeEvery)
-			} else {
-				assert.False(t, iavlStore.VersionExists(j),
-					"Unpruned version %d with latest version %d. Should prune all but last %d and every %d",
-					j, i, numRecent, storeEvery)
-			}
+	for step, state := range states {
+		for _, ver := range state.stored {
+			require.True(t, iavlStore.VersionExists(ver),
+				"Missing version %d with latest version %d. Should save last %d and every %d",
+				ver, step, numRecent, storeEvery)
+		}
+		for _, ver := range state.deleted {
+			require.False(t, iavlStore.VersionExists(ver),
+				"Unpruned version %d with latest version %d. Should prune all but last %d and every %d",
+				ver, step, numRecent, storeEvery)
 		}
 		nextVersion(iavlStore)
 	}
-
+}
+func TestIAVLNoPrune(t *testing.T) {
+	db := dbm.NewMemDB()
+	tree := iavl.NewVersionedTree(db, cacheSize)
+	iavlStore := newIAVLStore(tree, numRecent, int64(1))
+	nextVersion(iavlStore)
+	for i := 1; i < 100; i++ {
+		for j := 1; j <= i; j++ {
+			require.True(t, iavlStore.VersionExists(int64(j)),
+				"Missing version %d with latest version %d. Should be storing all versions",
+				j, i)
+		}
+		nextVersion(iavlStore)
+	}
+}
+func TestIAVLPruneEverything(t *testing.T) {
+	db := dbm.NewMemDB()
+	tree := iavl.NewVersionedTree(db, cacheSize)
+	iavlStore := newIAVLStore(tree, int64(0), int64(0))
+	nextVersion(iavlStore)
+	for i := 1; i < 100; i++ {
+		for j := 1; j < i; j++ {
+			require.False(t, iavlStore.VersionExists(int64(j)),
+				"Unpruned version %d with latest version %d. Should prune all old versions",
+				j, i)
+		}
+		require.True(t, iavlStore.VersionExists(int64(i)),
+			"Missing current version on step %d, should not prune current state tree",
+			i)
+		nextVersion(iavlStore)
+	}
 }
 
 func TestIAVLStoreQuery(t *testing.T) {

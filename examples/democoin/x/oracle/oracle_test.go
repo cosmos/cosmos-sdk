@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tmlibs/db"
+	dbm "github.com/tendermint/tendermint/libs/db"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/mock"
 	"github.com/cosmos/cosmos-sdk/store"

@@ -16,7 +16,7 @@ import (
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tmlibs/cli"
+	"github.com/tendermint/tendermint/libs/cli"
 )
 
 // rootCmd is the entry point for this binary
@@ -34,9 +34,9 @@ func main() {
 	// get the codec
 	cdc := app.MakeCodec()
 
-	// TODO: setup keybase, viper object, etc. to be passed into
+	// TODO: Setup keybase, viper object, etc. to be passed into
 	// the below functions and eliminate global vars, like we do
-	// with the cdc
+	// with the cdc.
 
 	// add standard rpc, and tx commands
 	rpc.AddCommands(rootCmd)

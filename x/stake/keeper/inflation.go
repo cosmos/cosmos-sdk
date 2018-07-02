@@ -18,7 +18,7 @@ func (k Keeper) ProcessProvisions(ctx sdk.Context) types.Pool {
 	pool := k.GetPool(ctx)
 	pool.Inflation = k.NextInflation(ctx)
 
-	provisions := pool.Inflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat).Evaluate()
+	provisions := pool.Inflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat).RoundInt64()
 
 	// TODO add to the fees provisions
 	pool.LooseTokens += provisions

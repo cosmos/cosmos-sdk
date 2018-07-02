@@ -137,7 +137,7 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 func (v Validator) ABCIValidator() abci.Validator {
 	return abci.Validator{
 		PubKey: tmtypes.TM2PB.PubKey(v.PubKey),
-		Power:  v.PoolShares.Bonded().Evaluate(),
+		Power:  v.PoolShares.Bonded().RoundInt64(),
 	}
 }
 
@@ -284,6 +284,7 @@ func (v Validator) DelegatorShareExRate(pool Pool) sdk.Rat {
 var _ sdk.Validator = Validator{}
 
 // nolint - for sdk.Validator
+func (v Validator) GetRevoked() bool            { return v.Revoked }
 func (v Validator) GetMoniker() string          { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus   { return v.Status() }
 func (v Validator) GetOwner() sdk.Address       { return v.Owner }

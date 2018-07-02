@@ -46,7 +46,7 @@ func TestABCIValidator(t *testing.T) {
 
 	abciVal := val.ABCIValidator()
 	require.Equal(t, tmtypes.TM2PB.PubKey(val.PubKey), abciVal.PubKey)
-	require.Equal(t, val.PoolShares.Bonded().Evaluate(), abciVal.Power)
+	require.Equal(t, val.PoolShares.Bonded().RoundInt64(), abciVal.Power)
 }
 
 func TestABCIValidatorZero(t *testing.T) {
@@ -68,22 +68,22 @@ func TestRemovePoolShares(t *testing.T) {
 		DelegatorShares: sdk.NewRat(100),
 	}
 
-	pool.BondedTokens = val.PoolShares.Bonded().Evaluate()
+	pool.BondedTokens = val.PoolShares.Bonded().RoundInt64()
 	pool.BondedShares = val.PoolShares.Bonded()
 
 	val, pool = val.UpdateStatus(pool, sdk.Bonded)
 	val, pool, tk := val.RemovePoolShares(pool, sdk.NewRat(10))
-	require.Equal(t, int64(90), val.PoolShares.Amount.Evaluate())
+	require.Equal(t, int64(90), val.PoolShares.Amount.RoundInt64())
 	require.Equal(t, int64(90), pool.BondedTokens)
-	require.Equal(t, int64(90), pool.BondedShares.Evaluate())
+	require.Equal(t, int64(90), pool.BondedShares.RoundInt64())
 	require.Equal(t, int64(20), pool.LooseTokens)
 	require.Equal(t, int64(10), tk)
 
 	val, pool = val.UpdateStatus(pool, sdk.Unbonded)
 	val, pool, tk = val.RemovePoolShares(pool, sdk.NewRat(10))
-	require.Equal(t, int64(80), val.PoolShares.Amount.Evaluate())
+	require.Equal(t, int64(80), val.PoolShares.Amount.RoundInt64())
 	require.Equal(t, int64(0), pool.BondedTokens)
-	require.Equal(t, int64(0), pool.BondedShares.Evaluate())
+	require.Equal(t, int64(0), pool.BondedShares.RoundInt64())
 	require.Equal(t, int64(30), pool.LooseTokens)
 	require.Equal(t, int64(10), tk)
 }

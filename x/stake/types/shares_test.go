@@ -18,18 +18,18 @@ func TestPoolSharesTokens(t *testing.T) {
 		DelegatorShares: sdk.NewRat(100),
 	}
 
-	pool.BondedTokens = val.PoolShares.Bonded().Evaluate()
+	pool.BondedTokens = val.PoolShares.Bonded().RoundInt64()
 	pool.BondedShares = val.PoolShares.Bonded()
 
 	poolShares := NewBondedShares(sdk.NewRat(50))
 	tokens := poolShares.Tokens(pool)
-	require.Equal(t, int64(50), tokens.Evaluate())
+	require.Equal(t, int64(50), tokens.RoundInt64())
 
 	poolShares = NewUnbondingShares(sdk.NewRat(50))
 	tokens = poolShares.Tokens(pool)
-	require.Equal(t, int64(50), tokens.Evaluate())
+	require.Equal(t, int64(50), tokens.RoundInt64())
 
 	poolShares = NewUnbondedShares(sdk.NewRat(50))
 	tokens = poolShares.Tokens(pool)
-	require.Equal(t, int64(50), tokens.Evaluate())
+	require.Equal(t, int64(50), tokens.RoundInt64())
 }

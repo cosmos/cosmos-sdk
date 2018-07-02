@@ -5,24 +5,24 @@
 *TBD*
 
 BREAKING CHANGES
-* Change default ports from 466xx to 266xx
-* AltBytes renamed to Memo, now a string, max 100 characters, costs a bit of gas
-* Transactions now take a list of Messages
-* Signers of a transaction now only sign over their account and sequence number
-* Removed MsgChangePubKey from auth
-* Removed setPubKey from account mapper
-* Removed GetMemo from Tx (it is still on StdTx)
-* Keybase and Ledger support from go-crypto merged into the SDK in the `crypto` folder
-* Gov module REST endpoints changed to be more RESTful
-* [cli] rearranged commands under subcommands
-* [stake] remove Tick and add EndBlocker
-* [stake] introduce concept of unbonding for delegations and validators
+* [config] Change default ports from 466xx to 266xx
+* [auth] AltBytes renamed to Memo, now a string, max 100 characters, costs a bit of gas
+* [types] GetMsg() -> GetMsgs()
+* [auth] Signers of a transaction now only sign over their account and sequence number
+* [auth] Removed MsgChangePubKey 
+* [auth] Removed SetPubKey from account mapper
+* [types] Removed GetMemo from Tx (it is still on StdTx)
+* [keys] Keybase and Ledger support from go-crypto merged into the SDK in the `crypto` folder
+* [x/gov] Gov module REST endpoints changed to be more RESTful
+* [cli] Rearranged commands under subcommands
+* [stake] Remove Tick and add EndBlocker
+* [stake] Introduce concept of unbonding for delegations and validators
   * `gaiacli stake unbond` replaced with `gaiacli stake begin-unbonding`
-  * introduced:
+  * Introduced:
     * `gaiacli stake complete-unbonding`
     * `gaiacli stake begin-redelegation`
     * `gaiacli stake complete-redelegation`
-* [slashing] update slashing for unbonding period
+* [slashing] Update slashing for unbonding period
   * Slash according to power at time of infraction instead of power at
     time of discovery
   * Iterate through unbonding delegations & redelegations which contributed
@@ -62,7 +62,18 @@ FEATURES
   - Ledger keys can be named and tracked locally in the key DB
 * [gaiacli] added an --async flag to the cli to deliver transactions without waiting for a tendermint response
 
-FIXES
+IMPROVEMENTS
+* bank module uses go-wire codec instead of 'encoding/json'
+* auth module uses go-wire codec instead of 'encoding/json'
+* revised use of endblock and beginblock
+* [stake] module reorganized to include `types` and `keeper` package
+* [stake] keeper always loads the store (instead passing around which doesn't really boost efficiency)
+* [stake] edit-validator changes now can use the keyword [do-not-modify] to not modify unspecified `--flag` (aka won't set them to `""` value)
+* [types] added common tag constants
+* [stake] offload more generic functionality from the handler into the keeper
+* added contributing guidelines
+
+BUG FIXES
 * [gaia] Added self delegation for validators in the genesis creation
 * [lcd] tests now don't depend on raw json text
 * [stake] error strings lower case
@@ -77,17 +88,6 @@ FIXES
 * \#1353 - CLI: Show pool shares fractions in human-readable format
 * \#1258 - printing big.rat's can no longer overflow int64
 * \#887  - limit the size of rationals that can be passed in from user input
-
-IMPROVEMENTS
-* bank module uses go-wire codec instead of 'encoding/json'
-* auth module uses go-wire codec instead of 'encoding/json'
-* revised use of endblock and beginblock
-* [stake] module reorganized to include `types` and `keeper` package
-* [stake] keeper always loads the store (instead passing around which doesn't really boost efficiency)
-* [stake] edit-validator changes now can use the keyword [do-not-modify] to not modify unspecified `--flag` (aka won't set them to `""` value)
-* [types] added common tag constants
-* [stake] offload more generic functionality from the handler into the keeper
-* added contributing guidelines
 
 ## 0.19.0
 

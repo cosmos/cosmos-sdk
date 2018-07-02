@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	coinPos  = sdk.Coin{"steak", sdk.NewInt(1000)}
-	coinZero = sdk.Coin{"steak", sdk.NewInt(0)}
-	coinNeg  = sdk.Coin{"steak", sdk.NewInt(-10000)}
+	coinPos  = sdk.NewCoin("steak", 1000)
+	coinZero = sdk.NewCoin("steak", 0)
+	coinNeg  = sdk.NewCoin("steak", -10000)
 )
 
 // test ValidateBasic for MsgCreateValidator
@@ -197,29 +197,3 @@ func TestMsgCompleteUnbonding(t *testing.T) {
 		}
 	}
 }
-
-// TODO introduce with go-amino
-//func TestSerializeMsg(t *testing.T) {
-
-//// make sure all types construct properly
-//bondAmt := 1234321
-//bond := sdk.Coin{Denom: "atom", Amount: int64(bondAmt)}
-
-//tests := []struct {
-//tx sdk.Msg
-//}{
-//{NewMsgCreateValidator(addr1, pk1, bond, Description{})},
-//{NewMsgEditValidator(addr1, Description{})},
-//{NewMsgDelegate(addr1, addr2, bond)},
-//{NewMsgUnbond(addr1, addr2, strconv.Itoa(bondAmt))},
-//}
-
-//for i, tc := range tests {
-//var tx sdk.Tx
-//bs := wire.BinaryBytes(tc.tx)
-//err := wire.ReadBinaryBytes(bs, &tx)
-//if require.NoError(t, err, "%d", i) {
-//require.Equal(t, tc.tx, tx, "%d", i)
-//}
-//}
-//}

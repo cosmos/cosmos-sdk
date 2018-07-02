@@ -52,7 +52,6 @@ type ProposalType  byte
 const (
     ProposalTypePlainText       = 0x1 // Plain text proposals
     ProposalTypeSoftwareUpgrade = 0x2 // Text proposal inducing a software upgrade
-    ProposalTypeParameterChange = 0x3 // Add or change a parameter in GlobalParams store
 )
 
 type ProposalStatus byte

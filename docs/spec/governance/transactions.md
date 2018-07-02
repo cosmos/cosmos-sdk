@@ -186,7 +186,7 @@ handled:
       throw
     
 
-    if  (proposal.CurrentStatus == ProposalStatusActive && len(stakeKeeper.GetDelegations(sender)) > 0)
+    if  (proposal.CurrentStatus == ProposalStatusActive)
 
         // Sender can vote if
         // Proposal is active

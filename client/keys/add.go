@@ -104,7 +104,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		info, err := kb.CreateFundraiserKey(name, seed, pass)
+		info, err := kb.CreateKey(name, seed, pass)
 		if err != nil {
 			return err
 		}

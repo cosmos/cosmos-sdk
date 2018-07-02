@@ -95,7 +95,7 @@ func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (addr sd
 func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (cleanup func(), validatorsPKs []crypto.PubKey, port string) {
 
 	config := GetConfig()
-	config.Consensus.TimeoutCommit = 1000
+	config.Consensus.TimeoutCommit = 100
 	config.Consensus.SkipTimeoutCommit = false
 	config.TxIndex.IndexAllTags = true
 
@@ -132,7 +132,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 	for _, gdValidator := range genDoc.Validators {
 		pk := gdValidator.PubKey
 		validatorsPKs = append(validatorsPKs, pk) // append keys for output
-		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, pk.Address(), "test_val1", true)
+		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, pk.Address(), "test_val1")
 		require.NoError(t, err)
 		appGenTxs = append(appGenTxs, appGenTx)
 	}

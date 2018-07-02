@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/bartekn/go-bip39"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -56,7 +56,7 @@ func TestFundraiserCompatibility(t *testing.T) {
 
 		master, ch := ComputeMastersFromSeed(seed)
 		priv, err := DerivePrivateKeyForPath(master, ch, "44'/118'/0'/0/0")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		pub := crypto.PrivKeySecp256k1(priv).PubKey()
 
 		t.Log("\tNODEJS GOLANG\n")
@@ -65,16 +65,16 @@ func TestFundraiserCompatibility(t *testing.T) {
 		t.Logf("PRIV \t%X %X\n", privB, priv)
 		t.Logf("PUB  \t%X %X\n", pubB, pub)
 
-		assert.Equal(t, seedB, seed)
-		assert.Equal(t, master[:], masterB, fmt.Sprintf("Expected masters to match for %d", i))
-		assert.Equal(t, priv[:], privB, "Expected priv keys to match")
+		require.Equal(t, seedB, seed)
+		require.Equal(t, master[:], masterB, fmt.Sprintf("Expected masters to match for %d", i))
+		require.Equal(t, priv[:], privB, "Expected priv keys to match")
 		var pubBFixed [33]byte
 		copy(pubBFixed[:], pubB)
-		assert.Equal(t, pub, crypto.PubKeySecp256k1(pubBFixed), fmt.Sprintf("Expected pub keys to match for %d", i))
+		require.Equal(t, pub, crypto.PubKeySecp256k1(pubBFixed), fmt.Sprintf("Expected pub keys to match for %d", i))
 
 		addr := pub.Address()
 		t.Logf("ADDR  \t%X %X\n", addrB, addr)
-		assert.Equal(t, addr, crypto.Address(addrB), fmt.Sprintf("Expected addresses to match %d", i))
+		require.Equal(t, addr, crypto.Address(addrB), fmt.Sprintf("Expected addresses to match %d", i))
 
 	}
 }

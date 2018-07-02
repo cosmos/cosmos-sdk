@@ -95,6 +95,26 @@ func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
 	return ubd, true
 }
 
+// load all unbonding delegations from a particular validator
+func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sdk.Address) (unbondingDelegations []types.UnbondingDelegation) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, GetUBDsByValIndexKey(valAddr, k.cdc))
+	i := 0
+	for ; ; i++ {
+		if !iterator.Valid() {
+			break
+		}
+		unbondingKey := iterator.Value()
+		unbondingBytes := store.Get(unbondingKey)
+		var unbondingDelegation types.UnbondingDelegation
+		k.cdc.MustUnmarshalBinary(unbondingBytes, &unbondingDelegation)
+		unbondingDelegations = append(unbondingDelegations, unbondingDelegation)
+		iterator.Next()
+	}
+	iterator.Close()
+	return unbondingDelegations
+}
+
 // set the unbonding delegation and associated index
 func (k Keeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
@@ -127,6 +147,26 @@ func (k Keeper) GetRedelegation(ctx sdk.Context,
 
 	k.cdc.MustUnmarshalBinary(bz, &red)
 	return red, true
+}
+
+// load all redelegations from a particular validator
+func (k Keeper) GetRedelegationsFromValidator(ctx sdk.Context, valAddr sdk.Address) (redelegations []types.Redelegation) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, GetREDsFromValSrcIndexKey(valAddr, k.cdc))
+	i := 0
+	for ; ; i++ {
+		if !iterator.Valid() {
+			break
+		}
+		redelegationKey := iterator.Value()
+		redelegationBytes := store.Get(redelegationKey)
+		var redelegation types.Redelegation
+		k.cdc.MustUnmarshalBinary(redelegationBytes, &redelegation)
+		redelegations = append(redelegations, redelegation)
+		iterator.Next()
+	}
+	iterator.Close()
+	return redelegations
 }
 
 // has a redelegation
@@ -254,7 +294,7 @@ func (k Keeper) unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.Address
 		k.RemoveValidator(ctx, validator.Owner)
 	}
 
-	return amount, nil
+	return
 }
 
 //______________________________________________________________________________________________________
@@ -270,12 +310,14 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr sdk
 	// create the unbonding delegation
 	params := k.GetParams(ctx)
 	minTime := ctx.BlockHeader().Time + params.UnbondingTime
+	balance := sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)}
 
 	ubd := types.UnbondingDelegation{
-		DelegatorAddr: delegatorAddr,
-		ValidatorAddr: validatorAddr,
-		MinTime:       minTime,
-		Balance:       sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)},
+		DelegatorAddr:  delegatorAddr,
+		ValidatorAddr:  validatorAddr,
+		MinTime:        minTime,
+		Balance:        balance,
+		InitialBalance: balance,
 	}
 	k.SetUnbondingDelegation(ctx, ubd)
 	return nil
@@ -338,6 +380,8 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delegatorAddr, validatorSrcAd
 		MinTime:          minTime,
 		SharesDst:        sharesCreated,
 		SharesSrc:        sharesAmount,
+		Balance:          returnCoin,
+		InitialBalance:   returnCoin,
 	}
 	k.SetRedelegation(ctx, red)
 	return nil

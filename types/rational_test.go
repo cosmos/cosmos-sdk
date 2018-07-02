@@ -5,22 +5,23 @@ import (
 	"testing"
 
 	wire "github.com/cosmos/cosmos-sdk/wire"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
-	assert.Equal(t, NewRat(1), NewRat(1, 1))
-	assert.Equal(t, NewRat(100), NewRat(100, 1))
-	assert.Equal(t, NewRat(-1), NewRat(-1, 1))
-	assert.Equal(t, NewRat(-100), NewRat(-100, 1))
-	assert.Equal(t, NewRat(0), NewRat(0, 1))
+	require.Equal(t, NewRat(1), NewRat(1, 1))
+	require.Equal(t, NewRat(100), NewRat(100, 1))
+	require.Equal(t, NewRat(-1), NewRat(-1, 1))
+	require.Equal(t, NewRat(-100), NewRat(-100, 1))
+	require.Equal(t, NewRat(0), NewRat(0, 1))
 
 	// do not allow for more than 2 variables
-	assert.Panics(t, func() { NewRat(1, 1, 1) })
+	require.Panics(t, func() { NewRat(1, 1, 1) })
 }
 
 func TestNewFromDecimal(t *testing.T) {
+	largeBigInt, success := new(big.Int).SetString("3109736052979742687701388262607869", 10)
+	require.True(t, success)
 	tests := []struct {
 		decimalStr string
 		expErr     bool
@@ -31,7 +32,13 @@ func TestNewFromDecimal(t *testing.T) {
 		{"1.1", false, NewRat(11, 10)},
 		{"0.75", false, NewRat(3, 4)},
 		{"0.8", false, NewRat(4, 5)},
-		{"0.11111", false, NewRat(11111, 100000)},
+		{"0.11111", true, NewRat(1111, 10000)},
+		{"628240629832763.5738930323617075341", true, NewRat(3141203149163817869, 5000)},
+		{"621947210595948537540277652521.5738930323617075341",
+			true, NewRatFromBigInt(largeBigInt, big.NewInt(5000))},
+		{"628240629832763.5738", false, NewRat(3141203149163817869, 5000)},
+		{"621947210595948537540277652521.5738",
+			false, NewRatFromBigInt(largeBigInt, big.NewInt(5000))},
 		{".", true, Rat{}},
 		{".0", true, Rat{}},
 		{"1.", true, Rat{}},
@@ -41,22 +48,21 @@ func TestNewFromDecimal(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-
-		res, err := NewRatFromDecimal(tc.decimalStr)
+		res, err := NewRatFromDecimal(tc.decimalStr, 4)
 		if tc.expErr {
-			assert.NotNil(t, err, tc.decimalStr)
+			require.NotNil(t, err, tc.decimalStr)
 		} else {
-			assert.Nil(t, err)
-			assert.True(t, res.Equal(tc.exp))
+			require.Nil(t, err, tc.decimalStr)
+			require.True(t, res.Equal(tc.exp), tc.decimalStr)
 		}
 
 		// negative tc
-		res, err = NewRatFromDecimal("-" + tc.decimalStr)
+		res, err = NewRatFromDecimal("-"+tc.decimalStr, 4)
 		if tc.expErr {
-			assert.NotNil(t, err, tc.decimalStr)
+			require.NotNil(t, err, tc.decimalStr)
 		} else {
-			assert.Nil(t, err)
-			assert.True(t, res.Equal(tc.exp.Mul(NewRat(-1))))
+			require.Nil(t, err, tc.decimalStr)
+			require.True(t, res.Equal(tc.exp.Mul(NewRat(-1))), tc.decimalStr)
 		}
 	}
 }
@@ -93,9 +99,9 @@ func TestEqualities(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		assert.Equal(t, tc.gt, tc.r1.GT(tc.r2))
-		assert.Equal(t, tc.lt, tc.r1.LT(tc.r2))
-		assert.Equal(t, tc.eq, tc.r1.Equal(tc.r2))
+		require.Equal(t, tc.gt, tc.r1.GT(tc.r2))
+		require.Equal(t, tc.lt, tc.r1.LT(tc.r2))
+		require.Equal(t, tc.eq, tc.r1.Equal(tc.r2))
 	}
 
 }
@@ -129,14 +135,14 @@ func TestArithmetic(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		assert.True(t, tc.resMul.Equal(tc.r1.Mul(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
-		assert.True(t, tc.resAdd.Equal(tc.r1.Add(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
-		assert.True(t, tc.resSub.Equal(tc.r1.Sub(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
+		require.True(t, tc.resMul.Equal(tc.r1.Mul(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
+		require.True(t, tc.resAdd.Equal(tc.r1.Add(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
+		require.True(t, tc.resSub.Equal(tc.r1.Sub(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
 
-		if tc.r2.Num() == 0 { // panic for divide by zero
-			assert.Panics(t, func() { tc.r1.Quo(tc.r2) })
+		if tc.r2.Num().IsZero() { // panic for divide by zero
+			require.Panics(t, func() { tc.r1.Quo(tc.r2) })
 		} else {
-			assert.True(t, tc.resDiv.Equal(tc.r1.Quo(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
+			require.True(t, tc.resDiv.Equal(tc.r1.Quo(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
 		}
 	}
 }
@@ -162,8 +168,8 @@ func TestEvaluate(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		assert.Equal(t, tc.res, tc.r1.Evaluate(), "%v", tc.r1)
-		assert.Equal(t, tc.res*-1, tc.r1.Mul(NewRat(-1)).Evaluate(), "%v", tc.r1.Mul(NewRat(-1)))
+		require.Equal(t, tc.res, tc.r1.RoundInt64(), "%v", tc.r1)
+		require.Equal(t, tc.res*-1, tc.r1.Mul(NewRat(-1)).RoundInt64(), "%v", tc.r1.Mul(NewRat(-1)))
 	}
 }
 
@@ -186,9 +192,9 @@ func TestRound(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		assert.Equal(t, tc.res, tc.r.Round(tc.precFactor), "%v", tc.r)
+		require.Equal(t, tc.res, tc.r.Round(tc.precFactor), "%v", tc.r)
 		negR1, negRes := tc.r.Mul(NewRat(-1)), tc.res.Mul(NewRat(-1))
-		assert.Equal(t, negRes, negR1.Round(tc.precFactor), "%v", negR1)
+		require.Equal(t, negRes, negR1.Round(tc.precFactor), "%v", negR1)
 	}
 }
 
@@ -205,7 +211,7 @@ func TestToLeftPadded(t *testing.T) {
 		{NewRat(1000, 3), 12, "000000000333"},
 	}
 	for _, tc := range tests {
-		assert.Equal(t, tc.res, tc.rat.ToLeftPadded(tc.digits))
+		require.Equal(t, tc.res, tc.rat.ToLeftPadded(tc.digits))
 	}
 }
 
@@ -214,13 +220,13 @@ var cdc = wire.NewCodec() //var jsonCdc JSONCodec // TODO wire.Codec
 func TestZeroSerializationJSON(t *testing.T) {
 	r := NewRat(0, 1)
 	err := cdc.UnmarshalJSON([]byte(`"0/1"`), &r)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	err = cdc.UnmarshalJSON([]byte(`"0/0"`), &r)
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 	err = cdc.UnmarshalJSON([]byte(`"1/0"`), &r)
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 	err = cdc.UnmarshalJSON([]byte(`"{}"`), &r)
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 }
 
 func TestSerializationText(t *testing.T) {
@@ -232,7 +238,7 @@ func TestSerializationText(t *testing.T) {
 	var r2 = Rat{new(big.Rat)}
 	err = r2.UnmarshalText(bz)
 	require.NoError(t, err)
-	assert.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
+	require.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
 }
 
 func TestSerializationGoWireJSON(t *testing.T) {
@@ -243,7 +249,7 @@ func TestSerializationGoWireJSON(t *testing.T) {
 	var r2 Rat
 	err = cdc.UnmarshalJSON(bz, &r2)
 	require.NoError(t, err)
-	assert.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
+	require.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
 }
 
 func TestSerializationGoWireBinary(t *testing.T) {
@@ -254,7 +260,7 @@ func TestSerializationGoWireBinary(t *testing.T) {
 	var r2 Rat
 	err = cdc.UnmarshalBinary(bz, &r2)
 	require.NoError(t, err)
-	assert.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
+	require.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
 }
 
 type testEmbedStruct struct {
@@ -272,9 +278,9 @@ func TestEmbeddedStructSerializationGoWire(t *testing.T) {
 	err = cdc.UnmarshalJSON(bz, &obj2)
 	require.Nil(t, err)
 
-	assert.Equal(t, obj.Field1, obj2.Field1)
-	assert.Equal(t, obj.Field2, obj2.Field2)
-	assert.True(t, obj.Field3.Equal(obj2.Field3), "original: %v, unmarshalled: %v", obj, obj2)
+	require.Equal(t, obj.Field1, obj2.Field1)
+	require.Equal(t, obj.Field2, obj2.Field2)
+	require.True(t, obj.Field3.Equal(obj2.Field3), "original: %v, unmarshalled: %v", obj, obj2)
 }
 
 func TestRatsEqual(t *testing.T) {
@@ -292,8 +298,8 @@ func TestRatsEqual(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		assert.Equal(t, tc.eq, RatsEqual(tc.r1s, tc.r2s))
-		assert.Equal(t, tc.eq, RatsEqual(tc.r2s, tc.r1s))
+		require.Equal(t, tc.eq, RatsEqual(tc.r1s, tc.r2s))
+		require.Equal(t, tc.eq, RatsEqual(tc.r2s, tc.r1s))
 	}
 
 }
@@ -303,7 +309,7 @@ func TestStringOverflow(t *testing.T) {
 	rat1 := NewRat(5164315003622678713, 4389711697696177267)
 	rat2 := NewRat(-3179849666053572961, 8459429845579852627)
 	rat3 := rat1.Add(rat2)
-	assert.Equal(t,
+	require.Equal(t,
 		"29728537197630860939575850336935951464/37134458148982045574552091851127630409",
 		rat3.String(),
 	)

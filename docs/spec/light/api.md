@@ -40,7 +40,10 @@ Returns on success:
     "code":200,
     "error": "",
     "result": {
-        // TODO: What should the return format be?
+	"code": 0,
+	"hash": "0D33F2F03A5234F38706E43004489E061AC40A2E",
+	"data": "",
+	"log": ""
     }
 }
 ```
@@ -75,7 +78,10 @@ Returns on success:
     "code":200,
     "error": "",
     "result": {
-        // TODO: What should the return format be?
+		"code": 0,
+		"hash": "E39AAB7A537ABAA237831742DCE1117F187C3C52",
+		"data": "",
+		"log": ""
     }
 }
 ```

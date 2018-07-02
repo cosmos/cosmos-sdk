@@ -56,7 +56,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	// verify the self-delegation exists
 	bond, found := keeper.GetDelegation(ctx, validatorAddr, validatorAddr)
 	require.True(t, found)
-	gotBond := bond.Shares.Evaluate()
+	gotBond := bond.Shares.RoundInt64()
 	require.Equal(t, initBond, gotBond,
 		"initBond: %v\ngotBond: %v\nbond: %v\n",
 		initBond, gotBond, bond)
@@ -78,8 +78,8 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	keeper.Revoke(ctx, keep.PKs[0])
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, sdk.Unbonded, validator.PoolShares.Status)             // ensure is unbonded
-	require.Equal(t, int64(500000), validator.PoolShares.Amount.Evaluate()) // ensure is unbonded
+	require.Equal(t, sdk.Unbonded, validator.PoolShares.Status)               // ensure is unbonded
+	require.Equal(t, int64(500000), validator.PoolShares.Amount.RoundInt64()) // ensure is unbonded
 
 	// the old power record should have been deleted as the power changed
 	require.False(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power))
@@ -155,20 +155,20 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, validator.Status())
-	require.Equal(t, bondAmount, validator.DelegatorShares.Evaluate())
-	require.Equal(t, bondAmount, validator.PoolShares.Bonded().Evaluate(), "validator: %v", validator)
+	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt64())
+	require.Equal(t, bondAmount, validator.PoolShares.Bonded().RoundInt64(), "validator: %v", validator)
 
 	_, found = keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
 	require.False(t, found)
 
 	bond, found := keeper.GetDelegation(ctx, validatorAddr, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, bondAmount, bond.Shares.Evaluate())
+	require.Equal(t, bondAmount, bond.Shares.RoundInt64())
 
 	pool := keeper.GetPool(ctx)
 	exRate := validator.DelegatorShareExRate(pool)
 	require.True(t, exRate.Equal(sdk.OneRat()), "expected exRate 1 got %v", exRate)
-	require.Equal(t, bondAmount, pool.BondedShares.Evaluate())
+	require.Equal(t, bondAmount, pool.BondedShares.RoundInt64())
 	require.Equal(t, bondAmount, pool.BondedTokens)
 
 	// just send the same msgbond multiple times
@@ -196,8 +196,8 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 
 		require.Equal(t, bond.Height, int64(i), "Incorrect bond height")
 
-		gotBond := bond.Shares.Evaluate()
-		gotDelegatorShares := validator.DelegatorShares.Evaluate()
+		gotBond := bond.Shares.RoundInt64()
+		gotDelegatorShares := validator.DelegatorShares.RoundInt64()
 		gotDelegatorAcc := accMapper.GetAccount(ctx, delegatorAddr).GetCoins().AmountOf(params.BondDenom)
 
 		require.Equal(t, expBond, gotBond,
@@ -230,8 +230,8 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, initBond*2, validator.DelegatorShares.Evaluate())
-	require.Equal(t, initBond*2, validator.PoolShares.Bonded().Evaluate())
+	require.Equal(t, initBond*2, validator.DelegatorShares.RoundInt64())
+	require.Equal(t, initBond*2, validator.PoolShares.Bonded().RoundInt64())
 
 	// just send the same msgUnbond multiple times
 	// TODO use decimals here
@@ -251,12 +251,12 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		bond, found := keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
 		require.True(t, found)
 
-		expBond := initBond - int64(i+1)*unbondShares.Evaluate()
-		expDelegatorShares := 2*initBond - int64(i+1)*unbondShares.Evaluate()
+		expBond := initBond - int64(i+1)*unbondShares.RoundInt64()
+		expDelegatorShares := 2*initBond - int64(i+1)*unbondShares.RoundInt64()
 		expDelegatorAcc := sdk.NewInt(initBond - expBond)
 
-		gotBond := bond.Shares.Evaluate()
-		gotDelegatorShares := validator.DelegatorShares.Evaluate()
+		gotBond := bond.Shares.RoundInt64()
+		gotDelegatorShares := validator.DelegatorShares.RoundInt64()
 		gotDelegatorAcc := accMapper.GetAccount(ctx, delegatorAddr).GetCoins().AmountOf(params.BondDenom)
 
 		require.Equal(t, expBond, gotBond,
@@ -285,7 +285,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		require.False(t, got.IsOK(), "expected unbond msg to fail")
 	}
 
-	leftBonded := initBond - int64(numUnbonds)*unbondShares.Evaluate()
+	leftBonded := initBond - int64(numUnbonds)*unbondShares.RoundInt64()
 
 	// should be unable to unbond one more than we have
 	unbondShares = sdk.NewRat(leftBonded + 1)
@@ -322,7 +322,7 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 		balanceExpd := sdk.NewInt(initBond - 10)
 		balanceGot := accMapper.GetAccount(ctx, val.Owner).GetCoins().AmountOf(params.BondDenom)
 		require.Equal(t, i+1, len(validators), "expected %d validators got %d, validators: %v", i+1, len(validators), validators)
-		require.Equal(t, 10, int(val.DelegatorShares.Evaluate()), "expected %d shares, got %d", 10, val.DelegatorShares)
+		require.Equal(t, 10, int(val.DelegatorShares.RoundInt64()), "expected %d shares, got %d", 10, val.DelegatorShares)
 		require.Equal(t, balanceExpd, balanceGot, "expected account to have %d, got %d", balanceExpd, balanceGot)
 	}
 

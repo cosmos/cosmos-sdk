@@ -46,7 +46,7 @@ type Validator interface {
 func ABCIValidator(v Validator) abci.Validator {
 	return abci.Validator{
 		PubKey: tmtypes.TM2PB.PubKey(v.GetPubKey()),
-		Power:  v.GetPower().Evaluate(),
+		Power:  v.GetPower().RoundInt64(),
 	}
 }
 

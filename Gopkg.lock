@@ -137,7 +137,6 @@
     ".",
     "hcl/ast",
     "hcl/parser",
-    "hcl/printer",
     "hcl/scanner",
     "hcl/strconv",
     "hcl/token",
@@ -334,12 +333,9 @@
 
 [[projects]]
   name = "github.com/tendermint/iavl"
-  packages = [
-    ".",
-    "sha256truncated"
-  ]
-  revision = "2de525d09cca7c45c3f43d178817947a6cfa242c"
-  version = "v0.8.1"
+  packages = ["."]
+  revision = "9e5dc3e61f70b285bb25414452d47aca1ff34c1d"
+  version = "v0.8.2-rc0"
 
 [[projects]]
   name = "github.com/tendermint/tendermint"
@@ -359,6 +355,7 @@
     "crypto/tmhash",
     "evidence",
     "libs/autofile",
+    "libs/bech32",
     "libs/cli",
     "libs/cli/flags",
     "libs/clist",
@@ -401,21 +398,6 @@
   version = "v0.22.0-rc2"
 
 [[projects]]
-  name = "github.com/tendermint/tmlibs"
-  packages = [
-    "bech32",
-    "cli",
-    "cli/flags",
-    "common",
-    "db",
-    "log",
-    "merkle",
-    "merkle/tmhash"
-  ]
-  revision = "49596e0a1f48866603813df843c9409fc19805c6"
-  version = "v0.9.0"
-
-[[projects]]
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
   revision = "065cbf938a16f20335c40cfe180f9cd4955c6a5a"
@@ -451,7 +433,7 @@
     "netutil",
     "trace"
   ]
-  revision = "4cb1c02c05b0e749b0365f61ae859a8e0cfceed9"
+  revision = "87b3feba568e144938625fc5d80ec92566c1a8fe"
 
 [[projects]]
   branch = "master"
@@ -524,6 +506,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e0adc07b8fcd9a48957baaa58a97b3bf1c72af18d06c7943b719794746ded31e"
+  inputs-digest = "13ad2a57b6942729e2d08b5c37810d62108aa64a335a4822fcff1ad992c0662b"
   solver-name = "gps-cdcl"
   solver-version = 1

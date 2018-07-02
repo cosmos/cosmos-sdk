@@ -60,7 +60,7 @@ func delegationHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerF
 			return
 		}
 
-		key := stake.GetDelegationKey(delegatorAddr, validatorAddr, cdc)
+		key := stake.GetDelegationKey(delegatorAddr, validatorAddr)
 
 		res, err := ctx.QueryStore(key, storeName)
 		if err != nil {
@@ -117,7 +117,7 @@ func ubdHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		key := stake.GetUBDKey(delegatorAddr, validatorAddr, cdc)
+		key := stake.GetUBDKey(delegatorAddr, validatorAddr)
 
 		res, err := ctx.QueryStore(key, storeName)
 		if err != nil {
@@ -182,7 +182,7 @@ func redHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		key := stake.GetREDKey(delegatorAddr, validatorSrcAddr, validatorDstAddr, cdc)
+		key := stake.GetREDKey(delegatorAddr, validatorSrcAddr, validatorDstAddr)
 
 		res, err := ctx.QueryStore(key, storeName)
 		if err != nil {

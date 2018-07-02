@@ -238,7 +238,7 @@ func getShares(storeName string, cdc *wire.Codec, sharesAmountStr, sharesPercent
 		}
 
 		// make a query to get the existing delegation shares
-		key := stake.GetDelegationKey(delegatorAddr, validatorAddr, cdc)
+		key := stake.GetDelegationKey(delegatorAddr, validatorAddr)
 		ctx := context.NewCoreContextFromViper()
 		resQuery, err := ctx.QueryStore(key, storeName)
 		if err != nil {

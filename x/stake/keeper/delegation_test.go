@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -201,19 +202,38 @@ func TestRedelegation(t *testing.T) {
 	keeper.SetRedelegation(ctx, rd)
 	resBond, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
-	require.True(t, rd.Equal(resBond))
+
+	fmt.Println("zoo0")
+	redelegations := keeper.GetRedelegationsFromValidator(ctx, addrVals[0])
+	require.Equal(t, 1, len(redelegations))
+	require.True(t, redelegations[0].Equal(resBond))
+
+	fmt.Println("zoo1")
+	redelegations = keeper.GetRedelegationsFromValidator(ctx, addrVals[0])
+	require.Equal(t, 1, len(redelegations))
+	require.True(t, redelegations[0].Equal(resBond))
+	fmt.Println("zoo2")
 
 	// check if has the redelegation
 	has = keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])
 	require.True(t, has)
+	fmt.Println("hoolahoop")
 
 	// modify a records, save, and retrieve
 	rd.SharesSrc = sdk.NewRat(21)
 	rd.SharesDst = sdk.NewRat(21)
+
 	keeper.SetRedelegation(ctx, rd)
+
 	resBond, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 	require.True(t, rd.Equal(resBond))
+	fmt.Println("hippo2")
+
+	redelegations = keeper.GetRedelegationsFromValidator(ctx, addrVals[0])
+	require.Equal(t, 1, len(redelegations))
+	require.True(t, redelegations[0].Equal(resBond))
+	fmt.Println("zzzzzzzzzzzzzzzzzzebra")
 
 	// delete a record
 	keeper.RemoveRedelegation(ctx, rd)

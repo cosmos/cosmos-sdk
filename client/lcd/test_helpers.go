@@ -169,7 +169,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 
 	//time.Sleep(time.Second)
 	//tests.WaitForHeight(2, port)
-	tests.WaitForStart(port)
+	tests.WaitForLCDStart(port)
 	tests.WaitForHeight(1, port)
 
 	// for use in defer

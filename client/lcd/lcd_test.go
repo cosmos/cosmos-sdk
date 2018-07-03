@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -63,7 +62,7 @@ func TestKeys(t *testing.T) {
 
 	addr2Bech32 := resp.Address
 	_, err = sdk.GetAccAddressBech32(addr2Bech32)
-	assert.NoError(t, err, "Did not return a correct bech32 address")
+	require.NoError(t, err, "Failed to return a correct bech32 address")
 
 	// existing keys
 	res, body = Request(t, port, "GET", "/keys", nil)

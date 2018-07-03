@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,7 +16,8 @@ import (
 
 var (
 	cacheSize        = 100
-	numHistory int64 = 5
+	numRecent  int64 = 5
+	storeEvery int64 = 3
 )
 
 var (
@@ -45,7 +47,7 @@ func newTree(t *testing.T, db dbm.DB) (*iavl.VersionedTree, CommitID) {
 func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newTree(t, db)
-	iavlStore := newIAVLStore(tree, numHistory)
+	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
 
 	key := "hello"
 
@@ -70,7 +72,7 @@ func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 func TestIAVLIterator(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newTree(t, db)
-	iavlStore := newIAVLStore(tree, numHistory)
+	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
 	iter := iavlStore.Iterator([]byte("aloha"), []byte("hellz"))
 	expected := []string{"aloha", "hello"}
 	var i int
@@ -143,7 +145,7 @@ func TestIAVLIterator(t *testing.T) {
 func TestIAVLSubspaceIterator(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newTree(t, db)
-	iavlStore := newIAVLStore(tree, numHistory)
+	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
 
 	iavlStore.Set([]byte("test1"), []byte("test1"))
 	iavlStore.Set([]byte("test2"), []byte("test2"))
@@ -202,7 +204,7 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 func TestIAVLReverseSubspaceIterator(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newTree(t, db)
-	iavlStore := newIAVLStore(tree, numHistory)
+	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
 
 	iavlStore.Set([]byte("test1"), []byte("test1"))
 	iavlStore.Set([]byte("test2"), []byte("test2"))
@@ -258,10 +260,89 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 	require.Equal(t, len(expected), i)
 }
 
+func nextVersion(iavl *iavlStore) {
+	key := []byte(fmt.Sprintf("Key for tree: %d", iavl.LastCommitID().Version))
+	value := []byte(fmt.Sprintf("Value for tree: %d", iavl.LastCommitID().Version))
+	iavl.Set(key, value)
+	iavl.Commit()
+}
+func TestIAVLDefaultPruning(t *testing.T) {
+	//Expected stored / deleted version numbers for:
+	//numRecent = 5, storeEvery = 3
+	var states = []struct {
+		stored  []int64
+		deleted []int64
+	}{
+		{[]int64{}, []int64{}},
+		{[]int64{1}, []int64{}},
+		{[]int64{1, 2}, []int64{}},
+		{[]int64{1, 2, 3}, []int64{}},
+		{[]int64{1, 2, 3, 4}, []int64{}},
+		{[]int64{1, 2, 3, 4, 5}, []int64{}},
+		{[]int64{1, 2, 3, 4, 5, 6}, []int64{}},
+		{[]int64{2, 3, 4, 5, 6, 7}, []int64{1}},
+		{[]int64{3, 4, 5, 6, 7, 8}, []int64{1, 2}},
+		{[]int64{3, 4, 5, 6, 7, 8, 9}, []int64{1, 2}},
+		{[]int64{3, 5, 6, 7, 8, 9, 10}, []int64{1, 2, 4}},
+		{[]int64{3, 6, 7, 8, 9, 10, 11}, []int64{1, 2, 4, 5}},
+		{[]int64{3, 6, 7, 8, 9, 10, 11, 12}, []int64{1, 2, 4, 5}},
+		{[]int64{3, 6, 8, 9, 10, 11, 12, 13}, []int64{1, 2, 4, 5, 7}},
+		{[]int64{3, 6, 9, 10, 11, 12, 13, 14}, []int64{1, 2, 4, 5, 7, 8}},
+		{[]int64{3, 6, 9, 10, 11, 12, 13, 14, 15}, []int64{1, 2, 4, 5, 7, 8}},
+	}
+	db := dbm.NewMemDB()
+	tree := iavl.NewVersionedTree(db, cacheSize)
+	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
+	for step, state := range states {
+		for _, ver := range state.stored {
+			require.True(t, iavlStore.VersionExists(ver),
+				"Missing version %d with latest version %d. Should save last %d and every %d",
+				ver, step, numRecent, storeEvery)
+		}
+		for _, ver := range state.deleted {
+			require.False(t, iavlStore.VersionExists(ver),
+				"Unpruned version %d with latest version %d. Should prune all but last %d and every %d",
+				ver, step, numRecent, storeEvery)
+		}
+		nextVersion(iavlStore)
+	}
+}
+func TestIAVLNoPrune(t *testing.T) {
+	db := dbm.NewMemDB()
+	tree := iavl.NewVersionedTree(db, cacheSize)
+	iavlStore := newIAVLStore(tree, numRecent, int64(1))
+	nextVersion(iavlStore)
+	for i := 1; i < 100; i++ {
+		for j := 1; j <= i; j++ {
+			require.True(t, iavlStore.VersionExists(int64(j)),
+				"Missing version %d with latest version %d. Should be storing all versions",
+				j, i)
+		}
+		nextVersion(iavlStore)
+	}
+}
+func TestIAVLPruneEverything(t *testing.T) {
+	db := dbm.NewMemDB()
+	tree := iavl.NewVersionedTree(db, cacheSize)
+	iavlStore := newIAVLStore(tree, int64(0), int64(0))
+	nextVersion(iavlStore)
+	for i := 1; i < 100; i++ {
+		for j := 1; j < i; j++ {
+			require.False(t, iavlStore.VersionExists(int64(j)),
+				"Unpruned version %d with latest version %d. Should prune all old versions",
+				j, i)
+		}
+		require.True(t, iavlStore.VersionExists(int64(i)),
+			"Missing current version on step %d, should not prune current state tree",
+			i)
+		nextVersion(iavlStore)
+	}
+}
+
 func TestIAVLStoreQuery(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree := iavl.NewVersionedTree(db, cacheSize)
-	iavlStore := newIAVLStore(tree, numHistory)
+	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
 
 	k1, v1 := []byte("key1"), []byte("val1")
 	k2, v2 := []byte("key2"), []byte("val2")

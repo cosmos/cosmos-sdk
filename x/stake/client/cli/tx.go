@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -154,9 +155,10 @@ func GetCmdRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "redelegate illiquid tokens from one validator to another",
 	}
 	cmd.AddCommand(
-		GetCmdBeginRedelegate(storeName, cdc),
-		GetCmdCompleteRedelegate(cdc),
-	)
+		client.PostCommands(
+			GetCmdBeginRedelegate(storeName, cdc),
+			GetCmdCompleteRedelegate(cdc),
+		)...)
 	return cmd
 }
 
@@ -301,9 +303,10 @@ func GetCmdUnbond(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "begin or complete unbonding shares from a validator",
 	}
 	cmd.AddCommand(
-		GetCmdBeginUnbonding(storeName, cdc),
-		GetCmdCompleteUnbonding(cdc),
-	)
+		client.PostCommands(
+			GetCmdBeginUnbonding(storeName, cdc),
+			GetCmdCompleteUnbonding(cdc),
+		)...)
 	return cmd
 }
 

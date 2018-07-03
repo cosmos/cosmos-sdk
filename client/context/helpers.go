@@ -9,9 +9,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	cmn "github.com/tendermint/tendermint/libs/common"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	cmn "github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -141,13 +141,22 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msgs []sdk.Msg, cdc
 	sequence := ctx.Sequence
 	memo := ctx.Memo
 
+	fee := sdk.Coin{}
+	if ctx.Fee != "" {
+		parsedFee, err := sdk.ParseCoin(ctx.Fee)
+		if err != nil {
+			return nil, err
+		}
+		fee = parsedFee
+	}
+
 	signMsg := auth.StdSignMsg{
 		ChainID:       chainID,
 		AccountNumber: accnum,
 		Sequence:      sequence,
 		Msgs:          msgs,
 		Memo:          memo,
-		Fee:           auth.NewStdFee(ctx.Gas, sdk.Coin{}), // TODO run simulate to estimate gas?
+		Fee:           auth.NewStdFee(ctx.Gas, fee), // TODO run simulate to estimate gas?
 	}
 
 	keybase, err := keys.GetKeyBase()

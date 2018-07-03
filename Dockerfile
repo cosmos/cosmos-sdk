@@ -1,34 +1,35 @@
 # Simple usage with a mounted data directory:
 # > docker build -t gaia .
-# > docker run -v $HOME/.gaiad:/root/.gaiad gaia init
-# > docker run -v $HOME/.gaiad:/root/.gaiad gaia start
-
-FROM alpine:edge
+# > docker run -it -p 46657:46657 -p 46656:46656 -v ~/.gaiad:/root/.gaiad -v ~/.gaiacli:/root/.gaiacli gaia gaiad init
+# > docker run -it -p 46657:46657 -p 46656:46656 -v ~/.gaiad:/root/.gaiad -v ~/.gaiacli:/root/.gaiacli gaia gaiad start
+FROM golang:alpine AS build-env
 
 # Set up dependencies
-ENV PACKAGES go glide make git libc-dev bash
+ENV PACKAGES make git libc-dev bash gcc linux-headers eudev-dev
 
-# Set up GOPATH & PATH
-
-ENV GOPATH       /root/go
-ENV BASE_PATH    $GOPATH/src/github.com/cosmos
-ENV REPO_PATH    $BASE_PATH/cosmos-sdk
-ENV WORKDIR      /cosmos/
-ENV PATH         $GOPATH/bin:$PATH
-
-# Link expected Go repo path
-
-RUN mkdir -p $WORKDIR $GOPATH/pkg $ $GOPATH/bin $BASE_PATH
+# Set working directory for the build
+WORKDIR /go/src/github.com/cosmos/cosmos-sdk
 
 # Add source files
-
-ADD . $REPO_PATH
+COPY . .
 
 # Install minimum necessary dependencies, build Cosmos SDK, remove packages
 RUN apk add --no-cache $PACKAGES && \
-    cd $REPO_PATH && make get_tools && make get_vendor_deps && make build && make install && \
-    apk del $PACKAGES
+    make get_tools && \
+    make get_vendor_deps && \
+    make build && \
+    make install
 
-# Set entrypoint
+# Final image
+FROM alpine:edge
 
-ENTRYPOINT ["gaiad"]
+# Install ca-certificates
+RUN apk add --update ca-certificates
+WORKDIR /root
+
+# Copy over binaries from the build-env
+COPY --from=build-env /go/bin/gaiad /usr/bin/gaiad
+COPY --from=build-env /go/bin/gaiacli /usr/bin/gaiacli
+
+# Run gaiad by default, omit entrypoint to ease using container with gaiacli
+CMD ["gaiad"]

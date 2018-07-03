@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/log"
 
-	tmserver "github.com/tendermint/tendermint/rpc/lib/server"
 	cmn "github.com/tendermint/tendermint/libs/common"
+	tmserver "github.com/tendermint/tendermint/rpc/lib/server"
 
 	client "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"

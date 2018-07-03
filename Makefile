@@ -92,14 +92,8 @@ test: test_unit
 test_cli:
 	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test`
 
-test_cli_retry:
-	for i in 1 2 3; do make test_cli && break || sleep 2; done
-
 test_unit:
 	@go test $(PACKAGES_NOCLITEST)
-
-test_unit_retry:
-	for i in 1 2 3; do make test_unit && break || sleep 2; done
 
 test_race:
 	@go test -race $(PACKAGES_NOCLITEST)

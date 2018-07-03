@@ -1,0 +1,20 @@
+{
+  "node_id": "678503e6c8f50db7279c7da3cb9b072aac4bc0d5",
+  "ip": "35.193.188.125",
+  "validator": {
+    "pub_key": {
+      "type": "AC26791624DE60",
+      "value": "RMwWTZsVdkq1heicNJb2fosy9Fls4NHxAHReiJvHl+8="
+    },
+    "power": 100,
+    "name": "polsdam"
+  },
+  "app_gen_tx": {
+    "name": "poldsam",
+    "address": "FA929191B04C5DB222AFC6F15C63EF48CCC864C5",
+    "pub_key": {
+      "type": "AC26791624DE60",
+      "value": "RMwWTZsVdkq1heicNJb2fosy9Fls4NHxAHReiJvHl+8="
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "node_id": "adb290585a2753bf1a520c76802b0dab3dffa895",
+  "ip": "34.201.21.179",
+  "validator": {
+    "pub_key": {
+      "type": "AC26791624DE60",
+      "value": "pY7eLF0Ez3yq495kIjag8mD67Q131np/ssagpEvlV2A="
+    },
+    "power": 100,
+    "name": "pbostrom"
+  },
+  "app_gen_tx": {
+    "name": "default",
+    "address": "109720515B4F8C0858DA3521E448262334534FFD",
+    "pub_key": {
+      "type": "AC26791624DE60",
+      "value": "pY7eLF0Ez3yq495kIjag8mD67Q131np/ssagpEvlV2A="
+    }
+  }
+}

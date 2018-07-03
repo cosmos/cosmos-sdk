@@ -47,6 +47,16 @@ func (k Keeper) setValidatorSigningBitArray(ctx sdk.Context, address sdk.Address
 	store.Set(GetValidatorSigningBitArrayKey(address, index), bz)
 }
 
+// Construct a new `ValidatorSigningInfo` struct
+func NewValidatorSigningInfo(startHeight int64, indexOffset int64, jailedUntil int64, signedBlocksCounter int64) ValidatorSigningInfo {
+	return ValidatorSigningInfo{
+		StartHeight:         startHeight,
+		IndexOffset:         indexOffset,
+		JailedUntil:         jailedUntil,
+		SignedBlocksCounter: signedBlocksCounter,
+	}
+}
+
 // Signing info for a validator
 type ValidatorSigningInfo struct {
 	StartHeight         int64 `json:"start_height"`          // height at which validator was first a candidate OR was unrevoked

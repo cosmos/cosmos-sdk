@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/gorilla/mux"
-	keys "github.com/tendermint/go-crypto/keys"
 
 	"github.com/spf13/cobra"
 )
@@ -28,7 +28,7 @@ var showKeysCmd = &cobra.Command{
 func getKey(name string) (keys.Info, error) {
 	kb, err := GetKeyBase()
 	if err != nil {
-		return keys.Info{}, err
+		return nil, err
 	}
 
 	return kb.Get(name)

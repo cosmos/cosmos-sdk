@@ -3,15 +3,14 @@ package types_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 type MockLogger struct {
@@ -43,7 +42,7 @@ func (l MockLogger) With(kvs ...interface{}) log.Logger {
 
 func TestContextGetOpShouldNeverPanic(t *testing.T) {
 	var ms types.MultiStore
-	ctx := types.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
+	ctx := types.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	indices := []int64{
 		-10, 1, 0, 10, 20,
 	}
@@ -58,7 +57,7 @@ func defaultContext(key types.StoreKey) types.Context {
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, types.StoreTypeIAVL, db)
 	cms.LoadLatestVersion()
-	ctx := types.NewContext(cms, abci.Header{}, false, nil, log.NewNopLogger())
+	ctx := types.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 	return ctx
 }
 
@@ -72,21 +71,21 @@ func TestCacheContext(t *testing.T) {
 	ctx := defaultContext(key)
 	store := ctx.KVStore(key)
 	store.Set(k1, v1)
-	assert.Equal(t, v1, store.Get(k1))
-	assert.Nil(t, store.Get(k2))
+	require.Equal(t, v1, store.Get(k1))
+	require.Nil(t, store.Get(k2))
 
 	cctx, write := ctx.CacheContext()
 	cstore := cctx.KVStore(key)
-	assert.Equal(t, v1, cstore.Get(k1))
-	assert.Nil(t, cstore.Get(k2))
+	require.Equal(t, v1, cstore.Get(k1))
+	require.Nil(t, cstore.Get(k2))
 
 	cstore.Set(k2, v2)
-	assert.Equal(t, v2, cstore.Get(k2))
-	assert.Nil(t, store.Get(k2))
+	require.Equal(t, v2, cstore.Get(k2))
+	require.Nil(t, store.Get(k2))
 
 	write()
 
-	assert.Equal(t, v2, store.Get(k2))
+	require.Equal(t, v2, store.Get(k2))
 }
 
 func TestLogContext(t *testing.T) {

@@ -1,12 +1,11 @@
 package rest
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/gorilla/mux"
-	"github.com/tendermint/go-crypto/keys"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,7 +26,9 @@ type sendBody struct {
 	LocalAccountName string    `json:"name"`
 	Password         string    `json:"password"`
 	ChainID          string    `json:"chain_id"`
+	AccountNumber    int64     `json:"account_number"`
 	Sequence         int64     `json:"sequence"`
+	Gas              int64     `json:"gas"`
 }
 
 var msgCdc = wire.NewCodec()
@@ -79,16 +80,22 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 		}
 
 		// build message
-		msg := client.BuildMsg(info.PubKey.Address(), to, m.Amount)
+		msg := client.BuildMsg(info.GetPubKey().Address(), to, m.Amount)
 		if err != nil { // XXX rechecking same error ?
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
+		// add gas to context
+		ctx = ctx.WithGas(m.Gas)
+		// add chain-id to context
+		ctx = ctx.WithChainID(m.ChainID)
+
 		// sign
+		ctx = ctx.WithAccountNumber(m.AccountNumber)
 		ctx = ctx.WithSequence(m.Sequence)
-		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, msg, cdc)
+		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, []sdk.Msg{msg}, cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(err.Error()))
@@ -103,7 +110,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 			return
 		}
 
-		output, err := json.MarshalIndent(res, "", "  ")
+		output, err := wire.MarshalJSONIndent(cdc, res)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

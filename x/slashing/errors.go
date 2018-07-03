@@ -12,41 +12,20 @@ const (
 	// Default slashing codespace
 	DefaultCodespace sdk.CodespaceType = 10
 
-	// Invalid validator
-	CodeInvalidValidator CodeType = 201
-	// Validator jailed
-	CodeValidatorJailed CodeType = 202
+	CodeInvalidValidator    CodeType = 101
+	CodeValidatorJailed     CodeType = 102
+	CodeValidatorNotRevoked CodeType = 103
 )
 
 func ErrNoValidatorForAddress(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidValidator, "That address is not associated with any known validator")
+	return sdk.NewError(codespace, CodeInvalidValidator, "that address is not associated with any known validator")
 }
 func ErrBadValidatorAddr(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidValidator, "Validator does not exist for that address")
+	return sdk.NewError(codespace, CodeInvalidValidator, "validator does not exist for that address")
 }
 func ErrValidatorJailed(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeValidatorJailed, "Validator jailed, cannot yet be unrevoked")
+	return sdk.NewError(codespace, CodeValidatorJailed, "validator jailed, cannot yet be unrevoked")
 }
-
-func codeToDefaultMsg(code CodeType) string {
-	switch code {
-	case CodeInvalidValidator:
-		return "Invalid Validator"
-	case CodeValidatorJailed:
-		return "Validator Jailed"
-	default:
-		return sdk.CodeToDefaultMsg(code)
-	}
-}
-
-func msgOrDefaultMsg(msg string, code CodeType) string {
-	if msg != "" {
-		return msg
-	}
-	return codeToDefaultMsg(code)
-}
-
-func newError(codespace sdk.CodespaceType, code CodeType, msg string) sdk.Error {
-	msg = msgOrDefaultMsg(msg, code)
-	return sdk.NewError(codespace, code, msg)
+func ErrValidatorNotRevoked(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeValidatorNotRevoked, "validator not revoked, cannot be unrevoked")
 }

@@ -93,6 +93,44 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	require.True(t, keeper.validatorByPowerIndexExists(ctx, power))
 }
 
+func TestZeroPowerUnbonded(t *testing.T) {
+	ctx, _, keeper := CreateTestInput(t, false, 0)
+	pool := keeper.GetPool(ctx)
+
+	// create a random pool
+	pool.LooseTokens = 10000
+	pool.BondedTokens = 1234
+	pool.BondedShares = sdk.NewRat(124)
+	pool.UnbondingTokens = 13934
+	pool.UnbondingShares = sdk.NewRat(145)
+	pool.UnbondedTokens = 154
+	pool.UnbondedShares = sdk.NewRat(1333)
+	keeper.SetPool(ctx, pool)
+
+	// add a validator
+	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	validator, pool, delSharesCreated := validator.AddTokensFromDel(pool, 100)
+	require.Equal(t, sdk.Unbonded, validator.Status())
+	require.Equal(t, int64(100), validator.PoolShares.Tokens(pool).RoundInt64())
+	keeper.SetPool(ctx, pool)
+	keeper.UpdateValidator(ctx, validator)
+	validator, found := keeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	require.Equal(t, int64(100), validator.PoolShares.Tokens(pool).RoundInt64(), "\nvalidator %v\npool %v", validator, pool)
+
+	pool = keeper.GetPool(ctx)
+
+	validator, pool, burned := validator.RemoveDelShares(pool, delSharesCreated)
+	require.Equal(t, int64(100), burned)
+	keeper.SetPool(ctx, pool)              // update the pool
+	keeper.UpdateValidator(ctx, validator) // update the validator, kicking it out
+	pool = keeper.GetPool(ctx)
+	validator, found = keeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	require.Equal(t, sdk.ZeroRat(), validator.GetPower())
+	require.Equal(t, sdk.Unbonded, validator.GetStatus())
+}
+
 // This function tests UpdateValidator, GetValidator, GetValidatorsBonded, RemoveValidator
 func TestValidatorBasics(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 1000)

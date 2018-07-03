@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	cmn "github.com/tendermint/tmlibs/common"
+	cmn "github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
 	"github.com/tendermint/tendermint/crypto"

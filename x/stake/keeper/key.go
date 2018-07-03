@@ -52,7 +52,7 @@ func GetValidatorsBondedIndexKey(ownerAddr sdk.Address) []byte {
 	return append(ValidatorsBondedIndexKey, ownerAddr.Bytes()...)
 }
 
-// rearrange the ValBondedIndexKey to get the ValidatorKey
+// Get the validator owner address from ValBondedIndexKey
 func GetAddressFromValBondedIndexKey(IndexKey []byte) []byte {
 	return IndexKey[1:] // remove prefix bytes
 }
@@ -84,10 +84,12 @@ func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 	counterBytes := make([]byte, 2)
 	binary.BigEndian.PutUint16(counterBytes, ^uint16(validator.BondIntraTxCounter)) // invert counter (first txns have priority)
 
-	return append(ValidatorsByPowerIndexKey,
-		append(revokedBytes,
-			append(powerBytes,
-				append(heightBytes, counterBytes...)...)...)...)
+	return append(append(append(append(
+		ValidatorsByPowerIndexKey,
+		revokedBytes...),
+		powerBytes...),
+		heightBytes...),
+		counterBytes...)
 }
 
 // get the key for the accumulated update validators.
@@ -115,12 +117,8 @@ func GetDelegationsKey(delegatorAddr sdk.Address) []byte {
 // get the key for an unbonding delegation by delegator and validator addr.
 // VALUE: stake/types.UnbondingDelegation
 func GetUBDKey(delegatorAddr, validatorAddr sdk.Address) []byte {
-
-	key := make([]byte, len(delegatorAddr.Bytes()))
-	copy(key, delegatorAddr.Bytes())
-
 	return append(
-		GetUBDsKey(key),
+		GetUBDsKey(delegatorAddr.Bytes()),
 		validatorAddr.Bytes()...)
 }
 
@@ -161,11 +159,8 @@ func GetUBDsByValIndexKey(validatorAddr sdk.Address) []byte {
 func GetREDKey(delegatorAddr, validatorSrcAddr,
 	validatorDstAddr sdk.Address) []byte {
 
-	key := make([]byte, len(delegatorAddr.Bytes()))
-	copy(key, delegatorAddr.Bytes())
-
 	return append(append(
-		GetREDsKey(key),
+		GetREDsKey(delegatorAddr.Bytes()),
 		validatorSrcAddr.Bytes()...),
 		validatorDstAddr.Bytes()...)
 }
@@ -175,12 +170,10 @@ func GetREDKey(delegatorAddr, validatorSrcAddr,
 func GetREDByValSrcIndexKey(delegatorAddr, validatorSrcAddr,
 	validatorDstAddr sdk.Address) []byte {
 
-	return append(
+	return append(append(
 		GetREDsFromValSrcIndexKey(validatorSrcAddr),
-		append(
-			delegatorAddr.Bytes(),
-			validatorDstAddr.Bytes()...)...,
-	)
+		delegatorAddr.Bytes()...),
+		validatorDstAddr.Bytes()...)
 }
 
 // get the index-key for a redelegation, stored by destination-validator-index
@@ -188,12 +181,10 @@ func GetREDByValSrcIndexKey(delegatorAddr, validatorSrcAddr,
 func GetREDByValDstIndexKey(delegatorAddr, validatorSrcAddr,
 	validatorDstAddr sdk.Address) []byte {
 
-	return append(
+	return append(append(
 		GetREDsToValDstIndexKey(validatorDstAddr),
-		append(
-			delegatorAddr.Bytes(),
-			validatorSrcAddr.Bytes()...)...,
-	)
+		delegatorAddr.Bytes()...),
+		validatorSrcAddr.Bytes()...)
 }
 
 // rearrange the ValSrcIndexKey to get the REDKey

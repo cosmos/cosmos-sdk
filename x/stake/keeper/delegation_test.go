@@ -179,7 +179,7 @@ func TestUnbondDelegation(t *testing.T) {
 	require.Equal(t, int64(4), pool.BondedTokens)
 }
 
-// tests Get/Set/Remove/Has UnbondingDelegation
+// Make sure that that the retrieving the delegations doesn't affect the state
 func TestGetRedelegationsFromValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 
@@ -198,10 +198,12 @@ func TestGetRedelegationsFromValidator(t *testing.T) {
 	resBond, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 
+	// get the redelegations one time
 	redelegations := keeper.GetRedelegationsFromValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
 	require.True(t, redelegations[0].Equal(resBond))
 
+	// get the redelegations a second time, should be exactly the same
 	redelegations = keeper.GetRedelegationsFromValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
 	require.True(t, redelegations[0].Equal(resBond))

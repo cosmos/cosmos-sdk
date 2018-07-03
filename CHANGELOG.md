@@ -38,6 +38,7 @@ BREAKING CHANGES
   * Add REST endpoint to retrieve liveness signing information for a validator
 * [types] renamed rational.Evaluate to rational.Round{Int64, Int}
 * [stake] most index keys nolonger hold a value - inputs are rearranged to form the desired key
+* [lcd] Switch key creation output to return bech32
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag

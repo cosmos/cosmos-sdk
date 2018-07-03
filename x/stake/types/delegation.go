@@ -15,14 +15,7 @@ type Delegation struct {
 	ValidatorAddr sdk.Address `json:"validator_addr"`
 	Shares        sdk.Rat     `json:"shares"`
 	Height        int64       `json:"height"` // Last height bond updated
-	//DelegationValue
 }
-
-// delegation store value
-//type DelegationValue struct {
-//Shares sdk.Rat `json:"shares"`
-//Height int64   `json:"height"` // Last height bond updated
-//}
 
 // two are equal
 func (d Delegation) Equal(d2 Delegation) bool {
@@ -70,16 +63,7 @@ type UnbondingDelegation struct {
 	MinTime        int64       `json:"min_time"`        // unix time for unbonding completion
 	InitialBalance sdk.Coin    `json:"initial_balance"` // atoms initially scheduled to receive at completion
 	Balance        sdk.Coin    `json:"balance"`         // atoms to receive at completion
-	//UBDValue
 }
-
-// UBD store value
-//type UBDValue struct {
-//CreationHeight int64    `json:"creation_height"` // height which the unbonding took place
-//MinTime        int64    `json:"min_time"`        // unix time for unbonding completion
-//InitialBalance sdk.Coin `json:"initial_balance"` // atoms initially scheduled to receive at completion
-//Balance        sdk.Coin `json:"balance"`         // atoms to receive at completion
-//}
 
 // nolint
 func (d UnbondingDelegation) Equal(d2 UnbondingDelegation) bool {
@@ -122,18 +106,7 @@ type Redelegation struct {
 	Balance          sdk.Coin    `json:"balance"`            // current balance
 	SharesSrc        sdk.Rat     `json:"shares_src"`         // amount of source shares redelegating
 	SharesDst        sdk.Rat     `json:"shares_dst"`         // amount of destination shares redelegating
-	//REDValue
 }
-
-// Redelegation store value
-//type REDValue struct {
-//CreationHeight int64    `json:"creation_height"` // height which the redelegation took place
-//MinTime        int64    `json:"min_time"`        // unix time for redelegation completion
-//InitialBalance sdk.Coin `json:"initial_balance"` // initial balance when redelegation started
-//Balance        sdk.Coin `json:"balance"`         // current balance
-//SharesSrc      sdk.Rat  `json:"shares_src"`      // amount of source shares redelegating
-//SharesDst      sdk.Rat  `json:"shares_dst"`      // amount of destination shares redelegating
-//}
 
 // nolint
 func (d Redelegation) Equal(d2 Redelegation) bool {

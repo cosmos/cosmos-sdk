@@ -6,7 +6,7 @@ import (
 	"os"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tmlibs/log"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 // SetupApp returns an application as well as a clean-up function

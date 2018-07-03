@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/viper"
 
 	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/tendermint/tmlibs/cli"
-	dbm "github.com/tendermint/tmlibs/db"
+	"github.com/tendermint/tendermint/libs/cli"
+	dbm "github.com/tendermint/tendermint/libs/db"
 
 	"github.com/cosmos/cosmos-sdk/client"
 

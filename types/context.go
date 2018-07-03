@@ -7,7 +7,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tmlibs/log"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 /*

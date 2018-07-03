@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
-	cmn "github.com/tendermint/tmlibs/common"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 var (

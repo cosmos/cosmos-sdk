@@ -137,7 +137,6 @@
     ".",
     "hcl/ast",
     "hcl/parser",
-    "hcl/printer",
     "hcl/scanner",
     "hcl/strconv",
     "hcl/token",
@@ -241,7 +240,7 @@
     "nfs",
     "xfs"
   ]
-  revision = "7d6f385de8bea29190f15ba9931442a0eaef9af7"
+  revision = "40f013a808ec4fa79def444a1a56de4d1727efcb"
 
 [[projects]]
   branch = "master"
@@ -267,8 +266,8 @@
 [[projects]]
   name = "github.com/spf13/cobra"
   packages = ["."]
-  revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
-  version = "v0.0.3"
+  revision = "7b2c5ac9fc04fc5efafb60700713d4fa609b777b"
+  version = "v0.0.1"
 
 [[projects]]
   branch = "master"
@@ -285,8 +284,8 @@
 [[projects]]
   name = "github.com/spf13/viper"
   packages = ["."]
-  revision = "b5e8006cbee93ec955a89ab31e0e3ce3204f3736"
-  version = "v1.0.2"
+  revision = "25b30aa063fc18e48662b86996252eabdcf2f0c7"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -334,11 +333,9 @@
 
 [[projects]]
   name = "github.com/tendermint/iavl"
-  packages = [
-    ".",
-    "sha256truncated"
-  ]
-  revision = "481b89cbbe6a641f7f6cb5db92b30b20f5a2e001"
+  packages = ["."]
+  revision = "9e5dc3e61f70b285bb25414452d47aca1ff34c1d"
+  version = "v0.8.2-rc0"
 
 [[projects]]
   name = "github.com/tendermint/tendermint"
@@ -354,9 +351,19 @@
     "consensus",
     "consensus/types",
     "crypto",
+    "crypto/merkle",
     "crypto/tmhash",
     "evidence",
+    "libs/autofile",
+    "libs/bech32",
+    "libs/cli",
+    "libs/cli/flags",
+    "libs/clist",
+    "libs/common",
+    "libs/db",
     "libs/events",
+    "libs/flowrate",
+    "libs/log",
     "libs/pubsub",
     "libs/pubsub/query",
     "lite",
@@ -387,25 +394,8 @@
     "types",
     "version"
   ]
-  revision = "8412b75b1070ac023405e8228e017ed36531fe1b"
-
-[[projects]]
-  name = "github.com/tendermint/tmlibs"
-  packages = [
-    "autofile",
-    "bech32",
-    "cli",
-    "cli/flags",
-    "clist",
-    "common",
-    "db",
-    "flowrate",
-    "log",
-    "merkle",
-    "merkle/tmhash"
-  ]
-  revision = "49596e0a1f48866603813df843c9409fc19805c6"
-  version = "v0.9.0"
+  revision = "5923b6288fe8ce9581936ee97c2bf9cf9c02c2f4"
+  version = "v0.22.0-rc2"
 
 [[projects]]
   name = "github.com/zondax/ledger-goclient"
@@ -443,7 +433,7 @@
     "netutil",
     "trace"
   ]
-  revision = "97aa3a539ec716117a9d15a4659a911f50d13c3c"
+  revision = "87b3feba568e144938625fc5d80ec92566c1a8fe"
 
 [[projects]]
   branch = "master"
@@ -482,9 +472,13 @@
   packages = [
     ".",
     "balancer",
+    "balancer/base",
+    "balancer/roundrobin",
     "codes",
     "connectivity",
     "credentials",
+    "encoding",
+    "encoding/proto",
     "grpclb/grpc_lb_v1/messages",
     "grpclog",
     "internal",
@@ -493,13 +487,15 @@
     "naming",
     "peer",
     "resolver",
+    "resolver/dns",
+    "resolver/passthrough",
     "stats",
     "status",
     "tap",
     "transport"
   ]
-  revision = "5b3c4e850e90a4cf6a20ebd46c8b32a0a3afcb9e"
-  version = "v1.7.5"
+  revision = "d11072e7ca9811b1100b80ca0269ac831f06d024"
+  version = "v1.11.3"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
@@ -510,6 +506,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "578ae0e0126ffd04006b6755a02bc25c95e2eb2ecb4ea99869c4ada133f29f6b"
+  inputs-digest = "13ad2a57b6942729e2d08b5c37810d62108aa64a335a4822fcff1ad992c0662b"
   solver-name = "gps-cdcl"
   solver-version = 1

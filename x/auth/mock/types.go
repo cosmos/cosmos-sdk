@@ -8,8 +8,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // Produce a random transaction, and check the state transition. Return a descriptive message "action" about
@@ -34,7 +34,7 @@ func AuthInvariant(t *testing.T, app *App, log string) {
 		coins := acc.GetCoins()
 		totalCoins = totalCoins.Plus(coins)
 		for _, coin := range coins {
-			require.True(t, coin.Amount > 0, log)
+			require.True(t, coin.Amount.GT(sdk.ZeroInt()), log)
 		}
 		return false
 	}

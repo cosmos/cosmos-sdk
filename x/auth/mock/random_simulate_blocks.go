@@ -2,12 +2,14 @@ package mock
 
 import (
 	"fmt"
+	"math/big"
 	"math/rand"
 	"testing"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // RandomizedTesting tests application by sending random messages.
@@ -71,4 +73,25 @@ func RandFromInterval(r *rand.Rand, intervals []Interval) int {
 	lo := interval.lo
 	hi := interval.hi
 	return r.Intn(hi-lo) + lo
+}
+
+type BigInterval struct {
+	lo sdk.Int
+	hi sdk.Int
+}
+
+// Chooses an interval uniformly from the list of random
+// intervals, and then chooses an element from an interval
+// uniformly at random.
+func RandFromBigInterval(r *rand.Rand, intervals []BigInterval) sdk.Int {
+	if len(intervals) == 0 {
+		return sdk.ZeroInt()
+	}
+	interval := intervals[r.Intn(len(intervals))]
+	lo := interval.lo
+	hi := interval.hi
+	diff := hi.Sub(lo)
+	result := sdk.NewIntFromBigInt(new(big.Int).Rand(r, diff.BigInt()))
+	result = result.Add(lo)
+	return result
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"math/rand"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -19,13 +20,17 @@ var chainID = "" // TODO
 // coin denominations
 func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.Address, denoms []string) {
 	accts := make([]auth.Account, len(addrs), len(addrs))
-	randCoinIntervals := []Interval{{1, 10}, {100, 1000}, {2 << 40, 2 << 50}}
+	randCoinIntervals := []BigInterval{
+		{sdk.NewIntWithDecimal(1, 0), sdk.NewIntWithDecimal(1, 1)},
+		{sdk.NewIntWithDecimal(1, 2), sdk.NewIntWithDecimal(1, 3)},
+		{sdk.NewIntWithDecimal(1, 40), sdk.NewIntWithDecimal(1, 50)},
+	}
 	for i := 0; i < len(accts); i++ {
 		coins := make([]sdk.Coin, len(denoms), len(denoms))
 		// generate a random coin for each denomination
 		for j := 0; j < len(denoms); j++ {
 			coins[j] = sdk.Coin{Denom: denoms[j],
-				Amount: int64(RandFromInterval(r, randCoinIntervals)),
+				Amount: RandFromBigInterval(r, randCoinIntervals),
 			}
 		}
 		app.TotalCoinsSupply = app.TotalCoinsSupply.Plus(coins)
@@ -101,7 +106,7 @@ func GenTx(msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKey)
 
 // generate a set of signed transactions a msg, that differ only by having the
 // sequence numbers incremented between every transaction.
-func GenSequenceOfTxs(msgs []sdk.Msg, accnums []int64, initSeqNums []int64, numToGenerate int, priv ...crypto.PrivKeyEd25519) []auth.StdTx {
+func GenSequenceOfTxs(msgs []sdk.Msg, accnums []int64, initSeqNums []int64, numToGenerate int, priv ...crypto.PrivKey) []auth.StdTx {
 	txs := make([]auth.StdTx, numToGenerate, numToGenerate)
 	for i := 0; i < numToGenerate; i++ {
 		txs[i] = GenTx(msgs, accnums, initSeqNums, priv...)
@@ -117,7 +122,7 @@ func incrementAllSequenceNumbers(initSeqNums []int64) {
 }
 
 // check a transaction result
-func SignCheck(app *baseapp.BaseApp, msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.Result {
+func SignCheck(app *baseapp.BaseApp, msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKey) sdk.Result {
 	tx := GenTx(msgs, accnums, seq, priv...)
 	res := app.Check(tx)
 	return res
@@ -149,26 +154,6 @@ func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accnum
 
 	app.Commit()
 	return res
-}
-
-// XXX the only reason we are using Sign Deliver here is because the tests
-// break on check tx the second time you use SignCheckDeliver in a test because
-// the checktx state has not been updated likely because commit is not being
-// called!
-func SignDeliver(t *testing.T, app *baseapp.BaseApp, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKey) {
-
-	// Sign the tx
-	tx := GenTx(msg, seq, priv...)
-
-	// Simulate a Block
-	app.BeginBlock(abci.RequestBeginBlock{})
-	res := app.Deliver(tx)
-	if expPass {
-		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
-	} else {
-		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
-	}
-	app.EndBlock(abci.RequestEndBlock{})
 }
 
 // Get all accounts in the accountMapper

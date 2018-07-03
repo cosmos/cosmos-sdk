@@ -6,14 +6,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"math/rand"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/mock"
-	"math/rand"
+
+	"strconv"
 
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
-	"strconv"
 )
 
 // test bank module in a mock application

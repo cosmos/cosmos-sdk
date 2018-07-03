@@ -1,12 +1,13 @@
 package mock
 
 import (
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/abci/types"
+	"fmt"
 	"math/rand"
-	"strconv"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/abci/types"
 )
 
 // RandomizedTesting tests application by sending random messages.
@@ -14,9 +15,17 @@ func (app *App) RandomizedTesting(t *testing.T, ops []TestAndRunTx, setups []Ran
 	invariants []AssertInvariants, numKeys int, numBlocks int, blockSize int) {
 
 	time := time.Now().UnixNano()
-	log := "Starting SingleModuleTest with randomness created with seed " + strconv.Itoa(int(time))
+	app.RandomizedTestingFromSeed(t, time, ops, setups, invariants, numKeys, numBlocks, blockSize)
+}
+
+// RandomizedTestingFromSeed tests an application by running the provided operations, testing the provided
+// invariants, but using the provided seed.
+func (app *App) RandomizedTestingFromSeed(t *testing.T, seed int64, ops []TestAndRunTx, setups []RandSetup,
+	invariants []AssertInvariants, numKeys int, numBlocks int, blockSize int) {
+	log := fmt.Sprintf("Starting SingleModuleTest with randomness created with seed %d", int(seed))
 	keys, addrs := GenerateNPrivKeyAddressPairs(numKeys)
-	r := rand.New(rand.NewSource(time))
+	r := rand.New(rand.NewSource(seed))
+
 	for i := 0; i < len(setups); i++ {
 		setups[i](r, keys)
 	}
@@ -44,4 +53,22 @@ func (app *App) assertAllInvariants(t *testing.T, tests []AssertInvariants, log 
 	for i := 0; i < len(tests); i++ {
 		tests[i](t, app, log)
 	}
+}
+
+type Interval struct {
+	lo int
+	hi int
+}
+
+// Chooses an interval uniformly from the list of random
+// intervals, and then chooses an element from an interval
+// uniformly at random.
+func RandFromInterval(r *rand.Rand, intervals []Interval) int {
+	if len(intervals) == 0 {
+		return 0
+	}
+	interval := intervals[r.Intn(len(intervals))]
+	lo := interval.lo
+	hi := interval.hi
+	return r.Intn(hi-lo) + lo
 }

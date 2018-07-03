@@ -10,8 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 	crypto "github.com/tendermint/go-crypto"
 
-	abci "github.com/tendermint/abci/types"
 	"math/rand"
+
+	abci "github.com/tendermint/abci/types"
 )
 
 var chainID = "" // TODO
@@ -20,13 +21,16 @@ var chainID = "" // TODO
 // coin denominations
 func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.Address, denoms []string) {
 	accts := make([]auth.Account, len(addrs), len(addrs))
-	maxNumCoins := 2 << 50
+	randCoinIntervals := []Interval{{1, 10}, {100, 1000}, {2 << 40, 2 << 50}}
 	for i := 0; i < len(accts); i++ {
 		coins := make([]sdk.Coin, len(denoms), len(denoms))
 		// generate a random coin for each denomination
 		for j := 0; j < len(denoms); j++ {
-			coins[j] = sdk.Coin{Denom: denoms[j], Amount: int64(r.Intn(maxNumCoins))}
+			coins[j] = sdk.Coin{Denom: denoms[j],
+				Amount: int64(RandFromInterval(r, randCoinIntervals)),
+			}
 		}
+		app.TotalCoinsSupply = app.TotalCoinsSupply.Plus(coins)
 		baseAcc := auth.NewBaseAccountWithAddress(addrs[i])
 		(&baseAcc).SetCoins(coins)
 		accts[i] = &baseAcc
@@ -44,7 +48,7 @@ func GenerateNPrivKeys(n int) (keys []crypto.PrivKey) {
 	return
 }
 
-// Generate n pairs of Private Keys, and Addresses
+// Generate n private key / address pairs
 func GenerateNPrivKeyAddressPairs(n int) (keys []crypto.PrivKey, addrs []sdk.Address) {
 	keys = make([]crypto.PrivKey, n, n)
 	addrs = make([]sdk.Address, n, n)

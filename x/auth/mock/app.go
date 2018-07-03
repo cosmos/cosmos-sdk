@@ -27,7 +27,8 @@ type App struct {
 	AccountMapper       auth.AccountMapper
 	FeeCollectionKeeper auth.FeeCollectionKeeper
 
-	GenesisAccounts []auth.Account
+	GenesisAccounts  []auth.Account
+	TotalCoinsSupply sdk.Coins
 }
 
 // partially construct a new app on the memstore for module and genesis testing
@@ -43,10 +44,11 @@ func NewApp() *App {
 
 	// create your application object
 	app := &App{
-		BaseApp:    bam.NewBaseApp("mock", cdc, logger, db),
-		Cdc:        cdc,
-		KeyMain:    sdk.NewKVStoreKey("main"),
-		KeyAccount: sdk.NewKVStoreKey("acc"),
+		BaseApp:          bam.NewBaseApp("mock", cdc, logger, db),
+		Cdc:              cdc,
+		KeyMain:          sdk.NewKVStoreKey("main"),
+		KeyAccount:       sdk.NewKVStoreKey("acc"),
+		TotalCoinsSupply: sdk.Coins{},
 	}
 
 	// define the accountMapper
@@ -60,7 +62,7 @@ func NewApp() *App {
 	app.SetInitChainer(app.InitChainer)
 
 	app.SetAnteHandler(auth.NewAnteHandler(app.AccountMapper, app.FeeCollectionKeeper))
-
+	app.TotalCoinsSupply = sdk.Coins{}
 	return app
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Delegation represents the bond with tokens held by an account.  It is
@@ -15,6 +16,41 @@ type Delegation struct {
 	ValidatorAddr sdk.Address `json:"validator_addr"`
 	Shares        sdk.Rat     `json:"shares"`
 	Height        int64       `json:"height"` // Last height bond updated
+}
+
+type delegationValue struct {
+	Shares sdk.Rat
+	Height int64
+}
+
+// return the delegation without fields contained within the key for the store
+func MarshalDelegation(cdc *wire.Codec, delegation Delegation) []byte {
+	val := delegationValue{
+		delegation.Shares,
+		delegation.Height,
+	}
+	return cdc.MustMarshalBinary(val)
+}
+
+// return the delegation without fields contained within the key for the store
+func UnmarshalDelegation(cdc *wire.Codec, key, value []byte) Delegation {
+	var storeValue delegationValue
+	cdc.MustUnmarshalBinary(value, &storeValue)
+
+	addrs := IndexKey[1:] // remove prefix bytes
+	split := len(addrs) / 2
+	if (len(addrs) % 2) != 0 {
+		panic("key length not even")
+	}
+	delAddr := sdk.Address{addrs[:split]}
+	valAddr := sdk.Address{addrs[split:]}
+
+	return Delegation{
+		DelegatorAddr: delAddr,
+		ValidatorAddr: valAddr,
+		Shares:        storeValue.Shares,
+		Height:        storeValue.Height,
+	}
 }
 
 // two are equal

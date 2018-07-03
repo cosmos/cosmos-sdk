@@ -2,7 +2,7 @@ package store
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	dbm "github.com/tendermint/tmlibs/db"
+	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
 type dbStoreAdapter struct {

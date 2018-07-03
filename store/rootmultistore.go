@@ -6,9 +6,9 @@ import (
 
 	"golang.org/x/crypto/ripemd160"
 
-	abci "github.com/tendermint/abci/types"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/merkle"
+	abci "github.com/tendermint/tendermint/abci/types"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/crypto/merkle"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -343,7 +343,11 @@ func (si storeInfo) Hash() []byte {
 	// include them via the keys.
 	bz, _ := cdc.MarshalBinary(si.Core) // Does not error
 	hasher := ripemd160.New()
-	hasher.Write(bz)
+	_, err := hasher.Write(bz)
+	if err != nil {
+		// TODO: Handle with #870
+		panic(err)
+	}
 	return hasher.Sum(nil)
 }
 

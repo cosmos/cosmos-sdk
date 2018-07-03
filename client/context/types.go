@@ -21,6 +21,7 @@ type CoreContext struct {
 	Client          rpcclient.Client
 	Decoder         auth.AccountDecoder
 	AccountStore    string
+	UseLedger       bool
 }
 
 // WithChainID - return a copy of the context with an updated chainID
@@ -99,5 +100,11 @@ func (c CoreContext) WithDecoder(decoder auth.AccountDecoder) CoreContext {
 // WithAccountStore - return a copy of the context with an updated AccountStore
 func (c CoreContext) WithAccountStore(accountStore string) CoreContext {
 	c.AccountStore = accountStore
+	return c
+}
+
+// WithUseLedger - return a copy of the context with an updated UseLedger
+func (c CoreContext) WithUseLedger(useLedger bool) CoreContext {
+	c.UseLedger = useLedger
 	return c
 }

@@ -8,10 +8,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -114,9 +114,10 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range Addrs {
 		pool := keeper.GetPool(ctx)
-		ck.AddCoins(ctx, addr, sdk.Coins{
+		_, _, err := ck.AddCoins(ctx, addr, sdk.Coins{
 			{keeper.GetParams(ctx).BondDenom, sdk.NewInt(initCoins)},
 		})
+		require.Nil(t, err)
 		pool.LooseTokens += initCoins
 		keeper.SetPool(ctx, pool)
 	}
@@ -161,6 +162,7 @@ func TestAddr(addr string, bech string) sdk.Address {
 	return res
 }
 
+// nolint: unparam
 func createTestAddrs(numAddrs int) []sdk.Address {
 	var addresses []sdk.Address
 	var buffer bytes.Buffer
@@ -179,6 +181,7 @@ func createTestAddrs(numAddrs int) []sdk.Address {
 	return addresses
 }
 
+// nolint: unparam
 func createTestPubKeys(numPubKeys int) []crypto.PubKey {
 	var publicKeys []crypto.PubKey
 	var buffer bytes.Buffer

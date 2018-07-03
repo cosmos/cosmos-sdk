@@ -50,7 +50,7 @@ func handleMsgUnrevoke(ctx sdk.Context, msg MsgUnrevoke, k Keeper) sdk.Result {
 	// Unrevoke the validator
 	k.validatorSet.Unrevoke(ctx, validator.GetPubKey())
 
-	tags := sdk.NewTags("action", []byte("unrevoke"), "validator", msg.ValidatorAddr.Bytes())
+	tags := sdk.NewTags("action", []byte("unrevoke"), "validator", []byte(msg.ValidatorAddr.String()))
 
 	return sdk.Result{
 		Tags: tags,

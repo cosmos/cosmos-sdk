@@ -108,7 +108,13 @@ test_cover:
 	@bash tests/test_cover.sh
 
 test_lint:
-	gometalinter.v2 --disable-all --enable='golint' --enable='misspell' --vendor ./...
+	gometalinter.v2 --disable-all --enable='golint' --enable='misspell' --enable='unparam' --enable='unconvert' --enable='ineffassign' --linter='vet:go vet -composites=false:PATH:LINE:MESSAGE' --enable='vet' --deadline=500s --vendor ./...
+	!(gometalinter.v2 --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
+
+format:
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -w -s
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs misspell -w
 
 benchmark:
 	@go test -bench=. $(PACKAGES_NOCLITEST)
@@ -181,4 +187,4 @@ remotenet-status:
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: build build_examples install install_examples install_debug dist check_tools get_tools get_vendor_deps draw_deps test test_cli test_unit test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update build-linux build-docker-gaiadnode localnet-start localnet-stop remotenet-start remotenet-stop remotenet-status
+.PHONY: build build_examples install install_examples install_debug dist check_tools get_tools get_vendor_deps draw_deps test test_cli test_unit test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update build-linux build-docker-gaiadnode localnet-start localnet-stop remotenet-start remotenet-stop remotenet-status format

@@ -7,10 +7,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -66,10 +66,11 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, Keep
 	genesis.Pool.LooseTokens = initCoins.MulRaw(int64(len(addrs))).Int64()
 	stake.InitGenesis(ctx, sk, genesis)
 	for _, addr := range addrs {
-		ck.AddCoins(ctx, addr, sdk.Coins{
+		_, _, err = ck.AddCoins(ctx, addr, sdk.Coins{
 			{sk.GetParams(ctx).BondDenom, initCoins},
 		})
 	}
+	require.Nil(t, err)
 	keeper := NewKeeper(cdc, keySlashing, sk, DefaultCodespace)
 	return ctx, ck, sk, keeper
 }

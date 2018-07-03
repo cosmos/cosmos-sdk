@@ -5,13 +5,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/abci/server"
+	"github.com/tendermint/tendermint/abci/server"
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/node"
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
-	cmn "github.com/tendermint/tmlibs/common"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 const (
@@ -31,7 +31,8 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 				return startStandAlone(ctx, appCreator)
 			}
 			ctx.Logger.Info("Starting ABCI with Tendermint")
-			return startInProcess(ctx, appCreator)
+			_, err := startInProcess(ctx, appCreator)
+			return err
 		},
 	}
 
@@ -58,22 +59,28 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 		return errors.Errorf("error creating listener: %v\n", err)
 	}
 	svr.SetLogger(ctx.Logger.With("module", "abci-server"))
-	svr.Start()
+	err = svr.Start()
+	if err != nil {
+		cmn.Exit(err.Error())
+	}
 
 	// Wait forever
 	cmn.TrapSignal(func() {
 		// Cleanup
-		svr.Stop()
+		err = svr.Stop()
+		if err != nil {
+			cmn.Exit(err.Error())
+		}
 	})
 	return nil
 }
 
-func startInProcess(ctx *Context, appCreator AppCreator) error {
+func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 	cfg := ctx.Config
 	home := cfg.RootDir
 	app, err := appCreator(home, ctx.Logger)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Create & start tendermint node
@@ -82,17 +89,18 @@ func startInProcess(ctx *Context, appCreator AppCreator) error {
 		proxy.NewLocalClientCreator(app),
 		node.DefaultGenesisDocProviderFunc(cfg),
 		node.DefaultDBProvider,
+		node.DefaultMetricsProvider,
 		ctx.Logger.With("module", "node"))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = n.Start()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Trap signal, run forever.
 	n.RunForever()
-	return nil
+	return n, nil
 }

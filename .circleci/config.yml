@@ -8,6 +8,7 @@ defaults: &defaults
     GOBIN: /tmp/workspace/bin
 
 jobs:
+
   setup_dependencies:
     <<: *defaults
     steps:
@@ -62,28 +63,11 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make get_tools
-            go get -u github.com/client9/misspell/cmd/misspell
       - run:
           name: Lint source
           command: |
             export PATH="$GOBIN:$PATH"
-            gometalinter.v2 --disable-all --enable='golint' --enable='misspell' --vendor ./...
-            find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
-  test_unit:
-    <<: *defaults
-    parallelism: 1
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - restore_cache:
-          key: v1-pkg-cache
-      - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          name: Test unit
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make test_unit
+            make test_lint
 
   test_cli:
     <<: *defaults
@@ -103,7 +87,7 @@ jobs:
 
   test_cover:
     <<: *defaults
-    parallelism: 1
+    parallelism: 2
     steps:
       - attach_workspace:
           at: /tmp/workspace
@@ -111,6 +95,7 @@ jobs:
           key: v1-pkg-cache
       - restore_cache:
           key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - run: mkdir -p /tmp/logs
       - run:
           name: Run tests
           command: |
@@ -119,15 +104,18 @@ jobs:
             for pkg in $(go list github.com/cosmos/cosmos-sdk/... | grep -v /vendor/ | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test | circleci tests split --split-by=timings); do
               id=$(basename "$pkg")
 
-              go test -timeout 5m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic "$pkg"
+              GOCACHE=off go test -v -timeout 8m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic "$pkg" | tee "/tmp/logs/$id-$RANDOM.log"
             done
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
             - "profiles/*"
+      - store_artifacts:
+          path: /tmp/logs
 
   upload_coverage:
     <<: *defaults
+    parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
@@ -155,9 +143,6 @@ workflows:
           requires:
             - setup_dependencies
       - test_cli:
-          requires:
-            - setup_dependencies
-      - test_unit:
           requires:
             - setup_dependencies
       - test_cover:

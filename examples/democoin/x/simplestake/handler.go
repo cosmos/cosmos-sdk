@@ -7,18 +7,18 @@ import (
 // NewHandler returns a handler for "simplestake" type messages.
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		switch msg := msg.(type) {
+		switch msg.(type) {
 		case MsgBond:
-			return handleMsgBond(ctx, k, msg)
+			return handleMsgBond()
 		case MsgUnbond:
-			return handleMsgUnbond(ctx, k, msg)
+			return handleMsgUnbond()
 		default:
 			return sdk.ErrUnknownRequest("No match for message type.").Result()
 		}
 	}
 }
 
-func handleMsgBond(ctx sdk.Context, k Keeper, msg MsgBond) sdk.Result {
+func handleMsgBond() sdk.Result {
 	// Removed ValidatorSet from result because it does not get used.
 	// TODO: Implement correct bond/unbond handling
 	return sdk.Result{
@@ -26,7 +26,7 @@ func handleMsgBond(ctx sdk.Context, k Keeper, msg MsgBond) sdk.Result {
 	}
 }
 
-func handleMsgUnbond(ctx sdk.Context, k Keeper, msg MsgUnbond) sdk.Result {
+func handleMsgUnbond() sdk.Result {
 	return sdk.Result{
 		Code: sdk.ABCICodeOK,
 	}

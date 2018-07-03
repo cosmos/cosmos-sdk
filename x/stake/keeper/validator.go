@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -247,7 +247,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 	// efficiency case:
 	// if already bonded and power increasing only need to update tendermint
 	if powerIncreasing && !validator.Revoked && oldValidator.Status() == sdk.Bonded {
-		bz := k.cdc.MustMarshalBinary(validator.ABCIValidator(k.cdc))
+		bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
 		store.Set(GetTendermintUpdatesKey(ownerAddr), bz)
 		return validator
 	}
@@ -445,7 +445,7 @@ func (k Keeper) unbondValidator(ctx sdk.Context, validator types.Validator) type
 	store.Set(GetValidatorKey(validator.Owner), bzVal)
 
 	// add to accumulated changes for tendermint
-	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero(k.cdc))
+	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero())
 	store.Set(GetTendermintUpdatesKey(validator.Owner), bzABCI)
 
 	// also remove from the Bonded types.Validators Store
@@ -474,7 +474,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	store.Set(GetValidatorsBondedIndexKey(validator.Owner), validator.Owner)
 
 	// add to accumulated changes for tendermint
-	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidator(k.cdc))
+	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidator())
 	store.Set(GetTendermintUpdatesKey(validator.Owner), bzABCI)
 
 	return validator
@@ -503,7 +503,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.Address) {
 	}
 	store.Delete(GetValidatorsBondedIndexKey(validator.Owner))
 
-	bz := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero(k.cdc))
+	bz := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero())
 	store.Set(GetTendermintUpdatesKey(address), bz)
 }
 

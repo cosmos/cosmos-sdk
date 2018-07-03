@@ -3,11 +3,10 @@ package types
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var (
@@ -39,9 +38,9 @@ func TestMsgCreateValidator(t *testing.T) {
 		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
 		msg := NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description)
 		if tc.expectPass {
-			assert.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
-			assert.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		}
 	}
 }
@@ -63,9 +62,9 @@ func TestMsgEditValidator(t *testing.T) {
 		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
 		msg := NewMsgEditValidator(tc.validatorAddr, description)
 		if tc.expectPass {
-			assert.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
-			assert.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		}
 	}
 }
@@ -90,9 +89,9 @@ func TestMsgDelegate(t *testing.T) {
 	for _, tc := range tests {
 		msg := NewMsgDelegate(tc.delegatorAddr, tc.validatorAddr, tc.bond)
 		if tc.expectPass {
-			assert.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
-			assert.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		}
 	}
 }
@@ -219,8 +218,8 @@ func TestMsgCompleteUnbonding(t *testing.T) {
 //var tx sdk.Tx
 //bs := wire.BinaryBytes(tc.tx)
 //err := wire.ReadBinaryBytes(bs, &tx)
-//if assert.NoError(t, err, "%d", i) {
-//assert.Equal(t, tc.tx, tx, "%d", i)
+//if require.NoError(t, err, "%d", i) {
+//require.Equal(t, tc.tx, tx, "%d", i)
 //}
 //}
 //}

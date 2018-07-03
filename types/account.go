@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/tmlibs/bech32"
-	cmn "github.com/tendermint/tmlibs/common"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/libs/bech32"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 //Address is a go crypto-style Address

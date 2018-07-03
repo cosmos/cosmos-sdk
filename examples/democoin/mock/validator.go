@@ -4,7 +4,7 @@ import (
 	"bytes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // Validator implements sdk.Validator
@@ -36,6 +36,11 @@ func (v Validator) GetPower() sdk.Rat {
 // Implements sdk.Validator
 func (v Validator) GetDelegatorShares() sdk.Rat {
 	return sdk.ZeroRat()
+}
+
+// Implements sdk.Validator
+func (v Validator) GetRevoked() bool {
+	return false
 }
 
 // Implements sdk.Validator
@@ -107,7 +112,7 @@ func (vs *ValidatorSet) RemoveValidator(addr sdk.Address) {
 }
 
 // Implements sdk.ValidatorSet
-func (vs *ValidatorSet) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, amt sdk.Rat) {
+func (vs *ValidatorSet) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power int64, amt sdk.Rat) {
 	panic("not implemented")
 }
 

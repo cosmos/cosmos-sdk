@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 // create create validator command
@@ -117,6 +118,9 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 			}
 
 			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			if err != nil {
+				return err
+			}
 			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
@@ -216,7 +220,7 @@ func getShares(storeName string, cdc *wire.Codec, sharesAmountStr, sharesPercent
 	case sharesAmountStr == "" && sharesPercentStr == "":
 		return sharesAmount, errors.Errorf("can either specify the amount OR the percent of the shares, not both")
 	case sharesAmountStr != "":
-		sharesAmount, err = sdk.NewRatFromDecimal(sharesAmountStr)
+		sharesAmount, err = sdk.NewRatFromDecimal(sharesAmountStr, types.MaxBondDenominatorPrecision)
 		if err != nil {
 			return sharesAmount, err
 		}
@@ -225,7 +229,7 @@ func getShares(storeName string, cdc *wire.Codec, sharesAmountStr, sharesPercent
 		}
 	case sharesPercentStr != "":
 		var sharesPercent sdk.Rat
-		sharesPercent, err = sdk.NewRatFromDecimal(sharesPercentStr)
+		sharesPercent, err = sdk.NewRatFromDecimal(sharesPercentStr, types.MaxBondDenominatorPrecision)
 		if err != nil {
 			return sharesAmount, err
 		}
@@ -259,7 +263,13 @@ func GetCmdCompleteRedelegate(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			if err != nil {
+				return err
+			}
 			validatorSrcAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidatorSrc))
+			if err != nil {
+				return err
+			}
 			validatorDstAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidatorDst))
 			if err != nil {
 				return err
@@ -351,6 +361,9 @@ func GetCmdCompleteUnbonding(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			if err != nil {
+				return err
+			}
 			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err

@@ -1,6 +1,8 @@
 package types
 
 import (
+	"encoding/json"
+
 	"math/big"
 )
 
@@ -46,14 +48,25 @@ func unmarshalAmino(i *big.Int, text string) (err error) {
 	return i.UnmarshalText([]byte(text))
 }
 
-// MarshalJSON for custom encodig scheme
+// MarshalJSON for custom encoding scheme
+// Must be encoded as a string for JSON precision
 func marshalJSON(i *big.Int) ([]byte, error) {
-	return i.MarshalText()
+	text, err := i.MarshalText()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(string(text))
 }
 
 // UnmarshalJSON for custom decoding scheme
+// Must be encoded as a string for JSON precision
 func unmarshalJSON(i *big.Int, bz []byte) error {
-	return i.UnmarshalText(bz)
+	var text string
+	err := json.Unmarshal(bz, &text)
+	if err != nil {
+		return err
+	}
+	return i.UnmarshalText([]byte(text))
 }
 
 // Int wraps integer with 256 bit range bound
@@ -212,6 +225,10 @@ func (i Int) DivRaw(i2 int64) Int {
 // Neg negates Int
 func (i Int) Neg() (res Int) {
 	return Int{neg(i.i)}
+}
+
+func (i Int) String() string {
+	return i.i.String()
 }
 
 // MarshalAmino defines custom encoding scheme

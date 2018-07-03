@@ -3,10 +3,10 @@ package mock
 import (
 	"os"
 
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -77,7 +77,11 @@ func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.Respo
 	// load the accounts
 	for _, genacc := range app.GenesisAccounts {
 		acc := app.AccountMapper.NewAccountWithAddress(ctx, genacc.GetAddress())
-		acc.SetCoins(genacc.GetCoins())
+		err := acc.SetCoins(genacc.GetCoins())
+		if err != nil {
+			// TODO: Handle with #870
+			panic(err)
+		}
 		app.AccountMapper.SetAccount(ctx, acc)
 	}
 

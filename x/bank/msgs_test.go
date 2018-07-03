@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -22,7 +22,7 @@ func TestMsgSendType(t *testing.T) {
 	}
 
 	// TODO some failures for bad result
-	assert.Equal(t, msg.Type(), "bank")
+	require.Equal(t, msg.Type(), "bank")
 }
 
 func TestInputValidation(t *testing.T) {
@@ -60,9 +60,9 @@ func TestInputValidation(t *testing.T) {
 	for i, tc := range cases {
 		err := tc.txIn.ValidateBasic()
 		if tc.valid {
-			assert.Nil(t, err, "%d: %+v", i, err)
+			require.Nil(t, err, "%d: %+v", i, err)
 		} else {
-			assert.NotNil(t, err, "%d", i)
+			require.NotNil(t, err, "%d", i)
 		}
 	}
 }
@@ -102,9 +102,9 @@ func TestOutputValidation(t *testing.T) {
 	for i, tc := range cases {
 		err := tc.txOut.ValidateBasic()
 		if tc.valid {
-			assert.Nil(t, err, "%d: %+v", i, err)
+			require.Nil(t, err, "%d: %+v", i, err)
 		} else {
-			assert.NotNil(t, err, "%d", i)
+			require.NotNil(t, err, "%d", i)
 		}
 	}
 }
@@ -170,9 +170,9 @@ func TestMsgSendValidation(t *testing.T) {
 	for i, tc := range cases {
 		err := tc.tx.ValidateBasic()
 		if tc.valid {
-			assert.Nil(t, err, "%d: %+v", i, err)
+			require.Nil(t, err, "%d: %+v", i, err)
 		} else {
-			assert.NotNil(t, err, "%d", i)
+			require.NotNil(t, err, "%d", i)
 		}
 	}
 }
@@ -187,8 +187,8 @@ func TestMsgSendGetSignBytes(t *testing.T) {
 	}
 	res := msg.GetSignBytes()
 
-	expected := `{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"denom":"atom","amount":10}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"denom":"atom","amount":10}]}]}`
-	assert.Equal(t, expected, string(res))
+	expected := `{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"denom":"atom","amount":"10"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"denom":"atom","amount":"10"}]}]}`
+	require.Equal(t, expected, string(res))
 }
 
 func TestMsgSendGetSigners(t *testing.T) {
@@ -201,7 +201,7 @@ func TestMsgSendGetSigners(t *testing.T) {
 	}
 	res := msg.GetSigners()
 	// TODO: fix this !
-	assert.Equal(t, fmt.Sprintf("%v", res), "[696E70757431 696E70757432 696E70757433]")
+	require.Equal(t, fmt.Sprintf("%v", res), "[696E70757431 696E70757432 696E70757433]")
 }
 
 /*
@@ -220,7 +220,7 @@ func TestMsgSendSigners(t *testing.T) {
 	}
 	tx := NewMsgSend(inputs, nil)
 
-	assert.Equal(t, signers, tx.Signers())
+	require.Equal(t, signers, tx.Signers())
 }
 */
 
@@ -241,7 +241,7 @@ func TestMsgIssueType(t *testing.T) {
 	}
 
 	// TODO some failures for bad result
-	assert.Equal(t, msg.Type(), "bank")
+	require.Equal(t, msg.Type(), "bank")
 }
 
 func TestMsgIssueValidation(t *testing.T) {
@@ -257,8 +257,8 @@ func TestMsgIssueGetSignBytes(t *testing.T) {
 	}
 	res := msg.GetSignBytes()
 
-	expected := `{"banker":"cosmosaccaddr1d9h8qat5e4ehc5","outputs":[{"address":"cosmosaccaddr1d3hkzm3dveex7mfdvfsku6cwsauqd","coins":[{"denom":"atom","amount":10}]}]}`
-	assert.Equal(t, expected, string(res))
+	expected := `{"banker":"cosmosaccaddr1d9h8qat5e4ehc5","outputs":[{"address":"cosmosaccaddr1d3hkzm3dveex7mfdvfsku6cwsauqd","coins":[{"denom":"atom","amount":"10"}]}]}`
+	require.Equal(t, expected, string(res))
 }
 
 func TestMsgIssueGetSigners(t *testing.T) {
@@ -266,5 +266,5 @@ func TestMsgIssueGetSigners(t *testing.T) {
 		Banker: sdk.Address([]byte("onlyone")),
 	}
 	res := msg.GetSigners()
-	assert.Equal(t, fmt.Sprintf("%v", res), "[6F6E6C796F6E65]")
+	require.Equal(t, fmt.Sprintf("%v", res), "[6F6E6C796F6E65]")
 }

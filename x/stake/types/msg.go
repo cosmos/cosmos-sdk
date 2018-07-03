@@ -1,17 +1,26 @@
 package types
 
 import (
+	"math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // name to idetify transaction types
 const MsgType = "stake"
 
-//Verify interface at compile time
+// Maximum amount of decimal points in the decimal representation of rationals
+// used in MsgBeginUnbonding / MsgBeginRedelegate
+const MaxBondDenominatorPrecision = 8
+
+// Verify interface at compile time
 var _, _, _ sdk.Msg = &MsgCreateValidator{}, &MsgEditValidator{}, &MsgDelegate{}
 var _, _ sdk.Msg = &MsgBeginUnbonding{}, &MsgCompleteUnbonding{}
 var _, _ sdk.Msg = &MsgBeginRedelegate{}, &MsgCompleteRedelegate{}
+
+// Initialize Int for the denominator
+var maximumBondingRationalDenominator sdk.Int = sdk.NewInt(int64(math.Pow10(MaxBondDenominatorPrecision)))
 
 //______________________________________________________________________
 
@@ -234,6 +243,9 @@ func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
 	if msg.SharesAmount.LTE(sdk.ZeroRat()) {
 		return ErrBadSharesAmount(DefaultCodespace)
 	}
+	if msg.SharesAmount.Denom().GT(maximumBondingRationalDenominator) {
+		return ErrBadSharesPrecision(DefaultCodespace)
+	}
 	return nil
 }
 
@@ -339,6 +351,9 @@ func (msg MsgBeginUnbonding) ValidateBasic() sdk.Error {
 	}
 	if msg.SharesAmount.LTE(sdk.ZeroRat()) {
 		return ErrBadSharesAmount(DefaultCodespace)
+	}
+	if msg.SharesAmount.Denom().GT(maximumBondingRationalDenominator) {
+		return ErrBadSharesPrecision(DefaultCodespace)
 	}
 	return nil
 }

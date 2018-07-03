@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/abci/types"
-	dbm "github.com/tendermint/tmlibs/db"
+	abci "github.com/tendermint/tendermint/abci/types"
+	dbm "github.com/tendermint/tendermint/libs/db"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/mock"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -89,7 +88,7 @@ func handleSeqOracle(ctx sdk.Context, key sdk.StoreKey, o seqOracle) sdk.Error {
 
 	seq := getSequence(ctx, key)
 	if seq != o.Seq {
-		return sdk.NewError(sdk.CodespaceUndefined, 1, "")
+		return sdk.NewError(sdk.CodespaceRoot, 1, "")
 	}
 
 	bz := wire.NewCodec().MustMarshalBinary(seq + 1)
@@ -106,9 +105,9 @@ func TestOracle(t *testing.T) {
 	addr3 := []byte("addr3")
 	addr4 := []byte("addr4")
 	valset := &mock.ValidatorSet{[]mock.Validator{
-		mock.Validator{addr1, sdk.NewRat(7)},
-		mock.Validator{addr2, sdk.NewRat(7)},
-		mock.Validator{addr3, sdk.NewRat(1)},
+		{addr1, sdk.NewRat(7)},
+		{addr2, sdk.NewRat(7)},
+		{addr3, sdk.NewRat(1)},
 	}}
 
 	key := sdk.NewKVStoreKey("testkey")
@@ -119,55 +118,55 @@ func TestOracle(t *testing.T) {
 	ctx = ctx.WithBlockHeader(abci.Header{ValidatorsHash: bz})
 
 	ork := NewKeeper(sdk.NewPrefixStoreGetter(key, []byte("oracle")), cdc, valset, sdk.NewRat(2, 3), 100)
-	h := seqHandler(ork, key, sdk.CodespaceUndefined)
+	h := seqHandler(ork, key, sdk.CodespaceRoot)
 
 	// Nonmock.Validator signed, transaction failed
 	msg := Msg{seqOracle{0, 0}, []byte("randomguy")}
 	res := h(ctx, msg)
-	assert.False(t, res.IsOK())
-	assert.Equal(t, 0, getSequence(ctx, key))
+	require.False(t, res.IsOK())
+	require.Equal(t, 0, getSequence(ctx, key))
 
 	// Less than 2/3 signed, msg not processed
 	msg.Signer = addr1
 	res = h(ctx, msg)
-	assert.True(t, res.IsOK())
-	assert.Equal(t, 0, getSequence(ctx, key))
+	require.True(t, res.IsOK())
+	require.Equal(t, 0, getSequence(ctx, key))
 
 	// Double signed, transaction failed
 	res = h(ctx, msg)
-	assert.False(t, res.IsOK())
-	assert.Equal(t, 0, getSequence(ctx, key))
+	require.False(t, res.IsOK())
+	require.Equal(t, 0, getSequence(ctx, key))
 
 	// More than 2/3 signed, msg processed
 	msg.Signer = addr2
 	res = h(ctx, msg)
-	assert.True(t, res.IsOK())
-	assert.Equal(t, 1, getSequence(ctx, key))
+	require.True(t, res.IsOK())
+	require.Equal(t, 1, getSequence(ctx, key))
 
 	// Already processed, transaction failed
 	msg.Signer = addr3
 	res = h(ctx, msg)
-	assert.False(t, res.IsOK())
-	assert.Equal(t, 1, getSequence(ctx, key))
+	require.False(t, res.IsOK())
+	require.Equal(t, 1, getSequence(ctx, key))
 
 	// Less than 2/3 signed, msg not processed
 	msg = Msg{seqOracle{100, 1}, addr1}
 	res = h(ctx, msg)
-	assert.True(t, res.IsOK())
-	assert.Equal(t, 1, getSequence(ctx, key))
+	require.True(t, res.IsOK())
+	require.Equal(t, 1, getSequence(ctx, key))
 
 	// More than 2/3 signed but payload is invalid
 	msg.Signer = addr2
 	res = h(ctx, msg)
-	assert.True(t, res.IsOK())
-	assert.NotEqual(t, "", res.Log)
-	assert.Equal(t, 1, getSequence(ctx, key))
+	require.True(t, res.IsOK())
+	require.NotEqual(t, "", res.Log)
+	require.Equal(t, 1, getSequence(ctx, key))
 
 	// Already processed, transaction failed
 	msg.Signer = addr3
 	res = h(ctx, msg)
-	assert.False(t, res.IsOK())
-	assert.Equal(t, 1, getSequence(ctx, key))
+	require.False(t, res.IsOK())
+	require.Equal(t, 1, getSequence(ctx, key))
 
 	// Should handle mock.Validator set change
 	valset.AddValidator(mock.Validator{addr4, sdk.NewRat(12)})
@@ -178,28 +177,28 @@ func TestOracle(t *testing.T) {
 	// Less than 2/3 signed, msg not processed
 	msg = Msg{seqOracle{1, 2}, addr1}
 	res = h(ctx, msg)
-	assert.True(t, res.IsOK())
-	assert.Equal(t, 1, getSequence(ctx, key))
+	require.True(t, res.IsOK())
+	require.Equal(t, 1, getSequence(ctx, key))
 
 	// Less than 2/3 signed, msg not processed
 	msg.Signer = addr2
 	res = h(ctx, msg)
-	assert.True(t, res.IsOK())
-	assert.Equal(t, 1, getSequence(ctx, key))
+	require.True(t, res.IsOK())
+	require.Equal(t, 1, getSequence(ctx, key))
 
 	// More than 2/3 signed, msg processed
 	msg.Signer = addr4
 	res = h(ctx, msg)
-	assert.True(t, res.IsOK())
-	assert.Equal(t, 2, getSequence(ctx, key))
+	require.True(t, res.IsOK())
+	require.Equal(t, 2, getSequence(ctx, key))
 
 	// Should handle mock.Validator set change while oracle process is happening
 	msg = Msg{seqOracle{2, 3}, addr4}
 
 	// Less than 2/3 signed, msg not processed
 	res = h(ctx, msg)
-	assert.True(t, res.IsOK())
-	assert.Equal(t, 2, getSequence(ctx, key))
+	require.True(t, res.IsOK())
+	require.Equal(t, 2, getSequence(ctx, key))
 
 	// Signed mock.Validator is kicked out
 	valset.RemoveValidator(addr4)
@@ -210,12 +209,12 @@ func TestOracle(t *testing.T) {
 	// Less than 2/3 signed, msg not processed
 	msg.Signer = addr1
 	res = h(ctx, msg)
-	assert.True(t, res.IsOK())
-	assert.Equal(t, 2, getSequence(ctx, key))
+	require.True(t, res.IsOK())
+	require.Equal(t, 2, getSequence(ctx, key))
 
 	// More than 2/3 signed, msg processed
 	msg.Signer = addr2
 	res = h(ctx, msg)
-	assert.True(t, res.IsOK())
-	assert.Equal(t, 3, getSequence(ctx, key))
+	require.True(t, res.IsOK())
+	require.Equal(t, 3, getSequence(ctx, key))
 }

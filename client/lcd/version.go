@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // cli version REST handler endpoint
@@ -16,7 +15,7 @@ func CLIVersionRequestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // connected node version REST handler endpoint
-func NodeVersionRequestHandler(cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
+func NodeVersionRequestHandler(ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		version, err := ctx.Query("/app/version")
 		if err != nil {
@@ -24,6 +23,6 @@ func NodeVersionRequestHandler(cdc *wire.Codec, ctx context.CoreContext) http.Ha
 			w.Write([]byte(fmt.Sprintf("Could't query version. Error: %s", err.Error())))
 			return
 		}
-		w.Write([]byte(version))
+		w.Write(version)
 	}
 }

@@ -7,11 +7,11 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/abci/server"
-	"github.com/tendermint/tmlibs/cli"
-	cmn "github.com/tendermint/tmlibs/common"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	"github.com/tendermint/tendermint/abci/server"
+	"github.com/tendermint/tendermint/libs/cli"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,12 +55,18 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	srv.Start()
+	err = srv.Start()
+	if err != nil {
+		cmn.Exit(err.Error())
+	}
 
 	// Wait forever
 	cmn.TrapSignal(func() {
 		// Cleanup
-		srv.Stop()
+		err = srv.Stop()
+		if err != nil {
+			cmn.Exit(err.Error())
+		}
 	})
 	return
 }

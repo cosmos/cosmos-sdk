@@ -82,17 +82,10 @@ func StatusOK(statusCode int) bool {
 }
 
 func waitForHeight(height int64, url string) {
+	var res *http.Response
+	var err error
 	for {
-		// get url, try a few times
-		var res *http.Response
-		var err error
-		for i := 0; i < 5; i++ {
-			res, err = http.Get(url)
-			if err == nil && StatusOK(res.StatusCode) {
-				break
-			}
-			time.Sleep(time.Millisecond * 200)
-		}
+		res, err = http.Get(url)
 		if err != nil {
 			panic(err)
 		}
@@ -101,10 +94,13 @@ func waitForHeight(height int64, url string) {
 		if err != nil {
 			panic(err)
 		}
-		res.Body.Close()
+		err = res.Body.Close()
+		if err != nil {
+			panic(err)
+		}
 
 		var resultBlock ctypes.ResultBlock
-		err = cdc.UnmarshalJSON([]byte(body), &resultBlock)
+		err = cdc.UnmarshalJSON(body, &resultBlock)
 		if err != nil {
 			fmt.Println("RES", res)
 			fmt.Println("BODY", string(body))
@@ -122,27 +118,31 @@ func waitForHeight(height int64, url string) {
 // wait for tendermint to start
 func WaitForStart(port string) {
 	var err error
-	for i := 0; i < 5; i++ {
-		time.Sleep(time.Second)
+	url := fmt.Sprintf("http://localhost:%v/blocks/latest", port)
 
-		url := fmt.Sprintf("http://localhost:%v/blocks/latest", port)
+	// ping the status endpoint a few times a second
+	// for a few seconds until we get a good response.
+	// otherwise something probably went wrong
+	for i := 0; i < 50; i++ {
+		time.Sleep(time.Millisecond * 100)
 
-		// get url, try a few times
 		var res *http.Response
 		res, err = http.Get(url)
-		if err == nil || res == nil {
+		if err != nil || res == nil {
 			continue
 		}
+		err = res.Body.Close()
+		if err != nil {
+			panic(err)
+		}
 
-		// waiting for server to start ...
-		if res.StatusCode != http.StatusOK {
-			res.Body.Close()
+		if res.StatusCode == http.StatusOK {
+			// good!
 			return
 		}
 	}
-	if err != nil {
-		panic(err)
-	}
+	// still haven't started up?! panic!
+	panic(err)
 }
 
 // TODO: these functions just print to Stdout.

@@ -3,7 +3,7 @@ package gov
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/mock"
@@ -42,9 +42,9 @@ func TestMsgSubmitProposal(t *testing.T) {
 	for i, tc := range tests {
 		msg := NewMsgSubmitProposal(tc.title, tc.description, tc.proposalType, tc.proposerAddr, tc.initialDeposit)
 		if tc.expectPass {
-			assert.Nil(t, msg.ValidateBasic(), "test: %v", i)
+			require.Nil(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
-			assert.NotNil(t, msg.ValidateBasic(), "test: %v", i)
+			require.NotNil(t, msg.ValidateBasic(), "test: %v", i)
 		}
 	}
 }
@@ -69,9 +69,9 @@ func TestMsgDeposit(t *testing.T) {
 	for i, tc := range tests {
 		msg := NewMsgDeposit(tc.depositerAddr, tc.proposalID, tc.depositAmount)
 		if tc.expectPass {
-			assert.Nil(t, msg.ValidateBasic(), "test: %v", i)
+			require.Nil(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
-			assert.NotNil(t, msg.ValidateBasic(), "test: %v", i)
+			require.NotNil(t, msg.ValidateBasic(), "test: %v", i)
 		}
 	}
 }
@@ -97,9 +97,9 @@ func TestMsgVote(t *testing.T) {
 	for i, tc := range tests {
 		msg := NewMsgVote(tc.voterAddr, tc.proposalID, tc.option)
 		if tc.expectPass {
-			assert.Nil(t, msg.ValidateBasic(), "test: %v", i)
+			require.Nil(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
-			assert.NotNil(t, msg.ValidateBasic(), "test: %v", i)
+			require.NotNil(t, msg.ValidateBasic(), "test: %v", i)
 		}
 	}
 }

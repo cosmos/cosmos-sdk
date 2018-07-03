@@ -61,6 +61,7 @@ type UnbondingDelegation struct {
 	ValidatorAddr  sdk.Address `json:"validator_addr"`  // validator unbonding from owner addr
 	CreationHeight int64       `json:"creation_height"` // height which the unbonding took place
 	MinTime        int64       `json:"min_time"`        // unix time for unbonding completion
+	InitialBalance sdk.Coin    `json:"initial_balance"` // atoms initially scheduled to receive at completion
 	Balance        sdk.Coin    `json:"balance"`         // atoms to receive at completion
 }
 
@@ -101,8 +102,10 @@ type Redelegation struct {
 	ValidatorDstAddr sdk.Address `json:"validator_dst_addr"` // validator redelegation destination owner addr
 	CreationHeight   int64       `json:"creation_height"`    // height which the redelegation took place
 	MinTime          int64       `json:"min_time"`           // unix time for redelegation completion
-	SharesSrc        sdk.Rat     `json:"shares`              // amount of source shares redelegating
-	SharesDst        sdk.Rat     `json:"shares`              // amount of destination shares redelegating
+	InitialBalance   sdk.Coin    `json:"initial_balance"`    // initial balance when redelegation started
+	Balance          sdk.Coin    `json:"balance"`            // current balance
+	SharesSrc        sdk.Rat     `json:"shares_src"`         // amount of source shares redelegating
+	SharesDst        sdk.Rat     `json:"shares_dst"`         // amount of destination shares redelegating
 }
 
 // nolint

@@ -101,7 +101,7 @@ func (keeper Keeper) setInitialProposalID(ctx sdk.Context, proposalID int64) sdk
 	if bz != nil {
 		return ErrInvalidGenesis(keeper.codespace, "Initial ProposalID already set")
 	}
-	bz = keeper.cdc.MustMarshalBinary(proposalID) // TODO: switch to MarshalBinaryBare when new go-amino gets added
+	bz = keeper.cdc.MustMarshalBinary(proposalID)
 	store.Set(KeyNextProposalID, bz)
 	return nil
 }
@@ -112,8 +112,8 @@ func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID int64, err sd
 	if bz == nil {
 		return -1, ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
 	}
-	keeper.cdc.MustUnmarshalBinary(bz, &proposalID)   // TODO: switch to UnmarshalBinaryBare when new go-amino gets added
-	bz = keeper.cdc.MustMarshalBinary(proposalID + 1) // TODO: switch to MarshalBinaryBare when new go-amino gets added
+	keeper.cdc.MustUnmarshalBinary(bz, &proposalID)
+	bz = keeper.cdc.MustMarshalBinary(proposalID + 1)
 	store.Set(KeyNextProposalID, bz)
 	return proposalID, nil
 }
@@ -129,7 +129,7 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 // Procedures
 
 // Gets procedure from store. TODO: move to global param store and allow for updating of this
-func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) DepositProcedure {
+func (keeper Keeper) GetDepositProcedure() DepositProcedure {
 	return DepositProcedure{
 		MinDeposit:       sdk.Coins{sdk.NewCoin("steak", 10)},
 		MaxDepositPeriod: 200,
@@ -137,14 +137,14 @@ func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) DepositProcedure {
 }
 
 // Gets procedure from store. TODO: move to global param store and allow for updating of this
-func (keeper Keeper) GetVotingProcedure(ctx sdk.Context) VotingProcedure {
+func (keeper Keeper) GetVotingProcedure() VotingProcedure {
 	return VotingProcedure{
 		VotingPeriod: 200,
 	}
 }
 
 // Gets procedure from store. TODO: move to global param store and allow for updating of this
-func (keeper Keeper) GetTallyingProcedure(ctx sdk.Context) TallyingProcedure {
+func (keeper Keeper) GetTallyingProcedure() TallyingProcedure {
 	return TallyingProcedure{
 		Threshold:         sdk.NewRat(1, 2),
 		Veto:              sdk.NewRat(1, 3),
@@ -256,7 +256,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 	// Check if deposit tipped proposal into voting period
 	// Active voting period if so
 	activatedVotingPeriod := false
-	if proposal.GetStatus() == StatusDepositPeriod && proposal.GetTotalDeposit().IsGTE(keeper.GetDepositProcedure(ctx).MinDeposit) {
+	if proposal.GetStatus() == StatusDepositPeriod && proposal.GetTotalDeposit().IsGTE(keeper.GetDepositProcedure().MinDeposit) {
 		keeper.activateVotingPeriod(ctx, proposal)
 		activatedVotingPeriod = true
 	}
@@ -264,7 +264,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 	// Add or update deposit object
 	currDeposit, found := keeper.GetDeposit(ctx, proposalID, depositerAddr)
 	if !found {
-		newDeposit := Deposit{depositerAddr, depositAmount}
+		newDeposit := Deposit{depositerAddr, proposalID, depositAmount}
 		keeper.setDeposit(ctx, proposalID, depositerAddr, newDeposit)
 	} else {
 		currDeposit.Amount = currDeposit.Amount.Plus(depositAmount)

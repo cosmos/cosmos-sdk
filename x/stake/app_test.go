@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var (
@@ -75,7 +75,7 @@ func checkValidator(t *testing.T, mapp *mock.App, keeper Keeper,
 
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	validator, found := keeper.GetValidator(ctxCheck, addr1)
-	assert.Equal(t, expFound, found)
+	require.Equal(t, expFound, found)
 	return validator
 }
 
@@ -85,11 +85,11 @@ func checkDelegation(t *testing.T, mapp *mock.App, keeper Keeper, delegatorAddr,
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	delegation, found := keeper.GetDelegation(ctxCheck, delegatorAddr, validatorAddr)
 	if expFound {
-		assert.True(t, found)
+		require.True(t, found)
 		assert.True(sdk.RatEq(t, expShares, delegation.Shares))
 		return
 	}
-	assert.False(t, found)
+	require.False(t, found)
 }
 
 func TestStakeMsgs(t *testing.T) {

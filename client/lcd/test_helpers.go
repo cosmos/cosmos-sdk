@@ -19,14 +19,14 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/libs/cli"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 	nm "github.com/tendermint/tendermint/node"
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/tendermint/tmlibs/cli"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
@@ -95,7 +95,7 @@ func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (addr sd
 func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (cleanup func(), validatorsPKs []crypto.PubKey, port string) {
 
 	config := GetConfig()
-	config.Consensus.TimeoutCommit = 1000
+	config.Consensus.TimeoutCommit = 100
 	config.Consensus.SkipTimeoutCommit = false
 	config.TxIndex.IndexAllTags = true
 
@@ -132,7 +132,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 	for _, gdValidator := range genDoc.Validators {
 		pk := gdValidator.PubKey
 		validatorsPKs = append(validatorsPKs, pk) // append keys for output
-		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, pk.Address(), "test_val1", true)
+		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, pk.Address(), "test_val1")
 		require.NoError(t, err)
 		appGenTxs = append(appGenTxs, appGenTx)
 	}
@@ -169,7 +169,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 
 	//time.Sleep(time.Second)
 	//tests.WaitForHeight(2, port)
-	tests.WaitForStart(port)
+	tests.WaitForLCDStart(port)
 	tests.WaitForHeight(1, port)
 
 	// for use in defer

@@ -7,11 +7,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 // create create validator command
@@ -153,9 +155,10 @@ func GetCmdRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "redelegate illiquid tokens from one validator to another",
 	}
 	cmd.AddCommand(
-		GetCmdBeginRedelegate(storeName, cdc),
-		GetCmdCompleteRedelegate(cdc),
-	)
+		client.PostCommands(
+			GetCmdBeginRedelegate(storeName, cdc),
+			GetCmdCompleteRedelegate(cdc),
+		)...)
 	return cmd
 }
 
@@ -219,7 +222,7 @@ func getShares(storeName string, cdc *wire.Codec, sharesAmountStr, sharesPercent
 	case sharesAmountStr == "" && sharesPercentStr == "":
 		return sharesAmount, errors.Errorf("can either specify the amount OR the percent of the shares, not both")
 	case sharesAmountStr != "":
-		sharesAmount, err = sdk.NewRatFromDecimal(sharesAmountStr)
+		sharesAmount, err = sdk.NewRatFromDecimal(sharesAmountStr, types.MaxBondDenominatorPrecision)
 		if err != nil {
 			return sharesAmount, err
 		}
@@ -228,7 +231,7 @@ func getShares(storeName string, cdc *wire.Codec, sharesAmountStr, sharesPercent
 		}
 	case sharesPercentStr != "":
 		var sharesPercent sdk.Rat
-		sharesPercent, err = sdk.NewRatFromDecimal(sharesPercentStr)
+		sharesPercent, err = sdk.NewRatFromDecimal(sharesPercentStr, types.MaxBondDenominatorPrecision)
 		if err != nil {
 			return sharesAmount, err
 		}
@@ -300,9 +303,10 @@ func GetCmdUnbond(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "begin or complete unbonding shares from a validator",
 	}
 	cmd.AddCommand(
-		GetCmdBeginUnbonding(storeName, cdc),
-		GetCmdCompleteUnbonding(cdc),
-	)
+		client.PostCommands(
+			GetCmdBeginUnbonding(storeName, cdc),
+			GetCmdCompleteUnbonding(cdc),
+		)...)
 	return cmd
 }
 

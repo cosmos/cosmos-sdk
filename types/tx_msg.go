@@ -11,12 +11,12 @@ type Msg interface {
 	// Must be alphanumeric or empty.
 	Type() string
 
-	// Get the canonical byte representation of the Msg.
-	GetSignBytes() []byte
-
 	// ValidateBasic does a simple validation check that
 	// doesn't require access to any other information.
 	ValidateBasic() Error
+
+	// Get the canonical byte representation of the Msg.
+	GetSignBytes() []byte
 
 	// Signers returns the addrs of signers that must sign.
 	// CONTRACT: All signatures must be present to be valid.

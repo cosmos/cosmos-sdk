@@ -3,11 +3,10 @@ package types_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -72,21 +71,21 @@ func TestCacheContext(t *testing.T) {
 	ctx := defaultContext(key)
 	store := ctx.KVStore(key)
 	store.Set(k1, v1)
-	assert.Equal(t, v1, store.Get(k1))
-	assert.Nil(t, store.Get(k2))
+	require.Equal(t, v1, store.Get(k1))
+	require.Nil(t, store.Get(k2))
 
 	cctx, write := ctx.CacheContext()
 	cstore := cctx.KVStore(key)
-	assert.Equal(t, v1, cstore.Get(k1))
-	assert.Nil(t, cstore.Get(k2))
+	require.Equal(t, v1, cstore.Get(k1))
+	require.Nil(t, cstore.Get(k2))
 
 	cstore.Set(k2, v2)
-	assert.Equal(t, v2, cstore.Get(k2))
-	assert.Nil(t, store.Get(k2))
+	require.Equal(t, v2, cstore.Get(k2))
+	require.Nil(t, store.Get(k2))
 
 	write()
 
-	assert.Equal(t, v2, store.Get(k2))
+	require.Equal(t, v2, store.Get(k2))
 }
 
 func TestLogContext(t *testing.T) {

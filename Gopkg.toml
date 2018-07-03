@@ -58,11 +58,11 @@
 
 [[constraint]]
   name = "github.com/tendermint/iavl"
-  revision = "481b89cbbe6a641f7f6cb5db92b30b20f5a2e001"
+  version = "=v0.8.2-rc0"
 
 [[constraint]]
   name = "github.com/tendermint/tendermint"
-  revision = "8412b75b1070ac023405e8228e017ed36531fe1b"
+  version = "=0.22.0-rc2"
 
 [[constraint]]
   name = "github.com/tendermint/tmlibs"

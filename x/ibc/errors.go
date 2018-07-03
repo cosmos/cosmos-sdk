@@ -36,6 +36,7 @@ func ErrIdenticalChains(codespace sdk.CodespaceType) sdk.Error {
 // -------------------------
 // Helpers
 
+// nolint: unparam
 func newError(codespace sdk.CodespaceType, code sdk.CodeType, msg string) sdk.Error {
 	msg = msgOrDefaultMsg(msg, code)
 	return sdk.NewError(codespace, code, msg)

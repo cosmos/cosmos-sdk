@@ -15,7 +15,7 @@ import (
 	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
-	"github.com/tendermint/tmlibs/cli"
+	"github.com/tendermint/tendermint/libs/cli"
 )
 
 const (
@@ -104,7 +104,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		info, err := kb.CreateFundraiserKey(name, seed, pass)
+		info, err := kb.CreateKey(name, seed, pass)
 		if err != nil {
 			return err
 		}

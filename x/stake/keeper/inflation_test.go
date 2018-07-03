@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -61,7 +60,7 @@ func TestGetInflation(t *testing.T) {
 		inflation := keeper.NextInflation(ctx)
 		diffInflation := inflation.Sub(tc.setInflation)
 
-		assert.True(t, diffInflation.Equal(tc.expectedChange),
+		require.True(t, diffInflation.Equal(tc.expectedChange),
 			"Name: %v\nDiff:  %v\nExpected: %v\n", tc.name, diffInflation, tc.expectedChange)
 	}
 }
@@ -155,7 +154,7 @@ func TestLargeUnbond(t *testing.T) {
 
 	pool = keeper.GetPool(ctx)
 	validator, found := keeper.GetValidator(ctx, Addrs[0])
-	assert.True(t, found)
+	require.True(t, found)
 
 	// initialBondedRatio that we can use to compare to the new values after the unbond
 	initialBondedRatio := pool.BondedRatio()
@@ -168,13 +167,13 @@ func TestLargeUnbond(t *testing.T) {
 	_, expProvisionsAfter, pool := updateProvisions(t, keeper, pool, ctx, 0)
 
 	bondedShares = bondedShares.Sub(bondSharesVal0)
-	val0UnbondedTokens = pool.UnbondedShareExRate().Mul(validator.PoolShares.Unbonded()).Evaluate()
+	val0UnbondedTokens = pool.UnbondedShareExRate().Mul(validator.PoolShares.Unbonded()).RoundInt64()
 	unbondedShares = unbondedShares.Add(sdk.NewRat(val0UnbondedTokens, 1).Mul(pool.UnbondedShareExRate()))
 
 	// unbonded shares should increase
-	assert.True(t, unbondedShares.GT(sdk.NewRat(300000000, 1)))
+	require.True(t, unbondedShares.GT(sdk.NewRat(300000000, 1)))
 	// Ensure that new bonded ratio is less than old bonded ratio , because before they were increasing (i.e. 50% < 75)
-	assert.True(t, (pool.BondedRatio().LT(initialBondedRatio)))
+	require.True(t, (pool.BondedRatio().LT(initialBondedRatio)))
 
 	// Final check that the pool equals initial values + provisions and adjustments we recorded
 	pool = keeper.GetPool(ctx)
@@ -202,7 +201,7 @@ func TestLargeBond(t *testing.T) {
 
 	pool = keeper.GetPool(ctx)
 	validator, found := keeper.GetValidator(ctx, Addrs[9])
-	assert.True(t, found)
+	require.True(t, found)
 
 	// initialBondedRatio that we can use to compare to the new values after the unbond
 	initialBondedRatio := pool.BondedRatio()
@@ -220,9 +219,9 @@ func TestLargeBond(t *testing.T) {
 	unbondedShares = unbondedShares.Sub(unbondedSharesVal9)
 
 	// unbonded shares should decrease
-	assert.True(t, unbondedShares.LT(sdk.NewRat(1200000000, 1)))
+	require.True(t, unbondedShares.LT(sdk.NewRat(1200000000, 1)))
 	// Ensure that new bonded ratio is greater than old bonded ratio (i.e. 50% > 25%)
-	assert.True(t, (pool.BondedRatio().GT(initialBondedRatio)))
+	require.True(t, (pool.BondedRatio().GT(initialBondedRatio)))
 	// Final check that the pool equals initial values + provisions and adjustments we recorded
 	pool = keeper.GetPool(ctx)
 
@@ -289,14 +288,14 @@ func TestInflationWithRandomOperations(t *testing.T) {
 // Final check on the global pool values for what the total tokens accumulated from each hour of provisions
 func checkFinalPoolValues(t *testing.T, pool types.Pool, initialTotalTokens, cumulativeExpProvs int64) {
 	calculatedTotalTokens := initialTotalTokens + cumulativeExpProvs
-	assert.Equal(t, calculatedTotalTokens, pool.TokenSupply())
+	require.Equal(t, calculatedTotalTokens, pool.TokenSupply())
 }
 
 // Processes provisions are added to the pool correctly every hour
 // Returns expected Provisions, expected Inflation, and pool, to help with cumulative calculations back in main Tests
 func updateProvisions(t *testing.T, keeper Keeper, pool types.Pool, ctx sdk.Context, hr int) (sdk.Rat, int64, types.Pool) {
 	expInflation := keeper.NextInflation(ctx)
-	expProvisions := (expInflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat)).Evaluate()
+	expProvisions := (expInflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat)).RoundInt64()
 	startTotalSupply := pool.TokenSupply()
 	pool = keeper.ProcessProvisions(ctx)
 	keeper.SetPool(ctx, pool)
@@ -332,14 +331,14 @@ func setupTestValidators(pool types.Pool, keeper Keeper, ctx sdk.Context, valida
 
 // Checks that the deterministic validator setup you wanted matches the values in the pool
 func checkValidatorSetup(t *testing.T, pool types.Pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens int64) {
-	assert.Equal(t, initialTotalTokens, pool.TokenSupply(), "%v", pool)
-	assert.Equal(t, initialBondedTokens, pool.BondedTokens, "%v", pool)
-	assert.Equal(t, initialUnbondedTokens, pool.UnbondedTokens, "%v", pool)
+	require.Equal(t, initialTotalTokens, pool.TokenSupply(), "%v", pool)
+	require.Equal(t, initialBondedTokens, pool.BondedTokens, "%v", pool)
+	require.Equal(t, initialUnbondedTokens, pool.UnbondedTokens, "%v", pool)
 
 	// test initial bonded ratio
-	assert.True(t, pool.BondedRatio().Equal(sdk.NewRat(initialBondedTokens, initialTotalTokens)), "%v", pool.BondedRatio())
+	require.True(t, pool.BondedRatio().Equal(sdk.NewRat(initialBondedTokens, initialTotalTokens)), "%v", pool.BondedRatio())
 	// test the value of validator shares
-	assert.True(t, pool.BondedShareExRate().Equal(sdk.OneRat()), "%v", pool.BondedShareExRate())
+	require.True(t, pool.BondedShareExRate().Equal(sdk.OneRat()), "%v", pool.BondedShareExRate())
 }
 
 // Checks that The inflation will correctly increase or decrease after an update to the pool
@@ -349,30 +348,30 @@ func checkInflation(t *testing.T, pool types.Pool, previousInflation, updatedInf
 	switch {
 	//BELOW 67% - Rate of change positive and increasing, while we are between 7% <= and < 20% inflation
 	case pool.BondedRatio().LT(sdk.NewRat(67, 100)) && updatedInflation.LT(sdk.NewRat(20, 100)):
-		assert.Equal(t, true, inflationChange.GT(sdk.ZeroRat()), msg)
+		require.Equal(t, true, inflationChange.GT(sdk.ZeroRat()), msg)
 
 	//BELOW 67% - Rate of change should be 0 while inflation continually stays at 20% until we reach 67% bonded ratio
 	case pool.BondedRatio().LT(sdk.NewRat(67, 100)) && updatedInflation.Equal(sdk.NewRat(20, 100)):
 		if previousInflation.Equal(sdk.NewRat(20, 100)) {
-			assert.Equal(t, true, inflationChange.IsZero(), msg)
+			require.Equal(t, true, inflationChange.IsZero(), msg)
 
 			//This else statement covers the one off case where we first hit 20%, but we still needed a positive ROC to get to 67% bonded ratio (i.e. we went from 19.99999% to 20%)
 		} else {
-			assert.Equal(t, true, inflationChange.GT(sdk.ZeroRat()), msg)
+			require.Equal(t, true, inflationChange.GT(sdk.ZeroRat()), msg)
 		}
 
 	//ABOVE 67% - Rate of change should be negative while the bond is above 67, and should stay negative until we reach inflation of 7%
 	case pool.BondedRatio().GT(sdk.NewRat(67, 100)) && updatedInflation.LT(sdk.NewRat(20, 100)) && updatedInflation.GT(sdk.NewRat(7, 100)):
-		assert.Equal(t, true, inflationChange.LT(sdk.ZeroRat()), msg)
+		require.Equal(t, true, inflationChange.LT(sdk.ZeroRat()), msg)
 
 	//ABOVE 67% - Rate of change should be 0 while inflation continually stays at 7%.
 	case pool.BondedRatio().GT(sdk.NewRat(67, 100)) && updatedInflation.Equal(sdk.NewRat(7, 100)):
 		if previousInflation.Equal(sdk.NewRat(7, 100)) {
-			assert.Equal(t, true, inflationChange.IsZero(), msg)
+			require.Equal(t, true, inflationChange.IsZero(), msg)
 
 			//This else statement covers the one off case where we first hit 7%, but we still needed a negative ROC to continue to get down to 67%. (i.e. we went from 7.00001% to 7%)
 		} else {
-			assert.Equal(t, true, inflationChange.LT(sdk.ZeroRat()), msg)
+			require.Equal(t, true, inflationChange.LT(sdk.ZeroRat()), msg)
 		}
 	}
 }

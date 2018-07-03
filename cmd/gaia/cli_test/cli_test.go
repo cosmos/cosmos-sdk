@@ -7,6 +7,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/tendermint/tendermint/crypto"
+	cmn "github.com/tendermint/tendermint/libs/common"
+
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -16,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 func TestGaiaCLISend(t *testing.T) {
@@ -34,9 +36,10 @@ func TestGaiaCLISend(t *testing.T) {
 	flags := fmt.Sprintf("--node=%v --chain-id=%v", servAddr, chainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteT(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
 	defer proc.Stop(false)
-	tests.WaitForStart(port)
+	tests.WaitForTMStart(port)
+	tests.WaitForNextHeightTM(port)
 
 	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
 	fooCech, err := sdk.Bech32ifyAcc(fooAddr)
@@ -90,9 +93,10 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	flags := fmt.Sprintf("--node=%v --chain-id=%v", servAddr, chainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteT(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
 	defer proc.Stop(false)
-	tests.WaitForStart(port)
+	tests.WaitForTMStart(port)
+	tests.WaitForNextHeightTM(port)
 
 	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
 	fooCech, err := sdk.Bech32ifyAcc(fooAddr)
@@ -130,19 +134,20 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.Equal(t, "2/1", validator.PoolShares.Amount.String())
 
 	// unbond a single share
-	unbondStr := fmt.Sprintf("gaiacli stake unbond %v", flags)
+	unbondStr := fmt.Sprintf("gaiacli stake unbond begin %v", flags)
 	unbondStr += fmt.Sprintf(" --name=%v", "bar")
 	unbondStr += fmt.Sprintf(" --address-validator=%v", barCech)
 	unbondStr += fmt.Sprintf(" --address-delegator=%v", barCech)
-	unbondStr += fmt.Sprintf(" --shares=%v", "1")
-	unbondStr += fmt.Sprintf(" --sequence=%v", "1")
-	t.Log(fmt.Sprintf("debug unbondStr: %v\n", unbondStr))
+	unbondStr += fmt.Sprintf(" --shares-amount=%v", "1")
 
-	executeWrite(t, unbondStr, pass)
+	success := executeWrite(t, unbondStr, pass)
+	require.True(t, success)
 	tests.WaitForNextHeightTM(port)
 
+	/* // this won't be what we expect because we've only started unbonding, haven't completed
 	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
 	require.Equal(t, int64(9), barAcc.GetCoins().AmountOf("steak").Int64(), "%v", barAcc)
+	*/
 	validator = executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %v --output=json %v", barCech, flags))
 	require.Equal(t, "1/1", validator.PoolShares.Amount.String())
 }
@@ -162,9 +167,10 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	flags := fmt.Sprintf("--node=%v --chain-id=%v", servAddr, chainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteT(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
 	defer proc.Stop(false)
-	tests.WaitForStart(port)
+	tests.WaitForTMStart(port)
+	tests.WaitForNextHeightTM(port)
 
 	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
 	fooCech, err := sdk.Bech32ifyAcc(fooAddr)
@@ -203,14 +209,27 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 //___________________________________________________________________________________
 // executors
 
-func executeWrite(t *testing.T, cmdStr string, writes ...string) {
+func executeWrite(t *testing.T, cmdStr string, writes ...string) bool {
 	proc := tests.GoExecuteT(t, cmdStr)
 
 	for _, write := range writes {
 		_, err := proc.StdinPipe.Write([]byte(write + "\n"))
 		require.NoError(t, err)
 	}
+	stdout, stderr, err := proc.ReadAll()
+	if err != nil {
+		fmt.Println("Err on proc.ReadAll()", err, cmdStr)
+	}
+	// Log output.
+	if len(stdout) > 0 {
+		t.Log("Stdout:", cmn.Green(string(stdout)))
+	}
+	if len(stderr) > 0 {
+		t.Log("Stderr:", cmn.Red(string(stderr)))
+	}
+
 	proc.Wait()
+	return proc.ExitState.Success()
 	//	bz := proc.StdoutBuffer.Bytes()
 	//	fmt.Println("EXEC WRITE", string(bz))
 }

@@ -83,7 +83,7 @@ jobs:
           name: Test cli
           command: |
             export PATH="$GOBIN:$PATH"
-            make test_cli_retry
+            make test_cli
 
   test_cover:
     <<: *defaults

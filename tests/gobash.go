@@ -1,6 +1,8 @@
 package tests
 
 import (
+	"fmt"
+	"io/ioutil"
 	"strings"
 	"testing"
 
@@ -21,13 +23,15 @@ func ExecuteT(t *testing.T, cmd string) (out string) {
 	}
 
 	// Start process and wait.
-	proc, err := StartProcess("", name, args, nil, nil)
+	proc, err := StartProcess("", name, args)
 	require.NoError(t, err)
-	proc.Wait()
 
 	// Get the output.
-	outbz := proc.StdoutBuffer.Bytes()
-	errbz := proc.StderrBuffer.Bytes()
+	outbz, errbz, err := proc.ReadAll()
+	if err != nil {
+		fmt.Println("Err on proc.ReadAll()", err, args)
+	}
+	proc.Wait()
 
 	// Log output.
 	if len(outbz) > 0 {
@@ -56,36 +60,38 @@ func GoExecuteT(t *testing.T, cmd string) (proc *Process) {
 	}
 
 	// Start process.
-	proc, err := StartProcess("", name, args, nil, nil)
+	proc, err := StartProcess("", name, args)
+	require.NoError(t, err)
+	return proc
+}
+
+// Same as GoExecuteT but spawns a go routine to ReadAll off stdout.
+func GoExecuteTWithStdout(t *testing.T, cmd string) (proc *Process) {
+	t.Log("Running", cmn.Cyan(cmd))
+
+	// Split cmd to name and args.
+	split := strings.Split(cmd, " ")
+	require.True(t, len(split) > 0, "no command provided")
+	name, args := split[0], []string(nil)
+	if len(split) > 1 {
+		args = split[1:]
+	}
+
+	// Start process.
+	proc, err := CreateProcess("", name, args)
 	require.NoError(t, err)
 
-	// Run goroutines to log stdout.
+	// Without this, the test halts ?!
 	go func() {
-		buf := make([]byte, 10240) // TODO Document the effects.
-		for {
-			n, err := proc.StdoutBuffer.Read(buf)
-			if err != nil {
-				return
-			}
-			if n > 0 {
-				t.Log("Stdout:", cmn.Green(string(buf[:n])))
-			}
+		_, err := ioutil.ReadAll(proc.StdoutPipe)
+		if err != nil {
+			fmt.Println("-------------ERR-----------------------", err)
+			return
 		}
 	}()
 
-	// Run goroutines to log stderr.
-	go func() {
-		buf := make([]byte, 10240) // TODO Document the effects.
-		for {
-			n, err := proc.StderrBuffer.Read(buf)
-			if err != nil {
-				return
-			}
-			if n > 0 {
-				t.Log("Stderr:", cmn.Red(string(buf[:n])))
-			}
-		}
-	}()
-
+	err = proc.Cmd.Start()
+	require.NoError(t, err)
+	proc.Pid = proc.Cmd.Process.Pid
 	return proc
 }

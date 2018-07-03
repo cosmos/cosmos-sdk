@@ -18,12 +18,12 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/p2p"
-	pvm "github.com/tendermint/tendermint/privval"
-	tmtypes "github.com/tendermint/tendermint/types"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/p2p"
+	pvm "github.com/tendermint/tendermint/privval"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"

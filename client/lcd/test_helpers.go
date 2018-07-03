@@ -19,14 +19,14 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/libs/cli"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 	nm "github.com/tendermint/tendermint/node"
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/tendermint/tendermint/libs/cli"
-	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
@@ -169,7 +169,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 
 	//time.Sleep(time.Second)
 	//tests.WaitForHeight(2, port)
-	tests.WaitForStart(port)
+	tests.WaitForLCDStart(port)
 	tests.WaitForHeight(1, port)
 
 	// for use in defer

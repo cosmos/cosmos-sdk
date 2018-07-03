@@ -13,9 +13,9 @@ import (
 
 	cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/common"
 	p2p "github.com/tendermint/tendermint/p2p"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	"github.com/tendermint/tendermint/libs/common"
 
 	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"

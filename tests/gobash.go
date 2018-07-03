@@ -65,6 +65,7 @@ func GoExecuteT(t *testing.T, cmd string) (proc *Process) {
 	return proc
 }
 
+// Same as GoExecuteT but spawns a go routine to ReadAll off stdout.
 func GoExecuteTWithStdout(t *testing.T, cmd string) (proc *Process) {
 	t.Log("Running", cmn.Cyan(cmd))
 

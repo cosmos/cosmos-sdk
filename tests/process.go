@@ -22,6 +22,9 @@ type Process struct {
 	StderrPipe io.ReadCloser    `json:"-"`
 }
 
+// dir: The working directory. If "", os.Getwd() is used.
+// name: Command name
+// args: Args to command. (should not include name)
 func StartProcess(dir string, name string, args []string) (*Process, error) {
 	proc, err := CreateProcess(dir, name, args)
 	if err != nil {
@@ -36,9 +39,7 @@ func StartProcess(dir string, name string, args []string) (*Process, error) {
 	return proc, nil
 }
 
-// dir: The working directory. If "", os.Getwd() is used.
-// name: Command name
-// args: Args to command. (should not include name)
+// Same as StartProcess but doesn't start the process
 func CreateProcess(dir string, name string, args []string) (*Process, error) {
 	var cmd = exec.Command(name, args...) // is not yet started.
 	// cmd dir
@@ -102,6 +103,7 @@ func (proc *Process) Wait() {
 	proc.EndTime = time.Now() // TODO make this goroutine-safe
 }
 
+// ReadAll calls ioutil.ReadAll on the StdoutPipe and StderrPipe.
 func (proc *Process) ReadAll() (stdout []byte, stderr []byte, err error) {
 	outbz, err := ioutil.ReadAll(proc.StdoutPipe)
 	if err != nil {

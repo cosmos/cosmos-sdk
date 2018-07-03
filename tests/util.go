@@ -22,7 +22,7 @@ func WaitForNextHeightTM(port string) {
 // on localhost
 func WaitForNextNBlocksTM(n int64, port string) {
 
-	// get teh latest block and wait for n more
+	// get the latest block and wait for n more
 	url := fmt.Sprintf("http://localhost:%v", port)
 	cl := tmclient.NewHTTP(url, "/websocket")
 	resBlock, err := cl.Block(nil)
@@ -133,6 +133,9 @@ func WaitForTMStart(port string) {
 	WaitForStart(url)
 }
 
+// WaitForStart waits for the node to start by pinging the url
+// every 100ms for 5s until it returns 200. If it takes longer than 5s,
+// it panics.
 func WaitForStart(url string) {
 	var err error
 

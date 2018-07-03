@@ -444,7 +444,7 @@ func SimpleAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState j
     "coins": [
       {
         "denom": "mycoin",
-        "amount": 9007199254740992
+        "amount": "9007199254740992"
       }
     ]
   }]

@@ -62,6 +62,7 @@ func TestKeys(t *testing.T) {
 	addr2Bech32 := resp.Address
 	fmt.Println(resp)
 	require.Len(t, addr2Bech32, 52, "Returned address has wrong format", addr2Bech32)
+	require.True(t, len(resp.Seed) > 0)
 
 	// existing keys
 	res, body = Request(t, port, "GET", "/keys", nil)

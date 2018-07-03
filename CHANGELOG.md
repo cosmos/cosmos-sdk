@@ -80,6 +80,7 @@ IMPROVEMENTS
 * added contributing guidelines
 
 BUG FIXES
+* [x/slashing] \#1510 Unrevoked validators cannot un-revoke themselves
 * [gaia] Added self delegation for validators in the genesis creation
 * [lcd] tests now don't depend on raw json text
 * [stake] error strings lower case

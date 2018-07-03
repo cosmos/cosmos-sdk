@@ -12,8 +12,9 @@ const (
 	// Default slashing codespace
 	DefaultCodespace sdk.CodespaceType = 10
 
-	CodeInvalidValidator CodeType = 101
-	CodeValidatorJailed  CodeType = 102
+	CodeInvalidValidator    CodeType = 101
+	CodeValidatorJailed     CodeType = 102
+	CodeValidatorNotRevoked CodeType = 103
 )
 
 func ErrNoValidatorForAddress(codespace sdk.CodespaceType) sdk.Error {
@@ -24,4 +25,7 @@ func ErrBadValidatorAddr(codespace sdk.CodespaceType) sdk.Error {
 }
 func ErrValidatorJailed(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeValidatorJailed, "validator jailed, cannot yet be unrevoked")
+}
+func ErrValidatorNotRevoked(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeValidatorNotRevoked, "validator not revoked, cannot be unrevoked")
 }

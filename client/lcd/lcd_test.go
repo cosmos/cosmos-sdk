@@ -59,7 +59,7 @@ func TestKeys(t *testing.T) {
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var resp keys.NewKeyResponse
 	err = wire.Cdc.UnmarshalJSON([]byte(body), &resp)
-	require.Nil(t, err)
+	require.Nil(t, err, body)
 
 	addr2Bech32 := resp.Address
 	_, err = sdk.GetAccAddressBech32(addr2Bech32)

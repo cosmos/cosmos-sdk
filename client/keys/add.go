@@ -222,7 +222,6 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	w.Write([]byte(bech32Account))
 	bz, err := json.Marshal(NewKeyResponse{
 		Address:  bech32Account,
 		Mnemonic: mnemonic,

@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"encoding/binary"
-	"fmt"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -54,9 +53,8 @@ func GetValidatorsBondedIndexKey(ownerAddr sdk.Address) []byte {
 }
 
 // rearrange the ValBondedIndexKey to get the ValidatorKey
-func GetValKeyFromValBondedIndexKey(IndexKey []byte) []byte {
-	addr := IndexKey[1:] // remove prefix bytes
-	return GetValidatorKey(addr)
+func GetAddressFromValBondedIndexKey(IndexKey []byte) []byte {
+	return IndexKey[1:] // remove prefix bytes
 }
 
 // get the validator by power index. power index is the key used in the power-store,
@@ -93,15 +91,10 @@ func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 }
 
 // get the key for the accumulated update validators.
-// VALUE: none (key rearrangement used)
+// VALUE: abci.Validator
+// note records using these keys should never persist between blocks
 func GetTendermintUpdatesKey(ownerAddr sdk.Address) []byte {
 	return append(TendermintUpdatesKey, ownerAddr.Bytes()...)
-}
-
-// rearrange the ValBondedIndexKey to get the ValidatorKey
-func GetValKeyFromTUIndexKey(IndexKey []byte) []byte {
-	addr := IndexKey[1:] // remove prefix bytes
-	return GetValidatorKey(addr)
 }
 
 //________________________________________________________________________________
@@ -122,7 +115,13 @@ func GetDelegationsKey(delegatorAddr sdk.Address) []byte {
 // get the key for an unbonding delegation by delegator and validator addr.
 // VALUE: stake/types.UnbondingDelegation
 func GetUBDKey(delegatorAddr, validatorAddr sdk.Address) []byte {
-	return append(GetUBDsKey(delegatorAddr), validatorAddr.Bytes()...)
+
+	key := make([]byte, len(delegatorAddr.Bytes()))
+	copy(key, delegatorAddr.Bytes())
+
+	return append(
+		GetUBDsKey(key),
+		validatorAddr.Bytes()...)
 }
 
 // get the index-key for an unbonding delegation, stored by validator-index
@@ -162,12 +161,12 @@ func GetUBDsByValIndexKey(validatorAddr sdk.Address) []byte {
 func GetREDKey(delegatorAddr, validatorSrcAddr,
 	validatorDstAddr sdk.Address) []byte {
 
-	fmt.Println("KEY", delegatorAddr.Bytes())
 	key := make([]byte, len(delegatorAddr.Bytes()))
 	copy(key, delegatorAddr.Bytes())
 
 	return append(append(
-		GetREDsKey(key), validatorSrcAddr.Bytes()...),
+		GetREDsKey(key),
+		validatorSrcAddr.Bytes()...),
 		validatorDstAddr.Bytes()...)
 }
 

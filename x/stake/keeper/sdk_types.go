@@ -34,7 +34,7 @@ func (k Keeper) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, va
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedIndexKey)
 	i := int64(0)
 	for ; iterator.Valid(); iterator.Next() {
-		address := iterator.Value()
+		address := GetAddressFromValBondedIndexKey(iterator.Key())
 		validator, found := k.GetValidator(ctx, address)
 		if !found {
 			panic(fmt.Sprintf("validator record not found for address: %v\n", address))

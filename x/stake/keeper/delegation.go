@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"bytes"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -100,8 +99,7 @@ func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
 func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sdk.Address) (unbondingDelegations []types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, GetUBDsByValIndexKey(valAddr))
-	i := 0
-	for ; ; i++ {
+	for {
 		if !iterator.Valid() {
 			break
 		}
@@ -158,21 +156,11 @@ func (k Keeper) GetRedelegationsFromValidator(ctx sdk.Context, valAddr sdk.Addre
 		if !iterator.Valid() {
 			break
 		}
-
-		fmt.Println("called")
-		//redelegationKey := iterator.Value()
-		iKey := iterator.Key()
-		fmt.Println("LEN IT", len(iKey))
-		redelegationKey := GetREDKeyFromValSrcIndexKey(iKey)
-		fmt.Printf("debug iteratorValue:        %v\n", iterator.Value())
-		fmt.Printf("debug iteratorKey:          %v\n", iKey)
-		fmt.Printf("debug redelegationKey:      %v\n", redelegationKey)
-
+		redelegationKey := GetREDKeyFromValSrcIndexKey(iterator.Key())
 		redelegationBytes := store.Get(redelegationKey)
 		var redelegation types.Redelegation
 		k.cdc.MustUnmarshalBinary(redelegationBytes, &redelegation)
 		redelegations = append(redelegations, redelegation)
-
 		iterator.Next()
 	}
 	iterator.Close()
@@ -201,10 +189,9 @@ func (k Keeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(red)
 	redKey := GetREDKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr)
-	fmt.Printf("debug redKey: %v\n", redKey)
 	store.Set(redKey, bz)
-	store.Set(GetREDByValSrcIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr), redKey) //[]byte{})
-	store.Set(GetREDByValDstIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr), redKey) // []byte{})
+	store.Set(GetREDByValSrcIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr), []byte{})
+	store.Set(GetREDByValDstIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr), []byte{})
 }
 
 // remove a redelegation object and associated index

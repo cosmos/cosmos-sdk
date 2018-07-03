@@ -162,12 +162,13 @@ func GetUBDsByValIndexKey(validatorAddr sdk.Address) []byte {
 func GetREDKey(delegatorAddr, validatorSrcAddr,
 	validatorDstAddr sdk.Address) []byte {
 
-	return append(
-		GetREDsKey(delegatorAddr),
-		append(
-			validatorSrcAddr.Bytes(),
-			validatorDstAddr.Bytes()...)...,
-	)
+	fmt.Println("KEY", delegatorAddr.Bytes())
+	key := make([]byte, len(delegatorAddr.Bytes()))
+	copy(key, delegatorAddr.Bytes())
+
+	return append(append(
+		GetREDsKey(key), validatorSrcAddr.Bytes()...),
+		validatorDstAddr.Bytes()...)
 }
 
 // get the index-key for a redelegation, stored by source-validator-index
@@ -206,10 +207,18 @@ func GetREDKeyFromValSrcIndexKey(IndexKey []byte) []byte {
 	valSrcAddr := addrs[:split]
 	delAddr := addrs[split : 2*split]
 	valDstAddr := addrs[2*split:]
-	fmt.Printf("debug delAddr: %v\n", delAddr)
+	fmt.Printf("debug indexKey: %v\n", IndexKey)
 	fmt.Printf("debug valSrcAddr: %v\n", valSrcAddr)
+	fmt.Printf("debug delAddr: %v\n", delAddr)
 	fmt.Printf("debug valDstAddr: %v\n", valDstAddr)
-	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
+	redKey := GetREDKey(delAddr, valSrcAddr, valDstAddr)
+	fmt.Println("------")
+	fmt.Printf("debug indexKey: %v\n", IndexKey)
+	fmt.Printf("debug valSrcAddr: %v\n", valSrcAddr)
+	fmt.Printf("debug delAddr: %v\n", delAddr)
+	fmt.Printf("debug valDstAddr: %v\n", valDstAddr)
+	fmt.Println("")
+	return redKey
 }
 
 // rearrange the ValDstIndexKey to get the REDKey

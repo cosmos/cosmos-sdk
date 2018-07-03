@@ -162,6 +162,7 @@ func (k Keeper) GetRedelegationsFromValidator(ctx sdk.Context, valAddr sdk.Addre
 		fmt.Println("called")
 		//redelegationKey := iterator.Value()
 		iKey := iterator.Key()
+		fmt.Println("LEN IT", len(iKey))
 		redelegationKey := GetREDKeyFromValSrcIndexKey(iKey)
 		fmt.Printf("debug iteratorValue:        %v\n", iterator.Value())
 		fmt.Printf("debug iteratorKey:          %v\n", iKey)

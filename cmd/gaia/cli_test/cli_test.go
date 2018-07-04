@@ -42,11 +42,9 @@ func TestGaiaCLISend(t *testing.T) {
 	tests.WaitForNextHeightTM(port)
 
 	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
-	fooCech, err := sdk.Bech32ifyAcc(fooAddr)
-	require.NoError(t, err)
+	fooCech := sdk.MustBech32ifyAcc(fooAddr)
 	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
-	barCech, err := sdk.Bech32ifyAcc(barAddr)
-	require.NoError(t, err)
+	barCech := sdk.MustBech32ifyAcc(barAddr)
 
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
@@ -85,13 +83,10 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	tests.WaitForNextHeightTM(port)
 
 	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
-	fooCech, err := sdk.Bech32ifyAcc(fooAddr)
-	require.NoError(t, err)
+	fooCech := sdk.MustBech32ifyAcc(fooAddr)
 	barAddr, barPubKey := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
-	barCech, err := sdk.Bech32ifyAcc(barAddr)
-	require.NoError(t, err)
-	barCeshPubKey, err := sdk.Bech32ifyValPub(barPubKey)
-	require.NoError(t, err)
+	barCech := sdk.MustBech32ifyAcc(barAddr)
+	barCeshPubKey := sdk.MustBech32ifyValPub(barPubKey)
 
 	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo", flags, barCech), pass)
 	tests.WaitForNextHeightTM(port)
@@ -145,8 +140,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	tests.WaitForNextHeightTM(port)
 
 	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
-	fooCech, err := sdk.Bech32ifyAcc(fooAddr)
-	require.NoError(t, err)
+	fooCech := sdk.MustBech32ifyAcc(fooAddr)
 
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
@@ -186,7 +180,6 @@ func getTestingHomeDirs() (string, string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Users home directory
 	home := usr.HomeDir
 	gaiadHome := fmt.Sprintf("%s%s.test_gaiad", home, string(os.PathSeparator))
 	gaiacliHome := fmt.Sprintf("%s%s.test_gaiacli", home, string(os.PathSeparator))

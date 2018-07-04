@@ -769,6 +769,7 @@ func MakeCodec() *wire.Codec {
 	crypto.RegisterAmino(cdc)
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&auth.BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
+	cdc.Seal()
 	return cdc
 }
 

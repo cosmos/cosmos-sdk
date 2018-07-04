@@ -37,3 +37,11 @@ func AuthInvariant(t *testing.T, app *App, log string) {
 	app.AccountMapper.IterateAccounts(ctx, chkAccount)
 	require.Equal(t, app.TotalCoinsSupply, totalCoins, log)
 }
+
+func PeriodicInvariant(invariant AssertInvariants, period int, offset int) AssertInvariants {
+	return func(t *testing.T, app *App, log string) {
+		if int(app.LastBlockHeight())%period == offset {
+			invariant(t, app, log)
+		}
+	}
+}

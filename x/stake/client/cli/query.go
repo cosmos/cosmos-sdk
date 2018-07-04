@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 // get the command to query a validator
@@ -130,7 +131,7 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 			}
 
 			// parse out the delegation
-			delegation := new(stake.Delegation)
+			delegation := types.UnmarshalDelegation(cdc, key, res)
 
 			switch viper.Get(cli.OutputFlag) {
 			case "text":
@@ -140,7 +141,6 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 				}
 				fmt.Println(resp)
 			case "json":
-				cdc.MustUnmarshalBinary(res, delegation)
 				output, err := wire.MarshalJSONIndent(cdc, delegation)
 				if err != nil {
 					return err
@@ -179,8 +179,7 @@ func GetCmdQueryDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 			// parse out the validators
 			var delegations []stake.Delegation
 			for _, KV := range resKVs {
-				var delegation stake.Delegation
-				cdc.MustUnmarshalBinary(KV.Value, &delegation)
+				delegation := types.UnmarshalDelegation(cdc, KV.Key, KV.Value)
 				delegations = append(delegations, delegation)
 			}
 

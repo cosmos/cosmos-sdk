@@ -9,7 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 const storeName = "stake"
@@ -75,13 +77,7 @@ func delegationHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerF
 			return
 		}
 
-		var delegation stake.Delegation
-		err = cdc.UnmarshalBinary(res, &delegation)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't decode delegation. Error: %s", err.Error())))
-			return
-		}
+		delegation := types.UnmarshalDelegation(cdc, key, res)
 
 		output, err := cdc.MarshalJSON(delegation)
 		if err != nil {

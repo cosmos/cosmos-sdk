@@ -91,9 +91,7 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.Address, fn func
 	iterator := sdk.KVStorePrefixIterator(store, key)
 	i := int64(0)
 	for ; iterator.Valid(); iterator.Next() {
-		bz := iterator.Value()
-		var delegation types.Delegation
-		k.cdc.MustUnmarshalBinary(bz, &delegation)
+		delegation := types.UnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
 		stop := fn(i, delegation) // XXX is this safe will the fields be able to get written to?
 		if stop {
 			break

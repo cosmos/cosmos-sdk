@@ -12,12 +12,13 @@ func (k Keeper) GetDelegation(ctx sdk.Context,
 	delegatorAddr, validatorAddr sdk.Address) (delegation types.Delegation, found bool) {
 
 	store := ctx.KVStore(k.storeKey)
-	delegatorBytes := store.Get(GetDelegationKey(delegatorAddr, validatorAddr))
-	if delegatorBytes == nil {
+	key := GetDelegationKey(delegatorAddr, validatorAddr)
+	value := store.Get(key)
+	if value == nil {
 		return delegation, false
 	}
 
-	k.cdc.MustUnmarshalBinary(delegatorBytes, &delegation)
+	delegation = types.UnmarshalDelegation(k.cdc, key, value)
 	return delegation, true
 }
 
@@ -31,9 +32,7 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 		if !iterator.Valid() {
 			break
 		}
-		bondBytes := iterator.Value()
-		var delegation types.Delegation
-		k.cdc.MustUnmarshalBinary(bondBytes, &delegation)
+		delegation := types.UnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
 		delegations = append(delegations, delegation)
 		iterator.Next()
 	}
@@ -55,9 +54,7 @@ func (k Keeper) GetDelegations(ctx sdk.Context, delegator sdk.Address,
 		if !iterator.Valid() || i > int(maxRetrieve-1) {
 			break
 		}
-		bondBytes := iterator.Value()
-		var delegation types.Delegation
-		k.cdc.MustUnmarshalBinary(bondBytes, &delegation)
+		delegation := types.UnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
 		delegations[i] = delegation
 		iterator.Next()
 	}
@@ -68,7 +65,7 @@ func (k Keeper) GetDelegations(ctx sdk.Context, delegator sdk.Address,
 // set the delegation
 func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinary(delegation)
+	b := types.MarshalDelegation(k.cdc, delegation)
 	store.Set(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr), b)
 }
 

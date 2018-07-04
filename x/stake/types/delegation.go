@@ -37,13 +37,12 @@ func UnmarshalDelegation(cdc *wire.Codec, key, value []byte) Delegation {
 	var storeValue delegationValue
 	cdc.MustUnmarshalBinary(value, &storeValue)
 
-	addrs := IndexKey[1:] // remove prefix bytes
-	split := len(addrs) / 2
-	if (len(addrs) % 2) != 0 {
+	addrs := key[1:] // remove prefix bytes
+	if len(addrs) != 40 {
 		panic("key length not even")
 	}
-	delAddr := sdk.Address{addrs[:split]}
-	valAddr := sdk.Address{addrs[split:]}
+	delAddr := sdk.Address(addrs[:20])
+	valAddr := sdk.Address(addrs[20:])
 
 	return Delegation{
 		DelegatorAddr: delAddr,

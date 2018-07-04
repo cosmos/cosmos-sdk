@@ -77,7 +77,12 @@ func delegationHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerF
 			return
 		}
 
-		delegation := types.UnmarshalDelegation(cdc, key, res)
+		delegation, err := types.UnmarshalDelegation(cdc, key, res)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
 
 		output, err := cdc.MarshalJSON(delegation)
 		if err != nil {
@@ -128,7 +133,12 @@ func ubdHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		ubd := types.UnmarshalUBD(cdc, key, res)
+		ubd, err := types.UnmarshalUBD(cdc, key, res)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("couldn't query unbonding-delegation. Error: %s", err.Error())))
+			return
+		}
 
 		output, err := cdc.MarshalJSON(ubd)
 		if err != nil {
@@ -187,7 +197,12 @@ func redHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		red := types.UnmarshalRED(cdc, key, res)
+		red, err := types.UnmarshalRED(cdc, key, res)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("couldn't query unbonding-delegation. Error: %s", err.Error())))
+			return
+		}
 
 		output, err := cdc.MarshalJSON(red)
 		if err != nil {
@@ -277,7 +292,12 @@ func validatorsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerF
 		for i, kv := range kvs {
 
 			addr := kv.Key[1:]
-			validator := types.UnmarshalValidator(cdc, addr, kv.Value)
+			validator, err := types.UnmarshalValidator(cdc, addr, kv.Value)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("couldn't query unbonding-delegation. Error: %s", err.Error())))
+				return
+			}
 
 			bech32Validator, err := bech32StakeValidatorOutput(validator)
 			if err != nil {

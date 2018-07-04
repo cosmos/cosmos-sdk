@@ -18,8 +18,7 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.Address) (validator types
 	if value == nil {
 		return validator, false
 	}
-	fmt.Printf("debug addr: %v\n", addr)
-	validator = types.UnmarshalValidator(k.cdc, addr, value)
+	validator = types.MustUnmarshalValidator(k.cdc, addr, value)
 	return validator, true
 }
 
@@ -36,7 +35,7 @@ func (k Keeper) GetValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) (val
 // set the main record holding validator details
 func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	bz := types.MarshalValidator(k.cdc, validator)
+	bz := types.MustMarshalValidator(k.cdc, validator)
 	store.Set(GetValidatorKey(validator.Owner), bz)
 }
 
@@ -75,7 +74,7 @@ func (k Keeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator)
 			break
 		}
 		addr := iterator.Key()[1:]
-		validator := types.UnmarshalValidator(k.cdc, addr, iterator.Value())
+		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
 		validators = append(validators, validator)
 		iterator.Next()
 	}
@@ -95,7 +94,7 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve int16) (validators []
 			break
 		}
 		addr := iterator.Key()[1:]
-		validator := types.UnmarshalValidator(k.cdc, addr, iterator.Value())
+		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
 		validators[i] = validator
 		iterator.Next()
 	}

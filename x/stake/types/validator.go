@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -81,7 +82,7 @@ type validatorValue struct {
 }
 
 // return the redelegation without fields contained within the key for the store
-func MarshalValidator(cdc *wire.Codec, validator Validator) []byte {
+func MustMarshalValidator(cdc *wire.Codec, validator Validator) []byte {
 	val := validatorValue{
 		PubKey:                validator.PubKey,
 		Revoked:               validator.Revoked,
@@ -101,12 +102,26 @@ func MarshalValidator(cdc *wire.Codec, validator Validator) []byte {
 }
 
 // unmarshal a redelegation from a store key and value
-func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) Validator {
+func MustUnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) Validator {
+	validator, err := UnmarshalValidator(cdc, ownerAddr, value)
+	if err != nil {
+		panic(err)
+	}
+
+	return validator
+}
+
+// unmarshal a redelegation from a store key and value
+func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) (validator Validator, err error) {
 	var storeValue validatorValue
-	cdc.MustUnmarshalBinary(value, &storeValue)
+	err = cdc.UnmarshalBinary(value, &storeValue)
+	if err != nil {
+		return
+	}
 
 	if len(ownerAddr) != 20 {
-		panic("unexpected address length")
+		err = errors.New("unexpected address length")
+		return
 	}
 
 	return Validator{
@@ -124,7 +139,7 @@ func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) Validator {
 		CommissionChangeRate:  storeValue.CommissionChangeRate,
 		CommissionChangeToday: storeValue.CommissionChangeToday,
 		PrevBondedShares:      storeValue.PrevBondedShares,
-	}
+	}, nil
 }
 
 // only the vitals - does not check bond height of IntraTxCounter

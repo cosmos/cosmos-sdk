@@ -18,7 +18,7 @@ func (k Keeper) GetDelegation(ctx sdk.Context,
 		return delegation, false
 	}
 
-	delegation = types.UnmarshalDelegation(k.cdc, key, value)
+	delegation = types.MustUnmarshalDelegation(k.cdc, key, value)
 	return delegation, true
 }
 
@@ -32,7 +32,7 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 		if !iterator.Valid() {
 			break
 		}
-		delegation := types.UnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
+		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
 		delegations = append(delegations, delegation)
 		iterator.Next()
 	}
@@ -54,7 +54,7 @@ func (k Keeper) GetDelegations(ctx sdk.Context, delegator sdk.Address,
 		if !iterator.Valid() || i > int(maxRetrieve-1) {
 			break
 		}
-		delegation := types.UnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
+		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
 		delegations[i] = delegation
 		iterator.Next()
 	}
@@ -65,7 +65,7 @@ func (k Keeper) GetDelegations(ctx sdk.Context, delegator sdk.Address,
 // set the delegation
 func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
-	b := types.MarshalDelegation(k.cdc, delegation)
+	b := types.MustMarshalDelegation(k.cdc, delegation)
 	store.Set(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr), b)
 }
 
@@ -88,7 +88,7 @@ func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
 		return ubd, false
 	}
 
-	ubd = types.UnmarshalUBD(k.cdc, key, value)
+	ubd = types.MustUnmarshalUBD(k.cdc, key, value)
 	return ubd, true
 }
 
@@ -102,7 +102,7 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sd
 		}
 		key := GetUBDKeyFromValIndexKey(iterator.Key())
 		value := store.Get(key)
-		ubd := types.UnmarshalUBD(k.cdc, key, value)
+		ubd := types.MustUnmarshalUBD(k.cdc, key, value)
 		ubds = append(ubds, ubd)
 		iterator.Next()
 	}
@@ -113,7 +113,7 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sd
 // set the unbonding delegation and associated index
 func (k Keeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
-	bz := types.MarshalUBD(k.cdc, ubd)
+	bz := types.MustMarshalUBD(k.cdc, ubd)
 	key := GetUBDKey(ubd.DelegatorAddr, ubd.ValidatorAddr)
 	store.Set(key, bz)
 	store.Set(GetUBDByValIndexKey(ubd.DelegatorAddr, ubd.ValidatorAddr), []byte{}) // index, store empty bytes
@@ -140,7 +140,7 @@ func (k Keeper) GetRedelegation(ctx sdk.Context,
 		return red, false
 	}
 
-	red = types.UnmarshalRED(k.cdc, key, value)
+	red = types.MustUnmarshalRED(k.cdc, key, value)
 	return red, true
 }
 
@@ -154,7 +154,7 @@ func (k Keeper) GetRedelegationsFromValidator(ctx sdk.Context, valAddr sdk.Addre
 		}
 		key := GetREDKeyFromValSrcIndexKey(iterator.Key())
 		value := store.Get(key)
-		red := types.UnmarshalRED(k.cdc, key, value)
+		red := types.MustUnmarshalRED(k.cdc, key, value)
 		reds = append(reds, red)
 		iterator.Next()
 	}
@@ -182,7 +182,7 @@ func (k Keeper) HasReceivingRedelegation(ctx sdk.Context,
 // set a redelegation and associated index
 func (k Keeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store := ctx.KVStore(k.storeKey)
-	bz := types.MarshalRED(k.cdc, red)
+	bz := types.MustMarshalRED(k.cdc, red)
 	key := GetREDKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr)
 	store.Set(key, bz)
 	store.Set(GetREDByValSrcIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr), []byte{})

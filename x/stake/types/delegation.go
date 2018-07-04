@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,7 +25,7 @@ type delegationValue struct {
 }
 
 // return the delegation without fields contained within the key for the store
-func MarshalDelegation(cdc *wire.Codec, delegation Delegation) []byte {
+func MustMarshalDelegation(cdc *wire.Codec, delegation Delegation) []byte {
 	val := delegationValue{
 		delegation.Shares,
 		delegation.Height,
@@ -33,23 +34,36 @@ func MarshalDelegation(cdc *wire.Codec, delegation Delegation) []byte {
 }
 
 // return the delegation without fields contained within the key for the store
-func UnmarshalDelegation(cdc *wire.Codec, key, value []byte) Delegation {
+func MustUnmarshalDelegation(cdc *wire.Codec, key, value []byte) Delegation {
+	delegation, err := UnmarshalDelegation(cdc, key, value)
+	if err != nil {
+		panic(err)
+	}
+	return delegation
+}
+
+// return the delegation without fields contained within the key for the store
+func UnmarshalDelegation(cdc *wire.Codec, key, value []byte) (delegation Delegation, err error) {
 	var storeValue delegationValue
-	cdc.MustUnmarshalBinary(value, &storeValue)
+	err = cdc.UnmarshalBinary(value, &storeValue)
+	if err != nil {
+		return
+	}
 
 	addrs := key[1:] // remove prefix bytes
-	if len(addrs) != 40 {
-		panic("unexpected key length")
+	if len(addrs) != 2*sdk.AddrLen {
+		err = errors.New("unexpected key length")
+		return
 	}
-	delAddr := sdk.Address(addrs[:20])
-	valAddr := sdk.Address(addrs[20:])
+	delAddr := sdk.Address(addrs[:sdk.AddrLen])
+	valAddr := sdk.Address(addrs[sdk.AddrLen:])
 
 	return Delegation{
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
 		Shares:        storeValue.Shares,
 		Height:        storeValue.Height,
-	}
+	}, nil
 }
 
 // nolint
@@ -109,7 +123,7 @@ type ubdValue struct {
 }
 
 // return the unbonding delegation without fields contained within the key for the store
-func MarshalUBD(cdc *wire.Codec, ubd UnbondingDelegation) []byte {
+func MustMarshalUBD(cdc *wire.Codec, ubd UnbondingDelegation) []byte {
 	val := ubdValue{
 		ubd.CreationHeight,
 		ubd.MinTime,
@@ -120,16 +134,29 @@ func MarshalUBD(cdc *wire.Codec, ubd UnbondingDelegation) []byte {
 }
 
 // unmarshal a unbonding delegation from a store key and value
-func UnmarshalUBD(cdc *wire.Codec, key, value []byte) UnbondingDelegation {
+func MustUnmarshalUBD(cdc *wire.Codec, key, value []byte) UnbondingDelegation {
+	ubd, err := UnmarshalUBD(cdc, key, value)
+	if err != nil {
+		panic(err)
+	}
+	return ubd
+}
+
+// unmarshal a unbonding delegation from a store key and value
+func UnmarshalUBD(cdc *wire.Codec, key, value []byte) (ubd UnbondingDelegation, err error) {
 	var storeValue ubdValue
-	cdc.MustUnmarshalBinary(value, &storeValue)
+	err = cdc.UnmarshalBinary(value, &storeValue)
+	if err != nil {
+		return
+	}
 
 	addrs := key[1:] // remove prefix bytes
-	if len(addrs) != 40 {
-		panic("unexpected key length")
+	if len(addrs) != 2*sdk.AddrLen {
+		err = errors.New("unexpected key length")
+		return
 	}
-	delAddr := sdk.Address(addrs[:20])
-	valAddr := sdk.Address(addrs[20:])
+	delAddr := sdk.Address(addrs[:sdk.AddrLen])
+	valAddr := sdk.Address(addrs[sdk.AddrLen:])
 
 	return UnbondingDelegation{
 		DelegatorAddr:  delAddr,
@@ -138,7 +165,7 @@ func UnmarshalUBD(cdc *wire.Codec, key, value []byte) UnbondingDelegation {
 		MinTime:        storeValue.MinTime,
 		InitialBalance: storeValue.InitialBalance,
 		Balance:        storeValue.Balance,
-	}
+	}, nil
 }
 
 // nolint
@@ -196,7 +223,7 @@ type redValue struct {
 }
 
 // return the redelegation without fields contained within the key for the store
-func MarshalRED(cdc *wire.Codec, red Redelegation) []byte {
+func MustMarshalRED(cdc *wire.Codec, red Redelegation) []byte {
 	val := redValue{
 		red.CreationHeight,
 		red.MinTime,
@@ -209,17 +236,30 @@ func MarshalRED(cdc *wire.Codec, red Redelegation) []byte {
 }
 
 // unmarshal a redelegation from a store key and value
-func UnmarshalRED(cdc *wire.Codec, key, value []byte) Redelegation {
+func MustUnmarshalRED(cdc *wire.Codec, key, value []byte) Redelegation {
+	red, err := UnmarshalRED(cdc, key, value)
+	if err != nil {
+		panic(err)
+	}
+	return red
+}
+
+// unmarshal a redelegation from a store key and value
+func UnmarshalRED(cdc *wire.Codec, key, value []byte) (red Redelegation, err error) {
 	var storeValue redValue
-	cdc.MustUnmarshalBinary(value, &storeValue)
+	err = cdc.UnmarshalBinary(value, &storeValue)
+	if err != nil {
+		return
+	}
 
 	addrs := key[1:] // remove prefix bytes
-	if len(addrs) != 60 {
-		panic("unexpected key length")
+	if len(addrs) != 3*sdk.AddrLen {
+		err = errors.New("unexpected key length")
+		return
 	}
-	delAddr := sdk.Address(addrs[:20])
-	valSrcAddr := sdk.Address(addrs[20:40])
-	valDstAddr := sdk.Address(addrs[40:60])
+	delAddr := sdk.Address(addrs[:sdk.AddrLen])
+	valSrcAddr := sdk.Address(addrs[sdk.AddrLen : 2*sdk.AddrLen])
+	valDstAddr := sdk.Address(addrs[2*sdk.AddrLen:])
 
 	return Redelegation{
 		DelegatorAddr:    delAddr,
@@ -231,7 +271,7 @@ func UnmarshalRED(cdc *wire.Codec, key, value []byte) Redelegation {
 		Balance:          storeValue.Balance,
 		SharesSrc:        storeValue.SharesSrc,
 		SharesDst:        storeValue.SharesDst,
-	}
+	}, nil
 }
 
 // nolint

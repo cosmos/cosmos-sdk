@@ -256,7 +256,7 @@ Accounts are serialized and stored in a Merkle tree under the key
 Typically, the address of the account is the 20-byte ``RIPEMD160`` hash
 of the public key, but other formats are acceptable as well, as defined
 in the `Tendermint crypto
-library <https://github.com/tendermint/tendermint/crypto>`__. The Merkle tree
+library <https://github.com/tendermint/tendermint/tree/master/crypto>`__. The Merkle tree
 used in Basecoin is a balanced, binary search tree, which we call an
 `IAVL tree <https://github.com/tendermint/iavl>`__.
 

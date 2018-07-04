@@ -15,7 +15,7 @@ import (
 // RandomizedTesting tests application by sending random messages.
 func (app *App) RandomizedTesting(
 	t *testing.T, ops []TestAndRunTx, setups []RandSetup,
-	invariants []AssertInvariants, numKeys int, numBlocks int, blockSize int,
+	invariants []Invariant, numKeys int, numBlocks int, blockSize int,
 ) {
 	time := time.Now().UnixNano()
 	app.RandomizedTestingFromSeed(t, time, ops, setups, invariants, numKeys, numBlocks, blockSize)
@@ -25,7 +25,7 @@ func (app *App) RandomizedTesting(
 // operations, testing the provided invariants, but using the provided seed.
 func (app *App) RandomizedTestingFromSeed(
 	t *testing.T, seed int64, ops []TestAndRunTx, setups []RandSetup,
-	invariants []AssertInvariants, numKeys int, numBlocks int, blockSize int,
+	invariants []Invariant, numKeys int, numBlocks int, blockSize int,
 ) {
 	log := fmt.Sprintf("Starting SingleModuleTest with randomness created with seed %d", int(seed))
 	keys, addrs := GeneratePrivKeyAddressPairs(numKeys)
@@ -62,7 +62,7 @@ func (app *App) RandomizedTestingFromSeed(
 	}
 }
 
-func (app *App) assertAllInvariants(t *testing.T, tests []AssertInvariants, log string) {
+func (app *App) assertAllInvariants(t *testing.T, tests []Invariant, log string) {
 	for i := 0; i < len(tests); i++ {
 		tests[i](t, app, log)
 	}

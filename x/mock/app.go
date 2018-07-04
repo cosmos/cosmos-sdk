@@ -1,3 +1,9 @@
+/*
+Package mock provides functions for creating mock applications for testing.
+
+This module also features randomized testing, so that various modules can
+test that their operations are interoperable.
+*/
 package mock
 
 import (
@@ -16,7 +22,9 @@ import (
 
 const chainID = ""
 
-// App extends an ABCI application.
+// App extends an ABCI application, but with most of its parameters exported.
+// They are exported for convenience in creating helper functions, as object
+// capabilities aren't needed for testing.
 type App struct {
 	*bam.BaseApp
 	Cdc        *wire.Codec // Cdc is public since the codec is passed into the module anyways
@@ -127,8 +135,8 @@ func SetGenesis(app *App, accs []auth.Account) {
 func GenTx(msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKey) auth.StdTx {
 	// Make the transaction free
 	fee := auth.StdFee{
-		sdk.Coins{sdk.NewCoin("foocoin", 0)},
-		100000,
+		Amount: sdk.Coins{sdk.NewCoin("foocoin", 0)},
+		Gas:    100000,
 	}
 
 	sigs := make([]auth.StdSignature, len(priv))

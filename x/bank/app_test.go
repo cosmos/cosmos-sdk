@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"math/big"
@@ -87,19 +86,6 @@ func getMockApp(t *testing.T) *mock.App {
 	return mapp
 }
 
-// getBenchmarkMockApp initializes a mock application for this module, for purposes of benchmarking
-// Any long term API support commitments do not apply to this function.
-func getBenchmarkMockApp() (*mock.App, error) {
-	mapp := mock.NewApp()
-
-	RegisterWire(mapp.Cdc)
-	coinKeeper := NewKeeper(mapp.AccountMapper)
-	mapp.Router().AddRoute("bank", NewHandler(coinKeeper))
-
-	err := mapp.CompleteSetup([]*sdk.KVStoreKey{})
-	return mapp, err
-}
-
 func TestBankWithRandomMessages(t *testing.T) {
 	mapp := getMockApp(t)
 	setup := func(r *rand.Rand, keys []crypto.PrivKey) {
@@ -110,7 +96,7 @@ func TestBankWithRandomMessages(t *testing.T) {
 		t,
 		[]mock.TestAndRunTx{randSingleSendTx},
 		[]mock.RandSetup{setup},
-		[]mock.AssertInvariants{bankTestInvariants(), mock.AuthInvariant},
+		[]mock.Invariant{ModuleInvariants, mock.AuthInvariant},
 		100, 30, 30,
 	)
 }
@@ -178,7 +164,7 @@ func sendAndVerifyMsgSend(t *testing.T, app *mock.App, msg MsgSend, ctx sdk.Cont
 		privkeys...)
 	res := app.Deliver(tx)
 	if !res.IsOK() {
-		// Do this the more 'canonical' way
+		// TODO: Do this in a more 'canonical' way
 		fmt.Println(res)
 		fmt.Println(log)
 		t.FailNow()
@@ -208,24 +194,6 @@ func randPositiveInt(r *rand.Rand, max sdk.Int) (sdk.Int, error) {
 	}
 	max = max.Sub(sdk.OneInt())
 	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdk.OneInt()), nil
-}
-
-func bankTestInvariants() mock.AssertInvariants {
-	return func(t *testing.T, app *mock.App, log string) {
-		// Check that noone has negative money
-		ctx := app.NewContext(false, abci.Header{})
-		checkNonnegativeBalances(t, app, ctx, log)
-	}
-}
-
-func checkNonnegativeBalances(t *testing.T, app *mock.App, ctx sdk.Context, log string) {
-	accts := mock.GetAllAccounts(app.AccountMapper, ctx)
-	for _, acc := range accts {
-		for _, coin := range acc.GetCoins() {
-			assert.True(t, coin.IsNotNegative(), acc.GetAddress().String()+
-				" has a negative denomination of "+coin.Denom+"\n"+log)
-		}
-	}
 }
 
 func TestMsgSendWithAccounts(t *testing.T) {

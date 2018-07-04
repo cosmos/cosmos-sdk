@@ -24,12 +24,13 @@ type (
 	// RandSetup performs the random setup the mock module needs.
 	RandSetup func(r *rand.Rand, privKeys []crypto.PrivKey)
 
-	// AssertInvariants asserts invariants for the mock module. It will print
-	// out the log when failing.
-	AssertInvariants func(t *testing.T, app *App, log string)
+	// An Invariant is a function which tests a particular invariant.
+	// If the invariant has been broken, the function should halt the
+	// test and output the log.
+	Invariant func(t *testing.T, app *App, log string)
 )
 
-// AuthInvariant enforces an invariant for the Auth module.
+// AuthInvariant enforces that the total amount of coins is what is expected
 // TODO: Does this belong here?
 func AuthInvariant(t *testing.T, app *App, log string) {
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
@@ -38,10 +39,6 @@ func AuthInvariant(t *testing.T, app *App, log string) {
 	chkAccount := func(acc auth.Account) bool {
 		coins := acc.GetCoins()
 		totalCoins = totalCoins.Plus(coins)
-
-		for _, coin := range coins {
-			require.True(t, coin.Amount.GT(sdk.ZeroInt()), log)
-		}
 		return false
 	}
 
@@ -49,10 +46,10 @@ func AuthInvariant(t *testing.T, app *App, log string) {
 	require.Equal(t, app.TotalCoinsSupply, totalCoins, log)
 }
 
-// PeriodicInvariant returns an AssertInvariants function closure that asserts
+// PeriodicInvariant returns an Invariant function closure that asserts
 // a given invariant if the mock application's last block modulo the given
 // period is congruent to the given offset.
-func PeriodicInvariant(invariant AssertInvariants, period int, offset int) AssertInvariants {
+func PeriodicInvariant(invariant Invariant, period int, offset int) Invariant {
 	return func(t *testing.T, app *App, log string) {
 		if int(app.LastBlockHeight())%period == offset {
 			invariant(t, app, log)

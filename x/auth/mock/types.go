@@ -24,10 +24,6 @@ type AssertInvariants func(t *testing.T, app *App, log string)
 
 // Invariant for Auth module. Placed here to avoid circular dependency
 func AuthInvariant(t *testing.T, app *App, log string) {
-	// This is a slow check, so only run it 1 out of every 5 blocks
-	// if app.LastBlockHeight()%5 != 1 {
-	// 	return
-	// }
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 	totalCoins := sdk.Coins{}
 	chkAccount := func(acc auth.Account) bool {

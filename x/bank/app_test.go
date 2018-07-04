@@ -1,6 +1,7 @@
 package bank
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -126,8 +127,10 @@ func randSingleSendTx(t *testing.T, r *rand.Rand, app *mock.App, ctx sdk.Context
 	initToCoins := app.AccountMapper.GetAccount(ctx, toAddr).GetCoins()
 
 	denomIndex := r.Intn(len(initFromCoins))
-	amt := sdk.NewIntFromBigInt(
-		new(big.Int).Rand(r, initFromCoins[denomIndex].Amount.BigInt()))
+	amt, goErr := randPositiveInt(r, initFromCoins[denomIndex].Amount)
+	if goErr != nil {
+		return "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, nil
+	}
 
 	action = fmt.Sprintf("%s is sending %s %s to %s",
 		fromAddr.String(),
@@ -161,6 +164,14 @@ func randSingleSendTx(t *testing.T, r *rand.Rand, app *mock.App, ctx sdk.Context
 	require.Equal(t, initToCoins.Plus(coins), resultantToAcc.GetCoins(), log)
 
 	return action, nil
+}
+
+func randPositiveInt(r *rand.Rand, max sdk.Int) (sdk.Int, error) {
+	if !max.GT(sdk.OneInt()) {
+		return sdk.Int{}, errors.New("max too small")
+	}
+	max = max.Sub(sdk.OneInt())
+	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdk.OneInt()), nil
 }
 
 func bankTestInvariants() mock.AssertInvariants {

@@ -48,6 +48,9 @@ func AuthInvariant(t *testing.T, app *App, log string) {
 	require.Equal(t, app.TotalCoinsSupply, totalCoins, log)
 }
 
+// PeriodicInvariant returns an AssertInvariants function closure that asserts
+// a given invariant if the mock application's last block modulo the given
+// period is congruent to the given offset.
 func PeriodicInvariant(invariant AssertInvariants, period int, offset int) AssertInvariants {
 	return func(t *testing.T, app *App, log string) {
 		if int(app.LastBlockHeight())%period == offset {

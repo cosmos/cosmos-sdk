@@ -1,19 +1,20 @@
 package bank
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"math/big"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 
-  "strconv"
-	
-  abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -104,15 +105,15 @@ func TestBankWithRandomMessages(t *testing.T) {
 		return
 	}
 	mapp.RandomizedTesting(t, []mock.TestAndRunTx{randSingleSendTx}, []mock.RandSetup{setup},
-		[]mock.AssertInvariants{bankTestInvariants()}, 100, 30, 30)
+		[]mock.AssertInvariants{bankTestInvariants(), mock.AuthInvariant}, 100, 30, 30)
 }
 
-// Send a random "Send" Transaction
+// Send a random "Send" Transaction from two already existing accounts
 func randSingleSendTx(t *testing.T, r *rand.Rand, app *mock.App, ctx sdk.Context, keys []crypto.PrivKey, log string) (action string, err sdk.Error) {
 	fromKey := keys[r.Intn(len(keys))]
 	fromAddr := fromKey.PubKey().Address()
 	toKey := keys[r.Intn(len(keys))]
-	// Disallow setting money to yourself
+	// Disallow sending money to yourself
 	for {
 		if !fromKey.Equals(toKey) {
 			break
@@ -121,21 +122,38 @@ func randSingleSendTx(t *testing.T, r *rand.Rand, app *mock.App, ctx sdk.Context
 	}
 	toAddr := toKey.PubKey().Address()
 	initFromAcc := app.AccountMapper.GetAccount(ctx, fromAddr)
-	initToCoins := app.AccountMapper.GetAccount(ctx, toAddr).GetCoins()
 	initFromCoins := initFromAcc.GetCoins()
+	initToCoins := app.AccountMapper.GetAccount(ctx, toAddr).GetCoins()
+
 	denomIndex := r.Intn(len(initFromCoins))
-	amt := r.Int63n(initFromCoins[denomIndex].Amount)
-	action = (fromAddr.String() + " is sending " + strconv.Itoa(int(amt)) +
-		initFromCoins[denomIndex].Denom + " to " + toAddr.String())
-	log += "\n" + action
+	amt := sdk.NewIntFromBigInt(
+		new(big.Int).Rand(r, initFromCoins[denomIndex].Amount.BigInt()))
+
+	action = fmt.Sprintf("%s is sending %s %s to %s",
+		fromAddr.String(),
+		amt.String(),
+		initFromCoins[denomIndex].Denom,
+		toAddr.String(),
+	)
+	log = fmt.Sprintf("%s\n%s", log, action)
 
 	coins := sdk.Coins{{initFromCoins[denomIndex].Denom, amt}}
 	var msg = MsgSend{
 		Inputs:  []Input{NewInput(initFromAcc.GetAddress(), coins)},
 		Outputs: []Output{NewOutput(toAddr, coins)},
 	}
-	tx := mock.GenTx(msg, []int64{int64(initFromAcc.GetSequence())}, fromKey)
-	app.Deliver(tx)
+	tx := mock.GenTx([]sdk.Msg{msg},
+		[]int64{initFromAcc.GetAccountNumber()},
+		[]int64{initFromAcc.GetSequence()},
+		fromKey)
+	res := app.Deliver(tx)
+	if !res.IsOK() {
+		// Do this the more 'canonical' way
+		fmt.Println(res)
+		fmt.Println(log)
+		t.FailNow()
+	}
+	require.True(t, res.IsOK(), log)
 
 	resultantFromAcc := app.AccountMapper.GetAccount(ctx, fromAddr)
 	resultantToAcc := app.AccountMapper.GetAccount(ctx, toAddr)

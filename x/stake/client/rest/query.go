@@ -128,13 +128,7 @@ func ubdHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		var ubd stake.UnbondingDelegation
-		err = cdc.UnmarshalBinary(res, &ubd)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't decode unbonding-delegation. Error: %s", err.Error())))
-			return
-		}
+		ubd := types.UnmarshalUBD(cdc, key, res)
 
 		output, err := cdc.MarshalJSON(ubd)
 		if err != nil {
@@ -193,13 +187,7 @@ func redHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		var red stake.Redelegation
-		err = cdc.UnmarshalBinary(res, &red)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't decode redelegation. Error: %s", err.Error())))
-			return
-		}
+		red := types.UnmarshalRED(cdc, key, res)
 
 		output, err := cdc.MarshalJSON(red)
 		if err != nil {

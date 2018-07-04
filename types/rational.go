@@ -41,6 +41,10 @@ func NewRat(Numerator int64, Denominator ...int64) Rat {
 // precision is the number of values after the decimal point which should be read
 func NewRatFromDecimal(decimalStr string, prec int) (f Rat, err Error) {
 	// first extract any negative symbol
+	if len(decimalStr) == 0 {
+		return f, ErrUnknownRequest("decimal string is empty")
+	}
+
 	neg := false
 	if string(decimalStr[0]) == "-" {
 		neg = true

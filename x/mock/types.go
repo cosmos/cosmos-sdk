@@ -12,28 +12,38 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-// Produce a random transaction, and check the state transition. Return a descriptive message "action" about
-// what this random tx actually did, for ease of debugging.
-type TestAndRunTx func(t *testing.T, r *rand.Rand, app *App, ctx sdk.Context, privKeys []crypto.PrivKey, log string) (action string, err sdk.Error)
+type (
+	// TestAndRunTx produces a random transaction, and check the state
+	// transition. It returns a descriptive message "action" about what this
+	// random tx actually did, for ease of debugging.
+	TestAndRunTx func(
+		t *testing.T, r *rand.Rand, app *App, ctx sdk.Context,
+		privKeys []crypto.PrivKey, log string,
+	) (action string, err sdk.Error)
 
-// Perform the random setup the module needs.
-type RandSetup func(r *rand.Rand, privKeys []crypto.PrivKey)
+	// RandSetup performs the random setup the mock module needs.
+	RandSetup func(r *rand.Rand, privKeys []crypto.PrivKey)
 
-// Assert invariants for the module. Print out the log when failing
-type AssertInvariants func(t *testing.T, app *App, log string)
+	// AssertInvariants asserts invariants for the mock module. It will print
+	// out the log when failing.
+	AssertInvariants func(t *testing.T, app *App, log string)
+)
 
-// Invariant for Auth module. Placed here to avoid circular dependency
+// AuthInvariant enforces an invariant for the Auth module.
 func AuthInvariant(t *testing.T, app *App, log string) {
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 	totalCoins := sdk.Coins{}
+
 	chkAccount := func(acc auth.Account) bool {
 		coins := acc.GetCoins()
 		totalCoins = totalCoins.Plus(coins)
+
 		for _, coin := range coins {
 			require.True(t, coin.Amount.GT(sdk.ZeroInt()), log)
 		}
 		return false
 	}
+
 	app.AccountMapper.IterateAccounts(ctx, chkAccount)
 	require.Equal(t, app.TotalCoinsSupply, totalCoins, log)
 }

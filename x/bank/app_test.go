@@ -13,7 +13,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/mock"
+	"github.com/cosmos/cosmos-sdk/x/mock"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -105,6 +105,7 @@ func TestBankWithRandomMessages(t *testing.T) {
 	setup := func(r *rand.Rand, keys []crypto.PrivKey) {
 		return
 	}
+
 	mapp.RandomizedTesting(t, []mock.TestAndRunTx{randSingleSendTx}, []mock.RandSetup{setup},
 		[]mock.AssertInvariants{bankTestInvariants(), mock.AuthInvariant}, 100, 30, 30)
 }

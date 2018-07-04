@@ -98,6 +98,7 @@ BUG FIXES
 * \#1353 - CLI: Show pool shares fractions in human-readable format
 * \#1258 - printing big.rat's can no longer overflow int64
 * \#887  - limit the size of rationals that can be passed in from user input
+* \#1461 - CLI tests now no longer reset your local environment data
 
 ## 0.19.0
 

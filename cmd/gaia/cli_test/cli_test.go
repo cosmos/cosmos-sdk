@@ -3,6 +3,9 @@ package clitest
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
+	"os/user"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -21,30 +24,27 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
+var (
+	pass        = "1234567890"
+	gaiadHome   = ""
+	gaiacliHome = ""
+)
+
+func init() {
+	gaiadHome, gaiacliHome = getTestingHomeDirs()
+}
+
 func TestGaiaCLISend(t *testing.T) {
+	flags, port, proc := resetTestEnv(t)
 
-	tests.ExecuteT(t, "gaiad unsafe_reset_all")
-	pass := "1234567890"
-	executeWrite(t, "gaiacli keys delete foo", pass)
-	executeWrite(t, "gaiacli keys delete bar", pass)
-	chainID := executeInit(t, "gaiad init -o --name=foo")
-	executeWrite(t, "gaiacli keys add bar", pass)
-
-	// get a free port, also setup some common flags
-	servAddr, port, err := server.FreeTCPAddr()
-	require.NoError(t, err)
-	flags := fmt.Sprintf("--node=%v --chain-id=%v", servAddr, chainID)
-
-	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
 	tests.WaitForNextHeightTM(port)
 
-	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
 	fooCech, err := sdk.Bech32ifyAcc(fooAddr)
 	require.NoError(t, err)
-	barAddr, _ := executeGetAddrPK(t, "gaiacli keys show bar --output=json")
+	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
 	barCech, err := sdk.Bech32ifyAcc(barAddr)
 	require.NoError(t, err)
 
@@ -79,29 +79,15 @@ func TestGaiaCLISend(t *testing.T) {
 }
 
 func TestGaiaCLICreateValidator(t *testing.T) {
-
-	tests.ExecuteT(t, "gaiad unsafe_reset_all")
-	pass := "1234567890"
-	executeWrite(t, "gaiacli keys delete foo", pass)
-	executeWrite(t, "gaiacli keys delete bar", pass)
-	chainID := executeInit(t, "gaiad init -o --name=foo")
-	executeWrite(t, "gaiacli keys add bar", pass)
-
-	// get a free port, also setup some common flags
-	servAddr, port, err := server.FreeTCPAddr()
-	require.NoError(t, err)
-	flags := fmt.Sprintf("--node=%v --chain-id=%v", servAddr, chainID)
-
-	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
+	flags, port, proc := resetTestEnv(t)
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
 	tests.WaitForNextHeightTM(port)
 
-	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
 	fooCech, err := sdk.Bech32ifyAcc(fooAddr)
 	require.NoError(t, err)
-	barAddr, barPubKey := executeGetAddrPK(t, "gaiacli keys show bar --output=json")
+	barAddr, barPubKey := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
 	barCech, err := sdk.Bech32ifyAcc(barAddr)
 	require.NoError(t, err)
 	barCeshPubKey, err := sdk.Bech32ifyValPub(barPubKey)
@@ -153,26 +139,12 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 }
 
 func TestGaiaCLISubmitProposal(t *testing.T) {
-
-	tests.ExecuteT(t, "gaiad unsafe_reset_all")
-	pass := "1234567890"
-	executeWrite(t, "gaiacli keys delete foo", pass)
-	executeWrite(t, "gaiacli keys delete bar", pass)
-	chainID := executeInit(t, "gaiad init -o --name=foo")
-	executeWrite(t, "gaiacli keys add bar", pass)
-
-	// get a free port, also setup some common flags
-	servAddr, port, err := server.FreeTCPAddr()
-	require.NoError(t, err)
-	flags := fmt.Sprintf("--node=%v --chain-id=%v", servAddr, chainID)
-
-	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
+	flags, port, proc := resetTestEnv(t)
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
 	tests.WaitForNextHeightTM(port)
 
-	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
 	fooCech, err := sdk.Bech32ifyAcc(fooAddr)
 	require.NoError(t, err)
 
@@ -204,6 +176,40 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	vote := executeGetVote(t, fmt.Sprintf("gaiacli gov query-vote  --proposalID=1 --voter=%v --output=json %v", fooCech, flags))
 	require.Equal(t, int64(1), vote.ProposalID)
 	require.Equal(t, gov.VoteOptionToString(gov.OptionYes), vote.Option)
+}
+
+//___________________________________________________________________________________
+// helper methods
+
+func getTestingHomeDirs() (string, string) {
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Users home directory
+	home := usr.HomeDir
+	gaiadHome := fmt.Sprintf("%s%s.test_gaiad", home, string(os.PathSeparator))
+	gaiacliHome := fmt.Sprintf("%s%s.test_gaiacli", home, string(os.PathSeparator))
+	return gaiadHome, gaiacliHome
+}
+
+// returns flags, port, process
+func resetTestEnv(t *testing.T) (flags string, port string, proc *tests.Process) {
+	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe_reset_all", gaiadHome))
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), pass)
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), pass)
+	chainID := executeInit(t, "gaiad init -o --name=foo --home="+gaiadHome)
+	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), pass)
+
+	// get a free port, also setup some common flags
+	servAddr, port, err := server.FreeTCPAddr()
+	require.NoError(t, err)
+	flags = fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
+
+	// start gaiad server
+	proc = tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
+
+	return flags, port, proc
 }
 
 //___________________________________________________________________________________

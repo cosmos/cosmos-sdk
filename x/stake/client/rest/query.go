@@ -275,15 +275,14 @@ func validatorsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerF
 		// parse out the validators
 		validators := make([]StakeValidatorOutput, len(kvs))
 		for i, kv := range kvs {
-			var validator stake.Validator
-			var bech32Validator StakeValidatorOutput
-			err = cdc.UnmarshalBinary(kv.Value, &validator)
-			if err == nil {
-				bech32Validator, err = bech32StakeValidatorOutput(validator)
-			}
+
+			addr := kv.Key[1:]
+			validator := types.UnmarshalValidator(cdc, addr, kv.Value)
+
+			bech32Validator, err := bech32StakeValidatorOutput(validator)
 			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("couldn't decode validator. Error: %s", err.Error())))
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(err.Error()))
 				return
 			}
 			validators[i] = bech32Validator

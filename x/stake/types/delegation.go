@@ -118,7 +118,7 @@ func MarshalUBD(cdc *wire.Codec, ubd UnbondingDelegation) []byte {
 	return cdc.MustMarshalBinary(val)
 }
 
-// return the unbonding delegation without fields contained within the key for the store
+// unmarshal a unbonding delegation from a store key and value
 func UnmarshalUBD(cdc *wire.Codec, key, value []byte) UnbondingDelegation {
 	var storeValue ubdValue
 	cdc.MustUnmarshalBinary(value, &storeValue)
@@ -192,7 +192,7 @@ type redValue struct {
 	SharesDst      sdk.Rat
 }
 
-// return the unbonding delegation without fields contained within the key for the store
+// return the redelegation without fields contained within the key for the store
 func MarshalRED(cdc *wire.Codec, red Redelegation) []byte {
 	val := redValue{
 		red.CreationHeight,
@@ -205,7 +205,7 @@ func MarshalRED(cdc *wire.Codec, red Redelegation) []byte {
 	return cdc.MustMarshalBinary(val)
 }
 
-// return the unbonding delegation without fields contained within the key for the store
+// unmarshal a redelegation from a store key and value
 func UnmarshalRED(cdc *wire.Codec, key, value []byte) Redelegation {
 	var storeValue redValue
 	cdc.MustUnmarshalBinary(value, &storeValue)

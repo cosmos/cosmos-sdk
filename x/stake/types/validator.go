@@ -9,6 +9,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Validator defines the total amount of bond shares and their exchange rate to
@@ -57,6 +58,70 @@ func NewValidator(owner sdk.Address, pubKey crypto.PubKey, description Descripti
 		CommissionChangeRate:  sdk.ZeroRat(),
 		CommissionChangeToday: sdk.ZeroRat(),
 		PrevBondedShares:      sdk.ZeroRat(),
+	}
+}
+
+// what's kept in the store value
+type validatorValue struct {
+	PubKey                crypto.PubKey
+	Revoked               bool
+	PoolShares            PoolShares
+	DelegatorShares       sdk.Rat
+	Description           Description
+	BondHeight            int64
+	BondIntraTxCounter    int16
+	ProposerRewardPool    sdk.Coins
+	Commission            sdk.Rat
+	CommissionMax         sdk.Rat
+	CommissionChangeRate  sdk.Rat
+	CommissionChangeToday sdk.Rat
+	PrevBondedShares      sdk.Rat
+}
+
+// return the redelegation without fields contained within the key for the store
+func MarshalValidator(cdc *wire.Codec, validator Validator) []byte {
+	val := validatorValue{
+		PubKey:                validator.PubKey,
+		Revoked:               validator.Revoked,
+		PoolShares:            validator.PoolShares,
+		DelegatorShares:       validator.DelegatorShares,
+		Description:           validator.Description,
+		BondHeight:            validator.BondHeight,
+		BondIntraTxCounter:    validator.BondIntraTxCounter,
+		ProposerRewardPool:    validator.ProposerRewardPool,
+		Commission:            validator.Commission,
+		CommissionMax:         validator.CommissionMax,
+		CommissionChangeRate:  validator.CommissionChangeRate,
+		CommissionChangeToday: validator.CommissionChangeToday,
+		PrevBondedShares:      validator.PrevBondedShares,
+	}
+	return cdc.MustMarshalBinary(val)
+}
+
+// unmarshal a redelegation from a store key and value
+func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) Validator {
+	var storeValue validatorValue
+	cdc.MustUnmarshalBinary(value, &storeValue)
+
+	if len(ownerAddr) != 20 {
+		panic("unexpected address length")
+	}
+
+	return Validator{
+		Owner:                 ownerAddr,
+		PubKey:                storeValue.PubKey,
+		Revoked:               storeValue.Revoked,
+		PoolShares:            storeValue.PoolShares,
+		DelegatorShares:       storeValue.DelegatorShares,
+		Description:           storeValue.Description,
+		BondHeight:            storeValue.BondHeight,
+		BondIntraTxCounter:    storeValue.BondIntraTxCounter,
+		ProposerRewardPool:    storeValue.ProposerRewardPool,
+		Commission:            storeValue.Commission,
+		CommissionMax:         storeValue.CommissionMax,
+		CommissionChangeRate:  storeValue.CommissionChangeRate,
+		CommissionChangeToday: storeValue.CommissionChangeToday,
+		PrevBondedShares:      storeValue.PrevBondedShares,
 	}
 }
 

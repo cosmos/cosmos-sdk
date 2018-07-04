@@ -32,8 +32,8 @@ func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			validator := new(stake.Validator)
-			cdc.MustUnmarshalBinary(res, validator)
+
+			validator := types.UnmarshalValidator(cdc, addr, res)
 
 			switch viper.Get(cli.OutputFlag) {
 			case "text":
@@ -76,8 +76,8 @@ func GetCmdQueryValidators(storeName string, cdc *wire.Codec) *cobra.Command {
 			// parse out the validators
 			var validators []stake.Validator
 			for _, kv := range resKVs {
-				var validator stake.Validator
-				cdc.MustUnmarshalBinary(kv.Value, &validator)
+				addr := kv.Key[1:]
+				validator := types.UnmarshalValidator(cdc, addr, kv.Value)
 				validators = append(validators, validator)
 			}
 

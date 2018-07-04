@@ -211,6 +211,12 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	keyOutput, err := Bech32KeyOutput(info)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
 	keyOutput.Seed = mnemonic
 
 	output, err := json.MarshalIndent(keyOutput, "", "  ")

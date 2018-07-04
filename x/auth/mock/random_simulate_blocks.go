@@ -57,6 +57,7 @@ func (app *App) assertAllInvariants(t *testing.T, tests []AssertInvariants, log 
 	}
 }
 
+// nolint:
 type Interval struct {
 	lo int
 	hi int
@@ -75,6 +76,7 @@ func RandFromInterval(r *rand.Rand, intervals []Interval) int {
 	return r.Intn(hi-lo) + lo
 }
 
+// nolint:
 type BigInterval struct {
 	lo sdk.Int
 	hi sdk.Int

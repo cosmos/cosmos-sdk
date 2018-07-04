@@ -124,7 +124,6 @@ func randSingleSendTx(t *testing.T, r *rand.Rand, app *mock.App, ctx sdk.Context
 	toAddr := toKey.PubKey().Address()
 	initFromAcc := app.AccountMapper.GetAccount(ctx, fromAddr)
 	initFromCoins := initFromAcc.GetCoins()
-	initToCoins := app.AccountMapper.GetAccount(ctx, toAddr).GetCoins()
 
 	denomIndex := r.Intn(len(initFromCoins))
 	amt, goErr := randPositiveInt(r, initFromCoins[denomIndex].Amount)
@@ -145,10 +144,32 @@ func randSingleSendTx(t *testing.T, r *rand.Rand, app *mock.App, ctx sdk.Context
 		Inputs:  []Input{NewInput(initFromAcc.GetAddress(), coins)},
 		Outputs: []Output{NewOutput(toAddr, coins)},
 	}
+	sendAndVerifyMsgSend(t, app, msg, ctx, log, []crypto.PrivKey{fromKey})
+
+	return action, nil
+}
+
+// Note this fails if there are repeated inputs or outputs
+func sendAndVerifyMsgSend(t *testing.T, app *mock.App, msg MsgSend, ctx sdk.Context, log string, privkeys []crypto.PrivKey) {
+	initialInputAddrCoins := make([]sdk.Coins, len(msg.Inputs))
+	initialOutputAddrCoins := make([]sdk.Coins, len(msg.Outputs))
+	AccountNumbers := make([]int64, len(msg.Inputs))
+	SequenceNumbers := make([]int64, len(msg.Inputs))
+
+	for i := 0; i < len(msg.Inputs); i++ {
+		acc := app.AccountMapper.GetAccount(ctx, msg.Inputs[i].Address)
+		AccountNumbers[i] = acc.GetAccountNumber()
+		SequenceNumbers[i] = acc.GetSequence()
+		initialInputAddrCoins[i] = acc.GetCoins()
+	}
+	for i := 0; i < len(msg.Outputs); i++ {
+		acc := app.AccountMapper.GetAccount(ctx, msg.Outputs[i].Address)
+		initialOutputAddrCoins[i] = acc.GetCoins()
+	}
 	tx := mock.GenTx([]sdk.Msg{msg},
-		[]int64{initFromAcc.GetAccountNumber()},
-		[]int64{initFromAcc.GetSequence()},
-		fromKey)
+		AccountNumbers,
+		SequenceNumbers,
+		privkeys...)
 	res := app.Deliver(tx)
 	if !res.IsOK() {
 		// Do this the more 'canonical' way
@@ -156,14 +177,23 @@ func randSingleSendTx(t *testing.T, r *rand.Rand, app *mock.App, ctx sdk.Context
 		fmt.Println(log)
 		t.FailNow()
 	}
-	require.True(t, res.IsOK(), log)
 
-	resultantFromAcc := app.AccountMapper.GetAccount(ctx, fromAddr)
-	resultantToAcc := app.AccountMapper.GetAccount(ctx, toAddr)
-	require.Equal(t, initFromCoins.Minus(coins), resultantFromAcc.GetCoins(), log)
-	require.Equal(t, initToCoins.Plus(coins), resultantToAcc.GetCoins(), log)
-
-	return action, nil
+	for i := 0; i < len(msg.Inputs); i++ {
+		terminalInputCoins := app.AccountMapper.GetAccount(ctx, msg.Inputs[i].Address).GetCoins()
+		require.Equal(t,
+			initialInputAddrCoins[i].Minus(msg.Inputs[i].Coins),
+			terminalInputCoins,
+			fmt.Sprintf("Input #%d had an incorrect amount of coins\n%s", i, log),
+		)
+	}
+	for i := 0; i < len(msg.Outputs); i++ {
+		terminalOutputCoins := app.AccountMapper.GetAccount(ctx, msg.Outputs[i].Address).GetCoins()
+		require.Equal(t,
+			initialOutputAddrCoins[i].Plus(msg.Outputs[i].Coins),
+			terminalOutputCoins,
+			fmt.Sprintf("Output #%d had an incorrect amount of coins\n%s", i, log),
+		)
+	}
 }
 
 func randPositiveInt(r *rand.Rand, max sdk.Int) (sdk.Int, error) {

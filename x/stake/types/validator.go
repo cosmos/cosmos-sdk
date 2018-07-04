@@ -2,12 +2,15 @@ package types
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 const doNotModifyDescVal = "[do-not-modify]"
@@ -61,7 +64,85 @@ func NewValidator(owner sdk.Address, pubKey crypto.PubKey, description Descripti
 	}
 }
 
-// Equal returns a boolean reflecting if two given validators are identical.
+// what's kept in the store value
+type validatorValue struct {
+	PubKey                crypto.PubKey
+	Revoked               bool
+	PoolShares            PoolShares
+	DelegatorShares       sdk.Rat
+	Description           Description
+	BondHeight            int64
+	BondIntraTxCounter    int16
+	ProposerRewardPool    sdk.Coins
+	Commission            sdk.Rat
+	CommissionMax         sdk.Rat
+	CommissionChangeRate  sdk.Rat
+	CommissionChangeToday sdk.Rat
+	PrevBondedShares      sdk.Rat
+}
+
+// return the redelegation without fields contained within the key for the store
+func MustMarshalValidator(cdc *wire.Codec, validator Validator) []byte {
+	val := validatorValue{
+		PubKey:                validator.PubKey,
+		Revoked:               validator.Revoked,
+		PoolShares:            validator.PoolShares,
+		DelegatorShares:       validator.DelegatorShares,
+		Description:           validator.Description,
+		BondHeight:            validator.BondHeight,
+		BondIntraTxCounter:    validator.BondIntraTxCounter,
+		ProposerRewardPool:    validator.ProposerRewardPool,
+		Commission:            validator.Commission,
+		CommissionMax:         validator.CommissionMax,
+		CommissionChangeRate:  validator.CommissionChangeRate,
+		CommissionChangeToday: validator.CommissionChangeToday,
+		PrevBondedShares:      validator.PrevBondedShares,
+	}
+	return cdc.MustMarshalBinary(val)
+}
+
+// unmarshal a redelegation from a store key and value
+func MustUnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) Validator {
+	validator, err := UnmarshalValidator(cdc, ownerAddr, value)
+	if err != nil {
+		panic(err)
+	}
+
+	return validator
+}
+
+// unmarshal a redelegation from a store key and value
+func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) (validator Validator, err error) {
+	var storeValue validatorValue
+	err = cdc.UnmarshalBinary(value, &storeValue)
+	if err != nil {
+		return
+	}
+
+	if len(ownerAddr) != 20 {
+		err = errors.New("unexpected address length")
+		return
+	}
+
+	return Validator{
+		Owner:                 ownerAddr,
+		PubKey:                storeValue.PubKey,
+		Revoked:               storeValue.Revoked,
+		PoolShares:            storeValue.PoolShares,
+		DelegatorShares:       storeValue.DelegatorShares,
+		Description:           storeValue.Description,
+		BondHeight:            storeValue.BondHeight,
+		BondIntraTxCounter:    storeValue.BondIntraTxCounter,
+		ProposerRewardPool:    storeValue.ProposerRewardPool,
+		Commission:            storeValue.Commission,
+		CommissionMax:         storeValue.CommissionMax,
+		CommissionChangeRate:  storeValue.CommissionChangeRate,
+		CommissionChangeToday: storeValue.CommissionChangeToday,
+		PrevBondedShares:      storeValue.PrevBondedShares,
+	}, nil
+}
+
+// only the vitals - does not check bond height of IntraTxCounter
 func (v Validator) Equal(c2 Validator) bool {
 	return v.PubKey.Equals(c2.PubKey) &&
 		bytes.Equal(v.Owner, c2.Owner) &&

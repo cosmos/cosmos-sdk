@@ -48,6 +48,10 @@ func (ms multiStore) LastCommitID() sdk.CommitID {
 	panic("not implemented")
 }
 
+func (ms multiStore) SetPruning(s sdk.PruningStrategy) {
+	panic("not implemented")
+}
+
 func (ms multiStore) GetCommitKVStore(key sdk.StoreKey) sdk.CommitKVStore {
 	panic("not implemented")
 }

@@ -7,7 +7,10 @@ import (
 	"os"
 	"path"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
+
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -44,7 +47,7 @@ func runHackCmd(cmd *cobra.Command, args []string) error {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	app := NewGaiaApp(logger, db)
+	app := NewGaiaApp(logger, db, baseapp.SetPruning(viper.GetString("pruning")))
 
 	// print some info
 	id := app.LastCommitID()
@@ -140,10 +143,10 @@ type GaiaApp struct {
 	slashingKeeper      slashing.Keeper
 }
 
-func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
+func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseApp)) *GaiaApp {
 	cdc := MakeCodec()
 
-	bApp := bam.NewBaseApp(appName, cdc, logger, db)
+	bApp := bam.NewBaseApp(appName, cdc, logger, db, baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(os.Stdout)
 
 	// create your application object

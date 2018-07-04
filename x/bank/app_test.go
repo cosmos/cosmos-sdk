@@ -106,8 +106,13 @@ func TestBankWithRandomMessages(t *testing.T) {
 		return
 	}
 
-	mapp.RandomizedTesting(t, []mock.TestAndRunTx{randSingleSendTx}, []mock.RandSetup{setup},
-		[]mock.AssertInvariants{bankTestInvariants(), mock.AuthInvariant}, 100, 30, 30)
+	mapp.RandomizedTesting(
+		t,
+		[]mock.TestAndRunTx{randSingleSendTx},
+		[]mock.RandSetup{setup},
+		[]mock.AssertInvariants{bankTestInvariants(), mock.AuthInvariant},
+		100, 30, 30,
+	)
 }
 
 // Send a random "Send" Transaction from two already existing accounts

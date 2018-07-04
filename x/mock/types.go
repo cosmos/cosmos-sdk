@@ -30,6 +30,7 @@ type (
 )
 
 // AuthInvariant enforces an invariant for the Auth module.
+// TODO: Does this belong here?
 func AuthInvariant(t *testing.T, app *App, log string) {
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 	totalCoins := sdk.Coins{}

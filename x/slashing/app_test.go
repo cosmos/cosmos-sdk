@@ -5,11 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/stretchr/testify/require"
-
+	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -103,10 +102,9 @@ func TestSlashingMsgs(t *testing.T) {
 	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.PoolShares.Bonded()))
 	unrevokeMsg := MsgUnrevoke{ValidatorAddr: validator.PubKey.Address()}
 
-	// no signing info yet
 	checkValidatorSigningInfo(t, mapp, keeper, addr1, false)
 
-	// unrevoke should fail with validator not revoked
-	res := mock.SignCheck(mapp.BaseApp, []sdk.Msg{unrevokeMsg}, []int64{0}, []int64{1}, priv1)
+	// unrevoke should fail with unknown validator
+	res := mock.CheckGenTx(t, mapp.BaseApp, []sdk.Msg{unrevokeMsg}, []int64{0}, []int64{1}, false, priv1)
 	require.Equal(t, sdk.ToABCICode(DefaultCodespace, CodeValidatorNotRevoked), res.Code)
 }

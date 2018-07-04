@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/mock"
+	"github.com/cosmos/cosmos-sdk/x/mock"
 )
 
 var (

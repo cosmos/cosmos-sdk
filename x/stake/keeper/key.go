@@ -131,12 +131,11 @@ func GetUBDByValIndexKey(delegatorAddr, validatorAddr sdk.Address) []byte {
 // rearrange the ValIndexKey to get the UBDKey
 func GetUBDKeyFromValIndexKey(IndexKey []byte) []byte {
 	addrs := IndexKey[1:] // remove prefix bytes
-	split := len(addrs) / 2
-	if (len(addrs) % 2) != 0 {
-		panic("key length not even")
+	if len(addrs) != 40 {
+		panic("unexpected key length")
 	}
-	valAddr := addrs[:split]
-	delAddr := addrs[split:]
+	valAddr := addrs[:20]
+	delAddr := addrs[20:]
 	return GetUBDKey(delAddr, valAddr)
 }
 
@@ -190,13 +189,12 @@ func GetREDByValDstIndexKey(delegatorAddr, validatorSrcAddr,
 // rearrange the ValSrcIndexKey to get the REDKey
 func GetREDKeyFromValSrcIndexKey(IndexKey []byte) []byte {
 	addrs := IndexKey[1:] // remove prefix bytes
-	split := len(addrs) / 3
-	if (len(addrs) % 3) != 0 {
+	if len(addrs) != 60 {
 		panic("unexpected key length")
 	}
-	valSrcAddr := addrs[:split]
-	delAddr := addrs[split : 2*split]
-	valDstAddr := addrs[2*split:]
+	valSrcAddr := addrs[:20]
+	delAddr := addrs[20:40]
+	valDstAddr := addrs[40:]
 
 	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
 }
@@ -204,13 +202,12 @@ func GetREDKeyFromValSrcIndexKey(IndexKey []byte) []byte {
 // rearrange the ValDstIndexKey to get the REDKey
 func GetREDKeyFromValDstIndexKey(IndexKey []byte) []byte {
 	addrs := IndexKey[1:] // remove prefix bytes
-	split := len(addrs) / 3
-	if (len(addrs) % 3) != 0 {
+	if len(addrs) != 60 {
 		panic("unexpected key length")
 	}
-	valDstAddr := addrs[:split]
-	delAddr := addrs[split : 2*split]
-	valSrcAddr := addrs[2*split:]
+	valDstAddr := addrs[:20]
+	delAddr := addrs[20:40]
+	valSrcAddr := addrs[40:]
 	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
 }
 
@@ -235,6 +232,7 @@ func GetREDsToValDstIndexKey(validatorDstAddr sdk.Address) []byte {
 // from a particular delegator
 func GetREDsByDelToValDstIndexKey(delegatorAddr sdk.Address,
 	validatorDstAddr sdk.Address) []byte {
+
 	return append(
 		GetREDsToValDstIndexKey(validatorDstAddr),
 		delegatorAddr.Bytes()...)

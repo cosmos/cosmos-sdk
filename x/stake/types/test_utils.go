@@ -11,7 +11,6 @@ import (
 )
 
 var (
-	// dummy pubkeys/addresses
 	pk1   = crypto.GenPrivKeyEd25519().PubKey()
 	pk2   = crypto.GenPrivKeyEd25519().PubKey()
 	pk3   = crypto.GenPrivKeyEd25519().PubKey()
@@ -23,18 +22,20 @@ var (
 	emptyPubkey crypto.PubKey
 )
 
-//______________________________________________________________
-
-// any operation that transforms staking state
-// takes in RNG instance, pool, validator
-// returns updated pool, updated validator, delta tokens, descriptive message
+// Operation reflects any operation that transforms staking state. It takes in
+// a RNG instance, pool, validator and returns an updated pool, updated
+// validator, delta tokens, and descriptive message.
 type Operation func(r *rand.Rand, pool Pool, c Validator) (Pool, Validator, int64, string)
 
-// operation: bond or unbond a validator depending on current status
+// OpBondOrUnbond implements an operation that bonds or unbonds a validator
+// depending on current status.
 // nolint: unparam
 func OpBondOrUnbond(r *rand.Rand, pool Pool, val Validator) (Pool, Validator, int64, string) {
-	var msg string
-	var newStatus sdk.BondStatus
+	var (
+		msg       string
+		newStatus sdk.BondStatus
+	)
+
 	if val.Status() == sdk.Bonded {
 		msg = fmt.Sprintf("sdk.Unbonded previously bonded validator %s (poolShares: %v, delShares: %v, DelegatorShareExRate: %v)",
 			val.Owner, val.PoolShares.Bonded(), val.DelegatorShares, val.DelegatorShareExRate(pool))
@@ -45,21 +46,27 @@ func OpBondOrUnbond(r *rand.Rand, pool Pool, val Validator) (Pool, Validator, in
 			val.Owner, val.PoolShares.Bonded(), val.DelegatorShares, val.DelegatorShareExRate(pool))
 		newStatus = sdk.Bonded
 	}
+
 	val, pool = val.UpdateStatus(pool, newStatus)
 	return pool, val, 0, msg
 }
 
-// operation: add a random number of tokens to a validator
+// OpAddTokens implements an operation that adds a random number of tokens to a
+// validator.
 func OpAddTokens(r *rand.Rand, pool Pool, val Validator) (Pool, Validator, int64, string) {
-	tokens := int64(r.Int31n(1000))
 	msg := fmt.Sprintf("validator %s (status: %d, poolShares: %v, delShares: %v, DelegatorShareExRate: %v)",
 		val.Owner, val.Status(), val.PoolShares.Bonded(), val.DelegatorShares, val.DelegatorShareExRate(pool))
+
+	tokens := int64(r.Int31n(1000))
 	val, pool, _ = val.AddTokensFromDel(pool, tokens)
 	msg = fmt.Sprintf("Added %d tokens to %s", tokens, msg)
-	return pool, val, -1 * tokens, msg // tokens are removed so for accounting must be negative
+
+	// Tokens are removed so for accounting must be negative
+	return pool, val, -1 * tokens, msg
 }
 
-// operation: remove a random number of shares from a validator
+// OpRemoveShares implements an operation that removes a random number of
+// shares from a validator.
 func OpRemoveShares(r *rand.Rand, pool Pool, val Validator) (Pool, Validator, int64, string) {
 	var shares sdk.Rat
 	for {
@@ -76,7 +83,7 @@ func OpRemoveShares(r *rand.Rand, pool Pool, val Validator) (Pool, Validator, in
 	return pool, val, tokens, msg
 }
 
-// pick a random staking operation
+// RandomOperation returns a random staking operation.
 func RandomOperation(r *rand.Rand) Operation {
 	operations := []Operation{
 		OpBondOrUnbond,
@@ -86,10 +93,11 @@ func RandomOperation(r *rand.Rand) Operation {
 	r.Shuffle(len(operations), func(i, j int) {
 		operations[i], operations[j] = operations[j], operations[i]
 	})
+
 	return operations[0]
 }
 
-// ensure invariants that should always be true are true
+// AssertInvariants ensures invariants that should always be true are true.
 // nolint: unparam
 func AssertInvariants(t *testing.T, msg string,
 	pOrig Pool, cOrig []Validator, pMod Pool, vMods []Validator, tokens int64) {
@@ -105,29 +113,28 @@ func AssertInvariants(t *testing.T, msg string,
 		pOrig.UnbondedTokens, pOrig.BondedTokens,
 		pMod.UnbondedTokens, pMod.BondedTokens, tokens)
 
-	// nonnegative bonded shares
+	// Nonnegative bonded shares
 	require.False(t, pMod.BondedShares.LT(sdk.ZeroRat()),
 		"Negative bonded shares - msg: %v\npOrig: %v\npMod: %v\ntokens: %v\n",
 		msg, pOrig, pMod, tokens)
 
-	// nonnegative unbonded shares
+	// Nonnegative unbonded shares
 	require.False(t, pMod.UnbondedShares.LT(sdk.ZeroRat()),
 		"Negative unbonded shares - msg: %v\npOrig: %v\npMod: %v\ntokens: %v\n",
 		msg, pOrig, pMod, tokens)
 
-	// nonnegative bonded ex rate
+	// Nonnegative bonded ex rate
 	require.False(t, pMod.BondedShareExRate().LT(sdk.ZeroRat()),
 		"Applying operation \"%s\" resulted in negative BondedShareExRate: %d",
 		msg, pMod.BondedShareExRate().RoundInt64())
 
-	// nonnegative unbonded ex rate
+	// Nonnegative unbonded ex rate
 	require.False(t, pMod.UnbondedShareExRate().LT(sdk.ZeroRat()),
 		"Applying operation \"%s\" resulted in negative UnbondedShareExRate: %d",
 		msg, pMod.UnbondedShareExRate().RoundInt64())
 
 	for _, vMod := range vMods {
-
-		// nonnegative ex rate
+		// Nonnegative ex rate
 		require.False(t, vMod.DelegatorShareExRate(pMod).LT(sdk.ZeroRat()),
 			"Applying operation \"%s\" resulted in negative validator.DelegatorShareExRate(): %v (validator.Owner: %s)",
 			msg,
@@ -135,7 +142,7 @@ func AssertInvariants(t *testing.T, msg string,
 			vMod.Owner,
 		)
 
-		// nonnegative poolShares
+		// Nonnegative poolShares
 		require.False(t, vMod.PoolShares.Bonded().LT(sdk.ZeroRat()),
 			"Applying operation \"%s\" resulted in negative validator.PoolShares.Bonded(): %v (validator.DelegatorShares: %v, validator.DelegatorShareExRate: %v, validator.Owner: %s)",
 			msg,
@@ -145,7 +152,7 @@ func AssertInvariants(t *testing.T, msg string,
 			vMod.Owner,
 		)
 
-		// nonnegative delShares
+		// Nonnegative delShares
 		require.False(t, vMod.DelegatorShares.LT(sdk.ZeroRat()),
 			"Applying operation \"%s\" resulted in negative validator.DelegatorShares: %v (validator.PoolShares.Bonded(): %v, validator.DelegatorShareExRate: %v, validator.Owner: %s)",
 			msg,
@@ -154,27 +161,25 @@ func AssertInvariants(t *testing.T, msg string,
 			vMod.DelegatorShareExRate(pMod),
 			vMod.Owner,
 		)
-
 	}
-
 }
 
-//________________________________________________________________________________
-// TODO refactor this random setup
+// TODO: refactor this random setup
 
-// generate a random validator
+// randomValidator generates a random validator.
 // nolint: unparam
 func randomValidator(r *rand.Rand, i int) Validator {
-
 	poolSharesAmt := sdk.NewRat(int64(r.Int31n(10000)))
 	delShares := sdk.NewRat(int64(r.Int31n(10000)))
 
 	var pShares PoolShares
+
 	if r.Float64() < float64(0.5) {
 		pShares = NewBondedShares(poolSharesAmt)
 	} else {
 		pShares = NewUnbondedShares(poolSharesAmt)
 	}
+
 	return Validator{
 		Owner:           addr1,
 		PubKey:          pk1,
@@ -183,7 +188,7 @@ func randomValidator(r *rand.Rand, i int) Validator {
 	}
 }
 
-// generate a random staking state
+// RandomSetup generates a random staking state.
 func RandomSetup(r *rand.Rand, numValidators int) (Pool, []Validator) {
 	pool := InitialPool()
 	pool.LooseTokens = 100000
@@ -191,6 +196,7 @@ func RandomSetup(r *rand.Rand, numValidators int) (Pool, []Validator) {
 	validators := make([]Validator, numValidators)
 	for i := 0; i < numValidators; i++ {
 		validator := randomValidator(r, i)
+
 		if validator.Status() == sdk.Bonded {
 			pool.BondedShares = pool.BondedShares.Add(validator.PoolShares.Bonded())
 			pool.BondedTokens += validator.PoolShares.Bonded().RoundInt64()
@@ -198,7 +204,9 @@ func RandomSetup(r *rand.Rand, numValidators int) (Pool, []Validator) {
 			pool.UnbondedShares = pool.UnbondedShares.Add(validator.PoolShares.Unbonded())
 			pool.UnbondedTokens += validator.PoolShares.Unbonded().RoundInt64()
 		}
+
 		validators[i] = validator
 	}
+
 	return pool, validators
 }

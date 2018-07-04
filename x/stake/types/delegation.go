@@ -52,7 +52,7 @@ func UnmarshalDelegation(cdc *wire.Codec, key, value []byte) Delegation {
 	}
 }
 
-// two are equal
+// nolint
 func (d Delegation) Equal(d2 Delegation) bool {
 	return bytes.Equal(d.DelegatorAddr, d2.DelegatorAddr) &&
 		bytes.Equal(d.ValidatorAddr, d2.ValidatorAddr) &&
@@ -68,16 +68,20 @@ func (d Delegation) GetDelegator() sdk.Address { return d.DelegatorAddr }
 func (d Delegation) GetValidator() sdk.Address { return d.ValidatorAddr }
 func (d Delegation) GetBondShares() sdk.Rat    { return d.Shares }
 
-//Human Friendly pretty printer
+// HumanReadableString returns a human readable string representation of a
+// Delegation. An error is returned if the Delegation's delegator or validator
+// addresses cannot be Bech32 encoded.
 func (d Delegation) HumanReadableString() (string, error) {
 	bechAcc, err := sdk.Bech32ifyAcc(d.DelegatorAddr)
 	if err != nil {
 		return "", err
 	}
+
 	bechVal, err := sdk.Bech32ifyAcc(d.ValidatorAddr)
 	if err != nil {
 		return "", err
 	}
+
 	resp := "Delegation \n"
 	resp += fmt.Sprintf("Delegator: %s\n", bechAcc)
 	resp += fmt.Sprintf("Validator: %s\n", bechVal)
@@ -85,12 +89,9 @@ func (d Delegation) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Height: %d", d.Height)
 
 	return resp, nil
-
 }
 
-//__________________________________________________________________
-
-// element stored to represent the passive unbonding queue
+// UnbondingDelegation reflects a delegation's passive unbonding queue.
 type UnbondingDelegation struct {
 	DelegatorAddr  sdk.Address `json:"delegator_addr"`  // delegator
 	ValidatorAddr  sdk.Address `json:"validator_addr"`  // validator unbonding from owner addr
@@ -147,16 +148,20 @@ func (d UnbondingDelegation) Equal(d2 UnbondingDelegation) bool {
 	return bytes.Equal(bz1, bz2)
 }
 
-//Human Friendly pretty printer
+// HumanReadableString returns a human readable string representation of an
+// UnbondingDelegation. An error is returned if the UnbondingDelegation's
+// delegator or validator addresses cannot be Bech32 encoded.
 func (d UnbondingDelegation) HumanReadableString() (string, error) {
 	bechAcc, err := sdk.Bech32ifyAcc(d.DelegatorAddr)
 	if err != nil {
 		return "", err
 	}
+
 	bechVal, err := sdk.Bech32ifyAcc(d.ValidatorAddr)
 	if err != nil {
 		return "", err
 	}
+
 	resp := "Unbonding Delegation \n"
 	resp += fmt.Sprintf("Delegator: %s\n", bechAcc)
 	resp += fmt.Sprintf("Validator: %s\n", bechVal)
@@ -168,9 +173,7 @@ func (d UnbondingDelegation) HumanReadableString() (string, error) {
 
 }
 
-//__________________________________________________________________
-
-// element stored to represent the passive redelegation queue
+// Redelegation reflects a delegation's passive re-delegation queue.
 type Redelegation struct {
 	DelegatorAddr    sdk.Address `json:"delegator_addr"`     // delegator
 	ValidatorSrcAddr sdk.Address `json:"validator_src_addr"` // validator redelegation source owner addr
@@ -238,20 +241,25 @@ func (d Redelegation) Equal(d2 Redelegation) bool {
 	return bytes.Equal(bz1, bz2)
 }
 
-//Human Friendly pretty printer
+// HumanReadableString returns a human readable string representation of a
+// Redelegation. An error is returned if the UnbondingDelegation's delegator or
+// validator addresses cannot be Bech32 encoded.
 func (d Redelegation) HumanReadableString() (string, error) {
 	bechAcc, err := sdk.Bech32ifyAcc(d.DelegatorAddr)
 	if err != nil {
 		return "", err
 	}
+
 	bechValSrc, err := sdk.Bech32ifyAcc(d.ValidatorSrcAddr)
 	if err != nil {
 		return "", err
 	}
+
 	bechValDst, err := sdk.Bech32ifyAcc(d.ValidatorDstAddr)
 	if err != nil {
 		return "", err
 	}
+
 	resp := "Redelegation \n"
 	resp += fmt.Sprintf("Delegator: %s\n", bechAcc)
 	resp += fmt.Sprintf("Source Validator: %s\n", bechValSrc)

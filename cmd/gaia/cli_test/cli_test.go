@@ -3,9 +3,7 @@ package clitest
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
-	"os/user"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -176,13 +174,9 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 // helper methods
 
 func getTestingHomeDirs() (string, string) {
-	usr, err := user.Current()
-	if err != nil {
-		log.Fatal(err)
-	}
-	home := usr.HomeDir
-	gaiadHome := fmt.Sprintf("%s%s.test_gaiad", home, string(os.PathSeparator))
-	gaiacliHome := fmt.Sprintf("%s%s.test_gaiacli", home, string(os.PathSeparator))
+	tmpDir := os.TempDir()
+	gaiadHome := fmt.Sprintf("%s%s.test_gaiad", tmpDir, string(os.PathSeparator))
+	gaiacliHome := fmt.Sprintf("%s%s.test_gaiacli", tmpDir, string(os.PathSeparator))
 	return gaiadHome, gaiacliHome
 }
 

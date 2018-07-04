@@ -7,13 +7,9 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/bech32"
-	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
-//Address is a go crypto-style Address
-type Address = cmn.HexBytes
-
-// nolint
+// Bech32 prefixes
 const (
 	// expected address length
 	AddrLen = 20
@@ -25,18 +21,71 @@ const (
 	Bech32PrefixValPub  = "cosmosvalpub"
 )
 
-// Bech32ifyAcc takes Address and returns the bech32 encoded string
-func Bech32ifyAcc(addr Address) (string, error) {
-	return bech32.ConvertAndEncode(Bech32PrefixAccAddr, addr.Bytes())
+//Address is a go crypto-style Address
+type Address []byte
+
+func NewAddress(bech32String string) (Address, error) {
+	return GetAccAddressHex(bech32String)
 }
 
-// MustBech32ifyAcc panics on bech32-encoding failure
-func MustBech32ifyAcc(addr Address) string {
-	enc, err := Bech32ifyAcc(addr)
+// Marshal needed for protobuf compatibility
+func (bz Address) Marshal() ([]byte, error) {
+	return bz, nil
+}
+
+// Unmarshal needed for protobuf compatibility
+func (bz *Address) Unmarshal(data []byte) error {
+	*bz = data
+	return nil
+}
+
+// Marshals to JSON using Bech32
+func (bz Address) MarshalJSON() ([]byte, error) {
+	s := bz.String()
+	jbz := make([]byte, len(s)+2)
+	jbz[0] = '"'
+	copy(jbz[1:], []byte(s))
+	jbz[len(jbz)-1] = '"'
+	return jbz, nil
+}
+
+// Unmarshals from JSON assuming Bech32 encoding
+func (bz *Address) UnmarshalJSON(data []byte) error {
+	if len(data) < 2 || data[0] != '"' || data[len(data)-1] != '"' {
+		return fmt.Errorf("Invalid bech32 string: %s", data)
+	}
+
+	bz2, err := GetAccAddressHex(string(data[1 : len(data)-1]))
+	if err != nil {
+		return err
+	}
+	*bz = bz2
+	return nil
+}
+
+// Allow it to fulfill various interfaces in light-client, etc...
+func (bz Address) Bytes() []byte {
+	return bz
+}
+
+func (bz Address) String() string {
+	bech32Addr, err := bech32.ConvertAndEncode(Bech32PrefixAccAddr, bz.Bytes())
 	if err != nil {
 		panic(err)
 	}
-	return enc
+	return bech32Addr
+}
+
+// For Printf / Sprintf, returns bech32 when using %s
+func (bz Address) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 's':
+		s.Write([]byte(fmt.Sprintf("%s", bz.String())))
+	case 'p':
+		s.Write([]byte(fmt.Sprintf("%p", bz)))
+	default:
+		s.Write([]byte(fmt.Sprintf("%X", []byte(bz))))
+	}
 }
 
 // Bech32ifyAccPub takes AccountPubKey and returns the bech32 encoded string

@@ -38,3 +38,7 @@ func TestAppendJSON(t *testing.T) {
 
 	require.Equal(t, bar, resBar, "appended: %v", appended)
 }
+
+func TestSortJSON(t *testing.T) {
+	// TODO add testcases of several types
+}

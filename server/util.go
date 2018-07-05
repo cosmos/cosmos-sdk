@@ -135,17 +135,18 @@ func AppendJSON(cdc *wire.Codec, baseJSON []byte, key string, value json.RawMess
 	return json.RawMessage(bz), err
 }
 
-// SortedJSON takes any JSON and returns it sorted by keys.
-// This can be used to sort JSON which will be returned by GetSignBytes,
+// SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces
+// are removed.
+// This method can be used to canonicalize JSON to be returned by GetSignBytes,
 // e.g. for the ledger integration.
-// If the passed JSON isn't valid this will fail.
+// If the passed JSON isn't valid it will return an error.
 func SortJSON(toSortJSON []byte) ([]byte, error) {
 	var c interface{}
 	err := json.Unmarshal(toSortJSON, &c)
 	if err != nil {
 		return nil, err
 	}
-	js, err := json.MarshalIndent(c, "", " ")
+	js, err := json.Marshal(c)
 	if err != nil {
 		return nil, err
 	}

@@ -93,7 +93,7 @@ func TestBankWithRandomMessages(t *testing.T) {
 		t,
 		[]mock.TestAndRunTx{TestAndRunSingleInputMsgSend},
 		[]mock.RandSetup{setup},
-		[]mock.Invariant{ModuleInvariants, mock.AuthInvariant},
+		[]mock.Invariant{ModuleInvariants},
 		100, 30, 30,
 	)
 }

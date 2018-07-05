@@ -1,9 +1,3 @@
-/*
-Package mock provides functions for creating applications for testing.
-
-This module also features randomized testing, so that various modules can
-test that their operations are interoperable.
-*/
 package mock
 
 import (

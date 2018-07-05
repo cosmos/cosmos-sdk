@@ -68,34 +68,15 @@ func (app *App) assertAllInvariants(t *testing.T, tests []Invariant, log string)
 	}
 }
 
-// nolint:
-type Interval struct {
-	lo int
-	hi int
-}
-
-// nolint:
+// BigInterval is a representation of the interval [lo, hi), where
+// lo and hi are both of type sdk.Int
 type BigInterval struct {
 	lo sdk.Int
 	hi sdk.Int
 }
 
-// RandFromInterval chooses an interval uniformly from the list of random
-// intervals, and then chooses an element from an interval uniformly at random.
-func RandFromInterval(r *rand.Rand, intervals []Interval) int {
-	if len(intervals) == 0 {
-		return 0
-	}
-
-	interval := intervals[r.Intn(len(intervals))]
-	lo := interval.lo
-	hi := interval.hi
-
-	return r.Intn(hi-lo) + lo
-}
-
-// RandFromBigInterval chooses an interval uniformly from the list of random
-// intervals, and then chooses an element from an interval uniformly at random.
+// RandFromBigInterval chooses an interval uniformly from the provided list of
+// BigIntervals, and then chooses an element from an interval uniformly at random.
 func RandFromBigInterval(r *rand.Rand, intervals []BigInterval) sdk.Int {
 	if len(intervals) == 0 {
 		return sdk.ZeroInt()

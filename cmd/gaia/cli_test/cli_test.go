@@ -33,7 +33,19 @@ func init() {
 }
 
 func TestGaiaCLISend(t *testing.T) {
-	flags, port, proc := resetTestEnv(t)
+	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe_reset_all", gaiadHome))
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), pass)
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), pass)
+	chainID := executeInit(t, "gaiad init -o --name=foo --home="+gaiadHome)
+	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), pass)
+
+	// get a free port, also setup some common flags
+	servAddr, port, err := server.FreeTCPAddr()
+	require.NoError(t, err)
+	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
+
+	// start gaiad server
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
 
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
@@ -75,7 +87,20 @@ func TestGaiaCLISend(t *testing.T) {
 }
 
 func TestGaiaCLICreateValidator(t *testing.T) {
-	flags, port, proc := resetTestEnv(t)
+	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe_reset_all", gaiadHome))
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), pass)
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), pass)
+	chainID := executeInit(t, "gaiad init -o --name=foo --home="+gaiadHome)
+	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), pass)
+
+	// get a free port, also setup some common flags
+	servAddr, port, err := server.FreeTCPAddr()
+	require.NoError(t, err)
+	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
+
+	// start gaiad server
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
+
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
 	tests.WaitForNextHeightTM(port)
@@ -132,7 +157,20 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 }
 
 func TestGaiaCLISubmitProposal(t *testing.T) {
-	flags, port, proc := resetTestEnv(t)
+	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe_reset_all", gaiadHome))
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), pass)
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), pass)
+	chainID := executeInit(t, "gaiad init -o --name=foo --home="+gaiadHome)
+	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), pass)
+
+	// get a free port, also setup some common flags
+	servAddr, port, err := server.FreeTCPAddr()
+	require.NoError(t, err)
+	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
+
+	// start gaiad server
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
+
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
 	tests.WaitForNextHeightTM(port)
@@ -178,25 +216,6 @@ func getTestingHomeDirs() (string, string) {
 	gaiadHome := fmt.Sprintf("%s%s.test_gaiad", tmpDir, string(os.PathSeparator))
 	gaiacliHome := fmt.Sprintf("%s%s.test_gaiacli", tmpDir, string(os.PathSeparator))
 	return gaiadHome, gaiacliHome
-}
-
-// returns flags, port, process
-func resetTestEnv(t *testing.T) (flags string, port string, proc *tests.Process) {
-	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe_reset_all", gaiadHome))
-	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), pass)
-	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), pass)
-	chainID := executeInit(t, "gaiad init -o --name=foo --home="+gaiadHome)
-	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), pass)
-
-	// get a free port, also setup some common flags
-	servAddr, port, err := server.FreeTCPAddr()
-	require.NoError(t, err)
-	flags = fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
-
-	// start gaiad server
-	proc = tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
-
-	return flags, port, proc
 }
 
 //___________________________________________________________________________________

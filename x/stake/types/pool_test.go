@@ -3,10 +3,23 @@ package types
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 )
+
+func TestPoolEqual(t *testing.T) {
+	p1 := InitialPool()
+	p2 := InitialPool()
+
+	ok := p1.Equal(p2)
+	require.True(t, ok)
+
+	p2.BondedTokens = 3
+	p2.BondedShares = sdk.NewRat(10)
+
+	ok = p1.Equal(p2)
+	require.False(t, ok)
+}
 
 func TestBondedRatio(t *testing.T) {
 	pool := InitialPool()
@@ -62,10 +75,10 @@ func TestUnbondedShareExRate(t *testing.T) {
 }
 
 func TestAddTokensBonded(t *testing.T) {
-
 	poolA := InitialPool()
 	poolA.LooseTokens = 10
 	require.Equal(t, poolA.BondedShareExRate(), sdk.OneRat())
+
 	poolB, sharesB := poolA.addTokensBonded(10)
 	require.Equal(t, poolB.BondedShareExRate(), sdk.OneRat())
 
@@ -78,10 +91,10 @@ func TestAddTokensBonded(t *testing.T) {
 }
 
 func TestRemoveSharesBonded(t *testing.T) {
-
 	poolA := InitialPool()
 	poolA.LooseTokens = 10
 	require.Equal(t, poolA.BondedShareExRate(), sdk.OneRat())
+
 	poolB, tokensB := poolA.removeSharesBonded(sdk.NewRat(10))
 	require.Equal(t, poolB.BondedShareExRate(), sdk.OneRat())
 
@@ -94,10 +107,10 @@ func TestRemoveSharesBonded(t *testing.T) {
 }
 
 func TestAddTokensUnbonded(t *testing.T) {
-
 	poolA := InitialPool()
 	poolA.LooseTokens = 10
 	require.Equal(t, poolA.UnbondedShareExRate(), sdk.OneRat())
+
 	poolB, sharesB := poolA.addTokensUnbonded(10)
 	require.Equal(t, poolB.UnbondedShareExRate(), sdk.OneRat())
 
@@ -110,11 +123,11 @@ func TestAddTokensUnbonded(t *testing.T) {
 }
 
 func TestRemoveSharesUnbonded(t *testing.T) {
-
 	poolA := InitialPool()
 	poolA.UnbondedTokens = 10
 	poolA.UnbondedShares = sdk.NewRat(10)
 	require.Equal(t, poolA.UnbondedShareExRate(), sdk.OneRat())
+
 	poolB, tokensB := poolA.removeSharesUnbonded(sdk.NewRat(10))
 	require.Equal(t, poolB.UnbondedShareExRate(), sdk.OneRat())
 

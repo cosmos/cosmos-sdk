@@ -1,88 +1,81 @@
 package app
 
 import (
-	"fmt"
 	"os"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/stake"
-	gen "github.com/cosmos/cosmos-sdk/x/stake/types"
-
+	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
-func setGenesis(bapp *BasecoinApp, accs ...auth.BaseAccount) error {
-	genaccs := make([]*types.GenesisAccount, len(accs))
-	for i, acc := range accs {
-		genaccs[i] = types.NewGenesisAccount(&types.AppAccount{acc, "foobart"})
+func setGenesis(baseApp *BasecoinApp, accounts ...*types.AppAccount) (types.GenesisState, error) {
+	genAccts := make([]*types.GenesisAccount, len(accounts))
+	for i, appAct := range accounts {
+		genAccts[i] = types.NewGenesisAccount(appAct)
 	}
 
-	genesisState := types.GenesisState{
-		Accounts:  genaccs,
-		StakeData: stake.DefaultGenesisState(),
-	}
-
-	stateBytes, err := wire.MarshalJSONIndent(bapp.cdc, genesisState)
+	genesisState := types.GenesisState{Accounts: genAccts}
+	stateBytes, err := wire.MarshalJSONIndent(baseApp.cdc, genesisState)
 	if err != nil {
-		return err
+		return types.GenesisState{}, err
 	}
 
-	// Initialize the chain
-	vals := []abci.Validator{}
-	bapp.InitChain(abci.RequestInitChain{Validators: vals, AppStateBytes: stateBytes})
-	bapp.Commit()
+	// initialize and commit the chain
+	baseApp.InitChain(abci.RequestInitChain{
+		Validators: []abci.Validator{}, AppStateBytes: stateBytes,
+	})
+	baseApp.Commit()
 
-	return nil
+	return genesisState, nil
 }
-
-//_______________________________________________________________________
 
 func TestGenesis(t *testing.T) {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 	db := dbm.NewMemDB()
-	bapp := NewBasecoinApp(logger, db)
+	baseApp := NewBasecoinApp(logger, db)
 
-	// Construct some genesis bytes to reflect basecoin/types/AppAccount
-	pk := crypto.GenPrivKeyEd25519().PubKey()
-	addr := pk.Address()
+	// construct a pubkey and an address for the test account
+	pubkey := crypto.GenPrivKeyEd25519().PubKey()
+	addr := pubkey.Address()
+
+	// construct some test coins
 	coins, err := sdk.ParseCoins("77foocoin,99barcoin")
 	require.Nil(t, err)
-	baseAcc := auth.BaseAccount{
-		Address: addr,
-		Coins:   coins,
-	}
-	acc := &types.AppAccount{baseAcc, "foobart"}
 
-	err = setGenesis(bapp, baseAcc)
+	// create an auth.BaseAccount for the given test account and set it's coins
+	baseAcct := auth.NewBaseAccountWithAddress(addr)
+	err = baseAcct.SetCoins(coins)
 	require.Nil(t, err)
 
-	// A checkTx context
-	ctx := bapp.BaseApp.NewContext(true, abci.Header{})
-	res1 := bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
-	require.Equal(t, acc, res1)
+	// create a new test AppAccount with the given auth.BaseAccount
+	appAcct := types.NewAppAccount("foobar", baseAcct)
+	genState, err := setGenesis(baseApp, appAcct)
+	require.Nil(t, err)
+
+	// create a context for the BaseApp
+	ctx := baseApp.BaseApp.NewContext(true, abci.Header{})
+	res := baseApp.accountMapper.GetAccount(ctx, baseAcct.Address)
+	require.Equal(t, appAcct, res)
 
 	// reload app and ensure the account is still there
-	bapp = NewBasecoinApp(logger, db)
-	// Initialize stake data with default genesis state
-	stakedata := gen.DefaultGenesisState()
-	genState, err := bapp.cdc.MarshalJSON(stakedata)
-	if err != nil {
-		panic(err)
-	}
+	baseApp = NewBasecoinApp(logger, db)
 
-	// InitChain with default stake data. Initializes deliverState and checkState context
-	bapp.InitChain(abci.RequestInitChain{AppStateBytes: []byte(fmt.Sprintf("{\"stake\": %s}", string(genState)))})
+	stateBytes, err := wire.MarshalJSONIndent(baseApp.cdc, genState)
+	require.Nil(t, err)
 
-	ctx = bapp.BaseApp.NewContext(true, abci.Header{})
-	res1 = bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
-	require.Equal(t, acc, res1)
+	// initialize the chain with the expected genesis state
+	baseApp.InitChain(abci.RequestInitChain{
+		Validators: []abci.Validator{}, AppStateBytes: stateBytes,
+	})
+
+	ctx = baseApp.BaseApp.NewContext(true, abci.Header{})
+	res = baseApp.accountMapper.GetAccount(ctx, baseAcct.Address)
+	require.Equal(t, appAcct, res)
 }

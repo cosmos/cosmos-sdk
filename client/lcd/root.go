@@ -7,10 +7,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tendermint/tmlibs/log"
+	"github.com/tendermint/tendermint/libs/log"
 
+	cmn "github.com/tendermint/tendermint/libs/common"
 	tmserver "github.com/tendermint/tendermint/rpc/lib/server"
-	cmn "github.com/tendermint/tmlibs/common"
 
 	client "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"

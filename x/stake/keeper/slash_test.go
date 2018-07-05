@@ -160,7 +160,7 @@ func TestSlashRedelegation(t *testing.T) {
 	// shares decreased
 	del, found = keeper.GetDelegation(ctx, addrDels[0], addrVals[1])
 	require.True(t, found)
-	require.Equal(t, int64(5), del.Shares.Evaluate())
+	require.Equal(t, int64(5), del.Shares.RoundInt64())
 	// pool bonded tokens decreased
 	newPool := keeper.GetPool(ctx)
 	require.Equal(t, int64(5), oldPool.BondedTokens-newPool.BondedTokens)
@@ -193,7 +193,7 @@ func TestSlashAtCurrentHeight(t *testing.T) {
 	// power decreased
 	require.Equal(t, sdk.NewRat(5), validator.GetPower())
 	// pool bonded shares decreased
-	require.Equal(t, sdk.NewRat(5).Evaluate(), oldPool.BondedShares.Sub(newPool.BondedShares).Evaluate())
+	require.Equal(t, sdk.NewRat(5).RoundInt64(), oldPool.BondedShares.Sub(newPool.BondedShares).RoundInt64())
 }
 
 // tests Slash at a previous height with an unbonding delegation

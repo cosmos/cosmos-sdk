@@ -6,15 +6,19 @@ import (
 	"fmt"
 
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tmlibs/bech32"
-	cmn "github.com/tendermint/tmlibs/common"
+	"github.com/tendermint/tendermint/libs/bech32"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 //Address is a go crypto-style Address
 type Address = cmn.HexBytes
 
-// Bech32 prefixes
+// nolint
 const (
+	// expected address length
+	AddrLen = 20
+
+	// Bech32 prefixes
 	Bech32PrefixAccAddr = "cosmosaccaddr"
 	Bech32PrefixAccPub  = "cosmosaccpub"
 	Bech32PrefixValAddr = "cosmosvaladdr"

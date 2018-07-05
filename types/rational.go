@@ -41,6 +41,10 @@ func NewRat(Numerator int64, Denominator ...int64) Rat {
 // precision is the number of values after the decimal point which should be read
 func NewRatFromDecimal(decimalStr string, prec int) (f Rat, err Error) {
 	// first extract any negative symbol
+	if len(decimalStr) == 0 {
+		return f, ErrUnknownRequest("decimal string is empty")
+	}
+
 	neg := false
 	if string(decimalStr[0]) == "-" {
 		neg = true
@@ -174,20 +178,20 @@ func (r Rat) EvaluateBig() *big.Int {
 	return d
 }
 
-// evaluate the rational using bankers rounding
-func (r Rat) Evaluate() int64 {
+// RoundInt64 rounds the rational using bankers rounding
+func (r Rat) RoundInt64() int64 {
 	return r.EvaluateBig().Int64()
 }
 
-// EvaulateInt evaludates the rational using EvaluateBig
-func (r Rat) EvaluateInt() Int {
+// RoundInt round the rational using bankers rounding
+func (r Rat) RoundInt() Int {
 	return NewIntFromBigInt(r.EvaluateBig())
 }
 
 // round Rat with the provided precisionFactor
 func (r Rat) Round(precisionFactor int64) Rat {
 	rTen := Rat{new(big.Rat).Mul(r.Rat, big.NewRat(precisionFactor, 1))}
-	return Rat{big.NewRat(rTen.Evaluate(), precisionFactor)}
+	return Rat{big.NewRat(rTen.RoundInt64(), precisionFactor)}
 }
 
 // TODO panic if negative or if totalDigits < len(initStr)???

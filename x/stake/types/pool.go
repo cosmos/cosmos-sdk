@@ -104,7 +104,7 @@ func (p Pool) addTokensUnbonded(amount int64) (p2 Pool, issuedShares PoolShares)
 }
 
 func (p Pool) removeSharesUnbonded(shares sdk.Rat) (p2 Pool, removedTokens int64) {
-	removedTokens = p.UnbondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
+	removedTokens = p.UnbondedShareExRate().Mul(shares).RoundInt64() // (tokens/shares) * shares
 	p.UnbondedShares = p.UnbondedShares.Sub(shares)
 	p.UnbondedTokens -= removedTokens
 	p.LooseTokens += removedTokens
@@ -126,7 +126,7 @@ func (p Pool) addTokensUnbonding(amount int64) (p2 Pool, issuedShares PoolShares
 }
 
 func (p Pool) removeSharesUnbonding(shares sdk.Rat) (p2 Pool, removedTokens int64) {
-	removedTokens = p.UnbondingShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
+	removedTokens = p.UnbondingShareExRate().Mul(shares).RoundInt64() // (tokens/shares) * shares
 	p.UnbondingShares = p.UnbondingShares.Sub(shares)
 	p.UnbondingTokens -= removedTokens
 	p.LooseTokens += removedTokens
@@ -148,7 +148,7 @@ func (p Pool) addTokensBonded(amount int64) (p2 Pool, issuedShares PoolShares) {
 }
 
 func (p Pool) removeSharesBonded(shares sdk.Rat) (p2 Pool, removedTokens int64) {
-	removedTokens = p.BondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
+	removedTokens = p.BondedShareExRate().Mul(shares).RoundInt64() // (tokens/shares) * shares
 	p.BondedShares = p.BondedShares.Sub(shares)
 	p.BondedTokens -= removedTokens
 	p.LooseTokens += removedTokens

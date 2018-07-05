@@ -189,7 +189,7 @@ docs](https://godoc.org/github.com/cosmos/cosmos-sdk/types#Context) for more det
 ### Result
 
 Handler takes a Context and Msg and returns a Result.
-Result is motivated by the corresponding [ABCI result](https://github.com/tendermint/tendermint/abci/blob/master/types/types.proto#L165).
+Result is motivated by the corresponding [ABCI result](https://github.com/tendermint/tendermint/blob/master/abci/types/types.proto#L165).
 It contains return values, error information, logs, and meta data about the transaction:
 
 ```go
@@ -409,7 +409,7 @@ func txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 Finally, we stitch it all together using the `BaseApp`.
 
 The BaseApp is an abstraction over the [Tendermint
-ABCI](https://github.com/tendermint/tendermint/abci) that
+ABCI](https://github.com/tendermint/tendermint/tree/master/abci) that
 simplifies application development by handling common low-level concerns.
 It serves as the mediator between the two key components of an SDK app: the store
 and the message handlers. The BaseApp implements the
@@ -473,7 +473,7 @@ Tendermint consensus engine. It would be initialized by a Genesis file, and it
 would be driven by blocks of transactions committed by the underlying Tendermint
 consensus. We'll talk more about ABCI and how this all works a bit later, but
 feel free to check the
-[specification](https://github.com/tendermint/tendermint/abci/blob/master/specification.md).
+[specification](https://github.com/tendermint/tendermint/blob/master/docs/abci-spec.md).
 We'll also see how to connect our app to a complete suite of components
 for running and using a live blockchain application.
 

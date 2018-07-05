@@ -8,7 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 	tcrypto "github.com/tendermint/tendermint/crypto"
-	dbm "github.com/tendermint/tmlibs/db"
+	dbm "github.com/tendermint/tendermint/libs/db"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bip39"

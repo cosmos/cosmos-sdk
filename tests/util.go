@@ -21,13 +21,20 @@ func WaitForNextHeightTM(port string) {
 // Wait for N tendermint blocks to pass using the Tendermint RPC
 // on localhost
 func WaitForNextNBlocksTM(n int64, port string) {
+
+	// get the latest block and wait for n more
 	url := fmt.Sprintf("http://localhost:%v", port)
 	cl := tmclient.NewHTTP(url, "/websocket")
 	resBlock, err := cl.Block(nil)
-	if err != nil {
-		panic(err)
+	var height int64
+	if err != nil || resBlock.Block == nil {
+		// wait for the first block to exist
+		WaitForHeightTM(1, port)
+		height = 1 + n
+	} else {
+		height = resBlock.Block.Height + n
 	}
-	waitForHeightTM(resBlock.Block.Height+n, url)
+	waitForHeightTM(height, url)
 }
 
 // Wait for the given height from the Tendermint RPC
@@ -57,7 +64,6 @@ func waitForHeightTM(height int64, url string) {
 
 		if resBlock.Block != nil &&
 			resBlock.Block.Height >= height {
-			fmt.Println("HEIGHT", resBlock.Block.Height)
 			return
 		}
 		time.Sleep(time.Millisecond * 100)
@@ -115,10 +121,23 @@ func waitForHeight(height int64, url string) {
 	}
 }
 
-// wait for tendermint to start
-func WaitForStart(port string) {
-	var err error
+// wait for tendermint to start by querying the LCD
+func WaitForLCDStart(port string) {
 	url := fmt.Sprintf("http://localhost:%v/blocks/latest", port)
+	WaitForStart(url)
+}
+
+// wait for tendermint to start by querying tendermint
+func WaitForTMStart(port string) {
+	url := fmt.Sprintf("http://localhost:%v/block", port)
+	WaitForStart(url)
+}
+
+// WaitForStart waits for the node to start by pinging the url
+// every 100ms for 5s until it returns 200. If it takes longer than 5s,
+// it panics.
+func WaitForStart(url string) {
+	var err error
 
 	// ping the status endpoint a few times a second
 	// for a few seconds until we get a good response.
@@ -131,6 +150,8 @@ func WaitForStart(port string) {
 		if err != nil || res == nil {
 			continue
 		}
+		//		body, _ := ioutil.ReadAll(res.Body)
+		//		fmt.Println("BODY", string(body))
 		err = res.Body.Close()
 		if err != nil {
 			panic(err)

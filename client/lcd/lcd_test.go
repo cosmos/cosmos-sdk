@@ -8,14 +8,13 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/common"
 	p2p "github.com/tendermint/tendermint/p2p"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	"github.com/tendermint/tmlibs/common"
 
 	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
@@ -57,11 +56,13 @@ func TestKeys(t *testing.T) {
 	res, body = Request(t, port, "POST", "/keys", jsonStr)
 
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var resp keys.NewKeyResponse
+	var resp keys.KeyOutput
 	err = wire.Cdc.UnmarshalJSON([]byte(body), &resp)
-	require.Nil(t, err)
-	addr2 := resp.Address
-	assert.Len(t, addr2, 40, "Returned address has wrong format", addr2)
+	require.Nil(t, err, body)
+
+	addr2Bech32 := resp.Address
+	_, err = sdk.GetAccAddressBech32(addr2Bech32)
+	require.NoError(t, err, "Failed to return a correct bech32 address")
 
 	// existing keys
 	res, body = Request(t, port, "GET", "/keys", nil)
@@ -70,9 +71,6 @@ func TestKeys(t *testing.T) {
 	err = cdc.UnmarshalJSON([]byte(body), &m)
 	require.Nil(t, err)
 
-	addr2Acc, err := sdk.GetAccAddressHex(addr2)
-	require.Nil(t, err)
-	addr2Bech32 := sdk.MustBech32ifyAcc(addr2Acc)
 	addrBech32 := sdk.MustBech32ifyAcc(addr)
 
 	require.Equal(t, name, m[0].Name, "Did not serve keys name correctly")

@@ -560,6 +560,52 @@ func TestTransitiveRedelegation(t *testing.T) {
 	require.True(t, got.IsOK(), "expected no error")
 }
 
+func TestCliffValidator(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	validatorAddr, validatorAddr2, validatorAddr3 := keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]
+
+	// set the unbonding time
+	params := keeper.GetParams(ctx)
+	params.UnbondingTime = 0
+	params.MaxValidators = 2
+	keeper.SetParams(ctx, params)
+
+	// create the validators
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, keep.PKs[0], 10)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	msgCreateValidator = newTestMsgCreateValidator(validatorAddr2, keep.PKs[1], 5)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	msgCreateValidator = newTestMsgCreateValidator(validatorAddr3, keep.PKs[2], 10)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	// initially should be the third validator
+	cliffVal := keeper.GetCliffValidator(ctx)
+	require.Equal(t, validatorAddr3, sdk.Address(cliffVal))
+
+	// unbond the third validator
+	msgBeginUnbonding := NewMsgBeginUnbonding(validatorAddr3, validatorAddr3, sdk.NewRat(10))
+	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgBeginUnbonding")
+
+	// unbond the second validator
+	msgBeginUnbonding = NewMsgBeginUnbonding(validatorAddr2, validatorAddr2, sdk.NewRat(5))
+	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgBeginUnbonding")
+
+	// get bonded validators - should just be one
+	vals := keeper.GetValidatorsBonded(ctx)
+	require.Equal(t, 1, len(vals))
+
+	// cliff now should be empty
+	cliffVal = keeper.GetCliffValidator(ctx)
+	require.Equal(t, nil, cliffVal)
+}
+
 func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 	valA, valB, del := keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]

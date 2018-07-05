@@ -37,8 +37,9 @@ BREAKING CHANGES
   * Add REST endpoint to unrevoke a validator previously revoked for downtime
   * Add REST endpoint to retrieve liveness signing information for a validator
 * [types] renamed rational.Evaluate to rational.Round{Int64, Int}
-* [stake] most index keys nolonger hold a value - inputs are rearranged to form the desired key
+* [x/stake] most index keys nolonger hold a value - inputs are rearranged to form the desired key
 * [lcd] Switch key creation output to return bech32
+* [x/stake] store-value for delegation, validator, ubd, and red do not hold duplicate information contained store-key
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
@@ -73,6 +74,7 @@ FEATURES
 * [testing] created a randomized testing framework. 
   - Currently bank has limited functionality in the framework
   - Auth has its invariants checked within the framework
+* [gaiacli] improve error messages on `send` and `account` commands
 
 IMPROVEMENTS
 * bank module uses go-wire codec instead of 'encoding/json'
@@ -101,6 +103,7 @@ BUG FIXES
 * \#1353 - CLI: Show pool shares fractions in human-readable format
 * \#1258 - printing big.rat's can no longer overflow int64
 * \#887  - limit the size of rationals that can be passed in from user input
+* \#1461 - CLI tests now no longer reset your local environment data
 
 ## 0.19.0
 

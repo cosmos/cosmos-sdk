@@ -123,16 +123,40 @@ func AddCommands(
 
 //___________________________________________________________________________________
 
-// append a new json field to existing json message
-func AppendJSON(cdc *wire.Codec, baseJSON []byte, key string, value json.RawMessage) (appended []byte, err error) {
+// InsertKeyJSON inserts a new JSON field/key with a given value to an existing
+// JSON message. An error is returned if any serialization operation fails.
+//
+// NOTE: The ordering of the keys returned as the resulting JSON message is
+// non-deterministic, so the client should not rely on key ordering.
+func InsertKeyJSON(cdc *wire.Codec, baseJSON []byte, key string, value json.RawMessage) ([]byte, error) {
 	var jsonMap map[string]json.RawMessage
-	err = cdc.UnmarshalJSON(baseJSON, &jsonMap)
+
+	if err := cdc.UnmarshalJSON(baseJSON, &jsonMap); err != nil {
+		return nil, err
+	}
+
+	jsonMap[key] = value
+	bz, err := wire.MarshalJSONIndent(cdc, jsonMap)
+
+	return json.RawMessage(bz), err
+}
+
+// SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces
+// are removed.
+// This method can be used to canonicalize JSON to be returned by GetSignBytes,
+// e.g. for the ledger integration.
+// If the passed JSON isn't valid it will return an error.
+func SortJSON(toSortJSON []byte) ([]byte, error) {
+	var c interface{}
+	err := json.Unmarshal(toSortJSON, &c)
 	if err != nil {
 		return nil, err
 	}
-	jsonMap[key] = value
-	bz, err := wire.MarshalJSONIndent(cdc, jsonMap)
-	return json.RawMessage(bz), err
+	js, err := json.Marshal(c)
+	if err != nil {
+		return nil, err
+	}
+	return js, nil
 }
 
 // https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go

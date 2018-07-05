@@ -9,7 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 const storeName = "stake"
@@ -75,11 +77,10 @@ func delegationHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerF
 			return
 		}
 
-		var delegation stake.Delegation
-		err = cdc.UnmarshalBinary(res, &delegation)
+		delegation, err := types.UnmarshalDelegation(cdc, key, res)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't decode delegation. Error: %s", err.Error())))
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
 			return
 		}
 
@@ -132,11 +133,10 @@ func ubdHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		var ubd stake.UnbondingDelegation
-		err = cdc.UnmarshalBinary(res, &ubd)
+		ubd, err := types.UnmarshalUBD(cdc, key, res)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't decode unbonding-delegation. Error: %s", err.Error())))
+			w.Write([]byte(fmt.Sprintf("couldn't query unbonding-delegation. Error: %s", err.Error())))
 			return
 		}
 
@@ -197,11 +197,10 @@ func redHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		var red stake.Redelegation
-		err = cdc.UnmarshalBinary(res, &red)
+		red, err := types.UnmarshalRED(cdc, key, res)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't decode redelegation. Error: %s", err.Error())))
+			w.Write([]byte(fmt.Sprintf("couldn't query unbonding-delegation. Error: %s", err.Error())))
 			return
 		}
 
@@ -291,15 +290,19 @@ func validatorsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerF
 		// parse out the validators
 		validators := make([]StakeValidatorOutput, len(kvs))
 		for i, kv := range kvs {
-			var validator stake.Validator
-			var bech32Validator StakeValidatorOutput
-			err = cdc.UnmarshalBinary(kv.Value, &validator)
-			if err == nil {
-				bech32Validator, err = bech32StakeValidatorOutput(validator)
-			}
+
+			addr := kv.Key[1:]
+			validator, err := types.UnmarshalValidator(cdc, addr, kv.Value)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("couldn't decode validator. Error: %s", err.Error())))
+				w.Write([]byte(fmt.Sprintf("couldn't query unbonding-delegation. Error: %s", err.Error())))
+				return
+			}
+
+			bech32Validator, err := bech32StakeValidatorOutput(validator)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(err.Error()))
 				return
 			}
 			validators[i] = bech32Validator

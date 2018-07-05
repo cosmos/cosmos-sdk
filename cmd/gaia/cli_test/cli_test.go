@@ -36,7 +36,7 @@ func TestGaiaCLISend(t *testing.T) {
 	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe_reset_all", gaiadHome))
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), pass)
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), pass)
-	chainID := executeInit(t, "gaiad init -o --name=foo --home="+gaiadHome)
+	chainID := executeInit(t, "gaiad init -o --owk --name=foo --home="+gaiadHome)
 	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), pass)
 
 	// get a free port, also setup some common flags
@@ -90,7 +90,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe_reset_all", gaiadHome))
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), pass)
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), pass)
-	chainID := executeInit(t, "gaiad init -o --name=foo --home="+gaiadHome)
+	chainID := executeInit(t, "gaiad init -o --owk --name=foo --home="+gaiadHome)
 	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), pass)
 
 	// get a free port, also setup some common flags
@@ -160,7 +160,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe_reset_all", gaiadHome))
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), pass)
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), pass)
-	chainID := executeInit(t, "gaiad init -o --name=foo --home="+gaiadHome)
+	chainID := executeInit(t, "gaiad init -o --owk --name=foo --home="+gaiadHome)
 	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), pass)
 
 	// get a free port, also setup some common flags

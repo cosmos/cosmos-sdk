@@ -3,6 +3,7 @@ package bank
 import (
 	"encoding/json"
 
+	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -72,6 +73,10 @@ func (msg MsgSend) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
+	b, err = server.SortJSON(b)
+	if err != nil {
+		panic(err)
+	}
 	return b
 }
 
@@ -133,6 +138,10 @@ func (msg MsgIssue) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
+	b, err = server.SortJSON(b)
+	if err != nil {
+		panic(err)
+	}
 	return b
 }
 
@@ -159,6 +168,10 @@ func (in Input) GetSignBytes() []byte {
 		Address: sdk.MustBech32ifyAcc(in.Address),
 		Coins:   in.Coins,
 	})
+	if err != nil {
+		panic(err)
+	}
+	bin, err = server.SortJSON(bin)
 	if err != nil {
 		panic(err)
 	}
@@ -206,6 +219,10 @@ func (out Output) GetSignBytes() []byte {
 		Address: sdk.MustBech32ifyAcc(out.Address),
 		Coins:   out.Coins,
 	})
+	if err != nil {
+		panic(err)
+	}
+	bin, err = server.SortJSON(bin)
 	if err != nil {
 		panic(err)
 	}

@@ -3,6 +3,7 @@ package types
 import (
 	"math"
 
+	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -63,6 +64,10 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
+	b, err = server.SortJSON(b)
+	if err != nil {
+		panic(err)
+	}
 	return b
 }
 
@@ -111,6 +116,10 @@ func (msg MsgEditValidator) GetSignBytes() []byte {
 		Description:   msg.Description,
 		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
 	})
+	if err != nil {
+		panic(err)
+	}
+	b, err = server.SortJSON(b)
 	if err != nil {
 		panic(err)
 	}
@@ -163,6 +172,10 @@ func (msg MsgDelegate) GetSignBytes() []byte {
 		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
 		Bond:          msg.Bond,
 	})
+	if err != nil {
+		panic(err)
+	}
+	b, err = server.SortJSON(b)
 	if err != nil {
 		panic(err)
 	}
@@ -226,6 +239,10 @@ func (msg MsgBeginRedelegate) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
+	b, err = server.SortJSON(b)
+	if err != nil {
+		panic(err)
+	}
 	return b
 }
 
@@ -286,6 +303,10 @@ func (msg MsgCompleteRedelegate) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
+	b, err = server.SortJSON(b)
+	if err != nil {
+		panic(err)
+	}
 	return b
 }
 
@@ -338,6 +359,10 @@ func (msg MsgBeginUnbonding) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
+	b, err = server.SortJSON(b)
+	if err != nil {
+		panic(err)
+	}
 	return b
 }
 
@@ -384,6 +409,10 @@ func (msg MsgCompleteUnbonding) GetSignBytes() []byte {
 		DelegatorAddr: sdk.MustBech32ifyAcc(msg.DelegatorAddr),
 		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
 	})
+	if err != nil {
+		panic(err)
+	}
+	b, err = server.SortJSON(b)
 	if err != nil {
 		panic(err)
 	}

@@ -3,6 +3,7 @@ package gov
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -82,6 +83,10 @@ func (msg MsgSubmitProposal) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
+	b, err = server.SortJSON(b)
+	if err != nil {
+		panic(err)
+	}
 	return b
 }
 
@@ -149,6 +154,10 @@ func (msg MsgDeposit) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
+	b, err = server.SortJSON(b)
+	if err != nil {
+		panic(err)
+	}
 	return b
 }
 
@@ -210,6 +219,10 @@ func (msg MsgVote) GetSignBytes() []byte {
 		Voter:      sdk.MustBech32ifyVal(msg.Voter),
 		Option:     VoteOptionToString(msg.Option),
 	})
+	if err != nil {
+		panic(err)
+	}
+	b, err = server.SortJSON(b)
 	if err != nil {
 		panic(err)
 	}

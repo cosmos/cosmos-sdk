@@ -394,18 +394,13 @@ func (v Validator) GetBondHeight() int64        { return v.BondHeight }
 // validator. An error is returned if the owner or the owner's public key
 // cannot be converted to Bech32 format.
 func (v Validator) HumanReadableString() (string, error) {
-	bechOwner, err := sdk.Bech32ifyAcc(v.Owner)
-	if err != nil {
-		return "", err
-	}
-
 	bechVal, err := sdk.Bech32ifyValPub(v.PubKey)
 	if err != nil {
 		return "", err
 	}
 
 	resp := "Validator \n"
-	resp += fmt.Sprintf("Owner: %s\n", bechOwner)
+	resp += fmt.Sprintf("Owner: %s\n", v.Owner)
 	resp += fmt.Sprintf("Validator: %s\n", bechVal)
 	resp += fmt.Sprintf("Shares: Status %s,  Amount: %s\n", sdk.BondStatusToString(v.PoolShares.Status), v.PoolShares.Amount.FloatString())
 	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.FloatString())

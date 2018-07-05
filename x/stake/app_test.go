@@ -14,14 +14,23 @@ import (
 
 var (
 	priv1 = crypto.GenPrivKeyEd25519()
-	addr1 = priv1.PubKey().Address()
+	addr1 = sdk.Address(priv1.PubKey().Address())
 	priv2 = crypto.GenPrivKeyEd25519()
-	addr2 = priv2.PubKey().Address()
-	addr3 = crypto.GenPrivKeyEd25519().PubKey().Address()
+	addr2 = sdk.Address(priv2.PubKey().Address())
+	addr3 = sdk.Address(crypto.GenPrivKeyEd25519().PubKey().Address())
 	priv4 = crypto.GenPrivKeyEd25519()
+<<<<<<< HEAD
 	addr4 = priv4.PubKey().Address()
 	coins = sdk.NewCoin("foocoin", 10)
 	fee   = auth.StdFee{sdk.Coins{sdk.NewCoin("foocoin", 0)}, 100000}
+=======
+	addr4 = sdk.Address(priv4.PubKey().Address())
+	coins = sdk.Coins{{"foocoin", sdk.NewInt(10)}}
+	fee   = auth.StdFee{
+		sdk.Coins{{"foocoin", sdk.NewInt(0)}},
+		100000,
+	}
+>>>>>>> asdf
 )
 
 // getMockApp returns an initialized mock application for this module.

@@ -124,10 +124,10 @@ func (msg MsgIssue) GetSignBytes() []byte {
 		outputs = append(outputs, output.GetSignBytes())
 	}
 	b, err := msgCdc.MarshalJSON(struct {
-		Banker  string            `json:"banker"`
+		Banker  sdk.Address       `json:"banker"`
 		Outputs []json.RawMessage `json:"outputs"`
 	}{
-		Banker:  sdk.MustBech32ifyAcc(msg.Banker),
+		Banker:  msg.Banker,
 		Outputs: outputs,
 	})
 	if err != nil {
@@ -152,13 +152,7 @@ type Input struct {
 
 // Return bytes to sign for Input
 func (in Input) GetSignBytes() []byte {
-	bin, err := msgCdc.MarshalJSON(struct {
-		Address string    `json:"address"`
-		Coins   sdk.Coins `json:"coins"`
-	}{
-		Address: sdk.MustBech32ifyAcc(in.Address),
-		Coins:   in.Coins,
-	})
+	bin, err := msgCdc.MarshalJSON(in)
 	if err != nil {
 		panic(err)
 	}
@@ -199,13 +193,7 @@ type Output struct {
 
 // Return bytes to sign for Output
 func (out Output) GetSignBytes() []byte {
-	bin, err := msgCdc.MarshalJSON(struct {
-		Address string    `json:"address"`
-		Coins   sdk.Coins `json:"coins"`
-	}{
-		Address: sdk.MustBech32ifyAcc(out.Address),
-		Coins:   out.Coins,
-	})
+	bin, err := msgCdc.MarshalJSON(out)
 	if err != nil {
 		panic(err)
 	}

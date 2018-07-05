@@ -77,16 +77,15 @@ func StringToVoteOption(str string) (VoteOption, sdk.Error) {
 
 // Rest Deposits
 type DepositRest struct {
-	Depositer  string    `json:"voter"`       //  address of the voter
-	ProposalID int64     `json:"proposal_id"` //  proposalID of the proposal
-	Amount     sdk.Coins `json:"option"`
+	Depositer  sdk.Address `json:"depositer"`   //  address of the depositer
+	ProposalID int64       `json:"proposal_id"` //  proposalID of the proposal
+	Amount     sdk.Coins   `json:"option"`
 }
 
 // Turn any Deposit to a DepositRest
 func DepositToRest(deposit Deposit) DepositRest {
-	bechAddr := sdk.MustBech32ifyAcc(deposit.Depositer)
 	return DepositRest{
-		Depositer:  bechAddr,
+		Depositer:  deposit.Depositer,
 		ProposalID: deposit.ProposalID,
 		Amount:     deposit.Amount,
 	}
@@ -94,16 +93,15 @@ func DepositToRest(deposit Deposit) DepositRest {
 
 // Rest Votes
 type VoteRest struct {
-	Voter      string `json:"voter"`       //  address of the voter
-	ProposalID int64  `json:"proposal_id"` //  proposalID of the proposal
-	Option     string `json:"option"`
+	Voter      sdk.Address `json:"voter"`       //  address of the voter
+	ProposalID int64       `json:"proposal_id"` //  proposalID of the proposal
+	Option     string      `json:"option"`
 }
 
 // Turn any Vote to a VoteRest
 func VoteToRest(vote Vote) VoteRest {
-	bechAddr, _ := sdk.Bech32ifyAcc(vote.Voter)
 	return VoteRest{
-		Voter:      bechAddr,
+		Voter:      vote.Voter,
 		ProposalID: vote.ProposalID,
 		Option:     VoteOptionToString(vote.Option),
 	}

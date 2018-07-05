@@ -21,7 +21,7 @@ const (
 	Bech32PrefixValPub  = "cosmosvalpub"
 )
 
-//Address is a go crypto-style Address
+// Address is a go crypto-style Address
 type Address []byte
 
 func NewAddress(bech32String string) (Address, error) {
@@ -103,13 +103,13 @@ func MustBech32ifyAccPub(pub crypto.PubKey) string {
 }
 
 // Bech32ifyVal returns the bech32 encoded string for a validator address
-func Bech32ifyVal(addr Address) (string, error) {
-	return bech32.ConvertAndEncode(Bech32PrefixValAddr, addr.Bytes())
+func Bech32ifyVal(bz []byte) (string, error) {
+	return bech32.ConvertAndEncode(Bech32PrefixValAddr, bz)
 }
 
 // MustBech32ifyVal panics on bech32-encoding failure
-func MustBech32ifyVal(addr Address) string {
-	enc, err := Bech32ifyVal(addr)
+func MustBech32ifyVal(bz []byte) string {
+	enc, err := Bech32ifyVal(bz)
 	if err != nil {
 		panic(err)
 	}

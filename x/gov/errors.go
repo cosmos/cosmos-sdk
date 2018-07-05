@@ -42,8 +42,7 @@ func ErrAlreadyFinishedProposal(codespace sdk.CodespaceType, proposalID int64) s
 }
 
 func ErrAddressNotStaked(codespace sdk.CodespaceType, address sdk.Address) sdk.Error {
-	bechAddr, _ := sdk.Bech32ifyAcc(address)
-	return sdk.NewError(codespace, CodeAddressNotStaked, fmt.Sprintf("Address %s is not staked and is thus ineligible to vote", bechAddr))
+	return sdk.NewError(codespace, CodeAddressNotStaked, fmt.Sprintf("Address %s is not staked and is thus ineligible to vote", address))
 }
 
 func ErrInvalidTitle(codespace sdk.CodespaceType, title string) sdk.Error {

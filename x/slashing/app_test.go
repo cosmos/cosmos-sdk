@@ -15,7 +15,7 @@ import (
 
 var (
 	priv1 = crypto.GenPrivKeyEd25519()
-	addr1 = priv1.PubKey().Address()
+	addr1 = sdk.Address(priv1.PubKey().Address())
 	coins = sdk.Coins{sdk.NewCoin("foocoin", 10)}
 )
 
@@ -100,7 +100,7 @@ func TestSlashingMsgs(t *testing.T) {
 	require.Equal(t, addr1, validator.Owner)
 	require.Equal(t, sdk.Bonded, validator.Status())
 	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.PoolShares.Bonded()))
-	unrevokeMsg := MsgUnrevoke{ValidatorAddr: validator.PubKey.Address()}
+	unrevokeMsg := MsgUnrevoke{ValidatorAddr: sdk.Address(validator.PubKey.Address())}
 
 	checkValidatorSigningInfo(t, mapp, keeper, addr1, false)
 

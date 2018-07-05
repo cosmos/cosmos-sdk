@@ -48,11 +48,11 @@ func SetKeyBase(kb keys.Keybase) {
 
 // used for outputting keys.Info over REST
 type KeyOutput struct {
-	Name    string `json:"name"`
-	Type    string `json:"type"`
-	Address string `json:"address"`
-	PubKey  string `json:"pub_key"`
-	Seed    string `json:"seed,omitempty"`
+	Name    string      `json:"name"`
+	Type    string      `json:"type"`
+	Address sdk.Address `json:"address"`
+	PubKey  string      `json:"pub_key"`
+	Seed    string      `json:"seed,omitempty"`
 }
 
 // create a list of KeyOutput in bech32 format
@@ -70,10 +70,7 @@ func Bech32KeysOutput(infos []keys.Info) ([]KeyOutput, error) {
 
 // create a KeyOutput in bech32 format
 func Bech32KeyOutput(info keys.Info) (KeyOutput, error) {
-	bechAccount, err := sdk.Bech32ifyAcc(sdk.Address(info.GetPubKey().Address().Bytes()))
-	if err != nil {
-		return KeyOutput{}, err
-	}
+	account := sdk.Address(info.GetPubKey().Address().Bytes())
 	bechPubKey, err := sdk.Bech32ifyAccPub(info.GetPubKey())
 	if err != nil {
 		return KeyOutput{}, err
@@ -81,7 +78,7 @@ func Bech32KeyOutput(info keys.Info) (KeyOutput, error) {
 	return KeyOutput{
 		Name:    info.GetName(),
 		Type:    info.GetType(),
-		Address: bechAccount,
+		Address: account,
 		PubKey:  bechPubKey,
 	}, nil
 }

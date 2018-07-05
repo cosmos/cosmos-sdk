@@ -155,11 +155,11 @@ func (msg MsgDelegate) GetSigners() []sdk.Address {
 // get the bytes for the message signer to sign on
 func (msg MsgDelegate) GetSignBytes() []byte {
 	b, err := MsgCdc.MarshalJSON(struct {
-		DelegatorAddr string   `json:"delegator_addr"`
-		ValidatorAddr string   `json:"validator_addr"`
-		Bond          sdk.Coin `json:"bond"`
+		DelegatorAddr sdk.Address `json:"delegator_addr"`
+		ValidatorAddr string      `json:"validator_addr"`
+		Bond          sdk.Coin    `json:"bond"`
 	}{
-		DelegatorAddr: sdk.MustBech32ifyAcc(msg.DelegatorAddr),
+		DelegatorAddr: msg.DelegatorAddr,
 		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
 		Bond:          msg.Bond,
 	})
@@ -213,14 +213,14 @@ func (msg MsgBeginRedelegate) GetSigners() []sdk.Address {
 // get the bytes for the message signer to sign on
 func (msg MsgBeginRedelegate) GetSignBytes() []byte {
 	b, err := MsgCdc.MarshalJSON(struct {
-		DelegatorAddr    string `json:"delegator_addr"`
-		ValidatorSrcAddr string `json:"validator_src_addr"`
-		ValidatorDstAddr string `json:"validator_dst_addr"`
-		SharesAmount     string `json:"shares"`
+		DelegatorAddr    sdk.Address `json:"delegator_addr"`
+		ValidatorSrcAddr string      `json:"validator_src_addr"`
+		ValidatorDstAddr string      `json:"validator_dst_addr"`
+		SharesAmount     string      `json:"shares"`
 	}{
-		DelegatorAddr:    sdk.MustBech32ifyAcc(msg.DelegatorAddr),
-		ValidatorSrcAddr: sdk.MustBech32ifyVal(msg.ValidatorSrcAddr),
-		ValidatorDstAddr: sdk.MustBech32ifyVal(msg.ValidatorDstAddr),
+		DelegatorAddr:    msg.DelegatorAddr,
+		ValidatorSrcAddr: sdk.MustBech32ifyVal(msg.ValidatorSrcAddr.Bytes()),
+		ValidatorDstAddr: sdk.MustBech32ifyVal(msg.ValidatorDstAddr.Bytes()),
 		SharesAmount:     msg.SharesAmount.String(),
 	})
 	if err != nil {
@@ -275,11 +275,11 @@ func (msg MsgCompleteRedelegate) GetSigners() []sdk.Address {
 // get the bytes for the message signer to sign on
 func (msg MsgCompleteRedelegate) GetSignBytes() []byte {
 	b, err := MsgCdc.MarshalJSON(struct {
-		DelegatorAddr    string `json:"delegator_addr"`
-		ValidatorSrcAddr string `json:"validator_src_addr"`
-		ValidatorDstAddr string `json:"validator_dst_addr"`
+		DelegatorAddr    sdk.Address `json:"delegator_addr"`
+		ValidatorSrcAddr string      `json:"validator_src_addr"`
+		ValidatorDstAddr string      `json:"validator_dst_addr"`
 	}{
-		DelegatorAddr:    sdk.MustBech32ifyAcc(msg.DelegatorAddr),
+		DelegatorAddr:    msg.DelegatorAddr,
 		ValidatorSrcAddr: sdk.MustBech32ifyVal(msg.ValidatorSrcAddr),
 		ValidatorDstAddr: sdk.MustBech32ifyVal(msg.ValidatorDstAddr),
 	})
@@ -327,11 +327,11 @@ func (msg MsgBeginUnbonding) GetSigners() []sdk.Address { return []sdk.Address{m
 // get the bytes for the message signer to sign on
 func (msg MsgBeginUnbonding) GetSignBytes() []byte {
 	b, err := MsgCdc.MarshalJSON(struct {
-		DelegatorAddr string `json:"delegator_addr"`
-		ValidatorAddr string `json:"validator_addr"`
-		SharesAmount  string `json:"shares_amount"`
+		DelegatorAddr sdk.Address `json:"delegator_addr"`
+		ValidatorAddr string      `json:"validator_addr"`
+		SharesAmount  string      `json:"shares_amount"`
 	}{
-		DelegatorAddr: sdk.MustBech32ifyAcc(msg.DelegatorAddr),
+		DelegatorAddr: msg.DelegatorAddr,
 		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
 		SharesAmount:  msg.SharesAmount.String(),
 	})
@@ -378,11 +378,11 @@ func (msg MsgCompleteUnbonding) GetSigners() []sdk.Address { return []sdk.Addres
 // get the bytes for the message signer to sign on
 func (msg MsgCompleteUnbonding) GetSignBytes() []byte {
 	b, err := MsgCdc.MarshalJSON(struct {
-		DelegatorAddr string `json:"delegator_addr"`
-		ValidatorAddr string `json:"validator_src_addr"`
+		DelegatorAddr sdk.Address `json:"delegator_addr"`
+		ValidatorAddr string      `json:"validator_src_addr"`
 	}{
-		DelegatorAddr: sdk.MustBech32ifyAcc(msg.DelegatorAddr),
-		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
+		DelegatorAddr: msg.DelegatorAddr,
+		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr.Bytes()),
 	})
 	if err != nil {
 		panic(err)

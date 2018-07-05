@@ -126,7 +126,7 @@ func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 		return nil, errors.Errorf("no key for: %s", name)
 	}
 
-	return info.GetPubKey().Address(), nil
+	return sdk.Address(info.GetPubKey().Address()), nil
 }
 
 // sign and build the transaction from the msg

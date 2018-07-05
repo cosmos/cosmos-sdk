@@ -76,7 +76,7 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.Core
 		to := sdk.Address(bz)
 
 		// build message
-		packet := ibc.NewIBCPacket(info.GetPubKey().Address(), to, m.Amount, m.SrcChainID, destChainID)
+		packet := ibc.NewIBCPacket(sdk.Address(info.GetPubKey().Address()), to, m.Amount, m.SrcChainID, destChainID)
 		msg := ibc.IBCTransferMsg{packet}
 
 		// add gas to context

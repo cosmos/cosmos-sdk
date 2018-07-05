@@ -43,19 +43,7 @@ func NewIBCPacket(srcAddr sdk.Address, destAddr sdk.Address, coins sdk.Coins,
 
 //nolint
 func (p IBCPacket) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(struct {
-		SrcAddr   string
-		DestAddr  string
-		Coins     sdk.Coins
-		SrcChain  string
-		DestChain string
-	}{
-		SrcAddr:   sdk.MustBech32ifyAcc(p.SrcAddr),
-		DestAddr:  sdk.MustBech32ifyAcc(p.DestAddr),
-		Coins:     p.Coins,
-		SrcChain:  p.SrcChain,
-		DestChain: p.DestChain,
-	})
+	b, err := msgCdc.MarshalJSON(p)
 	if err != nil {
 		panic(err)
 	}
@@ -121,11 +109,11 @@ func (msg IBCReceiveMsg) GetSigners() []sdk.Address { return []sdk.Address{msg.R
 func (msg IBCReceiveMsg) GetSignBytes() []byte {
 	b, err := msgCdc.MarshalJSON(struct {
 		IBCPacket json.RawMessage
-		Relayer   string
+		Relayer   sdk.Address
 		Sequence  int64
 	}{
 		IBCPacket: json.RawMessage(msg.IBCPacket.GetSignBytes()),
-		Relayer:   sdk.MustBech32ifyAcc(msg.Relayer),
+		Relayer:   msg.Relayer,
 		Sequence:  msg.Sequence,
 	})
 	if err != nil {

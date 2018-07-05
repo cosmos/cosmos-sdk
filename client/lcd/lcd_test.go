@@ -60,7 +60,7 @@ func TestKeys(t *testing.T) {
 	err = wire.Cdc.UnmarshalJSON([]byte(body), &resp)
 	require.Nil(t, err, body)
 
-	addr2Bech32 := resp.Address
+	addr2Bech32 := resp.Address.String()
 	_, err = sdk.GetAccAddressBech32(addr2Bech32)
 	require.NoError(t, err, "Failed to return a correct bech32 address")
 
@@ -71,7 +71,7 @@ func TestKeys(t *testing.T) {
 	err = cdc.UnmarshalJSON([]byte(body), &m)
 	require.Nil(t, err)
 
-	addrBech32 := sdk.MustBech32ifyAcc(addr)
+	addrBech32 := addr.String()
 
 	require.Equal(t, name, m[0].Name, "Did not serve keys name correctly")
 	require.Equal(t, addrBech32, m[0].Address, "Did not serve keys Address correctly")
@@ -224,10 +224,10 @@ func TestCoinSend(t *testing.T) {
 
 	bz, err := hex.DecodeString("8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6")
 	require.NoError(t, err)
-	someFakeAddr := sdk.MustBech32ifyAcc(bz)
+	someFakeAddr := sdk.Address(bz)
 
 	// query empty
-	res, body := Request(t, port, "GET", "/accounts/"+someFakeAddr, nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/accounts/%s", someFakeAddr), nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	acc := getAccount(t, port, addr)
@@ -334,8 +334,7 @@ func TestTxs(t *testing.T) {
 
 	// query sender
 	// also tests url decoding
-	addrBech := sdk.MustBech32ifyAcc(addr)
-	res, body = Request(t, port, "GET", "/txs?tag=sender_bech32=%27"+addrBech+"%27", nil)
+	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?tag=sender_bech32=%%27%s%%27", addr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err = cdc.UnmarshalJSON([]byte(body), &indexedTxs)
@@ -344,8 +343,7 @@ func TestTxs(t *testing.T) {
 	require.Equal(t, resultTx.Height, indexedTxs[0].Height)
 
 	// query recipient
-	receiveAddrBech := sdk.MustBech32ifyAcc(receiveAddr)
-	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?tag=recipient_bech32='%s'", receiveAddrBech), nil)
+	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?tag=recipient_bech32='%s'", receiveAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err = cdc.UnmarshalJSON([]byte(body), &indexedTxs)
@@ -382,7 +380,7 @@ func TestBonding(t *testing.T) {
 	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.Address{addr})
 	defer cleanup()
 
-	validator1Owner := pks[0].Address()
+	validator1Owner := sdk.Address(pks[0].Address())
 
 	// create bond TX
 	resultTx := doDelegate(t, port, seed, name, password, addr, validator1Owner)

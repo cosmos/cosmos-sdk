@@ -14,9 +14,9 @@ var (
 	pk1   = crypto.GenPrivKeyEd25519().PubKey()
 	pk2   = crypto.GenPrivKeyEd25519().PubKey()
 	pk3   = crypto.GenPrivKeyEd25519().PubKey()
-	addr1 = pk1.Address()
-	addr2 = pk2.Address()
-	addr3 = pk3.Address()
+	addr1 = sdk.Address(pk1.Address())
+	addr2 = sdk.Address(pk2.Address())
+	addr3 = sdk.Address(pk3.Address())
 
 	emptyAddr   sdk.Address
 	emptyPubkey crypto.PubKey

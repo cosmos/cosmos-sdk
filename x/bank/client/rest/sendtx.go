@@ -80,7 +80,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 		}
 
 		// build message
-		msg := client.BuildMsg(info.GetPubKey().Address(), to, m.Amount)
+		msg := client.BuildMsg(sdk.Address(info.GetPubKey().Address()), to, m.Amount)
 		if err != nil { // XXX rechecking same error ?
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

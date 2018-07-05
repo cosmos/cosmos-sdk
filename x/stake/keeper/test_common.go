@@ -143,10 +143,7 @@ func TestAddr(addr string, bech string) sdk.Address {
 	if err != nil {
 		panic(err)
 	}
-	bechexpected, err := sdk.Bech32ifyAcc(res)
-	if err != nil {
-		panic(err)
-	}
+	bechexpected := res.String()
 	if bech != bechexpected {
 		panic("Bech encoding doesn't match reference")
 	}
@@ -174,7 +171,7 @@ func createTestAddrs(numAddrs int) []sdk.Address {
 
 		buffer.WriteString(numString) //adding on final two digits to make addresses unique
 		res, _ := sdk.GetAccAddressHex(buffer.String())
-		bech, _ := sdk.Bech32ifyAcc(res)
+		bech := res.String()
 		addresses = append(addresses, TestAddr(buffer.String(), bech))
 		buffer.Reset()
 	}

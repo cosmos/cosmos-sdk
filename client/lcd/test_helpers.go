@@ -85,7 +85,7 @@ func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (addr sd
 	var err error
 	info, seed, err = kb.CreateMnemonic(name, crkeys.English, password, crkeys.Secp256k1)
 	require.NoError(t, err)
-	addr = info.GetPubKey().Address()
+	addr = sdk.Address(info.GetPubKey().Address())
 	return
 }
 
@@ -132,7 +132,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 	for _, gdValidator := range genDoc.Validators {
 		pk := gdValidator.PubKey
 		validatorsPKs = append(validatorsPKs, pk) // append keys for output
-		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, sdk.MustBech32ifyAcc(pk.Address()), "test_val1")
+		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, sdk.Address(pk.Address()), "test_val1")
 		require.NoError(t, err)
 		appGenTxs = append(appGenTxs, appGenTx)
 	}

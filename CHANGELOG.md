@@ -85,6 +85,7 @@ IMPROVEMENTS
 
 BUG FIXES
 * [x/slashing] \#1510 Unrevoked validators cannot un-revoke themselves
+* [x/stake] \#1513 Validators slashed to zero power are unbonded and removed from the store
 * [gaia] Added self delegation for validators in the genesis creation
 * [lcd] tests now don't depend on raw json text
 * [stake] error strings lower case

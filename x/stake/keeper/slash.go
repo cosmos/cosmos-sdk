@@ -92,7 +92,11 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	// update the pool
 	k.SetPool(ctx, pool)
 	// update the validator, possibly kicking it out
-	k.UpdateValidator(ctx, validator)
+	validator = k.UpdateValidator(ctx, validator)
+	// remove validator if it has been reduced to zero shares
+	if validator.PoolShares.Amount.IsZero() {
+		k.RemoveValidator(ctx, validator.Owner)
+	}
 
 	// Log that a slash occurred!
 	logger.Info(fmt.Sprintf("Validator %s slashed by slashFactor %v, removed %v shares and burned %d tokens", pubkey.Address(), slashFactor, sharesToRemove, burned))

@@ -123,15 +123,21 @@ func AddCommands(
 
 //___________________________________________________________________________________
 
-// append a new json field to existing json message
-func AppendJSON(cdc *wire.Codec, baseJSON []byte, key string, value json.RawMessage) (appended []byte, err error) {
+// InsertKeyJSON inserts a new JSON field/key with a given value to an existing
+// JSON message. An error is returned if any serialization operation fails.
+//
+// NOTE: The ordering of the keys returned as the resulting JSON message is
+// non-deterministic, so the client should not rely on key ordering.
+func InsertKeyJSON(cdc *wire.Codec, baseJSON []byte, key string, value json.RawMessage) ([]byte, error) {
 	var jsonMap map[string]json.RawMessage
-	err = cdc.UnmarshalJSON(baseJSON, &jsonMap)
-	if err != nil {
+
+	if err := cdc.UnmarshalJSON(baseJSON, &jsonMap); err != nil {
 		return nil, err
 	}
+
 	jsonMap[key] = value
 	bz, err := wire.MarshalJSONIndent(cdc, jsonMap)
+
 	return json.RawMessage(bz), err
 }
 

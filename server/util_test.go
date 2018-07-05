@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAppendJSON(t *testing.T) {
+func TestInsertKeyJSON(t *testing.T) {
 	cdc := wire.NewCodec()
 
 	foo := map[string]string{"foo": "foofoo"}
@@ -24,7 +24,7 @@ func TestAppendJSON(t *testing.T) {
 	barRaw := json.RawMessage(bz)
 
 	// make the append
-	appBz, err := AppendJSON(cdc, fooRaw, "barOuter", barRaw)
+	appBz, err := InsertKeyJSON(cdc, fooRaw, "barOuter", barRaw)
 	require.NoError(t, err)
 
 	// test the append

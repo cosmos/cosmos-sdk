@@ -27,13 +27,20 @@ func NewCoreContextFromViper() CoreContext {
 			chainID = def
 		}
 	}
+	// TODO: Remove the following deprecation code after Gaia-7000 is launched
+	keyName := viper.GetString(client.FlagName)
+	if keyName != "" {
+		fmt.Println("** Note --name is deprecated and will be removed next release. Please use --from instead **")
+	} else {
+		keyName = viper.GetString(client.FlagFrom)
+	}
 	return CoreContext{
 		ChainID:         chainID,
 		Height:          viper.GetInt64(client.FlagHeight),
 		Gas:             viper.GetInt64(client.FlagGas),
 		Fee:             viper.GetString(client.FlagFee),
 		TrustNode:       viper.GetBool(client.FlagTrustNode),
-		FromAddressName: viper.GetString(client.FlagName),
+		FromAddressName: keyName,
 		NodeURI:         nodeURI,
 		AccountNumber:   viper.GetInt64(client.FlagAccountNumber),
 		Sequence:        viper.GetInt64(client.FlagSequence),

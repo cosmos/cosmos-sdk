@@ -63,7 +63,7 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // quick validity check
@@ -114,7 +114,7 @@ func (msg MsgEditValidator) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // quick validity check
@@ -166,7 +166,7 @@ func (msg MsgDelegate) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // quick validity check
@@ -226,7 +226,7 @@ func (msg MsgBeginRedelegate) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // quick validity check
@@ -286,7 +286,7 @@ func (msg MsgCompleteRedelegate) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // quick validity check
@@ -338,7 +338,7 @@ func (msg MsgBeginUnbonding) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // quick validity check
@@ -387,7 +387,7 @@ func (msg MsgCompleteUnbonding) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // quick validity check

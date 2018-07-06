@@ -262,7 +262,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 		validator = updatedVal
 	}
 	// if decreasing but still bonded, update Tendermint validator
-	if oldFound && oldValidator.Status() == sdk.Bonded && (updatedVal.Owner == nil || updatedVal.Status() == sdk.Bonded) && !powerIncreasing {
+	if oldFound && oldValidator.Status() == sdk.Bonded && (updatedVal.Owner == nil || updatedVal.Status() == sdk.Bonded) && oldValidator.PoolShares.Bonded().GT(validator.PoolShares.Bonded()) {
 		bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
 		store.Set(GetTendermintUpdatesKey(ownerAddr), bz)
 	}

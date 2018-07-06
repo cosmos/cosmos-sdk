@@ -88,11 +88,11 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 
 	// register message routes
 	app.Router().
-		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
-		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
-		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
-		AddRoute("slashing", slashing.NewHandler(app.slashingKeeper)).
-		AddRoute("gov", gov.NewHandler(app.govKeeper))
+		AddRoute(bank.NewHandler(app.coinKeeper)).
+		AddRoute(ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
+		AddRoute(stake.NewHandler(app.stakeKeeper)).
+		AddRoute(slashing.NewHandler(app.slashingKeeper)).
+		AddRoute(gov.NewHandler(app.govKeeper))
 
 	// initialize BaseApp
 	app.SetInitChainer(app.initChainer)

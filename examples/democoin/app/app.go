@@ -81,12 +81,12 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.stakeKeeper = simplestake.NewKeeper(app.capKeyStakingStore, app.coinKeeper, app.RegisterCodespace(simplestake.DefaultCodespace))
 	app.Router().
-		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
-		AddRoute("cool", cool.NewHandler(app.coolKeeper)).
-		AddRoute("pow", app.powKeeper.Handler).
-		AddRoute("sketchy", sketchy.NewHandler()).
-		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
-		AddRoute("simplestake", simplestake.NewHandler(app.stakeKeeper))
+		AddRoute(bank.NewHandler(app.coinKeeper)).
+		AddRoute(cool.NewHandler(app.coolKeeper)).
+		AddRoute(app.powKeeper).
+		AddRoute(sketchy.NewHandler()).
+		AddRoute(ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
+		AddRoute(simplestake.NewHandler(app.stakeKeeper))
 
 	// Initialize BaseApp.
 	app.SetInitChainer(app.initChainerFn(app.coolKeeper, app.powKeeper))

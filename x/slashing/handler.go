@@ -4,16 +4,30 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Handler struct handles "slashing" type messages
+type Handler struct {
+	k Keeper
+}
+
+// NewHandler constructs a Handler
 func NewHandler(k Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		// NOTE msg already has validate basic run
-		switch msg := msg.(type) {
-		case MsgUnrevoke:
-			return handleMsgUnrevoke(ctx, msg, k)
-		default:
-			return sdk.ErrTxDecode("invalid message parse in staking module").Result()
-		}
+	return Handler{k}
+}
+
+// Implements sdk.Handler
+func (h Handler) Handle(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	// NOTE msg already has validate basic run
+	switch msg := msg.(type) {
+	case MsgUnrevoke:
+		return handleMsgUnrevoke(ctx, msg, h.k)
+	default:
+		return sdk.ErrTxDecode("invalid message parse in staking module").Result()
 	}
+}
+
+// Implements sdk.Handler
+func (h Handler) Type() string {
+	return MsgType
 }
 
 // Validators must submit a transaction to unrevoke itself after

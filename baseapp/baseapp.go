@@ -544,7 +544,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 			return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
 		}
 
-		result = handler(ctx, msg)
+		result = handler.Handle(ctx, msg)
 
 		// Set gas utilized
 		finalResult.GasUsed += ctx.GasMeter().GasConsumed()

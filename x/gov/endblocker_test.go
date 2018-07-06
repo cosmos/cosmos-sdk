@@ -20,7 +20,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 
 	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewCoin("steak", 5)})
 
-	res := govHandler(ctx, newProposalMsg)
+	res := govHandler.Handle(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
 
 	EndBlocker(ctx, keeper)
@@ -51,7 +51,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 
 	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewCoin("steak", 5)})
 
-	res := govHandler(ctx, newProposalMsg)
+	res := govHandler.Handle(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
 
 	EndBlocker(ctx, keeper)
@@ -64,7 +64,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.False(t, shouldPopInactiveProposalQueue(ctx, keeper))
 
 	newProposalMsg2 := NewMsgSubmitProposal("Test2", "test2", ProposalTypeText, addrs[1], sdk.Coins{sdk.NewCoin("steak", 5)})
-	res = govHandler(ctx, newProposalMsg2)
+	res = govHandler.Handle(ctx, newProposalMsg2)
 	require.True(t, res.IsOK())
 
 	ctx = ctx.WithBlockHeight(205)
@@ -95,7 +95,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 
 	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewCoin("steak", 5)})
 
-	res := govHandler(ctx, newProposalMsg)
+	res := govHandler.Handle(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
 	var proposalID int64
 	keeper.cdc.UnmarshalBinaryBare(res.Data, &proposalID)
@@ -110,7 +110,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	require.False(t, shouldPopInactiveProposalQueue(ctx, keeper))
 
 	newDepositMsg := NewMsgDeposit(addrs[1], proposalID, sdk.Coins{sdk.NewCoin("steak", 5)})
-	res = govHandler(ctx, newDepositMsg)
+	res = govHandler.Handle(ctx, newDepositMsg)
 	require.True(t, res.IsOK())
 
 	require.NotNil(t, keeper.InactiveProposalQueuePeek(ctx))
@@ -139,14 +139,16 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewCoin("steak", 5)})
 
-	res := govHandler(ctx, newProposalMsg)
+	res := govHandler.Handle(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
+
 	var proposalID int64
 	keeper.cdc.UnmarshalBinaryBare(res.Data, &proposalID)
 
 	ctx = ctx.WithBlockHeight(10)
 	newDepositMsg := NewMsgDeposit(addrs[1], proposalID, sdk.Coins{sdk.NewCoin("steak", 5)})
-	res = govHandler(ctx, newDepositMsg)
+
+	res = govHandler.Handle(ctx, newDepositMsg)
 	require.True(t, res.IsOK())
 
 	EndBlocker(ctx, keeper)

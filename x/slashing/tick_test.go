@@ -17,7 +17,7 @@ func TestBeginBlocker(t *testing.T) {
 	addr, pk, amt := addrs[2], pks[2], sdk.NewInt(100)
 
 	// bond the validator
-	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, pk, amt))
+	got := stake.NewHandler(sk).Handle(ctx, newTestMsgCreateValidator(addr, pk, amt))
 	require.True(t, got.IsOK())
 	stake.EndBlocker(ctx, sk)
 	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})

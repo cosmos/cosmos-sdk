@@ -100,7 +100,7 @@ func TestIBC(t *testing.T) {
 	msg = IBCTransferMsg{
 		IBCPacket: packet,
 	}
-	res = h(ctx, msg)
+	res = h.Handle(ctx, msg)
 	require.True(t, res.IsOK())
 
 	coins, err = getCoins(ck, ctx, src)
@@ -118,7 +118,7 @@ func TestIBC(t *testing.T) {
 		Relayer:   src,
 		Sequence:  0,
 	}
-	res = h(ctx, msg)
+	res = h.Handle(ctx, msg)
 	require.True(t, res.IsOK())
 
 	coins, err = getCoins(ck, ctx, dest)
@@ -128,7 +128,7 @@ func TestIBC(t *testing.T) {
 	igs = ibcm.GetIngressSequence(ctx, chainid)
 	require.Equal(t, igs, int64(1))
 
-	res = h(ctx, msg)
+	res = h.Handle(ctx, msg)
 	require.False(t, res.IsOK())
 
 	igs = ibcm.GetIngressSequence(ctx, chainid)

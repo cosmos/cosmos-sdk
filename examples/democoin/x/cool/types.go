@@ -8,6 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// name to identify transaction types
+const MsgType = "cool"
+
 // a really cool msg type, these fields are can be entirely arbitrary and
 // custom to your message
 type MsgSetTrend struct {
@@ -32,7 +35,7 @@ func NewMsgSetTrend(sender sdk.Address, cool string) MsgSetTrend {
 var _ sdk.Msg = MsgSetTrend{}
 
 // nolint
-func (msg MsgSetTrend) Type() string              { return "cool" }
+func (msg MsgSetTrend) Type() string              { return MsgType }
 func (msg MsgSetTrend) GetSigners() []sdk.Address { return []sdk.Address{msg.Sender} }
 func (msg MsgSetTrend) String() string {
 	return fmt.Sprintf("MsgSetTrend{Sender: %v, Cool: %v}", msg.Sender, msg.Cool)
@@ -82,7 +85,7 @@ func NewMsgQuiz(sender sdk.Address, coolerthancool string) MsgQuiz {
 var _ sdk.Msg = MsgQuiz{}
 
 // nolint
-func (msg MsgQuiz) Type() string              { return "cool" }
+func (msg MsgQuiz) Type() string              { return MsgType }
 func (msg MsgQuiz) GetSigners() []sdk.Address { return []sdk.Address{msg.Sender} }
 func (msg MsgQuiz) String() string {
 	return fmt.Sprintf("MsgQuiz{Sender: %v, CoolAnswer: %v}", msg.Sender, msg.CoolAnswer)

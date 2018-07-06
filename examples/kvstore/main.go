@@ -41,7 +41,7 @@ func main() {
 	baseApp.SetTxDecoder(decodeTx)
 
 	// Set a handler Route.
-	baseApp.Router().AddRoute("kvstore", Handler(capKeyMainStore))
+	baseApp.Router().AddRoute(NewHandler(capKeyMainStore))
 
 	// Load latest version.
 	if err := baseApp.LoadLatestVersion(capKeyMainStore); err != nil {
@@ -72,23 +72,36 @@ func main() {
 }
 
 // KVStore Handler
-func Handler(storeKey sdk.StoreKey) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		dTx, ok := msg.(kvstoreTx)
-		if !ok {
-			panic("Handler should only receive kvstoreTx")
-		}
+type Handler struct {
+	storeKey sdk.StoreKey
+}
 
-		// tx is already unmarshalled
-		key := dTx.key
-		value := dTx.value
+// NewHandler returns new handler
+func NewHandler(storeKey sdk.StoreKey) sdk.Handler {
+	return Handler{storeKey}
+}
 
-		store := ctx.KVStore(storeKey)
-		store.Set(key, value)
-
-		return sdk.Result{
-			Code: 0,
-			Log:  fmt.Sprintf("set %s=%s", key, value),
-		}
+// Implements sdk.Handler
+func (h Handler) Handle(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	dTx, ok := msg.(kvstoreTx)
+	if !ok {
+		panic("Handler should only receive kvstoreTx")
 	}
+
+	// tx is already unmarshalled
+	key := dTx.key
+	value := dTx.value
+
+	store := ctx.KVStore(h.storeKey)
+	store.Set(key, value)
+
+	return sdk.Result{
+		Code: 0,
+		Log:  fmt.Sprintf("set %s=%s", key, value),
+	}
+}
+
+// Implements sdk.Handler
+func (h Handler) Type() string {
+	return "kvstore"
 }

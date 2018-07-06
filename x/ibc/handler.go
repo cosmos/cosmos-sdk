@@ -7,18 +7,33 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
+// Handler struct handles "bank" type messages
+type Handler struct {
+	ibcm Mapper
+	ck   bank.Keeper
+}
+
+// NewHandler constructs a Handler
 func NewHandler(ibcm Mapper, ck bank.Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		switch msg := msg.(type) {
-		case IBCTransferMsg:
-			return handleIBCTransferMsg(ctx, ibcm, ck, msg)
-		case IBCReceiveMsg:
-			return handleIBCReceiveMsg(ctx, ibcm, ck, msg)
-		default:
-			errMsg := "Unrecognized IBC Msg type: " + reflect.TypeOf(msg).Name()
-			return sdk.ErrUnknownRequest(errMsg).Result()
-		}
+	return Handler{ibcm, ck}
+}
+
+// Implements sdk.Handler
+func (h Handler) Handle(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	switch msg := msg.(type) {
+	case IBCTransferMsg:
+		return handleIBCTransferMsg(ctx, h.ibcm, h.ck, msg)
+	case IBCReceiveMsg:
+		return handleIBCReceiveMsg(ctx, h.ibcm, h.ck, msg)
+	default:
+		errMsg := "Unrecognized IBC Msg type: " + reflect.TypeOf(msg).Name()
+		return sdk.ErrUnknownRequest(errMsg).Result()
 	}
+}
+
+// Implements sdk.Handler
+func (h Handler) Type() string {
+	return "ibc"
 }
 
 // IBCTransferMsg deducts coins from the account and creates an egress IBC packet.

@@ -6,17 +6,17 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 func main() {
 	cdc := app.MakeCodec()
-	ctx := server.NewDefaultContext()
+	ctx := sdk.NewDefaultServerContext()
 
 	rootCmd := &cobra.Command{
 		Use:               "basecoind",
@@ -39,11 +39,11 @@ func main() {
 	}
 }
 
-func newApp(logger log.Logger, db dbm.DB) abci.Application {
-	return app.NewBasecoinApp(logger, db)
+func newApp(ctx *sdk.ServerContext, db dbm.DB) abci.Application {
+	return app.NewBasecoinApp(ctx, db)
 }
 
-func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB) (json.RawMessage, []tmtypes.GenesisValidator, error) {
-	bapp := app.NewBasecoinApp(logger, db)
+func exportAppStateAndTMValidators(ctx *sdk.ServerContext, db dbm.DB) (json.RawMessage, []tmtypes.GenesisValidator, error) {
+	bapp := app.NewBasecoinApp(ctx, db)
 	return bapp.ExportAppStateAndValidators()
 }

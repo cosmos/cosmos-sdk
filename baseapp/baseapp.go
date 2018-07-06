@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	cfg "github.com/tendermint/tendermint/config"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -41,6 +42,7 @@ const (
 type BaseApp struct {
 	// initialized on creation
 	Logger     log.Logger
+	Config     *cfg.Config
 	name       string               // application name from abci.Info
 	cdc        *wire.Codec          // Amino codec
 	db         dbm.DB               // common DB backend
@@ -73,9 +75,10 @@ var _ abci.Application = (*BaseApp)(nil)
 
 // Create and name new BaseApp
 // NOTE: The db is used to store the version number for now.
-func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB) *BaseApp {
+func NewBaseApp(name string, cdc *wire.Codec, ctx *sdk.ServerContext, db dbm.DB) *BaseApp {
 	app := &BaseApp{
-		Logger:     logger,
+		Logger:     ctx.Logger,
+		Config:     ctx.Config,
 		name:       name,
 		cdc:        cdc,
 		db:         db,

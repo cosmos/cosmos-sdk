@@ -7,6 +7,7 @@ import (
 
 	"github.com/tendermint/tendermint/abci/server"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/node"
@@ -21,7 +22,7 @@ const (
 
 // StartCmd runs the service passed in, either
 // stand-alone, or in-process with tendermint
-func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
+func StartCmd(ctx *sdk.ServerContext, appCreator AppCreator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",
@@ -45,11 +46,11 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 	return cmd
 }
 
-func startStandAlone(ctx *Context, appCreator AppCreator) error {
+func startStandAlone(ctx *sdk.ServerContext, appCreator AppCreator) error {
 	// Generate the app in the proper dir
 	addr := viper.GetString(flagAddress)
 	home := viper.GetString("home")
-	app, err := appCreator(home, ctx.Logger)
+	app, err := appCreator(home, ctx)
 	if err != nil {
 		return err
 	}
@@ -75,10 +76,10 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	return nil
 }
 
-func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
+func startInProcess(ctx *sdk.ServerContext, appCreator AppCreator) (*node.Node, error) {
 	cfg := ctx.Config
 	home := cfg.RootDir
-	app, err := appCreator(home, ctx.Logger)
+	app, err := appCreator(home, ctx)
 	if err != nil {
 		return nil, err
 	}

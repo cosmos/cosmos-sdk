@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	abci "github.com/tendermint/tendermint/abci/types"
+	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -33,6 +34,8 @@ type App struct {
 // testing.
 func NewApp() *App {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
+	config := cfg.DefaultConfig()
+	ctx := sdk.NewServerContext(config, logger)
 	db := dbm.NewMemDB()
 
 	// Create the cdc with some standard codecs
@@ -43,7 +46,7 @@ func NewApp() *App {
 
 	// Create your application object
 	app := &App{
-		BaseApp:    bam.NewBaseApp("mock", cdc, logger, db),
+		BaseApp:    bam.NewBaseApp("mock", cdc, ctx, db),
 		Cdc:        cdc,
 		KeyMain:    sdk.NewKVStoreKey("main"),
 		KeyAccount: sdk.NewKVStoreKey("acc"),

@@ -11,6 +11,7 @@ import (
 
 	"os"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
@@ -28,7 +29,7 @@ var (
 const nodeDirPerm = 0755
 
 // get cmd to initialize all files for tendermint testnet and application
-func TestnetFilesCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
+func TestnetFilesCmd(ctx *sdk.ServerContext, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "testnet",
 		Short: "Initialize files for a Gaiad testnet",

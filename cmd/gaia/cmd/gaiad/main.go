@@ -5,19 +5,19 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	"github.com/cosmos/cosmos-sdk/server"
 )
 
 func main() {
 	cdc := app.MakeCodec()
-	ctx := server.NewDefaultContext()
+	ctx := sdk.NewDefaultServerContext()
 	cobra.EnableCommandSorting = false
 	rootCmd := &cobra.Command{
 		Use:               "gaiad",
@@ -38,11 +38,11 @@ func main() {
 	}
 }
 
-func newApp(logger log.Logger, db dbm.DB) abci.Application {
-	return app.NewGaiaApp(logger, db)
+func newApp(ctx *sdk.ServerContext, db dbm.DB) abci.Application {
+	return app.NewGaiaApp(ctx, db)
 }
 
-func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB) (json.RawMessage, []tmtypes.GenesisValidator, error) {
-	gapp := app.NewGaiaApp(logger, db)
+func exportAppStateAndTMValidators(ctx *sdk.ServerContext, db dbm.DB) (json.RawMessage, []tmtypes.GenesisValidator, error) {
+	gapp := app.NewGaiaApp(ctx, db)
 	return gapp.ExportAppStateAndValidators()
 }

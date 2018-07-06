@@ -14,7 +14,7 @@ BREAKING CHANGES
     * go-crypto, abci, tmlibs have been merged into Tendermint
     * Various other fixes
 * [auth] Signers of a transaction now only sign over their own account and sequence number
-* [auth] Removed MsgChangePubKey 
+* [auth] Removed MsgChangePubKey
 * [auth] Removed SetPubKey from account mapper
 * [auth] AltBytes renamed to Memo, now a string, max 100 characters, costs a bit of gas
 * [types] `GetMsg()` -> `GetMsgs()` as txs wrap many messages
@@ -41,6 +41,8 @@ BREAKING CHANGES
 * [x/stake] most index keys nolonger hold a value - inputs are rearranged to form the desired key
 * [lcd] Switch key creation output to return bech32
 * [x/stake] store-value for delegation, validator, ubd, and red do not hold duplicate information contained store-key
+* [server] Moved server.Context to types.ServerContext
+* [baseapp] NewBaseApp and related constructors take ServerContext instead of Logger
 
 DEPRECATED
 * [cli] Deprecate `--name` flag in commands that send txs, in favor of `--from`

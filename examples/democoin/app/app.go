@@ -6,7 +6,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
@@ -51,14 +50,14 @@ type DemocoinApp struct {
 	accountMapper auth.AccountMapper
 }
 
-func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
+func NewDemocoinApp(ctx *sdk.ServerContext, db dbm.DB) *DemocoinApp {
 
 	// Create app-level codec for txs and accounts.
 	var cdc = MakeCodec()
 
 	// Create your application object.
 	var app = &DemocoinApp{
-		BaseApp:            bam.NewBaseApp(appName, cdc, logger, db),
+		BaseApp:            bam.NewBaseApp(appName, cdc, ctx, db),
 		cdc:                cdc,
 		capKeyMainStore:    sdk.NewKVStoreKey("main"),
 		capKeyAccountStore: sdk.NewKVStoreKey("acc"),

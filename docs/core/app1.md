@@ -420,11 +420,11 @@ documentation](https://godoc.org/github.com/cosmos/cosmos-sdk/baseapp) for more 
 Here is the complete setup for App1:
 
 ```go
-func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
+func NewApp1(ctx *sdk.ServerContext, db dbm.DB) *bapp.BaseApp {
     cdc := wire.NewCodec()
 
     // Create the base application object.
-    app := bapp.NewBaseApp(app1Name, cdc, logger, db)
+    app := bapp.NewBaseApp(app1Name, cdc, ctx, db)
 
     // Create a capability key for accessing the account store.
     keyAccount := sdk.NewKVStoreKey("acc")

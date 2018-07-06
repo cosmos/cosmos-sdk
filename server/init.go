@@ -63,7 +63,7 @@ type InitConfig struct {
 }
 
 // get cmd to initialize all files for tendermint and application
-func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
+func GenTxCmd(ctx *sdk.ServerContext, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gen-tx",
 		Short: "Create genesis transaction file (under [--home]/config/gentx/gentx-[nodeID].json)",
@@ -153,7 +153,7 @@ func gentxWithConfig(cdc *wire.Codec, appInit AppInit, config *cfg.Config, genTx
 }
 
 // get cmd to initialize all files for tendermint and application
-func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
+func InitCmd(ctx *sdk.ServerContext, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize genesis config, priv-validator file, and p2p-node file",

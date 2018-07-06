@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/wire"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
@@ -20,29 +21,12 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
-// server context
-type Context struct {
-	Config *cfg.Config
-	Logger log.Logger
-}
-
-func NewDefaultContext() *Context {
-	return NewContext(
-		cfg.DefaultConfig(),
-		log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
-	)
-}
-
-func NewContext(config *cfg.Config, logger log.Logger) *Context {
-	return &Context{config, logger}
-}
-
 //___________________________________________________________________________________
 
 // PersistentPreRunEFn returns a PersistentPreRunE function for cobra
 // that initailizes the passed in context with a properly configured
-// logger and config objecy
-func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error {
+// logger and config object
+func PersistentPreRunEFn(context *sdk.ServerContext) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if cmd.Name() == version.VersionCmd.Name() {
 			return nil
@@ -92,7 +76,7 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 
 // add server commands
 func AddCommands(
-	ctx *Context, cdc *wire.Codec,
+	ctx *sdk.ServerContext, cdc *wire.Codec,
 	rootCmd *cobra.Command, appInit AppInit,
 	appCreator AppCreator, appExport AppExporter) {
 

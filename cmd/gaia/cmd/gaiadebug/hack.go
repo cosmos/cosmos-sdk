@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
@@ -39,12 +40,14 @@ func runHackCmd(cmd *cobra.Command, args []string) error {
 
 	// load the app
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	config := cfg.DefaultConfig()
+	ctx := sdk.NewServerContext(config, logger)
 	db, err := dbm.NewGoLevelDB("gaia", dataDir)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	app := NewGaiaApp(logger, db)
+	app := NewGaiaApp(ctx, db)
 
 	// print some info
 	id := app.LastCommitID()
@@ -140,12 +143,12 @@ type GaiaApp struct {
 	slashingKeeper      slashing.Keeper
 }
 
-func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
+func NewGaiaApp(ctx *sdk.ServerContext, db dbm.DB) *GaiaApp {
 	cdc := MakeCodec()
 
 	// create your application object
 	var app = &GaiaApp{
-		BaseApp:     bam.NewBaseApp(appName, cdc, logger, db),
+		BaseApp:     bam.NewBaseApp(appName, cdc, ctx, db),
 		cdc:         cdc,
 		keyMain:     sdk.NewKVStoreKey("main"),
 		keyAccount:  sdk.NewKVStoreKey("acc"),

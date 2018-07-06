@@ -5,7 +5,6 @@ import (
 
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,12 +15,12 @@ const (
 	app1Name = "App1"
 )
 
-func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
+func NewApp1(ctx *sdk.ServerContext, db dbm.DB) *bapp.BaseApp {
 
 	cdc := wire.NewCodec()
 
 	// Create the base application object.
-	app := bapp.NewBaseApp(app1Name, cdc, logger, db)
+	app := bapp.NewBaseApp(app1Name, cdc, ctx, db)
 
 	// Create a key for accessing the account store.
 	keyAccount := sdk.NewKVStoreKey("acc")

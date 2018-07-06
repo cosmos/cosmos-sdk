@@ -276,7 +276,6 @@ func newHandleBurn(am auth.AccountMapper) sdk.Handler {
 		burnMsg := msg.(testBurnMsg)
 		err := addCoins(am, ctx, burnMsg.Addr, burnMsg.Amount.Negative())
 		if err != nil {
-			panic(err)
 			return err.Result()
 		}
 		return sdk.Result{}
@@ -294,7 +293,6 @@ func newHandleSpend(am auth.AccountMapper) sdk.Handler {
 
 		err = addCoins(am, ctx, spendMsg.Receiver, spendMsg.Amount)
 		if err != nil {
-			panic(err)
 			return err.Result()
 		}
 		return sdk.Result{}

@@ -81,8 +81,9 @@ IMPROVEMENTS
 * [stake] module reorganized to include `types` and `keeper` package
 * [stake] keeper always loads the store (instead passing around which doesn't really boost efficiency)
 * [stake] edit-validator changes now can use the keyword [do-not-modify] to not modify unspecified `--flag` (aka won't set them to `""` value)
-* [types] added common tag constants
 * [stake] offload more generic functionality from the handler into the keeper
+* [types] added common tag constants
+* [keys] improve error message when deleting non-existent key
 * added contributing guidelines
 
 BUG FIXES

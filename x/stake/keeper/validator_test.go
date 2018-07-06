@@ -708,6 +708,7 @@ func TestGetTendermintUpdatesPowerDecrease(t *testing.T) {
 	require.Equal(t, sdk.NewRat(80).RoundInt64(), validators[0].GetPower().RoundInt64())
 	require.Equal(t, sdk.NewRat(70).RoundInt64(), validators[1].GetPower().RoundInt64())
 
+	// Tendermint updates should reflect power change
 	updates := keeper.GetTendermintUpdates(ctx)
 	require.Equal(t, 2, len(updates))
 	require.Equal(t, validators[0].ABCIValidator(), updates[0])

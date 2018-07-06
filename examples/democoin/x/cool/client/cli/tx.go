@@ -35,7 +35,7 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 			name := viper.GetString(client.FlagName)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			err = ctx.EnsureSignBuildBroadcast(name, []sdk.Msg{msg}, cdc, viper.GetBool(client.FlagAsync), false)
+			err = ctx.EnsureSignBuildBroadcast(name, []sdk.Msg{msg}, cdc, ctx.Async, false)
 			if err != nil {
 				return err
 			}
@@ -67,7 +67,7 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 			msg := cool.NewMsgSetTrend(from, args[0])
 
 			// build and sign the transaction, then broadcast to Tendermint
-			err = ctx.EnsureSignBuildBroadcast(name, []sdk.Msg{msg}, cdc, viper.GetBool(client.FlagAsync), false)
+			err = ctx.EnsureSignBuildBroadcast(name, []sdk.Msg{msg}, cdc, ctx.Async, false)
 			if err != nil {
 				return err
 			}

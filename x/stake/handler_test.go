@@ -562,7 +562,7 @@ func TestTransitiveRedelegation(t *testing.T) {
 
 func TestCliffValidator(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
-	validatorAddr, validatorAddr2, validatorAddr3 := keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]
+	validatorAddr1, validatorAddr2, validatorAddr3 := keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]
 
 	// make sure that the cliff validator is nil to begin with
 	cliffVal := keeper.GetCliffValidator(ctx)
@@ -575,7 +575,7 @@ func TestCliffValidator(t *testing.T) {
 	keeper.SetParams(ctx, params)
 
 	// add the first validator
-	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, keep.PKs[0], 30)
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr1, keep.PKs[0], 50)
 	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
 
@@ -584,13 +584,13 @@ func TestCliffValidator(t *testing.T) {
 	require.Equal(t, []byte(nil), cliffVal)
 
 	// Add the second validator
-	msgCreateValidator = newTestMsgCreateValidator(validatorAddr2, keep.PKs[1], 50)
+	msgCreateValidator = newTestMsgCreateValidator(validatorAddr2, keep.PKs[1], 30)
 	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
 
-	// now that we've reached maximum validators, the val-1 should be added to the cliff (top)
+	// now that we've reached maximum validators, the val-2 should be added to the cliff (top)
 	cliffVal = keeper.GetCliffValidator(ctx)
-	require.Equal(t, validatorAddr2, cliffVal)
+	require.Equal(t, validatorAddr2.Bytes(), cliffVal)
 
 	// add the third validator, which should not make it to being bonded,
 	// so the cliff validator should not change because nobody has been kicked out
@@ -599,25 +599,28 @@ func TestCliffValidator(t *testing.T) {
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
 
 	cliffVal = keeper.GetCliffValidator(ctx)
-	require.Equal(t, validatorAddr2, sdk.Address(cliffVal))
+	require.Equal(t, validatorAddr2.Bytes(), cliffVal)
 
-	// unbond the first validator
-	msgBeginUnbonding := NewMsgBeginUnbonding(validatorAddr1, validatorAddr1, sdk.NewRat(30))
+	// unbond the second validator
+	msgBeginUnbonding := NewMsgBeginUnbonding(validatorAddr2, validatorAddr2, sdk.NewRat(30))
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgBeginUnbonding")
+
+	vals := keeper.GetValidatorsBonded(ctx)
+	require.Equal(t, 2, len(vals))
 
 	// now the validator set should be updated,
 	// where val-3 enters the validator set on the cliff
 	cliffVal = keeper.GetCliffValidator(ctx)
-	require.Equal(t, validatorAddr2, sdk.Address(cliffVal))
+	require.Equal(t, validatorAddr3.Bytes(), cliffVal)
 
 	// unbond the second validator
-	msgBeginUnbonding = NewMsgBeginUnbonding(validatorAddr2, validatorAddr2, sdk.NewRat(5))
+	msgBeginUnbonding = NewMsgBeginUnbonding(validatorAddr1, validatorAddr1, sdk.NewRat(5))
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgBeginUnbonding")
 
 	// get bonded validators - should just be one
-	vals := keeper.GetValidatorsBonded(ctx)
+	vals = keeper.GetValidatorsBonded(ctx)
 	require.Equal(t, 1, len(vals))
 
 	// cliff now should be empty

@@ -284,6 +284,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 // Optionally also return the validator from a retrieve address if the validator has been bonded
 func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 	newValidator types.Validator) (updatedVal types.Validator) {
+	fmt.Println("wackydebugoutput UpdateBondedValidators 0")
 
 	store := ctx.KVStore(k.storeKey)
 
@@ -296,14 +297,24 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 	bondedValidatorsCount := 0
 	var validator types.Validator
 	for {
+		fmt.Println("wackydebugoutput UpdateBondedValidators 1")
 		if !iterator.Valid() || bondedValidatorsCount > int(maxValidators-1) {
+			fmt.Println("wackydebugoutput UpdateBondedValidators 2")
 
+			fmt.Printf("debug bondedValidatorsCount: %v\n", bondedValidatorsCount)
+			fmt.Printf("debug maxValidators: %v\n", maxValidators)
 			// TODO benchmark if we should read the current power and not write if it's the same
 			if bondedValidatorsCount == int(maxValidators) { // is cliff validator
+				fmt.Println("wackydebugoutput UpdateBondedValidators 3")
 				k.setCliffValidator(ctx, validator, k.GetPool(ctx))
+			} else {
+				fmt.Println("wackydebugoutput UpdateBondedValidators 4")
+				k.clearCliffValidator(ctx)
 			}
+			fmt.Println("wackydebugoutput UpdateBondedValidators 5")
 			break
 		}
+		fmt.Println("wackydebugoutput UpdateBondedValidators 6")
 
 		// either retrieve the original validator from the store, or under the
 		// situation that this is the "new validator" just use the validator
@@ -311,44 +322,59 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 		// store
 		ownerAddr := iterator.Value()
 		if bytes.Equal(ownerAddr, newValidator.Owner) {
+			fmt.Println("wackydebugoutput UpdateBondedValidators 7")
 			validator = newValidator
 		} else {
+			fmt.Println("wackydebugoutput UpdateBondedValidators 8")
 			var found bool
 			validator, found = k.GetValidator(ctx, ownerAddr)
 			if !found {
+				fmt.Println("wackydebugoutput UpdateBondedValidators 9")
 				panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
 			}
+			fmt.Println("wackydebugoutput UpdateBondedValidators 10")
 		}
+		fmt.Println("wackydebugoutput UpdateBondedValidators 11")
 
 		// if not previously a validator (and unrevoked),
 		// kick the cliff validator / bond this new validator
 		if validator.Status() != sdk.Bonded && !validator.Revoked {
+			fmt.Println("wackydebugoutput UpdateBondedValidators 12")
 			kickCliffValidator = true
 
 			validator = k.bondValidator(ctx, validator)
 			if bytes.Equal(ownerAddr, newValidator.Owner) {
+				fmt.Println("wackydebugoutput UpdateBondedValidators 13")
 				updatedVal = validator
 			}
+			fmt.Println("wackydebugoutput UpdateBondedValidators 14")
 		}
+		fmt.Println("wackydebugoutput UpdateBondedValidators 15")
 
 		if validator.Revoked && validator.Status() == sdk.Bonded {
+			fmt.Println("wackydebugoutput UpdateBondedValidators 16")
 			panic(fmt.Sprintf("revoked validator cannot be bonded, address: %v\n", ownerAddr))
-		} else {
-			bondedValidatorsCount++
 		}
+		fmt.Println("wackydebugoutput UpdateBondedValidators 18")
+		bondedValidatorsCount++
 
 		iterator.Next()
 	}
+	fmt.Println("wackydebugoutput UpdateBondedValidators 19")
 	iterator.Close()
 
 	// perform the actual kicks
 	if oldCliffValidatorAddr != nil && kickCliffValidator {
+		fmt.Println("wackydebugoutput UpdateBondedValidators 20")
 		validator, found := k.GetValidator(ctx, oldCliffValidatorAddr)
 		if !found {
+			fmt.Println("wackydebugoutput UpdateBondedValidators 21")
 			panic(fmt.Sprintf("validator record not found for address: %v\n", oldCliffValidatorAddr))
 		}
+		fmt.Println("wackydebugoutput UpdateBondedValidators 22")
 		k.unbondValidator(ctx, validator)
 	}
+	fmt.Println("wackydebugoutput UpdateBondedValidators 23")
 
 	return
 }
@@ -405,10 +431,8 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 
 		if validator.Revoked && validator.Status() == sdk.Bonded {
 			panic(fmt.Sprintf("revoked validator cannot be bonded, address: %v\n", ownerAddr))
-		} else {
-			bondedValidatorsCount++
 		}
-
+		bondedValidatorsCount++
 		iterator.Next()
 	}
 	iterator.Close()

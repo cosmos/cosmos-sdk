@@ -224,25 +224,26 @@ func (ctx CoreContext) ensureSignBuild(name string, msgs []sdk.Msg, cdc *wire.Co
 }
 
 // sign and build the transaction from the msg
-func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
+func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc *wire.Codec, async bool, printResponse bool) (err error) {
 
 	txBytes, err := ctx.ensureSignBuild(name, msgs, cdc)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return ctx.BroadcastTx(txBytes)
-}
-
-// sign and build the async transaction from the msg
-func (ctx CoreContext) EnsureSignBuildBroadcastAsync(name string, msgs []sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTx, err error) {
-
-	txBytes, err := ctx.ensureSignBuild(name, msgs, cdc)
-	if err != nil {
-		return nil, err
+	if async {
+		res, err := ctx.BroadcastTxAsync(txBytes)
+		fmt.Println("Async tx sent. tx hash: ", res.Hash.String())
+		return err
 	}
+	res, err := ctx.BroadcastTx(txBytes)
+	if printResponse {
+		fmt.Printf("Committed at block %d. Hash: %s Response:%+v \n", res.Height, res.Hash.String(), res.DeliverTx)
+	} else {
 
-	return ctx.BroadcastTxAsync(txBytes)
+		fmt.Printf("Committed at block %d. Hash: %s \n", res.Height, res.Hash.String())
+	}
+	return err
 }
 
 // get the next sequence for the account address

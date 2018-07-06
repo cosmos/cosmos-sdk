@@ -1,11 +1,12 @@
 package cli
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/pow"
@@ -49,12 +50,11 @@ func MineCmd(cdc *wire.Codec) *cobra.Command {
 			name := ctx.FromAddressName
 
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := ctx.EnsureSignBuildBroadcast(name, []sdk.Msg{msg}, cdc)
+			err = ctx.EnsureSignBuildBroadcast(name, []sdk.Msg{msg}, cdc, viper.GetBool(client.FlagAsync), false)
 			if err != nil {
 				return err
 			}
 
-			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
 			return nil
 		},
 	}

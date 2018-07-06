@@ -375,8 +375,8 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 		bechDepositerAddr := r.URL.Query().Get(RestDepositer)
 
 		var err error
-		var voterAddr sdk.Address
-		var depositerAddr sdk.Address
+		var voterAddr sdk.AccAddress
+		var depositerAddr sdk.AccAddress
 
 		if len(bechVoterAddr) != 0 {
 			voterAddr, err = sdk.GetAccAddressBech32(bechVoterAddr)

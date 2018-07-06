@@ -209,7 +209,7 @@ func GetCmdQueryUnbondingDelegation(storeName string, cdc *wire.Codec) *cobra.Co
 				return err
 			}
 
-			delAddr, err := sdk.GetValAddressHex(viper.GetString(FlagAddressDelegator))
+			delAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}
@@ -302,7 +302,7 @@ func GetCmdQueryRedelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			delAddr, err := sdk.GetValAddressHex(viper.GetString(FlagAddressDelegator))
+			delAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}

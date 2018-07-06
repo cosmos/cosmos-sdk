@@ -30,7 +30,7 @@ func handleMsgUnrevoke(ctx sdk.Context, msg MsgUnrevoke, k Keeper) sdk.Result {
 		return ErrValidatorNotRevoked(k.codespace).Result()
 	}
 
-	addr := sdk.Address(validator.GetPubKey().Address())
+	addr := sdk.ValAddress(validator.GetPubKey().Address())
 
 	// Signing info must exist
 	info, found := k.getValidatorSigningInfo(ctx, addr)

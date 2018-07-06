@@ -376,22 +376,22 @@ var DefaultAppInit = AppInit{
 
 // simple genesis tx
 type SimpleGenTx struct {
-	Addr string `json:"addr"`
+	Addr sdk.AccAddress `json:"addr"`
 }
 
 // Generate a genesis transaction
 func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig serverconfig.GenTx) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
-	var bech32Addr string
+	var addr sdk.AccAddress
 	var secret string
-	bech32Addr, secret, err = GenerateCoinKey()
+	addr, secret, err = GenerateCoinKey()
 	if err != nil {
 		return
 	}
 
 	var bz []byte
-	simpleGenTx := SimpleGenTx{bech32Addr}
+	simpleGenTx := SimpleGenTx{addr}
 	bz, err = cdc.MarshalJSON(simpleGenTx)
 	if err != nil {
 		return
@@ -444,7 +444,7 @@ func SimpleAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState j
 
 // GenerateCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateCoinKey() (string, string, error) {
+func GenerateCoinKey() (sdk.AccAddress, string, error) {
 
 	// construct an in-memory key store
 	keybase := keys.New(
@@ -457,12 +457,12 @@ func GenerateCoinKey() (string, string, error) {
 		return "", "", err
 	}
 	addr := info.GetPubKey().Address()
-	return sdk.MustBech32ifyAcc(sdk.Address(addr)), secret, nil
+	return sdk.AccAddress(addr), secret, nil
 }
 
 // GenerateSaveCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (string, string, error) {
+func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (sdk.AccAddress, string, error) {
 
 	// get the keystore from the client
 	keybase, err := clkeys.GetKeyBaseFromDir(clientRoot)
@@ -484,5 +484,5 @@ func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (s
 		return "", "", err
 	}
 	addr := info.GetPubKey().Address()
-	return sdk.MustBech32ifyAcc(sdk.Address(addr)), secret, nil
+	return sdk.AccAddress(addr), secret, nil
 }

@@ -35,7 +35,7 @@ func TestIBCMsgs(t *testing.T) {
 	destChain := "dest-chain"
 
 	priv1 := crypto.GenPrivKeyEd25519()
-	addr1 := sdk.Address(priv1.PubKey().Address())
+	addr1 := sdk.AccAddress(priv1.PubKey().Address())
 	coins := sdk.Coins{sdk.NewCoin("foocoin", 10)}
 	var emptyCoins sdk.Coins
 

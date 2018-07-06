@@ -13,7 +13,7 @@ import (
 
 func TestStdTx(t *testing.T) {
 	priv := crypto.GenPrivKeyEd25519()
-	addr := priv.PubKey().Address()
+	addr := sdk.AccAddress(priv.PubKey().Address())
 	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
 	fee := newStdFee()
 	sigs := []StdSignature{}

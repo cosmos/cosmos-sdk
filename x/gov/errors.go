@@ -41,7 +41,7 @@ func ErrAlreadyFinishedProposal(codespace sdk.CodespaceType, proposalID int64) s
 	return sdk.NewError(codespace, CodeAlreadyFinishedProposal, fmt.Sprintf("Proposal %d has already passed its voting period", proposalID))
 }
 
-func ErrAddressNotStaked(codespace sdk.CodespaceType, address sdk.Address) sdk.Error {
+func ErrAddressNotStaked(codespace sdk.CodespaceType, address sdk.AccAddress) sdk.Error {
 	return sdk.NewError(codespace, CodeAddressNotStaked, fmt.Sprintf("Address %s is not staked and is thus ineligible to vote", address))
 }
 

@@ -15,24 +15,24 @@ import (
 
 // MsgMine - mine some coins with PoW
 type MsgMine struct {
-	Sender     sdk.Address `json:"sender"`
-	Difficulty uint64      `json:"difficulty"`
-	Count      uint64      `json:"count"`
-	Nonce      uint64      `json:"nonce"`
-	Proof      []byte      `json:"proof"`
+	Sender     sdk.AccAddress `json:"sender"`
+	Difficulty uint64         `json:"difficulty"`
+	Count      uint64         `json:"count"`
+	Nonce      uint64         `json:"nonce"`
+	Proof      []byte         `json:"proof"`
 }
 
 // enforce the msg type at compile time
 var _ sdk.Msg = MsgMine{}
 
 // NewMsgMine - construct mine message
-func NewMsgMine(sender sdk.Address, difficulty uint64, count uint64, nonce uint64, proof []byte) MsgMine {
+func NewMsgMine(sender sdk.AccAddress, difficulty uint64, count uint64, nonce uint64, proof []byte) MsgMine {
 	return MsgMine{sender, difficulty, count, nonce, proof}
 }
 
 // nolint
-func (msg MsgMine) Type() string              { return "pow" }
-func (msg MsgMine) GetSigners() []sdk.Address { return []sdk.Address{msg.Sender} }
+func (msg MsgMine) Type() string                 { return "pow" }
+func (msg MsgMine) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Sender} }
 func (msg MsgMine) String() string {
 	return fmt.Sprintf("MsgMine{Sender: %v, Difficulty: %d, Count: %d, Nonce: %d, Proof: %s}", msg.Sender, msg.Difficulty, msg.Count, msg.Nonce, msg.Proof)
 }

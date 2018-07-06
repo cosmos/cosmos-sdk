@@ -25,14 +25,14 @@ import (
 var (
 	Addrs       = createTestAddrs(100)
 	PKs         = createTestPubKeys(100)
-	emptyAddr   sdk.Address
+	emptyAddr   sdk.AccAddress
 	emptyPubkey crypto.PubKey
 
-	addrDels = []sdk.Address{
+	addrDels = []sdk.AccAddress{
 		Addrs[0],
 		Addrs[1],
 	}
-	addrVals = []sdk.Address{
+	addrVals = []sdk.AccAddress{
 		Addrs[2],
 		Addrs[3],
 		Addrs[4],
@@ -137,7 +137,7 @@ func NewPubKey(pk string) (res crypto.PubKey) {
 }
 
 // for incode address generation
-func TestAddr(addr string, bech string) sdk.Address {
+func TestAddr(addr string, bech string) sdk.AccAddress {
 
 	res, err := sdk.GetAccAddressHex(addr)
 	if err != nil {
@@ -160,8 +160,8 @@ func TestAddr(addr string, bech string) sdk.Address {
 }
 
 // nolint: unparam
-func createTestAddrs(numAddrs int) []sdk.Address {
-	var addresses []sdk.Address
+func createTestAddrs(numAddrs int) []sdk.AccAddress {
+	var addresses []sdk.AccAddress
 	var buffer bytes.Buffer
 
 	// start at 100 so we can make up to 999 test addresses with valid test addresses

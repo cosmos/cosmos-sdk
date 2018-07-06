@@ -18,16 +18,16 @@ const (
 
 // Vote
 type Vote struct {
-	Voter      sdk.Address `json:"voter"`       //  address of the voter
-	ProposalID int64       `json:"proposal_id"` //  proposalID of the proposal
-	Option     VoteOption  `json:"option"`      //  option from OptionSet chosen by the voter
+	Voter      sdk.AccAddress `json:"voter"`       //  address of the voter
+	ProposalID int64          `json:"proposal_id"` //  proposalID of the proposal
+	Option     VoteOption     `json:"option"`      //  option from OptionSet chosen by the voter
 }
 
 // Deposit
 type Deposit struct {
-	Depositer  sdk.Address `json:"depositer"`   //  Address of the depositer
-	ProposalID int64       `json:"proposal_id"` //  proposalID of the proposal
-	Amount     sdk.Coins   `json:"amount"`      //  Deposit amount
+	Depositer  sdk.AccAddress `json:"depositer"`   //  Address of the depositer
+	ProposalID int64          `json:"proposal_id"` //  proposalID of the proposal
+	Amount     sdk.Coins      `json:"amount"`      //  Deposit amount
 }
 
 // ProposalTypeToString for pretty prints of ProposalType
@@ -77,9 +77,9 @@ func StringToVoteOption(str string) (VoteOption, sdk.Error) {
 
 // Rest Deposits
 type DepositRest struct {
-	Depositer  sdk.Address `json:"depositer"`   //  address of the depositer
-	ProposalID int64       `json:"proposal_id"` //  proposalID of the proposal
-	Amount     sdk.Coins   `json:"option"`
+	Depositer  sdk.AccAddress `json:"depositer"`   //  address of the depositer
+	ProposalID int64          `json:"proposal_id"` //  proposalID of the proposal
+	Amount     sdk.Coins      `json:"option"`
 }
 
 // Turn any Deposit to a DepositRest
@@ -93,9 +93,9 @@ func DepositToRest(deposit Deposit) DepositRest {
 
 // Rest Votes
 type VoteRest struct {
-	Voter      sdk.Address `json:"voter"`       //  address of the voter
-	ProposalID int64       `json:"proposal_id"` //  proposalID of the proposal
-	Option     string      `json:"option"`
+	Voter      sdk.AccAddress `json:"voter"`       //  address of the voter
+	ProposalID int64          `json:"proposal_id"` //  proposalID of the proposal
+	Option     string         `json:"option"`
 }
 
 // Turn any Vote to a VoteRest

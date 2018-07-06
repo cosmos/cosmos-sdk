@@ -10,21 +10,21 @@ import (
 )
 
 func TestNewMsgMine(t *testing.T) {
-	addr := sdk.Address([]byte("sender"))
+	addr := sdk.AccAddress([]byte("sender"))
 	msg := MsgMine{addr, 0, 0, 0, []byte("")}
 	equiv := NewMsgMine(addr, 0, 0, 0, []byte(""))
 	require.Equal(t, msg, equiv, "%s != %s", msg, equiv)
 }
 
 func TestMsgMineType(t *testing.T) {
-	addr := sdk.Address([]byte("sender"))
+	addr := sdk.AccAddress([]byte("sender"))
 	msg := MsgMine{addr, 0, 0, 0, []byte("")}
 	require.Equal(t, msg.Type(), "pow")
 }
 
 func TestMsgMineValidation(t *testing.T) {
-	addr := sdk.Address([]byte("sender"))
-	otherAddr := sdk.Address([]byte("another"))
+	addr := sdk.AccAddress([]byte("sender"))
+	otherAddr := sdk.AccAddress([]byte("another"))
 	count := uint64(0)
 
 	for difficulty := uint64(1); difficulty < 1000; difficulty += 100 {
@@ -52,21 +52,21 @@ func TestMsgMineValidation(t *testing.T) {
 }
 
 func TestMsgMineString(t *testing.T) {
-	addr := sdk.Address([]byte("sender"))
+	addr := sdk.AccAddress([]byte("sender"))
 	msg := MsgMine{addr, 0, 0, 0, []byte("abc")}
 	res := msg.String()
 	require.Equal(t, res, "MsgMine{Sender: 73656E646572, Difficulty: 0, Count: 0, Nonce: 0, Proof: abc}")
 }
 
 func TestMsgMineGetSignBytes(t *testing.T) {
-	addr := sdk.Address([]byte("sender"))
+	addr := sdk.AccAddress([]byte("sender"))
 	msg := MsgMine{addr, 1, 1, 1, []byte("abc")}
 	res := msg.GetSignBytes()
 	require.Equal(t, string(res), `{"count":1,"difficulty":1,"nonce":1,"proof":"YWJj","sender":"73656E646572"}`)
 }
 
 func TestMsgMineGetSigners(t *testing.T) {
-	addr := sdk.Address([]byte("sender"))
+	addr := sdk.AccAddress([]byte("sender"))
 	msg := MsgMine{addr, 1, 1, 1, []byte("abc")}
 	res := msg.GetSigners()
 	require.Equal(t, fmt.Sprintf("%v", res), "[73656E646572]")

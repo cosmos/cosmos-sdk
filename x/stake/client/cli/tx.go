@@ -209,7 +209,7 @@ func GetCmdBeginRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
 }
 
 func getShares(storeName string, cdc *wire.Codec, sharesAmountStr, sharesPercentStr string,
-	delegatorAddr, validatorAddr sdk.Address) (sharesAmount sdk.Rat, err error) {
+	delegatorAddr, validatorAddr sdk.AccAddress) (sharesAmount sdk.Rat, err error) {
 
 	switch {
 	case sharesAmountStr != "" && sharesPercentStr != "":

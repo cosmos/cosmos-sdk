@@ -21,26 +21,45 @@ const (
 	Bech32PrefixValPub  = "cosmosvalpub"
 )
 
-// Address is a go crypto-style Address
-type Address []byte
+//__________________________________________________________
 
-func NewAddress(bech32String string) (Address, error) {
-	return GetAccAddressHex(bech32String)
+// AccAddress is a go crypto-style Address
+type AccAddress []byte
+
+// create an Address from a hex string
+func GetAccAddressHex(address string) (addr AccAddress, err error) {
+	if len(address) == 0 {
+		return addr, errors.New("decoding bech32 address failed: must provide an address")
+	}
+	bz, err := hex.DecodeString(address)
+	if err != nil {
+		return nil, err
+	}
+	return AccAddress(bz), nil
+}
+
+// create an Address from a bech32 string
+func GetAccAddressBech32(address string) (addr AccAddress, err error) {
+	bz, err := GetFromBech32(address, Bech32PrefixAccAddr)
+	if err != nil {
+		return nil, err
+	}
+	return AccAddress(bz), nil
 }
 
 // Marshal needed for protobuf compatibility
-func (bz Address) Marshal() ([]byte, error) {
+func (bz AccAddress) Marshal() ([]byte, error) {
 	return bz, nil
 }
 
 // Unmarshal needed for protobuf compatibility
-func (bz *Address) Unmarshal(data []byte) error {
+func (bz *AccAddress) Unmarshal(data []byte) error {
 	*bz = data
 	return nil
 }
 
 // Marshals to JSON using Bech32
-func (bz Address) MarshalJSON() ([]byte, error) {
+func (bz AccAddress) MarshalJSON() ([]byte, error) {
 	s := bz.String()
 	jbz := make([]byte, len(s)+2)
 	jbz[0] = '"'
@@ -50,12 +69,12 @@ func (bz Address) MarshalJSON() ([]byte, error) {
 }
 
 // Unmarshals from JSON assuming Bech32 encoding
-func (bz *Address) UnmarshalJSON(data []byte) error {
+func (bz *AccAddress) UnmarshalJSON(data []byte) error {
 	if len(data) < 2 || data[0] != '"' || data[len(data)-1] != '"' {
 		return fmt.Errorf("Invalid bech32 string: %s", data)
 	}
 
-	bz2, err := GetAccAddressHex(string(data[1 : len(data)-1]))
+	bz2, err := GetAccAddressBech32(string(data[1 : len(data)-1]))
 	if err != nil {
 		return err
 	}
@@ -64,11 +83,11 @@ func (bz *Address) UnmarshalJSON(data []byte) error {
 }
 
 // Allow it to fulfill various interfaces in light-client, etc...
-func (bz Address) Bytes() []byte {
+func (bz AccAddress) Bytes() []byte {
 	return bz
 }
 
-func (bz Address) String() string {
+func (bz AccAddress) String() string {
 	bech32Addr, err := bech32.ConvertAndEncode(Bech32PrefixAccAddr, bz.Bytes())
 	if err != nil {
 		panic(err)
@@ -77,7 +96,93 @@ func (bz Address) String() string {
 }
 
 // For Printf / Sprintf, returns bech32 when using %s
-func (bz Address) Format(s fmt.State, verb rune) {
+func (bz AccAddress) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 's':
+		s.Write([]byte(fmt.Sprintf("%s", bz.String())))
+	case 'p':
+		s.Write([]byte(fmt.Sprintf("%p", bz)))
+	default:
+		s.Write([]byte(fmt.Sprintf("%X", []byte(bz))))
+	}
+}
+
+//__________________________________________________________
+
+// Address is a go crypto-style Address
+type ValAddress []byte
+
+// create a ValAddress from a hex string
+func GetValAddressHex(address string) (addr ValAddress, err error) {
+	if len(address) == 0 {
+		return addr, errors.New("decoding bech32 address failed: must provide an address")
+	}
+	bz, err := hex.DecodeString(address)
+	if err != nil {
+		return nil, err
+	}
+	return ValAddress(bz), nil
+}
+
+// create a ValAddress from a bech32 string
+func GetValAddressBech32(address string) (addr ValAddress, err error) {
+	bz, err := GetFromBech32(address, Bech32PrefixValAddr)
+	if err != nil {
+		return nil, err
+	}
+	return ValAddress(bz), nil
+}
+
+// Marshal needed for protobuf compatibility
+func (bz ValAddress) Marshal() ([]byte, error) {
+	return bz, nil
+}
+
+// Unmarshal needed for protobuf compatibility
+func (bz *ValAddress) Unmarshal(data []byte) error {
+	*bz = data
+	return nil
+}
+
+// Marshals to JSON using Bech32
+func (bz ValAddress) MarshalJSON() ([]byte, error) {
+	s := bz.String()
+	jbz := make([]byte, len(s)+2)
+	jbz[0] = '"'
+	copy(jbz[1:], []byte(s))
+	jbz[len(jbz)-1] = '"'
+	return jbz, nil
+}
+
+// Unmarshals from JSON assuming Bech32 encoding
+func (bz *ValAddress) UnmarshalJSON(data []byte) error {
+	if len(data) < 2 || data[0] != '"' || data[len(data)-1] != '"' {
+		return fmt.Errorf("Invalid bech32 string: %s", data)
+	}
+
+	bz2, err := GetValAddressBech32(string(data[1 : len(data)-1]))
+	if err != nil {
+		return err
+	}
+	*bz = bz2
+	return nil
+}
+
+// Allow it to fulfill various interfaces in light-client, etc...
+func (bz ValAddress) Bytes() []byte {
+	return bz
+}
+
+func (bz ValAddress) String() string {
+	bech32Addr, err := bech32.ConvertAndEncode(Bech32PrefixValAddr, bz.Bytes())
+	if err != nil {
+		panic(err)
+	}
+	return bech32Addr
+}
+
+// For Printf / Sprintf, returns bech32 when using %s
+func (bz ValAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
 		s.Write([]byte(fmt.Sprintf("%s", bz.String())))
@@ -102,20 +207,6 @@ func MustBech32ifyAccPub(pub crypto.PubKey) string {
 	return enc
 }
 
-// Bech32ifyVal returns the bech32 encoded string for a validator address
-func Bech32ifyVal(bz []byte) (string, error) {
-	return bech32.ConvertAndEncode(Bech32PrefixValAddr, bz)
-}
-
-// MustBech32ifyVal panics on bech32-encoding failure
-func MustBech32ifyVal(bz []byte) string {
-	enc, err := Bech32ifyVal(bz)
-	if err != nil {
-		panic(err)
-	}
-	return enc
-}
-
 // Bech32ifyValPub returns the bech32 encoded string for a validator pubkey
 func Bech32ifyValPub(pub crypto.PubKey) (string, error) {
 	return bech32.ConvertAndEncode(Bech32PrefixValPub, pub.Bytes())
@@ -128,36 +219,6 @@ func MustBech32ifyValPub(pub crypto.PubKey) string {
 		panic(err)
 	}
 	return enc
-}
-
-// create an Address from a string
-func GetAccAddressHex(address string) (addr Address, err error) {
-	if len(address) == 0 {
-		return addr, errors.New("decoding bech32 address failed: must provide an address")
-	}
-	bz, err := hex.DecodeString(address)
-	if err != nil {
-		return nil, err
-	}
-	return Address(bz), nil
-}
-
-// create an Address from a string
-func GetAccAddressBech32(address string) (addr Address, err error) {
-	bz, err := GetFromBech32(address, Bech32PrefixAccAddr)
-	if err != nil {
-		return nil, err
-	}
-	return Address(bz), nil
-}
-
-// create an Address from a string, panics on error
-func MustGetAccAddressBech32(address string) (addr Address) {
-	addr, err := GetAccAddressBech32(address)
-	if err != nil {
-		panic(err)
-	}
-	return addr
 }
 
 // create a Pubkey from a string
@@ -182,36 +243,6 @@ func MustGetAccPubKeyBech32(address string) (pk crypto.PubKey) {
 		panic(err)
 	}
 	return pk
-}
-
-// create an Address from a hex string
-func GetValAddressHex(address string) (addr Address, err error) {
-	if len(address) == 0 {
-		return addr, errors.New("decoding bech32 address failed: must provide an address")
-	}
-	bz, err := hex.DecodeString(address)
-	if err != nil {
-		return nil, err
-	}
-	return Address(bz), nil
-}
-
-// create an Address from a bech32 string
-func GetValAddressBech32(address string) (addr Address, err error) {
-	bz, err := GetFromBech32(address, Bech32PrefixValAddr)
-	if err != nil {
-		return nil, err
-	}
-	return Address(bz), nil
-}
-
-// create an Address from a string, panics on error
-func MustGetValAddressBech32(address string) (addr Address) {
-	addr, err := GetValAddressBech32(address)
-	if err != nil {
-		panic(err)
-	}
-	return addr
 }
 
 // decode a validator public key into a PubKey

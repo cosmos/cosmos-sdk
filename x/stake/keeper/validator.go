@@ -12,7 +12,7 @@ import (
 )
 
 // get a single validator
-func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.Address) (validator types.Validator, found bool) {
+func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.AccAddress) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	value := store.Get(GetValidatorKey(addr))
 	if value == nil {
@@ -487,7 +487,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 }
 
 // remove the validator record and associated indexes
-func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.Address) {
+func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.AccAddress) {
 
 	// first retrieve the old validator record
 	validator, found := k.GetValidator(ctx, address)

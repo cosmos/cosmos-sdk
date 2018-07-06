@@ -23,9 +23,9 @@ const doNotModifyDescVal = "[do-not-modify]"
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
 type Validator struct {
-	Owner   sdk.Address   `json:"owner"`   // sender of BondTx - UnbondTx returns here
-	PubKey  crypto.PubKey `json:"pub_key"` // pubkey of validator
-	Revoked bool          `json:"revoked"` // has the validator been revoked from bonded status?
+	Owner   sdk.AccAddress `json:"owner"`   // sender of BondTx - UnbondTx returns here
+	PubKey  crypto.PubKey  `json:"pub_key"` // pubkey of validator
+	Revoked bool           `json:"revoked"` // has the validator been revoked from bonded status?
 
 	PoolShares      PoolShares `json:"pool_shares"`      // total shares for tokens held in the pool
 	DelegatorShares sdk.Rat    `json:"delegator_shares"` // total shares issued to a validator's delegators
@@ -45,7 +45,7 @@ type Validator struct {
 }
 
 // NewValidator - initialize a new validator
-func NewValidator(owner sdk.Address, pubKey crypto.PubKey, description Description) Validator {
+func NewValidator(owner sdk.AccAddress, pubKey crypto.PubKey, description Description) Validator {
 	return Validator{
 		Owner:                 owner,
 		PubKey:                pubKey,
@@ -384,7 +384,7 @@ var _ sdk.Validator = Validator{}
 func (v Validator) GetRevoked() bool            { return v.Revoked }
 func (v Validator) GetMoniker() string          { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus   { return v.Status() }
-func (v Validator) GetOwner() sdk.Address       { return v.Owner }
+func (v Validator) GetOwner() sdk.AccAddress    { return v.Owner }
 func (v Validator) GetPubKey() crypto.PubKey    { return v.PubKey }
 func (v Validator) GetPower() sdk.Rat           { return v.PoolShares.Bonded() }
 func (v Validator) GetDelegatorShares() sdk.Rat { return v.DelegatorShares }

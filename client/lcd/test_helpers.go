@@ -80,19 +80,19 @@ func GetKB(t *testing.T) crkeys.Keybase {
 }
 
 // add an address to the store return name and password
-func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (addr sdk.Address, seed string) {
+func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (addr sdk.AccAddress, seed string) {
 	var info crkeys.Info
 	var err error
 	info, seed, err = kb.CreateMnemonic(name, crkeys.English, password, crkeys.Secp256k1)
 	require.NoError(t, err)
-	addr = sdk.Address(info.GetPubKey().Address())
+	addr = sdk.AccAddress(info.GetPubKey().Address())
 	return
 }
 
 // strt TM and the LCD in process, listening on their respective sockets
 //   nValidators = number of validators
 //   initAddrs = accounts to initialize with some steaks
-func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (cleanup func(), validatorsPKs []crypto.PubKey, port string) {
+func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress) (cleanup func(), validatorsPKs []crypto.PubKey, port string) {
 
 	config := GetConfig()
 	config.Consensus.TimeoutCommit = 100
@@ -132,7 +132,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 	for _, gdValidator := range genDoc.Validators {
 		pk := gdValidator.PubKey
 		validatorsPKs = append(validatorsPKs, pk) // append keys for output
-		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, sdk.Address(pk.Address()), "test_val1")
+		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, sdk.AccAddress(pk.Address()), "test_val1")
 		require.NoError(t, err)
 		appGenTxs = append(appGenTxs, appGenTx)
 	}

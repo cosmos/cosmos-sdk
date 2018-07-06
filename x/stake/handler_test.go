@@ -14,7 +14,7 @@ import (
 
 //______________________________________________________________________
 
-func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt int64) MsgCreateValidator {
+func newTestMsgCreateValidator(address sdk.AccAddress, pubKey crypto.PubKey, amt int64) MsgCreateValidator {
 	return MsgCreateValidator{
 		Description:    Description{},
 		ValidatorAddr:  address,
@@ -23,7 +23,7 @@ func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt in
 	}
 }
 
-func newTestMsgDelegate(delegatorAddr, validatorAddr sdk.Address, amt int64) MsgDelegate {
+func newTestMsgDelegate(delegatorAddr, validatorAddr sdk.AccAddress, amt int64) MsgDelegate {
 	return MsgDelegate{
 		DelegatorAddr: delegatorAddr,
 		ValidatorAddr: validatorAddr,
@@ -307,7 +307,7 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 	ctx, accMapper, keeper := keep.CreateTestInput(t, false, initBond)
 	params := setInstantUnbondPeriod(keeper, ctx)
 
-	validatorAddrs := []sdk.Address{keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]}
+	validatorAddrs := []sdk.AccAddress{keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]}
 
 	// bond them all
 	for i, validatorAddr := range validatorAddrs {

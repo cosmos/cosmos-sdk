@@ -34,7 +34,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, infracti
 	logger := ctx.Logger().With("module", "x/slashing")
 	time := ctx.BlockHeader().Time
 	age := time - timestamp
-	address := sdk.Address(pubkey.Address())
+	address := sdk.ValAddress(pubkey.Address())
 
 	// Double sign too old
 	if age > MaxEvidenceAge {
@@ -64,7 +64,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, infracti
 func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, power int64, signed bool) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	height := ctx.BlockHeight()
-	address := sdk.Address(pubkey.Address())
+	address := sdk.ValAddress(pubkey.Address())
 
 	// Local index, so counts blocks validator *should* have signed
 	// Will use the 0-value default signing info if not present, except for start height

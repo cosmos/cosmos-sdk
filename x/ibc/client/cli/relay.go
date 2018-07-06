@@ -27,7 +27,7 @@ const (
 
 type relayCommander struct {
 	cdc       *wire.Codec
-	address   sdk.Address
+	address   sdk.AccAddress
 	decoder   auth.AccountDecoder
 	mainStore string
 	ibcStore  string

@@ -76,8 +76,8 @@ func (msg MsgSend) GetSignBytes() []byte {
 }
 
 // Implements Msg.
-func (msg MsgSend) GetSigners() []sdk.Address {
-	addrs := make([]sdk.Address, len(msg.Inputs))
+func (msg MsgSend) GetSigners() []sdk.AccAddress {
+	addrs := make([]sdk.AccAddress, len(msg.Inputs))
 	for i, in := range msg.Inputs {
 		addrs[i] = in.Address
 	}
@@ -89,14 +89,14 @@ func (msg MsgSend) GetSigners() []sdk.Address {
 
 // MsgIssue - high level transaction of the coin module
 type MsgIssue struct {
-	Banker  sdk.Address `json:"banker"`
-	Outputs []Output    `json:"outputs"`
+	Banker  sdk.AccAddress `json:"banker"`
+	Outputs []Output       `json:"outputs"`
 }
 
 var _ sdk.Msg = MsgIssue{}
 
 // NewMsgIssue - construct arbitrary multi-in, multi-out send msg.
-func NewMsgIssue(banker sdk.Address, out []Output) MsgIssue {
+func NewMsgIssue(banker sdk.AccAddress, out []Output) MsgIssue {
 	return MsgIssue{Banker: banker, Outputs: out}
 }
 
@@ -124,7 +124,7 @@ func (msg MsgIssue) GetSignBytes() []byte {
 		outputs = append(outputs, output.GetSignBytes())
 	}
 	b, err := msgCdc.MarshalJSON(struct {
-		Banker  sdk.Address       `json:"banker"`
+		Banker  sdk.AccAddress    `json:"banker"`
 		Outputs []json.RawMessage `json:"outputs"`
 	}{
 		Banker:  msg.Banker,
@@ -137,8 +137,8 @@ func (msg MsgIssue) GetSignBytes() []byte {
 }
 
 // Implements Msg.
-func (msg MsgIssue) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.Banker}
+func (msg MsgIssue) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Banker}
 }
 
 //----------------------------------------
@@ -146,8 +146,8 @@ func (msg MsgIssue) GetSigners() []sdk.Address {
 
 // Transaction Input
 type Input struct {
-	Address sdk.Address `json:"address"`
-	Coins   sdk.Coins   `json:"coins"`
+	Address sdk.AccAddress `json:"address"`
+	Coins   sdk.Coins      `json:"coins"`
 }
 
 // Return bytes to sign for Input
@@ -174,7 +174,7 @@ func (in Input) ValidateBasic() sdk.Error {
 }
 
 // NewInput - create a transaction input, used with MsgSend
-func NewInput(addr sdk.Address, coins sdk.Coins) Input {
+func NewInput(addr sdk.AccAddress, coins sdk.Coins) Input {
 	input := Input{
 		Address: addr,
 		Coins:   coins,
@@ -187,8 +187,8 @@ func NewInput(addr sdk.Address, coins sdk.Coins) Input {
 
 // Transaction Output
 type Output struct {
-	Address sdk.Address `json:"address"`
-	Coins   sdk.Coins   `json:"coins"`
+	Address sdk.AccAddress `json:"address"`
+	Coins   sdk.Coins      `json:"coins"`
 }
 
 // Return bytes to sign for Output
@@ -215,7 +215,7 @@ func (out Output) ValidateBasic() sdk.Error {
 }
 
 // NewOutput - create a transaction output, used with MsgSend
-func NewOutput(addr sdk.Address, coins sdk.Coins) Output {
+func NewOutput(addr sdk.AccAddress, coins sdk.Coins) Output {
 	output := Output{
 		Address: addr,
 		Coins:   coins,

@@ -89,11 +89,11 @@ func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.Respo
 }
 
 // Generate genesis accounts loaded with coins, and returns their addresses, pubkeys, and privkeys
-func CreateGenAccounts(numAccs int64, genCoins sdk.Coins) (genAccs []auth.Account, addrs []sdk.Address, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
+func CreateGenAccounts(numAccs int64, genCoins sdk.Coins) (genAccs []auth.Account, addrs []sdk.AccAddress, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
 	for i := int64(0); i < numAccs; i++ {
 		privKey := crypto.GenPrivKeyEd25519()
 		pubKey := privKey.PubKey()
-		addr := sdk.Address(pubKey.Address())
+		addr := sdk.AccAddress(pubKey.Address())
 
 		genAcc := &auth.BaseAccount{
 			Address: addr,

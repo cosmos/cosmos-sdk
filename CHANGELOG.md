@@ -41,6 +41,9 @@ BREAKING CHANGES
 * [lcd] Switch key creation output to return bech32
 * [x/stake] store-value for delegation, validator, ubd, and red do not hold duplicate information contained store-key
 
+DEPRECATED
+* [cli] Deprecate `--name` flag in commands that send txs, in favor of `--from`
+
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
 * [lcd] Queried TXs now include the tx hash to identify each tx

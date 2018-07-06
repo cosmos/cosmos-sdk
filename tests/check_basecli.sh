@@ -36,7 +36,7 @@ echo; echo "Empty account:" $TO
 ./build/basecli account $TO
 
 # send some money
-TX=`echo $PASS | ./build/basecli send --to=$TO --amount=1000mycoin --name=demo --seq=0`
+TX=`echo $PASS | ./build/basecli send --to=$TO --amount=1000mycoin --from=demo --seq=0`
 echo; echo "SendTx"; echo $TX
 HASH=`echo $TX | cut -d' ' -f6`
 echo "tx hash:" $HASH

@@ -220,7 +220,7 @@ gaiacli stake create-validator \
   --address-validator=<account_cosmosaccaddr>
   --moniker="choose a moniker" \
   --chain-id=gaia-6002 \
-  --name=<key_name>
+  --from=<key_name>
 ```
 
 ### Edit Validator Description
@@ -237,7 +237,7 @@ gaiacli stake edit-validator
   --keybase-sig="6A0D65E29A4CBC8E"
   --details="To infinity and beyond!"
   --chain-id=gaia-6002 \
-  --name=<key_name>
+  --from=<key_name>
 ```
 
 ### View Validator Description
@@ -272,7 +272,7 @@ gaiad start
 Wait for your full node to catch up to the latest block. Next, run the following command. Note that `<cosmosaccaddr>` is the address of your validator account, and `<name>` is the name of the validator account. You can find this info by running `gaiacli keys list`.
 
 ```bash
-gaiacli stake unrevoke <cosmosaccaddr> --chain-id=gaia-6002 --name=<name>
+gaiacli stake unrevoke <cosmosaccaddr> --chain-id=gaia-6002 --from=<name>
 ```
 
 **WARNING:** If you don't wait for `gaiad` to sync before running `unrevoke`, you will receive an error message telling you your validator is still jailed.
@@ -321,7 +321,7 @@ gaiacli stake delegate \
   --amount=10steak \
   --address-delegator=<account_cosmosaccaddr> \
   --address-validator=<validator_cosmosaccaddr> \
-  --name=<key_name> \
+  --from=<key_name> \
   --chain-id=gaia-6002
 ```
 
@@ -338,7 +338,7 @@ gaiacli stake unbond \
   --address-delegator=<account_cosmosaccaddr> \
   --address-validator=<validator_cosmosaccaddr> \
   --shares=MAX \
-  --name=<key_name> \
+  --from=<key_name> \
   --chain-id=gaia-6002
 ```
 
@@ -361,7 +361,7 @@ gaiacli stake delegation \
 gaiacli send \
   --amount=10faucetToken \
   --chain-id=gaia-6002 \
-  --name=<key_name> \
+  --from=<key_name> \
   --to=<destination_cosmosaccaddr>
 ```
 

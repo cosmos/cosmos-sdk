@@ -78,7 +78,7 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 				if err != nil {
 					return err
 				}
-				fmt.Println("Async tx sent. tx hash: ", res.Hash.String())
+				fmt.Printf("Async tx sent. tx hash: %s\n", res.Hash.String())
 				return nil
 			}
 			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)

@@ -25,14 +25,19 @@ func deleteKeyCommand() *cobra.Command {
 func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	buf := client.BufferStdin()
-	oldpass, err := client.GetPassword(
-		"DANGER - enter password to permanently delete key:", buf)
+	kb, err := GetKeyBase()
 	if err != nil {
 		return err
 	}
 
-	kb, err := GetKeyBase()
+	_, err = kb.Get(name)
+	if err != nil {
+		return err
+	}
+
+	buf := client.BufferStdin()
+	oldpass, err := client.GetPassword(
+		"DANGER - enter password to permanently delete key:", buf)
 	if err != nil {
 		return err
 	}

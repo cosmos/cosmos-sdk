@@ -5,6 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"math/rand"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/mock"
@@ -81,17 +83,19 @@ func getMockApp(t *testing.T) *mock.App {
 	return mapp
 }
 
-// getBenchmarkMockApp initializes a mock application for this module, for purposes of benchmarking
-// Any long term API support commitments do not apply to this function.
-func getBenchmarkMockApp() (*mock.App, error) {
-	mapp := mock.NewApp()
+func TestBankWithRandomMessages(t *testing.T) {
+	mapp := getMockApp(t)
+	setup := func(r *rand.Rand, keys []crypto.PrivKey) {
+		return
+	}
 
-	RegisterWire(mapp.Cdc)
-	coinKeeper := NewKeeper(mapp.AccountMapper)
-	mapp.Router().AddRoute("bank", NewHandler(coinKeeper))
-
-	err := mapp.CompleteSetup([]*sdk.KVStoreKey{})
-	return mapp, err
+	mapp.RandomizedTesting(
+		t,
+		[]mock.TestAndRunTx{TestAndRunSingleInputMsgSend},
+		[]mock.RandSetup{setup},
+		[]mock.Invariant{ModuleInvariants},
+		100, 30, 30,
+	)
 }
 
 func TestMsgSendWithAccounts(t *testing.T) {

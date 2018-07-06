@@ -74,6 +74,9 @@ FEATURES
 * [gaiacli] Ledger support added
   - You can now use a Ledger with `gaiacli --ledger` for all key-related commands
   - Ledger keys can be named and tracked locally in the key DB
+* [testing] created a randomized testing framework. 
+  - Currently bank has limited functionality in the framework
+  - Auth has its invariants checked within the framework
 * [gaiacli] added the following flags for commands that post transactions to the chain:
   * async -- send the tx without waiting for a tendermint response
   * json  -- return the output in json format for increased readability

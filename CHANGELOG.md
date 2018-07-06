@@ -75,7 +75,7 @@ FEATURES
   - You can now use a Ledger with `gaiacli --ledger` for all key-related commands
   - Ledger keys can be named and tracked locally in the key DB
 * [gaiacli] added an --async flag to the cli to deliver transactions without waiting for a tendermint response
-* [gaiacli] improve error messages on `send` and `account` commands
+* [gaiacli] added a --json flag to the cli for deliver transactions
 
 IMPROVEMENTS
 * bank module uses go-wire codec instead of 'encoding/json'
@@ -87,6 +87,7 @@ IMPROVEMENTS
 * [stake] offload more generic functionality from the handler into the keeper
 * [types] added common tag constants
 * [keys] improve error message when deleting non-existent key
+* [gaiacli] improve error messages on `send` and `account` commands
 * added contributing guidelines
 
 BUG FIXES

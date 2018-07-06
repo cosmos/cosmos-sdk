@@ -233,17 +233,52 @@ func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc
 
 	if ctx.Async {
 		res, err := ctx.BroadcastTxAsync(txBytes)
-		fmt.Println("Async tx sent. tx hash: ", res.Hash.String())
-		return err
+		if err != nil {
+			return err
+		}
+		if ctx.JSON {
+			type toJSON struct {
+				TxHash string
+			}
+			valueToJSON := toJSON{res.Hash.String()}
+			JSON, err := cdc.MarshalJSON(valueToJSON)
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(JSON))
+		} else {
+			fmt.Println("Async tx sent. tx hash: ", res.Hash.String())
+		}
+		return nil
 	}
 	res, err := ctx.BroadcastTx(txBytes)
+	if err != nil {
+		return err
+	}
+	if ctx.JSON {
+		type toJSON struct {
+			Height   int64
+			TxHash   string
+			Response string
+		}
+		valueToJSON := toJSON{res.Height, res.Hash.String(), ""}
+		if printResponse {
+			valueToJSON.Response = fmt.Sprintf("%+v", res.DeliverTx)
+		}
+		JSON, err := cdc.MarshalJSON(valueToJSON)
+		if err != nil {
+			return err
+		}
+		fmt.Println(string(JSON))
+		return nil
+	}
 	if printResponse {
 		fmt.Printf("Committed at block %d. Hash: %s Response:%+v \n", res.Height, res.Hash.String(), res.DeliverTx)
 	} else {
 
 		fmt.Printf("Committed at block %d. Hash: %s \n", res.Height, res.Hash.String())
 	}
-	return err
+	return nil
 }
 
 // get the next sequence for the account address

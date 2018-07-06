@@ -3,7 +3,6 @@ package baseapp
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,7 +12,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,16 +20,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-func defaultLogger() log.Logger {
-	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
+func defaultContext() *sdk.ServerContext {
+	ctx := sdk.NewDefaultServerContext()
+	ctx.Logger = ctx.Logger.With("module", "sdk/app")
+	return ctx
 }
 
 func newBaseApp(name string) *BaseApp {
-	logger := defaultLogger()
+	ctx := defaultContext()
 	db := dbm.NewMemDB()
 	codec := wire.NewCodec()
 	auth.RegisterBaseAccount(codec)
-	return NewBaseApp(name, codec, logger, db)
+	return NewBaseApp(name, codec, ctx, db)
 }
 
 func TestMountStores(t *testing.T) {
@@ -62,10 +62,10 @@ func TestMountStores(t *testing.T) {
 // Test that we can make commits and then reload old versions.
 // Test that LoadLatestVersion actually does.
 func TestLoadVersion(t *testing.T) {
-	logger := defaultLogger()
+	ctx := defaultContext()
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, nil, logger, db)
+	app := NewBaseApp(name, nil, ctx, db)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
@@ -91,7 +91,7 @@ func TestLoadVersion(t *testing.T) {
 	commitID2 := sdk.CommitID{2, res.Data}
 
 	// reload with LoadLatestVersion
-	app = NewBaseApp(name, nil, logger, db)
+	app = NewBaseApp(name, nil, ctx, db)
 	app.MountStoresIAVL(capKey)
 	err = app.LoadLatestVersion(capKey)
 	require.Nil(t, err)
@@ -99,7 +99,7 @@ func TestLoadVersion(t *testing.T) {
 
 	// reload with LoadVersion, see if you can commit the same block and get
 	// the same result
-	app = NewBaseApp(name, nil, logger, db)
+	app = NewBaseApp(name, nil, ctx, db)
 	app.MountStoresIAVL(capKey)
 	err = app.LoadVersion(1, capKey)
 	require.Nil(t, err)
@@ -170,8 +170,8 @@ func TestInfo(t *testing.T) {
 func TestInitChainer(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	logger := defaultLogger()
-	app := NewBaseApp(name, nil, logger, db)
+	ctx := defaultContext()
+	app := NewBaseApp(name, nil, ctx, db)
 	// make cap keys and mount the stores
 	// NOTE/TODO: mounting multiple stores is broken
 	// see https://github.com/cosmos/cosmos-sdk/issues/532
@@ -216,7 +216,7 @@ func TestInitChainer(t *testing.T) {
 	require.Equal(t, value, res.Value)
 
 	// reload app
-	app = NewBaseApp(name, nil, logger, db)
+	app = NewBaseApp(name, nil, ctx, db)
 	app.MountStoresIAVL(capKey, capKey2)
 	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	require.Nil(t, err)
@@ -437,9 +437,9 @@ func TestRunInvalidTransaction(t *testing.T) {
 
 // Test that transactions exceeding gas limits fail
 func TestTxGasLimits(t *testing.T) {
-	logger := defaultLogger()
+	ctx := defaultContext()
 	db := dbm.NewMemDB()
-	app := NewBaseApp(t.Name(), nil, logger, db)
+	app := NewBaseApp(t.Name(), nil, ctx, db)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")

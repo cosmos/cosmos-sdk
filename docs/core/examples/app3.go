@@ -3,7 +3,6 @@ package app
 import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,13 +14,13 @@ const (
 	app3Name = "App3"
 )
 
-func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
+func NewApp3(ctx *sdk.ServerContext, db dbm.DB) *bapp.BaseApp {
 
 	// Create the codec with registered Msg types
 	cdc := NewCodec()
 
 	// Create the base application object.
-	app := bapp.NewBaseApp(app3Name, cdc, logger, db)
+	app := bapp.NewBaseApp(app3Name, cdc, ctx, db)
 
 	// Create a key for accessing the account store.
 	keyAccount := sdk.NewKVStoreKey("acc")

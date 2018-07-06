@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -38,8 +39,10 @@ func setGenesis(baseApp *BasecoinApp, accounts ...*types.AppAccount) (types.Gene
 
 func TestGenesis(t *testing.T) {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
+	config := cfg.DefaultConfig()
+	sctx := sdk.NewServerContext(config, logger)
 	db := dbm.NewMemDB()
-	baseApp := NewBasecoinApp(logger, db)
+	baseApp := NewBasecoinApp(sctx, db)
 
 	// construct a pubkey and an address for the test account
 	pubkey := crypto.GenPrivKeyEd25519().PubKey()
@@ -65,7 +68,7 @@ func TestGenesis(t *testing.T) {
 	require.Equal(t, appAcct, res)
 
 	// reload app and ensure the account is still there
-	baseApp = NewBasecoinApp(logger, db)
+	baseApp = NewBasecoinApp(sctx, db)
 
 	stateBytes, err := wire.MarshalJSONIndent(baseApp.cdc, genState)
 	require.Nil(t, err)

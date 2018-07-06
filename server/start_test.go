@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/server/mock"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
@@ -25,7 +26,7 @@ func TestStartStandAlone(t *testing.T) {
 	logger := log.NewNopLogger()
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
-	ctx := NewContext(cfg, logger)
+	ctx := sdk.NewServerContext(cfg, logger)
 	cdc := wire.NewCodec()
 	appInit := AppInit{
 		AppGenState: mock.AppGenState,
@@ -35,7 +36,7 @@ func TestStartStandAlone(t *testing.T) {
 	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 
-	app, err := mock.NewApp(home, logger)
+	app, err := mock.NewApp(home, ctx)
 	require.Nil(t, err)
 	svrAddr, _, err := FreeTCPAddr()
 	require.Nil(t, err)

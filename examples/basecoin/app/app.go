@@ -13,7 +13,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -46,14 +45,14 @@ type BasecoinApp struct {
 // In addition, all necessary mappers and keepers are created, routes
 // registered, and finally the stores being mounted along with any necessary
 // chain initialization.
-func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
+func NewBasecoinApp(ctx *sdk.ServerContext, db dbm.DB) *BasecoinApp {
 	// create and register app-level codec for TXs and accounts
 	cdc := MakeCodec()
 
 	// create your application type
 	var app = &BasecoinApp{
 		cdc:        cdc,
-		BaseApp:    bam.NewBaseApp(appName, cdc, logger, db),
+		BaseApp:    bam.NewBaseApp(appName, cdc, ctx, db),
 		keyMain:    sdk.NewKVStoreKey("main"),
 		keyAccount: sdk.NewKVStoreKey("acc"),
 		keyIBC:     sdk.NewKVStoreKey("ibc"),

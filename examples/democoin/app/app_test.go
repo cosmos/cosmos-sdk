@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -42,8 +43,10 @@ func setGenesis(bapp *DemocoinApp, trend string, accs ...auth.BaseAccount) error
 
 func TestGenesis(t *testing.T) {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
+	config := cfg.DefaultConfig()
+	sctx := sdk.NewServerContext(config, logger)
 	db := dbm.NewMemDB()
-	bapp := NewDemocoinApp(logger, db)
+	bapp := NewDemocoinApp(sctx, db)
 
 	// Construct some genesis bytes to reflect democoin/types/AppAccount
 	pk := crypto.GenPrivKeyEd25519().PubKey()
@@ -64,7 +67,7 @@ func TestGenesis(t *testing.T) {
 	require.Equal(t, acc, res1)
 
 	// reload app and ensure the account is still there
-	bapp = NewDemocoinApp(logger, db)
+	bapp = NewDemocoinApp(sctx, db)
 	bapp.InitChain(abci.RequestInitChain{AppStateBytes: []byte("{}")})
 	ctx = bapp.BaseApp.NewContext(true, abci.Header{})
 	res1 = bapp.accountMapper.GetAccount(ctx, baseAcc.Address)

@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/tendermint/abci/server"
+	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
@@ -20,6 +21,8 @@ import (
 func main() {
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "main")
+	config := cfg.DefaultConfig()
+	ctx := sdk.NewServerContext(config, logger)
 
 	rootDir := viper.GetString(cli.HomeFlag)
 	db, err := dbm.NewGoLevelDB("basecoind", filepath.Join(rootDir, "data"))
@@ -32,7 +35,7 @@ func main() {
 	var capKeyMainStore = sdk.NewKVStoreKey("main")
 
 	// Create BaseApp.
-	var baseApp = bam.NewBaseApp("kvstore", nil, logger, db)
+	var baseApp = bam.NewBaseApp("kvstore", nil, ctx, db)
 
 	// Set mounts for BaseApp's MultiStore.
 	baseApp.MountStoresIAVL(capKeyMainStore)

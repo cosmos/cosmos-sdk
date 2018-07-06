@@ -5,7 +5,9 @@ import (
 	"io/ioutil"
 	"os"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/log"
 )
 
@@ -14,6 +16,8 @@ import (
 func SetupApp() (abci.Application, func(), error) {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
 		With("module", "mock")
+	config := cfg.DefaultConfig()
+	ctx := sdk.NewServerContext(config, logger)
 	rootDir, err := ioutil.TempDir("", "mock-sdk")
 	if err != nil {
 		return nil, nil, err
@@ -26,6 +30,6 @@ func SetupApp() (abci.Application, func(), error) {
 		}
 	}
 
-	app, err := NewApp(rootDir, logger)
+	app, err := NewApp(rootDir, ctx)
 	return app, cleanup, err
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,12 +31,12 @@ func NewCodec() *wire.Codec {
 	return cdc
 }
 
-func NewApp2(logger log.Logger, db dbm.DB) *bapp.BaseApp {
+func NewApp2(ctx *sdk.ServerContext, db dbm.DB) *bapp.BaseApp {
 
 	cdc := NewCodec()
 
 	// Create the base application object.
-	app := bapp.NewBaseApp(app2Name, cdc, logger, db)
+	app := bapp.NewBaseApp(app2Name, cdc, ctx, db)
 
 	// Create a key for accessing the account store.
 	keyAccount := sdk.NewKVStoreKey("acc")

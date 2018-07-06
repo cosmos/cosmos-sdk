@@ -8,7 +8,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
@@ -20,7 +19,7 @@ import (
 // NewApp creates a simple mock kvstore app for testing. It should work
 // similar to a real app. Make sure rootDir is empty before running the test,
 // in order to guarantee consistent results
-func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
+func NewApp(rootDir string, ctx *sdk.ServerContext) (abci.Application, error) {
 	db, err := dbm.NewGoLevelDB("mock", filepath.Join(rootDir, "data"))
 	if err != nil {
 		return nil, err
@@ -30,7 +29,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	capKeyMainStore := sdk.NewKVStoreKey("main")
 
 	// Create BaseApp.
-	baseApp := bam.NewBaseApp("kvstore", nil, logger, db)
+	baseApp := bam.NewBaseApp("kvstore", nil, ctx, db)
 
 	// Set mounts for BaseApp's MultiStore.
 	baseApp.MountStoresIAVL(capKeyMainStore)

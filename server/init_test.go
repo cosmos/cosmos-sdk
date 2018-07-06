@@ -8,6 +8,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/server/mock"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 )
@@ -19,7 +20,7 @@ func TestInitCmd(t *testing.T) {
 	logger := log.NewNopLogger()
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
-	ctx := NewContext(cfg, logger)
+	ctx := sdk.NewServerContext(cfg, logger)
 	cdc := wire.NewCodec()
 	appInit := AppInit{
 		AppGenState: mock.AppGenState,

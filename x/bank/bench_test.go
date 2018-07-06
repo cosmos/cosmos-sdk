@@ -10,6 +10,19 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+// getBenchmarkMockApp initializes a mock application for this module, for purposes of benchmarking
+// Any long term API support commitments do not apply to this function.
+func getBenchmarkMockApp() (*mock.App, error) {
+	mapp := mock.NewApp()
+
+	RegisterWire(mapp.Cdc)
+	coinKeeper := NewKeeper(mapp.AccountMapper)
+	mapp.Router().AddRoute("bank", NewHandler(coinKeeper))
+
+	err := mapp.CompleteSetup([]*sdk.KVStoreKey{})
+	return mapp, err
+}
+
 func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	benchmarkApp, _ := getBenchmarkMockApp()
 

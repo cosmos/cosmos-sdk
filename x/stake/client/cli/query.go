@@ -31,8 +31,9 @@ func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 			res, err := ctx.QueryStore(key, storeName)
 			if err != nil {
 				return err
+			} else if len(res) == 0 {
+				return fmt.Errorf("No validator found with address %s", args[0])
 			}
-
 			validator := types.MustUnmarshalValidator(cdc, addr, res)
 
 			switch viper.Get(cli.OutputFlag) {
@@ -118,7 +119,7 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			delAddr, err := sdk.GetValAddressHex(viper.GetString(FlagAddressDelegator))
+			delAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}

@@ -332,32 +332,20 @@ func readOrCreatePrivValidator(tmConfig *cfg.Config) crypto.PubKey {
 	return privValidator.GetPubKey()
 }
 
-// create the genesis file
+// writeGenesisFile creates and writes the genesis configuration to disk. An
+// error is returned if building or writing the configuration to file fails.
 func writeGenesisFile(cdc *wire.Codec, genesisFile, chainID string, validators []tmtypes.GenesisValidator, appState json.RawMessage) error {
 	genDoc := tmtypes.GenesisDoc{
-		ChainID:    chainID,
-		Validators: validators,
+		ChainID:      chainID,
+		Validators:   validators,
+		AppStateJSON: appState,
 	}
+
 	if err := genDoc.ValidateAndComplete(); err != nil {
 		return err
 	}
-	if err := genDoc.SaveAs(genesisFile); err != nil {
-		return err
-	}
-	return addAppStateToGenesis(cdc, genesisFile, appState)
-}
 
-// Add one line to the genesis file
-func addAppStateToGenesis(cdc *wire.Codec, genesisConfigPath string, appState json.RawMessage) error {
-	bz, err := ioutil.ReadFile(genesisConfigPath)
-	if err != nil {
-		return err
-	}
-	out, err := AppendJSON(cdc, bz, "app_state", appState)
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile(genesisConfigPath, out, 0600)
+	return genDoc.SaveAs(genesisFile)
 }
 
 //_____________________________________________________________________

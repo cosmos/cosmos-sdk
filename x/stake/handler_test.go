@@ -638,7 +638,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	require.Equal(t, sdk.NewRat(3), delegation.Shares)
 
 	// validator power should have been reduced to zero
-	validator, found = keeper.GetValidator(ctx, valA)
-	require.True(t, found)
-	require.Equal(t, sdk.NewRat(0), validator.GetPower())
+	// ergo validator should have been removed from the store
+	_, found = keeper.GetValidator(ctx, valA)
+	require.False(t, found)
 }

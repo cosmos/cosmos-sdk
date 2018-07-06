@@ -35,8 +35,10 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1471
 
 	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
+	// If not found, the validator must have been overslashed and removed - so we don't need to do anything
 	if !found {
-		panic(fmt.Errorf("attempted to slash a nonexistent validator with address %s", pubkey.Address()))
+		logger.Info(fmt.Sprintf("Ignored attempt to slash a nonexistent validator with address %s", pubkey.Address()))
+		return
 	}
 	ownerAddress := validator.GetOwner()
 

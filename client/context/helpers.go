@@ -231,7 +231,7 @@ func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc
 		return err
 	}
 
-	if async {
+	if ctx.Async {
 		res, err := ctx.BroadcastTxAsync(txBytes)
 		fmt.Println("Async tx sent. tx hash: ", res.Hash.String())
 		return err

@@ -48,7 +48,7 @@ func MineCmd(cdc *wire.Codec) *cobra.Command {
 			name := ctx.FromAddressName
 
 			// build and sign the transaction, then broadcast to Tendermint
-			err = ctx.EnsureSignBuildBroadcast(name, []sdk.Msg{msg}, cdc, ctx.Async, false)
+			err = ctx.EnsureSignBuildBroadcast(name, []sdk.Msg{msg}, cdc, false)
 			if err != nil {
 				return err
 			}

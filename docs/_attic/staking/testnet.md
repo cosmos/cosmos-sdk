@@ -63,7 +63,7 @@ Then, we try to transfer some `steak` to another account:
 ```
 gaiacli account <FOO-ADDR>
 gaiacli account <BAR-ADDR>
-gaiacli send --amount=10steak --to=<BAR-ADDR> --name=foo --chain-id=test-chain
+gaiacli send --amount=10steak --to=<BAR-ADDR> --from=foo --chain-id=test-chain
 ```
 
 **Note:** We need to be careful with the `chain-id` and `sequence`
@@ -84,7 +84,7 @@ Finally, to relinquish all your power, unbond some coins. You should see
 your VotingPower reduce and your account balance increase.
 
 ```
-gaiacli unbond --chain-id=<chain-id> --name=test
+gaiacli unbond --chain-id=<chain-id> --from=test
 ```
 
 That's it!

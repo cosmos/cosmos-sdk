@@ -188,6 +188,9 @@ func (kb dbKeybase) List() ([]Info, error) {
 // Get returns the public information about one key.
 func (kb dbKeybase) Get(name string) (Info, error) {
 	bs := kb.db.Get(infoKey(name))
+	if len(bs) == 0 {
+		return nil, fmt.Errorf("Key %s not found", name)
+	}
 	return readInfo(bs)
 }
 

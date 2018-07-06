@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -49,12 +48,11 @@ func MineCmd(cdc *wire.Codec) *cobra.Command {
 			name := ctx.FromAddressName
 
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := ctx.EnsureSignBuildBroadcast(name, []sdk.Msg{msg}, cdc)
+			err = ctx.EnsureSignBuildBroadcast(name, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}
 
-			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
 			return nil
 		},
 	}

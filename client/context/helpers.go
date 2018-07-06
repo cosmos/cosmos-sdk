@@ -224,25 +224,58 @@ func (ctx CoreContext) ensureSignBuild(name string, msgs []sdk.Msg, cdc *wire.Co
 }
 
 // sign and build the transaction from the msg
-func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
+func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc *wire.Codec) (err error) {
 
 	txBytes, err := ctx.ensureSignBuild(name, msgs, cdc)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return ctx.BroadcastTx(txBytes)
-}
-
-// sign and build the async transaction from the msg
-func (ctx CoreContext) EnsureSignBuildBroadcastAsync(name string, msgs []sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTx, err error) {
-
-	txBytes, err := ctx.ensureSignBuild(name, msgs, cdc)
+	if ctx.Async {
+		res, err := ctx.BroadcastTxAsync(txBytes)
+		if err != nil {
+			return err
+		}
+		if ctx.JSON {
+			type toJSON struct {
+				TxHash string
+			}
+			valueToJSON := toJSON{res.Hash.String()}
+			JSON, err := cdc.MarshalJSON(valueToJSON)
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(JSON))
+		} else {
+			fmt.Println("Async tx sent. tx hash: ", res.Hash.String())
+		}
+		return nil
+	}
+	res, err := ctx.BroadcastTx(txBytes)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	return ctx.BroadcastTxAsync(txBytes)
+	if ctx.JSON {
+		// Since JSON is intended for automated scripts, always include response in JSON mode
+		type toJSON struct {
+			Height   int64
+			TxHash   string
+			Response string
+		}
+		valueToJSON := toJSON{res.Height, res.Hash.String(), fmt.Sprintf("%+v", res.DeliverTx)}
+		JSON, err := cdc.MarshalJSON(valueToJSON)
+		if err != nil {
+			return err
+		}
+		fmt.Println(string(JSON))
+		return nil
+	}
+	if ctx.PrintResponse {
+		fmt.Printf("Committed at block %d. Hash: %s Response:%+v \n", res.Height, res.Hash.String(), res.DeliverTx)
+	} else {
+		fmt.Printf("Committed at block %d. Hash: %s \n", res.Height, res.Hash.String())
+	}
+	return nil
 }
 
 // get the next sequence for the account address

@@ -2,10 +2,6 @@ package cli
 
 import (
 	"errors"
-	"fmt"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,12 +9,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/client"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const (
 	flagTo     = "to"
 	flagAmount = "amount"
-	flagAsync  = "async"
 )
 
 // SendTxCmd will create a send tx and sign it with the given key
@@ -73,19 +70,10 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 			// build and sign the transaction, then broadcast to Tendermint
 			msg := client.BuildMsg(from, to, coins)
 
-			if viper.GetBool(flagAsync) {
-				res, err := ctx.EnsureSignBuildBroadcastAsync(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
-				if err != nil {
-					return err
-				}
-				fmt.Printf("Async tx sent. tx hash: %s\n", res.Hash.String())
-				return nil
-			}
-			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
+			err = ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}
-			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
 			return nil
 
 		},
@@ -93,7 +81,6 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 
 	cmd.Flags().String(flagTo, "", "Address to send coins")
 	cmd.Flags().String(flagAmount, "", "Amount of coins to send")
-	cmd.Flags().Bool(flagAsync, false, "Pass the async flag to send a tx without waiting for the tx to be included in a block")
 
 	return cmd
 }

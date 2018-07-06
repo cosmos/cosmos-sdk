@@ -181,7 +181,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
 
-	executeWrite(t, fmt.Sprintf("gaiacli gov submitproposal %v --proposer=%v --deposit=5steak --type=Text --title=Test --description=test --from=foo", flags, fooCech), pass)
+	executeWrite(t, fmt.Sprintf("gaiacli gov submit-proposal %v --proposer=%v --deposit=5steak --type=Text --title=Test --description=test --from=foo", flags, fooCech), pass)
 	tests.WaitForNextHeightTM(port)
 
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))

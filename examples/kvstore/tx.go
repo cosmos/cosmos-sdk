@@ -27,7 +27,7 @@ func (tx kvstoreTx) GetMemo() string {
 }
 
 func (tx kvstoreTx) GetSignBytes() []byte {
-	return tx.bytes
+	return sdk.MustSortJSON(tx.bytes)
 }
 
 // Should the app be calling this? Or only handlers?

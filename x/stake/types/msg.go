@@ -3,7 +3,6 @@ package types
 import (
 	"math"
 
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -64,11 +63,7 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	b, err = server.SortJSON(b)
-	if err != nil {
-		panic(err)
-	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // quick validity check
@@ -119,11 +114,7 @@ func (msg MsgEditValidator) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	b, err = server.SortJSON(b)
-	if err != nil {
-		panic(err)
-	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // quick validity check
@@ -175,11 +166,7 @@ func (msg MsgDelegate) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	b, err = server.SortJSON(b)
-	if err != nil {
-		panic(err)
-	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // quick validity check
@@ -239,11 +226,7 @@ func (msg MsgBeginRedelegate) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	b, err = server.SortJSON(b)
-	if err != nil {
-		panic(err)
-	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // quick validity check
@@ -303,11 +286,7 @@ func (msg MsgCompleteRedelegate) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	b, err = server.SortJSON(b)
-	if err != nil {
-		panic(err)
-	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // quick validity check
@@ -359,11 +338,7 @@ func (msg MsgBeginUnbonding) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	b, err = server.SortJSON(b)
-	if err != nil {
-		panic(err)
-	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // quick validity check
@@ -412,11 +387,7 @@ func (msg MsgCompleteUnbonding) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	b, err = server.SortJSON(b)
-	if err != nil {
-		panic(err)
-	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // quick validity check

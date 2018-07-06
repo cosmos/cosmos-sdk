@@ -135,24 +135,6 @@ func AppendJSON(cdc *wire.Codec, baseJSON []byte, key string, value json.RawMess
 	return json.RawMessage(bz), err
 }
 
-// SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces
-// are removed.
-// This method can be used to canonicalize JSON to be returned by GetSignBytes,
-// e.g. for the ledger integration.
-// If the passed JSON isn't valid it will return an error.
-func SortJSON(toSortJSON []byte) ([]byte, error) {
-	var c interface{}
-	err := json.Unmarshal(toSortJSON, &c)
-	if err != nil {
-		return nil, err
-	}
-	js, err := json.Marshal(c)
-	if err != nil {
-		return nil, err
-	}
-	return js, nil
-}
-
 // https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go
 // TODO there must be a better way to get external IP
 func externalIP() (string, error) {

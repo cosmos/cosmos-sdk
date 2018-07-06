@@ -3,7 +3,6 @@ package bank
 import (
 	"encoding/json"
 
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -73,11 +72,7 @@ func (msg MsgSend) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	b, err = server.SortJSON(b)
-	if err != nil {
-		panic(err)
-	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // Implements Msg.
@@ -138,11 +133,7 @@ func (msg MsgIssue) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	b, err = server.SortJSON(b)
-	if err != nil {
-		panic(err)
-	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // Implements Msg.
@@ -171,11 +162,7 @@ func (in Input) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	bin, err = server.SortJSON(bin)
-	if err != nil {
-		panic(err)
-	}
-	return bin
+	return sdk.MustSortJSON(bin)
 }
 
 // ValidateBasic - validate transaction input
@@ -222,11 +209,7 @@ func (out Output) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	bin, err = server.SortJSON(bin)
-	if err != nil {
-		panic(err)
-	}
-	return bin
+	return sdk.MustSortJSON(bin)
 }
 
 // ValidateBasic - validate transaction output

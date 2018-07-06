@@ -62,7 +62,7 @@ func TestMsgMineGetSignBytes(t *testing.T) {
 	addr := sdk.Address([]byte("sender"))
 	msg := MsgMine{addr, 1, 1, 1, []byte("abc")}
 	res := msg.GetSignBytes()
-	require.Equal(t, string(res), `{"sender":"73656E646572","difficulty":1,"count":1,"nonce":1,"proof":"YWJj"}`)
+	require.Equal(t, string(res), `{"count":1,"difficulty":1,"nonce":1,"proof":"YWJj","sender":"73656E646572"}`)
 }
 
 func TestMsgMineGetSigners(t *testing.T) {

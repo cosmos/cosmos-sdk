@@ -48,7 +48,7 @@ func (msg MsgBond) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return bz
+	return sdk.MustSortJSON(bz)
 }
 
 //_______________________________________________________________

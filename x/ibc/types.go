@@ -59,7 +59,7 @@ func (p IBCPacket) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // validator the ibc packey
@@ -131,5 +131,5 @@ func (msg IBCReceiveMsg) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }

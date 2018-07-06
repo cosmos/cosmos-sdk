@@ -3,7 +3,6 @@ package auth
 import (
 	"encoding/json"
 
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -142,11 +141,7 @@ func StdSignBytes(chainID string, accnum int64, sequence int64, fee StdFee, msgs
 	if err != nil {
 		panic(err)
 	}
-	bz, err = server.SortJSON(bz)
-	if err != nil {
-		panic(err)
-	}
-	return bz
+	return sdk.MustSortJSON(bz)
 }
 
 // StdSignMsg is a convenience structure for passing along

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -54,7 +55,7 @@ func GetAccountCmd(storeName string, cdc *wire.Codec, decoder auth.AccountDecode
 
 			// Check if account was found
 			if res == nil {
-				return sdk.ErrUnknownAddress("No account with address " + addr +
+				return errors.New("No account with address " + addr +
 					" was found in the state.\nAre you sure there has been a transaction involving it?")
 			}
 

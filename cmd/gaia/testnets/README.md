@@ -320,7 +320,7 @@ On the testnet, we delegate `steak` instead of `atom`. Here's how you can bond t
 gaiacli stake delegate \
   --amount=10steak \
   --address-delegator=<account_cosmosaccaddr> \
-  --address-validator=$(gaiad tendermint show_validator) \
+  --address-validator=<validator_cosmosaccaddr> \
   --name=<key_name> \
   --chain-id=gaia-6002
 ```
@@ -336,7 +336,7 @@ If for any reason the validator misbehaves, or you want to unbond a certain amou
 ```bash
 gaiacli stake unbond \
   --address-delegator=<account_cosmosaccaddr> \
-  --address-validator=$(gaiad tendermint show_validator) \
+  --address-validator=<validator_cosmosaccaddr> \
   --shares=MAX \
   --name=<key_name> \
   --chain-id=gaia-6002
@@ -349,7 +349,7 @@ gaiacli account <account_cosmosaccaddr>
 
 gaiacli stake delegation \
   --address-delegator=<account_cosmosaccaddr> \
-  --address-validator=$(gaiad tendermint show_validator) \
+  --address-validator=<validator_cosmosaccaddr> \
   --chain-id=gaia-6002
 ```
 

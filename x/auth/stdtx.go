@@ -141,7 +141,7 @@ func StdSignBytes(chainID string, accnum int64, sequence int64, fee StdFee, msgs
 	if err != nil {
 		panic(err)
 	}
-	return bz
+	return sdk.MustSortJSON(bz)
 }
 
 // StdSignMsg is a convenience structure for passing along

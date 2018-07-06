@@ -197,9 +197,9 @@ We'll have ``alice`` send some ``mycoin`` to ``bob``, who has now joined the net
 
 ::
 
-    gaiacli send --amount=1000mycoin --sequence=0 --name=alice --to=5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6 --chain-id=test-chain-Uv1EVU
+    gaiacli send --amount=1000mycoin --sequence=0 --from=alice --to=5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6 --chain-id=test-chain-Uv1EVU
 
-where the ``--sequence`` flag is to be incremented for each transaction, the ``--name`` flag is the sender (alice), and the ``--to`` flag takes ``bob``'s address. You'll see something like:
+where the ``--sequence`` flag is to be incremented for each transaction, the ``--from`` flag is the sender (alice), and the ``--to`` flag takes ``bob``'s address. You'll see something like:
 
 ::
 
@@ -264,7 +264,7 @@ Now ``bob`` can create a validator with that pubkey.
 
 ::
 
-    gaiacli stake create-validator --amount=10mycoin --name=bob --address-validator=<address> --pub-key=<pubkey> --moniker=bobby
+    gaiacli stake create-validator --amount=10mycoin --from=bob --address-validator=<address> --pub-key=<pubkey> --moniker=bobby
 
 with an output like:
 
@@ -306,13 +306,13 @@ First let's have ``alice`` send some coins to ``charlie``:
 
 ::
 
-    gaiacli send --amount=1000mycoin --sequence=2 --name=alice --to=48F74F48281C89E5E4BE9092F735EA519768E8EF
+    gaiacli send --amount=1000mycoin --sequence=2 --from=alice --to=48F74F48281C89E5E4BE9092F735EA519768E8EF
 
 Then ``charlie`` will delegate some mycoin to ``bob``:
 
 ::
 
-    gaiacli stake delegate --amount=10mycoin --address-delegator=<charlie's address> --address-validator=<bob's address> --name=charlie
+    gaiacli stake delegate --amount=10mycoin --address-delegator=<charlie's address> --address-validator=<bob's address> --from=charlie
 
 You'll see output like:
 
@@ -396,7 +396,7 @@ your VotingPower reduce and your account balance increase.
 
 ::
 
-    gaiacli stake unbond --amount=5mycoin --name=charlie --address-delegator=<address> --address-validator=<address>
+    gaiacli stake unbond --amount=5mycoin --from=charlie --address-delegator=<address> --address-validator=<address>
     gaiacli account 48F74F48281C89E5E4BE9092F735EA519768E8EF
 
 See the bond decrease with ``gaiacli stake delegation`` like above.

@@ -16,7 +16,7 @@ here we will introduce the other ABCI requests sent by Tendermint, and
 how we can use them to build more advanced applications. For a more complete
 depiction of the ABCI and how its used, see
 [the
-specification](https://github.com/tendermint/tendermint/abci/blob/master/specification.md)
+specification](https://github.com/tendermint/tendermint/blob/master/docs/abci-spec.md)
 
 ## InitChain
 

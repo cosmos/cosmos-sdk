@@ -27,6 +27,7 @@ func TestNewFromDecimal(t *testing.T) {
 		expErr     bool
 		exp        Rat
 	}{
+		{"", true, Rat{}},
 		{"0", false, NewRat(0)},
 		{"1", false, NewRat(1)},
 		{"1.1", false, NewRat(11, 10)},

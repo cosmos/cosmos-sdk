@@ -675,3 +675,43 @@ func TestGetTendermintUpdatesNotValidatorCliff(t *testing.T) {
 	require.Equal(t, validators[0].ABCIValidatorZero(), updates[0])
 	require.Equal(t, validators[2].ABCIValidator(), updates[1])
 }
+
+func TestGetTendermintUpdatesPowerDecrease(t *testing.T) {
+	ctx, _, keeper := CreateTestInput(t, false, 1000)
+
+	amts := []int64{100, 100}
+	var validators [2]types.Validator
+	for i, amt := range amts {
+		pool := keeper.GetPool(ctx)
+		validators[i] = types.NewValidator(Addrs[i], PKs[i], types.Description{})
+		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
+		keeper.SetPool(ctx, pool)
+	}
+	validators[0] = keeper.UpdateValidator(ctx, validators[0])
+	validators[1] = keeper.UpdateValidator(ctx, validators[1])
+	keeper.ClearTendermintUpdates(ctx)
+	require.Equal(t, 0, len(keeper.GetTendermintUpdates(ctx)))
+
+	// check initial power
+	require.Equal(t, sdk.NewRat(100).RoundInt64(), validators[0].GetPower().RoundInt64())
+	require.Equal(t, sdk.NewRat(100).RoundInt64(), validators[1].GetPower().RoundInt64())
+
+	// test multiple value change
+	//  tendermintUpdate set: {c1, c3} -> {c1', c3'}
+	pool := keeper.GetPool(ctx)
+	validators[0], pool, _ = validators[0].RemoveDelShares(pool, sdk.NewRat(20))
+	validators[1], pool, _ = validators[1].RemoveDelShares(pool, sdk.NewRat(30))
+	keeper.SetPool(ctx, pool)
+	validators[0] = keeper.UpdateValidator(ctx, validators[0])
+	validators[1] = keeper.UpdateValidator(ctx, validators[1])
+
+	// power has changed
+	require.Equal(t, sdk.NewRat(80).RoundInt64(), validators[0].GetPower().RoundInt64())
+	require.Equal(t, sdk.NewRat(70).RoundInt64(), validators[1].GetPower().RoundInt64())
+
+	// Tendermint updates should reflect power change
+	updates := keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 2, len(updates))
+	require.Equal(t, validators[0].ABCIValidator(), updates[0])
+	require.Equal(t, validators[1].ABCIValidator(), updates[1])
+}

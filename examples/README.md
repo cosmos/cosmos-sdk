@@ -123,12 +123,12 @@ Where `90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD` is alice's address we got from 
 The following command will send coins from alice, to bob:
 
 ```
-basecli send --name=alice --amount=10000mycoin --to=29D721F054537C91F618A0FDBF770DA51EF8C48D
+basecli send --from=alice --amount=10000mycoin --to=29D721F054537C91F618A0FDBF770DA51EF8C48D
 --sequence=0 --chain-id=test-chain-AE4XQo
 ```
 
 Flag Descriptions:
-- `name` is the name you gave your key
+- `from` is the name you gave your key
 - `mycoin` is the name of the token for this basecoin demo, initialized in the genesis.json file
 - `sequence` is a tally of how many transactions have been made by this account. Since this is the first tx on this account, it is 0
 - `chain-id` is the unique ID that helps tendermint identify which network to connect to. You can find it in the terminal output from the gaiad daemon in the header block , or in the genesis.json file  at `~/.basecoind/config/genesis.json`
@@ -142,16 +142,16 @@ basecli account 29D721F054537C91F618A0FDBF770DA51EF8C48D
 Now lets send some from bob to charlie. Make sure you send less than bob has, otherwise the transaction will fail:
 
 ```
-basecli send --name=bob --amount=5000mycoin --to=2E8E13EEB8E3F0411ACCBC9BE0384732C24FBD5E
+basecli send --from=bob --amount=5000mycoin --to=2E8E13EEB8E3F0411ACCBC9BE0384732C24FBD5E
 --sequence=0 --chain-id=test-chain-AE4XQo
 ```
 
-Note how we use the ``--name`` flag to select a different account to send from.
+Note how we use the ``--from`` flag to select a different account to send from.
 
 Lets now try to send from bob back to alice:
 
 ```
-basecli send --name=bob --amount=3000mycoin --to=90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD
+basecli send --from=bob --amount=3000mycoin --to=90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD
 --sequence=1 --chain-id=test-chain-AE4XQo
 ```
 
@@ -256,7 +256,7 @@ Accounts are serialized and stored in a Merkle tree under the key
 Typically, the address of the account is the 20-byte ``RIPEMD160`` hash
 of the public key, but other formats are acceptable as well, as defined
 in the `Tendermint crypto
-library <https://github.com/tendermint/tendermint/crypto>`__. The Merkle tree
+library <https://github.com/tendermint/tendermint/tree/master/crypto>`__. The Merkle tree
 used in Basecoin is a balanced, binary search tree, which we call an
 `IAVL tree <https://github.com/tendermint/iavl>`__.
 

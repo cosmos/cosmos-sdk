@@ -5,6 +5,7 @@
 *TBD*
 
 BREAKING CHANGES
+* msg.GetSignBytes() returns sorted JSON (by key)
 * Update Tendermint to v0.22.0
     * Default ports changed from 466xx to 266xx
     * Amino JSON uses type names instead of prefix bytes
@@ -36,7 +37,13 @@ BREAKING CHANGES
     to an infraction, slash them proportional to their stake at the time
   * Add REST endpoint to unrevoke a validator previously revoked for downtime
   * Add REST endpoint to retrieve liveness signing information for a validator
+* [types] renamed rational.Evaluate to rational.Round{Int64, Int}
+* [x/stake] most index keys nolonger hold a value - inputs are rearranged to form the desired key
 * [lcd] Switch key creation output to return bech32
+* [x/stake] store-value for delegation, validator, ubd, and red do not hold duplicate information contained store-key
+
+DEPRECATED
+* [cli] Deprecate `--name` flag in commands that send txs, in favor of `--from`
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
@@ -67,7 +74,13 @@ FEATURES
 * [gaiacli] Ledger support added
   - You can now use a Ledger with `gaiacli --ledger` for all key-related commands
   - Ledger keys can be named and tracked locally in the key DB
-* [gaiacli] added an --async flag to the cli to deliver transactions without waiting for a tendermint response
+* [testing] created a randomized testing framework. 
+  - Currently bank has limited functionality in the framework
+  - Auth has its invariants checked within the framework
+* [gaiacli] added the following flags for commands that post transactions to the chain:
+  * async -- send the tx without waiting for a tendermint response
+  * json  -- return the output in json format for increased readability
+  * print-response -- return the tx response. (includes fields like gas cost)
 
 IMPROVEMENTS
 * bank module uses go-wire codec instead of 'encoding/json'
@@ -76,12 +89,15 @@ IMPROVEMENTS
 * [stake] module reorganized to include `types` and `keeper` package
 * [stake] keeper always loads the store (instead passing around which doesn't really boost efficiency)
 * [stake] edit-validator changes now can use the keyword [do-not-modify] to not modify unspecified `--flag` (aka won't set them to `""` value)
-* [types] added common tag constants
 * [stake] offload more generic functionality from the handler into the keeper
+* [types] added common tag constants
+* [keys] improve error message when deleting non-existent key
+* [gaiacli] improve error messages on `send` and `account` commands
 * added contributing guidelines
 
 BUG FIXES
 * [x/slashing] \#1510 Unrevoked validators cannot un-revoke themselves
+* [x/stake] \#1567 Validators decreased in power but not unbonded are now updated in Tendermint
 * [gaia] Added self delegation for validators in the genesis creation
 * [lcd] tests now don't depend on raw json text
 * [stake] error strings lower case
@@ -96,6 +112,8 @@ BUG FIXES
 * \#1353 - CLI: Show pool shares fractions in human-readable format
 * \#1258 - printing big.rat's can no longer overflow int64
 * \#887  - limit the size of rationals that can be passed in from user input
+* \#1461 - CLI tests now no longer reset your local environment data
+* \#1505 - `gaiacli stake validator` no longer panics if validator doesn't exist
 
 ## 0.19.0
 

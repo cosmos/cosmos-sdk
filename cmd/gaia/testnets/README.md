@@ -220,7 +220,7 @@ gaiacli stake create-validator \
   --address-validator=<account_cosmosaccaddr>
   --moniker="choose a moniker" \
   --chain-id=gaia-6002 \
-  --name=<key_name>
+  --from=<key_name>
 ```
 
 ### Edit Validator Description
@@ -237,7 +237,7 @@ gaiacli stake edit-validator
   --keybase-sig="6A0D65E29A4CBC8E"
   --details="To infinity and beyond!"
   --chain-id=gaia-6002 \
-  --name=<key_name>
+  --from=<key_name>
 ```
 
 ### View Validator Description
@@ -272,7 +272,7 @@ gaiad start
 Wait for your full node to catch up to the latest block. Next, run the following command. Note that `<cosmosaccaddr>` is the address of your validator account, and `<name>` is the name of the validator account. You can find this info by running `gaiacli keys list`.
 
 ```bash
-gaiacli stake unrevoke <cosmosaccaddr> --chain-id=gaia-6002 --name=<name>
+gaiacli stake unrevoke <cosmosaccaddr> --chain-id=gaia-6002 --from=<name>
 ```
 
 **WARNING:** If you don't wait for `gaiad` to sync before running `unrevoke`, you will receive an error message telling you your validator is still jailed.
@@ -320,8 +320,8 @@ On the testnet, we delegate `steak` instead of `atom`. Here's how you can bond t
 gaiacli stake delegate \
   --amount=10steak \
   --address-delegator=<account_cosmosaccaddr> \
-  --address-validator=$(gaiad tendermint show_validator) \
-  --name=<key_name> \
+  --address-validator=<validator_cosmosaccaddr> \
+  --from=<key_name> \
   --chain-id=gaia-6002
 ```
 
@@ -336,9 +336,9 @@ If for any reason the validator misbehaves, or you want to unbond a certain amou
 ```bash
 gaiacli stake unbond \
   --address-delegator=<account_cosmosaccaddr> \
-  --address-validator=$(gaiad tendermint show_validator) \
+  --address-validator=<validator_cosmosaccaddr> \
   --shares=MAX \
-  --name=<key_name> \
+  --from=<key_name> \
   --chain-id=gaia-6002
 ```
 
@@ -349,7 +349,7 @@ gaiacli account <account_cosmosaccaddr>
 
 gaiacli stake delegation \
   --address-delegator=<account_cosmosaccaddr> \
-  --address-validator=$(gaiad tendermint show_validator) \
+  --address-validator=<validator_cosmosaccaddr> \
   --chain-id=gaia-6002
 ```
 
@@ -361,7 +361,7 @@ gaiacli stake delegation \
 gaiacli send \
   --amount=10faucetToken \
   --chain-id=gaia-6002 \
-  --name=<key_name> \
+  --from=<key_name> \
   --to=<destination_cosmosaccaddr>
 ```
 

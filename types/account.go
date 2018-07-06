@@ -13,8 +13,12 @@ import (
 //Address is a go crypto-style Address
 type Address = cmn.HexBytes
 
-// Bech32 prefixes
+// nolint
 const (
+	// expected address length
+	AddrLen = 20
+
+	// Bech32 prefixes
 	Bech32PrefixAccAddr = "cosmosaccaddr"
 	Bech32PrefixAccPub  = "cosmosaccpub"
 	Bech32PrefixValAddr = "cosmosvaladdr"

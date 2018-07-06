@@ -5,6 +5,7 @@
 *TBD*
 
 BREAKING CHANGES
+* msg.GetSignBytes() returns sorted JSON (by key)
 * Update Tendermint to v0.22.0
     * Default ports changed from 466xx to 266xx
     * Amino JSON uses type names instead of prefix bytes
@@ -40,6 +41,9 @@ BREAKING CHANGES
 * [x/stake] most index keys nolonger hold a value - inputs are rearranged to form the desired key
 * [lcd] Switch key creation output to return bech32
 * [x/stake] store-value for delegation, validator, ubd, and red do not hold duplicate information contained store-key
+
+DEPRECATED
+* [cli] Deprecate `--name` flag in commands that send txs, in favor of `--from`
 
 FEATURES
 * [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
@@ -102,6 +106,7 @@ BUG FIXES
 * \#1258 - printing big.rat's can no longer overflow int64
 * \#887  - limit the size of rationals that can be passed in from user input
 * \#1461 - CLI tests now no longer reset your local environment data
+* \#1505 - `gaiacli stake validator` no longer panics if validator doesn't exist
 
 ## 0.19.0
 

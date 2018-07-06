@@ -224,7 +224,7 @@ func (ctx CoreContext) ensureSignBuild(name string, msgs []sdk.Msg, cdc *wire.Co
 }
 
 // sign and build the transaction from the msg
-func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc *wire.Codec, async bool, printResponse bool) (err error) {
+func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc *wire.Codec, printResponse bool) (err error) {
 
 	txBytes, err := ctx.ensureSignBuild(name, msgs, cdc)
 	if err != nil {

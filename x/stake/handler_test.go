@@ -1,8 +1,10 @@
 package stake
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -586,15 +588,22 @@ func TestUnbondingWhenExcessValidators(t *testing.T) {
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
 	require.Equal(t, 2, len(keeper.GetValidatorsBonded(ctx)))
 
+	fmt.Println("debug 1________________________________________________________________________________________")
+
 	// unbond the valdator-2
 	msgBeginUnbonding := NewMsgBeginUnbonding(validatorAddr2, validatorAddr2, sdk.NewRat(30))
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgBeginUnbonding")
+	fmt.Println("debug 2________________________________________________________________________________________")
 
-	// because there are extra validators waiting to get in, we should one
-	// of the queued validators make it into the bonded group, thus the total
-	// number of validators should stay the same
-	require.Equal(t, 2, len(keeper.GetValidatorsBonded(ctx)))
+	// because there are extra validators waiting to get in, the queued
+	// validator (aka. validator-1) should make it into the bonded group, thus
+	// the total number of validators should stay the same
+	vals := keeper.GetValidatorsBonded(ctx)
+	assert.Equal(t, 2, len(vals), "vals %v", vals)
+	val1, found := keeper.GetValidator(ctx, validatorAddr1)
+	require.True(t, found)
+	assert.Equal(t, sdk.Bonded, val1.Status(), "%v", val1)
 }
 
 func TestJoiningAsCliffValidator(t *testing.T) {

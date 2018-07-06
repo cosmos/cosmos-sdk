@@ -66,6 +66,7 @@ func GetValidatorsByPowerIndexKey(validator types.Validator, pool types.Pool) []
 }
 
 // get the power ranking of a validator
+// NOTE the larger values are of higher value
 func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 
 	power := validator.EquivalentBondedShares(pool)
@@ -73,9 +74,9 @@ func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 
 	revokedBytes := make([]byte, 1)
 	if validator.Revoked {
-		revokedBytes[0] = byte(0x01)
-	} else {
 		revokedBytes[0] = byte(0x00)
+	} else {
+		revokedBytes[0] = byte(0x01)
 	}
 
 	// heightBytes and counterBytes represent strings like powerBytes does

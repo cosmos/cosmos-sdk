@@ -29,20 +29,24 @@ func CoolAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState jso
 	if err != nil {
 		return
 	}
+
 	key := "cool"
 	value := json.RawMessage(`{
         "trend": "ice-cold"
       }`)
-	appState, err = server.AppendJSON(cdc, appState, key, value)
+
+	appState, err = server.InsertKeyJSON(cdc, appState, key, value)
 	if err != nil {
 		return
 	}
+
 	key = "pow"
 	value = json.RawMessage(`{
         "difficulty": 1,
         "count": 0
       }`)
-	appState, err = server.AppendJSON(cdc, appState, key, value)
+
+	appState, err = server.InsertKeyJSON(cdc, appState, key, value)
 	return
 }
 

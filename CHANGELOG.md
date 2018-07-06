@@ -74,8 +74,10 @@ FEATURES
 * [gaiacli] Ledger support added
   - You can now use a Ledger with `gaiacli --ledger` for all key-related commands
   - Ledger keys can be named and tracked locally in the key DB
-* [gaiacli] added an --async flag to the cli to deliver transactions without waiting for a tendermint response
-* [gaiacli] added a --json flag to the cli for deliver transactions
+* [gaiacli] added the following flags for commands that post transactions to the chain:
+  * async -- send the tx without waiting for a tendermint response
+  * json  -- return the output in json format for increased readability
+  * print-response -- return the tx response. (includes fields like gas cost)
 
 IMPROVEMENTS
 * bank module uses go-wire codec instead of 'encoding/json'

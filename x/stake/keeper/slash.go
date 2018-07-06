@@ -15,8 +15,6 @@ import (
 // CONTRACT:
 //    slashFactor is non-negative
 // CONTRACT:
-//    Validator exists and can be looked up by public key
-// CONTRACT:
 //    Infraction committed equal to or less than an unbonding period in the past,
 //    so all unbonding delegations and redelegations from that height are stored
 // CONTRACT:
@@ -35,8 +33,11 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1471
 
 	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
-	// If not found, the validator must have been overslashed and removed - so we don't need to do anything
 	if !found {
+		// If not found, the validator must have been overslashed and removed - so we don't need to do anything
+		// NOTE:  Correctness dependent on invariant that unbonding delegations / redelegations must also have been completely
+		//        slashed in this case - which we don't explicitly check, but should be true.
+		// Log the slash attempt for future reference (maybe we should tag it too)
 		logger.Info(fmt.Sprintf("Ignored attempt to slash a nonexistent validator with address %s", pubkey.Address()))
 		return
 	}

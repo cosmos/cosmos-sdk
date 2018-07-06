@@ -5,6 +5,7 @@
 *TBD*
 
 BREAKING CHANGES
+* msg.GetSignBytes() returns sorted JSON (by key)
 * Update Tendermint to v0.22.0
     * Default ports changed from 466xx to 266xx
     * Amino JSON uses type names instead of prefix bytes

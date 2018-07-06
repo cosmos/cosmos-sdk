@@ -662,7 +662,7 @@ const msgType3 = "burn"
 func (msg testBurnMsg) Type() string { return msgType3 }
 func (msg testBurnMsg) GetSignBytes() []byte {
 	bz, _ := json.Marshal(msg)
-	return bz
+	return sdk.MustSortJSON(bz)
 }
 func (msg testBurnMsg) ValidateBasic() sdk.Error {
 	if msg.Addr == nil {
@@ -685,7 +685,7 @@ const msgType4 = "send"
 func (msg testSendMsg) Type() string { return msgType4 }
 func (msg testSendMsg) GetSignBytes() []byte {
 	bz, _ := json.Marshal(msg)
-	return bz
+	return sdk.MustSortJSON(bz)
 }
 func (msg testSendMsg) ValidateBasic() sdk.Error {
 	if msg.Sender == nil || msg.Receiver == nil {

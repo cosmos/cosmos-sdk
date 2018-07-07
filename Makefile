@@ -102,7 +102,7 @@ test_cover:
 	@bash tests/test_cover.sh
 
 test_lint:
-	gometalinter.v2 --disable-all --enable='golint' --enable='misspell' --enable='unparam' --enable='unconvert' --enable='ineffassign' --linter='vet:go vet -composites=false:PATH:LINE:MESSAGE' --enable='vet' --deadline=500s --vendor ./...
+	gometalinter.v2 --config=tools/gometalinter.json ./...
 	!(gometalinter.v2 --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 

@@ -15,8 +15,6 @@ import (
 // CONTRACT:
 //    slashFactor is non-negative
 // CONTRACT:
-//    Validator exists and can be looked up by public key
-// CONTRACT:
 //    Infraction committed equal to or less than an unbonding period in the past,
 //    so all unbonding delegations and redelegations from that height are stored
 // CONTRACT:
@@ -36,7 +34,12 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 
 	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
-		panic(fmt.Errorf("attempted to slash a nonexistent validator with address %s", pubkey.Address()))
+		// If not found, the validator must have been overslashed and removed - so we don't need to do anything
+		// NOTE:  Correctness dependent on invariant that unbonding delegations / redelegations must also have been completely
+		//        slashed in this case - which we don't explicitly check, but should be true.
+		// Log the slash attempt for future reference (maybe we should tag it too)
+		logger.Error(fmt.Sprintf("WARNING: Ignored attempt to slash a nonexistent validator with address %s, we recommend you investigate immediately", pubkey.Address()))
+		return
 	}
 	ownerAddress := validator.GetOwner()
 
@@ -92,7 +95,11 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	// update the pool
 	k.SetPool(ctx, pool)
 	// update the validator, possibly kicking it out
-	k.UpdateValidator(ctx, validator)
+	validator = k.UpdateValidator(ctx, validator)
+	// remove validator if it has been reduced to zero shares
+	if validator.PoolShares.Amount.IsZero() {
+		k.RemoveValidator(ctx, validator.Owner)
+	}
 
 	// Log that a slash occurred!
 	logger.Info(fmt.Sprintf("Validator %s slashed by slashFactor %v, removed %v shares and burned %d tokens", pubkey.Address(), slashFactor, sharesToRemove, burned))

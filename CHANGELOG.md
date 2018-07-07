@@ -100,6 +100,7 @@ IMPROVEMENTS
 
 BUG FIXES
 * [x/slashing] \#1510 Unrevoked validators cannot un-revoke themselves
+* [x/stake] \#1513 Validators slashed to zero power are unbonded and removed from the store
 * [x/stake] \#1567 Validators decreased in power but not unbonded are now updated in Tendermint
 * [gaia] Added self delegation for validators in the genesis creation
 * [lcd] tests now don't depend on raw json text

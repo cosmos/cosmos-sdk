@@ -5,7 +5,7 @@ Policy](https://tendermint.com/security), we operate a bug bounty.
 See the policy for more details on submissions and rewards.
 
 The following is a list of examples of the kinds of bugs we're most interested in for
-the cosmos-sdk. See [here](https://github.com/tendermint/tendermint/blob/master/SECURITY.md) for vulnerabilities we are interested in for tendermint / lower level libs.
+the Cosmos SDK. See [here](https://github.com/tendermint/tendermint/blob/master/SECURITY.md) for vulnerabilities we are interested in for Tendermint, and lower-level libraries, e.g. IAVL.
 
 ## Specification
 - Conceptual flaws
@@ -15,7 +15,8 @@ the cosmos-sdk. See [here](https://github.com/tendermint/tendermint/blob/master/
 ## Modules 
 - x/staking
 - x/slashing
-- SDK standard datatype library
+- x/types
+- x/gov
 
 We are interested in bugs in other modules, however the above are most likely to have 
 significant vulnerabilities, due to the complexity / nuance involved
@@ -29,10 +30,5 @@ significant vulnerabilities, due to the complexity / nuance involved
 ## Handling private keys
 - HD key derivation, local and Ledger, and all key-management functionality
 - Side-channel attack vectors with our implementations
-
-## Least capabilities system
-- Attack vectors in our least capabilities system
-- Scenarios where a chain runs a "Malicious module"
-  - One example is a malicious module getting priviledge escalation to read
-   a store which it doesn't have the key for
-
+  - e.g. key exfiltration based on time or memory-access patterns when decrypting privkey
+  

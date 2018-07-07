@@ -546,8 +546,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 		result = handler(ctx, msg)
 
-		// Set gas utilized
-		finalResult.GasUsed += ctx.GasMeter().GasConsumed()
+		// Set gas wanted
 		finalResult.GasWanted += result.GasWanted
 
 		// Append Data and Tags
@@ -571,6 +570,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 			return result
 		}
 	}
+
+	// Set total gas used
+	finalResult.GasUsed = ctx.GasMeter().GasConsumed()
 
 	// If not a simulated run and result was successful, write to app.checkState.ms or app.deliverState.ms
 	// Only update state if all messages pass.

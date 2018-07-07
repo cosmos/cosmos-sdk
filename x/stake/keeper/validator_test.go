@@ -94,12 +94,9 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 }
 
 func TestZeroPowerUnbonded(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 0)
+	// initialize setup
+	ctx, _, keeper := CreateTestInput(t, false, 100)
 	pool := keeper.GetPool(ctx)
-
-	// create a random pool
-	pool.LooseTokens = 10000
-	keeper.SetPool(ctx, pool)
 
 	// add a validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})

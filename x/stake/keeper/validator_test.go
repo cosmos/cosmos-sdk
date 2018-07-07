@@ -656,7 +656,7 @@ func TestGetTendermintUpdatesInserted(t *testing.T) {
 	require.Equal(t, validators[4].ABCIValidator(), updates[0])
 }
 
-func TestGetTendermintUpdatesNotValidatorCliff(t *testing.T) {
+func TestGetTendermintUpdatesWithCliffValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 1000)
 	params := types.DefaultParams()
 	params.MaxValidators = 2

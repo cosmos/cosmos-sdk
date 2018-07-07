@@ -118,6 +118,9 @@ BUG FIXES
 * \#887  - limit the size of rationals that can be passed in from user input
 * \#1461 - CLI tests now no longer reset your local environment data
 * \#1505 - `gaiacli stake validator` no longer panics if validator doesn't exist
+* [x/stake] fix revoke bytes ordering (was putting revoked candidates at the top of the list)
+* [x/stake] bond count was counting revoked validators as bonded, fixed
+* \#1565 - fix cliff validator persisting when validator set shrinks from max
 
 ## 0.19.0
 

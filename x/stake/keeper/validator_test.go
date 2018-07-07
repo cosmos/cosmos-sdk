@@ -93,7 +93,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	require.True(t, keeper.validatorByPowerIndexExists(ctx, power))
 }
 
-func TestZeroPowerUnbonded(t *testing.T) {
+func TestSlashToZeroPowerRemoved(t *testing.T) {
 	// initialize setup
 	ctx, _, keeper := CreateTestInput(t, false, 100)
 	pool := keeper.GetPool(ctx)
@@ -105,15 +105,13 @@ func TestZeroPowerUnbonded(t *testing.T) {
 	require.Equal(t, int64(100), validator.PoolShares.Tokens(pool).RoundInt64())
 	keeper.SetPool(ctx, pool)
 	keeper.SetValidatorByPubKeyIndex(ctx, validator)
-	keeper.UpdateValidator(ctx, validator)
-	validator, found := keeper.GetValidator(ctx, addrVals[0])
-	require.True(t, found)
+	validator = keeper.UpdateValidator(ctx, validator)
 	require.Equal(t, int64(100), validator.PoolShares.Tokens(pool).RoundInt64(), "\nvalidator %v\npool %v", validator, pool)
 
 	// slash the validator by 100%
 	keeper.Slash(ctx, PKs[0], 0, 100, sdk.OneRat())
 	// validator should have been deleted
-	_, found = keeper.GetValidator(ctx, addrVals[0])
+	_, found := keeper.GetValidator(ctx, addrVals[0])
 	require.False(t, found)
 }
 

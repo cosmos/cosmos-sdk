@@ -38,7 +38,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 		// NOTE:  Correctness dependent on invariant that unbonding delegations / redelegations must also have been completely
 		//        slashed in this case - which we don't explicitly check, but should be true.
 		// Log the slash attempt for future reference (maybe we should tag it too)
-		logger.Info(fmt.Sprintf("Ignored attempt to slash a nonexistent validator with address %s", pubkey.Address()))
+		logger.Error(fmt.Sprintf("WARNING: Ignored attempt to slash a nonexistent validator with address %s, we recommend you investigate immediately", pubkey.Address()))
 		return
 	}
 	ownerAddress := validator.GetOwner()

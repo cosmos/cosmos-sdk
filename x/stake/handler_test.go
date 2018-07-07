@@ -3,7 +3,6 @@ package stake
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -596,10 +595,10 @@ func TestUnbondingWhenExcessValidators(t *testing.T) {
 	// validator (aka. validator-1) should make it into the bonded group, thus
 	// the total number of validators should stay the same
 	vals := keeper.GetValidatorsBonded(ctx)
-	assert.Equal(t, 2, len(vals), "vals %v", vals)
+	require.Equal(t, 2, len(vals), "vals %v", vals)
 	val1, found := keeper.GetValidator(ctx, validatorAddr1)
 	require.True(t, found)
-	assert.Equal(t, sdk.Bonded, val1.Status(), "%v", val1)
+	require.Equal(t, sdk.Bonded, val1.Status(), "%v", val1)
 }
 
 func TestJoiningAsCliffValidator(t *testing.T) {

@@ -1,7 +1,6 @@
 package stake
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -588,13 +587,10 @@ func TestUnbondingWhenExcessValidators(t *testing.T) {
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
 	require.Equal(t, 2, len(keeper.GetValidatorsBonded(ctx)))
 
-	fmt.Println("debug 1________________________________________________________________________________________")
-
 	// unbond the valdator-2
 	msgBeginUnbonding := NewMsgBeginUnbonding(validatorAddr2, validatorAddr2, sdk.NewRat(30))
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgBeginUnbonding")
-	fmt.Println("debug 2________________________________________________________________________________________")
 
 	// because there are extra validators waiting to get in, the queued
 	// validator (aka. validator-1) should make it into the bonded group, thus
@@ -713,7 +709,7 @@ func TestCliffValidator(t *testing.T) {
 	cliffVal = keeper.GetCliffValidator(ctx)
 	require.Equal(t, validatorAddr2.Bytes(), cliffVal)
 
-	// unbond the valdator-2
+	// unbond valdator-2
 	msgBeginUnbonding := NewMsgBeginUnbonding(validatorAddr2, validatorAddr2, sdk.NewRat(30))
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgBeginUnbonding")
@@ -726,8 +722,8 @@ func TestCliffValidator(t *testing.T) {
 	cliffVal = keeper.GetCliffValidator(ctx)
 	require.Equal(t, validatorAddr3.Bytes(), cliffVal)
 
-	// unbond the second validator
-	msgBeginUnbonding = NewMsgBeginUnbonding(validatorAddr1, validatorAddr1, sdk.NewRat(5))
+	// unbond valdator-1
+	msgBeginUnbonding = NewMsgBeginUnbonding(validatorAddr1, validatorAddr1, sdk.NewRat(50))
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgBeginUnbonding")
 

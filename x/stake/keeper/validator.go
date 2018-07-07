@@ -195,23 +195,19 @@ func (k Keeper) ClearTendermintUpdates(ctx sdk.Context) {
 // updates all validator stores as well as tendermint update store
 // may kick out validators if new validator is entering the bonded validator group
 func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) types.Validator {
-	fmt.Println("wackydebugoutput UpdateValidator 0")
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
 	ownerAddr := validator.Owner
 
 	// always update the main list ordered by owner address before exiting
 	defer func() {
-		fmt.Println("wackydebugoutput UpdateValidator 1")
 		k.SetValidator(ctx, validator)
 	}()
-	fmt.Println("wackydebugoutput UpdateValidator 2")
 
 	// retrieve the old validator record
 	oldValidator, oldFound := k.GetValidator(ctx, ownerAddr)
 
 	if validator.Revoked && oldValidator.Status() == sdk.Bonded {
-		fmt.Println("wackydebugoutput UpdateValidator 3")
 		validator = k.unbondValidator(ctx, validator)
 
 		// need to also clear the cliff validator spot because the revoke has
@@ -219,47 +215,37 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 		// updateValidatorsBonded is called
 		k.clearCliffValidator(ctx)
 	}
-	fmt.Println("wackydebugoutput UpdateValidator 4")
 
 	powerIncreasing := false
 	if oldFound && oldValidator.PoolShares.Bonded().LT(validator.PoolShares.Bonded()) {
-		fmt.Println("wackydebugoutput UpdateValidator 5")
 		powerIncreasing = true
 	}
-	fmt.Println("wackydebugoutput UpdateValidator 6")
 
 	// if already a validator, copy the old block height and counter, else set them
 	if oldFound && oldValidator.Status() == sdk.Bonded {
-		fmt.Println("wackydebugoutput UpdateValidator 7")
 		validator.BondHeight = oldValidator.BondHeight
 		validator.BondIntraTxCounter = oldValidator.BondIntraTxCounter
 	} else {
-		fmt.Println("wackydebugoutput UpdateValidator 8")
 		validator.BondHeight = ctx.BlockHeight()
 		counter := k.GetIntraTxCounter(ctx)
 		validator.BondIntraTxCounter = counter
 		k.SetIntraTxCounter(ctx, counter+1)
 	}
-	fmt.Println("wackydebugoutput UpdateValidator 9")
 
 	// update the list ordered by voting power
 	if oldFound {
-		fmt.Println("wackydebugoutput UpdateValidator 10")
 		store.Delete(GetValidatorsByPowerIndexKey(oldValidator, pool))
 	}
-	fmt.Println("wackydebugoutput UpdateValidator 11")
 	valPower := GetValidatorsByPowerIndexKey(validator, pool)
 	store.Set(valPower, validator.Owner)
 
 	// efficiency case:
 	// if already bonded and power increasing only need to update tendermint
 	if powerIncreasing && !validator.Revoked && oldValidator.Status() == sdk.Bonded {
-		fmt.Println("wackydebugoutput UpdateValidator 12")
 		bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
 		store.Set(GetTendermintUpdatesKey(ownerAddr), bz)
 		return validator
 	}
-	fmt.Println("wackydebugoutput UpdateValidator 13")
 
 	// efficiency case:
 	// if was unbonded/or is a new validator - and the new power is less than the cliff validator
@@ -267,27 +253,21 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 	if cliffPower != nil &&
 		(!oldFound || (oldFound && oldValidator.Status() == sdk.Unbonded)) &&
 		bytes.Compare(valPower, cliffPower) == -1 { //(valPower < cliffPower
-		fmt.Println("wackydebugoutput UpdateValidator 14")
 		return validator
 	}
-	fmt.Println("wackydebugoutput UpdateValidator 15")
 
 	// update the validator set for this validator
 	updatedVal := k.UpdateBondedValidators(ctx, validator)
 	if updatedVal.Owner != nil { // updates to validator occurred  to be updated
-		fmt.Println("wackydebugoutput UpdateValidator 16")
 		validator = updatedVal
 	}
-	fmt.Println("wackydebugoutput UpdateValidator 17")
 	// if decreased in power but still bonded, update Tendermint validator
 	// (if updatedVal is set, the validator has changed bonding status)
 	stillBonded := oldFound && oldValidator.Status() == sdk.Bonded && updatedVal.Owner == nil
 	if stillBonded && oldValidator.PoolShares.Bonded().GT(validator.PoolShares.Bonded()) {
-		fmt.Println("wackydebugoutput UpdateValidator 18")
 		bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
 		store.Set(GetTendermintUpdatesKey(ownerAddr), bz)
 	}
-	fmt.Println("wackydebugoutput UpdateValidator 19")
 	return validator
 }
 
@@ -306,8 +286,6 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 // Optionally also return the validator from a retrieve address if the validator has been bonded
 func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 	affectedValidator types.Validator) (updatedVal types.Validator) {
-	fmt.Printf("debug affectedValidator: %#v\n", affectedValidator)
-	fmt.Println("wackydebugoutput UpdateBondedValidators 0")
 
 	store := ctx.KVStore(k.storeKey)
 
@@ -320,63 +298,42 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 	bondedValidatorsCount := 0
 	var validator types.Validator
 	for {
-		fmt.Println("wackydebugoutput UpdateBondedValidators 1")
 		if !iterator.Valid() || bondedValidatorsCount > int(maxValidators-1) {
-			fmt.Printf("debug !iterator.Valid(): %v\n", !iterator.Valid())
-			fmt.Printf("debug bondedValidatorsCount > int(maxValidators-1): %v\n", bondedValidatorsCount > int(maxValidators-1))
-			fmt.Println("wackydebugoutput UpdateBondedValidators 2")
 
-			fmt.Printf("debug bondedValidatorsCount: %v\n", bondedValidatorsCount)
-			fmt.Printf("debug maxValidators: %v\n", maxValidators)
 			// TODO benchmark if we should read the current power and not write if it's the same
 			if bondedValidatorsCount == int(maxValidators) { // is cliff validator
-				fmt.Println("wackydebugoutput UpdateBondedValidators 3")
 				k.setCliffValidator(ctx, validator, k.GetPool(ctx))
 			} else {
-				fmt.Println("wackydebugoutput UpdateBondedValidators 4")
 				k.clearCliffValidator(ctx)
 			}
-			fmt.Println("wackydebugoutput UpdateBondedValidators 5")
 			break
 		}
-		fmt.Println("wackydebugoutput UpdateBondedValidators 6")
 
 		// either retrieve the original validator from the store, or under the
 		// situation that this is the "new validator" just use the validator
 		// provided because it has not yet been updated in the main validator
 		// store
 		ownerAddr := iterator.Value()
-		fmt.Printf("debug iterator.Value: %v\n", ownerAddr)
-		fmt.Printf("debug iterator.Key: %v\n", iterator.Key())
 		if bytes.Equal(ownerAddr, affectedValidator.Owner) {
-			fmt.Println("wackydebugoutput UpdateBondedValidators 7")
 			validator = affectedValidator
 		} else {
-			fmt.Println("wackydebugoutput UpdateBondedValidators 8")
 			var found bool
 			validator, found = k.GetValidator(ctx, ownerAddr)
 			if !found {
-				fmt.Println("wackydebugoutput UpdateBondedValidators 9")
 				panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
 			}
-			fmt.Println("wackydebugoutput UpdateBondedValidators 10")
 		}
-		fmt.Println("wackydebugoutput UpdateBondedValidators 11")
 
 		// if not previously a validator (and unrevoked),
 		// kick the cliff validator / bond this new validator
 		if validator.Status() != sdk.Bonded && !validator.Revoked {
-			fmt.Println("wackydebugoutput UpdateBondedValidators 12")
 			kickCliffValidator = true
 
 			validator = k.bondValidator(ctx, validator)
 			if bytes.Equal(ownerAddr, affectedValidator.Owner) {
-				fmt.Println("wackydebugoutput UpdateBondedValidators 13")
 				updatedVal = validator
 			}
-			fmt.Println("wackydebugoutput UpdateBondedValidators 14")
 		}
-		fmt.Println("wackydebugoutput UpdateBondedValidators 15")
 
 		if !validator.Revoked {
 			bondedValidatorsCount++
@@ -388,21 +345,16 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 
 		iterator.Next()
 	}
-	fmt.Println("wackydebugoutput UpdateBondedValidators 19")
 	iterator.Close()
 
 	// perform the actual kicks
 	if oldCliffValidatorAddr != nil && kickCliffValidator {
-		fmt.Println("wackydebugoutput UpdateBondedValidators 20")
 		validator, found := k.GetValidator(ctx, oldCliffValidatorAddr)
 		if !found {
-			fmt.Println("wackydebugoutput UpdateBondedValidators 21")
 			panic(fmt.Sprintf("validator record not found for address: %v\n", oldCliffValidatorAddr))
 		}
-		fmt.Println("wackydebugoutput UpdateBondedValidators 22")
 		k.unbondValidator(ctx, validator)
 	}
-	fmt.Println("wackydebugoutput UpdateBondedValidators 23")
 
 	return
 }
@@ -506,17 +458,14 @@ func (k Keeper) unbondValidator(ctx sdk.Context, validator types.Validator) type
 
 // perform all the store operations for when a validator status becomes bonded
 func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.Validator {
-	fmt.Println("wackydebugoutput bondValidator 0")
 
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
 
 	// sanity check
 	if validator.Status() == sdk.Bonded {
-		fmt.Println("wackydebugoutput bondValidator 1")
 		panic(fmt.Sprintf("should not already be bonded, validator: %v\n", validator))
 	}
-	fmt.Println("wackydebugoutput bondValidator 2")
 
 	// set the status
 	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
@@ -525,7 +474,6 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	// save the now bonded validator record to the three referenced stores
 	k.SetValidator(ctx, validator)
 	store.Set(GetValidatorsBondedIndexKey(validator.Owner), []byte{})
-	fmt.Println("wackydebugoutput bondValidator 3")
 
 	// add to accumulated changes for tendermint
 	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidator())

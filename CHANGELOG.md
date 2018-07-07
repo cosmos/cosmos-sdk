@@ -116,6 +116,7 @@ BUG FIXES
 * \#1505 - `gaiacli stake validator` no longer panics if validator doesn't exist
 * [x/stake] fix revoke bytes ordering (was putting revoked candidates at the top of the list)
 * [x/stake] bond count was counting revoked validators as bonded, fixed
+* \#1565 - fix cliff validator persisting when validator set shrinks from max
 
 ## 0.19.0
 

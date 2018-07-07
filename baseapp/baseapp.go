@@ -539,9 +539,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	}
 
 	// accumulate results
-	var logs []string
-	var data []byte
-	var tags sdk.Tags
+	logs := make([]string, 0, len(msgs))
+	var data []byte   // NOTE: we just append them all (?!)
+	var tags sdk.Tags // also just append them all
 	var code sdk.ABCICodeType
 	for msgIdx, msg := range msgs {
 		// Match route.

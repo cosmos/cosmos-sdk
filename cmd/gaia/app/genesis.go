@@ -30,20 +30,20 @@ type GenesisState struct {
 
 // GenesisAccount doesn't need pubkey or sequence
 type GenesisAccount struct {
-	Address sdk.Address `json:"address"`
-	Coins   sdk.Coins   `json:"coins"`
+	Address string    `json:"address"`
+	Coins   sdk.Coins `json:"coins"`
 }
 
 func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
 	return GenesisAccount{
-		Address: acc.Address,
+		Address: sdk.MustBech32ifyAcc(acc.Address),
 		Coins:   acc.Coins,
 	}
 }
 
 func NewGenesisAccountI(acc auth.Account) GenesisAccount {
 	return GenesisAccount{
-		Address: acc.GetAddress(),
+		Address: sdk.MustBech32ifyAcc(acc.GetAddress()),
 		Coins:   acc.GetCoins(),
 	}
 }
@@ -51,7 +51,7 @@ func NewGenesisAccountI(acc auth.Account) GenesisAccount {
 // convert GenesisAccount to auth.BaseAccount
 func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 	return &auth.BaseAccount{
-		Address: ga.Address,
+		Address: sdk.MustGetAccAddressBech32(ga.Address),
 		Coins:   ga.Coins.Sort(),
 	}
 }
@@ -76,9 +76,9 @@ func GaiaAppInit() server.AppInit {
 
 // simple genesis tx
 type GaiaGenTx struct {
-	Name    string        `json:"name"`
-	Address sdk.Address   `json:"address"`
-	PubKey  crypto.PubKey `json:"pub_key"`
+	Name    string `json:"name"`
+	Address string `json:"address"`
+	PubKey  string `json:"pub_key"`
 }
 
 // Generate a gaia genesis transaction with flags
@@ -88,7 +88,7 @@ func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig config.GenTx) (
 		return nil, nil, tmtypes.GenesisValidator{}, errors.New("Must specify --name (validator moniker)")
 	}
 
-	var addr sdk.Address
+	var addr string
 	var secret string
 	addr, secret, err = server.GenerateSaveCoinKey(genTxConfig.CliRoot, genTxConfig.Name, "1234567890", genTxConfig.Overwrite)
 	if err != nil {
@@ -108,14 +108,14 @@ func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig config.GenTx) (
 }
 
 // Generate a gaia genesis transaction without flags
-func GaiaAppGenTxNF(cdc *wire.Codec, pk crypto.PubKey, addr sdk.Address, name string) (
+func GaiaAppGenTxNF(cdc *wire.Codec, pk crypto.PubKey, addr string, name string) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
 	var bz []byte
 	gaiaGenTx := GaiaGenTx{
 		Name:    name,
 		Address: addr,
-		PubKey:  pk,
+		PubKey:  sdk.MustBech32ifyAccPub(pk),
 	}
 	bz, err = wire.MarshalJSONIndent(cdc, gaiaGenTx)
 	if err != nil {
@@ -153,7 +153,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		}
 
 		// create the genesis account, give'm few steaks and a buncha token with there name
-		accAuth := auth.NewBaseAccountWithAddress(genTx.Address)
+		accAuth := auth.NewBaseAccountWithAddress(sdk.MustGetAccAddressBech32(genTx.Address))
 		accAuth.Coins = sdk.Coins{
 			{genTx.Name + "Token", sdk.NewInt(1000)},
 			{"steak", sdk.NewInt(freeFermionsAcc)},
@@ -165,7 +165,8 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		// add the validator
 		if len(genTx.Name) > 0 {
 			desc := stake.NewDescription(genTx.Name, "", "", "")
-			validator := stake.NewValidator(genTx.Address, genTx.PubKey, desc)
+			validator := stake.NewValidator(sdk.MustGetAccAddressBech32(genTx.Address),
+				sdk.MustGetAccPubKeyBech32(genTx.PubKey), desc)
 
 			stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens + freeFermionVal // increase the supply
 

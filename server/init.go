@@ -376,22 +376,22 @@ var DefaultAppInit = AppInit{
 
 // simple genesis tx
 type SimpleGenTx struct {
-	Addr sdk.Address `json:"addr"`
+	Addr string `json:"addr"`
 }
 
 // Generate a genesis transaction
 func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig serverconfig.GenTx) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
-	var addr sdk.Address
+	var bech32Addr string
 	var secret string
-	addr, secret, err = GenerateCoinKey()
+	bech32Addr, secret, err = GenerateCoinKey()
 	if err != nil {
 		return
 	}
 
 	var bz []byte
-	simpleGenTx := SimpleGenTx{addr}
+	simpleGenTx := SimpleGenTx{bech32Addr}
 	bz, err = cdc.MarshalJSON(simpleGenTx)
 	if err != nil {
 		return
@@ -436,7 +436,7 @@ func SimpleAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState j
       }
     ]
   }]
-}`, genTx.Addr.String()))
+}`, genTx.Addr))
 	return
 }
 
@@ -444,7 +444,7 @@ func SimpleAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState j
 
 // GenerateCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateCoinKey() (sdk.Address, string, error) {
+func GenerateCoinKey() (string, string, error) {
 
 	// construct an in-memory key store
 	keybase := keys.New(
@@ -454,35 +454,35 @@ func GenerateCoinKey() (sdk.Address, string, error) {
 	// generate a private key, with recovery phrase
 	info, secret, err := keybase.CreateMnemonic("name", keys.English, "pass", keys.Secp256k1)
 	if err != nil {
-		return nil, "", err
+		return "", "", err
 	}
 	addr := info.GetPubKey().Address()
-	return sdk.Address(addr), secret, nil
+	return sdk.MustBech32ifyAcc(sdk.Address(addr)), secret, nil
 }
 
 // GenerateSaveCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (sdk.Address, string, error) {
+func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (string, string, error) {
 
 	// get the keystore from the client
 	keybase, err := clkeys.GetKeyBaseFromDir(clientRoot)
 	if err != nil {
-		return nil, "", err
+		return "", "", err
 	}
 
 	// ensure no overwrite
 	if !overwrite {
 		_, err := keybase.Get(keyName)
 		if err == nil {
-			return nil, "", errors.New("key already exists, overwrite is disabled")
+			return "", "", errors.New("key already exists, overwrite is disabled")
 		}
 	}
 
 	// generate a private key, with recovery phrase
 	info, secret, err := keybase.CreateMnemonic(keyName, keys.English, keyPass, keys.Secp256k1)
 	if err != nil {
-		return nil, "", err
+		return "", "", err
 	}
 	addr := info.GetPubKey().Address()
-	return sdk.Address(addr), secret, nil
+	return sdk.MustBech32ifyAcc(sdk.Address(addr)), secret, nil
 }

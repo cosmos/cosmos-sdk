@@ -303,7 +303,7 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 			// TODO benchmark if we should read the current power and not write if it's the same
 			if bondedValidatorsCount == int(maxValidators) { // is cliff validator
 				k.setCliffValidator(ctx, validator, k.GetPool(ctx))
-			} else {
+			} else if len(oldCliffValidatorAddr) > 0 {
 				k.clearCliffValidator(ctx)
 			}
 			break
@@ -409,10 +409,14 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 			validator = k.bondValidator(ctx, validator)
 		}
 
-		if validator.Revoked && validator.Status() == sdk.Bonded {
-			panic(fmt.Sprintf("revoked validator cannot be bonded, address: %v\n", ownerAddr))
+		if !validator.Revoked {
+			bondedValidatorsCount++
+		} else {
+			if validator.Status() == sdk.Bonded {
+				panic(fmt.Sprintf("revoked validator cannot be bonded, address: %v\n", ownerAddr))
+			}
 		}
-		bondedValidatorsCount++
+
 		iterator.Next()
 	}
 	iterator.Close()

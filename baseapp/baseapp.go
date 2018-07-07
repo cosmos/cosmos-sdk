@@ -122,6 +122,11 @@ func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 }
 
 // default custom logic for transaction decoding
+// TODO: remove auth and wire dependencies from baseapp
+//	- move this to auth.DefaultTxDecoder
+//	- set the default here to JSON decode like docs/examples/app1 (it will fail
+//		for multiple messages ;))
+//	- pass a TxDecoder into NewBaseApp, instead of a codec.
 func defaultTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var tx = auth.StdTx{}
@@ -370,6 +375,8 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 				return app.FilterPeerByAddrPort(path[3])
 			}
 			if path[2] == "pubkey" {
+				// TODO: this should be changed to `id`
+				// NOTE: this changed in tendermint and we didn't notice...
 				return app.FilterPeerByPubKey(path[3])
 			}
 		}
@@ -468,28 +475,38 @@ func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
 // txBytes may be nil in some cases, eg. in tests.
 // Also, in the future we may support "internal" transactions.
 func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
+	//NOTE: GasWanted should be returned by the AnteHandler.
+	// GasUsed is determined by the GasMeter.
+	// We need access to the context to get the gas meter so
+	// we initialize upfront
+	var gasWanted int64
+	ctx := app.getContextForAnte(mode, txBytes)
+
 	// Handle any panics.
 	defer func() {
 		if r := recover(); r != nil {
-			switch r.(type) {
+			switch rType := r.(type) {
 			case sdk.ErrorOutOfGas:
-				log := fmt.Sprintf("out of gas in location: %v", r.(sdk.ErrorOutOfGas).Descriptor)
+				log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
 				result = sdk.ErrOutOfGas(log).Result()
 			default:
 				log := fmt.Sprintf("recovered: %v\nstack:\n%v", r, string(debug.Stack()))
 				result = sdk.ErrInternal(log).Result()
 			}
 		}
+		result.GasWanted = gasWanted
+		result.GasUsed = ctx.GasMeter().GasConsumed()
 	}()
 
 	// Get the Msg.
 	var msgs = tx.GetMsgs()
 	if msgs == nil || len(msgs) == 0 {
+		// TODO: probably shouldn't be ErrInternal. Maybe new ErrInvalidMessage, or ?
 		return sdk.ErrInternal("Tx.GetMsgs() must return at least one message in list").Result()
 	}
 
 	for _, msg := range msgs {
-		// Validate the Msg
+		// Validate the Msg.
 		err := msg.ValidateBasic()
 		if err != nil {
 			err = err.WithDefaultCodespace(sdk.CodespaceRoot)
@@ -497,29 +514,16 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		}
 	}
 
-	// Get the context
-	var ctx sdk.Context
-	if mode == runTxModeCheck || mode == runTxModeSimulate {
-		ctx = app.checkState.ctx.WithTxBytes(txBytes)
-	} else {
-		ctx = app.deliverState.ctx.WithTxBytes(txBytes)
-		ctx = ctx.WithSigningValidators(app.signedValidators)
-	}
-
-	// Simulate a DeliverTx for gas calculation
-	if mode == runTxModeSimulate {
-		ctx = ctx.WithIsCheckTx(false)
-	}
-
 	// Run the ante handler.
 	if app.anteHandler != nil {
-		newCtx, result, abort := app.anteHandler(ctx, tx)
+		newCtx, anteResult, abort := app.anteHandler(ctx, tx)
 		if abort {
-			return result
+			return anteResult
 		}
 		if !newCtx.IsZero() {
 			ctx = newCtx
 		}
+		gasWanted = anteResult.GasWanted
 	}
 
 	// Get the correct cache
@@ -534,9 +538,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		ctx = ctx.WithMultiStore(msCache)
 	}
 
-	finalResult := sdk.Result{}
-	var logs []string
-	for i, msg := range msgs {
+	// accumulate results
+	logs := make([]string, 0, len(msgs))
+	var data []byte   // NOTE: we just append them all (?!)
+	var tags sdk.Tags // also just append them all
+	var code sdk.ABCICodeType
+	for msgIdx, msg := range msgs {
 		// Match route.
 		msgType := msg.Type()
 		handler := app.router.Route(msgType)
@@ -544,43 +551,61 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 			return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
 		}
 
-		result = handler(ctx, msg)
+		msgResult := handler(ctx, msg)
 
-		// Set gas utilized
-		finalResult.GasUsed += ctx.GasMeter().GasConsumed()
-		finalResult.GasWanted += result.GasWanted
+		// NOTE: GasWanted is determined by ante handler and
+		// GasUsed by the GasMeter
 
 		// Append Data and Tags
-		finalResult.Data = append(finalResult.Data, result.Data...)
-		finalResult.Tags = append(finalResult.Tags, result.Tags...)
-
-		// Construct usable logs in multi-message transactions. Messages are 1-indexed in logs.
-		logs = append(logs, fmt.Sprintf("Msg %d: %s", i+1, finalResult.Log))
+		data = append(data, msgResult.Data...)
+		tags = append(tags, msgResult.Tags...)
 
 		// Stop execution and return on first failed message.
-		if !result.IsOK() {
-			if len(msgs) == 1 {
-				return result
-			}
-			result.GasUsed = finalResult.GasUsed
-			if i == 0 {
-				result.Log = fmt.Sprintf("Msg 1 failed: %s", result.Log)
-			} else {
-				result.Log = fmt.Sprintf("Msg 1-%d Passed. Msg %d failed: %s", i, i+1, result.Log)
-			}
-			return result
+		if !msgResult.IsOK() {
+			logs = append(logs, fmt.Sprintf("Msg %d failed: %s", msgIdx, msgResult.Log))
+			code = msgResult.Code
+			break
 		}
+
+		// Construct usable logs in multi-message transactions.
+		logs = append(logs, fmt.Sprintf("Msg %d: %s", msgIdx, msgResult.Log))
 	}
 
-	// If not a simulated run and result was successful, write to app.checkState.ms or app.deliverState.ms
-	// Only update state if all messages pass.
-	if mode != runTxModeSimulate && result.IsOK() {
+	// Set the final gas values.
+	result = sdk.Result{
+		Code:      code,
+		Data:      data,
+		Log:       strings.Join(logs, "\n"),
+		GasWanted: gasWanted,
+		GasUsed:   ctx.GasMeter().GasConsumed(),
+		// TODO: FeeAmount/FeeDenom
+		Tags: tags,
+	}
+
+	// Only update state if all messages pass and we're not in a simulation.
+	if result.IsOK() && mode != runTxModeSimulate {
 		msCache.Write()
 	}
 
-	finalResult.Log = strings.Join(logs, "\n")
+	return result
+}
 
-	return finalResult
+func (app *BaseApp) getContextForAnte(mode runTxMode, txBytes []byte) sdk.Context {
+	var ctx sdk.Context
+
+	// Get the context.
+	if mode == runTxModeCheck || mode == runTxModeSimulate {
+		ctx = app.checkState.ctx.WithTxBytes(txBytes)
+	} else {
+		ctx = app.deliverState.ctx.WithTxBytes(txBytes)
+		ctx = ctx.WithSigningValidators(app.signedValidators)
+	}
+
+	// Simulate a DeliverTx for gas calculation.
+	if mode == runTxModeSimulate {
+		ctx = ctx.WithIsCheckTx(false)
+	}
+	return ctx
 }
 
 // Implements ABCI

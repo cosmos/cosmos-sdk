@@ -74,9 +74,9 @@ func TestKeys(t *testing.T) {
 	addrBech32 := addr.String()
 
 	require.Equal(t, name, m[0].Name, "Did not serve keys name correctly")
-	require.Equal(t, addrBech32, m[0].Address, "Did not serve keys Address correctly")
+	require.Equal(t, addrBech32, m[0].Address.String(), "Did not serve keys Address correctly")
 	require.Equal(t, newName, m[1].Name, "Did not serve keys name correctly")
-	require.Equal(t, addr2Bech32, m[1].Address, "Did not serve keys Address correctly")
+	require.Equal(t, addr2Bech32, m[1].Address.String(), "Did not serve keys Address correctly")
 
 	// select key
 	keyEndpoint := fmt.Sprintf("/keys/%s", newName)
@@ -87,7 +87,7 @@ func TestKeys(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, newName, m2.Name, "Did not serve keys name correctly")
-	require.Equal(t, addr2Bech32, m2.Address, "Did not serve keys Address correctly")
+	require.Equal(t, addr2Bech32, m2.Address.String(), "Did not serve keys Address correctly")
 
 	// update key
 	jsonStr = []byte(fmt.Sprintf(`{
@@ -197,7 +197,7 @@ func TestValidators(t *testing.T) {
 
 	require.NotEqual(t, rpc.ResultValidatorsOutput{}, resultVals)
 
-	require.Contains(t, resultVals.Validators[0].Address, "cosmosvaladdr")
+	require.Contains(t, resultVals.Validators[0].Address.String(), "cosmosvaladdr")
 	require.Contains(t, resultVals.Validators[0].PubKey, "cosmosvalpub")
 
 	// --

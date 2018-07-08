@@ -34,7 +34,7 @@ func NewMsgMine(sender sdk.AccAddress, difficulty uint64, count uint64, nonce ui
 func (msg MsgMine) Type() string                 { return "pow" }
 func (msg MsgMine) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Sender} }
 func (msg MsgMine) String() string {
-	return fmt.Sprintf("MsgMine{Sender: %v, Difficulty: %d, Count: %d, Nonce: %d, Proof: %s}", msg.Sender, msg.Difficulty, msg.Count, msg.Nonce, msg.Proof)
+	return fmt.Sprintf("MsgMine{Sender: %s, Difficulty: %d, Count: %d, Nonce: %d, Proof: %s}", msg.Sender, msg.Difficulty, msg.Count, msg.Nonce, msg.Proof)
 }
 
 // validate the mine message

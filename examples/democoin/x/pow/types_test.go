@@ -55,14 +55,14 @@ func TestMsgMineString(t *testing.T) {
 	addr := sdk.AccAddress([]byte("sender"))
 	msg := MsgMine{addr, 0, 0, 0, []byte("abc")}
 	res := msg.String()
-	require.Equal(t, res, "MsgMine{Sender: 73656E646572, Difficulty: 0, Count: 0, Nonce: 0, Proof: abc}")
+	require.Equal(t, res, "MsgMine{Sender: cosmosaccaddr1wdjkuer9wg4wml9c, Difficulty: 0, Count: 0, Nonce: 0, Proof: abc}")
 }
 
 func TestMsgMineGetSignBytes(t *testing.T) {
 	addr := sdk.AccAddress([]byte("sender"))
 	msg := MsgMine{addr, 1, 1, 1, []byte("abc")}
 	res := msg.GetSignBytes()
-	require.Equal(t, string(res), `{"count":1,"difficulty":1,"nonce":1,"proof":"YWJj","sender":"73656E646572"}`)
+	require.Equal(t, string(res), `{"count":1,"difficulty":1,"nonce":1,"proof":"YWJj","sender":"cosmosaccaddr1wdjkuer9wg4wml9c"}`)
 }
 
 func TestMsgMineGetSigners(t *testing.T) {

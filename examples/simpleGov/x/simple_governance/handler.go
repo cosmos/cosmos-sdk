@@ -136,7 +136,7 @@ func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
 	if voterOption == "" && err != nil {
 		// voter has not voted yet
 		for _, delegation := range delegatedTo {
-			bondShares := delegation.GetBondShares().Evaluate()
+			bondShares := delegation.GetBondShares().EvaluateBig().Int64()
 			err = proposal.updateTally(msg.Option, bondShares)
 			if err != nil {
 				return err.Result()
@@ -145,7 +145,7 @@ func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
 	} else {
 		// voter has already voted
 		for _, delegation := range delegatedTo {
-			bondShares := delegation.GetBondShares().Evaluate()
+			bondShares := delegation.GetBondShares().EvaluateBig().Int64()
 			// update previous vote with new one
 			err = proposal.updateTally(voterOption, -bondShares)
 			if err != nil {

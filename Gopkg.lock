@@ -49,9 +49,15 @@
     "client/rpc",
     "client/tx",
     "cmd/gaia/app",
+    "crypto",
+    "crypto/keys",
+    "crypto/keys/bcrypt",
+    "crypto/keys/bip39",
+    "crypto/keys/hd",
     "examples/basecoin/app",
     "examples/basecoin/types",
     "examples/democoin/app",
+    "examples/democoin/mock",
     "examples/democoin/types",
     "examples/democoin/x/cool",
     "examples/democoin/x/cool/client/cli",
@@ -71,21 +77,28 @@
     "x/auth",
     "x/auth/client/cli",
     "x/auth/client/rest",
-    "x/auth/mock",
     "x/bank",
     "x/bank/client",
     "x/bank/client/cli",
     "x/bank/client/rest",
+    "x/gov",
+    "x/gov/client/cli",
+    "x/gov/client/rest",
     "x/ibc",
     "x/ibc/client/cli",
     "x/ibc/client/rest",
+    "x/mock",
     "x/slashing",
     "x/slashing/client/cli",
+    "x/slashing/client/rest",
     "x/stake",
     "x/stake/client/cli",
-    "x/stake/client/rest"
+    "x/stake/client/rest",
+    "x/stake/keeper",
+    "x/stake/tags",
+    "x/stake/types"
   ]
-  revision = "918e217e1f52daa6f30a19468a04f9b1893eee82"
+  revision = "0d94c5a2559f9b117a67327b1813c2926c5fa6bf"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -187,7 +200,6 @@
     ".",
     "hcl/ast",
     "hcl/parser",
-    "hcl/printer",
     "hcl/scanner",
     "hcl/strconv",
     "hcl/token",
@@ -196,6 +208,12 @@
     "json/token"
   ]
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/howeyc/crc16"
+  packages = ["."]
+  revision = "2b2a61e366a66d3efb279e46176e7291001e0354"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -367,6 +385,12 @@
   revision = "0d5a0ceb10cf9ab89fdd744cc8c50a83134f6697"
 
 [[projects]]
+  name = "github.com/tendermint/abci"
+  packages = ["types"]
+  revision = "68592f4d8ee34e97db94b7a7976b1309efdb7eb9"
+  version = "v0.10.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/tendermint/ed25519"
   packages = [
@@ -381,6 +405,19 @@
   packages = ["."]
   revision = "2106ca61d91029c931fd54968c2bb02dc96b1412"
   version = "0.10.1"
+
+[[projects]]
+  name = "github.com/tendermint/go-crypto"
+  packages = [
+    ".",
+    "keys",
+    "keys/bcrypt",
+    "keys/words",
+    "keys/words/wordlist",
+    "tmhash"
+  ]
+  revision = "e4e3f8d8084637493b3208cf174a8338cbf618ac"
+  version = "v0.8.0"
 
 [[projects]]
   name = "github.com/tendermint/iavl"
@@ -447,6 +484,17 @@
   ]
   revision = "5923b6288fe8ce9581936ee97c2bf9cf9c02c2f4"
   version = "v0.22.0-rc2"
+
+[[projects]]
+  name = "github.com/tendermint/tmlibs"
+  packages = [
+    "cli",
+    "common",
+    "db",
+    "log"
+  ]
+  revision = "692f1d86a6e2c0efa698fd1e4541b68c74ffaf38"
+  version = "v0.8.4"
 
 [[projects]]
   name = "github.com/zondax/ledger-goclient"
@@ -557,6 +605,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "13ad2a57b6942729e2d08b5c37810d62108aa64a335a4822fcff1ad992c0662b"
+  inputs-digest = "420f39f422babc9b169cc0ef9b939bfc946fb391cadb8c0eeb6ce666c628b3df"
   solver-name = "gps-cdcl"
   solver-version = 1

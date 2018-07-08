@@ -252,20 +252,20 @@ func NewKeeperRead(SimpleGov sdk.StoreKey, ck bank.Keeper, sm stake.Keeper, code
 
 // NewProposalID creates a new id for a proposal
 func (k KeeperRead) NewProposalID(ctx sdk.Context) sdk.Error {
-	return sdk.ErrUnauthorized("").Trace("This keeper does not have write access for the simple governance store")
+	return sdk.ErrUnauthorized("").TraceSDK("This keeper does not have write access for the simple governance store")
 }
 
 // SetProposal sets a proposal to the context
 func (k KeeperRead) SetProposal(ctx sdk.Context, proposalID int64, proposal Proposal) sdk.Error {
-	return sdk.ErrUnauthorized("").Trace("This keeper does not have write access for the simple governance store")
+	return sdk.ErrUnauthorized("").TraceSDK("This keeper does not have write access for the simple governance store")
 }
 
 // SetVote sets the vote option to the proposal stored in the context store
 func (k KeeperRead) SetVote(ctx sdk.Context, key []byte, option string) sdk.Error {
-	return sdk.ErrUnauthorized("").Trace("This keeper does not have write access for the simple governance store")
+	return sdk.ErrUnauthorized("").TraceSDK("This keeper does not have write access for the simple governance store")
 }
 
 // setProposalQueue sets the ProposalQueue to the context
 func (k KeeperRead) setProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) sdk.Error {
-	return sdk.ErrUnauthorized("").Trace("This keeper does not have write access for the simple governance store")
+	return sdk.ErrUnauthorized("").TraceSDK("This keeper does not have write access for the simple governance store")
 }

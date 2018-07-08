@@ -353,6 +353,75 @@ gaiacli stake delegation \
   --chain-id=gaia-6002
 ```
 
+## Governance
+
+Governace is the process from which users in Cosmos can come to consensus on software updates, parameters of the mainnet or on custom proposals for independent sovereign zones/hubs.
+
+Governance is done through voting on proposals, which will be submitted by `Atom` holders on the mainnet. For more information about the governance process and how it works, please check out the Governance module [specification](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/governance).
+
+### Create a Governance proposal
+
+In order to create a governance proposal, you must submit an initial deposit along with the proposal details (_i.e_ `title`, `description` and `type`, which must be of value _Text_, _ParameterChange_ or _SoftwareUpgrade_):
+
+```bash
+gaiacli gov submit-proposal \
+  --title=<title> \
+  --description=<description> \
+  --type=<Text/ParameterChange/SoftwareUpgrade> \
+  --proposer=<account_cosmosaccaddr> \
+  --deposit=<40steak> \
+  --from=<name> \
+  --chain-id=gaia-7000
+```
+
+
+### Rise deposit
+
+In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (default: `10 steak`). If the proposal you previously created didn't meet this requirement, you can still rise the total amount deposited to make it valid. Once the minimum deposit is reached, proposal enters voting period:
+
+```bash
+gaiacli gov deposit \
+  --proposalID=<proposal_id> \
+  --depositer=<account_cosmosaccaddr> \
+  --deposit=<200steak> \
+  --from=<name> \
+  --chain-id=gaia-7000
+```
+
+_NOTE_: Proposals that don't meet this requirement will be deleted.
+
+#### Query proposal
+
+Once created, you can now query information of the proposal:
+
+```bash
+gaiacli gov query-proposal \
+  --proposalID=<proposal_id> \
+  --chain-id=gaia-7000
+```
+
+### Vote on a proposal
+
+```bash
+gaiacli gov vote \
+  --proposalID=<proposal_id> \
+  --voter=<account_cosmosaccaddr> \
+  --option=<Yes/No/NoWithVeto/Abstain> \
+  --from=<name> \
+  --chain-id=gaia-7000
+```
+
+#### Query vote
+
+Check the vote with the option you just submitted:
+
+```bash
+gaiacli gov query-vote \
+  --proposalID=<proposal_id> \
+  --voter=<account_cosmosaccaddr> \
+  --chain-id=gaia-7000
+```
+
 ## Other Operations
 
 ### Send Tokens

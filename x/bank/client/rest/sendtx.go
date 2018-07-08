@@ -1,12 +1,11 @@
 package rest
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/gorilla/mux"
-	"github.com/tendermint/go-crypto/keys"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -81,7 +80,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 		}
 
 		// build message
-		msg := client.BuildMsg(info.PubKey.Address(), to, m.Amount)
+		msg := client.BuildMsg(info.GetPubKey().Address(), to, m.Amount)
 		if err != nil { // XXX rechecking same error ?
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
@@ -111,7 +110,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 			return
 		}
 
-		output, err := json.MarshalIndent(res, "", "  ")
+		output, err := wire.MarshalJSONIndent(cdc, res)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

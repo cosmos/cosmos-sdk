@@ -233,7 +233,11 @@ func (m Linear) Flush(ptr interface{}, fn func() bool) {
 
 	var i uint64
 	for i = top; i < length; i++ {
-		m.Get(i, ptr)
+		err := m.Get(i, ptr)
+		if err != nil {
+			// TODO: Handle with #870
+			panic(err)
+		}
 		m.Delete(i)
 		if fn() {
 			break

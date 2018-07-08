@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/stretchr/testify/assert"
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 func TestToAccount(t *testing.T) {
@@ -14,7 +14,7 @@ func TestToAccount(t *testing.T) {
 	addr := sdk.Address(priv.PubKey().Address())
 	authAcc := auth.NewBaseAccountWithAddress(addr)
 	genAcc := NewGenesisAccount(&authAcc)
-	assert.Equal(t, authAcc, *genAcc.ToAccount())
+	require.Equal(t, authAcc, *genAcc.ToAccount())
 }
 
 func TestGaiaAppGenTx(t *testing.T) {

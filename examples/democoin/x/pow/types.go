@@ -8,7 +8,7 @@ import (
 	"math"
 	"strconv"
 
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -76,5 +76,5 @@ func (msg MsgMine) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }

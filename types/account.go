@@ -5,16 +5,20 @@ import (
 	"errors"
 	"fmt"
 
-	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/tmlibs/bech32"
-	cmn "github.com/tendermint/tmlibs/common"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/libs/bech32"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 //Address is a go crypto-style Address
 type Address = cmn.HexBytes
 
-// Bech32 prefixes
+// nolint
 const (
+	// expected address length
+	AddrLen = 20
+
+	// Bech32 prefixes
 	Bech32PrefixAccAddr = "cosmosaccaddr"
 	Bech32PrefixAccPub  = "cosmosaccpub"
 	Bech32PrefixValAddr = "cosmosvaladdr"
@@ -80,7 +84,7 @@ func MustBech32ifyValPub(pub crypto.PubKey) string {
 // create an Address from a string
 func GetAccAddressHex(address string) (addr Address, err error) {
 	if len(address) == 0 {
-		return addr, errors.New("must use provide address")
+		return addr, errors.New("decoding bech32 address failed: must provide an address")
 	}
 	bz, err := hex.DecodeString(address)
 	if err != nil {
@@ -98,6 +102,15 @@ func GetAccAddressBech32(address string) (addr Address, err error) {
 	return Address(bz), nil
 }
 
+// create an Address from a string, panics on error
+func MustGetAccAddressBech32(address string) (addr Address) {
+	addr, err := GetAccAddressBech32(address)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
 // create a Pubkey from a string
 func GetAccPubKeyBech32(address string) (pk crypto.PubKey, err error) {
 	bz, err := GetFromBech32(address, Bech32PrefixAccPub)
@@ -113,10 +126,19 @@ func GetAccPubKeyBech32(address string) (pk crypto.PubKey, err error) {
 	return pk, nil
 }
 
+// create an Pubkey from a string, panics on error
+func MustGetAccPubKeyBech32(address string) (pk crypto.PubKey) {
+	pk, err := GetAccPubKeyBech32(address)
+	if err != nil {
+		panic(err)
+	}
+	return pk
+}
+
 // create an Address from a hex string
 func GetValAddressHex(address string) (addr Address, err error) {
 	if len(address) == 0 {
-		return addr, errors.New("must use provide address")
+		return addr, errors.New("decoding bech32 address failed: must provide an address")
 	}
 	bz, err := hex.DecodeString(address)
 	if err != nil {
@@ -134,6 +156,15 @@ func GetValAddressBech32(address string) (addr Address, err error) {
 	return Address(bz), nil
 }
 
+// create an Address from a string, panics on error
+func MustGetValAddressBech32(address string) (addr Address) {
+	addr, err := GetValAddressBech32(address)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
 // decode a validator public key into a PubKey
 func GetValPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
 	bz, err := GetFromBech32(pubkey, Bech32PrefixValPub)
@@ -149,10 +180,19 @@ func GetValPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
 	return pk, nil
 }
 
+// create an Pubkey from a string, panics on error
+func MustGetValPubKeyBech32(address string) (pk crypto.PubKey) {
+	pk, err := GetValPubKeyBech32(address)
+	if err != nil {
+		panic(err)
+	}
+	return pk
+}
+
 // decode a bytestring from a bech32-encoded string
 func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 	if len(bech32str) == 0 {
-		return nil, errors.New("must provide non-empty string")
+		return nil, errors.New("decoding bech32 address failed: must provide an address")
 	}
 	hrp, bz, err := bech32.DecodeAndConvert(bech32str)
 	if err != nil {

@@ -5,15 +5,15 @@ import (
 	"net/http"
 
 	keybase "github.com/cosmos/cosmos-sdk/client/keys"
-	keys "github.com/tendermint/go-crypto/keys"
+	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 // REST request body
 // TODO does this need to be exposed?
 type SignTxBody struct {
-	Name     string `json="name"`
-	Password string `json="password"`
-	TxBytes  string `json="tx"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
+	TxBytes  string `json:"tx"`
 }
 
 // sign transaction REST Handler

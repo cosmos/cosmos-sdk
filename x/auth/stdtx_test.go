@@ -1,20 +1,15 @@
 package auth
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// func newStdFee() StdFee {
-// 	return NewStdFee(100,
-// 		Coin{"atom", 150},
-// 	)
-// }
 
 func TestStdTx(t *testing.T) {
 	priv := crypto.GenPrivKeyEd25519()
@@ -24,9 +19,25 @@ func TestStdTx(t *testing.T) {
 	sigs := []StdSignature{}
 
 	tx := NewStdTx(msgs, fee, sigs, "")
-	assert.Equal(t, msgs, tx.GetMsgs())
-	assert.Equal(t, sigs, tx.GetSignatures())
+	require.Equal(t, msgs, tx.GetMsgs())
+	require.Equal(t, sigs, tx.GetSignatures())
 
 	feePayer := FeePayer(tx)
-	assert.Equal(t, addr, feePayer)
+	require.Equal(t, addr, feePayer)
+}
+
+func TestStdSignBytes(t *testing.T) {
+	priv := crypto.GenPrivKeyEd25519()
+	addr := priv.PubKey().Address()
+	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	fee := newStdFee()
+	signMsg := StdSignMsg{
+		"1234",
+		3,
+		6,
+		fee,
+		msgs,
+		"memo",
+	}
+	require.Equal(t, fmt.Sprintf("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"5000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}", addr), string(signMsg.Bytes()))
 }

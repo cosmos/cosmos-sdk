@@ -1,8 +1,8 @@
 package tests
 
 import (
-	"bytes"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"time"
@@ -10,26 +10,37 @@ import (
 
 // execution process
 type Process struct {
-	ExecPath     string
-	Args         []string
-	Pid          int
-	StartTime    time.Time
-	EndTime      time.Time
-	Cmd          *exec.Cmd        `json:"-"`
-	ExitState    *os.ProcessState `json:"-"`
-	WaitCh       chan struct{}    `json:"-"`
-	StdinPipe    io.WriteCloser   `json:"-"`
-	StdoutBuffer *bytes.Buffer    `json:"-"`
-	StderrBuffer *bytes.Buffer    `json:"-"`
+	ExecPath   string
+	Args       []string
+	Pid        int
+	StartTime  time.Time
+	EndTime    time.Time
+	Cmd        *exec.Cmd        `json:"-"`
+	ExitState  *os.ProcessState `json:"-"`
+	StdinPipe  io.WriteCloser   `json:"-"`
+	StdoutPipe io.ReadCloser    `json:"-"`
+	StderrPipe io.ReadCloser    `json:"-"`
 }
 
 // dir: The working directory. If "", os.Getwd() is used.
 // name: Command name
 // args: Args to command. (should not include name)
-// outFile, errFile: If not nil, will use, otherwise new Buffers will be
-// allocated.  Either way, Process.Cmd.StdoutPipe and Process.Cmd.StderrPipe will be nil
-// respectively.
-func StartProcess(dir string, name string, args []string, outFile, errFile io.WriteCloser) (*Process, error) {
+func StartProcess(dir string, name string, args []string) (*Process, error) {
+	proc, err := CreateProcess(dir, name, args)
+	if err != nil {
+		return nil, err
+	}
+	// cmd start
+	if err := proc.Cmd.Start(); err != nil {
+		return nil, err
+	}
+	proc.Pid = proc.Cmd.Process.Pid
+
+	return proc, nil
+}
+
+// Same as StartProcess but doesn't start the process
+func CreateProcess(dir string, name string, args []string) (*Process, error) {
 	var cmd = exec.Command(name, args...) // is not yet started.
 	// cmd dir
 	if dir == "" {
@@ -46,52 +57,27 @@ func StartProcess(dir string, name string, args []string, outFile, errFile io.Wr
 	if err != nil {
 		return nil, err
 	}
-	// cmd stdout, stderr
-	var outBuffer, errBuffer *bytes.Buffer
-	if outFile != nil {
-		cmd.Stdout = outFile
-	} else {
-		outBuffer = bytes.NewBuffer(nil)
-		cmd.Stdout = outBuffer
-	}
-	if errFile != nil {
-		cmd.Stderr = errFile
-	} else {
-		errBuffer = bytes.NewBuffer(nil)
-		cmd.Stderr = errBuffer
-	}
-	// cmd start
-	if err := cmd.Start(); err != nil {
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
 		return nil, err
 	}
+
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return nil, err
+	}
+
 	proc := &Process{
-		ExecPath:  name,
-		Args:      args,
-		Pid:       cmd.Process.Pid,
-		StartTime: time.Now(),
-		Cmd:       cmd,
-		ExitState: nil,
-		WaitCh:    make(chan struct{}),
-		StdinPipe: stdin,
+		ExecPath:   name,
+		Args:       args,
+		StartTime:  time.Now(),
+		Cmd:        cmd,
+		ExitState:  nil,
+		StdinPipe:  stdin,
+		StdoutPipe: stdout,
+		StderrPipe: stderr,
 	}
-	if outBuffer != nil {
-		proc.StdoutBuffer = outBuffer
-	}
-	if errBuffer != nil {
-		proc.StderrBuffer = errBuffer
-	}
-	go func() {
-		err := proc.Cmd.Wait()
-		if err != nil {
-			// fmt.Printf("Process exit: %v\n", err)
-			if exitError, ok := err.(*exec.ExitError); ok {
-				proc.ExitState = exitError.ProcessState
-			}
-		}
-		proc.ExitState = proc.Cmd.ProcessState
-		proc.EndTime = time.Now() // TODO make this goroutine-safe
-		close(proc.WaitCh)
-	}()
 	return proc, nil
 }
 
@@ -106,5 +92,26 @@ func (proc *Process) Stop(kill bool) error {
 
 // wait for the process
 func (proc *Process) Wait() {
-	<-proc.WaitCh
+	err := proc.Cmd.Wait()
+	if err != nil {
+		// fmt.Printf("Process exit: %v\n", err)
+		if exitError, ok := err.(*exec.ExitError); ok {
+			proc.ExitState = exitError.ProcessState
+		}
+	}
+	proc.ExitState = proc.Cmd.ProcessState
+	proc.EndTime = time.Now() // TODO make this goroutine-safe
+}
+
+// ReadAll calls ioutil.ReadAll on the StdoutPipe and StderrPipe.
+func (proc *Process) ReadAll() (stdout []byte, stderr []byte, err error) {
+	outbz, err := ioutil.ReadAll(proc.StdoutPipe)
+	if err != nil {
+		return nil, nil, err
+	}
+	errbz, err := ioutil.ReadAll(proc.StderrPipe)
+	if err != nil {
+		return nil, nil, err
+	}
+	return outbz, errbz, nil
 }

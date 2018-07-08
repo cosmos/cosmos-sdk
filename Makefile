@@ -98,14 +98,8 @@ test: test_unit
 test_cli:
 	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test`
 
-test_cli_retry:
-	for i in 1 2 3; do make test_cli && break || sleep 2; done
-
 test_unit:
 	@go test $(PACKAGES_NOCLITEST)
-
-test_unit_retry:
-	for i in 1 2 3; do make test_unit && break || sleep 2; done
 
 test_race:
 	@go test -race $(PACKAGES_NOCLITEST)
@@ -114,7 +108,13 @@ test_cover:
 	@bash tests/test_cover.sh
 
 test_lint:
-	gometalinter.v2 --disable-all --enable='golint' --vendor ./...
+	gometalinter.v2 --config=tools/gometalinter.json ./...
+	!(gometalinter.v2 --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
+
+format:
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -w -s
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs misspell -w
 
 benchmark:
 	@go test -bench=. $(PACKAGES_NOCLITEST)
@@ -187,4 +187,4 @@ remotenet-status:
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: build build_examples install install_examples install_debug dist check_tools get_tools get_vendor_deps draw_deps test test_cli test_unit test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update build-linux build-docker-gaiadnode localnet-start localnet-stop remotenet-start remotenet-stop remotenet-status
+.PHONY: build build_examples install install_examples install_debug dist check_tools get_tools get_vendor_deps draw_deps test test_cli test_unit test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update build-linux build-docker-gaiadnode localnet-start localnet-stop remotenet-start remotenet-stop remotenet-status format

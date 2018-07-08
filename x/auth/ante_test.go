@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/tmlibs/log"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
@@ -41,9 +40,9 @@ func privAndAddr() (crypto.PrivKey, sdk.Address) {
 // run the tx through the anteHandler and ensure its valid
 func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx) {
 	_, result, abort := anteHandler(ctx, tx)
-	assert.False(t, abort)
-	assert.Equal(t, sdk.ABCICodeOK, result.Code)
-	assert.True(t, result.IsOK())
+	require.False(t, abort)
+	require.Equal(t, sdk.ABCICodeOK, result.Code)
+	require.True(t, result.IsOK())
 }
 
 // run the tx through the anteHandler and ensure it fails with the given code
@@ -52,7 +51,7 @@ func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, 
 		if r := recover(); r != nil {
 			switch r.(type) {
 			case sdk.ErrorOutOfGas:
-				assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas),
+				require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas),
 					fmt.Sprintf("Expected ErrorOutOfGas, got %v", r))
 			default:
 				panic(r)
@@ -60,8 +59,8 @@ func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, 
 		}
 	}()
 	_, result, abort := anteHandler(ctx, tx)
-	assert.True(t, abort)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), result.Code,
+	require.True(t, abort)
+	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), result.Code,
 		fmt.Sprintf("Expected %v, got %v", sdk.ToABCICode(sdk.CodespaceRoot, code), result))
 }
 
@@ -69,7 +68,11 @@ func newTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
 		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, "")
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), AccountNumber: accNums[i], Sequence: seqs[i]}
+		sig, err := priv.Sign(signBytes)
+		if err != nil {
+			panic(err)
+		}
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
 	}
 	tx := NewStdTx(msgs, fee, sigs, "")
 	return tx
@@ -79,7 +82,11 @@ func newTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, 
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
 		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, memo)
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), AccountNumber: accNums[i], Sequence: seqs[i]}
+		sig, err := priv.Sign(signBytes)
+		if err != nil {
+			panic(err)
+		}
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
 	}
 	tx := NewStdTx(msgs, fee, sigs, memo)
 	return tx
@@ -89,7 +96,11 @@ func newTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, 
 func newTestTxWithSignBytes(msgs []sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee, signBytes []byte, memo string) sdk.Tx {
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), AccountNumber: accNums[i], Sequence: seqs[i]}
+		sig, err := priv.Sign(signBytes)
+		if err != nil {
+			panic(err)
+		}
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
 	}
 	tx := NewStdTx(msgs, fee, sigs, memo)
 	return tx
@@ -126,7 +137,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
 	expectedSigners := []sdk.Address{addr1, addr2, addr3}
 	stdTx := tx.(StdTx)
-	assert.Equal(t, expectedSigners, stdTx.GetSigners())
+	require.Equal(t, expectedSigners, stdTx.GetSigners())
 
 	// Check no signatures fails
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeUnauthorized)
@@ -318,13 +329,13 @@ func TestAnteHandlerFees(t *testing.T) {
 	mapper.SetAccount(ctx, acc1)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInsufficientFunds)
 
-	assert.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(emptyCoins))
+	require.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(emptyCoins))
 
 	acc1.SetCoins(sdk.Coins{sdk.NewCoin("atom", 150)})
 	mapper.SetAccount(ctx, acc1)
 	checkValidTx(t, anteHandler, ctx, tx)
 
-	assert.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(sdk.Coins{sdk.NewCoin("atom", 150)}))
+	require.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(sdk.Coins{sdk.NewCoin("atom", 150)}))
 }
 
 // Test logic around memo gas consumption.
@@ -356,7 +367,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeOutOfGas)
 
 	// tx with memo doesn't have enough gas
-	fee = NewStdFee(1001, sdk.NewCoin("atom", 0))
+	fee = NewStdFee(801, sdk.NewCoin("atom", 0))
 	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeOutOfGas)
 
@@ -547,12 +558,12 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInvalidPubKey)
 
 	acc2 = mapper.GetAccount(ctx, addr2)
-	assert.Nil(t, acc2.GetPubKey())
+	require.Nil(t, acc2.GetPubKey())
 
 	// test invalid signature and public key
 	tx = newTestTx(ctx, msgs, privs, []int64{1}, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInvalidPubKey)
 
 	acc2 = mapper.GetAccount(ctx, addr2)
-	assert.Nil(t, acc2.GetPubKey())
+	require.Nil(t, acc2.GetPubKey())
 }

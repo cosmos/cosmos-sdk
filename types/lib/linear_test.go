@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,30 +41,30 @@ func TestList(t *testing.T) {
 	var res S
 
 	lm.Push(val)
-	assert.Equal(t, uint64(1), lm.Len())
+	require.Equal(t, uint64(1), lm.Len())
 	lm.Get(uint64(0), &res)
-	assert.Equal(t, val, res)
+	require.Equal(t, val, res)
 
 	val = S{2, false}
 	lm.Set(uint64(0), val)
 	lm.Get(uint64(0), &res)
-	assert.Equal(t, val, res)
+	require.Equal(t, val, res)
 
 	val = S{100, false}
 	lm.Push(val)
-	assert.Equal(t, uint64(2), lm.Len())
+	require.Equal(t, uint64(2), lm.Len())
 	lm.Get(uint64(1), &res)
-	assert.Equal(t, val, res)
+	require.Equal(t, val, res)
 
 	lm.Delete(uint64(1))
-	assert.Equal(t, uint64(2), lm.Len())
+	require.Equal(t, uint64(2), lm.Len())
 
 	lm.Iterate(&res, func(index uint64) (brk bool) {
 		var temp S
 		lm.Get(index, &temp)
-		assert.Equal(t, temp, res)
+		require.Equal(t, temp, res)
 
-		assert.True(t, index != 1)
+		require.True(t, index != 1)
 		return
 	})
 
@@ -74,7 +74,7 @@ func TestList(t *testing.T) {
 	})
 
 	lm.Get(uint64(0), &res)
-	assert.Equal(t, S{3, true}, res)
+	require.Equal(t, S{3, true}, res)
 }
 
 func TestQueue(t *testing.T) {
@@ -89,13 +89,13 @@ func TestQueue(t *testing.T) {
 
 	qm.Push(val)
 	qm.Peek(&res)
-	assert.Equal(t, val, res)
+	require.Equal(t, val, res)
 
 	qm.Pop()
 	empty := qm.IsEmpty()
 
-	assert.True(t, empty)
-	assert.NotNil(t, qm.Peek(&res))
+	require.True(t, empty)
+	require.NotNil(t, qm.Peek(&res))
 
 	qm.Push(S{1, true})
 	qm.Push(S{2, true})
@@ -107,10 +107,10 @@ func TestQueue(t *testing.T) {
 		return
 	})
 
-	assert.False(t, qm.IsEmpty())
+	require.False(t, qm.IsEmpty())
 
 	qm.Pop()
-	assert.True(t, qm.IsEmpty())
+	require.True(t, qm.IsEmpty())
 }
 
 func TestOptions(t *testing.T) {
@@ -136,22 +136,22 @@ func TestOptions(t *testing.T) {
 
 	// Checking keys.LengthKey
 	err := cdc.UnmarshalBinary(store.Get(keys.LengthKey), &len)
-	assert.Nil(t, err)
-	assert.Equal(t, len, linear.Len())
+	require.Nil(t, err)
+	require.Equal(t, len, linear.Len())
 
 	// Checking keys.ElemKey
 	for i := 0; i < 10; i++ {
 		linear.Get(uint64(i), &expected)
 		bz := store.Get(append(keys.ElemKey, []byte(fmt.Sprintf("%020d", i))...))
 		err = cdc.UnmarshalBinary(bz, &actual)
-		assert.Nil(t, err)
-		assert.Equal(t, expected, actual)
+		require.Nil(t, err)
+		require.Equal(t, expected, actual)
 	}
 
 	linear.Pop()
 
 	err = cdc.UnmarshalBinary(store.Get(keys.TopKey), &top)
-	assert.Nil(t, err)
-	assert.Equal(t, top, linear.getTop())
+	require.Nil(t, err)
+	require.Equal(t, top, linear.getTop())
 
 }

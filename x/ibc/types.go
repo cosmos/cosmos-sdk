@@ -59,13 +59,13 @@ func (p IBCPacket) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // validator the ibc packey
 func (p IBCPacket) ValidateBasic() sdk.Error {
 	if p.SrcChain == p.DestChain {
-		return ErrIdenticalChains(DefaultCodespace).Trace("")
+		return ErrIdenticalChains(DefaultCodespace).TraceSDK("")
 	}
 	if !p.Coins.IsValid() {
 		return sdk.ErrInvalidCoins("")
@@ -131,5 +131,5 @@ func (msg IBCReceiveMsg) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }

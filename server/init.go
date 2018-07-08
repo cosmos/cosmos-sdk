@@ -14,16 +14,16 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/go-crypto/keys"
-	"github.com/tendermint/go-crypto/keys/words"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/tendermint/tendermint/crypto"
+
 	cfg "github.com/tendermint/tendermint/config"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
-	tmcli "github.com/tendermint/tmlibs/cli"
-	cmn "github.com/tendermint/tmlibs/common"
-	dbm "github.com/tendermint/tmlibs/db"
 
 	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -88,7 +88,7 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				viper.GetBool(FlagOWK),
 				ip,
 			}
-			cliPrint, genTxFile, err := gentxWithConfig(ctx, cdc, appInit, config, genTxConfig)
+			cliPrint, genTxFile, err := gentxWithConfig(cdc, appInit, config, genTxConfig)
 			if err != nil {
 				return err
 			}
@@ -112,7 +112,7 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	return cmd
 }
 
-func gentxWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, genTxConfig serverconfig.GenTx) (
+func gentxWithConfig(cdc *wire.Codec, appInit AppInit, config *cfg.Config, genTxConfig serverconfig.GenTx) (
 	cliPrint json.RawMessage, genTxFile json.RawMessage, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
@@ -169,7 +169,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				viper.GetBool(FlagOverwrite),
 			}
 
-			chainID, nodeID, appMessage, err := initWithConfig(ctx, cdc, appInit, config, initConfig)
+			chainID, nodeID, appMessage, err := initWithConfig(cdc, appInit, config, initConfig)
 			if err != nil {
 				return err
 			}
@@ -200,7 +200,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	return cmd
 }
 
-func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.Config, initConfig InitConfig) (
+func initWithConfig(cdc *wire.Codec, appInit AppInit, config *cfg.Config, initConfig InitConfig) (
 	chainID string, nodeID string, appMessage json.RawMessage, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
@@ -226,7 +226,7 @@ func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.
 	var persistentPeers string
 
 	if initConfig.GenTxs {
-		validators, appGenTxs, persistentPeers, err = processGenTxs(initConfig.GenTxsDir, cdc, appInit)
+		validators, appGenTxs, persistentPeers, err = processGenTxs(initConfig.GenTxsDir, cdc)
 		if err != nil {
 			return
 		}
@@ -263,7 +263,7 @@ func initWithConfig(ctx *Context, cdc *wire.Codec, appInit AppInit, config *cfg.
 }
 
 // append a genesis-piece
-func processGenTxs(genTxsDir string, cdc *wire.Codec, appInit AppInit) (
+func processGenTxs(genTxsDir string, cdc *wire.Codec) (
 	validators []tmtypes.GenesisValidator, appGenTxs []json.RawMessage, persistentPeers string, err error) {
 
 	var fos []os.FileInfo
@@ -332,32 +332,20 @@ func readOrCreatePrivValidator(tmConfig *cfg.Config) crypto.PubKey {
 	return privValidator.GetPubKey()
 }
 
-// create the genesis file
+// writeGenesisFile creates and writes the genesis configuration to disk. An
+// error is returned if building or writing the configuration to file fails.
 func writeGenesisFile(cdc *wire.Codec, genesisFile, chainID string, validators []tmtypes.GenesisValidator, appState json.RawMessage) error {
 	genDoc := tmtypes.GenesisDoc{
-		ChainID:    chainID,
-		Validators: validators,
+		ChainID:      chainID,
+		Validators:   validators,
+		AppStateJSON: appState,
 	}
+
 	if err := genDoc.ValidateAndComplete(); err != nil {
 		return err
 	}
-	if err := genDoc.SaveAs(genesisFile); err != nil {
-		return err
-	}
-	return addAppStateToGenesis(cdc, genesisFile, appState)
-}
 
-// Add one line to the genesis file
-func addAppStateToGenesis(cdc *wire.Codec, genesisConfigPath string, appState json.RawMessage) error {
-	bz, err := ioutil.ReadFile(genesisConfigPath)
-	if err != nil {
-		return err
-	}
-	out, err := AppendJSON(cdc, bz, "app_state", appState)
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile(genesisConfigPath, out, 0600)
+	return genDoc.SaveAs(genesisFile)
 }
 
 //_____________________________________________________________________
@@ -388,22 +376,22 @@ var DefaultAppInit = AppInit{
 
 // simple genesis tx
 type SimpleGenTx struct {
-	Addr sdk.Address `json:"addr"`
+	Addr string `json:"addr"`
 }
 
 // Generate a genesis transaction
 func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig serverconfig.GenTx) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
-	var addr sdk.Address
+	var bech32Addr string
 	var secret string
-	addr, secret, err = GenerateCoinKey()
+	bech32Addr, secret, err = GenerateCoinKey()
 	if err != nil {
 		return
 	}
 
 	var bz []byte
-	simpleGenTx := SimpleGenTx{addr}
+	simpleGenTx := SimpleGenTx{bech32Addr}
 	bz, err = cdc.MarshalJSON(simpleGenTx)
 	if err != nil {
 		return
@@ -444,11 +432,11 @@ func SimpleAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState j
     "coins": [
       {
         "denom": "mycoin",
-        "amount": 9007199254740992
+        "amount": "9007199254740992"
       }
     ]
   }]
-}`, genTx.Addr.String()))
+}`, genTx.Addr))
 	return
 }
 
@@ -456,50 +444,45 @@ func SimpleAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState j
 
 // GenerateCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateCoinKey() (sdk.Address, string, error) {
+func GenerateCoinKey() (string, string, error) {
 
 	// construct an in-memory key store
-	codec, err := words.LoadCodec("english")
-	if err != nil {
-		return nil, "", err
-	}
 	keybase := keys.New(
 		dbm.NewMemDB(),
-		codec,
 	)
 
 	// generate a private key, with recovery phrase
-	info, secret, err := keybase.Create("name", "pass", keys.AlgoEd25519)
+	info, secret, err := keybase.CreateMnemonic("name", keys.English, "pass", keys.Secp256k1)
 	if err != nil {
-		return nil, "", err
+		return "", "", err
 	}
-	addr := info.PubKey.Address()
-	return addr, secret, nil
+	addr := info.GetPubKey().Address()
+	return sdk.MustBech32ifyAcc(sdk.Address(addr)), secret, nil
 }
 
 // GenerateSaveCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (sdk.Address, string, error) {
+func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (string, string, error) {
 
 	// get the keystore from the client
 	keybase, err := clkeys.GetKeyBaseFromDir(clientRoot)
 	if err != nil {
-		return nil, "", err
+		return "", "", err
 	}
 
 	// ensure no overwrite
 	if !overwrite {
 		_, err := keybase.Get(keyName)
 		if err == nil {
-			return nil, "", errors.New("key already exists, overwrite is disabled")
+			return "", "", errors.New("key already exists, overwrite is disabled")
 		}
 	}
 
 	// generate a private key, with recovery phrase
-	info, secret, err := keybase.Create(keyName, keyPass, keys.AlgoEd25519)
+	info, secret, err := keybase.CreateMnemonic(keyName, keys.English, keyPass, keys.Secp256k1)
 	if err != nil {
-		return nil, "", err
+		return "", "", err
 	}
-	addr := info.PubKey.Address()
-	return addr, secret, nil
+	addr := info.GetPubKey().Address()
+	return sdk.MustBech32ifyAcc(sdk.Address(addr)), secret, nil
 }

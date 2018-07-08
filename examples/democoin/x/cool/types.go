@@ -41,13 +41,13 @@ func (msg MsgSetTrend) String() string {
 // Validate Basic is used to quickly disqualify obviously invalid messages quickly
 func (msg MsgSetTrend) ValidateBasic() sdk.Error {
 	if len(msg.Sender) == 0 {
-		return sdk.ErrUnknownAddress(msg.Sender.String()).Trace("")
+		return sdk.ErrUnknownAddress(msg.Sender.String()).TraceSDK("")
 	}
 	if strings.Contains(msg.Cool, "hot") {
-		return sdk.ErrUnauthorized("").Trace("hot is not cool")
+		return sdk.ErrUnauthorized("").TraceSDK("hot is not cool")
 	}
 	if strings.Contains(msg.Cool, "warm") {
-		return sdk.ErrUnauthorized("").Trace("warm is not very cool")
+		return sdk.ErrUnauthorized("").TraceSDK("warm is not very cool")
 	}
 	return nil
 }
@@ -58,7 +58,7 @@ func (msg MsgSetTrend) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 //_______________________________________________________________________
@@ -91,7 +91,7 @@ func (msg MsgQuiz) String() string {
 // Validate Basic is used to quickly disqualify obviously invalid messages quickly
 func (msg MsgQuiz) ValidateBasic() sdk.Error {
 	if len(msg.Sender) == 0 {
-		return sdk.ErrUnknownAddress(msg.Sender.String()).Trace("")
+		return sdk.ErrUnknownAddress(msg.Sender.String()).TraceSDK("")
 	}
 	return nil
 }
@@ -102,5 +102,5 @@ func (msg MsgQuiz) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }

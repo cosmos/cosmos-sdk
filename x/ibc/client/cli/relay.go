@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/tmlibs/log"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -71,6 +71,7 @@ func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
+// nolint: unparam
 func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	fromChainID := viper.GetString(FlagFromChainID)
 	fromChainNode := viper.GetString(FlagFromChainNode)

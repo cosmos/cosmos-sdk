@@ -15,9 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tmlibs/cli"
-	tmflags "github.com/tendermint/tmlibs/cli/flags"
-	"github.com/tendermint/tmlibs/log"
+	"github.com/tendermint/tendermint/libs/cli"
+	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 // server context
@@ -69,7 +69,11 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 // If a new config is created, change some of the default tendermint settings
 func interceptLoadConfig() (conf *cfg.Config, err error) {
 	tmpConf := cfg.DefaultConfig()
-	viper.Unmarshal(tmpConf)
+	err = viper.Unmarshal(tmpConf)
+	if err != nil {
+		// TODO: Handle with #870
+		panic(err)
+	}
 	rootDir := tmpConf.RootDir
 	configFilePath := filepath.Join(rootDir, "config/config.toml")
 	// Intercept only if the file doesn't already exist
@@ -119,15 +123,21 @@ func AddCommands(
 
 //___________________________________________________________________________________
 
-// append a new json field to existing json message
-func AppendJSON(cdc *wire.Codec, baseJSON []byte, key string, value json.RawMessage) (appended []byte, err error) {
+// InsertKeyJSON inserts a new JSON field/key with a given value to an existing
+// JSON message. An error is returned if any serialization operation fails.
+//
+// NOTE: The ordering of the keys returned as the resulting JSON message is
+// non-deterministic, so the client should not rely on key ordering.
+func InsertKeyJSON(cdc *wire.Codec, baseJSON []byte, key string, value json.RawMessage) ([]byte, error) {
 	var jsonMap map[string]json.RawMessage
-	err = cdc.UnmarshalJSON(baseJSON, &jsonMap)
-	if err != nil {
+
+	if err := cdc.UnmarshalJSON(baseJSON, &jsonMap); err != nil {
 		return nil, err
 	}
+
 	jsonMap[key] = value
 	bz, err := wire.MarshalJSONIndent(cdc, jsonMap)
+
 	return json.RawMessage(bz), err
 }
 

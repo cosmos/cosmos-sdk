@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // Account is a standard account using a sequence number for replay protection

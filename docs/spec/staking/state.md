@@ -12,7 +12,7 @@ information, etc.
 
 ```golang
 type Pool struct {
-    LooseUnbondedTokens int64   // tokens not associated with any validator
+    LooseTokens int64   // tokens not associated with any validator
     UnbondedTokens      int64   // reserve of unbonded tokens held with validators
     UnbondingTokens     int64   // tokens moving from bonded to unbonded pool
     BondedTokens        int64   // reserve of bonded tokens

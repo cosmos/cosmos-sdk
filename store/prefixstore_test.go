@@ -5,9 +5,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/iavl"
-	dbm "github.com/tendermint/tmlibs/db"
+	dbm "github.com/tendermint/tendermint/libs/db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -65,7 +66,7 @@ func testPrefixStore(t *testing.T, baseStore KVStore, prefix []byte) {
 func TestIAVLStorePrefix(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree := iavl.NewVersionedTree(db, cacheSize)
-	iavlStore := newIAVLStore(tree, numHistory)
+	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
 
 	testPrefixStore(t, iavlStore, []byte("test"))
 }
@@ -96,14 +97,14 @@ func TestPrefixStoreIterate(t *testing.T) {
 	pIter := sdk.KVStorePrefixIterator(prefixStore, nil)
 
 	for bIter.Valid() && pIter.Valid() {
-		assert.Equal(t, bIter.Key(), append(prefix, pIter.Key()...))
-		assert.Equal(t, bIter.Value(), pIter.Value())
+		require.Equal(t, bIter.Key(), append(prefix, pIter.Key()...))
+		require.Equal(t, bIter.Value(), pIter.Value())
 
 		bIter.Next()
 		pIter.Next()
 	}
 
-	assert.Equal(t, bIter.Valid(), pIter.Valid())
+	require.Equal(t, bIter.Valid(), pIter.Valid())
 	bIter.Close()
 	pIter.Close()
 }

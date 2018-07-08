@@ -3,15 +3,16 @@ package bank
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/mock"
+	"github.com/cosmos/cosmos-sdk/x/mock"
 
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // test bank module in a mock application
@@ -77,14 +78,24 @@ var (
 
 // initialize the mock application for this module
 func getMockApp(t *testing.T) *mock.App {
-	mapp := mock.NewApp()
-
-	RegisterWire(mapp.Cdc)
-	coinKeeper := NewKeeper(mapp.AccountMapper)
-	mapp.Router().AddRoute("bank", NewHandler(coinKeeper))
-
-	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{}))
+	mapp, err := getBenchmarkMockApp()
+	require.NoError(t, err)
 	return mapp
+}
+
+func TestBankWithRandomMessages(t *testing.T) {
+	mapp := getMockApp(t)
+	setup := func(r *rand.Rand, keys []crypto.PrivKey) {
+		return
+	}
+
+	mapp.RandomizedTesting(
+		t,
+		[]mock.TestAndRunTx{TestAndRunSingleInputMsgSend},
+		[]mock.RandSetup{setup},
+		[]mock.Invariant{ModuleInvariants},
+		100, 30, 30,
+	)
 }
 
 func TestMsgSendWithAccounts(t *testing.T) {
@@ -104,7 +115,7 @@ func TestMsgSendWithAccounts(t *testing.T) {
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	res1 := mapp.AccountMapper.GetAccount(ctxCheck, addr1)
 	require.NotNil(t, res1)
-	assert.Equal(t, acc, res1.(*auth.BaseAccount))
+	require.Equal(t, acc, res1.(*auth.BaseAccount))
 
 	// Run a CheckDeliver
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{sendMsg1}, []int64{0}, []int64{0}, true, priv1)
@@ -122,7 +133,7 @@ func TestMsgSendWithAccounts(t *testing.T) {
 	tx.Signatures[0].Sequence = 1
 	res := mapp.Deliver(tx)
 
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
+	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
 
 	// resigning the tx with the bumped sequence should work
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{sendMsg1, sendMsg2}, []int64{0}, []int64{1}, true, priv1)

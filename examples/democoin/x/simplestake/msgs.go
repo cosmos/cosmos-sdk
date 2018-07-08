@@ -3,7 +3,7 @@ package simplestake
 import (
 	"encoding/json"
 
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -48,7 +48,7 @@ func (msg MsgBond) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return bz
+	return sdk.MustSortJSON(bz)
 }
 
 //_______________________________________________________________

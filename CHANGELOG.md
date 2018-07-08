@@ -44,6 +44,7 @@ BREAKING CHANGES
 * [x/stake] most index keys nolonger hold a value - inputs are rearranged to form the desired key
 * [lcd] Switch key creation output to return bech32
 * [x/stake] store-value for delegation, validator, ubd, and red do not hold duplicate information contained store-key
+* [gaiad] genesis transactions now use bech32 addresses / pubkeys
 
 DEPRECATED
 * [cli] Deprecate `--name` flag in commands that send txs, in favor of `--from`

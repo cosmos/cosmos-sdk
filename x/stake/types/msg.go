@@ -131,6 +131,75 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 
 //______________________________________________________________________
 
+// MsgSurrogateCreateValidator - struct for creating validator on someone else's behalf
+type MsgSurrogateCreateValidator struct {
+	Description
+	SurrogateAddr       sdk.Address   `json:"surrogate_addr"`
+	ValidatorAddr       sdk.Address   `json:"validator_address"`
+	ValidatorPubKey     crypto.PubKey `json:"validator_pubkey"`
+	SurrogateDelegation sdk.Coin      `json:"surrogate_delegation"`
+}
+
+func NewMsgSurrogateCreateValidator(surrogateAddr, validatorAddr sdk.Address,
+	validatorPubKey crypto.PubKey, surrogateDelegation sdk.Coin, description Description) MsgSurrogateCreateValidator {
+	return MsgSurrogateCreateValidator{
+		Description:         description,
+		SurrogateAddr:       surrogateAddr,
+		ValidatorAddr:       validatorAddr,
+		ValidatorPubKey:     validatorPubKey,
+		SurrogateDelegation: surrogateDelegation,
+	}
+}
+
+// nolint
+func (msg MsgSurrogateCreateValidator) Type() string { return MsgType }
+
+// Get the required signers for the msg
+func (msg MsgSurrogateCreateValidator) GetSigners() []sdk.Address {
+	// Both surrogate and validator sign msg. Surrogate pays fees
+	return []sdk.Address{msg.SurrogateAddr, msg.ValidatorAddr}
+}
+
+// get the bytes for the message signers to sign on
+func (msg MsgSurrogateCreateValidator) GetSignBytes() []byte {
+	b, err := MsgCdc.MarshalJSON(struct {
+		Description
+		SurrogateAddr string   `json:"surrogate_addr"`
+		ValidatorAddr string   `json:"validator_address"`
+		PubKey        string   `json:"validator_pubkey"`
+		Bond          sdk.Coin `json:"bond"`
+	}{
+		Description:   msg.Description,
+		SurrogateAddr: sdk.MustBech32ifyVal(msg.SurrogateAddr),
+		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
+		PubKey:        sdk.MustBech32ifyValPub(msg.ValidatorPubKey),
+	})
+	if err != nil {
+		panic(err)
+	}
+	return sdk.MustSortJSON(b)
+}
+
+// quick validity check
+func (msg MsgSurrogateCreateValidator) ValidateBasic() sdk.Error {
+	if msg.SurrogateAddr == nil {
+		return ErrNilSurrogateAddr(DefaultCodespace)
+	}
+	if msg.ValidatorAddr == nil {
+		return ErrNilValidatorAddr(DefaultCodespace)
+	}
+	if !(msg.SurrogateDelegation.Amount.GT(sdk.ZeroInt())) {
+		return ErrBadDelegationAmount(DefaultCodespace)
+	}
+	empty := Description{}
+	if msg.Description == empty {
+		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "description must be included")
+	}
+	return nil
+}
+
+//______________________________________________________________________
+
 // MsgDelegate - struct for bonding transactions
 type MsgDelegate struct {
 	DelegatorAddr sdk.Address `json:"delegator_addr"`

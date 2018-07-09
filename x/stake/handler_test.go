@@ -31,6 +31,16 @@ func newTestMsgDelegate(delegatorAddr, validatorAddr sdk.Address, amt int64) Msg
 	}
 }
 
+func newTestMsgSurrogateCreateValidator(surrogateAddr, validatorAddr sdk.Address, valPubKey crypto.PubKey, amt int64) MsgSurrogateCreateValidator {
+	return MsgSurrogateCreateValidator{
+		Description:         Description{},
+		SurrogateAddr:       surrogateAddr,
+		ValidatorAddr:       validatorAddr,
+		ValidatorPubKey:     valPubKey,
+		SurrogateDelegation: sdk.Coin{"steak", sdk.NewInt(amt)},
+	}
+}
+
 // retrieve params which are instant
 func setInstantUnbondPeriod(keeper keep.Keeper, ctx sdk.Context) types.Params {
 	params := keeper.GetParams(ctx)
@@ -136,6 +146,32 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	// one validator cannot bond twice
 	msgCreateValidator.PubKey = keep.PKs[1]
 	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.False(t, got.IsOK(), "%v", got)
+}
+
+func TestDuplicatesMsgSurrogateCreateValidator(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+
+	validatorAddr := keep.Addrs[0]
+	surrogateAddr := keep.Addrs[1]
+	pk := keep.PKs[0]
+	msgSurrogateCreateValidator := newTestMsgSurrogateCreateValidator(surrogateAddr, validatorAddr, pk, 10)
+	got := handleMsgSurrogateCreateValidator(ctx, msgSurrogateCreateValidator, keeper)
+	require.True(t, got.IsOK(), "%v", got)
+	validator, found := keeper.GetValidator(ctx, validatorAddr)
+
+	require.True(t, found)
+	require.Equal(t, sdk.Bonded, validator.Status())
+	require.Equal(t, validatorAddr, validator.Owner)
+	require.Equal(t, pk, validator.PubKey)
+	require.Equal(t, sdk.NewRat(10), validator.PoolShares.Bonded())
+	require.Equal(t, sdk.NewRat(10), validator.DelegatorShares)
+	require.Equal(t, Description{}, validator.Description)
+
+	// one validator cannot be created twice even from different surrogate
+	msgSurrogateCreateValidator.SurrogateAddr = keep.Addrs[2]
+	msgSurrogateCreateValidator.ValidatorPubKey = keep.PKs[1]
+	got = handleMsgSurrogateCreateValidator(ctx, msgSurrogateCreateValidator, keeper)
 	require.False(t, got.IsOK(), "%v", got)
 }
 
@@ -347,6 +383,56 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 
 		expBalance := sdk.NewInt(initBond)
 		gotBalance := accMapper.GetAccount(ctx, validatorPre.Owner).GetCoins().AmountOf(params.BondDenom)
+		require.Equal(t, expBalance, gotBalance, "expected account to have %d, got %d", expBalance, gotBalance)
+	}
+}
+
+func TestMultipleMsgSurrogateCreateValidator(t *testing.T) {
+	initBond := int64(1000)
+	ctx, accMapper, keeper := keep.CreateTestInput(t, false, initBond)
+	params := setInstantUnbondPeriod(keeper, ctx)
+
+	validatorAddrs := []sdk.Address{keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]}
+	surrogateAddrs := []sdk.Address{keep.Addrs[3], keep.Addrs[4], keep.Addrs[5]}
+
+	// bond them all
+	for i, validatorAddr := range validatorAddrs {
+		msgSurrogateCreateValidator := newTestMsgSurrogateCreateValidator(surrogateAddrs[i], validatorAddr, keep.PKs[i], 10)
+		got := handleMsgSurrogateCreateValidator(ctx, msgSurrogateCreateValidator, keeper)
+		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
+
+		//Check that the account is bonded
+		validators := keeper.GetValidators(ctx, 100)
+		require.Equal(t, (i + 1), len(validators))
+		val := validators[i]
+		balanceExpd := sdk.NewInt(initBond - 10)
+		balanceGot := accMapper.GetAccount(ctx, surrogateAddrs[i]).GetCoins().AmountOf(params.BondDenom)
+		require.Equal(t, i+1, len(validators), "expected %d validators got %d, validators: %v", i+1, len(validators), validators)
+		require.Equal(t, 10, int(val.DelegatorShares.RoundInt64()), "expected %d shares, got %d", 10, val.DelegatorShares)
+		require.Equal(t, balanceExpd, balanceGot, "expected account to have %d, got %d", balanceExpd, balanceGot)
+	}
+
+	// unbond them all by revoking surrogate delegation
+	for i, validatorAddr := range validatorAddrs {
+		_, found := keeper.GetValidator(ctx, validatorAddr)
+		require.True(t, found)
+		msgBeginUnbonding := NewMsgBeginUnbonding(surrogateAddrs[i], validatorAddr, sdk.NewRat(10)) // remove surrogate delegation
+		msgCompleteUnbonding := NewMsgCompleteUnbonding(surrogateAddrs[i], validatorAddr)
+		got := handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
+		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
+		got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbonding, keeper)
+		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
+
+		//Check that the account is unbonded
+		validators := keeper.GetValidators(ctx, 100)
+		require.Equal(t, len(validatorAddrs)-(i+1), len(validators),
+			"expected %d validators got %d", len(validatorAddrs)-(i+1), len(validators))
+
+		_, found = keeper.GetValidator(ctx, validatorAddr)
+		require.False(t, found)
+
+		expBalance := sdk.NewInt(initBond)
+		gotBalance := accMapper.GetAccount(ctx, surrogateAddrs[i]).GetCoins().AmountOf(params.BondDenom)
 		require.Equal(t, expBalance, gotBalance, "expected account to have %d, got %d", expBalance, gotBalance)
 	}
 }

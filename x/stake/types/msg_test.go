@@ -69,6 +69,38 @@ func TestMsgEditValidator(t *testing.T) {
 	}
 }
 
+// test ValidateBasic for MsgSurrogateCreateValidator
+func TestMsgSurrogateCreateValidator(t *testing.T) {
+	tests := []struct {
+		name, moniker, identity, website, details string
+		surrogateAddr                             sdk.Address
+		validatorAddr                             sdk.Address
+		validatorPubKey                           crypto.PubKey
+		bond                                      sdk.Coin
+		expectPass                                bool
+	}{
+		{"basic good", "a", "b", "c", "d", addr1, addr2, pk2, coinPos, true},
+		{"partial description", "", "", "c", "", addr1, addr2, pk2, coinPos, true},
+		{"empty description", "", "", "", "", addr1, addr2, pk2, coinPos, false},
+		{"empty surrogate address", "a", "b", "c", "d", emptyAddr, addr2, pk2, coinPos, false},
+		{"empty validator address", "a", "b", "c", "d", addr1, emptyAddr, pk2, coinPos, false},
+		{"empty pubkey", "a", "b", "c", "d", addr1, addr2, emptyPubkey, coinPos, true},
+		{"empty bond", "a", "b", "c", "d", addr1, addr2, pk2, coinZero, false},
+		{"negative bond", "a", "b", "c", "d", addr1, addr2, pk2, coinNeg, false},
+		{"negative bond", "a", "b", "c", "d", addr1, addr2, pk2, coinNeg, false},
+	}
+
+	for _, tc := range tests {
+		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
+		msg := NewMsgSurrogateCreateValidator(tc.surrogateAddr, tc.validatorAddr, tc.validatorPubKey, tc.bond, description)
+		if tc.expectPass {
+			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
+		} else {
+			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
+		}
+	}
+}
+
 // test ValidateBasic for MsgDelegate
 func TestMsgDelegate(t *testing.T) {
 	tests := []struct {

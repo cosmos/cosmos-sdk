@@ -17,9 +17,10 @@ BREAKING CHANGES
     * go-crypto, abci, tmlibs have been merged into Tendermint
     * Various other fixes
 * [auth] Signers of a transaction now only sign over their own account and sequence number
-* [auth] Removed MsgChangePubKey 
+* [auth] Removed MsgChangePubKey
 * [auth] Removed SetPubKey from account mapper
 * [auth] AltBytes renamed to Memo, now a string, max 100 characters, costs a bit of gas
+* [baseapp] NewBaseApp now takes option functions as parameters
 * [types] `GetMsg()` -> `GetMsgs()` as txs wrap many messages
 * [types] Removed GetMemo from Tx (it is still on StdTx)
 * [types] renamed rational.Evaluate to rational.Round{Int64, Int}
@@ -79,7 +80,7 @@ FEATURES
 * [gaiacli] Ledger support added
   - You can now use a Ledger with `gaiacli --ledger` for all key-related commands
   - Ledger keys can be named and tracked locally in the key DB
-* [testing] created a randomized testing framework. 
+* [testing] created a randomized testing framework.
   - Currently bank has limited functionality in the framework
   - Auth has its invariants checked within the framework
 * [gaiacli] added the following flags for commands that post transactions to the chain:

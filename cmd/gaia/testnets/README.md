@@ -310,11 +310,11 @@ WantedBy=multi-user.target
 
 ## Delegating to a Validator
 
-On the upcoming mainnet, you can delegate `atom` to a validator. These [delegators](https://cosmos.network/resources/delegators) can receive part of the validator's fee revenue. Read more about the [Cosmos Token Model](https://github.com/cosmos/cosmos/raw/master/Cosmos_Token_Model.pdf).
+On the upcoming mainnet, you can delegate `Atom` to a validator. These [delegators](https://cosmos.network/resources/delegators) can receive part of the validator's fee revenue. Read more about the [Cosmos Token Model](https://github.com/cosmos/cosmos/raw/master/Cosmos_Token_Model.pdf).
 
 ### Bond Tokens
 
-On the testnet, we delegate `steak` instead of `atom`. Here's how you can bond tokens to a testnet validator:
+On the testnet, we delegate `steak` instead of `Atom`. Here's how you can bond tokens to a testnet validator:
 
 ```bash
 gaiacli stake delegate \
@@ -355,18 +355,16 @@ gaiacli stake delegation \
 
 ## Governance
 
-Governance is the process from which users in the Cosmos Hub can come to consensus on software upgrades, parameters of the mainnet or on custom text proposals.
+Governance is the process from which users in the Cosmos Hub can come to consensus on software upgrades, parameters of the mainnet or on custom text proposals. This is done through voting on proposals, which will be submitted by `Atom` holders on the mainnet.
 
-Governance is done through voting on proposals, which will be submitted by `Atom` holders on the mainnet.
+Some considerations about the voting process:
 
-Some considerations about
-
-- Voting is done by bonded Atom holders on a 1 bonded `Atom` 1 vote basis
+- Voting is done by bonded `Atom` holders on a 1 bonded `Atom` 1 vote basis
 - Delegators inherit the vote of their validator if they don't vote
-- **Validators MUST vote on every proposal**. If a validator does not vote on a proposal, they will be **partially slashed**.
-- Votes are tallied at the end of the voting period (2 weeks on mainnet). Each address can vote multiple times (paying the transaction fee each time), only the last casted vote will count.
+- **Validators MUST vote on every proposal**. If a validator does not vote on a proposal, they will be **partially slashed**
+- Votes are tallied at the end of the voting period (2 weeks on mainnet). Each address can vote multiple times (paying the transaction fee each time), only the last casted vote will count
 - Voters can choose between options `Yes`, `No`, `NoWithVeto` and `Abstain`
-At the end of the voting period, a proposal is accepted if `(YesVotes/(YesVotes+NoVotes+NoWithVetoVotes))>1/2` and `(NoWithVetoVotes/(YesVotes+NoVotes+NoWithVetoVotes))<1/3`. It is rejected otherwise.
+At the end of the voting period, a proposal is accepted if `(YesVotes/(YesVotes+NoVotes+NoWithVetoVotes))>1/2` and `(NoWithVetoVotes/(YesVotes+NoVotes+NoWithVetoVotes))<1/3`. It is rejected otherwise
 
 For more information about the governance process and how it works, please check out the Governance module [specification](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/governance).
 
@@ -392,7 +390,7 @@ gaiacli gov submit-proposal \
 
 ### Increase deposit
 
-In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (default: `10 steak`). If the proposal you previously created didn't meet this requirement, you can still rise the total amount deposited to make it valid. Once the minimum deposit is reached, proposal enters voting period:
+In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (default: `10 steak`). If the proposal you previously created didn't meet this requirement, you can still increase the total amount deposited to activate it. Once the minimum deposit is reached, the proposal enters voting period:
 
 ```bash
 gaiacli gov deposit \
@@ -403,7 +401,7 @@ gaiacli gov deposit \
   --chain-id=gaia-7000
 ```
 
-_NOTE_: Proposals that don't meet this requirement will be deleted after `MaxDepositPeriod` is reached.
+> _NOTE_: Proposals that don't meet this requirement will be deleted after `MaxDepositPeriod` is reached.
 
 #### Query proposal
 
@@ -417,7 +415,7 @@ gaiacli gov query-proposal \
 
 ### Vote on a proposal
 
-After a proposal's deposit reaches the `MinDeposit` value, the voting period opens. Bonded Atom holders can then cast vote on it:
+After a proposal's deposit reaches the `MinDeposit` value, the voting period opens. Bonded `Atom` holders can then cast vote on it:
 
 ```bash
 gaiacli gov vote \
@@ -451,7 +449,7 @@ gaiacli send \
   --to=<destination_cosmosaccaddr>
 ```
 
-> _*Note:*_ The `--amount` flag accepts the format `--amount=<value|coin_name>`.
+> _*NOTE:*_ The `--amount` flag accepts the format `--amount=<value|coin_name>`.
 
 Now, view the updated balances of the origin and destination accounts:
 

@@ -45,6 +45,7 @@ BREAKING CHANGES
 * [lcd] Switch key creation output to return bech32
 * [x/stake] store-value for delegation, validator, ubd, and red do not hold duplicate information contained store-key
 * [gaiad] genesis transactions now use bech32 addresses / pubkeys
+* [lcd] Removed shorthand CLI flags (`a`, `c`, `n`, `o`)
 
 DEPRECATED
 * [cli] Deprecate `--name` flag in commands that send txs, in favor of `--from`

@@ -208,6 +208,8 @@ func GetCmdBeginRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
+// nolint: gocyclo
+// TODO: Make this pass gocyclo linting
 func getShares(storeName string, cdc *wire.Codec, sharesAmountStr, sharesPercentStr string,
 	delegatorAddr, validatorAddr sdk.Address) (sharesAmount sdk.Rat, err error) {
 

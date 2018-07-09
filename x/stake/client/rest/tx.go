@@ -65,6 +65,8 @@ type EditDelegationsBody struct {
 	CompleteRedelegates []msgCompleteRedelegateInput `json:"complete_redelegates"`
 }
 
+// nolint: gocyclo
+// TODO: Split this up into several smaller functions, and remove the above nolint
 func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m EditDelegationsBody

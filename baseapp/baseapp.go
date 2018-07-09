@@ -324,16 +324,39 @@ func (app *BaseApp) FilterPeerByPubKey(info string) abci.ResponseQuery {
 	return abci.ResponseQuery{}
 }
 
-// Implements ABCI.
-// Delegates to CommitMultiStore if it implements Queryable
-func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
-	path := strings.Split(req.Path, "/")
+func splitPath(requestPath string) (path []string) {
+	path = strings.Split(requestPath, "/")
 	// first element is empty string
 	if len(path) > 0 && path[0] == "" {
 		path = path[1:]
 	}
+	return path
+}
+
+// Implements ABCI.
+// Delegates to CommitMultiStore if it implements Queryable
+func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
+	path := splitPath(req.Path)
+	if len(path) == 0 {
+		msg := "no query path provided"
+		return sdk.ErrUnknownRequest(msg).QueryResult()
+	}
+	switch path[0] {
 	// "/app" prefix for special application queries
-	if len(path) >= 2 && path[0] == "app" {
+	case "app":
+		return handleQueryApp(app, path, req)
+	case "store":
+		return handleQueryStore(app, path, req)
+	case "p2p":
+		return handleQueryP2P(app, path, req)
+	}
+
+	msg := "unknown query path"
+	return sdk.ErrUnknownRequest(msg).QueryResult()
+}
+
+func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
+	if len(path) >= 2 {
 		var result sdk.Result
 		switch path[1] {
 		case "simulate":
@@ -358,18 +381,24 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			Value: value,
 		}
 	}
+	msg := "Expected second parameter to be either simulate or version, neither was present"
+	return sdk.ErrUnknownRequest(msg).QueryResult()
+}
+
+func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
 	// "/store" prefix for store queries
-	if len(path) >= 1 && path[0] == "store" {
-		queryable, ok := app.cms.(sdk.Queryable)
-		if !ok {
-			msg := "multistore doesn't support queries"
-			return sdk.ErrUnknownRequest(msg).QueryResult()
-		}
-		req.Path = "/" + strings.Join(path[1:], "/")
-		return queryable.Query(req)
+	queryable, ok := app.cms.(sdk.Queryable)
+	if !ok {
+		msg := "multistore doesn't support queries"
+		return sdk.ErrUnknownRequest(msg).QueryResult()
 	}
+	req.Path = "/" + strings.Join(path[1:], "/")
+	return queryable.Query(req)
+}
+
+func handleQueryP2P(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
 	// "/p2p" prefix for p2p queries
-	if len(path) >= 4 && path[0] == "p2p" {
+	if len(path) >= 4 {
 		if path[1] == "filter" {
 			if path[2] == "addr" {
 				return app.FilterPeerByAddrPort(path[3])
@@ -379,9 +408,13 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 				// NOTE: this changed in tendermint and we didn't notice...
 				return app.FilterPeerByPubKey(path[3])
 			}
+		} else {
+			msg := "Expected second parameter to be filter"
+			return sdk.ErrUnknownRequest(msg).QueryResult()
 		}
 	}
-	msg := "unknown query path"
+
+	msg := "Expected path is p2p filter <addr|pubkey> <parameter>"
 	return sdk.ErrUnknownRequest(msg).QueryResult()
 }
 
@@ -472,8 +505,34 @@ func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
 	return app.runTx(runTxModeDeliver, nil, tx)
 }
 
+func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
+	if msgs == nil || len(msgs) == 0 {
+		// TODO: probably shouldn't be ErrInternal. Maybe new ErrInvalidMessage, or ?
+		return sdk.ErrInternal("Tx.GetMsgs() must return at least one message in list")
+	}
+
+	for _, msg := range msgs {
+		// Validate the Msg.
+		err := msg.ValidateBasic()
+		if err != nil {
+			err = err.WithDefaultCodespace(sdk.CodespaceRoot)
+			return err
+		}
+	}
+	return nil
+}
+
+// Returns deliverState if app is in runTxModeDeliver, otherwhise returns checkstate
+func getState(app *BaseApp, mode runTxMode) *state {
+	if mode == runTxModeCheck || mode == runTxModeSimulate {
+		return app.checkState
+	}
+	return app.deliverState
+}
+
 // txBytes may be nil in some cases, eg. in tests.
 // Also, in the future we may support "internal" transactions.
+// nolint: gocyclo
 func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
 	//NOTE: GasWanted should be returned by the AnteHandler.
 	// GasUsed is determined by the GasMeter.
@@ -500,18 +559,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// Get the Msg.
 	var msgs = tx.GetMsgs()
-	if msgs == nil || len(msgs) == 0 {
-		// TODO: probably shouldn't be ErrInternal. Maybe new ErrInvalidMessage, or ?
-		return sdk.ErrInternal("Tx.GetMsgs() must return at least one message in list").Result()
-	}
-
-	for _, msg := range msgs {
-		// Validate the Msg.
-		err := msg.ValidateBasic()
-		if err != nil {
-			err = err.WithDefaultCodespace(sdk.CodespaceRoot)
-			return err.Result()
-		}
+	err := validateBasicTxMsgs(msgs)
+	if err != nil {
+		return err.Result()
 	}
 
 	// Run the ante handler.
@@ -526,17 +576,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		gasWanted = anteResult.GasWanted
 	}
 
-	// Get the correct cache
-	var msCache sdk.CacheMultiStore
-	if mode == runTxModeCheck || mode == runTxModeSimulate {
-		// CacheWrap app.checkState.ms in case it fails.
-		msCache = app.checkState.CacheMultiStore()
-		ctx = ctx.WithMultiStore(msCache)
-	} else {
-		// CacheWrap app.deliverState.ms in case it fails.
-		msCache = app.deliverState.CacheMultiStore()
-		ctx = ctx.WithMultiStore(msCache)
-	}
+	// Get the correct cache, CacheWrap app.checkState.ms in case it fails.
+	msCache := getState(app, mode).CacheMultiStore()
+	ctx = ctx.WithMultiStore(msCache)
 
 	// accumulate results
 	logs := make([]string, 0, len(msgs))

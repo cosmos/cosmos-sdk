@@ -194,6 +194,8 @@ func (k Keeper) ClearTendermintUpdates(ctx sdk.Context) {
 // perfom all the nessisary steps for when a validator changes its power
 // updates all validator stores as well as tendermint update store
 // may kick out validators if new validator is entering the bonded validator group
+// nolint: gocyclo
+// TODO: Remove above nolint, function needs to be simplified
 func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
@@ -284,6 +286,8 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 // GetValidators.
 //
 // Optionally also return the validator from a retrieve address if the validator has been bonded
+// nolint: gocyclo
+// TODO: Remove the above golint
 func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 	affectedValidator types.Validator) (updatedVal types.Validator) {
 
@@ -422,6 +426,11 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 	iterator.Close()
 
 	// perform the actual kicks
+	kickOutValidators(k, ctx, toKickOut)
+	return
+}
+
+func kickOutValidators(k Keeper, ctx sdk.Context, toKickOut map[string]byte) {
 	for key := range toKickOut {
 		ownerAddr := []byte(key)
 		validator, found := k.GetValidator(ctx, ownerAddr)
@@ -430,7 +439,6 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 		}
 		k.unbondValidator(ctx, validator)
 	}
-	return
 }
 
 // perform all the store operations for when a validator status becomes unbonded

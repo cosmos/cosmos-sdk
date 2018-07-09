@@ -369,6 +369,8 @@ func queryVoteHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 	}
 }
 
+// nolint: gocyclo
+// todo: Split this functionality into helper functions to remove the above
 func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		bechVoterAddr := r.URL.Query().Get(RestVoter)

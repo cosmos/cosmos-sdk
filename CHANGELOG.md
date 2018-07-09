@@ -70,6 +70,7 @@ FEATURES
   * ineffassign
   * errcheck
   * unparam
+  * gocyclo
 * [tools] Add `make format` command to automate fixing misspell and gofmt errors.
 * [server] Default config now creates a profiler at port 6060, and increase p2p send/recv rates
 * [tests] Add WaitForNextNBlocksTM helper method

@@ -8,23 +8,23 @@ import (
 )
 
 type (
-	Keeper                      = keeper.Keeper
-	Validator                   = types.Validator
-	Description                 = types.Description
-	Delegation                  = types.Delegation
-	UnbondingDelegation         = types.UnbondingDelegation
-	Redelegation                = types.Redelegation
-	Params                      = types.Params
-	Pool                        = types.Pool
-	PoolShares                  = types.PoolShares
-	MsgCreateValidator          = types.MsgCreateValidator
-	MsgEditValidator            = types.MsgEditValidator
-	MsgDelegate                 = types.MsgDelegate
-	MsgBeginUnbonding           = types.MsgBeginUnbonding
-	MsgCompleteUnbonding        = types.MsgCompleteUnbonding
-	MsgBeginRedelegate          = types.MsgBeginRedelegate
-	MsgCompleteRedelegate       = types.MsgCompleteRedelegate
-	GenesisState                = types.GenesisState
+	Keeper                = keeper.Keeper
+	Validator             = types.Validator
+	Description           = types.Description
+	Delegation            = types.Delegation
+	UnbondingDelegation   = types.UnbondingDelegation
+	Redelegation          = types.Redelegation
+	Params                = types.Params
+	Pool                  = types.Pool
+	PoolShares            = types.PoolShares
+	MsgCreateValidator    = types.MsgCreateValidator
+	MsgEditValidator      = types.MsgEditValidator
+	MsgDelegate           = types.MsgDelegate
+	MsgBeginUnbonding     = types.MsgBeginUnbonding
+	MsgCompleteUnbonding  = types.MsgCompleteUnbonding
+	MsgBeginRedelegate    = types.MsgBeginRedelegate
+	MsgCompleteRedelegate = types.MsgCompleteRedelegate
+	GenesisState          = types.GenesisState
 )
 
 var (

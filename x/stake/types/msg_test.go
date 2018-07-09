@@ -69,11 +69,11 @@ func TestMsgEditValidator(t *testing.T) {
 	}
 }
 
-// test ValidateBasic for MsgSurrogateCreateValidator
-func TestMsgOnBehalfOfCreateValidator(t *testing.T) {
+// test ValidateBasic for MsgCreateValidatorOnBehalfOf
+func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
 	tests := []struct {
 		name, moniker, identity, website, details string
-		surrogateAddr                             sdk.Address
+		delegatorAddr                             sdk.Address
 		validatorAddr                             sdk.Address
 		validatorPubKey                           crypto.PubKey
 		bond                                      sdk.Coin
@@ -92,7 +92,7 @@ func TestMsgOnBehalfOfCreateValidator(t *testing.T) {
 
 	for _, tc := range tests {
 		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
-		msg := NewMsgOnBehalfOfCreateValidator(tc.surrogateAddr, tc.validatorAddr, tc.validatorPubKey, tc.bond, description)
+		msg := NewMsgCreateValidatorOnBehalfOf(tc.delegatorAddr, tc.validatorAddr, tc.validatorPubKey, tc.bond, description)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {

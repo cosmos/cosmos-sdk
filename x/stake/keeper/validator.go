@@ -194,6 +194,8 @@ func (k Keeper) ClearTendermintUpdates(ctx sdk.Context) {
 // perfom all the nessisary steps for when a validator changes its power
 // updates all validator stores as well as tendermint update store
 // may kick out validators if new validator is entering the bonded validator group
+// nolint: gocyclo
+// TODO: Remove above nolint, function needs to be simplified
 func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)

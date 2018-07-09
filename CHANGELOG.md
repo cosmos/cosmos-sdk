@@ -85,6 +85,7 @@ FEATURES
   * async -- send the tx without waiting for a tendermint response
   * json  -- return the output in json format for increased readability
   * print-response -- return the tx response. (includes fields like gas cost)
+* [stake] Introduce new msg that allows surrogates to create validators with delegation for another user
 
 IMPROVEMENTS
 * bank module uses go-wire codec instead of 'encoding/json'

@@ -102,6 +102,7 @@ var (
 	ErrCommissionNegative     = types.ErrCommissionNegative
 	ErrCommissionHuge         = types.ErrCommissionHuge
 
+	ErrNilSurrogateAddr          = types.ErrNilSurrogateAddr
 	ErrNilDelegatorAddr          = types.ErrNilDelegatorAddr
 	ErrBadDenom                  = types.ErrBadDenom
 	ErrBadDelegationAmount       = types.ErrBadDelegationAmount

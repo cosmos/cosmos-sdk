@@ -526,9 +526,8 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 func getState(app *BaseApp, mode runTxMode) *state {
 	if mode == runTxModeCheck || mode == runTxModeSimulate {
 		return app.checkState
-	} else {
-		return app.deliverState
 	}
+	return app.deliverState
 }
 
 // txBytes may be nil in some cases, eg. in tests.

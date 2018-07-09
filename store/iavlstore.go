@@ -16,7 +16,7 @@ import (
 const (
 	defaultIAVLCacheSize  = 10000
 	defaultIAVLNumRecent  = 100
-	defaultIAVLStoreEvery = 10000
+	defaultIAVLStoreEvery = 1
 )
 
 // load the iavl store

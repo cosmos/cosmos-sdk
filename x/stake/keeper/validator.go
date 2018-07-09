@@ -422,6 +422,11 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 	iterator.Close()
 
 	// perform the actual kicks
+	kickOutValidators(k, ctx, toKickOut)
+	return
+}
+
+func kickOutValidators(k Keeper, ctx sdk.Context, toKickOut map[string]byte) {
 	for key := range toKickOut {
 		ownerAddr := []byte(key)
 		validator, found := k.GetValidator(ctx, ownerAddr)
@@ -430,7 +435,6 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 		}
 		k.unbondValidator(ctx, validator)
 	}
-	return
 }
 
 // perform all the store operations for when a validator status becomes unbonded

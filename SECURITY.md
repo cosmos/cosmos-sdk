@@ -7,11 +7,6 @@ See the policy for more details on submissions and rewards.
 The following is a list of examples of the kinds of bugs we're most interested in for
 the Cosmos SDK. See [here](https://github.com/tendermint/tendermint/blob/master/SECURITY.md) for vulnerabilities we are interested in for Tendermint, and lower-level libraries, e.g. IAVL.
 
-## Specification
-- Conceptual flaws
-- Ambiguities, inconsistencies, or incorrect statements
-- Mis-match between specification and implementation of any component
-
 ## Modules 
 - x/staking
 - x/slashing

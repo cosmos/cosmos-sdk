@@ -45,6 +45,8 @@ BREAKING CHANGES
 * [lcd] Switch key creation output to return bech32
 * [x/stake] store-value for delegation, validator, ubd, and red do not hold duplicate information contained store-key
 * [gaiad] genesis transactions now use bech32 addresses / pubkeys
+* [types] Renamed `sdk.Address` to `sdk.AccAddress`/`sdk.ValAddress`
+* [types] `sdk.AccAddress`/`sdk.ValAddress` natively marshals to Bech32 in String, Sprintf (when used with `%s`), and MarshalJSON
 
 DEPRECATED
 * [cli] Deprecate `--name` flag in commands that send txs, in favor of `--from`

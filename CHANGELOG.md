@@ -17,7 +17,7 @@ BREAKING CHANGES
     * go-crypto, abci, tmlibs have been merged into Tendermint
     * Various other fixes
 * [auth] Signers of a transaction now only sign over their own account and sequence number
-* [auth] Removed MsgChangePubKey 
+* [auth] Removed MsgChangePubKey
 * [auth] Removed SetPubKey from account mapper
 * [auth] AltBytes renamed to Memo, now a string, max 100 characters, costs a bit of gas
 * [types] `GetMsg()` -> `GetMsgs()` as txs wrap many messages
@@ -78,7 +78,7 @@ FEATURES
 * [gaiacli] Ledger support added
   - You can now use a Ledger with `gaiacli --ledger` for all key-related commands
   - Ledger keys can be named and tracked locally in the key DB
-* [testing] created a randomized testing framework. 
+* [testing] created a randomized testing framework.
   - Currently bank has limited functionality in the framework
   - Auth has its invariants checked within the framework
 * [gaiacli] added the following flags for commands that post transactions to the chain:
@@ -98,6 +98,7 @@ IMPROVEMENTS
 * [keys] improve error message when deleting non-existent key
 * [gaiacli] improve error messages on `send` and `account` commands
 * added contributing guidelines
+* [docs] Added commands for governance CLI on testnet README
 
 BUG FIXES
 * [x/slashing] \#1510 Unrevoked validators cannot un-revoke themselves

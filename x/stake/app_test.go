@@ -136,11 +136,11 @@ func TestStakeMsgs(t *testing.T) {
 	mock.SignCheckDeliver(t, mApp.BaseApp, []sdk.Msg{createValidatorMsgOnBehalfOf}, []int64{0}, []int64{1}, true, priv1)
 	mock.CheckBalance(t, mApp, addr1, sdk.Coins{genCoin.Minus(bondCoin).Minus(bondCoin)})
 	mApp.BeginBlock(abci.RequestBeginBlock{})
-	
+
 	validator = checkValidator(t, mApp, keeper, addr2, true)
 	require.Equal(t, addr2, validator.Owner)
 	require.Equal(t, sdk.Bonded, validator.Status())
-	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.PoolShares.Bonded()))	
+	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.PoolShares.Bonded()))
 
 	// check the bond that should have been created as well
 	checkDelegation(t, mApp, keeper, addr1, addr1, true, sdk.NewRat(10))

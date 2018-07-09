@@ -50,7 +50,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 				Website:  viper.GetString(FlagWebsite),
 				Details:  viper.GetString(FlagDetails),
 			}
-			
+
 			var msg sdk.Msg
 			if viper.GetString(FlagAddressDelegator) != "" {
 				delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))

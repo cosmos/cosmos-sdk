@@ -522,8 +522,18 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 	return nil
 }
 
+// Returns deliverState if app is in runTxModeDeliver, otherwhise returns checkstate
+func getState(app *BaseApp, mode runTxMode) *state {
+	if mode == runTxModeCheck || mode == runTxModeSimulate {
+		return app.checkState
+	} else {
+		return app.deliverState
+	}
+}
+
 // txBytes may be nil in some cases, eg. in tests.
 // Also, in the future we may support "internal" transactions.
+// nolint: gocyclo
 func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
 	//NOTE: GasWanted should be returned by the AnteHandler.
 	// GasUsed is determined by the GasMeter.
@@ -567,17 +577,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		gasWanted = anteResult.GasWanted
 	}
 
-	// Get the correct cache
-	var msCache sdk.CacheMultiStore
-	if mode == runTxModeCheck || mode == runTxModeSimulate {
-		// CacheWrap app.checkState.ms in case it fails.
-		msCache = app.checkState.CacheMultiStore()
-		ctx = ctx.WithMultiStore(msCache)
-	} else {
-		// CacheWrap app.deliverState.ms in case it fails.
-		msCache = app.deliverState.CacheMultiStore()
-		ctx = ctx.WithMultiStore(msCache)
-	}
+	// Get the correct cache, CacheWrap app.checkState.ms in case it fails.
+	msCache := getState(app, mode).CacheMultiStore()
+	ctx = ctx.WithMultiStore(msCache)
 
 	// accumulate results
 	logs := make([]string, 0, len(msgs))

@@ -15,7 +15,7 @@ go get github.com/cosmos/cosmos-sdk
 
 cd $GOPATH/src/github.com/cosmos/cosmos-sdk
 
-git checkout 0d94c5a2559f9b117a67327b1813c2926c5fa6bf
+git checkout <next RC>
 
 make get_tools
 

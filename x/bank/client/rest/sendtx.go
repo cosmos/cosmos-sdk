@@ -44,7 +44,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 		vars := mux.Vars(r)
 		bech32addr := vars["address"]
 
-		address, err := sdk.GetAccAddressBech32(bech32addr)
+		to, err := sdk.GetAccAddressBech32(bech32addr)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -68,13 +68,6 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 		info, err := kb.Get(m.LocalAccountName)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		to, err := sdk.GetAccAddressHex(address.String())
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}

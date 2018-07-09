@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"encoding/hex"
 	"io/ioutil"
 	"net/http"
 
@@ -39,7 +38,7 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.Core
 		destChainID := vars["destchain"]
 		bech32addr := vars["address"]
 
-		address, err := sdk.GetAccAddressBech32(bech32addr)
+		to, err := sdk.GetAccAddressBech32(bech32addr)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -66,14 +65,6 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.Core
 			w.Write([]byte(err.Error()))
 			return
 		}
-
-		bz, err := hex.DecodeString(address.String())
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-		to := sdk.AccAddress(bz)
 
 		// build message
 		packet := ibc.NewIBCPacket(sdk.AccAddress(info.GetPubKey().Address()), to, m.Amount, m.SrcChainID, destChainID)

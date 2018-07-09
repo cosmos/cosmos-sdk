@@ -286,6 +286,8 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 // GetValidators.
 //
 // Optionally also return the validator from a retrieve address if the validator has been bonded
+// nolint: gocyclo
+// TODO: Remove the above golint
 func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 	affectedValidator types.Validator) (updatedVal types.Validator) {
 

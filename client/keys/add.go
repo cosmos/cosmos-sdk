@@ -46,6 +46,8 @@ phrase, otherwise, a new key will be generated.`,
 	return cmd
 }
 
+// nolint: gocyclo
+// TODO remove the above when addressing #1446
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	var kb keys.Keybase
 	var err error

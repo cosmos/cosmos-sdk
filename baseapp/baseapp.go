@@ -505,6 +505,23 @@ func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
 	return app.runTx(runTxModeDeliver, nil, tx)
 }
 
+func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
+	if msgs == nil || len(msgs) == 0 {
+		// TODO: probably shouldn't be ErrInternal. Maybe new ErrInvalidMessage, or ?
+		return sdk.ErrInternal("Tx.GetMsgs() must return at least one message in list")
+	}
+
+	for _, msg := range msgs {
+		// Validate the Msg.
+		err := msg.ValidateBasic()
+		if err != nil {
+			err = err.WithDefaultCodespace(sdk.CodespaceRoot)
+			return err
+		}
+	}
+	return nil
+}
+
 // txBytes may be nil in some cases, eg. in tests.
 // Also, in the future we may support "internal" transactions.
 func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
@@ -533,18 +550,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// Get the Msg.
 	var msgs = tx.GetMsgs()
-	if msgs == nil || len(msgs) == 0 {
-		// TODO: probably shouldn't be ErrInternal. Maybe new ErrInvalidMessage, or ?
-		return sdk.ErrInternal("Tx.GetMsgs() must return at least one message in list").Result()
-	}
-
-	for _, msg := range msgs {
-		// Validate the Msg.
-		err := msg.ValidateBasic()
-		if err != nil {
-			err = err.WithDefaultCodespace(sdk.CodespaceRoot)
-			return err.Result()
-		}
+	err := validateBasicTxMsgs(msgs)
+	if err != nil {
+		return err.Result()
 	}
 
 	// Run the ante handler.

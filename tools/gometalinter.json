@@ -5,5 +5,5 @@
     "Enable": ["golint", "vet", "ineffassign", "unparam", "unconvert", "misspell", "gocyclo"],
     "Deadline": "500s",
     "Vendor": true,
-    "Cyclo": 10
+    "Cyclo": 11
 }

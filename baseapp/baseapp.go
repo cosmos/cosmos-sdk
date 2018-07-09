@@ -324,14 +324,19 @@ func (app *BaseApp) FilterPeerByPubKey(info string) abci.ResponseQuery {
 	return abci.ResponseQuery{}
 }
 
-// Implements ABCI.
-// Delegates to CommitMultiStore if it implements Queryable
-func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
-	path := strings.Split(req.Path, "/")
+func splitPath(requestPath string) (path []string) {
+	path = strings.Split(requestPath, "/")
 	// first element is empty string
 	if len(path) > 0 && path[0] == "" {
 		path = path[1:]
 	}
+	return path
+}
+
+// Implements ABCI.
+// Delegates to CommitMultiStore if it implements Queryable
+func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
+	path := splitPath(req.Path)
 	// "/app" prefix for special application queries
 	if len(path) >= 2 && path[0] == "app" {
 		var result sdk.Result

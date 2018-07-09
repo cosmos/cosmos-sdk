@@ -93,11 +93,7 @@ func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
 }
 
 // load all unbonding delegations from a particular validator
-<<<<<<< HEAD
-func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sdk.Address) (ubds []types.UnbondingDelegation) {
-=======
-func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sdk.AccAddress) (unbondingDelegations []types.UnbondingDelegation) {
->>>>>>> asdf
+func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sdk.AccAddress) (ubds []types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, GetUBDsByValIndexKey(valAddr))
 	for {
@@ -149,11 +145,7 @@ func (k Keeper) GetRedelegation(ctx sdk.Context,
 }
 
 // load all redelegations from a particular validator
-<<<<<<< HEAD
-func (k Keeper) GetRedelegationsFromValidator(ctx sdk.Context, valAddr sdk.Address) (reds []types.Redelegation) {
-=======
-func (k Keeper) GetRedelegationsFromValidator(ctx sdk.Context, valAddr sdk.AccAddress) (redelegations []types.Redelegation) {
->>>>>>> asdf
+func (k Keeper) GetRedelegationsFromValidator(ctx sdk.Context, valAddr sdk.AccAddress) (reds []types.Redelegation) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, GetREDsFromValSrcIndexKey(valAddr))
 	for {

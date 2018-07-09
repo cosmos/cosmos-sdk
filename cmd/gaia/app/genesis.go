@@ -36,14 +36,14 @@ type GenesisAccount struct {
 
 func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
 	return GenesisAccount{
-		Address: sdk.MustBech32ifyAcc(acc.Address),
+		Address: acc.Address,
 		Coins:   acc.Coins,
 	}
 }
 
 func NewGenesisAccountI(acc auth.Account) GenesisAccount {
 	return GenesisAccount{
-		Address: sdk.MustBech32ifyAcc(acc.GetAddress()),
+		Address: acc.GetAddress(),
 		Coins:   acc.GetCoins(),
 	}
 }
@@ -51,7 +51,7 @@ func NewGenesisAccountI(acc auth.Account) GenesisAccount {
 // convert GenesisAccount to auth.BaseAccount
 func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 	return &auth.BaseAccount{
-		Address: sdk.MustGetAccAddressBech32(ga.Address),
+		Address: ga.Address,
 		Coins:   ga.Coins.Sort(),
 	}
 }
@@ -78,7 +78,7 @@ func GaiaAppInit() server.AppInit {
 type GaiaGenTx struct {
 	Name    string         `json:"name"`
 	Address sdk.AccAddress `json:"address"`
-	PubKey  string  `json:"pub_key"`
+	PubKey  string         `json:"pub_key"`
 }
 
 // Generate a gaia genesis transaction with flags
@@ -153,7 +153,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		}
 
 		// create the genesis account, give'm few steaks and a buncha token with there name
-		accAuth := auth.NewBaseAccountWithAddress(sdk.MustGetAccAddressBech32(genTx.Address))
+		accAuth := auth.NewBaseAccountWithAddress(genTx.Address)
 		accAuth.Coins = sdk.Coins{
 			{genTx.Name + "Token", sdk.NewInt(1000)},
 			{"steak", sdk.NewInt(freeFermionsAcc)},
@@ -165,7 +165,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		// add the validator
 		if len(genTx.Name) > 0 {
 			desc := stake.NewDescription(genTx.Name, "", "", "")
-			validator := stake.NewValidator(sdk.MustGetAccAddressBech32(genTx.Address),
+			validator := stake.NewValidator(genTx.Address,
 				sdk.MustGetAccPubKeyBech32(genTx.PubKey), desc)
 
 			stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens + freeFermionVal // increase the supply

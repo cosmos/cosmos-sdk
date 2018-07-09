@@ -454,7 +454,7 @@ func GenerateCoinKey() (sdk.AccAddress, string, error) {
 	// generate a private key, with recovery phrase
 	info, secret, err := keybase.CreateMnemonic("name", keys.English, "pass", keys.Secp256k1)
 	if err != nil {
-		return "", "", err
+		return sdk.AccAddress([]byte{}), "", err
 	}
 	addr := info.GetPubKey().Address()
 	return sdk.AccAddress(addr), secret, nil
@@ -467,21 +467,21 @@ func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (s
 	// get the keystore from the client
 	keybase, err := clkeys.GetKeyBaseFromDir(clientRoot)
 	if err != nil {
-		return "", "", err
+		return sdk.AccAddress([]byte{}), "", err
 	}
 
 	// ensure no overwrite
 	if !overwrite {
 		_, err := keybase.Get(keyName)
 		if err == nil {
-			return "", "", errors.New("key already exists, overwrite is disabled")
+			return sdk.AccAddress([]byte{}), "", errors.New("key already exists, overwrite is disabled")
 		}
 	}
 
 	// generate a private key, with recovery phrase
 	info, secret, err := keybase.CreateMnemonic(keyName, keys.English, keyPass, keys.Secp256k1)
 	if err != nil {
-		return "", "", err
+		return sdk.AccAddress([]byte{}), "", err
 	}
 	addr := info.GetPubKey().Address()
 	return sdk.AccAddress(addr), secret, nil

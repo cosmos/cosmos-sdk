@@ -55,8 +55,8 @@ func UnmarshalDelegation(cdc *wire.Codec, key, value []byte) (delegation Delegat
 		err = errors.New("unexpected key length")
 		return
 	}
-	delAddr := sdk.Address(addrs[:sdk.AddrLen])
-	valAddr := sdk.Address(addrs[sdk.AddrLen:])
+	delAddr := sdk.AccAddress(addrs[:sdk.AddrLen])
+	valAddr := sdk.AccAddress(addrs[sdk.AddrLen:])
 
 	return Delegation{
 		DelegatorAddr: delAddr,
@@ -145,8 +145,8 @@ func UnmarshalUBD(cdc *wire.Codec, key, value []byte) (ubd UnbondingDelegation, 
 		err = errors.New("unexpected key length")
 		return
 	}
-	delAddr := sdk.Address(addrs[:sdk.AddrLen])
-	valAddr := sdk.Address(addrs[sdk.AddrLen:])
+	delAddr := sdk.AccAddress(addrs[:sdk.AddrLen])
+	valAddr := sdk.AccAddress(addrs[sdk.AddrLen:])
 
 	return UnbondingDelegation{
 		DelegatorAddr:  delAddr,
@@ -237,9 +237,9 @@ func UnmarshalRED(cdc *wire.Codec, key, value []byte) (red Redelegation, err err
 		err = errors.New("unexpected key length")
 		return
 	}
-	delAddr := sdk.Address(addrs[:sdk.AddrLen])
-	valSrcAddr := sdk.Address(addrs[sdk.AddrLen : 2*sdk.AddrLen])
-	valDstAddr := sdk.Address(addrs[2*sdk.AddrLen:])
+	delAddr := sdk.AccAddress(addrs[:sdk.AddrLen])
+	valSrcAddr := sdk.AccAddress(addrs[sdk.AddrLen : 2*sdk.AddrLen])
+	valDstAddr := sdk.AccAddress(addrs[2*sdk.AddrLen:])
 
 	return Redelegation{
 		DelegatorAddr:    delAddr,

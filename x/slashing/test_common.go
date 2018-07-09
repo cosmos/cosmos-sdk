@@ -29,9 +29,9 @@ var (
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
 	}
 	addrs = []sdk.AccAddress{
-		pks[0].Address(),
-		pks[1].Address(),
-		pks[2].Address(),
+		sdk.AccAddress(pks[0].Address()),
+		sdk.AccAddress(pks[1].Address()),
+		sdk.AccAddress(pks[2].Address()),
 	}
 	initCoins sdk.Int = sdk.NewInt(200)
 )

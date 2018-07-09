@@ -161,12 +161,6 @@ type NewKeyBody struct {
 	Password string `json:"password"`
 }
 
-// new key response REST body
-type NewKeyResponse struct {
-	Address  sdk.AccAddress `json:"address"`
-	Mnemonic string         `json:"mnemonic"`
-}
-
 // add new key REST handler
 func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	var kb keys.Keybase
@@ -215,18 +209,24 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	address := sdk.AccAddress(info.GetPubKey().Address().Bytes())
-	bz, err := json.Marshal(NewKeyResponse{
-		Address:  address,
-		Mnemonic: mnemonic,
-	})
+
+	keyOutput, err := Bech32KeyOutput(info)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	w.Write(output)
+	keyOutput.Seed = mnemonic
+
+	bz, err := json.Marshal(keyOutput)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	w.Write(bz)
 }
 
 // function to just a new seed to display in the UI before actually persisting it in the keybase

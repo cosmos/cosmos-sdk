@@ -285,9 +285,9 @@ type msgCounter struct {
 }
 
 // Implements Msg
-func (msg msgCounter) Type() string              { return typeMsgCounter }
-func (msg msgCounter) GetSignBytes() []byte      { return nil }
-func (msg msgCounter) GetSigners() []sdk.Address { return nil }
+func (msg msgCounter) Type() string                 { return typeMsgCounter }
+func (msg msgCounter) GetSignBytes() []byte         { return nil }
+func (msg msgCounter) GetSigners() []sdk.AccAddress { return nil }
 func (msg msgCounter) ValidateBasic() sdk.Error {
 	if msg.Counter >= 0 {
 		return nil
@@ -323,8 +323,8 @@ type msgCounter2 struct {
 }
 
 // Implements Msg
-func (msg msgCounter2) Type() string              { return typeMsgCounter2 }
-func (msg msgCounter2) GetSignBytes() []byte      { return nil }
+func (msg msgCounter2) Type() string                 { return typeMsgCounter2 }
+func (msg msgCounter2) GetSignBytes() []byte         { return nil }
 func (msg msgCounter2) GetSigners() []sdk.AccAddress { return nil }
 func (msg msgCounter2) ValidateBasic() sdk.Error {
 	if msg.Counter >= 0 {

@@ -2,7 +2,6 @@ package types
 
 import (
 	"math"
-	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -60,14 +59,8 @@ func NewMsgCreateValidatorOnBehalfOf(delegatorAddr, validatorAddr sdk.Address, p
 
 //nolint
 func (msg MsgCreateValidator) Type() string { return MsgType }
-
-// Returns Address(es) that must sign over msg.GetSignBytes()
 func (msg MsgCreateValidator) GetSigners() []sdk.Address {
-	if reflect.DeepEqual(msg.DelegatorAddr, msg.ValidatorAddr) {
-		return []sdk.Address{msg.ValidatorAddr}
-	}
-	// If delegator addr is different from validator addr, then delegator addr is first since it is feepayer
-	return []sdk.Address{msg.DelegatorAddr, msg.ValidatorAddr}
+	return []sdk.Address{msg.DelegatorAddr}
 }
 
 // get the bytes for the message signer to sign on

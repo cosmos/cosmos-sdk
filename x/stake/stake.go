@@ -72,6 +72,7 @@ var (
 	RegisterWire        = types.RegisterWire
 
 	NewMsgCreateValidator    = types.NewMsgCreateValidator
+	NewMsgCreateValidatorOnBehalfOf = types.NewMsgCreateValidatorOnBehalfOf
 	NewMsgEditValidator      = types.NewMsgEditValidator
 	NewMsgDelegate           = types.NewMsgDelegate
 	NewMsgBeginUnbonding     = types.NewMsgBeginUnbonding

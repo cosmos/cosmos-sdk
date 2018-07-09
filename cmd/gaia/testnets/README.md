@@ -355,13 +355,28 @@ gaiacli stake delegation \
 
 ## Governance
 
-Governace is the process from which users in Cosmos can come to consensus on software updates, parameters of the mainnet or on custom proposals for independent sovereign zones/hubs.
+Governance is the process from which users in the Cosmos Hub can come to consensus on software upgrades, parameters of the mainnet or on custom text proposals.
 
-Governance is done through voting on proposals, which will be submitted by `Atom` holders on the mainnet. For more information about the governance process and how it works, please check out the Governance module [specification](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/governance).
+Governance is done through voting on proposals, which will be submitted by `Atom` holders on the mainnet.
+
+Some considerations about
+
+- Voting is done by bonded Atom holders on a 1 bonded `Atom` 1 vote basis
+- Delegators inherit the vote of their validator if they don't vote
+- **Validators MUST vote on every proposal**. If a validator does not vote on a proposal, they will be **partially slashed**.
+- Votes are tallied at the end of the voting period (2 weeks on mainnet). Each address can vote multiple times (paying the transaction fee each time), only the last casted vote will count.
+- Voters can choose between options `Yes`, `No`, `NoWithVeto` and `Abstain`
+At the end of the voting period, a proposal is accepted if `(YesVotes/(YesVotes+NoVotes+NoWithVetoVotes))>1/2` and `(NoWithVetoVotes/(YesVotes+NoVotes+NoWithVetoVotes))<1/3`. It is rejected otherwise.
+
+For more information about the governance process and how it works, please check out the Governance module [specification](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/governance).
 
 ### Create a Governance proposal
 
-In order to create a governance proposal, you must submit an initial deposit along with the proposal details (_i.e_ `title`, `description` and `type`, which must be of value _Text_, _ParameterChange_ or _SoftwareUpgrade_):
+In order to create a governance proposal, you must submit an initial deposit along with the proposal details:
+
+- `title`: Title of the proposal
+- `description`: Description of the proposal
+- `type`: Type of proposal. Must be of value _Text_ (types _SoftwareUpgrade_ and _ParameterChange_ not supported yet).
 
 ```bash
 gaiacli gov submit-proposal \
@@ -375,7 +390,7 @@ gaiacli gov submit-proposal \
 ```
 
 
-### Rise deposit
+### Increase deposit
 
 In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (default: `10 steak`). If the proposal you previously created didn't meet this requirement, you can still rise the total amount deposited to make it valid. Once the minimum deposit is reached, proposal enters voting period:
 
@@ -388,7 +403,7 @@ gaiacli gov deposit \
   --chain-id=gaia-7000
 ```
 
-_NOTE_: Proposals that don't meet this requirement will be deleted.
+_NOTE_: Proposals that don't meet this requirement will be deleted after `MaxDepositPeriod` is reached.
 
 #### Query proposal
 
@@ -401,6 +416,8 @@ gaiacli gov query-proposal \
 ```
 
 ### Vote on a proposal
+
+After a proposal's deposit reaches the `MinDeposit` value, the voting period opens. Bonded Atom holders can then cast vote on it:
 
 ```bash
 gaiacli gov vote \

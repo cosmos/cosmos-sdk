@@ -362,7 +362,7 @@ Some considerations about the voting process:
 - Voting is done by bonded `Atom` holders on a 1 bonded `Atom` 1 vote basis
 - Delegators inherit the vote of their validator if they don't vote
 - **Validators MUST vote on every proposal**. If a validator does not vote on a proposal, they will be **partially slashed**
-- Votes are tallied at the end of the voting period (2 weeks on mainnet). Each address can vote multiple times (paying the transaction fee each time), only the last casted vote will count
+- Votes are tallied at the end of the voting period (2 weeks on mainnet). Each address can vote multiple times to update its `Option` value (paying the transaction fee each time), only the last casted vote will count as valid
 - Voters can choose between options `Yes`, `No`, `NoWithVeto` and `Abstain`
 At the end of the voting period, a proposal is accepted if `(YesVotes/(YesVotes+NoVotes+NoWithVetoVotes))>1/2` and `(NoWithVetoVotes/(YesVotes+NoVotes+NoWithVetoVotes))<1/3`. It is rejected otherwise
 

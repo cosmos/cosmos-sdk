@@ -61,6 +61,7 @@ func NewMsgCreateValidatorOnBehalfOf(delegatorAddr, validatorAddr sdk.Address, p
 //nolint
 func (msg MsgCreateValidator) Type() string { return MsgType }
 
+// Returns Address(es) that must sign over msg.GetSignBytes()
 func (msg MsgCreateValidator) GetSigners() []sdk.Address {
 	if reflect.DeepEqual(msg.DelegatorAddr, msg.ValidatorAddr) {
 		return []sdk.Address{msg.ValidatorAddr}

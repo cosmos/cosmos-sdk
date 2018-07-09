@@ -17,9 +17,10 @@ import (
 func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt int64) MsgCreateValidator {
 	return MsgCreateValidator{
 		Description:    Description{},
+		DelegatorAddr:  address,
 		ValidatorAddr:  address,
 		PubKey:         pubKey,
-		SelfDelegation: sdk.Coin{"steak", sdk.NewInt(amt)},
+		Delegation: sdk.Coin{"steak", sdk.NewInt(amt)},
 	}
 }
 
@@ -31,13 +32,13 @@ func newTestMsgDelegate(delegatorAddr, validatorAddr sdk.Address, amt int64) Msg
 	}
 }
 
-func newTestMsgSurrogateCreateValidator(surrogateAddr, validatorAddr sdk.Address, valPubKey crypto.PubKey, amt int64) MsgSurrogateCreateValidator {
-	return MsgSurrogateCreateValidator{
+func newTestMsgOnBehalfOfCreateValidator(delegatorAddr, validatorAddr sdk.Address, valPubKey crypto.PubKey, amt int64) MsgCreateValidator {
+	return MsgCreateValidator{
 		Description:         Description{},
-		SurrogateAddr:       surrogateAddr,
+		DelegatorAddr:       delegatorAddr,
 		ValidatorAddr:       validatorAddr,
-		ValidatorPubKey:     valPubKey,
-		SurrogateDelegation: sdk.Coin{"steak", sdk.NewInt(amt)},
+		PubKey:     valPubKey,
+		Delegation: sdk.Coin{"steak", sdk.NewInt(amt)},
 	}
 }
 
@@ -153,10 +154,10 @@ func TestDuplicatesMsgSurrogateCreateValidator(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 
 	validatorAddr := keep.Addrs[0]
-	surrogateAddr := keep.Addrs[1]
+	delegatorAddr := keep.Addrs[1]
 	pk := keep.PKs[0]
-	msgSurrogateCreateValidator := newTestMsgSurrogateCreateValidator(surrogateAddr, validatorAddr, pk, 10)
-	got := handleMsgSurrogateCreateValidator(ctx, msgSurrogateCreateValidator, keeper)
+	msgOnBehalfOfCreateValidator := newTestMsgOnBehalfOfCreateValidator(delegatorAddr, validatorAddr, pk, 10)
+	got := handleMsgCreateValidator(ctx, msgOnBehalfOfCreateValidator, keeper)
 	require.True(t, got.IsOK(), "%v", got)
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 
@@ -168,10 +169,10 @@ func TestDuplicatesMsgSurrogateCreateValidator(t *testing.T) {
 	require.Equal(t, sdk.NewRat(10), validator.DelegatorShares)
 	require.Equal(t, Description{}, validator.Description)
 
-	// one validator cannot be created twice even from different surrogate
-	msgSurrogateCreateValidator.SurrogateAddr = keep.Addrs[2]
-	msgSurrogateCreateValidator.ValidatorPubKey = keep.PKs[1]
-	got = handleMsgSurrogateCreateValidator(ctx, msgSurrogateCreateValidator, keeper)
+	// one validator cannot be created twice even from different delegator
+	msgOnBehalfOfCreateValidator.DelegatorAddr = keep.Addrs[2]
+	msgOnBehalfOfCreateValidator.PubKey = keep.PKs[1]
+	got = handleMsgCreateValidator(ctx, msgOnBehalfOfCreateValidator, keeper)
 	require.False(t, got.IsOK(), "%v", got)
 }
 
@@ -393,12 +394,12 @@ func TestMultipleMsgSurrogateCreateValidator(t *testing.T) {
 	params := setInstantUnbondPeriod(keeper, ctx)
 
 	validatorAddrs := []sdk.Address{keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]}
-	surrogateAddrs := []sdk.Address{keep.Addrs[3], keep.Addrs[4], keep.Addrs[5]}
+	delegatorAddrs := []sdk.Address{keep.Addrs[3], keep.Addrs[4], keep.Addrs[5]}
 
 	// bond them all
 	for i, validatorAddr := range validatorAddrs {
-		msgSurrogateCreateValidator := newTestMsgSurrogateCreateValidator(surrogateAddrs[i], validatorAddr, keep.PKs[i], 10)
-		got := handleMsgSurrogateCreateValidator(ctx, msgSurrogateCreateValidator, keeper)
+		msgOnBehalfOfCreateValidator := newTestMsgOnBehalfOfCreateValidator(delegatorAddrs[i], validatorAddr, keep.PKs[i], 10)
+		got := handleMsgCreateValidator(ctx, msgOnBehalfOfCreateValidator, keeper)
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 
 		//Check that the account is bonded
@@ -406,7 +407,7 @@ func TestMultipleMsgSurrogateCreateValidator(t *testing.T) {
 		require.Equal(t, (i + 1), len(validators))
 		val := validators[i]
 		balanceExpd := sdk.NewInt(initBond - 10)
-		balanceGot := accMapper.GetAccount(ctx, surrogateAddrs[i]).GetCoins().AmountOf(params.BondDenom)
+		balanceGot := accMapper.GetAccount(ctx, delegatorAddrs[i]).GetCoins().AmountOf(params.BondDenom)
 		require.Equal(t, i+1, len(validators), "expected %d validators got %d, validators: %v", i+1, len(validators), validators)
 		require.Equal(t, 10, int(val.DelegatorShares.RoundInt64()), "expected %d shares, got %d", 10, val.DelegatorShares)
 		require.Equal(t, balanceExpd, balanceGot, "expected account to have %d, got %d", balanceExpd, balanceGot)
@@ -416,8 +417,8 @@ func TestMultipleMsgSurrogateCreateValidator(t *testing.T) {
 	for i, validatorAddr := range validatorAddrs {
 		_, found := keeper.GetValidator(ctx, validatorAddr)
 		require.True(t, found)
-		msgBeginUnbonding := NewMsgBeginUnbonding(surrogateAddrs[i], validatorAddr, sdk.NewRat(10)) // remove surrogate delegation
-		msgCompleteUnbonding := NewMsgCompleteUnbonding(surrogateAddrs[i], validatorAddr)
+		msgBeginUnbonding := NewMsgBeginUnbonding(delegatorAddrs[i], validatorAddr, sdk.NewRat(10)) // remove surrogate delegation
+		msgCompleteUnbonding := NewMsgCompleteUnbonding(delegatorAddrs[i], validatorAddr)
 		got := handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 		got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbonding, keeper)
@@ -432,7 +433,7 @@ func TestMultipleMsgSurrogateCreateValidator(t *testing.T) {
 		require.False(t, found)
 
 		expBalance := sdk.NewInt(initBond)
-		gotBalance := accMapper.GetAccount(ctx, surrogateAddrs[i]).GetCoins().AmountOf(params.BondDenom)
+		gotBalance := accMapper.GetAccount(ctx, delegatorAddrs[i]).GetCoins().AmountOf(params.BondDenom)
 		require.Equal(t, expBalance, gotBalance, "expected account to have %d, got %d", expBalance, gotBalance)
 	}
 }

@@ -2,6 +2,7 @@ package types
 
 import (
 	"math"
+	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -27,36 +28,58 @@ var maximumBondingRationalDenominator sdk.Int = sdk.NewInt(int64(math.Pow10(MaxB
 // MsgCreateValidator - struct for unbonding transactions
 type MsgCreateValidator struct {
 	Description
-	ValidatorAddr  sdk.Address   `json:"address"`
+	DelegatorAddr  sdk.Address   `json:"delegator_address"`
+	ValidatorAddr  sdk.Address   `json:"validator_address"`
 	PubKey         crypto.PubKey `json:"pubkey"`
-	SelfDelegation sdk.Coin      `json:"self_delegation"`
+	Delegation sdk.Coin      `json:"delegation"`
 }
 
+// Default way to create validator. Delegator address and validator address are the same
 func NewMsgCreateValidator(validatorAddr sdk.Address, pubkey crypto.PubKey,
 	selfDelegation sdk.Coin, description Description) MsgCreateValidator {
 	return MsgCreateValidator{
 		Description:    description,
+		DelegatorAddr:  validatorAddr,
 		ValidatorAddr:  validatorAddr,
 		PubKey:         pubkey,
-		SelfDelegation: selfDelegation,
+		Delegation: selfDelegation,
+	}
+}
+
+// Creates validator msg by delegator address on behalf of validator address
+func NewMsgOnBehalfOfCreateValidator(delegatorAddr, validatorAddr sdk.Address, pubkey crypto.PubKey,
+    delegation sdk.Coin, description Description) MsgCreateValidator {
+	return MsgCreateValidator{
+		Description: description,
+		DelegatorAddr: delegatorAddr,
+		ValidatorAddr: validatorAddr,
+		PubKey: pubkey,
+		Delegation: delegation,
 	}
 }
 
 //nolint
 func (msg MsgCreateValidator) Type() string { return MsgType }
+
 func (msg MsgCreateValidator) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.ValidatorAddr}
+	if reflect.DeepEqual(msg.DelegatorAddr, msg.ValidatorAddr) {
+		return []sdk.Address{msg.ValidatorAddr}
+	}
+	// If delegator addr is different from validator addr, then delegator addr is first since it is feepayer
+	return []sdk.Address{msg.DelegatorAddr, msg.ValidatorAddr}
 }
 
 // get the bytes for the message signer to sign on
 func (msg MsgCreateValidator) GetSignBytes() []byte {
 	b, err := MsgCdc.MarshalJSON(struct {
 		Description
-		ValidatorAddr string   `json:"address"`
+		DelegatorAddr string   `json:"delegator_address"`
+		ValidatorAddr string   `json:"validator_address"`
 		PubKey        string   `json:"pubkey"`
 		Bond          sdk.Coin `json:"bond"`
 	}{
 		Description:   msg.Description,
+		DelegatorAddr: sdk.MustBech32ifyVal(msg.DelegatorAddr),
 		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
 		PubKey:        sdk.MustBech32ifyValPub(msg.PubKey),
 	})
@@ -68,10 +91,13 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
+	if msg.DelegatorAddr == nil {
+		return ErrNilDelegatorAddr(DefaultCodespace)
+	}
 	if msg.ValidatorAddr == nil {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if !(msg.SelfDelegation.Amount.GT(sdk.ZeroInt())) {
+	if !(msg.Delegation.Amount.GT(sdk.ZeroInt())) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	empty := Description{}
@@ -125,75 +151,6 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 	empty := Description{}
 	if msg.Description == empty {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
-	}
-	return nil
-}
-
-//______________________________________________________________________
-
-// MsgSurrogateCreateValidator - struct for creating validator on someone else's behalf
-type MsgSurrogateCreateValidator struct {
-	Description
-	SurrogateAddr       sdk.Address   `json:"surrogate_addr"`
-	ValidatorAddr       sdk.Address   `json:"validator_address"`
-	ValidatorPubKey     crypto.PubKey `json:"validator_pubkey"`
-	SurrogateDelegation sdk.Coin      `json:"surrogate_delegation"`
-}
-
-func NewMsgSurrogateCreateValidator(surrogateAddr, validatorAddr sdk.Address,
-	validatorPubKey crypto.PubKey, surrogateDelegation sdk.Coin, description Description) MsgSurrogateCreateValidator {
-	return MsgSurrogateCreateValidator{
-		Description:         description,
-		SurrogateAddr:       surrogateAddr,
-		ValidatorAddr:       validatorAddr,
-		ValidatorPubKey:     validatorPubKey,
-		SurrogateDelegation: surrogateDelegation,
-	}
-}
-
-// nolint
-func (msg MsgSurrogateCreateValidator) Type() string { return MsgType }
-
-// Get the required signers for the msg
-func (msg MsgSurrogateCreateValidator) GetSigners() []sdk.Address {
-	// Both surrogate and validator sign msg. Surrogate pays fees
-	return []sdk.Address{msg.SurrogateAddr, msg.ValidatorAddr}
-}
-
-// get the bytes for the message signers to sign on
-func (msg MsgSurrogateCreateValidator) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(struct {
-		Description
-		SurrogateAddr string   `json:"surrogate_addr"`
-		ValidatorAddr string   `json:"validator_address"`
-		PubKey        string   `json:"validator_pubkey"`
-		Bond          sdk.Coin `json:"bond"`
-	}{
-		Description:   msg.Description,
-		SurrogateAddr: sdk.MustBech32ifyVal(msg.SurrogateAddr),
-		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
-		PubKey:        sdk.MustBech32ifyValPub(msg.ValidatorPubKey),
-	})
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
-}
-
-// quick validity check
-func (msg MsgSurrogateCreateValidator) ValidateBasic() sdk.Error {
-	if msg.SurrogateAddr == nil {
-		return ErrNilSurrogateAddr(DefaultCodespace)
-	}
-	if msg.ValidatorAddr == nil {
-		return ErrNilValidatorAddr(DefaultCodespace)
-	}
-	if !(msg.SurrogateDelegation.Amount.GT(sdk.ZeroInt())) {
-		return ErrBadDelegationAmount(DefaultCodespace)
-	}
-	empty := Description{}
-	if msg.Description == empty {
-		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "description must be included")
 	}
 	return nil
 }

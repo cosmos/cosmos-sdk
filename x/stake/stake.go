@@ -19,7 +19,6 @@ type (
 	PoolShares                  = types.PoolShares
 	MsgCreateValidator          = types.MsgCreateValidator
 	MsgEditValidator            = types.MsgEditValidator
-	MsgSurrogateCreateValidator = types.MsgSurrogateCreateValidator
 	MsgDelegate                 = types.MsgDelegate
 	MsgBeginUnbonding           = types.MsgBeginUnbonding
 	MsgCompleteUnbonding        = types.MsgCompleteUnbonding
@@ -102,7 +101,6 @@ var (
 	ErrCommissionNegative     = types.ErrCommissionNegative
 	ErrCommissionHuge         = types.ErrCommissionHuge
 
-	ErrNilSurrogateAddr          = types.ErrNilSurrogateAddr
 	ErrNilDelegatorAddr          = types.ErrNilDelegatorAddr
 	ErrBadDenom                  = types.ErrBadDenom
 	ErrBadDelegationAmount       = types.ErrBadDelegationAmount

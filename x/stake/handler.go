@@ -67,7 +67,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	if found {
 		return ErrValidatorAlreadyExists(k.Codespace()).Result()
 	}
-	if msg.SelfDelegation.Denom != k.GetParams(ctx).BondDenom {
+	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
@@ -77,7 +77,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
-	_, err := k.Delegate(ctx, msg.ValidatorAddr, msg.SelfDelegation, validator)
+	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator)
 	if err != nil {
 		return err.Result()
 	}
@@ -114,39 +114,6 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
 		tags.Moniker, []byte(description.Moniker),
 		tags.Identity, []byte(description.Identity),
-	)
-	return sdk.Result{
-		Tags: tags,
-	}
-}
-
-func handleMsgSurrogateCreateValidator(ctx sdk.Context, msg types.MsgSurrogateCreateValidator, k keeper.Keeper) sdk.Result {
-
-	// check to see if the pubkey or sender has been registered before
-	_, found := k.GetValidator(ctx, msg.ValidatorAddr)
-	if found {
-		return ErrValidatorAlreadyExists(k.Codespace()).Result()
-	}
-	if msg.SurrogateDelegation.Denom != k.GetParams(ctx).BondDenom {
-		return ErrBadDenom(k.Codespace()).Result()
-	}
-
-	validator := NewValidator(msg.ValidatorAddr, msg.ValidatorPubKey, msg.Description)
-	k.SetValidator(ctx, validator)
-	k.SetValidatorByPubKeyIndex(ctx, validator)
-
-	// move coins from the msg.Surrogate account to a delegator account
-	// the validator account and global shares are updated within here
-	_, err := k.Delegate(ctx, msg.SurrogateAddr, msg.SurrogateDelegation, validator)
-	if err != nil {
-		return err.Result()
-	}
-
-	tags := sdk.NewTags(
-		tags.Action, tags.ActionCreateValidator,
-		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
-		tags.Moniker, []byte(msg.Description.Moniker),
-		tags.Identity, []byte(msg.Description.Identity),
 	)
 	return sdk.Result{
 		Tags: tags,

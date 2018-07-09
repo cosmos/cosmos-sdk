@@ -75,6 +75,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().AddFlagSet(fsAmount)
 	cmd.Flags().AddFlagSet(fsDescription)
 	cmd.Flags().AddFlagSet(fsValidator)
+	cmd.Flags().AddFlagSet(fsDelegator)
 	return cmd
 }
 

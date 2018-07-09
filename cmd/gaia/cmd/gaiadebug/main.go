@@ -158,10 +158,10 @@ func runAddrCmd(cmd *cobra.Command, args []string) error {
 	addr, err = hex.DecodeString(addrString)
 	if err != nil {
 		var err2 error
-		addr, err2 = sdk.GetAccAddressBech32(addrString)
+		addr, err2 = sdk.AccAddressFromBech32(addrString)
 		if err2 != nil {
 			var err3 error
-			addr, err3 = sdk.GetValAddressBech32(addrString)
+			addr, err3 = sdk.ValAddressFromBech32(addrString)
 
 			if err3 != nil {
 				return fmt.Errorf(`Expected hex or bech32. Got errors:

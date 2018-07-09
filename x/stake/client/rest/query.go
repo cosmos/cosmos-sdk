@@ -48,14 +48,14 @@ func delegationHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerF
 		bech32delegator := vars["delegator"]
 		bech32validator := vars["validator"]
 
-		delegatorAddr, err := sdk.GetAccAddressBech32(bech32delegator)
+		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		validatorAddr, err := sdk.GetAccAddressBech32(bech32validator)
+		validatorAddr, err := sdk.AccAddressFromBech32(bech32validator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -104,14 +104,14 @@ func ubdHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 		bech32delegator := vars["delegator"]
 		bech32validator := vars["validator"]
 
-		delegatorAddr, err := sdk.GetAccAddressBech32(bech32delegator)
+		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		validatorAddr, err := sdk.GetAccAddressBech32(bech32validator)
+		validatorAddr, err := sdk.AccAddressFromBech32(bech32validator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -161,21 +161,21 @@ func redHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 		bech32validatorSrc := vars["validator_src"]
 		bech32validatorDst := vars["validator_dst"]
 
-		delegatorAddr, err := sdk.GetAccAddressBech32(bech32delegator)
+		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		validatorSrcAddr, err := sdk.GetAccAddressBech32(bech32validatorSrc)
+		validatorSrcAddr, err := sdk.AccAddressFromBech32(bech32validatorSrc)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		validatorDstAddr, err := sdk.GetAccAddressBech32(bech32validatorDst)
+		validatorDstAddr, err := sdk.AccAddressFromBech32(bech32validatorDst)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))

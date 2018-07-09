@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -23,11 +24,12 @@ const (
 
 //__________________________________________________________
 
-// AccAddress is a go crypto-style Address
+// AccAddress a wrapper around bytes meant to represent an account address
+// When marshaled to a string or json, it uses bech32
 type AccAddress []byte
 
-// create an Address from a hex string
-func GetAccAddressHex(address string) (addr AccAddress, err error) {
+// create an AccAddress from a hex string
+func AccAddressFromHex(address string) (addr AccAddress, err error) {
 	if len(address) == 0 {
 		return addr, errors.New("decoding bech32 address failed: must provide an address")
 	}
@@ -38,8 +40,8 @@ func GetAccAddressHex(address string) (addr AccAddress, err error) {
 	return AccAddress(bz), nil
 }
 
-// create an Address from a bech32 string
-func GetAccAddressBech32(address string) (addr AccAddress, err error) {
+// create an AccAddress from a bech32 string
+func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 	bz, err := GetFromBech32(address, Bech32PrefixAccAddr)
 	if err != nil {
 		return nil, err
@@ -60,21 +62,18 @@ func (bz *AccAddress) Unmarshal(data []byte) error {
 
 // Marshals to JSON using Bech32
 func (bz AccAddress) MarshalJSON() ([]byte, error) {
-	s := bz.String()
-	jbz := make([]byte, len(s)+2)
-	jbz[0] = '"'
-	copy(jbz[1:], []byte(s))
-	jbz[len(jbz)-1] = '"'
-	return jbz, nil
+	return json.Marshal(bz.String())
 }
 
 // Unmarshals from JSON assuming Bech32 encoding
 func (bz *AccAddress) UnmarshalJSON(data []byte) error {
-	if len(data) < 2 || data[0] != '"' || data[len(data)-1] != '"' {
-		return fmt.Errorf("Invalid bech32 string: %s", data)
+	var s string
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return nil
 	}
 
-	bz2, err := GetAccAddressBech32(string(data[1 : len(data)-1]))
+	bz2, err := AccAddressFromBech32(s)
 	if err != nil {
 		return err
 	}
@@ -109,11 +108,12 @@ func (bz AccAddress) Format(s fmt.State, verb rune) {
 
 //__________________________________________________________
 
-// Address is a go crypto-style Address
+// AccAddress a wrapper around bytes meant to represent a validator address
+// (from over ABCI).  When marshaled to a string or json, it uses bech32
 type ValAddress []byte
 
 // create a ValAddress from a hex string
-func GetValAddressHex(address string) (addr ValAddress, err error) {
+func ValAddressFromHex(address string) (addr ValAddress, err error) {
 	if len(address) == 0 {
 		return addr, errors.New("decoding bech32 address failed: must provide an address")
 	}
@@ -125,7 +125,7 @@ func GetValAddressHex(address string) (addr ValAddress, err error) {
 }
 
 // create a ValAddress from a bech32 string
-func GetValAddressBech32(address string) (addr ValAddress, err error) {
+func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 	bz, err := GetFromBech32(address, Bech32PrefixValAddr)
 	if err != nil {
 		return nil, err
@@ -146,21 +146,18 @@ func (bz *ValAddress) Unmarshal(data []byte) error {
 
 // Marshals to JSON using Bech32
 func (bz ValAddress) MarshalJSON() ([]byte, error) {
-	s := bz.String()
-	jbz := make([]byte, len(s)+2)
-	jbz[0] = '"'
-	copy(jbz[1:], []byte(s))
-	jbz[len(jbz)-1] = '"'
-	return jbz, nil
+	return json.Marshal(bz.String())
 }
 
 // Unmarshals from JSON assuming Bech32 encoding
 func (bz *ValAddress) UnmarshalJSON(data []byte) error {
-	if len(data) < 2 || data[0] != '"' || data[len(data)-1] != '"' {
-		return fmt.Errorf("Invalid bech32 string: %s", data)
+	var s string
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return nil
 	}
 
-	bz2, err := GetValAddressBech32(string(data[1 : len(data)-1]))
+	bz2, err := ValAddressFromBech32(s)
 	if err != nil {
 		return err
 	}
@@ -212,7 +209,7 @@ func Bech32ifyValPub(pub crypto.PubKey) (string, error) {
 	return bech32.ConvertAndEncode(Bech32PrefixValPub, pub.Bytes())
 }
 
-// MustBech32ifyValPub pancis on bech32-encoding failure
+// MustBech32ifyValPub panics on bech32-encoding failure
 func MustBech32ifyValPub(pub crypto.PubKey) string {
 	enc, err := Bech32ifyValPub(pub)
 	if err != nil {

@@ -22,7 +22,7 @@ func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			addr, err := sdk.GetAccAddressBech32(args[0])
+			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
@@ -114,12 +114,12 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "Query a delegation based on address and validator address",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			valAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
+			valAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
 
-			delAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			delAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}
@@ -166,7 +166,7 @@ func GetCmdQueryDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			delegatorAddr, err := sdk.GetAccAddressBech32(args[0])
+			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
@@ -204,12 +204,12 @@ func GetCmdQueryUnbondingDelegation(storeName string, cdc *wire.Codec) *cobra.Co
 		Short: "Query an unbonding-delegation record based on delegator and validator address",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			valAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
+			valAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
 
-			delAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			delAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}
@@ -256,7 +256,7 @@ func GetCmdQueryUnbondingDelegations(storeName string, cdc *wire.Codec) *cobra.C
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			delegatorAddr, err := sdk.GetAccAddressBech32(args[0])
+			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
@@ -294,15 +294,15 @@ func GetCmdQueryRedelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "Query an unbonding-delegation record based on delegator and validator address",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			valSrcAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidatorSrc))
+			valSrcAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorSrc))
 			if err != nil {
 				return err
 			}
-			valDstAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidatorDst))
+			valDstAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorDst))
 			if err != nil {
 				return err
 			}
-			delAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			delAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}
@@ -349,7 +349,7 @@ func GetCmdQueryRedelegations(storeName string, cdc *wire.Codec) *cobra.Command 
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			delegatorAddr, err := sdk.GetAccAddressBech32(args[0])
+			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}

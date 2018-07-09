@@ -61,7 +61,7 @@ func TestKeys(t *testing.T) {
 	require.Nil(t, err, body)
 
 	addr2Bech32 := resp.Address.String()
-	_, err = sdk.GetAccAddressBech32(addr2Bech32)
+	_, err = sdk.AccAddressFromBech32(addr2Bech32)
 	require.NoError(t, err, "Failed to return a correct bech32 address")
 
 	// existing keys

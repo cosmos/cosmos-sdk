@@ -139,7 +139,7 @@ func NewPubKey(pk string) (res crypto.PubKey) {
 // for incode address generation
 func TestAddr(addr string, bech string) sdk.AccAddress {
 
-	res, err := sdk.GetAccAddressHex(addr)
+	res, err := sdk.AccAddressFromHex(addr)
 	if err != nil {
 		panic(err)
 	}
@@ -148,7 +148,7 @@ func TestAddr(addr string, bech string) sdk.AccAddress {
 		panic("Bech encoding doesn't match reference")
 	}
 
-	bechres, err := sdk.GetAccAddressBech32(bech)
+	bechres, err := sdk.AccAddressFromBech32(bech)
 	if err != nil {
 		panic(err)
 	}
@@ -170,7 +170,7 @@ func createTestAddrs(numAddrs int) []sdk.AccAddress {
 		buffer.WriteString("A58856F0FD53BF058B4909A21AEC019107BA6") //base address string
 
 		buffer.WriteString(numString) //adding on final two digits to make addresses unique
-		res, _ := sdk.GetAccAddressHex(buffer.String())
+		res, _ := sdk.AccAddressFromHex(buffer.String())
 		bech := res.String()
 		addresses = append(addresses, TestAddr(buffer.String(), bech))
 		buffer.Reset()

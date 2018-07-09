@@ -28,7 +28,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
+			validatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -75,7 +75,7 @@ func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
 		Short: "edit and existing validator account",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
+			validatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -115,11 +115,11 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			delegatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}
-			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
+			validatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -166,15 +166,15 @@ func GetCmdBeginRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			var err error
-			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			delegatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}
-			validatorSrcAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidatorSrc))
+			validatorSrcAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorSrc))
 			if err != nil {
 				return err
 			}
-			validatorDstAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidatorDst))
+			validatorDstAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorDst))
 			if err != nil {
 				return err
 			}
@@ -259,15 +259,15 @@ func GetCmdCompleteRedelegate(cdc *wire.Codec) *cobra.Command {
 		Short: "complete redelegation",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			delegatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}
-			validatorSrcAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidatorSrc))
+			validatorSrcAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorSrc))
 			if err != nil {
 				return err
 			}
-			validatorDstAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidatorDst))
+			validatorDstAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorDst))
 			if err != nil {
 				return err
 			}
@@ -311,11 +311,11 @@ func GetCmdBeginUnbonding(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "begin unbonding",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			delegatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}
-			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
+			validatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -356,11 +356,11 @@ func GetCmdCompleteUnbonding(cdc *wire.Codec) *cobra.Command {
 		Short: "complete unbonding",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			delegatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}
-			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
+			validatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}

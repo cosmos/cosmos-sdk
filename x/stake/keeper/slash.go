@@ -202,10 +202,7 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 	// Possible since the redelegation may already
 	// have been slashed, and slash amounts are calculated
 	// according to stake held at time of infraction
-	redelegationSlashAmount := slashAmount
-	if redelegationSlashAmount.GT(redelegation.Balance.Amount) {
-		redelegationSlashAmount = redelegation.Balance.Amount
-	}
+	redelegationSlashAmount := sdk.MinInt(slashAmount, redelegation.Balance.Amount)
 
 	// Update redelegation if necessary
 	if !redelegationSlashAmount.IsZero() {

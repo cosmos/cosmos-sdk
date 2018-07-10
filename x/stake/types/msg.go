@@ -2,6 +2,7 @@ package types
 
 import (
 	"math"
+	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -59,8 +60,16 @@ func NewMsgCreateValidatorOnBehalfOf(delegatorAddr, validatorAddr sdk.Address, p
 
 //nolint
 func (msg MsgCreateValidator) Type() string { return MsgType }
+
+// Return address(es) that must sign over msg.GetSignBytes()
 func (msg MsgCreateValidator) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.DelegatorAddr}
+	// delegator is first signer so delegator pays fees
+	addrs := []sdk.Address{msg.DelegatorAddr}
+	if !reflect.DeepEqual(msg.DelegatorAddr, msg.ValidatorAddr) {
+		// if validator addr is not same as delegator addr, validator must sign msg as well
+		addrs = append(addrs, msg.ValidatorAddr)
+	}
+	return addrs
 }
 
 // get the bytes for the message signer to sign on
@@ -70,12 +79,13 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 		DelegatorAddr string   `json:"delegator_address"`
 		ValidatorAddr string   `json:"validator_address"`
 		PubKey        string   `json:"pubkey"`
-		Bond          sdk.Coin `json:"bond"`
+		Delegation          sdk.Coin `json:"delegation"`
 	}{
 		Description:   msg.Description,
 		DelegatorAddr: sdk.MustBech32ifyVal(msg.DelegatorAddr),
 		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
 		PubKey:        sdk.MustBech32ifyValPub(msg.PubKey),
+		Delegation:    msg.Delegation,
 	})
 	if err != nil {
 		panic(err)
@@ -155,14 +165,14 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 type MsgDelegate struct {
 	DelegatorAddr sdk.Address `json:"delegator_addr"`
 	ValidatorAddr sdk.Address `json:"validator_addr"`
-	Bond          sdk.Coin    `json:"bond"`
+	Delegation          sdk.Coin    `json:"delegation"`
 }
 
-func NewMsgDelegate(delegatorAddr, validatorAddr sdk.Address, bond sdk.Coin) MsgDelegate {
+func NewMsgDelegate(delegatorAddr, validatorAddr sdk.Address, delegation sdk.Coin) MsgDelegate {
 	return MsgDelegate{
 		DelegatorAddr: delegatorAddr,
 		ValidatorAddr: validatorAddr,
-		Bond:          bond,
+		Delegation:          delegation,
 	}
 }
 
@@ -177,11 +187,11 @@ func (msg MsgDelegate) GetSignBytes() []byte {
 	b, err := MsgCdc.MarshalJSON(struct {
 		DelegatorAddr string   `json:"delegator_addr"`
 		ValidatorAddr string   `json:"validator_addr"`
-		Bond          sdk.Coin `json:"bond"`
+		Delegation          sdk.Coin `json:"delegation"`
 	}{
 		DelegatorAddr: sdk.MustBech32ifyAcc(msg.DelegatorAddr),
 		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
-		Bond:          msg.Bond,
+		Delegation:          msg.Delegation,
 	})
 	if err != nil {
 		panic(err)
@@ -197,7 +207,7 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if !(msg.Bond.Amount.GT(sdk.ZeroInt())) {
+	if !(msg.Delegation.Amount.GT(sdk.ZeroInt())) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	return nil

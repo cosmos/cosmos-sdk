@@ -69,7 +69,7 @@ func TestMsgEditValidator(t *testing.T) {
 	}
 }
 
-// test ValidateBasic for MsgCreateValidatorOnBehalfOf
+// test ValidateBasic and GetSigners for MsgCreateValidatorOnBehalfOf
 func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
 	tests := []struct {
 		name, moniker, identity, website, details string
@@ -99,6 +99,14 @@ func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
 			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		}
 	}
+
+	msg := NewMsgCreateValidator(addr1, pk1, coinPos, Description{})
+	addrs := msg.GetSigners()
+	require.Equal(t, []sdk.Address{addr1}, addrs, "Signers on default msg is wrong")
+
+	msg = NewMsgCreateValidatorOnBehalfOf(addr2, addr1, pk1, coinPos, Description{})
+	addrs = msg.GetSigners()
+	require.Equal(t, []sdk.Address{addr2, addr1}, addrs, "Signers on default msg is wrong")
 }
 
 // test ValidateBasic for MsgDelegate

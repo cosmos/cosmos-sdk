@@ -3,6 +3,7 @@ package stake
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/pkg/errors"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -11,13 +12,20 @@ import (
 // validator in the keeper along with manually setting the indexes. In
 // addition, it also sets any delegations found in data. Finally, it updates
 // the bonded validators.
-func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
+func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) error {
 	keeper.SetPool(ctx, data.Pool)
 	keeper.SetNewParams(ctx, data.Params)
 	keeper.InitIntraTxCounter(ctx)
 
 	for _, validator := range data.Validators {
 		keeper.SetValidator(ctx, validator)
+
+		if validator.PoolShares.Amount.IsZero() {
+			return errors.Errorf("genesis validator cannot have zero pool shares, validator: %v", validator)
+		}
+		if validator.DelegatorShares.IsZero() {
+			return errors.Errorf("genesis validator cannot have zero delegator shares, validator: %v", validator)
+		}
 
 		// Manually set indexes for the first time
 		keeper.SetValidatorByPubKeyIndex(ctx, validator)
@@ -33,6 +41,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	}
 
 	keeper.UpdateBondedValidatorsFull(ctx)
+	return nil
 }
 
 // WriteGenesis returns a GenesisState for a given context and keeper. The

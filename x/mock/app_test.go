@@ -27,7 +27,7 @@ func (tx testMsg) Type() string                       { return msgType }
 func (tx testMsg) GetMsg() sdk.Msg                    { return tx }
 func (tx testMsg) GetMemo() string                    { return "" }
 func (tx testMsg) GetSignBytes() []byte               { return nil }
-func (tx testMsg) GetSigners() []sdk.AccAddress          { return tx.signers }
+func (tx testMsg) GetSigners() []sdk.AccAddress       { return tx.signers }
 func (tx testMsg) GetSignatures() []auth.StdSignature { return nil }
 func (tx testMsg) ValidateBasic() sdk.Error {
 	if tx.positiveNum >= 0 {

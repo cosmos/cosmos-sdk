@@ -83,7 +83,6 @@ func checkValidator(t *testing.T, mapp *mock.App, keeper Keeper,
 	return validator
 }
 
-
 func checkDelegation(
 	t *testing.T, mapp *mock.App, keeper Keeper, delegatorAddr,
 	validatorAddr sdk.AccAddress, expFound bool, expShares sdk.Rat,

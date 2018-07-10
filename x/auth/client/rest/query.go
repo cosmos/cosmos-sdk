@@ -27,7 +27,7 @@ func QueryAccountRequestHandlerFn(storeName string, cdc *wire.Codec, decoder aut
 		vars := mux.Vars(r)
 		bech32addr := vars["address"]
 
-		addr, err := sdk.GetAccAddressBech32(bech32addr)
+		addr, err := sdk.AccAddressFromBech32(bech32addr)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))

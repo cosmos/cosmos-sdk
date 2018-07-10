@@ -28,14 +28,14 @@ var maximumBondingRationalDenominator sdk.Int = sdk.NewInt(int64(math.Pow10(MaxB
 // MsgCreateValidator - struct for unbonding transactions
 type MsgCreateValidator struct {
 	Description
-	DelegatorAddr sdk.Address   `json:"delegator_address"`
-	ValidatorAddr sdk.Address   `json:"validator_address"`
+	DelegatorAddr sdk.AccAddress   `json:"delegator_address"`
+	ValidatorAddr sdk.AccAddress   `json:"validator_address"`
 	PubKey        crypto.PubKey `json:"pubkey"`
 	Delegation    sdk.Coin      `json:"delegation"`
 }
 
 // Default way to create validator. Delegator address and validator address are the same
-func NewMsgCreateValidator(validatorAddr sdk.Address, pubkey crypto.PubKey,
+func NewMsgCreateValidator(validatorAddr sdk.AccAddress, pubkey crypto.PubKey,
 	selfDelegation sdk.Coin, description Description) MsgCreateValidator {
 	return MsgCreateValidator{
 		Description:   description,
@@ -47,7 +47,7 @@ func NewMsgCreateValidator(validatorAddr sdk.Address, pubkey crypto.PubKey,
 }
 
 // Creates validator msg by delegator address on behalf of validator address
-func NewMsgCreateValidatorOnBehalfOf(delegatorAddr, validatorAddr sdk.Address, pubkey crypto.PubKey,
+func NewMsgCreateValidatorOnBehalfOf(delegatorAddr, validatorAddr sdk.AccAddress, pubkey crypto.PubKey,
 	delegation sdk.Coin, description Description) MsgCreateValidator {
 	return MsgCreateValidator{
 		Description:   description,
@@ -62,9 +62,9 @@ func NewMsgCreateValidatorOnBehalfOf(delegatorAddr, validatorAddr sdk.Address, p
 func (msg MsgCreateValidator) Type() string { return MsgType }
 
 // Return address(es) that must sign over msg.GetSignBytes()
-func (msg MsgCreateValidator) GetSigners() []sdk.Address {
+func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 	// delegator is first signer so delegator pays fees
-	addrs := []sdk.Address{msg.DelegatorAddr}
+	addrs := []sdk.AccAddress{msg.DelegatorAddr}
 	if !reflect.DeepEqual(msg.DelegatorAddr, msg.ValidatorAddr) {
 		// if validator addr is not same as delegator addr, validator must sign msg as well
 		addrs = append(addrs, msg.ValidatorAddr)
@@ -76,14 +76,13 @@ func (msg MsgCreateValidator) GetSigners() []sdk.Address {
 func (msg MsgCreateValidator) GetSignBytes() []byte {
 	b, err := MsgCdc.MarshalJSON(struct {
 		Description
-		DelegatorAddr string   `json:"delegator_address"`
-		ValidatorAddr string   `json:"validator_address"`
-		PubKey        string   `json:"pubkey"`
-		Delegation          sdk.Coin `json:"delegation"`
+		DelegatorAddr sdk.AccAddress `json:"delegator_address"`
+		ValidatorAddr sdk.AccAddress `json:"validator_address"`
+		PubKey        string         `json:"pubkey"`
+		Delegation          sdk.Coin       `json:"delegation"`
 	}{
 		Description:   msg.Description,
-		DelegatorAddr: sdk.MustBech32ifyVal(msg.DelegatorAddr),
-		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
+		ValidatorAddr: msg.ValidatorAddr,
 		PubKey:        sdk.MustBech32ifyValPub(msg.PubKey),
 		Delegation:    msg.Delegation,
 	})
@@ -116,10 +115,10 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 // MsgEditValidator - struct for editing a validator
 type MsgEditValidator struct {
 	Description
-	ValidatorAddr sdk.Address `json:"address"`
+	ValidatorAddr sdk.AccAddress `json:"address"`
 }
 
-func NewMsgEditValidator(validatorAddr sdk.Address, description Description) MsgEditValidator {
+func NewMsgEditValidator(validatorAddr sdk.AccAddress, description Description) MsgEditValidator {
 	return MsgEditValidator{
 		Description:   description,
 		ValidatorAddr: validatorAddr,
@@ -128,18 +127,18 @@ func NewMsgEditValidator(validatorAddr sdk.Address, description Description) Msg
 
 //nolint
 func (msg MsgEditValidator) Type() string { return MsgType }
-func (msg MsgEditValidator) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.ValidatorAddr}
+func (msg MsgEditValidator) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.ValidatorAddr}
 }
 
 // get the bytes for the message signer to sign on
 func (msg MsgEditValidator) GetSignBytes() []byte {
 	b, err := MsgCdc.MarshalJSON(struct {
 		Description
-		ValidatorAddr string `json:"address"`
+		ValidatorAddr sdk.AccAddress `json:"address"`
 	}{
 		Description:   msg.Description,
-		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
+		ValidatorAddr: msg.ValidatorAddr,
 	})
 	if err != nil {
 		panic(err)
@@ -163,12 +162,12 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 
 // MsgDelegate - struct for bonding transactions
 type MsgDelegate struct {
-	DelegatorAddr sdk.Address `json:"delegator_addr"`
-	ValidatorAddr sdk.Address `json:"validator_addr"`
+	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
+	ValidatorAddr sdk.AccAddress `json:"validator_addr"`
 	Delegation          sdk.Coin    `json:"delegation"`
 }
 
-func NewMsgDelegate(delegatorAddr, validatorAddr sdk.Address, delegation sdk.Coin) MsgDelegate {
+func NewMsgDelegate(delegatorAddr, validatorAddr sdk.AccAddress, delegation sdk.Coin) MsgDelegate {
 	return MsgDelegate{
 		DelegatorAddr: delegatorAddr,
 		ValidatorAddr: validatorAddr,
@@ -178,21 +177,13 @@ func NewMsgDelegate(delegatorAddr, validatorAddr sdk.Address, delegation sdk.Coi
 
 //nolint
 func (msg MsgDelegate) Type() string { return MsgType }
-func (msg MsgDelegate) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.DelegatorAddr}
+func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.DelegatorAddr}
 }
 
 // get the bytes for the message signer to sign on
 func (msg MsgDelegate) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(struct {
-		DelegatorAddr string   `json:"delegator_addr"`
-		ValidatorAddr string   `json:"validator_addr"`
-		Delegation          sdk.Coin `json:"delegation"`
-	}{
-		DelegatorAddr: sdk.MustBech32ifyAcc(msg.DelegatorAddr),
-		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
-		Delegation:          msg.Delegation,
-	})
+	b, err := MsgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -217,14 +208,14 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 
 // MsgDelegate - struct for bonding transactions
 type MsgBeginRedelegate struct {
-	DelegatorAddr    sdk.Address `json:"delegator_addr"`
-	ValidatorSrcAddr sdk.Address `json:"validator_src_addr"`
-	ValidatorDstAddr sdk.Address `json:"validator_dst_addr"`
-	SharesAmount     sdk.Rat     `json:"shares_amount"`
+	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`
+	ValidatorSrcAddr sdk.AccAddress `json:"validator_src_addr"`
+	ValidatorDstAddr sdk.AccAddress `json:"validator_dst_addr"`
+	SharesAmount     sdk.Rat        `json:"shares_amount"`
 }
 
 func NewMsgBeginRedelegate(delegatorAddr, validatorSrcAddr,
-	validatorDstAddr sdk.Address, sharesAmount sdk.Rat) MsgBeginRedelegate {
+	validatorDstAddr sdk.AccAddress, sharesAmount sdk.Rat) MsgBeginRedelegate {
 
 	return MsgBeginRedelegate{
 		DelegatorAddr:    delegatorAddr,
@@ -236,21 +227,21 @@ func NewMsgBeginRedelegate(delegatorAddr, validatorSrcAddr,
 
 //nolint
 func (msg MsgBeginRedelegate) Type() string { return MsgType }
-func (msg MsgBeginRedelegate) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.DelegatorAddr}
+func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.DelegatorAddr}
 }
 
 // get the bytes for the message signer to sign on
 func (msg MsgBeginRedelegate) GetSignBytes() []byte {
 	b, err := MsgCdc.MarshalJSON(struct {
-		DelegatorAddr    string `json:"delegator_addr"`
-		ValidatorSrcAddr string `json:"validator_src_addr"`
-		ValidatorDstAddr string `json:"validator_dst_addr"`
-		SharesAmount     string `json:"shares"`
+		DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`
+		ValidatorSrcAddr sdk.AccAddress `json:"validator_src_addr"`
+		ValidatorDstAddr sdk.AccAddress `json:"validator_dst_addr"`
+		SharesAmount     string         `json:"shares"`
 	}{
-		DelegatorAddr:    sdk.MustBech32ifyAcc(msg.DelegatorAddr),
-		ValidatorSrcAddr: sdk.MustBech32ifyVal(msg.ValidatorSrcAddr),
-		ValidatorDstAddr: sdk.MustBech32ifyVal(msg.ValidatorDstAddr),
+		DelegatorAddr:    msg.DelegatorAddr,
+		ValidatorSrcAddr: msg.ValidatorSrcAddr,
+		ValidatorDstAddr: msg.ValidatorDstAddr,
 		SharesAmount:     msg.SharesAmount.String(),
 	})
 	if err != nil {
@@ -281,13 +272,13 @@ func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
 
 // MsgDelegate - struct for bonding transactions
 type MsgCompleteRedelegate struct {
-	DelegatorAddr    sdk.Address `json:"delegator_addr"`
-	ValidatorSrcAddr sdk.Address `json:"validator_source_addr"`
-	ValidatorDstAddr sdk.Address `json:"validator_destination_addr"`
+	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`
+	ValidatorSrcAddr sdk.AccAddress `json:"validator_source_addr"`
+	ValidatorDstAddr sdk.AccAddress `json:"validator_destination_addr"`
 }
 
 func NewMsgCompleteRedelegate(delegatorAddr, validatorSrcAddr,
-	validatorDstAddr sdk.Address) MsgCompleteRedelegate {
+	validatorDstAddr sdk.AccAddress) MsgCompleteRedelegate {
 
 	return MsgCompleteRedelegate{
 		DelegatorAddr:    delegatorAddr,
@@ -298,21 +289,13 @@ func NewMsgCompleteRedelegate(delegatorAddr, validatorSrcAddr,
 
 //nolint
 func (msg MsgCompleteRedelegate) Type() string { return MsgType }
-func (msg MsgCompleteRedelegate) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.DelegatorAddr}
+func (msg MsgCompleteRedelegate) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.DelegatorAddr}
 }
 
 // get the bytes for the message signer to sign on
 func (msg MsgCompleteRedelegate) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(struct {
-		DelegatorAddr    string `json:"delegator_addr"`
-		ValidatorSrcAddr string `json:"validator_src_addr"`
-		ValidatorDstAddr string `json:"validator_dst_addr"`
-	}{
-		DelegatorAddr:    sdk.MustBech32ifyAcc(msg.DelegatorAddr),
-		ValidatorSrcAddr: sdk.MustBech32ifyVal(msg.ValidatorSrcAddr),
-		ValidatorDstAddr: sdk.MustBech32ifyVal(msg.ValidatorDstAddr),
-	})
+	b, err := MsgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -337,12 +320,12 @@ func (msg MsgCompleteRedelegate) ValidateBasic() sdk.Error {
 
 // MsgBeginUnbonding - struct for unbonding transactions
 type MsgBeginUnbonding struct {
-	DelegatorAddr sdk.Address `json:"delegator_addr"`
-	ValidatorAddr sdk.Address `json:"validator_addr"`
-	SharesAmount  sdk.Rat     `json:"shares_amount"`
+	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
+	ValidatorAddr sdk.AccAddress `json:"validator_addr"`
+	SharesAmount  sdk.Rat        `json:"shares_amount"`
 }
 
-func NewMsgBeginUnbonding(delegatorAddr, validatorAddr sdk.Address, sharesAmount sdk.Rat) MsgBeginUnbonding {
+func NewMsgBeginUnbonding(delegatorAddr, validatorAddr sdk.AccAddress, sharesAmount sdk.Rat) MsgBeginUnbonding {
 	return MsgBeginUnbonding{
 		DelegatorAddr: delegatorAddr,
 		ValidatorAddr: validatorAddr,
@@ -351,18 +334,18 @@ func NewMsgBeginUnbonding(delegatorAddr, validatorAddr sdk.Address, sharesAmount
 }
 
 //nolint
-func (msg MsgBeginUnbonding) Type() string              { return MsgType }
-func (msg MsgBeginUnbonding) GetSigners() []sdk.Address { return []sdk.Address{msg.DelegatorAddr} }
+func (msg MsgBeginUnbonding) Type() string                 { return MsgType }
+func (msg MsgBeginUnbonding) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.DelegatorAddr} }
 
 // get the bytes for the message signer to sign on
 func (msg MsgBeginUnbonding) GetSignBytes() []byte {
 	b, err := MsgCdc.MarshalJSON(struct {
-		DelegatorAddr string `json:"delegator_addr"`
-		ValidatorAddr string `json:"validator_addr"`
-		SharesAmount  string `json:"shares_amount"`
+		DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
+		ValidatorAddr sdk.AccAddress `json:"validator_addr"`
+		SharesAmount  string         `json:"shares_amount"`
 	}{
-		DelegatorAddr: sdk.MustBech32ifyAcc(msg.DelegatorAddr),
-		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
+		DelegatorAddr: msg.DelegatorAddr,
+		ValidatorAddr: msg.ValidatorAddr,
 		SharesAmount:  msg.SharesAmount.String(),
 	})
 	if err != nil {
@@ -390,11 +373,11 @@ func (msg MsgBeginUnbonding) ValidateBasic() sdk.Error {
 
 // MsgCompleteUnbonding - struct for unbonding transactions
 type MsgCompleteUnbonding struct {
-	DelegatorAddr sdk.Address `json:"delegator_addr"`
-	ValidatorAddr sdk.Address `json:"validator_addr"`
+	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
+	ValidatorAddr sdk.AccAddress `json:"validator_addr"`
 }
 
-func NewMsgCompleteUnbonding(delegatorAddr, validatorAddr sdk.Address) MsgCompleteUnbonding {
+func NewMsgCompleteUnbonding(delegatorAddr, validatorAddr sdk.AccAddress) MsgCompleteUnbonding {
 	return MsgCompleteUnbonding{
 		DelegatorAddr: delegatorAddr,
 		ValidatorAddr: validatorAddr,
@@ -402,18 +385,14 @@ func NewMsgCompleteUnbonding(delegatorAddr, validatorAddr sdk.Address) MsgComple
 }
 
 //nolint
-func (msg MsgCompleteUnbonding) Type() string              { return MsgType }
-func (msg MsgCompleteUnbonding) GetSigners() []sdk.Address { return []sdk.Address{msg.DelegatorAddr} }
+func (msg MsgCompleteUnbonding) Type() string { return MsgType }
+func (msg MsgCompleteUnbonding) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.DelegatorAddr}
+}
 
 // get the bytes for the message signer to sign on
 func (msg MsgCompleteUnbonding) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(struct {
-		DelegatorAddr string `json:"delegator_addr"`
-		ValidatorAddr string `json:"validator_src_addr"`
-	}{
-		DelegatorAddr: sdk.MustBech32ifyAcc(msg.DelegatorAddr),
-		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
-	})
+	b, err := MsgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}

@@ -37,7 +37,7 @@ func NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto Account) AccountM
 }
 
 // Implaements sdk.AccountMapper.
-func (am AccountMapper) NewAccountWithAddress(ctx sdk.Context, addr sdk.Address) Account {
+func (am AccountMapper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) Account {
 	acc := am.clonePrototype()
 	err := acc.SetAddress(addr)
 	if err != nil {
@@ -63,12 +63,12 @@ func (am AccountMapper) NewAccount(ctx sdk.Context, acc Account) Account {
 }
 
 // Turn an address to key used to get it from the account store
-func AddressStoreKey(addr sdk.Address) []byte {
+func AddressStoreKey(addr sdk.AccAddress) []byte {
 	return append([]byte("account:"), addr.Bytes()...)
 }
 
 // Implements sdk.AccountMapper.
-func (am AccountMapper) GetAccount(ctx sdk.Context, addr sdk.Address) Account {
+func (am AccountMapper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) Account {
 	store := ctx.KVStore(am.key)
 	bz := store.Get(AddressStoreKey(addr))
 	if bz == nil {
@@ -104,7 +104,7 @@ func (am AccountMapper) IterateAccounts(ctx sdk.Context, process func(Account) (
 }
 
 // Returns the PubKey of the account at address
-func (am AccountMapper) GetPubKey(ctx sdk.Context, addr sdk.Address) (crypto.PubKey, sdk.Error) {
+func (am AccountMapper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, sdk.Error) {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return nil, sdk.ErrUnknownAddress(addr.String())
@@ -113,7 +113,7 @@ func (am AccountMapper) GetPubKey(ctx sdk.Context, addr sdk.Address) (crypto.Pub
 }
 
 // Returns the Sequence of the account at address
-func (am AccountMapper) GetSequence(ctx sdk.Context, addr sdk.Address) (int64, sdk.Error) {
+func (am AccountMapper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (int64, sdk.Error) {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return 0, sdk.ErrUnknownAddress(addr.String())
@@ -121,7 +121,7 @@ func (am AccountMapper) GetSequence(ctx sdk.Context, addr sdk.Address) (int64, s
 	return acc.GetSequence(), nil
 }
 
-func (am AccountMapper) setSequence(ctx sdk.Context, addr sdk.Address, newSequence int64) sdk.Error {
+func (am AccountMapper) setSequence(ctx sdk.Context, addr sdk.AccAddress, newSequence int64) sdk.Error {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return sdk.ErrUnknownAddress(addr.String())

@@ -54,9 +54,9 @@ type GenesisState struct {
 // GenesisAccount reflects a genesis account the application expects in it's
 // genesis state.
 type GenesisAccount struct {
-	Name    string      `json:"name"`
-	Address sdk.Address `json:"address"`
-	Coins   sdk.Coins   `json:"coins"`
+	Name    string         `json:"name"`
+	Address sdk.AccAddress `json:"address"`
+	Coins   sdk.Coins      `json:"coins"`
 }
 
 // NewGenesisAccount returns a reference to a new GenesisAccount given an

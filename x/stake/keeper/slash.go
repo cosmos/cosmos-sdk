@@ -81,10 +81,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	}
 
 	// Cannot decrease balance below zero
-	sharesToRemove := remainingSlashAmount
-	if sharesToRemove.GT(validator.PoolShares.Amount.RoundInt()) {
-		sharesToRemove = validator.PoolShares.Amount.RoundInt()
-	}
+	sharesToRemove := sdk.MinInt(remainingSlashAmount, validator.PoolShares.Amount.RoundInt())
 
 	// Get the current pool
 	pool := k.GetPool(ctx)
@@ -163,10 +160,7 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 	// Possible since the unbonding delegation may already
 	// have been slashed, and slash amounts are calculated
 	// according to stake held at time of infraction
-	unbondingSlashAmount := slashAmount
-	if unbondingSlashAmount.GT(unbondingDelegation.Balance.Amount) {
-		unbondingSlashAmount = unbondingDelegation.Balance.Amount
-	}
+	unbondingSlashAmount := sdk.MinInt(slashAmount, unbondingDelegation.Balance.Amount)
 
 	// Update unbonding delegation if necessary
 	if !unbondingSlashAmount.IsZero() {
@@ -208,10 +202,7 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 	// Possible since the redelegation may already
 	// have been slashed, and slash amounts are calculated
 	// according to stake held at time of infraction
-	redelegationSlashAmount := slashAmount
-	if redelegationSlashAmount.GT(redelegation.Balance.Amount) {
-		redelegationSlashAmount = redelegation.Balance.Amount
-	}
+	redelegationSlashAmount := sdk.MinInt(slashAmount, redelegation.Balance.Amount)
 
 	// Update redelegation if necessary
 	if !redelegationSlashAmount.IsZero() {

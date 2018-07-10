@@ -27,7 +27,7 @@ const (
 
 type relayCommander struct {
 	cdc       *wire.Codec
-	address   sdk.Address
+	address   sdk.AccAddress
 	decoder   auth.AccountDecoder
 	mainStore string
 	ibcStore  string
@@ -86,6 +86,8 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	c.loop(fromChainID, fromChainNode, toChainID, toChainNode)
 }
 
+// This is nolinted as someone is in the process of refactoring this to remove the goto
+// nolint: gocyclo
 func (c relayCommander) loop(fromChainID, fromChainNode, toChainID,
 	toChainNode string) {
 

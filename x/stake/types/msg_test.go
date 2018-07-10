@@ -19,7 +19,7 @@ var (
 func TestMsgCreateValidator(t *testing.T) {
 	tests := []struct {
 		name, moniker, identity, website, details string
-		validatorAddr                             sdk.Address
+		validatorAddr                             sdk.AccAddress
 		pubkey                                    crypto.PubKey
 		bond                                      sdk.Coin
 		expectPass                                bool
@@ -49,7 +49,7 @@ func TestMsgCreateValidator(t *testing.T) {
 func TestMsgEditValidator(t *testing.T) {
 	tests := []struct {
 		name, moniker, identity, website, details string
-		validatorAddr                             sdk.Address
+		validatorAddr                             sdk.AccAddress
 		expectPass                                bool
 	}{
 		{"basic good", "a", "b", "c", "d", addr1, true},
@@ -73,8 +73,8 @@ func TestMsgEditValidator(t *testing.T) {
 func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
 	tests := []struct {
 		name, moniker, identity, website, details string
-		delegatorAddr                             sdk.Address
-		validatorAddr                             sdk.Address
+		delegatorAddr                             sdk.AccAddress
+		validatorAddr                             sdk.AccAddress
 		validatorPubKey                           crypto.PubKey
 		bond                                      sdk.Coin
 		expectPass                                bool
@@ -102,19 +102,19 @@ func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
 
 	msg := NewMsgCreateValidator(addr1, pk1, coinPos, Description{})
 	addrs := msg.GetSigners()
-	require.Equal(t, []sdk.Address{addr1}, addrs, "Signers on default msg is wrong")
+	require.Equal(t, []sdk.AccAddress{addr1}, addrs, "Signers on default msg is wrong")
 
 	msg = NewMsgCreateValidatorOnBehalfOf(addr2, addr1, pk1, coinPos, Description{})
 	addrs = msg.GetSigners()
-	require.Equal(t, []sdk.Address{addr2, addr1}, addrs, "Signers for onbehalfof msg is wrong")
+	require.Equal(t, []sdk.AccAddress{addr2, addr1}, addrs, "Signers for onbehalfof msg is wrong")
 }
 
 // test ValidateBasic for MsgDelegate
 func TestMsgDelegate(t *testing.T) {
 	tests := []struct {
 		name          string
-		delegatorAddr sdk.Address
-		validatorAddr sdk.Address
+		delegatorAddr sdk.AccAddress
+		validatorAddr sdk.AccAddress
 		bond          sdk.Coin
 		expectPass    bool
 	}{
@@ -140,9 +140,9 @@ func TestMsgDelegate(t *testing.T) {
 func TestMsgBeginRedelegate(t *testing.T) {
 	tests := []struct {
 		name             string
-		delegatorAddr    sdk.Address
-		validatorSrcAddr sdk.Address
-		validatorDstAddr sdk.Address
+		delegatorAddr    sdk.AccAddress
+		validatorSrcAddr sdk.AccAddress
+		validatorDstAddr sdk.AccAddress
 		sharesAmount     sdk.Rat
 		expectPass       bool
 	}{
@@ -168,9 +168,9 @@ func TestMsgBeginRedelegate(t *testing.T) {
 func TestMsgCompleteRedelegate(t *testing.T) {
 	tests := []struct {
 		name             string
-		delegatorAddr    sdk.Address
-		validatorSrcAddr sdk.Address
-		validatorDstAddr sdk.Address
+		delegatorAddr    sdk.AccAddress
+		validatorSrcAddr sdk.AccAddress
+		validatorDstAddr sdk.AccAddress
 		expectPass       bool
 	}{
 		{"regular", addr1, addr2, addr3, true},
@@ -193,8 +193,8 @@ func TestMsgCompleteRedelegate(t *testing.T) {
 func TestMsgBeginUnbonding(t *testing.T) {
 	tests := []struct {
 		name          string
-		delegatorAddr sdk.Address
-		validatorAddr sdk.Address
+		delegatorAddr sdk.AccAddress
+		validatorAddr sdk.AccAddress
 		sharesAmount  sdk.Rat
 		expectPass    bool
 	}{
@@ -219,8 +219,8 @@ func TestMsgBeginUnbonding(t *testing.T) {
 func TestMsgCompleteUnbonding(t *testing.T) {
 	tests := []struct {
 		name          string
-		delegatorAddr sdk.Address
-		validatorAddr sdk.Address
+		delegatorAddr sdk.AccAddress
+		validatorAddr sdk.AccAddress
 		expectPass    bool
 	}{
 		{"regular", addr1, addr2, true},

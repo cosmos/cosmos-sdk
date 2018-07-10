@@ -68,8 +68,8 @@ func NewApp2(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 // MsgIssue to allow a registered issuer
 // to issue new coins.
 type MsgIssue struct {
-	Issuer   sdk.Address
-	Receiver sdk.Address
+	Issuer   sdk.AccAddress
+	Receiver sdk.AccAddress
 	Coin     sdk.Coin
 }
 
@@ -104,8 +104,8 @@ func (msg MsgIssue) GetSignBytes() []byte {
 }
 
 // Implements Msg. Return the signer.
-func (msg MsgIssue) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.Issuer}
+func (msg MsgIssue) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Issuer}
 }
 
 // Returns the sdk.Tags for the message
@@ -146,7 +146,7 @@ func handleMsgIssue(keyIssue *sdk.KVStoreKey, keyAcc *sdk.KVStoreKey) sdk.Handle
 	}
 }
 
-func handleIssuer(store sdk.KVStore, issuer sdk.Address, coin sdk.Coin) sdk.Result {
+func handleIssuer(store sdk.KVStore, issuer sdk.AccAddress, coin sdk.Coin) sdk.Result {
 	// the issuer address is stored directly under the coin denomination
 	denom := []byte(coin.Denom)
 	infoBytes := store.Get(denom)
@@ -170,7 +170,7 @@ func handleIssuer(store sdk.KVStore, issuer sdk.Address, coin sdk.Coin) sdk.Resu
 
 // coinInfo stores meta data about a coin
 type coinInfo struct {
-	Issuer sdk.Address `json:"issuer"`
+	Issuer sdk.AccAddress `json:"issuer"`
 }
 
 //------------------------------------------------------------------

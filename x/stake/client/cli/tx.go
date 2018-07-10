@@ -28,7 +28,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
+			validatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -53,7 +53,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 
 			var msg sdk.Msg
 			if viper.GetString(FlagAddressDelegator) != "" {
-				delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+				delegatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
 				if err != nil {
 					return err
 				}
@@ -86,7 +86,7 @@ func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
 		Short: "edit and existing validator account",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
+			validatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -126,11 +126,11 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			delegatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}
-			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
+			validatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -177,15 +177,15 @@ func GetCmdBeginRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			var err error
-			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			delegatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}
-			validatorSrcAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidatorSrc))
+			validatorSrcAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorSrc))
 			if err != nil {
 				return err
 			}
-			validatorDstAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidatorDst))
+			validatorDstAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorDst))
 			if err != nil {
 				return err
 			}
@@ -219,8 +219,10 @@ func GetCmdBeginRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
+// nolint: gocyclo
+// TODO: Make this pass gocyclo linting
 func getShares(storeName string, cdc *wire.Codec, sharesAmountStr, sharesPercentStr string,
-	delegatorAddr, validatorAddr sdk.Address) (sharesAmount sdk.Rat, err error) {
+	delegatorAddr, validatorAddr sdk.AccAddress) (sharesAmount sdk.Rat, err error) {
 
 	switch {
 	case sharesAmountStr != "" && sharesPercentStr != "":
@@ -250,14 +252,9 @@ func getShares(storeName string, cdc *wire.Codec, sharesAmountStr, sharesPercent
 		ctx := context.NewCoreContextFromViper()
 		resQuery, err := ctx.QueryStore(key, storeName)
 		if err != nil {
-			return sharesAmount, err
-		}
-		var delegation stake.Delegation
-		err = cdc.UnmarshalBinary(resQuery, &delegation)
-		if err != nil {
 			return sharesAmount, errors.Errorf("cannot find delegation to determine percent Error: %v", err)
 		}
-
+		delegation := types.MustUnmarshalDelegation(cdc, key, resQuery)
 		sharesAmount = sharesPercent.Mul(delegation.Shares)
 	}
 	return
@@ -270,15 +267,15 @@ func GetCmdCompleteRedelegate(cdc *wire.Codec) *cobra.Command {
 		Short: "complete redelegation",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			delegatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}
-			validatorSrcAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidatorSrc))
+			validatorSrcAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorSrc))
 			if err != nil {
 				return err
 			}
-			validatorDstAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidatorDst))
+			validatorDstAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorDst))
 			if err != nil {
 				return err
 			}
@@ -322,11 +319,11 @@ func GetCmdBeginUnbonding(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "begin unbonding",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			delegatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}
-			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
+			validatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -367,11 +364,11 @@ func GetCmdCompleteUnbonding(cdc *wire.Codec) *cobra.Command {
 		Short: "complete unbonding",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			delegatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}
-			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
+			validatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}

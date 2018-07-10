@@ -15,26 +15,22 @@ var _ sdk.Msg = &MsgUnrevoke{}
 
 // MsgUnrevoke - struct for unrevoking revoked validator
 type MsgUnrevoke struct {
-	ValidatorAddr sdk.Address `json:"address"` // address of the validator owner
+	ValidatorAddr sdk.AccAddress `json:"address"` // address of the validator owner
 }
 
-func NewMsgUnrevoke(validatorAddr sdk.Address) MsgUnrevoke {
+func NewMsgUnrevoke(validatorAddr sdk.AccAddress) MsgUnrevoke {
 	return MsgUnrevoke{
 		ValidatorAddr: validatorAddr,
 	}
 }
 
 //nolint
-func (msg MsgUnrevoke) Type() string              { return MsgType }
-func (msg MsgUnrevoke) GetSigners() []sdk.Address { return []sdk.Address{msg.ValidatorAddr} }
+func (msg MsgUnrevoke) Type() string                 { return MsgType }
+func (msg MsgUnrevoke) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.ValidatorAddr} }
 
 // get the bytes for the message signer to sign on
 func (msg MsgUnrevoke) GetSignBytes() []byte {
-	b, err := cdc.MarshalJSON(struct {
-		ValidatorAddr string `json:"address"`
-	}{
-		ValidatorAddr: sdk.MustBech32ifyVal(msg.ValidatorAddr),
-	})
+	b, err := cdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}

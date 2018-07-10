@@ -124,6 +124,7 @@ BUG FIXES
 * [x/stake] fix revoke bytes ordering (was putting revoked candidates at the top of the list)
 * [x/stake] bond count was counting revoked validators as bonded, fixed
 * \#1565 - fix cliff validator persisting when validator set shrinks from max
+* [x/stake] fix bug when unbonding/redelegating using `--shares-percent`
 
 ## 0.19.0
 

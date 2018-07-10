@@ -65,7 +65,11 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	// check to see if the pubkey or sender has been registered before
 	_, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if found {
-		return ErrValidatorAlreadyExists(k.Codespace()).Result()
+		return ErrValidatorOwnerExists(k.Codespace()).Result()
+	}
+	_, found = k.GetValidatorByPubKey(ctx, msg.PubKey)
+	if found {
+		return ErrValidatorPubKeyExists(k.Codespace()).Result()
 	}
 	if msg.SelfDelegation.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()

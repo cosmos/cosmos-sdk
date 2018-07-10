@@ -44,7 +44,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 		vars := mux.Vars(r)
 		bech32addr := vars["address"]
 
-		address, err := sdk.GetAccAddressBech32(bech32addr)
+		to, err := sdk.AccAddressFromBech32(bech32addr)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -72,15 +72,8 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 			return
 		}
 
-		to, err := sdk.GetAccAddressHex(address.String())
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
 		// build message
-		msg := client.BuildMsg(info.GetPubKey().Address(), to, m.Amount)
+		msg := client.BuildMsg(sdk.AccAddress(info.GetPubKey().Address()), to, m.Amount)
 		if err != nil { // XXX rechecking same error ?
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

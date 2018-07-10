@@ -121,7 +121,7 @@ func validateBasic(tx StdTx) (err sdk.Error) {
 // if the account doesn't have a pubkey, set it.
 func processSig(
 	ctx sdk.Context, am AccountMapper,
-	addr sdk.Address, sig StdSignature, signBytes []byte) (
+	addr sdk.AccAddress, sig StdSignature, signBytes []byte) (
 	acc Account, res sdk.Result) {
 
 	// Get the account.

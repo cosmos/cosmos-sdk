@@ -38,7 +38,7 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 			initialDeposit := viper.GetString(flagDeposit)
 
 			// get the from address from the name flag
-			from, err := sdk.GetAccAddressBech32(viper.GetString(flagProposer))
+			from, err := sdk.AccAddressFromBech32(viper.GetString(flagProposer))
 			if err != nil {
 				return err
 			}
@@ -90,7 +90,7 @@ func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 		Short: "deposit tokens for activing proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// get the from address from the name flag
-			depositer, err := sdk.GetAccAddressBech32(viper.GetString(flagDepositer))
+			depositer, err := sdk.AccAddressFromBech32(viper.GetString(flagDepositer))
 			if err != nil {
 				return err
 			}
@@ -136,7 +136,7 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			bechVoter := viper.GetString(flagVoter)
-			voter, err := sdk.GetAccAddressBech32(bechVoter)
+			voter, err := sdk.AccAddressFromBech32(bechVoter)
 			if err != nil {
 				return err
 			}
@@ -218,7 +218,7 @@ func GetCmdQueryVote(storeName string, cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			proposalID := viper.GetInt64(flagProposalID)
 
-			voterAddr, err := sdk.GetAccAddressBech32(viper.GetString(flagVoter))
+			voterAddr, err := sdk.AccAddressFromBech32(viper.GetString(flagVoter))
 			if err != nil {
 				return err
 			}

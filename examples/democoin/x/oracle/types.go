@@ -9,7 +9,7 @@ import (
 // Msg - struct for voting on payloads
 type Msg struct {
 	Payload
-	Signer sdk.Address
+	Signer sdk.AccAddress
 }
 
 // GetSignBytes implements sdk.Msg
@@ -22,8 +22,8 @@ func (msg Msg) GetSignBytes() []byte {
 }
 
 // GetSigners implements sdk.Msg
-func (msg Msg) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.Signer}
+func (msg Msg) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
 }
 
 // Payload defines inner data for actual execution

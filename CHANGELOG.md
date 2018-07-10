@@ -24,6 +24,8 @@ BREAKING CHANGES
 * [types] `GetMsg()` -> `GetMsgs()` as txs wrap many messages
 * [types] Removed GetMemo from Tx (it is still on StdTx)
 * [types] renamed rational.Evaluate to rational.Round{Int64, Int}
+* [types] Renamed `sdk.Address` to `sdk.AccAddress`/`sdk.ValAddress`
+* [types] `sdk.AccAddress`/`sdk.ValAddress` natively marshals to Bech32 in String, Sprintf (when used with `%s`), and MarshalJSON
 * [keys] Keybase and Ledger support from go-crypto merged into the SDK in the `crypto` folder
 * [cli] Rearranged commands under subcommands
 * [x/slashing] Update slashing for unbonding period
@@ -126,6 +128,7 @@ BUG FIXES
 * \#1461 - CLI tests now no longer reset your local environment data
 * \#1505 - `gaiacli stake validator` no longer panics if validator doesn't exist
 * \#1565 - fix cliff validator persisting when validator set shrinks from max
+* \#1010 - two validators can't bond with the same pubkey anymore
 
 ## 0.19.0
 

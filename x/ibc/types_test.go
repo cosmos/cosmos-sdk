@@ -67,7 +67,7 @@ func TestIBCTransferMsgValidation(t *testing.T) {
 
 func TestIBCReceiveMsg(t *testing.T) {
 	packet := constructIBCPacket(true)
-	msg := IBCReceiveMsg{packet, sdk.Address([]byte("relayer")), 0}
+	msg := IBCReceiveMsg{packet, sdk.AccAddress([]byte("relayer")), 0}
 
 	require.Equal(t, msg.Type(), "ibc")
 }
@@ -80,8 +80,8 @@ func TestIBCReceiveMsgValidation(t *testing.T) {
 		valid bool
 		msg   IBCReceiveMsg
 	}{
-		{true, IBCReceiveMsg{validPacket, sdk.Address([]byte("relayer")), 0}},
-		{false, IBCReceiveMsg{invalidPacket, sdk.Address([]byte("relayer")), 0}},
+		{true, IBCReceiveMsg{validPacket, sdk.AccAddress([]byte("relayer")), 0}},
+		{false, IBCReceiveMsg{invalidPacket, sdk.AccAddress([]byte("relayer")), 0}},
 	}
 
 	for i, tc := range cases {
@@ -98,8 +98,8 @@ func TestIBCReceiveMsgValidation(t *testing.T) {
 // Helpers
 
 func constructIBCPacket(valid bool) IBCPacket {
-	srcAddr := sdk.Address([]byte("source"))
-	destAddr := sdk.Address([]byte("destination"))
+	srcAddr := sdk.AccAddress([]byte("source"))
+	destAddr := sdk.AccAddress([]byte("destination"))
 	coins := sdk.Coins{sdk.NewCoin("atom", 10)}
 	srcChain := "source-chain"
 	destChain := "dest-chain"

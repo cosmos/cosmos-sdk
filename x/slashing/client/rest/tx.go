@@ -57,7 +57,7 @@ func unrevokeRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.Core
 			return
 		}
 
-		validatorAddr, err := sdk.GetAccAddressBech32(m.ValidatorAddr)
+		validatorAddr, err := sdk.AccAddressFromBech32(m.ValidatorAddr)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))

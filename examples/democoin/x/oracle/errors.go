@@ -16,7 +16,7 @@ const (
 // Error constructors
 
 // ErrNotValidator called when the signer of a Msg is not a validator
-func ErrNotValidator(codespace sdk.CodespaceType, address sdk.Address) sdk.Error {
+func ErrNotValidator(codespace sdk.CodespaceType, address sdk.AccAddress) sdk.Error {
 	return sdk.NewError(codespace, CodeNotValidator, address.String())
 }
 

@@ -228,7 +228,11 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 		bytes.Compare(valPower, cliffPower) == -1: //(valPower < cliffPower
 		// skip to completion
 
+		// default case -  validator was either:
+		//  a) not-bonded and now has power-rank greater than  cliff validator
+		//  b) bonded and now has decreased in power
 	default:
+
 		// update the validator set for this validator
 		updatedVal, updated := k.UpdateBondedValidators(ctx, validator)
 		if updated { // updates to validator occurred  to be updated

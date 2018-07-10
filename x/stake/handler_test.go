@@ -360,55 +360,6 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 	params := setInstantUnbondPeriod(keeper, ctx)
 
 	validatorAddrs := []sdk.AccAddress{keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]}
-
-	// bond them all
-	for i, validatorAddr := range validatorAddrs {
-		msgCreateValidator := newTestMsgCreateValidator(validatorAddr, keep.PKs[i], 10)
-		got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
-		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
-
-		//Check that the account is bonded
-		validators := keeper.GetValidators(ctx, 100)
-		require.Equal(t, (i + 1), len(validators))
-		val := validators[i]
-		balanceExpd := sdk.NewInt(initBond - 10)
-		balanceGot := accMapper.GetAccount(ctx, val.Owner).GetCoins().AmountOf(params.BondDenom)
-		require.Equal(t, i+1, len(validators), "expected %d validators got %d, validators: %v", i+1, len(validators), validators)
-		require.Equal(t, 10, int(val.DelegatorShares.RoundInt64()), "expected %d shares, got %d", 10, val.DelegatorShares)
-		require.Equal(t, balanceExpd, balanceGot, "expected account to have %d, got %d", balanceExpd, balanceGot)
-	}
-
-	// unbond them all
-	for i, validatorAddr := range validatorAddrs {
-		validatorPre, found := keeper.GetValidator(ctx, validatorAddr)
-		require.True(t, found)
-		msgBeginUnbonding := NewMsgBeginUnbonding(validatorAddr, validatorAddr, sdk.NewRat(10)) // self-delegation
-		msgCompleteUnbonding := NewMsgCompleteUnbonding(validatorAddr, validatorAddr)
-		got := handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
-		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
-		got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbonding, keeper)
-		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
-
-		//Check that the account is unbonded
-		validators := keeper.GetValidators(ctx, 100)
-		require.Equal(t, len(validatorAddrs)-(i+1), len(validators),
-			"expected %d validators got %d", len(validatorAddrs)-(i+1), len(validators))
-
-		_, found = keeper.GetValidator(ctx, validatorAddr)
-		require.False(t, found)
-
-		expBalance := sdk.NewInt(initBond)
-		gotBalance := accMapper.GetAccount(ctx, validatorPre.Owner).GetCoins().AmountOf(params.BondDenom)
-		require.Equal(t, expBalance, gotBalance, "expected account to have %d, got %d", expBalance, gotBalance)
-	}
-}
-
-func TestMultipleMsgCreateValidatorOnBehalfOf(t *testing.T) {
-	initBond := int64(1000)
-	ctx, accMapper, keeper := keep.CreateTestInput(t, false, initBond)
-	params := setInstantUnbondPeriod(keeper, ctx)
-
-	validatorAddrs := []sdk.AccAddress{keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]}
 	delegatorAddrs := []sdk.AccAddress{keep.Addrs[3], keep.Addrs[4], keep.Addrs[5]}
 
 	// bond them all

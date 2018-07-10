@@ -18,7 +18,7 @@ BREAKING CHANGES
       * The keys sub-module is now in the SDK
     * Various other fixes
 * [auth] Signers of a transaction now only sign over their own account and sequence number
-* [auth] Removed MsgChangePubKey 
+* [auth] Removed MsgChangePubKey
 * [auth] Removed SetPubKey from account mapper
 * [auth] AltBytes renamed to Memo, now a string, max 100 characters, costs a bit of gas
 * [types] `GetMsg()` -> `GetMsgs()` as txs wrap many messages
@@ -103,6 +103,7 @@ IMPROVEMENTS
 * [keys] improve error message when deleting non-existent key
 * [gaiacli] improve error messages on `send` and `account` commands
 * added contributing guidelines
+* [docs] Added commands for governance CLI on testnet README
 
 BUG FIXES
 * [x/slashing] \#1510 Unrevoked validators cannot un-revoke themselves

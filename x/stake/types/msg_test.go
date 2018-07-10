@@ -106,7 +106,7 @@ func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
 
 	msg = NewMsgCreateValidatorOnBehalfOf(addr2, addr1, pk1, coinPos, Description{})
 	addrs = msg.GetSigners()
-	require.Equal(t, []sdk.Address{addr2, addr1}, addrs, "Signers on default msg is wrong")
+	require.Equal(t, []sdk.Address{addr2, addr1}, addrs, "Signers for onbehalfof msg is wrong")
 }
 
 // test ValidateBasic for MsgDelegate

@@ -387,7 +387,7 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 			return validator, true
 		}
 	}
-	return Validator{}, false
+	return types.Validator{}, false
 }
 
 // full update of the bonded validator set, many can be added/kicked

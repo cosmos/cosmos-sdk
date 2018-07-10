@@ -30,7 +30,7 @@ func BondTxCmd(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCoreContextFromViper()
 
-			from, err := ctx.GetFromAddress()
+			from, err := ctx.GetFromAddresses()
 			if err != nil {
 				return err
 			}
@@ -58,7 +58,7 @@ func BondTxCmd(cdc *wire.Codec) *cobra.Command {
 			var pubKeyEd crypto.PubKeyEd25519
 			copy(pubKeyEd[:], rawPubKey)
 
-			msg := simplestake.NewMsgBond(from, stake, pubKeyEd)
+			msg := simplestake.NewMsgBond(from[0], stake, pubKeyEd)
 
 			return sendMsg(cdc, msg)
 		},
@@ -74,11 +74,11 @@ func UnbondTxCmd(cdc *wire.Codec) *cobra.Command {
 		Use:   "unbond",
 		Short: "Unbond from a validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			from, err := context.NewCoreContextFromViper().GetFromAddress()
+			from, err := context.NewCoreContextFromViper().GetFromAddresses()
 			if err != nil {
 				return err
 			}
-			msg := simplestake.NewMsgUnbond(from)
+			msg := simplestake.NewMsgUnbond(from[0])
 			return sendMsg(cdc, msg)
 		},
 	}
@@ -87,7 +87,7 @@ func UnbondTxCmd(cdc *wire.Codec) *cobra.Command {
 
 func sendMsg(cdc *wire.Codec, msg sdk.Msg) error {
 	ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
-	err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
+	err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressNames, []sdk.Msg{msg}, cdc)
 	if err != nil {
 		return err
 	}

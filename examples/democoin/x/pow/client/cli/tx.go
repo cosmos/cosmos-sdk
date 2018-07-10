@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -22,9 +23,12 @@ func MineCmd(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
-			from, err := ctx.GetFromAddress()
+			from, err := ctx.GetFromAddresses()
 			if err != nil {
 				return err
+			}
+			if len(from) != 1 {
+				return errors.New("Must provide single address for from flag")
 			}
 
 			difficulty, err := strconv.ParseUint(args[0], 0, 64)
@@ -42,10 +46,10 @@ func MineCmd(cdc *wire.Codec) *cobra.Command {
 
 			solution := []byte(args[3])
 
-			msg := pow.NewMsgMine(from, difficulty, count, nonce, solution)
+			msg := pow.NewMsgMine(from[0], difficulty, count, nonce, solution)
 
 			// get account name
-			name := ctx.FromAddressName
+			name := ctx.FromAddressNames
 
 			// build and sign the transaction, then broadcast to Tendermint
 			err = ctx.EnsureSignBuildBroadcast(name, []sdk.Msg{msg}, cdc)

@@ -72,12 +72,12 @@ func unrevokeRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.Core
 
 		ctx = ctx.WithGas(m.Gas)
 		ctx = ctx.WithChainID(m.ChainID)
-		ctx = ctx.WithAccountNumber(m.AccountNumber)
-		ctx = ctx.WithSequence(m.Sequence)
+		ctx = ctx.WithAccountNumbers([]int64{m.AccountNumber})
+		ctx = ctx.WithSequences([]int64{m.Sequence})
 
 		msg := slashing.NewMsgUnrevoke(validatorAddr)
 
-		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, []sdk.Msg{msg}, cdc)
+		txBytes, err := ctx.SignAndBuild([]string{m.LocalAccountName}, []string{m.Password}, []sdk.Msg{msg}, cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(err.Error()))

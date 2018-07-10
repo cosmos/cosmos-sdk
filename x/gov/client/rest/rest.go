@@ -68,7 +68,7 @@ func postProposalHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.Handle
 			return
 		}
 
-		proposer, err := sdk.GetAccAddressBech32(req.Proposer)
+		proposer, err := sdk.AccAddressFromBech32(req.Proposer)
 		if err != nil {
 			writeErr(&w, http.StatusBadRequest, err.Error())
 			return
@@ -122,7 +122,7 @@ func depositHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc
 			return
 		}
 
-		depositer, err := sdk.GetAccAddressBech32(req.Depositer)
+		depositer, err := sdk.AccAddressFromBech32(req.Depositer)
 		if err != nil {
 			writeErr(&w, http.StatusBadRequest, err.Error())
 			return
@@ -170,7 +170,7 @@ func voteHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
 			return
 		}
 
-		voter, err := sdk.GetAccAddressBech32(req.Voter)
+		voter, err := sdk.AccAddressFromBech32(req.Voter)
 		if err != nil {
 			writeErr(&w, http.StatusBadRequest, err.Error())
 			return
@@ -264,7 +264,7 @@ func queryDepositHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		depositerAddr, err := sdk.GetAccAddressBech32(bechDepositerAddr)
+		depositerAddr, err := sdk.AccAddressFromBech32(bechDepositerAddr)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			err := errors.Errorf("'%s' needs to be bech32 encoded", RestDepositer)
@@ -330,7 +330,7 @@ func queryVoteHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		voterAddr, err := sdk.GetAccAddressBech32(bechVoterAddr)
+		voterAddr, err := sdk.AccAddressFromBech32(bechVoterAddr)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			err := errors.Errorf("'%s' needs to be bech32 encoded", RestVoter)
@@ -377,11 +377,11 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 		bechDepositerAddr := r.URL.Query().Get(RestDepositer)
 
 		var err error
-		var voterAddr sdk.Address
-		var depositerAddr sdk.Address
+		var voterAddr sdk.AccAddress
+		var depositerAddr sdk.AccAddress
 
 		if len(bechVoterAddr) != 0 {
-			voterAddr, err = sdk.GetAccAddressBech32(bechVoterAddr)
+			voterAddr, err = sdk.AccAddressFromBech32(bechVoterAddr)
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				err := errors.Errorf("'%s' needs to be bech32 encoded", RestVoter)
@@ -391,7 +391,7 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 		}
 
 		if len(bechDepositerAddr) != 0 {
-			depositerAddr, err = sdk.GetAccAddressBech32(bechDepositerAddr)
+			depositerAddr, err = sdk.AccAddressFromBech32(bechDepositerAddr)
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				err := errors.Errorf("'%s' needs to be bech32 encoded", RestDepositer)

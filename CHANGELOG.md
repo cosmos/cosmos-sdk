@@ -46,6 +46,8 @@ BREAKING CHANGES
 * [x/stake] store-value for delegation, validator, ubd, and red do not hold duplicate information contained store-key
 * [gaiad] genesis transactions now use bech32 addresses / pubkeys
 * [lcd] Removed shorthand CLI flags (`a`, `c`, `n`, `o`)
+* [types] Renamed `sdk.Address` to `sdk.AccAddress`/`sdk.ValAddress`
+* [types] `sdk.AccAddress`/`sdk.ValAddress` natively marshals to Bech32 in String, Sprintf (when used with `%s`), and MarshalJSON
 
 DEPRECATED
 * [cli] Deprecate `--name` flag in commands that send txs, in favor of `--from`
@@ -125,6 +127,8 @@ BUG FIXES
 * [x/stake] bond count was counting revoked validators as bonded, fixed
 * \#1565 - fix cliff validator persisting when validator set shrinks from max
 * [x/stake] fix bug when unbonding/redelegating using `--shares-percent`
+* \#1010 - two validators can't bond with the same pubkey anymore
+
 
 ## 0.19.0
 

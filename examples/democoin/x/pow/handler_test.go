@@ -27,7 +27,7 @@ func TestPowHandler(t *testing.T) {
 
 	handler := keeper.Handler
 
-	addr := sdk.Address([]byte("sender"))
+	addr := sdk.AccAddress([]byte("sender"))
 	count := uint64(1)
 	difficulty := uint64(2)
 

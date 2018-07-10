@@ -11,8 +11,8 @@ import (
 // Account is a standard account using a sequence number for replay protection
 // and a pubkey for authentication.
 type Account interface {
-	GetAddress() sdk.Address
-	SetAddress(sdk.Address) error // errors if already set.
+	GetAddress() sdk.AccAddress
+	SetAddress(sdk.AccAddress) error // errors if already set.
 
 	GetPubKey() crypto.PubKey // can return nil.
 	SetPubKey(crypto.PubKey) error
@@ -39,26 +39,26 @@ var _ Account = (*BaseAccount)(nil)
 // Extend this by embedding this in your AppAccount.
 // See the examples/basecoin/types/account.go for an example.
 type BaseAccount struct {
-	Address       sdk.Address   `json:"address"`
-	Coins         sdk.Coins     `json:"coins"`
-	PubKey        crypto.PubKey `json:"public_key"`
-	AccountNumber int64         `json:"account_number"`
-	Sequence      int64         `json:"sequence"`
+	Address       sdk.AccAddress `json:"address"`
+	Coins         sdk.Coins      `json:"coins"`
+	PubKey        crypto.PubKey  `json:"public_key"`
+	AccountNumber int64          `json:"account_number"`
+	Sequence      int64          `json:"sequence"`
 }
 
-func NewBaseAccountWithAddress(addr sdk.Address) BaseAccount {
+func NewBaseAccountWithAddress(addr sdk.AccAddress) BaseAccount {
 	return BaseAccount{
 		Address: addr,
 	}
 }
 
 // Implements sdk.Account.
-func (acc BaseAccount) GetAddress() sdk.Address {
+func (acc BaseAccount) GetAddress() sdk.AccAddress {
 	return acc.Address
 }
 
 // Implements sdk.Account.
-func (acc *BaseAccount) SetAddress(addr sdk.Address) error {
+func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 	if len(acc.Address) != 0 {
 		return errors.New("cannot override BaseAccount address")
 	}

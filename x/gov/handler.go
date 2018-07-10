@@ -93,7 +93,7 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 }
 
 // Called every block, process inflation, update validator set
-func EndBlocker(ctx sdk.Context, keeper Keeper) (tags sdk.Tags, nonVotingVals []sdk.Address) {
+func EndBlocker(ctx sdk.Context, keeper Keeper) (tags sdk.Tags, nonVotingVals []sdk.AccAddress) {
 
 	tags = sdk.NewTags()
 

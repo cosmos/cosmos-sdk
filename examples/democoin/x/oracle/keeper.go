@@ -84,14 +84,14 @@ func (keeper Keeper) setInfo(ctx sdk.Context, p Payload, info Info) {
 	store.Set(key, bz)
 }
 
-func (keeper Keeper) sign(ctx sdk.Context, p Payload, signer sdk.Address) {
+func (keeper Keeper) sign(ctx sdk.Context, p Payload, signer sdk.AccAddress) {
 	store := keeper.key.KVStore(ctx)
 
 	key := GetSignKey(p, signer, keeper.cdc)
 	store.Set(key, signer)
 }
 
-func (keeper Keeper) signed(ctx sdk.Context, p Payload, signer sdk.Address) bool {
+func (keeper Keeper) signed(ctx sdk.Context, p Payload, signer sdk.AccAddress) bool {
 	store := keeper.key.KVStore(ctx)
 
 	key := GetSignKey(p, signer, keeper.cdc)

@@ -35,9 +35,9 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 // They are accumulated from the GetSigners method for each Msg
 // in the order they appear in tx.GetMsgs().
 // Duplicate addresses will be omitted.
-func (tx StdTx) GetSigners() []sdk.Address {
+func (tx StdTx) GetSigners() []sdk.AccAddress {
 	seen := map[string]bool{}
-	var signers []sdk.Address
+	var signers []sdk.AccAddress
 	for _, msg := range tx.GetMsgs() {
 		for _, addr := range msg.GetSigners() {
 			if !seen[addr.String()] {
@@ -65,7 +65,7 @@ func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 // FeePayer returns the address responsible for paying the fees
 // for the transactions. It's the first address returned by msg.GetSigners().
 // If GetSigners() is empty, this panics.
-func FeePayer(tx sdk.Tx) sdk.Address {
+func FeePayer(tx sdk.Tx) sdk.AccAddress {
 	return tx.GetMsgs()[0].GetSigners()[0]
 }
 

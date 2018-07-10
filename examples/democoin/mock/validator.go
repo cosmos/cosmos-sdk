@@ -9,7 +9,7 @@ import (
 
 // Validator implements sdk.Validator
 type Validator struct {
-	Address sdk.Address
+	Address sdk.AccAddress
 	Power   sdk.Rat
 }
 
@@ -19,7 +19,7 @@ func (v Validator) GetStatus() sdk.BondStatus {
 }
 
 // Implements sdk.Validator
-func (v Validator) GetOwner() sdk.Address {
+func (v Validator) GetOwner() sdk.AccAddress {
 	return v.Address
 }
 
@@ -73,7 +73,7 @@ func (vs *ValidatorSet) IterateValidatorsBonded(ctx sdk.Context, fn func(index i
 }
 
 // Validator implements sdk.ValidatorSet
-func (vs *ValidatorSet) Validator(ctx sdk.Context, addr sdk.Address) sdk.Validator {
+func (vs *ValidatorSet) Validator(ctx sdk.Context, addr sdk.AccAddress) sdk.Validator {
 	for _, val := range vs.Validators {
 		if bytes.Equal(val.Address, addr) {
 			return val
@@ -97,7 +97,7 @@ func (vs *ValidatorSet) AddValidator(val Validator) {
 }
 
 // Helper function for removing exsting validator
-func (vs *ValidatorSet) RemoveValidator(addr sdk.Address) {
+func (vs *ValidatorSet) RemoveValidator(addr sdk.AccAddress) {
 	pos := -1
 	for i, val := range vs.Validators {
 		if bytes.Equal(val.Address, addr) {

@@ -11,10 +11,10 @@ import (
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
-func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.Address) {
+func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
 	key := crypto.GenPrivKeyEd25519()
 	pub := key.PubKey()
-	addr := pub.Address()
+	addr := sdk.AccAddress(pub.Address())
 	return key, pub, addr
 }
 

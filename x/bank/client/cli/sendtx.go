@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,16 +37,14 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			bech32From := sdk.MustBech32ifyAcc(from)
 			// Check if account was found
 			if fromAcc == nil {
-				return errors.New("No account with address " + bech32From +
-					" was found in the state.\nAre you sure there has been a transaction involving it?")
+				return errors.Errorf("No account with address %s was found in the state.\nAre you sure there has been a transaction involving it?", from)
 			}
 
 			toStr := viper.GetString(flagTo)
 
-			to, err := sdk.GetAccAddressBech32(toStr)
+			to, err := sdk.AccAddressFromBech32(toStr)
 			if err != nil {
 				return err
 			}
@@ -63,8 +61,7 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 			if !account.GetCoins().IsGTE(coins) {
-				return errors.New("Address " + bech32From +
-					" doesn't have enough coins to pay for this transaction.")
+				return errors.Errorf("Address %s doesn't have enough coins to pay for this transaction.", from)
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint

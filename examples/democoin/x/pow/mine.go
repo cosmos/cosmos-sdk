@@ -10,12 +10,12 @@ import (
 )
 
 // generate the mine message
-func GenerateMsgMine(sender sdk.Address, count uint64, difficulty uint64) MsgMine {
+func GenerateMsgMine(sender sdk.AccAddress, count uint64, difficulty uint64) MsgMine {
 	nonce, hash := mine(sender, count, difficulty)
 	return NewMsgMine(sender, difficulty, count, nonce, hash)
 }
 
-func hash(sender sdk.Address, count uint64, nonce uint64) []byte {
+func hash(sender sdk.AccAddress, count uint64, nonce uint64) []byte {
 	var bytes []byte
 	bytes = append(bytes, []byte(sender)...)
 	countBytes := strconv.FormatUint(count, 16)
@@ -30,7 +30,7 @@ func hash(sender sdk.Address, count uint64, nonce uint64) []byte {
 	return ret[:16]
 }
 
-func mine(sender sdk.Address, count uint64, difficulty uint64) (uint64, []byte) {
+func mine(sender sdk.AccAddress, count uint64, difficulty uint64) (uint64, []byte) {
 	target := math.MaxUint64 / difficulty
 	for nonce := uint64(0); ; nonce++ {
 		hash := hash(sender, count, nonce)

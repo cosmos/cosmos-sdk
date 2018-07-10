@@ -32,7 +32,7 @@ func NewKeeper(key sdk.StoreKey, coinKeeper bank.Keeper, codespace sdk.Codespace
 	}
 }
 
-func (k Keeper) getBondInfo(ctx sdk.Context, addr sdk.Address) bondInfo {
+func (k Keeper) getBondInfo(ctx sdk.Context, addr sdk.AccAddress) bondInfo {
 	store := ctx.KVStore(k.key)
 	bz := store.Get(addr)
 	if bz == nil {
@@ -46,7 +46,7 @@ func (k Keeper) getBondInfo(ctx sdk.Context, addr sdk.Address) bondInfo {
 	return bi
 }
 
-func (k Keeper) setBondInfo(ctx sdk.Context, addr sdk.Address, bi bondInfo) {
+func (k Keeper) setBondInfo(ctx sdk.Context, addr sdk.AccAddress, bi bondInfo) {
 	store := ctx.KVStore(k.key)
 	bz, err := k.cdc.MarshalBinary(bi)
 	if err != nil {
@@ -55,13 +55,13 @@ func (k Keeper) setBondInfo(ctx sdk.Context, addr sdk.Address, bi bondInfo) {
 	store.Set(addr, bz)
 }
 
-func (k Keeper) deleteBondInfo(ctx sdk.Context, addr sdk.Address) {
+func (k Keeper) deleteBondInfo(ctx sdk.Context, addr sdk.AccAddress) {
 	store := ctx.KVStore(k.key)
 	store.Delete(addr)
 }
 
 // register a bond with the keeper
-func (k Keeper) Bond(ctx sdk.Context, addr sdk.Address, pubKey crypto.PubKey, stake sdk.Coin) (int64, sdk.Error) {
+func (k Keeper) Bond(ctx sdk.Context, addr sdk.AccAddress, pubKey crypto.PubKey, stake sdk.Coin) (int64, sdk.Error) {
 	if stake.Denom != stakingToken {
 		return 0, ErrIncorrectStakingToken(k.codespace)
 	}
@@ -86,7 +86,7 @@ func (k Keeper) Bond(ctx sdk.Context, addr sdk.Address, pubKey crypto.PubKey, st
 }
 
 // register an unbond with the keeper
-func (k Keeper) Unbond(ctx sdk.Context, addr sdk.Address) (crypto.PubKey, int64, sdk.Error) {
+func (k Keeper) Unbond(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, int64, sdk.Error) {
 	bi := k.getBondInfo(ctx, addr)
 	if bi.isEmpty() {
 		return nil, 0, ErrInvalidUnbond(k.codespace)
@@ -105,7 +105,7 @@ func (k Keeper) Unbond(ctx sdk.Context, addr sdk.Address) (crypto.PubKey, int64,
 
 // FOR TESTING PURPOSES -------------------------------------------------
 
-func (k Keeper) bondWithoutCoins(ctx sdk.Context, addr sdk.Address, pubKey crypto.PubKey, stake sdk.Coin) (int64, sdk.Error) {
+func (k Keeper) bondWithoutCoins(ctx sdk.Context, addr sdk.AccAddress, pubKey crypto.PubKey, stake sdk.Coin) (int64, sdk.Error) {
 	if stake.Denom != stakingToken {
 		return 0, ErrIncorrectStakingToken(k.codespace)
 	}
@@ -124,7 +124,7 @@ func (k Keeper) bondWithoutCoins(ctx sdk.Context, addr sdk.Address, pubKey crypt
 	return bi.Power, nil
 }
 
-func (k Keeper) unbondWithoutCoins(ctx sdk.Context, addr sdk.Address) (crypto.PubKey, int64, sdk.Error) {
+func (k Keeper) unbondWithoutCoins(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, int64, sdk.Error) {
 	bi := k.getBondInfo(ctx, addr)
 	if bi.isEmpty() {
 		return nil, 0, ErrInvalidUnbond(k.codespace)

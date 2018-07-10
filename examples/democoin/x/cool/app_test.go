@@ -15,7 +15,7 @@ import (
 var (
 	priv1  = crypto.GenPrivKeyEd25519()
 	pubKey = priv1.PubKey()
-	addr1  = pubKey.Address()
+	addr1  = sdk.AccAddress(pubKey.Address())
 
 	quizMsg1 = MsgQuiz{
 		Sender:     addr1,

@@ -11,7 +11,7 @@ import (
 
 func TestToAccount(t *testing.T) {
 	priv := crypto.GenPrivKeyEd25519()
-	addr := sdk.Address(priv.PubKey().Address())
+	addr := sdk.AccAddress(priv.PubKey().Address())
 	authAcc := auth.NewBaseAccountWithAddress(addr)
 	genAcc := NewGenesisAccount(&authAcc)
 	require.Equal(t, authAcc, *genAcc.ToAccount())

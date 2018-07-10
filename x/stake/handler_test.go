@@ -3,6 +3,7 @@ package stake
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -14,7 +15,7 @@ import (
 
 //______________________________________________________________________
 
-func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt int64) MsgCreateValidator {
+func newTestMsgCreateValidator(address sdk.AccAddress, pubKey crypto.PubKey, amt int64) MsgCreateValidator {
 	return MsgCreateValidator{
 		Description:    Description{},
 		ValidatorAddr:  address,
@@ -23,7 +24,7 @@ func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt in
 	}
 }
 
-func newTestMsgDelegate(delegatorAddr, validatorAddr sdk.Address, amt int64) MsgDelegate {
+func newTestMsgDelegate(delegatorAddr, validatorAddr sdk.AccAddress, amt int64) MsgDelegate {
 	return MsgDelegate{
 		DelegatorAddr: delegatorAddr,
 		ValidatorAddr: validatorAddr,
@@ -118,25 +119,45 @@ func TestValidatorByPowerIndex(t *testing.T) {
 func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 
-	validatorAddr := keep.Addrs[0]
-	pk := keep.PKs[0]
-	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, pk, 10)
-	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	addr1, addr2 := keep.Addrs[0], keep.Addrs[1]
+	pk1, pk2 := keep.PKs[0], keep.PKs[1]
+
+	msgCreateValidator1 := newTestMsgCreateValidator(addr1, pk1, 10)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator1, keeper)
 	require.True(t, got.IsOK(), "%v", got)
-	validator, found := keeper.GetValidator(ctx, validatorAddr)
+	validator, found := keeper.GetValidator(ctx, addr1)
 
 	require.True(t, found)
-	require.Equal(t, sdk.Bonded, validator.Status())
-	require.Equal(t, validatorAddr, validator.Owner)
-	require.Equal(t, pk, validator.PubKey)
-	require.Equal(t, sdk.NewRat(10), validator.PoolShares.Bonded())
-	require.Equal(t, sdk.NewRat(10), validator.DelegatorShares)
-	require.Equal(t, Description{}, validator.Description)
+	assert.Equal(t, sdk.Bonded, validator.Status())
+	assert.Equal(t, addr1, validator.Owner)
+	assert.Equal(t, pk1, validator.PubKey)
+	assert.Equal(t, sdk.NewRat(10), validator.PoolShares.Bonded())
+	assert.Equal(t, sdk.NewRat(10), validator.DelegatorShares)
+	assert.Equal(t, Description{}, validator.Description)
 
-	// one validator cannot bond twice
-	msgCreateValidator.PubKey = keep.PKs[1]
-	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	// two validators can't have the same owner address
+	msgCreateValidator2 := newTestMsgCreateValidator(addr1, pk2, 10)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator2, keeper)
 	require.False(t, got.IsOK(), "%v", got)
+
+	// two validators can't have the same pubkey
+	msgCreateValidator3 := newTestMsgCreateValidator(addr2, pk1, 10)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator3, keeper)
+	require.False(t, got.IsOK(), "%v", got)
+
+	// must have different pubkey and owner
+	msgCreateValidator4 := newTestMsgCreateValidator(addr2, pk2, 10)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator4, keeper)
+	require.True(t, got.IsOK(), "%v", got)
+	validator, found = keeper.GetValidator(ctx, addr2)
+
+	require.True(t, found)
+	assert.Equal(t, sdk.Bonded, validator.Status())
+	assert.Equal(t, addr2, validator.Owner)
+	assert.Equal(t, pk2, validator.PubKey)
+	assert.Equal(t, sdk.NewRat(10), validator.PoolShares.Bonded())
+	assert.Equal(t, sdk.NewRat(10), validator.DelegatorShares)
+	assert.Equal(t, Description{}, validator.Description)
 }
 
 func TestIncrementsMsgDelegate(t *testing.T) {
@@ -307,7 +328,7 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 	ctx, accMapper, keeper := keep.CreateTestInput(t, false, initBond)
 	params := setInstantUnbondPeriod(keeper, ctx)
 
-	validatorAddrs := []sdk.Address{keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]}
+	validatorAddrs := []sdk.AccAddress{keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]}
 
 	// bond them all
 	for i, validatorAddr := range validatorAddrs {

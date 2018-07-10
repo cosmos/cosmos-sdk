@@ -58,7 +58,7 @@ func TotalCoinsInvariant(t *testing.T, app *mock.App, log string) {
 // accounts already exist.
 func TestAndRunSingleInputMsgSend(t *testing.T, r *rand.Rand, app *mock.App, ctx sdk.Context, keys []crypto.PrivKey, log string) (action string, err sdk.Error) {
 	fromKey := keys[r.Intn(len(keys))]
-	fromAddr := fromKey.PubKey().Address()
+	fromAddr := sdk.AccAddress(fromKey.PubKey().Address())
 	toKey := keys[r.Intn(len(keys))]
 	// Disallow sending money to yourself
 	for {
@@ -67,7 +67,7 @@ func TestAndRunSingleInputMsgSend(t *testing.T, r *rand.Rand, app *mock.App, ctx
 		}
 		toKey = keys[r.Intn(len(keys))]
 	}
-	toAddr := toKey.PubKey().Address()
+	toAddr := sdk.AccAddress(toKey.PubKey().Address())
 	initFromCoins := app.AccountMapper.GetAccount(ctx, fromAddr).GetCoins()
 
 	denomIndex := r.Intn(len(initFromCoins))

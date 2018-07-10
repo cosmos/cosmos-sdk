@@ -95,11 +95,11 @@ func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.Respo
 
 // CreateGenAccounts generates genesis accounts loaded with coins, and returns
 // their addresses, pubkeys, and privkeys.
-func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []auth.Account, addrs []sdk.Address, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
+func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []auth.Account, addrs []sdk.AccAddress, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
 	for i := 0; i < numAccs; i++ {
 		privKey := crypto.GenPrivKeyEd25519()
 		pubKey := privKey.PubKey()
-		addr := pubKey.Address()
+		addr := sdk.AccAddress(pubKey.Address())
 
 		genAcc := &auth.BaseAccount{
 			Address: addr,
@@ -166,19 +166,19 @@ func GeneratePrivKeys(n int) (keys []crypto.PrivKey) {
 
 // GeneratePrivKeyAddressPairs generates a total of n private key, address
 // pairs.
-func GeneratePrivKeyAddressPairs(n int) (keys []crypto.PrivKey, addrs []sdk.Address) {
+func GeneratePrivKeyAddressPairs(n int) (keys []crypto.PrivKey, addrs []sdk.AccAddress) {
 	keys = make([]crypto.PrivKey, n, n)
-	addrs = make([]sdk.Address, n, n)
+	addrs = make([]sdk.AccAddress, n, n)
 	for i := 0; i < n; i++ {
 		keys[i] = crypto.GenPrivKeyEd25519()
-		addrs[i] = keys[i].PubKey().Address()
+		addrs[i] = sdk.AccAddress(keys[i].PubKey().Address())
 	}
 	return
 }
 
 // RandomSetGenesis set genesis accounts with random coin values using the
 // provided addresses and coin denominations.
-func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.Address, denoms []string) {
+func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []string) {
 	accts := make([]auth.Account, len(addrs), len(addrs))
 	randCoinIntervals := []BigInterval{
 		{sdk.NewIntWithDecimal(1, 0), sdk.NewIntWithDecimal(1, 1)},

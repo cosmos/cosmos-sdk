@@ -64,6 +64,7 @@ func (app *App) RandomizedTestingFromSeed(
 	}
 }
 
+// SimpleRandomizedTestingFromSeed
 func (app *App) SimpleRandomizedTestingFromSeed(
 	t *testing.T, seed int64, ops []TestAndRunMsg, setups []RandSetup,
 	invariants []Invariant, numKeys int, numBlocks int, blockSize int,

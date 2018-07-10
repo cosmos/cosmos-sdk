@@ -139,6 +139,21 @@ func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, exp
 	require.Equal(t, expectedID, lastID)
 }
 
+func TestOptionFunction(t *testing.T) {
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	codec := wire.NewCodec()
+	registerTestCodec(codec)
+	bap := NewBaseApp("starting name", codec, logger, db, testChangeNameHelper("new name"))
+	require.Equal(t, bap.name, "new name", "BaseApp should have had name changed via option function")
+}
+
+func testChangeNameHelper(name string) func(*BaseApp) {
+	return func(bap *BaseApp) {
+		bap.name = name
+	}
+}
+
 // Test that the app hash is static
 // TODO: https://github.com/cosmos/cosmos-sdk/issues/520
 /*func TestStaticAppHash(t *testing.T) {
@@ -285,9 +300,9 @@ type msgCounter struct {
 }
 
 // Implements Msg
-func (msg msgCounter) Type() string              { return typeMsgCounter }
-func (msg msgCounter) GetSignBytes() []byte      { return nil }
-func (msg msgCounter) GetSigners() []sdk.Address { return nil }
+func (msg msgCounter) Type() string                 { return typeMsgCounter }
+func (msg msgCounter) GetSignBytes() []byte         { return nil }
+func (msg msgCounter) GetSigners() []sdk.AccAddress { return nil }
 func (msg msgCounter) ValidateBasic() sdk.Error {
 	if msg.Counter >= 0 {
 		return nil
@@ -323,9 +338,9 @@ type msgCounter2 struct {
 }
 
 // Implements Msg
-func (msg msgCounter2) Type() string              { return typeMsgCounter2 }
-func (msg msgCounter2) GetSignBytes() []byte      { return nil }
-func (msg msgCounter2) GetSigners() []sdk.Address { return nil }
+func (msg msgCounter2) Type() string                 { return typeMsgCounter2 }
+func (msg msgCounter2) GetSignBytes() []byte         { return nil }
+func (msg msgCounter2) GetSigners() []sdk.AccAddress { return nil }
 func (msg msgCounter2) ValidateBasic() sdk.Error {
 	if msg.Counter >= 0 {
 		return nil

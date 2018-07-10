@@ -23,7 +23,7 @@ func TestMsgSubmitProposal(t *testing.T) {
 	tests := []struct {
 		title, description string
 		proposalType       byte
-		proposerAddr       sdk.Address
+		proposerAddr       sdk.AccAddress
 		initialDeposit     sdk.Coins
 		expectPass         bool
 	}{
@@ -33,7 +33,7 @@ func TestMsgSubmitProposal(t *testing.T) {
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeParameterChange, addrs[0], coinsPos, true},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeSoftwareUpgrade, addrs[0], coinsPos, true},
 		{"Test Proposal", "the purpose of this proposal is to test", 0x05, addrs[0], coinsPos, false},
-		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, sdk.Address{}, coinsPos, false},
+		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, sdk.AccAddress{}, coinsPos, false},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsZero, true},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsNeg, false},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsMulti, true},
@@ -54,13 +54,13 @@ func TestMsgDeposit(t *testing.T) {
 	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.Coins{})
 	tests := []struct {
 		proposalID    int64
-		depositerAddr sdk.Address
+		depositerAddr sdk.AccAddress
 		depositAmount sdk.Coins
 		expectPass    bool
 	}{
 		{0, addrs[0], coinsPos, true},
 		{-1, addrs[0], coinsPos, false},
-		{1, sdk.Address{}, coinsPos, false},
+		{1, sdk.AccAddress{}, coinsPos, false},
 		{1, addrs[0], coinsZero, true},
 		{1, addrs[0], coinsNeg, false},
 		{1, addrs[0], coinsMulti, true},
@@ -81,13 +81,13 @@ func TestMsgVote(t *testing.T) {
 	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.Coins{})
 	tests := []struct {
 		proposalID int64
-		voterAddr  sdk.Address
+		voterAddr  sdk.AccAddress
 		option     VoteOption
 		expectPass bool
 	}{
 		{0, addrs[0], OptionYes, true},
 		{-1, addrs[0], OptionYes, false},
-		{0, sdk.Address{}, OptionYes, false},
+		{0, sdk.AccAddress{}, OptionYes, false},
 		{0, addrs[0], OptionNo, true},
 		{0, addrs[0], OptionNoWithVeto, true},
 		{0, addrs[0], OptionAbstain, true},

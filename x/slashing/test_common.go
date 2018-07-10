@@ -28,10 +28,10 @@ var (
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51"),
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
 	}
-	addrs = []sdk.Address{
-		pks[0].Address(),
-		pks[1].Address(),
-		pks[2].Address(),
+	addrs = []sdk.AccAddress{
+		sdk.AccAddress(pks[0].Address()),
+		sdk.AccAddress(pks[1].Address()),
+		sdk.AccAddress(pks[2].Address()),
 	}
 	initCoins sdk.Int = sdk.NewInt(200)
 )
@@ -64,7 +64,9 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, Keep
 	sk := stake.NewKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
 	genesis.Pool.LooseTokens = initCoins.MulRaw(int64(len(addrs))).Int64()
-	stake.InitGenesis(ctx, sk, genesis)
+	err = stake.InitGenesis(ctx, sk, genesis)
+	require.Nil(t, err)
+
 	for _, addr := range addrs {
 		_, _, err = ck.AddCoins(ctx, addr, sdk.Coins{
 			{sk.GetParams(ctx).BondDenom, initCoins},
@@ -85,12 +87,12 @@ func newPubKey(pk string) (res crypto.PubKey) {
 	return pkEd
 }
 
-func testAddr(addr string) sdk.Address {
+func testAddr(addr string) sdk.AccAddress {
 	res := []byte(addr)
 	return res
 }
 
-func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
+func newTestMsgCreateValidator(address sdk.AccAddress, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
 	return stake.MsgCreateValidator{
 		Description:    stake.Description{},
 		ValidatorAddr:  address,

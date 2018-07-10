@@ -151,17 +151,17 @@ func runAddrCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	addrString := args[0]
-	var addr sdk.Address
+	var addr []byte
 
 	// try hex, then bech32
 	var err error
 	addr, err = hex.DecodeString(addrString)
 	if err != nil {
 		var err2 error
-		addr, err2 = sdk.GetAccAddressBech32(addrString)
+		addr, err2 = sdk.AccAddressFromBech32(addrString)
 		if err2 != nil {
 			var err3 error
-			addr, err3 = sdk.GetValAddressBech32(addrString)
+			addr, err3 = sdk.ValAddressFromBech32(addrString)
 
 			if err3 != nil {
 				return fmt.Errorf(`Expected hex or bech32. Got errors:
@@ -174,14 +174,9 @@ func runAddrCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	accAddr, err := sdk.Bech32ifyAcc(addr)
-	if err != nil {
-		return err
-	}
-	valAddr, err := sdk.Bech32ifyVal(addr)
-	if err != nil {
-		return err
-	}
+	accAddr := sdk.AccAddress(addr)
+	valAddr := sdk.ValAddress(addr)
+
 	fmt.Println("Address:", addr)
 	fmt.Println("Bech32 Acc:", accAddr)
 	fmt.Println("Bech32 Val:", valAddr)

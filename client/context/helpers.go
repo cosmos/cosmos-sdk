@@ -122,7 +122,7 @@ func (ctx CoreContext) GetFromAddresses() (from []sdk.AccAddress, err error) {
 	}
 
 	var addrs []sdk.AccAddress
-	for _, n := range names{
+	for _, n := range names {
 		info, err := keybase.Get(n)
 		if err != nil {
 			return nil, errors.Errorf("no key for: %s", n)
@@ -181,10 +181,10 @@ func (ctx CoreContext) SignAndBuild(names, passphrases []string, msgs []sdk.Msg,
 		}
 
 		sigs[i] = auth.StdSignature{
-			PubKey: pubkey,
-			Signature: sig,
+			PubKey:        pubkey,
+			Signature:     sig,
 			AccountNumber: accnums[i],
-			Sequence: sequences[i],
+			Sequence:      sequences[i],
 		}
 	}
 

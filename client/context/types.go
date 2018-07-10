@@ -8,23 +8,23 @@ import (
 
 // typical context created in sdk modules for transactions/queries
 type CoreContext struct {
-	ChainID         string
-	Height          int64
-	Gas             int64
-	Fee             string
-	TrustNode       bool
-	NodeURI         string
+	ChainID          string
+	Height           int64
+	Gas              int64
+	Fee              string
+	TrustNode        bool
+	NodeURI          string
 	FromAddressNames []string
 	AccountNumbers   []int64
 	Sequences        []int64
-	Memo            string
-	Client          rpcclient.Client
-	Decoder         auth.AccountDecoder
-	AccountStore    string
-	UseLedger       bool
-	Async           bool
-	JSON            bool
-	PrintResponse   bool
+	Memo             string
+	Client           rpcclient.Client
+	Decoder          auth.AccountDecoder
+	AccountStore     string
+	UseLedger        bool
+	Async            bool
+	JSON             bool
+	PrintResponse    bool
 }
 
 // WithChainID - return a copy of the context with an updated chainID

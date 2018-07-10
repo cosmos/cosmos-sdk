@@ -2,8 +2,8 @@ package context
 
 import (
 	"fmt"
-	"strings"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/viper"
 
@@ -44,23 +44,23 @@ func NewCoreContextFromViper() CoreContext {
 	seqs := normalizeIntList(stringToIntList(viper.GetString(client.FlagSequence)), len(keyNames))
 
 	return CoreContext{
-		ChainID:         chainID,
-		Height:          viper.GetInt64(client.FlagHeight),
-		Gas:             viper.GetInt64(client.FlagGas),
-		Fee:             viper.GetString(client.FlagFee),
-		TrustNode:       viper.GetBool(client.FlagTrustNode),
+		ChainID:          chainID,
+		Height:           viper.GetInt64(client.FlagHeight),
+		Gas:              viper.GetInt64(client.FlagGas),
+		Fee:              viper.GetString(client.FlagFee),
+		TrustNode:        viper.GetBool(client.FlagTrustNode),
 		FromAddressNames: keyNames,
-		NodeURI:         nodeURI,
+		NodeURI:          nodeURI,
 		AccountNumbers:   accNums,
 		Sequences:        seqs,
-		Memo:            viper.GetString(client.FlagMemo),
-		Client:          rpc,
-		Decoder:         nil,
-		AccountStore:    "acc",
-		UseLedger:       viper.GetBool(client.FlagUseLedger),
-		Async:           viper.GetBool(client.FlagAsync),
-		JSON:            viper.GetBool(client.FlagJson),
-		PrintResponse:   viper.GetBool(client.FlagPrintResponse),
+		Memo:             viper.GetString(client.FlagMemo),
+		Client:           rpc,
+		Decoder:          nil,
+		AccountStore:     "acc",
+		UseLedger:        viper.GetBool(client.FlagUseLedger),
+		Async:            viper.GetBool(client.FlagAsync),
+		JSON:             viper.GetBool(client.FlagJson),
+		PrintResponse:    viper.GetBool(client.FlagPrintResponse),
 	}
 }
 

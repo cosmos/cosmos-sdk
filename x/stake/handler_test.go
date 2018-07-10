@@ -23,7 +23,7 @@ func newTestMsgDelegate(delegatorAddr, validatorAddr sdk.AccAddress, amt int64) 
 	return MsgDelegate{
 		DelegatorAddr: delegatorAddr,
 		ValidatorAddr: validatorAddr,
-		Delegation:          sdk.Coin{"steak", sdk.NewInt(amt)},
+		Delegation:    sdk.Coin{"steak", sdk.NewInt(amt)},
 	}
 }
 

@@ -28,10 +28,10 @@ var maximumBondingRationalDenominator sdk.Int = sdk.NewInt(int64(math.Pow10(MaxB
 // MsgCreateValidator - struct for unbonding transactions
 type MsgCreateValidator struct {
 	Description
-	DelegatorAddr sdk.AccAddress   `json:"delegator_address"`
-	ValidatorAddr sdk.AccAddress   `json:"validator_address"`
-	PubKey        crypto.PubKey `json:"pubkey"`
-	Delegation    sdk.Coin      `json:"delegation"`
+	DelegatorAddr sdk.AccAddress `json:"delegator_address"`
+	ValidatorAddr sdk.AccAddress `json:"validator_address"`
+	PubKey        crypto.PubKey  `json:"pubkey"`
+	Delegation    sdk.Coin       `json:"delegation"`
 }
 
 // Default way to create validator. Delegator address and validator address are the same
@@ -79,7 +79,7 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 		DelegatorAddr sdk.AccAddress `json:"delegator_address"`
 		ValidatorAddr sdk.AccAddress `json:"validator_address"`
 		PubKey        string         `json:"pubkey"`
-		Delegation          sdk.Coin       `json:"delegation"`
+		Delegation    sdk.Coin       `json:"delegation"`
 	}{
 		Description:   msg.Description,
 		ValidatorAddr: msg.ValidatorAddr,
@@ -164,14 +164,14 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 type MsgDelegate struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
 	ValidatorAddr sdk.AccAddress `json:"validator_addr"`
-	Delegation          sdk.Coin    `json:"delegation"`
+	Delegation    sdk.Coin       `json:"delegation"`
 }
 
 func NewMsgDelegate(delegatorAddr, validatorAddr sdk.AccAddress, delegation sdk.Coin) MsgDelegate {
 	return MsgDelegate{
 		DelegatorAddr: delegatorAddr,
 		ValidatorAddr: validatorAddr,
-		Delegation:          delegation,
+		Delegation:    delegation,
 	}
 }
 

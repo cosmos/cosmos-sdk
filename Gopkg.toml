@@ -58,11 +58,11 @@
 
 [[constraint]]
   name = "github.com/tendermint/iavl"
-  version = "=v0.8.2-rc0"
+  version = "=v0.9.2"
 
-[[constraint]]
+[[override]]
   name = "github.com/tendermint/tendermint"
-  version = "=0.22.0-rc2"
+  version = "=0.22.2"
 
 [[constraint]]
   name = "github.com/bartekn/go-bip39"

@@ -15,9 +15,9 @@ The complete API is comprised of the sub-APIs of different modules. The modules 
 This API exposes all functionality needed for key creation, signing and management.
 
 
-### /keys - GET
+### /ICS19/keys - GET
 
-url: /keys, Method: GET
+url: /ICS19/keys, Method: GET
 
 Functionality: Get all keys
 
@@ -28,23 +28,21 @@ Parameters: null
 ```
 {
   "rest api": "2.0",
-  "code":200,
-  "error": "",
-  "result": {
-        "keys": [
-          {
-            "name": "monkey",
-            "address": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
-            "pub_key": "cosmosaccpub1zcjduc3q8s8ha96ry4xc5xvjp9tr9w9p0e5lk5y0rpjs5epsfxs4wmf72x3shvus0t"
-          },
-   		 {
-            "name": "test",
-            "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-            "pub_key": "cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
-         }
-	],
-    "block_height": 5241
+  "code": 0,
+  "result": [
+    {
+      "name": "moniker",
+      "type": "local",
+      "address": "cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+      "pub_key": "cosmosaccpub1addwnpepqvshl3s856ys9pwpnsfwmtk9psyn2ngzflmlvsvang08hpdmatj5cd0xsrr"
+    },
+    {
+      "name": "string",
+      "type": "local",
+      "address": "cosmosaccaddr1hwq3hvnn57lqg2srgut68yjpt6f6r4arp0y52a",
+      "pub_key": "cosmosaccpub1addwnpepq0p5rknmqctehv8sh8ppuw385n686rh6f553lt7dsn50fnw9n7g6xjndnhm"
     }
+  ]
 }
 ```
 
@@ -52,17 +50,16 @@ Parameters: null
 
 ```
 {
-"rest api": "2.0",
-"code":500,
-"error":"no keys available",
-"result":{}
+    "rest api": "2.0",
+    "code":500,
+    "error message":"no keys available"
 }
 ```
 
 
-### /keys - POST
+### /ICS19/keys - POST
 
-url: /keys, Method: POST
+url: /ICS19/keys, Method: POST
 
 Functionality: Recover your key from seed and persist it with your password protection
 
@@ -70,7 +67,6 @@ Functionality: Recover your key from seed and persist it with your password prot
 | --------- | ------ | ------- | -------- | ---------------- |
 | name      | string | null    | true     | name of keys     |
 | password  | string | null    | true     | password of keys |
-| seed      | string | null    | true     | seed of keys     |
 
 Parameters: null
 
@@ -78,12 +74,15 @@ Parameters: null
 
 ```
 {
-    "error": "",
-    "code":200,
-    "result": {
-    	"address":BD607C37147656A507A5A521AA9446EB72B2C907
-    },
-    "rest api": "2.0"
+  "rest api": "2.0",
+  "code": 0,
+  "result": {
+    "name": "test",
+    "type": "local",
+    "address": "cosmosaccaddr1y4wkh64fhy4uv2myxjg27k7fk72x796q4j6uke",
+    "pub_key": "cosmosaccpub1addwnpepqv3p2erx3v6gvp29xm7x48z4nlvulxzpjvgx2yv9ha4v45pjf66f58utf2v",
+    "seed": "gun discover trust slam gap fall oven record until found mule sweet armed fine object save disorder churn expire devote twenty winner knee orphan"
+  }
 }
 
 ```
@@ -92,18 +91,17 @@ Parameters: null
 
 ```
 {
-    "error": "invalid inputs",
-    "code":500,
-    "result": {},
-    "rest api": "2.0"
+  "rest api": "2.0",
+  "code": 409,
+  "error message": "Account with name test already exists."
 }
 
 ```
 
 
-### /keys/seed - GET
+### /ICS19/keys/seed - GET
 
-url: /keys/seed, Method: GET
+url: /ICS19/keys/seed, Method: GET
 
 Functionality: Create new seed
 
@@ -113,12 +111,9 @@ Parameters: null
 
 ```
 {
-    "error": "",
-    "code":200,
-    "result": {
-    	"seed":crime carpet recycle erase simple prepare moral dentist fee cause pitch trigger when velvet animal abandon
-    },
-    "rest api": "2.0"
+  "rest api": "2.0",
+  "code": 0,
+  "result": "useless tiny alone tilt trap wool know sense rapid balance force kite fork scissors face clap cherry mean task hurdle ahead artist engine magic"
 }
 
 ```
@@ -127,18 +122,17 @@ Parameters: null
 
 ```
 {
-    "error": "cannot generate new seed",
-    "code":500,
-    "result": {},
-    "rest api": "2.0"
+  "rest api": "2.0",
+  "code": 500,
+  "error message": "Internal error."
 }
 
 ```
 
 
-### /keys/{name} - GET
+### /ICS19/keys/get/{name} - GET
 
-url: /keys/{name}, Method: GET
+url: //ICS19keys/get/{name}, Method: GET
 
 Functionality: Get key information according to the specified key name
 
@@ -148,14 +142,14 @@ Parameters: null
 
 ```
 {
-    "error": "",
-    "code":200,
-    "result": {
-    	"name": "test",
-          "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-          "pub_key": "cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
-    },
-    "rest api": "2.0"
+  "rest api": "2.0",
+  "code": 0,
+  "result": {
+    "name": "test",
+    "type": "local",
+    "address": "cosmosaccaddr1y4wkh64fhy4uv2myxjg27k7fk72x796q4j6uke",
+    "pub_key": "cosmosaccpub1addwnpepqv3p2erx3v6gvp29xm7x48z4nlvulxzpjvgx2yv9ha4v45pjf66f58utf2v"
+  }
 }
 
 ```
@@ -164,10 +158,9 @@ Parameters: null
 
 ```
 {
-    "error": "cannot find corresponding name",
-    "code":500,
-    "result": {},
-    "rest api": "2.0"
+  "rest api": "2.0",
+  "code": 404,
+  "error message": "Key testt not found"
 }
 ```
 
@@ -180,22 +173,27 @@ Functionality: Update key password
 
 Parameters:
 
+* Path parameters:
+
+| Parameter       | Type   | Default | Required | Description     |
+| --------------- | ------ | ------- | -------- | --------------- |
+| name            | string | null    | true     | account name    |
+
+* Body parameters:
+
 | Parameter       | Type   | Default | Required | Description     |
 | --------------- | ------ | ------- | -------- | --------------- |
 | old_password    | string | null    | true     | password before |
 | new_password    | string | null    | true     | password before |
-| repeat_password | string | null    | true     | password before |
+
 
 * The above command returns JSON structured like this if success:
 
 ```
 {
-    "error": "",
-    "code":200,
-    "result": {
-     "updated":name
-    },
-    "rest api": "2.0"
+  "rest api": "2.0",
+  "code": 0,
+  "result": "success"
 }
 ```
 
@@ -203,10 +201,9 @@ Parameters:
 
 ```
 {
-    "error": "cannot update the corresponding key",
-    "code":500,
-    "result": {},
-    "rest api": "2.0"
+  "rest api": "2.0",
+  "code": 401,
+  "error message": "Ciphertext decryption failed"
 }
 ```
 
@@ -227,12 +224,9 @@ Parameters:
 
 ```
 {
-    "error": "",
-    "code":200,
-    "result": {
-     "deleted":name
-    },
-    "rest api": "2.0"
+  "rest api": "2.0",
+  "code": 0,
+  "result": "success"
 }
 ```
 
@@ -240,10 +234,9 @@ Parameters:
 
 ```
 {
-    "error": "cannot delete the corresponding key",
-    "code":500,
-    "result": {},
-    "rest api": "2.0"
+  "rest api": "2.0",
+  "code": 401,
+  "error message": "Ciphertext decryption failed"
 }
 ```
 
@@ -252,9 +245,9 @@ Parameters:
 
 The TokenAPI exposes all functionality needed to query account balances and send transactions.
 
-### /balance/{account} - GET
+### /ICS20/balance/{account} - GET
 
-url: /balance/{account}, Method: GET
+url: /ICS20/balance/{account}, Method: GET
 
 Functionality:
 
@@ -264,28 +257,24 @@ Parameters:
 
 ```
 {
-    "error": "",
-    "code":200,
-    "result": {
-          "type": "6C54F73C9F2E08",
-          "value": {
-              "address": "4E5B78AB5C303E681C372E65EC24F4AA05E4B682",
-              "coins": [
-                  {
-                      "denom": "monkeyToken",
-                      "amount": 10000
-                  },
-                  {
-                      "denom": "steak",
-                      "amount": 1000
-                  }
-              ],
-              "public_key": null,
-              "account_number": 0,
-              "sequence": 0
-          }
-    },
-    "rest api": "2.0"
+  "rest api": "2.0",
+  "code": 0,
+  "result": {
+    "address": "5D4FBF798E79D20222C22EBF19E40D10E7C65F5D",
+    "coins": [
+      {
+        "denom": "monikerToken",
+        "amount": "1000"
+      },
+      {
+        "denom": "steak",
+        "amount": "50"
+      }
+    ],
+    "public_key": null,
+    "account_number": 0,
+    "sequence": 0
+  }
 }
 ```
 
@@ -293,17 +282,16 @@ Parameters:
 
 ```
 {
-    "error": "Invalid account",
-    "code":500,
-    "result": {},
-    "rest api": "2.0"
+  "rest api": "2.0",
+  "code": 409,
+  "error message": "decoding bech32 failed: checksum failed. Expected 4rjz6l, got nsk7ks."
 }
 ```
 
 
-### /create_transfer - POST
+### /ICS20/create_transfer - POST
 
-url: /create_transfer, Method: **POST**
+url: /ICS20/create_transfer, Method: **POST**
 
 Functionality: transfer asset
 
@@ -315,8 +303,9 @@ Parameters:
 | to_address  | string | null    | true     | address to send to     |
 | amount  | int    | null    | true     | amount of the token         |
 | denomination  | string | null    | true     | denomination of the token   |
-| accnum  | int | null    | false     | account number, user can query the valid account number by accessing previous API: /balance/{account} |
+| account_number  | int | null    | false     | account number, user can query the valid account number by accessing previous API: /balance/{account} |
 | sequence  | int    | null    | false     | sequence number, once a transaction is send from this account, the sequence number increases one. User can get the valid sequence number by accessing previous API: /balance/{account} |
+| ensure_account_sequence  | bool | false    | false     | if true, lcd will query full node and calculate correct value for account_number and sequence  |
 | gas  | int | null    | false     | transaction fee   |
 
 
@@ -324,30 +313,28 @@ Parameters:
 
 ```
 {
-    "error": "",
-    "code":200,
-    "result": {
-     ""transaction": "[]bytes of a valid transaction bytes to be signed for that zone"
-    },
-    "rest api": "2.0"
+  "rest api": "2.0",
+  "code": 0,
+  "result": "eyJhY2NvdW50X251bWJlciI6IjAiLCJjaGFpbl9pZCI6InRlc3QtY2hhaW4tUnRBUzBLIiwiZmVlIjp7ImFtb3VudCI6W3siYW1vdW50IjoiMCIsImRlbm9tIjoiIn1dLCJnYXMiOiIwIn0sIm1lbW8iOiIiLCJtc2dzIjpbeyJpbnB1dHMiOlt7ImFkZHJlc3MiOiJjb3Ntb3NhY2NhZGRyMXQ0OG03N3Z3MDhmcXlna3o5NmwzbmVxZHpybnV2aDZhbnNrN2tzIiwiY29pbnMiOlt7ImFtb3VudCI6IjAiLCJkZW5vbSI6InN0cmluZyJ9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiY29zbW9zYWNjYWRkcjF0NDhtNzd2dzA4ZnF5Z2t6OTZsM25lcWR6cm51dmg2YW5zazdrcyIsImNvaW5zIjpbeyJhbW91bnQiOiIwIiwiZGVub20iOiJzdHJpbmcifV19XX1dLCJzZXF1ZW5jZSI6IjAifQ=="
 }
 ```
+
+The result value is the base64 encoding string of transaction bytes. Firstly user should decode the base64 string, then sign the transaction bytes.
 
 * The above command returns JSON structured like this if fails:
 
 ```
 {
-    "error": "Insufficient Funds",
-    "code":500,
-    "result": {},
-    "rest api": "2.0"
+  "rest api": "2.0",
+  "code": 400,
+  "error message": "decoding bech32 failed: checksum failed. Expected xfzga5, got nsk7ks."
 }
 ```
 
 
-### /signed_transfer - POST
+### /ICS20/signed_transfer - POST
 
-url: /signed_transfer, Method: POST
+url: /ICS20/signed_transfer, Method: POST
 
 Functionality: transfer asset
 
@@ -363,12 +350,44 @@ Parameters:
 
 ```
 {
-    "error": "",
-    "code":200,
-    "result": {
-     "tx_hash": ""
+  "rest api": "2.0",
+  "code": 0,
+  "result": {
+    "check_tx": {
+      "log": "Msg 0: ",
+      "gasUsed": "3315",
+      "tags": [
+        {
+          "key": "c2VuZGVy",
+          "value": "MjU1RDZCRUFBOUI5MkJDNjJCNjQzNDkwQUY1QkM5Qjc5NDZGMTc0MA=="
+        },
+        {
+          "key": "cmVjaXBpZW50",
+          "value": "QkI4MTFCQjI3M0E3QkUwNDJBMDM0NzE3QTM5MjQxNUU5M0ExRDdBMw=="
+        }
+      ],
+      "fee": {
+        "key": ""
+      }
     },
-    "rest api": "2.0"
+    "deliver_tx": {
+      "log": "Msg 0: ",
+      "gasUsed": "3315",
+      "tags": [
+        {
+          "key": "c2VuZGVy",
+          "value": "MjU1RDZCRUFBOUI5MkJDNjJCNjQzNDkwQUY1QkM5Qjc5NDZGMTc0MA=="
+        },
+        {
+          "key": "cmVjaXBpZW50",
+          "value": "QkI4MTFCQjI3M0E3QkUwNDJBMDM0NzE3QTM5MjQxNUU5M0ExRDdBMw=="
+        }
+      ],
+      "fee": {}
+    },
+    "hash": "8F2958D1B1A0C6D03D8E0A983CACF984AE4918C1",
+    "height": 138
+  }
 }
 ```
 
@@ -376,10 +395,9 @@ Parameters:
 
 ```
 {
-    "error": "Invalid Signature",
-    "code":500,
-    "result": {},
-    "rest api": "2.0"
+    "rest api": "2.0",
+    "error message": "Invalid Signature",
+    "code":500
 }
 ```
 ## StakingAPI

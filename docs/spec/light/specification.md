@@ -8,7 +8,7 @@ As we all know,  storage of cosmos-sdk based application contains multi substore
 
 ![Simple Merkle Tree](pics/simpleMerkleTree.png)
 
-As we have discussed in [LCD trust-propagation](https://github.com/irisnet/cosmos-sdk/tree/bianjie/lcd_spec/docs/spec/lcd#trust-propagation), the AppHash can be verified by checking voting power against a trusted validator set. Here we just need to build proof from ABCI state to AppHash.
+As we have discussed in [LCD trust-propagation](readme.md#how-does-lcd-achieve-high-security), the AppHash can be verified by checking voting power against a trusted validator set. Here we just need to build proof from ABCI state to AppHash.
 
 IAVL proof is implemented by [IAVL library](https://github.com/tendermint/iavl). If the target key exists, it can demonstrate that the key and value definitely exist in the store. Otherwise, if the key absents, it will return absence proof. The absence proof is very tricky. It contains a set of existence proof for a range of sorted keys which should cover the target key. However, the target key is not in the set. So the target key must not exist.
 
@@ -78,11 +78,11 @@ For instance:
 
 ## Load Balancing
 
-To improve LCD reliability and TPS, we recommend to connect LCD to more than one fullnode. But the complexity will increase a lot. So load balancing module will be imported as the adapter. Please refer to this link for detailed description: [load balancing](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/loadbalance.md)
+To improve LCD reliability and TPS, we recommend to connect LCD to more than one fullnode. But the complexity will increase a lot. So load balancing module will be imported as the adapter. Please refer to this link for detailed description: [load balancing](loadbalance.md)
 
 ## ICS1 (KeyAPI)
 
-1. **Query keys, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keys---get)**
+1. **Query keys, [API introduction](api.md#keys---get)**
 	* a. Load key store
 
    	 ```
@@ -128,7 +128,7 @@ To improve LCD reliability and TPS, we recommend to connect LCD to more than one
 	}, nil
     ```
 
-2. **Import key, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keys---post)**
+2. **Import key, [API introduction](api.md#keys---post)**
 
 	* a. Load key store
 	* b. Parameter checking. Name, password and seed should not be empty
@@ -136,25 +136,25 @@ To improve LCD reliability and TPS, we recommend to connect LCD to more than one
 	* d. Build key from key name, password and seed
 	* e. Persist key to key store
 
-3. **Generate seed, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keysseed---get)**
+3. **Generate seed, [API introduction](api.md#keysseed---get)**
 
 	* a. Load mock key store to avoid key persistence
 	* b. Generate random seed and return
 
-4. **Get key info by key name, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keysname---get)**
+4. **Get key info by key name, [API introduction](api.md#keysname---get)**
 
 	* a. Load key store
 	* b. Iterate the whole key store to find the key by name
 	* c. Encode address and public key to bech32 pattern
 
-5. **Update key password, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keysname---put)**
+5. **Update key password, [API introduction](api.md#keysname---put)**
 
 	* a. Load key store
 	* b. Iterate the whole key store to find the key by name
 	* c. Verify if the old-password match the current key password
 	* d. Re-persist the key with new password
 
-6. **Delete key, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keysname---delete)**
+6. **Delete key, [API introduction](api.md#keysname---delete)**
 
 	* a. Load key store
 	* b. Iterate the whole key store to find the key by name
@@ -163,19 +163,19 @@ To improve LCD reliability and TPS, we recommend to connect LCD to more than one
 
 ## ICS20 (TokenAPI)
 
-1. **Query asset information for specified account, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#balanceaccount---get)**
+1. **Query asset information for specified account, [API introduction](api.md#balanceaccount---get)**
 
 	* a. Decode address from bech32 to hex
 	* b. Send query request to a full node. Assert proof required in the request if LCD works on no-trust mode
 	* c. Verify the proof against trusted validator set
 	
-2. **Build unsigned transaction for transferring asset, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#create_transfer---post)**
+2. **Build unsigned transaction for transferring asset, [API introduction](api.md#create_transfer---post)**
   
 	* a. Parameter checking
 	* b. Build transaction with user specified parameters
 	* c. Serialize the transaction and return the byte array
 
-3. **Broadcast signed transaction for transferring asset, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#signed_transfer---post)**
+3. **Broadcast signed transaction for transferring asset, [API introduction](api.md#signed_transfer---post)**
 
 	* a. Users are supposed to sign the transaction byte array with their private key
 	* b. Broadcast transaction and its signature to full node
@@ -183,12 +183,12 @@ To improve LCD reliability and TPS, we recommend to connect LCD to more than one
 
 ## ICS21 (StakingAPI)
 
-1. **Get all validators' detailed information, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#stakevalidators---get)**
+1. **Get all validators' detailed information, [API introduction](api.md#stakevalidators---get)**
 
 	* a. Send query request to a full node
 	* b. Decode the query result and return
 
-2. **Get and verify the delegation information, [API introduction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#stakedelegatorbonding_statusvalidator---get)**
+2. **Get and verify the delegation information, [API introduction](api.md#stakedelegatorbonding_statusvalidator---get)**
 
 	* a. Verify and decode delegator address and validator address
 	* b. Send query request to a full node. Assert proof required in the request if LCD works on no-trust mode

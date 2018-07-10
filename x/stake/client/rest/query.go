@@ -231,7 +231,7 @@ type StakeValidatorOutput struct {
 
 	Commission            sdk.Rat `json:"commission"`              // XXX the commission rate of fees charged to any delegators
 	CommissionMax         sdk.Rat `json:"commission_max"`          // XXX maximum commission rate which this validator can ever charge
-	CommissionChangeRate  sdk.Rat `json:"commisrsion_change_rate"` // XXX maximum daily increase of the validator commission
+	CommissionChangeRate  sdk.Rat `json:"commission_change_rate"`  // XXX maximum daily increase of the validator commission
 	CommissionChangeToday sdk.Rat `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
 
 	// fee related

@@ -219,8 +219,8 @@ func (msg MsgBeginRedelegate) GetSignBytes() []byte {
 		SharesAmount     string         `json:"shares"`
 	}{
 		DelegatorAddr:    msg.DelegatorAddr,
-		ValidatorSrcAddr: msg.ValidatorSrcAddr.Bytes(),
-		ValidatorDstAddr: msg.ValidatorDstAddr.Bytes(),
+		ValidatorSrcAddr: msg.ValidatorSrcAddr,
+		ValidatorDstAddr: msg.ValidatorDstAddr,
 		SharesAmount:     msg.SharesAmount.String(),
 	})
 	if err != nil {

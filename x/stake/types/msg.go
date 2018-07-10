@@ -154,15 +154,7 @@ func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
 
 // get the bytes for the message signer to sign on
 func (msg MsgDelegate) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(struct {
-		DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-		ValidatorAddr sdk.AccAddress `json:"validator_addr"`
-		Bond          sdk.Coin       `json:"bond"`
-	}{
-		DelegatorAddr: msg.DelegatorAddr,
-		ValidatorAddr: msg.ValidatorAddr,
-		Bond:          msg.Bond,
-	})
+	b, err := MsgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -274,15 +266,7 @@ func (msg MsgCompleteRedelegate) GetSigners() []sdk.AccAddress {
 
 // get the bytes for the message signer to sign on
 func (msg MsgCompleteRedelegate) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(struct {
-		DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`
-		ValidatorSrcAddr sdk.AccAddress `json:"validator_src_addr"`
-		ValidatorDstAddr sdk.AccAddress `json:"validator_dst_addr"`
-	}{
-		DelegatorAddr:    msg.DelegatorAddr,
-		ValidatorSrcAddr: msg.ValidatorSrcAddr,
-		ValidatorDstAddr: msg.ValidatorDstAddr,
-	})
+	b, err := MsgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -379,13 +363,7 @@ func (msg MsgCompleteUnbonding) GetSigners() []sdk.AccAddress {
 
 // get the bytes for the message signer to sign on
 func (msg MsgCompleteUnbonding) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(struct {
-		DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-		ValidatorAddr sdk.AccAddress `json:"validator_src_addr"`
-	}{
-		DelegatorAddr: msg.DelegatorAddr,
-		ValidatorAddr: msg.ValidatorAddr.Bytes(),
-	})
+	b, err := MsgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}

@@ -30,8 +30,12 @@ func ErrNoValidatorFound(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidValidator, "validator does not exist for that address")
 }
 
-func ErrValidatorAlreadyExists(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "validator already exist, cannot re-create validator")
+func ErrValidatorOwnerExists(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "validator already exist for this owner-address, must use new validator-owner address")
+}
+
+func ErrValidatorPubKeyExists(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "validator already exist for this pubkey, must use new validator pubkey")
 }
 
 func ErrValidatorRevoked(codespace sdk.CodespaceType) sdk.Error {

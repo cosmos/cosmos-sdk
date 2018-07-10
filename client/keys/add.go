@@ -46,6 +46,8 @@ phrase, otherwise, a new key will be generated.`,
 	return cmd
 }
 
+// nolint: gocyclo
+// TODO remove the above when addressing #1446
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	var kb keys.Keybase
 	var err error
@@ -219,14 +221,14 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	keyOutput.Seed = mnemonic
 
-	output, err := json.MarshalIndent(keyOutput, "", "  ")
+	bz, err := json.Marshal(keyOutput)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	w.Write(output)
+	w.Write(bz)
 }
 
 // function to just a new seed to display in the UI before actually persisting it in the keybase

@@ -14,14 +14,17 @@ import (
 
 var (
 	priv1 = crypto.GenPrivKeyEd25519()
-	addr1 = priv1.PubKey().Address()
+	addr1 = sdk.AccAddress(priv1.PubKey().Address())
 	priv2 = crypto.GenPrivKeyEd25519()
-	addr2 = priv2.PubKey().Address()
-	addr3 = crypto.GenPrivKeyEd25519().PubKey().Address()
+	addr2 = sdk.AccAddress(priv2.PubKey().Address())
+	addr3 = sdk.AccAddress(crypto.GenPrivKeyEd25519().PubKey().Address())
 	priv4 = crypto.GenPrivKeyEd25519()
-	addr4 = priv4.PubKey().Address()
-	coins = sdk.NewCoin("foocoin", 10)
-	fee   = auth.StdFee{sdk.Coins{sdk.NewCoin("foocoin", 0)}, 100000}
+	addr4 = sdk.AccAddress(priv4.PubKey().Address())
+	coins = sdk.Coins{{"foocoin", sdk.NewInt(10)}}
+	fee   = auth.StdFee{
+		sdk.Coins{{"foocoin", sdk.NewInt(0)}},
+		100000,
+	}
 )
 
 // getMockApp returns an initialized mock application for this module.
@@ -68,10 +71,11 @@ func getInitChainer(mapp *mock.App, keeper Keeper) sdk.InitChainer {
 	}
 }
 
-func checkValidator(
-	t *testing.T, mapp *mock.App, keeper Keeper,
-	addr sdk.Address, expFound bool,
-) Validator {
+//__________________________________________________________________________________________
+
+func checkValidator(t *testing.T, mapp *mock.App, keeper Keeper,
+	addr sdk.AccAddress, expFound bool) Validator {
+
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	validator, found := keeper.GetValidator(ctxCheck, addr1)
 
@@ -79,10 +83,12 @@ func checkValidator(
 	return validator
 }
 
+
 func checkDelegation(
 	t *testing.T, mapp *mock.App, keeper Keeper, delegatorAddr,
-	validatorAddr sdk.Address, expFound bool, expShares sdk.Rat,
+	validatorAddr sdk.AccAddress, expFound bool, expShares sdk.Rat,
 ) {
+
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	delegation, found := keeper.GetDelegation(ctxCheck, delegatorAddr, validatorAddr)
 	if expFound {

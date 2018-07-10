@@ -16,7 +16,7 @@ import (
 const (
 	defaultIAVLCacheSize  = 10000
 	defaultIAVLNumRecent  = 100
-	defaultIAVLStoreEvery = 10000
+	defaultIAVLStoreEvery = 1
 )
 
 // load the iavl store
@@ -153,6 +153,20 @@ func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, false)
 }
 
+// Handle gatest the latest height, if height is 0
+func getHeight(tree *iavl.VersionedTree, req abci.RequestQuery) int64 {
+	height := req.Height
+	if height == 0 {
+		latest := tree.Version64()
+		if tree.VersionExists(latest - 1) {
+			height = latest - 1
+		} else {
+			height = latest
+		}
+	}
+	return height
+}
+
 // Query implements ABCI interface, allows queries
 //
 // by default we will return from (latest height -1),
@@ -167,24 +181,17 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	}
 
 	tree := st.tree
-	height := req.Height
-	if height == 0 {
-		latest := tree.Version64()
-		if tree.VersionExists(latest - 1) {
-			height = latest - 1
-		} else {
-			height = latest
-		}
-	}
-	// store the height we chose in the response
-	res.Height = height
+
+	// store the height we chose in the response, with 0 being changed to the
+	// latest height
+	res.Height = getHeight(tree, req)
 
 	switch req.Path {
 	case "/store", "/key": // Get by key
 		key := req.Data // Data holds the key bytes
 		res.Key = key
 		if req.Prove {
-			value, proof, err := tree.GetVersionedWithProof(key, height)
+			value, proof, err := tree.GetVersionedWithProof(key, res.Height)
 			if err != nil {
 				res.Log = err.Error()
 				break
@@ -198,7 +205,7 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			}
 			res.Proof = p
 		} else {
-			_, res.Value = tree.GetVersioned(key, height)
+			_, res.Value = tree.GetVersioned(key, res.Height)
 		}
 	case "/subspace":
 		subspace := req.Data

@@ -68,7 +68,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	stake.EndBlocker(ctx, sk)
 	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
 	require.True(t, sdk.NewRatFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
-	info, found := keeper.getValidatorSigningInfo(ctx, val.Address())
+	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))
 	require.False(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, int64(0), info.IndexOffset)
@@ -81,7 +81,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 		ctx = ctx.WithBlockHeight(height)
 		keeper.handleValidatorSignature(ctx, val, amtInt, true)
 	}
-	info, found = keeper.getValidatorSigningInfo(ctx, val.Address())
+	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, SignedBlocksWindow, info.SignedBlocksCounter)
@@ -91,7 +91,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 		ctx = ctx.WithBlockHeight(height)
 		keeper.handleValidatorSignature(ctx, val, amtInt, false)
 	}
-	info, found = keeper.getValidatorSigningInfo(ctx, val.Address())
+	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, SignedBlocksWindow-MinSignedPerWindow, info.SignedBlocksCounter)
@@ -105,7 +105,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	// 501st block missed
 	ctx = ctx.WithBlockHeight(height)
 	keeper.handleValidatorSignature(ctx, val, amtInt, false)
-	info, found = keeper.getValidatorSigningInfo(ctx, val.Address())
+	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, SignedBlocksWindow-MinSignedPerWindow-1, info.SignedBlocksCounter)
@@ -132,7 +132,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, int64(amtInt-1), pool.BondedTokens)
 
 	// validator start height should have been changed
-	info, found = keeper.getValidatorSigningInfo(ctx, val.Address())
+	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, height, info.StartHeight)
 	require.Equal(t, SignedBlocksWindow-MinSignedPerWindow-1, info.SignedBlocksCounter)
@@ -183,7 +183,7 @@ func TestHandleNewValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeight(SignedBlocksWindow + 2)
 	keeper.handleValidatorSignature(ctx, val, 100, false)
 
-	info, found := keeper.getValidatorSigningInfo(ctx, val.Address())
+	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(SignedBlocksWindow+1), info.StartHeight)
 	require.Equal(t, int64(2), info.IndexOffset)

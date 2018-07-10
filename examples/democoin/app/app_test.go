@@ -47,7 +47,7 @@ func TestGenesis(t *testing.T) {
 
 	// Construct some genesis bytes to reflect democoin/types/AppAccount
 	pk := crypto.GenPrivKeyEd25519().PubKey()
-	addr := pk.Address()
+	addr := sdk.AccAddress(pk.Address())
 	coins, err := sdk.ParseCoins("77foocoin,99barcoin")
 	require.Nil(t, err)
 	baseAcc := auth.BaseAccount{

@@ -149,24 +149,15 @@ func externalIP() (string, error) {
 		return "", err
 	}
 	for _, iface := range ifaces {
-		if iface.Flags&net.FlagUp == 0 {
-			continue // interface down
-		}
-		if iface.Flags&net.FlagLoopback != 0 {
-			continue // loopback interface
+		if skipInterface(iface) {
+			continue
 		}
 		addrs, err := iface.Addrs()
 		if err != nil {
 			return "", err
 		}
 		for _, addr := range addrs {
-			var ip net.IP
-			switch v := addr.(type) {
-			case *net.IPNet:
-				ip = v.IP
-			case *net.IPAddr:
-				ip = v.IP
-			}
+			ip := addrToIP(addr)
 			if ip == nil || ip.IsLoopback() {
 				continue
 			}
@@ -178,4 +169,25 @@ func externalIP() (string, error) {
 		}
 	}
 	return "", errors.New("are you connected to the network?")
+}
+
+func skipInterface(iface net.Interface) bool {
+	if iface.Flags&net.FlagUp == 0 {
+		return true // interface down
+	}
+	if iface.Flags&net.FlagLoopback != 0 {
+		return true // loopback interface
+	}
+	return false
+}
+
+func addrToIP(addr net.Addr) net.IP {
+	var ip net.IP
+	switch v := addr.(type) {
+	case *net.IPNet:
+		ip = v.IP
+	case *net.IPAddr:
+		ip = v.IP
+	}
+	return ip
 }

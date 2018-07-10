@@ -46,8 +46,8 @@ The `Account` interface captures this account model with getters and setters:
 // Account is a standard account using a sequence number for replay protection
 // and a pubkey for authentication.
 type Account interface {
-	GetAddress() sdk.Address
-	SetAddress(sdk.Address) error // errors if already set.
+	GetAddress() sdk.AccAddress
+	SetAddress(sdk.AccAddress) error // errors if already set.
 
 	GetPubKey() crypto.PubKey // can return nil.
 	SetPubKey(crypto.PubKey) error
@@ -76,11 +76,11 @@ The default implementation of `Account` is the `BaseAccount`:
 // Extend this by embedding this in your AppAccount.
 // See the examples/basecoin/types/account.go for an example.
 type BaseAccount struct {
-	Address       sdk.Address   `json:"address"`
-	Coins         sdk.Coins     `json:"coins"`
-	PubKey        crypto.PubKey `json:"public_key"`
-	AccountNumber int64         `json:"account_number"`
-	Sequence      int64         `json:"sequence"`
+	Address       sdk.AccAddress `json:"address"`
+	Coins         sdk.Coins      `json:"coins"`
+	PubKey        crypto.PubKey  `json:"public_key"`
+	AccountNumber int64          `json:"account_number"`
+	Sequence      int64          `json:"sequence"`
 }
 ```
 
@@ -260,7 +260,7 @@ The PubKey is required for signature verification, but it is only required in
 the StdSignature once. From that point on, it will be stored in the account.
 
 The fee is paid by the first address returned by `msg.GetSigners()` for the first `Msg`, 
-as provided by the `FeePayer(tx Tx) sdk.Address` function.
+as provided by the `FeePayer(tx Tx) sdk.AccAddress` function.
 
 ## CoinKeeper
 

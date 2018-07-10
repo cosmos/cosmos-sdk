@@ -37,6 +37,13 @@ func mod(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Mod(i, i2) }
 
 func neg(i *big.Int) *big.Int { return new(big.Int).Neg(i) }
 
+func min(i *big.Int, i2 *big.Int) *big.Int {
+	if i.Cmp(i2) == 1 {
+		return new(big.Int).Set(i2)
+	}
+	return new(big.Int).Set(i)
+}
+
 // MarshalAmino for custom encoding scheme
 func marshalAmino(i *big.Int) (string, error) {
 	bz, err := i.MarshalText()
@@ -225,6 +232,11 @@ func (i Int) DivRaw(i2 int64) Int {
 // Neg negates Int
 func (i Int) Neg() (res Int) {
 	return Int{neg(i.i)}
+}
+
+// Return the minimum of the ints
+func MinInt(i1, i2 Int) Int {
+	return Int{min(i1.BigInt(), i2.BigInt())}
 }
 
 func (i Int) String() string {
@@ -417,6 +429,11 @@ func (i Uint) Div(i2 Uint) (res Uint) {
 // Div divides Uint with int64
 func (i Uint) DivRaw(i2 uint64) Uint {
 	return i.Div(NewUint(i2))
+}
+
+// Return the minimum of the Uints
+func MinUint(i1, i2 Uint) Uint {
+	return Uint{min(i1.BigInt(), i2.BigInt())}
 }
 
 // MarshalAmino defines custom encoding scheme

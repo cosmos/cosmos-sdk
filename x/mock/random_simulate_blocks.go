@@ -31,11 +31,13 @@ func (app *App) RandomizedTestingFromSeed(
 	keys, addrs := GeneratePrivKeyAddressPairs(numKeys)
 	r := rand.New(rand.NewSource(seed))
 
+	RandomSetGenesis(r, app, addrs, []string{"foocoin"})
+	app.InitChain(abci.RequestInitChain{})
 	for i := 0; i < len(setups); i++ {
 		setups[i](r, keys)
 	}
+	app.Commit()
 
-	RandomSetGenesis(r, app, addrs, []string{"foocoin"})
 	header := abci.Header{Height: 0}
 
 	for i := 0; i < numBlocks; i++ {
@@ -51,6 +53,45 @@ func (app *App) RandomizedTestingFromSeed(
 		// "high load" blocks.
 		for j := 0; j < blockSize; j++ {
 			logUpdate, err := ops[r.Intn(len(ops))](t, r, app, ctx, keys, log)
+			log += "\n" + logUpdate
+
+			require.Nil(t, err, log)
+			app.assertAllInvariants(t, invariants, log)
+		}
+
+		app.EndBlock(abci.RequestEndBlock{})
+		header.Height++
+	}
+}
+
+func (app *App) SimpleRandomizedTestingFromSeed(
+	t *testing.T, seed int64, ops []TestAndRunMsg, setups []RandSetup,
+	invariants []Invariant, numKeys int, numBlocks int, blockSize int,
+) {
+	log := fmt.Sprintf("Starting SimpleSingleModuleTest with randomness created with seed %d", int(seed))
+	keys, addrs := GeneratePrivKeyAddressPairs(numKeys)
+	r := rand.New(rand.NewSource(seed))
+
+	RandomSetGenesis(r, app, addrs, []string{"foocoin"})
+	app.InitChain(abci.RequestInitChain{})
+	for i := 0; i < len(setups); i++ {
+		setups[i](r, keys)
+	}
+	app.Commit()
+
+	header := abci.Header{Height: 0}
+
+	for i := 0; i < numBlocks; i++ {
+		app.BeginBlock(abci.RequestBeginBlock{})
+
+		app.assertAllInvariants(t, invariants, log)
+
+		ctx := app.NewContext(false, header)
+
+		// TODO: Add modes to simulate "no load", "medium load", and
+		// "high load" blocks.
+		for j := 0; j < blockSize; j++ {
+			logUpdate, err := ops[r.Intn(len(ops))](t, r, ctx, keys, log)
 			log += "\n" + logUpdate
 
 			require.Nil(t, err, log)

@@ -17,6 +17,15 @@ type (
 		privKeys []crypto.PrivKey, log string,
 	) (action string, err sdk.Error)
 
+	// TestAndRunMsg produces a fuzzed message, calls the appropriate handler
+	// (bypassing all ante handler checks), and ensures that the state
+	// transition was as expected. It returns a descriptive message "action"
+	// about what this fuzzed msg actually did for ease of debugging.
+	TestAndRunMsg func(
+		t *testing.T, r *rand.Rand, ctx sdk.Context,
+		privKey []crypto.PrivKey, log string,
+	) (action string, err sdk.Error)
+
 	// RandSetup performs the random setup the mock module needs.
 	RandSetup func(r *rand.Rand, privKeys []crypto.PrivKey)
 

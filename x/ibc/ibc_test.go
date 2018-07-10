@@ -64,7 +64,7 @@ func TestIBC(t *testing.T) {
 	key := sdk.NewKVStoreKey("ibc")
 	ctx := defaultContext(key)
 
-	am := auth.NewAccountMapper(cdc, key, &auth.BaseAccount{})
+	am := auth.NewAccountMapper(cdc, key, auth.ProtoBaseAccount)
 	ck := bank.NewKeeper(am)
 
 	src := newAddress()

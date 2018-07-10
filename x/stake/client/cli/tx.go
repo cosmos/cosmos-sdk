@@ -241,14 +241,9 @@ func getShares(storeName string, cdc *wire.Codec, sharesAmountStr, sharesPercent
 		ctx := context.NewCoreContextFromViper()
 		resQuery, err := ctx.QueryStore(key, storeName)
 		if err != nil {
-			return sharesAmount, err
-		}
-		var delegation stake.Delegation
-		err = cdc.UnmarshalBinary(resQuery, &delegation)
-		if err != nil {
 			return sharesAmount, errors.Errorf("cannot find delegation to determine percent Error: %v", err)
 		}
-
+		delegation := types.MustUnmarshalDelegation(cdc, key, resQuery)
 		sharesAmount = sharesPercent.Mul(delegation.Shares)
 	}
 	return

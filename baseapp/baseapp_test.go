@@ -139,6 +139,21 @@ func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, exp
 	require.Equal(t, expectedID, lastID)
 }
 
+func TestOptionFunction(t *testing.T) {
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	codec := wire.NewCodec()
+	registerTestCodec(codec)
+	bap := NewBaseApp("starting name", codec, logger, db, testChangeNameHelper("new name"))
+	require.Equal(t, bap.name, "new name", "BaseApp should have had name changed via option function")
+}
+
+func testChangeNameHelper(name string) func(*BaseApp) {
+	return func(bap *BaseApp) {
+		bap.name = name
+	}
+}
+
 // Test that the app hash is static
 // TODO: https://github.com/cosmos/cosmos-sdk/issues/520
 /*func TestStaticAppHash(t *testing.T) {

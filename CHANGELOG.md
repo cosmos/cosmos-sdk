@@ -21,6 +21,7 @@ BREAKING CHANGES
 * [auth] Removed MsgChangePubKey
 * [auth] Removed SetPubKey from account mapper
 * [auth] AltBytes renamed to Memo, now a string, max 100 characters, costs a bit of gas
+* [baseapp] NewBaseApp now takes option functions as parameters
 * [types] `GetMsg()` -> `GetMsgs()` as txs wrap many messages
 * [types] Removed GetMemo from Tx (it is still on StdTx)
 * [types] renamed rational.Evaluate to rational.Round{Int64, Int}

@@ -21,10 +21,10 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) error 
 		keeper.SetValidator(ctx, validator)
 
 		if validator.PoolShares.Amount.IsZero() {
-			return errors.Errorf("genesis validator cannot have zero power, validator: %v", validator)
+			return errors.Errorf("genesis validator cannot have zero pool shares, validator: %v", validator)
 		}
 		if validator.DelegatorShares.IsZero() {
-			return errors.Errorf("genesis validator cannot have zero power, validator: %v", validator)
+			return errors.Errorf("genesis validator cannot have zero delegator shares, validator: %v", validator)
 		}
 
 		// Manually set indexes for the first time

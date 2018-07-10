@@ -37,7 +37,7 @@ func TestBeginBlocker(t *testing.T) {
 	}
 	BeginBlocker(ctx, req, keeper)
 
-	info, found := keeper.getValidatorSigningInfo(ctx, pk.Address())
+	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(pk.Address()))
 	require.True(t, found)
 	require.Equal(t, ctx.BlockHeight(), info.StartHeight)
 	require.Equal(t, int64(1), info.IndexOffset)

@@ -191,9 +191,11 @@ func (k Keeper) ClearTendermintUpdates(ctx sdk.Context) {
 
 //___________________________________________________________________________
 
-// perfom all the nessisary steps for when a validator changes its power
-// updates all validator stores as well as tendermint update store
-// may kick out validators if new validator is entering the bonded validator group
+// Perfom all the nessisary steps for when a validator changes its power.  This
+// function updates all validator stores as well as tendermint update store.
+// It may kick out validators if new validator is entering the bonded validator
+// group.
+//
 // nolint: gocyclo
 // TODO: Remove above nolint, function needs to be simplified
 func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) types.Validator {
@@ -203,7 +205,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 
 	validator = k.updateForRevoking(ctx, oldFound, oldValidator, validator)
 	powerIncreasing := k.getPowerIncreasing(ctx, oldFound, oldValidator, validator)
-	validator.BondHeight, validator.BondIntraTxCounter = k.getBondDetails(ctx, oldFound, oldValidator, validator)
+	validator.BondHeight, validator.BondIntraTxCounter = k.bondIncrement(ctx, oldFound, oldValidator, validator)
 	valPower := k.updateValidatorPower(ctx, oldFound, oldValidator, validator, pool)
 	cliffPower := k.GetCliffValidatorPower(ctx)
 
@@ -228,8 +230,8 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 
 	default:
 		// update the validator set for this validator
-		updatedVal := k.UpdateBondedValidators(ctx, validator)
-		if updatedVal.Owner != nil { // updates to validator occurred  to be updated
+		updatedVal, updated := k.UpdateBondedValidators(ctx, validator)
+		if updated { // updates to validator occurred  to be updated
 			validator = updatedVal
 		} else {
 
@@ -266,7 +268,8 @@ func (k Keeper) getPowerIncreasing(ctx sdk.Context, oldFound bool, oldValidator,
 	return false
 }
 
-func (k Keeper) getBondDetails(ctx sdk.Context, oldFound bool, oldValidator,
+// get the bond height and incremented intra-tx counter
+func (k Keeper) bondIncrement(ctx sdk.Context, oldFound bool, oldValidator,
 	newValidator types.Validator) (height int64, intraTxCounter int16) {
 
 	// if already a validator, copy the old block height and counter, else set them
@@ -296,25 +299,22 @@ func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidato
 	return valPower
 }
 
-// Update the validator group and kick out any old validators. In addition this
-// function adds (or doesn't add) a validator which has updated its bonded
-// tokens to the validator group. -> this validator is specified through the
-// updatedValidatorAddr term.
+// Update the bonded validator group based on a change to the validator
+// affectedValidator. This function potentially adds the affectedValidator to
+// the bonded validator group which kicks out the cliff validator. Under this
+// situation this function returns the updated affectedValidator.
 //
-// The correct subset is retrieved by iterating through an index of the
-// validators sorted by power, stored using the ValidatorsByPowerIndexKey.
-// Simultaneously the current validator records are updated in store with the
-// ValidatorsBondedIndexKey. This store is used to determine if a validator is
-// a validator without needing to iterate over the subspace as we do in
-// GetValidators.
-//
-// Optionally also return the validator from a retrieve address if the
-// validator has been bonded
+// The correct bonded subset of validators is retrieved by iterating through an
+// index of the validators sorted by power, stored using the
+// ValidatorsByPowerIndexKey.  Simultaneously the current validator records are
+// updated in store with the ValidatorsBondedIndexKey. This store is used to
+// determine if a validator is a validator without needing to iterate over all
+// validators.
 //
 // nolint: gocyclo
 // TODO: Remove the above golint
 func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
-	affectedValidator types.Validator) (updatedVal types.Validator) {
+	affectedValidator types.Validator) (updatedVal types.Validator, updated bool) {
 
 	store := ctx.KVStore(k.storeKey)
 
@@ -322,6 +322,7 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 	maxValidators := k.GetParams(ctx).MaxValidators
 	bondedValidatorsCount := 0
 	var validator, validatorToBond types.Validator
+	newValidatorBonded := false
 
 	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey) // largest to smallest
 	for {
@@ -347,6 +348,7 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 		if !validator.Revoked {
 			if validator.Status() != sdk.Bonded {
 				validatorToBond = validator
+				newValidatorBonded = true
 			}
 			bondedValidatorsCount++
 
@@ -366,8 +368,8 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 		k.clearCliffValidator(ctx)
 	}
 
-	// perform the validator swap for any new validators to add
-	if len(validatorToBond.Owner) > 0 {
+	// swap the cliff validator for a new validator if the affected validator was bonded
+	if newValidatorBonded {
 
 		// unbond the cliff validator
 		if oldCliffValidatorAddr != nil {
@@ -382,10 +384,10 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 		// bond the new validator
 		validator = k.bondValidator(ctx, validatorToBond)
 		if bytes.Equal(validator.Owner, affectedValidator.Owner) {
-			updatedVal = validator
+			return validator, true
 		}
 	}
-	return
+	return Validator{}, false
 }
 
 // full update of the bonded validator set, many can be added/kicked

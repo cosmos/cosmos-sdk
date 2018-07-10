@@ -199,78 +199,96 @@ func (k Keeper) ClearTendermintUpdates(ctx sdk.Context) {
 func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
-	ownerAddr := validator.Owner
+	oldValidator, oldFound := k.GetValidator(ctx, validator.Owner)
 
-	// always update the main list ordered by owner address before exiting
-	defer func() {
-		k.SetValidator(ctx, validator)
-	}()
+	validator = k.updateForRevoking(ctx, oldFound, oldValidator, validator)
+	powerIncreasing := k.getPowerIncreasing(ctx, oldFound, oldValidator, validator)
+	validator.BondHeight, validator.BondIntraTxCounter = k.getBondDetails(ctx, oldFound, oldValidator, validator)
+	valPower := k.updateValidatorPower(ctx, oldFound, oldValidator, validator, pool)
+	cliffPower := k.GetCliffValidatorPower(ctx)
 
-	// retrieve the old validator record
-	oldValidator, oldFound := k.GetValidator(ctx, ownerAddr)
+	switch {
+	// if already bonded and power increasing only need to update tendermint
+	case powerIncreasing && !validator.Revoked &&
+		(oldFound && oldValidator.Status() == sdk.Bonded):
 
-	if validator.Revoked && oldValidator.Status() == sdk.Bonded {
-		validator = k.unbondValidator(ctx, validator)
+		bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
+		store.Set(GetTendermintUpdatesKey(validator.Owner), bz)
+
+	// if was unbonded/or is a new validator - and the new power is less than the cliff validator
+	case cliffPower != nil &&
+		(!oldFound || (oldFound && oldValidator.Status() == sdk.Unbonded)) &&
+		bytes.Compare(valPower, cliffPower) == -1: //(valPower < cliffPower
+		// skip to completion
+
+	default:
+		// update the validator set for this validator
+		updatedVal := k.UpdateBondedValidators(ctx, validator)
+		if updatedVal.Owner != nil { // updates to validator occurred  to be updated
+			validator = updatedVal
+		} else {
+
+			// if decreased in power but still bonded, update Tendermint validator
+			// (if updatedVal is set, the validator has changed bonding status)
+			stillBonded := oldFound && oldValidator.Status() == sdk.Bonded
+			if stillBonded && oldValidator.PoolShares.Bonded().GT(validator.PoolShares.Bonded()) {
+				bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
+				store.Set(GetTendermintUpdatesKey(validator.Owner), bz)
+			}
+		}
+	}
+
+	k.SetValidator(ctx, validator)
+	return validator
+}
+
+func (k Keeper) updateForRevoking(ctx sdk.Context, oldFound bool, oldValidator, newValidator types.Validator) types.Validator {
+	if newValidator.Revoked && oldFound && oldValidator.Status() == sdk.Bonded {
+		newValidator = k.unbondValidator(ctx, newValidator)
 
 		// need to also clear the cliff validator spot because the revoke has
 		// opened up a new spot which will be filled when
 		// updateValidatorsBonded is called
 		k.clearCliffValidator(ctx)
 	}
+	return newValidator
+}
 
-	powerIncreasing := false
-	if oldFound && oldValidator.PoolShares.Bonded().LT(validator.PoolShares.Bonded()) {
-		powerIncreasing = true
+func (k Keeper) getPowerIncreasing(ctx sdk.Context, oldFound bool, oldValidator, newValidator types.Validator) bool {
+	if oldFound && oldValidator.PoolShares.Bonded().LT(newValidator.PoolShares.Bonded()) {
+		return true
 	}
+	return false
+}
+
+func (k Keeper) getBondDetails(ctx sdk.Context, oldFound bool, oldValidator,
+	newValidator types.Validator) (height int64, intraTxCounter int16) {
 
 	// if already a validator, copy the old block height and counter, else set them
 	if oldFound && oldValidator.Status() == sdk.Bonded {
-		validator.BondHeight = oldValidator.BondHeight
-		validator.BondIntraTxCounter = oldValidator.BondIntraTxCounter
-	} else {
-		validator.BondHeight = ctx.BlockHeight()
-		counter := k.GetIntraTxCounter(ctx)
-		validator.BondIntraTxCounter = counter
-		k.SetIntraTxCounter(ctx, counter+1)
+		height = oldValidator.BondHeight
+		intraTxCounter = oldValidator.BondIntraTxCounter
+		return
 	}
+	height = ctx.BlockHeight()
+	counter := k.GetIntraTxCounter(ctx)
+	intraTxCounter = counter
+	k.SetIntraTxCounter(ctx, counter+1)
+	return
+}
+
+func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidator,
+	newValidator types.Validator, pool types.Pool) (valPower []byte) {
+	store := ctx.KVStore(k.storeKey)
 
 	// update the list ordered by voting power
 	if oldFound {
 		store.Delete(GetValidatorsByPowerIndexKey(oldValidator, pool))
 	}
-	valPower := GetValidatorsByPowerIndexKey(validator, pool)
-	store.Set(valPower, validator.Owner)
+	valPower = GetValidatorsByPowerIndexKey(newValidator, pool)
+	store.Set(valPower, newValidator.Owner)
 
-	// efficiency case:
-	// if already bonded and power increasing only need to update tendermint
-	if powerIncreasing && !validator.Revoked && oldValidator.Status() == sdk.Bonded {
-		bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
-		store.Set(GetTendermintUpdatesKey(ownerAddr), bz)
-		return validator
-	}
-
-	// efficiency case:
-	// if was unbonded/or is a new validator - and the new power is less than the cliff validator
-	cliffPower := k.GetCliffValidatorPower(ctx)
-	if cliffPower != nil &&
-		(!oldFound || (oldFound && oldValidator.Status() == sdk.Unbonded)) &&
-		bytes.Compare(valPower, cliffPower) == -1 { //(valPower < cliffPower
-		return validator
-	}
-
-	// update the validator set for this validator
-	updatedVal := k.UpdateBondedValidators(ctx, validator)
-	if updatedVal.Owner != nil { // updates to validator occurred  to be updated
-		validator = updatedVal
-	}
-	// if decreased in power but still bonded, update Tendermint validator
-	// (if updatedVal is set, the validator has changed bonding status)
-	stillBonded := oldFound && oldValidator.Status() == sdk.Bonded && updatedVal.Owner == nil
-	if stillBonded && oldValidator.PoolShares.Bonded().GT(validator.PoolShares.Bonded()) {
-		bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
-		store.Set(GetTendermintUpdatesKey(ownerAddr), bz)
-	}
-	return validator
+	return valPower
 }
 
 // Update the validator group and kick out any old validators. In addition this

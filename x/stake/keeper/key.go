@@ -156,7 +156,7 @@ func GetUBDsByValIndexKey(validatorAddr sdk.AccAddress) []byte {
 
 // get the key for a redelegation
 // VALUE: stake/types.RedelegationKey
-func GetREDKey(delegatorAddr, validatorSrcAddr,	validatorDstAddr sdk.AccAddress) []byte {
+func GetREDKey(delegatorAddr, validatorSrcAddr, validatorDstAddr sdk.AccAddress) []byte {
 	return append(append(
 		GetREDsKey(delegatorAddr.Bytes()),
 		validatorSrcAddr.Bytes()...),

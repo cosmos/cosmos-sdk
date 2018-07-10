@@ -43,7 +43,7 @@ func TestGenesis(t *testing.T) {
 
 	// construct a pubkey and an address for the test account
 	pubkey := crypto.GenPrivKeyEd25519().PubKey()
-	addr := pubkey.Address()
+	addr := sdk.AccAddress(pubkey.Address())
 
 	// construct some test coins
 	coins, err := sdk.ParseCoins("77foocoin,99barcoin")

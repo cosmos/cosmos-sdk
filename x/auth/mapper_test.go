@@ -34,7 +34,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 
-	addr := sdk.Address([]byte("some-address"))
+	addr := sdk.AccAddress([]byte("some-address"))
 
 	// no account before its created
 	acc := mapper.GetAccount(ctx, addr)

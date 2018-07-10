@@ -61,8 +61,8 @@ type GenesisState struct {
 
 // GenesisAccount doesn't need pubkey or sequence
 type GenesisAccount struct {
-	Address sdk.Address `json:"address"`
-	Coins   sdk.Coins   `json:"coins"`
+	Address sdk.AccAddress `json:"address"`
+	Coins   sdk.Coins      `json:"coins"`
 }
 
 // Converts GenesisAccount to auth.BaseAccount for storage in account store

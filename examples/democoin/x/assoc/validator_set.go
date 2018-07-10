@@ -37,7 +37,7 @@ func NewValidatorSet(cdc *wire.Codec, key sdk.KVStoreGetter, valset sdk.Validato
 }
 
 // Implements sdk.ValidatorSet
-func (valset ValidatorSet) Validator(ctx sdk.Context, addr sdk.Address) (res sdk.Validator) {
+func (valset ValidatorSet) Validator(ctx sdk.Context, addr sdk.AccAddress) (res sdk.Validator) {
 	store := valset.key.KVStore(ctx)
 	base := store.Get(GetBaseKey(addr))
 	res = valset.ValidatorSet.Validator(ctx, base)
@@ -47,23 +47,23 @@ func (valset ValidatorSet) Validator(ctx sdk.Context, addr sdk.Address) (res sdk
 	return
 }
 
-// GetBaseKey :: sdk.Address -> sdk.Address
-func GetBaseKey(addr sdk.Address) []byte {
+// GetBaseKey :: sdk.AccAddress -> sdk.AccAddress
+func GetBaseKey(addr sdk.AccAddress) []byte {
 	return append([]byte{0x00}, addr...)
 }
 
-// GetAssocPrefix :: sdk.Address -> (sdk.Address -> byte)
-func GetAssocPrefix(base sdk.Address) []byte {
+// GetAssocPrefix :: sdk.AccAddress -> (sdk.AccAddress -> byte)
+func GetAssocPrefix(base sdk.AccAddress) []byte {
 	return append([]byte{0x01}, base...)
 }
 
-// GetAssocKey :: (sdk.Address, sdk.Address) -> byte
-func GetAssocKey(base sdk.Address, assoc sdk.Address) []byte {
+// GetAssocKey :: (sdk.AccAddress, sdk.AccAddress) -> byte
+func GetAssocKey(base sdk.AccAddress, assoc sdk.AccAddress) []byte {
 	return append(append([]byte{0x01}, base...), assoc...)
 }
 
 // Associate associates new address with validator address
-func (valset ValidatorSet) Associate(ctx sdk.Context, base sdk.Address, assoc sdk.Address) bool {
+func (valset ValidatorSet) Associate(ctx sdk.Context, base sdk.AccAddress, assoc sdk.AccAddress) bool {
 	if len(base) != valset.addrLen || len(assoc) != valset.addrLen {
 		return false
 	}
@@ -78,7 +78,7 @@ func (valset ValidatorSet) Associate(ctx sdk.Context, base sdk.Address, assoc sd
 }
 
 // Dissociate removes association between addresses
-func (valset ValidatorSet) Dissociate(ctx sdk.Context, base sdk.Address, assoc sdk.Address) bool {
+func (valset ValidatorSet) Dissociate(ctx sdk.Context, base sdk.AccAddress, assoc sdk.AccAddress) bool {
 	if len(base) != valset.addrLen || len(assoc) != valset.addrLen {
 		return false
 	}
@@ -93,9 +93,9 @@ func (valset ValidatorSet) Dissociate(ctx sdk.Context, base sdk.Address, assoc s
 }
 
 // Associations returns all associated addresses with a validator
-func (valset ValidatorSet) Associations(ctx sdk.Context, base sdk.Address) (res []sdk.Address) {
+func (valset ValidatorSet) Associations(ctx sdk.Context, base sdk.AccAddress) (res []sdk.AccAddress) {
 	store := valset.key.KVStore(ctx)
-	res = make([]sdk.Address, valset.maxAssoc)
+	res = make([]sdk.AccAddress, valset.maxAssoc)
 	iter := sdk.KVStorePrefixIterator(store, GetAssocPrefix(base))
 	i := 0
 	for ; iter.Valid(); iter.Next() {

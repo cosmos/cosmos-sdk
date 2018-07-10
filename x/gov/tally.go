@@ -6,14 +6,14 @@ import (
 
 // validatorGovInfo used for tallying
 type validatorGovInfo struct {
-	Address         sdk.Address // sdk.Address of the validator owner
-	Power           sdk.Rat     // Power of a Validator
-	DelegatorShares sdk.Rat     // Total outstanding delegator shares
-	Minus           sdk.Rat     // Minus of validator, used to compute validator's voting power
-	Vote            VoteOption  // Vote of the validator
+	Address         sdk.AccAddress // sdk.AccAddress of the validator owner
+	Power           sdk.Rat        // Power of a Validator
+	DelegatorShares sdk.Rat        // Total outstanding delegator shares
+	Minus           sdk.Rat        // Minus of validator, used to compute validator's voting power
+	Vote            VoteOption     // Vote of the validator
 }
 
-func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, nonVoting []sdk.Address) {
+func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, nonVoting []sdk.AccAddress) {
 	results := make(map[VoteOption]sdk.Rat)
 	results[OptionYes] = sdk.ZeroRat()
 	results[OptionAbstain] = sdk.ZeroRat()
@@ -67,7 +67,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, nonV
 	votesIterator.Close()
 
 	// Iterate over the validators again to tally their voting power and see who didn't vote
-	nonVoting = []sdk.Address{}
+	nonVoting = []sdk.AccAddress{}
 	for _, val := range currValidators {
 		if val.Vote == OptionEmpty {
 			nonVoting = append(nonVoting, val.Address)

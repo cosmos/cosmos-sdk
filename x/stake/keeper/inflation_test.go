@@ -342,6 +342,7 @@ func checkValidatorSetup(t *testing.T, pool types.Pool, initialTotalTokens, init
 }
 
 // Checks that The inflation will correctly increase or decrease after an update to the pool
+// nolint: gocyclo
 func checkInflation(t *testing.T, pool types.Pool, previousInflation, updatedInflation sdk.Rat, msg string) {
 	inflationChange := updatedInflation.Sub(previousInflation)
 

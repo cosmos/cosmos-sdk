@@ -36,9 +36,9 @@ func TestKeeper(t *testing.T) {
 	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
 	coinKeeper := NewKeeper(accountMapper)
 
-	addr := sdk.Address([]byte("addr1"))
-	addr2 := sdk.Address([]byte("addr2"))
-	addr3 := sdk.Address([]byte("addr3"))
+	addr := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+	addr3 := sdk.AccAddress([]byte("addr3"))
 	acc := accountMapper.NewAccountWithAddress(ctx, addr)
 
 	// Test GetCoins/SetCoins
@@ -122,9 +122,9 @@ func TestSendKeeper(t *testing.T) {
 	coinKeeper := NewKeeper(accountMapper)
 	sendKeeper := NewSendKeeper(accountMapper)
 
-	addr := sdk.Address([]byte("addr1"))
-	addr2 := sdk.Address([]byte("addr2"))
-	addr3 := sdk.Address([]byte("addr3"))
+	addr := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+	addr3 := sdk.AccAddress([]byte("addr3"))
 	acc := accountMapper.NewAccountWithAddress(ctx, addr)
 
 	// Test GetCoins/SetCoins
@@ -191,7 +191,7 @@ func TestViewKeeper(t *testing.T) {
 	coinKeeper := NewKeeper(accountMapper)
 	viewKeeper := NewViewKeeper(accountMapper)
 
-	addr := sdk.Address([]byte("addr1"))
+	addr := sdk.AccAddress([]byte("addr1"))
 	acc := accountMapper.NewAccountWithAddress(ctx, addr)
 
 	// Test GetCoins/SetCoins

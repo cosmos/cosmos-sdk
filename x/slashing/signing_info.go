@@ -8,7 +8,7 @@ import (
 )
 
 // Stored by *validator* address (not owner address)
-func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.Address) (info ValidatorSigningInfo, found bool) {
+func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.ValAddress) (info ValidatorSigningInfo, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(GetValidatorSigningInfoKey(address))
 	if bz == nil {
@@ -21,14 +21,14 @@ func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.Address) (i
 }
 
 // Stored by *validator* address (not owner address)
-func (k Keeper) setValidatorSigningInfo(ctx sdk.Context, address sdk.Address, info ValidatorSigningInfo) {
+func (k Keeper) setValidatorSigningInfo(ctx sdk.Context, address sdk.ValAddress, info ValidatorSigningInfo) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(info)
 	store.Set(GetValidatorSigningInfoKey(address), bz)
 }
 
 // Stored by *validator* address (not owner address)
-func (k Keeper) getValidatorSigningBitArray(ctx sdk.Context, address sdk.Address, index int64) (signed bool) {
+func (k Keeper) getValidatorSigningBitArray(ctx sdk.Context, address sdk.ValAddress, index int64) (signed bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(GetValidatorSigningBitArrayKey(address, index))
 	if bz == nil {
@@ -41,7 +41,7 @@ func (k Keeper) getValidatorSigningBitArray(ctx sdk.Context, address sdk.Address
 }
 
 // Stored by *validator* address (not owner address)
-func (k Keeper) setValidatorSigningBitArray(ctx sdk.Context, address sdk.Address, index int64, signed bool) {
+func (k Keeper) setValidatorSigningBitArray(ctx sdk.Context, address sdk.ValAddress, index int64, signed bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(signed)
 	store.Set(GetValidatorSigningBitArrayKey(address, index), bz)
@@ -72,12 +72,12 @@ func (i ValidatorSigningInfo) HumanReadableString() string {
 }
 
 // Stored by *validator* address (not owner address)
-func GetValidatorSigningInfoKey(v sdk.Address) []byte {
+func GetValidatorSigningInfoKey(v sdk.ValAddress) []byte {
 	return append([]byte{0x01}, v.Bytes()...)
 }
 
 // Stored by *validator* address (not owner address)
-func GetValidatorSigningBitArrayKey(v sdk.Address, i int64) []byte {
+func GetValidatorSigningBitArrayKey(v sdk.ValAddress, i int64) []byte {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, uint64(i))
 	return append([]byte{0x02}, append(v.Bytes(), b...)...)

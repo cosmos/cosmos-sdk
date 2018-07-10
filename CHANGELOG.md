@@ -129,6 +129,7 @@ BUG FIXES
 * \#1461 - CLI tests now no longer reset your local environment data
 * \#1505 - `gaiacli stake validator` no longer panics if validator doesn't exist
 * \#1565 - fix cliff validator persisting when validator set shrinks from max
+* \#1287 - prevent zero power validators at genesis
 * [x/stake] fix bug when unbonding/redelegating using `--shares-percent`
 * \#1010 - two validators can't bond with the same pubkey anymore
 

@@ -86,10 +86,7 @@ FEATURES
 * [types] Added MinInt and MinUint functions
 * [gaiad] `unsafe_reset_all` now resets addrbook.json
 * [democoin] add x/oracle, x/assoc
-* [gaiacli] Ledger support added
-  - You can now use a Ledger with `gaiacli --ledger` for all key-related commands
-  - Ledger keys can be named and tracked locally in the key DB
-* [tests] created a randomized testing framework.
+* [tests] created a randomized testing framework. 
   - Currently bank has limited functionality in the framework
   - Auth has its invariants checked within the framework
 * [tests] Add WaitForNextNBlocksTM helper method

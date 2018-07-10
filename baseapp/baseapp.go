@@ -554,7 +554,6 @@ func getState(app *BaseApp, mode runTxMode) *state {
 
 // txBytes may be nil in some cases, eg. in tests.
 // Also, in the future we may support "internal" transactions.
-// nolint: gocyclo
 func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
 	//NOTE: GasWanted should be returned by the AnteHandler.
 	// GasUsed is determined by the GasMeter.

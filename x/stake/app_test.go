@@ -65,7 +65,10 @@ func getInitChainer(mapp *mock.App, keeper Keeper) sdk.InitChainer {
 		stakeGenesis := DefaultGenesisState()
 		stakeGenesis.Pool.LooseTokens = 100000
 
-		InitGenesis(ctx, keeper, stakeGenesis)
+		err := InitGenesis(ctx, keeper, stakeGenesis)
+		if err != nil {
+			panic(err)
+		}
 
 		return abci.ResponseInitChain{}
 	}
@@ -82,7 +85,6 @@ func checkValidator(t *testing.T, mapp *mock.App, keeper Keeper,
 	require.Equal(t, expFound, found)
 	return validator
 }
-
 
 func checkDelegation(
 	t *testing.T, mapp *mock.App, keeper Keeper, delegatorAddr,

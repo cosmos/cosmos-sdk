@@ -5,14 +5,14 @@ To start a rest server, we need to specify the following parameters:
 | Parameter   | Type      | Default                 | Required | Description                                          |
 | ----------- | --------- | ----------------------- | -------- | ---------------------------------------------------- |
 | chain-id    | string    | null                    | true     | chain id of the full node to connect                 |
-| node-list   | URL       | "tcp://localhost:26657" | true     | address list of the full node to connect, for example: "tcp://10.10.10.10:26657,tcp://20.20.20.20:26657"                  |
-| laddr       | URL       | "tcp://localhost:1317"  | true     | address to run the rest server on                    |
-| trust-node  | bool      | "false"                 | true     | Whether this LCD is connected to a trusted full node |
+| node-list   | URL       | "tcp://localhost:26657" | false     | address list of the full node to connect, for example: "tcp://10.10.10.10:26657,tcp://20.20.20.20:26657"                  |
+| laddr       | URL       | "tcp://localhost:1317"  | false     | address to run the rest server on                    |
+| trust-node  | bool      | "false"                 | false     | Whether this LCD is connected to a trusted full node |
 
 **Sample command** :
 
 ```
-gaiacli advanced rest-server --chain-id=test --laddr=tcp://localhost:1317  --node tcp://localhost:46657 --trust-node=false
+gaiacli advanced rest-server-swagger --chain-id=test-chain-RtAS0K
 ```
 
 ## LCD Use Cases

@@ -132,7 +132,7 @@ Parameters: null
 
 ### /ICS19/keys/get/{name} - GET
 
-url: //ICS19keys/get/{name}, Method: GET
+url: /ICS19/keys/get/{name}, Method: GET
 
 Functionality: Get key information according to the specified key name
 
@@ -165,9 +165,9 @@ Parameters: null
 ```
 
 
-### /keys/{name} - PUT
+### /ICS19/keys/{name} - PUT
 
-url: /keys/{name}, Method: PUT
+url: /ICS19/keys/{name}, Method: PUT
 
 Functionality: Update key password
 
@@ -208,9 +208,9 @@ Parameters:
 ```
 
 
-### /keys/{name} - DELETE
+### /ICS19/keys/{name} - DELETE
 
-url: /keys/{name}, Method: DELETE
+url: /ICS19/keys/{name}, Method: DELETE
 
 Functionality: Delete key from keystore
 

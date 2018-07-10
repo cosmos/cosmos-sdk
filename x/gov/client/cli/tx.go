@@ -29,7 +29,7 @@ const (
 // submit a proposal tx
 func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "submitproposal",
+		Use:   "submit-proposal",
 		Short: "Submit a proposal along with an initial deposit",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			title := viper.GetString(flagTitle)
@@ -38,7 +38,7 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 			initialDeposit := viper.GetString(flagDeposit)
 
 			// get the from address from the name flag
-			from, err := sdk.GetAccAddressBech32(viper.GetString(flagProposer))
+			from, err := sdk.AccAddressFromBech32(viper.GetString(flagProposer))
 			if err != nil {
 				return err
 			}
@@ -63,13 +63,13 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
+			// proposalID must be returned, and it is a part of response
+			ctx.PrintResponse = true
 
-			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
+			err = ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}
-
-			fmt.Printf("Committed at block:%d. Hash:%s.Response:%+v \n", res.Height, res.Hash.String(), res.DeliverTx)
 			return nil
 		},
 	}
@@ -90,7 +90,7 @@ func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 		Short: "deposit tokens for activing proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// get the from address from the name flag
-			depositer, err := sdk.GetAccAddressBech32(viper.GetString(flagDepositer))
+			depositer, err := sdk.AccAddressFromBech32(viper.GetString(flagDepositer))
 			if err != nil {
 				return err
 			}
@@ -113,11 +113,10 @@ func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
-			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
+			err = ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}
-			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
 			return nil
 		},
 	}
@@ -137,7 +136,7 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			bechVoter := viper.GetString(flagVoter)
-			voter, err := sdk.GetAccAddressBech32(bechVoter)
+			voter, err := sdk.AccAddressFromBech32(bechVoter)
 			if err != nil {
 				return err
 			}
@@ -164,11 +163,10 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
-			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
+			err = ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}
-			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
 			return nil
 		},
 	}
@@ -220,7 +218,7 @@ func GetCmdQueryVote(storeName string, cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			proposalID := viper.GetInt64(flagProposalID)
 
-			voterAddr, err := sdk.GetAccAddressBech32(viper.GetString(flagVoter))
+			voterAddr, err := sdk.AccAddressFromBech32(viper.GetString(flagVoter))
 			if err != nil {
 				return err
 			}

@@ -7,8 +7,8 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,11 +28,11 @@ func defaultContext(key sdk.StoreKey) sdk.Context {
 	return ctx
 }
 
-func newAddress() crypto.Address {
-	return crypto.GenPrivKeyEd25519().PubKey().Address()
+func newAddress() sdk.AccAddress {
+	return sdk.AccAddress(crypto.GenPrivKeyEd25519().PubKey().Address())
 }
 
-func getCoins(ck bank.Keeper, ctx sdk.Context, addr crypto.Address) (sdk.Coins, sdk.Error) {
+func getCoins(ck bank.Keeper, ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, sdk.Error) {
 	zero := sdk.Coins(nil)
 	coins, _, err := ck.AddCoins(ctx, addr, zero)
 	return coins, err
@@ -52,6 +52,8 @@ func makeCodec() *wire.Codec {
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/ibc/Account", nil)
 	wire.RegisterCrypto(cdc)
+
+	cdc.Seal()
 
 	return cdc
 }

@@ -9,8 +9,8 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,15 +23,15 @@ import (
 // TODO remove dependencies on staking (should only refer to validator set type from sdk)
 
 var (
-	addrs = []sdk.Address{
-		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6160"),
-		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6161"),
-		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6162"),
-	}
 	pks = []crypto.PubKey{
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB50"),
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51"),
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
+	}
+	addrs = []sdk.AccAddress{
+		sdk.AccAddress(pks[0].Address()),
+		sdk.AccAddress(pks[1].Address()),
+		sdk.AccAddress(pks[2].Address()),
 	}
 	initCoins sdk.Int = sdk.NewInt(200)
 )
@@ -64,7 +64,9 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, Keep
 	sk := stake.NewKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
 	genesis.Pool.LooseTokens = initCoins.MulRaw(int64(len(addrs))).Int64()
-	stake.InitGenesis(ctx, sk, genesis)
+	err = stake.InitGenesis(ctx, sk, genesis)
+	require.Nil(t, err)
+
 	for _, addr := range addrs {
 		_, _, err = ck.AddCoins(ctx, addr, sdk.Coins{
 			{sk.GetParams(ctx).BondDenom, initCoins},
@@ -85,12 +87,12 @@ func newPubKey(pk string) (res crypto.PubKey) {
 	return pkEd
 }
 
-func testAddr(addr string) sdk.Address {
+func testAddr(addr string) sdk.AccAddress {
 	res := []byte(addr)
 	return res
 }
 
-func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
+func newTestMsgCreateValidator(address sdk.AccAddress, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
 	return stake.MsgCreateValidator{
 		Description:    stake.Description{},
 		ValidatorAddr:  address,

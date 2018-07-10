@@ -12,14 +12,14 @@ const MsgType = "gov"
 //-----------------------------------------------------------
 // MsgSubmitProposal
 type MsgSubmitProposal struct {
-	Title          string       //  Title of the proposal
-	Description    string       //  Description of the proposal
-	ProposalType   ProposalKind //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-	Proposer       sdk.Address  //  Address of the proposer
-	InitialDeposit sdk.Coins    //  Initial deposit paid by sender. Must be strictly positive.
+	Title          string         //  Title of the proposal
+	Description    string         //  Description of the proposal
+	ProposalType   ProposalKind   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	Proposer       sdk.AccAddress //  Address of the proposer
+	InitialDeposit sdk.Coins      //  Initial deposit paid by sender. Must be strictly positive.
 }
 
-func NewMsgSubmitProposal(title string, description string, proposalType ProposalKind, proposer sdk.Address, initialDeposit sdk.Coins) MsgSubmitProposal {
+func NewMsgSubmitProposal(title string, description string, proposalType ProposalKind, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
 	return MsgSubmitProposal{
 		Title:          title,
 		Description:    description,
@@ -67,38 +67,38 @@ func (msg MsgSubmitProposal) Get(key interface{}) (value interface{}) {
 // Implements Msg.
 func (msg MsgSubmitProposal) GetSignBytes() []byte {
 	b, err := msgCdc.MarshalJSON(struct {
-		Title          string    `json:"title"`
-		Description    string    `json:"description"`
-		ProposalType   string    `json:"proposal_type"`
-		Proposer       string    `json:"proposer"`
-		InitialDeposit sdk.Coins `json:"deposit"`
+		Title          string         `json:"title"`
+		Description    string         `json:"description"`
+		ProposalType   string         `json:"proposal_type"`
+		Proposer       sdk.AccAddress `json:"proposer"`
+		InitialDeposit sdk.Coins      `json:"deposit"`
 	}{
 		Title:          msg.Title,
 		Description:    msg.Description,
 		ProposalType:   ProposalTypeToString(msg.ProposalType),
-		Proposer:       sdk.MustBech32ifyVal(msg.Proposer),
+		Proposer:       msg.Proposer,
 		InitialDeposit: msg.InitialDeposit,
 	})
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // Implements Msg.
-func (msg MsgSubmitProposal) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.Proposer}
+func (msg MsgSubmitProposal) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Proposer}
 }
 
 //-----------------------------------------------------------
 // MsgDeposit
 type MsgDeposit struct {
-	ProposalID int64       `json:"proposalID"` // ID of the proposal
-	Depositer  sdk.Address `json:"depositer"`  // Address of the depositer
-	Amount     sdk.Coins   `json:"amount"`     // Coins to add to the proposal's deposit
+	ProposalID int64          `json:"proposalID"` // ID of the proposal
+	Depositer  sdk.AccAddress `json:"depositer"`  // Address of the depositer
+	Amount     sdk.Coins      `json:"amount"`     // Coins to add to the proposal's deposit
 }
 
-func NewMsgDeposit(depositer sdk.Address, proposalID int64, amount sdk.Coins) MsgDeposit {
+func NewMsgDeposit(depositer sdk.AccAddress, proposalID int64, amount sdk.Coins) MsgDeposit {
 	return MsgDeposit{
 		ProposalID: proposalID,
 		Depositer:  depositer,
@@ -138,34 +138,34 @@ func (msg MsgDeposit) Get(key interface{}) (value interface{}) {
 // Implements Msg.
 func (msg MsgDeposit) GetSignBytes() []byte {
 	b, err := msgCdc.MarshalJSON(struct {
-		ProposalID int64     `json:"proposalID"`
-		Depositer  string    `json:"proposer"`
-		Amount     sdk.Coins `json:"deposit"`
+		ProposalID int64          `json:"proposalID"`
+		Depositer  sdk.AccAddress `json:"proposer"`
+		Amount     sdk.Coins      `json:"deposit"`
 	}{
 		ProposalID: msg.ProposalID,
-		Depositer:  sdk.MustBech32ifyVal(msg.Depositer),
+		Depositer:  msg.Depositer,
 		Amount:     msg.Amount,
 	})
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // Implements Msg.
-func (msg MsgDeposit) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.Depositer}
+func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Depositer}
 }
 
 //-----------------------------------------------------------
 // MsgVote
 type MsgVote struct {
-	ProposalID int64       //  proposalID of the proposal
-	Voter      sdk.Address //  address of the voter
-	Option     VoteOption  //  option from OptionSet chosen by the voter
+	ProposalID int64          //  proposalID of the proposal
+	Voter      sdk.AccAddress //  address of the voter
+	Option     VoteOption     //  option from OptionSet chosen by the voter
 }
 
-func NewMsgVote(voter sdk.Address, proposalID int64, option VoteOption) MsgVote {
+func NewMsgVote(voter sdk.AccAddress, proposalID int64, option VoteOption) MsgVote {
 	return MsgVote{
 		ProposalID: proposalID,
 		Voter:      voter,
@@ -202,21 +202,21 @@ func (msg MsgVote) Get(key interface{}) (value interface{}) {
 // Implements Msg.
 func (msg MsgVote) GetSignBytes() []byte {
 	b, err := msgCdc.MarshalJSON(struct {
-		ProposalID int64  `json:"proposalID"`
-		Voter      string `json:"voter"`
-		Option     string `json:"option"`
+		ProposalID int64          `json:"proposalID"`
+		Voter      sdk.AccAddress `json:"voter"`
+		Option     string         `json:"option"`
 	}{
 		ProposalID: msg.ProposalID,
-		Voter:      sdk.MustBech32ifyVal(msg.Voter),
+		Voter:      msg.Voter,
 		Option:     VoteOptionToString(msg.Option),
 	})
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // Implements Msg.
-func (msg MsgVote) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.Voter}
+func (msg MsgVote) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Voter}
 }

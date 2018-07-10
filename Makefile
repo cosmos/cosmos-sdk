@@ -92,14 +92,8 @@ test: test_unit
 test_cli:
 	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test`
 
-test_cli_retry:
-	for i in 1 2 3; do make test_cli && break || sleep 2; done
-
 test_unit:
 	@go test $(PACKAGES_NOCLITEST)
-
-test_unit_retry:
-	for i in 1 2 3; do make test_unit && break || sleep 2; done
 
 test_race:
 	@go test -race $(PACKAGES_NOCLITEST)
@@ -108,7 +102,7 @@ test_cover:
 	@bash tests/test_cover.sh
 
 test_lint:
-	gometalinter.v2 --disable-all --enable='golint' --enable='misspell' --enable='unparam' --enable='unconvert' --enable='ineffassign' --linter='vet:go vet -composites=false:PATH:LINE:MESSAGE' --enable='vet' --deadline=500s --vendor ./...
+	gometalinter.v2 --config=tools/gometalinter.json ./...
 	!(gometalinter.v2 --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 

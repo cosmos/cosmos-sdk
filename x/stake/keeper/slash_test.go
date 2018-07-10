@@ -160,7 +160,7 @@ func TestSlashRedelegation(t *testing.T) {
 	// shares decreased
 	del, found = keeper.GetDelegation(ctx, addrDels[0], addrVals[1])
 	require.True(t, found)
-	require.Equal(t, int64(5), del.Shares.Evaluate())
+	require.Equal(t, int64(5), del.Shares.RoundInt64())
 	// pool bonded tokens decreased
 	newPool := keeper.GetPool(ctx)
 	require.Equal(t, int64(5), oldPool.BondedTokens-newPool.BondedTokens)
@@ -193,7 +193,7 @@ func TestSlashAtCurrentHeight(t *testing.T) {
 	// power decreased
 	require.Equal(t, sdk.NewRat(5), validator.GetPower())
 	// pool bonded shares decreased
-	require.Equal(t, sdk.NewRat(5).Evaluate(), oldPool.BondedShares.Sub(newPool.BondedShares).Evaluate())
+	require.Equal(t, sdk.NewRat(5).RoundInt64(), oldPool.BondedShares.Sub(newPool.BondedShares).RoundInt64())
 }
 
 // tests Slash at a previous height with an unbonding delegation
@@ -291,10 +291,10 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// just 1 bonded token burned again since that's all the validator now has
 	require.Equal(t, int64(10), oldPool.BondedTokens-newPool.BondedTokens)
 	// read updated validator
-	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
-	require.True(t, found)
 	// power decreased by 1 again, validator is out of stake
-	require.Equal(t, sdk.NewRat(0), validator.GetPower())
+	// ergo validator should have been removed from the store
+	_, found = keeper.GetValidatorByPubKey(ctx, pk)
+	require.False(t, found)
 }
 
 // tests Slash at a previous height with a redelegation
@@ -387,16 +387,16 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// four more bonded tokens burned
 	require.Equal(t, int64(16), oldPool.BondedTokens-newPool.BondedTokens)
 	// read updated validator
-	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
-	require.True(t, found)
-	// power decreased by 4, down to 0
-	require.Equal(t, sdk.NewRat(0), validator.GetPower())
+	// validator decreased to zero power, should have been removed from the store
+	_, found = keeper.GetValidatorByPubKey(ctx, pk)
+	require.False(t, found)
 
 	// slash the validator again, by 100%
 	// no stake remains to be slashed
 	ctx = ctx.WithBlockHeight(12)
-	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
-	require.True(t, found)
+	// validator no longer in the store
+	_, found = keeper.GetValidatorByPubKey(ctx, pk)
+	require.False(t, found)
 	keeper.Slash(ctx, pk, 10, 10, sdk.OneRat())
 
 	// read updating redelegation
@@ -409,10 +409,9 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// no more bonded tokens burned
 	require.Equal(t, int64(16), oldPool.BondedTokens-newPool.BondedTokens)
 	// read updated validator
-	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
-	require.True(t, found)
-	// power still zero
-	require.Equal(t, sdk.NewRat(0), validator.GetPower())
+	// power still zero, still not in the store
+	_, found = keeper.GetValidatorByPubKey(ctx, pk)
+	require.False(t, found)
 }
 
 // tests Slash at a previous height with both an unbonding delegation and a redelegation

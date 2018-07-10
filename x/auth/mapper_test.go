@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,7 +34,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 
-	addr := sdk.Address([]byte("some-address"))
+	addr := sdk.AccAddress([]byte("some-address"))
 
 	// no account before its created
 	acc := mapper.GetAccount(ctx, addr)

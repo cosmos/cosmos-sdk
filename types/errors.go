@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	cmn "github.com/tendermint/tmlibs/common"
+	cmn "github.com/tendermint/tendermint/libs/common"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -66,6 +66,7 @@ const (
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
+// nolint: gocyclo
 func CodeToDefaultMsg(code CodeType) string {
 	switch code {
 	case CodeInternal:

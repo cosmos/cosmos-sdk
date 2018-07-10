@@ -27,6 +27,7 @@ func TestNewFromDecimal(t *testing.T) {
 		expErr     bool
 		exp        Rat
 	}{
+		{"", true, Rat{}},
 		{"0", false, NewRat(0)},
 		{"1", false, NewRat(1)},
 		{"1.1", false, NewRat(11, 10)},
@@ -168,8 +169,8 @@ func TestEvaluate(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		require.Equal(t, tc.res, tc.r1.Evaluate(), "%v", tc.r1)
-		require.Equal(t, tc.res*-1, tc.r1.Mul(NewRat(-1)).Evaluate(), "%v", tc.r1.Mul(NewRat(-1)))
+		require.Equal(t, tc.res, tc.r1.RoundInt64(), "%v", tc.r1)
+		require.Equal(t, tc.res*-1, tc.r1.Mul(NewRat(-1)).RoundInt64(), "%v", tc.r1.Mul(NewRat(-1)))
 	}
 }
 

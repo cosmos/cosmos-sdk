@@ -37,10 +37,38 @@ func NewRat(Numerator int64, Denominator ...int64) Rat {
 	}
 }
 
+func getNumeratorDenominator(str []string, prec int) (numerator string, denom int64, err Error) {
+	switch len(str) {
+	case 1:
+		if len(str[0]) == 0 {
+			return "", 0, ErrUnknownRequest("not a decimal string")
+		}
+		numerator = str[0]
+		return numerator, 1, nil
+	case 2:
+		if len(str[0]) == 0 || len(str[1]) == 0 {
+			return "", 0, ErrUnknownRequest("not a decimal string")
+		}
+		if len(str[1]) > prec {
+			return "", 0, ErrUnknownRequest("string has too many decimals")
+		}
+		numerator = str[0] + str[1]
+		len := int64(len(str[1]))
+		denom = new(big.Int).Exp(big.NewInt(10), big.NewInt(len), nil).Int64()
+		return numerator, denom, nil
+	default:
+		return "", 0, ErrUnknownRequest("not a decimal string")
+	}
+}
+
 // create a rational from decimal string or integer string
 // precision is the number of values after the decimal point which should be read
 func NewRatFromDecimal(decimalStr string, prec int) (f Rat, err Error) {
 	// first extract any negative symbol
+	if len(decimalStr) == 0 {
+		return f, ErrUnknownRequest("decimal string is empty")
+	}
+
 	neg := false
 	if string(decimalStr[0]) == "-" {
 		neg = true
@@ -49,26 +77,9 @@ func NewRatFromDecimal(decimalStr string, prec int) (f Rat, err Error) {
 
 	str := strings.Split(decimalStr, ".")
 
-	var numStr string
-	var denom int64 = 1
-	switch len(str) {
-	case 1:
-		if len(str[0]) == 0 {
-			return f, ErrUnknownRequest("not a decimal string")
-		}
-		numStr = str[0]
-	case 2:
-		if len(str[0]) == 0 || len(str[1]) == 0 {
-			return f, ErrUnknownRequest("not a decimal string")
-		}
-		if len(str[1]) > prec {
-			return f, ErrUnknownRequest("string has too many decimals")
-		}
-		numStr = str[0] + str[1]
-		len := int64(len(str[1]))
-		denom = new(big.Int).Exp(big.NewInt(10), big.NewInt(len), nil).Int64()
-	default:
-		return f, ErrUnknownRequest("not a decimal string")
+	numStr, denom, err := getNumeratorDenominator(str, prec)
+	if err != nil {
+		return f, err
 	}
 
 	num, errConv := strconv.Atoi(numStr)
@@ -174,20 +185,20 @@ func (r Rat) EvaluateBig() *big.Int {
 	return d
 }
 
-// evaluate the rational using bankers rounding
-func (r Rat) Evaluate() int64 {
+// RoundInt64 rounds the rational using bankers rounding
+func (r Rat) RoundInt64() int64 {
 	return r.EvaluateBig().Int64()
 }
 
-// EvaulateInt evaludates the rational using EvaluateBig
-func (r Rat) EvaluateInt() Int {
+// RoundInt round the rational using bankers rounding
+func (r Rat) RoundInt() Int {
 	return NewIntFromBigInt(r.EvaluateBig())
 }
 
 // round Rat with the provided precisionFactor
 func (r Rat) Round(precisionFactor int64) Rat {
 	rTen := Rat{new(big.Rat).Mul(r.Rat, big.NewRat(precisionFactor, 1))}
-	return Rat{big.NewRat(rTen.Evaluate(), precisionFactor)}
+	return Rat{big.NewRat(rTen.RoundInt64(), precisionFactor)}
 }
 
 // TODO panic if negative or if totalDigits < len(initStr)???

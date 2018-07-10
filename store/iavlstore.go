@@ -7,15 +7,16 @@ import (
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
-	cmn "github.com/tendermint/tmlibs/common"
-	dbm "github.com/tendermint/tmlibs/db"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	dbm "github.com/tendermint/tendermint/libs/db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
 	defaultIAVLCacheSize  = 10000
-	defaultIAVLNumHistory = 1<<53 - 1 // DEPRECATED
+	defaultIAVLNumRecent  = 100
+	defaultIAVLStoreEvery = 1
 )
 
 // load the iavl store
@@ -25,7 +26,7 @@ func LoadIAVLStore(db dbm.DB, id CommitID) (CommitStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	store := newIAVLStore(tree, defaultIAVLNumHistory)
+	store := newIAVLStore(tree, defaultIAVLNumRecent, defaultIAVLStoreEvery)
 	return store, nil
 }
 
@@ -42,17 +43,25 @@ type iavlStore struct {
 	tree *iavl.VersionedTree
 
 	// How many old versions we hold onto.
-	// A value of 0 means keep all history.
-	numHistory int64
+	// A value of 0 means keep no recent states
+	numRecent int64
+
+	// Distance between state-sync waypoint states to be stored
+	// See https://github.com/tendermint/tendermint/issues/828
+	// A value of 1 means store every state
+	// A value of 0 means store no waypoints (node cannot assist in state-sync)
+	// By default this value should be set the same across all nodes,
+	// so that nodes can know the waypoints their peers store
+	// TODO if set to non-default, signal to peers that the node is not suitable as a state sync source
+	storeEvery int64
 }
 
 // CONTRACT: tree should be fully loaded.
-// TODO: use more numHistory's, so the below nolint can be removed
-// nolint: unparam
-func newIAVLStore(tree *iavl.VersionedTree, numHistory int64) *iavlStore {
+func newIAVLStore(tree *iavl.VersionedTree, numRecent int64, storeEvery int64) *iavlStore {
 	st := &iavlStore{
 		tree:       tree,
-		numHistory: numHistory,
+		numRecent:  numRecent,
+		storeEvery: storeEvery,
 	}
 	return st
 }
@@ -67,13 +76,15 @@ func (st *iavlStore) Commit() CommitID {
 		panic(err)
 	}
 
-	// Release an old version of history
-	if st.numHistory > 0 && (st.numHistory < st.tree.Version64()) {
-		toRelease := version - st.numHistory
-		err := st.tree.DeleteVersion(toRelease)
-		if err != nil {
-			// TODO: Handle with #870
-			panic(err)
+	// Release an old version of history, if not a sync waypoint
+	previous := version - 1
+	if st.numRecent < previous {
+		toRelease := previous - st.numRecent
+		if st.storeEvery == 0 || toRelease%st.storeEvery != 0 {
+			err := st.tree.DeleteVersion(toRelease)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 
@@ -89,6 +100,11 @@ func (st *iavlStore) LastCommitID() CommitID {
 		Version: st.tree.Version64(),
 		Hash:    st.tree.Hash(),
 	}
+}
+
+// VersionExists returns whether or not a given version is stored
+func (st *iavlStore) VersionExists(version int64) bool {
+	return st.tree.VersionExists(version)
 }
 
 // Implements Store.
@@ -137,6 +153,20 @@ func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, false)
 }
 
+// Handle gatest the latest height, if height is 0
+func getHeight(tree *iavl.VersionedTree, req abci.RequestQuery) int64 {
+	height := req.Height
+	if height == 0 {
+		latest := tree.Version64()
+		if tree.VersionExists(latest - 1) {
+			height = latest - 1
+		} else {
+			height = latest
+		}
+	}
+	return height
+}
+
 // Query implements ABCI interface, allows queries
 //
 // by default we will return from (latest height -1),
@@ -151,24 +181,17 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	}
 
 	tree := st.tree
-	height := req.Height
-	if height == 0 {
-		latest := tree.Version64()
-		if tree.VersionExists(latest - 1) {
-			height = latest - 1
-		} else {
-			height = latest
-		}
-	}
-	// store the height we chose in the response
-	res.Height = height
+
+	// store the height we chose in the response, with 0 being changed to the
+	// latest height
+	res.Height = getHeight(tree, req)
 
 	switch req.Path {
 	case "/store", "/key": // Get by key
 		key := req.Data // Data holds the key bytes
 		res.Key = key
 		if req.Prove {
-			value, proof, err := tree.GetVersionedWithProof(key, height)
+			value, proof, err := tree.GetVersionedWithProof(key, res.Height)
 			if err != nil {
 				res.Log = err.Error()
 				break
@@ -182,7 +205,7 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			}
 			res.Proof = p
 		} else {
-			_, res.Value = tree.GetVersioned(key, height)
+			_, res.Value = tree.GetVersioned(key, res.Height)
 		}
 	case "/subspace":
 		subspace := req.Data

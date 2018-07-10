@@ -5,9 +5,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"math/rand"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/mock"
+	"github.com/cosmos/cosmos-sdk/x/mock"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -16,12 +18,12 @@ import (
 // test bank module in a mock application
 var (
 	priv1     = crypto.GenPrivKeyEd25519()
-	addr1     = priv1.PubKey().Address()
+	addr1     = sdk.AccAddress(priv1.PubKey().Address())
 	priv2     = crypto.GenPrivKeyEd25519()
-	addr2     = priv2.PubKey().Address()
-	addr3     = crypto.GenPrivKeyEd25519().PubKey().Address()
+	addr2     = sdk.AccAddress(priv2.PubKey().Address())
+	addr3     = sdk.AccAddress(crypto.GenPrivKeyEd25519().PubKey().Address())
 	priv4     = crypto.GenPrivKeyEd25519()
-	addr4     = priv4.PubKey().Address()
+	addr4     = sdk.AccAddress(priv4.PubKey().Address())
 	coins     = sdk.Coins{sdk.NewCoin("foocoin", 10)}
 	halfCoins = sdk.Coins{sdk.NewCoin("foocoin", 5)}
 	manyCoins = sdk.Coins{sdk.NewCoin("foocoin", 1), sdk.NewCoin("barcoin", 1)}
@@ -81,17 +83,19 @@ func getMockApp(t *testing.T) *mock.App {
 	return mapp
 }
 
-// getBenchmarkMockApp initializes a mock application for this module, for purposes of benchmarking
-// Any long term API support commitments do not apply to this function.
-func getBenchmarkMockApp() (*mock.App, error) {
-	mapp := mock.NewApp()
+func TestBankWithRandomMessages(t *testing.T) {
+	mapp := getMockApp(t)
+	setup := func(r *rand.Rand, keys []crypto.PrivKey) {
+		return
+	}
 
-	RegisterWire(mapp.Cdc)
-	coinKeeper := NewKeeper(mapp.AccountMapper)
-	mapp.Router().AddRoute("bank", NewHandler(coinKeeper))
-
-	err := mapp.CompleteSetup([]*sdk.KVStoreKey{})
-	return mapp, err
+	mapp.RandomizedTesting(
+		t,
+		[]mock.TestAndRunTx{TestAndRunSingleInputMsgSend},
+		[]mock.RandSetup{setup},
+		[]mock.Invariant{ModuleInvariants},
+		100, 30, 30,
+	)
 }
 
 func TestMsgSendWithAccounts(t *testing.T) {

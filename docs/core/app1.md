@@ -30,7 +30,7 @@ type Msg interface {
     // Signers returns the addrs of signers that must sign.
     // CONTRACT: All signatures must be present to be valid.
     // CONTRACT: Returns addrs in some deterministic order.
-    GetSigners() []Address
+    GetSigners() []AccAddress
 }
 ```
 
@@ -43,8 +43,8 @@ For instance, take the simple token sending message type from app1.go:
 ```go
 // MsgSend to send coins from Input to Output
 type MsgSend struct {
-	From   sdk.Address `json:"from"`
-	To     sdk.Address `json:"to"`
+	From   sdk.AccAddress `json:"from"`
+	To     sdk.AccAddress `json:"to"`
 	Amount sdk.Coins   `json:"amount"`
 }
 
@@ -65,8 +65,8 @@ func (msg MsgSend) GetSignBytes() []byte {
 }
 
 // Implements Msg. Return the signer.
-func (msg MsgSend) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.From}
+func (msg MsgSend) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.From}
 }
 ```
 
@@ -189,7 +189,7 @@ docs](https://godoc.org/github.com/cosmos/cosmos-sdk/types#Context) for more det
 ### Result
 
 Handler takes a Context and Msg and returns a Result.
-Result is motivated by the corresponding [ABCI result](https://github.com/tendermint/tendermint/abci/blob/master/types/types.proto#L165).
+Result is motivated by the corresponding [ABCI result](https://github.com/tendermint/tendermint/blob/master/abci/types/types.proto#L165).
 It contains return values, error information, logs, and meta data about the transaction:
 
 ```go
@@ -277,7 +277,7 @@ Coins](https://godoc.org/github.com/cosmos/cosmos-sdk/types#Coins).
 Now we're ready to handle the two parts of the MsgSend:
 
 ```go
-func handleFrom(store sdk.KVStore, from sdk.Address, amt sdk.Coins) sdk.Result {
+func handleFrom(store sdk.KVStore, from sdk.AccAddress, amt sdk.Coins) sdk.Result {
 	// Get sender account from the store.
 	accBytes := store.Get(from)
 	if accBytes == nil {
@@ -315,7 +315,7 @@ func handleFrom(store sdk.KVStore, from sdk.Address, amt sdk.Coins) sdk.Result {
 	return sdk.Result{}
 }
 
-func handleTo(store sdk.KVStore, to sdk.Address, amt sdk.Coins) sdk.Result {
+func handleTo(store sdk.KVStore, to sdk.AccAddress, amt sdk.Coins) sdk.Result {
 	// Add msg amount to receiver account
 	accBytes := store.Get(to)
 	var acc appAccount
@@ -409,7 +409,7 @@ func txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 Finally, we stitch it all together using the `BaseApp`.
 
 The BaseApp is an abstraction over the [Tendermint
-ABCI](https://github.com/tendermint/tendermint/abci) that
+ABCI](https://github.com/tendermint/tendermint/tree/master/abci) that
 simplifies application development by handling common low-level concerns.
 It serves as the mediator between the two key components of an SDK app: the store
 and the message handlers. The BaseApp implements the
@@ -473,7 +473,7 @@ Tendermint consensus engine. It would be initialized by a Genesis file, and it
 would be driven by blocks of transactions committed by the underlying Tendermint
 consensus. We'll talk more about ABCI and how this all works a bit later, but
 feel free to check the
-[specification](https://github.com/tendermint/tendermint/abci/blob/master/specification.md).
+[specification](https://github.com/tendermint/tendermint/blob/master/docs/abci-spec.md).
 We'll also see how to connect our app to a complete suite of components
 for running and using a live blockchain application.
 

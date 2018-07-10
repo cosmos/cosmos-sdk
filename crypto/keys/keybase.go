@@ -8,7 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 	tcrypto "github.com/tendermint/tendermint/crypto"
-	dbm "github.com/tendermint/tmlibs/db"
+	dbm "github.com/tendermint/tendermint/libs/db"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bip39"
@@ -188,6 +188,9 @@ func (kb dbKeybase) List() ([]Info, error) {
 // Get returns the public information about one key.
 func (kb dbKeybase) Get(name string) (Info, error) {
 	bs := kb.db.Get(infoKey(name))
+	if len(bs) == 0 {
+		return nil, fmt.Errorf("Key %s not found", name)
+	}
 	return readInfo(bs)
 }
 

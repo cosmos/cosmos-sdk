@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tmlibs/log"
+	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
@@ -27,7 +27,7 @@ func TestPowHandler(t *testing.T) {
 
 	handler := keeper.Handler
 
-	addr := sdk.Address([]byte("sender"))
+	addr := sdk.AccAddress([]byte("sender"))
 	count := uint64(1)
 	difficulty := uint64(2)
 

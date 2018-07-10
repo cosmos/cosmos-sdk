@@ -7,13 +7,13 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tmlibs/log"
+	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
-func newTestMsg(addrs ...sdk.Address) *sdk.TestMsg {
+func newTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
 	return sdk.NewTestMsg(addrs...)
 }
 
@@ -31,9 +31,9 @@ func newCoins() sdk.Coins {
 }
 
 // generate a priv key and return it with its address
-func privAndAddr() (crypto.PrivKey, sdk.Address) {
+func privAndAddr() (crypto.PrivKey, sdk.AccAddress) {
 	priv := crypto.GenPrivKeyEd25519()
-	addr := priv.PubKey().Address()
+	addr := sdk.AccAddress(priv.PubKey().Address())
 	return priv, addr
 }
 
@@ -135,7 +135,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	tx = newTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 	// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
-	expectedSigners := []sdk.Address{addr1, addr2, addr3}
+	expectedSigners := []sdk.AccAddress{addr1, addr2, addr3}
 	stdTx := tx.(StdTx)
 	require.Equal(t, expectedSigners, stdTx.GetSigners())
 

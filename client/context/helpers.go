@@ -3,15 +3,15 @@ package context
 import (
 	"fmt"
 
-	"github.com/tendermint/tmlibs/common"
+	"github.com/tendermint/tendermint/libs/common"
 
 	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	cmn "github.com/tendermint/tendermint/libs/common"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	cmn "github.com/tendermint/tmlibs/common"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -109,7 +109,7 @@ func (ctx CoreContext) queryStore(key cmn.HexBytes, storeName, endPath string) (
 }
 
 // Get the from address from the name flag
-func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
+func (ctx CoreContext) GetFromAddress() (from sdk.AccAddress, err error) {
 
 	keybase, err := keys.GetKeyBase()
 	if err != nil {
@@ -126,7 +126,7 @@ func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 		return nil, errors.Errorf("no key for: %s", name)
 	}
 
-	return info.GetPubKey().Address(), nil
+	return sdk.AccAddress(info.GetPubKey().Address()), nil
 }
 
 // sign and build the transaction from the msg
@@ -141,13 +141,22 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msgs []sdk.Msg, cdc
 	sequence := ctx.Sequence
 	memo := ctx.Memo
 
+	fee := sdk.Coin{}
+	if ctx.Fee != "" {
+		parsedFee, err := sdk.ParseCoin(ctx.Fee)
+		if err != nil {
+			return nil, err
+		}
+		fee = parsedFee
+	}
+
 	signMsg := auth.StdSignMsg{
 		ChainID:       chainID,
 		AccountNumber: accnum,
 		Sequence:      sequence,
 		Msgs:          msgs,
 		Memo:          memo,
-		Fee:           auth.NewStdFee(ctx.Gas, sdk.Coin{}), // TODO run simulate to estimate gas?
+		Fee:           auth.NewStdFee(ctx.Gas, fee), // TODO run simulate to estimate gas?
 	}
 
 	keybase, err := keys.GetKeyBase()
@@ -215,25 +224,58 @@ func (ctx CoreContext) ensureSignBuild(name string, msgs []sdk.Msg, cdc *wire.Co
 }
 
 // sign and build the transaction from the msg
-func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
+func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc *wire.Codec) (err error) {
 
 	txBytes, err := ctx.ensureSignBuild(name, msgs, cdc)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return ctx.BroadcastTx(txBytes)
-}
-
-// sign and build the async transaction from the msg
-func (ctx CoreContext) EnsureSignBuildBroadcastAsync(name string, msgs []sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTx, err error) {
-
-	txBytes, err := ctx.ensureSignBuild(name, msgs, cdc)
+	if ctx.Async {
+		res, err := ctx.BroadcastTxAsync(txBytes)
+		if err != nil {
+			return err
+		}
+		if ctx.JSON {
+			type toJSON struct {
+				TxHash string
+			}
+			valueToJSON := toJSON{res.Hash.String()}
+			JSON, err := cdc.MarshalJSON(valueToJSON)
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(JSON))
+		} else {
+			fmt.Println("Async tx sent. tx hash: ", res.Hash.String())
+		}
+		return nil
+	}
+	res, err := ctx.BroadcastTx(txBytes)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	return ctx.BroadcastTxAsync(txBytes)
+	if ctx.JSON {
+		// Since JSON is intended for automated scripts, always include response in JSON mode
+		type toJSON struct {
+			Height   int64
+			TxHash   string
+			Response string
+		}
+		valueToJSON := toJSON{res.Height, res.Hash.String(), fmt.Sprintf("%+v", res.DeliverTx)}
+		JSON, err := cdc.MarshalJSON(valueToJSON)
+		if err != nil {
+			return err
+		}
+		fmt.Println(string(JSON))
+		return nil
+	}
+	if ctx.PrintResponse {
+		fmt.Printf("Committed at block %d. Hash: %s Response:%+v \n", res.Height, res.Hash.String(), res.DeliverTx)
+	} else {
+		fmt.Printf("Committed at block %d. Hash: %s \n", res.Height, res.Hash.String())
+	}
+	return nil
 }
 
 // get the next sequence for the account address

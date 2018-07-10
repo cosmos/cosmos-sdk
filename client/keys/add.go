@@ -15,7 +15,7 @@ import (
 	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
-	"github.com/tendermint/tmlibs/cli"
+	"github.com/tendermint/tendermint/libs/cli"
 )
 
 const (
@@ -46,6 +46,8 @@ phrase, otherwise, a new key will be generated.`,
 	return cmd
 }
 
+// nolint: gocyclo
+// TODO remove the above when addressing #1446
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	var kb keys.Keybase
 	var err error
@@ -161,12 +163,6 @@ type NewKeyBody struct {
 	Password string `json:"password"`
 }
 
-// new key response REST body
-type NewKeyResponse struct {
-	Address  string `json:"address"`
-	Mnemonic string `json:"mnemonic"`
-}
-
 // add new key REST handler
 func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	var kb keys.Keybase
@@ -215,15 +211,23 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	bz, err := json.Marshal(NewKeyResponse{
-		Address:  info.GetPubKey().Address().String(),
-		Mnemonic: mnemonic,
-	})
+
+	keyOutput, err := Bech32KeyOutput(info)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
+
+	keyOutput.Seed = mnemonic
+
+	bz, err := json.Marshal(keyOutput)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
 	w.Write(bz)
 }
 

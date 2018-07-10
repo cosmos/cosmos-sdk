@@ -3,9 +3,9 @@ package app
 import (
 	"encoding/json"
 
-	cmn "github.com/tendermint/tmlibs/common"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -51,13 +51,13 @@ var _ sdk.Msg = MsgSend{}
 
 // MsgSend to send coins from Input to Output
 type MsgSend struct {
-	From   sdk.Address `json:"from"`
-	To     sdk.Address `json:"to"`
-	Amount sdk.Coins   `json:"amount"`
+	From   sdk.AccAddress `json:"from"`
+	To     sdk.AccAddress `json:"to"`
+	Amount sdk.Coins      `json:"amount"`
 }
 
 // NewMsgSend
-func NewMsgSend(from, to sdk.Address, amt sdk.Coins) MsgSend {
+func NewMsgSend(from, to sdk.AccAddress, amt sdk.Coins) MsgSend {
 	return MsgSend{from, to, amt}
 }
 
@@ -85,12 +85,12 @@ func (msg MsgSend) GetSignBytes() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return bz
+	return sdk.MustSortJSON(bz)
 }
 
 // Implements Msg. Return the signer.
-func (msg MsgSend) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.From}
+func (msg MsgSend) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.From}
 }
 
 // Returns the sdk.Tags for the message
@@ -136,7 +136,7 @@ func handleMsgSend(key *sdk.KVStoreKey) sdk.Handler {
 }
 
 // Convenience Handlers
-func handleFrom(store sdk.KVStore, from sdk.Address, amt sdk.Coins) sdk.Result {
+func handleFrom(store sdk.KVStore, from sdk.AccAddress, amt sdk.Coins) sdk.Result {
 	// Get sender account from the store.
 	accBytes := store.Get(from)
 	if accBytes == nil {
@@ -174,7 +174,7 @@ func handleFrom(store sdk.KVStore, from sdk.Address, amt sdk.Coins) sdk.Result {
 	return sdk.Result{}
 }
 
-func handleTo(store sdk.KVStore, to sdk.Address, amt sdk.Coins) sdk.Result {
+func handleTo(store sdk.KVStore, to sdk.AccAddress, amt sdk.Coins) sdk.Result {
 	// Add msg amount to receiver account
 	accBytes := store.Get(to)
 	var acc appAccount

@@ -3,21 +3,19 @@ package cool
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 	bank "github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/mock"
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var (
 	priv1  = crypto.GenPrivKeyEd25519()
 	pubKey = priv1.PubKey()
-	addr1  = pubKey.Address()
+	addr1  = sdk.AccAddress(pubKey.Address())
 
 	quizMsg1 = MsgQuiz{
 		Sender:     addr1,

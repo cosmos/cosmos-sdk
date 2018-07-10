@@ -3,6 +3,7 @@ package stake
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -14,7 +15,7 @@ import (
 
 //______________________________________________________________________
 
-func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt int64) MsgCreateValidator {
+func newTestMsgCreateValidator(address sdk.AccAddress, pubKey crypto.PubKey, amt int64) MsgCreateValidator {
 	return MsgCreateValidator{
 		Description:    Description{},
 		ValidatorAddr:  address,
@@ -23,7 +24,7 @@ func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt in
 	}
 }
 
-func newTestMsgDelegate(delegatorAddr, validatorAddr sdk.Address, amt int64) MsgDelegate {
+func newTestMsgDelegate(delegatorAddr, validatorAddr sdk.AccAddress, amt int64) MsgDelegate {
 	return MsgDelegate{
 		DelegatorAddr: delegatorAddr,
 		ValidatorAddr: validatorAddr,
@@ -56,7 +57,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	// verify the self-delegation exists
 	bond, found := keeper.GetDelegation(ctx, validatorAddr, validatorAddr)
 	require.True(t, found)
-	gotBond := bond.Shares.Evaluate()
+	gotBond := bond.Shares.RoundInt64()
 	require.Equal(t, initBond, gotBond,
 		"initBond: %v\ngotBond: %v\nbond: %v\n",
 		initBond, gotBond, bond)
@@ -78,8 +79,8 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	keeper.Revoke(ctx, keep.PKs[0])
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, sdk.Unbonded, validator.PoolShares.Status)             // ensure is unbonded
-	require.Equal(t, int64(500000), validator.PoolShares.Amount.Evaluate()) // ensure is unbonded
+	require.Equal(t, sdk.Unbonded, validator.PoolShares.Status)               // ensure is unbonded
+	require.Equal(t, int64(500000), validator.PoolShares.Amount.RoundInt64()) // ensure is unbonded
 
 	// the old power record should have been deleted as the power changed
 	require.False(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power))
@@ -118,25 +119,45 @@ func TestValidatorByPowerIndex(t *testing.T) {
 func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 
-	validatorAddr := keep.Addrs[0]
-	pk := keep.PKs[0]
-	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, pk, 10)
-	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	addr1, addr2 := keep.Addrs[0], keep.Addrs[1]
+	pk1, pk2 := keep.PKs[0], keep.PKs[1]
+
+	msgCreateValidator1 := newTestMsgCreateValidator(addr1, pk1, 10)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator1, keeper)
 	require.True(t, got.IsOK(), "%v", got)
-	validator, found := keeper.GetValidator(ctx, validatorAddr)
+	validator, found := keeper.GetValidator(ctx, addr1)
 
 	require.True(t, found)
-	require.Equal(t, sdk.Bonded, validator.Status())
-	require.Equal(t, validatorAddr, validator.Owner)
-	require.Equal(t, pk, validator.PubKey)
-	require.Equal(t, sdk.NewRat(10), validator.PoolShares.Bonded())
-	require.Equal(t, sdk.NewRat(10), validator.DelegatorShares)
-	require.Equal(t, Description{}, validator.Description)
+	assert.Equal(t, sdk.Bonded, validator.Status())
+	assert.Equal(t, addr1, validator.Owner)
+	assert.Equal(t, pk1, validator.PubKey)
+	assert.Equal(t, sdk.NewRat(10), validator.PoolShares.Bonded())
+	assert.Equal(t, sdk.NewRat(10), validator.DelegatorShares)
+	assert.Equal(t, Description{}, validator.Description)
 
-	// one validator cannot bond twice
-	msgCreateValidator.PubKey = keep.PKs[1]
-	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	// two validators can't have the same owner address
+	msgCreateValidator2 := newTestMsgCreateValidator(addr1, pk2, 10)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator2, keeper)
 	require.False(t, got.IsOK(), "%v", got)
+
+	// two validators can't have the same pubkey
+	msgCreateValidator3 := newTestMsgCreateValidator(addr2, pk1, 10)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator3, keeper)
+	require.False(t, got.IsOK(), "%v", got)
+
+	// must have different pubkey and owner
+	msgCreateValidator4 := newTestMsgCreateValidator(addr2, pk2, 10)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator4, keeper)
+	require.True(t, got.IsOK(), "%v", got)
+	validator, found = keeper.GetValidator(ctx, addr2)
+
+	require.True(t, found)
+	assert.Equal(t, sdk.Bonded, validator.Status())
+	assert.Equal(t, addr2, validator.Owner)
+	assert.Equal(t, pk2, validator.PubKey)
+	assert.Equal(t, sdk.NewRat(10), validator.PoolShares.Bonded())
+	assert.Equal(t, sdk.NewRat(10), validator.DelegatorShares)
+	assert.Equal(t, Description{}, validator.Description)
 }
 
 func TestIncrementsMsgDelegate(t *testing.T) {
@@ -155,20 +176,20 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, validator.Status())
-	require.Equal(t, bondAmount, validator.DelegatorShares.Evaluate())
-	require.Equal(t, bondAmount, validator.PoolShares.Bonded().Evaluate(), "validator: %v", validator)
+	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt64())
+	require.Equal(t, bondAmount, validator.PoolShares.Bonded().RoundInt64(), "validator: %v", validator)
 
 	_, found = keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
 	require.False(t, found)
 
 	bond, found := keeper.GetDelegation(ctx, validatorAddr, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, bondAmount, bond.Shares.Evaluate())
+	require.Equal(t, bondAmount, bond.Shares.RoundInt64())
 
 	pool := keeper.GetPool(ctx)
 	exRate := validator.DelegatorShareExRate(pool)
 	require.True(t, exRate.Equal(sdk.OneRat()), "expected exRate 1 got %v", exRate)
-	require.Equal(t, bondAmount, pool.BondedShares.Evaluate())
+	require.Equal(t, bondAmount, pool.BondedShares.RoundInt64())
 	require.Equal(t, bondAmount, pool.BondedTokens)
 
 	// just send the same msgbond multiple times
@@ -196,8 +217,8 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 
 		require.Equal(t, bond.Height, int64(i), "Incorrect bond height")
 
-		gotBond := bond.Shares.Evaluate()
-		gotDelegatorShares := validator.DelegatorShares.Evaluate()
+		gotBond := bond.Shares.RoundInt64()
+		gotDelegatorShares := validator.DelegatorShares.RoundInt64()
 		gotDelegatorAcc := accMapper.GetAccount(ctx, delegatorAddr).GetCoins().AmountOf(params.BondDenom)
 
 		require.Equal(t, expBond, gotBond,
@@ -230,8 +251,8 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, initBond*2, validator.DelegatorShares.Evaluate())
-	require.Equal(t, initBond*2, validator.PoolShares.Bonded().Evaluate())
+	require.Equal(t, initBond*2, validator.DelegatorShares.RoundInt64())
+	require.Equal(t, initBond*2, validator.PoolShares.Bonded().RoundInt64())
 
 	// just send the same msgUnbond multiple times
 	// TODO use decimals here
@@ -251,12 +272,12 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		bond, found := keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
 		require.True(t, found)
 
-		expBond := initBond - int64(i+1)*unbondShares.Evaluate()
-		expDelegatorShares := 2*initBond - int64(i+1)*unbondShares.Evaluate()
+		expBond := initBond - int64(i+1)*unbondShares.RoundInt64()
+		expDelegatorShares := 2*initBond - int64(i+1)*unbondShares.RoundInt64()
 		expDelegatorAcc := sdk.NewInt(initBond - expBond)
 
-		gotBond := bond.Shares.Evaluate()
-		gotDelegatorShares := validator.DelegatorShares.Evaluate()
+		gotBond := bond.Shares.RoundInt64()
+		gotDelegatorShares := validator.DelegatorShares.RoundInt64()
 		gotDelegatorAcc := accMapper.GetAccount(ctx, delegatorAddr).GetCoins().AmountOf(params.BondDenom)
 
 		require.Equal(t, expBond, gotBond,
@@ -285,7 +306,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		require.False(t, got.IsOK(), "expected unbond msg to fail")
 	}
 
-	leftBonded := initBond - int64(numUnbonds)*unbondShares.Evaluate()
+	leftBonded := initBond - int64(numUnbonds)*unbondShares.RoundInt64()
 
 	// should be unable to unbond one more than we have
 	unbondShares = sdk.NewRat(leftBonded + 1)
@@ -307,7 +328,7 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 	ctx, accMapper, keeper := keep.CreateTestInput(t, false, initBond)
 	params := setInstantUnbondPeriod(keeper, ctx)
 
-	validatorAddrs := []sdk.Address{keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]}
+	validatorAddrs := []sdk.AccAddress{keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]}
 
 	// bond them all
 	for i, validatorAddr := range validatorAddrs {
@@ -322,7 +343,7 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 		balanceExpd := sdk.NewInt(initBond - 10)
 		balanceGot := accMapper.GetAccount(ctx, val.Owner).GetCoins().AmountOf(params.BondDenom)
 		require.Equal(t, i+1, len(validators), "expected %d validators got %d, validators: %v", i+1, len(validators), validators)
-		require.Equal(t, 10, int(val.DelegatorShares.Evaluate()), "expected %d shares, got %d", 10, val.DelegatorShares)
+		require.Equal(t, 10, int(val.DelegatorShares.RoundInt64()), "expected %d shares, got %d", 10, val.DelegatorShares)
 		require.Equal(t, balanceExpd, balanceGot, "expected account to have %d, got %d", balanceExpd, balanceGot)
 	}
 
@@ -560,6 +581,181 @@ func TestTransitiveRedelegation(t *testing.T) {
 	require.True(t, got.IsOK(), "expected no error")
 }
 
+func TestUnbondingWhenExcessValidators(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	validatorAddr1, validatorAddr2, validatorAddr3 := keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]
+
+	// set the unbonding time
+	params := keeper.GetParams(ctx)
+	params.UnbondingTime = 0
+	params.MaxValidators = 2
+	keeper.SetParams(ctx, params)
+
+	// add three validators
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr1, keep.PKs[0], 50)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+	require.Equal(t, 1, len(keeper.GetValidatorsBonded(ctx)))
+
+	msgCreateValidator = newTestMsgCreateValidator(validatorAddr2, keep.PKs[1], 30)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+	require.Equal(t, 2, len(keeper.GetValidatorsBonded(ctx)))
+
+	msgCreateValidator = newTestMsgCreateValidator(validatorAddr3, keep.PKs[2], 10)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+	require.Equal(t, 2, len(keeper.GetValidatorsBonded(ctx)))
+
+	// unbond the valdator-2
+	msgBeginUnbonding := NewMsgBeginUnbonding(validatorAddr2, validatorAddr2, sdk.NewRat(30))
+	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgBeginUnbonding")
+
+	// because there are extra validators waiting to get in, the queued
+	// validator (aka. validator-1) should make it into the bonded group, thus
+	// the total number of validators should stay the same
+	vals := keeper.GetValidatorsBonded(ctx)
+	require.Equal(t, 2, len(vals), "vals %v", vals)
+	val1, found := keeper.GetValidator(ctx, validatorAddr1)
+	require.True(t, found)
+	require.Equal(t, sdk.Bonded, val1.Status(), "%v", val1)
+}
+
+func TestJoiningAsCliffValidator(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	validatorAddr1, validatorAddr2 := keep.Addrs[0], keep.Addrs[1]
+
+	// make sure that the cliff validator is nil to begin with
+	cliffVal := keeper.GetCliffValidator(ctx)
+	require.Equal(t, []byte(nil), cliffVal)
+
+	// set the unbonding time
+	params := keeper.GetParams(ctx)
+	params.UnbondingTime = 0
+	params.MaxValidators = 2
+	keeper.SetParams(ctx, params)
+
+	// add the first validator
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr1, keep.PKs[0], 50)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	// cliff validator should still be nil
+	cliffVal = keeper.GetCliffValidator(ctx)
+	require.Equal(t, []byte(nil), cliffVal)
+
+	// Add the second validator
+	msgCreateValidator = newTestMsgCreateValidator(validatorAddr2, keep.PKs[1], 30)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	// now that we've reached maximum validators, the val-2 should be added to the cliff (top)
+	cliffVal = keeper.GetCliffValidator(ctx)
+	require.Equal(t, validatorAddr2.Bytes(), cliffVal)
+}
+
+func TestJoiningToCreateFirstCliffValidator(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	validatorAddr1, validatorAddr2 := keep.Addrs[0], keep.Addrs[1]
+
+	// make sure that the cliff validator is nil to begin with
+	cliffVal := keeper.GetCliffValidator(ctx)
+	require.Equal(t, []byte(nil), cliffVal)
+
+	// set the unbonding time
+	params := keeper.GetParams(ctx)
+	params.UnbondingTime = 0
+	params.MaxValidators = 2
+	keeper.SetParams(ctx, params)
+
+	// add the first validator
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr1, keep.PKs[0], 50)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	// cliff validator should still be nil
+	cliffVal = keeper.GetCliffValidator(ctx)
+	require.Equal(t, []byte(nil), cliffVal)
+
+	// Add the second validator
+	msgCreateValidator = newTestMsgCreateValidator(validatorAddr2, keep.PKs[1], 60)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	// now that we've reached maximum validators, validator-1 should be added to the cliff (top)
+	cliffVal = keeper.GetCliffValidator(ctx)
+	require.Equal(t, validatorAddr1.Bytes(), cliffVal)
+}
+
+func TestCliffValidator(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	validatorAddr1, validatorAddr2, validatorAddr3 := keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]
+
+	// make sure that the cliff validator is nil to begin with
+	cliffVal := keeper.GetCliffValidator(ctx)
+	require.Equal(t, []byte(nil), cliffVal)
+
+	// set the unbonding time
+	params := keeper.GetParams(ctx)
+	params.UnbondingTime = 0
+	params.MaxValidators = 2
+	keeper.SetParams(ctx, params)
+
+	// add the first validator
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr1, keep.PKs[0], 50)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	// cliff validator should still be nil
+	cliffVal = keeper.GetCliffValidator(ctx)
+	require.Equal(t, []byte(nil), cliffVal)
+
+	// Add the second validator
+	msgCreateValidator = newTestMsgCreateValidator(validatorAddr2, keep.PKs[1], 30)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	// now that we've reached maximum validators, validator-2 should be added to the cliff (top)
+	cliffVal = keeper.GetCliffValidator(ctx)
+	require.Equal(t, validatorAddr2.Bytes(), cliffVal)
+
+	// add the third validator, which should not make it to being bonded,
+	// so the cliff validator should not change because nobody has been kicked out
+	msgCreateValidator = newTestMsgCreateValidator(validatorAddr3, keep.PKs[2], 10)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	cliffVal = keeper.GetCliffValidator(ctx)
+	require.Equal(t, validatorAddr2.Bytes(), cliffVal)
+
+	// unbond valdator-2
+	msgBeginUnbonding := NewMsgBeginUnbonding(validatorAddr2, validatorAddr2, sdk.NewRat(30))
+	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgBeginUnbonding")
+
+	vals := keeper.GetValidatorsBonded(ctx)
+	require.Equal(t, 2, len(vals))
+
+	// now the validator set should be updated,
+	// where val-3 enters the validator set on the cliff
+	cliffVal = keeper.GetCliffValidator(ctx)
+	require.Equal(t, validatorAddr3.Bytes(), cliffVal)
+
+	// unbond valdator-1
+	msgBeginUnbonding = NewMsgBeginUnbonding(validatorAddr1, validatorAddr1, sdk.NewRat(50))
+	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgBeginUnbonding")
+
+	// get bonded validators - should just be one
+	vals = keeper.GetValidatorsBonded(ctx)
+	require.Equal(t, 1, len(vals))
+
+	// cliff now should be empty
+	cliffVal = keeper.GetCliffValidator(ctx)
+	require.Equal(t, []byte(nil), cliffVal)
+}
+
 func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 	valA, valB, del := keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]
@@ -638,7 +834,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	require.Equal(t, sdk.NewRat(3), delegation.Shares)
 
 	// validator power should have been reduced to zero
-	validator, found = keeper.GetValidator(ctx, valA)
-	require.True(t, found)
-	require.Equal(t, sdk.NewRat(0), validator.GetPower())
+	// ergo validator should have been removed from the store
+	_, found = keeper.GetValidator(ctx, valA)
+	require.False(t, found)
 }

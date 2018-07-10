@@ -12,13 +12,13 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 // initialize the mock application for this module
-func getMockApp(t *testing.T, numGenAccs int64) (*mock.App, Keeper, stake.Keeper, []sdk.Address, []crypto.PubKey, []crypto.PrivKey) {
+func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, []sdk.AccAddress, []crypto.PubKey, []crypto.PrivKey) {
 	mapp := mock.NewApp()
 
 	stake.RegisterWire(mapp.Cdc)
@@ -61,14 +61,17 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakeKeeper stake.Keeper) sdk
 		stakeGenesis := stake.DefaultGenesisState()
 		stakeGenesis.Pool.LooseTokens = 100000
 
-		stake.InitGenesis(ctx, stakeKeeper, stakeGenesis)
+		err := stake.InitGenesis(ctx, stakeKeeper, stakeGenesis)
+		if err != nil {
+			panic(err)
+		}
 		InitGenesis(ctx, keeper, DefaultGenesisState())
 		return abci.ResponseInitChain{}
 	}
 }
 
 // Sorts Addresses
-func SortAddresses(addrs []sdk.Address) {
+func SortAddresses(addrs []sdk.AccAddress) {
 	var byteAddrs [][]byte
 	for _, addr := range addrs {
 		byteAddrs = append(byteAddrs, addr.Bytes())

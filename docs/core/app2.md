@@ -22,8 +22,8 @@ Let's introduce a new message type for issuing coins:
 // MsgIssue to allow a registered issuer
 // to issue new coins.
 type MsgIssue struct {
-	Issuer   sdk.Address
-	Receiver sdk.Address
+	Issuer   sdk.AccAddress
+	Receiver sdk.AccAddress
 	Coin     sdk.Coin
 }
 
@@ -71,7 +71,7 @@ func handleMsgIssue(keyIssue *sdk.KVStoreKey, keyAcc *sdk.KVStoreKey) sdk.Handle
 	}
 }
 
-func handleIssuer(store sdk.KVStore, issuer sdk.Address, coin sdk.Coin) sdk.Result {
+func handleIssuer(store sdk.KVStore, issuer sdk.AccAddress, coin sdk.Coin) sdk.Result {
 	// the issuer address is stored directly under the coin denomination
 	denom := []byte(coin.Denom)
 	infoBytes := store.Get(denom)
@@ -95,7 +95,7 @@ func handleIssuer(store sdk.KVStore, issuer sdk.Address, coin sdk.Coin) sdk.Resu
 
 // coinInfo stores meta data about a coin
 type coinInfo struct {
-	Issuer sdk.Address `json:"issuer"`
+	Issuer sdk.AccAddress `json:"issuer"`
 }
 ```
 

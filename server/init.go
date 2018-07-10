@@ -18,12 +18,12 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	cfg "github.com/tendermint/tendermint/config"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
-	tmcli "github.com/tendermint/tmlibs/cli"
-	cmn "github.com/tendermint/tmlibs/common"
-	dbm "github.com/tendermint/tmlibs/db"
 
 	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -332,32 +332,20 @@ func readOrCreatePrivValidator(tmConfig *cfg.Config) crypto.PubKey {
 	return privValidator.GetPubKey()
 }
 
-// create the genesis file
+// writeGenesisFile creates and writes the genesis configuration to disk. An
+// error is returned if building or writing the configuration to file fails.
 func writeGenesisFile(cdc *wire.Codec, genesisFile, chainID string, validators []tmtypes.GenesisValidator, appState json.RawMessage) error {
 	genDoc := tmtypes.GenesisDoc{
-		ChainID:    chainID,
-		Validators: validators,
+		ChainID:      chainID,
+		Validators:   validators,
+		AppStateJSON: appState,
 	}
+
 	if err := genDoc.ValidateAndComplete(); err != nil {
 		return err
 	}
-	if err := genDoc.SaveAs(genesisFile); err != nil {
-		return err
-	}
-	return addAppStateToGenesis(cdc, genesisFile, appState)
-}
 
-// Add one line to the genesis file
-func addAppStateToGenesis(cdc *wire.Codec, genesisConfigPath string, appState json.RawMessage) error {
-	bz, err := ioutil.ReadFile(genesisConfigPath)
-	if err != nil {
-		return err
-	}
-	out, err := AppendJSON(cdc, bz, "app_state", appState)
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile(genesisConfigPath, out, 0600)
+	return genDoc.SaveAs(genesisFile)
 }
 
 //_____________________________________________________________________
@@ -388,14 +376,14 @@ var DefaultAppInit = AppInit{
 
 // simple genesis tx
 type SimpleGenTx struct {
-	Addr sdk.Address `json:"addr"`
+	Addr sdk.AccAddress `json:"addr"`
 }
 
 // Generate a genesis transaction
 func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig serverconfig.GenTx) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
-	var addr sdk.Address
+	var addr sdk.AccAddress
 	var secret string
 	addr, secret, err = GenerateCoinKey()
 	if err != nil {
@@ -444,11 +432,11 @@ func SimpleAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState j
     "coins": [
       {
         "denom": "mycoin",
-        "amount": 9007199254740992
+        "amount": "9007199254740992"
       }
     ]
   }]
-}`, genTx.Addr.String()))
+}`, genTx.Addr))
 	return
 }
 
@@ -456,7 +444,7 @@ func SimpleAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState j
 
 // GenerateCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateCoinKey() (sdk.Address, string, error) {
+func GenerateCoinKey() (sdk.AccAddress, string, error) {
 
 	// construct an in-memory key store
 	keybase := keys.New(
@@ -466,35 +454,35 @@ func GenerateCoinKey() (sdk.Address, string, error) {
 	// generate a private key, with recovery phrase
 	info, secret, err := keybase.CreateMnemonic("name", keys.English, "pass", keys.Secp256k1)
 	if err != nil {
-		return nil, "", err
+		return sdk.AccAddress([]byte{}), "", err
 	}
 	addr := info.GetPubKey().Address()
-	return sdk.Address(addr), secret, nil
+	return sdk.AccAddress(addr), secret, nil
 }
 
 // GenerateSaveCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (sdk.Address, string, error) {
+func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (sdk.AccAddress, string, error) {
 
 	// get the keystore from the client
 	keybase, err := clkeys.GetKeyBaseFromDir(clientRoot)
 	if err != nil {
-		return nil, "", err
+		return sdk.AccAddress([]byte{}), "", err
 	}
 
 	// ensure no overwrite
 	if !overwrite {
 		_, err := keybase.Get(keyName)
 		if err == nil {
-			return nil, "", errors.New("key already exists, overwrite is disabled")
+			return sdk.AccAddress([]byte{}), "", errors.New("key already exists, overwrite is disabled")
 		}
 	}
 
 	// generate a private key, with recovery phrase
 	info, secret, err := keybase.CreateMnemonic(keyName, keys.English, keyPass, keys.Secp256k1)
 	if err != nil {
-		return nil, "", err
+		return sdk.AccAddress([]byte{}), "", err
 	}
 	addr := info.GetPubKey().Address()
-	return sdk.Address(addr), secret, nil
+	return sdk.AccAddress(addr), secret, nil
 }

@@ -19,14 +19,14 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/libs/cli"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 	nm "github.com/tendermint/tendermint/node"
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/tendermint/tmlibs/cli"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
@@ -80,19 +80,19 @@ func GetKB(t *testing.T) crkeys.Keybase {
 }
 
 // add an address to the store return name and password
-func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (addr sdk.Address, seed string) {
+func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (addr sdk.AccAddress, seed string) {
 	var info crkeys.Info
 	var err error
 	info, seed, err = kb.CreateMnemonic(name, crkeys.English, password, crkeys.Secp256k1)
 	require.NoError(t, err)
-	addr = info.GetPubKey().Address()
+	addr = sdk.AccAddress(info.GetPubKey().Address())
 	return
 }
 
 // strt TM and the LCD in process, listening on their respective sockets
 //   nValidators = number of validators
 //   initAddrs = accounts to initialize with some steaks
-func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (cleanup func(), validatorsPKs []crypto.PubKey, port string) {
+func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress) (cleanup func(), validatorsPKs []crypto.PubKey, port string) {
 
 	config := GetConfig()
 	config.Consensus.TimeoutCommit = 100
@@ -132,7 +132,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 	for _, gdValidator := range genDoc.Validators {
 		pk := gdValidator.PubKey
 		validatorsPKs = append(validatorsPKs, pk) // append keys for output
-		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, pk.Address(), "test_val1")
+		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, sdk.AccAddress(pk.Address()), "test_val1")
 		require.NoError(t, err)
 		appGenTxs = append(appGenTxs, appGenTx)
 	}
@@ -169,7 +169,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 
 	//time.Sleep(time.Second)
 	//tests.WaitForHeight(2, port)
-	tests.WaitForStart(port)
+	tests.WaitForLCDStart(port)
 	tests.WaitForHeight(1, port)
 
 	// for use in defer

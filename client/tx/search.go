@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -43,7 +44,7 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
+	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 
 	// TODO: change this to false once proofs built in
 	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
@@ -54,7 +55,7 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 
 func searchTxs(ctx context.CoreContext, cdc *wire.Codec, tags []string) ([]txInfo, error) {
 	if len(tags) == 0 {
-		return nil, errors.New("Must declare at least one tag to search")
+		return nil, errors.New("must declare at least one tag to search")
 	}
 	// XXX: implement ANY
 	query := strings.Join(tags, " AND ")
@@ -107,7 +108,12 @@ func SearchTxRequestHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Han
 		}
 		keyValue := strings.Split(tag, "=")
 		key := keyValue[0]
-		value := keyValue[1]
+		value, err := url.QueryUnescape(keyValue[1])
+		if err != nil {
+			w.WriteHeader(400)
+			w.Write([]byte("Could not decode address: " + err.Error()))
+			return
+		}
 		if strings.HasSuffix(key, "_bech32") {
 			bech32address := strings.Trim(value, "'")
 			prefix := strings.Split(bech32address, "1")[0]
@@ -118,7 +124,7 @@ func SearchTxRequestHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Han
 				return
 			}
 
-			tag = strings.TrimRight(key, "_bech32") + "='" + sdk.Address(bz).String() + "'"
+			tag = strings.TrimRight(key, "_bech32") + "='" + sdk.AccAddress(bz).String() + "'"
 		}
 
 		txs, err := searchTxs(ctx, cdc, []string{tag})

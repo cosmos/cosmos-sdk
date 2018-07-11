@@ -31,8 +31,7 @@ const (
 type Procedure struct {
   VotingPeriod      int64               //  Length of the voting period. Initial value: 2 weeks
   MinDeposit        int64               //  Minimum deposit for a proposal to enter voting period. 
-  VoteTypes         []VoteType          //  Vote types available to voters. 
-  ProposalTypes     []ProposalType      //  Proposal types available to submitters. 
+  ProposalTypes     []string            //  Types available to submitters. {PlainTextProposal, SoftwareUpgradeProposal}
   Threshold         rational.Rational   //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
   Veto              rational.Rational   //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
   MaxDepositPeriod  int64               //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months

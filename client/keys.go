@@ -1,9 +1,8 @@
 package client
 
 import (
-	"github.com/tendermint/go-crypto/keys"
-	"github.com/tendermint/go-crypto/keys/words"
-	dbm "github.com/tendermint/tmlibs/db"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
 // GetKeyBase initializes a keybase based on the given db.
@@ -11,7 +10,6 @@ import (
 func GetKeyBase(db dbm.DB) keys.Keybase {
 	keybase := keys.New(
 		db,
-		words.MustLoadCodec("english"),
 	)
 	return keybase
 }

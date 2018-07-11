@@ -1,21 +1,59 @@
 package stake
 
 import (
-	tmtypes "github.com/tendermint/tendermint/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/pkg/errors"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-// GenesisState - all staking state that must be provided at genesis
-type GenesisState struct {
-	Pool       Pool         `json:"pool"`
-	Params     Params       `json:"params"`
-	Validators []Validator  `json:"validators"`
-	Bonds      []Delegation `json:"bonds"`
+// InitGenesis sets the pool and parameters for the provided keeper and
+// initializes the IntraTxCounter. For each validator in data, it sets that
+// validator in the keeper along with manually setting the indexes. In
+// addition, it also sets any delegations found in data. Finally, it updates
+// the bonded validators.
+func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) error {
+	keeper.SetPool(ctx, data.Pool)
+	keeper.SetNewParams(ctx, data.Params)
+	keeper.InitIntraTxCounter(ctx)
+
+	for _, validator := range data.Validators {
+		keeper.SetValidator(ctx, validator)
+
+		if validator.PoolShares.Amount.IsZero() {
+			return errors.Errorf("genesis validator cannot have zero pool shares, validator: %v", validator)
+		}
+		if validator.DelegatorShares.IsZero() {
+			return errors.Errorf("genesis validator cannot have zero delegator shares, validator: %v", validator)
+		}
+
+		// Manually set indexes for the first time
+		keeper.SetValidatorByPubKeyIndex(ctx, validator)
+		keeper.SetValidatorByPowerIndex(ctx, validator, data.Pool)
+
+		if validator.Status() == sdk.Bonded {
+			keeper.SetValidatorBondedIndex(ctx, validator)
+		}
+	}
+
+	for _, bond := range data.Bonds {
+		keeper.SetDelegation(ctx, bond)
+	}
+
+	keeper.UpdateBondedValidatorsFull(ctx)
+	return nil
 }
 
-func NewGenesisState(pool Pool, params Params, validators []Validator, bonds []Delegation) GenesisState {
-	return GenesisState{
+// WriteGenesis returns a GenesisState for a given context and keeper. The
+// GenesisState will contain the pool, params, validators, and bonds found in
+// the keeper.
+func WriteGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
+	pool := keeper.GetPool(ctx)
+	params := keeper.GetParams(ctx)
+	validators := keeper.GetAllValidators(ctx)
+	bonds := keeper.GetAllDelegations(ctx)
+
+	return types.GenesisState{
 		Pool:       pool,
 		Params:     params,
 		Validators: validators,
@@ -23,60 +61,17 @@ func NewGenesisState(pool Pool, params Params, validators []Validator, bonds []D
 	}
 }
 
-// get raw genesis raw message for testing
-func DefaultGenesisState() GenesisState {
-	return GenesisState{
-		Pool:   InitialPool(),
-		Params: DefaultParams(),
-	}
-}
-
-// InitGenesis - store genesis parameters
-func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
-	store := ctx.KVStore(k.storeKey)
-	k.setPool(ctx, data.Pool)
-	k.setNewParams(ctx, data.Params)
-	for _, validator := range data.Validators {
-
-		// set validator
-		k.setValidator(ctx, validator)
-
-		// manually set indexes for the first time
-		k.setValidatorByPubKeyIndex(ctx, validator)
-		k.setValidatorByPowerIndex(ctx, validator, data.Pool)
-		if validator.Status() == sdk.Bonded {
-			store.Set(GetValidatorsBondedKey(validator.PubKey), validator.Owner)
-		}
-	}
-	for _, bond := range data.Bonds {
-		k.setDelegation(ctx, bond)
-	}
-	k.updateBondedValidatorsFull(ctx, store)
-}
-
-// WriteGenesis - output genesis parameters
-func WriteGenesis(ctx sdk.Context, k Keeper) GenesisState {
-	pool := k.GetPool(ctx)
-	params := k.GetParams(ctx)
-	validators := k.getAllValidators(ctx)
-	bonds := k.getAllDelegations(ctx)
-	return GenesisState{
-		pool,
-		params,
-		validators,
-		bonds,
-	}
-}
-
-// WriteValidators - output current validator set
-func WriteValidators(ctx sdk.Context, k Keeper) (vals []tmtypes.GenesisValidator) {
-	k.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
+// WriteValidators returns a slice of bonded genesis validators.
+func WriteValidators(ctx sdk.Context, keeper Keeper) (vals []tmtypes.GenesisValidator) {
+	keeper.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
 		vals = append(vals, tmtypes.GenesisValidator{
 			PubKey: validator.GetPubKey(),
-			Power:  validator.GetPower().Evaluate(),
+			Power:  validator.GetPower().RoundInt64(),
 			Name:   validator.GetMoniker(),
 		})
+
 		return false
 	})
+
 	return
 }

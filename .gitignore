@@ -3,6 +3,7 @@
 *.swp
 *.swo
 .vscode
+.idea
 
 # Build
 vendor
@@ -15,6 +16,7 @@ docs/_build
 examples/basecoin/app/data
 baseapp/data/*
 client/lcd/keys/*
+mytestnet
 
 # Testing
 coverage.txt
@@ -25,6 +27,10 @@ profile.out
 *.box
 *.log
 vagrant
+
+# IDE
+.idea/
+*.iml
 
 # Graphviz
 dependency-graph.png

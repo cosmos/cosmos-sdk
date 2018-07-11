@@ -3,9 +3,9 @@ package types
 import (
 	"fmt"
 
-	cmn "github.com/tendermint/tmlibs/common"
+	cmn "github.com/tendermint/tendermint/libs/common"
 
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // ABCICodeType - combined codetype / codespace
@@ -53,6 +53,7 @@ const (
 	CodeInsufficientCoins CodeType = 10
 	CodeInvalidCoins      CodeType = 11
 	CodeOutOfGas          CodeType = 12
+	CodeMemoTooLarge      CodeType = 13
 
 	// CodespaceRoot is a codespace for error codes in this file only.
 	CodespaceRoot CodespaceType = 1
@@ -62,34 +63,37 @@ const (
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
+// nolint: gocyclo
 func CodeToDefaultMsg(code CodeType) string {
 	switch code {
 	case CodeInternal:
-		return "Internal error"
+		return "internal error"
 	case CodeTxDecode:
-		return "Tx parse error"
+		return "tx parse error"
 	case CodeInvalidSequence:
-		return "Invalid sequence"
+		return "invalid sequence"
 	case CodeUnauthorized:
-		return "Unauthorized"
+		return "unauthorized"
 	case CodeInsufficientFunds:
-		return "Insufficent funds"
+		return "insufficient funds"
 	case CodeUnknownRequest:
-		return "Unknown request"
+		return "unknown request"
 	case CodeInvalidAddress:
-		return "Invalid address"
+		return "invalid address"
 	case CodeInvalidPubKey:
-		return "Invalid pubkey"
+		return "invalid pubkey"
 	case CodeUnknownAddress:
-		return "Unknown address"
+		return "unknown address"
 	case CodeInsufficientCoins:
-		return "Insufficient coins"
+		return "insufficient coins"
 	case CodeInvalidCoins:
-		return "Invalid coins"
+		return "invalid coins"
 	case CodeOutOfGas:
-		return "Out of gas"
+		return "out of gas"
+	case CodeMemoTooLarge:
+		return "memo too large"
 	default:
-		return fmt.Sprintf("Unknown code %d", code)
+		return fmt.Sprintf("unknown code %d", code)
 	}
 }
 
@@ -134,6 +138,9 @@ func ErrInvalidCoins(msg string) Error {
 func ErrOutOfGas(msg string) Error {
 	return newErrorWithRootCodespace(CodeOutOfGas, msg)
 }
+func ErrMemoTooLarge(msg string) Error {
+	return newErrorWithRootCodespace(CodeMemoTooLarge, msg)
+}
 
 //----------------------------------------
 // Error & sdkError
@@ -151,6 +158,9 @@ type Error interface {
 
 	// convenience
 	TraceSDK(format string, args ...interface{}) Error
+
+	// set codespace
+	WithDefaultCodespace(CodespaceType) Error
 
 	Code() CodeType
 	Codespace() CodespaceType
@@ -184,6 +194,19 @@ type sdkError struct {
 	codespace CodespaceType
 	code      CodeType
 	cmnError
+}
+
+// Implements Error.
+func (err *sdkError) WithDefaultCodespace(cs CodespaceType) Error {
+	codespace := err.codespace
+	if codespace == CodespaceUndefined {
+		codespace = cs
+	}
+	return &sdkError{
+		codespace: cs,
+		code:      err.code,
+		cmnError:  err.cmnError,
+	}
 }
 
 // Implements ABCIError.

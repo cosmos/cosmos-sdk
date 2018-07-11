@@ -4,16 +4,14 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/spf13/cobra"
-
-	abci "github.com/tendermint/abci/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/tendermint/tmlibs/cli"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
-
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/cli"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 func main() {
@@ -33,7 +31,12 @@ func main() {
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.basecoind")
 	executor := cli.PrepareBaseCmd(rootCmd, "BC", rootDir)
-	executor.Execute()
+
+	err := executor.Execute()
+	if err != nil {
+		// Note: Handle with #870
+		panic(err)
+	}
 }
 
 func newApp(logger log.Logger, db dbm.DB) abci.Application {

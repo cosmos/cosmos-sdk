@@ -3,9 +3,9 @@ package simplestake
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -16,16 +16,16 @@ func TestBondMsgValidation(t *testing.T) {
 		valid   bool
 		msgBond MsgBond
 	}{
-		{true, NewMsgBond(sdk.Address{}, sdk.Coin{"mycoin", 5}, privKey.PubKey())},
-		{false, NewMsgBond(sdk.Address{}, sdk.Coin{"mycoin", 0}, privKey.PubKey())},
+		{true, NewMsgBond(sdk.AccAddress{}, sdk.NewCoin("mycoin", 5), privKey.PubKey())},
+		{false, NewMsgBond(sdk.AccAddress{}, sdk.NewCoin("mycoin", 0), privKey.PubKey())},
 	}
 
 	for i, tc := range cases {
 		err := tc.msgBond.ValidateBasic()
 		if tc.valid {
-			assert.Nil(t, err, "%d: %+v", i, err)
+			require.Nil(t, err, "%d: %+v", i, err)
 		} else {
-			assert.NotNil(t, err, "%d", i)
+			require.NotNil(t, err, "%d", i)
 		}
 	}
 }

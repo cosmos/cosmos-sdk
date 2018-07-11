@@ -20,7 +20,7 @@ func ExportCmd(ctx *Context, cdc *wire.Codec, appExporter AppExporter) *cobra.Co
 			home := viper.GetString("home")
 			appState, validators, err := appExporter(home, ctx.Logger)
 			if err != nil {
-				return errors.Errorf("Error exporting state: %v\n", err)
+				return errors.Errorf("error exporting state: %v\n", err)
 			}
 			doc, err := tmtypes.GenesisDocFromFile(ctx.Config.GenesisFile())
 			if err != nil {

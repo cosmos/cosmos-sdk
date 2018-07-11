@@ -5,20 +5,18 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
+	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var (
 	priv1 = crypto.GenPrivKeyEd25519()
-	addr1 = priv1.PubKey().Address()
-	coins = sdk.Coins{{"foocoin", 10}}
+	addr1 = sdk.AccAddress(priv1.PubKey().Address())
+	coins = sdk.Coins{sdk.NewCoin("foocoin", 10)}
 )
 
 // initialize the mock application for this module
@@ -36,7 +34,7 @@ func getMockApp(t *testing.T) (*mock.App, stake.Keeper, Keeper) {
 
 	mapp.SetEndBlocker(getEndBlocker(stakeKeeper))
 	mapp.SetInitChainer(getInitChainer(mapp, stakeKeeper))
-	mapp.CompleteSetup(t, []*sdk.KVStoreKey{keyStake, keySlashing})
+	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keySlashing}))
 
 	return mapp, stakeKeeper, keeper
 }
@@ -55,32 +53,37 @@ func getEndBlocker(keeper stake.Keeper) sdk.EndBlocker {
 func getInitChainer(mapp *mock.App, keeper stake.Keeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
-		stake.InitGenesis(ctx, keeper, stake.DefaultGenesisState())
+		stakeGenesis := stake.DefaultGenesisState()
+		stakeGenesis.Pool.LooseTokens = 100000
+		err := stake.InitGenesis(ctx, keeper, stakeGenesis)
+		if err != nil {
+			panic(err)
+		}
 		return abci.ResponseInitChain{}
 	}
 }
 
 func checkValidator(t *testing.T, mapp *mock.App, keeper stake.Keeper,
-	addr sdk.Address, expFound bool) stake.Validator {
+	addr sdk.AccAddress, expFound bool) stake.Validator {
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	validator, found := keeper.GetValidator(ctxCheck, addr1)
-	assert.Equal(t, expFound, found)
+	require.Equal(t, expFound, found)
 	return validator
 }
 
 func checkValidatorSigningInfo(t *testing.T, mapp *mock.App, keeper Keeper,
-	addr sdk.Address, expFound bool) ValidatorSigningInfo {
+	addr sdk.ValAddress, expFound bool) ValidatorSigningInfo {
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	signingInfo, found := keeper.getValidatorSigningInfo(ctxCheck, addr)
-	assert.Equal(t, expFound, found)
+	require.Equal(t, expFound, found)
 	return signingInfo
 }
 
 func TestSlashingMsgs(t *testing.T) {
 	mapp, stakeKeeper, keeper := getMockApp(t)
 
-	genCoin := sdk.Coin{"steak", 42}
-	bondCoin := sdk.Coin{"steak", 10}
+	genCoin := sdk.NewCoin("steak", 42)
+	bondCoin := sdk.NewCoin("steak", 10)
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,
@@ -92,7 +95,7 @@ func TestSlashingMsgs(t *testing.T) {
 	createValidatorMsg := stake.NewMsgCreateValidator(
 		addr1, priv1.PubKey(), bondCoin, description,
 	)
-	mock.SignCheckDeliver(t, mapp.BaseApp, createValidatorMsg, []int64{0}, []int64{0}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{createValidatorMsg}, []int64{0}, []int64{0}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin.Minus(bondCoin)})
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 
@@ -100,12 +103,12 @@ func TestSlashingMsgs(t *testing.T) {
 	require.Equal(t, addr1, validator.Owner)
 	require.Equal(t, sdk.Bonded, validator.Status())
 	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.PoolShares.Bonded()))
-	unrevokeMsg := MsgUnrevoke{ValidatorAddr: validator.PubKey.Address()}
+	unrevokeMsg := MsgUnrevoke{ValidatorAddr: sdk.AccAddress(validator.PubKey.Address())}
 
 	// no signing info yet
-	checkValidatorSigningInfo(t, mapp, keeper, addr1, false)
+	checkValidatorSigningInfo(t, mapp, keeper, sdk.ValAddress(addr1), false)
 
 	// unrevoke should fail with unknown validator
-	res := mock.SignCheck(t, mapp.BaseApp, unrevokeMsg, []int64{0}, []int64{1}, priv1)
-	require.Equal(t, sdk.ToABCICode(DefaultCodespace, CodeInvalidValidator), res.Code)
+	res := mock.CheckGenTx(t, mapp.BaseApp, []sdk.Msg{unrevokeMsg}, []int64{0}, []int64{1}, false, priv1)
+	require.Equal(t, sdk.ToABCICode(DefaultCodespace, CodeValidatorNotRevoked), res.Code)
 }

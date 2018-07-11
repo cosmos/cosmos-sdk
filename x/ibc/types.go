@@ -22,14 +22,14 @@ func init() {
 // IBCPacket defines a piece of data that can be send between two separate
 // blockchains.
 type IBCPacket struct {
-	SrcAddr   sdk.Address
-	DestAddr  sdk.Address
+	SrcAddr   sdk.AccAddress
+	DestAddr  sdk.AccAddress
 	Coins     sdk.Coins
 	SrcChain  string
 	DestChain string
 }
 
-func NewIBCPacket(srcAddr sdk.Address, destAddr sdk.Address, coins sdk.Coins,
+func NewIBCPacket(srcAddr sdk.AccAddress, destAddr sdk.AccAddress, coins sdk.Coins,
 	srcChain string, destChain string) IBCPacket {
 
 	return IBCPacket{
@@ -43,23 +43,11 @@ func NewIBCPacket(srcAddr sdk.Address, destAddr sdk.Address, coins sdk.Coins,
 
 //nolint
 func (p IBCPacket) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(struct {
-		SrcAddr   string
-		DestAddr  string
-		Coins     sdk.Coins
-		SrcChain  string
-		DestChain string
-	}{
-		SrcAddr:   sdk.MustBech32ifyAcc(p.SrcAddr),
-		DestAddr:  sdk.MustBech32ifyAcc(p.DestAddr),
-		Coins:     p.Coins,
-		SrcChain:  p.SrcChain,
-		DestChain: p.DestChain,
-	})
+	b, err := msgCdc.MarshalJSON(p)
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }
 
 // validator the ibc packey
@@ -86,7 +74,7 @@ type IBCTransferMsg struct {
 func (msg IBCTransferMsg) Type() string { return "ibc" }
 
 // x/bank/tx.go MsgSend.GetSigners()
-func (msg IBCTransferMsg) GetSigners() []sdk.Address { return []sdk.Address{msg.SrcAddr} }
+func (msg IBCTransferMsg) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.SrcAddr} }
 
 // get the sign bytes for ibc transfer message
 func (msg IBCTransferMsg) GetSignBytes() []byte {
@@ -106,7 +94,7 @@ func (msg IBCTransferMsg) ValidateBasic() sdk.Error {
 // to the destination chain.
 type IBCReceiveMsg struct {
 	IBCPacket
-	Relayer  sdk.Address
+	Relayer  sdk.AccAddress
 	Sequence int64
 }
 
@@ -115,21 +103,21 @@ func (msg IBCReceiveMsg) Type() string             { return "ibc" }
 func (msg IBCReceiveMsg) ValidateBasic() sdk.Error { return msg.IBCPacket.ValidateBasic() }
 
 // x/bank/tx.go MsgSend.GetSigners()
-func (msg IBCReceiveMsg) GetSigners() []sdk.Address { return []sdk.Address{msg.Relayer} }
+func (msg IBCReceiveMsg) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Relayer} }
 
 // get the sign bytes for ibc receive message
 func (msg IBCReceiveMsg) GetSignBytes() []byte {
 	b, err := msgCdc.MarshalJSON(struct {
 		IBCPacket json.RawMessage
-		Relayer   string
+		Relayer   sdk.AccAddress
 		Sequence  int64
 	}{
 		IBCPacket: json.RawMessage(msg.IBCPacket.GetSignBytes()),
-		Relayer:   sdk.MustBech32ifyAcc(msg.Relayer),
+		Relayer:   msg.Relayer,
 		Sequence:  msg.Sequence,
 	})
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return sdk.MustSortJSON(b)
 }

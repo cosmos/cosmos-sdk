@@ -9,4 +9,3 @@ Welcome to the Cosmos SDK!
 This location for our documentation has been deprecated, please see:
 
 - https://cosmos.network/docs/
-- 

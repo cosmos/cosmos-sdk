@@ -24,7 +24,7 @@ func ValidatorCommand() *cobra.Command {
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  printValidators,
 	}
-	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
+	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	// TODO: change this to false when we can
 	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
 	return cmd
@@ -32,10 +32,10 @@ func ValidatorCommand() *cobra.Command {
 
 // Validator output in bech32 format
 type ValidatorOutput struct {
-	Address     string `json:"address"` // in bech32
-	PubKey      string `json:"pub_key"` // in bech32
-	Accum       int64  `json:"accum"`
-	VotingPower int64  `json:"voting_power"`
+	Address     sdk.ValAddress `json:"address"` // in bech32
+	PubKey      string         `json:"pub_key"` // in bech32
+	Accum       int64          `json:"accum"`
+	VotingPower int64          `json:"voting_power"`
 }
 
 // Validators at a certain height output in bech32 format
@@ -45,17 +45,13 @@ type ResultValidatorsOutput struct {
 }
 
 func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
-	bechAddress, err := sdk.Bech32ifyVal(validator.Address)
-	if err != nil {
-		return ValidatorOutput{}, err
-	}
 	bechValPubkey, err := sdk.Bech32ifyValPub(validator.PubKey)
 	if err != nil {
 		return ValidatorOutput{}, err
 	}
 
 	return ValidatorOutput{
-		Address:     bechAddress,
+		Address:     sdk.ValAddress(validator.Address),
 		PubKey:      bechValPubkey,
 		Accum:       validator.Accum,
 		VotingPower: validator.VotingPower,

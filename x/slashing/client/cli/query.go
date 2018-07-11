@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tendermint/tmlibs/cli"
+	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,9 +25,9 @@ func GetCmdQuerySigningInfo(storeName string, cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			key := slashing.GetValidatorSigningInfoKey(pk.Address())
+			key := slashing.GetValidatorSigningInfoKey(sdk.ValAddress(pk.Address()))
 			ctx := context.NewCoreContextFromViper()
-			res, err := ctx.Query(key, storeName)
+			res, err := ctx.QueryStore(key, storeName)
 			if err != nil {
 				return err
 			}

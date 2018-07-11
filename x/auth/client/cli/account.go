@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -40,21 +41,21 @@ func GetAccountCmd(storeName string, cdc *wire.Codec, decoder auth.AccountDecode
 			// find the key to look up the account
 			addr := args[0]
 
-			key, err := sdk.GetAccAddressBech32(addr)
+			key, err := sdk.AccAddressFromBech32(addr)
 			if err != nil {
 				return err
 			}
 
 			// perform query
 			ctx := context.NewCoreContextFromViper()
-			res, err := ctx.Query(auth.AddressStoreKey(key), storeName)
+			res, err := ctx.QueryStore(auth.AddressStoreKey(key), storeName)
 			if err != nil {
 				return err
 			}
 
 			// Check if account was found
 			if res == nil {
-				return sdk.ErrUnknownAddress("No account with address " + addr +
+				return errors.New("No account with address " + addr +
 					" was found in the state.\nAre you sure there has been a transaction involving it?")
 			}
 

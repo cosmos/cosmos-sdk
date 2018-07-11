@@ -1,5 +1,13 @@
 # Changelog
 
+## Pending
+
+BREAKING CHANGES
+- [keys] Keybase.Update function now takes in a function to get the newpass, rather than the password itself
+
+BUG FIXES
+- [keys] \#1629 - updating password no longer asks for a new password when the first entered password was incorrect
+
 ## 0.20.0
 
 *July 10th, 2018*

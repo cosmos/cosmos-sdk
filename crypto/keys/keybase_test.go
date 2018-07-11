@@ -167,9 +167,10 @@ func TestSignVerify(t *testing.T) {
 }
 
 func assertPassword(t *testing.T, cstore Keybase, name, pass, badpass string) {
-	err := cstore.Update(name, badpass, pass)
+	getNewpass := func() (string, error) { return pass, nil }
+	err := cstore.Update(name, badpass, getNewpass)
 	require.NotNil(t, err)
-	err = cstore.Update(name, pass, pass)
+	err = cstore.Update(name, pass, getNewpass)
 	require.Nil(t, err, "%+v", err)
 }
 
@@ -265,12 +266,13 @@ func TestAdvancedKeyManagement(t *testing.T) {
 	assertPassword(t, cstore, n1, p1, p2)
 
 	// update password requires the existing password
-	err = cstore.Update(n1, "jkkgkg", p2)
+	getNewpass := func() (string, error) { return p2, nil }
+	err = cstore.Update(n1, "jkkgkg", getNewpass)
 	require.NotNil(t, err)
 	assertPassword(t, cstore, n1, p1, p2)
 
 	// then it changes the password when correct
-	err = cstore.Update(n1, p1, p2)
+	err = cstore.Update(n1, p1, getNewpass)
 	require.NoError(t, err)
 	// p2 is now the proper one!
 	assertPassword(t, cstore, n1, p2, p1)

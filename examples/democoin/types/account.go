@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/pow"
 )
 
-var _ sdk.Account = (*AppAccount)(nil)
+var _ auth.Account = (*AppAccount)(nil)
 
 // Custom extensions for this application.  This is just an example of
 // extending auth.BaseAccount with custom fields.
@@ -21,18 +21,23 @@ type AppAccount struct {
 	Name string `json:"name"`
 }
 
+// Constructor for AppAccount
+func ProtoAppAccount() auth.Account {
+	return &AppAccount{}
+}
+
 // nolint
 func (acc AppAccount) GetName() string      { return acc.Name }
 func (acc *AppAccount) SetName(name string) { acc.Name = name }
 
 // Get the AccountDecoder function for the custom AppAccount
-func GetAccountDecoder(cdc *wire.Codec) sdk.AccountDecoder {
-	return func(accBytes []byte) (res sdk.Account, err error) {
+func GetAccountDecoder(cdc *wire.Codec) auth.AccountDecoder {
+	return func(accBytes []byte) (res auth.Account, err error) {
 		if len(accBytes) == 0 {
 			return nil, sdk.ErrTxDecode("accBytes are empty")
 		}
 		acct := new(AppAccount)
-		err = cdc.UnmarshalBinary(accBytes, &acct)
+		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
 		if err != nil {
 			panic(err)
 		}
@@ -51,9 +56,9 @@ type GenesisState struct {
 
 // GenesisAccount doesn't need pubkey or sequence
 type GenesisAccount struct {
-	Name    string      `json:"name"`
-	Address sdk.Address `json:"address"`
-	Coins   sdk.Coins   `json:"coins"`
+	Name    string         `json:"name"`
+	Address sdk.AccAddress `json:"address"`
+	Coins   sdk.Coins      `json:"coins"`
 }
 
 func NewGenesisAccount(aa *AppAccount) *GenesisAccount {

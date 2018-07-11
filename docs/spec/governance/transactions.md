@@ -166,6 +166,7 @@ vote on the proposal.
 
 *Note: Gas cost for this message has to take into account the future tallying of the vote in EndBlocker*
 
+
 Next is a pseudocode proposal of the way `TxGovVote` transactions are 
 handled:
 
@@ -188,11 +189,10 @@ handled:
 
     if  (proposal.CurrentStatus == ProposalStatusActive)
 
+
         // Sender can vote if
         // Proposal is active
         // Sender has some bonds
 
         store(Governance, <txGovVote.ProposalID|'addresses'|sender>, txGovVote.Vote)   // Voters can vote multiple times. Re-voting overrides previous vote. This is ok because tallying is done once at the end.
-
-    
 ```

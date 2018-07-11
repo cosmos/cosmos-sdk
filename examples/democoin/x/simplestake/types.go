@@ -1,6 +1,6 @@
 package simplestake
 
-import crypto "github.com/tendermint/go-crypto"
+import "github.com/tendermint/tendermint/crypto"
 
 type bondInfo struct {
 	PubKey crypto.PubKey

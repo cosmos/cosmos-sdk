@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -87,11 +87,10 @@ func UnbondTxCmd(cdc *wire.Codec) *cobra.Command {
 
 func sendMsg(cdc *wire.Codec, msg sdk.Msg) error {
 	ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
-	res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
+	err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
 	return nil
 }

@@ -36,7 +36,7 @@ var isAlpha = regexp.MustCompile(`^[a-zA-Z]+$`).MatchString
 // AddRoute - TODO add description
 func (rtr *router) AddRoute(r string, h sdk.Handler) Router {
 	if !isAlpha(r) {
-		panic("route expressions can only contain alphanumeric characters")
+		panic("route expressions can only contain alphabet characters")
 	}
 	rtr.routes = append(rtr.routes, route{r, h})
 

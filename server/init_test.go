@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tmlibs/log"
+	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/mock"
+	"github.com/cosmos/cosmos-sdk/server/mock"
 	"github.com/cosmos/cosmos-sdk/wire"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 )
@@ -31,6 +31,10 @@ func TestInitCmd(t *testing.T) {
 }
 
 func TestGenTxCmd(t *testing.T) {
+	// TODO
+}
+
+func TestTestnetFilesCmd(t *testing.T) {
 	// TODO
 }
 

@@ -3,12 +3,12 @@ package ibc
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/go-crypto"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,15 +24,15 @@ func defaultContext(key sdk.StoreKey) sdk.Context {
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
 	cms.LoadLatestVersion()
-	ctx := sdk.NewContext(cms, abci.Header{}, false, nil, log.NewNopLogger())
+	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 	return ctx
 }
 
-func newAddress() crypto.Address {
-	return crypto.GenPrivKeyEd25519().PubKey().Address()
+func newAddress() sdk.AccAddress {
+	return sdk.AccAddress(crypto.GenPrivKeyEd25519().PubKey().Address())
 }
 
-func getCoins(ck bank.Keeper, ctx sdk.Context, addr crypto.Address) (sdk.Coins, sdk.Error) {
+func getCoins(ck bank.Keeper, ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, sdk.Error) {
 	zero := sdk.Coins(nil)
 	coins, _, err := ck.AddCoins(ctx, addr, zero)
 	return coins, err
@@ -49,9 +49,11 @@ func makeCodec() *wire.Codec {
 	cdc.RegisterConcrete(IBCReceiveMsg{}, "test/ibc/IBCReceiveMsg", nil)
 
 	// Register AppAccount
-	cdc.RegisterInterface((*sdk.Account)(nil), nil)
+	cdc.RegisterInterface((*auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/ibc/Account", nil)
 	wire.RegisterCrypto(cdc)
+
+	cdc.Seal()
 
 	return cdc
 }
@@ -62,18 +64,18 @@ func TestIBC(t *testing.T) {
 	key := sdk.NewKVStoreKey("ibc")
 	ctx := defaultContext(key)
 
-	am := auth.NewAccountMapper(cdc, key, &auth.BaseAccount{})
+	am := auth.NewAccountMapper(cdc, key, auth.ProtoBaseAccount)
 	ck := bank.NewKeeper(am)
 
 	src := newAddress()
 	dest := newAddress()
 	chainid := "ibcchain"
 	zero := sdk.Coins(nil)
-	mycoins := sdk.Coins{sdk.Coin{"mycoin", 10}}
+	mycoins := sdk.Coins{sdk.NewCoin("mycoin", 10)}
 
 	coins, _, err := ck.AddCoins(ctx, src, mycoins)
-	assert.Nil(t, err)
-	assert.Equal(t, mycoins, coins)
+	require.Nil(t, err)
+	require.Equal(t, mycoins, coins)
 
 	ibcm := NewMapper(cdc, key, DefaultCodespace)
 	h := NewHandler(ibcm, ck)
@@ -93,23 +95,23 @@ func TestIBC(t *testing.T) {
 	var igs int64
 
 	egl = ibcm.getEgressLength(store, chainid)
-	assert.Equal(t, egl, int64(0))
+	require.Equal(t, egl, int64(0))
 
 	msg = IBCTransferMsg{
 		IBCPacket: packet,
 	}
 	res = h(ctx, msg)
-	assert.True(t, res.IsOK())
+	require.True(t, res.IsOK())
 
 	coins, err = getCoins(ck, ctx, src)
-	assert.Nil(t, err)
-	assert.Equal(t, zero, coins)
+	require.Nil(t, err)
+	require.Equal(t, zero, coins)
 
 	egl = ibcm.getEgressLength(store, chainid)
-	assert.Equal(t, egl, int64(1))
+	require.Equal(t, egl, int64(1))
 
 	igs = ibcm.GetIngressSequence(ctx, chainid)
-	assert.Equal(t, igs, int64(0))
+	require.Equal(t, igs, int64(0))
 
 	msg = IBCReceiveMsg{
 		IBCPacket: packet,
@@ -117,18 +119,18 @@ func TestIBC(t *testing.T) {
 		Sequence:  0,
 	}
 	res = h(ctx, msg)
-	assert.True(t, res.IsOK())
+	require.True(t, res.IsOK())
 
 	coins, err = getCoins(ck, ctx, dest)
-	assert.Nil(t, err)
-	assert.Equal(t, mycoins, coins)
+	require.Nil(t, err)
+	require.Equal(t, mycoins, coins)
 
 	igs = ibcm.GetIngressSequence(ctx, chainid)
-	assert.Equal(t, igs, int64(1))
+	require.Equal(t, igs, int64(1))
 
 	res = h(ctx, msg)
-	assert.False(t, res.IsOK())
+	require.False(t, res.IsOK())
 
 	igs = ibcm.GetIngressSequence(ctx, chainid)
-	assert.Equal(t, igs, int64(1))
+	require.Equal(t, igs, int64(1))
 }

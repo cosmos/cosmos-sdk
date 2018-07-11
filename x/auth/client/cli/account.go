@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"encoding/hex"
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // GetAccountCmd for the auth.BaseAccount type
@@ -17,8 +18,8 @@ func GetAccountCmdDefault(storeName string, cdc *wire.Codec) *cobra.Command {
 }
 
 // Get account decoder for auth.DefaultAccount
-func GetAccountDecoder(cdc *wire.Codec) sdk.AccountDecoder {
-	return func(accBytes []byte) (acct sdk.Account, err error) {
+func GetAccountDecoder(cdc *wire.Codec) auth.AccountDecoder {
+	return func(accBytes []byte) (acct auth.Account, err error) {
 		// acct := new(auth.BaseAccount)
 		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
 		if err != nil {
@@ -30,7 +31,7 @@ func GetAccountDecoder(cdc *wire.Codec) sdk.AccountDecoder {
 
 // GetAccountCmd returns a query account that will display the
 // state of the account at a given address
-func GetAccountCmd(storeName string, cdc *wire.Codec, decoder sdk.AccountDecoder) *cobra.Command {
+func GetAccountCmd(storeName string, cdc *wire.Codec, decoder auth.AccountDecoder) *cobra.Command {
 	return &cobra.Command{
 		Use:   "account [address]",
 		Short: "Query account balance",
@@ -39,17 +40,23 @@ func GetAccountCmd(storeName string, cdc *wire.Codec, decoder sdk.AccountDecoder
 
 			// find the key to look up the account
 			addr := args[0]
-			bz, err := hex.DecodeString(addr)
+
+			key, err := sdk.AccAddressFromBech32(addr)
 			if err != nil {
 				return err
 			}
-			key := sdk.Address(bz)
 
 			// perform query
 			ctx := context.NewCoreContextFromViper()
-			res, err := ctx.Query(key, storeName)
+			res, err := ctx.QueryStore(auth.AddressStoreKey(key), storeName)
 			if err != nil {
 				return err
+			}
+
+			// Check if account was found
+			if res == nil {
+				return errors.New("No account with address " + addr +
+					" was found in the state.\nAre you sure there has been a transaction involving it?")
 			}
 
 			// decode the value

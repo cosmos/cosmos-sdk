@@ -1,9 +1,9 @@
 PACKAGES=$(shell go list ./... | grep -v '/vendor/')
 PACKAGES_NOCLITEST=$(shell go list ./... | grep -v '/vendor/' | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test)
 COMMIT_HASH := $(shell git rev-parse --short HEAD)
-BUILD_FLAGS = -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
+BUILD_FLAGS = -tags netgo -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
 
-all: check_tools get_vendor_deps install install_examples test_lint test
+all: get_tools get_vendor_deps install install_examples test_lint test
 
 ########################################
 ### CI
@@ -36,15 +36,18 @@ else
 	go build $(BUILD_FLAGS) -o build/democli ./examples/democoin/cmd/democli
 endif
 
-install: 
+install:
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
 
-install_examples: 
+install_examples:
 	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecoind
 	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecli
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democoind
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democli
+
+install_debug:
+	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiadebug
 
 dist:
 	@bash publish/dist.sh
@@ -70,7 +73,7 @@ get_vendor_deps:
 draw_deps:
 	@# requires brew install graphviz or apt-get install graphviz
 	go get github.com/RobotsAndPencils/goviz
-	@goviz -i github.com/tendermint/tendermint/cmd/tendermint -d 3 | dot -Tpng -o dependency-graph.png
+	@goviz -i github.com/cosmos/cosmos-sdk/cmd/gaia/cmd/gaiad -d 2 | dot -Tpng -o dependency-graph.png
 
 
 ########################################
@@ -86,17 +89,26 @@ godocs:
 
 test: test_unit
 
-test_cli: 
+test_cli:
 	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test`
 
 test_unit:
 	@go test $(PACKAGES_NOCLITEST)
 
+test_race:
+	@go test -race $(PACKAGES_NOCLITEST)
+
 test_cover:
 	@bash tests/test_cover.sh
 
 test_lint:
-	gometalinter --disable-all --enable='golint' --vendor ./...
+	gometalinter.v2 --config=tools/gometalinter.json ./...
+	!(gometalinter.v2 --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
+
+format:
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -w -s
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs misspell -w
 
 benchmark:
 	@go test -bench=. $(PACKAGES_NOCLITEST)
@@ -127,11 +139,26 @@ devdoc_update:
 
 
 ########################################
-### Remote validator nodes using terraform and ansible
+### Local validator nodes using docker and docker-compose
 
 # Build linux binary
 build-linux:
 	GOOS=linux GOARCH=amd64 $(MAKE) build
+
+build-docker-gaiadnode:
+	$(MAKE) -C networks/local
+
+# Run a 4-node testnet locally
+localnet-start: localnet-stop
+	@if ! [ -f build/node0/gaiad/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/gaiad:Z tendermint/gaiadnode testnet --v 4 --o . --starting-ip-address 192.168.10.2 ; fi
+	docker-compose up
+
+# Stop testnet
+localnet-stop:
+	docker-compose down
+
+########################################
+### Remote validator nodes using terraform and ansible
 
 TESTNET_NAME?=remotenet
 SERVERS?=4
@@ -154,4 +181,4 @@ remotenet-status:
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: build build_examples install install_examples dist check_tools get_tools get_vendor_deps draw_deps test test_cli test_unit test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update remotenet-start remotenet-stop remotenet-status
+.PHONY: build build_examples install install_examples install_debug dist check_tools get_tools get_vendor_deps draw_deps test test_cli test_unit test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update build-linux build-docker-gaiadnode localnet-start localnet-stop remotenet-start remotenet-stop remotenet-status format

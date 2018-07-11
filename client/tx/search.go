@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
@@ -29,7 +31,11 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tags := viper.GetStringSlice(flagTags)
 
-			output, err := searchTx(context.NewCoreContextFromViper(), cdc, tags)
+			txs, err := searchTxs(context.NewCoreContextFromViper(), cdc, tags)
+			if err != nil {
+				return err
+			}
+			output, err := cdc.MarshalJSON(txs)
 			if err != nil {
 				return err
 			}
@@ -38,7 +44,7 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
+	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 
 	// TODO: change this to false once proofs built in
 	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
@@ -47,13 +53,12 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func searchTx(ctx context.CoreContext, cdc *wire.Codec, tags []string) ([]byte, error) {
+func searchTxs(ctx context.CoreContext, cdc *wire.Codec, tags []string) ([]txInfo, error) {
 	if len(tags) == 0 {
-		return nil, errors.New("Must declare at least one tag to search")
+		return nil, errors.New("must declare at least one tag to search")
 	}
 	// XXX: implement ANY
 	query := strings.Join(tags, " AND ")
-
 	// get the node
 	node, err := ctx.GetNode()
 	if err != nil {
@@ -74,11 +79,7 @@ func searchTx(ctx context.CoreContext, cdc *wire.Codec, tags []string) ([]byte, 
 		return nil, err
 	}
 
-	output, err := cdc.MarshalJSON(info)
-	if err != nil {
-		return nil, err
-	}
-	return output, nil
+	return info, nil
 }
 
 func formatTxResults(cdc *wire.Codec, res []*ctypes.ResultTx) ([]txInfo, error) {
@@ -102,17 +103,49 @@ func SearchTxRequestHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Han
 		tag := r.FormValue("tag")
 		if tag == "" {
 			w.WriteHeader(400)
-			w.Write([]byte("You need to provide a tag to search for."))
+			w.Write([]byte("You need to provide at least a tag as a key=value pair to search for. Postfix the key with _bech32 to search bech32-encoded addresses or public keys"))
 			return
 		}
+		keyValue := strings.Split(tag, "=")
+		key := keyValue[0]
+		value, err := url.QueryUnescape(keyValue[1])
+		if err != nil {
+			w.WriteHeader(400)
+			w.Write([]byte("Could not decode address: " + err.Error()))
+			return
+		}
+		if strings.HasSuffix(key, "_bech32") {
+			bech32address := strings.Trim(value, "'")
+			prefix := strings.Split(bech32address, "1")[0]
+			bz, err := sdk.GetFromBech32(bech32address, prefix)
+			if err != nil {
+				w.WriteHeader(400)
+				w.Write([]byte(err.Error()))
+				return
+			}
 
-		tags := []string{tag}
-		output, err := searchTx(ctx, cdc, tags)
+			tag = strings.TrimRight(key, "_bech32") + "='" + sdk.AccAddress(bz).String() + "'"
+		}
+
+		txs, err := searchTxs(ctx, cdc, []string{tag})
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))
 			return
 		}
+
+		if len(txs) == 0 {
+			w.Write([]byte("[]"))
+			return
+		}
+
+		output, err := cdc.MarshalJSON(txs)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
 		w.Write(output)
 	}
 }

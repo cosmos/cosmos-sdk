@@ -3,10 +3,11 @@ package app
 import (
 	"encoding/json"
 
-	abci "github.com/tendermint/abci/types"
-	cmn "github.com/tendermint/tmlibs/common"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	abci "github.com/tendermint/tendermint/abci/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,14 +40,15 @@ type DemocoinApp struct {
 	capKeyStakingStore *sdk.KVStoreKey
 
 	// keepers
-	coinKeeper  bank.Keeper
-	coolKeeper  cool.Keeper
-	powKeeper   pow.Keeper
-	ibcMapper   ibc.Mapper
-	stakeKeeper simplestake.Keeper
+	feeCollectionKeeper auth.FeeCollectionKeeper
+	coinKeeper          bank.Keeper
+	coolKeeper          cool.Keeper
+	powKeeper           pow.Keeper
+	ibcMapper           ibc.Mapper
+	stakeKeeper         simplestake.Keeper
 
 	// Manage getting and setting accounts
-	accountMapper sdk.AccountMapper
+	accountMapper auth.AccountMapper
 }
 
 func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
@@ -69,7 +71,7 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	app.accountMapper = auth.NewAccountMapper(
 		cdc,
 		app.capKeyAccountStore, // target store
-		&types.AppAccount{},    // prototype
+		types.ProtoAppAccount,  // prototype
 	)
 
 	// Add handlers.
@@ -89,7 +91,7 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	// Initialize BaseApp.
 	app.SetInitChainer(app.initChainerFn(app.coolKeeper, app.powKeeper))
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyPowStore, app.capKeyIBCStore, app.capKeyStakingStore)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.BurnFeeHandler))
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
 		cmn.Exit(err.Error())
@@ -109,12 +111,16 @@ func MakeCodec() *wire.Codec {
 	simplestake.RegisterWire(cdc)
 
 	// Register AppAccount
-	cdc.RegisterInterface((*sdk.Account)(nil), nil)
+	cdc.RegisterInterface((*auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&types.AppAccount{}, "democoin/Account", nil)
+
+	cdc.Seal()
+
 	return cdc
 }
 
 // custom logic for democoin initialization
+// nolint: unparam
 func (app *DemocoinApp) initChainerFn(coolKeeper cool.Keeper, powKeeper pow.Keeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		stateJSON := req.AppStateBytes
@@ -153,12 +159,12 @@ func (app *DemocoinApp) initChainerFn(coolKeeper cool.Keeper, powKeeper pow.Keep
 }
 
 // Custom logic for state export
-func (app *DemocoinApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
+func (app *DemocoinApp) ExportAppStateAndValidators() (appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
 	ctx := app.NewContext(true, abci.Header{})
 
 	// iterate to get the accounts
 	accounts := []*types.GenesisAccount{}
-	appendAccount := func(acc sdk.Account) (stop bool) {
+	appendAccount := func(acc auth.Account) (stop bool) {
 		account := &types.GenesisAccount{
 			Address: acc.GetAddress(),
 			Coins:   acc.GetCoins(),
@@ -173,5 +179,9 @@ func (app *DemocoinApp) ExportAppStateJSON() (appState json.RawMessage, err erro
 		POWGenesis:  pow.WriteGenesis(ctx, app.powKeeper),
 		CoolGenesis: cool.WriteGenesis(ctx, app.coolKeeper),
 	}
-	return wire.MarshalJSONIndent(app.cdc, genState)
+	appState, err = wire.MarshalJSONIndent(app.cdc, genState)
+	if err != nil {
+		return nil, nil, err
+	}
+	return appState, validators, nil
 }

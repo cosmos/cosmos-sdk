@@ -3,9 +3,9 @@ package types
 import (
 	"fmt"
 
-	abci "github.com/tendermint/abci/types"
-	cmn "github.com/tendermint/tmlibs/common"
-	dbm "github.com/tendermint/tmlibs/db"
+	abci "github.com/tendermint/tendermint/abci/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
 // NOTE: These are implemented in cosmos-sdk/store.
@@ -84,7 +84,7 @@ type CommitMultiStore interface {
 	LoadVersion(ver int64) error
 }
 
-//----------------------------------------
+//---------subsp-------------------------------
 // KVStore
 
 // KVStore is a simple interface to get/set data
@@ -103,34 +103,41 @@ type KVStore interface {
 	// Delete deletes the key. Panics on nil key.
 	Delete(key []byte)
 
+	// Prefix applied keys with the argument
+	Prefix(prefix []byte) KVStore
+
 	// Iterator over a domain of keys in ascending order. End is exclusive.
 	// Start must be less than end, or the Iterator is invalid.
+	// Iterator must be closed by caller.
+	// To iterate over entire domain, use store.Iterator(nil, nil)
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	Iterator(start, end []byte) Iterator
 
 	// Iterator over a domain of keys in descending order. End is exclusive.
 	// Start must be greater than end, or the Iterator is invalid.
+	// Iterator must be closed by caller.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	ReverseIterator(start, end []byte) Iterator
-
-	// Iterator over all the keys with a certain prefix in ascending order.
-	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
-	SubspaceIterator(prefix []byte) Iterator
-
-	// Iterator over all the keys with a certain prefix in descending order.
-	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
-	ReverseSubspaceIterator(prefix []byte) Iterator
 
 	// TODO Not yet implemented.
 	// CreateSubKVStore(key *storeKey) (KVStore, error)
 
 	// TODO Not yet implemented.
 	// GetSubKVStore(key *storeKey) KVStore
-
 }
 
 // Alias iterator to db's Iterator for convenience.
 type Iterator = dbm.Iterator
+
+// Iterator over all the keys with a certain prefix in ascending order
+func KVStorePrefixIterator(kvs KVStore, prefix []byte) Iterator {
+	return kvs.Iterator(prefix, PrefixEndBytes(prefix))
+}
+
+// Iterator over all the keys with a certain prefix in descending order.
+func KVStoreReversePrefixIterator(kvs KVStore, prefix []byte) Iterator {
+	return kvs.ReverseIterator(prefix, PrefixEndBytes(prefix))
+}
 
 // CacheKVStore cache-wraps a KVStore.  After calling .Write() on
 // the CacheKVStore, all previously created CacheKVStores on the
@@ -146,6 +153,11 @@ type CacheKVStore interface {
 type CommitKVStore interface {
 	Committer
 	KVStore
+}
+
+// Wrapper for StoreKeys to get KVStores
+type KVStoreGetter interface {
+	KVStore(Context) KVStore
 }
 
 //----------------------------------------
@@ -200,6 +212,7 @@ const (
 	StoreTypeMulti StoreType = iota
 	StoreTypeDB
 	StoreTypeIAVL
+	StoreTypePrefix
 )
 
 //----------------------------------------
@@ -233,6 +246,11 @@ func (key *KVStoreKey) String() string {
 	return fmt.Sprintf("KVStoreKey{%p, %s}", key, key.name)
 }
 
+// Implements KVStoreGetter
+func (key *KVStoreKey) KVStore(ctx Context) KVStore {
+	return ctx.KVStore(key)
+}
+
 // PrefixEndBytes returns the []byte that would end a
 // range query for all []byte with a certain prefix
 // Deals with last byte of prefix being FF without overflowing
@@ -259,7 +277,24 @@ func PrefixEndBytes(prefix []byte) []byte {
 	return end
 }
 
+// Getter struct for prefixed stores
+type PrefixStoreGetter struct {
+	key    StoreKey
+	prefix []byte
+}
+
+func NewPrefixStoreGetter(key StoreKey, prefix []byte) PrefixStoreGetter {
+	return PrefixStoreGetter{key, prefix}
+}
+
+// Implements sdk.KVStoreGetter
+func (getter PrefixStoreGetter) KVStore(ctx Context) KVStore {
+	return ctx.KVStore(getter.key).Prefix(getter.prefix)
+}
+
 //----------------------------------------
 
 // key-value result for iterator queries
 type KVPair cmn.KVPair
+
+//----------------------------------------

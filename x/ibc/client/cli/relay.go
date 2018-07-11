@@ -7,11 +7,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/tmlibs/log"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
@@ -26,8 +27,8 @@ const (
 
 type relayCommander struct {
 	cdc       *wire.Codec
-	address   sdk.Address
-	decoder   sdk.AccountDecoder
+	address   sdk.AccAddress
+	decoder   auth.AccountDecoder
 	mainStore string
 	ibcStore  string
 	accStore  string
@@ -53,7 +54,7 @@ func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().String(FlagFromChainID, "", "Chain ID for ibc node to check outgoing packets")
-	cmd.Flags().String(FlagFromChainNode, "tcp://localhost:46657", "<host>:<port> to tendermint rpc interface for this chain")
+	cmd.Flags().String(FlagFromChainNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 	cmd.Flags().String(FlagToChainID, "", "Chain ID for ibc node to broadcast incoming packets")
 	cmd.Flags().String(FlagToChainNode, "tcp://localhost:36657", "<host>:<port> to tendermint rpc interface for this chain")
 
@@ -70,6 +71,7 @@ func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
+// nolint: unparam
 func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	fromChainID := viper.GetString(FlagFromChainID)
 	fromChainNode := viper.GetString(FlagFromChainNode)
@@ -84,6 +86,8 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	c.loop(fromChainID, fromChainNode, toChainID, toChainNode)
 }
 
+// This is nolinted as someone is in the process of refactoring this to remove the goto
+// nolint: gocyclo
 func (c relayCommander) loop(fromChainID, fromChainNode, toChainID,
 	toChainNode string) {
 
@@ -115,7 +119,7 @@ OUTER:
 		lengthKey := ibc.EgressLengthKey(toChainID)
 		egressLengthbz, err := query(fromChainNode, lengthKey, c.ibcStore)
 		if err != nil {
-			c.logger.Error("Error querying outgoing packet list length", "err", err)
+			c.logger.Error("error querying outgoing packet list length", "err", err)
 			continue OUTER //TODO replace with continue (I think it should just to the correct place where OUTER is now)
 		}
 		var egressLength int64
@@ -133,14 +137,14 @@ OUTER:
 		for i := processed; i < egressLength; i++ {
 			egressbz, err := query(fromChainNode, ibc.EgressKey(toChainID, i), c.ibcStore)
 			if err != nil {
-				c.logger.Error("Error querying egress packet", "err", err)
+				c.logger.Error("error querying egress packet", "err", err)
 				continue OUTER // TODO replace to break, will break first loop then send back to the beginning (aka OUTER)
 			}
 
 			err = c.broadcastTx(seq, toChainNode, c.refine(egressbz, i, passphrase))
 			seq++
 			if err != nil {
-				c.logger.Error("Error broadcasting ingress packet", "err", err)
+				c.logger.Error("error broadcasting ingress packet", "err", err)
 				continue OUTER // TODO replace to break, will break first loop then send back to the beginning (aka OUTER)
 			}
 
@@ -150,7 +154,7 @@ OUTER:
 }
 
 func query(node string, key []byte, storeName string) (res []byte, err error) {
-	return context.NewCoreContextFromViper().WithNodeURI(node).Query(key, storeName)
+	return context.NewCoreContextFromViper().WithNodeURI(node).QueryStore(key, storeName)
 }
 
 func (c relayCommander) broadcastTx(seq int64, node string, tx []byte) error {
@@ -188,7 +192,7 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 	}
 
 	ctx := context.NewCoreContextFromViper().WithSequence(sequence)
-	res, err := ctx.SignAndBuild(ctx.FromAddressName, passphrase, msg, c.cdc)
+	res, err := ctx.SignAndBuild(ctx.FromAddressName, passphrase, []sdk.Msg{msg}, c.cdc)
 	if err != nil {
 		panic(err)
 	}

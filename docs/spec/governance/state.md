@@ -56,6 +56,7 @@ const (
 
 type ProposalStatus byte
 
+
 const (
     ProposalStatusOpen      = 0x1   // Proposal is submitted. Participants can deposit on it but not vote
     ProposalStatusActive    = 0x2   // MinDeposit is reachhed, participants can vote

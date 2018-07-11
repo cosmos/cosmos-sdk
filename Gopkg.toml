@@ -28,17 +28,13 @@
   name = "github.com/bgentry/speakeasy"
   version = "~0.1.0"
 
-[[constraint]]
+[[override]]
   name = "github.com/golang/protobuf"
-  version = "~1.0.0"
+  version = "=1.1.0"
 
 [[constraint]]
   name = "github.com/mattn/go-isatty"
   version = "~0.0.3"
-
-[[constraint]]
-  name = "github.com/pkg/errors"
-  version = "~0.8.0"
 
 [[constraint]]
   name = "github.com/spf13/cobra"
@@ -49,43 +45,33 @@
   version = "~1.0.0"
 
 [[constraint]]
+  name = "github.com/pkg/errors"
+  version = "=0.8.0"
+
+[[constraint]]
   name = "github.com/stretchr/testify"
-  version = "~1.2.1"
-
-[[constraint]]
-  name = "github.com/tendermint/abci"
-  version = "~0.10.3"
-
-[[constraint]]
-  name = "github.com/tendermint/go-crypto"
-  version = "~0.6.2"
+  version = "=1.2.1"
 
 [[override]]
-  name = "github.com/tendermint/go-wire"
-  version = "0.7.3"
-
-[[constraint]]
   name = "github.com/tendermint/go-amino"
-  version = "~0.9.9"
+  version = "=0.10.1"
 
-[[constraint]]
+[[override]]
   name = "github.com/tendermint/iavl"
-  version = "~0.7.0"
+  version = "=v0.9.2"
+
+[[override]]
+  name = "github.com/tendermint/tendermint"
+  version = "=0.22.2"
 
 [[constraint]]
-  name = "github.com/tendermint/tendermint"
-  version = "0.19.5-rc1"
+  name = "github.com/bartekn/go-bip39"
+  branch = "master"
 
-[[override]]
-  name = "github.com/tendermint/tmlibs"
-  version = "~0.8.3-rc0"
-  
-# this got updated and broke, so locked to an old working commit ...
-[[override]]
-  name = "google.golang.org/genproto"
-  revision = "7fd901a49ba6a7f87732eb344f6e3c5b19d1b200"
+[[constraint]]
+  name = "github.com/zondax/ledger-goclient"
+  revision = "065cbf938a16f20335c40cfe180f9cd4955c6a5a"
 
 [prune]
   go-tests = true
   unused-packages = true
-

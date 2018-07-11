@@ -1,0 +1,20 @@
+{
+  "node_id": "79466a03e9d4b4648a7dd8cead1fa7121ce76ee3",
+  "ip": "34.235.130.1",
+  "validator": {
+      "pub_key": {
+      "type": "AC26791624DE60",
+      "value": "SW12+WpGKUCO9oT2CV0CD5kUclbXjJHV1MjerLWB7Oc="
+    },
+    "power": 100,
+    "name": "lino"
+  },
+  "app_gen_tx": {
+    "name": "lino",
+    "address": "5A007B81A25AF34B829B79DA508A26E12180BCDB",
+    "pub_key": {
+      "type": "AC26791624DE60",
+      "value": "SW12+WpGKUCO9oT2CV0CD5kUclbXjJHV1MjerLWB7Oc="
+    }
+  }
+}

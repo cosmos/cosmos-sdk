@@ -4,6 +4,7 @@ import (
 	"bytes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // An sdk.Tx which is its own sdk.Msg.
@@ -17,12 +18,16 @@ func (tx kvstoreTx) Type() string {
 	return "kvstore"
 }
 
-func (tx kvstoreTx) GetMsg() sdk.Msg {
-	return tx
+func (tx kvstoreTx) GetMsgs() []sdk.Msg {
+	return []sdk.Msg{tx}
+}
+
+func (tx kvstoreTx) GetMemo() string {
+	return ""
 }
 
 func (tx kvstoreTx) GetSignBytes() []byte {
-	return tx.bytes
+	return sdk.MustSortJSON(tx.bytes)
 }
 
 // Should the app be calling this? Or only handlers?
@@ -30,11 +35,11 @@ func (tx kvstoreTx) ValidateBasic() sdk.Error {
 	return nil
 }
 
-func (tx kvstoreTx) GetSigners() []sdk.Address {
+func (tx kvstoreTx) GetSigners() []sdk.AccAddress {
 	return nil
 }
 
-func (tx kvstoreTx) GetSignatures() []sdk.StdSignature {
+func (tx kvstoreTx) GetSignatures() []auth.StdSignature {
 	return nil
 }
 

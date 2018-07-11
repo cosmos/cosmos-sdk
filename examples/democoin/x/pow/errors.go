@@ -23,21 +23,21 @@ const (
 func codeToDefaultMsg(code CodeType) string {
 	switch code {
 	case CodeInvalidDifficulty:
-		return "Insuffient difficulty"
+		return "insuffient difficulty"
 	case CodeNonexistentDifficulty:
-		return "Nonexistent difficulty"
+		return "nonexistent difficulty"
 	case CodeNonexistentReward:
-		return "Nonexistent reward"
+		return "nonexistent reward"
 	case CodeNonexistentCount:
-		return "Nonexistent count"
+		return "nonexistent count"
 	case CodeInvalidProof:
-		return "Invalid proof"
+		return "invalid proof"
 	case CodeNotBelowTarget:
-		return "Not below target"
+		return "not below target"
 	case CodeInvalidCount:
-		return "Invalid count"
+		return "invalid count"
 	case CodeUnknownRequest:
-		return "Unknown request"
+		return "unknown request"
 	default:
 		return sdk.CodeToDefaultMsg(code)
 	}

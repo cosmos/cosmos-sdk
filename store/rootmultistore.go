@@ -6,9 +6,9 @@ import (
 
 	"golang.org/x/crypto/ripemd160"
 
-	abci "github.com/tendermint/abci/types"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/merkle"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/merkle"
+	dbm "github.com/tendermint/tendermint/libs/db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -89,7 +89,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 			id := CommitID{}
 			store, err := rs.loadCommitStoreFromParams(id, storeParams)
 			if err != nil {
-				return fmt.Errorf("Failed to load rootMultiStore: %v", err)
+				return fmt.Errorf("failed to load rootMultiStore: %v", err)
 			}
 			rs.stores[key] = store
 		}
@@ -112,7 +112,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 		storeParams := rs.storesParams[key]
 		store, err := rs.loadCommitStoreFromParams(commitID, storeParams)
 		if err != nil {
-			return fmt.Errorf("Failed to load rootMultiStore: %v", err)
+			return fmt.Errorf("failed to load rootMultiStore: %v", err)
 		}
 		newStores[key] = store
 	}
@@ -120,7 +120,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 	// If any CommitStoreLoaders were not used, return error.
 	for key := range rs.storesParams {
 		if _, ok := newStores[key]; !ok {
-			return fmt.Errorf("Unused CommitStoreLoader: %v", key)
+			return fmt.Errorf("unused CommitStoreLoader: %v", key)
 		}
 	}
 
@@ -343,7 +343,11 @@ func (si storeInfo) Hash() []byte {
 	// include them via the keys.
 	bz, _ := cdc.MarshalBinary(si.Core) // Does not error
 	hasher := ripemd160.New()
-	hasher.Write(bz)
+	_, err := hasher.Write(bz)
+	if err != nil {
+		// TODO: Handle with #870
+		panic(err)
+	}
 	return hasher.Sum(nil)
 }
 
@@ -399,14 +403,14 @@ func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, ver)
 	cInfoBytes := db.Get([]byte(cInfoKey))
 	if cInfoBytes == nil {
-		return commitInfo{}, fmt.Errorf("Failed to get rootMultiStore: no data")
+		return commitInfo{}, fmt.Errorf("failed to get rootMultiStore: no data")
 	}
 
 	// Parse bytes.
 	var cInfo commitInfo
 	err := cdc.UnmarshalBinary(cInfoBytes, &cInfo)
 	if err != nil {
-		return commitInfo{}, fmt.Errorf("Failed to get rootMultiStore: %v", err)
+		return commitInfo{}, fmt.Errorf("failed to get rootMultiStore: %v", err)
 	}
 	return cInfo, nil
 }

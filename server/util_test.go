@@ -5,11 +5,10 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestAppendJSON(t *testing.T) {
+func TestInsertKeyJSON(t *testing.T) {
 	cdc := wire.NewCodec()
 
 	foo := map[string]string{"foo": "foofoo"}
@@ -25,7 +24,7 @@ func TestAppendJSON(t *testing.T) {
 	barRaw := json.RawMessage(bz)
 
 	// make the append
-	appBz, err := AppendJSON(cdc, fooRaw, "barOuter", barRaw)
+	appBz, err := InsertKeyJSON(cdc, fooRaw, "barOuter", barRaw)
 	require.NoError(t, err)
 
 	// test the append
@@ -37,5 +36,5 @@ func TestAppendJSON(t *testing.T) {
 	err = cdc.UnmarshalJSON(appended["barOuter"], &resBar)
 	require.NoError(t, err)
 
-	assert.Equal(t, bar, resBar, "appended: %v", appended)
+	require.Equal(t, bar, resBar, "appended: %v", appended)
 }

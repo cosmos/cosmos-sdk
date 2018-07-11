@@ -34,15 +34,15 @@ const (
 )
 
 // add the signers to the context
-func WithSigners(ctx types.Context, accounts []types.Account) types.Context {
+func WithSigners(ctx types.Context, accounts []Account) types.Context {
 	return ctx.WithValue(contextKeySigners, accounts)
 }
 
 // get the signers from the context
-func GetSigners(ctx types.Context) []types.Account {
+func GetSigners(ctx types.Context) []Account {
 	v := ctx.Value(contextKeySigners)
 	if v == nil {
-		return []types.Account{}
+		return []Account{}
 	}
-	return v.([]types.Account)
+	return v.([]Account)
 }

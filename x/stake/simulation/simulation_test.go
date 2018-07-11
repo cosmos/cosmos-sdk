@@ -223,8 +223,23 @@ func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) mock.TestAn
 // SimulateMsgCompleteUnbonding
 func SimulateMsgCompleteUnbonding(k stake.Keeper) mock.TestAndRunMsg {
 	return func(t *testing.T, r *rand.Rand, ctx sdk.Context, keys []crypto.PrivKey, log string) (action string, err sdk.Error) {
-		msg := fmt.Sprintf("TestMsgCompleteUnbonding with %s", "ok")
-		return msg, nil
+		validatorKey := keys[r.Intn(len(keys))]
+		validatorAddress := sdk.AccAddress(validatorKey.PubKey().Address())
+		delegatorKey := keys[r.Intn(len(keys))]
+		delegatorAddress := sdk.AccAddress(delegatorKey.PubKey().Address())
+		msg := stake.MsgCompleteUnbonding{
+			DelegatorAddr: delegatorAddress,
+			ValidatorAddr: validatorAddress,
+		}
+		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		ctx, write := ctx.CacheContext()
+		result := stake.NewHandler(k)(ctx, msg)
+		if result.IsOK() {
+			write()
+		}
+		stats[fmt.Sprintf("stake/completeunbonding/%v", result.IsOK())] += 1
+		action = fmt.Sprintf("TestMsgCompleteUnbonding with %s", msg.GetSignBytes())
+		return action, nil
 	}
 }
 
@@ -267,8 +282,26 @@ func SimulateMsgBeginRedelegate(m auth.AccountMapper, k stake.Keeper) mock.TestA
 // SimulateMsgCompleteRedelegate
 func SimulateMsgCompleteRedelegate(k stake.Keeper) mock.TestAndRunMsg {
 	return func(t *testing.T, r *rand.Rand, ctx sdk.Context, keys []crypto.PrivKey, log string) (action string, err sdk.Error) {
-		msg := fmt.Sprintf("TestMsgCompleteRedelegate with %s", "ok")
-		return msg, nil
+		validatorSrcKey := keys[r.Intn(len(keys))]
+		validatorSrcAddress := sdk.AccAddress(validatorSrcKey.PubKey().Address())
+		validatorDstKey := keys[r.Intn(len(keys))]
+		validatorDstAddress := sdk.AccAddress(validatorDstKey.PubKey().Address())
+		delegatorKey := keys[r.Intn(len(keys))]
+		delegatorAddress := sdk.AccAddress(delegatorKey.PubKey().Address())
+		msg := stake.MsgCompleteRedelegate{
+			DelegatorAddr:    delegatorAddress,
+			ValidatorSrcAddr: validatorSrcAddress,
+			ValidatorDstAddr: validatorDstAddress,
+		}
+		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		ctx, write := ctx.CacheContext()
+		result := stake.NewHandler(k)(ctx, msg)
+		if result.IsOK() {
+			write()
+		}
+		stats[fmt.Sprintf("stake/completeredelegate/%v", result.IsOK())] += 1
+		action = fmt.Sprintf("TestMsgCompleteRedelegate with %s", msg.GetSignBytes())
+		return action, nil
 	}
 }
 
@@ -320,7 +353,8 @@ func TestStakeWithRandomMessages(t *testing.T) {
 			SimulateMsgCreateValidator(mapper, stakeKeeper),
 			SimulateMsgEditValidator(stakeKeeper),
 			SimulateMsgDelegate(mapper, stakeKeeper),
-			SimulateMsgBeginUnbonding(mapper, stakeKeeper),
+			// XXX TODO
+			// SimulateMsgBeginUnbonding(mapper, stakeKeeper),
 			SimulateMsgCompleteUnbonding(stakeKeeper),
 			// XXX TODO Bug found!
 			// SimulateMsgBeginRedelegate(mapper, stakeKeeper),

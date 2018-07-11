@@ -42,8 +42,8 @@ func CoolAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState jso
 
 	key = "pow"
 	value = json.RawMessage(`{
-        "difficulty": 1,
-        "count": 0
+        "difficulty": "1",
+        "count": "0"
       }`)
 
 	appState, err = server.InsertKeyJSON(cdc, appState, key, value)

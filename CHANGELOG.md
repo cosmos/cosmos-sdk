@@ -48,6 +48,8 @@ BREAKING CHANGES
 * [lcd] Switch key creation output to return bech32
 * [lcd] Removed shorthand CLI flags (`a`, `c`, `n`, `o`)
 * [gaiad] genesis transactions now use bech32 addresses / pubkeys
+* [gov] VoteStatus renamed to ProposalStatus
+* [gov] VoteOption, ProposalType, and ProposalStatus all marshal to string form in JSON
 
 DEPRECATED
 * [cli] Deprecated `--name` flag in commands that send txs, in favor of `--from`

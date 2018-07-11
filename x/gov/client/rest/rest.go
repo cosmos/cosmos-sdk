@@ -36,24 +36,24 @@ func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 }
 
 type postProposalReq struct {
-	BaseReq        baseReq   `json:"base_req"`
-	Title          string    `json:"title"`           //  Title of the proposal
-	Description    string    `json:"description"`     //  Description of the proposal
-	ProposalType   string    `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-	Proposer       string    `json:"proposer"`        //  Address of the proposer
-	InitialDeposit sdk.Coins `json:"initial_deposit"` // Coins to add to the proposal's deposit
+	BaseReq        baseReq          `json:"base_req"`
+	Title          string           `json:"title"`           //  Title of the proposal
+	Description    string           `json:"description"`     //  Description of the proposal
+	ProposalType   gov.ProposalKind `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	Proposer       sdk.AccAddress   `json:"proposer"`        //  Address of the proposer
+	InitialDeposit sdk.Coins        `json:"initial_deposit"` // Coins to add to the proposal's deposit
 }
 
 type depositReq struct {
-	BaseReq   baseReq   `json:"base_req"`
-	Depositer string    `json:"depositer"` // Address of the depositer
-	Amount    sdk.Coins `json:"amount"`    // Coins to add to the proposal's deposit
+	BaseReq   baseReq        `json:"base_req"`
+	Depositer sdk.AccAddress `json:"depositer"` // Address of the depositer
+	Amount    sdk.Coins      `json:"amount"`    // Coins to add to the proposal's deposit
 }
 
 type voteReq struct {
-	BaseReq baseReq `json:"base_req"`
-	Voter   string  `json:"voter"`  //  address of the voter
-	Option  string  `json:"option"` //  option from OptionSet chosen by the voter
+	BaseReq baseReq        `json:"base_req"`
+	Voter   sdk.AccAddress `json:"voter"`  //  address of the voter
+	Option  gov.VoteOption `json:"option"` //  option from OptionSet chosen by the voter
 }
 
 func postProposalHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
@@ -68,20 +68,8 @@ func postProposalHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.Handle
 			return
 		}
 
-		proposer, err := sdk.AccAddressFromBech32(req.Proposer)
-		if err != nil {
-			writeErr(&w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		proposalTypeByte, err := gov.StringToProposalType(req.ProposalType)
-		if err != nil {
-			writeErr(&w, http.StatusBadRequest, err.Error())
-			return
-		}
-
 		// create the message
-		msg := gov.NewMsgSubmitProposal(req.Title, req.Description, proposalTypeByte, proposer, req.InitialDeposit)
+		msg := gov.NewMsgSubmitProposal(req.Title, req.Description, req.ProposalType, req.Proposer, req.InitialDeposit)
 		err = msg.ValidateBasic()
 		if err != nil {
 			writeErr(&w, http.StatusBadRequest, err.Error())
@@ -117,19 +105,12 @@ func depositHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc
 		if err != nil {
 			return
 		}
-
 		if !req.BaseReq.baseReqValidate(w) {
 			return
 		}
 
-		depositer, err := sdk.AccAddressFromBech32(req.Depositer)
-		if err != nil {
-			writeErr(&w, http.StatusBadRequest, err.Error())
-			return
-		}
-
 		// create the message
-		msg := gov.NewMsgDeposit(depositer, proposalID, req.Amount)
+		msg := gov.NewMsgDeposit(req.Depositer, proposalID, req.Amount)
 		err = msg.ValidateBasic()
 		if err != nil {
 			writeErr(&w, http.StatusBadRequest, err.Error())
@@ -165,25 +146,12 @@ func voteHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
 		if err != nil {
 			return
 		}
-
 		if !req.BaseReq.baseReqValidate(w) {
 			return
 		}
 
-		voter, err := sdk.AccAddressFromBech32(req.Voter)
-		if err != nil {
-			writeErr(&w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		voteOptionByte, err := gov.StringToVoteOption(req.Option)
-		if err != nil {
-			writeErr(&w, http.StatusBadRequest, err.Error())
-			return
-		}
-
 		// create the message
-		msg := gov.NewMsgVote(voter, proposalID, voteOptionByte)
+		msg := gov.NewMsgVote(req.Voter, proposalID, req.Option)
 		err = msg.ValidateBasic()
 		if err != nil {
 			writeErr(&w, http.StatusBadRequest, err.Error())
@@ -225,8 +193,7 @@ func queryProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 
 		var proposal gov.Proposal
 		cdc.MustUnmarshalBinary(res, &proposal)
-		proposalRest := gov.ProposalToRest(proposal)
-		output, err := wire.MarshalJSONIndent(cdc, proposalRest)
+		output, err := wire.MarshalJSONIndent(cdc, proposal)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -291,8 +258,7 @@ func queryDepositHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 
 		var deposit gov.Deposit
 		cdc.MustUnmarshalBinary(res, &deposit)
-		depositRest := gov.DepositToRest(deposit)
-		output, err := wire.MarshalJSONIndent(cdc, depositRest)
+		output, err := wire.MarshalJSONIndent(cdc, deposit)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -358,8 +324,7 @@ func queryVoteHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 
 		var vote gov.Vote
 		cdc.MustUnmarshalBinary(res, &vote)
-		voteRest := gov.VoteToRest(vote)
-		output, err := wire.MarshalJSONIndent(cdc, voteRest)
+		output, err := wire.MarshalJSONIndent(cdc, vote)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -411,7 +376,7 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 		var maxProposalID int64
 		cdc.MustUnmarshalBinary(res, &maxProposalID)
 
-		matchingProposals := []gov.ProposalRest{}
+		matchingProposals := []gov.Proposal{}
 
 		for proposalID := int64(0); proposalID < maxProposalID; proposalID++ {
 			if voterAddr != nil {
@@ -435,7 +400,7 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 			var proposal gov.Proposal
 			cdc.MustUnmarshalBinary(res, &proposal)
 
-			matchingProposals = append(matchingProposals, gov.ProposalToRest(proposal))
+			matchingProposals = append(matchingProposals, proposal)
 		}
 
 		output, err := wire.MarshalJSONIndent(cdc, matchingProposals)

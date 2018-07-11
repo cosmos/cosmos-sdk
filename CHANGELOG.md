@@ -2,14 +2,14 @@
 
 ## 0.20.0
 
-*TBD*
+*July 10th, 2018*
 
 BREAKING CHANGES
 * msg.GetSignBytes() returns sorted JSON (by key)
 * msg.GetSignBytes() field changes
     * `msg_bytes` -> `msgs`
     * `fee_bytes` -> `fee`
-* Update Tendermint to v0.22.0
+* Update Tendermint to v0.22.2
     * Default ports changed from 466xx to 266xx
     * Amino JSON uses type names instead of prefix bytes
     * ED25519 addresses are the first 20-bytes of the SHA256 of the raw 32-byte

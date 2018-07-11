@@ -16,6 +16,10 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
+var (
+	stats = make(map[string]int)
+)
+
 // ModuleInvariants runs all invariants of the stake module.
 // Currently: total supply, positive power
 func ModuleInvariants(ck bank.Keeper, k Keeper) mock.Invariant {
@@ -38,7 +42,9 @@ func SupplyInvariants(ck bank.Keeper, k Keeper) mock.Invariant {
 			loose = loose.Add(acc.GetCoins().AmountOf("steak"))
 			return false
 		})
-		require.True(t, sdk.NewInt(pool.LooseTokens).Equal(loose), "expected loose tokens to equal total steak held by accounts")
+		require.True(t, sdk.NewInt(pool.LooseTokens).Equal(loose), "expected loose tokens to equal total steak held by accounts - pool.LooseTokens: %v, sum of account tokens: %v\nlog: %s",
+			pool.LooseTokens, loose, log)
+		stats["stake/invariant/looseTokens"] += 1
 
 		// Bonded tokens should equal sum of tokens with bonded validators
 		// Unbonded tokens should equal sum of tokens with unbonded validators
@@ -55,8 +61,10 @@ func SupplyInvariants(ck bank.Keeper, k Keeper) mock.Invariant {
 			}
 			return false
 		})
-		require.True(t, sdk.NewRat(pool.BondedTokens).Equal(bonded), "expected bonded tokens to equal total steak held by bonded validators")
-		require.True(t, sdk.NewRat(pool.UnbondedTokens).Equal(unbonded), "expected unbonded tokens to equal total steak held by unbonded validators")
+		require.True(t, sdk.NewRat(pool.BondedTokens).Equal(bonded), "expected bonded tokens to equal total steak held by bonded validators\nlog: %s", log)
+		stats["stake/invariant/bondedTokens"] += 1
+		require.True(t, sdk.NewRat(pool.UnbondedTokens).Equal(unbonded), "expected unbonded tokens to equal total steak held by unbonded validators\n log: %s", log)
+		stats["stake/invariant/unbondedTokens"] += 1
 
 		// TODO Unbonding tokens
 
@@ -72,6 +80,7 @@ func PositivePowerInvariant(k Keeper) mock.Invariant {
 			require.True(t, validator.GetPower().GT(sdk.ZeroRat()), "validator with non-positive power stored")
 			return false
 		})
+		stats["stake/invariant/positivePower"] += 1
 	}
 }
 
@@ -96,12 +105,19 @@ func SimulateMsgCreateValidator(m auth.AccountMapper, k Keeper) mock.TestAndRunM
 		if amount.GT(sdk.ZeroInt()) {
 			amount = sdk.NewInt(int64(r.Intn(int(amount.Int64()))))
 		}
+		if amount.Equal(sdk.ZeroInt()) {
+			return "nop", nil
+		}
 		msg := MsgCreateValidator{
 			Description:    description,
 			ValidatorAddr:  address,
 			PubKey:         pubkey,
 			SelfDelegation: sdk.NewIntCoin(denom, amount),
 		}
+		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		result := handleMsgCreateValidator(ctx, msg, k)
+		stats[fmt.Sprintf("stake/createvalidator/%v", result.IsOK())] += 1
+		// require.True(t, result.IsOK(), "expected OK result but instead got %v", result)
 		action = fmt.Sprintf("TestMsgCreateValidator: %s", msg.GetSignBytes())
 		return action, nil
 	}
@@ -123,21 +139,44 @@ func SimulateMsgEditValidator(k Keeper) mock.TestAndRunMsg {
 			Description:   description,
 			ValidatorAddr: address,
 		}
+		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		result := handleMsgEditValidator(ctx, msg, k)
+		stats[fmt.Sprintf("stake/editvalidator/%v", result.IsOK())] += 1
 		action = fmt.Sprintf("TestMsgEditValidator: %s", msg.GetSignBytes())
 		return action, nil
 	}
 }
 
 // SimulateMsgDelegate
-func SimulateMsgDelegate(k Keeper) mock.TestAndRunMsg {
+func SimulateMsgDelegate(m auth.AccountMapper, k Keeper) mock.TestAndRunMsg {
 	return func(t *testing.T, r *rand.Rand, ctx sdk.Context, keys []crypto.PrivKey, log string) (action string, err sdk.Error) {
-		msg := fmt.Sprintf("TestMsgDelegate with %s", "ok")
-		return msg, nil
+		denom := k.GetParams(ctx).BondDenom
+		validatorKey := keys[r.Intn(len(keys))]
+		validatorAddress := sdk.AccAddress(validatorKey.PubKey().Address())
+		delegatorKey := keys[r.Intn(len(keys))]
+		delegatorAddress := sdk.AccAddress(delegatorKey.PubKey().Address())
+		amount := m.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
+		if amount.GT(sdk.ZeroInt()) {
+			amount = sdk.NewInt(int64(r.Intn(int(amount.Int64()))))
+		}
+		if amount.Equal(sdk.ZeroInt()) {
+			return "nop", nil
+		}
+		msg := MsgDelegate{
+			DelegatorAddr: delegatorAddress,
+			ValidatorAddr: validatorAddress,
+			Bond:          sdk.NewIntCoin(denom, amount),
+		}
+		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		result := handleMsgDelegate(ctx, msg, k)
+		stats[fmt.Sprintf("stake/delegate/%v", result.IsOK())] += 1
+		action = fmt.Sprintf("TestMsgDelegate: %s", msg.GetSignBytes())
+		return action, nil
 	}
 }
 
 // SimulateMsgBeginUnbonding
-func SimulateMsgBeginUnbonding(k Keeper) mock.TestAndRunMsg {
+func SimulateMsgBeginUnbonding(m auth.AccountMapper, k Keeper) mock.TestAndRunMsg {
 	return func(t *testing.T, r *rand.Rand, ctx sdk.Context, keys []crypto.PrivKey, log string) (action string, err sdk.Error) {
 		msg := fmt.Sprintf("TestMsgBeginUnbonding with %s", "ok")
 		return msg, nil
@@ -153,10 +192,34 @@ func SimulateMsgCompleteUnbonding(k Keeper) mock.TestAndRunMsg {
 }
 
 // SimulateMsgBeginRedelegate
-func SimulateMsgBeginRedelegate(k Keeper) mock.TestAndRunMsg {
+func SimulateMsgBeginRedelegate(m auth.AccountMapper, k Keeper) mock.TestAndRunMsg {
 	return func(t *testing.T, r *rand.Rand, ctx sdk.Context, keys []crypto.PrivKey, log string) (action string, err sdk.Error) {
-		msg := fmt.Sprintf("TestMsgBeginRedelegate with %s", "ok")
-		return msg, nil
+		denom := k.GetParams(ctx).BondDenom
+		sourceValidatorKey := keys[r.Intn(len(keys))]
+		sourceValidatorAddress := sdk.AccAddress(sourceValidatorKey.PubKey().Address())
+		destValidatorKey := keys[r.Intn(len(keys))]
+		destValidatorAddress := sdk.AccAddress(destValidatorKey.PubKey().Address())
+		delegatorKey := keys[r.Intn(len(keys))]
+		delegatorAddress := sdk.AccAddress(delegatorKey.PubKey().Address())
+		// TODO
+		amount := m.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
+		if amount.GT(sdk.ZeroInt()) {
+			amount = sdk.NewInt(int64(r.Intn(int(amount.Int64()))))
+		}
+		if amount.Equal(sdk.ZeroInt()) {
+			return "nop", nil
+		}
+		msg := MsgBeginRedelegate{
+			DelegatorAddr:    delegatorAddress,
+			ValidatorSrcAddr: sourceValidatorAddress,
+			ValidatorDstAddr: destValidatorAddress,
+			SharesAmount:     sdk.NewRatFromInt(amount),
+		}
+		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		result := handleMsgBeginRedelegate(ctx, msg, k)
+		stats[fmt.Sprintf("stake/beginredelegate/%v", result.IsOK())] += 1
+		action = fmt.Sprintf("TestMsgBeginRedelegate: %s", msg.GetSignBytes())
+		return action, nil
 	}
 }
 
@@ -173,6 +236,19 @@ func SimulationSetup(mapp *mock.App, k Keeper) mock.RandSetup {
 	return func(r *rand.Rand, privKeys []crypto.PrivKey) {
 		ctx := mapp.NewContext(false, abci.Header{})
 		InitGenesis(ctx, k, DefaultGenesisState())
+		params := k.GetParams(ctx)
+		denom := params.BondDenom
+		loose := sdk.ZeroInt()
+		mapp.AccountMapper.IterateAccounts(ctx, func(acc auth.Account) bool {
+			balance := sdk.NewInt(int64(r.Intn(1000000)))
+			acc.SetCoins(acc.GetCoins().Plus(sdk.Coins{sdk.NewIntCoin(denom, balance)}))
+			mapp.AccountMapper.SetAccount(ctx, acc)
+			loose = loose.Add(balance)
+			return false
+		})
+		pool := k.GetPool(ctx)
+		pool.LooseTokens += loose.Int64()
+		k.SetPool(ctx, pool)
 	}
 }
 
@@ -186,6 +262,12 @@ func TestStakeWithRandomMessages(t *testing.T) {
 	stakeKey := sdk.NewKVStoreKey("stake")
 	stakeKeeper := NewKeeper(mapp.Cdc, stakeKey, coinKeeper, DefaultCodespace)
 	mapp.Router().AddRoute("stake", NewHandler(stakeKeeper))
+	mapp.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+		validatorUpdates := EndBlocker(ctx, stakeKeeper)
+		return abci.ResponseEndBlock{
+			ValidatorUpdates: validatorUpdates,
+		}
+	})
 
 	err := mapp.CompleteSetup([]*sdk.KVStoreKey{stakeKey})
 	if err != nil {
@@ -196,10 +278,10 @@ func TestStakeWithRandomMessages(t *testing.T) {
 		t, 20, []mock.TestAndRunMsg{
 			SimulateMsgCreateValidator(mapper, stakeKeeper),
 			SimulateMsgEditValidator(stakeKeeper),
-			SimulateMsgDelegate(stakeKeeper),
-			SimulateMsgBeginUnbonding(stakeKeeper),
+			SimulateMsgDelegate(mapper, stakeKeeper),
+			SimulateMsgBeginUnbonding(mapper, stakeKeeper),
 			SimulateMsgCompleteUnbonding(stakeKeeper),
-			SimulateMsgBeginRedelegate(stakeKeeper),
+			SimulateMsgBeginRedelegate(mapper, stakeKeeper),
 			SimulateMsgCompleteRedelegate(stakeKeeper),
 		}, []mock.RandSetup{
 			SimulationSetup(mapp, stakeKeeper),
@@ -207,4 +289,6 @@ func TestStakeWithRandomMessages(t *testing.T) {
 			ModuleInvariants(coinKeeper, stakeKeeper),
 		}, 10, 100, 500,
 	)
+
+	fmt.Printf("Stats: %v\n", stats)
 }

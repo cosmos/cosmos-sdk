@@ -239,71 +239,52 @@ func (v Validator) Status() sdk.BondStatus {
 	return v.PoolShares.Status
 }
 
-// UpdateStatus updates the location of the shares within a validator if it's
-// bond status has changed.
+// UpdateStatus updates the location of the shares within a validator
+// to reflect the new status
 func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator, Pool) {
 	var tokens int64
 
 	switch v.Status() {
 	case sdk.Unbonded:
-		if NewStatus == sdk.Unbonded {
-			return v, pool
-		}
-		pool, tokens = pool.removeSharesUnbonded(v.PoolShares.Amount)
 
+		switch NewStatus {
+		case sdk.Unbonded:
+			return v, pool
+		case sdk.Bonded:
+			pool = pool.AddTokensBonded(v.PoolShares.Amount)
+		}
 	case sdk.Unbonding:
-		if NewStatus == sdk.Unbonding {
-			return v, pool
-		}
-		pool, tokens = pool.removeSharesUnbonding(v.PoolShares.Amount)
 
-	case sdk.Bonded:
-		if NewStatus == sdk.Bonded {
-			// Return if nothing needs switching
+		switch NewStatus {
+		case sdk.Unbonding:
 			return v, pool
+		case sdk.Bonded:
+			pool = pool.AddTokensBonded(v.PoolShares.Amount)
 		}
-		pool, tokens = pool.removeSharesBonded(v.PoolShares.Amount)
+	case sdk.Bonded:
+
+		switch NewStatus {
+		case sdk.Bonded:
+			return v, pool
+		default:
+			pool = pool.RemoveTokensBonded(v.PoolShares.Amount)
+		}
 	}
 
-	switch NewStatus {
-	case sdk.Unbonded:
-		pool, v.PoolShares = pool.addTokensUnbonded(tokens)
-	case sdk.Unbonding:
-		pool, v.PoolShares = pool.addTokensUnbonding(tokens)
-	case sdk.Bonded:
-		pool, v.PoolShares = pool.addTokensBonded(tokens)
-	}
-
+	v.Tokens.Status = NewStatus
 	return v, pool
 }
 
-// RemovePoolShares removes pool shares from a validator. It returns
-// corresponding tokens, which could be burned (e.g. when slashing a validator)
-// or redistributed elsewhere.
-func (v Validator) RemovePoolShares(pool Pool, poolShares sdk.Rat) (Validator, Pool, int64) {
+// removes tokens from a validator
+func (v Validator) RemoveTokens(pool Pool, tokens sdk.Rat) (Validator, Pool) {
 	var tokens int64
 
-	switch v.Status() {
-	case sdk.Unbonded:
-		pool, tokens = pool.removeSharesUnbonded(poolShares)
-	case sdk.Unbonding:
-		pool, tokens = pool.removeSharesUnbonding(poolShares)
-	case sdk.Bonded:
-		pool, tokens = pool.removeSharesBonded(poolShares)
+	if v.Status() == sdk.Bonded {
+		pool = pool.removeBondedTokens(tokens)
 	}
 
 	v.PoolShares.Amount = v.PoolShares.Amount.Sub(poolShares)
 	return v, pool, tokens
-}
-
-// EquivalentBondedShares ...
-//
-// TODO: Remove should only be tokens get the power or potential power for a
-// validator if bonded, the power is the BondedShares if not bonded, the power
-// is the amount of bonded shares which the the validator would have it was
-// bonded.
-func (v Validator) EquivalentBondedShares(pool Pool) (eqBondedShares sdk.Rat) {
-	return v.PoolShares.ToBonded(pool).Amount
 }
 
 //_________________________________________________________________________________________________________
@@ -365,14 +346,12 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Rat) (Validator, Poo
 }
 
 // DelegatorShareExRate gets the exchange rate of tokens over delegator shares.
-// UNITS: eq-val-bonded-shares/delegator-shares
+// UNITS: tokens/delegator-shares
 func (v Validator) DelegatorShareExRate(pool Pool) sdk.Rat {
 	if v.DelegatorShares.IsZero() {
 		return sdk.OneRat()
 	}
-
-	eqBondedShares := v.PoolShares.ToBonded(pool).Amount
-	return eqBondedShares.Quo(v.DelegatorShares)
+	return v.Tokens.Amount.Quo(v.DelegatorShares)
 }
 
 //______________________________________________________________________
@@ -402,7 +381,7 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp := "Validator \n"
 	resp += fmt.Sprintf("Owner: %s\n", v.Owner)
 	resp += fmt.Sprintf("Validator: %s\n", bechVal)
-	resp += fmt.Sprintf("Shares: Status %s,  Amount: %s\n", sdk.BondStatusToString(v.PoolShares.Status), v.PoolShares.Amount.FloatString())
+	resp += fmt.Sprintf("Tokens: Status %s,  Amount: %s\n", sdk.BondStatusToString(v.Tokens.Status), v.Tokens.Amount.FloatString())
 	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.FloatString())
 	resp += fmt.Sprintf("Description: %s\n", v.Description)
 	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)

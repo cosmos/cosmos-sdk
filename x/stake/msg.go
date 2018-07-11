@@ -66,9 +66,6 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return ErrValidatorEmpty(DefaultCodespace)
 	}
-	if msg.Bond.Denom != StakingToken {
-		return ErrBadBondingDenom(DefaultCodespace)
-	}
 	if msg.Bond.Amount <= 0 {
 		return ErrBadBondingAmount(DefaultCodespace)
 	}
@@ -175,9 +172,6 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return ErrBadValidatorAddr(DefaultCodespace)
 	}
-	if msg.Bond.Denom != StakingToken {
-		return ErrBadBondingDenom(DefaultCodespace)
-	}
 	if msg.Bond.Amount <= 0 {
 		return ErrBadBondingAmount(DefaultCodespace)
 	}
@@ -239,5 +233,6 @@ func (msg MsgUnbond) ValidateBasic() sdk.Error {
 			return ErrBadShares(DefaultCodespace)
 		}
 	}
+
 	return nil
 }

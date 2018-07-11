@@ -64,3 +64,13 @@ NOTE: This documentation is a work-in-progress!
     - [CLI](clients/cli.md) - Queries and transactions via command line
     - [REST Light Client Daemon](clients/rest.md) - Queries and transactions via REST
       API
+
+# Future organisation of docs
+
+Next is an overview of the future organisation of the SDK docs
+
+- SDK book: Similar to RustBook, this is a series of tutorial that introduces the different concepts of the SDK. The SDK book is the recommended way to learn about the SDK. This is currently what is presented above (App1 to App5)
+- SDK API spec: Godoc provides a detailed reference spec for all the functions of the SDK. Lives here: https://godoc.org/github.com/cosmos/cosmos-sdk
+- SDK by examples: Self-sufficient SDK app examples.
+- SDK reference doc: Detailed documentation of everything that a SDK dev might want to know. Includes detailed explanation about multistore, IAVL tree, queries, LCD, testnets, RPCs, ... This is needed in 6 months (medium term). Until then Cosmos Hub spec will be used in replacement.
+- Cosmos Hub Spec: Detailed specification of all state and transitions in the Cosmos Hub state machine

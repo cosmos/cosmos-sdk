@@ -73,6 +73,7 @@ var _ abci.Application = (*BaseApp)(nil)
 
 // Create and name new BaseApp
 // NOTE: The db is used to store the version number for now.
+// TODO: We need to call setCheckState in here or else the first CheckTx could fail
 func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB) *BaseApp {
 	app := &BaseApp{
 		Logger:     logger,

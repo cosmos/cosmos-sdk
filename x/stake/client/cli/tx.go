@@ -50,7 +50,17 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 				Website:  viper.GetString(FlagWebsite),
 				Details:  viper.GetString(FlagDetails),
 			}
-			msg := stake.NewMsgCreateValidator(validatorAddr, pk, amount, description)
+
+			var msg sdk.Msg
+			if viper.GetString(FlagAddressDelegator) != "" {
+				delegatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
+				if err != nil {
+					return err
+				}
+				msg = stake.NewMsgCreateValidatorOnBehalfOf(delegatorAddr, validatorAddr, pk, amount, description)
+			} else {
+				msg = stake.NewMsgCreateValidator(validatorAddr, pk, amount, description)
+			}
 
 			// build and sign the transaction, then broadcast to Tendermint
 			err = ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
@@ -65,6 +75,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().AddFlagSet(fsAmount)
 	cmd.Flags().AddFlagSet(fsDescription)
 	cmd.Flags().AddFlagSet(fsValidator)
+	cmd.Flags().AddFlagSet(fsDelegator)
 	return cmd
 }
 

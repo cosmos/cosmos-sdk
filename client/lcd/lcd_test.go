@@ -729,7 +729,7 @@ func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, 
 			{
 				"delegator_addr": "%s",
 				"validator_addr": "%s",
-				"bond": { "denom": "%s", "amount": "60" }
+				"delegation": { "denom": "%s", "amount": "60" }
 			}
 		],
 		"begin_unbondings": [],

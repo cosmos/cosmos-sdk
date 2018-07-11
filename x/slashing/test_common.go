@@ -59,7 +59,7 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, Keep
 	require.Nil(t, err)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewTMLogger(os.Stdout))
 	cdc := createTestCodec()
-	accountMapper := auth.NewAccountMapper(cdc, keyAcc, &auth.BaseAccount{})
+	accountMapper := auth.NewAccountMapper(cdc, keyAcc, auth.ProtoBaseAccount)
 	ck := bank.NewKeeper(accountMapper)
 	sk := stake.NewKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
@@ -94,9 +94,10 @@ func testAddr(addr string) sdk.AccAddress {
 
 func newTestMsgCreateValidator(address sdk.AccAddress, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
 	return stake.MsgCreateValidator{
-		Description:    stake.Description{},
-		ValidatorAddr:  address,
-		PubKey:         pubKey,
-		SelfDelegation: sdk.Coin{"steak", amt},
+		Description:   stake.Description{},
+		DelegatorAddr: address,
+		ValidatorAddr: address,
+		PubKey:        pubKey,
+		Delegation:    sdk.Coin{"steak", amt},
 	}
 }

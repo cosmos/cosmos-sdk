@@ -1,15 +1,26 @@
 # Changelog
 
-## 0.20.0
+## 0.21.0
 
 *TBD*
+
+BREAKING CHANGES
+* [x/stake] Specify DelegatorAddress in MsgCreateValidator
+* [x/auth] NewAccountMapper takes a constructor instead of a prototype
+
+FEATURES
+* [baseapp] NewBaseApp now takes option functions as parameters
+
+## 0.20.0
+
+*July 10th, 2018*
 
 BREAKING CHANGES
 * msg.GetSignBytes() returns sorted JSON (by key)
 * msg.GetSignBytes() field changes
     * `msg_bytes` -> `msgs`
     * `fee_bytes` -> `fee`
-* Update Tendermint to v0.22.0
+* Update Tendermint to v0.22.2
     * Default ports changed from 466xx to 266xx
     * Amino JSON uses type names instead of prefix bytes
     * ED25519 addresses are the first 20-bytes of the SHA256 of the raw 32-byte
@@ -21,7 +32,6 @@ BREAKING CHANGES
 * [auth] Removed MsgChangePubKey
 * [auth] Removed SetPubKey from account mapper
 * [auth] AltBytes renamed to Memo, now a string, max 100 characters, costs a bit of gas
-* [baseapp] NewBaseApp now takes option functions as parameters
 * [types] `GetMsg()` -> `GetMsgs()` as txs wrap many messages
 * [types] Removed GetMemo from Tx (it is still on StdTx)
 * [types] renamed rational.Evaluate to rational.Round{Int64, Int}

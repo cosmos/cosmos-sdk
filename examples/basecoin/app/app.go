@@ -62,8 +62,8 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	// define and attach the mappers and keepers
 	app.accountMapper = auth.NewAccountMapper(
 		cdc,
-		app.keyAccount,      // target store
-		&types.AppAccount{}, // prototype
+		app.keyAccount,        // target store
+		auth.ProtoBaseAccount, // prototype
 	)
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))

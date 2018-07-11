@@ -16,19 +16,24 @@ import (
 //______________________________________________________________________
 
 func newTestMsgCreateValidator(address sdk.AccAddress, pubKey crypto.PubKey, amt int64) MsgCreateValidator {
-	return MsgCreateValidator{
-		Description:    Description{},
-		ValidatorAddr:  address,
-		PubKey:         pubKey,
-		SelfDelegation: sdk.Coin{"steak", sdk.NewInt(amt)},
-	}
+	return types.NewMsgCreateValidator(address, pubKey, sdk.Coin{"steak", sdk.NewInt(amt)}, Description{})
 }
 
 func newTestMsgDelegate(delegatorAddr, validatorAddr sdk.AccAddress, amt int64) MsgDelegate {
 	return MsgDelegate{
 		DelegatorAddr: delegatorAddr,
 		ValidatorAddr: validatorAddr,
-		Bond:          sdk.Coin{"steak", sdk.NewInt(amt)},
+		Delegation:    sdk.Coin{"steak", sdk.NewInt(amt)},
+	}
+}
+
+func newTestMsgCreateValidatorOnBehalfOf(delegatorAddr, validatorAddr sdk.AccAddress, valPubKey crypto.PubKey, amt int64) MsgCreateValidator {
+	return MsgCreateValidator{
+		Description:   Description{},
+		DelegatorAddr: delegatorAddr,
+		ValidatorAddr: validatorAddr,
+		PubKey:        valPubKey,
+		Delegation:    sdk.Coin{"steak", sdk.NewInt(amt)},
 	}
 }
 
@@ -158,6 +163,32 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	assert.Equal(t, sdk.NewRat(10), validator.PoolShares.Bonded())
 	assert.Equal(t, sdk.NewRat(10), validator.DelegatorShares)
 	assert.Equal(t, Description{}, validator.Description)
+}
+
+func TestDuplicatesMsgCreateValidatorOnBehalfOf(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+
+	validatorAddr := keep.Addrs[0]
+	delegatorAddr := keep.Addrs[1]
+	pk := keep.PKs[0]
+	msgCreateValidatorOnBehalfOf := newTestMsgCreateValidatorOnBehalfOf(delegatorAddr, validatorAddr, pk, 10)
+	got := handleMsgCreateValidator(ctx, msgCreateValidatorOnBehalfOf, keeper)
+	require.True(t, got.IsOK(), "%v", got)
+	validator, found := keeper.GetValidator(ctx, validatorAddr)
+
+	require.True(t, found)
+	require.Equal(t, sdk.Bonded, validator.Status())
+	require.Equal(t, validatorAddr, validator.Owner)
+	require.Equal(t, pk, validator.PubKey)
+	require.Equal(t, sdk.NewRat(10), validator.PoolShares.Bonded())
+	require.Equal(t, sdk.NewRat(10), validator.DelegatorShares)
+	require.Equal(t, Description{}, validator.Description)
+
+	// one validator cannot be created twice even from different delegator
+	msgCreateValidatorOnBehalfOf.DelegatorAddr = keep.Addrs[2]
+	msgCreateValidatorOnBehalfOf.PubKey = keep.PKs[1]
+	got = handleMsgCreateValidator(ctx, msgCreateValidatorOnBehalfOf, keeper)
+	require.False(t, got.IsOK(), "%v", got)
 }
 
 func TestIncrementsMsgDelegate(t *testing.T) {
@@ -329,11 +360,12 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 	params := setInstantUnbondPeriod(keeper, ctx)
 
 	validatorAddrs := []sdk.AccAddress{keep.Addrs[0], keep.Addrs[1], keep.Addrs[2]}
+	delegatorAddrs := []sdk.AccAddress{keep.Addrs[3], keep.Addrs[4], keep.Addrs[5]}
 
 	// bond them all
 	for i, validatorAddr := range validatorAddrs {
-		msgCreateValidator := newTestMsgCreateValidator(validatorAddr, keep.PKs[i], 10)
-		got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+		msgCreateValidatorOnBehalfOf := newTestMsgCreateValidatorOnBehalfOf(delegatorAddrs[i], validatorAddr, keep.PKs[i], 10)
+		got := handleMsgCreateValidator(ctx, msgCreateValidatorOnBehalfOf, keeper)
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 
 		//Check that the account is bonded
@@ -341,18 +373,18 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 		require.Equal(t, (i + 1), len(validators))
 		val := validators[i]
 		balanceExpd := sdk.NewInt(initBond - 10)
-		balanceGot := accMapper.GetAccount(ctx, val.Owner).GetCoins().AmountOf(params.BondDenom)
+		balanceGot := accMapper.GetAccount(ctx, delegatorAddrs[i]).GetCoins().AmountOf(params.BondDenom)
 		require.Equal(t, i+1, len(validators), "expected %d validators got %d, validators: %v", i+1, len(validators), validators)
 		require.Equal(t, 10, int(val.DelegatorShares.RoundInt64()), "expected %d shares, got %d", 10, val.DelegatorShares)
 		require.Equal(t, balanceExpd, balanceGot, "expected account to have %d, got %d", balanceExpd, balanceGot)
 	}
 
-	// unbond them all
+	// unbond them all by revoking delegation
 	for i, validatorAddr := range validatorAddrs {
-		validatorPre, found := keeper.GetValidator(ctx, validatorAddr)
+		_, found := keeper.GetValidator(ctx, validatorAddr)
 		require.True(t, found)
-		msgBeginUnbonding := NewMsgBeginUnbonding(validatorAddr, validatorAddr, sdk.NewRat(10)) // self-delegation
-		msgCompleteUnbonding := NewMsgCompleteUnbonding(validatorAddr, validatorAddr)
+		msgBeginUnbonding := NewMsgBeginUnbonding(delegatorAddrs[i], validatorAddr, sdk.NewRat(10)) // remove delegation
+		msgCompleteUnbonding := NewMsgCompleteUnbonding(delegatorAddrs[i], validatorAddr)
 		got := handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 		got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbonding, keeper)
@@ -367,7 +399,7 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 		require.False(t, found)
 
 		expBalance := sdk.NewInt(initBond)
-		gotBalance := accMapper.GetAccount(ctx, validatorPre.Owner).GetCoins().AmountOf(params.BondDenom)
+		gotBalance := accMapper.GetAccount(ctx, delegatorAddrs[i]).GetCoins().AmountOf(params.BondDenom)
 		require.Equal(t, expBalance, gotBalance, "expected account to have %d, got %d", expBalance, gotBalance)
 	}
 }

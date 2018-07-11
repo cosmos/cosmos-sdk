@@ -28,7 +28,7 @@ func NewApp4(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	keyAccount := sdk.NewKVStoreKey("acc")
 
 	// Set various mappers/keepers to interact easily with underlying stores
-	accountMapper := auth.NewAccountMapper(cdc, keyAccount, &auth.BaseAccount{})
+	accountMapper := auth.NewAccountMapper(cdc, keyAccount, auth.ProtoBaseAccount)
 	coinKeeper := bank.NewKeeper(accountMapper)
 
 	// TODO

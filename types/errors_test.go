@@ -14,8 +14,13 @@ var codeTypes = []CodeType{
 	CodeUnauthorized,
 	CodeInsufficientFunds,
 	CodeUnknownRequest,
-	CodeUnknownAddress,
+	CodeInvalidAddress,
 	CodeInvalidPubKey,
+	CodeUnknownAddress,
+	CodeInsufficientCoins,
+	CodeInvalidCoins,
+	CodeOutOfGas,
+	CodeMemoTooLarge,
 }
 
 type errFn func(msg string) Error
@@ -27,8 +32,13 @@ var errFns = []errFn{
 	ErrUnauthorized,
 	ErrInsufficientFunds,
 	ErrUnknownRequest,
-	ErrUnknownAddress,
+	ErrInvalidAddress,
 	ErrInvalidPubKey,
+	ErrUnknownAddress,
+	ErrInsufficientCoins,
+	ErrInvalidCoins,
+	ErrOutOfGas,
+	ErrMemoTooLarge,
 }
 
 func TestCodeType(t *testing.T) {
@@ -36,8 +46,11 @@ func TestCodeType(t *testing.T) {
 
 	for _, c := range codeTypes {
 		msg := CodeToDefaultMsg(c)
-		require.False(t, strings.HasPrefix(msg, "Unknown code"))
+		require.False(t, strings.HasPrefix(msg, "unknown code"))
 	}
+
+	msg := CodeToDefaultMsg(CodeOK)
+	require.True(t, strings.HasPrefix(msg, "unknown code"))
 }
 
 func TestErrFn(t *testing.T) {
@@ -47,4 +60,6 @@ func TestErrFn(t *testing.T) {
 		require.Equal(t, err.Code(), codeType)
 		require.Equal(t, err.Result().Code, ToABCICode(CodespaceRoot, codeType))
 	}
+
+	require.Equal(t, ABCICodeOK, ToABCICode(CodespaceRoot, CodeOK))
 }

@@ -115,7 +115,11 @@ func SimulateMsgCreateValidator(m auth.AccountMapper, k Keeper) mock.TestAndRunM
 			SelfDelegation: sdk.NewIntCoin(denom, amount),
 		}
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		ctx, write := ctx.CacheContext()
 		result := handleMsgCreateValidator(ctx, msg, k)
+		if result.IsOK() {
+			write()
+		}
 		stats[fmt.Sprintf("stake/createvalidator/%v", result.IsOK())] += 1
 		// require.True(t, result.IsOK(), "expected OK result but instead got %v", result)
 		action = fmt.Sprintf("TestMsgCreateValidator: %s", msg.GetSignBytes())
@@ -140,7 +144,11 @@ func SimulateMsgEditValidator(k Keeper) mock.TestAndRunMsg {
 			ValidatorAddr: address,
 		}
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		ctx, write := ctx.CacheContext()
 		result := handleMsgEditValidator(ctx, msg, k)
+		if result.IsOK() {
+			write()
+		}
 		stats[fmt.Sprintf("stake/editvalidator/%v", result.IsOK())] += 1
 		action = fmt.Sprintf("TestMsgEditValidator: %s", msg.GetSignBytes())
 		return action, nil
@@ -168,7 +176,11 @@ func SimulateMsgDelegate(m auth.AccountMapper, k Keeper) mock.TestAndRunMsg {
 			Bond:          sdk.NewIntCoin(denom, amount),
 		}
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		ctx, write := ctx.CacheContext()
 		result := handleMsgDelegate(ctx, msg, k)
+		if result.IsOK() {
+			write()
+		}
 		stats[fmt.Sprintf("stake/delegate/%v", result.IsOK())] += 1
 		action = fmt.Sprintf("TestMsgDelegate: %s", msg.GetSignBytes())
 		return action, nil
@@ -216,7 +228,11 @@ func SimulateMsgBeginRedelegate(m auth.AccountMapper, k Keeper) mock.TestAndRunM
 			SharesAmount:     sdk.NewRatFromInt(amount),
 		}
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		ctx, write := ctx.CacheContext()
 		result := handleMsgBeginRedelegate(ctx, msg, k)
+		if result.IsOK() {
+			write()
+		}
 		stats[fmt.Sprintf("stake/beginredelegate/%v", result.IsOK())] += 1
 		action = fmt.Sprintf("TestMsgBeginRedelegate: %s", msg.GetSignBytes())
 		return action, nil

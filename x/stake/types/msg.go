@@ -2,6 +2,7 @@ package types
 
 import (
 	"math"
+	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -27,38 +28,63 @@ var maximumBondingRationalDenominator sdk.Int = sdk.NewInt(int64(math.Pow10(MaxB
 // MsgCreateValidator - struct for unbonding transactions
 type MsgCreateValidator struct {
 	Description
-	ValidatorAddr  sdk.AccAddress `json:"address"`
-	PubKey         crypto.PubKey  `json:"pubkey"`
-	SelfDelegation sdk.Coin       `json:"self_delegation"`
+	DelegatorAddr sdk.AccAddress `json:"delegator_address"`
+	ValidatorAddr sdk.AccAddress `json:"validator_address"`
+	PubKey        crypto.PubKey  `json:"pubkey"`
+	Delegation    sdk.Coin       `json:"delegation"`
 }
 
+// Default way to create validator. Delegator address and validator address are the same
 func NewMsgCreateValidator(validatorAddr sdk.AccAddress, pubkey crypto.PubKey,
 	selfDelegation sdk.Coin, description Description) MsgCreateValidator {
 	return MsgCreateValidator{
-		Description:    description,
-		ValidatorAddr:  validatorAddr,
-		PubKey:         pubkey,
-		SelfDelegation: selfDelegation,
+		Description:   description,
+		DelegatorAddr: validatorAddr,
+		ValidatorAddr: validatorAddr,
+		PubKey:        pubkey,
+		Delegation:    selfDelegation,
+	}
+}
+
+// Creates validator msg by delegator address on behalf of validator address
+func NewMsgCreateValidatorOnBehalfOf(delegatorAddr, validatorAddr sdk.AccAddress, pubkey crypto.PubKey,
+	delegation sdk.Coin, description Description) MsgCreateValidator {
+	return MsgCreateValidator{
+		Description:   description,
+		DelegatorAddr: delegatorAddr,
+		ValidatorAddr: validatorAddr,
+		PubKey:        pubkey,
+		Delegation:    delegation,
 	}
 }
 
 //nolint
 func (msg MsgCreateValidator) Type() string { return MsgType }
+
+// Return address(es) that must sign over msg.GetSignBytes()
 func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.ValidatorAddr}
+	// delegator is first signer so delegator pays fees
+	addrs := []sdk.AccAddress{msg.DelegatorAddr}
+	if !reflect.DeepEqual(msg.DelegatorAddr, msg.ValidatorAddr) {
+		// if validator addr is not same as delegator addr, validator must sign msg as well
+		addrs = append(addrs, msg.ValidatorAddr)
+	}
+	return addrs
 }
 
 // get the bytes for the message signer to sign on
 func (msg MsgCreateValidator) GetSignBytes() []byte {
 	b, err := MsgCdc.MarshalJSON(struct {
 		Description
-		ValidatorAddr sdk.AccAddress `json:"address"`
+		DelegatorAddr sdk.AccAddress `json:"delegator_address"`
+		ValidatorAddr sdk.AccAddress `json:"validator_address"`
 		PubKey        string         `json:"pubkey"`
-		Bond          sdk.Coin       `json:"bond"`
+		Delegation    sdk.Coin       `json:"delegation"`
 	}{
 		Description:   msg.Description,
 		ValidatorAddr: msg.ValidatorAddr,
 		PubKey:        sdk.MustBech32ifyValPub(msg.PubKey),
+		Delegation:    msg.Delegation,
 	})
 	if err != nil {
 		panic(err)
@@ -68,10 +94,13 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
+	if msg.DelegatorAddr == nil {
+		return ErrNilDelegatorAddr(DefaultCodespace)
+	}
 	if msg.ValidatorAddr == nil {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if !(msg.SelfDelegation.Amount.GT(sdk.ZeroInt())) {
+	if !(msg.Delegation.Amount.GT(sdk.ZeroInt())) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	empty := Description{}
@@ -135,14 +164,14 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 type MsgDelegate struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
 	ValidatorAddr sdk.AccAddress `json:"validator_addr"`
-	Bond          sdk.Coin       `json:"bond"`
+	Delegation    sdk.Coin       `json:"delegation"`
 }
 
-func NewMsgDelegate(delegatorAddr, validatorAddr sdk.AccAddress, bond sdk.Coin) MsgDelegate {
+func NewMsgDelegate(delegatorAddr, validatorAddr sdk.AccAddress, delegation sdk.Coin) MsgDelegate {
 	return MsgDelegate{
 		DelegatorAddr: delegatorAddr,
 		ValidatorAddr: validatorAddr,
-		Bond:          bond,
+		Delegation:    delegation,
 	}
 }
 
@@ -169,7 +198,7 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if !(msg.Bond.Amount.GT(sdk.ZeroInt())) {
+	if !(msg.Delegation.Amount.GT(sdk.ZeroInt())) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	return nil

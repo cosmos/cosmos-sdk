@@ -89,6 +89,7 @@ FEATURES
 * [tests] created a randomized testing framework. 
   - Currently bank has limited functionality in the framework
   - Auth has its invariants checked within the framework
+* [x/stake] Allow validator to be created with starting delegation by a third-party delegator on behalf of validator.
 * [tests] Add WaitForNextNBlocksTM helper method
 * [keys] New keys now have 24 word recovery keys, for heightened security
 

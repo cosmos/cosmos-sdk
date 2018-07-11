@@ -71,13 +71,14 @@ var (
 	DefaultGenesisState = types.DefaultGenesisState
 	RegisterWire        = types.RegisterWire
 
-	NewMsgCreateValidator    = types.NewMsgCreateValidator
-	NewMsgEditValidator      = types.NewMsgEditValidator
-	NewMsgDelegate           = types.NewMsgDelegate
-	NewMsgBeginUnbonding     = types.NewMsgBeginUnbonding
-	NewMsgCompleteUnbonding  = types.NewMsgCompleteUnbonding
-	NewMsgBeginRedelegate    = types.NewMsgBeginRedelegate
-	NewMsgCompleteRedelegate = types.NewMsgCompleteRedelegate
+	NewMsgCreateValidator           = types.NewMsgCreateValidator
+	NewMsgCreateValidatorOnBehalfOf = types.NewMsgCreateValidatorOnBehalfOf
+	NewMsgEditValidator             = types.NewMsgEditValidator
+	NewMsgDelegate                  = types.NewMsgDelegate
+	NewMsgBeginUnbonding            = types.NewMsgBeginUnbonding
+	NewMsgCompleteUnbonding         = types.NewMsgCompleteUnbonding
+	NewMsgBeginRedelegate           = types.NewMsgBeginRedelegate
+	NewMsgCompleteRedelegate        = types.NewMsgCompleteRedelegate
 )
 
 const (

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.20.1
+
+*July 11th, 2018*
+
+BUG FIXES
+
+* [gaiad] Fix export command
+
 ## 0.20.0
 
 *July 10th, 2018*

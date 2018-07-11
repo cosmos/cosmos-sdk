@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.21.0
+
+*TBD*
+
+BREAKING CHANGES
+* [x/stake] Specify DelegatorAddress in MsgCreateValidator
+* [x/auth] NewAccountMapper takes a constructor instead of a prototype
+
+FEATURES
+* [baseapp] NewBaseApp now takes option functions as parameters
+
 ## 0.20.0
 
 *July 10th, 2018*
@@ -21,7 +32,6 @@ BREAKING CHANGES
 * [auth] Removed MsgChangePubKey
 * [auth] Removed SetPubKey from account mapper
 * [auth] AltBytes renamed to Memo, now a string, max 100 characters, costs a bit of gas
-* [baseapp] NewBaseApp now takes option functions as parameters
 * [types] `GetMsg()` -> `GetMsgs()` as txs wrap many messages
 * [types] Removed GetMemo from Tx (it is still on StdTx)
 * [types] renamed rational.Evaluate to rational.Round{Int64, Int}
@@ -89,7 +99,6 @@ FEATURES
 * [tests] created a randomized testing framework. 
   - Currently bank has limited functionality in the framework
   - Auth has its invariants checked within the framework
-* [x/stake] Allow validator to be created with starting delegation by a third-party delegator on behalf of validator.
 * [tests] Add WaitForNextNBlocksTM helper method
 * [keys] New keys now have 24 word recovery keys, for heightened security
 

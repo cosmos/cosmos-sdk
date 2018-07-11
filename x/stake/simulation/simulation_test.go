@@ -191,8 +191,32 @@ func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) mock.TestAndRunMs
 // SimulateMsgBeginUnbonding
 func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) mock.TestAndRunMsg {
 	return func(t *testing.T, r *rand.Rand, ctx sdk.Context, keys []crypto.PrivKey, log string) (action string, err sdk.Error) {
-		msg := fmt.Sprintf("TestMsgBeginUnbonding with %s", "ok")
-		return msg, nil
+		denom := k.GetParams(ctx).BondDenom
+		validatorKey := keys[r.Intn(len(keys))]
+		validatorAddress := sdk.AccAddress(validatorKey.PubKey().Address())
+		delegatorKey := keys[r.Intn(len(keys))]
+		delegatorAddress := sdk.AccAddress(delegatorKey.PubKey().Address())
+		amount := m.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
+		if amount.GT(sdk.ZeroInt()) {
+			amount = sdk.NewInt(int64(r.Intn(int(amount.Int64()))))
+		}
+		if amount.Equal(sdk.ZeroInt()) {
+			return "nop", nil
+		}
+		msg := stake.MsgBeginUnbonding{
+			DelegatorAddr: delegatorAddress,
+			ValidatorAddr: validatorAddress,
+			SharesAmount:  sdk.NewRatFromInt(amount),
+		}
+		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		ctx, write := ctx.CacheContext()
+		result := stake.NewHandler(k)(ctx, msg)
+		if result.IsOK() {
+			write()
+		}
+		stats[fmt.Sprintf("stake/beginunbonding/%v", result.IsOK())] += 1
+		action = fmt.Sprintf("TestMsgBeginUnbonding: %s", msg.GetSignBytes())
+		return action, nil
 	}
 }
 

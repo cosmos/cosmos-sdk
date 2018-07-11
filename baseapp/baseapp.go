@@ -81,6 +81,7 @@ var _ abci.Application = (*BaseApp)(nil)
 //
 // NOTE: The db is used to store the version number for now.
 // Accepts variable number of option functions, which act on the BaseApp to set configuration choices
+// TODO: We need to call setCheckState in here or else the first CheckTx could fail
 func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB, options ...func(*BaseApp)) *BaseApp {
 	app := &BaseApp{
 		Logger:     logger,

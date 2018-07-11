@@ -25,9 +25,10 @@ similar API.
 
 url: /broadcast_tx_sync
 
-Functionality: Submit a signed transaction and wait for it to be committed.
+Functionality: Submit a signed transaction synchronously. This returns a response from CheckTx.
 
 Parameters:
+
 | Parameter   | Type   | Default | Required | Description     |
 | ----------- | ------ | ------- | -------- | --------------- |
 | transaction | string | null    | true     | signed tx bytes |
@@ -36,14 +37,14 @@ Returns on success:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":200,
-    "error": "",
-    "result": {
-	"code": 0,
-	"hash": "0D33F2F03A5234F38706E43004489E061AC40A2E",
-	"data": "",
-	"log": ""
+    "error":"",
+    "result":{
+	"code":0,
+	"hash":"0D33F2F03A5234F38706E43004489E061AC40A2E",
+	"data":"",
+	"log":""
     }
 }
 ```
@@ -52,10 +53,10 @@ Returns on failure:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":500,
-    "error": "Could not submit the transaction synchronously.",
-    "result": {}
+    "error":"Could not submit the transaction synchronously.",
+    "result":{}
 }
 ```
 
@@ -63,9 +64,10 @@ Returns on failure:
 
 url: /broadcast_tx_async
 
-Functionality: Submit a signed transaction asynchronously.
+Functionality: Submit a signed transaction asynchronously. This does not return a response from CheckTx.
 
 Parameters:
+
 | Parameter   | Type   | Default | Required | Description     |
 | ----------- | ------ | ------- | -------- | --------------- |
 | transaction | string | null    | true     | signed tx bytes |
@@ -74,14 +76,14 @@ Returns on success:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":200,
-    "error": "",
+    "error":"",
     "result": {
-		"code": 0,
-		"hash": "E39AAB7A537ABAA237831742DCE1117F187C3C52",
-		"data": "",
-		"log": ""
+		"code":0,
+		"hash":"E39AAB7A537ABAA237831742DCE1117F187C3C52",
+		"data":"",
+		"log":""
     }
 }
 ```
@@ -90,10 +92,56 @@ Returns on failure:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":500,
-    "error": "Could not submit the transaction asynchronously.",
-    "result": {}
+    "error":"Could not submit the transaction asynchronously.",
+    "result":{}
+}
+```
+
+### /broadcast_tx_commit - POST
+
+url: /broadcast_tx_commit
+
+Functionality: Submit a signed transaction and waits for it to be committed in a block.
+
+Parameters:
+
+| Parameter   | Type   | Default | Required | Description     |
+| ----------- | ------ | ------- | -------- | --------------- |
+| transaction | string | null    | true     | signed tx bytes |
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{
+        "height":26682,
+        "hash":"75CA0F856A4DA078FC4911580360E70CEFB2EBEE",
+        "deliver_tx":{
+            "log":"",
+            "data":"",
+            "code":0
+        },
+        "check_tx":{
+        "log":"",
+        "data":"",
+        "code":0
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"Could not commit the transaction.",
+    "result":{}
 }
 ```
 
@@ -111,23 +159,23 @@ Returns on success:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":200,
-    "error": "",
-    "result": {
-        "keys": [
+    "error":"",
+    "result":{
+        "keys":[
            {
-                "name": "monkey",
-                "address": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
-                "pub_key": "cosmosaccpub1zcjduc3q8s8ha96ry4xc5xvjp9tr9w9p0e5lk5y0rpjs5epsfxs4wmf72x3shvus0t"
+                "name":"monkey",
+                "address":"cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
+                "pub_key":"cosmosaccpub1zcjduc3q8s8ha96ry4xc5xvjp9tr9w9p0e5lk5y0rpjs5epsfxs4wmf72x3shvus0t"
             },
             {
-                "name": "test",
-                "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-                "pub_key": "cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
+                "name":"test",
+                "address":"cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
+                "pub_key":"cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
             }
         ],
-        "block_height": 5241
+        "block_height":5241
     }
 }
 ```
@@ -136,7 +184,7 @@ Returns on failure:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":500,
     "error":"Could not retrieve the keys.",
     "result":{}
@@ -150,6 +198,7 @@ url: /keys/recover
 Functionality: Recover your key from seed and persist it encrypted with the password.
 
 Parameter:
+
 | Parameter | Type   | Default | Required | Description      |
 | --------- | ------ | ------- | -------- | ---------------- |
 | name      | string | null    | true     | name of key      |
@@ -160,11 +209,11 @@ Returns on success:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":200,
-    "error": "",
-    "result": {
-        "address":BD607C37147656A507A5A521AA9446EB72B2C907
+    "error":"",
+    "result":{
+        "address":"BD607C37147656A507A5A521AA9446EB72B2C907"
     }
 }
 ```
@@ -173,10 +222,10 @@ Returns on failure:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":500,
-    "error": "Could not recover the key.",
-    "result": {}
+    "error":"Could not recover the key.",
+    "result":{}
 }
 ```
 
@@ -187,6 +236,7 @@ url: /keys/create
 Functionality: Create a new key.
 
 Parameter:
+
 | Parameter | Type   | Default | Required | Description      |
 | --------- | ------ | ------- | -------- | ---------------- |
 | name      | string | null    | true     | name of key      |
@@ -196,11 +246,11 @@ Returns on success:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":200,
-    "error": "",
-    "result": {
-        "seed":crime carpet recycle erase simple prepare moral dentist fee cause pitch trigger when velvet animal abandon
+    "error":"",
+    "result":{
+        "seed":"crime carpet recycle erase simple prepare moral dentist fee cause pitch trigger when velvet animal abandon"
     }
 }
 ```
@@ -209,10 +259,10 @@ Returns on failure:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":500,
-    "error": "Could not create new key.",
-    "result": {}
+    "error":"Could not create new key.",
+    "result":{}
 }
 ```
 
@@ -226,13 +276,13 @@ Returns on success:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":200,
-    "error": "",
-    "result": {
-        "name": "test",
-            "address": "cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-            "pub_key": "cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
+    "error":"",
+    "result":{
+        "name":"test",
+            "address":"cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
+            "pub_key":"cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
     }
 }
 ```
@@ -241,10 +291,10 @@ Returns on failure:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":500,
-    "error": "Could not find information on the specified key.",
-    "result": {}
+    "error":"Could not find information on the specified key.",
+    "result":{}
 }
 ```
 
@@ -255,6 +305,7 @@ url: /keys/{name}
 Functionality: Change the encryption password for the specified key.
 
 Parameters:
+
 | Parameter       | Type   | Default | Required | Description     |
 | --------------- | ------ | ------- | -------- | --------------- |
 | old_password    | string | null    | true     | old password    |
@@ -264,10 +315,10 @@ Returns on success:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":200,
-    "error": "",
-    "result": {}
+    "error":"",
+    "result":{}
 }
 ```
 
@@ -275,10 +326,10 @@ Returns on failure:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":500,
-    "error": "Could not update the specified key.",
-    "result": {}
+    "error":"Could not update the specified key.",
+    "result":{}
 }
 ```
 
@@ -289,6 +340,7 @@ url: /keys/{name}
 Functionality: Delete the specified key.
 
 Parameters:
+
 | Parameter | Type   | Default | Required | Description      |
 | --------- | ------ | ------- | -------- | ---------------- |
 | password  | string | null    | true     | password of key  |
@@ -297,10 +349,10 @@ Returns on success:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":200,
-    "error": "",
-    "result": {}
+    "error":"",
+    "result":{}
 }
 ```
 
@@ -308,10 +360,10 @@ Returns on failure:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":500,
-    "error": "Could not delete the specified key.",
-    "result": {}
+    "error":"Could not delete the specified key.",
+    "result":{}
 }
 ```
 
@@ -329,13 +381,13 @@ Returns on success:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":200,
-    "error": "",
+    "error":"",
     "result": {
-        "atom": 1000,
-        "photon": 500,
-        "ether": 20
+        "atom":1000,
+        "photon":500,
+        "ether":20
     }
 }
 ```
@@ -344,10 +396,10 @@ Returns on error:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":500,
-    "error": "Could not find any balance for the specified account.",
-    "result": {}
+    "error":"Could not find any balance for the specified account.",
+    "result":{}
 }
 ```
 
@@ -358,6 +410,7 @@ url: /bank/create_transfer
 Functionality: Create a transfer in the bank module.
 
 Parameters:
+
 | Parameter    | Type   | Default | Required | Description               |
 | ------------ | ------ | ------- | -------- | ------------------------- |
 | sender       | string | null    | true     | Address of sender         |
@@ -370,11 +423,11 @@ Returns on success:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":200,
-    "error": "",
-    "result": {
-     "transaction": "TODO:<JSON sign bytes for the transaction>"
+    "error":"",
+    "result":{
+     "transaction":"TODO:<JSON sign bytes for the transaction>"
     }
 }
 ```
@@ -383,9 +436,9 @@ Returns on failure:
 
 ```json
 {
-    "rest api": "2.0",
+    "rest api":"2.0",
     "code":500,
-    "error": "Could not create the transaction.",
-    "result": {}
+    "error":"Could not create the transaction.",
+    "result":{}
 }
 ```

@@ -16,11 +16,10 @@ LCD will be used in the Cosmos Hub, the first Hub in the Cosmos network.
 
 ## Contents
 
-1. [**Overview**](#Overview)
-2. [**Get Started**](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/getting_started.md)
-3. [**API**](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md)
-4. [**Specifications**](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/specification.md)
-5. [**Future Improvements**](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/Future%20Improvements.md)
+1. [**Overview**](##Overview)
+2. [**Get Started**](getting_started.md)
+3. [**API**](api.md)
+4. [**Specifications**](hspecification.md)
 
 ## Overview
 
@@ -40,7 +39,7 @@ An application developer that would like to build a third party integration can 
 with the LCD for the Cosmos Hub (or any other zone) and only needs to initialise it. Afterwards his
 application can interact with the zone as if it was running against a full node.
 
-![high-level](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd_spec/docs/spec/lcd/pics/high-level.png)
+![high-level](pics/high-level.png)
 
 An application developer that wants to build an third party application for the Cosmos Hub (or any
 other zone) should build it against it's canonical API. That API is a combination of multiple parts.
@@ -60,15 +59,15 @@ A full node of ABCI is different from its light client in the following ways:
 |-| ------------- | ----- | -------------- |
 | Execute and verify transactions|Yes|No|Full node will execute and verify all transactions while LCD won't|
 | Verify and save blocks|Yes|No|Full node will verify and save all blocks while LCD won't|
-| Participate consensus| Yes|No|Only when the full node is a validator, it will participate consensus. LCD nodes never participate consensus|
+| Participate consensus| Yes|No|Only when the full node is a validtor, it will participate consensus. LCD nodes never participate consensus|
 | Bandwidth cost|Huge|Little|Full node will receive all blocks. if the bandwidth is limited, it will fall behind the main network. What's more, if it happens to be a validator,it will slow down the consensus process. LCD requires little bandwidth. Only when serving local request, it will cost bandwidth|
 | Computing resource|Huge|Little|Full node will execute all transactions and verify all blocks which require much computing resource|
 | Storage resource|Huge|Little|Full node will save all blocks and ABCI states. LCD just saves validator sets and some checkpoints|
 | Power consume|Huge|Little|Full nodes have to be deployed on machines which have high performance and will be running all the time. So power consume will be huge. LCD can be deployed on the same machines as users' applications, or on independent machines but with poor performance. Besides, LCD can be shutdown anytime when necessary. So LCD only consume very little power, even mobile devices can meet the power requirement|
 | Provide APIs|All cosmos APIs|Modular APIs|Full node supports all cosmos APIs. LCD provides modular APIs according to users' configuration|
-| Security level| High|High|Full node will verify all transactions and blocks by itself. LCD can't do this, but it can query any data from other full nodes and verify the data independently. So both full node and LCD don't need to trust any third nodes, they all can achieve high security|
+| Secuity level| High|High|Full node will verify all transactions and blocks by itself. LCD can't do this, but it can query any data from other full nodes and verify the data independently. So both full node and LCD don't need to trust any third nodes, they all can achieve high security|
 
-According to the above table, LCD can meet all users' functionality and security requirements, but
+According to the above table, LCD can meet all users' functionality and security requirements, but 
 only requires little resource on bandwidth, computing, storage and power.
 
 ## How does LCD achieve high security?
@@ -84,7 +83,7 @@ The original trusted validator set should be prepositioned into its trust store,
 validator set comes from genesis file. During running time, if LCD detects different validator set,
 it will verify it and save new validated validator set to trust store.
 
-![validator-set-change](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd_spec/docs/spec/lcd/pics/validatorSetChange.png)
+![validator-set-change](pics/validatorSetChange.png)
 
 ### Trust propagation
 
@@ -93,7 +92,7 @@ validator set evolution. Validator set is the foundation of trust, and the trust
 other blockchain data, such as block and transaction. The propagate architecture is shown as
 follows:
 
-![change-process](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd_spec/docs/spec/lcd/pics/trustPropagate.png)
+![change-process](pics/trustPropagate.png)
 
 In general, by trusted validator set, LCD can verify each block commit which contains all pre-commit
 data and block header data. Then the block hash, data hash and appHash are trusted. Based on this

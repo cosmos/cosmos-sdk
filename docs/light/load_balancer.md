@@ -1,4 +1,4 @@
-# Load Balancing Module
+# Load Balancing Module - WIP
 
 The LCD will be an important bridge between service providers and cosmos blockchain network. Suppose
 a service provider wants to monitor token information for millions of accounts. Then it has to keep

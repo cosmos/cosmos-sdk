@@ -22,19 +22,19 @@ make transaction faster and more reliable in the following cases.
 
 ### Create an account
 
-![deposit](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd_spec/docs/spec/lcd/pics/create-account.png)
+![deposit](pics/create-account.png)
 
-First you need to get a new seed phrase :[get-seed](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keysseed---get)
+First you need to get a new seed phrase :[get-seed](api.md#keysseed---get)
 
-After having new seed, you could generate a new account with it : [keys](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#keys---post)
+After having new seed, you could generate a new account with it : [keys](api.md#keys---post)
 
 ### Transfer a token
 
-![transfer](https://github.com/irisnet/cosmos-sdk/raw/bianjie/lcd_spec/docs/spec/lcd/pics/transfer-tokens.png)
+![transfer](pics/transfer-tokens.png)
 
 The first step is to build an asset transfer transaction. Here we can post all necessary parameters
 to /create_transfer to get the unsigned transaction byte array. Refer to this link for detailed
-operation: [build transaction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#create_transfer---post)
+operation: [build transaction](api.md#create_transfer---post)
 
 Then sign the returned transaction byte array with users' private key. Finally broadcast the signed
-transaction. Refer to this link for how to broadcast the signed transaction: [broadcast transaction](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/api.md#create_transfer---post)
+transaction. Refer to this link for how to broadcast the signed transaction: [broadcast transaction](api.md#create_transfer---post)

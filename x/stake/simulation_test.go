@@ -109,10 +109,11 @@ func SimulateMsgCreateValidator(m auth.AccountMapper, k Keeper) mock.TestAndRunM
 			return "nop", nil
 		}
 		msg := MsgCreateValidator{
-			Description:    description,
-			ValidatorAddr:  address,
-			PubKey:         pubkey,
-			SelfDelegation: sdk.NewIntCoin(denom, amount),
+			Description:   description,
+			ValidatorAddr: address,
+			DelegatorAddr: address,
+			PubKey:        pubkey,
+			Delegation:    sdk.NewIntCoin(denom, amount),
 		}
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		ctx, write := ctx.CacheContext()
@@ -173,7 +174,7 @@ func SimulateMsgDelegate(m auth.AccountMapper, k Keeper) mock.TestAndRunMsg {
 		msg := MsgDelegate{
 			DelegatorAddr: delegatorAddress,
 			ValidatorAddr: validatorAddress,
-			Bond:          sdk.NewIntCoin(denom, amount),
+			Delegation:    sdk.NewIntCoin(denom, amount),
 		}
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		ctx, write := ctx.CacheContext()

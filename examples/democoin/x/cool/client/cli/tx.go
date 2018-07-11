@@ -1,13 +1,12 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 
@@ -36,12 +35,11 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 			name := viper.GetString(client.FlagName)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := ctx.EnsureSignBuildBroadcast(name, msg, cdc)
+			err = ctx.EnsureSignBuildBroadcast(name, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}
 
-			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
 			return nil
 		},
 	}
@@ -69,12 +67,11 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 			msg := cool.NewMsgSetTrend(from, args[0])
 
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := ctx.EnsureSignBuildBroadcast(name, msg, cdc)
+			err = ctx.EnsureSignBuildBroadcast(name, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}
 
-			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
 			return nil
 		},
 	}

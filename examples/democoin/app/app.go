@@ -3,11 +3,11 @@ package app
 import (
 	"encoding/json"
 
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
-	cmn "github.com/tendermint/tmlibs/common"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -71,7 +71,7 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	app.accountMapper = auth.NewAccountMapper(
 		cdc,
 		app.capKeyAccountStore, // target store
-		&types.AppAccount{},    // prototype
+		types.ProtoAppAccount,  // prototype
 	)
 
 	// Add handlers.
@@ -113,10 +113,14 @@ func MakeCodec() *wire.Codec {
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&types.AppAccount{}, "democoin/Account", nil)
+
+	cdc.Seal()
+
 	return cdc
 }
 
 // custom logic for democoin initialization
+// nolint: unparam
 func (app *DemocoinApp) initChainerFn(coolKeeper cool.Keeper, powKeeper pow.Keeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		stateJSON := req.AppStateBytes

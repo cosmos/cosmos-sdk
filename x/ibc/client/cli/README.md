@@ -58,7 +58,7 @@ I[04-02|14:09:14.453] Generated genesis file                       module=main p
 }
 > ADDR2=DC26002735D3AA9573707CFA6D77C12349E49868
 > ID2=test-chain-4XHTPn
-> NODE2=tcp://0.0.0.0:46657
+> NODE2=tcp://0.0.0.0:26657
 > basecli keys add key2 --recover
 Enter a passphrase for your key:
 Repeat the passphrase:
@@ -70,7 +70,7 @@ key2        DC26002735D3AA9573707CFA6D77C12349E49868
 > basecoind start --home ~/.chain1 --address tcp://0.0.0.0:36658 --rpc.laddr tcp://0.0.0.0:36657 --p2p.laddr tcp://0.0.0.0:36656
 ...
 
-> basecoind start --home ~/.chain2 # --address tcp://0.0.0.0:46658 --rpc.laddr tcp://0.0.0.0:46657 --p2p.laddr tcp://0.0.0.0:46656
+> basecoind start --home ~/.chain2 # --address tcp://0.0.0.0:26658 --rpc.laddr tcp://0.0.0.0:26657 --p2p.laddr tcp://0.0.0.0:26656
 ...
 ```
 ## Check balance
@@ -109,7 +109,7 @@ key2        DC26002735D3AA9573707CFA6D77C12349E49868
 ## Transfer coins (addr1:chain1 -> addr2:chain2)
 
 ```console
-> basecli transfer --name key1 --to $ADDR2 --amount 10mycoin --chain $ID2 --chain-id $ID1 --node $NODE1
+> basecli transfer --from key1 --to $ADDR2 --amount 10mycoin --chain $ID2 --chain-id $ID1 --node $NODE1
 Password to sign with 'key1':
 Committed at block 1022. Hash: E16019DCC4AA08CA70AFCFBC96028ABCC51B6AD0
 > basecli account $ADDR1 --node $NODE1
@@ -133,7 +133,7 @@ Committed at block 1022. Hash: E16019DCC4AA08CA70AFCFBC96028ABCC51B6AD0
 ## Relay IBC packets
 
 ```console
-> basecli relay --name key2 --from-chain-id $ID1 --from-chain-node $NODE1 --to-chain-id $ID2 --to-chain-node $NODE2 --chain-id $ID2
+> basecli relay --from key2 --from-chain-id $ID1 --from-chain-node $NODE1 --to-chain-id $ID2 --to-chain-node $NODE2 --chain-id $ID2
 Password to sign with 'key2':
 I[04-03|16:18:59.984] Detected IBC packet                          number=0
 I[04-03|16:19:00.869] Relayed IBC packet                           number=0

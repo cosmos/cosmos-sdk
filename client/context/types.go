@@ -11,14 +11,20 @@ type CoreContext struct {
 	ChainID         string
 	Height          int64
 	Gas             int64
+	Fee             string
 	TrustNode       bool
 	NodeURI         string
 	FromAddressName string
 	AccountNumber   int64
 	Sequence        int64
+	Memo            string
 	Client          rpcclient.Client
 	Decoder         auth.AccountDecoder
 	AccountStore    string
+	UseLedger       bool
+	Async           bool
+	JSON            bool
+	PrintResponse   bool
 }
 
 // WithChainID - return a copy of the context with an updated chainID
@@ -36,6 +42,12 @@ func (c CoreContext) WithHeight(height int64) CoreContext {
 // WithGas - return a copy of the context with an updated gas
 func (c CoreContext) WithGas(gas int64) CoreContext {
 	c.Gas = gas
+	return c
+}
+
+// WithFee - return a copy of the context with an updated fee
+func (c CoreContext) WithFee(fee string) CoreContext {
+	c.Fee = fee
 	return c
 }
 
@@ -70,6 +82,12 @@ func (c CoreContext) WithSequence(sequence int64) CoreContext {
 	return c
 }
 
+// WithMemo - return a copy of the context with an updated memo
+func (c CoreContext) WithMemo(memo string) CoreContext {
+	c.Memo = memo
+	return c
+}
+
 // WithClient - return a copy of the context with an updated RPC client instance
 func (c CoreContext) WithClient(client rpcclient.Client) CoreContext {
 	c.Client = client
@@ -85,5 +103,11 @@ func (c CoreContext) WithDecoder(decoder auth.AccountDecoder) CoreContext {
 // WithAccountStore - return a copy of the context with an updated AccountStore
 func (c CoreContext) WithAccountStore(accountStore string) CoreContext {
 	c.AccountStore = accountStore
+	return c
+}
+
+// WithUseLedger - return a copy of the context with an updated UseLedger
+func (c CoreContext) WithUseLedger(useLedger bool) CoreContext {
+	c.UseLedger = useLedger
 	return c
 }

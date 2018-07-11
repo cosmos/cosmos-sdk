@@ -1,24 +1,31 @@
 package stake
 
 import (
-	"bytes"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/abci/types"
+	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
+	"github.com/cosmos/cosmos-sdk/x/stake/tags"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func NewHandler(k Keeper) sdk.Handler {
+func NewHandler(k keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		// NOTE msg already has validate basic run
 		switch msg := msg.(type) {
-		case MsgCreateValidator:
+		case types.MsgCreateValidator:
 			return handleMsgCreateValidator(ctx, msg, k)
-		case MsgEditValidator:
+		case types.MsgEditValidator:
 			return handleMsgEditValidator(ctx, msg, k)
-		case MsgDelegate:
+		case types.MsgDelegate:
 			return handleMsgDelegate(ctx, msg, k)
-		case MsgUnbond:
-			return handleMsgUnbond(ctx, msg, k)
+		case types.MsgBeginRedelegate:
+			return handleMsgBeginRedelegate(ctx, msg, k)
+		case types.MsgCompleteRedelegate:
+			return handleMsgCompleteRedelegate(ctx, msg, k)
+		case types.MsgBeginUnbonding:
+			return handleMsgBeginUnbonding(ctx, msg, k)
+		case types.MsgCompleteUnbonding:
+			return handleMsgCompleteUnbonding(ctx, msg, k)
 		default:
 			return sdk.ErrTxDecode("invalid message parse in staking module").Result()
 		}
@@ -26,25 +33,25 @@ func NewHandler(k Keeper) sdk.Handler {
 }
 
 // Called every block, process inflation, update validator set
-func EndBlocker(ctx sdk.Context, k Keeper) (ValidatorUpdates []abci.Validator) {
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Validator) {
 	pool := k.GetPool(ctx)
 
-	// Process Validator Provisions
-	blockTime := ctx.BlockHeader().Time // XXX assuming in seconds, confirm
+	// Process types.Validator Provisions
+	blockTime := ctx.BlockHeader().Time
 	if pool.InflationLastTime+blockTime >= 3600 {
 		pool.InflationLastTime = blockTime
-		pool = k.processProvisions(ctx)
+		pool = k.ProcessProvisions(ctx)
 	}
 
 	// save the params
-	k.setPool(ctx, pool)
+	k.SetPool(ctx, pool)
 
 	// reset the intra-transaction counter
-	k.setIntraTxCounter(ctx, 0)
+	k.SetIntraTxCounter(ctx, 0)
 
 	// calculate validator set changes
-	ValidatorUpdates = k.getTendermintUpdates(ctx)
-	k.clearTendermintUpdates(ctx)
+	ValidatorUpdates = k.GetTendermintUpdates(ctx)
+	k.ClearTendermintUpdates(ctx)
 	return
 }
 
@@ -53,212 +60,154 @@ func EndBlocker(ctx sdk.Context, k Keeper) (ValidatorUpdates []abci.Validator) {
 // These functions assume everything has been authenticated,
 // now we just perform action and save
 
-func handleMsgCreateValidator(ctx sdk.Context, msg MsgCreateValidator, k Keeper) sdk.Result {
+func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k keeper.Keeper) sdk.Result {
 
 	// check to see if the pubkey or sender has been registered before
 	_, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if found {
-		return ErrValidatorExistsAddr(k.codespace).Result()
+		return ErrValidatorOwnerExists(k.Codespace()).Result()
 	}
-	if msg.Bond.Denom != k.GetParams(ctx).BondDenom {
-		return ErrBadBondingDenom(k.codespace).Result()
+	_, found = k.GetValidatorByPubKey(ctx, msg.PubKey)
+	if found {
+		return ErrValidatorPubKeyExists(k.Codespace()).Result()
 	}
-	if ctx.IsCheckTx() {
-		return sdk.Result{}
+	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
+		return ErrBadDenom(k.Codespace()).Result()
 	}
 
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
-	k.setValidator(ctx, validator)
-	k.setValidatorByPubKeyIndex(ctx, validator)
-	tags := sdk.NewTags(
-		"action", []byte("createValidator"),
-		"validator", msg.ValidatorAddr.Bytes(),
-		"moniker", []byte(msg.Description.Moniker),
-		"identity", []byte(msg.Description.Identity),
-	)
+	k.SetValidator(ctx, validator)
+	k.SetValidatorByPubKeyIndex(ctx, validator)
 
-	// move coins from the msg.Address account to a (self-bond) delegator account
+	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
-	delegateTags, err := delegate(ctx, k, msg.ValidatorAddr, msg.Bond, validator)
+	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator)
 	if err != nil {
 		return err.Result()
 	}
-	tags = tags.AppendTags(delegateTags)
+
+	tags := sdk.NewTags(
+		tags.Action, tags.ActionCreateValidator,
+		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
+		tags.Moniker, []byte(msg.Description.Moniker),
+		tags.Identity, []byte(msg.Description.Identity),
+	)
 	return sdk.Result{
 		Tags: tags,
 	}
 }
 
-func handleMsgEditValidator(ctx sdk.Context, msg MsgEditValidator, k Keeper) sdk.Result {
+func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keeper.Keeper) sdk.Result {
 
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if !found {
-		return ErrBadValidatorAddr(k.codespace).Result()
-	}
-	if ctx.IsCheckTx() {
-		return sdk.Result{}
+		return ErrNoValidatorFound(k.Codespace()).Result()
 	}
 
-	// XXX move to types
 	// replace all editable fields (clients should autofill existing values)
-	validator.Description.Moniker = msg.Description.Moniker
-	validator.Description.Identity = msg.Description.Identity
-	validator.Description.Website = msg.Description.Website
-	validator.Description.Details = msg.Description.Details
+	description, err := validator.Description.UpdateDescription(msg.Description)
+	if err != nil {
+		return err.Result()
+	}
+	validator.Description = description
 
-	k.updateValidator(ctx, validator)
+	k.UpdateValidator(ctx, validator)
 	tags := sdk.NewTags(
-		"action", []byte("editValidator"),
-		"validator", msg.ValidatorAddr.Bytes(),
-		"moniker", []byte(msg.Description.Moniker),
-		"identity", []byte(msg.Description.Identity),
+		tags.Action, tags.ActionEditValidator,
+		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
+		tags.Moniker, []byte(description.Moniker),
+		tags.Identity, []byte(description.Identity),
 	)
 	return sdk.Result{
 		Tags: tags,
 	}
 }
 
-func handleMsgDelegate(ctx sdk.Context, msg MsgDelegate, k Keeper) sdk.Result {
+func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) sdk.Result {
 
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if !found {
-		return ErrBadValidatorAddr(k.codespace).Result()
+		return ErrNoValidatorFound(k.Codespace()).Result()
 	}
-	if msg.Bond.Denom != k.GetParams(ctx).BondDenom {
-		return ErrBadBondingDenom(k.codespace).Result()
+	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
+		return ErrBadDenom(k.Codespace()).Result()
 	}
 	if validator.Revoked == true {
-		return ErrValidatorRevoked(k.codespace).Result()
+		return ErrValidatorRevoked(k.Codespace()).Result()
 	}
-	if ctx.IsCheckTx() {
-		return sdk.Result{}
-	}
-	tags, err := delegate(ctx, k, msg.DelegatorAddr, msg.Bond, validator)
+	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator)
 	if err != nil {
 		return err.Result()
 	}
+
+	tags := sdk.NewTags(
+		tags.Action, tags.ActionDelegate,
+		tags.Delegator, []byte(msg.DelegatorAddr.String()),
+		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
+	)
 	return sdk.Result{
 		Tags: tags,
 	}
 }
 
-// common functionality between handlers
-func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
-	bondAmt sdk.Coin, validator Validator) (sdk.Tags, sdk.Error) {
-
-	// Get or create the delegator bond
-	bond, found := k.GetDelegation(ctx, delegatorAddr, validator.Owner)
-	if !found {
-		bond = Delegation{
-			DelegatorAddr: delegatorAddr,
-			ValidatorAddr: validator.Owner,
-			Shares:        sdk.ZeroRat(),
-		}
-	}
-
-	// Account new shares, save
-	pool := k.GetPool(ctx)
-	_, _, err := k.coinKeeper.SubtractCoins(ctx, bond.DelegatorAddr, sdk.Coins{bondAmt})
+func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k keeper.Keeper) sdk.Result {
+	err := k.BeginUnbonding(ctx, msg.DelegatorAddr, msg.ValidatorAddr, msg.SharesAmount)
 	if err != nil {
-		return nil, err
+		return err.Result()
 	}
-	validator, pool, newShares := validator.addTokensFromDel(pool, bondAmt.Amount)
-	bond.Shares = bond.Shares.Add(newShares)
 
-	// Update bond height
-	bond.Height = ctx.BlockHeight()
-
-	k.setPool(ctx, pool)
-	k.setDelegation(ctx, bond)
-	k.updateValidator(ctx, validator)
-	tags := sdk.NewTags("action", []byte("delegate"), "delegator", delegatorAddr.Bytes(), "validator", validator.Owner.Bytes())
-	return tags, nil
+	tags := sdk.NewTags(
+		tags.Action, tags.ActionBeginUnbonding,
+		tags.Delegator, []byte(msg.DelegatorAddr.String()),
+		tags.SrcValidator, []byte(msg.ValidatorAddr.String()),
+	)
+	return sdk.Result{Tags: tags}
 }
 
-func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
+func handleMsgCompleteUnbonding(ctx sdk.Context, msg types.MsgCompleteUnbonding, k keeper.Keeper) sdk.Result {
 
-	// check if bond has any shares in it unbond
-	bond, found := k.GetDelegation(ctx, msg.DelegatorAddr, msg.ValidatorAddr)
-	if !found {
-		return ErrNoDelegatorForAddress(k.codespace).Result()
+	err := k.CompleteUnbonding(ctx, msg.DelegatorAddr, msg.ValidatorAddr)
+	if err != nil {
+		return err.Result()
 	}
 
-	var delShares sdk.Rat
+	tags := sdk.NewTags(
+		tags.Action, ActionCompleteUnbonding,
+		tags.Delegator, []byte(msg.DelegatorAddr.String()),
+		tags.SrcValidator, []byte(msg.ValidatorAddr.String()),
+	)
 
-	// test that there are enough shares to unbond
-	if msg.Shares == "MAX" {
-		if !bond.Shares.GT(sdk.ZeroRat()) {
-			return ErrNotEnoughBondShares(k.codespace, msg.Shares).Result()
-		}
-	} else {
-		var err sdk.Error
-		delShares, err = sdk.NewRatFromDecimal(msg.Shares)
-		if err != nil {
-			return err.Result()
-		}
-		if bond.Shares.LT(delShares) {
-			return ErrNotEnoughBondShares(k.codespace, msg.Shares).Result()
-		}
+	return sdk.Result{Tags: tags}
+}
+
+func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k keeper.Keeper) sdk.Result {
+	err := k.BeginRedelegation(ctx, msg.DelegatorAddr, msg.ValidatorSrcAddr,
+		msg.ValidatorDstAddr, msg.SharesAmount)
+	if err != nil {
+		return err.Result()
 	}
 
-	// get validator
-	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
-	if !found {
-		return ErrNoValidatorForAddress(k.codespace).Result()
+	tags := sdk.NewTags(
+		tags.Action, tags.ActionBeginRedelegation,
+		tags.Delegator, []byte(msg.DelegatorAddr.String()),
+		tags.SrcValidator, []byte(msg.ValidatorSrcAddr.String()),
+		tags.DstValidator, []byte(msg.ValidatorDstAddr.String()),
+	)
+	return sdk.Result{Tags: tags}
+}
+
+func handleMsgCompleteRedelegate(ctx sdk.Context, msg types.MsgCompleteRedelegate, k keeper.Keeper) sdk.Result {
+	err := k.CompleteRedelegation(ctx, msg.DelegatorAddr, msg.ValidatorSrcAddr, msg.ValidatorDstAddr)
+	if err != nil {
+		return err.Result()
 	}
 
-	if ctx.IsCheckTx() {
-		return sdk.Result{}
-	}
-
-	// retrieve the amount of bonds to remove (TODO remove redundancy already serialized)
-	if msg.Shares == "MAX" {
-		delShares = bond.Shares
-	}
-
-	// subtract bond tokens from delegator bond
-	bond.Shares = bond.Shares.Sub(delShares)
-
-	// remove the bond
-	revokeValidator := false
-	if bond.Shares.IsZero() {
-
-		// if the bond is the owner of the validator then
-		// trigger a revoke validator
-		if bytes.Equal(bond.DelegatorAddr, validator.Owner) &&
-			validator.Revoked == false {
-			revokeValidator = true
-		}
-
-		k.removeDelegation(ctx, bond)
-	} else {
-		// Update bond height
-		bond.Height = ctx.BlockHeight()
-		k.setDelegation(ctx, bond)
-	}
-
-	// Add the coins
-	pool := k.GetPool(ctx)
-	validator, pool, returnAmount := validator.removeDelShares(pool, delShares)
-	k.setPool(ctx, pool)
-	returnCoins := sdk.Coins{{k.GetParams(ctx).BondDenom, returnAmount}}
-	k.coinKeeper.AddCoins(ctx, bond.DelegatorAddr, returnCoins)
-
-	/////////////////////////////////////
-	// revoke validator if necessary
-	if revokeValidator {
-		validator.Revoked = true
-	}
-
-	validator = k.updateValidator(ctx, validator)
-
-	if validator.DelegatorShares.IsZero() {
-		k.removeValidator(ctx, validator.Owner)
-	}
-
-	tags := sdk.NewTags("action", []byte("unbond"), "delegator", msg.DelegatorAddr.Bytes(), "validator", msg.ValidatorAddr.Bytes())
-	return sdk.Result{
-		Tags: tags,
-	}
+	tags := sdk.NewTags(
+		tags.Action, tags.ActionCompleteRedelegation,
+		tags.Delegator, []byte(msg.DelegatorAddr.String()),
+		tags.SrcValidator, []byte(msg.ValidatorSrcAddr.String()),
+		tags.DstValidator, []byte(msg.ValidatorDstAddr.String()),
+	)
+	return sdk.Result{Tags: tags}
 }

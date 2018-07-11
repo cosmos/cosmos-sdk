@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,18 +14,18 @@ import (
 
 func TestBeginBlocker(t *testing.T) {
 	ctx, ck, sk, keeper := createTestInput(t)
-	addr, pk, amt := addrs[2], pks[2], int64(100)
+	addr, pk, amt := addrs[2], pks[2], sdk.NewInt(100)
 
 	// bond the validator
 	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, pk, amt))
 	require.True(t, got.IsOK())
 	stake.EndBlocker(ctx, sk)
-	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins - amt}})
-	require.Equal(t, sdk.NewRat(amt), sk.Validator(ctx, addr).GetPower())
+	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
+	require.True(t, sdk.NewRatFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
 
 	val := abci.Validator{
 		PubKey: tmtypes.TM2PB.PubKey(pk),
-		Power:  amt,
+		Power:  amt.Int64(),
 	}
 
 	// mark the validator as having signed
@@ -37,7 +37,7 @@ func TestBeginBlocker(t *testing.T) {
 	}
 	BeginBlocker(ctx, req, keeper)
 
-	info, found := keeper.getValidatorSigningInfo(ctx, pk.Address())
+	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(pk.Address()))
 	require.True(t, found)
 	require.Equal(t, ctx.BlockHeight(), info.StartHeight)
 	require.Equal(t, int64(1), info.IndexOffset)
@@ -46,8 +46,8 @@ func TestBeginBlocker(t *testing.T) {
 
 	height := int64(0)
 
-	// for 50 blocks, mark the validator as having signed
-	for ; height < 50; height++ {
+	// for 1000 blocks, mark the validator as having signed
+	for ; height < SignedBlocksWindow; height++ {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
 			Validators: []abci.SigningValidator{{
@@ -58,8 +58,8 @@ func TestBeginBlocker(t *testing.T) {
 		BeginBlocker(ctx, req, keeper)
 	}
 
-	// for 51 blocks, mark the validator as having not signed
-	for ; height < 102; height++ {
+	// for 500 blocks, mark the validator as having not signed
+	for ; height < ((SignedBlocksWindow * 2) - MinSignedPerWindow + 1); height++ {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
 			Validators: []abci.SigningValidator{{

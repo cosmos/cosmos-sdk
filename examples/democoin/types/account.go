@@ -21,6 +21,11 @@ type AppAccount struct {
 	Name string `json:"name"`
 }
 
+// Constructor for AppAccount
+func ProtoAppAccount() auth.Account {
+	return &AppAccount{}
+}
+
 // nolint
 func (acc AppAccount) GetName() string      { return acc.Name }
 func (acc *AppAccount) SetName(name string) { acc.Name = name }
@@ -32,7 +37,7 @@ func GetAccountDecoder(cdc *wire.Codec) auth.AccountDecoder {
 			return nil, sdk.ErrTxDecode("accBytes are empty")
 		}
 		acct := new(AppAccount)
-		err = cdc.UnmarshalBinary(accBytes, &acct)
+		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
 		if err != nil {
 			panic(err)
 		}
@@ -51,9 +56,9 @@ type GenesisState struct {
 
 // GenesisAccount doesn't need pubkey or sequence
 type GenesisAccount struct {
-	Name    string      `json:"name"`
-	Address sdk.Address `json:"address"`
-	Coins   sdk.Coins   `json:"coins"`
+	Name    string         `json:"name"`
+	Address sdk.AccAddress `json:"address"`
+	Coins   sdk.Coins      `json:"coins"`
 }
 
 func NewGenesisAccount(aa *AppAccount) *GenesisAccount {

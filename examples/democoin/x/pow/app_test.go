@@ -3,20 +3,20 @@ package pow
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/mock"
 
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var (
 	priv1 = crypto.GenPrivKeyEd25519()
-	addr1 = priv1.PubKey().Address()
+	addr1 = sdk.AccAddress(priv1.PubKey().Address())
 )
 
 // initialize the mock application for this module
@@ -32,7 +32,7 @@ func getMockApp(t *testing.T) *mock.App {
 
 	mapp.SetInitChainer(getInitChainer(mapp, keeper))
 
-	mapp.CompleteSetup(t, []*sdk.KVStoreKey{keyPOW})
+	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyPOW}))
 	return mapp
 }
 
@@ -67,17 +67,17 @@ func TestMsgMine(t *testing.T) {
 	// A checkTx context (true)
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	res1 := mapp.AccountMapper.GetAccount(ctxCheck, addr1)
-	assert.Equal(t, acc1, res1)
+	require.Equal(t, acc1, res1)
 
 	// Mine and check for reward
 	mineMsg1 := GenerateMsgMine(addr1, 1, 2)
-	mock.SignCheckDeliver(t, mapp.BaseApp, mineMsg1, []int64{0}, []int64{0}, true, priv1)
-	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"pow", 1}})
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{mineMsg1}, []int64{0}, []int64{0}, true, priv1)
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"pow", sdk.NewInt(1)}})
 	// Mine again and check for reward
 	mineMsg2 := GenerateMsgMine(addr1, 2, 3)
-	mock.SignCheckDeliver(t, mapp.BaseApp, mineMsg2, []int64{0}, []int64{1}, true, priv1)
-	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"pow", 2}})
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{mineMsg2}, []int64{0}, []int64{1}, true, priv1)
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"pow", sdk.NewInt(2)}})
 	// Mine again - should be invalid
-	mock.SignCheckDeliver(t, mapp.BaseApp, mineMsg2, []int64{0}, []int64{1}, false, priv1)
-	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"pow", 2}})
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{mineMsg2}, []int64{0}, []int64{1}, false, priv1)
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"pow", sdk.NewInt(2)}})
 }

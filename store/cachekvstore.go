@@ -5,7 +5,7 @@ import (
 	"sort"
 	"sync"
 
-	cmn "github.com/tendermint/tmlibs/common"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 // If value is nil but deleted is false, it means the parent doesn't have the
@@ -78,6 +78,11 @@ func (ci *cacheKVStore) Delete(key []byte) {
 	ci.assertValidKey(key)
 
 	ci.setCacheValue(key, nil, true, true)
+}
+
+// Implements KVStore
+func (ci *cacheKVStore) Prefix(prefix []byte) KVStore {
+	return prefixStore{ci, prefix}
 }
 
 // Implements CacheKVStore.

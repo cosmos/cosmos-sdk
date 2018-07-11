@@ -2,7 +2,6 @@ package cli
 
 import (
 	"encoding/hex"
-	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -43,12 +42,10 @@ func IBCTransferCmd(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// get password
-			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
+			err = ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}
-
-			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
 			return nil
 		},
 	}
@@ -59,7 +56,7 @@ func IBCTransferCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func buildMsg(from sdk.Address) (sdk.Msg, error) {
+func buildMsg(from sdk.AccAddress) (sdk.Msg, error) {
 	amount := viper.GetString(flagAmount)
 	coins, err := sdk.ParseCoins(amount)
 	if err != nil {
@@ -71,7 +68,7 @@ func buildMsg(from sdk.Address) (sdk.Msg, error) {
 	if err != nil {
 		return nil, err
 	}
-	to := sdk.Address(bz)
+	to := sdk.AccAddress(bz)
 
 	packet := ibc.NewIBCPacket(from, to, coins, viper.GetString(client.FlagChainID),
 		viper.GetString(flagChain))

@@ -56,7 +56,10 @@ const (
 	CodeMemoTooLarge      CodeType = 13
 
 	// CodespaceRoot is a codespace for error codes in this file only.
-	CodespaceRoot CodespaceType = 1
+	// Notice that 0 is an "unset" codespace, which can be overridden with
+	// Error.WithDefaultCodespace().
+	CodespaceUndefined CodespaceType = 0
+	CodespaceRoot      CodespaceType = 1
 
 	// Maximum reservable codespace (2^16 - 1)
 	MaximumCodespace CodespaceType = 65535

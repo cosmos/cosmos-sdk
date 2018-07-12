@@ -117,6 +117,7 @@ IMPROVEMENTS
 * [stake] keeper always loads the store (instead passing around which doesn't really boost efficiency)
 * [stake] edit-validator changes now can use the keyword [do-not-modify] to not modify unspecified `--flag` (aka won't set them to `""` value)
 * [stake] offload more generic functionality from the handler into the keeper
+* [stake] clearer staking logic
 * [types] added common tag constants
 * [keys] improve error message when deleting non-existent key
 * [gaiacli] improve error messages on `send` and `account` commands

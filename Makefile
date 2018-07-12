@@ -4,7 +4,7 @@ PACKAGES_SIMTEST=$(shell go list ./... | grep -v '/vendor/' | grep '/simulation'
 COMMIT_HASH := $(shell git rev-parse --short HEAD)
 BUILD_FLAGS = -tags netgo -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
 
-all: get_tools get_vendor_deps install install_examples test_lint test
+all: get_tools get_vendor_deps install install_examples test_lint test test_sim
 
 ########################################
 ### CI

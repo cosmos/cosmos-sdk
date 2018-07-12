@@ -7,9 +7,14 @@
 BREAKING CHANGES
 * [x/stake] Specify DelegatorAddress in MsgCreateValidator
 * [x/auth] NewAccountMapper takes a constructor instead of a prototype
+* [keys] Keybase.Update function now takes in a function to get the newpass, rather than the password itself
 
 FEATURES
 * [baseapp] NewBaseApp now takes option functions as parameters
+
+
+BUG FIXES
+* [keys] \#1629 - updating password no longer asks for a new password when the first entered password was incorrect
 
 ## 0.20.0
 

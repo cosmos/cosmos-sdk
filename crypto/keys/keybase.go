@@ -330,8 +330,9 @@ func (kb dbKeybase) Delete(name, passphrase string) error {
 // encrypted.
 //
 // oldpass must be the current passphrase used for encryption,
-// newpass will be the only valid passphrase from this time forward.
-func (kb dbKeybase) Update(name, oldpass, newpass string) error {
+// getNewpass is a function to get the passphrase to permanently replace
+// the current passphrase
+func (kb dbKeybase) Update(name, oldpass string, getNewpass func() (string, error)) error {
 	info, err := kb.Get(name)
 	if err != nil {
 		return err
@@ -340,6 +341,10 @@ func (kb dbKeybase) Update(name, oldpass, newpass string) error {
 	case localInfo:
 		linfo := info.(localInfo)
 		key, err := unarmorDecryptPrivKey(linfo.PrivKeyArmor, oldpass)
+		if err != nil {
+			return err
+		}
+		newpass, err := getNewpass()
 		if err != nil {
 			return err
 		}

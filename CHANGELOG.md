@@ -11,6 +11,9 @@ BREAKING CHANGES
 FEATURES
 * [baseapp] NewBaseApp now takes option functions as parameters
 
+IMPROVEMENTS
+* Updated docs folder to accommodate cosmos.network docs project
+
 ## 0.20.0
 
 *July 10th, 2018*

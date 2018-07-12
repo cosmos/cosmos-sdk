@@ -84,7 +84,7 @@ func EnsureAccountNumbers(ctx CoreContext) (CoreContext, error) {
 		return ctx, err
 	}
 
-	var accNums []int64
+	accNums := make([]int64, len(addrs))
 	var err2 error
 	for i, accnum := range ctx.AccountNumbers {
 		if accnum != 0 {

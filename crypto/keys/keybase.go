@@ -240,6 +240,31 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig tcrypto.Signa
 	return sig, pub, nil
 }
 
+func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (tcrypto.PrivKey, error) {
+	info, err := kb.Get(name)
+	if err != nil {
+		return nil, err
+	}
+	var priv tcrypto.PrivKey
+	switch info.(type) {
+	case localInfo:
+		linfo := info.(localInfo)
+		if linfo.PrivKeyArmor == "" {
+			err = fmt.Errorf("private key not available")
+			return nil, err
+		}
+		priv, err = unarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
+		if err != nil {
+			return nil, err
+		}
+	case ledgerInfo:
+		return nil, errors.New("Only works on local private keys")
+	case offlineInfo:
+		return nil, errors.New("Only works on local private keys")
+	}
+	return priv, nil
+}
+
 func (kb dbKeybase) Export(name string) (armor string, err error) {
 	bz := kb.db.Get(infoKey(name))
 	if bz == nil {

@@ -39,6 +39,9 @@ type Keybase interface {
 	ImportPubKey(name string, armor string) (err error)
 	Export(name string) (armor string, err error)
 	ExportPubKey(name string) (armor string, err error)
+
+	// *only* works on locally-stored keys. Temporary method until we redo the exporting API
+	ExportPrivateKeyObject(name string, passphrase string) (crypto.PrivKey, error)
 }
 
 // Info is the publicly exposed information about a keypair

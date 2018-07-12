@@ -22,6 +22,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 		Use:   "create-validator",
 		Short: "create new validator initialized with a self-delegation to it",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("hello")
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
 			amount, err := sdk.ParseCoin(viper.GetString(FlagAmount))

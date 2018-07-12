@@ -368,6 +368,7 @@ func (v Validator) AddTokensFromDel(pool Pool, amount int64) (Validator, Pool, s
 // validator status.
 func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Rat) (Validator, Pool, sdk.Rat) {
 	issuedTokens := v.DelegatorShareExRate(pool).Mul(delShares)
+	v.Tokens = v.Tokens.Sub(issuedTokens)
 	v.DelegatorShares = v.DelegatorShares.Sub(delShares)
 
 	if v.Status == sdk.Bonded {

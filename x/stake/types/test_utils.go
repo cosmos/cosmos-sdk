@@ -97,27 +97,26 @@ func RandomOperation(r *rand.Rand) Operation {
 // AssertInvariants ensures invariants that should always be true are true.
 // nolint: unparam
 func AssertInvariants(t *testing.T, msg string,
-	pOrig Pool, cOrig []Validator, pMod Pool, vMods []Validator, tokens sdk.Rat) {
+	pOrig Pool, cOrig []Validator, pMod Pool, vMods []Validator) {
 
 	// total tokens conserved
-	require.Equal(t,
-		pOrig.LooseTokens.Add(pOrig.BondedTokens),
-		pMod.LooseTokens.Add(pMod.BondedTokens).Add(tokens),
-		"Tokens not conserved - msg: %v\n, pOrig.BondedTokens: %v, pOrig.LooseTokens: %v,  pMod.BondedTokens: %v, pMod.LooseTokens: %v, tokens: %v\n",
+	require.True(t,
+		pOrig.LooseTokens.Add(pOrig.BondedTokens).Equal(
+			pMod.LooseTokens.Add(pMod.BondedTokens)),
+		"Tokens not conserved - msg: %v\n, pOrig.BondedTokens: %v, pOrig.LooseTokens: %v,  pMod.BondedTokens: %v, pMod.LooseTokens: %v",
 		msg,
 		pOrig.BondedTokens, pOrig.LooseTokens,
-		pMod.BondedTokens, pMod.LooseTokens,
-		tokens)
+		pMod.BondedTokens, pMod.LooseTokens)
 
 	// Nonnegative bonded tokens
 	require.False(t, pMod.BondedTokens.LT(sdk.ZeroRat()),
-		"Negative bonded shares - msg: %v\npOrig: %v\npMod: %v\ntokens: %v\n",
-		msg, pOrig, pMod, tokens)
+		"Negative bonded shares - msg: %v\npOrig: %v\npMod: %v\n",
+		msg, pOrig, pMod)
 
 	// Nonnegative loose tokens
 	require.False(t, pMod.LooseTokens.LT(sdk.ZeroRat()),
-		"Negative unbonded shares - msg: %v\npOrig: %v\npMod: %v\ntokens: %v\n",
-		msg, pOrig, pMod, tokens)
+		"Negative unbonded shares - msg: %v\npOrig: %v\npMod: %v\n",
+		msg, pOrig, pMod)
 
 	for _, vMod := range vMods {
 		// Nonnegative ex rate
@@ -180,7 +179,7 @@ func RandomSetup(r *rand.Rand, numValidators int) (Pool, []Validator) {
 		case sdk.Bonded:
 			pool.BondedTokens = pool.BondedTokens.Add(validator.Tokens)
 		case sdk.Unbonded, sdk.Unbonding:
-			pool.LooseTokens = pool.BondedTokens.Add(validator.Tokens)
+			pool.LooseTokens = pool.LooseTokens.Add(validator.Tokens)
 		default:
 			panic("improper use of RandomSetup")
 		}

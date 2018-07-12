@@ -108,7 +108,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 
 	// Log that a slash occurred!
 	logger.Info(fmt.Sprintf(
-		"Validator %s slashed by slashFactor %v,  burned %d tokens",
+		"Validator %s slashed by slashFactor %v, burned %v tokens",
 		pubkey.Address(), slashFactor, burned))
 
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803

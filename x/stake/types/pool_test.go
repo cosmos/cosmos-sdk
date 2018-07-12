@@ -22,8 +22,8 @@ func TestAddBondedTokens(t *testing.T) {
 
 	pool = pool.addBondedTokens(sdk.NewRat(10))
 
-	require.Equal(t, sdk.NewRat(20), pool.BondedTokens)
-	require.Equal(t, sdk.NewRat(0), pool.LooseTokens)
+	require.True(sdk.RatEq(t, sdk.NewRat(20), pool.BondedTokens))
+	require.True(sdk.RatEq(t, sdk.NewRat(0), pool.LooseTokens))
 }
 
 func TestRemoveBondedTokens(t *testing.T) {
@@ -33,6 +33,6 @@ func TestRemoveBondedTokens(t *testing.T) {
 
 	pool = pool.removeBondedTokens(sdk.NewRat(5))
 
-	require.Equal(t, sdk.NewRat(5), pool.BondedTokens)
-	require.Equal(t, sdk.NewRat(15), pool.LooseTokens)
+	require.True(sdk.RatEq(t, sdk.NewRat(5), pool.BondedTokens))
+	require.True(sdk.RatEq(t, sdk.NewRat(15), pool.LooseTokens))
 }

@@ -107,17 +107,14 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	barAddr, barPubKey := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
 	barCeshPubKey := sdk.MustBech32ifyValPub(barPubKey)
 
-	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%s --from=foo", flags, barAddr), pass)
-	tests.WaitForNextHeightTM(port)
-
 	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", barAddr, flags))
-	require.Equal(t, int64(10), barAcc.GetCoins().AmountOf("steak").Int64())
+	require.Equal(t, int64(0), barAcc.GetCoins().AmountOf("steak").Int64())
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
-	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("steak").Int64())
+	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
 
 	// create validator
 	cvStr := fmt.Sprintf("gaiacli stake create-validator %v", flags)
-	cvStr += fmt.Sprintf(" --from=%s", "bar")
+	cvStr += fmt.Sprintf(" --from=%s", "foo, bar")
 	cvStr += fmt.Sprintf(" --address-validator=%s", barAddr)
 	cvStr += fmt.Sprintf(" --pubkey=%s", barCeshPubKey)
 	cvStr += fmt.Sprintf(" --amount=%v", "2steak")
@@ -126,8 +123,8 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	executeWrite(t, cvStr, pass)
 	tests.WaitForNextHeightTM(port)
 
-	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", barAddr, flags))
-	require.Equal(t, int64(8), barAcc.GetCoins().AmountOf("steak").Int64(), "%v", barAcc)
+	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
+	require.Equal(t, int64(48), barAcc.GetCoins().AmountOf("steak").Int64(), "%v", fooAcc)
 
 	validator := executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %s --output=json %v", barAddr, flags))
 	require.Equal(t, validator.Owner, barAddr)
@@ -135,9 +132,9 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 	// unbond a single share
 	unbondStr := fmt.Sprintf("gaiacli stake unbond begin %v", flags)
-	unbondStr += fmt.Sprintf(" --from=%s", "bar")
+	unbondStr += fmt.Sprintf(" --from=%s", "foo")
 	unbondStr += fmt.Sprintf(" --address-validator=%s", barAddr)
-	unbondStr += fmt.Sprintf(" --address-delegator=%s", barAddr)
+	unbondStr += fmt.Sprintf(" --address-delegator=%s", fooAddr)
 	unbondStr += fmt.Sprintf(" --shares-amount=%v", "1")
 
 	success := executeWrite(t, unbondStr, pass)

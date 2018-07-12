@@ -46,6 +46,11 @@ type BaseAccount struct {
 	Sequence      int64          `json:"sequence"`
 }
 
+// Prototype function for BaseAccount
+func ProtoBaseAccount() Account {
+	return &BaseAccount{}
+}
+
 func NewBaseAccountWithAddress(addr sdk.AccAddress) BaseAccount {
 	return BaseAccount{
 		Address: addr,

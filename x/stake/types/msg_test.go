@@ -69,6 +69,46 @@ func TestMsgEditValidator(t *testing.T) {
 	}
 }
 
+// test ValidateBasic and GetSigners for MsgCreateValidatorOnBehalfOf
+func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
+	tests := []struct {
+		name, moniker, identity, website, details string
+		delegatorAddr                             sdk.AccAddress
+		validatorAddr                             sdk.AccAddress
+		validatorPubKey                           crypto.PubKey
+		bond                                      sdk.Coin
+		expectPass                                bool
+	}{
+		{"basic good", "a", "b", "c", "d", addr1, addr2, pk2, coinPos, true},
+		{"partial description", "", "", "c", "", addr1, addr2, pk2, coinPos, true},
+		{"empty description", "", "", "", "", addr1, addr2, pk2, coinPos, false},
+		{"empty delegator address", "a", "b", "c", "d", emptyAddr, addr2, pk2, coinPos, false},
+		{"empty validator address", "a", "b", "c", "d", addr1, emptyAddr, pk2, coinPos, false},
+		{"empty pubkey", "a", "b", "c", "d", addr1, addr2, emptyPubkey, coinPos, true},
+		{"empty bond", "a", "b", "c", "d", addr1, addr2, pk2, coinZero, false},
+		{"negative bond", "a", "b", "c", "d", addr1, addr2, pk2, coinNeg, false},
+		{"negative bond", "a", "b", "c", "d", addr1, addr2, pk2, coinNeg, false},
+	}
+
+	for _, tc := range tests {
+		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
+		msg := NewMsgCreateValidatorOnBehalfOf(tc.delegatorAddr, tc.validatorAddr, tc.validatorPubKey, tc.bond, description)
+		if tc.expectPass {
+			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
+		} else {
+			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
+		}
+	}
+
+	msg := NewMsgCreateValidator(addr1, pk1, coinPos, Description{})
+	addrs := msg.GetSigners()
+	require.Equal(t, []sdk.AccAddress{addr1}, addrs, "Signers on default msg is wrong")
+
+	msg = NewMsgCreateValidatorOnBehalfOf(addr2, addr1, pk1, coinPos, Description{})
+	addrs = msg.GetSigners()
+	require.Equal(t, []sdk.AccAddress{addr2, addr1}, addrs, "Signers for onbehalfof msg is wrong")
+}
+
 // test ValidateBasic for MsgDelegate
 func TestMsgDelegate(t *testing.T) {
 	tests := []struct {

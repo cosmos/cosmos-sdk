@@ -71,7 +71,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	if found {
 		return ErrValidatorPubKeyExists(k.Codespace()).Result()
 	}
-	if msg.SelfDelegation.Denom != k.GetParams(ctx).BondDenom {
+	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
@@ -81,7 +81,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
-	_, err := k.Delegate(ctx, msg.ValidatorAddr, msg.SelfDelegation, validator)
+	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator)
 	if err != nil {
 		return err.Result()
 	}
@@ -130,13 +130,13 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	if !found {
 		return ErrNoValidatorFound(k.Codespace()).Result()
 	}
-	if msg.Bond.Denom != k.GetParams(ctx).BondDenom {
+	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 	if validator.Revoked == true {
 		return ErrValidatorRevoked(k.Codespace()).Result()
 	}
-	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Bond, validator)
+	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator)
 	if err != nil {
 		return err.Result()
 	}

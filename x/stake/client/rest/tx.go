@@ -27,7 +27,7 @@ func registerTxRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, k
 type msgDelegationsInput struct {
 	DelegatorAddr string   `json:"delegator_addr"` // in bech32
 	ValidatorAddr string   `json:"validator_addr"` // in bech32
-	Bond          sdk.Coin `json:"bond"`
+	Delegation    sdk.Coin `json:"delegation"`
 }
 type msgBeginRedelegateInput struct {
 	DelegatorAddr    string `json:"delegator_addr"`     // in bech32
@@ -119,7 +119,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 			messages[i] = stake.MsgDelegate{
 				DelegatorAddr: delegatorAddr,
 				ValidatorAddr: validatorAddr,
-				Bond:          msg.Bond,
+				Delegation:    msg.Delegation,
 			}
 			i++
 		}

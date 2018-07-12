@@ -105,7 +105,7 @@ Creating an AccountMapper is easy - we just need to specify a codec, a
 capability key, and a prototype of the object being encoded 
 
 ```go
-accountMapper := auth.NewAccountMapper(cdc, keyAccount, &auth.BaseAccount{})
+accountMapper := auth.NewAccountMapper(cdc, keyAccount, auth.ProtoBaseAccount)
 ```
 
 Then we can get, modify, and set accounts. For instance, we could double the
@@ -335,7 +335,7 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	keyFees := sdk.NewKVStoreKey("fee")  // TODO
 
 	// Set various mappers/keepers to interact easily with underlying stores
-	accountMapper := auth.NewAccountMapper(cdc, keyAccount, &auth.BaseAccount{})
+	accountMapper := auth.NewAccountMapper(cdc, keyAccount, auth.ProtoBaseAccount)
 	coinKeeper := bank.NewKeeper(accountMapper)
 	feeKeeper := auth.NewFeeCollectionKeeper(cdc, keyFees)
 

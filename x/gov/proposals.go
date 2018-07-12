@@ -1,25 +1,12 @@
 package gov
 
 import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/pkg/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-// Type that represents Status as a byte
-type VoteStatus = byte
-
-// Type that represents Proposal Type as a byte
-type ProposalKind = byte
-
-//nolint
-const (
-	StatusDepositPeriod VoteStatus = 0x01
-	StatusVotingPeriod  VoteStatus = 0x02
-	StatusPassed        VoteStatus = 0x03
-	StatusRejected      VoteStatus = 0x04
-
-	ProposalTypeText            ProposalKind = 0x01
-	ProposalTypeParameterChange ProposalKind = 0x02
-	ProposalTypeSoftwareUpgrade ProposalKind = 0x03
 )
 
 //-----------------------------------------------------------
@@ -37,8 +24,8 @@ type Proposal interface {
 	GetProposalType() ProposalKind
 	SetProposalType(ProposalKind)
 
-	GetStatus() VoteStatus
-	SetStatus(VoteStatus)
+	GetStatus() ProposalStatus
+	SetStatus(ProposalStatus)
 
 	GetSubmitBlock() int64
 	SetSubmitBlock(int64)
@@ -73,7 +60,7 @@ type TextProposal struct {
 	Description  string       `json:"description"`   //  Description of the proposal
 	ProposalType ProposalKind `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 
-	Status VoteStatus `json:"string"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
+	Status ProposalStatus `json:"string"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
 
 	SubmitBlock  int64     `json:"submit_block"`  //  Height of the block where TxGovSubmitProposal was included
 	TotalDeposit sdk.Coins `json:"total_deposit"` //  Current deposit on this proposal. Initial value is set at InitialDeposit
@@ -93,8 +80,8 @@ func (tp TextProposal) GetDescription() string                     { return tp.D
 func (tp *TextProposal) SetDescription(description string)         { tp.Description = description }
 func (tp TextProposal) GetProposalType() ProposalKind              { return tp.ProposalType }
 func (tp *TextProposal) SetProposalType(proposalType ProposalKind) { tp.ProposalType = proposalType }
-func (tp TextProposal) GetStatus() VoteStatus                      { return tp.Status }
-func (tp *TextProposal) SetStatus(status VoteStatus)               { tp.Status = status }
+func (tp TextProposal) GetStatus() ProposalStatus                  { return tp.Status }
+func (tp *TextProposal) SetStatus(status ProposalStatus)           { tp.Status = status }
 func (tp TextProposal) GetSubmitBlock() int64                      { return tp.SubmitBlock }
 func (tp *TextProposal) SetSubmitBlock(submitBlock int64)          { tp.SubmitBlock = submitBlock }
 func (tp TextProposal) GetTotalDeposit() sdk.Coins                 { return tp.TotalDeposit }
@@ -104,12 +91,82 @@ func (tp *TextProposal) SetVotingStartBlock(votingStartBlock int64) {
 	tp.VotingStartBlock = votingStartBlock
 }
 
-// Current Active Proposals
+//-----------------------------------------------------------
+// ProposalQueue
 type ProposalQueue []int64
 
-// ProposalTypeToString for pretty prints of ProposalType
-func ProposalTypeToString(proposalType ProposalKind) string {
-	switch proposalType {
+//-----------------------------------------------------------
+// ProposalKind
+
+// Type that represents Proposal Type as a byte
+type ProposalKind byte
+
+//nolint
+const (
+	ProposalTypeText            ProposalKind = 0x01
+	ProposalTypeParameterChange ProposalKind = 0x02
+	ProposalTypeSoftwareUpgrade ProposalKind = 0x03
+)
+
+// String to proposalType byte.  Returns ff if invalid.
+func ProposalTypeFromString(str string) (ProposalKind, error) {
+	switch str {
+	case "Text":
+		return ProposalTypeText, nil
+	case "ParameterChange":
+		return ProposalTypeParameterChange, nil
+	case "SoftwareUpgrade":
+		return ProposalTypeSoftwareUpgrade, nil
+	default:
+		return ProposalKind(0xff), errors.Errorf("'%s' is not a valid proposal type", str)
+	}
+}
+
+// is defined ProposalType?
+func validProposalType(pt ProposalKind) bool {
+	if pt == ProposalTypeText ||
+		pt == ProposalTypeParameterChange ||
+		pt == ProposalTypeSoftwareUpgrade {
+		return true
+	}
+	return false
+}
+
+// Marshal needed for protobuf compatibility
+func (pt ProposalKind) Marshal() ([]byte, error) {
+	return []byte{byte(pt)}, nil
+}
+
+// Unmarshal needed for protobuf compatibility
+func (pt *ProposalKind) Unmarshal(data []byte) error {
+	*pt = ProposalKind(data[0])
+	return nil
+}
+
+// Marshals to JSON using string
+func (pt ProposalKind) MarshalJSON() ([]byte, error) {
+	return json.Marshal(pt.String())
+}
+
+// Unmarshals from JSON assuming Bech32 encoding
+func (pt *ProposalKind) UnmarshalJSON(data []byte) error {
+	var s string
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return nil
+	}
+
+	bz2, err := ProposalTypeFromString(s)
+	if err != nil {
+		return err
+	}
+	*pt = bz2
+	return nil
+}
+
+// Turns VoteOption byte to String
+func (pt ProposalKind) String() string {
+	switch pt {
 	case 0x00:
 		return "Text"
 	case 0x01:
@@ -121,31 +178,91 @@ func ProposalTypeToString(proposalType ProposalKind) string {
 	}
 }
 
-func validProposalType(proposalType ProposalKind) bool {
-	if proposalType == ProposalTypeText ||
-		proposalType == ProposalTypeParameterChange ||
-		proposalType == ProposalTypeSoftwareUpgrade {
+// For Printf / Sprintf, returns bech32 when using %s
+func (pt ProposalKind) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 's':
+		s.Write([]byte(fmt.Sprintf("%s", pt.String())))
+	default:
+		s.Write([]byte(fmt.Sprintf("%v", pt)))
+	}
+}
+
+//-----------------------------------------------------------
+// ProposalStatus
+
+// Type that represents Proposal Status as a byte
+type ProposalStatus byte
+
+//nolint
+const (
+	StatusDepositPeriod ProposalStatus = 0x01
+	StatusVotingPeriod  ProposalStatus = 0x02
+	StatusPassed        ProposalStatus = 0x03
+	StatusRejected      ProposalStatus = 0x04
+)
+
+// ProposalStatusToString turns a string into a ProposalStatus
+func ProposalStatusFromString(str string) (ProposalStatus, error) {
+	switch str {
+	case "DepositPeriod":
+		return StatusDepositPeriod, nil
+	case "VotingPeriod":
+		return StatusVotingPeriod, nil
+	case "Passed":
+		return StatusPassed, nil
+	case "Rejected":
+		return StatusRejected, nil
+	default:
+		return ProposalStatus(0xff), errors.Errorf("'%s' is not a valid proposal status", str)
+	}
+}
+
+// is defined ProposalType?
+func validProposalStatus(status ProposalStatus) bool {
+	if status == StatusDepositPeriod ||
+		status == StatusVotingPeriod ||
+		status == StatusPassed ||
+		status == StatusRejected {
 		return true
 	}
 	return false
 }
 
-// String to proposalType byte.  Returns ff if invalid.
-func StringToProposalType(str string) (ProposalKind, sdk.Error) {
-	switch str {
-	case "Text":
-		return ProposalTypeText, nil
-	case "ParameterChange":
-		return ProposalTypeParameterChange, nil
-	case "SoftwareUpgrade":
-		return ProposalTypeSoftwareUpgrade, nil
-	default:
-		return ProposalKind(0xff), ErrInvalidProposalType(DefaultCodespace, str)
-	}
+// Marshal needed for protobuf compatibility
+func (status ProposalStatus) Marshal() ([]byte, error) {
+	return []byte{byte(status)}, nil
 }
 
-// StatusToString for pretty prints of Status
-func StatusToString(status VoteStatus) string {
+// Unmarshal needed for protobuf compatibility
+func (status *ProposalStatus) Unmarshal(data []byte) error {
+	*status = ProposalStatus(data[0])
+	return nil
+}
+
+// Marshals to JSON using string
+func (status ProposalStatus) MarshalJSON() ([]byte, error) {
+	return json.Marshal(status.String())
+}
+
+// Unmarshals from JSON assuming Bech32 encoding
+func (status *ProposalStatus) UnmarshalJSON(data []byte) error {
+	var s string
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return nil
+	}
+
+	bz2, err := ProposalStatusFromString(s)
+	if err != nil {
+		return err
+	}
+	*status = bz2
+	return nil
+}
+
+// Turns VoteStatus byte to String
+func (status ProposalStatus) String() string {
 	switch status {
 	case StatusDepositPeriod:
 		return "DepositPeriod"
@@ -160,45 +277,12 @@ func StatusToString(status VoteStatus) string {
 	}
 }
 
-// StatusToString for pretty prints of Status
-func StringToStatus(status string) VoteStatus {
-	switch status {
-	case "DepositPeriod":
-		return StatusDepositPeriod
-	case "VotingPeriod":
-		return StatusVotingPeriod
-	case "Passed":
-		return StatusPassed
-	case "Rejected":
-		return StatusRejected
+// For Printf / Sprintf, returns bech32 when using %s
+func (status ProposalStatus) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 's':
+		s.Write([]byte(fmt.Sprintf("%s", status.String())))
 	default:
-		return VoteStatus(0xff)
-	}
-}
-
-//-----------------------------------------------------------
-// Rest Proposals
-type ProposalRest struct {
-	ProposalID       int64     `json:"proposal_id"`        //  ID of the proposal
-	Title            string    `json:"title"`              //  Title of the proposal
-	Description      string    `json:"description"`        //  Description of the proposal
-	ProposalType     string    `json:"proposal_type"`      //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-	Status           string    `json:"string"`             //  Status of the Proposal {Pending, Active, Passed, Rejected}
-	SubmitBlock      int64     `json:"submit_block"`       //  Height of the block where TxGovSubmitProposal was included
-	TotalDeposit     sdk.Coins `json:"total_deposit"`      //  Current deposit on this proposal. Initial value is set at InitialDeposit
-	VotingStartBlock int64     `json:"voting_start_block"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
-}
-
-// Turn any Proposal to a ProposalRest
-func ProposalToRest(proposal Proposal) ProposalRest {
-	return ProposalRest{
-		ProposalID:       proposal.GetProposalID(),
-		Title:            proposal.GetTitle(),
-		Description:      proposal.GetDescription(),
-		ProposalType:     ProposalTypeToString(proposal.GetProposalType()),
-		Status:           StatusToString(proposal.GetStatus()),
-		SubmitBlock:      proposal.GetSubmitBlock(),
-		TotalDeposit:     proposal.GetTotalDeposit(),
-		VotingStartBlock: proposal.GetVotingStartBlock(),
+		s.Write([]byte(fmt.Sprintf("%v", status)))
 	}
 }

@@ -443,7 +443,7 @@ func TestSubmitProposal(t *testing.T) {
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
-	require.Equal(t, "Test", proposal.Title)
+	require.Equal(t, "Test", proposal.GetTitle())
 }
 
 func TestDeposit(t *testing.T) {
@@ -465,7 +465,7 @@ func TestDeposit(t *testing.T) {
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
-	require.Equal(t, "Test", proposal.Title)
+	require.Equal(t, "Test", proposal.GetTitle())
 
 	// create SubmitProposal TX
 	resultTx = doDeposit(t, port, seed, name, password, addr, proposalID)
@@ -473,7 +473,7 @@ func TestDeposit(t *testing.T) {
 
 	// query proposal
 	proposal = getProposal(t, port, proposalID)
-	require.True(t, proposal.TotalDeposit.IsEqual(sdk.Coins{sdk.NewCoin("steak", 10)}))
+	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{sdk.NewCoin("steak", 10)}))
 
 	// query deposit
 	deposit := getDeposit(t, port, proposalID, addr)
@@ -499,7 +499,7 @@ func TestVote(t *testing.T) {
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
-	require.Equal(t, "Test", proposal.Title)
+	require.Equal(t, "Test", proposal.GetTitle())
 
 	// create SubmitProposal TX
 	resultTx = doDeposit(t, port, seed, name, password, addr, proposalID)
@@ -507,7 +507,7 @@ func TestVote(t *testing.T) {
 
 	// query proposal
 	proposal = getProposal(t, port, proposalID)
-	require.Equal(t, gov.StatusToString(gov.StatusVotingPeriod), proposal.Status)
+	require.Equal(t, gov.StatusVotingPeriod, proposal.GetStatus())
 
 	// create SubmitProposal TX
 	resultTx = doVote(t, port, seed, name, password, addr, proposalID)
@@ -515,7 +515,7 @@ func TestVote(t *testing.T) {
 
 	vote := getVote(t, port, proposalID, addr)
 	require.Equal(t, proposalID, vote.ProposalID)
-	require.Equal(t, gov.VoteOptionToString(gov.OptionYes), vote.Option)
+	require.Equal(t, gov.OptionYes, vote.Option)
 }
 
 func TestUnrevoke(t *testing.T) {
@@ -576,31 +576,31 @@ func TestProposalsQuery(t *testing.T) {
 
 	// Test query all proposals
 	proposals := getProposalsAll(t, port)
-	require.Equal(t, proposalID1, (proposals[0]).ProposalID)
-	require.Equal(t, proposalID2, (proposals[1]).ProposalID)
-	require.Equal(t, proposalID3, (proposals[2]).ProposalID)
+	require.Equal(t, proposalID1, (proposals[0]).GetProposalID())
+	require.Equal(t, proposalID2, (proposals[1]).GetProposalID())
+	require.Equal(t, proposalID3, (proposals[2]).GetProposalID())
 
 	// Test query deposited by addr1
 	proposals = getProposalsFilterDepositer(t, port, addr)
-	require.Equal(t, proposalID1, (proposals[0]).ProposalID)
+	require.Equal(t, proposalID1, (proposals[0]).GetProposalID())
 
 	// Test query deposited by addr2
 	proposals = getProposalsFilterDepositer(t, port, addr2)
-	require.Equal(t, proposalID2, (proposals[0]).ProposalID)
-	require.Equal(t, proposalID3, (proposals[1]).ProposalID)
+	require.Equal(t, proposalID2, (proposals[0]).GetProposalID())
+	require.Equal(t, proposalID3, (proposals[1]).GetProposalID())
 
 	// Test query voted by addr1
 	proposals = getProposalsFilterVoter(t, port, addr)
-	require.Equal(t, proposalID2, (proposals[0]).ProposalID)
-	require.Equal(t, proposalID3, (proposals[1]).ProposalID)
+	require.Equal(t, proposalID2, (proposals[0]).GetProposalID())
+	require.Equal(t, proposalID3, (proposals[1]).GetProposalID())
 
 	// Test query voted by addr2
 	proposals = getProposalsFilterVoter(t, port, addr2)
-	require.Equal(t, proposalID3, (proposals[0]).ProposalID)
+	require.Equal(t, proposalID3, (proposals[0]).GetProposalID())
 
 	// Test query voted and deposited by addr1
 	proposals = getProposalsFilterVoterDepositer(t, port, addr, addr)
-	require.Equal(t, proposalID2, (proposals[0]).ProposalID)
+	require.Equal(t, proposalID2, (proposals[0]).GetProposalID())
 }
 
 //_____________________________________________________________________________
@@ -838,68 +838,68 @@ func getValidators(t *testing.T, port string) []stakerest.StakeValidatorOutput {
 	return validators
 }
 
-func getProposal(t *testing.T, port string, proposalID int64) gov.ProposalRest {
+func getProposal(t *testing.T, port string, proposalID int64) gov.Proposal {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d", proposalID), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var proposal gov.ProposalRest
+	var proposal gov.Proposal
 	err := cdc.UnmarshalJSON([]byte(body), &proposal)
 	require.Nil(t, err)
 	return proposal
 }
 
-func getDeposit(t *testing.T, port string, proposalID int64, depositerAddr sdk.AccAddress) gov.DepositRest {
+func getDeposit(t *testing.T, port string, proposalID int64, depositerAddr sdk.AccAddress) gov.Deposit {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d/deposits/%s", proposalID, depositerAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var deposit gov.DepositRest
+	var deposit gov.Deposit
 	err := cdc.UnmarshalJSON([]byte(body), &deposit)
 	require.Nil(t, err)
 	return deposit
 }
 
-func getVote(t *testing.T, port string, proposalID int64, voterAddr sdk.AccAddress) gov.VoteRest {
+func getVote(t *testing.T, port string, proposalID int64, voterAddr sdk.AccAddress) gov.Vote {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d/votes/%s", proposalID, voterAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var vote gov.VoteRest
+	var vote gov.Vote
 	err := cdc.UnmarshalJSON([]byte(body), &vote)
 	require.Nil(t, err)
 	return vote
 }
 
-func getProposalsAll(t *testing.T, port string) []gov.ProposalRest {
+func getProposalsAll(t *testing.T, port string) []gov.Proposal {
 	res, body := Request(t, port, "GET", "/gov/proposals", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var proposals []gov.ProposalRest
+	var proposals []gov.Proposal
 	err := cdc.UnmarshalJSON([]byte(body), &proposals)
 	require.Nil(t, err)
 	return proposals
 }
 
-func getProposalsFilterDepositer(t *testing.T, port string, depositerAddr sdk.AccAddress) []gov.ProposalRest {
+func getProposalsFilterDepositer(t *testing.T, port string, depositerAddr sdk.AccAddress) []gov.Proposal {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals?depositer=%s", depositerAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var proposals []gov.ProposalRest
+	var proposals []gov.Proposal
 	err := cdc.UnmarshalJSON([]byte(body), &proposals)
 	require.Nil(t, err)
 	return proposals
 }
 
-func getProposalsFilterVoter(t *testing.T, port string, voterAddr sdk.AccAddress) []gov.ProposalRest {
+func getProposalsFilterVoter(t *testing.T, port string, voterAddr sdk.AccAddress) []gov.Proposal {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals?voter=%s", voterAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var proposals []gov.ProposalRest
+	var proposals []gov.Proposal
 	err := cdc.UnmarshalJSON([]byte(body), &proposals)
 	require.Nil(t, err)
 	return proposals
 }
 
-func getProposalsFilterVoterDepositer(t *testing.T, port string, voterAddr, depositerAddr sdk.AccAddress) []gov.ProposalRest {
+func getProposalsFilterVoterDepositer(t *testing.T, port string, voterAddr, depositerAddr sdk.AccAddress) []gov.Proposal {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals?depositer=%s&voter=%s", depositerAddr, voterAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var proposals []gov.ProposalRest
+	var proposals []gov.Proposal
 	err := cdc.UnmarshalJSON([]byte(body), &proposals)
 	require.Nil(t, err)
 	return proposals

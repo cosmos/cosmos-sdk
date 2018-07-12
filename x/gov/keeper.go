@@ -48,7 +48,7 @@ func (keeper Keeper) WireCodec() *wire.Codec {
 // Proposals
 
 // Creates a NewProposal
-func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description string, proposalType byte) Proposal {
+func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description string, proposalType ProposalKind) Proposal {
 	proposalID, err := keeper.getNewProposalID(ctx)
 	if err != nil {
 		return nil
@@ -165,8 +165,8 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID int64, voterAddr sdk.Ac
 		return ErrInactiveProposal(keeper.codespace, proposalID)
 	}
 
-	if option != OptionYes && option != OptionAbstain && option != OptionNo && option != OptionNoWithVeto {
-		return ErrInvalidVote(keeper.codespace, VoteOptionToString(option))
+	if !validVoteOption(option) {
+		return ErrInvalidVote(keeper.codespace, option)
 	}
 
 	vote := Vote{

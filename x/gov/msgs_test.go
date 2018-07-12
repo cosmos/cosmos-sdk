@@ -22,7 +22,7 @@ func TestMsgSubmitProposal(t *testing.T) {
 	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.Coins{})
 	tests := []struct {
 		title, description string
-		proposalType       byte
+		proposalType       ProposalKind
 		proposerAddr       sdk.AccAddress
 		initialDeposit     sdk.Coins
 		expectPass         bool

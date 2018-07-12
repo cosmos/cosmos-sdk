@@ -161,6 +161,7 @@ func printCreate(info keys.Info, seed string) {
 type NewKeyBody struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
+	Seed     string `json:"seed"`
 }
 
 // add new key REST handler
@@ -205,7 +206,11 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create account
-	info, mnemonic, err := kb.CreateMnemonic(m.Name, keys.English, m.Password, keys.Secp256k1)
+	seed := m.Seed
+	if seed == "" {
+		seed = getSeed(keys.Secp256k1)
+	}
+	info, err := kb.CreateKey(m.Name, seed, m.Password)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -219,7 +224,7 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keyOutput.Seed = mnemonic
+	keyOutput.Seed = seed
 
 	bz, err := json.Marshal(keyOutput)
 	if err != nil {

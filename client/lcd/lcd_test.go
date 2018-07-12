@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -52,7 +53,7 @@ func TestKeys(t *testing.T) {
 	newPassword := "0987654321"
 
 	// add key
-	jsonStr := []byte(fmt.Sprintf(`{"name":"%s", "password":"%s"}`, newName, newPassword))
+	jsonStr := []byte(fmt.Sprintf(`{"name":"%s", "password":"%s", "seed":"%s"}`, newName, newPassword, seed))
 	res, body = Request(t, port, "POST", "/keys", jsonStr)
 
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -63,6 +64,11 @@ func TestKeys(t *testing.T) {
 	addr2Bech32 := resp.Address.String()
 	_, err = sdk.AccAddressFromBech32(addr2Bech32)
 	require.NoError(t, err, "Failed to return a correct bech32 address")
+
+	// test if created account is the correct account
+	expectedInfo, _ := GetKB(t).CreateKey(newName, seed, newPassword)
+	expectedAccount := sdk.AccAddress(expectedInfo.GetPubKey().Address().Bytes())
+	assert.Equal(t, expectedAccount.String(), addr2Bech32)
 
 	// existing keys
 	res, body = Request(t, port, "GET", "/keys", nil)

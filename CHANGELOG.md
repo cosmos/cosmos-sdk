@@ -15,6 +15,7 @@ FEATURES
 
 BUG FIXES
 * [keys] \#1629 - updating password no longer asks for a new password when the first entered password was incorrect
+* [lcd] importing an account would create a random account
 
 ## 0.20.0
 

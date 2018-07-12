@@ -151,6 +151,7 @@ BUG FIXES
 * \#1287 - prevent zero power validators at genesis
 * [x/stake] fix bug when unbonding/redelegating using `--shares-percent`
 * \#1010 - two validators can't bond with the same pubkey anymore
+* [lcd] importing an account would create a random account
 
 
 ## 0.19.0

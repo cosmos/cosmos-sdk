@@ -38,7 +38,9 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 		// NOTE:  Correctness dependent on invariant that unbonding delegations / redelegations must also have been completely
 		//        slashed in this case - which we don't explicitly check, but should be true.
 		// Log the slash attempt for future reference (maybe we should tag it too)
-		logger.Error(fmt.Sprintf("WARNING: Ignored attempt to slash a nonexistent validator with address %s, we recommend you investigate immediately", pubkey.Address()))
+		logger.Error(fmt.Sprintf(
+			"WARNING: Ignored attempt to slash a nonexistent validator with address %s, we recommend you investigate immediately",
+			pubkey.Address()))
 		return
 	}
 	ownerAddress := validator.GetOwner()
@@ -51,11 +53,15 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	switch {
 	case infractionHeight > ctx.BlockHeight():
 		// Can't slash infractions in the future
-		panic(fmt.Sprintf("impossible attempt to slash future infraction at height %d but we are at height %d", infractionHeight, ctx.BlockHeight()))
+		panic(fmt.Sprintf(
+			"impossible attempt to slash future infraction at height %d but we are at height %d",
+			infractionHeight, ctx.BlockHeight()))
 
 	case infractionHeight == ctx.BlockHeight():
 		// Special-case slash at current height for efficiency - we don't need to look through unbonding delegations or redelegations
-		logger.Info(fmt.Sprintf("Slashing at current height %d, not scanning unbonding delegations & redelegations", infractionHeight))
+		logger.Info(fmt.Sprintf(
+			"Slashing at current height %d, not scanning unbonding delegations & redelegations",
+			infractionHeight))
 
 	case infractionHeight < ctx.BlockHeight():
 		// Iterate through unbonding delegations from slashed validator
@@ -81,12 +87,12 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	}
 
 	// Cannot decrease balance below zero
-	sharesToRemove := sdk.MinInt(remainingSlashAmount, validator.PoolShares.Amount.RoundInt())
+	sharesToRemove := sdk.MinInt(remainingSlashAmount, validator.Tokens.RoundInt())
 
 	// Get the current pool
 	pool := k.GetPool(ctx)
 	// remove shares from the validator
-	validator, pool, burned := validator.RemovePoolShares(pool, sdk.NewRatFromInt(sharesToRemove))
+	validator, pool, burned := validator.RemoveBondedTokens(pool, sdk.NewRatFromInt(sharesToRemove))
 	// burn tokens
 	pool.LooseTokens -= burned
 	// update the pool
@@ -94,12 +100,14 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	// update the validator, possibly kicking it out
 	validator = k.UpdateValidator(ctx, validator)
 	// remove validator if it has been reduced to zero shares
-	if validator.PoolShares.Amount.IsZero() {
+	if validator.Tokens.IsZero() {
 		k.RemoveValidator(ctx, validator.Owner)
 	}
 
 	// Log that a slash occurred!
-	logger.Info(fmt.Sprintf("Validator %s slashed by slashFactor %v, removed %v shares and burned %d tokens", pubkey.Address(), slashFactor, sharesToRemove, burned))
+	logger.Info(fmt.Sprintf(
+		"Validator %s slashed by slashFactor %v, removed %v shares and burned %d tokens",
+		pubkey.Address(), slashFactor, sharesToRemove, burned))
 
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 	return

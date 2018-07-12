@@ -26,8 +26,13 @@ func BondStatusToString(b BondStatus) string {
 	case 0x02:
 		return "Bonded"
 	default:
-		return ""
+		panic("improper use of BondStatusToString")
 	}
+}
+
+// nolint
+func (b BondStatus) Equal(b2 BondStatus) bool {
+	return byte(b) == byte(b2)
 }
 
 // validator for a delegated proof of stake system

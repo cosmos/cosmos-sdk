@@ -42,7 +42,7 @@ func InitialPool() Pool {
 //____________________________________________________________________
 
 // Sum total of all staking tokens in the pool
-func (p Pool) TokenSupply() int64 {
+func (p Pool) TokenSupply() sdk.Rat {
 	return p.LooseTokens.Add(p.BondedTokens)
 }
 
@@ -50,8 +50,8 @@ func (p Pool) TokenSupply() int64 {
 
 // get the bond ratio of the global state
 func (p Pool) BondedRatio() sdk.Rat {
-	if p.TokenSupply() > 0 {
-		return sdk.NewRat(p.BondedTokens, p.TokenSupply())
+	if p.TokenSupply().GT(sdk.ZeroRat()) {
+		return p.BondedTokens.Quo(p.TokenSupply())
 	}
 	return sdk.ZeroRat()
 }
@@ -61,7 +61,7 @@ func (p Pool) BondedRatio() sdk.Rat {
 func (p Pool) addBondedTokens(bondedTokens sdk.Rat) Pool {
 	p.BondedTokens = p.BondedTokens.Add(bondedTokens)
 	p.LooseTokens = p.LooseTokens.Sub(bondedTokens)
-	if p.LooseTokens < 0 {
+	if p.LooseTokens.LT(sdk.ZeroRat()) {
 		panic(fmt.Sprintf("sanity check: loose tokens negative, pool: %v", p))
 	}
 	return p
@@ -70,7 +70,7 @@ func (p Pool) addBondedTokens(bondedTokens sdk.Rat) Pool {
 func (p Pool) removeBondedTokens(bondedTokens sdk.Rat) Pool {
 	p.BondedTokens = p.BondedTokens.Sub(bondedTokens)
 	p.LooseTokens = p.LooseTokens.Add(bondedTokens)
-	if p.UnbondedTokens < 0 {
+	if p.BondedTokens.LT(sdk.ZeroRat()) {
 		panic(fmt.Sprintf("sanity check: bonded tokens negative, pool: %v", p))
 	}
 	return p

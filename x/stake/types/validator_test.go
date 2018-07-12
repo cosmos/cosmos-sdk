@@ -197,17 +197,17 @@ func TestUpdateStatus(t *testing.T) {
 	require.Equal(t, int64(0), pool.BondedTokens.RoundInt64())
 	require.Equal(t, int64(100), pool.LooseTokens.RoundInt64())
 
-	validator, pool = validator.UpdateStatus(pool, sdk.Unbonding)
-	require.Equal(t, sdk.Unbonding, validator.Status)
-	require.Equal(t, int64(100), validator.Tokens.RoundInt64())
-	require.Equal(t, int64(0), pool.BondedTokens.RoundInt64())
-	require.Equal(t, int64(100), pool.LooseTokens.RoundInt64())
-
 	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.Equal(t, int64(100), validator.Tokens.RoundInt64())
 	require.Equal(t, int64(100), pool.BondedTokens.RoundInt64())
 	require.Equal(t, int64(0), pool.LooseTokens.RoundInt64())
+
+	validator, pool = validator.UpdateStatus(pool, sdk.Unbonding)
+	require.Equal(t, sdk.Unbonding, validator.Status)
+	require.Equal(t, int64(100), validator.Tokens.RoundInt64())
+	require.Equal(t, int64(0), pool.BondedTokens.RoundInt64())
+	require.Equal(t, int64(100), pool.LooseTokens.RoundInt64())
 }
 
 func TestPossibleOverflow(t *testing.T) {

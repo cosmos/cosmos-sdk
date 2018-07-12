@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -25,9 +26,12 @@ func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params) {
 		validator := types.NewValidator(addrVals[i], PKs[i], types.Description{})
 		validator, pool, _ = validator.AddTokensFromDel(pool, amt)
 		keeper.SetPool(ctx, pool)
-		keeper.UpdateValidator(ctx, validator)
+		validator = keeper.UpdateValidator(ctx, validator)
+		fmt.Printf("debug validator: %v\n", validator)
 		keeper.SetValidatorByPubKeyIndex(ctx, validator)
 	}
+	pool = keeper.GetPool(ctx)
+	fmt.Printf("debug pool: %v\n", pool)
 
 	return ctx, keeper, params
 }
@@ -354,7 +358,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	ctx = ctx.WithBlockHeight(12)
 	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
 	require.True(t, found)
-	keeper.Slash(ctx, pk, 10, 10, sdk.NewRat(3, 4))
+	require.NotPanics(t, func() { keeper.Slash(ctx, pk, 10, 10, sdk.NewRat(3, 4)) })
 
 	// read updating redelegation
 	rd, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])

@@ -93,7 +93,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 
 	// Get the current pool
 	pool := k.GetPool(ctx)
-	// remove shares from the validator
+	// remove tokens from the validator
 	validator, pool = validator.RemoveTokens(pool, burned)
 	// burn tokens
 	pool.LooseTokens = pool.LooseTokens.Sub(burned)

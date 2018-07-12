@@ -76,7 +76,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 
 	// burn half the delegator shares
 	validator, pool, burned := validator.RemoveDelShares(pool, delSharesCreated.Quo(sdk.NewRat(2)))
-	require.Equal(t, int64(50), burned)
+	require.Equal(t, int64(50), burned.RoundInt64())
 	keeper.SetPool(ctx, pool)              // update the pool
 	keeper.UpdateValidator(ctx, validator) // update the validator, possibly kicking it out
 	require.False(t, keeper.validatorByPowerIndexExists(ctx, power))
@@ -122,14 +122,21 @@ func TestValidatorBasics(t *testing.T) {
 		validators[i] = types.NewValidator(addrVals[i], PKs[i], types.Description{})
 		validators[i].Status = sdk.Unbonded
 		validators[i].Tokens = sdk.ZeroRat()
-		validators[i].AddTokensFromDel(pool, amt)
+		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
+		keeper.SetPool(ctx, pool)
 	}
+	assert.True(sdk.RatEq(t, sdk.NewRat(9), validators[0].Tokens))
+	assert.True(sdk.RatEq(t, sdk.NewRat(8), validators[1].Tokens))
+	assert.True(sdk.RatEq(t, sdk.NewRat(7), validators[2].Tokens))
 
 	// check the empty keeper first
 	_, found := keeper.GetValidator(ctx, addrVals[0])
 	require.False(t, found)
 	resVals := keeper.GetValidatorsBonded(ctx)
 	assert.Zero(t, len(resVals))
+
+	pool = keeper.GetPool(ctx)
+	assert.True(sdk.RatEq(t, sdk.ZeroRat(), pool.BondedTokens))
 
 	// set and retrieve a record
 	validators[0] = keeper.UpdateValidator(ctx, validators[0])
@@ -140,6 +147,11 @@ func TestValidatorBasics(t *testing.T) {
 	resVals = keeper.GetValidatorsBonded(ctx)
 	require.Equal(t, 1, len(resVals))
 	assert.True(ValEq(t, validators[0], resVals[0]))
+	assert.Equal(t, sdk.Bonded, validators[0].Status)
+	assert.True(sdk.RatEq(t, sdk.NewRat(9), validators[0].BondedTokens()))
+
+	pool = keeper.GetPool(ctx)
+	assert.True(sdk.RatEq(t, pool.BondedTokens, validators[0].BondedTokens()))
 
 	// modify a records, save, and retrieve
 	validators[0].Status = sdk.Bonded
@@ -398,6 +410,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 func TestValidatorBondHeight(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 1000)
+	pool := keeper.GetPool(ctx)
 
 	// now 2 max resValidators
 	params := keeper.GetParams(ctx)
@@ -405,7 +418,6 @@ func TestValidatorBondHeight(t *testing.T) {
 	keeper.SetParams(ctx, params)
 
 	// initialize some validators into the state
-	pool := keeper.GetPool(ctx)
 	var validators [3]types.Validator
 	validators[0] = types.NewValidator(Addrs[0], PKs[0], types.Description{})
 	validators[1] = types.NewValidator(Addrs[1], PKs[1], types.Description{})
@@ -414,14 +426,18 @@ func TestValidatorBondHeight(t *testing.T) {
 	validators[0], pool, _ = validators[0].AddTokensFromDel(pool, 200)
 	validators[1], pool, _ = validators[1].AddTokensFromDel(pool, 100)
 	validators[2], pool, _ = validators[2].AddTokensFromDel(pool, 100)
-
 	keeper.SetPool(ctx, pool)
+
 	validators[0] = keeper.UpdateValidator(ctx, validators[0])
+
 	////////////////////////////////////////
 	// If two validators both increase to the same voting power in the same block,
 	// the one with the first transaction should become bonded
 	validators[1] = keeper.UpdateValidator(ctx, validators[1])
 	validators[2] = keeper.UpdateValidator(ctx, validators[2])
+
+	pool = keeper.GetPool(ctx)
+
 	resValidators := keeper.GetValidatorsByPower(ctx)
 	require.Equal(t, uint16(len(resValidators)), params.MaxValidators)
 
@@ -430,7 +446,9 @@ func TestValidatorBondHeight(t *testing.T) {
 	validators[1], pool, _ = validators[1].AddTokensFromDel(pool, 50)
 	validators[2], pool, _ = validators[2].AddTokensFromDel(pool, 50)
 	keeper.SetPool(ctx, pool)
+	//require.NotPanics(t, func() {
 	validators[2] = keeper.UpdateValidator(ctx, validators[2])
+	//})
 	resValidators = keeper.GetValidatorsByPower(ctx)
 	require.Equal(t, params.MaxValidators, uint16(len(resValidators)))
 	validators[1] = keeper.UpdateValidator(ctx, validators[1])

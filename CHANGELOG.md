@@ -12,8 +12,8 @@ BREAKING CHANGES
 FEATURES
 * [baseapp] NewBaseApp now takes option functions as parameters
 
-
 BUG FIXES
+* \#1630 - redelegation nolonger removes tokens from the delegator liquid account
 * [keys] \#1629 - updating password no longer asks for a new password when the first entered password was incorrect
 * [lcd] importing an account would create a random account
 

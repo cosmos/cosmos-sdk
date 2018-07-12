@@ -85,7 +85,6 @@ To start the Rest server:
 
 ```bash
 gaiacli advanced rest-server --trust-node=false --node=<full_node_address:full_node_port>
-
 ```
 
 Flags:

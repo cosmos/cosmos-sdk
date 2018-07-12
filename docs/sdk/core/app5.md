@@ -1,7 +1,7 @@
-# App5 - Basecoin
+# Basecoin
 
 As we've seen, the SDK provides a flexible yet comprehensive framework for building state
-machines and defining their transitions, including authenticating transactions, 
+machines and defining their transitions, including authenticating transactions,
 executing messages, controlling access to stores, and updating the validator set.
 
 Until now, we have focused on building only isolated ABCI applications to
@@ -17,11 +17,11 @@ TODO
 
 ## Tendermint Node
 
-Since the Cosmos-SDK is written in Go, Cosmos-SDK applications can be compiled 
+Since the Cosmos-SDK is written in Go, Cosmos-SDK applications can be compiled
 with Tendermint into a single binary. Of course, like any ABCI application, they
 can also run as separate processes that communicate with Tendermint via socket.
 
-For more details on what's involved in starting a Tendermint full node, see the 
+For more details on what's involved in starting a Tendermint full node, see the
 [NewNode](https://godoc.org/github.com/tendermint/tendermint/node#NewNode)
 function in `github.com/tendermint/tendermint/node`.
 
@@ -57,14 +57,14 @@ func newApp(logger log.Logger, db dbm.DB) abci.Application {
 }
 ```
 
-Note we utilize the popular [cobra library](https://github.com/spf13/cobra) 
-for the CLI, in concert with the [viper library](https://github.com/spf13/library) 
+Note we utilize the popular [cobra library](https://github.com/spf13/cobra)
+for the CLI, in concert with the [viper library](https://github.com/spf13/library)
 for managing configuration. See our [cli library](https://github.com/tendermint/blob/master/tmlibs/cli/setup.go)
 for more details.
 
 TODO: compile and run the binary
 
-Options for running the `basecoind` binary are effectively the same as for `tendermint`. 
+Options for running the `basecoind` binary are effectively the same as for `tendermint`.
 See [Using Tendermint](TODO) for more details.
 
 ## Clients

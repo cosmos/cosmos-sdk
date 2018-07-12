@@ -108,7 +108,7 @@ func EnsureSequences(ctx CoreContext) (CoreContext, error) {
 		return ctx, err
 	}
 
-	var seqs []int64
+	seqs := make([]int64, len(addrs))
 	var err2 error
 	for i, seq := range ctx.Sequences {
 		if seq != 0 {

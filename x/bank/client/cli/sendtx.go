@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	errs "errors"
 
 	"github.com/pkg/errors"
@@ -36,6 +37,9 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 			if len(from) != 1 {
 				return errs.New("Must provide single from address for this transaction")
 			}
+
+			fmt.Println(from)
+			fmt.Println(ctx.AccountNumbers)
 
 			fromAcc, err := ctx.QueryStore(auth.AddressStoreKey(from[0]), ctx.AccountStore)
 			if err != nil {

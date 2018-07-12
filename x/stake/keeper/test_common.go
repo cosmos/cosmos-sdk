@@ -118,7 +118,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 			{keeper.GetParams(ctx).BondDenom, sdk.NewInt(initCoins)},
 		})
 		require.Nil(t, err)
-		pool.LooseTokens += initCoins
+		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewRat(initCoins))
 		keeper.SetPool(ctx, pool)
 	}
 

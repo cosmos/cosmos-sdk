@@ -48,7 +48,7 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			proposalType, err := gov.StringToProposalType(strProposalType)
+			proposalType, err := gov.ProposalTypeFromString(strProposalType)
 			if err != nil {
 				return err
 			}
@@ -145,7 +145,7 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 
 			option := viper.GetString(flagOption)
 
-			byteVoteOption, err := gov.StringToVoteOption(option)
+			byteVoteOption, err := gov.VoteOptionFromString(option)
 			if err != nil {
 				return err
 			}
@@ -158,7 +158,7 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]", bechVoter, msg.ProposalID, gov.VoteOptionToString(msg.Option))
+			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]", bechVoter, msg.ProposalID, msg.Option)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
@@ -195,8 +195,7 @@ func GetCmdQueryProposal(storeName string, cdc *wire.Codec) *cobra.Command {
 
 			var proposal gov.Proposal
 			cdc.MustUnmarshalBinary(res, &proposal)
-			proposalRest := gov.ProposalToRest(proposal)
-			output, err := wire.MarshalJSONIndent(cdc, proposalRest)
+			output, err := wire.MarshalJSONIndent(cdc, proposal)
 			if err != nil {
 				return err
 			}
@@ -232,8 +231,7 @@ func GetCmdQueryVote(storeName string, cdc *wire.Codec) *cobra.Command {
 
 			var vote gov.Vote
 			cdc.MustUnmarshalBinary(res, &vote)
-			voteRest := gov.VoteToRest(vote)
-			output, err := wire.MarshalJSONIndent(cdc, voteRest)
+			output, err := wire.MarshalJSONIndent(cdc, vote)
 			if err != nil {
 				return err
 			}

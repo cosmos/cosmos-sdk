@@ -107,8 +107,6 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	barAddr, barPubKey := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
 	barCeshPubKey := sdk.MustBech32ifyValPub(barPubKey)
 
-	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", barAddr, flags))
-	require.Equal(t, int64(0), barAcc.GetCoins().AmountOf("steak").Int64())
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
 
@@ -123,8 +121,8 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	executeWrite(t, cvStr, pass)
 	tests.WaitForNextHeightTM(port)
 
-	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
-	require.Equal(t, int64(48), barAcc.GetCoins().AmountOf("steak").Int64(), "%v", fooAcc)
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
+	require.Equal(t, int64(48), fooAcc.GetCoins().AmountOf("steak").Int64(), "%v", fooAcc)
 
 	validator := executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %s --output=json %v", barAddr, flags))
 	require.Equal(t, validator.Owner, barAddr)

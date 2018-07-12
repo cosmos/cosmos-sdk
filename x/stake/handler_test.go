@@ -268,6 +268,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 	initBond := int64(1000)
 	ctx, accMapper, keeper := keep.CreateTestInput(t, false, initBond)
 	params := setInstantUnbondPeriod(keeper, ctx)
+	denom := params.BondDenom
 
 	// create validator, delegate
 	validatorAddr, delegatorAddr := keep.Addrs[0], keep.Addrs[1]
@@ -276,9 +277,16 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
 
+	// initial balance
+	amt1 := accMapper.GetAccount(ctx, delegatorAddr).GetCoins().AmountOf(denom)
+
 	msgDelegate := newTestMsgDelegate(delegatorAddr, validatorAddr, initBond)
 	got = handleMsgDelegate(ctx, msgDelegate, keeper)
 	require.True(t, got.IsOK(), "expected delegation to be ok, got %v", got)
+
+	// balance should have been subtracted after delegation
+	amt2 := accMapper.GetAccount(ctx, delegatorAddr).GetCoins().AmountOf(denom)
+	require.Equal(t, amt1.Sub(sdk.NewInt(initBond)).Int64(), amt2.Int64(), "expected coins to be subtracted")
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
@@ -530,6 +538,7 @@ func TestUnbondingPeriod(t *testing.T) {
 func TestRedelegationPeriod(t *testing.T) {
 	ctx, AccMapper, keeper := keep.CreateTestInput(t, false, 1000)
 	validatorAddr, validatorAddr2 := keep.Addrs[0], keep.Addrs[1]
+	denom := keeper.GetParams(ctx).BondDenom
 
 	// set the unbonding time
 	params := keeper.GetParams(ctx)
@@ -538,8 +547,16 @@ func TestRedelegationPeriod(t *testing.T) {
 
 	// create the validators
 	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, keep.PKs[0], 10)
+
+	// initial balance
+	amt1 := AccMapper.GetAccount(ctx, validatorAddr).GetCoins().AmountOf(denom)
+
 	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	// balance should have been subtracted after creation
+	amt2 := AccMapper.GetAccount(ctx, validatorAddr).GetCoins().AmountOf(denom)
+	require.Equal(t, amt1.Sub(sdk.NewInt(10)).Int64(), amt2.Int64(), "expected coins to be subtracted")
 
 	msgCreateValidator = newTestMsgCreateValidator(validatorAddr2, keep.PKs[1], 10)
 	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)

@@ -11,6 +11,9 @@ BREAKING CHANGES
 FEATURES
 * [baseapp] NewBaseApp now takes option functions as parameters
 
+BUG FIXES
+* [server] 'gaiad init' command family now writes provided name as the moniker in `config.toml`
+
 ## 0.20.0
 
 *July 10th, 2018*

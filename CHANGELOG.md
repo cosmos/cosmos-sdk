@@ -11,6 +11,9 @@ BREAKING CHANGES
 FEATURES
 * [baseapp] NewBaseApp now takes option functions as parameters
 
+BUG FIXES
+* \#1630 - redelegation nolonger removes tokens from the delegator liquid account
+
 ## 0.20.0
 
 *July 10th, 2018*
@@ -143,7 +146,6 @@ BUG FIXES
 * \#1287 - prevent zero power validators at genesis
 * [x/stake] fix bug when unbonding/redelegating using `--shares-percent`
 * \#1010 - two validators can't bond with the same pubkey anymore
-* \#1630 - redelegation nolonger removes tokens from the delegator liquid account
 
 
 ## 0.19.0

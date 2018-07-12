@@ -2,6 +2,7 @@ package store
 
 import (
 	"bytes"
+	"io"
 	"sort"
 	"sync"
 
@@ -27,11 +28,10 @@ var _ CacheKVStore = (*cacheKVStore)(nil)
 
 // nolint
 func NewCacheKVStore(parent KVStore) *cacheKVStore {
-	ci := &cacheKVStore{
+	return &cacheKVStore{
 		cache:  make(map[string]cValue),
 		parent: parent,
 	}
-	return ci
 }
 
 // Implements Store.
@@ -98,6 +98,7 @@ func (ci *cacheKVStore) Write() {
 			keys = append(keys, key)
 		}
 	}
+
 	sort.Strings(keys)
 
 	// TODO: Consider allowing usage of Batch, which would allow the write to
@@ -125,6 +126,11 @@ func (ci *cacheKVStore) CacheWrap() CacheWrap {
 	return NewCacheKVStore(ci)
 }
 
+// CacheWrapWithTrace implements the CacheWrapper interface.
+func (ci *cacheKVStore) CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap {
+	return NewCacheKVStore(NewTraceKVStore(ci, w, tc))
+}
+
 //----------------------------------------
 // Iteration
 
@@ -140,32 +146,39 @@ func (ci *cacheKVStore) ReverseIterator(start, end []byte) Iterator {
 
 func (ci *cacheKVStore) iterator(start, end []byte, ascending bool) Iterator {
 	var parent, cache Iterator
+
 	if ascending {
 		parent = ci.parent.Iterator(start, end)
 	} else {
 		parent = ci.parent.ReverseIterator(start, end)
 	}
+
 	items := ci.dirtyItems(ascending)
 	cache = newMemIterator(start, end, items)
+
 	return newCacheMergeIterator(parent, cache, ascending)
 }
 
 // Constructs a slice of dirty items, to use w/ memIterator.
 func (ci *cacheKVStore) dirtyItems(ascending bool) []cmn.KVPair {
 	items := make([]cmn.KVPair, 0, len(ci.cache))
+
 	for key, cacheValue := range ci.cache {
 		if !cacheValue.dirty {
 			continue
 		}
-		items = append(items,
-			cmn.KVPair{[]byte(key), cacheValue.value})
+
+		items = append(items, cmn.KVPair{Key: []byte(key), Value: cacheValue.value})
 	}
+
 	sort.Slice(items, func(i, j int) bool {
 		if ascending {
 			return bytes.Compare(items[i].Key, items[j].Key) < 0
 		}
+
 		return bytes.Compare(items[i].Key, items[j].Key) > 0
 	})
+
 	return items
 }
 
@@ -180,10 +193,9 @@ func (ci *cacheKVStore) assertValidKey(key []byte) {
 
 // Only entrypoint to mutate ci.cache.
 func (ci *cacheKVStore) setCacheValue(key, value []byte, deleted bool, dirty bool) {
-	cacheValue := cValue{
+	ci.cache[string(key)] = cValue{
 		value:   value,
 		deleted: deleted,
 		dirty:   dirty,
 	}
-	ci.cache[string(key)] = cacheValue
 }

@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	"golang.org/x/crypto/ripemd160"
@@ -18,16 +19,18 @@ const (
 	commitInfoKeyFmt = "s/%d" // s/<version>
 )
 
-// rootMultiStore is composed of many CommitStores.
-// Name contrasts with cacheMultiStore which is for cache-wrapping
-// other MultiStores.
-// Implements MultiStore.
+// rootMultiStore is composed of many CommitStores. Name contrasts with
+// cacheMultiStore which is for cache-wrapping other MultiStores. It implements
+// the CommitMultiStore interface.
 type rootMultiStore struct {
 	db           dbm.DB
 	lastCommitID CommitID
 	storesParams map[StoreKey]storeParams
 	stores       map[StoreKey]CommitStore
 	keysByName   map[string]StoreKey
+
+	traceWriter  io.Writer
+	traceContext TraceContext
 }
 
 var _ CommitMultiStore = (*rootMultiStore)(nil)
@@ -130,6 +133,40 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 	return nil
 }
 
+// WithTracer sets the tracer for the MultiStore that the underlying
+// stores will utilize to trace operations. A MultiStore is returned.
+func (rs *rootMultiStore) WithTracer(w io.Writer) MultiStore {
+	rs.traceWriter = w
+	return rs
+}
+
+// WithTracingContext updates the tracing context for the MultiStore by merging
+// the given context with the existing context by key. Any existing keys will
+// be overwritten. It is implied that the caller should update the context when
+// necessary between tracing operations. It returns a modified MultiStore.
+func (rs *rootMultiStore) WithTracingContext(tc TraceContext) MultiStore {
+	if rs.traceContext != nil {
+		for k, v := range tc {
+			rs.traceContext[k] = v
+		}
+	} else {
+		rs.traceContext = tc
+	}
+
+	return rs
+}
+
+// TracingEnabled returns if tracing is enabled for the MultiStore.
+func (rs *rootMultiStore) TracingEnabled() bool {
+	return rs.traceWriter != nil
+}
+
+// ResetTraceContext resets the current tracing context.
+func (rs *rootMultiStore) ResetTraceContext() MultiStore {
+	rs.traceContext = nil
+	return rs
+}
+
 //----------------------------------------
 // +CommitStore
 
@@ -165,6 +202,11 @@ func (rs *rootMultiStore) CacheWrap() CacheWrap {
 	return rs.CacheMultiStore().(CacheWrap)
 }
 
+// CacheWrapWithTrace implements the CacheWrapper interface.
+func (rs *rootMultiStore) CacheWrapWithTrace(_ io.Writer, _ TraceContext) CacheWrap {
+	return rs.CacheWrap()
+}
+
 //----------------------------------------
 // +MultiStore
 
@@ -178,9 +220,17 @@ func (rs *rootMultiStore) GetStore(key StoreKey) Store {
 	return rs.stores[key]
 }
 
-// Implements MultiStore.
+// GetKVStore implements the MultiStore interface. If tracing is enabled on the
+// rootMultiStore, a wrapped TraceKVStore will be returned with the given
+// tracer, otherwise, the original KVStore will be returned.
 func (rs *rootMultiStore) GetKVStore(key StoreKey) KVStore {
-	return rs.stores[key].(KVStore)
+	store := rs.stores[key].(KVStore)
+
+	if rs.TracingEnabled() {
+		store = NewTraceKVStore(store, rs.traceWriter, rs.traceContext)
+	}
+
+	return store
 }
 
 // Implements MultiStore.

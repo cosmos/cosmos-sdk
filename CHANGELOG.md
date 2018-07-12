@@ -10,6 +10,7 @@ BREAKING CHANGES
 
 FEATURES
 * [baseapp] NewBaseApp now takes option functions as parameters
+* [store] Added support for tracing multi-store operations via `--trace-store`
 
 ## 0.20.0
 

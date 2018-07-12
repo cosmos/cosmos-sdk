@@ -33,6 +33,9 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
+			fmt.Println(ctx.FromAddressNames)
+			fmt.Println(ctx.AccountNumbers)
+
 			pkStr := viper.GetString(FlagPubKey)
 			if len(pkStr) == 0 {
 				return fmt.Errorf("must use --pubkey flag")

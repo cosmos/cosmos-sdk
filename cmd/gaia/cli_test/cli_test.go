@@ -112,7 +112,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 	// create validator
 	cvStr := fmt.Sprintf("gaiacli stake create-validator %v", flags)
-	cvStr += fmt.Sprintf(" --from=%s", "foo, bar")
+	cvStr += fmt.Sprintf(" --from=%s", "foo,bar")
 	cvStr += fmt.Sprintf(" --address-validator=%s", barAddr)
 	cvStr += fmt.Sprintf(" --pubkey=%s", barCeshPubKey)
 	cvStr += fmt.Sprintf(" --amount=%v", "2steak")

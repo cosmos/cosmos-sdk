@@ -1,6 +1,8 @@
 package store
 
 import (
+	"io"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 )
@@ -17,6 +19,11 @@ func (dbStoreAdapter) GetStoreType() StoreType {
 // Implements KVStore.
 func (dsa dbStoreAdapter) CacheWrap() CacheWrap {
 	return NewCacheKVStore(dsa)
+}
+
+// CacheWrapWithTrace implements the KVStore interface.
+func (dsa dbStoreAdapter) CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap {
+	return NewCacheKVStore(NewTraceKVStore(dsa, w, tc))
 }
 
 // Implements KVStore

@@ -143,9 +143,12 @@ type GaiaApp struct {
 func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 	cdc := MakeCodec()
 
+	bApp := bam.NewBaseApp(appName, cdc, logger, db)
+	bApp.SetCommitMultiStoreTracer(os.Stdout)
+
 	// create your application object
 	var app = &GaiaApp{
-		BaseApp:     bam.NewBaseApp(appName, cdc, logger, db),
+		BaseApp:     bApp,
 		cdc:         cdc,
 		keyMain:     sdk.NewKVStoreKey("main"),
 		keyAccount:  sdk.NewKVStoreKey("acc"),

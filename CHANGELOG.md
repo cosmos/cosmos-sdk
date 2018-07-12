@@ -11,6 +11,7 @@ BREAKING CHANGES
 
 FEATURES
 * [baseapp] NewBaseApp now takes option functions as parameters
+* [store] Added support for tracing multi-store operations via `--trace-store`
 
 BUG FIXES
 * \#1630 - redelegation nolonger removes tokens from the delegator liquid account

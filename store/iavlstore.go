@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"io"
 	"sync"
 
 	"github.com/tendermint/go-amino"
@@ -115,6 +116,11 @@ func (st *iavlStore) GetStoreType() StoreType {
 // Implements Store.
 func (st *iavlStore) CacheWrap() CacheWrap {
 	return NewCacheKVStore(st)
+}
+
+// CacheWrapWithTrace implements the Store interface.
+func (st *iavlStore) CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap {
+	return NewCacheKVStore(NewTraceKVStore(st, w, tc))
 }
 
 // Implements KVStore.

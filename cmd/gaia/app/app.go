@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"io"
 	"os"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -55,12 +56,19 @@ type GaiaApp struct {
 	govKeeper           gov.Keeper
 }
 
-func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
+// NewGaiaApp returns a reference to an initialized GaiaApp.
+//
+// TODO: Determine how to use a flexible and robust configuration paradigm that
+// allows for sensible defaults while being highly configurable
+// (e.g. functional options).
+func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer) *GaiaApp {
 	cdc := MakeCodec()
 
-	// create your application object
+	bApp := bam.NewBaseApp(appName, cdc, logger, db)
+	bApp.SetCommitMultiStoreTracer(traceStore)
+
 	var app = &GaiaApp{
-		BaseApp:          bam.NewBaseApp(appName, cdc, logger, db),
+		BaseApp:          bApp,
 		cdc:              cdc,
 		keyMain:          sdk.NewKVStoreKey("main"),
 		keyAccount:       sdk.NewKVStoreKey("acc"),

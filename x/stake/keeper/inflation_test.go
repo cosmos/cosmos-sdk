@@ -240,7 +240,7 @@ func TestInflationWithRandomOperations(t *testing.T) {
 		previousInflation := pool.Inflation
 
 		// Perform the random operation, and record how validators are modified
-		poolMod, validatorMod, tokens, msg := types.RandomOperation(r)(r, pool, validators[validatorCounter])
+		poolMod, validatorMod, _, msg := types.RandomOperation(r)(r, pool, validators[validatorCounter])
 		validatorsMod := make([]types.Validator, len(validators))
 		copy(validatorsMod[:], validators[:])
 		require.Equal(t, numValidators, len(validators), "i %v", validatorCounter)
@@ -249,7 +249,7 @@ func TestInflationWithRandomOperations(t *testing.T) {
 
 		types.AssertInvariants(t, msg,
 			pool, validators,
-			poolMod, validatorsMod, tokens)
+			poolMod, validatorsMod)
 
 		// set pool and validators after the random operation
 		pool = poolMod
@@ -286,7 +286,7 @@ func updateProvisions(t *testing.T, keeper Keeper, pool types.Pool, ctx sdk.Cont
 	keeper.SetPool(ctx, pool)
 
 	//check provisions were added to pool
-	require.Equal(t, startTotalSupply.Add(expProvisions), pool.TokenSupply().RoundInt64())
+	require.Equal(sdk.RatEq(t, startTotalSupply.Add(expProvisions), pool.TokenSupply()))
 
 	return expInflation, expProvisions, pool
 }
@@ -316,8 +316,8 @@ func setupTestValidators(pool types.Pool, keeper Keeper, ctx sdk.Context, valida
 
 // Checks that the deterministic validator setup you wanted matches the values in the pool
 func checkValidatorSetup(t *testing.T, pool types.Pool, initialTotalTokens, initialBondedTokens int64) {
-	require.Equal(t, initialTotalTokens, pool.TokenSupply(), "%v", pool)
-	require.Equal(t, initialBondedTokens, pool.BondedTokens, "%v", pool)
+	require.Equal(t, initialTotalTokens, pool.TokenSupply().RoundInt64(), "%v", pool)
+	require.Equal(t, initialBondedTokens, pool.BondedTokens.RoundInt64(), "%v", pool)
 
 	// test initial bonded ratio
 	require.True(t, pool.BondedRatio().Equal(sdk.NewRat(initialBondedTokens, initialTotalTokens)), "%v", pool.BondedRatio())

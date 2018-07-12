@@ -151,7 +151,7 @@ func TestUnbondDelegation(t *testing.T) {
 	validator = keeper.UpdateValidator(ctx, validator)
 
 	pool = keeper.GetPool(ctx)
-	require.Equal(t, int64(10), pool.BondedTokens)
+	require.Equal(t, int64(10), pool.BondedTokens.RoundInt64())
 	require.Equal(t, int64(10), validator.BondedTokens().RoundInt64())
 
 	delegation := types.Delegation{
@@ -175,8 +175,8 @@ func TestUnbondDelegation(t *testing.T) {
 
 	require.Equal(t, int64(4), delegation.Shares.RoundInt64())
 	require.Equal(t, int64(4), validator.BondedTokens().RoundInt64())
-	require.Equal(t, int64(6), pool.LooseTokens, "%v", pool)
-	require.Equal(t, int64(4), pool.BondedTokens)
+	require.Equal(t, int64(6), pool.LooseTokens.RoundInt64(), "%v", pool)
+	require.Equal(t, int64(4), pool.BondedTokens.RoundInt64())
 }
 
 // Make sure that that the retrieving the delegations doesn't affect the state

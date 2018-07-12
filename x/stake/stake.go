@@ -16,7 +16,6 @@ type (
 	Redelegation          = types.Redelegation
 	Params                = types.Params
 	Pool                  = types.Pool
-	PoolShares            = types.PoolShares
 	MsgCreateValidator    = types.MsgCreateValidator
 	MsgEditValidator      = types.MsgEditValidator
 	MsgDelegate           = types.MsgDelegate
@@ -62,9 +61,6 @@ var (
 
 	DefaultParams       = types.DefaultParams
 	InitialPool         = types.InitialPool
-	NewUnbondedShares   = types.NewUnbondedShares
-	NewUnbondingShares  = types.NewUnbondingShares
-	NewBondedShares     = types.NewBondedShares
 	NewValidator        = types.NewValidator
 	NewDescription      = types.NewDescription
 	NewGenesisState     = types.NewGenesisState

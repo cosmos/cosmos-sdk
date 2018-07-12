@@ -63,7 +63,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper) sdk.InitChainer {
 		mapp.InitChainer(ctx, req)
 
 		stakeGenesis := DefaultGenesisState()
-		stakeGenesis.Pool.LooseTokens = 100000
+		stakeGenesis.Pool.LooseTokens = sdk.NewRat(100000)
 
 		err := InitGenesis(ctx, keeper, stakeGenesis)
 		if err != nil {
@@ -135,8 +135,8 @@ func TestStakeMsgs(t *testing.T) {
 
 	validator := checkValidator(t, mApp, keeper, addr1, true)
 	require.Equal(t, addr1, validator.Owner)
-	require.Equal(t, sdk.Bonded, validator.Status())
-	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.PoolShares.Bonded()))
+	require.Equal(t, sdk.Bonded, validator.Status)
+	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.BondedTokens()))
 
 	// check the bond that should have been created as well
 	checkDelegation(t, mApp, keeper, addr1, addr1, true, sdk.NewRat(10))

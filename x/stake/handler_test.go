@@ -79,8 +79,8 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	keeper.Revoke(ctx, keep.PKs[0])
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, sdk.Unbonded, validator.PoolShares.Status)               // ensure is unbonded
-	require.Equal(t, int64(500000), validator.PoolShares.Amount.RoundInt64()) // ensure is unbonded
+	require.Equal(t, sdk.Unbonded, validator.Status)               // ensure is unbonded
+	require.Equal(t, int64(500000), validator.Tokens.RoundInt64()) // ensure is unbonded
 
 	// the old power record should have been deleted as the power changed
 	require.False(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power))
@@ -128,10 +128,10 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, addr1)
 
 	require.True(t, found)
-	assert.Equal(t, sdk.Bonded, validator.Status())
+	assert.Equal(t, sdk.Bonded, validator.Status)
 	assert.Equal(t, addr1, validator.Owner)
 	assert.Equal(t, pk1, validator.PubKey)
-	assert.Equal(t, sdk.NewRat(10), validator.PoolShares.Bonded())
+	assert.Equal(t, sdk.NewRat(10), validator.BondedTokens())
 	assert.Equal(t, sdk.NewRat(10), validator.DelegatorShares)
 	assert.Equal(t, Description{}, validator.Description)
 
@@ -152,10 +152,10 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	validator, found = keeper.GetValidator(ctx, addr2)
 
 	require.True(t, found)
-	assert.Equal(t, sdk.Bonded, validator.Status())
+	assert.Equal(t, sdk.Bonded, validator.Status)
 	assert.Equal(t, addr2, validator.Owner)
 	assert.Equal(t, pk2, validator.PubKey)
-	assert.Equal(t, sdk.NewRat(10), validator.PoolShares.Bonded())
+	assert.Equal(t, sdk.NewRat(10), validator.BondedTokens())
 	assert.Equal(t, sdk.NewRat(10), validator.DelegatorShares)
 	assert.Equal(t, Description{}, validator.Description)
 }
@@ -175,9 +175,9 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, sdk.Bonded, validator.Status())
+	require.Equal(t, sdk.Bonded, validator.Status)
 	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt64())
-	require.Equal(t, bondAmount, validator.PoolShares.Bonded().RoundInt64(), "validator: %v", validator)
+	require.Equal(t, bondAmount, validator.BondedTokens().RoundInt64(), "validator: %v", validator)
 
 	_, found = keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
 	require.False(t, found)
@@ -189,8 +189,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	pool := keeper.GetPool(ctx)
 	exRate := validator.DelegatorShareExRate(pool)
 	require.True(t, exRate.Equal(sdk.OneRat()), "expected exRate 1 got %v", exRate)
-	require.Equal(t, bondAmount, pool.BondedShares.RoundInt64())
-	require.Equal(t, bondAmount, pool.BondedTokens)
+	require.Equal(t, bondAmount, pool.BondedTokens())
 
 	// just send the same msgbond multiple times
 	msgDelegate := newTestMsgDelegate(delegatorAddr, validatorAddr, bondAmount)
@@ -252,7 +251,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	require.Equal(t, initBond*2, validator.DelegatorShares.RoundInt64())
-	require.Equal(t, initBond*2, validator.PoolShares.Bonded().RoundInt64())
+	require.Equal(t, initBond*2, validator.BondedTokens().RoundInt64())
 
 	// just send the same msgUnbond multiple times
 	// TODO use decimals here
@@ -619,7 +618,7 @@ func TestUnbondingWhenExcessValidators(t *testing.T) {
 	require.Equal(t, 2, len(vals), "vals %v", vals)
 	val1, found := keeper.GetValidator(ctx, validatorAddr1)
 	require.True(t, found)
-	require.Equal(t, sdk.Bonded, val1.Status(), "%v", val1)
+	require.Equal(t, sdk.Bonded, val1.Status, "%v", val1)
 }
 
 func TestJoiningAsCliffValidator(t *testing.T) {

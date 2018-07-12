@@ -18,7 +18,7 @@ func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params) {
 	params := keeper.GetParams(ctx)
 	pool := keeper.GetPool(ctx)
 	numVals := 3
-	pool.LooseTokens = amt * int64(numVals)
+	pool.LooseTokens = sdk.NewRat(amt * int64(numVals))
 
 	// add numVals validators
 	for i := 0; i < numVals; i++ {

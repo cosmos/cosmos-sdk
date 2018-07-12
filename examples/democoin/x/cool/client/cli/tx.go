@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"errors"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -23,19 +25,22 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
 			// get the from address from the name flag
-			from, err := ctx.GetFromAddress()
+			from, err := ctx.GetFromAddresses()
 			if err != nil {
 				return err
 			}
+			if len(from) != 1 {
+				return errors.New("Must provide single from address")
+			}
 
 			// create the message
-			msg := cool.NewMsgQuiz(from, args[0])
+			msg := cool.NewMsgQuiz(from[0], args[0])
 
 			// get account name
 			name := viper.GetString(client.FlagName)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			err = ctx.EnsureSignBuildBroadcast(name, []sdk.Msg{msg}, cdc)
+			err = ctx.EnsureSignBuildBroadcast([]string{name}, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}
@@ -55,7 +60,7 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
 			// get the from address from the name flag
-			from, err := ctx.GetFromAddress()
+			from, err := ctx.GetFromAddresses()
 			if err != nil {
 				return err
 			}
@@ -64,10 +69,10 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 			name := viper.GetString(client.FlagName)
 
 			// create the message
-			msg := cool.NewMsgSetTrend(from, args[0])
+			msg := cool.NewMsgSetTrend(from[0], args[0])
 
 			// build and sign the transaction, then broadcast to Tendermint
-			err = ctx.EnsureSignBuildBroadcast(name, []sdk.Msg{msg}, cdc)
+			err = ctx.EnsureSignBuildBroadcast([]string{name}, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}

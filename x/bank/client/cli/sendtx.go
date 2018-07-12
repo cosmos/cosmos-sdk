@@ -1,6 +1,8 @@
 package cli
 
 import (
+	errs "errors"
+
 	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -27,12 +29,15 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
 			// get the from/to address
-			from, err := ctx.GetFromAddress()
+			from, err := ctx.GetFromAddresses()
 			if err != nil {
 				return err
 			}
+			if len(from) != 1 {
+				return errs.New("Must provide single from address for this transaction")
+			}
 
-			fromAcc, err := ctx.QueryStore(auth.AddressStoreKey(from), ctx.AccountStore)
+			fromAcc, err := ctx.QueryStore(auth.AddressStoreKey(from[0]), ctx.AccountStore)
 			if err != nil {
 				return err
 			}
@@ -65,9 +70,9 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := client.BuildMsg(from, to, coins)
+			msg := client.BuildMsg(from[0], to, coins)
 
-			err = ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
+			err = ctx.EnsureSignBuildBroadcast(ctx.FromAddressNames, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}

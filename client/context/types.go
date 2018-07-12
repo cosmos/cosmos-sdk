@@ -8,23 +8,23 @@ import (
 
 // typical context created in sdk modules for transactions/queries
 type CoreContext struct {
-	ChainID         string
-	Height          int64
-	Gas             int64
-	Fee             string
-	TrustNode       bool
-	NodeURI         string
-	FromAddressName string
-	AccountNumber   int64
-	Sequence        int64
-	Memo            string
-	Client          rpcclient.Client
-	Decoder         auth.AccountDecoder
-	AccountStore    string
-	UseLedger       bool
-	Async           bool
-	JSON            bool
-	PrintResponse   bool
+	ChainID          string
+	Height           int64
+	Gas              int64
+	Fee              string
+	TrustNode        bool
+	NodeURI          string
+	FromAddressNames []string
+	AccountNumbers   []int64
+	Sequences        []int64
+	Memo             string
+	Client           rpcclient.Client
+	Decoder          auth.AccountDecoder
+	AccountStore     string
+	UseLedger        bool
+	Async            bool
+	JSON             bool
+	PrintResponse    bool
 }
 
 // WithChainID - return a copy of the context with an updated chainID
@@ -65,20 +65,20 @@ func (c CoreContext) WithNodeURI(nodeURI string) CoreContext {
 }
 
 // WithFromAddressName - return a copy of the context with an updated from address
-func (c CoreContext) WithFromAddressName(fromAddressName string) CoreContext {
-	c.FromAddressName = fromAddressName
+func (c CoreContext) WithFromAddressNames(fromAddressNames []string) CoreContext {
+	c.FromAddressNames = fromAddressNames
 	return c
 }
 
 // WithSequence - return a copy of the context with an account number
-func (c CoreContext) WithAccountNumber(accnum int64) CoreContext {
-	c.AccountNumber = accnum
+func (c CoreContext) WithAccountNumbers(accnums []int64) CoreContext {
+	c.AccountNumbers = accnums
 	return c
 }
 
 // WithSequence - return a copy of the context with an updated sequence number
-func (c CoreContext) WithSequence(sequence int64) CoreContext {
-	c.Sequence = sequence
+func (c CoreContext) WithSequences(sequences []int64) CoreContext {
+	c.Sequences = sequences
 	return c
 }
 

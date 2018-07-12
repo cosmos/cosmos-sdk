@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/hex"
+	"errors"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -30,19 +31,23 @@ func IBCTransferCmd(cdc *wire.Codec) *cobra.Command {
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
 			// get the from address
-			from, err := ctx.GetFromAddress()
+			from, err := ctx.GetFromAddresses()
 			if err != nil {
 				return err
 			}
 
+			if len(from) != 1 {
+				return errors.New("Must only provide one address to from flag")
+			}
+
 			// build the message
-			msg, err := buildMsg(from)
+			msg, err := buildMsg(from[0])
 			if err != nil {
 				return err
 			}
 
 			// get password
-			err = ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
+			err = ctx.EnsureSignBuildBroadcast(ctx.FromAddressNames, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
 			}

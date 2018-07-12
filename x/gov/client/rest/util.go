@@ -69,14 +69,14 @@ func writeErr(w *http.ResponseWriter, status int, msg string) {
 
 // TODO: Build this function out into a more generic base-request (probably should live in client/lcd)
 func signAndBuild(w http.ResponseWriter, ctx context.CoreContext, baseReq baseReq, msg sdk.Msg, cdc *wire.Codec) {
-	ctx = ctx.WithAccountNumber(baseReq.AccountNumber)
-	ctx = ctx.WithSequence(baseReq.Sequence)
+	ctx = ctx.WithAccountNumbers([]int64{baseReq.AccountNumber})
+	ctx = ctx.WithSequences([]int64{baseReq.Sequence})
 	ctx = ctx.WithChainID(baseReq.ChainID)
 
 	// add gas to context
 	ctx = ctx.WithGas(baseReq.Gas)
 
-	txBytes, err := ctx.SignAndBuild(baseReq.Name, baseReq.Password, []sdk.Msg{msg}, cdc)
+	txBytes, err := ctx.SignAndBuild([]string{baseReq.Name}, []string{baseReq.Password}, []sdk.Msg{msg}, cdc)
 	if err != nil {
 		writeErr(&w, http.StatusUnauthorized, err.Error())
 		return

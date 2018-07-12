@@ -109,36 +109,40 @@ func (ctx CoreContext) queryStore(key cmn.HexBytes, storeName, endPath string) (
 }
 
 // Get the from address from the name flag
-func (ctx CoreContext) GetFromAddress() (from sdk.AccAddress, err error) {
+func (ctx CoreContext) GetFromAddresses() (from []sdk.AccAddress, err error) {
 
 	keybase, err := keys.GetKeyBase()
 	if err != nil {
 		return nil, err
 	}
 
-	name := ctx.FromAddressName
-	if name == "" {
+	names := ctx.FromAddressNames
+	if names == nil {
 		return nil, errors.Errorf("must provide a from address name")
 	}
 
-	info, err := keybase.Get(name)
-	if err != nil {
-		return nil, errors.Errorf("no key for: %s", name)
+	var addrs []sdk.AccAddress
+	for _, n := range names {
+		info, err := keybase.Get(n)
+		if err != nil {
+			return nil, errors.Errorf("no key for: %s", n)
+		}
+		addrs = append(addrs, sdk.AccAddress(info.GetPubKey().Address()))
 	}
 
-	return sdk.AccAddress(info.GetPubKey().Address()), nil
+	return addrs, nil
 }
 
-// sign and build the transaction from the msg
-func (ctx CoreContext) SignAndBuild(name, passphrase string, msgs []sdk.Msg, cdc *wire.Codec) ([]byte, error) {
+// sign and build the transaction from the msgs
+func (ctx CoreContext) SignAndBuild(names, passphrases []string, msgs []sdk.Msg, cdc *wire.Codec) ([]byte, error) {
 
 	// build the Sign Messsage from the Standard Message
 	chainID := ctx.ChainID
 	if chainID == "" {
 		return nil, errors.Errorf("chain ID required but not specified")
 	}
-	accnum := ctx.AccountNumber
-	sequence := ctx.Sequence
+	accnums := ctx.AccountNumbers
+	sequences := ctx.Sequences
 	memo := ctx.Memo
 
 	fee := sdk.Coin{}
@@ -150,48 +154,54 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msgs []sdk.Msg, cdc
 		fee = parsedFee
 	}
 
-	signMsg := auth.StdSignMsg{
-		ChainID:       chainID,
-		AccountNumber: accnum,
-		Sequence:      sequence,
-		Msgs:          msgs,
-		Memo:          memo,
-		Fee:           auth.NewStdFee(ctx.Gas, fee), // TODO run simulate to estimate gas?
-	}
+	txFee := auth.NewStdFee(ctx.Gas, fee)
 
-	keybase, err := keys.GetKeyBase()
-	if err != nil {
-		return nil, err
-	}
+	sigs := make([]auth.StdSignature, len(names))
+	for i, name := range names {
+		signMsg := auth.StdSignMsg{
+			ChainID:       chainID,
+			AccountNumber: accnums[i],
+			Sequence:      sequences[i],
+			Msgs:          msgs,
+			Memo:          memo,
+			Fee:           txFee, // TODO run simulate to estimate gas?
+		}
 
-	// sign and build
-	bz := signMsg.Bytes()
+		keybase, err := keys.GetKeyBase()
+		if err != nil {
+			return nil, err
+		}
 
-	sig, pubkey, err := keybase.Sign(name, passphrase, bz)
-	if err != nil {
-		return nil, err
+		// sign and build
+		bz := signMsg.Bytes()
+
+		sig, pubkey, err := keybase.Sign(name, passphrases[i], bz)
+		if err != nil {
+			return nil, err
+		}
+
+		sigs[i] = auth.StdSignature{
+			PubKey:        pubkey,
+			Signature:     sig,
+			AccountNumber: accnums[i],
+			Sequence:      sequences[i],
+		}
 	}
-	sigs := []auth.StdSignature{{
-		PubKey:        pubkey,
-		Signature:     sig,
-		AccountNumber: accnum,
-		Sequence:      sequence,
-	}}
 
 	// marshal bytes
-	tx := auth.NewStdTx(signMsg.Msgs, signMsg.Fee, sigs, memo)
+	tx := auth.NewStdTx(msgs, txFee, sigs, memo)
 
 	return cdc.MarshalBinary(tx)
 }
 
-// sign and build the transaction from the msg
-func (ctx CoreContext) ensureSignBuild(name string, msgs []sdk.Msg, cdc *wire.Codec) (tyBytes []byte, err error) {
-	ctx, err = EnsureAccountNumber(ctx)
+// sign and build the transaction from the msgs
+func (ctx CoreContext) ensureSignBuild(names []string, msgs []sdk.Msg, cdc *wire.Codec) (tyBytes []byte, err error) {
+	ctx, err = EnsureAccountNumbers(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// default to next sequence number if none provided
-	ctx, err = EnsureSequence(ctx)
+	ctx, err = EnsureSequences(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -203,19 +213,22 @@ func (ctx CoreContext) ensureSignBuild(name string, msgs []sdk.Msg, cdc *wire.Co
 		return nil, err
 	}
 
-	info, err := keybase.Get(name)
-	if err != nil {
-		return nil, err
-	}
-	var passphrase string
-	// Only need a passphrase for locally-stored keys
-	if info.GetType() == "local" {
-		passphrase, err = ctx.GetPassphraseFromStdin(name)
+	passphrases := make([]string, len(names))
+	for i, name := range names {
+		info, err := keybase.Get(name)
 		if err != nil {
-			return nil, fmt.Errorf("Error fetching passphrase: %v", err)
+			return nil, err
+		}
+		// Only need a passphrase for locally-stored keys
+		if info.GetType() == "local" {
+			passphrases[i], err = ctx.GetPassphraseFromStdin(name)
+			if err != nil {
+				return nil, fmt.Errorf("Error fetching passphrase for account %s: %v", name, err)
+			}
 		}
 	}
-	txBytes, err = ctx.SignAndBuild(name, passphrase, msgs, cdc)
+
+	txBytes, err = ctx.SignAndBuild(names, passphrases, msgs, cdc)
 	if err != nil {
 		return nil, fmt.Errorf("Error signing transaction: %v", err)
 	}
@@ -224,9 +237,9 @@ func (ctx CoreContext) ensureSignBuild(name string, msgs []sdk.Msg, cdc *wire.Co
 }
 
 // sign and build the transaction from the msg
-func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc *wire.Codec) (err error) {
+func (ctx CoreContext) EnsureSignBuildBroadcast(names []string, msgs []sdk.Msg, cdc *wire.Codec) (err error) {
 
-	txBytes, err := ctx.ensureSignBuild(name, msgs, cdc)
+	txBytes, err := ctx.ensureSignBuild(names, msgs, cdc)
 	if err != nil {
 		return err
 	}

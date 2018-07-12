@@ -356,8 +356,7 @@ func TestStakeWithRandomMessages(t *testing.T) {
 			// XXX TODO
 			// SimulateMsgBeginUnbonding(mapper, stakeKeeper),
 			SimulateMsgCompleteUnbonding(stakeKeeper),
-			// XXX TODO Bug found!
-			// SimulateMsgBeginRedelegate(mapper, stakeKeeper),
+			SimulateMsgBeginRedelegate(mapper, stakeKeeper),
 			SimulateMsgCompleteRedelegate(stakeKeeper),
 		}, []mock.RandSetup{
 			SimulationSetup(mapp, stakeKeeper),

@@ -528,7 +528,7 @@ func TestUnbondingPeriod(t *testing.T) {
 }
 
 func TestRedelegationPeriod(t *testing.T) {
-	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	ctx, AccMapper, keeper := keep.CreateTestInput(t, false, 1000)
 	validatorAddr, validatorAddr2 := keep.Addrs[0], keep.Addrs[1]
 
 	// set the unbonding time
@@ -545,10 +545,16 @@ func TestRedelegationPeriod(t *testing.T) {
 	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
 
+	bal1 := AccMapper.GetAccount(ctx, validatorAddr).GetCoins()
+
 	// begin redelegate
 	msgBeginRedelegate := NewMsgBeginRedelegate(validatorAddr, validatorAddr, validatorAddr2, sdk.NewRat(10))
 	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error, %v", got)
+
+	// origin account should not lose tokens as with a regular delegation
+	bal2 := AccMapper.GetAccount(ctx, validatorAddr).GetCoins()
+	require.Equal(t, bal1, bal2)
 
 	// cannot complete redelegation at same time
 	msgCompleteRedelegate := NewMsgCompleteRedelegate(validatorAddr, validatorAddr, validatorAddr2)

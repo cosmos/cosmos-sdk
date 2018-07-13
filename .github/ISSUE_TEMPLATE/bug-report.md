@@ -1,29 +1,21 @@
 ---
-name: Issue Template
-about: Issue Template
+name: Bug Report 
+about: Create a report to help us squash bugs!
 
 ---
 
 <!-- < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < ☺ 
 v                            ✰  Thanks for opening an issue! ✰    
 v    Before smashing the submit button please review the template.
-v   Please also ensure that this is not a duplicate issue. 
+v    Please also ensure that this is not a duplicate issue :)  
 ☺ > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > >  --> 
 
-## Summary
+## Summary of Bug 
 <!-- Concisely describe the issue --> 
 
-## Problem definition / steps to reproduce
-<!-- 
-For Bugs: What commands in order should someone run to reproduce your problem
-For Proposals: Outline the problem which merits 
---> 
+## Steps to Reproduce
+<!-- What commands in order should someone run to reproduce your problem --> 
 
-## Proposed solution 
-<!-- 
-For Bugs: (if applicable) proposed steps for solution
-For Proposals: The Proposal
---> 
 ____
 #### For Admin Use
  - [ ] Not duplicate issue

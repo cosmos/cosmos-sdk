@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var _ sdk.Tx = (*StdTx)(nil)

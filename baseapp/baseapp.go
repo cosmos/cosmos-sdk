@@ -1,11 +1,11 @@
 package baseapp
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"runtime/debug"
 	"strings"
-	"encoding/json"
 
 	"github.com/pkg/errors"
 
@@ -20,8 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 
 	// TODO: Remove dependency on auth and wire
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // Key to store the header in the DB itself.
@@ -366,7 +366,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 		default:
 			result = sdk.ErrUnknownRequest(fmt.Sprintf("Unknown query: %s", path)).Result()
 		}
-		
+
 		// Encode with amino if defined, else use json
 		// TODO: Use JSON encoding only once app.cdc removed
 		var value []byte

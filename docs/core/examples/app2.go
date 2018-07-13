@@ -203,7 +203,6 @@ func tx2Decoder(cdc *wire.Codec) sdk.TxDecoder {
 	}
 }
 
-
 //------------------------------------------------------------------
 
 // Simple anteHandler that ensures msg signers have signed.

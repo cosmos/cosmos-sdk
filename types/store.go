@@ -11,6 +11,20 @@ import (
 
 // NOTE: These are implemented in cosmos-sdk/store.
 
+// PruningStrategy specfies how old states will be deleted over time
+type PruningStrategy uint8
+
+const (
+	// PruneSyncable means only those states not needed for state syncing will be deleted (keeps last 100 + every 10000th)
+	PruneSyncable PruningStrategy = iota
+
+	// PruneEverything means all saved states will be deleted, storing only the current state
+	PruneEverything PruningStrategy = iota
+
+	// PruneNothing means all historic states will be saved, nothing will be deleted
+	PruneNothing PruningStrategy = iota
+)
+
 type Store interface { //nolint
 	GetStoreType() StoreType
 	CacheWrapper
@@ -20,6 +34,7 @@ type Store interface { //nolint
 type Committer interface {
 	Commit() CommitID
 	LastCommitID() CommitID
+	SetPruning(PruningStrategy)
 }
 
 // Stores of MultiStore must implement CommitStore.

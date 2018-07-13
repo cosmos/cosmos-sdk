@@ -57,14 +57,10 @@ type GaiaApp struct {
 }
 
 // NewGaiaApp returns a reference to an initialized GaiaApp.
-//
-// TODO: Determine how to use a flexible and robust configuration paradigm that
-// allows for sensible defaults while being highly configurable
-// (e.g. functional options).
-func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer) *GaiaApp {
+func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptions ...func(*bam.BaseApp)) *GaiaApp {
 	cdc := MakeCodec()
 
-	bApp := bam.NewBaseApp(appName, cdc, logger, db)
+	bApp := bam.NewBaseApp(appName, cdc, logger, db, baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 
 	var app = &GaiaApp{

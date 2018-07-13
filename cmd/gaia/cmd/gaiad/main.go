@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"io"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
+
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/cli"
@@ -40,7 +43,7 @@ func main() {
 }
 
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
-	return app.NewGaiaApp(logger, db, traceStore)
+	return app.NewGaiaApp(logger, db, traceStore, baseapp.SetPruning(viper.GetString("pruning")))
 }
 
 func exportAppStateAndTMValidators(

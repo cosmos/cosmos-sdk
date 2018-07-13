@@ -7,9 +7,17 @@
 BREAKING CHANGES
 * [x/stake] Specify DelegatorAddress in MsgCreateValidator
 * [x/auth] NewAccountMapper takes a constructor instead of a prototype
+* [keys] Keybase.Update function now takes in a function to get the newpass, rather than the password itself
 
 FEATURES
 * [baseapp] NewBaseApp now takes option functions as parameters
+* [store] Added support for tracing multi-store operations via `--trace-store`
+* [store] Pruning strategy configurable with pruning flag on gaiad start
+
+BUG FIXES
+* \#1630 - redelegation nolonger removes tokens from the delegator liquid account
+* [keys] \#1629 - updating password no longer asks for a new password when the first entered password was incorrect
+* [lcd] importing an account would create a random account
 
 ## 0.20.0
 
@@ -58,6 +66,8 @@ BREAKING CHANGES
 * [lcd] Switch key creation output to return bech32
 * [lcd] Removed shorthand CLI flags (`a`, `c`, `n`, `o`)
 * [gaiad] genesis transactions now use bech32 addresses / pubkeys
+* [gov] VoteStatus renamed to ProposalStatus
+* [gov] VoteOption, ProposalType, and ProposalStatus all marshal to string form in JSON
 
 DEPRECATED
 * [cli] Deprecated `--name` flag in commands that send txs, in favor of `--from`
@@ -101,6 +111,7 @@ FEATURES
   - Auth has its invariants checked within the framework
 * [tests] Add WaitForNextNBlocksTM helper method
 * [keys] New keys now have 24 word recovery keys, for heightened security
+- [keys] Add a temporary method for exporting the private key
 
 IMPROVEMENTS
 * [x/bank] Now uses go-wire codec instead of 'encoding/json'
@@ -110,6 +121,7 @@ IMPROVEMENTS
 * [stake] keeper always loads the store (instead passing around which doesn't really boost efficiency)
 * [stake] edit-validator changes now can use the keyword [do-not-modify] to not modify unspecified `--flag` (aka won't set them to `""` value)
 * [stake] offload more generic functionality from the handler into the keeper
+* [stake] clearer staking logic
 * [types] added common tag constants
 * [keys] improve error message when deleting non-existent key
 * [gaiacli] improve error messages on `send` and `account` commands

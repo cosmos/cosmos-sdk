@@ -34,11 +34,14 @@ type Keybase interface {
 	CreateOffline(name string, pubkey crypto.PubKey) (info Info, err error)
 
 	// The following operations will *only* work on locally-stored keys
-	Update(name, oldpass, newpass string) error
+	Update(name, oldpass string, getNewpass func() (string, error)) error
 	Import(name string, armor string) (err error)
 	ImportPubKey(name string, armor string) (err error)
 	Export(name string) (armor string, err error)
 	ExportPubKey(name string) (armor string, err error)
+
+	// *only* works on locally-stored keys. Temporary method until we redo the exporting API
+	ExportPrivateKeyObject(name string, passphrase string) (crypto.PrivKey, error)
 }
 
 // Info is the publicly exposed information about a keypair

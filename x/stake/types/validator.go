@@ -206,6 +206,7 @@ func (v Validator) Bech32Validator() (BechValidator, error) {
 //___________________________________________________________________
 
 // only the vitals - does not check bond height of IntraTxCounter
+// nolint gocyclo - why dis fail?
 func (v Validator) Equal(c2 Validator) bool {
 	return v.PubKey.Equals(c2.PubKey) &&
 		bytes.Equal(v.Owner, c2.Owner) &&
@@ -309,7 +310,7 @@ func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator,
 		case sdk.Unbonded:
 			return v, pool
 		case sdk.Bonded:
-			pool = pool.addBondedTokens(v.Tokens)
+			pool = pool.looseTokensToBonded(v.Tokens)
 		}
 	case sdk.Unbonding:
 
@@ -317,7 +318,7 @@ func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator,
 		case sdk.Unbonding:
 			return v, pool
 		case sdk.Bonded:
-			pool = pool.addBondedTokens(v.Tokens)
+			pool = pool.looseTokensToBonded(v.Tokens)
 		}
 	case sdk.Bonded:
 
@@ -325,7 +326,7 @@ func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator,
 		case sdk.Bonded:
 			return v, pool
 		default:
-			pool = pool.removeBondedTokens(v.Tokens)
+			pool = pool.bondedTokensToLoose(v.Tokens)
 		}
 	}
 
@@ -336,7 +337,7 @@ func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator,
 // removes tokens from a validator
 func (v Validator) RemoveTokens(pool Pool, tokens sdk.Rat) (Validator, Pool) {
 	if v.Status == sdk.Bonded {
-		pool = pool.removeBondedTokens(tokens)
+		pool = pool.bondedTokensToLoose(tokens)
 	}
 
 	v.Tokens = v.Tokens.Sub(tokens)
@@ -352,7 +353,7 @@ func (v Validator) AddTokensFromDel(pool Pool, amount int64) (Validator, Pool, s
 	exRate := v.DelegatorShareExRate()
 
 	if v.Status == sdk.Bonded {
-		pool = pool.addBondedTokens(sdk.NewRat(amount))
+		pool = pool.looseTokensToBonded(sdk.NewRat(amount))
 	}
 
 	amountRat := sdk.NewRat(amount)
@@ -373,7 +374,7 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Rat) (Validator, Poo
 	v.DelegatorShares = v.DelegatorShares.Sub(delShares)
 
 	if v.Status == sdk.Bonded {
-		pool = pool.removeBondedTokens(issuedTokens)
+		pool = pool.bondedTokensToLoose(issuedTokens)
 	}
 
 	return v, pool, issuedTokens

@@ -446,9 +446,7 @@ func TestValidatorBondHeight(t *testing.T) {
 	validators[1], pool, _ = validators[1].AddTokensFromDel(pool, 50)
 	validators[2], pool, _ = validators[2].AddTokensFromDel(pool, 50)
 	keeper.SetPool(ctx, pool)
-	//require.NotPanics(t, func() {
 	validators[2] = keeper.UpdateValidator(ctx, validators[2])
-	//})
 	resValidators = keeper.GetValidatorsByPower(ctx)
 	require.Equal(t, params.MaxValidators, uint16(len(resValidators)))
 	validators[1] = keeper.UpdateValidator(ctx, validators[1])

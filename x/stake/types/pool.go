@@ -58,7 +58,7 @@ func (p Pool) BondedRatio() sdk.Rat {
 
 //_______________________________________________________________________
 
-func (p Pool) addBondedTokens(bondedTokens sdk.Rat) Pool {
+func (p Pool) looseTokensToBonded(bondedTokens sdk.Rat) Pool {
 	p.BondedTokens = p.BondedTokens.Add(bondedTokens)
 	p.LooseTokens = p.LooseTokens.Sub(bondedTokens)
 	if p.LooseTokens.LT(sdk.ZeroRat()) {
@@ -67,7 +67,7 @@ func (p Pool) addBondedTokens(bondedTokens sdk.Rat) Pool {
 	return p
 }
 
-func (p Pool) removeBondedTokens(bondedTokens sdk.Rat) Pool {
+func (p Pool) bondedTokensToLoose(bondedTokens sdk.Rat) Pool {
 	p.BondedTokens = p.BondedTokens.Sub(bondedTokens)
 	p.LooseTokens = p.LooseTokens.Add(bondedTokens)
 	if p.BondedTokens.LT(sdk.ZeroRat()) {

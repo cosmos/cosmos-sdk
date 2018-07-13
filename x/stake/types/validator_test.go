@@ -177,8 +177,6 @@ func TestRemoveDelShares(t *testing.T) {
 		Inflation:         sdk.NewRat(7, 100),
 	}
 	shares := sdk.NewRat(29)
-	msg := fmt.Sprintf("validator %#v", validator)
-	msg = fmt.Sprintf("Removed %v shares from %s", shares, msg)
 	_, newPool, tokens := validator.RemoveDelShares(pool, shares)
 	require.True(sdk.RatEq(t, sdk.NewRat(147958, 115), tokens))
 	require.True(sdk.RatEq(t,

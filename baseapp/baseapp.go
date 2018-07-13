@@ -105,7 +105,7 @@ func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB, opti
 }
 
 // Create and name new BaseApp
-// Does not set cdc and instead takes a user-defined txDecoder. If nil, BaseApp uses defaultTxDecoder
+// Does not set cdc and instead takes a user-defined txDecoder.
 // TODO: Rename to NewBaseApp and remove above constructor once auth, wire dependencies removed
 func NewBaseAppNoCodec(name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp)) *BaseApp {
 	app := &BaseApp{

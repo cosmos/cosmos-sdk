@@ -42,7 +42,7 @@ type Validator struct {
 	CommissionChangeToday sdk.Rat `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
 
 	// fee related
-	PrevBondedShares sdk.Rat `json:"prev_bonded_shares"` // total shares of a global hold pools
+	LastBondedTokens sdk.Rat `json:"prev_bonded_tokens"` // Previous bonded tokens held
 }
 
 // NewValidator - initialize a new validator
@@ -62,7 +62,7 @@ func NewValidator(owner sdk.AccAddress, pubKey crypto.PubKey, description Descri
 		CommissionMax:         sdk.ZeroRat(),
 		CommissionChangeRate:  sdk.ZeroRat(),
 		CommissionChangeToday: sdk.ZeroRat(),
-		PrevBondedShares:      sdk.ZeroRat(),
+		LastBondedTokens:      sdk.ZeroRat(),
 	}
 }
 
@@ -81,7 +81,7 @@ type validatorValue struct {
 	CommissionMax         sdk.Rat
 	CommissionChangeRate  sdk.Rat
 	CommissionChangeToday sdk.Rat
-	PrevBondedShares      sdk.Rat
+	LastBondedTokens      sdk.Rat
 }
 
 // return the redelegation without fields contained within the key for the store
@@ -100,7 +100,7 @@ func MustMarshalValidator(cdc *wire.Codec, validator Validator) []byte {
 		CommissionMax:         validator.CommissionMax,
 		CommissionChangeRate:  validator.CommissionChangeRate,
 		CommissionChangeToday: validator.CommissionChangeToday,
-		PrevBondedShares:      validator.PrevBondedShares,
+		LastBondedTokens:      validator.LastBondedTokens,
 	}
 	return cdc.MustMarshalBinary(val)
 }
@@ -143,7 +143,7 @@ func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) (validator Val
 		CommissionMax:         storeValue.CommissionMax,
 		CommissionChangeRate:  storeValue.CommissionChangeRate,
 		CommissionChangeToday: storeValue.CommissionChangeToday,
-		PrevBondedShares:      storeValue.PrevBondedShares,
+		LastBondedTokens:      storeValue.LastBondedTokens,
 	}, nil
 }
 
@@ -170,7 +170,7 @@ type BechValidator struct {
 	CommissionChangeToday sdk.Rat `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
 
 	// fee related
-	PrevBondedShares sdk.Rat `json:"prev_bonded_shares"` // total shares of a global hold pools
+	LastBondedTokens sdk.Rat `json:"prev_bonded_shares"` // last bonded token amount
 }
 
 // get the bech validator from the the regular validator
@@ -199,7 +199,7 @@ func (v Validator) Bech32Validator() (BechValidator, error) {
 		CommissionChangeRate:  v.CommissionChangeRate,
 		CommissionChangeToday: v.CommissionChangeToday,
 
-		PrevBondedShares: v.PrevBondedShares,
+		LastBondedTokens: v.LastBondedTokens,
 	}, nil
 }
 
@@ -219,7 +219,7 @@ func (v Validator) Equal(c2 Validator) bool {
 		v.CommissionMax.Equal(c2.CommissionMax) &&
 		v.CommissionChangeRate.Equal(c2.CommissionChangeRate) &&
 		v.CommissionChangeToday.Equal(c2.CommissionChangeToday) &&
-		v.PrevBondedShares.Equal(c2.PrevBondedShares)
+		v.LastBondedTokens.Equal(c2.LastBondedTokens)
 }
 
 // Description - description fields for a validator
@@ -351,12 +351,12 @@ func (v Validator) AddTokensFromDel(pool Pool, amount int64) (Validator, Pool, s
 
 	// bondedShare/delegatedShare
 	exRate := v.DelegatorShareExRate()
+	amountRat := sdk.NewRat(amount)
 
 	if v.Status == sdk.Bonded {
-		pool = pool.looseTokensToBonded(sdk.NewRat(amount))
+		pool = pool.looseTokensToBonded(amountRat)
 	}
 
-	amountRat := sdk.NewRat(amount)
 	v.Tokens = v.Tokens.Add(amountRat)
 	issuedShares := amountRat.Quo(exRate)
 	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
@@ -365,9 +365,6 @@ func (v Validator) AddTokensFromDel(pool Pool, amount int64) (Validator, Pool, s
 }
 
 // RemoveDelShares removes delegator shares from a validator.
-//
-// NOTE: This function assumes the shares have already been updated for the
-// validator status.
 func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Rat) (Validator, Pool, sdk.Rat) {
 	issuedTokens := v.DelegatorShareExRate().Mul(delShares)
 	v.Tokens = v.Tokens.Sub(issuedTokens)
@@ -434,7 +431,7 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Max Commission Rate: %s\n", v.CommissionMax.String())
 	resp += fmt.Sprintf("Commission Change Rate: %s\n", v.CommissionChangeRate.String())
 	resp += fmt.Sprintf("Commission Change Today: %s\n", v.CommissionChangeToday.String())
-	resp += fmt.Sprintf("Previously Bonded Stares: %s\n", v.PrevBondedShares.String())
+	resp += fmt.Sprintf("Previous Bonded Tokens: %s\n", v.LastBondedTokens.String())
 
 	return resp, nil
 }

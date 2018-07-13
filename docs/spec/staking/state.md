@@ -11,7 +11,7 @@ inflation information, etc.
 
 ```golang
 type Pool struct {
-    LooseTokens int64   // tokens not associated with any validator
+    LooseTokens         int64   // tokens not associated with any bonded validator
     BondedTokens        int64   // reserve of bonded tokens
     InflationLastTime   int64   // block which the last inflation was processed // TODO make time
     Inflation           sdk.Rat // current annual inflation rate
@@ -74,7 +74,6 @@ type Validator struct {
     ConsensusPubKey crypto.PubKey  // Tendermint consensus pubkey of validator
     Revoked         bool           // has the validator been revoked?
     
-    PoolShares      sdk.BondStatus // total shares for tokens held in the pool
 	Status          sdk.BondStatus // validator status (bonded/unbonding/unbonded)
 	Tokens          sdk.Rat        // delegated tokens (incl. self-delegation)
     DelegatorShares sdk.Rat        // total shares issued to a validator's delegators
@@ -91,7 +90,7 @@ type Validator struct {
     ProposerRewardPool sdk.Coins    // reward pool collected from being the proposer
     
     // TODO: maybe this belongs in distribution module ?
-    PrevPoolShares PoolShares  // total shares of a global hold pools
+	LastBondedTokens   sdk.Rat     // last bonded token amount
 }
 
 type CommissionInfo struct {

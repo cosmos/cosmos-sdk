@@ -11,6 +11,9 @@ BREAKING CHANGES
 
 FEATURES
 * [baseapp] NewBaseApp now takes option functions as parameters
+
+IMPROVEMENTS
+* Updated docs folder to accommodate cosmos.network docs project
 * [store] Added support for tracing multi-store operations via `--trace-store`
 * [store] Pruning strategy configurable with pruning flag on gaiad start
 
@@ -18,6 +21,7 @@ BUG FIXES
 * \#1630 - redelegation nolonger removes tokens from the delegator liquid account
 * [keys] \#1629 - updating password no longer asks for a new password when the first entered password was incorrect
 * [lcd] importing an account would create a random account
+* [server] 'gaiad init' command family now writes provided name as the moniker in `config.toml`
 
 ## 0.20.0
 

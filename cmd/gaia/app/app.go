@@ -74,8 +74,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 	// define the accountMapper
 	app.accountMapper = auth.NewAccountMapper(
 		app.cdc,
-		app.keyAccount,      // target store
-		&auth.BaseAccount{}, // prototype
+		app.keyAccount,        // target store
+		auth.ProtoBaseAccount, // prototype
 	)
 
 	// add handlers

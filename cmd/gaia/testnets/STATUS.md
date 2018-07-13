@@ -1,5 +1,10 @@
 # TESTNET STATUS
 
+## *July 2, 2018, 1:00 EST* - Gaia-6002 slashing failure
+
+- Gaia-6002 has been halted due to a slashing issue.
+- The team is taking its time to look into this Gaia-7000 will be introduced this week.
+
 ## *June 13, 2018, 17:00 EST* - Gaia-6002 is making blocks!
 
 - Gaia-6002 is live and making blocks

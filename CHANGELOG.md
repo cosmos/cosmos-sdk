@@ -1,15 +1,32 @@
 # Changelog
 
-## 0.20.0
+## 0.21.0
 
 *TBD*
+
+BREAKING CHANGES
+* [x/stake] Specify DelegatorAddress in MsgCreateValidator
+* [x/auth] NewAccountMapper takes a constructor instead of a prototype
+* [keys] Keybase.Update function now takes in a function to get the newpass, rather than the password itself
+
+FEATURES
+* [baseapp] NewBaseApp now takes option functions as parameters
+
+BUG FIXES
+* \#1630 - redelegation nolonger removes tokens from the delegator liquid account
+* [keys] \#1629 - updating password no longer asks for a new password when the first entered password was incorrect
+* [lcd] importing an account would create a random account
+
+## 0.20.0
+
+*July 10th, 2018*
 
 BREAKING CHANGES
 * msg.GetSignBytes() returns sorted JSON (by key)
 * msg.GetSignBytes() field changes
     * `msg_bytes` -> `msgs`
     * `fee_bytes` -> `fee`
-* Update Tendermint to v0.22.0
+* Update Tendermint to v0.22.2
     * Default ports changed from 466xx to 266xx
     * Amino JSON uses type names instead of prefix bytes
     * ED25519 addresses are the first 20-bytes of the SHA256 of the raw 32-byte
@@ -47,6 +64,8 @@ BREAKING CHANGES
 * [lcd] Switch key creation output to return bech32
 * [lcd] Removed shorthand CLI flags (`a`, `c`, `n`, `o`)
 * [gaiad] genesis transactions now use bech32 addresses / pubkeys
+* [gov] VoteStatus renamed to ProposalStatus
+* [gov] VoteOption, ProposalType, and ProposalStatus all marshal to string form in JSON
 
 DEPRECATED
 * [cli] Deprecated `--name` flag in commands that send txs, in favor of `--from`
@@ -90,6 +109,7 @@ FEATURES
   - Auth has its invariants checked within the framework
 * [tests] Add WaitForNextNBlocksTM helper method
 * [keys] New keys now have 24 word recovery keys, for heightened security
+- [keys] Add a temporary method for exporting the private key
 
 IMPROVEMENTS
 * [x/bank] Now uses go-wire codec instead of 'encoding/json'

@@ -41,7 +41,7 @@ func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 		return ErrInvalidDescription(DefaultCodespace, msg.Description) // TODO: Proper Error
 	}
 	if !validProposalType(msg.ProposalType) {
-		return ErrInvalidProposalType(DefaultCodespace, ProposalTypeToString(msg.ProposalType))
+		return ErrInvalidProposalType(DefaultCodespace, msg.ProposalType)
 	}
 	if len(msg.Proposer) == 0 {
 		return sdk.ErrInvalidAddress(msg.Proposer.String())
@@ -56,7 +56,7 @@ func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgSubmitProposal) String() string {
-	return fmt.Sprintf("MsgSubmitProposal{%v, %v, %v, %v}", msg.Title, msg.Description, ProposalTypeToString(msg.ProposalType), msg.InitialDeposit)
+	return fmt.Sprintf("MsgSubmitProposal{%s, %s, %s, %v}", msg.Title, msg.Description, msg.ProposalType, msg.InitialDeposit)
 }
 
 // Implements Msg.
@@ -66,19 +66,7 @@ func (msg MsgSubmitProposal) Get(key interface{}) (value interface{}) {
 
 // Implements Msg.
 func (msg MsgSubmitProposal) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(struct {
-		Title          string         `json:"title"`
-		Description    string         `json:"description"`
-		ProposalType   string         `json:"proposal_type"`
-		Proposer       sdk.AccAddress `json:"proposer"`
-		InitialDeposit sdk.Coins      `json:"deposit"`
-	}{
-		Title:          msg.Title,
-		Description:    msg.Description,
-		ProposalType:   ProposalTypeToString(msg.ProposalType),
-		Proposer:       msg.Proposer,
-		InitialDeposit: msg.InitialDeposit,
-	})
+	b, err := msgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -127,7 +115,7 @@ func (msg MsgDeposit) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgDeposit) String() string {
-	return fmt.Sprintf("MsgDeposit{%v=>%v: %v}", msg.Depositer, msg.ProposalID, msg.Amount)
+	return fmt.Sprintf("MsgDeposit{%s=>%v: %v}", msg.Depositer, msg.ProposalID, msg.Amount)
 }
 
 // Implements Msg.
@@ -137,15 +125,7 @@ func (msg MsgDeposit) Get(key interface{}) (value interface{}) {
 
 // Implements Msg.
 func (msg MsgDeposit) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(struct {
-		ProposalID int64          `json:"proposalID"`
-		Depositer  sdk.AccAddress `json:"proposer"`
-		Amount     sdk.Coins      `json:"deposit"`
-	}{
-		ProposalID: msg.ProposalID,
-		Depositer:  msg.Depositer,
-		Amount:     msg.Amount,
-	})
+	b, err := msgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -185,13 +165,13 @@ func (msg MsgVote) ValidateBasic() sdk.Error {
 		return ErrUnknownProposal(DefaultCodespace, msg.ProposalID)
 	}
 	if !validVoteOption(msg.Option) {
-		return ErrInvalidVote(DefaultCodespace, VoteOptionToString(msg.Option))
+		return ErrInvalidVote(DefaultCodespace, msg.Option)
 	}
 	return nil
 }
 
 func (msg MsgVote) String() string {
-	return fmt.Sprintf("MsgVote{%v - %v}", msg.ProposalID, msg.Option)
+	return fmt.Sprintf("MsgVote{%v - %s}", msg.ProposalID, msg.Option)
 }
 
 // Implements Msg.
@@ -201,15 +181,7 @@ func (msg MsgVote) Get(key interface{}) (value interface{}) {
 
 // Implements Msg.
 func (msg MsgVote) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(struct {
-		ProposalID int64          `json:"proposalID"`
-		Voter      sdk.AccAddress `json:"voter"`
-		Option     string         `json:"option"`
-	}{
-		ProposalID: msg.ProposalID,
-		Voter:      msg.Voter,
-		Option:     VoteOptionToString(msg.Option),
-	})
+	b, err := msgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}

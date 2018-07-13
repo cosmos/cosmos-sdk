@@ -17,10 +17,11 @@ import (
 const (
 	flagWithTendermint = "with-tendermint"
 	flagAddress        = "address"
+	flagTraceStore     = "trace-store"
 )
 
-// StartCmd runs the service passed in, either
-// stand-alone, or in-process with tendermint
+// StartCmd runs the service passed in, either stand-alone or in-process with
+// Tendermint.
 func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
@@ -30,26 +31,30 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 				ctx.Logger.Info("Starting ABCI without Tendermint")
 				return startStandAlone(ctx, appCreator)
 			}
+
 			ctx.Logger.Info("Starting ABCI with Tendermint")
+
 			_, err := startInProcess(ctx, appCreator)
 			return err
 		},
 	}
 
-	// basic flags for abci app
-	cmd.Flags().Bool(flagWithTendermint, true, "run abci app embedded in-process with tendermint")
+	// core flags for the ABCI application
+	cmd.Flags().Bool(flagWithTendermint, true, "Run abci app embedded in-process with tendermint")
 	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
+	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
 
-	// AddNodeFlags adds support for all tendermint-specific command line options
+	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
 	return cmd
 }
 
 func startStandAlone(ctx *Context, appCreator AppCreator) error {
-	// Generate the app in the proper dir
 	addr := viper.GetString(flagAddress)
 	home := viper.GetString("home")
-	app, err := appCreator(home, ctx.Logger)
+	traceStore := viper.GetString(flagTraceStore)
+
+	app, err := appCreator(home, ctx.Logger, traceStore)
 	if err != nil {
 		return err
 	}
@@ -58,15 +63,17 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	if err != nil {
 		return errors.Errorf("error creating listener: %v\n", err)
 	}
+
 	svr.SetLogger(ctx.Logger.With("module", "abci-server"))
+
 	err = svr.Start()
 	if err != nil {
 		cmn.Exit(err.Error())
 	}
 
-	// Wait forever
+	// wait forever
 	cmn.TrapSignal(func() {
-		// Cleanup
+		// cleanup
 		err = svr.Stop()
 		if err != nil {
 			cmn.Exit(err.Error())
@@ -78,29 +85,33 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 	cfg := ctx.Config
 	home := cfg.RootDir
-	app, err := appCreator(home, ctx.Logger)
+	traceStore := viper.GetString(flagTraceStore)
+
+	app, err := appCreator(home, ctx.Logger, traceStore)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create & start tendermint node
-	n, err := node.NewNode(cfg,
+	// create & start tendermint node
+	tmNode, err := node.NewNode(
+		cfg,
 		pvm.LoadOrGenFilePV(cfg.PrivValidatorFile()),
 		proxy.NewLocalClientCreator(app),
 		node.DefaultGenesisDocProviderFunc(cfg),
 		node.DefaultDBProvider,
 		node.DefaultMetricsProvider,
-		ctx.Logger.With("module", "node"))
+		ctx.Logger.With("module", "node"),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	err = n.Start()
+	err = tmNode.Start()
 	if err != nil {
 		return nil, err
 	}
 
-	// Trap signal, run forever.
-	n.RunForever()
-	return n, nil
+	// trap signal (run forever)
+	tmNode.RunForever()
+	return tmNode, nil
 }

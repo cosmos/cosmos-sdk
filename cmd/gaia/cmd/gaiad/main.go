@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io"
 
 	"github.com/spf13/cobra"
 
@@ -38,11 +39,13 @@ func main() {
 	}
 }
 
-func newApp(logger log.Logger, db dbm.DB) abci.Application {
-	return app.NewGaiaApp(logger, db)
+func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
+	return app.NewGaiaApp(logger, db, traceStore)
 }
 
-func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB) (json.RawMessage, []tmtypes.GenesisValidator, error) {
-	gapp := app.NewGaiaApp(logger, db)
-	return gapp.ExportAppStateAndValidators()
+func exportAppStateAndTMValidators(
+	logger log.Logger, db dbm.DB, traceStore io.Writer,
+) (json.RawMessage, []tmtypes.GenesisValidator, error) {
+	gApp := app.NewGaiaApp(logger, db, traceStore)
+	return gApp.ExportAppStateAndValidators()
 }

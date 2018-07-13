@@ -14,8 +14,10 @@ FEATURES
 
 IMPROVEMENTS
 * Updated docs folder to accommodate cosmos.network docs project
+* [store] Added support for tracing multi-store operations via `--trace-store`
 
 BUG FIXES
+* \#1630 - redelegation nolonger removes tokens from the delegator liquid account
 * [keys] \#1629 - updating password no longer asks for a new password when the first entered password was incorrect
 * [lcd] importing an account would create a random account
 
@@ -111,6 +113,7 @@ FEATURES
   - Auth has its invariants checked within the framework
 * [tests] Add WaitForNextNBlocksTM helper method
 * [keys] New keys now have 24 word recovery keys, for heightened security
+- [keys] Add a temporary method for exporting the private key
 
 IMPROVEMENTS
 * [x/bank] Now uses go-wire codec instead of 'encoding/json'

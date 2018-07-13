@@ -27,8 +27,9 @@ type Validator struct {
 	PubKey  crypto.PubKey  `json:"pub_key"` // pubkey of validator
 	Revoked bool           `json:"revoked"` // has the validator been revoked from bonded status?
 
-	PoolShares      PoolShares `json:"pool_shares"`      // total shares for tokens held in the pool
-	DelegatorShares sdk.Rat    `json:"delegator_shares"` // total shares issued to a validator's delegators
+	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
+	Tokens          sdk.Rat        `json:"tokens"`           // delegated tokens (incl. self-delegation)
+	DelegatorShares sdk.Rat        `json:"delegator_shares"` // total shares issued to a validator's delegators
 
 	Description        Description `json:"description"`           // description terms for the validator
 	BondHeight         int64       `json:"bond_height"`           // earliest height as a bonded validator
@@ -41,7 +42,7 @@ type Validator struct {
 	CommissionChangeToday sdk.Rat `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
 
 	// fee related
-	PrevBondedShares sdk.Rat `json:"prev_bonded_shares"` // total shares of a global hold pools
+	LastBondedTokens sdk.Rat `json:"prev_bonded_tokens"` // Previous bonded tokens held
 }
 
 // NewValidator - initialize a new validator
@@ -50,7 +51,8 @@ func NewValidator(owner sdk.AccAddress, pubKey crypto.PubKey, description Descri
 		Owner:                 owner,
 		PubKey:                pubKey,
 		Revoked:               false,
-		PoolShares:            NewUnbondedShares(sdk.ZeroRat()),
+		Status:                sdk.Unbonded,
+		Tokens:                sdk.ZeroRat(),
 		DelegatorShares:       sdk.ZeroRat(),
 		Description:           description,
 		BondHeight:            int64(0),
@@ -60,7 +62,7 @@ func NewValidator(owner sdk.AccAddress, pubKey crypto.PubKey, description Descri
 		CommissionMax:         sdk.ZeroRat(),
 		CommissionChangeRate:  sdk.ZeroRat(),
 		CommissionChangeToday: sdk.ZeroRat(),
-		PrevBondedShares:      sdk.ZeroRat(),
+		LastBondedTokens:      sdk.ZeroRat(),
 	}
 }
 
@@ -68,7 +70,8 @@ func NewValidator(owner sdk.AccAddress, pubKey crypto.PubKey, description Descri
 type validatorValue struct {
 	PubKey                crypto.PubKey
 	Revoked               bool
-	PoolShares            PoolShares
+	Status                sdk.BondStatus
+	Tokens                sdk.Rat
 	DelegatorShares       sdk.Rat
 	Description           Description
 	BondHeight            int64
@@ -78,7 +81,7 @@ type validatorValue struct {
 	CommissionMax         sdk.Rat
 	CommissionChangeRate  sdk.Rat
 	CommissionChangeToday sdk.Rat
-	PrevBondedShares      sdk.Rat
+	LastBondedTokens      sdk.Rat
 }
 
 // return the redelegation without fields contained within the key for the store
@@ -86,7 +89,8 @@ func MustMarshalValidator(cdc *wire.Codec, validator Validator) []byte {
 	val := validatorValue{
 		PubKey:                validator.PubKey,
 		Revoked:               validator.Revoked,
-		PoolShares:            validator.PoolShares,
+		Status:                validator.Status,
+		Tokens:                validator.Tokens,
 		DelegatorShares:       validator.DelegatorShares,
 		Description:           validator.Description,
 		BondHeight:            validator.BondHeight,
@@ -96,7 +100,7 @@ func MustMarshalValidator(cdc *wire.Codec, validator Validator) []byte {
 		CommissionMax:         validator.CommissionMax,
 		CommissionChangeRate:  validator.CommissionChangeRate,
 		CommissionChangeToday: validator.CommissionChangeToday,
-		PrevBondedShares:      validator.PrevBondedShares,
+		LastBondedTokens:      validator.LastBondedTokens,
 	}
 	return cdc.MustMarshalBinary(val)
 }
@@ -128,7 +132,8 @@ func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) (validator Val
 		Owner:                 ownerAddr,
 		PubKey:                storeValue.PubKey,
 		Revoked:               storeValue.Revoked,
-		PoolShares:            storeValue.PoolShares,
+		Tokens:                storeValue.Tokens,
+		Status:                storeValue.Status,
 		DelegatorShares:       storeValue.DelegatorShares,
 		Description:           storeValue.Description,
 		BondHeight:            storeValue.BondHeight,
@@ -138,15 +143,75 @@ func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) (validator Val
 		CommissionMax:         storeValue.CommissionMax,
 		CommissionChangeRate:  storeValue.CommissionChangeRate,
 		CommissionChangeToday: storeValue.CommissionChangeToday,
-		PrevBondedShares:      storeValue.PrevBondedShares,
+		LastBondedTokens:      storeValue.LastBondedTokens,
 	}, nil
 }
 
+//___________________________________________________________________
+
+// validator struct for bech output
+type BechValidator struct {
+	Owner   sdk.AccAddress `json:"owner"`   // in bech32
+	PubKey  string         `json:"pub_key"` // in bech32
+	Revoked bool           `json:"revoked"` // has the validator been revoked from bonded status?
+
+	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
+	Tokens          sdk.Rat        `json:"tokens"`           // delegated tokens (incl. self-delegation)
+	DelegatorShares sdk.Rat        `json:"delegator_shares"` // total shares issued to a validator's delegators
+
+	Description        Description `json:"description"`           // description terms for the validator
+	BondHeight         int64       `json:"bond_height"`           // earliest height as a bonded validator
+	BondIntraTxCounter int16       `json:"bond_intra_tx_counter"` // block-local tx index of validator change
+	ProposerRewardPool sdk.Coins   `json:"proposer_reward_pool"`  // XXX reward pool collected from being the proposer
+
+	Commission            sdk.Rat `json:"commission"`              // XXX the commission rate of fees charged to any delegators
+	CommissionMax         sdk.Rat `json:"commission_max"`          // XXX maximum commission rate which this validator can ever charge
+	CommissionChangeRate  sdk.Rat `json:"commission_change_rate"`  // XXX maximum daily increase of the validator commission
+	CommissionChangeToday sdk.Rat `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
+
+	// fee related
+	LastBondedTokens sdk.Rat `json:"prev_bonded_shares"` // last bonded token amount
+}
+
+// get the bech validator from the the regular validator
+func (v Validator) Bech32Validator() (BechValidator, error) {
+	bechValPubkey, err := sdk.Bech32ifyValPub(v.PubKey)
+	if err != nil {
+		return BechValidator{}, err
+	}
+
+	return BechValidator{
+		Owner:   v.Owner,
+		PubKey:  bechValPubkey,
+		Revoked: v.Revoked,
+
+		Status:          v.Status,
+		Tokens:          v.Tokens,
+		DelegatorShares: v.DelegatorShares,
+
+		Description:        v.Description,
+		BondHeight:         v.BondHeight,
+		BondIntraTxCounter: v.BondIntraTxCounter,
+		ProposerRewardPool: v.ProposerRewardPool,
+
+		Commission:            v.Commission,
+		CommissionMax:         v.CommissionMax,
+		CommissionChangeRate:  v.CommissionChangeRate,
+		CommissionChangeToday: v.CommissionChangeToday,
+
+		LastBondedTokens: v.LastBondedTokens,
+	}, nil
+}
+
+//___________________________________________________________________
+
 // only the vitals - does not check bond height of IntraTxCounter
+// nolint gocyclo - why dis fail?
 func (v Validator) Equal(c2 Validator) bool {
 	return v.PubKey.Equals(c2.PubKey) &&
 		bytes.Equal(v.Owner, c2.Owner) &&
-		v.PoolShares.Equal(c2.PoolShares) &&
+		v.Status.Equal(c2.Status) &&
+		v.Tokens.Equal(c2.Tokens) &&
 		v.DelegatorShares.Equal(c2.DelegatorShares) &&
 		v.Description == c2.Description &&
 		v.ProposerRewardPool.IsEqual(c2.ProposerRewardPool) &&
@@ -154,7 +219,7 @@ func (v Validator) Equal(c2 Validator) bool {
 		v.CommissionMax.Equal(c2.CommissionMax) &&
 		v.CommissionChangeRate.Equal(c2.CommissionChangeRate) &&
 		v.CommissionChangeToday.Equal(c2.CommissionChangeToday) &&
-		v.PrevBondedShares.Equal(c2.PrevBondedShares)
+		v.LastBondedTokens.Equal(c2.LastBondedTokens)
 }
 
 // Description - description fields for a validator
@@ -221,7 +286,7 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 func (v Validator) ABCIValidator() abci.Validator {
 	return abci.Validator{
 		PubKey: tmtypes.TM2PB.PubKey(v.PubKey),
-		Power:  v.PoolShares.Bonded().RoundInt64(),
+		Power:  v.BondedTokens().RoundInt64(),
 	}
 }
 
@@ -234,145 +299,99 @@ func (v Validator) ABCIValidatorZero() abci.Validator {
 	}
 }
 
-// Status returns the validator's bond status inferred from the pool shares.
-func (v Validator) Status() sdk.BondStatus {
-	return v.PoolShares.Status
-}
-
-// UpdateStatus updates the location of the shares within a validator if it's
-// bond status has changed.
+// UpdateStatus updates the location of the shares within a validator
+// to reflect the new status
 func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator, Pool) {
-	var tokens int64
 
-	switch v.Status() {
+	switch v.Status {
 	case sdk.Unbonded:
-		if NewStatus == sdk.Unbonded {
-			return v, pool
-		}
-		pool, tokens = pool.removeSharesUnbonded(v.PoolShares.Amount)
 
+		switch NewStatus {
+		case sdk.Unbonded:
+			return v, pool
+		case sdk.Bonded:
+			pool = pool.looseTokensToBonded(v.Tokens)
+		}
 	case sdk.Unbonding:
-		if NewStatus == sdk.Unbonding {
-			return v, pool
-		}
-		pool, tokens = pool.removeSharesUnbonding(v.PoolShares.Amount)
 
-	case sdk.Bonded:
-		if NewStatus == sdk.Bonded {
-			// Return if nothing needs switching
+		switch NewStatus {
+		case sdk.Unbonding:
 			return v, pool
+		case sdk.Bonded:
+			pool = pool.looseTokensToBonded(v.Tokens)
 		}
-		pool, tokens = pool.removeSharesBonded(v.PoolShares.Amount)
+	case sdk.Bonded:
+
+		switch NewStatus {
+		case sdk.Bonded:
+			return v, pool
+		default:
+			pool = pool.bondedTokensToLoose(v.Tokens)
+		}
 	}
 
-	switch NewStatus {
-	case sdk.Unbonded:
-		pool, v.PoolShares = pool.addTokensUnbonded(tokens)
-	case sdk.Unbonding:
-		pool, v.PoolShares = pool.addTokensUnbonding(tokens)
-	case sdk.Bonded:
-		pool, v.PoolShares = pool.addTokensBonded(tokens)
-	}
-
+	v.Status = NewStatus
 	return v, pool
 }
 
-// RemovePoolShares removes pool shares from a validator. It returns
-// corresponding tokens, which could be burned (e.g. when slashing a validator)
-// or redistributed elsewhere.
-func (v Validator) RemovePoolShares(pool Pool, poolShares sdk.Rat) (Validator, Pool, int64) {
-	var tokens int64
-
-	switch v.Status() {
-	case sdk.Unbonded:
-		pool, tokens = pool.removeSharesUnbonded(poolShares)
-	case sdk.Unbonding:
-		pool, tokens = pool.removeSharesUnbonding(poolShares)
-	case sdk.Bonded:
-		pool, tokens = pool.removeSharesBonded(poolShares)
+// removes tokens from a validator
+func (v Validator) RemoveTokens(pool Pool, tokens sdk.Rat) (Validator, Pool) {
+	if v.Status == sdk.Bonded {
+		pool = pool.bondedTokensToLoose(tokens)
 	}
 
-	v.PoolShares.Amount = v.PoolShares.Amount.Sub(poolShares)
-	return v, pool, tokens
-}
-
-// EquivalentBondedShares ...
-//
-// TODO: Remove should only be tokens get the power or potential power for a
-// validator if bonded, the power is the BondedShares if not bonded, the power
-// is the amount of bonded shares which the the validator would have it was
-// bonded.
-func (v Validator) EquivalentBondedShares(pool Pool) (eqBondedShares sdk.Rat) {
-	return v.PoolShares.ToBonded(pool).Amount
+	v.Tokens = v.Tokens.Sub(tokens)
+	return v, pool
 }
 
 //_________________________________________________________________________________________________________
 
 // AddTokensFromDel adds tokens to a validator
 func (v Validator) AddTokensFromDel(pool Pool, amount int64) (Validator, Pool, sdk.Rat) {
-	var (
-		poolShares             PoolShares
-		equivalentBondedShares sdk.Rat
-	)
 
 	// bondedShare/delegatedShare
-	exRate := v.DelegatorShareExRate(pool)
+	exRate := v.DelegatorShareExRate()
+	amountRat := sdk.NewRat(amount)
 
-	switch v.Status() {
-	case sdk.Unbonded:
-		pool, poolShares = pool.addTokensUnbonded(amount)
-	case sdk.Unbonding:
-		pool, poolShares = pool.addTokensUnbonding(amount)
-	case sdk.Bonded:
-		pool, poolShares = pool.addTokensBonded(amount)
+	if v.Status == sdk.Bonded {
+		pool = pool.looseTokensToBonded(amountRat)
 	}
-	v.PoolShares.Amount = v.PoolShares.Amount.Add(poolShares.Amount)
-	equivalentBondedShares = poolShares.ToBonded(pool).Amount
 
-	// bondedShare/(bondedShare/delegatedShare) = delegatedShare
-	issuedDelegatorShares := equivalentBondedShares.Quo(exRate)
-	v.DelegatorShares = v.DelegatorShares.Add(issuedDelegatorShares)
+	v.Tokens = v.Tokens.Add(amountRat)
+	issuedShares := amountRat.Quo(exRate)
+	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
 
-	return v, pool, issuedDelegatorShares
+	return v, pool, issuedShares
 }
 
 // RemoveDelShares removes delegator shares from a validator.
-//
-// NOTE: This function assumes the shares have already been updated for the
-// validator status.
-func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Rat) (Validator, Pool, int64) {
-	amount := v.DelegatorShareExRate(pool).Mul(delShares)
-	eqBondedSharesToRemove := NewBondedShares(amount)
+func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Rat) (Validator, Pool, sdk.Rat) {
+	issuedTokens := v.DelegatorShareExRate().Mul(delShares)
+	v.Tokens = v.Tokens.Sub(issuedTokens)
 	v.DelegatorShares = v.DelegatorShares.Sub(delShares)
 
-	var createdCoins int64
-
-	switch v.Status() {
-	case sdk.Unbonded:
-		unbondedShares := eqBondedSharesToRemove.ToUnbonded(pool).Amount
-		pool, createdCoins = pool.removeSharesUnbonded(unbondedShares)
-		v.PoolShares.Amount = v.PoolShares.Amount.Sub(unbondedShares)
-	case sdk.Unbonding:
-		unbondingShares := eqBondedSharesToRemove.ToUnbonding(pool).Amount
-		pool, createdCoins = pool.removeSharesUnbonding(unbondingShares)
-		v.PoolShares.Amount = v.PoolShares.Amount.Sub(unbondingShares)
-	case sdk.Bonded:
-		pool, createdCoins = pool.removeSharesBonded(eqBondedSharesToRemove.Amount)
-		v.PoolShares.Amount = v.PoolShares.Amount.Sub(eqBondedSharesToRemove.Amount)
+	if v.Status == sdk.Bonded {
+		pool = pool.bondedTokensToLoose(issuedTokens)
 	}
 
-	return v, pool, createdCoins
+	return v, pool, issuedTokens
 }
 
 // DelegatorShareExRate gets the exchange rate of tokens over delegator shares.
-// UNITS: eq-val-bonded-shares/delegator-shares
-func (v Validator) DelegatorShareExRate(pool Pool) sdk.Rat {
+// UNITS: tokens/delegator-shares
+func (v Validator) DelegatorShareExRate() sdk.Rat {
 	if v.DelegatorShares.IsZero() {
 		return sdk.OneRat()
 	}
+	return v.Tokens.Quo(v.DelegatorShares)
+}
 
-	eqBondedShares := v.PoolShares.ToBonded(pool).Amount
-	return eqBondedShares.Quo(v.DelegatorShares)
+// Get the bonded tokens which the validator holds
+func (v Validator) BondedTokens() sdk.Rat {
+	if v.Status == sdk.Bonded {
+		return v.Tokens
+	}
+	return sdk.ZeroRat()
 }
 
 //______________________________________________________________________
@@ -383,10 +402,10 @@ var _ sdk.Validator = Validator{}
 // nolint - for sdk.Validator
 func (v Validator) GetRevoked() bool            { return v.Revoked }
 func (v Validator) GetMoniker() string          { return v.Description.Moniker }
-func (v Validator) GetStatus() sdk.BondStatus   { return v.Status() }
+func (v Validator) GetStatus() sdk.BondStatus   { return v.Status }
 func (v Validator) GetOwner() sdk.AccAddress    { return v.Owner }
 func (v Validator) GetPubKey() crypto.PubKey    { return v.PubKey }
-func (v Validator) GetPower() sdk.Rat           { return v.PoolShares.Bonded() }
+func (v Validator) GetPower() sdk.Rat           { return v.BondedTokens() }
 func (v Validator) GetDelegatorShares() sdk.Rat { return v.DelegatorShares }
 func (v Validator) GetBondHeight() int64        { return v.BondHeight }
 
@@ -402,7 +421,8 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp := "Validator \n"
 	resp += fmt.Sprintf("Owner: %s\n", v.Owner)
 	resp += fmt.Sprintf("Validator: %s\n", bechVal)
-	resp += fmt.Sprintf("Shares: Status %s,  Amount: %s\n", sdk.BondStatusToString(v.PoolShares.Status), v.PoolShares.Amount.FloatString())
+	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
+	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens.FloatString())
 	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.FloatString())
 	resp += fmt.Sprintf("Description: %s\n", v.Description)
 	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
@@ -411,7 +431,7 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Max Commission Rate: %s\n", v.CommissionMax.String())
 	resp += fmt.Sprintf("Commission Change Rate: %s\n", v.CommissionChangeRate.String())
 	resp += fmt.Sprintf("Commission Change Today: %s\n", v.CommissionChangeToday.String())
-	resp += fmt.Sprintf("Previously Bonded Stares: %s\n", v.PrevBondedShares.String())
+	resp += fmt.Sprintf("Previous Bonded Tokens: %s\n", v.LastBondedTokens.String())
 
 	return resp, nil
 }

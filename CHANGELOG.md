@@ -6,11 +6,16 @@
 
 BREAKING CHANGES
 * [x/stake] Specify DelegatorAddress in MsgCreateValidator
+* [x/stake] Remove the use of global shares in the pool
+   * Remove the use of `PoolShares` type in `x/stake/validator` type - replace with `Status` `Tokens` fields
 * [x/auth] NewAccountMapper takes a constructor instead of a prototype
 * [keys] Keybase.Update function now takes in a function to get the newpass, rather than the password itself
 
 FEATURES
 * [baseapp] NewBaseApp now takes option functions as parameters
+
+IMPROVEMENTS
+* Updated docs folder to accommodate cosmos.network docs project
 * [store] Added support for tracing multi-store operations via `--trace-store`
 * [store] Pruning strategy configurable with pruning flag on gaiad start
 

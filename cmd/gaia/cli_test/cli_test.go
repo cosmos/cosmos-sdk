@@ -131,7 +131,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 	validator := executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %s --output=json %v", barAddr, flags))
 	require.Equal(t, validator.Owner, barAddr)
-	require.Equal(t, "2/1", validator.PoolShares.Amount.String())
+	require.True(sdk.RatEq(t, sdk.NewRat(2), validator.Tokens))
 
 	// unbond a single share
 	unbondStr := fmt.Sprintf("gaiacli stake unbond begin %v", flags)
@@ -149,7 +149,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.Equal(t, int64(9), barAcc.GetCoins().AmountOf("steak").Int64(), "%v", barAcc)
 	*/
 	validator = executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %s --output=json %v", barAddr, flags))
-	require.Equal(t, "1/1", validator.PoolShares.Amount.String())
+	require.Equal(t, "1/1", validator.Tokens.String())
 }
 
 func TestGaiaCLISubmitProposal(t *testing.T) {

@@ -20,7 +20,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) error 
 	for _, validator := range data.Validators {
 		keeper.SetValidator(ctx, validator)
 
-		if validator.PoolShares.Amount.IsZero() {
+		if validator.Tokens.IsZero() {
 			return errors.Errorf("genesis validator cannot have zero pool shares, validator: %v", validator)
 		}
 		if validator.DelegatorShares.IsZero() {
@@ -31,7 +31,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) error 
 		keeper.SetValidatorByPubKeyIndex(ctx, validator)
 		keeper.SetValidatorByPowerIndex(ctx, validator, data.Pool)
 
-		if validator.Status() == sdk.Bonded {
+		if validator.Status == sdk.Bonded {
 			keeper.SetValidatorBondedIndex(ctx, validator)
 		}
 	}

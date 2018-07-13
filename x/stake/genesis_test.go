@@ -14,8 +14,7 @@ func TestInitGenesis(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 
 	pool := keeper.GetPool(ctx)
-	pool.UnbondedTokens = 1
-	pool.UnbondedShares = sdk.OneRat()
+	pool.LooseTokens = sdk.OneRat()
 
 	params := keeper.GetParams(ctx)
 	var delegations []Delegation
@@ -28,7 +27,7 @@ func TestInitGenesis(t *testing.T) {
 	err := InitGenesis(ctx, keeper, genesisState)
 	require.Error(t, err)
 
-	validators[0].PoolShares.Amount = sdk.OneRat()
+	validators[0].Tokens = sdk.OneRat()
 	validators[0].DelegatorShares = sdk.OneRat()
 
 	genesisState = types.NewGenesisState(pool, params, validators, delegations)

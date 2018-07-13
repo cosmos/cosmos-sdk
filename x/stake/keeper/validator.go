@@ -149,7 +149,7 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 		if !found {
 			panic(fmt.Sprintf("validator record not found for address: %v\n", address))
 		}
-		if validator.Status() == sdk.Bonded {
+		if validator.Status == sdk.Bonded {
 			validators[i] = validator
 			i++
 		}
@@ -212,7 +212,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 	switch {
 	// if already bonded and power increasing only need to update tendermint
 	case powerIncreasing && !validator.Revoked &&
-		(oldFound && oldValidator.Status() == sdk.Bonded):
+		(oldFound && oldValidator.Status == sdk.Bonded):
 
 		bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
 		store.Set(GetTendermintUpdatesKey(validator.Owner), bz)
@@ -224,7 +224,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 
 	// if was unbonded and the new power is less than the cliff validator
 	case cliffPower != nil &&
-		(oldFound && oldValidator.Status() == sdk.Unbonded) &&
+		(oldFound && oldValidator.Status == sdk.Unbonded) &&
 		bytes.Compare(valPower, cliffPower) == -1: //(valPower < cliffPower
 		// skip to completion
 
@@ -234,19 +234,19 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 	default:
 
 		// update the validator set for this validator
+		// if updated, the validator has changed bonding status
 		updatedVal, updated := k.UpdateBondedValidators(ctx, validator)
 		if updated { // updates to validator occurred  to be updated
 			validator = updatedVal
-		} else {
-
-			// if decreased in power but still bonded, update Tendermint validator
-			// (if updatedVal is set, the validator has changed bonding status)
-			stillBonded := oldFound && oldValidator.Status() == sdk.Bonded
-			if stillBonded && oldValidator.PoolShares.Bonded().GT(validator.PoolShares.Bonded()) {
-				bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
-				store.Set(GetTendermintUpdatesKey(validator.Owner), bz)
-			}
+			break
 		}
+
+		// if decreased in power but still bonded, update Tendermint validator
+		if oldFound && oldValidator.BondedTokens().GT(validator.BondedTokens()) {
+			bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
+			store.Set(GetTendermintUpdatesKey(validator.Owner), bz)
+		}
+
 	}
 
 	k.SetValidator(ctx, validator)
@@ -254,7 +254,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 }
 
 func (k Keeper) updateForRevoking(ctx sdk.Context, oldFound bool, oldValidator, newValidator types.Validator) types.Validator {
-	if newValidator.Revoked && oldFound && oldValidator.Status() == sdk.Bonded {
+	if newValidator.Revoked && oldFound && oldValidator.Status == sdk.Bonded {
 		newValidator = k.unbondValidator(ctx, newValidator)
 
 		// need to also clear the cliff validator spot because the revoke has
@@ -266,7 +266,7 @@ func (k Keeper) updateForRevoking(ctx sdk.Context, oldFound bool, oldValidator, 
 }
 
 func (k Keeper) getPowerIncreasing(ctx sdk.Context, oldFound bool, oldValidator, newValidator types.Validator) bool {
-	if oldFound && oldValidator.PoolShares.Bonded().LT(newValidator.PoolShares.Bonded()) {
+	if oldFound && oldValidator.BondedTokens().LT(newValidator.BondedTokens()) {
 		return true
 	}
 	return false
@@ -277,7 +277,7 @@ func (k Keeper) bondIncrement(ctx sdk.Context, oldFound bool, oldValidator,
 	newValidator types.Validator) (height int64, intraTxCounter int16) {
 
 	// if already a validator, copy the old block height and counter, else set them
-	if oldFound && oldValidator.Status() == sdk.Bonded {
+	if oldFound && oldValidator.Status == sdk.Bonded {
 		height = oldValidator.BondHeight
 		intraTxCounter = oldValidator.BondIntraTxCounter
 		return
@@ -350,14 +350,14 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 
 		// increment bondedValidatorsCount / get the validator to bond
 		if !validator.Revoked {
-			if validator.Status() != sdk.Bonded {
+			if validator.Status != sdk.Bonded {
 				validatorToBond = validator
 				newValidatorBonded = true
 			}
 			bondedValidatorsCount++
 
 			// sanity check
-		} else if validator.Status() == sdk.Bonded {
+		} else if validator.Status == sdk.Bonded {
 			panic(fmt.Sprintf("revoked validator cannot be bonded, address: %v\n", ownerAddr))
 		}
 
@@ -444,7 +444,7 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 		if !validator.Revoked {
 			bondedValidatorsCount++
 		} else {
-			if validator.Status() == sdk.Bonded {
+			if validator.Status == sdk.Bonded {
 				panic(fmt.Sprintf("revoked validator cannot be bonded, address: %v\n", ownerAddr))
 			}
 		}
@@ -483,7 +483,7 @@ func (k Keeper) unbondValidator(ctx sdk.Context, validator types.Validator) type
 	pool := k.GetPool(ctx)
 
 	// sanity check
-	if validator.Status() == sdk.Unbonded {
+	if validator.Status == sdk.Unbonded {
 		panic(fmt.Sprintf("should not already be unbonded,  validator: %v\n", validator))
 	}
 
@@ -510,7 +510,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	pool := k.GetPool(ctx)
 
 	// sanity check
-	if validator.Status() == sdk.Bonded {
+	if validator.Status == sdk.Bonded {
 		panic(fmt.Sprintf("should not already be bonded, validator: %v\n", validator))
 	}
 

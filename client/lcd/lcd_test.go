@@ -27,7 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	stakerest "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 )
 
 func init() {
@@ -834,11 +833,11 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 	return results[0]
 }
 
-func getValidators(t *testing.T, port string) []stakerest.StakeValidatorOutput {
+func getValidators(t *testing.T, port string) []stake.BechValidator {
 	// get the account to get the sequence
 	res, body := Request(t, port, "GET", "/stake/validators", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var validators []stakerest.StakeValidatorOutput
+	var validators []stake.BechValidator
 	err := cdc.UnmarshalJSON([]byte(body), &validators)
 	require.Nil(t, err)
 	return validators

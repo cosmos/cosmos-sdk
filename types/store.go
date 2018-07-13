@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"io"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -9,6 +10,20 @@ import (
 )
 
 // NOTE: These are implemented in cosmos-sdk/store.
+
+// PruningStrategy specfies how old states will be deleted over time
+type PruningStrategy uint8
+
+const (
+	// PruneSyncable means only those states not needed for state syncing will be deleted (keeps last 100 + every 10000th)
+	PruneSyncable PruningStrategy = iota
+
+	// PruneEverything means all saved states will be deleted, storing only the current state
+	PruneEverything PruningStrategy = iota
+
+	// PruneNothing means all historic states will be saved, nothing will be deleted
+	PruneNothing PruningStrategy = iota
+)
 
 type Store interface { //nolint
 	GetStoreType() StoreType
@@ -19,6 +34,7 @@ type Store interface { //nolint
 type Committer interface {
 	Commit() CommitID
 	LastCommitID() CommitID
+	SetPruning(PruningStrategy)
 }
 
 // Stores of MultiStore must implement CommitStore.
@@ -50,6 +66,21 @@ type MultiStore interface { //nolint
 	GetStore(StoreKey) Store
 	GetKVStore(StoreKey) KVStore
 	GetKVStoreWithGas(GasMeter, StoreKey) KVStore
+
+	// TracingEnabled returns if tracing is enabled for the MultiStore.
+	TracingEnabled() bool
+
+	// WithTracer sets the tracer for the MultiStore that the underlying
+	// stores will utilize to trace operations. A MultiStore is returned.
+	WithTracer(w io.Writer) MultiStore
+
+	// WithTracingContext sets the tracing context for a MultiStore. It is
+	// implied that the caller should update the context when necessary between
+	// tracing operations. A MultiStore is returned.
+	WithTracingContext(TraceContext) MultiStore
+
+	// ResetTraceContext resets the current tracing context.
+	ResetTraceContext() MultiStore
 }
 
 // From MultiStore.CacheMultiStore()....
@@ -163,25 +194,27 @@ type KVStoreGetter interface {
 //----------------------------------------
 // CacheWrap
 
-/*
-	CacheWrap() makes the most appropriate cache-wrap.  For example,
-	IAVLStore.CacheWrap() returns a CacheKVStore.
-
-	CacheWrap() should not return a Committer, since Commit() on
-	cache-wraps make no sense.  It can return KVStore, HeapStore,
-	SpaceStore, etc.
-*/
+// CacheWrap makes the most appropriate cache-wrap. For example,
+// IAVLStore.CacheWrap() returns a CacheKVStore. CacheWrap should not return
+// a Committer, since Commit cache-wraps make no sense. It can return KVStore,
+// HeapStore, SpaceStore, etc.
 type CacheWrap interface {
-
 	// Write syncs with the underlying store.
 	Write()
 
 	// CacheWrap recursively wraps again.
 	CacheWrap() CacheWrap
+
+	// CacheWrapWithTrace recursively wraps again with tracing enabled.
+	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
 }
 
 type CacheWrapper interface { //nolint
+	// CacheWrap cache wraps.
 	CacheWrap() CacheWrap
+
+	// CacheWrapWithTrace cache wraps with tracing enabled.
+	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
 }
 
 //----------------------------------------
@@ -298,3 +331,7 @@ func (getter PrefixStoreGetter) KVStore(ctx Context) KVStore {
 type KVPair cmn.KVPair
 
 //----------------------------------------
+
+// TraceContext contains TraceKVStore context data. It will be written with
+// every trace operation.
+type TraceContext map[string]interface{}

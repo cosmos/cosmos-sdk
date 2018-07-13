@@ -105,7 +105,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	privVal := pvm.LoadOrGenFilePV(privValidatorFile)
 	privVal.Reset()
 	db := dbm.NewMemDB()
-	app := gapp.NewGaiaApp(logger, db)
+	app := gapp.NewGaiaApp(logger, db, nil)
 	cdc = gapp.MakeCodec()
 
 	genesisFile := config.GenesisFile()

@@ -1,6 +1,8 @@
 package mock
 
 import (
+	"io"
+
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,11 +20,35 @@ func (ms multiStore) CacheWrap() sdk.CacheWrap {
 	panic("not implemented")
 }
 
+func (ms multiStore) CacheWrapWithTrace(_ io.Writer, _ sdk.TraceContext) sdk.CacheWrap {
+	panic("not implemented")
+}
+
+func (ms multiStore) ResetTraceContext() sdk.MultiStore {
+	panic("not implemented")
+}
+
+func (ms multiStore) TracingEnabled() bool {
+	panic("not implemented")
+}
+
+func (ms multiStore) WithTracingContext(tc sdk.TraceContext) sdk.MultiStore {
+	panic("not implemented")
+}
+
+func (ms multiStore) WithTracer(w io.Writer) sdk.MultiStore {
+	panic("not implemented")
+}
+
 func (ms multiStore) Commit() sdk.CommitID {
 	panic("not implemented")
 }
 
 func (ms multiStore) LastCommitID() sdk.CommitID {
+	panic("not implemented")
+}
+
+func (ms multiStore) SetPruning(s sdk.PruningStrategy) {
 	panic("not implemented")
 }
 
@@ -67,6 +93,10 @@ type kvStore struct {
 }
 
 func (kv kvStore) CacheWrap() sdk.CacheWrap {
+	panic("not implemented")
+}
+
+func (kv kvStore) CacheWrapWithTrace(w io.Writer, tc sdk.TraceContext) sdk.CacheWrap {
 	panic("not implemented")
 }
 

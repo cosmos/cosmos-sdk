@@ -99,7 +99,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 
 	// inflate a bunch
 	params := keeper.GetParams(ctx)
-	for i := 0; i < 20000; i++ {
+	for i := 0; i < 200; i++ {
 		pool = pool.ProcessProvisions(params)
 		keeper.SetPool(ctx, pool)
 	}
@@ -221,7 +221,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	pool := keeper.GetPool(ctx)
 	exRate := validator.DelegatorShareExRate()
 	require.True(t, exRate.Equal(sdk.OneRat()), "expected exRate 1 got %v", exRate)
-	require.Equal(t, bondAmount, pool.BondedTokens)
+	require.Equal(t, bondAmount, pool.BondedTokens.RoundInt64())
 
 	// just send the same msgbond multiple times
 	msgDelegate := newTestMsgDelegate(delegatorAddr, validatorAddr, bondAmount)

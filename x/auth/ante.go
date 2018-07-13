@@ -17,6 +17,7 @@ const (
 // NewAnteHandler returns an AnteHandler that checks
 // and increments sequence numbers, checks signatures & account numbers,
 // and deducts fees from the first signer.
+// nolint: gocyclo
 func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 	return func(

@@ -149,6 +149,11 @@ func gentxWithConfig(cdc *wire.Codec, appInit AppInit, config *cfg.Config, genTx
 		return
 	}
 
+	// Write updated config with moniker
+	config.Moniker = genTxConfig.Name
+	configFilePath := filepath.Join(config.RootDir, "config", "config.toml")
+	cfg.WriteConfigFile(configFilePath, config)
+
 	return
 }
 
@@ -240,6 +245,11 @@ func initWithConfig(cdc *wire.Codec, appInit AppInit, config *cfg.Config, initCo
 			viper.GetBool(FlagOWK),
 			"127.0.0.1",
 		}
+
+		// Write updated config with moniker
+		config.Moniker = genTxConfig.Name
+		configFilePath := filepath.Join(config.RootDir, "config", "config.toml")
+		cfg.WriteConfigFile(configFilePath, config)
 		appGenTx, am, validator, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
 		appMessage = am
 		if err != nil {

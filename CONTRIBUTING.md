@@ -8,6 +8,12 @@ Please make sure to use `gofmt` before every commit - the easiest way to do this
 
 Looking for a good place to start contributing? How about checking out some [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 
+## Pull Requests
+
+To accommodate review process we suggest that PRs are catagorically broken up. 
+Ideally each PR addresses only a single issue. Additionally, as much as possible
+code refactoring and cleanup should be submitted as a seperate PRs from bugfixes/feature-additions. 
+
 ## Forking
 
 Please note that Go requires code to live under absolute paths, which complicates forking.

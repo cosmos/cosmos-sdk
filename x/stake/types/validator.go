@@ -27,8 +27,8 @@ type Validator struct {
 	PubKey  crypto.PubKey  `json:"pub_key"` // pubkey of validator
 	Revoked bool           `json:"revoked"` // has the validator been revoked from bonded status?
 
-	Tokens          sdk.Rat        `json:"tokens"`           // delegated tokens (incl. self-delegation)
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
+	Tokens          sdk.Rat        `json:"tokens"`           // delegated tokens (incl. self-delegation)
 	DelegatorShares sdk.Rat        `json:"delegator_shares"` // total shares issued to a validator's delegators
 
 	Description        Description `json:"description"`           // description terms for the validator
@@ -70,8 +70,8 @@ func NewValidator(owner sdk.AccAddress, pubKey crypto.PubKey, description Descri
 type validatorValue struct {
 	PubKey                crypto.PubKey
 	Revoked               bool
-	Tokens                sdk.Rat
 	Status                sdk.BondStatus
+	Tokens                sdk.Rat
 	DelegatorShares       sdk.Rat
 	Description           Description
 	BondHeight            int64
@@ -89,8 +89,8 @@ func MustMarshalValidator(cdc *wire.Codec, validator Validator) []byte {
 	val := validatorValue{
 		PubKey:                validator.PubKey,
 		Revoked:               validator.Revoked,
-		Tokens:                validator.Tokens,
 		Status:                validator.Status,
+		Tokens:                validator.Tokens,
 		DelegatorShares:       validator.DelegatorShares,
 		Description:           validator.Description,
 		BondHeight:            validator.BondHeight,
@@ -155,8 +155,8 @@ type BechValidator struct {
 	PubKey  string         `json:"pub_key"` // in bech32
 	Revoked bool           `json:"revoked"` // has the validator been revoked from bonded status?
 
-	Tokens          sdk.Rat        `json:"tokens"`           // delegated tokens (incl. self-delegation)
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
+	Tokens          sdk.Rat        `json:"tokens"`           // delegated tokens (incl. self-delegation)
 	DelegatorShares sdk.Rat        `json:"delegator_shares"` // total shares issued to a validator's delegators
 
 	Description        Description `json:"description"`           // description terms for the validator
@@ -185,8 +185,8 @@ func (v Validator) Bech32Validator() (BechValidator, error) {
 		PubKey:  bechValPubkey,
 		Revoked: v.Revoked,
 
-		Tokens:          v.Tokens,
 		Status:          v.Status,
+		Tokens:          v.Tokens,
 		DelegatorShares: v.DelegatorShares,
 
 		Description:        v.Description,
@@ -210,8 +210,8 @@ func (v Validator) Bech32Validator() (BechValidator, error) {
 func (v Validator) Equal(c2 Validator) bool {
 	return v.PubKey.Equals(c2.PubKey) &&
 		bytes.Equal(v.Owner, c2.Owner) &&
-		v.Tokens.Equal(c2.Tokens) &&
 		v.Status.Equal(c2.Status) &&
+		v.Tokens.Equal(c2.Tokens) &&
 		v.DelegatorShares.Equal(c2.DelegatorShares) &&
 		v.Description == c2.Description &&
 		v.ProposerRewardPool.IsEqual(c2.ProposerRewardPool) &&

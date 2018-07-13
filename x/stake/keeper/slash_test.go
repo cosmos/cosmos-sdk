@@ -329,6 +329,11 @@ func TestSlashWithRedelegation(t *testing.T) {
 	}
 	keeper.SetDelegation(ctx, del)
 
+	// update bonded tokens
+	pool := keeper.GetPool(ctx)
+	pool.BondedTokens = pool.BondedTokens.Add(sdk.NewRat(6))
+	keeper.SetPool(ctx, pool)
+
 	// slash validator
 	ctx = ctx.WithBlockHeight(12)
 	oldPool := keeper.GetPool(ctx)
@@ -358,7 +363,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	ctx = ctx.WithBlockHeight(12)
 	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
 	require.True(t, found)
-	require.NotPanics(t, func() { keeper.Slash(ctx, pk, 10, 10, sdk.NewRat(3, 4)) })
+	require.NotPanics(t, func() { keeper.Slash(ctx, pk, 10, 10, sdk.OneRat()) })
 
 	// read updating redelegation
 	rd, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
@@ -367,7 +372,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.Equal(t, sdk.NewInt(0), rd.Balance.Amount)
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
-	// 7 bonded tokens burned
+	// seven bonded tokens burned
 	require.Equal(t, int64(12), oldPool.BondedTokens.Sub(newPool.BondedTokens).RoundInt64())
 	// read updated validator
 	validator, found = keeper.GetValidatorByPubKey(ctx, pk)

@@ -2,7 +2,7 @@
 
 ## 0.21.0
 
-*TBD*
+*July 13th, 2018*
 
 BREAKING CHANGES
 * [x/stake] Specify DelegatorAddress in MsgCreateValidator

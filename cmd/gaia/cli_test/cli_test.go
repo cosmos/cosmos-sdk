@@ -131,7 +131,6 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 	validator := executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %s --output=json %v", barAddr, flags))
 	require.Equal(t, validator.Owner, barAddr)
-	require.Fail(t, "", "validator %v", validator)
 	require.Equal(t, "2/1", validator.Tokens.String())
 
 	// unbond a single share

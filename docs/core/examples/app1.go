@@ -9,7 +9,6 @@ import (
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 const (
@@ -18,16 +17,11 @@ const (
 
 func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 
-	cdc := wire.NewCodec()
-
 	// Create the base application object.
-	app := bapp.NewBaseApp(app1Name, cdc, logger, db)
+	app := bapp.NewBaseAppNoCodec(app1Name, logger, db, tx1Decoder)
 
 	// Create a key for accessing the account store.
 	keyAccount := sdk.NewKVStoreKey("acc")
-
-	// Determine how transactions are decoded.
-	app.SetTxDecoder(txDecoder)
 
 	// Register message routes.
 	// Note the handler gets access to the account store.
@@ -225,7 +219,7 @@ func (tx app1Tx) GetMsgs() []sdk.Msg {
 }
 
 // JSON decode MsgSend.
-func txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
+func tx1Decoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 	var tx app1Tx
 	err := json.Unmarshal(txBytes, &tx)
 	if err != nil {

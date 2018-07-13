@@ -53,7 +53,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	// create your application type
 	var app = &BasecoinApp{
 		cdc:        cdc,
-		BaseApp:    bam.NewBaseApp(appName, cdc, logger, db),
+		BaseApp:    bam.NewBaseAppNoCodec(appName, logger, db, auth.DefaultTxDecoder(cdc)),
 		keyMain:    sdk.NewKVStoreKey("main"),
 		keyAccount: sdk.NewKVStoreKey("acc"),
 		keyIBC:     sdk.NewKVStoreKey("ibc"),
@@ -78,6 +78,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
+	app.SetTxDecoder(auth.DefaultTxDecoder(cdc))
 
 	// mount the multistore and load the latest state
 	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC)

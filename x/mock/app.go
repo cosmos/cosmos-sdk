@@ -47,7 +47,7 @@ func NewApp() *App {
 
 	// Create your application object
 	app := &App{
-		BaseApp:          bam.NewBaseApp("mock", cdc, logger, db),
+		BaseApp:          bam.NewBaseAppNoCodec("mock", logger, db, auth.DefaultTxDecoder(cdc)),
 		Cdc:              cdc,
 		KeyMain:          sdk.NewKVStoreKey("main"),
 		KeyAccount:       sdk.NewKVStoreKey("acc"),

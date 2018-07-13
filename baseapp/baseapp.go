@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"runtime/debug"
 	"strings"
+	"encoding/json"
 
 	"github.com/pkg/errors"
 
@@ -15,8 +16,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/wire"
+
+	// TODO: Remove dependency on auth and wire
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Key to store the header in the DB itself.
@@ -42,7 +45,7 @@ type BaseApp struct {
 	// initialized on creation
 	Logger     log.Logger
 	name       string               // application name from abci.Info
-	cdc        *wire.Codec          // Amino codec
+	cdc        *wire.Codec          // Amino codec (DEPRECATED)
 	db         dbm.DB               // common DB backend
 	cms        sdk.CommitMultiStore // Main (uncached) state
 	router     Router               // handle any kind of message
@@ -74,6 +77,7 @@ var _ abci.Application = (*BaseApp)(nil)
 // Create and name new BaseApp
 // NOTE: The db is used to store the version number for now.
 // Accepts variable number of option functions, which act on the BaseApp to set configuration choices
+// DEPRECATED
 func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB, options ...func(*BaseApp)) *BaseApp {
 	app := &BaseApp{
 		Logger:     logger,
@@ -83,7 +87,28 @@ func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB, opti
 		cms:        store.NewCommitMultiStore(db),
 		router:     NewRouter(),
 		codespacer: sdk.NewCodespacer(),
-		txDecoder:  defaultTxDecoder(cdc),
+		txDecoder:  auth.DefaultTxDecoder(cdc),
+	}
+	// Register the undefined & root codespaces, which should not be used by any modules
+	app.codespacer.RegisterOrPanic(sdk.CodespaceRoot)
+	for _, option := range options {
+		option(app)
+	}
+	return app
+}
+
+// Create and name new BaseApp
+// Does not set cdc and instead takes a user-defined txDecoder. If nil, BaseApp uses defaultTxDecoder
+// TODO: Rename to NewBaseApp and remove above constructor once auth, wire dependencies removed
+func NewBaseAppNoCodec(name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp)) *BaseApp {
+	app := &BaseApp{
+		Logger:     logger,
+		name:       name,
+		db:         db,
+		cms:        store.NewCommitMultiStore(db),
+		router:     NewRouter(),
+		codespacer: sdk.NewCodespacer(),
+		txDecoder:  txDecoder,
 	}
 	// Register the undefined & root codespaces, which should not be used by any modules
 	app.codespacer.RegisterOrPanic(sdk.CodespaceRoot)
@@ -121,32 +146,9 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 }
 
 // Set the txDecoder function
+// DEPRECATED
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
-}
-
-// default custom logic for transaction decoding
-// TODO: remove auth and wire dependencies from baseapp
-//	- move this to auth.DefaultTxDecoder
-//	- set the default here to JSON decode like docs/examples/app1 (it will fail
-//		for multiple messages ;))
-//	- pass a TxDecoder into NewBaseApp, instead of a codec.
-func defaultTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
-	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
-		var tx = auth.StdTx{}
-
-		if len(txBytes) == 0 {
-			return nil, sdk.ErrTxDecode("txBytes are empty")
-		}
-
-		// StdTx.Msg is an interface. The concrete types
-		// are registered by MakeTxCodec
-		err := cdc.UnmarshalBinary(txBytes, &tx)
-		if err != nil {
-			return nil, sdk.ErrTxDecode("").TraceSDK(err.Error())
-		}
-		return tx, nil
-	}
 }
 
 // nolint - Set functions
@@ -349,7 +351,20 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 		default:
 			result = sdk.ErrUnknownRequest(fmt.Sprintf("Unknown query: %s", path)).Result()
 		}
-		value := app.cdc.MustMarshalBinary(result)
+		
+		// Encode with amino if defined, else use json
+		// TODO: Use JSON encoding only once app.cdc removed
+		var value []byte
+		if app.cdc != nil {
+			value = app.cdc.MustMarshalBinary(result)
+		} else {
+			var err error
+			value, err = json.Marshal(result)
+			if err != nil {
+				return sdk.ErrInternal("Encoding result failed").QueryResult()
+			}
+		}
+
 		return abci.ResponseQuery{
 			Code:  uint32(sdk.ABCICodeOK),
 			Value: value,

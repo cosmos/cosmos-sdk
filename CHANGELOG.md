@@ -11,6 +11,9 @@ BREAKING CHANGES
 
 FEATURES
 * [baseapp] NewBaseApp now takes option functions as parameters
+
+IMPROVEMENTS
+* Updated docs folder to accommodate cosmos.network docs project
 * [store] Added support for tracing multi-store operations via `--trace-store`
 * [store] Pruning strategy configurable with pruning flag on gaiad start
 

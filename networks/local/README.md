@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- [Install gaia](/docs/index.rst)
+- [Install gaia](https://cosmos.network/docs/getting-started/installation.html)
 - [Install docker](https://docs.docker.com/engine/installation/)
 - [Install docker-compose](https://docs.docker.com/compose/install/)
 
@@ -22,7 +22,6 @@ make build-linux
 # Build tendermint/gaiadnode image
 make build-docker-gaiadnode
 ```
-
 
 ## Run a testnet
 
@@ -66,7 +65,6 @@ docker run -v `pwd`/build:/gaiad tendermint/gaiadnode testnet --o . --v 1
 
 #Run the node
 docker run -v `pwd`/build:/gaiad tendermint/gaiadnode
-
 ```
 
 ## Logging
@@ -76,4 +74,3 @@ Log is saved under the attached volume, in the `gaiad.log` file and written on t
 ## Special binaries
 
 If you have multiple binaries with different names, you can specify which one to run with the BINARY environment variable. The path of the binary is relative to the attached volume.
-

@@ -120,10 +120,10 @@ func AssertInvariants(t *testing.T, msg string,
 
 	for _, vMod := range vMods {
 		// Nonnegative ex rate
-		require.False(t, vMod.DelegatorShareExRate(pMod).LT(sdk.ZeroRat()),
+		require.False(t, vMod.DelegatorShareExRate().LT(sdk.ZeroRat()),
 			"Applying operation \"%s\" resulted in negative validator.DelegatorShareExRate(): %v (validator.Owner: %s)",
 			msg,
-			vMod.DelegatorShareExRate(pMod),
+			vMod.DelegatorShareExRate(),
 			vMod.Owner,
 		)
 

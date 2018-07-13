@@ -349,14 +349,15 @@ func (v Validator) RemoveTokens(pool Pool, tokens sdk.Rat) (Validator, Pool) {
 func (v Validator) AddTokensFromDel(pool Pool, amount int64) (Validator, Pool, sdk.Rat) {
 
 	// bondedShare/delegatedShare
-	exRate := v.DelegatorShareExRate(pool)
+	exRate := v.DelegatorShareExRate()
 
 	if v.Status == sdk.Bonded {
 		pool = pool.addBondedTokens(sdk.NewRat(amount))
 	}
 
-	v.Tokens = v.Tokens.Add(sdk.NewRat(amount))
-	issuedShares := v.Tokens.Quo(exRate)
+	amountRat := sdk.NewRat(amount)
+	v.Tokens = v.Tokens.Add(amountRat)
+	issuedShares := amountRat.Quo(exRate)
 	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
 
 	return v, pool, issuedShares
@@ -367,7 +368,7 @@ func (v Validator) AddTokensFromDel(pool Pool, amount int64) (Validator, Pool, s
 // NOTE: This function assumes the shares have already been updated for the
 // validator status.
 func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Rat) (Validator, Pool, sdk.Rat) {
-	issuedTokens := v.DelegatorShareExRate(pool).Mul(delShares)
+	issuedTokens := v.DelegatorShareExRate().Mul(delShares)
 	v.Tokens = v.Tokens.Sub(issuedTokens)
 	v.DelegatorShares = v.DelegatorShares.Sub(delShares)
 
@@ -380,7 +381,7 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Rat) (Validator, Poo
 
 // DelegatorShareExRate gets the exchange rate of tokens over delegator shares.
 // UNITS: tokens/delegator-shares
-func (v Validator) DelegatorShareExRate(pool Pool) sdk.Rat {
+func (v Validator) DelegatorShareExRate() sdk.Rat {
 	if v.DelegatorShares.IsZero() {
 		return sdk.OneRat()
 	}

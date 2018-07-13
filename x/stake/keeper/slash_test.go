@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -27,11 +26,9 @@ func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params) {
 		validator, pool, _ = validator.AddTokensFromDel(pool, amt)
 		keeper.SetPool(ctx, pool)
 		validator = keeper.UpdateValidator(ctx, validator)
-		fmt.Printf("debug validator: %v\n", validator)
 		keeper.SetValidatorByPubKeyIndex(ctx, validator)
 	}
 	pool = keeper.GetPool(ctx)
-	fmt.Printf("debug pool: %v\n", pool)
 
 	return ctx, keeper, params
 }

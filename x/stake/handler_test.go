@@ -98,8 +98,9 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	require.True(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power2))
 
 	// inflate a bunch
+	params := keeper.GetParams(ctx)
 	for i := 0; i < 20000; i++ {
-		pool = keeper.ProcessProvisions(ctx)
+		pool = pool.ProcessProvisions(params)
 		keeper.SetPool(ctx, pool)
 	}
 
@@ -160,8 +161,8 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	assert.Equal(t, sdk.Bonded, validator.Status)
 	assert.Equal(t, addr2, validator.Owner)
 	assert.Equal(t, pk2, validator.PubKey)
-	assert.Equal(t, sdk.NewRat(10), validator.BondedTokens())
-	assert.Equal(t, sdk.NewRat(10), validator.DelegatorShares)
+	assert.True(sdk.RatEq(t, sdk.NewRat(10), validator.Tokens))
+	assert.True(sdk.RatEq(t, sdk.NewRat(10), validator.DelegatorShares))
 	assert.Equal(t, Description{}, validator.Description)
 }
 
@@ -177,12 +178,12 @@ func TestDuplicatesMsgCreateValidatorOnBehalfOf(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 
 	require.True(t, found)
-	require.Equal(t, sdk.Bonded, validator.Status())
-	require.Equal(t, validatorAddr, validator.Owner)
-	require.Equal(t, pk, validator.PubKey)
-	require.Equal(t, sdk.NewRat(10), validator.PoolShares.Bonded())
-	require.Equal(t, sdk.NewRat(10), validator.DelegatorShares)
-	require.Equal(t, Description{}, validator.Description)
+	assert.Equal(t, sdk.Bonded, validator.Status)
+	assert.Equal(t, validatorAddr, validator.Owner)
+	assert.Equal(t, pk, validator.PubKey)
+	assert.True(sdk.RatEq(t, sdk.NewRat(10), validator.Tokens))
+	assert.True(sdk.RatEq(t, sdk.NewRat(10), validator.DelegatorShares))
+	assert.Equal(t, Description{}, validator.Description)
 
 	// one validator cannot be created twice even from different delegator
 	msgCreateValidatorOnBehalfOf.DelegatorAddr = keep.Addrs[2]
@@ -218,7 +219,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	require.Equal(t, bondAmount, bond.Shares.RoundInt64())
 
 	pool := keeper.GetPool(ctx)
-	exRate := validator.DelegatorShareExRate(pool)
+	exRate := validator.DelegatorShareExRate()
 	require.True(t, exRate.Equal(sdk.OneRat()), "expected exRate 1 got %v", exRate)
 	require.Equal(t, bondAmount, pool.BondedTokens)
 
@@ -237,8 +238,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 		bond, found := keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
 		require.True(t, found)
 
-		pool := keeper.GetPool(ctx)
-		exRate := validator.DelegatorShareExRate(pool)
+		exRate := validator.DelegatorShareExRate()
 		require.True(t, exRate.Equal(sdk.OneRat()), "expected exRate 1 got %v, i = %v", exRate, i)
 
 		expBond := int64(i+1) * bondAmount

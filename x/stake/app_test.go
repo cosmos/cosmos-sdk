@@ -147,8 +147,8 @@ func TestStakeMsgs(t *testing.T) {
 
 	validator = checkValidator(t, mApp, keeper, addr2, true)
 	require.Equal(t, addr2, validator.Owner)
-	require.Equal(t, sdk.Bonded, validator.Status())
-	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.PoolShares.Bonded()))
+	require.Equal(t, sdk.Bonded, validator.Status)
+	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.Tokens))
 
 	// check the bond that should have been created as well
 	checkDelegation(t, mApp, keeper, addr1, addr1, true, sdk.NewRat(10))

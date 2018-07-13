@@ -99,7 +99,7 @@ func TestAddTokensValidatorBonded(t *testing.T) {
 	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
 	validator, pool, delShares := validator.AddTokensFromDel(pool, 10)
 
-	require.Equal(t, sdk.OneRat(), validator.DelegatorShareExRate(pool))
+	require.Equal(t, sdk.OneRat(), validator.DelegatorShareExRate())
 
 	assert.True(sdk.RatEq(t, sdk.NewRat(10), delShares))
 	assert.True(sdk.RatEq(t, sdk.NewRat(10), validator.BondedTokens()))
@@ -112,7 +112,7 @@ func TestAddTokensValidatorUnbonding(t *testing.T) {
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonding)
 	validator, pool, delShares := validator.AddTokensFromDel(pool, 10)
 
-	require.Equal(t, sdk.OneRat(), validator.DelegatorShareExRate(pool))
+	require.Equal(t, sdk.OneRat(), validator.DelegatorShareExRate())
 
 	assert.True(sdk.RatEq(t, sdk.NewRat(10), delShares))
 	assert.Equal(t, sdk.Unbonding, validator.Status)
@@ -126,7 +126,7 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
 	validator, pool, delShares := validator.AddTokensFromDel(pool, 10)
 
-	require.Equal(t, sdk.OneRat(), validator.DelegatorShareExRate(pool))
+	require.Equal(t, sdk.OneRat(), validator.DelegatorShareExRate())
 
 	assert.True(sdk.RatEq(t, sdk.NewRat(10), delShares))
 	assert.Equal(t, sdk.Unbonded, validator.Status)
@@ -145,7 +145,7 @@ func TestRemoveDelShares(t *testing.T) {
 	poolA := InitialPool()
 	poolA.LooseTokens = sdk.NewRat(10)
 	poolA.BondedTokens = valA.BondedTokens()
-	require.Equal(t, valA.DelegatorShareExRate(poolA), sdk.OneRat())
+	require.Equal(t, valA.DelegatorShareExRate(), sdk.OneRat())
 
 	// Remove delegator shares
 	valB, poolB, coinsB := valA.RemoveDelShares(poolA, sdk.NewRat(10))
@@ -231,9 +231,9 @@ func TestPossibleOverflow(t *testing.T) {
 	newValidator, _, _ := validator.AddTokensFromDel(pool, tokens)
 
 	msg = fmt.Sprintf("Added %d tokens to %s", tokens, msg)
-	require.False(t, newValidator.DelegatorShareExRate(pool).LT(sdk.ZeroRat()),
+	require.False(t, newValidator.DelegatorShareExRate().LT(sdk.ZeroRat()),
 		"Applying operation \"%s\" resulted in negative DelegatorShareExRate(): %v",
-		msg, newValidator.DelegatorShareExRate(pool))
+		msg, newValidator.DelegatorShareExRate())
 }
 
 // run random operations in a random order on a random single-validator state, assert invariants hold

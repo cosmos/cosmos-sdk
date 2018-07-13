@@ -164,7 +164,7 @@ type StdSignature struct {
 	Sequence         int64 `json:"sequence"`
 }
 
-// default custom logic for transaction decoding
+// logic for standard transaction decoding
 func DefaultTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var tx = StdTx{}

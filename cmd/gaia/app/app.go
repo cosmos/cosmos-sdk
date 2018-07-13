@@ -75,6 +75,9 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		keyFeeCollection: sdk.NewKVStoreKey("fee"),
 	}
 
+	// Set app.cdc so that Query has same result encoding
+	app.cdc = cdc
+
 	// define the accountMapper
 	app.accountMapper = auth.NewAccountMapper(
 		app.cdc,

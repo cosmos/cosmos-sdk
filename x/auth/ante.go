@@ -21,13 +21,31 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 	return func(
 		ctx sdk.Context, tx sdk.Tx,
-	) (_ sdk.Context, _ sdk.Result, abort bool) {
+	) (_ sdk.Context, res sdk.Result, abort bool) {
 
 		// This AnteHandler requires Txs to be StdTxs
 		stdTx, ok := tx.(StdTx)
 		if !ok {
 			return ctx, sdk.ErrInternal("tx must be StdTx").Result(), true
 		}
+
+		// AnteHandlers must have their own defer/recover in order
+		// for the BaseApp to know how much gas was used!
+		// This is because the GasMeter is created in the AnteHandler,
+		// but if it panics the context won't be set properly in runTx's recover ...
+		defer func() {
+			if r := recover(); r != nil {
+				switch rType := r.(type) {
+				case sdk.ErrorOutOfGas:
+					log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
+					res = sdk.ErrOutOfGas(log).Result()
+					res.GasWanted = stdTx.Fee.Gas 
+					res.GasUsed = ctx.GasMeter().GasConsumed()
+				default:
+					panic(r)
+				}
+			}
+		}()
 
 		err := validateBasic(stdTx)
 		if err != nil {
@@ -90,7 +108,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 		// TODO: tx tags (?)
 
-		return ctx, sdk.Result{}, false // continue...
+		return ctx, sdk.Result{GasWanted: stdTx.Fee.Gas}, false // continue...
 	}
 }
 

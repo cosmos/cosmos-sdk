@@ -151,7 +151,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 
 	appState, err := wire.MarshalJSONIndent(cdc, genesisState)
 	require.NoError(t, err)
-	genDoc.AppStateJSON = appState
+	genDoc.AppState = appState
 
 	// LCD listen address
 	var listenAddr string

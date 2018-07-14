@@ -30,7 +30,7 @@ func ExportCmd(ctx *Context, cdc *wire.Codec, appExporter AppExporter) *cobra.Co
 				return err
 			}
 
-			doc.AppStateJSON = appState
+			doc.AppState = appState
 			doc.Validators = validators
 
 			encoded, err := wire.MarshalJSONIndent(cdc, doc)

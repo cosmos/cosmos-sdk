@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.21.1
+
+*July 14th, 2018*
+
+BUG FIXES
+* [build] Added Ledger build support via `LEDGER_ENABLED=true|false`
+  * True by default except when cross-compiling
+
 ## 0.21.0
 
 *July 13th, 2018*
@@ -24,8 +32,6 @@ BUG FIXES
 * [keys] \#1629 - updating password no longer asks for a new password when the first entered password was incorrect
 * [lcd] importing an account would create a random account
 * [server] 'gaiad init' command family now writes provided name as the moniker in `config.toml`
-* [build] Added Ledger build support via `LEDGER_ENABLED=true|false`
-  * True by default except when cross-compiling
 
 ## 0.20.0
 

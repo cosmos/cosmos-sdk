@@ -29,6 +29,7 @@ func NewCodec() *wire.Codec {
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(MsgSend{}, "example/MsgSend", nil)
 	cdc.RegisterConcrete(MsgIssue{}, "example/MsgIssue", nil)
+	crypto.RegisterAmino(cdc)
 	return cdc
 }
 

@@ -1,4 +1,4 @@
-// +build ledger
+// +build cgo,ledger
 
 package crypto
 

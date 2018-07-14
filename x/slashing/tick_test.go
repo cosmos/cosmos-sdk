@@ -13,7 +13,7 @@ import (
 )
 
 func TestBeginBlocker(t *testing.T) {
-	ctx, ck, sk, keeper := createTestInput(t)
+	ctx, ck, sk, _, keeper := createTestInput(t)
 	addr, pk, amt := addrs[2], pks[2], sdk.NewInt(100)
 
 	// bond the validator
@@ -47,7 +47,7 @@ func TestBeginBlocker(t *testing.T) {
 	height := int64(0)
 
 	// for 1000 blocks, mark the validator as having signed
-	for ; height < SignedBlocksWindow; height++ {
+	for ; height < keeper.SignedBlocksWindow(ctx); height++ {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
 			Validators: []abci.SigningValidator{{
@@ -59,7 +59,7 @@ func TestBeginBlocker(t *testing.T) {
 	}
 
 	// for 500 blocks, mark the validator as having not signed
-	for ; height < ((SignedBlocksWindow * 2) - MinSignedPerWindow + 1); height++ {
+	for ; height < ((keeper.SignedBlocksWindow(ctx) * 2) - keeper.MinSignedPerWindow(ctx) + 1); height++ {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
 			Validators: []abci.SigningValidator{{

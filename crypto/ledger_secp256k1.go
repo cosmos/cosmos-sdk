@@ -153,6 +153,9 @@ func (pkl PrivKeyLedgerSecp256k1) pubkeyLedgerSecp256k1() (pub tmcrypto.PubKey, 
 
 	// re-serialize in the 33-byte compressed format
 	cmp, err := secp256k1.ParsePubKey(key[:], secp256k1.S256())
+	if err != nil {
+		return nil, fmt.Errorf("error parsing public key: %v", err)
+	}
 	copy(pk[:], cmp.SerializeCompressed())
 
 	return pk, nil

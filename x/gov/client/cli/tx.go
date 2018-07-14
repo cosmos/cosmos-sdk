@@ -158,7 +158,7 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]", bechVoter, msg.ProposalID, msg.Option)
+			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]", bechVoter, msg.ProposalID, msg.Option.String())
 
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))

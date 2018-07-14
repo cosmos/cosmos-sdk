@@ -10,11 +10,6 @@
 #   name = "github.com/user/project"
 #   version = "1.0.0"
 #
-# [[constraint]]
-#   name = "github.com/user/project2"
-#   branch = "dev"
-#   source = "github.com/myfork/project2"
-#
 # [[override]]
 #   name = "github.com/x/y"
 #   version = "2.4.0"
@@ -66,7 +61,7 @@
 
 [[constraint]]
   name = "github.com/bartekn/go-bip39"
-  branch = "master"
+  revision = "a05967ea095d81c8fe4833776774cfaff8e5036c"
 
 [[constraint]]
   name = "github.com/zondax/ledger-goclient"

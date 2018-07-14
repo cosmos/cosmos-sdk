@@ -54,7 +54,7 @@ func getInitChainer(mapp *mock.App, keeper stake.Keeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 		stakeGenesis := stake.DefaultGenesisState()
-		stakeGenesis.Pool.LooseTokens = 100000
+		stakeGenesis.Pool.LooseTokens = sdk.NewRat(100000)
 		err := stake.InitGenesis(ctx, keeper, stakeGenesis)
 		if err != nil {
 			panic(err)
@@ -101,8 +101,8 @@ func TestSlashingMsgs(t *testing.T) {
 
 	validator := checkValidator(t, mapp, stakeKeeper, addr1, true)
 	require.Equal(t, addr1, validator.Owner)
-	require.Equal(t, sdk.Bonded, validator.Status())
-	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.PoolShares.Bonded()))
+	require.Equal(t, sdk.Bonded, validator.Status)
+	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.BondedTokens()))
 	unrevokeMsg := MsgUnrevoke{ValidatorAddr: sdk.AccAddress(validator.PubKey.Address())}
 
 	// no signing info yet

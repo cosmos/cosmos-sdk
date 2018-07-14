@@ -2,20 +2,28 @@
 
 ## 0.21.0
 
-*TBD*
+*July 13th, 2018*
 
 BREAKING CHANGES
 * [x/stake] Specify DelegatorAddress in MsgCreateValidator
+* [x/stake] Remove the use of global shares in the pool
+   * Remove the use of `PoolShares` type in `x/stake/validator` type - replace with `Status` `Tokens` fields
 * [x/auth] NewAccountMapper takes a constructor instead of a prototype
 * [keys] Keybase.Update function now takes in a function to get the newpass, rather than the password itself
 
 FEATURES
 * [baseapp] NewBaseApp now takes option functions as parameters
 
+IMPROVEMENTS
+* Updated docs folder to accommodate cosmos.network docs project
+* [store] Added support for tracing multi-store operations via `--trace-store`
+* [store] Pruning strategy configurable with pruning flag on gaiad start
+
 BUG FIXES
 * \#1630 - redelegation nolonger removes tokens from the delegator liquid account
 * [keys] \#1629 - updating password no longer asks for a new password when the first entered password was incorrect
 * [lcd] importing an account would create a random account
+* [server] 'gaiad init' command family now writes provided name as the moniker in `config.toml`
 
 ## 0.20.0
 

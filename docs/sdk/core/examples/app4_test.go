@@ -13,6 +13,7 @@ import (
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 func newTestChain() *bapp.BaseApp {
@@ -21,7 +22,7 @@ func newTestChain() *bapp.BaseApp {
 	return NewApp4(logger, db)
 }
 
-func InitTestChain(bc *bapp.BaseApp, addrs ...sdk.AccAddress) {
+func InitTestChain(bc *bapp.BaseApp, chainId string, addrs ...sdk.AccAddress) {
 	var accounts []*GenesisAccount
 	for _, addr := range addrs {
 		acc := GenesisAccount{
@@ -35,14 +36,13 @@ func InitTestChain(bc *bapp.BaseApp, addrs ...sdk.AccAddress) {
 	if err != nil {
 		panic(err)
 	}
-	bc.InitChain(abci.RequestInitChain{AppStateBytes: genState})
+	bc.InitChain(abci.RequestInitChain{ChainId: chainId, AppStateBytes: genState})
 }
 
-func GenerateSpendMsg(sender, receiver sdk.AccAddress, amount sdk.Coins) MsgSend {
-	return MsgSend{
-		From: sender,
-		To:   receiver,
-		Amount: amount,
+func GenerateSpendMsg(sender, receiver sdk.AccAddress, amount sdk.Coins) bank.MsgSend {
+	return bank.MsgSend{
+		Inputs: []bank.Input{{sender, amount}},
+		Outputs: []bank.Output{{receiver, amount}},
 	}
 }
 
@@ -96,7 +96,7 @@ func TestMsgSend(t *testing.T) {
 	addr1 := priv1.PubKey().Address().Bytes()
 	addr2 := priv2.PubKey().Address().Bytes()
 
-	InitTestChain(bc, addr1)
+	InitTestChain(bc, "test-chain", addr1)
 
 	// Send funds to addr2
 	msg := GenerateSpendMsg(addr1, addr2, sdk.Coins{{"testCoin", sdk.NewInt(100)}})
@@ -124,7 +124,7 @@ func TestMsgSend(t *testing.T) {
 		Memo: "",
 	}
 
-	bc.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{ChainID: "test-chain"}})
+	bc.BeginBlock(abci.RequestBeginBlock{})
 
 	res := bc.Deliver(tx)
 

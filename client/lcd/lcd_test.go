@@ -768,7 +768,7 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 		"password": "%s",
 		"account_number": "%d",
 		"sequence": "%d",
-		"gas": "10000",
+		"gas": "20000",
 		"chain_id": "%s",
 		"delegations": [],
 		"begin_unbondings": [

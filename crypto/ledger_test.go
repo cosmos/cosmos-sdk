@@ -14,7 +14,7 @@ func TestRealLedgerSecp256k1(t *testing.T) {
 	if os.Getenv("WITH_LEDGER") == "" {
 		t.Skip("Set WITH_LEDGER to run code on real ledger")
 	}
-	msg := []byte("kuhehfeohg")
+	msg := []byte("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"5000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}")
 
 	path := DerivationPath{44, 60, 0, 0, 0}
 
@@ -27,17 +27,16 @@ func TestRealLedgerSecp256k1(t *testing.T) {
 	valid := pub.VerifyBytes(msg, sig)
 	require.True(t, valid)
 
-	// now, let's serialize the key and make sure it still works
-	bs := priv.Bytes()
-	priv2, err := tcrypto.PrivKeyFromBytes(bs)
+	// now, let's serialize the public key and make sure it still works
+	bs := priv.PubKey().Bytes()
+	pub2, err := tcrypto.PubKeyFromBytes(bs)
 	require.Nil(t, err, "%+v", err)
 
 	// make sure we get the same pubkey when we load from disk
-	pub2 := priv2.PubKey()
 	require.Equal(t, pub, pub2)
 
 	// signing with the loaded key should match the original pubkey
-	sig, err = priv2.Sign(msg)
+	sig, err = priv.Sign(msg)
 	require.Nil(t, err)
 	valid = pub.VerifyBytes(msg, sig)
 	require.True(t, valid)

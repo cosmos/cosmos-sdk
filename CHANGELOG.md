@@ -2,10 +2,12 @@
 
 ## 0.21.0
 
-*TBD*
+*July 13th, 2018*
 
 BREAKING CHANGES
 * [x/stake] Specify DelegatorAddress in MsgCreateValidator
+* [x/stake] Remove the use of global shares in the pool
+   * Remove the use of `PoolShares` type in `x/stake/validator` type - replace with `Status` `Tokens` fields
 * [x/auth] NewAccountMapper takes a constructor instead of a prototype
 * [keys] Keybase.Update function now takes in a function to get the newpass, rather than the password itself
 

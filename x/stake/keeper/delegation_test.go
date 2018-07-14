@@ -141,7 +141,7 @@ func TestUnbondingDelegation(t *testing.T) {
 func TestUnbondDelegation(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
-	pool.LooseTokens = 10
+	pool.LooseTokens = sdk.NewRat(10)
 
 	//create a validator and a delegator to that validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -151,8 +151,8 @@ func TestUnbondDelegation(t *testing.T) {
 	validator = keeper.UpdateValidator(ctx, validator)
 
 	pool = keeper.GetPool(ctx)
-	require.Equal(t, int64(10), pool.BondedTokens)
-	require.Equal(t, int64(10), validator.PoolShares.Bonded().RoundInt64())
+	require.Equal(t, int64(10), pool.BondedTokens.RoundInt64())
+	require.Equal(t, int64(10), validator.BondedTokens().RoundInt64())
 
 	delegation := types.Delegation{
 		DelegatorAddr: addrDels[0],
@@ -162,10 +162,10 @@ func TestUnbondDelegation(t *testing.T) {
 	keeper.SetDelegation(ctx, delegation)
 
 	var err error
-	var amount int64
+	var amount sdk.Rat
 	amount, err = keeper.unbond(ctx, addrDels[0], addrVals[0], sdk.NewRat(6))
 	require.NoError(t, err)
-	require.Equal(t, int64(6), amount) // shares to be added to an unbonding delegation / redelegation
+	require.Equal(t, int64(6), amount.RoundInt64()) // shares to be added to an unbonding delegation / redelegation
 
 	delegation, found := keeper.GetDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
@@ -174,9 +174,9 @@ func TestUnbondDelegation(t *testing.T) {
 	pool = keeper.GetPool(ctx)
 
 	require.Equal(t, int64(4), delegation.Shares.RoundInt64())
-	require.Equal(t, int64(4), validator.PoolShares.Bonded().RoundInt64())
-	require.Equal(t, int64(6), pool.LooseTokens, "%v", pool)
-	require.Equal(t, int64(4), pool.BondedTokens)
+	require.Equal(t, int64(4), validator.BondedTokens().RoundInt64())
+	require.Equal(t, int64(6), pool.LooseTokens.RoundInt64(), "%v", pool)
+	require.Equal(t, int64(4), pool.BondedTokens.RoundInt64())
 }
 
 // Make sure that that the retrieving the delegations doesn't affect the state

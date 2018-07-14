@@ -252,3 +252,11 @@ func RatsEqual(r1s, r2s []Rat) bool {
 func RatEq(t *testing.T, exp, got Rat) (*testing.T, bool, string, Rat, Rat) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
 }
+
+// minimum rational between two
+func MinRat(r1, r2 Rat) Rat {
+	if r1.LT(r2) {
+		return r1
+	}
+	return r2
+}

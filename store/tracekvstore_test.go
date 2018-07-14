@@ -11,9 +11,9 @@ import (
 )
 
 var kvPairs = []KVPair{
-	KVPair{Key: keyFmt(1), Value: valFmt(1)},
-	KVPair{Key: keyFmt(2), Value: valFmt(2)},
-	KVPair{Key: keyFmt(3), Value: valFmt(3)},
+	{Key: keyFmt(1), Value: valFmt(1)},
+	{Key: keyFmt(2), Value: valFmt(2)},
+	{Key: keyFmt(3), Value: valFmt(3)},
 }
 
 func newTraceKVStore(w io.Writer) *TraceKVStore {

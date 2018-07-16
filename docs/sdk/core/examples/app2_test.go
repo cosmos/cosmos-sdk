@@ -46,8 +46,7 @@ func TestEncoding(t *testing.T) {
 	tx1, err = testTxDecoder(encodedSendTx)
 	require.Nil(t, err, "Error decoding sendTx")
 
-	sendTxAfter, ok := tx1.(app2Tx)
-	require.True(t, ok, "Casting to app2Tx failed")
+	sendTxAfter := tx1.(app2Tx)
 	
 	require.Equal(t, sendTxBefore, sendTxAfter, "Transaction changed after encoding/decoding")
 
@@ -77,8 +76,7 @@ func TestEncoding(t *testing.T) {
 	tx2, err2 = testTxDecoder(encodedIssueTx)
 	require.Nil(t, err2, "Error decoding issue Tx")
 
-	issueTxAfter, ok := tx2.(app2Tx)
-	require.True(t, ok, "Casting to app2Tx failed")
+	issueTxAfter := tx2.(app2Tx)
 
 	require.Equal(t, issueTxBefore, issueTxAfter, "Transaction changed after encoding/decoding")
 

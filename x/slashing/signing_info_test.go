@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetSetValidatorSigningInfo(t *testing.T) {
-	ctx, _, _, keeper := createTestInput(t)
+	ctx, _, _, _, keeper := createTestInput(t)
 	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(addrs[0]))
 	require.False(t, found)
 	newInfo := ValidatorSigningInfo{
@@ -28,7 +28,7 @@ func TestGetSetValidatorSigningInfo(t *testing.T) {
 }
 
 func TestGetSetValidatorSigningBitArray(t *testing.T) {
-	ctx, _, _, keeper := createTestInput(t)
+	ctx, _, _, _, keeper := createTestInput(t)
 	signed := keeper.getValidatorSigningBitArray(ctx, sdk.ValAddress(addrs[0]), 0)
 	require.False(t, signed) // treat empty key as unsigned
 	keeper.setValidatorSigningBitArray(ctx, sdk.ValAddress(addrs[0]), 0, true)

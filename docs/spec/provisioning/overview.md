@@ -115,7 +115,7 @@ type powerChange struct {
     height      int64        // block height at change
     power       rational.Rat // total power at change
     prevpower   rational.Rat // total power at previous height-1 
-    feesin      coins.Coin   // fees in at block height
+    feesIn      coins.Coin   // fees-in at block height
     prevFeePool coins.Coin   // total fees in at previous block height
 }
 ```

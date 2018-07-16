@@ -1,7 +1,6 @@
 ## State
 
 ### Pool
-
  - key: `01`
  - value: `amino(pool)`
 

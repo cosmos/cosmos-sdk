@@ -1,5 +1,4 @@
-
-### Transaction Overview
+## Transaction Overview
 
 In this section we describe the processing of the transactions and the
 corresponding updates to the state. Transactions: 

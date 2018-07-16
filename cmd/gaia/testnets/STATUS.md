@@ -1,5 +1,9 @@
 # TESTNET STATUS
 
+## *July 16, 2018, 17:00 EST* - New Testnet Gaia-7000
+
+- Gaia-7000 is up!
+
 ## *July 2, 2018, 1:00 EST* - Gaia-6002 slashing failure
 
 - Gaia-6002 has been halted due to a slashing issue.

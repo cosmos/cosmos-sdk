@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 
-	"github.com/cosmos/cosmos-sdk/cmd/cosmos-sdk-cli/types"
+	"github.com/cosmos/cosmos-sdk/cmd/cosmos-sdk-cli/template/types"
 )
 
 const (

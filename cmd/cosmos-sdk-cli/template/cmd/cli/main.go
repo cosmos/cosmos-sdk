@@ -17,8 +17,8 @@ import (
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 
-	"github.com/cosmos/cosmos-sdk/cmd/cosmos-sdk-cli/app"
-	"github.com/cosmos/cosmos-sdk/cmd/cosmos-sdk-cli/types"
+	"github.com/cosmos/cosmos-sdk/cmd/cosmos-sdk-cli/template/app"
+	"github.com/cosmos/cosmos-sdk/cmd/cosmos-sdk-cli/template/types"
 )
 
 // rootCmd is the entry point for this binary

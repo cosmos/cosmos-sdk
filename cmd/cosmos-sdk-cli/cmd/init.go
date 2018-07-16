@@ -53,7 +53,7 @@ var initCmd = &cobra.Command{
 		fmt.Print("configuring the project in " + projectPath + "\n\n")
 		time.Sleep(2 * time.Second)
 		box := packr.NewBox("../template")
-		var replacer = strings.NewReplacer("MyAwesomeProject", capitalizedProjectName, "myawesomeproject", shortProjectName, "github.com/cosmos/cosmos-sdk/cmd/cosmos-sdk-cli", remoteProjectPath)
+		var replacer = strings.NewReplacer("MyAwesomeProject", capitalizedProjectName, "myawesomeproject", shortProjectName, "github.com/cosmos/cosmos-sdk/cmd/cosmos-sdk-cli/template", remoteProjectPath)
 		box.Walk(func(path string, file packr.File) error {
 			actualPath := replacer.Replace(path)
 			fmt.Println("Creating file: " + actualPath)

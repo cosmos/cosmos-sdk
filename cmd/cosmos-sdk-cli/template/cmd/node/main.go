@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -34,11 +35,11 @@ func MyAwesomeProjectAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (
 	return
 }
 
-func newApp(logger log.Logger, db dbm.DB) abci.Application {
+func newApp(logger log.Logger, db dbm.DB, _ io.Writer) abci.Application {
 	return app.NewMyAwesomeProjectApp(logger, db)
 }
 
-func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB) (json.RawMessage, []tmtypes.GenesisValidator, error) {
+func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB, _ io.Writer) (json.RawMessage, []tmtypes.GenesisValidator, error) {
 	dapp := app.NewMyAwesomeProjectApp(logger, db)
 	return dapp.ExportAppStateAndValidators()
 }

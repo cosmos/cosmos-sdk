@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.21.1
+
+*July 14th, 2018*
+
+BUG FIXES
+* [build] Added Ledger build support via `LEDGER_ENABLED=true|false`
+  * True by default except when cross-compiling
+
 ## 0.21.0
 
 *July 13th, 2018*

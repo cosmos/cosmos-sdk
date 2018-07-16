@@ -70,7 +70,8 @@ install_examples:
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democli
 
 install_cosmos-sdk-cli:
-	go install $(BUILD_FLAGS) ./cmd/cosmos-sdk-cli
+	packr install $(BUILD_FLAGS) ./cmd/cosmos-sdk-cli
+	packr clean
 
 install_debug:
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiadebug

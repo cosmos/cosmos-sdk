@@ -8,13 +8,14 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "cosmos-zone",
+	Use:   "cosmos-sdk-cli",
 	Short: "Tools to develop on cosmos-sdk",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Do Stuff Here
 	},
 }
 
+// Execute the command
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

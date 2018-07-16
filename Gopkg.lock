@@ -2,7 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
   name = "github.com/bartekn/go-bip39"
   packages = ["."]
   revision = "a05967ea095d81c8fe4833776774cfaff8e5036c"
@@ -80,6 +79,12 @@
   version = "v1.7.0"
 
 [[projects]]
+  name = "github.com/gobuffalo/packr"
+  packages = ["."]
+  revision = "bd47f2894846e32edcf9aa37290fef76c327883f"
+  version = "v1.11.1"
+
+[[projects]]
   name = "github.com/gogo/protobuf"
   packages = [
     "gogoproto",
@@ -135,7 +140,6 @@
     ".",
     "hcl/ast",
     "hcl/parser",
-    "hcl/printer",
     "hcl/scanner",
     "hcl/strconv",
     "hcl/token",
@@ -503,6 +507,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "94abff3ff321fd150a6e4b95d109297296cdc00693c648c9b2a48171b90e36b0"
+  inputs-digest = "2a655310c28a7f80cb2cfe5f2969182896aac09293344472de10e9135ddc364c"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -1,5 +1,5 @@
-PACKAGES=$(shell go list ./... | grep -v '/vendor/')
-PACKAGES_NOCLITEST=$(shell go list ./... | grep -v '/vendor/' | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test)
+PACKAGES=$(shell go list ./... | grep -v '/vendor/' | grep -v '/cosmos-sdk-cli/template')
+PACKAGES_NOCLITEST=$(shell go list ./... | grep -v '/vendor/' | grep -v '/cosmos-sdk-cli/template' | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test)
 COMMIT_HASH := $(shell git rev-parse --short HEAD)
 BUILD_TAGS = netgo ledger
 BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
@@ -37,6 +37,15 @@ endif
 build-linux:
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
 
+build_cosmos-sdk-cli:
+ifeq ($(OS),Windows_NT)
+	packr build $(BUILD_FLAGS) -o build/cosmos-sdk-cli.exe ./cmd/cosmos-sdk-cli
+	packr clean
+else
+	packr build $(BUILD_FLAGS) -o build/cosmos-sdk-cli ./cmd/cosmos-sdk-cli
+	packr clean
+endif
+
 build_examples:
 ifeq ($(OS),Windows_NT)
 	go build $(BUILD_FLAGS) -o build/basecoind.exe ./examples/basecoin/cmd/basecoind
@@ -60,6 +69,9 @@ install_examples:
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democoind
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democli
 
+install_cosmos-sdk-cli:
+	go install $(BUILD_FLAGS) ./cmd/cosmos-sdk-cli
+
 install_debug:
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiadebug
 
@@ -82,7 +94,7 @@ get_tools:
 get_vendor_deps:
 	@rm -rf vendor/
 	@echo "--> Running dep ensure"
-	@dep ensure -v
+	@dep ensure -v --vendor-only
 
 draw_deps:
 	@# requires brew install graphviz or apt-get install graphviz
@@ -116,9 +128,9 @@ test_cover:
 	@bash tests/test_cover.sh
 
 test_lint:
-	gometalinter.v2 --config=tools/gometalinter.json ./...
-	!(gometalinter.v2 --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
+	gometalinter.v2 --config=tools/gometalinter.json ./... --exclude cmd/cosmos-sdk-cli
+	!(gometalinter.v2 --disable-all --enable='errcheck' --vendor ./... | grep -v "client/" | grep -v "cosmos-sdk-cli/template/")
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "./cmd/cosmos-sdk-cli/*" -not -path "*.git*" | xargs gofmt -d -s
 	dep status >> /dev/null
 	!(grep -n branch Gopkg.toml)
 
@@ -193,7 +205,7 @@ remotenet-status:
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: build build_examples install install_examples install_debug dist \
+.PHONY: build build_cosmos-sdk-cli build_examples install install_examples install_cosmos-sdk-cli install_debug dist \
 check_tools get_tools get_vendor_deps draw_deps test test_cli test_unit \
 test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop remotenet-start \

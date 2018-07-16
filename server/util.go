@@ -77,16 +77,21 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 	rootDir := tmpConf.RootDir
 	configFilePath := filepath.Join(rootDir, "config/config.toml")
 	// Intercept only if the file doesn't already exist
+
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		// the following parse config is needed to create directories
-		sdkDefaultConfig, _ := tcmd.ParseConfig()
-		sdkDefaultConfig.ProfListenAddress = "prof_laddr=localhost:6060"
-		sdkDefaultConfig.P2P.RecvRate = 5120000
-		sdkDefaultConfig.P2P.SendRate = 5120000
-		cfg.WriteConfigFile(configFilePath, sdkDefaultConfig)
+		conf, _ = tcmd.ParseConfig()
+		conf.ProfListenAddress = "localhost:6060"
+		conf.P2P.RecvRate = 5120000
+		conf.P2P.SendRate = 5120000
+		conf.Consensus.TimeoutCommit = 5000
+		cfg.WriteConfigFile(configFilePath, conf)
 		// Fall through, just so that its parsed into memory.
 	}
-	conf, err = tcmd.ParseConfig()
+
+	if conf == nil {
+		conf, err = tcmd.ParseConfig()
+	}
 	return
 }
 

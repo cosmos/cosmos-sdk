@@ -134,7 +134,7 @@ func (app *MyAwesomeProjectApp) ExportAppStateAndValidators() (appState json.Raw
 	app.accountMapper.IterateAccounts(ctx, appendAccount)
 
 	genState := types.GenesisState{
-		Accounts:    accounts,
+		Accounts: accounts,
 	}
 	appState, err = wire.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {

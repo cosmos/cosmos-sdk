@@ -17,15 +17,15 @@ import (
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 
-	"_REMOTE_PROJECT_PATH_/app"
-	"_REMOTE_PROJECT_PATH_/types"
+	"github.com/cosmos/cosmos-sdk/cmd/cosmos-sdk-cli/app"
+	"github.com/cosmos/cosmos-sdk/cmd/cosmos-sdk-cli/types"
 )
 
 // rootCmd is the entry point for this binary
 var (
 	rootCmd = &cobra.Command{
-		Use:   "_PROJECT_SHORT_NAME_cli",
-		Short: "_CAPITALIZED_PROJECT_SHORT_NAME_ light-client",
+		Use:   "myawesomeprojectcli",
+		Short: "MyAwesomeProject light-client",
 	}
 )
 
@@ -56,7 +56,7 @@ func main() {
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),
 		)...)
-	// and now _PROJECT_SHORT_NAME_ specific commands here
+	// and now myawesomeproject specific commands here
 
 	// add proxy, version and key info
 	rootCmd.AddCommand(
@@ -68,7 +68,7 @@ func main() {
 	)
 
 	// prepare and add flags
-	executor := cli.PrepareMainCmd(rootCmd, "BC", os.ExpandEnv("$HOME/._PROJECT_SHORT_NAME_cli"))
+	executor := cli.PrepareMainCmd(rootCmd, "BC", os.ExpandEnv("$HOME/.myawesomeprojectcli"))
 	err := executor.Execute()
 	if err != nil {
 		// handle with #870

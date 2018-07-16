@@ -12,20 +12,20 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"_REMOTE_PROJECT_PATH_/app"
+	"github.com/cosmos/cosmos-sdk/cmd/cosmos-sdk-cli/app"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // init parameters
-var _CAPITALIZED_PROJECT_SHORT_NAME_AppInit = server.AppInit{
-	AppGenState: _CAPITALIZED_PROJECT_SHORT_NAME_AppGenState,
+var MyAwesomeProjectAppInit = server.AppInit{
+	AppGenState: MyAwesomeProjectAppGenState,
 	AppGenTx:    server.SimpleAppGenTx,
 }
 
 // GenAppParams sets up the app_state, append any other app specific components.
-func _CAPITALIZED_PROJECT_SHORT_NAME_AppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
+func MyAwesomeProjectAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
 	appState, err = server.SimpleAppGenState(cdc, appGenTxs)
 	if err != nil {
 		return
@@ -35,11 +35,11 @@ func _CAPITALIZED_PROJECT_SHORT_NAME_AppGenState(cdc *wire.Codec, appGenTxs []js
 }
 
 func newApp(logger log.Logger, db dbm.DB) abci.Application {
-	return app.New_CAPITALIZED_PROJECT_SHORT_NAME_App(logger, db)
+	return app.NewMyAwesomeProjectApp(logger, db)
 }
 
 func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB) (json.RawMessage, []tmtypes.GenesisValidator, error) {
-	dapp := app.New_CAPITALIZED_PROJECT_SHORT_NAME_App(logger, db)
+	dapp := app.NewMyAwesomeProjectApp(logger, db)
 	return dapp.ExportAppStateAndValidators()
 }
 
@@ -48,17 +48,17 @@ func main() {
 	ctx := server.NewDefaultContext()
 
 	rootCmd := &cobra.Command{
-		Use:               "_PROJECT_SHORT_NAME_d",
-		Short:             "_CAPITALIZED_PROJECT_SHORT_NAME_ Daemon (server)",
+		Use:               "myawesomeprojectd",
+		Short:             "MyAwesomeProject Daemon (server)",
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	server.AddCommands(ctx, cdc, rootCmd, _CAPITALIZED_PROJECT_SHORT_NAME_AppInit,
-		server.ConstructAppCreator(newApp, "_PROJECT_SHORT_NAME_"),
-		server.ConstructAppExporter(exportAppStateAndTMValidators, "_PROJECT_SHORT_NAME_"))
+	server.AddCommands(ctx, cdc, rootCmd, MyAwesomeProjectAppInit,
+		server.ConstructAppCreator(newApp, "myawesomeproject"),
+		server.ConstructAppExporter(exportAppStateAndTMValidators, "myawesomeproject"))
 
 	// prepare and add flags
-	rootDir := os.ExpandEnv("$HOME/._PROJECT_SHORT_NAME_d")
+	rootDir := os.ExpandEnv("$HOME/.myawesomeprojectd")
 	executor := cli.PrepareBaseCmd(rootCmd, "BC", rootDir)
 	err := executor.Execute()
 	if err != nil {

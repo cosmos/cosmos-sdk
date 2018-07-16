@@ -15,15 +15,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 
-	"_REMOTE_PROJECT_PATH_/types"
+	"github.com/cosmos/cosmos-sdk/cmd/cosmos-sdk-cli/types"
 )
 
 const (
-	appName = "_CAPITALIZED_PROJECT_SHORT_NAME_App"
+	appName = "MyAwesomeProjectApp"
 )
 
 // Extended ABCI application
-type _CAPITALIZED_PROJECT_SHORT_NAME_App struct {
+type MyAwesomeProjectApp struct {
 	*bam.BaseApp
 	cdc *wire.Codec
 
@@ -39,13 +39,13 @@ type _CAPITALIZED_PROJECT_SHORT_NAME_App struct {
 	accountMapper auth.AccountMapper
 }
 
-func New_CAPITALIZED_PROJECT_SHORT_NAME_App(logger log.Logger, db dbm.DB) *_CAPITALIZED_PROJECT_SHORT_NAME_App {
+func NewMyAwesomeProjectApp(logger log.Logger, db dbm.DB) *MyAwesomeProjectApp {
 
 	// Create app-level codec for txs and accounts.
 	var cdc = MakeCodec()
 
 	// Create your application object.
-	var app = &_CAPITALIZED_PROJECT_SHORT_NAME_App{
+	var app = &MyAwesomeProjectApp{
 		BaseApp:            bam.NewBaseApp(appName, cdc, logger, db),
 		cdc:                cdc,
 		capKeyMainStore:    sdk.NewKVStoreKey("main"),
@@ -84,16 +84,16 @@ func MakeCodec() *wire.Codec {
 
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
-	cdc.RegisterConcrete(&types.AppAccount{}, "_PROJECT_SHORT_NAME_/Account", nil)
+	cdc.RegisterConcrete(&types.AppAccount{}, "myawesomeproject/Account", nil)
 
 	cdc.Seal()
 
 	return cdc
 }
 
-// custom logic for _PROJECT_SHORT_NAME_ initialization
+// custom logic for myawesomeproject initialization
 // nolint: unparam
-func (app *_CAPITALIZED_PROJECT_SHORT_NAME_App) initChainerFn() sdk.InitChainer {
+func (app *MyAwesomeProjectApp) initChainerFn() sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		stateJSON := req.AppStateBytes
 
@@ -118,7 +118,7 @@ func (app *_CAPITALIZED_PROJECT_SHORT_NAME_App) initChainerFn() sdk.InitChainer 
 }
 
 // Custom logic for state export
-func (app *_CAPITALIZED_PROJECT_SHORT_NAME_App) ExportAppStateAndValidators() (appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
+func (app *MyAwesomeProjectApp) ExportAppStateAndValidators() (appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
 	ctx := app.NewContext(true, abci.Header{})
 
 	// iterate to get the accounts

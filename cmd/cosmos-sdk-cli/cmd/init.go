@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/gobuffalo/packr"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -59,6 +60,10 @@ var initCmd = &cobra.Command{
 			fmt.Println("Creating file: " + actualPath)
 			contents := box.String(path)
 			contents = replacer.Replace(contents)
+			if actualPath == "Gopkg.toml" {
+				versionReplacer := strings.NewReplacer("_COSMOS_VERSION_", version.Version)
+				contents = versionReplacer.Replace(contents)
+			}
 			lastIndex := strings.LastIndex(actualPath, string(os.PathSeparator))
 			rootDir := ""
 			if lastIndex != -1 {

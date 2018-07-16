@@ -50,6 +50,7 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	return app
 }
 
+// Update codec from app2 to register imported modules
 func UpdatedCodec() *wire.Codec {
 	cdc := wire.NewCodec()
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)

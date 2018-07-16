@@ -24,7 +24,7 @@ func newTestChain() *bapp.BaseApp {
 }
 
 // Initialize all provided addresses with 100 testCoin
-func InitTestChain(bc *bapp.BaseApp, chainId string, addrs ...sdk.AccAddress) {
+func InitTestChain(bc *bapp.BaseApp, chainID string, addrs ...sdk.AccAddress) {
 	var accounts []*GenesisAccount
 	for _, addr := range addrs {
 		acc := GenesisAccount{
@@ -38,7 +38,7 @@ func InitTestChain(bc *bapp.BaseApp, chainId string, addrs ...sdk.AccAddress) {
 	if err != nil {
 		panic(err)
 	}
-	bc.InitChain(abci.RequestInitChain{ChainId: chainId, AppStateBytes: genState})
+	bc.InitChain(abci.RequestInitChain{ChainId: chainID, AppStateBytes: genState})
 }
 
 // Generate basic SpendMsg with one input and output
@@ -49,7 +49,7 @@ func GenerateSpendMsg(sender, receiver sdk.AccAddress, amount sdk.Coins) bank.Ms
 	}
 }
 
-// Test spending nonexistant funds fails
+// Test spending nonexistent funds fails
 func TestBadMsg(t *testing.T) {
 	bc := newTestChain()
 
@@ -59,7 +59,7 @@ func TestBadMsg(t *testing.T) {
 	addr1 := priv1.PubKey().Address().Bytes()
 	addr2 := priv2.PubKey().Address().Bytes()
 
-	// Attempt to spend non-existant funds
+	// Attempt to spend non-existent funds
 	msg := GenerateSpendMsg(addr1, addr2, sdk.Coins{{"testCoin", sdk.NewInt(100)}})
 
 	// Construct transaction

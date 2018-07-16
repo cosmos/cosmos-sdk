@@ -70,7 +70,7 @@ var (
 	// TODO Temporarily set to 10 minutes for testnets
 	defaultDowntimeUnbondDuration int64 = 60 * 10
 
-	defaultMinSignedPerWindow sdk.Rat = sdk.NewRat(1, 2)
+	defaultMinSignedPerWindow = sdk.NewRat(1, 2)
 
 	defaultSlashFractionDoubleSign = sdk.NewRat(1).Quo(sdk.NewRat(20))
 

@@ -7,7 +7,7 @@ get_tools:
 	go get github.com/golang/dep/cmd/dep
 
 build:
-	go build -o bin/myawesomeprojectcli cmd/cli/main.go && go build -o bin/_PROJECT_SHORT_NAME_d cmd/node/main.go
+	go build -o bin/myawesomeprojectcli cmd/cli/main.go && go build -o bin/myawesomeprojectd cmd/node/main.go
 
 get_vendor_deps:
 	@rm -rf vendor/

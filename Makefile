@@ -5,7 +5,7 @@ BUILD_TAGS = netgo ledger
 BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
 GCC := $(shell command -v gcc 2> /dev/null)
 LEDGER_ENABLED ?= true
-all: get_tools get_vendor_deps install install_examples test_lint test
+all: get_tools get_vendor_deps install install_examples install_cosmos-sdk-cli test_lint test
 
 ########################################
 ### CI

@@ -1,11 +1,26 @@
 # Changelog
 
-## 0.21.2
-*July 16th, 2018*
+## PENDING
 
 Features
 * [cosmos-sdk-cli] Added support for cosmos-sdk-cli under cosmos-sdk/cmd
   This allows SDK users to init a new project repository with a single command.
+
+## 0.22.0
+
+*July 16th, 2018*
+
+BREAKING CHANGES
+* [x/gov] Increase VotingPeriod, DepositPeriod, and MinDeposit
+
+IMPROVEMENTS
+* [gaiad] Default config updates:
+    - `timeout_commit=5000` so blocks only made every 5s
+    - `prof_listen_addr=localhost:6060` so profile server is on by default
+    - `p2p.send_rate` and `p2p.recv_rate` increases 10x (~5MB/s)
+
+BUG FIXES
+* [server] Fix to actually overwrite default tendermint config
 
 ## 0.21.1
 

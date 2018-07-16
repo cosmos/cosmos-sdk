@@ -46,7 +46,7 @@
   name = "github.com/tendermint/go-wire"
 
 [[constraint]]
-  version = "~_COSMOS_VERSION_"
+  version = "~0.21.0"
   name = "github.com/cosmos/cosmos-sdk"
 
 [[override]]

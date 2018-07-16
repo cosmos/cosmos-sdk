@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.21.2
+*July 16th, 2018*
+
+Features
+* [cosmos-sdk-cli] Added support for cosmos-sdk-cli under cosmos-sdk/cmd
+  This allows SDK users to init a new project repository with a single command.
+
 ## 0.21.1
 
 *July 14th, 2018*

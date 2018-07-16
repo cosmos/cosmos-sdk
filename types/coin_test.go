@@ -19,7 +19,7 @@ func TestIsPositiveCoin(t *testing.T) {
 
 	for tcIndex, tc := range cases {
 		res := tc.inputOne.IsPositive()
-		require.Equal(t, tc.expected, res, "%s positivity is incorrect. tc #%d", tc.inputOne.String(), tcIndex)
+		require.Equal(t, tc.expected, res, "%s positivity is incorrect, tc #%d", tc.inputOne.String(), tcIndex)
 	}
 }
 
@@ -35,7 +35,7 @@ func TestIsNotNegativeCoin(t *testing.T) {
 
 	for tcIndex, tc := range cases {
 		res := tc.inputOne.IsNotNegative()
-		require.Equal(t, tc.expected, res, "%s not-negativity is incorrect. tc #%d", tc.inputOne.String(), tcIndex)
+		require.Equal(t, tc.expected, res, "%s not-negativity is incorrect, tc #%d", tc.inputOne.String(), tcIndex)
 	}
 }
 
@@ -54,7 +54,7 @@ func TestSameDenomAsCoin(t *testing.T) {
 
 	for tcIndex, tc := range cases {
 		res := tc.inputOne.SameDenomAs(tc.inputTwo)
-		require.Equal(t, tc.expected, res, "Coin denominations didn't match. tc #%d", tcIndex)
+		require.Equal(t, tc.expected, res, "coin denominations didn't match, tc #%d", tcIndex)
 	}
 }
 
@@ -72,7 +72,7 @@ func TestIsGTECoin(t *testing.T) {
 
 	for tcIndex, tc := range cases {
 		res := tc.inputOne.IsGTE(tc.inputTwo)
-		require.Equal(t, tc.expected, res, "Coin GTE relation is incorrect. tc #%d", tcIndex)
+		require.Equal(t, tc.expected, res, "coin GTE relation is incorrect, tc #%d", tcIndex)
 	}
 }
 
@@ -91,7 +91,7 @@ func TestIsEqualCoin(t *testing.T) {
 
 	for tcIndex, tc := range cases {
 		res := tc.inputOne.IsEqual(tc.inputTwo)
-		require.Equal(t, tc.expected, res, "Coin equality relation is incorrect. tc #%d", tcIndex)
+		require.Equal(t, tc.expected, res, "coin equality relation is incorrect, tc #%d", tcIndex)
 	}
 }
 
@@ -108,7 +108,7 @@ func TestPlusCoin(t *testing.T) {
 
 	for tcIndex, tc := range cases {
 		res := tc.inputOne.Plus(tc.inputTwo)
-		require.Equal(t, tc.expected, res, "Sum of coins is incorrect. tc #%d", tcIndex)
+		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 	}
 
 	tc := struct {
@@ -134,7 +134,7 @@ func TestMinusCoin(t *testing.T) {
 
 	for tcIndex, tc := range cases {
 		res := tc.inputOne.Minus(tc.inputTwo)
-		require.Equal(t, tc.expected, res, "Difference of coins is incorrect. tc #%d", tcIndex)
+		require.Equal(t, tc.expected, res, "difference of coins is incorrect, tc #%d", tcIndex)
 	}
 
 	tc := struct {
@@ -215,7 +215,7 @@ func TestPlusCoins(t *testing.T) {
 	for tcIndex, tc := range cases {
 		res := tc.inputOne.Plus(tc.inputTwo)
 		assert.True(t, res.IsValid())
-		require.Equal(t, tc.expected, res, "Sum of coins is incorrect. tc #%d", tcIndex)
+		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 	}
 }
 
@@ -247,7 +247,7 @@ func TestParse(t *testing.T) {
 		if !tc.valid {
 			require.NotNil(t, err, "%s: %#v. tc #%d", tc.input, res, tcIndex)
 		} else if assert.Nil(t, err, "%s: %+v", tc.input, err) {
-			require.Equal(t, tc.expected, res, "Coin parsing was incorrect. tc #%d", tcIndex)
+			require.Equal(t, tc.expected, res, "coin parsing was incorrect, tc #%d", tcIndex)
 		}
 	}
 
@@ -297,9 +297,9 @@ func TestSortCoins(t *testing.T) {
 	}
 
 	for tcIndex, tc := range cases {
-		require.Equal(t, tc.before, tc.coins.IsValid(), "Coin validity is incorrect before sorting. tc #%d", tcIndex)
+		require.Equal(t, tc.before, tc.coins.IsValid(), "coin validity is incorrect before sorting, tc #%d", tcIndex)
 		tc.coins.Sort()
-		require.Equal(t, tc.after, tc.coins.IsValid(), "Coin validity is incorrect after sorting. tc #%d", tcIndex)
+		require.Equal(t, tc.after, tc.coins.IsValid(), "coin validity is incorrect after sorting, tc #%d", tcIndex)
 	}
 }
 

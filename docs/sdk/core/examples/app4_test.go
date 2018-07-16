@@ -16,12 +16,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
+// Create and return App4 instance
 func newTestChain() *bapp.BaseApp {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 	db := dbm.NewMemDB()
 	return NewApp4(logger, db)
 }
 
+// Initialize all provided addresses with 100 testCoin
 func InitTestChain(bc *bapp.BaseApp, chainId string, addrs ...sdk.AccAddress) {
 	var accounts []*GenesisAccount
 	for _, addr := range addrs {
@@ -39,6 +41,7 @@ func InitTestChain(bc *bapp.BaseApp, chainId string, addrs ...sdk.AccAddress) {
 	bc.InitChain(abci.RequestInitChain{ChainId: chainId, AppStateBytes: genState})
 }
 
+// Generate basic SpendMsg with one input and output
 func GenerateSpendMsg(sender, receiver sdk.AccAddress, amount sdk.Coins) bank.MsgSend {
 	return bank.MsgSend{
 		Inputs: []bank.Input{{sender, amount}},
@@ -46,9 +49,11 @@ func GenerateSpendMsg(sender, receiver sdk.AccAddress, amount sdk.Coins) bank.Ms
 	}
 }
 
+// Test spending nonexistant funds fails
 func TestBadMsg(t *testing.T) {
 	bc := newTestChain()
 
+	// Create privkeys and addresses
 	priv1 := crypto.GenPrivKeyEd25519()
 	priv2 := crypto.GenPrivKeyEd25519()
 	addr1 := priv1.PubKey().Address().Bytes()
@@ -57,6 +62,7 @@ func TestBadMsg(t *testing.T) {
 	// Attempt to spend non-existant funds
 	msg := GenerateSpendMsg(addr1, addr2, sdk.Coins{{"testCoin", sdk.NewInt(100)}})
 
+	// Construct transaction
 	fee := auth.StdFee{
 		Gas: 1000000000000000,
 		Amount: sdk.Coins{{"testCoin", sdk.NewInt(0)}},
@@ -82,8 +88,10 @@ func TestBadMsg(t *testing.T) {
 
 	bc.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{ChainID: "test-chain"}})
 
+	// Deliver the transaction
 	res := bc.Deliver(tx)
 
+	// Check that tx failed
 	require.False(t, res.IsOK(), "Invalid tx passed")
 
 }

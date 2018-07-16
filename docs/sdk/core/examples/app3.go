@@ -39,7 +39,7 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	// Register message routes.
 	// Note the handler gets access to
 	app.Router().
-		AddRoute("send", bank.NewHandler(coinKeeper))
+		AddRoute("bank", bank.NewHandler(coinKeeper))
 
 	// Mount stores and load the latest state.
 	app.MountStoresIAVL(keyAccount, keyFees)

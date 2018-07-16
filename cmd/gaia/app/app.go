@@ -186,7 +186,11 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 
 // export the state of gaia for a genesis file
 func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
-	ctx := app.NewContext(true, abci.Header{})
+	// XXX: We need to call BeginBlock to initialize the deliver state.
+	// We can't get the checkState witout calling Commit or InitChain.
+	// Ideally, NewBaseApp can initialize the check state and we can just use that here.
+	app.BeginBlock(abci.RequestBeginBlock{})
+	ctx := app.NewContext(false, abci.Header{})
 
 	// iterate to get the accounts
 	accounts := []GenesisAccount{}

@@ -129,7 +129,7 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 // Procedures
 
 var (
-	defaultMinDeposit       int64 = 100
+	defaultMinDeposit       int64 = 10
 	defaultMaxDepositPeriod int64 = 10000
 	defaultVotingPeriod     int64 = 10000
 )

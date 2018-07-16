@@ -51,19 +51,19 @@ func TestNewFromDecimal(t *testing.T) {
 	for tcIndex, tc := range tests {
 		res, err := NewRatFromDecimal(tc.decimalStr, 4)
 		if tc.expErr {
-			require.NotNil(t, err, tc.decimalStr, "Did not error where expected. tc #%d", tcIndex)
+			require.NotNil(t, err, tc.decimalStr, "error expected, tc #%d", tcIndex)
 		} else {
-			require.Nil(t, err, tc.decimalStr, "Unexpectedly errored. tc #%d", tcIndex)
-			require.True(t, res.Equal(tc.exp), tc.decimalStr, "Equality was incorrect. tc #%d", tcIndex)
+			require.Nil(t, err, tc.decimalStr, "unexpected error, tc #%d", tcIndex)
+			require.True(t, res.Equal(tc.exp), tc.decimalStr, "equality was incorrect, tc #%d", tcIndex)
 		}
 
 		// negative tc
 		res, err = NewRatFromDecimal("-"+tc.decimalStr, 4)
 		if tc.expErr {
-			require.NotNil(t, err, tc.decimalStr, "Did not error where expected (negative case). tc #%d", tcIndex)
+			require.NotNil(t, err, tc.decimalStr, "error expected (negative case), tc #%d", tcIndex)
 		} else {
-			require.Nil(t, err, tc.decimalStr, "Unexpectedly errored (negative case). tc #%d", tcIndex)
-			require.True(t, res.Equal(tc.exp.Mul(NewRat(-1))), tc.decimalStr, "Equality was incorrect (negative case). tc #%d", tcIndex)
+			require.Nil(t, err, tc.decimalStr, "unexpected error (negative case), tc #%d", tcIndex)
+			require.True(t, res.Equal(tc.exp.Mul(NewRat(-1))), tc.decimalStr, "equality was incorrect (negative case), tc #%d", tcIndex)
 		}
 	}
 }
@@ -100,9 +100,9 @@ func TestEqualities(t *testing.T) {
 	}
 
 	for tcIndex, tc := range tests {
-		require.Equal(t, tc.gt, tc.r1.GT(tc.r2), "GT result is incorrect. tc #%d", tcIndex)
-		require.Equal(t, tc.lt, tc.r1.LT(tc.r2), "LT result is incorrect. tc #%d", tcIndex)
-		require.Equal(t, tc.eq, tc.r1.Equal(tc.r2), "Equality result is incorrect. tc #%d", tcIndex)
+		require.Equal(t, tc.gt, tc.r1.GT(tc.r2), "GT result is incorrect, tc #%d", tcIndex)
+		require.Equal(t, tc.lt, tc.r1.LT(tc.r2), "LT result is incorrect, tc #%d", tcIndex)
+		require.Equal(t, tc.eq, tc.r1.Equal(tc.r2), "equality result is incorrect, tc #%d", tcIndex)
 	}
 
 }
@@ -193,9 +193,9 @@ func TestRound(t *testing.T) {
 	}
 
 	for tcIndex, tc := range tests {
-		require.Equal(t, tc.res, tc.r.Round(tc.precFactor), "%v", tc.r, "Incorrect rounding. tc #%d", tcIndex)
+		require.Equal(t, tc.res, tc.r.Round(tc.precFactor), "%v", tc.r, "incorrect rounding, tc #%d", tcIndex)
 		negR1, negRes := tc.r.Mul(NewRat(-1)), tc.res.Mul(NewRat(-1))
-		require.Equal(t, negRes, negR1.Round(tc.precFactor), "%v", negR1, "Incorrect rounding (negative case). tc #%d", tcIndex)
+		require.Equal(t, negRes, negR1.Round(tc.precFactor), "%v", negR1, "incorrect rounding (negative case), tc #%d", tcIndex)
 	}
 }
 
@@ -212,7 +212,7 @@ func TestToLeftPadded(t *testing.T) {
 		{NewRat(1000, 3), 12, "000000000333"},
 	}
 	for tcIndex, tc := range tests {
-		require.Equal(t, tc.res, tc.rat.ToLeftPadded(tc.digits), "Incorrect left padding. tc #%d", tcIndex)
+		require.Equal(t, tc.res, tc.rat.ToLeftPadded(tc.digits), "incorrect left padding, tc #%d", tcIndex)
 	}
 }
 
@@ -301,8 +301,8 @@ func TestRatsEqual(t *testing.T) {
 	}
 
 	for tcIndex, tc := range tests {
-		require.Equal(t, tc.eq, RatsEqual(tc.r1s, tc.r2s), "Equality of rational arrays is incorrect. tc #%d", tcIndex)
-		require.Equal(t, tc.eq, RatsEqual(tc.r2s, tc.r1s), "Equality of rational arrays is incorrect (converse). tc #%d", tcIndex)
+		require.Equal(t, tc.eq, RatsEqual(tc.r1s, tc.r2s), "equality of rational arrays is incorrect, tc #%d", tcIndex)
+		require.Equal(t, tc.eq, RatsEqual(tc.r2s, tc.r1s), "equality of rational arrays is incorrect (converse), tc #%d", tcIndex)
 	}
 
 }

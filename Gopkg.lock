@@ -2,7 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
   name = "github.com/bartekn/go-bip39"
   packages = ["."]
   revision = "a05967ea095d81c8fe4833776774cfaff8e5036c"
@@ -135,7 +134,6 @@
     ".",
     "hcl/ast",
     "hcl/parser",
-    "hcl/printer",
     "hcl/scanner",
     "hcl/strconv",
     "hcl/token",
@@ -503,6 +501,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "94abff3ff321fd150a6e4b95d109297296cdc00693c648c9b2a48171b90e36b0"
+  inputs-digest = "71e86b1f1e9ec71901c20d8532dc8477df66eff37a407322379f6a8b03e5d91b"
   solver-name = "gps-cdcl"
   solver-version = 1

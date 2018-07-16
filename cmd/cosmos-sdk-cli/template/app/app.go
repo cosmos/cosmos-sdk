@@ -56,7 +56,7 @@ func NewMyAwesomeProjectApp(logger log.Logger, db dbm.DB) *MyAwesomeProjectApp {
 	app.accountMapper = auth.NewAccountMapper(
 		cdc,
 		app.capKeyAccountStore,  // target store
-		types.ProtoAppAccount(), // prototype
+		types.ProtoAppAccount, // prototype
 	)
 
 	// Add handlers.

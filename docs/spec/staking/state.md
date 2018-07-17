@@ -6,28 +6,17 @@
  - value: `amino(pool)`
 
 The pool is a space for all dynamic global state of the Cosmos Hub.  It tracks
-information about the total amounts of Atoms in all states, representative
-validator shares for stake in the global pools, moving Atom inflation
-information, etc.
+information about the total amounts of Atoms in all states, moving Atom
+inflation information, etc.
 
 ```golang
 type Pool struct {
-    LooseTokens int64   // tokens not associated with any validator
-    UnbondedTokens      int64   // reserve of unbonded tokens held with validators
-    UnbondingTokens     int64   // tokens moving from bonded to unbonded pool
+    LooseTokens         int64   // tokens not associated with any bonded validator
     BondedTokens        int64   // reserve of bonded tokens
-    UnbondedShares      sdk.Rat // sum of all shares distributed for the Unbonded Pool
-    UnbondingShares     sdk.Rat // shares moving from Bonded to Unbonded Pool
-    BondedShares        sdk.Rat // sum of all shares distributed for the Bonded Pool
     InflationLastTime   int64   // block which the last inflation was processed // TODO make time
     Inflation           sdk.Rat // current annual inflation rate
     
     DateLastCommissionReset int64  // unix timestamp for last commission accounting reset (daily)
-}
-
-type PoolShares struct {
-    Status sdk.BondStatus // either: unbonded, unbonding, or bonded
-    Amount sdk.Rat        // total shares of type ShareKind
 }
 ```
 
@@ -85,7 +74,8 @@ type Validator struct {
     ConsensusPubKey crypto.PubKey  // Tendermint consensus pubkey of validator
     Revoked         bool           // has the validator been revoked?
     
-    PoolShares      PoolShares     // total shares for tokens held in the pool
+	Status          sdk.BondStatus // validator status (bonded/unbonding/unbonded)
+	Tokens          sdk.Rat        // delegated tokens (incl. self-delegation)
     DelegatorShares sdk.Rat        // total shares issued to a validator's delegators
     SlashRatio      sdk.Rat        // increases each time the validator is slashed
     
@@ -100,7 +90,7 @@ type Validator struct {
     ProposerRewardPool sdk.Coins    // reward pool collected from being the proposer
     
     // TODO: maybe this belongs in distribution module ?
-    PrevPoolShares PoolShares  // total shares of a global hold pools
+	LastBondedTokens   sdk.Rat     // last bonded token amount
 }
 
 type CommissionInfo struct {

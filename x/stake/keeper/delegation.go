@@ -200,9 +200,9 @@ func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 
 //_____________________________________________________________________________________
 
-// Perform a delegation, set/update everything necessary within the store
+// Perform a delegation, set/update everything necessary within the store.
 func (k Keeper) Delegate(ctx sdk.Context, delegatorAddr sdk.AccAddress, bondAmt sdk.Coin,
-	validator types.Validator) (newShares sdk.Rat, err sdk.Error) {
+	validator types.Validator, subtractAccount bool) (newShares sdk.Rat, err sdk.Error) {
 
 	// Get or create the delegator delegation
 	delegation, found := k.GetDelegation(ctx, delegatorAddr, validator.Owner)
@@ -214,12 +214,15 @@ func (k Keeper) Delegate(ctx sdk.Context, delegatorAddr sdk.AccAddress, bondAmt 
 		}
 	}
 
-	// Account new shares, save
-	pool := k.GetPool(ctx)
-	_, _, err = k.coinKeeper.SubtractCoins(ctx, delegation.DelegatorAddr, sdk.Coins{bondAmt})
-	if err != nil {
-		return
+	if subtractAccount {
+		// Account new shares, save
+		_, _, err = k.coinKeeper.SubtractCoins(ctx, delegation.DelegatorAddr, sdk.Coins{bondAmt})
+		if err != nil {
+			return
+		}
 	}
+
+	pool := k.GetPool(ctx)
 	validator, pool, newShares = validator.AddTokensFromDel(pool, bondAmt.Amount.Int64())
 	delegation.Shares = delegation.Shares.Add(newShares)
 
@@ -235,7 +238,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delegatorAddr sdk.AccAddress, bondAmt 
 
 // unbond the the delegation return
 func (k Keeper) unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddress,
-	shares sdk.Rat) (amount int64, err sdk.Error) {
+	shares sdk.Rat) (amount sdk.Rat, err sdk.Error) {
 
 	// check if delegation has any shares in it unbond
 	delegation, found := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
@@ -303,7 +306,7 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr sdk
 	// create the unbonding delegation
 	params := k.GetParams(ctx)
 	minTime := ctx.BlockHeader().Time + params.UnbondingTime
-	balance := sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)}
+	balance := sdk.Coin{params.BondDenom, returnAmount.RoundInt()}
 
 	ubd := types.UnbondingDelegation{
 		DelegatorAddr:  delegatorAddr,
@@ -353,12 +356,12 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delegatorAddr, validatorSrcAd
 	}
 
 	params := k.GetParams(ctx)
-	returnCoin := sdk.Coin{params.BondDenom, sdk.NewInt(returnAmount)}
+	returnCoin := sdk.Coin{params.BondDenom, returnAmount.RoundInt()}
 	dstValidator, found := k.GetValidator(ctx, validatorDstAddr)
 	if !found {
 		return types.ErrBadRedelegationDst(k.Codespace())
 	}
-	sharesCreated, err := k.Delegate(ctx, delegatorAddr, returnCoin, dstValidator)
+	sharesCreated, err := k.Delegate(ctx, delegatorAddr, returnCoin, dstValidator, false)
 	if err != nil {
 		return err
 	}

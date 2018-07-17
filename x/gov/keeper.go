@@ -48,7 +48,7 @@ func (keeper Keeper) WireCodec() *wire.Codec {
 // Proposals
 
 // Creates a NewProposal
-func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description string, proposalType byte) Proposal {
+func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description string, proposalType ProposalKind) Proposal {
 	proposalID, err := keeper.getNewProposalID(ctx)
 	if err != nil {
 		return nil
@@ -128,18 +128,24 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 // =====================================================
 // Procedures
 
+var (
+	defaultMinDeposit       int64 = 10
+	defaultMaxDepositPeriod int64 = 10000
+	defaultVotingPeriod     int64 = 10000
+)
+
 // Gets procedure from store. TODO: move to global param store and allow for updating of this
 func (keeper Keeper) GetDepositProcedure() DepositProcedure {
 	return DepositProcedure{
-		MinDeposit:       sdk.Coins{sdk.NewCoin("steak", 10)},
-		MaxDepositPeriod: 200,
+		MinDeposit:       sdk.Coins{sdk.NewCoin("steak", defaultMinDeposit)},
+		MaxDepositPeriod: defaultMaxDepositPeriod,
 	}
 }
 
 // Gets procedure from store. TODO: move to global param store and allow for updating of this
 func (keeper Keeper) GetVotingProcedure() VotingProcedure {
 	return VotingProcedure{
-		VotingPeriod: 200,
+		VotingPeriod: defaultVotingPeriod,
 	}
 }
 
@@ -165,8 +171,8 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID int64, voterAddr sdk.Ac
 		return ErrInactiveProposal(keeper.codespace, proposalID)
 	}
 
-	if option != OptionYes && option != OptionAbstain && option != OptionNo && option != OptionNoWithVeto {
-		return ErrInvalidVote(keeper.codespace, VoteOptionToString(option))
+	if !validVoteOption(option) {
+		return ErrInvalidVote(keeper.codespace, option)
 	}
 
 	vote := Vote{

@@ -60,7 +60,7 @@ func (k Keeper) Validator(ctx sdk.Context, address sdk.AccAddress) sdk.Validator
 // total power from the bond
 func (k Keeper) TotalPower(ctx sdk.Context) sdk.Rat {
 	pool := k.GetPool(ctx)
-	return pool.BondedShares
+	return pool.BondedTokens
 }
 
 //__________________________________________________________________________

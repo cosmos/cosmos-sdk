@@ -35,12 +35,13 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 // Called every block, process inflation, update validator set
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Validator) {
 	pool := k.GetPool(ctx)
+	params := k.GetParams(ctx)
 
 	// Process types.Validator Provisions
 	blockTime := ctx.BlockHeader().Time
 	if pool.InflationLastTime+blockTime >= 3600 {
 		pool.InflationLastTime = blockTime
-		pool = k.ProcessProvisions(ctx)
+		pool = pool.ProcessProvisions(params)
 	}
 
 	// save the params
@@ -81,7 +82,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
-	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator)
+	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator, true)
 	if err != nil {
 		return err.Result()
 	}
@@ -136,7 +137,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	if validator.Revoked == true {
 		return ErrValidatorRevoked(k.Codespace()).Result()
 	}
-	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator)
+	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator, true)
 	if err != nil {
 		return err.Result()
 	}

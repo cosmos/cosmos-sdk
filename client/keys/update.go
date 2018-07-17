@@ -26,23 +26,23 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	buf := client.BufferStdin()
+	kb, err := GetKeyBase()
+	if err != nil {
+		return err
+	}
 	oldpass, err := client.GetPassword(
 		"Enter the current passphrase:", buf)
 	if err != nil {
 		return err
 	}
-	newpass, err := client.GetCheckPassword(
-		"Enter the new passphrase:",
-		"Repeat the new passphrase:", buf)
-	if err != nil {
-		return err
+
+	getNewpass := func() (string, error) {
+		return client.GetCheckPassword(
+			"Enter the new passphrase:",
+			"Repeat the new passphrase:", buf)
 	}
 
-	kb, err := GetKeyBase()
-	if err != nil {
-		return err
-	}
-	err = kb.Update(name, oldpass, newpass)
+	err = kb.Update(name, oldpass, getNewpass)
 	if err != nil {
 		return err
 	}
@@ -81,8 +81,10 @@ func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	getNewpass := func() (string, error) { return m.NewPassword, nil }
+
 	// TODO check if account exists and if password is correct
-	err = kb.Update(name, m.OldPassword, m.NewPassword)
+	err = kb.Update(name, m.OldPassword, getNewpass)
 	if err != nil {
 		w.WriteHeader(401)
 		w.Write([]byte(err.Error()))

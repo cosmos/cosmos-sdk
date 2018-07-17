@@ -100,7 +100,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	validator, _ := sk.GetValidatorByPubKey(ctx, val)
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 	pool := sk.GetPool(ctx)
-	require.Equal(t, int64(amtInt), pool.BondedTokens)
+	require.Equal(t, int64(amtInt), pool.BondedTokens.RoundInt64())
 
 	// 501st block missed
 	ctx = ctx.WithBlockHeight(height)
@@ -129,7 +129,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should have been slashed
 	pool = sk.GetPool(ctx)
-	require.Equal(t, int64(amtInt-1), pool.BondedTokens)
+	require.Equal(t, int64(amtInt-1), pool.BondedTokens.RoundInt64())
 
 	// validator start height should have been changed
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))
@@ -194,5 +194,5 @@ func TestHandleNewValidator(t *testing.T) {
 	validator, _ := sk.GetValidatorByPubKey(ctx, val)
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 	pool := sk.GetPool(ctx)
-	require.Equal(t, int64(100), pool.BondedTokens)
+	require.Equal(t, int64(100), pool.BondedTokens.RoundInt64())
 }

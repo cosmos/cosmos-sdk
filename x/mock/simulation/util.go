@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 )
 
@@ -28,4 +29,9 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 		remain--
 	}
 	return string(b)
+}
+
+func DisplayEvents(events map[string]uint) {
+	// TODO
+	fmt.Printf("Events: %v\n", events)
 }

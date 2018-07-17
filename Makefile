@@ -114,8 +114,10 @@ test_race:
 	@go test -race $(PACKAGES_NOCLITEST)
 
 test_sim:
+	@echo "Running individual module simulations..."
+	@go test $(PACKAGES_SIMTEST) -v
+	@echo "Running full Gaia simulation..."
 	@ENABLE_GAIA_SIMULATION=1 go test ./cmd/gaia/app -run TestFullGaiaSimulation -v
-	@go test $(PACKAGES_SIMTEST)
 
 test_cover:
 	@bash tests/test_cover.sh

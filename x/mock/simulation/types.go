@@ -15,7 +15,7 @@ type (
 	// about what this fuzzed tx actually did, for ease of debugging.
 	TestAndRunTx func(
 		t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		privKeys []crypto.PrivKey, log string,
+		privKeys []crypto.PrivKey, log string, event func(string),
 	) (action string, err sdk.Error)
 
 	// RandSetup performs the random setup the mock module needs.

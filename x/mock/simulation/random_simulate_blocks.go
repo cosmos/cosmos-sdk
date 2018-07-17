@@ -33,6 +33,12 @@ func SimulateFromSeed(
 	keys, addrs := mock.GeneratePrivKeyAddressPairs(numKeys)
 	r := rand.New(rand.NewSource(seed))
 
+	// Setup event stats
+	events := make(map[string]uint)
+	event := func(what string) {
+		events[what] += 1
+	}
+
 	app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, addrs)})
 	for i := 0; i < len(setups); i++ {
 		setups[i](r, keys)
@@ -53,7 +59,7 @@ func SimulateFromSeed(
 		// TODO: Add modes to simulate "no load", "medium load", and
 		// "high load" blocks.
 		for j := 0; j < blockSize; j++ {
-			logUpdate, err := ops[r.Intn(len(ops))](t, r, app, ctx, keys, log)
+			logUpdate, err := ops[r.Intn(len(ops))](t, r, app, ctx, keys, log, event)
 			log += "\n" + logUpdate
 
 			require.Nil(t, err, log)
@@ -63,6 +69,8 @@ func SimulateFromSeed(
 		app.EndBlock(abci.RequestEndBlock{})
 		header.Height++
 	}
+
+	DisplayEvents(events)
 }
 
 // AssertAllInvariants asserts a list of provided invariants against application state

@@ -1,5 +1,10 @@
 # Changelog
 
+## PENDING
+
+IMPROVEMENTS
+* [baseapp] Allow any alphanumeric character in route
+
 ## 0.22.0
 
 *July 16th, 2018*

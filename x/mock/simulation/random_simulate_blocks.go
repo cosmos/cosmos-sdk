@@ -1,4 +1,4 @@
-package mock
+package simulation
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -27,7 +28,7 @@ func RandomizedTestingFromSeed(
 	invariants []Invariant, numKeys int, numBlocks int, blockSize int,
 ) {
 	log := fmt.Sprintf("Starting SingleModuleTest with randomness created with seed %d", int(seed))
-	keys, _ := GeneratePrivKeyAddressPairs(numKeys)
+	keys, _ := mock.GeneratePrivKeyAddressPairs(numKeys)
 	r := rand.New(rand.NewSource(seed))
 
 	// XXX TODO

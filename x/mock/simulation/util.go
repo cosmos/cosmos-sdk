@@ -1,37 +1,8 @@
-package mock
+package simulation
 
 import (
-	"math/big"
 	"math/rand"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// BigInterval is a representation of the interval [lo, hi), where
-// lo and hi are both of type sdk.Int
-type BigInterval struct {
-	lo sdk.Int
-	hi sdk.Int
-}
-
-// RandFromBigInterval chooses an interval uniformly from the provided list of
-// BigIntervals, and then chooses an element from an interval uniformly at random.
-func RandFromBigInterval(r *rand.Rand, intervals []BigInterval) sdk.Int {
-	if len(intervals) == 0 {
-		return sdk.ZeroInt()
-	}
-
-	interval := intervals[r.Intn(len(intervals))]
-
-	lo := interval.lo
-	hi := interval.hi
-
-	diff := hi.Sub(lo)
-	result := sdk.NewIntFromBigInt(new(big.Int).Rand(r, diff.BigInt()))
-	result = result.Add(lo)
-
-	return result
-}
 
 // shamelessly copied from https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-golang#31832326
 

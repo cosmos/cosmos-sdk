@@ -9,7 +9,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	gaia "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	"github.com/cosmos/cosmos-sdk/x/mock"
+	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 )
 
 const (
@@ -26,11 +26,11 @@ func TestFullGaiaSimulation(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	mock.RandomizedTesting(
+	simulation.RandomizedTesting(
 		t, app.BaseApp,
-		[]mock.TestAndRunTx{},
-		[]mock.RandSetup{},
-		[]mock.Invariant{},
+		[]simulation.TestAndRunTx{},
+		[]simulation.RandSetup{},
+		[]simulation.Invariant{},
 		NumKeys,
 		NumBlocks,
 		BlockSize,

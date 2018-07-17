@@ -1,5 +1,16 @@
 # Changelog
 
+## TBD
+
+BREAKING CHANGES
+
+FEATURES
+* [lcd] Can now query governance proposals by ProposalStatus
+
+IMPROVEMENTS
+
+BUG FIXES
+
 ## 0.22.0
 
 *July 16th, 2018*
@@ -37,7 +48,6 @@ BREAKING CHANGES
 
 FEATURES
 * [baseapp] NewBaseApp now takes option functions as parameters
-* [lcd] Can now query governance proposals by ProposalStatus
 
 IMPROVEMENTS
 * Updated docs folder to accommodate cosmos.network docs project

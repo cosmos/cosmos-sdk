@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -13,17 +14,8 @@ type (
 	// transition was as expected. It returns a descriptive message "action"
 	// about what this fuzzed tx actually did, for ease of debugging.
 	TestAndRunTx func(
-		t *testing.T, r *rand.Rand, app *App, ctx sdk.Context,
+		t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		privKeys []crypto.PrivKey, log string,
-	) (action string, err sdk.Error)
-
-	// TestAndRunMsg produces a fuzzed message, calls the appropriate handler
-	// (bypassing all ante handler checks), and ensures that the state
-	// transition was as expected. It returns a descriptive message "action"
-	// about what this fuzzed msg actually did for ease of debugging.
-	TestAndRunMsg func(
-		t *testing.T, r *rand.Rand, ctx sdk.Context,
-		privKey []crypto.PrivKey, log string,
 	) (action string, err sdk.Error)
 
 	// RandSetup performs the random setup the mock module needs.
@@ -32,14 +24,14 @@ type (
 	// An Invariant is a function which tests a particular invariant.
 	// If the invariant has been broken, the function should halt the
 	// test and output the log.
-	Invariant func(t *testing.T, app *App, log string)
+	Invariant func(t *testing.T, app *baseapp.BaseApp, log string)
 )
 
 // PeriodicInvariant returns an Invariant function closure that asserts
 // a given invariant if the mock application's last block modulo the given
 // period is congruent to the given offset.
 func PeriodicInvariant(invariant Invariant, period int, offset int) Invariant {
-	return func(t *testing.T, app *App, log string) {
+	return func(t *testing.T, app *baseapp.BaseApp, log string) {
 		if int(app.LastBlockHeight())%period == offset {
 			invariant(t, app, log)
 		}

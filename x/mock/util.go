@@ -1,0 +1,60 @@
+package mock
+
+import (
+	"math/big"
+	"math/rand"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+// BigInterval is a representation of the interval [lo, hi), where
+// lo and hi are both of type sdk.Int
+type BigInterval struct {
+	lo sdk.Int
+	hi sdk.Int
+}
+
+// RandFromBigInterval chooses an interval uniformly from the provided list of
+// BigIntervals, and then chooses an element from an interval uniformly at random.
+func RandFromBigInterval(r *rand.Rand, intervals []BigInterval) sdk.Int {
+	if len(intervals) == 0 {
+		return sdk.ZeroInt()
+	}
+
+	interval := intervals[r.Intn(len(intervals))]
+
+	lo := interval.lo
+	hi := interval.hi
+
+	diff := hi.Sub(lo)
+	result := sdk.NewIntFromBigInt(new(big.Int).Rand(r, diff.BigInt()))
+	result = result.Add(lo)
+
+	return result
+}
+
+// shamelessly copied from https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-golang#31832326
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const (
+	letterIdxBits = 6                    // 6 bits to represent a letter index
+	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
+	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+)
+
+func RandStringOfLength(r *rand.Rand, n int) string {
+	b := make([]byte, n)
+	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
+	for i, cache, remain := n-1, r.Int63(), letterIdxMax; i >= 0; {
+		if remain == 0 {
+			cache, remain = r.Int63(), letterIdxMax
+		}
+		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
+			b[i] = letterBytes[idx]
+			i--
+		}
+		cache >>= letterIdxBits
+		remain--
+	}
+	return string(b)
+}

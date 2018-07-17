@@ -2,36 +2,36 @@ package mock
 
 import (
 	"fmt"
-	"math/big"
 	"math/rand"
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // RandomizedTesting tests application by sending random messages.
-func (app *App) RandomizedTesting(
-	t *testing.T, ops []TestAndRunTx, setups []RandSetup,
+func RandomizedTesting(
+	t *testing.T, app *baseapp.BaseApp, ops []TestAndRunTx, setups []RandSetup,
 	invariants []Invariant, numKeys int, numBlocks int, blockSize int,
 ) {
 	time := time.Now().UnixNano()
-	app.RandomizedTestingFromSeed(t, time, ops, setups, invariants, numKeys, numBlocks, blockSize)
+	RandomizedTestingFromSeed(t, app, time, ops, setups, invariants, numKeys, numBlocks, blockSize)
 }
 
 // RandomizedTestingFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
-func (app *App) RandomizedTestingFromSeed(
-	t *testing.T, seed int64, ops []TestAndRunTx, setups []RandSetup,
+func RandomizedTestingFromSeed(
+	t *testing.T, app *baseapp.BaseApp, seed int64, ops []TestAndRunTx, setups []RandSetup,
 	invariants []Invariant, numKeys int, numBlocks int, blockSize int,
 ) {
 	log := fmt.Sprintf("Starting SingleModuleTest with randomness created with seed %d", int(seed))
-	keys, addrs := GeneratePrivKeyAddressPairs(numKeys)
+	keys, _ := GeneratePrivKeyAddressPairs(numKeys)
 	r := rand.New(rand.NewSource(seed))
 
-	RandomSetGenesis(r, app, addrs, []string{"foocoin"})
+	// XXX TODO
+	// RandomSetGenesis(r, app, addrs, []string{"foocoin"})
 	app.InitChain(abci.RequestInitChain{})
 	for i := 0; i < len(setups); i++ {
 		setups[i](r, keys)
@@ -45,7 +45,7 @@ func (app *App) RandomizedTestingFromSeed(
 
 		// Make sure invariants hold at beginning of block and when nothing was
 		// done.
-		app.assertAllInvariants(t, invariants, log)
+		AssertAllInvariants(t, app, invariants, log)
 
 		ctx := app.NewContext(false, header)
 
@@ -56,7 +56,7 @@ func (app *App) RandomizedTestingFromSeed(
 			log += "\n" + logUpdate
 
 			require.Nil(t, err, log)
-			app.assertAllInvariants(t, invariants, log)
+			AssertAllInvariants(t, app, invariants, log)
 		}
 
 		app.EndBlock(abci.RequestEndBlock{})
@@ -64,100 +64,8 @@ func (app *App) RandomizedTestingFromSeed(
 	}
 }
 
-// SimpleRandomizedTestingFromSeed
-func (app *App) SimpleRandomizedTestingFromSeed(
-	t *testing.T, seed int64, ops []TestAndRunMsg, setups []RandSetup,
-	invariants []Invariant, numKeys int, numBlocks int, blockSize int,
-) {
-	log := fmt.Sprintf("Starting SimpleSingleModuleTest with randomness created with seed %d", int(seed))
-	keys, addrs := GeneratePrivKeyAddressPairs(numKeys)
-	r := rand.New(rand.NewSource(seed))
-
-	RandomSetGenesis(r, app, addrs, []string{"foocoin"})
-	app.InitChain(abci.RequestInitChain{})
-	for i := 0; i < len(setups); i++ {
-		setups[i](r, keys)
-	}
-	app.Commit()
-
-	header := abci.Header{Height: 0}
-
-	for i := 0; i < numBlocks; i++ {
-		app.BeginBlock(abci.RequestBeginBlock{})
-
-		app.assertAllInvariants(t, invariants, log)
-
-		ctx := app.NewContext(false, header)
-
-		// TODO: Add modes to simulate "no load", "medium load", and
-		// "high load" blocks.
-		for j := 0; j < blockSize; j++ {
-			logUpdate, err := ops[r.Intn(len(ops))](t, r, ctx, keys, log)
-			log += "\n" + logUpdate
-
-			require.Nil(t, err, log)
-			app.assertAllInvariants(t, invariants, log)
-		}
-
-		app.EndBlock(abci.RequestEndBlock{})
-		header.Height++
-	}
-}
-
-func (app *App) assertAllInvariants(t *testing.T, tests []Invariant, log string) {
+func AssertAllInvariants(t *testing.T, app *baseapp.BaseApp, tests []Invariant, log string) {
 	for i := 0; i < len(tests); i++ {
 		tests[i](t, app, log)
 	}
-}
-
-// BigInterval is a representation of the interval [lo, hi), where
-// lo and hi are both of type sdk.Int
-type BigInterval struct {
-	lo sdk.Int
-	hi sdk.Int
-}
-
-// RandFromBigInterval chooses an interval uniformly from the provided list of
-// BigIntervals, and then chooses an element from an interval uniformly at random.
-func RandFromBigInterval(r *rand.Rand, intervals []BigInterval) sdk.Int {
-	if len(intervals) == 0 {
-		return sdk.ZeroInt()
-	}
-
-	interval := intervals[r.Intn(len(intervals))]
-
-	lo := interval.lo
-	hi := interval.hi
-
-	diff := hi.Sub(lo)
-	result := sdk.NewIntFromBigInt(new(big.Int).Rand(r, diff.BigInt()))
-	result = result.Add(lo)
-
-	return result
-}
-
-// shamelessly copied from https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-golang#31832326
-
-const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-const (
-	letterIdxBits = 6                    // 6 bits to represent a letter index
-	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
-	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
-)
-
-func RandStringOfLength(r *rand.Rand, n int) string {
-	b := make([]byte, n)
-	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
-	for i, cache, remain := n-1, r.Int63(), letterIdxMax; i >= 0; {
-		if remain == 0 {
-			cache, remain = r.Int63(), letterIdxMax
-		}
-		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
-			b[i] = letterBytes[idx]
-			i--
-		}
-		cache >>= letterIdxBits
-		remain--
-	}
-	return string(b)
 }

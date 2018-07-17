@@ -1,5 +1,9 @@
 # Join the Testnet
 
+::: tip Current Testnet
+The current testnet is `gaia-7001`.
+:::
+
 Please ensure you have the [Cosmos SDK](/getting-started/installation.md) installed. If you ran a full node on a previous testnet, please skip to [Upgrading From Previous Testnet](#upgrading-from-previous-testnet).
 
 ## Setting Up a New Node

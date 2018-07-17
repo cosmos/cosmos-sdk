@@ -16,6 +16,6 @@ func TestFullGaiaSimulation(t *testing.T) {
 	// Setup Gaia application
 	logger := log.NewNopLogger()
 	db := dbm.NewMemDB()
-	app := gaia.NewGaiaApp(logger, db)
+	app := gaia.NewGaiaApp(logger, db, nil)
 	require.Equal(t, "GaiaApp", app.Name())
 }

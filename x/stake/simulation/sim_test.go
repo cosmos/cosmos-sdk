@@ -42,31 +42,21 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper) mock.Invariant {
 			loose = loose.Add(acc.GetCoins().AmountOf("steak"))
 			return false
 		})
-		require.True(t, sdk.NewInt(pool.LooseTokens).Equal(loose), "expected loose tokens to equal total steak held by accounts - pool.LooseTokens: %v, sum of account tokens: %v\nlog: %s",
+		require.True(t, pool.LooseTokens.RoundInt64() == loose.Int64(), "expected loose tokens to equal total steak held by accounts - pool.LooseTokens: %v, sum of account tokens: %v\nlog: %s",
 			pool.LooseTokens, loose, log)
 		stats["stake/invariant/looseTokens"] += 1
 
 		// Bonded tokens should equal sum of tokens with bonded validators
-		// Unbonded tokens should equal sum of tokens with unbonded validators
 		bonded := sdk.ZeroRat()
-		unbonded := sdk.ZeroRat()
 		k.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {
 			switch validator.GetStatus() {
 			case sdk.Bonded:
 				bonded = bonded.Add(validator.GetPower())
-			case sdk.Unbonding:
-				// TODO
-			case sdk.Unbonded:
-				unbonded = unbonded.Add(validator.GetPower())
 			}
 			return false
 		})
-		require.True(t, sdk.NewRat(pool.BondedTokens).Equal(bonded), "expected bonded tokens to equal total steak held by bonded validators\nlog: %s", log)
+		require.True(t, pool.BondedTokens.Equal(bonded), "expected bonded tokens to equal total steak held by bonded validators\nlog: %s", log)
 		stats["stake/invariant/bondedTokens"] += 1
-		require.True(t, sdk.NewRat(pool.UnbondedTokens).Equal(unbonded), "expected unbonded tokens to equal total steak held by unbonded validators\n log: %s", log)
-		stats["stake/invariant/unbondedTokens"] += 1
-
-		// TODO Unbonding tokens
 
 		// TODO Inflation check on total supply
 	}
@@ -321,7 +311,7 @@ func SimulationSetup(mapp *mock.App, k stake.Keeper) mock.RandSetup {
 			return false
 		})
 		pool := k.GetPool(ctx)
-		pool.LooseTokens += loose.Int64()
+		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewRat(loose.Int64(), 1))
 		k.SetPool(ctx, pool)
 	}
 }

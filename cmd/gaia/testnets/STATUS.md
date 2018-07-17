@@ -1,5 +1,10 @@
 # TESTNET STATUS
 
+## *July 17, 2018, 3:00 EST* - Gaia-7000 consensus failure
+
+- Misconfiguration in the genesis file led to a consensus failure
+- New genesis file for gaia-7001 will be up soon
+
 ## *July 17, 2018, 2:40 EST* - Gaia-7000 is making blocks!
 
 - Gaia-7000 is live and making blocks!

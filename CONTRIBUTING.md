@@ -69,9 +69,9 @@ includes its continuous integration status using a badge in the `README.md`.
 
 We expect tests to use `require` or `assert` rather than `t.Skip` or `t.Fail`,
 unless there is a reason to do otherwise.
-We prefer to use [table driven tests](https://github.com/golang/go/wiki/TableDrivenTests)
-where applicable.
-Error messages should follow the following format
+When testing a function under a variety of different inputs, we prefer to use
+[table driven tests](https://github.com/golang/go/wiki/TableDrivenTests).
+Table driven test error messages should follow the following format
 `<desc>, tc #<index>, i #<index>`.
 `<desc>` is an optional short description of whats failing, `tc` is the
 index within the table of the testcase that is failing, and `i` is when there

@@ -19,8 +19,8 @@ import (
 
 const (
 	NumKeys   = 10
-	NumBlocks = 1000
-	BlockSize = 1000
+	NumBlocks = 100
+	BlockSize = 500
 
 	simulationEnv = "ENABLE_GAIA_SIMULATION"
 )
@@ -38,9 +38,11 @@ func appStateFn(r *rand.Rand, accs []sdk.AccAddress) json.RawMessage {
 	}
 
 	// Default genesis state
+	stakeGenesis := stake.DefaultGenesisState()
+	stakeGenesis.Pool.LooseTokens = sdk.NewRat(1000)
 	genesis := GenesisState{
 		Accounts:  genesisAccounts,
-		StakeData: stake.DefaultGenesisState(),
+		StakeData: stakeGenesis,
 	}
 
 	// Marshal genesis

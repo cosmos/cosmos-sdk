@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"encoding/json"
+	"math/rand"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,8 +35,13 @@ func TestStakeWithRandomMessages(t *testing.T) {
 		panic(err)
 	}
 
+	appStateFn := func(r *rand.Rand, accs []sdk.AccAddress) json.RawMessage {
+		mock.RandomSetGenesis(r, mapp, accs, []string{"stake"})
+		return json.RawMessage("{}")
+	}
+
 	simulation.Simulate(
-		t, mapp.BaseApp, json.RawMessage("{}"),
+		t, mapp.BaseApp, appStateFn,
 		[]simulation.TestAndRunTx{
 			SimulateMsgCreateValidator(mapper, stakeKeeper),
 			SimulateMsgEditValidator(stakeKeeper),

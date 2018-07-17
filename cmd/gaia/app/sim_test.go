@@ -1,6 +1,8 @@
 package app
 
 import (
+	"encoding/json"
+	"math/rand"
 	"os"
 	"testing"
 
@@ -9,8 +11,10 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	stake "github.com/cosmos/cosmos-sdk/x/stake"
+	stakesim "github.com/cosmos/cosmos-sdk/x/stake/simulation"
 )
 
 const (
@@ -20,6 +24,33 @@ const (
 
 	simulationEnv = "ENABLE_GAIA_SIMULATION"
 )
+
+func appStateFn(r *rand.Rand, accs []sdk.AccAddress) json.RawMessage {
+	var genesisAccounts []GenesisAccount
+
+	// Randomly generate some genesis accounts
+	for _, addr := range accs {
+		coins := sdk.Coins{sdk.Coin{"steak", sdk.NewInt(100)}}
+		genesisAccounts = append(genesisAccounts, GenesisAccount{
+			Address: addr,
+			Coins:   coins,
+		})
+	}
+
+	// Default genesis state
+	genesis := GenesisState{
+		Accounts:  genesisAccounts,
+		StakeData: stake.DefaultGenesisState(),
+	}
+
+	// Marshal genesis
+	appState, err := MakeCodec().MarshalJSON(genesis)
+	if err != nil {
+		panic(err)
+	}
+
+	return appState
+}
 
 func TestFullGaiaSimulation(t *testing.T) {
 	if os.Getenv(simulationEnv) == "" {
@@ -32,24 +63,16 @@ func TestFullGaiaSimulation(t *testing.T) {
 	app := NewGaiaApp(logger, db, nil)
 	require.Equal(t, "GaiaApp", app.Name())
 
-	// Default genesis state
-	genesis := GenesisState{
-		Accounts:  []GenesisAccount{},
-		StakeData: stake.DefaultGenesisState(),
-	}
-
-	// Marshal genesis
-	appState, err := MakeCodec().MarshalJSON(genesis)
-	if err != nil {
-		panic(err)
-	}
-
 	// Run randomized simulation
 	simulation.Simulate(
-		t, app.BaseApp, appState,
-		[]simulation.TestAndRunTx{},
+		t, app.BaseApp, appStateFn,
+		[]simulation.TestAndRunTx{
+			stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper),
+		},
 		[]simulation.RandSetup{},
-		[]simulation.Invariant{},
+		[]simulation.Invariant{
+			stakesim.AllInvariants(app.coinKeeper, app.stakeKeeper, app.accountMapper),
+		},
 		NumKeys,
 		NumBlocks,
 		BlockSize,

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -15,26 +16,24 @@ import (
 
 // Simulate tests application by sending random messages.
 func Simulate(
-	t *testing.T, app *baseapp.BaseApp, appState json.RawMessage, ops []TestAndRunTx, setups []RandSetup,
+	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, accs []sdk.AccAddress) json.RawMessage, ops []TestAndRunTx, setups []RandSetup,
 	invariants []Invariant, numKeys int, numBlocks int, blockSize int,
 ) {
 	time := time.Now().UnixNano()
-	SimulateFromSeed(t, app, appState, time, ops, setups, invariants, numKeys, numBlocks, blockSize)
+	SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numKeys, numBlocks, blockSize)
 }
 
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
 func SimulateFromSeed(
-	t *testing.T, app *baseapp.BaseApp, appState json.RawMessage, seed int64, ops []TestAndRunTx, setups []RandSetup,
+	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, accs []sdk.AccAddress) json.RawMessage, seed int64, ops []TestAndRunTx, setups []RandSetup,
 	invariants []Invariant, numKeys int, numBlocks int, blockSize int,
 ) {
-	log := fmt.Sprintf("Starting SingleModuleTest with randomness created with seed %d", int(seed))
-	keys, _ := mock.GeneratePrivKeyAddressPairs(numKeys)
+	log := fmt.Sprintf("Starting SimulateFromSeed with randomness created with seed %d", int(seed))
+	keys, addrs := mock.GeneratePrivKeyAddressPairs(numKeys)
 	r := rand.New(rand.NewSource(seed))
 
-	// XXX TODO
-	// RandomSetGenesis(r, app, addrs, []string{"foocoin"})
-	app.InitChain(abci.RequestInitChain{AppStateBytes: appState})
+	app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, addrs)})
 	for i := 0; i < len(setups); i++ {
 		setups[i](r, keys)
 	}
@@ -66,6 +65,7 @@ func SimulateFromSeed(
 	}
 }
 
+// AssertAllInvariants asserts a list of provided invariants against application state
 func AssertAllInvariants(t *testing.T, app *baseapp.BaseApp, tests []Invariant, log string) {
 	for i := 0; i < len(tests); i++ {
 		tests[i](t, app, log)

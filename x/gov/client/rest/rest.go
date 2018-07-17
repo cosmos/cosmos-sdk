@@ -16,10 +16,11 @@ import (
 // REST Variable names
 // nolint
 const (
-	RestProposalID = "proposalID"
-	RestDepositer  = "depositer"
-	RestVoter      = "voter"
-	storeName      = "gov"
+	RestProposalID     = "proposalID"
+	RestDepositer      = "depositer"
+	RestVoter          = "voter"
+	RestProposalStatus = "status"
+	storeName          = "gov"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
@@ -340,10 +341,12 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		bechVoterAddr := r.URL.Query().Get(RestVoter)
 		bechDepositerAddr := r.URL.Query().Get(RestDepositer)
+		strProposalStatus := r.URL.Query().Get(RestProposalStatus)
 
 		var err error
 		var voterAddr sdk.AccAddress
 		var depositerAddr sdk.AccAddress
+		var proposalStatus gov.ProposalStatus
 
 		if len(bechVoterAddr) != 0 {
 			voterAddr, err = sdk.AccAddressFromBech32(bechVoterAddr)
@@ -360,6 +363,16 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				err := errors.Errorf("'%s' needs to be bech32 encoded", RestDepositer)
+				w.Write([]byte(err.Error()))
+				return
+			}
+		}
+
+		if len(strProposalStatus) != 0 {
+			proposalStatus, err = gov.ProposalStatusFromString(strProposalStatus)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				err := errors.Errorf("'%s' is not a valid Proposal Status", strProposalStatus)
 				w.Write([]byte(err.Error()))
 				return
 			}
@@ -397,8 +410,15 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 			if err != nil || len(res) == 0 {
 				continue
 			}
+
 			var proposal gov.Proposal
 			cdc.MustUnmarshalBinary(res, &proposal)
+
+			if len(strProposalStatus) != 0 {
+				if proposal.GetStatus() != proposalStatus {
+					continue
+				}
+			}
 
 			matchingProposals = append(matchingProposals, proposal)
 		}

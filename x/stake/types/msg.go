@@ -21,7 +21,7 @@ var _, _ sdk.Msg = &MsgBeginUnbonding{}, &MsgCompleteUnbonding{}
 var _, _ sdk.Msg = &MsgBeginRedelegate{}, &MsgCompleteRedelegate{}
 
 // Initialize Int for the denominator
-var maximumBondingRationalDenominator sdk.Int = sdk.NewInt(int64(math.Pow10(MaxBondDenominatorPrecision)))
+var maximumBondingRationalDenominator = sdk.NewInt(int64(math.Pow10(MaxBondDenominatorPrecision)))
 
 //______________________________________________________________________
 

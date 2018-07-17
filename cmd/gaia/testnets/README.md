@@ -62,6 +62,47 @@ moniker = "<your_custom_moniker>"
 
 Your full node has been initialized!
 
+## Upgrading From Previous Testnet
+
+These instructions are for full nodes that have ran on previous testnets and
+would like to upgrade to the latest testnet.
+
+### Reset Data
+
+First, remove the outdated files and reset the data.
+
+```bash
+rm $HOME/.gaiad/config/addrbook.json $HOME/.gaiad/config/genesis.json
+gaiad unsafe_reset_all
+```
+
+Your node is now in a pristine state while keeping the original `priv_validator.json` and `config.toml`. 
+If you had any sentry nodes or full nodes setup before, your node will still try to connect to them, 
+but may fail if they haven't also been upgraded.
+
+**WARNING:** Make sure that every node has a unique `priv_validator.json`.
+Do not copy the `priv_validator.json` from an old node to multiple new nodes.
+Running two nodes with the same `priv_validator.json` will cause you to double sign.
+
+NOTE: key formats changed between gaia-6002 and gaia-7000. If you're trying to upgrade from gaia-6002,
+you will also need to delete your `priv_validator.json`:
+
+```
+rm $HOME/.gaiad/config/priv_validator.json
+```
+
+### Software Upgrade
+
+Now it is time to upgrade the software:
+
+```bash
+cd $GOPATH/src/github.com/cosmos/cosmos-sdk
+git fetch --all && git checkout v0.22.0
+make update_tools && make get_vendor_deps && make install
+```
+
+Your full node has been cleanly upgraded!
+
 ## Genesis & Seeds
 
 ### Copy the Genesis File

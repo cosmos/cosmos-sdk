@@ -56,11 +56,6 @@ func copyBasecoinTemplate(projectName string, projectPath string, remoteProjectP
 		}
 		return nil
 	})
-
-	//Copy the entire basecoin directory to the project path.
-	//os.MkdirAll(projectPath+string(os.PathSeparator)+rootDir, os.ModePerm)
-	//filePath := projectPath + string(os.PathSeparator) + actualPath
-	//ioutil.WriteFile(filePath, []byte(contents), os.ModePerm)
 }
 
 func createGopkg(projectPath string) {

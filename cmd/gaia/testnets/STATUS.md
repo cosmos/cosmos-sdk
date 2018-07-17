@@ -1,8 +1,13 @@
 # TESTNET STATUS
 
+## *July 17, 2018, 2:40 EST* - Gaia-7000 is making blocks!
+
+- Gaia-7000 is live and making blocks!
+
 ## *July 16, 2018, 17:00 EST* - New Testnet Gaia-7000
 
 - Gaia-7000 is up!
+- 108 validators in the genesis.json file.
 
 ## *July 2, 2018, 1:00 EST* - Gaia-6002 slashing failure
 

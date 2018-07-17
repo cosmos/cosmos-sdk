@@ -1,5 +1,10 @@
 # TESTNET STATUS
 
+## *July 17, 2018, 4:00 EST* - New Testnet Gaia-7001 
+
+- New testnet with fixes for the genesis file 
+- Increased max validators to 128
+
 ## *July 17, 2018, 3:00 EST* - Gaia-7000 consensus failure
 
 - Misconfiguration in the genesis file led to a consensus failure

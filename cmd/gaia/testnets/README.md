@@ -1,4 +1,4 @@
-# Connect to the `gaia-7000` Testnet
+# Connect to the `gaia-7001` Testnet
 
 _**NOTE:**_ We are aware this documentation is a work in progress. We are actively
 working to improve the tooling and the documentation to make this process as painless as
@@ -70,7 +70,7 @@ Fetch the testnet's `genesis.json` file and place it in `gaiad`'s config directo
 
 ```bash
 mkdir -p $HOME/.gaiad/config
-curl https://gist.githubusercontent.com/cwgoes/00dfd24c104fc3d704692f04adf4fd35/raw/1d5ee526d22e48ff6717b1b514dca02f8b14a932/gaia-7000-final.json > $HOME/.gaiad/config/genesis.json
+curl https://gist.githubusercontent.com/cwgoes/311da6ba05be6e113185a716538a44c3/raw/7b6e784cf29761b5781488006313bd69d164aa6c/chris-final.json > $HOME/.gaiad/config/genesis.json
 ```
 
 ### Add Seed Nodes
@@ -188,7 +188,7 @@ gaiacli stake create-validator \
   --pubkey=$(gaiad tendermint show_validator) \
   --address-validator=<account_cosmosaccaddr>
   --moniker="choose a moniker" \
-  --chain-id=gaia-7000 \
+  --chain-id=gaia-7001 \
   --from=<key_name>
 ```
 
@@ -205,7 +205,7 @@ gaiacli stake edit-validator
   --website="https://cosmos.network" \
   --keybase-sig="6A0D65E29A4CBC8E"
   --details="To infinity and beyond!"
-  --chain-id=gaia-7000 \
+  --chain-id=gaia-7001 \
   --from=<key_name>
 ```
 
@@ -215,7 +215,7 @@ View the validator's information with this command:
 ```bash
 gaiacli stake validator \
   --address-validator=<account_cosmosaccaddr> \
-  --chain-id=gaia-7000
+  --chain-id=gaia-7001
 ```
 
 Your validator is active if the following command returns anything:
@@ -230,7 +230,7 @@ You should also be able to see your validator on the [Explorer](https://explorec
 
 ### Problem #1: My validator has `voting_power: 0`
 
-Your validator has become auto-unbonded. In `gaia-7000`, we unbond validators if they do not vote on `50` of the last `100` blocks. Since blocks are proposed every ~2 seconds, a validator unresponsive for ~100 seconds will become unbonded. This usually happens when your `gaiad` process crashes.
+Your validator has become auto-unbonded. In `gaia-7001`, we unbond validators if they do not vote on `50` of the last `100` blocks. Since blocks are proposed every ~2 seconds, a validator unresponsive for ~100 seconds will become unbonded. This usually happens when your `gaiad` process crashes.
 
 Here's how you can return the voting power back to your validator. First, if `gaiad` is not running, start it up again:
 
@@ -241,7 +241,7 @@ gaiad start
 Wait for your full node to catch up to the latest block. Next, run the following command. Note that `<cosmosaccaddr>` is the address of your validator account, and `<name>` is the name of the validator account. You can find this info by running `gaiacli keys list`.
 
 ```bash
-gaiacli stake unrevoke <cosmosaccaddr> --chain-id=gaia-7000 --from=<name>
+gaiacli stake unrevoke <cosmosaccaddr> --chain-id=gaia-7001 --from=<name>
 ```
 
 **WARNING:** If you don't wait for `gaiad` to sync before running `unrevoke`, you will receive an error message telling you your validator is still jailed.
@@ -291,7 +291,7 @@ gaiacli stake delegate \
   --address-delegator=<account_cosmosaccaddr> \
   --address-validator=<validator_cosmosaccaddr> \
   --from=<key_name> \
-  --chain-id=gaia-7000
+  --chain-id=gaia-7001
 ```
 
 While tokens are bonded, they are pooled with all the other bonded tokens in the network. Validators and delegators obtain a percentage of shares that equal their stake in this pool.
@@ -308,7 +308,7 @@ gaiacli stake unbond \
   --address-validator=<validator_cosmosaccaddr> \
   --shares=MAX \
   --from=<key_name> \
-  --chain-id=gaia-7000
+  --chain-id=gaia-7001
 ```
 
 You can check your balance and your stake delegation to see that the unbonding went through successfully.
@@ -319,7 +319,7 @@ gaiacli account <account_cosmosaccaddr>
 gaiacli stake delegation \
   --address-delegator=<account_cosmosaccaddr> \
   --address-validator=<validator_cosmosaccaddr> \
-  --chain-id=gaia-7000
+  --chain-id=gaia-7001
 ```
 
 ## Governance
@@ -353,7 +353,7 @@ gaiacli gov submit-proposal \
   --proposer=<account_cosmosaccaddr> \
   --deposit=<40steak> \
   --from=<name> \
-  --chain-id=gaia-7000
+  --chain-id=gaia-7001
 ```
 
 
@@ -367,7 +367,7 @@ gaiacli gov deposit \
   --depositer=<account_cosmosaccaddr> \
   --deposit=<200steak> \
   --from=<name> \
-  --chain-id=gaia-7000
+  --chain-id=gaia-7001
 ```
 
 > _NOTE_: Proposals that don't meet this requirement will be deleted after `MaxDepositPeriod` is reached.
@@ -379,7 +379,7 @@ Once created, you can now query information of the proposal:
 ```bash
 gaiacli gov query-proposal \
   --proposalID=<proposal_id> \
-  --chain-id=gaia-7000
+  --chain-id=gaia-7001
 ```
 
 ### Vote on a proposal
@@ -392,7 +392,7 @@ gaiacli gov vote \
   --voter=<account_cosmosaccaddr> \
   --option=<Yes/No/NoWithVeto/Abstain> \
   --from=<name> \
-  --chain-id=gaia-7000
+  --chain-id=gaia-7001
 ```
 
 #### Query vote
@@ -403,7 +403,7 @@ Check the vote with the option you just submitted:
 gaiacli gov query-vote \
   --proposalID=<proposal_id> \
   --voter=<account_cosmosaccaddr> \
-  --chain-id=gaia-7000
+  --chain-id=gaia-7001
 ```
 
 ## Other Operations
@@ -413,7 +413,7 @@ gaiacli gov query-vote \
 ```bash
 gaiacli send \
   --amount=10faucetToken \
-  --chain-id=gaia-7000 \
+  --chain-id=gaia-7001 \
   --from=<key_name> \
   --to=<destination_cosmosaccaddr>
 ```

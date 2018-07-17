@@ -10,9 +10,6 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "cosmos-sdk-cli",
 	Short: "Tools to develop on cosmos-sdk",
-	Run: func(cmd *cobra.Command, args []string) {
-		// Do Stuff Here
-	},
 }
 
 // Execute the command

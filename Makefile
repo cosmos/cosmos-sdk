@@ -1,5 +1,5 @@
-PACKAGES=$(shell go list ./... | grep -v '/vendor/' | grep -v '/cosmos-sdk-cli/template')
-PACKAGES_NOCLITEST=$(shell go list ./... | grep -v '/vendor/' | grep -v '/cosmos-sdk-cli/template' | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test)
+PACKAGES=$(shell go list ./... | grep -v '/vendor/')
+PACKAGES_NOCLITEST=$(shell go list ./... | grep -v '/vendor/' | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test)
 COMMIT_HASH := $(shell git rev-parse --short HEAD)
 BUILD_TAGS = netgo ledger
 BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
@@ -39,11 +39,9 @@ build-linux:
 
 build_cosmos-sdk-cli:
 ifeq ($(OS),Windows_NT)
-	packr build $(BUILD_FLAGS) -o build/cosmos-sdk-cli.exe ./cmd/cosmos-sdk-cli
-	packr clean
+	go build $(BUILD_FLAGS) -o build/cosmos-sdk-cli.exe ./cmd/cosmos-sdk-cli
 else
-	packr build $(BUILD_FLAGS) -o build/cosmos-sdk-cli ./cmd/cosmos-sdk-cli
-	packr clean
+	go build $(BUILD_FLAGS) -o build/cosmos-sdk-cli ./cmd/cosmos-sdk-cli
 endif
 
 build_examples:
@@ -70,8 +68,7 @@ install_examples:
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democli
 
 install_cosmos-sdk-cli:
-	packr install $(BUILD_FLAGS) ./cmd/cosmos-sdk-cli
-	packr clean
+	go install $(BUILD_FLAGS) ./cmd/cosmos-sdk-cli
 
 install_debug:
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiadebug
@@ -95,7 +92,7 @@ get_tools:
 get_vendor_deps:
 	@rm -rf vendor/
 	@echo "--> Running dep ensure"
-	@dep ensure -v --vendor-only
+	@dep ensure -v
 
 draw_deps:
 	@# requires brew install graphviz or apt-get install graphviz
@@ -129,9 +126,9 @@ test_cover:
 	@bash tests/test_cover.sh
 
 test_lint:
-	gometalinter.v2 --config=tools/gometalinter.json ./... --exclude cmd/cosmos-sdk-cli/template
-	!(gometalinter.v2 --disable-all --enable='errcheck' --vendor ./... | grep -v "client/" | grep -v "cosmos-sdk-cli/template/")
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "./cmd/cosmos-sdk-cli/template" -not -path "*.git*" | xargs gofmt -d -s
+	gometalinter.v2 --config=tools/gometalinter.json ./...
+	!(gometalinter.v2 --disable-all --enable='errcheck' --vendor ./... | grep -v "client/" )
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	dep status >> /dev/null
 	!(grep -n branch Gopkg.toml)
 

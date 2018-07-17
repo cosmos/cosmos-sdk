@@ -13,7 +13,6 @@ MISSPELL = github.com/client9/misspell/cmd/misspell
 ERRCHECK = github.com/kisielk/errcheck
 UNPARAM = mvdan.cc/unparam
 GOCYCLO = github.com/alecthomas/gocyclo
-PACKR = github.com/gobuffalo/packr
 
 DEP_CHECK := $(shell command -v dep 2> /dev/null)
 GOLINT_CHECK := $(shell command -v golint 2> /dev/null)
@@ -24,7 +23,6 @@ MISSPELL_CHECK := $(shell command -v misspell 2> /dev/null)
 ERRCHECK_CHECK := $(shell command -v errcheck 2> /dev/null)
 UNPARAM_CHECK := $(shell command -v unparam 2> /dev/null)
 GOCYCLO_CHECK := $(shell command -v gocyclo 2> /dev/null)
-PACKR_CHECK := $(shell command -v packr 2> /dev/null)
 
 check_tools:
 ifndef DEP_CHECK
@@ -71,11 +69,6 @@ ifndef GOCYCLO_CHECK
 	@echo "No gocyclo in path.  Install with 'make get_tools'."
 else
 	@echo "Found gocyclo in path."
-endif
-ifndef PACKR_CHECK
-	@echo "No packr in path. Install with make get_tools'."
-else
-	@echo "Found packr in path."
 endif
 
 get_tools:
@@ -133,12 +126,6 @@ else
 	@echo "Installing goyclo"
 	go get -v $(GOCYCLO)
 endif
-ifdef PACKR_CHECK
-	@echo "Packr is already installed. Run 'make update_tools' to update."
-else
-	@echo "$(ansi_grn)Installing packr$(ansi_end)"
-	go get -v $(PACKR)
-endif
 
 update_tools:
 	@echo "Updating dep"
@@ -159,8 +146,6 @@ update_tools:
 	go get -u -v $(UNPARAM)
 	@echo "Updating goyclo"
 	go get -u -v $(GOCYCLO)
-	@echo "Updating packr"
-	go get -u -v $(PACKR)
 
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.

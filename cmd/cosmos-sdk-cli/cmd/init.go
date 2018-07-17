@@ -1,21 +1,19 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
 	"go/build"
 	"io/ioutil"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/gobuffalo/packr"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"path/filepath"
 )
 
 func init() {
+	initCmd.Flags().StringVarP(&remoteProjectPath, "project-path", "p", "", "Remote project path. eg: github.com/your_user_name/project_name")
 	rootCmd.AddCommand(initCmd)
 }
 
@@ -28,54 +26,112 @@ func resolveProjectPath(remoteProjectPath string) string {
 	return gopath + string(os.PathSeparator) + "src" + string(os.PathSeparator) + remoteProjectPath
 }
 
-var initCmd = &cobra.Command{
-	Use:   "init AwesomeProjectName",
-	Short: "Initialize your new cosmos zone",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return errors.New("Project name is required")
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
+var remoteBasecoinPath = "github.com/cosmos/cosmos-sdk/examples/basecoin"
+
+func copyBasecoinTemplate(projectName string, projectPath string, remoteProjectPath string) {
+	basecoinProjectPath := resolveProjectPath(remoteBasecoinPath)
+	filepath.Walk(basecoinProjectPath, func(path string, f os.FileInfo, err error) error {
+		if !f.IsDir() {
+			data, err := ioutil.ReadFile(path)
+			check(err)
+			contents := string(data)
+			// Extract relative file path eg: app/app.go instead of /Users/..../github.com/cosmos/...examples/basecoin/app/app.go
+			relativeFilePath := path[len(basecoinProjectPath)+1:]
+			// Evaluating the filepath in the new project folder
+			projectFilePath := projectPath + string(os.PathSeparator) + relativeFilePath
+			lengthOfRootDir := strings.LastIndex(projectFilePath, string(os.PathSeparator))
+			// Extracting the path of root directory from the filepath
+			rootDir := projectFilePath[0:lengthOfRootDir]
+			// Creating the required directory first
+			os.MkdirAll(rootDir, os.ModePerm)
+			fmt.Println("Creating " + projectFilePath)
+			// Writing the contents to a file in the project folder
+			ioutil.WriteFile(projectFilePath, []byte(contents), os.ModePerm)
 		}
+		return nil
+	})
+
+	//Copy the entire basecoin directory to the project path.
+	//os.MkdirAll(projectPath+string(os.PathSeparator)+rootDir, os.ModePerm)
+	//filePath := projectPath + string(os.PathSeparator) + actualPath
+	//ioutil.WriteFile(filePath, []byte(contents), os.ModePerm)
+}
+
+func createGopkg(projectPath string) {
+	// Create gopkg.toml file
+	dependencies := map[string]string{
+		"github.com/cosmos/cosmos-sdk": version.Version,
+	}
+	overrides := map[string]string{
+		"github.com/golang/protobuf": "1.1.0",
+	}
+	contents := ""
+	for dependency, version := range dependencies {
+		contents += "[[constraint]]\n\tname = \"" + dependency + "\"\n\tversion = \"" + version + "\"\n\n"
+	}
+	for dependency, version := range overrides {
+		contents += "[[override]]\n\tname = \"" + dependency + "\"\n\tversion = \"=" + version + "\"\n\n"
+	}
+	contents += "[prune]\n\tgo-tests = true\n\tunused-packages = true"
+	ioutil.WriteFile(projectPath+"/Gopkg.toml", []byte(contents), os.ModePerm)
+}
+
+func createMakefile(projectPath string) {
+	// Create makefile
+	makefileContents := `PACKAGES=$(shell go list ./... | grep -v '/vendor/')
+
+all: get_tools get_vendor_deps build test
+
+get_tools:
+	go get github.com/golang/dep/cmd/dep
+
+build:
+	go build -o bin/basecli cmd/basecli/main.go && go build -o bin/basecoind cmd/basecoind/main.go
+
+get_vendor_deps:
+	@rm -rf vendor/
+	@dep ensure
+
+test:
+	@go test $(PACKAGES)
+
+benchmark:
+	@go test -bench=. $(PACKAGES)
+
+.PHONY: all build test benchmark`
+	ioutil.WriteFile(projectPath+"/Makefile", []byte(makefileContents), os.ModePerm)
+
+}
+
+func setupBasecoinWorkspace(projectName string, remoteProjectPath string) {
+	projectPath := resolveProjectPath(remoteProjectPath)
+	fmt.Println("Configuring your project in " + projectPath)
+	copyBasecoinTemplate(projectName, projectPath, remoteProjectPath)
+	createGopkg(projectPath)
+	createMakefile(projectPath)
+	fmt.Println("\nInitialized a new project at " + projectPath + ".\nHappy hacking!")
+}
+
+var remoteProjectPath string
+var initCmd = &cobra.Command{
+	Use:   "init [ProjectName]",
+	Short: "Initialize your new cosmos zone",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Print("Thanks for choosing Cosmos-SDK to build your project.\n\n")
 		projectName := args[0]
-		capitalizedProjectName := strings.Title(projectName)
 		shortProjectName := strings.ToLower(projectName)
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Println("Thank you for using cosmos-zone tool.")
-		fmt.Println("You are only a few steps away from creating your brand new blockchain project on Cosmos.")
-		fmt.Print("We will ask you a few more questions to guide you through this process\n\n")
-		fmt.Print("To configure this project we need a remote project path. If you are unsure you can leave this empty. ")
-		fmt.Print("Remote project path is usually something like github.com/your_user_name/project_name\n")
-		fmt.Print("Enter remote project path: ")
-		remoteProjectPath, _ := reader.ReadString('\n')
 		remoteProjectPath = strings.ToLower(strings.TrimSpace(remoteProjectPath))
 		if remoteProjectPath == "" {
 			remoteProjectPath = strings.ToLower(shortProjectName)
 		}
-		projectPath := resolveProjectPath(remoteProjectPath)
-		fmt.Print("configuring the project in " + projectPath + "\n\n")
-		time.Sleep(2 * time.Second)
-		box := packr.NewBox("../template")
-		var replacer = strings.NewReplacer("MyAwesomeProject", capitalizedProjectName, "myawesomeproject", shortProjectName, "github.com/cosmos/cosmos-sdk/cmd/cosmos-sdk-cli/template", remoteProjectPath)
-		box.Walk(func(path string, file packr.File) error {
-			actualPath := replacer.Replace(path)
-			fmt.Println("Creating file: " + actualPath)
-			contents := box.String(path)
-			contents = replacer.Replace(contents)
-			if actualPath == "Gopkg.toml" {
-				versionReplacer := strings.NewReplacer("_COSMOS_VERSION_", version.Version)
-				contents = versionReplacer.Replace(contents)
-			}
-			lastIndex := strings.LastIndex(actualPath, string(os.PathSeparator))
-			rootDir := ""
-			if lastIndex != -1 {
-				rootDir = actualPath[0:lastIndex]
-			}
-			// Create directory
-			os.MkdirAll(projectPath+string(os.PathSeparator)+rootDir, os.ModePerm)
-			filePath := projectPath + string(os.PathSeparator) + actualPath
-			ioutil.WriteFile(filePath, []byte(contents), os.ModePerm)
-			return nil
-		})
-		fmt.Println("Initialized a new project at " + projectPath + ". Happy hacking!")
+		setupBasecoinWorkspace(shortProjectName, remoteProjectPath)
 		return nil
 	},
 }

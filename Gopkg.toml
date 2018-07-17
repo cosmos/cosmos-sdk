@@ -67,10 +67,6 @@
   name = "github.com/zondax/ledger-goclient"
   revision = "39ba4728c137c75718a21f9b4b3280fa31b9139b"
 
-[[constraint]]
-  name = "github.com/gobuffalo/packr"
-  version = "1.11.1"
-
 [prune]
   go-tests = true
   unused-packages = true

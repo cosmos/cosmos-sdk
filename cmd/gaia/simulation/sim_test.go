@@ -10,6 +10,7 @@ import (
 
 	gaia "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
+	stake "github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 const (
@@ -19,15 +20,28 @@ const (
 )
 
 func TestFullGaiaSimulation(t *testing.T) {
+
 	// Setup Gaia application
 	logger := log.NewNopLogger()
 	db := dbm.NewMemDB()
 	app := gaia.NewGaiaApp(logger, db, nil)
 	require.Equal(t, "GaiaApp", app.Name())
 
+	// Default genesis state
+	genesis := gaia.GenesisState{
+		Accounts:  []gaia.GenesisAccount{},
+		StakeData: stake.DefaultGenesisState(),
+	}
+
+	// Marshal genesis
+	appState, err := gaia.MakeCodec().MarshalJSON(genesis)
+	if err != nil {
+		panic(err)
+	}
+
 	// Run randomized simulation
-	simulation.RandomizedTesting(
-		t, app.BaseApp,
+	simulation.Simulate(
+		t, app.BaseApp, appState,
 		[]simulation.TestAndRunTx{},
 		[]simulation.RandSetup{},
 		[]simulation.Invariant{},

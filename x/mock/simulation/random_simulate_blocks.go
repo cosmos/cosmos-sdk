@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -12,19 +13,19 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// RandomizedTesting tests application by sending random messages.
-func RandomizedTesting(
-	t *testing.T, app *baseapp.BaseApp, ops []TestAndRunTx, setups []RandSetup,
+// Simulate tests application by sending random messages.
+func Simulate(
+	t *testing.T, app *baseapp.BaseApp, appState json.RawMessage, ops []TestAndRunTx, setups []RandSetup,
 	invariants []Invariant, numKeys int, numBlocks int, blockSize int,
 ) {
 	time := time.Now().UnixNano()
-	RandomizedTestingFromSeed(t, app, time, ops, setups, invariants, numKeys, numBlocks, blockSize)
+	SimulateFromSeed(t, app, appState, time, ops, setups, invariants, numKeys, numBlocks, blockSize)
 }
 
-// RandomizedTestingFromSeed tests an application by running the provided
+// SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
-func RandomizedTestingFromSeed(
-	t *testing.T, app *baseapp.BaseApp, seed int64, ops []TestAndRunTx, setups []RandSetup,
+func SimulateFromSeed(
+	t *testing.T, app *baseapp.BaseApp, appState json.RawMessage, seed int64, ops []TestAndRunTx, setups []RandSetup,
 	invariants []Invariant, numKeys int, numBlocks int, blockSize int,
 ) {
 	log := fmt.Sprintf("Starting SingleModuleTest with randomness created with seed %d", int(seed))
@@ -33,7 +34,7 @@ func RandomizedTestingFromSeed(
 
 	// XXX TODO
 	// RandomSetGenesis(r, app, addrs, []string{"foocoin"})
-	app.InitChain(abci.RequestInitChain{})
+	app.InitChain(abci.RequestInitChain{AppStateBytes: appState})
 	for i := 0; i < len(setups); i++ {
 		setups[i](r, keys)
 	}

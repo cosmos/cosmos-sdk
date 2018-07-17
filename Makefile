@@ -2,8 +2,10 @@ PACKAGES=$(shell go list ./... | grep -v '/vendor/')
 PACKAGES_NOCLITEST=$(shell go list ./... | grep -v '/vendor/' | grep -v '/simulation' | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test)
 PACKAGES_SIMTEST=$(shell go list ./... | grep -v '/vendor/' | grep '/simulation')
 COMMIT_HASH := $(shell git rev-parse --short HEAD)
-BUILD_FLAGS = -tags netgo -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
-
+BUILD_TAGS = netgo ledger
+BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
+GCC := $(shell command -v gcc 2> /dev/null)
+LEDGER_ENABLED ?= true
 all: get_tools get_vendor_deps install install_examples test_lint test test_sim
 
 ########################################
@@ -12,10 +14,19 @@ all: get_tools get_vendor_deps install install_examples test_lint test test_sim
 ci: get_tools get_vendor_deps install test_cover test_lint test
 
 ########################################
-### Build
+### Build/Install
 
-# This can be unified later, here for easy demos
-build:
+check-ledger: 
+ifeq ($(LEDGER_ENABLED),true)
+ifndef GCC
+$(error "gcc not installed for ledger support, please install")
+endif
+else
+TMP_BUILD_TAGS := $(BUILD_TAGS)
+BUILD_TAGS = $(filter-out ledger, $(TMP_BUILD_TAGS))
+endif
+
+build: check-ledger
 ifeq ($(OS),Windows_NT)
 	go build $(BUILD_FLAGS) -o build/gaiad.exe ./cmd/gaia/cmd/gaiad
 	go build $(BUILD_FLAGS) -o build/gaiacli.exe ./cmd/gaia/cmd/gaiacli
@@ -23,6 +34,9 @@ else
 	go build $(BUILD_FLAGS) -o build/gaiad ./cmd/gaia/cmd/gaiad
 	go build $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaia/cmd/gaiacli
 endif
+
+build-linux:
+	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
 
 build_examples:
 ifeq ($(OS),Windows_NT)
@@ -37,7 +51,7 @@ else
 	go build $(BUILD_FLAGS) -o build/democli ./examples/democoin/cmd/democli
 endif
 
-install:
+install: check-ledger
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
 
@@ -109,6 +123,8 @@ test_lint:
 	gometalinter.v2 --config=tools/gometalinter.json ./...
 	!(gometalinter.v2 --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
+	dep status >> /dev/null
+	!(grep -n branch Gopkg.toml)
 
 format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -w -s
@@ -144,10 +160,6 @@ devdoc_update:
 
 ########################################
 ### Local validator nodes using docker and docker-compose
-
-# Build linux binary
-build-linux:
-	GOOS=linux GOARCH=amd64 $(MAKE) build
 
 build-docker-gaiadnode:
 	$(MAKE) -C networks/local
@@ -185,4 +197,8 @@ remotenet-status:
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: build build_examples install install_examples install_debug dist check_tools get_tools get_vendor_deps draw_deps test test_cli test_unit test_cover test_sim test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update build-linux build-docker-gaiadnode localnet-start localnet-stop remotenet-start remotenet-stop remotenet-status format
+.PHONY: build build_examples install install_examples install_debug dist \
+check_tools get_tools get_vendor_deps draw_deps test test_cli test_unit \
+test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
+build-linux build-docker-gaiadnode localnet-start localnet-stop remotenet-start \
+remotenet-stop remotenet-status format check-ledger test_sim

@@ -2,7 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
   digest = "1:09a7f74eb6bb3c0f14d8926610c87f569c5cff68e978d30e9a3540aeb626fdf0"
   name = "github.com/bartekn/go-bip39"
   packages = ["."]
@@ -42,12 +41,11 @@
   revision = "fdfc19097e7ac6b57035062056f5b7b4638b8898"
 
 [[projects]]
-  branch = "master"
   digest = "1:386de157f7d19259a7f9c81f26ce011223ce0f090353c1152ffdf730d7d10ac2"
   name = "github.com/btcsuite/btcutil"
   packages = ["bech32"]
   pruneopts = "UT"
-  revision = "ab6388e0c60ae4834a1f57511e20c17b5f78be4b"
+  revision = "d4cc87b860166d00d6b5b9e0d3b3d71d6088d4d4"
 
 [[projects]]
   digest = "1:a2c1d0e43bd3baaa071d1b9ed72c27d78169b2b269f71c105ac4ba34b1be4a39"
@@ -58,7 +56,6 @@
   version = "v1.1.0"
 
 [[projects]]
-  branch = "master"
   digest = "1:c7644c73a3d23741fdba8a99b1464e021a224b7e205be497271a8003a15ca41b"
   name = "github.com/ebuchman/fail-test"
   packages = ["."]
@@ -265,7 +262,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
   digest = "1:98225904b7abff96c052b669b25788f18225a36673fba022fb93514bb9a2a64e"
   name = "github.com/prometheus/client_golang"
   packages = [
@@ -309,7 +305,6 @@
   revision = "ae68e2d4c00fed4943b5f6698d504a5fe083da8a"
 
 [[projects]]
-  branch = "master"
   digest = "1:c4556a44e350b50a490544d9b06e9fba9c286c21d6c0e47f54f3a9214597298c"
   name = "github.com/rcrowley/go-metrics"
   packages = ["."]
@@ -428,7 +423,7 @@
   version = "v0.9.2"
 
 [[projects]]
-  digest = "1:2511fa7bc2725251a1a48a923c8f01cd41de29b00a21224092d448a9e4627c21"
+  digest = "1:5f41a7655812fa5901c71735dc8845f33184e94a2020c770f60a1a80ed228cb3"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -486,15 +481,15 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "5ff65274b84ea905787a48512cc3124385bddf2f"
-  version = "v0.22.2"
+  revision = "c64a3c74c870d725ba1356f75b4afadf0928c297"
+  version = "v0.22.4"
 
 [[projects]]
-  digest = "1:9d2f5bccd058537986ef2862b8c6daff855f293d924ae8ebc18974143ae9191e"
+  digest = "1:5bd938386bd1f61a581bf8cd6ff2b7b2f79c542929176db4ceb44965440dae07"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
   pruneopts = "UT"
-  revision = "065cbf938a16f20335c40cfe180f9cd4955c6a5a"
+  revision = "39ba4728c137c75718a21f9b4b3280fa31b9139b"
 
 [[projects]]
   branch = "master"
@@ -517,7 +512,6 @@
   revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
 
 [[projects]]
-  branch = "master"
   digest = "1:04dda8391c3e2397daf254ac68003f30141c069b228d06baec8324a5f81dc1e9"
   name = "golang.org/x/net"
   packages = [

@@ -120,10 +120,10 @@ else
 	@echo "Installing unparam"
 	go get -v $(UNPARAM)
 endif
-ifdef GOYCLO_CHECK
-	@echo "goyclo is already installed.  Run 'make update_tools' to update."
+ifdef GOCYCLO_CHECK
+	@echo "gocyclo is already installed.  Run 'make update_tools' to update."
 else
-	@echo "Installing goyclo"
+	@echo "Installing gocyclo"
 	go get -v $(GOCYCLO)
 endif
 

@@ -15,7 +15,7 @@ Developers can create messages by implementing the `Msg` interface:
 ```go
 type Msg interface {
     // Return the message type.
-    // Must be alphabetic or empty.
+    // Must be alphanumeric or empty.
     // Must correspond to name of message handler (XXX).
     Type() string
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## TBD
+
+BREAKING CHANGES
+
+FEATURES
+* [lcd] Can now query governance proposals by ProposalStatus
+
+IMPROVEMENTS
+
+BUG FIXES
+
 ## 0.22.0
 
 *July 16th, 2018*

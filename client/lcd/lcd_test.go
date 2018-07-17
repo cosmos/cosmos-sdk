@@ -569,6 +569,16 @@ func TestProposalsQuery(t *testing.T) {
 	resultTx = doDeposit(t, port, seed2, name2, password2, addr2, proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
+	// Only proposals #1 should be in Deposit Period
+	proposals := getProposalsFilterStatus(t, port, gov.StatusDepositPeriod)
+	require.Len(t, proposals, 1)
+	require.Equal(t, proposalID1, proposals[0].GetProposalID())
+	// Only proposals #2 and #3 should be in Voting Period
+	proposals = getProposalsFilterStatus(t, port, gov.StatusVotingPeriod)
+	require.Len(t, proposals, 2)
+	require.Equal(t, proposalID2, proposals[0].GetProposalID())
+	require.Equal(t, proposalID3, proposals[1].GetProposalID())
+
 	// Addr1 votes on proposals #2 & #3
 	resultTx = doVote(t, port, seed, name, password1, addr, proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
@@ -580,7 +590,7 @@ func TestProposalsQuery(t *testing.T) {
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Test query all proposals
-	proposals := getProposalsAll(t, port)
+	proposals = getProposalsAll(t, port)
 	require.Equal(t, proposalID1, (proposals[0]).GetProposalID())
 	require.Equal(t, proposalID2, (proposals[1]).GetProposalID())
 	require.Equal(t, proposalID3, (proposals[2]).GetProposalID())
@@ -902,6 +912,16 @@ func getProposalsFilterVoter(t *testing.T, port string, voterAddr sdk.AccAddress
 
 func getProposalsFilterVoterDepositer(t *testing.T, port string, voterAddr, depositerAddr sdk.AccAddress) []gov.Proposal {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals?depositer=%s&voter=%s", depositerAddr, voterAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var proposals []gov.Proposal
+	err := cdc.UnmarshalJSON([]byte(body), &proposals)
+	require.Nil(t, err)
+	return proposals
+}
+
+func getProposalsFilterStatus(t *testing.T, port string, status gov.ProposalStatus) []gov.Proposal {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals?status=%s", status), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var proposals []gov.Proposal

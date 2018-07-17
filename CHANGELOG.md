@@ -1,6 +1,6 @@
 # Changelog
 
-## TBD
+## PENDING
 
 BREAKING CHANGES
 
@@ -8,6 +8,7 @@ FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus
 
 IMPROVEMENTS
+* [baseapp] Allow any alphanumeric character in route
 
 BUG FIXES
 

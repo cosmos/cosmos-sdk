@@ -21,14 +21,14 @@ This will initialize a project, the dependencies, directory structures with the 
 
 ### Example:
 ```shell
-cosmos-sdk-cli init testzone
+cosmos-sdk-cli init testzone -p github.com/your_user_name/testzone
 ```
+-p remote project path (optional). If this is not provided, it creates testzone under $GOPATH/src/
 
-This will ask for a remote path for the project - usually github.com/your_user_name/testzone and will create a new testzone application under $GOPATH/src/github.com/your_user_name/testzone along with Makefile
 
 ```shell
 cd $GOPATH/src/github.com/your_user_name/testzone
 make
 ```
-This will create two binaries(testzonecli and testzoned) under bin folder. testzoned is the full node of the application which you can run, and testzonecli is your light client.
+This will create two binaries(basecli and basecoind) under bin folder. basecoind is the full node of the application which you can run, and basecli is your light client.
 

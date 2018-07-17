@@ -1,6 +1,6 @@
 PACKAGES=$(shell go list ./... | grep -v '/vendor/')
-PACKAGES_NOCLITEST=$(shell go list ./... | grep -v '/vendor/' | grep -v '/simulation' | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test)
-PACKAGES_SIMTEST=$(shell go list ./... | grep -v '/vendor/' | grep '/simulation')
+PACKAGES_NOCLITEST=$(shell go list ./... | grep -v '/vendor/' | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test)
+PACKAGES_SIMTEST=$(shell go list ./... | grep -v '/vendor/')
 COMMIT_HASH := $(shell git rev-parse --short HEAD)
 BUILD_TAGS = netgo ledger
 BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
@@ -114,7 +114,7 @@ test_race:
 	@go test -race $(PACKAGES_NOCLITEST)
 
 test_sim:
-	@go test $(PACKAGES_SIMTEST) -v
+	@ENABLE_GAIA_SIMULATION=1 go test ./cmd/gaia/app -run TestFullGaiaSimulation -v
 
 test_cover:
 	@bash tests/test_cover.sh

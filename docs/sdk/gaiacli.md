@@ -75,7 +75,7 @@ We're working on improving our error messages!
 ```bash
 gaiacli send \
   --amount=10faucetToken \
-  --chain-id=gaia-6002 \
+  --chain-id=gaia-7001 \
   --name=<key_name> \
   --to=<destination_cosmosaccaddr>
 ```
@@ -111,7 +111,7 @@ gaiacli stake delegate \
   --address-delegator=<account_cosmosaccaddr> \
   --address-validator=$(gaiad tendermint show_validator) \
   --name=<key_name> \
-  --chain-id=gaia-6002
+  --chain-id=gaia-7001
 ```
 
 While tokens are bonded, they are pooled with all the other bonded tokens in the network. Validators and delegators obtain a percentage of shares that equal their stake in this pool.
@@ -130,7 +130,7 @@ gaiacli stake unbond \
   --address-validator=$(gaiad tendermint show_validator) \
   --shares=MAX \
   --name=<key_name> \
-  --chain-id=gaia-6002
+  --chain-id=gaia-7001
 ```
 
 You can check your balance and your stake delegation to see that the unbonding went through successfully.
@@ -141,5 +141,5 @@ gaiacli account <account_cosmosaccaddr>
 gaiacli stake delegation \
   --address-delegator=<account_cosmosaccaddr> \
   --address-validator=$(gaiad tendermint show_validator) \
-  --chain-id=gaia-6002
+  --chain-id=gaia-7001
 ```

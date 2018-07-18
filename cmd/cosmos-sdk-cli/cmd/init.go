@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/version"
-	tmversion "github.com/tendermint/tendermint/version"
 	"github.com/spf13/cobra"
+	tmversion "github.com/tendermint/tendermint/version"
 	"path/filepath"
 )
 
@@ -23,24 +23,23 @@ func init() {
 }
 
 var initCmd = &cobra.Command{
-        Use:   "init [ProjectName]",
-        Short: "Initialize your new cosmos zone",
-        Args:  cobra.ExactArgs(1),
-        RunE: func(cmd *cobra.Command, args []string) error {
-                fmt.Print("Thanks for choosing Cosmos-SDK to build your project.\n\n")
-                projectName := args[0]
+	Use:   "init [ProjectName]",
+	Short: "Initialize your new cosmos zone",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Print("Thanks for choosing Cosmos-SDK to build your project.\n\n")
+		projectName := args[0]
 		capitalizedProjectName := strings.Title(projectName)
-                shortProjectName := strings.ToLower(projectName)
-                remoteProjectPath = strings.ToLower(strings.TrimSpace(remoteProjectPath))
-                if remoteProjectPath == "" {
-                        remoteProjectPath = strings.ToLower(shortProjectName)
-                }
-		replacer = strings.NewReplacer("basecli", shortProjectName + "cli", "basecoind", shortProjectName + "d", "BasecoinApp", capitalizedProjectName + "App", "github.com/cosmos/cosmos-sdk/examples/basecoin/", remoteProjectPath + "/", "basecoin", shortProjectName)
-                setupBasecoinWorkspace(shortProjectName, remoteProjectPath)
-                return nil
-        },
+		shortProjectName := strings.ToLower(projectName)
+		remoteProjectPath = strings.ToLower(strings.TrimSpace(remoteProjectPath))
+		if remoteProjectPath == "" {
+			remoteProjectPath = strings.ToLower(shortProjectName)
+		}
+		replacer = strings.NewReplacer("basecli", shortProjectName+"cli", "basecoind", shortProjectName+"d", "BasecoinApp", capitalizedProjectName+"App", "github.com/cosmos/cosmos-sdk/examples/basecoin/", remoteProjectPath+"/", "basecoin", shortProjectName)
+		setupBasecoinWorkspace(shortProjectName, remoteProjectPath)
+		return nil
+	},
 }
-
 
 func resolveProjectPath(remoteProjectPath string) string {
 	gopath := os.Getenv("GOPATH")
@@ -83,12 +82,12 @@ func createGopkg(projectPath string) {
 	// Create gopkg.toml file
 	dependencies := map[string]string{
 		"github.com/cosmos/cosmos-sdk": "=" + version.Version,
-		"github.com/stretchr/testify": "=1.2.1",
-		"github.com/spf13/cobra": "=0.0.1",
-		"github.com/spf13/viper": "=1.0.0",
+		"github.com/stretchr/testify":  "=1.2.1",
+		"github.com/spf13/cobra":       "=0.0.1",
+		"github.com/spf13/viper":       "=1.0.0",
 	}
 	overrides := map[string]string{
-		"github.com/golang/protobuf": "1.1.0",
+		"github.com/golang/protobuf":       "1.1.0",
 		"github.com/tendermint/tendermint": tmversion.Version,
 	}
 	contents := ""
@@ -138,4 +137,3 @@ func setupBasecoinWorkspace(projectName string, remoteProjectPath string) {
 	createMakefile(projectPath)
 	fmt.Printf("\nInitialized a new project at %s.\nHappy hacking!\n", projectPath)
 }
-

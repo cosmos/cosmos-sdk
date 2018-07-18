@@ -6,6 +6,7 @@ import (
 )
 
 // shamelessly copied from https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-golang#31832326
+// TODO we should probably move this to tendermint/libs/common/random.go
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const (

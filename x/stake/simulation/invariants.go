@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -30,10 +31,15 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) sim
 		ctx := app.NewContext(false, abci.Header{})
 		pool := k.GetPool(ctx)
 
-		// Loose tokens should equal coin supply
+		// Loose tokens should equal coin supply plus unbonding delegations
 		loose := sdk.ZeroInt()
 		am.IterateAccounts(ctx, func(acc auth.Account) bool {
 			loose = loose.Add(acc.GetCoins().AmountOf("steak"))
+			return false
+		})
+		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd stake.UnbondingDelegation) bool {
+			fmt.Printf("found ubd with balance: %v\n", ubd.Balance)
+			loose = loose.Add(ubd.Balance.Amount)
 			return false
 		})
 		require.True(t, pool.LooseTokens.RoundInt64() == loose.Int64(), "expected loose tokens to equal total steak held by accounts - pool.LooseTokens: %v, sum of account tokens: %v\nlog: %s",

@@ -6,7 +6,7 @@ BUILD_TAGS = netgo ledger
 BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
 GCC := $(shell command -v gcc 2> /dev/null)
 LEDGER_ENABLED ?= true
-all: get_tools get_vendor_deps install install_examples test_lint test test_sim
+all: get_tools get_vendor_deps install install_examples test_lint test
 
 ########################################
 ### CI
@@ -114,10 +114,10 @@ test_race:
 	@go test -race $(PACKAGES_NOCLITEST)
 
 test_sim:
-	@echo "Running individual module simulations..."
+	@echo "Running individual module simulations."
 	@go test $(PACKAGES_SIMTEST) -v
-	@echo "Running full Gaia simulation..."
-	@ENABLE_GAIA_SIMULATION=1 go test ./cmd/gaia/app -run TestFullGaiaSimulation -v
+	@echo "Running full Gaia simulation. This may take several minutes. Set the environment variable 'GAIA_SIMULATION_SEED' to run with a constant seed."
+	@GAIA_SIMULATION_ENABLED=1 go test ./cmd/gaia/app -run TestFullGaiaSimulation -v
 
 test_cover:
 	@bash tests/test_cover.sh

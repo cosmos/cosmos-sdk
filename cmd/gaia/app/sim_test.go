@@ -20,9 +20,13 @@ import (
 const (
 	NumKeys   = 10
 	NumBlocks = 100
-	BlockSize = 500
+	BlockSize = 100
 
-	simulationEnv = "ENABLE_GAIA_SIMULATION"
+	simulationEnvEnable    = "GAIA_SIMULATION_ENABLED"
+	simulationEnvSeed      = "GAIA_SIMULATION_SEED"
+	simulationEnvKeys      = "GAIA_SIMULATION_KEYS"
+	simulationEnvBlocks    = "GAIA_SIMULATION_BLOCKS"
+	simulationEnvBlockSize = "GAIA_SIMULATION_BLOCK_SIZE"
 )
 
 func appStateFn(r *rand.Rand, accs []sdk.AccAddress) json.RawMessage {
@@ -55,7 +59,7 @@ func appStateFn(r *rand.Rand, accs []sdk.AccAddress) json.RawMessage {
 }
 
 func TestFullGaiaSimulation(t *testing.T) {
-	if os.Getenv(simulationEnv) == "" {
+	if os.Getenv(simulationEnvEnable) == "" {
 		t.Skip("Skipping Gaia simulation")
 	}
 
@@ -65,11 +69,26 @@ func TestFullGaiaSimulation(t *testing.T) {
 	app := NewGaiaApp(logger, db, nil)
 	require.Equal(t, "GaiaApp", app.Name())
 
+	var seed int64
+	envSeed := os.Getenv(simulationEnvSeed)
+	if envSeed != "" {
+		seed, err = strconv.ParseInt(envSeed, 10, 64)
+		require.Nil(t, err)
+	} else {
+		seed = time.Now().UnixNano()
+	}
+
 	// Run randomized simulation
-	simulation.Simulate(
-		t, app.BaseApp, appStateFn,
+	simulation.SimulateFromSeed(
+		t, app.BaseApp, appStateFn, seed,
 		[]simulation.TestAndRunTx{
 			stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper),
+			stakesim.SimulateMsgEditValidator(app.accountMapper, app.stakeKeeper),
+			stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper),
+			stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper),
+			stakesim.SimulateMsgCompleteUnbonding(app.stakeKeeper),
+			stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper),
+			stakesim.SimulateMsgCompleteRedelegate(app.stakeKeeper),
 		},
 		[]simulation.RandSetup{},
 		[]simulation.Invariant{

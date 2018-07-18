@@ -46,8 +46,7 @@ func TestStakeWithRandomMessages(t *testing.T) {
 			SimulateMsgCreateValidator(mapper, stakeKeeper),
 			SimulateMsgEditValidator(stakeKeeper),
 			SimulateMsgDelegate(mapper, stakeKeeper),
-			// XXX TODO
-			// SimulateMsgBeginUnbonding(mapper, stakeKeeper),
+			SimulateMsgBeginUnbonding(mapper, stakeKeeper),
 			SimulateMsgCompleteUnbonding(stakeKeeper),
 			SimulateMsgBeginRedelegate(mapper, stakeKeeper),
 			SimulateMsgCompleteRedelegate(stakeKeeper),
@@ -55,6 +54,6 @@ func TestStakeWithRandomMessages(t *testing.T) {
 			SimulationSetup(mapp, stakeKeeper),
 		}, []simulation.Invariant{
 			AllInvariants(coinKeeper, stakeKeeper, mapp.AccountMapper),
-		}, 10, 100, 500,
+		}, 10, 100, 100,
 	)
 }

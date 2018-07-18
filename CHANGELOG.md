@@ -10,10 +10,12 @@ FEATURES
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route
+* [x/stake] Add revoked to human-readable validator 
 * [cli] Improve error messages for all txs when the account doesn't exist
 * [tools] Remove `rm -rf vendor/` from `make get_vendor_deps`
 
 BUG FIXES
+*  \#1666 Add intra-tx counter to the genesis validators
 
 ## 0.22.0
 

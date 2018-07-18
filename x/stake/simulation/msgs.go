@@ -32,7 +32,7 @@ func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation
 			amount = sdk.NewInt(int64(r.Intn(int(amount.Int64()))))
 		}
 		if amount.Equal(sdk.ZeroInt()) {
-			return "nop", nil
+			return "no-operation", nil
 		}
 		msg := stake.MsgCreateValidator{
 			Description:   description,
@@ -95,7 +95,7 @@ func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) simulation.TestAn
 			amount = sdk.NewInt(int64(r.Intn(int(amount.Int64()))))
 		}
 		if amount.Equal(sdk.ZeroInt()) {
-			return "nop", nil
+			return "no-operation", nil
 		}
 		msg := stake.MsgDelegate{
 			DelegatorAddr: delegatorAddress,
@@ -127,7 +127,7 @@ func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.
 			amount = sdk.NewInt(int64(r.Intn(int(amount.Int64()))))
 		}
 		if amount.Equal(sdk.ZeroInt()) {
-			return "nop", nil
+			return "no-operation", nil
 		}
 		msg := stake.MsgBeginUnbonding{
 			DelegatorAddr: delegatorAddress,
@@ -185,7 +185,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountMapper, k stake.Keeper) simulation
 			amount = sdk.NewInt(int64(r.Intn(int(amount.Int64()))))
 		}
 		if amount.Equal(sdk.ZeroInt()) {
-			return "nop", nil
+			return "no-operation", nil
 		}
 		msg := stake.MsgBeginRedelegate{
 			DelegatorAddr:    delegatorAddress,

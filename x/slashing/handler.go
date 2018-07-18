@@ -43,10 +43,6 @@ func handleMsgUnrevoke(ctx sdk.Context, msg MsgUnrevoke, k Keeper) sdk.Result {
 		return ErrValidatorJailed(k.codespace).Result()
 	}
 
-	if ctx.IsCheckTx() {
-		return sdk.Result{}
-	}
-
 	// Update the starting height (so the validator can't be immediately revoked again)
 	info.StartHeight = ctx.BlockHeight()
 	k.setValidatorSigningInfo(ctx, addr, info)

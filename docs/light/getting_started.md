@@ -1,18 +1,20 @@
 # Getting Started
 
 To start a rest server, we need to specify the following parameters:
-| Parameter   | Type      | Default                 | Required | Description                                          |
-| ----------- | --------- | ----------------------- | -------- | ---------------------------------------------------- |
-| chain-id    | string    | null                    | true     | chain id of the full node to connect                 |
-| node        | URL       | "tcp://localhost:46657" | true     | address of the full node to connect                  |
-| laddr       | URL       | "tcp://localhost:1317"  | true     | address to run the rest server on                    |
-| trust-node  | bool      | "false"                 | true     | Whether this LCD is connected to a trusted full node |
-| trust-store | DIRECTORY | "$HOME/.lcd"            | false    | directory for save checkpoints and validator sets    |
 
-Sample command:
+| Parameter       | Type      | Default                 | Required | Description                                          |
+| -----------     | --------- | ----------------------- | -------- | ---------------------------------------------------- |
+| home            | string    | "$HOME/.gaiacli"        | false    | directory for save checkpoints and validator sets    |
+| chain-id        | string    | null                    | true     | chain id of the full node to connect                 |
+| node-list       | URL       | "tcp://localhost:26657" | false    | addresses of the full node to connect                |
+| laddr           | URL       | "tcp://localhost:1317"  | false    | address to run the rest server on                    |
+| trust-node      | bool      | "false"                 | false    | Whether this LCD is connected to a trusted full node |
+| swagger-host-ip | string    | "localhost"             | false    | The IP of the server which Cosmos-LCD is running on  |
+| modules         | string    | "general,key,token"     | false    | enabled modules.                                     |
 
+If you have gaiad running on your local machine, and its listening port is 26657, then you can start Cosmos-LCD just with the following command:
 ```bash
-gaiacli light-client --chain-id=test --laddr=tcp://localhost:1317  --node tcp://localhost:46657 --trust-node=false
+gaiacli advanced rest-server-swagger --chain-id {your chain id}
 ```
 
 ## Gaia Light Use Cases

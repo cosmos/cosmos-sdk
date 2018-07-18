@@ -9,6 +9,7 @@ FEATURES
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route
+* [tools] Remove `rm -rf vendor/` from `make get_vendor_deps`
 
 BUG FIXES
 

@@ -80,7 +80,6 @@ get_tools:
 	cd tools && $(MAKE) get_tools
 
 get_vendor_deps:
-	@rm -rf vendor/
 	@echo "--> Running dep ensure"
 	@dep ensure -v
 

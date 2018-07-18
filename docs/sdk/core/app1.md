@@ -421,7 +421,7 @@ Here is the complete setup for App1:
 
 ```go
 func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
-	
+
     // Create the base application object.
     app := bapp.NewBaseApp(app1Name, logger, db, tx1Decoder)
 
@@ -454,7 +454,7 @@ Here, we have only a single Msg type, `bank`, a single store for accounts, and a
 The handler is granted access to the store by giving it the capability key.
 In future apps, we'll have multiple stores and handlers, and not every handler will get access to every store.
 
-After setting the transaction decoder and the message handling routes, the final
+After setting the message handling routes, the final
 step is to mount the stores and load the latest version.
 Since we only have one store, we only mount one.
 

@@ -21,9 +21,9 @@ import (
 )
 
 const (
-	NumKeys   = 10
-	NumBlocks = 100
-	BlockSize = 100
+	defaultNumKeys   = 10
+	defaultNumBlocks = 100
+	defaultBlockSize = 100
 
 	simulationEnvEnable    = "GAIA_SIMULATION_ENABLED"
 	simulationEnvSeed      = "GAIA_SIMULATION_SEED"
@@ -82,6 +82,27 @@ func TestFullGaiaSimulation(t *testing.T) {
 		seed = time.Now().UnixNano()
 	}
 
+	keys := defaultNumKeys
+	envKeys := os.Getenv(simulationEnvKeys)
+	if envKeys != "" {
+		keys, err = strconv.Atoi(envKeys)
+		require.Nil(t, err)
+	}
+
+	blocks := defaultNumBlocks
+	envBlocks := os.Getenv(simulationEnvBlocks)
+	if envBlocks != "" {
+		blocks, err = strconv.Atoi(envBlocks)
+		require.Nil(t, err)
+	}
+
+	blockSize := defaultBlockSize
+	envBlockSize := os.Getenv(simulationEnvBlockSize)
+	if envBlockSize != "" {
+		blockSize, err = strconv.Atoi(envBlockSize)
+		require.Nil(t, err)
+	}
+
 	// Run randomized simulation
 	simulation.SimulateFromSeed(
 		t, app.BaseApp, appStateFn, seed,
@@ -100,9 +121,9 @@ func TestFullGaiaSimulation(t *testing.T) {
 			banksim.NonnegativeBalanceInvariant(app.accountMapper),
 			stakesim.AllInvariants(app.coinKeeper, app.stakeKeeper, app.accountMapper),
 		},
-		NumKeys,
-		NumBlocks,
-		BlockSize,
+		keys,
+		blocks,
+		blockSize,
 	)
 
 }

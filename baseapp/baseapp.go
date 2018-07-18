@@ -47,7 +47,7 @@ type BaseApp struct {
 	cms        sdk.CommitMultiStore // Main (uncached) state
 	router     Router               // handle any kind of message
 	codespacer *sdk.Codespacer      // handle module codespacing
-	txDecoder   sdk.TxDecoder   // unmarshal []byte into sdk.Tx
+	txDecoder  sdk.TxDecoder        // unmarshal []byte into sdk.Tx
 
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
 

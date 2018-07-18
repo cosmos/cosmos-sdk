@@ -26,12 +26,6 @@ func resolveProjectPath(remoteProjectPath string) string {
 	return gopath + string(os.PathSeparator) + "src" + string(os.PathSeparator) + remoteProjectPath
 }
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
 var remoteBasecoinPath = "github.com/cosmos/cosmos-sdk/examples/basecoin"
 
 func copyBasecoinTemplate(projectName string, projectPath string, remoteProjectPath string) {
@@ -39,7 +33,9 @@ func copyBasecoinTemplate(projectName string, projectPath string, remoteProjectP
 	filepath.Walk(basecoinProjectPath, func(path string, f os.FileInfo, err error) error {
 		if !f.IsDir() {
 			data, err := ioutil.ReadFile(path)
-			check(err)
+			if err != nil {
+				return err
+			}
 			contents := string(data)
 			// Extract relative file path eg: app/app.go instead of /Users/..../github.com/cosmos/...examples/basecoin/app/app.go
 			relativeFilePath := path[len(basecoinProjectPath)+1:]

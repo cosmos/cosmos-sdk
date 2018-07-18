@@ -14,7 +14,7 @@ func TestInitGenesis(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 
 	pool := keeper.GetPool(ctx)
-	pool.LooseTokens = sdk.OneRat()
+	pool.LooseTokens = sdk.NewRat(2)
 
 	params := keeper.GetParams(ctx)
 	var delegations []Delegation

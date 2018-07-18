@@ -314,6 +314,12 @@ func (k Keeper) unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddr
 // complete unbonding an unbonding record
 func (k Keeper) BeginUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddress, sharesAmount sdk.Rat) sdk.Error {
 
+	// TODO quick fix, instead we should use an index, see https://github.com/cosmos/cosmos-sdk/issues/1402
+	_, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
+	if found {
+		return types.ErrExistingUnbondingDelegation(k.Codespace())
+	}
+
 	returnAmount, err := k.unbond(ctx, delegatorAddr, validatorAddr, sharesAmount)
 	if err != nil {
 		return err

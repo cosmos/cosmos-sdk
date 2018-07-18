@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"math/rand"
 	"os"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -70,6 +72,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	var seed int64
+	var err error
 	envSeed := os.Getenv(simulationEnvSeed)
 	if envSeed != "" {
 		seed, err = strconv.ParseInt(envSeed, 10, 64)
@@ -83,7 +86,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 		t, app.BaseApp, appStateFn, seed,
 		[]simulation.TestAndRunTx{
 			stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper),
-			stakesim.SimulateMsgEditValidator(app.accountMapper, app.stakeKeeper),
+			stakesim.SimulateMsgEditValidator(app.stakeKeeper),
 			stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper),
 			stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper),
 			stakesim.SimulateMsgCompleteUnbonding(app.stakeKeeper),

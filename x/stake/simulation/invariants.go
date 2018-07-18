@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -38,7 +37,6 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) sim
 			return false
 		})
 		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd stake.UnbondingDelegation) bool {
-			fmt.Printf("found ubd with balance: %v\n", ubd.Balance)
 			loose = loose.Add(ubd.Balance.Amount)
 			return false
 		})

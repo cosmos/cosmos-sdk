@@ -421,16 +421,12 @@ Here is the complete setup for App1:
 
 ```go
 func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
-    cdc := wire.NewCodec()
-
+	
     // Create the base application object.
-    app := bapp.NewBaseApp(app1Name, cdc, logger, db)
+    app := bapp.NewBaseApp(app1Name, logger, db, tx1Decoder)
 
     // Create a capability key for accessing the account store.
     keyAccount := sdk.NewKVStoreKey("acc")
-
-    // Determine how transactions are decoded.
-    app.SetTxDecoder(txDecoder)
 
     // Register message routes.
     // Note the handler receives the keyAccount and thus

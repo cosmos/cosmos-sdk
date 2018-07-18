@@ -67,6 +67,29 @@ tested by circle using `go test -v -race ./...`. If not, they will need a
 `circle.yml`. Ideally, every repo has a `Makefile` that defines `make test` and
 includes its continuous integration status using a badge in the `README.md`.
 
+We expect tests to use `require` or `assert` rather than `t.Skip` or `t.Fail`,
+unless there is a reason to do otherwise.
+When testing a function under a variety of different inputs, we prefer to use
+[table driven tests](https://github.com/golang/go/wiki/TableDrivenTests).
+Table driven test error messages should follow the following format
+`<desc>, tc #<index>, i #<index>`.
+`<desc>` is an optional short description of whats failing, `tc` is the
+index within the table of the testcase that is failing, and `i` is when there
+is a loop, exactly which iteration of the loop failed.
+The idea is you should be able to see the
+error message and figure out exactly what failed.
+Here is an example check:
+
+```
+<some table>
+for tcIndex, tc := range cases {
+  <some code>
+  for i := 0; i < tc.numTxsToTest; i++ {
+      <some code>
+			require.Equal(t, expectedTx[:32], calculatedTx[:32],
+				"First 32 bytes of the txs differed. tc #%d, i #%d", tcIndex, i)
+ ```
+
 ## Branching Model and Release
 
 User-facing repos should adhere to the branching model: http://nvie.com/posts/a-successful-git-branching-model/.

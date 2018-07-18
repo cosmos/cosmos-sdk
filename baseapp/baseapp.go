@@ -635,7 +635,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	}
 
 	ctx = ctx.WithMultiStore(msCache)
-	result = app.runMsgs(ctx, msgs, runTxModeCheck)
+	result = app.runMsgs(ctx, msgs, mode)
 	result.GasWanted = gasWanted
 
 	// only update state if all messages pass and we're not in a simulation

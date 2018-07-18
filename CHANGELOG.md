@@ -3,6 +3,7 @@
 ## PENDING
 
 BREAKING CHANGES
+* [x/stake] Fixed the period check for the inflation calculation
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus

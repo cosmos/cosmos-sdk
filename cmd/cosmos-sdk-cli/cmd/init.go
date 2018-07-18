@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 )
 
+var remoteBasecoinPath = "github.com/cosmos/cosmos-sdk/examples/basecoin"
+var replacer *strings.Replacer
 var remoteProjectPath string
 
 func init() {
@@ -27,11 +29,13 @@ var initCmd = &cobra.Command{
         RunE: func(cmd *cobra.Command, args []string) error {
                 fmt.Print("Thanks for choosing Cosmos-SDK to build your project.\n\n")
                 projectName := args[0]
+		capitalizedProjectName := strings.Title(projectName)
                 shortProjectName := strings.ToLower(projectName)
                 remoteProjectPath = strings.ToLower(strings.TrimSpace(remoteProjectPath))
                 if remoteProjectPath == "" {
                         remoteProjectPath = strings.ToLower(shortProjectName)
                 }
+		replacer = strings.NewReplacer("basecli", shortProjectName + "cli", "basecoind", shortProjectName + "d", "BasecoinApp", capitalizedProjectName + "App", "github.com/cosmos/cosmos-sdk/examples/basecoin/", remoteProjectPath + "/", "basecoin", shortProjectName)
                 setupBasecoinWorkspace(shortProjectName, remoteProjectPath)
                 return nil
         },
@@ -47,8 +51,6 @@ func resolveProjectPath(remoteProjectPath string) string {
 	return gopath + string(os.PathSeparator) + "src" + string(os.PathSeparator) + remoteProjectPath
 }
 
-var remoteBasecoinPath = "github.com/cosmos/cosmos-sdk/examples/basecoin"
-
 func copyBasecoinTemplate(projectName string, projectPath string, remoteProjectPath string) {
 	basecoinProjectPath := resolveProjectPath(remoteBasecoinPath)
 	filepath.Walk(basecoinProjectPath, func(path string, f os.FileInfo, err error) error {
@@ -62,6 +64,7 @@ func copyBasecoinTemplate(projectName string, projectPath string, remoteProjectP
 			relativeFilePath := path[len(basecoinProjectPath)+1:]
 			// Evaluating the filepath in the new project folder
 			projectFilePath := projectPath + string(os.PathSeparator) + relativeFilePath
+			projectFilePath = replacer.Replace(projectFilePath)
 			lengthOfRootDir := strings.LastIndex(projectFilePath, string(os.PathSeparator))
 			// Extracting the path of root directory from the filepath
 			rootDir := projectFilePath[0:lengthOfRootDir]
@@ -69,6 +72,7 @@ func copyBasecoinTemplate(projectName string, projectPath string, remoteProjectP
 			os.MkdirAll(rootDir, os.ModePerm)
 			fmt.Println("Creating " + projectFilePath)
 			// Writing the contents to a file in the project folder
+			contents = replacer.Replace(contents)
 			ioutil.WriteFile(projectFilePath, []byte(contents), os.ModePerm)
 		}
 		return nil
@@ -121,6 +125,7 @@ benchmark:
 	@go test -bench=. $(PACKAGES)
 
 .PHONY: all build test benchmark`
+	makefileContents = replacer.Replace(makefileContents)
 	ioutil.WriteFile(projectPath+"/Makefile", []byte(makefileContents), os.ModePerm)
 
 }

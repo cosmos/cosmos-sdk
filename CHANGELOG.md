@@ -9,6 +9,7 @@ FEATURES
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route
+* [cli] Improve error messages for all txs when the account doesn't exist
 
 BUG FIXES
 

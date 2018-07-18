@@ -83,21 +83,6 @@ func getMockApp(t *testing.T) *mock.App {
 	return mapp
 }
 
-func TestBankWithRandomMessages(t *testing.T) {
-	mapp := getMockApp(t)
-	setup := func(r *rand.Rand, keys []crypto.PrivKey) {
-		return
-	}
-
-	mapp.RandomizedTesting(
-		t,
-		[]mock.TestAndRunTx{TestAndRunSingleInputMsgSend},
-		[]mock.RandSetup{setup},
-		[]mock.Invariant{ModuleInvariants},
-		100, 30, 30,
-	)
-}
-
 func TestMsgSendWithAccounts(t *testing.T) {
 	mapp := getMockApp(t)
 

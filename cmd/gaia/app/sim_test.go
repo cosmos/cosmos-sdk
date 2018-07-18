@@ -14,6 +14,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	stake "github.com/cosmos/cosmos-sdk/x/stake"
 	stakesim "github.com/cosmos/cosmos-sdk/x/stake/simulation"
@@ -85,6 +86,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 	simulation.SimulateFromSeed(
 		t, app.BaseApp, appStateFn, seed,
 		[]simulation.TestAndRunTx{
+			banksim.TestAndRunSingleInputMsgSend(app.accountMapper),
 			stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper),
 			stakesim.SimulateMsgEditValidator(app.stakeKeeper),
 			stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper),
@@ -95,6 +97,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 		},
 		[]simulation.RandSetup{},
 		[]simulation.Invariant{
+			banksim.NonnegativeBalanceInvariant(app.accountMapper),
 			stakesim.AllInvariants(app.coinKeeper, app.stakeKeeper, app.accountMapper),
 		},
 		NumKeys,

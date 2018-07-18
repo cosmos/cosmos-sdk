@@ -35,11 +35,7 @@ IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route
 * [tools] Remove `rm -rf vendor/` from `make get_vendor_deps`
 * [x/auth] Recover ErrorOutOfGas panic in order to set sdk.Result attributes correctly
-* [x/stake] Add revoked to human-readable validator 
 * [tests] Add tests to example apps in docs
 * [x/gov] Votes on a proposal can now be queried
 * [x/bank] Unit tests are now table-driven
 * [tests] Fixes ansible scripts to work with AWS too
-
-BUG FIXES
-*  \#1666 Add intra-tx counter to the genesis validators

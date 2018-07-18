@@ -14,7 +14,12 @@ import (
 )
 
 var remoteBasecoinPath = "github.com/cosmos/cosmos-sdk/examples/basecoin"
+
+// Replacer to replace all instances of basecoin/basecli/BasecoinApp to project specific names
+// Gets initialized when initCmd is executing after getting the project name from user
 var replacer *strings.Replacer
+
+// Remote path for the project.
 var remoteProjectPath string
 
 func init() {
@@ -35,7 +40,11 @@ var initCmd = &cobra.Command{
 		if remoteProjectPath == "" {
 			remoteProjectPath = strings.ToLower(shortProjectName)
 		}
-		replacer = strings.NewReplacer("basecli", shortProjectName+"cli", "basecoind", shortProjectName+"d", "BasecoinApp", capitalizedProjectName+"App", "github.com/cosmos/cosmos-sdk/examples/basecoin/", remoteProjectPath+"/", "basecoin", shortProjectName)
+		replacer = strings.NewReplacer("basecli", shortProjectName+"cli",
+			"basecoind", shortProjectName+"d",
+			"BasecoinApp", capitalizedProjectName+"App",
+			remoteBasecoinPath, remoteProjectPath,
+			"basecoin", shortProjectName)
 		setupBasecoinWorkspace(shortProjectName, remoteProjectPath)
 		return nil
 	},
@@ -103,6 +112,7 @@ func createGopkg(projectPath string) {
 
 func createMakefile(projectPath string) {
 	// Create makefile
+	// TODO: Should we use tools/ directory as in Cosmos-SDK to get tools for linting etc.
 	makefileContents := `PACKAGES=$(shell go list ./... | grep -v '/vendor/')
 
 all: get_tools get_vendor_deps build test
@@ -124,7 +134,10 @@ benchmark:
 	@go test -bench=. $(PACKAGES)
 
 .PHONY: all build test benchmark`
+
+	// Replacing instances of base* to project specific names
 	makefileContents = replacer.Replace(makefileContents)
+
 	ioutil.WriteFile(projectPath+"/Makefile", []byte(makefileContents), os.ModePerm)
 
 }

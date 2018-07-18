@@ -9,6 +9,7 @@ FEATURES
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route
+* [x/stake] Add revoked to human-readable validator 
 
 BUG FIXES
 

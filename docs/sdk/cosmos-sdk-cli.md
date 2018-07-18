@@ -23,7 +23,7 @@ This will initialize a project, the dependencies, directory structures with the 
 ```shell
 $ cosmos-sdk-cli init testzone -p github.com/your_user_name/testzone
 ```
-```-p [remote-project-path]```. If this is not provided, it creates testzone under $GOPATH/src/
+`-p [remote-project-path]`. If this is not provided, it creates testzone under $GOPATH/src/
 
 
 ```shell

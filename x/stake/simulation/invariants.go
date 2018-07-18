@@ -30,8 +30,8 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) sim
 		ctx := app.NewContext(false, abci.Header{})
 		pool := k.GetPool(ctx)
 
-		// Loose tokens should equal coin supply plus unbonding delegations
 		loose := sdk.ZeroInt()
+		bonded := sdk.ZeroRat()
 		am.IterateAccounts(ctx, func(acc auth.Account) bool {
 			loose = loose.Add(acc.GetCoins().AmountOf("steak"))
 			return false
@@ -40,18 +40,22 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) sim
 			loose = loose.Add(ubd.Balance.Amount)
 			return false
 		})
-		require.True(t, pool.LooseTokens.RoundInt64() == loose.Int64(), "expected loose tokens to equal total steak held by accounts - pool.LooseTokens: %v, sum of account tokens: %v\nlog: %s",
-			pool.LooseTokens.RoundInt64(), loose.Int64(), log)
-
-		// Bonded tokens should equal sum of tokens with bonded validators
-		bonded := sdk.ZeroRat()
 		k.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {
 			switch validator.GetStatus() {
 			case sdk.Bonded:
 				bonded = bonded.Add(validator.GetPower())
+			case sdk.Unbonding:
+			case sdk.Unbonded:
+				loose = loose.Add(validator.GetTokens().RoundInt())
 			}
 			return false
 		})
+
+		// Loose tokens should equal coin supply plus unbonding delegations plus tokens on unbonded validators
+		require.True(t, pool.LooseTokens.RoundInt64() == loose.Int64(), "expected loose tokens to equal total steak held by accounts - pool.LooseTokens: %v, sum of account tokens: %v\nlog: %s",
+			pool.LooseTokens.RoundInt64(), loose.Int64(), log)
+
+		// Bonded tokens should equal sum of tokens with bonded validators
 		require.True(t, pool.BondedTokens.Equal(bonded), "expected bonded tokens to equal total steak held by bonded validators\nlog: %s", log)
 
 		// TODO Inflation check on total supply

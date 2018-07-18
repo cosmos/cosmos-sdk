@@ -406,6 +406,7 @@ func (v Validator) GetStatus() sdk.BondStatus   { return v.Status }
 func (v Validator) GetOwner() sdk.AccAddress    { return v.Owner }
 func (v Validator) GetPubKey() crypto.PubKey    { return v.PubKey }
 func (v Validator) GetPower() sdk.Rat           { return v.BondedTokens() }
+func (v Validator) GetTokens() sdk.Rat          { return v.Tokens }
 func (v Validator) GetDelegatorShares() sdk.Rat { return v.DelegatorShares }
 func (v Validator) GetBondHeight() int64        { return v.BondHeight }
 

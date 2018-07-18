@@ -51,7 +51,7 @@ func TestStakeWithRandomMessages(t *testing.T) {
 			SimulateMsgBeginRedelegate(mapper, stakeKeeper),
 			SimulateMsgCompleteRedelegate(stakeKeeper),
 		}, []simulation.RandSetup{
-			SimulationSetup(mapp, stakeKeeper),
+			Setup(mapp, stakeKeeper),
 		}, []simulation.Invariant{
 			AllInvariants(coinKeeper, stakeKeeper, mapp.AccountMapper),
 		}, 10, 100, 100,

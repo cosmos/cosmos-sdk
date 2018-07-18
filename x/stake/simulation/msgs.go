@@ -231,8 +231,8 @@ func SimulateMsgCompleteRedelegate(k stake.Keeper) simulation.TestAndRunTx {
 	}
 }
 
-// SimulationSetup
-func SimulationSetup(mapp *mock.App, k stake.Keeper) simulation.RandSetup {
+// Setup
+func Setup(mapp *mock.App, k stake.Keeper) simulation.RandSetup {
 	return func(r *rand.Rand, privKeys []crypto.PrivKey) {
 		ctx := mapp.NewContext(false, abci.Header{})
 		stake.InitGenesis(ctx, k, stake.DefaultGenesisState())

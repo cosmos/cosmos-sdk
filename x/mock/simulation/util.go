@@ -15,6 +15,7 @@ const (
 	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 )
 
+// Generate a random string of a particular length
 func RandStringOfLength(r *rand.Rand, n int) string {
 	b := make([]byte, n)
 	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
@@ -32,6 +33,7 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 	return string(b)
 }
 
+// Pretty-print events as a table
 func DisplayEvents(events map[string]uint) {
 	// TODO
 	fmt.Printf("Events: %v\n", events)

@@ -36,7 +36,7 @@ func SimulateFromSeed(
 	// Setup event stats
 	events := make(map[string]uint)
 	event := func(what string) {
-		events[what] += 1
+		events[what]++
 	}
 
 	app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, addrs)})

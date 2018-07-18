@@ -18,10 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-
-	// TODO: Remove dependency on auth and wire
-	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // Key to store the header in the DB itself.
@@ -47,14 +43,12 @@ type BaseApp struct {
 	// initialized on creation
 	Logger     log.Logger
 	name       string               // application name from abci.Info
-	cdc        *wire.Codec          // Amino codec (DEPRECATED)
 	db         dbm.DB               // common DB backend
 	cms        sdk.CommitMultiStore // Main (uncached) state
 	router     Router               // handle any kind of message
 	codespacer *sdk.Codespacer      // handle module codespacing
-
-	// must be set
 	txDecoder   sdk.TxDecoder   // unmarshal []byte into sdk.Tx
+
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
 
 	// may be nil
@@ -83,31 +77,10 @@ var _ abci.Application = (*BaseApp)(nil)
 // (e.g. functional options).
 //
 // NOTE: The db is used to store the version number for now.
+// Accepts a user-defined txDecoder
 // Accepts variable number of option functions, which act on the BaseApp to set configuration choices
-// DEPRECATED
-func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB, options ...func(*BaseApp)) *BaseApp {
-	app := &BaseApp{
-		Logger:     logger,
-		name:       name,
-		cdc:        cdc,
-		db:         db,
-		cms:        store.NewCommitMultiStore(db),
-		router:     NewRouter(),
-		codespacer: sdk.NewCodespacer(),
-		txDecoder:  auth.DefaultTxDecoder(cdc),
-	}
-	// Register the undefined & root codespaces, which should not be used by any modules
-	app.codespacer.RegisterOrPanic(sdk.CodespaceRoot)
-	for _, option := range options {
-		option(app)
-	}
-	return app
-}
-
-// Create and name new BaseApp
-// Does not set cdc and instead takes a user-defined txDecoder.
 // TODO: Rename to NewBaseApp and remove above constructor once auth, wire dependencies removed
-func NewBaseAppNoCodec(name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp)) *BaseApp {
+func NewBaseApp(name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp)) *BaseApp {
 	app := &BaseApp{
 		Logger:     logger,
 		name:       name,
@@ -158,12 +131,6 @@ func (app *BaseApp) MountStoreWithDB(key sdk.StoreKey, typ sdk.StoreType, db dbm
 // Mount a store to the provided key in the BaseApp multistore, using the default DB
 func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 	app.cms.MountStoreWithDB(key, typ, nil)
-}
-
-// Set the txDecoder function
-// DEPRECATED
-func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
-	app.txDecoder = txDecoder
 }
 
 // nolint - Set functions
@@ -367,17 +334,10 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 			result = sdk.ErrUnknownRequest(fmt.Sprintf("Unknown query: %s", path)).Result()
 		}
 
-		// Encode with amino if defined, else use json
-		// TODO: Use JSON encoding only once app.cdc removed
-		var value []byte
-		if app.cdc != nil {
-			value = app.cdc.MustMarshalBinary(result)
-		} else {
-			var err error
-			value, err = json.Marshal(result)
-			if err != nil {
-				return sdk.ErrInternal("Encoding result failed").QueryResult()
-			}
+		// Encode with json
+		value, err := json.Marshal(result)
+		if err != nil {
+			return sdk.ErrInternal("Encoding result failed").QueryResult()
 		}
 
 		return abci.ResponseQuery{

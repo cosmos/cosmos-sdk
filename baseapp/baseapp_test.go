@@ -31,7 +31,7 @@ func newBaseApp(name string) *BaseApp {
 	db := dbm.NewMemDB()
 	codec := wire.NewCodec()
 	registerTestCodec(codec)
-	return NewBaseAppNoCodec(name, logger, db, testTxDecoder(codec))
+	return NewBaseApp(name, logger, db, testTxDecoder(codec))
 }
 
 func registerTestCodec(cdc *wire.Codec) {
@@ -84,7 +84,7 @@ func TestLoadVersion(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseAppNoCodec(name, logger, db, nil)
+	app := NewBaseApp(name, logger, db, nil)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
@@ -113,7 +113,7 @@ func TestLoadVersion(t *testing.T) {
 	commitID2 := sdk.CommitID{2, res.Data}
 
 	// reload with LoadLatestVersion
-	app = NewBaseAppNoCodec(name, logger, db, nil)
+	app = NewBaseApp(name, logger, db, nil)
 	app.MountStoresIAVL(capKey)
 	err = app.LoadLatestVersion(capKey)
 	require.Nil(t, err)
@@ -121,7 +121,7 @@ func TestLoadVersion(t *testing.T) {
 
 	// reload with LoadVersion, see if you can commit the same block and get
 	// the same result
-	app = NewBaseAppNoCodec(name, logger, db, nil)
+	app = NewBaseApp(name, logger, db, nil)
 	app.MountStoresIAVL(capKey)
 	err = app.LoadVersion(1, capKey)
 	require.Nil(t, err)
@@ -141,7 +141,7 @@ func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, exp
 func TestOptionFunction(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	bap := NewBaseAppNoCodec("starting name", logger, db, nil, testChangeNameHelper("new name"))
+	bap := NewBaseApp("starting name", logger, db, nil, testChangeNameHelper("new name"))
 	require.Equal(t, bap.name, "new name", "BaseApp should have had name changed via option function")
 }
 
@@ -213,7 +213,7 @@ func TestInitChainer(t *testing.T) {
 	// we can reload the same  app later
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseAppNoCodec(name, logger, db, nil)
+	app := NewBaseApp(name, logger, db, nil)
 	capKey := sdk.NewKVStoreKey("main")
 	capKey2 := sdk.NewKVStoreKey("key2")
 	app.MountStoresIAVL(capKey, capKey2)
@@ -254,7 +254,7 @@ func TestInitChainer(t *testing.T) {
 	require.Equal(t, value, res.Value)
 
 	// reload app
-	app = NewBaseAppNoCodec(name, logger, db, nil)
+	app = NewBaseApp(name, logger, db, nil)
 	app.MountStoresIAVL(capKey, capKey2)
 	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	require.Nil(t, err)

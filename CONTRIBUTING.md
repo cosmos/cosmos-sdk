@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for considering making contributions to Cosmos-SDK and related repositories! Start by taking a look at this [coding repo](https://github.com/tendermint/coding) for overall information on repository workflow and standards.
+Thank you for considering making contributions to Cosmos-SDK and related repositories! Start by taking a look at this [coding repo](https://github.com/tendermint/coding) for overall information on repository workflow and standards. Note, we use `make get_dev_tools` and `make update_dev_tools` for installing the linting tools.
 
 Please follow standard github best practices: fork the repo, branch from the tip of develop, make some commits, and submit a pull request to develop. See the [open issues](https://github.com/cosmos/cosmos-sdk/issues) for things we need help with!
 

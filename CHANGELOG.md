@@ -12,6 +12,7 @@ IMPROVEMENTS
 * [x/stake] Add revoked to human-readable validator 
 
 BUG FIXES
+*  \#1666 Add intra-tx counter to the genesis validators
 
 ## 0.22.0
 

@@ -7,6 +7,9 @@
 BREAKING CHANGES
 * [x/stake] Fixed the period check for the inflation calculation
 
+IMPROVEMENTS
+* [cli] Improve error messages for all txs when the account doesn't exist
+
 ## 0.22.0
 
 *July 16th, 2018*

@@ -49,7 +49,7 @@ func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation
 		}
 		event(fmt.Sprintf("stake/MsgCreateValidator/%v", result.IsOK()))
 		// require.True(t, result.IsOK(), "expected OK result but instead got %v", result)
-		action = fmt.Sprintf("TestMsgCreateValidator: %s", msg.GetSignBytes())
+		action = fmt.Sprintf("TestMsgCreateValidator: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil
 	}
 }
@@ -77,7 +77,7 @@ func SimulateMsgEditValidator(k stake.Keeper) simulation.TestAndRunTx {
 			write()
 		}
 		event(fmt.Sprintf("stake/MsgEditValidator/%v", result.IsOK()))
-		action = fmt.Sprintf("TestMsgEditValidator: %s", msg.GetSignBytes())
+		action = fmt.Sprintf("TestMsgEditValidator: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil
 	}
 }
@@ -109,7 +109,7 @@ func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) simulation.TestAn
 			write()
 		}
 		event(fmt.Sprintf("stake/MsgDelegate/%v", result.IsOK()))
-		action = fmt.Sprintf("TestMsgDelegate: %s", msg.GetSignBytes())
+		action = fmt.Sprintf("TestMsgDelegate: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil
 	}
 }
@@ -141,7 +141,7 @@ func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.
 			write()
 		}
 		event(fmt.Sprintf("stake/MsgBeginUnbonding/%v", result.IsOK()))
-		action = fmt.Sprintf("TestMsgBeginUnbonding: %s", msg.GetSignBytes())
+		action = fmt.Sprintf("TestMsgBeginUnbonding: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil
 	}
 }
@@ -164,7 +164,7 @@ func SimulateMsgCompleteUnbonding(k stake.Keeper) simulation.TestAndRunTx {
 			write()
 		}
 		event(fmt.Sprintf("stake/MsgCompleteUnbonding/%v", result.IsOK()))
-		action = fmt.Sprintf("TestMsgCompleteUnbonding with %s", msg.GetSignBytes())
+		action = fmt.Sprintf("TestMsgCompleteUnbonding: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil
 	}
 }
@@ -226,7 +226,7 @@ func SimulateMsgCompleteRedelegate(k stake.Keeper) simulation.TestAndRunTx {
 			write()
 		}
 		event(fmt.Sprintf("stake/MsgCompleteRedelegate/%v", result.IsOK()))
-		action = fmt.Sprintf("TestMsgCompleteRedelegate with %s", msg.GetSignBytes())
+		action = fmt.Sprintf("TestMsgCompleteRedelegate: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil
 	}
 }

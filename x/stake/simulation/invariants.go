@@ -41,8 +41,7 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) sim
 			return false
 		})
 		require.True(t, pool.LooseTokens.RoundInt64() == loose.Int64(), "expected loose tokens to equal total steak held by accounts - pool.LooseTokens: %v, sum of account tokens: %v\nlog: %s",
-			pool.LooseTokens, loose, log)
-		// stats["stake/invariant/looseTokens"] += 1
+			pool.LooseTokens.RoundInt64(), loose.Int64(), log)
 
 		// Bonded tokens should equal sum of tokens with bonded validators
 		bonded := sdk.ZeroRat()
@@ -54,7 +53,6 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) sim
 			return false
 		})
 		require.True(t, pool.BondedTokens.Equal(bonded), "expected bonded tokens to equal total steak held by bonded validators\nlog: %s", log)
-		// stats["stake/invariant/bondedTokens"] += 1
 
 		// TODO Inflation check on total supply
 	}
@@ -68,7 +66,6 @@ func PositivePowerInvariant(k stake.Keeper) simulation.Invariant {
 			require.True(t, validator.GetPower().GT(sdk.ZeroRat()), "validator with non-positive power stored")
 			return false
 		})
-		// stats["stake/invariant/positivePower"] += 1
 	}
 }
 

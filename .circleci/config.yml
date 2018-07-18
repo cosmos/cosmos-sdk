@@ -99,6 +99,7 @@ jobs:
           name: Test simulation
           command: |
             export PATH="$GOBIN:$PATH"
+            export GAIA_SIMULATION_SEED=1531897442166404087
             make test_sim
 
   test_cover:

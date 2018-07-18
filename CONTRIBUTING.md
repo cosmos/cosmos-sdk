@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for considering making contributions to Cosmos-SDK and related repositories! Start by taking a look at this [coding repo](https://github.com/tendermint/coding) for overall information on repository workflow and standards.
+Thank you for considering making contributions to Cosmos-SDK and related repositories! Start by taking a look at this [coding repo](https://github.com/tendermint/coding) for overall information on repository workflow and standards. Note, we use `make get_dev_tools` and `make update_dev_tools` for installing the linting tools.
 
 Please follow standard github best practices: fork the repo, branch from the tip of develop, make some commits, and submit a pull request to develop. See the [open issues](https://github.com/cosmos/cosmos-sdk/issues) for things we need help with!
 
@@ -66,6 +66,29 @@ If they have `.go` files in the root directory, they will be automatically
 tested by circle using `go test -v -race ./...`. If not, they will need a
 `circle.yml`. Ideally, every repo has a `Makefile` that defines `make test` and
 includes its continuous integration status using a badge in the `README.md`.
+
+We expect tests to use `require` or `assert` rather than `t.Skip` or `t.Fail`,
+unless there is a reason to do otherwise.
+When testing a function under a variety of different inputs, we prefer to use
+[table driven tests](https://github.com/golang/go/wiki/TableDrivenTests).
+Table driven test error messages should follow the following format
+`<desc>, tc #<index>, i #<index>`.
+`<desc>` is an optional short description of whats failing, `tc` is the
+index within the table of the testcase that is failing, and `i` is when there
+is a loop, exactly which iteration of the loop failed.
+The idea is you should be able to see the
+error message and figure out exactly what failed.
+Here is an example check:
+
+```
+<some table>
+for tcIndex, tc := range cases {
+  <some code>
+  for i := 0; i < tc.numTxsToTest; i++ {
+      <some code>
+			require.Equal(t, expectedTx[:32], calculatedTx[:32],
+				"First 32 bytes of the txs differed. tc #%d, i #%d", tcIndex, i)
+ ```
 
 ## Branching Model and Release
 

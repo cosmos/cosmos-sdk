@@ -10,25 +10,28 @@ import (
 
 // Keeper manages global parameter store
 type Keeper struct {
-	cdc *wire.Codec
-	key sdk.StoreKey
+	cdc      *wire.Codec
+	key      sdk.StoreKey
+	tkey     sdk.StoreKey
+	prefixes []string
 }
 
 // NewKeeper constructs a new Keeper
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey) Keeper {
+func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, tkey sdk.StoreKey) Keeper {
 	return Keeper{
-		cdc: cdc,
-		key: key,
+		cdc:  cdc,
+		key:  key,
+		tkey: tkey,
 	}
 }
 
 // InitKeeper constructs a new Keeper with initial parameters
-func InitKeeper(ctx sdk.Context, cdc *wire.Codec, key sdk.StoreKey, params ...interface{}) Keeper {
+func InitKeeper(ctx sdk.Context, cdc *wire.Codec, key sdk.StoreKey, tkey sdk.StoreKey, params ...interface{}) Keeper {
 	if len(params)%2 != 0 {
 		panic("Odd params list length for InitKeeper")
 	}
 
-	k := NewKeeper(cdc, key)
+	k := NewKeeper(cdc, key, tkey)
 
 	for i := 0; i < len(params); i += 2 {
 		k.set(ctx, params[i].(string), params[i+1])
@@ -50,6 +53,12 @@ func (k Keeper) getRaw(ctx sdk.Context, key string) []byte {
 	return store.Get([]byte(key))
 }
 
+// modified returns true if the parameter of the key is changed in this block
+func (k Keeper) modified(ctx sdk.Context, key string) bool {
+	tstore := ctx.KVStore(k.tkey)
+	return tstore.Has([]byte(key))
+}
+
 // set automatically marshalls and type check parameter
 func (k Keeper) set(ctx sdk.Context, key string, param interface{}) error {
 	store := ctx.KVStore(k.key)
@@ -69,6 +78,9 @@ func (k Keeper) set(ctx sdk.Context, key string, param interface{}) error {
 	}
 	store.Set([]byte(key), bz)
 
+	tstore := ctx.KVStore(k.tkey)
+	tstore.Set([]byte(key), []byte{})
+
 	return nil
 }
 
@@ -83,8 +95,8 @@ func (k Keeper) Getter() Getter {
 	return Getter{k}
 }
 
-// Setter returns read/write struct
-func (k Keeper) Setter() Setter {
+// MasterSetter returns read/write struct on all prefix range
+func (k Keeper) MasterSetter() Setter {
 	return Setter{Getter{k}}
 }
 
@@ -312,6 +324,12 @@ func (k Getter) GetRatWithDefault(ctx sdk.Context, key string, def sdk.Rat) (res
 	return
 }
 
+// Modified returns true if the parameter associated with the key is modified in this block
+func (k Getter) Modified(ctx sdk.Context, key string) bool {
+	return k.k.modified(ctx, key)
+}
+
+// TODO: Disable the other module construct Setter
 // Setter exposes all methods including Set
 type Setter struct {
 	Getter

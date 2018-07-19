@@ -329,14 +329,18 @@ func NewTransientStoreKey(name string) *TransientStoreKey {
 	}
 }
 
+// Implements StoreKey
 func (key *TransientStoreKey) Name() string {
 	return key.name
 }
+
+// Implements StoreKey
 
 func (key *TransientStoreKey) String() string {
 	return fmt.Sprintf("TransientStoreKey{%p, %s}", key, key.name)
 }
 
+// Implements KVStoreGetter
 func (key *TransientStoreKey) KVStore(ctx Context) KVStore {
 	return ctx.KVStore(key)
 }

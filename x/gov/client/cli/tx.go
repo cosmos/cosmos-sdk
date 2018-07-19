@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	flagProposalID   = "proposalID"
+	flagProposalID   = "proposal-id"
 	flagTitle        = "title"
 	flagDescription  = "description"
 	flagProposalType = "type"

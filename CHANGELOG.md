@@ -6,6 +6,7 @@
 
 BREAKING CHANGES
 * [x/gov] Increase VotingPeriod, DepositPeriod, and MinDeposit
+* [x/gov] CLI flag changed from `proposalID` to `proposal-id`
 
 IMPROVEMENTS
 * [gaiad] Default config updates:

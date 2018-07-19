@@ -10,6 +10,7 @@ FEATURES
   * Modules specify invariants and operations, preferably in an x/[module]/simulation package
   * Modules can test random combinations of their own operations
   * Applications can integrate operations and invariants from modules together for an integrated simulation
+* [baseapp] Initialize validator set on ResponseInitChain
 * Added support for cosmos-sdk-cli tool under cosmos-sdk/cmd	
    * This allows SDK users to init a new project repository with a single command.
 

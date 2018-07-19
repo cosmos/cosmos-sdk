@@ -110,6 +110,22 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sd
 	return ubds
 }
 
+// iterate through all of the unbonding delegations
+func (k Keeper) IterateUnbondingDelegations(ctx sdk.Context, fn func(index int64, ubd types.UnbondingDelegation) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, UnbondingDelegationKey)
+	i := int64(0)
+	for ; iterator.Valid(); iterator.Next() {
+		ubd := types.MustUnmarshalUBD(k.cdc, iterator.Key(), iterator.Value())
+		stop := fn(i, ubd)
+		if stop {
+			break
+		}
+		i++
+	}
+	iterator.Close()
+}
+
 // set the unbonding delegation and associated index
 func (k Keeper) SetUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
@@ -297,6 +313,12 @@ func (k Keeper) unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddr
 
 // complete unbonding an unbonding record
 func (k Keeper) BeginUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddress, sharesAmount sdk.Rat) sdk.Error {
+
+	// TODO quick fix, instead we should use an index, see https://github.com/cosmos/cosmos-sdk/issues/1402
+	_, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
+	if found {
+		return types.ErrExistingUnbondingDelegation(k.Codespace())
+	}
 
 	returnAmount, err := k.unbond(ctx, delegatorAddr, validatorAddr, sharesAmount)
 	if err != nil {

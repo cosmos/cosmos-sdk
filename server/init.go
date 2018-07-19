@@ -48,10 +48,9 @@ var (
 
 // genesis piece structure for creating combined genesis
 type GenesisTx struct {
-	NodeID    string                   `json:"node_id"`
-	IP        string                   `json:"ip"`
-	Validator tmtypes.GenesisValidator `json:"validator"`
-	AppGenTx  json.RawMessage          `json:"app_gen_tx"`
+	NodeID   string          `json:"node_id"`
+	IP       string          `json:"ip"`
+	AppGenTx json.RawMessage `json:"app_gen_tx"`
 }
 
 // Storage for init command input parameters
@@ -121,16 +120,15 @@ func gentxWithConfig(cdc *wire.Codec, appInit AppInit, config *cfg.Config, genTx
 	nodeID := string(nodeKey.ID())
 	pubKey := readOrCreatePrivValidator(config)
 
-	appGenTx, cliPrint, validator, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
+	appGenTx, cliPrint, _, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
 	if err != nil {
 		return
 	}
 
 	tx := GenesisTx{
-		NodeID:    nodeID,
-		IP:        genTxConfig.IP,
-		Validator: validator,
-		AppGenTx:  appGenTx,
+		NodeID:   nodeID,
+		IP:       genTxConfig.IP,
+		AppGenTx: appGenTx,
 	}
 	bz, err := wire.MarshalJSONIndent(cdc, tx)
 	if err != nil {
@@ -312,7 +310,6 @@ func processGenTxs(genTxsDir string, cdc *wire.Codec) (
 		genTx := genTxs[nodeID]
 
 		// combine some stuff
-		validators = append(validators, genTx.Validator)
 		appGenTxs = append(appGenTxs, genTx.AppGenTx)
 
 		// Add a persistent peer

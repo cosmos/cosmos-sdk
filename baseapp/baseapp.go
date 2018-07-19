@@ -290,7 +290,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	if app.initChainer == nil {
 		return
 	}
-	app.initChainer(app.deliverState.ctx, req) // no error
+	res = app.initChainer(app.deliverState.ctx, req)
 
 	// NOTE: we don't commit, but BeginBlock for block 1
 	// starts from this deliverState

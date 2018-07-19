@@ -436,7 +436,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	return
 }
 
-// Implements ABCI
+// CheckTx implements ABCI
 // CheckTx runs the "basic checks" to see whether or not a transaction can possibly be executed,
 // first decoding, then the ante handler (which checks signatures/fees/ValidateBasic),
 // then finally the route match to see whether a handler exists. CheckTx does not run the actual

@@ -6,6 +6,8 @@ BREAKING CHANGES
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus
+* Added support for cosmos-sdk-cli tool under cosmos-sdk/cmd	
+   * This allows SDK users to init a new project repository with a single command.
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route

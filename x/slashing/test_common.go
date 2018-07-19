@@ -34,7 +34,7 @@ var (
 		sdk.AccAddress(pks[1].Address()),
 		sdk.AccAddress(pks[2].Address()),
 	}
-	initCoins sdk.Int = sdk.NewInt(200)
+	initCoins = sdk.NewInt(200)
 )
 
 func createTestCodec() *wire.Codec {

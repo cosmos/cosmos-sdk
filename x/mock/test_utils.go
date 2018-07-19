@@ -46,7 +46,8 @@ func SignCheckDeliver(
 	seq []int64, expPass bool, priv ...crypto.PrivKey,
 ) sdk.Result {
 	tx := GenTx(msgs, accNums, seq, priv...)
-	res := app.Check(tx)
+	// Must simulate now as CheckTx doesn't run Msgs anymore
+	res := app.Simulate(tx)
 
 	if expPass {
 		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)

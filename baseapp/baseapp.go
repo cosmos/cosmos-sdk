@@ -436,7 +436,11 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	return
 }
 
-// Implements ABCI
+// CheckTx implements ABCI
+// CheckTx runs the "basic checks" to see whether or not a transaction can possibly be executed,
+// first decoding, then the ante handler (which checks signatures/fees/ValidateBasic),
+// then finally the route match to see whether a handler exists. CheckTx does not run the actual
+// Msg handler function(s).
 func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 	// Decode the Tx.
 	var result sdk.Result
@@ -514,16 +518,11 @@ func (app *BaseApp) getContextForAnte(mode runTxMode, txBytes []byte) (ctx sdk.C
 		ctx = ctx.WithSigningValidators(app.signedValidators)
 	}
 
-	// Simulate a DeliverTx for gas calculation
-	if mode == runTxModeSimulate {
-		ctx = ctx.WithIsCheckTx(false)
-	}
-
 	return
 }
 
 // Iterates through msgs and executes them
-func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg) (result sdk.Result) {
+func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
 	// accumulate results
 	logs := make([]string, 0, len(msgs))
 	var data []byte   // NOTE: we just append them all (?!)
@@ -537,7 +536,11 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg) (result sdk.Result)
 			return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
 		}
 
-		msgResult := handler(ctx, msg)
+		var msgResult sdk.Result
+		// Skip actual execution for CheckTx
+		if mode != runTxModeCheck {
+			msgResult = handler(ctx, msg)
+		}
 
 		// NOTE: GasWanted is determined by ante handler and
 		// GasUsed by the GasMeter
@@ -615,9 +618,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// run the ante handler
 	if app.anteHandler != nil {
-		newCtx, anteResult, abort := app.anteHandler(ctx, tx)
+		newCtx, result, abort := app.anteHandler(ctx, tx)
 		if abort {
-			return anteResult
+			return result
 		}
 		if !newCtx.IsZero() {
 			ctx = newCtx
@@ -636,7 +639,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	}
 
 	ctx = ctx.WithMultiStore(msCache)
-	result = app.runMsgs(ctx, msgs)
+	result = app.runMsgs(ctx, msgs, mode)
 	result.GasWanted = gasWanted
 
 	// only update state if all messages pass and we're not in a simulation

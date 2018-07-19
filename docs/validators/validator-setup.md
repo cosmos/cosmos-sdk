@@ -84,7 +84,7 @@ To be in the validator set, you need to have more total voting power than the 10
 
 ### Problem #1: My validator has `voting_power: 0`
 
-Your validator has become auto-unbonded. In `gaia-7001`, we unbond validators if they do not vote on `50` of the last `100` blocks. Since blocks are proposed every ~2 seconds, a validator unresponsive for ~100 seconds will become unbonded. This usually happens when your `gaiad` process crashes.
+Your validator has become auto-unbonded. In `gaia-7001`, we unbond validators if they do not vote on `20,000` of the last `40,000` blocks. Since blocks are proposed every ~10 seconds, a validator unresponsive for ~55 hours will become unbonded. This tends to happen when your `gaiad` process crashes.
 
 Here's how you can return the voting power back to your validator. First, if `gaiad` is not running, start it up again:
 

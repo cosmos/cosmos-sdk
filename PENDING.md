@@ -12,6 +12,7 @@ IMPROVEMENTS
 * [cli] Improve error messages for all txs when the account doesn't exist
 * [tools] Remove `rm -rf vendor/` from `make get_vendor_deps`
 * [x/stake] Add revoked to human-readable validator 
+* [tests] Add tests to example apps in docs
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators

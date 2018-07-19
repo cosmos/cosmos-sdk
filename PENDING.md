@@ -3,6 +3,7 @@
 BREAKING CHANGES
 * [baseapp] Msgs are no longer run on CheckTx, removed `ctx.IsCheckTx()`
 * [x/stake] Fixed the period check for the inflation calculation
+* [baseapp] NewBaseApp constructor now takes sdk.TxDecoder as argument instead of wire.Codec
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus

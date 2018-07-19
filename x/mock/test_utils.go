@@ -1,6 +1,8 @@
 package mock
 
 import (
+	"math/big"
+	"math/rand"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -9,6 +11,32 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 )
+
+// BigInterval is a representation of the interval [lo, hi), where
+// lo and hi are both of type sdk.Int
+type BigInterval struct {
+	lo sdk.Int
+	hi sdk.Int
+}
+
+// RandFromBigInterval chooses an interval uniformly from the provided list of
+// BigIntervals, and then chooses an element from an interval uniformly at random.
+func RandFromBigInterval(r *rand.Rand, intervals []BigInterval) sdk.Int {
+	if len(intervals) == 0 {
+		return sdk.ZeroInt()
+	}
+
+	interval := intervals[r.Intn(len(intervals))]
+
+	lo := interval.lo
+	hi := interval.hi
+
+	diff := hi.Sub(lo)
+	result := sdk.NewIntFromBigInt(new(big.Int).Rand(r, diff.BigInt()))
+	result = result.Add(lo)
+
+	return result
+}
 
 // CheckBalance checks the balance of an account.
 func CheckBalance(t *testing.T, app *App, addr sdk.AccAddress, exp sdk.Coins) {

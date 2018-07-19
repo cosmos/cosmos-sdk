@@ -5,8 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"math/rand"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/mock"
@@ -81,21 +79,6 @@ func getMockApp(t *testing.T) *mock.App {
 	mapp, err := getBenchmarkMockApp()
 	require.NoError(t, err)
 	return mapp
-}
-
-func TestBankWithRandomMessages(t *testing.T) {
-	mapp := getMockApp(t)
-	setup := func(r *rand.Rand, keys []crypto.PrivKey) {
-		return
-	}
-
-	mapp.RandomizedTesting(
-		t,
-		[]mock.TestAndRunTx{TestAndRunSingleInputMsgSend},
-		[]mock.RandSetup{setup},
-		[]mock.Invariant{ModuleInvariants},
-		100, 30, 30,
-	)
 }
 
 func TestMsgSendWithAccounts(t *testing.T) {

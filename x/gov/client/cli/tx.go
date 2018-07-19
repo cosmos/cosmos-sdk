@@ -20,8 +20,6 @@ const (
 	flagDescription  = "description"
 	flagProposalType = "type"
 	flagDeposit      = "deposit"
-	flagProposer     = "proposer"
-	flagDepositer    = "depositer"
 	flagVoter        = "voter"
 	flagOption       = "option"
 )
@@ -32,13 +30,15 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 		Use:   "submit-proposal",
 		Short: "Submit a proposal along with an initial deposit",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
+
 			title := viper.GetString(flagTitle)
 			description := viper.GetString(flagDescription)
 			strProposalType := viper.GetString(flagProposalType)
 			initialDeposit := viper.GetString(flagDeposit)
 
 			// get the from address from the name flag
-			from, err := sdk.AccAddressFromBech32(viper.GetString(flagProposer))
+			fromAddr, err := ctx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -54,7 +54,7 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// create the message
-			msg := gov.NewMsgSubmitProposal(title, description, proposalType, from, amount)
+			msg := gov.NewMsgSubmitProposal(title, description, proposalType, fromAddr, amount)
 
 			err = msg.ValidateBasic()
 			if err != nil {
@@ -62,10 +62,8 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 			// proposalID must be returned, and it is a part of response
 			ctx.PrintResponse = true
-
 			err = ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
@@ -78,7 +76,6 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().String(flagDescription, "", "description of proposal")
 	cmd.Flags().String(flagProposalType, "", "proposalType of proposal")
 	cmd.Flags().String(flagDeposit, "", "deposit of proposal")
-	cmd.Flags().String(flagProposer, "", "proposer of proposal")
 
 	return cmd
 }
@@ -89,8 +86,10 @@ func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 		Use:   "deposit",
 		Short: "deposit tokens for activing proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
+
 			// get the from address from the name flag
-			depositer, err := sdk.AccAddressFromBech32(viper.GetString(flagDepositer))
+			depositerAddr, err := ctx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -103,7 +102,7 @@ func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// create the message
-			msg := gov.NewMsgDeposit(depositer, proposalID, amount)
+			msg := gov.NewMsgDeposit(depositerAddr, proposalID, amount)
 
 			err = msg.ValidateBasic()
 			if err != nil {
@@ -111,8 +110,6 @@ func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
-
 			err = ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
@@ -122,7 +119,6 @@ func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().String(flagProposalID, "", "proposalID of proposal depositing on")
-	cmd.Flags().String(flagDepositer, "", "depositer of deposit")
 	cmd.Flags().String(flagDeposit, "", "amount of deposit")
 
 	return cmd
@@ -134,9 +130,9 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 		Use:   "vote",
 		Short: "vote for an active proposal, options: Yes/No/NoWithVeto/Abstain",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
-			bechVoter := viper.GetString(flagVoter)
-			voter, err := sdk.AccAddressFromBech32(bechVoter)
+			voterAddr, err := ctx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -151,18 +147,17 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// create the message
-			msg := gov.NewMsgVote(voter, proposalID, byteVoteOption)
+			msg := gov.NewMsgVote(voterAddr, proposalID, byteVoteOption)
 
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
 			}
 
-			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]", bechVoter, msg.ProposalID, msg.Option.String())
+			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]",
+				voterAddr.String(), msg.ProposalID, msg.Option.String())
 
 			// build and sign the transaction, then broadcast to Tendermint
-			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
-
 			err = ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err
@@ -172,7 +167,6 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().String(flagProposalID, "", "proposalID of proposal voting on")
-	cmd.Flags().String(flagVoter, "", "bech32 voter address")
 	cmd.Flags().String(flagOption, "", "vote option {Yes, No, NoWithVeto, Abstain}")
 
 	return cmd

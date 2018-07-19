@@ -112,6 +112,7 @@ func main() {
 		client.GetCommands(
 			govcmd.GetCmdQueryProposal("gov", cdc),
 			govcmd.GetCmdQueryVote("gov", cdc),
+			govcmd.GetCmdQueryVotes("gov", cdc),
 		)...)
 	govCmd.AddCommand(
 		client.PostCommands(

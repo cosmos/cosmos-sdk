@@ -1,6 +1,8 @@
 # Changelog
 
-## PENDING
+## 0.23.0
+
+*July 20th, 2018*
 
 BREAKING CHANGES
 * [x/stake] Fixed the period check for the inflation calculation

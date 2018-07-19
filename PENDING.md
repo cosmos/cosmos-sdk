@@ -3,9 +3,8 @@
 BREAKING CHANGES
 * [baseapp] Msgs are no longer run on CheckTx, removed `ctx.IsCheckTx()`
 * [x/stake] Fixed the period check for the inflation calculation
-* \#1606 cli commands now consistently use `--from`, the following have been switched
+* \#1606 The following CLI commands have been switched to use `--from`
   * `gaiacli stake create-validator --address-validator`
-  * `gaiacli stake edit-validator --address-validator`
   * `gaiacli stake edit-validator --address-validator`
   * `gaiacli stake delegate --address-delegator`
   * `gaiacli stake unbond begin --address-delegator`

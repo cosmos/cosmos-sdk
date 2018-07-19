@@ -6,6 +6,7 @@ BREAKING CHANGES
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus
+* [baseapp] Initialize validator set on ResponseInitChain
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route

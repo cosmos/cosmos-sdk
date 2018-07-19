@@ -5,9 +5,24 @@ BREAKING CHANGES
 * [x/stake] Fixed the period check for the inflation calculation
 * [baseapp] NewBaseApp constructor now takes sdk.TxDecoder as argument instead of wire.Codec
 * [x/auth] Default TxDecoder can be found in `x/auth` rather than baseapp
+* \#1606 The following CLI commands have been switched to use `--from`
+  * `gaiacli stake create-validator --address-validator`
+  * `gaiacli stake edit-validator --address-validator`
+  * `gaiacli stake delegate --address-delegator`
+  * `gaiacli stake unbond begin --address-delegator`
+  * `gaiacli stake unbond complete --address-delegator`
+  * `gaiacli stake redelegate begin --address-delegator`
+  * `gaiacli stake redelegate complete --address-delegator`
+  * `gaiacli stake unrevoke [validator-address]`
+  * `gaiacli gov submit-proposal --proposer`
+  * `gaiacli gov deposit --depositer`
+  * `gaiacli gov vote --voter`
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus
+* [baseapp] Initialize validator set on ResponseInitChain
+* Added support for cosmos-sdk-cli tool under cosmos-sdk/cmd	
+   * This allows SDK users to init a new project repository with a single command.
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route

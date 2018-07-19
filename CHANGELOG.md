@@ -1,21 +1,5 @@
 # Changelog
 
-## PENDING
-
-BREAKING CHANGES
-
-FEATURES
-* [lcd] Can now query governance proposals by ProposalStatus
-* [x/mock/simulation] Randomized simulation framework
-  * Modules specify invariants and operations, preferably in an x/[module]/simulation package
-  * Modules can test random combinations of their own operations
-  * Applications can integrate operations and invariants from modules together for an integrated simulation
-
-IMPROVEMENTS
-* [baseapp] Allow any alphanumeric character in route
-
-BUG FIXES
-
 ## 0.22.0
 
 *July 16th, 2018*

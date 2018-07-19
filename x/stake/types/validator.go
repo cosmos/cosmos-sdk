@@ -147,6 +147,34 @@ func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) (validator Val
 	}, nil
 }
 
+// HumanReadableString returns a human readable string representation of a
+// validator. An error is returned if the owner or the owner's public key
+// cannot be converted to Bech32 format.
+func (v Validator) HumanReadableString() (string, error) {
+	bechVal, err := sdk.Bech32ifyValPub(v.PubKey)
+	if err != nil {
+		return "", err
+	}
+
+	resp := "Validator \n"
+	resp += fmt.Sprintf("Owner: %s\n", v.Owner)
+	resp += fmt.Sprintf("Validator: %s\n", bechVal)
+	resp += fmt.Sprintf("Revoked: %v\n", v.Revoked)
+	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
+	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens.FloatString())
+	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.FloatString())
+	resp += fmt.Sprintf("Description: %s\n", v.Description)
+	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
+	resp += fmt.Sprintf("Proposer Reward Pool: %s\n", v.ProposerRewardPool.String())
+	resp += fmt.Sprintf("Commission: %s\n", v.Commission.String())
+	resp += fmt.Sprintf("Max Commission Rate: %s\n", v.CommissionMax.String())
+	resp += fmt.Sprintf("Commission Change Rate: %s\n", v.CommissionChangeRate.String())
+	resp += fmt.Sprintf("Commission Change Today: %s\n", v.CommissionChangeToday.String())
+	resp += fmt.Sprintf("Previous Bonded Tokens: %s\n", v.LastBondedTokens.String())
+
+	return resp, nil
+}
+
 //___________________________________________________________________
 
 // validator struct for bech output
@@ -409,30 +437,3 @@ func (v Validator) GetPower() sdk.Rat           { return v.BondedTokens() }
 func (v Validator) GetTokens() sdk.Rat          { return v.Tokens }
 func (v Validator) GetDelegatorShares() sdk.Rat { return v.DelegatorShares }
 func (v Validator) GetBondHeight() int64        { return v.BondHeight }
-
-// HumanReadableString returns a human readable string representation of a
-// validator. An error is returned if the owner or the owner's public key
-// cannot be converted to Bech32 format.
-func (v Validator) HumanReadableString() (string, error) {
-	bechVal, err := sdk.Bech32ifyValPub(v.PubKey)
-	if err != nil {
-		return "", err
-	}
-
-	resp := "Validator \n"
-	resp += fmt.Sprintf("Owner: %s\n", v.Owner)
-	resp += fmt.Sprintf("Validator: %s\n", bechVal)
-	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
-	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens.FloatString())
-	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.FloatString())
-	resp += fmt.Sprintf("Description: %s\n", v.Description)
-	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
-	resp += fmt.Sprintf("Proposer Reward Pool: %s\n", v.ProposerRewardPool.String())
-	resp += fmt.Sprintf("Commission: %s\n", v.Commission.String())
-	resp += fmt.Sprintf("Max Commission Rate: %s\n", v.CommissionMax.String())
-	resp += fmt.Sprintf("Commission Change Rate: %s\n", v.CommissionChangeRate.String())
-	resp += fmt.Sprintf("Commission Change Today: %s\n", v.CommissionChangeToday.String())
-	resp += fmt.Sprintf("Previous Bonded Tokens: %s\n", v.LastBondedTokens.String())
-
-	return resp, nil
-}

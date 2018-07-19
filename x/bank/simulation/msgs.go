@@ -22,15 +22,15 @@ import (
 // accounts already exist.
 func TestAndRunSingleInputMsgSend(mapper auth.AccountMapper) simulation.TestAndRunTx {
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
-		fromKey := keys[r.Intn(len(keys))]
+		fromKey := simulation.RandomKey(r, keys)
 		fromAddr := sdk.AccAddress(fromKey.PubKey().Address())
-		toKey := keys[r.Intn(len(keys))]
+		toKey := simulation.RandomKey(r, keys)
 		// Disallow sending money to yourself
 		for {
 			if !fromKey.Equals(toKey) {
 				break
 			}
-			toKey = keys[r.Intn(len(keys))]
+			toKey = simulation.RandomKey(r, keys)
 		}
 		toAddr := sdk.AccAddress(toKey.PubKey().Address())
 		initFromCoins := mapper.GetAccount(ctx, fromAddr).GetCoins()

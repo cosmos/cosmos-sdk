@@ -3,6 +3,10 @@ package simulation
 import (
 	"fmt"
 	"math/rand"
+
+	crypto "github.com/tendermint/tendermint/crypto"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // shamelessly copied from https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-golang#31832326
@@ -37,4 +41,16 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 func DisplayEvents(events map[string]uint) {
 	// TODO
 	fmt.Printf("Events: %v\n", events)
+}
+
+// Pick a random key from an array
+func RandomKey(r *rand.Rand, keys []crypto.PrivKey) crypto.PrivKey {
+	return keys[r.Intn(
+		len(keys),
+	)]
+}
+
+// Generate a random amount
+func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
+	return sdk.NewInt(int64(r.Intn(int(max.Int64()))))
 }

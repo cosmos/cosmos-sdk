@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"runtime/debug"
@@ -18,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Key to store the header in the DB itself.
@@ -335,11 +335,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 		}
 
 		// Encode with json
-		value, err := json.Marshal(result)
-		if err != nil {
-			return sdk.ErrInternal("Encoding result failed").QueryResult()
-		}
-
+		value := wire.Cdc.MustMarshalBinary(result)
 		return abci.ResponseQuery{
 			Code:  uint32(sdk.ABCICodeOK),
 			Value: value,

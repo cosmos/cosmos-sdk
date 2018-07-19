@@ -3,7 +3,6 @@ package baseapp
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -630,7 +629,7 @@ func TestSimulateTx(t *testing.T) {
 		require.True(t, queryResult.IsOK(), queryResult.Log)
 
 		var res sdk.Result
-		err = json.Unmarshal(queryResult.Value, &res)
+		wire.Cdc.MustUnmarshalBinary(queryResult.Value, &res)
 		require.Nil(t, err, "Result unmarshalling failed")
 		require.True(t, res.IsOK(), res.Log)
 		require.Equal(t, gasConsumed, res.GasUsed, res.Log)

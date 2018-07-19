@@ -167,11 +167,11 @@ func (pt *ProposalKind) UnmarshalJSON(data []byte) error {
 // Turns VoteOption byte to String
 func (pt ProposalKind) String() string {
 	switch pt {
-	case 0x00:
-		return "Text"
 	case 0x01:
-		return "ParameterChange"
+		return "Text"
 	case 0x02:
+		return "ParameterChange"
+	case 0x03:
 		return "SoftwareUpgrade"
 	default:
 		return ""

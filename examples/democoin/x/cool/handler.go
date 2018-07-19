@@ -47,10 +47,6 @@ func handleMsgQuiz(ctx sdk.Context, k Keeper, msg MsgQuiz) sdk.Result {
 		return ErrIncorrectCoolAnswer(k.codespace, msg.CoolAnswer).Result()
 	}
 
-	if ctx.IsCheckTx() {
-		return sdk.Result{} // TODO
-	}
-
 	bonusCoins := sdk.Coins{sdk.NewCoin(msg.CoolAnswer, 69)}
 
 	_, _, err := k.ck.AddCoins(ctx, msg.Sender, bonusCoins)

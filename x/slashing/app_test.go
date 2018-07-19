@@ -113,6 +113,6 @@ func TestSlashingMsgs(t *testing.T) {
 	checkValidatorSigningInfo(t, mapp, keeper, sdk.ValAddress(addr1), false)
 
 	// unrevoke should fail with unknown validator
-	res := mock.CheckGenTx(t, mapp.BaseApp, []sdk.Msg{unrevokeMsg}, []int64{0}, []int64{1}, false, priv1)
+	res := mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{unrevokeMsg}, []int64{0}, []int64{1}, false, priv1)
 	require.Equal(t, sdk.ToABCICode(DefaultCodespace, CodeValidatorNotRevoked), res.Code)
 }

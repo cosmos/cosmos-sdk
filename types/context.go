@@ -44,6 +44,8 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 	c = c.WithLogger(logger)
 	c = c.WithSigningValidators(nil)
 	c = c.WithGasMeter(NewInfiniteGasMeter())
+	c = c.WithKVGasConfig(DefaultKVGasConfig())
+	c = c.WithTransientGasConfig(DefaultTransientGasConfig())
 	return c
 }
 
@@ -69,12 +71,12 @@ func (c Context) Value(key interface{}) interface{} {
 
 // KVStore fetches a KVStore from the MultiStore.
 func (c Context) KVStore(key StoreKey) KVStore {
-	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), cachedDefaultGasConfig)
+	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), c.KVGasConfig())
 }
 
 // TransientStore fetches a TransientStore from the MultiStore.
 func (c Context) TransientStore(key StoreKey) KVStore {
-	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), cachedTransientGasConfig)
+	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), c.TransientGasConfig())
 }
 
 //----------------------------------------
@@ -135,6 +137,8 @@ const (
 	contextKeyLogger
 	contextKeySigningValidators
 	contextKeyGasMeter
+	contextKeyKVGasConfig
+	contextKeyTransientGasConfig
 )
 
 // NOTE: Do not expose MultiStore.
@@ -169,6 +173,12 @@ func (c Context) SigningValidators() []abci.SigningValidator {
 func (c Context) GasMeter() GasMeter {
 	return c.Value(contextKeyGasMeter).(GasMeter)
 }
+func (c Context) KVGasConfig() GasConfig {
+	return c.Value(contextKeyKVGasConfig).(GasConfig)
+}
+func (c Context) TransientGasConfig() GasConfig {
+	return c.Value(contextKeyTransientGasConfig).(GasConfig)
+}
 func (c Context) WithMultiStore(ms MultiStore) Context {
 	return c.withValue(contextKeyMultiStore, ms)
 }
@@ -200,6 +210,12 @@ func (c Context) WithSigningValidators(SigningValidators []abci.SigningValidator
 }
 func (c Context) WithGasMeter(meter GasMeter) Context {
 	return c.withValue(contextKeyGasMeter, meter)
+}
+func (c Context) WithKVGasConfig(config GasConfig) Context {
+	return c.withValue(contextKeyKVGasConfig, config)
+}
+func (c Context) WithTransientGasConfig(config GasConfig) Context {
+	return c.withValue(contextKeyTransientGasConfig, config)
 }
 
 // Cache the multistore and return a new cached context. The cached context is

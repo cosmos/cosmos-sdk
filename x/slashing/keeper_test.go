@@ -12,10 +12,12 @@ import (
 
 // Have to change these parameters for tests
 // lest the tests take forever
-func init() {
-	defaultSignedBlocksWindow = 1000
-	defaultDowntimeUnbondDuration = 60 * 60
-	defaultDoubleSignUnbondDuration = 60 * 60
+func keeperTestParams() DefaultParams {
+	params := HubDefaultParams()
+	params.SignedBlocksWindow = 1000
+	params.DowntimeUnbondDuration = 60 * 60
+	params.DoubleSignUnbondDuration = 60 * 60
+	return params
 }
 
 // Test that a validator is slashed correctly
@@ -23,7 +25,7 @@ func init() {
 func TestHandleDoubleSign(t *testing.T) {
 
 	// initial setup
-	ctx, ck, sk, _, keeper := createTestInput(t)
+	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, val, amt))
@@ -57,7 +59,7 @@ func TestHandleDoubleSign(t *testing.T) {
 func TestHandleAbsentValidator(t *testing.T) {
 
 	// initial setup
-	ctx, ck, sk, _, keeper := createTestInput(t)
+	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	sh := stake.NewHandler(sk)
@@ -169,7 +171,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 // and that they are not immediately jailed
 func TestHandleNewValidator(t *testing.T) {
 	// initial setup
-	ctx, ck, sk, _, keeper := createTestInput(t)
+	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
 	addr, val, amt := addrs[0], pks[0], int64(100)
 	sh := stake.NewHandler(sk)
 	got := sh(ctx, newTestMsgCreateValidator(addr, val, sdk.NewInt(amt)))
@@ -206,7 +208,7 @@ func TestHandleNewValidator(t *testing.T) {
 func TestHandleAlreadyJailed(t *testing.T) {
 
 	// initial setup
-	ctx, _, sk, _, keeper := createTestInput(t)
+	ctx, _, sk, _, keeper := createTestInput(t, HubDefaultParams())
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	sh := stake.NewHandler(sk)

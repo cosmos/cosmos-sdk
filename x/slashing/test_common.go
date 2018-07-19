@@ -48,24 +48,26 @@ func createTestCodec() *wire.Codec {
 	return cdc
 }
 
-func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, params.Setter, Keeper) {
+func createTestInput(t *testing.T, defaults DefaultParams) (sdk.Context, bank.Keeper, stake.Keeper, params.Store, Keeper) {
 	keyAcc := sdk.NewKVStoreKey("acc")
 	keyStake := sdk.NewKVStoreKey("stake")
 	keySlashing := sdk.NewKVStoreKey("slashing")
 	keyParams := sdk.NewKVStoreKey("params")
+	tkeyParams := sdk.NewTransientStoreKey("params")
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keySlashing, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewTMLogger(os.Stdout))
 	cdc := createTestCodec()
 	accountMapper := auth.NewAccountMapper(cdc, keyAcc, auth.ProtoBaseAccount)
 	ck := bank.NewKeeper(accountMapper)
-	params := params.NewKeeper(cdc, keyParams)
+	paramstore := params.NewKeeper(cdc, keyParams, tkeyParams, nil).SubStore(DefaultParamSpace)
 	sk := stake.NewKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
 
@@ -80,8 +82,12 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, para
 		})
 	}
 	require.Nil(t, err)
-	keeper := NewKeeper(cdc, keySlashing, sk, params.Getter(), DefaultCodespace)
-	return ctx, ck, sk, params.Setter(), keeper
+	keeper := NewKeeper(cdc, keySlashing, sk, paramstore, DefaultCodespace)
+
+	err = InitGenesis(ctx, keeper, GenesisState{defaults})
+	require.Nil(t, err)
+
+	return ctx, ck, sk, paramstore, keeper
 }
 
 func newPubKey(pk string) (res crypto.PubKey) {

@@ -91,11 +91,11 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	// add handlers
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
-	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams)
+	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams, nil)
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
 	app.govKeeper = gov.NewKeeper(app.cdc, app.keyGov, app.paramsKeeper.Setter(), app.coinKeeper, app.stakeKeeper, app.RegisterCodespace(gov.DefaultCodespace))
 	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(app.cdc, app.keyFeeCollection)
-	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.paramsKeeper.Getter(), app.RegisterCodespace(slashing.DefaultCodespace))
+	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.paramsKeeper.SubStore(slashing.DefaultParamSpace), app.RegisterCodespace(slashing.DefaultCodespace))
 
 	// register message routes
 	app.Router().
@@ -189,6 +189,11 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.StakeData)
 
 	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
+
+	err = slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData)
+	if err != nil {
+		panic(err)
+	}
 
 	return abci.ResponseInitChain{
 		Validators: validators,

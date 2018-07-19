@@ -82,6 +82,41 @@ func TestProcessProvisions(t *testing.T) {
 	checkFinalPoolValues(t, pool, sdk.NewRat(initialTotalTokens), cumulativeExpProvs)
 }
 
+// Benchmark precision
+func BenchmarkProcessProvisions10000(b *testing.B) {
+	precision = 10000
+	pool := InitialPool()
+	params := DefaultParams()
+
+	var initialTotalTokens int64 = 550000000
+	var cumulativeExpProvs = sdk.ZeroRat()
+	pool.LooseTokens = sdk.NewRat(initialTotalTokens)
+
+	// process the provisions for a year
+	for hr := 0; hr < b.N; hr++ {
+		var expProvisions sdk.Rat
+		_, expProvisions, pool, _ = updateProvisionsBare(pool, params, hr)
+		cumulativeExpProvs = cumulativeExpProvs.Add(expProvisions)
+	}
+}
+
+func BenchmarkProcessProvisions100000000000(b *testing.B) {
+	precision = 100000000000
+	pool := InitialPool()
+	params := DefaultParams()
+
+	var initialTotalTokens int64 = 550000000
+	var cumulativeExpProvs = sdk.ZeroRat()
+	pool.LooseTokens = sdk.NewRat(initialTotalTokens)
+
+	// process the provisions for a year
+	for hr := 0; hr < b.N; hr++ {
+		var expProvisions sdk.Rat
+		_, expProvisions, pool, _ = updateProvisionsBare(pool, params, hr)
+		cumulativeExpProvs = cumulativeExpProvs.Add(expProvisions)
+	}
+}
+
 //_________________________________________________________________________________________
 ////////////////////////////////HELPER FUNCTIONS BELOW/////////////////////////////////////
 
@@ -94,15 +129,20 @@ func checkFinalPoolValues(t *testing.T, pool Pool, initialTotalTokens, cumulativ
 // Processes provisions are added to the pool correctly every hour
 // Returns expected Provisions, expected Inflation, and pool, to help with cumulative calculations back in main Tests
 func updateProvisions(t *testing.T, pool Pool, params Params, hr int) (sdk.Rat, sdk.Rat, Pool) {
-	expInflation := pool.NextInflation(params)
-	expProvisions := expInflation.Mul(pool.TokenSupply()).Quo(hrsPerYrRat)
-	startTotalSupply := pool.TokenSupply()
-	pool = pool.ProcessProvisions(params)
+	expInflation, expProvisions, pool, startTotalSupply := updateProvisionsBare(pool, params, hr)
 
 	//check provisions were added to pool
 	require.True(sdk.RatEq(t, startTotalSupply.Add(expProvisions), pool.TokenSupply()))
 
 	return expInflation, expProvisions, pool
+}
+
+func updateProvisionsBare(pool Pool, params Params, hr int) (sdk.Rat, sdk.Rat, Pool, sdk.Rat) {
+	expInflation := pool.NextInflation(params)
+	expProvisions := expInflation.Mul(pool.TokenSupply()).Quo(hrsPerYrRat)
+	startTotalSupply := pool.TokenSupply()
+	pool = pool.ProcessProvisions(params)
+	return expInflation, expProvisions, pool, startTotalSupply
 }
 
 // Checks that The inflation will correctly increase or decrease after an update to the pool

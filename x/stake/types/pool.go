@@ -80,7 +80,7 @@ func (p Pool) bondedTokensToLoose(bondedTokens sdk.Rat) Pool {
 //_______________________________________________________________________
 // Inflation
 
-const precision = 100000000000     // increased to this precision for accuracy
+var precision int64 = 100000000000 // increased to this precision for accuracy
 var hrsPerYrRat = sdk.NewRat(8766) // as defined by a julian year of 365.25 days
 
 // process provisions for an hour period

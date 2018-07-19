@@ -437,6 +437,10 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 }
 
 // Implements ABCI
+// CheckTx runs the "basic checks" to see whether or not a transaction can possibly be executed,
+// first decoding, then the ante handler (which checks signatures/fees/ValidateBasic),
+// then finally the route match to see whether a handler exists. CheckTx does not run the actual
+// Msg handler function(s).
 func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 	// Decode the Tx.
 	var result sdk.Result

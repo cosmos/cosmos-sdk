@@ -358,25 +358,20 @@ func TestTxs(t *testing.T) {
 }
 
 func TestValidatorsQuery(t *testing.T) {
-	cleanup, pks, port := InitializeTestLCD(t, 2, []sdk.AccAddress{})
+	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
 	defer cleanup()
-	require.Equal(t, 2, len(pks))
+	require.Equal(t, 1, len(pks))
 
 	validators := getValidators(t, port)
-	require.Equal(t, len(validators), 2)
+	require.Equal(t, len(validators), 1)
 
 	// make sure all the validators were found (order unknown because sorted by owner addr)
-	foundVal1, foundVal2 := false, false
-	pk1Bech := sdk.MustBech32ifyValPub(pks[0])
-	pk2Bech := sdk.MustBech32ifyValPub(pks[1])
-	if validators[0].PubKey == pk1Bech || validators[1].PubKey == pk1Bech {
-		foundVal1 = true
+	foundVal := false
+	pkBech := sdk.MustBech32ifyValPub(pks[0])
+	if validators[0].PubKey == pkBech {
+		foundVal = true
 	}
-	if validators[0].PubKey == pk2Bech || validators[1].PubKey == pk2Bech {
-		foundVal2 = true
-	}
-	require.True(t, foundVal1, "pk1Bech %v, owner1 %v, owner2 %v", pk1Bech, validators[0].Owner, validators[1].Owner)
-	require.True(t, foundVal2, "pk2Bech %v, owner1 %v, owner2 %v", pk2Bech, validators[0].Owner, validators[1].Owner)
+	require.True(t, foundVal, "pkBech %v, owner %v", pkBech, validators[0].Owner)
 }
 
 func TestBonding(t *testing.T) {

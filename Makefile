@@ -132,11 +132,11 @@ test_sim:
 	@echo "Running individual module simulations."
 	@go test $(PACKAGES_SIMTEST) -v
 	@echo "Running full Gaia simulation. This may take several minutes."
-	@echo "Set the environment variable 'GAIA_SIMULATION_SEED' to run with a constant seed."
-	@echo "Set the environment variable 'GAIA_SIMULATION_KEYS' to run with the specified number of keys."
-	@echo "Set the environment variable 'GAIA_SIMULATION_BLOCKS' to run with the specified number of blocks."
-	@echo "Set the environment variable 'GAIA_SIMULATION_BLOCK_SIZE' to run with the specified block size (operations per block)."
-	@GAIA_SIMULATION_ENABLED=1 go test ./cmd/gaia/app -run TestFullGaiaSimulation -v
+	@echo "Pass the flag 'SimulationSeed' to run with a constant seed."
+	@echo "Pass the flag 'SimulationNumKeys' to run with the specified number of keys."
+	@echo "Pass the flag 'SimulationNumBlocks' to run with the specified number of blocks."
+	@echo "Pass the flag 'SimulationBlockSize' to run with the specified block size (operations per block)."
+	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationBlockSize=200 -v
 
 test_cover:
 	@bash tests/test_cover.sh

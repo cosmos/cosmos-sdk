@@ -2,11 +2,9 @@ package app
 
 import (
 	"encoding/json"
+	"flag"
 	"math/rand"
-	"os"
-	"strconv"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -20,17 +18,21 @@ import (
 	stakesim "github.com/cosmos/cosmos-sdk/x/stake/simulation"
 )
 
-const (
-	defaultNumKeys   = 10
-	defaultNumBlocks = 100
-	defaultBlockSize = 100
-
-	simulationEnvEnable    = "GAIA_SIMULATION_ENABLED"
-	simulationEnvSeed      = "GAIA_SIMULATION_SEED"
-	simulationEnvKeys      = "GAIA_SIMULATION_KEYS"
-	simulationEnvBlocks    = "GAIA_SIMULATION_BLOCKS"
-	simulationEnvBlockSize = "GAIA_SIMULATION_BLOCK_SIZE"
+var (
+	seed      int64
+	numKeys   int
+	numBlocks int
+	blockSize int
+	enabled   bool
 )
+
+func init() {
+	flag.Int64Var(&seed, "SimulationSeed", 42, "Simulation random seed")
+	flag.IntVar(&numKeys, "SimulationNumKeys", 10, "Number of keys (accounts)")
+	flag.IntVar(&numBlocks, "SimulationNumBlocks", 100, "Number of blocks")
+	flag.IntVar(&blockSize, "SimulationBlockSize", 100, "Operations per block")
+	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")
+}
 
 func appStateFn(r *rand.Rand, accs []sdk.AccAddress) json.RawMessage {
 	var genesisAccounts []GenesisAccount
@@ -62,7 +64,7 @@ func appStateFn(r *rand.Rand, accs []sdk.AccAddress) json.RawMessage {
 }
 
 func TestFullGaiaSimulation(t *testing.T) {
-	if os.Getenv(simulationEnvEnable) == "" {
+	if !enabled {
 		t.Skip("Skipping Gaia simulation")
 	}
 
@@ -71,37 +73,6 @@ func TestFullGaiaSimulation(t *testing.T) {
 	db := dbm.NewMemDB()
 	app := NewGaiaApp(logger, db, nil)
 	require.Equal(t, "GaiaApp", app.Name())
-
-	var seed int64
-	var err error
-	envSeed := os.Getenv(simulationEnvSeed)
-	if envSeed != "" {
-		seed, err = strconv.ParseInt(envSeed, 10, 64)
-		require.Nil(t, err)
-	} else {
-		seed = time.Now().UnixNano()
-	}
-
-	keys := defaultNumKeys
-	envKeys := os.Getenv(simulationEnvKeys)
-	if envKeys != "" {
-		keys, err = strconv.Atoi(envKeys)
-		require.Nil(t, err)
-	}
-
-	blocks := defaultNumBlocks
-	envBlocks := os.Getenv(simulationEnvBlocks)
-	if envBlocks != "" {
-		blocks, err = strconv.Atoi(envBlocks)
-		require.Nil(t, err)
-	}
-
-	blockSize := defaultBlockSize
-	envBlockSize := os.Getenv(simulationEnvBlockSize)
-	if envBlockSize != "" {
-		blockSize, err = strconv.Atoi(envBlockSize)
-		require.Nil(t, err)
-	}
 
 	// Run randomized simulation
 	simulation.SimulateFromSeed(
@@ -121,8 +92,8 @@ func TestFullGaiaSimulation(t *testing.T) {
 			banksim.NonnegativeBalanceInvariant(app.accountMapper),
 			stakesim.AllInvariants(app.coinKeeper, app.stakeKeeper, app.accountMapper),
 		},
-		keys,
-		blocks,
+		numKeys,
+		numBlocks,
 		blockSize,
 	)
 

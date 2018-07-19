@@ -3,6 +3,7 @@
 BREAKING CHANGES
 * [baseapp] Msgs are no longer run on CheckTx, removed `ctx.IsCheckTx()`
 * [x/stake] Fixed the period check for the inflation calculation
+* [x/stake] Inflation doesn't use rationals in calculation (performance boost)
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus

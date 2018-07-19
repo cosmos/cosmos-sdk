@@ -337,7 +337,7 @@ gaiacli stake delegate \
 
 While tokens are bonded, they are pooled with all the other bonded tokens in the network. Validators and delegators obtain a percentage of shares that equal their stake in this pool.
 
-> _*NOTE:*_  Don't use more `steak` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
+> _*NOTE:*_  Don't use more `steak` thank you have! You can always get more by using the [Faucet](https://gaia.faucetcosmos.network/)!
 
 ### Unbond Tokens
 

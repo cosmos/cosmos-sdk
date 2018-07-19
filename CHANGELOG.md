@@ -1,19 +1,5 @@
 # Changelog
 
-## PENDING
-
-BREAKING CHANGES
-
-FEATURES
-* [lcd] Can now query governance proposals by ProposalStatus
-* [cosmos-sdk-cli] Added support for cosmos-sdk-cli under cosmos-sdk/cmd
-  This allows SDK users to init a new project repository with a single command.
-
-IMPROVEMENTS
-* [baseapp] Allow any alphanumeric character in route
-
-BUG FIXES
-
 ## 0.22.0
 
 *July 16th, 2018*

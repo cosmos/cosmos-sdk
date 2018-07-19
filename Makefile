@@ -83,14 +83,19 @@ dist:
 check_tools:
 	cd tools && $(MAKE) check_tools
 
+check_dev_tools:
+	cd tools && $(MAKE) check_dev_tools
+
 update_tools:
 	cd tools && $(MAKE) update_tools
 
-get_tools:
-	cd tools && $(MAKE) get_tools
+update_dev_tools:
+	cd tools && $(MAKE) update_dev_tools
+
+get_dev_tools:
+	cd tools && $(MAKE) get_dev_tools
 
 get_vendor_deps:
-	@rm -rf vendor/
 	@echo "--> Running dep ensure"
 	@dep ensure -v
 

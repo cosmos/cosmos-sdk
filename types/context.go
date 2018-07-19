@@ -41,7 +41,6 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 	c = c.WithBlockHeader(header)
 	c = c.WithBlockHeight(header.Height)
 	c = c.WithChainID(header.ChainID)
-	c = c.WithIsCheckTx(isCheckTx)
 	c = c.WithTxBytes(nil)
 	c = c.WithLogger(logger)
 	c = c.WithSigningValidators(nil)
@@ -127,7 +126,6 @@ const (
 	contextKeyBlockHeader
 	contextKeyBlockHeight
 	contextKeyChainID
-	contextKeyIsCheckTx
 	contextKeyTxBytes
 	contextKeyLogger
 	contextKeySigningValidators
@@ -150,9 +148,6 @@ func (c Context) BlockHeight() int64 {
 }
 func (c Context) ChainID() string {
 	return c.Value(contextKeyChainID).(string)
-}
-func (c Context) IsCheckTx() bool {
-	return c.Value(contextKeyIsCheckTx).(bool)
 }
 func (c Context) TxBytes() []byte {
 	return c.Value(contextKeyTxBytes).([]byte)
@@ -178,9 +173,6 @@ func (c Context) WithBlockHeight(height int64) Context {
 }
 func (c Context) WithChainID(chainID string) Context {
 	return c.withValue(contextKeyChainID, chainID)
-}
-func (c Context) WithIsCheckTx(isCheckTx bool) Context {
-	return c.withValue(contextKeyIsCheckTx, isCheckTx)
 }
 func (c Context) WithTxBytes(txBytes []byte) Context {
 	return c.withValue(contextKeyTxBytes, txBytes)

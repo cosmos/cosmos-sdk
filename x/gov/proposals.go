@@ -60,7 +60,7 @@ type TextProposal struct {
 	Description  string       `json:"description"`   //  Description of the proposal
 	ProposalType ProposalKind `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 
-	Status ProposalStatus `json:"string"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
+	Status ProposalStatus `json:"proposal_status"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
 
 	SubmitBlock  int64     `json:"submit_block"`  //  Height of the block where TxGovSubmitProposal was included
 	TotalDeposit sdk.Coins `json:"total_deposit"` //  Current deposit on this proposal. Initial value is set at InitialDeposit
@@ -184,7 +184,7 @@ func (pt ProposalKind) Format(s fmt.State, verb rune) {
 	case 's':
 		s.Write([]byte(fmt.Sprintf("%s", pt.String())))
 	default:
-		s.Write([]byte(fmt.Sprintf("%v", pt)))
+		s.Write([]byte(fmt.Sprintf("%v", byte(pt))))
 	}
 }
 
@@ -283,6 +283,6 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	case 's':
 		s.Write([]byte(fmt.Sprintf("%s", status.String())))
 	default:
-		s.Write([]byte(fmt.Sprintf("%v", status)))
+		s.Write([]byte(fmt.Sprintf("%v", byte(status))))
 	}
 }

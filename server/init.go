@@ -346,9 +346,9 @@ func readOrCreatePrivValidator(tmConfig *cfg.Config) crypto.PubKey {
 // error is returned if building or writing the configuration to file fails.
 func writeGenesisFile(cdc *wire.Codec, genesisFile, chainID string, validators []tmtypes.GenesisValidator, appState json.RawMessage) error {
 	genDoc := tmtypes.GenesisDoc{
-		ChainID:      chainID,
-		Validators:   validators,
-		AppStateJSON: appState,
+		ChainID:    chainID,
+		Validators: validators,
+		AppState:   appState,
 	}
 
 	if err := genDoc.ValidateAndComplete(); err != nil {

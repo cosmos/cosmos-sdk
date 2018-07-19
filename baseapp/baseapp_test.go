@@ -287,7 +287,7 @@ func (tx txTest) GetMsgs() []sdk.Msg { return tx.Msgs }
 
 const (
 	typeMsgCounter  = "msgCounter"
-	typeMsgCounter2 = "msgCounterTwo" // NOTE: no numerics (?)
+	typeMsgCounter2 = "msgCounter2"
 )
 
 // ValidateBasic() fails on negative counters.

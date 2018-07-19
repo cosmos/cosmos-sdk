@@ -30,6 +30,9 @@ ifndef DEP_CHECK
 else
 	@echo "Found dep in path."
 endif
+
+check_dev_tools:
+	$(MAKE) check_tools
 ifndef GOLINT_CHECK
 	@echo "No golint in path.  Install with 'make get_tools'."
 else
@@ -78,6 +81,9 @@ else
 	@echo "Installing dep"
 	go get -v $(DEP)
 endif
+
+get_dev_tools:
+	$(MAKE) get_tools
 ifdef GOLINT_CHECK
 	@echo "Golint is already installed.  Run 'make update_tools' to update."
 else
@@ -130,6 +136,9 @@ endif
 update_tools:
 	@echo "Updating dep"
 	go get -u -v $(DEP)
+
+update_dev_tools:
+	$(MAKE) update_tools
 	@echo "Updating tendermint/golint"
 	go get -u -v $(GOLINT)
 	@echo "Updating gometalinter.v2"
@@ -150,4 +159,4 @@ update_tools:
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: check_tools get_tools update_tools
+.PHONY: check_tools get_tools update_tools check_dev_tools get_dev_tools update_dev_tools

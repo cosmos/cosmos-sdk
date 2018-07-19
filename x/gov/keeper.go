@@ -128,18 +128,24 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 // =====================================================
 // Procedures
 
+var (
+	defaultMinDeposit       int64 = 10
+	defaultMaxDepositPeriod int64 = 10000
+	defaultVotingPeriod     int64 = 10000
+)
+
 // Gets procedure from store. TODO: move to global param store and allow for updating of this
 func (keeper Keeper) GetDepositProcedure() DepositProcedure {
 	return DepositProcedure{
-		MinDeposit:       sdk.Coins{sdk.NewCoin("steak", 10)},
-		MaxDepositPeriod: 200,
+		MinDeposit:       sdk.Coins{sdk.NewCoin("steak", defaultMinDeposit)},
+		MaxDepositPeriod: defaultMaxDepositPeriod,
 	}
 }
 
 // Gets procedure from store. TODO: move to global param store and allow for updating of this
 func (keeper Keeper) GetVotingProcedure() VotingProcedure {
 	return VotingProcedure{
-		VotingPeriod: 200,
+		VotingPeriod: defaultVotingPeriod,
 	}
 }
 

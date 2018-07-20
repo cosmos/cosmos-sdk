@@ -64,9 +64,17 @@ func SimulateFromSeed(
 
 		ctx := app.NewContext(false, header)
 
-		// TODO: Add modes to simulate "no load", "medium load", and
-		// "high load" blocks.
-		for j := 0; j < blockSize; j++ {
+		var thisBlockSize int
+		load := r.Float64()
+		switch {
+		case load < 0.33:
+			thisBlockSize = 0
+		case load < 0.66:
+			thisBlockSize = blockSize
+		default:
+			thisBlockSize = blockSize * 2
+		}
+		for j := 0; j < thisBlockSize; j++ {
 			logUpdate, err := ops[r.Intn(len(ops))](t, r, app, ctx, keys, log, event)
 			log += "\n" + logUpdate
 

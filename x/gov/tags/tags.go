@@ -6,13 +6,20 @@ import (
 )
 
 var (
-	ActionSubmitProposal = []byte("submit-proposal")
+	ActionSubmitProposal   = []byte("submit-proposal")
+	ActionDeposit          = []byte("deposit")
+	ActionVote             = []byte("vote")
+	ActionProposalDropped  = []byte("proposal-dropped")
+	ActionProposalPassed   = []byte("proposal-passed")
+	ActionProposalRejected = []byte("proposal-rejected")
 
 	Action = sdk.TagAction
 	//SrcValidator = sdk.TagSrcValidator
 	//DstValidator = sdk.TagDstValidator
 	//Delegator    = sdk.TagDelegator
 	Proposer          = "proposer"
-	ProposalID        = "proposal-ID"
-	VotingPeriodStart = "VotingPeriodStart"
+	ProposalID        = "proposal-id"
+	VotingPeriodStart = "voting-period-start"
+	Depositer         = "depositer"
+	Voter             = "voter"
 )

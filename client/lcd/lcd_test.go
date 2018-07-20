@@ -611,6 +611,17 @@ func TestProposalsQuery(t *testing.T) {
 	// Test query voted and deposited by addr1
 	proposals = getProposalsFilterVoterDepositer(t, port, addr, addr)
 	require.Equal(t, proposalID2, (proposals[0]).GetProposalID())
+
+	// Test query votes on Proposal 2
+	votes := getVotes(t, port, proposalID2)
+	require.Len(t, votes, 1)
+	require.Equal(t, addr, votes[0].Voter)
+
+	// Test query votes on Proposal 3
+	votes = getVotes(t, port, proposalID3)
+	require.Len(t, votes, 2)
+	require.True(t, addr.String() == votes[0].Voter.String() || addr.String() == votes[1].Voter.String())
+	require.True(t, addr2.String() == votes[0].Voter.String() || addr2.String() == votes[1].Voter.String())
 }
 
 //_____________________________________________________________________________
@@ -873,6 +884,15 @@ func getVote(t *testing.T, port string, proposalID int64, voterAddr sdk.AccAddre
 	err := cdc.UnmarshalJSON([]byte(body), &vote)
 	require.Nil(t, err)
 	return vote
+}
+
+func getVotes(t *testing.T, port string, proposalID int64) []gov.Vote {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d/votes", proposalID), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var votes []gov.Vote
+	err := cdc.UnmarshalJSON([]byte(body), &votes)
+	require.Nil(t, err)
+	return votes
 }
 
 func getProposalsAll(t *testing.T, port string) []gov.Proposal {

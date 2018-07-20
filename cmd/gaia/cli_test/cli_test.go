@@ -217,6 +217,11 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	vote := executeGetVote(t, fmt.Sprintf("gaiacli gov query-vote --proposal-id=1 --voter=%s --output=json %v", fooAddr, flags))
 	require.Equal(t, int64(1), vote.ProposalID)
 	require.Equal(t, gov.OptionYes, vote.Option)
+
+	votes := executeGetVotes(t, fmt.Sprintf("gaiacli gov query-votes --proposalID=1 --output=json %v", flags))
+	require.Len(t, votes, 1)
+	require.Equal(t, int64(1), votes[0].ProposalID)
+	require.Equal(t, gov.OptionYes, votes[0].Option)
 }
 
 //___________________________________________________________________________________
@@ -320,4 +325,13 @@ func executeGetVote(t *testing.T, cmdStr string) gov.Vote {
 	err := cdc.UnmarshalJSON([]byte(out), &vote)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
 	return vote
+}
+
+func executeGetVotes(t *testing.T, cmdStr string) []gov.Vote {
+	out := tests.ExecuteT(t, cmdStr)
+	var votes []gov.Vote
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &votes)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return votes
 }

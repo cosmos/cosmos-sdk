@@ -1,16 +1,5 @@
 # Changelog
 
-## PENDING
-
-BREAKING CHANGES
-* [x/gov] Increase VotingPeriod, DepositPeriod, and MinDeposit
-
-IMPROVEMENTS
-
-BUG FIXES
-
-## 0.21.1
-
 ## 0.22.0
 
 *July 16th, 2018*

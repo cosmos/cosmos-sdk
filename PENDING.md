@@ -2,6 +2,7 @@
 
 BREAKING CHANGES
 * [baseapp] Msgs are no longer run on CheckTx, removed `ctx.IsCheckTx()`
+* [x/gov] CLI flag changed from `proposalID` to `proposal-id`
 * [x/stake] Fixed the period check for the inflation calculation
 * \#1606 The following CLI commands have been switched to use `--from`
   * `gaiacli stake create-validator --address-validator`

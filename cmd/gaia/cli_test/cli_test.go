@@ -218,7 +218,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, int64(1), vote.ProposalID)
 	require.Equal(t, gov.OptionYes, vote.Option)
 
-	votes := executeGetVotes(t, fmt.Sprintf("gaiacli gov query-votes --proposalID=1 --output=json %v", flags))
+	votes := executeGetVotes(t, fmt.Sprintf("gaiacli gov query-votes --proposal-id=1 --output=json %v", flags))
 	require.Len(t, votes, 1)
 	require.Equal(t, int64(1), votes[0].ProposalID)
 	require.Equal(t, gov.OptionYes, votes[0].Option)

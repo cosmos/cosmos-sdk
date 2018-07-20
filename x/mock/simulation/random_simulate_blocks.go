@@ -74,6 +74,7 @@ func SimulateFromSeed(
 		header.Time += minTimePerBlock + int64(r.Intn(int(timeDiff)))
 	}
 
+	fmt.Printf("Simulation complete. Final height (blocks): %d, final time (seconds): %d\n", header.Height, header.Time)
 	DisplayEvents(events)
 }
 

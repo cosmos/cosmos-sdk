@@ -136,6 +136,8 @@ test_sim:
 	@echo "Pass the flag 'SimulationNumKeys' to run with the specified number of keys."
 	@echo "Pass the flag 'SimulationNumBlocks' to run with the specified number of blocks."
 	@echo "Pass the flag 'SimulationBlockSize' to run with the specified block size (operations per block)."
+	@echo "Pass the flag 'SimulationMinTimePerBlock' to run with the specified minimum block time."
+	@echo "Pass the flag 'SimulationMaxTimePerBlock' to run with the specified maximum block time."
 	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationBlockSize=200 -v
 
 test_cover:

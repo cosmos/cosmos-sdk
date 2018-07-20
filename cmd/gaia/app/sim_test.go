@@ -31,8 +31,8 @@ var (
 func init() {
 	flag.Int64Var(&seed, "SimulationSeed", 42, "Simulation random seed")
 	flag.IntVar(&numKeys, "SimulationNumKeys", 10, "Number of keys (accounts)")
-	flag.IntVar(&numBlocks, "SimulationNumBlocks", 100, "Number of blocks")
-	flag.IntVar(&blockSize, "SimulationBlockSize", 100, "Operations per block")
+	flag.IntVar(&numBlocks, "SimulationNumBlocks", 1000, "Number of blocks")
+	flag.IntVar(&blockSize, "SimulationBlockSize", 10, "Operations per block")
 	flag.Int64Var(&minTimePerBlock, "SimulationMinTimePerBlock", 10, "Minimum time per block (seconds)")
 	flag.Int64Var(&maxTimePerBlock, "SimulationMaxTimePerBlock", 20, "Maximum time per block (seconds)")
 	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")

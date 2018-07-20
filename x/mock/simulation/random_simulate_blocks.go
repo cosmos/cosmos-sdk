@@ -17,17 +17,17 @@ import (
 // Simulate tests application by sending random messages.
 func Simulate(
 	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, accs []sdk.AccAddress) json.RawMessage, ops []TestAndRunTx, setups []RandSetup,
-	invariants []Invariant, numKeys int, numBlocks int, blockSize int,
+	invariants []Invariant, numKeys int, numBlocks int, blockSize int, minTimePerBlock int64, maxTimePerBlock int64,
 ) {
 	time := time.Now().UnixNano()
-	SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numKeys, numBlocks, blockSize)
+	SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numKeys, numBlocks, blockSize, minTimePerBlock, maxTimePerBlock)
 }
 
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
 func SimulateFromSeed(
 	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, accs []sdk.AccAddress) json.RawMessage, seed int64, ops []TestAndRunTx, setups []RandSetup,
-	invariants []Invariant, numKeys int, numBlocks int, blockSize int,
+	invariants []Invariant, numKeys int, numBlocks int, blockSize int, minTimePerBlock int64, maxTimePerBlock int64,
 ) {
 	log := fmt.Sprintf("Starting SimulateFromSeed with randomness created with seed %d", int(seed))
 	keys, addrs := mock.GeneratePrivKeyAddressPairs(numKeys)
@@ -39,13 +39,16 @@ func SimulateFromSeed(
 		events[what]++
 	}
 
+	time := int64(0)
+	timeDiff := maxTimePerBlock - minTimePerBlock
+
 	app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, addrs)})
 	for i := 0; i < len(setups); i++ {
 		setups[i](r, keys)
 	}
 	app.Commit()
 
-	header := abci.Header{Height: 0}
+	header := abci.Header{Height: 0, Time: time}
 
 	for i := 0; i < numBlocks; i++ {
 		app.BeginBlock(abci.RequestBeginBlock{})
@@ -68,6 +71,7 @@ func SimulateFromSeed(
 
 		app.EndBlock(abci.RequestEndBlock{})
 		header.Height++
+		header.Time += minTimePerBlock + int64(r.Intn(int(timeDiff)))
 	}
 
 	DisplayEvents(events)

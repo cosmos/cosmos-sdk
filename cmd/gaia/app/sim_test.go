@@ -19,11 +19,13 @@ import (
 )
 
 var (
-	seed      int64
-	numKeys   int
-	numBlocks int
-	blockSize int
-	enabled   bool
+	seed            int64
+	numKeys         int
+	numBlocks       int
+	blockSize       int
+	minTimePerBlock int64
+	maxTimePerBlock int64
+	enabled         bool
 )
 
 func init() {
@@ -31,6 +33,8 @@ func init() {
 	flag.IntVar(&numKeys, "SimulationNumKeys", 10, "Number of keys (accounts)")
 	flag.IntVar(&numBlocks, "SimulationNumBlocks", 100, "Number of blocks")
 	flag.IntVar(&blockSize, "SimulationBlockSize", 100, "Operations per block")
+	flag.Int64Var(&minTimePerBlock, "SimulationMinTimePerBlock", 10, "Minimum time per block (seconds)")
+	flag.Int64Var(&maxTimePerBlock, "SimulationMaxTimePerBlock", 20, "Maximum time per block (seconds)")
 	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")
 }
 
@@ -95,6 +99,8 @@ func TestFullGaiaSimulation(t *testing.T) {
 		numKeys,
 		numBlocks,
 		blockSize,
+		minTimePerBlock,
+		maxTimePerBlock,
 	)
 
 }

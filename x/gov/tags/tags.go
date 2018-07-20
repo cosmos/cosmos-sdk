@@ -13,10 +13,7 @@ var (
 	ActionProposalPassed   = []byte("proposal-passed")
 	ActionProposalRejected = []byte("proposal-rejected")
 
-	Action = sdk.TagAction
-	//SrcValidator = sdk.TagSrcValidator
-	//DstValidator = sdk.TagDstValidator
-	//Delegator    = sdk.TagDelegator
+	Action            = sdk.TagAction
 	Proposer          = "proposer"
 	ProposalID        = "proposal-id"
 	VotingPeriodStart = "voting-period-start"

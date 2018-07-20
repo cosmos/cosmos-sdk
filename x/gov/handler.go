@@ -2,6 +2,7 @@ package gov
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 )
 
 // Handle all "gov" type messages.
@@ -33,9 +34,9 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(proposal.GetProposalID())
 
 	tags := sdk.NewTags(
-		"action", []byte("submitProposal"),
-		"proposer", []byte(msg.Proposer.String()),
-		"proposalId", proposalIDBytes,
+		tags.Action, tags.ActionSubmitProposal,
+		tags.Proposer, []byte(msg.Proposer.String()),
+		tags.ProposalID, proposalIDBytes,
 	)
 
 	if votingStarted {

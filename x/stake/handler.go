@@ -34,12 +34,12 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 // Called every block, process inflation, update validator set
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Validator) {
+	pool := k.GetPool(ctx)
 
 	// Process provision inflation
 	blockTime := ctx.BlockHeader().Time
 	if blockTime-pool.InflationLastTime >= 3600 {
 		params := k.GetParams(ctx)
-		pool := k.GetPool(ctx)
 		pool.InflationLastTime = blockTime
 		pool = pool.ProcessProvisions(params)
 		k.SetPool(ctx, pool)

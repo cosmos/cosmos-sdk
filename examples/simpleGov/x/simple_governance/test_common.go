@@ -2,15 +2,14 @@ package simpleGovernance
 
 import (
 	"encoding/hex"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/x/mock"
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	// "github.com/fedekunze/cosmos-sdk/examples/simpleGov/app"
 )
 
 // dummy addresses used for testing
@@ -91,53 +89,32 @@ var (
 
 //_______________________________________________________________________________________
 
-// // intended to be used with require/assert:  require.True(ValEq(...))
-// func valEq(t *testing.T, exp, got Validator) (*testing.T, bool, string, Validator, Validator) {
-// 	return t, exp.equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
-// }
+// getMockApp returns an initialized mock application for this module.
+func getMockApp(t *testing.T) (*mock.App, Keeper) {
+	mApp := mock.NewApp()
 
-func loggerAndDB() (log.Logger, dbm.DB) {
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
-	dB := dbm.NewMemDB()
-	return logger, dB
+	RegisterWire(mApp.Cdc)
+
+	keyStake := sdk.NewKVStoreKey("stake")
+	coinKeeper := bank.NewKeeper(mApp.AccountMapper)
+	stakeKeeper := stake.NewKeeper(mApp.Cdc, keyStake, coinKeeper, mApp.RegisterCodespace(DefaultCodespace))
+	keeper := NewKeeper(mApp.Cdc, coinKeeper, stakeKeeper, mApp.RegisterCodespace(DefaultCodespace))
+
+	mApp.Router().AddRoute("simpleGovernance", NewHandler(keeper))
+	// mApp.SetEndBlocker(getEndBlocker(keeper))
+	// mApp.SetInitChainer(getInitChainer(mApp, keeper))
+
+	require.NoError(t, mApp.CompleteSetup([]*sdk.KVStoreKey{keyStake}))
+	return mApp, keeper
 }
 
-// func newSimpleGovApp() *app.SimpleGovApp {
-// 	logger, dB := loggerAndDB()
-// 	return app.NewSimpleGovApp(logger, dB)
-// }
+// getInitChainer initializes the chainer of the mock app and sets the genesis
+// state. It returns an empty ResponseInitChain.
+func getInitChainer(mapp *mock.App, keeper Keeper) sdk.InitChainer {
+	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+		mapp.InitChainer(ctx, req)
 
-func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.Address) {
-	key := crypto.GenPrivKeyEd25519()
-	pub := key.PubKey()
-	addr := sdk.Address(pub.Address())
-	return key, pub, addr
-}
-
-func initialPool() stake.Pool {
-	return stake.Pool{
-		LooseUnbondedTokens:     sdk.NewInt(int64(0)),
-		BondedTokens:            sdk.NewInt(int64(0)),
-		UnbondingTokens:         sdk.NewInt(int64(0)),
-		UnbondedTokens:          sdk.NewInt(int64(0)),
-		BondedShares:            sdk.ZeroRat(),
-		UnbondingShares:         sdk.ZeroRat(),
-		UnbondedShares:          sdk.ZeroRat(),
-		InflationLastTime:       0,
-		Inflation:               sdk.NewRat(7, 100),
-		DateLastCommissionReset: 0,
-		PrevBondedShares:        sdk.ZeroRat(),
-	}
-}
-
-func defaultParams() stake.Params {
-	return stake.Params{
-		InflationRateChange: sdk.NewRat(13, 100),
-		InflationMax:        sdk.NewRat(20, 100),
-		InflationMin:        sdk.NewRat(7, 100),
-		GoalBonded:          sdk.NewRat(67, 100),
-		MaxValidators:       100,
-		BondDenom:           "Atom",
+		return abci.ResponseInitChain{}
 	}
 }
 
@@ -164,7 +141,7 @@ func makeTestCodec() *wire.Codec {
 // hogpodge of all sorts of input required for testing
 func createTestInput(t *testing.T, initCoins int64) (sdk.Context, auth.AccountMapper, Keeper) {
 
-	app := newSimpleGovApp()
+	// app := NewSimpleGovApp()
 	keyStake := sdk.NewKVStoreKey("stake")
 	keyAuth := sdk.NewKVStoreKey("auth")
 	simpleGovKey := sdk.NewKVStoreKey("simpleGov")

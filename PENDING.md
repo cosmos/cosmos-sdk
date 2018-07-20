@@ -2,6 +2,7 @@
 
 BREAKING CHANGES
 * [baseapp] Msgs are no longer run on CheckTx, removed `ctx.IsCheckTx()`
+* [x/gov] CLI flag changed from `proposalID` to `proposal-id`
 * [x/stake] Fixed the period check for the inflation calculation
 * \#1606 The following CLI commands have been switched to use `--from`
   * `gaiacli stake create-validator --address-validator`
@@ -32,7 +33,6 @@ IMPROVEMENTS
 * [tools] Remove `rm -rf vendor/` from `make get_vendor_deps`
 * [x/stake] Add revoked to human-readable validator 
 * [x/gov] Votes on a proposal can now be queried
-* [x/gov] gov cli proposalID to proposal-id
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators

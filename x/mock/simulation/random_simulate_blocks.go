@@ -42,7 +42,12 @@ func SimulateFromSeed(
 	time := int64(0)
 	timeDiff := maxTimePerBlock - minTimePerBlock
 
-	app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, addrs)})
+	res := app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, addrs)})
+	validators := make(map[string]abci.Validator)
+	for _, validator := range res.Validators {
+		validators[string(validator.Address)] = validator
+	}
+
 	for i := 0; i < len(setups); i++ {
 		setups[i](r, keys)
 	}
@@ -69,7 +74,8 @@ func SimulateFromSeed(
 			AssertAllInvariants(t, app, invariants, log)
 		}
 
-		app.EndBlock(abci.RequestEndBlock{})
+		res := app.EndBlock(abci.RequestEndBlock{})
+		UpdateValidators(t, validators, res.ValidatorUpdates)
 		header.Height++
 		header.Time += minTimePerBlock + int64(r.Intn(int(timeDiff)))
 	}
@@ -82,5 +88,18 @@ func SimulateFromSeed(
 func AssertAllInvariants(t *testing.T, app *baseapp.BaseApp, tests []Invariant, log string) {
 	for i := 0; i < len(tests); i++ {
 		tests[i](t, app, log)
+	}
+}
+
+// UpdateValidators mimicks Tendermint's update logic
+func UpdateValidators(t *testing.T, current map[string]abci.Validator, updates []abci.Validator) {
+	for _, update := range updates {
+		switch {
+		case update.Power == 0:
+			require.NotNil(t, current[string(update.Address)], "tried to delete a nonexistent validator")
+			delete(current, string(update.Address))
+		default:
+			current[string(update.Address)] = update
+		}
 	}
 }

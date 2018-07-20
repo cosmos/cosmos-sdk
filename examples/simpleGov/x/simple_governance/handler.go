@@ -6,7 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // Minimum proposal deposit
@@ -37,13 +38,13 @@ func NewHandler(k Keeper) sdk.Handler {
 
 // NewEndBlocker checks proposals and generates a EndBlocker
 func NewEndBlocker(k Keeper) sdk.EndBlocker {
-	return func(ctx sdk.Context, req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
+	return sdk.EndBlocker(func(ctx sdk.Context, req types.RequestEndBlock) types.ResponseEndBlock {
 		err := checkProposal(ctx, k)
 		if err != nil {
 			panic(err)
 		}
-		return
-	}
+		return abci.ResponseEndBlock{}
+	})
 }
 
 // checkProposal checks if the proposal reached the end of the voting period

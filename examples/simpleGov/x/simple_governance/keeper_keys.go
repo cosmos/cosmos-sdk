@@ -25,7 +25,7 @@ func GenerateProposalVotesKey(proposalID int64) []byte {
 }
 
 // GenerateProposalVoteKey creates a key of the form "proposals"|{proposalID}|"votes"|{voterAddress}
-func GenerateProposalVoteKey(proposalID int64, voterAddr sdk.Address) []byte {
+func GenerateProposalVoteKey(proposalID int64, voterAddr sdk.AccAddress) []byte {
 	key := GenerateProposalVotesKey(proposalID)
 	key = append(key, voterAddr.Bytes()...)
 	return key

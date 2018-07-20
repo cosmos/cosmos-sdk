@@ -10,12 +10,12 @@ import (
 
 // Proposal defines the basic properties of a staking proposal
 type Proposal struct {
-	Title       string      `json:"title"`        // Title of the proposal
-	Description string      `json:"description"`  // Description of the proposal
-	Submitter   sdk.Address `json:"submitter"`    // Account address of the proposer
-	SubmitBlock int64       `json:"submit_block"` // Block height from which the proposal is open for votations
-	State       string      `json:"state"`        // One of Open, Accepted, Rejected
-	Deposit     sdk.Coins   `json:"deposit"`      // Coins deposited in escrow
+	Title       string         `json:"title"`        // Title of the proposal
+	Description string         `json:"description"`  // Description of the proposal
+	Submitter   sdk.AccAddress `json:"submitter"`    // Account address of the proposer
+	SubmitBlock int64          `json:"submit_block"` // Block height from which the proposal is open for votations
+	State       string         `json:"state"`        // One of Open, Accepted, Rejected
+	Deposit     sdk.Coins      `json:"deposit"`      // Coins deposited in escrow
 
 	YesVotes     int64 `json:"yes_votes"`     // Total Yes votes
 	NoVotes      int64 `json:"no_votes"`      // Total No votes
@@ -26,7 +26,7 @@ type Proposal struct {
 func NewProposal(
 	title string,
 	description string,
-	submitter sdk.Address,
+	submitter sdk.AccAddress,
 	blockHeight int64,
 	deposit sdk.Coins) Proposal {
 	return Proposal{
@@ -83,14 +83,14 @@ func (pq ProposalQueue) isEmpty() bool {
 
 //SubmitProposalMsg defines a message to create a proposal
 type SubmitProposalMsg struct {
-	Title       string      // Title of the proposal
-	Description string      // Description of the proposal
-	Deposit     sdk.Coins   // Deposit paid by submitter. Must be > MinDeposit to enter voting period
-	Submitter   sdk.Address // Address of the submitter
+	Title       string         // Title of the proposal
+	Description string         // Description of the proposal
+	Deposit     sdk.Coins      // Deposit paid by submitter. Must be > MinDeposit to enter voting period
+	Submitter   sdk.AccAddress // Address of the submitter
 }
 
 // NewSubmitProposalMsg submits a message with a new proposal
-func NewSubmitProposalMsg(title string, description string, deposit sdk.Coins, submitter sdk.Address) SubmitProposalMsg {
+func NewSubmitProposalMsg(title string, description string, deposit sdk.Coins, submitter sdk.AccAddress) SubmitProposalMsg {
 	return SubmitProposalMsg{
 		Title:       title,
 		Description: description,
@@ -119,8 +119,8 @@ func (msg SubmitProposalMsg) GetSignBytes() []byte {
 }
 
 // GetSigners Implements Msg
-func (msg SubmitProposalMsg) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.Submitter}
+func (msg SubmitProposalMsg) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Submitter}
 }
 
 // ValidateBasic Implements Msg
@@ -157,13 +157,13 @@ func (msg SubmitProposalMsg) String() string {
 // VoteMsg defines the msg of a staker containing the vote option to an
 // specific proposal
 type VoteMsg struct {
-	ProposalID int64       // ID of the proposal
-	Option     string      // Option chosen by voter
-	Voter      sdk.Address // Address of the voter
+	ProposalID int64          // ID of the proposal
+	Option     string         // Option chosen by voter
+	Voter      sdk.AccAddress // Address of the voter
 }
 
 // NewVoteMsg creates a VoteMsg instance
-func NewVoteMsg(proposalID int64, option string, voter sdk.Address) VoteMsg {
+func NewVoteMsg(proposalID int64, option string, voter sdk.AccAddress) VoteMsg {
 	// by default a nil option is an abstention
 	if option == "" {
 		option = "Abstain"
@@ -195,8 +195,8 @@ func (msg VoteMsg) GetSignBytes() []byte {
 }
 
 // GetSigners Implements Msg
-func (msg VoteMsg) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.Voter}
+func (msg VoteMsg) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Voter}
 }
 
 func isValidOption(option string) bool {

@@ -29,6 +29,11 @@ func (v Validator) GetPubKey() crypto.PubKey {
 }
 
 // Implements sdk.Validator
+func (v Validator) GetTokens() sdk.Rat {
+	return sdk.ZeroRat()
+}
+
+// Implements sdk.Validator
 func (v Validator) GetPower() sdk.Rat {
 	return v.Power
 }

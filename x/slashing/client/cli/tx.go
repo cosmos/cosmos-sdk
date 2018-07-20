@@ -14,12 +14,12 @@ import (
 func GetCmdUnrevoke(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unrevoke",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(0),
 		Short: "unrevoke validator previously revoked for downtime",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
-			validatorAddr, err := sdk.AccAddressFromBech32(args[0])
+			validatorAddr, err := ctx.GetFromAddress()
 			if err != nil {
 				return err
 			}

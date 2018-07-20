@@ -18,7 +18,7 @@ import (
 )
 
 // initialize the mock application for this module
-func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, []sdk.Address, []crypto.PubKey, []crypto.PrivKey) {
+func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, []sdk.AccAddress, []crypto.PubKey, []crypto.PrivKey) {
 	mapp := mock.NewApp()
 
 	stake.RegisterWire(mapp.Cdc)
@@ -59,16 +59,21 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakeKeeper stake.Keeper) sdk
 		mapp.InitChainer(ctx, req)
 
 		stakeGenesis := stake.DefaultGenesisState()
-		stakeGenesis.Pool.LooseTokens = 100000
+		stakeGenesis.Pool.LooseTokens = sdk.NewRat(100000)
 
-		stake.InitGenesis(ctx, stakeKeeper, stakeGenesis)
+		validators, err := stake.InitGenesis(ctx, stakeKeeper, stakeGenesis)
+		if err != nil {
+			panic(err)
+		}
 		InitGenesis(ctx, keeper, DefaultGenesisState())
-		return abci.ResponseInitChain{}
+		return abci.ResponseInitChain{
+			Validators: validators,
+		}
 	}
 }
 
 // Sorts Addresses
-func SortAddresses(addrs []sdk.Address) {
+func SortAddresses(addrs []sdk.AccAddress) {
 	var byteAddrs [][]byte
 	for _, addr := range addrs {
 		byteAddrs = append(byteAddrs, addr.Bytes())

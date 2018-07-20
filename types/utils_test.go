@@ -29,10 +29,10 @@ func TestSortJSON(t *testing.T) {
 			wantErr: false},
 	}
 
-	for _, tc := range cases {
+	for tcIndex, tc := range cases {
 		got, err := SortJSON([]byte(tc.unsortedJSON))
 		if tc.wantErr != (err != nil) {
-			t.Fatalf("got %t, want: %t, err=%s", err != nil, tc.wantErr, err)
+			t.Fatalf("got %t, want: %t, tc #%d, err=%s", err != nil, tc.wantErr, tcIndex, err)
 		}
 		require.Equal(t, string(got), tc.want)
 	}

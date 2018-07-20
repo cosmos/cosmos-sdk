@@ -19,7 +19,7 @@ var (
 
 // testMsg is a mock transaction that has a validation which can fail.
 type testMsg struct {
-	signers     []sdk.Address
+	signers     []sdk.AccAddress
 	positiveNum int64
 }
 
@@ -27,7 +27,7 @@ func (tx testMsg) Type() string                       { return msgType }
 func (tx testMsg) GetMsg() sdk.Msg                    { return tx }
 func (tx testMsg) GetMemo() string                    { return "" }
 func (tx testMsg) GetSignBytes() []byte               { return nil }
-func (tx testMsg) GetSigners() []sdk.Address          { return tx.signers }
+func (tx testMsg) GetSigners() []sdk.AccAddress       { return tx.signers }
 func (tx testMsg) GetSignatures() []auth.StdSignature { return nil }
 func (tx testMsg) ValidateBasic() sdk.Error {
 	if tx.positiveNum >= 0 {
@@ -53,7 +53,7 @@ func TestCheckAndDeliverGenTx(t *testing.T) {
 	SetGenesis(mApp, accs)
 	ctxCheck := mApp.BaseApp.NewContext(true, abci.Header{})
 
-	msg := testMsg{signers: []sdk.Address{addrs[0]}, positiveNum: 1}
+	msg := testMsg{signers: []sdk.AccAddress{addrs[0]}, positiveNum: 1}
 
 	acct := mApp.AccountMapper.GetAccount(ctxCheck, addrs[0])
 	require.Equal(t, accs[0], acct.(*auth.BaseAccount))
@@ -86,14 +86,14 @@ func TestCheckGenTx(t *testing.T) {
 
 	SetGenesis(mApp, accs)
 
-	msg1 := testMsg{signers: []sdk.Address{addrs[0]}, positiveNum: 1}
+	msg1 := testMsg{signers: []sdk.AccAddress{addrs[0]}, positiveNum: 1}
 	CheckGenTx(
 		t, mApp.BaseApp, []sdk.Msg{msg1},
 		[]int64{accs[0].GetAccountNumber()}, []int64{accs[0].GetSequence()},
 		true, privKeys[0],
 	)
 
-	msg2 := testMsg{signers: []sdk.Address{addrs[0]}, positiveNum: -1}
+	msg2 := testMsg{signers: []sdk.AccAddress{addrs[0]}, positiveNum: -1}
 	CheckGenTx(
 		t, mApp.BaseApp, []sdk.Msg{msg2},
 		[]int64{accs[0].GetAccountNumber()}, []int64{accs[0].GetSequence()},

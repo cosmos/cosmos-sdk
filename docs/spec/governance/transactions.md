@@ -12,7 +12,7 @@ type TxGovSubmitProposal struct {
   Title           string        //  Title of the proposal
   Description     string        //  Description of the proposal
   Type            ProposalType  //  Type of proposal
-  InitialDeposit  int64         //  Initial deposit paid by sender. Must be strictly positive.
+  InitialDeposit  sdk.Coins     //  Initial deposit paid by sender. Must be strictly positive.
 }
 ```
 
@@ -22,8 +22,7 @@ type TxGovSubmitProposal struct {
 * Initialise `Proposals` attributes
 * Decrease balance of sender by `InitialDeposit`
 * If `MinDeposit` is reached:
-  * Push `proposalID` in  `ProposalProcessingQueueEnd`
-  * Store each validator's voting power in `ValidatorGovInfos`
+  * Push `proposalID` in  `ProposalProcessingQueue`
 
 A `TxGovSubmitProposal` transaction can be handled according to the following 
 pseudocode.
@@ -34,16 +33,18 @@ pseudocode.
 
 upon receiving txGovSubmitProposal from sender do
   
-  if !correctlyFormatted(txGovSubmitProposal) then 
+  if !correctlyFormatted(txGovSubmitProposal)  
     // check if proposal is correctly formatted. Includes fee payment.
     throw
   
   initialDeposit = txGovSubmitProposal.InitialDeposit 
-  if (initialDeposit <= 0) OR (sender.AtomBalance < initialDeposit) then 
+  if (initialDeposit.Atoms <= 0) OR (sender.AtomBalance < initialDeposit.Atoms)  
     // InitialDeposit is negative or null OR sender has insufficient funds
     throw
+
+  if (txGovSubmitProposal.Type != ProposalTypePlainText) OR (txGovSubmitProposal.Type != ProposalTypeSoftwareUpgrade)
   
-  sender.AtomBalance -= initialDeposit
+  sender.AtomBalance -= initialDeposit.Atoms
   
   proposalID = generate new proposalID
   proposal = NewProposal()
@@ -55,38 +56,26 @@ upon receiving txGovSubmitProposal from sender do
   proposal.SubmitBlock = CurrentBlock
   proposal.Deposits.append({initialDeposit, sender})
   proposal.Submitter = sender
-  proposal.Votes.Yes = 0
-  proposal.Votes.No = 0
-  proposal.Votes.NoWithVeto = 0
-  proposal.Votes.Abstain = 0
+  proposal.YesVotes = 0
+  proposal.NoVotes = 0
+  proposal.NoWithVetoVotes = 0
+  proposal.AbstainVotes = 0
   
-  activeProcedure = load(params, 'ActiveProcedure')
+  depositProcedure = load(GlobalParams, 'DepositProcedure')
   
-  if (initialDeposit < activeProcedure.MinDeposit) then  
+  if (initialDeposit < depositProcedure.MinDeposit)  
     // MinDeposit is not reached
     
-    proposal.VotingStartBlock = -1
-    proposal.InitTotalVotingPower = 0
+    proposal.CurrentStatus = ProposalStatusOpen
   
   else  
     // MinDeposit is reached
     
+    proposal.CurrentStatus = ProposalStatusActive
     proposal.VotingStartBlock = CurrentBlock
-    proposal.InitTotalVotingPower = TotalVotingPower
-    proposal.InitProcedure = activeProcedure
-    
-    for each validator in CurrentBondedValidators
-      // Store voting power of each bonded validator
-
-      validatorGovInfo = new ValidatorGovInfo
-      validatorGovInfo.InitVotingPower = validator.VotingPower
-      validatorGovInfo.Minus = 0
-
-      store(ValidatorGovInfos, <proposalID | validator.Address>, validatorGovInfo)
-    
     ProposalProcessingQueue.push(proposalID)
   
-  store(Proposals, proposalID, proposal) // Store proposal in Proposals mapping
+  store(Proposals, <proposalID|'proposal'>, proposal) // Store proposal in Proposals mapping
   return proposalID
 ```
 
@@ -98,8 +87,8 @@ Once a proposal is submitted, if
 
 ```go
 type TxGovDeposit struct {
-  ProposalID    int64   // ID of the proposal
-  Deposit       int64   // Number of Atoms to add to the proposal's deposit
+  ProposalID    int64       // ID of the proposal
+  Deposit       sdk.Coins   // Number of Atoms to add to the proposal's deposit
 }
 ```
 
@@ -109,7 +98,6 @@ type TxGovDeposit struct {
 * Increase `proposal.TotalDeposit` by sender's `deposit`
 * If `MinDeposit` is reached:
   * Push `proposalID` in  `ProposalProcessingQueueEnd`
-  * Store each validator's voting power in `ValidatorGovInfos`
 
 A `TxGovDeposit` transaction has to go through a number of checks to be valid. 
 These checks are outlined in the following pseudocode.
@@ -121,57 +109,43 @@ These checks are outlined in the following pseudocode.
 upon receiving txGovDeposit from sender do
   // check if proposal is correctly formatted. Includes fee payment.
   
-  if !correctlyFormatted(txGovDeposit) then  
+  if !correctlyFormatted(txGovDeposit) 
     throw
   
-  proposal = load(Proposals, txGovDeposit.ProposalID)
+  proposal = load(Proposals, <txGovDeposit.ProposalID|'proposal'>) // proposal is a const key, proposalID is variable
 
-  if (proposal == nil) then  
+  if (proposal == nil) 
     // There is no proposal for this proposalID
     throw
   
-  if (txGovDeposit.Deposit <= 0) OR (sender.AtomBalance < txGovDeposit.Deposit)
-    // deposit is negative or null OR sender has insufficient funds
-    throw
-  
-  activeProcedure = load(params, 'ActiveProcedure')
+  if (txGovDeposit.Deposit.Atoms <= 0) OR (sender.AtomBalance < txGovDeposit.Deposit.Atoms) OR (proposal.CurrentStatus != ProposalStatusOpen)
 
-  if (proposal.TotalDeposit >= activeProcedure.MinDeposit) then  
-    // MinDeposit was reached
-    // TODO: shouldnt we do something here ?
+    // deposit is negative or null 
+    // OR sender has insufficient funds
+    // OR proposal is not open for deposit anymore
+
     throw
-  
+
+  depositProcedure = load(GlobalParams, 'DepositProcedure')
+
+  if (CurrentBlock >= proposal.SubmitBlock + depositProcedure.MaxDepositPeriod)
+    proposal.CurrentStatus = ProposalStatusClosed
+
   else
-    if (CurrentBlock >= proposal.SubmitBlock + activeProcedure.MaxDepositPeriod) then 
-      // Maximum deposit period reached
-      throw
-    
     // sender can deposit
-    
-    sender.AtomBalance -= txGovDeposit.Deposit
+    sender.AtomBalance -= txGovDeposit.Deposit.Atoms
 
     proposal.Deposits.append({txGovVote.Deposit, sender})
-    proposal.TotalDeposit += txGovDeposit.Deposit
+    proposal.TotalDeposit.Plus(txGovDeposit.Deposit)
     
-    if (proposal.TotalDeposit >= activeProcedure.MinDeposit) then  
+    if (proposal.TotalDeposit >= depositProcedure.MinDeposit)   
       // MinDeposit is reached, vote opens
       
       proposal.VotingStartBlock = CurrentBlock
-      proposal.InitTotalVotingPower = TotalVotingPower
-      proposal.InitProcedure = activeProcedure
-      
-      for each validator in CurrentBondedValidators
-        // Store voting power of each bonded validator
-
-        validatorGovInfo = NewValidatorGovInfo()
-        validatorGovInfo.InitVotingPower = validator.VotingPower
-        validatorGovInfo.Minus = 0
-
-        store(ValidatorGovInfos, <proposalID | validator.Address>, validatorGovInfo)
-      
+      proposal.CurrentStatus = ProposalStatusActive
       ProposalProcessingQueue.push(txGovDeposit.ProposalID)  
 
-    store(Proposals, txGovVote.ProposalID, proposal)
+  store(Proposals, <txGovVote.ProposalID|'proposal'>, proposal)
 ```
 
 ### Vote
@@ -182,27 +156,16 @@ vote on the proposal.
 
 ```go
   type TxGovVote struct {
-    ProposalID           int64           //  proposalID of the proposal
-    Option               string          //  option chosen by the voter
-    ValidatorAddress      crypto.address //  Address of the validator voter wants to tie its vote to
+    ProposalID           int64         //  proposalID of the proposal
+    Vote                 byte          //  option from OptionSet chosen by the voter
   }
 ```
 
 **State modifications:**
-* If sender is not a validator and validator has not voted, initialize or 
-  increase minus of validator by sender's `voting power`
-* If sender is not a validator and validator has voted, decrease 
-  votes of `validatorOption` by sender's `voting power`
-* If sender is not a validator, increase votes of `txGovVote.Option`
-  by sender's `voting power`
-* If sender is a validator, increase votes of `txGovVote.Option` by 
-  validator's `InitVotingPower - minus` (`minus` can be equal to 0)
+* Record `Vote` of sender
 
-Votes need to be tied to a validator in order to compute validator's voting 
-power. If a delegator is bonded to multiple validators, it will have to send 
-one transaction per validator (the UI should facilitate this so that multiple 
-transactions can be sent in one "vote flow"). If the sender is the validator 
-itself, then it will input its own address as `Address`
+*Note: Gas cost for this message has to take into account the future tallying of the vote in EndBlocker*
+
 
 Next is a pseudocode proposal of the way `TxGovVote` transactions are 
 handled:
@@ -214,89 +177,22 @@ handled:
   upon receiving txGovVote from sender do
     // check if proposal is correctly formatted. Includes fee payment.    
     
-    if !correctlyFormatted(txGovDeposit) then  
+    if !correctlyFormatted(txGovDeposit)   
       throw
     
-    proposal = load(Proposals, txGovDeposit.ProposalID)
+    proposal = load(Proposals, <txGovDeposit.ProposalID|'proposal'>)
 
-    if (proposal == nil) then  
+    if (proposal == nil)   
       // There is no proposal for this proposalID
       throw
     
-    validator = load(CurrentValidators, txGovVote.Address)
-        if (validator == nil) then 
-         
-          // Throws if
-          // ValidatorAddress is not the address of a current validator
-          
-          throw
-          
-        else
-           option = load(Options, <txGovVote.ProposalID>:<sender>:<txGovVote.ValidatorAddress>)
 
-    if (option != nil)
-     // sender has already voted with the Atoms bonded to Address
-     throw
+    if  (proposal.CurrentStatus == ProposalStatusActive)
 
-    if  (proposal.VotingStartBlock < 0) OR  
-        (CurrentBlock > proposal.VotingStartBlock + proposal.InitProcedure.VotingPeriod) OR 
-        (proposal.VotingStartBlock < lastBondingBlock(sender, txGovVote.Address) OR   
-        (proposal.VotingStartBlock < lastUnbondingBlock(sender, txGovVote.Address) OR   
-        (proposal.Votes.YesVotes/proposal.InitTotalVotingPower >= 2/3) then   
 
-        // Throws if
-        // Vote has not started OR if
-        // Vote had ended OR if
-        // sender bonded Atoms to Address after start of vote OR if
-        // sender unbonded Atoms from Address after start of vote OR if
-        // special condition is met, i.e. proposal is accepted and closed
+        // Sender can vote if
+        // Proposal is active
+        // Sender has some bonds
 
-        throw     
-
-    validatorGovInfo = load(ValidatorGovInfos, <txGovVote.ProposalID>:<validator.Address>)
-
-    if (validatorGovInfo == nil)
-      // validator became validator after proposal entered voting period 
-      throw
-
-    // sender can vote, check if sender == validator and store sender's option in Options
-    
-    store(Options, <txGovVote.ProposalID>:<sender>:<txGovVote.Address>, txGovVote.Option)
-
-    if (sender != validator.address)
-      // Here, sender is not the Address of the validator whose Address is txGovVote.Address
-
-      if sender does not have bonded Atoms to txGovVote.Address then
-        // check in Staking module
-        throw
-
-      validatorOption = load(Options, <txGovVote.ProposalID>:<sender>:<txGovVote.Address>)
-
-      if (validatorOption == nil)
-        // Validator has not voted already
-
-        validatorGovInfo.Minus += sender.bondedAmounTo(txGovVote.Address)
-        store(ValidatorGovInfos, <txGovVote.ProposalID>:<validator.Address>, validatorGovInfo)
-
-      else
-        // Validator has already voted
-        // Reduce votes of option chosen by validator by sender's bonded Amount
-
-        proposal.Votes.validatorOption -= sender.bondedAmountTo(txGovVote.Address)
-
-      // increase votes of option chosen by sender by bonded Amount
-
-      senderOption = txGovVote.Option
-      propoal.Votes.senderOption -= sender.bondedAmountTo(txGovVote.Address)
-
-      store(Proposals, txGovVote.ProposalID, proposal)
-        
-
-    else 
-      // sender is the address of the validator whose main Address is txGovVote.Address
-      // i.e. sender == validator
-
-      proposal.Votes.validatorOption += (validatorGovInfo.InitVotingPower - validatorGovInfo.Minus)
-
-      store(Proposals, txGovVote.ProposalID, proposal)
+        store(Governance, <txGovVote.ProposalID|'addresses'|sender>, txGovVote.Vote)   // Voters can vote multiple times. Re-voting overrides previous vote. This is ok because tallying is done once at the end.
 ```

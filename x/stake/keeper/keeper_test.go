@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
@@ -32,7 +33,7 @@ func TestPool(t *testing.T) {
 	require.True(t, expPool.Equal(resPool))
 
 	//modify a params, save, and retrieve
-	expPool.BondedTokens = 777
+	expPool.BondedTokens = sdk.NewRat(777)
 	keeper.SetPool(ctx, expPool)
 	resPool = keeper.GetPool(ctx)
 	require.True(t, expPool.Equal(resPool))

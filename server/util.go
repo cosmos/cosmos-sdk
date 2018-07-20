@@ -77,16 +77,21 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 	rootDir := tmpConf.RootDir
 	configFilePath := filepath.Join(rootDir, "config/config.toml")
 	// Intercept only if the file doesn't already exist
+
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		// the following parse config is needed to create directories
-		sdkDefaultConfig, _ := tcmd.ParseConfig()
-		sdkDefaultConfig.ProfListenAddress = "prof_laddr=localhost:6060"
-		sdkDefaultConfig.P2P.RecvRate = 5120000
-		sdkDefaultConfig.P2P.SendRate = 5120000
-		cfg.WriteConfigFile(configFilePath, sdkDefaultConfig)
+		conf, _ = tcmd.ParseConfig()
+		conf.ProfListenAddress = "localhost:6060"
+		conf.P2P.RecvRate = 5120000
+		conf.P2P.SendRate = 5120000
+		conf.Consensus.TimeoutCommit = 5000
+		cfg.WriteConfigFile(configFilePath, conf)
 		// Fall through, just so that its parsed into memory.
 	}
-	conf, err = tcmd.ParseConfig()
+
+	if conf == nil {
+		conf, err = tcmd.ParseConfig()
+	}
 	return
 }
 
@@ -149,24 +154,15 @@ func externalIP() (string, error) {
 		return "", err
 	}
 	for _, iface := range ifaces {
-		if iface.Flags&net.FlagUp == 0 {
-			continue // interface down
-		}
-		if iface.Flags&net.FlagLoopback != 0 {
-			continue // loopback interface
+		if skipInterface(iface) {
+			continue
 		}
 		addrs, err := iface.Addrs()
 		if err != nil {
 			return "", err
 		}
 		for _, addr := range addrs {
-			var ip net.IP
-			switch v := addr.(type) {
-			case *net.IPNet:
-				ip = v.IP
-			case *net.IPAddr:
-				ip = v.IP
-			}
+			ip := addrToIP(addr)
 			if ip == nil || ip.IsLoopback() {
 				continue
 			}
@@ -178,4 +174,25 @@ func externalIP() (string, error) {
 		}
 	}
 	return "", errors.New("are you connected to the network?")
+}
+
+func skipInterface(iface net.Interface) bool {
+	if iface.Flags&net.FlagUp == 0 {
+		return true // interface down
+	}
+	if iface.Flags&net.FlagLoopback != 0 {
+		return true // loopback interface
+	}
+	return false
+}
+
+func addrToIP(addr net.Addr) net.IP {
+	var ip net.IP
+	switch v := addr.(type) {
+	case *net.IPNet:
+		ip = v.IP
+	case *net.IPAddr:
+		ip = v.IP
+	}
+	return ip
 }

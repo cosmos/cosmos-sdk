@@ -18,6 +18,6 @@ func GetSignPrefix(p Payload, cdc *wire.Codec) []byte {
 }
 
 // GetSignKey returns the key for sign
-func GetSignKey(p Payload, signer sdk.Address, cdc *wire.Codec) []byte {
+func GetSignKey(p Payload, signer sdk.AccAddress, cdc *wire.Codec) []byte {
 	return append(GetSignPrefix(p, cdc), signer...)
 }

@@ -10,13 +10,13 @@ import (
 type (
 	Keeper                = keeper.Keeper
 	Validator             = types.Validator
+	BechValidator         = types.BechValidator
 	Description           = types.Description
 	Delegation            = types.Delegation
 	UnbondingDelegation   = types.UnbondingDelegation
 	Redelegation          = types.Redelegation
 	Params                = types.Params
 	Pool                  = types.Pool
-	PoolShares            = types.PoolShares
 	MsgCreateValidator    = types.MsgCreateValidator
 	MsgEditValidator      = types.MsgEditValidator
 	MsgDelegate           = types.MsgDelegate
@@ -62,22 +62,20 @@ var (
 
 	DefaultParams       = types.DefaultParams
 	InitialPool         = types.InitialPool
-	NewUnbondedShares   = types.NewUnbondedShares
-	NewUnbondingShares  = types.NewUnbondingShares
-	NewBondedShares     = types.NewBondedShares
 	NewValidator        = types.NewValidator
 	NewDescription      = types.NewDescription
 	NewGenesisState     = types.NewGenesisState
 	DefaultGenesisState = types.DefaultGenesisState
 	RegisterWire        = types.RegisterWire
 
-	NewMsgCreateValidator    = types.NewMsgCreateValidator
-	NewMsgEditValidator      = types.NewMsgEditValidator
-	NewMsgDelegate           = types.NewMsgDelegate
-	NewMsgBeginUnbonding     = types.NewMsgBeginUnbonding
-	NewMsgCompleteUnbonding  = types.NewMsgCompleteUnbonding
-	NewMsgBeginRedelegate    = types.NewMsgBeginRedelegate
-	NewMsgCompleteRedelegate = types.NewMsgCompleteRedelegate
+	NewMsgCreateValidator           = types.NewMsgCreateValidator
+	NewMsgCreateValidatorOnBehalfOf = types.NewMsgCreateValidatorOnBehalfOf
+	NewMsgEditValidator             = types.NewMsgEditValidator
+	NewMsgDelegate                  = types.NewMsgDelegate
+	NewMsgBeginUnbonding            = types.NewMsgBeginUnbonding
+	NewMsgCompleteUnbonding         = types.NewMsgCompleteUnbonding
+	NewMsgBeginRedelegate           = types.NewMsgBeginRedelegate
+	NewMsgCompleteRedelegate        = types.NewMsgCompleteRedelegate
 )
 
 const (
@@ -92,14 +90,15 @@ const (
 )
 
 var (
-	ErrNilValidatorAddr       = types.ErrNilValidatorAddr
-	ErrNoValidatorFound       = types.ErrNoValidatorFound
-	ErrValidatorAlreadyExists = types.ErrValidatorAlreadyExists
-	ErrValidatorRevoked       = types.ErrValidatorRevoked
-	ErrBadRemoveValidator     = types.ErrBadRemoveValidator
-	ErrDescriptionLength      = types.ErrDescriptionLength
-	ErrCommissionNegative     = types.ErrCommissionNegative
-	ErrCommissionHuge         = types.ErrCommissionHuge
+	ErrNilValidatorAddr      = types.ErrNilValidatorAddr
+	ErrNoValidatorFound      = types.ErrNoValidatorFound
+	ErrValidatorOwnerExists  = types.ErrValidatorOwnerExists
+	ErrValidatorPubKeyExists = types.ErrValidatorPubKeyExists
+	ErrValidatorRevoked      = types.ErrValidatorRevoked
+	ErrBadRemoveValidator    = types.ErrBadRemoveValidator
+	ErrDescriptionLength     = types.ErrDescriptionLength
+	ErrCommissionNegative    = types.ErrCommissionNegative
+	ErrCommissionHuge        = types.ErrCommissionHuge
 
 	ErrNilDelegatorAddr          = types.ErrNilDelegatorAddr
 	ErrBadDenom                  = types.ErrBadDenom

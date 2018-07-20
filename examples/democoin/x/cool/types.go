@@ -11,7 +11,7 @@ import (
 // a really cool msg type, these fields are can be entirely arbitrary and
 // custom to your message
 type MsgSetTrend struct {
-	Sender sdk.Address
+	Sender sdk.AccAddress
 	Cool   string
 }
 
@@ -21,7 +21,7 @@ type Genesis struct {
 }
 
 // new cool message
-func NewMsgSetTrend(sender sdk.Address, cool string) MsgSetTrend {
+func NewMsgSetTrend(sender sdk.AccAddress, cool string) MsgSetTrend {
 	return MsgSetTrend{
 		Sender: sender,
 		Cool:   cool,
@@ -32,8 +32,8 @@ func NewMsgSetTrend(sender sdk.Address, cool string) MsgSetTrend {
 var _ sdk.Msg = MsgSetTrend{}
 
 // nolint
-func (msg MsgSetTrend) Type() string              { return "cool" }
-func (msg MsgSetTrend) GetSigners() []sdk.Address { return []sdk.Address{msg.Sender} }
+func (msg MsgSetTrend) Type() string                 { return "cool" }
+func (msg MsgSetTrend) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Sender} }
 func (msg MsgSetTrend) String() string {
 	return fmt.Sprintf("MsgSetTrend{Sender: %v, Cool: %v}", msg.Sender, msg.Cool)
 }
@@ -66,12 +66,12 @@ func (msg MsgSetTrend) GetSignBytes() []byte {
 // A message type to quiz how cool you are. these fields are can be entirely
 // arbitrary and custom to your message
 type MsgQuiz struct {
-	Sender     sdk.Address
+	Sender     sdk.AccAddress
 	CoolAnswer string
 }
 
 // New cool message
-func NewMsgQuiz(sender sdk.Address, coolerthancool string) MsgQuiz {
+func NewMsgQuiz(sender sdk.AccAddress, coolerthancool string) MsgQuiz {
 	return MsgQuiz{
 		Sender:     sender,
 		CoolAnswer: coolerthancool,
@@ -82,8 +82,8 @@ func NewMsgQuiz(sender sdk.Address, coolerthancool string) MsgQuiz {
 var _ sdk.Msg = MsgQuiz{}
 
 // nolint
-func (msg MsgQuiz) Type() string              { return "cool" }
-func (msg MsgQuiz) GetSigners() []sdk.Address { return []sdk.Address{msg.Sender} }
+func (msg MsgQuiz) Type() string                 { return "cool" }
+func (msg MsgQuiz) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Sender} }
 func (msg MsgQuiz) String() string {
 	return fmt.Sprintf("MsgQuiz{Sender: %v, CoolAnswer: %v}", msg.Sender, msg.CoolAnswer)
 }

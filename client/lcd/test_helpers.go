@@ -80,19 +80,19 @@ func GetKB(t *testing.T) crkeys.Keybase {
 }
 
 // add an address to the store return name and password
-func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (addr sdk.Address, seed string) {
+func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (addr sdk.AccAddress, seed string) {
 	var info crkeys.Info
 	var err error
 	info, seed, err = kb.CreateMnemonic(name, crkeys.English, password, crkeys.Secp256k1)
 	require.NoError(t, err)
-	addr = info.GetPubKey().Address()
+	addr = sdk.AccAddress(info.GetPubKey().Address())
 	return
 }
 
 // strt TM and the LCD in process, listening on their respective sockets
 //   nValidators = number of validators
 //   initAddrs = accounts to initialize with some steaks
-func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (cleanup func(), validatorsPKs []crypto.PubKey, port string) {
+func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress) (cleanup func(), validatorsPKs []crypto.PubKey, port string) {
 
 	config := GetConfig()
 	config.Consensus.TimeoutCommit = 100
@@ -105,7 +105,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 	privVal := pvm.LoadOrGenFilePV(privValidatorFile)
 	privVal.Reset()
 	db := dbm.NewMemDB()
-	app := gapp.NewGaiaApp(logger, db)
+	app := gapp.NewGaiaApp(logger, db, nil)
 	cdc = gapp.MakeCodec()
 
 	genesisFile := config.GenesisFile()
@@ -132,7 +132,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 	for _, gdValidator := range genDoc.Validators {
 		pk := gdValidator.PubKey
 		validatorsPKs = append(validatorsPKs, pk) // append keys for output
-		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, sdk.MustBech32ifyAcc(pk.Address()), "test_val1")
+		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, sdk.AccAddress(pk.Address()), "test_val1")
 		require.NoError(t, err)
 		appGenTxs = append(appGenTxs, appGenTx)
 	}
@@ -146,12 +146,12 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.Address) (
 		accAuth.Coins = sdk.Coins{sdk.NewCoin("steak", 100)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)
-		genesisState.StakeData.Pool.LooseTokens += 100
+		genesisState.StakeData.Pool.LooseTokens = genesisState.StakeData.Pool.LooseTokens.Add(sdk.NewRat(100))
 	}
 
 	appState, err := wire.MarshalJSONIndent(cdc, genesisState)
 	require.NoError(t, err)
-	genDoc.AppStateJSON = appState
+	genDoc.AppState = appState
 
 	// LCD listen address
 	var listenAddr string

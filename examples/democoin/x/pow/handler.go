@@ -26,14 +26,6 @@ func handleMsgMine(ctx sdk.Context, pk Keeper, msg MsgMine) sdk.Result {
 		return err.Result()
 	}
 
-	// commented for now, makes testing difficult
-	// TODO figure out a better test method that allows early CheckTx return
-	/*
-		if ctx.IsCheckTx() {
-			return sdk.Result{} // TODO
-		}
-	*/
-
 	err = pk.ApplyValid(ctx, msg.Sender, newDiff, newCount)
 	if err != nil {
 		return err.Result()

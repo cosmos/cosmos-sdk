@@ -35,10 +35,10 @@ func TestKeeperGetSet(t *testing.T) {
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
-	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
+	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
 	stakeKeeper := NewKeeper(capKey, bank.NewKeeper(accountMapper), DefaultCodespace)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	addr := sdk.Address([]byte("some-address"))
+	addr := sdk.AccAddress([]byte("some-address"))
 
 	bi := stakeKeeper.getBondInfo(ctx, addr)
 	require.Equal(t, bi, bondInfo{})
@@ -65,10 +65,10 @@ func TestBonding(t *testing.T) {
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 
-	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
+	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
 	coinKeeper := bank.NewKeeper(accountMapper)
 	stakeKeeper := NewKeeper(capKey, coinKeeper, DefaultCodespace)
-	addr := sdk.Address([]byte("some-address"))
+	addr := sdk.AccAddress([]byte("some-address"))
 	privKey := crypto.GenPrivKeyEd25519()
 	pubKey := privKey.PubKey()
 

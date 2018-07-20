@@ -23,16 +23,16 @@ import (
 
 // dummy addresses used for testing
 var (
-	Addrs       = createTestAddrs(100)
-	PKs         = createTestPubKeys(100)
-	emptyAddr   sdk.Address
+	Addrs       = createTestAddrs(500)
+	PKs         = createTestPubKeys(500)
+	emptyAddr   sdk.AccAddress
 	emptyPubkey crypto.PubKey
 
-	addrDels = []sdk.Address{
+	addrDels = []sdk.AccAddress{
 		Addrs[0],
 		Addrs[1],
 	}
-	addrVals = []sdk.Address{
+	addrVals = []sdk.AccAddress{
 		Addrs[2],
 		Addrs[3],
 		Addrs[4],
@@ -101,9 +101,9 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	cdc := MakeTestCodec()
 	accountMapper := auth.NewAccountMapper(
-		cdc,                 // amino codec
-		keyAcc,              // target store
-		&auth.BaseAccount{}, // prototype
+		cdc,                   // amino codec
+		keyAcc,                // target store
+		auth.ProtoBaseAccount, // prototype
 	)
 	ck := bank.NewKeeper(accountMapper)
 	keeper := NewKeeper(cdc, keyStake, ck, types.DefaultCodespace)
@@ -118,7 +118,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 			{keeper.GetParams(ctx).BondDenom, sdk.NewInt(initCoins)},
 		})
 		require.Nil(t, err)
-		pool.LooseTokens += initCoins
+		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewRat(initCoins))
 		keeper.SetPool(ctx, pool)
 	}
 
@@ -137,21 +137,18 @@ func NewPubKey(pk string) (res crypto.PubKey) {
 }
 
 // for incode address generation
-func TestAddr(addr string, bech string) sdk.Address {
+func TestAddr(addr string, bech string) sdk.AccAddress {
 
-	res, err := sdk.GetAccAddressHex(addr)
+	res, err := sdk.AccAddressFromHex(addr)
 	if err != nil {
 		panic(err)
 	}
-	bechexpected, err := sdk.Bech32ifyAcc(res)
-	if err != nil {
-		panic(err)
-	}
+	bechexpected := res.String()
 	if bech != bechexpected {
 		panic("Bech encoding doesn't match reference")
 	}
 
-	bechres, err := sdk.GetAccAddressBech32(bech)
+	bechres, err := sdk.AccAddressFromBech32(bech)
 	if err != nil {
 		panic(err)
 	}
@@ -163,8 +160,8 @@ func TestAddr(addr string, bech string) sdk.Address {
 }
 
 // nolint: unparam
-func createTestAddrs(numAddrs int) []sdk.Address {
-	var addresses []sdk.Address
+func createTestAddrs(numAddrs int) []sdk.AccAddress {
+	var addresses []sdk.AccAddress
 	var buffer bytes.Buffer
 
 	// start at 100 so we can make up to 999 test addresses with valid test addresses
@@ -173,8 +170,8 @@ func createTestAddrs(numAddrs int) []sdk.Address {
 		buffer.WriteString("A58856F0FD53BF058B4909A21AEC019107BA6") //base address string
 
 		buffer.WriteString(numString) //adding on final two digits to make addresses unique
-		res, _ := sdk.GetAccAddressHex(buffer.String())
-		bech, _ := sdk.Bech32ifyAcc(res)
+		res, _ := sdk.AccAddressFromHex(buffer.String())
+		bech := res.String()
 		addresses = append(addresses, TestAddr(buffer.String(), bech))
 		buffer.Reset()
 	}

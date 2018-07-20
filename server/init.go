@@ -48,10 +48,9 @@ var (
 
 // genesis piece structure for creating combined genesis
 type GenesisTx struct {
-	NodeID    string                   `json:"node_id"`
-	IP        string                   `json:"ip"`
-	Validator tmtypes.GenesisValidator `json:"validator"`
-	AppGenTx  json.RawMessage          `json:"app_gen_tx"`
+	NodeID   string          `json:"node_id"`
+	IP       string          `json:"ip"`
+	AppGenTx json.RawMessage `json:"app_gen_tx"`
 }
 
 // Storage for init command input parameters
@@ -121,16 +120,15 @@ func gentxWithConfig(cdc *wire.Codec, appInit AppInit, config *cfg.Config, genTx
 	nodeID := string(nodeKey.ID())
 	pubKey := readOrCreatePrivValidator(config)
 
-	appGenTx, cliPrint, validator, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
+	appGenTx, cliPrint, _, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
 	if err != nil {
 		return
 	}
 
 	tx := GenesisTx{
-		NodeID:    nodeID,
-		IP:        genTxConfig.IP,
-		Validator: validator,
-		AppGenTx:  appGenTx,
+		NodeID:   nodeID,
+		IP:       genTxConfig.IP,
+		AppGenTx: appGenTx,
 	}
 	bz, err := wire.MarshalJSONIndent(cdc, tx)
 	if err != nil {
@@ -148,6 +146,11 @@ func gentxWithConfig(cdc *wire.Codec, appInit AppInit, config *cfg.Config, genTx
 	if err != nil {
 		return
 	}
+
+	// Write updated config with moniker
+	config.Moniker = genTxConfig.Name
+	configFilePath := filepath.Join(config.RootDir, "config", "config.toml")
+	cfg.WriteConfigFile(configFilePath, config)
 
 	return
 }
@@ -240,6 +243,11 @@ func initWithConfig(cdc *wire.Codec, appInit AppInit, config *cfg.Config, initCo
 			viper.GetBool(FlagOWK),
 			"127.0.0.1",
 		}
+
+		// Write updated config with moniker
+		config.Moniker = genTxConfig.Name
+		configFilePath := filepath.Join(config.RootDir, "config", "config.toml")
+		cfg.WriteConfigFile(configFilePath, config)
 		appGenTx, am, validator, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
 		appMessage = am
 		if err != nil {
@@ -302,7 +310,6 @@ func processGenTxs(genTxsDir string, cdc *wire.Codec) (
 		genTx := genTxs[nodeID]
 
 		// combine some stuff
-		validators = append(validators, genTx.Validator)
 		appGenTxs = append(appGenTxs, genTx.AppGenTx)
 
 		// Add a persistent peer
@@ -336,9 +343,9 @@ func readOrCreatePrivValidator(tmConfig *cfg.Config) crypto.PubKey {
 // error is returned if building or writing the configuration to file fails.
 func writeGenesisFile(cdc *wire.Codec, genesisFile, chainID string, validators []tmtypes.GenesisValidator, appState json.RawMessage) error {
 	genDoc := tmtypes.GenesisDoc{
-		ChainID:      chainID,
-		Validators:   validators,
-		AppStateJSON: appState,
+		ChainID:    chainID,
+		Validators: validators,
+		AppState:   appState,
 	}
 
 	if err := genDoc.ValidateAndComplete(); err != nil {
@@ -376,22 +383,22 @@ var DefaultAppInit = AppInit{
 
 // simple genesis tx
 type SimpleGenTx struct {
-	Addr string `json:"addr"`
+	Addr sdk.AccAddress `json:"addr"`
 }
 
 // Generate a genesis transaction
 func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig serverconfig.GenTx) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
-	var bech32Addr string
+	var addr sdk.AccAddress
 	var secret string
-	bech32Addr, secret, err = GenerateCoinKey()
+	addr, secret, err = GenerateCoinKey()
 	if err != nil {
 		return
 	}
 
 	var bz []byte
-	simpleGenTx := SimpleGenTx{bech32Addr}
+	simpleGenTx := SimpleGenTx{addr}
 	bz, err = cdc.MarshalJSON(simpleGenTx)
 	if err != nil {
 		return
@@ -444,7 +451,7 @@ func SimpleAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState j
 
 // GenerateCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateCoinKey() (string, string, error) {
+func GenerateCoinKey() (sdk.AccAddress, string, error) {
 
 	// construct an in-memory key store
 	keybase := keys.New(
@@ -454,35 +461,35 @@ func GenerateCoinKey() (string, string, error) {
 	// generate a private key, with recovery phrase
 	info, secret, err := keybase.CreateMnemonic("name", keys.English, "pass", keys.Secp256k1)
 	if err != nil {
-		return "", "", err
+		return sdk.AccAddress([]byte{}), "", err
 	}
 	addr := info.GetPubKey().Address()
-	return sdk.MustBech32ifyAcc(sdk.Address(addr)), secret, nil
+	return sdk.AccAddress(addr), secret, nil
 }
 
 // GenerateSaveCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (string, string, error) {
+func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (sdk.AccAddress, string, error) {
 
 	// get the keystore from the client
 	keybase, err := clkeys.GetKeyBaseFromDir(clientRoot)
 	if err != nil {
-		return "", "", err
+		return sdk.AccAddress([]byte{}), "", err
 	}
 
 	// ensure no overwrite
 	if !overwrite {
 		_, err := keybase.Get(keyName)
 		if err == nil {
-			return "", "", errors.New("key already exists, overwrite is disabled")
+			return sdk.AccAddress([]byte{}), "", errors.New("key already exists, overwrite is disabled")
 		}
 	}
 
 	// generate a private key, with recovery phrase
 	info, secret, err := keybase.CreateMnemonic(keyName, keys.English, keyPass, keys.Secp256k1)
 	if err != nil {
-		return "", "", err
+		return sdk.AccAddress([]byte{}), "", err
 	}
 	addr := info.GetPubKey().Address()
-	return sdk.MustBech32ifyAcc(sdk.Address(addr)), secret, nil
+	return sdk.AccAddress(addr), secret, nil
 }

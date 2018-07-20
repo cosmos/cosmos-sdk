@@ -35,12 +35,13 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 // Called every block, process inflation, update validator set
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Validator) {
 	pool := k.GetPool(ctx)
+	params := k.GetParams(ctx)
 
 	// Process types.Validator Provisions
 	blockTime := ctx.BlockHeader().Time
-	if pool.InflationLastTime+blockTime >= 3600 {
+	if blockTime-pool.InflationLastTime >= 3600 {
 		pool.InflationLastTime = blockTime
-		pool = k.ProcessProvisions(ctx)
+		pool = pool.ProcessProvisions(params)
 	}
 
 	// save the params
@@ -65,9 +66,13 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	// check to see if the pubkey or sender has been registered before
 	_, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if found {
-		return ErrValidatorAlreadyExists(k.Codespace()).Result()
+		return ErrValidatorOwnerExists(k.Codespace()).Result()
 	}
-	if msg.SelfDelegation.Denom != k.GetParams(ctx).BondDenom {
+	_, found = k.GetValidatorByPubKey(ctx, msg.PubKey)
+	if found {
+		return ErrValidatorPubKeyExists(k.Codespace()).Result()
+	}
+	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
@@ -77,7 +82,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
-	_, err := k.Delegate(ctx, msg.ValidatorAddr, msg.SelfDelegation, validator)
+	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator, true)
 	if err != nil {
 		return err.Result()
 	}
@@ -126,13 +131,13 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	if !found {
 		return ErrNoValidatorFound(k.Codespace()).Result()
 	}
-	if msg.Bond.Denom != k.GetParams(ctx).BondDenom {
+	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 	if validator.Revoked == true {
 		return ErrValidatorRevoked(k.Codespace()).Result()
 	}
-	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Bond, validator)
+	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator, true)
 	if err != nil {
 		return err.Result()
 	}

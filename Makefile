@@ -93,6 +93,9 @@ update_tools:
 update_dev_tools:
 	cd tools && $(MAKE) update_dev_tools
 
+get_tools:
+	cd tools && $(MAKE) get_tools
+
 get_dev_tools:
 	cd tools && $(MAKE) get_dev_tools
 
@@ -220,7 +223,7 @@ remotenet-status:
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
 .PHONY: build build_cosmos-sdk-cli build_examples install install_examples install_cosmos-sdk-cli install_debug dist \
-check_tools get_tools get_vendor_deps draw_deps test test_cli test_unit \
+check_tools check_dev_tools get_tools get_dev_tools get_vendor_deps draw_deps test test_cli test_unit \
 test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop remotenet-start \
-remotenet-stop remotenet-status format check-ledger test_sim
+remotenet-stop remotenet-status format check-ledger test_sim update_tools update_dev_tools

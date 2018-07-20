@@ -33,6 +33,7 @@ IMPROVEMENTS
 * [tools] Remove `rm -rf vendor/` from `make get_vendor_deps`
 * [x/stake] Add revoked to human-readable validator 
 * [x/gov] Votes on a proposal can now be queried
+* [x/bank] Unit tests are now table-driven
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators

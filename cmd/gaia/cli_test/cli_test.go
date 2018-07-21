@@ -188,35 +188,40 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, int64(45), fooAcc.GetCoins().AmountOf("steak").Int64())
 
-	proposal1 := executeGetProposal(t, fmt.Sprintf("gaiacli gov query-proposal --proposalID=1 --output=json %v", flags))
+	proposal1 := executeGetProposal(t, fmt.Sprintf("gaiacli gov query-proposal --proposal-id=1 --output=json %v", flags))
 	require.Equal(t, int64(1), proposal1.GetProposalID())
 	require.Equal(t, gov.StatusDepositPeriod, proposal1.GetStatus())
 
 	depositStr := fmt.Sprintf("gaiacli gov deposit %v", flags)
 	depositStr += fmt.Sprintf(" --from=%s", "foo")
 	depositStr += fmt.Sprintf(" --deposit=%s", "10steak")
-	depositStr += fmt.Sprintf(" --proposalID=%s", "1")
+	depositStr += fmt.Sprintf(" --proposal-id=%s", "1")
 
 	executeWrite(t, depositStr, pass)
 	tests.WaitForNextNBlocksTM(2, port)
 
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, int64(35), fooAcc.GetCoins().AmountOf("steak").Int64())
-	proposal1 = executeGetProposal(t, fmt.Sprintf("gaiacli gov query-proposal --proposalID=1 --output=json %v", flags))
+	proposal1 = executeGetProposal(t, fmt.Sprintf("gaiacli gov query-proposal --proposal-id=1 --output=json %v", flags))
 	require.Equal(t, int64(1), proposal1.GetProposalID())
 	require.Equal(t, gov.StatusVotingPeriod, proposal1.GetStatus())
 
 	voteStr := fmt.Sprintf("gaiacli gov vote %v", flags)
 	voteStr += fmt.Sprintf(" --from=%s", "foo")
-	voteStr += fmt.Sprintf(" --proposalID=%s", "1")
+	voteStr += fmt.Sprintf(" --proposal-id=%s", "1")
 	voteStr += fmt.Sprintf(" --option=%s", "Yes")
 
 	executeWrite(t, voteStr, pass)
 	tests.WaitForNextNBlocksTM(2, port)
 
-	vote := executeGetVote(t, fmt.Sprintf("gaiacli gov query-vote --proposalID=1 --voter=%s --output=json %v", fooAddr, flags))
+	vote := executeGetVote(t, fmt.Sprintf("gaiacli gov query-vote --proposal-id=1 --voter=%s --output=json %v", fooAddr, flags))
 	require.Equal(t, int64(1), vote.ProposalID)
 	require.Equal(t, gov.OptionYes, vote.Option)
+
+	votes := executeGetVotes(t, fmt.Sprintf("gaiacli gov query-votes --proposal-id=1 --output=json %v", flags))
+	require.Len(t, votes, 1)
+	require.Equal(t, int64(1), votes[0].ProposalID)
+	require.Equal(t, gov.OptionYes, votes[0].Option)
 }
 
 //___________________________________________________________________________________
@@ -320,4 +325,13 @@ func executeGetVote(t *testing.T, cmdStr string) gov.Vote {
 	err := cdc.UnmarshalJSON([]byte(out), &vote)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
 	return vote
+}
+
+func executeGetVotes(t *testing.T, cmdStr string) []gov.Vote {
+	out := tests.ExecuteT(t, cmdStr)
+	var votes []gov.Vote
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &votes)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return votes
 }

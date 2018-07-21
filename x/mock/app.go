@@ -202,8 +202,7 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 		(&baseAcc).SetCoins(coins)
 		accts[i] = &baseAcc
 	}
-
-	SetGenesis(app, accts)
+	app.GenesisAccounts = accts
 }
 
 // GetAllAccounts returns all accounts in the accountMapper.

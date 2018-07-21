@@ -7,7 +7,7 @@ v    If a checkbox is n/a - please still include it but + a little note why
 * [ ] Updated all relevant documentation (`docs/`)
 * [ ] Updated all relevant code comments
 * [ ] Wrote tests
-* [ ] Updated `CHANGELOG.md`
+* [ ] Added entries in `PENDING.md`
 * [ ] Updated `cmd/gaia` and `examples/`
 ___________________________________
 For Admin Use:

@@ -85,6 +85,23 @@ jobs:
             export PATH="$GOBIN:$PATH"
             make test_cli
 
+  test_sim:
+    <<: *defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - restore_cache:
+          key: v1-pkg-cache
+      - restore_cache:
+          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Test simulation
+          command: |
+            export PATH="$GOBIN:$PATH"
+            export GAIA_SIMULATION_SEED=1531897442166404087
+            make test_sim
+
   test_cover:
     <<: *defaults
     parallelism: 4
@@ -142,6 +159,9 @@ workflows:
           requires:
             - setup_dependencies
       - test_cli:
+          requires:
+            - setup_dependencies
+      - test_sim:
           requires:
             - setup_dependencies
       - test_cover:

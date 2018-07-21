@@ -1,5 +1,6 @@
 PACKAGES=$(shell go list ./... | grep -v '/vendor/')
-PACKAGES_NOCLITEST=$(shell go list ./... | grep -v '/vendor/' | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test)
+PACKAGES_NOCLITEST=$(shell go list ./... | grep -v '/vendor/' | grep -v '/simulation' | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test)
+PACKAGES_SIMTEST=$(shell go list ./... | grep -v '/vendor/' | grep '/simulation')
 COMMIT_HASH := $(shell git rev-parse --short HEAD)
 BUILD_TAGS = netgo ledger
 BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
@@ -92,6 +93,9 @@ update_tools:
 update_dev_tools:
 	cd tools && $(MAKE) update_dev_tools
 
+get_tools:
+	cd tools && $(MAKE) get_tools
+
 get_dev_tools:
 	cd tools && $(MAKE) get_dev_tools
 
@@ -126,6 +130,16 @@ test_unit:
 
 test_race:
 	@go test -race $(PACKAGES_NOCLITEST)
+
+test_sim:
+	@echo "Running individual module simulations."
+	@go test $(PACKAGES_SIMTEST) -v
+	@echo "Running full Gaia simulation. This may take several minutes."
+	@echo "Pass the flag 'SimulationSeed' to run with a constant seed."
+	@echo "Pass the flag 'SimulationNumKeys' to run with the specified number of keys."
+	@echo "Pass the flag 'SimulationNumBlocks' to run with the specified number of blocks."
+	@echo "Pass the flag 'SimulationBlockSize' to run with the specified block size (operations per block)."
+	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationBlockSize=200 -v
 
 test_cover:
 	@bash tests/test_cover.sh
@@ -209,7 +223,7 @@ remotenet-status:
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
 .PHONY: build build_cosmos-sdk-cli build_examples install install_examples install_cosmos-sdk-cli install_debug dist \
-check_tools get_tools get_vendor_deps draw_deps test test_cli test_unit \
+check_tools check_dev_tools get_tools get_dev_tools get_vendor_deps draw_deps test test_cli test_unit \
 test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop remotenet-start \
-remotenet-stop remotenet-status format check-ledger
+remotenet-stop remotenet-status format check-ledger test_sim update_tools update_dev_tools

@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	flagProposalID   = "proposalID"
+	flagProposalID   = "proposal-id"
 	flagTitle        = "title"
 	flagDescription  = "description"
 	flagProposalType = "type"
@@ -236,6 +236,57 @@ func GetCmdQueryVote(storeName string, cdc *wire.Codec) *cobra.Command {
 
 	cmd.Flags().String(flagProposalID, "", "proposalID of proposal voting on")
 	cmd.Flags().String(flagVoter, "", "bech32 voter address")
+
+	return cmd
+}
+
+// Command to Get a Proposal Information
+func GetCmdQueryVotes(storeName string, cdc *wire.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "query-votes",
+		Short: "query votes on a proposal",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			proposalID := viper.GetInt64(flagProposalID)
+
+			ctx := context.NewCoreContextFromViper()
+
+			res, err := ctx.QueryStore(gov.KeyProposal(proposalID), storeName)
+			if len(res) == 0 || err != nil {
+				return errors.Errorf("proposalID [%d] does not exist", proposalID)
+			}
+
+			var proposal gov.Proposal
+			cdc.MustUnmarshalBinary(res, &proposal)
+
+			if proposal.GetStatus() != gov.StatusVotingPeriod {
+				fmt.Println("Proposal not in voting period.")
+				return nil
+			}
+
+			res2, err := ctx.QuerySubspace(cdc, gov.KeyVotesSubspace(proposalID), storeName)
+			if err != nil {
+				return err
+			}
+
+			var votes []gov.Vote
+			for i := 0; i < len(res2); i++ {
+				var vote gov.Vote
+				cdc.MustUnmarshalBinary(res2[i].Value, &vote)
+				votes = append(votes, vote)
+			}
+
+			output, err := wire.MarshalJSONIndent(cdc, votes)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(string(output))
+
+			return nil
+		},
+	}
+
+	cmd.Flags().String(flagProposalID, "", "proposalID of which proposal's votes are being queried")
 
 	return cmd
 }

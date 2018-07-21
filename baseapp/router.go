@@ -31,11 +31,11 @@ func NewRouter() *router {
 	}
 }
 
-var isAlpha = regexp.MustCompile(`^[a-zA-Z]+$`).MatchString
+var isAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
 
 // AddRoute - TODO add description
 func (rtr *router) AddRoute(r string, h sdk.Handler) Router {
-	if !isAlpha(r) {
+	if !isAlphaNumeric(r) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
 	rtr.routes = append(rtr.routes, route{r, h})

@@ -19,7 +19,7 @@ func TestPowHandler(t *testing.T) {
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
-	am := auth.NewAccountMapper(cdc, capKey, &auth.BaseAccount{})
+	am := auth.NewAccountMapper(cdc, capKey, auth.ProtoBaseAccount)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	config := NewConfig("pow", int64(1))
 	ck := bank.NewKeeper(am)
@@ -27,7 +27,7 @@ func TestPowHandler(t *testing.T) {
 
 	handler := keeper.Handler
 
-	addr := sdk.Address([]byte("sender"))
+	addr := sdk.AccAddress([]byte("sender"))
 	count := uint64(1)
 	difficulty := uint64(2)
 

@@ -27,7 +27,7 @@ func signingInfoHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.C
 		vars := mux.Vars(r)
 		bech32validator := vars["validator"]
 
-		validatorAddr, err := sdk.GetValAddressBech32(bech32validator)
+		validatorAddr, err := sdk.ValAddressFromBech32(bech32validator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))

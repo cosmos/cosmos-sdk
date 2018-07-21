@@ -7,30 +7,29 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
-// keeper
-type Keeper = keeper.Keeper
-
-var NewKeeper = keeper.NewKeeper
-
-// types
-type Validator = types.Validator
-type Description = types.Description
-type Delegation = types.Delegation
-type UnbondingDelegation = types.UnbondingDelegation
-type Redelegation = types.Redelegation
-type Params = types.Params
-type Pool = types.Pool
-type PoolShares = types.PoolShares
-type MsgCreateValidator = types.MsgCreateValidator
-type MsgEditValidator = types.MsgEditValidator
-type MsgDelegate = types.MsgDelegate
-type MsgBeginUnbonding = types.MsgBeginUnbonding
-type MsgCompleteUnbonding = types.MsgCompleteUnbonding
-type MsgBeginRedelegate = types.MsgBeginRedelegate
-type MsgCompleteRedelegate = types.MsgCompleteRedelegate
-type GenesisState = types.GenesisState
+type (
+	Keeper                = keeper.Keeper
+	Validator             = types.Validator
+	BechValidator         = types.BechValidator
+	Description           = types.Description
+	Delegation            = types.Delegation
+	UnbondingDelegation   = types.UnbondingDelegation
+	Redelegation          = types.Redelegation
+	Params                = types.Params
+	Pool                  = types.Pool
+	MsgCreateValidator    = types.MsgCreateValidator
+	MsgEditValidator      = types.MsgEditValidator
+	MsgDelegate           = types.MsgDelegate
+	MsgBeginUnbonding     = types.MsgBeginUnbonding
+	MsgCompleteUnbonding  = types.MsgCompleteUnbonding
+	MsgBeginRedelegate    = types.MsgBeginRedelegate
+	MsgCompleteRedelegate = types.MsgCompleteRedelegate
+	GenesisState          = types.GenesisState
+)
 
 var (
+	NewKeeper = keeper.NewKeeper
+
 	GetValidatorKey              = keeper.GetValidatorKey
 	GetValidatorByPubKeyIndexKey = keeper.GetValidatorByPubKeyIndexKey
 	GetValidatorsBondedIndexKey  = keeper.GetValidatorsBondedIndexKey
@@ -63,26 +62,22 @@ var (
 
 	DefaultParams       = types.DefaultParams
 	InitialPool         = types.InitialPool
-	NewUnbondedShares   = types.NewUnbondedShares
-	NewUnbondingShares  = types.NewUnbondingShares
-	NewBondedShares     = types.NewBondedShares
 	NewValidator        = types.NewValidator
 	NewDescription      = types.NewDescription
 	NewGenesisState     = types.NewGenesisState
 	DefaultGenesisState = types.DefaultGenesisState
 	RegisterWire        = types.RegisterWire
 
-	// messages
-	NewMsgCreateValidator    = types.NewMsgCreateValidator
-	NewMsgEditValidator      = types.NewMsgEditValidator
-	NewMsgDelegate           = types.NewMsgDelegate
-	NewMsgBeginUnbonding     = types.NewMsgBeginUnbonding
-	NewMsgCompleteUnbonding  = types.NewMsgCompleteUnbonding
-	NewMsgBeginRedelegate    = types.NewMsgBeginRedelegate
-	NewMsgCompleteRedelegate = types.NewMsgCompleteRedelegate
+	NewMsgCreateValidator           = types.NewMsgCreateValidator
+	NewMsgCreateValidatorOnBehalfOf = types.NewMsgCreateValidatorOnBehalfOf
+	NewMsgEditValidator             = types.NewMsgEditValidator
+	NewMsgDelegate                  = types.NewMsgDelegate
+	NewMsgBeginUnbonding            = types.NewMsgBeginUnbonding
+	NewMsgCompleteUnbonding         = types.NewMsgCompleteUnbonding
+	NewMsgBeginRedelegate           = types.NewMsgBeginRedelegate
+	NewMsgCompleteRedelegate        = types.NewMsgCompleteRedelegate
 )
 
-// errors
 const (
 	DefaultCodespace      = types.DefaultCodespace
 	CodeInvalidValidator  = types.CodeInvalidValidator
@@ -95,14 +90,15 @@ const (
 )
 
 var (
-	ErrNilValidatorAddr       = types.ErrNilValidatorAddr
-	ErrNoValidatorFound       = types.ErrNoValidatorFound
-	ErrValidatorAlreadyExists = types.ErrValidatorAlreadyExists
-	ErrValidatorRevoked       = types.ErrValidatorRevoked
-	ErrBadRemoveValidator     = types.ErrBadRemoveValidator
-	ErrDescriptionLength      = types.ErrDescriptionLength
-	ErrCommissionNegative     = types.ErrCommissionNegative
-	ErrCommissionHuge         = types.ErrCommissionHuge
+	ErrNilValidatorAddr      = types.ErrNilValidatorAddr
+	ErrNoValidatorFound      = types.ErrNoValidatorFound
+	ErrValidatorOwnerExists  = types.ErrValidatorOwnerExists
+	ErrValidatorPubKeyExists = types.ErrValidatorPubKeyExists
+	ErrValidatorRevoked      = types.ErrValidatorRevoked
+	ErrBadRemoveValidator    = types.ErrBadRemoveValidator
+	ErrDescriptionLength     = types.ErrDescriptionLength
+	ErrCommissionNegative    = types.ErrCommissionNegative
+	ErrCommissionHuge        = types.ErrCommissionHuge
 
 	ErrNilDelegatorAddr          = types.ErrNilDelegatorAddr
 	ErrBadDenom                  = types.ErrBadDenom
@@ -126,7 +122,6 @@ var (
 	ErrMissingSignature      = types.ErrMissingSignature
 )
 
-// tags
 var (
 	ActionCreateValidator      = tags.ActionCreateValidator
 	ActionEditValidator        = tags.ActionEditValidator

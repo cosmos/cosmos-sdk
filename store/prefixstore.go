@@ -1,6 +1,8 @@
 package store
 
 import (
+	"io"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -17,6 +19,11 @@ func (s prefixStore) GetStoreType() StoreType {
 // Implements CacheWrap
 func (s prefixStore) CacheWrap() CacheWrap {
 	return NewCacheKVStore(s)
+}
+
+// CacheWrapWithTrace implements the KVStore interface.
+func (s prefixStore) CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap {
+	return NewCacheKVStore(NewTraceKVStore(s, w, tc))
 }
 
 // Implements KVStore

@@ -11,11 +11,12 @@ import (
 
 func TestCannotUnrevokeUnlessRevoked(t *testing.T) {
 	// initial setup
-	ctx, ck, sk, keeper := createTestInput(t)
+	ctx, ck, sk, _, keeper := createTestInput(t)
 	slh := NewHandler(keeper)
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
-	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, val, amt))
+	msg := newTestMsgCreateValidator(addr, val, amt)
+	got := stake.NewHandler(sk)(ctx, msg)
 	require.True(t, got.IsOK())
 	stake.EndBlocker(ctx, sk)
 	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})

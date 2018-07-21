@@ -28,11 +28,11 @@ func defaultContext(key sdk.StoreKey) sdk.Context {
 	return ctx
 }
 
-func newAddress() crypto.Address {
-	return crypto.GenPrivKeyEd25519().PubKey().Address()
+func newAddress() sdk.AccAddress {
+	return sdk.AccAddress(crypto.GenPrivKeyEd25519().PubKey().Address())
 }
 
-func getCoins(ck bank.Keeper, ctx sdk.Context, addr crypto.Address) (sdk.Coins, sdk.Error) {
+func getCoins(ck bank.Keeper, ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, sdk.Error) {
 	zero := sdk.Coins(nil)
 	coins, _, err := ck.AddCoins(ctx, addr, zero)
 	return coins, err
@@ -53,6 +53,8 @@ func makeCodec() *wire.Codec {
 	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/ibc/Account", nil)
 	wire.RegisterCrypto(cdc)
 
+	cdc.Seal()
+
 	return cdc
 }
 
@@ -62,7 +64,7 @@ func TestIBC(t *testing.T) {
 	key := sdk.NewKVStoreKey("ibc")
 	ctx := defaultContext(key)
 
-	am := auth.NewAccountMapper(cdc, key, &auth.BaseAccount{})
+	am := auth.NewAccountMapper(cdc, key, auth.ProtoBaseAccount)
 	ck := bank.NewKeeper(am)
 
 	src := newAddress()

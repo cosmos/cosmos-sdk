@@ -1,12 +1,18 @@
 # Contributing
 
-Thank you for considering making contributions to Cosmos-SDK and related repositories! Start by taking a look at this [coding repo](https://github.com/tendermint/coding) for overall information on repository workflow and standards.
+Thank you for considering making contributions to Cosmos-SDK and related repositories! Start by taking a look at this [coding repo](https://github.com/tendermint/coding) for overall information on repository workflow and standards. Note, we use `make get_dev_tools` and `make update_dev_tools` for installing the linting tools.
 
 Please follow standard github best practices: fork the repo, branch from the tip of develop, make some commits, and submit a pull request to develop. See the [open issues](https://github.com/cosmos/cosmos-sdk/issues) for things we need help with!
 
 Please make sure to use `gofmt` before every commit - the easiest way to do this is have your editor run it for you upon saving a file. Additionally please ensure that your code is lint compliant by running `make lint`
 
 Looking for a good place to start contributing? How about checking out some [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
+
+## Pull Requests
+
+To accommodate review process we suggest that PRs are catagorically broken up. 
+Ideally each PR addresses only a single issue. Additionally, as much as possible
+code refactoring and cleanup should be submitted as a seperate PRs from bugfixes/feature-additions. 
 
 ## Forking
 
@@ -60,6 +66,29 @@ If they have `.go` files in the root directory, they will be automatically
 tested by circle using `go test -v -race ./...`. If not, they will need a
 `circle.yml`. Ideally, every repo has a `Makefile` that defines `make test` and
 includes its continuous integration status using a badge in the `README.md`.
+
+We expect tests to use `require` or `assert` rather than `t.Skip` or `t.Fail`,
+unless there is a reason to do otherwise.
+When testing a function under a variety of different inputs, we prefer to use
+[table driven tests](https://github.com/golang/go/wiki/TableDrivenTests).
+Table driven test error messages should follow the following format
+`<desc>, tc #<index>, i #<index>`.
+`<desc>` is an optional short description of whats failing, `tc` is the
+index within the table of the testcase that is failing, and `i` is when there
+is a loop, exactly which iteration of the loop failed.
+The idea is you should be able to see the
+error message and figure out exactly what failed.
+Here is an example check:
+
+```
+<some table>
+for tcIndex, tc := range cases {
+  <some code>
+  for i := 0; i < tc.numTxsToTest; i++ {
+      <some code>
+			require.Equal(t, expectedTx[:32], calculatedTx[:32],
+				"First 32 bytes of the txs differed. tc #%d, i #%d", tcIndex, i)
+ ```
 
 ## Branching Model and Release
 

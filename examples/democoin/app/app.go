@@ -71,7 +71,7 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	app.accountMapper = auth.NewAccountMapper(
 		cdc,
 		app.capKeyAccountStore, // target store
-		&types.AppAccount{},    // prototype
+		types.ProtoAppAccount,  // prototype
 	)
 
 	// Add handlers.
@@ -113,6 +113,9 @@ func MakeCodec() *wire.Codec {
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&types.AppAccount{}, "democoin/Account", nil)
+
+	cdc.Seal()
+
 	return cdc
 }
 

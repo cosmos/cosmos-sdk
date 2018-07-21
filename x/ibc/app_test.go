@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/mock"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -35,7 +35,7 @@ func TestIBCMsgs(t *testing.T) {
 	destChain := "dest-chain"
 
 	priv1 := crypto.GenPrivKeyEd25519()
-	addr1 := priv1.PubKey().Address()
+	addr1 := sdk.AccAddress(priv1.PubKey().Address())
 	coins := sdk.Coins{sdk.NewCoin("foocoin", 10)}
 	var emptyCoins sdk.Coins
 

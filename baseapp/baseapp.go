@@ -2,12 +2,14 @@ package baseapp
 
 import (
 	"fmt"
+	"io"
 	"runtime/debug"
 	"strings"
 
 	"github.com/pkg/errors"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -37,7 +39,7 @@ const (
 	runTxModeDeliver runTxMode = iota
 )
 
-// The ABCI application
+// BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
 	Logger     log.Logger
@@ -71,9 +73,15 @@ type BaseApp struct {
 
 var _ abci.Application = (*BaseApp)(nil)
 
-// Create and name new BaseApp
+// NewBaseApp returns a reference to an initialized BaseApp.
+//
+// TODO: Determine how to use a flexible and robust configuration paradigm that
+// allows for sensible defaults while being highly configurable
+// (e.g. functional options).
+//
 // NOTE: The db is used to store the version number for now.
-func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB) *BaseApp {
+// Accepts variable number of option functions, which act on the BaseApp to set configuration choices
+func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB, options ...func(*BaseApp)) *BaseApp {
 	app := &BaseApp{
 		Logger:     logger,
 		name:       name,
@@ -84,14 +92,25 @@ func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB) *Bas
 		codespacer: sdk.NewCodespacer(),
 		txDecoder:  defaultTxDecoder(cdc),
 	}
-	// Register the undefined & root codespaces, which should not be used by any modules
+
+	// Register the undefined & root codespaces, which should not be used by
+	// any modules.
 	app.codespacer.RegisterOrPanic(sdk.CodespaceRoot)
+	for _, option := range options {
+		option(app)
+	}
 	return app
 }
 
 // BaseApp Name
 func (app *BaseApp) Name() string {
 	return app.name
+}
+
+// SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
+// CommitMultiStore.
+func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
+	app.cms.WithTracer(w)
 }
 
 // Register the next available codespace through the baseapp's codespacer, starting from a default
@@ -122,6 +141,11 @@ func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 }
 
 // default custom logic for transaction decoding
+// TODO: remove auth and wire dependencies from baseapp
+//	- move this to auth.DefaultTxDecoder
+//	- set the default here to JSON decode like docs/examples/app1 (it will fail
+//		for multiple messages ;))
+//	- pass a TxDecoder into NewBaseApp, instead of a codec.
 func defaultTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var tx = auth.StdTx{}
@@ -199,36 +223,6 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 		return errors.New("baseapp expects MultiStore with 'main' KVStore")
 	}
 
-	// XXX: Do we really need the header? What does it have that we want
-	// here that's not already in the CommitID ? If an app wants to have it,
-	// they can do so in their BeginBlocker. If we force it in baseapp,
-	// then either we force the AppHash to change with every block (since the header
-	// will be in the merkle store) or we can't write the state and the header to the
-	// db atomically without doing some surgery on the store interfaces ...
-
-	// if we've committed before, we expect <dbHeaderKey> to exist in the db
-	/*
-		var lastCommitID = app.cms.LastCommitID()
-		var header abci.Header
-
-		if !lastCommitID.IsZero() {
-			headerBytes := app.db.Get(dbHeaderKey)
-			if len(headerBytes) == 0 {
-				errStr := fmt.Sprintf("Version > 0 but missing key %s", dbHeaderKey)
-				return errors.New(errStr)
-			}
-			err := proto.Unmarshal(headerBytes, &header)
-			if err != nil {
-				return errors.Wrap(err, "failed to parse Header")
-			}
-			lastVersion := lastCommitID.Version
-			if header.Height != lastVersion {
-				errStr := fmt.Sprintf("expected db://%s.Height %v but got %v", dbHeaderKey, lastVersion, header.Height)
-				return errors.New(errStr)
-			}
-		}
-	*/
-
 	return nil
 }
 
@@ -296,7 +290,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	if app.initChainer == nil {
 		return
 	}
-	app.initChainer(app.deliverState.ctx, req) // no error
+	res = app.initChainer(app.deliverState.ctx, req)
 
 	// NOTE: we don't commit, but BeginBlock for block 1
 	// starts from this deliverState
@@ -319,16 +313,39 @@ func (app *BaseApp) FilterPeerByPubKey(info string) abci.ResponseQuery {
 	return abci.ResponseQuery{}
 }
 
-// Implements ABCI.
-// Delegates to CommitMultiStore if it implements Queryable
-func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
-	path := strings.Split(req.Path, "/")
+func splitPath(requestPath string) (path []string) {
+	path = strings.Split(requestPath, "/")
 	// first element is empty string
 	if len(path) > 0 && path[0] == "" {
 		path = path[1:]
 	}
+	return path
+}
+
+// Implements ABCI.
+// Delegates to CommitMultiStore if it implements Queryable
+func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
+	path := splitPath(req.Path)
+	if len(path) == 0 {
+		msg := "no query path provided"
+		return sdk.ErrUnknownRequest(msg).QueryResult()
+	}
+	switch path[0] {
 	// "/app" prefix for special application queries
-	if len(path) >= 2 && path[0] == "app" {
+	case "app":
+		return handleQueryApp(app, path, req)
+	case "store":
+		return handleQueryStore(app, path, req)
+	case "p2p":
+		return handleQueryP2P(app, path, req)
+	}
+
+	msg := "unknown query path"
+	return sdk.ErrUnknownRequest(msg).QueryResult()
+}
+
+func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
+	if len(path) >= 2 {
 		var result sdk.Result
 		switch path[1] {
 		case "simulate":
@@ -353,38 +370,55 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			Value: value,
 		}
 	}
+	msg := "Expected second parameter to be either simulate or version, neither was present"
+	return sdk.ErrUnknownRequest(msg).QueryResult()
+}
+
+func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
 	// "/store" prefix for store queries
-	if len(path) >= 1 && path[0] == "store" {
-		queryable, ok := app.cms.(sdk.Queryable)
-		if !ok {
-			msg := "multistore doesn't support queries"
-			return sdk.ErrUnknownRequest(msg).QueryResult()
-		}
-		req.Path = "/" + strings.Join(path[1:], "/")
-		return queryable.Query(req)
+	queryable, ok := app.cms.(sdk.Queryable)
+	if !ok {
+		msg := "multistore doesn't support queries"
+		return sdk.ErrUnknownRequest(msg).QueryResult()
 	}
+	req.Path = "/" + strings.Join(path[1:], "/")
+	return queryable.Query(req)
+}
+
+func handleQueryP2P(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
 	// "/p2p" prefix for p2p queries
-	if len(path) >= 4 && path[0] == "p2p" {
+	if len(path) >= 4 {
 		if path[1] == "filter" {
 			if path[2] == "addr" {
 				return app.FilterPeerByAddrPort(path[3])
 			}
 			if path[2] == "pubkey" {
+				// TODO: this should be changed to `id`
+				// NOTE: this changed in tendermint and we didn't notice...
 				return app.FilterPeerByPubKey(path[3])
 			}
+		} else {
+			msg := "Expected second parameter to be filter"
+			return sdk.ErrUnknownRequest(msg).QueryResult()
 		}
 	}
-	msg := "unknown query path"
+
+	msg := "Expected path is p2p filter <addr|pubkey> <parameter>"
 	return sdk.ErrUnknownRequest(msg).QueryResult()
 }
 
-// Implements ABCI
+// BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
-	// Initialize the DeliverTx state.
-	// If this is the first block, it should already
-	// be initialized in InitChain.
-	// Otherwise app.deliverState will be nil, since it
-	// is reset on Commit.
+	if app.cms.TracingEnabled() {
+		app.cms.ResetTraceContext()
+		app.cms.WithTracingContext(sdk.TraceContext(
+			map[string]interface{}{"blockHeight": req.Header.Height},
+		))
+	}
+
+	// Initialize the DeliverTx state. If this is the first block, it should
+	// already be initialized in InitChain. Otherwise app.deliverState will be
+	// nil, since it is reset on Commit.
 	if app.deliverState == nil {
 		app.setDeliverState(req.Header)
 	} else {
@@ -392,15 +426,21 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		// by InitChain. Context is now updated with Header information.
 		app.deliverState.ctx = app.deliverState.ctx.WithBlockHeader(req.Header)
 	}
+
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)
 	}
+
 	// set the signed validators for addition to context in deliverTx
 	app.signedValidators = req.Validators
 	return
 }
 
-// Implements ABCI
+// CheckTx implements ABCI
+// CheckTx runs the "basic checks" to see whether or not a transaction can possibly be executed,
+// first decoding, then the ante handler (which checks signatures/fees/ValidateBasic),
+// then finally the route match to see whether a handler exists. CheckTx does not run the actual
+// Msg handler function(s).
 func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 	// Decode the Tx.
 	var result sdk.Result
@@ -450,55 +490,27 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	}
 }
 
-// nolint - Mostly for testing
-func (app *BaseApp) Check(tx sdk.Tx) (result sdk.Result) {
-	return app.runTx(runTxModeCheck, nil, tx)
-}
-
-// nolint - full tx execution
-func (app *BaseApp) Simulate(tx sdk.Tx) (result sdk.Result) {
-	return app.runTx(runTxModeSimulate, nil, tx)
-}
-
-// nolint
-func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
-	return app.runTx(runTxModeDeliver, nil, tx)
-}
-
-// txBytes may be nil in some cases, eg. in tests.
-// Also, in the future we may support "internal" transactions.
-func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
-	// Handle any panics.
-	defer func() {
-		if r := recover(); r != nil {
-			switch r.(type) {
-			case sdk.ErrorOutOfGas:
-				log := fmt.Sprintf("out of gas in location: %v", r.(sdk.ErrorOutOfGas).Descriptor)
-				result = sdk.ErrOutOfGas(log).Result()
-			default:
-				log := fmt.Sprintf("recovered: %v\nstack:\n%v", r, string(debug.Stack()))
-				result = sdk.ErrInternal(log).Result()
-			}
-		}
-	}()
-
-	// Get the Msg.
-	var msgs = tx.GetMsgs()
+// Basic validator for msgs
+func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 	if msgs == nil || len(msgs) == 0 {
-		return sdk.ErrInternal("Tx.GetMsgs() must return at least one message in list").Result()
+		// TODO: probably shouldn't be ErrInternal. Maybe new ErrInvalidMessage, or ?
+		return sdk.ErrInternal("Tx.GetMsgs() must return at least one message in list")
 	}
 
 	for _, msg := range msgs {
-		// Validate the Msg
+		// Validate the Msg.
 		err := msg.ValidateBasic()
 		if err != nil {
 			err = err.WithDefaultCodespace(sdk.CodespaceRoot)
-			return err.Result()
+			return err
 		}
 	}
 
+	return nil
+}
+
+func (app *BaseApp) getContextForAnte(mode runTxMode, txBytes []byte) (ctx sdk.Context) {
 	// Get the context
-	var ctx sdk.Context
 	if mode == runTxModeCheck || mode == runTxModeSimulate {
 		ctx = app.checkState.ctx.WithTxBytes(txBytes)
 	} else {
@@ -506,12 +518,105 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		ctx = ctx.WithSigningValidators(app.signedValidators)
 	}
 
-	// Simulate a DeliverTx for gas calculation
-	if mode == runTxModeSimulate {
-		ctx = ctx.WithIsCheckTx(false)
+	return
+}
+
+// Iterates through msgs and executes them
+func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
+	// accumulate results
+	logs := make([]string, 0, len(msgs))
+	var data []byte   // NOTE: we just append them all (?!)
+	var tags sdk.Tags // also just append them all
+	var code sdk.ABCICodeType
+	for msgIdx, msg := range msgs {
+		// Match route.
+		msgType := msg.Type()
+		handler := app.router.Route(msgType)
+		if handler == nil {
+			return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
+		}
+
+		var msgResult sdk.Result
+		// Skip actual execution for CheckTx
+		if mode != runTxModeCheck {
+			msgResult = handler(ctx, msg)
+		}
+
+		// NOTE: GasWanted is determined by ante handler and
+		// GasUsed by the GasMeter
+
+		// Append Data and Tags
+		data = append(data, msgResult.Data...)
+		tags = append(tags, msgResult.Tags...)
+
+		// Stop execution and return on first failed message.
+		if !msgResult.IsOK() {
+			logs = append(logs, fmt.Sprintf("Msg %d failed: %s", msgIdx, msgResult.Log))
+			code = msgResult.Code
+			break
+		}
+
+		// Construct usable logs in multi-message transactions.
+		logs = append(logs, fmt.Sprintf("Msg %d: %s", msgIdx, msgResult.Log))
 	}
 
-	// Run the ante handler.
+	// Set the final gas values.
+	result = sdk.Result{
+		Code:    code,
+		Data:    data,
+		Log:     strings.Join(logs, "\n"),
+		GasUsed: ctx.GasMeter().GasConsumed(),
+		// TODO: FeeAmount/FeeDenom
+		Tags: tags,
+	}
+
+	return result
+}
+
+// Returns the applicantion's deliverState if app is in runTxModeDeliver,
+// otherwise it returns the application's checkstate.
+func getState(app *BaseApp, mode runTxMode) *state {
+	if mode == runTxModeCheck || mode == runTxModeSimulate {
+		return app.checkState
+	}
+
+	return app.deliverState
+}
+
+// runTx processes a transaction. The transactions is proccessed via an
+// anteHandler. txBytes may be nil in some cases, eg. in tests. Also, in the
+// future we may support "internal" transactions.
+func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
+	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
+	// determined by the GasMeter. We need access to the context to get the gas
+	// meter so we initialize upfront.
+	var gasWanted int64
+	ctx := app.getContextForAnte(mode, txBytes)
+
+	defer func() {
+		if r := recover(); r != nil {
+			switch rType := r.(type) {
+			case sdk.ErrorOutOfGas:
+				log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
+				result = sdk.ErrOutOfGas(log).Result()
+			default:
+				log := fmt.Sprintf("recovered: %v\nstack:\n%v", r, string(debug.Stack()))
+				result = sdk.ErrInternal(log).Result()
+			}
+		}
+
+		result.GasWanted = gasWanted
+		result.GasUsed = ctx.GasMeter().GasConsumed()
+	}()
+
+	var msgs = tx.GetMsgs()
+
+	err := validateBasicTxMsgs(msgs)
+	if err != nil {
+		return err.Result()
+	}
+
+	// run the ante handler
 	if app.anteHandler != nil {
 		newCtx, result, abort := app.anteHandler(ctx, tx)
 		if abort {
@@ -520,74 +625,41 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		if !newCtx.IsZero() {
 			ctx = newCtx
 		}
+
+		gasWanted = result.GasWanted
 	}
 
-	// Get the correct cache
-	var msCache sdk.CacheMultiStore
-	if mode == runTxModeCheck || mode == runTxModeSimulate {
-		// CacheWrap app.checkState.ms in case it fails.
-		msCache = app.checkState.CacheMultiStore()
-		ctx = ctx.WithMultiStore(msCache)
-	} else {
-		// CacheWrap app.deliverState.ms in case it fails.
-		msCache = app.deliverState.CacheMultiStore()
-		ctx = ctx.WithMultiStore(msCache)
+	// Keep the state in a transient CacheWrap in case processing the messages
+	// fails.
+	msCache := getState(app, mode).CacheMultiStore()
+	if msCache.TracingEnabled() {
+		msCache = msCache.WithTracingContext(sdk.TraceContext(
+			map[string]interface{}{"txHash": cmn.HexBytes(tmhash.Sum(txBytes)).String()},
+		)).(sdk.CacheMultiStore)
 	}
 
-	finalResult := sdk.Result{}
-	var logs []string
-	for i, msg := range msgs {
-		// Match route.
-		msgType := msg.Type()
-		handler := app.router.Route(msgType)
-		if handler == nil {
-			return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
-		}
+	ctx = ctx.WithMultiStore(msCache)
+	result = app.runMsgs(ctx, msgs, mode)
+	result.GasWanted = gasWanted
 
-		result = handler(ctx, msg)
-
-		// Set gas utilized
-		finalResult.GasUsed += ctx.GasMeter().GasConsumed()
-		finalResult.GasWanted += result.GasWanted
-
-		// Append Data and Tags
-		finalResult.Data = append(finalResult.Data, result.Data...)
-		finalResult.Tags = append(finalResult.Tags, result.Tags...)
-
-		// Construct usable logs in multi-message transactions. Messages are 1-indexed in logs.
-		logs = append(logs, fmt.Sprintf("Msg %d: %s", i+1, finalResult.Log))
-
-		// Stop execution and return on first failed message.
-		if !result.IsOK() {
-			if len(msgs) == 1 {
-				return result
-			}
-			result.GasUsed = finalResult.GasUsed
-			if i == 0 {
-				result.Log = fmt.Sprintf("Msg 1 failed: %s", result.Log)
-			} else {
-				result.Log = fmt.Sprintf("Msg 1-%d Passed. Msg %d failed: %s", i, i+1, result.Log)
-			}
-			return result
-		}
-	}
-
-	// If not a simulated run and result was successful, write to app.checkState.ms or app.deliverState.ms
-	// Only update state if all messages pass.
-	if mode != runTxModeSimulate && result.IsOK() {
+	// only update state if all messages pass and we're not in a simulation
+	if result.IsOK() && mode != runTxModeSimulate {
 		msCache.Write()
 	}
 
-	finalResult.Log = strings.Join(logs, "\n")
-
-	return finalResult
+	return
 }
 
-// Implements ABCI
+// EndBlock implements the ABCI application interface.
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
+	if app.deliverState.ms.TracingEnabled() {
+		app.deliverState.ms = app.deliverState.ms.ResetTraceContext().(sdk.CacheMultiStore)
+	}
+
 	if app.endBlocker != nil {
 		res = app.endBlocker(app.deliverState.ctx, req)
 	}
+
 	return
 }
 

@@ -12,6 +12,7 @@ INEFFASSIGN = github.com/gordonklaus/ineffassign
 MISSPELL = github.com/client9/misspell/cmd/misspell
 ERRCHECK = github.com/kisielk/errcheck
 UNPARAM = mvdan.cc/unparam
+GOCYCLO = github.com/alecthomas/gocyclo
 
 DEP_CHECK := $(shell command -v dep 2> /dev/null)
 GOLINT_CHECK := $(shell command -v golint 2> /dev/null)
@@ -21,6 +22,7 @@ INEFFASSIGN_CHECK := $(shell command -v ineffassign 2> /dev/null)
 MISSPELL_CHECK := $(shell command -v misspell 2> /dev/null)
 ERRCHECK_CHECK := $(shell command -v errcheck 2> /dev/null)
 UNPARAM_CHECK := $(shell command -v unparam 2> /dev/null)
+GOCYCLO_CHECK := $(shell command -v gocyclo 2> /dev/null)
 
 check_tools:
 ifndef DEP_CHECK
@@ -28,6 +30,9 @@ ifndef DEP_CHECK
 else
 	@echo "Found dep in path."
 endif
+
+check_dev_tools:
+	$(MAKE) check_tools
 ifndef GOLINT_CHECK
 	@echo "No golint in path.  Install with 'make get_tools'."
 else
@@ -63,6 +68,11 @@ ifndef UNPARAM_CHECK
 else
 	@echo "Found unparam in path."
 endif
+ifndef GOCYCLO_CHECK
+	@echo "No gocyclo in path.  Install with 'make get_tools'."
+else
+	@echo "Found gocyclo in path."
+endif
 
 get_tools:
 ifdef DEP_CHECK
@@ -71,6 +81,9 @@ else
 	@echo "Installing dep"
 	go get -v $(DEP)
 endif
+
+get_dev_tools:
+	$(MAKE) get_tools
 ifdef GOLINT_CHECK
 	@echo "Golint is already installed.  Run 'make update_tools' to update."
 else
@@ -113,10 +126,19 @@ else
 	@echo "Installing unparam"
 	go get -v $(UNPARAM)
 endif
+ifdef GOCYCLO_CHECK
+	@echo "gocyclo is already installed.  Run 'make update_tools' to update."
+else
+	@echo "Installing gocyclo"
+	go get -v $(GOCYCLO)
+endif
 
 update_tools:
 	@echo "Updating dep"
 	go get -u -v $(DEP)
+
+update_dev_tools:
+	$(MAKE) update_tools
 	@echo "Updating tendermint/golint"
 	go get -u -v $(GOLINT)
 	@echo "Updating gometalinter.v2"
@@ -131,8 +153,10 @@ update_tools:
 	go get -u -v $(ERRCHECK)
 	@echo "Updating unparam"
 	go get -u -v $(UNPARAM)
+	@echo "Updating goyclo"
+	go get -u -v $(GOCYCLO)
 
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: check_tools get_tools update_tools
+.PHONY: check_tools get_tools update_tools check_dev_tools get_dev_tools update_dev_tools

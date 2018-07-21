@@ -37,10 +37,38 @@ func NewRat(Numerator int64, Denominator ...int64) Rat {
 	}
 }
 
+func getNumeratorDenominator(str []string, prec int) (numerator string, denom int64, err Error) {
+	switch len(str) {
+	case 1:
+		if len(str[0]) == 0 {
+			return "", 0, ErrUnknownRequest("not a decimal string")
+		}
+		numerator = str[0]
+		return numerator, 1, nil
+	case 2:
+		if len(str[0]) == 0 || len(str[1]) == 0 {
+			return "", 0, ErrUnknownRequest("not a decimal string")
+		}
+		if len(str[1]) > prec {
+			return "", 0, ErrUnknownRequest("string has too many decimals")
+		}
+		numerator = str[0] + str[1]
+		len := int64(len(str[1]))
+		denom = new(big.Int).Exp(big.NewInt(10), big.NewInt(len), nil).Int64()
+		return numerator, denom, nil
+	default:
+		return "", 0, ErrUnknownRequest("not a decimal string")
+	}
+}
+
 // create a rational from decimal string or integer string
 // precision is the number of values after the decimal point which should be read
 func NewRatFromDecimal(decimalStr string, prec int) (f Rat, err Error) {
 	// first extract any negative symbol
+	if len(decimalStr) == 0 {
+		return f, ErrUnknownRequest("decimal string is empty")
+	}
+
 	neg := false
 	if string(decimalStr[0]) == "-" {
 		neg = true
@@ -49,26 +77,9 @@ func NewRatFromDecimal(decimalStr string, prec int) (f Rat, err Error) {
 
 	str := strings.Split(decimalStr, ".")
 
-	var numStr string
-	var denom int64 = 1
-	switch len(str) {
-	case 1:
-		if len(str[0]) == 0 {
-			return f, ErrUnknownRequest("not a decimal string")
-		}
-		numStr = str[0]
-	case 2:
-		if len(str[0]) == 0 || len(str[1]) == 0 {
-			return f, ErrUnknownRequest("not a decimal string")
-		}
-		if len(str[1]) > prec {
-			return f, ErrUnknownRequest("string has too many decimals")
-		}
-		numStr = str[0] + str[1]
-		len := int64(len(str[1]))
-		denom = new(big.Int).Exp(big.NewInt(10), big.NewInt(len), nil).Int64()
-	default:
-		return f, ErrUnknownRequest("not a decimal string")
+	numStr, denom, err := getNumeratorDenominator(str, prec)
+	if err != nil {
+		return f, err
 	}
 
 	num, errConv := strconv.Atoi(numStr)
@@ -223,7 +234,7 @@ func (r *Rat) UnmarshalAmino(text string) (err error) {
 //___________________________________________________________________________________
 // helpers
 
-// test if two rat arrays are the equal
+// test if two rat arrays are equal
 func RatsEqual(r1s, r2s []Rat) bool {
 	if len(r1s) != len(r2s) {
 		return false
@@ -240,4 +251,12 @@ func RatsEqual(r1s, r2s []Rat) bool {
 // intended to be used with require/assert:  require.True(RatEq(...))
 func RatEq(t *testing.T, exp, got Rat) (*testing.T, bool, string, Rat, Rat) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
+}
+
+// minimum rational between two
+func MinRat(r1, r2 Rat) Rat {
+	if r1.LT(r2) {
+		return r1
+	}
+	return r2
 }

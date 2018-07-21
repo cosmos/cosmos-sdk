@@ -3,6 +3,7 @@ package clitest
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -21,189 +22,216 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
-func TestGaiaCLISend(t *testing.T) {
+var (
+	pass        = "1234567890"
+	gaiadHome   = ""
+	gaiacliHome = ""
+)
 
-	tests.ExecuteT(t, "gaiad unsafe_reset_all")
-	pass := "1234567890"
-	executeWrite(t, "gaiacli keys delete foo", pass)
-	executeWrite(t, "gaiacli keys delete bar", pass)
-	chainID := executeInit(t, "gaiad init -o --name=foo")
-	executeWrite(t, "gaiacli keys add bar", pass)
+func init() {
+	gaiadHome, gaiacliHome = getTestingHomeDirs()
+}
+
+func TestGaiaCLISend(t *testing.T) {
+	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe_reset_all", gaiadHome))
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), pass)
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), pass)
+	chainID := executeInit(t, fmt.Sprintf("gaiad init -o --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome))
+	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), pass)
 
 	// get a free port, also setup some common flags
 	servAddr, port, err := server.FreeTCPAddr()
 	require.NoError(t, err)
-	flags := fmt.Sprintf("--node=%v --chain-id=%v", servAddr, chainID)
+	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
+
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
-	tests.WaitForNextHeightTM(port)
+	tests.WaitForNextNBlocksTM(2, port)
 
-	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
-	fooCech, err := sdk.Bech32ifyAcc(fooAddr)
-	require.NoError(t, err)
-	barAddr, _ := executeGetAddrPK(t, "gaiacli keys show bar --output=json")
-	barCech, err := sdk.Bech32ifyAcc(barAddr)
-	require.NoError(t, err)
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
+	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
 
-	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
+	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
 
-	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo", flags, barCech), pass)
-	tests.WaitForNextHeightTM(port)
+	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%s --from=foo", flags, barAddr), pass)
+	tests.WaitForNextNBlocksTM(2, port)
 
-	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
+	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", barAddr, flags))
 	require.Equal(t, int64(10), barAcc.GetCoins().AmountOf("steak").Int64())
-	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("steak").Int64())
 
 	// test autosequencing
-	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo", flags, barCech), pass)
-	tests.WaitForNextHeightTM(port)
+	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%s --from=foo", flags, barAddr), pass)
+	tests.WaitForNextNBlocksTM(2, port)
 
-	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
+	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", barAddr, flags))
 	require.Equal(t, int64(20), barAcc.GetCoins().AmountOf("steak").Int64())
-	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, int64(30), fooAcc.GetCoins().AmountOf("steak").Int64())
 
 	// test memo
-	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo --memo 'testmemo'", flags, barCech), pass)
-	tests.WaitForNextHeightTM(port)
+	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%s --from=foo --memo 'testmemo'", flags, barAddr), pass)
+	tests.WaitForNextNBlocksTM(2, port)
 
-	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
+	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", barAddr, flags))
 	require.Equal(t, int64(30), barAcc.GetCoins().AmountOf("steak").Int64())
-	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, int64(20), fooAcc.GetCoins().AmountOf("steak").Int64())
 }
 
 func TestGaiaCLICreateValidator(t *testing.T) {
-
-	tests.ExecuteT(t, "gaiad unsafe_reset_all")
-	pass := "1234567890"
-	executeWrite(t, "gaiacli keys delete foo", pass)
-	executeWrite(t, "gaiacli keys delete bar", pass)
-	chainID := executeInit(t, "gaiad init -o --name=foo")
-	executeWrite(t, "gaiacli keys add bar", pass)
+	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe_reset_all", gaiadHome))
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), pass)
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), pass)
+	chainID := executeInit(t, fmt.Sprintf("gaiad init -o --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome))
+	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), pass)
 
 	// get a free port, also setup some common flags
 	servAddr, port, err := server.FreeTCPAddr()
 	require.NoError(t, err)
-	flags := fmt.Sprintf("--node=%v --chain-id=%v", servAddr, chainID)
+	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
+
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
-	tests.WaitForNextHeightTM(port)
+	tests.WaitForNextNBlocksTM(2, port)
 
-	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
-	fooCech, err := sdk.Bech32ifyAcc(fooAddr)
-	require.NoError(t, err)
-	barAddr, barPubKey := executeGetAddrPK(t, "gaiacli keys show bar --output=json")
-	barCech, err := sdk.Bech32ifyAcc(barAddr)
-	require.NoError(t, err)
-	barCeshPubKey, err := sdk.Bech32ifyValPub(barPubKey)
-	require.NoError(t, err)
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
+	barAddr, barPubKey := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
+	barCeshPubKey := sdk.MustBech32ifyValPub(barPubKey)
 
-	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo", flags, barCech), pass)
-	tests.WaitForNextHeightTM(port)
+	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%s --from=foo", flags, barAddr), pass)
+	tests.WaitForNextNBlocksTM(2, port)
 
-	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
+	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", barAddr, flags))
 	require.Equal(t, int64(10), barAcc.GetCoins().AmountOf("steak").Int64())
-	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
+	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("steak").Int64())
 
 	// create validator
 	cvStr := fmt.Sprintf("gaiacli stake create-validator %v", flags)
-	cvStr += fmt.Sprintf(" --name=%v", "bar")
-	cvStr += fmt.Sprintf(" --address-validator=%v", barCech)
-	cvStr += fmt.Sprintf(" --pubkey=%v", barCeshPubKey)
+	cvStr += fmt.Sprintf(" --from=%s", "bar")
+	cvStr += fmt.Sprintf(" --pubkey=%s", barCeshPubKey)
 	cvStr += fmt.Sprintf(" --amount=%v", "2steak")
 	cvStr += fmt.Sprintf(" --moniker=%v", "bar-vally")
 
 	executeWrite(t, cvStr, pass)
-	tests.WaitForNextHeightTM(port)
+	tests.WaitForNextNBlocksTM(2, port)
 
-	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
+	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", barAddr, flags))
 	require.Equal(t, int64(8), barAcc.GetCoins().AmountOf("steak").Int64(), "%v", barAcc)
 
-	validator := executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %v --output=json %v", barCech, flags))
+	validator := executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %s --output=json %v", barAddr, flags))
 	require.Equal(t, validator.Owner, barAddr)
-	require.Equal(t, "2/1", validator.PoolShares.Amount.String())
+	require.True(sdk.RatEq(t, sdk.NewRat(2), validator.Tokens))
 
 	// unbond a single share
 	unbondStr := fmt.Sprintf("gaiacli stake unbond begin %v", flags)
-	unbondStr += fmt.Sprintf(" --name=%v", "bar")
-	unbondStr += fmt.Sprintf(" --address-validator=%v", barCech)
-	unbondStr += fmt.Sprintf(" --address-delegator=%v", barCech)
+	unbondStr += fmt.Sprintf(" --from=%s", "bar")
+	unbondStr += fmt.Sprintf(" --address-validator=%s", barAddr)
 	unbondStr += fmt.Sprintf(" --shares-amount=%v", "1")
 
 	success := executeWrite(t, unbondStr, pass)
 	require.True(t, success)
-	tests.WaitForNextHeightTM(port)
+	tests.WaitForNextNBlocksTM(2, port)
 
 	/* // this won't be what we expect because we've only started unbonding, haven't completed
 	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
 	require.Equal(t, int64(9), barAcc.GetCoins().AmountOf("steak").Int64(), "%v", barAcc)
 	*/
-	validator = executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %v --output=json %v", barCech, flags))
-	require.Equal(t, "1/1", validator.PoolShares.Amount.String())
+	validator = executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %s --output=json %v", barAddr, flags))
+	require.Equal(t, "1/1", validator.Tokens.String())
 }
 
 func TestGaiaCLISubmitProposal(t *testing.T) {
-
-	tests.ExecuteT(t, "gaiad unsafe_reset_all")
-	pass := "1234567890"
-	executeWrite(t, "gaiacli keys delete foo", pass)
-	executeWrite(t, "gaiacli keys delete bar", pass)
-	chainID := executeInit(t, "gaiad init -o --name=foo")
-	executeWrite(t, "gaiacli keys add bar", pass)
+	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe_reset_all", gaiadHome))
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), pass)
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), pass)
+	chainID := executeInit(t, fmt.Sprintf("gaiad init -o --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome))
+	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), pass)
 
 	// get a free port, also setup some common flags
 	servAddr, port, err := server.FreeTCPAddr()
 	require.NoError(t, err)
-	flags := fmt.Sprintf("--node=%v --chain-id=%v", servAddr, chainID)
+	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
+
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
-	tests.WaitForNextHeightTM(port)
+	tests.WaitForNextNBlocksTM(2, port)
 
-	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
-	fooCech, err := sdk.Bech32ifyAcc(fooAddr)
-	require.NoError(t, err)
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
 
-	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
+	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
 
-	executeWrite(t, fmt.Sprintf("gaiacli gov submitproposal %v --proposer=%v --deposit=5steak --type=Text --title=Test --description=test --name=foo", flags, fooCech), pass)
-	tests.WaitForNextHeightTM(port)
+	// unbond a single share
+	spStr := fmt.Sprintf("gaiacli gov submit-proposal %v", flags)
+	spStr += fmt.Sprintf(" --from=%s", "foo")
+	spStr += fmt.Sprintf(" --deposit=%s", "5steak")
+	spStr += fmt.Sprintf(" --type=%s", "Text")
+	spStr += fmt.Sprintf(" --title=%s", "Test")
+	spStr += fmt.Sprintf(" --description=%s", "test")
 
-	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
+	executeWrite(t, spStr, pass)
+	tests.WaitForNextNBlocksTM(2, port)
+
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, int64(45), fooAcc.GetCoins().AmountOf("steak").Int64())
 
 	proposal1 := executeGetProposal(t, fmt.Sprintf("gaiacli gov query-proposal --proposalID=1 --output=json %v", flags))
-	require.Equal(t, int64(1), proposal1.ProposalID)
-	require.Equal(t, gov.StatusToString(gov.StatusDepositPeriod), proposal1.Status)
+	require.Equal(t, int64(1), proposal1.GetProposalID())
+	require.Equal(t, gov.StatusDepositPeriod, proposal1.GetStatus())
 
-	executeWrite(t, fmt.Sprintf("gaiacli gov deposit %v --depositer=%v --deposit=10steak --proposalID=1 --name=foo", flags, fooCech), pass)
-	tests.WaitForNextHeightTM(port)
+	depositStr := fmt.Sprintf("gaiacli gov deposit %v", flags)
+	depositStr += fmt.Sprintf(" --from=%s", "foo")
+	depositStr += fmt.Sprintf(" --deposit=%s", "10steak")
+	depositStr += fmt.Sprintf(" --proposalID=%s", "1")
 
-	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
+	executeWrite(t, depositStr, pass)
+	tests.WaitForNextNBlocksTM(2, port)
+
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, int64(35), fooAcc.GetCoins().AmountOf("steak").Int64())
 	proposal1 = executeGetProposal(t, fmt.Sprintf("gaiacli gov query-proposal --proposalID=1 --output=json %v", flags))
-	require.Equal(t, int64(1), proposal1.ProposalID)
-	require.Equal(t, gov.StatusToString(gov.StatusVotingPeriod), proposal1.Status)
+	require.Equal(t, int64(1), proposal1.GetProposalID())
+	require.Equal(t, gov.StatusVotingPeriod, proposal1.GetStatus())
 
-	executeWrite(t, fmt.Sprintf("gaiacli gov vote %v --proposalID=1 --voter=%v --option=Yes --name=foo", flags, fooCech), pass)
-	tests.WaitForNextHeightTM(port)
+	voteStr := fmt.Sprintf("gaiacli gov vote %v", flags)
+	voteStr += fmt.Sprintf(" --from=%s", "foo")
+	voteStr += fmt.Sprintf(" --proposalID=%s", "1")
+	voteStr += fmt.Sprintf(" --option=%s", "Yes")
 
-	vote := executeGetVote(t, fmt.Sprintf("gaiacli gov query-vote  --proposalID=1 --voter=%v --output=json %v", fooCech, flags))
+	executeWrite(t, voteStr, pass)
+	tests.WaitForNextNBlocksTM(2, port)
+
+	vote := executeGetVote(t, fmt.Sprintf("gaiacli gov query-vote --proposalID=1 --voter=%s --output=json %v", fooAddr, flags))
 	require.Equal(t, int64(1), vote.ProposalID)
-	require.Equal(t, gov.VoteOptionToString(gov.OptionYes), vote.Option)
+	require.Equal(t, gov.OptionYes, vote.Option)
+
+	votes := executeGetVotes(t, fmt.Sprintf("gaiacli gov query-votes --proposalID=1 --output=json %v", flags))
+	require.Len(t, votes, 1)
+	require.Equal(t, int64(1), votes[0].ProposalID)
+	require.Equal(t, gov.OptionYes, votes[0].Option)
+}
+
+//___________________________________________________________________________________
+// helper methods
+
+func getTestingHomeDirs() (string, string) {
+	tmpDir := os.TempDir()
+	gaiadHome := fmt.Sprintf("%s%s.test_gaiad", tmpDir, string(os.PathSeparator))
+	gaiacliHome := fmt.Sprintf("%s%s.test_gaiacli", tmpDir, string(os.PathSeparator))
+	return gaiadHome, gaiacliHome
 }
 
 //___________________________________________________________________________________
@@ -247,18 +275,15 @@ func executeInit(t *testing.T, cmdStr string) (chainID string) {
 	return
 }
 
-func executeGetAddrPK(t *testing.T, cmdStr string) (sdk.Address, crypto.PubKey) {
+func executeGetAddrPK(t *testing.T, cmdStr string) (sdk.AccAddress, crypto.PubKey) {
 	out := tests.ExecuteT(t, cmdStr)
 	var ko keys.KeyOutput
 	keys.UnmarshalJSON([]byte(out), &ko)
 
-	address, err := sdk.GetAccAddressBech32(ko.Address)
-	require.NoError(t, err)
-
 	pk, err := sdk.GetAccPubKeyBech32(ko.PubKey)
 	require.NoError(t, err)
 
-	return address, pk
+	return ko.Address, pk
 }
 
 func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {
@@ -284,20 +309,29 @@ func executeGetValidator(t *testing.T, cmdStr string) stake.Validator {
 	return validator
 }
 
-func executeGetProposal(t *testing.T, cmdStr string) gov.ProposalRest {
+func executeGetProposal(t *testing.T, cmdStr string) gov.Proposal {
 	out := tests.ExecuteT(t, cmdStr)
-	var proposal gov.ProposalRest
+	var proposal gov.Proposal
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &proposal)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
 	return proposal
 }
 
-func executeGetVote(t *testing.T, cmdStr string) gov.VoteRest {
+func executeGetVote(t *testing.T, cmdStr string) gov.Vote {
 	out := tests.ExecuteT(t, cmdStr)
-	var vote gov.VoteRest
+	var vote gov.Vote
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &vote)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
 	return vote
+}
+
+func executeGetVotes(t *testing.T, cmdStr string) []gov.Vote {
+	out := tests.ExecuteT(t, cmdStr)
+	var votes []gov.Vote
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &votes)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return votes
 }

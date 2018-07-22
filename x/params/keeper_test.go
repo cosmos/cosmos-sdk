@@ -14,10 +14,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
-func defaultContext(key sdk.StoreKey) sdk.Context {
+func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
+	cms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db)
 	cms.LoadLatestVersion()
 	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 	return ctx
@@ -36,8 +37,9 @@ func TestKeeper(t *testing.T) {
 	}
 
 	skey := sdk.NewKVStoreKey("test")
-	ctx := defaultContext(skey)
-	setter := NewKeeper(wire.NewCodec(), skey).Setter()
+	tkey := sdk.NewTransientStoreKey("test")
+	ctx := defaultContext(skey, tkey)
+	setter := NewKeeper(wire.NewCodec(), skey, tkey).MasterSetter()
 
 	for _, kv := range kvs {
 		err := setter.Set(ctx, kv.key, kv.param)
@@ -74,11 +76,12 @@ func TestKeeper(t *testing.T) {
 
 func TestGetter(t *testing.T) {
 	key := sdk.NewKVStoreKey("test")
-	ctx := defaultContext(key)
-	keeper := NewKeeper(wire.NewCodec(), key)
+	tkey := sdk.NewTransientStoreKey("test")
+	ctx := defaultContext(key, tkey)
+	keeper := NewKeeper(wire.NewCodec(), key, tkey)
 
 	g := keeper.Getter()
-	s := keeper.Setter()
+	s := keeper.MasterSetter()
 
 	kvs := []struct {
 		key   string

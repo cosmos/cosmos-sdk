@@ -27,6 +27,7 @@ FEATURES
 * [baseapp] Initialize validator set on ResponseInitChain
 * Added support for cosmos-sdk-cli tool under cosmos-sdk/cmd	
    * This allows SDK users to init a new project repository with a single command.
+* [store] Add transient store
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route

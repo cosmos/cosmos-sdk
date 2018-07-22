@@ -69,6 +69,9 @@ type BaseApp struct {
 	checkState       *state                  // for CheckTx
 	deliverState     *state                  // for DeliverTx
 	signedValidators []abci.SigningValidator // absent validators from begin block
+
+	// Consensus parameters are set by (Request)InitChain and (Response)EndBlock
+	consensusParams *abci.ConsensusParams
 }
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -228,6 +231,9 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
+	if app.consensusParams == nil {
+
+	}
 	if isCheckTx {
 		return sdk.NewContext(app.checkState.ms, header, true, app.Logger)
 	}
@@ -247,7 +253,7 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, app.Logger),
+		ctx: sdk.NewContext(ms, header, true, app.Logger).WithConsensusParams(app.consensusParams),
 	}
 }
 
@@ -286,6 +292,8 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// Initialize the deliver state and check state with ChainID and run initChain
 	app.setDeliverState(abci.Header{ChainID: req.ChainId})
 	app.setCheckState(abci.Header{ChainID: req.ChainId})
+
+	app.consensusParams = req.ConsensusParams
 
 	if app.initChainer == nil {
 		return
@@ -650,6 +658,43 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	return
 }
 
+// Copied from tendermint/tendermint/types/params.go
+func (app *BaseApp) updateConsensusParams(updates *abci.ConsensusParams) {
+	if updates == nil {
+		return
+	}
+
+	params := app.consensusParams
+
+	// we must defensively consider any structs may be nil
+	// XXX: it's cast city over here. It's ok because we only do int32->int
+	// but still, watch it champ.
+	if updates.BlockSize != nil {
+		if updates.BlockSize.MaxBytes > 0 {
+			params.BlockSize.MaxBytes = updates.BlockSize.MaxBytes
+		}
+		if updates.BlockSize.MaxTxs > 0 {
+			params.BlockSize.MaxTxs = updates.BlockSize.MaxTxs
+		}
+		if updates.BlockSize.MaxGas > 0 {
+			params.BlockSize.MaxGas = updates.BlockSize.MaxGas
+		}
+	}
+	if updates.TxSize != nil {
+		if updates.TxSize.MaxBytes > 0 {
+			params.TxSize.MaxBytes = updates.TxSize.MaxBytes
+		}
+		if updates.TxSize.MaxGas > 0 {
+			params.TxSize.MaxGas = updates.TxSize.MaxGas
+		}
+	}
+	if updates.BlockGossip != nil {
+		if updates.BlockGossip.BlockPartSizeBytes > 0 {
+			params.BlockGossip.BlockPartSizeBytes = updates.BlockGossip.BlockPartSizeBytes
+		}
+	}
+}
+
 // EndBlock implements the ABCI application interface.
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	if app.deliverState.ms.TracingEnabled() {
@@ -658,6 +703,10 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 	if app.endBlocker != nil {
 		res = app.endBlocker(app.deliverState.ctx, req)
+	}
+
+	if res.ConsensusParamUpdates != nil {
+		app.updateConsensusParams(res.ConsensusParamUpdates)
 	}
 
 	return

@@ -11,7 +11,7 @@ type GenesisState struct {
 
 // ActivatedParamKey - paramstore key for msg type activation
 func ActivatedParamKey(ty string) string {
-	return "Activated/" + ty
+	return "params/Activated/" + ty
 }
 
 // InitGenesis stores activated type to param store

@@ -27,7 +27,7 @@ type Msg interface {
     // This is what is signed.
     GetSignBytes() []byte
 
-	// Signers returns the addrs of signers that must sign.
+	// GetSigners returns the addrs of signers that must sign.
     // CONTRACT: All signatures must be present to be valid.
     // CONTRACT: Returns addrs in some deterministic order.
     GetSigners() []AccAddress

@@ -36,12 +36,9 @@ IMPROVEMENTS
 * [tools] Remove `rm -rf vendor/` from `make get_vendor_deps`
 * [x/auth] Recover ErrorOutOfGas panic in order to set sdk.Result attributes correctly
 * [x/stake] Add revoked to human-readable validator 
-<<<<<<< HEAD
 * [tests] Add tests to example apps in docs
-=======
 * [x/gov] Votes on a proposal can now be queried
 * [x/bank] Unit tests are now table-driven
->>>>>>> 63f70cb41417518f2a5f0493dc6cb906e14e9203
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators

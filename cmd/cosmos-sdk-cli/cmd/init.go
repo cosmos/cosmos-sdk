@@ -151,8 +151,8 @@ func setupBasecoinWorkspace(projectName string, remoteProjectPath string) {
 		copyBasecoinTemplate(projectName, projectPath, remoteProjectPath)
 		createGopkg(projectPath)
 		createMakefile(projectPath)
-		fmt.Printf("\nInitialized a new project at %s.\nHappy hacking!\n", projectPath)
+		fmt.Printf("Initialized a new project at %s.\nHappy hacking!\n", projectPath)
 	} else {
-		fmt.Printf("\n%s already exists, please choose a different project path\n", projectPath)
+		fmt.Errorf("%s already exists, please choose a different project path\n", projectPath)
 	}
 }

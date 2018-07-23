@@ -3,6 +3,7 @@ package gov
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/tags"
+	"strconv"
 )
 
 // Handle all "gov" type messages.
@@ -31,7 +32,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 		return err.Result()
 	}
 
-	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(proposal.GetProposalID())
+	proposalIDBytes := []byte(strconv.FormatInt(proposal.GetProposalID(),10))
 
 	resTags := sdk.NewTags(
 		tags.Action, tags.ActionSubmitProposal,
@@ -81,7 +82,7 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 		return err.Result()
 	}
 
-	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(msg.ProposalID)
+	proposalIDBytes := []byte(strconv.FormatInt(msg.ProposalID,10))
 
 	resTags := sdk.NewTags(
 		tags.Action, tags.ActionVote,
@@ -105,7 +106,8 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags, nonVotingVals
 			continue
 		}
 
-		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(inactiveProposal.GetProposalID())
+		proposalIDBytes := []byte(strconv.FormatInt(inactiveProposal.GetProposalID(),10))
+
 		keeper.DeleteProposal(ctx, inactiveProposal)
 		resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
@@ -168,3 +170,4 @@ func shouldPopActiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 	}
 	return false
 }
+

@@ -30,11 +30,13 @@ REGION ?= us-east-2
 all:
 	@echo "There is no all. Only sum of the ones."
 
+disclaimer:
+	@echo "WARNING: These are example network configuration scripts only and have not undergone security review. They should not be used for production deployments."
 
 ########################################
 ### Extract genesis.json and config.toml from a node in a cluster
 
-extract-config:
+extract-config: disclaimer
 	#Make sure you have AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY or your IAM roles set for AWS API access.
 	@if ! [ -f $(HOME)/.ssh/id_rsa.pub ]; then ssh-keygen ; fi
 	cd remote/ansible && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(CLUSTER_NAME)" -u centos -b -e TESTNET_NAME="$(TESTNET_NAME)" -e GENESISFILE="$(GENESISFILE)" -e CONFIGFILE="$(CONFIGFILE)" extract-config.yml
@@ -43,7 +45,7 @@ extract-config:
 ########################################
 ### Remote validator nodes using terraform and ansible in AWS
 
-validators-start:
+validators-start: disclaimer
 	#Make sure you have AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY or your IAM roles set for AWS API access.
 	@if ! [ -f $(HOME)/.ssh/id_rsa.pub ]; then ssh-keygen ; fi
 	@if [ -z "`file $(BINARY) | grep 'ELF 64-bit'`" ]; then echo "Please build a linux binary using 'make build-linux'." ; false ; fi
@@ -51,11 +53,11 @@ validators-start:
 	cd remote/ansible && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(CLUSTER_NAME)" -u centos -b -e BINARY=$(BINARY) -e TESTNET_NAME="$(TESTNET_NAME)" setup-validators.yml
 	cd remote/ansible && ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(CLUSTER_NAME)" -u centos -b start.yml
 
-validators-stop:
+validators-stop: disclaimer
 	cd remote/terraform-aws && terraform workspace select "$(CLUSTER_NAME)" && terraform destroy -force -var SSH_PUBLIC_FILE="$(HOME)/.ssh/id_rsa.pub" -var SSH_PRIVATE_FILE="$(HOME)/.ssh/id_rsa" && terraform workspace select default && terraform workspace delete "$(CLUSTER_NAME)"
 	rm -rf remote/ansible/keys/ remote/ansible/files/
 
-validators-status:
+validators-status: disclaimer
 	cd remote/ansible && ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(CLUSTER_NAME)" status.yml
 
 #validators-clear:
@@ -65,7 +67,7 @@ validators-status:
 ########################################
 ### Remote full nodes using terraform and ansible in Amazon AWS
 
-fullnodes-start:
+fullnodes-start: disclaimer
 	#Make sure you have AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY or your IAM roles set for AWS API access.
 	@if ! [ -f $(HOME)/.ssh/id_rsa.pub ]; then ssh-keygen ; fi
 	@if [ -z "`file $(BINARY) | grep 'ELF 64-bit'`" ]; then echo "Please build a linux binary using 'make build-linux'." ; false ; fi
@@ -73,17 +75,17 @@ fullnodes-start:
 	cd remote/ansible && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(CLUSTER_NAME)" -u centos -b -e BINARY=$(BINARY) -e TESTNET_NAME="$(TESTNET_NAME)" -e GENESISFILE="$(GENESISFILE)" -e CONFIGFILE="$(CONFIGFILE)" setup-fullnodes.yml
 	cd remote/ansible && ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(CLUSTER_NAME)" -u centos -b start.yml
 
-fullnodes-stop:
+fullnodes-stop: disclaimer
 	cd remote/terraform-aws && terraform workspace select "$(CLUSTER_NAME)" && terraform destroy -force -var SSH_PUBLIC_FILE="$(HOME)/.ssh/id_rsa.pub" -var SSH_PRIVATE_FILE="$(HOME)/.ssh/id_rsa" && terraform workspace select default && terraform workspace delete "$(CLUSTER_NAME)"
 	rm -rf remote/ansible/keys/ remote/ansible/files/
 
-fullnodes-status:
+fullnodes-status: disclaimer
 	cd remote/ansible && ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(CLUSTER_NAME)" status.yml
 
 ########################################
 ### Other calls
 
-upgrade-gaiad:
+upgrade-gaiad: disclaimer
 	#Make sure you have AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY or your IAM roles set for AWS API access.
 	@if ! [ -f $(HOME)/.ssh/id_rsa.pub ]; then ssh-keygen ; fi
 	@if [ -z "`file $(BINARY) | grep 'ELF 64-bit'`" ]; then echo "Please build a linux binary using 'make build-linux'." ; false ; fi
@@ -92,20 +94,20 @@ upgrade-gaiad:
 list:
 	remote/ansible/inventory/ec2.py | python -c 'import json,sys ; print "\n".join(json.loads("".join(sys.stdin.readlines()))["tag_Environment_$(CLUSTER_NAME)"])'
 
-install-datadog:
+install-datadog: disclaimer
 	#Make sure you have AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY or your IAM roles set for AWS API access.
 	@if [ -z "$(DD_API_KEY)" ]; then echo "DD_API_KEY environment variable not set." ; false ; fi
 	cd remote/ansible && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(CLUSTER_NAME)" -u centos -b -e DD_API_KEY="$(DD_API_KEY)" -e TESTNET_NAME="$(TESTNET_NAME)" -e CLUSTER_NAME="$(CLUSTER_NAME)" install-datadog-agent.yml
 
-remove-datadog:
+remove-datadog: disclaimer
 	#Make sure you have AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY or your IAM roles set for AWS API access.
 	cd remote/ansible && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(CLUSTER_NAME)" -u centos -b remove-datadog-agent.yml
 
 
 ########################################
 ### Application infrastructure setup
-
-app-start:
+ 
+app-start: disclaimer
 	#Make sure you have AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY or your IAM roles set for AWS API access.
 	@if ! [ -f $(HOME)/.ssh/id_rsa.pub ]; then ssh-keygen ; fi
 	@if [ -z "`file $(BINARY) | grep 'ELF 64-bit'`" ]; then echo "Please build a linux binary using 'make build-linux'." ; false ; fi
@@ -113,7 +115,7 @@ app-start:
 	cd remote/ansible && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(APP_NAME)" -u centos -b -e BINARY=$(BINARY) -e TESTNET_NAME="$(TESTNET_NAME)" -e GENESISFILE="$(GENESISFILE)" -e CONFIGFILE="$(CONFIGFILE)" setup-fullnodes.yml
 	cd remote/ansible && ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(APP_NAME)" -u centos -b start.yml
 
-app-stop:
+app-stop: disclaimer
 	cd remote/terraform-app && terraform workspace select "$(APP_NAME)" && terraform destroy -force -var SSH_PUBLIC_FILE="$(HOME)/.ssh/id_rsa.pub" -var SSH_PRIVATE_FILE="$(HOME)/.ssh/id_rsa" -var APP_NAME=$(APP_NAME) && terraform workspace select default && terraform workspace delete "$(APP_NAME)"
 	rm -rf remote/ansible/keys/ remote/ansible/files/
 
@@ -121,4 +123,3 @@ app-stop:
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
 .PHONY: all extract-config validators-start validators-stop validators-status fullnodes-start fullnodes-stop fullnodes-status upgrade-gaiad list install-datadog remove-datadog app-start app-stop
-

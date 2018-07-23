@@ -46,11 +46,7 @@ var initCmd = &cobra.Command{
 			remoteBasecoinPath, remoteProjectPath,
 			"basecoin", shortProjectName,
 			"Basecoin", capitalizedProjectName)
-		err := setupBasecoinWorkspace(shortProjectName, remoteProjectPath)
-		if err != nil {
-			return err
-		}
-		return nil
+		return setupBasecoinWorkspace(shortProjectName, remoteProjectPath)
 	},
 }
 

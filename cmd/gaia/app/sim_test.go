@@ -25,6 +25,7 @@ var (
 	blockSize       int
 	minTimePerBlock int64
 	maxTimePerBlock int64
+	signingFraction float64
 	enabled         bool
 )
 
@@ -35,6 +36,7 @@ func init() {
 	flag.IntVar(&blockSize, "SimulationBlockSize", 1000, "Operations per block")
 	flag.Int64Var(&minTimePerBlock, "SimulationMinTimePerBlock", 60, "Minimum time per block (seconds)")
 	flag.Int64Var(&maxTimePerBlock, "SimulationMaxTimePerBlock", 120, "Maximum time per block (seconds)")
+	flag.Float64Var(&signingFraction, "SimulationSigningFraction", 0.7, "Chance a given validator signs a given block")
 	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")
 }
 
@@ -101,6 +103,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 		blockSize,
 		minTimePerBlock,
 		maxTimePerBlock,
+		signingFraction,
 	)
 
 }

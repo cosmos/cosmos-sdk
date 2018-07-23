@@ -44,7 +44,8 @@ var initCmd = &cobra.Command{
 			"basecoind", shortProjectName+"d",
 			"BasecoinApp", capitalizedProjectName+"App",
 			remoteBasecoinPath, remoteProjectPath,
-			"basecoin", shortProjectName)
+			"basecoin", shortProjectName,
+			"Basecoin", capitalizedProjectName)
 		setupBasecoinWorkspace(shortProjectName, remoteProjectPath)
 		return nil
 	},

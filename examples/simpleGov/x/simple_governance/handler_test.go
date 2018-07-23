@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/abci/types"
 )
 
 func TestHandleSubmitProposalMsg(t *testing.T) {
@@ -19,9 +20,15 @@ func TestHandleSubmitProposalMsg(t *testing.T) {
 	// deposit greater than account balance --> error
 
 	// crete context and proposalKeeper each address has 200 Atoms
-	ctx, _, k := createTestInput(t, int64(200))
 
-	err := checkProposal(ctx, k) // No proposal
+	keyStake := sdk.NewKVStoreKey("stake")
+	keyGov := sdk.NewKVStoreKey("gov")
+
+	mapp, k, sk := CreateMockApp(100, keyStake, keyGov)
+	header := abci.Header{ChainID: "simplegovchain"}
+	ctx := mapp.NewContext(false, header)
+	newTags := sdk.NewTags()
+	tags, err := checkProposal(ctx, k, newTags) // No proposal
 	assert.NotNil(t, err)
 
 	cases := []struct {
@@ -46,7 +53,7 @@ func TestHandleSubmitProposalMsg(t *testing.T) {
 	}
 
 	// Test if the proposal reached the end of voting period
-	err = checkProposal(ctx, k)
+	tags, err = checkProposal(ctx, k, newTags)
 	assert.Nil(t, err)
 
 	// Voting Handler

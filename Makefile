@@ -151,6 +151,14 @@ test_lint:
 	dep status >> /dev/null
 	!(grep -n branch Gopkg.toml)
 
+test_docker:
+	docker build -f Dockerfile.test -t gaia-test .
+	docker run gaia-test make test
+
+test_lint_docker:
+	docker build -f Dockerfile.test -t gaia-test .
+	docker run gaia-test make test_lint
+
 format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -w -s
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs misspell -w

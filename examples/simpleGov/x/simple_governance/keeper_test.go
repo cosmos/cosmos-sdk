@@ -5,23 +5,31 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
+	abci "github.com/tendermint/abci/types"
 )
 
 func TestSimpleGovKeeper(t *testing.T) {
 
-	ctx, _, k := createTestInput(t, int64(200))
-	assert.NotNil(t, k)
+	keyStake := sdk.NewKVStoreKey("stake")
+	keyGov := sdk.NewKVStoreKey("gov")
+
+	mapp, k, sk := CreateMockApp(100, keyStake, keyGov)
+	header := abci.Header{ChainID: "simplegovchain"}
+	ctx := mapp.NewContext(false, header)
+	newTags := sdk.NewTags()
+	tags, err := checkProposal(ctx, k, newTags) // No proposal
+	assert.NotNil(t, err)
 
 	// create proposals
-	proposal := NewProposal(titles[1], descriptions[1], addrs[1], ctx.BlockHeight(), sdk.Coins{{"Atom", sdk.NewInt(int64(200))}})
-	proposal2 := NewProposal(titles[2], descriptions[2], addrs[4], ctx.BlockHeight(), sdk.Coins{{"Atom", sdk.NewInt(int64(150))}})
+	proposal := NewProposal(int64(1), titles[1], descriptions[1], addrs[1], ctx.BlockHeight(), sdk.Coins{{"Atom", sdk.NewInt(int64(200))}})
+	proposal2 := NewProposal(int64(2), titles[2], descriptions[2], addrs[4], ctx.BlockHeight(), sdk.Coins{{"Atom", sdk.NewInt(int64(150))}})
 
 	// –––––––––––––––––––––––––––––––––––––––
 	//                KEEPER
 	// –––––––––––––––––––––––––––––––––––––––
 
 	// ––––––– Test SetProposal –––––––
-	err := k.SetProposal(ctx, 1, proposal)
+	err = k.SetProposal(ctx, 1, proposal)
 	assert.Nil(t, err)
 
 	// ––––––– Test GetProposal –––––––

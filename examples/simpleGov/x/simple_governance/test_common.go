@@ -106,6 +106,7 @@ func testAddr(addr string) sdk.AccAddress {
 	return res
 }
 
+// CreateMockApp creates a new Mock application for testing purposes
 func CreateMockApp(
 	numGenAccs int,
 	stakeKey *sdk.KVStoreKey,

@@ -46,7 +46,10 @@ var initCmd = &cobra.Command{
 			remoteBasecoinPath, remoteProjectPath,
 			"basecoin", shortProjectName,
 			"Basecoin", capitalizedProjectName)
-		setupBasecoinWorkspace(shortProjectName, remoteProjectPath)
+		err := setupBasecoinWorkspace(shortProjectName, remoteProjectPath)
+		if err != nil {
+			return err
+		}
 		return nil
 	},
 }
@@ -143,16 +146,16 @@ benchmark:
 
 }
 
-func setupBasecoinWorkspace(projectName string, remoteProjectPath string) {
+func setupBasecoinWorkspace(projectName string, remoteProjectPath string) error {
 	projectPath := resolveProjectPath(remoteProjectPath)
 	fmt.Println("Configuring your project in " + projectPath)
 	// Check if the projectPath already exists or not
-	if _, err := os.Stat(projectPath); os.IsNotExist(err) {
-		copyBasecoinTemplate(projectName, projectPath, remoteProjectPath)
-		createGopkg(projectPath)
-		createMakefile(projectPath)
-		fmt.Printf("Initialized a new project at %s.\nHappy hacking!\n", projectPath)
-	} else {
-		fmt.Errorf("%s already exists, please choose a different project path\n", projectPath)
+	if _, err := os.Stat(projectPath); !os.IsNotExist(err) {
+		return fmt.Errorf("Unable to initialize the project. %s already exists", projectPath)
 	}
+	copyBasecoinTemplate(projectName, projectPath, remoteProjectPath)
+	createGopkg(projectPath)
+	createMakefile(projectPath)
+	fmt.Printf("Initialized a new project at %s.\nHappy hacking!\n", projectPath)
+	return nil
 }

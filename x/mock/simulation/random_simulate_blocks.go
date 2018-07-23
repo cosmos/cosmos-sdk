@@ -94,6 +94,8 @@ func SimulateFromSeed(
 
 		res := app.EndBlock(abci.RequestEndBlock{})
 		UpdateValidators(t, validators, res.ValidatorUpdates)
+		fmt.Printf("Simulation of block %d with %d operations complete.\n", header.Height, thisBlockSize)
+
 		header.Height++
 		header.Time += minTimePerBlock + int64(r.Intn(int(timeDiff)))
 	}

@@ -16,7 +16,7 @@ export SERVERS=$4
 
 # Build the AWS full nodes
 rm -rf remote/ansible/keys
-make fullnodes-start-aws
+make fullnodes-start
 
 # Save the private key seed words from the nodes
 SEEDFOLDER="${TESTNET_NAME}-${CLUSTER_NAME}-seedwords"

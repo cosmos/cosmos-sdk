@@ -10,5 +10,5 @@ set -eux
 export TESTNET_NAME=$1
 export CLUSTER_NAME=$2
 
-make install-datadog-aws
+make install-datadog
 

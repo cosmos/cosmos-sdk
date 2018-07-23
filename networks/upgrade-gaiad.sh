@@ -10,5 +10,5 @@ set -eux
 
 export CLUSTER_NAME=$1
 
-make upgrade-gaiad-aws
+make upgrade-gaiad
 

@@ -10,5 +10,5 @@ set -eux
 export CLUSTER_NAME=$1
 
 # Delete the AWS nodes
-make fullnodes-stop-aws
+make fullnodes-stop
 

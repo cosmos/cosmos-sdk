@@ -21,7 +21,7 @@ export SERVERS=$4
 
 # Build the AWS validator nodes and extract the genesis.json and config.toml from one of them
 rm -rf remote/ansible/keys
-make validators-start-aws extract-config-aws
+make validators-start extract-config
 
 # Save the private key seed words from the validators
 SEEDFOLDER="${TESTNET_NAME}-${CLUSTER_NAME}-seedwords"

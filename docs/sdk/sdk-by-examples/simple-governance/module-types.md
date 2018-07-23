@@ -1,6 +1,8 @@
-## Types (`types.go`)
+## Types 
 
-In this file, we define the custom types for our module. This includes the types from the [State](#State) section and the custom message types defined in the [Transactions](#Transactions) section.
+**File: [`x/simple_governance/types.go`](https://github.com/cosmos/cosmos-sdk/blob/fedekunze/module_tutorial/examples/simpleGov/x/simple_governance/types.go)**
+
+In this file, we define the custom types for our module. This includes the types from the [State](app-design.md#State) section and the custom message types defined in the [Messages](app-design#Messages) section.
 
 For each new type that is not a message, it is possible to add methods that make sense in the context of the application. In our case, we will implement an `updateTally` function to easily update the tally of a given proposal as vote messages come in.
 

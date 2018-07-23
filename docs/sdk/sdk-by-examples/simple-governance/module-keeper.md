@@ -1,8 +1,10 @@
-## Keeper (`keeper.go`)
+## Keeper
+
+**File: [`x/simple_governance/keeper.go`](https://github.com/cosmos/cosmos-sdk/blob/fedekunze/module_tutorial/examples/simpleGov/x/simple_governance/keeper.go)**
 
 ### Short intro to keepers
 
-`Keepers` are a module abstraction that handle reading/writing to the module store. This is a practical implementation of the [`Object Capability Model`](link) for Cosmos. 
+`Keepers` are a module abstraction that handle reading/writing to the module store. This is a practical implementation of the **Object Capability Model** for Cosmos. 
 
 
 As module developers, we have to define keepers to interact with our module's store(s) not only from within our module, but also from other modules. When another module wants to access one of our module's store(s), a keeper for this store has to be passed to it at the application level. In practice, it will look like that:
@@ -70,7 +72,7 @@ The first function we have to create is the constructor.
 func NewKeeper(SimpleGov sdk.StoreKey, ck bank.Keeper, sm stake.Keeper, codespace sdk.CodespaceType) Keeper
 ```
 
-This function is called from the main `app.go` file to instanciate a new `Keeper`. A similar function exits for `KeeperRead`.
+This function is called from the main [`app.go`](https://github.com/cosmos/cosmos-sdk/blob/fedekunze/module_tutorial/examples/simpleGov/app/app.go) file to instanciate a new `Keeper`. A similar function exits for `KeeperRead`.
 
 ```go
 func NewKeeperRead(SimpleGov sdk.StoreKey, ck bank.Keeper, sm stake.Keeper, codespace sdk.CodespaceType) KeeperRead

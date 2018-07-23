@@ -1,4 +1,6 @@
-## Handler (`handler.go`)
+## Handler 
+
+**File: [`x/simple_governance/handler.go`](https://github.com/cosmos/cosmos-sdk/blob/fedekunze/module_tutorial/examples/simpleGov/x/simple_governance/handler.go)**
 
 ### Constructor and core handlers
 
@@ -56,7 +58,7 @@ func NewEndBlocker(k Keeper) sdk.EndBlocker {
 }
 ```
 
-Do not forget that each module need to declare its `BeginBlock` and `EndBlock` constructors at application level. See the [Application - Bridging it all together](#application_-_bridging_it_all_together).
+Do not forget that each module need to declare its `BeginBlock` and `EndBlock` constructors at application level. See the [Application - Bridging it all together](app-structure.md).
 
 For the purpose of our simple governance application, we will use `EndBlock` to automatically tally the results of the vote. Here are the different steps that will be performed:
 

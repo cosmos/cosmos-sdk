@@ -13,7 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/fedekunze/cosmos-sdk/examples/simpleGov/app"
+	"github.com/cosmos/cosmos-sdk/examples/simpleGov/app"
 )
 
 // SimpleGovAppInit initial parameters

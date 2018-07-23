@@ -18,7 +18,7 @@ import (
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
-	simplegovcmd "github.com/fedekunze/cosmos-sdk/examples/simpleGov/x/simple_governance/client/cli"
+	simplegovcmd "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simple_governance/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
 )

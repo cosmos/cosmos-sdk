@@ -1,5 +1,7 @@
 ## Application codec
 
+**File: [`app/app.go`](https://github.com/cosmos/cosmos-sdk/blob/fedekunze/module_tutorial/examples/simpleGov/app/app.go)**
+
 Finally, we need to define the `MakeCodec()` function and register the concrete types and interface from the various modules.
 
 ```go

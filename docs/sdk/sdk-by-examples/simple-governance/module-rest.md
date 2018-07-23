@@ -1,5 +1,7 @@
 ## Rest API
 
+**File: [`x/simple_governance/client/rest/simple_governance.goo`](https://github.com/cosmos/cosmos-sdk/blob/fedekunze/module_tutorial/examples/simpleGov/x/simple_governance/client/rest/simple_governance.go)**
+
 The Rest Server, also called [Light-Client Daemon (LCD)](https://github.com/cosmos/cosmos-sdk/tree/master/client/lcd), provides support for **HTTP queries**.
 
 ________________________________________________________
@@ -27,4 +29,4 @@ Now, let us define endpoints that will be available for users to query through H
 
 It is the job of module developers to provide sensible endpoints so that front-end developers and service providers can properly interact with it.
 
-As for the actual in-code implementation of the endpoints for our simple governance module, you can take a look at [this file](../client/rest/simple_governance.go). Additionaly, here is a [link](https://hackernoon.com/restful-api-designing-guidelines-the-best-practices-60e1d954e7c9) for REST APIs best practices.
+Additionaly, here is a [link](https://hackernoon.com/restful-api-designing-guidelines-the-best-practices-60e1d954e7c9) for REST APIs best practices.

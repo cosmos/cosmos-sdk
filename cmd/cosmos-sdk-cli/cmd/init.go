@@ -146,6 +146,7 @@ benchmark:
 func setupBasecoinWorkspace(projectName string, remoteProjectPath string) {
 	projectPath := resolveProjectPath(remoteProjectPath)
 	fmt.Println("Configuring your project in " + projectPath)
+	// Check if the projectPath already exists or not
 	if _, err := os.Stat(projectPath); os.IsNotExist(err) {
 		copyBasecoinTemplate(projectName, projectPath, remoteProjectPath)
 		createGopkg(projectPath)

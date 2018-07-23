@@ -16,7 +16,7 @@ BREAKING CHANGES
   * `gaiacli gov submit-proposal --proposer`
   * `gaiacli gov deposit --depositer`
   * `gaiacli gov vote --voter`
-* [x/gov] Added tags sub-package, changed tags to use dash-case 
+* [x/gov] Added tags sub-package, changed tags to use dash-case
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus
@@ -25,16 +25,18 @@ FEATURES
   * Modules can test random combinations of their own operations
   * Applications can integrate operations and invariants from modules together for an integrated simulation
 * [baseapp] Initialize validator set on ResponseInitChain
-* Added support for cosmos-sdk-cli tool under cosmos-sdk/cmd	
+* Added support for cosmos-sdk-cli tool under cosmos-sdk/cmd
    * This allows SDK users to init a new project repository with a single command.
+* Optionally run tests within a docker container.
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route
 * [cli] Improve error messages for all txs when the account doesn't exist
 * [tools] Remove `rm -rf vendor/` from `make get_vendor_deps`
-* [x/stake] Add revoked to human-readable validator 
+* [x/stake] Add revoked to human-readable validator
 * [x/gov] Votes on a proposal can now be queried
 * [x/bank] Unit tests are now table-driven
+* [x/slashing] No longer wait until SignedBlocksWindow has passed before downtime slashing commences.
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators

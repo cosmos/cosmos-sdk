@@ -1,0 +1,19 @@
+FROM golang:alpine
+
+# Set up dependencies
+ENV PACKAGES make git libc-dev bash gcc linux-headers eudev-dev
+
+RUN apk add --no-cache $PACKAGES
+
+# Set working directory for the build
+WORKDIR /go/src/github.com/cosmos/cosmos-sdk
+
+# Add source files
+COPY . .
+
+# Install minimum necessary dependencies, build Cosmos SDK, remove packages
+RUN make get_tools
+RUN make get_vendor_deps
+RUN make build
+RUN make install
+

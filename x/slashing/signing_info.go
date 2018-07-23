@@ -32,8 +32,8 @@ func (k Keeper) getValidatorSigningBitArray(ctx sdk.Context, address sdk.ValAddr
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(GetValidatorSigningBitArrayKey(address, index))
 	if bz == nil {
-		// lazy: treat empty key as unsigned
-		signed = false
+		// lazy: treat empty key as signed
+		signed = true
 		return
 	}
 	k.cdc.MustUnmarshalBinary(bz, &signed)
@@ -45,6 +45,14 @@ func (k Keeper) setValidatorSigningBitArray(ctx sdk.Context, address sdk.ValAddr
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(signed)
 	store.Set(GetValidatorSigningBitArrayKey(address, index), bz)
+}
+
+// Invalidate the signing bit array (stored by *validator* address)
+func (k Keeper) invalidateValidatorSigningBitArray(ctx sdk.Context, address sdk.ValAddress, SignedBlocksWindow int64) {
+	store := ctx.KVStore(k.storeKey)
+	for index := int64(0); index < SignedBlocksWindow; index++ {
+		store.Delete(GetValidatorSigningBitArrayKey(address, index))
+	}
 }
 
 // Construct a new `ValidatorSigningInfo` struct

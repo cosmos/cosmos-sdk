@@ -75,7 +75,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	signInfo, found := k.getValidatorSigningInfo(ctx, address)
 	if !found {
 		// If this validator has never been seen before, construct a new SigningInfo with the correct start height
-		signInfo = NewValidatorSigningInfo(height, 0, 0, 0)
+		signInfo = NewValidatorSigningInfo(height, 0, 0, k.SignedBlocksWindow(ctx))
 	}
 	index := signInfo.IndexOffset % k.SignedBlocksWindow(ctx)
 	signInfo.IndexOffset++
@@ -99,13 +99,14 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	if !signed {
 		logger.Info(fmt.Sprintf("Absent validator %s at height %d, %d signed, threshold %d", pubkey.Address(), height, signInfo.SignedBlocksCounter, k.MinSignedPerWindow(ctx)))
 	}
-	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)
-	if height > minHeight && signInfo.SignedBlocksCounter < k.MinSignedPerWindow(ctx) {
+	if signInfo.SignedBlocksCounter < k.MinSignedPerWindow(ctx) {
 		// Downtime confirmed, slash, revoke, and jail the validator
-		logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d", pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx)))
+		logger.Info(fmt.Sprintf("Validator %s below signed blocks threshold of %d", pubkey.Address(), k.MinSignedPerWindow(ctx)))
 		k.validatorSet.Slash(ctx, pubkey, height, power, k.SlashFractionDowntime(ctx))
 		k.validatorSet.Revoke(ctx, pubkey)
 		signInfo.JailedUntil = ctx.BlockHeader().Time + k.DowntimeUnbondDuration(ctx)
+		k.invalidateValidatorSigningBitArray(ctx, address, k.SignedBlocksWindow(ctx))
+		signInfo.SignedBlocksCounter = k.SignedBlocksWindow(ctx)
 	}
 
 	// Set the updated signing info

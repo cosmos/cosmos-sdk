@@ -42,7 +42,7 @@ func TestBeginBlocker(t *testing.T) {
 	require.Equal(t, ctx.BlockHeight(), info.StartHeight)
 	require.Equal(t, int64(1), info.IndexOffset)
 	require.Equal(t, int64(0), info.JailedUntil)
-	require.Equal(t, int64(1), info.SignedBlocksCounter)
+	require.Equal(t, int64(1000), info.SignedBlocksCounter)
 
 	height := int64(0)
 
@@ -74,4 +74,11 @@ func TestBeginBlocker(t *testing.T) {
 	validator, found := sk.GetValidatorByPubKey(ctx, pk)
 	require.True(t, found)
 	require.Equal(t, sdk.Unbonded, validator.GetStatus())
+
+	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(pk.Address()))
+	require.True(t, found)
+	require.Equal(t, int64(0), info.StartHeight)
+	require.Equal(t, int64(1502), info.IndexOffset)
+	require.Equal(t, int64(3600), info.JailedUntil)
+	require.Equal(t, int64(1000), info.SignedBlocksCounter)
 }

@@ -1,6 +1,6 @@
 # Integrate a Cosmos-SDK based blockchain as a Service Provider
 
-We define 'service providers' as entities that provide services for end-users that involve some form of interaction with a Cosmos-SDK based blockchain (this includes the Cosmos Hub). More specifically, this document will be focused around interactions with tokens.
+We define 'service providers' as entities providing services for end-users that involve some form of interaction with a Cosmos-SDK based blockchain (this includes the Cosmos Hub). More specifically, this document will be focused around interactions with tokens.
 
 This section does not concern wallet builders that want to provide Light-Client functionalities. Service providers are expected to act as trusted point of contact to the blockchain for their end-users. 
 
@@ -18,9 +18,9 @@ There are three main pieces to consider:
 
 We will describe the steps to run and interract with a full-node for the Cosmos Hub. For other SDK-based blockchain, the process should be similar. 
 
-First, you need to [install the software](https://github.com/cosmos/cosmos.network/blob/jordan-peng/vuepress-docs/docs/getting-started/installation.md).
+First, you need to [install the software](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/getting-started/installation.md).
 
-Then, you can start [running a full-node](https://github.com/cosmos/cosmos.network/blob/jordan-peng/vuepress-docs/docs/getting-started/full-node.md).
+Then, you can start [running a full-node](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/getting-started/full-node.md).
 
 ### Command-Line interface
 
@@ -71,11 +71,7 @@ Flags:
 - `--name`: Name of the key of the sending account.
 - `--to`: Address of the recipient.
 
-### Listening for incoming transaction
 
-The current recommended way to listen for incoming transaction is to periodically query the blockchain through the following endpoint of the LCD:
-
-TODO: Point to `/balance` endpoint in the API spec
 
 ## Setting up the Rest Server
 
@@ -91,6 +87,12 @@ Flags:
 - `--trust-node`: A boolean. If `true`, light-client verification is enabled. If `false`, it is disabled. For service providers, this should be set to `false`.
 - `--node`: This is where you indicate the address and the port of your full-node. The format is <full_node_address:full_node_port>. If the full-node is on the same machine, the address should be "tcp://localhost".
 - `--laddr`: This flag allows you to specify the address and port for the Rest Server. You will mostly use this flag only to specify the port, in which case just input "localhost" for the address. The format is <rest_server_address:port>.
+
+### Listening for incoming transaction
+
+The current recommended way to listen for incoming transaction is to periodically query the blockchain through the following endpoint of the LCD:
+
+[`/bank/balance/{account}`](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/light/api.md#bankbalanceaccount---get)
 
 ## Rest Token API
 

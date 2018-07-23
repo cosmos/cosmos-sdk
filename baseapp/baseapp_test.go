@@ -30,7 +30,7 @@ func newBaseApp(name string) *BaseApp {
 	db := dbm.NewMemDB()
 	codec := wire.NewCodec()
 	registerTestCodec(codec)
-	return NewBaseApp(name, codec, logger, db)
+	return NewBaseApp(name, logger, db, testTxDecoder(codec))
 }
 
 func registerTestCodec(cdc *wire.Codec) {
@@ -48,8 +48,6 @@ func registerTestCodec(cdc *wire.Codec) {
 func setupBaseApp(t *testing.T) (*BaseApp, *sdk.KVStoreKey, *sdk.KVStoreKey) {
 	app := newBaseApp(t.Name())
 	require.Equal(t, t.Name(), app.Name())
-
-	app.SetTxDecoder(testTxDecoder(app.cdc))
 
 	// make some cap keys
 	capKey1 := sdk.NewKVStoreKey("key1")
@@ -85,7 +83,7 @@ func TestLoadVersion(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, nil, logger, db)
+	app := NewBaseApp(name, logger, db, nil)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
@@ -114,7 +112,7 @@ func TestLoadVersion(t *testing.T) {
 	commitID2 := sdk.CommitID{2, res.Data}
 
 	// reload with LoadLatestVersion
-	app = NewBaseApp(name, nil, logger, db)
+	app = NewBaseApp(name, logger, db, nil)
 	app.MountStoresIAVL(capKey)
 	err = app.LoadLatestVersion(capKey)
 	require.Nil(t, err)
@@ -122,7 +120,7 @@ func TestLoadVersion(t *testing.T) {
 
 	// reload with LoadVersion, see if you can commit the same block and get
 	// the same result
-	app = NewBaseApp(name, nil, logger, db)
+	app = NewBaseApp(name, logger, db, nil)
 	app.MountStoresIAVL(capKey)
 	err = app.LoadVersion(1, capKey)
 	require.Nil(t, err)
@@ -142,9 +140,7 @@ func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, exp
 func TestOptionFunction(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	codec := wire.NewCodec()
-	registerTestCodec(codec)
-	bap := NewBaseApp("starting name", codec, logger, db, testChangeNameHelper("new name"))
+	bap := NewBaseApp("starting name", logger, db, nil, testChangeNameHelper("new name"))
 	require.Equal(t, bap.name, "new name", "BaseApp should have had name changed via option function")
 }
 
@@ -216,7 +212,7 @@ func TestInitChainer(t *testing.T) {
 	// we can reload the same  app later
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseApp(name, nil, logger, db)
+	app := NewBaseApp(name, logger, db, nil)
 	capKey := sdk.NewKVStoreKey("main")
 	capKey2 := sdk.NewKVStoreKey("key2")
 	app.MountStoresIAVL(capKey, capKey2)
@@ -257,7 +253,7 @@ func TestInitChainer(t *testing.T) {
 	require.Equal(t, value, res.Value)
 
 	// reload app
-	app = NewBaseApp(name, nil, logger, db)
+	app = NewBaseApp(name, logger, db, nil)
 	app.MountStoresIAVL(capKey, capKey2)
 	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	require.Nil(t, err)
@@ -444,9 +440,13 @@ func TestCheckTx(t *testing.T) {
 
 	app.InitChain(abci.RequestInitChain{})
 
+	// Create same codec used in txDecoder
+	codec := wire.NewCodec()
+	registerTestCodec(codec)
+
 	for i := int64(0); i < nTxs; i++ {
 		tx := newTxCounter(i, 0)
-		txBytes, err := app.cdc.MarshalBinary(tx)
+		txBytes, err := codec.MarshalBinary(tx)
 		require.NoError(t, err)
 		r := app.CheckTx(txBytes)
 		assert.True(t, r.IsOK(), fmt.Sprintf("%v", r))
@@ -481,6 +481,10 @@ func TestDeliverTx(t *testing.T) {
 	deliverKey := []byte("deliver-key")
 	app.Router().AddRoute(typeMsgCounter, handlerMsgCounter(t, capKey, deliverKey))
 
+	// Create same codec used in txDecoder
+	codec := wire.NewCodec()
+	registerTestCodec(codec)
+
 	nBlocks := 3
 	txPerHeight := 5
 	for blockN := 0; blockN < nBlocks; blockN++ {
@@ -488,7 +492,7 @@ func TestDeliverTx(t *testing.T) {
 		for i := 0; i < txPerHeight; i++ {
 			counter := int64(blockN*txPerHeight + i)
 			tx := newTxCounter(counter, counter)
-			txBytes, err := app.cdc.MarshalBinary(tx)
+			txBytes, err := codec.MarshalBinary(tx)
 			require.NoError(t, err)
 			res := app.DeliverTx(txBytes)
 			require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
@@ -518,12 +522,16 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	app.Router().AddRoute(typeMsgCounter, handlerMsgCounter(t, capKey, deliverKey))
 	app.Router().AddRoute(typeMsgCounter2, handlerMsgCounter(t, capKey, deliverKey2))
 
+	// Create same codec used in txDecoder
+	codec := wire.NewCodec()
+	registerTestCodec(codec)
+
 	// run a multi-msg tx
 	// with all msgs the same type
 	{
 		app.BeginBlock(abci.RequestBeginBlock{})
 		tx := newTxCounter(0, 0, 1, 2)
-		txBytes, err := app.cdc.MarshalBinary(tx)
+		txBytes, err := codec.MarshalBinary(tx)
 		require.NoError(t, err)
 		res := app.DeliverTx(txBytes)
 		require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
@@ -544,7 +552,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 		tx := newTxCounter(1, 3)
 		tx.Msgs = append(tx.Msgs, msgCounter2{0})
 		tx.Msgs = append(tx.Msgs, msgCounter2{1})
-		txBytes, err := app.cdc.MarshalBinary(tx)
+		txBytes, err := codec.MarshalBinary(tx)
 		require.NoError(t, err)
 		res := app.DeliverTx(txBytes)
 		require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
@@ -589,6 +597,10 @@ func TestSimulateTx(t *testing.T) {
 	})
 	app.InitChain(abci.RequestInitChain{})
 
+	// Create same codec used in txDecoder
+	codec := wire.NewCodec()
+	registerTestCodec(codec)
+
 	nBlocks := 3
 	for blockN := 0; blockN < nBlocks; blockN++ {
 		count := int64(blockN + 1)
@@ -607,7 +619,7 @@ func TestSimulateTx(t *testing.T) {
 		require.Equal(t, int64(gasConsumed), result.GasUsed)
 
 		// simulate by calling Query with encoded tx
-		txBytes, err := app.cdc.MarshalBinary(tx)
+		txBytes, err := codec.MarshalBinary(tx)
 		require.Nil(t, err)
 		query := abci.RequestQuery{
 			Path: "/app/simulate",
@@ -617,7 +629,8 @@ func TestSimulateTx(t *testing.T) {
 		require.True(t, queryResult.IsOK(), queryResult.Log)
 
 		var res sdk.Result
-		app.cdc.MustUnmarshalBinary(queryResult.Value, &res)
+		wire.Cdc.MustUnmarshalBinary(queryResult.Value, &res)
+		require.Nil(t, err, "Result unmarshalling failed")
 		require.True(t, res.IsOK(), res.Log)
 		require.Equal(t, gasConsumed, res.GasUsed, res.Log)
 		app.EndBlock(abci.RequestEndBlock{})

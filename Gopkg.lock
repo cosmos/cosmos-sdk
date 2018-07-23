@@ -646,6 +646,7 @@
     "github.com/tendermint/tendermint/rpc/lib/client",
     "github.com/tendermint/tendermint/rpc/lib/server",
     "github.com/tendermint/tendermint/types",
+    "github.com/tendermint/tendermint/version",
     "github.com/zondax/ledger-goclient",
     "golang.org/x/crypto/blowfish",
     "golang.org/x/crypto/ripemd160",

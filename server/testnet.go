@@ -9,11 +9,12 @@ import (
 
 	gc "github.com/cosmos/cosmos-sdk/server/config"
 
+	"os"
+
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
-	cmn "github.com/tendermint/tmlibs/common"
-	"os"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 var (
@@ -42,7 +43,7 @@ Example:
 	`,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			config := ctx.Config
-			err := testnetWithConfig(config, ctx, cdc, appInit)
+			err := testnetWithConfig(config, cdc, appInit)
 			return err
 		},
 	}
@@ -58,11 +59,12 @@ Example:
 	return cmd
 }
 
-func testnetWithConfig(config *cfg.Config, ctx *Context, cdc *wire.Codec, appInit AppInit) error {
-
+func testnetWithConfig(config *cfg.Config, cdc *wire.Codec, appInit AppInit) error {
 	outDir := viper.GetString(outputDir)
+	numValidators := viper.GetInt(nValidators)
+
 	// Generate private key, node ID, initial transaction
-	for i := 0; i < viper.GetInt(nValidators); i++ {
+	for i := 0; i < numValidators; i++ {
 		nodeDirName := fmt.Sprintf("%s%d", viper.GetString(nodeDirPrefix), i)
 		nodeDir := filepath.Join(outDir, nodeDirName, "gaiad")
 		clientDir := filepath.Join(outDir, nodeDirName, "gaiacli")
@@ -82,18 +84,9 @@ func testnetWithConfig(config *cfg.Config, ctx *Context, cdc *wire.Codec, appIni
 		}
 
 		config.Moniker = nodeDirName
-
-		ip := viper.GetString(startingIPAddress)
-		if len(ip) == 0 {
-			ip, err = externalIP()
-			if err != nil {
-				return err
-			}
-		} else {
-			ip, err = calculateIP(ip, i)
-			if err != nil {
-				return err
-			}
+		ip, err := getIP(i)
+		if err != nil {
+			return err
 		}
 
 		genTxConfig := gc.GenTx{
@@ -104,42 +97,29 @@ func testnetWithConfig(config *cfg.Config, ctx *Context, cdc *wire.Codec, appIni
 		}
 
 		// Run `init gen-tx` and generate initial transactions
-		cliPrint, genTxFile, err := gentxWithConfig(ctx, cdc, appInit, config, genTxConfig)
+		cliPrint, genTxFile, err := gentxWithConfig(cdc, appInit, config, genTxConfig)
 		if err != nil {
 			return err
 		}
 
 		// Save private key seed words
 		name := fmt.Sprintf("%v.json", "key_seed")
-		writePath := filepath.Join(clientDir)
-		file := filepath.Join(writePath, name)
-		err = cmn.EnsureDir(writePath, 0700)
-		if err != nil {
-			return err
-		}
-		err = cmn.WriteFile(file, cliPrint, 0600)
+		err = writeFile(name, clientDir, cliPrint)
 		if err != nil {
 			return err
 		}
 
 		// Gather gentxs folder
 		name = fmt.Sprintf("%v.json", nodeDirName)
-		writePath = filepath.Join(gentxsDir)
-		file = filepath.Join(writePath, name)
-		err = cmn.EnsureDir(writePath, 0700)
+		err = writeFile(name, gentxsDir, genTxFile)
 		if err != nil {
 			return err
 		}
-		err = cmn.WriteFile(file, genTxFile, 0644)
-		if err != nil {
-			return err
-		}
-
 	}
 
 	// Generate genesis.json and config.toml
 	chainID := "chain-" + cmn.RandStr(6)
-	for i := 0; i < viper.GetInt(nValidators); i++ {
+	for i := 0; i < numValidators; i++ {
 
 		nodeDirName := fmt.Sprintf("%s%d", viper.GetString(nodeDirPrefix), i)
 		nodeDir := filepath.Join(outDir, nodeDirName, "gaiad")
@@ -154,13 +134,43 @@ func testnetWithConfig(config *cfg.Config, ctx *Context, cdc *wire.Codec, appIni
 		config.SetRoot(nodeDir)
 
 		// Run `init` and generate genesis.json and config.toml
-		_, _, _, err := initWithConfig(ctx, cdc, appInit, config, initConfig)
+		_, _, _, err := initWithConfig(cdc, appInit, config, initConfig)
 		if err != nil {
 			return err
 		}
 	}
 
 	fmt.Printf("Successfully initialized %v node directories\n", viper.GetInt(nValidators))
+	return nil
+}
+
+func getIP(i int) (ip string, err error) {
+	ip = viper.GetString(startingIPAddress)
+	if len(ip) == 0 {
+		ip, err = externalIP()
+		if err != nil {
+			return "", err
+		}
+	} else {
+		ip, err = calculateIP(ip, i)
+		if err != nil {
+			return "", err
+		}
+	}
+	return ip, nil
+}
+
+func writeFile(name string, dir string, contents []byte) error {
+	writePath := filepath.Join(dir)
+	file := filepath.Join(writePath, name)
+	err := cmn.EnsureDir(writePath, 0700)
+	if err != nil {
+		return err
+	}
+	err = cmn.WriteFile(file, contents, 0600)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

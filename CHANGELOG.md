@@ -1,20 +1,193 @@
 # Changelog
 
-## 0.20.0
+## 0.22.0
 
-*TBD*
+*July 16th, 2018*
 
 BREAKING CHANGES
-* Change default ports from 466xx to 266xx
-* AltBytes renamed to Memo, now a string, max 100 characters, costs a bit of gas
+* [x/gov] Increase VotingPeriod, DepositPeriod, and MinDeposit
+
+IMPROVEMENTS
+* [gaiad] Default config updates:
+    - `timeout_commit=5000` so blocks only made every 5s
+    - `prof_listen_addr=localhost:6060` so profile server is on by default
+    - `p2p.send_rate` and `p2p.recv_rate` increases 10x (~5MB/s)
+
+BUG FIXES
+* [server] Fix to actually overwrite default tendermint config
+
+## 0.21.1
+
+*July 14th, 2018*
+
+BUG FIXES
+* [build] Added Ledger build support via `LEDGER_ENABLED=true|false`
+  * True by default except when cross-compiling
+
+## 0.21.0
+
+*July 13th, 2018*
+
+BREAKING CHANGES
+* [x/stake] Specify DelegatorAddress in MsgCreateValidator
+* [x/stake] Remove the use of global shares in the pool
+   * Remove the use of `PoolShares` type in `x/stake/validator` type - replace with `Status` `Tokens` fields
+* [x/auth] NewAccountMapper takes a constructor instead of a prototype
+* [keys] Keybase.Update function now takes in a function to get the newpass, rather than the password itself
 
 FEATURES
-* [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
+* [baseapp] NewBaseApp now takes option functions as parameters
 
-FIXES
-* \#1259 - fix bug where certain tests that could have a nil pointer in defer
+IMPROVEMENTS
+* Updated docs folder to accommodate cosmos.network docs project
+* [store] Added support for tracing multi-store operations via `--trace-store`
+* [store] Pruning strategy configurable with pruning flag on gaiad start
+
+BUG FIXES
+* \#1630 - redelegation nolonger removes tokens from the delegator liquid account
+* [keys] \#1629 - updating password no longer asks for a new password when the first entered password was incorrect
+* [lcd] importing an account would create a random account
+* [server] 'gaiad init' command family now writes provided name as the moniker in `config.toml`
+* [build] Added Ledger build support via `LEDGER_ENABLED=true|false`
+  * True by default except when cross-compiling
+
+## 0.20.0
+
+*July 10th, 2018*
+
+BREAKING CHANGES
+* msg.GetSignBytes() returns sorted JSON (by key)
+* msg.GetSignBytes() field changes
+    * `msg_bytes` -> `msgs`
+    * `fee_bytes` -> `fee`
+* Update Tendermint to v0.22.2
+    * Default ports changed from 466xx to 266xx
+    * Amino JSON uses type names instead of prefix bytes
+    * ED25519 addresses are the first 20-bytes of the SHA256 of the raw 32-byte
+      pubkey (Instead of RIPEMD160)
+    * go-crypto, abci, tmlibs have been merged into Tendermint
+      * The keys sub-module is now in the SDK
+    * Various other fixes
+* [auth] Signers of a transaction now only sign over their own account and sequence number
+* [auth] Removed MsgChangePubKey
+* [auth] Removed SetPubKey from account mapper
+* [auth] AltBytes renamed to Memo, now a string, max 100 characters, costs a bit of gas
+* [types] `GetMsg()` -> `GetMsgs()` as txs wrap many messages
+* [types] Removed GetMemo from Tx (it is still on StdTx)
+* [types] renamed rational.Evaluate to rational.Round{Int64, Int}
+* [types] Renamed `sdk.Address` to `sdk.AccAddress`/`sdk.ValAddress`
+* [types] `sdk.AccAddress`/`sdk.ValAddress` natively marshals to Bech32 in String, Sprintf (when used with `%s`), and MarshalJSON
+* [keys] Keybase and Ledger support from go-crypto merged into the SDK in the `crypto` folder
+* [cli] Rearranged commands under subcommands
+* [x/slashing] Update slashing for unbonding period
+  * Slash according to power at time of infraction instead of power at
+    time of discovery
+  * Iterate through unbonding delegations & redelegations which contributed
+    to an infraction, slash them proportional to their stake at the time
+  * Add REST endpoint to unrevoke a validator previously revoked for downtime
+  * Add REST endpoint to retrieve liveness signing information for a validator
+* [x/stake] Remove Tick and add EndBlocker
+* [x/stake] most index keys nolonger hold a value - inputs are rearranged to form the desired key
+* [x/stake] store-value for delegation, validator, ubd, and red do not hold duplicate information contained store-key
+* [x/stake] Introduce concept of unbonding for delegations and validators
+  * `gaiacli stake unbond` replaced with `gaiacli stake begin-unbonding`
+  * Introduced:
+    * `gaiacli stake complete-unbonding`
+    * `gaiacli stake begin-redelegation`
+    * `gaiacli stake complete-redelegation`
+* [lcd] Switch key creation output to return bech32
+* [lcd] Removed shorthand CLI flags (`a`, `c`, `n`, `o`)
+* [gaiad] genesis transactions now use bech32 addresses / pubkeys
+* [gov] VoteStatus renamed to ProposalStatus
+* [gov] VoteOption, ProposalType, and ProposalStatus all marshal to string form in JSON
+
+DEPRECATED
+* [cli] Deprecated `--name` flag in commands that send txs, in favor of `--from`
+
+FEATURES
+* [x/gov] Implemented MVP
+  * Supported proposal types: just binary (pass/fail) TextProposals for now
+  * Proposals need deposits to be votable; deposits are burned if proposal fails
+  * Delegators delegate votes to validator by default but can override (for their stake)
+* [gaiacli] Ledger support added
+  - You can now use a Ledger with `gaiacli --ledger` for all key-related commands
+  - Ledger keys can be named and tracked locally in the key DB
+* [gaiacli] You can now attach a simple text-only memo to any transaction, with the `--memo` flag
+* [gaiacli] added the following flags for commands that post transactions to the chain:
+  * async -- send the tx without waiting for a tendermint response
+  * json  -- return the output in json format for increased readability
+  * print-response -- return the tx response. (includes fields like gas cost)
+* [lcd] Queried TXs now include the tx hash to identify each tx
+* [mockapp] CompleteSetup() no longer takes a testing parameter
+* [x/bank] Add benchmarks for signing and delivering a block with a single bank transaction
+  * Run with `cd x/bank && go test --bench=.`
+* [tools] make get_tools installs tendermint's linter, and gometalinter
+* [tools] Switch gometalinter to the stable version
+* [tools] Add the following linters
+  * misspell
+  * gofmt
+  * go vet -composites=false
+  * unconvert
+  * ineffassign
+  * errcheck
+  * unparam
+  * gocyclo
+* [tools] Added `make format` command to automate fixing misspell and gofmt errors.
+* [server] Default config now creates a profiler at port 6060, and increase p2p send/recv rates
+* [types] Switches internal representation of Int/Uint/Rat to use pointers
+* [types] Added MinInt and MinUint functions
+* [gaiad] `unsafe_reset_all` now resets addrbook.json
+* [democoin] add x/oracle, x/assoc
+* [tests] created a randomized testing framework. 
+  - Currently bank has limited functionality in the framework
+  - Auth has its invariants checked within the framework
+* [tests] Add WaitForNextNBlocksTM helper method
+* [keys] New keys now have 24 word recovery keys, for heightened security
+- [keys] Add a temporary method for exporting the private key
+
+IMPROVEMENTS
+* [x/bank] Now uses go-wire codec instead of 'encoding/json'
+* [x/auth] Now uses go-wire codec instead of 'encoding/json'
+* revised use of endblock and beginblock
+* [stake] module reorganized to include `types` and `keeper` package
+* [stake] keeper always loads the store (instead passing around which doesn't really boost efficiency)
+* [stake] edit-validator changes now can use the keyword [do-not-modify] to not modify unspecified `--flag` (aka won't set them to `""` value)
+* [stake] offload more generic functionality from the handler into the keeper
+* [stake] clearer staking logic
+* [types] added common tag constants
+* [keys] improve error message when deleting non-existent key
+* [gaiacli] improve error messages on `send` and `account` commands
+* added contributing guidelines
+* [docs] Added commands for governance CLI on testnet README
+
+BUG FIXES
+* [x/slashing] \#1510 Unrevoked validators cannot un-revoke themselves
+* [x/stake] \#1513 Validators slashed to zero power are unbonded and removed from the store
+* [x/stake] \#1567 Validators decreased in power but not unbonded are now updated in Tendermint
+* [x/stake] error strings lower case
+* [x/stake] pool loose tokens now accounts for unbonding and unbonding tokens not associated with any validator
+* [x/stake] fix revoke bytes ordering (was putting revoked candidates at the top of the list)
+* [x/stake] bond count was counting revoked validators as bonded, fixed
+* [gaia] Added self delegation for validators in the genesis creation
+* [lcd] tests now don't depend on raw json text
 * Retry on HTTP request failure in CLI tests, add option to retry tests in Makefile
-* Fixed bug where chain ID wasn't passed properly in x/bank REST handler
+* Fixed bug where chain ID wasn't passed properly in x/bank REST handler, removed Viper hack from ante handler
+* Fixed bug where `democli account` didn't decode the account data correctly
+* \#872  - recovery phrases no longer all end in `abandon`
+* \#887  - limit the size of rationals that can be passed in from user input
+* \#1052 - Make all now works
+* \#1258 - printing big.rat's can no longer overflow int64
+* \#1259 - fix bug where certain tests that could have a nil pointer in defer
+* \#1343 - fixed unnecessary parallelism in CI
+* \#1353 - CLI: Show pool shares fractions in human-readable format
+* \#1367 - set ChainID in InitChain
+* \#1461 - CLI tests now no longer reset your local environment data
+* \#1505 - `gaiacli stake validator` no longer panics if validator doesn't exist
+* \#1565 - fix cliff validator persisting when validator set shrinks from max
+* \#1287 - prevent zero power validators at genesis
+* [x/stake] fix bug when unbonding/redelegating using `--shares-percent`
+* \#1010 - two validators can't bond with the same pubkey anymore
+
 
 ## 0.19.0
 

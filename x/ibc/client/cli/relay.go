@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/tmlibs/log"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,7 +27,7 @@ const (
 
 type relayCommander struct {
 	cdc       *wire.Codec
-	address   sdk.Address
+	address   sdk.AccAddress
 	decoder   auth.AccountDecoder
 	mainStore string
 	ibcStore  string
@@ -71,6 +71,7 @@ func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
+// nolint: unparam
 func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	fromChainID := viper.GetString(FlagFromChainID)
 	fromChainNode := viper.GetString(FlagFromChainNode)
@@ -85,6 +86,8 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	c.loop(fromChainID, fromChainNode, toChainID, toChainNode)
 }
 
+// This is nolinted as someone is in the process of refactoring this to remove the goto
+// nolint: gocyclo
 func (c relayCommander) loop(fromChainID, fromChainNode, toChainID,
 	toChainNode string) {
 
@@ -189,7 +192,7 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 	}
 
 	ctx := context.NewCoreContextFromViper().WithSequence(sequence)
-	res, err := ctx.SignAndBuild(ctx.FromAddressName, passphrase, msg, c.cdc)
+	res, err := ctx.SignAndBuild(ctx.FromAddressName, passphrase, []sdk.Msg{msg}, c.cdc)
 	if err != nil {
 		panic(err)
 	}

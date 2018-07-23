@@ -31,8 +31,8 @@ func (tx kvstoreTx) Type() string {
 	return "kvstore"
 }
 
-func (tx kvstoreTx) GetMsg() sdk.Msg {
-	return tx
+func (tx kvstoreTx) GetMsgs() []sdk.Msg {
+	return []sdk.Msg{tx}
 }
 
 func (tx kvstoreTx) GetMemo() string {
@@ -48,7 +48,7 @@ func (tx kvstoreTx) ValidateBasic() sdk.Error {
 	return nil
 }
 
-func (tx kvstoreTx) GetSigners() []sdk.Address {
+func (tx kvstoreTx) GetSigners() []sdk.AccAddress {
 	return nil
 }
 

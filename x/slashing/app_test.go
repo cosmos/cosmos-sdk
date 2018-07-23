@@ -5,19 +5,18 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/mock"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
+	"github.com/cosmos/cosmos-sdk/x/mock"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var (
 	priv1 = crypto.GenPrivKeyEd25519()
-	addr1 = priv1.PubKey().Address()
+	addr1 = sdk.AccAddress(priv1.PubKey().Address())
 	coins = sdk.Coins{sdk.NewCoin("foocoin", 10)}
 )
 
@@ -28,15 +27,18 @@ func getMockApp(t *testing.T) (*mock.App, stake.Keeper, Keeper) {
 	RegisterWire(mapp.Cdc)
 	keyStake := sdk.NewKVStoreKey("stake")
 	keySlashing := sdk.NewKVStoreKey("slashing")
+	keyParams := sdk.NewKVStoreKey("params")
 	coinKeeper := bank.NewKeeper(mapp.AccountMapper)
+	paramsKeeper := params.NewKeeper(mapp.Cdc, keyParams)
 	stakeKeeper := stake.NewKeeper(mapp.Cdc, keyStake, coinKeeper, mapp.RegisterCodespace(stake.DefaultCodespace))
-	keeper := NewKeeper(mapp.Cdc, keySlashing, stakeKeeper, mapp.RegisterCodespace(DefaultCodespace))
+
+	keeper := NewKeeper(mapp.Cdc, keySlashing, stakeKeeper, paramsKeeper.Getter(), mapp.RegisterCodespace(DefaultCodespace))
 	mapp.Router().AddRoute("stake", stake.NewHandler(stakeKeeper))
 	mapp.Router().AddRoute("slashing", NewHandler(keeper))
 
 	mapp.SetEndBlocker(getEndBlocker(stakeKeeper))
 	mapp.SetInitChainer(getInitChainer(mapp, stakeKeeper))
-	mapp.CompleteSetup(t, []*sdk.KVStoreKey{keyStake, keySlashing})
+	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keySlashing, keyParams}))
 
 	return mapp, stakeKeeper, keeper
 }
@@ -55,24 +57,32 @@ func getEndBlocker(keeper stake.Keeper) sdk.EndBlocker {
 func getInitChainer(mapp *mock.App, keeper stake.Keeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
-		stake.InitGenesis(ctx, keeper, stake.DefaultGenesisState())
-		return abci.ResponseInitChain{}
+		stakeGenesis := stake.DefaultGenesisState()
+		stakeGenesis.Pool.LooseTokens = sdk.NewRat(100000)
+		validators, err := stake.InitGenesis(ctx, keeper, stakeGenesis)
+		if err != nil {
+			panic(err)
+		}
+
+		return abci.ResponseInitChain{
+			Validators: validators,
+		}
 	}
 }
 
 func checkValidator(t *testing.T, mapp *mock.App, keeper stake.Keeper,
-	addr sdk.Address, expFound bool) stake.Validator {
+	addr sdk.AccAddress, expFound bool) stake.Validator {
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	validator, found := keeper.GetValidator(ctxCheck, addr1)
-	assert.Equal(t, expFound, found)
+	require.Equal(t, expFound, found)
 	return validator
 }
 
 func checkValidatorSigningInfo(t *testing.T, mapp *mock.App, keeper Keeper,
-	addr sdk.Address, expFound bool) ValidatorSigningInfo {
+	addr sdk.ValAddress, expFound bool) ValidatorSigningInfo {
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	signingInfo, found := keeper.getValidatorSigningInfo(ctxCheck, addr)
-	assert.Equal(t, expFound, found)
+	require.Equal(t, expFound, found)
 	return signingInfo
 }
 
@@ -92,20 +102,20 @@ func TestSlashingMsgs(t *testing.T) {
 	createValidatorMsg := stake.NewMsgCreateValidator(
 		addr1, priv1.PubKey(), bondCoin, description,
 	)
-	mock.SignCheckDeliver(t, mapp.BaseApp, createValidatorMsg, []int64{0}, []int64{0}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{createValidatorMsg}, []int64{0}, []int64{0}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin.Minus(bondCoin)})
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 
 	validator := checkValidator(t, mapp, stakeKeeper, addr1, true)
 	require.Equal(t, addr1, validator.Owner)
-	require.Equal(t, sdk.Bonded, validator.Status())
-	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.PoolShares.Bonded()))
-	unrevokeMsg := MsgUnrevoke{ValidatorAddr: validator.PubKey.Address()}
+	require.Equal(t, sdk.Bonded, validator.Status)
+	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.BondedTokens()))
+	unrevokeMsg := MsgUnrevoke{ValidatorAddr: sdk.AccAddress(validator.PubKey.Address())}
 
 	// no signing info yet
-	checkValidatorSigningInfo(t, mapp, keeper, addr1, false)
+	checkValidatorSigningInfo(t, mapp, keeper, sdk.ValAddress(addr1), false)
 
 	// unrevoke should fail with unknown validator
-	res := mock.SignCheck(t, mapp.BaseApp, unrevokeMsg, []int64{0}, []int64{1}, priv1)
-	require.Equal(t, sdk.ToABCICode(DefaultCodespace, CodeInvalidValidator), res.Code)
+	res := mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{unrevokeMsg}, []int64{0}, []int64{1}, false, priv1)
+	require.Equal(t, sdk.ToABCICode(DefaultCodespace, CodeValidatorNotRevoked), res.Code)
 }

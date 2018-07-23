@@ -3,26 +3,25 @@ package bank
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/mock"
+	"github.com/cosmos/cosmos-sdk/x/mock"
 
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // test bank module in a mock application
 var (
 	priv1     = crypto.GenPrivKeyEd25519()
-	addr1     = priv1.PubKey().Address()
+	addr1     = sdk.AccAddress(priv1.PubKey().Address())
 	priv2     = crypto.GenPrivKeyEd25519()
-	addr2     = priv2.PubKey().Address()
-	addr3     = crypto.GenPrivKeyEd25519().PubKey().Address()
+	addr2     = sdk.AccAddress(priv2.PubKey().Address())
+	addr3     = sdk.AccAddress(crypto.GenPrivKeyEd25519().PubKey().Address())
 	priv4     = crypto.GenPrivKeyEd25519()
-	addr4     = priv4.PubKey().Address()
+	addr4     = sdk.AccAddress(priv4.PubKey().Address())
 	coins     = sdk.Coins{sdk.NewCoin("foocoin", 10)}
 	halfCoins = sdk.Coins{sdk.NewCoin("foocoin", 5)}
 	manyCoins = sdk.Coins{sdk.NewCoin("foocoin", 1), sdk.NewCoin("barcoin", 1)}
@@ -77,13 +76,8 @@ var (
 
 // initialize the mock application for this module
 func getMockApp(t *testing.T) *mock.App {
-	mapp := mock.NewApp()
-
-	RegisterWire(mapp.Cdc)
-	coinKeeper := NewKeeper(mapp.AccountMapper)
-	mapp.Router().AddRoute("bank", NewHandler(coinKeeper))
-
-	mapp.CompleteSetup(t, []*sdk.KVStoreKey{})
+	mapp, err := getBenchmarkMockApp()
+	require.NoError(t, err)
 	return mapp
 }
 
@@ -104,28 +98,28 @@ func TestMsgSendWithAccounts(t *testing.T) {
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	res1 := mapp.AccountMapper.GetAccount(ctxCheck, addr1)
 	require.NotNil(t, res1)
-	assert.Equal(t, acc, res1.(*auth.BaseAccount))
+	require.Equal(t, acc, res1.(*auth.BaseAccount))
 
 	// Run a CheckDeliver
-	mock.SignCheckDeliver(t, mapp.BaseApp, sendMsg1, []int64{0}, []int64{0}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{sendMsg1}, []int64{0}, []int64{0}, true, priv1)
 
 	// Check balances
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("foocoin", 57)})
 	mock.CheckBalance(t, mapp, addr2, sdk.Coins{sdk.NewCoin("foocoin", 10)})
 
 	// Delivering again should cause replay error
-	mock.SignCheckDeliver(t, mapp.BaseApp, sendMsg1, []int64{0}, []int64{0}, false, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{sendMsg1, sendMsg2}, []int64{0}, []int64{0}, false, priv1)
 
 	// bumping the txnonce number without resigning should be an auth error
 	mapp.BeginBlock(abci.RequestBeginBlock{})
-	tx := mock.GenTx(sendMsg1, []int64{0}, []int64{0}, priv1)
+	tx := mock.GenTx([]sdk.Msg{sendMsg1}, []int64{0}, []int64{0}, priv1)
 	tx.Signatures[0].Sequence = 1
 	res := mapp.Deliver(tx)
 
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
+	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
 
 	// resigning the tx with the bumped sequence should work
-	mock.SignCheckDeliver(t, mapp.BaseApp, sendMsg1, []int64{0}, []int64{1}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{sendMsg1, sendMsg2}, []int64{0}, []int64{1}, true, priv1)
 }
 
 func TestMsgSendMultipleOut(t *testing.T) {
@@ -145,7 +139,7 @@ func TestMsgSendMultipleOut(t *testing.T) {
 	mock.SetGenesis(mapp, accs)
 
 	// Simulate a Block
-	mock.SignCheckDeliver(t, mapp.BaseApp, sendMsg2, []int64{0}, []int64{0}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{sendMsg2}, []int64{0}, []int64{0}, true, priv1)
 
 	// Check balances
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("foocoin", 32)})
@@ -173,7 +167,7 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 	mock.SetGenesis(mapp, accs)
 
 	// CheckDeliver
-	mock.SignCheckDeliver(t, mapp.BaseApp, sendMsg3, []int64{0, 2}, []int64{0, 0}, true, priv1, priv4)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{sendMsg3}, []int64{0, 2}, []int64{0, 0}, true, priv1, priv4)
 
 	// Check balances
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("foocoin", 32)})
@@ -194,14 +188,14 @@ func TestMsgSendDependent(t *testing.T) {
 	mock.SetGenesis(mapp, accs)
 
 	// CheckDeliver
-	mock.SignCheckDeliver(t, mapp.BaseApp, sendMsg1, []int64{0}, []int64{0}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{sendMsg1}, []int64{0}, []int64{0}, true, priv1)
 
 	// Check balances
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("foocoin", 32)})
 	mock.CheckBalance(t, mapp, addr2, sdk.Coins{sdk.NewCoin("foocoin", 10)})
 
 	// Simulate a Block
-	mock.SignCheckDeliver(t, mapp.BaseApp, sendMsg4, []int64{1}, []int64{0}, true, priv2)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{sendMsg4}, []int64{1}, []int64{0}, true, priv2)
 
 	// Check balances
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("foocoin", 42)})

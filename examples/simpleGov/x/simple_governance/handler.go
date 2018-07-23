@@ -6,7 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // Minimum proposal deposit
@@ -37,42 +38,48 @@ func NewHandler(k Keeper) sdk.Handler {
 
 // NewEndBlocker checks proposals and generates a EndBlocker
 func NewEndBlocker(k Keeper) sdk.EndBlocker {
-	return func(ctx sdk.Context, req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-		err := checkProposal(ctx, k)
+	return sdk.EndBlocker(func(ctx sdk.Context, req types.RequestEndBlock) types.ResponseEndBlock {
+		newTags := sdk.NewTags()
+		tags, err := checkProposal(ctx, k, newTags)
 		if err != nil {
 			panic(err)
 		}
-		return
-	}
+		return abci.ResponseEndBlock{
+			Tags: tags,
+		}
+	})
 }
 
 // checkProposal checks if the proposal reached the end of the voting period
 // and handles the logic of closing it
-func checkProposal(ctx sdk.Context, k Keeper) sdk.Error {
+func checkProposal(ctx sdk.Context, k Keeper, tags sdk.Tags) (sdk.Tags, sdk.Error) {
 	proposal, err := k.ProposalQueueHead(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
 	// Proposal reached the end of the voting period
 	if ctx.BlockHeight() >= proposal.SubmitBlock+votingPeriod && proposal.IsOpen() {
 		k.ProposalQueuePop(ctx)
-
+		proposalIDBytes := k.cdc.MustMarshalBinaryBare(proposal.ID)
 		nonAbstainTotal := proposal.YesVotes + proposal.NoVotes
 		if float64(proposal.YesVotes)/float64(nonAbstainTotal) > float64(0.5) { // TODO: Deal with decimals
 
 			// Refund deposit
 			_, _, err := k.ck.AddCoins(ctx, proposal.Submitter, proposal.Deposit)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			proposal.State = "Accepted"
+			tags.AppendTag("action", []byte("proposalPassed"))
+			tags.AppendTag("proposalId", proposalIDBytes)
 		} else {
 			proposal.State = "Rejected"
+			tags.AppendTag("action", []byte("proposalRejected"))
+			tags.AppendTag("proposalId", proposalIDBytes)
 		}
-		return checkProposal(ctx, k)
+		return checkProposal(ctx, k, tags)
 	}
-	return nil
+	return tags, nil
 }
 
 // handleVoteMsg handles the logic of a SubmitProposalMsg
@@ -90,13 +97,14 @@ func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg SubmitProposalMsg) s
 
 	if msg.Deposit.AmountOf("Atom").GT(minDeposit) ||
 		msg.Deposit.AmountOf("Atom").Equal(minDeposit) {
+		proposalID := k.NewProposalID(ctx)
 		proposal := NewProposal(
+			proposalID,
 			msg.Title,
 			msg.Description,
 			msg.Submitter,
 			ctx.BlockHeight(),
 			msg.Deposit)
-		proposalID := k.NewProposalID(ctx)
 		k.SetProposal(ctx, proposalID, proposal)
 		return sdk.Result{
 			Tags: sdk.NewTags(
@@ -136,7 +144,7 @@ func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
 	if voterOption == "" && err != nil {
 		// voter has not voted yet
 		for _, delegation := range delegatedTo {
-			bondShares := delegation.GetBondShares().Evaluate()
+			bondShares := delegation.GetBondShares().EvaluateBig().Int64()
 			err = proposal.updateTally(msg.Option, bondShares)
 			if err != nil {
 				return err.Result()
@@ -145,7 +153,7 @@ func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
 	} else {
 		// voter has already voted
 		for _, delegation := range delegatedTo {
-			bondShares := delegation.GetBondShares().Evaluate()
+			bondShares := delegation.GetBondShares().EvaluateBig().Int64()
 			// update previous vote with new one
 			err = proposal.updateTally(voterOption, -bondShares)
 			if err != nil {

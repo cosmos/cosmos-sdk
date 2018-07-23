@@ -1,6 +1,8 @@
 package types
 
 import (
+	"encoding/json"
+
 	"math/big"
 )
 
@@ -35,6 +37,13 @@ func mod(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Mod(i, i2) }
 
 func neg(i *big.Int) *big.Int { return new(big.Int).Neg(i) }
 
+func min(i *big.Int, i2 *big.Int) *big.Int {
+	if i.Cmp(i2) == 1 {
+		return new(big.Int).Set(i2)
+	}
+	return new(big.Int).Set(i)
+}
+
 // MarshalAmino for custom encoding scheme
 func marshalAmino(i *big.Int) (string, error) {
 	bz, err := i.MarshalText()
@@ -46,31 +55,42 @@ func unmarshalAmino(i *big.Int, text string) (err error) {
 	return i.UnmarshalText([]byte(text))
 }
 
-// MarshalJSON for custom encodig scheme
+// MarshalJSON for custom encoding scheme
+// Must be encoded as a string for JSON precision
 func marshalJSON(i *big.Int) ([]byte, error) {
-	return i.MarshalText()
+	text, err := i.MarshalText()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(string(text))
 }
 
 // UnmarshalJSON for custom decoding scheme
+// Must be encoded as a string for JSON precision
 func unmarshalJSON(i *big.Int, bz []byte) error {
-	return i.UnmarshalText(bz)
+	var text string
+	err := json.Unmarshal(bz, &text)
+	if err != nil {
+		return err
+	}
+	return i.UnmarshalText([]byte(text))
 }
 
 // Int wraps integer with 256 bit range bound
 // Checks overflow, underflow and division by zero
 // Exists in range from -(2^255-1) to 2^255-1
 type Int struct {
-	i big.Int
+	i *big.Int
 }
 
 // BigInt converts Int to big.Int
 func (i Int) BigInt() *big.Int {
-	return new(big.Int).Set(&(i.i))
+	return new(big.Int).Set(i.i)
 }
 
 // NewInt constructs Int from int64
 func NewInt(n int64) Int {
-	return Int{*big.NewInt(n)}
+	return Int{big.NewInt(n)}
 }
 
 // NewIntFromBigInt constructs Int from big.Int
@@ -78,7 +98,7 @@ func NewIntFromBigInt(i *big.Int) Int {
 	if i.BitLen() > 255 {
 		panic("NewIntFromBigInt() out of bound")
 	}
-	return Int{*i}
+	return Int{i}
 }
 
 // NewIntFromString constructs Int from string
@@ -92,7 +112,7 @@ func NewIntFromString(s string) (res Int, ok bool) {
 		ok = false
 		return
 	}
-	return Int{*i}, true
+	return Int{i}, true
 }
 
 // NewIntWithDecimal constructs Int with decimal
@@ -103,14 +123,14 @@ func NewIntWithDecimal(n int64, dec int) Int {
 	if i.BitLen() > 255 {
 		panic("NewIntWithDecimal() out of bound")
 	}
-	return Int{*i}
+	return Int{i}
 }
 
 // ZeroInt returns Int value with zero
-func ZeroInt() Int { return Int{*big.NewInt(0)} }
+func ZeroInt() Int { return Int{big.NewInt(0)} }
 
 // OneInt returns Int value with one
-func OneInt() Int { return Int{*big.NewInt(1)} }
+func OneInt() Int { return Int{big.NewInt(1)} }
 
 // Int64 converts Int to int64
 // Panics if the value is out of range
@@ -133,22 +153,22 @@ func (i Int) Sign() int {
 
 // Equal compares two Ints
 func (i Int) Equal(i2 Int) bool {
-	return equal(&(i.i), &(i2.i))
+	return equal(i.i, i2.i)
 }
 
 // GT returns true if first Int is greater than second
 func (i Int) GT(i2 Int) bool {
-	return gt((&i.i), &(i2.i))
+	return gt(i.i, i2.i)
 }
 
 // LT returns true if first Int is lesser than second
 func (i Int) LT(i2 Int) bool {
-	return lt((&i.i), &(i2.i))
+	return lt(i.i, i2.i)
 }
 
 // Add adds Int from another
 func (i Int) Add(i2 Int) (res Int) {
-	res = Int{*add(&(i.i), &(i2.i))}
+	res = Int{add(i.i, i2.i)}
 	// Check overflow
 	if res.i.BitLen() > 255 {
 		panic("Int overflow")
@@ -163,7 +183,7 @@ func (i Int) AddRaw(i2 int64) Int {
 
 // Sub subtracts Int from another
 func (i Int) Sub(i2 Int) (res Int) {
-	res = Int{*sub(&(i.i), &(i2.i))}
+	res = Int{sub(i.i, i2.i)}
 	// Check overflow
 	if res.i.BitLen() > 255 {
 		panic("Int overflow")
@@ -182,7 +202,7 @@ func (i Int) Mul(i2 Int) (res Int) {
 	if i.i.BitLen()+i2.i.BitLen()-1 > 255 {
 		panic("Int overflow")
 	}
-	res = Int{*mul(&(i.i), &(i2.i))}
+	res = Int{mul(i.i, i2.i)}
 	// Check overflow if sign of both are same
 	if res.i.BitLen() > 255 {
 		panic("Int overflow")
@@ -201,7 +221,7 @@ func (i Int) Div(i2 Int) (res Int) {
 	if i2.i.Sign() == 0 {
 		panic("Division by zero")
 	}
-	return Int{*div(&(i.i), &(i2.i))}
+	return Int{div(i.i, i2.i)}
 }
 
 // DivRaw divides Int with int64
@@ -211,46 +231,67 @@ func (i Int) DivRaw(i2 int64) Int {
 
 // Neg negates Int
 func (i Int) Neg() (res Int) {
-	return Int{*neg(&(i.i))}
+	return Int{neg(i.i)}
+}
+
+// Return the minimum of the ints
+func MinInt(i1, i2 Int) Int {
+	return Int{min(i1.BigInt(), i2.BigInt())}
+}
+
+func (i Int) String() string {
+	return i.i.String()
 }
 
 // MarshalAmino defines custom encoding scheme
 func (i Int) MarshalAmino() (string, error) {
-	return marshalAmino(&(i.i))
+	if i.i == nil { // Necessary since default Uint initialization has i.i as nil
+		i.i = new(big.Int)
+	}
+	return marshalAmino(i.i)
 }
 
 // UnmarshalAmino defines custom decoding scheme
 func (i *Int) UnmarshalAmino(text string) error {
-	return unmarshalAmino(&(i.i), text)
+	if i.i == nil { // Necessary since default Int initialization has i.i as nil
+		i.i = new(big.Int)
+	}
+	return unmarshalAmino(i.i, text)
 }
 
 // MarshalJSON defines custom encoding scheme
 func (i Int) MarshalJSON() ([]byte, error) {
-	return marshalJSON(&(i.i))
+	if i.i == nil { // Necessary since default Uint initialization has i.i as nil
+		i.i = new(big.Int)
+	}
+	return marshalJSON(i.i)
 }
 
 // UnmarshalJSON defines custom decoding scheme
 func (i *Int) UnmarshalJSON(bz []byte) error {
-	return unmarshalJSON(&(i.i), bz)
+	if i.i == nil { // Necessary since default Int initialization has i.i as nil
+		i.i = new(big.Int)
+	}
+	return unmarshalJSON(i.i, bz)
 }
 
 // Int wraps integer with 256 bit range bound
 // Checks overflow, underflow and division by zero
 // Exists in range from 0 to 2^256-1
 type Uint struct {
-	i big.Int
+	i *big.Int
 }
 
 // BigInt converts Uint to big.Unt
 func (i Uint) BigInt() *big.Int {
-	return new(big.Int).Set(&(i.i))
+	return new(big.Int).Set(i.i)
 }
 
 // NewUint constructs Uint from int64
 func NewUint(n uint64) Uint {
 	i := new(big.Int)
 	i.SetUint64(n)
-	return Uint{*i}
+	return Uint{i}
 }
 
 // NewUintFromBigUint constructs Uint from big.Uint
@@ -259,7 +300,7 @@ func NewUintFromBigInt(i *big.Int) Uint {
 	if i.Sign() == -1 || i.Sign() == 1 && i.BitLen() > 256 {
 		panic("Uint overflow")
 	}
-	return Uint{*i}
+	return Uint{i}
 }
 
 // NewUintFromString constructs Uint from string
@@ -273,7 +314,7 @@ func NewUintFromString(s string) (res Uint, ok bool) {
 		ok = false
 		return
 	}
-	return Uint{*i}, true
+	return Uint{i}, true
 }
 
 // NewUintWithDecimal constructs Uint with decimal
@@ -284,14 +325,14 @@ func NewUintWithDecimal(n int64, dec int) Uint {
 	if i.Sign() == -1 || i.Sign() == 1 && i.BitLen() > 256 {
 		panic("NewUintWithDecimal() out of bound")
 	}
-	return Uint{*i}
+	return Uint{i}
 }
 
 // ZeroUint returns Uint value with zero
-func ZeroUint() Uint { return Uint{*big.NewInt(0)} }
+func ZeroUint() Uint { return Uint{big.NewInt(0)} }
 
 // OneUint returns Uint value with one
-func OneUint() Uint { return Uint{*big.NewInt(1)} }
+func OneUint() Uint { return Uint{big.NewInt(1)} }
 
 // Uint64 converts Uint to uint64
 // Panics if the value is out of range
@@ -314,22 +355,22 @@ func (i Uint) Sign() int {
 
 // Equal compares two Uints
 func (i Uint) Equal(i2 Uint) bool {
-	return equal(&(i.i), &(i2.i))
+	return equal(i.i, i2.i)
 }
 
 // GT returns true if first Uint is greater than second
 func (i Uint) GT(i2 Uint) bool {
-	return gt(&(i.i), &(i2.i))
+	return gt(i.i, i2.i)
 }
 
 // LT returns true if first Uint is lesser than second
 func (i Uint) LT(i2 Uint) bool {
-	return lt(&(i.i), &(i2.i))
+	return lt(i.i, i2.i)
 }
 
 // Add adds Uint from another
 func (i Uint) Add(i2 Uint) (res Uint) {
-	res = Uint{*add(&(i.i), &(i2.i))}
+	res = Uint{add(i.i, i2.i)}
 	// Check overflow
 	if res.Sign() == -1 || res.Sign() == 1 && res.i.BitLen() > 256 {
 		panic("Uint overflow")
@@ -344,7 +385,7 @@ func (i Uint) AddRaw(i2 uint64) Uint {
 
 // Sub subtracts Uint from another
 func (i Uint) Sub(i2 Uint) (res Uint) {
-	res = Uint{*sub(&(i.i), &(i2.i))}
+	res = Uint{sub(i.i, i2.i)}
 	// Check overflow
 	if res.Sign() == -1 || res.Sign() == 1 && res.i.BitLen() > 256 {
 		panic("Uint overflow")
@@ -363,7 +404,7 @@ func (i Uint) Mul(i2 Uint) (res Uint) {
 	if i.i.BitLen()+i2.i.BitLen()-1 > 256 {
 		panic("Uint overflow")
 	}
-	res = Uint{*mul(&(i.i), &(i2.i))}
+	res = Uint{mul(i.i, i2.i)}
 	// Check overflow
 	if res.Sign() == -1 || res.Sign() == 1 && res.i.BitLen() > 256 {
 		panic("Uint overflow")
@@ -382,7 +423,7 @@ func (i Uint) Div(i2 Uint) (res Uint) {
 	if i2.Sign() == 0 {
 		panic("division-by-zero")
 	}
-	return Uint{*div(&(i.i), &(i2.i))}
+	return Uint{div(i.i, i2.i)}
 }
 
 // Div divides Uint with int64
@@ -390,22 +431,39 @@ func (i Uint) DivRaw(i2 uint64) Uint {
 	return i.Div(NewUint(i2))
 }
 
+// Return the minimum of the Uints
+func MinUint(i1, i2 Uint) Uint {
+	return Uint{min(i1.BigInt(), i2.BigInt())}
+}
+
 // MarshalAmino defines custom encoding scheme
 func (i Uint) MarshalAmino() (string, error) {
-	return marshalAmino(&(i.i))
+	if i.i == nil { // Necessary since default Uint initialization has i.i as nil
+		i.i = new(big.Int)
+	}
+	return marshalAmino(i.i)
 }
 
 // UnmarshalAmino defines custom decoding scheme
 func (i *Uint) UnmarshalAmino(text string) error {
-	return unmarshalAmino(&(i.i), text)
+	if i.i == nil { // Necessary since default Uint initialization has i.i as nil
+		i.i = new(big.Int)
+	}
+	return unmarshalAmino(i.i, text)
 }
 
 // MarshalJSON defines custom encoding scheme
 func (i Uint) MarshalJSON() ([]byte, error) {
-	return marshalJSON(&(i.i))
+	if i.i == nil { // Necessary since default Uint initialization has i.i as nil
+		i.i = new(big.Int)
+	}
+	return marshalJSON(i.i)
 }
 
 // UnmarshalJSON defines custom decoding scheme
 func (i *Uint) UnmarshalJSON(bz []byte) error {
-	return unmarshalJSON(&(i.i), bz)
+	if i.i == nil { // Necessary since default Uint initialization has i.i as nil
+		i.i = new(big.Int)
+	}
+	return unmarshalJSON(i.i, bz)
 }

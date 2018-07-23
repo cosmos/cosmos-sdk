@@ -7,31 +7,34 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
+// TODO remove dependencies on staking (should only refer to validator set type from sdk)
+
 var (
-	addrs = []sdk.Address{
-		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6160"),
-		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6161"),
-		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6162"),
-	}
 	pks = []crypto.PubKey{
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB50"),
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51"),
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
 	}
-	initCoins sdk.Int = sdk.NewInt(200)
+	addrs = []sdk.AccAddress{
+		sdk.AccAddress(pks[0].Address()),
+		sdk.AccAddress(pks[1].Address()),
+		sdk.AccAddress(pks[2].Address()),
+	}
+	initCoins = sdk.NewInt(200)
 )
 
 func createTestCodec() *wire.Codec {
@@ -44,32 +47,40 @@ func createTestCodec() *wire.Codec {
 	return cdc
 }
 
-func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, Keeper) {
+func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, params.Setter, Keeper) {
 	keyAcc := sdk.NewKVStoreKey("acc")
 	keyStake := sdk.NewKVStoreKey("stake")
 	keySlashing := sdk.NewKVStoreKey("slashing")
+	keyParams := sdk.NewKVStoreKey("params")
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keySlashing, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewTMLogger(os.Stdout))
+	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewTMLogger(os.Stdout))
 	cdc := createTestCodec()
-	accountMapper := auth.NewAccountMapper(cdc, keyAcc, &auth.BaseAccount{})
+	accountMapper := auth.NewAccountMapper(cdc, keyAcc, auth.ProtoBaseAccount)
 	ck := bank.NewKeeper(accountMapper)
+	params := params.NewKeeper(cdc, keyParams)
 	sk := stake.NewKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
-	genesis.Pool.LooseUnbondedTokens = initCoins.MulRaw(int64(len(addrs)))
-	stake.InitGenesis(ctx, sk, genesis)
+
+	genesis.Pool.LooseTokens = sdk.NewRat(initCoins.MulRaw(int64(len(addrs))).Int64())
+
+	_, err = stake.InitGenesis(ctx, sk, genesis)
+	require.Nil(t, err)
+
 	for _, addr := range addrs {
-		ck.AddCoins(ctx, addr, sdk.Coins{
+		_, _, err = ck.AddCoins(ctx, addr, sdk.Coins{
 			{sk.GetParams(ctx).BondDenom, initCoins},
 		})
 	}
-	keeper := NewKeeper(cdc, keySlashing, sk, DefaultCodespace)
-	return ctx, ck, sk, keeper
+	require.Nil(t, err)
+	keeper := NewKeeper(cdc, keySlashing, sk, params.Getter(), DefaultCodespace)
+	return ctx, ck, sk, params.Setter(), keeper
 }
 
 func newPubKey(pk string) (res crypto.PubKey) {
@@ -82,16 +93,17 @@ func newPubKey(pk string) (res crypto.PubKey) {
 	return pkEd
 }
 
-func testAddr(addr string) sdk.Address {
+func testAddr(addr string) sdk.AccAddress {
 	res := []byte(addr)
 	return res
 }
 
-func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
+func newTestMsgCreateValidator(address sdk.AccAddress, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
 	return stake.MsgCreateValidator{
 		Description:   stake.Description{},
+		DelegatorAddr: address,
 		ValidatorAddr: address,
 		PubKey:        pubKey,
-		Bond:          sdk.Coin{"steak", amt},
+		Delegation:    sdk.Coin{"steak", amt},
 	}
 }

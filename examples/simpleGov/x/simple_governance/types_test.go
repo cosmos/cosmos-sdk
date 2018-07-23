@@ -11,12 +11,12 @@ func TestNewSubmitProposalMsg(t *testing.T) {
 	goodTitle := "Photons at launch"
 	emptyStr := ""
 	goodDescription := "Should we include Photons at launch?"
-	addr1 := sdk.Address([]byte{1, 2})
-	addr2 := sdk.Address([]byte{7, 8})
+	addr1 := sdk.AccAddress([]byte{1, 2})
+	addr2 := sdk.AccAddress([]byte{7, 8})
 	someCoins := sdk.Coins{{"atom", sdk.NewInt(int64(123))}}
 	multiCoins := sdk.Coins{{"atom", sdk.NewInt(int64(123))}, {"eth", sdk.NewInt(int64(20))}}
 
-	emptyAddr := sdk.Address{}
+	emptyAddr := sdk.AccAddress{}
 	emptyCoins := sdk.Coins{}
 	emptyCoins2 := sdk.Coins{sdk.Coin{"eth", sdk.NewInt(int64(0))}}
 	someEmptyCoins := sdk.Coins{{"eth", sdk.NewInt(int64(10))}, {"atom", sdk.NewInt(int64(0))}}
@@ -61,10 +61,10 @@ func TestNewSubmitProposalMsg(t *testing.T) {
 
 func TestNewVoteMsg(t *testing.T) {
 	emptyStr := ""
-	addr1 := sdk.Address([]byte{1, 2})
-	addr2 := sdk.Address([]byte{7, 8})
+	addr1 := sdk.AccAddress([]byte{1, 2})
+	addr2 := sdk.AccAddress([]byte{7, 8})
 
-	emptyAddr := sdk.Address{}
+	emptyAddr := sdk.AccAddress{}
 
 	yay := "Yes"
 	nay := "No"
@@ -114,10 +114,10 @@ func TestUpdateTally(t *testing.T) {
 
 	goodTitle := "Photons at launch"
 	goodDescription := "Should we include Photons at launch?"
-	addr1 := sdk.Address([]byte{1, 2})
+	addr1 := sdk.AccAddress([]byte{1, 2})
 	someCoins := sdk.Coins{{"atom", sdk.NewInt(int64(123))}}
 
-	proposal := NewProposal(goodTitle, goodDescription, addr1, 10, someCoins)
+	proposal := NewProposal(int64(1), goodTitle, goodDescription, addr1, 10, someCoins)
 	proposalPtr := &proposal
 	assert.Equal(t, int64(0), proposalPtr.YesVotes)
 	assert.Equal(t, int64(0), proposalPtr.NoVotes)

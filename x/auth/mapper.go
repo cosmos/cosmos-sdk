@@ -1,12 +1,9 @@
 package auth
 
 import (
-	"fmt"
-	"reflect"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var globalAccountNumberKey = []byte("globalAccountNumber")
@@ -18,8 +15,8 @@ type AccountMapper struct {
 	// The (unexposed) key used to access the store from the Context.
 	key sdk.StoreKey
 
-	// The prototypical Account concrete type.
-	proto Account
+	// The prototypical Account constructor.
+	proto func() Account
 
 	// The wire codec for binary encoding/decoding of accounts.
 	cdc *wire.Codec
@@ -28,7 +25,7 @@ type AccountMapper struct {
 // NewAccountMapper returns a new sdk.AccountMapper that
 // uses go-amino to (binary) encode and decode concrete sdk.Accounts.
 // nolint
-func NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto Account) AccountMapper {
+func NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto func() Account) AccountMapper {
 	return AccountMapper{
 		key:   key,
 		proto: proto,
@@ -37,26 +34,38 @@ func NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto Account) AccountM
 }
 
 // Implaements sdk.AccountMapper.
-func (am AccountMapper) NewAccountWithAddress(ctx sdk.Context, addr sdk.Address) Account {
-	acc := am.clonePrototype()
-	acc.SetAddress(addr)
-	acc.SetAccountNumber(am.GetNextAccountNumber(ctx))
+func (am AccountMapper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) Account {
+	acc := am.proto()
+	err := acc.SetAddress(addr)
+	if err != nil {
+		// Handle w/ #870
+		panic(err)
+	}
+	err = acc.SetAccountNumber(am.GetNextAccountNumber(ctx))
+	if err != nil {
+		// Handle w/ #870
+		panic(err)
+	}
 	return acc
 }
 
 // New Account
 func (am AccountMapper) NewAccount(ctx sdk.Context, acc Account) Account {
-	acc.SetAccountNumber(am.GetNextAccountNumber(ctx))
+	err := acc.SetAccountNumber(am.GetNextAccountNumber(ctx))
+	if err != nil {
+		// TODO: Handle with #870
+		panic(err)
+	}
 	return acc
 }
 
 // Turn an address to key used to get it from the account store
-func AddressStoreKey(addr sdk.Address) []byte {
+func AddressStoreKey(addr sdk.AccAddress) []byte {
 	return append([]byte("account:"), addr.Bytes()...)
 }
 
 // Implements sdk.AccountMapper.
-func (am AccountMapper) GetAccount(ctx sdk.Context, addr sdk.Address) Account {
+func (am AccountMapper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) Account {
 	store := ctx.KVStore(am.key)
 	bz := store.Get(AddressStoreKey(addr))
 	if bz == nil {
@@ -92,7 +101,7 @@ func (am AccountMapper) IterateAccounts(ctx sdk.Context, process func(Account) (
 }
 
 // Returns the PubKey of the account at address
-func (am AccountMapper) GetPubKey(ctx sdk.Context, addr sdk.Address) (crypto.PubKey, sdk.Error) {
+func (am AccountMapper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, sdk.Error) {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return nil, sdk.ErrUnknownAddress(addr.String())
@@ -100,19 +109,8 @@ func (am AccountMapper) GetPubKey(ctx sdk.Context, addr sdk.Address) (crypto.Pub
 	return acc.GetPubKey(), nil
 }
 
-// Sets the PubKey of the account at address
-func (am AccountMapper) SetPubKey(ctx sdk.Context, addr sdk.Address, newPubKey crypto.PubKey) sdk.Error {
-	acc := am.GetAccount(ctx, addr)
-	if acc == nil {
-		return sdk.ErrUnknownAddress(addr.String())
-	}
-	acc.SetPubKey(newPubKey)
-	am.SetAccount(ctx, acc)
-	return nil
-}
-
 // Returns the Sequence of the account at address
-func (am AccountMapper) GetSequence(ctx sdk.Context, addr sdk.Address) (int64, sdk.Error) {
+func (am AccountMapper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (int64, sdk.Error) {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return 0, sdk.ErrUnknownAddress(addr.String())
@@ -120,12 +118,16 @@ func (am AccountMapper) GetSequence(ctx sdk.Context, addr sdk.Address) (int64, s
 	return acc.GetSequence(), nil
 }
 
-func (am AccountMapper) setSequence(ctx sdk.Context, addr sdk.Address, newSequence int64) sdk.Error {
+func (am AccountMapper) setSequence(ctx sdk.Context, addr sdk.AccAddress, newSequence int64) sdk.Error {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return sdk.ErrUnknownAddress(addr.String())
 	}
-	acc.SetSequence(newSequence)
+	err := acc.SetSequence(newSequence)
+	if err != nil {
+		// Handle w/ #870
+		panic(err)
+	}
 	am.SetAccount(ctx, acc)
 	return nil
 }
@@ -152,30 +154,6 @@ func (am AccountMapper) GetNextAccountNumber(ctx sdk.Context) int64 {
 
 //----------------------------------------
 // misc.
-
-// Creates a new struct (or pointer to struct) from am.proto.
-func (am AccountMapper) clonePrototype() Account {
-	protoRt := reflect.TypeOf(am.proto)
-	if protoRt.Kind() == reflect.Ptr {
-		protoCrt := protoRt.Elem()
-		if protoCrt.Kind() != reflect.Struct {
-			panic("accountMapper requires a struct proto sdk.Account, or a pointer to one")
-		}
-		protoRv := reflect.New(protoCrt)
-		clone, ok := protoRv.Interface().(Account)
-		if !ok {
-			panic(fmt.Sprintf("accountMapper requires a proto sdk.Account, but %v doesn't implement sdk.Account", protoRt))
-		}
-		return clone
-	}
-
-	protoRv := reflect.New(protoRt).Elem()
-	clone, ok := protoRv.Interface().(Account)
-	if !ok {
-		panic(fmt.Sprintf("accountMapper requires a proto sdk.Account, but %v doesn't implement sdk.Account", protoRt))
-	}
-	return clone
-}
 
 func (am AccountMapper) encodeAccount(acc Account) []byte {
 	bz, err := am.cdc.MarshalBinaryBare(acc)

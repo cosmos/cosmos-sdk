@@ -7,12 +7,15 @@ import (
 	"os"
 	"path"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
+
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
-	cmn "github.com/tendermint/tmlibs/common"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	"github.com/spf13/viper"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
@@ -44,7 +48,7 @@ func runHackCmd(cmd *cobra.Command, args []string) error {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	app := NewGaiaApp(logger, db)
+	app := NewGaiaApp(logger, db, baseapp.SetPruning(viper.GetString("pruning")))
 
 	// print some info
 	id := app.LastCommitID()
@@ -130,6 +134,7 @@ type GaiaApp struct {
 	keyIBC      *sdk.KVStoreKey
 	keyStake    *sdk.KVStoreKey
 	keySlashing *sdk.KVStoreKey
+	keyParams   *sdk.KVStoreKey
 
 	// Manage getting and setting accounts
 	accountMapper       auth.AccountMapper
@@ -138,34 +143,40 @@ type GaiaApp struct {
 	ibcMapper           ibc.Mapper
 	stakeKeeper         stake.Keeper
 	slashingKeeper      slashing.Keeper
+	paramsKeeper        params.Keeper
 }
 
-func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
+func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseApp)) *GaiaApp {
 	cdc := MakeCodec()
+
+	bApp := bam.NewBaseApp(appName, cdc, logger, db, baseAppOptions...)
+	bApp.SetCommitMultiStoreTracer(os.Stdout)
 
 	// create your application object
 	var app = &GaiaApp{
-		BaseApp:     bam.NewBaseApp(appName, cdc, logger, db),
+		BaseApp:     bApp,
 		cdc:         cdc,
 		keyMain:     sdk.NewKVStoreKey("main"),
 		keyAccount:  sdk.NewKVStoreKey("acc"),
 		keyIBC:      sdk.NewKVStoreKey("ibc"),
 		keyStake:    sdk.NewKVStoreKey("stake"),
 		keySlashing: sdk.NewKVStoreKey("slashing"),
+		keyParams:   sdk.NewKVStoreKey("params"),
 	}
 
 	// define the accountMapper
 	app.accountMapper = auth.NewAccountMapper(
 		app.cdc,
-		app.keyAccount,      // target store
-		&auth.BaseAccount{}, // prototype
+		app.keyAccount,        // target store
+		auth.ProtoBaseAccount, // prototype
 	)
 
 	// add handlers
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
+	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams)
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
-	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.RegisterCodespace(slashing.DefaultCodespace))
+	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.paramsKeeper.Getter(), app.RegisterCodespace(slashing.DefaultCodespace))
 
 	// register message routes
 	app.Router().
@@ -197,6 +208,7 @@ func MakeCodec() *wire.Codec {
 	auth.RegisterWire(cdc)
 	sdk.RegisterWire(cdc)
 	wire.RegisterCrypto(cdc)
+	cdc.Seal()
 	return cdc
 }
 
@@ -210,6 +222,7 @@ func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 }
 
 // application updates every end block
+// nolint: unparam
 func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
 
@@ -226,8 +239,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	var genesisState gaia.GenesisState
 	err := app.cdc.UnmarshalJSON(stateJSON, &genesisState)
 	if err != nil {
-		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
-		// return sdk.ErrGenesisParse("").TraceCause(err, "")
+		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468 // return sdk.ErrGenesisParse("").TraceCause(err, "")
 	}
 
 	// load the accounts
@@ -237,7 +249,12 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	}
 
 	// load the initial stake information
-	stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
-	return abci.ResponseInitChain{}
+	validators, err := stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
+	if err != nil {
+		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468 // return sdk.ErrGenesisParse("").TraceCause(err, "")
+	}
 
+	return abci.ResponseInitChain{
+		Validators: validators,
+	}
 }

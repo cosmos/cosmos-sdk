@@ -5,11 +5,10 @@ import (
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/gamarin2/cosmos-sdk/examples/simpleGov/x/simpleGovernance"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	"github.com/gamarin2/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simpleGovernance"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

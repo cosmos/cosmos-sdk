@@ -124,7 +124,7 @@ func SearchTxRequestHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Han
 				return
 			}
 
-			tag = strings.TrimRight(key, "_bech32") + "='" + sdk.Address(bz).String() + "'"
+			tag = strings.TrimRight(key, "_bech32") + "='" + sdk.AccAddress(bz).String() + "'"
 		}
 
 		txs, err := searchTxs(ctx, cdc, []string{tag})

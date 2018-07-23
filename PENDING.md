@@ -35,6 +35,9 @@ IMPROVEMENTS
 * [x/stake] Add revoked to human-readable validator 
 * [x/gov] Votes on a proposal can now be queried
 * [x/bank] Unit tests are now table-driven
+* [cosmos-sdk-cli]
+    * Replacing all instances of "Basecoin" to ProjectName in Basecoin code
+    * Checking if directory exists before creating a new project
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators

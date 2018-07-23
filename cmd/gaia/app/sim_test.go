@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -42,21 +43,27 @@ func init() {
 	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")
 }
 
-func appStateFn(r *rand.Rand, accs []sdk.AccAddress) json.RawMessage {
+func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage {
 	var genesisAccounts []GenesisAccount
 
 	// Randomly generate some genesis accounts
-	for _, addr := range accs {
+	for _, acc := range accs {
 		coins := sdk.Coins{sdk.Coin{"steak", sdk.NewInt(100)}}
 		genesisAccounts = append(genesisAccounts, GenesisAccount{
-			Address: addr,
+			Address: acc,
 			Coins:   coins,
 		})
 	}
 
 	// Default genesis state
 	stakeGenesis := stake.DefaultGenesisState()
-	stakeGenesis.Pool.LooseTokens = sdk.NewRat(1000)
+	stakeGenesis.Pool.LooseTokens = sdk.NewRat(1100)
+	validator := stake.NewValidator(accs[0], keys[0].PubKey(), stake.Description{})
+	validator.Tokens = sdk.NewRat(100)
+	validator.DelegatorShares = sdk.NewRat(100)
+	delegation := stake.Delegation{accs[0], accs[0], sdk.NewRat(100), 0}
+	stakeGenesis.Validators = []stake.Validator{validator}
+	stakeGenesis.Bonds = []stake.Delegation{delegation}
 	genesis := GenesisState{
 		Accounts:  genesisAccounts,
 		StakeData: stakeGenesis,

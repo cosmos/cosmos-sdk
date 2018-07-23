@@ -3,14 +3,14 @@ package slashing
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestMsgUnrevokeGetSignBytes(t *testing.T) {
-	addr := sdk.Address("abcd")
+	addr := sdk.AccAddress("abcd")
 	msg := NewMsgUnrevoke(addr)
 	bytes := msg.GetSignBytes()
-	assert.Equal(t, string(bytes), `{"address":"cosmosvaladdr1v93xxeqamr0mv"}`)
+	require.Equal(t, string(bytes), `{"address":"cosmosaccaddr1v93xxeqhyqz5v"}`)
 }

@@ -1,7 +1,9 @@
 package mock
 
 import (
-	dbm "github.com/tendermint/tmlibs/db"
+	"io"
+
+	dbm "github.com/tendermint/tendermint/libs/db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -18,11 +20,35 @@ func (ms multiStore) CacheWrap() sdk.CacheWrap {
 	panic("not implemented")
 }
 
+func (ms multiStore) CacheWrapWithTrace(_ io.Writer, _ sdk.TraceContext) sdk.CacheWrap {
+	panic("not implemented")
+}
+
+func (ms multiStore) ResetTraceContext() sdk.MultiStore {
+	panic("not implemented")
+}
+
+func (ms multiStore) TracingEnabled() bool {
+	panic("not implemented")
+}
+
+func (ms multiStore) WithTracingContext(tc sdk.TraceContext) sdk.MultiStore {
+	panic("not implemented")
+}
+
+func (ms multiStore) WithTracer(w io.Writer) sdk.MultiStore {
+	panic("not implemented")
+}
+
 func (ms multiStore) Commit() sdk.CommitID {
 	panic("not implemented")
 }
 
 func (ms multiStore) LastCommitID() sdk.CommitID {
+	panic("not implemented")
+}
+
+func (ms multiStore) SetPruning(s sdk.PruningStrategy) {
 	panic("not implemented")
 }
 
@@ -70,6 +96,10 @@ func (kv kvStore) CacheWrap() sdk.CacheWrap {
 	panic("not implemented")
 }
 
+func (kv kvStore) CacheWrapWithTrace(w io.Writer, tc sdk.TraceContext) sdk.CacheWrap {
+	panic("not implemented")
+}
+
 func (kv kvStore) GetStoreType() sdk.StoreType {
 	panic("not implemented")
 }
@@ -95,6 +125,10 @@ func (kv kvStore) Delete(key []byte) {
 	delete(kv.store, string(key))
 }
 
+func (kv kvStore) Prefix(prefix []byte) sdk.KVStore {
+	panic("not implemented")
+}
+
 func (kv kvStore) Iterator(start, end []byte) sdk.Iterator {
 	panic("not implemented")
 }
@@ -111,6 +145,6 @@ func (kv kvStore) ReverseSubspaceIterator(prefix []byte) sdk.Iterator {
 	panic("not implemented")
 }
 
-func NewCommitMultiStore(db dbm.DB) sdk.CommitMultiStore {
+func NewCommitMultiStore() sdk.CommitMultiStore {
 	return multiStore{kv: make(map[sdk.StoreKey]kvStore)}
 }

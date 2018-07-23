@@ -1,9 +1,5 @@
 package types
 
-import (
-	abci "github.com/tendermint/abci/types"
-)
-
 // Result is the union of ResponseDeliverTx and ResponseCheckTx.
 type Result struct {
 
@@ -25,9 +21,6 @@ type Result struct {
 	// Tx fee amount and denom.
 	FeeAmount int64
 	FeeDenom  string
-
-	// Changes to the validator set.
-	ValidatorUpdates []abci.Validator
 
 	// Tags are used for transaction indexing and pubsub.
 	Tags Tags

@@ -4,11 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIsPositiveCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		expected bool
@@ -18,15 +17,13 @@ func TestIsPositiveCoin(t *testing.T) {
 		{NewCoin("a", -1), false},
 	}
 
-	for _, tc := range cases {
+	for tcIndex, tc := range cases {
 		res := tc.inputOne.IsPositive()
-		assert.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res, "%s positivity is incorrect, tc #%d", tc.inputOne.String(), tcIndex)
 	}
 }
 
 func TestIsNotNegativeCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		expected bool
@@ -36,15 +33,13 @@ func TestIsNotNegativeCoin(t *testing.T) {
 		{NewCoin("a", -1), false},
 	}
 
-	for _, tc := range cases {
+	for tcIndex, tc := range cases {
 		res := tc.inputOne.IsNotNegative()
-		assert.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res, "%s not-negativity is incorrect, tc #%d", tc.inputOne.String(), tcIndex)
 	}
 }
 
 func TestSameDenomAsCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -57,15 +52,13 @@ func TestSameDenomAsCoin(t *testing.T) {
 		{NewCoin("steak", -11), NewCoin("steak", 10), true},
 	}
 
-	for _, tc := range cases {
+	for tcIndex, tc := range cases {
 		res := tc.inputOne.SameDenomAs(tc.inputTwo)
-		assert.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res, "coin denominations didn't match, tc #%d", tcIndex)
 	}
 }
 
 func TestIsGTECoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -77,15 +70,13 @@ func TestIsGTECoin(t *testing.T) {
 		{NewCoin("a", 1), NewCoin("b", 1), false},
 	}
 
-	for _, tc := range cases {
+	for tcIndex, tc := range cases {
 		res := tc.inputOne.IsGTE(tc.inputTwo)
-		assert.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res, "coin GTE relation is incorrect, tc #%d", tcIndex)
 	}
 }
 
 func TestIsEqualCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -98,15 +89,13 @@ func TestIsEqualCoin(t *testing.T) {
 		{NewCoin("steak", -11), NewCoin("steak", 10), false},
 	}
 
-	for _, tc := range cases {
+	for tcIndex, tc := range cases {
 		res := tc.inputOne.IsEqual(tc.inputTwo)
-		assert.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res, "coin equality relation is incorrect, tc #%d", tcIndex)
 	}
 }
 
 func TestPlusCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -117,9 +106,9 @@ func TestPlusCoin(t *testing.T) {
 		{NewCoin("asdf", -4), NewCoin("asdf", 5), NewCoin("asdf", 1)},
 	}
 
-	for _, tc := range cases {
+	for tcIndex, tc := range cases {
 		res := tc.inputOne.Plus(tc.inputTwo)
-		assert.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 	}
 
 	tc := struct {
@@ -128,12 +117,10 @@ func TestPlusCoin(t *testing.T) {
 		expected int64
 	}{NewCoin("asdf", -1), NewCoin("asdf", 1), 0}
 	res := tc.inputOne.Plus(tc.inputTwo)
-	assert.Equal(tc.expected, res.Amount.Int64())
+	require.Equal(t, tc.expected, res.Amount.Int64())
 }
 
 func TestMinusCoin(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		inputOne Coin
 		inputTwo Coin
@@ -145,9 +132,9 @@ func TestMinusCoin(t *testing.T) {
 		{NewCoin("asdf", 10), NewCoin("asdf", 1), NewCoin("asdf", 9)},
 	}
 
-	for _, tc := range cases {
+	for tcIndex, tc := range cases {
 		res := tc.inputOne.Minus(tc.inputTwo)
-		assert.Equal(tc.expected, res)
+		require.Equal(t, tc.expected, res, "difference of coins is incorrect, tc #%d", tcIndex)
 	}
 
 	tc := struct {
@@ -156,7 +143,7 @@ func TestMinusCoin(t *testing.T) {
 		expected int64
 	}{NewCoin("A", 1), NewCoin("A", 1), 0}
 	res := tc.inputOne.Minus(tc.inputTwo)
-	assert.Equal(tc.expected, res.Amount.Int64())
+	require.Equal(t, tc.expected, res.Amount.Int64())
 
 }
 
@@ -208,8 +195,6 @@ func TestCoins(t *testing.T) {
 }
 
 func TestPlusCoins(t *testing.T) {
-	assert := assert.New(t)
-
 	one := NewInt(1)
 	zero := NewInt(0)
 	negone := NewInt(-1)
@@ -227,10 +212,10 @@ func TestPlusCoins(t *testing.T) {
 		{Coins{{"A", negone}, {"B", zero}}, Coins{{"A", zero}, {"B", zero}}, Coins{{"A", negone}}},
 	}
 
-	for _, tc := range cases {
+	for tcIndex, tc := range cases {
 		res := tc.inputOne.Plus(tc.inputTwo)
-		assert.True(res.IsValid())
-		assert.Equal(tc.expected, res)
+		assert.True(t, res.IsValid())
+		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 	}
 }
 
@@ -257,12 +242,12 @@ func TestParse(t *testing.T) {
 		{"5foo-bar", false, nil},              // once more, only letters in coin name
 	}
 
-	for _, tc := range cases {
+	for tcIndex, tc := range cases {
 		res, err := ParseCoins(tc.input)
 		if !tc.valid {
-			assert.NotNil(t, err, "%s: %#v", tc.input, res)
+			require.NotNil(t, err, "%s: %#v. tc #%d", tc.input, res, tcIndex)
 		} else if assert.Nil(t, err, "%s: %+v", tc.input, err) {
-			assert.Equal(t, tc.expected, res)
+			require.Equal(t, tc.expected, res, "coin parsing was incorrect, tc #%d", tcIndex)
 		}
 	}
 
@@ -311,10 +296,10 @@ func TestSortCoins(t *testing.T) {
 		{dup, false, false},
 	}
 
-	for _, tc := range cases {
-		assert.Equal(t, tc.before, tc.coins.IsValid())
+	for tcIndex, tc := range cases {
+		require.Equal(t, tc.before, tc.coins.IsValid(), "coin validity is incorrect before sorting, tc #%d", tcIndex)
 		tc.coins.Sort()
-		assert.Equal(t, tc.after, tc.coins.IsValid())
+		require.Equal(t, tc.after, tc.coins.IsValid(), "coin validity is incorrect after sorting, tc #%d", tcIndex)
 	}
 }
 

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"path/filepath"
 
-	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	gc "github.com/cosmos/cosmos-sdk/server/config"
@@ -30,13 +30,10 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	capKeyMainStore := sdk.NewKVStoreKey("main")
 
 	// Create BaseApp.
-	baseApp := bam.NewBaseApp("kvstore", nil, logger, db)
+	baseApp := bam.NewBaseApp("kvstore", logger, db, decodeTx)
 
 	// Set mounts for BaseApp's MultiStore.
 	baseApp.MountStoresIAVL(capKeyMainStore)
-
-	// Set Tx decoder
-	baseApp.SetTxDecoder(decodeTx)
 
 	baseApp.SetInitChainer(InitChainer(capKeyMainStore))
 

@@ -6,7 +6,7 @@ import (
 )
 
 // build the sendTx msg
-func BuildMsg(from sdk.Address, to sdk.Address, coins sdk.Coins) sdk.Msg {
+func BuildMsg(from sdk.AccAddress, to sdk.AccAddress, coins sdk.Coins) sdk.Msg {
 	input := bank.NewInput(from, coins)
 	output := bank.NewOutput(to, coins)
 	msg := bank.NewMsgSend([]bank.Input{input}, []bank.Output{output})

@@ -3,11 +3,11 @@ package pow
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/abci/types"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	abci "github.com/tendermint/tendermint/abci/types"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,26 +32,26 @@ func TestPowKeeperGetSet(t *testing.T) {
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
-	am := auth.NewAccountMapper(cdc, capKey, &auth.BaseAccount{})
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
+	am := auth.NewAccountMapper(cdc, capKey, auth.ProtoBaseAccount)
+	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	config := NewConfig("pow", int64(1))
 	ck := bank.NewKeeper(am)
 	keeper := NewKeeper(capKey, config, ck, DefaultCodespace)
 
 	err := InitGenesis(ctx, keeper, Genesis{uint64(1), uint64(0)})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	genesis := WriteGenesis(ctx, keeper)
-	assert.Nil(t, err)
-	assert.Equal(t, genesis, Genesis{uint64(1), uint64(0)})
+	require.Nil(t, err)
+	require.Equal(t, genesis, Genesis{uint64(1), uint64(0)})
 
 	res, err := keeper.GetLastDifficulty(ctx)
-	assert.Nil(t, err)
-	assert.Equal(t, res, uint64(1))
+	require.Nil(t, err)
+	require.Equal(t, res, uint64(1))
 
 	keeper.SetLastDifficulty(ctx, 2)
 
 	res, err = keeper.GetLastDifficulty(ctx)
-	assert.Nil(t, err)
-	assert.Equal(t, res, uint64(2))
+	require.Nil(t, err)
+	require.Equal(t, res, uint64(2))
 }

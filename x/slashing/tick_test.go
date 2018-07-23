@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,7 +13,7 @@ import (
 )
 
 func TestBeginBlocker(t *testing.T) {
-	ctx, ck, sk, keeper := createTestInput(t)
+	ctx, ck, sk, _, keeper := createTestInput(t)
 	addr, pk, amt := addrs[2], pks[2], sdk.NewInt(100)
 
 	// bond the validator
@@ -37,7 +37,7 @@ func TestBeginBlocker(t *testing.T) {
 	}
 	BeginBlocker(ctx, req, keeper)
 
-	info, found := keeper.getValidatorSigningInfo(ctx, pk.Address())
+	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(pk.Address()))
 	require.True(t, found)
 	require.Equal(t, ctx.BlockHeight(), info.StartHeight)
 	require.Equal(t, int64(1), info.IndexOffset)
@@ -46,8 +46,8 @@ func TestBeginBlocker(t *testing.T) {
 
 	height := int64(0)
 
-	// for 50 blocks, mark the validator as having signed
-	for ; height < 50; height++ {
+	// for 1000 blocks, mark the validator as having signed
+	for ; height < keeper.SignedBlocksWindow(ctx); height++ {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
 			Validators: []abci.SigningValidator{{
@@ -58,8 +58,8 @@ func TestBeginBlocker(t *testing.T) {
 		BeginBlocker(ctx, req, keeper)
 	}
 
-	// for 51 blocks, mark the validator as having not signed
-	for ; height < 102; height++ {
+	// for 500 blocks, mark the validator as having not signed
+	for ; height < ((keeper.SignedBlocksWindow(ctx) * 2) - keeper.MinSignedPerWindow(ctx) + 1); height++ {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
 			Validators: []abci.SigningValidator{{

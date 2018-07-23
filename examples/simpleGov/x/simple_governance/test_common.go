@@ -29,28 +29,18 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 
 	ck := bank.NewKeeper(mapp.AccountMapper)
 	sk := stake.NewKeeper(mapp.Cdc, keyStake, ck, mapp.RegisterCodespace(stake.DefaultCodespace))
-	keeper := NewKeeper(mapp.Cdc, ck, sk, mapp.RegisterCodespace(DefaultCodespace))
+	keeper := NewKeeper(keyGov, ck, sk, mapp.RegisterCodespace(DefaultCodespace))
 	mapp.Router().AddRoute("simplegov", NewHandler(keeper))
 
 	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyGov}))
 
-	mapp.SetEndBlocker(getEndBlocker(keeper))
+	mapp.SetEndBlocker(NewEndBlocker(keeper))
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk))
 
 	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewCoin("steak", 42)})
 	mock.SetGenesis(mapp, genAccs)
 
 	return mapp, keeper, sk, addrs, pubKeys, privKeys
-}
-
-// gov and stake endblocker
-func getEndBlocker(keeper Keeper) sdk.EndBlocker {
-	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-		tags, _ := EndBlocker(ctx, keeper)
-		return abci.ResponseEndBlock{
-			Tags: tags,
-		}
-	}
 }
 
 // gov and stake initchainer
@@ -65,7 +55,6 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakeKeeper stake.Keeper) sdk
 		if err != nil {
 			panic(err)
 		}
-		InitGenesis(ctx, keeper, DefaultGenesisState())
 		return abci.ResponseInitChain{
 			Validators: validators,
 		}

@@ -10,6 +10,7 @@ import (
 
 // Proposal defines the basic properties of a staking proposal
 type Proposal struct {
+	ID          int64          `json:"id"`           // ID of the proposal
 	Title       string         `json:"title"`        // Title of the proposal
 	Description string         `json:"description"`  // Description of the proposal
 	Submitter   sdk.AccAddress `json:"submitter"`    // Account address of the proposer
@@ -24,12 +25,14 @@ type Proposal struct {
 
 // NewProposal validates deposit and creates a new proposal
 func NewProposal(
+	id int64,
 	title string,
 	description string,
 	submitter sdk.AccAddress,
 	blockHeight int64,
 	deposit sdk.Coins) Proposal {
 	return Proposal{
+		ID:           id,
 		Title:        title,
 		Description:  description,
 		Submitter:    submitter,

@@ -190,7 +190,7 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 	if main == nil {
 		return errors.New("baseapp expects MultiStore with 'main' KVStore")
 	}
-
+	app.setCheckState(abci.Header{})
 	return nil
 }
 

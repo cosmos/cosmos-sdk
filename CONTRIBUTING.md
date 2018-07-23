@@ -11,15 +11,15 @@ contributors, the general procedure for contributing has been established:
      [find](https://github.com/cosmos/cosmos-sdk/issues) an issue you'd like to help with, 
   2. participate in thoughtful discussion on that issue, 
   3. if you would then like to contribute code:
-    a. if a the issue is a proposal, ensure that the proposal has been accepted, 
-    b. ensure that nobody else has already begun working on this issue, if they have
+     1. if a the issue is a proposal, ensure that the proposal has been accepted, 
+     2. ensure that nobody else has already begun working on this issue, if they have
        make sure to contact them to collaborate, 
-    c. if nobody has been assigned the issue and you would like to work on it
+     3. if nobody has been assigned the issue and you would like to work on it
        make a comment on the issue to inform the community of your intentions
        to begin work, 
-    d. follow standard github best practices: fork the repo, branch from the
+     4. follow standard github best practices: fork the repo, branch from the
        tip of `develop`, make some commits, and submit a PR to `develop`, 
-    e. include `WIP:` in the PR-title to and submit your PR early, even if it's
+     5. include `WIP:` in the PR-title to and submit your PR early, even if it's
        incomplete, this indicates to the community you're working on something and
        allows them to provide comments early in the development process. When the code
        is complete it can be marked as ready-for-review by replacing `WIP:` with

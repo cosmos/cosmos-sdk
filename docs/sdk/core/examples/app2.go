@@ -37,7 +37,7 @@ func NewApp2(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	cdc := NewCodec()
 
 	// Create the base application object.
-	app := bapp.NewBaseApp(app2Name, cdc, logger, db)
+	app := bapp.NewBaseApp(app2Name, logger, db, tx2Decoder(cdc))
 
 	// Create a key for accessing the account store.
 	keyAccount := sdk.NewKVStoreKey("acc")
@@ -46,8 +46,6 @@ func NewApp2(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 
 	// set antehandler function
 	app.SetAnteHandler(antehandler)
-
-	app.SetTxDecoder(tx2Decoder(cdc))
 
 	// Register message routes.
 	// Note the handler gets access to the account store.

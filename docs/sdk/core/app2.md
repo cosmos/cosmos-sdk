@@ -173,6 +173,18 @@ type app2Tx struct {
 func (tx app2Tx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{tx.Msg}
 }
+
+// Amino decode app2Tx. Capable of decoding both MsgSend and MsgIssue
+func tx2Decoder(cdc *wire.Codec) sdk.TxDecoder {
+	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
+		var tx app2Tx
+		err := cdc.UnmarshalBinary(txBytes, &tx)
+		if err != nil {
+			return nil, sdk.ErrTxDecode(err.Error())
+		}
+		return tx, nil
+	}
+}
 ```
 
 ## AnteHandler
@@ -244,7 +256,7 @@ func NewApp2(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	cdc := NewCodec()
 
 	// Create the base application object.
-	app := bapp.NewBaseApp(app2Name, cdc, logger, db)
+	app := bapp.NewBaseApp(app2Name, logger, db, txDecoder(cdc))
 
 	// Create a key for accessing the account store.
 	keyAccount := sdk.NewKVStoreKey("acc")
@@ -274,6 +286,9 @@ The main difference here, compared to `App1`, is that we use a second capability
 key for a second store that is *only* passed to a second handler, the
 `handleMsgIssue`. The first `handleMsgSend` has no access to this second store and cannot read or write to
 it, ensuring a strong separation of concerns.
+
+Note now that we're using Amino, we create a codec, register our types on the codec, and pass the
+codec into our TxDecoder constructor, `tx2Decoder`. The SDK takes care of the rest for us!
 
 ## Conclusion
 

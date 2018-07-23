@@ -119,9 +119,8 @@ On the testnet, we delegate `steak` instead of `atom`. Here's how you can bond t
 ```bash
 gaiacli stake delegate \
   --amount=10steak \
-  --address-delegator=<account_cosmosaccaddr> \
   --address-validator=$(gaiad tendermint show_validator) \
-  --name=<key_name> \
+  --from=<key_name> \
   --chain-id=gaia-6002
 ```
 
@@ -136,15 +135,16 @@ While tokens are bonded, they are pooled with all the other bonded tokens in the
 If for any reason the validator misbehaves, or you want to unbond a certain amount of tokens, use this following command. You can unbond a specific amount of`shares`\(eg:`12.1`\) or all of them \(`MAX`\).
 
 ```bash
-gaiacli stake unbond \
-  --address-delegator=<account_cosmosaccaddr> \
+gaiacli stake unbond begin \
   --address-validator=$(gaiad tendermint show_validator) \
-  --shares=MAX \
-  --name=<key_name> \
+  --shares-percent=1 \
+  --from=<key_name> \
   --chain-id=gaia-6002
 ```
 
-You can check your balance and your stake delegation to see that the unbonding went through successfully.
+Later you must use the `gaiacli stake unbond complete` command to finish
+unbonding at which point you can can check your balance and your stake
+delegation to see that the unbonding went through successfully.
 
 ```bash
 gaiacli account <account_cosmosaccaddr>

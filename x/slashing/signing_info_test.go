@@ -30,8 +30,23 @@ func TestGetSetValidatorSigningInfo(t *testing.T) {
 func TestGetSetValidatorSigningBitArray(t *testing.T) {
 	ctx, _, _, _, keeper := createTestInput(t)
 	signed := keeper.getValidatorSigningBitArray(ctx, sdk.ValAddress(addrs[0]), 0)
-	require.False(t, signed) // treat empty key as unsigned
+	require.True(t, signed) // treat empty key as signed
+	keeper.setValidatorSigningBitArray(ctx, sdk.ValAddress(addrs[0]), 0, false)
+	signed = keeper.getValidatorSigningBitArray(ctx, sdk.ValAddress(addrs[0]), 0)
+	require.False(t, signed) // now should be unsigned
 	keeper.setValidatorSigningBitArray(ctx, sdk.ValAddress(addrs[0]), 0, true)
 	signed = keeper.getValidatorSigningBitArray(ctx, sdk.ValAddress(addrs[0]), 0)
 	require.True(t, signed) // now should be signed
+}
+
+func TestGetSetInvalidateValidatorSigningBitArray(t *testing.T) {
+	ctx, _, _, _, keeper := createTestInput(t)
+	signed := keeper.getValidatorSigningBitArray(ctx, sdk.ValAddress(addrs[0]), 0)
+	require.True(t, signed) // treat empty key as signed
+	keeper.setValidatorSigningBitArray(ctx, sdk.ValAddress(addrs[0]), 0, false)
+	signed = keeper.getValidatorSigningBitArray(ctx, sdk.ValAddress(addrs[0]), 0)
+	require.False(t, signed) // now should be unsigned
+	keeper.invalidateValidatorSigningBitArray(ctx, sdk.ValAddress(addrs[0]), int64(1))
+	signed = keeper.getValidatorSigningBitArray(ctx, sdk.ValAddress(addrs[0]), 0)
+	require.True(t, signed) // now should be signed (by virtue of being unset)
 }

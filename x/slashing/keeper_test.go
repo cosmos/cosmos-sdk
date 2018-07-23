@@ -107,7 +107,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
-	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)-1, info.SignedBlocksCounter)
+	require.Equal(t, int64(1000), info.SignedBlocksCounter)
 
 	// validator should have been revoked
 	validator, _ = sk.GetValidatorByPubKey(ctx, val)
@@ -134,7 +134,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, height, info.StartHeight)
-	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)-1, info.SignedBlocksCounter)
+	require.Equal(t, int64(1000), info.SignedBlocksCounter)
 
 	// validator should not be immediately revoked again
 	height++
@@ -186,7 +186,7 @@ func TestHandleNewValidator(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, int64(keeper.SignedBlocksWindow(ctx)+1), info.StartHeight)
 	require.Equal(t, int64(2), info.IndexOffset)
-	require.Equal(t, int64(1), info.SignedBlocksCounter)
+	require.Equal(t, int64(999), info.SignedBlocksCounter)
 	require.Equal(t, int64(0), info.JailedUntil)
 
 	// validator should be bonded still, should not have been revoked or slashed
@@ -194,4 +194,35 @@ func TestHandleNewValidator(t *testing.T) {
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 	pool := sk.GetPool(ctx)
 	require.Equal(t, int64(100), pool.BondedTokens.RoundInt64())
+}
+
+// Test a new validator that never signs between 0 and MinSignedPerWindow
+// is immediately revoked at MinSignedPerWindow and doesn't wait until
+// SignedBlocksWindow to be slashed.
+func TestHandleNewValidatorNeverPresent(t *testing.T) {
+	// initial setup
+	ctx, ck, sk, _, keeper := createTestInput(t)
+	addr, val, amt := addrs[0], pks[0], int64(100)
+	sh := stake.NewHandler(sk)
+	got := sh(ctx, newTestMsgCreateValidator(addr, val, sdk.NewInt(amt)))
+	require.True(t, got.IsOK())
+	stake.EndBlocker(ctx, sk)
+	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.SubRaw(amt)}})
+	require.Equal(t, sdk.NewRat(amt), sk.Validator(ctx, addr).GetPower())
+
+	for height := int64(0); height < keeper.MinSignedPerWindow(ctx)+1; height++ {
+		ctx = ctx.WithBlockHeight(height)
+		keeper.handleValidatorSignature(ctx, val, 100, false)
+	}
+
+	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))
+	require.True(t, found)
+	require.Equal(t, int64(0), info.StartHeight)
+	require.Equal(t, int64(keeper.MinSignedPerWindow(ctx)+1), info.IndexOffset)
+	require.Equal(t, int64(keeper.SignedBlocksWindow(ctx)), info.SignedBlocksCounter)
+	require.Equal(t, int64(3600), info.JailedUntil)
+
+	// validator should be unbonded
+	validator, _ := sk.GetValidatorByPubKey(ctx, val)
+	require.Equal(t, sdk.Unbonded, validator.GetStatus())
 }

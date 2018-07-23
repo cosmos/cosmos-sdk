@@ -80,9 +80,9 @@ func SimulateFromSeed(
 		case load < 0.33:
 			thisBlockSize = 0
 		case load < 0.66:
-			thisBlockSize = blockSize
+			thisBlockSize = r.Intn(blockSize * 2)
 		default:
-			thisBlockSize = blockSize * 2
+			thisBlockSize = r.Intn(blockSize * 4)
 		}
 		for j := 0; j < thisBlockSize; j++ {
 			logUpdate, err := ops[r.Intn(len(ops))](t, r, app, ctx, keys, log, event)

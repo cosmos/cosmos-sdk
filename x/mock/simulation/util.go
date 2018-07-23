@@ -41,7 +41,7 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 // Pretty-print events as a table
 func DisplayEvents(events map[string]uint) {
 	var keys []string
-	for key, _ := range events {
+	for key := range events {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)

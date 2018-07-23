@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	"github.com/tendermint/abci/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -38,7 +37,7 @@ func NewHandler(k Keeper) sdk.Handler {
 
 // NewEndBlocker checks proposals and generates a EndBlocker
 func NewEndBlocker(k Keeper) sdk.EndBlocker {
-	return sdk.EndBlocker(func(ctx sdk.Context, req types.RequestEndBlock) types.ResponseEndBlock {
+	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 		newTags := sdk.NewTags()
 		tags, err := checkProposal(ctx, k, newTags)
 		if err != nil {
@@ -47,7 +46,7 @@ func NewEndBlocker(k Keeper) sdk.EndBlocker {
 		return abci.ResponseEndBlock{
 			Tags: tags,
 		}
-	})
+	}
 }
 
 // checkProposal checks if the proposal reached the end of the voting period

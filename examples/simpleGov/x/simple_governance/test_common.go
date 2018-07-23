@@ -82,7 +82,7 @@ var (
 		"",
 		"          ",
 	}
-	emptyAddr   sdk.Address
+	emptyAddr   sdk.AccAddress
 	emptyPubkey crypto.PubKey
 )
 

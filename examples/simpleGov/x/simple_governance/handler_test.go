@@ -25,8 +25,8 @@ func TestHandleSubmitProposalMsg(t *testing.T) {
 	keyGov := sdk.NewKVStoreKey("gov")
 
 	mapp, k, sk := CreateMockApp(100, keyStake, keyGov)
-	header := abci.Header{ChainID: "simplegovchain"}
-	ctx := mapp.NewContext(false, header)
+
+	ctx := mapp.NewContext(false, abci.Header{})
 	newTags := sdk.NewTags()
 	tags, err := checkProposal(ctx, k, newTags) // No proposal
 	assert.NotNil(t, err)

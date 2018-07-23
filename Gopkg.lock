@@ -36,74 +36,6 @@
   revision = "d4cc87b860166d00d6b5b9e0d3b3d71d6088d4d4"
 
 [[projects]]
-  branch = "develop"
-  name = "github.com/cosmos/cosmos-sdk"
-  packages = [
-    "baseapp",
-    "client",
-    "client/context",
-    "client/keys",
-    "client/lcd",
-    "client/rpc",
-    "client/tx",
-    "cmd/cosmos-sdk-cli/cmd",
-    "cmd/gaia/app",
-    "crypto",
-    "crypto/keys",
-    "crypto/keys/bcrypt",
-    "crypto/keys/bip39",
-    "crypto/keys/hd",
-    "examples/basecoin/app",
-    "examples/basecoin/types",
-    "examples/democoin/app",
-    "examples/democoin/mock",
-    "examples/democoin/types",
-    "examples/democoin/x/cool",
-    "examples/democoin/x/cool/client/cli",
-    "examples/democoin/x/pow",
-    "examples/democoin/x/pow/client/cli",
-    "examples/democoin/x/simplestake",
-    "examples/democoin/x/simplestake/client/cli",
-    "examples/democoin/x/sketchy",
-    "server",
-    "server/config",
-    "server/mock",
-    "store",
-    "tests",
-    "types",
-    "version",
-    "wire",
-    "x/auth",
-    "x/auth/client/cli",
-    "x/auth/client/rest",
-    "x/bank",
-    "x/bank/client",
-    "x/bank/client/cli",
-    "x/bank/client/rest",
-    "x/bank/simulation",
-    "x/gov",
-    "x/gov/client/cli",
-    "x/gov/client/rest",
-    "x/ibc",
-    "x/ibc/client/cli",
-    "x/ibc/client/rest",
-    "x/mock",
-    "x/mock/simulation",
-    "x/params",
-    "x/slashing",
-    "x/slashing/client/cli",
-    "x/slashing/client/rest",
-    "x/stake",
-    "x/stake/client/cli",
-    "x/stake/client/rest",
-    "x/stake/keeper",
-    "x/stake/simulation",
-    "x/stake/tags",
-    "x/stake/types"
-  ]
-  revision = "bf3bd57584e2fb1e1e710d6a1749a2cdcb650393"
-
-[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -604,6 +536,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "bdf79a845c44fb559662c6379e89aac14b5058868e864b18379865ee75e1d2ae"
+  inputs-digest = "90c9808eda60dea4584f732136683b86e05ea59ec108fc1cbaeb116c7c16ce7f"
   solver-name = "gps-cdcl"
   solver-version = 1

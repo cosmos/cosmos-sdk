@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/lib"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -19,10 +20,10 @@ import (
 
 // flags
 const (
-	FlagFromChainID   = "from-chain-id"
-	FlagFromChainNode = "from-chain-node"
-	FlagToChainID     = "to-chain-id"
-	FlagToChainNode   = "to-chain-node"
+	FlagSrcChainID    = "src-chain-id"
+	FlagSrcChainNode  = "src-chain-node"
+	FlagDestChainID   = "dest-chain-id"
+	FlagDestChainNode = "dest-chain-node"
 )
 
 type relayCommander struct {
@@ -53,99 +54,90 @@ func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 		Run: cmdr.runIBCRelay,
 	}
 
-	cmd.Flags().String(FlagFromChainID, "", "Chain ID for ibc node to check outgoing packets")
-	cmd.Flags().String(FlagFromChainNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
-	cmd.Flags().String(FlagToChainID, "", "Chain ID for ibc node to broadcast incoming packets")
-	cmd.Flags().String(FlagToChainNode, "tcp://localhost:36657", "<host>:<port> to tendermint rpc interface for this chain")
+	cmd.Flags().String(FlagSrcChainID, "", "Chain ID for ibc node to check outgoing packets")
+	cmd.Flags().String(FlagSrcChainNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
+	cmd.Flags().String(FlagDestChainID, "", "Chain ID for ibc node to broadcast incoming packets")
+	cmd.Flags().String(FlagDestChainNode, "tcp://localhost:36657", "<host>:<port> to tendermint rpc interface for this chain")
 
-	cmd.MarkFlagRequired(FlagFromChainID)
-	cmd.MarkFlagRequired(FlagFromChainNode)
-	cmd.MarkFlagRequired(FlagToChainID)
-	cmd.MarkFlagRequired(FlagToChainNode)
+	cmd.MarkFlagRequired(FlagSrcChainID)
+	cmd.MarkFlagRequired(FlagSrcChainNode)
+	cmd.MarkFlagRequired(FlagDestChainID)
+	cmd.MarkFlagRequired(FlagDestChainNode)
 
-	viper.BindPFlag(FlagFromChainID, cmd.Flags().Lookup(FlagFromChainID))
-	viper.BindPFlag(FlagFromChainNode, cmd.Flags().Lookup(FlagFromChainNode))
-	viper.BindPFlag(FlagToChainID, cmd.Flags().Lookup(FlagToChainID))
-	viper.BindPFlag(FlagToChainNode, cmd.Flags().Lookup(FlagToChainNode))
+	viper.BindPFlag(FlagSrcChainID, cmd.Flags().Lookup(FlagSrcChainID))
+	viper.BindPFlag(FlagSrcChainNode, cmd.Flags().Lookup(FlagSrcChainNode))
+	viper.BindPFlag(FlagDestChainID, cmd.Flags().Lookup(FlagDestChainID))
+	viper.BindPFlag(FlagDestChainNode, cmd.Flags().Lookup(FlagDestChainNode))
 
 	return cmd
 }
 
 // nolint: unparam
 func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
-	fromChainID := viper.GetString(FlagFromChainID)
-	fromChainNode := viper.GetString(FlagFromChainNode)
-	toChainID := viper.GetString(FlagToChainID)
-	toChainNode := viper.GetString(FlagToChainNode)
+	srcChainID := viper.GetString(FlagSrcChainID)
+	srcChainNode := viper.GetString(FlagSrcChainNode)
+	toChainID := viper.GetString(FlagDestChainID)
+	toChainNode := viper.GetString(FlagDestChainNode)
 	address, err := context.NewCoreContextFromViper().GetFromAddress()
 	if err != nil {
 		panic(err)
 	}
 	c.address = address
 
-	c.loop(fromChainID, fromChainNode, toChainID, toChainNode)
+	ctx := context.NewCoreContextFromViper()
+	// TODO: use proper config
+	egressQueue := lib.NewLinearClient(ctx.WithNodeURI(srcChainNode), "bank", c.cdc, []byte("ibc/"), nil)
+	c.loop(egressQueue, srcChainID, toChainID, toChainNode)
 }
 
-// This is nolinted as someone is in the process of refactoring this to remove the goto
-// nolint: gocyclo
-func (c relayCommander) loop(fromChainID, fromChainNode, toChainID,
-	toChainNode string) {
-
-	ctx := context.NewCoreContextFromViper()
-	// get password
-	passphrase, err := ctx.GetPassphraseFromStdin(ctx.FromAddressName)
+func (c relayCommander) processed(node string, srcChainID string) uint64 {
+	// TODO: Support receipts
+	bz, err := query(node, ibc.IncomingSequenceKey(ibc.PacketType, srcChainID), c.ibcStore)
 	if err != nil {
 		panic(err)
 	}
 
-	ingressKey := ibc.IngressSequenceKey(fromChainID)
+	if bz == nil {
+		return 0
+	}
+	var res int64
+	c.cdc.MustUnmarshalBinary(bz, &res)
 
-OUTER:
+	if res < 0 {
+		panic("Negative processed result")
+	}
+
+	return uint64(res)
+}
+
+// This is nolinted as someone is in the process of refactoring this to remove the goto
+// nolint: gocyclo
+func (c relayCommander) loop(egressQueue lib.LinearClient, srcChainID, chainID, chainNode string) {
+	ctx := context.NewCoreContextFromViper()
+
 	for {
 		time.Sleep(5 * time.Second)
 
-		processedbz, err := query(toChainNode, ingressKey, c.ibcStore)
-		if err != nil {
-			panic(err)
+		proc := c.processed(chainNode, srcChainID)
+		length := egressQueue.Len()
+		if length <= proc {
+			continue
 		}
 
-		var processed int64
-		if processedbz == nil {
-			processed = 0
-		} else if err = c.cdc.UnmarshalBinary(processedbz, &processed); err != nil {
-			panic(err)
-		}
+		c.logger.Info("Detected IBC packet", "number", length-1)
 
-		lengthKey := ibc.EgressLengthKey(toChainID)
-		egressLengthbz, err := query(fromChainNode, lengthKey, c.ibcStore)
-		if err != nil {
-			c.logger.Error("error querying outgoing packet list length", "err", err)
-			continue OUTER //TODO replace with continue (I think it should just to the correct place where OUTER is now)
-		}
-		var egressLength int64
-		if egressLengthbz == nil {
-			egressLength = 0
-		} else if err = c.cdc.UnmarshalBinary(egressLengthbz, &egressLength); err != nil {
-			panic(err)
-		}
-		if egressLength > processed {
-			c.logger.Info("Detected IBC packet", "number", egressLength-1)
-		}
-
-		seq := c.getSequence(toChainNode)
-
-		for i := processed; i < egressLength; i++ {
-			egressbz, err := query(fromChainNode, ibc.EgressKey(toChainID, i), c.ibcStore)
+		var data ibc.Datagram
+		for i := proc; i < length; i++ {
+			err := egressQueue.Get(i, &data)
 			if err != nil {
-				c.logger.Error("error querying egress packet", "err", err)
-				continue OUTER // TODO replace to break, will break first loop then send back to the beginning (aka OUTER)
+				panic(err)
 			}
 
-			err = c.broadcastTx(seq, toChainNode, c.refine(egressbz, i, passphrase))
-			seq++
+			// TODO: add proof
+			msg := ibc.MsgReceive{Datagram: data, Relayer: c.address}
+			err = ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, c.cdc)
 			if err != nil {
-				c.logger.Error("error broadcasting ingress packet", "err", err)
-				continue OUTER // TODO replace to break, will break first loop then send back to the beginning (aka OUTER)
+				panic(err)
 			}
 
 			c.logger.Info("Relayed IBC packet", "number", i)
@@ -177,24 +169,4 @@ func (c relayCommander) getSequence(node string) int64 {
 	}
 
 	return 0
-}
-
-func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []byte {
-	var packet ibc.IBCPacket
-	if err := c.cdc.UnmarshalBinary(bz, &packet); err != nil {
-		panic(err)
-	}
-
-	msg := ibc.IBCReceiveMsg{
-		IBCPacket: packet,
-		Relayer:   c.address,
-		Sequence:  sequence,
-	}
-
-	ctx := context.NewCoreContextFromViper().WithSequence(sequence)
-	res, err := ctx.SignAndBuild(ctx.FromAddressName, passphrase, []sdk.Msg{msg}, c.cdc)
-	if err != nil {
-		panic(err)
-	}
-	return res
 }

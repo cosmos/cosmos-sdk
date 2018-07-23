@@ -263,6 +263,7 @@ func TestCoinSend(t *testing.T) {
 	require.Equal(t, int64(1), mycoins.Amount.Int64())
 }
 
+/*
 func TestIBCTransfer(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKB(t))
@@ -291,7 +292,7 @@ func TestIBCTransfer(t *testing.T) {
 
 	// TODO: query ibc egress packet state
 }
-
+*/
 func TestTxs(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKB(t))

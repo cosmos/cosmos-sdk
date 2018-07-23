@@ -8,6 +8,8 @@ import (
 func RegisterWire(cdc *wire.Codec) {
 	cdc.RegisterConcrete(MsgSend{}, "cosmos-sdk/Send", nil)
 	cdc.RegisterConcrete(MsgIssue{}, "cosmos-sdk/Issue", nil)
+	cdc.RegisterConcrete(MsgIBCSend{}, "cosmos-sdk/IBCSend", nil)
+
 }
 
 var msgCdc = wire.NewCodec()

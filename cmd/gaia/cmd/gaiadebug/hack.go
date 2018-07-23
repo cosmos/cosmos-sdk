@@ -140,7 +140,7 @@ type GaiaApp struct {
 	accountMapper       auth.AccountMapper
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	coinKeeper          bank.Keeper
-	ibcMapper           ibc.Mapper
+	ibcKeeper           ibc.Keeper
 	stakeKeeper         stake.Keeper
 	slashingKeeper      slashing.Keeper
 	paramsKeeper        params.Keeper
@@ -173,15 +173,15 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 
 	// add handlers
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
-	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams)
+	app.ibcKeeper = ibc.NewKeeper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.paramsKeeper.Getter(), app.RegisterCodespace(slashing.DefaultCodespace))
 
 	// register message routes
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
-		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
+		AddRoute("ibc", ibc.NewHandler(app.ibcKeeper)).
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
 
 	// initialize BaseApp

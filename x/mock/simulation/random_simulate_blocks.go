@@ -56,6 +56,7 @@ func SimulateFromSeed(
 	app.Commit()
 
 	header := abci.Header{Height: 0, Time: time}
+	opCount := 0
 
 	for i := 0; i < numBlocks; i++ {
 
@@ -90,17 +91,18 @@ func SimulateFromSeed(
 
 			require.Nil(t, err, log)
 			AssertAllInvariants(t, app, invariants, log)
+			fmt.Printf("\rSimulating... block %d/%d, operation %d.", header.Height, numBlocks, opCount)
+			opCount++
 		}
 
 		res := app.EndBlock(abci.RequestEndBlock{})
 		UpdateValidators(t, validators, res.ValidatorUpdates)
-		fmt.Printf("Simulation of block %d with %d operations complete.\n", header.Height, thisBlockSize)
 
 		header.Height++
 		header.Time += minTimePerBlock + int64(r.Intn(int(timeDiff)))
 	}
 
-	fmt.Printf("Simulation complete. Final height (blocks): %d, final time (seconds): %d\n", header.Height, header.Time)
+	fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds): %d\n", header.Height, header.Time)
 	DisplayEvents(events)
 }
 

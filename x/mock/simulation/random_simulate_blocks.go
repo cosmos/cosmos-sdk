@@ -58,7 +58,13 @@ func SimulateFromSeed(
 	for i := 0; i < numBlocks; i++ {
 
 		// Generate a random RequestBeginBlock with the current validator set
-		request := RandomRequestBeginBlock(t, r, validators, signingFraction, evidenceFraction, header.Height, header.Time)
+		var request abci.RequestBeginBlock
+		if signingFraction == 0.0 {
+			// No BeginBlock simulation
+			request = abci.RequestBeginBlock{}
+		} else {
+			request = RandomRequestBeginBlock(t, r, validators, signingFraction, evidenceFraction, header.Height, header.Time)
+		}
 		app.BeginBlock(request)
 
 		// Make sure invariants hold at beginning of block

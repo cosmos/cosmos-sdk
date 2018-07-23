@@ -19,14 +19,15 @@ import (
 )
 
 var (
-	seed            int64
-	numKeys         int
-	numBlocks       int
-	blockSize       int
-	minTimePerBlock int64
-	maxTimePerBlock int64
-	signingFraction float64
-	enabled         bool
+	seed             int64
+	numKeys          int
+	numBlocks        int
+	blockSize        int
+	minTimePerBlock  int64
+	maxTimePerBlock  int64
+	signingFraction  float64
+	evidenceFraction float64
+	enabled          bool
 )
 
 func init() {

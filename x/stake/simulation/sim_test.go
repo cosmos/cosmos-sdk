@@ -54,6 +54,6 @@ func TestStakeWithRandomMessages(t *testing.T) {
 			Setup(mapp, stakeKeeper),
 		}, []simulation.Invariant{
 			AllInvariants(coinKeeper, stakeKeeper, mapp.AccountMapper),
-		}, 10, 100, 100, 10, 20, 0.7, 0.0,
+		}, 10, 100, 100, 10, 20, 0.0, 0.0,
 	)
 }

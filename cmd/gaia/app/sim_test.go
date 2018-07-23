@@ -32,11 +32,12 @@ var (
 func init() {
 	flag.Int64Var(&seed, "SimulationSeed", 42, "Simulation random seed")
 	flag.IntVar(&numKeys, "SimulationNumKeys", 10, "Number of keys (accounts)")
-	flag.IntVar(&numBlocks, "SimulationNumBlocks", 50, "Number of blocks")
+	flag.IntVar(&numBlocks, "SimulationNumBlocks", 100, "Number of blocks")
 	flag.IntVar(&blockSize, "SimulationBlockSize", 1000, "Operations per block")
 	flag.Int64Var(&minTimePerBlock, "SimulationMinTimePerBlock", 60, "Minimum time per block (seconds)")
 	flag.Int64Var(&maxTimePerBlock, "SimulationMaxTimePerBlock", 120, "Maximum time per block (seconds)")
 	flag.Float64Var(&signingFraction, "SimulationSigningFraction", 0.7, "Chance a given validator signs a given block")
+	flag.Float64Var(&evidenceFraction, "SimulationEvidenceFraction", 0.01, "Chance that any evidence is found on a given block")
 	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")
 }
 
@@ -104,6 +105,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 		minTimePerBlock,
 		maxTimePerBlock,
 		signingFraction,
+		evidenceFraction,
 	)
 
 }

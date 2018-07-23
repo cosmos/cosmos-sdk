@@ -17,17 +17,17 @@ import (
 // Simulate tests application by sending random messages.
 func Simulate(
 	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, accs []sdk.AccAddress) json.RawMessage, ops []TestAndRunTx, setups []RandSetup,
-	invariants []Invariant, numKeys int, numBlocks int, blockSize int, minTimePerBlock int64, maxTimePerBlock int64, signingFraction float64,
+	invariants []Invariant, numKeys int, numBlocks int, blockSize int, minTimePerBlock int64, maxTimePerBlock int64, signingFraction float64, evidenceFraction float64,
 ) {
 	time := time.Now().UnixNano()
-	SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numKeys, numBlocks, blockSize, minTimePerBlock, maxTimePerBlock, signingFraction)
+	SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numKeys, numBlocks, blockSize, minTimePerBlock, maxTimePerBlock, signingFraction, evidenceFraction)
 }
 
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
 func SimulateFromSeed(
 	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, accs []sdk.AccAddress) json.RawMessage, seed int64, ops []TestAndRunTx, setups []RandSetup,
-	invariants []Invariant, numKeys int, numBlocks int, blockSize int, minTimePerBlock int64, maxTimePerBlock int64, signingFraction float64,
+	invariants []Invariant, numKeys int, numBlocks int, blockSize int, minTimePerBlock int64, maxTimePerBlock int64, signingFraction float64, evidenceFraction float64,
 ) {
 	log := fmt.Sprintf("Starting SimulateFromSeed with randomness created with seed %d", int(seed))
 	keys, addrs := mock.GeneratePrivKeyAddressPairs(numKeys)
@@ -58,7 +58,7 @@ func SimulateFromSeed(
 	for i := 0; i < numBlocks; i++ {
 
 		// Generate a random RequestBeginBlock with the current validator set
-		request := RandomRequestBeginBlock(t, r, validators, signingFraction)
+		request := RandomRequestBeginBlock(t, r, validators, signingFraction, evidenceFraction, header.Height, header.Time)
 		app.BeginBlock(request)
 
 		// Make sure invariants hold at beginning of block
@@ -94,8 +94,9 @@ func SimulateFromSeed(
 	DisplayEvents(events)
 }
 
-// RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators and signing fraction
-func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]abci.Validator, signingFraction float64) abci.RequestBeginBlock {
+// RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
+func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]abci.Validator, signingFraction float64, evidenceFraction float64,
+	currentHeight int64, currentTime int64) abci.RequestBeginBlock {
 	require.True(t, len(validators) > 0, "Zero validators can't sign a block!")
 	signingValidators := make([]abci.SigningValidator, len(validators))
 	i := 0
@@ -107,8 +108,25 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]a
 		}
 		i++
 	}
+	evidence := make([]abci.Evidence, 0)
+	if r.Float64() < evidenceFraction {
+		// TODO Also include past evidence
+		validator := signingValidators[r.Intn(len(signingValidators))].Validator
+		var currentTotalVotingPower int64
+		for _, val := range validators {
+			currentTotalVotingPower += val.Power
+		}
+		evidence = append(evidence, abci.Evidence{
+			Type:             "DOUBLE_SIGN",
+			Validator:        validator,
+			Height:           currentHeight,
+			Time:             currentTime,
+			TotalVotingPower: currentTotalVotingPower,
+		})
+	}
 	return abci.RequestBeginBlock{
-		Validators: signingValidators,
+		Validators:          signingValidators,
+		ByzantineValidators: evidence,
 	}
 }
 

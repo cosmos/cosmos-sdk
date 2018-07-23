@@ -37,7 +37,7 @@ func NewApp2(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	cdc := NewCodec()
 
 	// Create the base application object.
-	app := bapp.NewBaseApp(app2Name, cdc, logger, db)
+	app := bapp.NewBaseApp(app2Name, logger, db, tx2Decoder(cdc))
 
 	// Create a key for accessing the account store.
 	keyAccount := sdk.NewKVStoreKey("acc")
@@ -189,6 +189,18 @@ func (tx app2Tx) GetMsgs() []sdk.Msg {
 
 func (tx app2Tx) GetSignatures() []auth.StdSignature {
 	return tx.Signatures
+}
+
+// Amino decode app2Tx. Capable of decoding both MsgSend and MsgIssue
+func tx2Decoder(cdc *wire.Codec) sdk.TxDecoder {
+	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
+		var tx app2Tx
+		err := cdc.UnmarshalBinary(txBytes, &tx)
+		if err != nil {
+			return nil, sdk.ErrTxDecode(err.Error())
+		}
+		return tx, nil
+	}
 }
 
 //------------------------------------------------------------------

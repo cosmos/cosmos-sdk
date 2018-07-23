@@ -4,14 +4,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestBondMsgValidation(t *testing.T) {
-	privKey := crypto.GenPrivKeyEd25519()
+	privKey := ed25519.GenPrivKey()
 	cases := []struct {
 		valid   bool
 		msgBond MsgBond

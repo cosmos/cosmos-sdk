@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -42,7 +42,7 @@ func TestGenesis(t *testing.T) {
 	baseApp := NewBasecoinApp(logger, db)
 
 	// construct a pubkey and an address for the test account
-	pubkey := crypto.GenPrivKeyEd25519().PubKey()
+	pubkey := ed25519.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())
 
 	// construct some test coins

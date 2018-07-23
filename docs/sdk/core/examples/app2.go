@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -21,7 +21,7 @@ const (
 )
 
 var (
-	issuer = crypto.GenPrivKeyEd25519().PubKey().Address()
+	issuer = ed25519.GenPrivKey().PubKey().Address()
 )
 
 func NewCodec() *wire.Codec {

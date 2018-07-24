@@ -1,59 +1,62 @@
 ## State
 
-### Pool
- - key: `01`
- - value: `amino(pool)`
+### Reward Pool
 
-The pool is a space for all dynamic global state of the Cosmos Hub.  It tracks
-information about the total amounts of Atoms in all states, moving Atom
-inflation information, etc.
+All rewards are collected in the reward pool and distributed to validators/delegators 
+from this pool. 
+
+ - RewardPool:  `0x00 -> amino(rewardPool)`
 
 ```golang
-type Pool struct {
-    LooseTokens         int64   // tokens not associated with any bonded validator
-    BondedTokens        int64   // reserve of bonded tokens
-    InflationLastTime   int64   // block which the last inflation was processed // TODO make time
-    Inflation           sdk.Rat // current annual inflation rate
-    
-    DateLastCommissionReset int64  // unix timestamp for last commission accounting reset (daily)
+type RewardPool sdk.Coins // reward pool for all validators
+```
+
+### Validator Distribution
+
+Validator Distribution information for the relavent validator is updated: each
+time delegations to a validator are updated, a validator successfully proposes
+a block and receives (recieving a reward), any delegator withdraws from a
+validator, the validator withdraws. 
+
+ - ValidatorDistribution:  `0x02 | ValOwnerAddr -> amino(validatorDistribution)`
+
+```golang
+type ValidatorDistribution struct {
+    Adjustment         sdk.Rat   // commission adjustment factor
+    ProposerRewardPool sdk.Coins // reward pool collected from being the proposer
+	LastBondedTokens   sdk.Rat   // last bonded token amount
 }
-_______________________________________
+```
 
-### Validator
+### Delegation
 
-Validators are identified according to the `ValOwnerAddr`, 
-an SDK account address for the owner of the validator.
-
-Validators also have a `ValTendermintAddr`, the address 
-of the public key of the validator.
-
-Validators are indexed in the store using the following maps:
+Each delegation holds multiple adjustment factors to specify its entitlement to
+the rewards from a validator. `AdjustmentFeePool` is  used to passively
+calculate each bonds entitled fees from the `RewardPool`.
+`AdjustmentRewardPool` is used to passively calculate each bonds entitled fees
+from `ValidatorDistribution.ProposerRewardPool`
  
- - Validators: `0x02 | ValOwnerAddr -> amino(validator)`
- - ValidatorsByPubKey: `0x03 | ValTendermintAddr -> ValOwnerAddr`
- - ValidatorsByPower: `0x05 | power | blockHeight | blockTx  -> ValOwnerAddr`
+ - DelegatorDist: ` 0x02 | DelegatorAddr | ValOwnerAddr -> amino(delegatorDist)`
 
-* Adjustment factor used to passively calculate each validators entitled fees
-  from `GlobalState.FeePool`
-
-Delegation Shares
-
-* AdjustmentFeePool: Adjustment factor used to passively calculate each bonds
-  entitled fees from `GlobalState.FeePool`
-* AdjustmentRewardPool: Adjustment factor used to passively calculate each
-  bonds entitled fees from `Validator.ProposerRewardPool`
+```golang
+type DelegatorDist struct {
+    HeightLastWithdrawal int64     // last time this delegation withdrew rewards
+    AdjustmentFeePool    sdk.Rat   // commission adjustment factor
+    AdjustmentRewardPool sdk.Coins // reward pool collected from being the proposer
+}
+```
 
 ### Power Change
 
- - Key: `0x03 | amino(nonce)`
-
 Every instance that the voting power changes, information about the state of
 the validator set during the change must be recorded as a `PowerChange` for
-other validators to run through. 
+other validators to run through. Each power change is stored under a sequence
+number which increments by one for each new power change record
 
+ - PowerChange: `0x03 | amino(PCSequence) -> amino(validatorDist)`
 
 ```golang
-type PCNonce int64 
+type PCSequence int64 
 
 type PowerChange struct {
     height      int64        // block height at change
@@ -64,12 +67,8 @@ type PowerChange struct {
 }
 ```
 
-### Max Power Change Nonce
- - key: `0x04`
- - value: `amino(PCNonce)`
+### Max Power Change Sequence
 
-To track the height of the power change, a nonce The set of all `powerChange`
-may be trimmed from its oldest members once all validators have synced past the
-height of the oldest `powerChange`.  This trim procedure will occur on an epoch
-basis.  
+To track the latest `PowerChange` record, the maximum `PCSequence` is stored
 
+ - MaxPCSequence:   `0x04 -> amino(PCSequence)`

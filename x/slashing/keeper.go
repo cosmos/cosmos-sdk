@@ -105,12 +105,15 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 		validator := k.validatorSet.ValidatorByPubKey(ctx, pubkey)
 		if validator != nil && !validator.GetRevoked() {
 			// Downtime confirmed, slash, revoke, and jail the validator
-			logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d", pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx)))
+			logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",
+				pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx)))
 			k.validatorSet.Slash(ctx, pubkey, height, power, k.SlashFractionDowntime(ctx))
 			k.validatorSet.Revoke(ctx, pubkey)
 			signInfo.JailedUntil = ctx.BlockHeader().Time + k.DowntimeUnbondDuration(ctx)
 		} else {
-			logger.Info(fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store (possibly already completely unbonded) or already revoked", pubkey.Address()))
+			// Validator was (a) not found or (b) already revoked, don't slash
+			logger.Info(fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store or already revoked",
+				pubkey.Address()))
 		}
 	}
 

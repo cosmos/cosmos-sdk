@@ -13,7 +13,7 @@ bonded tokens to unbonded tokens is 67%.
 
 The target annual inflation rate is recalculated for each provisions cycle. The
 inflation is also subject to a rate change (positive or negative) depending on
-the distance from the desired ratio (67%). The maximum rate change possible is
+the distance from the target ratio (67%). The maximum rate change possible is
 defined to be 13% per year, however the annual inflation is capped as between
 7% and 20%.
 
@@ -26,11 +26,12 @@ Note that params are global params (TODO: link to the global params spec)
 ```
 processProvisions():
     hrsPerYr = 8766   // as defined by a julian year of 365.25 days
-    
-    time = BFTTime()
-    if time > GetInflationLastTime() + OneHour
-        SetInflationLastTime(InflationLastTime + OneHour)
-        inflation = nextInflation(hrsPerYr).Round(1000000000)
+    precision = 10000
+
+    time = BFTTime() // time is in seconds
+    if time > GetInflationLastTime() + 3600 
+        SetInflationLastTime(InflationLastTime + 3600)
+        inflation = nextInflation(hrsPerYr).Round(precision)
         SetInflation(inflation)
         
         provisions = inflation * (pool.TotalSupply() / hrsPerYr)
@@ -39,8 +40,6 @@ processProvisions():
         distribution.AddInflation(provisions)
 
 nextInflation(hrsPerYr rational.Rat):
-    if pool.TotalSupply() > 0 
-        panic("Total supply must be greater than 0")
 
     bondedRatio = pool.BondedPool / pool.TotalSupply()
 
@@ -48,8 +47,11 @@ nextInflation(hrsPerYr rational.Rat):
     inflationRateChange = inflationRateChangePerYear / hrsPerYr
 
     inflation = GetInflation() + inflationRateChange
-    if inflation > params.InflationMax then inflation = params.InflationMax
-    if inflation < params.InflationMin then inflation = params.InflationMin
-	
-    return inflation 
+    switch inflation
+        case > params.InflationMax
+            return params.InflationMax
+        case < params.InflationMin
+            return params.InflationMin
+        default 	
+            return inflation 
 ```

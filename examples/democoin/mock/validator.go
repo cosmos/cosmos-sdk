@@ -87,6 +87,11 @@ func (vs *ValidatorSet) Validator(ctx sdk.Context, addr sdk.AccAddress) sdk.Vali
 	return nil
 }
 
+// ValidatorByPubKey implements sdk.ValidatorSet
+func (vs *ValidatorSet) ValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) sdk.Validator {
+	panic("not implemented")
+}
+
 // TotalPower implements sdk.ValidatorSet
 func (vs *ValidatorSet) TotalPower(ctx sdk.Context) sdk.Rat {
 	res := sdk.ZeroRat()

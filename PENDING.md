@@ -42,3 +42,4 @@ IMPROVEMENTS
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators
+*  \#1797 Fix off-by-one error in slashing for downtime

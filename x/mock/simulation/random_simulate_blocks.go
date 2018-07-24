@@ -58,16 +58,11 @@ func SimulateFromSeed(
 	header := abci.Header{Height: 0, Time: time}
 	opCount := 0
 
+	request := abci.RequestBeginBlock{}
+
 	for i := 0; i < numBlocks; i++ {
 
-		// Generate a random RequestBeginBlock with the current validator set
-		var request abci.RequestBeginBlock
-		if signingFraction == 0.0 {
-			// No BeginBlock simulation
-			request = abci.RequestBeginBlock{}
-		} else {
-			request = RandomRequestBeginBlock(t, r, validators, signingFraction, evidenceFraction, header.Height, header.Time)
-		}
+		// Run the BeginBlock handler
 		app.BeginBlock(request)
 
 		// Make sure invariants hold at beginning of block
@@ -96,10 +91,19 @@ func SimulateFromSeed(
 		}
 
 		res := app.EndBlock(abci.RequestEndBlock{})
-		UpdateValidators(t, validators, res.ValidatorUpdates)
-
 		header.Height++
 		header.Time += minTimePerBlock + int64(r.Intn(int(timeDiff)))
+
+		// Generate a random RequestBeginBlock with the current validator set for the next block
+		if signingFraction == 0.0 {
+			// No BeginBlock simulation
+			request = abci.RequestBeginBlock{}
+		} else {
+			request = RandomRequestBeginBlock(t, r, validators, signingFraction, evidenceFraction, header.Height, header.Time)
+		}
+
+		// Update the validator set
+		UpdateValidators(t, validators, res.ValidatorUpdates)
 	}
 
 	fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds): %d\n", header.Height, header.Time)

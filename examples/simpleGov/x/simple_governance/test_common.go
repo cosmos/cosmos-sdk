@@ -133,7 +133,7 @@ func CreateMockApp(
 func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, []sdk.AccAddress, []crypto.PubKey, []crypto.PrivKey) {
 
 	keyStake := sdk.NewKVStoreKey("stake")
-	keyGov := sdk.NewKVStoreKey("gov")
+	keyGov := sdk.NewKVStoreKey("simplegov")
 
 	mapp, k, sk := CreateMockApp(numGenAccs, keyStake, keyGov)
 	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyGov}))
@@ -141,10 +141,10 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 	mapp.SetEndBlocker(NewEndBlocker(k))
 	mapp.SetInitChainer(getInitChainer(mapp, k, sk))
 
-	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewCoin("steak", 42)})
+	genAccs, addresses, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewCoin("steak", 42)})
 	mock.SetGenesis(mapp, genAccs)
 
-	return mapp, k, sk, addrs, pubKeys, privKeys
+	return mapp, k, sk, addresses, pubKeys, privKeys
 }
 
 // gov and stake initchainer

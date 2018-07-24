@@ -16,10 +16,11 @@ import (
 // REST Variable names
 // nolint
 const (
-	RestProposalID = "proposalID"
-	RestDepositer  = "depositer"
-	RestVoter      = "voter"
-	storeName      = "gov"
+	RestProposalID     = "proposalID"
+	RestDepositer      = "depositer"
+	RestVoter          = "voter"
+	RestProposalStatus = "status"
+	storeName          = "gov"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
@@ -31,6 +32,8 @@ func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}", RestProposalID), queryProposalHandlerFn(cdc)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits/{%s}", RestProposalID, RestDepositer), queryDepositHandlerFn(cdc)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes/{%s}", RestProposalID, RestVoter), queryVoteHandlerFn(cdc)).Methods("GET")
+
+	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes", RestProposalID), queryVotesOnProposalHandlerFn(cdc)).Methods("GET")
 
 	r.HandleFunc("/gov/proposals", queryProposalsWithParameterFn(cdc)).Methods("GET")
 }
@@ -336,14 +339,81 @@ func queryVoteHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 
 // nolint: gocyclo
 // todo: Split this functionality into helper functions to remove the above
+func queryVotesOnProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		strProposalID := vars[RestProposalID]
+
+		if len(strProposalID) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			err := errors.New("proposalId required but not specified")
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		proposalID, err := strconv.ParseInt(strProposalID, 10, 64)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			err := errors.Errorf("proposalID [%s] is not positive", proposalID)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		ctx := context.NewCoreContextFromViper()
+
+		res, err := ctx.QueryStore(gov.KeyProposal(proposalID), storeName)
+		if err != nil || len(res) == 0 {
+			err := errors.Errorf("proposalID [%d] does not exist", proposalID)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		var proposal gov.Proposal
+		cdc.MustUnmarshalBinary(res, &proposal)
+
+		if proposal.GetStatus() != gov.StatusVotingPeriod {
+			err := errors.Errorf("proposal is not in Voting Period", proposalID)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		res2, err := ctx.QuerySubspace(cdc, gov.KeyVotesSubspace(proposalID), storeName)
+		if err != nil {
+			err = errors.New("ProposalID doesn't exist")
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		var votes []gov.Vote
+
+		for i := 0; i < len(res2); i++ {
+			var vote gov.Vote
+			cdc.MustUnmarshalBinary(res2[i].Value, &vote)
+			votes = append(votes, vote)
+		}
+
+		output, err := wire.MarshalJSONIndent(cdc, votes)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write(output)
+	}
+}
+
+// nolint: gocyclo
+// todo: Split this functionality into helper functions to remove the above
 func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		bechVoterAddr := r.URL.Query().Get(RestVoter)
 		bechDepositerAddr := r.URL.Query().Get(RestDepositer)
+		strProposalStatus := r.URL.Query().Get(RestProposalStatus)
 
 		var err error
 		var voterAddr sdk.AccAddress
 		var depositerAddr sdk.AccAddress
+		var proposalStatus gov.ProposalStatus
 
 		if len(bechVoterAddr) != 0 {
 			voterAddr, err = sdk.AccAddressFromBech32(bechVoterAddr)
@@ -360,6 +430,16 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				err := errors.Errorf("'%s' needs to be bech32 encoded", RestDepositer)
+				w.Write([]byte(err.Error()))
+				return
+			}
+		}
+
+		if len(strProposalStatus) != 0 {
+			proposalStatus, err = gov.ProposalStatusFromString(strProposalStatus)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				err := errors.Errorf("'%s' is not a valid Proposal Status", strProposalStatus)
 				w.Write([]byte(err.Error()))
 				return
 			}
@@ -397,8 +477,15 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 			if err != nil || len(res) == 0 {
 				continue
 			}
+
 			var proposal gov.Proposal
 			cdc.MustUnmarshalBinary(res, &proposal)
+
+			if len(strProposalStatus) != 0 {
+				if proposal.GetStatus() != proposalStatus {
+					continue
+				}
+			}
 
 			matchingProposals = append(matchingProposals, proposal)
 		}

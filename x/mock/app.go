@@ -47,7 +47,7 @@ func NewApp() *App {
 
 	// Create your application object
 	app := &App{
-		BaseApp:          bam.NewBaseApp("mock", cdc, logger, db),
+		BaseApp:          bam.NewBaseApp("mock", logger, db, auth.DefaultTxDecoder(cdc)),
 		Cdc:              cdc,
 		KeyMain:          sdk.NewKVStoreKey("main"),
 		KeyAccount:       sdk.NewKVStoreKey("acc"),
@@ -202,8 +202,7 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 		(&baseAcc).SetCoins(coins)
 		accts[i] = &baseAcc
 	}
-
-	SetGenesis(app, accts)
+	app.GenesisAccounts = accts
 }
 
 // GetAllAccounts returns all accounts in the accountMapper.

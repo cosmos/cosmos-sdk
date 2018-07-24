@@ -15,9 +15,13 @@ type Coin struct {
 }
 
 func NewCoin(denom string, amount int64) Coin {
+	return NewIntCoin(denom, NewInt(amount))
+}
+
+func NewIntCoin(denom string, amount Int) Coin {
 	return Coin{
 		Denom:  denom,
-		Amount: NewInt(amount),
+		Amount: amount,
 	}
 }
 

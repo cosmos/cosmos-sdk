@@ -63,7 +63,7 @@ type GaiaApp struct {
 func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptions ...func(*bam.BaseApp)) *GaiaApp {
 	cdc := MakeCodec()
 
-	bApp := bam.NewBaseApp(appName, cdc, logger, db, baseAppOptions...)
+	bApp := bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 
 	var app = &GaiaApp{
@@ -143,8 +143,8 @@ func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 // application updates every end block
 // nolint: unparam
 func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
 
+	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
 	tags, _ := gov.EndBlocker(ctx, app.govKeeper)
 
 	return abci.ResponseEndBlock{
@@ -173,7 +173,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	}
 
 	// load the initial stake information
-	err = stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
+	validators, err := stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
 	if err != nil {
 		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 		// return sdk.ErrGenesisParse("").TraceCause(err, "")
@@ -181,7 +181,9 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 
 	gov.InitGenesis(ctx, app.govKeeper, gov.DefaultGenesisState())
 
-	return abci.ResponseInitChain{}
+	return abci.ResponseInitChain{
+		Validators: validators,
+	}
 }
 
 // export the state of gaia for a genesis file

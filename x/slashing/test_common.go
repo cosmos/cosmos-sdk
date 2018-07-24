@@ -34,7 +34,7 @@ var (
 		sdk.AccAddress(pks[1].Address()),
 		sdk.AccAddress(pks[2].Address()),
 	}
-	initCoins sdk.Int = sdk.NewInt(200)
+	initCoins = sdk.NewInt(200)
 )
 
 func createTestCodec() *wire.Codec {
@@ -70,7 +70,7 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, para
 
 	genesis.Pool.LooseTokens = sdk.NewRat(initCoins.MulRaw(int64(len(addrs))).Int64())
 
-	err = stake.InitGenesis(ctx, sk, genesis)
+	_, err = stake.InitGenesis(ctx, sk, genesis)
 	require.Nil(t, err)
 
 	for _, addr := range addrs {

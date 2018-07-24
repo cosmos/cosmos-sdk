@@ -358,25 +358,20 @@ func TestTxs(t *testing.T) {
 }
 
 func TestValidatorsQuery(t *testing.T) {
-	cleanup, pks, port := InitializeTestLCD(t, 2, []sdk.AccAddress{})
+	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
 	defer cleanup()
-	require.Equal(t, 2, len(pks))
+	require.Equal(t, 1, len(pks))
 
 	validators := getValidators(t, port)
-	require.Equal(t, len(validators), 2)
+	require.Equal(t, len(validators), 1)
 
 	// make sure all the validators were found (order unknown because sorted by owner addr)
-	foundVal1, foundVal2 := false, false
-	pk1Bech := sdk.MustBech32ifyValPub(pks[0])
-	pk2Bech := sdk.MustBech32ifyValPub(pks[1])
-	if validators[0].PubKey == pk1Bech || validators[1].PubKey == pk1Bech {
-		foundVal1 = true
+	foundVal := false
+	pkBech := sdk.MustBech32ifyValPub(pks[0])
+	if validators[0].PubKey == pkBech {
+		foundVal = true
 	}
-	if validators[0].PubKey == pk2Bech || validators[1].PubKey == pk2Bech {
-		foundVal2 = true
-	}
-	require.True(t, foundVal1, "pk1Bech %v, owner1 %v, owner2 %v", pk1Bech, validators[0].Owner, validators[1].Owner)
-	require.True(t, foundVal2, "pk2Bech %v, owner1 %v, owner2 %v", pk2Bech, validators[0].Owner, validators[1].Owner)
+	require.True(t, foundVal, "pkBech %v, owner %v", pkBech, validators[0].Owner)
 }
 
 func TestBonding(t *testing.T) {
@@ -569,6 +564,16 @@ func TestProposalsQuery(t *testing.T) {
 	resultTx = doDeposit(t, port, seed2, name2, password2, addr2, proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
+	// Only proposals #1 should be in Deposit Period
+	proposals := getProposalsFilterStatus(t, port, gov.StatusDepositPeriod)
+	require.Len(t, proposals, 1)
+	require.Equal(t, proposalID1, proposals[0].GetProposalID())
+	// Only proposals #2 and #3 should be in Voting Period
+	proposals = getProposalsFilterStatus(t, port, gov.StatusVotingPeriod)
+	require.Len(t, proposals, 2)
+	require.Equal(t, proposalID2, proposals[0].GetProposalID())
+	require.Equal(t, proposalID3, proposals[1].GetProposalID())
+
 	// Addr1 votes on proposals #2 & #3
 	resultTx = doVote(t, port, seed, name, password1, addr, proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
@@ -580,7 +585,7 @@ func TestProposalsQuery(t *testing.T) {
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Test query all proposals
-	proposals := getProposalsAll(t, port)
+	proposals = getProposalsAll(t, port)
 	require.Equal(t, proposalID1, (proposals[0]).GetProposalID())
 	require.Equal(t, proposalID2, (proposals[1]).GetProposalID())
 	require.Equal(t, proposalID3, (proposals[2]).GetProposalID())
@@ -606,6 +611,17 @@ func TestProposalsQuery(t *testing.T) {
 	// Test query voted and deposited by addr1
 	proposals = getProposalsFilterVoterDepositer(t, port, addr, addr)
 	require.Equal(t, proposalID2, (proposals[0]).GetProposalID())
+
+	// Test query votes on Proposal 2
+	votes := getVotes(t, port, proposalID2)
+	require.Len(t, votes, 1)
+	require.Equal(t, addr, votes[0].Voter)
+
+	// Test query votes on Proposal 3
+	votes = getVotes(t, port, proposalID3)
+	require.Len(t, votes, 2)
+	require.True(t, addr.String() == votes[0].Voter.String() || addr.String() == votes[1].Voter.String())
+	require.True(t, addr2.String() == votes[0].Voter.String() || addr2.String() == votes[1].Voter.String())
 }
 
 //_____________________________________________________________________________
@@ -870,6 +886,15 @@ func getVote(t *testing.T, port string, proposalID int64, voterAddr sdk.AccAddre
 	return vote
 }
 
+func getVotes(t *testing.T, port string, proposalID int64) []gov.Vote {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d/votes", proposalID), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var votes []gov.Vote
+	err := cdc.UnmarshalJSON([]byte(body), &votes)
+	require.Nil(t, err)
+	return votes
+}
+
 func getProposalsAll(t *testing.T, port string) []gov.Proposal {
 	res, body := Request(t, port, "GET", "/gov/proposals", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -902,6 +927,16 @@ func getProposalsFilterVoter(t *testing.T, port string, voterAddr sdk.AccAddress
 
 func getProposalsFilterVoterDepositer(t *testing.T, port string, voterAddr, depositerAddr sdk.AccAddress) []gov.Proposal {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals?depositer=%s&voter=%s", depositerAddr, voterAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var proposals []gov.Proposal
+	err := cdc.UnmarshalJSON([]byte(body), &proposals)
+	require.Nil(t, err)
+	return proposals
+}
+
+func getProposalsFilterStatus(t *testing.T, port string, status gov.ProposalStatus) []gov.Proposal {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals?status=%s", status), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var proposals []gov.Proposal

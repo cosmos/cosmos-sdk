@@ -234,7 +234,7 @@ func (r *Rat) UnmarshalAmino(text string) (err error) {
 //___________________________________________________________________________________
 // helpers
 
-// test if two rat arrays are the equal
+// test if two rat arrays are equal
 func RatsEqual(r1s, r2s []Rat) bool {
 	if len(r1s) != len(r2s) {
 		return false

@@ -30,6 +30,7 @@ FEATURES
 * [baseapp] Initialize validator set on ResponseInitChain
 * [cosmos-sdk-cli] Added support for cosmos-sdk-cli tool under cosmos-sdk/cmd	
    * This allows SDK users to initialize a new project repository.
+* [tests] Remotenet commands for AWS (awsnet)
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route
@@ -40,6 +41,7 @@ IMPROVEMENTS
 * [tests] Add tests to example apps in docs
 * [x/gov] Votes on a proposal can now be queried
 * [x/bank] Unit tests are now table-driven
+* [tests] Fixes ansible scripts to work with AWS too
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators

@@ -22,7 +22,6 @@ resource "digitalocean_droplet" "cluster" {
 
   connection {
     private_key = "${file(var.ssh_private_file)}"
-    timeout = "30s"
   }
 
   provisioner "file" {

@@ -2,7 +2,7 @@
 
 ## TxWithdrawDelegation
 
-When a delegator wishes to withdraw thier transaction fees it must send
+When a delegator wishes to withdraw their transaction fees it must send
 `TxWithdrawDelegation`. Note that parts of this transaction logic is also
 triggered each with any change in individual delegations, such as an unbond,
 redelegation, or delegation of additional tokens to a specific validator.  
@@ -20,7 +20,7 @@ if GetValidator(delegation) == found ; Exit
 
 ## TxWithdrawValidator
 
-When a validator wishes to withdraw thier transaction fees it must send
+When a validator wishes to withdraw their transaction fees it must send
 `TxWithdrawDelegation`. Note that parts of this transaction logic is also
 triggered each with any change in individual delegations, such as an unbond,
 redelegation, or delegation of additional tokens to a specific validator.  
@@ -57,81 +57,79 @@ delegators) receives between 1% and 5% of fee rewards, the reserve tax is then
 charged, then the remainder is distributed socially by voting power to all
 validators including the proposer validator.  The amount of proposer reward is
 calculated from pre-commits Tendermint messages. All provision rewards are
-added to a provision reward pool which validator holds individually. Here note
-that `BondedShares` represents the sum of all voting power saved in the
-`GlobalState` (denoted `gs`).
+added to a provision reward pool which validator holds individually
+(`ValidatorDistribution.ProvisionsRewardPool`). 
 
 ```
-proposerReward = feesCollected * (0.01 + 0.04 
-                  * sumOfVotingPowerOfPrecommitValidators / gs.BondedShares)
-validator.ProposerRewardPool += proposerReward
+func (g Global) Update(feesCollected sdk.Coins, 
+     sumPowerPrecommitValidators, totalBondedTokens, communityTax sdk.Dec)
 
-reserveTaxed = feesCollected * params.ReserveTax
-gs.ReservePool += reserveTaxed
-
-distributedReward = feesCollected - proposerReward - reserveTaxed
-gs.FeePool += distributedReward
-gs.SumFeesReceived += distributedReward
-gs.RecentFee = distributedReward
+     feesCollectedDec = MakeDecCoins(feesCollected)
+     proposerReward = feesCollectedDec * (0.01 + 0.04 
+                       * sumPowerPrecommitValidators / totalBondedTokens)
+     validator.ProposerRewardPool += proposerReward
+     
+     communityFunding = feesCollectedDec * communityTax
+     gs.CommunityFund += communityFunding
+     
+     poolReceived = feesCollectedDec - proposerReward - communityFunding
+     g.Pool += poolReceived
+     g.EverReceivedPool += poolReceived
+     g.LastReceivedPool = poolReceived
 ```
 
 The entitlement to the fee pool held by the each validator can be accounted for
-lazily.  First we must account for a validator's `count` and `adjustment`. The
-`count` represents a lazy accounting of what that validators entitlement to the
-fee pool would be if there `VotingPower` was to never change and they were to
-never withdraw fees. 
+lazily.  To begin this calculation we must determine the  validator's `Count`
+and `Adjustment`. The `Count` represents a lazy accounting of what a
+validator's entitlement to the fee pool would be if all validators have always
+had static voting power, and no validator had ever withdrawn their entitled
+rewards. 
 
 ``` 
-validator.count = validator.VotingPower * BlockHeight
+func (v ValidatorDistribution) Count() int64
+    return v.BondedTokens() * BlockHeight
+
+func (p Pool) Count() int64
+    return p.TotalBondedTokens() * BlockHeight
 ``` 
 
-Similarly the GlobalState count can be passively calculated whenever needed,
-where `BondedShares` is the updated sum of voting powers from all validators.
-
-``` 
-gs.count = gs.BondedShares * BlockHeight
-``` 
-
-The `adjustment` term accounts for changes in voting power and withdrawals of
+The `Adjustment` term accounts for changes in voting power and withdrawals of
 fees. The adjustment factor must be persisted with the validator and modified
 whenever fees are withdrawn from the validator or the voting power of the
 validator changes. When the voting power of the validator changes the
 `Adjustment` factor is increased/decreased by the cumulative difference in the
 voting power if the voting power has been the new voting power as opposed to
 the old voting power for the entire duration of the blockchain up the previous
-block. Each time there is an adjustment change the GlobalState (denoted `gs`)
-`Adjustment` must also be updated.
+block. Each time there is an adjustment change the `Global.Adjustment` must
+also be updated.
 
 ```
-simplePool = validator.count / gs.count * gs.SumFeesReceived
-projectedPool = validator.PrevPower * (height-1) 
-                / (gs.PrevPower * (height-1)) * gs.PrevFeesReceived
-                + validator.Power / gs.Power * gs.RecentFee
+func (v ValidatorDistibution) SimplePool(g Global) DecCoins
+    return v.Count() / g.Count() * g.SumFeesReceived
 
-AdjustmentChange = simplePool - projectedPool
-validator.AdjustmentRewardPool += AdjustmentChange
-gs.Adjustment += AdjustmentChange
+func (v ValidatorDistibution) ProjectedPool(height int64, g Global, 
+                                            pool stake.Pool, val stake.Validator) DecCoins
+    return v.PrevPower * (height-1) 
+           / (g.PrevPower * (height-1)) 
+           * g.EverReceivedPool
+           + val.Power() / Pool.TotalPower() 
+           * g.LastReceivedPool
+
+func UpdateAdjustment(g Global, v ValidatorDistibution, 
+                      simplePool, projectedPool DecCoins) (Global, ValidatorDistibution)
+                                            
+    AdjustmentChange = simplePool - projectedPool
+    v.AdjustmentRewardPool += AdjustmentChange
+    g.Adjustment += AdjustmentChange
+    return g, v
 ```
 
 Every instance that the voting power changes, information about the state of
 the validator set during the change must be recorded as a `powerChange` for
 other validators to run through. Before any validator modifies its voting power
 it must first run through the above calculation to determine the change in
-their `caandidate.AdjustmentRewardPool` for all historical changes in the set
-of `powerChange` which they have not yet synced to.  The set of all
-`powerChange` may be trimmed from its oldest members once all validators have
-synced past the height of the oldest `powerChange`.  This trim procedure will
-occur on an epoch basis.  
-
-```golang
-type powerChange struct {
-    height      int64        // block height at change
-    power       rational.Rat // total power at change
-    prevpower   rational.Rat // total power at previous height-1 
-    feesIn      coins.Coin   // fees-in at block height
-    prevFeePool coins.Coin   // total fees in at previous block height
-}
-```
+their `candidate.AdjustmentRewardPool` for all historical changes in the set
+of `powerChange` which they have not yet synced to. 
 
 Note that the adjustment factor may result as negative if the voting power of a
 different validator has decreased.  
@@ -145,7 +143,8 @@ Now the entitled fee pool of each validator can be lazily accounted for at
 any given block:
 
 ```
-validator.feePool = validator.simplePool - validator.Adjustment
+func (v ValidatorDistibution) Pool(g Global) DecCoins
+    return v.simplePool() - v.Adjustment
 ```
 
 So far we have covered two sources fees which can be withdrawn from: Fees from
@@ -164,20 +163,20 @@ each delegator and the validators entitled commission from `gs.FeesPool` and
 `validator.ProposerRewardPool`. 
 
 The calculations are identical with a few modifications to the parameters:
- - Delegator's entitlement to `gs.FeePool`:
+ - Delegator's entitlement to `rewardPool`:
    - entitled party voting power should be taken as the effective voting power
      after commission is retrieved, 
      `bond.Shares/validator.TotalDelegatorShares * validator.VotingPower * (1 - validator.Commission)`
- - Delegator's entitlement to `validator.ProposerFeePool` 
+ - Delegator's entitlement to `validatorDistribution.ProposerFeePool` 
    - global power in this context is actually shares
      `validator.TotalDelegatorShares`
    - entitled party voting power should be taken as the effective shares after
      commission is retrieved, `bond.Shares * (1 - validator.Commission)`
- - Validator's commission entitlement to `gs.FeePool` 
+ - Validator's commission entitlement to `rewardPool` 
    - entitled party voting power should be taken as the effective voting power
      of commission portion of total voting power, 
      `validator.VotingPower * validator.Commission`
- - Validator's commission entitlement to `validator.ProposerFeePool` 
+ - Validator's commission entitlement to `validatorDistribution.ProposerFeePool` 
    - global power in this context is actually shares
      `validator.TotalDelegatorShares`
    - entitled party voting power should be taken as the of commission portion

@@ -1,6 +1,6 @@
 # Transactions
 
-In the previous app we built a simple `bank` with one message type for sending
+In the previous app we built a simple bank with one message type `send` for sending
 coins and one store for storing accounts.
 Here we build `App2`, which expands on `App1` by introducing 
 
@@ -144,9 +144,13 @@ func NewCodec() *wire.Codec {
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(MsgSend{}, "example/MsgSend", nil)
 	cdc.RegisterConcrete(MsgIssue{}, "example/MsgIssue", nil)
+	crypto.RegisterAmino(cdc)
 	return cdc
 }
 ```
+
+Note: We also register the types in the `tendermint/tendermint/crypto` module so that `crypto.PubKey`
+and `crypto.Signature` are encoded/decoded correctly.
 
 Amino supports encoding and decoding in both a binary and JSON format.
 See the [codec API docs](https://godoc.org/github.com/tendermint/go-amino#Codec) for more details.
@@ -219,28 +223,22 @@ func antehandler(ctx sdk.Context, tx sdk.Tx) (_ sdk.Context, _ sdk.Result, abort
 		return ctx, sdk.ErrTxDecode("Tx must be of format app2Tx").Result(), true
 	}
 
-	// expect only one msg in app2Tx
+	// expect only one msg and one signer in app2Tx
 	msg := tx.GetMsgs()[0]
-
-	signerAddrs := msg.GetSigners()
-
-	if len(signerAddrs) != len(appTx.GetSignatures()) {
-		return ctx, sdk.ErrUnauthorized("Number of signatures do not match required amount").Result(), true
-	}
+	signerAddr := msg.GetSigners()[0]
 
 	signBytes := msg.GetSignBytes()
-	for i, addr := range signerAddrs {
-		sig := appTx.GetSignatures()[i]
 
-		// check that submitted pubkey belongs to required address
-		if !bytes.Equal(sig.PubKey.Address(), addr) {
-			return ctx, sdk.ErrUnauthorized("Provided Pubkey does not match required address").Result(), true
-		}
+	sig := appTx.GetSignature()
 
-		// check that signature is over expected signBytes
-		if !sig.PubKey.VerifyBytes(signBytes, sig.Signature) {
-			return ctx, sdk.ErrUnauthorized("Signature verification failed").Result(), true
-		}
+	// check that submitted pubkey belongs to required address
+	if !bytes.Equal(appTx.PubKey.Address(), signerAddr) {
+		return ctx, sdk.ErrUnauthorized("Provided Pubkey does not match required address").Result(), true
+	}
+
+	// check that signature is over expected signBytes
+	if !appTx.PubKey.VerifyBytes(signBytes, sig) {
+		return ctx, sdk.ErrUnauthorized("Signature verification failed").Result(), true
 	}
 
 	// authentication passed, app to continue processing by sending msg to handler

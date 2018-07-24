@@ -37,6 +37,7 @@ IMPROVEMENTS
 * [tools] Remove `rm -rf vendor/` from `make get_vendor_deps`
 * [x/auth] Recover ErrorOutOfGas panic in order to set sdk.Result attributes correctly
 * [x/stake] Add revoked to human-readable validator 
+* [tests] Add tests to example apps in docs
 * [x/gov] Votes on a proposal can now be queried
 * [x/bank] Unit tests are now table-driven
 

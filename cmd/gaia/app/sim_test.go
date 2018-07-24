@@ -103,6 +103,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 			stakesim.SimulateMsgCompleteUnbonding(app.stakeKeeper),
 			stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper),
 			stakesim.SimulateMsgCompleteRedelegate(app.stakeKeeper),
+			slashingsim.SimulateMsgUnrevoke(app.slashingKeeper),
 		},
 		[]simulation.RandSetup{},
 		[]simulation.Invariant{

@@ -39,11 +39,11 @@ func TestGetInflation(t *testing.T) {
 
 		// test 7% minimum stop (testing with 100% bonded)
 		{"test 4", sdk.OneRat(), sdk.ZeroRat(), sdk.NewRat(7, 100), sdk.ZeroRat()},
-		{"test 5", sdk.OneRat(), sdk.ZeroRat(), sdk.NewRat(70001, 1000000), sdk.NewRat(-1, 1000000).Round(precision)},
+		{"test 5", sdk.OneRat(), sdk.ZeroRat(), sdk.NewRat(70001, 1000000), sdk.NewRat(-1, 1000000)},
 
 		// test 20% maximum stop (testing with 0% bonded)
 		{"test 6", sdk.ZeroRat(), sdk.ZeroRat(), sdk.NewRat(20, 100), sdk.ZeroRat()},
-		{"test 7", sdk.ZeroRat(), sdk.ZeroRat(), sdk.NewRat(199999, 1000000), sdk.NewRat(1, 1000000).Round(precision)},
+		{"test 7", sdk.ZeroRat(), sdk.ZeroRat(), sdk.NewRat(199999, 1000000), sdk.NewRat(1, 1000000)},
 
 		// perfect balance shouldn't change inflation
 		{"test 8", sdk.NewRat(67), sdk.NewRat(33), sdk.NewRat(15, 100), sdk.ZeroRat()},
@@ -94,8 +94,9 @@ func checkFinalPoolValues(t *testing.T, pool Pool, initialTotalTokens, cumulativ
 // Processes provisions are added to the pool correctly every hour
 // Returns expected Provisions, expected Inflation, and pool, to help with cumulative calculations back in main Tests
 func updateProvisions(t *testing.T, pool Pool, params Params, hr int) (sdk.Rat, sdk.Rat, Pool) {
+
 	expInflation := pool.NextInflation(params)
-	expProvisions := expInflation.Mul(pool.TokenSupply()).Quo(hrsPerYrRat)
+	expProvisions := expInflation.Mul(pool.TokenSupply().Round(precision)).Quo(hrsPerYrRat)
 	startTotalSupply := pool.TokenSupply()
 	pool = pool.ProcessProvisions(params)
 

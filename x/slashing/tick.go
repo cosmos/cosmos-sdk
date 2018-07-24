@@ -11,6 +11,7 @@ import (
 
 // slashing begin block functionality
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) (tags sdk.Tags) {
+
 	// Tag the height
 	heightBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(heightBytes, uint64(req.Header.Height))

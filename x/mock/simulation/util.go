@@ -47,7 +47,7 @@ func DisplayEvents(events map[string]uint) {
 	sort.Strings(keys)
 	fmt.Printf("Event statistics: \n")
 	for _, key := range keys {
-		fmt.Printf("\t% 60s => %d\n", key, events[key])
+		fmt.Printf("  % 60s => %d\n", key, events[key])
 	}
 }
 

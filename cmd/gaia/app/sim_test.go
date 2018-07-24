@@ -14,7 +14,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
+	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
+	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	stake "github.com/cosmos/cosmos-sdk/x/stake"
 	stakesim "github.com/cosmos/cosmos-sdk/x/stake/simulation"
 )
@@ -34,8 +36,8 @@ var (
 func init() {
 	flag.Int64Var(&seed, "SimulationSeed", 42, "Simulation random seed")
 	flag.IntVar(&numKeys, "SimulationNumKeys", 10, "Number of keys (accounts)")
-	flag.IntVar(&numBlocks, "SimulationNumBlocks", 100, "Number of blocks")
-	flag.IntVar(&blockSize, "SimulationBlockSize", 1000, "Operations per block")
+	flag.IntVar(&numBlocks, "SimulationNumBlocks", 1000, "Number of blocks")
+	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "Operations per block")
 	flag.Int64Var(&minTimePerBlock, "SimulationMinTimePerBlock", 86400, "Minimum time per block (seconds)")
 	flag.Int64Var(&maxTimePerBlock, "SimulationMaxTimePerBlock", 2*86400, "Maximum time per block (seconds)")
 	flag.Float64Var(&signingFraction, "SimulationSigningFraction", 0.7, "Chance a given validator signs a given block")
@@ -104,8 +106,10 @@ func TestFullGaiaSimulation(t *testing.T) {
 		},
 		[]simulation.RandSetup{},
 		[]simulation.Invariant{
-			banksim.NonnegativeBalanceInvariant(app.accountMapper),
-			stakesim.AllInvariants(app.coinKeeper, app.stakeKeeper, app.accountMapper),
+			simulation.PeriodicInvariant(banksim.NonnegativeBalanceInvariant(app.accountMapper), 100, 0),
+			simulation.PeriodicInvariant(govsim.AllInvariants(), 100, 0),
+			simulation.PeriodicInvariant(stakesim.AllInvariants(app.coinKeeper, app.stakeKeeper, app.accountMapper), 100, 0),
+			simulation.PeriodicInvariant(slashingsim.AllInvariants(), 100, 0),
 		},
 		numKeys,
 		numBlocks,

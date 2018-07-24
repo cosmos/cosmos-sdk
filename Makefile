@@ -143,7 +143,7 @@ test_sim:
 	@echo "Pass the flag 'SimulationMaxTimePerBlock' to run with the specified maximum block time."
 	@echo "Pass the flag 'SimulationSigningFraction' to run with the specified chance of a given validator signing a given block."
 	@echo "Pass the flag 'SimulationEvidenceFraction' to run with the specified chance of finding evidence on a given block."
-	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationBlockSize=200 -v
+	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -v
 
 test_cover:
 	@bash tests/test_cover.sh

@@ -1,10 +1,5 @@
 # Changelog
 
-## PENDING
-
-BUG FIXES
-* [x/gov] Fixed bug where Tally fails due to revoked/unbonding validator
-
 ## 0.22.0
 
 *July 16th, 2018*

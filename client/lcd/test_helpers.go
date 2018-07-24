@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pact-foundation/pact-go/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
@@ -213,8 +214,19 @@ func startTM(tmcfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc,
 
 // start the LCD. note this blocks!
 func startLCD(logger log.Logger, listenAddr string, cdc *wire.Codec) (net.Listener, error) {
-	handler := createHandler(cdc)
-	return tmrpc.StartHTTPServer(listenAddr, handler, logger, tmrpc.Config{})
+	mux := http.NewServeMux()
+
+	// This function handles Pact state requests for a particular test.
+	mux.HandleFunc("/setup", func(w http.ResponseWriter, req *http.Request) {
+		var s *types.ProviderState
+		decoder := json.NewDecoder(req.Body)
+		decoder.Decode(&s)
+		// We don't do anything yet.
+		w.Header().Add("Content-Type", "application/json")
+	})
+
+	mux.Handle("/", createHandler(cdc))
+	return tmrpc.StartHTTPServer(listenAddr, mux, logger, tmrpc.Config{})
 }
 
 // make a test lcd test request

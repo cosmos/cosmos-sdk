@@ -4,11 +4,13 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/crypto"
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 const (
@@ -18,7 +20,7 @@ const (
 func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 
 	// Create the codec with registered Msg types
-	cdc := NewCodec()
+	cdc := UpdatedCodec()
 
 	// Create the base application object.
 	app := bapp.NewBaseApp(app3Name, logger, db, auth.DefaultTxDecoder(cdc))
@@ -37,7 +39,7 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	// Register message routes.
 	// Note the handler gets access to
 	app.Router().
-		AddRoute("send", bank.NewHandler(coinKeeper))
+		AddRoute("bank", bank.NewHandler(coinKeeper))
 
 	// Mount stores and load the latest state.
 	app.MountStoresIAVL(keyAccount, keyFees)
@@ -46,4 +48,15 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 		cmn.Exit(err.Error())
 	}
 	return app
+}
+
+// Update codec from app2 to register imported modules
+func UpdatedCodec() *wire.Codec {
+	cdc := wire.NewCodec()
+	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
+	cdc.RegisterConcrete(MsgSend{}, "example/MsgSend", nil)
+	cdc.RegisterConcrete(MsgIssue{}, "example/MsgIssue", nil)
+	auth.RegisterWire(cdc)
+	crypto.RegisterAmino(cdc)
+	return cdc
 }

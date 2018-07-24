@@ -198,32 +198,11 @@ localnet-start: localnet-stop
 localnet-stop:
 	docker-compose down
 
-########################################
-### Remote validator nodes using terraform and ansible
-
-TESTNET_NAME?=remotenet
-SERVERS?=4
-BINARY=$(CURDIR)/build/gaiad
-remotenet-start:
-	@if [ -z "$(DO_API_TOKEN)" ]; then echo "DO_API_TOKEN environment variable not set." ; false ; fi
-	@if ! [ -f $(HOME)/.ssh/id_rsa.pub ]; then ssh-keygen ; fi
-	@if [ -z "`file $(BINARY) | grep 'ELF 64-bit'`" ]; then echo "Please build a linux binary using 'make build-linux'." ; false ; fi
-	cd networks/remote/terraform && terraform init && terraform apply -var DO_API_TOKEN="$(DO_API_TOKEN)" -var SSH_PUBLIC_FILE="$(HOME)/.ssh/id_rsa.pub" -var SSH_PRIVATE_FILE="$(HOME)/.ssh/id_rsa" -var TESTNET_NAME="$(TESTNET_NAME)" -var SERVERS="$(SERVERS)"
-	cd networks/remote/ansible && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i inventory/digital_ocean.py -l "$(TESTNET_NAME)" -e BINARY=$(BINARY) -e TESTNET_NAME="$(TESTNET_NAME)" setup-validators.yml
-	cd networks/remote/ansible && ansible-playbook -i inventory/digital_ocean.py -l "$(TESTNET_NAME)" start.yml
-
-remotenet-stop:
-	@if [ -z "$(DO_API_TOKEN)" ]; then echo "DO_API_TOKEN environment variable not set." ; false ; fi
-	cd networks/remote/terraform && terraform destroy -var DO_API_TOKEN="$(DO_API_TOKEN)" -var SSH_PUBLIC_FILE="$(HOME)/.ssh/id_rsa.pub" -var SSH_PRIVATE_FILE="$(HOME)/.ssh/id_rsa"
-
-remotenet-status:
-	cd networks/remote/ansible && ansible-playbook -i inventory/digital_ocean.py -l "$(TESTNET_NAME)" status.yml
-
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
 .PHONY: build build_cosmos-sdk-cli build_examples install install_examples install_cosmos-sdk-cli install_debug dist \
 check_tools check_dev_tools get_tools get_dev_tools get_vendor_deps draw_deps test test_cli test_unit \
 test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
-build-linux build-docker-gaiadnode localnet-start localnet-stop remotenet-start \
-remotenet-stop remotenet-status format check-ledger test_sim update_tools update_dev_tools
+build-linux build-docker-gaiadnode localnet-start localnet-stop \
+format check-ledger test_sim update_tools update_dev_tools

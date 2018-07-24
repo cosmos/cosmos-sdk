@@ -38,7 +38,7 @@
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
   pruneopts = "UT"
-  revision = "fdfc19097e7ac6b57035062056f5b7b4638b8898"
+  revision = "9a2f9524024889e129a5422aca2cff73cb3eabf6"
 
 [[projects]]
   digest = "1:386de157f7d19259a7f9c81f26ce011223ce0f090353c1152ffdf730d7d10ac2"
@@ -165,12 +165,13 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8951fe6e358876736d8fa1f3992624fdbb2dec6bc49401c1381d1ef8abbb544f"
+  digest = "1:ac64f01acc5eeea9dde40e326de6b6471e501392ec06524c3b51033aa50789bc"
   name = "github.com/hashicorp/hcl"
   packages = [
     ".",
     "hcl/ast",
     "hcl/parser",
+    "hcl/printer",
     "hcl/scanner",
     "hcl/strconv",
     "hcl/token",
@@ -231,11 +232,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e730597b38a4d56e2361e0b6236cb800e52c73cace2ff91396f4ff35792ddfa7"
+  digest = "1:5ab79470a1d0fb19b041a624415612f8236b3c06070161a910562f2b2d064355"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
   pruneopts = "UT"
-  revision = "bb74f1db0675b241733089d5a1faa5dd8b0ef57b"
+  revision = "f15292f7a699fcc1a38a80977f80a046874ba8ac"
 
 [[projects]]
   digest = "1:95741de3af260a92cc5c7f3f3061e85273f5a81b5db20d4bd68da74bd521675e"
@@ -509,7 +510,7 @@
     "salsa20/salsa",
   ]
   pruneopts = "UT"
-  revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
+  revision = "c126467f60eb25f8f27e5a981f32a87e3965053f"
 
 [[projects]]
   digest = "1:04dda8391c3e2397daf254ac68003f30141c069b228d06baec8324a5f81dc1e9"
@@ -533,7 +534,7 @@
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "1b2967e3c290b7c545b3db0deeda16e9be4f98a2"
+  revision = "ac767d655b305d4e9612f5f6e33120b9176c4ad4"
 
 [[projects]]
   digest = "1:7509ba4347d1f8de6ae9be8818b0cd1abc3deeffe28aeaf4be6d4b6b5178d9ca"
@@ -564,7 +565,7 @@
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "UT"
-  revision = "e92b116572682a5b432ddd840aeaba2a559eeff1"
+  revision = "02b4e95473316948020af0b7a4f0f22c73929b0e"
 
 [[projects]]
   digest = "1:4d7b5d9746840266938cdb21a40f8eba7137d9153c4ed404d6bb2a450d06f690"

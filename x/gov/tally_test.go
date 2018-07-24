@@ -389,3 +389,43 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 
 	require.False(t, passes)
 }
+
+func TestTallyRevokedValidator(t *testing.T) {
+	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
+	stakeHandler := stake.NewHandler(sk)
+
+	dummyDescription := stake.NewDescription("T", "E", "S", "T")
+	val1CreateMsg := stake.NewMsgCreateValidator(addrs[0], crypto.GenPrivKeyEd25519().PubKey(), sdk.NewCoin("steak", 25), dummyDescription)
+	stakeHandler(ctx, val1CreateMsg)
+	val2CreateMsg := stake.NewMsgCreateValidator(addrs[1], crypto.GenPrivKeyEd25519().PubKey(), sdk.NewCoin("steak", 6), dummyDescription)
+	stakeHandler(ctx, val2CreateMsg)
+	val3CreateMsg := stake.NewMsgCreateValidator(addrs[2], crypto.GenPrivKeyEd25519().PubKey(), sdk.NewCoin("steak", 7), dummyDescription)
+	stakeHandler(ctx, val3CreateMsg)
+
+	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewCoin("steak", 10))
+	stakeHandler(ctx, delegator1Msg)
+	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], addrs[1], sdk.NewCoin("steak", 10))
+	stakeHandler(ctx, delegator1Msg2)
+
+	val2, found := sk.GetValidator(ctx, addrs[1])
+	require.True(t, found)
+	sk.Revoke(ctx, val2.PubKey)
+
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	proposalID := proposal.GetProposalID()
+	proposal.SetStatus(StatusVotingPeriod)
+	keeper.SetProposal(ctx, proposal)
+
+	err := keeper.AddVote(ctx, proposalID, addrs[0], OptionYes)
+	require.Nil(t, err)
+	err = keeper.AddVote(ctx, proposalID, addrs[1], OptionNo)
+	require.Nil(t, err)
+	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNo)
+	require.Nil(t, err)
+
+	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+
+	require.True(t, passes)
+}

@@ -205,38 +205,3 @@ rate, all commission on fees must be simultaneously withdrawn.
   was added. This is achieved by setting `DelegatorBond.FeeWithdrawalHeight` to
   the height which the bond was added. 
 
-### Atom provisions
-
-Validator provisions are minted on an hourly basis (the first block of a new
-hour). The annual target of between 7% and 20%. The long-term target ratio of
-bonded tokens to unbonded tokens is 67%.
-
-The target annual inflation rate is recalculated for each provisions cycle. The
-inflation is also subject to a rate change (positive or negative) depending on
-the distance from the desired ratio (67%). The maximum rate change possible is
-defined to be 13% per year, however the annual inflation is capped as between
-7% and 20%.
-
-```go
-inflationRateChange(0) = 0
-Inflation(0) = 0.07
-    
-bondedRatio = Pool.BondedTokens / Pool.TotalSupplyTokens
-AnnualInflationRateChange = (1 - bondedRatio / 0.67) * 0.13
-
-annualInflation += AnnualInflationRateChange
-
-if annualInflation > 0.20 then Inflation = 0.20
-if annualInflation < 0.07 then Inflation = 0.07
-
-provisionTokensHourly = Pool.TotalSupplyTokens * Inflation / (365.25*24)
-```
-
-Because the validators hold a relative bonded share (`GlobalStakeShares`), when
-more bonded tokens are added proportionally to all validators, the only term
-which needs to be updated is the `GlobalState.BondedPool`. So for each 
-provisions cycle:
-
-```go
-Pool.BondedPool += provisionTokensHourly
-```

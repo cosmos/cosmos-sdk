@@ -43,6 +43,7 @@ validator, the validator withdraws.
 
 ```golang
 type ValidatorDistribution struct {
+    CommissionWithdrawalHeight   int64    // last time this delegation withdrew rewards
     Adjustment                 sdk.Dec   // global pool adjustment factor
     ProposerAdjustment         DecCoins  // proposer pool adjustment factor
     ProposerPool               DecCoins  // reward pool collected from being the proposer
@@ -86,12 +87,18 @@ number which increments by one for each new power change record
 type PCSequence int64 
 
 type PowerChange struct {
-    height      int64        // block height at change
-    power       rational.Rat // total power at change
-    prevpower   rational.Rat // total power at previous height-1 
-    feesIn      coins.Coin   // fees-in at block height
-    prevPool    coins.Coin   // total fees in at previous block height
+    Height                        int64     // block height at change
+    ValidatorBondedTokens         sdk.Dec   // following used to create distribution scenarios
+    ValidatorDelegatorShares      sdk.Dec
+    ValidatorDelegatorShareExRate sdk.Dec
+    ValidatorCommission           sdk.Dec
+    PoolBondedTokens              sdk.Dec
+    Global                        Global
+    ValDistr                      ValidatorDistribution
 }
+    
+    DelegationShares              sdk.Dec
+    DelDistr                      DelegatorDistribution
 ```
 
 ### Max Power Change Sequence

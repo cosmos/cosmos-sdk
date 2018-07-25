@@ -1,17 +1,5 @@
 # Transactions
 
-TODO XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-Include this next text in the transactions
-
-Each time there is an recipient adjustment change the distributor adjustment
-must also be updated, this modification is defined by each particular
-distribution scenario. 
-
-Each time a withdrawal is made by a recipient the adjustment term must be
-modified for each block with a change in distributors shares since the time of
-last withdrawal.  This is accomplished by iterating over all relevant
-`PowerChange`'s stored in distribution state.
-
 ## TxWithdrawDelegation
 
 When a delegator wishes to withdraw their transaction fees it must send
@@ -19,15 +7,66 @@ When a delegator wishes to withdraw their transaction fees it must send
 triggered each with any change in individual delegations, such as an unbond,
 redelegation, or delegation of additional tokens to a specific validator.  
 
+Generally, each time a withdrawal is made by a recipient the adjustment term
+must be modified for each block with a change in distributors shares since the
+time of last withdrawal.  This is accomplished by iterating over all relevant
+`PowerChange`'s stored in distribution state.
+
+
 ```golang
 type TxWithdrawDelegation struct {
-    delegation sdk.AccAddress
+    delegatorAddr sdk.AccAddress
+    withdrawAddr  sdk.AccAddress // address to make the withdrawal to
 }
-```
 
-```
-if GetValidator(delegation) == found ; Exit 
+func WithdrawalDelegator(delegatorAddr, withdrawAddr sdk.AccAddress) 
+    entitlement = GetDelegatorEntitlement(delegatorAddr)
+    AddCoins(withdrawAddr, totalEntitlment.TruncateDecimal())
 
+func GetDelegatorEntitlement(delegatorAddr sdk.AccAddress) DecCoins
+    
+    // compile all the distribution scenarios
+    delegations = GetDelegations(delegatorAddr)
+    DelDistr = GetDelegationDistribution(delegation.DelegatorAddr,
+                                         delegation.ValidatorAddr)
+    pcs = GetPowerChanges(DelDistr.WithdrawalHeight)
+        
+    // update all adjustment factors for each delegation since last withdrawal
+    for pc = range pcs 
+        for delegation = range delegations 
+            DelDistr = GetDelegationDistribution(delegation.DelegatorAddr,
+                                                 delegation.ValidatorAddr)
+            pc.ProcessPowerChangeDelegation(delegation, DelDistr) 
+    
+    // collect all entitled fees
+    entitlement = 0
+    for delegation = range delegations 
+        global = GetGlobal() 
+        pool = GetPool() 
+        DelDistr = GetDelegationDistribution(delegation.DelegatorAddr,
+                        delegation.ValidatorAddr)
+        ValDistr = GetValidatorDistribution(delegation.ValidatorAddr)
+        validator = GetValidator(delegation.ValidatorAddr)
+
+        scenerio1 = NewDelegationFromGlobalPool(delegation, validator, 
+                        pool, global, ValDistr, DelDistr)
+        scenerio2 = NewDelegationFromProvisionPool(delegation, validator, 
+                        ValDistr, DelDistr)
+        entitlement += scenerio1.WithdrawalEntitlement()
+        entitlement += scenerio2.WithdrawalEntitlement()
+    
+    return entitlement
+
+func (pc PowerChange) ProcessPowerChangeDelegation(delegation sdk.Delegation, 
+                      DelDistr DelegationDistribution) 
+
+    // get the historical scenarios
+    scenario1 = pc.DelegationFromGlobalPool(delegation, DelDistr) 
+    scenario2 = pc.DelegationFromProvisionPool(delegation, DelDistr) 
+
+    // process the adjustment factors 
+    scenario1.UpdateAdjustmentForPowerChange(pc.Height) 
+    scenario2.UpdateAdjustmentForPowerChange(pc.Height) 
 ```
 
 ## TxWithdrawValidator
@@ -38,13 +77,45 @@ triggered each with any change in individual delegations, such as an unbond,
 redelegation, or delegation of additional tokens to a specific validator.  
 
 ```golang
-type TxWithdrawDelegation struct {
-    delegation sdk.AccAddress
+type TxWithdrawValidator struct {
+    ownerAddr    sdk.AccAddress // validator address to withdraw from 
+    withdrawAddr sdk.AccAddress // address to make the withdrawal to
 }
-```
 
-```
-TODO: pseudo-code
+func WithdrawlValidator(ownerAddr, withdrawAddr sdk.AccAddress)
+
+    // update the delegator adjustment factors and also withdrawal delegation fees
+    entitlement = GetDelegatorEntitlement(ownerAddr)
+    
+    // update the validator adjustment factors for commission 
+    ValDistr = GetValidatorDistribution(ownerAddr.ValidatorAddr)
+    pcs = GetPowerChanges(ValDistr.CommissionWithdrawalHeight)
+    for pc = range pcs 
+        pc.ProcessPowerChangeCommission()
+
+    // withdrawal validator commission rewards
+    global = GetGlobal() 
+    pool = GetPool() 
+    ValDistr = GetValidatorDistribution(delegation.ValidatorAddr)
+    validator = GetValidator(delegation.ValidatorAddr)
+
+    scenerio1 = NewCommissionFromGlobalPool(validator, 
+                    pool, global, ValDistr)
+    scenerio2 = CommissionFromProposerPool(validator, ValDistr)
+    entitlement += scenerio1.WithdrawalEntitlement()
+    entitlement += scenerio2.WithdrawalEntitlement()
+    
+    AddCoins(withdrawAddr, totalEntitlment.TruncateDecimal())
+
+func (pc PowerChange) ProcessPowerChangeCommission() 
+
+    // get the historical scenarios
+    scenario1 = pc.CommissionFromGlobalPool()
+    scenario2 = pc.CommissionFromProposerPool()
+
+    // process the adjustment factors 
+    scenario1.UpdateAdjustmentForPowerChange(pc.Height) 
+    scenario2.UpdateAdjustmentForPowerChange(pc.Height) 
 ```
 
 ## Common Calculations 
@@ -68,7 +139,7 @@ type DistributionScenario interface {
     RecipientShares()               sdk.Dec  // current shares 
     RecipientPrevShares()           sdk.Dec  // shares last block
 
-    ModifyAdjustments(withdrawal sdk.Dec) // proceedure to modify adjustment factors
+    ModifyAdjustments(withdrawal sdk.Dec)    // proceedure to modify adjustment factors
 }
 ```
 
@@ -98,8 +169,7 @@ func (d DistributionScenario) GlobalCount(height int64) sdk.Dec
 func (d DistributionScenario) SimplePool() DecCoins
     return d.RecipientCount() / d.GlobalCount() * d.DistributorCumulativeTokens
 
-func (d DistributionScenario) ProjectedPool(height int64, g Global, 
-                                            pool stake.Pool, val stake.Validator) DecCoins
+func (d DistributionScenario) ProjectedPool(height int64) DecCoins
     return d.RecipientPrevShares() * (height-1) 
            / (d.DistributorPrevShares() * (height-1)) 
            * d.DistributorCumulativeTokens
@@ -120,7 +190,9 @@ distributor's/recipient's shares are changed.
    withdrawal amount. 
 
 ```
-func (d DistributionScenario) UpdateAdjustmentForPowerChange(simplePool, projectedPool DecCoins) 
+func (d DistributionScenario) UpdateAdjustmentForPowerChange(height int64) 
+    simplePool = d.SimplePool()
+    projectedPool = d.ProjectedPool(height)
     AdjustmentChange = simplePool - projectedPool
     if AdjustmentChange > 0 
         d.ModifyAdjustments(AdjustmentChange) 
@@ -133,6 +205,8 @@ func (d DistributionScenario) WithdrawalEntitlement() DecCoins
 
 ### Distribution scenarios
 
+Note that the distribution scenario structures are found in `state.md`. 
+
 #### Delegation's entitlement to Global.Pool
 
 For delegations (including validator's self-delegation) all fees from fee pool
@@ -142,46 +216,48 @@ shares should be taken as the bonded tokens less the validator's commission.
 
 ```
 type DelegationFromGlobalPool struct {
-    delegation sdk.Delegation
-    validator  sdk.Validator 
-    pool       sdk.StakePool
-    global     Global
-    valDistr   ValidatorDistribution
-    delDistr   DelegatorDistribution
+    DelegationShares              sdk.Dec
+    ValidatorCommission           sdk.Dec
+    ValidatorBondedTokens         sdk.Dec
+    ValidatorDelegatorShareExRate sdk.Dec
+    PoolBondedTokens              sdk.Dec
+    Global                        Global
+    ValDistr                      ValidatorDistribution
+    DelDistr                      DelegatorDistribution
 }
 
 func (d DelegationFromGlobalPool) DistributorTokens() DecCoins
-    return global.Pool
+    return d.Global.Pool
 
 func (d DelegationFromGlobalPool) DistributorCumulativeTokens() DecCoins
-    return global.EverReceivedPool
+    return d.Global.EverReceivedPool
 
 func (d DelegationFromGlobalPool) DistributorPrevReceivedTokens() DecCoins
-    return global.PrevReceivedPool
+    return d.Global.PrevReceivedPool
     
 func (d DelegationFromGlobalPool) DistributorShares() sdk.Dec
-    return pool.BondedTokens
+    return d.PoolBondedTokens
 
 func (d DelegationFromGlobalPool) DistributorPrevShares() sdk.Dec
-    return global.PrevBondedTokens
+    return d.Global.PrevBondedTokens
 
 func (d DelegationFromGlobalPool) RecipientShares() sdk.Dec
-    return d.delegation.Shares * d.validator.DelegatorShareExRate() * 
-           d.validator.BondedTokens() * (1 - d.validator.Commission)
+    return d.DelegationShares * d.ValidatorDelegatorShareExRate() * 
+           d.ValidatorBondedTokens() * (1 - d.ValidatorCommission)
 
 func (d DelegationFromGlobalPool) RecipientPrevShares() sdk.Dec
-    return d.delDistr.PrevTokens
+    return d.DelDistr.PrevTokens
 
 func (d DelegationFromGlobalPool) RecipientAdjustment() sdk.Dec
-    return d.delDistr.Adjustment
+    return d.DelDistr.Adjustment
 
 func (d DelegationFromGlobalPool) ModifyAdjustments(withdrawal sdk.Dec)
-    d.valDistr.Adjustment += withdrawal
-    d.delDistr.Adjustment += withdrawal
+    d.ValDistr.Adjustment += withdrawal
+    d.DelDistr.Adjustment += withdrawal
     d.global.Adjustment += withdrawal
-    SetValidatorDistribution(d.valDistr)
-    SetDelegatorDistribution(d.delDistr)
-    SetGlobal(global)
+    SetValidatorDistribution(d.ValDistr)
+    SetDelegatorDistribution(d.DelDistr)
+    SetGlobal(d.Global)
 ```
 
 #### Delegation's entitlement to ValidatorDistribution.ProposerPool
@@ -194,42 +270,42 @@ commission.
 
 ```
 type DelegationFromProposerPool struct {
-    delegation sdk.Delegation
-    validator  sdk.Validator 
-    pool       sdk.StakePool
-    valDistr   ValidatorDistribution
-    delDistr   DelegatorDistribution
+    DelegationShares         sdk.Dec
+    ValidatorCommission      sdk.Dec
+    ValidatorDelegatorShares sdk.Dec
+    ValDistr                 ValidatorDistribution
+    DelDistr                 DelegatorDistribution
 }
 
 func (d DelegationFromProposerPool) DistributorTokens() DecCoins
-    return valDistr.ProposerPool
+    return d.ValDistr.ProposerPool
 
 func (d DelegationFromProposerPool) DistributorCumulativeTokens() DecCoins
-    return valDistr.EverReceivedProposerReward
+    return d.ValDistr.EverReceivedProposerReward
 
 func (d DelegationFromProposerPool) DistributorPrevReceivedTokens() DecCoins
-    return valDistr.PrevReceivedProposerReward
+    return d.ValDistr.PrevReceivedProposerReward
 
 func (d DelegationFromProposerPool) DistributorShares() sdk.Dec
-    return validator.DelegatorShares
+    return d.ValidatorDelegatorShares
 
 func (d DelegationFromProposerPool) DistributorPrevShares() sdk.Dec
-    return validator.PrevDelegatorShares
+    return d.ValDistr.PrevDelegatorShares
 
 func (d DelegationFromProposerPool) RecipientShares() sdk.Dec
-    return d.delegation.Shares * (1 - d.validator.Commission)
+    return d.DelegationShares * (1 - d.ValidatorCommission)
 
 func (d DelegationFromProposerPool) RecipientPrevShares() sdk.Dec
-    return d.delDistr.PrevShares
+    return d.DelDistr.PrevShares
 
 func (d DelegationFromProposerPool) RecipientAdjustment() sdk.Dec
-    return d.delDistr.AdjustmentProposer
+    return d.DelDistr.AdjustmentProposer
 
 func (d DelegationFromProposerPool) ModifyAdjustments(withdrawal sdk.Dec)
-    d.valDistr.AdjustmentProposer += withdrawal
-    d.delDistr.AdjustmentProposer += withdrawal
-    SetValidatorDistribution(d.valDistr)
-    SetDelegatorDistribution(d.delDistr)
+    d.ValDistr.AdjustmentProposer += withdrawal
+    d.DelDistr.AdjustmentProposer += withdrawal
+    SetValidatorDistribution(d.ValDistr)
+    SetDelegatorDistribution(d.DelDistr)
 ```
 
 #### Validators's commission entitlement to Global.Pool
@@ -239,42 +315,42 @@ commission portion of bonded tokens.
 
 ```
 type CommissionFromGlobalPool struct {
-    delegation sdk.Delegation
-    validator  sdk.Validator 
-    pool       sdk.StakePool
-    global     Global
-    valDistr   ValidatorDistribution
+    ValidatorBondedTokens sdk.Dec
+    ValidatorCommission   sdk.Dec
+    PoolBondedTokens      sdk.Dec
+    Global                Global
+    ValDistr              ValidatorDistribution
 }
 
 func (c CommissionFromGlobalPool) DistributorTokens() DecCoins
-    return global.Pool
+    return c.Global.Pool
 
 func (c CommissionFromGlobalPool) DistributorCumulativeTokens() DecCoins
-    return global.EverReceivedPool
+    return c.Global.EverReceivedPool
 
 func (c CommissionFromGlobalPool) DistributorPrevReceivedTokens() DecCoins
-    return global.PrevReceivedPool
+    return c.Global.PrevReceivedPool
     
 func (c CommissionFromGlobalPool) DistributorShares() sdk.Dec
-    return pool.BondedTokens
+    return c.PoolBondedTokens
 
 func (c CommissionFromGlobalPool) DistributorPrevShares() sdk.Dec
-    return global.PrevBondedTokens
+    return c.Global.PrevBondedTokens
 
 func (c CommissionFromGlobalPool) RecipientShares() sdk.Dec
-    return c.validator.BondedTokens() * c.validator.Commission
+    return c.ValidatorBondedTokens() * c.ValidatorCommission
 
 func (c CommissionFromGlobalPool) RecipientPrevShares() sdk.Dec
-    return d.valDistr.PrevBondedTokens * c.validator.Commission
+    return c.ValDistr.PrevBondedTokens * c.ValidatorCommission
 
 func (c CommissionFromGlobalPool) RecipientAdjustment() sdk.Dec
-    return d.valDistr.Adjustment
+    return c.ValDistr.Adjustment
 
 func (c CommissionFromGlobalPool) ModifyAdjustments(withdrawal sdk.Dec)
-    d.valDistr.Adjustment += withdrawal
-    d.global.Adjustment += withdrawal
-    SetValidatorDistribution(d.valDistr)
-    SetGlobal(d.global)
+    c.ValDistr.Adjustment += withdrawal
+    c.Global.Adjustment += withdrawal
+    SetValidatorDistribution(c.ValDistr)
+    SetGlobal(c.Global)
 ```
 
 #### Validators's commission entitlement to ValidatorDistribution.ProposerPool
@@ -284,39 +360,37 @@ shares based on the commission portion of the total delegator shares.
 
 ```
 type CommissionFromProposerPool struct {
-    validator  sdk.Validator 
-    pool       sdk.StakePool
-    valDistr   ValidatorDistribution
+    ValidatorDelegatorShares sdk.Dec
+    ValidatorCommission      sdk.Dec
+    ValDistr                 ValidatorDistribution
 }
 
 func (c CommissionFromProposerPool) DistributorTokens() DecCoins
-    return valDistr.ProposerPool
+    return c.ValDistr.ProposerPool
 
 func (c CommissionFromProposerPool) DistributorCumulativeTokens() DecCoins
-    return valDistr.EverReceivedProposerReward
+    return c.ValDistr.EverReceivedProposerReward
 
 func (c CommissionFromProposerPool) DistributorPrevReceivedTokens() DecCoins
-    return valDistr.PrevReceivedProposerReward
+    return c.ValDistr.PrevReceivedProposerReward
 
 func (c CommissionFromProposerPool) DistributorShares() sdk.Dec
-    return validator.DelegatorShares
+    return c.ValidatorDelegatorShares
 
 func (c CommissionFromProposerPool) DistributorPrevShares() sdk.Dec
-    return validator.PrevDelegatorShares
+    return c.ValDistr.PrevDelegatorShares
 
 func (c CommissionFromProposerPool) RecipientShares() sdk.Dec
-    return d.validator.DelegatorShares * (d.validator.Commission)
+    return c.ValidatorDelegatorShares * (c.ValidatorCommission)
 
 func (c CommissionFromProposerPool) RecipientPrevShares() sdk.Dec
-    return d.validator.PrevDelegatorShares * (d.validator.Commission)
+    return c.ValDistr.PrevDelegatorShares * (c.ValidatorCommission)
 
-func (c CommissionFromGlobalPool) RecipientAdjustment() sdk.Dec
-    return d.valDistr.AdjustmentProposer
+func (c CommissionFromProposerPool) RecipientAdjustment() sdk.Dec
+    return c.ValDistr.AdjustmentProposer
 
 func (c CommissionFromProposerPool) ModifyAdjustments(withdrawal sdk.Dec)
-    d.valDistr.AdjustmentProposer += withdrawal
-    d.delDistr.AdjustmentProposer += withdrawal
-    SetValidatorDistribution(d.valDistr)
-    SetDelegatorDistribution(d.delDistr)
+    c.ValDistr.AdjustmentProposer += withdrawal
+    SetValidatorDistribution(c.ValDistr)
 ```
 

@@ -104,10 +104,7 @@ func SimulateFromSeed(
 		}
 
 		// Update the validator set
-		fmt.Printf("\nUpdates: %v\n", res.ValidatorUpdates)
-		fmt.Printf("Len before: %d\n", len(validators))
 		validators = UpdateValidators(t, validators, res.ValidatorUpdates)
-		fmt.Printf("Len after: %d\n", len(validators))
 	}
 
 	fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds): %d\n", header.Height, header.Time)
@@ -162,10 +159,10 @@ func UpdateValidators(t *testing.T, current map[string]abci.Validator, updates [
 	for _, update := range updates {
 		switch {
 		case update.Power == 0:
-			require.NotNil(t, current[string(update.Address)], "tried to delete a nonexistent validator")
-			delete(current, string(update.Address))
+			require.NotNil(t, current[string(update.PubKey.Data)], "tried to delete a nonexistent validator")
+			delete(current, string(update.PubKey.Data))
 		default:
-			current[string(update.Address)] = update
+			current[string(update.PubKey.Data)] = update
 		}
 	}
 	return current

@@ -1,8 +1,6 @@
 package stake
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/tags"
@@ -12,7 +10,6 @@ import (
 
 func NewHandler(k keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		fmt.Printf("\nHandling msg %s\n", msg.GetSignBytes())
 		// NOTE msg already has validate basic run
 		switch msg := msg.(type) {
 		case types.MsgCreateValidator:

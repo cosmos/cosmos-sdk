@@ -125,7 +125,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 		},
 		[]simulation.RandSetup{},
 		[]simulation.Invariant{
-			allInvariants,
+			simulation.PeriodicInvariant(allInvariants, 100, 0),
 		},
 		numKeys,
 		numBlocks,

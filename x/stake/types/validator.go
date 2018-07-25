@@ -271,16 +271,16 @@ func NewDescription(moniker, identity, website, details string) Description {
 // UpdateDescription updates the fields of a given description. An error is
 // returned if the resulting description contains an invalid length.
 func (d Description) UpdateDescription(d2 Description) (Description, sdk.Error) {
-	if d.Moniker == doNotModifyDescVal {
+	if d2.Moniker == doNotModifyDescVal {
 		d2.Moniker = d.Moniker
 	}
-	if d.Identity == doNotModifyDescVal {
+	if d2.Identity == doNotModifyDescVal {
 		d2.Identity = d.Identity
 	}
-	if d.Website == doNotModifyDescVal {
+	if d2.Website == doNotModifyDescVal {
 		d2.Website = d.Website
 	}
-	if d.Details == doNotModifyDescVal {
+	if d2.Details == doNotModifyDescVal {
 		d2.Details = d.Details
 	}
 

@@ -25,19 +25,31 @@ func TestValidatorEqual(t *testing.T) {
 
 func TestUpdateDescription(t *testing.T) {
 	d1 := Description{
+		Website: "https://validator.cosmos",
+		Details: "Test validator",
+	}
+
+	d2 := Description{
 		Moniker:  doNotModifyDescVal,
 		Identity: doNotModifyDescVal,
 		Website:  doNotModifyDescVal,
 		Details:  doNotModifyDescVal,
 	}
-	d2 := Description{
-		Website: "https://validator.cosmos",
-		Details: "Test validator",
+
+	d3 := Description{
+		Moniker:  "",
+		Identity: "",
+		Website:  "",
+		Details:  "",
 	}
 
 	d, err := d1.UpdateDescription(d2)
 	require.Nil(t, err)
 	require.Equal(t, d, d1)
+
+	d, err = d1.UpdateDescription(d3)
+	require.Nil(t, err)
+	require.Equal(t, d, d3)
 }
 
 func TestABCIValidator(t *testing.T) {

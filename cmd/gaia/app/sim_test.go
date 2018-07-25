@@ -35,7 +35,7 @@ var (
 
 func init() {
 	flag.Int64Var(&seed, "SimulationSeed", 42, "Simulation random seed")
-	flag.IntVar(&numKeys, "SimulationNumKeys", 10, "Number of keys (accounts)")
+	flag.IntVar(&numKeys, "SimulationNumKeys", 1000, "Number of keys (accounts)")
 	flag.IntVar(&numBlocks, "SimulationNumBlocks", 1000, "Number of blocks")
 	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "Operations per block")
 	flag.Int64Var(&minTimePerBlock, "SimulationMinTimePerBlock", 86400, "Minimum time per block (seconds)")
@@ -59,13 +59,20 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 
 	// Default genesis state
 	stakeGenesis := stake.DefaultGenesisState()
-	stakeGenesis.Pool.LooseTokens = sdk.NewRat(1100)
-	validator := stake.NewValidator(accs[0], keys[0].PubKey(), stake.Description{})
-	validator.Tokens = sdk.NewRat(100)
-	validator.DelegatorShares = sdk.NewRat(100)
-	delegation := stake.Delegation{accs[0], accs[0], sdk.NewRat(100), 0}
-	stakeGenesis.Validators = []stake.Validator{validator}
-	stakeGenesis.Bonds = []stake.Delegation{delegation}
+	var validators []stake.Validator
+	var delegations []stake.Delegation
+	numInitiallyBonded := int64(50)
+	for i := 0; i < int(numInitiallyBonded); i++ {
+		validator := stake.NewValidator(accs[i], keys[i].PubKey(), stake.Description{})
+		validator.Tokens = sdk.NewRat(100)
+		validator.DelegatorShares = sdk.NewRat(100)
+		delegation := stake.Delegation{accs[i], accs[i], sdk.NewRat(100), 0}
+		validators = append(validators, validator)
+		delegations = append(delegations, delegation)
+	}
+	stakeGenesis.Pool.LooseTokens = sdk.NewRat(int64(100*numKeys) + (numInitiallyBonded * 100))
+	stakeGenesis.Validators = validators
+	stakeGenesis.Bonds = delegations
 	genesis := GenesisState{
 		Accounts:  genesisAccounts,
 		StakeData: stakeGenesis,
@@ -96,10 +103,13 @@ func TestFullGaiaSimulation(t *testing.T) {
 		t, app.BaseApp, appStateFn, seed,
 		[]simulation.TestAndRunTx{
 			banksim.TestAndRunSingleInputMsgSend(app.accountMapper),
+			govsim.SimulateMsgSubmitProposal(app.govKeeper),
+			govsim.SimulateMsgDeposit(app.govKeeper),
+			govsim.SimulateMsgVote(app.govKeeper),
 			stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper),
 			stakesim.SimulateMsgEditValidator(app.stakeKeeper),
 			stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper),
-			stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper),
+			//stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper),
 			stakesim.SimulateMsgCompleteUnbonding(app.stakeKeeper),
 			stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper),
 			stakesim.SimulateMsgCompleteRedelegate(app.stakeKeeper),

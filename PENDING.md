@@ -31,6 +31,7 @@ FEATURES
 * [cosmos-sdk-cli] Added support for cosmos-sdk-cli tool under cosmos-sdk/cmd	
    * This allows SDK users to initialize a new project repository.
 * [tests] Remotenet commands for AWS (awsnet)
+* [networks] Added ansible scripts to upgrade seed nodes on a network
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route

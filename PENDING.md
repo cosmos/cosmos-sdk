@@ -20,6 +20,7 @@ BREAKING CHANGES
   * `gaiacli gov deposit --depositer`
   * `gaiacli gov vote --voter`
 * [x/gov] Added tags sub-package, changed tags to use dash-case 
+* \#1807 Switch from use of rational to decimal
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus

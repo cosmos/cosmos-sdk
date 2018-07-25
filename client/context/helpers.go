@@ -16,6 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"reflect"
+	"strconv"
 )
 
 // Broadcast the transaction bytes to Tendermint
@@ -276,7 +278,8 @@ func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msgs []sdk.Msg, cdc
 		return nil
 	}
 	if ctx.PrintResponse {
-		fmt.Printf("Committed at block %d. Hash: %s Response:%+v \n", res.Height, res.Hash.String(), res.DeliverTx)
+		fmt.Printf("Committed at block %d. Hash: %s \nResponse: \n", res.Height, res.Hash.String())
+		getReadableString(res.DeliverTx)
 	} else {
 		fmt.Printf("Committed at block %d. Hash: %s \n", res.Height, res.Hash.String())
 	}
@@ -344,4 +347,29 @@ func (ctx CoreContext) GetNode() (rpcclient.Client, error) {
 		return nil, errors.New("must define node URI")
 	}
 	return ctx.Client, nil
+}
+
+func getReadableString(a interface{}) {
+	val := reflect.ValueOf(a)
+	typ := reflect.TypeOf(a)
+	fields := val.NumField()
+	for i := 0; i < fields; i++ {
+		str := typ.Field(i).Type.String()
+		switch str {
+		case "[]uint8":
+			fmt.Println(typ.Field(i).Name, ":", string(val.Field(i).Interface().([]uint8)))
+		case "[]common.KVPair":
+			fmt.Println(typ.Field(i).Name, "{")
+			kvpair := val.Field(i).Interface().([]cmn.KVPair)
+			for _, x := range kvpair {
+				fmt.Println("    " + string(x.Key) + " : " + string(x.Value))
+			}
+			fmt.Println("}")
+		case "common.KI64Pair":
+			x := val.Field(i).Interface().(cmn.KI64Pair)
+			fmt.Println(typ.Field(i).Name + ": {" + string(x.Key) + ":" + strconv.Itoa(int(x.Value)) + "}")
+		default:
+			fmt.Println(typ.Field(i).Name, ":", val.Field(i))
+		}
+	}
 }

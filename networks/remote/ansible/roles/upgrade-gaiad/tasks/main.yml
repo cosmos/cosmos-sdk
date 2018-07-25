@@ -7,3 +7,15 @@
     mode: 0755
   notify: restart gaiad
 
+- name: Copy new genesis.json if available
+  when: GENESISFILE is defined
+  copy:
+    src: "{{GENESISFILE}}"
+    dest: /home/gaiad/.gaiad/config/genesis.json
+  notify: restart gaiad
+
+- name: Reset network
+  when: (UNSAFE_RESET_ALL | default(no)) == 'yes'
+  command: "sudo -u gaiad gaiad unsafe_reset_all"
+  notify: restart gaiad
+

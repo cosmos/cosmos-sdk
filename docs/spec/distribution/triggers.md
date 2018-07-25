@@ -11,11 +11,6 @@ earned any rewards) meaning that the initial value for `validator.Adjustment`
 must be set to the value of `validator.SimplePool()` for the height which the
 validator is added on the validator set. 
 
-```
-func CreateValidatorDistribution() 
-TODO: pseudo-code XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-```
-
 ## Create or modify delegation distribution
  
  - triggered-by: `stake.TxDelegate`
@@ -26,11 +21,6 @@ the height which the bond was added. Additionally the `AdjustmentPool` and
 `AdjustmentProposerPool` must be set to the equivalent values of
 `DelegationDistribution.SimplePool()` and
 `DelegationDistribution.SimpleProposerPool()` for the height of delegation. 
-
-```
-func CreateOrModDelegationDistribution() 
-TODO: pseudo-code XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-```
 
 ## Commission rate change
  

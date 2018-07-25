@@ -32,6 +32,7 @@ func SimulateFromSeed(
 	invariants []Invariant, numKeys int, numBlocks int, blockSize int, minTimePerBlock int64, maxTimePerBlock int64, signingFraction float64, evidenceFraction float64,
 ) {
 	log := fmt.Sprintf("Starting SimulateFromSeed with randomness created with seed %d", int(seed))
+	fmt.Printf("%s\n", log)
 	keys, accs := mock.GeneratePrivKeyAddressPairs(numKeys)
 	r := rand.New(rand.NewSource(seed))
 
@@ -99,10 +100,11 @@ func SimulateFromSeed(
 			// No BeginBlock simulation
 			request = abci.RequestBeginBlock{}
 		} else {
-			request = RandomRequestBeginBlock(t, r, validators, signingFraction, evidenceFraction, header.Height, header.Time)
+			request = RandomRequestBeginBlock(t, r, validators, signingFraction, evidenceFraction, header.Height, header.Time, log)
 		}
 
 		// Update the validator set
+		fmt.Printf("\nUpdates: %v\n", res.ValidatorUpdates)
 		UpdateValidators(t, validators, res.ValidatorUpdates)
 	}
 
@@ -112,7 +114,7 @@ func SimulateFromSeed(
 
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
 func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]abci.Validator, signingFraction float64, evidenceFraction float64,
-	currentHeight int64, currentTime int64) abci.RequestBeginBlock {
+	currentHeight int64, currentTime int64, log string) abci.RequestBeginBlock {
 	require.True(t, len(validators) > 0, "Zero validators can't sign a block!")
 	signingValidators := make([]abci.SigningValidator, len(validators))
 	i := 0

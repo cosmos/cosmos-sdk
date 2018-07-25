@@ -13,10 +13,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 // SimulateMsgSubmitProposal
-func SimulateMsgSubmitProposal(k gov.Keeper) simulation.TestAndRunTx {
+func SimulateMsgSubmitProposal(k gov.Keeper, sk stake.Keeper) simulation.TestAndRunTx {
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
 		key := simulation.RandomKey(r, keys)
 		addr := sdk.AccAddress(key.PubKey().Address())
@@ -30,6 +31,9 @@ func SimulateMsgSubmitProposal(k gov.Keeper) simulation.TestAndRunTx {
 		)
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		ctx, write := ctx.CacheContext()
+		pool := sk.GetPool(ctx)
+		pool.LooseTokens = pool.LooseTokens.Sub(sdk.NewRat(10))
+		sk.SetPool(ctx, pool)
 		result := gov.NewHandler(k)(ctx, msg)
 		if result.IsOK() {
 			write()
@@ -41,7 +45,7 @@ func SimulateMsgSubmitProposal(k gov.Keeper) simulation.TestAndRunTx {
 }
 
 // SimulateMsgDeposit
-func SimulateMsgDeposit(k gov.Keeper) simulation.TestAndRunTx {
+func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.TestAndRunTx {
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
 		key := simulation.RandomKey(r, keys)
 		addr := sdk.AccAddress(key.PubKey().Address())
@@ -50,6 +54,9 @@ func SimulateMsgDeposit(k gov.Keeper) simulation.TestAndRunTx {
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		ctx, write := ctx.CacheContext()
 		result := gov.NewHandler(k)(ctx, msg)
+		pool := sk.GetPool(ctx)
+		pool.LooseTokens = pool.LooseTokens.Sub(sdk.NewRat(10))
+		sk.SetPool(ctx, pool)
 		if result.IsOK() {
 			write()
 		}
@@ -60,7 +67,7 @@ func SimulateMsgDeposit(k gov.Keeper) simulation.TestAndRunTx {
 }
 
 // SimulateMsgVote
-func SimulateMsgVote(k gov.Keeper) simulation.TestAndRunTx {
+func SimulateMsgVote(k gov.Keeper, sk stake.Keeper) simulation.TestAndRunTx {
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
 		key := simulation.RandomKey(r, keys)
 		addr := sdk.AccAddress(key.PubKey().Address())

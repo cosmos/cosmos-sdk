@@ -12,6 +12,7 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
@@ -98,14 +99,21 @@ func TestFullGaiaSimulation(t *testing.T) {
 	app := NewGaiaApp(logger, db, nil)
 	require.Equal(t, "GaiaApp", app.Name())
 
+	allInvariants := func(t *testing.T, baseapp *baseapp.BaseApp, log string) {
+		banksim.NonnegativeBalanceInvariant(app.accountMapper)(t, baseapp, log)
+		govsim.AllInvariants()(t, baseapp, log)
+		stakesim.AllInvariants(app.coinKeeper, app.stakeKeeper, app.accountMapper)(t, baseapp, log)
+		slashingsim.AllInvariants()(t, baseapp, log)
+	}
+
 	// Run randomized simulation
 	simulation.SimulateFromSeed(
 		t, app.BaseApp, appStateFn, seed,
 		[]simulation.TestAndRunTx{
 			banksim.TestAndRunSingleInputMsgSend(app.accountMapper),
-			govsim.SimulateMsgSubmitProposal(app.govKeeper),
-			govsim.SimulateMsgDeposit(app.govKeeper),
-			govsim.SimulateMsgVote(app.govKeeper),
+			govsim.SimulateMsgSubmitProposal(app.govKeeper, app.stakeKeeper),
+			govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper),
+			govsim.SimulateMsgVote(app.govKeeper, app.stakeKeeper),
 			stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper),
 			stakesim.SimulateMsgEditValidator(app.stakeKeeper),
 			stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper),
@@ -117,10 +125,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 		},
 		[]simulation.RandSetup{},
 		[]simulation.Invariant{
-			simulation.PeriodicInvariant(banksim.NonnegativeBalanceInvariant(app.accountMapper), 100, 0),
-			simulation.PeriodicInvariant(govsim.AllInvariants(), 100, 0),
-			simulation.PeriodicInvariant(stakesim.AllInvariants(app.coinKeeper, app.stakeKeeper, app.accountMapper), 100, 0),
-			simulation.PeriodicInvariant(slashingsim.AllInvariants(), 100, 0),
+			allInvariants,
 		},
 		numKeys,
 		numBlocks,

@@ -22,6 +22,8 @@ Other notes:
  
 ### TxCreateValidator
 
+ - triggers: `distribution.CreateValidatorDistribution`
+
 A validator is created using the `TxCreateValidator` transaction.
 
 ```golang
@@ -81,7 +83,9 @@ editCandidacy(tx TxEditCandidacy):
     return
 ```
      	
-### TxDelegation
+### TxDelegate
+ 
+ - triggers: `distribution.CreateOrModDelegationDistribution`
 
 Within this transaction the delegator provides coins, and in return receives
 some amount of their validator's delegator-shares that are assigned to

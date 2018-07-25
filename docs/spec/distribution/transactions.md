@@ -35,7 +35,86 @@ type TxWithdrawDelegation struct {
 TODO: pseudo-code
 ```
 
-## Common Calculations
+## Common Calculations 
+
+### Distribution scenarios 
+
+A common form of abstracted calculations exists between validators and
+delegations attempting to withdrawal their rewards, either from `Global.Pool` 
+or from `ValidatorDistribution.ProposerPool`. With the following interface 
+fulfilled the entitled fees for the various scenarios can be calculated 
+as explained in later sections.
+
+```golang
+type DistributionScenario interface {
+    GlobalShares()    sdk.Dec  
+    RecipientShares() sdk.Dec
+}
+```
+
+#### Delegator's entitlement to ValidatorDistribution.Pool()
+
+For delegators all fees from fee pool are subject to commission rate from the
+owner of the validator. The global shares should be taken as true number of
+global bonded shares. The recipients shares should be taken as the bonded
+tokens less the validator's commission.
+
+```
+type DelegationFromGlobalPool struct {
+    delegation sdk.Delegation
+    validator  sdk.Validator 
+    pool  sdk.Validator 
+}
+
+func (d DelegationFromGlobalPool) GlobalShares() sdk.Dec
+    return pool.BondedTokens
+
+func (d DelegationFromGlobalPool) RecipientShares() sdk.Dec
+    return d.delegation.Shares * d.validator.DelegatorShareExRate() * 
+           validator.BondedTokens() * (1 - validator.Commission)
+```
+
+#### Delegator's entitlement to ValidatorDistribution.ProposerPool
+
+Delegations are still subject commission on the rewards gained from the
+proposer pool.  Global shares in this context is actually the validators total
+delegations shares.  The reciepient shares is taken as the effective delegation
+shares less the validator's commission. 
+
+
+`bond.Shares * (1 - validator.Commission)`
+
+```
+type DelegationFromProposerPool struct {
+    delegation sdk.Delegation
+    validator  sdk.Validator 
+    pool  sdk.Validator 
+}
+
+func (d DelegationFromProposerPool) GlobalShares() sdk.Dec
+    return pool.BondedTokens
+
+func (d DelegationFromProposerPool) RecipientShares() sdk.Dec
+    return d.delegation.Shares * d.validator.DelegatorShareExRate() * 
+           validator.BondedTokens() * (1 - validator.Commission)
+```
+
+#### Validator's commission entitlement to `rewardPool` 
+   entitled party voting power should be taken as the effective voting power
+     of commission portion of total voting power, 
+     `validator.VotingPower * validator.Commission`
+
+#### Validator's commission entitlement to `validatorDistribution.ProposerFeePool` 
+   - global power in this context is actually shares
+     `validator.TotalDelegatorShares`
+   - entitled party voting power should be taken as the of commission portion
+     of total delegators shares, 
+     `validator.TotalDelegatorShares * validator.Commission`
+
+
+
+
+### Entitled fees from distribution scenarios 
 
 Collected fees are pooled globally and divided out passively to validators and
 delegators. Each validator has the opportunity to charge commission to the
@@ -67,10 +146,10 @@ func (g Global) Update(feesCollected sdk.Coins,
      feesCollectedDec = MakeDecCoins(feesCollected)
      proposerReward = feesCollectedDec * (0.01 + 0.04 
                        * sumPowerPrecommitValidators / totalBondedTokens)
-     validator.ProposerRewardPool += proposerReward
+     validator.ProposerPool += proposerReward
      
      communityFunding = feesCollectedDec * communityTax
-     gs.CommunityFund += communityFunding
+     g.CommunityFund += communityFunding
      
      poolReceived = feesCollectedDec - proposerReward - communityFunding
      g.Pool += poolReceived
@@ -82,8 +161,8 @@ The entitlement to the fee pool held by the each validator can be accounted for
 lazily.  To begin this calculation we must determine the  validator's `Count`
 and `Adjustment`. The `Count` represents a lazy accounting of what a
 validator's entitlement to the fee pool would be if all validators have always
-had static voting power, and no validator had ever withdrawn their entitled
 rewards. 
+had static voting power, and no validator had ever withdrawn their entitled
 
 ``` 
 func (v ValidatorDistribution) Count() int64
@@ -119,88 +198,29 @@ func UpdateAdjustment(g Global, v ValidatorDistibution,
                       simplePool, projectedPool DecCoins) (Global, ValidatorDistibution)
                                             
     AdjustmentChange = simplePool - projectedPool
-    v.AdjustmentRewardPool += AdjustmentChange
+    v.Adjustment += AdjustmentChange
     g.Adjustment += AdjustmentChange
     return g, v
 ```
 
-Every instance that the voting power changes, information about the state of
-the validator set during the change must be recorded as a `powerChange` for
-other validators to run through. Before any validator modifies its voting power
-it must first run through the above calculation to determine the change in
-their `candidate.AdjustmentRewardPool` for all historical changes in the set
-of `powerChange` which they have not yet synced to. 
-
-Note that the adjustment factor may result as negative if the voting power of a
-different validator has decreased.  
+Before any validator modifies its voting power it must first run through the
+above calculation to determine the change in their
+`validatorDistribution.Adjustment` for all historical changes in the set of
+`powerChange` which they have not yet synced to. 
 
 ``` 
-validator.AdjustmentRewardPool += withdrawn
-gs.Adjustment += withdrawn
+func (v ValidatorDistibution) Withdraw(g Global, withdrawal DecCoins) (Global, ValidatorDistribution)
+    v.Adjustment += withdrawal
+    g.Adjustment += withdrawal
+    return g, v
 ``` 
 
-Now the entitled fee pool of each validator can be lazily accounted for at 
-any given block:
+The entitled pool of for validator can then be lazily accounted for at any
+given block:
 
 ```
 func (v ValidatorDistibution) Pool(g Global) DecCoins
     return v.simplePool() - v.Adjustment
 ```
 
-So far we have covered two sources fees which can be withdrawn from: Fees from
-proposer rewards (`validator.ProposerRewardPool`), and fees from the fee pool
-(`validator.feePool`). However we should note that all fees from fee pool are
-subject to commission rate from the owner of the validator. These next
-calculations outline the math behind withdrawing fee rewards as either a
-delegator to a validator providing commission, or as the owner of a validator
-who is receiving commission.
-
-### Calculations For Delegators and Validators
-
-The same mechanism described to calculate the fees which an entire validator is
-entitled to is be applied to delegator level to determine the entitled fees for
-each delegator and the validators entitled commission from `gs.FeesPool` and
-`validator.ProposerRewardPool`. 
-
-The calculations are identical with a few modifications to the parameters:
- - Delegator's entitlement to `rewardPool`:
-   - entitled party voting power should be taken as the effective voting power
-     after commission is retrieved, 
-     `bond.Shares/validator.TotalDelegatorShares * validator.VotingPower * (1 - validator.Commission)`
- - Delegator's entitlement to `validatorDistribution.ProposerFeePool` 
-   - global power in this context is actually shares
-     `validator.TotalDelegatorShares`
-   - entitled party voting power should be taken as the effective shares after
-     commission is retrieved, `bond.Shares * (1 - validator.Commission)`
- - Validator's commission entitlement to `rewardPool` 
-   - entitled party voting power should be taken as the effective voting power
-     of commission portion of total voting power, 
-     `validator.VotingPower * validator.Commission`
- - Validator's commission entitlement to `validatorDistribution.ProposerFeePool` 
-   - global power in this context is actually shares
-     `validator.TotalDelegatorShares`
-   - entitled party voting power should be taken as the of commission portion
-     of total delegators shares, 
-     `validator.TotalDelegatorShares * validator.Commission`
-
-For more implementation ideas see spreadsheet `spec/AbsoluteFeeDistrModel.xlsx`
-
-As mentioned earlier, every time the voting power of a delegator bond is
-changing either by unbonding or further bonding, all fees must be
-simultaneously withdrawn. Similarly if the validator changes the commission
-rate, all commission on fees must be simultaneously withdrawn.  
-
-### Other general notes on fees accounting
-
-- When a delegator chooses to re-delegate shares, fees continue to accumulate
-  until the re-delegation queue reaches maturity. At the block which the queue
-  reaches maturity and shares are re-delegated all available fees are
-  simultaneously withdrawn. 
-- Whenever a totally new validator is added to the validator set, the `accum`
-  of the entire validator must be 0, meaning that the initial value for
-  `validator.Adjustment` must be set to the value of `canidate.Count` for the
-  height which the validator is added on the validator set.
-- The feePool of a new delegator bond will be 0 for the height at which the bond
-  was added. This is achieved by setting `DelegatorBond.FeeWithdrawalHeight` to
-  the height which the bond was added. 
 

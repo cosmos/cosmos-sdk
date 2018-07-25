@@ -42,27 +42,27 @@ validator, the validator withdraws.
 
 ```golang
 type ValidatorDistribution struct {
-    Adjustment         sdk.Dec   // commission adjustment factor
-    ProposerRewardPool DecCoins // reward pool collected from being the proposer
-	LastBondedTokens   sdk.Dec   // last bonded token amount
+    Adjustment       sdk.Dec   // commission adjustment factor
+    ProposerPool     DecCoins  // reward pool collected from being the proposer
+	LastBondedTokens sdk.Dec   // last bonded token amount
 }
 ```
 
-### Delegation
+### Delegation Distribution 
 
 Each delegation holds multiple adjustment factors to specify its entitlement to
-the rewards from a validator. `AdjustmentFeePool` is  used to passively
-calculate each bonds entitled fees from the `RewardPool`.
-`AdjustmentRewardPool` is used to passively calculate each bonds entitled fees
-from `ValidatorDistribution.ProposerRewardPool`
+the rewards from a validator. `AdjustmentPool` is  used to passively calculate
+each bonds entitled fees from the `RewardPool`.  `AdjustmentPool` is used to
+passively calculate each bonds entitled fees from
+`ValidatorDistribution.ProposerRewardPool`
  
- - DelegatorDist: ` 0x02 | DelegatorAddr | ValOwnerAddr -> amino(delegatorDist)`
+ - DelegatorDistribution: ` 0x02 | DelegatorAddr | ValOwnerAddr -> amino(delegatorDist)`
 
 ```golang
 type DelegatorDist struct {
-    HeightLastWithdrawal int64     // last time this delegation withdrew rewards
-    AdjustmentFeePool    sdk.Dec   // commission adjustment factor
-    AdjustmentRewardPool DecCoins // reward pool collected from being the proposer
+    WithdrawalHeight       int64    // last time this delegation withdrew rewards
+    AdjustmentPool         sdk.Dec  // commission adjustment factor
+    AdjustmentProposerPool DecCoins // reward pool collected from being the proposer
 }
 ```
 
@@ -83,7 +83,7 @@ type PowerChange struct {
     power       rational.Rat // total power at change
     prevpower   rational.Rat // total power at previous height-1 
     feesIn      coins.Coin   // fees-in at block height
-    prevFeePool coins.Coin   // total fees in at previous block height
+    prevPool    coins.Coin   // total fees in at previous block height
 }
 ```
 

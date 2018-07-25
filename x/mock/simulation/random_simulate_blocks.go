@@ -105,7 +105,9 @@ func SimulateFromSeed(
 
 		// Update the validator set
 		fmt.Printf("\nUpdates: %v\n", res.ValidatorUpdates)
-		UpdateValidators(t, validators, res.ValidatorUpdates)
+		fmt.Printf("Len before: %d\n", len(validators))
+		validators = UpdateValidators(t, validators, res.ValidatorUpdates)
+		fmt.Printf("Len after: %d\n", len(validators))
 	}
 
 	fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds): %d\n", header.Height, header.Time)
@@ -156,7 +158,7 @@ func AssertAllInvariants(t *testing.T, app *baseapp.BaseApp, tests []Invariant, 
 }
 
 // UpdateValidators mimicks Tendermint's update logic
-func UpdateValidators(t *testing.T, current map[string]abci.Validator, updates []abci.Validator) {
+func UpdateValidators(t *testing.T, current map[string]abci.Validator, updates []abci.Validator) map[string]abci.Validator {
 	for _, update := range updates {
 		switch {
 		case update.Power == 0:
@@ -166,4 +168,5 @@ func UpdateValidators(t *testing.T, current map[string]abci.Validator, updates [
 			current[string(update.Address)] = update
 		}
 	}
+	return current
 }

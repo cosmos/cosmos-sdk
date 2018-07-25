@@ -479,6 +479,8 @@ func kickOutValidators(k Keeper, ctx sdk.Context, toKickOut map[string]byte) {
 // perform all the store operations for when a validator status becomes unbonded
 func (k Keeper) unbondValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 
+	fmt.Printf("\nUnbonding validator: %s\n", validator.Owner)
+
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
 
@@ -505,6 +507,8 @@ func (k Keeper) unbondValidator(ctx sdk.Context, validator types.Validator) type
 
 // perform all the store operations for when a validator status becomes bonded
 func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.Validator {
+
+	fmt.Printf("\nBonding validator: %s\n", validator.Owner)
 
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)

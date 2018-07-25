@@ -2,13 +2,19 @@
 
 ## 0.23.0
 
-*July 20th, 2018*
+*July 25th, 2018*
 
 BREAKING CHANGES
 * [x/stake] Fixed the period check for the inflation calculation
 
 IMPROVEMENTS
 * [cli] Improve error messages for all txs when the account doesn't exist
+* [tendermint] Update to v0.22.6
+    - Updates the crypto imports/API (#1966)
+
+BUG FIXES
+* [tendermint] Update to v0.22.6
+    - Fixes some security vulnerabilities reported in the [Bug Bounty](https://hackerone.com/tendermint)
 
 ## 0.22.0
 

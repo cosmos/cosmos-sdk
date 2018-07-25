@@ -71,7 +71,7 @@
   version = "v1.4.7"
 
 [[projects]]
-  digest = "1:830de2bf776efb5af3a7749ecde2087a88da74da10ef2769edcde8e8624b5d96"
+  digest = "1:fa30c0652956e159cdb97dcb2ef8b8db63ed668c02a5c3a40961c8f0641252fe"
   name = "github.com/go-kit/kit"
   packages = [
     "log",
@@ -83,8 +83,8 @@
     "metrics/prometheus",
   ]
   pruneopts = "UT"
-  revision = "ca4112baa34cb55091301bdc13b1420a122b1b9e"
-  version = "v0.7.0"
+  revision = "4dc7be5d2d12881735283bcab7352178e190fc71"
+  version = "v0.6.0"
 
 [[projects]]
   digest = "1:31a18dae27a29aa074515e43a443abfd2ba6deb6d69309d8d7ce789c45f34659"
@@ -165,13 +165,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ac64f01acc5eeea9dde40e326de6b6471e501392ec06524c3b51033aa50789bc"
+  digest = "1:8951fe6e358876736d8fa1f3992624fdbb2dec6bc49401c1381d1ef8abbb544f"
   name = "github.com/hashicorp/hcl"
   packages = [
     ".",
     "hcl/ast",
     "hcl/parser",
-    "hcl/printer",
     "hcl/scanner",
     "hcl/strconv",
     "hcl/token",
@@ -332,12 +331,12 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:872fa275c31e1f9db31d66fa9b1d4a7bb9a080ff184e6977da01f36bfbe07f11"
+  digest = "1:627ab2f549a6a55c44f46fa24a4307f4d0da81bfc7934ed0473bf38b24051d26"
   name = "github.com/spf13/cobra"
   packages = ["."]
   pruneopts = "UT"
-  revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
-  version = "v0.0.3"
+  revision = "7b2c5ac9fc04fc5efafb60700713d4fa609b777b"
+  version = "v0.0.1"
 
 [[projects]]
   branch = "master"
@@ -356,12 +355,12 @@
   version = "v1.0.1"
 
 [[projects]]
-  digest = "1:59e7dceb53b4a1e57eb1eb0bf9951ff0c25912df7660004a789b62b4e8cdca3b"
+  digest = "1:f8e1a678a2571e265f4bf91a3e5e32aa6b1474a55cb0ea849750cc177b664d96"
   name = "github.com/spf13/viper"
   packages = ["."]
   pruneopts = "UT"
-  revision = "b5e8006cbee93ec955a89ab31e0e3ce3204f3736"
-  version = "v1.0.2"
+  revision = "25b30aa063fc18e48662b86996252eabdcf2f0c7"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:73697231b93fb74a73ebd8384b68b9a60c57ea6b13c56d2425414566a72c8e6d"
@@ -424,7 +423,7 @@
   version = "v0.9.2"
 
 [[projects]]
-  digest = "1:dc368155b5eeb6d5ec949b4de5d866be7948031d0e448bce2c5d8ef83118ee12"
+  digest = "1:049c779b867a182cea567c65d7c81e3b9e4e4a7eece4c35a19639f75d2aa7da9"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -487,8 +486,8 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "05a76fb517f50da27b4bfcdc7b4cf185fc61eff6"
-  version = "v0.22.5"
+  revision = "5fdbcd70df57b71ffba71e1ff5f00d617852a9c0"
+  version = "v0.22.6"
 
 [[projects]]
   digest = "1:5bd938386bd1f61a581bf8cd6ff2b7b2f79c542929176db4ceb44965440dae07"

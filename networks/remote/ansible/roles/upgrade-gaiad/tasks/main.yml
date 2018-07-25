@@ -7,11 +7,19 @@
     mode: 0755
   notify: restart gaiad
 
-- name: Copy new genesis.json if available
-  when: GENESISFILE is defined
+- name: Copy new genesis.json file, if available
+  when: "GENESISFILE is defined and GENESISFILE != ''" 
   copy:
     src: "{{GENESISFILE}}"
     dest: /home/gaiad/.gaiad/config/genesis.json
+  notify: restart gaiad
+
+- name: Download genesis.json URL, if available
+  when: "GENESISURL is defined and GENESISURL != ''"
+  get_url:
+    url: "{{GENESISURL}}"
+    dest: /home/gaiad/.gaiad/config/genesis.json
+    force: yes
   notify: restart gaiad
 
 - name: Reset network

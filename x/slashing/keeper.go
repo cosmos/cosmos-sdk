@@ -65,6 +65,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, infracti
 }
 
 // handle a validator signature, must be called once per validator per block
+// nolint gocyclo
 func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, power int64, signed bool) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	height := ctx.BlockHeight()
@@ -101,11 +102,19 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	}
 	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)
 	if height > minHeight && signInfo.SignedBlocksCounter < k.MinSignedPerWindow(ctx) {
-		// Downtime confirmed, slash, revoke, and jail the validator
-		logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d", pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx)))
-		k.validatorSet.Slash(ctx, pubkey, height, power, k.SlashFractionDowntime(ctx))
-		k.validatorSet.Revoke(ctx, pubkey)
-		signInfo.JailedUntil = ctx.BlockHeader().Time + k.DowntimeUnbondDuration(ctx)
+		validator := k.validatorSet.ValidatorByPubKey(ctx, pubkey)
+		if validator != nil && !validator.GetRevoked() {
+			// Downtime confirmed, slash, revoke, and jail the validator
+			logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",
+				pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx)))
+			k.validatorSet.Slash(ctx, pubkey, height, power, k.SlashFractionDowntime(ctx))
+			k.validatorSet.Revoke(ctx, pubkey)
+			signInfo.JailedUntil = ctx.BlockHeader().Time + k.DowntimeUnbondDuration(ctx)
+		} else {
+			// Validator was (a) not found or (b) already revoked, don't slash
+			logger.Info(fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store or already revoked",
+				pubkey.Address()))
+		}
 	}
 
 	// Set the updated signing info

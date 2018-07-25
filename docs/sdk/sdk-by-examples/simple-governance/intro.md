@@ -14,7 +14,7 @@ Before getting in the bulk of the code, we will start by some introductory conte
 - [Architecture of a SDK-app](sdk-architecture.md)
 - [Starting your own project](start.md)
 
-## #Setup and design phase
+### Setup and design phase
 
 - [Setup](setup.md)
 - [Application design](app-design.md)

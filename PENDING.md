@@ -45,4 +45,5 @@ IMPROVEMENTS
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators
+*  \#1797 Fix off-by-one error in slashing for downtime
 *  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator

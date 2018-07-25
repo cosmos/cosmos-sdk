@@ -38,14 +38,14 @@ gaiacli stake create-validator \
 
 You can edit your validator's public description. This info is to identify your validator, and will be relied on by delegators to decide which validators to stake to. Make sure to provide input for every flag below, otherwise the field will default to empty (`--moniker` defaults to the machine name).
 
-The `--keybase-sig` is a 16-digit string that is generated with a [keybase.io](https://keybase.io) account. It's a cryptographically secure method of verifying your identity across multiple online networks. The Keybase API allows us to retrieve your Keybase avatar. This is how you can add a logo to your validator profile.
+The `--identity` can be used as to verify identity with systems like Keybase or UPort. When using with Keybase `--identity` should be populated with a 16-digit string that is generated with a [keybase.io](https://keybase.io) account. It's a cryptographically secure method of verifying your identity across multiple online networks. The Keybase API allows us to retrieve your Keybase avatar. This is how you can add a logo to your validator profile.
 
 ```bash
 gaiacli stake edit-validator
   --address-validator=<account_cosmosaccaddr>
   --moniker="choose a moniker" \
   --website="https://cosmos.network" \
-  --keybase-sig="6A0D65E29A4CBC8E"
+  --identity=6A0D65E29A4CBC8E
   --details="To infinity and beyond!"
   --chain-id=gaia-6002 \
   --name=<key_name>

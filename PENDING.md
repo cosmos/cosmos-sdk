@@ -5,6 +5,9 @@ BREAKING CHANGES
 * [x/gov] CLI flag changed from `proposalID` to `proposal-id`
 * [x/stake] Fixed the period check for the inflation calculation
 * [x/stake] Inflation doesn't use rationals in calculation (performance boost)
+* [x/stake] CLI flags for identity changed from `--keybase-sig` to `--identity`, effects:
+  * `gaiacli stake create-validator`
+  * `gaiacli stake edit-validator`
 * [baseapp] NewBaseApp constructor now takes sdk.TxDecoder as argument instead of wire.Codec
 * [x/auth] Default TxDecoder can be found in `x/auth` rather than baseapp
 * \#1606 The following CLI commands have been switched to use `--from`
@@ -47,3 +50,4 @@ BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators
 *  \#1797 Fix off-by-one error in slashing for downtime
 *  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator
+*  \#1766 Fixes bad example for keybase identity

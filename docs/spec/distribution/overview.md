@@ -2,6 +2,24 @@
 
 ## Overview
 
+Collected fees are pooled globally and divided out passively to validators and
+delegators. Each validator has the opportunity to charge commission to the
+delegators on the fees collected on behalf of the delegators by the validators.
+Fees are paid directly into a global fee pool, and validator proposer-reward
+pool. Due to the nature of of passive accounting whenever changes to parameters
+which affect the rate of fee distribution occurs, withdrawal of fees must also
+occur. 
+ 
+ - when withdrawing one must withdrawal the maximum amount they are entitled
+   too, leaving nothing in the pool, 
+ - when bonding, unbonding, or re-delegating tokens to an existing account a
+   full withdrawal of the fees must occur (as the rules for lazy accounting
+   change), 
+ - when a validator chooses to change the commission on fees, all accumulated 
+   commission fees must be simultaneously withdrawn.
+
+The above scenarios are covered is `triggers.md`.
+
 The distribution mechanism outlines herein is used to lazily distribute the
 following between validators and associated delegators:
  - Multi-token fees to be socially distributed 

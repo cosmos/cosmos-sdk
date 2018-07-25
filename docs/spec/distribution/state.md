@@ -23,9 +23,10 @@ type DecCoin struct {
 }
 
 type Global struct {
+	PrevBondedTokens  sdk.Dec  // bonded token amount for the global pool on the previous block 
     Adjustment        sdk.Dec  // global adjustment factor for lazy calculations
     Pool              DecCoins // funds pool for all validators
-    LastReceivedPool  DecCoins // last funds added to the pool 
+    PrevReceivedPool  DecCoins // funds added to the pool on the previous block
     EverReceivedPool  DecCoins // total funds ever added to the pool 
     CommunityFund     DecCoins // pool for community funds
 }
@@ -42,9 +43,13 @@ validator, the validator withdraws.
 
 ```golang
 type ValidatorDistribution struct {
-    Adjustment       sdk.Dec   // commission adjustment factor
-    ProposerPool     DecCoins  // reward pool collected from being the proposer
-	LastBondedTokens sdk.Dec   // last bonded token amount
+    Adjustment                 sdk.Dec   // global pool adjustment factor
+    ProposerAdjustment         DecCoins  // proposer pool adjustment factor
+    ProposerPool               DecCoins  // reward pool collected from being the proposer
+    EverReceivedProposerReward DecCoins  // all rewards ever collected from being the proposer
+    PrevReceivedProposerReward DecCoins  // all rewards ever collected from being the proposer
+	PrevBondedTokens           sdk.Dec   // bonded token amount on the previous block 
+	PrevDelegatorShares        sdk.Dec   // amount of delegator shares for the validator on the previous block 
 }
 ```
 
@@ -60,9 +65,11 @@ passively calculate each bonds entitled fees from
 
 ```golang
 type DelegatorDist struct {
-    WithdrawalHeight       int64    // last time this delegation withdrew rewards
-    AdjustmentPool         sdk.Dec  // commission adjustment factor
-    AdjustmentProposerPool DecCoins // reward pool collected from being the proposer
+    WithdrawalHeight   int64    // last time this delegation withdrew rewards
+    Adjustment         sdk.Dec  // commission adjustment factor
+    AdjustmentProposer DecCoins // reward pool collected from being the proposer
+    PrevTokens         sdk.Dec  // bonded tokens held by the delegation on the previous block
+    PrevShares         sdk.Dec  // delegator shares held by the delegation on the previous block
 }
 ```
 

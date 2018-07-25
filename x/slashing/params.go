@@ -14,7 +14,7 @@ var (
 	// SignedBlocksWindow - sliding window for downtime slashing
 	// TODO Governance parameter?
 	// TODO Temporarily set to 40000 blocks for testnets
-	SignedBlocksWindow int64 = 1000
+	SignedBlocksWindow int64 = 10000
 
 	// Downtime slashing threshold - 50%
 	// TODO Governance parameter?
@@ -38,5 +38,5 @@ var (
 
 	// SlashFractionDowntime - currently 1%
 	// TODO Governance parameter?
-	SlashFractionDowntime = sdk.NewRat(1).Quo(sdk.NewRat(100))
+	SlashFractionDowntime = sdk.NewRat(10).Quo(sdk.NewRat(100))
 )

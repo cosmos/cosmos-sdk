@@ -19,7 +19,7 @@ type TxWithdrawDelegation struct {
     withdrawAddr  sdk.AccAddress // address to make the withdrawal to
 }
 
-func WithdrawalDelegator(delegatorAddr, withdrawAddr sdk.AccAddress) 
+func WithdrawDelegator(delegatorAddr, withdrawAddr sdk.AccAddress) 
     entitlement = GetDelegatorEntitlement(delegatorAddr)
     AddCoins(withdrawAddr, totalEntitlment.TruncateDecimal())
 
@@ -82,7 +82,7 @@ type TxWithdrawValidator struct {
     withdrawAddr sdk.AccAddress // address to make the withdrawal to
 }
 
-func WithdrawlValidator(ownerAddr, withdrawAddr sdk.AccAddress)
+func WithdrawalValidator(ownerAddr, withdrawAddr sdk.AccAddress)
 
     // update the delegator adjustment factors and also withdrawal delegation fees
     entitlement = GetDelegatorEntitlement(ownerAddr)

@@ -16,7 +16,7 @@ const (
 	FlagSharesPercent       = "shares-percent"
 
 	FlagMoniker  = "moniker"
-	FlagIdentity = "keybase-sig"
+	FlagIdentity = "identity"
 	FlagWebsite  = "website"
 	FlagDetails  = "details"
 )
@@ -38,7 +38,7 @@ func init() {
 	fsShares.String(FlagSharesAmount, "", "Amount of source-shares to either unbond or redelegate as a positive integer or decimal")
 	fsShares.String(FlagSharesPercent, "", "Percent of source-shares to either unbond or redelegate as a positive integer or decimal >0 and <=1")
 	fsDescription.String(FlagMoniker, "[do-not-modify]", "validator name")
-	fsDescription.String(FlagIdentity, "[do-not-modify]", "optional keybase signature")
+	fsDescription.String(FlagIdentity, "[do-not-modify]", "optional identity signature (ex. UPort or Keybase)")
 	fsDescription.String(FlagWebsite, "[do-not-modify]", "optional website")
 	fsDescription.String(FlagDetails, "[do-not-modify]", "optional details")
 	fsValidator.String(FlagAddressValidator, "", "hex address of the validator")

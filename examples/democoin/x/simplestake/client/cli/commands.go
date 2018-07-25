@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,7 +55,7 @@ func BondTxCmd(cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			var pubKeyEd crypto.PubKeyEd25519
+			var pubKeyEd ed25519.PubKeyEd25519
 			copy(pubKeyEd[:], rawPubKey)
 
 			msg := simplestake.NewMsgBond(from, stake, pubKeyEd)

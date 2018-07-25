@@ -42,12 +42,11 @@
   revision = "fdfc19097e7ac6b57035062056f5b7b4638b8898"
 
 [[projects]]
-  branch = "master"
   digest = "1:386de157f7d19259a7f9c81f26ce011223ce0f090353c1152ffdf730d7d10ac2"
   name = "github.com/btcsuite/btcutil"
   packages = ["bech32"]
   pruneopts = "UT"
-  revision = "ab6388e0c60ae4834a1f57511e20c17b5f78be4b"
+  revision = "d4cc87b860166d00d6b5b9e0d3b3d71d6088d4d4"
 
 [[projects]]
   digest = "1:a2c1d0e43bd3baaa071d1b9ed72c27d78169b2b269f71c105ac4ba34b1be4a39"
@@ -58,7 +57,6 @@
   version = "v1.1.0"
 
 [[projects]]
-  branch = "master"
   digest = "1:c7644c73a3d23741fdba8a99b1464e021a224b7e205be497271a8003a15ca41b"
   name = "github.com/ebuchman/fail-test"
   packages = ["."]
@@ -106,7 +104,7 @@
   version = "v1.7.0"
 
 [[projects]]
-  digest = "1:af1306bff89268721ea2550d504413c9487ebfca11e2ff8f39ae79b99a720ff5"
+  digest = "1:212285efb97b9ec2e20550d81f0446cb7897e57cbdfd7301b1363ab113d8be45"
   name = "github.com/gogo/protobuf"
   packages = [
     "gogoproto",
@@ -117,8 +115,8 @@
     "types",
   ]
   pruneopts = "UT"
-  revision = "1adfc126b41513cc696b209667c8656ea7aac67c"
-  version = "v1.0.0"
+  revision = "636bf0302bc95575d69441b25a2603156ffdddf1"
+  version = "v1.1.1"
 
 [[projects]]
   digest = "1:cb22af0ed7c72d495d8be1106233ee553898950f15fd3f5404406d44c2e86888"
@@ -265,7 +263,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
   digest = "1:98225904b7abff96c052b669b25788f18225a36673fba022fb93514bb9a2a64e"
   name = "github.com/prometheus/client_golang"
   packages = [
@@ -309,7 +306,6 @@
   revision = "ae68e2d4c00fed4943b5f6698d504a5fe083da8a"
 
 [[projects]]
-  branch = "master"
   digest = "1:c4556a44e350b50a490544d9b06e9fba9c286c21d6c0e47f54f3a9214597298c"
   name = "github.com/rcrowley/go-metrics"
   packages = ["."]
@@ -428,7 +424,7 @@
   version = "v0.9.2"
 
 [[projects]]
-  digest = "1:2511fa7bc2725251a1a48a923c8f01cd41de29b00a21224092d448a9e4627c21"
+  digest = "1:049c779b867a182cea567c65d7c81e3b9e4e4a7eece4c35a19639f75d2aa7da9"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -442,8 +438,13 @@
     "consensus",
     "consensus/types",
     "crypto",
+    "crypto/armor",
+    "crypto/ed25519",
+    "crypto/encoding/amino",
     "crypto/merkle",
+    "crypto/secp256k1",
     "crypto/tmhash",
+    "crypto/xsalsa20symmetric",
     "evidence",
     "libs/autofile",
     "libs/bech32",
@@ -486,8 +487,8 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "5ff65274b84ea905787a48512cc3124385bddf2f"
-  version = "v0.22.2"
+  revision = "5fdbcd70df57b71ffba71e1ff5f00d617852a9c0"
+  version = "v0.22.6"
 
 [[projects]]
   digest = "1:5bd938386bd1f61a581bf8cd6ff2b7b2f79c542929176db4ceb44965440dae07"
@@ -517,7 +518,6 @@
   revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
 
 [[projects]]
-  branch = "master"
   digest = "1:04dda8391c3e2397daf254ac68003f30141c069b228d06baec8324a5f81dc1e9"
   name = "golang.org/x/net"
   packages = [
@@ -573,7 +573,7 @@
   revision = "e92b116572682a5b432ddd840aeaba2a559eeff1"
 
 [[projects]]
-  digest = "1:4d7b5d9746840266938cdb21a40f8eba7137d9153c4ed404d6bb2a450d06f690"
+  digest = "1:4515e3030c440845b046354fd5d57671238428b820deebce2e9dabb5cd3c51ac"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -585,9 +585,11 @@
     "credentials",
     "encoding",
     "encoding/proto",
-    "grpclb/grpc_lb_v1/messages",
     "grpclog",
     "internal",
+    "internal/backoff",
+    "internal/channelz",
+    "internal/grpcrand",
     "keepalive",
     "metadata",
     "naming",
@@ -601,8 +603,8 @@
     "transport",
   ]
   pruneopts = "UT"
-  revision = "d11072e7ca9811b1100b80ca0269ac831f06d024"
-  version = "v1.11.3"
+  revision = "168a6198bcb0ef175f7dacec0b8691fc141dc9b8"
+  version = "v1.13.0"
 
 [[projects]]
   digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
@@ -635,8 +637,13 @@
     "github.com/tendermint/tendermint/cmd/tendermint/commands",
     "github.com/tendermint/tendermint/config",
     "github.com/tendermint/tendermint/crypto",
+    "github.com/tendermint/tendermint/crypto/armor",
+    "github.com/tendermint/tendermint/crypto/ed25519",
+    "github.com/tendermint/tendermint/crypto/encoding/amino",
     "github.com/tendermint/tendermint/crypto/merkle",
+    "github.com/tendermint/tendermint/crypto/secp256k1",
     "github.com/tendermint/tendermint/crypto/tmhash",
+    "github.com/tendermint/tendermint/crypto/xsalsa20symmetric",
     "github.com/tendermint/tendermint/libs/bech32",
     "github.com/tendermint/tendermint/libs/cli",
     "github.com/tendermint/tendermint/libs/cli/flags",

@@ -67,6 +67,8 @@ func NewApp() *App {
 	app.SetInitChainer(app.InitChainer)
 	app.SetAnteHandler(auth.NewAnteHandler(app.AccountMapper, app.FeeCollectionKeeper))
 
+	// Not sealing for custom extension
+
 	return app
 }
 

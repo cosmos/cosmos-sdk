@@ -197,3 +197,47 @@ func TestHandleNewValidator(t *testing.T) {
 	pool := sk.GetPool(ctx)
 	require.Equal(t, int64(100), pool.BondedTokens.RoundInt64())
 }
+
+// Test a revoked validator being "down" twice
+// Ensure that they're only slashed once
+func TestHandleAlreadyRevoked(t *testing.T) {
+
+	// initial setup
+	ctx, _, sk, keeper := createTestInput(t)
+	amtInt := int64(100)
+	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
+	sh := stake.NewHandler(sk)
+	got := sh(ctx, newTestMsgCreateValidator(addr, val, amt))
+	require.True(t, got.IsOK())
+	stake.EndBlocker(ctx, sk)
+
+	// 1000 first blocks OK
+	height := int64(0)
+	for ; height < SignedBlocksWindow; height++ {
+		ctx = ctx.WithBlockHeight(height)
+		keeper.handleValidatorSignature(ctx, val, amtInt, true)
+	}
+
+	// 501 blocks missed
+	for ; height < SignedBlocksWindow+(SignedBlocksWindow-MinSignedPerWindow)+1; height++ {
+		ctx = ctx.WithBlockHeight(height)
+		keeper.handleValidatorSignature(ctx, val, amtInt, false)
+	}
+
+	// validator should have been revoked and slashed
+	validator, _ := sk.GetValidatorByPubKey(ctx, val)
+	require.Equal(t, sdk.Unbonded, validator.GetStatus())
+
+	// validator should have been slashed
+	slashAmt := sdk.NewRat(amtInt).Mul(SlashFractionDowntime).RoundInt64()
+	require.Equal(t, int64(amtInt)-slashAmt, validator.Tokens.RoundInt64()) // TODO replace w/ .GetTokens()
+
+	// another block missed
+	ctx = ctx.WithBlockHeight(height)
+	keeper.handleValidatorSignature(ctx, val, amtInt, false)
+
+	// validator should not have been slashed twice
+	validator, _ = sk.GetValidatorByPubKey(ctx, val)
+	require.Equal(t, int64(amtInt)-slashAmt, validator.Tokens.RoundInt64()) // TODO replace w/ .GetTokens()
+
+}

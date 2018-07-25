@@ -128,7 +128,8 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should have been slashed
 	pool = sk.GetPool(ctx)
-	require.Equal(t, int64(amtInt-1), pool.BondedTokens.RoundInt64())
+	slashAmt := sdk.NewRat(amtInt).Mul(keeper.SlashFractionDowntime(ctx)).RoundInt64()
+	require.Equal(t, int64(amtInt)-slashAmt, pool.BondedTokens.RoundInt64())
 
 	// validator start height should have been changed
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))

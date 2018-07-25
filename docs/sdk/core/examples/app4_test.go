@@ -1,14 +1,14 @@
 package app
 
 import (
-	"github.com/stretchr/testify/require"
-	"os"
 	"encoding/json"
-	"testing"
-	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
+	"os"
+	"testing"
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,7 +44,7 @@ func InitTestChain(bc *bapp.BaseApp, chainID string, addrs ...sdk.AccAddress) {
 // Generate basic SpendMsg with one input and output
 func GenerateSpendMsg(sender, receiver sdk.AccAddress, amount sdk.Coins) bank.MsgSend {
 	return bank.MsgSend{
-		Inputs: []bank.Input{{sender, amount}},
+		Inputs:  []bank.Input{{sender, amount}},
 		Outputs: []bank.Output{{receiver, amount}},
 	}
 }
@@ -64,7 +64,7 @@ func TestBadMsg(t *testing.T) {
 
 	// Construct transaction
 	fee := auth.StdFee{
-		Gas: 1000000000000000,
+		Gas:    1000000000000000,
 		Amount: sdk.Coins{{"testCoin", sdk.NewInt(0)}},
 	}
 	signBytes := auth.StdSignBytes("test-chain", 0, 0, fee, []sdk.Msg{msg}, "")
@@ -72,18 +72,18 @@ func TestBadMsg(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	sigs := []auth.StdSignature{auth.StdSignature{
-		PubKey: priv1.PubKey(),
-		Signature: sig,
+	sigs := []auth.StdSignature{{
+		PubKey:        priv1.PubKey(),
+		Signature:     sig,
 		AccountNumber: 0,
-		Sequence: 0,
+		Sequence:      0,
 	}}
 
 	tx := auth.StdTx{
-		Msgs: []sdk.Msg{msg},
-		Fee:  fee,
+		Msgs:       []sdk.Msg{msg},
+		Fee:        fee,
 		Signatures: sigs,
-		Memo: "",
+		Memo:       "",
 	}
 
 	bc.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{ChainID: "test-chain"}})
@@ -110,7 +110,7 @@ func TestMsgSend(t *testing.T) {
 	msg := GenerateSpendMsg(addr1, addr2, sdk.Coins{{"testCoin", sdk.NewInt(100)}})
 
 	fee := auth.StdFee{
-		Gas: 1000000000000000,
+		Gas:    1000000000000000,
 		Amount: sdk.Coins{{"testCoin", sdk.NewInt(0)}},
 	}
 	signBytes := auth.StdSignBytes("test-chain", 0, 0, fee, []sdk.Msg{msg}, "")
@@ -118,18 +118,18 @@ func TestMsgSend(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	sigs := []auth.StdSignature{auth.StdSignature{
-		PubKey: priv1.PubKey(),
-		Signature: sig,
+	sigs := []auth.StdSignature{{
+		PubKey:        priv1.PubKey(),
+		Signature:     sig,
 		AccountNumber: 0,
-		Sequence: 0,
+		Sequence:      0,
 	}}
 
 	tx := auth.StdTx{
-		Msgs: []sdk.Msg{msg},
-		Fee:  fee,
+		Msgs:       []sdk.Msg{msg},
+		Fee:        fee,
 		Signatures: sigs,
-		Memo: "",
+		Memo:       "",
 	}
 
 	bc.BeginBlock(abci.RequestBeginBlock{})
@@ -138,5 +138,4 @@ func TestMsgSend(t *testing.T) {
 
 	require.True(t, res.IsOK(), res.Log)
 
-	
 }

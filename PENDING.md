@@ -4,6 +4,7 @@ BREAKING CHANGES
 * [baseapp] Msgs are no longer run on CheckTx, removed `ctx.IsCheckTx()`
 * [x/gov] CLI flag changed from `proposalID` to `proposal-id`
 * [x/stake] Fixed the period check for the inflation calculation
+* [x/stake] Inflation doesn't use rationals in calculation (performance boost)
 * [baseapp] NewBaseApp constructor now takes sdk.TxDecoder as argument instead of wire.Codec
 * [x/auth] Default TxDecoder can be found in `x/auth` rather than baseapp
 * \#1606 The following CLI commands have been switched to use `--from`
@@ -27,8 +28,9 @@ FEATURES
   * Modules can test random combinations of their own operations
   * Applications can integrate operations and invariants from modules together for an integrated simulation
 * [baseapp] Initialize validator set on ResponseInitChain
-* Added support for cosmos-sdk-cli tool under cosmos-sdk/cmd	
-   * This allows SDK users to init a new project repository with a single command.
+* [cosmos-sdk-cli] Added support for cosmos-sdk-cli tool under cosmos-sdk/cmd	
+   * This allows SDK users to initialize a new project repository.
+* [tests] Remotenet commands for AWS (awsnet)
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route
@@ -36,8 +38,11 @@ IMPROVEMENTS
 * [tools] Remove `rm -rf vendor/` from `make get_vendor_deps`
 * [x/auth] Recover ErrorOutOfGas panic in order to set sdk.Result attributes correctly
 * [x/stake] Add revoked to human-readable validator 
+* [tests] Add tests to example apps in docs
 * [x/gov] Votes on a proposal can now be queried
 * [x/bank] Unit tests are now table-driven
+* [tests] Fixes ansible scripts to work with AWS too
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators
+*  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator

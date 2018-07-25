@@ -13,7 +13,6 @@ import (
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 const (
@@ -29,6 +28,7 @@ func NewCodec() *wire.Codec {
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(MsgSend{}, "example/MsgSend", nil)
 	cdc.RegisterConcrete(MsgIssue{}, "example/MsgIssue", nil)
+	crypto.RegisterAmino(cdc)
 	return cdc
 }
 
@@ -179,7 +179,9 @@ type coinInfo struct {
 // Simple tx to wrap the Msg.
 type app2Tx struct {
 	sdk.Msg
-	Signatures []auth.StdSignature
+
+	PubKey    crypto.PubKey
+	Signature crypto.Signature
 }
 
 // This tx only has one Msg.
@@ -187,8 +189,8 @@ func (tx app2Tx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{tx.Msg}
 }
 
-func (tx app2Tx) GetSignatures() []auth.StdSignature {
-	return tx.Signatures
+func (tx app2Tx) GetSignature() crypto.Signature {
+	return tx.Signature
 }
 
 // Amino decode app2Tx. Capable of decoding both MsgSend and MsgIssue
@@ -214,28 +216,22 @@ func antehandler(ctx sdk.Context, tx sdk.Tx) (_ sdk.Context, _ sdk.Result, abort
 		return ctx, sdk.ErrTxDecode("Tx must be of format app2Tx").Result(), true
 	}
 
-	// expect only one msg in app2Tx
+	// expect only one msg and one signer in app2Tx
 	msg := tx.GetMsgs()[0]
-
-	signerAddrs := msg.GetSigners()
-
-	if len(signerAddrs) != len(appTx.GetSignatures()) {
-		return ctx, sdk.ErrUnauthorized("Number of signatures do not match required amount").Result(), true
-	}
+	signerAddr := msg.GetSigners()[0]
 
 	signBytes := msg.GetSignBytes()
-	for i, addr := range signerAddrs {
-		sig := appTx.GetSignatures()[i]
 
-		// check that submitted pubkey belongs to required address
-		if !bytes.Equal(sig.PubKey.Address(), addr) {
-			return ctx, sdk.ErrUnauthorized("Provided Pubkey does not match required address").Result(), true
-		}
+	sig := appTx.GetSignature()
 
-		// check that signature is over expected signBytes
-		if !sig.PubKey.VerifyBytes(signBytes, sig.Signature) {
-			return ctx, sdk.ErrUnauthorized("Signature verification failed").Result(), true
-		}
+	// check that submitted pubkey belongs to required address
+	if !bytes.Equal(appTx.PubKey.Address(), signerAddr) {
+		return ctx, sdk.ErrUnauthorized("Provided Pubkey does not match required address").Result(), true
+	}
+
+	// check that signature is over expected signBytes
+	if !appTx.PubKey.VerifyBytes(signBytes, sig) {
+		return ctx, sdk.ErrUnauthorized("Signature verification failed").Result(), true
 	}
 
 	// authentication passed, app to continue processing by sending msg to handler

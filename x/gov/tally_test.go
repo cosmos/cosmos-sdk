@@ -397,11 +397,11 @@ func TestTallyRevokedValidator(t *testing.T) {
 	stakeHandler := stake.NewHandler(sk)
 
 	dummyDescription := stake.NewDescription("T", "E", "S", "T")
-	val1CreateMsg := stake.NewMsgCreateValidator(addrs[0], crypto.GenPrivKeyEd25519().PubKey(), sdk.NewCoin("steak", 25), dummyDescription)
+	val1CreateMsg := stake.NewMsgCreateValidator(addrs[0], ed25519.GenPrivKey().PubKey(), sdk.NewCoin("steak", 25), dummyDescription)
 	stakeHandler(ctx, val1CreateMsg)
-	val2CreateMsg := stake.NewMsgCreateValidator(addrs[1], crypto.GenPrivKeyEd25519().PubKey(), sdk.NewCoin("steak", 6), dummyDescription)
+	val2CreateMsg := stake.NewMsgCreateValidator(addrs[1], ed25519.GenPrivKey().PubKey(), sdk.NewCoin("steak", 6), dummyDescription)
 	stakeHandler(ctx, val2CreateMsg)
-	val3CreateMsg := stake.NewMsgCreateValidator(addrs[2], crypto.GenPrivKeyEd25519().PubKey(), sdk.NewCoin("steak", 7), dummyDescription)
+	val3CreateMsg := stake.NewMsgCreateValidator(addrs[2], ed25519.GenPrivKey().PubKey(), sdk.NewCoin("steak", 7), dummyDescription)
 	stakeHandler(ctx, val3CreateMsg)
 
 	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewCoin("steak", 10))

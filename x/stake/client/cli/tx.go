@@ -24,7 +24,11 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
-			amount, err := sdk.ParseCoin(viper.GetString(FlagAmount))
+			amounstStr := viper.GetString(FlagAmount)
+			if amounstStr == "" {
+				return fmt.Errorf("Must specify amount to stake using --amount")
+			}
+			amount, err := sdk.ParseCoin(amounstStr)
 			if err != nil {
 				return err
 			}
@@ -73,7 +77,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 
 	cmd.Flags().AddFlagSet(fsPk)
 	cmd.Flags().AddFlagSet(fsAmount)
-	cmd.Flags().AddFlagSet(fsDescription)
+	cmd.Flags().AddFlagSet(fsDescriptionCreate)
 	cmd.Flags().AddFlagSet(fsDelegator)
 	return cmd
 }
@@ -108,7 +112,7 @@ func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsDescription)
+	cmd.Flags().AddFlagSet(fsDescriptionEdit)
 	return cmd
 }
 

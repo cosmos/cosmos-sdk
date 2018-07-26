@@ -2,13 +2,14 @@ package app
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
-	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,8 +55,8 @@ func TestBadMsg(t *testing.T) {
 	bc := newTestChain()
 
 	// Create privkeys and addresses
-	priv1 := crypto.GenPrivKeyEd25519()
-	priv2 := crypto.GenPrivKeyEd25519()
+	priv1 := ed25519.GenPrivKey()
+	priv2 := ed25519.GenPrivKey()
 	addr1 := priv1.PubKey().Address().Bytes()
 	addr2 := priv2.PubKey().Address().Bytes()
 
@@ -72,7 +73,7 @@ func TestBadMsg(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	sigs := []auth.StdSignature{{
+	sigs := []auth.StdSignature{auth.StdSignature{
 		PubKey:        priv1.PubKey(),
 		Signature:     sig,
 		AccountNumber: 0,
@@ -99,8 +100,8 @@ func TestBadMsg(t *testing.T) {
 func TestMsgSend(t *testing.T) {
 	bc := newTestChain()
 
-	priv1 := crypto.GenPrivKeyEd25519()
-	priv2 := crypto.GenPrivKeyEd25519()
+	priv1 := ed25519.GenPrivKey()
+	priv2 := ed25519.GenPrivKey()
 	addr1 := priv1.PubKey().Address().Bytes()
 	addr2 := priv2.PubKey().Address().Bytes()
 
@@ -118,7 +119,7 @@ func TestMsgSend(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	sigs := []auth.StdSignature{{
+	sigs := []auth.StdSignature{auth.StdSignature{
 		PubKey:        priv1.PubKey(),
 		Signature:     sig,
 		AccountNumber: 0,

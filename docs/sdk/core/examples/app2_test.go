@@ -1,9 +1,10 @@
 package app
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
 	"testing"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/stretchr/testify/require"
 )
@@ -11,8 +12,8 @@ import (
 // Test encoding of app2Tx is correct with both msg types
 func TestEncoding(t *testing.T) {
 	// Create privkeys and addresses
-	priv1 := crypto.GenPrivKeyEd25519()
-	priv2 := crypto.GenPrivKeyEd25519()
+	priv1 := ed25519.GenPrivKey()
+	priv2 := ed25519.GenPrivKey()
 	addr1 := priv1.PubKey().Address().Bytes()
 	addr2 := priv2.PubKey().Address().Bytes()
 

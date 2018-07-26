@@ -10,6 +10,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -131,7 +132,7 @@ func NewPubKey(pk string) (res crypto.PubKey) {
 		panic(err)
 	}
 	//res, err = crypto.PubKeyFromBytes(pkBytes)
-	var pkEd crypto.PubKeyEd25519
+	var pkEd ed25519.PubKeyEd25519
 	copy(pkEd[:], pkBytes[:])
 	return pkEd
 }

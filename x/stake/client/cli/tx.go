@@ -24,7 +24,11 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
-			amount, err := sdk.ParseCoin(viper.GetString(FlagAmount))
+			amounstStr := viper.GetString(FlagAmount)
+			if amounstStr == "" {
+				return fmt.Errorf("Must specify amount to stake using --amount")
+			}
+			amount, err := sdk.ParseCoin(amounstStr)
 			if err != nil {
 				return err
 			}

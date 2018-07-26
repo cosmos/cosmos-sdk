@@ -46,9 +46,12 @@ IMPROVEMENTS
 * [x/gov] Votes on a proposal can now be queried
 * [x/bank] Unit tests are now table-driven
 * [tests] Fixes ansible scripts to work with AWS too
+* [tests] \#1806 CLI tests are now behind the build flag 'cli_test', so go test works on a new repo
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators
 *  \#1797 Fix off-by-one error in slashing for downtime
 *  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator
 *  \#1766 Fixes bad example for keybase identity
+*  \#1804 Fixes gen-tx genesis generation logic temporarily until upstream updates
+*  \#1799 Fix `gaiad export`

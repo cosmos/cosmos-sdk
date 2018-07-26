@@ -1,6 +1,5 @@
-PACKAGES=$(shell go list ./... | grep -v '/vendor/')
-PACKAGES_NOCLITEST=$(shell go list ./... | grep -v '/vendor/' | grep -v '/simulation' | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test)
-PACKAGES_SIMTEST=$(shell go list ./... | grep -v '/vendor/' | grep '/simulation')
+PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
+PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 COMMIT_HASH := $(shell git rev-parse --short HEAD)
 BUILD_TAGS = netgo ledger
 BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
@@ -123,13 +122,13 @@ godocs:
 test: test_unit
 
 test_cli:
-	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test`
+	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test` -tags=cli_test
 
 test_unit:
-	@go test $(PACKAGES_NOCLITEST)
+	@go test $(PACKAGES_NOSIMULATION)
 
 test_race:
-	@go test -race $(PACKAGES_NOCLITEST)
+	@go test -race $(PACKAGES_NOSIMULATION)
 
 test_sim:
 	@echo "Running individual module simulations."
@@ -156,7 +155,7 @@ format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs misspell -w
 
 benchmark:
-	@go test -bench=. $(PACKAGES_NOCLITEST)
+	@go test -bench=. $(PACKAGES_NOSIMULATION)
 
 
 ########################################

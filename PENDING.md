@@ -53,4 +53,5 @@ BUG FIXES
 *  \#1797 Fix off-by-one error in slashing for downtime
 *  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator
 *  \#1766 Fixes bad example for keybase identity
+*  \#1804 Fixes gen-tx genesis generation logic temporarily until upstream updates
 *  \#1799 Fix `gaiad export`

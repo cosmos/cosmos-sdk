@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -28,7 +30,7 @@ func NewCodec() *wire.Codec {
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(MsgSend{}, "example/MsgSend", nil)
 	cdc.RegisterConcrete(MsgIssue{}, "example/MsgIssue", nil)
-	crypto.RegisterAmino(cdc)
+	cryptoAmino.RegisterAmino(cdc)
 	return cdc
 }
 

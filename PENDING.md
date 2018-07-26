@@ -55,3 +55,4 @@ BUG FIXES
 *  \#1766 Fixes bad example for keybase identity
 *  \#1804 Fixes gen-tx genesis generation logic temporarily until upstream updates
 *  \#1799 Fix `gaiad export`
+*  \#1828 Force user to specify amount on create-validator command by removing default

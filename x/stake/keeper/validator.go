@@ -320,6 +320,8 @@ func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidato
 func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 	affectedValidator types.Validator) (updatedVal types.Validator, updated bool) {
 
+	fmt.Printf("\nCalling UpdateBondedValidators with %s\n", affectedValidator)
+
 	store := ctx.KVStore(k.storeKey)
 
 	oldCliffValidatorAddr := k.GetCliffValidator(ctx)
@@ -339,7 +341,7 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 		// validator provided because it has not yet been updated in the store
 		ownerAddr := iterator.Value()
 		if bytes.Equal(ownerAddr, affectedValidator.Owner) {
-			fmt.Printf("\nAffected validator: %s\n", affectedValidator)
+			fmt.Printf("Affected validator: %s\n", affectedValidator)
 			validator = affectedValidator
 		} else {
 			var found bool
@@ -361,6 +363,8 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 		} else if validator.Status == sdk.Bonded {
 			panic(fmt.Sprintf("revoked validator cannot be bonded, address: %v\n", ownerAddr))
 		}
+
+		fmt.Printf("Iter; on validator: %s\n", validator)
 
 		iterator.Next()
 	}

@@ -19,6 +19,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -119,7 +120,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	for i := 1; i < nValidators; i++ {
 		genDoc.Validators = append(genDoc.Validators,
 			tmtypes.GenesisValidator{
-				PubKey: crypto.GenPrivKeyEd25519().PubKey(),
+				PubKey: ed25519.GenPrivKey().PubKey(),
 				Power:  1,
 				Name:   "val",
 			},
@@ -151,7 +152,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 
 	appState, err := wire.MarshalJSONIndent(cdc, genesisState)
 	require.NoError(t, err)
-	genDoc.AppStateJSON = appState
+	genDoc.AppState = appState
 
 	// LCD listen address
 	var listenAddr string

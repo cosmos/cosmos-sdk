@@ -32,6 +32,8 @@ func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits/{%s}", RestProposalID, RestDepositer), queryDepositHandlerFn(cdc)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes/{%s}", RestProposalID, RestVoter), queryVoteHandlerFn(cdc)).Methods("GET")
 
+	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes", RestProposalID), queryVotesOnProposalHandlerFn(cdc)).Methods("GET")
+
 	r.HandleFunc("/gov/proposals", queryProposalsWithParameterFn(cdc)).Methods("GET")
 }
 
@@ -325,6 +327,71 @@ func queryVoteHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 		var vote gov.Vote
 		cdc.MustUnmarshalBinary(res, &vote)
 		output, err := wire.MarshalJSONIndent(cdc, vote)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write(output)
+	}
+}
+
+// nolint: gocyclo
+// todo: Split this functionality into helper functions to remove the above
+func queryVotesOnProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		strProposalID := vars[RestProposalID]
+
+		if len(strProposalID) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			err := errors.New("proposalId required but not specified")
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		proposalID, err := strconv.ParseInt(strProposalID, 10, 64)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			err := errors.Errorf("proposalID [%s] is not positive", proposalID)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		ctx := context.NewCoreContextFromViper()
+
+		res, err := ctx.QueryStore(gov.KeyProposal(proposalID), storeName)
+		if err != nil || len(res) == 0 {
+			err := errors.Errorf("proposalID [%d] does not exist", proposalID)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		var proposal gov.Proposal
+		cdc.MustUnmarshalBinary(res, &proposal)
+
+		if proposal.GetStatus() != gov.StatusVotingPeriod {
+			err := errors.Errorf("proposal is not in Voting Period", proposalID)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		res2, err := ctx.QuerySubspace(cdc, gov.KeyVotesSubspace(proposalID), storeName)
+		if err != nil {
+			err = errors.New("ProposalID doesn't exist")
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		var votes []gov.Vote
+
+		for i := 0; i < len(res2); i++ {
+			var vote gov.Vote
+			cdc.MustUnmarshalBinary(res2[i].Value, &vote)
+			votes = append(votes, vote)
+		}
+
+		output, err := wire.MarshalJSONIndent(cdc, votes)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))

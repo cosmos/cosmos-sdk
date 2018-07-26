@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.23.0
+
+*July 25th, 2018*
+
+BREAKING CHANGES
+* [x/stake] Fixed the period check for the inflation calculation
+
+IMPROVEMENTS
+* [cli] Improve error messages for all txs when the account doesn't exist
+* [tendermint] Update to v0.22.6
+    - Updates the crypto imports/API (#1966)
+* [x/stake] Add revoked to human-readable validator 
+
+BUG FIXES
+* [tendermint] Update to v0.22.6
+    - Fixes some security vulnerabilities reported in the [Bug Bounty](https://hackerone.com/tendermint)
+*  \#1797 Fix off-by-one error in slashing for downtime
+*  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator
+*  \#1666 Add intra-tx counter to the genesis validators
+
 ## 0.22.0
 
 *July 16th, 2018*

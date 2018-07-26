@@ -3,6 +3,7 @@ package context
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
@@ -10,6 +11,9 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // NewCoreContextFromViper - return a new context with parameters from the command line
@@ -66,6 +70,36 @@ func defaultChainID() (string, error) {
 		return "", err
 	}
 	return doc.ChainID, nil
+}
+
+// EnsureAccountExists - Make sure account exists
+func EnsureAccountExists(ctx CoreContext, name string) error {
+	keybase, err := keys.GetKeyBase()
+	if err != nil {
+		return err
+	}
+
+	if name == "" {
+		return errors.Errorf("must provide a from address name")
+	}
+
+	info, err := keybase.Get(name)
+	if err != nil {
+		return errors.Errorf("no key for: %s", name)
+	}
+
+	accAddr := sdk.AccAddress(info.GetPubKey().Address())
+
+	Acc, err := ctx.QueryStore(auth.AddressStoreKey(accAddr), ctx.AccountStore)
+	if err != nil {
+		return err
+	}
+
+	// Check if account was found
+	if Acc == nil {
+		return errors.Errorf("No account with address %s was found in the state.\nAre you sure there has been a transaction involving it?", accAddr)
+	}
+	return nil
 }
 
 // EnsureAccount - automatically set account number if none provided

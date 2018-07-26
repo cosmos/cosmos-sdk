@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
@@ -51,6 +53,15 @@ func (k Keeper) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, va
 // get the sdk.validator for a particular address
 func (k Keeper) Validator(ctx sdk.Context, address sdk.AccAddress) sdk.Validator {
 	val, found := k.GetValidator(ctx, address)
+	if !found {
+		return nil
+	}
+	return val
+}
+
+// get the sdk.validator for a particular pubkey
+func (k Keeper) ValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) sdk.Validator {
+	val, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
 		return nil
 	}

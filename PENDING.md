@@ -24,6 +24,7 @@ BREAKING CHANGES
   * `gaiacli gov deposit --depositer`
   * `gaiacli gov vote --voter`
 * [x/gov] Added tags sub-package, changed tags to use dash-case 
+* [x/gov] Governance parameters are now stored in globalparams store
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus

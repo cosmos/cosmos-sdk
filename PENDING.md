@@ -46,6 +46,7 @@ IMPROVEMENTS
 * [x/gov] Votes on a proposal can now be queried
 * [x/bank] Unit tests are now table-driven
 * [tests] Fixes ansible scripts to work with AWS too
+* [tests] \#1806 CLI tests are now behind the build flag 'cli_test', so go test works on a new repo
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators

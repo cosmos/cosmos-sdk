@@ -339,6 +339,7 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 		// validator provided because it has not yet been updated in the store
 		ownerAddr := iterator.Value()
 		if bytes.Equal(ownerAddr, affectedValidator.Owner) {
+			fmt.Printf("\nAffected validator: %s\n", affectedValidator)
 			validator = affectedValidator
 		} else {
 			var found bool
@@ -365,10 +366,16 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 	}
 	iterator.Close()
 
+	if newValidatorBonded && bytes.Equal(oldCliffValidatorAddr, validator.Owner) {
+		panic("cliff validator has not been changed, yet we bonded a new validator")
+	}
+
 	// clear or set the cliff validator
 	if bondedValidatorsCount == int(maxValidators) {
+		fmt.Printf("Setting cliff validator: %s\n", validator)
 		k.setCliffValidator(ctx, validator, k.GetPool(ctx))
 	} else if len(oldCliffValidatorAddr) > 0 {
+		fmt.Printf("Clearing cliff validator\n")
 		k.clearCliffValidator(ctx)
 	}
 
@@ -381,6 +388,8 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 			if !found {
 				panic(fmt.Sprintf("validator record not found for address: %v\n", oldCliffValidatorAddr))
 			}
+			fmt.Printf("Unbonding old cliff validator: %s\n", cliffVal)
+			fmt.Printf("Then bonding new validator: %s\n", validatorToBond)
 			k.unbondValidator(ctx, cliffVal)
 
 		}
@@ -484,7 +493,7 @@ func (k Keeper) unbondValidator(ctx sdk.Context, validator types.Validator) type
 
 	// sanity check
 	if validator.Status == sdk.Unbonded {
-		panic(fmt.Sprintf("should not already be unbonded,  validator: %v\n", validator))
+		panic(fmt.Sprintf("should not already be unbonded, validator: %s\n", validator))
 	}
 
 	// set the status
@@ -511,7 +520,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 
 	// sanity check
 	if validator.Status == sdk.Bonded {
-		panic(fmt.Sprintf("should not already be bonded, validator: %v\n", validator))
+		panic(fmt.Sprintf("should not already be bonded, validator: %s\n", validator))
 	}
 
 	// set the status

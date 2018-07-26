@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.23.1
+
+*July 27th, 2018*
+
+BUG FIXES
+  * [tendermint] Update to v0.22.7
+    - [consensus, blockchain] Register the Evidence interface so it can be
+      marshalled/unmarshalled by the blockchain and consensus reactors
+
 ## 0.23.0
 
 *July 25th, 2018*

@@ -30,10 +30,10 @@ func TestUpdateDescription(t *testing.T) {
 	}
 
 	d2 := Description{
-		Moniker:  doNotModifyDescVal,
-		Identity: doNotModifyDescVal,
-		Website:  doNotModifyDescVal,
-		Details:  doNotModifyDescVal,
+		Moniker:  DoNotModifyDesc,
+		Identity: DoNotModifyDesc,
+		Website:  DoNotModifyDesc,
+		Details:  DoNotModifyDesc,
 	}
 
 	d3 := Description{

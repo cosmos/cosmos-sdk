@@ -140,27 +140,6 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 // =====================================================
 // Procedures
 
-<<<<<<< HEAD
-var (
-	defaultMinDeposit       int64 = 10
-	defaultMaxDepositPeriod int64 = 10000
-	defaultVotingPeriod     int64 = 10000
-)
-
-// Gets procedure from store. TODO: move to global param store and allow for updating of this
-func (keeper Keeper) GetDepositProcedure() DepositProcedure {
-	return DepositProcedure{
-		MinDeposit:       sdk.Coins{sdk.NewCoin("steak", defaultMinDeposit)},
-		MaxDepositPeriod: defaultMaxDepositPeriod,
-	}
-}
-
-// Gets procedure from store. TODO: move to global param store and allow for updating of this
-func (keeper Keeper) GetVotingProcedure() VotingProcedure {
-	return VotingProcedure{
-		VotingPeriod: defaultVotingPeriod,
-	}
-=======
 // Returns the current Deposit Procedure from the global param store
 func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) DepositProcedure {
 	var depositProcedure DepositProcedure
@@ -173,7 +152,6 @@ func (keeper Keeper) GetVotingProcedure(ctx sdk.Context) VotingProcedure {
 	var votingProcedure VotingProcedure
 	keeper.ps.Get(ctx, ParamStoreKeyVotingProcedure, &votingProcedure)
 	return votingProcedure
->>>>>>> moved governance parameters to globalparams store and can be set in genesis
 }
 
 // Returns the current Tallying Procedure from the global param store

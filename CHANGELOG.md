@@ -15,6 +15,8 @@ IMPROVEMENTS
 BUG FIXES
 * [tendermint] Update to v0.22.6
     - Fixes some security vulnerabilities reported in the [Bug Bounty](https://hackerone.com/tendermint)
+*  \#1797 Fix off-by-one error in slashing for downtime
+*  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator
 
 ## 0.22.0
 

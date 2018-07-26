@@ -3,7 +3,6 @@
 BREAKING CHANGES
 * [baseapp] Msgs are no longer run on CheckTx, removed `ctx.IsCheckTx()`
 * [x/gov] CLI flag changed from `proposalID` to `proposal-id`
-* [x/stake] Fixed the period check for the inflation calculation
 * [x/stake] Inflation doesn't use rationals in calculation (performance boost)
 * [baseapp] NewBaseApp constructor now takes sdk.TxDecoder as argument instead of wire.Codec
 * [x/auth] Default TxDecoder can be found in `x/auth` rather than baseapp
@@ -34,7 +33,6 @@ FEATURES
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route
-* [cli] Improve error messages for all txs when the account doesn't exist
 * [tools] Remove `rm -rf vendor/` from `make get_vendor_deps`
 * [x/auth] Recover ErrorOutOfGas panic in order to set sdk.Result attributes correctly
 * [x/stake] Add revoked to human-readable validator 
@@ -45,5 +43,3 @@ IMPROVEMENTS
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators
-*  \#1797 Fix off-by-one error in slashing for downtime
-*  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator

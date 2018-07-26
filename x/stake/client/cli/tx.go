@@ -73,7 +73,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 
 	cmd.Flags().AddFlagSet(fsPk)
 	cmd.Flags().AddFlagSet(fsAmount)
-	cmd.Flags().AddFlagSet(fsDescription)
+	cmd.Flags().AddFlagSet(fsDescriptionCreate)
 	cmd.Flags().AddFlagSet(fsDelegator)
 	return cmd
 }
@@ -108,7 +108,7 @@ func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsDescription)
+	cmd.Flags().AddFlagSet(fsDescriptionEdit)
 	return cmd
 }
 

@@ -2,6 +2,8 @@ package cli
 
 import (
 	flag "github.com/spf13/pflag"
+
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 // nolint
@@ -23,13 +25,14 @@ const (
 
 // common flagsets to add to various functions
 var (
-	fsPk           = flag.NewFlagSet("", flag.ContinueOnError)
-	fsAmount       = flag.NewFlagSet("", flag.ContinueOnError)
-	fsShares       = flag.NewFlagSet("", flag.ContinueOnError)
-	fsDescription  = flag.NewFlagSet("", flag.ContinueOnError)
-	fsValidator    = flag.NewFlagSet("", flag.ContinueOnError)
-	fsDelegator    = flag.NewFlagSet("", flag.ContinueOnError)
-	fsRedelegation = flag.NewFlagSet("", flag.ContinueOnError)
+	fsPk                = flag.NewFlagSet("", flag.ContinueOnError)
+	fsAmount            = flag.NewFlagSet("", flag.ContinueOnError)
+	fsShares            = flag.NewFlagSet("", flag.ContinueOnError)
+	fsDescriptionCreate = flag.NewFlagSet("", flag.ContinueOnError)
+	fsDescriptionEdit   = flag.NewFlagSet("", flag.ContinueOnError)
+	fsValidator         = flag.NewFlagSet("", flag.ContinueOnError)
+	fsDelegator         = flag.NewFlagSet("", flag.ContinueOnError)
+	fsRedelegation      = flag.NewFlagSet("", flag.ContinueOnError)
 )
 
 func init() {
@@ -37,10 +40,14 @@ func init() {
 	fsAmount.String(FlagAmount, "1steak", "Amount of coins to bond")
 	fsShares.String(FlagSharesAmount, "", "Amount of source-shares to either unbond or redelegate as a positive integer or decimal")
 	fsShares.String(FlagSharesPercent, "", "Percent of source-shares to either unbond or redelegate as a positive integer or decimal >0 and <=1")
-	fsDescription.String(FlagMoniker, "", "validator name")
-	fsDescription.String(FlagIdentity, "", "optional identity signature (ex. UPort or Keybase)")
-	fsDescription.String(FlagWebsite, "", "optional website")
-	fsDescription.String(FlagDetails, "", "optional details")
+	fsDescriptionCreate.String(FlagMoniker, "", "validator name")
+	fsDescriptionCreate.String(FlagIdentity, "", "optional identity signature (ex. UPort or Keybase)")
+	fsDescriptionCreate.String(FlagWebsite, "", "optional website")
+	fsDescriptionCreate.String(FlagDetails, "", "optional details")
+	fsDescriptionEdit.String(FlagMoniker, types.DoNotModifyDesc, "validator name")
+	fsDescriptionEdit.String(FlagIdentity, types.DoNotModifyDesc, "optional identity signature (ex. UPort or Keybase)")
+	fsDescriptionEdit.String(FlagWebsite, types.DoNotModifyDesc, "optional website")
+	fsDescriptionEdit.String(FlagDetails, types.DoNotModifyDesc, "optional details")
 	fsValidator.String(FlagAddressValidator, "", "hex address of the validator")
 	fsDelegator.String(FlagAddressDelegator, "", "hex address of the delegator")
 	fsRedelegation.String(FlagAddressValidatorSrc, "", "hex address of the source validator")

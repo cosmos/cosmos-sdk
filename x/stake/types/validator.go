@@ -13,8 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
-const doNotModifyDescVal = "[do-not-modify]"
-
 // Validator defines the total amount of bond shares and their exchange rate to
 // coins. Accumulation of interest is modelled as an in increase in the
 // exchange rate, and slashing as a decrease.  When coins are delegated to this
@@ -250,6 +248,9 @@ func (v Validator) Equal(c2 Validator) bool {
 		v.LastBondedTokens.Equal(c2.LastBondedTokens)
 }
 
+// constant used in flags to indicate that description field should not be updated
+const DoNotModifyDesc = "[do-not-modify]"
+
 // Description - description fields for a validator
 type Description struct {
 	Moniker  string `json:"moniker"`  // name
@@ -271,16 +272,16 @@ func NewDescription(moniker, identity, website, details string) Description {
 // UpdateDescription updates the fields of a given description. An error is
 // returned if the resulting description contains an invalid length.
 func (d Description) UpdateDescription(d2 Description) (Description, sdk.Error) {
-	if d2.Moniker == doNotModifyDescVal {
+	if d2.Moniker == DoNotModifyDesc {
 		d2.Moniker = d.Moniker
 	}
-	if d2.Identity == doNotModifyDescVal {
+	if d2.Identity == DoNotModifyDesc {
 		d2.Identity = d.Identity
 	}
-	if d2.Website == doNotModifyDescVal {
+	if d2.Website == DoNotModifyDesc {
 		d2.Website = d.Website
 	}
-	if d2.Details == doNotModifyDescVal {
+	if d2.Details == DoNotModifyDesc {
 		d2.Details = d.Details
 	}
 

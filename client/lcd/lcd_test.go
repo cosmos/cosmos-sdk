@@ -35,7 +35,7 @@ func init() {
 
 func TestKeys(t *testing.T) {
 	name, password := "test", "1234567890"
-	addr, seed := CreateAddr(t, "test", password, GetKB(t))
+	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -65,7 +65,7 @@ func TestKeys(t *testing.T) {
 	require.NoError(t, err, "Failed to return a correct bech32 address")
 
 	// test if created account is the correct account
-	expectedInfo, _ := GetKB(t).CreateKey(newName, seed, newPassword)
+	expectedInfo, _ := GetKeyBase(t).CreateKey(newName, seed, newPassword)
 	expectedAccount := sdk.AccAddress(expectedInfo.GetPubKey().Address().Bytes())
 	assert.Equal(t, expectedAccount.String(), addr2Bech32)
 
@@ -223,7 +223,7 @@ func TestValidators(t *testing.T) {
 
 func TestCoinSend(t *testing.T) {
 	name, password := "test", "1234567890"
-	addr, seed := CreateAddr(t, "test", password, GetKB(t))
+	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -265,7 +265,7 @@ func TestCoinSend(t *testing.T) {
 
 func TestIBCTransfer(t *testing.T) {
 	name, password := "test", "1234567890"
-	addr, seed := CreateAddr(t, "test", password, GetKB(t))
+	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -294,7 +294,7 @@ func TestIBCTransfer(t *testing.T) {
 
 func TestTxs(t *testing.T) {
 	name, password := "test", "1234567890"
-	addr, seed := CreateAddr(t, "test", password, GetKB(t))
+	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -376,7 +376,7 @@ func TestValidatorsQuery(t *testing.T) {
 
 func TestBonding(t *testing.T) {
 	name, password, denom := "test", "1234567890", "steak"
-	addr, seed := CreateAddr(t, "test", password, GetKB(t))
+	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
 	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -426,7 +426,7 @@ func TestBonding(t *testing.T) {
 
 func TestSubmitProposal(t *testing.T) {
 	name, password := "test", "1234567890"
-	addr, seed := CreateAddr(t, "test", password, GetKB(t))
+	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -448,7 +448,7 @@ func TestSubmitProposal(t *testing.T) {
 
 func TestDeposit(t *testing.T) {
 	name, password := "test", "1234567890"
-	addr, seed := CreateAddr(t, "test", password, GetKB(t))
+	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -482,7 +482,7 @@ func TestDeposit(t *testing.T) {
 
 func TestVote(t *testing.T) {
 	name, password := "test", "1234567890"
-	addr, seed := CreateAddr(t, "test", password, GetKB(t))
+	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -520,7 +520,7 @@ func TestVote(t *testing.T) {
 
 func TestUnrevoke(t *testing.T) {
 	_, password := "test", "1234567890"
-	addr, _ := CreateAddr(t, "test", password, GetKB(t))
+	addr, _ := CreateAddr(t, "test", password, GetKeyBase(t))
 	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -537,8 +537,8 @@ func TestUnrevoke(t *testing.T) {
 func TestProposalsQuery(t *testing.T) {
 	name, password1 := "test", "1234567890"
 	name2, password2 := "test2", "1234567890"
-	addr, seed := CreateAddr(t, "test", password1, GetKB(t))
-	addr2, seed2 := CreateAddr(t, "test2", password2, GetKB(t))
+	addr, seed := CreateAddr(t, "test", password1, GetKeyBase(t))
+	addr2, seed2 := CreateAddr(t, "test2", password2, GetKeyBase(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr, addr2})
 	defer cleanup()
 

@@ -17,13 +17,13 @@ type Dec struct {
 // number of decimal places
 const Precision = 10
 
-func precisionInt() big.Int {
+func precisionInt() *big.Int {
 	return new(big.Int).Exp(big.NewInt(1), big.NewInt(Precision), nil)
 }
 
 // nolint - common values
 func ZeroDec() Dec { return Dec{big.NewInt(0)} }
-func OneDec() Dec  { return Dec{&precisionInt} }
+func OneDec() Dec  { return Dec{precisionInt()} }
 
 // get the precision multiplier
 func precisionMultiplier(prec int64) *big.Int {
@@ -31,7 +31,7 @@ func precisionMultiplier(prec int64) *big.Int {
 		panic("too much precision")
 	}
 	zerosToAdd := Precision - prec
-	multplier := new(big.Int).Exp(big.NewInt(1), big.NewInt(zerosToAdd), nil)
+	multiplier := new(big.Int).Exp(big.NewInt(1), big.NewInt(zerosToAdd), nil)
 	return multiplier
 }
 
@@ -61,23 +61,23 @@ func NewDecFromInt(i Int, prec int64) Dec {
 
 // create a decimal from a decimal string (ex. "1234.5678")
 func NewDecFromStr(str string) (f Dec, err Error) {
-	if len(decimalStr) == 0 {
+	if len(str) == 0 {
 		return f, ErrUnknownRequest("decimal string is empty")
 	}
 
 	// first extract any negative symbol
 	neg := false
-	if string(decimalStr[0]) == "-" {
+	if string(str[0]) == "-" {
 		neg = true
-		decimalStr = decimalStr[1:]
+		str = str[1:]
 	}
 
-	str := strings.Split(decimalStr, ".")
+	strs := strings.Split(str, ".")
 	lenDecs := 0
-	combinedStr := str[0]
-	if len(str) == 2 {
-		lenDecs = len(str[1])
-	} else if len(str) > 2 {
+	combinedStr := strs[0]
+	if len(strs) == 2 {
+		lenDecs = len(strs[1])
+	} else if len(strs) > 2 {
 		return f, ErrUnknownRequest("too many periods to be a decimal string")
 	}
 
@@ -85,41 +85,44 @@ func NewDecFromStr(str string) (f Dec, err Error) {
 		return f, ErrUnknownRequest("too much Precision in decimal")
 	}
 
-	// add some extra zero's to correct to the Precision factor
+	// add some extra dzero's to correct to the Precision factor
 	zerosToAdd := Precision - lenDecs
-	zeros := fmt.Sprintf(`%0s`+zerosToAdd, "")
+	zeros := fmt.Sprintf(`%0`+strconv.Itoa(zerosToAdd)+`s`, "")
 	combinedStr = combinedStr + zeros
 
 	combined, ok := new(big.Int).SetString(combinedStr, 10)
 	if !ok {
 		return f, ErrUnknownRequest("bad string to integer conversion")
 	}
-	return combined
+	if neg {
+		combined = new(big.Int).Neg(combined)
+	}
+	return Dec{combined}, nil
 }
 
 //nolint
-func (d Dec) IsZero() bool      { return (d.Int).Sign() == 0 } // Is equal to zero
-func (d Dec) Equal(d2.Int) bool { return (d.Int).Cmp(d2.Int) == 0 }
-func (d Dec) GT(d2.Int) bool    { return (d.Int).Cmp(d2.Int) == 1 }             // greater than
-func (d Dec) GTE(d2.Int) bool   { return !d.LT(d2) }                            // greater than or equal
-func (d Dec) LT(d2.Int) bool    { return (d.Int).Cmp(d2.Int) == -1 }            // less than
-func (d Dec) LTE(d2.Int) bool   { return !d.GT(d2) }                            // less than or equal
-func (d Dec) Add(d2.Int) Dec    { return Dec{new(big.Int).Add(d.Int, d2.Int)} } // addition
-func (d Dec) Sub(d2.Int) Dec    { return Dec{new(big.Int).Sub(d.Int, d2.Int)} } // subtraction
+func (d Dec) IsZero() bool      { return (d.Int).Sign() == 0 } // Is equal to dzero
+func (d Dec) Equal(d2 Dec) bool { return (d.Int).Cmp(d2.Int) == 0 }
+func (d Dec) GT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) == 1 }             // greater than
+func (d Dec) GTE(d2 Dec) bool   { return !d.LT(d2) }                            // greater than or equal
+func (d Dec) LT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) == -1 }            // less than
+func (d Dec) LTE(d2 Dec) bool   { return !d.GT(d2) }                            // less than or equal
+func (d Dec) Add(d2 Dec) Dec    { return Dec{new(big.Int).Add(d.Int, d2.Int)} } // addition
+func (d Dec) Sub(d2 Dec) Dec    { return Dec{new(big.Int).Sub(d.Int, d2.Int)} } // subtraction
 
 // multiplication
-func (d Dec) Mul(d2.Int) Dec {
+func (d Dec) Mul(d2 Dec) Dec {
 	mul := new(big.Int).Mul(d.Int, d2.Int)
 	chopped := BankerRoundChop(mul, Precision)
 	return Dec{chopped}
 }
 
 // quotient
-func (d Dec) Quo(d2.Int) Dec {
+func (d Dec) Quo(d2 Dec) Dec {
 	mul := new(big.Int).Mul(new(big.Int).Mul( // multiple Precision twice
-		d.Int, *precisionInt), *precisionInt)
+		d.Int, precisionInt()), precisionInt())
 
-	quo := Dec{new(big.Int).Quo(mul, d2.Int)}
+	quo := new(big.Int).Quo(mul, d2.Int)
 	chopped := BankerRoundChop(quo, Precision)
 	return Dec{chopped}
 }
@@ -134,12 +137,12 @@ func (d Dec) String() string {
 }
 
 var (
-	zero  = big.NewInt(0)
-	one   = big.NewInt(1)
-	two   = big.NewInt(2)
-	five  = big.NewInt(5)
-	nFive = big.NewInt(-5)
-	ten   = big.NewInt(10)
+	dzero  = big.NewInt(0)
+	done   = big.NewInt(1)
+	dtwo   = big.NewInt(2)
+	dfive  = big.NewInt(5)
+	dnFive = big.NewInt(-5)
+	dten   = big.NewInt(10)
 )
 
 //     ____
@@ -159,20 +162,20 @@ var (
 func BankerRoundChop(d *big.Int, n int64) *big.Int {
 
 	// get the trucated quotient and remainder
-	quo, rem, prec := big.NewInt(0), big.NewInt(0), *precisionInt()
-	quo, rem := quo.Int.QuoRem(d, prec, rem)
+	quo, rem, prec := big.NewInt(0), big.NewInt(0), precisionInt()
+	quo, rem = quo.QuoRem(d, prec, rem)
 
-	if rem.Sign == 0 { // remainder is zero
-		return Dec{quo}
+	if rem.Sign() == 0 { // remainder is dzero
+		return quo
 	}
 
-	fiveLine := big.NewInt(5 * len(rem.String())) // ex. 1234 -> 5000
+	fiveLine := big.NewInt(int64(5 * len(rem.String()))) // ex. 1234 -> 5000
 
 	switch rem.Cmp(fiveLine) {
 	case -1:
-		return Dec{quo}
+		return quo
 	case 1:
-		return Dec{quo.Add(big.NewInt(1))}
+		return new(big.Int).Add(quo, big.NewInt(1))
 
 	default: // bankers rounding must take place
 		str := quo.String()
@@ -184,20 +187,20 @@ func BankerRoundChop(d *big.Int, n int64) *big.Int {
 		// always round to an even number
 		if finalDig == 0 || finalDig == 2 || finalDig == 4 ||
 			finalDig == 6 || finalDig == 8 {
-			return Dec{quo}
+			return quo
 		}
-		return Dec{quo.Add(big.NewInt(1))}
 	}
+	return new(big.Int).Add(quo, big.NewInt(1))
 }
 
 // RoundInt64 rounds the decimal using bankers rounding
 func (d Dec) RoundInt64() int64 {
-	return d.BankerRoundChop(Precision).Int64()
+	return BankerRoundChop(d.Int, Precision).Int64()
 }
 
 // RoundInt round the decimal using bankers rounding
 func (d Dec) RoundInt() Int {
-	return d.BankerRoundChop(Precision).Int
+	return NewIntFromBigInt(BankerRoundChop(d.Int, Precision))
 }
 
 // TODO panic if negative or if totalDigits < len(initStr)???
@@ -233,7 +236,7 @@ func (d *Dec) UnmarshalAmino(text string) (err error) {
 //___________________________________________________________________________________
 // helpers
 
-// test if two decimal arrays are equal
+// test if dtwo decimal arrays are equal
 func DecsEqual(d1s, d2s []Dec) bool {
 	if len(d1s) != len(d2s) {
 		return false
@@ -252,8 +255,8 @@ func DecEq(t *testing.T, exp, got Dec) (*testing.T, bool, string, Dec, Dec) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
 }
 
-// minimum decimal between two
-func MinDec(d1, d2.Int) Dec {
+// minimum decimal between dtwo
+func MinDec(d1, d2 Dec) Dec {
 	if d1.LT(d2) {
 		return d1
 	}

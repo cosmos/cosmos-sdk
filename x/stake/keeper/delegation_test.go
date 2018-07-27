@@ -116,7 +116,7 @@ func TestUnbondingDelegation(t *testing.T) {
 		ValidatorAddr:  addrVals[0],
 		CreationHeight: 0,
 		MinTime:        0,
-		Balance:        sdk.NewCoin("steak", 5),
+		Balance:        sdk.NewInt64Coin("steak", 5),
 	}
 
 	// set and retrieve a record
@@ -126,7 +126,7 @@ func TestUnbondingDelegation(t *testing.T) {
 	require.True(t, ubd.Equal(resBond))
 
 	// modify a records, save, and retrieve
-	ubd.Balance = sdk.NewCoin("steak", 21)
+	ubd.Balance = sdk.NewInt64Coin("steak", 21)
 	keeper.SetUnbondingDelegation(ctx, ubd)
 	resBond, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)

@@ -62,44 +62,42 @@ func TestNewDecFromStr(t *testing.T) {
 	}
 }
 
-//func TestEqualities(t *testing.T) {
-//tests := []struct {
-//d1, d2     Dec
-//gt, lt, eq bool
-//}{
-//{NewDec(0), NewDec(0), false, false, true},
-//{NewDec(0, 100), NewDec(0, 10000), false, false, true},
-//{NewDec(100), NewDec(100), false, false, true},
-//{NewDec(-100), NewDec(-100), false, false, true},
-//{NewDec(-100, -1), NewDec(100), false, false, true},
-//{NewDec(-1, 1), NewDec(1, -1), false, false, true},
-//{NewDec(1, -1), NewDec(-1, 1), false, false, true},
-//{NewDec(3, 7), NewDec(3, 7), false, false, true},
+func TestDEqualities(t *testing.T) {
+	tests := []struct {
+		d1, d2     Dec
+		gt, lt, eq bool
+	}{
+		{NewDec(0, 0), NewDec(0, 0), false, false, true},
+		{NewDec(0, 2), NewDec(0, 4), false, false, true},
+		{NewDec(100, 0), NewDec(100, 0), false, false, true},
+		{NewDec(-100, 0), NewDec(-100, 0), false, false, true},
+		{NewDec(-1, 1), NewDec(-1, 1), false, false, true},
+		{NewDec(3333, 3), NewDec(3333, 3), false, false, true},
 
-//{NewDec(0), NewDec(3, 7), false, true, false},
-//{NewDec(0), NewDec(100), false, true, false},
-//{NewDec(-1), NewDec(3, 7), false, true, false},
-//{NewDec(-1), NewDec(100), false, true, false},
-//{NewDec(1, 7), NewDec(100), false, true, false},
-//{NewDec(1, 7), NewDec(3, 7), false, true, false},
-//{NewDec(-3, 7), NewDec(-1, 7), false, true, false},
+		{NewDec(0, 0), NewDec(3333, 3), false, true, false},
+		{NewDec(0, 0), NewDec(100, 0), false, true, false},
+		{NewDec(-1, 0), NewDec(3333, 3), false, true, false},
+		{NewDec(-1, 0), NewDec(100, 0), false, true, false},
+		{NewDec(1111, 3), NewDec(100, 0), false, true, false},
+		{NewDec(1111, 3), NewDec(3333, 3), false, true, false},
+		{NewDec(-3333, 3), NewDec(-1111, 3), false, true, false},
 
-//{NewDec(3, 7), NewDec(0), true, false, false},
-//{NewDec(100), NewDec(0), true, false, false},
-//{NewDec(3, 7), NewDec(-1), true, false, false},
-//{NewDec(100), NewDec(-1), true, false, false},
-//{NewDec(100), NewDec(1, 7), true, false, false},
-//{NewDec(3, 7), NewDec(1, 7), true, false, false},
-//{NewDec(-1, 7), NewDec(-3, 7), true, false, false},
-//}
+		{NewDec(3333, 3), NewDec(0, 0), true, false, false},
+		{NewDec(100, 0), NewDec(0, 0), true, false, false},
+		{NewDec(3333, 3), NewDec(-1, 0), true, false, false},
+		{NewDec(100, 0), NewDec(-1, 0), true, false, false},
+		{NewDec(100, 0), NewDec(1111, 3), true, false, false},
+		{NewDec(3333, 3), NewDec(1111, 3), true, false, false},
+		{NewDec(-1111, 3), NewDec(-3333, 3), true, false, false},
+	}
 
-//for tcIndex, tc := range tests {
-//require.Equal(t, tc.gt, tc.d1.GT(tc.d2), "GT result is incorrect, tc #%d", tcIndex)
-//require.Equal(t, tc.lt, tc.d1.LT(tc.d2), "LT result is incorrect, tc #%d", tcIndex)
-//require.Equal(t, tc.eq, tc.d1.Equal(tc.d2), "equality result is incorrect, tc #%d", tcIndex)
-//}
+	for tcIndex, tc := range tests {
+		require.Equal(t, tc.gt, tc.d1.GT(tc.d2), "GT result is incorrect, tc #%d", tcIndex)
+		require.Equal(t, tc.lt, tc.d1.LT(tc.d2), "LT result is incorrect, tc #%d", tcIndex)
+		require.Equal(t, tc.eq, tc.d1.Equal(tc.d2), "equality result is incorrect, tc #%d", tcIndex)
+	}
 
-//}
+}
 
 //func TestArithmetic(t *testing.T) {
 //tests := []struct {

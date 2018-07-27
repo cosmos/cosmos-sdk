@@ -84,6 +84,7 @@ func NewDecFromStr(str string) (f Dec, err Error) {
 		if lenDecs == 0 || len(combinedStr) == 0 {
 			return f, ErrUnknownRequest("bad decimal length")
 		}
+		combinedStr = combinedStr + strs[1]
 	} else if len(strs) > 2 {
 		return f, ErrUnknownRequest("too many periods to be a decimal string")
 	}

@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"math/big"
 	"testing"
 
@@ -28,7 +27,7 @@ func TestNewDecFromStr(t *testing.T) {
 		{"1.1", false, NewDec(11, 1)},
 		{"0.75", false, NewDec(75, 2)},
 		{"0.8", false, NewDec(8, 1)},
-		{"0.11111", true, NewDec(1111, 5)},
+		{"0.11111", false, NewDec(11111, 5)},
 		{"314460551102969.3144278234343371835", true, NewDec(3141203149163817869, 0)},
 		{"314460551102969314427823434337.1835718092488231350",
 			true, NewDecFromBigInt(largeBigInt, 4)},
@@ -43,7 +42,6 @@ func TestNewDecFromStr(t *testing.T) {
 	}
 
 	for tcIndex, tc := range tests {
-		fmt.Printf("debug tcIndex: %v\n", tcIndex)
 		res, err := NewDecFromStr(tc.decimalStr)
 		if tc.expErr {
 			require.NotNil(t, err, "error expected, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
@@ -58,7 +56,7 @@ func TestNewDecFromStr(t *testing.T) {
 			require.NotNil(t, err, "error expected, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 		} else {
 			require.Nil(t, err, "unexpected error, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
-			exp := tc.exp.Mul(NewDec(-1, 1))
+			exp := tc.exp.Mul(NewDec(-1, 0))
 			require.True(t, res.Equal(exp), "equality was incorrect, res %v, exp %v, tc %v", res, exp, tcIndex)
 		}
 	}

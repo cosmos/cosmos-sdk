@@ -4,52 +4,40 @@ import (
 	"math/big"
 	"testing"
 
-	wire "github.com/cosmos/cosmos-sdk/wire"
 	"github.com/stretchr/testify/require"
 )
 
-func TestNew(t *testing.T) {
-	require.Equal(t, NewRat(1), NewRat(1, 1))
-	require.Equal(t, NewRat(100), NewRat(100, 1))
-	require.Equal(t, NewRat(-1), NewRat(-1, 1))
-	require.Equal(t, NewRat(-100), NewRat(-100, 1))
-	require.Equal(t, NewRat(0), NewRat(0, 1))
-
-	// do not allow for more than 2 variables
-	require.Panics(t, func() { NewRat(1, 1, 1) })
-}
-
-func TestNewFromDecimal(t *testing.T) {
-	largeBigInt, success := new(big.Int).SetString("3109736052979742687701388262607869", 10)
+func TestNewDecFromStr(t *testing.T) {
+	largeBigInt, success := new(big.Int).SetString("3144605511029693144278234343371835", 10)
 	require.True(t, success)
 	tests := []struct {
 		decimalStr string
 		expErr     bool
-		exp        Rat
+		exp        Dec
 	}{
-		{"", true, Rat{}},
-		{"0", false, NewRat(0)},
-		{"1", false, NewRat(1)},
-		{"1.1", false, NewRat(11, 10)},
-		{"0.75", false, NewRat(3, 4)},
-		{"0.8", false, NewRat(4, 5)},
-		{"0.11111", true, NewRat(1111, 10000)},
-		{"628240629832763.5738930323617075341", true, NewRat(3141203149163817869, 5000)},
-		{"621947210595948537540277652521.5738930323617075341",
-			true, NewRatFromBigInt(largeBigInt, big.NewInt(5000))},
-		{"628240629832763.5738", false, NewRat(3141203149163817869, 5000)},
-		{"621947210595948537540277652521.5738",
-			false, NewRatFromBigInt(largeBigInt, big.NewInt(5000))},
-		{".", true, Rat{}},
-		{".0", true, Rat{}},
-		{"1.", true, Rat{}},
-		{"foobar", true, Rat{}},
-		{"0.foobar", true, Rat{}},
-		{"0.foobar.", true, Rat{}},
+		{"", true, Dec{}},
+		{"0", false, NewDec(0, 0)},
+		{"1", false, NewDec(1, 0)},
+		{"1.1", false, NewDec(11, 2)},
+		{"0.75", false, NewDec(75, 2)},
+		{"0.8", false, NewDec(8, 1)},
+		{"0.11111", true, NewDec(1111, 5)},
+		{"314460551102969.3144278234343371835", true, NewDec(3141203149163817869, 0)},
+		{"314460551102969314427823434337.1835718092488231350",
+			true, NewDecFromBigInt(largeBigInt, big.NewInt(4))},
+		{"314460551102969.3144", false, NewDec(31412031491638178693144, 4)},
+		{"314460551102969314427823434337.1835",
+			false, NewDecFromBigInt(largeBigInt, 4)},
+		{".", true, Dec{}},
+		{".0", false, NewDec(0, 0)},
+		{"1.", false, NewDec(1, 0)},
+		{"foobar", true, Dec{}},
+		{"0.foobar", true, Dec{}},
+		{"0.foobar.", true, Dec{}},
 	}
 
 	for tcIndex, tc := range tests {
-		res, err := NewRatFromDecimal(tc.decimalStr, 4)
+		res, err := NewDecFromDec(tc.decimalStr, 4)
 		if tc.expErr {
 			require.NotNil(t, err, tc.decimalStr, "error expected, tc #%d", tcIndex)
 		} else {
@@ -58,262 +46,262 @@ func TestNewFromDecimal(t *testing.T) {
 		}
 
 		// negative tc
-		res, err = NewRatFromDecimal("-"+tc.decimalStr, 4)
+		res, err = NewDecFromDec("-"+tc.decimalStr, 4)
 		if tc.expErr {
 			require.NotNil(t, err, tc.decimalStr, "error expected (negative case), tc #%d", tcIndex)
 		} else {
 			require.Nil(t, err, tc.decimalStr, "unexpected error (negative case), tc #%d", tcIndex)
-			require.True(t, res.Equal(tc.exp.Mul(NewRat(-1))), tc.decimalStr, "equality was incorrect (negative case), tc #%d", tcIndex)
+			require.True(t, res.Equal(tc.exp.Mul(NewDec(-1))), tc.decimalStr, "equality was incorrect (negative case), tc #%d", tcIndex)
 		}
 	}
 }
 
-func TestEqualities(t *testing.T) {
-	tests := []struct {
-		r1, r2     Rat
-		gt, lt, eq bool
-	}{
-		{NewRat(0), NewRat(0), false, false, true},
-		{NewRat(0, 100), NewRat(0, 10000), false, false, true},
-		{NewRat(100), NewRat(100), false, false, true},
-		{NewRat(-100), NewRat(-100), false, false, true},
-		{NewRat(-100, -1), NewRat(100), false, false, true},
-		{NewRat(-1, 1), NewRat(1, -1), false, false, true},
-		{NewRat(1, -1), NewRat(-1, 1), false, false, true},
-		{NewRat(3, 7), NewRat(3, 7), false, false, true},
+//func TestEqualities(t *testing.T) {
+//tests := []struct {
+//d1, d2     Dec
+//gt, lt, eq bool
+//}{
+//{NewDec(0), NewDec(0), false, false, true},
+//{NewDec(0, 100), NewDec(0, 10000), false, false, true},
+//{NewDec(100), NewDec(100), false, false, true},
+//{NewDec(-100), NewDec(-100), false, false, true},
+//{NewDec(-100, -1), NewDec(100), false, false, true},
+//{NewDec(-1, 1), NewDec(1, -1), false, false, true},
+//{NewDec(1, -1), NewDec(-1, 1), false, false, true},
+//{NewDec(3, 7), NewDec(3, 7), false, false, true},
 
-		{NewRat(0), NewRat(3, 7), false, true, false},
-		{NewRat(0), NewRat(100), false, true, false},
-		{NewRat(-1), NewRat(3, 7), false, true, false},
-		{NewRat(-1), NewRat(100), false, true, false},
-		{NewRat(1, 7), NewRat(100), false, true, false},
-		{NewRat(1, 7), NewRat(3, 7), false, true, false},
-		{NewRat(-3, 7), NewRat(-1, 7), false, true, false},
+//{NewDec(0), NewDec(3, 7), false, true, false},
+//{NewDec(0), NewDec(100), false, true, false},
+//{NewDec(-1), NewDec(3, 7), false, true, false},
+//{NewDec(-1), NewDec(100), false, true, false},
+//{NewDec(1, 7), NewDec(100), false, true, false},
+//{NewDec(1, 7), NewDec(3, 7), false, true, false},
+//{NewDec(-3, 7), NewDec(-1, 7), false, true, false},
 
-		{NewRat(3, 7), NewRat(0), true, false, false},
-		{NewRat(100), NewRat(0), true, false, false},
-		{NewRat(3, 7), NewRat(-1), true, false, false},
-		{NewRat(100), NewRat(-1), true, false, false},
-		{NewRat(100), NewRat(1, 7), true, false, false},
-		{NewRat(3, 7), NewRat(1, 7), true, false, false},
-		{NewRat(-1, 7), NewRat(-3, 7), true, false, false},
-	}
+//{NewDec(3, 7), NewDec(0), true, false, false},
+//{NewDec(100), NewDec(0), true, false, false},
+//{NewDec(3, 7), NewDec(-1), true, false, false},
+//{NewDec(100), NewDec(-1), true, false, false},
+//{NewDec(100), NewDec(1, 7), true, false, false},
+//{NewDec(3, 7), NewDec(1, 7), true, false, false},
+//{NewDec(-1, 7), NewDec(-3, 7), true, false, false},
+//}
 
-	for tcIndex, tc := range tests {
-		require.Equal(t, tc.gt, tc.r1.GT(tc.r2), "GT result is incorrect, tc #%d", tcIndex)
-		require.Equal(t, tc.lt, tc.r1.LT(tc.r2), "LT result is incorrect, tc #%d", tcIndex)
-		require.Equal(t, tc.eq, tc.r1.Equal(tc.r2), "equality result is incorrect, tc #%d", tcIndex)
-	}
+//for tcIndex, tc := range tests {
+//require.Equal(t, tc.gt, tc.d1.GT(tc.d2), "GT result is incorrect, tc #%d", tcIndex)
+//require.Equal(t, tc.lt, tc.d1.LT(tc.d2), "LT result is incorrect, tc #%d", tcIndex)
+//require.Equal(t, tc.eq, tc.d1.Equal(tc.d2), "equality result is incorrect, tc #%d", tcIndex)
+//}
 
-}
+//}
 
-func TestArithmetic(t *testing.T) {
-	tests := []struct {
-		r1, r2                         Rat
-		resMul, resDiv, resAdd, resSub Rat
-	}{
-		// r1       r2         MUL        DIV        ADD        SUB
-		{NewRat(0), NewRat(0), NewRat(0), NewRat(0), NewRat(0), NewRat(0)},
-		{NewRat(1), NewRat(0), NewRat(0), NewRat(0), NewRat(1), NewRat(1)},
-		{NewRat(0), NewRat(1), NewRat(0), NewRat(0), NewRat(1), NewRat(-1)},
-		{NewRat(0), NewRat(-1), NewRat(0), NewRat(0), NewRat(-1), NewRat(1)},
-		{NewRat(-1), NewRat(0), NewRat(0), NewRat(0), NewRat(-1), NewRat(-1)},
+//func TestArithmetic(t *testing.T) {
+//tests := []struct {
+//d1, d2                         Dec
+//resMul, resDiv, resAdd, resSub Dec
+//}{
+//// d1       d2         MUL        DIV        ADD        SUB
+//{NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0)},
+//{NewDec(1), NewDec(0), NewDec(0), NewDec(0), NewDec(1), NewDec(1)},
+//{NewDec(0), NewDec(1), NewDec(0), NewDec(0), NewDec(1), NewDec(-1)},
+//{NewDec(0), NewDec(-1), NewDec(0), NewDec(0), NewDec(-1), NewDec(1)},
+//{NewDec(-1), NewDec(0), NewDec(0), NewDec(0), NewDec(-1), NewDec(-1)},
 
-		{NewRat(1), NewRat(1), NewRat(1), NewRat(1), NewRat(2), NewRat(0)},
-		{NewRat(-1), NewRat(-1), NewRat(1), NewRat(1), NewRat(-2), NewRat(0)},
-		{NewRat(1), NewRat(-1), NewRat(-1), NewRat(-1), NewRat(0), NewRat(2)},
-		{NewRat(-1), NewRat(1), NewRat(-1), NewRat(-1), NewRat(0), NewRat(-2)},
+//{NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(2), NewDec(0)},
+//{NewDec(-1), NewDec(-1), NewDec(1), NewDec(1), NewDec(-2), NewDec(0)},
+//{NewDec(1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(0), NewDec(2)},
+//{NewDec(-1), NewDec(1), NewDec(-1), NewDec(-1), NewDec(0), NewDec(-2)},
 
-		{NewRat(3), NewRat(7), NewRat(21), NewRat(3, 7), NewRat(10), NewRat(-4)},
-		{NewRat(2), NewRat(4), NewRat(8), NewRat(1, 2), NewRat(6), NewRat(-2)},
-		{NewRat(100), NewRat(100), NewRat(10000), NewRat(1), NewRat(200), NewRat(0)},
+//{NewDec(3), NewDec(7), NewDec(21), NewDec(3, 7), NewDec(10), NewDec(-4)},
+//{NewDec(2), NewDec(4), NewDec(8), NewDec(1, 2), NewDec(6), NewDec(-2)},
+//{NewDec(100), NewDec(100), NewDec(10000), NewDec(1), NewDec(200), NewDec(0)},
 
-		{NewRat(3, 2), NewRat(3, 2), NewRat(9, 4), NewRat(1), NewRat(3), NewRat(0)},
-		{NewRat(3, 7), NewRat(7, 3), NewRat(1), NewRat(9, 49), NewRat(58, 21), NewRat(-40, 21)},
-		{NewRat(1, 21), NewRat(11, 5), NewRat(11, 105), NewRat(5, 231), NewRat(236, 105), NewRat(-226, 105)},
-		{NewRat(-21), NewRat(3, 7), NewRat(-9), NewRat(-49), NewRat(-144, 7), NewRat(-150, 7)},
-		{NewRat(100), NewRat(1, 7), NewRat(100, 7), NewRat(700), NewRat(701, 7), NewRat(699, 7)},
-	}
+//{NewDec(3, 2), NewDec(3, 2), NewDec(9, 4), NewDec(1), NewDec(3), NewDec(0)},
+//{NewDec(3, 7), NewDec(7, 3), NewDec(1), NewDec(9, 49), NewDec(58, 21), NewDec(-40, 21)},
+//{NewDec(1, 21), NewDec(11, 5), NewDec(11, 105), NewDec(5, 231), NewDec(236, 105), NewDec(-226, 105)},
+//{NewDec(-21), NewDec(3, 7), NewDec(-9), NewDec(-49), NewDec(-144, 7), NewDec(-150, 7)},
+//{NewDec(100), NewDec(1, 7), NewDec(100, 7), NewDec(700), NewDec(701, 7), NewDec(699, 7)},
+//}
 
-	for tcIndex, tc := range tests {
-		require.True(t, tc.resMul.Equal(tc.r1.Mul(tc.r2)), "r1 %v, r2 %v. tc #%d", tc.r1.Rat, tc.r2.Rat, tcIndex)
-		require.True(t, tc.resAdd.Equal(tc.r1.Add(tc.r2)), "r1 %v, r2 %v. tc #%d", tc.r1.Rat, tc.r2.Rat, tcIndex)
-		require.True(t, tc.resSub.Equal(tc.r1.Sub(tc.r2)), "r1 %v, r2 %v. tc #%d", tc.r1.Rat, tc.r2.Rat, tcIndex)
+//for tcIndex, tc := range tests {
+//require.True(t, tc.resMul.Equal(tc.d1.Mul(tc.d2)), "d1 %v, d2 %v. tc #%d", tc.d1.Dec, tc.d2.Dec, tcIndex)
+//require.True(t, tc.resAdd.Equal(tc.d1.Add(tc.d2)), "d1 %v, d2 %v. tc #%d", tc.d1.Dec, tc.d2.Dec, tcIndex)
+//require.True(t, tc.resSub.Equal(tc.d1.Sub(tc.d2)), "d1 %v, d2 %v. tc #%d", tc.d1.Dec, tc.d2.Dec, tcIndex)
 
-		if tc.r2.Num().IsZero() { // panic for divide by zero
-			require.Panics(t, func() { tc.r1.Quo(tc.r2) })
-		} else {
-			require.True(t, tc.resDiv.Equal(tc.r1.Quo(tc.r2)), "r1 %v, r2 %v. tc #%d", tc.r1.Rat, tc.r2.Rat, tcIndex)
-		}
-	}
-}
+//if tc.d2.Num().IsZero() { // panic for divide by zero
+//require.Panics(t, func() { tc.d1.Quo(tc.d2) })
+//} else {
+//require.True(t, tc.resDiv.Equal(tc.d1.Quo(tc.d2)), "d1 %v, d2 %v. tc #%d", tc.d1.Dec, tc.d2.Dec, tcIndex)
+//}
+//}
+//}
 
-func TestEvaluate(t *testing.T) {
-	tests := []struct {
-		r1  Rat
-		res int64
-	}{
-		{NewRat(0), 0},
-		{NewRat(1), 1},
-		{NewRat(1, 4), 0},
-		{NewRat(1, 2), 0},
-		{NewRat(3, 4), 1},
-		{NewRat(5, 6), 1},
-		{NewRat(3, 2), 2},
-		{NewRat(5, 2), 2},
-		{NewRat(6, 11), 1},  // 0.545-> 1 even though 5 is first decimal and 1 not even
-		{NewRat(17, 11), 2}, // 1.545
-		{NewRat(5, 11), 0},
-		{NewRat(16, 11), 1},
-		{NewRat(113, 12), 9},
-	}
+//func TestEvaluate(t *testing.T) {
+//tests := []struct {
+//d1  Dec
+//res int64
+//}{
+//{NewDec(0), 0},
+//{NewDec(1), 1},
+//{NewDec(1, 4), 0},
+//{NewDec(1, 2), 0},
+//{NewDec(3, 4), 1},
+//{NewDec(5, 6), 1},
+//{NewDec(3, 2), 2},
+//{NewDec(5, 2), 2},
+//{NewDec(6, 11), 1},  // 0.545-> 1 even though 5 is first decimal and 1 not even
+//{NewDec(17, 11), 2}, // 1.545
+//{NewDec(5, 11), 0},
+//{NewDec(16, 11), 1},
+//{NewDec(113, 12), 9},
+//}
 
-	for tcIndex, tc := range tests {
-		require.Equal(t, tc.res, tc.r1.RoundInt64(), "%v. tc #%d", tc.r1, tcIndex)
-		require.Equal(t, tc.res*-1, tc.r1.Mul(NewRat(-1)).RoundInt64(), "%v. tc #%d", tc.r1.Mul(NewRat(-1)), tcIndex)
-	}
-}
+//for tcIndex, tc := range tests {
+//require.Equal(t, tc.res, tc.d1.RoundInt64(), "%v. tc #%d", tc.d1, tcIndex)
+//require.Equal(t, tc.res*-1, tc.d1.Mul(NewDec(-1)).RoundInt64(), "%v. tc #%d", tc.d1.Mul(NewDec(-1)), tcIndex)
+//}
+//}
 
-func TestRound(t *testing.T) {
-	many3 := "333333333333333333333333333333333333333333333"
-	many7 := "777777777777777777777777777777777777777777777"
-	big3, worked := new(big.Int).SetString(many3, 10)
-	require.True(t, worked)
-	big7, worked := new(big.Int).SetString(many7, 10)
-	require.True(t, worked)
+//func TestRound(t *testing.T) {
+//many3 := "333333333333333333333333333333333333333333333"
+//many7 := "777777777777777777777777777777777777777777777"
+//big3, worked := new(big.Int).SetString(many3, 10)
+//require.True(t, worked)
+//big7, worked := new(big.Int).SetString(many7, 10)
+//require.True(t, worked)
 
-	tests := []struct {
-		r, res     Rat
-		precFactor int64
-	}{
-		{NewRat(333, 777), NewRat(429, 1000), 1000},
-		{Rat{new(big.Rat).SetFrac(big3, big7)}, NewRat(429, 1000), 1000},
-		{Rat{new(big.Rat).SetFrac(big3, big7)}, Rat{big.NewRat(4285714286, 10000000000)}, 10000000000},
-		{NewRat(1, 2), NewRat(1, 2), 1000},
-	}
+//tests := []struct {
+//d, res     Dec
+//precFactor int64
+//}{
+//{NewDec(333, 777), NewDec(429, 1000), 1000},
+//{Dec{new(big.Dec).SetFrac(big3, big7)}, NewDec(429, 1000), 1000},
+//{Dec{new(big.Dec).SetFrac(big3, big7)}, Dec{big.NewDec(4285714286, 10000000000)}, 10000000000},
+//{NewDec(1, 2), NewDec(1, 2), 1000},
+//}
 
-	for tcIndex, tc := range tests {
-		require.Equal(t, tc.res, tc.r.Round(tc.precFactor), "%v", tc.r, "incorrect rounding, tc #%d", tcIndex)
-		negR1, negRes := tc.r.Mul(NewRat(-1)), tc.res.Mul(NewRat(-1))
-		require.Equal(t, negRes, negR1.Round(tc.precFactor), "%v", negR1, "incorrect rounding (negative case), tc #%d", tcIndex)
-	}
-}
+//for tcIndex, tc := range tests {
+//require.Equal(t, tc.res, tc.d.Round(tc.precFactor), "%v", tc.d, "incorrect rounding, tc #%d", tcIndex)
+//negR1, negRes := tc.d.Mul(NewDec(-1)), tc.res.Mul(NewDec(-1))
+//require.Equal(t, negRes, negR1.Round(tc.precFactor), "%v", negR1, "incorrect rounding (negative case), tc #%d", tcIndex)
+//}
+//}
 
-func TestToLeftPadded(t *testing.T) {
-	tests := []struct {
-		rat    Rat
-		digits int8
-		res    string
-	}{
-		{NewRat(100, 3), 8, "00000033"},
-		{NewRat(1, 3), 8, "00000000"},
-		{NewRat(100, 2), 8, "00000050"},
-		{NewRat(1000, 3), 8, "00000333"},
-		{NewRat(1000, 3), 12, "000000000333"},
-	}
-	for tcIndex, tc := range tests {
-		require.Equal(t, tc.res, tc.rat.ToLeftPadded(tc.digits), "incorrect left padding, tc #%d", tcIndex)
-	}
-}
+//func TestToLeftPadded(t *testing.T) {
+//tests := []struct {
+//dec    Dec
+//digits int8
+//res    string
+//}{
+//{NewDec(100, 3), 8, "00000033"},
+//{NewDec(1, 3), 8, "00000000"},
+//{NewDec(100, 2), 8, "00000050"},
+//{NewDec(1000, 3), 8, "00000333"},
+//{NewDec(1000, 3), 12, "000000000333"},
+//}
+//for tcIndex, tc := range tests {
+//require.Equal(t, tc.res, tc.dec.ToLeftPadded(tc.digits), "incorrect left padding, tc #%d", tcIndex)
+//}
+//}
 
-var cdc = wire.NewCodec() //var jsonCdc JSONCodec // TODO wire.Codec
+//var cdc = wire.NewCodec() //var jsonCdc JSONCodec // TODO wire.Codec
 
-func TestZeroSerializationJSON(t *testing.T) {
-	r := NewRat(0, 1)
-	err := cdc.UnmarshalJSON([]byte(`"0/1"`), &r)
-	require.Nil(t, err)
-	err = cdc.UnmarshalJSON([]byte(`"0/0"`), &r)
-	require.NotNil(t, err)
-	err = cdc.UnmarshalJSON([]byte(`"1/0"`), &r)
-	require.NotNil(t, err)
-	err = cdc.UnmarshalJSON([]byte(`"{}"`), &r)
-	require.NotNil(t, err)
-}
+//func TestZeroSerializationJSON(t *testing.T) {
+//d := NewDec(0, 1)
+//err := cdc.UnmarshalJSON([]byte(`"0/1"`), &d)
+//require.Nil(t, err)
+//err = cdc.UnmarshalJSON([]byte(`"0/0"`), &d)
+//require.NotNil(t, err)
+//err = cdc.UnmarshalJSON([]byte(`"1/0"`), &d)
+//require.NotNil(t, err)
+//err = cdc.UnmarshalJSON([]byte(`"{}"`), &d)
+//require.NotNil(t, err)
+//}
 
-func TestSerializationText(t *testing.T) {
-	r := NewRat(1, 3)
+//func TestSerializationText(t *testing.T) {
+//d := NewDec(1, 3)
 
-	bz, err := r.MarshalText()
-	require.NoError(t, err)
+//bz, err := d.MarshalText()
+//require.NoError(t, err)
 
-	var r2 = Rat{new(big.Rat)}
-	err = r2.UnmarshalText(bz)
-	require.NoError(t, err)
-	require.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
-}
+//var d2 = Dec{new(big.Dec)}
+//err = d2.UnmarshalText(bz)
+//require.NoError(t, err)
+//require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
+//}
 
-func TestSerializationGoWireJSON(t *testing.T) {
-	r := NewRat(1, 3)
-	bz, err := cdc.MarshalJSON(r)
-	require.NoError(t, err)
+//func TestSerializationGoWireJSON(t *testing.T) {
+//d := NewDec(1, 3)
+//bz, err := cdc.MarshalJSON(d)
+//require.NoError(t, err)
 
-	var r2 Rat
-	err = cdc.UnmarshalJSON(bz, &r2)
-	require.NoError(t, err)
-	require.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
-}
+//var d2 Dec
+//err = cdc.UnmarshalJSON(bz, &d2)
+//require.NoError(t, err)
+//require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
+//}
 
-func TestSerializationGoWireBinary(t *testing.T) {
-	r := NewRat(1, 3)
-	bz, err := cdc.MarshalBinary(r)
-	require.NoError(t, err)
+//func TestSerializationGoWireBinary(t *testing.T) {
+//d := NewDec(1, 3)
+//bz, err := cdc.MarshalBinary(d)
+//require.NoError(t, err)
 
-	var r2 Rat
-	err = cdc.UnmarshalBinary(bz, &r2)
-	require.NoError(t, err)
-	require.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
-}
+//var d2 Dec
+//err = cdc.UnmarshalBinary(bz, &d2)
+//require.NoError(t, err)
+//require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
+//}
 
-type testEmbedStruct struct {
-	Field1 string `json:"f1"`
-	Field2 int    `json:"f2"`
-	Field3 Rat    `json:"f3"`
-}
+//type testEmbedStruct struct {
+//Field1 string `json:"f1"`
+//Field2 int    `json:"f2"`
+//Field3 Dec    `json:"f3"`
+//}
 
-func TestEmbeddedStructSerializationGoWire(t *testing.T) {
-	obj := testEmbedStruct{"foo", 10, NewRat(1, 3)}
-	bz, err := cdc.MarshalJSON(obj)
-	require.Nil(t, err)
+//func TestEmbeddedStructSerializationGoWire(t *testing.T) {
+//obj := testEmbedStruct{"foo", 10, NewDec(1, 3)}
+//bz, err := cdc.MarshalJSON(obj)
+//require.Nil(t, err)
 
-	var obj2 testEmbedStruct
-	err = cdc.UnmarshalJSON(bz, &obj2)
-	require.Nil(t, err)
+//var obj2 testEmbedStruct
+//err = cdc.UnmarshalJSON(bz, &obj2)
+//require.Nil(t, err)
 
-	require.Equal(t, obj.Field1, obj2.Field1)
-	require.Equal(t, obj.Field2, obj2.Field2)
-	require.True(t, obj.Field3.Equal(obj2.Field3), "original: %v, unmarshalled: %v", obj, obj2)
-}
+//require.Equal(t, obj.Field1, obj2.Field1)
+//require.Equal(t, obj.Field2, obj2.Field2)
+//require.True(t, obj.Field3.Equal(obj2.Field3), "original: %v, unmarshalled: %v", obj, obj2)
+//}
 
-func TestRatsEqual(t *testing.T) {
-	tests := []struct {
-		r1s, r2s []Rat
-		eq       bool
-	}{
-		{[]Rat{NewRat(0)}, []Rat{NewRat(0)}, true},
-		{[]Rat{NewRat(0)}, []Rat{NewRat(1)}, false},
-		{[]Rat{NewRat(0)}, []Rat{}, false},
-		{[]Rat{NewRat(0), NewRat(1)}, []Rat{NewRat(0), NewRat(1)}, true},
-		{[]Rat{NewRat(1), NewRat(0)}, []Rat{NewRat(1), NewRat(0)}, true},
-		{[]Rat{NewRat(1), NewRat(0)}, []Rat{NewRat(0), NewRat(1)}, false},
-		{[]Rat{NewRat(1), NewRat(0)}, []Rat{NewRat(1)}, false},
-		{[]Rat{NewRat(1), NewRat(2)}, []Rat{NewRat(2), NewRat(4)}, false},
-		{[]Rat{NewRat(3), NewRat(18)}, []Rat{NewRat(1), NewRat(6)}, false},
-	}
+//func TestDecsEqual(t *testing.T) {
+//tests := []struct {
+//d1s, d2s []Dec
+//eq       bool
+//}{
+//{[]Dec{NewDec(0)}, []Dec{NewDec(0)}, true},
+//{[]Dec{NewDec(0)}, []Dec{NewDec(1)}, false},
+//{[]Dec{NewDec(0)}, []Dec{}, false},
+//{[]Dec{NewDec(0), NewDec(1)}, []Dec{NewDec(0), NewDec(1)}, true},
+//{[]Dec{NewDec(1), NewDec(0)}, []Dec{NewDec(1), NewDec(0)}, true},
+//{[]Dec{NewDec(1), NewDec(0)}, []Dec{NewDec(0), NewDec(1)}, false},
+//{[]Dec{NewDec(1), NewDec(0)}, []Dec{NewDec(1)}, false},
+//{[]Dec{NewDec(1), NewDec(2)}, []Dec{NewDec(2), NewDec(4)}, false},
+//{[]Dec{NewDec(3), NewDec(18)}, []Dec{NewDec(1), NewDec(6)}, false},
+//}
 
-	for tcIndex, tc := range tests {
-		require.Equal(t, tc.eq, RatsEqual(tc.r1s, tc.r2s), "equality of rational arrays is incorrect, tc #%d", tcIndex)
-		require.Equal(t, tc.eq, RatsEqual(tc.r2s, tc.r1s), "equality of rational arrays is incorrect (converse), tc #%d", tcIndex)
-	}
+//for tcIndex, tc := range tests {
+//require.Equal(t, tc.eq, DecsEqual(tc.d1s, tc.d2s), "equality of decional arrays is incorrect, tc #%d", tcIndex)
+//require.Equal(t, tc.eq, DecsEqual(tc.d2s, tc.d1s), "equality of decional arrays is incorrect (converse), tc #%d", tcIndex)
+//}
 
-}
+//}
 
-func TestStringOverflow(t *testing.T) {
-	// two random 64 bit primes
-	rat1 := NewRat(5164315003622678713, 4389711697696177267)
-	rat2 := NewRat(-3179849666053572961, 8459429845579852627)
-	rat3 := rat1.Add(rat2)
-	require.Equal(t,
-		"29728537197630860939575850336935951464/37134458148982045574552091851127630409",
-		rat3.String(),
-	)
-}
+//func TestStringOverflow(t *testing.T) {
+//// two random 64 bit primes
+//dec1 := NewDec(5164315003622678713, 4389711697696177267)
+//dec2 := NewDec(-3179849666053572961, 8459429845579852627)
+//dec3 := dec1.Add(dec2)
+//require.Equal(t,
+//"29728537197630860939575850336935951464/37134458148982045574552091851127630409",
+//dec3.String(),
+//)
+//}

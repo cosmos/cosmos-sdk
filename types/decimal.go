@@ -8,9 +8,9 @@ import (
 	"testing"
 )
 
-// NOTE: never use new(Decimal) or else we will panic unmarshalling into the
+// NOTE: never use new(Dec) or else we will panic unmarshalling into the
 // nil embedded big.Int
-type Decimal struct {
+type Dec struct {
 	*big.Int `json:Int""`
 }
 
@@ -18,36 +18,49 @@ type Decimal struct {
 const Precision = 10
 
 func precisionInt() big.Int {
-	return new(big.Int).Exp(big.NewInt(1), big.NewInt(precision), nil)
+	return new(big.Int).Exp(big.NewInt(1), big.NewInt(Precision), nil)
 }
 
 // nolint - common values
-func ZeroDec() Decimal { return Decimal{big.NewInt(0)} }
-func OneDec() Decimal  { return Decimal{&precisionInt} }
+func ZeroDec() Dec { return Dec{big.NewInt(0)} }
+func OneDec() Dec  { return Dec{&precisionInt} }
 
-// create a new Decimal from integer assuming whole numbers
-func NewDecimalFromInt64(i int64) Decimal {
-	return Decimal{
-		new(big.Int).Mul(big.NewInt(i), precisionInt()),
+// get the precision multiplier
+func precisionMultiplier(prec int64) *big.Int {
+	if prec > Precision {
+		panic("too much precision")
+	}
+	zerosToAdd := Precision - prec
+	multplier := new(big.Int).Exp(big.NewInt(1), big.NewInt(zerosToAdd), nil)
+	return multiplier
+}
+
+// create a new Dec from integer assuming whole numbers
+// CONTRACT: prec !> Precision
+func NewDec(i, prec int64) Dec {
+	return Dec{
+		new(big.Int).Mul(big.NewInt(i), precisionMultiplier(prec)),
 	}
 }
 
-// create a new Decimal from big integer assuming whole numbers
-func NewDecFromBigInt(i *big.Int) Decimal {
-	return Decimal{
-		new(big.Int).Mul(i, precisionInt()),
+// create a new Dec from big integer assuming whole numbers
+// CONTRACT: prec !> Precision
+func NewDecFromBigInt(i *big.Int, prec int64) Dec {
+	return Dec{
+		new(big.Int).Mul(i, precisionMultiplier(prec)),
 	}
 }
 
-// create a new Decimal from big integer assuming whole numbers
-func NewDecFromInt(i Int) Decimal {
-	return Decimal{
-		new(big.Int).Mul(i.BigInt(), precisionInt()),
+// create a new Dec from big integer assuming whole numbers
+// CONTRACT: prec !> Precision
+func NewDecFromInt(i Int, prec int64) Dec {
+	return Dec{
+		new(big.Int).Mul(i.BigInt(), precisionMultiplier(prec)),
 	}
 }
 
 // create a decimal from a decimal string (ex. "1234.5678")
-func NewDecimalFromStr(str string) (f Decimal, err Error) {
+func NewDecFromStr(str string) (f Dec, err Error) {
 	if len(decimalStr) == 0 {
 		return f, ErrUnknownRequest("decimal string is empty")
 	}
@@ -60,20 +73,20 @@ func NewDecimalFromStr(str string) (f Decimal, err Error) {
 	}
 
 	str := strings.Split(decimalStr, ".")
-	lenDecimals := 0
+	lenDecs := 0
 	combinedStr := str[0]
 	if len(str) == 2 {
-		lenDecimals = len(str[1])
+		lenDecs = len(str[1])
 	} else if len(str) > 2 {
 		return f, ErrUnknownRequest("too many periods to be a decimal string")
 	}
 
-	if lenDecimals > precision {
-		return f, ErrUnknownRequest("too much precision in decimal")
+	if lenDecs > Precision {
+		return f, ErrUnknownRequest("too much Precision in decimal")
 	}
 
-	// add some extra zero's to correct to the precision factor
-	zerosToAdd := precision - lenDecimals
+	// add some extra zero's to correct to the Precision factor
+	zerosToAdd := Precision - lenDecs
 	zeros := fmt.Sprintf(`%0s`+zerosToAdd, "")
 	combinedStr = combinedStr + zeros
 
@@ -85,35 +98,38 @@ func NewDecimalFromStr(str string) (f Decimal, err Error) {
 }
 
 //nolint
-func (d Decimal) IsZero() bool       { return (d.Int).Sign() == 0 } // Is equal to zero
-func (d Decimal) Equal(d2.Int) bool  { return (d.Int).Cmp(d2.Int) == 0 }
-func (d Decimal) GT(d2.Int) bool     { return (d.Int).Cmp(d2.Int) == 1 }                 // greater than
-func (d Decimal) GTE(d2.Int) bool    { return !d.LT(d2) }                                // greater than or equal
-func (d Decimal) LT(d2.Int) bool     { return (d.Int).Cmp(d2.Int) == -1 }                // less than
-func (d Decimal) LTE(d2.Int) bool    { return !d.GT(d2) }                                // less than or equal
-func (d Decimal) Add(d2.Int) Decimal { return Decimal{new(big.Int).Add(d.Int, d2.Int)} } // addition
-func (d Decimal) Sub(d2.Int) Decimal { return Decimal{new(big.Int).Sub(d.Int, d2.Int)} } // subtraction
+func (d Dec) IsZero() bool      { return (d.Int).Sign() == 0 } // Is equal to zero
+func (d Dec) Equal(d2.Int) bool { return (d.Int).Cmp(d2.Int) == 0 }
+func (d Dec) GT(d2.Int) bool    { return (d.Int).Cmp(d2.Int) == 1 }             // greater than
+func (d Dec) GTE(d2.Int) bool   { return !d.LT(d2) }                            // greater than or equal
+func (d Dec) LT(d2.Int) bool    { return (d.Int).Cmp(d2.Int) == -1 }            // less than
+func (d Dec) LTE(d2.Int) bool   { return !d.GT(d2) }                            // less than or equal
+func (d Dec) Add(d2.Int) Dec    { return Dec{new(big.Int).Add(d.Int, d2.Int)} } // addition
+func (d Dec) Sub(d2.Int) Dec    { return Dec{new(big.Int).Sub(d.Int, d2.Int)} } // subtraction
 
 // multiplication
-func (d Decimal) Mul(d2.Int) Decimal {
+func (d Dec) Mul(d2.Int) Dec {
 	mul := new(big.Int).Mul(d.Int, d2.Int)
 	chopped := BankerRoundChop(mul, Precision)
-	return Decimal{chopped}
+	return Dec{chopped}
 }
 
 // quotient
-func (d Decimal) Quo(d2.Int) Decimal {
-	mul := new(big.Int).Mul(new(big.Int).Mul( // multiple precision twice
+func (d Dec) Quo(d2.Int) Dec {
+	mul := new(big.Int).Mul(new(big.Int).Mul( // multiple Precision twice
 		d.Int, *precisionInt), *precisionInt)
 
-	quo := Decimal{new(big.Int).Quo(mul, d2.Int)}
+	quo := Dec{new(big.Int).Quo(mul, d2.Int)}
 	chopped := BankerRoundChop(quo, Precision)
-	return Decimal{chopped}
+	return Dec{chopped}
 }
 
-func (d Decimal) String() string {
+func (d Dec) String() string {
 	str := d.Int.String()
-	placement := len(str) - precision
+	placement := len(str) - Precision
+	if placement < 0 {
+		panic("too few decimal digits")
+	}
 	return str[:placement] + "." + str[placement:]
 }
 
@@ -147,16 +163,16 @@ func BankerRoundChop(d *big.Int, n int64) *big.Int {
 	quo, rem := quo.Int.QuoRem(d, prec, rem)
 
 	if rem.Sign == 0 { // remainder is zero
-		return Decimal{quo}
+		return Dec{quo}
 	}
 
 	fiveLine := big.NewInt(5 * len(rem.String())) // ex. 1234 -> 5000
 
 	switch rem.Cmp(fiveLine) {
 	case -1:
-		return Decimal{quo}
+		return Dec{quo}
 	case 1:
-		return Decimal{quo.Add(big.NewInt(1))}
+		return Dec{quo.Add(big.NewInt(1))}
 
 	default: // bankers rounding must take place
 		str := quo.String()
@@ -168,25 +184,25 @@ func BankerRoundChop(d *big.Int, n int64) *big.Int {
 		// always round to an even number
 		if finalDig == 0 || finalDig == 2 || finalDig == 4 ||
 			finalDig == 6 || finalDig == 8 {
-			return Decimal{quo}
+			return Dec{quo}
 		}
-		return Decimal{quo.Add(big.NewInt(1))}
+		return Dec{quo.Add(big.NewInt(1))}
 	}
 }
 
 // RoundInt64 rounds the decimal using bankers rounding
-func (d Decimal) RoundInt64() int64 {
-	return d.BankerRoundChop(precision).Int64()
+func (d Dec) RoundInt64() int64 {
+	return d.BankerRoundChop(Precision).Int64()
 }
 
 // RoundInt round the decimal using bankers rounding
-func (d Decimal) RoundInt() Int {
-	return d.BankerRoundChop(precision).Int
+func (d Dec) RoundInt() Int {
+	return d.BankerRoundChop(Precision).Int
 }
 
 // TODO panic if negative or if totalDigits < len(initStr)???
 // evaluate as an integer and return left padded string
-func (d Decimal) ToLeftPadded(totalDigits int8) string {
+func (d Dec) ToLeftPadded(totalDigits int8) string {
 	intStr := d.Int.String()
 	fcode := `%0` + strconv.Itoa(int(totalDigits)) + `s`
 	return fmt.Sprintf(fcode, intStr)
@@ -195,7 +211,7 @@ func (d Decimal) ToLeftPadded(totalDigits int8) string {
 //___________________________________________________________________________________
 
 // wraps d.MarshalText()
-func (d Decimal) MarshalAmino() (string, error) {
+func (d Dec) MarshalAmino() (string, error) {
 	if d.Int == nil {
 		d.Int = new(big.Int)
 	}
@@ -204,7 +220,7 @@ func (d Decimal) MarshalAmino() (string, error) {
 }
 
 // requires a valid JSON string - strings quotes and calls UnmarshalText
-func (d *Decimal) UnmarshalAmino(text string) (err error) {
+func (d *Dec) UnmarshalAmino(text string) (err error) {
 	tempInt := big.NewInt(0)
 	err = tempInt.UnmarshalText([]byte(text))
 	if err != nil {
@@ -218,7 +234,7 @@ func (d *Decimal) UnmarshalAmino(text string) (err error) {
 // helpers
 
 // test if two decimal arrays are equal
-func DecsEqual(d1s, d2s []Decimal) bool {
+func DecsEqual(d1s, d2s []Dec) bool {
 	if len(d1s) != len(d2s) {
 		return false
 	}
@@ -232,12 +248,12 @@ func DecsEqual(d1s, d2s []Decimal) bool {
 }
 
 // intended to be used with require/assert:  require.True(RatEq(...))
-func DecEq(t *testing.T, exp, got Decimal) (*testing.T, bool, string, Decimal, Decimal) {
+func DecEq(t *testing.T, exp, got Dec) (*testing.T, bool, string, Dec, Dec) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
 }
 
 // minimum decimal between two
-func MinDec(d1, d2.Int) Decimal {
+func MinDec(d1, d2.Int) Dec {
 	if d1.LT(d2) {
 		return d1
 	}

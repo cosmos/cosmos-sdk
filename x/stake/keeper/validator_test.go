@@ -103,6 +103,52 @@ func TestCliffValidatorPowerIncrease(t *testing.T) {
 
 	// add two validators
 	validatorA := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	validatorA, pool, _ = validatorA.AddTokensFromDel(pool, 200)
+	keeper.SetPool(ctx, pool)
+	validatorA = keeper.UpdateValidator(ctx, validatorA)
+	validatorB := types.NewValidator(addrVals[1], PKs[1], types.Description{})
+	validatorB, pool, _ = validatorB.AddTokensFromDel(pool, 99)
+	keeper.SetPool(ctx, pool)
+	validatorB = keeper.UpdateValidator(ctx, validatorB)
+
+	// assert correct cliff validator & cliff power
+	require.Equal(t, validatorB.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+	cliffPower := keeper.GetCliffValidatorPower(ctx)
+	require.Equal(t, GetValidatorsByPowerIndexKey(validatorB, pool), cliffPower)
+
+	// add some tokens
+	validatorB, pool, _ = validatorB.AddTokensFromDel(pool, 2)
+	keeper.SetPool(ctx, pool)
+	validatorB = keeper.UpdateValidator(ctx, validatorB)
+
+	// assert validator B has new power
+	validatorB, found := keeper.GetValidator(ctx, validatorB.Owner)
+	require.True(t, found)
+	require.Equal(t, sdk.NewRat(101), validatorB.GetPower())
+
+	// cliff validator should not have switched
+	require.Equal(t, validatorB.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+
+	// ... but cliff validator power should have been updated for new valB power
+	cliffPower = keeper.GetCliffValidatorPower(ctx)
+	require.Equal(t, GetValidatorsByPowerIndexKey(validatorB, pool), cliffPower)
+}
+
+func TestCliffValidatorSwitch(t *testing.T) {
+	ctx, _, keeper := CreateTestInput(t, false, 0)
+	pool := keeper.GetPool(ctx)
+
+	params := keeper.GetParams(ctx)
+	params.MaxValidators = 2
+	keeper.SetParams(ctx, params)
+
+	// create a random pool
+	pool.LooseTokens = sdk.NewRat(10000)
+	pool.BondedTokens = sdk.NewRat(1234)
+	keeper.SetPool(ctx, pool)
+
+	// add two validators
+	validatorA := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 	validatorA, pool, _ = validatorA.AddTokensFromDel(pool, 100)
 	keeper.SetPool(ctx, pool)
 	validatorA = keeper.UpdateValidator(ctx, validatorA)

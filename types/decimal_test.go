@@ -123,9 +123,6 @@ func TestDArithmetic(t *testing.T) {
 
 		{NewDec(15, 1), NewDec(15, 1), NewDec(225, 2), NewDec(1, 0), NewDec(3, 0), NewDec(0, 0)},
 		{NewDec(3333, 4), NewDec(333, 4), NewDec(1109889, 8), NewDec(10009009009, 9), NewDec(3666, 4), NewDec(3, 1)},
-		//{NewDec(1, 21), NewDec(11, 5), NewDec(11, 105), NewDec(5, 231), NewDec(236, 105), NewDec(-226, 105)},
-		//{NewDec(-21), NewDec(3333, 3), NewDec(-9), NewDec(-49), NewDec(-144, 7), NewDec(-150, 7)},
-		//{NewDec(100), NewDec(1, 7), NewDec(100, 7), NewDec(700), NewDec(701, 7), NewDec(699, 7)},
 	}
 
 	for tcIndex, tc := range tests {
@@ -146,56 +143,29 @@ func TestDArithmetic(t *testing.T) {
 	}
 }
 
-//func TestEvaluate(t *testing.T) {
-//tests := []struct {
-//d1  Dec
-//res int64
-//}{
-//{NewDec(0, 0), 0},
-//{NewDec(1, 0), 1},
-//{NewDec(1, 4), 0},
-//{NewDec(1, 2), 0},
-//{NewDec(3, 4), 1},
-//{NewDec(5, 6), 1},
-//{NewDec(15, 1), 2},
-//{NewDec(5, 2), 2},
-//{NewDec(6, 11), 1},  // 0.545-> 1 even though 5 is first decimal and 1 not even
-//{NewDec(17, 11), 2}, // 1.545
-//{NewDec(5, 11), 0},
-//{NewDec(16, 11), 1},
-//{NewDec(113, 12), 9},
-//}
+func TestRoundInt64(t *testing.T) {
+	tests := []struct {
+		d1       Dec
+		resInt64 int64
+	}{
+		{NewDec(0, 0), 0},
+		{NewDec(1, 0), 1},
+		{NewDec(25, 2), 0},
+		{NewDec(5, 1), 0},
+		{NewDec(75, 2), 1},
+		{NewDec(75, 1), 8},
+		{NewDec(8333, 4), 1},
+		{NewDec(15, 0), 2},
+		{NewDec(25, 1), 2},
+		{NewDec(545, 3), 1},  // 0.545-> 1 even though 5 is first decimal and 1 not even
+		{NewDec(1545, 3), 2}, // 1.545
+	}
 
-//for tcIndex, tc := range tests {
-//require.Equal(t, tc.res, tc.d1.RoundInt64(), "%v. tc %d", tc.d1, tcIndex)
-//require.Equal(t, tc.res*-1, tc.d1.Mul(NewDec(-1, 0)).RoundInt64(), "%v. tc %d", tc.d1.Mul(NewDec(-1, 0)), tcIndex)
-//}
-//}
-
-//func TestRound(t *testing.T) {
-//many3 := "333333333333333333333333333333333333333333333"
-//many7 := "777777777777777777777777777777777777777777777"
-//big3, worked := new(big.Int).SetString(many3, 10)
-//require.True(t, worked)
-//big7, worked := new(big.Int).SetString(many7, 10)
-//require.True(t, worked)
-
-//tests := []struct {
-//d, res     Dec
-//precFactor int64
-//}{
-//{NewDec(333, 777), NewDec(429, 1000), 1000},
-//{Dec{new(big.Dec).SetFrac(big3, big7)}, NewDec(429, 1000), 1000},
-//{Dec{new(big.Dec).SetFrac(big3, big7)}, Dec{big.NewDec(4285714286, 10000000000)}, 10000000000},
-//{NewDec(1, 2), NewDec(1, 2), 1000},
-//}
-
-//for tcIndex, tc := range tests {
-//require.Equal(t, tc.res, tc.d.Round(tc.precFactor), "%v", tc.d, "incorrect rounding, tc %d", tcIndex)
-//negR1, negRes := tc.d.Mul(NewDec(-1, 0)), tc.res.Mul(NewDec(-1, 0))
-//require.Equal(t, negRes, negR1.Round(tc.precFactor), "%v", negR1, "incorrect rounding (negative case), tc %d", tcIndex)
-//}
-//}
+	for tcIndex, tc := range tests {
+		require.Equal(t, tc.res, tc.d1.RoundInt64(), "%v. tc %d", tc.d1, tcIndex)
+		require.Equal(t, tc.res*-1, tc.d1.Mul(NewDec(-1, 0)).RoundInt64(), "%v. tc %d", tc.d1.Mul(NewDec(-1, 0)), tcIndex)
+	}
+}
 
 //func TestToLeftPadded(t *testing.T) {
 //tests := []struct {

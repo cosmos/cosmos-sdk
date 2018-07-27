@@ -2,8 +2,9 @@ package app
 
 import (
 	"testing"
-	"github.com/tendermint/tendermint/crypto"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/stretchr/testify/require"
 )
@@ -11,14 +12,14 @@ import (
 // Test encoding of app2Tx is correct with both msg types
 func TestEncoding(t *testing.T) {
 	// Create privkeys and addresses
-	priv1 := crypto.GenPrivKeyEd25519()
-	priv2 := crypto.GenPrivKeyEd25519()
+	priv1 := ed25519.GenPrivKey()
+	priv2 := ed25519.GenPrivKey()
 	addr1 := priv1.PubKey().Address().Bytes()
 	addr2 := priv2.PubKey().Address().Bytes()
 
 	sendMsg := MsgSend{
-		From: addr1,
-		To: addr2,
+		From:   addr1,
+		To:     addr2,
 		Amount: sdk.Coins{{"testCoins", sdk.NewInt(100)}},
 	}
 
@@ -30,8 +31,8 @@ func TestEncoding(t *testing.T) {
 	}
 
 	sendTxBefore := app2Tx{
-		Msg: sendMsg,
-		PubKey: priv1.PubKey(),
+		Msg:       sendMsg,
+		PubKey:    priv1.PubKey(),
 		Signature: sig,
 	}
 
@@ -47,13 +48,13 @@ func TestEncoding(t *testing.T) {
 	require.Nil(t, err, "Error decoding sendTx")
 
 	sendTxAfter := tx1.(app2Tx)
-	
+
 	require.Equal(t, sendTxBefore, sendTxAfter, "Transaction changed after encoding/decoding")
 
 	issueMsg := MsgIssue{
-		Issuer: addr1,
+		Issuer:   addr1,
 		Receiver: addr2,
-		Coin: sdk.Coin{"testCoin", sdk.NewInt(100)},
+		Coin:     sdk.Coin{"testCoin", sdk.NewInt(100)},
 	}
 
 	signBytes = issueMsg.GetSignBytes()
@@ -63,8 +64,8 @@ func TestEncoding(t *testing.T) {
 	}
 
 	issueTxBefore := app2Tx{
-		Msg: issueMsg,
-		PubKey: priv1.PubKey(),
+		Msg:       issueMsg,
+		PubKey:    priv1.PubKey(),
 		Signature: sig,
 	}
 

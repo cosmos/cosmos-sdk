@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 var invalidstrs = []string{
@@ -22,7 +22,7 @@ var invalidstrs = []string{
 }
 
 func TestPubKey(t *testing.T) {
-	var pub crypto.PubKeyEd25519
+	var pub ed25519.PubKeyEd25519
 
 	for i := 0; i < 20; i++ {
 		rand.Read(pub[:])
@@ -52,7 +52,7 @@ func TestPubKey(t *testing.T) {
 }
 
 func TestAccAddr(t *testing.T) {
-	var pub crypto.PubKeyEd25519
+	var pub ed25519.PubKeyEd25519
 
 	for i := 0; i < 20; i++ {
 		rand.Read(pub[:])
@@ -96,7 +96,7 @@ func TestAccAddr(t *testing.T) {
 }
 
 func TestValAddr(t *testing.T) {
-	var pub crypto.PubKeyEd25519
+	var pub ed25519.PubKeyEd25519
 
 	for i := 0; i < 20; i++ {
 		rand.Read(pub[:])

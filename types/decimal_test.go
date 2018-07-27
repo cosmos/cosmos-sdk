@@ -1,11 +1,18 @@
 package types
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
+
+func TestPrecisionMultiplier(t *testing.T) {
+	res := precisionMultiplier(5)
+	exp := big.NewInt(100000)
+	require.Equal(t, 0, res.Cmp(exp), "equality was incorrect, res %v, exp %v", res, exp)
+}
 
 func TestNewDecFromStr(t *testing.T) {
 	largeBigInt, success := new(big.Int).SetString("3144605511029693144278234343371835", 10)
@@ -18,7 +25,7 @@ func TestNewDecFromStr(t *testing.T) {
 		{"", true, Dec{}},
 		{"0", false, NewDec(0, 0)},
 		{"1", false, NewDec(1, 0)},
-		{"1.1", false, NewDec(11, 2)},
+		{"1.1", false, NewDec(11, 1)},
 		{"0.75", false, NewDec(75, 2)},
 		{"0.8", false, NewDec(8, 1)},
 		{"0.11111", true, NewDec(1111, 5)},
@@ -28,20 +35,21 @@ func TestNewDecFromStr(t *testing.T) {
 		{"314460551102969314427823434337.1835",
 			false, NewDecFromBigInt(largeBigInt, 4)},
 		{".", true, Dec{}},
-		{".0", false, NewDec(0, 0)},
-		{"1.", false, NewDec(1, 0)},
+		{".0", true, NewDec(0, 0)},
+		{"1.", true, NewDec(1, 0)},
 		{"foobar", true, Dec{}},
 		{"0.foobar", true, Dec{}},
 		{"0.foobar.", true, Dec{}},
 	}
 
 	for tcIndex, tc := range tests {
+		fmt.Printf("debug tcIndex: %v\n", tcIndex)
 		res, err := NewDecFromStr(tc.decimalStr)
 		if tc.expErr {
 			require.NotNil(t, err, "error expected, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 		} else {
 			require.Nil(t, err, "unexpected error, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
-			require.True(t, res.Equal(tc.exp), "equality was incorrect, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
+			require.True(t, res.Equal(tc.exp), "equality was incorrect, res %v, exp %v, tc %v", res, tc.exp, tcIndex)
 		}
 
 		// negative tc

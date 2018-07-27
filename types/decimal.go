@@ -72,11 +72,18 @@ func NewDecFromStr(str string) (f Dec, err Error) {
 		str = str[1:]
 	}
 
+	if len(str) == 0 {
+		return f, ErrUnknownRequest("decimal string is empty")
+	}
+
 	strs := strings.Split(str, ".")
 	lenDecs := 0
 	combinedStr := strs[0]
 	if len(strs) == 2 {
 		lenDecs = len(strs[1])
+		if lenDecs == 0 || len(combinedStr) == 0 {
+			return f, ErrUnknownRequest("bad decimal length")
+		}
 	} else if len(strs) > 2 {
 		return f, ErrUnknownRequest("too many periods to be a decimal string")
 	}

@@ -230,3 +230,11 @@ func GetREDsByDelToValDstIndexKey(delegatorAddr, validatorDstAddr sdk.AccAddress
 		GetREDsToValDstIndexKey(validatorDstAddr),
 		delegatorAddr.Bytes()...)
 }
+
+// get the prefix keyspace for all redelegations redelegating from a source validator
+// from a particular delegator
+func GetREDsByDelFromValSrcIndexKey(delegatorAddr, validatorSrcAddr sdk.AccAddress) []byte {
+	return append(
+		GetREDsFromValSrcIndexKey(validatorSrcAddr),
+		delegatorAddr.Bytes()...)
+}

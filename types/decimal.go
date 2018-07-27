@@ -18,7 +18,7 @@ type Dec struct {
 const Precision = 10
 
 func precisionInt() *big.Int {
-	return new(big.Int).Exp(big.NewInt(1), big.NewInt(Precision), nil)
+	return new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision), nil)
 }
 
 // nolint - common values
@@ -31,7 +31,7 @@ func precisionMultiplier(prec int64) *big.Int {
 		panic("too much precision")
 	}
 	zerosToAdd := Precision - prec
-	multiplier := new(big.Int).Exp(big.NewInt(1), big.NewInt(zerosToAdd), nil)
+	multiplier := new(big.Int).Exp(big.NewInt(10), big.NewInt(zerosToAdd), nil)
 	return multiplier
 }
 

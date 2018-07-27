@@ -58,7 +58,8 @@ func TestNewDecFromStr(t *testing.T) {
 			require.NotNil(t, err, "error expected, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 		} else {
 			require.Nil(t, err, "unexpected error, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
-			require.True(t, res.Equal(tc.exp), "equality was incorrect, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
+			exp := tc.exp.Mul(NewDec(-1, 1))
+			require.True(t, res.Equal(exp), "equality was incorrect, res %v, exp %v, tc %v", res, exp, tcIndex)
 		}
 	}
 }

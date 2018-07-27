@@ -32,7 +32,7 @@ func TestStakeWithRandomMessages(t *testing.T) {
 		}
 	})
 
-	err := mapp.CompleteSetup([]*sdk.KVStoreKey{stakeKey})
+	err := mapp.CompleteSetup([]*sdk.KVStoreKey{stakeKey}, nil)
 	if err != nil {
 		panic(err)
 	}

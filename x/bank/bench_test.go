@@ -19,7 +19,7 @@ func getBenchmarkMockApp() (*mock.App, error) {
 	coinKeeper := NewKeeper(mapp.AccountMapper)
 	mapp.Router().AddRoute("bank", NewHandler(coinKeeper))
 
-	err := mapp.CompleteSetup([]*sdk.KVStoreKey{})
+	err := mapp.CompleteSetup([]*sdk.KVStoreKey{}, nil)
 	return mapp, err
 }
 

@@ -21,7 +21,7 @@ func TestBankWithRandomMessages(t *testing.T) {
 	coinKeeper := bank.NewKeeper(mapper)
 	mapp.Router().AddRoute("bank", bank.NewHandler(coinKeeper))
 
-	err := mapp.CompleteSetup([]*sdk.KVStoreKey{})
+	err := mapp.CompleteSetup([]*sdk.KVStoreKey{}, nil)
 	if err != nil {
 		panic(err)
 	}

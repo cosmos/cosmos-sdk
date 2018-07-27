@@ -100,6 +100,28 @@ func TestDEqualities(t *testing.T) {
 
 }
 
+func TestDecsEqual(t *testing.T) {
+	tests := []struct {
+		d1s, d2s []Dec
+		eq       bool
+	}{
+		{[]Dec{NewDec(0, 0)}, []Dec{NewDec(0, 0)}, true},
+		{[]Dec{NewDec(0, 0)}, []Dec{NewDec(1, 0)}, false},
+		{[]Dec{NewDec(0, 0)}, []Dec{}, false},
+		{[]Dec{NewDec(0, 0), NewDec(1, 0)}, []Dec{NewDec(0, 0), NewDec(1, 0)}, true},
+		{[]Dec{NewDec(1, 0), NewDec(0, 0)}, []Dec{NewDec(1, 0), NewDec(0, 0)}, true},
+		{[]Dec{NewDec(1, 0), NewDec(0, 0)}, []Dec{NewDec(0, 0), NewDec(1, 0)}, false},
+		{[]Dec{NewDec(1, 0), NewDec(0, 0)}, []Dec{NewDec(1, 0)}, false},
+		{[]Dec{NewDec(1, 0), NewDec(2, 0)}, []Dec{NewDec(2, 0), NewDec(4, 0)}, false},
+		{[]Dec{NewDec(3, 0), NewDec(18, 0)}, []Dec{NewDec(1, 0), NewDec(6, 0)}, false},
+	}
+
+	for tcIndex, tc := range tests {
+		require.Equal(t, tc.eq, DecsEqual(tc.d1s, tc.d2s), "equality of decional arrays is incorrect, tc %d", tcIndex)
+		require.Equal(t, tc.eq, DecsEqual(tc.d2s, tc.d1s), "equality of decional arrays is incorrect (converse), tc %d", tcIndex)
+	}
+}
+
 func TestDArithmetic(t *testing.T) {
 	tests := []struct {
 		d1, d2                         Dec
@@ -143,29 +165,29 @@ func TestDArithmetic(t *testing.T) {
 	}
 }
 
-func TestRoundInt64(t *testing.T) {
-	tests := []struct {
-		d1       Dec
-		resInt64 int64
-	}{
-		{NewDec(0, 0), 0},
-		{NewDec(1, 0), 1},
-		{NewDec(25, 2), 0},
-		{NewDec(5, 1), 0},
-		{NewDec(75, 2), 1},
-		{NewDec(75, 1), 8},
-		{NewDec(8333, 4), 1},
-		{NewDec(15, 0), 2},
-		{NewDec(25, 1), 2},
-		{NewDec(545, 3), 1},  // 0.545-> 1 even though 5 is first decimal and 1 not even
-		{NewDec(1545, 3), 2}, // 1.545
-	}
+//func TestRoundInt64(t *testing.T) {
+//tests := []struct {
+//d1       Dec
+//resInt64 int64
+//}{
+//{NewDec(0, 0), 0},
+//{NewDec(1, 0), 1},
+//{NewDec(25, 2), 0},
+//{NewDec(5, 1), 0},
+//{NewDec(75, 2), 1},
+//{NewDec(75, 1), 8},
+//{NewDec(8333, 4), 1},
+//{NewDec(15, 0), 2},
+//{NewDec(25, 1), 2},
+//{NewDec(545, 3), 1},  // 0.545-> 1 even though 5 is first decimal and 1 not even
+//{NewDec(1545, 3), 2}, // 1.545
+//}
 
-	for tcIndex, tc := range tests {
-		require.Equal(t, tc.res, tc.d1.RoundInt64(), "%v. tc %d", tc.d1, tcIndex)
-		require.Equal(t, tc.res*-1, tc.d1.Mul(NewDec(-1, 0)).RoundInt64(), "%v. tc %d", tc.d1.Mul(NewDec(-1, 0)), tcIndex)
-	}
-}
+//for tcIndex, tc := range tests {
+//require.Equal(t, tc.resInt64, tc.d1.RoundInt64(), "%v. tc %d", tc.d1, tcIndex)
+//require.Equal(t, tc.resInt64*-1, tc.d1.Mul(NewDec(-1, 0)).RoundInt64(), "%v. tc %d", tc.d1.Mul(NewDec(-1, 0)), tcIndex)
+//}
+//}
 
 //func TestToLeftPadded(t *testing.T) {
 //tests := []struct {
@@ -185,32 +207,28 @@ func TestRoundInt64(t *testing.T) {
 //}
 
 //var cdc = wire.NewCodec() //var jsonCdc JSONCodec // TODO wire.Codec
+func TestDZeroSerializationJSON(t *testing.T) {
+	d := NewDec(0, 0)
+	err := cdc.UnmarshalJSON([]byte(`0`), &d)
+	require.Nil(t, err)
+	err = cdc.UnmarshalJSON([]byte(`{}`), &d)
+	require.NotNil(t, err)
+}
 
-//func TestZeroSerializationJSON(t *testing.T) {
-//d := NewDec(0, 1)
-//err := cdc.UnmarshalJSON([]byte(`"0/1"`), &d)
-//require.Nil(t, err)
-//err = cdc.UnmarshalJSON([]byte(`"0/0"`), &d)
-//require.NotNil(t, err)
-//err = cdc.UnmarshalJSON([]byte(`"1/0"`), &d)
-//require.NotNil(t, err)
-//err = cdc.UnmarshalJSON([]byte(`"{}"`), &d)
-//require.NotNil(t, err)
-//}
+func TestDSerializationText(t *testing.T) {
+	d := NewDec(1, 3)
 
-//func TestSerializationText(t *testing.T) {
-//d := NewDec(1, 3)
+	bz, err := d.MarshalText()
+	require.NoError(t, err)
+	fmt.Printf("debug bz: %s\n", bz)
 
-//bz, err := d.MarshalText()
-//require.NoError(t, err)
+	var d2 = Dec{new(big.Int)}
+	err = d2.UnmarshalText(bz)
+	require.NoError(t, err)
+	require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
+}
 
-//var d2 = Dec{new(big.Dec)}
-//err = d2.UnmarshalText(bz)
-//require.NoError(t, err)
-//require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
-//}
-
-//func TestSerializationGoWireJSON(t *testing.T) {
+//func TestDSerializationGoWireJSON(t *testing.T) {
 //d := NewDec(1, 3)
 //bz, err := cdc.MarshalJSON(d)
 //require.NoError(t, err)
@@ -221,29 +239,29 @@ func TestRoundInt64(t *testing.T) {
 //require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
 //}
 
-//func TestSerializationGoWireBinary(t *testing.T) {
-//d := NewDec(1, 3)
-//bz, err := cdc.MarshalBinary(d)
-//require.NoError(t, err)
+func TestDSerializationGoWireBinary(t *testing.T) {
+	d := NewDec(1, 3)
+	bz, err := cdc.MarshalBinary(d)
+	require.NoError(t, err)
 
-//var d2 Dec
-//err = cdc.UnmarshalBinary(bz, &d2)
-//require.NoError(t, err)
-//require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
-//}
+	var d2 Dec
+	err = cdc.UnmarshalBinary(bz, &d2)
+	require.NoError(t, err)
+	require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
+}
 
-//type testEmbedStruct struct {
+//type testDEmbedStruct struct {
 //Field1 string `json:"f1"`
 //Field2 int    `json:"f2"`
 //Field3 Dec    `json:"f3"`
 //}
 
-//func TestEmbeddedStructSerializationGoWire(t *testing.T) {
-//obj := testEmbedStruct{"foo", 10, NewDec(1, 3)}
+//func TestDEmbeddedStructSerializationGoWire(t *testing.T) {
+//obj := testDEmbedStruct{"foo", 10, NewDec(1, 3)}
 //bz, err := cdc.MarshalJSON(obj)
 //require.Nil(t, err)
 
-//var obj2 testEmbedStruct
+//var obj2 testDEmbedStruct
 //err = cdc.UnmarshalJSON(bz, &obj2)
 //require.Nil(t, err)
 
@@ -252,36 +270,15 @@ func TestRoundInt64(t *testing.T) {
 //require.True(t, obj.Field3.Equal(obj2.Field3), "original: %v, unmarshalled: %v", obj, obj2)
 //}
 
-//func TestDecsEqual(t *testing.T) {
-//tests := []struct {
-//d1s, d2s []Dec
-//eq       bool
-//}{
-//{[]Dec{NewDec(0, 0)}, []Dec{NewDec(0, 0)}, true},
-//{[]Dec{NewDec(0, 0)}, []Dec{NewDec(1, 0)}, false},
-//{[]Dec{NewDec(0, 0)}, []Dec{}, false},
-//{[]Dec{NewDec(0, 0), NewDec(1, 0)}, []Dec{NewDec(0, 0), NewDec(1, 0)}, true},
-//{[]Dec{NewDec(1, 0), NewDec(0, 0)}, []Dec{NewDec(1, 0), NewDec(0, 0)}, true},
-//{[]Dec{NewDec(1, 0), NewDec(0, 0)}, []Dec{NewDec(0, 0), NewDec(1, 0)}, false},
-//{[]Dec{NewDec(1, 0), NewDec(0, 0)}, []Dec{NewDec(1, 0)}, false},
-//{[]Dec{NewDec(1, 0), NewDec(2, 0)}, []Dec{NewDec(2, 0), NewDec(4, 0)}, false},
-//{[]Dec{NewDec(3, 0), NewDec(18)}, []Dec{NewDec(1, 0), NewDec(6)}, false},
-//}
-
-//for tcIndex, tc := range tests {
-//require.Equal(t, tc.eq, DecsEqual(tc.d1s, tc.d2s), "equality of decional arrays is incorrect, tc %d", tcIndex)
-//require.Equal(t, tc.eq, DecsEqual(tc.d2s, tc.d1s), "equality of decional arrays is incorrect (converse), tc %d", tcIndex)
-//}
-
-//}
-
-//func TestStringOverflow(t *testing.T) {
-//// two random 64 bit primes
-//dec1 := NewDec(5164315003622678713, 4389711697696177267)
-//dec2 := NewDec(-3179849666053572961, 8459429845579852627)
-//dec3 := dec1.Add(dec2)
-//require.Equal(t,
-//"29728537197630860939575850336935951464/37134458148982045574552091851127630409",
-//dec3.String(),
-//)
-//}
+func TestDStringOverflow(t *testing.T) {
+	// two random 64 bit primes
+	dec1, err := NewDecFromStr("51643150036226787134389711697696177267")
+	require.NoError(t, err)
+	dec2, err := NewDecFromStr("-31798496660535729618459429845579852627")
+	require.NoError(t, err)
+	dec3 := dec1.Add(dec2)
+	require.Equal(t,
+		"19844653375691057515930281852116324640.0000000000",
+		dec3.String(),
+	)
+}

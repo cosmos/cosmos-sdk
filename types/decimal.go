@@ -147,6 +147,14 @@ func (d Dec) String() string {
 	return str[:placement] + "." + str[placement:]
 }
 
+// TODO panic if negative or if totalDigits < len(initStr)???
+// evaluate as an integer and return left padded string
+func (d Dec) ToLeftPadded(totalDigits int8) string {
+	intStr := d.Int.String()
+	fcode := `%0` + strconv.Itoa(int(totalDigits)) + `s`
+	return fmt.Sprintf(fcode, intStr)
+}
+
 var (
 	dzero  = big.NewInt(0)
 	done   = big.NewInt(1)
@@ -219,14 +227,6 @@ func (d Dec) RoundInt64() int64 {
 // RoundInt round the decimal using bankers rounding
 func (d Dec) RoundInt() Int {
 	return NewIntFromBigInt(BankerRoundChop(d.Int, Precision))
-}
-
-// TODO panic if negative or if totalDigits < len(initStr)???
-// evaluate as an integer and return left padded string
-func (d Dec) ToLeftPadded(totalDigits int8) string {
-	intStr := d.Int.String()
-	fcode := `%0` + strconv.Itoa(int(totalDigits)) + `s`
-	return fmt.Sprintf(fcode, intStr)
 }
 
 //___________________________________________________________________________________

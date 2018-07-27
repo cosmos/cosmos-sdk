@@ -15,10 +15,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
+// Keys for parameter access
 const (
 	TestParamSpace = "ParamsTest"
 )
 
+// Returns components for testing
 func DefaultTestComponents(t *testing.T) (sdk.Context, Store, func() sdk.CommitID) {
 	cdc := wire.NewCodec()
 	key := sdk.NewKVStoreKey("params")

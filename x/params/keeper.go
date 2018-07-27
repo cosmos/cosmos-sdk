@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params/store"
 )
 
+// Keeper of the global paramstore
 type Keeper struct {
 	cdc  *wire.Codec
 	key  sdk.StoreKey
@@ -20,12 +21,15 @@ type Keeper struct {
 	stores map[string]*Store
 }
 
+// KeeperSpace defines param space for the substores
+// Zero value("") means not using the substore
 type KeeperSpace struct {
 	ConsensusSpace string
 	GasConfigSpace string
 	MsgStatusSpace string
 }
 
+// Default KeeperSpace
 func DefaultKeeperSpace() *KeeperSpace {
 	return &KeeperSpace{
 		ConsensusSpace: consensus.DefaultParamSpace,
@@ -34,6 +38,7 @@ func DefaultKeeperSpace() *KeeperSpace {
 	}
 }
 
+// NewKeeper construct a params keeper
 func NewKeeper(cdc *wire.Codec, key *sdk.KVStoreKey, tkey *sdk.TransientStoreKey, space *KeeperSpace) (k Keeper) {
 	if space == nil {
 		space = DefaultKeeperSpace()
@@ -50,13 +55,22 @@ func NewKeeper(cdc *wire.Codec, key *sdk.KVStoreKey, tkey *sdk.TransientStoreKey
 	}
 
 	// Registering Default Subspaces
-	_ = k.SubStore(space.ConsensusSpace)
-	_ = k.SubStore(space.GasConfigSpace)
-	_ = k.SubStore(space.MsgStatusSpace)
+	if space != nil {
+		if space.ConsensusSpace != "" {
+			_ = k.SubStore(space.ConsensusSpace)
+		}
+		if space.GasConfigSpace != "" {
+			_ = k.SubStore(space.GasConfigSpace)
+		}
+		if space.MsgStatusSpace != "" {
+			_ = k.SubStore(space.MsgStatusSpace)
+		}
+	}
 
 	return k
 }
 
+// Allocate substore used for keepers
 func (k Keeper) SubStore(space string) Store {
 	_, ok := k.stores[space]
 	if ok {
@@ -66,6 +80,7 @@ func (k Keeper) SubStore(space string) Store {
 	return k.UnsafeSubStore(space)
 }
 
+// Get substore without checking existing allocation
 func (k Keeper) UnsafeSubStore(space string) Store {
 	if space == "" {
 		panic("cannot use empty string for substore space")
@@ -78,14 +93,20 @@ func (k Keeper) UnsafeSubStore(space string) Store {
 	return store
 }
 
+// ConsensusStore returns ConsensusParams submodule store
+// Panics if not allocated
 func (k Keeper) ConsensusStore() Store {
 	return *k.stores[k.space.ConsensusSpace]
 }
 
+// GasConfigStore returns GasConfig submodule store
+// Panics if not allocated
 func (k Keeper) GasConfigStore() Store {
 	return *k.stores[k.space.GasConfigSpace]
 }
 
+// MsgStatusStore returns MsgStatus submodule store
+// Panics if not allocated
 func (k Keeper) MsgStatusStore() Store {
 	return *k.stores[k.space.MsgStatusSpace]
 }

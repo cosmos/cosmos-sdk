@@ -8,11 +8,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-// nolint
+// Default parameter namespace
 const (
 	DefaultParamSpace = "Slashing"
 )
 
+// Key generators for parameter access
 func MaxEvidenceAgeKey() params.Key           { return params.NewKey("MaxEvidenceAge") }
 func SignedBlocksWindowKey() params.Key       { return params.NewKey("SignedBlocksWindow") }
 func MinSignedPerWindowKey() params.Key       { return params.NewKey("MinSignedPerWindow") }
@@ -21,6 +22,7 @@ func DowntimeUnbondDurationKey() params.Key   { return params.NewKey("DowntimeUn
 func SlashFractionDoubleSignKey() params.Key  { return params.NewKey("SlashFractionDoubleSign") }
 func SlashFractionDowntimeKey() params.Key    { return params.NewKey("SlashFractionDowntime") }
 
+// Cached parameter keys
 var (
 	maxEvidenceAgeKey           = MaxEvidenceAgeKey()
 	signedBlocksWindowKey       = SignedBlocksWindowKey()

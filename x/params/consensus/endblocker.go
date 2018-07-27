@@ -8,27 +8,20 @@ import (
 	params "github.com/cosmos/cosmos-sdk/x/params/store"
 )
 
-// Keys for parameter access
+// Default parameter namespace
 const (
 	DefaultParamSpace = "ConsensusParams"
-
-	BlockSizeSpace   = "BlockSize"
-	TxSizeSpace      = "TxSize"
-	BlockGossipSpace = "BlockGossip"
-
-	MaxBytesKey      = "MaxBytes"
-	MaxTxsKey        = "MaxTxs"
-	MaxGasKey        = "MaxGas"
-	PartSizeBytesKey = "PartSizeBytes"
 )
 
-func BlockMaxBytesKey() params.Key      { return params.NewKey(BlockSizeSpace, MaxBytesKey) }
-func BlockMaxTxsKey() params.Key        { return params.NewKey(BlockSizeSpace, MaxTxsKey) }
-func BlockMaxGasKey() params.Key        { return params.NewKey(BlockSizeSpace, MaxGasKey) }
-func TxMaxBytesKey() params.Key         { return params.NewKey(TxSizeSpace, MaxBytesKey) }
-func TxMaxGasKey() params.Key           { return params.NewKey(TxSizeSpace, MaxGasKey) }
-func BlockPartSizeBytesKey() params.Key { return params.NewKey(BlockGossipSpace, PartSizeBytesKey) }
+// Key generators for parameter access
+func BlockMaxBytesKey() params.Key      { return params.NewKey("BlockSize", "MaxBytes") }
+func BlockMaxTxsKey() params.Key        { return params.NewKey("BlockSize", "MaxTxs") }
+func BlockMaxGasKey() params.Key        { return params.NewKey("BlockSize", "MaxGas") }
+func TxMaxBytesKey() params.Key         { return params.NewKey("TxSize", "MaxBytes") }
+func TxMaxGasKey() params.Key           { return params.NewKey("TxSize", "MaxGas") }
+func BlockPartSizeBytesKey() params.Key { return params.NewKey("BlockGossip", "PartSizeBytes") }
 
+// Cached parameter keys
 var (
 	blockMaxBytesKey      = BlockMaxBytesKey()
 	blockMaxTxsKey        = BlockMaxTxsKey()
@@ -38,6 +31,7 @@ var (
 	blockPartSizeBytesKey = BlockPartSizeBytesKey()
 )
 
+// EndBlock returns consensus parameters set in the block
 func EndBlock(ctx sdk.Context, store params.Store) (updates *abci.ConsensusParams) {
 	updates = &abci.ConsensusParams{
 		BlockSize:   new(abci.BlockSize),

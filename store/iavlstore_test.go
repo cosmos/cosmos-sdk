@@ -446,6 +446,7 @@ func TestIAVLStoreQuery(t *testing.T) {
 	require.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	require.Equal(t, v3, qres.Value)
 	query2 := abci.RequestQuery{Path: "/key", Data: k2, Height: cid.Version}
+
 	qres = iavlStore.Query(query2)
 	require.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	require.Equal(t, v2, qres.Value)

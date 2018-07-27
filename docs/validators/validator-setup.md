@@ -1,7 +1,7 @@
 # Validator Setup
 
 ::: warning Current Testnet
-The current testnet is `gaia-7001`.
+The current testnet is `gaia-7002`.
 :::
 
 Before setting up your validator node, make sure you've already gone through the [Full Node Setup](/getting-started/full-node.md) guide.
@@ -34,7 +34,7 @@ gaiacli stake create-validator \
   --pubkey=$(gaiad tendermint show_validator) \
   --address-validator=<account_cosmosaccaddr>
   --moniker="choose a moniker" \
-  --chain-id=gaia-7001 \
+  --chain-id=gaia-7002 \
   --name=<key_name>
 ```
 
@@ -51,7 +51,7 @@ gaiacli stake edit-validator
   --website="https://cosmos.network" \
   --keybase-sig="6A0D65E29A4CBC8E"
   --details="To infinity and beyond!"
-  --chain-id=gaia-7001 \
+  --chain-id=gaia-7002 \
   --name=<key_name>
 ```
 
@@ -62,7 +62,7 @@ View the validator's information with this command:
 ```bash
 gaiacli stake validator \
   --address-validator=<account_cosmosaccaddr> \
-  --chain-id=gaia-7001
+  --chain-id=gaia-7002
 ```
 
 ### Confirm Your Validator is Running
@@ -84,7 +84,7 @@ To be in the validator set, you need to have more total voting power than the 10
 
 ### Problem #1: My validator has `voting_power: 0`
 
-Your validator has become auto-unbonded. In `gaia-7001`, we unbond validators if they do not vote on `50` of the last `100` blocks. Since blocks are proposed every ~2 seconds, a validator unresponsive for ~100 seconds will become unbonded. This usually happens when your `gaiad` process crashes.
+Your validator has become auto-unbonded. In `gaia-7002`, we unbond validators if they do not vote on `50` of the last `100` blocks. Since blocks are proposed every ~2 seconds, a validator unresponsive for ~100 seconds will become unbonded. This usually happens when your `gaiad` process crashes.
 
 Here's how you can return the voting power back to your validator. First, if `gaiad` is not running, start it up again:
 
@@ -95,7 +95,7 @@ gaiad start
 Wait for your full node to catch up to the latest block. Next, run the following command. Note that `<cosmosaccaddr>` is the address of your validator account, and `<name>` is the name of the validator account. You can find this info by running `gaiacli keys list`.
 
 ```bash
-gaiacli stake unrevoke <cosmosaccaddr> --chain-id=gaia-7001 --name=<name>
+gaiacli stake unrevoke <cosmosaccaddr> --chain-id=gaia-7002 --name=<name>
 ```
 
 ::: danger Warning

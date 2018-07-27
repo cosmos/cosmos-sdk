@@ -206,6 +206,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 	validator = k.updateForRevoking(ctx, oldFound, oldValidator, validator)
 	powerIncreasing := k.getPowerIncreasing(ctx, oldFound, oldValidator, validator)
 	validator.BondHeight, validator.BondIntraTxCounter = k.bondIncrement(ctx, oldFound, oldValidator, validator)
+	fmt.Printf("Found validator: %v, bond height: %v, counter: %v, old bond height: %v, old counter: %v\n", oldFound, validator.BondHeight, validator.BondIntraTxCounter, oldValidator.BondHeight, oldValidator.BondIntraTxCounter)
 	valPower := k.updateValidatorPower(ctx, oldFound, oldValidator, validator, pool)
 	cliffPower := k.GetCliffValidatorPower(ctx)
 
@@ -295,8 +296,10 @@ func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidato
 
 	// update the list ordered by voting power
 	if oldFound {
+		fmt.Printf("Delete old key: %X\n", GetValidatorsByPowerIndexKey(oldValidator, pool))
 		store.Delete(GetValidatorsByPowerIndexKey(oldValidator, pool))
 	}
+	fmt.Printf("Write new key: %X\n", GetValidatorsByPowerIndexKey(newValidator, pool))
 	valPower = GetValidatorsByPowerIndexKey(newValidator, pool)
 	store.Set(valPower, newValidator.Owner)
 
@@ -329,6 +332,8 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 	bondedValidatorsCount := 0
 	var validator, validatorToBond types.Validator
 	newValidatorBonded := false
+
+	seen := make(map[string]bool)
 
 	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey) // largest to smallest
 	for {
@@ -364,7 +369,12 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 			panic(fmt.Sprintf("revoked validator cannot be bonded, address: %v\n", ownerAddr))
 		}
 
-		fmt.Printf("Iter; on validator: %s\n", validator)
+		fmt.Printf("Iter; on key %X, validator: %s\n", iterator.Key(), validator)
+
+		if seen[string(ownerAddr)] {
+			panic(fmt.Sprintf("duplicate validator: %s", sdk.AccAddress(ownerAddr)))
+		}
+		seen[string(ownerAddr)] = true
 
 		iterator.Next()
 	}

@@ -59,3 +59,4 @@ BUG FIXES
 *  \#1804 Fixes gen-tx genesis generation logic temporarily until upstream updates
 *  \#1799 Fix `gaiad export`
 *  \#1828 Force user to specify amount on create-validator command by removing default
+*  \#1839 Fixed bug where intra-tx counter wasn't set correctly for genesis validators

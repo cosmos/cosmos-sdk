@@ -1,4 +1,0 @@
-// nolint
-package types
-
-// aliases

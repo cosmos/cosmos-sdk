@@ -1,4 +1,4 @@
-package decimal
+package types
 
 import (
 	"math/big"

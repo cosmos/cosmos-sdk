@@ -1,4 +1,4 @@
-package decimal
+package types
 
 import (
 	"fmt"
@@ -18,8 +18,7 @@ type Decimal struct {
 const Precision = 10
 
 func precisionInt() big.Int {
-	p := big.NewInt(1)
-	return *p.Exp(big.NewInt(1), big.NewInt(precision), nil)
+	return new(big.Int).Exp(big.NewInt(1), big.NewInt(precision), nil)
 }
 
 // nolint - common values
@@ -27,40 +26,27 @@ func ZeroDec() Decimal { return Decimal{big.NewInt(0)} }
 func OneDec() Decimal  { return Decimal{&precisionInt} }
 
 // create a new Decimal from integer assuming whole numbers
-func NewDecimalFromInt(i int64) Decimal {
+func NewDecimalFromInt64(i int64) Decimal {
 	return Decimal{
 		new(big.Int).Mul(big.NewInt(i), precisionInt()),
 	}
 }
 
-// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxxx XXX
-func getNumeratorDenominator(str []string, prec int) (numerator string, denom int64, err Error) {
-	switch len(str) {
-	case 1:
-		if len(str[0]) == 0 {
-			return "", 0, ErrUnknownRequest("not a decimal string")
-		}
-		numerator = str[0]
-		return numerator, 1, nil
-	case 2:
-		if len(str[0]) == 0 || len(str[1]) == 0 {
-			return "", 0, ErrUnknownRequest("not a decimal string")
-		}
-		if len(str[1]) > prec {
-			return "", 0, ErrUnknownRequest("string has too many decimals")
-		}
-		numerator = str[0] + str[1]
-		len := int64(len(str[1]))
-		denom = new(big.Int).Exp(big.NewInt(10), big.NewInt(len), nil).Int64()
-		return numerator, denom, nil
-	default:
-		return "", 0, ErrUnknownRequest("not a decimal string")
+// create a new Decimal from big integer assuming whole numbers
+func NewDecFromBigInt(i *big.Int) Decimal {
+	return Decimal{
+		new(big.Int).Mul(i, precisionInt()),
 	}
 }
 
-// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxxx XXX
-// create a decimal from decimal string or integer string
-// precision is the number of values after the decimal point which should be read
+// create a new Decimal from big integer assuming whole numbers
+func NewDecFromInt(i Int) Decimal {
+	return Decimal{
+		new(big.Int).Mul(i.BigInt(), precisionInt()),
+	}
+}
+
+// create a decimal from a decimal string (ex. "1234.5678")
 func NewDecimalFromStr(str string) (f Decimal, err Error) {
 	if len(decimalStr) == 0 {
 		return f, ErrUnknownRequest("decimal string is empty")
@@ -86,57 +72,16 @@ func NewDecimalFromStr(str string) (f Decimal, err Error) {
 		return f, ErrUnknownRequest("too much precision in decimal")
 	}
 
-	numStr, denom, err := getNumeratorDenominator(str, prec)
-	if err != nil {
-		return f, err
+	// add some extra zero's to correct to the precision factor
+	zerosToAdd := precision - lenDecimals
+	zeros := fmt.Sprintf(`%0s`+zerosToAdd, "")
+	combinedStr = combinedStr + zeros
+
+	combined, ok := new(big.Int).SetString(combinedStr, 10)
+	if !ok {
+		return f, ErrUnknownRequest("bad string to integer conversion")
 	}
-
-	num, errConv := strconv.Atoi(numStr)
-	if errConv != nil && strings.HasSuffix(errConv.Error(), "value out of range") {
-		// resort to big int, don't make this default option for efficiency
-		numBig, success := new(big.Int).SetString(numStr, 10)
-		if success != true {
-			return f, ErrUnknownRequest("not a decimal string")
-		}
-
-		if neg {
-			numBig.Neg(numBig)
-		}
-
-		return NewDecFromBigInt(numBig, big.NewInt(denom)), nil
-	} else if errConv != nil {
-		return f, ErrUnknownRequest("not a decimal string")
-	}
-
-	if neg {
-		num *= -1
-	}
-
-	return NewInt(int64(num), denom), nil
-}
-
-// NewDecFromBigInt constructs Decimal from big.Int
-func NewDecFromBigInt(num *big.Int, denom ...*big.Int) Decimal {
-	switch len(denom) {
-	case 0:
-		return Decimal{new(big.Int).SetInt(num)}
-	case 1:
-		return Decimal{new(big.Int).SetFrac(num, denom[0])}
-	default:
-		panic("improper use of NewDecFromBigInt, can only have one denominator")
-	}
-}
-
-// NewDecFromInt constructs Decimal from Int
-func NewDecFromInt(num Int, denom ...Int) Decimal {
-	switch len(denom) {
-	case 0:
-		return Decimal{new(big.Int).SetInt(num.BigInt())}
-	case 1:
-		return Decimal{new(big.Int).SetFrac(num.BigInt(), denom[0].BigInt())}
-	default:
-		panic("improper use of NewDecFromBigInt, can only have one denominator")
-	}
+	return combined
 }
 
 //nolint

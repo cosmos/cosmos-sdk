@@ -129,14 +129,17 @@ func (d Dec) Mul(d2 Dec) Dec {
 func (d Dec) Quo(d2 Dec) Dec {
 	mul := new(big.Int).Mul(new(big.Int).Mul( // multiple Precision twice
 		d.Int, precisionInt()), precisionInt())
+	fmt.Printf("debug mul: %v\n", mul.String())
 
 	quo := new(big.Int).Quo(mul, d2.Int)
+	fmt.Printf("debug quo: %v\n", quo.String())
 	chopped := BankerRoundChop(quo, Precision)
+	fmt.Printf("debug chopped: %v\n", chopped.String())
 	return Dec{chopped}
 }
 
 func (d Dec) String() string {
-	str := d.Int.String()
+	str := d.ToLeftPadded(Precision)
 	placement := len(str) - Precision
 	if placement < 0 {
 		panic("too few decimal digits")
@@ -177,7 +180,14 @@ func BankerRoundChop(d *big.Int, n int64) *big.Int {
 		return quo
 	}
 
-	fiveLine := big.NewInt(int64(5 * len(rem.String()))) // ex. 1234 -> 5000
+	lenWhole := len(d.String())
+	lenQuo := len(quo.String())
+	lenRem := len(rem.String())
+	leadingZeros := lenWhole - (lenQuo + lenRem) // leading zeros removed from the remainder
+
+	zerosToAdd := int64(lenRem - 1 + leadingZeros)
+	multiplier := new(big.Int).Exp(big.NewInt(10), big.NewInt(zerosToAdd), nil)
+	fiveLine := new(big.Int).Mul(big.NewInt(5), multiplier)
 
 	switch rem.Cmp(fiveLine) {
 	case -1:

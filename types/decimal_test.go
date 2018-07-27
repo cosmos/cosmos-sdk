@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 
@@ -92,66 +93,71 @@ func TestDEqualities(t *testing.T) {
 	}
 
 	for tcIndex, tc := range tests {
-		require.Equal(t, tc.gt, tc.d1.GT(tc.d2), "GT result is incorrect, tc #%d", tcIndex)
-		require.Equal(t, tc.lt, tc.d1.LT(tc.d2), "LT result is incorrect, tc #%d", tcIndex)
-		require.Equal(t, tc.eq, tc.d1.Equal(tc.d2), "equality result is incorrect, tc #%d", tcIndex)
+		require.Equal(t, tc.gt, tc.d1.GT(tc.d2), "GT result is incorrect, tc %d", tcIndex)
+		require.Equal(t, tc.lt, tc.d1.LT(tc.d2), "LT result is incorrect, tc %d", tcIndex)
+		require.Equal(t, tc.eq, tc.d1.Equal(tc.d2), "equality result is incorrect, tc %d", tcIndex)
 	}
 
 }
 
-//func TestArithmetic(t *testing.T) {
-//tests := []struct {
-//d1, d2                         Dec
-//resMul, resDiv, resAdd, resSub Dec
-//}{
-//// d1       d2         MUL        DIV        ADD        SUB
-//{NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0)},
-//{NewDec(1), NewDec(0), NewDec(0), NewDec(0), NewDec(1), NewDec(1)},
-//{NewDec(0), NewDec(1), NewDec(0), NewDec(0), NewDec(1), NewDec(-1)},
-//{NewDec(0), NewDec(-1), NewDec(0), NewDec(0), NewDec(-1), NewDec(1)},
-//{NewDec(-1), NewDec(0), NewDec(0), NewDec(0), NewDec(-1), NewDec(-1)},
+func TestDArithmetic(t *testing.T) {
+	tests := []struct {
+		d1, d2                         Dec
+		expMul, expDiv, expAdd, expSub Dec
+	}{
+		// d1          d2            MUL           DIV           ADD           SUB
+		{NewDec(0, 0), NewDec(0, 0), NewDec(0, 0), NewDec(0, 0), NewDec(0, 0), NewDec(0, 0)},
+		{NewDec(1, 0), NewDec(0, 0), NewDec(0, 0), NewDec(0, 0), NewDec(1, 0), NewDec(1, 0)},
+		{NewDec(0, 0), NewDec(1, 0), NewDec(0, 0), NewDec(0, 0), NewDec(1, 0), NewDec(-1, 0)},
+		{NewDec(0, 0), NewDec(-1, 0), NewDec(0, 0), NewDec(0, 0), NewDec(-1, 0), NewDec(1, 0)},
+		{NewDec(-1, 0), NewDec(0, 0), NewDec(0, 0), NewDec(0, 0), NewDec(-1, 0), NewDec(-1, 0)},
 
-//{NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(2), NewDec(0)},
-//{NewDec(-1), NewDec(-1), NewDec(1), NewDec(1), NewDec(-2), NewDec(0)},
-//{NewDec(1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(0), NewDec(2)},
-//{NewDec(-1), NewDec(1), NewDec(-1), NewDec(-1), NewDec(0), NewDec(-2)},
+		{NewDec(1, 0), NewDec(1, 0), NewDec(1, 0), NewDec(1, 0), NewDec(2, 0), NewDec(0, 0)},
+		{NewDec(-1, 0), NewDec(-1, 0), NewDec(1, 0), NewDec(1, 0), NewDec(-2, 0), NewDec(0, 0)},
+		{NewDec(1, 0), NewDec(-1, 0), NewDec(-1, 0), NewDec(-1, 0), NewDec(0, 0), NewDec(2, 0)},
+		{NewDec(-1, 0), NewDec(1, 0), NewDec(-1, 0), NewDec(-1, 0), NewDec(0, 0), NewDec(-2, 0)},
 
-//{NewDec(3), NewDec(7), NewDec(21), NewDec(3, 7), NewDec(10), NewDec(-4)},
-//{NewDec(2), NewDec(4), NewDec(8), NewDec(1, 2), NewDec(6), NewDec(-2)},
-//{NewDec(100), NewDec(100), NewDec(10000), NewDec(1), NewDec(200), NewDec(0)},
+		{NewDec(3, 0), NewDec(7, 0), NewDec(21, 0), NewDec(4285714286, 10), NewDec(10, 0), NewDec(-4, 0)},
+		{NewDec(2, 0), NewDec(4, 0), NewDec(8, 0), NewDec(5, 1), NewDec(6, 0), NewDec(-2, 0)},
+		{NewDec(100, 0), NewDec(100, 0), NewDec(10000, 0), NewDec(1, 0), NewDec(200, 0), NewDec(0, 0)},
 
-//{NewDec(3, 2), NewDec(3, 2), NewDec(9, 4), NewDec(1), NewDec(3), NewDec(0)},
-//{NewDec(3, 7), NewDec(7, 3), NewDec(1), NewDec(9, 49), NewDec(58, 21), NewDec(-40, 21)},
-//{NewDec(1, 21), NewDec(11, 5), NewDec(11, 105), NewDec(5, 231), NewDec(236, 105), NewDec(-226, 105)},
-//{NewDec(-21), NewDec(3, 7), NewDec(-9), NewDec(-49), NewDec(-144, 7), NewDec(-150, 7)},
-//{NewDec(100), NewDec(1, 7), NewDec(100, 7), NewDec(700), NewDec(701, 7), NewDec(699, 7)},
-//}
+		{NewDec(15, 1), NewDec(15, 1), NewDec(225, 2), NewDec(1, 0), NewDec(3, 0), NewDec(0, 0)},
+		{NewDec(3333, 4), NewDec(333, 4), NewDec(1109889, 8), NewDec(10009009009, 9), NewDec(3666, 4), NewDec(3, 1)},
+		//{NewDec(1, 21), NewDec(11, 5), NewDec(11, 105), NewDec(5, 231), NewDec(236, 105), NewDec(-226, 105)},
+		//{NewDec(-21), NewDec(3333, 3), NewDec(-9), NewDec(-49), NewDec(-144, 7), NewDec(-150, 7)},
+		//{NewDec(100), NewDec(1, 7), NewDec(100, 7), NewDec(700), NewDec(701, 7), NewDec(699, 7)},
+	}
 
-//for tcIndex, tc := range tests {
-//require.True(t, tc.resMul.Equal(tc.d1.Mul(tc.d2)), "d1 %v, d2 %v. tc #%d", tc.d1.Dec, tc.d2.Dec, tcIndex)
-//require.True(t, tc.resAdd.Equal(tc.d1.Add(tc.d2)), "d1 %v, d2 %v. tc #%d", tc.d1.Dec, tc.d2.Dec, tcIndex)
-//require.True(t, tc.resSub.Equal(tc.d1.Sub(tc.d2)), "d1 %v, d2 %v. tc #%d", tc.d1.Dec, tc.d2.Dec, tcIndex)
+	for tcIndex, tc := range tests {
+		fmt.Printf("debug tcIndex: %v\n", tcIndex)
+		resAdd := tc.d1.Add(tc.d2)
+		resSub := tc.d1.Sub(tc.d2)
+		resMul := tc.d1.Mul(tc.d2)
+		require.True(t, tc.expAdd.Equal(resAdd), "exp %v, res %v, tc %d", tc.expAdd, resAdd, tcIndex)
+		require.True(t, tc.expSub.Equal(resSub), "exp %v, res %v, tc %d", tc.expSub, resSub, tcIndex)
+		require.True(t, tc.expMul.Equal(resMul), "exp %v, res %v, tc %d", tc.expMul, resMul, tcIndex)
 
-//if tc.d2.Num().IsZero() { // panic for divide by zero
-//require.Panics(t, func() { tc.d1.Quo(tc.d2) })
-//} else {
-//require.True(t, tc.resDiv.Equal(tc.d1.Quo(tc.d2)), "d1 %v, d2 %v. tc #%d", tc.d1.Dec, tc.d2.Dec, tcIndex)
-//}
-//}
-//}
+		if tc.d2.IsZero() { // panic for divide by zero
+			require.Panics(t, func() { tc.d1.Quo(tc.d2) })
+		} else {
+			resDiv := tc.d1.Quo(tc.d2)
+			require.True(t, tc.expDiv.Equal(resDiv), "exp %v, res %v, tc %d", tc.expDiv.String(), resDiv.String(), tcIndex)
+		}
+	}
+}
 
 //func TestEvaluate(t *testing.T) {
 //tests := []struct {
 //d1  Dec
 //res int64
 //}{
-//{NewDec(0), 0},
-//{NewDec(1), 1},
+//{NewDec(0, 0), 0},
+//{NewDec(1, 0), 1},
 //{NewDec(1, 4), 0},
 //{NewDec(1, 2), 0},
 //{NewDec(3, 4), 1},
 //{NewDec(5, 6), 1},
-//{NewDec(3, 2), 2},
+//{NewDec(15, 1), 2},
 //{NewDec(5, 2), 2},
 //{NewDec(6, 11), 1},  // 0.545-> 1 even though 5 is first decimal and 1 not even
 //{NewDec(17, 11), 2}, // 1.545
@@ -161,8 +167,8 @@ func TestDEqualities(t *testing.T) {
 //}
 
 //for tcIndex, tc := range tests {
-//require.Equal(t, tc.res, tc.d1.RoundInt64(), "%v. tc #%d", tc.d1, tcIndex)
-//require.Equal(t, tc.res*-1, tc.d1.Mul(NewDec(-1)).RoundInt64(), "%v. tc #%d", tc.d1.Mul(NewDec(-1)), tcIndex)
+//require.Equal(t, tc.res, tc.d1.RoundInt64(), "%v. tc %d", tc.d1, tcIndex)
+//require.Equal(t, tc.res*-1, tc.d1.Mul(NewDec(-1, 0)).RoundInt64(), "%v. tc %d", tc.d1.Mul(NewDec(-1, 0)), tcIndex)
 //}
 //}
 
@@ -185,9 +191,9 @@ func TestDEqualities(t *testing.T) {
 //}
 
 //for tcIndex, tc := range tests {
-//require.Equal(t, tc.res, tc.d.Round(tc.precFactor), "%v", tc.d, "incorrect rounding, tc #%d", tcIndex)
-//negR1, negRes := tc.d.Mul(NewDec(-1)), tc.res.Mul(NewDec(-1))
-//require.Equal(t, negRes, negR1.Round(tc.precFactor), "%v", negR1, "incorrect rounding (negative case), tc #%d", tcIndex)
+//require.Equal(t, tc.res, tc.d.Round(tc.precFactor), "%v", tc.d, "incorrect rounding, tc %d", tcIndex)
+//negR1, negRes := tc.d.Mul(NewDec(-1, 0)), tc.res.Mul(NewDec(-1, 0))
+//require.Equal(t, negRes, negR1.Round(tc.precFactor), "%v", negR1, "incorrect rounding (negative case), tc %d", tcIndex)
 //}
 //}
 
@@ -204,7 +210,7 @@ func TestDEqualities(t *testing.T) {
 //{NewDec(1000, 3), 12, "000000000333"},
 //}
 //for tcIndex, tc := range tests {
-//require.Equal(t, tc.res, tc.dec.ToLeftPadded(tc.digits), "incorrect left padding, tc #%d", tcIndex)
+//require.Equal(t, tc.res, tc.dec.ToLeftPadded(tc.digits), "incorrect left padding, tc %d", tcIndex)
 //}
 //}
 
@@ -281,20 +287,20 @@ func TestDEqualities(t *testing.T) {
 //d1s, d2s []Dec
 //eq       bool
 //}{
-//{[]Dec{NewDec(0)}, []Dec{NewDec(0)}, true},
-//{[]Dec{NewDec(0)}, []Dec{NewDec(1)}, false},
-//{[]Dec{NewDec(0)}, []Dec{}, false},
-//{[]Dec{NewDec(0), NewDec(1)}, []Dec{NewDec(0), NewDec(1)}, true},
-//{[]Dec{NewDec(1), NewDec(0)}, []Dec{NewDec(1), NewDec(0)}, true},
-//{[]Dec{NewDec(1), NewDec(0)}, []Dec{NewDec(0), NewDec(1)}, false},
-//{[]Dec{NewDec(1), NewDec(0)}, []Dec{NewDec(1)}, false},
-//{[]Dec{NewDec(1), NewDec(2)}, []Dec{NewDec(2), NewDec(4)}, false},
-//{[]Dec{NewDec(3), NewDec(18)}, []Dec{NewDec(1), NewDec(6)}, false},
+//{[]Dec{NewDec(0, 0)}, []Dec{NewDec(0, 0)}, true},
+//{[]Dec{NewDec(0, 0)}, []Dec{NewDec(1, 0)}, false},
+//{[]Dec{NewDec(0, 0)}, []Dec{}, false},
+//{[]Dec{NewDec(0, 0), NewDec(1, 0)}, []Dec{NewDec(0, 0), NewDec(1, 0)}, true},
+//{[]Dec{NewDec(1, 0), NewDec(0, 0)}, []Dec{NewDec(1, 0), NewDec(0, 0)}, true},
+//{[]Dec{NewDec(1, 0), NewDec(0, 0)}, []Dec{NewDec(0, 0), NewDec(1, 0)}, false},
+//{[]Dec{NewDec(1, 0), NewDec(0, 0)}, []Dec{NewDec(1, 0)}, false},
+//{[]Dec{NewDec(1, 0), NewDec(2, 0)}, []Dec{NewDec(2, 0), NewDec(4, 0)}, false},
+//{[]Dec{NewDec(3, 0), NewDec(18)}, []Dec{NewDec(1, 0), NewDec(6)}, false},
 //}
 
 //for tcIndex, tc := range tests {
-//require.Equal(t, tc.eq, DecsEqual(tc.d1s, tc.d2s), "equality of decional arrays is incorrect, tc #%d", tcIndex)
-//require.Equal(t, tc.eq, DecsEqual(tc.d2s, tc.d1s), "equality of decional arrays is incorrect (converse), tc #%d", tcIndex)
+//require.Equal(t, tc.eq, DecsEqual(tc.d1s, tc.d2s), "equality of decional arrays is incorrect, tc %d", tcIndex)
+//require.Equal(t, tc.eq, DecsEqual(tc.d2s, tc.d1s), "equality of decional arrays is incorrect (converse), tc %d", tcIndex)
 //}
 
 //}

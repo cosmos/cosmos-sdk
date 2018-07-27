@@ -37,7 +37,6 @@ BREAKING CHANGES
 
 FEATURES
 * [baseapp] NewBaseApp now takes option functions as parameters
-* [x/gov] Initial governance parameters can now be set in the genesis file
 
 IMPROVEMENTS
 * Updated docs folder to accommodate cosmos.network docs project

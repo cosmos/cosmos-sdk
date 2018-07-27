@@ -24,8 +24,7 @@ func TestNewDecFromStr(t *testing.T) {
 		{"0.11111", true, NewDec(1111, 5)},
 		{"314460551102969.3144278234343371835", true, NewDec(3141203149163817869, 0)},
 		{"314460551102969314427823434337.1835718092488231350",
-			true, NewDecFromBigInt(largeBigInt, big.NewInt(4))},
-		{"314460551102969.3144", false, NewDec(31412031491638178693144, 4)},
+			true, NewDecFromBigInt(largeBigInt, 4)},
 		{"314460551102969314427823434337.1835",
 			false, NewDecFromBigInt(largeBigInt, 4)},
 		{".", true, Dec{}},
@@ -37,21 +36,21 @@ func TestNewDecFromStr(t *testing.T) {
 	}
 
 	for tcIndex, tc := range tests {
-		res, err := NewDecFromDec(tc.decimalStr, 4)
+		res, err := NewDecFromStr(tc.decimalStr)
 		if tc.expErr {
-			require.NotNil(t, err, tc.decimalStr, "error expected, tc #%d", tcIndex)
+			require.NotNil(t, err, "error expected, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 		} else {
-			require.Nil(t, err, tc.decimalStr, "unexpected error, tc #%d", tcIndex)
-			require.True(t, res.Equal(tc.exp), tc.decimalStr, "equality was incorrect, tc #%d", tcIndex)
+			require.Nil(t, err, "unexpected error, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
+			require.True(t, res.Equal(tc.exp), "equality was incorrect, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 		}
 
 		// negative tc
-		res, err = NewDecFromDec("-"+tc.decimalStr, 4)
+		res, err = NewDecFromStr("-" + tc.decimalStr)
 		if tc.expErr {
-			require.NotNil(t, err, tc.decimalStr, "error expected (negative case), tc #%d", tcIndex)
+			require.NotNil(t, err, "error expected, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 		} else {
-			require.Nil(t, err, tc.decimalStr, "unexpected error (negative case), tc #%d", tcIndex)
-			require.True(t, res.Equal(tc.exp.Mul(NewDec(-1))), tc.decimalStr, "equality was incorrect (negative case), tc #%d", tcIndex)
+			require.Nil(t, err, "unexpected error, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
+			require.True(t, res.Equal(tc.exp), "equality was incorrect, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 		}
 	}
 }

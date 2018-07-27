@@ -146,7 +146,6 @@ func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
 
 // load application version
 func (app *BaseApp) LoadVersion(version int64, mainKey sdk.StoreKey) error {
-	app.enforceSeal()
 	err := app.cms.LoadVersion(version)
 	if err != nil {
 		return err
@@ -166,7 +165,6 @@ func (app *BaseApp) LastBlockHeight() int64 {
 
 // initializes the remaining logic from app.cms
 func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
-
 	// main store should exist.
 	// TODO: we don't actually need the main store here
 	main := app.cms.GetKVStore(mainKey)
@@ -175,6 +173,9 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 	}
 	// Needed for `gaiad export`, which inits from store but never calls initchain
 	app.setCheckState(abci.Header{})
+
+	app.Seal()
+
 	return nil
 }
 

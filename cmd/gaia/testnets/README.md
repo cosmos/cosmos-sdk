@@ -1,3 +1,11 @@
+# DEPRECATED
+
+The content of this file is moved to the `/docs` folder and is hosted on the 
+[website](https://cosmos.network/docs/getting-started/full-node.html#run-a-full-node).
+
+The rest of this folder is moved to the [testnets
+repo](https://github.com/cosmos/testnets).
+
 # Connect to the `gaia-7001` Testnet
 
 _**NOTE:**_ We are aware this documentation is a work in progress. We are actively
@@ -29,7 +37,7 @@ Next, let's install the testnet's version of the Cosmos SDK.
 mkdir -p $GOPATH/src/github.com/cosmos
 cd $GOPATH/src/github.com/cosmos
 git clone https://github.com/cosmos/cosmos-sdk
-cd cosmos-sdk && git checkout v0.22.0
+cd cosmos-sdk && git checkout v0.23.1
 make get_tools && make get_vendor_deps && make install
 ```
 
@@ -37,10 +45,10 @@ That will install the `gaiad` and `gaiacli` binaries. Verify that everything is 
 
 ```bash
 $ gaiad version
-0.22.0
+0.23.1
 
 $ gaiacli version
-0.22.0
+0.23.1
 ```
 
 ### Node Setup
@@ -97,7 +105,7 @@ Now it is time to upgrade the software:
 
 ```bash
 cd $GOPATH/src/github.com/cosmos/cosmos-sdk
-git fetch --all && git checkout v0.22.0
+git fetch --all && git checkout v0.23.1
 make update_tools && make get_vendor_deps && make install
 ```
 

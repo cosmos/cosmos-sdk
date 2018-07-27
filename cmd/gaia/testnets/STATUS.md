@@ -1,4 +1,6 @@
-# TESTNET STATUS
+# DEPRECATED
+
+See [testnets repo](https://github.com/cosmos/testnets).
 
 ## *July 17, 2018, 4:00 EST* - New Testnet Gaia-7001 
 

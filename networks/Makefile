@@ -40,7 +40,15 @@ disclaimer:
 extract-config: disclaimer
 	#Make sure you have AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY or your IAM roles set for AWS API access.
 	@if ! [ -f $(HOME)/.ssh/id_rsa.pub ]; then ssh-keygen ; fi
-	cd remote/ansible && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(CLUSTER_NAME)" -u centos -b -e TESTNET_NAME="$(TESTNET_NAME)" -e GENESISFILE="$(GENESISFILE)" -e CONFIGFILE="$(CONFIGFILE)" extract-config.yml
+	cd remote/ansible && \
+	ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \
+		-i inventory/ec2.py \
+		-l "tag_Environment_$(CLUSTER_NAME)" \
+		-b -u centos \
+		-e TESTNET_NAME="$(TESTNET_NAME)" \
+		-e GENESISFILE="$(GENESISFILE)" \
+		-e CONFIGFILE="$(CONFIGFILE)" \
+		extract-config.yml
 
 
 ########################################

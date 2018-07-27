@@ -75,11 +75,12 @@ func NewApp() *App {
 
 // CompleteSetup completes the application setup after the routes have been
 // registered.
-func (app *App) CompleteSetup(newKeys []*sdk.KVStoreKey) error {
+func (app *App) CompleteSetup(newKeys []*sdk.KVStoreKey, newTKeys []*sdk.TransientStoreKey) error {
 	newKeys = append(newKeys, app.KeyMain)
 	newKeys = append(newKeys, app.KeyAccount)
 
 	app.MountStoresIAVL(newKeys...)
+	app.MountStoresTransient(newTKeys...)
 	err := app.LoadLatestVersion(app.KeyMain)
 
 	return err

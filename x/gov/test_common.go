@@ -27,14 +27,17 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 	RegisterWire(mapp.Cdc)
 
 	keyGlobalParams := sdk.NewKVStoreKey("params")
+	tkeyGlobalParams := sdk.NewTransientStoreKey("params")
 	keyStake := sdk.NewKVStoreKey("stake")
 	keyGov := sdk.NewKVStoreKey("gov")
 
-	pk := params.NewKeeper(mapp.Cdc, keyGlobalParams)
+	pk := params.NewKeeper(mapp.Cdc, keyGlobalParams, tkeyGlobalParams, nil)
 	ck := bank.NewKeeper(mapp.AccountMapper)
 	sk := stake.NewKeeper(mapp.Cdc, keyStake, ck, mapp.RegisterCodespace(stake.DefaultCodespace))
-	keeper := NewKeeper(mapp.Cdc, keyGov, pk.Setter(), ck, sk, DefaultCodespace)
+	keeper := NewKeeper(mapp.Cdc, keyGov, pk, pk.SubStore("testgov"), ck, sk, DefaultCodespace)
 	mapp.Router().AddRoute("gov", NewHandler(keeper))
+
+	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyGov, keyGlobalParams}, []*sdk.TransientStoreKey{tkeyGlobalParams}))
 
 	mapp.SetEndBlocker(getEndBlocker(keeper))
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk))

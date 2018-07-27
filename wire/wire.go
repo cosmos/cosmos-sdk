@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	amino "github.com/tendermint/go-amino"
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/encoding/amino"
 )
 
 // amino codec to marshal/unmarshal
@@ -18,7 +18,7 @@ func NewCodec() *Codec {
 
 // Register the go-crypto to the codec
 func RegisterCrypto(cdc *Codec) {
-	crypto.RegisterAmino(cdc)
+	cryptoAmino.RegisterAmino(cdc)
 }
 
 // attempt to make some pretty json

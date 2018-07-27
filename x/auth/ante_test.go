@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,7 +33,7 @@ func newCoins() sdk.Coins {
 
 // generate a priv key and return it with its address
 func privAndAddr() (crypto.PrivKey, sdk.AccAddress) {
-	priv := crypto.GenPrivKeyEd25519()
+	priv := ed25519.GenPrivKey()
 	addr := sdk.AccAddress(priv.PubKey().Address())
 	return priv, addr
 }
@@ -47,21 +48,20 @@ func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx
 
 // run the tx through the anteHandler and ensure it fails with the given code
 func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, code sdk.CodeType) {
-	defer func() {
-		if r := recover(); r != nil {
-			switch r.(type) {
-			case sdk.ErrorOutOfGas:
-				require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas),
-					fmt.Sprintf("Expected ErrorOutOfGas, got %v", r))
-			default:
-				panic(r)
-			}
-		}
-	}()
-	_, result, abort := anteHandler(ctx, tx)
+	newCtx, result, abort := anteHandler(ctx, tx)
 	require.True(t, abort)
 	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), result.Code,
 		fmt.Sprintf("Expected %v, got %v", sdk.ToABCICode(sdk.CodespaceRoot, code), result))
+
+	if code == sdk.CodeOutOfGas {
+		stdTx, ok := tx.(StdTx)
+		require.True(t, ok, "tx must be in form auth.StdTx")
+		// GasWanted set correctly
+		require.Equal(t, stdTx.Fee.Gas, result.GasWanted, "Gas wanted not set correctly")
+		require.True(t, result.GasUsed > result.GasWanted, "GasUsed not greated than GasWanted")
+		// Check that context is set correctly
+		require.Equal(t, result.GasUsed, newCtx.GasMeter().GasConsumed(), "Context not updated correctly")
+	}
 }
 
 func newTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee) sdk.Tx {

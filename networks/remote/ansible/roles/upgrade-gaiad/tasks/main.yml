@@ -1,0 +1,9 @@
+---
+
+- name: Copy binary
+  copy:
+    src: "{{BINARY}}"
+    dest: /usr/bin
+    mode: 0755
+  notify: restart gaiad
+

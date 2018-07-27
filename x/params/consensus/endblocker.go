@@ -13,7 +13,7 @@ const (
 	DefaultParamSpace = "ConsensusParams"
 )
 
-// Key generators for parameter access
+// nolint - Key generators for parameter access
 func BlockMaxBytesKey() params.Key      { return params.NewKey("BlockSize", "MaxBytes") }
 func BlockMaxTxsKey() params.Key        { return params.NewKey("BlockSize", "MaxTxs") }
 func BlockMaxGasKey() params.Key        { return params.NewKey("BlockSize", "MaxGas") }

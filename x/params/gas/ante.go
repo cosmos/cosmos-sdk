@@ -10,7 +10,7 @@ const (
 	DefaultParamSpace = "GasConfig"
 )
 
-// Key generators for parameter store
+// nolint - Key generators for parameter store
 func KVStoreKey() params.Key        { return params.NewKey("KVStore") }
 func TransientStoreKey() params.Key { return params.NewKey("TransientStore") }
 

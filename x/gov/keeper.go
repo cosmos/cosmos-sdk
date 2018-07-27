@@ -12,10 +12,12 @@ const (
 	DefaultParamSpace = "gov"
 )
 
+// nolint - Paramstore key constructor
 func ParamStoreKeyDepositProcedure() params.Key  { return params.NewKey("depositprocedure") }
 func ParamStoreKeyVotingProcedure() params.Key   { return params.NewKey("votingprocedure") }
 func ParamStoreKeyTallyingProcedure() params.Key { return params.NewKey("tallyingprocedure") }
 
+// Cached parameter store keys
 var (
 	paramStoreKeyDepositProcedure  = ParamStoreKeyDepositProcedure()
 	paramStoreKeyVotingProcedure   = ParamStoreKeyVotingProcedure()

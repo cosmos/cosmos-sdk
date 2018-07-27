@@ -8,29 +8,32 @@ import (
 	"testing"
 )
 
-// NOTE: never use new(Rat) or else
-// we will panic unmarshalling into the
-// nil embedded big.Rat
-type Rat struct {
-	*big.Rat `json:"rat"`
+// NOTE: never use new(Decimal) or else we will panic unmarshalling into the
+// nil embedded big.Int
+type Decimal struct {
+	*big.Int `json:Int""`
+}
+
+// number of decimal places
+const Precision = 10
+
+func precisionInt() big.Int {
+	p := big.NewInt(1)
+	return *p.Exp(big.NewInt(1), big.NewInt(precision), nil)
 }
 
 // nolint - common values
-func ZeroRat() Rat { return Rat{big.NewRat(0, 1)} }
-func OneRat() Rat  { return Rat{big.NewRat(1, 1)} }
+func ZeroDec() Decimal { return Decimal{big.NewInt(0)} }
+func OneDec() Decimal  { return Decimal{&precisionInt} }
 
-// New - create a new Rat from integers
-func NewRat(Numerator int64, Denominator ...int64) Rat {
-	switch len(Denominator) {
-	case 0:
-		return Rat{big.NewRat(Numerator, 1)}
-	case 1:
-		return Rat{big.NewRat(Numerator, Denominator[0])}
-	default:
-		panic("improper use of New, can only have one denominator")
+// create a new Decimal from integer assuming whole numbers
+func NewDecimalFromInt(i int64) Decimal {
+	return Decimal{
+		new(big.Int).Mul(big.NewInt(i), precisionInt()),
 	}
 }
 
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxxx XXX
 func getNumeratorDenominator(str []string, prec int) (numerator string, denom int64, err Error) {
 	switch len(str) {
 	case 1:
@@ -55,14 +58,15 @@ func getNumeratorDenominator(str []string, prec int) (numerator string, denom in
 	}
 }
 
-// create a rational from decimal string or integer string
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxxx XXX
+// create a decimal from decimal string or integer string
 // precision is the number of values after the decimal point which should be read
-func NewRatFromDecimal(decimalStr string, prec int) (f Rat, err Error) {
-	// first extract any negative symbol
+func NewDecimalFromStr(str string) (f Decimal, err Error) {
 	if len(decimalStr) == 0 {
 		return f, ErrUnknownRequest("decimal string is empty")
 	}
 
+	// first extract any negative symbol
 	neg := false
 	if string(decimalStr[0]) == "-" {
 		neg = true
@@ -70,6 +74,17 @@ func NewRatFromDecimal(decimalStr string, prec int) (f Rat, err Error) {
 	}
 
 	str := strings.Split(decimalStr, ".")
+	lenDecimals := 0
+	combinedStr := str[0]
+	if len(str) == 2 {
+		lenDecimals = len(str[1])
+	} else if len(str) > 2 {
+		return f, ErrUnknownRequest("too many periods to be a decimal string")
+	}
+
+	if lenDecimals > precision {
+		return f, ErrUnknownRequest("too much precision in decimal")
+	}
 
 	numStr, denom, err := getNumeratorDenominator(str, prec)
 	if err != nil {
@@ -88,7 +103,7 @@ func NewRatFromDecimal(decimalStr string, prec int) (f Rat, err Error) {
 			numBig.Neg(numBig)
 		}
 
-		return NewRatFromBigInt(numBig, big.NewInt(denom)), nil
+		return NewDecFromBigInt(numBig, big.NewInt(denom)), nil
 	} else if errConv != nil {
 		return f, ErrUnknownRequest("not a decimal string")
 	}
@@ -97,48 +112,65 @@ func NewRatFromDecimal(decimalStr string, prec int) (f Rat, err Error) {
 		num *= -1
 	}
 
-	return NewRat(int64(num), denom), nil
+	return NewInt(int64(num), denom), nil
 }
 
-// NewRatFromBigInt constructs Rat from big.Int
-func NewRatFromBigInt(num *big.Int, denom ...*big.Int) Rat {
+// NewDecFromBigInt constructs Decimal from big.Int
+func NewDecFromBigInt(num *big.Int, denom ...*big.Int) Decimal {
 	switch len(denom) {
 	case 0:
-		return Rat{new(big.Rat).SetInt(num)}
+		return Decimal{new(big.Int).SetInt(num)}
 	case 1:
-		return Rat{new(big.Rat).SetFrac(num, denom[0])}
+		return Decimal{new(big.Int).SetFrac(num, denom[0])}
 	default:
-		panic("improper use of NewRatFromBigInt, can only have one denominator")
+		panic("improper use of NewDecFromBigInt, can only have one denominator")
 	}
 }
 
-// NewRatFromInt constructs Rat from Int
-func NewRatFromInt(num Int, denom ...Int) Rat {
+// NewDecFromInt constructs Decimal from Int
+func NewDecFromInt(num Int, denom ...Int) Decimal {
 	switch len(denom) {
 	case 0:
-		return Rat{new(big.Rat).SetInt(num.BigInt())}
+		return Decimal{new(big.Int).SetInt(num.BigInt())}
 	case 1:
-		return Rat{new(big.Rat).SetFrac(num.BigInt(), denom[0].BigInt())}
+		return Decimal{new(big.Int).SetFrac(num.BigInt(), denom[0].BigInt())}
 	default:
-		panic("improper use of NewRatFromBigInt, can only have one denominator")
+		panic("improper use of NewDecFromBigInt, can only have one denominator")
 	}
 }
 
 //nolint
-func (r Rat) Num() Int            { return Int{r.Rat.Num()} }   // Num - return the numerator
-func (r Rat) Denom() Int          { return Int{r.Rat.Denom()} } // Denom  - return the denominator
-func (r Rat) IsZero() bool        { return r.Num().IsZero() }   // IsZero - Is the Rat equal to zero
-func (r Rat) Equal(r2 Rat) bool   { return (r.Rat).Cmp(r2.Rat) == 0 }
-func (r Rat) GT(r2 Rat) bool      { return (r.Rat).Cmp(r2.Rat) == 1 }             // greater than
-func (r Rat) GTE(r2 Rat) bool     { return !r.LT(r2) }                            // greater than or equal
-func (r Rat) LT(r2 Rat) bool      { return (r.Rat).Cmp(r2.Rat) == -1 }            // less than
-func (r Rat) LTE(r2 Rat) bool     { return !r.GT(r2) }                            // less than or equal
-func (r Rat) Mul(r2 Rat) Rat      { return Rat{new(big.Rat).Mul(r.Rat, r2.Rat)} } // Mul - multiplication
-func (r Rat) Quo(r2 Rat) Rat      { return Rat{new(big.Rat).Quo(r.Rat, r2.Rat)} } // Quo - quotient
-func (r Rat) Add(r2 Rat) Rat      { return Rat{new(big.Rat).Add(r.Rat, r2.Rat)} } // Add - addition
-func (r Rat) Sub(r2 Rat) Rat      { return Rat{new(big.Rat).Sub(r.Rat, r2.Rat)} } // Sub - subtraction
-func (r Rat) String() string      { return r.Rat.String() }
-func (r Rat) FloatString() string { return r.Rat.FloatString(10) } // a human-friendly string format. The last digit is rounded to nearest, with halves rounded away from zero.
+func (d Decimal) IsZero() bool       { return (d.Int).Sign() == 0 } // Is equal to zero
+func (d Decimal) Equal(d2.Int) bool  { return (d.Int).Cmp(d2.Int) == 0 }
+func (d Decimal) GT(d2.Int) bool     { return (d.Int).Cmp(d2.Int) == 1 }                 // greater than
+func (d Decimal) GTE(d2.Int) bool    { return !d.LT(d2) }                                // greater than or equal
+func (d Decimal) LT(d2.Int) bool     { return (d.Int).Cmp(d2.Int) == -1 }                // less than
+func (d Decimal) LTE(d2.Int) bool    { return !d.GT(d2) }                                // less than or equal
+func (d Decimal) Add(d2.Int) Decimal { return Decimal{new(big.Int).Add(d.Int, d2.Int)} } // addition
+func (d Decimal) Sub(d2.Int) Decimal { return Decimal{new(big.Int).Sub(d.Int, d2.Int)} } // subtraction
+
+// multiplication
+func (d Decimal) Mul(d2.Int) Decimal {
+	mul := new(big.Int).Mul(d.Int, d2.Int)
+	chopped := BankerRoundChop(mul, Precision)
+	return Decimal{chopped}
+}
+
+// quotient
+func (d Decimal) Quo(d2.Int) Decimal {
+	mul := new(big.Int).Mul(new(big.Int).Mul( // multiple precision twice
+		d.Int, *precisionInt), *precisionInt)
+
+	quo := Decimal{new(big.Int).Quo(mul, d2.Int)}
+	chopped := BankerRoundChop(quo, Precision)
+	return Decimal{chopped}
+}
+
+func (d Decimal) String() string {
+	str := d.Int.String()
+	placement := len(str) - precision
+	return str[:placement] + "." + str[placement:]
+}
 
 var (
 	zero  = big.NewInt(0)
@@ -149,93 +181,105 @@ var (
 	ten   = big.NewInt(10)
 )
 
-// evaluate the rational using bankers rounding
-func (r Rat) EvaluateBig() *big.Int {
+//     ____
+//  __|    |__   "chop 'em
+//       ` \     round!"
+// ___||  ~  _     -bankers
+// |         |      __
+// |       | |   __|__|__
+// |_____:  /   | $$$    |
+//              |________|
 
-	num := r.Rat.Num()
-	denom := r.Rat.Denom()
+// chop of n digits, and banker round the digits being chopped off
+// Examples:
+//   BankerRoundChop(1005, 1) = 100
+//   BankerRoundChop(1015, 1) = 102
+//   BankerRoundChop(1500, 3) = 2
+func BankerRoundChop(d *big.Int, n int64) *big.Int {
 
-	d, rem := new(big.Int), new(big.Int)
-	d.QuoRem(num, denom, rem)
-	if rem.Cmp(zero) == 0 { // is the remainder zero
-		return d
+	// get the trucated quotient and remainder
+	quo, rem, prec := big.NewInt(0), big.NewInt(0), *precisionInt()
+	quo, rem := quo.Int.QuoRem(d, prec, rem)
+
+	if rem.Sign == 0 { // remainder is zero
+		return Decimal{quo}
 	}
 
-	// evaluate the remainder using bankers rounding
-	tenNum := new(big.Int).Mul(num, ten)
-	tenD := new(big.Int).Mul(d, ten)
-	remainderDigit := new(big.Int).Sub(new(big.Int).Quo(tenNum, denom), tenD) // get the first remainder digit
-	isFinalDigit := (new(big.Int).Rem(tenNum, denom).Cmp(zero) == 0)          // is this the final digit in the remainder?
+	fiveLine := big.NewInt(5 * len(rem.String())) // ex. 1234 -> 5000
 
-	switch {
-	case isFinalDigit && (remainderDigit.Cmp(five) == 0 || remainderDigit.Cmp(nFive) == 0):
-		dRem2 := new(big.Int).Rem(d, two)
-		return new(big.Int).Add(d, dRem2) // always rounds to the even number
-	case remainderDigit.Cmp(five) != -1: //remainderDigit >= 5:
-		d.Add(d, one)
-	case remainderDigit.Cmp(nFive) != 1: //remainderDigit <= -5:
-		d.Sub(d, one)
+	switch rem.Cmp(fiveLine) {
+	case -1:
+		return Decimal{quo}
+	case 1:
+		return Decimal{quo.Add(big.NewInt(1))}
+
+	default: // bankers rounding must take place
+		str := quo.String()
+		finalDig, err := strconv.Atoi(string(str[len(str)]))
+		if err != nil {
+			panic(err)
+		}
+
+		// always round to an even number
+		if finalDig == 0 || finalDig == 2 || finalDig == 4 ||
+			finalDig == 6 || finalDig == 8 {
+			return Decimal{quo}
+		}
+		return Decimal{quo.Add(big.NewInt(1))}
 	}
-	return d
 }
 
-// RoundInt64 rounds the rational using bankers rounding
-func (r Rat) RoundInt64() int64 {
-	return r.EvaluateBig().Int64()
+// RoundInt64 rounds the decimal using bankers rounding
+func (d Decimal) RoundInt64() int64 {
+	return d.BankerRoundChop(precision).Int64()
 }
 
-// RoundInt round the rational using bankers rounding
-func (r Rat) RoundInt() Int {
-	return NewIntFromBigInt(r.EvaluateBig())
-}
-
-// round Rat with the provided precisionFactor
-func (r Rat) Round(precisionFactor int64) Rat {
-	rTen := Rat{new(big.Rat).Mul(r.Rat, big.NewRat(precisionFactor, 1))}
-	return Rat{big.NewRat(rTen.RoundInt64(), precisionFactor)}
+// RoundInt round the decimal using bankers rounding
+func (d Decimal) RoundInt() Int {
+	return d.BankerRoundChop(precision).Int
 }
 
 // TODO panic if negative or if totalDigits < len(initStr)???
 // evaluate as an integer and return left padded string
-func (r Rat) ToLeftPadded(totalDigits int8) string {
-	intStr := r.EvaluateBig().String()
+func (d Decimal) ToLeftPadded(totalDigits int8) string {
+	intStr := d.Int.String()
 	fcode := `%0` + strconv.Itoa(int(totalDigits)) + `s`
 	return fmt.Sprintf(fcode, intStr)
 }
 
 //___________________________________________________________________________________
 
-//Wraps r.MarshalText().
-func (r Rat) MarshalAmino() (string, error) {
-	if r.Rat == nil {
-		r.Rat = new(big.Rat)
+// wraps d.MarshalText()
+func (d Decimal) MarshalAmino() (string, error) {
+	if d.Int == nil {
+		d.Int = new(big.Int)
 	}
-	bz, err := r.Rat.MarshalText()
+	bz, err := d.Int.MarshalText()
 	return string(bz), err
 }
 
-// Requires a valid JSON string - strings quotes and calls UnmarshalText
-func (r *Rat) UnmarshalAmino(text string) (err error) {
-	tempRat := big.NewRat(0, 1)
-	err = tempRat.UnmarshalText([]byte(text))
+// requires a valid JSON string - strings quotes and calls UnmarshalText
+func (d *Decimal) UnmarshalAmino(text string) (err error) {
+	tempInt := big.NewInt(0)
+	err = tempInt.UnmarshalText([]byte(text))
 	if err != nil {
 		return err
 	}
-	r.Rat = tempRat
+	d.Int = tempInt
 	return nil
 }
 
 //___________________________________________________________________________________
 // helpers
 
-// test if two rat arrays are equal
-func RatsEqual(r1s, r2s []Rat) bool {
-	if len(r1s) != len(r2s) {
+// test if two decimal arrays are equal
+func DecsEqual(d1s, d2s []Decimal) bool {
+	if len(d1s) != len(d2s) {
 		return false
 	}
 
-	for i, r1 := range r1s {
-		if !r1.Equal(r2s[i]) {
+	for i, d1 := range d1s {
+		if !d1.Equal(d2s[i]) {
 			return false
 		}
 	}
@@ -243,14 +287,14 @@ func RatsEqual(r1s, r2s []Rat) bool {
 }
 
 // intended to be used with require/assert:  require.True(RatEq(...))
-func RatEq(t *testing.T, exp, got Rat) (*testing.T, bool, string, Rat, Rat) {
+func DecEq(t *testing.T, exp, got Decimal) (*testing.T, bool, string, Decimal, Decimal) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
 }
 
-// minimum rational between two
-func MinRat(r1, r2 Rat) Rat {
-	if r1.LT(r2) {
-		return r1
+// minimum decimal between two
+func MinDec(d1, d2.Int) Decimal {
+	if d1.LT(d2) {
+		return d1
 	}
-	return r2
+	return d2
 }

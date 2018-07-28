@@ -59,7 +59,7 @@ func SimulateFromSeed(
 	res := app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, keys, accs)})
 	validators := make(map[string]mockValidator)
 	for _, validator := range res.Validators {
-		validators[string(validator.Address)] = mockValidator{validator, 0}
+		validators[string(validator.Address)] = mockValidator{validator, GetMemberOfInitialState(r, initialLivenessWeightings)}
 	}
 
 	for i := 0; i < len(setups); i++ {
@@ -115,7 +115,7 @@ func SimulateFromSeed(
 		}
 
 		// Update the validator set
-		validators = updateValidators(t, validators, res.ValidatorUpdates)
+		validators = updateValidators(t, r, validators, res.ValidatorUpdates)
 	}
 
 	fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds): %d\n", header.Height, header.Time)
@@ -129,7 +129,6 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]m
 	signingValidators := make([]abci.SigningValidator, len(validators))
 	i := 0
 	for _, mVal := range validators {
-		// TODO: Change this to be based off of a markov chain.
 		mVal.livenessState = livenessTransitions.NextState(r, mVal.livenessState)
 		signed := true
 
@@ -178,7 +177,7 @@ func AssertAllInvariants(t *testing.T, app *baseapp.BaseApp, tests []Invariant, 
 }
 
 // updateValidators mimicks Tendermint's update logic
-func updateValidators(t *testing.T, current map[string]mockValidator, updates []abci.Validator) map[string]mockValidator {
+func updateValidators(t *testing.T, r *rand.Rand, current map[string]mockValidator, updates []abci.Validator) map[string]mockValidator {
 	for _, update := range updates {
 		switch {
 		case update.Power == 0:
@@ -189,9 +188,8 @@ func updateValidators(t *testing.T, current map[string]mockValidator, updates []
 			if mVal, ok := current[string(update.PubKey.Data)]; ok {
 				mVal.val = update
 			} else {
-				// Set this new validator as live
-				// TODO: Consider making new validators use the liveness initial state
-				current[string(update.PubKey.Data)] = mockValidator{update, 0}
+				// Set this new validator
+				current[string(update.PubKey.Data)] = mockValidator{update, GetMemberOfInitialState(r, initialLivenessWeightings)}
 			}
 		}
 	}

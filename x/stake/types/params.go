@@ -12,10 +12,10 @@ const defaultUnbondingTime int64 = 60 * 60 * 24 * 3
 
 // Params defines the high level settings for staking
 type Params struct {
-	InflationRateChange sdk.Rat `json:"inflation_rate_change"` // maximum annual change in inflation rate
-	InflationMax        sdk.Rat `json:"inflation_max"`         // maximum inflation rate
-	InflationMin        sdk.Rat `json:"inflation_min"`         // minimum inflation rate
-	GoalBonded          sdk.Rat `json:"goal_bonded"`           // Goal of percent bonded atoms
+	InflationDeceChange sdk.Dec `json:"inflation_rate_change"` // maximum annual change in inflation rate
+	InflationMax        sdk.Dec `json:"inflation_max"`         // maximum inflation rate
+	InflationMin        sdk.Dec `json:"inflation_min"`         // minimum inflation rate
+	GoalBonded          sdk.Dec `json:"goal_bonded"`           // Goal of percent bonded atoms
 
 	UnbondingTime int64 `json:"unbonding_time"`
 
@@ -33,10 +33,10 @@ func (p Params) Equal(p2 Params) bool {
 // DefaultParams returns a default set of parameters.
 func DefaultParams() Params {
 	return Params{
-		InflationRateChange: sdk.NewRat(13, 100),
-		InflationMax:        sdk.NewRat(20, 100),
-		InflationMin:        sdk.NewRat(7, 100),
-		GoalBonded:          sdk.NewRat(67, 100),
+		InflationDeceChange: sdk.NewDec(13, 100),
+		InflationMax:        sdk.NewDec(20, 100),
+		InflationMin:        sdk.NewDec(7, 100),
+		GoalBonded:          sdk.NewDec(67, 100),
 		UnbondingTime:       defaultUnbondingTime,
 		MaxValidators:       100,
 		BondDenom:           "steak",

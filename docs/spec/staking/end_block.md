@@ -42,16 +42,16 @@ processProvisions():
         
         setPool(pool)
 
-nextInflation(hrsPerYr rational.Rat):
+nextInflation(hrsPerYr rational.Dec):
     if pool.TotalSupply > 0 
         bondedRatio = pool.BondedPool / pool.TotalSupply
     else 
         bondedRation = 0
    
-    inflationRateChangePerYear = (1 - bondedRatio / params.GoalBonded) * params.InflationRateChange
-    inflationRateChange = inflationRateChangePerYear / hrsPerYr
+    inflationDeceChangePerYear = (1 - bondedRatio / params.GoalBonded) * params.InflationDeceChange
+    inflationDeceChange = inflationDeceChangePerYear / hrsPerYr
 
-    inflation = pool.Inflation + inflationRateChange
+    inflation = pool.Inflation + inflationDeceChange
     if inflation > params.InflationMax then inflation = params.InflationMax
 	
     if inflation < params.InflationMin then inflation = params.InflationMin

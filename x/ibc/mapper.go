@@ -14,7 +14,7 @@ type Mapper struct {
 	codespace sdk.CodespaceType
 }
 
-// XXX: The Mapper should not take a CoinKeeper. Rather have the CoinKeeper
+// XXX: The Mapper should not take a CoinKeeper. Decher have the CoinKeeper
 // take an Mapper.
 func NewMapper(cdc *wire.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) Mapper {
 	// XXX: How are these codecs supposed to work?

@@ -9,6 +9,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// create a decimal from a decimal string (ex. "1234.5678")
+func mustNewDecFromStr(t *testing.T, str string) (d Dec) {
+	d, err := NewDecFromStr(str)
+	require.NoError(t, err)
+	return d
+}
+
+//_______________________________________
+
 func TestPrecisionMultiplier(t *testing.T) {
 	res := precisionMultiplier(5)
 	exp := big.NewInt(100000)
@@ -64,7 +73,7 @@ func TestNewDecFromStr(t *testing.T) {
 	}
 }
 
-func TestDEqualities(t *testing.T) {
+func TestEqualities(t *testing.T) {
 	tests := []struct {
 		d1, d2     Dec
 		gt, lt, eq bool
@@ -123,7 +132,7 @@ func TestDecsEqual(t *testing.T) {
 	}
 }
 
-func TestDArithmetic(t *testing.T) {
+func TestArithmetic(t *testing.T) {
 	tests := []struct {
 		d1, d2                         Dec
 		expMul, expDiv, expAdd, expSub Dec
@@ -171,16 +180,16 @@ func TestBankerRoundChop(t *testing.T) {
 		d1  Dec
 		exp int64
 	}{
-		{MustNewDecFromStr("0.25"), 0},
-		{MustNewDecFromStr("0"), 0},
-		{MustNewDecFromStr("1"), 1},
-		{MustNewDecFromStr("0.75"), 1},
-		{MustNewDecFromStr("0.5"), 0},
-		{MustNewDecFromStr("7.5"), 8},
-		{MustNewDecFromStr("1.5"), 2},
-		{MustNewDecFromStr("2.5"), 2},
-		{MustNewDecFromStr("0.545"), 1}, // 0.545-> 1 even though 5 is first decimal and 1 not even
-		{MustNewDecFromStr("1.545"), 2},
+		{mustNewDecFromStr(t, "0.25"), 0},
+		{mustNewDecFromStr(t, "0"), 0},
+		{mustNewDecFromStr(t, "1"), 1},
+		{mustNewDecFromStr(t, "0.75"), 1},
+		{mustNewDecFromStr(t, "0.5"), 0},
+		{mustNewDecFromStr(t, "7.5"), 8},
+		{mustNewDecFromStr(t, "1.5"), 2},
+		{mustNewDecFromStr(t, "2.5"), 2},
+		{mustNewDecFromStr(t, "0.545"), 1}, // 0.545-> 1 even though 5 is first decimal and 1 not even
+		{mustNewDecFromStr(t, "1.545"), 2},
 	}
 
 	for tcIndex, tc := range tests {
@@ -192,17 +201,17 @@ func TestBankerRoundChop(t *testing.T) {
 	}
 }
 
-func TestDToLeftPadded(t *testing.T) {
+func TestToLeftPadded(t *testing.T) {
 	tests := []struct {
 		dec    Dec
 		digits int8
 		exp    string
 	}{
-		{MustNewDecFromStr("33.3"), 8, "00000033"},
-		{MustNewDecFromStr("50"), 8, "00000050"},
-		{MustNewDecFromStr("333"), 8, "00000333"},
-		{MustNewDecFromStr("333"), 12, "000000000333"},
-		{MustNewDecFromStr("0.3333"), 8, "00000000"},
+		{mustNewDecFromStr(t, "33.3"), 8, "00000033"},
+		{mustNewDecFromStr(t, "50"), 8, "00000050"},
+		{mustNewDecFromStr(t, "333"), 8, "00000333"},
+		{mustNewDecFromStr(t, "333"), 12, "000000000333"},
+		{mustNewDecFromStr(t, "0.3333"), 8, "00000000"},
 	}
 	for tcIndex, tc := range tests {
 		res := tc.dec.ToLeftPadded(tc.digits)
@@ -220,8 +229,8 @@ func TestZeroDeserializationJSON(t *testing.T) {
 	require.NotNil(t, err)
 }
 
-func TestDSerializationText(t *testing.T) {
-	d := MustNewDecFromStr("0.333")
+func TestSerializationText(t *testing.T) {
+	d := mustNewDecFromStr(t, "0.333")
 
 	bz, err := d.MarshalText()
 	require.NoError(t, err)
@@ -233,8 +242,8 @@ func TestDSerializationText(t *testing.T) {
 	require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
 }
 
-func TestDSerializationGoWireJSON(t *testing.T) {
-	d := MustNewDecFromStr("0.333")
+func TestSerializationGoWireJSON(t *testing.T) {
+	d := mustNewDecFromStr(t, "0.333")
 
 	bz, err := dcdc.MarshalJSON(d)
 	require.NoError(t, err)
@@ -245,8 +254,8 @@ func TestDSerializationGoWireJSON(t *testing.T) {
 	require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
 }
 
-func TestDSerializationGoWireBinary(t *testing.T) {
-	d := MustNewDecFromStr("0.333")
+func TestSerializationGoWireBinary(t *testing.T) {
+	d := mustNewDecFromStr(t, "0.333")
 
 	bz, err := dcdc.MarshalBinary(d)
 	require.NoError(t, err)
@@ -264,7 +273,7 @@ type testDEmbedStruct struct {
 }
 
 // TODO make work for UnmarshalJSON
-func TestDEmbeddedStructSerializationGoWire(t *testing.T) {
+func TestEmbeddedStructSerializationGoWire(t *testing.T) {
 	obj := testDEmbedStruct{"foo", 10, NewDec(1, 3)}
 	bz, err := cdc.MarshalBinary(obj)
 	require.Nil(t, err)
@@ -278,7 +287,7 @@ func TestDEmbeddedStructSerializationGoWire(t *testing.T) {
 	require.True(t, obj.Field3.Equal(obj2.Field3), "original: %v, unmarshalled: %v", obj, obj2)
 }
 
-func TestDStringOverflow(t *testing.T) {
+func TestStringOverflow(t *testing.T) {
 	// two random 64 bit primes
 	dec1, err := NewDecFromStr("51643150036226787134389711697696177267")
 	require.NoError(t, err)

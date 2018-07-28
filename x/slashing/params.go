@@ -28,9 +28,9 @@ func (k Keeper) SignedBlocksWindow(ctx sdk.Context) int64 {
 
 // Downtime slashing thershold - default 50%
 func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
-	minSignedPerWindow := k.params.GetRatWithDefault(ctx, MinSignedPerWindowKey, defaultMinSignedPerWindow)
+	minSignedPerWindow := k.params.GetDecWithDefault(ctx, MinSignedPerWindowKey, defaultMinSignedPerWindow)
 	signedBlocksWindow := k.SignedBlocksWindow(ctx)
-	return sdk.NewRat(signedBlocksWindow).Mul(minSignedPerWindow).RoundInt64()
+	return sdk.NewDec(signedBlocksWindow, 0).Mul(minSignedPerWindow).RoundInt64()
 }
 
 // Double-sign unbond duration
@@ -44,13 +44,13 @@ func (k Keeper) DowntimeUnbondDuration(ctx sdk.Context) int64 {
 }
 
 // SlashFractionDoubleSign - currently default 5%
-func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) sdk.Rat {
-	return k.params.GetRatWithDefault(ctx, SlashFractionDoubleSignKey, defaultSlashFractionDoubleSign)
+func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) sdk.Dec {
+	return k.params.GetDecWithDefault(ctx, SlashFractionDoubleSignKey, defaultSlashFractionDoubleSign)
 }
 
 // SlashFractionDowntime - currently default 1%
-func (k Keeper) SlashFractionDowntime(ctx sdk.Context) sdk.Rat {
-	return k.params.GetRatWithDefault(ctx, SlashFractionDowntimeKey, defaultSlashFractionDowntime)
+func (k Keeper) SlashFractionDowntime(ctx sdk.Context) sdk.Dec {
+	return k.params.GetDecWithDefault(ctx, SlashFractionDowntimeKey, defaultSlashFractionDowntime)
 }
 
 // declared as var because of keeper_test.go
@@ -70,9 +70,9 @@ var (
 	// TODO Temporarily set to 10 minutes for testnets
 	defaultDowntimeUnbondDuration int64 = 60 * 10
 
-	defaultMinSignedPerWindow = sdk.NewRat(1, 2)
+	defaultMinSignedPerWindow = sdk.NewDec(5, 1) // 0.5
 
-	defaultSlashFractionDoubleSign = sdk.NewRat(1).Quo(sdk.NewRat(20))
+	defaultSlashFractionDoubleSign = sdk.NewDec(1, 0).Quo(sdk.NewDec(20, 0))
 
-	defaultSlashFractionDowntime = sdk.NewRat(1).Quo(sdk.NewRat(100))
+	defaultSlashFractionDowntime = sdk.NewDec(1, 0).Quo(sdk.NewDec(100, 0))
 )

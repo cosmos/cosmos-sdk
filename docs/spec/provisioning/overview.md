@@ -113,8 +113,8 @@ occur on an epoch basis.
 ```golang
 type powerChange struct {
     height      int64        // block height at change
-    power       rational.Rat // total power at change
-    prevpower   rational.Rat // total power at previous height-1 
+    power       rational.Dec // total power at change
+    prevpower   rational.Dec // total power at previous height-1 
     feesin      coins.Coin   // fees in at block height
     prevFeePool coins.Coin   // total fees in at previous block height
 }
@@ -205,13 +205,13 @@ defined to be 13% per year, however the annual inflation is capped as between
 7% and 20%.
 
 ```go
-inflationRateChange(0) = 0
+inflationDeceChange(0) = 0
 Inflation(0) = 0.07
     
 bondedRatio = Pool.BondedTokens / Pool.TotalSupplyTokens
-AnnualInflationRateChange = (1 - bondedRatio / 0.67) * 0.13
+AnnualInflationDeceChange = (1 - bondedRatio / 0.67) * 0.13
 
-annualInflation += AnnualInflationRateChange
+annualInflation += AnnualInflationDeceChange
 
 if annualInflation > 0.20 then Inflation = 0.20
 if annualInflation < 0.07 then Inflation = 0.07

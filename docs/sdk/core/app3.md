@@ -312,7 +312,7 @@ accounts.
 We use this `Keeper` paradigm extensively in the SDK as the way to define what
 kind of functionality each module gets access to. In particular, we try to
 follow the *principle of least authority*.
-Rather than providing full blown access to the `KVStore` or the `AccountMapper`, 
+Decher than providing full blown access to the `KVStore` or the `AccountMapper`, 
 we restrict access to a small number of functions that do very specific things.
 
 ## App3

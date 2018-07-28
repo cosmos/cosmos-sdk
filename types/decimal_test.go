@@ -165,29 +165,31 @@ func TestDArithmetic(t *testing.T) {
 	}
 }
 
-//func TestRoundInt64(t *testing.T) {
-//tests := []struct {
-//d1       Dec
-//resInt64 int64
-//}{
-//{NewDec(0, 0), 0},
-//{NewDec(1, 0), 1},
-//{NewDec(25, 2), 0},
-//{NewDec(5, 1), 0},
-//{NewDec(75, 2), 1},
-//{NewDec(75, 1), 8},
-//{NewDec(8333, 4), 1},
-//{NewDec(15, 0), 2},
-//{NewDec(25, 1), 2},
-//{NewDec(545, 3), 1},  // 0.545-> 1 even though 5 is first decimal and 1 not even
-//{NewDec(1545, 3), 2}, // 1.545
-//}
+func TestRoundInt64(t *testing.T) {
+	tests := []struct {
+		d1       Dec
+		expInt64 int64
+	}{
+		{MustNewDecFromStr("0.25"), 0},
+		{MustNewDecFromStr("0"), 0},
+		{MustNewDecFromStr("1"), 1},
+		{MustNewDecFromStr("0.75"), 1},
+		{MustNewDecFromStr("0.5"), 0},
+		{MustNewDecFromStr("7.5"), 8},
+		{MustNewDecFromStr("1.5"), 2},
+		{MustNewDecFromStr("2.5"), 2},
+		{MustNewDecFromStr("0.545"), 1}, // 0.545-> 1 even though 5 is first decimal and 1 not even
+		{MustNewDecFromStr("1.545"), 2},
+	}
 
-//for tcIndex, tc := range tests {
-//require.Equal(t, tc.resInt64, tc.d1.RoundInt64(), "%v. tc %d", tc.d1, tcIndex)
-//require.Equal(t, tc.resInt64*-1, tc.d1.Mul(NewDec(-1, 0)).RoundInt64(), "%v. tc %d", tc.d1.Mul(NewDec(-1, 0)), tcIndex)
-//}
-//}
+	for tcIndex, tc := range tests {
+		resNeg := tc.d1.Neg().RoundInt64()
+		require.Equal(t, -1*tc.expInt64, resNeg, "negative tc %d", tcIndex)
+
+		resPos := tc.d1.RoundInt64()
+		require.Equal(t, tc.expInt64, resPos, "positive tc %d", tcIndex)
+	}
+}
 
 func TestDToLeftPadded(t *testing.T) {
 	tests := []struct {

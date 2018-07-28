@@ -124,6 +124,7 @@ func (d Dec) GT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) == 1 }             
 func (d Dec) GTE(d2 Dec) bool   { return !d.LT(d2) }                            // greater than or equal
 func (d Dec) LT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) == -1 }            // less than
 func (d Dec) LTE(d2 Dec) bool   { return !d.GT(d2) }                            // less than or equal
+func (d Dec) Neg() Dec          { return Dec{new(big.Int).Neg(d.Int)} }         // Is equal to dzero
 func (d Dec) Add(d2 Dec) Dec    { return Dec{new(big.Int).Add(d.Int, d2.Int)} } // addition
 func (d Dec) Sub(d2 Dec) Dec    { return Dec{new(big.Int).Sub(d.Int, d2.Int)} } // subtraction
 
@@ -199,7 +200,15 @@ var (
 //   BankerRoundChop(1005, 1) = 100
 //   BankerRoundChop(1015, 1) = 102
 //   BankerRoundChop(1500, 3) = 2
-func BankerRoundChop(d *big.Int, n int64) *big.Int {
+func BankerRoundChop(d *big.Int, n int64) (chopped *big.Int) {
+
+	// remove the negative and add it back when returning
+	if d.Sign() == -1 {
+		d = new(big.Int).Neg(d)
+		defer func() {
+			chopped = new(big.Int).Neg(chopped)
+		}()
+	}
 
 	// get the trucated quotient and remainder
 	quo, rem, prec := big.NewInt(0), big.NewInt(0), precisionInt()
@@ -223,13 +232,14 @@ func BankerRoundChop(d *big.Int, n int64) *big.Int {
 
 	switch rem.Cmp(fiveLine) {
 	case -1:
-		return quo
+		chopped = quo
+		return
 	case 1:
-		return new(big.Int).Add(quo, big.NewInt(1))
-
+		chopped = new(big.Int).Add(quo, big.NewInt(1))
+		return
 	default: // bankers rounding must take place
 		str := quo.String()
-		finalDig, err := strconv.Atoi(string(str[len(str)]))
+		finalDig, err := strconv.Atoi(string(str[len(str)-1]))
 		if err != nil {
 			panic(err)
 		}
@@ -237,10 +247,13 @@ func BankerRoundChop(d *big.Int, n int64) *big.Int {
 		// always round to an even number
 		if finalDig == 0 || finalDig == 2 || finalDig == 4 ||
 			finalDig == 6 || finalDig == 8 {
-			return quo
+
+			chopped = quo
+			return
 		}
+		chopped = new(big.Int).Add(quo, big.NewInt(1))
+		return
 	}
-	return new(big.Int).Add(quo, big.NewInt(1))
 }
 
 // RoundInt64 rounds the decimal using bankers rounding

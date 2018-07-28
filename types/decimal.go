@@ -11,7 +11,7 @@ import (
 // NOTE: never use new(Dec) or else we will panic unmarshalling into the
 // nil embedded big.Int
 type Dec struct {
-	*big.Int `json:Int""`
+	*big.Int `"json:Int"`
 }
 
 // number of decimal places
@@ -139,12 +139,9 @@ func (d Dec) Mul(d2 Dec) Dec {
 func (d Dec) Quo(d2 Dec) Dec {
 	mul := new(big.Int).Mul(new(big.Int).Mul( // multiple Precision twice
 		d.Int, precisionInt()), precisionInt())
-	fmt.Printf("debug mul: %v\n", mul.String())
 
 	quo := new(big.Int).Quo(mul, d2.Int)
-	fmt.Printf("debug quo: %v\n", quo.String())
 	chopped := BankerRoundChop(quo, Precision)
-	fmt.Printf("debug chopped: %v\n", chopped.String())
 	return Dec{chopped}
 }
 
@@ -168,11 +165,8 @@ func (d Dec) ToLeftPaddedWithDecimals(totalDigits int8) string {
 // TODO panic if negative or if totalDigits < len(initStr)???
 // evaluate as an integer and return left padded string
 func (d Dec) ToLeftPadded(totalDigits int8) string {
-	fmt.Printf("debug d: %v\n", d.String())
 	chopped := BankerRoundChop(d.Int, Precision)
-	fmt.Printf("debug chopped: %v\n", chopped)
 	intStr := chopped.String()
-	fmt.Printf("debug intStr: %v\n", intStr)
 	fcode := `%0` + strconv.Itoa(int(totalDigits)) + `s`
 	return fmt.Sprintf(fcode, intStr)
 }
@@ -279,7 +273,8 @@ func (d Dec) MarshalAmino() (string, error) {
 
 // requires a valid JSON string - strings quotes and calls UnmarshalText
 func (d *Dec) UnmarshalAmino(text string) (err error) {
-	tempInt := big.NewInt(0)
+	fmt.Printf("debug hoot")
+	tempInt := new(big.Int)
 	err = tempInt.UnmarshalText([]byte(text))
 	if err != nil {
 		return err

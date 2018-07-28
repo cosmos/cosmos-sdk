@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"testing"
 
+	wire "github.com/cosmos/cosmos-sdk/wire"
 	"github.com/stretchr/testify/require"
 )
 
@@ -165,10 +166,10 @@ func TestDArithmetic(t *testing.T) {
 	}
 }
 
-func TestRoundInt64(t *testing.T) {
+func TestBankerRoundChop(t *testing.T) {
 	tests := []struct {
-		d1       Dec
-		expInt64 int64
+		d1  Dec
+		exp int64
 	}{
 		{MustNewDecFromStr("0.25"), 0},
 		{MustNewDecFromStr("0"), 0},
@@ -184,10 +185,10 @@ func TestRoundInt64(t *testing.T) {
 
 	for tcIndex, tc := range tests {
 		resNeg := tc.d1.Neg().RoundInt64()
-		require.Equal(t, -1*tc.expInt64, resNeg, "negative tc %d", tcIndex)
+		require.Equal(t, -1*tc.exp, resNeg, "negative tc %d", tcIndex)
 
 		resPos := tc.d1.RoundInt64()
-		require.Equal(t, tc.expInt64, resPos, "positive tc %d", tcIndex)
+		require.Equal(t, tc.exp, resPos, "positive tc %d", tcIndex)
 	}
 }
 
@@ -209,42 +210,45 @@ func TestDToLeftPadded(t *testing.T) {
 	}
 }
 
-//var cdc = wire.NewCodec() //var jsonCdc JSONCodec // TODO wire.Codec
-func TestDZeroSerializationJSON(t *testing.T) {
-	d := NewDec(0, 0)
-	err := cdc.UnmarshalJSON([]byte(`0`), &d)
+var dcdc = wire.NewCodec()
+
+func TestZeroDeserializationJSON(t *testing.T) {
+	d := Dec{new(big.Int)}
+	err := dcdc.UnmarshalJSON([]byte("0"), &d)
 	require.Nil(t, err)
-	err = cdc.UnmarshalJSON([]byte(`{}`), &d)
+	err = dcdc.UnmarshalJSON([]byte("{}"), &d)
 	require.NotNil(t, err)
 }
 
 func TestDSerializationText(t *testing.T) {
-	d := NewDec(1, 3)
+	d := MustNewDecFromStr("0.333")
 
 	bz, err := d.MarshalText()
 	require.NoError(t, err)
 	fmt.Printf("debug bz: %s\n", bz)
 
-	var d2 = Dec{new(big.Int)}
+	d2 := Dec{new(big.Int)}
 	err = d2.UnmarshalText(bz)
 	require.NoError(t, err)
 	require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
 }
 
-//func TestDSerializationGoWireJSON(t *testing.T) {
-//d := NewDec(1, 3)
-//bz, err := cdc.MarshalJSON(d)
-//require.NoError(t, err)
+func TestDSerializationGoWireJSON(t *testing.T) {
+	d := MustNewDecFromStr("0.333")
 
-//var d2 Dec
-//err = cdc.UnmarshalJSON(bz, &d2)
-//require.NoError(t, err)
-//require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
-//}
+	bz, err := dcdc.MarshalJSON(d)
+	require.NoError(t, err)
+
+	d2 := Dec{new(big.Int)}
+	err = dcdc.UnmarshalJSON(bz, &d2)
+	require.NoError(t, err)
+	require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
+}
 
 func TestDSerializationGoWireBinary(t *testing.T) {
-	d := NewDec(1, 3)
-	bz, err := cdc.MarshalBinary(d)
+	d := MustNewDecFromStr("0.333")
+
+	bz, err := dcdc.MarshalBinary(d)
 	require.NoError(t, err)
 
 	var d2 Dec
@@ -253,25 +257,25 @@ func TestDSerializationGoWireBinary(t *testing.T) {
 	require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
 }
 
-//type testDEmbedStruct struct {
-//Field1 string `json:"f1"`
-//Field2 int    `json:"f2"`
-//Field3 Dec    `json:"f3"`
-//}
+type testDEmbedStruct struct {
+	Field1 string `json:"f1"`
+	Field2 int    `json:"f2"`
+	Field3 Dec    `json:"f3"`
+}
 
-//func TestDEmbeddedStructSerializationGoWire(t *testing.T) {
-//obj := testDEmbedStruct{"foo", 10, NewDec(1, 3)}
-//bz, err := cdc.MarshalJSON(obj)
-//require.Nil(t, err)
+func TestDEmbeddedStructSerializationGoWire(t *testing.T) {
+	obj := testDEmbedStruct{"foo", 10, NewDec(1, 3)}
+	bz, err := cdc.MarshalBinary(obj)
+	require.Nil(t, err)
 
-//var obj2 testDEmbedStruct
-//err = cdc.UnmarshalJSON(bz, &obj2)
-//require.Nil(t, err)
+	var obj2 testDEmbedStruct
+	err = dcdc.UnmarshalBinary(bz, &obj2)
+	require.Nil(t, err)
 
-//require.Equal(t, obj.Field1, obj2.Field1)
-//require.Equal(t, obj.Field2, obj2.Field2)
-//require.True(t, obj.Field3.Equal(obj2.Field3), "original: %v, unmarshalled: %v", obj, obj2)
-//}
+	require.Equal(t, obj.Field1, obj2.Field1)
+	require.Equal(t, obj.Field2, obj2.Field2)
+	require.True(t, obj.Field3.Equal(obj2.Field3), "original: %v, unmarshalled: %v", obj, obj2)
+}
 
 func TestDStringOverflow(t *testing.T) {
 	// two random 64 bit primes

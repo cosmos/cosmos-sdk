@@ -16,6 +16,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO: Abstract these into parameters later
+var (
+	// Currently there are 3 different liveness types, fully online, spotty connection, offline.
+	initialLivenessWeightings   = []int{40, 5, 5}
+	livenessTransitionMatrix, _ = CreateTransitionMatrix([][]int{
+		[]int{90, 20, 1},
+		[]int{10, 50, 5},
+		[]int{0, 10, 1000},
+	})
+)
+
 // Simulate tests application by sending random messages.
 func Simulate(
 	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, ops []TestAndRunTx, setups []RandSetup,
@@ -46,9 +57,9 @@ func SimulateFromSeed(
 	timeDiff := maxTimePerBlock - minTimePerBlock
 
 	res := app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, keys, accs)})
-	validators := make(map[string]abci.Validator)
+	validators := make(map[string]mockValidator)
 	for _, validator := range res.Validators {
-		validators[string(validator.Address)] = validator
+		validators[string(validator.Address)] = mockValidator{validator, GetMemberOfInitialState(r, initialLivenessWeightings)}
 	}
 
 	for i := 0; i < len(setups); i++ {
@@ -100,11 +111,11 @@ func SimulateFromSeed(
 			// No BeginBlock simulation
 			request = abci.RequestBeginBlock{}
 		} else {
-			request = RandomRequestBeginBlock(t, r, validators, signingFraction, evidenceFraction, header.Height, header.Time, log)
+			request = RandomRequestBeginBlock(t, r, validators, livenessTransitionMatrix, evidenceFraction, header.Height, header.Time, log)
 		}
 
 		// Update the validator set
-		validators = UpdateValidators(t, validators, res.ValidatorUpdates)
+		validators = updateValidators(t, r, validators, res.ValidatorUpdates)
 	}
 
 	fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds): %d\n", header.Height, header.Time)
@@ -112,15 +123,26 @@ func SimulateFromSeed(
 }
 
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
-func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]abci.Validator, signingFraction float64, evidenceFraction float64,
+func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]mockValidator, livenessTransitions TransitionMatrix, evidenceFraction float64,
 	currentHeight int64, currentTime int64, log string) abci.RequestBeginBlock {
 	require.True(t, len(validators) > 0, "Zero validators can't sign a block!")
 	signingValidators := make([]abci.SigningValidator, len(validators))
 	i := 0
-	for _, val := range validators {
-		signed := r.Float64() < signingFraction
+	for _, mVal := range validators {
+		mVal.livenessState = livenessTransitions.NextState(r, mVal.livenessState)
+		signed := true
+
+		if mVal.livenessState == 1 {
+			// spotty connection, 50% probability of success
+			// See https://github.com/golang/go/issues/23804#issuecomment-365370418
+			// for reasoning behind computing like this
+			signed = r.Int63()%2 == 0
+		} else if mVal.livenessState == 2 {
+			// offline
+			signed = false
+		}
 		signingValidators[i] = abci.SigningValidator{
-			Validator:       val,
+			Validator:       mVal.val,
 			SignedLastBlock: signed,
 		}
 		i++
@@ -130,8 +152,8 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]a
 		// TODO Also include past evidence
 		validator := signingValidators[r.Intn(len(signingValidators))].Validator
 		var currentTotalVotingPower int64
-		for _, val := range validators {
-			currentTotalVotingPower += val.Power
+		for _, mVal := range validators {
+			currentTotalVotingPower += mVal.val.Power
 		}
 		evidence = append(evidence, abci.Evidence{
 			Type:             "DOUBLE_SIGN",
@@ -154,15 +176,21 @@ func AssertAllInvariants(t *testing.T, app *baseapp.BaseApp, tests []Invariant, 
 	}
 }
 
-// UpdateValidators mimicks Tendermint's update logic
-func UpdateValidators(t *testing.T, current map[string]abci.Validator, updates []abci.Validator) map[string]abci.Validator {
+// updateValidators mimicks Tendermint's update logic
+func updateValidators(t *testing.T, r *rand.Rand, current map[string]mockValidator, updates []abci.Validator) map[string]mockValidator {
 	for _, update := range updates {
 		switch {
 		case update.Power == 0:
 			require.NotNil(t, current[string(update.PubKey.Data)], "tried to delete a nonexistent validator")
 			delete(current, string(update.PubKey.Data))
 		default:
-			current[string(update.PubKey.Data)] = update
+			// Does validator already exist?
+			if mVal, ok := current[string(update.PubKey.Data)]; ok {
+				mVal.val = update
+			} else {
+				// Set this new validator
+				current[string(update.PubKey.Data)] = mockValidator{update, GetMemberOfInitialState(r, initialLivenessWeightings)}
+			}
 		}
 	}
 	return current

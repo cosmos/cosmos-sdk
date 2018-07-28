@@ -74,7 +74,7 @@ func TestRandBech32AccAddrConsistency(t *testing.T) {
 		testMarshal(t, acc, &res, acc.Marshal, (&res).Unmarshal)
 
 		str := acc.String()
-		res, err = types.AccAddressFromBech32(str)
+		res, err := types.AccAddressFromBech32(str)
 		require.Nil(t, err)
 		require.Equal(t, acc, res)
 
@@ -109,7 +109,7 @@ func TestValAddr(t *testing.T) {
 		testMarshal(t, acc, &res, acc.Marshal, (&res).Unmarshal)
 
 		str := acc.String()
-		res, err = types.ValAddressFromBech32(str)
+		res, err := types.ValAddressFromBech32(str)
 		require.Nil(t, err)
 		require.Equal(t, acc, res)
 

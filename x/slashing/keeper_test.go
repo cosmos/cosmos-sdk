@@ -44,12 +44,12 @@ func TestHandleDoubleSign(t *testing.T) {
 	// unrevoke to measure power
 	sk.Unrevoke(ctx, val)
 	// power should be reduced
-	require.Equal(t, sdk.NewDecFromInt(amt, 0).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))), sk.Validator(ctx, addr).GetPower())
+	require.Equal(t, sdk.NewDecFromInt(amt, 0).Mul(sdk.NewDec(19, 0).Quo(sdk.NewDec(20, 0))), sk.Validator(ctx, addr).GetPower())
 	ctx = ctx.WithBlockHeader(abci.Header{Time: 1 + keeper.MaxEvidenceAge(ctx)})
 
 	// double sign past max age
 	keeper.handleDoubleSign(ctx, val, 0, 0, amtInt)
-	require.Equal(t, sdk.NewDecFromInt(amt, 0).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))), sk.Validator(ctx, addr).GetPower())
+	require.Equal(t, sdk.NewDecFromInt(amt, 0).Mul(sdk.NewDec(19, 0).Quo(sdk.NewDec(20, 0))), sk.Validator(ctx, addr).GetPower())
 }
 
 // Test a validator through uptime, downtime, revocation,

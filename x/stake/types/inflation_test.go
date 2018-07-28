@@ -26,16 +26,16 @@ func TestGetInflation(t *testing.T) {
 		setInflation, expectedChange sdk.Dec
 	}{
 		// with 0% bonded atom supply the inflation should increase by InflationDeceChange
-		{"test 1", sdk.ZeroDec(), sdk.ZeroDec(), sdk.NewDec(7, 2), params.InflationDeceChange.Quo(hrsPerYrDec).Round(precision)},
+		{"test 1", sdk.ZeroDec(), sdk.ZeroDec(), sdk.NewDec(7, 2), params.InflationDeceChange.Quo(hrsPerYrDec)},
 
 		// 100% bonded, starting at 20% inflation and being reduced
 		// (1 - (1/0.67))*(0.13/8667)
 		{"test 2", sdk.OneDec(), sdk.ZeroDec(), sdk.NewDec(20, 2),
-			sdk.OneDec().Sub(sdk.OneDec().Quo(params.GoalBonded)).Mul(params.InflationDeceChange).Quo(hrsPerYrDec).Round(precision)},
+			sdk.OneDec().Sub(sdk.OneDec().Quo(params.GoalBonded)).Mul(params.InflationDeceChange).Quo(hrsPerYrDec)},
 
 		// 50% bonded, starting at 10% inflation and being increased
 		{"test 3", sdk.OneDec(), sdk.OneDec(), sdk.NewDec(10, 2),
-			sdk.OneDec().Sub(sdk.NewDec(5, 1).Quo(params.GoalBonded)).Mul(params.InflationDeceChange).Quo(hrsPerYrDec).Round(precision)},
+			sdk.OneDec().Sub(sdk.NewDec(5, 1).Quo(params.GoalBonded)).Mul(params.InflationDeceChange).Quo(hrsPerYrDec)},
 
 		// test 7% minimum stop (testing with 100% bonded)
 		{"test 4", sdk.OneDec(), sdk.ZeroDec(), sdk.NewDec(7, 2), sdk.ZeroDec()},
@@ -96,7 +96,7 @@ func checkFinalPoolValues(t *testing.T, pool Pool, initialTotalTokens, cumulativ
 func updateProvisions(t *testing.T, pool Pool, params Params, hr int) (sdk.Dec, sdk.Dec, Pool) {
 
 	expInflation := pool.NextInflation(params)
-	expProvisions := expInflation.Mul(pool.TokenSupply().Round(precision)).Quo(hrsPerYrDec)
+	expProvisions := expInflation.Mul(pool.TokenSupply()).Quo(hrsPerYrDec)
 	startTotalSupply := pool.TokenSupply()
 	pool = pool.ProcessProvisions(params)
 

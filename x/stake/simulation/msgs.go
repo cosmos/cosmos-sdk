@@ -132,7 +132,7 @@ func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.
 		msg := stake.MsgBeginUnbonding{
 			DelegatorAddr: delegatorAddress,
 			ValidatorAddr: validatorAddress,
-			SharesAmount:  sdk.NewDecFromInt(amount),
+			SharesAmount:  sdk.NewDecFromInt(amount, 0),
 		}
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		ctx, write := ctx.CacheContext()
@@ -191,7 +191,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountMapper, k stake.Keeper) simulation
 			DelegatorAddr:    delegatorAddress,
 			ValidatorSrcAddr: sourceValidatorAddress,
 			ValidatorDstAddr: destValidatorAddress,
-			SharesAmount:     sdk.NewDecFromInt(amount),
+			SharesAmount:     sdk.NewDecFromInt(amount, 0),
 		}
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		ctx, write := ctx.CacheContext()

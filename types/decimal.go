@@ -255,7 +255,6 @@ func (d Dec) MarshalAmino() (string, error) {
 
 // requires a valid JSON string - strings quotes and calls UnmarshalText
 func (d *Dec) UnmarshalAmino(text string) (err error) {
-	fmt.Printf("debug hoot")
 	tempInt := new(big.Int)
 	err = tempInt.UnmarshalText([]byte(text))
 	if err != nil {

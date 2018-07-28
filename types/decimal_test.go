@@ -219,13 +219,13 @@ func TestToLeftPadded(t *testing.T) {
 	}
 }
 
-var dcdc = wire.NewCodec()
+var cdc = wire.NewCodec()
 
 func TestZeroDeserializationJSON(t *testing.T) {
 	d := Dec{new(big.Int)}
-	err := dcdc.UnmarshalJSON([]byte("0"), &d)
+	err := cdc.UnmarshalJSON([]byte("0"), &d)
 	require.Nil(t, err)
-	err = dcdc.UnmarshalJSON([]byte("{}"), &d)
+	err = cdc.UnmarshalJSON([]byte("{}"), &d)
 	require.NotNil(t, err)
 }
 
@@ -245,11 +245,11 @@ func TestSerializationText(t *testing.T) {
 func TestSerializationGoWireJSON(t *testing.T) {
 	d := mustNewDecFromStr(t, "0.333")
 
-	bz, err := dcdc.MarshalJSON(d)
+	bz, err := cdc.MarshalJSON(d)
 	require.NoError(t, err)
 
 	d2 := Dec{new(big.Int)}
-	err = dcdc.UnmarshalJSON(bz, &d2)
+	err = cdc.UnmarshalJSON(bz, &d2)
 	require.NoError(t, err)
 	require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
 }
@@ -257,7 +257,7 @@ func TestSerializationGoWireJSON(t *testing.T) {
 func TestSerializationGoWireBinary(t *testing.T) {
 	d := mustNewDecFromStr(t, "0.333")
 
-	bz, err := dcdc.MarshalBinary(d)
+	bz, err := cdc.MarshalBinary(d)
 	require.NoError(t, err)
 
 	var d2 Dec
@@ -279,7 +279,7 @@ func TestEmbeddedStructSerializationGoWire(t *testing.T) {
 	require.Nil(t, err)
 
 	var obj2 testDEmbedStruct
-	err = dcdc.UnmarshalBinary(bz, &obj2)
+	err = cdc.UnmarshalBinary(bz, &obj2)
 	require.Nil(t, err)
 
 	require.Equal(t, obj.Field1, obj2.Field1)

@@ -82,8 +82,8 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 		// the following parse config is needed to create directories
 		conf, _ = tcmd.ParseConfig()
 		conf.ProfListenAddress = "localhost:6060"
-		conf.P2P.RecvDece = 5120000
-		conf.P2P.SendDece = 5120000
+		conf.P2P.RecvRate = 5120000
+		conf.P2P.SendRate = 5120000
 		conf.Consensus.TimeoutCommit = 5000
 		cfg.WriteConfigFile(configFilePath, conf)
 		// Fall through, just so that its parsed into memory.

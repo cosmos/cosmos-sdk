@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"encoding/hex"
@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
+
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 var invalidstrs = []string{
@@ -15,35 +17,43 @@ var invalidstrs = []string{
 	"hello, world!",
 	"0xAA",
 	"AAA",
-	Bech32PrefixAccAddr + "AB0C",
-	Bech32PrefixAccPub + "1234",
-	Bech32PrefixValAddr + "5678",
-	Bech32PrefixValPub + "BBAB",
+	types.Bech32PrefixAccAddr + "AB0C",
+	types.Bech32PrefixAccPub + "1234",
+	types.Bech32PrefixValAddr + "5678",
+	types.Bech32PrefixValPub + "BBAB",
 }
 
-func TestPubKey(t *testing.T) {
+func testMarshal(t *testing.T, original interface{}, res interface{}, marshal func() ([]byte, error), unmarshal func([]byte) error) {
+	bz, err := marshal()
+	require.Nil(t, err)
+	err = unmarshal(bz)
+	require.Nil(t, err)
+	require.Equal(t, original, res)
+}
+
+func TestRandBech32PubkeyConsistency(t *testing.T) {
 	var pub ed25519.PubKeyEd25519
 
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 1000; i++ {
 		rand.Read(pub[:])
 
-		mustbech32accpub := MustBech32ifyAccPub(pub)
-		bech32accpub, err := Bech32ifyAccPub(pub)
+		mustbech32accpub := types.MustBech32ifyAccPub(pub)
+		bech32accpub, err := types.Bech32ifyAccPub(pub)
 		require.Nil(t, err)
 		require.Equal(t, bech32accpub, mustbech32accpub)
 
-		mustbech32valpub := MustBech32ifyValPub(pub)
-		bech32valpub, err := Bech32ifyValPub(pub)
+		mustbech32valpub := types.MustBech32ifyValPub(pub)
+		bech32valpub, err := types.Bech32ifyValPub(pub)
 		require.Nil(t, err)
 		require.Equal(t, bech32valpub, mustbech32valpub)
 
-		mustaccpub := MustGetAccPubKeyBech32(bech32accpub)
-		accpub, err := GetAccPubKeyBech32(bech32accpub)
+		mustaccpub := types.MustGetAccPubKeyBech32(bech32accpub)
+		accpub, err := types.GetAccPubKeyBech32(bech32accpub)
 		require.Nil(t, err)
 		require.Equal(t, accpub, mustaccpub)
 
-		mustvalpub := MustGetValPubKeyBech32(bech32valpub)
-		valpub, err := GetValPubKeyBech32(bech32valpub)
+		mustvalpub := types.MustGetValPubKeyBech32(bech32valpub)
+		valpub, err := types.GetValPubKeyBech32(bech32valpub)
 		require.Nil(t, err)
 		require.Equal(t, valpub, mustvalpub)
 
@@ -51,46 +61,37 @@ func TestPubKey(t *testing.T) {
 	}
 }
 
-func TestAccAddr(t *testing.T) {
+func TestRandBech32AccAddrConsistency(t *testing.T) {
 	var pub ed25519.PubKeyEd25519
 
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 1000; i++ {
 		rand.Read(pub[:])
 
-		acc := AccAddress(pub.Address())
-		res := AccAddress{}
+		acc := types.AccAddress(pub.Address())
+		res := types.AccAddress{}
 
-		bz, err := acc.MarshalJSON()
-		require.Nil(t, err)
-		err = (&res).UnmarshalJSON(bz)
-		require.Nil(t, err)
-		require.Equal(t, acc, res)
-
-		bz, err = acc.Marshal()
-		require.Nil(t, err)
-		err = (&res).Unmarshal(bz)
-		require.Nil(t, err)
-		require.Equal(t, acc, res)
+		testMarshal(t, acc, &res, acc.MarshalJSON, (&res).UnmarshalJSON)
+		testMarshal(t, acc, &res, acc.Marshal, (&res).Unmarshal)
 
 		str := acc.String()
-		res, err = AccAddressFromBech32(str)
+		res, err = types.AccAddressFromBech32(str)
 		require.Nil(t, err)
 		require.Equal(t, acc, res)
 
 		str = hex.EncodeToString(acc)
-		res, err = AccAddressFromHex(str)
+		res, err = types.AccAddressFromHex(str)
 		require.Nil(t, err)
 		require.Equal(t, acc, res)
 	}
 
 	for _, str := range invalidstrs {
-		_, err := AccAddressFromHex(str)
+		_, err := types.AccAddressFromHex(str)
 		require.NotNil(t, err)
 
-		_, err = AccAddressFromBech32(str)
+		_, err = types.AccAddressFromBech32(str)
 		require.NotNil(t, err)
 
-		err = (*AccAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
+		err = (*types.AccAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
 		require.NotNil(t, err)
 	}
 }
@@ -101,40 +102,31 @@ func TestValAddr(t *testing.T) {
 	for i := 0; i < 20; i++ {
 		rand.Read(pub[:])
 
-		acc := ValAddress(pub.Address())
-		res := ValAddress{}
+		acc := types.ValAddress(pub.Address())
+		res := types.ValAddress{}
 
-		bz, err := acc.MarshalJSON()
-		require.Nil(t, err)
-		err = (&res).UnmarshalJSON(bz)
-		require.Nil(t, err)
-		require.Equal(t, acc, res)
-
-		bz, err = acc.Marshal()
-		require.Nil(t, err)
-		err = (&res).Unmarshal(bz)
-		require.Nil(t, err)
-		require.Equal(t, acc, res)
+		testMarshal(t, acc, &res, acc.MarshalJSON, (&res).UnmarshalJSON)
+		testMarshal(t, acc, &res, acc.Marshal, (&res).Unmarshal)
 
 		str := acc.String()
-		res, err = ValAddressFromBech32(str)
+		res, err = types.ValAddressFromBech32(str)
 		require.Nil(t, err)
 		require.Equal(t, acc, res)
 
 		str = hex.EncodeToString(acc)
-		res, err = ValAddressFromHex(str)
+		res, err = types.ValAddressFromHex(str)
 		require.Nil(t, err)
 		require.Equal(t, acc, res)
 	}
 
 	for _, str := range invalidstrs {
-		_, err := ValAddressFromHex(str)
+		_, err := types.ValAddressFromHex(str)
 		require.NotNil(t, err)
 
-		_, err = ValAddressFromBech32(str)
+		_, err = types.ValAddressFromBech32(str)
 		require.NotNil(t, err)
 
-		err = (*ValAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
+		err = (*types.ValAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
 		require.NotNil(t, err)
 	}
 }

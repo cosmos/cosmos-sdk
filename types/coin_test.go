@@ -181,9 +181,9 @@ func TestEqualCoins(t *testing.T) {
 		{Coins{NewCoin("A", 0), NewCoin("B", 1)}, Coins{NewCoin("B", 1), NewCoin("A", 0)}, false},
 	}
 
-	for _, tc := range cases {
+	for tcnum, tc := range cases {
 		res := tc.inputOne.IsEqual(tc.inputTwo)
-		require.Equal(t, tc.expected, res)
+		require.Equal(t, tc.expected, res, "Equality is differed from expected. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
 	}
 }
 

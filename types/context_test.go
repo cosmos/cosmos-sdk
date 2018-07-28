@@ -105,7 +105,8 @@ func (d dummy) Clone() interface{} {
 	return d
 }
 
-func TestWithPrimitive(t *testing.T) {
+// Testing saving/loading primitive values to/from the context
+func TestContextWithPrimitive(t *testing.T) {
 	ctx := types.NewContext(nil, abci.Header{}, false, log.NewNopLogger())
 
 	clonerkey := "cloner"
@@ -140,7 +141,8 @@ func TestWithPrimitive(t *testing.T) {
 	require.Equal(t, uint64val, ctx.Value(uint64key))
 }
 
-func TestWithCustom(t *testing.T) {
+// Testing saving/loading sdk type values to/from the context
+func TestContextWithCustom(t *testing.T) {
 	var ctx types.Context
 	require.True(t, ctx.IsZero())
 

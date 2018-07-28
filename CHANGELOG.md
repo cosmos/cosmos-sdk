@@ -134,7 +134,7 @@ FEATURES
   * gocyclo
 * [tools] Added `make format` command to automate fixing misspell and gofmt errors.
 * [server] Default config now creates a profiler at port 6060, and increase p2p send/recv rates
-* [types] Switches internal representation of Int/Uint/Dec to use pointers
+* [types] Switches internal representation of Int/Uint/Rat to use pointers
 * [types] Added MinInt and MinUint functions
 * [gaiad] `unsafe_reset_all` now resets addrbook.json
 * [democoin] add x/oracle, x/assoc
@@ -383,7 +383,7 @@ BREAKING CHANGES
 * Removed SealedAccountMapper
 * gaiad init now requires use of `--name` flag
 * Removed Get from Msg interface
-* types/rational now extends big.Dec
+* types/rational now extends big.Rat
 
 FEATURES:
 

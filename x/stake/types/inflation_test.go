@@ -26,27 +26,27 @@ func TestGetInflation(t *testing.T) {
 		setInflation, expectedChange sdk.Dec
 	}{
 		// with 0% bonded atom supply the inflation should increase by InflationDeceChange
-		{"test 1", sdk.ZeroDec(), sdk.ZeroDec(), sdk.NewDec(7, 100), params.InflationDeceChange.Quo(hrsPerYrDec).Round(precision)},
+		{"test 1", sdk.ZeroDec(), sdk.ZeroDec(), sdk.NewDec(7, 2), params.InflationDeceChange.Quo(hrsPerYrDec).Round(precision)},
 
 		// 100% bonded, starting at 20% inflation and being reduced
 		// (1 - (1/0.67))*(0.13/8667)
-		{"test 2", sdk.OneDec(), sdk.ZeroDec(), sdk.NewDec(20, 100),
+		{"test 2", sdk.OneDec(), sdk.ZeroDec(), sdk.NewDec(20, 2),
 			sdk.OneDec().Sub(sdk.OneDec().Quo(params.GoalBonded)).Mul(params.InflationDeceChange).Quo(hrsPerYrDec).Round(precision)},
 
 		// 50% bonded, starting at 10% inflation and being increased
-		{"test 3", sdk.OneDec(), sdk.OneDec(), sdk.NewDec(10, 100),
-			sdk.OneDec().Sub(sdk.NewDec(1, 2).Quo(params.GoalBonded)).Mul(params.InflationDeceChange).Quo(hrsPerYrDec).Round(precision)},
+		{"test 3", sdk.OneDec(), sdk.OneDec(), sdk.NewDec(10, 2),
+			sdk.OneDec().Sub(sdk.NewDec(5, 1).Quo(params.GoalBonded)).Mul(params.InflationDeceChange).Quo(hrsPerYrDec).Round(precision)},
 
 		// test 7% minimum stop (testing with 100% bonded)
-		{"test 4", sdk.OneDec(), sdk.ZeroDec(), sdk.NewDec(7, 100), sdk.ZeroDec()},
-		{"test 5", sdk.OneDec(), sdk.ZeroDec(), sdk.NewDec(70001, 1000000), sdk.NewDec(-1, 1000000)},
+		{"test 4", sdk.OneDec(), sdk.ZeroDec(), sdk.NewDec(7, 2), sdk.ZeroDec()},
+		{"test 5", sdk.OneDec(), sdk.ZeroDec(), sdk.NewDec(70001, 6), sdk.NewDec(-1, 6)},
 
 		// test 20% maximum stop (testing with 0% bonded)
-		{"test 6", sdk.ZeroDec(), sdk.ZeroDec(), sdk.NewDec(20, 100), sdk.ZeroDec()},
-		{"test 7", sdk.ZeroDec(), sdk.ZeroDec(), sdk.NewDec(199999, 1000000), sdk.NewDec(1, 1000000)},
+		{"test 6", sdk.ZeroDec(), sdk.ZeroDec(), sdk.NewDec(20, 2), sdk.ZeroDec()},
+		{"test 7", sdk.ZeroDec(), sdk.ZeroDec(), sdk.NewDec(199999, 6), sdk.NewDec(1, 6)},
 
 		// perfect balance shouldn't change inflation
-		{"test 8", sdk.NewDec(67), sdk.NewDec(33), sdk.NewDec(15, 100), sdk.ZeroDec()},
+		{"test 8", sdk.NewDec(67, 0), sdk.NewDec(33, 0), sdk.NewDec(15, 2), sdk.ZeroDec()},
 	}
 	for _, tc := range tests {
 		pool.BondedTokens, pool.LooseTokens = tc.setBondedTokens, tc.setLooseTokens
@@ -69,7 +69,7 @@ func TestProcessProvisions(t *testing.T) {
 		initialTotalTokens int64 = 550000000
 		cumulativeExpProvs       = sdk.ZeroDec()
 	)
-	pool.LooseTokens = sdk.NewDec(initialTotalTokens)
+	pool.LooseTokens = sdk.NewDec(initialTotalTokens, 0)
 
 	// process the provisions for a year
 	for hr := 0; hr < 100; hr++ {
@@ -79,7 +79,7 @@ func TestProcessProvisions(t *testing.T) {
 	}
 
 	//get the pool and do the final value checks from checkFinalPoolValues
-	checkFinalPoolValues(t, pool, sdk.NewDec(initialTotalTokens), cumulativeExpProvs)
+	checkFinalPoolValues(t, pool, sdk.NewDec(initialTotalTokens, 0), cumulativeExpProvs)
 }
 
 //_________________________________________________________________________________________
@@ -113,12 +113,12 @@ func checkInflation(t *testing.T, pool Pool, previousInflation, updatedInflation
 
 	switch {
 	//BELOW 67% - Dece of change positive and increasing, while we are between 7% <= and < 20% inflation
-	case pool.BondedRatio().LT(sdk.NewDec(67, 100)) && updatedInflation.LT(sdk.NewDec(20, 100)):
+	case pool.BondedRatio().LT(sdk.NewDec(67, 2)) && updatedInflation.LT(sdk.NewDec(20, 2)):
 		require.Equal(t, true, inflationChange.GT(sdk.ZeroDec()), msg)
 
 	//BELOW 67% - Dece of change should be 0 while inflation continually stays at 20% until we reach 67% bonded ratio
-	case pool.BondedRatio().LT(sdk.NewDec(67, 100)) && updatedInflation.Equal(sdk.NewDec(20, 100)):
-		if previousInflation.Equal(sdk.NewDec(20, 100)) {
+	case pool.BondedRatio().LT(sdk.NewDec(67, 2)) && updatedInflation.Equal(sdk.NewDec(20, 2)):
+		if previousInflation.Equal(sdk.NewDec(20, 2)) {
 			require.Equal(t, true, inflationChange.IsZero(), msg)
 
 			//This else statement covers the one off case where we first hit 20%, but we still needed a positive ROC to get to 67% bonded ratio (i.e. we went from 19.99999% to 20%)
@@ -127,12 +127,12 @@ func checkInflation(t *testing.T, pool Pool, previousInflation, updatedInflation
 		}
 
 	//ABOVE 67% - Dece of change should be negative while the bond is above 67, and should stay negative until we reach inflation of 7%
-	case pool.BondedRatio().GT(sdk.NewDec(67, 100)) && updatedInflation.LT(sdk.NewDec(20, 100)) && updatedInflation.GT(sdk.NewDec(7, 100)):
+	case pool.BondedRatio().GT(sdk.NewDec(67, 2)) && updatedInflation.LT(sdk.NewDec(20, 2)) && updatedInflation.GT(sdk.NewDec(7, 2)):
 		require.Equal(t, true, inflationChange.LT(sdk.ZeroDec()), msg)
 
 	//ABOVE 67% - Dece of change should be 0 while inflation continually stays at 7%.
-	case pool.BondedRatio().GT(sdk.NewDec(67, 100)) && updatedInflation.Equal(sdk.NewDec(7, 100)):
-		if previousInflation.Equal(sdk.NewDec(7, 100)) {
+	case pool.BondedRatio().GT(sdk.NewDec(67, 2)) && updatedInflation.Equal(sdk.NewDec(7, 2)):
+		if previousInflation.Equal(sdk.NewDec(7, 2)) {
 			require.Equal(t, true, inflationChange.IsZero(), msg)
 
 			//This else statement covers the one off case where we first hit 7%, but we still needed a negative ROC to continue to get down to 67%. (i.e. we went from 7.00001% to 7%)

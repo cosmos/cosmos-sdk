@@ -37,7 +37,7 @@ func BurnFeeHandler(ctx sdk.Context, _ sdk.Tx, collectedFees sdk.Coins) {}
 //func coinsMulDec(coins sdk.Coins, rat sdk.Dec) sdk.Coins {
 //var res sdk.Coins
 //for _, coin := range coins {
-//coinMulAmt := rat.Mul(sdk.NewDec(coin.Amount)).Evaluate()
+//coinMulAmt := rat.Mul(sdk.NewDec(coin.Amount, 0)).Evaluate()
 //coinMul := sdk.Coins{{coin.Denom, coinMulAmt}}
 //res = res.Plus(coinMul)
 //}

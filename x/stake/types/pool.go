@@ -33,7 +33,7 @@ func InitialPool() Pool {
 		LooseTokens:             sdk.ZeroDec(),
 		BondedTokens:            sdk.ZeroDec(),
 		InflationLastTime:       0,
-		Inflation:               sdk.NewDec(7, 100),
+		Inflation:               sdk.NewDec(7, 2),
 		DateLastCommissionReset: 0,
 		PrevBondedShares:        sdk.ZeroDec(),
 	}

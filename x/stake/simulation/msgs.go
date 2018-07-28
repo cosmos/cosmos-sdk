@@ -247,7 +247,7 @@ func Setup(mapp *mock.App, k stake.Keeper) simulation.RandSetup {
 			return false
 		})
 		pool := k.GetPool(ctx)
-		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewDec(loose.Int64(), 1))
+		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewDec(loose.Int64(), 0))
 		k.SetPool(ctx, pool)
 	}
 }

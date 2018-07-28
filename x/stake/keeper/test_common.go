@@ -80,7 +80,7 @@ func ParamsNoInflation() types.Params {
 		InflationDeceChange: sdk.ZeroDec(),
 		InflationMax:        sdk.ZeroDec(),
 		InflationMin:        sdk.ZeroDec(),
-		GoalBonded:          sdk.NewDec(67, 100),
+		GoalBonded:          sdk.NewDec(67, 2),
 		MaxValidators:       100,
 		BondDenom:           "steak",
 	}

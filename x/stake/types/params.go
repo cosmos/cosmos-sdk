@@ -33,10 +33,10 @@ func (p Params) Equal(p2 Params) bool {
 // DefaultParams returns a default set of parameters.
 func DefaultParams() Params {
 	return Params{
-		InflationDeceChange: sdk.NewDec(13, 100),
-		InflationMax:        sdk.NewDec(20, 100),
-		InflationMin:        sdk.NewDec(7, 100),
-		GoalBonded:          sdk.NewDec(67, 100),
+		InflationDeceChange: sdk.NewDec(13, 2),
+		InflationMax:        sdk.NewDec(20, 2),
+		InflationMin:        sdk.NewDec(7, 2),
+		GoalBonded:          sdk.NewDec(67, 2),
 		UnbondingTime:       defaultUnbondingTime,
 		MaxValidators:       100,
 		BondDenom:           "steak",

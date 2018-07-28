@@ -70,8 +70,8 @@ func TestRandBech32AccAddrConsistency(t *testing.T) {
 		acc := types.AccAddress(pub.Address())
 		res := types.AccAddress{}
 
-		testMarshal(t, acc, &res, acc.MarshalJSON, (&res).UnmarshalJSON)
-		testMarshal(t, acc, &res, acc.Marshal, (&res).Unmarshal)
+		testMarshal(t, &acc, &res, acc.MarshalJSON, (&res).UnmarshalJSON)
+		testMarshal(t, &acc, &res, acc.Marshal, (&res).Unmarshal)
 
 		str := acc.String()
 		res, err := types.AccAddressFromBech32(str)
@@ -105,8 +105,8 @@ func TestValAddr(t *testing.T) {
 		acc := types.ValAddress(pub.Address())
 		res := types.ValAddress{}
 
-		testMarshal(t, acc, &res, acc.MarshalJSON, (&res).UnmarshalJSON)
-		testMarshal(t, acc, &res, acc.Marshal, (&res).Unmarshal)
+		testMarshal(t, &acc, &res, acc.MarshalJSON, (&res).UnmarshalJSON)
+		testMarshal(t, &acc, &res, acc.Marshal, (&res).Unmarshal)
 
 		str := acc.String()
 		res, err := types.ValAddressFromBech32(str)

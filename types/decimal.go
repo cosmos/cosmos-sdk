@@ -60,9 +60,9 @@ func NewDecFromInt(i Int, prec int64) Dec {
 }
 
 // create a decimal from a decimal string (ex. "1234.5678")
-func NewDecFromStr(str string) (f Dec, err Error) {
+func NewDecFromStr(str string) (d Dec, err Error) {
 	if len(str) == 0 {
-		return f, ErrUnknownRequest("decimal string is empty")
+		return d, ErrUnknownRequest("decimal string is empty")
 	}
 
 	// first extract any negative symbol
@@ -73,7 +73,7 @@ func NewDecFromStr(str string) (f Dec, err Error) {
 	}
 
 	if len(str) == 0 {
-		return f, ErrUnknownRequest("decimal string is empty")
+		return d, ErrUnknownRequest("decimal string is empty")
 	}
 
 	strs := strings.Split(str, ".")
@@ -82,15 +82,15 @@ func NewDecFromStr(str string) (f Dec, err Error) {
 	if len(strs) == 2 {
 		lenDecs = len(strs[1])
 		if lenDecs == 0 || len(combinedStr) == 0 {
-			return f, ErrUnknownRequest("bad decimal length")
+			return d, ErrUnknownRequest("bad decimal length")
 		}
 		combinedStr = combinedStr + strs[1]
 	} else if len(strs) > 2 {
-		return f, ErrUnknownRequest("too many periods to be a decimal string")
+		return d, ErrUnknownRequest("too many periods to be a decimal string")
 	}
 
 	if lenDecs > Precision {
-		return f, ErrUnknownRequest("too much Precision in decimal")
+		return d, ErrUnknownRequest("too much Precision in decimal")
 	}
 
 	// add some extra dzero's to correct to the Precision factor
@@ -100,12 +100,21 @@ func NewDecFromStr(str string) (f Dec, err Error) {
 
 	combined, ok := new(big.Int).SetString(combinedStr, 10)
 	if !ok {
-		return f, ErrUnknownRequest("bad string to integer conversion")
+		return d, ErrUnknownRequest("bad string to integer conversion")
 	}
 	if neg {
 		combined = new(big.Int).Neg(combined)
 	}
 	return Dec{combined}, nil
+}
+
+// create a decimal from a decimal string (ex. "1234.5678")
+func MustNewDecFromStr(str string) (d Dec) {
+	d, err := NewDecFromStr(str)
+	if err != nil {
+		panic(err)
+	}
+	return d
 }
 
 //nolint
@@ -139,7 +148,7 @@ func (d Dec) Quo(d2 Dec) Dec {
 }
 
 func (d Dec) String() string {
-	str := d.ToLeftPadded(Precision)
+	str := d.ToLeftPaddedWithDecimals(Precision)
 	placement := len(str) - Precision
 	if placement < 0 {
 		panic("too few decimal digits")
@@ -149,8 +158,20 @@ func (d Dec) String() string {
 
 // TODO panic if negative or if totalDigits < len(initStr)???
 // evaluate as an integer and return left padded string
-func (d Dec) ToLeftPadded(totalDigits int8) string {
+func (d Dec) ToLeftPaddedWithDecimals(totalDigits int8) string {
 	intStr := d.Int.String()
+	fcode := `%0` + strconv.Itoa(int(totalDigits)) + `s`
+	return fmt.Sprintf(fcode, intStr)
+}
+
+// TODO panic if negative or if totalDigits < len(initStr)???
+// evaluate as an integer and return left padded string
+func (d Dec) ToLeftPadded(totalDigits int8) string {
+	fmt.Printf("debug d: %v\n", d.String())
+	chopped := BankerRoundChop(d.Int, Precision)
+	fmt.Printf("debug chopped: %v\n", chopped)
+	intStr := chopped.String()
+	fmt.Printf("debug intStr: %v\n", intStr)
 	fcode := `%0` + strconv.Itoa(int(totalDigits)) + `s`
 	return fmt.Sprintf(fcode, intStr)
 }
@@ -189,6 +210,9 @@ func BankerRoundChop(d *big.Int, n int64) *big.Int {
 	}
 
 	lenWhole := len(d.String())
+	if quo.Sign() == 0 { // only the decimal places (ex. 0.1234)
+		lenWhole++
+	}
 	lenQuo := len(quo.String())
 	lenRem := len(rem.String())
 	leadingZeros := lenWhole - (lenQuo + lenRem) // leading zeros removed from the remainder

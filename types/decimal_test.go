@@ -189,22 +189,23 @@ func TestDArithmetic(t *testing.T) {
 //}
 //}
 
-//func TestToLeftPadded(t *testing.T) {
-//tests := []struct {
-//dec    Dec
-//digits int8
-//res    string
-//}{
-//{NewDec(100, 3), 8, "00000033"},
-//{NewDec(1, 3), 8, "00000000"},
-//{NewDec(100, 2), 8, "00000050"},
-//{NewDec(1000, 3), 8, "00000333"},
-//{NewDec(1000, 3), 12, "000000000333"},
-//}
-//for tcIndex, tc := range tests {
-//require.Equal(t, tc.res, tc.dec.ToLeftPadded(tc.digits), "incorrect left padding, tc %d", tcIndex)
-//}
-//}
+func TestDToLeftPadded(t *testing.T) {
+	tests := []struct {
+		dec    Dec
+		digits int8
+		exp    string
+	}{
+		{MustNewDecFromStr("33.3"), 8, "00000033"},
+		{MustNewDecFromStr("50"), 8, "00000050"},
+		{MustNewDecFromStr("333"), 8, "00000333"},
+		{MustNewDecFromStr("333"), 12, "000000000333"},
+		{MustNewDecFromStr("0.3333"), 8, "00000000"},
+	}
+	for tcIndex, tc := range tests {
+		res := tc.dec.ToLeftPadded(tc.digits)
+		require.Equal(t, tc.exp, res, "incorrect left padding, tc %d", tcIndex)
+	}
+}
 
 //var cdc = wire.NewCodec() //var jsonCdc JSONCodec // TODO wire.Codec
 func TestDZeroSerializationJSON(t *testing.T) {

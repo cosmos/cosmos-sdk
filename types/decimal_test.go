@@ -263,6 +263,7 @@ type testDEmbedStruct struct {
 	Field3 Dec    `json:"f3"`
 }
 
+// TODO make work for UnmarshalJSON
 func TestDEmbeddedStructSerializationGoWire(t *testing.T) {
 	obj := testDEmbedStruct{"foo", 10, NewDec(1, 3)}
 	bz, err := cdc.MarshalBinary(obj)

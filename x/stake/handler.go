@@ -1,8 +1,6 @@
 package stake
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/tags"
@@ -105,8 +103,6 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	if !found {
 		return ErrNoValidatorFound(k.Codespace()).Result()
 	}
-
-	fmt.Printf("HandleMsgEditValidator: %s\n", validator)
 
 	// replace all editable fields (clients should autofill existing values)
 	description, err := validator.Description.UpdateDescription(msg.Description)

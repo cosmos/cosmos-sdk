@@ -209,9 +209,6 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 	valPower := k.updateValidatorPower(ctx, oldFound, oldValidator, validator, pool)
 	cliffPower := k.GetCliffValidatorPower(ctx)
 
-	fmt.Printf("valPower: %X\n", valPower)
-	fmt.Printf("Cliff power: %X\n", cliffPower)
-
 	switch {
 	// if already bonded and power increasing only need to update tendermint
 	case powerIncreasing && !validator.Revoked &&
@@ -298,10 +295,8 @@ func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidato
 
 	// update the list ordered by voting power
 	if oldFound {
-		fmt.Printf("Deleting key: %X\n", GetValidatorsByPowerIndexKey(oldValidator, pool))
 		store.Delete(GetValidatorsByPowerIndexKey(oldValidator, pool))
 	}
-	fmt.Printf("Writing key: %X\n", GetValidatorsByPowerIndexKey(newValidator, pool))
 	valPower = GetValidatorsByPowerIndexKey(newValidator, pool)
 	store.Set(valPower, newValidator.Owner)
 
@@ -324,8 +319,6 @@ func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidato
 // TODO: Remove the above golint
 func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 	affectedValidator types.Validator) (updatedVal types.Validator, updated bool) {
-
-	fmt.Printf("\nCalling UpdateBondedValidators with validator %s\n", affectedValidator)
 
 	store := ctx.KVStore(k.storeKey)
 
@@ -359,7 +352,6 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 		if !validator.Revoked {
 			if validator.Status != sdk.Bonded {
 				validatorToBond = validator
-				fmt.Printf("At count %d of %d, decided to bond: %s\n", bondedValidatorsCount, int(maxValidators-1), validatorToBond)
 				if newValidatorBonded {
 					panic("already decided to bond a validator, can't bond another!")
 				}
@@ -493,8 +485,6 @@ func kickOutValidators(k Keeper, ctx sdk.Context, toKickOut map[string]byte) {
 
 // perform all the store operations for when a validator status becomes unbonded
 func (k Keeper) unbondValidator(ctx sdk.Context, validator types.Validator) types.Validator {
-
-	fmt.Printf("Unbonding: %s\n", validator)
 
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)

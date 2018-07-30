@@ -526,7 +526,7 @@ func TestUnrevoke(t *testing.T) {
 
 	// XXX: any less than this and it fails
 	tests.WaitForHeight(3, port)
-  pkString, _ := sdk.Bech32ifyValPub(pks[0])
+	pkString, _ := sdk.Bech32ifyValPub(pks[0])
 	signingInfo := getSigningInfo(t, port, pkString)
 	tests.WaitForHeight(4, port)
 	require.Equal(t, true, signingInfo.IndexOffset > 0)

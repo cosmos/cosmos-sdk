@@ -37,6 +37,7 @@ FEATURES
    * This allows SDK users to initialize a new project repository.
 * [tests] Remotenet commands for AWS (awsnet)
 * [store] Add transient store
+* [gov] Add slashing for validators who do not vote on a proposal
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route

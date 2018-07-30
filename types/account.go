@@ -7,6 +7,8 @@ import (
 	"fmt"
 
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/encoding/amino"
+
 	"github.com/tendermint/tendermint/libs/bech32"
 )
 
@@ -16,10 +18,10 @@ const (
 	AddrLen = 20
 
 	// Bech32 prefixes
-	Bech32PrefixAccAddr = "cosmosaccaddr"
-	Bech32PrefixAccPub  = "cosmosaccpub"
-	Bech32PrefixValAddr = "cosmosvaladdr"
-	Bech32PrefixValPub  = "cosmosvalpub"
+	Bech32PrefixAccAddr = "irisaccaddr"
+	Bech32PrefixAccPub  = "irisaccpub"
+	Bech32PrefixValAddr = "irisvaladdr"
+	Bech32PrefixValPub  = "irisvalpub"
 )
 
 //__________________________________________________________
@@ -225,7 +227,7 @@ func GetAccPubKeyBech32(address string) (pk crypto.PubKey, err error) {
 		return nil, err
 	}
 
-	pk, err = crypto.PubKeyFromBytes(bz)
+	pk, err = cryptoAmino.PubKeyFromBytes(bz)
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +251,7 @@ func GetValPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
 		return nil, err
 	}
 
-	pk, err = crypto.PubKeyFromBytes(bz)
+	pk, err = cryptoAmino.PubKeyFromBytes(bz)
 	if err != nil {
 		return nil, err
 	}

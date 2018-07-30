@@ -8,6 +8,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/armor"
+	"github.com/tendermint/tendermint/crypto/encoding/amino"
+	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 )
 
 const (
@@ -44,7 +47,7 @@ func armorBytes(bz []byte, blockType string) string {
 		"type":    "Info",
 		"version": "0.0.0",
 	}
-	return crypto.EncodeArmor(blockType, header, bz)
+	return armor.EncodeArmor(blockType, header, bz)
 }
 
 func unarmorInfoBytes(armorStr string) (bz []byte, err error) {
@@ -56,7 +59,7 @@ func unarmorPubKeyBytes(armorStr string) (bz []byte, err error) {
 }
 
 func unarmorBytes(armorStr, blockType string) (bz []byte, err error) {
-	bType, header, bz, err := crypto.DecodeArmor(armorStr)
+	bType, header, bz, err := armor.DecodeArmor(armorStr)
 	if err != nil {
 		return
 	}
@@ -77,13 +80,13 @@ func encryptArmorPrivKey(privKey crypto.PrivKey, passphrase string) string {
 		"kdf":  "bcrypt",
 		"salt": fmt.Sprintf("%X", saltBytes),
 	}
-	armorStr := crypto.EncodeArmor(blockTypePrivKey, header, encBytes)
+	armorStr := armor.EncodeArmor(blockTypePrivKey, header, encBytes)
 	return armorStr
 }
 
 func unarmorDecryptPrivKey(armorStr string, passphrase string) (crypto.PrivKey, error) {
 	var privKey crypto.PrivKey
-	blockType, header, encBytes, err := crypto.DecodeArmor(armorStr)
+	blockType, header, encBytes, err := armor.DecodeArmor(armorStr)
 	if err != nil {
 		return privKey, err
 	}
@@ -112,7 +115,7 @@ func encryptPrivKey(privKey crypto.PrivKey, passphrase string) (saltBytes []byte
 	}
 	key = crypto.Sha256(key) // Get 32 bytes
 	privKeyBytes := privKey.Bytes()
-	return saltBytes, crypto.EncryptSymmetric(privKeyBytes, key)
+	return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
 }
 
 func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privKey crypto.PrivKey, err error) {
@@ -121,10 +124,10 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privK
 		cmn.Exit("Error generating bcrypt key from passphrase: " + err.Error())
 	}
 	key = crypto.Sha256(key) // Get 32 bytes
-	privKeyBytes, err := crypto.DecryptSymmetric(encBytes, key)
+	privKeyBytes, err := xsalsa20symmetric.DecryptSymmetric(encBytes, key)
 	if err != nil {
 		return privKey, err
 	}
-	privKey, err = crypto.PrivKeyFromBytes(privKeyBytes)
+	privKey, err = cryptoAmino.PrivKeyFromBytes(privKeyBytes)
 	return privKey, err
 }

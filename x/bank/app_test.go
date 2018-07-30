@@ -13,17 +13,19 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 // test bank module in a mock application
 var (
-	priv1     = crypto.GenPrivKeyEd25519()
-	addr1     = sdk.AccAddress(priv1.PubKey().Address())
-	priv2     = crypto.GenPrivKeyEd25519()
-	addr2     = sdk.AccAddress(priv2.PubKey().Address())
-	addr3     = sdk.AccAddress(crypto.GenPrivKeyEd25519().PubKey().Address())
-	priv4     = crypto.GenPrivKeyEd25519()
-	addr4     = sdk.AccAddress(priv4.PubKey().Address())
+	priv1 = ed25519.GenPrivKey()
+	addr1 = sdk.AccAddress(priv1.PubKey().Address())
+	priv2 = ed25519.GenPrivKey()
+	addr2 = sdk.AccAddress(priv2.PubKey().Address())
+	addr3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
+	priv4 = ed25519.GenPrivKey()
+	addr4 = sdk.AccAddress(priv4.PubKey().Address())
+
 	coins     = sdk.Coins{sdk.NewCoin("foocoin", 10)}
 	halfCoins = sdk.Coins{sdk.NewCoin("foocoin", 5)}
 	manyCoins = sdk.Coins{sdk.NewCoin("foocoin", 1), sdk.NewCoin("barcoin", 1)}

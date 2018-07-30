@@ -10,11 +10,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 var (
-	priv1 = crypto.GenPrivKeyEd25519()
+	priv1 = ed25519.GenPrivKey()
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
 	coins = sdk.Coins{sdk.NewCoin("foocoin", 10)}
 )

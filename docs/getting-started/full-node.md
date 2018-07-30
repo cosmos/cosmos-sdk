@@ -66,7 +66,7 @@ Fetch the testnet's `genesis.json` file into `gaiad`'s config directory.
 
 ```bash
 mkdir -p $HOME/.gaiad/config
-curl https://raw.githubusercontent.com/cosmos/testnets/master/gaia-7002/genesis.json > $HOME/.gaiad/config/genesis.json
+curl https://raw.githubusercontent.com/cosmos/testnets/master/gaia-7004/genesis.json > $HOME/.gaiad/config/genesis.json
 ```
 
 ### Add Seed Nodes

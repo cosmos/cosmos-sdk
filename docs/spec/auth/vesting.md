@@ -5,14 +5,14 @@
 This paper specifies changes to the auth and bank modules to implement vested accounts for the Cosmos Hub. 
 The requirements for this vested account is that it should be capable of being initialized during genesis with
 a starting balance X coins and a vesting blocknumber N. The owner of this account should be able to delegate to validators and vote,
-however they cannot send their coins to other accounts until the account has fully vested. Thus, the bank module's MsgSend handler 
+however they cannot send their coins to other accounts until the account has fully vested. Thus, the bank module's `MsgSend` handler 
 should error if a vested account is trying to send an amount before block N.
 
 ### Implementation
 
 ##### Changes to x/auth Module
 
-The Account interface will specify both the Account type and any parameters it needs.
+The `Account` interface will specify both the Account type and any parameters it needs.
 
 ```go
 // Account is a standard account using a sequence number for replay protection

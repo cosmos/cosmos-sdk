@@ -2,13 +2,25 @@
 
 ## Changelog
 
-* {date}: {changelog}
-
 ## Context
 
-> This section describes the forces at play, including technological, political, social, and project local. These forces are probably in tension, and should be called out as such. The language in this section is value-neutral. It is simply describing facts.
+Having the ability to sign messages off-chain has proven to be a fundamental aspect
+of nearly any blockchain. The notion of signing messages off-chain has many 
+added benefits such as saving on computational costs and reducing transaction
+throughput and overhead. Within the context of the Cosmos SDK, some of the major
+applications of signing such data includes, but is not limited to, providing a
+cryptographic secure and verifiable means of proving validator identity and
+possibly associating it with some other framework or organization. In addition,
+having the ability to sign Cosmos SDK messages with a Ledger device.
 
-{context body}
+A standardized protocol for hashing and signing messages that can be implemented
+by the Cosmos SDK and any third-party organization is needed the subscribes to
+the following:
+
+* A specification of structured data
+* A framework for encoding structured data
+* A cryptographic secure hashing and signing algorithm
+* A framework for supporting extensions and domain separation
 
 ## Decision
 
@@ -18,9 +30,7 @@
 
 ## Status
 
-> A decision may be "proposed" if the project stakeholders haven't agreed with it yet, or "accepted" once it is agreed. If a later ADR changes or reverses a decision, it may be marked as "deprecated" or "superseded" with a reference to its replacement.
-
-{Deprecated|Proposed|Accepted}
+Proposed.
 
 ## Consequences
 

@@ -38,6 +38,7 @@ FEATURES
 * [tests] Remotenet commands for AWS (awsnet)
 * [store] Add transient store
 * [gov] Add slashing for validators who do not vote on a proposal
+* [cli] added `gov query-proposals` command to CLI. Can filter by `depositer`, `voter`, and `status`
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route

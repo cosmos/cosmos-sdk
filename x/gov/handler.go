@@ -94,7 +94,7 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 }
 
 // Called every block, process inflation, update validator set
-func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags, nonVotingVals []sdk.AccAddress) {
+func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 
 	resTags = sdk.NewTags()
 
@@ -112,13 +112,14 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags, nonVotingVals
 	}
 
 	var passes bool
+	var nonVotingVals []sdk.AccAddress
 
 	// Check if earliest Active Proposal ended voting period yet
 	for shouldPopActiveProposalQueue(ctx, keeper) {
 		activeProposal := keeper.ActiveProposalQueuePop(ctx)
 
 		proposalStartBlock := activeProposal.GetVotingStartBlock()
-		votingPeriod := keeper.GetVotingProcedure().VotingPeriod
+		votingPeriod := keeper.GetVotingProcedure(ctx).VotingPeriod
 		if ctx.BlockHeight() < proposalStartBlock+votingPeriod {
 			continue
 		}
@@ -137,14 +138,23 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags, nonVotingVals
 		}
 		keeper.SetProposal(ctx, activeProposal)
 
+		for _, valAddr := range nonVotingVals {
+			val := keeper.ds.GetValidatorSet().Validator(ctx, valAddr)
+			keeper.ds.GetValidatorSet().Slash(ctx,
+				val.GetPubKey(),
+				ctx.BlockHeight(),
+				val.GetPower().RoundInt64(),
+				keeper.GetTallyingProcedure(ctx).GovernancePenalty)
+		}
+
 		resTags.AppendTag(tags.Action, action)
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
 	}
 
-	return resTags, nonVotingVals
+	return resTags
 }
 func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
-	depositProcedure := keeper.GetDepositProcedure()
+	depositProcedure := keeper.GetDepositProcedure(ctx)
 	peekProposal := keeper.InactiveProposalQueuePeek(ctx)
 
 	if peekProposal == nil {
@@ -158,7 +168,7 @@ func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 }
 
 func shouldPopActiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
-	votingProcedure := keeper.GetVotingProcedure()
+	votingProcedure := keeper.GetVotingProcedure(ctx)
 	peekProposal := keeper.ActiveProposalQueuePeek(ctx)
 
 	if peekProposal == nil {

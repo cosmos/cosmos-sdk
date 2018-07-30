@@ -5,14 +5,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestStdTx(t *testing.T) {
-	priv := crypto.GenPrivKeyEd25519()
+	priv := ed25519.GenPrivKey()
 	addr := sdk.AccAddress(priv.PubKey().Address())
 	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
 	fee := newStdFee()
@@ -27,7 +26,7 @@ func TestStdTx(t *testing.T) {
 }
 
 func TestStdSignBytes(t *testing.T) {
-	priv := crypto.GenPrivKeyEd25519()
+	priv := ed25519.GenPrivKey()
 	addr := sdk.AccAddress(priv.PubKey().Address())
 	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
 	fee := newStdFee()

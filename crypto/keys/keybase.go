@@ -11,6 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/pkg/errors"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/encoding/amino"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
@@ -163,9 +165,9 @@ func (kb *dbKeybase) persistDerivedKey(seed []byte, passwd, name, fullHdPath str
 	// if we have a password, use it to encrypt the private key and store it
 	// else store the public key only
 	if passwd != "" {
-		info = kb.writeLocalKey(tmcrypto.PrivKeySecp256k1(derivedPriv), name, passwd)
+		info = kb.writeLocalKey(secp256k1.PrivKeySecp256k1(derivedPriv), name, passwd)
 	} else {
-		pubk := tmcrypto.PrivKeySecp256k1(derivedPriv).PubKey()
+		pubk := secp256k1.PrivKeySecp256k1(derivedPriv).PubKey()
 		info = kb.writeOfflineKey(pubk, name)
 	}
 	return
@@ -314,7 +316,7 @@ func (kb dbKeybase) ImportPubKey(name string, armor string) (err error) {
 	if err != nil {
 		return
 	}
-	pubKey, err := tmcrypto.PubKeyFromBytes(pubBytes)
+	pubKey, err := cryptoAmino.PubKeyFromBytes(pubBytes)
 	if err != nil {
 		return
 	}

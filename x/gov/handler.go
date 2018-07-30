@@ -140,7 +140,11 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 
 		for _, valAddr := range nonVotingVals {
 			val := keeper.ds.GetValidatorSet().Validator(ctx, valAddr)
-			keeper.ds.GetValidatorSet().Slash(ctx, val.GetPubKey(), ctx.BlockHeight(), val.GetPower().RoundInt64(), keeper.GetTallyingProcedure(ctx).GovernancePenalty)
+			keeper.ds.GetValidatorSet().Slash(ctx,
+				val.GetPubKey(),
+				ctx.BlockHeight(),
+				val.GetPower().RoundInt64(),
+				keeper.GetTallyingProcedure(ctx).GovernancePenalty)
 		}
 
 		resTags.AppendTag(tags.Action, action)

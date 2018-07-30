@@ -1,16 +1,16 @@
 package app
 
 import (
+	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
-	"github.com/tendermint/tendermint/crypto"
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 const (
@@ -57,6 +57,6 @@ func UpdatedCodec() *wire.Codec {
 	cdc.RegisterConcrete(MsgSend{}, "example/MsgSend", nil)
 	cdc.RegisterConcrete(MsgIssue{}, "example/MsgIssue", nil)
 	auth.RegisterWire(cdc)
-	crypto.RegisterAmino(cdc)
+	cryptoAmino.RegisterAmino(cdc)
 	return cdc
 }

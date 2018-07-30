@@ -8,6 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var _ sdk.MultiStore = multiStore{}
+
 type multiStore struct {
 	kv map[sdk.StoreKey]kvStore
 }
@@ -76,10 +78,6 @@ func (ms multiStore) GetKVStore(key sdk.StoreKey) sdk.KVStore {
 	return ms.kv[key]
 }
 
-func (ms multiStore) GetKVStoreWithGas(meter sdk.GasMeter, key sdk.StoreKey) sdk.KVStore {
-	panic("not implemented")
-}
-
 func (ms multiStore) GetStore(key sdk.StoreKey) sdk.Store {
 	panic("not implemented")
 }
@@ -87,6 +85,8 @@ func (ms multiStore) GetStore(key sdk.StoreKey) sdk.Store {
 func (ms multiStore) GetStoreType() sdk.StoreType {
 	panic("not implemented")
 }
+
+var _ sdk.KVStore = kvStore{}
 
 type kvStore struct {
 	store map[string][]byte
@@ -127,6 +127,10 @@ func (kv kvStore) Delete(key []byte) {
 
 func (kv kvStore) Prefix(prefix []byte) sdk.KVStore {
 	panic("not implemented")
+}
+
+func (kv kvStore) Gas(meter sdk.GasMeter, config sdk.GasConfig) sdk.KVStore {
+	panic("not implmeneted")
 }
 
 func (kv kvStore) Iterator(start, end []byte) sdk.Iterator {

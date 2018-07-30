@@ -190,7 +190,8 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 	if main == nil {
 		return errors.New("baseapp expects MultiStore with 'main' KVStore")
 	}
-
+	// Needed for `gaiad export`, which inits from store but never calls initchain
+	app.setCheckState(abci.Header{})
 	return nil
 }
 

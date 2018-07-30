@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -46,7 +46,7 @@ func TestGenesis(t *testing.T) {
 	bapp := NewDemocoinApp(logger, db)
 
 	// Construct some genesis bytes to reflect democoin/types/AppAccount
-	pk := crypto.GenPrivKeyEd25519().PubKey()
+	pk := ed25519.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pk.Address())
 	coins, err := sdk.ParseCoins("77foocoin,99barcoin")
 	require.Nil(t, err)

@@ -118,7 +118,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags, nonVotingVals
 		activeProposal := keeper.ActiveProposalQueuePop(ctx)
 
 		proposalStartBlock := activeProposal.GetVotingStartBlock()
-		votingPeriod := keeper.GetVotingProcedure().VotingPeriod
+		votingPeriod := keeper.GetVotingProcedure(ctx).VotingPeriod
 		if ctx.BlockHeight() < proposalStartBlock+votingPeriod {
 			continue
 		}
@@ -144,7 +144,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags, nonVotingVals
 	return resTags, nonVotingVals
 }
 func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
-	depositProcedure := keeper.GetDepositProcedure()
+	depositProcedure := keeper.GetDepositProcedure(ctx)
 	peekProposal := keeper.InactiveProposalQueuePeek(ctx)
 
 	if peekProposal == nil {
@@ -158,7 +158,7 @@ func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 }
 
 func shouldPopActiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
-	votingProcedure := keeper.GetVotingProcedure()
+	votingProcedure := keeper.GetVotingProcedure(ctx)
 	peekProposal := keeper.ActiveProposalQueuePeek(ctx)
 
 	if peekProposal == nil {

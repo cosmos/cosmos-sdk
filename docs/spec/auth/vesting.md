@@ -4,16 +4,15 @@
 
 This paper specifies changes to the auth and bank modules to implement vested accounts for the Cosmos Hub. 
 The requirements for this vested account is that it should be capable of being initialized during genesis with
-a starting balance X and a vesting blocknumber N. The owner of this account should be able to delegate to validators,
-but they cannot send their initial coins to other accounts. However; funds sent to this account, or fees and 
-inflation rewards from delegation should be spendable. Thus, the bank module's MsgSend handler should error if 
-a vested account is trying to send an amount `x > currentBalance - initialBalance` before block N.
+a starting balance X coins and a vesting blocknumber N. The owner of this account should be able to delegate to validators,
+but they cannot send their coins to other accounts. Thus, the bank module's MsgSend handler should error if 
+a vested account is trying to send an amount before block N.
 
 ### Implementation
 
 ##### Changes to x/auth Module
 
-The first change is to the Account interface to specify both the Account type and any parameters it needs.
+The Account interface will specify both the Account type and any parameters it needs.
 
 ```go
 // Account is a standard account using a sequence number for replay protection
@@ -48,12 +47,11 @@ handler can then call `GetParams` to handle the specific account type using the 
 exist in the parameter map.
 
 The `VestedAccount` will be an implementation of `Account` interface that wraps `BaseAccount` with 
-`Type() => "vested` and params, `GetParams() => {"Funds": initialBalance (sdk.Coins), "BlockLock": blockN (int64)}`. 
-`SetParams` will be disabled as we do not want to update params after vested account initialization. 
-The `VestedAccount` will also maintain an attribute called `FreeCoins`
+`Type() => "vested` and params, `GetParams() => {"BlockLock": blockN (int64)}`. 
+`SetParams` will be disabled as we do not want to update params after vested account initialization.
 
 
-`auth.AccountMapper` to handle vested accounts as well. Specific changes 
+`auth.AccountMapper` will be modified handle vested accounts as well. Specific changes 
 are omitted in this doc for succinctness.
 
 
@@ -65,12 +63,24 @@ handled at the `bank.Keeper` level. Specifically in methods that are explicitly 
 account (i.e. `acc.Type() == "vested"`):
 
 1. Check if `ctx.BlockHeight() < acc.GetParams()["BlockLock"]`
-  * If `true`, the account is still vesting 
-2. If account is still vesting, check that `(acc.GetCoins() - acc.GetParams()["Funds"] - amount).IsValid()`.
-  * This will check that amount trying to be spent will not come from initial balance.
-3. If above checks pass, allow transaction to go through. Else, return sdk.Error.
+2. If `true`, the account is still vesting, return sdk.Error. Else, allow transaction to be processed as normal.
 
 ### Initializing at Genesis
+
+To initialize both vested accounts and base accounts, the `GenesisAccount` struct will be:
+
+```go
+type GenesisAccount struct {
+	Address   sdk.AccAddress `json:"address"`
+    Coins     sdk.Coins      `json:"coins"`
+    Type      string         `json:"type"`
+    BlockLock int64          `json:"lock"`
+}
+```
+
+During `InitChain`, the GenesisAccount's are decoded. If they have `Type == "vested`, a vested account with parameters => 
+`{"BlockLock": BlockLock}` gets created and put in initial state. Otherwise if `Type == "base"` a base account is created 
+and the `BlockLock` attribute of corresponding `GenesisAccount` is ignored. `InitChain` will panic on any other account types.
 
 ### Pros and Cons
 

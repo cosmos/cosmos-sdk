@@ -473,11 +473,11 @@ func TestDeposit(t *testing.T) {
 
 	// query proposal
 	proposal = getProposal(t, port, proposalID)
-	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{sdk.NewCoin("steak", 10)}))
+	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{sdk.NewInt64Coin("steak", 10)}))
 
 	// query deposit
 	deposit := getDeposit(t, port, proposalID, addr)
-	require.True(t, deposit.Amount.IsEqual(sdk.Coins{sdk.NewCoin("steak", 10)}))
+	require.True(t, deposit.Amount.IsEqual(sdk.Coins{sdk.NewInt64Coin("steak", 10)}))
 }
 
 func TestVote(t *testing.T) {
@@ -649,7 +649,7 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.AccAddress
 	chainID := viper.GetString(client.FlagChainID)
 
 	// send
-	coinbz, err := cdc.MarshalJSON(sdk.NewCoin("steak", 1))
+	coinbz, err := cdc.MarshalJSON(sdk.NewInt64Coin("steak", 1))
 	if err != nil {
 		panic(err)
 	}

@@ -12,9 +12,9 @@ func TestIsPositiveCoin(t *testing.T) {
 		inputOne Coin
 		expected bool
 	}{
-		{NewCoin("A", 1), true},
-		{NewCoin("A", 0), false},
-		{NewCoin("a", -1), false},
+		{NewInt64Coin("A", 1), true},
+		{NewInt64Coin("A", 0), false},
+		{NewInt64Coin("a", -1), false},
 	}
 
 	for tcIndex, tc := range cases {
@@ -28,9 +28,9 @@ func TestIsNotNegativeCoin(t *testing.T) {
 		inputOne Coin
 		expected bool
 	}{
-		{NewCoin("A", 1), true},
-		{NewCoin("A", 0), true},
-		{NewCoin("a", -1), false},
+		{NewInt64Coin("A", 1), true},
+		{NewInt64Coin("A", 0), true},
+		{NewInt64Coin("a", -1), false},
 	}
 
 	for tcIndex, tc := range cases {
@@ -45,11 +45,11 @@ func TestSameDenomAsCoin(t *testing.T) {
 		inputTwo Coin
 		expected bool
 	}{
-		{NewCoin("A", 1), NewCoin("A", 1), true},
-		{NewCoin("A", 1), NewCoin("a", 1), false},
-		{NewCoin("a", 1), NewCoin("b", 1), false},
-		{NewCoin("steak", 1), NewCoin("steak", 10), true},
-		{NewCoin("steak", -11), NewCoin("steak", 10), true},
+		{NewInt64Coin("A", 1), NewInt64Coin("A", 1), true},
+		{NewInt64Coin("A", 1), NewInt64Coin("a", 1), false},
+		{NewInt64Coin("a", 1), NewInt64Coin("b", 1), false},
+		{NewInt64Coin("steak", 1), NewInt64Coin("steak", 10), true},
+		{NewInt64Coin("steak", -11), NewInt64Coin("steak", 10), true},
 	}
 
 	for tcIndex, tc := range cases {
@@ -64,10 +64,10 @@ func TestIsGTECoin(t *testing.T) {
 		inputTwo Coin
 		expected bool
 	}{
-		{NewCoin("A", 1), NewCoin("A", 1), true},
-		{NewCoin("A", 2), NewCoin("A", 1), true},
-		{NewCoin("A", -1), NewCoin("A", 5), false},
-		{NewCoin("a", 1), NewCoin("b", 1), false},
+		{NewInt64Coin("A", 1), NewInt64Coin("A", 1), true},
+		{NewInt64Coin("A", 2), NewInt64Coin("A", 1), true},
+		{NewInt64Coin("A", -1), NewInt64Coin("A", 5), false},
+		{NewInt64Coin("a", 1), NewInt64Coin("b", 1), false},
 	}
 
 	for tcIndex, tc := range cases {
@@ -82,11 +82,11 @@ func TestIsEqualCoin(t *testing.T) {
 		inputTwo Coin
 		expected bool
 	}{
-		{NewCoin("A", 1), NewCoin("A", 1), true},
-		{NewCoin("A", 1), NewCoin("a", 1), false},
-		{NewCoin("a", 1), NewCoin("b", 1), false},
-		{NewCoin("steak", 1), NewCoin("steak", 10), false},
-		{NewCoin("steak", -11), NewCoin("steak", 10), false},
+		{NewInt64Coin("A", 1), NewInt64Coin("A", 1), true},
+		{NewInt64Coin("A", 1), NewInt64Coin("a", 1), false},
+		{NewInt64Coin("a", 1), NewInt64Coin("b", 1), false},
+		{NewInt64Coin("steak", 1), NewInt64Coin("steak", 10), false},
+		{NewInt64Coin("steak", -11), NewInt64Coin("steak", 10), false},
 	}
 
 	for tcIndex, tc := range cases {
@@ -101,9 +101,9 @@ func TestPlusCoin(t *testing.T) {
 		inputTwo Coin
 		expected Coin
 	}{
-		{NewCoin("A", 1), NewCoin("A", 1), NewCoin("A", 2)},
-		{NewCoin("A", 1), NewCoin("B", 1), NewCoin("A", 1)},
-		{NewCoin("asdf", -4), NewCoin("asdf", 5), NewCoin("asdf", 1)},
+		{NewInt64Coin("A", 1), NewInt64Coin("A", 1), NewInt64Coin("A", 2)},
+		{NewInt64Coin("A", 1), NewInt64Coin("B", 1), NewInt64Coin("A", 1)},
+		{NewInt64Coin("asdf", -4), NewInt64Coin("asdf", 5), NewInt64Coin("asdf", 1)},
 	}
 
 	for tcIndex, tc := range cases {
@@ -115,7 +115,7 @@ func TestPlusCoin(t *testing.T) {
 		inputOne Coin
 		inputTwo Coin
 		expected int64
-	}{NewCoin("asdf", -1), NewCoin("asdf", 1), 0}
+	}{NewInt64Coin("asdf", -1), NewInt64Coin("asdf", 1), 0}
 	res := tc.inputOne.Plus(tc.inputTwo)
 	require.Equal(t, tc.expected, res.Amount.Int64())
 }
@@ -127,9 +127,9 @@ func TestMinusCoin(t *testing.T) {
 		expected Coin
 	}{
 
-		{NewCoin("A", 1), NewCoin("B", 1), NewCoin("A", 1)},
-		{NewCoin("asdf", -4), NewCoin("asdf", 5), NewCoin("asdf", -9)},
-		{NewCoin("asdf", 10), NewCoin("asdf", 1), NewCoin("asdf", 9)},
+		{NewInt64Coin("A", 1), NewInt64Coin("B", 1), NewInt64Coin("A", 1)},
+		{NewInt64Coin("asdf", -4), NewInt64Coin("asdf", 5), NewInt64Coin("asdf", -9)},
+		{NewInt64Coin("asdf", 10), NewInt64Coin("asdf", 1), NewInt64Coin("asdf", 9)},
 	}
 
 	for tcIndex, tc := range cases {
@@ -141,7 +141,7 @@ func TestMinusCoin(t *testing.T) {
 		inputOne Coin
 		inputTwo Coin
 		expected int64
-	}{NewCoin("A", 1), NewCoin("A", 1), 0}
+	}{NewInt64Coin("A", 1), NewInt64Coin("A", 1), 0}
 	res := tc.inputOne.Minus(tc.inputTwo)
 	require.Equal(t, tc.expected, res.Amount.Int64())
 
@@ -256,32 +256,32 @@ func TestParse(t *testing.T) {
 func TestSortCoins(t *testing.T) {
 
 	good := Coins{
-		NewCoin("GAS", 1),
-		NewCoin("MINERAL", 1),
-		NewCoin("TREE", 1),
+		NewInt64Coin("GAS", 1),
+		NewInt64Coin("MINERAL", 1),
+		NewInt64Coin("TREE", 1),
 	}
 	empty := Coins{
-		NewCoin("GOLD", 0),
+		NewInt64Coin("GOLD", 0),
 	}
 	badSort1 := Coins{
-		NewCoin("TREE", 1),
-		NewCoin("GAS", 1),
-		NewCoin("MINERAL", 1),
+		NewInt64Coin("TREE", 1),
+		NewInt64Coin("GAS", 1),
+		NewInt64Coin("MINERAL", 1),
 	}
 	badSort2 := Coins{ // both are after the first one, but the second and third are in the wrong order
-		NewCoin("GAS", 1),
-		NewCoin("TREE", 1),
-		NewCoin("MINERAL", 1),
+		NewInt64Coin("GAS", 1),
+		NewInt64Coin("TREE", 1),
+		NewInt64Coin("MINERAL", 1),
 	}
 	badAmt := Coins{
-		NewCoin("GAS", 1),
-		NewCoin("TREE", 0),
-		NewCoin("MINERAL", 1),
+		NewInt64Coin("GAS", 1),
+		NewInt64Coin("TREE", 0),
+		NewInt64Coin("MINERAL", 1),
 	}
 	dup := Coins{
-		NewCoin("GAS", 1),
-		NewCoin("GAS", 1),
-		NewCoin("MINERAL", 1),
+		NewInt64Coin("GAS", 1),
+		NewInt64Coin("GAS", 1),
+		NewInt64Coin("MINERAL", 1),
 	}
 
 	cases := []struct {
@@ -307,31 +307,31 @@ func TestAmountOf(t *testing.T) {
 
 	case0 := Coins{}
 	case1 := Coins{
-		NewCoin("", 0),
+		NewInt64Coin("", 0),
 	}
 	case2 := Coins{
-		NewCoin(" ", 0),
+		NewInt64Coin(" ", 0),
 	}
 	case3 := Coins{
-		NewCoin("GOLD", 0),
+		NewInt64Coin("GOLD", 0),
 	}
 	case4 := Coins{
-		NewCoin("GAS", 1),
-		NewCoin("MINERAL", 1),
-		NewCoin("TREE", 1),
+		NewInt64Coin("GAS", 1),
+		NewInt64Coin("MINERAL", 1),
+		NewInt64Coin("TREE", 1),
 	}
 	case5 := Coins{
-		NewCoin("MINERAL", 1),
-		NewCoin("TREE", 1),
+		NewInt64Coin("MINERAL", 1),
+		NewInt64Coin("TREE", 1),
 	}
 	case6 := Coins{
-		NewCoin("", 6),
+		NewInt64Coin("", 6),
 	}
 	case7 := Coins{
-		NewCoin(" ", 7),
+		NewInt64Coin(" ", 7),
 	}
 	case8 := Coins{
-		NewCoin("GAS", 8),
+		NewInt64Coin("GAS", 8),
 	}
 
 	cases := []struct {

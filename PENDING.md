@@ -25,6 +25,7 @@ BREAKING CHANGES
   * `gaiacli gov vote --voter`
 * [x/gov] Added tags sub-package, changed tags to use dash-case 
 * [x/gov] Governance parameters are now stored in globalparams store
+* [types] sdk.NewCoin now takes sdk.Int, sdk.NewInt64Coin takes int64
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus

@@ -399,7 +399,7 @@ func TestBonding(t *testing.T) {
 
 	// query validator
 	bond := getDelegation(t, port, addr, validator1Owner)
-	require.Equal(t, "60/1", bond.Shares.String())
+	require.Equal(t, "60.0000000000", bond.Shares)
 
 	//////////////////////
 	// testing unbonding
@@ -410,7 +410,7 @@ func TestBonding(t *testing.T) {
 
 	// query validator
 	bond = getDelegation(t, port, addr, validator1Owner)
-	require.Equal(t, "30/1", bond.Shares.String())
+	require.Equal(t, "30.0000000000", bond.Shares)
 
 	// check if tx was committed
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -425,7 +425,7 @@ func TestBonding(t *testing.T) {
 	summary := getDelegationSummary(t, port, addr)
 
 	assert.Len(t, summary.Delegations, 1, "Delegation summary holds all delegations")
-	assert.Equal(t, "30/1", summary.Delegations[0].Shares.String())
+	assert.Equal(t, "30.0000000000", summary.Delegations[0].Shares)
 	assert.Len(t, summary.UnbondingDelegations, 1, "Delegation summary holds all unbonding-delegations")
 	assert.Equal(t, "30", summary.UnbondingDelegations[0].Balance.Amount.String())
 
@@ -729,12 +729,12 @@ func getSigningInfo(t *testing.T, port string, validatorAddr sdk.ValAddress) sla
 	return signingInfo
 }
 
-func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.AccAddress) stake.Delegation {
+func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.AccAddress) rest.DelegationWithoutRat {
 
 	// get the account to get the sequence
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/delegations/%s", delegatorAddr, validatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var bond stake.Delegation
+	var bond rest.DelegationWithoutRat
 	err := cdc.UnmarshalJSON([]byte(body), &bond)
 	require.Nil(t, err)
 	return bond

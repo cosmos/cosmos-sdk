@@ -71,9 +71,17 @@ func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec
 	// Don't think this is currently possible without changing keys
 }
 
+// already resolve the rational shares to not handle this in the client
+type DelegationWithoutRat struct {
+	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
+	ValidatorAddr sdk.AccAddress `json:"validator_addr"`
+	Shares        string         `json:"shares"`
+	Height        int64          `json:"height"`
+}
+
 // Aggregation of all delegations, unbondings and redelegations
 type DelegationSummary struct {
-	Delegations          []stake.Delegation          `json:"delegations"`
+	Delegations          []DelegationWithoutRat      `json:"delegations"`
 	UnbondingDelegations []stake.UnbondingDelegation `json:"unbonding_delegations"`
 	Redelegations        []stake.Redelegation        `json:"redelegations"`
 }
@@ -137,7 +145,14 @@ func delegatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFu
 					return
 				}
 
-				delegationSummary.Delegations = append(delegationSummary.Delegations, delegation)
+				outputDelegation := DelegationWithoutRat{
+					DelegatorAddr: delegation.DelegatorAddr,
+					ValidatorAddr: delegation.ValidatorAddr,
+					Height:        delegation.Height,
+					Shares:        delegation.Shares.FloatString(),
+				}
+
+				delegationSummary.Delegations = append(delegationSummary.Delegations, outputDelegation)
 			}
 
 			undelegationKey := stake.GetUBDKey(delegatorAddr, validatorAddr)
@@ -432,7 +447,14 @@ func delegationHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerF
 			return
 		}
 
-		output, err := cdc.MarshalJSON(delegation)
+		outputDelegation := DelegationWithoutRat{
+			DelegatorAddr: delegation.DelegatorAddr,
+			ValidatorAddr: delegation.ValidatorAddr,
+			Height:        delegation.Height,
+			Shares:        delegation.Shares.FloatString(),
+		}
+
+		output, err := cdc.MarshalJSON(outputDelegation)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

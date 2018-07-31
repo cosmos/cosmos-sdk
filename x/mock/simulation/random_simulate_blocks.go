@@ -21,9 +21,9 @@ var (
 	// Currently there are 3 different liveness types, fully online, spotty connection, offline.
 	initialLivenessWeightings   = []int{40, 5, 5}
 	livenessTransitionMatrix, _ = CreateTransitionMatrix([][]int{
-		[]int{90, 20, 1},
-		[]int{10, 50, 5},
-		[]int{0, 10, 1000},
+		{90, 20, 1},
+		{10, 50, 5},
+		{0, 10, 1000},
 	})
 )
 

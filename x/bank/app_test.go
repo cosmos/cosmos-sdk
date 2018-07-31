@@ -113,8 +113,8 @@ func TestMsgSendWithAccounts(t *testing.T) {
 			expPass:  true,
 			privKeys: []crypto.PrivKey{priv1},
 			expectedBalances: []expectedBalance{
-				expectedBalance{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 57)}},
-				expectedBalance{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}},
+				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 57)}},
+				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}},
 			},
 		},
 		{
@@ -169,9 +169,9 @@ func TestMsgSendMultipleOut(t *testing.T) {
 			expPass:  true,
 			privKeys: []crypto.PrivKey{priv1},
 			expectedBalances: []expectedBalance{
-				expectedBalance{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
-				expectedBalance{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 47)}},
-				expectedBalance{addr3, sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}},
+				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
+				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 47)}},
+				{addr3, sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}},
 			},
 		},
 	}
@@ -211,10 +211,10 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 			expPass:  true,
 			privKeys: []crypto.PrivKey{priv1, priv4},
 			expectedBalances: []expectedBalance{
-				expectedBalance{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
-				expectedBalance{addr4, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
-				expectedBalance{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 52)}},
-				expectedBalance{addr3, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}},
+				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
+				{addr4, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
+				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 52)}},
+				{addr3, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}},
 			},
 		},
 	}
@@ -246,8 +246,8 @@ func TestMsgSendDependent(t *testing.T) {
 			expPass:  true,
 			privKeys: []crypto.PrivKey{priv1},
 			expectedBalances: []expectedBalance{
-				expectedBalance{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
-				expectedBalance{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}},
+				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
+				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}},
 			},
 		},
 		{
@@ -257,7 +257,7 @@ func TestMsgSendDependent(t *testing.T) {
 			expPass:  true,
 			privKeys: []crypto.PrivKey{priv2},
 			expectedBalances: []expectedBalance{
-				expectedBalance{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 42)}},
+				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 42)}},
 			},
 		},
 	}

@@ -42,7 +42,7 @@ func getValidators(validatorKVs []sdk.KVPair, cdc *wire.Codec) ([]types.BechVali
 // get Validator given an Account Address
 func getValidator(address sdk.AccAddress, validatorKVs []sdk.KVPair, cdc *wire.Codec) (sdk.Validator, error) {
 	// parse out the validators
-	for i, kv := range validatorKVs {
+	for _, kv := range validatorKVs {
 		addr := kv.Key[1:]
 		validator, err := types.UnmarshalValidator(cdc, addr, kv.Value)
 		if err != nil {

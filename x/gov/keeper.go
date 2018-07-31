@@ -126,7 +126,7 @@ func (keeper Keeper) GetLastProposalID(ctx sdk.Context) (proposalID int64) {
 		return 0
 	}
 	keeper.cdc.MustUnmarshalBinary(bz, &proposalID)
-	proposalID -= 1
+	proposalID--
 	return
 }
 

@@ -32,6 +32,7 @@ var (
 	signingFraction   float64
 	evidenceFraction  float64
 	invariantInterval int
+	onOperation       bool
 	enabled           bool
 	verbose           bool
 )
@@ -46,6 +47,7 @@ func init() {
 	flag.Float64Var(&signingFraction, "SimulationSigningFraction", 0.7, "Chance a given validator signs a given block")
 	flag.Float64Var(&evidenceFraction, "SimulationEvidenceFraction", 0.01, "Chance that any evidence is found on a given block")
 	flag.IntVar(&invariantInterval, "SimulationInvariantInterval", 10, "Interval between blocks for checking invariants")
+	flag.BoolVar(&onOperation, "SimulationOnOperation", false, "Check invariants after each operation")
 	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")
 	flag.BoolVar(&verbose, "SimulationVerbose", false, "Verbose log output")
 }
@@ -66,6 +68,7 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 	stakeGenesis := stake.DefaultGenesisState()
 	var validators []stake.Validator
 	var delegations []stake.Delegation
+	// XXX Try different numbers of initally bonded validators
 	numInitiallyBonded := int64(50)
 	for i := 0; i < int(numInitiallyBonded); i++ {
 		validator := stake.NewValidator(accs[i], keys[i].PubKey(), stake.Description{})
@@ -126,19 +129,20 @@ func TestFullGaiaSimulation(t *testing.T) {
 			govsim.SimulateMsgSubmitProposal(app.govKeeper, app.stakeKeeper),
 			govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper),
 			govsim.SimulateMsgVote(app.govKeeper, app.stakeKeeper),
-			//stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper),
-			//stakesim.SimulateMsgEditValidator(app.stakeKeeper),
-			//stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper),
-			//stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper),
-			//stakesim.SimulateMsgCompleteUnbonding(app.stakeKeeper),
-			//stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper),
-			//stakesim.SimulateMsgCompleteRedelegate(app.stakeKeeper),
+			stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper),
+			stakesim.SimulateMsgEditValidator(app.stakeKeeper),
+			stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper),
+			stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper),
+			stakesim.SimulateMsgCompleteUnbonding(app.stakeKeeper),
+			stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper),
+			stakesim.SimulateMsgCompleteRedelegate(app.stakeKeeper),
 			slashingsim.SimulateMsgUnrevoke(app.slashingKeeper),
 		},
 		[]simulation.RandSetup{},
 		[]simulation.Invariant{
-			simulation.PeriodicInvariant(allInvariants, invariantInterval, 0),
+			simulation.PeriodicInvariant(allInvariants, 10),
 		},
+		onOperation,
 		numKeys,
 		numBlocks,
 		blockSize,

@@ -136,13 +136,13 @@ test_sim_modules:
 
 test_sim_gaia_fast:
 	@echo "Running full Gaia simulation. This may take several minutes..."
-	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=100 -SimulationInvariantInterval=5 \
-		-SimulationNumKeys=100 -SimulationBlockSize=50 -timeout 10m
+	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=200 -SimulationInvariantInterval=5 \
+		-timeout 10m
 
 test_sim_gaia_slow:
 	@echo "Running full Gaia simulation. This may take several minutes..."
-	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimuluationNumBlocks=1000 -SimulationInvariantInterval=10 \
-		-v -timeout 24h
+	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationInvariantInterval=10 \
+		-SimulationVerbose=true -v -timeout 24h
 
 test_cover:
 	@bash tests/test_cover.sh

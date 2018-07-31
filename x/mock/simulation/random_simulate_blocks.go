@@ -30,17 +30,17 @@ var (
 // Simulate tests application by sending random messages.
 func Simulate(
 	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, ops []TestAndRunTx, setups []RandSetup,
-	invariants []Invariant, numKeys int, numBlocks int, blockSize int, minTimePerBlock int64, maxTimePerBlock int64, signingFraction float64, evidenceFraction float64,
+	invariants []Invariant, onOperation bool, numKeys int, numBlocks int, blockSize int, minTimePerBlock int64, maxTimePerBlock int64, signingFraction float64, evidenceFraction float64,
 ) {
 	time := time.Now().UnixNano()
-	SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numKeys, numBlocks, blockSize, minTimePerBlock, maxTimePerBlock, signingFraction, evidenceFraction)
+	SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, onOperation, numKeys, numBlocks, blockSize, minTimePerBlock, maxTimePerBlock, signingFraction, evidenceFraction)
 }
 
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
 func SimulateFromSeed(
 	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, seed int64, ops []TestAndRunTx, setups []RandSetup,
-	invariants []Invariant, numKeys int, numBlocks int, blockSize int, minTimePerBlock int64, maxTimePerBlock int64, signingFraction float64, evidenceFraction float64,
+	invariants []Invariant, onOperation bool, numKeys int, numBlocks int, blockSize int, minTimePerBlock int64, maxTimePerBlock int64, signingFraction float64, evidenceFraction float64,
 ) {
 	log := fmt.Sprintf("Starting SimulateFromSeed with randomness created with seed %d", int(seed))
 	fmt.Printf("%s\n", log)
@@ -97,7 +97,9 @@ func SimulateFromSeed(
 			log += "\n" + logUpdate
 
 			require.Nil(t, err, log)
-			AssertAllInvariants(t, app, invariants, log)
+			if onOperation {
+				AssertAllInvariants(t, app, invariants, log)
+			}
 			fmt.Printf("\rSimulating... block %d/%d, operation %d.", header.Height, numBlocks, opCount)
 			opCount++
 		}

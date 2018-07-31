@@ -256,6 +256,7 @@ func Request(t *testing.T, port, method, path string, payload []byte) (*http.Res
 		res *http.Response
 	)
 	url := fmt.Sprintf("http://localhost:%v%v", port, path)
+	fmt.Println("REQUEST " + method + " " + url)
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(payload))
 	require.Nil(t, err)

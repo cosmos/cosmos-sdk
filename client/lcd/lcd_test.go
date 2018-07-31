@@ -375,6 +375,19 @@ func TestValidatorsQuery(t *testing.T) {
 	require.True(t, foundVal, "pkBech %v, owner %v", pkBech, validators[0].Owner)
 }
 
+func TestValidatorQuery(t *testing.T) {
+	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	defer cleanup()
+	require.Equal(t, 1, len(pks))
+
+	validator1Owner := sdk.ValAddress(pks[0].Address())
+
+	validator := getValidator(t, port, validator1Owner)
+	bech32ValAddress, err := sdk.Bech32ifyValPub(pks[0])
+	require.NoError(t, err)
+	assert.Equal(t, validator.PubKey, bech32ValAddress, "The returned validator does not hold the correct data")
+}
+
 func TestBonding(t *testing.T) {
 	name, password, denom := "test", "1234567890", "steak"
 	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
@@ -744,7 +757,6 @@ func getDelegationSummary(t *testing.T, port string, delegatorAddr sdk.AccAddres
 
 	// get the account to get the sequence
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s", delegatorAddr), nil)
-	fmt.Println("SUMMARY " + body)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var summary rest.DelegationSummary
 	err := cdc.UnmarshalJSON([]byte(body), &summary)
@@ -879,6 +891,17 @@ func getValidators(t *testing.T, port string) []stake.BechValidator {
 	err := cdc.UnmarshalJSON([]byte(body), &validators)
 	require.Nil(t, err)
 	return validators
+}
+
+func getValidator(t *testing.T, port string, validatorAddr sdk.ValAddress) stake.BechValidator {
+	// get the account to get the sequence
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/validators/%s", validatorAddr.String()), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	fmt.Println(body)
+	var validator stake.BechValidator
+	err := cdc.UnmarshalJSON([]byte(body), &validator)
+	require.Nil(t, err)
+	return validator
 }
 
 func getProposal(t *testing.T, port string, proposalID int64) gov.Proposal {

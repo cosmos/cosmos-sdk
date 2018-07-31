@@ -5,7 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/pkg/errors"
 )
 
 // Contains checks if the a given query contains one of the tx types
@@ -40,19 +42,24 @@ func getValidators(validatorKVs []sdk.KVPair, cdc *wire.Codec) ([]types.BechVali
 }
 
 // get Validator given an Account Address
-func getValidator(address sdk.AccAddress, validatorKVs []sdk.KVPair, cdc *wire.Codec) (sdk.Validator, error) {
+func getValidator(address sdk.ValAddress, validatorKVs []sdk.KVPair, cdc *wire.Codec) (stake.BechValidator, error) {
 	// parse out the validators
 	for _, kv := range validatorKVs {
 		addr := kv.Key[1:]
 		validator, err := types.UnmarshalValidator(cdc, addr, kv.Value)
 		if err != nil {
-			return nil, err
+			return stake.BechValidator{}, err
 		}
 
-		ownerAddress := validator.GetOwner()
+		ownerAddress := validator.PubKey.Address()
 		if reflect.DeepEqual(ownerAddress.Bytes(), address.Bytes()) {
-			return validator, nil
+			bech32Validator, err := validator.Bech32Validator()
+			if err != nil {
+				return stake.BechValidator{}, err
+			}
+
+			return bech32Validator, nil
 		}
 	}
-	return nil, nil // validator Not Found
+	return stake.BechValidator{}, errors.Errorf("Couldn't find validator") // validator Not Found
 }

@@ -62,10 +62,10 @@ func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec
 	).Methods("GET")
 
 	// GET /stake/validators/{addr}
-	// r.HandleFunc(
-	// 	"/stake/validators/{addr}",
-	// 	validatorHandlerFn(ctx, cdc),
-	// ).Methods("GET")
+	r.HandleFunc(
+		"/stake/validators/{addr}",
+		validatorHandlerFn(ctx, cdc),
+	).Methods("GET")
 
 	// GET /stake/validators/{addr}/delegators
 	// Don't think this is currently possible without changing keys
@@ -628,49 +628,45 @@ func validatorsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerF
 }
 
 // HTTP request handler to query the validator information from a given validator address
-// func validatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
+func validatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-// 		var output []byte
-// 		// read parameters
-// 		vars := mux.Vars(r)
-// 		bech32validatorAddr := vars["addr"]
-// 		valAddress, err := sdk.AccAddressFromBech32(bech32validatorAddr)
-// 		if err != nil {
-// 			w.WriteHeader(http.StatusBadRequest)
-// 			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
-// 			return
-// 		}
+		var output []byte
+		// read parameters
+		vars := mux.Vars(r)
+		bech32validatorAddr := vars["addr"]
+		valAddress, err := sdk.ValAddressFromBech32(bech32validatorAddr)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
+			return
+		}
 
-// 		kvs, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
-// 		if err != nil {
-// 			w.WriteHeader(http.StatusInternalServerError)
-// 			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
-// 			return
-// 		}
+		kvs, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
+			return
+		}
 
-// 		// the query will return empty if there are no validators
-// 		if len(kvs) == 0 {
-// 			w.WriteHeader(http.StatusNoContent)
-// 			return
-// 		}
+		validator, err := getValidator(valAddress, kvs, cdc)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("couldn't query validator. Error: %s", err.Error())))
+			return
+		}
 
-// 		validator, err := getValidator(valAddress, kvs, cdc)
-// 		if err != nil {
-// 			w.WriteHeader(http.StatusInternalServerError)
-// 			w.Write([]byte(fmt.Sprintf("couldn't query unbonding-delegation. Error: %s", err.Error())))
-// 			return
-// 		}
-// 		output, err = cdc.MarshalJSON(validator)
-// 		if err != nil {
-// 			w.WriteHeader(http.StatusInternalServerError)
-// 			w.Write([]byte(err.Error()))
-// 			return
-// 		}
-// 		if output == nil {
-// 			w.WriteHeader(http.StatusNoContent)
-// 			return
-// 		}
-// 		w.Write(output)
-// 	}
-// }
+		output, err = cdc.MarshalJSON(validator)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
+			return
+		}
+
+		if output == nil {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		w.Write(output)
+	}
+}

@@ -74,6 +74,9 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 	stakeGenesis.Pool.LooseTokens = sdk.NewRat(int64(100*numKeys) + (numInitiallyBonded * 100))
 	stakeGenesis.Validators = validators
 	stakeGenesis.Bonds = delegations
+	// No inflation, for now
+	stakeGenesis.Params.InflationMax = sdk.NewRat(0)
+	stakeGenesis.Params.InflationMin = sdk.NewRat(0)
 	genesis := GenesisState{
 		Accounts:  genesisAccounts,
 		StakeData: stakeGenesis,

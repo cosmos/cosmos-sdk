@@ -25,6 +25,7 @@ BREAKING CHANGES
   * `gaiacli gov vote --voter`
 * [x/gov] Added tags sub-package, changed tags to use dash-case 
 * [x/gov] Governance parameters are now stored in globalparams store
+* [types] sdk.NewCoin now takes sdk.Int, sdk.NewInt64Coin takes int64
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus
@@ -38,6 +39,7 @@ FEATURES
 * [tests] Remotenet commands for AWS (awsnet)
 * [store] Add transient store
 * [gov] Add slashing for validators who do not vote on a proposal
+* [cli] added `gov query-proposals` command to CLI. Can filter by `depositer`, `voter`, and `status`
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route

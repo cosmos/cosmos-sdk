@@ -21,7 +21,7 @@ func createValidators(t *testing.T, stakeHandler sdk.Handler, ctx sdk.Context, a
 	require.True(t, len(addrs) <= len(pubkeys), "Not enough pubkeys specified at top of file.")
 	dummyDescription := stake.NewDescription("T", "E", "S", "T")
 	for i := 0; i < len(addrs); i++ {
-		valCreateMsg := stake.NewMsgCreateValidator(addrs[i], pubkeys[i], sdk.NewCoin("steak", coinAmt[i]), dummyDescription)
+		valCreateMsg := stake.NewMsgCreateValidator(addrs[i], pubkeys[i], sdk.NewInt64Coin("steak", coinAmt[i]), dummyDescription)
 		res := stakeHandler(ctx, valCreateMsg)
 		require.True(t, res.IsOK())
 	}
@@ -224,7 +224,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 
 	createValidators(t, stakeHandler, ctx, addrs[:3], []int64{5, 6, 7})
 
-	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewCoin("steak", 30))
+	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewInt64Coin("steak", 30))
 	stakeHandler(ctx, delegator1Msg)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -254,7 +254,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 
 	createValidators(t, stakeHandler, ctx, addrs[:3], []int64{5, 6, 7})
 
-	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewCoin("steak", 30))
+	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewInt64Coin("steak", 30))
 	stakeHandler(ctx, delegator1Msg)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -283,9 +283,9 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 
 	createValidators(t, stakeHandler, ctx, addrs[:3], []int64{5, 6, 7})
 
-	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewCoin("steak", 10))
+	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewInt64Coin("steak", 10))
 	stakeHandler(ctx, delegator1Msg)
-	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], addrs[1], sdk.NewCoin("steak", 10))
+	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], addrs[1], sdk.NewInt64Coin("steak", 10))
 	stakeHandler(ctx, delegator1Msg2)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -314,16 +314,16 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	stakeHandler := stake.NewHandler(sk)
 
 	dummyDescription := stake.NewDescription("T", "E", "S", "T")
-	val1CreateMsg := stake.NewMsgCreateValidator(addrs[0], ed25519.GenPrivKey().PubKey(), sdk.NewCoin("steak", 25), dummyDescription)
+	val1CreateMsg := stake.NewMsgCreateValidator(addrs[0], ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin("steak", 25), dummyDescription)
 	stakeHandler(ctx, val1CreateMsg)
-	val2CreateMsg := stake.NewMsgCreateValidator(addrs[1], ed25519.GenPrivKey().PubKey(), sdk.NewCoin("steak", 6), dummyDescription)
+	val2CreateMsg := stake.NewMsgCreateValidator(addrs[1], ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin("steak", 6), dummyDescription)
 	stakeHandler(ctx, val2CreateMsg)
-	val3CreateMsg := stake.NewMsgCreateValidator(addrs[2], ed25519.GenPrivKey().PubKey(), sdk.NewCoin("steak", 7), dummyDescription)
+	val3CreateMsg := stake.NewMsgCreateValidator(addrs[2], ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin("steak", 7), dummyDescription)
 	stakeHandler(ctx, val3CreateMsg)
 
-	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewCoin("steak", 10))
+	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewInt64Coin("steak", 10))
 	stakeHandler(ctx, delegator1Msg)
-	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], addrs[1], sdk.NewCoin("steak", 10))
+	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], addrs[1], sdk.NewInt64Coin("steak", 10))
 	stakeHandler(ctx, delegator1Msg2)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -350,10 +350,9 @@ func TestTallyRevokedValidator(t *testing.T) {
 	stakeHandler := stake.NewHandler(sk)
 
 	createValidators(t, stakeHandler, ctx, addrs[:3], []int64{25, 6, 7})
-
-	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewCoin("steak", 10))
+	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewInt64Coin("steak", 10))
 	stakeHandler(ctx, delegator1Msg)
-	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], addrs[1], sdk.NewCoin("steak", 10))
+	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], addrs[1], sdk.NewInt64Coin("steak", 10))
 	stakeHandler(ctx, delegator1Msg2)
 
 	val2, found := sk.GetValidator(ctx, addrs[1])

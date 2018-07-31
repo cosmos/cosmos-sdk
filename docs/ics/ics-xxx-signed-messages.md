@@ -76,6 +76,12 @@ cases. This may require introducing prefixes to transactions.
 concrete types are registered. Can we rely on this mechanism or do we need a
 custom true injective encoding?
 
+User-agents such Voyager, Metamask, and Ledger may provide human-readable and
+structured data, but this data must be consistent in terms of the field types
+and structure itself encoded via `amino`. This would require said applications
+to have an `amino` implementation. This may yet further warrant a simple custom
+encoding.
+
 > TODO: Do we need to implement a custom encoding scheme instead of or atop 
 amino similar or equal to EIP-712 `hashStruct`? As far as I know, this is mostly
 due to providing Soldity efficiencies and addressing limitations.

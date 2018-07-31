@@ -65,8 +65,9 @@ type ValidatorSet interface {
 	IterateValidatorsBonded(Context,
 		func(index int64, validator Validator) (stop bool))
 
-	Validator(Context, AccAddress) Validator // get a particular validator by owner AccAddress
-	TotalPower(Context) Rat                  // total power of the validator set
+	Validator(Context, AccAddress) Validator            // get a particular validator by owner AccAddress
+	ValidatorByPubKey(Context, crypto.PubKey) Validator // get a particular validator by signing PubKey
+	TotalPower(Context) Rat                             // total power of the validator set
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
 	Slash(Context, crypto.PubKey, int64, int64, Rat)

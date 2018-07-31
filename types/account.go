@@ -7,6 +7,8 @@ import (
 	"fmt"
 
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/encoding/amino"
+
 	"github.com/tendermint/tendermint/libs/bech32"
 )
 
@@ -15,11 +17,14 @@ const (
 	// expected address length
 	AddrLen = 20
 
+	////////////////////  iris/cosmos-sdk begin  ///////////////////////////
 	// Bech32 prefixes
-	Bech32PrefixAccAddr = "cosmosaccaddr"
-	Bech32PrefixAccPub  = "cosmosaccpub"
-	Bech32PrefixValAddr = "cosmosvaladdr"
-	Bech32PrefixValPub  = "cosmosvalpub"
+	Bech32PrefixAccAddr = "faa"
+	Bech32PrefixAccPub  = "fap"
+	Bech32PrefixValAddr = "fva"
+	Bech32PrefixValPub  = "fvp"
+
+	////////////////////  iris/cosmos-sdk end  ///////////////////////////
 )
 
 //__________________________________________________________
@@ -225,7 +230,7 @@ func GetAccPubKeyBech32(address string) (pk crypto.PubKey, err error) {
 		return nil, err
 	}
 
-	pk, err = crypto.PubKeyFromBytes(bz)
+	pk, err = cryptoAmino.PubKeyFromBytes(bz)
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +254,7 @@ func GetValPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
 		return nil, err
 	}
 
-	pk, err = crypto.PubKeyFromBytes(bz)
+	pk, err = cryptoAmino.PubKeyFromBytes(bz)
 	if err != nil {
 		return nil, err
 	}

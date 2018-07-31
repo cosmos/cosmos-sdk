@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	dbm "github.com/tendermint/tendermint/libs/db"
 )
@@ -69,7 +70,7 @@ func TestKeyManagement(t *testing.T) {
 
 	// create an offline key
 	o1 := "offline"
-	priv1 := crypto.GenPrivKeyEd25519()
+	priv1 := ed25519.GenPrivKey()
 	pub1 := priv1.PubKey()
 	i, err = cstore.CreateOffline(o1, pub1)
 	require.Nil(t, err)

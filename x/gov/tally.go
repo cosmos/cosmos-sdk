@@ -48,16 +48,16 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, nonV
 		} else {
 
 			keeper.ds.IterateDelegations(ctx, vote.Voter, func(index int64, delegation sdk.Delegation) (stop bool) {
-				val := currValidators[delegation.GetValidator().String()]
-				val.Minus = val.Minus.Add(delegation.GetBondShares())
-				currValidators[delegation.GetValidator().String()] = val
+				if val, ok := currValidators[delegation.GetValidator().String()]; ok {
+					val.Minus = val.Minus.Add(delegation.GetBondShares())
+					currValidators[delegation.GetValidator().String()] = val
 
-				delegatorShare := delegation.GetBondShares().Quo(val.DelegatorShares)
-				votingPower := val.Power.Mul(delegatorShare)
+					delegatorShare := delegation.GetBondShares().Quo(val.DelegatorShares)
+					votingPower := val.Power.Mul(delegatorShare)
 
-				results[vote.Option] = results[vote.Option].Add(votingPower)
-				totalVotingPower = totalVotingPower.Add(votingPower)
-
+					results[vote.Option] = results[vote.Option].Add(votingPower)
+					totalVotingPower = totalVotingPower.Add(votingPower)
+				}
 				return false
 			})
 		}

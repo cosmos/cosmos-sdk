@@ -394,7 +394,7 @@ func TestBonding(t *testing.T) {
 	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
-	validator1Owner := sdk.AccAddress(pks[0].Address())
+	validator1Owner := sdk.ValAddress(pks[0].Address())
 
 	// create bond TX
 	resultTx := doDelegate(t, port, seed, name, password, addr, validator1Owner)
@@ -749,7 +749,7 @@ func getSigningInfo(t *testing.T, port string, validatorAddr sdk.ValAddress) sla
 	return signingInfo
 }
 
-func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.AccAddress) rest.DelegationWithoutRat {
+func getDelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) rest.DelegationWithoutRat {
 
 	// get the account to get the sequence
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/delegations/%s", delegatorAddr, validatorAddr), nil)
@@ -783,7 +783,7 @@ func getDelegationSummary(t *testing.T, port string, delegatorAddr sdk.AccAddres
 	return summary
 }
 
-func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, validatorAddr sdk.AccAddress) (resultTx ctypes.ResultBroadcastTxCommit) {
+func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) (resultTx ctypes.ResultBroadcastTxCommit) {
 	// get the account to get the sequence
 	acc := getAccount(t, port, delegatorAddr)
 	accnum := acc.GetAccountNumber()
@@ -811,7 +811,7 @@ func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, 
 		"begin_redelegates": [],
 		"complete_redelegates": []
 	}`, name, password, accnum, sequence, chainID, delegatorAddr, validatorAddr, "steak"))
-	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
+	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delegatorAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var results []ctypes.ResultBroadcastTxCommit
@@ -822,7 +822,7 @@ func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, 
 }
 
 func doBeginUnbonding(t *testing.T, port, seed, name, password string,
-	delegatorAddr, validatorAddr sdk.AccAddress) (resultTx ctypes.ResultBroadcastTxCommit) {
+	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) (resultTx ctypes.ResultBroadcastTxCommit) {
 
 	// get the account to get the sequence
 	acc := getAccount(t, port, delegatorAddr)
@@ -851,7 +851,7 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 		"begin_redelegates": [],
 		"complete_redelegates": []
 	}`, name, password, accnum, sequence, chainID, delegatorAddr, validatorAddr))
-	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
+	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delegatorAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var results []ctypes.ResultBroadcastTxCommit
@@ -862,7 +862,7 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 }
 
 func doBeginRedelegation(t *testing.T, port, seed, name, password string,
-	delegatorAddr, validatorSrcAddr, validatorDstAddr sdk.AccAddress) (resultTx ctypes.ResultBroadcastTxCommit) {
+	delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress) (resultTx ctypes.ResultBroadcastTxCommit) {
 
 	// get the account to get the sequence
 	acc := getAccount(t, port, delegatorAddr)
@@ -892,7 +892,7 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 		],
 		"complete_redelegates": []
 	}`, name, password, accnum, sequence, chainID, delegatorAddr, validatorSrcAddr, validatorDstAddr))
-	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
+	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delegatorAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var results []ctypes.ResultBroadcastTxCommit

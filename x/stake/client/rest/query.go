@@ -375,14 +375,16 @@ func delegationHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerF
 			return
 		}
 
-		validatorAddr, err := sdk.AccAddressFromBech32(bech32validator)
+		validatorAddr, err := sdk.ValAddressFromBech32(bech32validator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
+		//TODO this seems wrong. we should query with the sdk.ValAddress and not sdk.AccAddress
+		validatorAddrAcc := sdk.AccAddress(validatorAddr)
 
-		key := stake.GetDelegationKey(delegatorAddr, validatorAddr)
+		key := stake.GetDelegationKey(delegatorAddr, validatorAddrAcc)
 
 		res, err := ctx.QueryStore(key, storeName)
 		if err != nil {

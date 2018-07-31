@@ -183,7 +183,7 @@ func TestSlashing(t *testing.T) {
 	val1Initial := keeper.ds.GetValidatorSet().Validator(ctx, addrs[1]).GetPower().Quo(initTotalPower)
 	val2Initial := keeper.ds.GetValidatorSet().Validator(ctx, addrs[2]).GetPower().Quo(initTotalPower)
 
-	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewCoin("steak", 15)})
+	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewInt64Coin("steak", 15)})
 
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())

@@ -12,7 +12,7 @@ import (
 
 // Have to change these parameters for tests
 // lest the tests take forever
-func keeperTestParams() DefaultParams {
+func keeperTestParams() Params {
 	params := HubDefaultParams()
 	params.SignedBlocksWindow = 1000
 	params.DowntimeUnbondDuration = 60 * 60

@@ -7,7 +7,7 @@ import (
 
 // GenesisState - all slashing state that must be provided at genesis
 type GenesisState struct {
-	Params DefaultParams
+	Params Params
 }
 
 // HubDefaultGenesisState - default GenesisState used by Cosmos Hub

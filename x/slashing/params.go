@@ -33,8 +33,8 @@ var (
 	slashFractionDowntimeKey    = SlashFractionDowntimeKey()
 )
 
-// DefaultParams - used for initializing default parameter for slashing at genesis
-type DefaultParams struct {
+// Params - used for initializing default parameter for slashing at genesis
+type Params struct {
 	MaxEvidenceAge           int64
 	SignedBlocksWindow       int64
 	MinSignedPerWindow       sdk.Dec
@@ -45,8 +45,8 @@ type DefaultParams struct {
 }
 
 // Default parameters used by Cosmos Hub
-func HubDefaultParams() DefaultParams {
-	return DefaultParams{
+func HubDefaultParams() Params {
+	return Params{
 		// defaultMaxEvidenceAge = 60 * 60 * 24 * 7 * 3
 		// TODO Temporarily set to 2 minutes for testnets.
 		MaxEvidenceAge: 60 * 2,

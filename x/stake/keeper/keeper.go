@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
@@ -13,16 +14,18 @@ type Keeper struct {
 	storeKey   sdk.StoreKey
 	cdc        *wire.Codec
 	coinKeeper bank.Keeper
+	paramstore params.Store
 
 	// codespace
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, paramstore params.Store, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:   key,
 		cdc:        cdc,
 		coinKeeper: ck,
+		paramstore: paramstore,
 		codespace:  codespace,
 	}
 	return keeper

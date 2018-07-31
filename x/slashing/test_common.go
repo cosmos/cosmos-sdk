@@ -48,7 +48,7 @@ func createTestCodec() *wire.Codec {
 	return cdc
 }
 
-func createTestInput(t *testing.T, defaults DefaultParams) (sdk.Context, bank.Keeper, stake.Keeper, params.Store, Keeper) {
+func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, stake.Keeper, params.Store, Keeper) {
 	keyAcc := sdk.NewKVStoreKey("acc")
 	keyStake := sdk.NewKVStoreKey("stake")
 	keySlashing := sdk.NewKVStoreKey("slashing")

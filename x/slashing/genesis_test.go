@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func testEqualParams(t *testing.T, ctx sdk.Context, params DefaultParams, keeper Keeper) {
+func testEqualParams(t *testing.T, ctx sdk.Context, params Params, keeper Keeper) {
 	require.Equal(t, params.MaxEvidenceAge, keeper.MaxEvidenceAge(ctx))
 	require.Equal(t, params.SignedBlocksWindow, keeper.SignedBlocksWindow(ctx))
 	require.Equal(t, sdk.NewRat(params.SignedBlocksWindow).Mul(params.MinSignedPerWindow).RoundInt64(), keeper.MinSignedPerWindow(ctx))

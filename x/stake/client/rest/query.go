@@ -3,14 +3,19 @@ package rest
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/stake/tags"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
@@ -18,17 +23,17 @@ const storeName = "stake"
 
 func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 
-	// GET /stake/delegators/{addr} // Get all delegations (delegation, undelegation and redelegation) from a delegator
+	// GET /stake/delegators/{delegatorAddr} // Get all delegations (delegation, undelegation and redelegation) from a delegator
 	r.HandleFunc(
 		"/stake/delegators/{delegatorAddr}",
 		delegatorHandlerFn(ctx, cdc),
 	).Methods("GET")
 
-	// // GET /stake/delegators/{addr}/txs // Get all staking txs (i.e msgs) from a delegator
-	// r.HandleFunc(
-	// 	"/stake/delegators/{addr}/txs",
-	// 	delegatorTxsHandlerFn(ctx, cdc),
-	// ).Queries("type", "{type}").Methods("GET")
+	// GET /stake/delegators/{delegatorAddr}/txs // Get all staking txs (i.e msgs) from a delegator
+	r.HandleFunc(
+		"/stake/delegators/{delegatorAddr}/txs",
+		delegatorTxsHandlerFn(ctx, cdc),
+	).Queries("type", "{type}").Methods("GET")
 
 	// // GET /stake/delegators/{addr}/validators // Query all validators that a delegator is bonded to
 	// r.HandleFunc(
@@ -36,13 +41,13 @@ func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec
 	// 	delegatorValidatorsHandlerFn(ctx, cdc),
 	// ).Methods("GET")
 
-	// GET /stake/delegators/{addr}/delegations/{validatorAddr} // Query a delegation between a delegator and a validator
+	// GET /stake/delegators/{delegatorAddr}/delegations/{validatorAddr} // Query a delegation between a delegator and a validator
 	r.HandleFunc(
 		"/stake/delegators/{delegatorAddr}/delegations/{validatorAddr}",
 		delegationHandlerFn(ctx, cdc),
 	).Methods("GET")
 
-	// GET /stake/delegators/{addr}/unbonding_delegations/{validatorAddr} // Query all unbonding_delegations between a delegator and a validator
+	// GET /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr} // Query all unbonding_delegations between a delegator and a validator
 	r.HandleFunc(
 		"/stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}",
 		unbondingDelegationsHandlerFn(ctx, cdc),
@@ -216,87 +221,103 @@ func delegatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFu
 }
 
 // HTTP request handler to query all staking txs (msgs) from a delegator
-// func delegatorTxsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		var output []byte
-// 		var typesQuerySlice []string
-// 		vars := mux.Vars(r)
-// 		bech32delegator := vars["addr"]
+func delegatorTxsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var output []byte
+		var typesQuerySlice []string
+		vars := mux.Vars(r)
+		delegatorAddr := vars["delegatorAddr"]
 
-// 		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
-// 		if err != nil {
-// 			w.WriteHeader(http.StatusBadRequest)
-// 			w.Write([]byte(err.Error()))
-// 			return
-// 		}
+		_, err := sdk.AccAddressFromBech32(delegatorAddr)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
 
-// 		node, err := ctx.GetNode()
-// 		if err != nil {
-// 			w.WriteHeader(http.StatusInternalServerError)
-// 			w.Write([]byte(fmt.Sprintf("Couldn't get current Node information. Error: %s", err.Error())))
-// 			return
-// 		}
+		node, err := ctx.GetNode()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("Couldn't get current Node information. Error: %s", err.Error())))
+			return
+		}
 
-// 		// Get values from query
+		// Get values from query
 
-// 		typesQuery := r.URL.Query().Get("type")
-// 		typesQuerySlice = strings.Split(strings.TrimSpace(typesQuery), " ")
+		typesQuery := r.URL.Query().Get("type")
+		typesQuerySlice = strings.Split(strings.TrimSpace(typesQuery), " ")
 
-// 		query := sdk.TagDelegator + " " + delegatorAddr.String()
-// 		noQuery := len(typesQuerySlice) == 0
-// 		isBondTx := contains(typesQuerySlice, "bond")
-// 		isUnbondTx := contains(typesQuerySlice, "unbond")
-// 		isRedTx := contains(typesQuerySlice, "redelegate")
-// 		if !isBondTx || !isUnbondTx || !isRedTx {
-// 			w.WriteHeader(http.StatusNoContent)
-// 			return
-// 		}
+		fmt.Println(delegatorAddr, typesQuerySlice)
 
-// 		// TODO double check this
-// 		if noQuery || isBondTx {
-// 			query = query + " ANY " + sdk.TagAction
-// 			query = query + " delegate"
-// 		}
-// 		if noQuery || isUnbondTx {
-// 			query = query + " AND " + sdk.TagAction
-// 			query = query + " begin-unbonding"
+		noQuery := len(typesQuerySlice) == 0
+		isBondTx := contains(typesQuerySlice, "bond")
+		isUnbondTx := contains(typesQuerySlice, "unbond")
+		isRedTx := contains(typesQuerySlice, "redelegate")
+		var txs []tx.TxInfo = []tx.TxInfo{}
 
-// 			query = query + " OR " + sdk.TagAction
-// 			query = query + " complete-unbonding"
-// 		}
-// 		if noQuery || isRedTx {
-// 			query = query + " AND " + sdk.TagAction
-// 			query = query + " begin-redelegation"
+		// TODO double check this
+		if noQuery || isBondTx {
+			foundTxs, err := queryTxs(node, cdc, string(tags.ActionDelegate), delegatorAddr)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("error querying transactions. Error: %s", err.Error())))
+			}
+			txs = append(txs, foundTxs...)
+		}
+		if noQuery || isUnbondTx {
+			foundTxs, err := queryTxs(node, cdc, string(tags.ActionBeginUnbonding), delegatorAddr)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("error querying transactions. Error: %s", err.Error())))
+			}
+			txs = append(txs, foundTxs...)
 
-// 			query = query + " OR " + sdk.TagAction
-// 			query = query + " complete-redelegation"
-// 		}
+			foundTxs, err = queryTxs(node, cdc, string(tags.ActionCompleteUnbonding), delegatorAddr)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("error querying transactions. Error: %s", err.Error())))
+			}
+			txs = append(txs, foundTxs...)
+		}
+		if noQuery || isRedTx {
+			foundTxs, err := queryTxs(node, cdc, string(tags.ActionBeginRedelegation), delegatorAddr)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("error querying transactions. Error: %s", err.Error())))
+			}
+			txs = append(txs, foundTxs...)
 
-// 		page := 0
-// 		perPage := 100
-// 		prove := false
-// 		res, err := node.TxSearch(query, prove, page, perPage)
-// 		if err != nil {
-// 			w.WriteHeader(http.StatusNoContent)
-// 			return
-// 		}
+			foundTxs, err = queryTxs(node, cdc, string(tags.ActionCompleteRedelegation), delegatorAddr)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("error querying transactions. Error: %s", err.Error())))
+			}
+			txs = append(txs, foundTxs...)
+		}
 
-// 		info, err := formatTxResults(cdc, res.Txs)
-// 		if err != nil {
-// 			w.WriteHeader(http.StatusInternalServerError)
-// 			w.Write([]byte(fmt.Sprintf("couldn't query txs. Error: %s", err.Error())))
-// 			return
-// 		}
-// 		// success
-// 		output, err = cdc.MarshalJSON(info)
-// 		if err != nil {
-// 			w.WriteHeader(http.StatusInternalServerError)
-// 			w.Write([]byte(err.Error()))
-// 			return
-// 		}
-// 		w.Write(output) // write
-// 	}
-// }
+		// success
+		output, err = cdc.MarshalJSON(txs)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write(output) // write
+	}
+}
+
+func queryTxs(node rpcclient.Client, cdc *wire.Codec, tag string, delegatorAddr string) ([]tx.TxInfo, error) {
+	page := 0
+	perPage := 100
+	prove := false
+	query := tag + " AND " + delegatorAddr
+	res, err := node.TxSearch(query, prove, page, perPage)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx.FormatTxResults(cdc, res.Txs)
+}
 
 // http request handler to query an unbonding-delegation
 func unbondingDelegationsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {

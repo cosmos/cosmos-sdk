@@ -7,13 +7,13 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client/tx"
+
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/common"
 	p2p "github.com/tendermint/tendermint/p2p"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
@@ -317,13 +317,7 @@ func TestTxs(t *testing.T) {
 	res, body = Request(t, port, "GET", fmt.Sprintf("/txs/%s", resultTx.Hash), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	type txInfo struct {
-		Hash   common.HexBytes        `json:"hash"`
-		Height int64                  `json:"height"`
-		Tx     sdk.Tx                 `json:"tx"`
-		Result abci.ResponseDeliverTx `json:"result"`
-	}
-	var indexedTxs []txInfo
+	var indexedTxs []tx.TxInfo
 
 	// check if tx is queryable
 	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?tag=tx.hash='%s'", resultTx.Hash), nil)
@@ -452,6 +446,11 @@ func TestBonding(t *testing.T) {
 	// TODO add redelegation, need more complex capabilities such to mock context and
 	// TODO check summary for redelegation
 	// assert.Len(t, summary.Redelegations, 1, "Delegation summary holds all redelegations")
+
+	// query txs
+	// TODO fix, not returning txs
+	// txs := getBondingTxs(t, port, addr, "")
+	// assert.Len(t, txs, 2, "All Txs found")
 }
 
 func TestSubmitProposal(t *testing.T) {
@@ -781,6 +780,17 @@ func getDelegationSummary(t *testing.T, port string, delegatorAddr sdk.AccAddres
 	err := cdc.UnmarshalJSON([]byte(body), &summary)
 	require.Nil(t, err)
 	return summary
+}
+
+func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, query string) []tx.TxInfo {
+
+	// get the account to get the sequence
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/txs?type=%s", delegatorAddr, query), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var txs []tx.TxInfo
+	err := cdc.UnmarshalJSON([]byte(body), &txs)
+	require.Nil(t, err)
+	return txs
 }
 
 func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) (resultTx ctypes.ResultBroadcastTxCommit) {

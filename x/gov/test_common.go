@@ -50,7 +50,7 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 // gov and stake endblocker
 func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-		tags, _ := EndBlocker(ctx, keeper)
+		tags := EndBlocker(ctx, keeper)
 		return abci.ResponseEndBlock{
 			Tags: tags,
 		}

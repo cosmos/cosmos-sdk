@@ -433,19 +433,63 @@ func setLatestVersion(batch dbm.Batch, version int64) {
 }
 
 // Commits each store and returns a new commitInfo.
+//// Commits each store and returns a new commitInfo.
+//func commitStores(version int64, storeMap map[StoreKey]CommitStore) commitInfo {
+//	storeInfos := make([]storeInfo, 0, len(storeMap))
+//
+//	for key, store := range storeMap {
+//		// Commit
+//		commitID := store.Commit()
+//
+//		// Record CommitID
+//		si := storeInfo{}
+//		si.Name = key.Name()
+//		si.Core.CommitID = commitID
+//		// si.Core.StoreType = store.GetStoreType()
+//		storeInfos = append(storeInfos, si)
+//	}
+//
+//	ci := commitInfo{
+//		Version:    version,
+//		StoreInfos: storeInfos,
+//	}
+//	return ci
+//}
+
+////////////////////  iris/cosmos-sdk begin///////////////////////////
+// Commits each store and returns a new commitInfo.
 func commitStores(version int64, storeMap map[StoreKey]CommitStore) commitInfo {
-	storeInfos := make([]storeInfo, 0, len(storeMap))
 
-	for key, store := range storeMap {
-		// Commit
-		commitID := store.Commit()
+	storemap := make(map[string]CommitStore)
 
-		// Record CommitID
-		si := storeInfo{}
-		si.Name = key.Name()
-		si.Core.CommitID = commitID
-		// si.Core.StoreType = store.GetStoreType()
-		storeInfos = append(storeInfos, si)
+	fmt.Println("CommitStores!!!!!!")
+	for key,store:= range storeMap{
+		fmt.Println(key)
+		storemap[key.Name()] = store
+	}
+
+	upgradeStore:=storemap["upgrade"].(KVStore)
+	bz:= upgradeStore.Get([]byte("k/"))//CurrentStoreKey
+	storekeys := string(bz) //splitby":"
+
+	storekeyslist := strings.Split(storekeys, ":")
+	fmt.Println(storekeyslist)
+
+	storeInfos := make([]storeInfo, 0, len(storekeyslist))
+
+	for _, key := range storekeyslist {
+
+		if store,ok:= storemap[key]; ok{
+			// Commit
+			commitID := store.Commit()
+
+			// Record CommitID
+			si := storeInfo{}
+			si.Name = key
+			si.Core.CommitID = commitID
+			// si.Core.StoreType = store.GetStoreType()
+			storeInfos = append(storeInfos, si)
+		}
 	}
 
 	ci := commitInfo{
@@ -454,6 +498,8 @@ func commitStores(version int64, storeMap map[StoreKey]CommitStore) commitInfo {
 	}
 	return ci
 }
+////////////////////  iris/cosmos-sdk end///////////////////////////
+
 
 // Gets commitInfo from disk.
 func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {

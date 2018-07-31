@@ -19,7 +19,7 @@ import (
 
 func registerTxRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
 	r.HandleFunc(
-		"/stake/delegations",
+		"/stake/delegators/{delegatorAddr}/delegations",
 		editDelegationsRequestHandlerFn(cdc, kb, ctx),
 	).Methods("POST")
 }
@@ -67,6 +67,7 @@ type EditDelegationsBody struct {
 
 // nolint: gocyclo
 // TODO: Split this up into several smaller functions, and remove the above nolint
+// TODO: use sdk.ValAddress instead of sdk.AccAddress for validators in messages
 func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m EditDelegationsBody
@@ -105,7 +106,8 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 				w.Write([]byte(fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error())))
 				return
 			}
-			validatorAddr, err := sdk.AccAddressFromBech32(msg.ValidatorAddr)
+			validatorAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddr)
+			validatorAddrAcc := sdk.AccAddress(validatorAddr)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
@@ -118,7 +120,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 			}
 			messages[i] = stake.MsgDelegate{
 				DelegatorAddr: delegatorAddr,
-				ValidatorAddr: validatorAddr,
+				ValidatorAddr: validatorAddrAcc,
 				Delegation:    msg.Delegation,
 			}
 			i++
@@ -136,13 +138,15 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 				w.Write([]byte("Must use own delegator address"))
 				return
 			}
-			validatorSrcAddr, err := sdk.AccAddressFromBech32(msg.ValidatorSrcAddr)
+			validatorSrcAddr, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddr)
+			validatorSrcAddrAcc := sdk.AccAddress(validatorSrcAddr)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
 				return
 			}
-			validatorDstAddr, err := sdk.AccAddressFromBech32(msg.ValidatorDstAddr)
+			ValidatorDstAddr, err := sdk.ValAddressFromBech32(msg.ValidatorDstAddr)
+			ValidatorDstAddrAcc := sdk.AccAddress(ValidatorDstAddr)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
@@ -156,8 +160,8 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 			}
 			messages[i] = stake.MsgBeginRedelegate{
 				DelegatorAddr:    delegatorAddr,
-				ValidatorSrcAddr: validatorSrcAddr,
-				ValidatorDstAddr: validatorDstAddr,
+				ValidatorSrcAddr: validatorSrcAddrAcc,
+				ValidatorDstAddr: ValidatorDstAddrAcc,
 				SharesAmount:     shares,
 			}
 			i++
@@ -170,13 +174,15 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 				w.Write([]byte(fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error())))
 				return
 			}
-			validatorSrcAddr, err := sdk.AccAddressFromBech32(msg.ValidatorSrcAddr)
+			validatorSrcAddr, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddr)
+			validatorSrcAddrAcc := sdk.AccAddress(validatorSrcAddr)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
 				return
 			}
-			validatorDstAddr, err := sdk.AccAddressFromBech32(msg.ValidatorDstAddr)
+			ValidatorDstAddr, err := sdk.ValAddressFromBech32(msg.ValidatorDstAddr)
+			ValidatorDstAddrAcc := sdk.AccAddress(ValidatorDstAddr)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
@@ -189,8 +195,8 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 			}
 			messages[i] = stake.MsgCompleteRedelegate{
 				DelegatorAddr:    delegatorAddr,
-				ValidatorSrcAddr: validatorSrcAddr,
-				ValidatorDstAddr: validatorDstAddr,
+				ValidatorSrcAddr: validatorSrcAddrAcc,
+				ValidatorDstAddr: ValidatorDstAddrAcc,
 			}
 			i++
 		}
@@ -207,7 +213,8 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 				w.Write([]byte("Must use own delegator address"))
 				return
 			}
-			validatorAddr, err := sdk.AccAddressFromBech32(msg.ValidatorAddr)
+			validatorAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddr)
+			validatorAddrAcc := sdk.AccAddress(validatorAddr)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
@@ -221,7 +228,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 			}
 			messages[i] = stake.MsgBeginUnbonding{
 				DelegatorAddr: delegatorAddr,
-				ValidatorAddr: validatorAddr,
+				ValidatorAddr: validatorAddrAcc,
 				SharesAmount:  shares,
 			}
 			i++

@@ -1,4 +1,4 @@
-package lcd
+package rest
 
 import (
 	"bytes"
@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -21,6 +22,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/gorilla/mux"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -38,6 +40,20 @@ import (
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
+
+func createHandler(cdc *wire.Codec) http.Handler {
+	r := mux.NewRouter()
+
+	kb, err := keys.GetKeyBase() //XXX
+	if err != nil {
+		panic(err)
+	}
+
+	ctx := context.NewCoreContextFromViper()
+	RegisterRoutes(ctx, r, cdc, kb)
+
+	return r
+}
 
 // makePathname creates a unique pathname for each test. It will panic if it
 // cannot get the current working directory.
@@ -121,7 +137,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	config.TxIndex.IndexAllTags = true
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	logger = log.NewFilter(logger, log.AllowError())
+	logger = log.NewFilter(logger, log.AllowNone())
 
 	privValidatorFile := config.PrivValidatorFile()
 	privVal := pvm.LoadOrGenFilePV(privValidatorFile)
@@ -129,7 +145,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 
 	db := dbm.NewMemDB()
 	app := gapp.NewGaiaApp(logger, db, nil)
-	cdc = gapp.MakeCodec()
+	cdc := gapp.MakeCodec()
 
 	genesisFile := config.GenesisFile()
 	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
@@ -170,7 +186,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	// add some tokens to init accounts
 	for _, addr := range initAddrs {
 		accAuth := auth.NewBaseAccountWithAddress(addr)
-		accAuth.Coins = sdk.Coins{sdk.NewInt64Coin("steak", 100)}
+		accAuth.Coins = sdk.Coins{sdk.NewCoin("steak", 100)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)
 		genesisState.StakeData.Pool.LooseTokens = genesisState.StakeData.Pool.LooseTokens.Add(sdk.NewRat(100))
@@ -256,7 +272,6 @@ func Request(t *testing.T, port, method, path string, payload []byte) (*http.Res
 		res *http.Response
 	)
 	url := fmt.Sprintf("http://localhost:%v%v", port, path)
-	fmt.Println("REQUEST " + method + " " + url)
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(payload))
 	require.Nil(t, err)

@@ -36,10 +36,16 @@ func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec
 	// 	delegatorValidatorsHandlerFn(ctx, cdc),
 	// ).Methods("GET")
 
-	// GET /stake/delegators/{addr}/validators/{addr} // Query a validator info that a delegator is bonded to
+	// GET /stake/delegators/{addr}/delegations/{validatorAddr} // Query a delegation between a delegator and a validator
 	r.HandleFunc(
 		"/stake/delegators/{delegatorAddr}/delegations/{validatorAddr}",
 		delegationHandlerFn(ctx, cdc),
+	).Methods("GET")
+
+	// GET /stake/delegators/{addr}/unbonding_delegations/{validatorAddr} // Query all unbonding_delegations between a delegator and a validator
+	r.HandleFunc(
+		"/stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}",
+		unbondingDelegationsHandlerFn(ctx, cdc),
 	).Methods("GET")
 
 	// GET /stake/delegators/{addr}/validators/{addr}
@@ -292,115 +298,66 @@ func delegatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFu
 // 	}
 // }
 
-// HTTP request handler to query all delegator bonded validators
-// func delegatorValidatorsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
+// http request handler to query an unbonding-delegation
+func unbondingDelegationsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-// 		var isBonded bool
-// 		var validatorAddr sdk.AccAddress
-// 		var bondedValidators []sdk.Validator
-// 		var output []byte // validators
-// 		var typesQuerySlice []string
+		// read parameters
+		vars := mux.Vars(r)
+		bech32delegator := vars["delegatorAddr"]
+		bech32validator := vars["validatorAddr"]
 
-// 		// read parameters
-// 		vars := mux.Vars(r)
-// 		bech32delegator := vars["delegatorAddr"]
+		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
 
-// 		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
-// 		if err != nil {
-// 			w.WriteHeader(http.StatusBadRequest)
-// 			w.Write([]byte(err.Error()))
-// 			return
-// 		}
+		validatorAddr, err := sdk.ValAddressFromBech32(bech32validator)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		//TODO this seems wrong. we should query with the sdk.ValAddress and not sdk.AccAddress
+		validatorAddrAcc := sdk.AccAddress(validatorAddr)
 
-// 		// Get all validators using key
-// 		kvs, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
-// 		if err != nil {
-// 			w.WriteHeader(http.StatusInternalServerError)
-// 			w.Write([]byte(fmt.Sprintf("couldn't query validators. Error: %s", err.Error())))
-// 			return
-// 		}
+		key := stake.GetUBDKey(delegatorAddr, validatorAddrAcc)
 
-// 		// the query will return empty if there are no validators
-// 		if len(kvs) == 0 {
-// 			w.WriteHeader(http.StatusNoContent)
-// 			return
-// 		}
+		res, err := ctx.QueryStore(key, storeName)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("couldn't query unbonding-delegation. Error: %s", err.Error())))
+			return
+		}
 
-// 		validators, err := getValidators(kvs, cdc)
-// 		if err != nil {
-// 			w.WriteHeader(http.StatusInternalServerError)
-// 			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
-// 			return
-// 		}
+		// the query will return empty if there is no data for this record
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
 
-// 		for i, validator := range validators {
-// 			// get all transactions from the delegator to val and append
-// 			isBonded = false
-// 			validatorAddr = validator.Owner
+		ubd, err := types.UnmarshalUBD(cdc, key, res)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("couldn't query unbonding-delegation. Error: %s", err.Error())))
+			return
+		}
 
-// 			// Check if there if the delegator is bonded or redelegated to the validator
+		// unbondings will be a list in the future but is not yet, but we want to keep the API consistent
+		ubdArray := []stake.UnbondingDelegation{ubd}
 
-// 			keyDel := stake.GetDelegationKey(delegatorAddr, validatorAddr)
-// 			keyRed := stake.GetREDsByDelToValDstIndexKey(delegatorAddr, validatorAddr)
+		output, err := cdc.MarshalJSON(ubdArray)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
 
-// 			res, err := ctx.QueryStore(keyDel, storeName)
-// 			if err != nil {
-// 				w.WriteHeader(http.StatusInternalServerError)
-// 				w.Write([]byte(fmt.Sprintf("couldn't query delegation. Error: %s", err.Error())))
-// 				return
-// 			}
-
-// 			if len(res) != 0 {
-// 				isBonded = true
-// 			}
-
-// 			if !isBonded {
-// 				res, err = ctx.QueryStore(keyRed, storeName)
-// 				if err != nil {
-// 					w.WriteHeader(http.StatusInternalServerError)
-// 					w.Write([]byte(fmt.Sprintf("couldn't query delegation. Error: %s", err.Error())))
-// 					return
-// 				}
-
-// 				if len(res) != 0 {
-// 					isBonded = true
-// 				}
-// 			}
-
-// 			if isBonded {
-// 				kvs, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
-// 				if err != nil {
-// 					w.WriteHeader(http.StatusInternalServerError)
-// 					w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
-// 					return
-// 				}
-
-// 				// the query will return empty if there are no validators
-// 				if len(kvs) == 0 {
-// 					continue
-// 				}
-// 				validator, err := getValidator(validatorAddr, kvs, cdc)
-// 				if err != nil {
-// 					w.WriteHeader(http.StatusInternalServerError)
-// 					w.Write([]byte(fmt.Sprintf("Couldn't get info from validator %s. Error: %s", validatorAddr.String(), err.Error())))
-// 					return
-// 				} else if validator == nil && err == nil {
-// 					continue
-// 				}
-// 				bondedValidators = append(bondedValidators, validator)
-// 			}
-// 		}
-// 		// success
-// 		output, err = cdc.MarshalJSON(bondedValidators)
-// 		if err != nil {
-// 			w.WriteHeader(http.StatusInternalServerError)
-// 			w.Write([]byte(err.Error()))
-// 			return
-// 		}
-// 		w.Write(output) // write
-// 	}
-// }
+		w.Write(output)
+	}
+}
 
 // HTTP request handler to query a bonded validator
 func delegationHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {

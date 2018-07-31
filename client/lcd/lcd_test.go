@@ -435,6 +435,13 @@ func TestBonding(t *testing.T) {
 	coins = acc.GetCoins()
 	require.Equal(t, int64(40), coins.AmountOf("steak").Int64())
 
+	// query unbonding delegation
+	validatorAddr := sdk.ValAddress(pks[0].Address())
+	unbondings := getUndelegations(t, port, addr, validatorAddr)
+	assert.Len(t, unbondings, 1, "Unbondings holds all unbonding-delegations")
+	assert.Equal(t, "30", unbondings[0].Balance.Amount.String())
+
+	// query summary
 	summary := getDelegationSummary(t, port, addr)
 
 	assert.Len(t, summary.Delegations, 1, "Delegation summary holds all delegations")
@@ -751,6 +758,18 @@ func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.A
 	err := cdc.UnmarshalJSON([]byte(body), &bond)
 	require.Nil(t, err)
 	return bond
+}
+
+func getUndelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) []stake.UnbondingDelegation {
+
+	// get the account to get the sequence
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/unbonding_delegations/%s", delegatorAddr, validatorAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	fmt.Println(body)
+	var unbondings []stake.UnbondingDelegation
+	err := cdc.UnmarshalJSON([]byte(body), &unbondings)
+	require.Nil(t, err)
+	return unbondings
 }
 
 func getDelegationSummary(t *testing.T, port string, delegatorAddr sdk.AccAddress) rest.DelegationSummary {

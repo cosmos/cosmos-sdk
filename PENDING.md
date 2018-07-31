@@ -1,6 +1,8 @@
 ## PENDING
 
 BREAKING CHANGES
+* API
+  - \#1880 [x/stake] changed the endpoints to be more REST-ful
 * Update to tendermint v0.22.5. This involves changing all of the cryptography imports. [Ref](https://github.com/tendermint/tendermint/pull/1966)
 * [baseapp] Msgs are no longer run on CheckTx, removed `ctx.IsCheckTx()`
 * [x/gov] CLI flag changed from `proposalID` to `proposal-id`
@@ -25,6 +27,7 @@ BREAKING CHANGES
   * `gaiacli gov vote --voter`
 * [x/gov] Added tags sub-package, changed tags to use dash-case 
 * [x/gov] Governance parameters are now stored in globalparams store
+* [types] sdk.NewCoin now takes sdk.Int, sdk.NewInt64Coin takes int64
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus
@@ -38,6 +41,7 @@ FEATURES
 * [tests] Remotenet commands for AWS (awsnet)
 * [store] Add transient store
 * [gov] Add slashing for validators who do not vote on a proposal
+* [cli] added `gov query-proposals` command to CLI. Can filter by `depositer`, `voter`, and `status`
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route

@@ -27,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 )
 
 func init() {
@@ -421,7 +422,16 @@ func TestBonding(t *testing.T) {
 	coins = acc.GetCoins()
 	require.Equal(t, int64(40), coins.AmountOf("steak").Int64())
 
+	summary := getDelegationSummary(t, port, addr)
+
+	assert.Len(t, summary.Delegations, 1, "Delegation summary holds all delegations")
+	assert.Equal(t, "30/1", summary.Delegations[0].Shares.String())
+	assert.Len(t, summary.UnbondingDelegations, 1, "Delegation summary holds all unbonding-delegations")
+	assert.Equal(t, "30", summary.UnbondingDelegations[0].Balance.Amount.String())
+
 	// TODO add redelegation, need more complex capabilities such to mock context and
+	// TODO check summary for redelegation
+	// assert.Len(t, summary.Redelegations, 1, "Delegation summary holds all redelegations")
 }
 
 func TestSubmitProposal(t *testing.T) {
@@ -722,12 +732,24 @@ func getSigningInfo(t *testing.T, port string, validatorAddr sdk.ValAddress) sla
 func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.AccAddress) stake.Delegation {
 
 	// get the account to get the sequence
-	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/%s/delegation/%s", delegatorAddr, validatorAddr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/delegations/%s", delegatorAddr, validatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var bond stake.Delegation
 	err := cdc.UnmarshalJSON([]byte(body), &bond)
 	require.Nil(t, err)
 	return bond
+}
+
+func getDelegationSummary(t *testing.T, port string, delegatorAddr sdk.AccAddress) rest.DelegationSummary {
+
+	// get the account to get the sequence
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s", delegatorAddr), nil)
+	fmt.Println("SUMMARY " + body)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var summary rest.DelegationSummary
+	err := cdc.UnmarshalJSON([]byte(body), &summary)
+	require.Nil(t, err)
+	return summary
 }
 
 func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, validatorAddr sdk.AccAddress) (resultTx ctypes.ResultBroadcastTxCommit) {

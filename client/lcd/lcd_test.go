@@ -526,8 +526,8 @@ func TestUnrevoke(t *testing.T) {
 
 	// XXX: any less than this and it fails
 	tests.WaitForHeight(3, port)
-
-	signingInfo := getSigningInfo(t, port, sdk.ValAddress(pks[0].Address()))
+	pkString, _ := sdk.Bech32ifyValPub(pks[0])
+	signingInfo := getSigningInfo(t, port, pkString)
 	tests.WaitForHeight(4, port)
 	require.Equal(t, true, signingInfo.IndexOffset > 0)
 	require.Equal(t, int64(0), signingInfo.JailedUntil)
@@ -710,8 +710,8 @@ func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Acc
 	return resultTx
 }
 
-func getSigningInfo(t *testing.T, port string, validatorAddr sdk.ValAddress) slashing.ValidatorSigningInfo {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/slashing/signing_info/%s", validatorAddr), nil)
+func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.ValidatorSigningInfo {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/slashing/signing_info/%s", validatorPubKey), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var signingInfo slashing.ValidatorSigningInfo
 	err := cdc.UnmarshalJSON([]byte(body), &signingInfo)

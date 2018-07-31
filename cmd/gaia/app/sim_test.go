@@ -23,15 +23,17 @@ import (
 )
 
 var (
-	seed             int64
-	numKeys          int
-	numBlocks        int
-	blockSize        int
-	minTimePerBlock  int64
-	maxTimePerBlock  int64
-	signingFraction  float64
-	evidenceFraction float64
-	enabled          bool
+	seed              int64
+	numKeys           int
+	numBlocks         int
+	blockSize         int
+	minTimePerBlock   int64
+	maxTimePerBlock   int64
+	signingFraction   float64
+	evidenceFraction  float64
+	invariantInterval int
+	enabled           bool
+	verbose           bool
 )
 
 func init() {
@@ -43,7 +45,9 @@ func init() {
 	flag.Int64Var(&maxTimePerBlock, "SimulationMaxTimePerBlock", 2*86400, "Maximum time per block (seconds)")
 	flag.Float64Var(&signingFraction, "SimulationSigningFraction", 0.7, "Chance a given validator signs a given block")
 	flag.Float64Var(&evidenceFraction, "SimulationEvidenceFraction", 0.01, "Chance that any evidence is found on a given block")
+	flag.IntVar(&invariantInterval, "SimulationInvariantInterval", 10, "Interval between blocks for checking invariants")
 	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")
+	flag.BoolVar(&verbose, "SimulationVerbose", false, "Verbose log output")
 }
 
 func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage {
@@ -97,7 +101,12 @@ func TestFullGaiaSimulation(t *testing.T) {
 	}
 
 	// Setup Gaia application
-	logger := log.TestingLogger()
+	var logger log.Logger
+	if verbose {
+		logger = log.TestingLogger()
+	} else {
+		logger = log.NewNopLogger()
+	}
 	db := dbm.NewMemDB()
 	app := NewGaiaApp(logger, db, nil)
 	require.Equal(t, "GaiaApp", app.Name())
@@ -128,8 +137,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 		},
 		[]simulation.RandSetup{},
 		[]simulation.Invariant{
-			//simulation.PeriodicInvariant(allInvariants, 50, 0),
-			allInvariants,
+			simulation.PeriodicInvariant(allInvariants, invariantInterval, 0),
 		},
 		numKeys,
 		numBlocks,

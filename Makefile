@@ -130,19 +130,19 @@ test_unit:
 test_race:
 	@go test -race $(PACKAGES_NOSIMULATION)
 
-test_sim:
-	@echo "Running individual module simulations."
-	@go test $(PACKAGES_SIMTEST) -v
-	@echo "Running full Gaia simulation. This may take several minutes."
-	@echo "Pass the flag 'SimulationSeed' to run with a constant seed."
-	@echo "Pass the flag 'SimulationNumKeys' to run with the specified number of keys."
-	@echo "Pass the flag 'SimulationNumBlocks' to run with the specified number of blocks."
-	@echo "Pass the flag 'SimulationBlockSize' to run with the specified block size (operations per block)."
-	@echo "Pass the flag 'SimulationMinTimePerBlock' to run with the specified minimum block time."
-	@echo "Pass the flag 'SimulationMaxTimePerBlock' to run with the specified maximum block time."
-	@echo "Pass the flag 'SimulationSigningFraction' to run with the specified chance of a given validator signing a given block."
-	@echo "Pass the flag 'SimulationEvidenceFraction' to run with the specified chance of finding evidence on a given block."
-	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -v -timeout 24h
+test_sim_modules:
+	@echo "Running individual module simulations..."
+	@go test $(PACKAGES_SIMTEST)
+
+test_sim_gaia_fast:
+	@echo "Running full Gaia simulation. This may take several minutes..."
+	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=100 -SimulationInvariantInterval=5 \
+		-SimulationNumKeys=100 -SimulationBlockSize=50 -timeout 10m
+
+test_sim_gaia_slow:
+	@echo "Running full Gaia simulation. This may take several minutes..."
+	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimuluationNumBlocks=1000 -SimulationInvariantInterval=10 \
+		-v -timeout 24h
 
 test_cover:
 	@bash tests/test_cover.sh
@@ -208,4 +208,4 @@ localnet-stop:
 check_tools check_dev_tools get_tools get_dev_tools get_vendor_deps draw_deps test test_cli test_unit \
 test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop \
-format check-ledger test_sim update_tools update_dev_tools
+format check-ledger test_sim_modules test_sim_gaia_fast test_sim_gaia_slow update_tools update_dev_tools

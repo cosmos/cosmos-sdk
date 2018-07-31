@@ -22,7 +22,7 @@ func SimulateMsgSubmitProposal(k gov.Keeper, sk stake.Keeper) simulation.TestAnd
 		key := simulation.RandomKey(r, keys)
 		addr := sdk.AccAddress(key.PubKey().Address())
 		// TODO random deposit
-		deposit := sdk.Coins{sdk.NewCoin("steak", 5)}
+		deposit := sdk.Coins{sdk.NewInt64Coin("steak", 5)}
 		msg := gov.NewMsgSubmitProposal(
 			simulation.RandStringOfLength(r, 5),
 			simulation.RandStringOfLength(r, 5),
@@ -50,7 +50,8 @@ func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.TestAndRunTx {
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
 		key := simulation.RandomKey(r, keys)
 		addr := sdk.AccAddress(key.PubKey().Address())
-		deposit := sdk.Coins{sdk.NewCoin("steak", 10)}
+		// TODO random deposit
+		deposit := sdk.Coins{sdk.NewInt64Coin("steak", 10)}
 		lastProposalID := k.GetLastProposalID(ctx)
 		if lastProposalID < 1 {
 			return "no-operation", nil

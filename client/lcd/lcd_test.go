@@ -771,7 +771,6 @@ func getUndelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress, v
 	// get the account to get the sequence
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/unbonding_delegations/%s", delegatorAddr, validatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	fmt.Println(body)
 	var unbondings []stake.UnbondingDelegation
 	err := cdc.UnmarshalJSON([]byte(body), &unbondings)
 	require.Nil(t, err)
@@ -939,7 +938,6 @@ func getValidator(t *testing.T, port string, validatorAddr sdk.ValAddress) stake
 	// get the account to get the sequence
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/validators/%s", validatorAddr.String()), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	fmt.Println(body)
 	var validator stake.BechValidator
 	err := cdc.UnmarshalJSON([]byte(body), &validator)
 	require.Nil(t, err)

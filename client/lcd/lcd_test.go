@@ -448,9 +448,14 @@ func TestBonding(t *testing.T) {
 	// assert.Len(t, summary.Redelegations, 1, "Delegation summary holds all redelegations")
 
 	// query txs
-	// TODO fix, not returning txs
-	// txs := getBondingTxs(t, port, addr, "")
-	// assert.Len(t, txs, 2, "All Txs found")
+	txs := getBondingTxs(t, port, addr, "")
+	assert.Len(t, txs, 2, "All Txs found")
+
+	txs = getBondingTxs(t, port, addr, "bond")
+	assert.Len(t, txs, 1, "All bonding txs found")
+
+	txs = getBondingTxs(t, port, addr, "unbond")
+	assert.Len(t, txs, 1, "All unbonding txs found")
 }
 
 func TestSubmitProposal(t *testing.T) {
@@ -748,6 +753,8 @@ func getSigningInfo(t *testing.T, port string, validatorAddr sdk.ValAddress) sla
 	return signingInfo
 }
 
+// ============= Stake Module ================
+
 func getDelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) rest.DelegationWithoutRat {
 
 	// get the account to get the sequence
@@ -785,7 +792,13 @@ func getDelegationSummary(t *testing.T, port string, delegatorAddr sdk.AccAddres
 func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, query string) []tx.TxInfo {
 
 	// get the account to get the sequence
-	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/txs?type=%s", delegatorAddr, query), nil)
+	var res *http.Response
+	var body string
+	if len(query) > 0 {
+		res, body = Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/txs?type=%s", delegatorAddr, query), nil)
+	} else {
+		res, body = Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/txs", delegatorAddr), nil)
+	}
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var txs []tx.TxInfo
 	err := cdc.UnmarshalJSON([]byte(body), &txs)
@@ -932,6 +945,8 @@ func getValidator(t *testing.T, port string, validatorAddr sdk.ValAddress) stake
 	require.Nil(t, err)
 	return validator
 }
+
+// ============= Governance Module ================
 
 func getProposal(t *testing.T, port string, proposalID int64) gov.Proposal {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d", proposalID), nil)

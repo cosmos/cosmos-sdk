@@ -33,7 +33,7 @@ func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec
 	r.HandleFunc(
 		"/stake/delegators/{delegatorAddr}/txs",
 		delegatorTxsHandlerFn(ctx, cdc),
-	).Queries("type", "{type}").Methods("GET")
+	).Methods("GET")
 
 	// // GET /stake/delegators/{addr}/validators // Query all validators that a delegator is bonded to
 	// r.HandleFunc(
@@ -245,15 +245,16 @@ func delegatorTxsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handle
 		// Get values from query
 
 		typesQuery := r.URL.Query().Get("type")
-		typesQuerySlice = strings.Split(strings.TrimSpace(typesQuery), " ")
-
-		fmt.Println(delegatorAddr, typesQuerySlice)
+		trimmedQuery := strings.TrimSpace(typesQuery)
+		if len(trimmedQuery) != 0 {
+			typesQuerySlice = strings.Split(trimmedQuery, " ")
+		}
 
 		noQuery := len(typesQuerySlice) == 0
 		isBondTx := contains(typesQuerySlice, "bond")
 		isUnbondTx := contains(typesQuerySlice, "unbond")
 		isRedTx := contains(typesQuerySlice, "redelegate")
-		var txs []tx.TxInfo = []tx.TxInfo{}
+		var txs = []tx.TxInfo{}
 
 		// TODO double check this
 		if noQuery || isBondTx {
@@ -310,7 +311,7 @@ func queryTxs(node rpcclient.Client, cdc *wire.Codec, tag string, delegatorAddr 
 	page := 0
 	perPage := 100
 	prove := false
-	query := tag + " AND " + delegatorAddr
+	query := tags.Action + "='" + tag + "' AND " + tags.Delegator + "='" + delegatorAddr + "'"
 	res, err := node.TxSearch(query, prove, page, perPage)
 	if err != nil {
 		return nil, err

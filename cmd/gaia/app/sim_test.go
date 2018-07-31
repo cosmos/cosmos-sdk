@@ -68,7 +68,7 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 	stakeGenesis := stake.DefaultGenesisState()
 	var validators []stake.Validator
 	var delegations []stake.Delegation
-	// XXX Try different numbers of initally bonded validators
+	// XXX Try different numbers of initially bonded validators
 	numInitiallyBonded := int64(50)
 	for i := 0; i < int(numInitiallyBonded); i++ {
 		validator := stake.NewValidator(accs[i], keys[i].PubKey(), stake.Description{})

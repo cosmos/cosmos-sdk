@@ -226,7 +226,7 @@ func (rs *rootMultiStore) CacheMultiStore() CacheMultiStore {
 
 // Implements MultiStore.
 func (rs *rootMultiStore) GetStore(key StoreKey) Store {
-	return rs.stores[key]
+	return rs.getStoreByName(key.Name())
 }
 
 // GetKVStore implements the MultiStore interface. If tracing is enabled on the

@@ -92,11 +92,11 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 
 	// register message routes
 	app.Router().
-		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
-		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
-		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
-		AddRoute("slashing", slashing.NewHandler(app.slashingKeeper)).
-		AddRoute("gov", gov.NewHandler(app.govKeeper))
+		AddRoute("bank", app.keyAccount, bank.NewHandler(app.coinKeeper)).
+		AddRoute("ibc", app.keyIBC, ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
+		AddRoute("stake", app.keyStake, stake.NewHandler(app.stakeKeeper)).
+		AddRoute("slashing", app.keySlashing, slashing.NewHandler(app.slashingKeeper)).
+		AddRoute("gov", app.keyGov, gov.NewHandler(app.govKeeper))
 
 	// initialize BaseApp
 	app.SetInitChainer(app.initChainer)

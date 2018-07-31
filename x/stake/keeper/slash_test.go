@@ -71,8 +71,8 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 		CreationHeight: 0,
 		// expiration timestamp (beyond which the unbonding delegation shouldn't be slashed)
 		MinTime:        0,
-		InitialBalance: sdk.NewCoin(params.BondDenom, 10),
-		Balance:        sdk.NewCoin(params.BondDenom, 10),
+		InitialBalance: sdk.NewInt64Coin(params.BondDenom, 10),
+		Balance:        sdk.NewInt64Coin(params.BondDenom, 10),
 	}
 	keeper.SetUnbondingDelegation(ctx, ubd)
 
@@ -95,9 +95,9 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	ubd, found := keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
 	// initialbalance unchanged
-	require.Equal(t, sdk.NewCoin(params.BondDenom, 10), ubd.InitialBalance)
+	require.Equal(t, sdk.NewInt64Coin(params.BondDenom, 10), ubd.InitialBalance)
 	// balance decreased
-	require.Equal(t, sdk.NewCoin(params.BondDenom, 5), ubd.Balance)
+	require.Equal(t, sdk.NewInt64Coin(params.BondDenom, 5), ubd.Balance)
 	newPool := keeper.GetPool(ctx)
 	require.Equal(t, int64(5), oldPool.LooseTokens.Sub(newPool.LooseTokens).RoundInt64())
 }
@@ -117,8 +117,8 @@ func TestSlashRedelegation(t *testing.T) {
 		MinTime:        0,
 		SharesSrc:      sdk.NewRat(10),
 		SharesDst:      sdk.NewRat(10),
-		InitialBalance: sdk.NewCoin(params.BondDenom, 10),
-		Balance:        sdk.NewCoin(params.BondDenom, 10),
+		InitialBalance: sdk.NewInt64Coin(params.BondDenom, 10),
+		Balance:        sdk.NewInt64Coin(params.BondDenom, 10),
 	}
 	keeper.SetRedelegation(ctx, rd)
 
@@ -155,9 +155,9 @@ func TestSlashRedelegation(t *testing.T) {
 	rd, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 	// initialbalance unchanged
-	require.Equal(t, sdk.NewCoin(params.BondDenom, 10), rd.InitialBalance)
+	require.Equal(t, sdk.NewInt64Coin(params.BondDenom, 10), rd.InitialBalance)
 	// balance decreased
-	require.Equal(t, sdk.NewCoin(params.BondDenom, 5), rd.Balance)
+	require.Equal(t, sdk.NewInt64Coin(params.BondDenom, 5), rd.Balance)
 	// shares decreased
 	del, found = keeper.GetDelegation(ctx, addrDels[0], addrVals[1])
 	require.True(t, found)
@@ -210,8 +210,8 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 		CreationHeight: 11,
 		// expiration timestamp (beyond which the unbonding delegation shouldn't be slashed)
 		MinTime:        0,
-		InitialBalance: sdk.NewCoin(params.BondDenom, 4),
-		Balance:        sdk.NewCoin(params.BondDenom, 4),
+		InitialBalance: sdk.NewInt64Coin(params.BondDenom, 4),
+		Balance:        sdk.NewInt64Coin(params.BondDenom, 4),
 	}
 	keeper.SetUnbondingDelegation(ctx, ubd)
 
@@ -313,8 +313,8 @@ func TestSlashWithRedelegation(t *testing.T) {
 		MinTime:          0,
 		SharesSrc:        sdk.NewRat(6),
 		SharesDst:        sdk.NewRat(6),
-		InitialBalance:   sdk.NewCoin(params.BondDenom, 6),
-		Balance:          sdk.NewCoin(params.BondDenom, 6),
+		InitialBalance:   sdk.NewInt64Coin(params.BondDenom, 6),
+		Balance:          sdk.NewInt64Coin(params.BondDenom, 6),
 	}
 	keeper.SetRedelegation(ctx, rd)
 
@@ -435,8 +435,8 @@ func TestSlashBoth(t *testing.T) {
 		MinTime:        0,
 		SharesSrc:      sdk.NewRat(6),
 		SharesDst:      sdk.NewRat(6),
-		InitialBalance: sdk.NewCoin(params.BondDenom, 6),
-		Balance:        sdk.NewCoin(params.BondDenom, 6),
+		InitialBalance: sdk.NewInt64Coin(params.BondDenom, 6),
+		Balance:        sdk.NewInt64Coin(params.BondDenom, 6),
 	}
 	keeper.SetRedelegation(ctx, rdA)
 
@@ -455,8 +455,8 @@ func TestSlashBoth(t *testing.T) {
 		CreationHeight: 11,
 		// expiration timestamp (beyond which the unbonding delegation shouldn't be slashed)
 		MinTime:        0,
-		InitialBalance: sdk.NewCoin(params.BondDenom, 4),
-		Balance:        sdk.NewCoin(params.BondDenom, 4),
+		InitialBalance: sdk.NewInt64Coin(params.BondDenom, 4),
+		Balance:        sdk.NewInt64Coin(params.BondDenom, 4),
 	}
 	keeper.SetUnbondingDelegation(ctx, ubdA)
 

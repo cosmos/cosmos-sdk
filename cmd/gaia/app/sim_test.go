@@ -36,8 +36,8 @@ var (
 
 func init() {
 	flag.Int64Var(&seed, "SimulationSeed", 42, "Simulation random seed")
-	flag.IntVar(&numKeys, "SimulationNumKeys", 1000, "Number of keys (accounts)")
-	flag.IntVar(&numBlocks, "SimulationNumBlocks", 1000, "Number of blocks")
+	flag.IntVar(&numKeys, "SimulationNumKeys", 500, "Number of keys (accounts)")
+	flag.IntVar(&numBlocks, "SimulationNumBlocks", 500, "Number of blocks")
 	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "Operations per block")
 	flag.Int64Var(&minTimePerBlock, "SimulationMinTimePerBlock", 86400, "Minimum time per block (seconds)")
 	flag.Int64Var(&maxTimePerBlock, "SimulationMaxTimePerBlock", 2*86400, "Maximum time per block (seconds)")
@@ -94,7 +94,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 	}
 
 	// Setup Gaia application
-	logger := log.NewNopLogger()
+	logger := log.TestingLogger()
 	db := dbm.NewMemDB()
 	app := NewGaiaApp(logger, db, nil)
 	require.Equal(t, "GaiaApp", app.Name())
@@ -114,18 +114,18 @@ func TestFullGaiaSimulation(t *testing.T) {
 			govsim.SimulateMsgSubmitProposal(app.govKeeper, app.stakeKeeper),
 			govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper),
 			govsim.SimulateMsgVote(app.govKeeper, app.stakeKeeper),
-			stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper),
-			stakesim.SimulateMsgEditValidator(app.stakeKeeper),
-			stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper),
-			stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper),
-			stakesim.SimulateMsgCompleteUnbonding(app.stakeKeeper),
-			stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper),
-			stakesim.SimulateMsgCompleteRedelegate(app.stakeKeeper),
+			//stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper),
+			//stakesim.SimulateMsgEditValidator(app.stakeKeeper),
+			//stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper),
+			//stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper),
+			//stakesim.SimulateMsgCompleteUnbonding(app.stakeKeeper),
+			//stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper),
+			//stakesim.SimulateMsgCompleteRedelegate(app.stakeKeeper),
 			slashingsim.SimulateMsgUnrevoke(app.slashingKeeper),
 		},
 		[]simulation.RandSetup{},
 		[]simulation.Invariant{
-			// simulation.PeriodicInvariant(allInvariants, 50, 0),
+			//simulation.PeriodicInvariant(allInvariants, 50, 0),
 			allInvariants,
 		},
 		numKeys,

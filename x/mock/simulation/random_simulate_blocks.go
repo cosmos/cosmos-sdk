@@ -70,7 +70,7 @@ func SimulateFromSeed(
 	header := abci.Header{Height: 0, Time: time}
 	opCount := 0
 
-	request := abci.RequestBeginBlock{}
+	request := abci.RequestBeginBlock{Header: header}
 
 	for i := 0; i < numBlocks; i++ {
 
@@ -103,15 +103,16 @@ func SimulateFromSeed(
 		}
 
 		res := app.EndBlock(abci.RequestEndBlock{})
+		app.Commit()
 		header.Height++
 		header.Time += minTimePerBlock + int64(r.Intn(int(timeDiff)))
 
 		// Generate a random RequestBeginBlock with the current validator set for the next block
 		if signingFraction == 0.0 {
 			// No BeginBlock simulation
-			request = abci.RequestBeginBlock{}
+			request = abci.RequestBeginBlock{Header: header}
 		} else {
-			request = RandomRequestBeginBlock(t, r, validators, livenessTransitionMatrix, evidenceFraction, header.Height, header.Time, log)
+			request = RandomRequestBeginBlock(t, r, validators, livenessTransitionMatrix, evidenceFraction, header, log)
 		}
 
 		// Update the validator set
@@ -124,7 +125,7 @@ func SimulateFromSeed(
 
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
 func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]mockValidator, livenessTransitions TransitionMatrix, evidenceFraction float64,
-	currentHeight int64, currentTime int64, log string) abci.RequestBeginBlock {
+	header abci.Header, log string) abci.RequestBeginBlock {
 	require.True(t, len(validators) > 0, "Zero validators can't sign a block!")
 	signingValidators := make([]abci.SigningValidator, len(validators))
 	i := 0
@@ -158,12 +159,13 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]m
 		evidence = append(evidence, abci.Evidence{
 			Type:             "DOUBLE_SIGN",
 			Validator:        validator,
-			Height:           currentHeight,
-			Time:             currentTime,
+			Height:           header.Height,
+			Time:             header.Time,
 			TotalVotingPower: currentTotalVotingPower,
 		})
 	}
 	return abci.RequestBeginBlock{
+		Header:              header,
 		Validators:          signingValidators,
 		ByzantineValidators: evidence,
 	}

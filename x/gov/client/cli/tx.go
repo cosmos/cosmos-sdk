@@ -15,13 +15,16 @@ import (
 )
 
 const (
-	flagProposalID   = "proposal-id"
-	flagTitle        = "title"
-	flagDescription  = "description"
-	flagProposalType = "type"
-	flagDeposit      = "deposit"
-	flagVoter        = "voter"
-	flagOption       = "option"
+	flagProposalID        = "proposal-id"
+	flagTitle             = "title"
+	flagDescription       = "description"
+	flagProposalType      = "type"
+	flagDeposit           = "deposit"
+	flagVoter             = "voter"
+	flagOption            = "option"
+	flagDepositer         = "depositer"
+	flagStatus            = "status"
+	flagLatestProposalIDs = "latest"
 )
 
 // submit a proposal tx
@@ -199,6 +202,111 @@ func GetCmdQueryProposal(storeName string, cdc *wire.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().String(flagProposalID, "", "proposalID of proposal being queried")
+
+	return cmd
+}
+
+// nolint: gocyclo
+// Command to Query Proposals
+func GetCmdQueryProposals(storeName string, cdc *wire.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "query-proposals",
+		Short: "query proposals with optional filters",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			bechDepositerAddr := viper.GetString(flagDepositer)
+			bechVoterAddr := viper.GetString(flagVoter)
+			strProposalStatus := viper.GetString(flagStatus)
+			latestProposalsIDs := viper.GetInt64(flagLatestProposalIDs)
+
+			var err error
+			var voterAddr sdk.AccAddress
+			var depositerAddr sdk.AccAddress
+			var proposalStatus gov.ProposalStatus
+
+			if len(bechDepositerAddr) != 0 {
+				depositerAddr, err = sdk.AccAddressFromBech32(bechDepositerAddr)
+				if err != nil {
+					return err
+				}
+			}
+
+			if len(bechVoterAddr) != 0 {
+				voterAddr, err = sdk.AccAddressFromBech32(bechVoterAddr)
+				if err != nil {
+					return err
+				}
+			}
+
+			if len(strProposalStatus) != 0 {
+				proposalStatus, err = gov.ProposalStatusFromString(strProposalStatus)
+				if err != nil {
+					return err
+				}
+			}
+
+			ctx := context.NewCoreContextFromViper()
+
+			res, err := ctx.QueryStore(gov.KeyNextProposalID, storeName)
+			if err != nil {
+				return err
+			}
+			var maxProposalID int64
+			cdc.MustUnmarshalBinary(res, &maxProposalID)
+
+			matchingProposals := []gov.Proposal{}
+
+			if latestProposalsIDs == 0 {
+				latestProposalsIDs = maxProposalID
+			}
+
+			for proposalID := maxProposalID - latestProposalsIDs; proposalID < maxProposalID; proposalID++ {
+				if voterAddr != nil {
+					res, err = ctx.QueryStore(gov.KeyVote(proposalID, voterAddr), storeName)
+					if err != nil || len(res) == 0 {
+						continue
+					}
+				}
+
+				if depositerAddr != nil {
+					res, err = ctx.QueryStore(gov.KeyDeposit(proposalID, depositerAddr), storeName)
+					if err != nil || len(res) == 0 {
+						continue
+					}
+				}
+
+				res, err = ctx.QueryStore(gov.KeyProposal(proposalID), storeName)
+				if err != nil || len(res) == 0 {
+					continue
+				}
+
+				var proposal gov.Proposal
+				cdc.MustUnmarshalBinary(res, &proposal)
+
+				if len(strProposalStatus) != 0 {
+					if proposal.GetStatus() != proposalStatus {
+						continue
+					}
+				}
+
+				matchingProposals = append(matchingProposals, proposal)
+			}
+
+			if len(matchingProposals) == 0 {
+				fmt.Println("No matching proposals found")
+				return nil
+			}
+
+			for _, proposal := range matchingProposals {
+				fmt.Printf("  %d - %s\n", proposal.GetProposalID(), proposal.GetTitle())
+			}
+			return nil
+		},
+	}
+
+	cmd.Flags().String(flagLatestProposalIDs, "", "(optional) limit to latest [number] proposals. Defaults to all proposals")
+	cmd.Flags().String(flagDepositer, "", "(optional) filter by proposals deposited on by depositer")
+	cmd.Flags().String(flagVoter, "", "(optional) filter by proposals voted on by voted")
+	cmd.Flags().String(flagStatus, "", "(optional) filter proposals by proposal status")
 
 	return cmd
 }

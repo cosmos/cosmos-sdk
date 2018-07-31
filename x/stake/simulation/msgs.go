@@ -39,7 +39,7 @@ func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation
 			ValidatorAddr: address,
 			DelegatorAddr: address,
 			PubKey:        pubkey,
-			Delegation:    sdk.NewIntCoin(denom, amount),
+			Delegation:    sdk.NewCoin(denom, amount),
 		}
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		ctx, write := ctx.CacheContext()
@@ -100,7 +100,7 @@ func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) simulation.TestAn
 		msg := stake.MsgDelegate{
 			DelegatorAddr: delegatorAddress,
 			ValidatorAddr: validatorAddress,
-			Delegation:    sdk.NewIntCoin(denom, amount),
+			Delegation:    sdk.NewCoin(denom, amount),
 		}
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		ctx, write := ctx.CacheContext()
@@ -241,7 +241,7 @@ func Setup(mapp *mock.App, k stake.Keeper) simulation.RandSetup {
 		loose := sdk.ZeroInt()
 		mapp.AccountMapper.IterateAccounts(ctx, func(acc auth.Account) bool {
 			balance := simulation.RandomAmount(r, sdk.NewInt(1000000))
-			acc.SetCoins(acc.GetCoins().Plus(sdk.Coins{sdk.NewIntCoin(denom, balance)}))
+			acc.SetCoins(acc.GetCoins().Plus(sdk.Coins{sdk.NewCoin(denom, balance)}))
 			mapp.AccountMapper.SetAccount(ctx, acc)
 			loose = loose.Add(balance)
 			return false

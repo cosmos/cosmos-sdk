@@ -19,7 +19,7 @@ Other notes:
  - `sender` denotes the address of the sender of the transaction
  - `getXxx`, `setXxx`, and `removeXxx` functions are used to retrieve and
     modify objects from the store
- - `sdk.Dec` refers to a rational numeric type specified by the SDK.
+ - `sdk.Dec` refers to a decimal type specified by the SDK.
  
 ### TxCreateValidator
 

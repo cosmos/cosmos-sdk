@@ -25,8 +25,8 @@ type VotingProcedure struct {
 
 ```go
 type TallyingProcedure struct {
-  Threshold         rational.Rational   //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
-  Veto              rational.Rational   //  Minimum proportion of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
+  Threshold         sdk.Dec   //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
+  Veto              sdk.Dec   //  Minimum proportion of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
   GovernancePenalty sdk.Dec             //  Penalty if validator does not vote
   GracePeriod       int64               //  If validator entered validator set in this period of blocks before vote ended, governance penalty does not apply
 }

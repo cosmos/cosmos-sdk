@@ -113,8 +113,8 @@ occur on an epoch basis.
 ```golang
 type powerChange struct {
     height      int64        // block height at change
-    power       rational.Dec // total power at change
-    prevpower   rational.Dec // total power at previous height-1 
+    power       sdk.Dec // total power at change
+    prevpower   sdk.Dec // total power at previous height-1 
     feesin      coins.Coin   // fees in at block height
     prevFeePool coins.Coin   // total fees in at previous block height
 }

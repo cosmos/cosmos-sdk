@@ -42,7 +42,7 @@ processProvisions():
         
         setPool(pool)
 
-nextInflation(hrsPerYr rational.Dec):
+nextInflation(hrsPerYr sdk.Dec):
     if pool.TotalSupply > 0 
         bondedRatio = pool.BondedPool / pool.TotalSupply
     else 

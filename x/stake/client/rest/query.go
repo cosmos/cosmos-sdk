@@ -453,10 +453,8 @@ func delegatorValidatorsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("couldn't query validators. Error: %s", err.Error())))
 			return
-		}
-
-		// the query will return empty if there are no validators
-		if len(kvs) == 0 {
+		} else if len(kvs) == 0 {
+			// the query will return empty if there are no validators
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
@@ -483,27 +481,17 @@ func delegatorValidatorsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http
 				return
 			}
 
-			// if len(res) == 0 {
-			// 	res, err = ctx.QueryStore(keyRed, storeName)
-			// 	if err != nil {
-			// 		w.WriteHeader(http.StatusInternalServerError)
-			// 		w.Write([]byte(fmt.Sprintf("couldn't query delegation. Error: %s", err.Error())))
-			// 		return
-			// 	}
-			// }
-
 			if len(res) != 0 {
-
 				kvs, errQuery := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
 				if errQuery != nil {
 					w.WriteHeader(http.StatusInternalServerError)
 					w.Write([]byte(fmt.Sprintf("Error: %s", errQuery.Error())))
 					return
-				}
-				// the query will return empty if there are no validators
-				if len(kvs) == 0 {
+				} else if len(kvs) == 0 {
+					// the query will return empty if there are no delegations
 					continue
 				}
+
 				validator, errVal := getValidatorFromAccAdrr(validatorAccAddr, kvs, cdc)
 				if errVal != nil {
 					w.WriteHeader(http.StatusInternalServerError)
@@ -511,6 +499,10 @@ func delegatorValidatorsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http
 					return
 				}
 				bondedValidators = append(bondedValidators, validator)
+			} else {
+				// delegator is not bonded to any delegator
+				w.WriteHeader(http.StatusNoContent)
+				return
 			}
 		}
 		// success
@@ -553,17 +545,6 @@ func delegatorValidatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.
 			w.Write([]byte(fmt.Sprintf("couldn't query delegation. Error: %s", err.Error())))
 			return
 		}
-
-		// TODO Double check if this is necessary or not
-		// if delegator has no delegations
-		// if len(res) == 0 {
-		// 	res, err = ctx.QueryStore(keyRed, storeName)
-		// 	if err != nil {
-		// 		w.WriteHeader(http.StatusInternalServerError)
-		// 		w.Write([]byte(fmt.Sprintf("couldn't query delegation. Error: %s", err.Error())))
-		// 		return
-		// 	}
-		// }
 		// if delegator delegations
 		if len(res) != 0 {
 			kvs, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
@@ -571,10 +552,8 @@ func delegatorValidatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
 				return
-			}
-
-			// the query will return empty if there are no validators
-			if len(kvs) == 0 {
+			} else if len(kvs) == 0 {
+				// the query will return empty if there are no delegations
 				w.WriteHeader(http.StatusNoContent)
 				return
 			}

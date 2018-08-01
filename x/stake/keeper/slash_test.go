@@ -275,7 +275,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
 	require.True(t, found)
 	// power decreased by 3 again
-	require.Equal(t, sdk.NewDec(1, 1), validator.GetPower())
+	require.Equal(t, sdk.NewDec(1, 0), validator.GetPower())
 
 	// slash validator again
 	// all originally bonded stake has been slashed, so this will have no effect

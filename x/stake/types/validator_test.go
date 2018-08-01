@@ -189,9 +189,12 @@ func TestRemoveDelShares(t *testing.T) {
 	}
 	shares := sdk.NewDec(29, 0)
 	_, newPool, tokens := validator.RemoveDelShares(pool, shares)
-	exp, err := sdk.NewDecFromStr("1286.5913043478")
+
+	exp, err := sdk.NewDecFromStr("1286.5913043477")
 	require.NoError(t, err)
+
 	require.True(sdk.DecEq(t, exp, tokens))
+
 	require.True(sdk.DecEq(t,
 		newPool.LooseTokens.Add(newPool.BondedTokens),
 		pool.LooseTokens.Add(pool.BondedTokens)))

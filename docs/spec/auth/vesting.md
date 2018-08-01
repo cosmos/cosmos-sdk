@@ -2,98 +2,87 @@
 
 ### Intro and Requirements
 
-This paper specifies changes to the auth and bank modules to implement vested accounts for the Cosmos Hub. 
-The requirements for this vested account is that it should be capable of being initialized during genesis with
-a starting balance X coins and a vesting blocktime T. The owner of this account should be able to delegate to validators and vote,
-however they cannot send their coins to other accounts until the account has fully vested. Thus, the bank module's `MsgSend` handler 
-should error if a vested account is trying to send an amount before time T.
+This paper specifies changes to the auth and bank modules to implement vesting accounts for the Cosmos Hub. 
+The requirements for this vesting account is that it should be capable of being initialized during genesis with
+a starting balance X coins and a vesting blocktime T. The owner of this account should be able to delegate to validators 
+and vote with locked coins, however they cannot send locked coins to other accounts until those coins have been unlocked. 
+The vesting account should also be able to spend any coins it receives from other users or from fees/inflation rewards. 
+Thus, the bank module's `MsgSend` handler should error if a vesting account is trying to send an amount that exceeds their 
+unlocked coin amount.
 
 ### Implementation
 
-##### Changes to x/auth Module
-
-The `Account` interface will specify both the Account type and any parameters it needs.
+##### Vesting Account implementation
 
 ```go
-// Account is a standard account using a sequence number for replay protection
-// and a pubkey for authentication.
-type Account interface {
-    Type() string // returns the type of the account
+type VestingAccount interface {
+    Account
+    AssertIsVestingAccount() // existence implies that account is vesting.
+}
 
-	GetAddress() sdk.AccAddress
-	SetAddress(sdk.AccAddress) error // errors if already set.
+// Implements Vesting Account
+// Continuously vests by unlocking coins linearly with respect to time
+type ContinuousVestingAccount struct {
+    BaseAccount
+    OriginalCoins sdk.Coins
+    ReceivedCoins sdk.Coins
+    StartTime     int64
+    EndTime       int64
+}
 
-	GetPubKey() crypto.PubKey // can return nil.
-	SetPubKey(crypto.PubKey) error
-
-	GetAccountNumber() int64
-	SetAccountNumber(int64) error
-
-	GetSequence() int64
-	SetSequence(int64) error
-
-	GetCoins() sdk.Coins
-    SetCoins(sdk.Coins) error
-    
-    // Getter and setter methods for account params
-    // Parameters can be understood to be a map[string]interface{} with encoded keys and vals in store
-    // It is upto handler to use these appropriately
-    GetParams([]byte) []byte
-    SetParams([]byte, []byte) error
+func (vacc ContinuousVestingAccount) ConvertAccount() BaseAccount {
+    if T > vacc.EndTime {
+        // Convert to BaseAccount
+    }
 }
 ```
 
-The `Type` method will allow handlers to determine what type of account is sending the message, and the 
-handler can then call `GetParams` to handle the specific account type using the parameters it expects to 
-exist in the parameter map.
+The `VestingAccount` interface is used purely to assert that an account is a vesting account like so:
 
-The `VestedAccount` will be an implementation of `Account` interface that wraps `BaseAccount` with 
-`Type() => "vested` and params, `GetParams() => {"TimeLock": N (int64)}`. 
-`SetParams` will be disabled as we do not want to update params after vested account initialization.
+```go
+vacc, ok := acc.(VestingAccount); ok
+```
 
+The `ContinuousVestingAccount` struct implements the Vesting account interface. It uses `OriginalCoins`, `ReceivedCoins`, 
+`StartTime`, and `EndTime` to calculate how many coins are sendable at any given point. Once the account has fully vested, 
+the next `bank.MsgSend` will convert the account into a `BaseAccount` and store it in state as such from that point on. 
+Since the vesting restrictions need to be implemented on a per-module basis, the `ContinuouosVestingAccount` implements 
+the `Account` interface exactly like `BaseAccount`.
 
-`auth.AccountMapper` will be modified handle vested accounts as well. Specific changes 
-are omitted in this doc for succinctness.
+##### Changes to Keepers/Handler
 
-
-##### Changes to bank MsgSend Handler
-
-Since a vested account should be capable of doing everything but sending, the restriction should be 
+Since a vesting account should be capable of doing everything but sending with its locked coins, the restriction should be 
 handled at the `bank.Keeper` level. Specifically in methods that are explicitly used for sending like 
-`sendCoins` and `inputOutputCoins`. These methods must check an account's `Type` method; if it is a vested 
-account (i.e. `acc.Type() == "vested"`):
+`sendCoins` and `inputOutputCoins`. These methods must check that an account is a vesting account using the check described above.
+NOTE: `Now = ctx.BlockHeader().Time`
 
-1. Check if `ctx.BlockHeader().Time < acc.GetParams()["BlockLock"]`
-2. If `true`, the account is still vesting, return sdk.Error. Else, allow transaction to be processed as normal.
+1. If `Now < vacc.EndTime`
+   1. Calculate `SendableCoins := ReceivedCoins + OriginalCoins * (Now - StartTime)/(EndTime - StartTime))`
+      - NOTE: `SendableCoins` may be greater than total coins in account. This is because coins can be subtracted by staking module.
+        `SendableCoins` denotes maximum coins allowed to be spent right now.
+   2. If `msg.Amount > SendableCoins`, return sdk.Error. Else, allow transaction to process normally.
+2. Else:
+   1. Convert account to `BaseAccount` and process normally.
+
+Coins that are sent to a vesting account after initialization either through users sending them coins or through fees/inflation rewards 
+should be spendable immediately after receiving them. Thus, handlers (like staking or bank) that send coins that a vesting account did not 
+originally own should increment `ReceivedCoins` by the amount sent.
+
+WARNING: Handlers SHOULD NOT update `ReceivedCoins` if they were originally sent from the vesting account. For example, if a vesting account 
+unbonds from a validator, their tokens should be added back to account but `ReceivedCoins` SHOULD NOT be incremented.
+However when the staking handler is handing out fees or inflation rewards, then `ReceivedCoins` SHOULD be incremented.
 
 ### Initializing at Genesis
 
-To initialize both vested accounts and base accounts, the `GenesisAccount` struct will be:
+To initialize both vesting accounts and base accounts, the `GenesisAccount` struct will be:
 
 ```go
 type GenesisAccount struct {
-	Address  sdk.AccAddress `json:"address"`
-    Coins    sdk.Coins      `json:"coins"`
-    Type     string         `json:"type"`
-    TimeLock int64          `json:"lock"`
+	Address sdk.AccAddress `json:"address"`
+    Coins   sdk.Coins      `json:"coins"`
+    EndTime int64          `json:"lock"`
 }
 ```
 
-During `InitChain`, the GenesisAccount's are decoded. If they have `Type == "vested`, a vested account with parameters => 
-`{"TimeLock": N}` gets created and put in initial state. Otherwise if `Type == "base"` a base account is created 
-and the `TimeLock` attribute of corresponding `GenesisAccount` is ignored. `InitChain` will panic on any other account types.
-
-### Pros and Cons
-
-##### Pros
-
-- Easily Extensible. If more account types need to get added in the future or if developers building on top of SDK 
-want to handle multiple custom account types, they simply have to implement the `Account` interface with unique `Type` 
-and their custom parameters.
-- Handlers (and their associated keepers) get to determine what types of accounts they will handle and can use the parameters 
-in Account interface to handle different accounts appropriately.
-
-##### Cons
-
-- Changes to `Account` interface
-- Slightly more complex code in `bank.Keeper` functions
+During `InitChain`, the GenesisAccounts are decoded. If `EndTime == 0`, a BaseAccount gets created and put in Genesis state. 
+Otherwise a vesting account is created with `StartTime = RequestInitChain.Time`, `EndTime = gacc.EndTime`, and `OriginalCoins = Coins`. 

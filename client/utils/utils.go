@@ -22,6 +22,8 @@ func SendTx(txCtx authctx.TxContext, queryCtx context.QueryContext, msgs []sdk.M
 		return err
 	}
 
+	// TODO: (ref #1903) Allow for user supplied account number without
+	// automatically doing a manual lookup.
 	if txCtx.AccountNumber == 0 {
 		accNum, err := queryCtx.GetAccountNumber(from)
 		if err != nil {
@@ -31,6 +33,8 @@ func SendTx(txCtx authctx.TxContext, queryCtx context.QueryContext, msgs []sdk.M
 		txCtx = txCtx.WithAccountNumber(accNum)
 	}
 
+	// TODO: (ref #1903) Allow for user supplied account sequence without
+	// automatically doing a manual lookup.
 	if txCtx.Sequence == 0 {
 		accSeq, err := queryCtx.GetAccountSequence(from)
 		if err != nil {

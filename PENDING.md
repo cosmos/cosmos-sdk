@@ -42,6 +42,7 @@ FEATURES
 * [store] Add transient store
 * [gov] Add slashing for validators who do not vote on a proposal
 * [cli] added `gov query-proposals` command to CLI. Can filter by `depositer`, `voter`, and `status`
+* [core] added BaseApp.Seal - ability to seal baseapp parameters once they've been set
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route

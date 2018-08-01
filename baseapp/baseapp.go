@@ -135,6 +135,12 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 	app.cms.MountStoreWithDB(key, typ, nil)
 }
 
+////////////////////  iris/cosmos-sdk begin  ///////////////////////////
+func (app *BaseApp) GetKVStore(key sdk.StoreKey) sdk.KVStore {
+	return app.cms.GetKVStore(key)
+}
+////////////////////  iris/cosmos-sdk end  ///////////////////////////
+
 // Set the txDecoder function
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder

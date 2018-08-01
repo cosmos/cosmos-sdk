@@ -476,13 +476,16 @@ gaiacli account <account_cosmosaccaddr> --block=<block_height>
 
 ## Create your Own Testnet
 
-To create your own testnet, first each validator will need to install gaiad and run gen-tx
+To create your own testnet, first each validator will need to install gaiad and
+run `gen-tx`:
 
 ```bash
 gaiad init gen-tx --name <account_name>
 ```
 
-This populations `$HOME/.gaiad/gen-tx/` with a json file.
+The validator will be prompted to enter a password for their new account.
+
+This populates `$HOME/.gaiad/gen-tx/` with a json file.
 
 Now these json files need to be aggregated together via Github, a Google form, pastebin or other methods.
 

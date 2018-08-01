@@ -20,7 +20,7 @@
 - We need to test auto-flipping w/ threshold voting power.
 - Super simple:
   - Only use text proposals
-  - Put “NextAppVersion” in the header and tally voting power behind it
+  - On-chain mechanism for agreeing on when to "flip" to new functionality
 
 ## Slashing/Stability
 - current: downtime, double signing during unbonding

@@ -17,6 +17,7 @@ REGION_LIMIT?=1
 
 # Path to gaiad for deployment. Must be a Linux binary.
 BINARY?=$(CURDIR)/../build/gaiad
+GAIACLI_BINARY?=$(CURDIR)/../build/gaiacli
 
 # Path to the genesis.json and config.toml files to deploy on full nodes.
 GENESISFILE?=$(CURDIR)/../build/genesis.json
@@ -39,7 +40,15 @@ disclaimer:
 extract-config: disclaimer
 	#Make sure you have AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY or your IAM roles set for AWS API access.
 	@if ! [ -f $(HOME)/.ssh/id_rsa.pub ]; then ssh-keygen ; fi
-	cd remote/ansible && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(CLUSTER_NAME)" -u centos -b -e TESTNET_NAME="$(TESTNET_NAME)" -e GENESISFILE="$(GENESISFILE)" -e CONFIGFILE="$(CONFIGFILE)" extract-config.yml
+	cd remote/ansible && \
+	ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \
+		-i inventory/ec2.py \
+		-l "tag_Environment_$(CLUSTER_NAME)" \
+		-b -u centos \
+		-e TESTNET_NAME="$(TESTNET_NAME)" \
+		-e GENESISFILE="$(GENESISFILE)" \
+		-e CONFIGFILE="$(CONFIGFILE)" \
+		extract-config.yml
 
 
 ########################################
@@ -90,6 +99,15 @@ upgrade-gaiad: disclaimer
 	@if ! [ -f $(HOME)/.ssh/id_rsa.pub ]; then ssh-keygen ; fi
 	@if [ -z "`file $(BINARY) | grep 'ELF 64-bit'`" ]; then echo "Please build a linux binary using 'make build-linux'." ; false ; fi
 	cd remote/ansible && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(CLUSTER_NAME)" -u centos -b -e BINARY=$(BINARY) upgrade-gaiad.yml
+
+UNSAFE_RESET_ALL?=no
+upgrade-seeds: disclaimer
+	#Make sure you have AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY or your IAM roles set for AWS API access.
+	@if ! [ -f $(HOME)/.ssh/id_rsa.pub ]; then ssh-keygen ; fi
+	@if [ -z "`file $(BINARY) | grep 'ELF 64-bit'`" ]; then echo "Please build a linux binary using 'make build-linux'." ; false ; fi
+	@if [ -z "`file $(GAIACLI_BINARY) | grep 'ELF 64-bit'`" ]; then echo "Please build a linux binary using 'make build-linux'." ; false ; fi
+	cd remote/ansible && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i inventory/ec2.py -l "tag_Environment_$(CLUSTER_NAME)" -u centos -b -e BINARY=$(BINARY) -e GAIACLI_BINARY=$(GAIACLI_BINARY) -e UNSAFE_RESET_ALL=$(UNSAFE_RESET_ALL) upgrade-gaia.yml
+
 
 list:
 	remote/ansible/inventory/ec2.py | python -c 'import json,sys ; print "\n".join(json.loads("".join(sys.stdin.readlines()))["tag_Environment_$(CLUSTER_NAME)"])'

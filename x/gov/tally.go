@@ -81,7 +81,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, nonV
 		totalVotingPower = totalVotingPower.Add(votingPower)
 	}
 
-	tallyingProcedure := keeper.GetTallyingProcedure()
+	tallyingProcedure := keeper.GetTallyingProcedure(ctx)
 
 	// If no one votes, proposal fails
 	if totalVotingPower.Sub(results[OptionAbstain]).Equal(sdk.ZeroRat()) {

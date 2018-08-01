@@ -428,40 +428,16 @@ func delegatorValidatorsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http
 			// get all transactions from the delegator to val and append
 			validatorAccAddr = validator.Owner
 
-			// Check if the delegator is bonded or redelegated to the validator
-			keyDel := stake.GetDelegationKey(delegatorAddr, validatorAccAddr)
-			// keyRed := stake.GetREDsByDelToValDstIndexKey(delegatorAddr, validatorAccAddr)
-
-			res, errQuery := ctx.QueryStore(keyDel, storeName)
-			if errQuery != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("couldn't query delegation. Error: %s", errQuery.Error())))
+			validator, statusCode, errMsg, errRes := getDelegatorValidator(ctx, cdc, delegatorAddr, validatorAccAddr)
+			if errRes != nil {
+				w.WriteHeader(statusCode)
+				w.Write([]byte(fmt.Sprintf("%s%s", errMsg, errRes.Error())))
 				return
+			} else if statusCode == http.StatusNoContent {
+				continue
 			}
 
-			if len(res) != 0 {
-				kvs, errQuery := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
-				if errQuery != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(fmt.Sprintf("Error: %s", errQuery.Error())))
-					return
-				} else if len(kvs) == 0 {
-					// the query will return empty if there are no delegations
-					continue
-				}
-
-				validator, errVal := getValidatorFromAccAdrr(validatorAccAddr, kvs, cdc)
-				if errVal != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(fmt.Sprintf("Couldn't get info from validator %s. Error: %s", validatorAccAddr.String(), errVal.Error())))
-					return
-				}
-				bondedValidators = append(bondedValidators, validator)
-			} else {
-				// delegator is not bonded to any delegator
-				w.WriteHeader(http.StatusNoContent)
-				return
-			}
+			bondedValidators = append(bondedValidators, validator)
 		}
 		// success
 		output, err := cdc.MarshalJSON(bondedValidators)
@@ -485,7 +461,7 @@ func delegatorValidatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.
 
 		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
 		validatorAccAddr, err := sdk.AccAddressFromBech32(bech32validator)
-		validatorValAddress, err := sdk.ValAddressFromBech32(bech32validator)
+		// validatorValAddress, err := sdk.ValAddressFromBech32(bech32validator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
@@ -494,43 +470,20 @@ func delegatorValidatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.
 
 		// Check if there if the delegator is bonded or redelegated to the validator
 
-		keyDel := stake.GetDelegationKey(delegatorAddr, validatorAccAddr)
-		// keyRed := stake.GetREDsByDelToValDstIndexKey(delegatorAddr, validatorAccAddr)
-
-		res, err := ctx.QueryStore(keyDel, storeName)
+		validator, statusCode, errMsg, err := getDelegatorValidator(ctx, cdc, delegatorAddr, validatorAccAddr)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't query delegation. Error: %s", err.Error())))
+			w.WriteHeader(statusCode)
+			w.Write([]byte(fmt.Sprintf("%s%s", errMsg, err.Error())))
+			return
+		} else if statusCode == http.StatusNoContent {
+			w.WriteHeader(statusCode)
 			return
 		}
-		// if delegator delegations
-		if len(res) != 0 {
-			kvs, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
-				return
-			} else if len(kvs) == 0 {
-				// the query will return empty if there are no delegations
-				w.WriteHeader(http.StatusNoContent)
-				return
-			}
-			validator, err := getValidator(validatorValAddress, kvs, cdc)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("Couldn't get info from validator %s. Error: %s", validatorValAddress.String(), err.Error())))
-				return
-			}
-			// success
-			output, err = cdc.MarshalJSON(validator)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(err.Error()))
-				return
-			}
-		} else {
-			// delegator is not bonded to any delegator
-			w.WriteHeader(http.StatusNoContent)
+		// success
+		output, err = cdc.MarshalJSON(validator)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
 			return
 		}
 		w.Write(output)

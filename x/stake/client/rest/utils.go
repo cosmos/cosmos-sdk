@@ -27,9 +27,40 @@ func contains(stringSlice []string, txType string) bool {
 	return false
 }
 
+func getDelegatorValidator(ctx context.CoreContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAccAddr sdk.AccAddress) (
+	validator types.BechValidator, httpStatusCode int, errMsg string, err error) {
+
+	// Check if the delegator is bonded or redelegated to the validator
+	keyDel := stake.GetDelegationKey(delegatorAddr, validatorAccAddr)
+	// keyRed := stake.GetREDsByDelToValDstIndexKey(delegatorAddr, validatorAccAddr)
+
+	res, err := ctx.QueryStore(keyDel, storeName)
+	if err != nil {
+		return types.BechValidator{}, http.StatusInternalServerError, "couldn't query delegation. Error: ", err
+	}
+
+	if len(res) != 0 {
+		kvs, errQuery := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
+		if errQuery != nil {
+			return types.BechValidator{}, http.StatusInternalServerError, "Error: ", err
+		}
+		if len(kvs) == 0 {
+			// the query will return empty if there are no delegations
+			return types.BechValidator{}, http.StatusNoContent, "", nil
+		}
+
+		validator, errVal := getValidatorFromAccAdrr(validatorAccAddr, kvs, cdc)
+		if errVal != nil {
+			return types.BechValidator{}, http.StatusInternalServerError, "Couldn't get info from validator. Error: ", errVal
+		}
+		return validator, http.StatusOK, "", nil
+
+	}
+	return types.BechValidator{}, http.StatusNoContent, "", nil
+}
+
 func getDelegatorDelegations(ctx context.CoreContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
-	outputDelegation DelegationWithoutRat, httpStatusCode int, errMsg string, err error,
-) {
+	outputDelegation DelegationWithoutRat, httpStatusCode int, errMsg string, err error) {
 	delegationKey := stake.GetDelegationKey(delegatorAddr, validatorAddr)
 	marshalledDelegation, err := ctx.QueryStore(delegationKey, storeName)
 	if err != nil {
@@ -50,14 +81,13 @@ func getDelegatorDelegations(ctx context.CoreContext, cdc *wire.Codec, delegator
 			Shares:        delegation.Shares.FloatString(),
 		}
 
-		return outputDelegation, 0, "", nil
+		return outputDelegation, http.StatusOK, "", nil
 	}
 	return DelegationWithoutRat{}, http.StatusNoContent, "", nil
 }
 
 func getDelegatorUndelegations(ctx context.CoreContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
-	unbonds types.UnbondingDelegation, httpStatusCode int, errMsg string, err error,
-) {
+	unbonds types.UnbondingDelegation, httpStatusCode int, errMsg string, err error) {
 	undelegationKey := stake.GetUBDKey(delegatorAddr, validatorAddr)
 	marshalledUnbondingDelegation, err := ctx.QueryStore(undelegationKey, storeName)
 	if err != nil {
@@ -70,14 +100,13 @@ func getDelegatorUndelegations(ctx context.CoreContext, cdc *wire.Codec, delegat
 		if errUnmarshal != nil {
 			return types.UnbondingDelegation{}, http.StatusInternalServerError, "couldn't unmarshall unbonding-delegation. Error: ", errUnmarshal
 		}
-		return unbondingDelegation, 0, "", nil
+		return unbondingDelegation, http.StatusOK, "", nil
 	}
 	return types.UnbondingDelegation{}, http.StatusNoContent, "", nil
 }
 
 func getDelegatorRedelegations(ctx context.CoreContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
-	regelegations types.Redelegation, httpStatusCode int, errMsg string, err error,
-) {
+	regelegations types.Redelegation, httpStatusCode int, errMsg string, err error) {
 
 	keyRedelegateTo := stake.GetREDsByDelToValDstIndexKey(delegatorAddr, validatorAddr)
 	marshalledRedelegations, err := ctx.QueryStore(keyRedelegateTo, storeName)
@@ -91,7 +120,7 @@ func getDelegatorRedelegations(ctx context.CoreContext, cdc *wire.Codec, delegat
 			return types.Redelegation{}, http.StatusInternalServerError, "couldn't unmarshall redelegations. Error: ", errUnmarshal
 		}
 
-		return redelegations, 0, "", nil
+		return redelegations, http.StatusOK, "", nil
 	}
 	return types.Redelegation{}, http.StatusNoContent, "", nil
 }

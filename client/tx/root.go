@@ -16,7 +16,7 @@ func AddCommands(cmd *cobra.Command, cdc *wire.Codec) {
 	)
 }
 
-// register REST routes
+// RegisterRoutes Registers REST routes for txs
 func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 	r.HandleFunc("/txs/{hash}", QueryTxRequestHandlerFn(cdc, ctx)).Methods("GET")
 	r.HandleFunc("/txs", SearchTxRequestHandlerFn(ctx, cdc)).Methods("GET")

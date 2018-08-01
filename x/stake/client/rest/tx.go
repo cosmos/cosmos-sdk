@@ -50,7 +50,7 @@ type msgCompleteUnbondingInput struct {
 	ValidatorAddr string `json:"validator_addr"` // in bech32
 }
 
-// request body for edit delegations
+// EditDelegationsBody The request body for edit delegations
 type EditDelegationsBody struct {
 	LocalAccountName    string                       `json:"name"`
 	Password            string                       `json:"password"`

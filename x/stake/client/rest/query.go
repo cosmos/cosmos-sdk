@@ -83,6 +83,8 @@ func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec
 }
 
 // already resolve the rational shares to not handle this in the client
+
+// DelegationWithoutRat defines a delegation without type Rat for shares
 type DelegationWithoutRat struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
 	ValidatorAddr sdk.AccAddress `json:"validator_addr"`
@@ -90,7 +92,7 @@ type DelegationWithoutRat struct {
 	Height        int64          `json:"height"`
 }
 
-// Aggregation of all delegations, unbondings and redelegations
+// DelegationSummary The aggregation of all delegations, unbondings and redelegations
 type DelegationSummary struct {
 	Delegations          []DelegationWithoutRat      `json:"delegations"`
 	UnbondingDelegations []stake.UnbondingDelegation `json:"unbonding_delegations"`
@@ -149,8 +151,8 @@ func delegatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFu
 
 			// the query will return empty if there is no data for this record
 			if len(marshalledDelegation) != 0 {
-				delegation, err := types.UnmarshalDelegation(cdc, delegationKey, marshalledDelegation)
-				if err != nil {
+				delegation, errUnmarshal := types.UnmarshalDelegation(cdc, delegationKey, marshalledDelegation)
+				if errUnmarshal != nil {
 					w.WriteHeader(http.StatusInternalServerError)
 					w.Write([]byte(fmt.Sprintf("couldn't unmarshall unbonding-delegation. Error: %s", err.Error())))
 					return
@@ -176,8 +178,8 @@ func delegatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFu
 
 			// the query will return empty if there is no data for this record
 			if len(marshalledUnbondingDelegation) != 0 {
-				unbondingDelegation, err := types.UnmarshalUBD(cdc, undelegationKey, marshalledUnbondingDelegation)
-				if err != nil {
+				unbondingDelegation, errUnmarshal := types.UnmarshalUBD(cdc, undelegationKey, marshalledUnbondingDelegation)
+				if errUnmarshal != nil {
 					w.WriteHeader(http.StatusInternalServerError)
 					w.Write([]byte(fmt.Sprintf("couldn't unmarshall unbonding-delegation. Error: %s", err.Error())))
 					return
@@ -197,8 +199,8 @@ func delegatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFu
 			}
 
 			if len(marshalledRedelegations) != 0 {
-				redelegations, err := types.UnmarshalRED(cdc, keyRedelegateTo, marshalledRedelegations)
-				if err != nil {
+				redelegations, errUnmarshal := types.UnmarshalRED(cdc, keyRedelegateTo, marshalledRedelegations)
+				if errUnmarshal != nil {
 					w.WriteHeader(http.StatusInternalServerError)
 					w.Write([]byte(fmt.Sprintf("couldn't unmarshall redelegations. Error: %s", err.Error())))
 					return
@@ -258,31 +260,31 @@ func delegatorTxsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handle
 
 		// TODO double check this
 		if noQuery || isBondTx {
-			foundTxs, err := queryTxs(node, cdc, string(tags.ActionDelegate), delegatorAddr)
-			if err != nil {
+			foundTxs, errQuery := queryTxs(node, cdc, string(tags.ActionDelegate), delegatorAddr)
+			if errQuery != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("error querying transactions. Error: %s", err.Error())))
 			}
 			txs = append(txs, foundTxs...)
 		}
 		if noQuery || isUnbondTx {
-			foundTxs, err := queryTxs(node, cdc, string(tags.ActionBeginUnbonding), delegatorAddr)
-			if err != nil {
+			foundTxs, errQuery := queryTxs(node, cdc, string(tags.ActionBeginUnbonding), delegatorAddr)
+			if errQuery != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("error querying transactions. Error: %s", err.Error())))
 			}
 			txs = append(txs, foundTxs...)
 
-			foundTxs, err = queryTxs(node, cdc, string(tags.ActionCompleteUnbonding), delegatorAddr)
-			if err != nil {
+			foundTxs, errQuery = queryTxs(node, cdc, string(tags.ActionCompleteUnbonding), delegatorAddr)
+			if errQuery != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("error querying transactions. Error: %s", err.Error())))
 			}
 			txs = append(txs, foundTxs...)
 		}
 		if noQuery || isRedTx {
-			foundTxs, err := queryTxs(node, cdc, string(tags.ActionBeginRedelegation), delegatorAddr)
-			if err != nil {
+			foundTxs, errQuery := queryTxs(node, cdc, string(tags.ActionBeginRedelegation), delegatorAddr)
+			if errQuery != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("error querying transactions. Error: %s", err.Error())))
 			}

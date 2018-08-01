@@ -27,6 +27,7 @@ BREAKING CHANGES
   * `gaiacli gov vote --voter`
 * [x/gov] Added tags sub-package, changed tags to use dash-case 
 * [x/gov] Governance parameters are now stored in globalparams store
+* [lcd] \#1866 Updated lcd /slashing/signing_info endpoint to take cosmosvalpub instead of cosmosvaladdr
 * [types] sdk.NewCoin now takes sdk.Int, sdk.NewInt64Coin takes int64
 
 FEATURES
@@ -39,9 +40,11 @@ FEATURES
 * [cosmos-sdk-cli] Added support for cosmos-sdk-cli tool under cosmos-sdk/cmd	
    * This allows SDK users to initialize a new project repository.
 * [tests] Remotenet commands for AWS (awsnet)
+* [networks] Added ansible scripts to upgrade seed nodes on a network
 * [store] Add transient store
 * [gov] Add slashing for validators who do not vote on a proposal
 * [cli] added `gov query-proposals` command to CLI. Can filter by `depositer`, `voter`, and `status`
+* [core] added BaseApp.Seal - ability to seal baseapp parameters once they've been set
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route

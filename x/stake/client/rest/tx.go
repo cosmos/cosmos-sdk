@@ -20,7 +20,7 @@ import (
 func registerTxRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
 	r.HandleFunc(
 		"/stake/delegators/{delegatorAddr}/delegations",
-		editDelegationsRequestHandlerFn(cdc, kb, ctx),
+		delegationsRequestHandlerFn(cdc, kb, ctx),
 	).Methods("POST")
 }
 
@@ -68,7 +68,7 @@ type EditDelegationsBody struct {
 // nolint: gocyclo
 // TODO: Split this up into several smaller functions, and remove the above nolint
 // TODO: use sdk.ValAddress instead of sdk.AccAddress for validators in messages
-func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m EditDelegationsBody
 		body, err := ioutil.ReadAll(r.Body)

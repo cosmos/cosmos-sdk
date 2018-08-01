@@ -317,7 +317,7 @@ func TestTxs(t *testing.T) {
 	res, body = Request(t, port, "GET", fmt.Sprintf("/txs/%s", resultTx.Hash), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var indexedTxs []tx.TxInfo
+	var indexedTxs []tx.Info
 
 	// check if tx is queryable
 	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?tag=tx.hash='%s'", resultTx.Hash), nil)
@@ -788,7 +788,7 @@ func getDelegationSummary(t *testing.T, port string, delegatorAddr sdk.AccAddres
 	return summary
 }
 
-func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, query string) []tx.TxInfo {
+func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, query string) []tx.Info {
 
 	// get the account to get the sequence
 	var res *http.Response
@@ -799,7 +799,7 @@ func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, quer
 		res, body = Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/txs", delegatorAddr), nil)
 	}
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var txs []tx.TxInfo
+	var txs []tx.Info
 	err := cdc.UnmarshalJSON([]byte(body), &txs)
 	require.Nil(t, err)
 	return txs

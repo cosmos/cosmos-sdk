@@ -524,7 +524,7 @@ paths:
         required: true
         type: string
     post:
-      summary: Edit a delegation
+      summary: Submit delegation
       parameters:
       - in: body
         name: delegation

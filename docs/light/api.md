@@ -513,7 +513,7 @@ Returns on failure:
 
 url: /stake/delegators/{delegatorAddr}/delegations
 
-Functionality: Edit a delegation.
+Functionality: Submit a delegation.
 
 Returns on success:
 

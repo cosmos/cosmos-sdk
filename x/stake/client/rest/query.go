@@ -259,19 +259,26 @@ func delegatorTxsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handle
 		isBondTx := contains(typesQuerySlice, "bond")
 		isUnbondTx := contains(typesQuerySlice, "unbond")
 		isRedTx := contains(typesQuerySlice, "redelegate")
-		var txs = []tx.TxInfo{}
+		var txs = []tx.Info{}
 		var actions []string
 
-		if noQuery || isBondTx {
+		if isBondTx {
 			actions = append(actions, string(tags.ActionDelegate))
-		}
-		if noQuery || isUnbondTx {
+		} else if isUnbondTx {
 			actions = append(actions, string(tags.ActionBeginUnbonding))
 			actions = append(actions, string(tags.ActionCompleteUnbonding))
-		}
-		if noQuery || isRedTx {
+		} else if isRedTx {
 			actions = append(actions, string(tags.ActionBeginRedelegation))
 			actions = append(actions, string(tags.ActionCompleteRedelegation))
+		} else if noQuery {
+			actions = append(actions, string(tags.ActionDelegate))
+			actions = append(actions, string(tags.ActionBeginUnbonding))
+			actions = append(actions, string(tags.ActionCompleteUnbonding))
+			actions = append(actions, string(tags.ActionBeginRedelegation))
+			actions = append(actions, string(tags.ActionCompleteRedelegation))
+		} else {
+			w.WriteHeader(http.StatusNoContent)
+			return
 		}
 
 		for _, action := range actions {
@@ -294,7 +301,7 @@ func delegatorTxsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handle
 	}
 }
 
-func queryTxs(node rpcclient.Client, cdc *wire.Codec, tag string, delegatorAddr string) ([]tx.TxInfo, error) {
+func queryTxs(node rpcclient.Client, cdc *wire.Codec, tag string, delegatorAddr string) ([]tx.Info, error) {
 	page := 0
 	perPage := 100
 	prove := false

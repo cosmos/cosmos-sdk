@@ -54,14 +54,14 @@ const (
 	TypeOffline KeyType = 2
 )
 
+var keyTypes = map[KeyType]string{
+	TypeLocal:   "local",
+	TypeLedger:  "ledger",
+	TypeOffline: "offline",
+}
+
 // String implements the stringer interface for KeyType.
 func (kt KeyType) String() string {
-	keyTypes := map[KeyType]string{
-		TypeLocal:   "local",
-		TypeLedger:  "ledger",
-		TypeOffline: "offline",
-	}
-
 	return keyTypes[kt]
 }
 

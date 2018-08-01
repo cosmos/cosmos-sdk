@@ -122,13 +122,13 @@ func (ctx QueryContext) BroadcastTx(tx []byte) (*ctypes.ResultBroadcastTxCommit,
 		return res, err
 	}
 
-	if res.CheckTx.Code != uint32(0) {
+	if !res.CheckTx.IsOK() {
 		return res, errors.Errorf("checkTx failed: (%d) %s",
 			res.CheckTx.Code,
 			res.CheckTx.Log)
 	}
 
-	if res.DeliverTx.Code != uint32(0) {
+	if !res.DeliverTx.IsOK() {
 		return res, errors.Errorf("deliverTx failed: (%d) %s",
 			res.DeliverTx.Code,
 			res.DeliverTx.Log)
@@ -294,7 +294,7 @@ func (ctx QueryContext) query(path string, key common.HexBytes) (res []byte, err
 	}
 
 	resp := result.Response
-	if resp.Code != uint32(0) {
+	if !resp.IsOK() {
 		return res, errors.Errorf("query failed: (%d) %s", resp.Code, resp.Log)
 	}
 

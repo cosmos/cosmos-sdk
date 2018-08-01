@@ -159,5 +159,5 @@ gaiacli stake delegation \
 ## Light Client Daemon
 
 ::: tip Note
-🚧 We are actively working on documentation for the LCD.
+🚧Documentation coming soon!
 :::

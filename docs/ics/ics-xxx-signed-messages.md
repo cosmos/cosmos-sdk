@@ -104,31 +104,56 @@ is as follows:
 
 ## API
 
-We now formalize a standard set of APIs that providers must implement:
+Application developers and designers should formalize a standard set of APIs that
+adhere to the following specification:
 
-```
-cosmosSignBytes(b : B, addr : B) {
-    return secp256k1Sign(sha256(encode(b)), addressPrivKey(addr))
-}
-```
+<hr>
 
-```
-cosmosSignBytesPass(b : B, pass : B) {
-    return secp256k1Sign(sha256(encode(b)), passPrivKey(addr))
-}
-```
+**cosmosSignBytes**
 
-```
-cosmosSignTyped(s : S, domainSeparator : B, addr : B) {
-     return secp256k1Sign(sha256(encode(s, domainSeparator)), addressPrivKey(addr))
-}
-```
+Params:
+* `data`: arbitrary byte length data to sign
+* `address`: 20 byte account address to sign data with
 
-```
-cosmosSignTypedPass(s : S, domainSeparator : B, pass : B) {
-     return secp256k1Sign(sha256(encode(s, domainSeparator)), passPrivKey(addr))
-}
-```
+Returns:
+* `signature`: the Cosmos signature derived using `S`
+
+<hr>
+
+**cosmosSignBytesPass**
+
+Params:
+* `data`: arbitrary byte length data to sign
+* `address`: 20 byte account address to sign data with
+* `password`: password of the account to sign data with
+
+Returns:
+* `signature`: the Cosmos signature derived using `S`
+
+<hr>
+
+**cosmosSignTyped**
+
+Params:
+* `domainSeparator`: the application domain separator to encode and sign
+* `typedData`: type data structure to encode and sign
+* `address`: 20 byte account address to sign data with
+
+Returns:
+* `signature`: the Cosmos signature derived using `S`
+
+<hr>
+
+**cosmosSignTypedPass**
+
+Params:
+* `domainSeparator`: the application domain separator to encode and sign
+* `typedData`: type data structure to encode and sign
+* `address`: 20 byte account address to sign data with
+* `password`: password of the account to sign data with
+
+Returns:
+* `signature`: the Cosmos signature derived using `S`
 
 ## References
 

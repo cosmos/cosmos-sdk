@@ -3,8 +3,10 @@ package rest
 import (
 	"bytes"
 	"fmt"
+	"net/http"
 	"reflect"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -25,7 +27,76 @@ func contains(stringSlice []string, txType string) bool {
 	return false
 }
 
-// Query staking txs
+func getDelegatorDelegations(ctx context.CoreContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
+	outputDelegation DelegationWithoutRat, httpStatusCode int, errMsg string, err error,
+) {
+	delegationKey := stake.GetDelegationKey(delegatorAddr, validatorAddr)
+	marshalledDelegation, err := ctx.QueryStore(delegationKey, storeName)
+	if err != nil {
+		return DelegationWithoutRat{}, http.StatusInternalServerError, "couldn't query delegation. Error: ", err
+	}
+
+	// the query will return empty if there is no data for this record
+	if len(marshalledDelegation) != 0 {
+		delegation, errUnmarshal := types.UnmarshalDelegation(cdc, delegationKey, marshalledDelegation)
+		if errUnmarshal != nil {
+			return DelegationWithoutRat{}, http.StatusInternalServerError, "couldn't unmarshall delegation. Error: ", errUnmarshal
+		}
+
+		outputDelegation := DelegationWithoutRat{
+			DelegatorAddr: delegation.DelegatorAddr,
+			ValidatorAddr: delegation.ValidatorAddr,
+			Height:        delegation.Height,
+			Shares:        delegation.Shares.FloatString(),
+		}
+
+		return outputDelegation, 0, "", nil
+	}
+	return DelegationWithoutRat{}, http.StatusNoContent, "", nil
+}
+
+func getDelegatorUndelegations(ctx context.CoreContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
+	unbonds types.UnbondingDelegation, httpStatusCode int, errMsg string, err error,
+) {
+	undelegationKey := stake.GetUBDKey(delegatorAddr, validatorAddr)
+	marshalledUnbondingDelegation, err := ctx.QueryStore(undelegationKey, storeName)
+	if err != nil {
+		return types.UnbondingDelegation{}, http.StatusInternalServerError, "couldn't query unbonding-delegation. Error: ", err
+	}
+
+	// the query will return empty if there is no data for this record
+	if len(marshalledUnbondingDelegation) != 0 {
+		unbondingDelegation, errUnmarshal := types.UnmarshalUBD(cdc, undelegationKey, marshalledUnbondingDelegation)
+		if errUnmarshal != nil {
+			return types.UnbondingDelegation{}, http.StatusInternalServerError, "couldn't unmarshall unbonding-delegation. Error: ", errUnmarshal
+		}
+		return unbondingDelegation, 0, "", nil
+	}
+	return types.UnbondingDelegation{}, http.StatusNoContent, "", nil
+}
+
+func getDelegatorRedelegations(ctx context.CoreContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
+	regelegations types.Redelegation, httpStatusCode int, errMsg string, err error,
+) {
+
+	keyRedelegateTo := stake.GetREDsByDelToValDstIndexKey(delegatorAddr, validatorAddr)
+	marshalledRedelegations, err := ctx.QueryStore(keyRedelegateTo, storeName)
+	if err != nil {
+		return types.Redelegation{}, http.StatusInternalServerError, "couldn't query redelegation. Error: ", err
+	}
+
+	if len(marshalledRedelegations) != 0 {
+		redelegations, errUnmarshal := types.UnmarshalRED(cdc, keyRedelegateTo, marshalledRedelegations)
+		if errUnmarshal != nil {
+			return types.Redelegation{}, http.StatusInternalServerError, "couldn't unmarshall redelegations. Error: ", errUnmarshal
+		}
+
+		return redelegations, 0, "", nil
+	}
+	return types.Redelegation{}, http.StatusNoContent, "", nil
+}
+
+// queryTxs Queries staking txs
 func queryTxs(node rpcclient.Client, cdc *wire.Codec, tag string, delegatorAddr string) ([]tx.Info, error) {
 	page := 0
 	perPage := 100
@@ -39,7 +110,7 @@ func queryTxs(node rpcclient.Client, cdc *wire.Codec, tag string, delegatorAddr 
 	return tx.FormatTxResults(cdc, res.Txs)
 }
 
-// get all Validators
+// getValidators Gets all Validators
 func getValidators(validatorKVs []sdk.KVPair, cdc *wire.Codec) ([]types.BechValidator, error) {
 	validators := make([]types.BechValidator, len(validatorKVs))
 	for i, kv := range validatorKVs {

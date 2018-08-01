@@ -144,75 +144,33 @@ func delegatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFu
 			validatorAddr = validator.Owner
 
 			// Delegations
-			delegationKey := stake.GetDelegationKey(delegatorAddr, validatorAddr)
-			marshalledDelegation, err := ctx.QueryStore(delegationKey, storeName)
+			delegations, statusCode, errMsg, err := getDelegatorDelegations(ctx, cdc, delegatorAddr, validatorAddr)
 			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("couldn't query delegation. Error: %s", err.Error())))
+				w.WriteHeader(statusCode)
+				w.Write([]byte(fmt.Sprintf("%s%s", errMsg, err.Error())))
 				return
 			}
-
-			// the query will return empty if there is no data for this record
-			if len(marshalledDelegation) != 0 {
-				delegation, errUnmarshal := types.UnmarshalDelegation(cdc, delegationKey, marshalledDelegation)
-				if errUnmarshal != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(fmt.Sprintf("couldn't unmarshall unbonding-delegation. Error: %s", err.Error())))
-					return
-				}
-
-				outputDelegation := DelegationWithoutRat{
-					DelegatorAddr: delegation.DelegatorAddr,
-					ValidatorAddr: delegation.ValidatorAddr,
-					Height:        delegation.Height,
-					Shares:        delegation.Shares.FloatString(),
-				}
-
-				delegationSummary.Delegations = append(delegationSummary.Delegations, outputDelegation)
-			}
+			delegationSummary.Delegations = append(delegationSummary.Delegations, delegations)
 
 			// Undelegations
-			undelegationKey := stake.GetUBDKey(delegatorAddr, validatorAddr)
-			marshalledUnbondingDelegation, err := ctx.QueryStore(undelegationKey, storeName)
+			unbondingDelegation, statusCode, errMsg, err := getDelegatorUndelegations(ctx, cdc, delegatorAddr, validatorAddr)
 			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("couldn't query unbonding-delegation. Error: %s", err.Error())))
+				w.WriteHeader(statusCode)
+				w.Write([]byte(fmt.Sprintf("%s%s", errMsg, err.Error())))
 				return
 			}
-
-			// the query will return empty if there is no data for this record
-			if len(marshalledUnbondingDelegation) != 0 {
-				unbondingDelegation, errUnmarshal := types.UnmarshalUBD(cdc, undelegationKey, marshalledUnbondingDelegation)
-				if errUnmarshal != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(fmt.Sprintf("couldn't unmarshall unbonding-delegation. Error: %s", err.Error())))
-					return
-				}
-
-				delegationSummary.UnbondingDelegations = append(delegationSummary.UnbondingDelegations, unbondingDelegation)
-			}
+			delegationSummary.UnbondingDelegations = append(delegationSummary.UnbondingDelegations, unbondingDelegation)
 
 			// Redelegations
 			// only querying redelegations to a validator as this should give us already all relegations
 			// if we also would put in redelegations from, we would have every redelegation double
-			keyRedelegateTo := stake.GetREDsByDelToValDstIndexKey(delegatorAddr, validatorAddr)
-			marshalledRedelegations, err := ctx.QueryStore(keyRedelegateTo, storeName)
+			redelegations, statusCode, errMsg, err := getDelegatorRedelegations(ctx, cdc, delegatorAddr, validatorAddr)
 			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("couldn't query redelegation. Error: %s", err.Error())))
+				w.WriteHeader(statusCode)
+				w.Write([]byte(fmt.Sprintf("%s%s", errMsg, err.Error())))
 				return
 			}
-
-			if len(marshalledRedelegations) != 0 {
-				redelegations, errUnmarshal := types.UnmarshalRED(cdc, keyRedelegateTo, marshalledRedelegations)
-				if errUnmarshal != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(fmt.Sprintf("couldn't unmarshall redelegations. Error: %s", err.Error())))
-					return
-				}
-
-				delegationSummary.Redelegations = append(delegationSummary.Redelegations, redelegations)
-			}
+			delegationSummary.Redelegations = append(delegationSummary.Redelegations, redelegations)
 
 			output, err := cdc.MarshalJSON(delegationSummary)
 			if err != nil {

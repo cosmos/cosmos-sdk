@@ -12,7 +12,7 @@ import (
 // NOTE: never use new(Dec) or else we will panic unmarshalling into the
 // nil embedded big.Int
 type Dec struct {
-	*big.Int `"json:Int"`
+	*big.Int `json:"int"`
 }
 
 // number of decimal places
@@ -172,6 +172,7 @@ func (d Dec) ToLeftPadded(totalDigits int8) string {
 // |_____:  /   | $$$    |
 //              |________|
 
+// nolint - go-cyclo
 // chop of n digits, and banker round the digits being chopped off
 // Examples:
 //   BankerRoundChop(1005, 1) = 100

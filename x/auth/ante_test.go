@@ -12,6 +12,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 func newTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
@@ -112,9 +113,10 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
+	paramsKeeper := params.NewKeeper(cdc, sdk.NewKVStoreKey("params"))
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
@@ -165,9 +167,10 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
+	paramsKeeper := params.NewKeeper(cdc, sdk.NewKVStoreKey("params"))
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
@@ -225,8 +228,9 @@ func TestAnteHandlerSequences(t *testing.T) {
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
+	paramsKeeper := params.NewKeeper(cdc, sdk.NewKVStoreKey("params"))
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
@@ -303,8 +307,9 @@ func TestAnteHandlerFees(t *testing.T) {
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
+	paramsKeeper := params.NewKeeper(cdc, sdk.NewKVStoreKey("params"))
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
@@ -345,8 +350,9 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
+	paramsKeeper := params.NewKeeper(cdc, sdk.NewKVStoreKey("params"))
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
@@ -388,8 +394,9 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
+	paramsKeeper := params.NewKeeper(cdc, sdk.NewKVStoreKey("params"))
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
@@ -439,8 +446,9 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
+	paramsKeeper := params.NewKeeper(cdc, sdk.NewKVStoreKey("params"))
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
@@ -520,8 +528,9 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
+	paramsKeeper := params.NewKeeper(cdc, sdk.NewKVStoreKey("params"))
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 

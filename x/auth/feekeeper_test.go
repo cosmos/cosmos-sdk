@@ -10,6 +10,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/store"
+	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
 var (
@@ -21,10 +24,11 @@ var (
 func TestFeeCollectionKeeperGetSet(t *testing.T) {
 	ms, _, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
+	paramKeeper := params.NewKeeper(cdc, sdk.NewKVStoreKey("params"))
 
 	// make context and keeper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	fck := NewFeeCollectionKeeper(cdc, capKey2)
+	fck := NewFeeCollectionKeeper(cdc, capKey2, paramKeeper.Getter())
 
 	// no coins initially
 	currFees := fck.GetCollectedFees(ctx)
@@ -40,10 +44,11 @@ func TestFeeCollectionKeeperGetSet(t *testing.T) {
 func TestFeeCollectionKeeperAdd(t *testing.T) {
 	ms, _, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
+	paramKeeper := params.NewKeeper(cdc, sdk.NewKVStoreKey("params"))
 
 	// make context and keeper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	fck := NewFeeCollectionKeeper(cdc, capKey2)
+	fck := NewFeeCollectionKeeper(cdc, capKey2, paramKeeper.Getter())
 
 	// no coins initially
 	require.True(t, fck.GetCollectedFees(ctx).IsEqual(emptyCoins))
@@ -60,10 +65,11 @@ func TestFeeCollectionKeeperAdd(t *testing.T) {
 func TestFeeCollectionKeeperClear(t *testing.T) {
 	ms, _, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
+	paramKeeper := params.NewKeeper(cdc, sdk.NewKVStoreKey("params"))
 
 	// make context and keeper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	fck := NewFeeCollectionKeeper(cdc, capKey2)
+	fck := NewFeeCollectionKeeper(cdc, capKey2, paramKeeper.Getter())
 
 	// set coins initially
 	fck.setCollectedFees(ctx, twoCoins)
@@ -72,4 +78,48 @@ func TestFeeCollectionKeeperClear(t *testing.T) {
 	// clear fees and see that pool is now empty
 	fck.ClearCollectedFees(ctx)
 	require.True(t, fck.GetCollectedFees(ctx).IsEqual(emptyCoins))
+}
+
+func TestFeeCollectionKeeperPreprocess(t *testing.T) {
+	db := dbm.NewMemDB()
+
+	capKey := sdk.NewKVStoreKey("capkey")
+	paramsKey := sdk.NewKVStoreKey("params")
+
+	ms := store.NewCommitMultiStore(db)
+	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(paramsKey, sdk.StoreTypeIAVL, db)
+	ms.LoadLatestVersion()
+
+	cdc := wire.NewCodec()
+	paramKeeper := params.NewKeeper(cdc, paramsKey)
+
+	// make context and keeper
+	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
+	fck := NewFeeCollectionKeeper(cdc, capKey, paramKeeper.Getter())
+	InitGenesis(ctx, paramKeeper.Setter(), DefaultGenesisState())
+
+	var err sdk.Error
+	err = fck.FeePreprocess(ctx, oneCoin)
+	require.Error(t,err,"")
+
+	fee1 := sdk.Coins{sdk.NewCoin("iGas", 50)}
+	err = fck.FeePreprocess(ctx, fee1)
+	require.Error(t,err,"")
+
+	fee2 := sdk.Coins{sdk.NewCoin("iGas", 100)}
+	err = fck.FeePreprocess(ctx, fee2)
+	require.NoError(t,err,"")
+
+	fee3 := sdk.Coins{sdk.NewCoin("iris", 1)}
+	err = fck.FeePreprocess(ctx, fee3)
+	require.Error(t,err,"")
+
+	exchangeRate := sdk.NewRatFromInt(sdk.NewInt(100), sdk.OneInt())
+	exchangeRateBytes,errMsg := fck.cdc.MarshalBinary(exchangeRate)
+	require.NoError(t, errMsg)
+	paramKeeper.Setter().SetRaw(ctx, FeeExchangeRatePrefix+"iris", exchangeRateBytes)
+
+	err = fck.FeePreprocess(ctx, fee3)
+	require.NoError(t,err,"")
 }

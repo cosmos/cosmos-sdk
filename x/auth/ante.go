@@ -53,6 +53,11 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		}
 		fee := stdTx.Fee
 
+		err = fck.FeePreprocess(ctx,fee.Amount)
+		if err != nil {
+			return ctx, err.Result(), true
+		}
+
 		// Check sig and nonce and collect signer accounts.
 		var signerAccs = make([]Account, len(signerAddrs))
 		for i := 0; i < len(sigs); i++ {

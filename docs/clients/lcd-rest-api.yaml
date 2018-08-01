@@ -470,6 +470,8 @@ paths:
           description: Tx not available for provided hash
 
 # ================== Staking Module # ==================
+
+# TODO create D
   /stake/delegators/{delegatorAddr}:
     parameters:
       - in: path
@@ -485,11 +487,11 @@ paths:
         - application/json
       responses:
         200:
-          description: Delegations
-          schema:
-            $ref: "#/definitions/Tx"
+          description: OK
         404:
-          description: Tx not available for provided hash
+          description: Not Found
+        500:
+          description: Internal Server Error
 
   /stake/delegators/{delegatorAddr}/txs:
     parameters:
@@ -506,11 +508,75 @@ paths:
         - application/json
       responses:
         200:
-          description: Tx with the provided hash
+          description: OK
           schema:
             $ref: "#/definitions/Tx"
         404:
-          description: Tx not available for provided hash
+          description: Not Found
+        500:
+          description: Internal Server Error
+
+  /stake/delegators/{delegatorAddr}/delegations:
+    parameters:
+      - in: path
+        name: delegatorAddr
+        description: Bech32 AccAddress of Delegator
+        required: true
+        type: string
+    post:
+      summary: Edit a delegation
+      parameters:
+      - in: body
+        name: delegation
+        description: The password of the account to remove from the KMS
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+            password:
+              type: string
+            account_number:
+              type: number
+            delegations:
+              type: array
+              items:
+                type: string
+            begin_unbondings:
+              type: array
+              items:
+                type: string
+            complete_unbondings:
+              type: array
+              items:
+                type: string
+            begin_redelegates:
+              type: array
+              items:
+                type: string
+            complete_redelegates:
+              type: array
+              items:
+                type: string
+            chain_id:
+              type: string
+            gas:
+              type: number
+            sequence:
+              type: number
+      tags:
+        - stake
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Tx"
+        404:
+          description: Not Found
+        500:
+          description: Internal Server Error
 
   /stake/delegators/{delegatorAddr}/delegations/{validatorAddr}:
     parameters:
@@ -532,11 +598,9 @@ paths:
         - application/json
       responses:
         200:
-          description: Delegations
-          schema:
-            $ref: "#/definitions/Tx"
+          description: OK
         404:
-          description: Tx not available for provided hash
+          description: Not Found
 
   /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}:
     parameters:
@@ -558,11 +622,11 @@ paths:
         - application/json
       responses:
         200:
-          description: Delegations
-          schema:
-            $ref: "#/definitions/Tx"
+          description: OK
         404:
-          description: Tx not available for provided hash
+          description: Not Found
+        500:
+          description: Internal Server Error
 
   /stake/validators:
     get:
@@ -573,11 +637,9 @@ paths:
         - application/json
       responses:
         200:
-          description: Delegations
-          schema:
-            $ref: "#/definitions/Tx"
-        404:
-          description: Tx not available for provided hash
+          description: OK
+        500:
+          description: Internal Server Error
 
   /stake/validators/{validatorAddr}:
     parameters:
@@ -594,13 +656,13 @@ paths:
         - application/json
       responses:
         200:
-          description: Delegations
-          schema:
-            $ref: "#/definitions/Tx"
+          description: OK
         404:
-          description: Tx not available for provided hash
+          description: Not Found
+        500:
+          description: Internal Server Error
 
-
+# TODO Add staking definitions
 definitions:
   Address:
     type: string

@@ -72,7 +72,12 @@ func SimulateFromSeed(
 
 	request := abci.RequestBeginBlock{Header: header}
 
+	var pastTimes []int64
+
 	for i := 0; i < numBlocks; i++ {
+
+		// Log the header time for future lookup
+		pastTimes = append(pastTimes, header.Time)
 
 		// Run the BeginBlock handler
 		app.BeginBlock(request)
@@ -114,11 +119,11 @@ func SimulateFromSeed(
 			// No BeginBlock simulation
 			request = abci.RequestBeginBlock{Header: header}
 		} else {
-			request = RandomRequestBeginBlock(t, r, validators, livenessTransitionMatrix, evidenceFraction, header, log)
+			request = RandomRequestBeginBlock(t, r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, event, header, log)
 		}
 
 		// Update the validator set
-		validators = updateValidators(t, r, validators, res.ValidatorUpdates)
+		validators = updateValidators(t, r, validators, res.ValidatorUpdates, event)
 	}
 
 	fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds): %d\n", header.Height, header.Time)
@@ -127,7 +132,7 @@ func SimulateFromSeed(
 
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
 func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]mockValidator, livenessTransitions TransitionMatrix, evidenceFraction float64,
-	header abci.Header, log string) abci.RequestBeginBlock {
+	pastTimes []int64, event func(string), header abci.Header, log string) abci.RequestBeginBlock {
 	require.True(t, len(validators) > 0, "Zero validators can't sign a block!")
 	signingValidators := make([]abci.SigningValidator, len(validators))
 	i := 0
@@ -144,6 +149,11 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]m
 			// offline
 			signed = false
 		}
+		if signed {
+			event("beginblock/signing/signed")
+		} else {
+			event("beginblock/signing/missed")
+		}
 		signingValidators[i] = abci.SigningValidator{
 			Validator:       mVal.val,
 			SignedLastBlock: signed,
@@ -152,7 +162,12 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]m
 	}
 	evidence := make([]abci.Evidence, 0)
 	if r.Float64() < evidenceFraction {
-		// TODO Also include past evidence
+		height := header.Height
+		time := header.Time
+		if r.Float64() < pastEvidenceFraction {
+			height = int64(r.Intn(int(header.Height)))
+			time = pastTimes[height]
+		}
 		validator := signingValidators[r.Intn(len(signingValidators))].Validator
 		var currentTotalVotingPower int64
 		for _, mVal := range validators {
@@ -161,8 +176,8 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]m
 		evidence = append(evidence, abci.Evidence{
 			Type:             "DOUBLE_SIGN",
 			Validator:        validator,
-			Height:           header.Height,
-			Time:             header.Time,
+			Height:           height,
+			Time:             time,
 			TotalVotingPower: currentTotalVotingPower,
 		})
 	}
@@ -181,19 +196,22 @@ func AssertAllInvariants(t *testing.T, app *baseapp.BaseApp, tests []Invariant, 
 }
 
 // updateValidators mimicks Tendermint's update logic
-func updateValidators(t *testing.T, r *rand.Rand, current map[string]mockValidator, updates []abci.Validator) map[string]mockValidator {
+func updateValidators(t *testing.T, r *rand.Rand, current map[string]mockValidator, updates []abci.Validator, event func(string)) map[string]mockValidator {
 	for _, update := range updates {
 		switch {
 		case update.Power == 0:
 			require.NotNil(t, current[string(update.PubKey.Data)], "tried to delete a nonexistent validator")
+			event("endblock/validatorupdates/kicked")
 			delete(current, string(update.PubKey.Data))
 		default:
 			// Does validator already exist?
 			if mVal, ok := current[string(update.PubKey.Data)]; ok {
 				mVal.val = update
+				event("endblock/validatorupdates/updated")
 			} else {
 				// Set this new validator
 				current[string(update.PubKey.Data)] = mockValidator{update, GetMemberOfInitialState(r, initialLivenessWeightings)}
+				event("endblock/validatorupdates/added")
 			}
 		}
 	}

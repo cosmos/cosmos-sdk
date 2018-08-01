@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
-	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -170,7 +169,7 @@ func getValidator(address sdk.ValAddress, validatorKVs []sdk.KVPair, cdc *wire.C
 		}
 
 		ownerAddress := validator.PubKey.Address()
-		if reflect.DeepEqual(ownerAddress.Bytes(), address.Bytes()) {
+		if bytes.Equal(ownerAddress.Bytes(), address.Bytes()) {
 			bech32Validator, err := validator.Bech32Validator()
 			if err != nil {
 				return stake.BechValidator{}, err

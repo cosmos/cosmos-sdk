@@ -21,6 +21,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	keeper.InitIntraTxCounter(ctx)
 
 	for i, validator := range data.Validators {
+		validator.BondIntraTxCounter = int16(i) // set the intra-tx counter to the order the validators are presented
 		keeper.SetValidator(ctx, validator)
 
 		if validator.Tokens.IsZero() {
@@ -33,7 +34,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		// Manually set indexes for the first time
 		keeper.SetValidatorByPubKeyIndex(ctx, validator)
 
-		validator.BondIntraTxCounter = int16(i) // set the intra-tx counter to the order the validators are presented
 		keeper.SetValidatorByPowerIndex(ctx, validator, data.Pool)
 
 		if validator.Status == sdk.Bonded {

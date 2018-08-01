@@ -42,14 +42,16 @@ func TestInitGenesis(t *testing.T) {
 	vals, err := InitGenesis(ctx, keeper, genesisState)
 	require.NoError(t, err)
 
-	// now make sure the validators are bonded
+	// now make sure the validators are bonded and intra-tx counters are correct
 	resVal, found := keeper.GetValidator(ctx, keep.Addrs[0])
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, resVal.Status)
+	require.Equal(t, int16(0), resVal.BondIntraTxCounter)
 
 	resVal, found = keeper.GetValidator(ctx, keep.Addrs[1])
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, resVal.Status)
+	require.Equal(t, int16(1), resVal.BondIntraTxCounter)
 
 	abcivals := make([]abci.Validator, len(vals))
 	for i, val := range validators {

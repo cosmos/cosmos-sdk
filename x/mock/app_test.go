@@ -13,7 +13,7 @@ const msgType = "testMsg"
 
 var (
 	numAccts                       = 2
-	genCoins                       = sdk.Coins{sdk.NewCoin("foocoin", 77)}
+	genCoins                       = sdk.Coins{sdk.NewInt64Coin("foocoin", 77)}
 	accs, addrs, pubKeys, privKeys = CreateGenAccounts(numAccts, genCoins)
 )
 

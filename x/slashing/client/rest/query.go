@@ -25,16 +25,15 @@ func signingInfoHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.C
 
 		// read parameters
 		vars := mux.Vars(r)
-		bech32validator := vars["validator"]
 
-		validatorAddr, err := sdk.ValAddressFromBech32(bech32validator)
+		pk, err := sdk.GetValPubKeyBech32(vars["validator"])
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		key := slashing.GetValidatorSigningInfoKey(validatorAddr)
+		key := slashing.GetValidatorSigningInfoKey(sdk.ValAddress(pk.Address()))
 		res, err := ctx.QueryStore(key, storeName)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

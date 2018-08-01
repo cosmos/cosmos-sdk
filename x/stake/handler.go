@@ -111,7 +111,9 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	}
 	validator.Description = description
 
-	k.UpdateValidator(ctx, validator)
+	// We don't need to run through all the power update logic within k.UpdateValidator
+	// We just need to override the entry in state, since only the description has changed.
+	k.SetValidator(ctx, validator)
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionEditValidator,
 		tags.DstValidator, []byte(msg.ValidatorAddr.String()),

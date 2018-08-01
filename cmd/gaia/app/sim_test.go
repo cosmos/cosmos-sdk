@@ -23,31 +23,17 @@ import (
 )
 
 var (
-	seed              int64
-	numKeys           int
-	numBlocks         int
-	blockSize         int
-	minTimePerBlock   int64
-	maxTimePerBlock   int64
-	signingFraction   float64
-	evidenceFraction  float64
-	invariantInterval int
-	onOperation       bool
-	enabled           bool
-	verbose           bool
+	seed      int64
+	numBlocks int
+	blockSize int
+	enabled   bool
+	verbose   bool
 )
 
 func init() {
 	flag.Int64Var(&seed, "SimulationSeed", 42, "Simulation random seed")
-	flag.IntVar(&numKeys, "SimulationNumKeys", 500, "Number of keys (accounts)")
 	flag.IntVar(&numBlocks, "SimulationNumBlocks", 500, "Number of blocks")
 	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "Operations per block")
-	flag.Int64Var(&minTimePerBlock, "SimulationMinTimePerBlock", 86400, "Minimum time per block (seconds)")
-	flag.Int64Var(&maxTimePerBlock, "SimulationMaxTimePerBlock", 2*86400, "Maximum time per block (seconds)")
-	flag.Float64Var(&signingFraction, "SimulationSigningFraction", 0.7, "Chance a given validator signs a given block")
-	flag.Float64Var(&evidenceFraction, "SimulationEvidenceFraction", 0.01, "Chance that any evidence is found on a given block")
-	flag.IntVar(&invariantInterval, "SimulationInvariantInterval", 10, "Interval between blocks for checking invariants")
-	flag.BoolVar(&onOperation, "SimulationOnOperation", false, "Check invariants after each operation")
 	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")
 	flag.BoolVar(&verbose, "SimulationVerbose", false, "Verbose log output")
 }
@@ -78,7 +64,7 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
-	stakeGenesis.Pool.LooseTokens = sdk.NewRat(int64(100*numKeys) + (numInitiallyBonded * 100))
+	stakeGenesis.Pool.LooseTokens = sdk.NewRat(int64(100*250) + (numInitiallyBonded * 100))
 	stakeGenesis.Validators = validators
 	stakeGenesis.Bonds = delegations
 	// No inflation, for now
@@ -142,14 +128,8 @@ func TestFullGaiaSimulation(t *testing.T) {
 		[]simulation.Invariant{
 			simulation.PeriodicInvariant(allInvariants, 10),
 		},
-		onOperation,
-		numKeys,
 		numBlocks,
 		blockSize,
-		minTimePerBlock,
-		maxTimePerBlock,
-		signingFraction,
-		evidenceFraction,
 	)
 
 }

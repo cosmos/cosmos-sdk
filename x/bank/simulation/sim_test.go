@@ -41,6 +41,6 @@ func TestBankWithRandomMessages(t *testing.T) {
 			NonnegativeBalanceInvariant(mapper),
 			TotalCoinsInvariant(mapper, func() sdk.Coins { return mapp.TotalCoinsSupply }),
 		},
-		true, 100, 30, 30, 10, 20, 0.0, 0.0,
+		30, 30,
 	)
 }

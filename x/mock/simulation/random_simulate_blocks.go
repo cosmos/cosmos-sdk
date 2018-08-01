@@ -16,31 +16,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: Abstract these into parameters later
-var (
-	// Currently there are 3 different liveness types, fully online, spotty connection, offline.
-	initialLivenessWeightings   = []int{40, 5, 5}
-	livenessTransitionMatrix, _ = CreateTransitionMatrix([][]int{
-		{90, 20, 1},
-		{10, 50, 5},
-		{0, 10, 1000},
-	})
-)
-
 // Simulate tests application by sending random messages.
 func Simulate(
 	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, ops []TestAndRunTx, setups []RandSetup,
-	invariants []Invariant, onOperation bool, numKeys int, numBlocks int, blockSize int, minTimePerBlock int64, maxTimePerBlock int64, signingFraction float64, evidenceFraction float64,
+	invariants []Invariant, numBlocks int, blockSize int,
 ) {
 	time := time.Now().UnixNano()
-	SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, onOperation, numKeys, numBlocks, blockSize, minTimePerBlock, maxTimePerBlock, signingFraction, evidenceFraction)
+	SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numBlocks, blockSize)
 }
 
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
 func SimulateFromSeed(
 	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, seed int64, ops []TestAndRunTx, setups []RandSetup,
-	invariants []Invariant, onOperation bool, numKeys int, numBlocks int, blockSize int, minTimePerBlock int64, maxTimePerBlock int64, signingFraction float64, evidenceFraction float64,
+	invariants []Invariant, numBlocks int, blockSize int,
 ) {
 	log := fmt.Sprintf("Starting SimulateFromSeed with randomness created with seed %d", int(seed))
 	fmt.Printf("%s\n", log)
@@ -115,12 +104,7 @@ func SimulateFromSeed(
 		header.Time += minTimePerBlock + int64(r.Intn(int(timeDiff)))
 
 		// Generate a random RequestBeginBlock with the current validator set for the next block
-		if signingFraction == 0.0 {
-			// No BeginBlock simulation
-			request = abci.RequestBeginBlock{Header: header}
-		} else {
-			request = RandomRequestBeginBlock(t, r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, event, header, log)
-		}
+		request = RandomRequestBeginBlock(t, r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, event, header, log)
 
 		// Update the validator set
 		validators = updateValidators(t, r, validators, res.ValidatorUpdates, event)
@@ -133,7 +117,9 @@ func SimulateFromSeed(
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
 func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]mockValidator, livenessTransitions TransitionMatrix, evidenceFraction float64,
 	pastTimes []int64, event func(string), header abci.Header, log string) abci.RequestBeginBlock {
-	require.True(t, len(validators) > 0, "Zero validators can't sign a block!")
+	if len(validators) == 0 {
+		return abci.RequestBeginBlock{Header: header}
+	}
 	signingValidators := make([]abci.SigningValidator, len(validators))
 	i := 0
 	for _, mVal := range validators {

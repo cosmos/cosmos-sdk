@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"math/big"
 	"testing"
 
@@ -158,7 +157,6 @@ func TestArithmetic(t *testing.T) {
 	}
 
 	for tcIndex, tc := range tests {
-		fmt.Printf("debug tcIndex: %v\n", tcIndex)
 		resAdd := tc.d1.Add(tc.d2)
 		resSub := tc.d1.Sub(tc.d2)
 		resMul := tc.d1.Mul(tc.d2)
@@ -223,9 +221,9 @@ var cdc = wire.NewCodec()
 
 func TestZeroDeserializationJSON(t *testing.T) {
 	d := Dec{new(big.Int)}
-	err := cdc.UnmarshalJSON([]byte("0"), &d)
+	err := cdc.UnmarshalJSON([]byte(`"0"`), &d)
 	require.Nil(t, err)
-	err = cdc.UnmarshalJSON([]byte("{}"), &d)
+	err = cdc.UnmarshalJSON([]byte(`"{}"`), &d)
 	require.NotNil(t, err)
 }
 
@@ -234,7 +232,6 @@ func TestSerializationText(t *testing.T) {
 
 	bz, err := d.MarshalText()
 	require.NoError(t, err)
-	fmt.Printf("debug bz: %s\n", bz)
 
 	d2 := Dec{new(big.Int)}
 	err = d2.UnmarshalText(bz)

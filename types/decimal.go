@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -262,6 +263,33 @@ func (d *Dec) UnmarshalAmino(text string) (err error) {
 	}
 	d.Int = tempInt
 	return nil
+}
+
+// MarshalJSON defines custom encoding scheme
+func (d Dec) MarshalJSON() ([]byte, error) {
+	if d.Int == nil {
+		d.Int = new(big.Int)
+	}
+
+	text, err := d.Int.MarshalText()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(string(text))
+}
+
+// UnmarshalJSON defines custom decoding scheme
+func (d *Dec) UnmarshalJSON(bz []byte) error {
+	if d.Int == nil {
+		d.Int = new(big.Int)
+	}
+
+	var text string
+	err := json.Unmarshal(bz, &text)
+	if err != nil {
+		return err
+	}
+	return d.Int.UnmarshalText([]byte(text))
 }
 
 //___________________________________________________________________________________

@@ -111,6 +111,13 @@ type GenesisState struct {
 	Threshold int64 `json:"fee_threshold"`
 }
 
+func DefaultGenesisStateForTest() GenesisState {
+	return GenesisState{
+		FeeToken: "iGas",
+		Threshold: 0,
+	}
+}
+
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		FeeToken: "iGas",

@@ -9,11 +9,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/store"
-	dbm "github.com/tendermint/tendermint/libs/db"
-)
+		)
 
 var (
 	emptyCoins = sdk.Coins{}
@@ -22,7 +20,7 @@ var (
 )
 
 func TestFeeCollectionKeeperGetSet(t *testing.T) {
-	ms, _, capKey2 := setupMultiStore()
+	ms, _, capKey2, _ := setupMultiStore()
 	cdc := wire.NewCodec()
 	paramKeeper := params.NewKeeper(cdc, sdk.NewKVStoreKey("params"))
 
@@ -42,7 +40,7 @@ func TestFeeCollectionKeeperGetSet(t *testing.T) {
 }
 
 func TestFeeCollectionKeeperAdd(t *testing.T) {
-	ms, _, capKey2 := setupMultiStore()
+	ms, _, capKey2, _ := setupMultiStore()
 	cdc := wire.NewCodec()
 	paramKeeper := params.NewKeeper(cdc, sdk.NewKVStoreKey("params"))
 
@@ -63,7 +61,7 @@ func TestFeeCollectionKeeperAdd(t *testing.T) {
 }
 
 func TestFeeCollectionKeeperClear(t *testing.T) {
-	ms, _, capKey2 := setupMultiStore()
+	ms, _, capKey2, _ := setupMultiStore()
 	cdc := wire.NewCodec()
 	paramKeeper := params.NewKeeper(cdc, sdk.NewKVStoreKey("params"))
 
@@ -81,22 +79,14 @@ func TestFeeCollectionKeeperClear(t *testing.T) {
 }
 
 func TestFeeCollectionKeeperPreprocess(t *testing.T) {
-	db := dbm.NewMemDB()
-
-	capKey := sdk.NewKVStoreKey("capkey")
-	paramsKey := sdk.NewKVStoreKey("params")
-
-	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(paramsKey, sdk.StoreTypeIAVL, db)
-	ms.LoadLatestVersion()
+	ms, _, capKey2, paramsKey := setupMultiStore()
 
 	cdc := wire.NewCodec()
 	paramKeeper := params.NewKeeper(cdc, paramsKey)
 
 	// make context and keeper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	fck := NewFeeCollectionKeeper(cdc, capKey, paramKeeper.Getter())
+	fck := NewFeeCollectionKeeper(cdc, capKey2, paramKeeper.Getter())
 	InitGenesis(ctx, paramKeeper.Setter(), DefaultGenesisState())
 
 	var err sdk.Error

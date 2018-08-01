@@ -31,7 +31,7 @@ func BlockCommand() *cobra.Command {
 	return cmd
 }
 
-func getBlock(ctx context.CoreContext, height *int64) ([]byte, error) {
+func getBlock(ctx context.QueryContext, height *int64) ([]byte, error) {
 	// get the node
 	node, err := ctx.GetNode()
 	if err != nil {
@@ -57,7 +57,7 @@ func getBlock(ctx context.CoreContext, height *int64) ([]byte, error) {
 }
 
 // get the current blockchain height
-func GetChainHeight(ctx context.CoreContext) (int64, error) {
+func GetChainHeight(ctx context.QueryContext) (int64, error) {
 	node, err := ctx.GetNode()
 	if err != nil {
 		return -1, err
@@ -86,7 +86,7 @@ func printBlock(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	output, err := getBlock(context.NewCoreContextFromViper(), height)
+	output, err := getBlock(context.NewQueryContextFromCLI(), height)
 	if err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func printBlock(cmd *cobra.Command, args []string) error {
 // REST
 
 // REST handler to get a block
-func BlockRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
+func BlockRequestHandlerFn(ctx context.QueryContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		height, err := strconv.ParseInt(vars["height"], 10, 64)
@@ -123,7 +123,7 @@ func BlockRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
 }
 
 // REST handler to get the latest block
-func LatestBlockRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
+func LatestBlockRequestHandlerFn(ctx context.QueryContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		height, err := GetChainHeight(ctx)
 		if err != nil {

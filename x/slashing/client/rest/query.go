@@ -4,26 +4,23 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gorilla/mux"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/gorilla/mux"
 )
 
-func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
+func registerQueryRoutes(queryCtx context.QueryContext, r *mux.Router, cdc *wire.Codec) {
 	r.HandleFunc(
 		"/slashing/signing_info/{validator}",
-		signingInfoHandlerFn(ctx, "slashing", cdc),
+		signingInfoHandlerFn(queryCtx, "slashing", cdc),
 	).Methods("GET")
 }
 
 // http request handler to query signing info
-func signingInfoHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
+func signingInfoHandlerFn(queryCtx context.QueryContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		// read parameters
 		vars := mux.Vars(r)
 
 		pk, err := sdk.GetValPubKeyBech32(vars["validator"])
@@ -34,7 +31,8 @@ func signingInfoHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.C
 		}
 
 		key := slashing.GetValidatorSigningInfoKey(sdk.ValAddress(pk.Address()))
-		res, err := ctx.QueryStore(key, storeName)
+
+		res, err := queryCtx.QueryStore(key, storeName)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("couldn't query signing info. Error: %s", err.Error())))
@@ -42,6 +40,7 @@ func signingInfoHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.C
 		}
 
 		var signingInfo slashing.ValidatorSigningInfo
+
 		err = cdc.UnmarshalBinary(res, &signingInfo)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

@@ -18,23 +18,25 @@ func statusCommand() *cobra.Command {
 		Short: "Query remote node for status",
 		RunE:  printNodeStatus,
 	}
+
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	return cmd
 }
 
-func getNodeStatus(ctx context.CoreContext) (*ctypes.ResultStatus, error) {
+func getNodeStatus(ctx context.QueryContext) (*ctypes.ResultStatus, error) {
 	// get the node
 	node, err := ctx.GetNode()
 	if err != nil {
 		return &ctypes.ResultStatus{}, err
 	}
+
 	return node.Status()
 }
 
 // CMD
 
 func printNodeStatus(cmd *cobra.Command, args []string) error {
-	status, err := getNodeStatus(context.NewCoreContextFromViper())
+	status, err := getNodeStatus(context.NewQueryContextFromCLI())
 	if err != nil {
 		return err
 	}
@@ -52,7 +54,7 @@ func printNodeStatus(cmd *cobra.Command, args []string) error {
 // REST
 
 // REST handler for node info
-func NodeInfoRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
+func NodeInfoRequestHandlerFn(ctx context.QueryContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		status, err := getNodeStatus(ctx)
 		if err != nil {
@@ -68,12 +70,13 @@ func NodeInfoRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
+
 		w.Write(output)
 	}
 }
 
 // REST handler for node syncing
-func NodeSyncingRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
+func NodeSyncingRequestHandlerFn(ctx context.QueryContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		status, err := getNodeStatus(ctx)
 		if err != nil {
@@ -88,6 +91,7 @@ func NodeSyncingRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
+
 		w.Write([]byte(strconv.FormatBool(syncing)))
 	}
 }

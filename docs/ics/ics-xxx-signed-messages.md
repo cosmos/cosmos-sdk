@@ -40,8 +40,10 @@ and in general Ethereum's `eth_sign` and `eth_signTypedData` methods<sup>2</sup>
 
 ### Preliminary
 
-We will a have Cosmos SDK message signing protocol that consists of using `SHA-256`,
-as the hashing algorithm and `secp256k1` as the signing algorithm.
+The Cosmos message signing protocol will be parameterized with a cryptographic
+secure hashing algorithm `SHA-256` and a signing algorithm `S` that contains 
+the operations `sign` and `verify` which provide a digital signature over a set
+of bytes and verification of a signature respectively.
 
 Note, our goal here is not to provide context and reasoning about why necessarily
 these algorithms were chosen apart from the fact they are the defacto algorithms
@@ -69,22 +71,6 @@ rules, where `||` denotes concatenation:
 > TODO: Figure out byte(s) prefix in the encoding to not have collisions with
 typical transaction signatures (JSON-encoded) and to distinguish the individual
 cases. This may require introducing prefixes to transactions.
-
-#### Assumptions
-
-`amino` is deterministic and seems to be injective -- at least when when
-concrete types are registered. Can we rely on this mechanism or do we need a
-custom true injective encoding?
-
-User-agents such Voyager, Metamask, and Ledger may provide human-readable and
-structured data, but this data must be consistent in terms of the field types
-and structure itself encoded via `amino`. This would require said applications
-to have an `amino` implementation. This may yet further warrant a simple custom
-encoding.
-
-> TODO: Do we need to implement a custom encoding scheme instead of or atop 
-amino similar or equal to EIP-712 `hashStruct`? As far as I know, this is mostly
-due to providing Soldity efficiencies and addressing limitations.
 
 ### DomainSeparator
 

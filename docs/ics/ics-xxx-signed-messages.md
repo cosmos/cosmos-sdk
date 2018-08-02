@@ -146,7 +146,7 @@ a schema adhering to the JSON schema [specification](http://json-schema.org/spec
       ]
     },
     "primaryType": {
-      "description": "The name of primary message type to sign.",
+      "description": "The name of primary message type to sign. This is needed for when there is more than one type defined besides `CosmosDomain`.",
       "type": "string",
       "minLength": 1
     },

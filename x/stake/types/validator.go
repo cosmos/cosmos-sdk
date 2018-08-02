@@ -178,7 +178,6 @@ func (v Validator) HumanReadableString() (string, error) {
 // validator struct for bech output
 type BechValidator struct {
 	Owner   sdk.AccAddress `json:"owner"`   // in bech32
-	Address sdk.ValAddress `json:"address"` // in bech32
 	PubKey  string         `json:"pub_key"` // in bech32
 	Revoked bool           `json:"revoked"` // has the validator been revoked from bonded status?
 
@@ -209,7 +208,6 @@ func (v Validator) Bech32Validator() (BechValidator, error) {
 
 	return BechValidator{
 		Owner:   v.Owner,
-		Address: sdk.ValAddress(v.PubKey.Address()),
 		PubKey:  bechValPubkey,
 		Revoked: v.Revoked,
 

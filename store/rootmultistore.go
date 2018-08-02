@@ -462,8 +462,7 @@ func commitStores(version int64, storeMap map[StoreKey]CommitStore) commitInfo {
 
 	storemap := make(map[string]CommitStore)
 
-	fmt.Println("CommitStores!!!!!!")
-	for key,store:= range storeMap{
+	for key, store := range storeMap {
 		fmt.Println(key)
 		storemap[key.Name()] = store
 	}
@@ -473,17 +472,16 @@ func commitStores(version int64, storeMap map[StoreKey]CommitStore) commitInfo {
 	if upgrade != nil {
 
 		upgradeStore := upgrade.(KVStore)
-		bz := upgradeStore.Get([]byte("k/"))	//CurrentStoreKey
-		storekeys := string(bz) 				//splitby":"
+		bz := upgradeStore.Get([]byte("k/")) //CurrentStoreKey
+		storekeys := string(bz)              //splitby":"
 
 		storekeyslist := strings.Split(storekeys, ":")
-		fmt.Println(storekeyslist)
 
 		storeInfos := make([]storeInfo, 0, len(storekeyslist))
 
 		for _, key := range storekeyslist {
 
-			if store,ok:= storemap[key]; ok{
+			if store, ok := storemap[key]; ok {
 				// Commit
 				commitID := store.Commit()
 
@@ -523,11 +521,9 @@ func commitStores(version int64, storeMap map[StoreKey]CommitStore) commitInfo {
 		return ci
 	}
 
-
-
 }
-////////////////////  iris/cosmos-sdk end///////////////////////////
 
+////////////////////  iris/cosmos-sdk end///////////////////////////
 
 // Gets commitInfo from disk.
 func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {

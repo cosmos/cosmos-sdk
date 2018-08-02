@@ -139,6 +139,7 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 func (app *BaseApp) GetKVStore(key sdk.StoreKey) sdk.KVStore {
 	return app.cms.GetKVStore(key)
 }
+
 ////////////////////  iris/cosmos-sdk end  ///////////////////////////
 
 // Set the txDecoder function
@@ -476,7 +477,6 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 	}
 
 	////////////////////  iris/cosmos-sdk end ///////////////////////////
-
 
 	// Decode the Tx.
 

@@ -161,7 +161,7 @@ func getValidators(validatorKVs []sdk.KVPair, cdc *wire.Codec) ([]types.BechVali
 	return validators, nil
 }
 
-// getValidator Gets a validator given a ValAddress
+// Gets a validator given a ValAddress
 func getValidator(address sdk.ValAddress, validatorKVs []sdk.KVPair, cdc *wire.Codec) (stake.BechValidator, error) {
 	// parse out the validators
 	for _, kv := range validatorKVs {
@@ -184,7 +184,7 @@ func getValidator(address sdk.ValAddress, validatorKVs []sdk.KVPair, cdc *wire.C
 	return stake.BechValidator{}, errors.Errorf("Couldn't find validator")
 }
 
-// getValidatorFromAccAdrr Gets a validator given an AccAddress
+// Gets a validator given an AccAddress
 func getValidatorFromAccAdrr(address sdk.AccAddress, validatorKVs []sdk.KVPair, cdc *wire.Codec) (stake.BechValidator, error) {
 	// parse out the validators
 	for _, kv := range validatorKVs {
@@ -205,4 +205,25 @@ func getValidatorFromAccAdrr(address sdk.AccAddress, validatorKVs []sdk.KVPair, 
 		}
 	}
 	return stake.BechValidator{}, errors.Errorf("Couldn't find validator")
+}
+
+//  Gets all Bech32 validators from a key
+func getBech32Validators(storeName string, ctx context.CoreContext, cdc *wire.Codec) (
+	validators []types.BechValidator, httpStatusCode int, errMsg string, err error) {
+	// Get all validators using key
+	kvs, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
+	if err != nil {
+		return nil, http.StatusInternalServerError, "couldn't query validators. Error: ", err
+	}
+
+	// the query will return empty if there are no validators
+	if len(kvs) == 0 {
+		return nil, http.StatusNoContent, "", nil
+	}
+
+	validators, err = getValidators(kvs, cdc)
+	if err != nil {
+		return nil, http.StatusInternalServerError, "Error: ", err
+	}
+	return validators, http.StatusOK, "", nil
 }

@@ -120,23 +120,10 @@ func delegatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFu
 		}
 
 		// Get all validators using key
-		kvs, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
+		validators, statusCode, errMsg, err := getBech32Validators(storeName, ctx, cdc)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't query validators. Error: %s", err.Error())))
-			return
-		}
-
-		// the query will return empty if there are no validators
-		if len(kvs) == 0 {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-
-		validators, err := getValidators(kvs, cdc)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
+			w.WriteHeader(statusCode)
+			w.Write([]byte(fmt.Sprintf("%s%s", errMsg, err.Error())))
 			return
 		}
 

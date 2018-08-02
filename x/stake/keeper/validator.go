@@ -191,13 +191,13 @@ func (k Keeper) ClearTendermintUpdates(ctx sdk.Context) {
 
 //___________________________________________________________________________
 
-// Perfom all the nessisary steps for when a validator changes its power.  This
+// Perform all the necessary steps for when a validator changes its power.  This
 // function updates all validator stores as well as tendermint update store.
 // It may kick out validators if new validator is entering the bonded validator
 // group.
 //
 // nolint: gocyclo
-// TODO: Remove above nolint, function needs to be simplified
+// TODO: Remove above nolint, function needs to be simplified!
 func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
@@ -210,12 +210,18 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 	cliffPower := k.GetCliffValidatorPower(ctx)
 
 	switch {
-	// if already bonded and power increasing only need to update tendermint
+	// if the validator is already bonded and the power is increasing, we need to:
+	// a) update Tendermint
+	// b) check if the cliff validator needs to be updated
 	case powerIncreasing && !validator.Revoked &&
 		(oldFound && oldValidator.Status == sdk.Bonded):
 
 		bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
 		store.Set(GetTendermintUpdatesKey(validator.Owner), bz)
+
+		if cliffPower != nil {
+			k.setCliffValidator(ctx, validator, pool)
+		}
 
 	// if is a new validator and the new power is less than the cliff validator
 	case cliffPower != nil && !oldFound &&

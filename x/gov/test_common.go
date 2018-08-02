@@ -30,7 +30,7 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 	ck := bank.NewKeeper(mapp.AccountMapper)
 	sk := stake.NewKeeper(mapp.Cdc, keyStake, ck, mapp.RegisterCodespace(stake.DefaultCodespace))
 	keeper := NewKeeper(mapp.Cdc, keyGov, ck, sk, DefaultCodespace)
-	mapp.Router().AddRoute("gov", keyGov, NewHandler(keeper))
+	mapp.Router().AddRoute("gov", []*sdk.KVStoreKey{keyGov}, NewHandler(keeper))
 
 	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyGov}))
 

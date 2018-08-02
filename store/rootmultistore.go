@@ -468,35 +468,63 @@ func commitStores(version int64, storeMap map[StoreKey]CommitStore) commitInfo {
 		storemap[key.Name()] = store
 	}
 
-	upgradeStore:=storemap["upgrade"].(KVStore)
-	bz:= upgradeStore.Get([]byte("k/"))//CurrentStoreKey
-	storekeys := string(bz) //splitby":"
+	upgrade := storemap["upgrade"]
 
-	storekeyslist := strings.Split(storekeys, ":")
-	fmt.Println(storekeyslist)
+	if upgrade != nil {
 
-	storeInfos := make([]storeInfo, 0, len(storekeyslist))
+		upgradeStore := upgrade.(KVStore)
+		bz := upgradeStore.Get([]byte("k/"))	//CurrentStoreKey
+		storekeys := string(bz) 				//splitby":"
 
-	for _, key := range storekeyslist {
+		storekeyslist := strings.Split(storekeys, ":")
+		fmt.Println(storekeyslist)
 
-		if store,ok:= storemap[key]; ok{
+		storeInfos := make([]storeInfo, 0, len(storekeyslist))
+
+		for _, key := range storekeyslist {
+
+			if store,ok:= storemap[key]; ok{
+				// Commit
+				commitID := store.Commit()
+
+				// Record CommitID
+				si := storeInfo{}
+				si.Name = key
+				si.Core.CommitID = commitID
+				// si.Core.StoreType = store.GetStoreType()
+				storeInfos = append(storeInfos, si)
+			}
+		}
+
+		ci := commitInfo{
+			Version:    version,
+			StoreInfos: storeInfos,
+		}
+		return ci
+	} else {
+		storeInfos := make([]storeInfo, 0, len(storeMap))
+
+		for key, store := range storeMap {
 			// Commit
 			commitID := store.Commit()
 
 			// Record CommitID
 			si := storeInfo{}
-			si.Name = key
+			si.Name = key.Name()
 			si.Core.CommitID = commitID
 			// si.Core.StoreType = store.GetStoreType()
 			storeInfos = append(storeInfos, si)
 		}
+
+		ci := commitInfo{
+			Version:    version,
+			StoreInfos: storeInfos,
+		}
+		return ci
 	}
 
-	ci := commitInfo{
-		Version:    version,
-		StoreInfos: storeInfos,
-	}
-	return ci
+
+
 }
 ////////////////////  iris/cosmos-sdk end///////////////////////////
 

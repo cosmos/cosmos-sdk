@@ -78,7 +78,7 @@ rules, where `||` denotes concatenation:
   * `b`: the bytes to be signed
   * `l`: little endian uint64 encoding of the length of `b`
 * `encode(ds : TS, ts : TS)` = `0x000001 || encodeStruct(ds) || encodeStruct(ts)`, where
-  * `ds`: the application domain separator which is also a human-readable typed structure ([see below](###DomainSeparator))
+  * `ds`: the application domain separator which is also a human-readable typed structure ([see below](#domainseparator))
   * `ts`: the human-readable typed structure to be signed
 
 The prefix bytes disambiguate the encoding cases from one another as well as
@@ -205,7 +205,7 @@ The **data** of a typed structure is encoded as the concatenation of values in
 the typed data sorted by the field names in lexicographic ascending order. The
 specification is as follows, where `||` denotes concatenation:
 
-`encodeData(ts : TS)` = <code>sha256(value<sub>1</sub>) || sha256(value<sub>2</sub>) || ... || sha256(value<sub>n</sub>)`</code>
+`encodeData(ts : TS)` = <code>sha256(value<sub>1</sub>) || sha256(value<sub>2</sub>) || ... || sha256(value<sub>n</sub>)`</code>, where <code>value<sub>1</sub> < value<sub>2</sub></code>
 
 ### DomainSeparator
 

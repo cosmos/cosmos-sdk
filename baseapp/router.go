@@ -46,10 +46,11 @@ func (rtr *router) AddRoute(r string, s []*sdk.KVStoreKey, h sdk.Handler) Router
 	if !isAlpha(r) {
 		panic("route expressions can only contain alphabet characters")
 	}
-	rtr.routes = append(rtr.routes, route{r,s,h})
+	rtr.routes = append(rtr.routes, route{r, s, h})
 
 	return rtr
 }
+
 ////////////////////  iris/cosmos-sdk end  ///////////////////////////
 
 // Route - TODO add description
@@ -71,7 +72,7 @@ func (rtr *router) RouteTable() (table []string) {
 		for _, store := range route.s {
 			storelist = storelist + ":" + store.Name()
 		}
-		table = append(table, route.r + "/" + storelist)
+		table = append(table, route.r+"/"+storelist)
 	}
 	return
 }

@@ -150,7 +150,9 @@ func delegatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFu
 				w.Write([]byte(fmt.Sprintf("%s%s", errMsg, err.Error())))
 				return
 			}
-			delegationSummary.Delegations = append(delegationSummary.Delegations, delegations)
+			if statusCode != http.StatusNoContent {
+				delegationSummary.Delegations = append(delegationSummary.Delegations, delegations)
+			}
 
 			// Undelegations
 			unbondingDelegation, statusCode, errMsg, err := getDelegatorUndelegations(ctx, cdc, delegatorAddr, validatorAddr)
@@ -159,7 +161,9 @@ func delegatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFu
 				w.Write([]byte(fmt.Sprintf("%s%s", errMsg, err.Error())))
 				return
 			}
-			delegationSummary.UnbondingDelegations = append(delegationSummary.UnbondingDelegations, unbondingDelegation)
+			if statusCode != http.StatusNoContent {
+				delegationSummary.UnbondingDelegations = append(delegationSummary.UnbondingDelegations, unbondingDelegation)
+			}
 
 			// Redelegations
 			// only querying redelegations to a validator as this should give us already all relegations
@@ -170,7 +174,9 @@ func delegatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFu
 				w.Write([]byte(fmt.Sprintf("%s%s", errMsg, err.Error())))
 				return
 			}
-			delegationSummary.Redelegations = append(delegationSummary.Redelegations, redelegations)
+			if statusCode != http.StatusNoContent {
+				delegationSummary.Redelegations = append(delegationSummary.Redelegations, redelegations)
+			}
 
 			output, err := cdc.MarshalJSON(delegationSummary)
 			if err != nil {

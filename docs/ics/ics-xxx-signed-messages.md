@@ -2,6 +2,19 @@
 
 >TODO: Replace with valid ICS number and possibly move to new location.
 
+  * [Changelog](#changelog)
+  * [Abstract](#abstract)
+  * [Specification](#specification)
+    + [Preliminary](#preliminary)
+    + [Encoding](#encoding)
+      - [Schema](#schema)
+      - [encodeStruct](#encodestruct)
+      - [encodeSchema](#encodeschema)
+      - [encodeData](#encodedata)
+    + [DomainSeparator](#domainseparator)
+  * [API](#api)
+  * [References](#references)
+
 ## Changelog
 
 ## Abstract
@@ -56,51 +69,181 @@ pre-image attacks, as well as being deterministic and uniform.
 Our goal is to create a deterministic, injective, machine-verifiable means of
 encoding human-readable typed and structured data.
 
-Let us consider the set of signed messages to be: `B ∪ S`, where `B` is the set
-of byte strings and `S` is the set of human-readable typed structures. Thus, the
+Let us consider the set of signed messages to be: `B ∪ TS`, where `B` is the set
+of byte arrays and `TS` is the set of human-readable typed structures. Thus, the
 set can can be encoded in a deterministic and injective way via the following
 rules, where `||` denotes concatenation:
 
-* `encode(b : B)` = `p1 || bytes("Signed Cosmos SDK Message: \n") || l || b`, where
+* `encode(b : B)` = `0x0000 || bytes("Signed Cosmos SDK Message: \n") || l || b`, where
+  * `b`: the bytes to be signed
   * `l`: little endian uint64 encoding of the length of `b`
-  * `p1`: prefix to distinguish from normal transactions and other encoding cases
-* `encode(s : S, domainSeparator : B)` = `p2 || domainSeparator || amino(s)`, where
-  * `domainSeparator`: 32 byte encoding of the domain separator [see below](###DomainSeparator)
-  * `p2`: prefix to distinguish from normal transactions and other encoding cases
+* `encode(ds : TS, ts : TS)` = `0x000001 || encodeStruct(ds) || encodeStruct(ts)`, where
+  * `ds`: the application domain separator which is also a human-readable typed structure ([see below](###DomainSeparator))
+  * `ts`: the human-readable typed structure to be signed
 
-> TODO: Figure out byte(s) prefix in the encoding to not have collisions with
-typical transaction signatures (JSON-encoded) and to distinguish the individual
-cases. This may require introducing prefixes to transactions.
+The prefix bytes disambiguate the encoding cases from one another as well as
+separating them from collision of transactions to be signed. The `amino`
+serialization protocol escapes the set of disambiguation and prefix bytes with a
+single `0x00` byte so there should be no collision with those structures.
+
+#### Schema
+
+To achieve deterministic and injective encoding, Cosmos signed messages over
+type structures will use an existing known standard -- [JSON schema](http://json-schema.org/).
+The domain separator and typed structures to be encoded must be specified with
+a schema adhering to the JSON schema [specification](http://json-schema.org/specification.html).
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "cosmos/signing/typeData/schema",
+  "title": "The Cosmos signed message typed data schema.",
+  "type": "object",
+  "definitions": {
+    "typeDef": {
+      "type": "array",
+      "items": {
+        "description": "The list of properties a schema definition contains.",
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the schema rule.",
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "description": "The description of the schema rule.",
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of the schema rule.",
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ]
+      }
+    }
+  },
+  "properties": {
+    "types": {
+      "type": "object",
+      "properties": {
+        "CosmosDomain": {
+          "description": "The application domain separator schema.",
+          "$ref": "#/definitions/typeDef"
+        }
+      },
+      "additionalProperties": {
+        "description": "The application type schemas.",
+        "$ref": "#/definitions/typeDef"
+      },
+      "required": [
+        "CosmosDomain"
+      ]
+    },
+    "primaryType": {
+      "description": "The name of primary message type to sign.",
+      "type": "string",
+      "minLength": 1
+    },
+    "domain": {
+      "description": "The domain separator to sign.",
+      "type": "object"
+    },
+    "message": {
+      "description": "The message data to sign.",
+      "type": "object"
+    }
+  },
+  "required": [
+    "types",
+    "primaryType",
+    "domain",
+    "message"
+  ]
+}
+```
+
+#### encodeStruct
+
+The specification of encoding a human-readable typed structures, which includes 
+the domain separator, is as follows, where `||` denotes concatenation:
+
+`encodeStruct(ts : TS)` = `sha256(sha256(encodeSchema(ts)) || sha256(encodeData(ts)))`
+
+**Note**: The typed structure `ts` should include the JSON instance and schema.
+
+#### encodeSchema
+
+The **schema** of a typed structure is encoded as the name of the type and the
+concatenation of it's schema fields. If the schema internally references other
+schemas, then those are appended to the encoding. In order to make the encoding
+deterministic, the encoding should sort types by their type name in lexicographic
+ascending order. The specification is as follows, where `||` denotes concatenation:
+
+`encodeSchema(ts : TS)` = `"typeName(" || name || " " || type || ", " || ... || ")"`
+
+e.g.
+```json
+"Address(address string)Coin(amount integer, denom string)Transaction(coin Coin, from Address, to Address)"
+```
+
+##### Alternatives
+
+1. Instead of concatenating schema signatures, we could also take each type
+definition and insert them into a sorted JSON object and hash the byte
+representation of that object. This would avoid having to perform weird
+concatenations.
+
+#### encodeData
+
+The **data** of a typed structure is encoded as the concatenation of values in
+the typed data sorted by the field names in lexicographic ascending order. The
+specification is as follows, where `||` denotes concatenation:
+
+`encodeData(ts : TS)` = <code>sha256(value<sub>1</sub>) || sha256(value<sub>2</sub>) || ... || sha256(value<sub>n</sub>)`</code>
 
 ### DomainSeparator
 
 Encoding structures can still lead to potential collisions and while this may be
-ok or even desired, it introduces a concern in that it could lead to two compatible
+okay or even desired, it introduces a concern in that it could lead to two compatible
 signatures. The domain separator prevents collisions of otherwise identical
-structures. It is designed to unique per application use and is directly used in
-the signature encoding itself. The domain separator is also extensible where the
-protocol and application designer may introduce or omit fields to their liking,
-but we will provide a typical structure that can be used for proper separation
+structures. It is designed to be unique per application use and is directly used
+in the signature encoding itself. The domain separator is also extensible where
+the protocol and application designer may introduce or omit fields to their needs,
+but we will provide a "standard" structure that can be used for proper separation
 of concerns:
 
-```golang
-type DomainSeparator struct {
-    name    string  // A user readable name of the signing origin or application.
-    chainID string  // The corresponding Cosmos chain identifier.
-    version uint16  // Version of the domain separator. A single major version should suffice.
-    salt    []byte  // Random data to further provide disambiguation.
+```json
+{
+  "types": {
+    "CosmosDomain": [
+      {
+        "name": "name",
+        "description": "The name of the signing origin or application.",
+        "type": "string"
+      },
+      {
+        "name": "chainID",
+        "description": "The corresponding Cosmos chain identifier.",
+        "type": "string",
+      },
+      {
+        "name": "version",
+        "description": "The major version of the domain separator.",
+        "type": "integer",
+      },
+    ],
+  },
 }
 ```
 
-Application designers may choose to omit or introduce additional fields to a
-domain separator. However, users should provided with the exact information for
-which they will be signing (i.e. a user should always know the chain ID they are
-signing for).
-
-Given the set of all domain separators, the encoding of the domain separator
-is as follows:
-
-* `encode(domainSeparator : B)` = `sha256(amino(domainSeparator))`
+**Note**: The user-agent should refuse signing if the `chainID` does not match
+the currently active chain!
 
 ## API
 
@@ -116,7 +259,7 @@ Params:
 * `address`: 20 byte account address to sign data with
 
 Returns:
-* `signature`: the Cosmos signature derived using `S`
+* `signature`: the Cosmos signature derived using signing algorithm `S`
 
 <hr>
 
@@ -128,32 +271,30 @@ Params:
 * `password`: password of the account to sign data with
 
 Returns:
-* `signature`: the Cosmos signature derived using `S`
+* `signature`: the Cosmos signature derived using signing algorithm `S`
 
 <hr>
 
 **cosmosSignTyped**
 
 Params:
-* `domainSeparator`: the application domain separator to encode and sign
-* `typedData`: type data structure to encode and sign
+* `typedData`: type typed data structure, including the domain separator, to encode and sign
 * `address`: 20 byte account address to sign data with
 
 Returns:
-* `signature`: the Cosmos signature derived using `S`
+* `signature`: the Cosmos signature derived using signing algorithm `S`
 
 <hr>
 
 **cosmosSignTypedPass**
 
 Params:
-* `domainSeparator`: the application domain separator to encode and sign
-* `typedData`: type data structure to encode and sign
+* `typedData`: type typed data structure, including the domain separator, to encode and sign
 * `address`: 20 byte account address to sign data with
 * `password`: password of the account to sign data with
 
 Returns:
-* `signature`: the Cosmos signature derived using `S`
+* `signature`: the Cosmos signature derived using signing algorithm `S`
 
 ## References
 

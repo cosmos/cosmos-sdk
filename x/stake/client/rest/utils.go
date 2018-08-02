@@ -38,24 +38,24 @@ func getDelegatorValidator(ctx context.CoreContext, cdc *wire.Codec, delegatorAd
 		return types.BechValidator{}, http.StatusInternalServerError, "couldn't query delegation. Error: ", err
 	}
 
-	if len(res) != 0 {
-		kvs, errQuery := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
-		if errQuery != nil {
-			return types.BechValidator{}, http.StatusInternalServerError, "Error: ", err
-		}
-		if len(kvs) == 0 {
-			// the query will return empty if there are no delegations
-			return types.BechValidator{}, http.StatusNoContent, "", nil
-		}
-
-		validator, errVal := getValidatorFromAccAdrr(validatorAccAddr, kvs, cdc)
-		if errVal != nil {
-			return types.BechValidator{}, http.StatusInternalServerError, "Couldn't get info from validator. Error: ", errVal
-		}
-		return validator, http.StatusOK, "", nil
-
+	if len(res) == 0 {
+		return types.BechValidator{}, http.StatusNoContent, "", nil
 	}
-	return types.BechValidator{}, http.StatusNoContent, "", nil
+
+	kvs, errQuery := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
+	if errQuery != nil {
+		return types.BechValidator{}, http.StatusInternalServerError, "Error: ", err
+	}
+	if len(kvs) == 0 {
+		// the query will return empty if there are no delegations
+		return types.BechValidator{}, http.StatusNoContent, "", nil
+	}
+
+	validator, errVal := getValidatorFromAccAdrr(validatorAccAddr, kvs, cdc)
+	if errVal != nil {
+		return types.BechValidator{}, http.StatusInternalServerError, "Couldn't get info from validator. Error: ", errVal
+	}
+	return validator, http.StatusOK, "", nil
 }
 
 func getDelegatorDelegations(ctx context.CoreContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
@@ -67,22 +67,23 @@ func getDelegatorDelegations(ctx context.CoreContext, cdc *wire.Codec, delegator
 	}
 
 	// the query will return empty if there is no data for this record
-	if len(marshalledDelegation) != 0 {
-		delegation, errUnmarshal := types.UnmarshalDelegation(cdc, delegationKey, marshalledDelegation)
-		if errUnmarshal != nil {
-			return DelegationWithoutRat{}, http.StatusInternalServerError, "couldn't unmarshall delegation. Error: ", errUnmarshal
-		}
-
-		outputDelegation := DelegationWithoutRat{
-			DelegatorAddr: delegation.DelegatorAddr,
-			ValidatorAddr: delegation.ValidatorAddr,
-			Height:        delegation.Height,
-			Shares:        delegation.Shares.FloatString(),
-		}
-
-		return outputDelegation, http.StatusOK, "", nil
+	if len(marshalledDelegation) == 0 {
+		return DelegationWithoutRat{}, http.StatusNoContent, "", nil
 	}
-	return DelegationWithoutRat{}, http.StatusNoContent, "", nil
+
+	delegation, errUnmarshal := types.UnmarshalDelegation(cdc, delegationKey, marshalledDelegation)
+	if errUnmarshal != nil {
+		return DelegationWithoutRat{}, http.StatusInternalServerError, "couldn't unmarshall delegation. Error: ", errUnmarshal
+	}
+
+	outputDelegation = DelegationWithoutRat{
+		DelegatorAddr: delegation.DelegatorAddr,
+		ValidatorAddr: delegation.ValidatorAddr,
+		Height:        delegation.Height,
+		Shares:        delegation.Shares.FloatString(),
+	}
+
+	return outputDelegation, http.StatusOK, "", nil
 }
 
 func getDelegatorUndelegations(ctx context.CoreContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
@@ -94,14 +95,15 @@ func getDelegatorUndelegations(ctx context.CoreContext, cdc *wire.Codec, delegat
 	}
 
 	// the query will return empty if there is no data for this record
-	if len(marshalledUnbondingDelegation) != 0 {
-		unbondingDelegation, errUnmarshal := types.UnmarshalUBD(cdc, undelegationKey, marshalledUnbondingDelegation)
-		if errUnmarshal != nil {
-			return types.UnbondingDelegation{}, http.StatusInternalServerError, "couldn't unmarshall unbonding-delegation. Error: ", errUnmarshal
-		}
-		return unbondingDelegation, http.StatusOK, "", nil
+	if len(marshalledUnbondingDelegation) == 0 {
+		return types.UnbondingDelegation{}, http.StatusNoContent, "", nil
 	}
-	return types.UnbondingDelegation{}, http.StatusNoContent, "", nil
+
+	unbondingDelegation, errUnmarshal := types.UnmarshalUBD(cdc, undelegationKey, marshalledUnbondingDelegation)
+	if errUnmarshal != nil {
+		return types.UnbondingDelegation{}, http.StatusInternalServerError, "couldn't unmarshall unbonding-delegation. Error: ", errUnmarshal
+	}
+	return unbondingDelegation, http.StatusOK, "", nil
 }
 
 func getDelegatorRedelegations(ctx context.CoreContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
@@ -113,15 +115,16 @@ func getDelegatorRedelegations(ctx context.CoreContext, cdc *wire.Codec, delegat
 		return types.Redelegation{}, http.StatusInternalServerError, "couldn't query redelegation. Error: ", err
 	}
 
-	if len(marshalledRedelegations) != 0 {
-		redelegations, errUnmarshal := types.UnmarshalRED(cdc, keyRedelegateTo, marshalledRedelegations)
-		if errUnmarshal != nil {
-			return types.Redelegation{}, http.StatusInternalServerError, "couldn't unmarshall redelegations. Error: ", errUnmarshal
-		}
-
-		return redelegations, http.StatusOK, "", nil
+	if len(marshalledRedelegations) == 0 {
+		return types.Redelegation{}, http.StatusNoContent, "", nil
 	}
-	return types.Redelegation{}, http.StatusNoContent, "", nil
+
+	redelegations, errUnmarshal := types.UnmarshalRED(cdc, keyRedelegateTo, marshalledRedelegations)
+	if errUnmarshal != nil {
+		return types.Redelegation{}, http.StatusInternalServerError, "couldn't unmarshall redelegations. Error: ", errUnmarshal
+	}
+
+	return redelegations, http.StatusOK, "", nil
 }
 
 // queryTxs Queries staking txs

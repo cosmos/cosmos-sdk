@@ -3,13 +3,13 @@
 ## TxWithdrawDelegation
 
 When a delegator wishes to withdraw their transaction fees it must send
-`TxWithdrawDelegation`. Note that parts of this transaction logic is also
+`TxWithdrawDelegation`. Note that parts of this transaction logic are also
 triggered each with any change in individual delegations, such as an unbond,
 redelegation, or delegation of additional tokens to a specific validator.  
 
-Generally, each time a withdrawal is made by a recipient the adjustment term
-must be modified for each block with a change in distributors shares since the
-time of last withdrawal.  This is accomplished by iterating over all relevant
+Each time a withdrawal is made by a recipient the adjustment term must be
+modified for each block with a change in distributors shares since the time of
+last withdrawal.  This is accomplished by iterating over all relevant
 `PowerChange`'s stored in distribution state.
 
 
@@ -74,7 +74,9 @@ func (pc PowerChange) ProcessPowerChangeDelegation(delegation sdk.Delegation,
 When a validator wishes to withdraw their transaction fees it must send
 `TxWithdrawDelegation`. Note that parts of this transaction logic is also
 triggered each with any change in individual delegations, such as an unbond,
-redelegation, or delegation of additional tokens to a specific validator.  
+redelegation, or delegation of additional tokens to a specific validator. This
+transaction withdraws the validators commission rewards, as well as any rewards
+earning on their self-delegation. 
 
 ```golang
 type TxWithdrawValidator struct {
@@ -152,12 +154,13 @@ recipient's entitlement to the distributor's tokens would be if all recipients
 for that distributor had static shares (equal to the current shares), and no
 recipients had ever withdrawn their entitled rewards. The projected pool
 represents the anticipated recipient's entitlement to the distributors tokens
-base on the current blocks token input to the distributor, and the
-distributor's tokens and shares of the previous block assuming that neither had
-changed in the current block. Using the simple and projected pools we can determine 
-all cumulative changes which have taken place outside of the recipient and adjust 
-the recipient's _adjustment factor_ to account for these changes and ultimately 
-keep track of the correct entitlement to the distributors tokens. 
+based on the current blocks token input (for example fees reward received)  to
+the distributor, and the distributor's tokens and shares of the previous block
+assuming that neither had changed in the current block. Using the simple and
+projected pools we can determine all cumulative changes which have taken place
+outside of the recipient and adjust the recipient's _adjustment factor_ to
+account for these changes and ultimately keep track of the correct entitlement
+to the distributors tokens. 
 
 ```
 func (d DistributionScenario) RecipientCount(height int64) sdk.Dec

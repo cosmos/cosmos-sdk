@@ -1,12 +1,5 @@
 # End Block
 
-```
-EndBlock() 
-    processProvisions()
-```
-
-# Inflation
-
 Validator provisions are minted on an hourly basis (the first block of a new
 hour). The annual target of between 7% and 20%. The long-term target ratio of
 bonded tokens to unbonded tokens is 67%.
@@ -24,7 +17,9 @@ the exception that there are no special rewards for the block proposer)
 Note that params are global params (TODO: link to the global params spec)
 
 ```
-processProvisions():
+EndBlock(): 
+
+    //process provisions
     hrsPerYr = 8766   // as defined by a julian year of 365.25 days
     precision = 10000
 

@@ -2,18 +2,18 @@
 
 ## Create validator distribution
 
- - triggered-by: `stake.TxCreateValidator`
+ - triggered-by: validator entering bonded validator group (`stake.bondValidator()`)
 
-Whenever a totally new validator is added to the Tendermint validator set they
-are entitled to begin earning rewards of atom provisions and fess. At this
-point `ValidatorDistribution.Pool()` must be zero (as the validator has not yet
+Whenever a new validator is added to the Tendermint validator set they are
+entitled to begin earning rewards of atom provisions and fees. At this point
+`ValidatorDistribution.Pool()` must be zero (as the validator has not yet
 earned any rewards) meaning that the initial value for `validator.Adjustment`
 must be set to the value of `validator.SimplePool()` for the height which the
 validator is added on the validator set. 
 
 ## Create or modify delegation distribution
  
- - triggered-by: `stake.TxDelegate`
+ - triggered-by: `stake.TxDelegate`, `stake.TxBeginRedelegate`, `stake.TxBeginUnbonding`
 
 The pool of a new delegator bond will be 0 for the height at which the bond was
 added. This is achieved by setting `DelegationDistribution.WithdrawalHeight` to

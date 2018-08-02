@@ -10,7 +10,7 @@ import (
 type Router interface {
 
 	////////////////////  iris/cosmos-sdk begin  ///////////////////////////
-	AddRoute(r string, s *sdk.KVStoreKey, h sdk.Handler) (rtr Router)
+	AddRoute(r string, s []*sdk.KVStoreKey, h sdk.Handler) (rtr Router)
 	Route(path string) (h sdk.Handler)
 	RouteTable() (table []string)
 	////////////////////  iris/cosmos-sdk end  ///////////////////////////
@@ -20,7 +20,7 @@ type Router interface {
 type route struct {
 	r string
 	////////////////////  iris/cosmos-sdk begin  ///////////////////////////
-	s *sdk.KVStoreKey
+	s []*sdk.KVStoreKey
 	////////////////////  iris/cosmos-sdk end  ///////////////////////////
 	h sdk.Handler
 }
@@ -42,7 +42,7 @@ var isAlpha = regexp.MustCompile(`^[a-zA-Z]+$`).MatchString
 
 // AddRoute - TODO add description
 ////////////////////  iris/cosmos-sdk begin  ///////////////////////////
-func (rtr *router) AddRoute(r string, s *sdk.KVStoreKey, h sdk.Handler) Router {
+func (rtr *router) AddRoute(r string, s []*sdk.KVStoreKey, h sdk.Handler) Router {
 	if !isAlpha(r) {
 		panic("route expressions can only contain alphabet characters")
 	}
@@ -67,7 +67,11 @@ func (rtr *router) Route(path string) (h sdk.Handler) {
 
 func (rtr *router) RouteTable() (table []string) {
 	for _, route := range rtr.routes {
-		table = append(table, route.r + "/" + route.s.String())
+		storelist := ""
+		for _, store := range route.s {
+			storelist = storelist + ":" + store.Name()
+		}
+		table = append(table, route.r + "/" + storelist)
 	}
 	return
 }

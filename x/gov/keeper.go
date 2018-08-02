@@ -7,13 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-// nolint
-const (
-	ParamStoreKeyDepositProcedure  = "gov/depositprocedure"
-	ParamStoreKeyVotingProcedure   = "gov/votingprocedure"
-	ParamStoreKeyTallyingProcedure = "gov/tallyingprocedure"
-)
-
 // Governance Keeper
 type Keeper struct {
 	// The reference to the ParamSetter to get and set Global Params
@@ -135,42 +128,6 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 	keeper.ActiveProposalQueuePush(ctx, proposal)
-}
-
-// =====================================================
-// Procedures
-
-// Returns the current Deposit Procedure from the global param store
-func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) DepositProcedure {
-	var depositProcedure DepositProcedure
-	keeper.ps.Get(ctx, ParamStoreKeyDepositProcedure, &depositProcedure)
-	return depositProcedure
-}
-
-// Returns the current Voting Procedure from the global param store
-func (keeper Keeper) GetVotingProcedure(ctx sdk.Context) VotingProcedure {
-	var votingProcedure VotingProcedure
-	keeper.ps.Get(ctx, ParamStoreKeyVotingProcedure, &votingProcedure)
-	return votingProcedure
-}
-
-// Returns the current Tallying Procedure from the global param store
-func (keeper Keeper) GetTallyingProcedure(ctx sdk.Context) TallyingProcedure {
-	var tallyingProcedure TallyingProcedure
-	keeper.ps.Get(ctx, ParamStoreKeyTallyingProcedure, &tallyingProcedure)
-	return tallyingProcedure
-}
-
-func (keeper Keeper) setDepositProcedure(ctx sdk.Context, depositProcedure DepositProcedure) {
-	keeper.ps.Set(ctx, ParamStoreKeyDepositProcedure, &depositProcedure)
-}
-
-func (keeper Keeper) setVotingProcedure(ctx sdk.Context, votingProcedure VotingProcedure) {
-	keeper.ps.Set(ctx, ParamStoreKeyVotingProcedure, &votingProcedure)
-}
-
-func (keeper Keeper) setTallyingProcedure(ctx sdk.Context, tallyingProcedure TallyingProcedure) {
-	keeper.ps.Set(ctx, ParamStoreKeyTallyingProcedure, &tallyingProcedure)
 }
 
 // =====================================================

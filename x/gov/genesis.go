@@ -47,9 +47,15 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 		// TODO: Handle this with #870
 		panic(err)
 	}
-	k.setDepositProcedure(ctx, data.DepositProcedure)
-	k.setVotingProcedure(ctx, data.VotingProcedure)
-	k.setTallyingProcedure(ctx, data.TallyingProcedure)
+
+	k.setDepositProcedureDeposit(ctx, data.DepositProcedure.MinDeposit)
+	k.setDepositProcedureMaxDepositPeriod(ctx, data.DepositProcedure.MaxDepositPeriod)
+
+	k.setVotingProcedureVotingPeriod(ctx, data.VotingProcedure.VotingPeriod)
+
+	k.setTallyingProcedure(ctx, ParamStoreKeyTallyingProcedureThreshold, data.TallyingProcedure.Threshold)
+	k.setTallyingProcedure(ctx, ParamStoreKeyTallyingProcedureVeto, data.TallyingProcedure.Veto)
+	k.setTallyingProcedure(ctx, ParamStoreKeyTallyingProcedurePenalty, data.TallyingProcedure.GovernancePenalty)
 }
 
 // WriteGenesis - output genesis parameters

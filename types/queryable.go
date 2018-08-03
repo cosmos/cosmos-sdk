@@ -2,6 +2,5 @@ package types
 
 import abci "github.com/tendermint/tendermint/abci/types"
 
-type CustomQueryable interface {
-	Query(ctx Context, path []string, req abci.RequestQuery) (res []byte, err Error)
-}
+// Type for querier functions on keepers to implement to handle custom queries
+type Querier = func(ctx Context, path []string, req abci.RequestQuery) (res []byte, err Error)

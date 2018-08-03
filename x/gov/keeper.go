@@ -108,6 +108,52 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposal Proposal) {
 	store.Delete(KeyProposal(proposal.GetProposalID()))
 }
 
+// nolint: gocyclo
+// Get Proposal from store by ProposalID
+func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddress, depositerAddr sdk.AccAddress, status ProposalStatus, numLatest int64) []Proposal {
+
+	maxProposalID, err := keeper.peekCurrentProposalID(ctx)
+	if err != nil {
+		return nil
+	}
+
+	matchingProposals := []Proposal{}
+
+	if numLatest <= 0 {
+		numLatest = maxProposalID
+	}
+
+	for proposalID := maxProposalID - numLatest; proposalID < maxProposalID; proposalID++ {
+		if voterAddr != nil && len(voterAddr) != 0 {
+			_, found := keeper.GetVote(ctx, proposalID, voterAddr)
+			if !found {
+				continue
+			}
+		}
+
+		if depositerAddr != nil && len(depositerAddr) != 0 {
+			_, found := keeper.GetDeposit(ctx, proposalID, depositerAddr)
+			if !found {
+				continue
+			}
+		}
+
+		proposal := keeper.GetProposal(ctx, proposalID)
+		if proposal == nil {
+			continue
+		}
+
+		if validProposalStatus(status) {
+			if proposal.GetStatus() != status {
+				continue
+			}
+		}
+
+		matchingProposals = append(matchingProposals, proposal)
+	}
+	return matchingProposals
+}
+
 func (keeper Keeper) setInitialProposalID(ctx sdk.Context, proposalID int64) sdk.Error {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyNextProposalID)
@@ -131,7 +177,21 @@ func (keeper Keeper) GetLastProposalID(ctx sdk.Context) (proposalID int64) {
 	return
 }
 
+// Gets the next available ProposalID and increments it
 func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID int64, err sdk.Error) {
+	store := ctx.KVStore(keeper.storeKey)
+	bz := store.Get(KeyNextProposalID)
+	if bz == nil {
+		return -1, ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
+	}
+	keeper.cdc.MustUnmarshalBinary(bz, &proposalID)
+	bz = keeper.cdc.MustMarshalBinary(proposalID + 1)
+	store.Set(KeyNextProposalID, bz)
+	return proposalID, nil
+}
+
+// Peeks the next available ProposalID without incrementing it
+func (keeper Keeper) peekCurrentProposalID(ctx sdk.Context) (proposalID int64, err sdk.Error) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyNextProposalID)
 	if bz == nil {

@@ -393,10 +393,18 @@ func handleQueryP2P(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 
 func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
 	// "/custom" prefix for keeper queries
-	queryable := app.queryrouter.Route(path[1])
+	querier := app.queryrouter.Route(path[1])
 	ctx := app.checkState.ctx
-	res, err := queryable.Query(ctx, path[2:], req)
-	return
+	resBytes, err := querier(ctx, path[2:], req)
+	if err != nil {
+		return abci.ResponseQuery{
+			Code: uint32(err.ABCICode()),
+		}
+	}
+	return abci.ResponseQuery{
+		Code:  uint32(sdk.ABCICodeOK),
+		Value: resBytes,
+	}
 }
 
 // BeginBlock implements the ABCI application interface.

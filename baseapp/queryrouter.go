@@ -6,14 +6,14 @@ import (
 
 // QueryRouter provides queryables for each query path.
 type QueryRouter interface {
-	AddRoute(r string, h sdk.CustomQueryable) (rtr QueryRouter)
-	Route(path string) (h sdk.CustomQueryable)
+	AddRoute(r string, h sdk.Querier) (rtr QueryRouter)
+	Route(path string) (h sdk.Querier)
 }
 
 // map a transaction type to a handler and an initgenesis function
 type queryroute struct {
 	r string
-	h sdk.CustomQueryable
+	h sdk.Querier
 }
 
 type queryrouter struct {
@@ -30,7 +30,7 @@ func NewQueryRouter() *queryrouter {
 }
 
 // AddRoute - TODO add description
-func (rtr *queryrouter) AddRoute(r string, h sdk.CustomQueryable) QueryRouter {
+func (rtr *queryrouter) AddRoute(r string, h sdk.Querier) QueryRouter {
 	if !isAlphaNumeric(r) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
@@ -41,7 +41,7 @@ func (rtr *queryrouter) AddRoute(r string, h sdk.CustomQueryable) QueryRouter {
 
 // Route - TODO add description
 // TODO handle expressive matches.
-func (rtr *queryrouter) Route(path string) (h sdk.CustomQueryable) {
+func (rtr *queryrouter) Route(path string) (h sdk.Querier) {
 	for _, route := range rtr.routes {
 		if route.r == path {
 			return route.h

@@ -137,31 +137,6 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 	app.cms.MountStoreWithDB(key, typ, nil)
 }
 
-<<<<<<< HEAD
-=======
-// nolint - Set functions
-func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
-	app.initChainer = initChainer
-}
-func (app *BaseApp) SetBeginBlocker(beginBlocker sdk.BeginBlocker) {
-	app.beginBlocker = beginBlocker
-}
-func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
-	app.endBlocker = endBlocker
-}
-func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
-	app.anteHandler = ah
-}
-func (app *BaseApp) SetAddrPeerFilter(pf sdk.PeerFilter) {
-	app.addrPeerFilter = pf
-}
-func (app *BaseApp) SetPubKeyPeerFilter(pf sdk.PeerFilter) {
-	app.pubkeyPeerFilter = pf
-}
-func (app *BaseApp) Router() Router           { return app.router }
-func (app *BaseApp) QueryRouter() QueryRouter { return app.queryrouter }
-
->>>>>>> custom queriables
 // load latest application version
 func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
 	err := app.cms.LoadLatestVersion()

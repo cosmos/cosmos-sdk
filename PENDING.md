@@ -35,6 +35,9 @@ FEATURES
   * Modules specify invariants and operations, preferably in an x/[module]/simulation package
   * Modules can test random combinations of their own operations
   * Applications can integrate operations and invariants from modules together for an integrated simulation
+  * Simulates Tendermint's algorithm for validator set updates
+  * Simulates validator signing/downtime with a Markov chain, and occaisional double-signatures
+  * Includes simulated operations & invariants for staking, slashing, governance, and bank modules
 * [baseapp] Initialize validator set on ResponseInitChain
 * [cosmos-sdk-cli] Added support for cosmos-sdk-cli tool under cosmos-sdk/cmd	
    * This allows SDK users to initialize a new project repository.
@@ -58,6 +61,7 @@ IMPROVEMENTS
 * [tests] \#1806 CLI tests are now behind the build flag 'cli_test', so go test works on a new repo
 * [x/gov] Initial governance parameters can now be set in the genesis file
 * [x/stake] \#1815 Sped up the processing of `EditValidator` txs. 
+* [x/gov] Added simple logging for proposal expiry & tally events using ctx.Logger
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators
@@ -69,3 +73,4 @@ BUG FIXES
 *  \#1828 Force user to specify amount on create-validator command by removing default
 *  \#1839 Fixed bug where intra-tx counter wasn't set correctly for genesis validators
 * [tests] \#1675 Fix non-deterministic `test_cover` 
+* [baseapp] ctx.BlockHeight now correctly set on BeginBlock when app.deliverState is non-nil

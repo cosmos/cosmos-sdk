@@ -1,6 +1,6 @@
 This document should contain plain english instructions for testing functionality on `gaiad`. This “Script” is supposed to be run by 2 people who will each spin up a `gaiad` node and run the series of prompts below.
 
-- Create a network of 2 nodes (doc n/e, TODO)
+- [Create a network of 2 nodes](getting-started/create-testnet.md)
 - [Generate an account](sdk/clients.md)
 - [Send funds from one account to the other](sdk/clients.md)
 - [Create a validator](validators/validator-setup.md)
@@ -13,5 +13,5 @@ This document should contain plain english instructions for testing functionalit
 - [Query a proposal](validators/validator-setup.md)
 - [Vote on a proposal](validators/validator-setup.md)
 - [Query status of a proposal](validators/validator-setup.md)
-- [Query the votes on a proposal](validators/validator-setup.md) TODO, move governance from [here](https://github.com/cosmos/cosmos-sdk/tree/develop/cmd/gaia/testnets#governance) to validators/validator-setup.md
-- Export state and reload (doc n/e, TODO)
+- [Query the votes on a proposal](validators/validator-setup.md)
+- [Export state and reload](getting-started/create-testnet.md)

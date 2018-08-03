@@ -17,3 +17,11 @@ gaiad init --gen-txs -o --chain=<chain-name>
 ```
 
 This will generate a `genesis.json` in `$HOME/.gaiad/config/genesis.json` distribute this file to all validators on your testnet.
+
+### Export state
+
+To export state and reload (useful for testing purposes):
+
+```
+gaiad export > genesis.json; cp genesis.json ~/.gaiad/config/genesis.json; gaiad start
+```

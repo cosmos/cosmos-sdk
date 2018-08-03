@@ -2,11 +2,11 @@
 
 ### Intro and Requirements
 
-This paper specifies changes to the auth and bank modules to implement vesting accounts for the Cosmos Hub. 
-The requirements for this vesting account is that it should be capable of being initialized during genesis with
-a starting balance X coins and a vesting blocktime T. The owner of this account should be able to delegate to validators 
+This paper specifies vesting account implementation for the Cosmos Hub. 
+The requirements for this vesting account is that it should be initialized during genesis with
+a starting balance X coins and a vesting endtime T. The owner of this account should be able to delegate to validators 
 and vote with locked coins, however they cannot send locked coins to other accounts until those coins have been unlocked. 
-The vesting account should also be able to spend any coins it receives from other users or from fees/inflation rewards. 
+The vesting account should also be able to spend any coins it receives from other users. 
 Thus, the bank module's `MsgSend` handler should error if a vesting account is trying to send an amount that exceeds their 
 unlocked coin amount.
 
@@ -14,34 +14,39 @@ unlocked coin amount.
 
 ##### Vesting Account implementation
 
+NOTE:  `Now = ctx.BlockHeader().Time`
+
 ```go
 type VestingAccount interface {
     Account
     AssertIsVestingAccount() // existence implies that account is vesting.
+    ConvertAccount(sdk.Context) BaseAccount
 }
 
 // Implements Vesting Account
 // Continuously vests by unlocking coins linearly with respect to time
 type ContinuousVestingAccount struct {
     BaseAccount
-    OriginalCoins sdk.Coins
-    ReceivedCoins sdk.Coins
+    OriginalCoins sdk.Coins // Coins in account on Initialization
+    ReceivedCoins sdk.Coins // Coins received from other accounts
+
+    // StartTime and EndTime used to calculate how much of OriginalCoins is unlocked at any given point
     StartTime     int64
     EndTime       int64
 }
 
-func (vacc ContinuousVestingAccount) ConvertAccount() BaseAccount {
-    if T > vacc.EndTime {
-        // Convert to BaseAccount
-    }
-}
+ConvertAccount(vacc ContinuousVestingAccount) (BaseAccount):
+    if Now > vacc.EndTime then // Convert to BaseAccount
+
 ```
 
-The `VestingAccount` interface is used purely to assert that an account is a vesting account like so:
+The `VestingAccount` interface is used to assert that an account is a vesting account like so:
 
 ```go
 vacc, ok := acc.(VestingAccount); ok
 ```
+
+as well as to convert to BaseAccount again once the account has fully vested.
 
 The `ContinuousVestingAccount` struct implements the Vesting account interface. It uses `OriginalCoins`, `ReceivedCoins`, 
 `StartTime`, and `EndTime` to calculate how many coins are sendable at any given point. Once the account has fully vested, 
@@ -54,35 +59,78 @@ the `Account` interface exactly like `BaseAccount`.
 Since a vesting account should be capable of doing everything but sending with its locked coins, the restriction should be 
 handled at the `bank.Keeper` level. Specifically in methods that are explicitly used for sending like 
 `sendCoins` and `inputOutputCoins`. These methods must check that an account is a vesting account using the check described above.
-NOTE: `Now = ctx.BlockHeader().Time`
 
-1. If `Now < vacc.EndTime`
-   1. Calculate `SendableCoins := ReceivedCoins + OriginalCoins * (Now - StartTime)/(EndTime - StartTime))`
-      - NOTE: `SendableCoins` may be greater than total coins in account. This is because coins can be subtracted by staking module.
-        `SendableCoins` denotes maximum coins allowed to be spent right now.
-   2. If `msg.Amount > SendableCoins`, return sdk.Error. Else, allow transaction to process normally.
-2. Else:
-   1. Convert account to `BaseAccount` and process normally.
+```go
+if Now < vacc.EndTime:
+    // NOTE: SendableCoins may be greater than total coins in account because coins can be subtracted by staking module
+    // SendableCoins denotes maximum coins allowed to be spent.
+    SendableCoins := ReceivedCoins + OriginalCoins * (Now - StartTime) / (EndTime - StartTime)
+    if msg.Amount > SendableCoins then fail
 
-Coins that are sent to a vesting account after initialization either through users sending them coins or through fees/inflation rewards 
-should be spendable immediately after receiving them. Thus, handlers (like staking or bank) that send coins that a vesting account did not 
+else: account = ConvertAccount(account) // Account fully vested, convert to BaseAccount
+
+if msg.Amount > account.GetCoins() then fail // Must still check if account has enough coins, since SendableCoins does not check this.
+
+// All checks passed, send the coins
+SendCoins(inputs, outputs)
+
+```
+
+Coins that are sent to a vesting account after initialization by users sending them coins should be spendable 
+immediately after receiving them. Thus, handlers (like staking or bank) that send coins that a vesting account did not 
 originally own should increment `ReceivedCoins` by the amount sent.
 
-WARNING: Handlers SHOULD NOT update `ReceivedCoins` if they were originally sent from the vesting account. For example, if a vesting account 
-unbonds from a validator, their tokens should be added back to account but `ReceivedCoins` SHOULD NOT be incremented.
+CONTRACT: Handlers SHOULD NOT update `ReceivedCoins` if they were originally sent from the vesting account. For example, if a vesting account unbonds from a validator, their tokens should be added back to account but `ReceivedCoins` SHOULD NOT be incremented.
 However when the staking handler is handing out fees or inflation rewards, then `ReceivedCoins` SHOULD be incremented.
 
 ### Initializing at Genesis
 
-To initialize both vesting accounts and base accounts, the `GenesisAccount` struct will be:
+To initialize both vesting accounts and base accounts, the `GenesisAccount` struct will include an EndTime. Accounts meant to be 
+BaseAccounts will have `EndTime = 0`. The `initChainer` method will parse the GenesisAccount into BaseAccounts and VestingAccounts 
+as appropriate.
 
 ```go
 type GenesisAccount struct {
-	Address sdk.AccAddress `json:"address"`
-    Coins   sdk.Coins      `json:"coins"`
-    EndTime int64          `json:"lock"`
+    Address        sdk.AccAddress `json:"address"`
+    GenesisCoins   sdk.Coins      `json:"coins"`
+    EndTime        int64          `json:"lock"`
 }
+
+initChainer:
+    for genesis_acc in GenesisAccounts:
+        if EndTime == 0 then // Create BaseAccount
+        else:
+            vesting_account = ContinuouslyVestingAccount{
+                OriginalCoins: GenesisCoins,
+                StartTime:     RequestInitChain.Time,
+                EndTime:       EndTime,
+            }
+        // Add account to initial state
 ```
 
-During `InitChain`, the GenesisAccounts are decoded. If `EndTime == 0`, a BaseAccount gets created and put in Genesis state. 
-Otherwise a vesting account is created with `StartTime = RequestInitChain.Time`, `EndTime = gacc.EndTime`, and `OriginalCoins = Coins`. 
+### Formulas
+
+`OriginalCoins`: Amount of coins in account at Genesis
+
+`CurrentCoins`: Coins currently in the baseaccount (both locked and unlocked)
+
+`ReceivedCoins`: Coins received from other accounts (always unlocked)
+
+`LockedCoins`: Coins that are currently locked
+
+`Delegated`: Coins that have been delegated (no longer in account; may be locked or unlocked)
+
+`Sent`: Coins sent to other accounts (MUST be unlocked)
+
+Maximum amount of coins vesting schedule allows to be sent:
+
+`ReceivedCoins + OriginalCoins * (Now - StartTime) / (EndTime - StartTime)`
+`ReceivedCoins + OriginalCoins - LockedCoins`
+
+Coins currently in Account:
+
+`CurrentCoins = OriginalCoins + ReceivedCoins - Delegated - Sent`
+
+**Maximum amount of coins spendable right now:**
+
+`min( ReceivedCoins + OriginalCoins - LockedCoins, CurrentCoins )`

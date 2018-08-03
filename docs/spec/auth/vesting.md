@@ -62,14 +62,18 @@ handled at the `bank.Keeper` level. Specifically in methods that are explicitly 
 
 ```go
 if Now < vacc.EndTime:
-    // NOTE: SendableCoins may be greater than total coins in account because coins can be subtracted by staking module
+    // NOTE: SendableCoins may be greater than total coins in account 
+    // because coins can be subtracted by staking module
     // SendableCoins denotes maximum coins allowed to be spent.
     SendableCoins := ReceivedCoins + OriginalCoins * (Now - StartTime) / (EndTime - StartTime)
     if msg.Amount > SendableCoins then fail
 
-else: account = ConvertAccount(account) // Account fully vested, convert to BaseAccount
+// Account fully vested, convert to BaseAccount
+else: account = ConvertAccount(account) 
 
-if msg.Amount > account.GetCoins() then fail // Must still check if account has enough coins, since SendableCoins does not check this.
+// Must still check if account has enough coins,
+// since SendableCoins does not check this.
+if msg.Amount > account.GetCoins() then fail 
 
 // All checks passed, send the coins
 SendCoins(inputs, outputs)
@@ -125,6 +129,7 @@ initChainer:
 Maximum amount of coins vesting schedule allows to be sent:
 
 `ReceivedCoins + OriginalCoins * (Now - StartTime) / (EndTime - StartTime)`
+
 `ReceivedCoins + OriginalCoins - LockedCoins`
 
 Coins currently in Account:

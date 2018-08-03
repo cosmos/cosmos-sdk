@@ -31,9 +31,9 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tags := viper.GetStringSlice(flagTags)
 
-			queryTx := context.NewQueryContextFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			txs, err := searchTxs(queryTx, cdc, tags)
+			txs, err := searchTxs(cliCtx, cdc, tags)
 			if err != nil {
 				return err
 			}
@@ -57,7 +57,7 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func searchTxs(queryTx context.QueryContext, cdc *wire.Codec, tags []string) ([]txInfo, error) {
+func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]txInfo, error) {
 	if len(tags) == 0 {
 		return nil, errors.New("must declare at least one tag to search")
 	}
@@ -66,7 +66,7 @@ func searchTxs(queryTx context.QueryContext, cdc *wire.Codec, tags []string) ([]
 	query := strings.Join(tags, " AND ")
 
 	// get the node
-	node, err := queryTx.GetNode()
+	node, err := cliCtx.GetNode()
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func formatTxResults(cdc *wire.Codec, res []*ctypes.ResultTx) ([]txInfo, error) 
 // REST
 
 // Search Tx REST Handler
-func SearchTxRequestHandlerFn(queryTx context.QueryContext, cdc *wire.Codec) http.HandlerFunc {
+func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tag := r.FormValue("tag")
 		if tag == "" {
@@ -137,7 +137,7 @@ func SearchTxRequestHandlerFn(queryTx context.QueryContext, cdc *wire.Codec) htt
 			tag = strings.TrimRight(key, "_bech32") + "='" + sdk.AccAddress(bz).String() + "'"
 		}
 
-		txs, err := searchTxs(queryTx, cdc, []string{tag})
+		txs, err := searchTxs(cliCtx, cdc, []string{tag})
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

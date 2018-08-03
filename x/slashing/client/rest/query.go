@@ -11,15 +11,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func registerQueryRoutes(queryCtx context.QueryContext, r *mux.Router, cdc *wire.Codec) {
+func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec) {
 	r.HandleFunc(
 		"/slashing/signing_info/{validator}",
-		signingInfoHandlerFn(queryCtx, "slashing", cdc),
+		signingInfoHandlerFn(cliCtx, "slashing", cdc),
 	).Methods("GET")
 }
 
 // http request handler to query signing info
-func signingInfoHandlerFn(queryCtx context.QueryContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
+func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -32,7 +32,7 @@ func signingInfoHandlerFn(queryCtx context.QueryContext, storeName string, cdc *
 
 		key := slashing.GetValidatorSigningInfoKey(sdk.ValAddress(pk.Address()))
 
-		res, err := queryCtx.QueryStore(key, storeName)
+		res, err := cliCtx.QueryStore(key, storeName)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("couldn't query signing info. Error: %s", err.Error())))

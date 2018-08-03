@@ -27,9 +27,9 @@ func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 			}
 
 			key := stake.GetValidatorKey(addr)
-			ctx := context.NewQueryContextFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, err := ctx.QueryStore(key, storeName)
+			res, err := cliCtx.QueryStore(key, storeName)
 			if err != nil {
 				return err
 			} else if len(res) == 0 {
@@ -71,9 +71,9 @@ func GetCmdQueryValidators(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "Query for all validators",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := stake.ValidatorsKey
-			ctx := context.NewQueryContextFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			resKVs, err := ctx.QuerySubspace(key, storeName)
+			resKVs, err := cliCtx.QuerySubspace(key, storeName)
 			if err != nil {
 				return err
 			}
@@ -131,9 +131,9 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 			}
 
 			key := stake.GetDelegationKey(delAddr, valAddr)
-			ctx := context.NewQueryContextFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, err := ctx.QueryStore(key, storeName)
+			res, err := cliCtx.QueryStore(key, storeName)
 			if err != nil {
 				return err
 			}
@@ -183,9 +183,9 @@ func GetCmdQueryDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 			}
 
 			key := stake.GetDelegationsKey(delegatorAddr)
-			ctx := context.NewQueryContextFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			resKVs, err := ctx.QuerySubspace(key, storeName)
+			resKVs, err := cliCtx.QuerySubspace(key, storeName)
 			if err != nil {
 				return err
 			}
@@ -230,9 +230,9 @@ func GetCmdQueryUnbondingDelegation(storeName string, cdc *wire.Codec) *cobra.Co
 			}
 
 			key := stake.GetUBDKey(delAddr, valAddr)
-			ctx := context.NewQueryContextFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, err := ctx.QueryStore(key, storeName)
+			res, err := cliCtx.QueryStore(key, storeName)
 			if err != nil {
 				return err
 			}
@@ -282,9 +282,9 @@ func GetCmdQueryUnbondingDelegations(storeName string, cdc *wire.Codec) *cobra.C
 			}
 
 			key := stake.GetUBDsKey(delegatorAddr)
-			ctx := context.NewQueryContextFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			resKVs, err := ctx.QuerySubspace(key, storeName)
+			resKVs, err := cliCtx.QuerySubspace(key, storeName)
 			if err != nil {
 				return err
 			}
@@ -334,9 +334,9 @@ func GetCmdQueryRedelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 			}
 
 			key := stake.GetREDKey(delAddr, valSrcAddr, valDstAddr)
-			ctx := context.NewQueryContextFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, err := ctx.QueryStore(key, storeName)
+			res, err := cliCtx.QueryStore(key, storeName)
 			if err != nil {
 				return err
 			}
@@ -386,9 +386,9 @@ func GetCmdQueryRedelegations(storeName string, cdc *wire.Codec) *cobra.Command 
 			}
 
 			key := stake.GetREDsKey(delegatorAddr)
-			ctx := context.NewQueryContextFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			resKVs, err := ctx.QuerySubspace(key, storeName)
+			resKVs, err := cliCtx.QuerySubspace(key, storeName)
 			if err != nil {
 				return err
 			}

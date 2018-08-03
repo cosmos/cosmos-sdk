@@ -19,10 +19,10 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
-func registerTxRoutes(queryCtx context.QueryContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
+func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
 	r.HandleFunc(
 		"/stake/delegations",
-		editDelegationsRequestHandlerFn(cdc, kb, queryCtx),
+		editDelegationsRequestHandlerFn(cdc, kb, cliCtx),
 	).Methods("POST")
 }
 
@@ -69,7 +69,7 @@ type EditDelegationsBody struct {
 
 // nolint: gocyclo
 // TODO: Split this up into several smaller functions, and remove the above nolint
-func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, queryCtx context.QueryContext) http.HandlerFunc {
+func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m EditDelegationsBody
 
@@ -310,7 +310,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, queryCtx 
 		//     should we have a sdk.MultiMsg type to make sending atomic?
 		results := make([]*ctypes.ResultBroadcastTxCommit, len(signedTxs[:]))
 		for i, txBytes := range signedTxs {
-			res, err := queryCtx.BroadcastTx(txBytes)
+			res, err := cliCtx.BroadcastTx(txBytes)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(err.Error()))

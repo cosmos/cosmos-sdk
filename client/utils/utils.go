@@ -12,12 +12,12 @@ import (
 // ensures that the account exists, has a proper number and sequence set. In
 // addition, it builds and signs a transaction with the supplied messages.
 // Finally, it broadcasts the signed transaction to a node.
-func SendTx(txCtx authctx.TxContext, queryCtx context.QueryContext, msgs []sdk.Msg) error {
-	if err := queryCtx.EnsureAccountExists(); err != nil {
+func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) error {
+	if err := cliCtx.EnsureAccountExists(); err != nil {
 		return err
 	}
 
-	from, err := queryCtx.GetFromAddress()
+	from, err := cliCtx.GetFromAddress()
 	if err != nil {
 		return err
 	}
@@ -25,7 +25,7 @@ func SendTx(txCtx authctx.TxContext, queryCtx context.QueryContext, msgs []sdk.M
 	// TODO: (ref #1903) Allow for user supplied account number without
 	// automatically doing a manual lookup.
 	if txCtx.AccountNumber == 0 {
-		accNum, err := queryCtx.GetAccountNumber(from)
+		accNum, err := cliCtx.GetAccountNumber(from)
 		if err != nil {
 			return err
 		}
@@ -36,7 +36,7 @@ func SendTx(txCtx authctx.TxContext, queryCtx context.QueryContext, msgs []sdk.M
 	// TODO: (ref #1903) Allow for user supplied account sequence without
 	// automatically doing a manual lookup.
 	if txCtx.Sequence == 0 {
-		accSeq, err := queryCtx.GetAccountSequence(from)
+		accSeq, err := cliCtx.GetAccountSequence(from)
 		if err != nil {
 			return err
 		}
@@ -44,17 +44,17 @@ func SendTx(txCtx authctx.TxContext, queryCtx context.QueryContext, msgs []sdk.M
 		txCtx = txCtx.WithSequence(accSeq)
 	}
 
-	passphrase, err := keys.GetPassphrase(queryCtx.FromAddressName)
+	passphrase, err := keys.GetPassphrase(cliCtx.FromAddressName)
 	if err != nil {
 		return err
 	}
 
 	// build and sign the transaction
-	txBytes, err := txCtx.BuildAndSign(queryCtx.FromAddressName, passphrase, msgs)
+	txBytes, err := txCtx.BuildAndSign(cliCtx.FromAddressName, passphrase, msgs)
 	if err != nil {
 		return err
 	}
 
 	// broadcast to a Tendermint node
-	return queryCtx.EnsureBroadcastTx(txBytes)
+	return cliCtx.EnsureBroadcastTx(txBytes)
 }

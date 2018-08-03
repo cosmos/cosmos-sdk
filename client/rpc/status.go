@@ -23,9 +23,9 @@ func statusCommand() *cobra.Command {
 	return cmd
 }
 
-func getNodeStatus(ctx context.QueryContext) (*ctypes.ResultStatus, error) {
+func getNodeStatus(cliCtx context.CLIContext) (*ctypes.ResultStatus, error) {
 	// get the node
-	node, err := ctx.GetNode()
+	node, err := cliCtx.GetNode()
 	if err != nil {
 		return &ctypes.ResultStatus{}, err
 	}
@@ -36,7 +36,7 @@ func getNodeStatus(ctx context.QueryContext) (*ctypes.ResultStatus, error) {
 // CMD
 
 func printNodeStatus(cmd *cobra.Command, args []string) error {
-	status, err := getNodeStatus(context.NewQueryContextFromCLI())
+	status, err := getNodeStatus(context.NewCLIContext())
 	if err != nil {
 		return err
 	}
@@ -54,9 +54,9 @@ func printNodeStatus(cmd *cobra.Command, args []string) error {
 // REST
 
 // REST handler for node info
-func NodeInfoRequestHandlerFn(ctx context.QueryContext) http.HandlerFunc {
+func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		status, err := getNodeStatus(ctx)
+		status, err := getNodeStatus(cliCtx)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))
@@ -76,9 +76,9 @@ func NodeInfoRequestHandlerFn(ctx context.QueryContext) http.HandlerFunc {
 }
 
 // REST handler for node syncing
-func NodeSyncingRequestHandlerFn(ctx context.QueryContext) http.HandlerFunc {
+func NodeSyncingRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		status, err := getNodeStatus(ctx)
+		status, err := getNodeStatus(cliCtx)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

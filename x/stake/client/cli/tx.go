@@ -26,7 +26,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 		Short: "create new validator initialized with a self-delegation to it",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
@@ -40,7 +40,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			validatorAddr, err := queryCtx.GetFromAddress()
+			validatorAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -79,7 +79,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txCtx, queryCtx, []sdk.Msg{msg})
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -98,12 +98,12 @@ func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
 		Short: "edit and existing validator account",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			validatorAddr, err := queryCtx.GetFromAddress()
+			validatorAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -117,7 +117,7 @@ func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
 			msg := stake.NewMsgEditValidator(validatorAddr, description)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txCtx, queryCtx, []sdk.Msg{msg})
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -133,7 +133,7 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 		Short: "delegate liquid tokens to an validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
@@ -143,7 +143,7 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			delegatorAddr, err := queryCtx.GetFromAddress()
+			delegatorAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -156,7 +156,7 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 			msg := stake.NewMsgDelegate(delegatorAddr, validatorAddr, amount)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txCtx, queryCtx, []sdk.Msg{msg})
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -189,13 +189,13 @@ func GetCmdBeginRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "begin redelegation",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
 			var err error
-			delegatorAddr, err := queryCtx.GetFromAddress()
+			delegatorAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -224,7 +224,7 @@ func GetCmdBeginRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
 			msg := stake.NewMsgBeginRedelegate(delegatorAddr, validatorSrcAddr, validatorDstAddr, sharesAmount)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txCtx, queryCtx, []sdk.Msg{msg})
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -265,11 +265,11 @@ func getShares(
 
 		// make a query to get the existing delegation shares
 		key := stake.GetDelegationKey(delegatorAddr, validatorAddr)
-		queryCtx := context.NewQueryContextFromCLI().
+		cliCtx := context.NewCLIContext().
 			WithCodec(cdc).
 			WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-		resQuery, err := queryCtx.QueryStore(key, storeName)
+		resQuery, err := cliCtx.QueryStore(key, storeName)
 		if err != nil {
 			return sharesAmount, errors.Errorf("cannot find delegation to determine percent Error: %v", err)
 		}
@@ -288,12 +288,12 @@ func GetCmdCompleteRedelegate(cdc *wire.Codec) *cobra.Command {
 		Short: "complete redelegation",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			delegatorAddr, err := queryCtx.GetFromAddress()
+			delegatorAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -311,7 +311,7 @@ func GetCmdCompleteRedelegate(cdc *wire.Codec) *cobra.Command {
 			msg := stake.NewMsgCompleteRedelegate(delegatorAddr, validatorSrcAddr, validatorDstAddr)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txCtx, queryCtx, []sdk.Msg{msg})
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -343,12 +343,12 @@ func GetCmdBeginUnbonding(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "begin unbonding",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			delegatorAddr, err := queryCtx.GetFromAddress()
+			delegatorAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -372,7 +372,7 @@ func GetCmdBeginUnbonding(storeName string, cdc *wire.Codec) *cobra.Command {
 			msg := stake.NewMsgBeginUnbonding(delegatorAddr, validatorAddr, sharesAmount)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txCtx, queryCtx, []sdk.Msg{msg})
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -389,12 +389,12 @@ func GetCmdCompleteUnbonding(cdc *wire.Codec) *cobra.Command {
 		Short: "complete unbonding",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			delegatorAddr, err := queryCtx.GetFromAddress()
+			delegatorAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -407,7 +407,7 @@ func GetCmdCompleteUnbonding(cdc *wire.Codec) *cobra.Command {
 			msg := stake.NewMsgCompleteUnbonding(delegatorAddr, validatorAddr)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txCtx, queryCtx, []sdk.Msg{msg})
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
 

@@ -15,8 +15,8 @@ import (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(queryCtx context.QueryContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/ibc/{destchain}/{address}/send", TransferRequestHandlerFn(cdc, kb, queryCtx)).Methods("POST")
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
+	r.HandleFunc("/ibc/{destchain}/{address}/send", TransferRequestHandlerFn(cdc, kb, cliCtx)).Methods("POST")
 }
 
 type transferBody struct {
@@ -32,7 +32,7 @@ type transferBody struct {
 
 // TransferRequestHandler - http request handler to transfer coins to a address
 // on a different chain via IBC
-func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, queryCtx context.QueryContext) http.HandlerFunc {
+func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		destChainID := vars["destchain"]
@@ -86,7 +86,7 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, queryCtx context
 			return
 		}
 
-		res, err := queryCtx.BroadcastTx(txBytes)
+		res, err := cliCtx.BroadcastTx(txBytes)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

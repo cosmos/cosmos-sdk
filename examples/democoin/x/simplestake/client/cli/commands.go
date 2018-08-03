@@ -31,12 +31,12 @@ func BondTxCmd(cdc *wire.Codec) *cobra.Command {
 		Short: "Bond to a validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			from, err := queryCtx.GetFromAddress()
+			from, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -68,7 +68,7 @@ func BondTxCmd(cdc *wire.Codec) *cobra.Command {
 
 			// Build and sign the transaction, then broadcast to a Tendermint
 			// node.
-			return utils.SendTx(txCtx, queryCtx, []sdk.Msg{msg})
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -85,11 +85,11 @@ func UnbondTxCmd(cdc *wire.Codec) *cobra.Command {
 		Short: "Unbond from a validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout)
 
-			from, err := queryCtx.GetFromAddress()
+			from, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -98,7 +98,7 @@ func UnbondTxCmd(cdc *wire.Codec) *cobra.Command {
 
 			// Build and sign the transaction, then broadcast to a Tendermint
 			// node.
-			return utils.SendTx(txCtx, queryCtx, []sdk.Msg{msg})
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
 

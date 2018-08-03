@@ -29,12 +29,12 @@ func IBCTransferCmd(cdc *wire.Codec) *cobra.Command {
 		Use: "transfer",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			from, err := queryCtx.GetFromAddress()
+			from, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -44,7 +44,7 @@ func IBCTransferCmd(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			return utils.SendTx(txCtx, queryCtx, []sdk.Msg{msg})
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
 

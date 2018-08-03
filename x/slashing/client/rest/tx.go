@@ -17,10 +17,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func registerTxRoutes(queryCtx context.QueryContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
+func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
 	r.HandleFunc(
 		"/slashing/unrevoke",
-		unrevokeRequestHandlerFn(cdc, kb, queryCtx),
+		unrevokeRequestHandlerFn(cdc, kb, cliCtx),
 	).Methods("POST")
 }
 
@@ -35,7 +35,7 @@ type UnrevokeBody struct {
 	ValidatorAddr    string `json:"validator_addr"`
 }
 
-func unrevokeRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, queryCtx context.QueryContext) http.HandlerFunc {
+func unrevokeRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m UnrevokeBody
 		body, err := ioutil.ReadAll(r.Body)
@@ -88,7 +88,7 @@ func unrevokeRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, queryCtx context
 			return
 		}
 
-		res, err := queryCtx.BroadcastTx(txBytes)
+		res, err := cliCtx.BroadcastTx(txBytes)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

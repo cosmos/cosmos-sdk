@@ -7,7 +7,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+
 	"github.com/pkg/errors"
+
 	"github.com/tendermint/tendermint/libs/common"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -16,7 +18,7 @@ import (
 
 // GetNode returns an RPC client. If the context's client is not defined, an
 // error is returned.
-func (ctx QueryContext) GetNode() (rpcclient.Client, error) {
+func (ctx CLIContext) GetNode() (rpcclient.Client, error) {
 	if ctx.Client == nil {
 		return nil, errors.New("no RPC client defined")
 	}
@@ -25,19 +27,19 @@ func (ctx QueryContext) GetNode() (rpcclient.Client, error) {
 }
 
 // Query performs a query for information about the connected node.
-func (ctx QueryContext) Query(path string) (res []byte, err error) {
+func (ctx CLIContext) Query(path string) (res []byte, err error) {
 	return ctx.query(path, nil)
 }
 
 // QueryStore performs a query from a Tendermint node with the provided key and
 // store name.
-func (ctx QueryContext) QueryStore(key cmn.HexBytes, storeName string) (res []byte, err error) {
+func (ctx CLIContext) QueryStore(key cmn.HexBytes, storeName string) (res []byte, err error) {
 	return ctx.queryStore(key, storeName, "key")
 }
 
 // QuerySubspace performs a query from a Tendermint node with the provided
 // store name and subspace.
-func (ctx QueryContext) QuerySubspace(subspace []byte, storeName string) (res []sdk.KVPair, err error) {
+func (ctx CLIContext) QuerySubspace(subspace []byte, storeName string) (res []sdk.KVPair, err error) {
 	resRaw, err := ctx.queryStore(subspace, storeName, "subspace")
 	if err != nil {
 		return res, err
@@ -49,7 +51,7 @@ func (ctx QueryContext) QuerySubspace(subspace []byte, storeName string) (res []
 
 // GetAccount queries for an account given an address and a block height. An
 // error is returned if the query or decoding fails.
-func (ctx QueryContext) GetAccount(address []byte) (auth.Account, error) {
+func (ctx CLIContext) GetAccount(address []byte) (auth.Account, error) {
 	if ctx.AccDecoder == nil {
 		return nil, errors.New("account decoder required but not provided")
 	}
@@ -70,7 +72,7 @@ func (ctx QueryContext) GetAccount(address []byte) (auth.Account, error) {
 }
 
 // GetFromAddress returns the from address from the context's name.
-func (ctx QueryContext) GetFromAddress() (from sdk.AccAddress, err error) {
+func (ctx CLIContext) GetFromAddress() (from sdk.AccAddress, err error) {
 	if ctx.FromAddressName == "" {
 		return nil, errors.Errorf("must provide a from address name")
 	}
@@ -90,7 +92,7 @@ func (ctx QueryContext) GetFromAddress() (from sdk.AccAddress, err error) {
 
 // GetAccountNumber returns the next account number for the given account
 // address.
-func (ctx QueryContext) GetAccountNumber(address []byte) (int64, error) {
+func (ctx CLIContext) GetAccountNumber(address []byte) (int64, error) {
 	account, err := ctx.GetAccount(address)
 	if err != nil {
 		return 0, err
@@ -101,7 +103,7 @@ func (ctx QueryContext) GetAccountNumber(address []byte) (int64, error) {
 
 // GetAccountSequence returns the sequence number for the given account
 // address.
-func (ctx QueryContext) GetAccountSequence(address []byte) (int64, error) {
+func (ctx CLIContext) GetAccountSequence(address []byte) (int64, error) {
 	account, err := ctx.GetAccount(address)
 	if err != nil {
 		return 0, err
@@ -111,7 +113,7 @@ func (ctx QueryContext) GetAccountSequence(address []byte) (int64, error) {
 }
 
 // BroadcastTx broadcasts transaction bytes to a Tendermint node.
-func (ctx QueryContext) BroadcastTx(tx []byte) (*ctypes.ResultBroadcastTxCommit, error) {
+func (ctx CLIContext) BroadcastTx(tx []byte) (*ctypes.ResultBroadcastTxCommit, error) {
 	node, err := ctx.GetNode()
 	if err != nil {
 		return nil, err
@@ -139,7 +141,7 @@ func (ctx QueryContext) BroadcastTx(tx []byte) (*ctypes.ResultBroadcastTxCommit,
 
 // BroadcastTxAsync broadcasts transaction bytes to a Tendermint node
 // asynchronously.
-func (ctx QueryContext) BroadcastTxAsync(tx []byte) (*ctypes.ResultBroadcastTx, error) {
+func (ctx CLIContext) BroadcastTxAsync(tx []byte) (*ctypes.ResultBroadcastTx, error) {
 	node, err := ctx.GetNode()
 	if err != nil {
 		return nil, err
@@ -155,7 +157,7 @@ func (ctx QueryContext) BroadcastTxAsync(tx []byte) (*ctypes.ResultBroadcastTx, 
 
 // EnsureAccountExists ensures that an account exists for a given context. An
 // error is returned if it does not.
-func (ctx QueryContext) EnsureAccountExists() error {
+func (ctx CLIContext) EnsureAccountExists() error {
 	addr, err := ctx.GetFromAddress()
 	if err != nil {
 		return err
@@ -176,7 +178,7 @@ func (ctx QueryContext) EnsureAccountExists() error {
 // EnsureAccountExistsFromAddr ensures that an account exists for a given
 // address. Instead of using the context's from name, a direct address is
 // given. An error is returned if it does not.
-func (ctx QueryContext) EnsureAccountExistsFromAddr(addr sdk.AccAddress) error {
+func (ctx CLIContext) EnsureAccountExistsFromAddr(addr sdk.AccAddress) error {
 	accountBytes, err := ctx.QueryStore(auth.AddressStoreKey(addr), ctx.AccountStore)
 	if err != nil {
 		return err
@@ -193,7 +195,7 @@ func (ctx QueryContext) EnsureAccountExistsFromAddr(addr sdk.AccAddress) error {
 // asynchronously based on the context parameters. The result of the broadcast
 // is parsed into an intermediate structure which is logged if the context has
 // a logger defined.
-func (ctx QueryContext) EnsureBroadcastTx(txBytes []byte) error {
+func (ctx CLIContext) EnsureBroadcastTx(txBytes []byte) error {
 	if ctx.Async {
 		return ctx.ensureBroadcastTxAsync(txBytes)
 	}
@@ -201,7 +203,7 @@ func (ctx QueryContext) EnsureBroadcastTx(txBytes []byte) error {
 	return ctx.ensureBroadcastTx(txBytes)
 }
 
-func (ctx QueryContext) ensureBroadcastTxAsync(txBytes []byte) error {
+func (ctx CLIContext) ensureBroadcastTxAsync(txBytes []byte) error {
 	res, err := ctx.BroadcastTxAsync(txBytes)
 	if err != nil {
 		return err
@@ -231,7 +233,7 @@ func (ctx QueryContext) ensureBroadcastTxAsync(txBytes []byte) error {
 	return nil
 }
 
-func (ctx QueryContext) ensureBroadcastTx(txBytes []byte) error {
+func (ctx CLIContext) ensureBroadcastTx(txBytes []byte) error {
 	res, err := ctx.BroadcastTx(txBytes)
 	if err != nil {
 		return err
@@ -277,7 +279,7 @@ func (ctx QueryContext) ensureBroadcastTx(txBytes []byte) error {
 
 // query performs a query from a Tendermint node with the provided store name
 // and path.
-func (ctx QueryContext) query(path string, key common.HexBytes) (res []byte, err error) {
+func (ctx CLIContext) query(path string, key common.HexBytes) (res []byte, err error) {
 	node, err := ctx.GetNode()
 	if err != nil {
 		return res, err
@@ -303,7 +305,7 @@ func (ctx QueryContext) query(path string, key common.HexBytes) (res []byte, err
 
 // queryStore performs a query from a Tendermint node with the provided a store
 // name and path.
-func (ctx QueryContext) queryStore(key cmn.HexBytes, storeName, endPath string) ([]byte, error) {
+func (ctx CLIContext) queryStore(key cmn.HexBytes, storeName, endPath string) ([]byte, error) {
 	path := fmt.Sprintf("/store/%s/%s", storeName, endPath)
 	return ctx.query(path, key)
 }

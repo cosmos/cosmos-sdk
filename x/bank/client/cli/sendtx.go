@@ -28,12 +28,12 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 		Short: "Create and sign a send tx",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			if err := queryCtx.EnsureAccountExists(); err != nil {
+			if err := cliCtx.EnsureAccountExists(); err != nil {
 				return err
 			}
 
@@ -51,12 +51,12 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			from, err := queryCtx.GetFromAddress()
+			from, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
 
-			account, err := queryCtx.GetAccount(from)
+			account, err := cliCtx.GetAccount(from)
 			if err != nil {
 				return err
 			}
@@ -69,7 +69,7 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 			// build and sign the transaction, then broadcast to Tendermint
 			msg := client.BuildMsg(from, to, coins)
 
-			return utils.SendTx(txCtx, queryCtx, []sdk.Msg{msg})
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
 

@@ -44,15 +44,15 @@ func GetAccountCmd(storeName string, cdc *wire.Codec, decoder auth.AccountDecode
 				return err
 			}
 
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(decoder)
 
-			if err := queryCtx.EnsureAccountExistsFromAddr(key); err != nil {
+			if err := cliCtx.EnsureAccountExistsFromAddr(key); err != nil {
 				return err
 			}
 
-			acc, err := queryCtx.GetAccount(key)
+			acc, err := cliCtx.GetAccount(key)
 			if err != nil {
 				return err
 			}

@@ -6,15 +6,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+
 	"github.com/spf13/viper"
+
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 )
 
 const ctxAccStoreName = "acc"
 
-// QueryContext implements a typical context created in SDK modules for
-// queries.
-type QueryContext struct {
+// CLIContext implements a typical CLI context created in SDK modules for
+// transaction handling and queries.
+type CLIContext struct {
 	Codec           *wire.Codec
 	AccDecoder      auth.AccountDecoder
 	Client          rpcclient.Client
@@ -30,9 +32,9 @@ type QueryContext struct {
 	PrintResponse   bool
 }
 
-// NewQueryContextFromCLI returns a new initialized QueryContext with
-// parameters from the command line using Viper.
-func NewQueryContextFromCLI() QueryContext {
+// NewCLIContext returns a new initialized CLIContext with parameters from the
+// command line using Viper.
+func NewCLIContext() CLIContext {
 	var rpc rpcclient.Client
 
 	nodeURI := viper.GetString(client.FlagNode)
@@ -40,7 +42,7 @@ func NewQueryContextFromCLI() QueryContext {
 		rpc = rpcclient.NewHTTP(nodeURI, "/websocket")
 	}
 
-	return QueryContext{
+	return CLIContext{
 		Client:          rpc,
 		NodeURI:         nodeURI,
 		AccountStore:    ctxAccStoreName,
@@ -55,45 +57,45 @@ func NewQueryContextFromCLI() QueryContext {
 }
 
 // WithCodec returns a copy of the context with an updated codec.
-func (ctx QueryContext) WithCodec(cdc *wire.Codec) QueryContext {
+func (ctx CLIContext) WithCodec(cdc *wire.Codec) CLIContext {
 	ctx.Codec = cdc
 	return ctx
 }
 
 // WithAccountDecoder returns a copy of the context with an updated account
 // decoder.
-func (ctx QueryContext) WithAccountDecoder(decoder auth.AccountDecoder) QueryContext {
+func (ctx CLIContext) WithAccountDecoder(decoder auth.AccountDecoder) CLIContext {
 	ctx.AccDecoder = decoder
 	return ctx
 }
 
 // WithLogger returns a copy of the context with an updated logger.
-func (ctx QueryContext) WithLogger(w io.Writer) QueryContext {
+func (ctx CLIContext) WithLogger(w io.Writer) CLIContext {
 	ctx.Logger = w
 	return ctx
 }
 
 // WithAccountStore returns a copy of the context with an updated AccountStore.
-func (ctx QueryContext) WithAccountStore(accountStore string) QueryContext {
+func (ctx CLIContext) WithAccountStore(accountStore string) CLIContext {
 	ctx.AccountStore = accountStore
 	return ctx
 }
 
 // WithFromAddressName returns a copy of the context with an updated from
 // address.
-func (ctx QueryContext) WithFromAddressName(addrName string) QueryContext {
+func (ctx CLIContext) WithFromAddressName(addrName string) CLIContext {
 	ctx.FromAddressName = addrName
 	return ctx
 }
 
 // WithTrustNode returns a copy of the context with an updated TrustNode flag.
-func (ctx QueryContext) WithTrustNode(trustNode bool) QueryContext {
+func (ctx CLIContext) WithTrustNode(trustNode bool) CLIContext {
 	ctx.TrustNode = trustNode
 	return ctx
 }
 
 // WithNodeURI returns a copy of the context with an updated node URI.
-func (ctx QueryContext) WithNodeURI(nodeURI string) QueryContext {
+func (ctx CLIContext) WithNodeURI(nodeURI string) CLIContext {
 	ctx.NodeURI = nodeURI
 	ctx.Client = rpcclient.NewHTTP(nodeURI, "/websocket")
 	return ctx
@@ -101,13 +103,13 @@ func (ctx QueryContext) WithNodeURI(nodeURI string) QueryContext {
 
 // WithClient returns a copy of the context with an updated RPC client
 // instance.
-func (ctx QueryContext) WithClient(client rpcclient.Client) QueryContext {
+func (ctx CLIContext) WithClient(client rpcclient.Client) CLIContext {
 	ctx.Client = client
 	return ctx
 }
 
 // WithUseLedger returns a copy of the context with an updated UseLedger flag.
-func (ctx QueryContext) WithUseLedger(useLedger bool) QueryContext {
+func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 	ctx.UseLedger = useLedger
 	return ctx
 }

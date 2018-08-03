@@ -25,10 +25,10 @@ const (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(queryCtx context.QueryContext, r *mux.Router, cdc *wire.Codec) {
-	r.HandleFunc("/gov/proposals", postProposalHandlerFn(cdc, queryCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits", RestProposalID), depositHandlerFn(cdc, queryCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes", RestProposalID), voteHandlerFn(cdc, queryCtx)).Methods("POST")
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec) {
+	r.HandleFunc("/gov/proposals", postProposalHandlerFn(cdc, cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits", RestProposalID), depositHandlerFn(cdc, cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes", RestProposalID), voteHandlerFn(cdc, cliCtx)).Methods("POST")
 
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}", RestProposalID), queryProposalHandlerFn(cdc)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits/{%s}", RestProposalID, RestDepositer), queryDepositHandlerFn(cdc)).Methods("GET")
@@ -60,7 +60,7 @@ type voteReq struct {
 	Option  gov.VoteOption `json:"option"` //  option from OptionSet chosen by the voter
 }
 
-func postProposalHandlerFn(cdc *wire.Codec, queryCtx context.QueryContext) http.HandlerFunc {
+func postProposalHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req postProposalReq
 		err := buildReq(w, r, cdc, &req)
@@ -80,11 +80,11 @@ func postProposalHandlerFn(cdc *wire.Codec, queryCtx context.QueryContext) http.
 			return
 		}
 
-		signAndBuild(w, queryCtx, req.BaseReq, msg, cdc)
+		signAndBuild(w, cliCtx, req.BaseReq, msg, cdc)
 	}
 }
 
-func depositHandlerFn(cdc *wire.Codec, queryCtx context.QueryContext) http.HandlerFunc {
+func depositHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]
@@ -122,11 +122,11 @@ func depositHandlerFn(cdc *wire.Codec, queryCtx context.QueryContext) http.Handl
 			return
 		}
 
-		signAndBuild(w, queryCtx, req.BaseReq, msg, cdc)
+		signAndBuild(w, cliCtx, req.BaseReq, msg, cdc)
 	}
 }
 
-func voteHandlerFn(cdc *wire.Codec, queryCtx context.QueryContext) http.HandlerFunc {
+func voteHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]
@@ -163,7 +163,7 @@ func voteHandlerFn(cdc *wire.Codec, queryCtx context.QueryContext) http.HandlerF
 			return
 		}
 
-		signAndBuild(w, queryCtx, req.BaseReq, msg, cdc)
+		signAndBuild(w, cliCtx, req.BaseReq, msg, cdc)
 	}
 }
 
@@ -188,9 +188,9 @@ func queryProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		queryCtx := context.NewQueryContextFromCLI().WithCodec(cdc)
+		cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-		res, err := queryCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
+		res, err := cliCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
 		if err != nil || len(res) == 0 {
 			err := errors.Errorf("proposalID [%d] does not exist", proposalID)
 			w.Write([]byte(err.Error()))
@@ -253,11 +253,11 @@ func queryDepositHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		queryCtx := context.NewQueryContextFromCLI().WithCodec(cdc)
+		cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-		res, err := queryCtx.QueryStore(gov.KeyDeposit(proposalID, depositerAddr), storeName)
+		res, err := cliCtx.QueryStore(gov.KeyDeposit(proposalID, depositerAddr), storeName)
 		if err != nil || len(res) == 0 {
-			res, err := queryCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
+			res, err := cliCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
 			if err != nil || len(res) == 0 {
 				w.WriteHeader(http.StatusNotFound)
 				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
@@ -326,11 +326,11 @@ func queryVoteHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		queryCtx := context.NewQueryContextFromCLI().WithCodec(cdc)
+		cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-		res, err := queryCtx.QueryStore(gov.KeyVote(proposalID, voterAddr), storeName)
+		res, err := cliCtx.QueryStore(gov.KeyVote(proposalID, voterAddr), storeName)
 		if err != nil || len(res) == 0 {
-			res, err := queryCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
+			res, err := cliCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
 			if err != nil || len(res) == 0 {
 				w.WriteHeader(http.StatusNotFound)
 				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
@@ -385,9 +385,9 @@ func queryVotesOnProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		queryCtx := context.NewQueryContextFromCLI().WithCodec(cdc)
+		cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-		res, err := queryCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
+		res, err := cliCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
 		if err != nil || len(res) == 0 {
 			err := errors.Errorf("proposalID [%d] does not exist", proposalID)
 			w.Write([]byte(err.Error()))
@@ -405,7 +405,7 @@ func queryVotesOnProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		res2, err := queryCtx.QuerySubspace(gov.KeyVotesSubspace(proposalID), storeName)
+		res2, err := cliCtx.QuerySubspace(gov.KeyVotesSubspace(proposalID), storeName)
 		if err != nil {
 			err = errors.New("ProposalID doesn't exist")
 			w.Write([]byte(err.Error()))
@@ -477,9 +477,9 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 			}
 		}
 
-		queryCtx := context.NewQueryContextFromCLI().WithCodec(cdc)
+		cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-		res, err := queryCtx.QueryStore(gov.KeyNextProposalID, storeName)
+		res, err := cliCtx.QueryStore(gov.KeyNextProposalID, storeName)
 		if err != nil {
 			err = errors.New("no proposals exist yet and proposalID has not been set")
 			w.Write([]byte(err.Error()))
@@ -494,20 +494,20 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 
 		for proposalID := int64(0); proposalID < maxProposalID; proposalID++ {
 			if voterAddr != nil {
-				res, err = queryCtx.QueryStore(gov.KeyVote(proposalID, voterAddr), storeName)
+				res, err = cliCtx.QueryStore(gov.KeyVote(proposalID, voterAddr), storeName)
 				if err != nil || len(res) == 0 {
 					continue
 				}
 			}
 
 			if depositerAddr != nil {
-				res, err = queryCtx.QueryStore(gov.KeyDeposit(proposalID, depositerAddr), storeName)
+				res, err = cliCtx.QueryStore(gov.KeyDeposit(proposalID, depositerAddr), storeName)
 				if err != nil || len(res) == 0 {
 					continue
 				}
 			}
 
-			res, err = queryCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
+			res, err = cliCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
 			if err != nil || len(res) == 0 {
 				continue
 			}

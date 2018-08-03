@@ -80,7 +80,7 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	toChainID := viper.GetString(FlagToChainID)
 	toChainNode := viper.GetString(FlagToChainNode)
 
-	address, err := context.NewQueryContextFromCLI().GetFromAddress()
+	address, err := context.NewCLIContext().GetFromAddress()
 	if err != nil {
 		panic(err)
 	}
@@ -93,9 +93,9 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 // This is nolinted as someone is in the process of refactoring this to remove the goto
 // nolint: gocyclo
 func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
-	ctx := context.NewQueryContextFromCLI()
+	cliCtx := context.NewCLIContext()
 
-	passphrase, err := keys.ReadPassphraseFromStdin(ctx.FromAddressName)
+	passphrase, err := keys.ReadPassphraseFromStdin(cliCtx.FromAddressName)
 	if err != nil {
 		panic(err)
 	}
@@ -160,11 +160,11 @@ OUTER:
 }
 
 func query(node string, key []byte, storeName string) (res []byte, err error) {
-	return context.NewQueryContextFromCLI().WithNodeURI(node).QueryStore(key, storeName)
+	return context.NewCLIContext().WithNodeURI(node).QueryStore(key, storeName)
 }
 
 func (c relayCommander) broadcastTx(seq int64, node string, tx []byte) error {
-	_, err := context.NewQueryContextFromCLI().WithNodeURI(node).BroadcastTx(tx)
+	_, err := context.NewCLIContext().WithNodeURI(node).BroadcastTx(tx)
 	return err
 }
 
@@ -199,9 +199,9 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 	}
 
 	txCtx := authctx.NewTxContextFromCLI().WithSequence(sequence).WithCodec(c.cdc)
-	queryCtx := context.NewQueryContextFromCLI()
+	cliCtx := context.NewCLIContext()
 
-	res, err := txCtx.BuildAndSign(queryCtx.FromAddressName, passphrase, []sdk.Msg{msg})
+	res, err := txCtx.BuildAndSign(cliCtx.FromAddressName, passphrase, []sdk.Msg{msg})
 	if err != nil {
 		panic(err)
 	}

@@ -14,17 +14,17 @@ import (
 )
 
 // register REST routes
-func RegisterRoutes(queryCtx context.QueryContext, r *mux.Router, cdc *wire.Codec, storeName string) {
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, storeName string) {
 	r.HandleFunc(
 		"/accounts/{address}",
-		QueryAccountRequestHandlerFn(storeName, cdc, authcmd.GetAccountDecoder(cdc), queryCtx),
+		QueryAccountRequestHandlerFn(storeName, cdc, authcmd.GetAccountDecoder(cdc), cliCtx),
 	).Methods("GET")
 }
 
 // query accountREST Handler
 func QueryAccountRequestHandlerFn(
 	storeName string, cdc *wire.Codec,
-	decoder auth.AccountDecoder, queryCtx context.QueryContext,
+	decoder auth.AccountDecoder, cliCtx context.CLIContext,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -37,7 +37,7 @@ func QueryAccountRequestHandlerFn(
 			return
 		}
 
-		res, err := queryCtx.QueryStore(auth.AddressStoreKey(addr), storeName)
+		res, err := cliCtx.QueryStore(auth.AddressStoreKey(addr), storeName)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("couldn't query account. Error: %s", err.Error())))

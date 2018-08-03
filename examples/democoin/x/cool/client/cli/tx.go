@@ -22,19 +22,19 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			from, err := queryCtx.GetFromAddress()
+			from, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
 
 			msg := cool.NewMsgQuiz(from, args[0])
 
-			return utils.SendTx(txCtx, queryCtx, []sdk.Msg{msg})
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
 }
@@ -47,19 +47,19 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			from, err := queryCtx.GetFromAddress()
+			from, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
 
 			msg := cool.NewMsgSetTrend(from, args[0])
 
-			return utils.SendTx(txCtx, queryCtx, []sdk.Msg{msg})
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
 }

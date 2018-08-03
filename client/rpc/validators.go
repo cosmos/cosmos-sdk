@@ -58,9 +58,9 @@ func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error
 	}, nil
 }
 
-func getValidators(ctx context.QueryContext, height *int64) ([]byte, error) {
+func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	// get the node
-	node, err := ctx.GetNode()
+	node, err := cliCtx.GetNode()
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func printValidators(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	output, err := getValidators(context.NewQueryContextFromCLI(), height)
+	output, err := getValidators(context.NewCLIContext(), height)
 	if err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ func printValidators(cmd *cobra.Command, args []string) error {
 // REST
 
 // Validator Set at a height REST handler
-func ValidatorSetRequestHandlerFn(ctx context.QueryContext) http.HandlerFunc {
+func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -129,14 +129,14 @@ func ValidatorSetRequestHandlerFn(ctx context.QueryContext) http.HandlerFunc {
 			return
 		}
 
-		chainHeight, err := GetChainHeight(ctx)
+		chainHeight, err := GetChainHeight(cliCtx)
 		if height > chainHeight {
 			w.WriteHeader(404)
 			w.Write([]byte("ERROR: Requested block height is bigger then the chain length."))
 			return
 		}
 
-		output, err := getValidators(ctx, &height)
+		output, err := getValidators(cliCtx, &height)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))
@@ -148,16 +148,16 @@ func ValidatorSetRequestHandlerFn(ctx context.QueryContext) http.HandlerFunc {
 }
 
 // Latest Validator Set REST handler
-func LatestValidatorSetRequestHandlerFn(ctx context.QueryContext) http.HandlerFunc {
+func LatestValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		height, err := GetChainHeight(ctx)
+		height, err := GetChainHeight(cliCtx)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		output, err := getValidators(ctx, &height)
+		output, err := getValidators(cliCtx, &height)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

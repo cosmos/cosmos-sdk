@@ -16,8 +16,8 @@ import (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(queryCtx context.QueryContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/accounts/{address}/send", SendRequestHandlerFn(cdc, kb, queryCtx)).Methods("POST")
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
+	r.HandleFunc("/accounts/{address}/send", SendRequestHandlerFn(cdc, kb, cliCtx)).Methods("POST")
 }
 
 type sendBody struct {
@@ -39,7 +39,7 @@ func init() {
 }
 
 // SendRequestHandlerFn - http request handler to send coins to a address
-func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, queryCtx context.QueryContext) http.HandlerFunc {
+func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collect data
 		vars := mux.Vars(r)
@@ -96,7 +96,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, queryCtx context.Que
 			return
 		}
 
-		res, err := queryCtx.BroadcastTx(txBytes)
+		res, err := cliCtx.BroadcastTx(txBytes)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

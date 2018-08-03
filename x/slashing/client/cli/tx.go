@@ -22,19 +22,19 @@ func GetCmdUnrevoke(cdc *wire.Codec) *cobra.Command {
 		Short: "unrevoke validator previously revoked for downtime",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			validatorAddr, err := queryCtx.GetFromAddress()
+			validatorAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
 
 			msg := slashing.NewMsgUnrevoke(validatorAddr)
 
-			return utils.SendTx(txCtx, queryCtx, []sdk.Msg{msg})
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
 

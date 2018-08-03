@@ -42,12 +42,12 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 			initialDeposit := viper.GetString(flagDeposit)
 
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			fromAddr, err := queryCtx.GetFromAddress()
+			fromAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -71,8 +71,8 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 
 			// Build and sign the transaction, then broadcast to Tendermint
 			// proposalID must be returned, and it is a part of response.
-			queryCtx.PrintResponse = true
-			return utils.SendTx(txCtx, queryCtx, []sdk.Msg{msg})
+			cliCtx.PrintResponse = true
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -91,12 +91,12 @@ func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 		Short: "deposit tokens for activing proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			depositerAddr, err := queryCtx.GetFromAddress()
+			depositerAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -117,7 +117,7 @@ func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 
 			// Build and sign the transaction, then broadcast to a Tendermint
 			// node.
-			return utils.SendTx(txCtx, queryCtx, []sdk.Msg{msg})
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -134,12 +134,12 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 		Short: "vote for an active proposal, options: Yes/No/NoWithVeto/Abstain",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			queryCtx := context.NewQueryContextFromCLI().
+			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			voterAddr, err := queryCtx.GetFromAddress()
+			voterAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -165,7 +165,7 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 
 			// Build and sign the transaction, then broadcast to a Tendermint
 			// node.
-			return utils.SendTx(txCtx, queryCtx, []sdk.Msg{msg})
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -181,10 +181,10 @@ func GetCmdQueryProposal(storeName string, cdc *wire.Codec) *cobra.Command {
 		Use:   "query-proposal",
 		Short: "query proposal details",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			queryCtx := context.NewQueryContextFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			proposalID := viper.GetInt64(flagProposalID)
 
-			res, err := queryCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
+			res, err := cliCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
 			if len(res) == 0 || err != nil {
 				return errors.Errorf("proposalID [%d] is not existed", proposalID)
 			}
@@ -245,9 +245,9 @@ func GetCmdQueryProposals(storeName string, cdc *wire.Codec) *cobra.Command {
 				}
 			}
 
-			queryCtx := context.NewQueryContextFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, err := queryCtx.QueryStore(gov.KeyNextProposalID, storeName)
+			res, err := cliCtx.QueryStore(gov.KeyNextProposalID, storeName)
 			if err != nil {
 				return err
 			}
@@ -262,20 +262,20 @@ func GetCmdQueryProposals(storeName string, cdc *wire.Codec) *cobra.Command {
 
 			for proposalID := maxProposalID - latestProposalsIDs; proposalID < maxProposalID; proposalID++ {
 				if voterAddr != nil {
-					res, err = queryCtx.QueryStore(gov.KeyVote(proposalID, voterAddr), storeName)
+					res, err = cliCtx.QueryStore(gov.KeyVote(proposalID, voterAddr), storeName)
 					if err != nil || len(res) == 0 {
 						continue
 					}
 				}
 
 				if depositerAddr != nil {
-					res, err = queryCtx.QueryStore(gov.KeyDeposit(proposalID, depositerAddr), storeName)
+					res, err = cliCtx.QueryStore(gov.KeyDeposit(proposalID, depositerAddr), storeName)
 					if err != nil || len(res) == 0 {
 						continue
 					}
 				}
 
-				res, err = queryCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
+				res, err = cliCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
 				if err != nil || len(res) == 0 {
 					continue
 				}
@@ -320,7 +320,7 @@ func GetCmdQueryVote(storeName string, cdc *wire.Codec) *cobra.Command {
 		Use:   "query-vote",
 		Short: "query vote",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			queryCtx := context.NewQueryContextFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			proposalID := viper.GetInt64(flagProposalID)
 
 			voterAddr, err := sdk.AccAddressFromBech32(viper.GetString(flagVoter))
@@ -328,7 +328,7 @@ func GetCmdQueryVote(storeName string, cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			res, err := queryCtx.QueryStore(gov.KeyVote(proposalID, voterAddr), storeName)
+			res, err := cliCtx.QueryStore(gov.KeyVote(proposalID, voterAddr), storeName)
 			if len(res) == 0 || err != nil {
 				return errors.Errorf("proposalID [%d] does not exist", proposalID)
 			}
@@ -358,10 +358,10 @@ func GetCmdQueryVotes(storeName string, cdc *wire.Codec) *cobra.Command {
 		Use:   "query-votes",
 		Short: "query votes on a proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			queryCtx := context.NewQueryContextFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			proposalID := viper.GetInt64(flagProposalID)
 
-			res, err := queryCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
+			res, err := cliCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
 			if len(res) == 0 || err != nil {
 				return errors.Errorf("proposalID [%d] does not exist", proposalID)
 			}
@@ -374,7 +374,7 @@ func GetCmdQueryVotes(storeName string, cdc *wire.Codec) *cobra.Command {
 				return nil
 			}
 
-			res2, err := queryCtx.QuerySubspace(gov.KeyVotesSubspace(proposalID), storeName)
+			res2, err := cliCtx.QuerySubspace(gov.KeyVotesSubspace(proposalID), storeName)
 			if err != nil {
 				return err
 			}

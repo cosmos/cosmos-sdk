@@ -32,9 +32,9 @@ func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 			hashHexStr := args[0]
 			trustNode := viper.GetBool(client.FlagTrustNode)
 
-			queryCtx := context.NewQueryContextFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			output, err := queryTx(cdc, queryCtx, hashHexStr, trustNode)
+			output, err := queryTx(cdc, cliCtx, hashHexStr, trustNode)
 			if err != nil {
 				return err
 			}
@@ -51,13 +51,13 @@ func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func queryTx(cdc *wire.Codec, queryCtx context.QueryContext, hashHexStr string, trustNode bool) ([]byte, error) {
+func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string, trustNode bool) ([]byte, error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
 		return nil, err
 	}
 
-	node, err := queryCtx.GetNode()
+	node, err := cliCtx.GetNode()
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func parseTx(cdc *wire.Codec, txBytes []byte) (sdk.Tx, error) {
 // REST
 
 // transaction query REST handler
-func QueryTxRequestHandlerFn(cdc *wire.Codec, queryCtx context.QueryContext) http.HandlerFunc {
+func QueryTxRequestHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		hashHexStr := vars["hash"]
@@ -122,7 +122,7 @@ func QueryTxRequestHandlerFn(cdc *wire.Codec, queryCtx context.QueryContext) htt
 			trustNode = true
 		}
 
-		output, err := queryTx(cdc, queryCtx, hashHexStr, trustNode)
+		output, err := queryTx(cdc, cliCtx, hashHexStr, trustNode)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

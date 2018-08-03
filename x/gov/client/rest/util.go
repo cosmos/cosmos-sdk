@@ -71,7 +71,7 @@ func writeErr(w *http.ResponseWriter, status int, msg string) {
 
 // TODO: Build this function out into a more generic base-request
 // (probably should live in client/lcd).
-func signAndBuild(w http.ResponseWriter, queryCtx context.QueryContext, baseReq baseReq, msg sdk.Msg, cdc *wire.Codec) {
+func signAndBuild(w http.ResponseWriter, cliCtx context.CLIContext, baseReq baseReq, msg sdk.Msg, cdc *wire.Codec) {
 	txCtx := authctx.TxContext{
 		Codec:         cdc,
 		AccountNumber: baseReq.AccountNumber,
@@ -86,7 +86,7 @@ func signAndBuild(w http.ResponseWriter, queryCtx context.QueryContext, baseReq 
 		return
 	}
 
-	res, err := queryCtx.BroadcastTx(txBytes)
+	res, err := cliCtx.BroadcastTx(txBytes)
 	if err != nil {
 		writeErr(&w, http.StatusInternalServerError, err.Error())
 		return

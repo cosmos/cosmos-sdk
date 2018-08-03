@@ -20,7 +20,7 @@ const (
 
 // load the iavl store
 func LoadIAVLStore(db dbm.DB, id CommitID, pruning sdk.PruningStrategy) (CommitStore, error) {
-	tree := iavl.NewVersionedTree(db, defaultIAVLCacheSize)
+	tree := iavl.NewMutableTree(db, defaultIAVLCacheSize)
 	_, err := tree.LoadVersion(id.Version)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ var _ Queryable = (*iavlStore)(nil)
 type iavlStore struct {
 
 	// The underlying tree.
-	tree *iavl.VersionedTree
+	tree *iavl.MutableTree
 
 	// How many old versions we hold onto.
 	// A value of 0 means keep no recent states.
@@ -56,7 +56,7 @@ type iavlStore struct {
 }
 
 // CONTRACT: tree should be fully loaded.
-func newIAVLStore(tree *iavl.VersionedTree, numRecent int64, storeEvery int64) *iavlStore {
+func newIAVLStore(tree *iavl.MutableTree, numRecent int64, storeEvery int64) *iavlStore {
 	st := &iavlStore{
 		tree:       tree,
 		numRecent:  numRecent,
@@ -167,16 +167,16 @@ func (st *iavlStore) Gas(meter GasMeter, config GasConfig) KVStore {
 
 // Implements KVStore.
 func (st *iavlStore) Iterator(start, end []byte) Iterator {
-	return newIAVLIterator(st.tree.Tree(), start, end, true)
+	return newIAVLIterator(st.tree.ImmutableTree, start, end, true)
 }
 
 // Implements KVStore.
 func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
-	return newIAVLIterator(st.tree.Tree(), start, end, false)
+	return newIAVLIterator(st.tree.ImmutableTree, start, end, false)
 }
 
 // Handle gatest the latest height, if height is 0
-func getHeight(tree *iavl.VersionedTree, req abci.RequestQuery) int64 {
+func getHeight(tree *iavl.MutableTree, req abci.RequestQuery) int64 {
 	height := req.Height
 	if height == 0 {
 		latest := tree.Version64()
@@ -255,7 +255,7 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 // Implements Iterator.
 type iavlIterator struct {
 	// Underlying store
-	tree *iavl.Tree
+	tree *iavl.ImmutableTree
 
 	// Domain
 	start, end []byte
@@ -286,7 +286,7 @@ var _ Iterator = (*iavlIterator)(nil)
 // newIAVLIterator will create a new iavlIterator.
 // CONTRACT: Caller must release the iavlIterator, as each one creates a new
 // goroutine.
-func newIAVLIterator(tree *iavl.Tree, start, end []byte, ascending bool) *iavlIterator {
+func newIAVLIterator(tree *iavl.ImmutableTree, start, end []byte, ascending bool) *iavlIterator {
 	iter := &iavlIterator{
 		tree:      tree,
 		start:     cp(start),

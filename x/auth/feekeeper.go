@@ -4,14 +4,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/params"
-		"fmt"
-	)
+	"fmt"
+)
 
 var (
 	collectedFeesKey = []byte("collectedFees")
-	feeTokenKey      = "fee/token"			// fee/token
-	FeeThresholdKey  = "fee/threshold"			// fee/threshold
-	FeeExchangeRatePrefix = "fee/exchange/rate/"	// fee/exchange/rate/<denomination>
+	NativeFeeTokenKey = "feeToken/native"
+	NativeGasPriceThresholdKey  = "feeToken/native/gasPrice/threshold"
+	FeeExchangeRatePrefix = "feeToken/derived/exchange/rate/"	//  key = feeToken/derived/exchange/rate/<denomination>, rate = BigInt(value)/10^18
+	Precision = int64(1000000000000000000) //10^18
 )
 
 // This FeeCollectionKeeper handles collection of fees in the anteHandler
@@ -64,68 +65,77 @@ func (fck FeeCollectionKeeper) addCollectedFees(ctx sdk.Context, coins sdk.Coins
 	return newCoins
 }
 
+func (fck FeeCollectionKeeper) refundCollectedFees(ctx sdk.Context, coins sdk.Coins) sdk.Coins {
+	newCoins := fck.GetCollectedFees(ctx).Minus(coins)
+	fck.setCollectedFees(ctx, newCoins)
+
+	return newCoins
+}
+
+
 // Clears the collected Fee Pool
 func (fck FeeCollectionKeeper) ClearCollectedFees(ctx sdk.Context) {
 	fck.setCollectedFees(ctx, sdk.Coins{})
 }
 
-func (fck FeeCollectionKeeper) FeePreprocess(ctx sdk.Context, coins sdk.Coins) sdk.Error {
-	feeToken, err := fck.getter.GetString(ctx, feeTokenKey)
+func (fck FeeCollectionKeeper) FeePreprocess(ctx sdk.Context, coins sdk.Coins, gasLimit int64) sdk.Error {
+	if gasLimit <=0 {
+		return sdk.ErrInternal(fmt.Sprintf("gaslimit %s should be larger than 0", gasLimit))
+	}
+	nativeFeeToken, err := fck.getter.GetString(ctx, NativeFeeTokenKey)
 	if err != nil {
 		panic(err)
 	}
-	feeThreshold, err := fck.getter.GetInt(ctx, FeeThresholdKey)
+	nativeGasPriceThreshold, err := fck.getter.GetInt(ctx, NativeGasPriceThresholdKey)
 	if err != nil {
 		panic(err)
 	}
 
-	equivalentTotalFee := sdk.ZeroRat()
+
+	equivalentTotalFee := sdk.NewInt(0)
 	for _,coin := range coins {
-		if coin.Denom != feeToken {
+		if coin.Denom != nativeFeeToken {
 			exchangeRateKey := FeeExchangeRatePrefix + coin.Denom
-			rateBytes := fck.getter.GetRaw(ctx, exchangeRateKey)
-			if rateBytes == nil {
-				continue
-			}
-			var exchangeRate sdk.Rat
-			err := fck.cdc.UnmarshalBinary(rateBytes, &exchangeRate)
+			rate, err := fck.getter.GetInt(ctx, exchangeRateKey)
 			if err != nil {
 				panic(err)
 			}
-			equivalentFee := exchangeRate.Mul(sdk.NewRatFromInt(coin.Amount, sdk.OneInt()))
+
+			equivalentFee := coin.Amount.Mul(rate).Div(sdk.NewInt(Precision))
 			equivalentTotalFee = equivalentTotalFee.Add(equivalentFee)
 
 		} else {
-			equivalentTotalFee = equivalentTotalFee.Add(sdk.NewRatFromInt(coin.Amount, sdk.OneInt()))
+			equivalentTotalFee = equivalentTotalFee.Add(coin.Amount)
 		}
 	}
 
-	if equivalentTotalFee.LT(sdk.NewRatFromInt(feeThreshold, sdk.OneInt())) {
-		return sdk.ErrInsufficientCoins(fmt.Sprintf("equivalent total fee %s is less than threshold %s", equivalentTotalFee.String(), feeThreshold))
+	gasPrice := equivalentTotalFee.Div(sdk.NewInt(gasLimit))
+	if gasPrice.LT(nativeGasPriceThreshold) {
+		return sdk.ErrInsufficientCoins(fmt.Sprintf("gas price %s is less than threshold %s", gasPrice.String(), nativeGasPriceThreshold.String()))
 	}
 	return nil
 }
 
 type GenesisState struct {
-	FeeToken string `json:"fee_token"`
-	Threshold int64 `json:"fee_threshold"`
+	FeeTokenNative string `json:"fee_token_native"`
+	GasPriceThreshold int64 `json:"gas_price_threshold"`
 }
 
 func DefaultGenesisStateForTest() GenesisState {
 	return GenesisState{
-		FeeToken: "iGas",
-		Threshold: 0,
+		FeeTokenNative: "atom",
+		GasPriceThreshold: 0,
 	}
 }
 
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		FeeToken: "iGas",
-		Threshold: 100,
+		FeeTokenNative: "atom",
+		GasPriceThreshold: 5,
 	}
 }
 
 func InitGenesis(ctx sdk.Context, setter params.Setter, data GenesisState) {
-	setter.SetString(ctx, feeTokenKey, data.FeeToken)
-	setter.SetInt(ctx, FeeThresholdKey, sdk.NewInt(data.Threshold))
+	setter.SetString(ctx, NativeFeeTokenKey, data.FeeTokenNative)
+	setter.SetInt(ctx, NativeGasPriceThresholdKey, sdk.NewInt(data.GasPriceThreshold))
 }

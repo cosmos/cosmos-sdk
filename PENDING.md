@@ -60,3 +60,4 @@ BUG FIXES
 *  \#1799 Fix `gaiad export`
 *  \#1828 Force user to specify amount on create-validator command by removing default
 *  \#1839 Fixed bug where intra-tx counter wasn't set correctly for genesis validators
+* [staking] \#1858 Fixed bug where the cliff validator was not be updated correctly

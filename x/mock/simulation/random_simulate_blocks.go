@@ -54,7 +54,6 @@ func SimulateFromSeed(
 	for i := 0; i < len(setups); i++ {
 		setups[i](r, keys)
 	}
-	app.Commit()
 
 	header := abci.Header{Height: 0, Time: time}
 	opCount := 0
@@ -99,7 +98,6 @@ func SimulateFromSeed(
 		}
 
 		res := app.EndBlock(abci.RequestEndBlock{})
-		app.Commit()
 		header.Height++
 		header.Time += minTimePerBlock + int64(r.Intn(int(timeDiff)))
 

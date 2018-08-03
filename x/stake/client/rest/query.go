@@ -86,7 +86,7 @@ func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec
 
 // already resolve the rational shares to not handle this in the client
 
-// DelegationWithoutRat defines a delegation without type Rat for shares
+// defines a delegation without type Rat for shares
 type DelegationWithoutRat struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
 	ValidatorAddr sdk.AccAddress `json:"validator_addr"`
@@ -94,7 +94,7 @@ type DelegationWithoutRat struct {
 	Height        int64          `json:"height"`
 }
 
-// DelegationSummary The aggregation of all delegations, unbondings and redelegations
+// aggregation of all delegations, unbondings and redelegations
 type DelegationSummary struct {
 	Delegations          []DelegationWithoutRat      `json:"delegations"`
 	UnbondingDelegations []stake.UnbondingDelegation `json:"unbonding_delegations"`
@@ -120,23 +120,10 @@ func delegatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFu
 		}
 
 		// Get all validators using key
-		kvs, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
+		validators, statusCode, errMsg, err := getBech32Validators(storeName, ctx, cdc)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't query validators. Error: %s", err.Error())))
-			return
-		}
-
-		// the query will return empty if there are no validators
-		if len(kvs) == 0 {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-
-		validators, err := getValidators(kvs, cdc)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
+			w.WriteHeader(statusCode)
+			w.Write([]byte(fmt.Sprintf("%s%s", errMsg, err.Error())))
 			return
 		}
 
@@ -267,7 +254,7 @@ func delegatorTxsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handle
 	}
 }
 
-// http request handler to query an unbonding-delegation
+// HTTP request handler to query an unbonding-delegation
 func unbondingDelegationsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 

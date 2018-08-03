@@ -205,13 +205,13 @@ defined to be 13% per year, however the annual inflation is capped as between
 7% and 20%.
 
 ```go
-inflationDeceChange(0) = 0
+inflationRateChange(0) = 0
 Inflation(0) = 0.07
     
 bondedRatio = Pool.BondedTokens / Pool.TotalSupplyTokens
-AnnualInflationDeceChange = (1 - bondedRatio / 0.67) * 0.13
+AnnualInflationRateChange = (1 - bondedRatio / 0.67) * 0.13
 
-annualInflation += AnnualInflationDeceChange
+annualInflation += AnnualInflationRateChange
 
 if annualInflation > 0.20 then Inflation = 0.20
 if annualInflation < 0.07 then Inflation = 0.07

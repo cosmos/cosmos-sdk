@@ -821,7 +821,7 @@ in the case of a successful double-spend attack.
 
 Building on an approach pioneered by Ripple, Stellar [\[13\]][13] refined a
 model of Federated Byzantine Agreement wherein the processes participating in
-consensus do not constitute a fixed and globally known set. Decher, each
+consensus do not constitute a fixed and globally known set. Rather, each
 process node curates one or more "quorum slices", each constituting a set of
 trusted processes. A "quorum" in Stellar is defined to be a set of nodes that
 contain at least one quorum slice for each node in the set, such that agreement

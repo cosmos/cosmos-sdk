@@ -110,7 +110,7 @@ func TestAddTokensValidatorBonded(t *testing.T) {
 	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
 	validator, pool, delShares := validator.AddTokensFromDel(pool, 10)
 
-	require.Equal(t, sdk.OneDec(), validator.DelegatorShareExDece())
+	require.Equal(t, sdk.OneDec(), validator.DelegatorShareExRate())
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10, 0), delShares))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10, 0), validator.BondedTokens()))
@@ -123,7 +123,7 @@ func TestAddTokensValidatorUnbonding(t *testing.T) {
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonding)
 	validator, pool, delShares := validator.AddTokensFromDel(pool, 10)
 
-	require.Equal(t, sdk.OneDec(), validator.DelegatorShareExDece())
+	require.Equal(t, sdk.OneDec(), validator.DelegatorShareExRate())
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10, 0), delShares))
 	assert.Equal(t, sdk.Unbonding, validator.Status)
@@ -137,7 +137,7 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
 	validator, pool, delShares := validator.AddTokensFromDel(pool, 10)
 
-	require.Equal(t, sdk.OneDec(), validator.DelegatorShareExDece())
+	require.Equal(t, sdk.OneDec(), validator.DelegatorShareExRate())
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10, 0), delShares))
 	assert.Equal(t, sdk.Unbonded, validator.Status)
@@ -156,7 +156,7 @@ func TestRemoveDelShares(t *testing.T) {
 	poolA := InitialPool()
 	poolA.LooseTokens = sdk.NewDec(10, 0)
 	poolA.BondedTokens = valA.BondedTokens()
-	require.Equal(t, valA.DelegatorShareExDece(), sdk.OneDec())
+	require.Equal(t, valA.DelegatorShareExRate(), sdk.OneDec())
 
 	// Remove delegator shares
 	valB, poolB, coinsB := valA.RemoveDelShares(poolA, sdk.NewDec(10, 0))
@@ -245,9 +245,9 @@ func TestPossibleOverflow(t *testing.T) {
 	newValidator, _, _ := validator.AddTokensFromDel(pool, tokens)
 
 	msg = fmt.Sprintf("Added %d tokens to %s", tokens, msg)
-	require.False(t, newValidator.DelegatorShareExDece().LT(sdk.ZeroDec()),
-		"Applying operation \"%s\" resulted in negative DelegatorShareExDece(): %v",
-		msg, newValidator.DelegatorShareExDece())
+	require.False(t, newValidator.DelegatorShareExRate().LT(sdk.ZeroDec()),
+		"Applying operation \"%s\" resulted in negative DelegatorShareExRate(): %v",
+		msg, newValidator.DelegatorShareExRate())
 }
 
 func TestHumanReadableString(t *testing.T) {

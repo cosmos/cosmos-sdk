@@ -48,10 +48,10 @@ nextInflation(hrsPerYr sdk.Dec):
     else 
         bondedRation = 0
    
-    inflationDeceChangePerYear = (1 - bondedRatio / params.GoalBonded) * params.InflationDeceChange
-    inflationDeceChange = inflationDeceChangePerYear / hrsPerYr
+    inflationRateChangePerYear = (1 - bondedRatio / params.GoalBonded) * params.InflationRateChange
+    inflationRateChange = inflationRateChangePerYear / hrsPerYr
 
-    inflation = pool.Inflation + inflationDeceChange
+    inflation = pool.Inflation + inflationRateChange
     if inflation > params.InflationMax then inflation = params.InflationMax
 	
     if inflation < params.InflationMin then inflation = params.InflationMin

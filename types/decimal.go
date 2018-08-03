@@ -37,7 +37,7 @@ func precisionMultiplier(prec int64) *big.Int {
 }
 
 // create a new Dec from integer assuming whole numbers
-// CONTRACT: prec !> Precision
+// CONTRACT: prec <= Precision
 func NewDec(i, prec int64) Dec {
 	return Dec{
 		new(big.Int).Mul(big.NewInt(i), precisionMultiplier(prec)),
@@ -113,9 +113,9 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 func (d Dec) IsZero() bool      { return (d.Int).Sign() == 0 } // Is equal to zero
 func (d Dec) Equal(d2 Dec) bool { return (d.Int).Cmp(d2.Int) == 0 }
 func (d Dec) GT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) == 1 }             // greater than
-func (d Dec) GTE(d2 Dec) bool   { return !d.LT(d2) }                            // greater than or equal
+func (d Dec) GTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) >= 0 }             // greater than or equal
 func (d Dec) LT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) == -1 }            // less than
-func (d Dec) LTE(d2 Dec) bool   { return !d.GT(d2) }                            // less than or equal
+func (d Dec) LTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) <= 0 }             // less than or equal
 func (d Dec) Neg() Dec          { return Dec{new(big.Int).Neg(d.Int)} }         // Is equal to zero
 func (d Dec) Add(d2 Dec) Dec    { return Dec{new(big.Int).Add(d.Int, d2.Int)} } // addition
 func (d Dec) Sub(d2 Dec) Dec    { return Dec{new(big.Int).Sub(d.Int, d2.Int)} } // subtraction

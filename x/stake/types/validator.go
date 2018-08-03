@@ -36,7 +36,7 @@ type Validator struct {
 
 	Commission            sdk.Dec `json:"commission"`              // XXX the commission rate of fees charged to any delegators
 	CommissionMax         sdk.Dec `json:"commission_max"`          // XXX maximum commission rate which this validator can ever charge
-	CommissionChangeDece  sdk.Dec `json:"commission_change_rate"`  // XXX maximum daily increase of the validator commission
+	CommissionChangeRate  sdk.Dec `json:"commission_change_rate"`  // XXX maximum daily increase of the validator commission
 	CommissionChangeToday sdk.Dec `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
 
 	// fee related
@@ -58,7 +58,7 @@ func NewValidator(owner sdk.AccAddress, pubKey crypto.PubKey, description Descri
 		ProposerRewardPool:    sdk.Coins{},
 		Commission:            sdk.ZeroDec(),
 		CommissionMax:         sdk.ZeroDec(),
-		CommissionChangeDece:  sdk.ZeroDec(),
+		CommissionChangeRate:  sdk.ZeroDec(),
 		CommissionChangeToday: sdk.ZeroDec(),
 		LastBondedTokens:      sdk.ZeroDec(),
 	}
@@ -77,7 +77,7 @@ type validatorValue struct {
 	ProposerRewardPool    sdk.Coins
 	Commission            sdk.Dec
 	CommissionMax         sdk.Dec
-	CommissionChangeDece  sdk.Dec
+	CommissionChangeRate  sdk.Dec
 	CommissionChangeToday sdk.Dec
 	LastBondedTokens      sdk.Dec
 }
@@ -96,7 +96,7 @@ func MustMarshalValidator(cdc *wire.Codec, validator Validator) []byte {
 		ProposerRewardPool:    validator.ProposerRewardPool,
 		Commission:            validator.Commission,
 		CommissionMax:         validator.CommissionMax,
-		CommissionChangeDece:  validator.CommissionChangeDece,
+		CommissionChangeRate:  validator.CommissionChangeRate,
 		CommissionChangeToday: validator.CommissionChangeToday,
 		LastBondedTokens:      validator.LastBondedTokens,
 	}
@@ -139,7 +139,7 @@ func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) (validator Val
 		ProposerRewardPool:    storeValue.ProposerRewardPool,
 		Commission:            storeValue.Commission,
 		CommissionMax:         storeValue.CommissionMax,
-		CommissionChangeDece:  storeValue.CommissionChangeDece,
+		CommissionChangeRate:  storeValue.CommissionChangeRate,
 		CommissionChangeToday: storeValue.CommissionChangeToday,
 		LastBondedTokens:      storeValue.LastBondedTokens,
 	}, nil
@@ -165,8 +165,8 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
 	resp += fmt.Sprintf("Proposer Reward Pool: %s\n", v.ProposerRewardPool.String())
 	resp += fmt.Sprintf("Commission: %s\n", v.Commission.String())
-	resp += fmt.Sprintf("Max Commission Dece: %s\n", v.CommissionMax.String())
-	resp += fmt.Sprintf("Commission Change Dece: %s\n", v.CommissionChangeDece.String())
+	resp += fmt.Sprintf("Max Commission Rate: %s\n", v.CommissionMax.String())
+	resp += fmt.Sprintf("Commission Change Rate: %s\n", v.CommissionChangeRate.String())
 	resp += fmt.Sprintf("Commission Change Today: %s\n", v.CommissionChangeToday.String())
 	resp += fmt.Sprintf("Previous Bonded Tokens: %s\n", v.LastBondedTokens.String())
 
@@ -192,7 +192,7 @@ type BechValidator struct {
 
 	Commission            sdk.Dec `json:"commission"`              // XXX the commission rate of fees charged to any delegators
 	CommissionMax         sdk.Dec `json:"commission_max"`          // XXX maximum commission rate which this validator can ever charge
-	CommissionChangeDece  sdk.Dec `json:"commission_change_rate"`  // XXX maximum daily increase of the validator commission
+	CommissionChangeRate  sdk.Dec `json:"commission_change_rate"`  // XXX maximum daily increase of the validator commission
 	CommissionChangeToday sdk.Dec `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
 
 	// fee related
@@ -222,7 +222,7 @@ func (v Validator) Bech32Validator() (BechValidator, error) {
 
 		Commission:            v.Commission,
 		CommissionMax:         v.CommissionMax,
-		CommissionChangeDece:  v.CommissionChangeDece,
+		CommissionChangeRate:  v.CommissionChangeRate,
 		CommissionChangeToday: v.CommissionChangeToday,
 
 		LastBondedTokens: v.LastBondedTokens,
@@ -243,7 +243,7 @@ func (v Validator) Equal(c2 Validator) bool {
 		v.ProposerRewardPool.IsEqual(c2.ProposerRewardPool) &&
 		v.Commission.Equal(c2.Commission) &&
 		v.CommissionMax.Equal(c2.CommissionMax) &&
-		v.CommissionChangeDece.Equal(c2.CommissionChangeDece) &&
+		v.CommissionChangeRate.Equal(c2.CommissionChangeRate) &&
 		v.CommissionChangeToday.Equal(c2.CommissionChangeToday) &&
 		v.LastBondedTokens.Equal(c2.LastBondedTokens)
 }
@@ -379,7 +379,7 @@ func (v Validator) RemoveTokens(pool Pool, tokens sdk.Dec) (Validator, Pool) {
 func (v Validator) AddTokensFromDel(pool Pool, amount int64) (Validator, Pool, sdk.Dec) {
 
 	// bondedShare/delegatedShare
-	exDece := v.DelegatorShareExDece()
+	exRate := v.DelegatorShareExRate()
 	amountDec := sdk.NewDec(amount, 0)
 
 	if v.Status == sdk.Bonded {
@@ -387,7 +387,7 @@ func (v Validator) AddTokensFromDel(pool Pool, amount int64) (Validator, Pool, s
 	}
 
 	v.Tokens = v.Tokens.Add(amountDec)
-	issuedShares := amountDec.Quo(exDece)
+	issuedShares := amountDec.Quo(exRate)
 	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
 
 	return v, pool, issuedShares
@@ -395,7 +395,7 @@ func (v Validator) AddTokensFromDel(pool Pool, amount int64) (Validator, Pool, s
 
 // RemoveDelShares removes delegator shares from a validator.
 func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Pool, sdk.Dec) {
-	issuedTokens := v.DelegatorShareExDece().Mul(delShares)
+	issuedTokens := v.DelegatorShareExRate().Mul(delShares)
 	v.Tokens = v.Tokens.Sub(issuedTokens)
 	v.DelegatorShares = v.DelegatorShares.Sub(delShares)
 
@@ -406,9 +406,9 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Poo
 	return v, pool, issuedTokens
 }
 
-// DelegatorShareExDece gets the exchange rate of tokens over delegator shares.
+// DelegatorShareExRate gets the exchange rate of tokens over delegator shares.
 // UNITS: tokens/delegator-shares
-func (v Validator) DelegatorShareExDece() sdk.Dec {
+func (v Validator) DelegatorShareExRate() sdk.Dec {
 	if v.DelegatorShares.IsZero() {
 		return sdk.OneDec()
 	}

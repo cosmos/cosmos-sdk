@@ -77,7 +77,7 @@ func MakeTestCodec() *wire.Codec {
 // default params without inflation
 func ParamsNoInflation() types.Params {
 	return types.Params{
-		InflationDeceChange: sdk.ZeroDec(),
+		InflationRateChange: sdk.ZeroDec(),
 		InflationMax:        sdk.ZeroDec(),
 		InflationMin:        sdk.ZeroDec(),
 		GoalBonded:          sdk.NewDec(67, 2),

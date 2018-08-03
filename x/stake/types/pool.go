@@ -104,15 +104,15 @@ func (p Pool) NextInflation(params Params) (inflation sdk.Dec) {
 	// defined to be 13% per year, however the annual inflation is capped as between
 	// 7% and 20%.
 
-	// (1 - bondedRatio/GoalBonded) * InflationDeceChange
-	inflationDeceChangePerYear := sdk.OneDec().
+	// (1 - bondedRatio/GoalBonded) * InflationRateChange
+	inflationRateChangePerYear := sdk.OneDec().
 		Sub(p.BondedRatio().
 			Quo(params.GoalBonded)).
-		Mul(params.InflationDeceChange)
-	inflationDeceChange := inflationDeceChangePerYear.Quo(hrsPerYrDec)
+		Mul(params.InflationRateChange)
+	inflationRateChange := inflationRateChangePerYear.Quo(hrsPerYrDec)
 
 	// increase the new annual inflation for this next cycle
-	inflation = p.Inflation.Add(inflationDeceChange)
+	inflation = p.Inflation.Add(inflationRateChange)
 	if inflation.GT(params.InflationMax) {
 		inflation = params.InflationMax
 	}

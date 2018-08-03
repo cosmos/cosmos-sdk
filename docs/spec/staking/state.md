@@ -29,7 +29,7 @@ overall functioning of the stake module.
 
 ```golang
 type Params struct {
-    InflationDeceChange sdk.Dec // maximum annual change in inflation rate
+    InflationRateChange sdk.Dec // maximum annual change in inflation rate
 	InflationMax        sdk.Dec // maximum inflation rate
 	InflationMin        sdk.Dec // minimum inflation rate
 	GoalBonded          sdk.Dec // Goal of percent bonded atoms
@@ -94,9 +94,9 @@ type Validator struct {
 }
 
 type CommissionInfo struct {
-    Dece        sdk.Dec  // the commission rate of fees charged to any delegators
+    Rate        sdk.Dec  // the commission rate of fees charged to any delegators
     Max         sdk.Dec  // maximum commission rate which this validator can ever charge
-    ChangeDece  sdk.Dec  // maximum daily increase of the validator commission
+    ChangeRate  sdk.Dec  // maximum daily increase of the validator commission
     ChangeToday sdk.Dec  // commission rate change today, reset each day (UTC time)
     LastChange  int64    // unix timestamp of last commission change
 }

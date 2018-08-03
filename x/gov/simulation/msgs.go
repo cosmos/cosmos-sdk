@@ -16,13 +16,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
+const (
+	denom = "steak"
+)
+
 // SimulateMsgSubmitProposal
 func SimulateMsgSubmitProposal(k gov.Keeper, sk stake.Keeper) simulation.TestAndRunTx {
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
 		key := simulation.RandomKey(r, keys)
 		addr := sdk.AccAddress(key.PubKey().Address())
-		// TODO random deposit
-		deposit := sdk.Coins{sdk.NewInt64Coin("steak", 5)}
+		deposit := randomDeposit(r)
 		msg := gov.NewMsgSubmitProposal(
 			simulation.RandStringOfLength(r, 5),
 			simulation.RandStringOfLength(r, 5),
@@ -33,7 +36,7 @@ func SimulateMsgSubmitProposal(k gov.Keeper, sk stake.Keeper) simulation.TestAnd
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		ctx, write := ctx.CacheContext()
 		pool := sk.GetPool(ctx)
-		pool.LooseTokens = pool.LooseTokens.Sub(sdk.NewRat(5))
+		pool.LooseTokens = pool.LooseTokens.Sub(sdk.NewRatFromInt(deposit.AmountOf(denom)))
 		sk.SetPool(ctx, pool)
 		result := gov.NewHandler(k)(ctx, msg)
 		if result.IsOK() {
@@ -50,19 +53,17 @@ func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.TestAndRunTx {
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
 		key := simulation.RandomKey(r, keys)
 		addr := sdk.AccAddress(key.PubKey().Address())
-		// TODO random deposit
-		deposit := sdk.Coins{sdk.NewInt64Coin("steak", 10)}
-		lastProposalID := k.GetLastProposalID(ctx)
-		if lastProposalID < 1 {
+		proposalID, ok := randomProposalID(r, k, ctx)
+		if !ok {
 			return "no-operation", nil
 		}
-		proposalID := int64(r.Intn(int(lastProposalID)))
+		deposit := randomDeposit(r)
 		msg := gov.NewMsgDeposit(addr, proposalID, deposit)
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		ctx, write := ctx.CacheContext()
 		result := gov.NewHandler(k)(ctx, msg)
 		pool := sk.GetPool(ctx)
-		pool.LooseTokens = pool.LooseTokens.Sub(sdk.NewRat(10))
+		pool.LooseTokens = pool.LooseTokens.Sub(sdk.NewRatFromInt(deposit.AmountOf(denom)))
 		sk.SetPool(ctx, pool)
 		if result.IsOK() {
 			write()
@@ -78,11 +79,10 @@ func SimulateMsgVote(k gov.Keeper, sk stake.Keeper) simulation.TestAndRunTx {
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
 		key := simulation.RandomKey(r, keys)
 		addr := sdk.AccAddress(key.PubKey().Address())
-		lastProposalID := k.GetLastProposalID(ctx)
-		if lastProposalID < 1 {
+		proposalID, ok := randomProposalID(r, k, ctx)
+		if !ok {
 			return "no-operation", nil
 		}
-		proposalID := int64(r.Intn(int(lastProposalID)))
 		option := randomVotingOption(r)
 		msg := gov.NewMsgVote(addr, proposalID, option)
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
@@ -95,6 +95,23 @@ func SimulateMsgVote(k gov.Keeper, sk stake.Keeper) simulation.TestAndRunTx {
 		action = fmt.Sprintf("TestMsgVote: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil
 	}
+}
+
+// Pick a random deposit
+func randomDeposit(r *rand.Rand) sdk.Coins {
+	// TODO Choose based on account balance and min deposit
+	amount := int64(r.Intn(20)) + 1
+	return sdk.Coins{sdk.NewInt64Coin(denom, amount)}
+}
+
+// Pick a random proposal ID
+func randomProposalID(r *rand.Rand, k gov.Keeper, ctx sdk.Context) (proposalID int64, ok bool) {
+	lastProposalID := k.GetLastProposalID(ctx)
+	if lastProposalID < 1 {
+		return 0, false
+	}
+	proposalID = int64(r.Intn(int(lastProposalID)))
+	return proposalID, true
 }
 
 // Pick a random voting option

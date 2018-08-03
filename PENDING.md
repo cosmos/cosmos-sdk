@@ -62,6 +62,7 @@ IMPROVEMENTS
 * [x/gov] Initial governance parameters can now be set in the genesis file
 * [x/stake] \#1815 Sped up the processing of `EditValidator` txs. 
 * [x/gov] Added simple logging for proposal expiry & tally events using ctx.Logger
+* [x/stake] Added several sanity checks in UpdateValidator()
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators

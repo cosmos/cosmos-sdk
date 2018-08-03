@@ -491,7 +491,7 @@ func (k Keeper) unbondValidator(ctx sdk.Context, validator types.Validator) type
 
 	// sanity check
 	if validator.Status == sdk.Unbonded {
-		panic(fmt.Sprintf("should not already be unbonded, validator: %s\n", validator))
+		panic(fmt.Sprintf("should not already be unbonded, validator: %v\n", validator))
 	}
 
 	// set the status
@@ -518,7 +518,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 
 	// sanity check
 	if validator.Status == sdk.Bonded {
-		panic(fmt.Sprintf("should not already be bonded, validator: %s\n", validator))
+		panic(fmt.Sprintf("should not already be bonded, validator: %v\n", validator))
 	}
 
 	// set the status

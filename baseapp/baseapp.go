@@ -129,13 +129,6 @@ func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
 	}
 }
 
-// Mount a transient store to the provided key in the BaseApp multistore
-func (app *BaseApp) MountStoresTransient(keys ...*sdk.TransientStoreKey) {
-	for _, key := range keys {
-		app.MountStore(key, sdk.StoreTypeTransient)
-	}
-}
-
 // Mount a store to the provided key in the BaseApp multistore, using a specified DB
 func (app *BaseApp) MountStoreWithDB(key sdk.StoreKey, typ sdk.StoreType, db dbm.DB) {
 	app.cms.MountStoreWithDB(key, typ, db)

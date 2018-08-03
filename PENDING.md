@@ -28,6 +28,7 @@ BREAKING CHANGES
 * [core] \#1807 Switch from use of rational to decimal
 * [lcd] \#1866 Updated lcd /slashing/signing_info endpoint to take cosmosvalpub instead of cosmosvaladdr
 * [types] sdk.NewCoin now takes sdk.Int, sdk.NewInt64Coin takes int64
+* [cli] Genesis/key creation (`init`) now supports user-provided key passwords
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus
@@ -43,6 +44,7 @@ FEATURES
 * [store] Add transient store
 * [gov] Add slashing for validators who do not vote on a proposal
 * [cli] added `gov query-proposals` command to CLI. Can filter by `depositer`, `voter`, and `status`
+* [core] added BaseApp.Seal - ability to seal baseapp parameters once they've been set
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route

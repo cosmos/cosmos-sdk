@@ -3,18 +3,24 @@ package app
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
-	"github.com/spf13/pflag"
-	"github.com/tendermint/tendermint/crypto"
-	tmtypes "github.com/tendermint/tendermint/types"
-
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+
+	"github.com/spf13/pflag"
+
+	"github.com/tendermint/tendermint/crypto"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
+
+// DefaultKeyPass contains the default key password for genesis transactions
+const DefaultKeyPass = "12345678"
 
 var (
 	// bonded tokens given to genesis validators/accounts
@@ -81,30 +87,49 @@ type GaiaGenTx struct {
 	PubKey  string         `json:"pub_key"`
 }
 
-// Generate a gaia genesis transaction with flags
-func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey, genTxConfig config.GenTx) (
-	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
+// GaiaAppGenTx generates a Gaia genesis transaction.
+func GaiaAppGenTx(
+	cdc *wire.Codec, pk crypto.PubKey, genTxConfig config.GenTx,
+) (appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 	if genTxConfig.Name == "" {
 		return nil, nil, tmtypes.GenesisValidator{}, errors.New("Must specify --name (validator moniker)")
 	}
 
-	var addr sdk.AccAddress
-	var secret string
-	addr, secret, err = server.GenerateSaveCoinKey(genTxConfig.CliRoot, genTxConfig.Name, "1234567890", genTxConfig.Overwrite)
-	if err != nil {
-		return
+	buf := client.BufferStdin()
+	prompt := fmt.Sprintf("Password for account '%s' (default %s):", genTxConfig.Name, DefaultKeyPass)
+
+	keyPass, err := client.GetPassword(prompt, buf)
+	if err != nil && keyPass != "" {
+		// An error was returned that either failed to read the password from
+		// STDIN or the given password is not empty but failed to meet minimum
+		// length requirements.
+		return appGenTx, cliPrint, validator, err
 	}
-	mm := map[string]string{"secret": secret}
-	var bz []byte
-	bz, err = cdc.MarshalJSON(mm)
+
+	if keyPass == "" {
+		keyPass = DefaultKeyPass
+	}
+
+	addr, secret, err := server.GenerateSaveCoinKey(
+		genTxConfig.CliRoot,
+		genTxConfig.Name,
+		keyPass,
+		genTxConfig.Overwrite,
+	)
 	if err != nil {
-		return
+		return appGenTx, cliPrint, validator, err
+	}
+
+	mm := map[string]string{"secret": secret}
+	bz, err := cdc.MarshalJSON(mm)
+	if err != nil {
+		return appGenTx, cliPrint, validator, err
 	}
 
 	cliPrint = json.RawMessage(bz)
-
 	appGenTx, _, validator, err = GaiaAppGenTxNF(cdc, pk, addr, genTxConfig.Name)
-	return
+
+	return appGenTx, cliPrint, validator, err
 }
 
 // Generate a gaia genesis transaction without flags

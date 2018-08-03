@@ -66,6 +66,9 @@ type BaseApp struct {
 	checkState       *state                  // for CheckTx
 	deliverState     *state                  // for DeliverTx
 	signedValidators []abci.SigningValidator // absent validators from begin block
+
+	// flag for sealing
+	sealed bool
 }
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -132,27 +135,6 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 	app.cms.MountStoreWithDB(key, typ, nil)
 }
 
-// nolint - Set functions
-func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
-	app.initChainer = initChainer
-}
-func (app *BaseApp) SetBeginBlocker(beginBlocker sdk.BeginBlocker) {
-	app.beginBlocker = beginBlocker
-}
-func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
-	app.endBlocker = endBlocker
-}
-func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
-	app.anteHandler = ah
-}
-func (app *BaseApp) SetAddrPeerFilter(pf sdk.PeerFilter) {
-	app.addrPeerFilter = pf
-}
-func (app *BaseApp) SetPubKeyPeerFilter(pf sdk.PeerFilter) {
-	app.pubkeyPeerFilter = pf
-}
-func (app *BaseApp) Router() Router { return app.router }
-
 // load latest application version
 func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
 	err := app.cms.LoadLatestVersion()
@@ -183,7 +165,6 @@ func (app *BaseApp) LastBlockHeight() int64 {
 
 // initializes the remaining logic from app.cms
 func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
-
 	// main store should exist.
 	// TODO: we don't actually need the main store here
 	main := app.cms.GetKVStore(mainKey)
@@ -192,6 +173,9 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 	}
 	// Needed for `gaiad export`, which inits from store but never calls initchain
 	app.setCheckState(abci.Header{})
+
+	app.Seal()
+
 	return nil
 }
 

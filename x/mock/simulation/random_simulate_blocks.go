@@ -9,6 +9,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -158,7 +159,7 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]m
 			currentTotalVotingPower += mVal.val.Power
 		}
 		evidence = append(evidence, abci.Evidence{
-			Type:             "DOUBLE_SIGN",
+			Type:             tmtypes.ABCIEvidenceTypeDuplicateVote,
 			Validator:        validator,
 			Height:           height,
 			Time:             time,

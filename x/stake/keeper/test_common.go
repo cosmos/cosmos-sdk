@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
@@ -91,11 +92,15 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 
 	keyStake := sdk.NewKVStoreKey("stake")
 	keyAcc := sdk.NewKVStoreKey("acc")
+	keyParams := sdk.NewKVStoreKey("params")
+	tkeyParams := sdk.NewTransientStoreKey("params")
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -107,7 +112,8 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 		auth.ProtoBaseAccount, // prototype
 	)
 	ck := bank.NewKeeper(accountMapper)
-	keeper := NewKeeper(cdc, keyStake, ck, types.DefaultCodespace)
+	pk := params.NewKeeper(cdc, keyParams, tkeyParams, nil)
+	keeper := NewKeeper(cdc, keyStake, ck, pk.SubStore("stake"), types.DefaultCodespace)
 	keeper.SetPool(ctx, types.InitialPool())
 	keeper.SetNewParams(ctx, types.DefaultParams())
 	keeper.InitIntraTxCounter(ctx)
@@ -116,7 +122,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	for _, addr := range Addrs {
 		pool := keeper.GetPool(ctx)
 		_, _, err := ck.AddCoins(ctx, addr, sdk.Coins{
-			{keeper.GetParams(ctx).BondDenom, sdk.NewInt(initCoins)},
+			{keeper.BondDenom(ctx), sdk.NewInt(initCoins)},
 		})
 		require.Nil(t, err)
 		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewDec(initCoins))

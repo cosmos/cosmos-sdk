@@ -35,13 +35,13 @@ var (
 
 // Params - used for initializing default parameter for slashing at genesis
 type Params struct {
-	MaxEvidenceAge           int64
-	SignedBlocksWindow       int64
-	MinSignedPerWindow       sdk.Dec
-	DoubleSignUnbondDuration int64
-	DowntimeUnbondDuration   int64
-	SlashFractionDoubleSign  sdk.Dec
-	SlashFractionDowntime    sdk.Dec
+	MaxEvidenceAge           int64   `json:"max-evidence-age"`
+	SignedBlocksWindow       int64   `json:"signed-blocks-window"`
+	MinSignedPerWindow       sdk.Dec `json:"min-signed-per-window"`
+	DoubleSignUnbondDuration int64   `json:"doublesign-unbond-duration"`
+	DowntimeUnbondDuration   int64   `json:"downtime-unbond-duration"`
+	SlashFractionDoubleSign  sdk.Dec `json:"slash-fraction-doublesign"`
+	SlashFractionDowntime    sdk.Dec `json:"slash-fraction-downtime"`
 }
 
 // Default parameters used by Cosmos Hub
@@ -78,14 +78,14 @@ func (k Keeper) MaxEvidenceAge(ctx sdk.Context) time.Duration {
 
 // SignedBlocksWindow - sliding window for downtime slashing
 func (k Keeper) SignedBlocksWindow(ctx sdk.Context) (res int64) {
-	k.paramstore.Get(ctx, SignedBlocksWindowKey(), &res)
+	k.paramstore.Get(ctx, signedBlocksWindowKey, &res)
 	return
 }
 
 // Downtime slashing thershold - default 50% of the SignedBlocksWindow
 func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 	var minSignedPerWindow sdk.Dec
-	k.paramstore.Get(ctx, MinSignedPerWindowKey(), &minSignedPerWindow)
+	k.paramstore.Get(ctx, minSignedPerWindowKey, &minSignedPerWindow)
 	signedBlocksWindow := k.SignedBlocksWindow(ctx)
 	return sdk.NewDec(signedBlocksWindow).Mul(minSignedPerWindow).RoundInt64()
 }
@@ -106,12 +106,12 @@ func (k Keeper) DowntimeUnbondDuration(ctx sdk.Context) time.Duration {
 
 // SlashFractionDoubleSign - currently default 5%
 func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) (res sdk.Dec) {
-	k.paramstore.Get(ctx, SlashFractionDoubleSignKey(), &res)
+	k.paramstore.Get(ctx, slashFractionDoubleSignKey, &res)
 	return
 }
 
 // SlashFractionDowntime - currently default 1%
 func (k Keeper) SlashFractionDowntime(ctx sdk.Context) (res sdk.Dec) {
-	k.paramstore.Get(ctx, SlashFractionDowntimeKey(), &res)
+	k.paramstore.Get(ctx, slashFractionDowntimeKey, &res)
 	return
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -34,14 +35,17 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	RegisterWire(mApp.Cdc)
 
 	keyStake := sdk.NewKVStoreKey("stake")
+	keyParams := sdk.NewKVStoreKey("params")
+	tkeyParams := sdk.NewTransientStoreKey("params")
 	coinKeeper := bank.NewKeeper(mApp.AccountMapper)
-	keeper := NewKeeper(mApp.Cdc, keyStake, coinKeeper, mApp.RegisterCodespace(DefaultCodespace))
+	pk := params.NewKeeper(mApp.Cdc, keyParams, tkeyParams, nil)
+	keeper := NewKeeper(mApp.Cdc, keyStake, coinKeeper, pk.SubStore("stake"), mApp.RegisterCodespace(DefaultCodespace))
 
 	mApp.Router().AddRoute("stake", NewHandler(keeper))
 	mApp.SetEndBlocker(getEndBlocker(keeper))
 	mApp.SetInitChainer(getInitChainer(mApp, keeper))
 
-	require.NoError(t, mApp.CompleteSetup([]*sdk.KVStoreKey{keyStake}, nil))
+	require.NoError(t, mApp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyParams}, []*sdk.TransientStoreKey{tkeyParams}))
 	return mApp, keeper
 }
 

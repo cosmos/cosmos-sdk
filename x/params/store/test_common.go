@@ -24,9 +24,11 @@ const (
 func DefaultTestComponents(t *testing.T) (sdk.Context, Store, func() sdk.CommitID) {
 	cdc := wire.NewCodec()
 	key := sdk.NewKVStoreKey("params")
-	tkey := sdk.NewTransientStoreKey("params")
+	tkey := sdk.NewTransientStoreKey("tparams")
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
+	ms.WithTracer(os.Stdout)
+	ms.WithTracingContext(sdk.TraceContext{})
 	ms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db)
 	err := ms.LoadLatestVersion()

@@ -10,11 +10,12 @@ import (
 func NewAnteHandler(store params.Store) sdk.AnteHandler {
 	return func(ctx sdk.Context, tx sdk.Tx) (sdk.Context, sdk.Result, bool) {
 		for _, msg := range tx.GetMsgs() {
-			if !store.Has(ctx, params.NewKey(msg.Type())) {
+			key := params.NewKey(msg.Type())
+			if !store.Has(ctx, key) {
 				return ctx, sdk.ErrUnauthorized("deactivated msg type").Result(), true
 			}
 			var activated bool
-			store.Get(ctx, params.NewKey(msg.Type()), &activated)
+			store.Get(ctx, key, &activated)
 			if !activated {
 				return ctx, sdk.ErrUnauthorized("deactivated msg type").Result(), true
 			}

@@ -15,17 +15,21 @@ type Store struct {
 	key  sdk.StoreKey
 	tkey sdk.StoreKey
 
-	space string
+	space []byte
 }
 
 // NewStore constructs a store with namespace
 func NewStore(cdc *wire.Codec, key sdk.StoreKey, tkey sdk.StoreKey, space string) Store {
+	if !isAlphaNumeric(space) {
+		panic("paramstore space expressions can only contain alphanumeric characters")
+	}
+
 	return Store{
 		cdc:  cdc,
 		key:  key,
 		tkey: tkey,
 
-		space: space,
+		space: []byte(space + "/"),
 	}
 }
 
@@ -53,14 +57,17 @@ func (k Key) Append(keys ...string) (res Key) {
 
 // NewKey constructs a key from a list of strings
 func NewKey(keys ...string) (res Key) {
-	res = Key{""}
+	if len(keys) < 1 {
+		panic("length of parameter keys must not be zero")
+	}
+	res = Key{keys[0]}
 
-	return res.Append(keys...)
+	return res.Append(keys[1:]...)
 }
 
 // KeyBytes make KVStore key bytes from Key
-func (k Key) KeyBytes(space string) []byte {
-	return append([]byte(space), []byte(k.s)...)
+func (k Key) Bytes() []byte {
+	return []byte(k.s)
 }
 
 // Human readable string
@@ -70,33 +77,35 @@ func (k Key) String() string {
 
 // Get parameter from store
 func (s Store) Get(ctx sdk.Context, key Key, ptr interface{}) {
-	store := ctx.KVStore(s.key)
-	bz := store.Get(key.KeyBytes(s.space))
+	store := ctx.KVStore(s.key).Prefix(s.space)
+	bz := store.Get(key.Bytes())
 	s.cdc.MustUnmarshalBinary(bz, ptr)
 }
 
 // Get raw bytes of parameter from store
 func (s Store) GetRaw(ctx sdk.Context, key Key) []byte {
-	store := ctx.KVStore(s.key)
-	return store.Get(key.KeyBytes(s.space))
+	store := ctx.KVStore(s.key).Prefix(s.space)
+	res := store.Get(key.Bytes())
+	return res
 }
 
 // Check if the parameter is set in the store
 func (s Store) Has(ctx sdk.Context, key Key) bool {
-	store := ctx.KVStore(s.key)
-	return store.Has(key.KeyBytes(s.space))
+	store := ctx.KVStore(s.key).Prefix(s.space)
+	return store.Has(key.Bytes())
 }
 
 // Returns true if the parameter is set in the block
 func (s Store) Modified(ctx sdk.Context, key Key) bool {
-	tstore := ctx.KVStore(s.tkey)
-	return tstore.Has(key.KeyBytes(s.space))
+	tstore := ctx.KVStore(s.tkey).Prefix(s.space)
+	return tstore.Has(key.Bytes())
 }
 
 // Set parameter, return error if stored parameter has different type from input
 func (s Store) Set(ctx sdk.Context, key Key, param interface{}) error {
-	store := ctx.KVStore(s.key)
-	keybz := key.KeyBytes(s.space)
+	store := ctx.KVStore(s.key).Prefix(s.space)
+	keybz := key.Bytes()
+
 	bz := store.Get(keybz)
 	if bz != nil {
 		ptrty := reflect.PtrTo(reflect.TypeOf(param))
@@ -113,7 +122,7 @@ func (s Store) Set(ctx sdk.Context, key Key, param interface{}) error {
 	}
 	store.Set(keybz, bz)
 
-	tstore := ctx.KVStore(s.tkey)
+	tstore := ctx.KVStore(s.tkey).Prefix(s.space)
 	tstore.Set(keybz, []byte{})
 
 	return nil
@@ -121,16 +130,18 @@ func (s Store) Set(ctx sdk.Context, key Key, param interface{}) error {
 
 // Set raw bytes of parameter
 func (s Store) SetRaw(ctx sdk.Context, key Key, param []byte) {
-	keybz := key.KeyBytes(s.space)
+	keybz := key.Bytes()
 
-	store := ctx.KVStore(s.key)
+	store := ctx.KVStore(s.key).Prefix(s.space)
 	store.Set(keybz, param)
 
-	tstore := ctx.KVStore(s.tkey)
+	tstore := ctx.KVStore(s.tkey).Prefix(s.space)
 	tstore.Set(keybz, []byte{})
 }
 
-// Wrapper of Store, provides only immutable functions
+// Iterates over raw parameters in the substore
+
+// Wrapper of Store, provides immutable functions only
 type ReadOnlyStore struct {
 	s Store
 }

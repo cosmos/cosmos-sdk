@@ -109,7 +109,7 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validat
 	store := ctx.KVStore(k.storeKey)
 
 	// add the actual validator power sorted store
-	maxValidators := k.GetParams(ctx).MaxValidators
+	maxValidators := k.MaxValidators(ctx)
 	validators = make([]types.Validator, maxValidators)
 
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedIndexKey)
@@ -138,7 +138,7 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validat
 // TODO: Rename to GetBondedValidatorsByPower or GetValidatorsByPower(ctx, status)
 func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 	store := ctx.KVStore(k.storeKey)
-	maxValidators := k.GetParams(ctx).MaxValidators
+	maxValidators := k.MaxValidators(ctx)
 	validators := make([]types.Validator, maxValidators)
 	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey) // largest to smallest
 	i := 0
@@ -390,7 +390,7 @@ func (k Keeper) UpdateBondedValidators(
 	store := ctx.KVStore(k.storeKey)
 
 	oldCliffValidatorAddr := k.GetCliffValidator(ctx)
-	maxValidators := k.GetParams(ctx).MaxValidators
+	maxValidators := k.MaxValidators(ctx)
 	bondedValidatorsCount := 0
 	var validator, validatorToBond types.Validator
 	newValidatorBonded := false
@@ -502,7 +502,7 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 	var validator types.Validator
 
 	oldCliffValidatorAddr := k.GetCliffValidator(ctx)
-	maxValidators := k.GetParams(ctx).MaxValidators
+	maxValidators := k.MaxValidators(ctx)
 	bondedValidatorsCount := 0
 
 	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)

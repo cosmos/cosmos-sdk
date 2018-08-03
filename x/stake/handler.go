@@ -72,7 +72,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	if found {
 		return ErrValidatorPubKeyExists(k.Codespace()).Result()
 	}
-	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
+	if msg.Delegation.Denom != k.BondDenom(ctx) {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
@@ -133,7 +133,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	if !found {
 		return ErrNoValidatorFound(k.Codespace()).Result()
 	}
-	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
+	if msg.Delegation.Denom != k.BondDenom(ctx) {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 	if validator.Jailed {

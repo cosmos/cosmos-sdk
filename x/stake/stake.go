@@ -60,6 +60,14 @@ var (
 	GetREDsToValDstIndexKey      = keeper.GetREDsToValDstIndexKey
 	GetREDsByDelToValDstIndexKey = keeper.GetREDsByDelToValDstIndexKey
 
+	DefaultParamSpace      = keeper.DefaultParamSpace
+	KeyInflationRateChange = keeper.KeyInflationRateChange
+	KeyInflationMax        = keeper.KeyInflationMax
+	KeyGoalBonded          = keeper.KeyGoalBonded
+	KeyUnbondingTime       = keeper.KeyUnbondingTime
+	KeyMaxValidators       = keeper.KeyMaxValidators
+	KeyBondDenom           = keeper.KeyBondDenom
+
 	DefaultParams       = types.DefaultParams
 	InitialPool         = types.InitialPool
 	NewValidator        = types.NewValidator

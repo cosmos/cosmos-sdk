@@ -374,6 +374,7 @@ func TestValidatorsQuery(t *testing.T) {
 	require.True(t, foundVal, "pkBech %v, owner %v", pkBech, validators[0].Owner)
 }
 
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxx
 func TestBonding(t *testing.T) {
 	name, password, denom := "test", "1234567890", "steak"
 	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
@@ -398,7 +399,7 @@ func TestBonding(t *testing.T) {
 
 	// query validator
 	bond := getDelegation(t, port, addr, validator1Owner)
-	require.Equal(t, "60/1", bond.Shares.String())
+	require.Equal(t, "60.0000000000", bond.Shares.String())
 
 	//////////////////////
 	// testing unbonding
@@ -409,7 +410,7 @@ func TestBonding(t *testing.T) {
 
 	// query validator
 	bond = getDelegation(t, port, addr, validator1Owner)
-	require.Equal(t, "30/1", bond.Shares.String())
+	require.Equal(t, "30.0000000000", bond.Shares.String())
 
 	// check if tx was committed
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)

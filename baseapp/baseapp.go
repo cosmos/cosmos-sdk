@@ -192,9 +192,6 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
-	if app.consensusParams == nil {
-
-	}
 	if isCheckTx {
 		return sdk.NewContext(app.checkState.ms, header, true, app.Logger)
 	}
@@ -656,9 +653,6 @@ func (app *BaseApp) updateConsensusParams(updates *abci.ConsensusParams) {
 
 	params := app.consensusParams
 
-	// we must defensively consider any structs may be nil
-	// XXX: it's cast city over here. It's ok because we only do int32->int
-	// but still, watch it champ.
 	if updates.BlockSize != nil {
 		if updates.BlockSize.MaxBytes > 0 {
 			params.BlockSize.MaxBytes = updates.BlockSize.MaxBytes

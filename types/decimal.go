@@ -18,8 +18,14 @@ type Dec struct {
 // number of decimal places
 const Precision = 10
 
+var (
+	precisionExpReuse = big.NewInt(Precision)
+	ten               = big.NewInt(10)
+	precisionReuse    = new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision), nil)
+)
+
 func precisionInt() *big.Int {
-	return new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision), nil)
+	return precisionReuse.Exp(ten, precisionExpReuse, nil)
 }
 
 // nolint - common values
@@ -124,13 +130,19 @@ func (d Dec) Sub(d2 Dec) Dec    { return Dec{new(big.Int).Sub(d.Int, d2.Int)} } 
 func (d Dec) Mul(d2 Dec) Dec {
 	mul := new(big.Int).Mul(d.Int, d2.Int)
 	chopped := BankerRoundChop(mul, Precision)
+
+	if chopped.BitLen() > 255 {
+		panic("Int overflow")
+	}
 	return Dec{chopped}
 }
 
 // quotient
 func (d Dec) Quo(d2 Dec) Dec {
-	mul := new(big.Int).Mul(new(big.Int).Mul( // multiple Precision twice
-		d.Int, precisionInt()), precisionInt())
+
+	// multiply precision twice
+	mul := new(big.Int).Mul(d.Int, precisionInt())
+	mul.Mul(mul, precisionInt())
 
 	quo := new(big.Int).Quo(mul, d2.Int)
 	chopped := BankerRoundChop(quo, Precision)
@@ -236,6 +248,9 @@ func BankerRoundChop(d *big.Int, n int64) (chopped *big.Int) {
 
 // RoundInt64 rounds the decimal using bankers rounding
 func (d Dec) RoundInt64() int64 {
+	if !d.Int.IsInt64() {
+		panic("Int64() out of bound")
+	}
 	return BankerRoundChop(d.Int, Precision).Int64()
 }
 

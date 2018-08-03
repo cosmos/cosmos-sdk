@@ -140,7 +140,8 @@ func NewFeeRefundHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.FeeRefun
 			}
 			refundCoins = append(refundCoins, newCoin)
 		}
-		firstAccount.SetCoins(firstAccount.GetCoins().Plus(refundCoins))
+		coins := am.GetAccount(ctx, firstAccount.GetAddress()).GetCoins()
+		firstAccount.SetCoins(coins.Plus(refundCoins))
 		am.SetAccount(ctx, firstAccount)
 		fck.refundCollectedFees(ctx, refundCoins)
 	}

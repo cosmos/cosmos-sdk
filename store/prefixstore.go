@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"io"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,6 +15,7 @@ type prefixStore struct {
 }
 
 func (s prefixStore) key(key []byte) (res []byte) {
+	res = make([]byte, len(s.prefix))
 	copy(res, s.prefix)
 	res = append(res, key...)
 	return
@@ -67,11 +69,11 @@ func (s prefixStore) Gas(meter GasMeter, config GasConfig) KVStore {
 
 // Implements KVStore
 func (s prefixStore) Iterator(start, end []byte) Iterator {
-	newstart := make([]byte, len(s.prefix), len(start))
+	newstart := make([]byte, len(s.prefix))
 	copy(newstart, s.prefix)
 	newstart = append(newstart, start...)
 
-	newend := make([]byte, len(s.prefix)+len(end))
+	newend := make([]byte, len(s.prefix))
 	if end == nil {
 		newend = sdk.PrefixEndBytes(s.prefix)
 	} else {
@@ -98,6 +100,8 @@ func (s prefixStore) ReverseIterator(start, end []byte) Iterator {
 		copy(newend, s.prefix)
 		newend = append(newend, end...)
 	}
+
+	fmt.Printf("ns: %s\nne: %s\n", string(newstart), string(newend))
 
 	return prefixIterator{
 		prefix: s.prefix,

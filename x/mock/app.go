@@ -87,7 +87,7 @@ func (app *App) CompleteSetup(newKeys ...sdk.StoreKey) error {
 		case *sdk.TransientStoreKey:
 			app.MountStore(key, sdk.StoreTypeTransient)
 		default:
-			return fmt.Errorf("Unsupported StoreKey: %+v\n", key)
+			return fmt.Errorf("unsupported StoreKey: %+v\n", key)
 		}
 	}
 

@@ -38,36 +38,43 @@ func (k Keeper) InflationRateChange(ctx sdk.Context) (res sdk.Rat) {
 	return
 }
 
+// InflationMax - Maximum inflation rate
 func (k Keeper) InflationMax(ctx sdk.Context) (res sdk.Rat) {
 	k.paramstore.Get(ctx, keyInflationMax, &res)
 	return
 }
 
+// InflationMin - Minimum inflation rate
 func (k Keeper) InflationMin(ctx sdk.Context) (res sdk.Rat) {
 	k.paramstore.Get(ctx, keyInflationMin, &res)
 	return
 }
 
+// GoalBonded - Goal of percent bonded atoms
 func (k Keeper) GoalBonded(ctx sdk.Context) (res sdk.Rat) {
 	k.paramstore.Get(ctx, keyGoalBonded, &res)
 	return
 }
 
+// UnbondingTime
 func (k Keeper) UnbondingTime(ctx sdk.Context) (res int64) {
 	k.paramstore.Get(ctx, keyUnbondingTime, &res)
 	return
 }
 
+// MaxValidators - Maximum number of validators
 func (k Keeper) MaxValidators(ctx sdk.Context) (res uint16) {
 	k.paramstore.Get(ctx, keyMaxValidators, &res)
 	return
 }
 
+// BondDenom - Bondable coin denomination
 func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
 	k.paramstore.Get(ctx, keyBondDenom, &res)
 	return
 }
 
+// Get all parameteras as types.Params
 func (k Keeper) GetParams(ctx sdk.Context) (res types.Params) {
 	res.InflationRateChange = k.InflationRateChange(ctx)
 	res.InflationMax = k.InflationMax(ctx)

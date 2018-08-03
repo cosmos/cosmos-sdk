@@ -18,6 +18,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
+var (
+	// make some cap keys
+	capKey1 = sdk.NewKVStoreKey("key1")
+	capKey2 = sdk.NewKVStoreKey("key2")
+)
+
 //------------------------------------------------------------------------------------------
 // Helpers for setup. Most tests should be able to use setupBaseApp
 
@@ -25,12 +31,12 @@ func defaultLogger() log.Logger {
 	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 }
 
-func newBaseApp(name string) *BaseApp {
+func newBaseApp(name string, options ...func(*BaseApp)) *BaseApp {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	codec := wire.NewCodec()
 	registerTestCodec(codec)
-	return NewBaseApp(name, logger, db, testTxDecoder(codec))
+	return NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
 }
 
 func registerTestCodec(cdc *wire.Codec) {
@@ -45,13 +51,9 @@ func registerTestCodec(cdc *wire.Codec) {
 }
 
 // simple one store baseapp
-func setupBaseApp(t *testing.T) (*BaseApp, *sdk.KVStoreKey, *sdk.KVStoreKey) {
-	app := newBaseApp(t.Name())
+func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
+	app := newBaseApp(t.Name(), options...)
 	require.Equal(t, t.Name(), app.Name())
-
-	// make some cap keys
-	capKey1 := sdk.NewKVStoreKey("key1")
-	capKey2 := sdk.NewKVStoreKey("key2")
 
 	// no stores are mounted
 	require.Panics(t, func() { app.LoadLatestVersion(capKey1) })
@@ -61,14 +63,14 @@ func setupBaseApp(t *testing.T) (*BaseApp, *sdk.KVStoreKey, *sdk.KVStoreKey) {
 	// stores are mounted
 	err := app.LoadLatestVersion(capKey1)
 	require.Nil(t, err)
-	return app, capKey1, capKey2
+	return app
 }
 
 //------------------------------------------------------------------------------------------
 // test mounting and loading stores
 
 func TestMountStores(t *testing.T) {
-	app, capKey1, capKey2 := setupBaseApp(t)
+	app := setupBaseApp(t)
 
 	// check both stores
 	store1 := app.cms.GetCommitKVStore(capKey1)
@@ -216,8 +218,6 @@ func TestInitChainer(t *testing.T) {
 	capKey := sdk.NewKVStoreKey("main")
 	capKey2 := sdk.NewKVStoreKey("key2")
 	app.MountStoresIAVL(capKey, capKey2)
-	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
-	require.Nil(t, err)
 
 	// set a value in the store on init chain
 	key, value := []byte("hello"), []byte("goodbye")
@@ -239,6 +239,11 @@ func TestInitChainer(t *testing.T) {
 
 	// set initChainer and try again - should see the value
 	app.SetInitChainer(initChainer)
+
+	// stores are mounted and private members are set - sealing baseapp
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	require.Nil(t, err)
+
 	app.InitChain(abci.RequestInitChain{AppStateBytes: []byte("{}"), ChainId: "test-chain-id"}) // must have valid JSON genesis file, even if empty
 
 	// assert that chainID is set correctly in InitChain
@@ -254,10 +259,10 @@ func TestInitChainer(t *testing.T) {
 
 	// reload app
 	app = NewBaseApp(name, logger, db, nil)
+	app.SetInitChainer(initChainer)
 	app.MountStoresIAVL(capKey, capKey2)
 	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	require.Nil(t, err)
-	app.SetInitChainer(initChainer)
 
 	// ensure we can still query after reloading
 	res = app.Query(query)
@@ -426,17 +431,19 @@ func incrementingCounter(t *testing.T, store sdk.KVStore, counterKey []byte, cou
 // on the store within a block, and that the CheckTx state
 // gets reset to the latest committed state during Commit
 func TestCheckTx(t *testing.T) {
-	app, capKey, _ := setupBaseApp(t)
-
 	// This ante handler reads the key and checks that the value matches the current counter.
 	// This ensures changes to the kvstore persist across successive CheckTx.
 	counterKey := []byte("counter-key")
-	app.SetAnteHandler(anteHandlerTxTest(t, capKey, counterKey))
+
+	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, counterKey)) }
+	routerOpt := func(bapp *BaseApp) {
+		// TODO: can remove this once CheckTx doesnt process msgs.
+		bapp.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result { return sdk.Result{} })
+	}
+
+	app := setupBaseApp(t, anteOpt, routerOpt)
 
 	nTxs := int64(5)
-
-	// TODO: can remove this once CheckTx doesnt process msgs.
-	app.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result { return sdk.Result{} })
 
 	app.InitChain(abci.RequestInitChain{})
 
@@ -452,7 +459,7 @@ func TestCheckTx(t *testing.T) {
 		assert.True(t, r.IsOK(), fmt.Sprintf("%v", r))
 	}
 
-	checkStateStore := app.checkState.ctx.KVStore(capKey)
+	checkStateStore := app.checkState.ctx.KVStore(capKey1)
 	storedCounter := getIntFromStore(checkStateStore, counterKey)
 
 	// Ensure AnteHandler ran
@@ -463,7 +470,7 @@ func TestCheckTx(t *testing.T) {
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
 
-	checkStateStore = app.checkState.ctx.KVStore(capKey)
+	checkStateStore = app.checkState.ctx.KVStore(capKey1)
 	storedBytes := checkStateStore.Get(counterKey)
 	require.Nil(t, storedBytes)
 }
@@ -471,15 +478,15 @@ func TestCheckTx(t *testing.T) {
 // Test that successive DeliverTx can see each others' effects
 // on the store, both within and across blocks.
 func TestDeliverTx(t *testing.T) {
-	app, capKey, _ := setupBaseApp(t)
-
 	// test increments in the ante
 	anteKey := []byte("ante-key")
-	app.SetAnteHandler(anteHandlerTxTest(t, capKey, anteKey))
+	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 
 	// test increments in the handler
 	deliverKey := []byte("deliver-key")
-	app.Router().AddRoute(typeMsgCounter, handlerMsgCounter(t, capKey, deliverKey))
+	routerOpt := func(bapp *BaseApp) { bapp.Router().AddRoute(typeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey)) }
+
+	app := setupBaseApp(t, anteOpt, routerOpt)
 
 	// Create same codec used in txDecoder
 	codec := wire.NewCodec()
@@ -510,17 +517,19 @@ func TestMultiMsgCheckTx(t *testing.T) {
 
 // One call to DeliverTx should process all the messages, in order.
 func TestMultiMsgDeliverTx(t *testing.T) {
-	app, capKey, _ := setupBaseApp(t)
-
 	// increment the tx counter
 	anteKey := []byte("ante-key")
-	app.SetAnteHandler(anteHandlerTxTest(t, capKey, anteKey))
+	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 
 	// increment the msg counter
 	deliverKey := []byte("deliver-key")
 	deliverKey2 := []byte("deliver-key2")
-	app.Router().AddRoute(typeMsgCounter, handlerMsgCounter(t, capKey, deliverKey))
-	app.Router().AddRoute(typeMsgCounter2, handlerMsgCounter(t, capKey, deliverKey2))
+	routerOpt := func(bapp *BaseApp) {
+		bapp.Router().AddRoute(typeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
+		bapp.Router().AddRoute(typeMsgCounter2, handlerMsgCounter(t, capKey1, deliverKey2))
+	}
+
+	app := setupBaseApp(t, anteOpt, routerOpt)
 
 	// Create same codec used in txDecoder
 	codec := wire.NewCodec()
@@ -536,7 +545,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 		res := app.DeliverTx(txBytes)
 		require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-		store := app.deliverState.ctx.KVStore(capKey)
+		store := app.deliverState.ctx.KVStore(capKey1)
 
 		// tx counter only incremented once
 		txCounter := getIntFromStore(store, anteKey)
@@ -557,7 +566,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 		res := app.DeliverTx(txBytes)
 		require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-		store := app.deliverState.ctx.KVStore(capKey)
+		store := app.deliverState.ctx.KVStore(capKey1)
 
 		// tx counter only incremented once
 		txCounter := getIntFromStore(store, anteKey)
@@ -583,18 +592,24 @@ func TestConcurrentCheckDeliver(t *testing.T) {
 // Simulate() and Query("/app/simulate", txBytes) should give
 // the same results.
 func TestSimulateTx(t *testing.T) {
-	app, _, _ := setupBaseApp(t)
-
 	gasConsumed := int64(5)
-	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
-		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasConsumed))
-		return
-	})
 
-	app.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		ctx.GasMeter().ConsumeGas(gasConsumed, "test")
-		return sdk.Result{GasUsed: ctx.GasMeter().GasConsumed()}
-	})
+	anteOpt := func(bapp *BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
+			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasConsumed))
+			return
+		})
+	}
+
+	routerOpt := func(bapp *BaseApp) {
+		bapp.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+			ctx.GasMeter().ConsumeGas(gasConsumed, "test")
+			return sdk.Result{GasUsed: ctx.GasMeter().GasConsumed()}
+		})
+	}
+
+	app := setupBaseApp(t, anteOpt, routerOpt)
+
 	app.InitChain(abci.RequestInitChain{})
 
 	// Create same codec used in txDecoder
@@ -643,10 +658,14 @@ func TestSimulateTx(t *testing.T) {
 // TODO: add more
 
 func TestRunInvalidTransaction(t *testing.T) {
-	app, _, _ := setupBaseApp(t)
-	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
-	app.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
+	anteOpt := func(bapp *BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
+	}
+	routerOpt := func(bapp *BaseApp) {
+		bapp.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
+	}
 
+	app := setupBaseApp(t, anteOpt, routerOpt)
 	app.BeginBlock(abci.RequestBeginBlock{})
 
 	// Transaction with no messages
@@ -713,43 +732,49 @@ func TestRunInvalidTransaction(t *testing.T) {
 
 // Test that transactions exceeding gas limits fail
 func TestTxGasLimits(t *testing.T) {
-	app, _, _ := setupBaseApp(t)
-
 	gasGranted := int64(10)
-	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
-		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
+	anteOpt := func(bapp *BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
+			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
 
-		// NOTE/TODO/XXX:
-		// AnteHandlers must have their own defer/recover in order
-		// for the BaseApp to know how much gas was used used!
-		// This is because the GasMeter is created in the AnteHandler,
-		// but if it panics the context won't be set properly in runTx's recover ...
-		defer func() {
-			if r := recover(); r != nil {
-				switch rType := r.(type) {
-				case sdk.ErrorOutOfGas:
-					log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
-					res = sdk.ErrOutOfGas(log).Result()
-					res.GasWanted = gasGranted
-					res.GasUsed = newCtx.GasMeter().GasConsumed()
-				default:
-					panic(r)
+			// NOTE/TODO/XXX:
+			// AnteHandlers must have their own defer/recover in order
+			// for the BaseApp to know how much gas was used used!
+			// This is because the GasMeter is created in the AnteHandler,
+			// but if it panics the context won't be set properly in runTx's recover ...
+			defer func() {
+				if r := recover(); r != nil {
+					switch rType := r.(type) {
+					case sdk.ErrorOutOfGas:
+						log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
+						res = sdk.ErrOutOfGas(log).Result()
+						res.GasWanted = gasGranted
+						res.GasUsed = newCtx.GasMeter().GasConsumed()
+					default:
+						panic(r)
+					}
 				}
-			}
-		}()
+			}()
 
-		count := tx.(*txTest).Counter
-		newCtx.GasMeter().ConsumeGas(count, "counter-ante")
-		res = sdk.Result{
-			GasWanted: gasGranted,
-		}
-		return
-	})
-	app.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		count := msg.(msgCounter).Counter
-		ctx.GasMeter().ConsumeGas(count, "counter-handler")
-		return sdk.Result{}
-	})
+			count := tx.(*txTest).Counter
+			newCtx.GasMeter().ConsumeGas(count, "counter-ante")
+			res = sdk.Result{
+				GasWanted: gasGranted,
+			}
+			return
+		})
+
+	}
+
+	routerOpt := func(bapp *BaseApp) {
+		bapp.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+			count := msg.(msgCounter).Counter
+			ctx.GasMeter().ConsumeGas(count, "counter-handler")
+			return sdk.Result{}
+		})
+	}
+
+	app := setupBaseApp(t, anteOpt, routerOpt)
 
 	app.BeginBlock(abci.RequestBeginBlock{})
 
@@ -798,20 +823,25 @@ func TestTxGasLimits(t *testing.T) {
 
 // Test that we can only query from the latest committed state.
 func TestQuery(t *testing.T) {
-	app, capKey, _ := setupBaseApp(t)
-
 	key, value := []byte("hello"), []byte("goodbye")
-	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
-		store := ctx.KVStore(capKey)
-		store.Set(key, value)
-		return
-	})
+	anteOpt := func(bapp *BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
+			store := ctx.KVStore(capKey1)
+			store.Set(key, value)
+			return
+		})
+	}
 
-	app.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		store := ctx.KVStore(capKey)
-		store.Set(key, value)
-		return sdk.Result{}
-	})
+	routerOpt := func(bapp *BaseApp) {
+		bapp.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+			store := ctx.KVStore(capKey1)
+			store.Set(key, value)
+			return sdk.Result{}
+		})
+	}
+
+	app := setupBaseApp(t, anteOpt, routerOpt)
+
 	app.InitChain(abci.RequestInitChain{})
 
 	// NOTE: "/store/key1" tells us KVStore
@@ -848,17 +878,21 @@ func TestQuery(t *testing.T) {
 
 // Test p2p filter queries
 func TestP2PQuery(t *testing.T) {
-	app, _, _ := setupBaseApp(t)
+	addrPeerFilterOpt := func(bapp *BaseApp) {
+		bapp.SetAddrPeerFilter(func(addrport string) abci.ResponseQuery {
+			require.Equal(t, "1.1.1.1:8000", addrport)
+			return abci.ResponseQuery{Code: uint32(3)}
+		})
+	}
 
-	app.SetAddrPeerFilter(func(addrport string) abci.ResponseQuery {
-		require.Equal(t, "1.1.1.1:8000", addrport)
-		return abci.ResponseQuery{Code: uint32(3)}
-	})
+	pubkeyPeerFilterOpt := func(bapp *BaseApp) {
+		bapp.SetPubKeyPeerFilter(func(pubkey string) abci.ResponseQuery {
+			require.Equal(t, "testpubkey", pubkey)
+			return abci.ResponseQuery{Code: uint32(4)}
+		})
+	}
 
-	app.SetPubKeyPeerFilter(func(pubkey string) abci.ResponseQuery {
-		require.Equal(t, "testpubkey", pubkey)
-		return abci.ResponseQuery{Code: uint32(4)}
-	})
+	app := setupBaseApp(t, addrPeerFilterOpt, pubkeyPeerFilterOpt)
 
 	addrQuery := abci.RequestQuery{
 		Path: "/p2p/filter/addr/1.1.1.1:8000",

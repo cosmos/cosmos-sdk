@@ -34,13 +34,12 @@ type (
 )
 
 // PeriodicInvariant returns an Invariant function closure that asserts
-// a given invariant every 1 / period times it is called.
-func PeriodicInvariant(invariant Invariant, period int) Invariant {
-	counter := 0
+// a given invariant if the mock application's last block modulo the given
+// period is congruent to the given offset.
+func PeriodicInvariant(invariant Invariant, period int, offset int) Invariant {
 	return func(t *testing.T, app *baseapp.BaseApp, log string) {
-		if counter == 0 {
+		if int(app.LastBlockHeight())%period == offset {
 			invariant(t, app, log)
 		}
-		counter = (counter + 1) % period
 	}
 }

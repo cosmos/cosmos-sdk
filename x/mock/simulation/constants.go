@@ -16,7 +16,7 @@ const (
 	// Chance that double-signing evidence is found on a given block
 	evidenceFraction float64 = 0.01
 
-	// TODO Remove in favor of search
+	// TODO Remove in favor of binary search for invariant violation
 	onOperation bool = false
 )
 

@@ -28,6 +28,7 @@ BREAKING CHANGES
 * [lcd] \#1866 Updated lcd /slashing/signing_info endpoint to take cosmosvalpub instead of cosmosvaladdr
 * [types] sdk.NewCoin now takes sdk.Int, sdk.NewInt64Coin takes int64
 * [cli] #1551: Officially removed `--name` from CLI commands
+* [cli] Genesis/key creation (`init`) now supports user-provided key passwords
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus

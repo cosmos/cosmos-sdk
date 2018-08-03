@@ -270,13 +270,12 @@ func unbondingDelegationsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) htt
 			return
 		}
 
-		validatorAddr, err := sdk.ValAddressFromBech32(bech32validator)
+		validatorAddr, err := sdk.AccAddressFromBech32(bech32validator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		//TODO this seems wrong. we should query with the sdk.ValAddress and not sdk.AccAddress
 		validatorAddrAcc := sdk.AccAddress(validatorAddr)
 
 		key := stake.GetUBDKey(delegatorAddr, validatorAddrAcc)
@@ -331,13 +330,12 @@ func delegationHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerF
 			return
 		}
 
-		validatorAddr, err := sdk.ValAddressFromBech32(bech32validator)
+		validatorAddr, err := sdk.AccAddressFromBech32(bech32validator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		//TODO this seems wrong. we should query with the sdk.ValAddress and not sdk.AccAddress
 		validatorAddrAcc := sdk.AccAddress(validatorAddr)
 
 		key := stake.GetDelegationKey(delegatorAddr, validatorAddrAcc)
@@ -454,7 +452,6 @@ func delegatorValidatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.
 
 		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
 		validatorAccAddr, err := sdk.AccAddressFromBech32(bech32validator)
-		// validatorValAddress, err := sdk.ValAddressFromBech32(bech32validator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
@@ -526,7 +523,7 @@ func validatorHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFu
 		// read parameters
 		vars := mux.Vars(r)
 		bech32validatorAddr := vars["addr"]
-		valAddress, err := sdk.ValAddressFromBech32(bech32validatorAddr)
+		valAddress, err := sdk.AccAddressFromBech32(bech32validatorAddr)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))

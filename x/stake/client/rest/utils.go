@@ -162,7 +162,7 @@ func getValidators(validatorKVs []sdk.KVPair, cdc *wire.Codec) ([]types.BechVali
 }
 
 // Gets a validator given a ValAddress
-func getValidator(address sdk.ValAddress, validatorKVs []sdk.KVPair, cdc *wire.Codec) (stake.BechValidator, error) {
+func getValidator(address sdk.AccAddress, validatorKVs []sdk.KVPair, cdc *wire.Codec) (stake.BechValidator, error) {
 	// parse out the validators
 	for _, kv := range validatorKVs {
 		addr := kv.Key[1:]

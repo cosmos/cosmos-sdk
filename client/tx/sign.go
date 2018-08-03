@@ -8,7 +8,7 @@ import (
 	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
-// SignTxBody REST request body for signed txs
+// REST request body for signed txs
 // TODO does this need to be exposed?
 type SignTxBody struct {
 	Name     string `json:"name"`
@@ -16,7 +16,7 @@ type SignTxBody struct {
 	TxBytes  string `json:"tx"`
 }
 
-// SignTxRequstHandler Sign transaction REST Handler
+// sign transaction REST Handler
 func SignTxRequstHandler(w http.ResponseWriter, r *http.Request) {
 	var kb keys.Keybase
 	var m SignTxBody

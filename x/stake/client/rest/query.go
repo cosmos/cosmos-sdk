@@ -86,7 +86,7 @@ func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec
 
 // already resolve the rational shares to not handle this in the client
 
-// DelegationWithoutRat defines a delegation without type Rat for shares
+// defines a delegation without type Rat for shares
 type DelegationWithoutRat struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
 	ValidatorAddr sdk.AccAddress `json:"validator_addr"`
@@ -94,7 +94,7 @@ type DelegationWithoutRat struct {
 	Height        int64          `json:"height"`
 }
 
-// DelegationSummary The aggregation of all delegations, unbondings and redelegations
+// aggregation of all delegations, unbondings and redelegations
 type DelegationSummary struct {
 	Delegations          []DelegationWithoutRat      `json:"delegations"`
 	UnbondingDelegations []stake.UnbondingDelegation `json:"unbonding_delegations"`
@@ -254,7 +254,7 @@ func delegatorTxsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handle
 	}
 }
 
-// http request handler to query an unbonding-delegation
+// HTTP request handler to query an unbonding-delegation
 func unbondingDelegationsHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 

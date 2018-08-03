@@ -42,8 +42,8 @@ func getDelegatorValidator(ctx context.CoreContext, cdc *wire.Codec, delegatorAd
 		return types.BechValidator{}, http.StatusNoContent, "", nil
 	}
 
-	kvs, errQuery := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
-	if errQuery != nil {
+	kvs, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
+	if err != nil {
 		return types.BechValidator{}, http.StatusInternalServerError, "Error: ", err
 	}
 	if len(kvs) == 0 {
@@ -71,9 +71,9 @@ func getDelegatorDelegations(ctx context.CoreContext, cdc *wire.Codec, delegator
 		return DelegationWithoutRat{}, http.StatusNoContent, "", nil
 	}
 
-	delegation, errUnmarshal := types.UnmarshalDelegation(cdc, delegationKey, marshalledDelegation)
-	if errUnmarshal != nil {
-		return DelegationWithoutRat{}, http.StatusInternalServerError, "couldn't unmarshall delegation. Error: ", errUnmarshal
+	delegation, err := types.UnmarshalDelegation(cdc, delegationKey, marshalledDelegation)
+	if err != nil {
+		return DelegationWithoutRat{}, http.StatusInternalServerError, "couldn't unmarshall delegation. Error: ", err
 	}
 
 	outputDelegation = DelegationWithoutRat{
@@ -99,9 +99,9 @@ func getDelegatorUndelegations(ctx context.CoreContext, cdc *wire.Codec, delegat
 		return types.UnbondingDelegation{}, http.StatusNoContent, "", nil
 	}
 
-	unbondingDelegation, errUnmarshal := types.UnmarshalUBD(cdc, undelegationKey, marshalledUnbondingDelegation)
-	if errUnmarshal != nil {
-		return types.UnbondingDelegation{}, http.StatusInternalServerError, "couldn't unmarshall unbonding-delegation. Error: ", errUnmarshal
+	unbondingDelegation, err := types.UnmarshalUBD(cdc, undelegationKey, marshalledUnbondingDelegation)
+	if err != nil {
+		return types.UnbondingDelegation{}, http.StatusInternalServerError, "couldn't unmarshall unbonding-delegation. Error: ", err
 	}
 	return unbondingDelegation, http.StatusOK, "", nil
 }
@@ -119,9 +119,9 @@ func getDelegatorRedelegations(ctx context.CoreContext, cdc *wire.Codec, delegat
 		return types.Redelegation{}, http.StatusNoContent, "", nil
 	}
 
-	redelegations, errUnmarshal := types.UnmarshalRED(cdc, keyRedelegateTo, marshalledRedelegations)
-	if errUnmarshal != nil {
-		return types.Redelegation{}, http.StatusInternalServerError, "couldn't unmarshall redelegations. Error: ", errUnmarshal
+	redelegations, err := types.UnmarshalRED(cdc, keyRedelegateTo, marshalledRedelegations)
+	if err != nil {
+		return types.Redelegation{}, http.StatusInternalServerError, "couldn't unmarshall redelegations. Error: ", err
 	}
 
 	return redelegations, http.StatusOK, "", nil

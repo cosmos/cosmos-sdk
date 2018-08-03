@@ -124,6 +124,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	require.False(t, shouldPopInactiveProposalQueue(ctx, keeper))
 	require.NotNil(t, keeper.ActiveProposalQueuePeek(ctx))
 	require.False(t, shouldPopActiveProposalQueue(ctx, keeper))
+
 }
 
 func TestTickPassedVotingPeriod(t *testing.T) {
@@ -166,6 +167,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	require.False(t, depositsIterator.Valid())
 	depositsIterator.Close()
 	require.Equal(t, StatusRejected, keeper.GetProposal(ctx, proposalID).GetStatus())
+	require.True(t, TallyResultEqual(keeper.GetProposal(ctx, proposalID).GetTallyResult(), EmptyTallyResult()))
 }
 
 func TestSlashing(t *testing.T) {

@@ -42,6 +42,7 @@ FEATURES
 * [store] Add transient store
 * [gov] Add slashing for validators who do not vote on a proposal
 * [cli] added `gov query-proposals` command to CLI. Can filter by `depositer`, `voter`, and `status`
+* [gov] added TallyResult type that gets added stored in Proposal after tallying is finished
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route

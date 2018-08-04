@@ -19,27 +19,44 @@ type Dec struct {
 const Precision = 10
 
 var (
-	precisionExpReuse = big.NewInt(Precision)
-	ten               = big.NewInt(10)
-	precisionReuse    = new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision), nil)
+	precisionExpReuse    = big.NewInt(Precision)
+	ten                  = big.NewInt(10)
+	precisionReuse       = new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision), nil)
+	precisionMultipliers []*big.Int
 )
 
+// Set precision multipliers
+func init() {
+	precisionMultipliers = make([]*big.Int, Precision+1)
+	for i := 0; i <= Precision; i++ {
+		precisionMultipliers[i] = calcPrecisionMultiplier(int64(i))
+	}
+}
+
 func precisionInt() *big.Int {
-	return precisionReuse.Exp(ten, precisionExpReuse, nil)
+	return new(big.Int).Set(precisionReuse)
 }
 
 // nolint - common values
 func ZeroDec() Dec { return Dec{big.NewInt(0)} }
 func OneDec() Dec  { return Dec{precisionInt()} }
 
-// get the precision multiplier
-func precisionMultiplier(prec int64) *big.Int {
+// calculate the precision multiplier
+func calcPrecisionMultiplier(prec int64) *big.Int {
 	if prec > Precision {
 		panic("too much precision")
 	}
 	zerosToAdd := Precision - prec
 	multiplier := new(big.Int).Exp(big.NewInt(10), big.NewInt(zerosToAdd), nil)
 	return multiplier
+}
+
+// get the precision multiplier. Do not mutate result.
+func precisionMultiplier(prec int64) *big.Int {
+	if prec > Precision {
+		panic("too much precision")
+	}
+	return precisionMultipliers[prec]
 }
 
 // create a new Dec from integer assuming whole numbers
@@ -141,8 +158,8 @@ func (d Dec) Mul(d2 Dec) Dec {
 func (d Dec) Quo(d2 Dec) Dec {
 
 	// multiply precision twice
-	mul := new(big.Int).Mul(d.Int, precisionInt())
-	mul.Mul(mul, precisionInt())
+	mul := new(big.Int).Mul(d.Int, precisionReuse)
+	mul.Mul(mul, precisionReuse)
 
 	quo := new(big.Int).Quo(mul, d2.Int)
 	chopped := BankerRoundChop(quo, Precision)

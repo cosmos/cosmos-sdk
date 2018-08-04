@@ -218,8 +218,8 @@ func BankerRoundChop(d *big.Int, n int64) (chopped *big.Int) {
 	}
 
 	// get the trucated quotient and remainder
-	quo, rem, prec := big.NewInt(0), big.NewInt(0), precisionInt()
-	quo, rem = quo.QuoRem(d, prec, rem)
+	quo, rem := big.NewInt(0), big.NewInt(0)
+	quo, rem = quo.QuoRem(d, precisionReuse, rem)
 
 	if rem.Sign() == 0 { // remainder is zero
 		return quo

@@ -261,8 +261,6 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 // updateCliffValidator determines if the current cliff validator needs to be
 // updated or swapped.
 func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validator) {
-	var cliffValByPower types.Validator
-
 	cliffAddr := sdk.AccAddress(k.GetCliffValidator(ctx))
 	if !bytes.Equal(cliffAddr, affectedVal.Owner) {
 		return
@@ -278,22 +276,14 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 	// Create a validator iterator ranging from smallest to largest in power
 	// where only the smallest by power is needed.
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsByPowerIndexKey)
-	offset := 0
-	for {
-		if !iterator.Valid() || offset == 1 {
-			break
-		}
+	if !iterator.Valid() {
+		panic("invalid iterator for validator power store")
+	}
 
-		ownerAddr := iterator.Value()
-		validator, found := k.GetValidator(ctx, ownerAddr)
-		if !found {
-			panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
-		}
-
-		cliffValByPower = validator
-
-		offset++
-		iterator.Next()
+	ownerAddr := iterator.Value()
+	cliffValByPower, found := k.GetValidator(ctx, ownerAddr)
+	if !found {
+		panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
 	}
 
 	iterator.Close()

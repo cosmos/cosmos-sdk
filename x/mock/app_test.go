@@ -40,7 +40,7 @@ func (tx testMsg) ValidateBasic() sdk.Error {
 func getMockApp(t *testing.T) *App {
 	mApp := NewApp()
 
-	mApp.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
+	mApp.Router().AddRoute(msgType, []*sdk.KVStoreKey{}, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
 	require.NoError(t, mApp.CompleteSetup([]*sdk.KVStoreKey{}))
 
 	return mApp

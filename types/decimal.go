@@ -210,14 +210,14 @@ func (d Dec) ToLeftPadded(totalDigits int8) string {
 //   BankerRoundChop(1015, 1) = 102
 //   BankerRoundChop(1500, 3) = 2
 func BankerRoundChop(d *big.Int, n int64) (chopped *big.Int) {
-
-	negated := (d.Sign() == -1)
 	// remove the negative and add it back when returning
-	if negated {
-		d = new(big.Int).Neg(d)
-		defer func() {
-			chopped.Neg(chopped)
-		}()
+	if d.Sign() == -1 {
+		// make d positive, compute chopped value, and then un-mutate d
+		d = d.Neg(d)
+		chopped = BankerRoundChop(d, n)
+		d = d.Neg(d)
+		chopped.Neg(chopped)
+		return chopped
 	}
 
 	// get the trucated quotient and remainder

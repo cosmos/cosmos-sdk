@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -108,6 +109,17 @@ func (bz AccAddress) Format(s fmt.State, verb rune) {
 	}
 }
 
+// Returns boolean for whether two AccAddresses are Equal
+func (bz AccAddress) Equals(bz2 AccAddress) bool {
+	return (bytes.Compare(bz.Bytes(), bz2.Bytes()) == 0)
+}
+
+// Returns boolean for whether an AccAddress is empty
+func (bz AccAddress) Empty() bool {
+	bz2 := AccAddress{}
+	return bz.Equals(bz2)
+}
+
 //__________________________________________________________
 
 // AccAddress a wrapper around bytes meant to represent a validator address
@@ -190,6 +202,17 @@ func (bz ValAddress) Format(s fmt.State, verb rune) {
 	default:
 		s.Write([]byte(fmt.Sprintf("%X", []byte(bz))))
 	}
+}
+
+// Returns boolean for whether two ValAddresses are Equal
+func (bz ValAddress) Equals(bz2 ValAddress) bool {
+	return (bytes.Compare(bz.Bytes(), bz2.Bytes()) == 0)
+}
+
+// Returns boolean for whether an AccAddress is empty
+func (bz ValAddress) Empty() bool {
+	bz2 := ValAddress{}
+	return bz.Equals(bz2)
 }
 
 // Bech32ifyAccPub takes AccountPubKey and returns the bech32 encoded string

@@ -55,7 +55,7 @@ type QueryDepositParams struct {
 
 func queryDeposit(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	var params QueryDepositParams
-	err2 := keeper.cdc.UnmarshalBinary(req.Data, params)
+	err2 := keeper.cdc.UnmarshalBinary(req.Data, &params)
 	if err2 != nil {
 		return []byte{}, sdk.ErrUnknownRequest("incorrectly formatted request data")
 	}

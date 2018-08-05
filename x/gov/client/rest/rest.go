@@ -21,6 +21,7 @@ const (
 	RestDepositer      = "depositer"
 	RestVoter          = "voter"
 	RestProposalStatus = "status"
+	RestNumLatest      = "latest"
 	storeName          = "gov"
 )
 
@@ -190,9 +191,13 @@ func queryProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 
 		cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-		res, err := cliCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
-		if err != nil || len(res) == 0 {
-			err := errors.Errorf("proposalID [%d] does not exist", proposalID)
+		params := gov.QueryProposalParams{
+			ProposalID: proposalID,
+		}
+
+		res, err := cliCtx.QueryWithData("custom/gov/proposal", cdc.MustMarshalBinary(params))
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 
 			return
@@ -255,19 +260,14 @@ func queryDepositHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 
 		cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-		res, err := cliCtx.QueryStore(gov.KeyDeposit(proposalID, depositerAddr), storeName)
-		if err != nil || len(res) == 0 {
-			res, err := cliCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
-			if err != nil || len(res) == 0 {
-				w.WriteHeader(http.StatusNotFound)
-				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
-				w.Write([]byte(err.Error()))
+		params := gov.QueryDepositParams{
+			ProposalID: proposalID,
+			Depositer:  depositerAddr,
+		}
 
-				return
-			}
-
-			w.WriteHeader(http.StatusNotFound)
-			err = errors.Errorf("depositer [%s] did not deposit on proposalID [%d]", bechDepositerAddr, proposalID)
+		res, err := cliCtx.QueryWithData("custom/gov/deposit", cdc.MustMarshalBinary(params))
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 
 			return
@@ -283,7 +283,19 @@ func queryDepositHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 
 			return
 		}
-
+		if deposit.Empty() {
+			res, err := cliCtx.QueryWithData("custom/gov/proposal", cdc.MustMarshalBinary(gov.QueryProposalParams{params.ProposalID}))
+			if err != nil || len(res) == 0 {
+				w.WriteHeader(http.StatusNotFound)
+				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
+				w.Write([]byte(err.Error()))
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+			err = errors.Errorf("depositer [%s] did not deposit on proposalID [%d]", bechDepositerAddr, proposalID)
+			w.Write([]byte(err.Error()))
+			return
+		}
 		w.Write(output)
 	}
 }
@@ -328,19 +340,14 @@ func queryVoteHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 
 		cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-		res, err := cliCtx.QueryStore(gov.KeyVote(proposalID, voterAddr), storeName)
-		if err != nil || len(res) == 0 {
-			res, err := cliCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
-			if err != nil || len(res) == 0 {
-				w.WriteHeader(http.StatusNotFound)
-				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
-				w.Write([]byte(err.Error()))
+		params := gov.QueryVoteParams{
+			Voter:      voterAddr,
+			ProposalID: proposalID,
+		}
 
-				return
-			}
-
-			w.WriteHeader(http.StatusNotFound)
-			err = errors.Errorf("voter [%s] did not vote on proposalID [%d]", bechVoterAddr, proposalID)
+		res, err := cliCtx.QueryWithData("custom/gov/vote", cdc.MustMarshalBinary(params))
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 
 			return
@@ -356,7 +363,19 @@ func queryVoteHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 
 			return
 		}
-
+		if vote.Empty() {
+			res, err := cliCtx.QueryWithData("custom/gov/proposal", cdc.MustMarshalBinary(gov.QueryProposalParams{params.ProposalID}))
+			if err != nil || len(res) == 0 {
+				w.WriteHeader(http.StatusNotFound)
+				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
+				w.Write([]byte(err.Error()))
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+			err = errors.Errorf("voter [%s] did not deposit on proposalID [%d]", bechVoterAddr, proposalID)
+			w.Write([]byte(err.Error()))
+			return
+		}
 		w.Write(output)
 	}
 }
@@ -387,38 +406,19 @@ func queryVotesOnProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 
 		cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-		res, err := cliCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
-		if err != nil || len(res) == 0 {
-			err := errors.Errorf("proposalID [%d] does not exist", proposalID)
-			w.Write([]byte(err.Error()))
-
-			return
+		params := gov.QueryVotesParams{
+			ProposalID: proposalID,
 		}
 
-		var proposal gov.Proposal
-		cdc.MustUnmarshalBinary(res, &proposal)
-
-		if proposal.GetStatus() != gov.StatusVotingPeriod {
-			err := errors.Errorf("proposal is not in Voting Period", proposalID)
-			w.Write([]byte(err.Error()))
-
-			return
-		}
-
-		res2, err := cliCtx.QuerySubspace(gov.KeyVotesSubspace(proposalID), storeName)
+		res, err := cliCtx.QueryWithData("custom/gov/votes", cdc.MustMarshalBinary(params))
 		if err != nil {
-			err = errors.New("ProposalID doesn't exist")
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
 		var votes []gov.Vote
-
-		for i := 0; i < len(res2); i++ {
-			var vote gov.Vote
-			cdc.MustUnmarshalBinary(res2[i].Value, &vote)
-			votes = append(votes, vote)
-		}
+		cdc.MustUnmarshalBinary(res, &votes)
 
 		output, err := wire.MarshalJSONIndent(cdc, votes)
 		if err != nil {
@@ -439,11 +439,13 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 		bechVoterAddr := r.URL.Query().Get(RestVoter)
 		bechDepositerAddr := r.URL.Query().Get(RestDepositer)
 		strProposalStatus := r.URL.Query().Get(RestProposalStatus)
+		strNumLatest := r.URL.Query().Get(RestNumLatest)
 
 		var err error
 		var voterAddr sdk.AccAddress
 		var depositerAddr sdk.AccAddress
 		var proposalStatus gov.ProposalStatus
+		var numLatest int64
 
 		if len(bechVoterAddr) != 0 {
 			voterAddr, err = sdk.AccAddressFromBech32(bechVoterAddr)
@@ -476,54 +478,35 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 				return
 			}
 		}
+		if len(strNumLatest) != 0 {
+			numLatest, err = strconv.ParseInt(strNumLatest, 10, 64)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				err := errors.Errorf("'%s' is not a valid int64", strNumLatest)
+				w.Write([]byte(err.Error()))
+				return
+			}
+		}
 
 		cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-		res, err := cliCtx.QueryStore(gov.KeyNextProposalID, storeName)
+		params := gov.QueryProposalsParams{
+			Depositer:          depositerAddr,
+			Voter:              voterAddr,
+			ProposalStatus:     proposalStatus,
+			NumLatestProposals: numLatest,
+		}
+
+		res, err := cliCtx.QueryWithData("custom/gov/proposals", cdc.MustMarshalBinary(params))
 		if err != nil {
-			err = errors.New("no proposals exist yet and proposalID has not been set")
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 
 			return
 		}
 
-		var maxProposalID int64
-		cdc.MustUnmarshalBinary(res, &maxProposalID)
-
-		matchingProposals := []gov.Proposal{}
-
-		for proposalID := int64(0); proposalID < maxProposalID; proposalID++ {
-			if voterAddr != nil {
-				res, err = cliCtx.QueryStore(gov.KeyVote(proposalID, voterAddr), storeName)
-				if err != nil || len(res) == 0 {
-					continue
-				}
-			}
-
-			if depositerAddr != nil {
-				res, err = cliCtx.QueryStore(gov.KeyDeposit(proposalID, depositerAddr), storeName)
-				if err != nil || len(res) == 0 {
-					continue
-				}
-			}
-
-			res, err = cliCtx.QueryStore(gov.KeyProposal(proposalID), storeName)
-			if err != nil || len(res) == 0 {
-				continue
-			}
-
-			var proposal gov.Proposal
-			cdc.MustUnmarshalBinary(res, &proposal)
-
-			if len(strProposalStatus) != 0 {
-				if proposal.GetStatus() != proposalStatus {
-					continue
-				}
-			}
-
-			matchingProposals = append(matchingProposals, proposal)
-		}
-
+		var matchingProposals []gov.Proposal
+		cdc.MustUnmarshalBinary(res, &matchingProposals)
 		output, err := wire.MarshalJSONIndent(cdc, matchingProposals)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)

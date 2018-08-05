@@ -15,11 +15,43 @@ type Vote struct {
 	Option     VoteOption     `json:"option"`      //  option from OptionSet chosen by the voter
 }
 
+// Returns whether 2 votes are equal
+func (voteA Vote) Equals(voteB Vote) bool {
+	if voteA.Voter.Equals(voteB.Voter) &&
+		voteA.ProposalID == voteB.ProposalID &&
+		voteA.Option == voteB.Option {
+		return true
+	}
+	return false
+}
+
+// Returns whether a vote is empty
+func (voteA Vote) Empty() bool {
+	voteB := Vote{}
+	return voteA.Equals(voteB)
+}
+
 // Deposit
 type Deposit struct {
 	Depositer  sdk.AccAddress `json:"depositer"`   //  Address of the depositer
 	ProposalID int64          `json:"proposal_id"` //  proposalID of the proposal
 	Amount     sdk.Coins      `json:"amount"`      //  Deposit amount
+}
+
+// Returns whether 2 deposits are equal
+func (depositA Deposit) Equals(depositB Deposit) bool {
+	if depositA.Depositer.Equals(depositB.Depositer) &&
+		depositA.ProposalID == depositB.ProposalID &&
+		depositA.Amount.IsEqual(depositB.Amount) {
+		return true
+	}
+	return false
+}
+
+// Returns whether a deposit is empty
+func (depositA Deposit) Empty() bool {
+	depositB := Deposit{}
+	return depositA.Equals(depositB)
 }
 
 // Type that represents VoteOption as a byte

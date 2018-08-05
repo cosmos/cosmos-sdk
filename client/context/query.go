@@ -31,6 +31,11 @@ func (ctx CLIContext) Query(path string) (res []byte, err error) {
 	return ctx.query(path, nil)
 }
 
+// Query information about the connected node with a data payload
+func (ctx CLIContext) QueryWithData(path string, data []byte) (res []byte, err error) {
+	return ctx.query(path, data)
+}
+
 // QueryStore performs a query from a Tendermint node with the provided key and
 // store name.
 func (ctx CLIContext) QueryStore(key cmn.HexBytes, storeName string) (res []byte, err error) {

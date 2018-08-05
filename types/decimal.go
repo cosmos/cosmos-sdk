@@ -23,6 +23,8 @@ var (
 	ten                  = big.NewInt(10)
 	precisionReuse       = new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision), nil)
 	precisionMultipliers []*big.Int
+	zeroInt              = big.NewInt(0)
+	tenInt               = big.NewInt(10)
 )
 
 // Set precision multipliers
@@ -38,7 +40,7 @@ func precisionInt() *big.Int {
 }
 
 // nolint - common values
-func ZeroDec() Dec { return Dec{big.NewInt(0)} }
+func ZeroDec() Dec { return Dec{new(big.Int).Set(zeroInt)} }
 func OneDec() Dec  { return Dec{precisionInt()} }
 
 // calculate the precision multiplier
@@ -47,7 +49,7 @@ func calcPrecisionMultiplier(prec int64) *big.Int {
 		panic("too much precision")
 	}
 	zerosToAdd := Precision - prec
-	multiplier := new(big.Int).Exp(big.NewInt(10), big.NewInt(zerosToAdd), nil)
+	multiplier := new(big.Int).Exp(tenInt, big.NewInt(zerosToAdd), nil)
 	return multiplier
 }
 
@@ -68,7 +70,7 @@ func NewDec(i, prec int64) Dec {
 }
 
 // create a new Dec from big integer assuming whole numbers
-// CONTRACT: prec !> Precision
+// CONTRACT: prec <= Precision
 func NewDecFromBigInt(i *big.Int, prec int64) Dec {
 	return Dec{
 		new(big.Int).Mul(i, precisionMultiplier(prec)),
@@ -76,7 +78,7 @@ func NewDecFromBigInt(i *big.Int, prec int64) Dec {
 }
 
 // create a new Dec from big integer assuming whole numbers
-// CONTRACT: prec !> Precision
+// CONTRACT: prec <= Precision
 func NewDecFromInt(i Int, prec int64) Dec {
 	return Dec{
 		new(big.Int).Mul(i.BigInt(), precisionMultiplier(prec)),
@@ -209,11 +211,12 @@ func (d Dec) ToLeftPadded(totalDigits int8) string {
 //   BankerRoundChop(1500, 3) = 2
 func BankerRoundChop(d *big.Int, n int64) (chopped *big.Int) {
 
+	negated := (d.Sign() == -1)
 	// remove the negative and add it back when returning
-	if d.Sign() == -1 {
+	if negated {
 		d = new(big.Int).Neg(d)
 		defer func() {
-			chopped = new(big.Int).Neg(chopped)
+			chopped.Neg(chopped)
 		}()
 	}
 
@@ -242,23 +245,15 @@ func BankerRoundChop(d *big.Int, n int64) (chopped *big.Int) {
 		chopped = quo
 		return
 	case 1:
-		chopped = new(big.Int).Add(quo, big.NewInt(1))
+		chopped = quo.Add(quo, big.NewInt(1))
 		return
 	default: // bankers rounding must take place
-		str := quo.String()
-		finalDig, err := strconv.Atoi(string(str[len(str)-1]))
-		if err != nil {
-			panic(err)
-		}
-
 		// always round to an even number
-		if finalDig == 0 || finalDig == 2 || finalDig == 4 ||
-			finalDig == 6 || finalDig == 8 {
-
+		if quo.Bit(0) == 0 {
 			chopped = quo
 			return
 		}
-		chopped = new(big.Int).Add(quo, big.NewInt(1))
+		chopped = quo.Add(quo, big.NewInt(1))
 		return
 	}
 }

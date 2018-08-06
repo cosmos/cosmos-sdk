@@ -11,6 +11,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"math"
 )
 
 const doNotModifyDescVal = "[do-not-modify]"
@@ -30,6 +31,7 @@ type Validator struct {
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
 	Tokens          sdk.Rat        `json:"tokens"`           // delegated tokens (incl. self-delegation)
 	DelegatorShares sdk.Rat        `json:"delegator_shares"` // total shares issued to a validator's delegators
+	Precision       int8           `json:"precision"`
 
 	Description        Description `json:"description"`           // description terms for the validator
 	BondHeight         int64       `json:"bond_height"`           // earliest height as a bonded validator
@@ -53,6 +55,7 @@ func NewValidator(owner sdk.AccAddress, pubKey crypto.PubKey, description Descri
 		Revoked:               false,
 		Status:                sdk.Unbonded,
 		Tokens:                sdk.ZeroRat(),
+		Precision:             0,
 		DelegatorShares:       sdk.ZeroRat(),
 		Description:           description,
 		BondHeight:            int64(0),
@@ -433,6 +436,9 @@ func (v Validator) GetMoniker() string          { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus   { return v.Status }
 func (v Validator) GetOwner() sdk.AccAddress    { return v.Owner }
 func (v Validator) GetPubKey() crypto.PubKey    { return v.PubKey }
-func (v Validator) GetPower() sdk.Rat           { return v.BondedTokens() }
+func (v Validator) GetPower() sdk.Rat           {
+	precisionNumber := int64(math.Pow10(int(v.Precision)))
+	return v.BondedTokens().Quo(sdk.NewRat(precisionNumber))
+}
 func (v Validator) GetDelegatorShares() sdk.Rat { return v.DelegatorShares }
 func (v Validator) GetBondHeight() int64        { return v.BondHeight }

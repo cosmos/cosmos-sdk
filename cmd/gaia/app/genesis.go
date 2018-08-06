@@ -173,6 +173,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 			// add some new shares to the validator
 			var issuedDelShares sdk.Rat
 			validator, stakeData.Pool, issuedDelShares = validator.AddTokensFromDel(stakeData.Pool, freeFermionVal)
+			validator.Precision = stakeData.Params.Precision
 			stakeData.Validators = append(stakeData.Validators, validator)
 
 			// create the self-delegation from the issuedDelShares

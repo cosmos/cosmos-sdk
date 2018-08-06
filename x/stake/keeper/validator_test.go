@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -88,14 +89,17 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	require.True(t, keeper.validatorByPowerIndexExists(ctx, power))
 }
 
-func TestCliffValidatorPowerIncrease(t *testing.T) {
+func TestCliffValidatorChange(t *testing.T) {
+	numVals := 10
+	maxVals := 5
+
 	// create context, keeper, and pool for tests
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 
 	// create keeper parameters
 	params := keeper.GetParams(ctx)
-	params.MaxValidators = 2
+	params.MaxValidators = uint16(maxVals)
 	keeper.SetParams(ctx, params)
 
 	// create a random pool
@@ -103,101 +107,40 @@ func TestCliffValidatorPowerIncrease(t *testing.T) {
 	pool.BondedTokens = sdk.NewRat(1234)
 	keeper.SetPool(ctx, pool)
 
-	// add validators
-	validatorA := types.NewValidator(addrVals[0], PKs[0], types.Description{Moniker: "A"})
-	validatorA, pool, _ = validatorA.AddTokensFromDel(pool, 200)
+	validators := make([]types.Validator, numVals)
+	for i := 0; i < len(validators); i++ {
+		moniker := fmt.Sprintf("val#%d", int64(i))
+		val := types.NewValidator(Addrs[i], PKs[i], types.Description{Moniker: moniker})
+		val, pool, _ = val.AddTokensFromDel(pool, int64((i+1)*10))
 
+		keeper.SetPool(ctx, pool)
+		val = keeper.UpdateValidator(ctx, val)
+		validators[i] = val
+	}
+
+	// add a large amount of tokens to current cliff validator
+	currCliffVal := validators[numVals-maxVals]
+	currCliffVal, pool, _ = currCliffVal.AddTokensFromDel(pool, 200)
 	keeper.SetPool(ctx, pool)
-	validatorA = keeper.UpdateValidator(ctx, validatorA)
+	currCliffVal = keeper.UpdateValidator(ctx, currCliffVal)
 
-	validatorB := types.NewValidator(addrVals[1], PKs[1], types.Description{Moniker: "B"})
-	validatorB, pool, _ = validatorB.AddTokensFromDel(pool, 99)
-
-	keeper.SetPool(ctx, pool)
-	validatorB = keeper.UpdateValidator(ctx, validatorB)
-
-	// assert correct cliff validator & cliff power
-	require.Equal(t, validatorB.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
-	cliffPower := keeper.GetCliffValidatorPower(ctx)
-	require.Equal(t, GetValidatorsByPowerIndexKey(validatorB, pool), cliffPower)
-
-	// add some tokens
-	validatorB, pool, _ = validatorB.AddTokensFromDel(pool, 2)
-	keeper.SetPool(ctx, pool)
-	validatorB = keeper.UpdateValidator(ctx, validatorB)
-
-	// assert validator B has new power
-	validatorB, found := keeper.GetValidator(ctx, validatorB.Owner)
-	require.True(t, found)
-	require.Equal(t, sdk.NewRat(101), validatorB.GetPower())
-
-	// assert cliff validator should not have switched
-	require.Equal(t, validatorB.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
-
-	// assert cliff validator power has been updated for the expected validator
-	cliffPower = keeper.GetCliffValidatorPower(ctx)
-	require.Equal(t, GetValidatorsByPowerIndexKey(validatorB, pool), cliffPower)
-}
-
-func TestCliffValidatorSwitch(t *testing.T) {
-	// create context, keeper, and pool for tests
-	ctx, _, keeper := CreateTestInput(t, false, 0)
-	pool := keeper.GetPool(ctx)
-
-	// create keeper parameters
-	params := keeper.GetParams(ctx)
-	params.MaxValidators = 3
-	keeper.SetParams(ctx, params)
-
-	// create a random pool
-	pool.LooseTokens = sdk.NewRat(10000)
-	pool.BondedTokens = sdk.NewRat(1234)
-	keeper.SetPool(ctx, pool)
-
-	// add validators
-	validatorA := types.NewValidator(addrVals[0], PKs[0], types.Description{Moniker: "A"})
-	validatorA, pool, _ = validatorA.AddTokensFromDel(pool, 100)
-
-	keeper.SetPool(ctx, pool)
-	validatorA = keeper.UpdateValidator(ctx, validatorA)
-
-	validatorB := types.NewValidator(addrVals[1], PKs[1], types.Description{Moniker: "B"})
-	validatorB, pool, _ = validatorB.AddTokensFromDel(pool, 99)
-
-	keeper.SetPool(ctx, pool)
-	validatorB = keeper.UpdateValidator(ctx, validatorB)
-
-	validatorC := types.NewValidator(addrVals[2], PKs[2], types.Description{Moniker: "C"})
-	validatorC, pool, _ = validatorC.AddTokensFromDel(pool, 200)
-
-	keeper.SetPool(ctx, pool)
-	validatorC = keeper.UpdateValidator(ctx, validatorC)
-
-	// assert correct cliff validator & cliff power
-	require.Equal(t, validatorB.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
-	cliffPower := keeper.GetCliffValidatorPower(ctx)
-	require.Equal(t, GetValidatorsByPowerIndexKey(validatorB, pool), cliffPower)
-
-	// add a lot of tokens
-	validatorB, pool, _ = validatorB.AddTokensFromDel(pool, 200)
-	keeper.SetPool(ctx, pool)
-	validatorB = keeper.UpdateValidator(ctx, validatorB)
-
-	validatorA, found := keeper.GetValidator(ctx, validatorA.Owner)
-	require.True(t, found)
-	require.Equal(t, sdk.NewRat(100), validatorA.GetPower())
-
-	// assert validator B has higher power now
-	validatorB, found = keeper.GetValidator(ctx, validatorB.Owner)
-	require.True(t, found)
-	require.Equal(t, sdk.NewRat(299), validatorB.GetPower())
-
-	// assert cliff validator should have switched
-	require.Equal(t, validatorA.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+	// assert new cliff validator to be set to the second lowest bonded validator by power
+	newCliffVal := validators[numVals-maxVals+1]
+	require.Equal(t, newCliffVal.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
 
 	// assert cliff validator power should have been updated
+	cliffPower := keeper.GetCliffValidatorPower(ctx)
+	require.Equal(t, GetValidatorsByPowerIndexKey(newCliffVal, pool), cliffPower)
+
+	// add small amount of tokens to new current cliff validator
+	newCliffVal, pool, _ = newCliffVal.AddTokensFromDel(pool, 1)
+	keeper.SetPool(ctx, pool)
+	newCliffVal = keeper.UpdateValidator(ctx, newCliffVal)
+
+	// assert cliff validator has not change but increased in power
 	cliffPower = keeper.GetCliffValidatorPower(ctx)
-	require.Equal(t, GetValidatorsByPowerIndexKey(validatorA, pool), cliffPower)
+	require.Equal(t, newCliffVal.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+	require.Equal(t, GetValidatorsByPowerIndexKey(newCliffVal, pool), cliffPower)
 }
 
 func TestCliffValidatorNoSwitch(t *testing.T) {

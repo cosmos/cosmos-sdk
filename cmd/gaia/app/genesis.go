@@ -142,7 +142,12 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 
 	// start with the default staking genesis state
 	stakeData := stake.DefaultGenesisState()
-
+	precisionNumber := math.Pow10(int(stakeData.Params.DenomPrecision))
+	if precisionNumber > math.MaxInt64 {
+		panic(errors.New("precision is too high, int64 is overflow"))
+	}
+	precisionInt64 := int64(precisionNumber)
+	tokenPrecision := sdk.NewRat(precisionInt64)
 	// get genesis flag account information
 	genaccs := make([]GenesisAccount, len(appGenTxs))
 	for i, appGenTx := range appGenTxs {
@@ -156,18 +161,11 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		// create the genesis account, give'm few steaks and a buncha token with there name
 		accAuth := auth.NewBaseAccountWithAddress(genTx.Address)
 		accAuth.Coins = sdk.Coins{
-			{genTx.Name + "Token", sdk.NewInt(1000)},
-			{"steak", sdk.NewInt(freeFermionsAcc)},
+			{genTx.Name + "Token", sdk.NewInt(1000).Mul(sdk.NewInt(precisionInt64))},
+			{"steak", sdk.NewInt(freeFermionsAcc).Mul(sdk.NewInt(precisionInt64))},
 		}
 		acc := NewGenesisAccount(&accAuth)
 		genaccs[i] = acc
-
-		precisionNumber := math.Pow10(int(stakeData.Params.DenomPrecision))
-		if precisionNumber > math.MaxInt64 {
-			panic(errors.New("precision is too high, int64 is overflow"))
-		}
-		precisionInt64 := int64(precisionNumber)
-		tokenPrecision := sdk.NewRat(precisionInt64)
 		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewRat(freeFermionsAcc).Mul(tokenPrecision)) // increase the supply
 
 		// add the validator

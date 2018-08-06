@@ -77,7 +77,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	}
 
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
-	validator.Precision = k.GetParams(ctx).Precision
+	validator.TokenPrecision = k.GetParams(ctx).DenomPrecision
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPubKeyIndex(ctx, validator)
 

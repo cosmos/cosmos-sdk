@@ -31,7 +31,7 @@ type Validator struct {
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
 	Tokens          sdk.Rat        `json:"tokens"`           // delegated tokens (incl. self-delegation)
 	DelegatorShares sdk.Rat        `json:"delegator_shares"` // total shares issued to a validator's delegators
-	Precision       int8           `json:"precision"`
+	TokenPrecision  int8           `json:"token_precision"`
 
 	Description        Description `json:"description"`           // description terms for the validator
 	BondHeight         int64       `json:"bond_height"`           // earliest height as a bonded validator
@@ -55,7 +55,7 @@ func NewValidator(owner sdk.AccAddress, pubKey crypto.PubKey, description Descri
 		Revoked:               false,
 		Status:                sdk.Unbonded,
 		Tokens:                sdk.ZeroRat(),
-		Precision:             0,
+		TokenPrecision:        0,
 		DelegatorShares:       sdk.ZeroRat(),
 		Description:           description,
 		BondHeight:            int64(0),
@@ -75,6 +75,7 @@ type validatorValue struct {
 	Revoked               bool
 	Status                sdk.BondStatus
 	Tokens                sdk.Rat
+	TokenPrecision        int8
 	DelegatorShares       sdk.Rat
 	Description           Description
 	BondHeight            int64
@@ -94,6 +95,7 @@ func MustMarshalValidator(cdc *wire.Codec, validator Validator) []byte {
 		Revoked:               validator.Revoked,
 		Status:                validator.Status,
 		Tokens:                validator.Tokens,
+		TokenPrecision:        validator.TokenPrecision,
 		DelegatorShares:       validator.DelegatorShares,
 		Description:           validator.Description,
 		BondHeight:            validator.BondHeight,
@@ -136,6 +138,7 @@ func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) (validator Val
 		PubKey:                storeValue.PubKey,
 		Revoked:               storeValue.Revoked,
 		Tokens:                storeValue.Tokens,
+		TokenPrecision:        storeValue.TokenPrecision,
 		Status:                storeValue.Status,
 		DelegatorShares:       storeValue.DelegatorShares,
 		Description:           storeValue.Description,
@@ -165,6 +168,7 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Revoked: %v\n", v.Revoked)
 	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
 	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens.FloatString())
+	resp += fmt.Sprintf("TokenPrecision: %d\n", v.TokenPrecision)
 	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.FloatString())
 	resp += fmt.Sprintf("Description: %s\n", v.Description)
 	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
@@ -189,6 +193,7 @@ type BechValidator struct {
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
 	Tokens          sdk.Rat        `json:"tokens"`           // delegated tokens (incl. self-delegation)
 	DelegatorShares sdk.Rat        `json:"delegator_shares"` // total shares issued to a validator's delegators
+	TokenPrecision  int8           `json:"token_precision"`
 
 	Description        Description `json:"description"`           // description terms for the validator
 	BondHeight         int64       `json:"bond_height"`           // earliest height as a bonded validator
@@ -219,6 +224,7 @@ func (v Validator) Bech32Validator() (BechValidator, error) {
 		Status:          v.Status,
 		Tokens:          v.Tokens,
 		DelegatorShares: v.DelegatorShares,
+		TokenPrecision:       v.TokenPrecision,
 
 		Description:        v.Description,
 		BondHeight:         v.BondHeight,
@@ -244,6 +250,7 @@ func (v Validator) Equal(c2 Validator) bool {
 		v.Status.Equal(c2.Status) &&
 		v.Tokens.Equal(c2.Tokens) &&
 		v.DelegatorShares.Equal(c2.DelegatorShares) &&
+		v.TokenPrecision == c2.TokenPrecision &&
 		v.Description == c2.Description &&
 		v.ProposerRewardPool.IsEqual(c2.ProposerRewardPool) &&
 		v.Commission.Equal(c2.Commission) &&
@@ -317,7 +324,7 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 func (v Validator) ABCIValidator() abci.Validator {
 	return abci.Validator{
 		PubKey: tmtypes.TM2PB.PubKey(v.PubKey),
-		Power:  v.BondedTokens().RoundInt64(),
+		Power:  v.GetPower().RoundInt64(),
 	}
 }
 
@@ -437,7 +444,7 @@ func (v Validator) GetStatus() sdk.BondStatus   { return v.Status }
 func (v Validator) GetOwner() sdk.AccAddress    { return v.Owner }
 func (v Validator) GetPubKey() crypto.PubKey    { return v.PubKey }
 func (v Validator) GetPower() sdk.Rat           {
-	precisionNumber := int64(math.Pow10(int(v.Precision)))
+	precisionNumber := int64(math.Pow10(int(v.TokenPrecision)))
 	return v.BondedTokens().Quo(sdk.NewRat(precisionNumber))
 }
 func (v Validator) GetDelegatorShares() sdk.Rat { return v.DelegatorShares }

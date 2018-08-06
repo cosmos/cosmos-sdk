@@ -133,6 +133,11 @@ func TestMultiStoreQuery(t *testing.T) {
 	cid = multi.Commit()
 	ver := cid.Version
 
+	// Reload multistore from database
+	multi = newMultiStoreWithMounts(db)
+	err = multi.LoadLatestVersion()
+	require.Nil(t, err)
+
 	// Test bad path.
 	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
 	qres := multi.Query(query)

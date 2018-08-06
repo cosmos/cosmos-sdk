@@ -50,8 +50,8 @@ func NewApp2(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	// Register message routes.
 	// Note the handler gets access to the account store.
 	app.Router().
-		AddRoute("send", handleMsgSend(keyAccount)).
-		AddRoute("issue", handleMsgIssue(keyAccount, keyIssue))
+		AddRoute("send", []*sdk.KVStoreKey{keyAccount}, handleMsgSend(keyAccount)).
+		AddRoute("issue",[]*sdk.KVStoreKey{keyIssue},  handleMsgIssue(keyAccount, keyIssue))
 
 	// Mount stores and load the latest state.
 	app.MountStoresIAVL(keyAccount, keyIssue)

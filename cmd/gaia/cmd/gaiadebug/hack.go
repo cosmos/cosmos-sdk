@@ -176,9 +176,9 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 
 	// register message routes
 	app.Router().
-		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
-		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
-		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
+		AddRoute("bank",  []*sdk.KVStoreKey{app.keyAccount}, bank.NewHandler(app.coinKeeper)).
+		AddRoute("ibc", []*sdk.KVStoreKey{app.keyIBC},  ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
+		AddRoute("stake",  []*sdk.KVStoreKey{app.keySlashing}, stake.NewHandler(app.stakeKeeper))
 
 	// initialize BaseApp
 	app.SetInitChainer(app.initChainer)

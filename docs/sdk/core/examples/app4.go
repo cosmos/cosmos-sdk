@@ -43,7 +43,7 @@ func NewApp4(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	// Register message routes.
 	// Note the handler gets access to the account store.
 	app.Router().
-		AddRoute("send", bank.NewHandler(coinKeeper))
+		AddRoute("send", []*sdk.KVStoreKey{keyAccount}, bank.NewHandler(coinKeeper))
 
 	// Mount stores and load the latest state.
 	app.MountStoresIAVL(keyAccount, keyFees)

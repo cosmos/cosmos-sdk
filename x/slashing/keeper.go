@@ -2,6 +2,7 @@ package slashing
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -33,10 +34,10 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, params pa
 }
 
 // handle a validator signing two blocks at the same height
-func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight int64, timestamp int64, power int64) {
+func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight int64, timestamp time.Time, power int64) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	time := ctx.BlockHeader().Time
-	age := time - timestamp
+	age := time.Sub(timestamp)
 	address := sdk.ValAddress(pubkey.Address())
 
 	// Double sign too old
@@ -60,7 +61,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, infracti
 	if !found {
 		panic(fmt.Sprintf("Expected signing info for validator %s but not found", address))
 	}
-	signInfo.JailedUntil = time + k.DoubleSignUnbondDuration(ctx)
+	signInfo.JailedUntil = time.Add(k.DoubleSignUnbondDuration(ctx))
 	k.setValidatorSigningInfo(ctx, address, signInfo)
 }
 
@@ -76,7 +77,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	signInfo, found := k.getValidatorSigningInfo(ctx, address)
 	if !found {
 		// If this validator has never been seen before, construct a new SigningInfo with the correct start height
-		signInfo = NewValidatorSigningInfo(height, 0, 0, 0)
+		signInfo = NewValidatorSigningInfo(height, 0, time.Unix(0, 0), 0)
 	}
 	index := signInfo.IndexOffset % k.SignedBlocksWindow(ctx)
 	signInfo.IndexOffset++
@@ -109,7 +110,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 				pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx)))
 			k.validatorSet.Slash(ctx, pubkey, height, power, k.SlashFractionDowntime(ctx))
 			k.validatorSet.Revoke(ctx, pubkey)
-			signInfo.JailedUntil = ctx.BlockHeader().Time + k.DowntimeUnbondDuration(ctx)
+			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeUnbondDuration(ctx))
 		} else {
 			// Validator was (a) not found or (b) already revoked, don't slash
 			logger.Info(fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store or already revoked",

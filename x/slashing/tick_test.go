@@ -30,10 +30,12 @@ func TestBeginBlocker(t *testing.T) {
 
 	// mark the validator as having signed
 	req := abci.RequestBeginBlock{
-		Validators: []abci.SigningValidator{{
-			Validator:       val,
-			SignedLastBlock: true,
-		}},
+		LastCommitInfo: abci.LastCommitInfo{
+			Validators: []abci.SigningValidator{{
+				Validator:       val,
+				SignedLastBlock: true,
+			}},
+		},
 	}
 	BeginBlocker(ctx, req, keeper)
 
@@ -50,10 +52,12 @@ func TestBeginBlocker(t *testing.T) {
 	for ; height < keeper.SignedBlocksWindow(ctx); height++ {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
-			Validators: []abci.SigningValidator{{
-				Validator:       val,
-				SignedLastBlock: true,
-			}},
+			LastCommitInfo: abci.LastCommitInfo{
+				Validators: []abci.SigningValidator{{
+					Validator:       val,
+					SignedLastBlock: true,
+				}},
+			},
 		}
 		BeginBlocker(ctx, req, keeper)
 	}
@@ -62,10 +66,12 @@ func TestBeginBlocker(t *testing.T) {
 	for ; height < ((keeper.SignedBlocksWindow(ctx) * 2) - keeper.MinSignedPerWindow(ctx) + 1); height++ {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
-			Validators: []abci.SigningValidator{{
-				Validator:       val,
-				SignedLastBlock: false,
-			}},
+			LastCommitInfo: abci.LastCommitInfo{
+				Validators: []abci.SigningValidator{{
+					Validator:       val,
+					SignedLastBlock: false,
+				}},
+			},
 		}
 		BeginBlocker(ctx, req, keeper)
 	}

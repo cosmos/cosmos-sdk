@@ -223,7 +223,7 @@ func startTM(
 		proxy.NewLocalClientCreator(app),
 		genDocProvider,
 		dbProvider,
-		nm.DefaultMetricsProvider,
+		nm.DefaultMetricsProvider(tmcfg.Instrumentation),
 		logger.With("module", "node"),
 	)
 	if err != nil {

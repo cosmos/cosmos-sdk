@@ -44,5 +44,5 @@ func SignTxRequstHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write(sig.Bytes())
+	w.Write(sig)
 }

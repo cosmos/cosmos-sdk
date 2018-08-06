@@ -2,6 +2,7 @@ package slashing
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -37,7 +38,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	keeper.handleValidatorSignature(ctx, val, amtInt, true)
 
 	// double sign less than max age
-	keeper.handleDoubleSign(ctx, val, 0, 0, amtInt)
+	keeper.handleDoubleSign(ctx, val, 0, time.Unix(0, 0), amtInt)
 
 	// should be revoked
 	require.True(t, sk.Validator(ctx, addr).GetRevoked())
@@ -45,10 +46,10 @@ func TestHandleDoubleSign(t *testing.T) {
 	sk.Unrevoke(ctx, val)
 	// power should be reduced
 	require.Equal(t, sdk.NewRatFromInt(amt).Mul(sdk.NewRat(19).Quo(sdk.NewRat(20))), sk.Validator(ctx, addr).GetPower())
-	ctx = ctx.WithBlockHeader(abci.Header{Time: 1 + keeper.MaxEvidenceAge(ctx)})
+	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(keeper.MaxEvidenceAge(ctx))})
 
 	// double sign past max age
-	keeper.handleDoubleSign(ctx, val, 0, 0, amtInt)
+	keeper.handleDoubleSign(ctx, val, 0, time.Unix(0, 0), amtInt)
 	require.Equal(t, sdk.NewRatFromInt(amt).Mul(sdk.NewRat(19).Quo(sdk.NewRat(20))), sk.Validator(ctx, addr).GetPower())
 }
 
@@ -118,7 +119,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.False(t, got.IsOK())
 
 	// unrevocation should succeed after jail expiration
-	ctx = ctx.WithBlockHeader(abci.Header{Time: keeper.DowntimeUnbondDuration(ctx) + 1})
+	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(keeper.DowntimeUnbondDuration(ctx))})
 	got = slh(ctx, NewMsgUnrevoke(addr))
 	require.True(t, got.IsOK())
 

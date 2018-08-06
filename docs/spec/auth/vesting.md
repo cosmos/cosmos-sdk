@@ -65,7 +65,7 @@ handled at the `bank.Keeper` level. Specifically in methods that are explicitly 
 `sendCoins` and `inputOutputCoins`. These methods must check that an account is a vesting account using the check described above.
 
 ```go
-if Now < vacc.EndTime:
+if Now < vestingAccount.EndTime:
     // NOTE: SendableCoins may be greater than total coins in account 
     // because coins can be subtracted by staking module
     // SendableCoins denotes maximum coins allowed to be spent.
@@ -73,11 +73,12 @@ if Now < vacc.EndTime:
     if msg.Amount > SendableCoins then fail
 
 // Account fully vested, convert to BaseAccount
-else: account = ConvertAccount(account) 
+else:
+    account = ConvertAccount(account) 
 
 // Must still check if account has enough coins,
 // since SendableCoins does not check this.
-if msg.Amount > account.GetCoins() then fail 
+if msg.Amount > account.GetCoins() then fail
 
 // All checks passed, send the coins
 SendCoins(inputs, outputs)

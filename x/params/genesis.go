@@ -20,9 +20,9 @@ type ParamGenesisState struct {
 	Coins []CoinConfig `json:"coins"`
 }
 
-func DefaultPrecison(coin types.Coin) types.Coin {
-	coin.Amount = Pow10(IrisPrecision).Mul(coin.Amount)
-	return coin
+
+func DefaultPrecison(amount int64) sdk.Int {
+	return Pow10(IrisPrecision).Mul(sdk.NewInt(amount))
 }
 
 func ToBigCoin(ctx sdk.Context, k Getter, coin types.Coin) (types.Coin, error) {

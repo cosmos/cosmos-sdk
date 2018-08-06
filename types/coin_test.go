@@ -147,6 +147,46 @@ func TestMinusCoin(t *testing.T) {
 
 }
 
+func TestIsZeroCoins(t *testing.T) {
+	cases := []struct {
+		inputOne Coins
+		expected bool
+	}{
+		{Coins{}, true},
+		{Coins{NewCoin("A", 0)}, true},
+		{Coins{NewCoin("A", 0), NewCoin("B", 0)}, true},
+		{Coins{NewCoin("A", 1)}, false},
+		{Coins{NewCoin("A", 0), NewCoin("B", 1)}, false},
+	}
+
+	for _, tc := range cases {
+		res := tc.inputOne.IsZero()
+		require.Equal(t, tc.expected, res)
+	}
+}
+
+func TestEqualCoins(t *testing.T) {
+	cases := []struct {
+		inputOne Coins
+		inputTwo Coins
+		expected bool
+	}{
+		{Coins{}, Coins{}, true},
+		{Coins{NewCoin("A", 0)}, Coins{NewCoin("A", 0)}, true},
+		{Coins{NewCoin("A", 0), NewCoin("B", 1)}, Coins{NewCoin("A", 0), NewCoin("B", 1)}, true},
+		{Coins{NewCoin("A", 0)}, Coins{NewCoin("B", 0)}, false},
+		{Coins{NewCoin("A", 0)}, Coins{NewCoin("A", 1)}, false},
+		{Coins{NewCoin("A", 0)}, Coins{NewCoin("A", 0), NewCoin("B", 1)}, false},
+		// TODO: is it expected behaviour? shouldn't we sort the coins before comparing them?
+		{Coins{NewCoin("A", 0), NewCoin("B", 1)}, Coins{NewCoin("B", 1), NewCoin("A", 0)}, false},
+	}
+
+	for tcnum, tc := range cases {
+		res := tc.inputOne.IsEqual(tc.inputTwo)
+		require.Equal(t, tc.expected, res, "Equality is differed from expected. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
+	}
+}
+
 func TestCoins(t *testing.T) {
 
 	//Define the coins to be used in tests
@@ -160,6 +200,7 @@ func TestCoins(t *testing.T) {
 	empty := Coins{
 		{"GOLD", NewInt(0)},
 	}
+	null := Coins{}
 	badSort1 := Coins{
 		{"TREE", NewInt(1)},
 		{"GAS", NewInt(1)},
@@ -184,6 +225,7 @@ func TestCoins(t *testing.T) {
 
 	assert.True(t, good.IsValid(), "Coins are valid")
 	assert.True(t, good.IsPositive(), "Expected coins to be positive: %v", good)
+	assert.False(t, null.IsPositive(), "Expected coins to not be positive: %v", null)
 	assert.True(t, good.IsGTE(empty), "Expected %v to be >= %v", good, empty)
 	assert.False(t, neg.IsPositive(), "Expected neg coins to not be positive: %v", neg)
 	assert.Zero(t, len(sum), "Expected 0 coins")

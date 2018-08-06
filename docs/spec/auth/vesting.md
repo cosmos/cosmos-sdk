@@ -35,8 +35,12 @@ type ContinuousVestingAccount struct {
     EndTime       int64
 }
 
+// ConvertAccount converts VestingAccount into BaseAccount
+// Will convert only after account has fully vested
 ConvertAccount(vacc ContinuousVestingAccount) (BaseAccount):
-    if Now > vacc.EndTime then // Convert to BaseAccount
+    if Now > vacc.EndTime:
+        account = NewBaseAccount(vacc.Address, vacc.OriginalCoins + vacc.ReceivedCoins)
+        return account
 
 ```
 
@@ -101,15 +105,22 @@ type GenesisAccount struct {
 }
 
 initChainer:
-    for genesis_acc in GenesisAccounts:
-        if EndTime == 0 then // Create BaseAccount
-        else:
-            vesting_account = ContinuouslyVestingAccount{
-                OriginalCoins: GenesisCoins,
+    for gacc in GenesisAccounts:
+        baseAccount := BaseAccount{
+            Address: gacc.Address,
+            Coins:   gacc.GenesisCoins,
+        }
+        if gacc.EndTime != 0:
+            vestingAccount := ContinuouslyVestingAccount{
+                BaseAccount:   baseAccount,
+                OriginalCoins: gacc.GenesisCoins,
                 StartTime:     RequestInitChain.Time,
-                EndTime:       EndTime,
+                EndTime:       gacc.EndTime,
             }
-        // Add account to initial state
+            AddAccountToState(vestingAccount)
+        else:
+            AddAccountToState(baseAccount)
+
 ```
 
 ### Formulas

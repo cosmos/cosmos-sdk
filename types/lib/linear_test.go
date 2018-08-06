@@ -31,6 +31,18 @@ func defaultComponents(key sdk.StoreKey) (sdk.Context, *wire.Codec) {
 	return ctx, cdc
 }
 
+func TestNewLinear(t *testing.T) {
+	cdc := wire.NewCodec()
+	require.NotPanics(t, func() { NewLinear(cdc, nil, nil) })
+	require.NotPanics(t, func() { NewLinear(cdc, nil, DefaultLinearKeys()) })
+	require.NotPanics(t, func() { NewLinear(cdc, nil, &LinearKeys{[]byte{0xAA}, []byte{0xBB}, []byte{0xCC}}) })
+
+	require.Panics(t, func() { NewLinear(cdc, nil, &LinearKeys{nil, nil, nil}) })
+	require.Panics(t, func() { NewLinear(cdc, nil, &LinearKeys{[]byte{0xAA}, nil, nil}) })
+	require.Panics(t, func() { NewLinear(cdc, nil, &LinearKeys{nil, []byte{0xBB}, nil}) })
+	require.Panics(t, func() { NewLinear(cdc, nil, &LinearKeys{nil, nil, []byte{0xCC}}) })
+}
+
 func TestList(t *testing.T) {
 	key := sdk.NewKVStoreKey("test")
 	ctx, cdc := defaultComponents(key)

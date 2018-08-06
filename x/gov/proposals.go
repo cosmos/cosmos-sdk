@@ -47,7 +47,7 @@ func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 		proposalA.GetDescription() == proposalB.GetDescription() &&
 		proposalA.GetProposalType() == proposalB.GetProposalType() &&
 		proposalA.GetStatus() == proposalB.GetStatus() &&
-		TallyResultEqual(proposalA.GetTallyResult(), proposalB.GetTallyResult()) &&
+		proposalA.GetTallyResult().Equals(proposalB.GetTallyResult()) &&
 		proposalA.GetSubmitBlock() == proposalB.GetSubmitBlock() &&
 		proposalA.GetTotalDeposit().IsEqual(proposalB.GetTotalDeposit()) &&
 		proposalA.GetVotingStartBlock() == proposalB.GetVotingStartBlock() {
@@ -314,11 +314,11 @@ func EmptyTallyResult() TallyResult {
 }
 
 // checks if two proposals are equal
-func TallyResultEqual(resultA TallyResult, resultB TallyResult) bool {
+func (resultA TallyResult) Equals(resultB TallyResult) bool {
 	if resultA.Yes.Equal(resultB.Yes) &&
-		resultA.Abstain.Equal(resultB.Yes) &&
+		resultA.Abstain.Equal(resultB.Abstain) &&
 		resultA.No.Equal(resultB.No) &&
-		resultA.NoWithVeto.Equal(resultB.Yes) {
+		resultA.NoWithVeto.Equal(resultB.NoWithVeto) {
 		return true
 	}
 	return false

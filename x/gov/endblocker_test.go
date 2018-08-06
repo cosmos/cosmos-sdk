@@ -167,7 +167,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	require.False(t, depositsIterator.Valid())
 	depositsIterator.Close()
 	require.Equal(t, StatusRejected, keeper.GetProposal(ctx, proposalID).GetStatus())
-	require.True(t, TallyResultEqual(keeper.GetProposal(ctx, proposalID).GetTallyResult(), EmptyTallyResult()))
+	require.True(t, keeper.GetProposal(ctx, proposalID).GetTallyResult().Equals(EmptyTallyResult()))
 }
 
 func TestSlashing(t *testing.T) {
@@ -205,6 +205,8 @@ func TestSlashing(t *testing.T) {
 	require.Equal(t, StatusVotingPeriod, keeper.GetProposal(ctx, proposalID).GetStatus())
 
 	EndBlocker(ctx, keeper)
+
+	require.False(t, keeper.GetProposal(ctx, proposalID).GetTallyResult().Equals(EmptyTallyResult()))
 
 	endTotalPower := keeper.ds.GetValidatorSet().TotalPower(ctx)
 	val0End := keeper.ds.GetValidatorSet().Validator(ctx, addrs[0]).GetPower().Quo(endTotalPower)

@@ -100,11 +100,10 @@ func MakeCodec() *wire.Codec {
 	sdk.RegisterWire(cdc)
 	bank.RegisterWire(cdc)
 	ibc.RegisterWire(cdc)
+	auth.RegisterWire(cdc)
 
-	// register custom types
-	cdc.RegisterInterface((*auth.Account)(nil), nil)
+	// register custom type
 	cdc.RegisterConcrete(&types.AppAccount{}, "basecoin/Account", nil)
-	cdc.RegisterConcrete(auth.StdTx{}, "auth/StdTx", nil)
 
 	cdc.Seal()
 

@@ -268,19 +268,43 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 		return
 	}
 
+	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
+
+	oldCliffAddr := sdk.AccAddress(k.GetCliffValidator(ctx))
+	oldCliffVal, found := k.GetValidator(ctx, oldCliffAddr)
+	if !found {
+		panic(fmt.Sprintf("cliff validator record not found for address: %v\n", oldCliffAddr))
+	}
 
 	// NOTE: We get the power via affectedVal since the store (by power key)
 	// has yet to be updated.
 	affectedValPower := affectedVal.GetPower()
 
-	// get all the bonded validators ranked by power in descending order
-	bondedVals := k.GetValidatorsByPower(ctx)
-	if len(bondedVals) == 0 {
-		panic("unexpected empty bonded validator set")
+	// Create a validator iterator ranging from smallest to largest by power
+	// starting the current cliff validator's power.
+	start := GetValidatorsByPowerIndexKey(oldCliffVal, pool)
+	end := sdk.PrefixEndBytes(ValidatorsByPowerIndexKey)
+	iterator := store.Iterator(start, end)
+
+	var newCliffVal types.Validator
+
+	for ; iterator.Valid(); iterator.Next() {
+		ownerAddr := iterator.Value()
+
+		currVal, found := k.GetValidator(ctx, ownerAddr)
+		if !found {
+			panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
+		}
+
+		if currVal.Status == sdk.Bonded && !currVal.Revoked {
+			newCliffVal = currVal
+			break
+		}
 	}
 
-	newCliffVal := bondedVals[len(bondedVals)-1]
+	iterator.Close()
+
 	if bytes.Equal(affectedVal.Owner, newCliffVal.Owner) {
 		// The affected validator remains the cliff validator, however, since
 		// the store does not contain the new power, set the new cliff

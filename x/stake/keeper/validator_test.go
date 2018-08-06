@@ -111,6 +111,8 @@ func TestCliffValidatorChange(t *testing.T) {
 	for i := 0; i < len(validators); i++ {
 		moniker := fmt.Sprintf("val#%d", int64(i))
 		val := types.NewValidator(Addrs[i], PKs[i], types.Description{Moniker: moniker})
+		val.BondHeight = int64(i)
+		val.BondIntraTxCounter = int16(i)
 		val, pool, _ = val.AddTokensFromDel(pool, int64((i+1)*10))
 
 		keeper.SetPool(ctx, pool)

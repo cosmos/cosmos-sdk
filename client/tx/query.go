@@ -21,24 +21,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-// Get the default command for a tx query
+// QueryTxCmd implements the default command for a tx query.
 func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tx [hash]",
 		Short: "Matches this txhash over all committed blocks",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			// find the key to look up the account
 			hashHexStr := args[0]
 			trustNode := viper.GetBool(client.FlagTrustNode)
 
-			output, err := queryTx(cdc, context.NewCoreContextFromViper(), hashHexStr, trustNode)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			output, err := queryTx(cdc, cliCtx, hashHexStr, trustNode)
 			if err != nil {
 				return err
 			}
-			fmt.Println(string(output))
 
+			fmt.Println(string(output))
 			return nil
 		},
 	}
@@ -50,14 +51,13 @@ func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func queryTx(cdc *wire.Codec, ctx context.CoreContext, hashHexStr string, trustNode bool) ([]byte, error) {
+func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string, trustNode bool) ([]byte, error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
 		return nil, err
 	}
 
-	// get the node
-	node, err := ctx.GetNode()
+	node, err := cliCtx.GetNode()
 	if err != nil {
 		return nil, err
 	}
@@ -66,6 +66,7 @@ func queryTx(cdc *wire.Codec, ctx context.CoreContext, hashHexStr string, trustN
 	if err != nil {
 		return nil, err
 	}
+
 	info, err := formatTxResult(cdc, res)
 	if err != nil {
 		return nil, err
@@ -81,13 +82,12 @@ func formatTxResult(cdc *wire.Codec, res *ctypes.ResultTx) (txInfo, error) {
 		return txInfo{}, err
 	}
 
-	info := txInfo{
+	return txInfo{
 		Hash:   res.Hash,
 		Height: res.Height,
 		Tx:     tx,
 		Result: res.TxResult,
-	}
-	return info, nil
+	}, nil
 }
 
 // txInfo is used to prepare info to display
@@ -100,17 +100,19 @@ type txInfo struct {
 
 func parseTx(cdc *wire.Codec, txBytes []byte) (sdk.Tx, error) {
 	var tx auth.StdTx
+
 	err := cdc.UnmarshalBinary(txBytes, &tx)
 	if err != nil {
 		return nil, err
 	}
+
 	return tx, nil
 }
 
 // REST
 
 // transaction query REST handler
-func QueryTxRequestHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
+func QueryTxRequestHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		hashHexStr := vars["hash"]
@@ -120,12 +122,13 @@ func QueryTxRequestHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.Hand
 			trustNode = true
 		}
 
-		output, err := queryTx(cdc, ctx, hashHexStr, trustNode)
+		output, err := queryTx(cdc, cliCtx, hashHexStr, trustNode)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))
 			return
 		}
+
 		w.Write(output)
 	}
 }

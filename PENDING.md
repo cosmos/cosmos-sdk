@@ -27,6 +27,7 @@ BREAKING CHANGES
 * [x/gov] Governance parameters are now stored in globalparams store
 * [lcd] \#1866 Updated lcd /slashing/signing_info endpoint to take cosmosvalpub instead of cosmosvaladdr
 * [types] sdk.NewCoin now takes sdk.Int, sdk.NewInt64Coin takes int64
+* [cli] #1551: Officially removed `--name` from CLI commands
 * [cli] Genesis/key creation (`init`) now supports user-provided key passwords
 
 FEATURES
@@ -69,3 +70,14 @@ BUG FIXES
 *  \#1828 Force user to specify amount on create-validator command by removing default
 *  \#1839 Fixed bug where intra-tx counter wasn't set correctly for genesis validators
 * [tests] \#1675 Fix non-deterministic `test_cover` 
+* [client] \#1551: Refactored `CoreContext`
+  * Renamed `CoreContext` to `QueryContext`
+  * Removed all tx related fields and logic (building & signing) to separate
+  structure `TxContext` in `x/auth/client/context`
+  * Cleaned up documentation and API of what used to be `CoreContext`
+  * Implemented `KeyType` enum for key info
+
+BUG FIXES
+*  \#1666 Add intra-tx counter to the genesis validators
+* [tests] \#1551: Fixed invalid LCD test JSON payload in `doIBCTransfer`
+*  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator

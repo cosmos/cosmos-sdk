@@ -647,7 +647,6 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.AccAddress
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-
 	// send
 	coinbz, err := cdc.MarshalJSON(sdk.NewInt64Coin("steak", 1))
 	if err != nil {
@@ -693,7 +692,7 @@ func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Acc
 		"account_number":"%d",
 		"sequence": "%d",
 		"gas": "100000",
-		"chain_id": "%s",
+		"src_chain_id": "%s",
 		"amount":[
 			{
 				"denom": "%s",
@@ -701,6 +700,7 @@ func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Acc
 			}
 		]
 	}`, name, password, accnum, sequence, chainID, "steak"))
+
 	res, body := Request(t, port, "POST", fmt.Sprintf("/ibc/testchain/%s/send", receiveAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 

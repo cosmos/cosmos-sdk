@@ -274,6 +274,7 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 	// has yet to be updated.
 	affectedValPower := affectedVal.GetPower()
 
+	// get all the bonded validators ranked by power in descending order
 	bondedVals := k.GetValidatorsByPower(ctx)
 	if len(bondedVals) == 0 {
 		panic("unexpected empty bonded validator set")

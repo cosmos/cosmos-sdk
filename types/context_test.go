@@ -160,7 +160,7 @@ func TestContextWithCustom(t *testing.T) {
 	ischeck := true
 	txbytes := []byte("txbytes")
 	logger := NewMockLogger()
-	signvals := []abci.SigningValidator{abci.SigningValidator{}}
+	signvals := []abci.SigningValidator{{}}
 	meter := types.NewGasMeter(10000)
 
 	ctx = types.NewContext(nil, header, ischeck, logger).

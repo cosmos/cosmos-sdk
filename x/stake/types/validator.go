@@ -444,8 +444,12 @@ func (v Validator) GetStatus() sdk.BondStatus   { return v.Status }
 func (v Validator) GetOwner() sdk.AccAddress    { return v.Owner }
 func (v Validator) GetPubKey() crypto.PubKey    { return v.PubKey }
 func (v Validator) GetPower() sdk.Rat           {
-	precisionNumber := int64(math.Pow10(int(v.TokenPrecision)))
-	return v.BondedTokens().Quo(sdk.NewRat(precisionNumber))
+	precisionNumber := math.Pow10(int(v.TokenPrecision))
+	if precisionNumber > math.MaxInt64 {
+		panic(errors.New("precision is too high, int64 is overflow"))
+	}
+	precisionInt64 := int64(precisionNumber)
+	return v.BondedTokens().Quo(sdk.NewRat(precisionInt64))
 }
 func (v Validator) GetDelegatorShares() sdk.Rat { return v.DelegatorShares }
 func (v Validator) GetBondHeight() int64        { return v.BondHeight }

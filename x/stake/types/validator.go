@@ -385,11 +385,11 @@ func (v Validator) RemoveTokens(pool Pool, tokens sdk.Rat) (Validator, Pool) {
 //_________________________________________________________________________________________________________
 
 // AddTokensFromDel adds tokens to a validator
-func (v Validator) AddTokensFromDel(pool Pool, amount int64) (Validator, Pool, sdk.Rat) {
+func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool, sdk.Rat) {
 
 	// bondedShare/delegatedShare
 	exRate := v.DelegatorShareExRate()
-	amountRat := sdk.NewRat(amount)
+	amountRat := sdk.NewRatFromInt(amount)
 
 	if v.Status == sdk.Bonded {
 		pool = pool.looseTokensToBonded(amountRat)
@@ -448,8 +448,8 @@ func (v Validator) GetPower() sdk.Rat           {
 	if precisionNumber > math.MaxInt64 {
 		panic(errors.New("precision is too high, int64 is overflow"))
 	}
-	precisionInt64 := int64(precisionNumber)
-	return v.BondedTokens().Quo(sdk.NewRat(precisionInt64))
+	tokenPrecision := int64(precisionNumber)
+	return v.BondedTokens().Quo(sdk.NewRat(tokenPrecision))
 }
 func (v Validator) GetDelegatorShares() sdk.Rat { return v.DelegatorShares }
 func (v Validator) GetBondHeight() int64        { return v.BondHeight }

@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"math"
 )
 
 var (
@@ -160,7 +161,14 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		}
 		acc := NewGenesisAccount(&accAuth)
 		genaccs[i] = acc
-		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewRat(freeFermionsAcc)) // increase the supply
+
+		precisionNumber := math.Pow10(int(stakeData.Params.DenomPrecision))
+		if precisionNumber > math.MaxInt64 {
+			panic(errors.New("precision is too high, int64 is overflow"))
+		}
+		precisionInt64 := int64(precisionNumber)
+		tokenPrecision := sdk.NewRat(precisionInt64)
+		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewRat(freeFermionsAcc).Mul(tokenPrecision)) // increase the supply
 
 		// add the validator
 		if len(genTx.Name) > 0 {
@@ -168,11 +176,11 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 			validator := stake.NewValidator(genTx.Address,
 				sdk.MustGetAccPubKeyBech32(genTx.PubKey), desc)
 
-			stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewRat(freeFermionVal)) // increase the supply
+			stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewRat(freeFermionVal).Mul(tokenPrecision)) // increase the supply
 
 			// add some new shares to the validator
 			var issuedDelShares sdk.Rat
-			validator, stakeData.Pool, issuedDelShares = validator.AddTokensFromDel(stakeData.Pool, freeFermionVal)
+			validator, stakeData.Pool, issuedDelShares = validator.AddTokensFromDel(stakeData.Pool, sdk.NewInt(freeFermionVal).Mul(sdk.NewInt(precisionInt64)))
 			validator.TokenPrecision = stakeData.Params.DenomPrecision
 			stakeData.Validators = append(stakeData.Validators, validator)
 

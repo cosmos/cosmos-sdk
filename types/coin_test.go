@@ -153,10 +153,10 @@ func TestIsZeroCoins(t *testing.T) {
 		expected bool
 	}{
 		{Coins{}, true},
-		{Coins{NewCoin("A", 0)}, true},
-		{Coins{NewCoin("A", 0), NewCoin("B", 0)}, true},
-		{Coins{NewCoin("A", 1)}, false},
-		{Coins{NewCoin("A", 0), NewCoin("B", 1)}, false},
+		{Coins{NewInt64Coin("A", 0)}, true},
+		{Coins{NewInt64Coin("A", 0), NewInt64Coin("B", 0)}, true},
+		{Coins{NewInt64Coin("A", 1)}, false},
+		{Coins{NewInt64Coin("A", 0), NewInt64Coin("B", 1)}, false},
 	}
 
 	for _, tc := range cases {
@@ -172,13 +172,13 @@ func TestEqualCoins(t *testing.T) {
 		expected bool
 	}{
 		{Coins{}, Coins{}, true},
-		{Coins{NewCoin("A", 0)}, Coins{NewCoin("A", 0)}, true},
-		{Coins{NewCoin("A", 0), NewCoin("B", 1)}, Coins{NewCoin("A", 0), NewCoin("B", 1)}, true},
-		{Coins{NewCoin("A", 0)}, Coins{NewCoin("B", 0)}, false},
-		{Coins{NewCoin("A", 0)}, Coins{NewCoin("A", 1)}, false},
-		{Coins{NewCoin("A", 0)}, Coins{NewCoin("A", 0), NewCoin("B", 1)}, false},
+		{Coins{NewInt64Coin("A", 0)}, Coins{NewInt64Coin("A", 0)}, true},
+		{Coins{NewInt64Coin("A", 0), NewInt64Coin("B", 1)}, Coins{NewInt64Coin("A", 0), NewInt64Coin("B", 1)}, true},
+		{Coins{NewInt64Coin("A", 0)}, Coins{NewInt64Coin("B", 0)}, false},
+		{Coins{NewInt64Coin("A", 0)}, Coins{NewInt64Coin("A", 1)}, false},
+		{Coins{NewInt64Coin("A", 0)}, Coins{NewInt64Coin("A", 0), NewInt64Coin("B", 1)}, false},
 		// TODO: is it expected behaviour? shouldn't we sort the coins before comparing them?
-		{Coins{NewCoin("A", 0), NewCoin("B", 1)}, Coins{NewCoin("B", 1), NewCoin("A", 0)}, false},
+		{Coins{NewInt64Coin("A", 0), NewInt64Coin("B", 1)}, Coins{NewInt64Coin("B", 1), NewInt64Coin("A", 0)}, false},
 	}
 
 	for tcnum, tc := range cases {

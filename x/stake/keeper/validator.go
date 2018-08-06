@@ -134,6 +134,8 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validat
 }
 
 // get the group of bonded validators sorted by power-rank
+//
+// TODO: Rename to GetBondedValidatorsByPower or GetValidatorsByPower(ctx, status)
 func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
@@ -266,37 +268,27 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 		return
 	}
 
-	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
 
 	// NOTE: We get the power via affectedVal since the store (by power key)
 	// has yet to be updated.
 	affectedValPower := affectedVal.GetPower()
 
-	// Create a validator iterator ranging from smallest to largest in power
-	// where only the smallest by power is needed.
-	iterator := sdk.KVStorePrefixIterator(store, ValidatorsByPowerIndexKey)
-	if !iterator.Valid() {
-		panic("invalid iterator for validator power store")
+	bondedVals := k.GetValidatorsByPower(ctx)
+	if len(bondedVals) == 0 {
+		panic("unexpected empty bonded validator set")
 	}
 
-	ownerAddr := iterator.Value()
-	cliffValByPower, found := k.GetValidator(ctx, ownerAddr)
-	if !found {
-		panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
-	}
-
-	iterator.Close()
-
-	if bytes.Equal(affectedVal.Owner, cliffValByPower.Owner) {
+	newCliffVal := bondedVals[len(bondedVals)-1]
+	if bytes.Equal(affectedVal.Owner, newCliffVal.Owner) {
 		// The affected validator remains the cliff validator, however, since
 		// the store does not contain the new power, set the new cliff
 		// validator to the affected validator.
 		k.setCliffValidator(ctx, affectedVal, pool)
-	} else if affectedValPower.GT(cliffValByPower.GetPower()) {
+	} else if affectedValPower.GT(newCliffVal.GetPower()) {
 		// The affected validator no longer remains the cliff validator as it's
 		// power is greater than the new current cliff validator.
-		k.setCliffValidator(ctx, cliffValByPower, pool)
+		k.setCliffValidator(ctx, newCliffVal, pool)
 	}
 }
 

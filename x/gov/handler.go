@@ -23,7 +23,7 @@ func NewHandler(keeper Keeper) sdk.Handler {
 
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
 
-	proposal := keeper.NewTextProposal(ctx, msg.Title, msg.Description, msg.ProposalType)
+	proposal := keeper.NewProposal(ctx, msg.Title, msg.Description, msg.ProposalType,msg.Params)
 
 	err, votingStarted := keeper.AddDeposit(ctx, proposal.GetProposalID(), msg.Proposer, msg.InitialDeposit)
 	if err != nil {
@@ -122,6 +122,8 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (tags sdk.Tags, nonVotingVals []
 				activeProposal.SetStatus(StatusPassed)
 				tags.AppendTag("action", []byte("proposalPassed"))
 				tags.AppendTag("proposalId", proposalIDBytes)
+
+				activeProposal.Execute(ctx,keeper)
 			} else {
 				keeper.DeleteDeposits(ctx, activeProposal.GetProposalID())
 				activeProposal.SetStatus(StatusRejected)

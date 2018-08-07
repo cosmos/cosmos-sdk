@@ -226,13 +226,22 @@
 
 [[projects]]
   branch = "master"
+<<<<<<< HEAD
+=======
+  digest = "1:63b68062b8968092eb86bedc4e68894bd096ea6b24920faca8b9dcf451f54bb5"
+>>>>>>> 46382994a3db68b17fe69b23bf0af1f377ba4f2c
   name = "github.com/prometheus/common"
   packages = [
     "expfmt",
     "internal/bitbucket.org/ww/goautoneg",
     "model"
   ]
+<<<<<<< HEAD
   revision = "7600349dcfe1abd18d72d3a1770870d9800a7801"
+=======
+  pruneopts = "UT"
+  revision = "c7de2306084e37d54b8be01f3541a8464345e9a5"
+>>>>>>> 46382994a3db68b17fe69b23bf0af1f377ba4f2c
 
 [[projects]]
   branch = "master"
@@ -479,7 +488,11 @@
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "UT"
+<<<<<<< HEAD
   revision = "2a72893556e4d1f6c795a4c039314c9fa751eedb"
+=======
+  revision = "daca94659cb50e9f37c1b834680f2e46358f10b0"
+>>>>>>> 46382994a3db68b17fe69b23bf0af1f377ba4f2c
 
 [[projects]]
   name = "google.golang.org/grpc"

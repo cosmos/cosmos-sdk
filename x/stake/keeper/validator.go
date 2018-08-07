@@ -222,12 +222,12 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 		bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
 		store.Set(GetTendermintUpdatesKey(validator.Owner), bz)
 
-		if cliffPower != nil {
-			cliffAddr := sdk.AccAddress(k.GetCliffValidator(ctx))
-			if bytes.Equal(cliffAddr, validator.Owner) {
-				k.updateCliffValidator(ctx, validator)
-			}
-		}
+		//if cliffPower != nil {
+		//cliffAddr := sdk.AccAddress(k.GetCliffValidator(ctx))
+		//if bytes.Equal(cliffAddr, validator.Owner) {
+		//k.updateCliffValidator(ctx, validator)
+		//}
+		//}
 
 	// if is a new validator and the new power is less than the cliff validator
 	case cliffPower != nil && !oldFound &&
@@ -241,7 +241,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 		// skip to completion
 
 		// default case -  validator was either:
-		//  a) not-bonded and now has power-rank greater than  cliff validator
+		//  a) not-bonded and now has power-rank greater than the cliff validator
 		//  b) bonded and now has decreased in power
 	default:
 		// update the validator set for this validator
@@ -389,8 +389,8 @@ func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidato
 // nolint: gocyclo
 // TODO: Remove the above golint
 func (k Keeper) UpdateBondedValidators(
-	ctx sdk.Context, affectedValidator types.Validator,
-) (updatedVal types.Validator, updated bool) {
+	ctx sdk.Context, affectedValidator types.Validator) (
+	updatedVal types.Validator, updated bool) {
 
 	store := ctx.KVStore(k.storeKey)
 

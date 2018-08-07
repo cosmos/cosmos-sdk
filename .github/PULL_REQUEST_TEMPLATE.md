@@ -10,6 +10,7 @@ v    If a checkbox is n/a - please still include it but + a little note why
 - [ ] Wrote tests
 - [ ] Added entries in `PENDING.md` that include links to the relevant issue or PR that most accurately describes the change.
 - [ ] Updated `cmd/gaia` and `examples/`
+- [ ] Read PR `Files changed` in the github PR explorer
 ___________________________________
 For Admin Use:
 - [ ] Added appropriate labels to PR (ex. wip, ready-for-review, docs)

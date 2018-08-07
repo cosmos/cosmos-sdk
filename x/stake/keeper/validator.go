@@ -271,10 +271,9 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
 
-	oldCliffAddr := sdk.AccAddress(k.GetCliffValidator(ctx))
-	oldCliffVal, found := k.GetValidator(ctx, oldCliffAddr)
+	oldCliffVal, found := k.GetValidator(ctx, cliffAddr)
 	if !found {
-		panic(fmt.Sprintf("cliff validator record not found for address: %v\n", oldCliffAddr))
+		panic(fmt.Sprintf("cliff validator record not found for address: %v\n", cliffAddr))
 	}
 
 	// NOTE: We get the power via affectedVal since the store (by power key)

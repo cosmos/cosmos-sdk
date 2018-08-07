@@ -2,7 +2,6 @@ package simpleGovernance
 
 import (
 	"bytes"
-	"encoding/hex"
 	"log"
 	"sort"
 	"testing"
@@ -34,18 +33,18 @@ var (
 	}
 
 	// dummy pubkeys used for testing
-	pks = []crypto.PubKey{
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB50"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB53"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB54"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB55"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB56"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB57"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB58"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB59"),
-	}
+	// pks = []crypto.PubKey{
+	// 	newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB50"),
+	// 	newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51"),
+	// 	newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
+	// 	newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB53"),
+	// 	newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB54"),
+	// 	newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB55"),
+	// 	newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB56"),
+	// 	newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB57"),
+	// 	newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB58"),
+	// 	newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB59"),
+	// }
 
 	titles = []string{
 		"Photons at launch",
@@ -86,16 +85,16 @@ var (
 	emptyPubkey crypto.PubKey
 )
 
-func newPubKey(pk string) (res crypto.PubKey) {
-	pkBytes, err := hex.DecodeString(pk)
-	if err != nil {
-		panic(err)
-	}
-	//res, err = crypto.PubKeyFromBytes(pkBytes)
-	var pkEd crypto.PubKeyEd25519
-	copy(pkEd[:], pkBytes[:])
-	return pkEd
-}
+// func newPubKey(pk string) (res crypto.PubKey) {
+// 	pkBytes, err := hex.DecodeString(pk)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	//res, err = crypto.PubKeyFromBytes(pkBytes)
+// 	var pkEd crypto.PubKeyEd25519
+// 	copy(pkEd[:], pkBytes[:])
+// 	return pkEd
+// }
 
 // for incode address generation
 func testAddr(addr string) sdk.AccAddress {
@@ -106,45 +105,55 @@ func testAddr(addr string) sdk.AccAddress {
 	return res
 }
 
-// CreateMockApp creates a new Mock application for testing purposes
-func CreateMockApp(
-	numGenAccs int,
-	stakeKey *sdk.KVStoreKey,
-	govKey *sdk.KVStoreKey,
-) (
-	*mock.App,
-	Keeper,
-	stake.Keeper,
-) {
+// // CreateMockApp creates a new Mock application for testing purposes
+// func CreateMockApp(
+// 	numGenAccs int,
+// 	stakeKey *sdk.KVStoreKey,
+// 	govKey *sdk.KVStoreKey,
+// ) (
+// 	*mock.App,
+// 	Keeper,
+// 	stake.Keeper,
+// ) {
+// 	mapp := mock.NewApp()
+//
+// 	stake.RegisterWire(mapp.Cdc)
+// 	RegisterWire(mapp.Cdc)
+//
+// 	ck := bank.NewKeeper(mapp.AccountMapper)
+// 	sk := stake.NewKeeper(mapp.Cdc, stakeKey, ck, mapp.RegisterCodespace(stake.DefaultCodespace))
+// 	keeper := NewKeeper(govKey, ck, sk, mapp.RegisterCodespace(DefaultCodespace))
+// 	mapp.Router().AddRoute("simplegov", NewHandler(keeper))
+//
+// 	return mapp, keeper, sk
+// }
+
+// initialize the mock application for this module
+func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, []sdk.AccAddress, []crypto.PubKey, []crypto.PrivKey) {
 	mapp := mock.NewApp()
 
 	stake.RegisterWire(mapp.Cdc)
 	RegisterWire(mapp.Cdc)
 
-	ck := bank.NewKeeper(mapp.AccountMapper)
-	sk := stake.NewKeeper(mapp.Cdc, stakeKey, ck, mapp.RegisterCodespace(stake.DefaultCodespace))
-	keeper := NewKeeper(govKey, ck, sk, mapp.RegisterCodespace(DefaultCodespace))
-	mapp.Router().AddRoute("simplegov", NewHandler(keeper))
-
-	return mapp, keeper, sk
-}
-
-// initialize the mock application for this module
-func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, []sdk.AccAddress, []crypto.PubKey, []crypto.PrivKey) {
-
+	keyGlobalParams := sdk.NewKVStoreKey("params")
 	keyStake := sdk.NewKVStoreKey("stake")
 	keyGov := sdk.NewKVStoreKey("simplegov")
 
-	mapp, k, sk := CreateMockApp(numGenAccs, keyStake, keyGov)
-	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyGov}))
+	ck := bank.NewKeeper(mapp.AccountMapper)
+	sk := stake.NewKeeper(mapp.Cdc, keyStake, ck, mapp.RegisterCodespace(stake.DefaultCodespace))
+	keeper := NewKeeper(mapp.Cdc, keyGov, ck, sk, mapp.RegisterCodespace(stake.DefaultCodespace))
+	mapp.Router().AddRoute("simplegov", NewHandler(keeper))
 
-	mapp.SetEndBlocker(NewEndBlocker(k))
-	mapp.SetInitChainer(getInitChainer(mapp, k, sk))
+	mapp.SetEndBlocker(NewEndBlocker(keeper))
+	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk))
 
-	genAccs, addresses, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewCoin("steak", 42)})
+	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyGov, keyGlobalParams}))
+
+	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewInt64Coin("steak", 42)})
+
 	mock.SetGenesis(mapp, genAccs)
 
-	return mapp, k, sk, addresses, pubKeys, privKeys
+	return mapp, keeper, sk, addrs, pubKeys, privKeys
 }
 
 // gov and stake initchainer

@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	amino "github.com/tendermint/go-amino"
 )
 
 // nolint
@@ -18,8 +19,7 @@ type Keeper struct {
 }
 
 // NewKeeper crates a new keeper with write and read access
-func NewKeeper(SimpleGov sdk.StoreKey, ck bank.Keeper, sm stake.Keeper, codespace sdk.CodespaceType) Keeper {
-	cdc := wire.NewCodec()
+func NewKeeper(cdc *amino.Codec, SimpleGov sdk.StoreKey, ck bank.Keeper, sm stake.Keeper, codespace sdk.CodespaceType) Keeper {
 
 	return Keeper{
 		SimpleGov: SimpleGov,
@@ -30,12 +30,29 @@ func NewKeeper(SimpleGov sdk.StoreKey, ck bank.Keeper, sm stake.Keeper, codespac
 	}
 }
 
-// NewProposalID creates a new id for a proposal
-func (k Keeper) NewProposalID(ctx sdk.Context) int64 {
+// Creates a new Proposal
+func (k Keeper) NewProposal(ctx sdk.Context, title string, description string) Proposal {
+	proposalID := k.newProposalID(ctx)
+	sdk.AccAddressFromHex("0")
+	proposal := Proposal{
+		ID:          proposalID,
+		Title:       title,
+		Description: description,
+		State:       "Open",
+		Deposit:     sdk.Coins{},
+		SubmitBlock: ctx.BlockHeight(),
+	}
+	k.SetProposal(ctx, proposal)
+	k.ProposalQueuePush(ctx, proposal.ID)
+	return proposal
+}
+
+// generates a new id for a proposal
+func (k Keeper) newProposalID(ctx sdk.Context) int64 {
 	store := ctx.KVStore(k.SimpleGov)
 	bid := store.Get([]byte("TotalID"))
 	if bid == nil {
-		return 0
+		return -1
 	}
 
 	totalID := new(int64)
@@ -57,41 +74,18 @@ func (k Keeper) GetProposal(ctx sdk.Context, proposalID int64) (Proposal, sdk.Er
 		return Proposal{}, ErrProposalNotFound(proposalID)
 	}
 
-	proposal := Proposal{}
+	proposal := &Proposal{}
 
 	err := k.cdc.UnmarshalBinary(bp, proposal)
 	if err != nil {
 		panic(err)
 	}
 
-	return proposal, nil
+	return *proposal, nil
 }
 
-// GetAllProposals gets the set of all active proposals
-// func (k Keeper) GetAllProposals(ctx sdk.Context) (proposals []Proposal) {
-// 	storeKey := sdk.NewKVStoreKey("simpleGov")
-// 	store := ctx.KVStore(storeKey)
-// 	iterator := sdk.KVStorePrefixIterator(store, prefix) // Check the prefix key
-//
-// 	i := 0
-// 	for ; ; i++ {
-// 		if !iterator.Valid() {
-// 			iterator.Close()
-// 			break
-// 		}
-// 		bz := iterator.Value()
-// 		var proposal Proposal
-// 		k.cdc.MustUnmarshalBinary(bz, &proposal)
-// 		if proposal.IsOpen() {
-// 			proposals = append(proposals, proposal)
-// 		}
-// 		iterator.Next()
-// 	}
-// 	return proposals
-// }
-
 // SetProposal sets a proposal to the context
-func (k Keeper) SetProposal(ctx sdk.Context, proposalID int64, proposal Proposal) sdk.Error {
+func (k Keeper) SetProposal(ctx sdk.Context, proposal Proposal) sdk.Error {
 	store := ctx.KVStore(k.SimpleGov)
 
 	bp, err := k.cdc.MarshalBinary(proposal)
@@ -99,7 +93,7 @@ func (k Keeper) SetProposal(ctx sdk.Context, proposalID int64, proposal Proposal
 		panic(err) // return proper error
 	}
 
-	key := GenerateProposalKey(proposalID)
+	key := GenerateProposalKey(proposal.ID)
 
 	store.Set(key, bp)
 	return nil
@@ -146,8 +140,8 @@ func (k Keeper) GetVote(ctx sdk.Context, proposalID int64, voter sdk.AccAddress)
 // }
 
 // SetVote sets the vote option to the proposal stored in the context store
-func (k Keeper) SetVote(ctx sdk.Context, proposalID int64, voter sdk.AccAddress, option string) {
-	key := GenerateProposalVoteKey(proposalID, voter)
+func (k Keeper) SetVote(ctx sdk.Context, proposalID int64, voterAddr sdk.AccAddress, option string) {
+	key := GenerateProposalVoteKey(proposalID, voterAddr)
 	store := ctx.KVStore(k.SimpleGov)
 	bv, err := k.cdc.MarshalBinary(option)
 	if err != nil {

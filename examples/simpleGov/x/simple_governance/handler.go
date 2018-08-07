@@ -96,19 +96,12 @@ func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg SubmitProposalMsg) s
 
 	if msg.Deposit.AmountOf("Atom").GT(minDeposit) ||
 		msg.Deposit.AmountOf("Atom").Equal(minDeposit) {
-		proposalID := k.NewProposalID(ctx)
-		proposal := NewProposal(
-			proposalID,
-			msg.Title,
-			msg.Description,
-			msg.Submitter,
-			ctx.BlockHeight(),
-			msg.Deposit)
-		k.SetProposal(ctx, proposalID, proposal)
+		proposal := k.NewProposal(ctx, msg.Title, msg.Description)
+		k.SetProposal(ctx, proposal)
 		return sdk.Result{
 			Tags: sdk.NewTags(
 				"action", []byte("propose"),
-				"proposal", int64ToBytes(proposalID),
+				"proposal", int64ToBytes(proposal.ID),
 				"submitter", msg.Submitter.Bytes(),
 			),
 		}
@@ -166,7 +159,7 @@ func handleVoteMsg(ctx sdk.Context, k Keeper, msg VoteMsg) sdk.Result {
 	}
 
 	k.SetVote(ctx, msg.ProposalID, msg.Voter, msg.Option)
-	k.SetProposal(ctx, msg.ProposalID, proposal)
+	k.SetProposal(ctx, proposal)
 
 	return sdk.Result{
 		Tags: sdk.NewTags(

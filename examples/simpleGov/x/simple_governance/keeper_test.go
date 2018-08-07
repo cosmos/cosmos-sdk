@@ -10,13 +10,10 @@ import (
 
 func TestSimpleGovKeeper(t *testing.T) {
 
-	keyStake := sdk.NewKVStoreKey("stake")
-	keyGov := sdk.NewKVStoreKey("simplegov")
-
-	mapp, k, _ := CreateMockApp(100, keyStake, keyGov)
+	mapp, k, _, _, _, _ := getMockApp(t, 100)
 
 	mapp.BeginBlock(abci.RequestBeginBlock{})
-	ctx := mapp.NewContext(false, abci.Header{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	if ctx.KVStore(k.SimpleGov) == nil {
 		panic("Nil interface")
 	}
@@ -25,16 +22,12 @@ func TestSimpleGovKeeper(t *testing.T) {
 	// assert.NotNil(t, err)
 
 	// create proposals
-	proposal := NewProposal(int64(1), titles[1], descriptions[1], addrs[1], ctx.BlockHeight(), sdk.Coins{{"Atom", sdk.NewInt(int64(200))}})
-	proposal2 := NewProposal(int64(2), titles[2], descriptions[2], addrs[4], ctx.BlockHeight(), sdk.Coins{{"Atom", sdk.NewInt(int64(150))}})
+	proposal := k.NewProposal(ctx, titles[1], descriptions[1])
+	proposal2 := k.NewProposal(ctx, titles[2], descriptions[2])
 
 	// –––––––––––––––––––––––––––––––––––––––
 	//                KEEPER
 	// –––––––––––––––––––––––––––––––––––––––
-
-	// ––––––– Test SetProposal –––––––
-	err := k.SetProposal(ctx, 1, proposal)
-	assert.Nil(t, err)
 
 	// ––––––– Test GetProposal –––––––
 

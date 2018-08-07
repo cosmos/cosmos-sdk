@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -292,12 +291,12 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 	}
 	denomStr, amountStr := matches[2], matches[1]
 
-	amount, err := strconv.Atoi(amountStr)
-	if err != nil {
+	amount, ok := NewIntFromString(amountStr)
+	if !ok  {
 		return
 	}
 
-	return Coin{denomStr, NewInt(int64(amount))}, nil
+	return Coin{denomStr, amount}, nil
 }
 
 // ParseCoins will parse out a list of coins separated by commas.

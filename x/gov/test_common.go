@@ -15,6 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/params"
+
 )
 
 // initialize the mock application for this module
@@ -24,15 +26,18 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 	stake.RegisterWire(mapp.Cdc)
 	RegisterWire(mapp.Cdc)
 
+	keyGlobalParams := sdk.NewKVStoreKey("params")
 	keyStake := sdk.NewKVStoreKey("stake")
 	keyGov := sdk.NewKVStoreKey("gov")
 
+	pk := params.NewKeeper(mapp.Cdc, keyGlobalParams)
 	ck := bank.NewKeeper(mapp.AccountMapper)
 	sk := stake.NewKeeper(mapp.Cdc, keyStake, ck, mapp.RegisterCodespace(stake.DefaultCodespace))
-	keeper := NewKeeper(mapp.Cdc, keyGov, ck, sk, DefaultCodespace)
-	mapp.Router().AddRoute("gov", []*sdk.KVStoreKey{keyGov}, NewHandler(keeper))
 
-	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyGov}))
+	keeper := NewKeeper(mapp.Cdc, keyGov,pk.Setter(), ck, sk, DefaultCodespace)
+	mapp.Router().AddRoute("gov", []*sdk.KVStoreKey{keyGov, mapp.KeyAccount, keyStake}, NewHandler(keeper))
+
+	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyGov, keyGlobalParams}))
 
 	mapp.SetEndBlocker(getEndBlocker(keeper))
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk))

@@ -4,10 +4,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	"fmt"
 )
 
 // Governance Keeper
 type Keeper struct {
+	// The reference to the ParamSetter to get and set Global Params
+	ps params.Setter
+
 	// The reference to the CoinKeeper to modify balances
 	ck bank.Keeper
 
@@ -28,9 +33,10 @@ type Keeper struct {
 }
 
 // NewGovernanceMapper returns a mapper that uses go-wire to (binary) encode and decode gov types.
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ps params.Setter, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
 		storeKey:  key,
+		ps:        ps,
 		ck:        ck,
 		ds:        ds,
 		vs:        ds.GetValidatorSet(),
@@ -66,6 +72,42 @@ func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description 
 	keeper.SetProposal(ctx, proposal)
 	keeper.InactiveProposalQueuePush(ctx, proposal)
 	return proposal
+}
+
+func (keeper Keeper) NewParametersProposal(ctx sdk.Context, title string, description string, proposalType ProposalKind,params Params) Proposal{
+	proposalID, err := keeper.getNewProposalID(ctx)
+	if err != nil {
+		return nil
+	}
+	var textProposal = TextProposal{
+		ProposalID:       proposalID,
+		Title:            title,
+		Description:      description,
+		ProposalType:     proposalType,
+		Status:           StatusDepositPeriod,
+		TotalDeposit:     sdk.Coins{},
+		SubmitBlock:      ctx.BlockHeight(),
+		VotingStartBlock: -1, // TODO: Make Time
+	}
+	var proposal Proposal = &ParameterProposal{
+		textProposal,
+		params,
+	}
+	keeper.SetProposal(ctx, proposal)
+	keeper.InactiveProposalQueuePush(ctx, proposal)
+	return proposal
+}
+
+func (keeper Keeper) NewProposal(ctx sdk.Context, title string, description string, proposalType ProposalKind,params Params) Proposal{
+	switch proposalType {
+	case ProposalTypeText:
+		return keeper.NewTextProposal(ctx, title, description, proposalType)
+	case ProposalTypeParameterChange:
+		return keeper.NewParametersProposal(ctx, title, description, proposalType,params)
+	case ProposalTypeSoftwareUpgrade:
+		fmt.Println("not implement")
+	}
+	return nil
 }
 
 // Get Proposal from store by ProposalID
@@ -123,39 +165,6 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 	keeper.ActiveProposalQueuePush(ctx, proposal)
-}
-
-// =====================================================
-// Procedures
-
-var (
-	defaultMinDeposit       int64 = 10
-	defaultMaxDepositPeriod int64 = 10000
-	defaultVotingPeriod     int64 = 10000
-)
-
-// Gets procedure from store. TODO: move to global param store and allow for updating of this
-func (keeper Keeper) GetDepositProcedure() DepositProcedure {
-	return DepositProcedure{
-		MinDeposit:       sdk.Coins{sdk.NewCoin("steak", defaultMinDeposit)},
-		MaxDepositPeriod: defaultMaxDepositPeriod,
-	}
-}
-
-// Gets procedure from store. TODO: move to global param store and allow for updating of this
-func (keeper Keeper) GetVotingProcedure() VotingProcedure {
-	return VotingProcedure{
-		VotingPeriod: defaultVotingPeriod,
-	}
-}
-
-// Gets procedure from store. TODO: move to global param store and allow for updating of this
-func (keeper Keeper) GetTallyingProcedure() TallyingProcedure {
-	return TallyingProcedure{
-		Threshold:         sdk.NewRat(1, 2),
-		Veto:              sdk.NewRat(1, 3),
-		GovernancePenalty: sdk.NewRat(1, 100),
-	}
 }
 
 // =====================================================
@@ -262,7 +271,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 	// Check if deposit tipped proposal into voting period
 	// Active voting period if so
 	activatedVotingPeriod := false
-	if proposal.GetStatus() == StatusDepositPeriod && proposal.GetTotalDeposit().IsGTE(keeper.GetDepositProcedure().MinDeposit) {
+	if proposal.GetStatus() == StatusDepositPeriod && proposal.GetTotalDeposit().IsGTE(keeper.GetDepositProcedure(ctx).MinDeposit) {
 		keeper.activateVotingPeriod(ctx, proposal)
 		activatedVotingPeriod = true
 	}

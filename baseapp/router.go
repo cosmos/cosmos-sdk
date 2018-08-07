@@ -73,7 +73,11 @@ func (rtr *router) RouteTable() (table []string) {
 	for _, route := range rtr.routes {
 		storelist := ""
 		for _, store := range route.s {
-			storelist = storelist + ":" + store.Name()
+			if storelist == "" {
+				storelist = store.Name()
+			} else {
+				storelist = storelist + ":" + store.Name()
+			}
 		}
 		table = append(table, route.r+"/"+storelist)
 	}

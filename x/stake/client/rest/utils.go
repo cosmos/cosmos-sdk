@@ -26,14 +26,14 @@ func contains(stringSlice []string, txType string) bool {
 	return false
 }
 
-func getDelegatorValidator(ctx context.CoreContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAccAddr sdk.AccAddress) (
+func getDelegatorValidator(cliCtx context.CLIContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAccAddr sdk.AccAddress) (
 	validator types.BechValidator, httpStatusCode int, errMsg string, err error) {
 
 	// Check if the delegator is bonded or redelegated to the validator
 	keyDel := stake.GetDelegationKey(delegatorAddr, validatorAccAddr)
 	// keyRed := stake.GetREDsByDelToValDstIndexKey(delegatorAddr, validatorAccAddr)
 
-	res, err := ctx.QueryStore(keyDel, storeName)
+	res, err := cliCtx.QueryStore(keyDel, storeName)
 	if err != nil {
 		return types.BechValidator{}, http.StatusInternalServerError, "couldn't query delegation. Error: ", err
 	}
@@ -42,7 +42,7 @@ func getDelegatorValidator(ctx context.CoreContext, cdc *wire.Codec, delegatorAd
 		return types.BechValidator{}, http.StatusNoContent, "", nil
 	}
 
-	kvs, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
+	kvs, err := cliCtx.QuerySubspace(stake.ValidatorsKey, storeName)
 	if err != nil {
 		return types.BechValidator{}, http.StatusInternalServerError, "Error: ", err
 	}
@@ -58,10 +58,10 @@ func getDelegatorValidator(ctx context.CoreContext, cdc *wire.Codec, delegatorAd
 	return validator, http.StatusOK, "", nil
 }
 
-func getDelegatorDelegations(ctx context.CoreContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
+func getDelegatorDelegations(cliCtx context.CLIContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
 	outputDelegation DelegationWithoutRat, httpStatusCode int, errMsg string, err error) {
 	delegationKey := stake.GetDelegationKey(delegatorAddr, validatorAddr)
-	marshalledDelegation, err := ctx.QueryStore(delegationKey, storeName)
+	marshalledDelegation, err := cliCtx.QueryStore(delegationKey, storeName)
 	if err != nil {
 		return DelegationWithoutRat{}, http.StatusInternalServerError, "couldn't query delegation. Error: ", err
 	}
@@ -86,10 +86,10 @@ func getDelegatorDelegations(ctx context.CoreContext, cdc *wire.Codec, delegator
 	return outputDelegation, http.StatusOK, "", nil
 }
 
-func getDelegatorUndelegations(ctx context.CoreContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
+func getDelegatorUndelegations(cliCtx context.CLIContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
 	unbonds types.UnbondingDelegation, httpStatusCode int, errMsg string, err error) {
 	undelegationKey := stake.GetUBDKey(delegatorAddr, validatorAddr)
-	marshalledUnbondingDelegation, err := ctx.QueryStore(undelegationKey, storeName)
+	marshalledUnbondingDelegation, err := cliCtx.QueryStore(undelegationKey, storeName)
 	if err != nil {
 		return types.UnbondingDelegation{}, http.StatusInternalServerError, "couldn't query unbonding-delegation. Error: ", err
 	}
@@ -106,11 +106,11 @@ func getDelegatorUndelegations(ctx context.CoreContext, cdc *wire.Codec, delegat
 	return unbondingDelegation, http.StatusOK, "", nil
 }
 
-func getDelegatorRedelegations(ctx context.CoreContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
+func getDelegatorRedelegations(cliCtx context.CLIContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
 	regelegations types.Redelegation, httpStatusCode int, errMsg string, err error) {
 
 	keyRedelegateTo := stake.GetREDsByDelToValDstIndexKey(delegatorAddr, validatorAddr)
-	marshalledRedelegations, err := ctx.QueryStore(keyRedelegateTo, storeName)
+	marshalledRedelegations, err := cliCtx.QueryStore(keyRedelegateTo, storeName)
 	if err != nil {
 		return types.Redelegation{}, http.StatusInternalServerError, "couldn't query redelegation. Error: ", err
 	}
@@ -208,10 +208,10 @@ func getValidatorFromAccAdrr(address sdk.AccAddress, validatorKVs []sdk.KVPair, 
 }
 
 //  Gets all Bech32 validators from a key
-func getBech32Validators(storeName string, ctx context.CoreContext, cdc *wire.Codec) (
+func getBech32Validators(storeName string, cliCtx context.CLIContext, cdc *wire.Codec) (
 	validators []types.BechValidator, httpStatusCode int, errMsg string, err error) {
 	// Get all validators using key
-	kvs, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
+	kvs, err := cliCtx.QuerySubspace(stake.ValidatorsKey, storeName)
 	if err != nil {
 		return nil, http.StatusInternalServerError, "couldn't query validators. Error: ", err
 	}

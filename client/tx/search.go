@@ -57,7 +57,7 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]txInfo, error) {
+func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]Info, error) {
 	if len(tags) == 0 {
 		return nil, errors.New("must declare at least one tag to search")
 	}

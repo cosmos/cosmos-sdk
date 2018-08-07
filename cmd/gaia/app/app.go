@@ -99,11 +99,11 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 
 	// register message routes
 	app.Router().
-		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
-		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
-		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
-		AddRoute("slashing", slashing.NewHandler(app.slashingKeeper)).
-		AddRoute("gov", gov.NewHandler(app.govKeeper))
+		AddRoute("bank", []*sdk.KVStoreKey{app.keyAccount}, bank.NewHandler(app.coinKeeper)).
+		AddRoute("ibc", []*sdk.KVStoreKey{app.keyIBC, app.keyAccount}, ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
+		AddRoute("stake", []*sdk.KVStoreKey{app.keyStake, app.keyAccount}, stake.NewHandler(app.stakeKeeper)).
+		AddRoute("slashing", []*sdk.KVStoreKey{app.keySlashing, app.keyStake}, slashing.NewHandler(app.slashingKeeper)).
+		AddRoute("gov", []*sdk.KVStoreKey{app.keyGov, app.keyAccount, app.keyStake}, gov.NewHandler(app.govKeeper))
 
 	// initialize BaseApp
 	app.SetInitChainer(app.initChainer)
@@ -183,6 +183,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	}
 
 	gov.InitGenesis(ctx, app.govKeeper, gov.DefaultGenesisState())
+
+	params.InitParamGenesis(ctx, app.paramsKeeper, genesisState.ParamsData)
 
 	auth.InitGenesis(ctx,app.paramsKeeper.Setter(),auth.DefaultGenesisState())
 

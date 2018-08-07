@@ -5,13 +5,7 @@ import (
 	wire "github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
-)
-
-// nolint
-const (
-	ParamStoreKeyDepositProcedure  = "gov/depositprocedure"
-	ParamStoreKeyVotingProcedure   = "gov/votingprocedure"
-	ParamStoreKeyTallyingProcedure = "gov/tallyingprocedure"
+	"fmt"
 )
 
 // Governance Keeper
@@ -80,6 +74,42 @@ func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description 
 	return proposal
 }
 
+func (keeper Keeper) NewParametersProposal(ctx sdk.Context, title string, description string, proposalType ProposalKind,params Params) Proposal{
+	proposalID, err := keeper.getNewProposalID(ctx)
+	if err != nil {
+		return nil
+	}
+	var textProposal = TextProposal{
+		ProposalID:       proposalID,
+		Title:            title,
+		Description:      description,
+		ProposalType:     proposalType,
+		Status:           StatusDepositPeriod,
+		TotalDeposit:     sdk.Coins{},
+		SubmitBlock:      ctx.BlockHeight(),
+		VotingStartBlock: -1, // TODO: Make Time
+	}
+	var proposal Proposal = &ParameterProposal{
+		textProposal,
+		params,
+	}
+	keeper.SetProposal(ctx, proposal)
+	keeper.InactiveProposalQueuePush(ctx, proposal)
+	return proposal
+}
+
+func (keeper Keeper) NewProposal(ctx sdk.Context, title string, description string, proposalType ProposalKind,params Params) Proposal{
+	switch proposalType {
+	case ProposalTypeText:
+		return keeper.NewTextProposal(ctx, title, description, proposalType)
+	case ProposalTypeParameterChange:
+		return keeper.NewParametersProposal(ctx, title, description, proposalType,params)
+	case ProposalTypeSoftwareUpgrade:
+		fmt.Println("not implement")
+	}
+	return nil
+}
+
 // Get Proposal from store by ProposalID
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID int64) Proposal {
 	store := ctx.KVStore(keeper.storeKey)
@@ -135,42 +165,6 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 	keeper.ActiveProposalQueuePush(ctx, proposal)
-}
-
-// =====================================================
-// Procedures
-
-// Returns the current Deposit Procedure from the global param store
-func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) DepositProcedure {
-	var depositProcedure DepositProcedure
-	keeper.ps.Get(ctx, ParamStoreKeyDepositProcedure, &depositProcedure)
-	return depositProcedure
-}
-
-// Returns the current Voting Procedure from the global param store
-func (keeper Keeper) GetVotingProcedure(ctx sdk.Context) VotingProcedure {
-	var votingProcedure VotingProcedure
-	keeper.ps.Get(ctx, ParamStoreKeyVotingProcedure, &votingProcedure)
-	return votingProcedure
-}
-
-// Returns the current Tallying Procedure from the global param store
-func (keeper Keeper) GetTallyingProcedure(ctx sdk.Context) TallyingProcedure {
-	var tallyingProcedure TallyingProcedure
-	keeper.ps.Get(ctx, ParamStoreKeyTallyingProcedure, &tallyingProcedure)
-	return tallyingProcedure
-}
-
-func (keeper Keeper) setDepositProcedure(ctx sdk.Context, depositProcedure DepositProcedure) {
-	keeper.ps.Set(ctx, ParamStoreKeyDepositProcedure, &depositProcedure)
-}
-
-func (keeper Keeper) setVotingProcedure(ctx sdk.Context, votingProcedure VotingProcedure) {
-	keeper.ps.Set(ctx, ParamStoreKeyVotingProcedure, &votingProcedure)
-}
-
-func (keeper Keeper) setTallyingProcedure(ctx sdk.Context, tallyingProcedure TallyingProcedure) {
-	keeper.ps.Set(ctx, ParamStoreKeyTallyingProcedure, &tallyingProcedure)
 }
 
 // =====================================================

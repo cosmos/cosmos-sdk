@@ -26,7 +26,7 @@ func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		StartingProposalID: 1,
 		DepositProcedure: DepositProcedure{
-			MinDeposit:       sdk.Coins{sdk.NewCoin("steak", 10)},
+			MinDeposit:       sdk.Coins{sdk.Coin{Denom:"steak", Amount: sdk.NewInt(int64(10)).Mul(Pow10(18))}},
 			MaxDepositPeriod: 10,
 		},
 		VotingProcedure: VotingProcedure{
@@ -47,9 +47,15 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 		// TODO: Handle this with #870
 		panic(err)
 	}
-	k.setDepositProcedure(ctx, data.DepositProcedure)
-	k.setVotingProcedure(ctx, data.VotingProcedure)
-	k.setTallyingProcedure(ctx, data.TallyingProcedure)
+
+	k.setDepositProcedureDeposit(ctx, data.DepositProcedure.MinDeposit)
+	k.setDepositProcedureMaxDepositPeriod(ctx, data.DepositProcedure.MaxDepositPeriod)
+
+	k.setVotingProcedureVotingPeriod(ctx, data.VotingProcedure.VotingPeriod)
+
+	k.setTallyingProcedure(ctx, ParamStoreKeyTallyingProcedureThreshold, data.TallyingProcedure.Threshold)
+	k.setTallyingProcedure(ctx, ParamStoreKeyTallyingProcedureVeto, data.TallyingProcedure.Veto)
+	k.setTallyingProcedure(ctx, ParamStoreKeyTallyingProcedurePenalty, data.TallyingProcedure.GovernancePenalty)
 }
 
 // WriteGenesis - output genesis parameters
@@ -65,4 +71,16 @@ func WriteGenesis(ctx sdk.Context, k Keeper) GenesisState {
 		VotingProcedure:    votingProcedure,
 		TallyingProcedure:  tallyingProcedure,
 	}
+}
+
+func Pow10(y int) sdk.Int {
+	result := sdk.NewInt(1)
+	x := sdk.NewInt(10)
+	for i := y; i > 0; i >>= 1 {
+		if i&1 != 0 {
+			result = result.Mul(x)
+		}
+		x = x.Mul(x)
+	}
+	return result
 }

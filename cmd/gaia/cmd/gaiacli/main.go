@@ -17,7 +17,7 @@ import (
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	slashingcmd "github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
-
+	paramscli "github.com/cosmos/cosmos-sdk/x/params/client/cli"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 )
 
@@ -140,6 +140,18 @@ func main() {
 		client.LineBreak,
 		version.VersionCmd,
 	)
+
+	paramsCmd := &cobra.Command{
+		Use:   "params",
+		Short: "Governance and voting subcommands",
+	}
+
+	paramsCmd.AddCommand(
+		client.GetCommands(
+			paramscli.QueryParam("params",cdc),
+		)...)
+
+	rootCmd.AddCommand(paramsCmd)
 
 	// prepare and add flags
 	executor := cli.PrepareMainCmd(rootCmd, "GA", app.DefaultCLIHome)

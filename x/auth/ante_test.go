@@ -15,6 +15,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
+func defaultGenesisStateForTest() GenesisState {
+	return GenesisState{
+		FeeTokenNative: "atom",
+		GasPriceThreshold: 0,
+	}
+}
+
 func newTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
 	return sdk.NewTestMsg(addrs...)
 }
@@ -119,7 +126,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
-	InitGenesis(ctx, paramsKeeper.Setter(), DefaultGenesisStateForTest())
+	InitGenesis(ctx, paramsKeeper.Setter(), defaultGenesisStateForTest())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -174,7 +181,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
-	InitGenesis(ctx, paramsKeeper.Setter(), DefaultGenesisStateForTest())
+	InitGenesis(ctx, paramsKeeper.Setter(), defaultGenesisStateForTest())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -235,7 +242,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
-	InitGenesis(ctx, paramsKeeper.Setter(), DefaultGenesisStateForTest())
+	InitGenesis(ctx, paramsKeeper.Setter(), defaultGenesisStateForTest())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -315,7 +322,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
-	InitGenesis(ctx, paramsKeeper.Setter(), DefaultGenesisStateForTest())
+	InitGenesis(ctx, paramsKeeper.Setter(), defaultGenesisStateForTest())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -359,7 +366,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
-	InitGenesis(ctx, paramsKeeper.Setter(), DefaultGenesisStateForTest())
+	InitGenesis(ctx, paramsKeeper.Setter(), defaultGenesisStateForTest())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -372,7 +379,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	var tx sdk.Tx
 	msg := newTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []int64{0}, []int64{0}
-	fee := NewStdFee(0, sdk.NewCoin("atom", 0))
+	fee := NewStdFee(1, sdk.NewCoin("atom", 0))
 
 	// tx does not have enough gas
 	tx = newTestTx(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee)
@@ -389,7 +396,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeMemoTooLarge)
 
 	// tx with memo has enough gas
-	fee = NewStdFee(1100, sdk.NewCoin("atom", 0))
+	fee = NewStdFee(1200, sdk.NewCoin("atom", 0))
 	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 	checkValidTx(t, anteHandler, ctx, tx)
 }
@@ -404,7 +411,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
-	InitGenesis(ctx, paramsKeeper.Setter(), DefaultGenesisStateForTest())
+	InitGenesis(ctx, paramsKeeper.Setter(), defaultGenesisStateForTest())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -457,7 +464,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
-	InitGenesis(ctx, paramsKeeper.Setter(), DefaultGenesisStateForTest())
+	InitGenesis(ctx, paramsKeeper.Setter(), defaultGenesisStateForTest())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -540,7 +547,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
-	InitGenesis(ctx, paramsKeeper.Setter(), DefaultGenesisStateForTest())
+	InitGenesis(ctx, paramsKeeper.Setter(), defaultGenesisStateForTest())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()

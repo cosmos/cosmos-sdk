@@ -91,6 +91,8 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 			if i == 0 {
 				firstAccount = signerAcc
+			} else {
+				am.SetAccount(newCtx, signerAcc)
 			}
 
 			signerAccs[i] = signerAcc

@@ -90,26 +90,23 @@ func TestFeeCollectionKeeperPreprocess(t *testing.T) {
 	InitGenesis(ctx, paramKeeper.Setter(), DefaultGenesisState())
 
 	var err sdk.Error
-	err = fck.FeePreprocess(ctx, oneCoin)
+	//err = fck.FeePreprocess(ctx, oneCoin, 10)
+	//require.Error(t,err,"")
+
+	fee1 := sdk.Coins{sdk.NewCoin("steak", 50)}
+	err = fck.FeePreprocess(ctx, fee1, 10)
 	require.Error(t,err,"")
 
-	fee1 := sdk.Coins{sdk.NewCoin("iGas", 50)}
-	err = fck.FeePreprocess(ctx, fee1)
-	require.Error(t,err,"")
-
-	fee2 := sdk.Coins{sdk.NewCoin("iGas", 100)}
-	err = fck.FeePreprocess(ctx, fee2)
+	fee2 := sdk.Coins{sdk.NewCoin("steak", 200000000000)}
+	err = fck.FeePreprocess(ctx, fee2, 10)
 	require.NoError(t,err,"")
 
-	fee3 := sdk.Coins{sdk.NewCoin("iris", 1)}
-	err = fck.FeePreprocess(ctx, fee3)
+	fee3 := sdk.Coins{sdk.NewCoin("iGas", 120000000000)}
+	err = fck.FeePreprocess(ctx, fee3, 10)
 	require.Error(t,err,"")
 
-	exchangeRate := sdk.NewRatFromInt(sdk.NewInt(100), sdk.OneInt())
-	exchangeRateBytes,errMsg := fck.cdc.MarshalBinary(exchangeRate)
-	require.NoError(t, errMsg)
-	paramKeeper.Setter().SetRaw(ctx, FeeExchangeRatePrefix+"iris", exchangeRateBytes)
+	paramKeeper.Setter().SetString(ctx, FeeExchangeRatePrefix+"iGas", sdk.NewInt(int64(9000000000)).String())
 
-	err = fck.FeePreprocess(ctx, fee3)
+	err = fck.FeePreprocess(ctx, fee3, 10)
 	require.NoError(t,err,"")
 }

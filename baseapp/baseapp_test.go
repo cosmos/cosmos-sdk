@@ -440,7 +440,7 @@ func TestCheckTx(t *testing.T) {
 	nTxs := int64(5)
 
 	// TODO: can remove this once CheckTx doesnt process msgs.
-	app.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result { return sdk.Result{} })
+	app.Router().AddRoute(typeMsgCounter, []*sdk.KVStoreKey{capKey}, func(ctx sdk.Context, msg sdk.Msg) sdk.Result { return sdk.Result{} })
 
 	app.InitChain(abci.RequestInitChain{})
 
@@ -479,7 +479,7 @@ func TestDeliverTx(t *testing.T) {
 
 	// test increments in the handler
 	deliverKey := []byte("deliver-key")
-	app.Router().AddRoute(typeMsgCounter, handlerMsgCounter(t, capKey, deliverKey))
+	app.Router().AddRoute(typeMsgCounter, []*sdk.KVStoreKey{capKey}, handlerMsgCounter(t, capKey, deliverKey))
 
 	nBlocks := 3
 	txPerHeight := 5
@@ -515,8 +515,8 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	// increment the msg counter
 	deliverKey := []byte("deliver-key")
 	deliverKey2 := []byte("deliver-key2")
-	app.Router().AddRoute(typeMsgCounter, handlerMsgCounter(t, capKey, deliverKey))
-	app.Router().AddRoute(typeMsgCounter2, handlerMsgCounter(t, capKey, deliverKey2))
+	app.Router().AddRoute(typeMsgCounter, []*sdk.KVStoreKey{capKey}, handlerMsgCounter(t, capKey, deliverKey))
+	app.Router().AddRoute(typeMsgCounter2, []*sdk.KVStoreKey{capKey}, handlerMsgCounter(t, capKey, deliverKey2))
 
 	// run a multi-msg tx
 	// with all msgs the same type
@@ -575,7 +575,7 @@ func TestConcurrentCheckDeliver(t *testing.T) {
 // Simulate() and Query("/app/simulate", txBytes) should give
 // the same results.
 func TestSimulateTx(t *testing.T) {
-	app, _, _ := setupBaseApp(t)
+	app, capKey, _ := setupBaseApp(t)
 
 	gasConsumed := int64(5)
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
@@ -583,7 +583,7 @@ func TestSimulateTx(t *testing.T) {
 		return
 	})
 
-	app.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	app.Router().AddRoute(typeMsgCounter, []*sdk.KVStoreKey{capKey}, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		ctx.GasMeter().ConsumeGas(gasConsumed, "test")
 		return sdk.Result{GasUsed: ctx.GasMeter().GasConsumed()}
 	})
@@ -630,9 +630,9 @@ func TestSimulateTx(t *testing.T) {
 // TODO: add more
 
 func TestRunInvalidTransaction(t *testing.T) {
-	app, _, _ := setupBaseApp(t)
+	app, capKey, _ := setupBaseApp(t)
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
-	app.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
+	app.Router().AddRoute(typeMsgCounter, []*sdk.KVStoreKey{capKey}, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
 
 	app.BeginBlock(abci.RequestBeginBlock{})
 
@@ -700,7 +700,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 
 // Test that transactions exceeding gas limits fail
 func TestTxGasLimits(t *testing.T) {
-	app, _, _ := setupBaseApp(t)
+	app, capKey, _ := setupBaseApp(t)
 
 	gasGranted := int64(10)
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
@@ -732,7 +732,7 @@ func TestTxGasLimits(t *testing.T) {
 		}
 		return
 	})
-	app.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	app.Router().AddRoute(typeMsgCounter, []*sdk.KVStoreKey{capKey}, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		count := msg.(msgCounter).Counter
 		ctx.GasMeter().ConsumeGas(count, "counter-handler")
 		return sdk.Result{}
@@ -794,7 +794,7 @@ func TestQuery(t *testing.T) {
 		return
 	})
 
-	app.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	app.Router().AddRoute(typeMsgCounter, []*sdk.KVStoreKey{capKey}, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		store := ctx.KVStore(capKey)
 		store.Set(key, value)
 		return sdk.Result{}

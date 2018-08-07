@@ -492,6 +492,7 @@ func validatorsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handle
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(output)
 	}
 }
@@ -551,6 +552,7 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
+
 		w.Write(output)
 	}
 }

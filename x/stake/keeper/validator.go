@@ -261,7 +261,10 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 }
 
 // updateCliffValidator determines if the current cliff validator needs to be
-// updated or swapped.
+// updated or swapped. If the provided affected validator is the current cliff
+// validator before it's power was increased, either the cliff power key will
+// be updated or if it's power is greater than the next bonded validator by
+// power, it'll be swapped.
 func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validator) {
 	cliffAddr := sdk.AccAddress(k.GetCliffValidator(ctx))
 	if !bytes.Equal(cliffAddr, affectedVal.Owner) {

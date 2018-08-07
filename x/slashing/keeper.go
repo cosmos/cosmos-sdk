@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/tendermint/tendermint/crypto/tmhash"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -12,11 +14,11 @@ import (
 
 // Keeper of the slashing store
 type Keeper struct {
-	storeKey     sdk.StoreKey
-	cdc          *wire.Codec
-	validatorSet sdk.ValidatorSet
-	params       params.Getter
-
+	storeKey        sdk.StoreKey
+	cdc             *wire.Codec
+	validatorSet    sdk.ValidatorSet
+	params          params.Getter
+	addressToPubkey map[[tmhash.Size]byte]crypto.PubKey
 	// codespace
 	codespace sdk.CodespaceType
 }
@@ -78,6 +80,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	if !found {
 		// If this validator has never been seen before, construct a new SigningInfo with the correct start height
 		signInfo = NewValidatorSigningInfo(height, 0, time.Unix(0, 0), 0)
+		k.addValidatorAddress(pubkey.Address(), pubkey)
 	}
 	index := signInfo.IndexOffset % k.SignedBlocksWindow(ctx)
 	signInfo.IndexOffset++
@@ -120,4 +123,13 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 
 	// Set the updated signing info
 	k.setValidatorSigningInfo(ctx, address, signInfo)
+}
+
+func (k Keeper) addValidatorAddress(addrSlice []byte, key crypto.PubKey) {
+	if len(addrSlice) != tmhash.Size {
+		return
+	}
+	addr := new([tmhash.Size]byte)
+	copy(addr[:], addrSlice)
+	k.addressToPubkey[*addr] = key
 }

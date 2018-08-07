@@ -24,7 +24,7 @@ func TestGetSetValidatorSigningInfo(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, info.StartHeight, int64(4))
 	require.Equal(t, info.IndexOffset, int64(3))
-	require.Equal(t, info.JailedUntil, int64(2))
+	require.Equal(t, info.JailedUntil, time.Unix(2, 0).UTC())
 	require.Equal(t, info.SignedBlocksCounter, int64(10))
 }
 

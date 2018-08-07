@@ -2,6 +2,7 @@ package slashing
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -43,7 +44,7 @@ func TestBeginBlocker(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, ctx.BlockHeight(), info.StartHeight)
 	require.Equal(t, int64(1), info.IndexOffset)
-	require.Equal(t, int64(0), info.JailedUntil)
+	require.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
 	require.Equal(t, int64(1), info.SignedBlocksCounter)
 
 	height := int64(0)

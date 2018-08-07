@@ -73,7 +73,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, int64(0), info.IndexOffset)
 	require.Equal(t, int64(0), info.SignedBlocksCounter)
-	require.Equal(t, int64(0), info.JailedUntil)
+	require.Equal(t, time.Unix(0, 0), info.JailedUntil)
 	height := int64(0)
 
 	// 1000 first blocks OK
@@ -188,7 +188,7 @@ func TestHandleNewValidator(t *testing.T) {
 	require.Equal(t, int64(keeper.SignedBlocksWindow(ctx)+1), info.StartHeight)
 	require.Equal(t, int64(2), info.IndexOffset)
 	require.Equal(t, int64(1), info.SignedBlocksCounter)
-	require.Equal(t, int64(0), info.JailedUntil)
+	require.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
 
 	// validator should be bonded still, should not have been revoked or slashed
 	validator, _ := sk.GetValidatorByPubKey(ctx, val)

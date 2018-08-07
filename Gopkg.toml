@@ -57,8 +57,7 @@
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  # We haven't tagged a release yet, but this is the revision on master
-  revision = "013b9cef642f875634c614019ab13b17570778ad"
+  version = "=v0.23.0"
 
 [[constraint]]
   name = "github.com/bartekn/go-bip39"

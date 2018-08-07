@@ -223,7 +223,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 		store.Set(GetTendermintUpdatesKey(validator.Owner), bz)
 
 		if cliffPower != nil {
-			k.updateCliffValidator(ctx, validator)
+			k.attemptUpdateCliffValidator(ctx, validator)
 		}
 
 	// if is a new validator and the new power is less than the cliff validator
@@ -260,12 +260,12 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 	return validator
 }
 
-// updateCliffValidator determines if the current cliff validator needs to be
-// updated or swapped. If the provided affected validator is the current cliff
-// validator before it's power was increased, either the cliff power key will
-// be updated or if it's power is greater than the next bonded validator by
-// power, it'll be swapped.
-func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validator) {
+// attemptUpdateCliffValidator determines if the current cliff validator needs
+// to be updated or swapped. If the provided affected validator is the current
+// cliff validator before it's power was increased, either the cliff power key
+// will be updated or if it's power is greater than the next bonded validator
+// by power, it'll be swapped.
+func (k Keeper) attemptUpdateCliffValidator(ctx sdk.Context, affectedVal types.Validator) {
 	cliffAddr := sdk.AccAddress(k.GetCliffValidator(ctx))
 	if !bytes.Equal(cliffAddr, affectedVal.Owner) {
 		return

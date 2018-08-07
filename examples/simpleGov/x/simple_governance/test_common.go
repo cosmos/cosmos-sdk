@@ -68,11 +68,11 @@ var (
 		"Should we change the number of validators to 500?",
 	}
 
-	coinsHandlerTest = []sdk.Coins{
-		sdk.Coins{{"Atom", sdk.NewInt(int64(101))}, {"eth", sdk.NewInt(int64(20))}}, // ok
-		sdk.Coins{{"eth", sdk.NewInt(int64(10))}, {"Atom", sdk.NewInt(int64(0))}},   // empty coins
-		sdk.Coins{{"BTC", sdk.NewInt(int64(15))}, {"Atom", sdk.NewInt(int64(50))}},  // balance below deposit
-	}
+	// coinsHandlerTest = []sdk.Coins{
+	// 	sdk.Coins{{"Atom", sdk.NewInt(int64(101))}, {"eth", sdk.NewInt(int64(20))}}, // ok
+	// 	sdk.Coins{{"eth", sdk.NewInt(int64(10))}, {"Atom", sdk.NewInt(int64(0))}},   // empty coins
+	// 	sdk.Coins{{"BTC", sdk.NewInt(int64(15))}, {"Atom", sdk.NewInt(int64(50))}},  // balance below deposit
+	// }
 
 	options = []string{
 		"Yes",

@@ -22,8 +22,9 @@ func TestSimpleGovKeeper(t *testing.T) {
 	// assert.NotNil(t, err)
 
 	// create proposals
-	proposal := k.NewProposal(ctx, titles[1], descriptions[1])
-	proposal2 := k.NewProposal(ctx, titles[2], descriptions[2])
+	proposal := k.NewProposal(ctx, titles[0], descriptions[0])
+	// TODO Error when defined proposal 2 is defined here
+	// proposal2 := k.NewProposal(ctx, titles[1], descriptions[1])
 
 	// –––––––––––––––––––––––––––––––––––––––
 	//                KEEPER
@@ -32,13 +33,15 @@ func TestSimpleGovKeeper(t *testing.T) {
 	// ––––––– Test GetProposal –––––––
 
 	// Case 1: valid request
-	resProposal, err := k.GetProposal(ctx, 1)
-	assert.NotNil(t, resProposal)
+	res, err := k.GetProposal(ctx, proposal.ID)
+	assert.NotEqual(t, Proposal{}, res)
 	assert.Nil(t, err)
-	assert.Equal(t, proposal, resProposal)
+	assert.Equal(t, proposal, res)
+
+	proposal2 := k.NewProposal(ctx, titles[1], descriptions[1])
 
 	// Case 2: invalid proposalID
-	resProposal, err = k.GetProposal(ctx, 2)
+	res, err = k.GetProposal(ctx, proposal2.ID)
 	assert.NotNil(t, err)
 
 	k.SetVote(ctx, 1, addrs[2], options[1])
@@ -75,13 +78,13 @@ func TestSimpleGovKeeper(t *testing.T) {
 	// ––––––– Test GetProposal –––––––
 
 	// Case 1: valid request
-	resProposal, err = keeperRead.GetProposal(ctx, 1)
-	assert.NotNil(t, resProposal)
+	res, err = keeperRead.GetProposal(ctx, proposal.ID)
+	assert.NotNil(t, res)
 	assert.Nil(t, err)
-	assert.Equal(t, proposal, resProposal)
+	assert.Equal(t, proposal, res)
 
 	// Case 2: invalid proposalID
-	resProposal, err = keeperRead.GetProposal(ctx, 2)
+	res, err = keeperRead.GetProposal(ctx, proposal2.ID)
 	assert.NotNil(t, err)
 
 	// ––––––– Test SetProposal –––––––
@@ -123,19 +126,19 @@ func TestSimpleGovKeeper(t *testing.T) {
 	err = k.ProposalQueuePush(ctx, 1)
 	assert.Nil(t, err)
 
-	resProposal, err = k.ProposalQueueHead(ctx) // Gets first proposal
-	assert.NotNil(t, resProposal)
+	res, err = k.ProposalQueueHead(ctx) // Gets first proposal
+	assert.NotNil(t, res)
 	assert.Nil(t, err)
-	assert.Equal(t, proposal, resProposal)
+	assert.Equal(t, proposal, res)
 
-	resProposal, err = k.ProposalQueuePop(ctx) // Pops first proposal
+	res, err = k.ProposalQueuePop(ctx) // Pops first proposal
 	assert.Nil(t, err)
-	assert.Equal(t, proposal, resProposal)
+	assert.Equal(t, proposal, res)
 
-	resProposal, err = k.ProposalQueuePop(ctx) // Empty queue --> error
+	res, err = k.ProposalQueuePop(ctx) // Empty queue --> error
 	assert.NotNil(t, err)
 	assert.Equal(t, proposal, Proposal{})
 
-	resProposal, err = k.ProposalQueueHead(ctx) // Empty queue --> error
+	res, err = k.ProposalQueueHead(ctx) // Empty queue --> error
 	assert.NotNil(t, err)
 }

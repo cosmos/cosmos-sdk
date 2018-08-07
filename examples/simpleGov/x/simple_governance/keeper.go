@@ -39,7 +39,6 @@ func (k Keeper) NewProposal(ctx sdk.Context, title string, description string) P
 		Title:       title,
 		Description: description,
 		State:       "Open",
-		Deposit:     sdk.Coins{},
 		SubmitBlock: ctx.BlockHeight(),
 	}
 	k.SetProposal(ctx, proposal)
@@ -73,30 +72,18 @@ func (k Keeper) GetProposal(ctx sdk.Context, proposalID int64) (Proposal, sdk.Er
 	if bp == nil {
 		return Proposal{}, ErrProposalNotFound(proposalID)
 	}
-
 	proposal := &Proposal{}
-
-	err := k.cdc.UnmarshalBinary(bp, proposal)
-	if err != nil {
-		panic(err)
-	}
+	k.cdc.MustUnmarshalBinary(bp, proposal)
 
 	return *proposal, nil
 }
 
 // SetProposal sets a proposal to the context
-func (k Keeper) SetProposal(ctx sdk.Context, proposal Proposal) sdk.Error {
+func (k Keeper) SetProposal(ctx sdk.Context, proposal Proposal) {
 	store := ctx.KVStore(k.SimpleGov)
-
-	bp, err := k.cdc.MarshalBinary(proposal)
-	if err != nil {
-		panic(err) // return proper error
-	}
-
+	bz := k.cdc.MustMarshalBinary(proposal)
 	key := GenerateProposalKey(proposal.ID)
-
-	store.Set(key, bp)
-	return nil
+	store.Set(key, bz)
 }
 
 // GetVote returns the given option of a proposal stored in the keeper

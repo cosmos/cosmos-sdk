@@ -14,7 +14,7 @@ func TestSimpleGovKeeper(t *testing.T) {
 
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
-	if ctx.KVStore(k.SimpleGov) == nil {
+	if ctx.KVStore(k.storeKey) == nil {
 		panic("Nil interface")
 	}
 	// newTags := sdk.NewTags()
@@ -41,7 +41,7 @@ func TestSimpleGovKeeper(t *testing.T) {
 	proposal2 := k.NewProposal(ctx, titles[1], descriptions[1])
 
 	// Case 2: invalid proposalID
-	res, err = k.GetProposal(ctx, proposal2.ID)
+	res, err = k.GetProposal(ctx, 4)
 	assert.NotNil(t, err)
 
 	k.SetVote(ctx, 1, addrs[2], options[1])
@@ -84,12 +84,12 @@ func TestSimpleGovKeeper(t *testing.T) {
 	assert.Equal(t, proposal, res)
 
 	// Case 2: invalid proposalID
-	res, err = keeperRead.GetProposal(ctx, proposal2.ID)
+	res, err = keeperRead.GetProposal(ctx, 10)
 	assert.NotNil(t, err)
 
 	// ––––––– Test SetProposal –––––––
 
-	err = keeperRead.SetProposal(ctx, 2, proposal2) // Error Unauthorized
+	err = keeperRead.SetProposal(ctx, proposal2) // Error Unauthorized
 	assert.NotNil(t, err)
 
 	// ––––––– Test GetVote –––––––

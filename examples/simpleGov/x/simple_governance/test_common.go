@@ -105,29 +105,6 @@ func testAddr(addr string) sdk.AccAddress {
 	return res
 }
 
-// // CreateMockApp creates a new Mock application for testing purposes
-// func CreateMockApp(
-// 	numGenAccs int,
-// 	stakeKey *sdk.KVStoreKey,
-// 	govKey *sdk.KVStoreKey,
-// ) (
-// 	*mock.App,
-// 	Keeper,
-// 	stake.Keeper,
-// ) {
-// 	mapp := mock.NewApp()
-//
-// 	stake.RegisterWire(mapp.Cdc)
-// 	RegisterWire(mapp.Cdc)
-//
-// 	ck := bank.NewKeeper(mapp.AccountMapper)
-// 	sk := stake.NewKeeper(mapp.Cdc, stakeKey, ck, mapp.RegisterCodespace(stake.DefaultCodespace))
-// 	keeper := NewKeeper(govKey, ck, sk, mapp.RegisterCodespace(DefaultCodespace))
-// 	mapp.Router().AddRoute("simplegov", NewHandler(keeper))
-//
-// 	return mapp, keeper, sk
-// }
-
 // initialize the mock application for this module
 func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, []sdk.AccAddress, []crypto.PubKey, []crypto.PrivKey) {
 	mapp := mock.NewApp()
@@ -149,11 +126,11 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 
 	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyGov, keyGlobalParams}))
 
-	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewInt64Coin("steak", 42)})
+	genAccs, addresses, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewInt64Coin("steak", 42)})
 
 	mock.SetGenesis(mapp, genAccs)
 
-	return mapp, keeper, sk, addrs, pubKeys, privKeys
+	return mapp, keeper, sk, addresses, pubKeys, privKeys
 }
 
 // gov and stake initchainer

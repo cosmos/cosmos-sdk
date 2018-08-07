@@ -17,6 +17,7 @@ type MsgSubmitProposal struct {
 	ProposalType   ProposalKind   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 	Proposer       sdk.AccAddress //  Address of the proposer
 	InitialDeposit sdk.Coins      //  Initial deposit paid by sender. Must be strictly positive.
+	Params         Params
 }
 
 func NewMsgSubmitProposal(title string, description string, proposalType ProposalKind, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
@@ -26,6 +27,17 @@ func NewMsgSubmitProposal(title string, description string, proposalType Proposa
 		ProposalType:   proposalType,
 		Proposer:       proposer,
 		InitialDeposit: initialDeposit,
+	}
+}
+
+func NewSubmitProposal(title string, description string, proposalType ProposalKind, proposer sdk.AccAddress, initialDeposit sdk.Coins,params Params) MsgSubmitProposal {
+	return MsgSubmitProposal{
+		Title:          title,
+		Description:    description,
+		ProposalType:   proposalType,
+		Proposer:       proposer,
+		InitialDeposit: initialDeposit,
+		Params:			params,
 	}
 }
 

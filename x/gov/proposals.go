@@ -95,28 +95,34 @@ func (tp *TextProposal) SetVotingStartBlock(votingStartBlock int64) {
 func (tp *TextProposal) Execute(ctx sdk.Context, k Keeper) error { return nil }
 
 ////////////////////  iris/cosmos-sdk begin  ///////////////////////////
-type Op byte
+type Op string
 
 const (
-	Add    Op = 0x01
-	Del    Op = 0x02
-	Update Op = 0x03
+	Add    Op = "add"
+	Del    Op = "del"
+	Update Op = "update"
 )
 
 type Data struct {
-	Key   string      `json:"key"`
-	Value interface{} `json:"value"`
-	Op    Op          `json:"op"`
+	Key   string `json:"key"`
+	Value string `json:"value"`
+	Op    Op     `json:"op"`
 }
+
+type Params []Data
+
+// Implements Proposal Interface
+var _ Proposal = (*ParameterProposal)(nil)
 
 type ParameterProposal struct {
 	TextProposal
-	Datas []Data `json:"datas"`
+	Datas Params `json:"datas"`
 }
 
 func (pp *ParameterProposal) Execute(ctx sdk.Context, k Keeper) error {
 
 	logger := ctx.Logger().With("module", "x/gov")
+	logger.Info("Execute ParameterProposal begin","info", fmt.Sprintf("current height:%d",ctx.BlockHeight()))
 
 	if len(pp.Datas) == 0 {
 		return errors.New("ParameterProposal's data is empty")
@@ -129,7 +135,9 @@ func (pp *ParameterProposal) Execute(ctx sdk.Context, k Keeper) error {
 			if bz == nil || len(bz) == 0 {
 				logger.Error("Execute ParameterProposal ", "err", "Parameter "+data.Key+" is not exist")
 			} else {
-				k.ps.Set(ctx, data.Key, data.Value)
+				if err := k.ps.Set(ctx, data.Key, data.Value);err != nil{
+					logger.Error("Execute ParameterProposal ", "err", err.Error())
+				}
 			}
 		} else {
 

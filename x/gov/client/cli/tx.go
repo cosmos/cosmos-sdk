@@ -12,6 +12,7 @@ import (
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/pkg/errors"
+	"encoding/json"
 )
 
 const (
@@ -24,6 +25,7 @@ const (
 	flagDepositer    = "depositer"
 	flagVoter        = "voter"
 	flagOption       = "option"
+	flagParams       = "params"
 )
 
 // submit a proposal tx
@@ -36,6 +38,7 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 			description := viper.GetString(flagDescription)
 			strProposalType := viper.GetString(flagProposalType)
 			initialDeposit := viper.GetString(flagDeposit)
+			paramsStr := viper.GetString(flagParams)
 
 			// get the from address from the name flag
 			from, err := sdk.AccAddressFromBech32(viper.GetString(flagProposer))
@@ -54,7 +57,14 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// create the message
-			msg := gov.NewMsgSubmitProposal(title, description, proposalType, from, amount)
+			var params gov.Params
+			if(proposalType == gov.ProposalTypeParameterChange){
+				if err := json.Unmarshal([]byte(paramsStr),&params);err != nil{
+					fmt.Println(err.Error())
+					return nil
+				}
+			}
+			msg := gov.NewSubmitProposal(title, description, proposalType, from, amount,params)
 
 			err = msg.ValidateBasic()
 			if err != nil {
@@ -79,6 +89,7 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().String(flagProposalType, "", "proposalType of proposal")
 	cmd.Flags().String(flagDeposit, "", "deposit of proposal")
 	cmd.Flags().String(flagProposer, "", "proposer of proposal")
+	cmd.Flags().String(flagParams, "", "parameter of proposal,eg. [{key:key,value:value,op:update}]")
 
 	return cmd
 }

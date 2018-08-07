@@ -35,6 +35,8 @@ type Proposal interface {
 
 	GetVotingStartBlock() int64
 	SetVotingStartBlock(int64)
+
+	Execute(ctx sdk.Context, k Keeper) error
 }
 
 // checks if two proposals are equal
@@ -90,6 +92,61 @@ func (tp TextProposal) GetVotingStartBlock() int64                 { return tp.V
 func (tp *TextProposal) SetVotingStartBlock(votingStartBlock int64) {
 	tp.VotingStartBlock = votingStartBlock
 }
+func (tp *TextProposal) Execute(ctx sdk.Context, k Keeper) error { return nil }
+
+////////////////////  iris/cosmos-sdk begin  ///////////////////////////
+type Op string
+
+const (
+	Add    Op = "add"
+	Del    Op = "del"
+	Update Op = "update"
+)
+
+type Data struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+	Op    Op     `json:"op"`
+}
+
+type Params []Data
+
+// Implements Proposal Interface
+var _ Proposal = (*ParameterProposal)(nil)
+
+type ParameterProposal struct {
+	TextProposal
+	Datas Params `json:"datas"`
+}
+
+func (pp *ParameterProposal) Execute(ctx sdk.Context, k Keeper) error {
+
+	logger := ctx.Logger().With("module", "x/gov")
+	logger.Info("Execute ParameterProposal begin","info", fmt.Sprintf("current height:%d",ctx.BlockHeight()))
+
+	if len(pp.Datas) == 0 {
+		return errors.New("ParameterProposal's data is empty")
+	}
+	for _, data := range pp.Datas {
+		if data.Op == Add {
+			k.ps.Set(ctx, data.Key, data.Value)
+		} else if data.Op == Update {
+			bz := k.ps.GetRaw(ctx, data.Key)
+			if bz == nil || len(bz) == 0 {
+				logger.Error("Execute ParameterProposal ", "err", "Parameter "+data.Key+" is not exist")
+			} else {
+				if err := k.ps.Set(ctx, data.Key, data.Value);err != nil{
+					logger.Error("Execute ParameterProposal ", "err", err.Error())
+				}
+			}
+		} else {
+
+		}
+	}
+	return nil
+}
+
+////////////////////  iris/cosmos-sdk end  ///////////////////////////
 
 //-----------------------------------------------------------
 // ProposalQueue

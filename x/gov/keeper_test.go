@@ -10,13 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// overwrite defaults for testing
-func init() {
-	defaultMinDeposit = 10
-	defaultMaxDepositPeriod = 200
-	defaultVotingPeriod = 200
-}
-
 func TestGetSetProposal(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0)
 	mapp.BeginBlock(abci.RequestBeginBlock{})

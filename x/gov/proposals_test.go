@@ -6,6 +6,7 @@ import (
 	"github.com/magiconair/properties/assert"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"testing"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 func TestParameterProposal(t *testing.T) {
@@ -44,4 +45,6 @@ func TestParameterProposal(t *testing.T) {
 
 func TestByte(t *testing.T) {
 	fmt.Println(string([]byte{112,114,111,112,111,115,97,108,73,100}))
+	bInt :=sdk.NewRatFromInt(params.DefaultPrecison(100))
+	fmt.Println(bInt)
 }

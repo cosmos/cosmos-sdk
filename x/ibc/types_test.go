@@ -100,7 +100,7 @@ func TestIBCReceiveMsgValidation(t *testing.T) {
 func constructIBCPacket(valid bool) IBCPacket {
 	srcAddr := sdk.AccAddress([]byte("source"))
 	destAddr := sdk.AccAddress([]byte("destination"))
-	coins := sdk.Coins{sdk.NewCoin("atom", 10)}
+	coins := sdk.Coins{sdk.NewInt64Coin("atom", 10)}
 	srcChain := "source-chain"
 	destChain := "dest-chain"
 

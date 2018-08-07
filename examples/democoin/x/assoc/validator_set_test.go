@@ -36,7 +36,7 @@ func TestValidatorSet(t *testing.T) {
 		{addr2, sdk.NewRat(2)},
 	}}
 
-	valset := NewValidatorSet(wire.NewCodec(), sdk.NewPrefixStoreGetter(key, []byte("assoc")), base, 1, 5)
+	valset := NewValidatorSet(wire.NewCodec(), ctx.KVStore(key).Prefix([]byte("assoc")), base, 1, 5)
 
 	require.Equal(t, base.Validator(ctx, addr1), valset.Validator(ctx, addr1))
 	require.Equal(t, base.Validator(ctx, addr2), valset.Validator(ctx, addr2))

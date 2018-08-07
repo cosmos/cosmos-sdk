@@ -4,7 +4,6 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/iavl"
@@ -35,32 +34,34 @@ func setRandomKVPairs(t *testing.T, store KVStore) []kvpair {
 
 func testPrefixStore(t *testing.T, baseStore KVStore, prefix []byte) {
 	prefixStore := baseStore.Prefix(prefix)
+	prefixPrefixStore := prefixStore.Prefix([]byte("prefix"))
 
-	kvps := setRandomKVPairs(t, prefixStore)
-
-	buf := make([]byte, 32)
-	for i := 0; i < 20; i++ {
-		rand.Read(buf)
-		assert.False(t, prefixStore.Has(buf))
-		assert.Nil(t, prefixStore.Get(buf))
-		assert.False(t, baseStore.Has(append(prefix, buf...)))
-		assert.Nil(t, baseStore.Get(append(prefix, buf...)))
-	}
+	kvps := setRandomKVPairs(t, prefixPrefixStore)
 
 	for i := 0; i < 20; i++ {
 		key := kvps[i].key
-		assert.True(t, prefixStore.Has(key))
-		assert.Equal(t, kvps[i].value, prefixStore.Get(key))
-		assert.True(t, baseStore.Has(append(prefix, key...)))
-		assert.Equal(t, kvps[i].value, baseStore.Get(append(prefix, key...)))
+		value := kvps[i].value
+		require.True(t, prefixPrefixStore.Has(key))
+		require.Equal(t, value, prefixPrefixStore.Get(key))
 
-		prefixStore.Delete(key)
-		assert.False(t, prefixStore.Has(key))
-		assert.Nil(t, prefixStore.Get(key))
-		assert.False(t, baseStore.Has(append(prefix, buf...)))
-		assert.Nil(t, baseStore.Get(append(prefix, buf...)))
+		key = append([]byte("prefix"), key...)
+		require.True(t, prefixStore.Has(key))
+		require.Equal(t, value, prefixStore.Get(key))
+		key = append(prefix, key...)
+		require.True(t, baseStore.Has(key))
+		require.Equal(t, value, baseStore.Get(key))
+
+		key = kvps[i].key
+		prefixPrefixStore.Delete(key)
+		require.False(t, prefixPrefixStore.Has(key))
+		require.Nil(t, prefixPrefixStore.Get(key))
+		key = append([]byte("prefix"), key...)
+		require.False(t, prefixStore.Has(key))
+		require.Nil(t, prefixStore.Get(key))
+		key = append(prefix, key...)
+		require.False(t, baseStore.Has(key))
+		require.Nil(t, baseStore.Get(key))
 	}
-
 }
 
 func TestIAVLStorePrefix(t *testing.T) {
@@ -80,7 +81,7 @@ func TestCacheKVStorePrefix(t *testing.T) {
 func TestGasKVStorePrefix(t *testing.T) {
 	meter := sdk.NewGasMeter(100000000)
 	mem := dbStoreAdapter{dbm.NewMemDB()}
-	gasStore := NewGasKVStore(meter, mem)
+	gasStore := NewGasKVStore(meter, sdk.DefaultGasConfig(), mem)
 
 	testPrefixStore(t, gasStore, []byte("test"))
 }

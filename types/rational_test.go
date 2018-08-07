@@ -2,6 +2,7 @@ package types
 
 import (
 	"math/big"
+	"math/rand"
 	"testing"
 
 	wire "github.com/cosmos/cosmos-sdk/wire"
@@ -316,4 +317,86 @@ func TestStringOverflow(t *testing.T) {
 		"29728537197630860939575850336935951464/37134458148982045574552091851127630409",
 		rat3.String(),
 	)
+}
+
+// Tests below uses randomness
+// Since we are using *big.Rat as underlying value
+// and (U/)Int is immutable value(see TestImmutability(U/)Int)
+// it is safe to use randomness in the tests
+func TestArithRat(t *testing.T) {
+	for i := 0; i < 20; i++ {
+		n1 := NewInt(int64(rand.Int31()))
+		d1 := NewInt(int64(rand.Int31()))
+		rat1 := NewRatFromInt(n1, d1)
+
+		n2 := NewInt(int64(rand.Int31()))
+		d2 := NewInt(int64(rand.Int31()))
+		rat2 := NewRatFromInt(n2, d2)
+
+		n1d2 := n1.Mul(d2)
+		n2d1 := n2.Mul(d1)
+
+		cases := []struct {
+			nres Int
+			dres Int
+			rres Rat
+		}{
+			{n1d2.Add(n2d1), d1.Mul(d2), rat1.Add(rat2)},
+			{n1d2.Sub(n2d1), d1.Mul(d2), rat1.Sub(rat2)},
+			{n1.Mul(n2), d1.Mul(d2), rat1.Mul(rat2)},
+			{n1d2, n2d1, rat1.Quo(rat2)},
+		}
+
+		for _, tc := range cases {
+			require.Equal(t, NewRatFromInt(tc.nres, tc.dres), tc.rres)
+		}
+	}
+}
+
+func TestCompRat(t *testing.T) {
+	for i := 0; i < 20; i++ {
+		n1 := NewInt(int64(rand.Int31()))
+		d1 := NewInt(int64(rand.Int31()))
+		rat1 := NewRatFromInt(n1, d1)
+
+		n2 := NewInt(int64(rand.Int31()))
+		d2 := NewInt(int64(rand.Int31()))
+		rat2 := NewRatFromInt(n2, d2)
+
+		n1d2 := n1.Mul(d2)
+		n2d1 := n2.Mul(d1)
+
+		cases := []struct {
+			ires bool
+			rres bool
+		}{
+			{n1d2.Equal(n2d1), rat1.Equal(rat2)},
+			{n1d2.GT(n2d1), rat1.GT(rat2)},
+			{n1d2.LT(n2d1), rat1.LT(rat2)},
+			{n1d2.GT(n2d1) || n1d2.Equal(n2d1), rat1.GTE(rat2)},
+			{n1d2.LT(n2d1) || n1d2.Equal(n2d1), rat1.LTE(rat2)},
+		}
+
+		for _, tc := range cases {
+			require.Equal(t, tc.ires, tc.rres)
+		}
+	}
+}
+
+func TestImmutabilityRat(t *testing.T) {
+	for i := 0; i < 20; i++ {
+		n := int64(rand.Int31())
+		r := NewRat(n)
+		z := ZeroRat()
+		o := OneRat()
+
+		r.Add(z)
+		r.Sub(z)
+		r.Mul(o)
+		r.Quo(o)
+
+		require.Equal(t, n, r.RoundInt64())
+		require.True(t, NewRat(n).Equal(r))
+	}
+
 }

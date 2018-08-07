@@ -1,0 +1,9 @@
+---
+
+- hosts: all
+  any_errors_fatal: true
+  gather_facts: no
+  roles:
+    - upgrade-gaiad
+    - add-lcd
+

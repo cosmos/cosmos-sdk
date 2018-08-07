@@ -237,14 +237,14 @@ gaiacli stake create-validator \
 
 You can edit your validator's public description. This info is to identify your validator, and will be relied on by delegators to decide which validators to stake to. Make sure to provide input for every flag below, otherwise the field will default to empty (`--moniker` defaults to the machine name).
 
-The `--keybase-sig` is a 16-digit string that is generated with a [keybase.io](https://keybase.io) account. It's a cryptographically secure method of verifying your identity across multiple online networks. The Keybase API allows us to retrieve your Keybase avatar. This is how you can add a logo to your validator profile.
+The `--identity` can be used as to verify identity with systems like Keybase or UPort. When using with Keybase `--identity` should be populated with a 16-digit string that is generated with a [keybase.io](https://keybase.io) account. It's a cryptographically secure method of verifying your identity across multiple online networks. The Keybase API allows us to retrieve your Keybase avatar. This is how you can add a logo to your validator profile.
 
 ```bash
 gaiacli stake edit-validator
   --address-validator=<account_cosmosaccaddr>
   --moniker="choose a moniker" \
   --website="https://cosmos.network" \
-  --keybase-sig="6A0D65E29A4CBC8E"
+  --identity=6A0D65E29A4CBC8E
   --details="To infinity and beyond!"
   --chain-id=gaia-7001 \
   --from=<key_name>
@@ -473,3 +473,26 @@ You can also check your balance at a given block by using the `--block` flag:
 ```bash
 gaiacli account <account_cosmosaccaddr> --block=<block_height>
 ```
+
+## Create your Own Testnet
+
+To create your own testnet, first each validator will need to install gaiad and
+run `gen-tx`:
+
+```bash
+gaiad init gen-tx --name <account_name>
+```
+
+The validator will be prompted to enter a password for their new account.
+
+This populates `$HOME/.gaiad/gen-tx/` with a json file.
+
+Now these json files need to be aggregated together via Github, a Google form, pastebin or other methods.
+
+Place all files on one computer in `$HOME/.gaiad/gen-tx/`
+
+```bash
+gaiad init --gen-txs -o --chain=<chain-name>
+```
+
+This will generate a `genesis.json` in `$HOME/.gaiad/config/genesis.json` distribute this file to all validators on your testnet.

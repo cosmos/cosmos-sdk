@@ -11,11 +11,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 var (
-	priv1 = crypto.GenPrivKeyEd25519()
+	priv1 = ed25519.GenPrivKey()
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
 )
 
@@ -33,6 +33,9 @@ func getMockApp(t *testing.T) *mock.App {
 	mapp.SetInitChainer(getInitChainer(mapp, keeper))
 
 	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyPOW}))
+
+	mapp.Seal()
+
 	return mapp
 }
 

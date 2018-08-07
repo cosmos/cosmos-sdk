@@ -1,0 +1,11 @@
+---
+
+# Required: BINARY
+# Optional: GENESISFILE, UNSAFE_RESET_ALL
+
+- hosts: all
+  any_errors_fatal: true
+  gather_facts: no
+  roles:
+    - upgrade-gaiad
+

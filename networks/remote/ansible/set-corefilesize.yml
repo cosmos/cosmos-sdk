@@ -1,0 +1,13 @@
+---
+
+# Set the core file size to unlimited to allow the system to generate core dumps
+
+- hosts: all
+  any_errors_fatal: true
+  gather_facts: no
+
+  tasks:
+
+    - name: Set core file size to unlimited to be able to get the core dump on SIGABRT
+      shell: "ulimit -c unlimited"
+

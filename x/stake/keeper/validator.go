@@ -223,7 +223,10 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 		store.Set(GetTendermintUpdatesKey(validator.Owner), bz)
 
 		if cliffPower != nil {
-			k.attemptUpdateCliffValidator(ctx, validator)
+			cliffAddr := sdk.AccAddress(k.GetCliffValidator(ctx))
+			if bytes.Equal(cliffAddr, validator.Owner) {
+				k.updateCliffValidator(ctx, validator)
+			}
 		}
 
 	// if is a new validator and the new power is less than the cliff validator
@@ -260,19 +263,15 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 	return validator
 }
 
-// attemptUpdateCliffValidator determines if the current cliff validator needs
-// to be updated or swapped. If the provided affected validator is the current
-// cliff validator before it's power was increased, either the cliff power key
-// will be updated or if it's power is greater than the next bonded validator
-// by power, it'll be swapped.
-func (k Keeper) attemptUpdateCliffValidator(ctx sdk.Context, affectedVal types.Validator) {
-	cliffAddr := sdk.AccAddress(k.GetCliffValidator(ctx))
-	if !bytes.Equal(cliffAddr, affectedVal.Owner) {
-		return
-	}
-
+// updateCliffValidator determines if the current cliff validator needs to be
+// updated or swapped. If the provided affected validator is the current cliff
+// validator before it's power was increased, either the cliff power key will
+// be updated or if it's power is greater than the next bonded validator by
+// power, it'll be swapped.
+func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
+	cliffAddr := sdk.AccAddress(k.GetCliffValidator(ctx))
 
 	oldCliffVal, found := k.GetValidator(ctx, cliffAddr)
 	if !found {
@@ -289,9 +288,10 @@ func (k Keeper) attemptUpdateCliffValidator(ctx sdk.Context, affectedVal types.V
 	end := sdk.PrefixEndBytes(ValidatorsByPowerIndexKey)
 	iterator := store.Iterator(start, end)
 
+	offset := 0
 	var newCliffVal types.Validator
 
-	for ; iterator.Valid(); iterator.Next() {
+	for ; iterator.Valid() && offset < 1; iterator.Next() {
 		ownerAddr := iterator.Value()
 
 		currVal, found := k.GetValidator(ctx, ownerAddr)
@@ -299,13 +299,18 @@ func (k Keeper) attemptUpdateCliffValidator(ctx sdk.Context, affectedVal types.V
 			panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
 		}
 
-		if currVal.Status == sdk.Bonded && !currVal.Revoked {
-			newCliffVal = currVal
-			break
+		if currVal.Status != sdk.Bonded || currVal.Revoked {
+			panic(fmt.Sprintf("unexpected revoked or unbonded validator for address: %s\n", ownerAddr))
 		}
+
+		newCliffVal = currVal
+		offset++
 	}
 
 	iterator.Close()
+	if offset == 0 {
+		panic("unable to find cliff validator")
+	}
 
 	if bytes.Equal(affectedVal.Owner, newCliffVal.Owner) {
 		// The affected validator remains the cliff validator, however, since

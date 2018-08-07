@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 var (
@@ -26,6 +27,7 @@ var (
 type GenesisState struct {
 	Accounts  []GenesisAccount   `json:"accounts"`
 	StakeData stake.GenesisState `json:"stake"`
+	ParamsData params.ParamGenesisState `json:"params"`
 }
 
 // GenesisAccount doesn't need pubkey or sequence
@@ -154,6 +156,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 
 		// create the genesis account, give'm few steaks and a buncha token with there name
 		accAuth := auth.NewBaseAccountWithAddress(genTx.Address)
+
 		accAuth.Coins = sdk.Coins{
 			{genTx.Name + "Token", sdk.NewInt(1000)},
 			{"steak", sdk.NewInt(freeFermionsAcc)},
@@ -187,10 +190,12 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		}
 	}
 
+	paramsData := params.DefaultGenesisState()
 	// create the final app state
 	genesisState = GenesisState{
 		Accounts:  genaccs,
 		StakeData: stakeData,
+		ParamsData:paramsData,
 	}
 	return
 }

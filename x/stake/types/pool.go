@@ -12,7 +12,7 @@ import (
 type Pool struct {
 	LooseTokens       sdk.Rat   `json:"loose_tokens"`        // tokens which are not bonded in a validator
 	BondedTokens      sdk.Rat   `json:"bonded_tokens"`       // reserve of bonded tokens
-	InflationLastTime time.Time `json:"inflation_last_time"` // block which the last inflation was processed // TODO make time
+	InflationLastTime time.Time `json:"inflation_last_time"` // block which the last inflation was processed
 	Inflation         sdk.Rat   `json:"inflation"`           // current annual inflation rate
 
 	DateLastCommissionReset int64 `json:"date_last_commission_reset"` // unix timestamp for last commission accounting reset (daily)

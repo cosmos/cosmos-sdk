@@ -501,7 +501,7 @@ func TestUnbondingPeriod(t *testing.T) {
 
 	// set the unbonding time
 	params := keeper.GetParams(ctx)
-	params.UnbondingTime = 7
+	params.UnbondingTime = 7 * time.Second
 	keeper.SetParams(ctx, params)
 
 	// create the validator
@@ -542,7 +542,7 @@ func TestRedelegationPeriod(t *testing.T) {
 
 	// set the unbonding time
 	params := keeper.GetParams(ctx)
-	params.UnbondingTime = 7
+	params.UnbondingTime = 7 * time.Second
 	keeper.SetParams(ctx, params)
 
 	// create the validators

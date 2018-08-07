@@ -374,7 +374,7 @@ func TestValidatorQuery(t *testing.T) {
 	defer cleanup()
 	require.Equal(t, 1, len(pks))
 
-	validator1Owner := sdk.ValAddress(pks[0].Address())
+	validator1Owner := sdk.AccAddress(pks[0].Address())
 
 	validator := getValidator(t, port, validator1Owner)
 	bech32ValAddress, err := sdk.Bech32ifyValPub(pks[0])
@@ -388,7 +388,7 @@ func TestBonding(t *testing.T) {
 	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
-	validator1Owner := sdk.ValAddress(pks[0].Address())
+	validator1Owner := sdk.AccAddress(pks[0].Address())
 
 	// create bond TX
 	resultTx := doDelegate(t, port, seed, name, password, addr, validator1Owner)
@@ -430,7 +430,7 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, int64(40), coins.AmountOf("steak").Int64())
 
 	// query unbonding delegation
-	validatorAddr := sdk.ValAddress(pks[0].Address())
+	validatorAddr := sdk.AccAddress(pks[0].Address())
 	unbondings := getUndelegations(t, port, addr, validatorAddr)
 	assert.Len(t, unbondings, 1, "Unbondings holds all unbonding-delegations")
 	assert.Equal(t, "30", unbondings[0].Balance.Amount.String())
@@ -755,7 +755,7 @@ func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.
 
 // ============= Stake Module ================
 
-func getDelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) rest.DelegationWithoutRat {
+func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.AccAddress) rest.DelegationWithoutRat {
 
 	// get the account to get the sequence
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/delegations/%s", delegatorAddr, validatorAddr), nil)
@@ -766,7 +766,7 @@ func getDelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, vali
 	return bond
 }
 
-func getUndelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) []stake.UnbondingDelegation {
+func getUndelegations(t *testing.T, port string, delegatorAddr, validatorAddr sdk.AccAddress) []stake.UnbondingDelegation {
 
 	// get the account to get the sequence
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/unbonding_delegations/%s", delegatorAddr, validatorAddr), nil)
@@ -805,7 +805,7 @@ func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, quer
 	return txs
 }
 
-func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) (resultTx ctypes.ResultBroadcastTxCommit) {
+func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, validatorAddr sdk.AccAddress) (resultTx ctypes.ResultBroadcastTxCommit) {
 	// get the account to get the sequence
 	acc := getAccount(t, port, delegatorAddr)
 	accnum := acc.GetAccountNumber()
@@ -844,7 +844,7 @@ func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr s
 }
 
 func doBeginUnbonding(t *testing.T, port, seed, name, password string,
-	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) (resultTx ctypes.ResultBroadcastTxCommit) {
+	delegatorAddr, validatorAddr sdk.AccAddress) (resultTx ctypes.ResultBroadcastTxCommit) {
 
 	// get the account to get the sequence
 	acc := getAccount(t, port, delegatorAddr)
@@ -884,7 +884,7 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 }
 
 func doBeginRedelegation(t *testing.T, port, seed, name, password string,
-	delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress) (resultTx ctypes.ResultBroadcastTxCommit) {
+	delegatorAddr, validatorSrcAddr, validatorDstAddr sdk.AccAddress) (resultTx ctypes.ResultBroadcastTxCommit) {
 
 	// get the account to get the sequence
 	acc := getAccount(t, port, delegatorAddr)
@@ -934,7 +934,7 @@ func getValidators(t *testing.T, port string) []stake.BechValidator {
 	return validators
 }
 
-func getValidator(t *testing.T, port string, validatorAddr sdk.ValAddress) stake.BechValidator {
+func getValidator(t *testing.T, port string, validatorAddr sdk.AccAddress) stake.BechValidator {
 	// get the account to get the sequence
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/validators/%s", validatorAddr.String()), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)

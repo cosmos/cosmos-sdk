@@ -70,8 +70,8 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.Ba
 
 	// register message routes
 	app.Router().
-		AddRoute("bank",[]*sdk.KVStoreKey{app.keyAccount}, bank.NewHandler(app.coinKeeper)).
-		AddRoute("ibc", []*sdk.KVStoreKey{app.keyIBC},ibc.NewHandler(app.ibcMapper, app.coinKeeper))
+		AddRoute("bank", []*sdk.KVStoreKey{app.keyAccount}, bank.NewHandler(app.coinKeeper)).
+		AddRoute("ibc", []*sdk.KVStoreKey{app.keyIBC, app.keyAccount}, ibc.NewHandler(app.ibcMapper, app.coinKeeper))
 
 	// perform initialization logic
 	app.SetInitChainer(app.initChainer)

@@ -47,20 +47,16 @@ func (k Keeper) NewProposal(ctx sdk.Context, title string, description string) P
 }
 
 // generates a new id for a proposal
-func (k Keeper) newProposalID(ctx sdk.Context) int64 {
+func (k Keeper) newProposalID(ctx sdk.Context) (proposalID int64) {
 	store := ctx.KVStore(k.storeKey)
-	bid := store.Get([]byte("TotalID"))
+	bid := store.Get(KeyNextProposalID)
 	if bid == nil {
 		return -1
 	}
-
-	totalID := new(int64)
-	err := k.cdc.UnmarshalBinary(bid, totalID)
-	if err != nil {
-		panic(err)
-	}
-
-	return (*totalID + 1)
+	k.cdc.MustUnmarshalBinary(bid, &proposalID)
+	bid = k.cdc.MustMarshalBinary(proposalID + 1)
+	store.Set(KeyNextProposalID, bid)
+	return
 }
 
 // GetProposal gets the proposal with the given id from the context.
@@ -88,7 +84,7 @@ func (k Keeper) SetProposal(ctx sdk.Context, proposal Proposal) {
 
 // GetVote returns the given option of a proposal stored in the keeper
 // Used to check if an address already voted
-func (k Keeper) GetVote(ctx sdk.Context, proposalID int64, voter sdk.AccAddress) (string, sdk.Error) {
+func (k Keeper) GetVote(ctx sdk.Context, proposalID int64, voter sdk.AccAddress) (option string, err sdk.Error) {
 
 	key := GenerateProposalVoteKey(proposalID, voter)
 	store := ctx.KVStore(k.storeKey)
@@ -96,12 +92,8 @@ func (k Keeper) GetVote(ctx sdk.Context, proposalID int64, voter sdk.AccAddress)
 	if bv == nil {
 		return "", ErrVoteNotFound("")
 	}
-	option := new(string)
-	err := k.cdc.UnmarshalBinary(bv, option)
-	if err != nil {
-		panic(err)
-	}
-	return *option, nil
+	k.cdc.MustUnmarshalBinary(bv, &option)
+	return option, nil
 }
 
 // GetAllProposalVotes gets the set of all votes from a proposal
@@ -219,9 +211,7 @@ type KeeperRead struct {
 }
 
 // NewKeeperRead crates a new keeper with read access
-func NewKeeperRead(simpleGovKey sdk.StoreKey, ck bank.Keeper, sm stake.Keeper, codespace sdk.CodespaceType) KeeperRead {
-	cdc := wire.NewCodec()
-
+func NewKeeperRead(cdc *amino.Codec, simpleGovKey sdk.StoreKey, ck bank.Keeper, sm stake.Keeper, codespace sdk.CodespaceType) KeeperRead {
 	return KeeperRead{Keeper{
 		storeKey:  simpleGovKey,
 		cdc:       cdc,

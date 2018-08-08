@@ -27,6 +27,12 @@ func TestSimpleGovKeeper(t *testing.T) {
 		proposals = append(proposals, proposal)
 	}
 
+	// –––––––––––––––––––––––––––––––––––––––
+	//                KEEPER
+	// –––––––––––––––––––––––––––––––––––––––
+
+	// ––––––– Test GetProposal –––––––
+
 	// Case 1: valid request
 	for idx := 0; idx < len(titles); idx++ {
 		res, err := k.GetProposal(ctx, proposals[idx].ID)
@@ -34,15 +40,6 @@ func TestSimpleGovKeeper(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, proposals[idx], res)
 	}
-
-	// TODO Error when defined proposal 2 is defined here
-	// proposal2 := k.NewProposal(ctx, titles[1], descriptions[1])
-
-	// –––––––––––––––––––––––––––––––––––––––
-	//                KEEPER
-	// –––––––––––––––––––––––––––––––––––––––
-
-	// ––––––– Test GetProposal –––––––
 
 	// Case 2: invalid proposalID
 	res, err := k.GetProposal(ctx, int64(len(titles)+10))

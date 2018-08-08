@@ -6,6 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// nolint
+var (
+	KeyNextProposalID        = []byte("newProposalID")
+	KeyActiveProposalQueue   = []byte("activeProposalQueue")
+	KeyInactiveProposalQueue = []byte("inactiveProposalQueue")
+)
+
 // GenerateProposalKey creates a key of the form "proposals"|{proposalID}
 func GenerateProposalKey(proposalID int64) []byte {
 	var key []byte

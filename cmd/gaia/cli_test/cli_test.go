@@ -192,13 +192,13 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	// unbond a single share
 	spStr := fmt.Sprintf("gaiacli gov submit-proposal %v", flags)
 	spStr += fmt.Sprintf(" --from=%s", "foo")
-	spStr += fmt.Sprintf(" --deposit=%s", "5steak")
+	spStr += fmt.Sprintf(" --deposit=%ssteak", toBigInt(5).String())
 	spStr += fmt.Sprintf(" --type=%s", "Text")
 	spStr += fmt.Sprintf(" --title=%s", "Test")
 	spStr += fmt.Sprintf(" --description=%s", "test")
 	spStr += fmt.Sprintf(" --proposer=%s", fooAddr)
-  spStr += fmt.Sprintf(" --gas=%d", 100000)
-  spStr += fmt.Sprintf(" --fee=%s", "2000000000000000steak")
+  	spStr += fmt.Sprintf(" --gas=%d", 100000)
+  	spStr += fmt.Sprintf(" --fee=%s", "2000000000000000steak")
 
 	executeWrite(t, spStr, pass)
 	tests.WaitForNextNBlocksTM(2, port)
@@ -214,11 +214,11 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	depositStr := fmt.Sprintf("gaiacli gov deposit %v", flags)
 	depositStr += fmt.Sprintf(" --from=%s", "foo")
-	depositStr += fmt.Sprintf(" --deposit=%s", "10steak")
+	depositStr += fmt.Sprintf(" --deposit=%ssteak", toBigInt(10).String())
 	depositStr += fmt.Sprintf(" --proposalID=%s", "1")
 	depositStr += fmt.Sprintf(" --depositer=%s", fooAddr)
-  depositStr += fmt.Sprintf(" --gas=%d", 100000)
-  depositStr += fmt.Sprintf(" --fee=%s", "2000000000000000steak")
+  	depositStr += fmt.Sprintf(" --gas=%d", 100000)
+  	depositStr += fmt.Sprintf(" --fee=%s", "2000000000000000steak")
 
 	executeWrite(t, depositStr, pass)
 	tests.WaitForNextNBlocksTM(2, port)
@@ -235,8 +235,8 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	voteStr += fmt.Sprintf(" --proposalID=%s", "1")
 	voteStr += fmt.Sprintf(" --option=%s", "Yes")
 	voteStr += fmt.Sprintf(" --voter=%s", fooAddr)
-  voteStr += fmt.Sprintf(" --gas=%d", 100000)
-  voteStr += fmt.Sprintf(" --fee=%s", "2000000000000000steak")
+  	voteStr += fmt.Sprintf(" --gas=%d", 100000)
+  	voteStr += fmt.Sprintf(" --fee=%s", "2000000000000000steak")
 
 	executeWrite(t, voteStr, pass)
 	tests.WaitForNextNBlocksTM(2, port)

@@ -420,24 +420,6 @@ func (v Validator) AddTokensFromInt(pool Pool, amount sdk.Int) (Validator, Pool,
 	return v, pool, issuedShares
 }
 
-// AddTokensFromDel adds tokens to a validator
-func (v Validator) AddTokensFromInt(pool Pool, amount sdk.Int) (Validator, Pool, sdk.Rat) {
-
-	// bondedShare/delegatedShare
-	exRate := v.DelegatorShareExRate()
-	amountRat := sdk.NewRatFromInt(amount)
-
-	if v.Status == sdk.Bonded {
-		pool = pool.looseTokensToBonded(amountRat)
-	}
-
-	v.Tokens = v.Tokens.Add(amountRat)
-	issuedShares := amountRat.Quo(exRate)
-	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
-
-	return v, pool, issuedShares
-}
-
 // RemoveDelShares removes delegator shares from a validator.
 func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Rat) (Validator, Pool, sdk.Rat) {
 	issuedTokens := v.DelegatorShareExRate().Mul(delShares)

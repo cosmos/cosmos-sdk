@@ -386,8 +386,8 @@ func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidato
 // nolint: gocyclo
 // TODO: Remove the above golint
 func (k Keeper) UpdateBondedValidators(
-	ctx sdk.Context, affectedValidator types.Validator,
-) (updatedVal types.Validator, updated bool) {
+	ctx sdk.Context, affectedValidator types.Validator) (
+	updatedVal types.Validator, updated bool) {
 
 	store := ctx.KVStore(k.storeKey)
 

@@ -288,10 +288,9 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 	end := sdk.PrefixEndBytes(ValidatorsByPowerIndexKey)
 	iterator := store.Iterator(start, end)
 
-	offset := 0
 	var newCliffVal types.Validator
 
-	for ; iterator.Valid() && offset < 1; iterator.Next() {
+	for ; iterator.Valid(); iterator.Next() {
 		ownerAddr := iterator.Value()
 
 		currVal, found := k.GetValidator(ctx, ownerAddr)
@@ -304,19 +303,17 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 		}
 
 		newCliffVal = currVal
-		offset++
+		break
 	}
 
 	iterator.Close()
-	if offset == 0 {
-		panic("unable to find cliff validator")
-	}
 
 	if bytes.Equal(affectedVal.Owner, newCliffVal.Owner) {
 		// The affected validator remains the cliff validator, however, since
 		// the store does not contain the new power, set the new cliff
 		// validator to the affected validator.
-		k.setCliffValidator(ctx, affectedVal, pool)
+		bz := GetValidatorsByPowerIndexKey(affectedVal, pool)
+		store.Set(ValidatorPowerCliffKey, bz)
 	} else if affectedValPower.GT(newCliffVal.GetPower()) {
 		// The affected validator no longer remains the cliff validator as it's
 		// power is greater than the new current cliff validator.

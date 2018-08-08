@@ -16,7 +16,7 @@ import (
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 )
 
-// contains Checks if the a given query contains one of the tx types
+// contains checks if the a given query contains one of the tx types
 func contains(stringSlice []string, txType string) bool {
 	for _, word := range stringSlice {
 		if word == txType {
@@ -29,7 +29,7 @@ func contains(stringSlice []string, txType string) bool {
 func getDelegatorValidator(cliCtx context.CLIContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAccAddr sdk.AccAddress) (
 	validator types.BechValidator, httpStatusCode int, errMsg string, err error) {
 
-	// Check if the delegator is bonded or redelegated to the validator
+	// check if the delegator is bonded or redelegated to the validator
 	keyDel := stake.GetDelegationKey(delegatorAddr, validatorAccAddr)
 	// keyRed := stake.GetREDsByDelToValDstIndexKey(delegatorAddr, validatorAccAddr)
 
@@ -127,7 +127,7 @@ func getDelegatorRedelegations(cliCtx context.CLIContext, cdc *wire.Codec, deleg
 	return redelegations, http.StatusOK, "", nil
 }
 
-// queryTxs Queries staking txs
+// queries staking txs
 func queryTxs(node rpcclient.Client, cdc *wire.Codec, tag string, delegatorAddr string) ([]tx.Info, error) {
 	page := 0
 	perPage := 100
@@ -141,7 +141,7 @@ func queryTxs(node rpcclient.Client, cdc *wire.Codec, tag string, delegatorAddr 
 	return tx.FormatTxResults(cdc, res.Txs)
 }
 
-// getValidators Gets all Validators
+// gets all validators
 func getValidators(validatorKVs []sdk.KVPair, cdc *wire.Codec) ([]types.BechValidator, error) {
 	validators := make([]types.BechValidator, len(validatorKVs))
 	for i, kv := range validatorKVs {
@@ -161,7 +161,7 @@ func getValidators(validatorKVs []sdk.KVPair, cdc *wire.Codec) ([]types.BechVali
 	return validators, nil
 }
 
-// Gets a validator given a ValAddress
+// gets a validator given a ValAddress
 func getValidator(address sdk.AccAddress, validatorKVs []sdk.KVPair, cdc *wire.Codec) (stake.BechValidator, error) {
 	// parse out the validators
 	for _, kv := range validatorKVs {
@@ -184,7 +184,7 @@ func getValidator(address sdk.AccAddress, validatorKVs []sdk.KVPair, cdc *wire.C
 	return stake.BechValidator{}, errors.Errorf("Couldn't find validator")
 }
 
-// Gets a validator given an AccAddress
+// gets a validator given an AccAddress
 func getValidatorFromAccAdrr(address sdk.AccAddress, validatorKVs []sdk.KVPair, cdc *wire.Codec) (stake.BechValidator, error) {
 	// parse out the validators
 	for _, kv := range validatorKVs {
@@ -207,7 +207,7 @@ func getValidatorFromAccAdrr(address sdk.AccAddress, validatorKVs []sdk.KVPair, 
 	return stake.BechValidator{}, errors.Errorf("Couldn't find validator")
 }
 
-//  Gets all Bech32 validators from a key
+//  gets all Bech32 validators from a key
 func getBech32Validators(storeName string, cliCtx context.CLIContext, cdc *wire.Codec) (
 	validators []types.BechValidator, httpStatusCode int, errMsg string, err error) {
 	// Get all validators using key

@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 )
 
-// BroadcastTxBody Tx Broadcast Body
+// Tx Broadcast Body
 type BroadcastTxBody struct {
 	TxBytes string `json:"tx"`
 }

@@ -23,7 +23,7 @@ const (
 	flagAny  = "any"
 )
 
-// Default client command to search through tagged transactions
+// default client command to search through tagged transactions
 func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "txs",
@@ -89,7 +89,7 @@ func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]Inf
 	return info, nil
 }
 
-// Parse the indexed txs into an array of Info
+// parse the indexed txs into an array of Info
 func FormatTxResults(cdc *wire.Codec, res []*ctypes.ResultTx) ([]Info, error) {
 	var err error
 	out := make([]Info, len(res))

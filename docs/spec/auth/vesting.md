@@ -47,7 +47,8 @@ ConvertAccount(vacc ContinuousVestingAccount, ctx sdk.Context) (BaseAccount):
 
 // Uses time in context to calculate total unlocked coins
 TotalUnlockedCoins(vacc ContinuousVestingAccount, ctx sdk.Context) sdk.Coins:
-    return ReceivedCoins + OriginalCoins * (Now - StartTime) / (EndTime - StartTime)
+    unlockedCoins := ReceivedCoins + OriginalCoins * (Now - StartTime) / (EndTime - StartTime)
+    return unlockedCoins
 
 ```
 

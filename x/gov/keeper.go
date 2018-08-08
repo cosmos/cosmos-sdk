@@ -71,6 +71,7 @@ func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description 
 		Description:      description,
 		ProposalType:     proposalType,
 		Status:           StatusDepositPeriod,
+		TallyResult:      EmptyTallyResult(),
 		TotalDeposit:     sdk.Coins{},
 		SubmitBlock:      ctx.BlockHeight(),
 		VotingStartBlock: -1, // TODO: Make Time

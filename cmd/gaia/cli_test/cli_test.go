@@ -126,12 +126,12 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	// create validator
 	cvStr := fmt.Sprintf("gaiacli stake create-validator %v", flags)
 	cvStr += fmt.Sprintf(" --from=%s", "bar")
-	cvStr += fmt.Sprintf(" --address-validator=%s", barAddr)
 	cvStr += fmt.Sprintf(" --pubkey=%s", barCeshPubKey)
 	cvStr += fmt.Sprintf(" --amount=%vsteak", toBigInt(2))
 	cvStr += fmt.Sprintf(" --moniker=%v", "bar-vally")
 	cvStr += fmt.Sprintf(" --gas=%d", 100000)
 	cvStr += fmt.Sprintf(" --fee=%vsteak", 2000000000000000)
+	cvStr += fmt.Sprintf(" --address-validator=%s", barAddr)
 
 	executeWrite(t, cvStr, pass)
 	tests.WaitForNextNBlocksTM(2, port)
@@ -189,7 +189,18 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, toBigInt(50), fooAcc.GetCoins().AmountOf("steak"))
 
-	executeWrite(t, fmt.Sprintf("gaiacli gov submit-proposal %v --proposer=%s --deposit=%vsteak --type=Text --title=Test --description=test --from=foo --gas 100000 --fee 2000000000000000steak", flags, fooAddr,toBigInt(5)), pass)
+	// unbond a single share
+	spStr := fmt.Sprintf("gaiacli gov submit-proposal %v", flags)
+	spStr += fmt.Sprintf(" --from=%s", "foo")
+	spStr += fmt.Sprintf(" --deposit=%s", "5steak")
+	spStr += fmt.Sprintf(" --type=%s", "Text")
+	spStr += fmt.Sprintf(" --title=%s", "Test")
+	spStr += fmt.Sprintf(" --description=%s", "test")
+	spStr += fmt.Sprintf(" --proposer=%s", fooAddr)
+  spStr += fmt.Sprintf(" --gas=%d", 100000)
+  spStr += fmt.Sprintf(" --fee=%s", "2000000000000000steak")
+
+	executeWrite(t, spStr, pass)
 	tests.WaitForNextNBlocksTM(2, port)
 
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
@@ -201,7 +212,15 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, int64(1), proposal1.GetProposalID())
 	require.Equal(t, gov.StatusDepositPeriod, proposal1.GetStatus())
 
-	executeWrite(t, fmt.Sprintf("gaiacli gov deposit %v --depositer=%s --deposit=%vsteak --proposalID=1 --from=foo --gas 100000 --fee 2000000000000000steak", flags, fooAddr,toBigInt(10)), pass)
+	depositStr := fmt.Sprintf("gaiacli gov deposit %v", flags)
+	depositStr += fmt.Sprintf(" --from=%s", "foo")
+	depositStr += fmt.Sprintf(" --deposit=%s", "10steak")
+	depositStr += fmt.Sprintf(" --proposalID=%s", "1")
+	depositStr += fmt.Sprintf(" --depositer=%s", fooAddr)
+  depositStr += fmt.Sprintf(" --gas=%d", 100000)
+  depositStr += fmt.Sprintf(" --fee=%s", "2000000000000000steak")
+
+	executeWrite(t, depositStr, pass)
 	tests.WaitForNextNBlocksTM(2, port)
 
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
@@ -211,10 +230,18 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, int64(1), proposal1.GetProposalID())
 	require.Equal(t, gov.StatusVotingPeriod, proposal1.GetStatus())
 
-	executeWrite(t, fmt.Sprintf("gaiacli gov vote %v --proposalID=1 --voter=%s --option=Yes --from=foo --gas 100000 --fee 2000000000000000steak", flags, fooAddr), pass)
+	voteStr := fmt.Sprintf("gaiacli gov vote %v", flags)
+	voteStr += fmt.Sprintf(" --from=%s", "foo")
+	voteStr += fmt.Sprintf(" --proposalID=%s", "1")
+	voteStr += fmt.Sprintf(" --option=%s", "Yes")
+	voteStr += fmt.Sprintf(" --voter=%s", fooAddr)
+  voteStr += fmt.Sprintf(" --gas=%d", 100000)
+  voteStr += fmt.Sprintf(" --fee=%s", "2000000000000000steak")
+
+	executeWrite(t, voteStr, pass)
 	tests.WaitForNextNBlocksTM(2, port)
 
-	vote := executeGetVote(t, fmt.Sprintf("gaiacli gov query-vote  --proposalID=1 --voter=%s --output=json %v", fooAddr, flags))
+	vote := executeGetVote(t, fmt.Sprintf("gaiacli gov query-vote --proposalID=1 --voter=%s --output=json %v", fooAddr, flags))
 	require.Equal(t, int64(1), vote.ProposalID)
 	require.Equal(t, gov.OptionYes, vote.Option)
 

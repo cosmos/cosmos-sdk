@@ -21,6 +21,10 @@ type VestingAccount interface {
     Account
     AssertIsVestingAccount() // existence implies that account is vesting.
     ConvertAccount(sdk.Context) BaseAccount
+
+    // Calculates total amount of unlocked coins released by vesting schedule
+    // May be larger than total coins in account right now
+    TotalUnlockedCoins(sdk.Context) sdk.Coins
 }
 
 // Implements Vesting Account
@@ -37,10 +41,13 @@ type ContinuousVestingAccount struct {
 
 // ConvertAccount converts VestingAccount into BaseAccount
 // Will convert only after account has fully vested
-ConvertAccount(vacc ContinuousVestingAccount) (BaseAccount):
+ConvertAccount(vacc ContinuousVestingAccount, ctx sdk.Context) (BaseAccount):
     if Now > vacc.EndTime:
-        account = NewBaseAccount(vacc.Address, vacc.OriginalCoins + vacc.ReceivedCoins)
-        return account
+        return vacc.BaseAccount
+
+// Uses time in context to calculate total unlocked coins
+TotalUnlockedCoins(vacc ContinuousVestingAccount, ctx sdk.Context) sdk.Coins:
+    return ReceivedCoins + OriginalCoins * (Now - StartTime) / (EndTime - StartTime)
 
 ```
 
@@ -69,8 +76,7 @@ if Now < vestingAccount.EndTime:
     // NOTE: SendableCoins may be greater than total coins in account 
     // because coins can be subtracted by staking module
     // SendableCoins denotes maximum coins allowed to be spent.
-    SendableCoins := ReceivedCoins + OriginalCoins * (Now - StartTime) / (EndTime - StartTime)
-    if msg.Amount > SendableCoins then fail
+    if msg.Amount > vestingAccount.TotalUnlockedCoins() then fail
 
 // Account fully vested, convert to BaseAccount
 else:
@@ -147,6 +153,8 @@ Maximum amount of coins vesting schedule allows to be sent:
 Coins currently in Account:
 
 `CurrentCoins = OriginalCoins + ReceivedCoins - Delegated - Sent`
+
+`CurrentCoins = vestingAccount.BaseAccount.GetCoins()`
 
 **Maximum amount of coins spendable right now:**
 

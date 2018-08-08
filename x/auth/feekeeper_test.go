@@ -100,13 +100,4 @@ func TestFeeCollectionKeeperPreprocess(t *testing.T) {
 	fee2 := sdk.Coins{sdk.NewCoin("steak", 200000000000)}
 	err = fck.FeePreprocess(ctx, fee2, 10)
 	require.NoError(t,err,"")
-
-	fee3 := sdk.Coins{sdk.NewCoin("iGas", 120000000000)}
-	err = fck.FeePreprocess(ctx, fee3, 10)
-	require.Error(t,err,"")
-
-	paramKeeper.Setter().SetString(ctx, FeeExchangeRatePrefix+"iGas", sdk.NewInt(int64(9000000000)).String())
-
-	err = fck.FeePreprocess(ctx, fee3, 10)
-	require.NoError(t,err,"")
 }

@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 // TODO remove dependencies on staking (should only refer to validator set type from sdk)
@@ -47,6 +48,20 @@ func createTestCodec() *wire.Codec {
 	return cdc
 }
 
+// DefaultParams returns a default set of parameters.
+func defaultParamsForTest() types.Params {
+	return types.Params{
+		InflationRateChange: sdk.NewRat(13, 100),
+		InflationMax:        sdk.NewRat(20, 100),
+		InflationMin:        sdk.NewRat(7, 100),
+		GoalBonded:          sdk.NewRat(67, 100),
+		UnbondingTime:       int64(60 * 60 * 24 * 3),
+		MaxValidators:       100,
+		BondDenom:           "steak",
+		DenomPrecision:       0,
+	}
+}
+
 func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, Keeper) {
 	keyAcc := sdk.NewKVStoreKey("acc")
 	keyStake := sdk.NewKVStoreKey("stake")
@@ -64,7 +79,7 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, Keep
 	ck := bank.NewKeeper(accountMapper)
 	sk := stake.NewKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
-
+	genesis.Params = defaultParamsForTest()
 	genesis.Pool.LooseTokens = sdk.NewRat(initCoins.MulRaw(int64(len(addrs))).Int64())
 
 	err = stake.InitGenesis(ctx, sk, genesis)

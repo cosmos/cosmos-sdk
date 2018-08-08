@@ -12,5 +12,5 @@ func TestMsgUnrevokeGetSignBytes(t *testing.T) {
 	addr := sdk.AccAddress("abcd")
 	msg := NewMsgUnrevoke(addr)
 	bytes := msg.GetSignBytes()
-	require.Equal(t, string(bytes), `{"address":"cosmosaccaddr1v93xxeqhyqz5v"}`)
+	require.Equal(t, string(bytes), `{"address":"faa1v93xxeqwhds0g"}`)
 }

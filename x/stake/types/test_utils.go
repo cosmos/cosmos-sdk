@@ -57,7 +57,7 @@ func OpAddTokens(r *rand.Rand, pool Pool, validator Validator) (Pool, Validator,
 	msg := fmt.Sprintf("validator %#v", validator)
 
 	tokens := int64(r.Int31n(1000))
-	validator, pool, _ = validator.AddTokensFromDel(pool, tokens)
+	validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(tokens))
 	msg = fmt.Sprintf("Added %d tokens to %s", tokens, msg)
 
 	// Tokens are removed so for accounting must be negative

@@ -14,19 +14,21 @@ import (
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
-func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
+func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey, *sdk.KVStoreKey) {
 	db := dbm.NewMemDB()
 	capKey := sdk.NewKVStoreKey("capkey")
 	capKey2 := sdk.NewKVStoreKey("capkey2")
+	paramsKey := sdk.NewKVStoreKey("params")
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(capKey2, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(paramsKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
-	return ms, capKey, capKey2
+	return ms, capKey, capKey2, paramsKey
 }
 
 func TestAccountMapperGetSet(t *testing.T) {
-	ms, capKey, _ := setupMultiStore()
+	ms, capKey, _, _ := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 

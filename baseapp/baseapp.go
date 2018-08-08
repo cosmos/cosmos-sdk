@@ -55,6 +55,7 @@ type BaseApp struct {
 	// must be set
 	txDecoder   sdk.TxDecoder   // unmarshal []byte into sdk.Tx
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
+	feeRefundHandler sdk.FeeRefundHandler // fee handler for fee refund
 
 	// may be nil
 	initChainer      sdk.InitChainer  // initialize state with validators and state blob
@@ -186,6 +187,9 @@ func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 }
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	app.anteHandler = ah
+}
+func (app *BaseApp) SetFeeRefundHandler(fh sdk.FeeRefundHandler) {
+	app.feeRefundHandler = fh
 }
 func (app *BaseApp) SetAddrPeerFilter(pf sdk.PeerFilter) {
 	app.addrPeerFilter = pf
@@ -640,7 +644,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// meter so we initialize upfront.
 	var gasWanted int64
 	ctx := app.getContextForAnte(mode, txBytes)
-
+	originalCtx := ctx
 	defer func() {
 		if r := recover(); r != nil {
 			switch rType := r.(type) {
@@ -655,6 +659,11 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 		result.GasWanted = gasWanted
 		result.GasUsed = ctx.GasMeter().GasConsumed()
+
+		// Refund unspent fee
+		if app.feeRefundHandler != nil {
+			app.feeRefundHandler(originalCtx, tx, result)
+		}
 	}()
 
 	var msgs = tx.GetMsgs()
@@ -672,9 +681,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		}
 		if !newCtx.IsZero() {
 			ctx = newCtx
+			originalCtx = newCtx
 		}
 
-		gasWanted = result.GasWanted
+		gasWanted = anteResult.GasWanted
 	}
 
 	// Keep the state in a transient CacheWrap in case processing the messages

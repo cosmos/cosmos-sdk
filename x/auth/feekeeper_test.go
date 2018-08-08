@@ -9,8 +9,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
-)
+	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/params"
+		)
 
 var (
 	emptyCoins = sdk.Coins{}
@@ -19,12 +20,13 @@ var (
 )
 
 func TestFeeCollectionKeeperGetSet(t *testing.T) {
-	ms, _, capKey2 := setupMultiStore()
+	ms, _, capKey2, _ := setupMultiStore()
 	cdc := wire.NewCodec()
+	paramKeeper := params.NewKeeper(cdc, sdk.NewKVStoreKey("params"))
 
 	// make context and keeper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	fck := NewFeeCollectionKeeper(cdc, capKey2)
+	fck := NewFeeCollectionKeeper(cdc, capKey2, paramKeeper.Getter())
 
 	// no coins initially
 	currFees := fck.GetCollectedFees(ctx)
@@ -38,12 +40,13 @@ func TestFeeCollectionKeeperGetSet(t *testing.T) {
 }
 
 func TestFeeCollectionKeeperAdd(t *testing.T) {
-	ms, _, capKey2 := setupMultiStore()
+	ms, _, capKey2, _ := setupMultiStore()
 	cdc := wire.NewCodec()
+	paramKeeper := params.NewKeeper(cdc, sdk.NewKVStoreKey("params"))
 
 	// make context and keeper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	fck := NewFeeCollectionKeeper(cdc, capKey2)
+	fck := NewFeeCollectionKeeper(cdc, capKey2, paramKeeper.Getter())
 
 	// no coins initially
 	require.True(t, fck.GetCollectedFees(ctx).IsEqual(emptyCoins))
@@ -58,12 +61,13 @@ func TestFeeCollectionKeeperAdd(t *testing.T) {
 }
 
 func TestFeeCollectionKeeperClear(t *testing.T) {
-	ms, _, capKey2 := setupMultiStore()
+	ms, _, capKey2, _ := setupMultiStore()
 	cdc := wire.NewCodec()
+	paramKeeper := params.NewKeeper(cdc, sdk.NewKVStoreKey("params"))
 
 	// make context and keeper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	fck := NewFeeCollectionKeeper(cdc, capKey2)
+	fck := NewFeeCollectionKeeper(cdc, capKey2, paramKeeper.Getter())
 
 	// set coins initially
 	fck.setCollectedFees(ctx, twoCoins)
@@ -72,4 +76,28 @@ func TestFeeCollectionKeeperClear(t *testing.T) {
 	// clear fees and see that pool is now empty
 	fck.ClearCollectedFees(ctx)
 	require.True(t, fck.GetCollectedFees(ctx).IsEqual(emptyCoins))
+}
+
+func TestFeeCollectionKeeperPreprocess(t *testing.T) {
+	ms, _, capKey2, paramsKey := setupMultiStore()
+
+	cdc := wire.NewCodec()
+	paramKeeper := params.NewKeeper(cdc, paramsKey)
+
+	// make context and keeper
+	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
+	fck := NewFeeCollectionKeeper(cdc, capKey2, paramKeeper.Getter())
+	InitGenesis(ctx, paramKeeper.Setter(), DefaultGenesisState())
+
+	var err sdk.Error
+	//err = fck.FeePreprocess(ctx, oneCoin, 10)
+	//require.Error(t,err,"")
+
+	fee1 := sdk.Coins{sdk.NewCoin("steak", 50)}
+	err = fck.FeePreprocess(ctx, fee1, 10)
+	require.Error(t,err,"")
+
+	fee2 := sdk.Coins{sdk.NewCoin("steak", 200000000000)}
+	err = fck.FeePreprocess(ctx, fee2, 10)
+	require.NoError(t,err,"")
 }

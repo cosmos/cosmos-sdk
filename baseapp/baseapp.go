@@ -387,6 +387,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	// set the signed validators for addition to context in deliverTx
+	// TODO: communicate this result to the address to pubkey map in slashing
 	app.signedValidators = req.LastCommitInfo.GetValidators()
 	return
 }

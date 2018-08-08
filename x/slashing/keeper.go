@@ -69,6 +69,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, infracti
 
 // handle a validator signature, must be called once per validator per block
 // nolint gocyclo
+// TODO: Change this to take in an address
 func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, power int64, signed bool) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	height := ctx.BlockHeight()
@@ -80,7 +81,6 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	if !found {
 		// If this validator has never been seen before, construct a new SigningInfo with the correct start height
 		signInfo = NewValidatorSigningInfo(height, 0, time.Unix(0, 0), 0)
-		k.addValidatorAddress(pubkey.Address(), pubkey)
 	}
 	index := signInfo.IndexOffset % k.SignedBlocksWindow(ctx)
 	signInfo.IndexOffset++

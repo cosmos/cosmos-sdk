@@ -661,7 +661,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		result.GasUsed = ctx.GasMeter().GasConsumed()
 
 		// Refund unspent fee
-		app.feeRefundHandler(originalCtx, tx, result)
+		if app.feeRefundHandler != nil {
+			app.feeRefundHandler(originalCtx, tx, result)
+		}
 	}()
 
 	var msgs = tx.GetMsgs()

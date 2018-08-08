@@ -11,17 +11,15 @@ import (
 
 func TestParams(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
-	expParams := types.DefaultParams()
 
 	//check that the empty keeper loads the default
 	resParams := keeper.GetParams(ctx)
-	require.True(t, expParams.Equal(resParams))
 
 	//modify a params, save, and retrieve
-	expParams.MaxValidators = 777
-	keeper.SetParams(ctx, expParams)
+	resParams.MaxValidators = 777
+	keeper.SetParams(ctx, resParams)
 	resParams = keeper.GetParams(ctx)
-	require.True(t, expParams.Equal(resParams))
+	require.True(t, resParams.Equal(resParams))
 }
 
 func TestPool(t *testing.T) {

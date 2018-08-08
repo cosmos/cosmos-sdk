@@ -84,7 +84,7 @@ func (fck FeeCollectionKeeper) ClearCollectedFees(ctx sdk.Context) {
 
 func (fck FeeCollectionKeeper) FeePreprocess(ctx sdk.Context, coins sdk.Coins, gasLimit int64) sdk.Error {
 	if gasLimit <= 0 {
-		return sdk.ErrInternal(fmt.Sprintf("gaslimit %s should be larger than 0", gasLimit))
+		return sdk.ErrInternal(fmt.Sprintf("gaslimit %d should be larger than 0", gasLimit))
 	}
 	nativeFeeToken, err := fck.getter.GetString(ctx, NativeFeeTokenKey)
 	if err != nil {

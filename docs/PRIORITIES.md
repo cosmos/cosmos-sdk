@@ -1,4 +1,7 @@
 
+## CLI
+- Documentation // language
+
 ## Fees
 - Collection
   - Gas price based on parameter

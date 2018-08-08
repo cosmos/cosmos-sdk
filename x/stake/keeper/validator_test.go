@@ -89,7 +89,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	require.True(t, keeper.validatorByPowerIndexExists(ctx, power))
 }
 
-func TestCliffValidatorChange(t *testing.T) {
+func TestCliffValidatorIncreasePower(t *testing.T) {
 	numVals := 10
 	maxVals := 5
 
@@ -143,6 +143,126 @@ func TestCliffValidatorChange(t *testing.T) {
 	cliffPower = keeper.GetCliffValidatorPower(ctx)
 	require.Equal(t, newCliffVal.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
 	require.Equal(t, GetValidatorsByPowerIndexKey(newCliffVal, pool), cliffPower)
+}
+
+func TestCliffValidatorDecreasePower(t *testing.T) {
+	numVals := 10
+	maxVals := 5
+
+	// create context, keeper, and pool for tests
+	ctx, _, keeper := CreateTestInput(t, false, 0)
+	pool := keeper.GetPool(ctx)
+
+	// create keeper parameters
+	params := keeper.GetParams(ctx)
+	params.MaxValidators = uint16(maxVals)
+	keeper.SetParams(ctx, params)
+
+	// create a random pool
+	pool.LooseTokens = sdk.NewRat(10000)
+	pool.BondedTokens = sdk.NewRat(1234)
+	keeper.SetPool(ctx, pool)
+
+	validators := make([]types.Validator, numVals)
+	for i := 0; i < len(validators); i++ {
+		moniker := fmt.Sprintf("val#%d", int64(i))
+		val := types.NewValidator(Addrs[i], PKs[i], types.Description{Moniker: moniker})
+		val.BondHeight = int64(i)
+		val.BondIntraTxCounter = int16(i)
+		val, pool, _ = val.AddTokensFromDel(pool, int64((i+1)*10))
+
+		keeper.SetPool(ctx, pool)
+		val = keeper.UpdateValidator(ctx, val)
+		validators[i] = val
+	}
+
+	// remove a small amount of tokens to new current cliff validator
+	currCliffVal := validators[numVals-maxVals]
+	currCliffVal, pool, _ = currCliffVal.RemoveDelShares(pool, sdk.NewRat(1, 1))
+	keeper.SetPool(ctx, pool)
+	currCliffVal = keeper.UpdateValidator(ctx, currCliffVal)
+
+	// assert cliff validator has not change but decreased in power
+	cliffPower := keeper.GetCliffValidatorPower(ctx)
+	require.Equal(t, currCliffVal.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+	require.Equal(t, GetValidatorsByPowerIndexKey(currCliffVal, pool), cliffPower)
+
+	// remove some tokens from the cliff validator
+	currCliffVal, pool, _ = currCliffVal.RemoveDelShares(pool, sdk.NewRat(11, 1))
+	keeper.SetPool(ctx, pool)
+	currCliffVal = keeper.UpdateValidator(ctx, currCliffVal)
+
+	// assert new cliff validator added from the previously unbonded set
+	newCliffVal := validators[numVals-maxVals-1]
+	require.Equal(t, newCliffVal.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+
+	// assert cliff validator power should have been updated
+	cliffPower = keeper.GetCliffValidatorPower(ctx)
+	require.Equal(t, GetValidatorsByPowerIndexKey(newCliffVal, pool), cliffPower)
+}
+
+func TestCliffValidatorIncreaseThenDecreasePower(t *testing.T) {
+	numVals := 10
+	maxVals := 5
+
+	// create context, keeper, and pool for tests
+	ctx, _, keeper := CreateTestInput(t, false, 0)
+	pool := keeper.GetPool(ctx)
+
+	// create keeper parameters
+	params := keeper.GetParams(ctx)
+	params.MaxValidators = uint16(maxVals)
+	keeper.SetParams(ctx, params)
+
+	// create a random pool
+	pool.LooseTokens = sdk.NewRat(10000)
+	pool.BondedTokens = sdk.NewRat(1234)
+	keeper.SetPool(ctx, pool)
+
+	validators := make([]types.Validator, numVals)
+	for i := 0; i < len(validators); i++ {
+		moniker := fmt.Sprintf("val#%d", int64(i))
+		val := types.NewValidator(Addrs[i], PKs[i], types.Description{Moniker: moniker})
+		val.BondHeight = int64(i)
+		val.BondIntraTxCounter = int16(i)
+		val, pool, _ = val.AddTokensFromDel(pool, int64((i+1)*10))
+
+		keeper.SetPool(ctx, pool)
+		val = keeper.UpdateValidator(ctx, val)
+		validators[i] = val
+	}
+
+	// add some tokens to current cliff validator
+	origCliffVal := validators[numVals-maxVals]
+	origCliffVal, pool, _ = origCliffVal.AddTokensFromDel(pool, 5)
+	keeper.SetPool(ctx, pool)
+	origCliffVal = keeper.UpdateValidator(ctx, origCliffVal)
+
+	assert.Equal(t, origCliffVal.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+	cliffPower := keeper.GetCliffValidatorPower(ctx)
+	assert.Equal(t, GetValidatorsByPowerIndexKey(origCliffVal, pool), cliffPower)
+
+	// add tokens to another validator, giving it 1 more tokens than the original cliff validator had
+	// but not as much as the cliff validator currently has
+	newCliffVal := validators[numVals-maxVals-1]
+	newCliffVal, pool, _ = newCliffVal.AddTokensFromDel(pool, 11)
+	keeper.SetPool(ctx, pool)
+	newCliffVal = keeper.UpdateValidator(ctx, newCliffVal)
+
+	assert.Equal(t, origCliffVal.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+	cliffPower = keeper.GetCliffValidatorPower(ctx)
+	assert.Equal(t, GetValidatorsByPowerIndexKey(newCliffVal, pool), cliffPower)
+
+	// add tokens to another validator, giving it 2 more tokens than the original cliff validator had
+	// but not as much as the cliff validator currently has
+	newCliffVal = validators[numVals-maxVals-2]
+	newCliffVal, pool, _ = newCliffVal.AddTokensFromDel(pool, 22)
+	keeper.SetPool(ctx, pool)
+	newCliffVal = keeper.UpdateValidator(ctx, newCliffVal)
+
+	assert.Equal(t, origCliffVal.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+	cliffPower = keeper.GetCliffValidatorPower(ctx)
+	assert.Equal(t, GetValidatorsByPowerIndexKey(newCliffVal, pool), cliffPower)
 }
 
 func TestSlashToZeroPowerRemoved(t *testing.T) {

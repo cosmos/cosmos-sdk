@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -26,10 +25,9 @@ func TestBeginBlocker(t *testing.T) {
 	require.True(t, sdk.NewRatFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
 
 	val := abci.Validator{
-		PubKey: tmtypes.TM2PB.PubKey(pk),
-		Power:  amt.Int64(),
+		Address: pk.Address(),
+		Power:   amt.Int64(),
 	}
-	keeper.addPubkey(pk, false)
 
 	// mark the validator as having signed
 	req := abci.RequestBeginBlock{

@@ -79,7 +79,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	address := sdk.ValAddress(addr)
 	pubkey, err := k.getPubkey(addr)
 	if err != nil {
-		panic("Validator address not found")
+		panic(fmt.Sprintf("Validator address %v not found, map is %v", addr, k.addressToPubkey))
 	}
 	// Local index, so counts blocks validator *should* have signed
 	// Will use the 0-value default signing info if not present, except for start height
@@ -139,10 +139,11 @@ func (k Keeper) AddValidators(vals []abci.Validator) {
 		if err != nil {
 			continue
 		}
-		k.addPubkey(pubkey, val.Power == 0)
+		k.addPubkey(pubkey, false)
 	}
 }
 
+// TODO: Make a method to remove the pubkey from the map when a validator is unbonded.
 func (k Keeper) addPubkey(pubkey crypto.PubKey, del bool) {
 	addr := new([tmhash.Size]byte)
 	copy(addr[:], pubkey.Address())

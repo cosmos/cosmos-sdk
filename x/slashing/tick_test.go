@@ -20,7 +20,8 @@ func TestBeginBlocker(t *testing.T) {
 	// bond the validator
 	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, pk, amt))
 	require.True(t, got.IsOK())
-	stake.EndBlocker(ctx, sk)
+	validatorUpdates := stake.EndBlocker(ctx, sk)
+	keeper.AddValidators(validatorUpdates)
 	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
 	require.True(t, sdk.NewRatFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
 
@@ -28,6 +29,7 @@ func TestBeginBlocker(t *testing.T) {
 		PubKey: tmtypes.TM2PB.PubKey(pk),
 		Power:  amt.Int64(),
 	}
+	keeper.addPubkey(pk, false)
 
 	// mark the validator as having signed
 	req := abci.RequestBeginBlock{

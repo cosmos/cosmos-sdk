@@ -1,6 +1,7 @@
 package slashing
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -76,7 +77,10 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	logger := ctx.Logger().With("module", "x/slashing")
 	height := ctx.BlockHeight()
 	address := sdk.ValAddress(addr)
-	pubkey := k.getPubkey(addr)
+	pubkey, err := k.getPubkey(addr)
+	if err != nil {
+		panic("Validator address not found")
+	}
 	// Local index, so counts blocks validator *should* have signed
 	// Will use the 0-value default signing info if not present, except for start height
 	signInfo, found := k.getValidatorSigningInfo(ctx, address)
@@ -149,8 +153,12 @@ func (k Keeper) addPubkey(pubkey crypto.PubKey, del bool) {
 	}
 }
 
-func (k Keeper) getPubkey(address crypto.Address) crypto.PubKey {
+func (k Keeper) getPubkey(address crypto.Address) (crypto.PubKey, error) {
 	addr := new([tmhash.Size]byte)
 	copy(addr[:], address)
-	return k.addressToPubkey[*addr]
+	pk := k.addressToPubkey[*addr]
+	if pk == nil {
+		return nil, errors.New("Address not found")
+	}
+	return pk, nil
 }

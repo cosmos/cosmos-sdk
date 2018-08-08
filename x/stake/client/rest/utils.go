@@ -31,7 +31,6 @@ func getDelegatorValidator(cliCtx context.CLIContext, cdc *wire.Codec, delegator
 
 	// check if the delegator is bonded or redelegated to the validator
 	keyDel := stake.GetDelegationKey(delegatorAddr, validatorAccAddr)
-	// keyRed := stake.GetREDsByDelToValDstIndexKey(delegatorAddr, validatorAccAddr)
 
 	res, err := cliCtx.QueryStore(keyDel, storeName)
 	if err != nil {

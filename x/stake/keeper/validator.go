@@ -193,7 +193,7 @@ func (k Keeper) ClearTendermintUpdates(ctx sdk.Context) {
 
 //___________________________________________________________________________
 
-// Perfom all the necessary steps for when a validator changes its power. This
+// Perform all the necessary steps for when a validator changes its power. This
 // function updates all validator stores as well as tendermint update store.
 // It may kick out validators if a new validator is entering the bonded validator
 // group.

@@ -112,7 +112,7 @@ func (fck FeeCollectionKeeper) FeePreprocess(ctx sdk.Context, coins sdk.Coins, g
 	}
 
 	if len(coins) < 1 || coins[0].Denom != nativeFeeToken {
-		return sdk.ErrInvalidCoins("no native fee token")
+		return sdk.ErrInvalidCoins(fmt.Sprintf("no native fee token, expected native token is %s", nativeFeeToken))
 	}
 /*
 	equivalentTotalFee := sdk.NewInt(0)
@@ -138,7 +138,7 @@ func (fck FeeCollectionKeeper) FeePreprocess(ctx sdk.Context, coins sdk.Coins, g
 	equivalentTotalFee := coins[0].Amount
 	gasPrice := equivalentTotalFee.Div(sdk.NewInt(gasLimit))
 	if gasPrice.LT(threshold) {
-		return sdk.ErrInsufficientCoins(fmt.Sprintf("gas price %s is less than threshold %s", gasPrice.String(), threshold.String()))
+		return sdk.ErrInsufficientCoins(fmt.Sprintf("equivalent gas price (%s%s) is less than threshold (%s%s)", gasPrice.String(), nativeFeeToken, threshold.String(), nativeFeeToken))
 	}
 	return nil
 }

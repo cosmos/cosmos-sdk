@@ -85,3 +85,4 @@ BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators
 * [tests] \#1551: Fixed invalid LCD test JSON payload in `doIBCTransfer`
 *  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator
+* [basecoin] Fixes coin transaction failure and account query [discussion](https://forum.cosmos.network/t/unmarshalbinarybare-expected-to-read-prefix-bytes-75fbfab8-since-it-is-registered-concrete-but-got-0a141dfa/664/6)

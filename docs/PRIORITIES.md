@@ -1,7 +1,3 @@
-
-## CLI
-- Documentation // language
-
 ## Fees
 - Collection
   - Gas price based on parameter
@@ -73,3 +69,7 @@
 ## Slashing/Stability
 - tendermint evidence: we don’t yet slash byzantine signatures (signing at all) when not bonded.
 
+# Other priority
+
+## CLI
+- Documentation // language

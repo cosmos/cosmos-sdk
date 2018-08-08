@@ -26,18 +26,20 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Cod
 		delegatorHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
-	// GET /stake/delegators/{delegatorAddr}/txs // Get all staking txs (i.e msgs) from a delegator
+	// GET /stake/delegators/{delegatorAddr}/txs?type=<bond/unbond/redelegate> // Get all staking txs (i.e msgs) from a delegator
 	r.HandleFunc(
 		"/stake/delegators/{delegatorAddr}/txs",
 		delegatorTxsHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
+	// TODO Tests
 	// // GET /stake/delegators/{delegatorAddr}/validators // Query all validators that a delegator is bonded to
 	// r.HandleFunc(
 	// 	"/stake/delegators/{delegatorAddr}/validators",
 	// 	delegatorValidatorsHandlerFn(cliCtx, cdc),
 	// ).Methods("GET")
 
+	// TODO Tests
 	// GET /stake/delegators/{delegatorAddr}/validators/{validatorAddr} // Query a validator that a delegator is bonded to
 	// r.HandleFunc(
 	// 	"/stake/delegators/{delegatorAddr}/validators",
@@ -56,17 +58,6 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Cod
 		unbondingDelegationsHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
-	/*
-			GET /stake/delegators/{addr}/validators/{addr}/txs // Get all txs to a validator performed by a delegator
-		 	GET /stake/delegators/{addr}/validators/{addr}/txs?type=bond // Get all bonding txs to a validator performed by a delegator
-			GET /stake/delegators/{addr}/validators/{addr}/txs?type=unbond // Get all unbonding txs to a validator performed by a delegator
-			GET /stake/delegators/{addr}/validators/{addr}/txs?type=redelegate // Get all redelegation txs to a validator performed by a delegator
-	*/
-	// r.HandleFunc(
-	// 	"/stake/delegators/{delegatorAddr}/validators/{validatorAddr}/txs",
-	// 	stakingTxsHandlerFn(cliCtx, cdc),
-	// ).Queries("type", "{type}").Methods("GET")
-
 	// GET /stake/validators/
 	r.HandleFunc(
 		"/stake/validators",
@@ -78,9 +69,6 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Cod
 		"/stake/validators/{addr}",
 		validatorHandlerFn(cliCtx, cdc),
 	).Methods("GET")
-
-	// GET /stake/validators/{addr}/delegators
-	// Don't think this is currently possible without changing keys
 }
 
 // already resolve the rational shares to not handle this in the client
@@ -214,21 +202,22 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Hand
 		var txs = []tx.Info{}
 		var actions []string
 
-		if isBondTx {
+		switch {
+		case isBondTx:
 			actions = append(actions, string(tags.ActionDelegate))
-		} else if isUnbondTx {
+		case isUnbondTx:
 			actions = append(actions, string(tags.ActionBeginUnbonding))
 			actions = append(actions, string(tags.ActionCompleteUnbonding))
-		} else if isRedTx {
+		case isRedTx:
 			actions = append(actions, string(tags.ActionBeginRedelegation))
 			actions = append(actions, string(tags.ActionCompleteRedelegation))
-		} else if noQuery {
+		case noQuery:
 			actions = append(actions, string(tags.ActionDelegate))
 			actions = append(actions, string(tags.ActionBeginUnbonding))
 			actions = append(actions, string(tags.ActionCompleteUnbonding))
 			actions = append(actions, string(tags.ActionBeginRedelegation))
 			actions = append(actions, string(tags.ActionCompleteRedelegation))
-		} else {
+		default:
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}

@@ -17,17 +17,12 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) (tags 
 	binary.LittleEndian.PutUint64(heightBytes, uint64(req.Header.Height))
 	tags = sdk.NewTags("height", heightBytes)
 
-	fmt.Println(ctx.SigningValidators())
-
 	// Iterate over all the validators  which *should* have signed this block
 	// Store whether or not they have actually signed it and slash/unbond any
 	// which have missed too many blocks in a row (downtime slashing)
 	for _, signingValidator := range req.LastCommitInfo.GetValidators() {
 		present := signingValidator.SignedLastBlock
-		addr := new([20]byte)
-		copy(addr[:], signingValidator.Validator.Address)
-		pubkey := sk.addressToPubkey[*addr]
-		sk.handleValidatorSignature(ctx, pubkey, signingValidator.Validator.Power, present)
+		sk.handleValidatorSignature(ctx, signingValidator.Validator.Address, signingValidator.Validator.Power, present)
 	}
 
 	// Iterate through any newly discovered evidence of infraction

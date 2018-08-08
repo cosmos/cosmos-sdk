@@ -72,11 +72,11 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, infracti
 
 // handle a validator signature, must be called once per validator per block
 // nolint gocyclo
-// TODO: Change this to take in an address
-func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, power int64, signed bool) {
+func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, power int64, signed bool) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	height := ctx.BlockHeight()
-	address := sdk.ValAddress(pubkey.Address())
+	address := sdk.ValAddress(addr)
+	pubkey := k.getPubkey(addr)
 	// Local index, so counts blocks validator *should* have signed
 	// Will use the 0-value default signing info if not present, except for start height
 	signInfo, found := k.getValidatorSigningInfo(ctx, address)
@@ -104,7 +104,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	}
 
 	if !signed {
-		logger.Info(fmt.Sprintf("Absent validator %s at height %d, %d signed, threshold %d", pubkey.Address(), height, signInfo.SignedBlocksCounter, k.MinSignedPerWindow(ctx)))
+		logger.Info(fmt.Sprintf("Absent validator %s at height %d, %d signed, threshold %d", addr, height, signInfo.SignedBlocksCounter, k.MinSignedPerWindow(ctx)))
 	}
 	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)
 	if height > minHeight && signInfo.SignedBlocksCounter < k.MinSignedPerWindow(ctx) {
@@ -127,6 +127,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	k.setValidatorSigningInfo(ctx, address, signInfo)
 }
 
+// AddValidators adds the validators to the keepers validator addr to pubkey mapping.
 func (k Keeper) AddValidators(vals []abci.Validator) {
 	for i := 0; i < len(vals); i++ {
 		val := vals[i]
@@ -134,12 +135,22 @@ func (k Keeper) AddValidators(vals []abci.Validator) {
 		if err != nil {
 			continue
 		}
-		addr := new([tmhash.Size]byte)
-		copy(addr[:], pubkey.Address())
-		if val.GetPower() != 0 {
-			k.addressToPubkey[*addr] = pubkey
-		} else {
-			delete(k.addressToPubkey, *addr)
-		}
+		k.addPubkey(pubkey, val.Power == 0)
 	}
+}
+
+func (k Keeper) addPubkey(pubkey crypto.PubKey, del bool) {
+	addr := new([tmhash.Size]byte)
+	copy(addr[:], pubkey.Address())
+	if del {
+		delete(k.addressToPubkey, *addr)
+	} else {
+		k.addressToPubkey[*addr] = pubkey
+	}
+}
+
+func (k Keeper) getPubkey(address crypto.Address) crypto.PubKey {
+	addr := new([tmhash.Size]byte)
+	copy(addr[:], address)
+	return k.addressToPubkey[*addr]
 }

@@ -78,6 +78,7 @@ BUG FIXES
 *  \#1799 Fix `gaiad export`
 *  \#1828 Force user to specify amount on create-validator command by removing default
 *  \#1839 Fixed bug where intra-tx counter wasn't set correctly for genesis validators
+* [staking] [#1858](https://github.com/cosmos/cosmos-sdk/pull/1858) Fixed bug where the cliff validator was not be updated correctly
 * [tests] \#1675 Fix non-deterministic `test_cover` 
 * [tests] \#1551: Fixed invalid LCD test JSON payload in `doIBCTransfer`
 * [baseapp] ctx.BlockHeight now correctly set on BeginBlock when app.deliverState is non-nil
@@ -87,3 +88,6 @@ BUG FIXES
   structure `TxContext` in `x/auth/client/context`
   * Cleaned up documentation and API of what used to be `CoreContext`
   * Implemented `KeyType` enum for key info
+* [tests] \#1551: Fixed invalid LCD test JSON payload in `doIBCTransfer`
+*  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator
+* [basecoin] Fixes coin transaction failure and account query [discussion](https://forum.cosmos.network/t/unmarshalbinarybare-expected-to-read-prefix-bytes-75fbfab8-since-it-is-registered-concrete-but-got-0a141dfa/664/6)

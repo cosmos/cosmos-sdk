@@ -255,9 +255,9 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 // helper methods
 
 func getTestingHomeDirs() (string, string) {
-	//tmpDir := os.TempDir()
-	gaiadHome := fmt.Sprintf("%s%s.gaiad", "/home/lhy", string(os.PathSeparator))
-	gaiacliHome := fmt.Sprintf("%s%s.gaiacli", "/home/lhy", string(os.PathSeparator))
+	tmpDir := os.TempDir()
+	gaiadHome := fmt.Sprintf("%s%s.test_gaiad", tmpDir, string(os.PathSeparator))
+	gaiacliHome := fmt.Sprintf("%s%s.test_gaiacli", tmpDir, string(os.PathSeparator))
 	return gaiadHome, gaiacliHome
 }
 

@@ -1,6 +1,8 @@
 ## PENDING
 
 BREAKING CHANGES
+* API
+  - \#1880 [x/stake] changed the endpoints to be more REST-ful
 * Update to tendermint v0.22.5. This involves changing all of the cryptography imports. [Ref](https://github.com/tendermint/tendermint/pull/1966)
 * [baseapp] Msgs are no longer run on CheckTx, removed `ctx.IsCheckTx()`
 * [x/gov] CLI flag changed from `proposalID` to `proposal-id`

@@ -75,14 +75,14 @@ func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string, trus
 	return wire.MarshalJSONIndent(cdc, info)
 }
 
-func formatTxResult(cdc *wire.Codec, res *ctypes.ResultTx) (txInfo, error) {
+func formatTxResult(cdc *wire.Codec, res *ctypes.ResultTx) (Info, error) {
 	// TODO: verify the proof if requested
 	tx, err := parseTx(cdc, res.Tx)
 	if err != nil {
-		return txInfo{}, err
+		return Info{}, err
 	}
 
-	return txInfo{
+	return Info{
 		Hash:   res.Hash,
 		Height: res.Height,
 		Tx:     tx,
@@ -90,8 +90,8 @@ func formatTxResult(cdc *wire.Codec, res *ctypes.ResultTx) (txInfo, error) {
 	}, nil
 }
 
-// txInfo is used to prepare info to display
-type txInfo struct {
+// Info is used to prepare info to display
+type Info struct {
 	Hash   common.HexBytes        `json:"hash"`
 	Height int64                  `json:"height"`
 	Tx     sdk.Tx                 `json:"tx"`

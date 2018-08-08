@@ -7,13 +7,13 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client/tx"
+
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/common"
 	p2p "github.com/tendermint/tendermint/p2p"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
@@ -27,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 )
 
 func init() {
@@ -316,13 +317,7 @@ func TestTxs(t *testing.T) {
 	res, body = Request(t, port, "GET", fmt.Sprintf("/txs/%s", resultTx.Hash), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	type txInfo struct {
-		Hash   common.HexBytes        `json:"hash"`
-		Height int64                  `json:"height"`
-		Tx     sdk.Tx                 `json:"tx"`
-		Result abci.ResponseDeliverTx `json:"result"`
-	}
-	var indexedTxs []txInfo
+	var indexedTxs []tx.Info
 
 	// check if tx is queryable
 	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?tag=tx.hash='%s'", resultTx.Hash), nil)
@@ -374,6 +369,19 @@ func TestValidatorsQuery(t *testing.T) {
 	require.True(t, foundVal, "pkBech %v, owner %v", pkBech, validators[0].Owner)
 }
 
+func TestValidatorQuery(t *testing.T) {
+	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	defer cleanup()
+	require.Equal(t, 1, len(pks))
+
+	validator1Owner := sdk.AccAddress(pks[0].Address())
+
+	validator := getValidator(t, port, validator1Owner)
+	bech32ValAddress, err := sdk.Bech32ifyValPub(pks[0])
+	require.NoError(t, err)
+	assert.Equal(t, validator.PubKey, bech32ValAddress, "The returned validator does not hold the correct data")
+}
+
 func TestBonding(t *testing.T) {
 	name, password, denom := "test", "1234567890", "steak"
 	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
@@ -398,7 +406,7 @@ func TestBonding(t *testing.T) {
 
 	// query validator
 	bond := getDelegation(t, port, addr, validator1Owner)
-	require.Equal(t, "60/1", bond.Shares.String())
+	require.Equal(t, "60.0000000000", bond.Shares)
 
 	//////////////////////
 	// testing unbonding
@@ -409,7 +417,7 @@ func TestBonding(t *testing.T) {
 
 	// query validator
 	bond = getDelegation(t, port, addr, validator1Owner)
-	require.Equal(t, "30/1", bond.Shares.String())
+	require.Equal(t, "30.0000000000", bond.Shares)
 
 	// check if tx was committed
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -421,7 +429,33 @@ func TestBonding(t *testing.T) {
 	coins = acc.GetCoins()
 	require.Equal(t, int64(40), coins.AmountOf("steak").Int64())
 
+	// query unbonding delegation
+	validatorAddr := sdk.AccAddress(pks[0].Address())
+	unbondings := getUndelegations(t, port, addr, validatorAddr)
+	assert.Len(t, unbondings, 1, "Unbondings holds all unbonding-delegations")
+	assert.Equal(t, "30", unbondings[0].Balance.Amount.String())
+
+	// query summary
+	summary := getDelegationSummary(t, port, addr)
+
+	assert.Len(t, summary.Delegations, 1, "Delegation summary holds all delegations")
+	assert.Equal(t, "30.0000000000", summary.Delegations[0].Shares)
+	assert.Len(t, summary.UnbondingDelegations, 1, "Delegation summary holds all unbonding-delegations")
+	assert.Equal(t, "30", summary.UnbondingDelegations[0].Balance.Amount.String())
+
 	// TODO add redelegation, need more complex capabilities such to mock context and
+	// TODO check summary for redelegation
+	// assert.Len(t, summary.Redelegations, 1, "Delegation summary holds all redelegations")
+
+	// query txs
+	txs := getBondingTxs(t, port, addr, "")
+	assert.Len(t, txs, 2, "All Txs found")
+
+	txs = getBondingTxs(t, port, addr, "bond")
+	assert.Len(t, txs, 1, "All bonding txs found")
+
+	txs = getBondingTxs(t, port, addr, "unbond")
+	assert.Len(t, txs, 1, "All unbonding txs found")
 }
 
 func TestSubmitProposal(t *testing.T) {
@@ -719,15 +753,56 @@ func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.
 	return signingInfo
 }
 
-func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.AccAddress) stake.Delegation {
+// ============= Stake Module ================
+
+func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.AccAddress) rest.DelegationWithoutRat {
 
 	// get the account to get the sequence
-	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/%s/delegation/%s", delegatorAddr, validatorAddr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/delegations/%s", delegatorAddr, validatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var bond stake.Delegation
+	var bond rest.DelegationWithoutRat
 	err := cdc.UnmarshalJSON([]byte(body), &bond)
 	require.Nil(t, err)
 	return bond
+}
+
+func getUndelegations(t *testing.T, port string, delegatorAddr, validatorAddr sdk.AccAddress) []stake.UnbondingDelegation {
+
+	// get the account to get the sequence
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/unbonding_delegations/%s", delegatorAddr, validatorAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var unbondings []stake.UnbondingDelegation
+	err := cdc.UnmarshalJSON([]byte(body), &unbondings)
+	require.Nil(t, err)
+	return unbondings
+}
+
+func getDelegationSummary(t *testing.T, port string, delegatorAddr sdk.AccAddress) rest.DelegationSummary {
+
+	// get the account to get the sequence
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s", delegatorAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var summary rest.DelegationSummary
+	err := cdc.UnmarshalJSON([]byte(body), &summary)
+	require.Nil(t, err)
+	return summary
+}
+
+func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, query string) []tx.Info {
+
+	// get the account to get the sequence
+	var res *http.Response
+	var body string
+	if len(query) > 0 {
+		res, body = Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/txs?type=%s", delegatorAddr, query), nil)
+	} else {
+		res, body = Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/txs", delegatorAddr), nil)
+	}
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var txs []tx.Info
+	err := cdc.UnmarshalJSON([]byte(body), &txs)
+	require.Nil(t, err)
+	return txs
 }
 
 func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, validatorAddr sdk.AccAddress) (resultTx ctypes.ResultBroadcastTxCommit) {
@@ -758,7 +833,7 @@ func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, 
 		"begin_redelegates": [],
 		"complete_redelegates": []
 	}`, name, password, accnum, sequence, chainID, delegatorAddr, validatorAddr, "steak"))
-	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
+	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delegatorAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var results []ctypes.ResultBroadcastTxCommit
@@ -798,7 +873,7 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 		"begin_redelegates": [],
 		"complete_redelegates": []
 	}`, name, password, accnum, sequence, chainID, delegatorAddr, validatorAddr))
-	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
+	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delegatorAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var results []ctypes.ResultBroadcastTxCommit
@@ -839,7 +914,7 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 		],
 		"complete_redelegates": []
 	}`, name, password, accnum, sequence, chainID, delegatorAddr, validatorSrcAddr, validatorDstAddr))
-	res, body := Request(t, port, "POST", "/stake/delegations", jsonStr)
+	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delegatorAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var results []ctypes.ResultBroadcastTxCommit
@@ -858,6 +933,18 @@ func getValidators(t *testing.T, port string) []stake.BechValidator {
 	require.Nil(t, err)
 	return validators
 }
+
+func getValidator(t *testing.T, port string, validatorAddr sdk.AccAddress) stake.BechValidator {
+	// get the account to get the sequence
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/validators/%s", validatorAddr.String()), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var validator stake.BechValidator
+	err := cdc.UnmarshalJSON([]byte(body), &validator)
+	require.Nil(t, err)
+	return validator
+}
+
+// ============= Governance Module ================
 
 func getProposal(t *testing.T, port string, proposalID int64) gov.Proposal {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d", proposalID), nil)

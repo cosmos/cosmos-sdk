@@ -3,6 +3,7 @@
 - Collection
   - Gas price based on parameter
   - (which gets changed automatically)
+  - https://github.com/cosmos/cosmos-sdk/issues/1921
   - Per block gas usage as %
   - Windowing function
     - Block N,

@@ -34,3 +34,4 @@ vagrant
 
 # Graphviz
 dependency-graph.png
+data/

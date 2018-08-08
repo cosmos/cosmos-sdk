@@ -617,6 +617,7 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
+  inputs-digest = "71e86b1f1e9ec71901c20d8532dc8477df66eff37a407322379f6a8b03e5d91b"
   input-imports = [
     "github.com/bartekn/go-bip39",
     "github.com/bgentry/speakeasy",

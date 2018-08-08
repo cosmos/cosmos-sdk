@@ -71,5 +71,8 @@
 
 # Other priority
 
-## CLI
+## gaiad // gaiacli
+- Documentation // language
+
+## gaialite
 - Documentation // language

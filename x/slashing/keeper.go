@@ -5,10 +5,12 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -26,11 +28,12 @@ type Keeper struct {
 // NewKeeper creates a slashing keeper
 func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, params params.Getter, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
-		storeKey:     key,
-		cdc:          cdc,
-		validatorSet: vs,
-		params:       params,
-		codespace:    codespace,
+		storeKey:        key,
+		cdc:             cdc,
+		validatorSet:    vs,
+		params:          params,
+		addressToPubkey: make(map[[tmhash.Size]byte]crypto.PubKey),
+		codespace:       codespace,
 	}
 	return keeper
 }
@@ -74,7 +77,6 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	logger := ctx.Logger().With("module", "x/slashing")
 	height := ctx.BlockHeight()
 	address := sdk.ValAddress(pubkey.Address())
-
 	// Local index, so counts blocks validator *should* have signed
 	// Will use the 0-value default signing info if not present, except for start height
 	signInfo, found := k.getValidatorSigningInfo(ctx, address)
@@ -125,11 +127,19 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	k.setValidatorSigningInfo(ctx, address, signInfo)
 }
 
-func (k Keeper) addValidatorAddress(addrSlice []byte, key crypto.PubKey) {
-	if len(addrSlice) != tmhash.Size {
-		return
+func (k Keeper) AddValidators(vals []abci.Validator) {
+	for i := 0; i < len(vals); i++ {
+		val := vals[i]
+		pubkey, err := tmtypes.PB2TM.PubKey(val.PubKey)
+		if err != nil {
+			continue
+		}
+		addr := new([tmhash.Size]byte)
+		copy(addr[:], pubkey.Address())
+		if val.GetPower() != 0 {
+			k.addressToPubkey[*addr] = pubkey
+		} else {
+			delete(k.addressToPubkey, *addr)
+		}
 	}
-	addr := new([tmhash.Size]byte)
-	copy(addr[:], addrSlice)
-	k.addressToPubkey[*addr] = key
 }

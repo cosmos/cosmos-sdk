@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -86,6 +87,62 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	require.True(t, found)
 	power = GetValidatorsByPowerIndexKey(validator, pool)
 	require.True(t, keeper.validatorByPowerIndexExists(ctx, power))
+}
+
+func TestCliffValidatorChange(t *testing.T) {
+	numVals := 10
+	maxVals := 5
+
+	// create context, keeper, and pool for tests
+	ctx, _, keeper := CreateTestInput(t, false, 0)
+	pool := keeper.GetPool(ctx)
+
+	// create keeper parameters
+	params := keeper.GetParams(ctx)
+	params.MaxValidators = uint16(maxVals)
+	keeper.SetParams(ctx, params)
+
+	// create a random pool
+	pool.LooseTokens = sdk.NewRat(10000)
+	pool.BondedTokens = sdk.NewRat(1234)
+	keeper.SetPool(ctx, pool)
+
+	validators := make([]types.Validator, numVals)
+	for i := 0; i < len(validators); i++ {
+		moniker := fmt.Sprintf("val#%d", int64(i))
+		val := types.NewValidator(Addrs[i], PKs[i], types.Description{Moniker: moniker})
+		val.BondHeight = int64(i)
+		val.BondIntraTxCounter = int16(i)
+		val, pool, _ = val.AddTokensFromDel(pool, int64((i+1)*10))
+
+		keeper.SetPool(ctx, pool)
+		val = keeper.UpdateValidator(ctx, val)
+		validators[i] = val
+	}
+
+	// add a large amount of tokens to current cliff validator
+	currCliffVal := validators[numVals-maxVals]
+	currCliffVal, pool, _ = currCliffVal.AddTokensFromDel(pool, 200)
+	keeper.SetPool(ctx, pool)
+	currCliffVal = keeper.UpdateValidator(ctx, currCliffVal)
+
+	// assert new cliff validator to be set to the second lowest bonded validator by power
+	newCliffVal := validators[numVals-maxVals+1]
+	require.Equal(t, newCliffVal.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+
+	// assert cliff validator power should have been updated
+	cliffPower := keeper.GetCliffValidatorPower(ctx)
+	require.Equal(t, GetValidatorsByPowerIndexKey(newCliffVal, pool), cliffPower)
+
+	// add small amount of tokens to new current cliff validator
+	newCliffVal, pool, _ = newCliffVal.AddTokensFromDel(pool, 1)
+	keeper.SetPool(ctx, pool)
+	newCliffVal = keeper.UpdateValidator(ctx, newCliffVal)
+
+	// assert cliff validator has not change but increased in power
+	cliffPower = keeper.GetCliffValidatorPower(ctx)
+	require.Equal(t, newCliffVal.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+	require.Equal(t, GetValidatorsByPowerIndexKey(newCliffVal, pool), cliffPower)
 }
 
 func TestSlashToZeroPowerRemoved(t *testing.T) {

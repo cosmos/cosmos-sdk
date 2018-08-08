@@ -63,7 +63,9 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.Ba
 	app.accountMapper = auth.NewAccountMapper(
 		cdc,
 		app.keyAccount,        // target store
-		auth.ProtoBaseAccount, // prototype
+		func () auth.Account {
+			return &types.AppAccount{}
+		},
 	)
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
@@ -100,9 +102,9 @@ func MakeCodec() *wire.Codec {
 	sdk.RegisterWire(cdc)
 	bank.RegisterWire(cdc)
 	ibc.RegisterWire(cdc)
+	auth.RegisterWire(cdc)
 
-	// register custom types
-	cdc.RegisterInterface((*auth.Account)(nil), nil)
+	// register custom type
 	cdc.RegisterConcrete(&types.AppAccount{}, "basecoin/Account", nil)
 
 	cdc.Seal()

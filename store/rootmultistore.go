@@ -129,10 +129,17 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 		newStores[key] = store
 	}
 
-	// If any CommitStoreLoaders were not used, return error.
-	for key := range rs.storesParams {
+	// If any CommitStoreLoaders were not used, create the new one.
+	for key, storeParams := range rs.storesParams {
 		if _, ok := newStores[key]; !ok {
-			return fmt.Errorf("unused CommitStoreLoader: %v", key)
+			////////////////////  iris/cosmos-sdk begin ///////////////////////////
+			id := CommitID{}
+			store, err := rs.loadCommitStoreFromParams(id, storeParams)
+			if err != nil {
+				return fmt.Errorf("failed to load rootMultiStore: %v", err)
+			}
+			newStores[key] = store
+			////////////////////  iris/cosmos-sdk end ///////////////////////////
 		}
 	}
 

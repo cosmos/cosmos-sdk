@@ -51,7 +51,7 @@ func getMockApp(t *testing.T) *mock.App {
 	keyCool := sdk.NewKVStoreKey("cool")
 	coinKeeper := bank.NewKeeper(mapp.AccountMapper)
 	keeper := NewKeeper(keyCool, coinKeeper, mapp.RegisterCodespace(DefaultCodespace))
-	mapp.Router().AddRoute("cool", NewHandler(keeper))
+	mapp.Router().AddRoute("cool", []*sdk.KVStoreKey{keyCool}, NewHandler(keeper))
 
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, "ice-cold"))
 

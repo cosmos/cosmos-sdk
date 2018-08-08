@@ -39,6 +39,8 @@ const (
 	runTxModeDeliver runTxMode = iota
 )
 
+type RunMsg func(ctx sdk.Context, msgs []sdk.Msg) sdk.Result
+
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
@@ -60,6 +62,7 @@ type BaseApp struct {
 	endBlocker       sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
 	addrPeerFilter   sdk.PeerFilter   // filter peers by address and port
 	pubkeyPeerFilter sdk.PeerFilter   // filter peers by public key
+	runMsg			 RunMsg
 
 	//--------------------
 	// Volatile
@@ -191,6 +194,10 @@ func (app *BaseApp) SetPubKeyPeerFilter(pf sdk.PeerFilter) {
 	app.pubkeyPeerFilter = pf
 }
 func (app *BaseApp) Router() Router { return app.router }
+
+func (app *BaseApp) SetRunMsg(runMsg RunMsg) {
+	app.runMsg = runMsg
+}
 
 // load latest application version
 func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
@@ -564,6 +571,10 @@ func (app *BaseApp) getContextForAnte(mode runTxMode, txBytes []byte) (ctx sdk.C
 
 // Iterates through msgs and executes them
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg) (result sdk.Result) {
+	if app.runMsg != nil {
+		return app.runMsg(ctx, msgs)
+	}
+
 	// accumulate results
 	logs := make([]string, 0, len(msgs))
 	var data []byte   // NOTE: we just append them all (?!)

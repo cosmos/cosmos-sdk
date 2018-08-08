@@ -4,6 +4,7 @@ import (
 	"regexp"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"strings"
 )
 
 // Router provides handlers for each transaction type.
@@ -43,7 +44,9 @@ var isAlpha = regexp.MustCompile(`^[a-zA-Z]+$`).MatchString
 // AddRoute - TODO add description
 ////////////////////  iris/cosmos-sdk begin  ///////////////////////////
 func (rtr *router) AddRoute(r string, s []*sdk.KVStoreKey, h sdk.Handler) Router {
-	if !isAlpha(r) {
+	rstrs := strings.Split(r, "-")
+
+	if !isAlpha(rstrs[0]) {
 		panic("route expressions can only contain alphabet characters")
 	}
 	rtr.routes = append(rtr.routes, route{r, s, h})
@@ -70,7 +73,11 @@ func (rtr *router) RouteTable() (table []string) {
 	for _, route := range rtr.routes {
 		storelist := ""
 		for _, store := range route.s {
-			storelist = storelist + ":" + store.Name()
+			if storelist == "" {
+				storelist = store.Name()
+			} else {
+				storelist = storelist + ":" + store.Name()
+			}
 		}
 		table = append(table, route.r+"/"+storelist)
 	}

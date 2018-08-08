@@ -76,6 +76,18 @@ func (fck FeeCollectionKeeper) refundCollectedFees(ctx sdk.Context, coins sdk.Co
 	return newCoins
 }
 
+func (fck FeeCollectionKeeper) GetNativeFeeToken(ctx sdk.Context, coins sdk.Coins) sdk.Coin {
+	nativeFeeToken, err := fck.getter.GetString(ctx, NativeFeeTokenKey)
+	if err != nil {
+		panic(err)
+	}
+	for _,coin := range coins {
+		if coin.Denom == nativeFeeToken {
+			return coin
+		}
+	}
+	return sdk.Coin{}
+}
 
 // Clears the collected Fee Pool
 func (fck FeeCollectionKeeper) ClearCollectedFees(ctx sdk.Context) {
@@ -99,6 +111,10 @@ func (fck FeeCollectionKeeper) FeePreprocess(ctx sdk.Context, coins sdk.Coins, g
 		panic(errors.New("failed to parse gas price from string"))
 	}
 
+	if len(coins) < 1 || coins[0].Denom != nativeFeeToken {
+		return sdk.ErrInvalidCoins("no native fee token")
+	}
+/*
 	equivalentTotalFee := sdk.NewInt(0)
 	for _,coin := range coins {
 		if coin.Denom != nativeFeeToken {
@@ -111,14 +127,15 @@ func (fck FeeCollectionKeeper) FeePreprocess(ctx sdk.Context, coins sdk.Coins, g
 			if !ok {
 				panic(errors.New("failed to parse rate from string"))
 			}
-			equivalentFee := rate.Div(sdk.NewInt(RatePrecision)).Mul(coin.Amount)
+			equivalentFee := rate.Mul(coin.Amount).Div(sdk.NewInt(RatePrecision))
 			equivalentTotalFee = equivalentTotalFee.Add(equivalentFee)
 
 		} else {
 			equivalentTotalFee = equivalentTotalFee.Add(coin.Amount)
 		}
 	}
-
+*/
+	equivalentTotalFee := coins[0].Amount
 	gasPrice := equivalentTotalFee.Div(sdk.NewInt(gasLimit))
 	if gasPrice.LT(threshold) {
 		return sdk.ErrInsufficientCoins(fmt.Sprintf("gas price %s is less than threshold %s", gasPrice.String(), threshold.String()))

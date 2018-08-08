@@ -66,7 +66,11 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			sequences[i] = sigs[i].Sequence
 			accNums[i] = sigs[i].AccountNumber
 		}
-		fee := stdTx.Fee
+
+		fee := StdFee{
+			Gas: stdTx.Fee.Gas,
+			Amount: sdk.Coins{fck.GetNativeFeeToken(ctx, stdTx.Fee.Amount)},
+		}
 
 		err = fck.FeePreprocess(newCtx, fee.Amount, fee.Gas)
 		if err != nil {
@@ -124,7 +128,10 @@ func NewFeeRefundHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.FeeRefun
 		if !ok {
 			return
 		}
-		fee := stdTx.Fee
+		fee := StdFee{
+			Gas: stdTx.Fee.Gas,
+			Amount: sdk.Coins{fck.GetNativeFeeToken(ctx, stdTx.Fee.Amount)},
+		}
 		txAccounts := GetSigners(ctx)
 		if len(txAccounts) < 1 {
 			return

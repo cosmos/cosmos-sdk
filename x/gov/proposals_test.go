@@ -6,7 +6,6 @@ import (
 	"github.com/magiconair/properties/assert"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"testing"
-	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 func TestParameterProposal(t *testing.T) {
@@ -22,15 +21,30 @@ func TestParameterProposal(t *testing.T) {
 	pp := ParameterProposal{
 		Datas: []Data{
 			{Key: ParamStoreKeyDepositProcedureDeposit, Value: "200iris", Op: Update},
+			{Key: ParamStoreKeyDepositProcedureMaxDepositPeriod, Value: "20", Op: Update},
 			{Key: ParamStoreKeyTallyingProcedurePenalty, Value: "1/50", Op: Update},
 			{Key: ParamStoreKeyTallyingProcedureVeto, Value: "1/4", Op: Update},
 			{Key: ParamStoreKeyTallyingProcedureThreshold, Value: "2/8", Op: Update},
+			{Key: "upgrade", Value: "false", Op: Update},
+			{Key: "version", Value: "2", Op: Update},
 		},
 	}
+
+	keeper.ps.Set(ctx,"upgrade",true)
+	keeper.ps.Set(ctx,"version",int16(1))
 
 	pp.Execute(ctx, keeper)
 	assert.Equal(t, keeper.GetDepositProcedure(ctx).MinDeposit,
 		sdk.Coins{sdk.NewCoin("iris", 200)})
+
+	assert.Equal(t, keeper.GetDepositProcedure(ctx).MaxDepositPeriod,int64(20))
+
+	upgrade,_ := keeper.ps.GetBool(ctx,"upgrade")
+	assert.Equal(t, upgrade,false)
+
+	version,_ := keeper.ps.GetInt16(ctx,"version")
+	assert.Equal(t, version,int16(2))
+
 
 
 	assert.Equal(t, keeper.GetTallyingProcedure(ctx),
@@ -39,12 +53,4 @@ func TestParameterProposal(t *testing.T) {
 			Veto:              sdk.NewRat(1, 4),
 			GovernancePenalty: sdk.NewRat(1, 50),
 		})
-}
-
-
-
-func TestByte(t *testing.T) {
-	fmt.Println(string([]byte{112,114,111,112,111,115,97,108,73,100}))
-	bInt :=sdk.NewRatFromInt(params.DefaultPrecison(100))
-	fmt.Println(bInt)
 }

@@ -36,12 +36,13 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 	keeper := NewKeeper(mapp.Cdc, keyGov, pk.Setter(), ck, sk, DefaultCodespace)
 	mapp.Router().AddRoute("gov", NewHandler(keeper))
 
-	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyGov, keyGlobalParams}))
-
 	mapp.SetEndBlocker(getEndBlocker(keeper))
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk))
 
-	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewCoin("steak", 42)})
+	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyGov, keyGlobalParams}))
+
+	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewInt64Coin("steak", 42)})
+
 	mock.SetGenesis(mapp, genAccs)
 
 	return mapp, keeper, sk, addrs, pubKeys, privKeys
@@ -50,7 +51,7 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 // gov and stake endblocker
 func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-		tags, _ := EndBlocker(ctx, keeper)
+		tags := EndBlocker(ctx, keeper)
 		return abci.ResponseEndBlock{
 			Tags: tags,
 		}

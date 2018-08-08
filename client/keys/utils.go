@@ -29,6 +29,55 @@ func GetKeyBase() (keys.Keybase, error) {
 	return GetKeyBaseFromDir(rootDir)
 }
 
+// GetKeyInfo returns key info for a given name. An error is returned if the
+// keybase cannot be retrieved or getting the info fails.
+func GetKeyInfo(name string) (keys.Info, error) {
+	keybase, err := GetKeyBase()
+	if err != nil {
+		return nil, err
+	}
+
+	return keybase.Get(name)
+}
+
+// GetPassphrase returns a passphrase for a given name. It will first retrieve
+// the key info for that name if the type is local, it'll fetch input from
+// STDIN. Otherwise, an empty passphrase is returned. An error is returned if
+// the key info cannot be fetched or reading from STDIN fails.
+func GetPassphrase(name string) (string, error) {
+	var passphrase string
+
+	keyInfo, err := GetKeyInfo(name)
+	if err != nil {
+		return passphrase, err
+	}
+
+	// we only need a passphrase for locally stored keys
+	// TODO: (ref: #864) address security concerns
+	if keyInfo.GetType() == keys.TypeLocal {
+		passphrase, err = ReadPassphraseFromStdin(name)
+		if err != nil {
+			return passphrase, err
+		}
+	}
+
+	return passphrase, nil
+}
+
+// ReadPassphraseFromStdin attempts to read a passphrase from STDIN return an
+// error upon failure.
+func ReadPassphraseFromStdin(name string) (string, error) {
+	buf := client.BufferStdin()
+	prompt := fmt.Sprintf("Password to sign with '%s':", name)
+
+	passphrase, err := client.GetPassword(prompt, buf)
+	if err != nil {
+		return passphrase, fmt.Errorf("Error reading passphrase: %v", err)
+	}
+
+	return passphrase, nil
+}
+
 // initialize a keybase based on the configuration
 func GetKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 	if keybase == nil {
@@ -77,7 +126,7 @@ func Bech32KeyOutput(info keys.Info) (KeyOutput, error) {
 	}
 	return KeyOutput{
 		Name:    info.GetName(),
-		Type:    info.GetType(),
+		Type:    info.GetType().String(),
 		Address: account,
 		PubKey:  bechPubKey,
 	}, nil

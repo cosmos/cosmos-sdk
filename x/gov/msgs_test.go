@@ -10,11 +10,11 @@ import (
 )
 
 var (
-	coinsPos         = sdk.Coins{sdk.NewCoin("steak", 1000)}
+	coinsPos         = sdk.Coins{sdk.NewInt64Coin("steak", 1000)}
 	coinsZero        = sdk.Coins{}
-	coinsNeg         = sdk.Coins{sdk.NewCoin("steak", -10000)}
-	coinsPosNotAtoms = sdk.Coins{sdk.NewCoin("foo", 10000)}
-	coinsMulti       = sdk.Coins{sdk.NewCoin("foo", 10000), sdk.NewCoin("steak", 1000)}
+	coinsNeg         = sdk.Coins{sdk.NewInt64Coin("steak", -10000)}
+	coinsPosNotAtoms = sdk.Coins{sdk.NewInt64Coin("foo", 10000)}
+	coinsMulti       = sdk.Coins{sdk.NewInt64Coin("foo", 10000), sdk.NewInt64Coin("steak", 1000)}
 )
 
 // test ValidateBasic for MsgCreateValidator

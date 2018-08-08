@@ -94,7 +94,7 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 }
 
 // Called every block, process inflation, update validator set
-func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags, nonVotingVals []sdk.AccAddress) {
+func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 
 	resTags = sdk.NewTags()
 
@@ -111,8 +111,6 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags, nonVotingVals
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
 	}
 
-	var passes bool
-
 	// Check if earliest Active Proposal ended voting period yet
 	for shouldPopActiveProposalQueue(ctx, keeper) {
 		activeProposal := keeper.ActiveProposalQueuePop(ctx)
@@ -123,7 +121,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags, nonVotingVals
 			continue
 		}
 
-		passes, nonVotingVals = tally(ctx, keeper, activeProposal)
+		passes, tallyResults, nonVotingVals := tally(ctx, keeper, activeProposal)
 		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(activeProposal.GetProposalID())
 		var action []byte
 		if passes {
@@ -135,13 +133,23 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags, nonVotingVals
 			activeProposal.SetStatus(StatusRejected)
 			action = tags.ActionProposalRejected
 		}
+		activeProposal.SetTallyResult(tallyResults)
 		keeper.SetProposal(ctx, activeProposal)
+
+		for _, valAddr := range nonVotingVals {
+			val := keeper.ds.GetValidatorSet().Validator(ctx, valAddr)
+			keeper.ds.GetValidatorSet().Slash(ctx,
+				val.GetPubKey(),
+				ctx.BlockHeight(),
+				val.GetPower().RoundInt64(),
+				keeper.GetTallyingProcedure(ctx).GovernancePenalty)
+		}
 
 		resTags.AppendTag(tags.Action, action)
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
 	}
 
-	return resTags, nonVotingVals
+	return resTags
 }
 func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 	depositProcedure := keeper.GetDepositProcedure(ctx)

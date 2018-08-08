@@ -19,7 +19,7 @@ LCD will be used in the Cosmos Hub, the first Hub in the Cosmos network.
 1. [**Overview**](##Overview)
 2. [**Get Started**](getting_started.md)
 3. [**API**](api.md)
-4. [**Specifications**](hspecification.md)
+4. [**Specifications**](specification.md)
 
 ## Overview
 
@@ -67,7 +67,7 @@ A full node of ABCI is different from its light client in the following ways:
 | Provide APIs|All cosmos APIs|Modular APIs|Full node supports all cosmos APIs. LCD provides modular APIs according to users' configuration|
 | Secuity level| High|High|Full node will verify all transactions and blocks by itself. LCD can't do this, but it can query any data from other full nodes and verify the data independently. So both full node and LCD don't need to trust any third nodes, they all can achieve high security|
 
-According to the above table, LCD can meet all users' functionality and security requirements, but 
+According to the above table, LCD can meet all users' functionality and security requirements, but
 only requires little resource on bandwidth, computing, storage and power.
 
 ## How does LCD achieve high security?

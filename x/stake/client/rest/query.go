@@ -137,17 +137,17 @@ func delegatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 			if statusCode != http.StatusNoContent {
 				delegationSummary.Redelegations = append(delegationSummary.Redelegations, redelegations)
 			}
-
-			output, err := cdc.MarshalJSON(delegationSummary)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(err.Error()))
-				return
-			}
-
-			// success
-			w.Write(output) // write
 		}
+
+		output, err := cdc.MarshalJSON(delegationSummary)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		// success
+		w.Write(output) // write
 	}
 }
 

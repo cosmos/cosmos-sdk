@@ -155,9 +155,9 @@ func (k Keeper) addPubkey(pubkey crypto.PubKey, del bool) {
 }
 
 func (k Keeper) getPubkey(address crypto.Address) (crypto.PubKey, error) {
-	addr := new([tmhash.Size]byte)
+	var addr [tmhash.Size]byte
 	copy(addr[:], address)
-	pk := k.addressToPubkey[*addr]
+	pk := k.addressToPubkey[addr]
 	if pk == nil {
 		return nil, errors.New("Address not found")
 	}

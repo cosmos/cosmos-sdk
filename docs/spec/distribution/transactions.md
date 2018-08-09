@@ -1,16 +1,3 @@
-
-
-
-Each delegation holds multiple accumulation factors to specify its entitlement to
-the rewards from a validator. `Accum` is used to passively calculate
-each bonds entitled rewards from the `RewardPool`. `AccumProposer` is used to
-passively calculate each bonds entitled rewards from
-`ValidatorDistribution.ProposerRewardPool`
-
-
-
-
-
 # Transactions
 
 ## TxWithdrawDelegation
@@ -42,14 +29,14 @@ func GetDelegatorEntitlement(delegatorAddr sdk.AccAddress) DecCoins
     delegations = GetDelegations(delegatorAddr)
     DelDistr = GetDelegationDistribution(delegation.DelegatorAddr,
                                          delegation.ValidatorAddr)
-    pcs = GetPowerChanges(DelDistr.WithdrawalHeight)
+    vus = GetValidatorUpdates(DelDistr.WithdrawalHeight)
         
     // update all adjustment factors for each delegation since last withdrawal
-    for pc = range pcs 
+    for vu = range vus 
         for delegation = range delegations 
             DelDistr = GetDelegationDistribution(delegation.DelegatorAddr,
                                                  delegation.ValidatorAddr)
-            pc.ProcessPowerChangeDelegation(delegation, DelDistr) 
+            vu.ProcessPowerChangeDelegation(delegation, DelDistr) 
     
     // collect all entitled fees
     entitlement = 0
@@ -70,16 +57,16 @@ func GetDelegatorEntitlement(delegatorAddr sdk.AccAddress) DecCoins
     
     return entitlement
 
-func (pc ValidatorUpdate) ProcessPowerChangeDelegation(delegation sdk.Delegation, 
+func (vu ValidatorUpdate) ProcessPowerChangeDelegation(delegation sdk.Delegation, 
                       DelDistr DelegationDistribution) 
 
     // get the historical scenarios
-    scenario1 = pc.DelegationFromGlobalPool(delegation, DelDistr) 
-    scenario2 = pc.DelegationFromProvisionPool(delegation, DelDistr) 
+    scenario1 = vu.DelegationFromGlobalPool(delegation, DelDistr) 
+    scenario2 = vu.DelegationFromProvisionPool(delegation, DelDistr) 
 
     // process the adjustment factors 
-    scenario1.UpdateAdjustmentForPowerChange(pc.Height) 
-    scenario2.UpdateAdjustmentForPowerChange(pc.Height) 
+    scenario1.UpdateAdjustmentForPowerChange(vu.Height) 
+    scenario2.UpdateAdjustmentForPowerChange(vu.Height) 
 ```
 
 ## TxWithdrawValidator
@@ -91,7 +78,7 @@ redelegation, or delegation of additional tokens to a specific validator. This
 transaction withdraws the validators commission rewards, as well as any rewards
 earning on their self-delegation. 
 
-```golang
+```
 type TxWithdrawValidator struct {
     ownerAddr    sdk.AccAddress // validator address to withdraw from 
     withdrawAddr sdk.AccAddress // address to make the withdrawal to
@@ -104,9 +91,9 @@ func WithdrawalValidator(ownerAddr, withdrawAddr sdk.AccAddress)
     
     // update the validator adjustment factors for commission 
     ValDistr = GetValidatorDistribution(ownerAddr.ValidatorAddr)
-    pcs = GetPowerChanges(ValDistr.CommissionWithdrawalHeight)
-    for pc = range pcs 
-        pc.ProcessPowerChangeCommission()
+    vus = GetValidatorUpdates(ValDistr.CommissionWithdrawalHeight)
+    for vu = range vus 
+        vu.ProcessPowerChangeCommission()
 
     // withdrawal validator commission rewards
     global = GetGlobal() 
@@ -122,38 +109,78 @@ func WithdrawalValidator(ownerAddr, withdrawAddr sdk.AccAddress)
     
     AddCoins(withdrawAddr, totalEntitlment.TruncateDecimal())
 
-func (pc ValidatorUpdate) ProcessPowerChangeCommission() 
+func (vu ValidatorUpdate) ProcessPowerChangeCommission() 
 
     // get the historical scenarios
-    scenario1 = pc.CommissionFromGlobalPool()
-    scenario2 = pc.CommissionFromProposerPool()
+    scenario1 = vu.CommissionFromGlobalPool()
+    scenario2 = vu.CommissionFromProposerPool()
 
     // process the adjustment factors 
-    scenario1.UpdateAdjustmentForPowerChange(pc.Height) 
-    scenario2.UpdateAdjustmentForPowerChange(pc.Height) 
+    scenario1.UpdateAdjustmentForPowerChange(vu.Height) 
+    scenario2.UpdateAdjustmentForPowerChange(vu.Height) 
 ```
 
 ## Common Calculations 
 
 
-### Distribution scenarios
+### Update total validator accum
 
-Note that the distribution scenario structures are found in `state.md`. 
+The total amount of validator accum must be calculated in order to determine
+the amount of pool tokens which a validator is entitled to at a particular block. 
+This term is to be updated during a validator withdrawal. 
 
-#### Delegation's entitlement to Global.Pool
+``` 
+func (g Global) UpdateTotalValAccum() 
+
+TODO 
+
+```
+
+### Update total delegator accum
+
+Each delegation holds multiple accumulation factors to specify its entitlement to
+the rewards from a validator. `Accum` is used to passively calculate
+each bonds entitled rewards from the `RewardPool`. `AccumProposer` is used to
+passively calculate each bonds entitled rewards from
+`ValidatorDistribution.ProposerRewardPool`
+
+``` 
+TODO
+```
+
+### Global Pool to Validator Pool
+
+Everytime a validator or delegator make a withdraw or the validator is the
+proposer and receives new tokens - the relavent validator must move tokens from
+the passive global pool to thier own pool. 
+
+``` 
+TODO
+```
+
+
+### Delegation's entitlement to ValidatorDistribution.Pool
 
 For delegations (including validator's self-delegation) all fees from fee pool
 are subject to commission rate from the owner of the validator. The global
 shares should be taken as true number of global bonded shares. The recipients
 shares should be taken as the bonded tokens less the validator's commission.
 
+Each delegation holds multiple accumulation factors to specify its entitlement to
+the rewards from a validator. `Accum` is used to passively calculate
+each bonds entitled rewards from the `RewardPool`. `AccumProposer` is used to
+passively calculate each bonds entitled rewards from
+`ValidatorDistribution.ProposerRewardPool`
+
 ```
+TODO
 ```
 
-#### Validators's commission entitlement to Global.Pool
+### Validators's commission entitlement to ValidatorDistribution.Pool
 
 Similar to a delegator's entitlement, but with recipient shares based on the
 commission portion of bonded tokens.
 
 ```
+TODO
 ```

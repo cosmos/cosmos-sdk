@@ -18,6 +18,7 @@ func RegisterWire(cdc *wire.Codec) {
 	cdc.RegisterInterface((*Proposal)(nil), nil)
 	cdc.RegisterConcrete(&TextProposal{}, "gov/TextProposal", nil)
 	cdc.RegisterConcrete(&ParameterProposal{}, "gov/ParameterProposal", nil)
+	cdc.RegisterConcrete(&SoftwareUpgradeProposal{}, "gov/SoftwareUpgradeProposal", nil)
 }
 
 var msgCdc = wire.NewCodec()

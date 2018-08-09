@@ -39,6 +39,23 @@ func DefaultGenesisState() GenesisState {
 		},
 	}
 }
+func DefaultIrisGenesisState() GenesisState {
+	return GenesisState{
+		StartingProposalID: 1,
+		DepositProcedure: DepositProcedure{
+			MinDeposit: sdk.Coins{sdk.Coin{Denom:"iris", Amount: sdk.NewInt(int64(10)).Mul(Pow10(18))}},
+			MaxDepositPeriod: 10,
+		},
+		VotingProcedure: VotingProcedure{
+			VotingPeriod: 10,
+		},
+		TallyingProcedure: TallyingProcedure{
+			Threshold:         sdk.NewRat(1, 2),
+			Veto:              sdk.NewRat(1, 3),
+			GovernancePenalty: sdk.NewRat(1, 100),
+		},
+	}
+}
 
 // InitGenesis - store genesis parameters
 func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {

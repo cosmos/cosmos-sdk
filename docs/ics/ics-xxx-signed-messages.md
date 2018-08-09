@@ -10,6 +10,10 @@
   * [API](#api)
   * [References](#references)
 
+## Status
+
+Proposed.
+
 ## Changelog
 
 ## Abstract

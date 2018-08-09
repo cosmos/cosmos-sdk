@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"math"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
@@ -143,7 +144,12 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 
 	// start with the default staking genesis state
 	stakeData := stake.DefaultGenesisState()
-
+	precisionNumber := math.Pow10(int(stakeData.Params.DenomPrecision))
+	if precisionNumber > math.MaxInt64 {
+		panic(errors.New("precision is too high, int64 is overflow"))
+	}
+	precisionInt64 := int64(precisionNumber)
+	tokenPrecision := sdk.NewRat(precisionInt64)
 	// get genesis flag account information
 	genaccs := make([]GenesisAccount, len(appGenTxs))
 	for i, appGenTx := range appGenTxs {
@@ -158,12 +164,12 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		accAuth := auth.NewBaseAccountWithAddress(genTx.Address)
 
 		accAuth.Coins = sdk.Coins{
-			{genTx.Name + "Token", sdk.NewInt(1000)},
-			{"steak", sdk.NewInt(freeFermionsAcc)},
+			{genTx.Name + "Token", sdk.NewInt(1000).Mul(sdk.NewInt(precisionInt64))},
+			{"steak", sdk.NewInt(freeFermionsAcc).Mul(sdk.NewInt(precisionInt64))},
 		}
 		acc := NewGenesisAccount(&accAuth)
 		genaccs[i] = acc
-		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewRat(freeFermionsAcc)) // increase the supply
+		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewRat(freeFermionsAcc).Mul(tokenPrecision)) // increase the supply
 
 		// add the validator
 		if len(genTx.Name) > 0 {
@@ -171,11 +177,12 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 			validator := stake.NewValidator(genTx.Address,
 				sdk.MustGetAccPubKeyBech32(genTx.PubKey), desc)
 
-			stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewRat(freeFermionVal)) // increase the supply
+			stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewRat(freeFermionVal).Mul(tokenPrecision)) // increase the supply
 
 			// add some new shares to the validator
 			var issuedDelShares sdk.Rat
-			validator, stakeData.Pool, issuedDelShares = validator.AddTokensFromDel(stakeData.Pool, freeFermionVal)
+			validator, stakeData.Pool, issuedDelShares = validator.AddTokensFromDel(stakeData.Pool, sdk.NewInt(freeFermionVal).Mul(sdk.NewInt(precisionInt64)))
+			validator.TokenPrecision = stakeData.Params.DenomPrecision
 			stakeData.Validators = append(stakeData.Validators, validator)
 
 			// create the self-delegation from the issuedDelShares
@@ -195,7 +202,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 	genesisState = GenesisState{
 		Accounts:  genaccs,
 		StakeData: stakeData,
-		ParamsData:paramsData,
+		ParamsData: paramsData,
 	}
 	return
 }

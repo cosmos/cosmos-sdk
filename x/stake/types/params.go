@@ -21,6 +21,7 @@ type Params struct {
 
 	MaxValidators uint16 `json:"max_validators"` // maximum number of validators
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
+	DenomPrecision	  int8   `json:"denom_precision"`// coin precision
 }
 
 // Equal returns a boolean determining if two Param types are identical.
@@ -40,5 +41,6 @@ func DefaultParams() Params {
 		UnbondingTime:       defaultUnbondingTime,
 		MaxValidators:       100,
 		BondDenom:           "steak",
+		DenomPrecision:       18,
 	}
 }

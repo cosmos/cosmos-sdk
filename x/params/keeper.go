@@ -68,7 +68,6 @@ func (k Keeper) set(ctx sdk.Context, key string, param interface{}) error {
 		return err
 	}
 	store.Set([]byte(key), bz)
-
 	return nil
 }
 
@@ -321,6 +320,7 @@ type Setter struct {
 func (k Setter) Set(ctx sdk.Context, key string, param interface{}) error {
 	return k.k.set(ctx, key, param)
 }
+
 
 // SetRaw exposes setRaw
 func (k Setter) SetRaw(ctx sdk.Context, key string, param []byte) {

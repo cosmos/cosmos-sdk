@@ -21,7 +21,10 @@ func QueryParam(storeName string, cdc *wire.Codec) *cobra.Command {
 				fmt.Println(err.Error())
 				return nil
 			}
-			fmt.Println(string(res))
+			var result string
+			if cdc.UnmarshalBinary(res, &result) == nil {
+				fmt.Println(result)
+			}
 			return nil
 		},
 	}

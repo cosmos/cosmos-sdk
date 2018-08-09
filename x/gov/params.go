@@ -51,11 +51,13 @@ func (keeper Keeper) setDepositProcedureDeposit(ctx sdk.Context, Deposit sdk.Coi
 }
 
 func (keeper Keeper) setDepositProcedureMaxDepositPeriod(ctx sdk.Context, MaxDepositPeriod int64) {
-	keeper.ps.Set(ctx, ParamStoreKeyDepositProcedureMaxDepositPeriod, &MaxDepositPeriod)
+	maxDepositPeriod := strconv.FormatInt(MaxDepositPeriod,10)
+	keeper.ps.Set(ctx, ParamStoreKeyDepositProcedureMaxDepositPeriod, &maxDepositPeriod)
 }
 
 func (keeper Keeper) setVotingProcedureVotingPeriod(ctx sdk.Context, VotingPeriod int64) {
-	keeper.ps.Set(ctx, ParamStoreKeyVotingProcedureVotingPeriod, &VotingPeriod)
+	votingPeriod := strconv.FormatInt(VotingPeriod,10)
+	keeper.ps.Set(ctx, ParamStoreKeyVotingProcedureVotingPeriod, &votingPeriod)
 }
 
 func (keeper Keeper) setTallyingProcedure(ctx sdk.Context, key string, rat sdk.Rat) {
@@ -71,12 +73,18 @@ func (keeper Keeper) getDepositProcedureDeposit(ctx sdk.Context) (Deposit sdk.Co
 }
 
 func (keeper Keeper) getDepositProcedureMaxDepositPeriod(ctx sdk.Context) (MaxDepositPeriod int64) {
-	keeper.ps.Get(ctx, ParamStoreKeyDepositProcedureMaxDepositPeriod, &MaxDepositPeriod)
+	var maxDepositPeriod string
+	if keeper.ps.Get(ctx, ParamStoreKeyDepositProcedureMaxDepositPeriod, &maxDepositPeriod) == nil {
+		MaxDepositPeriod, _ = strconv.ParseInt(maxDepositPeriod, 10, 64)
+	}
 	return
 }
 
 func (keeper Keeper) getVotingProcedureVotingPeriod(ctx sdk.Context) (VotingPeriod int64) {
-	keeper.ps.Get(ctx, ParamStoreKeyVotingProcedureVotingPeriod, &VotingPeriod)
+	var votingPeriod string
+	if keeper.ps.Get(ctx, ParamStoreKeyVotingProcedureVotingPeriod, &votingPeriod) == nil {
+		VotingPeriod, _ = strconv.ParseInt(votingPeriod, 10, 64)
+	}
 	return
 }
 

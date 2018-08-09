@@ -38,7 +38,7 @@
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
   pruneopts = "UT"
-  revision = "9a2f9524024889e129a5422aca2cff73cb3eabf6"
+  revision = "cf05f92c3f815bbd5091ed6c73eff51f7b1945e8"
 
 [[projects]]
   digest = "1:386de157f7d19259a7f9c81f26ce011223ce0f090353c1152ffdf730d7d10ac2"
@@ -517,7 +517,7 @@
     "salsa20/salsa",
   ]
   pruneopts = "UT"
-  revision = "c126467f60eb25f8f27e5a981f32a87e3965053f"
+  revision = "f027049dab0ad238e394a753dba2d14753473a04"
 
 [[projects]]
   digest = "1:04dda8391c3e2397daf254ac68003f30141c069b228d06baec8324a5f81dc1e9"
@@ -544,7 +544,7 @@
     "unix",
   ]
   pruneopts = "UT"
-  revision = "bd9dbc187b6e1dacfdd2722a87e83093c2d7bd6e"
+  revision = "acbc56fc7007d2a01796d5bde54f39e3b3e95945"
 
 [[projects]]
   digest = "1:7509ba4347d1f8de6ae9be8818b0cd1abc3deeffe28aeaf4be6d4b6b5178d9ca"

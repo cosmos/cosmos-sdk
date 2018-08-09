@@ -57,7 +57,7 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]txInfo, error) {
+func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]Info, error) {
 	if len(tags) == 0 {
 		return nil, errors.New("must declare at least one tag to search")
 	}
@@ -81,7 +81,7 @@ func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]txI
 		return nil, err
 	}
 
-	info, err := formatTxResults(cdc, res.Txs)
+	info, err := FormatTxResults(cdc, res.Txs)
 	if err != nil {
 		return nil, err
 	}
@@ -89,9 +89,10 @@ func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]txI
 	return info, nil
 }
 
-func formatTxResults(cdc *wire.Codec, res []*ctypes.ResultTx) ([]txInfo, error) {
+// parse the indexed txs into an array of Info
+func FormatTxResults(cdc *wire.Codec, res []*ctypes.ResultTx) ([]Info, error) {
 	var err error
-	out := make([]txInfo, len(res))
+	out := make([]Info, len(res))
 	for i := range res {
 		out[i], err = formatTxResult(cdc, res[i])
 		if err != nil {

@@ -8,7 +8,7 @@ import (
 	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
-// REST request body
+// REST request body for signed txs
 // TODO does this need to be exposed?
 type SignTxBody struct {
 	Name     string `json:"name"`

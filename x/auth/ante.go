@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"errors"
+	"runtime/debug"
 )
 
 const (
@@ -124,11 +125,10 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 }
 
 func NewFeeRefundHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.FeeRefundHandler {
-	return func(ctx sdk.Context, tx sdk.Tx, txResult sdk.Result) (error) {
-		var err error
+	return func(ctx sdk.Context, tx sdk.Tx, txResult sdk.Result) (err error) {
 		defer func() {
 			if r := recover(); r != nil {
-				err = errors.New(fmt.Sprintf("encountered panic error during fee refund: %+v", r))
+				err = errors.New(fmt.Sprintf("encountered panic error during fee refund, recovered: %v\nstack:\n%v", r, string(debug.Stack())))
 			}
 		}()
 
@@ -147,14 +147,14 @@ func NewFeeRefundHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.FeeRefun
 		if !ok {
 			return errors.New("transaction is not Stdtx")
 		}
-		fee := StdFee{
-			Gas: stdTx.Fee.Gas,
-			Amount: sdk.Coins{fck.GetNativeFeeToken(ctx, stdTx.Fee.Amount)},
-		}
-
 		// Refund process will also cost gas, but this is compensation for previous fee deduction.
 		// It is not reasonable to consume users' gas. So the context gas is reset to transaction gas
 		ctx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
+
+		fee := StdFee{
+			Gas: stdTx.Fee.Gas,
+			Amount: sdk.Coins{fck.GetNativeFeeToken(ctx, stdTx.Fee.Amount)}, // consume gas
+		}
 
 		unusedGas := txResult.GasWanted - txResult.GasUsed
 		var refundCoins sdk.Coins
@@ -165,11 +165,15 @@ func NewFeeRefundHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.FeeRefun
 			}
 			refundCoins = append(refundCoins, newCoin)
 		}
-		coins := am.GetAccount(ctx, firstAccount.GetAddress()).GetCoins()
+		coins := am.GetAccount(ctx, firstAccount.GetAddress()).GetCoins()   // consume gas
 		err = firstAccount.SetCoins(coins.Plus(refundCoins))
-		am.SetAccount(ctx, firstAccount)
-		fck.refundCollectedFees(ctx, refundCoins)
-		return err
+		if err != nil {
+			return err
+		}
+
+		am.SetAccount(ctx, firstAccount)                                    // consume gas
+		fck.refundCollectedFees(ctx, refundCoins)                           // consume gas
+		return
 	}
 }
 

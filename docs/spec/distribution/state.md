@@ -23,9 +23,10 @@ type DecCoin struct {
 }
 
 type Global struct {
-    Accum             sdk.Dec  // global accumulation factor for lazy calculations
-    Pool              DecCoins // funds for all validators which have yet to be withdrawn
-    CommunityFund     DecCoins // pool for community funds yet to be spent
+    TotalValAccumUpdateHeight  int64    // last height which the total validator accum was updated
+    TotalValAccum              sdk.Dec  // total valdator accum held by validators
+    Pool                       DecCoins // funds for all validators which have yet to be withdrawn
+    CommunityPool              DecCoins // pool for community funds yet to be spent
 }
 ```
 
@@ -41,28 +42,48 @@ Validator distribution information for the relevant validator is updated each ti
 
 ```golang
 type ValidatorDistribution struct {
-    CommissionWithdrawalHeight int64    // last time this validator withdrew commission
-    Accum                      sdk.Dec  // global pool accumulation factor
-    ProposerAccum              sdk.Dec  // proposer pool accumulation factor
-    ProposerPool               DecCoins // reward pool collected from being the proposer
+    CommissionWithdrawalHeight int64    // last height this validator withdrew commission
+
+    GlobalWithdrawalHeight     int64    // last height this validator withdrew from the global pool
+    Pool                       DecCoins // reward pool collected held within this validator (includes proposer rewards)
+
+    TotalDelAccumUpdateHeight  int64    // last height which the total delegator accum was updated
+    TotalDelAccum              sdk.Dec  // total proposer pool accumulation factor held by delegators
 }
 ```
 
 ### Delegation Distribution 
 
-Each delegation holds multiple accumulation factors to specify its entitlement to
-the rewards from a validator. `Accum` is used to passively calculate
-each bonds entitled rewards from the `RewardPool`. `AccumProposer` is used to
-passively calculate each bonds entitled rewards from
-`ValidatorDistribution.ProposerRewardPool`
+Each delegation distribution only needs to record the height at which it last
+withdrew fees. Because a delegation must withdraw fees each time it's
+properties change (aka bonded tokens etc.) its properties will remain constant
+and the delegator's _accumulation_ factor can be calculated passively knowing
+only the height of the last withdrawal and its current properties. 
  
  - DelegatorDistribution: ` 0x02 | DelegatorAddr | ValOwnerAddr -> amino(delegatorDist)`
 
 ```golang
 type DelegatorDist struct {
     WithdrawalHeight int64    // last time this delegation withdrew rewards
-    Accum            sdk.Dec  // reward provisioning accumulation factor
-    AccumProposer    sdk.Dec  // proposers pool accumulation factor
 }
 ```
 
+### Validator Update
+
+Every instance that a validator:
+ - enters into the bonded state, 
+ - leaves the bonded state,
+ - is slashed, or
+ - changes its commission rate, 
+
+information about the state change must be recorded as a `ValidatorUpdate`.
+Each power change is indexed by validator and its block height. 
+
+ - ValidatorUpdate: `0x03 | ValOwnerAddr | amino(Height) -> amino(ValidatorUpdate)`
+
+```golang
+type ValidatorUpdate struct {
+    Height                        int64     // block height of update
+    NewCommissionRate             sdk.Dec   // commission rate at this height
+}
+```

@@ -1,3 +1,16 @@
+
+
+
+Each delegation holds multiple accumulation factors to specify its entitlement to
+the rewards from a validator. `Accum` is used to passively calculate
+each bonds entitled rewards from the `RewardPool`. `AccumProposer` is used to
+passively calculate each bonds entitled rewards from
+`ValidatorDistribution.ProposerRewardPool`
+
+
+
+
+
 # Transactions
 
 ## TxWithdrawDelegation
@@ -10,7 +23,7 @@ redelegation, or delegation of additional tokens to a specific validator.
 Each time a withdrawal is made by a recipient the adjustment term must be
 modified for each block with a change in distributors shares since the time of
 last withdrawal.  This is accomplished by iterating over all relevant
-`PowerChange`'s stored in distribution state.
+`ValidatorUpdate`'s stored in distribution state.
 
 
 ```golang
@@ -57,7 +70,7 @@ func GetDelegatorEntitlement(delegatorAddr sdk.AccAddress) DecCoins
     
     return entitlement
 
-func (pc PowerChange) ProcessPowerChangeDelegation(delegation sdk.Delegation, 
+func (pc ValidatorUpdate) ProcessPowerChangeDelegation(delegation sdk.Delegation, 
                       DelDistr DelegationDistribution) 
 
     // get the historical scenarios
@@ -109,7 +122,7 @@ func WithdrawalValidator(ownerAddr, withdrawAddr sdk.AccAddress)
     
     AddCoins(withdrawAddr, totalEntitlment.TruncateDecimal())
 
-func (pc PowerChange) ProcessPowerChangeCommission() 
+func (pc ValidatorUpdate) ProcessPowerChangeCommission() 
 
     // get the historical scenarios
     scenario1 = pc.CommissionFromGlobalPool()
@@ -122,75 +135,6 @@ func (pc PowerChange) ProcessPowerChangeCommission()
 
 ## Common Calculations 
 
-### Distribution scenario
-
-A common form of abstracted calculations exists between validators and
-delegations attempting to withdrawal their rewards, either from `Global.Pool` 
-or from `ValidatorDistribution.ProposerPool`. With the following interface 
-fulfilled the entitled fees for the various scenarios can be calculated.
-
-```golang
-type DistributionScenario interface {
-    DistributorTokens()              DecCoins // current tokens from distributor
-    DistributorShares()              sdk.Dec  // current shares 
-    RecipientAccum()                 sdk.Dec  
-    RecipientShares()                sdk.Dec  // current shares 
-
-    ModifyAccums(withdrawal sdk.Dec) // proceedure to modify adjustment factors
-}
-```
-
-#### Entitled reward from distribution scenario
-
-The entitlement to the distributor's tokens held can be accounted for lazily.
-To begin this calculation we must determine the recipient's _simple pool_ and
-_projected pool_. The simple pool represents a lazy accounting of what a
-recipient's entitlement to the distributor's tokens would be if all recipients
-for that distributor had static shares (equal to the current shares), and no
-recipients had ever withdrawn their entitled rewards. The projected pool
-represents the anticipated recipient's entitlement to the distributors tokens
-based on the current blocks token input (for example fees reward received)  to
-the distributor, and the distributor's tokens and shares of the previous block
-assuming that neither had changed in the current block. Using the simple and
-projected pools we can determine all cumulative changes which have taken place
-outside of the recipient and adjust the recipient's _adjustment factor_ to
-account for these changes and ultimately keep track of the correct entitlement
-to the distributors tokens. 
-
-```
-func (d DistributionScenario) RecipientCount(height int64) sdk.Dec
-    return v.RecipientShares() * height
-
-func (d DistributionScenario) GlobalCount(height int64) sdk.Dec
-    return d.DistributorShares() * height
-
-```
-
-The `DistributionScenario` _accum_ terms account for changes in
-recipient/distributor shares and recipient withdrawals. The adjustment factor
-must be modified whenever the recipient withdraws from the distributor or the
-distributor's/recipient's shares are changed. 
- - When the shares of the recipient is changed the adjustment factor is
-   increased/decreased by the difference between the _simple_ and _projected_
-   pools.  In other words, the cumulative difference in the shares if the shares
-   has been the new shares as opposed to the old shares for the entire duration of
-   the blockchain up the previous block. 
- - When a recipient makes a withdrawal the adjustment factor is increased by the
-   withdrawal amount. 
-
-```
-func (d DistributionScenario) UpdateAdjustmentForPowerChange(height int64) 
-    simplePool = d.SimplePool()
-    projectedPool = d.ProjectedPool(height)
-    AdjustmentChange = simplePool - projectedPool
-    if AdjustmentChange > 0 
-        d.ModifyAdjustments(AdjustmentChange) 
-
-func (d DistributionScenario) WithdrawalEntitlement() DecCoins
-    entitlement = d.SimplePool() - d.RecipientAdjustment()
-    d.ModifyAdjustments(entitlement)
-    return entitlement
-```
 
 ### Distribution scenarios
 
@@ -206,17 +150,6 @@ shares should be taken as the bonded tokens less the validator's commission.
 ```
 ```
 
-#### Delegation's entitlement to ValidatorDistribution.ProposerPool
-
-Delegations (including validator's self-delegation) are still subject
-commission on the rewards gained from the proposer pool.  Global shares in this
-context is actually the validators total delegations shares.  The recipient's
-shares is taken as the effective delegation shares less the validator's
-commission. 
-
-```
-```
-
 #### Validators's commission entitlement to Global.Pool
 
 Similar to a delegator's entitlement, but with recipient shares based on the
@@ -224,12 +157,3 @@ commission portion of bonded tokens.
 
 ```
 ```
-
-#### Validators's commission entitlement to ValidatorDistribution.ProposerPool
-
-Similar to a delegators entitlement to the proposer pool, but with recipient
-shares based on the commission portion of the total delegator shares.
-
-```
-```
-

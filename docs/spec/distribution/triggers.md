@@ -6,21 +6,21 @@
 
 The pool of a new delegator bond will be 0 for the height at which the bond was
 added, or the withdrawal has taken place. This is achieved by setting
-`DelegatorDist.WithdrawalHeight` to the relevant height, withdrawing any
-remaining fees, and setting `DelegatorDist.Accum` and
-`DelegatorDist.ProposerAccum` to 0.
+`DelegatorDist.WithdrawalHeight` to the height of the triggering transaction. 
 
 ## Commission rate change
  
  - triggered-by: `stake.TxEditValidator`
 
 If a validator changes its commission rate, all commission on fees must be
-simultaneously withdrawn using the transaction `TxWithdrawValidator`
+simultaneously withdrawn using the transaction `TxWithdrawValidator`.
+Additionally the change and associated height must be recorded in a
+`ValidatorUpdate` state record.
 
 ## Change in Validator State
  
  - triggered-by: `stake.Slash`, `stake.UpdateValidator`
 
-Whenever a validator is slashed or enters/leaves the validator group
-`ValidatorUpdate` information must be recorded in order to properly calculate
-the accum factors. 
+Whenever a validator is slashed or enters/leaves the validator group all of the
+validator entitled reward tokens must be simultaniously withdrawn from
+`Global.Pool` and added to `ValidatorDistribution.Pool` 

@@ -98,6 +98,29 @@ func (keeper Keeper) NewParametersProposal(ctx sdk.Context, title string, descri
 	return proposal
 }
 
+func (keeper Keeper) NewSofterwareUpgradeProposal(ctx sdk.Context, title string, description string, proposalType ProposalKind) Proposal{
+	proposalID, err := keeper.getNewProposalID(ctx)
+	if err != nil {
+		return nil
+	}
+	var textProposal = TextProposal{
+		ProposalID:       proposalID,
+		Title:            title,
+		Description:      description,
+		ProposalType:     proposalType,
+		Status:           StatusDepositPeriod,
+		TotalDeposit:     sdk.Coins{},
+		SubmitBlock:      ctx.BlockHeight(),
+		VotingStartBlock: -1, // TODO: Make Time
+	}
+	var proposal Proposal = &SoftwareUpgradeProposal{
+		textProposal,
+	}
+	keeper.SetProposal(ctx, proposal)
+	keeper.InactiveProposalQueuePush(ctx, proposal)
+	return proposal
+}
+
 func (keeper Keeper) NewProposal(ctx sdk.Context, title string, description string, proposalType ProposalKind,params Params) Proposal{
 	switch proposalType {
 	case ProposalTypeText:

@@ -23,11 +23,20 @@ func NewHandler(k Keeper) sdk.Handler {
 
 // Handle MsgSend.
 func handleMsgSend(ctx sdk.Context, k Keeper, msg MsgSend) sdk.Result {
-	// NOTE: totalIn == totalOut should already have been checked
+	// NOTE: totalIn == totalOut should already have been checked in msg.ValidateBasic()
 
-	tags, err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
+	err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
 	if err != nil {
 		return err.Result()
+	}
+
+	tags := sdk.NewTags()
+
+	for _, input := range msg.Inputs {
+		tags.AppendTag("sender", []byte(input.Address.String()))
+	}
+	for _, output := range msg.Outputs {
+		tags.AppendTag("recipient", []byte(output.Address.String()))
 	}
 
 	return sdk.Result{

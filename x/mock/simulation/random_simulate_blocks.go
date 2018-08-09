@@ -94,7 +94,9 @@ func SimulateFromSeed(
 			if onOperation {
 				AssertAllInvariants(t, app, invariants, log)
 			}
-			fmt.Printf("\rSimulating... block %d/%d, operation %d.", header.Height, numBlocks, opCount)
+			if opCount%200 == 0 {
+				fmt.Printf("\rSimulating... block %d/%d, operation %d.", header.Height, numBlocks, opCount)
+			}
 			opCount++
 		}
 

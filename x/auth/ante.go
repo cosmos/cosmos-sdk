@@ -21,7 +21,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 	return func(
 		ctx sdk.Context, tx sdk.Tx,
-	) (_ sdk.Context, _ sdk.Result, abort bool) {
+	) (newCtx sdk.Context, res sdk.Result, abort bool) {
 
 		// This AnteHandler requires Txs to be StdTxs
 		stdTx, ok := tx.(StdTx)
@@ -29,20 +29,35 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			return ctx, sdk.ErrInternal("tx must be StdTx").Result(), true
 		}
 
+		// set the gas meter
+		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
+
+		defer func() {
+			if r := recover(); r != nil {
+				switch rType := r.(type) {
+				case sdk.ErrorOutOfGas:
+					log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
+					res = sdk.ErrOutOfGas(log).Result()
+					res.GasWanted = stdTx.Fee.Gas
+					res.GasUsed = newCtx.GasMeter().GasConsumed()
+					abort = true
+				default:
+					panic(r)
+				}
+			}
+		}()
+
 		err := validateBasic(stdTx)
 		if err != nil {
-			return ctx, err.Result(), true
+			return newCtx, err.Result(), true
 		}
 
 		sigs := stdTx.GetSignatures()
 		signerAddrs := stdTx.GetSigners()
 		msgs := tx.GetMsgs()
 
-		// set the gas meter
-		ctx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
-
 		// charge gas for the memo
-		ctx.GasMeter().ConsumeGas(memoCostPerByte*sdk.Gas(len(stdTx.GetMemo())), "memo")
+		newCtx.GasMeter().ConsumeGas(memoCostPerByte*sdk.Gas(len(stdTx.GetMemo())), "memo")
 
 		// Get the sign bytes (requires all account & sequence numbers and the fee)
 		sequences := make([]int64, len(sigs))
@@ -51,46 +66,93 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			sequences[i] = sigs[i].Sequence
 			accNums[i] = sigs[i].AccountNumber
 		}
-		fee := stdTx.Fee
+
+		fee := StdFee{
+			Gas: stdTx.Fee.Gas,
+			Amount: sdk.Coins{fck.GetNativeFeeToken(ctx, stdTx.Fee.Amount)},
+		}
+
+		err = fck.FeePreprocess(newCtx, fee.Amount, fee.Gas)
+		if err != nil {
+			return newCtx, err.Result(), true
+		}
 
 		// Check sig and nonce and collect signer accounts.
 		var signerAccs = make([]Account, len(signerAddrs))
+		var firstAccount Account
 		for i := 0; i < len(sigs); i++ {
 			signerAddr, sig := signerAddrs[i], sigs[i]
 
 			// check signature, return account with incremented nonce
-			signBytes := StdSignBytes(ctx.ChainID(), accNums[i], sequences[i], fee, msgs, stdTx.GetMemo())
+			signBytes := StdSignBytes(newCtx.ChainID(), accNums[i], sequences[i], fee, msgs, stdTx.GetMemo())
 			signerAcc, res := processSig(
-				ctx, am,
+				newCtx, am,
 				signerAddr, sig, signBytes,
 			)
 			if !res.IsOK() {
-				return ctx, res, true
+				return newCtx, res, true
 			}
 
-			// first sig pays the fees
-			// TODO: Add min fees
-			// Can this function be moved outside of the loop?
-			if i == 0 && !fee.Amount.IsZero() {
-				ctx.GasMeter().ConsumeGas(deductFeesCost, "deductFees")
-				signerAcc, res = deductFees(signerAcc, fee)
-				if !res.IsOK() {
-					return ctx, res, true
-				}
-				fck.addCollectedFees(ctx, fee.Amount)
+			if i == 0 {
+				firstAccount = signerAcc
+			} else {
+				am.SetAccount(newCtx, signerAcc)
 			}
 
-			// Save the account.
-			am.SetAccount(ctx, signerAcc)
 			signerAccs[i] = signerAcc
 		}
 
+		if firstAccount != nil {
+			newCtx.GasMeter().ConsumeGas(deductFeesCost, "deductFees")
+			firstAccount, res = deductFees(firstAccount, fee)
+			if !res.IsOK() {
+				return newCtx, res, true
+			}
+			// Save the account.
+			am.SetAccount(newCtx, firstAccount)
+			fck.addCollectedFees(newCtx, fee.Amount)
+		}
+
 		// cache the signer accounts in the context
-		ctx = WithSigners(ctx, signerAccs)
+		newCtx = WithSigners(newCtx, signerAccs)
 
-		// TODO: tx tags (?)
+		res.GasWanted = stdTx.Fee.Gas
 
-		return ctx, sdk.Result{}, false // continue...
+		return newCtx, res, false // continue...
+	}
+}
+
+func NewFeeRefundHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.FeeRefundHandler {
+	return func(ctx sdk.Context, tx sdk.Tx, txResult sdk.Result) {
+		stdTx, ok := tx.(StdTx)
+		if !ok {
+			return
+		}
+		fee := StdFee{
+			Gas: stdTx.Fee.Gas,
+			Amount: sdk.Coins{fck.GetNativeFeeToken(ctx, stdTx.Fee.Amount)},
+		}
+		txAccounts := GetSigners(ctx)
+		if len(txAccounts) < 1 {
+			return
+		}
+		firstAccount := txAccounts[0]
+		if txResult.GasWanted <= txResult.GasUsed {
+			return
+		}
+		unusedGas := txResult.GasWanted - txResult.GasUsed
+		var refundCoins sdk.Coins
+		for _,coin := range fee.Amount {
+			newCoin := sdk.Coin{
+				Denom:	coin.Denom,
+				Amount: coin.Amount.Mul(sdk.NewInt(unusedGas)).Div(sdk.NewInt(txResult.GasWanted)),
+			}
+			refundCoins = append(refundCoins, newCoin)
+		}
+		coins := am.GetAccount(ctx, firstAccount.GetAddress()).GetCoins()
+		firstAccount.SetCoins(coins.Plus(refundCoins))
+		am.SetAccount(ctx, firstAccount)
+		fck.refundCollectedFees(ctx, refundCoins)
 	}
 }
 

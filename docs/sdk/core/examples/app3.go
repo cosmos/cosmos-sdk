@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 const (
@@ -26,11 +27,13 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	// Create a key for accessing the account store.
 	keyAccount := sdk.NewKVStoreKey("acc")
 	keyFees := sdk.NewKVStoreKey("fee") // TODO
+	keyParams := sdk.NewKVStoreKey("params")
 
 	// Set various mappers/keepers to interact easily with underlying stores
 	accountMapper := auth.NewAccountMapper(cdc, keyAccount, auth.ProtoBaseAccount)
 	coinKeeper := bank.NewKeeper(accountMapper)
-	feeKeeper := auth.NewFeeCollectionKeeper(cdc, keyFees)
+	paramsKeeper := params.NewKeeper(cdc, keyParams)
+	feeKeeper := auth.NewFeeCollectionKeeper(cdc, keyFees, paramsKeeper.Getter())
 
 	app.SetAnteHandler(auth.NewAnteHandler(accountMapper, feeKeeper))
 
@@ -40,7 +43,7 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 		AddRoute("send", []*sdk.KVStoreKey{keyAccount}, bank.NewHandler(coinKeeper))
 
 	// Mount stores and load the latest state.
-	app.MountStoresIAVL(keyAccount, keyFees)
+	app.MountStoresIAVL(keyAccount, keyFees, keyParams, keyFees)
 	err := app.LoadLatestVersion(keyAccount)
 	if err != nil {
 		cmn.Exit(err.Error())

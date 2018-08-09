@@ -19,7 +19,7 @@ func TestDelegation(t *testing.T) {
 	var validators [3]types.Validator
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(addrVals[i], PKs[i], types.Description{})
-		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
+		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, sdk.NewInt(amt))
 	}
 
 	keeper.SetPool(ctx, pool)
@@ -145,7 +145,7 @@ func TestUnbondDelegation(t *testing.T) {
 
 	//create a validator and a delegator to that validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
-	validator, pool, issuedShares := validator.AddTokensFromDel(pool, 10)
+	validator, pool, issuedShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
 	require.Equal(t, int64(10), issuedShares.RoundInt64())
 	keeper.SetPool(ctx, pool)
 	validator = keeper.UpdateValidator(ctx, validator)

@@ -12,7 +12,15 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
+
+func defaultGenesisStateForTest() GenesisState {
+	return GenesisState{
+		FeeTokenNative: "atom",
+		GasPriceThreshold: 0,
+	}
+}
 
 func newTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
 	return sdk.NewTestMsg(addrs...)
@@ -110,13 +118,15 @@ func newTestTxWithSignBytes(msgs []sdk.Msg, privs []crypto.PrivKey, accNums []in
 // Test various error cases in the AnteHandler control flow.
 func TestAnteHandlerSigErrors(t *testing.T) {
 	// setup
-	ms, capKey, capKey2 := setupMultiStore()
+	ms, capKey, capKey2, paramsKey := setupMultiStore()
 	cdc := wire.NewCodec()
+	paramsKeeper := params.NewKeeper(cdc, paramsKey)
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
+	InitGenesis(ctx, paramsKeeper.Setter(), defaultGenesisStateForTest())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -163,13 +173,15 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 // Test logic around account number checking with one signer and many signers.
 func TestAnteHandlerAccountNumbers(t *testing.T) {
 	// setup
-	ms, capKey, capKey2 := setupMultiStore()
+	ms, capKey, capKey2, paramsKey := setupMultiStore()
 	cdc := wire.NewCodec()
+	paramsKeeper := params.NewKeeper(cdc, paramsKey)
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
+	InitGenesis(ctx, paramsKeeper.Setter(), defaultGenesisStateForTest())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -222,13 +234,15 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 // Test logic around sequence checking with one signer and many signers.
 func TestAnteHandlerSequences(t *testing.T) {
 	// setup
-	ms, capKey, capKey2 := setupMultiStore()
+	ms, capKey, capKey2, paramsKey := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
+	paramsKeeper := params.NewKeeper(cdc, paramsKey)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
+	InitGenesis(ctx, paramsKeeper.Setter(), defaultGenesisStateForTest())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -300,13 +314,15 @@ func TestAnteHandlerSequences(t *testing.T) {
 // Test logic around fee deduction.
 func TestAnteHandlerFees(t *testing.T) {
 	// setup
-	ms, capKey, capKey2 := setupMultiStore()
+	ms, capKey, capKey2, paramsKey := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
+	paramsKeeper := params.NewKeeper(cdc, paramsKey)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
+	InitGenesis(ctx, paramsKeeper.Setter(), defaultGenesisStateForTest())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -342,13 +358,15 @@ func TestAnteHandlerFees(t *testing.T) {
 // Test logic around memo gas consumption.
 func TestAnteHandlerMemoGas(t *testing.T) {
 	// setup
-	ms, capKey, capKey2 := setupMultiStore()
+	ms, capKey, capKey2, paramsKey := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
+	paramsKeeper := params.NewKeeper(cdc, paramsKey)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
+	InitGenesis(ctx, paramsKeeper.Setter(), defaultGenesisStateForTest())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -361,7 +379,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	var tx sdk.Tx
 	msg := newTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []int64{0}, []int64{0}
-	fee := NewStdFee(0, sdk.NewCoin("atom", 0))
+	fee := NewStdFee(1, sdk.NewCoin("atom", 0))
 
 	// tx does not have enough gas
 	tx = newTestTx(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee)
@@ -378,20 +396,22 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeMemoTooLarge)
 
 	// tx with memo has enough gas
-	fee = NewStdFee(1100, sdk.NewCoin("atom", 0))
+	fee = NewStdFee(1200, sdk.NewCoin("atom", 0))
 	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 	checkValidTx(t, anteHandler, ctx, tx)
 }
 
 func TestAnteHandlerMultiSigner(t *testing.T) {
 	// setup
-	ms, capKey, capKey2 := setupMultiStore()
+	ms, capKey, capKey2, paramsKey := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
+	paramsKeeper := params.NewKeeper(cdc, paramsKey)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
+	InitGenesis(ctx, paramsKeeper.Setter(), defaultGenesisStateForTest())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -436,13 +456,15 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 
 func TestAnteHandlerBadSignBytes(t *testing.T) {
 	// setup
-	ms, capKey, capKey2 := setupMultiStore()
+	ms, capKey, capKey2, paramsKey := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
+	paramsKeeper := params.NewKeeper(cdc, paramsKey)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
+	InitGenesis(ctx, paramsKeeper.Setter(), defaultGenesisStateForTest())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -517,13 +539,15 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 
 func TestAnteHandlerSetPubKey(t *testing.T) {
 	// setup
-	ms, capKey, capKey2 := setupMultiStore()
+	ms, capKey, capKey2, paramsKey := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
+	paramsKeeper := params.NewKeeper(cdc, paramsKey)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2, paramsKeeper.Getter())
 	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
+	InitGenesis(ctx, paramsKeeper.Setter(), defaultGenesisStateForTest())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()

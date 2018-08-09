@@ -63,6 +63,7 @@ IMPROVEMENTS
 * [tests] \#1806 CLI tests are now behind the build flag 'cli_test', so go test works on a new repo
 * [x/gov] Initial governance parameters can now be set in the genesis file
 * [x/stake] \#1815 Sped up the processing of `EditValidator` txs. 
+* [server] \#1930 Transactions indexer indexes all tags by default.
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators

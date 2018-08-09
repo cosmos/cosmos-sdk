@@ -8,8 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/tmhash"
 )
 
 // Have to change these parameters for tests
@@ -26,7 +24,6 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t)
-	keeper.setAddrPubkeyMap(ctx, make(map[[tmhash.Size]byte]crypto.PubKey))
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, val, amt))

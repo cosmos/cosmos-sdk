@@ -1,11 +1,9 @@
 package slashing
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -131,51 +129,47 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 
 // AddValidators adds the validators to the keepers validator addr to pubkey mapping.
 func (k Keeper) AddValidators(ctx sdk.Context, vals []abci.Validator) {
-	store := ctx.KVStore(k.storeKey)
-	var addrPubkey map[[tmhash.Size]byte]crypto.PubKey
-	k.cdc.MustUnmarshalBinary(store.Get(getAddrPubkeyMapKey()), &addrPubkey)
 	for i := 0; i < len(vals); i++ {
 		val := vals[i]
 		pubkey, err := tmtypes.PB2TM.PubKey(val.PubKey)
 		if err != nil {
 			continue
 		}
-		k.addPubkey(pubkey, addrPubkey, false)
+		k.addPubkey(ctx, pubkey, false)
 	}
-	k.setAddrPubkeyMap(ctx, addrPubkey)
 }
 
 // TODO: Make a method to remove the pubkey from the map when a validator is unbonded.
-func (k Keeper) addPubkey(pubkey crypto.PubKey, map_ map[[tmhash.Size]byte]crypto.PubKey, del bool) {
-	addr := new([tmhash.Size]byte)
-	copy(addr[:], pubkey.Address())
+func (k Keeper) addPubkey(ctx sdk.Context, pubkey crypto.PubKey, del bool) {
+	addr := pubkey.Address()
 	if del {
-		delete(map_, *addr)
+		k.deleteAddrPubkeyRelation(ctx, addr)
 	} else {
-		map_[*addr] = pubkey
+		k.setAddrPubkeyRelation(ctx, addr, pubkey)
 	}
 }
 
 func (k Keeper) getPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKey, error) {
 	store := ctx.KVStore(k.storeKey)
-	var addrPubkey map[[tmhash.Size]byte]crypto.PubKey
-	k.cdc.MustUnmarshalBinary(store.Get(getAddrPubkeyMapKey()), &addrPubkey)
-
-	var addr [tmhash.Size]byte
-	copy(addr[:], address)
-	pk := addrPubkey[addr]
-	if pk == nil {
-		return nil, errors.New("Address not found")
+	var pubkey crypto.PubKey
+	err := k.cdc.UnmarshalBinary(store.Get(getAddrPubkeyRelationKey(address)), &pubkey)
+	if err != nil {
+		return nil, fmt.Errorf("address %v not found", address)
 	}
-	return pk, nil
+	return pubkey, nil
 }
 
-func (k Keeper) setAddrPubkeyMap(ctx sdk.Context, addrPubkeyMap map[[tmhash.Size]byte]crypto.PubKey) {
+func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address, pubkey crypto.PubKey) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinary(addrPubkeyMap)
-	store.Set(getAddrPubkeyMapKey(), bz)
+	bz := k.cdc.MustMarshalBinary(pubkey)
+	store.Set(getAddrPubkeyRelationKey(addr), bz)
 }
 
-func getAddrPubkeyMapKey() []byte {
-	return []byte{0x03}
+func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(getAddrPubkeyRelationKey(addr))
+}
+
+func getAddrPubkeyRelationKey(address []byte) []byte {
+	return append([]byte{0x03}, address...)
 }

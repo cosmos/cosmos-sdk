@@ -7,9 +7,6 @@ import (
 	"github.com/pkg/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"reflect"
-	"strconv"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 //-----------------------------------------------------------
@@ -135,55 +132,48 @@ func (pp *ParameterProposal) Execute(ctx sdk.Context, k Keeper) (err error) {
 			if bz == nil || len(bz) == 0 {
 				logger.Error("Execute ParameterProposal ", "err", "Parameter "+data.Key+" is not exist")
 			} else {
-				ptrty ,ok := k.ps.GetType(ctx,data.Key)
-				if !ok {
-					logger.Error("Execute ParameterProposal ", "err", "Parameter "+data.Key+" is not exist")
-					return
-				}
-				destValue := convert(data.Value,ptrty,k.cdc)
-				if err := k.ps.Set(ctx, data.Key, destValue);err != nil{
-					logger.Error("Execute ParameterProposal ", "err", err.Error())
-				}
+				k.ps.SetString(ctx, data.Key, data.Value)
 			}
 		} else {
+
 		}
 	}
 	return
 }
 
-func convert(srcData string,ptrty reflect.Type,codec *wire.Codec) ( v interface{}){
-	if ptrty.Kind() == reflect.Ptr {
-		ptrty = ptrty.Elem()
-	}
-
-	srcValue := reflect.ValueOf(srcData)
-	srcType := reflect.TypeOf(srcData)
-	if srcType.ConvertibleTo(ptrty){
-		v = srcValue.Convert(ptrty).Interface()
-	}else {
-		switch ptrty.Kind() {
-		case reflect.Int:
-			v,_ = strconv.Atoi(srcData)
-		case reflect.Int8:
-			v,_ = strconv.ParseInt(srcData, 10, 8)
-		case reflect.Int16:
-			v,_ = strconv.ParseInt(srcData, 10, 16)
-		case reflect.Int64:
-			v,_ = strconv.ParseInt(srcData, 10, 64)
-		case reflect.Bool:
-			v,_ = strconv.ParseBool(srcData)
-		case reflect.Uint:
-			v,_ = strconv.ParseUint(srcData, 10, 10)
-		case reflect.Uint8:
-			v,_ = strconv.ParseUint(srcData, 10, 8)
-		case reflect.Uint64:
-			v,_ = strconv.ParseUint(srcData, 10, 64)
-		case reflect.Uint16:
-			v,_ = strconv.ParseUint(srcData, 10, 16)
-		}
-	}
-	return
-}
+//func convert(srcData string,ptrty reflect.Type,codec *wire.Codec) ( v interface{}){
+//	if ptrty.Kind() == reflect.Ptr {
+//		ptrty = ptrty.Elem()
+//	}
+//
+//	srcValue := reflect.ValueOf(srcData)
+//	srcType := reflect.TypeOf(srcData)
+//	if srcType.ConvertibleTo(ptrty){
+//		v = srcValue.Convert(ptrty).Interface()
+//	}else {
+//		switch ptrty.Kind() {
+//		case reflect.Int:
+//			v,_ = strconv.Atoi(srcData)
+//		case reflect.Int8:
+//			v,_ = strconv.ParseInt(srcData, 10, 8)
+//		case reflect.Int16:
+//			v,_ = strconv.ParseInt(srcData, 10, 16)
+//		case reflect.Int64:
+//			v,_ = strconv.ParseInt(srcData, 10, 64)
+//		case reflect.Bool:
+//			v,_ = strconv.ParseBool(srcData)
+//		case reflect.Uint:
+//			v,_ = strconv.ParseUint(srcData, 10, 10)
+//		case reflect.Uint8:
+//			v,_ = strconv.ParseUint(srcData, 10, 8)
+//		case reflect.Uint64:
+//			v,_ = strconv.ParseUint(srcData, 10, 64)
+//		case reflect.Uint16:
+//			v,_ = strconv.ParseUint(srcData, 10, 16)
+//		}
+//	}
+//	return
+//}
 
 ////////////////////  iris/cosmos-sdk end  ///////////////////////////
 

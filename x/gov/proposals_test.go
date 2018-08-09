@@ -25,13 +25,8 @@ func TestParameterProposal(t *testing.T) {
 			{Key: ParamStoreKeyTallyingProcedurePenalty, Value: "1/50", Op: Update},
 			{Key: ParamStoreKeyTallyingProcedureVeto, Value: "1/4", Op: Update},
 			{Key: ParamStoreKeyTallyingProcedureThreshold, Value: "2/8", Op: Update},
-			{Key: "upgrade", Value: "false", Op: Update},
-			{Key: "version", Value: "2", Op: Update},
 		},
 	}
-
-	keeper.ps.Set(ctx,"upgrade",true)
-	keeper.ps.Set(ctx,"version",int16(1))
 
 	pp.Execute(ctx, keeper)
 	assert.Equal(t, keeper.GetDepositProcedure(ctx).MinDeposit,
@@ -39,11 +34,6 @@ func TestParameterProposal(t *testing.T) {
 
 	assert.Equal(t, keeper.GetDepositProcedure(ctx).MaxDepositPeriod,int64(20))
 
-	upgrade,_ := keeper.ps.GetBool(ctx,"upgrade")
-	assert.Equal(t, upgrade,false)
-
-	version,_ := keeper.ps.GetInt16(ctx,"version")
-	assert.Equal(t, version,int16(2))
 
 
 

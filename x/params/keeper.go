@@ -12,7 +12,6 @@ import (
 type Keeper struct {
 	cdc *wire.Codec
 	key sdk.StoreKey
-	typ map[string]reflect.Type
 }
 
 // NewKeeper constructs a new Keeper
@@ -20,7 +19,6 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey) Keeper {
 	return Keeper{
 		cdc: cdc,
 		key: key,
-		typ: make(map[string]reflect.Type),
 	}
 }
 
@@ -70,7 +68,6 @@ func (k Keeper) set(ctx sdk.Context, key string, param interface{}) error {
 		return err
 	}
 	store.Set([]byte(key), bz)
-	k.typ[key] = reflect.ValueOf(param).Type()
 	return nil
 }
 
@@ -98,11 +95,6 @@ type Getter struct {
 // Get exposes get
 func (k Getter) Get(ctx sdk.Context, key string, ptr interface{}) error {
 	return k.k.get(ctx, key, ptr)
-}
-
-func (k Getter) GetType(ctx sdk.Context, key string) (typ reflect.Type,ok bool){
-	typ,ok = k.k.typ[key]
-	return
 }
 
 // GetRaw exposes getRaw

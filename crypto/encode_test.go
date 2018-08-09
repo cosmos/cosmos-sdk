@@ -4,7 +4,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	tcrypto "github.com/tendermint/tendermint/crypto"
@@ -22,11 +21,11 @@ func checkAminoBinary(t *testing.T, src, dst interface{}, size int) {
 	require.Nil(t, err, "%+v", err)
 	if byterSrc, ok := src.(byter); ok {
 		// Make sure this is compatible with current (Bytes()) encoding.
-		assert.Equal(t, byterSrc.Bytes(), bz, "Amino binary vs Bytes() mismatch")
+		require.Equal(t, byterSrc.Bytes(), bz, "Amino binary vs Bytes() mismatch")
 	}
 	// Make sure we have the expected length.
 	if size != -1 {
-		assert.Equal(t, size, len(bz), "Amino binary size mismatch")
+		require.Equal(t, size, len(bz), "Amino binary size mismatch")
 	}
 	// Unmarshal.
 	err = cdc.UnmarshalBinaryBare(bz, dst)

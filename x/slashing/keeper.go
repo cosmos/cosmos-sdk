@@ -17,11 +17,10 @@ import (
 
 // Keeper of the slashing store
 type Keeper struct {
-	storeKey        sdk.StoreKey
-	cdc             *wire.Codec
-	validatorSet    sdk.ValidatorSet
-	params          params.Getter
-	addressToPubkey map[[tmhash.Size]byte]crypto.PubKey
+	storeKey     sdk.StoreKey
+	cdc          *wire.Codec
+	validatorSet sdk.ValidatorSet
+	params       params.Getter
 	// codespace
 	codespace sdk.CodespaceType
 }
@@ -29,12 +28,11 @@ type Keeper struct {
 // NewKeeper creates a slashing keeper
 func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, params params.Getter, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
-		storeKey:        key,
-		cdc:             cdc,
-		validatorSet:    vs,
-		params:          params,
-		addressToPubkey: make(map[[tmhash.Size]byte]crypto.PubKey),
-		codespace:       codespace,
+		storeKey:     key,
+		cdc:          cdc,
+		validatorSet: vs,
+		params:       params,
+		codespace:    codespace,
 	}
 	return keeper
 }
@@ -77,9 +75,9 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	logger := ctx.Logger().With("module", "x/slashing")
 	height := ctx.BlockHeight()
 	address := sdk.ValAddress(addr)
-	pubkey, err := k.getPubkey(addr)
+	pubkey, err := k.getPubkey(ctx, addr)
 	if err != nil {
-		panic(fmt.Sprintf("Validator address %v not found, map is %v", addr, k.addressToPubkey))
+		panic(fmt.Sprintf("Validator address %v not found", addr))
 	}
 	// Local index, so counts blocks validator *should* have signed
 	// Will use the 0-value default signing info if not present, except for start height
@@ -132,34 +130,52 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 }
 
 // AddValidators adds the validators to the keepers validator addr to pubkey mapping.
-func (k Keeper) AddValidators(vals []abci.Validator) {
+func (k Keeper) AddValidators(ctx sdk.Context, vals []abci.Validator) {
+	store := ctx.KVStore(k.storeKey)
+	var addrPubkey map[[tmhash.Size]byte]crypto.PubKey
+	k.cdc.MustUnmarshalBinary(store.Get(getAddrPubkeyMapKey()), &addrPubkey)
 	for i := 0; i < len(vals); i++ {
 		val := vals[i]
 		pubkey, err := tmtypes.PB2TM.PubKey(val.PubKey)
 		if err != nil {
 			continue
 		}
-		k.addPubkey(pubkey, false)
+		k.addPubkey(pubkey, addrPubkey, false)
 	}
+	k.setAddrPubkeyMap(ctx, addrPubkey)
 }
 
 // TODO: Make a method to remove the pubkey from the map when a validator is unbonded.
-func (k Keeper) addPubkey(pubkey crypto.PubKey, del bool) {
+func (k Keeper) addPubkey(pubkey crypto.PubKey, map_ map[[tmhash.Size]byte]crypto.PubKey, del bool) {
 	addr := new([tmhash.Size]byte)
 	copy(addr[:], pubkey.Address())
 	if del {
-		delete(k.addressToPubkey, *addr)
+		delete(map_, *addr)
 	} else {
-		k.addressToPubkey[*addr] = pubkey
+		map_[*addr] = pubkey
 	}
 }
 
-func (k Keeper) getPubkey(address crypto.Address) (crypto.PubKey, error) {
+func (k Keeper) getPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKey, error) {
+	store := ctx.KVStore(k.storeKey)
+	var addrPubkey map[[tmhash.Size]byte]crypto.PubKey
+	k.cdc.MustUnmarshalBinary(store.Get(getAddrPubkeyMapKey()), &addrPubkey)
+
 	var addr [tmhash.Size]byte
 	copy(addr[:], address)
-	pk := k.addressToPubkey[addr]
+	pk := addrPubkey[addr]
 	if pk == nil {
 		return nil, errors.New("Address not found")
 	}
 	return pk, nil
+}
+
+func (k Keeper) setAddrPubkeyMap(ctx sdk.Context, addrPubkeyMap map[[tmhash.Size]byte]crypto.PubKey) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshalBinary(addrPubkeyMap)
+	store.Set(getAddrPubkeyMapKey(), bz)
+}
+
+func getAddrPubkeyMapKey() []byte {
+	return []byte{0x03}
 }

@@ -23,3 +23,5 @@ Tendermint connects the blockchain engine, Tendermint Core (*networking* and *co
 But most importantly, Tendermint is natively compatible with the [Inter-Blockchain Communication Protocol](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/ibc) (IBC). This means that any Tendermint-based blockchain, whether public or private, can be natively connected to the Cosmos ecosystem and securely exchange tokens with other blockchains in the ecosystem. Note that benefiting from interoperability via IBC and Cosmos preserves the sovereignty of your Tendermint chain. Non-Tendermint chains can also be connected to Cosmos via IBC adapters or Peg-Zones, but this is out of scope for this document.
 
 For a more detailed overview of the Cosmos ecosystem, you can read [this article](https://blog.cosmos.network/understanding-the-value-proposition-of-cosmos-ecaef63350d).
+
+For more on Tendermint, go [here](tendermint.md)

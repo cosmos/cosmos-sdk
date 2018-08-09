@@ -6,12 +6,11 @@ Before getting in the bulk of the code, we will start by some introductory conte
 
 ## Table of contents:
 
-### Introduction
+### Introduction - Prerequsite reading
 
-- [Intro to Tendermint and Cosmos](tendermint-cosmos.md)
-- [Intro to Cosmos-SDK](sdk-intro.md)
-- [Tendermint Core and ABCI](core-abci.md)
-- [Architecture of a SDK-app](sdk-architecture.md)
+- [Intro to Tendermint and Cosmos](../../../introduction/tendermint-cosmos.md)
+- [Tendermint Core and ABCI](../../../introduction/tendermint.md)
+- [Intro to Cosmos-SDK](../../overview.md)
 - [Starting your own project](start.md)
 
 ### Setup and design phase

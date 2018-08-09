@@ -141,6 +141,23 @@ func (pp *ParameterProposal) Execute(ctx sdk.Context, k Keeper) (err error) {
 	return
 }
 
+var _ Proposal = (*SoftwareUpgradeProposal)(nil)
+type SoftwareUpgradeProposal struct {
+	TextProposal
+}
+func (sp *SoftwareUpgradeProposal) Execute(ctx sdk.Context, k Keeper) error {
+	logger := ctx.Logger().With("module", "x/gov")
+	logger.Info("Execute SoftwareProposal begin","info", fmt.Sprintf("current height:%d",ctx.BlockHeight()))
+	err := k.ps.Set(ctx,"upgrade/proposalId",sp.ProposalID)
+	if err != nil{
+		return err
+	}
+	k.ps.Set(ctx,"upgrade/proposalAcceptHeight",ctx.BlockHeight())
+	if err != nil{
+		return err
+	}
+	return nil
+}
 //func convert(srcData string,ptrty reflect.Type,codec *wire.Codec) ( v interface{}){
 //	if ptrty.Kind() == reflect.Ptr {
 //		ptrty = ptrty.Elem()

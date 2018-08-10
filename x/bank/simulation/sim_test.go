@@ -14,9 +14,11 @@ import (
 func TestBankWithRandomMessages(t *testing.T) {
 	mapp := mock.NewApp()
 
+	bankDenomKey := sdk.NewKVStoreKey("bankDenomKey")
+
 	bank.RegisterWire(mapp.Cdc)
 	mapper := mapp.AccountMapper
-	coinKeeper := bank.NewKeeper(mapper)
+	coinKeeper := bank.NewKeeper(mapp.Cdc, bankDenomKey, mapper, bank.DefaultCodespace)
 	mapp.Router().AddRoute("bank", bank.NewHandler(coinKeeper))
 
 	err := mapp.CompleteSetup([]*sdk.KVStoreKey{})

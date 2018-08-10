@@ -24,8 +24,9 @@ func getMockApp(t *testing.T) *mock.App {
 	mapp := mock.NewApp()
 
 	RegisterWire(mapp.Cdc)
+	keyBankDenoms := sdk.NewKVStoreKey("bankdenoms")
 	keyPOW := sdk.NewKVStoreKey("pow")
-	coinKeeper := bank.NewKeeper(mapp.AccountMapper)
+	coinKeeper := bank.NewKeeper(mapp.Cdc, keyBankDenoms, mapp.AccountMapper, mapp.RegisterCodespace(bank.DefaultCodespace))
 	config := Config{"pow", 1}
 	keeper := NewKeeper(keyPOW, config, coinKeeper, mapp.RegisterCodespace(DefaultCodespace))
 	mapp.Router().AddRoute("pow", keeper.Handler)

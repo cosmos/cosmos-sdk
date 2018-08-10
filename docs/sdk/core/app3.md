@@ -272,6 +272,7 @@ Earlier, we noted that `Mappers` are abstactions over KVStores that handle
 marshalling and unmarshalling data types to and from underlying stores. 
 We can build another abstraction on top of `Mappers` that we call `Keepers`, 
 which expose only limitted functionality on the underlying types stored by the `Mapper`.
+`Keepers` can also function as `Mappers` themselves.
 
 For instance, the `x/bank` module defines the canonical versions of `MsgSend`
 and `MsgIssue` for the SDK, as well as a `Handler` for processing them. However, 

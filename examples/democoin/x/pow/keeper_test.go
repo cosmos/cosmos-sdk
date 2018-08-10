@@ -17,25 +17,26 @@ import (
 )
 
 // possibly share this kind of setup functionality between module testsuites?
-func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
+func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
 	db := dbm.NewMemDB()
 	capKey := sdk.NewKVStoreKey("capkey")
+	capKey2 := sdk.NewKVStoreKey("capkey2")
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
 
-	return ms, capKey
+	return ms, capKey, capKey2
 }
 
 func TestPowKeeperGetSet(t *testing.T) {
-	ms, capKey := setupMultiStore()
+	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
 	am := auth.NewAccountMapper(cdc, capKey, auth.ProtoBaseAccount)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	config := NewConfig("pow", int64(1))
-	ck := bank.NewKeeper(am)
+	ck := bank.NewKeeper(cdc, capKey2, am, bank.DefaultCodespace)
 	keeper := NewKeeper(capKey, config, ck, DefaultCodespace)
 
 	err := InitGenesis(ctx, keeper, Genesis{uint64(1), uint64(0)})

@@ -41,6 +41,7 @@ type GaiaApp struct {
 	// keys to access the substores
 	keyMain          *sdk.KVStoreKey
 	keyAccount       *sdk.KVStoreKey
+	keyBankDenoms    *sdk.KVStoreKey
 	keyIBC           *sdk.KVStoreKey
 	keyStake         *sdk.KVStoreKey
 	keySlashing      *sdk.KVStoreKey
@@ -72,6 +73,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		cdc:              cdc,
 		keyMain:          sdk.NewKVStoreKey("main"),
 		keyAccount:       sdk.NewKVStoreKey("acc"),
+		keyBankDenoms:    sdk.NewKVStoreKey("bankdenoms"),
 		keyIBC:           sdk.NewKVStoreKey("ibc"),
 		keyStake:         sdk.NewKVStoreKey("stake"),
 		keySlashing:      sdk.NewKVStoreKey("slashing"),
@@ -89,7 +91,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	)
 
 	// add handlers
-	app.coinKeeper = bank.NewKeeper(app.accountMapper)
+	app.coinKeeper = bank.NewKeeper(app.cdc, app.keyBankDenoms, app.accountMapper, app.RegisterCodespace(bank.DefaultCodespace))
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams)
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))

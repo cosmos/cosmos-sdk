@@ -30,9 +30,10 @@ type BasecoinApp struct {
 	cdc *wire.Codec
 
 	// keys to access the multistore
-	keyMain    *sdk.KVStoreKey
-	keyAccount *sdk.KVStoreKey
-	keyIBC     *sdk.KVStoreKey
+	keyMain       *sdk.KVStoreKey
+	keyAccount    *sdk.KVStoreKey
+	keyBankDenoms *sdk.KVStoreKey
+	keyIBC        *sdk.KVStoreKey
 
 	// manage getting and setting accounts
 	accountMapper       auth.AccountMapper
@@ -52,11 +53,12 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.Ba
 
 	// create your application type
 	var app = &BasecoinApp{
-		cdc:        cdc,
-		BaseApp:    bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...),
-		keyMain:    sdk.NewKVStoreKey("main"),
-		keyAccount: sdk.NewKVStoreKey("acc"),
-		keyIBC:     sdk.NewKVStoreKey("ibc"),
+		cdc:           cdc,
+		BaseApp:       bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...),
+		keyMain:       sdk.NewKVStoreKey("main"),
+		keyAccount:    sdk.NewKVStoreKey("acc"),
+		keyBankDenoms: sdk.NewKVStoreKey("bankdenoms"),
+		keyIBC:        sdk.NewKVStoreKey("ibc"),
 	}
 
 	// define and attach the mappers and keepers
@@ -65,7 +67,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.Ba
 		app.keyAccount,        // target store
 		auth.ProtoBaseAccount, // prototype
 	)
-	app.coinKeeper = bank.NewKeeper(app.accountMapper)
+	app.coinKeeper = bank.NewKeeper(app.cdc, app.keyIBC, app.accountMapper, app.RegisterCodespace(bank.DefaultCodespace))
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 
 	// register message routes

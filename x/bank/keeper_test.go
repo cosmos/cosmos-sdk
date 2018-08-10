@@ -17,24 +17,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
+func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
 	db := dbm.NewMemDB()
 	authKey := sdk.NewKVStoreKey("authkey")
+	bankDenomKey := sdk.NewKVStoreKey("bankDenomKey")
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(authKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(bankDenomKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
-	return ms, authKey
+	return ms, authKey, bankDenomKey
 }
 
 func TestKeeper(t *testing.T) {
-	ms, authKey := setupMultiStore()
+	ms, authKey, bankDenomKey := setupMultiStore()
 
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
-	coinKeeper := NewKeeper(accountMapper)
+	coinKeeper := NewKeeper(cdc, bankDenomKey, accountMapper, DefaultCodespace)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
@@ -78,7 +80,7 @@ func TestKeeper(t *testing.T) {
 	require.True(t, coinKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}))
 	require.True(t, coinKeeper.GetCoins(ctx, addr2).IsEqual(sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}))
 
-	_, err2 := coinKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 50)})
+	err2 := coinKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 50)})
 	assert.Implements(t, (*sdk.Error)(nil), err2)
 	require.True(t, coinKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}))
 	require.True(t, coinKeeper.GetCoins(ctx, addr2).IsEqual(sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}))
@@ -112,15 +114,15 @@ func TestKeeper(t *testing.T) {
 }
 
 func TestSendKeeper(t *testing.T) {
-	ms, authKey := setupMultiStore()
+	ms, authKey, bankDenomKey := setupMultiStore()
 
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
-	coinKeeper := NewKeeper(accountMapper)
-	sendKeeper := NewSendKeeper(accountMapper)
+	coinKeeper := NewKeeper(cdc, bankDenomKey, accountMapper, DefaultCodespace)
+	sendKeeper := NewSendKeeper(coinKeeper)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
@@ -147,7 +149,7 @@ func TestSendKeeper(t *testing.T) {
 	require.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}))
 	require.True(t, sendKeeper.GetCoins(ctx, addr2).IsEqual(sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}))
 
-	_, err2 := sendKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 50)})
+	err2 := sendKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 50)})
 	assert.Implements(t, (*sdk.Error)(nil), err2)
 	require.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}))
 	require.True(t, sendKeeper.GetCoins(ctx, addr2).IsEqual(sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}))
@@ -181,15 +183,15 @@ func TestSendKeeper(t *testing.T) {
 }
 
 func TestViewKeeper(t *testing.T) {
-	ms, authKey := setupMultiStore()
+	ms, authKey, bankDenomKey := setupMultiStore()
 
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
-	coinKeeper := NewKeeper(accountMapper)
-	viewKeeper := NewViewKeeper(accountMapper)
+	coinKeeper := NewKeeper(cdc, bankDenomKey, accountMapper, DefaultCodespace)
+	viewKeeper := NewViewKeeper(coinKeeper)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	acc := accountMapper.NewAccountWithAddress(ctx, addr)

@@ -45,7 +45,6 @@ Before getting in the bulk of the code, we will start by some introductory conte
     + [Installation](run-install.md)
     + [Submit a proposal](submit-proposal.md)
     + [Cast a vote](cast-vote.md)
-- [Testnet](testnet.md)
 
 ## Useful links
 

@@ -68,6 +68,7 @@ IMPROVEMENTS
 * [x/stake] \#1815 Sped up the processing of `EditValidator` txs. 
 * [x/gov] Added simple logging for proposal expiry & tally events using ctx.Logger
 * [x/stake] Added several sanity checks in UpdateValidator()
+* [server] \#1930 Transactions indexer indexes all tags by default.
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators

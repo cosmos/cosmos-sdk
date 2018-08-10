@@ -345,7 +345,7 @@ func intarithraw(uifn func(Int, int64) Int, bifn func(*big.Int, *big.Int, *big.I
 }
 
 func TestImmutabilityArithInt(t *testing.T) {
-	size := 1000
+	size := 500
 
 	ops := []intop{
 		intarith(Int.Add, (*big.Int).Add),
@@ -358,7 +358,7 @@ func TestImmutabilityArithInt(t *testing.T) {
 		intarithraw(Int.DivRaw, (*big.Int).Div),
 	}
 
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 100; i++ {
 		uis := make([]Int, size)
 		bis := make([]*big.Int, size)
 
@@ -443,7 +443,7 @@ func uintarithraw(uifn func(Uint, uint64) Uint, bifn func(*big.Int, *big.Int, *b
 }
 
 func TestImmutabilityArithUint(t *testing.T) {
-	size := 1000
+	size := 500
 
 	ops := []uintop{
 		uintarith(Uint.Add, (*big.Int).Add, false),
@@ -456,7 +456,7 @@ func TestImmutabilityArithUint(t *testing.T) {
 		uintarithraw(Uint.DivRaw, (*big.Int).Div, false),
 	}
 
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 100; i++ {
 		uis := make([]Uint, size)
 		bis := make([]*big.Int, size)
 

@@ -1,8 +1,26 @@
 swagger: '2.0'
 info:
   version: '1.1.0'
-  title: Light client daemon to interface with Cosmos baseserver via REST
-  description: Specification for the LCD provided by `gaiacli advanced rest-server`
+  title: Gaia-Lite (former LCD) to interface with Cosmos BaseServer via REST
+  description: Specification for Gaia-lite provided by `gaiacli advanced rest-server`
+
+tags:
+- name: keys
+  description: Key management to add or view local private keys
+- name: send
+  description: Create and sign a send tx
+- name: stake
+  description: Stake module API for staking and validation
+- name: account
+  description: Query account balance
+- name: query
+  description: Information about blocks and txs
+- name: validator set
+  description: Check the state of the validator set
+- name: node
+  description: Information of the connected node
+- name: version
+  description: Information about the app version
 
 
 securityDefinitions:
@@ -12,22 +30,28 @@ securityDefinitions:
 paths:
   /version:
     get:
-      summary: Version of the light client daemon
-      description: Get the version of the LCD running locally to compare against expected
+      summary: Version of Gaia-lite
+      tags:
+        - version
+      description: Get the version of gaia-lite running locally to compare against expected
       responses:
         200:
           description: Plaintext version i.e. "v0.5.0"
   /node_version:
     get:
       summary: Version of the connected node
+      tags:
+        - node
       description: Get the version of the SDK running on the connected node to compare against expected
       responses:
         200:
           description: Plaintext version i.e. "v0.5.0"
   /node_info:
     get:
-      description: Only the node info. Block information can be queried via /block/latest
-      summary: The propertied of the connected node
+      description: Information about the connected node
+      summary: The properties of the connected node
+      tags:
+        - node
       produces:
         - application/json
       responses:
@@ -61,6 +85,8 @@ paths:
   /syncing:
     get:
       summary: Syncing state of node
+      tags:
+        - node
       description: Get if the node is currently syning with other nodes
       responses:
         200:
@@ -69,6 +95,8 @@ paths:
   /keys:
     get:
       summary: List of accounts stored locally
+      tags:
+        - keys
       produces:
         - application/json
       responses:
@@ -80,6 +108,8 @@ paths:
               $ref: '#/definitions/Account'
     post:
       summary: Create a new account locally
+      tags:
+        - keys
       consumes:
         - application/json
       parameters:
@@ -105,6 +135,8 @@ paths:
   /keys/seed:
     get:
       summary: Create a new seed to create a new account with
+      tags:
+        - keys
       produces:
         - application/json
       responses:
@@ -121,6 +153,8 @@ paths:
         type: string
     get:
       summary: Get a certain locally stored account
+      tags:
+        - keys
       produces:
         - application/json
       responses:
@@ -132,6 +166,8 @@ paths:
           description: Account is not available
     put:
       summary: Update the password for this account in the KMS
+      tags:
+        - keys
       consumes:
         - application/json
       parameters:
@@ -157,6 +193,8 @@ paths:
           description: Account is not available
     delete:
       summary: Remove an account
+      tags:
+        - keys
       consumes:
         - application/json
       parameters:
@@ -216,6 +254,8 @@ paths:
         type: string
     get:
       summary: Get the account balances
+      tags:
+        - account
       produces:
         - application/json
       responses:
@@ -234,6 +274,8 @@ paths:
         type: string
     post:
       summary: Send coins (build -> sign -> send)
+      tags:
+        - send
       security:
         - kms: []
       consumes:
@@ -265,6 +307,8 @@ paths:
   /blocks/latest:
     get:
       summary: Get the latest block
+      tags:
+        - query
       produces:
         - application/json
       responses:
@@ -281,6 +325,8 @@ paths:
         type: number
     get:
       summary: Get a block at a certain height
+      tags:
+        - query
       produces:
         - application/json
       responses:
@@ -293,6 +339,8 @@ paths:
   /validatorsets/latest:
     get:
       summary: Get the latest validator set
+      tags:
+        - validator set
       produces:
         - application/json
       responses:
@@ -316,6 +364,8 @@ paths:
         type: number
     get:
       summary: Get a validator set a certain height
+      tags:
+        - validator set
       produces:
         - application/json
       responses:
@@ -407,6 +457,8 @@ paths:
         type: string
     get:
       summary: Get a Tx by hash
+      tags:
+        - query
       produces:
         - application/json
       responses:
@@ -416,141 +468,201 @@ paths:
             $ref: "#/definitions/Tx"
         404:
           description: Tx not available for provided hash
-  # /delegates:
-  #   parameters:
-  #     - in: query
-  #       name: delegator
-  #       description: Query for all delegates a delegator has stake with
-  #       schema:
-  #         $ref: "#/definitions/Address"
-  #   get:
-  #     summary: Get a list of canidates/delegates/validators (optionally filtered by delegator)
-  #     responses:
-  #       200:
-  #         description: List of delegates, filtered by provided delegator address
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: array
-  #               items:
-  #                 $ref: "#/definitions/Delegate"
-  # /delegates/bond:
-  #   post:
-  #     summary: Bond atoms (build -> sign -> send)
-  #     security:
-  #       - sign: []
-  #     requestBody:
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: array
-  #             items:
-  #               type: object
-  #               properties:
-  #                 amount:
-  #                   $ref: "#/definitions/Coins"
-  #                 pub_key:
-  #                   $ref: "#/definitions/PubKey"
-  #     responses:
-  #       202:
-  #         description: Tx was send and will probably be added to the next block
-  #       400:
-  #         description: The Tx was malformated
-  # /delegates/unbond:
-  #   post:
-  #     summary: Unbond atoms (build -> sign -> send)
-  #     security:
-  #       - sign: []
-  #     requestBody:
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: array
-  #             items:
-  #               type: object
-  #               properties:
-  #                 amount:
-  #                   $ref: "#/definitions/Coins"
-  #                 pub_key:
-  #                   $ref: "#/definitions/PubKey"
-  #     responses:
-  #       202:
-  #         description: Tx was send and will probably be added to the next block
-  #       400:
-  #         description: The Tx was malformated
-  # /delegates/{pubkey}:
-  #   parameters:
-  #     - in: path
-  #       name: pubkey
-  #       description: Pubkey of a delegate
-  #       required: true
-  #       schema:
-  #         type: string
-  #         example: 81B11E717789600CC192B26F452A983DF13B985EE75ABD9DD9E68D7BA007A958
-  #   get:
-  #     summary: Get a certain canidate/delegate/validator
-  #     responses:
-  #       200:
-  #         description: Delegate for specified pub_key
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/definitions/Delegate"
-  #       404:
-  #         description: No delegate found for provided pub_key
-  # /delegates/{pubkey}/bond:
-  #   parameters:
-  #     - in: path
-  #       name: pubkey
-  #       description: Pubkey of a delegate
-  #       required: true
-  #       schema:
-  #         type: string
-  #         example: 81B11E717789600CC192B26F452A983DF13B985EE75ABD9DD9E68D7BA007A958
-  #   post:
-  #     summary: Bond atoms (build -> sign -> send)
-  #     security:
-  #       - sign: []
-  #     requestBody:
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               amount:
-  #                 $ref: "#/definitions/Coins"
-  #     responses:
-  #       202:
-  #         description: Tx was send and will probably be added to the next block
-  #       400:
-  #         description: The Tx was malformated
-  # /delegates/{pubkey}/unbond:
-  #   parameters:
-  #     - in: path
-  #       name: pubkey
-  #       description: Pubkey of a delegate
-  #       required: true
-  #       schema:
-  #         type: string
-  #         example: 81B11E717789600CC192B26F452A983DF13B985EE75ABD9DD9E68D7BA007A958
-  #   post:
-  #     summary: Unbond atoms  (build -> sign -> send)
-  #     security:
-  #       - sign: []
-  #     requestBody:
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               amount:
-  #                 $ref: "#/definitions/Coins"
-  #     responses:
-  #       202:
-  #         description: Tx was send and will probably be added to the next block
-  #       400:
-  #         description: The Tx was malformated
 
+# ================== Staking Module # ==================
+
+# TODO create D
+  /stake/delegators/{delegatorAddr}:
+    parameters:
+      - in: path
+        name: delegatorAddr
+        description: AccAddress of Delegator
+        required: true
+        type: string
+    get:
+      summary: Get all delegations (delegation, undelegation) from a delegator
+      tags:
+        - stake
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+        404:
+          description: Not Found
+        500:
+          description: Internal Server Error
+
+  /stake/delegators/{delegatorAddr}/txs:
+    parameters:
+      - in: path
+        name: delegatorAddr
+        description: AccAddress of Delegator
+        required: true
+        type: string
+    get:
+      summary: Get all staking txs (i.e msgs) from a delegator
+      tags:
+        - stake
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Tx"
+        404:
+          description: Not Found
+        500:
+          description: Internal Server Error
+
+  /stake/delegators/{delegatorAddr}/delegations:
+    parameters:
+      - in: path
+        name: delegatorAddr
+        description: Bech32 AccAddress of Delegator
+        required: true
+        type: string
+    post:
+      summary: Submit delegation
+      parameters:
+      - in: body
+        name: delegation
+        description: The password of the account to remove from the KMS
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+            password:
+              type: string
+            account_number:
+              type: number
+            delegations:
+              type: array
+              items:
+                type: string
+            begin_unbondings:
+              type: array
+              items:
+                type: string
+            complete_unbondings:
+              type: array
+              items:
+                type: string
+            begin_redelegates:
+              type: array
+              items:
+                type: string
+            complete_redelegates:
+              type: array
+              items:
+                type: string
+            chain_id:
+              type: string
+            gas:
+              type: number
+            sequence:
+              type: number
+      tags:
+        - stake
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Tx"
+        404:
+          description: Not Found
+        500:
+          description: Internal Server Error
+
+  /stake/delegators/{delegatorAddr}/delegations/{validatorAddr}:
+    parameters:
+      - in: path
+        name: delegatorAddr
+        description: Bech32 AccAddress of Delegator
+        required: true
+        type: string
+      - in: path
+        name: validatorAddr
+        description: Bech32 ValAddress of Delegator
+        required: true
+        type: string
+    get:
+      summary: Query the current delegation status between a delegator and a validator
+      tags:
+        - stake
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+        404:
+          description: Not Found
+
+  /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}:
+    parameters:
+      - in: path
+        name: delegatorAddr
+        description: Bech32 AccAddress of Delegator
+        required: true
+        type: string
+      - in: path
+        name: validatorAddr
+        description: Bech32 ValAddress of Delegator
+        required: true
+        type: string
+    get:
+      summary: Query all unbonding delegations between a delegator and a validator
+      tags:
+        - stake
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+        404:
+          description: Not Found
+        500:
+          description: Internal Server Error
+
+  /stake/validators:
+    get:
+      summary: Get all validator candidates
+      tags:
+        - stake
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+        500:
+          description: Internal Server Error
+
+  /stake/validators/{validatorAddr}:
+    parameters:
+      - in: path
+        name: validatorAddr
+        description: Bech32 ValAddress of Delegator
+        required: true
+        type: string
+    get:
+      summary: Query the information from a single validator
+      tags:
+        - stake
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+        404:
+          description: Not Found
+        500:
+          description: Internal Server Error
+
+# TODO Add staking definitions
 definitions:
   Address:
     type: string

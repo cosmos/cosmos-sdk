@@ -1,22 +1,26 @@
 package gov
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strconv"
 	"strings"
 )
 
-// nolint
-const (
-	ParamStoreKeyDepositProcedureDeposit          = "gov/depositprocedure/deposit"
-	ParamStoreKeyDepositProcedureMaxDepositPeriod = "gov/depositprocedure/maxDepositPeriod"
+const Prefix = "gov/"
 
-	ParamStoreKeyVotingProcedureVotingPeriod = "gov/votingprocedure/votingPeriod"
-
-	ParamStoreKeyTallyingProcedureThreshold = "gov/tallyingprocedure/threshold"
-	ParamStoreKeyTallyingProcedureVeto      = "gov/tallyingprocedure/veto"
-	ParamStoreKeyTallyingProcedurePenalty   = "gov/tallyingprocedure/penalty"
+var (
+	ParamStoreKeyDepositProcedureDeposit          = GetGovKey("depositprocedure/deposit")
+	ParamStoreKeyDepositProcedureMaxDepositPeriod = GetGovKey("depositprocedure/maxDepositPeriod")
+	ParamStoreKeyVotingProcedureVotingPeriod      = GetGovKey("votingprocedure/votingPeriod")
+	ParamStoreKeyTallyingProcedureThreshold       = GetGovKey("tallyingprocedure/threshold")
+	ParamStoreKeyTallyingProcedureVeto            = GetGovKey("tallyingprocedure/veto")
+	ParamStoreKeyTallyingProcedurePenalty         = GetGovKey("tallyingprocedure/penalty")
 )
+
+func GetGovKey(key string) string {
+	return fmt.Sprintf("%s%s", Prefix, key)
+}
 
 // =====================================================
 // Procedures
@@ -51,12 +55,12 @@ func (keeper Keeper) setDepositProcedureDeposit(ctx sdk.Context, Deposit sdk.Coi
 }
 
 func (keeper Keeper) setDepositProcedureMaxDepositPeriod(ctx sdk.Context, MaxDepositPeriod int64) {
-	maxDepositPeriod := strconv.FormatInt(MaxDepositPeriod,10)
+	maxDepositPeriod := strconv.FormatInt(MaxDepositPeriod, 10)
 	keeper.ps.Set(ctx, ParamStoreKeyDepositProcedureMaxDepositPeriod, &maxDepositPeriod)
 }
 
 func (keeper Keeper) setVotingProcedureVotingPeriod(ctx sdk.Context, VotingPeriod int64) {
-	votingPeriod := strconv.FormatInt(VotingPeriod,10)
+	votingPeriod := strconv.FormatInt(VotingPeriod, 10)
 	keeper.ps.Set(ctx, ParamStoreKeyVotingProcedureVotingPeriod, &votingPeriod)
 }
 

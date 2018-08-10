@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"strings"
 )
 
 //-----------------------------------------------------------
@@ -99,32 +100,37 @@ type Op string
 
 const (
 	Add    Op = "add"
-	Del    Op = "del"
 	Update Op = "update"
 )
 
-type Data struct {
+type Param struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
 	Op    Op     `json:"op"`
 }
 
-type Params []Data
+type Params []Param
 
 // Implements Proposal Interface
 var _ Proposal = (*ParameterProposal)(nil)
 
 type ParameterProposal struct {
 	TextProposal
-	Datas Params `json:"datas"`
+	Params Params `json:"params"`
 }
 
 func (pp *ParameterProposal) Execute(ctx sdk.Context, k Keeper) (err error) {
 
 	logger := ctx.Logger().With("module", "x/gov")
-	logger.Info("Execute ParameterProposal begin","info", fmt.Sprintf("current height:%d",ctx.BlockHeight()))
+	logger.Info("Execute ParameterProposal begin", "info", fmt.Sprintf("current height:%d", ctx.BlockHeight()))
 
-	for _, data := range pp.Datas {
+	for _, data := range pp.Params {
+		//param only begin with "gov/" can be update
+		if !strings.HasPrefix(data.Key, Prefix) {
+			errMsg := fmt.Sprintf("Parameter %s is not begin with %s", data.Key, Prefix)
+			logger.Error("Execute ParameterProposal ", "err", errMsg)
+			continue
+		}
 		if data.Op == Add {
 			k.ps.Set(ctx, data.Key, data.Value)
 		} else if data.Op == Update {
@@ -134,63 +140,30 @@ func (pp *ParameterProposal) Execute(ctx sdk.Context, k Keeper) (err error) {
 			} else {
 				k.ps.SetString(ctx, data.Key, data.Value)
 			}
-		} else {
-
 		}
 	}
 	return
 }
 
 var _ Proposal = (*SoftwareUpgradeProposal)(nil)
+
 type SoftwareUpgradeProposal struct {
 	TextProposal
 }
+
 func (sp *SoftwareUpgradeProposal) Execute(ctx sdk.Context, k Keeper) error {
 	logger := ctx.Logger().With("module", "x/gov")
-	logger.Info("Execute SoftwareProposal begin","info", fmt.Sprintf("current height:%d",ctx.BlockHeight()))
-	err := k.ps.Set(ctx,"upgrade/proposalId",sp.ProposalID)
-	if err != nil{
+	logger.Info("Execute SoftwareProposal begin", "info", fmt.Sprintf("current height:%d", ctx.BlockHeight()))
+	err := k.ps.Set(ctx, "upgrade/proposalId", sp.ProposalID)
+	if err != nil {
 		return err
 	}
-	k.ps.Set(ctx,"upgrade/proposalAcceptHeight",ctx.BlockHeight())
-	if err != nil{
+	k.ps.Set(ctx, "upgrade/proposalAcceptHeight", ctx.BlockHeight())
+	if err != nil {
 		return err
 	}
 	return nil
 }
-//func convert(srcData string,ptrty reflect.Type,codec *wire.Codec) ( v interface{}){
-//	if ptrty.Kind() == reflect.Ptr {
-//		ptrty = ptrty.Elem()
-//	}
-//
-//	srcValue := reflect.ValueOf(srcData)
-//	srcType := reflect.TypeOf(srcData)
-//	if srcType.ConvertibleTo(ptrty){
-//		v = srcValue.Convert(ptrty).Interface()
-//	}else {
-//		switch ptrty.Kind() {
-//		case reflect.Int:
-//			v,_ = strconv.Atoi(srcData)
-//		case reflect.Int8:
-//			v,_ = strconv.ParseInt(srcData, 10, 8)
-//		case reflect.Int16:
-//			v,_ = strconv.ParseInt(srcData, 10, 16)
-//		case reflect.Int64:
-//			v,_ = strconv.ParseInt(srcData, 10, 64)
-//		case reflect.Bool:
-//			v,_ = strconv.ParseBool(srcData)
-//		case reflect.Uint:
-//			v,_ = strconv.ParseUint(srcData, 10, 10)
-//		case reflect.Uint8:
-//			v,_ = strconv.ParseUint(srcData, 10, 8)
-//		case reflect.Uint64:
-//			v,_ = strconv.ParseUint(srcData, 10, 64)
-//		case reflect.Uint16:
-//			v,_ = strconv.ParseUint(srcData, 10, 16)
-//		}
-//	}
-//	return
-//}
 
 ////////////////////  iris/cosmos-sdk end  ///////////////////////////
 

@@ -2,10 +2,9 @@ package gov
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"fmt"
 )
 
 // Governance Keeper
@@ -128,7 +127,7 @@ func (keeper Keeper) NewProposal(ctx sdk.Context, title string, description stri
 	case ProposalTypeParameterChange:
 		return keeper.NewParametersProposal(ctx, title, description, proposalType,params)
 	case ProposalTypeSoftwareUpgrade:
-		fmt.Println("not implement")
+		return keeper.NewSofterwareUpgradeProposal(ctx, title, description, proposalType)
 	}
 	return nil
 }

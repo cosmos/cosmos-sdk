@@ -20,7 +20,7 @@ import (
 	)
 
 func toBigInt(amount int) sdk.Int{
-	return params.Pow10(18).Mul(sdk.NewInt(int64(amount)))
+	return Pow10(18).Mul(sdk.NewInt(int64(amount)))
 }
 
 // initialize the mock application for this module

@@ -59,7 +59,7 @@ func main() {
 	// Application
 	myapp := app.NewGaiaApp(
 		ctx.Logger, appDB, traceStoreWriter,
-		baseapp.SetPruning("nothing"),
+		baseapp.SetPruning("everything"), // nothing
 	)
 
 	// Genesis
@@ -86,7 +86,7 @@ func main() {
 	validators := tm.TM2PB.Validators(genState.Validators)
 	csParams := tm.TM2PB.ConsensusParams(genDoc.ConsensusParams)
 	req := abci.RequestInitChain{
-		Time:            genDoc.GenesisTime.Unix(),
+		Time:            genDoc.GenesisTime,
 		ChainId:         genDoc.ChainID,
 		ConsensusParams: csParams,
 		Validators:      validators,

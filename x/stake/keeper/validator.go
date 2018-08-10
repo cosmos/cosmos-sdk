@@ -423,8 +423,6 @@ func (k Keeper) UpdateBondedValidators(
 			if validator.Status == sdk.Bonded {
 				panic(fmt.Sprintf("revoked validator cannot be bonded for address: %s\n", ownerAddr))
 			}
-
-			break
 		}
 
 		// increment the total number of bonded validators and potentially mark

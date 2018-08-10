@@ -135,7 +135,7 @@ func (k Keeper) AddValidators(ctx sdk.Context, vals []abci.Validator) {
 		if err != nil {
 			panic(err)
 		}
-		k.addPubkey(ctx, pubkey, false)
+		k.addPubkey(ctx, pubkey)
 	}
 }
 

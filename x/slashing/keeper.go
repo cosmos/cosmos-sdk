@@ -133,20 +133,16 @@ func (k Keeper) AddValidators(ctx sdk.Context, vals []abci.Validator) {
 		val := vals[i]
 		pubkey, err := tmtypes.PB2TM.PubKey(val.PubKey)
 		if err != nil {
-			continue
+			panic(err)
 		}
 		k.addPubkey(ctx, pubkey, false)
 	}
 }
 
 // TODO: Make a method to remove the pubkey from the map when a validator is unbonded.
-func (k Keeper) addPubkey(ctx sdk.Context, pubkey crypto.PubKey, del bool) {
+func (k Keeper) addPubkey(ctx sdk.Context, pubkey crypto.PubKey) {
 	addr := pubkey.Address()
-	if del {
-		k.deleteAddrPubkeyRelation(ctx, addr)
-	} else {
-		k.setAddrPubkeyRelation(ctx, addr, pubkey)
-	}
+	k.setAddrPubkeyRelation(ctx, addr, pubkey)
 }
 
 func (k Keeper) getPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKey, error) {

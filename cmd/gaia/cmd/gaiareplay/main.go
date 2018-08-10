@@ -59,7 +59,7 @@ func main() {
 	// Application
 	myapp := app.NewGaiaApp(
 		ctx.Logger, appDB, traceStoreWriter,
-		baseapp.SetPruning("nothing"),
+		baseapp.SetPruning("everything"), // nothing
 	)
 
 	// Genesis

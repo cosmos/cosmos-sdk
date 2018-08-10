@@ -102,42 +102,48 @@ func (gi *gasKVStore) iterator(start, end []byte, ascending bool) sdk.Iterator {
 	return newGasIterator(gi.gasMeter, parent)
 }
 
-type gasIterator struct {
+type GasIterator struct {
 	gasMeter sdk.GasMeter
 	parent   sdk.Iterator
 }
 
 func newGasIterator(gasMeter sdk.GasMeter, parent sdk.Iterator) sdk.Iterator {
-	return &gasIterator{
+	return &GasIterator{
 		gasMeter: gasMeter,
 		parent:   parent,
 	}
 }
 
 // Implements Iterator.
-func (g *gasIterator) Domain() (start []byte, end []byte) {
+func (g *GasIterator) Domain() (start []byte, end []byte) {
 	return g.parent.Domain()
 }
 
 // Implements Iterator.
-func (g *gasIterator) Valid() bool {
+func (g *GasIterator) Valid() bool {
 	return g.parent.Valid()
 }
 
 // Implements Iterator.
-func (g *gasIterator) Next() {
+func (g *GasIterator) Next() {
 	g.parent.Next()
 }
 
 // Implements Iterator.
-func (g *gasIterator) Key() (key []byte) {
+func (g *GasIterator) Key() (key []byte) {
 	g.gasMeter.ConsumeGas(KeyCostFlat, "KeyFlat")
 	key = g.parent.Key()
 	return key
 }
 
 // Implements Iterator.
-func (g *gasIterator) Value() (value []byte) {
+func (g *GasIterator) NoGasKey() (key []byte) {
+	key = g.parent.Key()
+	return key
+}
+
+// Implements Iterator.
+func (g *GasIterator) Value() (value []byte) {
 	value = g.parent.Value()
 	g.gasMeter.ConsumeGas(ValueCostFlat, "ValueFlat")
 	g.gasMeter.ConsumeGas(ValueCostPerByte*sdk.Gas(len(value)), "ValuePerByte")
@@ -145,6 +151,12 @@ func (g *gasIterator) Value() (value []byte) {
 }
 
 // Implements Iterator.
-func (g *gasIterator) Close() {
+func (g *GasIterator) NoGasValue() (key []byte) {
+	key = g.parent.Value()
+	return key
+}
+
+// Implements Iterator.
+func (g *GasIterator) Close() {
 	g.parent.Close()
 }

@@ -6,7 +6,9 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
+	cmn "github.com/tendermint/tendermint/libs/common"
 
+	sm "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
@@ -328,10 +330,22 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 	var validator, validatorToBond types.Validator
 	newValidatorBonded := false
 
+	fmt.Println("-------------")
+	mmm := map[string]struct{}{}
+
+	i := 0
 	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey) // largest to smallest
 	for {
 		if !iterator.Valid() || bondedValidatorsCount > int(maxValidators-1) {
 			break
+		}
+		i++
+
+		if _, ok := mmm[string(iterator.(*sm.GasIterator).NoGasValue())]; ok {
+			fmt.Printf(">> DUPLICATE ?! %X %X\n",
+				iterator.(*sm.GasIterator).NoGasKey(),
+				iterator.(*sm.GasIterator).NoGasValue(),
+			)
 		}
 
 		// either retrieve the original validator from the store, or under the
@@ -339,6 +353,7 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 		// validator provided because it has not yet been updated in the store
 		ownerAddr := iterator.Value()
 		if bytes.Equal(ownerAddr, affectedValidator.Owner) {
+			fmt.Println(">> FOUND AFFECTED VALIDATOR")
 			validator = affectedValidator
 		} else {
 			var found bool
@@ -348,9 +363,14 @@ func (k Keeper) UpdateBondedValidators(ctx sdk.Context,
 			}
 		}
 
+		fmt.Printf(">> VALIDATOR %d: %X (%v) -> %v\n", i,
+			iterator.(*sm.GasIterator).NoGasKey(),
+			cmn.ColoredBytes(iterator.(*sm.GasIterator).NoGasKey(), cmn.Blue, cmn.Green), validator)
+
 		// increment bondedValidatorsCount / get the validator to bond
 		if !validator.Revoked {
 			if validator.Status != sdk.Bonded {
+				fmt.Println(">> NEW VALIDATOR! ^^")
 				validatorToBond = validator
 				newValidatorBonded = true
 			}
@@ -575,6 +595,7 @@ func (k Keeper) setCliffValidator(ctx sdk.Context, validator types.Validator, po
 	store := ctx.KVStore(k.storeKey)
 	bz := GetValidatorsByPowerIndexKey(validator, pool)
 	store.Set(ValidatorPowerCliffKey, bz)
+	fmt.Printf(">> SET CLIFF VALIDATOR?! %X\n", validator.Owner)
 	store.Set(ValidatorCliffIndexKey, validator.Owner)
 }
 
@@ -582,5 +603,7 @@ func (k Keeper) setCliffValidator(ctx sdk.Context, validator types.Validator, po
 func (k Keeper) clearCliffValidator(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(ValidatorPowerCliffKey)
+	owner := store.Get(ValidatorCliffIndexKey)
+	fmt.Printf(">> CLEAR CLIFF VALIDATOR?! %X\n", owner)
 	store.Delete(ValidatorCliffIndexKey)
 }

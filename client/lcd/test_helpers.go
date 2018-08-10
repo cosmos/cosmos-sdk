@@ -121,7 +121,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	config.TxIndex.IndexAllTags = true
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	logger = log.NewFilter(logger, log.AllowDebug())
+	logger = log.NewFilter(logger, log.AllowError())
 
 	privValidatorFile := config.PrivValidatorFile()
 	privVal := pvm.LoadOrGenFilePV(privValidatorFile)
@@ -256,6 +256,7 @@ func Request(t *testing.T, port, method, path string, payload []byte) (*http.Res
 		res *http.Response
 	)
 	url := fmt.Sprintf("http://localhost:%v%v", port, path)
+	fmt.Println("REQUEST " + method + " " + url)
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(payload))
 	require.Nil(t, err)

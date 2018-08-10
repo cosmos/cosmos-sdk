@@ -1,8 +1,8 @@
-
 ## Fees
 - Collection
   - Gas price based on parameter
   - (which gets changed automatically)
+  - https://github.com/cosmos/cosmos-sdk/issues/1921
   - Per block gas usage as %
   - Windowing function
     - Block N,
@@ -22,7 +22,8 @@
   - Only use text proposals
   - On-chain mechanism for agreeing on when to "flip" to new functionality
 
-## Slashing/Stability
+## Staking/Slashing/Stability
+- Unbonding state for validators https://github.com/cosmos/cosmos-sdk/issues/1676
 - current: downtime, double signing during unbonding
 - who gets slashed when -- needs review about edge cases
 - need to communicate to everyone that lite has this edge case
@@ -68,3 +69,10 @@
 ## Slashing/Stability
 - tendermint evidence: we don’t yet slash byzantine signatures (signing at all) when not bonded.
 
+# Other priority
+
+## gaiad // gaiacli
+- Documentation // language
+
+## gaialite
+- Documentation // language

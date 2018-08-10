@@ -1,6 +1,8 @@
 ## PENDING
 
 BREAKING CHANGES
+* API
+  - \#1880 [x/stake] changed the endpoints to be more REST-ful
 * Update to tendermint v0.22.5. This involves changing all of the cryptography imports. [Ref](https://github.com/tendermint/tendermint/pull/1966)
 * [baseapp] Msgs are no longer run on CheckTx, removed `ctx.IsCheckTx()`
 * [x/gov] CLI flag changed from `proposalID` to `proposal-id`
@@ -46,6 +48,7 @@ FEATURES
 * [cli] added `gov query-proposals` command to CLI. Can filter by `depositer`, `voter`, and `status`
 * [core] added BaseApp.Seal - ability to seal baseapp parameters once they've been set
 * [scripts] added log output monitoring to DataDog using Ansible scripts
+* [gov] added TallyResult type that gets added stored in Proposal after tallying is finished
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route
@@ -53,6 +56,7 @@ IMPROVEMENTS
 * [tools] Remove `rm -rf vendor/` from `make get_vendor_deps`
 * [x/auth] Recover ErrorOutOfGas panic in order to set sdk.Result attributes correctly
 * [x/stake] Add revoked to human-readable validator 
+* [spec] \#967 Inflation and distribution specs drastically improved
 * [tests] Add tests to example apps in docs
 * [x/gov] Votes on a proposal can now be queried
 * [x/bank] Unit tests are now table-driven
@@ -70,6 +74,7 @@ BUG FIXES
 *  \#1799 Fix `gaiad export`
 *  \#1828 Force user to specify amount on create-validator command by removing default
 *  \#1839 Fixed bug where intra-tx counter wasn't set correctly for genesis validators
+* [staking] [#1858](https://github.com/cosmos/cosmos-sdk/pull/1858) Fixed bug where the cliff validator was not be updated correctly
 * [tests] \#1675 Fix non-deterministic `test_cover` 
 * [client] \#1551: Refactored `CoreContext`
   * Renamed `CoreContext` to `QueryContext`
@@ -77,8 +82,8 @@ BUG FIXES
   structure `TxContext` in `x/auth/client/context`
   * Cleaned up documentation and API of what used to be `CoreContext`
   * Implemented `KeyType` enum for key info
-
-BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators
 * [tests] \#1551: Fixed invalid LCD test JSON payload in `doIBCTransfer`
 *  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator
+*  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator
+* [basecoin] Fixes coin transaction failure and account query [discussion](https://forum.cosmos.network/t/unmarshalbinarybare-expected-to-read-prefix-bytes-75fbfab8-since-it-is-registered-concrete-but-got-0a141dfa/664/6)

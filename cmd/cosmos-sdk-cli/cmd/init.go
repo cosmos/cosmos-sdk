@@ -7,10 +7,11 @@ import (
 	"os"
 	"strings"
 
+	"path/filepath"
+
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
 	tmversion "github.com/tendermint/tendermint/version"
-	"path/filepath"
 )
 
 var remoteBasecoinPath = "github.com/cosmos/cosmos-sdk/examples/basecoin"

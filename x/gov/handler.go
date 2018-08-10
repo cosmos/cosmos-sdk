@@ -111,9 +111,6 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
 	}
 
-	var passes bool
-	var nonVotingVals []sdk.AccAddress
-
 	// Check if earliest Active Proposal ended voting period yet
 	for shouldPopActiveProposalQueue(ctx, keeper) {
 		activeProposal := keeper.ActiveProposalQueuePop(ctx)
@@ -124,7 +121,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 			continue
 		}
 
-		passes, nonVotingVals = tally(ctx, keeper, activeProposal)
+		passes, tallyResults, nonVotingVals := tally(ctx, keeper, activeProposal)
 		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(activeProposal.GetProposalID())
 		var action []byte
 		if passes {
@@ -136,6 +133,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 			activeProposal.SetStatus(StatusRejected)
 			action = tags.ActionProposalRejected
 		}
+		activeProposal.SetTallyResult(tallyResults)
 		keeper.SetProposal(ctx, activeProposal)
 
 		for _, valAddr := range nonVotingVals {

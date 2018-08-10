@@ -442,3 +442,219 @@ Returns on failure:
     "result":{}
 }
 ```
+
+## ICS21 - StakingAPI
+
+The StakingAPI exposes all functionality needed for validation and delegation in Proof-of-Stake.
+
+### /stake/delegators/{delegatorAddr} - GET
+
+url: /stake/delegators/{delegatorAddr}
+
+Functionality: Get all delegations (delegation, undelegation) from a delegator.
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result": {
+        "atom":1000,
+        "photon":500,
+        "ether":20
+    }
+}
+```
+
+Returns on error:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"Could not find any balance for the specified account.",
+    "result":{}
+}
+```
+
+### /stake/delegators/{delegatorAddr}/txs - GET
+
+url: /stake/delegators/{delegatorAddr}/txs
+
+Functionality: Get all staking txs (i.e msgs) from a delegator.
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{
+     "transaction":"TODO"
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"Could not create the transaction.",
+    "result":{}
+}
+```
+
+### /stake/delegators/{delegatorAddr}/delegations - POST
+
+url: /stake/delegators/{delegatorAddr}/delegations
+
+Functionality: Submit a delegation.
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{
+     "transaction":"TODO"
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"Could not create the transaction.",
+    "result":{}
+}
+```
+
+### /stake/delegators/{delegatorAddr}/delegations/{validatorAddr} - GET
+
+url: /stake/delegators/{delegatorAddr}/delegations/{validatorAddr}
+
+Functionality: Query the current delegation status between a delegator and a validator.
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{
+     "transaction":"TODO"
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"Could not create the transaction.",
+    "result":{}
+}
+```
+
+### /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr} - GET
+
+url: /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}
+
+Functionality: Query all unbonding delegations between a delegator and a validator.
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{
+     "transaction":"TODO"
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"Could not create the transaction.",
+    "result":{}
+}
+```
+
+### /stake/validators - GET
+
+url: /stake/validators
+
+Functionality: Get all validator candidates.
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{
+     "transaction":"TODO"
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"Could not create the transaction.",
+    "result":{}
+}
+```
+
+### /stake/validators/{validatorAddr} - GET
+
+url: /stake/validators/{validatorAddr}
+
+Functionality: Query the information from a single validator.
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{
+     "transaction":"TODO"
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"Could not create the transaction.",
+    "result":{}
+}
+```

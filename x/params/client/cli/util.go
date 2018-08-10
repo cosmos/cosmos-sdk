@@ -9,8 +9,8 @@ import (
 
 func ExportCmd(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "export",
-		Short: "export all keypair which begin with args from global store.(args can be 'gov','stake' eg,or full path such as 'gov/votingprocedure/votingPeriod')",
+		Use:   "export [key]",
+		Short: "export all keypair which begin with key from global store.(key can be 'gov','stake' eg,or full path such as 'gov/votingprocedure/votingPeriod')",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCoreContextFromViper()

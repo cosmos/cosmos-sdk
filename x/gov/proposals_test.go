@@ -19,7 +19,7 @@ func TestParameterProposal(t *testing.T) {
 	fmt.Println(keeper.GetVotingProcedure(ctx))
 
 	pp := ParameterProposal{
-		Datas: []Data{
+		Params: []Param{
 			{Key: ParamStoreKeyDepositProcedureDeposit, Value: "200iris", Op: Update},
 			{Key: ParamStoreKeyDepositProcedureMaxDepositPeriod, Value: "20", Op: Update},
 			{Key: ParamStoreKeyTallyingProcedurePenalty, Value: "1/50", Op: Update},

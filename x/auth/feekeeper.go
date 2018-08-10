@@ -11,8 +11,8 @@ import (
 var (
 	collectedFeesKey = []byte("collectedFees")
 	NativeFeeTokenKey = "feeToken/native"
-	NativeGasPriceThresholdKey  = "feeToken/native/gasPrice/threshold"
-	FeeExchangeRatePrefix = "feeToken/derived/exchange/rate/"	//  key = feeToken/derived/exchange/rate/<denomination>, rate = BigInt(value)/10^18
+	NativeGasPriceThresholdKey  = "gov/feeToken/gasPriceThreshold"
+	FeeExchangeRatePrefix = "gov/feeToken/exchangeRate/"	//  key = gov/feeToken/exchangeRate/<denomination>, rate = BigInt(value)/10^9
 	RatePrecision = int64(1000000000) //10^9
 )
 
@@ -20,7 +20,7 @@ var (
 // and setting of MinFees for different fee tokens
 type FeeCollectionKeeper struct {
 
-	getter params.Getter
+	getter params.GetterProxy
 
 	// The (unexposed) key used to access the fee store from the Context.
 	key sdk.StoreKey
@@ -30,7 +30,7 @@ type FeeCollectionKeeper struct {
 }
 
 // NewFeeKeeper returns a new FeeKeeper
-func NewFeeCollectionKeeper(cdc *wire.Codec, key sdk.StoreKey, getter params.Getter) FeeCollectionKeeper {
+func NewFeeCollectionKeeper(cdc *wire.Codec, key sdk.StoreKey, getter params.GetterProxy) FeeCollectionKeeper {
 	return FeeCollectionKeeper{
 		key: key,
 		cdc: cdc,
@@ -155,7 +155,7 @@ func DefaultGenesisState() GenesisState {
 	}
 }
 
-func InitGenesis(ctx sdk.Context, setter params.Setter, data GenesisState) {
+func InitGenesis(ctx sdk.Context, setter params.SetterProxy, data GenesisState) {
 	setter.SetString(ctx, NativeFeeTokenKey, data.FeeTokenNative)
 	setter.SetString(ctx, NativeGasPriceThresholdKey, sdk.NewInt(data.GasPriceThreshold).String())
 }

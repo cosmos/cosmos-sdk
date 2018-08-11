@@ -8,6 +8,8 @@ BREAKING CHANGES
 * Gaia CLI  (`gaiacli`)
     * [x/stake] Validator.Owner renamed to Validator.Operator
     * [cli] unsafe_reset_all, show_validator, and show_node_id have been renamed to unsafe-reset-all, show-validator, and show-node-id
+    * [cli] \#1983 --print-response now defaults to true in commands that create and send a transaction
+    * [cli] \#1983 you can now pass --pubkey or --address to gaiacli keys show to return a plaintext representation of the key's address or public key for use with other commands
 
 * Gaia
     * Make the transient store key use a distinct store key. [#2013](https://github.com/cosmos/cosmos-sdk/pull/2013)

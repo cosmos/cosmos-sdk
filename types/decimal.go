@@ -16,7 +16,13 @@ type Dec struct {
 }
 
 // number of decimal places
-const Precision = 10
+const (
+	Precision = 10
+
+	// bytes required to represent the above precision
+	// ceil(log2(9999999999))
+	DecimalPrecisionBytes = 34
+)
 
 var (
 	precisionExpReuse    = big.NewInt(Precision)
@@ -137,20 +143,38 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 //nolint
 func (d Dec) IsZero() bool      { return (d.Int).Sign() == 0 } // Is equal to zero
 func (d Dec) Equal(d2 Dec) bool { return (d.Int).Cmp(d2.Int) == 0 }
-func (d Dec) GT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) == 1 }             // greater than
-func (d Dec) GTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) >= 0 }             // greater than or equal
-func (d Dec) LT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) == -1 }            // less than
-func (d Dec) LTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) <= 0 }             // less than or equal
-func (d Dec) Neg() Dec          { return Dec{new(big.Int).Neg(d.Int)} }         // Is equal to zero
-func (d Dec) Add(d2 Dec) Dec    { return Dec{new(big.Int).Add(d.Int, d2.Int)} } // addition
-func (d Dec) Sub(d2 Dec) Dec    { return Dec{new(big.Int).Sub(d.Int, d2.Int)} } // subtraction
+func (d Dec) GT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) == 1 }     // greater than
+func (d Dec) GTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) >= 0 }     // greater than or equal
+func (d Dec) LT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) == -1 }    // less than
+func (d Dec) LTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) <= 0 }     // less than or equal
+func (d Dec) Neg() Dec          { return Dec{new(big.Int).Neg(d.Int)} } // Is equal to zero
+
+// addition
+func (d Dec) Add(d2 Dec) Dec {
+	res := new(big.Int).Add(d.Int, d2.Int)
+
+	if res.BitLen() > 255+DecimalPrecisionBytes {
+		panic("Int overflow")
+	}
+	return Dec{res}
+}
+
+// subtraction
+func (d Dec) Sub(d2 Dec) Dec {
+	res := new(big.Int).Sub(d.Int, d2.Int)
+
+	if res.BitLen() > 255+DecimalPrecisionBytes {
+		panic("Int overflow")
+	}
+	return Dec{res}
+}
 
 // multiplication
 func (d Dec) Mul(d2 Dec) Dec {
 	mul := new(big.Int).Mul(d.Int, d2.Int)
 	chopped := BankerRoundChop(mul, Precision)
 
-	if chopped.BitLen() > 255 {
+	if chopped.BitLen() > 255+DecimalPrecisionBytes {
 		panic("Int overflow")
 	}
 	return Dec{chopped}
@@ -210,6 +234,7 @@ func (d Dec) ToLeftPadded(totalDigits int8) string {
 //   BankerRoundChop(1015, 1) = 102
 //   BankerRoundChop(1500, 3) = 2
 func BankerRoundChop(d *big.Int, n int64) (chopped *big.Int) {
+
 	// remove the negative and add it back when returning
 	if d.Sign() == -1 {
 		// make d positive, compute chopped value, and then un-mutate d
@@ -260,10 +285,11 @@ func BankerRoundChop(d *big.Int, n int64) (chopped *big.Int) {
 
 // RoundInt64 rounds the decimal using bankers rounding
 func (d Dec) RoundInt64() int64 {
-	if !d.Int.IsInt64() {
+	chopped := BankerRoundChop(d.Int, Precision)
+	if !chopped.IsInt64() {
 		panic("Int64() out of bound")
 	}
-	return BankerRoundChop(d.Int, Precision).Int64()
+	return chopped.Int64()
 }
 
 // RoundInt round the decimal using bankers rounding

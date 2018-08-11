@@ -1,7 +1,6 @@
 ########################################
 ### WARNING: The DigitalOcean scripts are deprecated. They are still here because
 ### they might be useful for developers.
-### Use -f to call this Makefile: "make -f Makefile.do target"
 
 # Name of the testnet. Used in chain-id.
 TESTNET_NAME?=remotenet

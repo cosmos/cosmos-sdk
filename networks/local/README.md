@@ -31,9 +31,9 @@ To start a 4 node testnet run:
 make localnet-start
 ```
 
-The nodes bind their RPC servers to ports 46657, 46660, 46662, and 46664 on the host.
+The nodes bind their RPC servers to ports 26657, 26660, 26662, and 26664 on the host.
 This file creates a 4-node network using the gaiadnode image.
-The nodes of the network expose their P2P and RPC endpoints to the host machine on ports 46656-46657, 46659-46660, 46661-46662, and 46663-46664 respectively.
+The nodes of the network expose their P2P and RPC endpoints to the host machine on ports 26656-26657, 26659-26660, 26661-26662, and 26663-26664 respectively.
 
 To update the binary, just rebuild it and restart the nodes:
 

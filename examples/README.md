@@ -179,7 +179,7 @@ starting this tutorial again or trying something new), the following
 commands are run:
 
 ```
-basecoind unsafe_reset_all
+basecoind unsafe-reset-all
 rm -rf ~/.basecoind
 rm -rf ~/.basecli
 ```

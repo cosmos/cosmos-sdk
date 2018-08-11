@@ -11,8 +11,8 @@ import (
 var (
 	collectedFeesKey = []byte("collectedFees")
 	NativeFeeTokenKey = "feeToken/native"
-	NativeGasPriceThresholdKey  = "gov/feeToken/gasPriceThreshold"
-	FeeExchangeRatePrefix = "gov/feeToken/exchangeRate/"	//  key = gov/feeToken/exchangeRate/<denomination>, rate = BigInt(value)/10^9
+	NativeGasPriceThresholdKey  = "feeToken/gasPriceThreshold"
+	FeeExchangeRatePrefix = "feeToken/exchangeRate/"	//  key = gov/feeToken/exchangeRate/<denomination>, rate = BigInt(value)/10^9
 	RatePrecision = int64(1000000000) //10^9
 )
 
@@ -102,7 +102,7 @@ func (fck FeeCollectionKeeper) FeePreprocess(ctx sdk.Context, coins sdk.Coins, g
 	if err != nil {
 		panic(err)
 	}
-	nativeGasPriceThreshold, err := fck.getter.GetString(ctx, NativeGasPriceThresholdKey)
+	nativeGasPriceThreshold, err := fck.getter.GovGetter().GetString(ctx, NativeGasPriceThresholdKey)
 	if err != nil {
 		panic(err)
 	}
@@ -157,5 +157,5 @@ func DefaultGenesisState() GenesisState {
 
 func InitGenesis(ctx sdk.Context, setter params.SetterProxy, data GenesisState) {
 	setter.SetString(ctx, NativeFeeTokenKey, data.FeeTokenNative)
-	setter.SetString(ctx, NativeGasPriceThresholdKey, sdk.NewInt(data.GasPriceThreshold).String())
+	setter.GovSetter().SetString(ctx, NativeGasPriceThresholdKey, sdk.NewInt(data.GasPriceThreshold).String())
 }

@@ -15,6 +15,11 @@ func mustNewDecFromStr(t *testing.T, str string) (d Dec) {
 	return d
 }
 
+// intended to be used with require/assert:  require.True(DecEq(...))
+func DecEq(t *testing.T, exp, got Dec) (*testing.T, bool, string, Dec, Dec) {
+	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
+}
+
 //_______________________________________
 
 func TestPrecisionMultiplier(t *testing.T) {

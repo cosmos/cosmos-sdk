@@ -132,7 +132,7 @@ func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.
 		msg := stake.MsgBeginUnbonding{
 			DelegatorAddr: delegatorAddress,
 			ValidatorAddr: validatorAddress,
-			SharesAmount:  sdk.NewDecFromInt(amount, 0),
+			SharesAmount:  sdk.NewDecFromInt(amount),
 		}
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		ctx, write := ctx.CacheContext()
@@ -191,7 +191,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountMapper, k stake.Keeper) simulation
 			DelegatorAddr:    delegatorAddress,
 			ValidatorSrcAddr: sourceValidatorAddress,
 			ValidatorDstAddr: destValidatorAddress,
-			SharesAmount:     sdk.NewDecFromInt(amount, 0),
+			SharesAmount:     sdk.NewDecFromInt(amount),
 		}
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		ctx, write := ctx.CacheContext()
@@ -247,7 +247,7 @@ func Setup(mapp *mock.App, k stake.Keeper) simulation.RandSetup {
 			return false
 		})
 		pool := k.GetPool(ctx)
-		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewDec(loose.Int64(), 0))
+		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewDec(loose.Int64()))
 		k.SetPool(ctx, pool)
 	}
 }

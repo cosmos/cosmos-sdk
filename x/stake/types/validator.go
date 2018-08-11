@@ -380,7 +380,7 @@ func (v Validator) AddTokensFromDel(pool Pool, amount int64) (Validator, Pool, s
 
 	// bondedShare/delegatedShare
 	exRate := v.DelegatorShareExRate()
-	amountDec := sdk.NewDec(amount, 0)
+	amountDec := sdk.NewDec(amount)
 
 	if v.Status == sdk.Bonded {
 		pool = pool.looseTokensToBonded(amountDec)

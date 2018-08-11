@@ -11,19 +11,19 @@ func TestDelegationEqual(t *testing.T) {
 	d1 := Delegation{
 		DelegatorAddr: addr1,
 		ValidatorAddr: addr2,
-		Shares:        sdk.NewDec(100, 0),
+		Shares:        sdk.NewDec(100),
 	}
 	d2 := Delegation{
 		DelegatorAddr: addr1,
 		ValidatorAddr: addr2,
-		Shares:        sdk.NewDec(100, 0),
+		Shares:        sdk.NewDec(100),
 	}
 
 	ok := d1.Equal(d2)
 	require.True(t, ok)
 
 	d2.ValidatorAddr = addr3
-	d2.Shares = sdk.NewDec(200, 0)
+	d2.Shares = sdk.NewDec(200)
 
 	ok = d1.Equal(d2)
 	require.False(t, ok)
@@ -33,7 +33,7 @@ func TestDelegationHumanReadableString(t *testing.T) {
 	d := Delegation{
 		DelegatorAddr: addr1,
 		ValidatorAddr: addr2,
-		Shares:        sdk.NewDec(100, 0),
+		Shares:        sdk.NewDec(100),
 	}
 
 	// NOTE: Being that the validator's keypair is random, we cannot test the
@@ -91,8 +91,8 @@ func TestRedelegationEqual(t *testing.T) {
 	ok := r1.Equal(r2)
 	require.True(t, ok)
 
-	r2.SharesDst = sdk.NewDec(10, 0)
-	r2.SharesSrc = sdk.NewDec(20, 0)
+	r2.SharesDst = sdk.NewDec(10)
+	r2.SharesSrc = sdk.NewDec(20)
 	r2.MinTime = 20 * 20 * 2
 
 	ok = r1.Equal(r2)
@@ -104,8 +104,8 @@ func TestRedelegationHumanReadableString(t *testing.T) {
 		DelegatorAddr:    addr1,
 		ValidatorSrcAddr: addr2,
 		ValidatorDstAddr: addr3,
-		SharesDst:        sdk.NewDec(10, 0),
-		SharesSrc:        sdk.NewDec(20, 0),
+		SharesDst:        sdk.NewDec(10),
+		SharesSrc:        sdk.NewDec(20),
 	}
 
 	// NOTE: Being that the validator's keypair is random, we cannot test the

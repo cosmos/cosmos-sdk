@@ -15,11 +15,6 @@ func mustNewDecFromStr(t *testing.T, str string) (d Dec) {
 	return d
 }
 
-// intended to be used with require/assert:  require.True(DecEq(...))
-func DecEq(t *testing.T, exp, got Dec) (*testing.T, bool, string, Dec, Dec) {
-	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
-}
-
 //_______________________________________
 
 func TestPrecisionMultiplier(t *testing.T) {
@@ -38,20 +33,20 @@ func TestNewDecFromStr(t *testing.T) {
 	}{
 		{"", true, Dec{}},
 		{"0.-75", true, Dec{}},
-		{"0", false, NewDec(0, 0)},
-		{"1", false, NewDec(1, 0)},
-		{"1.1", false, NewDec(11, 1)},
-		{"0.75", false, NewDec(75, 2)},
-		{"0.8", false, NewDec(8, 1)},
-		{"0.11111", false, NewDec(11111, 5)},
-		{"314460551102969.3144278234343371835", true, NewDec(3141203149163817869, 0)},
+		{"0", false, NewDec(0)},
+		{"1", false, NewDec(1)},
+		{"1.1", false, NewDecWithPrec(11, 1)},
+		{"0.75", false, NewDecWithPrec(75, 2)},
+		{"0.8", false, NewDecWithPrec(8, 1)},
+		{"0.11111", false, NewDecWithPrec(11111, 5)},
+		{"314460551102969.3144278234343371835", true, NewDec(3141203149163817869)},
 		{"314460551102969314427823434337.1835718092488231350",
-			true, NewDecFromBigInt(largeBigInt, 4)},
+			true, NewDecFromBigIntWithPrec(largeBigInt, 4)},
 		{"314460551102969314427823434337.1835",
-			false, NewDecFromBigInt(largeBigInt, 4)},
+			false, NewDecFromBigIntWithPrec(largeBigInt, 4)},
 		{".", true, Dec{}},
-		{".0", true, NewDec(0, 0)},
-		{"1.", true, NewDec(1, 0)},
+		{".0", true, NewDec(0)},
+		{"1.", true, NewDec(1)},
 		{"foobar", true, Dec{}},
 		{"0.foobar", true, Dec{}},
 		{"0.foobar.", true, Dec{}},
@@ -72,7 +67,7 @@ func TestNewDecFromStr(t *testing.T) {
 			require.NotNil(t, err, "error expected, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 		} else {
 			require.Nil(t, err, "unexpected error, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
-			exp := tc.exp.Mul(NewDec(-1, 0))
+			exp := tc.exp.Mul(NewDec(-1))
 			require.True(t, res.Equal(exp), "equality was incorrect, res %v, exp %v, tc %v", res, exp, tcIndex)
 		}
 	}
@@ -83,28 +78,28 @@ func TestEqualities(t *testing.T) {
 		d1, d2     Dec
 		gt, lt, eq bool
 	}{
-		{NewDec(0, 0), NewDec(0, 0), false, false, true},
-		{NewDec(0, 2), NewDec(0, 4), false, false, true},
-		{NewDec(100, 0), NewDec(100, 0), false, false, true},
-		{NewDec(-100, 0), NewDec(-100, 0), false, false, true},
-		{NewDec(-1, 1), NewDec(-1, 1), false, false, true},
-		{NewDec(3333, 3), NewDec(3333, 3), false, false, true},
+		{NewDec(0), NewDec(0), false, false, true},
+		{NewDecWithPrec(0, 2), NewDecWithPrec(0, 4), false, false, true},
+		{NewDecWithPrec(100, 0), NewDecWithPrec(100, 0), false, false, true},
+		{NewDecWithPrec(-100, 0), NewDecWithPrec(-100, 0), false, false, true},
+		{NewDecWithPrec(-1, 1), NewDecWithPrec(-1, 1), false, false, true},
+		{NewDecWithPrec(3333, 3), NewDecWithPrec(3333, 3), false, false, true},
 
-		{NewDec(0, 0), NewDec(3333, 3), false, true, false},
-		{NewDec(0, 0), NewDec(100, 0), false, true, false},
-		{NewDec(-1, 0), NewDec(3333, 3), false, true, false},
-		{NewDec(-1, 0), NewDec(100, 0), false, true, false},
-		{NewDec(1111, 3), NewDec(100, 0), false, true, false},
-		{NewDec(1111, 3), NewDec(3333, 3), false, true, false},
-		{NewDec(-3333, 3), NewDec(-1111, 3), false, true, false},
+		{NewDecWithPrec(0, 0), NewDecWithPrec(3333, 3), false, true, false},
+		{NewDecWithPrec(0, 0), NewDecWithPrec(100, 0), false, true, false},
+		{NewDecWithPrec(-1, 0), NewDecWithPrec(3333, 3), false, true, false},
+		{NewDecWithPrec(-1, 0), NewDecWithPrec(100, 0), false, true, false},
+		{NewDecWithPrec(1111, 3), NewDecWithPrec(100, 0), false, true, false},
+		{NewDecWithPrec(1111, 3), NewDecWithPrec(3333, 3), false, true, false},
+		{NewDecWithPrec(-3333, 3), NewDecWithPrec(-1111, 3), false, true, false},
 
-		{NewDec(3333, 3), NewDec(0, 0), true, false, false},
-		{NewDec(100, 0), NewDec(0, 0), true, false, false},
-		{NewDec(3333, 3), NewDec(-1, 0), true, false, false},
-		{NewDec(100, 0), NewDec(-1, 0), true, false, false},
-		{NewDec(100, 0), NewDec(1111, 3), true, false, false},
-		{NewDec(3333, 3), NewDec(1111, 3), true, false, false},
-		{NewDec(-1111, 3), NewDec(-3333, 3), true, false, false},
+		{NewDecWithPrec(3333, 3), NewDecWithPrec(0, 0), true, false, false},
+		{NewDecWithPrec(100, 0), NewDecWithPrec(0, 0), true, false, false},
+		{NewDecWithPrec(3333, 3), NewDecWithPrec(-1, 0), true, false, false},
+		{NewDecWithPrec(100, 0), NewDecWithPrec(-1, 0), true, false, false},
+		{NewDecWithPrec(100, 0), NewDecWithPrec(1111, 3), true, false, false},
+		{NewDecWithPrec(3333, 3), NewDecWithPrec(1111, 3), true, false, false},
+		{NewDecWithPrec(-1111, 3), NewDecWithPrec(-3333, 3), true, false, false},
 	}
 
 	for tcIndex, tc := range tests {
@@ -120,15 +115,15 @@ func TestDecsEqual(t *testing.T) {
 		d1s, d2s []Dec
 		eq       bool
 	}{
-		{[]Dec{NewDec(0, 0)}, []Dec{NewDec(0, 0)}, true},
-		{[]Dec{NewDec(0, 0)}, []Dec{NewDec(1, 0)}, false},
-		{[]Dec{NewDec(0, 0)}, []Dec{}, false},
-		{[]Dec{NewDec(0, 0), NewDec(1, 0)}, []Dec{NewDec(0, 0), NewDec(1, 0)}, true},
-		{[]Dec{NewDec(1, 0), NewDec(0, 0)}, []Dec{NewDec(1, 0), NewDec(0, 0)}, true},
-		{[]Dec{NewDec(1, 0), NewDec(0, 0)}, []Dec{NewDec(0, 0), NewDec(1, 0)}, false},
-		{[]Dec{NewDec(1, 0), NewDec(0, 0)}, []Dec{NewDec(1, 0)}, false},
-		{[]Dec{NewDec(1, 0), NewDec(2, 0)}, []Dec{NewDec(2, 0), NewDec(4, 0)}, false},
-		{[]Dec{NewDec(3, 0), NewDec(18, 0)}, []Dec{NewDec(1, 0), NewDec(6, 0)}, false},
+		{[]Dec{NewDec(0)}, []Dec{NewDec(0)}, true},
+		{[]Dec{NewDec(0)}, []Dec{NewDec(1)}, false},
+		{[]Dec{NewDec(0)}, []Dec{}, false},
+		{[]Dec{NewDec(0), NewDec(1)}, []Dec{NewDec(0), NewDec(1)}, true},
+		{[]Dec{NewDec(1), NewDec(0)}, []Dec{NewDec(1), NewDec(0)}, true},
+		{[]Dec{NewDec(1), NewDec(0)}, []Dec{NewDec(0), NewDec(1)}, false},
+		{[]Dec{NewDec(1), NewDec(0)}, []Dec{NewDec(1)}, false},
+		{[]Dec{NewDec(1), NewDec(2)}, []Dec{NewDec(2), NewDec(4)}, false},
+		{[]Dec{NewDec(3), NewDec(18)}, []Dec{NewDec(1), NewDec(6)}, false},
 	}
 
 	for tcIndex, tc := range tests {
@@ -143,23 +138,25 @@ func TestArithmetic(t *testing.T) {
 		expMul, expDiv, expAdd, expSub Dec
 	}{
 		// d1          d2            MUL           DIV           ADD           SUB
-		{NewDec(0, 0), NewDec(0, 0), NewDec(0, 0), NewDec(0, 0), NewDec(0, 0), NewDec(0, 0)},
-		{NewDec(1, 0), NewDec(0, 0), NewDec(0, 0), NewDec(0, 0), NewDec(1, 0), NewDec(1, 0)},
-		{NewDec(0, 0), NewDec(1, 0), NewDec(0, 0), NewDec(0, 0), NewDec(1, 0), NewDec(-1, 0)},
-		{NewDec(0, 0), NewDec(-1, 0), NewDec(0, 0), NewDec(0, 0), NewDec(-1, 0), NewDec(1, 0)},
-		{NewDec(-1, 0), NewDec(0, 0), NewDec(0, 0), NewDec(0, 0), NewDec(-1, 0), NewDec(-1, 0)},
+		{NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0)},
+		{NewDec(1), NewDec(0), NewDec(0), NewDec(0), NewDec(1), NewDec(1)},
+		{NewDec(0), NewDec(1), NewDec(0), NewDec(0), NewDec(1), NewDec(-1)},
+		{NewDec(0), NewDec(-1), NewDec(0), NewDec(0), NewDec(-1), NewDec(1)},
+		{NewDec(-1), NewDec(0), NewDec(0), NewDec(0), NewDec(-1), NewDec(-1)},
 
-		{NewDec(1, 0), NewDec(1, 0), NewDec(1, 0), NewDec(1, 0), NewDec(2, 0), NewDec(0, 0)},
-		{NewDec(-1, 0), NewDec(-1, 0), NewDec(1, 0), NewDec(1, 0), NewDec(-2, 0), NewDec(0, 0)},
-		{NewDec(1, 0), NewDec(-1, 0), NewDec(-1, 0), NewDec(-1, 0), NewDec(0, 0), NewDec(2, 0)},
-		{NewDec(-1, 0), NewDec(1, 0), NewDec(-1, 0), NewDec(-1, 0), NewDec(0, 0), NewDec(-2, 0)},
+		{NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(2), NewDec(0)},
+		{NewDec(-1), NewDec(-1), NewDec(1), NewDec(1), NewDec(-2), NewDec(0)},
+		{NewDec(1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(0), NewDec(2)},
+		{NewDec(-1), NewDec(1), NewDec(-1), NewDec(-1), NewDec(0), NewDec(-2)},
 
-		{NewDec(3, 0), NewDec(7, 0), NewDec(21, 0), NewDec(4285714286, 10), NewDec(10, 0), NewDec(-4, 0)},
-		{NewDec(2, 0), NewDec(4, 0), NewDec(8, 0), NewDec(5, 1), NewDec(6, 0), NewDec(-2, 0)},
-		{NewDec(100, 0), NewDec(100, 0), NewDec(10000, 0), NewDec(1, 0), NewDec(200, 0), NewDec(0, 0)},
+		{NewDec(3), NewDec(7), NewDec(21), NewDecWithPrec(4285714286, 10), NewDec(10), NewDec(-4)},
+		{NewDec(2), NewDec(4), NewDec(8), NewDecWithPrec(5, 1), NewDec(6), NewDec(-2)},
+		{NewDec(100), NewDec(100), NewDec(10000), NewDec(1), NewDec(200), NewDec(0)},
 
-		{NewDec(15, 1), NewDec(15, 1), NewDec(225, 2), NewDec(1, 0), NewDec(3, 0), NewDec(0, 0)},
-		{NewDec(3333, 4), NewDec(333, 4), NewDec(1109889, 8), NewDec(10009009009, 9), NewDec(3666, 4), NewDec(3, 1)},
+		{NewDecWithPrec(15, 1), NewDecWithPrec(15, 1), NewDecWithPrec(225, 2),
+			NewDec(1), NewDec(3), NewDec(0)},
+		{NewDecWithPrec(3333, 4), NewDecWithPrec(333, 4), NewDecWithPrec(1109889, 8),
+			NewDecWithPrec(10009009009, 9), NewDecWithPrec(3666, 4), NewDecWithPrec(3, 1)},
 	}
 
 	for tcIndex, tc := range tests {
@@ -277,7 +274,7 @@ type testDEmbedStruct struct {
 
 // TODO make work for UnmarshalJSON
 func TestEmbeddedStructSerializationGoWire(t *testing.T) {
-	obj := testDEmbedStruct{"foo", 10, NewDec(1, 3)}
+	obj := testDEmbedStruct{"foo", 10, NewDecWithPrec(1, 3)}
 	bz, err := cdc.MarshalBinary(obj)
 	require.Nil(t, err)
 

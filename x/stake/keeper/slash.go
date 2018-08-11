@@ -28,7 +28,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	}
 
 	// Amount of slashing = slash slashFactor * power at time of infraction
-	slashAmount := sdk.NewDec(power, 0).Mul(slashFactor)
+	slashAmount := sdk.NewDec(power).Mul(slashFactor)
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1348
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1471
 
@@ -166,7 +166,7 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 	}
 
 	// Calculate slash amount proportional to stake contributing to infraction
-	slashAmount = sdk.NewDecFromInt(unbondingDelegation.InitialBalance.Amount, 0).Mul(slashFactor)
+	slashAmount = sdk.NewDecFromInt(unbondingDelegation.InitialBalance.Amount).Mul(slashFactor)
 
 	// Don't slash more tokens than held
 	// Possible since the unbonding delegation may already
@@ -210,7 +210,7 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 	}
 
 	// Calculate slash amount proportional to stake contributing to infraction
-	slashAmount = sdk.NewDecFromInt(redelegation.InitialBalance.Amount, 0).Mul(slashFactor)
+	slashAmount = sdk.NewDecFromInt(redelegation.InitialBalance.Amount).Mul(slashFactor)
 
 	// Don't slash more tokens than held
 	// Possible since the redelegation may already

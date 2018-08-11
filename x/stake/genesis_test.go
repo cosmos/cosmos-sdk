@@ -17,7 +17,7 @@ func TestInitGenesis(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 
 	pool := keeper.GetPool(ctx)
-	pool.BondedTokens = sdk.NewDec(2, 0)
+	pool.BondedTokens = sdk.NewDec(2)
 
 	params := keeper.GetParams(ctx)
 	var delegations []Delegation
@@ -69,7 +69,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 	// Assigning 2 to the first 100 vals, 1 to the rest
 	pool := keeper.GetPool(ctx)
-	pool.BondedTokens = sdk.NewDec(int64(200+(size-100)), 0)
+	pool.BondedTokens = sdk.NewDec(int64(200 + (size - 100)))
 
 	params := keeper.GetParams(ctx)
 	delegations := []Delegation{}
@@ -80,8 +80,8 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 		validators[i].Status = sdk.Bonded
 		if i < 100 {
-			validators[i].Tokens = sdk.NewDec(2, 0)
-			validators[i].DelegatorShares = sdk.NewDec(2, 0)
+			validators[i].Tokens = sdk.NewDec(2)
+			validators[i].DelegatorShares = sdk.NewDec(2)
 		} else {
 			validators[i].Tokens = sdk.OneDec()
 			validators[i].DelegatorShares = sdk.OneDec()

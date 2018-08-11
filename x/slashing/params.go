@@ -30,7 +30,7 @@ func (k Keeper) SignedBlocksWindow(ctx sdk.Context) int64 {
 func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 	minSignedPerWindow := k.params.GetDecWithDefault(ctx, MinSignedPerWindowKey, defaultMinSignedPerWindow)
 	signedBlocksWindow := k.SignedBlocksWindow(ctx)
-	return sdk.NewDec(signedBlocksWindow, 0).Mul(minSignedPerWindow).RoundInt64()
+	return sdk.NewDec(signedBlocksWindow).Mul(minSignedPerWindow).RoundInt64()
 }
 
 // Double-sign unbond duration
@@ -70,9 +70,9 @@ var (
 	// TODO Temporarily set to 10 minutes for testnets
 	defaultDowntimeUnbondDuration int64 = 60 * 10
 
-	defaultMinSignedPerWindow = sdk.NewDec(5, 1) // 0.5
+	defaultMinSignedPerWindow = sdk.NewDecWithPrec(5, 1) // 0.5
 
-	defaultSlashFractionDoubleSign = sdk.NewDec(1, 0).Quo(sdk.NewDec(20, 0))
+	defaultSlashFractionDoubleSign = sdk.NewDec(1).Quo(sdk.NewDec(20))
 
-	defaultSlashFractionDowntime = sdk.NewDec(1, 0).Quo(sdk.NewDec(100, 0))
+	defaultSlashFractionDowntime = sdk.NewDec(1).Quo(sdk.NewDec(100))
 )

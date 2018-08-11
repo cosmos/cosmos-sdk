@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"testing"
 )
 
 // NOTE: never use new(Dec) or else we will panic unmarshalling into the
@@ -25,6 +26,7 @@ const (
 
 var (
 	precisionReuse       = new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision), nil)
+	fivePrecision        = new(big.Int).Mul(big.NewInt(5), precisionReuse)
 	precisionMultipliers []*big.Int
 	zeroInt              = big.NewInt(0)
 	tenInt               = big.NewInt(10)
@@ -64,6 +66,8 @@ func precisionMultiplier(prec int64) *big.Int {
 	return precisionMultipliers[prec]
 }
 
+//______________________________________________________________________________________________
+
 // create a new Dec from integer assuming whole number
 func NewDec(i int64) Dec {
 	return NewDecWithPrec(i, 0)
@@ -79,7 +83,13 @@ func NewDecWithPrec(i, prec int64) Dec {
 
 // create a new Dec from big integer assuming whole numbers
 // CONTRACT: prec <= Precision
-func NewDecFromBigInt(i *big.Int, prec int64) Dec {
+func NewDecFromBigInt(i *big.Int) Dec {
+	return NewDecFromBigIntWithPrec(i, 0)
+}
+
+// create a new Dec from big integer assuming whole numbers
+// CONTRACT: prec <= Precision
+func NewDecFromBigIntWithPrec(i *big.Int, prec int64) Dec {
 	return Dec{
 		new(big.Int).Mul(i, precisionMultiplier(prec)),
 	}
@@ -87,7 +97,13 @@ func NewDecFromBigInt(i *big.Int, prec int64) Dec {
 
 // create a new Dec from big integer assuming whole numbers
 // CONTRACT: prec <= Precision
-func NewDecFromInt(i Int, prec int64) Dec {
+func NewDecFromInt(i Int) Dec {
+	return NewDecFromIntWithPrec(i, 0)
+}
+
+// create a new Dec from big integer with decimal place at prec
+// CONTRACT: prec <= Precision
+func NewDecFromIntWithPrec(i Int, prec int64) Dec {
 	return Dec{
 		new(big.Int).Mul(i.BigInt(), precisionMultiplier(prec)),
 	}
@@ -152,6 +168,7 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 	return Dec{combined}, nil
 }
 
+//______________________________________________________________________________________________
 //nolint
 func (d Dec) IsZero() bool      { return (d.Int).Sign() == 0 } // Is equal to zero
 func (d Dec) Equal(d2 Dec) bool { return (d.Int).Cmp(d2.Int) == 0 }
@@ -184,7 +201,7 @@ func (d Dec) Sub(d2 Dec) Dec {
 // multiplication
 func (d Dec) Mul(d2 Dec) Dec {
 	mul := new(big.Int).Mul(d.Int, d2.Int)
-	chopped := BankerRoundChopPrecision(mul)
+	chopped := ChopPrecisionAndRound(mul)
 
 	if chopped.BitLen() > 255+DecimalPrecisionBytes {
 		panic("Int overflow")
@@ -200,7 +217,7 @@ func (d Dec) Quo(d2 Dec) Dec {
 	mul.Mul(mul, precisionReuse)
 
 	quo := new(big.Int).Quo(mul, d2.Int)
-	chopped := BankerRoundChopPrecision(quo)
+	chopped := ChopPrecisionAndRound(quo)
 	return Dec{chopped}
 }
 
@@ -224,7 +241,7 @@ func (d Dec) ToLeftPaddedWithDecimals(totalDigits int8) string {
 // TODO panic if negative or if totalDigits < len(initStr)???
 // evaluate as an integer and return left padded string
 func (d Dec) ToLeftPadded(totalDigits int8) string {
-	chopped := BankerRoundChopPrecision(d.Int)
+	chopped := ChopPrecisionAndRound(d.Int)
 	intStr := chopped.String()
 	fcode := `%0` + strconv.Itoa(int(totalDigits)) + `s`
 	return fmt.Sprintf(fcode, intStr)
@@ -242,13 +259,13 @@ func (d Dec) ToLeftPadded(totalDigits int8) string {
 // nolint - go-cyclo
 // Remove a Precision amount of rightmost digits and perform bankers rounding
 // on the remainder (gaussian rounding) on the digits which have been removed.
-func BankerRoundChopPrecision(d *big.Int) (chopped *big.Int) {
+func ChopPrecisionAndRound(d *big.Int) (chopped *big.Int) {
 
 	// remove the negative and add it back when returning
 	if d.Sign() == -1 {
 		// make d positive, compute chopped value, and then un-mutate d
 		d = d.Neg(d)
-		chopped = BankerRoundChopPrecision(d)
+		chopped = ChopPrecisionAndRound(d)
 		d = d.Neg(d)
 		chopped.Neg(chopped)
 		return chopped
@@ -262,19 +279,19 @@ func BankerRoundChopPrecision(d *big.Int) (chopped *big.Int) {
 		return quo
 	}
 
-	lenWhole := len(d.String())
-	if quo.Sign() == 0 { // only the decimal places (ex. 0.1234)
-		lenWhole++
-	}
-	lenQuo := len(quo.String())
-	lenRem := len(rem.String())
-	leadingZeros := lenWhole - (lenQuo + lenRem) // leading zeros removed from the remainder
+	//lenWhole := len(d.String())
+	//if quo.Sign() == 0 { // only the decimal places (ex. 0.1234)
+	//lenWhole++
+	//}
+	//lenQuo := len(quo.String())
+	//lenRem := len(rem.String())
+	//leadingZeros := lenWhole - (lenQuo + lenRem) // leading zeros removed from the remainder
 
-	zerosToAdd := int64(lenRem - 1 + leadingZeros)
-	multiplier := new(big.Int).Exp(big.NewInt(10), big.NewInt(zerosToAdd), nil)
-	fiveLine := new(big.Int).Mul(big.NewInt(5), multiplier)
+	//zerosToAdd := int64(lenRem - 1 + leadingZeros)
+	//multiplier := new(big.Int).Exp(big.NewInt(10), big.NewInt(zerosToAdd), nil)
+	//fiveLine := new(big.Int).Mul(big.NewInt(5), multiplier)
 
-	switch rem.Cmp(fiveLine) {
+	switch rem.Cmp(fivePrecision) {
 	case -1:
 		chopped = quo
 		return
@@ -294,7 +311,7 @@ func BankerRoundChopPrecision(d *big.Int) (chopped *big.Int) {
 
 // RoundInt64 rounds the decimal using bankers rounding
 func (d Dec) RoundInt64() int64 {
-	chopped := BankerRoundChopPrecision(d.Int)
+	chopped := ChopPrecisionAndRound(d.Int)
 	if !chopped.IsInt64() {
 		panic("Int64() out of bound")
 	}
@@ -303,7 +320,7 @@ func (d Dec) RoundInt64() int64 {
 
 // RoundInt round the decimal using bankers rounding
 func (d Dec) RoundInt() Int {
-	return NewIntFromBigInt(BankerRoundChopPrecision(d.Int))
+	return NewIntFromBigInt(ChopPrecisionAndRound(d.Int))
 }
 
 //___________________________________________________________________________________
@@ -378,4 +395,9 @@ func MinDec(d1, d2 Dec) Dec {
 		return d1
 	}
 	return d2
+}
+
+// intended to be used with require/assert:  require.True(DecEq(...))
+func DecEq(t *testing.T, exp, got Dec) (*testing.T, bool, string, Dec, Dec) {
+	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
 }

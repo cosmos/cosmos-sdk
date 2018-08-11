@@ -33,7 +33,7 @@ func InitialPool() Pool {
 		LooseTokens:             sdk.ZeroDec(),
 		BondedTokens:            sdk.ZeroDec(),
 		InflationLastTime:       0,
-		Inflation:               sdk.NewDec(7, 2),
+		Inflation:               sdk.NewDecWithPrec(7, 2),
 		DateLastCommissionReset: 0,
 		PrevBondedShares:        sdk.ZeroDec(),
 	}
@@ -80,8 +80,8 @@ func (p Pool) bondedTokensToLoose(bondedTokens sdk.Dec) Pool {
 //_______________________________________________________________________
 // Inflation
 
-const precision = 10000               // increased to this precision for accuracy
-var hrsPerYrDec = sdk.NewDec(8766, 0) // as defined by a julian year of 365.25 days
+const precision = 10000            // increased to this precision for accuracy
+var hrsPerYrDec = sdk.NewDec(8766) // as defined by a julian year of 365.25 days
 
 // process provisions for an hour period
 func (p Pool) ProcessProvisions(params Params) Pool {

@@ -80,7 +80,7 @@ func ParamsNoInflation() types.Params {
 		InflationRateChange: sdk.ZeroDec(),
 		InflationMax:        sdk.ZeroDec(),
 		InflationMin:        sdk.ZeroDec(),
-		GoalBonded:          sdk.NewDec(67, 2),
+		GoalBonded:          sdk.NewDecWithPrec(67, 2),
 		MaxValidators:       100,
 		BondDenom:           "steak",
 	}
@@ -119,7 +119,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 			{keeper.GetParams(ctx).BondDenom, sdk.NewInt(initCoins)},
 		})
 		require.Nil(t, err)
-		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewDec(initCoins, 0))
+		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewDec(initCoins))
 		keeper.SetPool(ctx, pool)
 	}
 

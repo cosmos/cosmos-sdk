@@ -70,7 +70,7 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, para
 	genesis := stake.DefaultGenesisState()
 
 	ic := initCoins.MulRaw(int64(len(addrs)))
-	genesis.Pool.LooseTokens = sdk.NewDec(ic.Int64(), 0)
+	genesis.Pool.LooseTokens = sdk.NewDec(ic.Int64())
 
 	_, err = stake.InitGenesis(ctx, sk, genesis)
 	require.Nil(t, err)

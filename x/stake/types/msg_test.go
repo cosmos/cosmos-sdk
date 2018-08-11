@@ -146,12 +146,12 @@ func TestMsgBeginRedelegate(t *testing.T) {
 		sharesAmount     sdk.Dec
 		expectPass       bool
 	}{
-		{"regular", addr1, addr2, addr3, sdk.NewDec(1, 1), true},
-		{"negative decimal", addr1, addr2, addr3, sdk.NewDec(-1, 1), false},
+		{"regular", addr1, addr2, addr3, sdk.NewDecWithPrec(1, 1), true},
+		{"negative decimal", addr1, addr2, addr3, sdk.NewDecWithPrec(-1, 1), false},
 		{"zero amount", addr1, addr2, addr3, sdk.ZeroDec(), false},
-		{"empty delegator", emptyAddr, addr1, addr3, sdk.NewDec(1, 1), false},
-		{"empty source validator", addr1, emptyAddr, addr3, sdk.NewDec(1, 1), false},
-		{"empty destination validator", addr1, addr2, emptyAddr, sdk.NewDec(1, 1), false},
+		{"empty delegator", emptyAddr, addr1, addr3, sdk.NewDecWithPrec(1, 1), false},
+		{"empty source validator", addr1, emptyAddr, addr3, sdk.NewDecWithPrec(1, 1), false},
+		{"empty destination validator", addr1, addr2, emptyAddr, sdk.NewDecWithPrec(1, 1), false},
 	}
 
 	for _, tc := range tests {
@@ -198,11 +198,11 @@ func TestMsgBeginUnbonding(t *testing.T) {
 		sharesAmount  sdk.Dec
 		expectPass    bool
 	}{
-		{"regular", addr1, addr2, sdk.NewDec(1, 1), true},
-		{"negative decimal", addr1, addr2, sdk.NewDec(-1, 1), false},
+		{"regular", addr1, addr2, sdk.NewDecWithPrec(1, 1), true},
+		{"negative decimal", addr1, addr2, sdk.NewDecWithPrec(-1, 1), false},
 		{"zero amount", addr1, addr2, sdk.ZeroDec(), false},
-		{"empty delegator", emptyAddr, addr1, sdk.NewDec(1, 1), false},
-		{"empty validator", addr1, emptyAddr, sdk.NewDec(1, 1), false},
+		{"empty delegator", emptyAddr, addr1, sdk.NewDecWithPrec(1, 1), false},
+		{"empty validator", addr1, emptyAddr, sdk.NewDecWithPrec(1, 1), false},
 	}
 
 	for _, tc := range tests {

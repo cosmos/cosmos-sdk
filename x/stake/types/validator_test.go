@@ -74,8 +74,8 @@ func TestRemoveTokens(t *testing.T) {
 		Owner:           addr1,
 		PubKey:          pk1,
 		Status:          sdk.Bonded,
-		Tokens:          sdk.NewDec(100, 0),
-		DelegatorShares: sdk.NewDec(100, 0),
+		Tokens:          sdk.NewDec(100),
+		DelegatorShares: sdk.NewDec(100),
 	}
 
 	pool := InitialPool()
@@ -150,8 +150,8 @@ func TestRemoveDelShares(t *testing.T) {
 		Owner:           addr1,
 		PubKey:          pk1,
 		Status:          sdk.Bonded,
-		Tokens:          sdk.NewDec(100, 0),
-		DelegatorShares: sdk.NewDec(100, 0),
+		Tokens:          sdk.NewDec(100),
+		DelegatorShares: sdk.NewDec(100),
 	}
 	poolA := InitialPool()
 	poolA.LooseTokens = sdk.NewDec(10, 0)
@@ -202,7 +202,7 @@ func TestRemoveDelShares(t *testing.T) {
 
 func TestUpdateStatus(t *testing.T) {
 	pool := InitialPool()
-	pool.LooseTokens = sdk.NewDec(100, 0)
+	pool.LooseTokens = sdk.NewDec(100)
 
 	validator := NewValidator(addr1, pk1, Description{})
 	validator, pool, _ = validator.AddTokensFromDel(pool, 100)
@@ -235,7 +235,7 @@ func TestPossibleOverflow(t *testing.T) {
 		DelegatorShares: delShares,
 	}
 	pool := Pool{
-		LooseTokens:       sdk.NewDec(100, 0),
+		LooseTokens:       sdk.NewDec(100),
 		BondedTokens:      poolTokens,
 		InflationLastTime: 0,
 		Inflation:         sdk.NewDec(7, 2),

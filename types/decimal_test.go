@@ -37,6 +37,7 @@ func TestNewDecFromStr(t *testing.T) {
 		exp        Dec
 	}{
 		{"", true, Dec{}},
+		{"0.-75", true, Dec{}},
 		{"0", false, NewDec(0, 0)},
 		{"1", false, NewDec(1, 0)},
 		{"1.1", false, NewDec(11, 1)},

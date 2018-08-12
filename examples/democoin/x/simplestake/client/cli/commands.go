@@ -3,18 +3,20 @@ package cli
 import (
 	"encoding/hex"
 	"fmt"
-
-	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-
-	"github.com/spf13/viper"
+	"os"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/examples/democoin/x/simplestake"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
 
-	"github.com/cosmos/cosmos-sdk/examples/democoin/x/simplestake"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 const (
@@ -28,9 +30,13 @@ func BondTxCmd(cdc *wire.Codec) *cobra.Command {
 		Use:   "bond",
 		Short: "Bond to a validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.NewCoreContextFromViper()
+			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().
+				WithCodec(cdc).
+				WithLogger(os.Stdout).
+				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			from, err := ctx.GetFromAddress()
+			from, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -60,11 +66,15 @@ func BondTxCmd(cdc *wire.Codec) *cobra.Command {
 
 			msg := simplestake.NewMsgBond(from, stake, pubKeyEd)
 
-			return sendMsg(cdc, msg)
+			// Build and sign the transaction, then broadcast to a Tendermint
+			// node.
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
+
 	cmd.Flags().String(flagStake, "", "Amount of coins to stake")
 	cmd.Flags().String(flagValidator, "", "Validator address to stake")
+
 	return cmd
 }
 
@@ -74,23 +84,23 @@ func UnbondTxCmd(cdc *wire.Codec) *cobra.Command {
 		Use:   "unbond",
 		Short: "Unbond from a validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			from, err := context.NewCoreContextFromViper().GetFromAddress()
+			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().
+				WithCodec(cdc).
+				WithLogger(os.Stdout)
+
+			from, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
+
 			msg := simplestake.NewMsgUnbond(from)
-			return sendMsg(cdc, msg)
+
+			// Build and sign the transaction, then broadcast to a Tendermint
+			// node.
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
+
 	return cmd
-}
-
-func sendMsg(cdc *wire.Codec, msg sdk.Msg) error {
-	ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
-	err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

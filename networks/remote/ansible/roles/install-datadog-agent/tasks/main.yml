@@ -1,0 +1,58 @@
+---
+
+- name: Remove old datadog.yaml, if exist
+  file: path=/etc/datadog-agent/datadog.yaml state=absent
+  notify: restart datadog-agent
+
+- name: Download DataDog agent script
+  get_url: url=https://raw.githubusercontent.com/DataDog/datadog-agent/master/cmd/agent/install_script.sh dest=/tmp/datadog-agent-install.sh mode=0755
+
+- name: Install DataDog agent
+  command: "/tmp/datadog-agent-install.sh"
+  environment:
+    DD_API_KEY: "{{DD_API_KEY}}"
+    DD_HOST_TAGS: "testnet:{{TESTNET_NAME}},cluster:{{CLUSTER_NAME}}"
+
+- name: Set datadog.yaml config
+  template: src=datadog.yaml.j2 dest=/etc/datadog-agent/datadog.yaml
+  notify: restart datadog-agent
+
+- name: Set metrics config
+  copy: src=conf.d/ dest=/etc/datadog-agent/conf.d/
+  notify: restart datadog-agent
+
+- name: Disable journald rate-limiting
+  lineinfile: "dest=/etc/systemd/journald.conf regexp={{item.regexp}} line='{{item.line}}'"
+  with_items:
+  - { regexp: "^#RateLimitInterval", line: "RateLimitInterval=0s" }
+  - { regexp: "^#RateLimitBurst", line: "RateLimitBurst=0" }
+  - { regexp: "^#SystemMaxFileSize", line: "SystemMaxFileSize=500M" }
+  notify: restart journald
+
+- name: As long as Datadog does not support journald on RPM-based linux, we enable rsyslog
+  yum: "name={{item}} state=installed"
+  with_items:
+  - rsyslog
+  - rsyslog-gnutls
+
+#- name: Get DataDog certificate for rsyslog
+#  get_url: url=https://docs.datadoghq.com/crt/intake.logs.datadoghq.com.crt dest=/etc/ssl/certs/intake.logs.datadoghq.com.crt
+
+- name: Get DataDog certificate for rsyslog
+  copy: src=intake.logs.datadoghq.com.crt dest=/etc/ssl/certs/intake.logs.datadoghq.com.crt
+
+- name: Add datadog config to rsyslog
+  template: src=datadog.conf.j2 dest=/etc/rsyslog.d/datadog.conf mode=0600
+  notify: restart rsyslog
+
+- name: Set logrotate to rotate daily so syslog does not use up all space
+  copy: src=logrotate.conf dest=/etc/logrotate.conf
+
+- name: Set syslog to restart datadog-agent after logrotate
+  copy: src=syslog dest=/etc/logrotate.d/syslog
+
+#semanage port -a -t syslog_tls_port_t -p tcp 10516
+- name: Enable rsyslog to report to port 10516 in SELinux
+  seport: ports=10516 proto=tcp reload=yes setype=syslog_tls_port_t state=present
+  notify: restart rsyslog
+

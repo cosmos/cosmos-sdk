@@ -20,7 +20,7 @@ IMPROVEMENTS
 * [cli] Improve error messages for all txs when the account doesn't exist
 * [tendermint] Update to v0.22.6
     - Updates the crypto imports/API (#1966)
-* [x/stake] Add revoked to human-readable validator 
+* [x/stake] Add revoked to human-readable validator
 
 BUG FIXES
 * [tendermint] Update to v0.22.6
@@ -77,6 +77,8 @@ BUG FIXES
 * [keys] \#1629 - updating password no longer asks for a new password when the first entered password was incorrect
 * [lcd] importing an account would create a random account
 * [server] 'gaiad init' command family now writes provided name as the moniker in `config.toml`
+* [build] Added Ledger build support via `LEDGER_ENABLED=true|false`
+  * True by default except when cross-compiling
 
 ## 0.20.0
 

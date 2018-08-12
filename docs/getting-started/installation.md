@@ -20,12 +20,18 @@ echo "export PATH=$PATH:$GOBIN" >> ~/.bash_profile
 ## Install Cosmos SDK
 
 Next, let's install the testnet's version of the Cosmos SDK.
+You can find information about the latest testnet and the right
+version of the Cosmos-SDK for it in the [testnets
+repo](https://github.com/cosmos/testnets#testnet-status).
+Here we'll use the `master` branch, which contains the latest stable release.
+If necessary, make sure you `git checkout` the correct 
+[released version](https://github.com/cosmos/cosmos-sdk/releases).
 
 ```bash
 mkdir -p $GOPATH/src/github.com/cosmos
 cd $GOPATH/src/github.com/cosmos
 git clone https://github.com/cosmos/cosmos-sdk
-cd cosmos-sdk && git checkout v0.19.0
+cd cosmos-sdk && git checkout master
 make get_tools && make get_vendor_deps && make install
 ```
 
@@ -33,10 +39,7 @@ That will install the `gaiad` and `gaiacli` binaries. Verify that everything is 
 
 ```bash
 $ gaiad version
-0.19.0-c6711810
-
 $ gaiacli version
-0.19.0-c6711810
 ```
 
 ## Run a Full Node

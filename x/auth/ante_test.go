@@ -20,14 +20,14 @@ func newTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
 
 func newStdFee() StdFee {
 	return NewStdFee(5000,
-		sdk.NewCoin("atom", 150),
+		sdk.NewInt64Coin("atom", 150),
 	)
 }
 
 // coins to more than cover the fee
 func newCoins() sdk.Coins {
 	return sdk.Coins{
-		sdk.NewCoin("atom", 10000000),
+		sdk.NewInt64Coin("atom", 10000000),
 	}
 }
 
@@ -48,21 +48,20 @@ func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx
 
 // run the tx through the anteHandler and ensure it fails with the given code
 func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, code sdk.CodeType) {
-	defer func() {
-		if r := recover(); r != nil {
-			switch r.(type) {
-			case sdk.ErrorOutOfGas:
-				require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas),
-					fmt.Sprintf("Expected ErrorOutOfGas, got %v", r))
-			default:
-				panic(r)
-			}
-		}
-	}()
-	_, result, abort := anteHandler(ctx, tx)
+	newCtx, result, abort := anteHandler(ctx, tx)
 	require.True(t, abort)
 	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), result.Code,
 		fmt.Sprintf("Expected %v, got %v", sdk.ToABCICode(sdk.CodespaceRoot, code), result))
+
+	if code == sdk.CodeOutOfGas {
+		stdTx, ok := tx.(StdTx)
+		require.True(t, ok, "tx must be in form auth.StdTx")
+		// GasWanted set correctly
+		require.Equal(t, stdTx.Fee.Gas, result.GasWanted, "Gas wanted not set correctly")
+		require.True(t, result.GasUsed > result.GasWanted, "GasUsed not greated than GasWanted")
+		// Check that context is set correctly
+		require.Equal(t, result.GasUsed, newCtx.GasMeter().GasConsumed(), "Context not updated correctly")
+	}
 }
 
 func newTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee) sdk.Tx {
@@ -326,17 +325,17 @@ func TestAnteHandlerFees(t *testing.T) {
 	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInsufficientFunds)
 
-	acc1.SetCoins(sdk.Coins{sdk.NewCoin("atom", 149)})
+	acc1.SetCoins(sdk.Coins{sdk.NewInt64Coin("atom", 149)})
 	mapper.SetAccount(ctx, acc1)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInsufficientFunds)
 
 	require.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(emptyCoins))
 
-	acc1.SetCoins(sdk.Coins{sdk.NewCoin("atom", 150)})
+	acc1.SetCoins(sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	mapper.SetAccount(ctx, acc1)
 	checkValidTx(t, anteHandler, ctx, tx)
 
-	require.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(sdk.Coins{sdk.NewCoin("atom", 150)}))
+	require.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(sdk.Coins{sdk.NewInt64Coin("atom", 150)}))
 }
 
 // Test logic around memo gas consumption.
@@ -361,24 +360,24 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	var tx sdk.Tx
 	msg := newTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []int64{0}, []int64{0}
-	fee := NewStdFee(0, sdk.NewCoin("atom", 0))
+	fee := NewStdFee(0, sdk.NewInt64Coin("atom", 0))
 
 	// tx does not have enough gas
 	tx = newTestTx(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeOutOfGas)
 
 	// tx with memo doesn't have enough gas
-	fee = NewStdFee(801, sdk.NewCoin("atom", 0))
+	fee = NewStdFee(801, sdk.NewInt64Coin("atom", 0))
 	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeOutOfGas)
 
 	// memo too large
-	fee = NewStdFee(2001, sdk.NewCoin("atom", 0))
+	fee = NewStdFee(2001, sdk.NewInt64Coin("atom", 0))
 	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeMemoTooLarge)
 
 	// tx with memo has enough gas
-	fee = NewStdFee(1100, sdk.NewCoin("atom", 0))
+	fee = NewStdFee(1100, sdk.NewInt64Coin("atom", 0))
 	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 	checkValidTx(t, anteHandler, ctx, tx)
 }

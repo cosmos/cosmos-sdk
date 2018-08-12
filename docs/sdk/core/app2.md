@@ -1,6 +1,6 @@
 # Transactions
 
-In the previous app we built a simple `bank` with one message type for sending
+In the previous app we built a simple bank with one message type `send` for sending
 coins and one store for storing accounts.
 Here we build `App2`, which expands on `App1` by introducing 
 
@@ -144,9 +144,13 @@ func NewCodec() *wire.Codec {
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(MsgSend{}, "example/MsgSend", nil)
 	cdc.RegisterConcrete(MsgIssue{}, "example/MsgIssue", nil)
+	crypto.RegisterAmino(cdc)
 	return cdc
 }
 ```
+
+Note: We also register the types in the `tendermint/tendermint/crypto` module so that `crypto.PubKey`
+is encoded/decoded correctly.
 
 Amino supports encoding and decoding in both a binary and JSON format.
 See the [codec API docs](https://godoc.org/github.com/tendermint/go-amino#Codec) for more details.
@@ -162,17 +166,26 @@ type app2Tx struct {
     sdk.Msg
     
     PubKey    crypto.PubKey
-    Signature crypto.Signature
+    Signature []byte
 }
 
 // This tx only has one Msg.
 func (tx app2Tx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{tx.Msg}
 }
-```
 
-We don't need a custom TxDecoder function anymore, since we're just using the
-Amino codec!
+// Amino decode app2Tx. Capable of decoding both MsgSend and MsgIssue
+func tx2Decoder(cdc *wire.Codec) sdk.TxDecoder {
+	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
+		var tx app2Tx
+		err := cdc.UnmarshalBinary(txBytes, &tx)
+		if err != nil {
+			return nil, sdk.ErrTxDecode(err.Error())
+		}
+		return tx, nil
+	}
+}
+```
 
 ## AnteHandler
 
@@ -210,28 +223,22 @@ func antehandler(ctx sdk.Context, tx sdk.Tx) (_ sdk.Context, _ sdk.Result, abort
 		return ctx, sdk.ErrTxDecode("Tx must be of format app2Tx").Result(), true
 	}
 
-	// expect only one msg in app2Tx
+	// expect only one msg and one signer in app2Tx
 	msg := tx.GetMsgs()[0]
-
-	signerAddrs := msg.GetSigners()
-
-	if len(signerAddrs) != len(appTx.GetSignatures()) {
-		return ctx, sdk.ErrUnauthorized("Number of signatures do not match required amount").Result(), true
-	}
+	signerAddr := msg.GetSigners()[0]
 
 	signBytes := msg.GetSignBytes()
-	for i, addr := range signerAddrs {
-		sig := appTx.GetSignatures()[i]
 
-		// check that submitted pubkey belongs to required address
-		if !bytes.Equal(sig.PubKey.Address(), addr) {
-			return ctx, sdk.ErrUnauthorized("Provided Pubkey does not match required address").Result(), true
-		}
+	sig := appTx.GetSignature()
 
-		// check that signature is over expected signBytes
-		if !sig.PubKey.VerifyBytes(signBytes, sig.Signature) {
-			return ctx, sdk.ErrUnauthorized("Signature verification failed").Result(), true
-		}
+	// check that submitted pubkey belongs to required address
+	if !bytes.Equal(appTx.PubKey.Address(), signerAddr) {
+		return ctx, sdk.ErrUnauthorized("Provided Pubkey does not match required address").Result(), true
+	}
+
+	// check that signature is over expected signBytes
+	if !appTx.PubKey.VerifyBytes(signBytes, sig) {
+		return ctx, sdk.ErrUnauthorized("Signature verification failed").Result(), true
 	}
 
 	// authentication passed, app to continue processing by sending msg to handler
@@ -249,7 +256,7 @@ func NewApp2(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	cdc := NewCodec()
 
 	// Create the base application object.
-	app := bapp.NewBaseApp(app2Name, cdc, logger, db)
+	app := bapp.NewBaseApp(app2Name, logger, db, txDecoder(cdc))
 
 	// Create a key for accessing the account store.
 	keyAccount := sdk.NewKVStoreKey("acc")
@@ -280,9 +287,8 @@ key for a second store that is *only* passed to a second handler, the
 `handleMsgIssue`. The first `handleMsgSend` has no access to this second store and cannot read or write to
 it, ensuring a strong separation of concerns.
 
-Note also that we do not need to use `SetTxDecoder` here - now that we're using
-Amino, we simply create a codec, register our types on the codec, and pass the
-codec into `NewBaseApp`. The SDK takes care of the rest for us!
+Note now that we're using Amino, we create a codec, register our types on the codec, and pass the
+codec into our TxDecoder constructor, `tx2Decoder`. The SDK takes care of the rest for us!
 
 ## Conclusion
 

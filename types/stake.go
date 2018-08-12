@@ -43,6 +43,7 @@ type Validator interface {
 	GetOwner() AccAddress     // owner AccAddress to receive/return validators coins
 	GetPubKey() crypto.PubKey // validation pubkey
 	GetPower() Rat            // validation power
+	GetTokens() Rat           // validation tokens
 	GetDelegatorShares() Rat  // Total out standing delegator shares
 	GetBondHeight() int64     // height in which the validator became active
 }

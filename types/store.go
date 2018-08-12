@@ -65,7 +65,6 @@ type MultiStore interface { //nolint
 	// Convenience for fetching substores.
 	GetStore(StoreKey) Store
 	GetKVStore(StoreKey) KVStore
-	GetKVStoreWithGas(GasMeter, StoreKey) KVStore
 
 	// TracingEnabled returns if tracing is enabled for the MultiStore.
 	TracingEnabled() bool
@@ -134,9 +133,6 @@ type KVStore interface {
 	// Delete deletes the key. Panics on nil key.
 	Delete(key []byte)
 
-	// Prefix applied keys with the argument
-	Prefix(prefix []byte) KVStore
-
 	// Iterator over a domain of keys in ascending order. End is exclusive.
 	// Start must be less than end, or the Iterator is invalid.
 	// Iterator must be closed by caller.
@@ -155,6 +151,16 @@ type KVStore interface {
 
 	// TODO Not yet implemented.
 	// GetSubKVStore(key *storeKey) KVStore
+
+	// Prefix applied keys with the argument
+	// CONTRACT: when Prefix is called on a KVStore more than once,
+	// the concatanation of the prefixes is applied
+	Prefix(prefix []byte) KVStore
+
+	// Gas consuming store
+	// CONTRACT: when Gas is called on a KVStore more than once,
+	// the concatanation of the meters/configs is applied
+	Gas(GasMeter, GasConfig) KVStore
 }
 
 // Alias iterator to db's Iterator for convenience.
@@ -184,11 +190,6 @@ type CacheKVStore interface {
 type CommitKVStore interface {
 	Committer
 	KVStore
-}
-
-// Wrapper for StoreKeys to get KVStores
-type KVStoreGetter interface {
-	KVStore(Context) KVStore
 }
 
 //----------------------------------------
@@ -245,7 +246,7 @@ const (
 	StoreTypeMulti StoreType = iota
 	StoreTypeDB
 	StoreTypeIAVL
-	StoreTypePrefix
+	StoreTypeTransient
 )
 
 //----------------------------------------
@@ -279,11 +280,6 @@ func (key *KVStoreKey) String() string {
 	return fmt.Sprintf("KVStoreKey{%p, %s}", key, key.name)
 }
 
-// Implements KVStoreGetter
-func (key *KVStoreKey) KVStore(ctx Context) KVStore {
-	return ctx.KVStore(key)
-}
-
 // PrefixEndBytes returns the []byte that would end a
 // range query for all []byte with a certain prefix
 // Deals with last byte of prefix being FF without overflowing
@@ -310,19 +306,27 @@ func PrefixEndBytes(prefix []byte) []byte {
 	return end
 }
 
-// Getter struct for prefixed stores
-type PrefixStoreGetter struct {
-	key    StoreKey
-	prefix []byte
+// TransientStoreKey is used for indexing transient stores in a MultiStore
+type TransientStoreKey struct {
+	name string
 }
 
-func NewPrefixStoreGetter(key StoreKey, prefix []byte) PrefixStoreGetter {
-	return PrefixStoreGetter{key, prefix}
+// Constructs new TransientStoreKey
+// Must return a pointer according to the ocap principle
+func NewTransientStoreKey(name string) *TransientStoreKey {
+	return &TransientStoreKey{
+		name: name,
+	}
 }
 
-// Implements sdk.KVStoreGetter
-func (getter PrefixStoreGetter) KVStore(ctx Context) KVStore {
-	return ctx.KVStore(getter.key).Prefix(getter.prefix)
+// Implements StoreKey
+func (key *TransientStoreKey) Name() string {
+	return key.name
+}
+
+// Implements StoreKey
+func (key *TransientStoreKey) String() string {
+	return fmt.Sprintf("TransientStoreKey{%p, %s}", key, key.name)
 }
 
 //----------------------------------------

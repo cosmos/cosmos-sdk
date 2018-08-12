@@ -2,6 +2,11 @@
 
 See [testnets repo](https://github.com/cosmos/testnets).
 
+## *July 22, 2018, 5:30 EST* - Gaia-7001 Consensus Failure 
+
+- [Consensus Failure at Block 24570](https://github.com/cosmos/cosmos-sdk/issues/1787)
+
+
 ## *July 17, 2018, 4:00 EST* - New Testnet Gaia-7001 
 
 - New testnet with fixes for the genesis file 

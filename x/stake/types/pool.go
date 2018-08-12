@@ -3,16 +3,17 @@ package types
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Pool - dynamic parameters of the current state
 type Pool struct {
-	LooseTokens       sdk.Rat `json:"loose_tokens"`        // tokens which are not bonded in a validator
-	BondedTokens      sdk.Rat `json:"bonded_tokens"`       // reserve of bonded tokens
-	InflationLastTime int64   `json:"inflation_last_time"` // block which the last inflation was processed // TODO make time
-	Inflation         sdk.Rat `json:"inflation"`           // current annual inflation rate
+	LooseTokens       sdk.Rat   `json:"loose_tokens"`        // tokens which are not bonded in a validator
+	BondedTokens      sdk.Rat   `json:"bonded_tokens"`       // reserve of bonded tokens
+	InflationLastTime time.Time `json:"inflation_last_time"` // block which the last inflation was processed
+	Inflation         sdk.Rat   `json:"inflation"`           // current annual inflation rate
 
 	DateLastCommissionReset int64 `json:"date_last_commission_reset"` // unix timestamp for last commission accounting reset (daily)
 
@@ -32,7 +33,7 @@ func InitialPool() Pool {
 	return Pool{
 		LooseTokens:             sdk.ZeroRat(),
 		BondedTokens:            sdk.ZeroRat(),
-		InflationLastTime:       0,
+		InflationLastTime:       time.Unix(0, 0),
 		Inflation:               sdk.NewRat(7, 100),
 		DateLastCommissionReset: 0,
 		PrevBondedShares:        sdk.ZeroRat(),
@@ -80,13 +81,15 @@ func (p Pool) bondedTokensToLoose(bondedTokens sdk.Rat) Pool {
 //_______________________________________________________________________
 // Inflation
 
-const precision = 100000000000     // increased to this precision for accuracy
+const precision = 10000            // increased to this precision for accuracy
 var hrsPerYrRat = sdk.NewRat(8766) // as defined by a julian year of 365.25 days
 
 // process provisions for an hour period
 func (p Pool) ProcessProvisions(params Params) Pool {
 	p.Inflation = p.NextInflation(params)
-	provisions := p.Inflation.Mul(p.TokenSupply()).Quo(hrsPerYrRat)
+	provisions := p.Inflation.
+		Mul(p.TokenSupply().Round(precision)).
+		Quo(hrsPerYrRat)
 
 	// TODO add to the fees provisions
 	p.LooseTokens = p.LooseTokens.Add(provisions)
@@ -103,7 +106,10 @@ func (p Pool) NextInflation(params Params) (inflation sdk.Rat) {
 	// 7% and 20%.
 
 	// (1 - bondedRatio/GoalBonded) * InflationRateChange
-	inflationRateChangePerYear := sdk.OneRat().Sub(p.BondedRatio().Quo(params.GoalBonded)).Mul(params.InflationRateChange)
+	inflationRateChangePerYear := sdk.OneRat().
+		Sub(p.BondedRatio().Round(precision).
+			Quo(params.GoalBonded)).
+		Mul(params.InflationRateChange)
 	inflationRateChange := inflationRateChangePerYear.Quo(hrsPerYrRat)
 
 	// increase the new annual inflation for this next cycle

@@ -71,7 +71,7 @@ func TestIBC(t *testing.T) {
 	dest := newAddress()
 	chainid := "ibcchain"
 	zero := sdk.Coins(nil)
-	mycoins := sdk.Coins{sdk.NewCoin("mycoin", 10)}
+	mycoins := sdk.Coins{sdk.NewInt64Coin("mycoin", 10)}
 
 	coins, _, err := ck.AddCoins(ctx, src, mycoins)
 	require.Nil(t, err)

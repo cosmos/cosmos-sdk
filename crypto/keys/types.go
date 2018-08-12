@@ -16,7 +16,7 @@ type Keybase interface {
 	Delete(name, passphrase string) error
 
 	// Sign some bytes, looking up the private key to use
-	Sign(name, passphrase string, msg []byte) (crypto.Signature, crypto.PubKey, error)
+	Sign(name, passphrase string, msg []byte) ([]byte, crypto.PubKey, error)
 
 	// CreateMnemonic creates a new mnemonic, and derives a hierarchical deterministic
 	// key from that.

@@ -1,3 +1,10 @@
+## v0.24.0 PENDING 
+^--- PENDING wasn't purged on sdk v0.23.0 release.
+
+BREAKING CHANGES
+* Update to tendermint v0.23.0. This involves removing crypto.Pubkey, 
+maintaining a validator address to pubkey map, and using time.Time instead of int64 for time. [SDK PR](https://github.com/cosmos/cosmos-sdk/pull/1927)
+
 ## PENDING
 
 BREAKING CHANGES

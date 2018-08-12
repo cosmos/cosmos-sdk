@@ -327,7 +327,7 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr sdk
 
 	// create the unbonding delegation
 	params := k.GetParams(ctx)
-	minTime := ctx.BlockHeader().Time + params.UnbondingTime
+	minTime := ctx.BlockHeader().Time.Add(params.UnbondingTime)
 	balance := sdk.Coin{params.BondDenom, returnAmount.RoundInt()}
 
 	ubd := types.UnbondingDelegation{
@@ -351,7 +351,7 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr 
 
 	// ensure that enough time has passed
 	ctxTime := ctx.BlockHeader().Time
-	if ubd.MinTime > ctxTime {
+	if ubd.MinTime.After(ctxTime) {
 		return types.ErrNotMature(k.Codespace(), "unbonding", "unit-time", ubd.MinTime, ctxTime)
 	}
 
@@ -389,7 +389,7 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delegatorAddr, validatorSrcAd
 	}
 
 	// create the unbonding delegation
-	minTime := ctx.BlockHeader().Time + params.UnbondingTime
+	minTime := ctx.BlockHeader().Time.Add(params.UnbondingTime)
 
 	red := types.Redelegation{
 		DelegatorAddr:    delegatorAddr,
@@ -415,7 +415,7 @@ func (k Keeper) CompleteRedelegation(ctx sdk.Context, delegatorAddr, validatorSr
 
 	// ensure that enough time has passed
 	ctxTime := ctx.BlockHeader().Time
-	if red.MinTime > ctxTime {
+	if red.MinTime.After(ctxTime) {
 		return types.ErrNotMature(k.Codespace(), "redelegation", "unit-time", red.MinTime, ctxTime)
 	}
 

@@ -279,7 +279,7 @@ type TxInput struct {
   Address   []byte           `json:"address"`   // Hash of the PubKey
   Coins     Coins            `json:"coins"`     //
   Sequence  int              `json:"sequence"`  // Must be 1 greater than the last committed TxInput
-  Signature crypto.Signature `json:"signature"` // Depends on the PubKey type and the whole Tx
+  Signature []byte           `json:"signature"` // Depends on the PubKey type and the whole Tx
   PubKey    crypto.PubKey    `json:"pub_key"`   // Is present iff Sequence == 0
 }
 

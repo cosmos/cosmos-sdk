@@ -159,7 +159,7 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		return sdk.ZeroRat()
 	}
 
-	if unbondingDelegation.MinTime < now {
+	if unbondingDelegation.MinTime.Before(now) {
 		// Unbonding delegation no longer eligible for slashing, skip it
 		// TODO Settle and delete it automatically?
 		return sdk.ZeroRat()
@@ -203,7 +203,7 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 		return sdk.ZeroRat()
 	}
 
-	if redelegation.MinTime < now {
+	if redelegation.MinTime.Before(now) {
 		// Redelegation no longer eligible for slashing, skip it
 		// TODO Delete it automatically?
 		return sdk.ZeroRat()

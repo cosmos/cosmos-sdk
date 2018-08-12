@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
@@ -564,7 +565,7 @@ func TestUnrevoke(t *testing.T) {
 	signingInfo := getSigningInfo(t, port, pkString)
 	tests.WaitForHeight(4, port)
 	require.Equal(t, true, signingInfo.IndexOffset > 0)
-	require.Equal(t, int64(0), signingInfo.JailedUntil)
+	require.Equal(t, time.Unix(0, 0).UTC(), signingInfo.JailedUntil)
 	require.Equal(t, true, signingInfo.SignedBlocksCounter > 0)
 }
 

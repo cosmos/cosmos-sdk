@@ -2,13 +2,14 @@ package types
 
 import (
 	"bytes"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // defaultUnbondingTime reflects three weeks in seconds as the default
 // unbonding time.
-const defaultUnbondingTime int64 = 60 * 60 * 24 * 3
+const defaultUnbondingTime time.Duration = 60 * 60 * 24 * 3 * time.Second
 
 // Params defines the high level settings for staking
 type Params struct {
@@ -17,7 +18,7 @@ type Params struct {
 	InflationMin        sdk.Rat `json:"inflation_min"`         // minimum inflation rate
 	GoalBonded          sdk.Rat `json:"goal_bonded"`           // Goal of percent bonded atoms
 
-	UnbondingTime int64 `json:"unbonding_time"`
+	UnbondingTime time.Duration `json:"unbonding_time"`
 
 	MaxValidators uint16 `json:"max_validators"` // maximum number of validators
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination

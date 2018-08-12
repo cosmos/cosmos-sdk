@@ -54,6 +54,7 @@ FEATURES
 * [gov] Add slashing for validators who do not vote on a proposal
 * [cli] added `gov query-proposals` command to CLI. Can filter by `depositer`, `voter`, and `status`
 * [core] added BaseApp.Seal - ability to seal baseapp parameters once they've been set
+* [scripts] added log output monitoring to DataDog using Ansible scripts
 * [gov] added TallyResult type that gets added stored in Proposal after tallying is finished
 
 IMPROVEMENTS

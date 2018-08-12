@@ -18,7 +18,7 @@ BREAKING CHANGES
   * `gaiacli gov submit-proposal --proposer`
   * `gaiacli gov deposit --depositer`
   * `gaiacli gov vote --voter`
-* [x/gov] Added tags sub-package, changed tags to use dash-case 
+* [x/gov] Added tags sub-package, changed tags to use dash-case
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus
@@ -27,7 +27,7 @@ FEATURES
   * Modules can test random combinations of their own operations
   * Applications can integrate operations and invariants from modules together for an integrated simulation
 * [baseapp] Initialize validator set on ResponseInitChain
-* [cosmos-sdk-cli] Added support for cosmos-sdk-cli tool under cosmos-sdk/cmd	
+* [cosmos-sdk-cli] Added support for cosmos-sdk-cli tool under cosmos-sdk/cmd
    * This allows SDK users to initialize a new project repository.
 * [tests] Remotenet commands for AWS (awsnet)
 
@@ -39,3 +39,4 @@ IMPROVEMENTS
 * [x/gov] Votes on a proposal can now be queried
 * [x/bank] Unit tests are now table-driven
 * [tests] Fixes ansible scripts to work with AWS too
+* [gaiad] Add optional flag to `gaiad testnet` to make config directory of daemon (default `gaiad`) and cli (default `gaiacli`) configurable

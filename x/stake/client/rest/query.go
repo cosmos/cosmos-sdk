@@ -137,17 +137,16 @@ func delegatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 			if statusCode != http.StatusNoContent {
 				delegationSummary.Redelegations = append(delegationSummary.Redelegations, redelegations)
 			}
-
-			output, err := cdc.MarshalJSON(delegationSummary)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(err.Error()))
-				return
-			}
-
-			// success
-			w.Write(output) // write
 		}
+
+		output, err := cdc.MarshalJSON(delegationSummary)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		w.Write(output)
 	}
 }
 
@@ -218,14 +217,13 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Hand
 			txs = append(txs, foundTxs...)
 		}
 
-		// success
 		output, err = cdc.MarshalJSON(txs)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		w.Write(output) // write
+		w.Write(output)
 	}
 }
 
@@ -402,14 +400,13 @@ func delegatorValidatorsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) ht
 
 			bondedValidators = append(bondedValidators, validator)
 		}
-		// success
 		output, err := cdc.MarshalJSON(bondedValidators)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		w.Write(output) // write
+		w.Write(output)
 	}
 }
 
@@ -441,7 +438,6 @@ func delegatorValidatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) htt
 			w.WriteHeader(statusCode)
 			return
 		}
-		// success
 		output, err = cdc.MarshalJSON(validator)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

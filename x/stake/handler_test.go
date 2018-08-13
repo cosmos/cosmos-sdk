@@ -81,7 +81,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	require.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
 
 	// slash and revoke the first validator
-	keeper.Slash(ctx, keep.PKs[0], 0, initBond, sdk.NewDec(1, 2))
+	keeper.Slash(ctx, keep.PKs[0], 0, initBond, sdk.NewDecWithPrec(5, 1))
 	keeper.Revoke(ctx, keep.PKs[0])
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
@@ -847,7 +847,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	require.Equal(t, sdk.NewDec(6), delegation.Shares)
 
 	// slash the validator by half
-	keeper.Slash(ctx, keep.PKs[0], 0, 20, sdk.NewDec(1, 2))
+	keeper.Slash(ctx, keep.PKs[0], 0, 20, sdk.NewDecWithPrec(5, 1))
 
 	// unbonding delegation should have been slashed by half
 	unbonding, found := keeper.GetUnbondingDelegation(ctx, del, valA)
@@ -871,7 +871,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 
 	// slash the validator for an infraction committed after the unbonding and redelegation begin
 	ctx = ctx.WithBlockHeight(3)
-	keeper.Slash(ctx, keep.PKs[0], 2, 10, sdk.NewDec(1, 2))
+	keeper.Slash(ctx, keep.PKs[0], 2, 10, sdk.NewDecWithPrec(5, 1))
 
 	// unbonding delegation should be unchanged
 	unbonding, found = keeper.GetUnbondingDelegation(ctx, del, valA)

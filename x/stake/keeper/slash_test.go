@@ -63,7 +63,7 @@ func TestRevocation(t *testing.T) {
 // tests slashUnbondingDelegation
 func TestSlashUnbondingDelegation(t *testing.T) {
 	ctx, keeper, params := setupHelper(t, 10)
-	fraction := sdk.NewDec(1, 2)
+	fraction := sdk.NewDecWithPrec(5, 1)
 
 	// set an unbonding delegation
 	ubd := types.UnbondingDelegation{
@@ -106,7 +106,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 // tests slashRedelegation
 func TestSlashRedelegation(t *testing.T) {
 	ctx, keeper, params := setupHelper(t, 10)
-	fraction := sdk.NewDec(1, 2)
+	fraction := sdk.NewDecWithPrec(5, 1)
 
 	// set a redelegation
 	rd := types.Redelegation{
@@ -172,7 +172,7 @@ func TestSlashRedelegation(t *testing.T) {
 func TestSlashAtFutureHeight(t *testing.T) {
 	ctx, keeper, _ := setupHelper(t, 10)
 	pk := PKs[0]
-	fraction := sdk.NewDec(1, 2)
+	fraction := sdk.NewDecWithPrec(5, 1)
 	require.Panics(t, func() { keeper.Slash(ctx, pk, 1, 10, fraction) })
 }
 
@@ -180,7 +180,7 @@ func TestSlashAtFutureHeight(t *testing.T) {
 func TestSlashAtCurrentHeight(t *testing.T) {
 	ctx, keeper, _ := setupHelper(t, 10)
 	pk := PKs[0]
-	fraction := sdk.NewDec(1, 2)
+	fraction := sdk.NewDecWithPrec(5, 1)
 
 	oldPool := keeper.GetPool(ctx)
 	validator, found := keeper.GetValidatorByPubKey(ctx, pk)
@@ -202,7 +202,7 @@ func TestSlashAtCurrentHeight(t *testing.T) {
 func TestSlashWithUnbondingDelegation(t *testing.T) {
 	ctx, keeper, params := setupHelper(t, 10)
 	pk := PKs[0]
-	fraction := sdk.NewDec(1, 2)
+	fraction := sdk.NewDecWithPrec(5, 1)
 
 	// set an unbonding delegation
 	ubd := types.UnbondingDelegation{
@@ -303,7 +303,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 func TestSlashWithRedelegation(t *testing.T) {
 	ctx, keeper, params := setupHelper(t, 10)
 	pk := PKs[0]
-	fraction := sdk.NewDec(1, 2)
+	fraction := sdk.NewDecWithPrec(5, 1)
 
 	// set a redelegation
 	rd := types.Redelegation{
@@ -424,7 +424,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 // tests Slash at a previous height with both an unbonding delegation and a redelegation
 func TestSlashBoth(t *testing.T) {
 	ctx, keeper, params := setupHelper(t, 10)
-	fraction := sdk.NewDec(1, 2)
+	fraction := sdk.NewDecWithPrec(5, 1)
 
 	// set a redelegation
 	rdA := types.Redelegation{

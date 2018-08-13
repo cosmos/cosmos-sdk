@@ -392,25 +392,20 @@ func TestBonding(t *testing.T) {
 	validator1Owner := sdk.AccAddress(pks[0].Address())
 	validator := getValidator(t, port, validator1Owner)
 
-	// create bond TX
 	resultTx := doDelegate(t, port, seed, name, password, addr, validator1Owner, 60)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
-	// check if tx was committed
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
-	// query sender
 	acc := getAccount(t, port, addr)
 	coins := acc.GetCoins()
 
 	require.Equal(t, int64(40), coins.AmountOf(denom).Int64())
 
-	// query validator
 	bond := getDelegation(t, port, addr, validator1Owner)
 	require.Equal(t, "60.0000000000", bond.Shares)
 
-	// query summary
 	summary := getDelegationSummary(t, port, addr)
 
 	require.Len(t, summary.Delegations, 1, "Delegation summary holds all delegations")
@@ -428,34 +423,29 @@ func TestBonding(t *testing.T) {
 	//////////////////////
 	// testing unbonding
 
-	// create unbond TX
 	resultTx = doBeginUnbonding(t, port, seed, name, password, addr, validator1Owner, 60)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
-	// check if tx was committed
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
-	// should the sender should have not received any coins as the unbonding has only just begun
+	// sender should have not received any coins as the unbonding has only just begun
 	acc = getAccount(t, port, addr)
 	coins = acc.GetCoins()
 	require.Equal(t, int64(40), coins.AmountOf("steak").Int64())
 
-	// query unbonding delegation
 	unbondings := getUndelegations(t, port, addr, validator1Owner)
 	require.Len(t, unbondings, 1, "Unbondings holds all unbonding-delegations")
 	require.Equal(t, "60", unbondings[0].Balance.Amount.String())
 
-	// query summary
 	summary = getDelegationSummary(t, port, addr)
 
 	require.Len(t, summary.Delegations, 0, "Delegation summary holds all delegations")
 	require.Len(t, summary.UnbondingDelegations, 1, "Delegation summary holds all unbonding-delegations")
 	require.Equal(t, "60", summary.UnbondingDelegations[0].Balance.Amount.String())
 
-	// validator still has bonded shares from the delegator
 	bondedValidators = getDelegatorValidators(t, port, addr)
-	require.Len(t, bondedValidators, 0)
+	require.Len(t, bondedValidators, 0, "There's no delegation as the user withdraw all funds")
 
 	// TODO Undonding status not currently implemented
 	// require.Equal(t, sdk.Unbonding, bondedValidators[0].Status)
@@ -774,7 +764,6 @@ func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.
 
 func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.AccAddress) rest.DelegationWithoutRat {
 
-	// get the account to get the sequence
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/delegations/%s", delegatorAddr, validatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var bond rest.DelegationWithoutRat
@@ -785,7 +774,6 @@ func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.A
 
 func getUndelegations(t *testing.T, port string, delegatorAddr, validatorAddr sdk.AccAddress) []stake.UnbondingDelegation {
 
-	// get the account to get the sequence
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/unbonding_delegations/%s", delegatorAddr, validatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var unbondings []stake.UnbondingDelegation
@@ -796,7 +784,6 @@ func getUndelegations(t *testing.T, port string, delegatorAddr, validatorAddr sd
 
 func getDelegationSummary(t *testing.T, port string, delegatorAddr sdk.AccAddress) rest.DelegationSummary {
 
-	// get the account to get the sequence
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s", delegatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var summary rest.DelegationSummary
@@ -807,7 +794,6 @@ func getDelegationSummary(t *testing.T, port string, delegatorAddr sdk.AccAddres
 
 func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, query string) []tx.Info {
 
-	// get the account to get the sequence
 	var res *http.Response
 	var body string
 	if len(query) > 0 {
@@ -1072,7 +1058,7 @@ func getProposalsFilterStatus(t *testing.T, port string, status gov.ProposalStat
 }
 
 func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress) (resultTx ctypes.ResultBroadcastTxCommit) {
-	// get the account to get the sequence
+
 	acc := getAccount(t, port, proposerAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
@@ -1106,7 +1092,7 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 }
 
 func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, proposalID int64) (resultTx ctypes.ResultBroadcastTxCommit) {
-	// get the account to get the sequence
+
 	acc := getAccount(t, port, proposerAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()

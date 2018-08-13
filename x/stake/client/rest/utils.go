@@ -29,7 +29,6 @@ func contains(stringSlice []string, txType string) bool {
 func getDelegatorValidator(cliCtx context.CLIContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAccAddr sdk.AccAddress) (
 	validator types.BechValidator, httpStatusCode int, errMsg string, err error) {
 
-	// check if the delegator is bonded or redelegated to the validator
 	keyDel := stake.GetDelegationKey(delegatorAddr, validatorAccAddr)
 
 	res, err := cliCtx.QueryStore(keyDel, storeName)
@@ -46,7 +45,6 @@ func getDelegatorValidator(cliCtx context.CLIContext, cdc *wire.Codec, delegator
 		return types.BechValidator{}, http.StatusInternalServerError, "Error: ", err
 	}
 	if len(kvs) == 0 {
-		// the query will return empty if there are no delegations
 		return types.BechValidator{}, http.StatusNoContent, "", nil
 	}
 
@@ -65,7 +63,6 @@ func getDelegatorDelegations(cliCtx context.CLIContext, cdc *wire.Codec, delegat
 		return DelegationWithoutRat{}, http.StatusInternalServerError, "couldn't query delegation. Error: ", err
 	}
 
-	// the query will return empty if there is no data for this record
 	if len(marshalledDelegation) == 0 {
 		return DelegationWithoutRat{}, http.StatusNoContent, "", nil
 	}
@@ -93,7 +90,6 @@ func getDelegatorUndelegations(cliCtx context.CLIContext, cdc *wire.Codec, deleg
 		return types.UnbondingDelegation{}, http.StatusInternalServerError, "couldn't query unbonding-delegation. Error: ", err
 	}
 
-	// the query will return empty if there is no data for this record
 	if len(marshalledUnbondingDelegation) == 0 {
 		return types.UnbondingDelegation{}, http.StatusNoContent, "", nil
 	}

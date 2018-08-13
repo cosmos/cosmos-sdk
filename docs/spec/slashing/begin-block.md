@@ -1,6 +1,6 @@
 # Begin-Block
 
-## Evidence handling & slashing
+## Evidence handling
 
 Tendermint blocks can include
 [Evidence](https://github.com/tendermint/tendermint/blob/develop/docs/spec/blockchain/blockchain.md#evidence), which indicates that a validator
@@ -76,7 +76,7 @@ This ensures that offending validators are punished the same amount whether they
 act as a single validator with X stake or as N validators with collectively X
 stake.
 
-## Uptime/downtime tracking & slashing
+## Uptime tracking
 
 At the beginning of each block, we update the signing info for each validator and check if they should be automatically unbonded:
 

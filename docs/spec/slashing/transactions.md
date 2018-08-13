@@ -11,12 +11,7 @@ possibly rejoin the bonded set, it must send `TxUnjail`:
 type TxUnjail struct {
     ValidatorAddr sdk.AccAddress
 }
-```
 
-All delegators still delegated to the validator will be rebonded and begin
-to again collect provisions and rewards.
-
-```golang
 handleMsgUnjail(tx TxUnjail)
 
     validator := getValidator(tx.ValidatorAddr)
@@ -39,3 +34,7 @@ handleMsgUnjail(tx TxUnjail)
 
     return
 ```
+
+If the validotor has enough stake to be in the top hundred, they will be automatically rebonded,
+and all delegators still delegated to the validator will be rebonded and begin to again collect
+provisions and rewards.

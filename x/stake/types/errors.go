@@ -3,6 +3,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -99,11 +100,18 @@ func ErrBadSharesAmount(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "shares must be > 0")
 }
 
+func ErrBadSharesPrecision(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDelegation,
+		fmt.Sprintf("shares denominator must be < %s, try reducing the number of decimal points",
+			maximumBondingRationalDenominator.String()),
+	)
+}
+
 func ErrBadSharesPercent(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "shares percent must be >0 and <=1")
 }
 
-func ErrNotMature(codespace sdk.CodespaceType, operation, descriptor string, got, min int64) sdk.Error {
+func ErrNotMature(codespace sdk.CodespaceType, operation, descriptor string, got, min time.Time) sdk.Error {
 	msg := fmt.Sprintf("%v is not mature requires a min %v of %v, currently it is %v",
 		operation, descriptor, got, min)
 	return sdk.NewError(codespace, CodeUnauthorized, msg)

@@ -69,7 +69,7 @@ func (k Keeper) ValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) sdk.Val
 }
 
 // total power from the bond
-func (k Keeper) TotalPower(ctx sdk.Context) sdk.Dec {
+func (k Keeper) TotalPower(ctx sdk.Context) sdk.Rat {
 	pool := k.GetPool(ctx)
 	return pool.BondedTokens
 }

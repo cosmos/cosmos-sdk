@@ -1,15 +1,15 @@
-## v0.24.0 PENDING 
+## v0.24.0 PENDING
 ^--- PENDING wasn't purged on sdk v0.23.0 release.
 
 BREAKING CHANGES
-* Update to tendermint v0.23.0. This involves removing crypto.Pubkey, 
+* Update to tendermint v0.23.0. This involves removing crypto.Pubkey,
 maintaining a validator address to pubkey map, and using time.Time instead of int64 for time. [SDK PR](https://github.com/cosmos/cosmos-sdk/pull/1927)
 
 ## PENDING
 
 BREAKING CHANGES
 * API
-  - \#1880 [x/stake] changed the endpoints to be more REST-ful
+  - \#1880 and \#2000 [x/stake] changed the endpoints to be more REST-ful
 * Update to tendermint v0.22.5. This involves changing all of the cryptography imports. [Ref](https://github.com/tendermint/tendermint/pull/1966)
 * [baseapp] Msgs are no longer run on CheckTx, removed `ctx.IsCheckTx()`
 * [x/gov] CLI flag changed from `proposalID` to `proposal-id`
@@ -32,7 +32,7 @@ BREAKING CHANGES
   * `gaiacli gov submit-proposal --proposer`
   * `gaiacli gov deposit --depositer`
   * `gaiacli gov vote --voter`
-* [x/gov] Added tags sub-package, changed tags to use dash-case 
+* [x/gov] Added tags sub-package, changed tags to use dash-case
 * [x/gov] Governance parameters are now stored in globalparams store
 * [lcd] \#1866 Updated lcd /slashing/signing_info endpoint to take cosmosvalpub instead of cosmosvaladdr
 * [types] sdk.NewCoin now takes sdk.Int, sdk.NewInt64Coin takes int64
@@ -46,7 +46,7 @@ FEATURES
   * Modules can test random combinations of their own operations
   * Applications can integrate operations and invariants from modules together for an integrated simulation
 * [baseapp] Initialize validator set on ResponseInitChain
-* [cosmos-sdk-cli] Added support for cosmos-sdk-cli tool under cosmos-sdk/cmd	
+* [cosmos-sdk-cli] Added support for cosmos-sdk-cli tool under cosmos-sdk/cmd
    * This allows SDK users to initialize a new project repository.
 * [tests] Remotenet commands for AWS (awsnet)
 * [networks] Added ansible scripts to upgrade seed nodes on a network
@@ -62,7 +62,7 @@ IMPROVEMENTS
 * [cli] Improve error messages for all txs when the account doesn't exist
 * [tools] Remove `rm -rf vendor/` from `make get_vendor_deps`
 * [x/auth] Recover ErrorOutOfGas panic in order to set sdk.Result attributes correctly
-* [x/stake] Add revoked to human-readable validator 
+* [x/stake] Add revoked to human-readable validator
 * [spec] \#967 Inflation and distribution specs drastically improved
 * [tests] Add tests to example apps in docs
 * [x/gov] Votes on a proposal can now be queried
@@ -70,8 +70,9 @@ IMPROVEMENTS
 * [tests] Fixes ansible scripts to work with AWS too
 * [tests] \#1806 CLI tests are now behind the build flag 'cli_test', so go test works on a new repo
 * [x/gov] Initial governance parameters can now be set in the genesis file
-* [x/stake] \#1815 Sped up the processing of `EditValidator` txs. 
+* [x/stake] \#1815 Sped up the processing of `EditValidator` txs.
 * [server] \#1930 Transactions indexer indexes all tags by default.
+* [x/stake] \#2000 Added tests for new staking endpoints
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators
@@ -83,7 +84,7 @@ BUG FIXES
 *  \#1828 Force user to specify amount on create-validator command by removing default
 *  \#1839 Fixed bug where intra-tx counter wasn't set correctly for genesis validators
 * [staking] [#1858](https://github.com/cosmos/cosmos-sdk/pull/1858) Fixed bug where the cliff validator was not be updated correctly
-* [tests] \#1675 Fix non-deterministic `test_cover` 
+* [tests] \#1675 Fix non-deterministic `test_cover`
 * [client] \#1551: Refactored `CoreContext`
   * Renamed `CoreContext` to `QueryContext`
   * Removed all tx related fields and logic (building & signing) to separate

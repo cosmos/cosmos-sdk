@@ -94,7 +94,7 @@ func TestGetter(t *testing.T) {
 		{"uint64", uint64(1)},
 		{"int", sdk.NewInt(1)},
 		{"uint", sdk.NewUint(1)},
-		{"rat", sdk.NewRat(1)},
+		{"rat", sdk.NewDec(1)},
 	}
 
 	assert.NotPanics(t, func() { s.SetString(ctx, kvs[0].key, "test") })
@@ -107,7 +107,7 @@ func TestGetter(t *testing.T) {
 	assert.NotPanics(t, func() { s.SetUint64(ctx, kvs[7].key, uint64(1)) })
 	assert.NotPanics(t, func() { s.SetInt(ctx, kvs[8].key, sdk.NewInt(1)) })
 	assert.NotPanics(t, func() { s.SetUint(ctx, kvs[9].key, sdk.NewUint(1)) })
-	assert.NotPanics(t, func() { s.SetRat(ctx, kvs[10].key, sdk.NewRat(1)) })
+	assert.NotPanics(t, func() { s.SetRat(ctx, kvs[10].key, sdk.NewDec(1)) })
 
 	var res interface{}
 	var err error
@@ -263,7 +263,7 @@ func TestGetter(t *testing.T) {
 	assert.Equal(t, def9, res)
 
 	// Rat
-	def10 := sdk.NewRat(0)
+	def10 := sdk.NewDec(0)
 	res, err = g.GetRat(ctx, kvs[10].key)
 	assert.Nil(t, err)
 	assert.Equal(t, kvs[10].param, res)

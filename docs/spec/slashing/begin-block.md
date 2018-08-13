@@ -1,12 +1,13 @@
-# End-Block
+# Begin-Block
 
-## Slashing
+## Evidence handling & slashing
 
 Tendermint blocks can include
 [Evidence](https://github.com/tendermint/tendermint/blob/develop/docs/spec/blockchain/blockchain.md#evidence), which indicates that a validator
 committed malicious behaviour. The relevant information is forwarded to the
 application as [ABCI
-Evidence](https://github.com/tendermint/tendermint/blob/develop/abci/types/types.proto#L259), so the validator an be accordingly punished.
+Evidence](https://github.com/tendermint/tendermint/blob/develop/abci/types/types.proto#L259) in `abci.RequestBeginBlock`
+so that the validator an be accordingly punished.
 
 For some `evidence` to be valid, it must satisfy:
 
@@ -75,7 +76,7 @@ This ensures that offending validators are punished the same amount whether they
 act as a single validator with X stake or as N validators with collectively X
 stake.
 
-## Automatic Unbonding
+## Uptime/downtime tracking & slashing
 
 At the beginning of each block, we update the signing info for each validator and check if they should be automatically unbonded:
 

@@ -64,9 +64,11 @@ When the validator voluntarily unjails themselves (and possibly changes signing 
 
 Slashing periods are indexed in the store as follows:
 
-- SlashingPeriod: ` 0x03 | ValTendermintAddr -> amino(slashingPeriod) `
+- SlashingPeriod: ` 0x03 | ValTendermintAddr | StartHeight -> amino(slashingPeriod) `
 
-This allows us to look up slashing period by validator address, the only lookup necessary.
+This allows us to look up slashing period by validator address, the only lookup necessary,
+and iterate over start height to efficiently retrieve the most recent slashing period(s)
+or those beginning after a given height.
 
 ```go
 type SlashingPeriod struct {

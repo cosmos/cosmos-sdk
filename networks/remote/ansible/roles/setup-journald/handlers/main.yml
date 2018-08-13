@@ -3,4 +3,3 @@
 - name: restart journald
   service: name=systemd-journald state=restarted
 
-

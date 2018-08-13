@@ -387,7 +387,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	// set the signed validators for addition to context in deliverTx
-	app.signedValidators = req.Validators
+	// TODO: communicate this result to the address to pubkey map in slashing
+	app.signedValidators = req.LastCommitInfo.GetValidators()
 	return
 }
 
@@ -412,11 +413,7 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 		Log:       result.Log,
 		GasWanted: result.GasWanted,
 		GasUsed:   result.GasUsed,
-		Fee: cmn.KI64Pair{
-			[]byte(result.FeeDenom),
-			result.FeeAmount,
-		},
-		Tags: result.Tags,
+		Tags:      result.Tags,
 	}
 }
 

@@ -1,6 +1,8 @@
 package slashing
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -17,8 +19,8 @@ const (
 
 // MaxEvidenceAge - Max age for evidence - 21 days (3 weeks)
 // MaxEvidenceAge = 60 * 60 * 24 * 7 * 3
-func (k Keeper) MaxEvidenceAge(ctx sdk.Context) int64 {
-	return k.params.GetInt64WithDefault(ctx, MaxEvidenceAgeKey, defaultMaxEvidenceAge)
+func (k Keeper) MaxEvidenceAge(ctx sdk.Context) time.Duration {
+	return time.Duration(k.params.GetInt64WithDefault(ctx, MaxEvidenceAgeKey, defaultMaxEvidenceAge)) * time.Second
 }
 
 // SignedBlocksWindow - sliding window for downtime slashing
@@ -34,13 +36,13 @@ func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 }
 
 // Double-sign unbond duration
-func (k Keeper) DoubleSignUnbondDuration(ctx sdk.Context) int64 {
-	return k.params.GetInt64WithDefault(ctx, DoubleSignUnbondDurationKey, defaultDoubleSignUnbondDuration)
+func (k Keeper) DoubleSignUnbondDuration(ctx sdk.Context) time.Duration {
+	return time.Duration(k.params.GetInt64WithDefault(ctx, DoubleSignUnbondDurationKey, defaultDoubleSignUnbondDuration)) * time.Second
 }
 
 // Downtime unbond duration
-func (k Keeper) DowntimeUnbondDuration(ctx sdk.Context) int64 {
-	return k.params.GetInt64WithDefault(ctx, DowntimeUnbondDurationKey, defaultDowntimeUnbondDuration)
+func (k Keeper) DowntimeUnbondDuration(ctx sdk.Context) time.Duration {
+	return time.Duration(k.params.GetInt64WithDefault(ctx, DowntimeUnbondDurationKey, defaultDowntimeUnbondDuration)) * time.Second
 }
 
 // SlashFractionDoubleSign - currently default 5%

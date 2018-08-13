@@ -1,3 +1,10 @@
+## v0.24.0 PENDING 
+^--- PENDING wasn't purged on sdk v0.23.0 release.
+
+BREAKING CHANGES
+* Update to tendermint v0.23.0. This involves removing crypto.Pubkey, 
+maintaining a validator address to pubkey map, and using time.Time instead of int64 for time. [SDK PR](https://github.com/cosmos/cosmos-sdk/pull/1927)
+
 ## PENDING
 
 BREAKING CHANGES
@@ -50,6 +57,7 @@ FEATURES
 * [gov] Add slashing for validators who do not vote on a proposal
 * [cli] added `gov query-proposals` command to CLI. Can filter by `depositer`, `voter`, and `status`
 * [core] added BaseApp.Seal - ability to seal baseapp parameters once they've been set
+* [scripts] added log output monitoring to DataDog using Ansible scripts
 * [gov] added TallyResult type that gets added stored in Proposal after tallying is finished
 
 IMPROVEMENTS

@@ -43,7 +43,7 @@ func SimulateFromSeed(
 		events[what]++
 	}
 
-	time := int64(0)
+	timestamp := time.Unix(0, 0)
 	timeDiff := maxTimePerBlock - minTimePerBlock
 
 	res := app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, keys, accs)})
@@ -56,12 +56,12 @@ func SimulateFromSeed(
 		setups[i](r, keys)
 	}
 
-	header := abci.Header{Height: 0, Time: time}
+	header := abci.Header{Height: 0, Time: timestamp}
 	opCount := 0
 
 	request := abci.RequestBeginBlock{Header: header}
 
-	var pastTimes []int64
+	var pastTimes []time.Time
 
 	for i := 0; i < numBlocks; i++ {
 
@@ -102,7 +102,7 @@ func SimulateFromSeed(
 
 		res := app.EndBlock(abci.RequestEndBlock{})
 		header.Height++
-		header.Time += minTimePerBlock + int64(r.Intn(int(timeDiff)))
+		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
 
 		// Generate a random RequestBeginBlock with the current validator set for the next block
 		request = RandomRequestBeginBlock(t, r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, event, header, log)
@@ -117,7 +117,7 @@ func SimulateFromSeed(
 
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
 func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]mockValidator, livenessTransitions TransitionMatrix, evidenceFraction float64,
-	pastTimes []int64, event func(string), header abci.Header, log string) abci.RequestBeginBlock {
+	pastTimes []time.Time, event func(string), header abci.Header, log string) abci.RequestBeginBlock {
 	if len(validators) == 0 {
 		return abci.RequestBeginBlock{Header: header}
 	}
@@ -169,8 +169,10 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]m
 		})
 	}
 	return abci.RequestBeginBlock{
-		Header:              header,
-		Validators:          signingValidators,
+		Header: header,
+		LastCommitInfo: abci.LastCommitInfo{
+			Validators: signingValidators,
+		},
 		ByzantineValidators: evidence,
 	}
 }

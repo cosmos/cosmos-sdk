@@ -15,6 +15,3 @@
   command: "systemd-tmpfiles --create --prefix /var/log/journal"
   notify: restart journald
 
-#- name: Ability to get the core dump on SIGABRT
-#  shell: "ulimit -c unlimited"
-

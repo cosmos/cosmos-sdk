@@ -183,7 +183,7 @@ type app2Tx struct {
 	sdk.Msg
 
 	PubKey    crypto.PubKey
-	Signature crypto.Signature
+	Signature []byte
 }
 
 // This tx only has one Msg.
@@ -191,7 +191,7 @@ func (tx app2Tx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{tx.Msg}
 }
 
-func (tx app2Tx) GetSignature() crypto.Signature {
+func (tx app2Tx) GetSignature() []byte {
 	return tx.Signature
 }
 

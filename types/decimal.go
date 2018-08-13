@@ -26,7 +26,7 @@ const (
 
 var (
 	precisionReuse       = new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision), nil)
-	fivePrecision        = new(big.Int).Mul(big.NewInt(5), precisionReuse)
+	fivePrecision        = new(big.Int).Quo(precisionReuse, big.NewInt(2))
 	precisionMultipliers []*big.Int
 	zeroInt              = big.NewInt(0)
 	tenInt               = big.NewInt(10)
@@ -176,7 +176,7 @@ func (d Dec) GT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) == 1 }     // great
 func (d Dec) GTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) >= 0 }     // greater than or equal
 func (d Dec) LT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) == -1 }    // less than
 func (d Dec) LTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) <= 0 }     // less than or equal
-func (d Dec) Neg() Dec          { return Dec{new(big.Int).Neg(d.Int)} } // Is equal to zero
+func (d Dec) Neg() Dec          { return Dec{new(big.Int).Neg(d.Int)} } // reverse the decimal sign
 
 // addition
 func (d Dec) Add(d2 Dec) Dec {

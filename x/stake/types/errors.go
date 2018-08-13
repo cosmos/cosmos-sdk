@@ -73,6 +73,10 @@ func ErrBadDenom(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "invalid coin denomination")
 }
 
+func ErrBadDelegationAddr(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidInput, "unexpected address length for this (address, validator) pair")
+}
+
 func ErrBadDelegationAmount(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "amount must be > 0")
 }

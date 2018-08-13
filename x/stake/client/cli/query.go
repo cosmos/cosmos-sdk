@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
@@ -142,7 +141,7 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 			// parse out the delegation
 			delegation, err := types.UnmarshalDelegation(cdc, key, res)
 			if err != nil {
-				return errors.Errorf("%v: %v", types.ErrNoDelegation(types.DefaultCodespace).Data(), err)
+				return err
 			}
 
 			switch viper.Get(cli.OutputFlag) {

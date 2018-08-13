@@ -48,12 +48,13 @@ func UnmarshalDelegation(cdc *wire.Codec, key, value []byte) (delegation Delegat
 	var storeValue delegationValue
 	err = cdc.UnmarshalBinary(value, &storeValue)
 	if err != nil {
+		err = fmt.Errorf("%v: %v", ErrNoDelegation(DefaultCodespace).Data(), err)
 		return
 	}
 
 	addrs := key[1:] // remove prefix bytes
 	if len(addrs) != 2*sdk.AddrLen {
-		err = errors.New("unexpected key length")
+		err = fmt.Errorf("%v", ErrBadDelegationAddr(DefaultCodespace).Data())
 		return
 	}
 	delAddr := sdk.AccAddress(addrs[:sdk.AddrLen])

@@ -126,12 +126,20 @@ func ErrNotMature(codespace sdk.CodespaceType, operation, descriptor string, got
 	return sdk.NewError(codespace, CodeUnauthorized, msg)
 }
 
+func ErrBadUnbondingDelegationAddr(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidInput, "unexpected address length for this (address, validator) pair")
+}
+
 func ErrNoUnbondingDelegation(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "no unbonding delegation found")
 }
 
 func ErrExistingUnbondingDelegation(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "existing unbonding delegation found")
+}
+
+func ErrBadRedelegationAddr(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidInput, "unexpected address length for this (address, srcValidator, dstValidator) triple")
 }
 
 func ErrNoRedelegation(codespace sdk.CodespaceType) sdk.Error {

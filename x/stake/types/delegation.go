@@ -2,7 +2,6 @@ package types
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"time"
 
@@ -144,7 +143,7 @@ func UnmarshalUBD(cdc *wire.Codec, key, value []byte) (ubd UnbondingDelegation, 
 
 	addrs := key[1:] // remove prefix bytes
 	if len(addrs) != 2*sdk.AddrLen {
-		err = errors.New("unexpected key length")
+		err = fmt.Errorf("%v", ErrBadUnbondingDelegationAddr(DefaultCodespace).Data())
 		return
 	}
 	delAddr := sdk.AccAddress(addrs[:sdk.AddrLen])
@@ -236,7 +235,7 @@ func UnmarshalRED(cdc *wire.Codec, key, value []byte) (red Redelegation, err err
 
 	addrs := key[1:] // remove prefix bytes
 	if len(addrs) != 3*sdk.AddrLen {
-		err = errors.New("unexpected key length")
+		err = fmt.Errorf("%v", ErrBadRedelegationAddr(DefaultCodespace).Data())
 		return
 	}
 	delAddr := sdk.AccAddress(addrs[:sdk.AddrLen])

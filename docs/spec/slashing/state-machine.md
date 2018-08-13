@@ -1,8 +1,10 @@
-## Transaction Overview
+## Transaction & State Machine Interaction Overview
+
+### Transactions
 
 In this section we describe the processing of transactions for the `slashing` module.
 
-### TxUnjail
+#### TxUnjail
 
 If a validator was automatically unbonded due to downtime and wishes to come back online &
 possibly rejoin the bonded set, it must send `TxUnjail`:
@@ -35,6 +37,19 @@ handleMsgUnjail(tx TxUnjail)
     return
 ```
 
-If the validotor has enough stake to be in the top hundred, they will be automatically rebonded,
+If the validater has enough stake to be in the top hundred, they will be automatically rebonded,
 and all delegators still delegated to the validator will be rebonded and begin to again collect
 provisions and rewards.
+
+### Interactions
+
+#### Validator Bonded
+
+#### Validator Slashed
+
+#### Validator Unjailed
+
+#### Slashing Period Cleanup
+
+Once no evidence for a given slashing period can possibly be valid (the end time plus the unbonding period is less than the current time),
+old slashing periods should be cleaned up.

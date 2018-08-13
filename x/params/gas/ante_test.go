@@ -6,11 +6,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params/store"
+	"github.com/cosmos/cosmos-sdk/x/params/space"
 )
 
 func TestGasAnteHandler(t *testing.T) {
-	ctx, store, _ := store.DefaultTestComponents(t)
+	ctx, space, _ := space.DefaultTestComponents(t)
 
 	cases := []sdk.GasConfig{
 		sdk.GasConfig{3, 3, 3, 3, 3, 3, 3, 3},
@@ -18,7 +18,7 @@ func TestGasAnteHandler(t *testing.T) {
 		sdk.GasConfig{50, 80, 20, 40, 55, 15, 25, 5},
 	}
 
-	ante := NewAnteHandler(store)
+	ante := NewAnteHandler(space)
 
 	var abort bool
 	ctx, _, abort = ante(ctx, nil)
@@ -27,8 +27,8 @@ func TestGasAnteHandler(t *testing.T) {
 	require.Equal(t, sdk.DefaultTransientGasConfig(), ctx.TransientGasConfig())
 
 	for _, tc := range cases {
-		store.Set(ctx, kvStoreKey, tc)
-		store.Set(ctx, transientStoreKey, tc)
+		space.Set(ctx, kvStoreKey, tc)
+		space.Set(ctx, transientStoreKey, tc)
 		ctx, _, abort = ante(ctx, nil)
 		require.False(t, abort)
 		require.Equal(t, tc, ctx.KVGasConfig())

@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params/store"
+	"github.com/cosmos/cosmos-sdk/x/params/space"
 )
 
 type tx []sdk.Msg
@@ -30,26 +30,26 @@ type msg2 struct{ msg }
 func (msg2) Type() string { return "msg2" }
 
 func TestAnteHandler(t *testing.T) {
-	msg1key := store.NewKey("msg1")
-	msg2key := store.NewKey("msg2")
+	msg1key := space.NewKey("msg1")
+	msg2key := space.NewKey("msg2")
 
-	ctx, store, _ := store.DefaultTestComponents(t)
+	ctx, space, _ := space.DefaultTestComponents(t)
 
 	data := GenesisState{
 		ActivatedTypes: []string{"msg1"},
 	}
 
-	InitGenesis(ctx, store, data)
+	InitGenesis(ctx, space, data)
 
-	ante := NewAnteHandler(store)
+	ante := NewAnteHandler(space)
 
 	_, _, abort := ante(ctx, tx{msg1{}})
 	require.False(t, abort)
 	_, _, abort = ante(ctx, tx{msg2{}})
 	require.True(t, abort)
 
-	store.Set(ctx, msg1key, false)
-	store.Set(ctx, msg2key, true)
+	space.Set(ctx, msg1key, false)
+	space.Set(ctx, msg2key, true)
 
 	_, _, abort = ante(ctx, tx{msg1{}})
 	require.True(t, abort)

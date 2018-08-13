@@ -2,10 +2,10 @@ package msgstat
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	params "github.com/cosmos/cosmos-sdk/x/params/store"
+	params "github.com/cosmos/cosmos-sdk/x/params/space"
 )
 
-// ActivatedParamKey - paramstore key for msg type activation
+// ActivatedParamKey - paramspace key for msg type activation
 const (
 	DefaultParamSpace = "MsgStatus"
 )
@@ -15,9 +15,9 @@ type GenesisState struct {
 	ActivatedTypes []string `json:"activated-types"`
 }
 
-// InitGenesis stores activated types to param store
-func InitGenesis(ctx sdk.Context, store params.Store, data GenesisState) {
+// InitGenesis spaces activated types to param space
+func InitGenesis(ctx sdk.Context, space params.Space, data GenesisState) {
 	for _, ty := range data.ActivatedTypes {
-		store.Set(ctx, params.NewKey(ty), true)
+		space.Set(ctx, params.NewKey(ty), true)
 	}
 }

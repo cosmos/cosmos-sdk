@@ -1,4 +1,4 @@
-package store
+package space
 
 import (
 	"os"
@@ -21,7 +21,7 @@ const (
 )
 
 // Returns components for testing
-func DefaultTestComponents(t *testing.T) (sdk.Context, Store, func() sdk.CommitID) {
+func DefaultTestComponents(t *testing.T) (sdk.Context, Space, func() sdk.CommitID) {
 	cdc := wire.NewCodec()
 	key := sdk.NewKVStoreKey("params")
 	tkey := sdk.NewTransientStoreKey("tparams")
@@ -34,7 +34,7 @@ func DefaultTestComponents(t *testing.T) (sdk.Context, Store, func() sdk.CommitI
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewTMLogger(os.Stdout))
-	store := NewStore(cdc, key, tkey, TestParamSpace)
+	store := NewSpace(cdc, key, tkey, TestParamSpace)
 
 	return ctx, store, ms.Commit
 }

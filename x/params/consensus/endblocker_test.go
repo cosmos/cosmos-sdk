@@ -8,7 +8,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params/store"
+	"github.com/cosmos/cosmos-sdk/x/params/space"
 )
 
 type flatConsensusParams struct {
@@ -69,29 +69,29 @@ func override(original flatConsensusParams, updates flatConsensusParams) (res fl
 	return
 }
 
-func setParams(ctx sdk.Context, store store.Store, params flatConsensusParams) {
+func setParams(ctx sdk.Context, space space.Space, params flatConsensusParams) {
 	if params.blockMaxBytes != 0 {
-		store.Set(ctx, blockMaxBytesKey, params.blockMaxBytes)
+		space.Set(ctx, blockMaxBytesKey, params.blockMaxBytes)
 	}
 	if params.blockMaxTxs != 0 {
-		store.Set(ctx, blockMaxTxsKey, params.blockMaxTxs)
+		space.Set(ctx, blockMaxTxsKey, params.blockMaxTxs)
 	}
 	if params.blockMaxGas != 0 {
-		store.Set(ctx, blockMaxGasKey, params.blockMaxGas)
+		space.Set(ctx, blockMaxGasKey, params.blockMaxGas)
 	}
 	if params.txMaxBytes != 0 {
-		store.Set(ctx, txMaxBytesKey, params.txMaxBytes)
+		space.Set(ctx, txMaxBytesKey, params.txMaxBytes)
 	}
 	if params.txMaxGas != 0 {
-		store.Set(ctx, txMaxGasKey, params.txMaxGas)
+		space.Set(ctx, txMaxGasKey, params.txMaxGas)
 	}
 	if params.partSizeBytes != 0 {
-		store.Set(ctx, blockPartSizeBytesKey, params.partSizeBytes)
+		space.Set(ctx, blockPartSizeBytesKey, params.partSizeBytes)
 	}
 }
 
 func TestEndBlocker(t *testing.T) {
-	ctx, store, commit := store.DefaultTestComponents(t)
+	ctx, space, commit := space.DefaultTestComponents(t)
 
 	empty := &abci.ConsensusParams{
 		BlockSize: &abci.BlockSize{
@@ -131,8 +131,8 @@ func TestEndBlocker(t *testing.T) {
 	current := flat(empty)
 	for _, tc := range cases {
 		flatten := flat(tc)
-		setParams(ctx, store, flat(tc))
-		updates := EndBlock(ctx, store)
+		setParams(ctx, space, flat(tc))
+		updates := EndBlock(ctx, space)
 		updated := override(current, flat(updates))
 		current = override(current, flatten)
 		require.Equal(t, current, updated)

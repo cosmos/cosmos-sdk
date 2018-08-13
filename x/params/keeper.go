@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params/consensus"
 	"github.com/cosmos/cosmos-sdk/x/params/gas"
 	"github.com/cosmos/cosmos-sdk/x/params/msgstat"
-	"github.com/cosmos/cosmos-sdk/x/params/store"
+	"github.com/cosmos/cosmos-sdk/x/params/space"
 )
 
 // Keeper of the global paramstore
@@ -18,10 +18,10 @@ type Keeper struct {
 
 	space KeeperSpace
 
-	stores map[string]*Store
+	spaces map[string]*Space
 }
 
-// KeeperSpace defines param space for the substores
+// KeeperSpace defines param space for the subspaces
 // Zero value("") means not using the substore
 type KeeperSpace struct {
 	ConsensusSpace string
@@ -51,19 +51,19 @@ func NewKeeper(cdc *wire.Codec, key *sdk.KVStoreKey, tkey *sdk.TransientStoreKey
 
 		space: *space,
 
-		stores: make(map[string]*Store),
+		spaces: make(map[string]*Space),
 	}
 
 	// Registering Default Subspaces
 	if space != nil {
 		if space.ConsensusSpace != "" {
-			_ = k.SubStore(space.ConsensusSpace)
+			_ = k.Subspace(space.ConsensusSpace)
 		}
 		if space.GasConfigSpace != "" {
-			_ = k.SubStore(space.GasConfigSpace)
+			_ = k.Subspace(space.GasConfigSpace)
 		}
 		if space.MsgStatusSpace != "" {
-			_ = k.SubStore(space.MsgStatusSpace)
+			_ = k.Subspace(space.MsgStatusSpace)
 		}
 	}
 
@@ -71,42 +71,42 @@ func NewKeeper(cdc *wire.Codec, key *sdk.KVStoreKey, tkey *sdk.TransientStoreKey
 }
 
 // Allocate substore used for keepers
-func (k Keeper) SubStore(space string) Store {
-	_, ok := k.stores[space]
+func (k Keeper) Subspace(space string) Space {
+	_, ok := k.spaces[space]
 	if ok {
-		panic("substore already occupied")
+		panic("subspace already occupied")
 	}
 
-	return k.UnsafeSubStore(space)
+	return k.UnsafeSubspace(space)
 }
 
 // Get substore without checking existing allocation
-func (k Keeper) UnsafeSubStore(space string) Store {
-	if space == "" {
-		panic("cannot use empty string for substore space")
+func (k Keeper) UnsafeSubspace(spacename string) Space {
+	if spacename == "" {
+		panic("cannot use empty string for subspace")
 	}
 
-	store := store.NewStore(k.cdc, k.key, k.tkey, space)
+	space := space.NewSpace(k.cdc, k.key, k.tkey, spacename)
 
-	k.stores[space] = &store
+	k.spaces[spacename] = &space
 
-	return store
+	return space
 }
 
-// ConsensusStore returns ConsensusParams submodule store
+// ConsensusSpace returns ConsensusParams submodule store
 // Panics if not allocated
-func (k Keeper) ConsensusStore() Store {
-	return *k.stores[k.space.ConsensusSpace]
+func (k Keeper) ConsensusSpace() Space {
+	return *k.spaces[k.space.ConsensusSpace]
 }
 
-// GasConfigStore returns GasConfig submodule store
+// GasConfigSpace returns GasConfig submodule store
 // Panics if not allocated
-func (k Keeper) GasConfigStore() Store {
-	return *k.stores[k.space.GasConfigSpace]
+func (k Keeper) GasConfigSpace() Space {
+	return *k.spaces[k.space.GasConfigSpace]
 }
 
-// MsgStatusStore returns MsgStatus submodule store
+// MsgStatusSpace returns MsgStatus submodule store
 // Panics if not allocated
-func (k Keeper) MsgStatusStore() Store {
-	return *k.stores[k.space.MsgStatusSpace]
+func (k Keeper) MsgStatusSpace() Space {
+	return *k.spaces[k.space.MsgStatusSpace]
 }

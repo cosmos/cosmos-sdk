@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	params "github.com/cosmos/cosmos-sdk/x/params/store"
+	params "github.com/cosmos/cosmos-sdk/x/params/space"
 )
 
 // Default parameter namespace
@@ -32,35 +32,35 @@ var (
 )
 
 // EndBlock returns consensus parameters set in the block
-func EndBlock(ctx sdk.Context, store params.Store) (updates *abci.ConsensusParams) {
+func EndBlock(ctx sdk.Context, space params.Space) (updates *abci.ConsensusParams) {
 	updates = &abci.ConsensusParams{
 		BlockSize:   new(abci.BlockSize),
 		TxSize:      new(abci.TxSize),
 		BlockGossip: new(abci.BlockGossip),
 	}
 
-	if store.Modified(ctx, blockMaxBytesKey) {
-		store.Get(ctx, blockMaxBytesKey, &updates.BlockSize.MaxBytes)
+	if space.Modified(ctx, blockMaxBytesKey) {
+		space.Get(ctx, blockMaxBytesKey, &updates.BlockSize.MaxBytes)
 	}
 
-	if store.Modified(ctx, blockMaxTxsKey) {
-		store.Get(ctx, blockMaxTxsKey, &updates.BlockSize.MaxTxs)
+	if space.Modified(ctx, blockMaxTxsKey) {
+		space.Get(ctx, blockMaxTxsKey, &updates.BlockSize.MaxTxs)
 	}
 
-	if store.Modified(ctx, blockMaxGasKey) {
-		store.Get(ctx, blockMaxGasKey, &updates.BlockSize.MaxGas)
+	if space.Modified(ctx, blockMaxGasKey) {
+		space.Get(ctx, blockMaxGasKey, &updates.BlockSize.MaxGas)
 	}
 
-	if store.Modified(ctx, txMaxBytesKey) {
-		store.Get(ctx, txMaxBytesKey, &updates.TxSize.MaxBytes)
+	if space.Modified(ctx, txMaxBytesKey) {
+		space.Get(ctx, txMaxBytesKey, &updates.TxSize.MaxBytes)
 	}
 
-	if store.Modified(ctx, txMaxGasKey) {
-		store.Get(ctx, txMaxGasKey, &updates.TxSize.MaxGas)
+	if space.Modified(ctx, txMaxGasKey) {
+		space.Get(ctx, txMaxGasKey, &updates.TxSize.MaxGas)
 	}
 
-	if store.Modified(ctx, blockPartSizeBytesKey) {
-		store.Get(ctx, blockPartSizeBytesKey, &updates.BlockGossip.BlockPartSizeBytes)
+	if space.Modified(ctx, blockPartSizeBytesKey) {
+		space.Get(ctx, blockPartSizeBytesKey, &updates.BlockGossip.BlockPartSizeBytes)
 	}
 
 	return

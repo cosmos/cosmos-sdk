@@ -70,8 +70,6 @@ type BaseApp struct {
 
 	// flag for sealing
 	sealed bool
-	// Consensus parameters are set by (Request)InitChain and (Response)EndBlock
-	consensusParams *abci.ConsensusParams
 }
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -176,7 +174,7 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 		return errors.New("baseapp expects MultiStore with 'main' KVStore")
 	}
 	// Needed for `gaiad export`, which inits from store but never calls initchain
-	app.setCheckState(abci.Header{})
+	app.setCheckState(abci.Header{}, nil)
 
 	app.Seal()
 
@@ -200,19 +198,25 @@ func (st *state) CacheMultiStore() sdk.CacheMultiStore {
 	return st.ms.CacheMultiStore()
 }
 
-func (app *BaseApp) setCheckState(header abci.Header) {
+func (app *BaseApp) setCheckState(header abci.Header, params *abci.ConsensusParams) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, app.Logger).WithConsensusParams(app.consensusParams),
+		ctx: sdk.NewContext(ms, header, true, app.Logger),
+	}
+	if params != nil {
+		app.checkState.ctx = app.checkState.ctx.WithConsensusParams(params)
 	}
 }
 
-func (app *BaseApp) setDeliverState(header abci.Header) {
+func (app *BaseApp) setDeliverState(header abci.Header, params *abci.ConsensusParams) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:  ms,
 		ctx: sdk.NewContext(ms, header, false, app.Logger),
+	}
+	if params != nil {
+		app.deliverState.ctx = app.deliverState.ctx.WithConsensusParams(params)
 	}
 }
 
@@ -241,10 +245,8 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 // InitChain runs the initialization logic directly on the CommitMultiStore and commits it.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	// Initialize the deliver state and check state with ChainID and run initChain
-	app.setDeliverState(abci.Header{ChainID: req.ChainId})
-	app.setCheckState(abci.Header{ChainID: req.ChainId})
-
-	app.consensusParams = req.ConsensusParams
+	app.setDeliverState(abci.Header{ChainID: req.ChainId}, req.ConsensusParams)
+	app.setCheckState(abci.Header{ChainID: req.ChainId}, req.ConsensusParams)
 
 	if app.initChainer == nil {
 		return
@@ -411,7 +413,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	// already be initialized in InitChain. Otherwise app.deliverState will be
 	// nil, since it is reset on Commit.
 	if app.deliverState == nil {
-		app.setDeliverState(req.Header)
+		app.setDeliverState(req.Header, nil)
 	} else {
 		// In the first block, app.deliverState.ctx will already be initialized
 		// by InitChain. Context is now updated with Header information.
@@ -639,22 +641,31 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 }
 
 // Copied from tendermint/tendermint/types/params.go
-func (app *BaseApp) updateConsensusParams(updates *abci.ConsensusParams) {
+func updateConsensusParams(params *abci.ConsensusParams, updates *abci.ConsensusParams) (res *abci.ConsensusParams) {
+	res = new(abci.ConsensusParams)
+	res.BlockSize = new(abci.BlockSize)
+	res.TxSize = new(abci.BlockSize)
+	res.BlockGossip = new(abci.BlockGossip)
+
 	if updates == nil {
 		return
 	}
 
-	params := app.consensusParams
-
 	if updates.BlockSize != nil {
 		if updates.BlockSize.MaxBytes > 0 {
-			params.BlockSize.MaxBytes = updates.BlockSize.MaxBytes
+			ress.BlockSize.MaxBytes = updates.BlockSize.MaxBytes
+		} else {
+			res.BlockSize.MaxBytes = params.BlockSize.MaxBytes
 		}
 		if updates.BlockSize.MaxTxs > 0 {
-			params.BlockSize.MaxTxs = updates.BlockSize.MaxTxs
+			res.BlockSize.MaxTxs = updates.BlockSize.MaxTxs
+		} else {
+			res.BlockSize.MaxTxs = params.BlockSize.MaxTxs
 		}
 		if updates.BlockSize.MaxGas > 0 {
-			params.BlockSize.MaxGas = updates.BlockSize.MaxGas
+			res.BlockSize.MaxGas = updates.BlockSize.MaxGas
+		} else {
+			res.BlockSize.MaxGas = params.BlockSize.MaxGas
 		}
 	}
 	if updates.TxSize != nil {
@@ -670,6 +681,7 @@ func (app *BaseApp) updateConsensusParams(updates *abci.ConsensusParams) {
 			params.BlockGossip.BlockPartSizeBytes = updates.BlockGossip.BlockPartSizeBytes
 		}
 	}
+	return
 }
 
 // EndBlock implements the ABCI application interface.
@@ -683,7 +695,7 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	}
 
 	if res.ConsensusParamUpdates != nil {
-		app.updateConsensusParams(res.ConsensusParamUpdates)
+		params := updateConsensusParams(app.deliverState.ctx.ConsensusParams(), res.ConsensusParamUpdates)
 	}
 
 	return
@@ -712,7 +724,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// Reset the Check state to the latest committed
 	// NOTE: safe because Tendermint holds a lock on the mempool for Commit.
 	// Use the header from this latest block.
-	app.setCheckState(header)
+	app.setCheckState(header, nil)
 
 	// Empty the Deliver state
 	app.deliverState = nil

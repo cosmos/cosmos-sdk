@@ -17,9 +17,9 @@ All delegators still delegated to the validator will be rebonded and begin
 to again collect provisions and rewards.
 
 ```golang
-handleMsgUnjail(operator sdk.AccAddress)
+handleMsgUnjail(tx TxUnjail)
 
-    validator := getValidator(operator)
+    validator := getValidator(tx.ValidatorAddr)
     if validator == nil
       fail with "No validator found"
 

@@ -89,7 +89,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	}
 
 	// Cannot decrease balance below zero
-	tokensToBurn := sdk.MinRat(remainingSlashAmount, validator.Tokens)
+	tokensToBurn := sdk.MinDec(remainingSlashAmount, validator.Tokens)
 
 	// Get the current pool
 	pool := k.GetPool(ctx)
@@ -166,7 +166,7 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 	}
 
 	// Calculate slash amount proportional to stake contributing to infraction
-	slashAmount = sdk.NewDecFromInt(unbondingDelegation.InitialBalance.Amount, sdk.OneInt()).Mul(slashFactor)
+	slashAmount = sdk.NewDecFromInt(unbondingDelegation.InitialBalance.Amount).Mul(slashFactor)
 
 	// Don't slash more tokens than held
 	// Possible since the unbonding delegation may already
@@ -210,7 +210,7 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 	}
 
 	// Calculate slash amount proportional to stake contributing to infraction
-	slashAmount = sdk.NewDecFromInt(redelegation.InitialBalance.Amount, sdk.OneInt()).Mul(slashFactor)
+	slashAmount = sdk.NewDecFromInt(redelegation.InitialBalance.Amount).Mul(slashFactor)
 
 	// Don't slash more tokens than held
 	// Possible since the redelegation may already

@@ -3,16 +3,17 @@ package types
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Pool - dynamic parameters of the current state
 type Pool struct {
-	LooseTokens       sdk.Dec `json:"loose_tokens"`        // tokens which are not bonded in a validator
-	BondedTokens      sdk.Dec `json:"bonded_tokens"`       // reserve of bonded tokens
-	InflationLastTime int64   `json:"inflation_last_time"` // block which the last inflation was processed // TODO make time
-	Inflation         sdk.Dec `json:"inflation"`           // current annual inflation rate
+	LooseTokens       sdk.Dec   `json:"loose_tokens"`        // tokens which are not bonded in a validator
+	BondedTokens      sdk.Dec   `json:"bonded_tokens"`       // reserve of bonded tokens
+	InflationLastTime time.Time `json:"inflation_last_time"` // block which the last inflation was processed // TODO make time
+	Inflation         sdk.Dec   `json:"inflation"`           // current annual inflation rate
 
 	DateLastCommissionReset int64 `json:"date_last_commission_reset"` // unix timestamp for last commission accounting reset (daily)
 
@@ -32,7 +33,7 @@ func InitialPool() Pool {
 	return Pool{
 		LooseTokens:             sdk.ZeroDec(),
 		BondedTokens:            sdk.ZeroDec(),
-		InflationLastTime:       0,
+		InflationLastTime:       time.Unix(0, 0),
 		Inflation:               sdk.NewDecWithPrec(7, 2),
 		DateLastCommissionReset: 0,
 		PrevBondedShares:        sdk.ZeroDec(),

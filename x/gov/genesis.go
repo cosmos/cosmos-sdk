@@ -33,9 +33,9 @@ func DefaultGenesisState() GenesisState {
 			VotingPeriod: 200,
 		},
 		TallyingProcedure: TallyingProcedure{
-			Threshold:         sdk.NewDec(1, 2),
-			Veto:              sdk.NewDec(1, 3),
-			GovernancePenalty: sdk.NewDec(1, 100),
+			Threshold:         sdk.NewDecWithPrec(5, 1),
+			Veto:              sdk.NewDecWithPrec(334, 3),
+			GovernancePenalty: sdk.NewDecWithPrec(1, 2),
 		},
 	}
 }

@@ -246,7 +246,7 @@ func getShares(
 	case sharesAmountStr == "" && sharesPercentStr == "":
 		return sharesAmount, errors.Errorf("can either specify the amount OR the percent of the shares, not both")
 	case sharesAmountStr != "":
-		sharesAmount, err = sdk.NewDecFromDecimal(sharesAmountStr, types.MaxBondDenominatorPrecision)
+		sharesAmount, err = sdk.NewDecFromStr(sharesAmountStr)
 		if err != nil {
 			return sharesAmount, err
 		}
@@ -255,7 +255,7 @@ func getShares(
 		}
 	case sharesPercentStr != "":
 		var sharesPercent sdk.Dec
-		sharesPercent, err = sdk.NewDecFromDecimal(sharesPercentStr, types.MaxBondDenominatorPrecision)
+		sharesPercent, err = sdk.NewDecFromStr(sharesPercentStr)
 		if err != nil {
 			return sharesAmount, err
 		}

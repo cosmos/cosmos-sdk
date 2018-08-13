@@ -30,7 +30,7 @@ func (k Keeper) SignedBlocksWindow(ctx sdk.Context) int64 {
 
 // Downtime slashing thershold - default 50%
 func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
-	minSignedPerWindow := k.params.GetRatWithDefault(ctx, MinSignedPerWindowKey, defaultMinSignedPerWindow)
+	minSignedPerWindow := k.params.GetDecWithDefault(ctx, MinSignedPerWindowKey, defaultMinSignedPerWindow)
 	signedBlocksWindow := k.SignedBlocksWindow(ctx)
 	return sdk.NewDec(signedBlocksWindow).Mul(minSignedPerWindow).RoundInt64()
 }
@@ -47,12 +47,12 @@ func (k Keeper) DowntimeUnbondDuration(ctx sdk.Context) time.Duration {
 
 // SlashFractionDoubleSign - currently default 5%
 func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) sdk.Dec {
-	return k.params.GetRatWithDefault(ctx, SlashFractionDoubleSignKey, defaultSlashFractionDoubleSign)
+	return k.params.GetDecWithDefault(ctx, SlashFractionDoubleSignKey, defaultSlashFractionDoubleSign)
 }
 
 // SlashFractionDowntime - currently default 1%
 func (k Keeper) SlashFractionDowntime(ctx sdk.Context) sdk.Dec {
-	return k.params.GetRatWithDefault(ctx, SlashFractionDowntimeKey, defaultSlashFractionDowntime)
+	return k.params.GetDecWithDefault(ctx, SlashFractionDowntimeKey, defaultSlashFractionDowntime)
 }
 
 // declared as var because of keeper_test.go
@@ -72,7 +72,7 @@ var (
 	// TODO Temporarily set to 10 minutes for testnets
 	defaultDowntimeUnbondDuration int64 = 60 * 10
 
-	defaultMinSignedPerWindow = sdk.NewDec(1, 2)
+	defaultMinSignedPerWindow = sdk.NewDecWithPrec(5, 1)
 
 	defaultSlashFractionDoubleSign = sdk.NewDec(1).Quo(sdk.NewDec(20))
 

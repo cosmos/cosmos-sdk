@@ -65,58 +65,74 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, infracti
 }
 
 // handle a validator signature, must be called once per validator per block
-// nolint gocyclo
 func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, power int64, signed bool) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	height := ctx.BlockHeight()
-	address := sdk.ValAddress(pubkey.Address())
+	valAddr := sdk.ValAddress(pubkey.Address())
 
-	// Local index, so counts blocks validator *should* have signed
-	// Will use the 0-value default signing info if not present, except for start height
-	signInfo, found := k.getValidatorSigningInfo(ctx, address)
+	// The signInfo reflects a local index, so we can count blocks validator
+	// SHOULD have signed. We will use the 0-value default signing info if it is
+	// not present, except for start height.
+	signInfo, found := k.getValidatorSigningInfo(ctx, valAddr)
 	if !found {
-		// If this validator has never been seen before, construct a new SigningInfo with the correct start height
+		// If this validator has never been seen before, construct a new
+		// SigningInfo with the correct start height.
 		signInfo = NewValidatorSigningInfo(height, 0, 0, 0)
 	}
+
 	index := signInfo.IndexOffset % k.SignedBlocksWindow(ctx)
 	signInfo.IndexOffset++
 
-	// Update signed block bit array & counter
-	// This counter just tracks the sum of the bit array
-	// That way we avoid needing to read/write the whole array each time
-	previous := k.getValidatorSigningBitArray(ctx, address, index)
-	if previous == signed {
-		// Array value at this index has not changed, no need to update counter
-	} else if previous && !signed {
-		// Array value has changed from signed to unsigned, decrement counter
-		k.setValidatorSigningBitArray(ctx, address, index, false)
+	// Update the signed block bit array & counter. This counter just tracks the
+	// total sum of the bit array. This way we avoid needing to read/write the
+	// whole array each time.
+	signedPrev := k.getValidatorSigningBitArray(ctx, valAddr, index)
+	if signedPrev == signed {
+		// array value at this index has not changed, no need to update counter
+	} else if signedPrev && !signed {
+		// array value has changed from signed to unsigned, decrement counter
+		k.setValidatorSigningBitArray(ctx, valAddr, index, false)
 		signInfo.SignedBlocksCounter--
-	} else if !previous && signed {
-		// Array value has changed from unsigned to signed, increment counter
-		k.setValidatorSigningBitArray(ctx, address, index, true)
+	} else if !signedPrev && signed {
+		// array value has changed from unsigned to signed, increment counter
+		k.setValidatorSigningBitArray(ctx, valAddr, index, true)
 		signInfo.SignedBlocksCounter++
 	}
 
 	if !signed {
-		logger.Info(fmt.Sprintf("Absent validator %s at height %d, %d signed, threshold %d", pubkey.Address(), height, signInfo.SignedBlocksCounter, k.MinSignedPerWindow(ctx)))
+		logger.Info(fmt.Sprintf("Absent validator %s at height %d, %d signed, threshold %d",
+			pubkey.Address(), height, signInfo.SignedBlocksCounter, k.MinSignedPerWindow(ctx)),
+		)
 	}
+
+	// Check if MinSignedPerWindow has elapsed since since the validator was
+	// bonded and if the validator has missed MinSignedPerWindow signatures.
 	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)
 	if height > minHeight && signInfo.SignedBlocksCounter < k.MinSignedPerWindow(ctx) {
 		validator := k.validatorSet.ValidatorByPubKey(ctx, pubkey)
 		if validator != nil && !validator.GetRevoked() {
-			// Downtime confirmed, slash, revoke, and jail the validator
-			logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",
-				pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx)))
+			// The validator downtime has been confirmed, so we slash, revoke,
+			// and jail the validator.
+			logger.Info(
+				fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",
+					pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx),
+				),
+			)
+
 			k.validatorSet.Slash(ctx, pubkey, height, power, k.SlashFractionDowntime(ctx))
 			k.validatorSet.Revoke(ctx, pubkey)
+
 			signInfo.JailedUntil = ctx.BlockHeader().Time + k.DowntimeUnbondDuration(ctx)
 		} else {
-			// Validator was (a) not found or (b) already revoked, don't slash
-			logger.Info(fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store or already revoked",
-				pubkey.Address()))
+			// The validator was either not found or already revoked, so we do
+			// NOT slash.
+			logger.Info(
+				fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store or already revoked",
+					pubkey.Address(),
+				),
+			)
 		}
 	}
 
-	// Set the updated signing info
-	k.setValidatorSigningInfo(ctx, address, signInfo)
+	k.setValidatorSigningInfo(ctx, valAddr, signInfo)
 }

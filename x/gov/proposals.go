@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"strings"
 )
 
 //-----------------------------------------------------------
@@ -99,49 +100,67 @@ type Op string
 
 const (
 	Add    Op = "add"
-	Del    Op = "del"
 	Update Op = "update"
 )
 
-type Data struct {
+type Param struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
 	Op    Op     `json:"op"`
 }
 
-type Params []Data
+type Params []Param
 
 // Implements Proposal Interface
 var _ Proposal = (*ParameterProposal)(nil)
 
 type ParameterProposal struct {
 	TextProposal
-	Datas Params `json:"datas"`
+	Params Params `json:"params"`
 }
 
-func (pp *ParameterProposal) Execute(ctx sdk.Context, k Keeper) error {
+func (pp *ParameterProposal) Execute(ctx sdk.Context, k Keeper) (err error) {
 
 	logger := ctx.Logger().With("module", "x/gov")
-	logger.Info("Execute ParameterProposal begin","info", fmt.Sprintf("current height:%d",ctx.BlockHeight()))
+	logger.Info("Execute ParameterProposal begin", "info", fmt.Sprintf("current height:%d", ctx.BlockHeight()))
 
-	if len(pp.Datas) == 0 {
-		return errors.New("ParameterProposal's data is empty")
-	}
-	for _, data := range pp.Datas {
+	for _, data := range pp.Params {
+		//param only begin with "gov/" can be update
+		if !strings.HasPrefix(data.Key, Prefix) {
+			errMsg := fmt.Sprintf("Parameter %s is not begin with %s", data.Key, Prefix)
+			logger.Error("Execute ParameterProposal ", "err", errMsg)
+			continue
+		}
 		if data.Op == Add {
-			k.ps.Set(ctx, data.Key, data.Value)
+			k.ps.GovSetter().Set(ctx, data.Key, data.Value)
 		} else if data.Op == Update {
-			bz := k.ps.GetRaw(ctx, data.Key)
+			bz := k.ps.GovSetter().GetRaw(ctx, data.Key)
 			if bz == nil || len(bz) == 0 {
 				logger.Error("Execute ParameterProposal ", "err", "Parameter "+data.Key+" is not exist")
 			} else {
-				if err := k.ps.Set(ctx, data.Key, data.Value);err != nil{
-					logger.Error("Execute ParameterProposal ", "err", err.Error())
-				}
+				k.ps.GovSetter().SetString(ctx, data.Key, data.Value)
 			}
-		} else {
-
 		}
+	}
+	return
+}
+
+var _ Proposal = (*SoftwareUpgradeProposal)(nil)
+
+type SoftwareUpgradeProposal struct {
+	TextProposal
+}
+
+func (sp *SoftwareUpgradeProposal) Execute(ctx sdk.Context, k Keeper) error {
+	logger := ctx.Logger().With("module", "x/gov")
+	logger.Info("Execute SoftwareProposal begin", "info", fmt.Sprintf("current height:%d", ctx.BlockHeight()))
+	err := k.ps.Set(ctx, "upgrade/proposalId", sp.ProposalID)
+	if err != nil {
+		return err
+	}
+	k.ps.Set(ctx, "upgrade/proposalAcceptHeight", ctx.BlockHeight())
+	if err != nil {
+		return err
 	}
 	return nil
 }

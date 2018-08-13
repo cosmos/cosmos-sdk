@@ -148,7 +148,7 @@ func main() {
 
 	paramsCmd.AddCommand(
 		client.GetCommands(
-			paramscli.QueryParam("params",cdc),
+			paramscli.ExportCmd("params",cdc),
 		)...)
 
 	rootCmd.AddCommand(paramsCmd)

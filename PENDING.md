@@ -7,7 +7,8 @@ BREAKING CHANGES
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
-
+    * Make the transient store key use a distinct store key.
+    
 * SDK 
 
 * Tendermint 

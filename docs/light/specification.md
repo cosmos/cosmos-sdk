@@ -323,6 +323,14 @@ return KeyOutput{
 
 TODO
 
+### [/stake/delegators/{delegatorAddr}/validators](api.md#stakedelegatorsdelegatorAddrvalidators---get)
+
+TODO
+
+### [/stake/delegators/{delegatorAddr}/validators/{validatorAddr}](api.md#stakedelegatorsdelegatorAddrvalidatorsvalidatorAddr---get)
+
+TODO
+
 ### [/stake/delegators/{delegatorAddr}/txs](api.md#stakedelegatorsdelegatorAddrtxs---get)
 
 TODO

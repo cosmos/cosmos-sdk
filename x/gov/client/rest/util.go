@@ -17,6 +17,7 @@ type baseReq struct {
 	AccountNumber int64  `json:"account_number"`
 	Sequence      int64  `json:"sequence"`
 	Gas           int64  `json:"gas"`
+	Fee           string `json:"fee"`
 }
 
 func buildReq(w http.ResponseWriter, r *http.Request, cdc *wire.Codec, req interface{}) error {
@@ -75,6 +76,7 @@ func signAndBuild(w http.ResponseWriter, ctx context.CoreContext, baseReq baseRe
 
 	// add gas to context
 	ctx = ctx.WithGas(baseReq.Gas)
+	ctx = ctx.WithFee(baseReq.Fee)
 
 	txBytes, err := ctx.SignAndBuild(baseReq.Name, baseReq.Password, []sdk.Msg{msg}, cdc)
 	if err != nil {

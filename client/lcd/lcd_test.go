@@ -763,83 +763,87 @@ func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.
 // ============= Stake Module ================
 
 func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.AccAddress) rest.DelegationWithoutRat {
-
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/delegations/%s", delegatorAddr, validatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
 	var bond rest.DelegationWithoutRat
+
 	err := cdc.UnmarshalJSON([]byte(body), &bond)
 	require.Nil(t, err)
+
 	return bond
 }
 
 func getUndelegations(t *testing.T, port string, delegatorAddr, validatorAddr sdk.AccAddress) []stake.UnbondingDelegation {
-
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/unbonding_delegations/%s", delegatorAddr, validatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
 	var unbondings []stake.UnbondingDelegation
+
 	err := cdc.UnmarshalJSON([]byte(body), &unbondings)
 	require.Nil(t, err)
+
 	return unbondings
 }
 
 func getDelegationSummary(t *testing.T, port string, delegatorAddr sdk.AccAddress) rest.DelegationSummary {
-
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s", delegatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
 	var summary rest.DelegationSummary
+
 	err := cdc.UnmarshalJSON([]byte(body), &summary)
 	require.Nil(t, err)
+
 	return summary
 }
 
 func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, query string) []tx.Info {
-
 	var res *http.Response
 	var body string
+
 	if len(query) > 0 {
 		res, body = Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/txs?type=%s", delegatorAddr, query), nil)
 	} else {
 		res, body = Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/txs", delegatorAddr), nil)
 	}
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
 	var txs []tx.Info
+
 	err := cdc.UnmarshalJSON([]byte(body), &txs)
 	require.Nil(t, err)
+
 	return txs
 }
 
 func getDelegatorValidators(t *testing.T, port string, delegatorAddr sdk.AccAddress) []stake.BechValidator {
-
-	var res *http.Response
-	var body string
-	res, body = Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/validators", delegatorAddr), nil)
-
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/validators", delegatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
 	var bondedValidators []stake.BechValidator
+
 	err := cdc.UnmarshalJSON([]byte(body), &bondedValidators)
 	require.Nil(t, err)
+
 	return bondedValidators
 }
 
 func getDelegatorValidator(t *testing.T, port string, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) stake.BechValidator {
-
-	var res *http.Response
-	var body string
-	res, body = Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/validators/%s", delegatorAddr, validatorAddr), nil)
-
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/validators/%s", delegatorAddr, validatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
 	var bondedValidator stake.BechValidator
 	err := cdc.UnmarshalJSON([]byte(body), &bondedValidator)
 	require.Nil(t, err)
+
 	return bondedValidator
 }
 
 func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, validatorAddr sdk.AccAddress, amount int64) (resultTx ctypes.ResultBroadcastTxCommit) {
-
 	acc := getAccount(t, port, delegatorAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
-
 	chainID := viper.GetString(client.FlagChainID)
 
 	jsonStr := []byte(fmt.Sprintf(`{
@@ -878,7 +882,6 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 	acc := getAccount(t, port, delegatorAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
-
 	chainID := viper.GetString(client.FlagChainID)
 
 	jsonStr := []byte(fmt.Sprintf(`{

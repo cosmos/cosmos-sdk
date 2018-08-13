@@ -17,6 +17,7 @@ const (
 	CodeInvalidDelegation CodeType = 102
 	CodeInvalidInput      CodeType = 103
 	CodeValidatorJailed   CodeType = 104
+	CodeInvalidAddress    CodeType = sdk.CodeInvalidAddress
 	CodeUnauthorized      CodeType = sdk.CodeUnauthorized
 	CodeInternal          CodeType = sdk.CodeInternal
 	CodeUnknownRequest    CodeType = sdk.CodeUnknownRequest
@@ -25,6 +26,10 @@ const (
 //validator
 func ErrNilValidatorAddr(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidInput, "validator address is nil")
+}
+
+func ErrBadValidatorAddr(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidAddress, "validator address is invalid")
 }
 
 func ErrNoValidatorFound(codespace sdk.CodespaceType) sdk.Error {

@@ -36,10 +36,11 @@ The information stored for tracking validator liveness is as follows:
 
 ```go
 type ValidatorSigningInfo struct {
-  StartHeight           int64
-  IndexOffset           int64
-  JailedUntil           int64
-  SignedBlocksCounter   int64
+    StartHeight           int64     // Height at which the validator became able to sign blocks
+    IndexOffset           int64     // Offset into the signed block bit array
+    JailedUntil           int64     // Block height until which the validator is jailed,
+                                    // or sentinel value of 0 for not jailed
+    SignedBlocksCounter   int64     // Running counter of signed blocks
 }
 
 ```
@@ -49,3 +50,29 @@ Where:
 * `IndexOffset` is incremented each time the candidate was a bonded validator in a block (and may have signed a precommit or not).
 * `JailedUntil` is set whenever the candidate is revoked due to downtime
 * `SignedBlocksCounter` is a counter kept to avoid unnecessary array reads. `SignedBlocksBitArray.Sum() == SignedBlocksCounter` always.
+
+### Slashing Period
+
+A slashing period is a start and end time associated with a particular validator,
+within which only the "worst infraction counts": the total amount of slashing for
+infractions committed within the period (and discovered whenever) is capped at the
+penalty for the worst offense.
+
+This period starts when a validator is first bonded and ends when a validator is slashed & jailed
+for double-signing (but does not end if they are slashed & jailed for just missing blocks).
+When the validator voluntarily unjails themselves (and possibly changes signing keys), they reset the period.
+
+Slashing periods are indexed in the store as follows:
+
+- SlashingPeriod: ` 0x03 | ValTendermintAddr -> amino(slashingPeriod) `
+
+This allows us to look up slashing period by validator address, the only lookup necessary.
+
+```go
+type SlashingPeriod struct {
+    ValidatorAddr         sdk.ValAddress      // Tendermint address of the validator
+    StartHeight           int64               // Block height at which slashing period begin
+    EndHeight             int64               // Block height at which slashing period ended
+    SlashedSoFar          sdk.Rat             // Fraction slashed so far, cumulative
+}
+```

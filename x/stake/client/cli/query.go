@@ -142,7 +142,7 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 			// parse out the delegation
 			delegation, err := types.UnmarshalDelegation(cdc, key, res)
 			if err != nil {
-				return errors.Errorf("cannot unmarshal delegation: %v", err)
+				return errors.Errorf("%v: %v", types.ErrNoDelegation(types.DefaultCodespace).Data(), err)
 			}
 
 			switch viper.Get(cli.OutputFlag) {

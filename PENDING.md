@@ -1,15 +1,5 @@
 ## PENDING
 
-* Gaia REST API (`gaiacli advanced rest-server`)
-
-* Gaia CLI  (`gaiacli`)
-
-* Gaia
-
-* SDK 
-
-* Tendermint 
-
 BREAKING CHANGES
 
 * Gaia REST API (`gaiacli advanced rest-server`)

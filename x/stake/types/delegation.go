@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -100,14 +101,14 @@ type UnbondingDelegation struct {
 	DelegatorAddr  sdk.AccAddress `json:"delegator_addr"`  // delegator
 	ValidatorAddr  sdk.AccAddress `json:"validator_addr"`  // validator unbonding from owner addr
 	CreationHeight int64          `json:"creation_height"` // height which the unbonding took place
-	MinTime        int64          `json:"min_time"`        // unix time for unbonding completion
+	MinTime        time.Time      `json:"min_time"`        // unix time for unbonding completion
 	InitialBalance sdk.Coin       `json:"initial_balance"` // atoms initially scheduled to receive at completion
 	Balance        sdk.Coin       `json:"balance"`         // atoms to receive at completion
 }
 
 type ubdValue struct {
 	CreationHeight int64
-	MinTime        int64
+	MinTime        time.Time
 	InitialBalance sdk.Coin
 	Balance        sdk.Coin
 }
@@ -186,7 +187,7 @@ type Redelegation struct {
 	ValidatorSrcAddr sdk.AccAddress `json:"validator_src_addr"` // validator redelegation source owner addr
 	ValidatorDstAddr sdk.AccAddress `json:"validator_dst_addr"` // validator redelegation destination owner addr
 	CreationHeight   int64          `json:"creation_height"`    // height which the redelegation took place
-	MinTime          int64          `json:"min_time"`           // unix time for redelegation completion
+	MinTime          time.Time      `json:"min_time"`           // unix time for redelegation completion
 	InitialBalance   sdk.Coin       `json:"initial_balance"`    // initial balance when redelegation started
 	Balance          sdk.Coin       `json:"balance"`            // current balance
 	SharesSrc        sdk.Rat        `json:"shares_src"`         // amount of source shares redelegating
@@ -195,7 +196,7 @@ type Redelegation struct {
 
 type redValue struct {
 	CreationHeight int64
-	MinTime        int64
+	MinTime        time.Time
 	InitialBalance sdk.Coin
 	Balance        sdk.Coin
 	SharesSrc      sdk.Rat

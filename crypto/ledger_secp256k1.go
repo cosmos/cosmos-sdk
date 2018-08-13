@@ -114,7 +114,7 @@ func (pkl PrivKeyLedgerSecp256k1) Equals(other tmcrypto.PrivKey) bool {
 // Communication is checked on NewPrivKeyLedger and PrivKeyFromBytes, returning
 // an error, so this should only trigger if the private key is held in memory
 // for a while before use.
-func (pkl PrivKeyLedgerSecp256k1) Sign(msg []byte) (tmcrypto.Signature, error) {
+func (pkl PrivKeyLedgerSecp256k1) Sign(msg []byte) ([]byte, error) {
 	sig, err := pkl.signLedgerSecp256k1(msg)
 	if err != nil {
 		return nil, err
@@ -135,13 +135,8 @@ func (pkl PrivKeyLedgerSecp256k1) getPubKey() (key tmcrypto.PubKey, err error) {
 	return key, err
 }
 
-func (pkl PrivKeyLedgerSecp256k1) signLedgerSecp256k1(msg []byte) (tmcrypto.Signature, error) {
-	sigBytes, err := pkl.ledger.SignSECP256K1(pkl.Path, msg)
-	if err != nil {
-		return nil, err
-	}
-
-	return tmsecp256k1.SignatureSecp256k1FromBytes(sigBytes), nil
+func (pkl PrivKeyLedgerSecp256k1) signLedgerSecp256k1(msg []byte) ([]byte, error) {
+	return pkl.ledger.SignSECP256K1(pkl.Path, msg)
 }
 
 func (pkl PrivKeyLedgerSecp256k1) pubkeyLedgerSecp256k1() (pub tmcrypto.PubKey, err error) {

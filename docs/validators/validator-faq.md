@@ -14,9 +14,9 @@ The [Cosmos Hub](/introduction/cosmos-hub.md) is based on [Tendermint](/introduc
 
 The Cosmos Hub is a public Proof-Of-Stake (PoS) blockchain, meaning that validator's weight is determined by the amount of staking tokens (Atoms) bonded as collateral. These Atoms can be staked directly by the validator or delegated to them by Atom holders.
 
-Any user in the system can declare its intention to become a validator by sending a "declare-candidacy" transaction. From there, they become validator candidates.
+Any user in the system can declare its intention to become a validator by sending a `create-validator` transaction. From there, they become validators.
 
-The weight (i.e. total stake) of a candidate determines wether or not it is a validator, and also how frequently this node will have to propose a block and how much revenue it will obtain. Initially, only the top 100 validator candidates with the most weight will be validators. If validators double sign, are frequently offline or do not participate in governance, their staked Atoms (including Atoms of users that delegated to them) can be destroyed, or 'slashed'.
+The weight (i.e. total stake) of a validator determines wether or not it is an active validator, and also how frequently this node will have to propose a block and how much revenue it will obtain. Initially, only the top 100 validators with the most weight will be active validators. If validators double sign, are frequently offline or do not participate in governance, their staked Atoms (including Atoms of users that delegated to them) can be destroyed, or 'slashed'.
 
 ### What is a full-node?
 
@@ -28,7 +28,7 @@ Of course, it is possible and encouraged for any user to run full-nodes even if 
 
 Delegators are Atom holders who cannot, or do not want to run validator operations themselves. Through [Cosmos Voyager](/getting-started/voyager.md), a user can delegate Atoms to a validator and obtain a part of its revenue in exchange (for more detail on how revenue is distributed, see **What is the incentive to stake?** and **What is a validator's commission?** sections below).
 
-Because they share revenue with their validators, delegators also share responsibility. Should a validator misbehave, each of its delegators will be partially slashed in proportion to their stake. This is why delegators should perform due diligence on validator candidates before delegating, as well as spreading their stake over multiple validators.
+Because they share revenue with their validators, delegators also share responsibility. Should a validator misbehave, each of its delegators will be partially slashed in proportion to their stake. This is why delegators should perform due diligence on validators before delegating, as well as spreading their stake over multiple validators.
 
 Delegators play a critical role in the system, as they are responsible for choosing validators. Being a delegator is not a passive role: Delegators should actively monitor the actions of their validators and participate in governance.
 
@@ -36,21 +36,22 @@ Delegators play a critical role in the system, as they are responsible for choos
 
 ### How to become a validator?
 
-Any participant in the network can signal that they want to become a validator by sending a "declare-candidacy" transaction, where they must fill out the following parameters:
+Any participant in the network can signal that they want to become a validator by sending a `create-validator` transaction, where they must fill out the following parameters:
 
-* Validator's PubKey: The validator must signal an account with which it will perform its validator duties. The private key associated with PubKey is used to sign _prevotes_ and _precommits_. This way, validators can have different accounts for validating and holding liquid funds.
-* Validator's name
+* Validator's PubKey:  The private key associated with PubKey is used to sign _prevotes_ and _precommits_. This way, validators can have different accounts for validating and holding liquid funds.
+* Validator's Address: Application level address. This is the address used to identify your validator publicly. The private key associated with this address is used to bond, unbond, claim rewards, and participate in governance (in MVP only).
+* Validator's name (moniker)
 * Validator's website (Optional)
 * Validator's description (Optional)
 * Initial commission rate: The commission rate on block provisions, block rewards and fees charged to delegators
-* Maximum commission: The maximum commission rate which this validator candidate can charge
-* Commission change rate: The maximum daily increase of the validator candidate commission
-* Minimum self-bond amount: Minimum amount of Atoms the validator candidate need to have bonded at all time. If the validator's self-bonded stake falls below this limit, its entire staking pool will unbond.
-* Initial self-bond amount: Initial amount Atoms the validator candidate wants to self-bond
+* Maximum commission: The maximum commission rate which this validator  can charge
+* Commission change rate: The maximum daily increase of the validator  commission
+* Minimum self-bond amount: Minimum amount of Atoms the validator need to have bonded at all time. If the validator's self-bonded stake falls below this limit, its entire staking pool will unbond.
+* Initial self-bond amount: Initial amount of Atoms the validator wants to self-bond
 
-Once a PubKey has declared candidacy, Atom holders can delegate atoms to it, effectively adding stake to this pool. The total stake of an address is the combination of Atoms bonded by delegators and Atoms self-bonded by the entity which designated itself.
+Once a validator is created, Atom holders can delegate atoms to it, effectively adding stake to this pool. The total stake of an address is the combination of Atoms bonded by delegators and Atoms self-bonded by the entity which designated itself.
 
-Out of all the candidates that signaled themselves, the 100 with the most stake are the ones who are designated as validators. If a validator's total stake falls below the top 100 then that validator loses its validator privileges. Over time, the maximum number of validators will increase, according to a predefined schedule:
+Out of all validators that signaled themselves, the 100 with the most stake are the ones who are designated as validators. They become **bonded validators** If a validator's total stake falls below the top 100 then that validator loses its validator privileges, it enters **unbonding mode** and, eventually, becomes **unbonded** . Over time, the maximum number of validators will increase, according to a predefined schedule:
 
 * **Year 0:** 100
 * **Year 1:** 113
@@ -64,19 +65,48 @@ Out of all the candidates that signaled themselves, the 100 with the most stake 
 * **Year 9:** 300
 * **Year 10:** 300
 
+## Testnet
+
 ### How can I join the testnet?
 
 The Testnet is a great environment to test your validator setup before launch.
 
-We view testnet participation as a great way to signal to the community that you are ready and able to operate a validator. You can find all relevant information about the [testnet and more here](/getting-started/full-node.md).
+We view testnet participation as a great way to signal to the community that you are ready and able to operate a validator. You can find all relevant information about the testnet [here](https://github.com/cosmos/cosmos-sdk/tree/develop/cmd/gaia/testnets) and [here](https://github.com/cosmos/testnets).
+
+### What are the different types of keys?
+
+In short, there are two types of keys:
+
+- **Tendermint Key**: This is a unique key used to sign block hashes. It is associated with a public key `cosmosvalpub`.
+    + Generated when the node is created with gaiad init.
+    + Get this value with gaiad tendermint show_validator
+    +M e.g. cosmosvalpub1zcjduc3qcyj09qc03elte23zwshdx92jm6ce88fgc90rtqhjx8v0608qh5ssp0w94c 
+
+- **Application keys**: These keys are created from the application and used to sign transactions. As a validator, you will probably use one key to sign staking-related transactions, and another key to sign governance-related transactions. Application keys are associated with a public key `cosmosaccpub` and an address `cosmosaccaddr`. Both are derived from account keys generated by `gaiacli keys add`.
+
+
+### What are the different states a validator can be in?
+
+After a validator is created with a `create-validator` transaction, it can be in three states:
+
+- `bonded`: Validator is in the active set and participates in consensus. Validator is earning rewards and can be slashed for misbehaviour.
+- `unbonding`: Validator is not in the active set and does not participate in consensus. Validator is not earning rewards, but can still be slashed for misbehaviour. This is a transition state from `bonded` to `unbonded`. If validator does not send a `rebond` transaction while in `unbonding` mode, it will take three weeks for the state transition to complete. 
+- `unbonded`: Validator is not in the active set, and therefore not signing blocs. Validator cannot be slashed, and does not earn any reward. It is still possible to delegate Atoms to this validator. Un-delegating from an `unbonded` validator is immediate.
+
+Delegators have the same state as their validator. 
+
+*Note that delegation are not necessarily bonded. Atoms can be delegated and bonded, delegated and unbonding, delegated and unbonded, or liquid*
+
+
+### What is 'self-bond'? How can I increase my 'self-bond'?
 
 ### Is there a faucet?
 
-If you want to obtain coins for the testnet, you can do so by using [this faucet](https://faucetcosmos.network)
+If you want to obtain coins for the testnet, you can do so by using [this faucet](https://gaia.faucetcosmos.network/)
 
-### Is there a minimum amount of Atoms that must be staked to be a validator?
+### Is there a minimum amount of Atoms that must be staked to be an active (=bonded) validator?
 
-There is no minimum. The top 100 validator candidates with the highest total stake (where total stake = self-bonded stake + delegators stake) are the validators.
+There is no minimum. The top 100 validators with the highest total stake (where total stake = self-bonded stake + delegators stake) are the active validators.
 
 ### How will delegators choose their validators?
 
@@ -87,7 +117,7 @@ Delegators are free to choose validators according to their own subjective crite
 * **Commission rate:** Commission applied on revenue by validators before it is distributed to their delegators
 * **Track record:** Delegators will likely look at the track record of the validators they plan to delegate to. This includes seniority, past votes on proposals, historical average uptime and how often the node was compromised.
 
-Apart from these criteria that will be displayed in Cosmos Voyager, there will be a possibility for validators to signal a website address to complete their resume. Validators will need to build reputation one way or another to attract delegators. For example, it would be a good practice for validators to have their setup audited by third parties. Note though, that the Tendermint team will not approve or conduct any audit itself.
+Apart from these criteria that will be displayed in Cosmos Voyager, there will be a possibility for validators to signal a website address to complete their resume. Validators will need to build reputation one way or another to attract delegators. For example, it would be a good practice for validators to have their setup audited by third parties. Note though, that the Tendermint team will not approve or conduct any audit itself. For more on due diligence, see [this blog post](https://medium.com/@interchain_io/3d0faf10ce6f)
 
 ## Responsibilites
 
@@ -199,9 +229,9 @@ If a validator misbehaves, its bonded stake along with its delegators' stake and
 
 * **Double signing:** If someone reports on chain A that a validator signed two blocks at the same height on chain A and chain B, this validator will get slashed on chain A
 * **Unavailability:** If a validator's signature has not been included in the last X blocks, the validator will get slashed by a marginal amount proportional to X. If X is above a certain limit Y, then the validator will get unbonded
-* **Non-voting:** If a validator did not vote on a proposal and once the fault is reported by a someone, its stake will receive a minor slash.
+* **Non-voting:** If a validator did not vote on a proposal, its stake will receive a minor slash.
 
-Note that even if a validator does not intentionally misbehave, it can still be slashed if its node crashes, looses connectivity, gets DDOSed, or if its private key is compromised. A complete document on the economics of the network will be published soon.
+Note that even if a validator does not intentionally misbehave, it can still be slashed if its node crashes, looses connectivity, gets DDOSed, or if its private key is compromised.
 
 ### Do validators need to self-bond Atoms?
 
@@ -251,7 +281,6 @@ Validators should expect to run an HSM that supports ed25519 keys. Here are pote
 * Ledger Nano S
 * Ledger BOLOS SGX enclave
 * Thales nShield support
-* Tendermint SGX enclave
 
 The Tendermint team does not recommend one solution above the other. The community is encouraged to bolster the effort to improve HSMs and the security of key management.
 
@@ -276,3 +305,5 @@ Validator nodes should only connect to full-nodes they trust because they operat
 Sentry nodes can be quickly spun up or change their IP addresses. Because the links to the sentry nodes are in private IP space, an internet based attacked cannot disturb them directly. This will ensure validator block proposals and votes always make it to the rest of the network.
 
 It is expected that good operating procedures on that part of validators will completely mitigate these threats.
+
+For more on sentry node architecture, see [this](https://forum.cosmos.network/t/sentry-node-architecture-overview/454).

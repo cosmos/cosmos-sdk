@@ -2,6 +2,7 @@ package types
 
 import (
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -57,7 +58,7 @@ func TestUnbondingDelegationEqual(t *testing.T) {
 	require.True(t, ok)
 
 	ud2.ValidatorAddr = addr3
-	ud2.MinTime = 20 * 20 * 2
+	ud2.MinTime = time.Unix(20*20*2, 0)
 
 	ok = ud1.Equal(ud2)
 	require.False(t, ok)
@@ -93,7 +94,7 @@ func TestRedelegationEqual(t *testing.T) {
 
 	r2.SharesDst = sdk.NewRat(10)
 	r2.SharesSrc = sdk.NewRat(20)
-	r2.MinTime = 20 * 20 * 2
+	r2.MinTime = time.Unix(20*20*2, 0)
 
 	ok = r1.Equal(r2)
 	require.False(t, ok)

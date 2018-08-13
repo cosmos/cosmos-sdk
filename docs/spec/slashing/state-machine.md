@@ -43,13 +43,38 @@ provisions and rewards.
 
 ### Interactions
 
+In this section we describe the "hooks" - slashing module code that runs when other events happen.
+
 #### Validator Bonded
+
+Upon successful bonding of a validator (a given validator changing from "unbonded" state to "bonded" state,
+which may happen on delegation, on unjailing, etc), we create a new `SlashingPeriod` structure for the
+now-bonded validator, wich `StartHeight` of the current block, `EndHeight` of `0` (sentinel value for not-yet-ended),
+and `SlashedSoFar` of `0`:
+
+```golang
+onValidatorBonded(address sdk.ValAddress)
+```
+
+#### Validator Unbonded
+
+When a validator is unbonded, we update the in-progress `SlashingPeriod` with the current block as the `EndHeight`:
+
+```golang
+onValidatorUnbonded(address sdk.ValAddress)
+```
 
 #### Validator Slashed
 
-#### Validator Unjailed
+When a validator is slashed, we look up the appropriate `SlashingPeriod` based on the validator
+address and the time of infraction, cap the fraction slashed as `max(SlashFraction, SlashedSoFar)`
+(which may be `0`), and update the `SlashingPeriod` with the increased `SlashedSoFar`:
 
-#### Slashing Period Cleanup
+```golang
+beforeValidatorSlashed(address sdk.ValAddress, fraction sdk.Rat)
+```
+
+### State Cleanup
 
 Once no evidence for a given slashing period can possibly be valid (the end time plus the unbonding period is less than the current time),
-old slashing periods should be cleaned up.
+old slashing periods should be cleaned up. This will be implemented post-launch.

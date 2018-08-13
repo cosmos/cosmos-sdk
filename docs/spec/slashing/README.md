@@ -21,9 +21,9 @@ This module will be used by the Cosmos Hub, the first hub in the Cosmos ecosyste
           1. Unjail
     1. [Interactions](state-machine.md#interactions)
           1. Validator Bonded
+          1. Validator Unbonding
           1. Validator Slashed
-          1. Validator Unjailed
-          1. Slashing Period Cleanup
+    1. [State Cleanup](state-machine.md#state-cleanup)
 1. **[Begin Block](begin-block.md)**
     1. [Evidence handling](begin-block.md#evidence-handling)
     1. [Uptime tracking](begin-block.md#uptime-tracking)

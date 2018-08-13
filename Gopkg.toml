@@ -65,7 +65,7 @@
 
 [[constraint]]
   name = "github.com/zondax/ledger-goclient"
-  revision = "39ba4728c137c75718a21f9b4b3280fa31b9139b"
+  revision = "a05312e1c998ad831b70eea41d009654f7f95985"
 
 [prune]
   go-tests = true

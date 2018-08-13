@@ -1,43 +1,39 @@
 ## v0.24.0 PENDING 
-^--- PENDING wasn't purged on sdk v0.23.0 release.
 
 BREAKING CHANGES
-* Update to tendermint v0.23.0. This involves removing crypto.Pubkey, 
-maintaining a validator address to pubkey map, and using time.Time instead of int64 for time. [SDK PR](https://github.com/cosmos/cosmos-sdk/pull/1927)
 
-## PENDING
+* Gaia REST API (`gaiacli advanced rest-server`)
+  - [x/stake] \#1880 More REST-ful endpoints
+  - [x/slashing] \#1866 `/slashing/signing_info` takes cosmosvalpub instead of cosmosvaladdr
+  - use time.Time instead of int64 for time. 
 
-BREAKING CHANGES
-* API
-  - \#1880 [x/stake] changed the endpoints to be more REST-ful
-* Update to tendermint v0.22.5. This involves changing all of the cryptography imports. [Ref](https://github.com/tendermint/tendermint/pull/1966)
-* [baseapp] Msgs are no longer run on CheckTx, removed `ctx.IsCheckTx()`
-* [x/gov] CLI flag changed from `proposalID` to `proposal-id`
-* [x/stake] Fixed the period check for the inflation calculation
-* [x/stake] Inflation doesn't use rationals in calculation (performance boost)
-* [x/stake] CLI flags for identity changed from `--keybase-sig` to `--identity`, effects:
-  * `gaiacli stake create-validator`
-  * `gaiacli stake edit-validator`
-* [baseapp] NewBaseApp constructor now takes sdk.TxDecoder as argument instead of wire.Codec
-* [x/auth] Default TxDecoder can be found in `x/auth` rather than baseapp
-* \#1606 The following CLI commands have been switched to use `--from`
-  * `gaiacli stake create-validator --address-validator`
-  * `gaiacli stake edit-validator --address-validator`
-  * `gaiacli stake delegate --address-delegator`
-  * `gaiacli stake unbond begin --address-delegator`
-  * `gaiacli stake unbond complete --address-delegator`
-  * `gaiacli stake redelegate begin --address-delegator`
-  * `gaiacli stake redelegate complete --address-delegator`
-  * `gaiacli stake unrevoke [validator-address]`
-  * `gaiacli gov submit-proposal --proposer`
-  * `gaiacli gov deposit --depositer`
-  * `gaiacli gov vote --voter`
-* [x/gov] Added tags sub-package, changed tags to use dash-case 
-* [x/gov] Governance parameters are now stored in globalparams store
-* [lcd] \#1866 Updated lcd /slashing/signing_info endpoint to take cosmosvalpub instead of cosmosvaladdr
-* [types] sdk.NewCoin now takes sdk.Int, sdk.NewInt64Coin takes int64
-* [cli] #1551: Officially removed `--name` from CLI commands
-* [cli] Genesis/key creation (`init`) now supports user-provided key passwords
+* Gaia CLI  (`gaiacli`)
+  -  [x/stake] change `--keybase-sig` to `--identity`
+  -  [x/gov] Change `proposalID` to `proposal-id` 
+  -  [x/stake, x/gov] \#1606 Use `--from` instead of adhoc flags like `--address-validator` 
+        and `--proposer` to indicate the sender address.
+  -  \#1551 Remove `--name` completely
+  -  Genesis/key creation (`gaiad init`) now supports user-provided key passwords
+
+* Gaia
+  - [x/stake] Inflation doesn't use rationals in calculation (performance boost)
+  - [x/stake] Persist a map from `addr->pubkey` in the state since BeginBlock
+    doesn't provide pubkeys.
+  - [x/gov] Added tags sub-package, changed tags to use dash-case 
+  - [x/gov] Governance parameters are now stored in globalparams store
+  
+* SDK 
+  - [baseapp] Msgs are no longer run on CheckTx, removed `ctx.IsCheckTx()`
+  - [baseapp] NewBaseApp constructor now takes sdk.TxDecoder as argument instead of wire.Codec
+  - [types] sdk.NewCoin now takes sdk.Int, sdk.NewInt64Coin takes int64
+  - [x/auth] Default TxDecoder can be found in `x/auth` rather than baseapp
+
+* Tendermint 
+    - v0.22.5 -> [Tendermint PR](https://github.com/tendermint/tendermint/pull/1966)
+        - change all the cryptography imports. 
+    - v0.23.0 -> [SDK PR](https://github.com/cosmos/cosmos-sdk/pull/1927)
+        - BeginBlock no longer includes crypto.Pubkey
+        - use time.Time instead of int64 for time. 
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus
@@ -59,10 +55,8 @@ FEATURES
 
 IMPROVEMENTS
 * [baseapp] Allow any alphanumeric character in route
-* [cli] Improve error messages for all txs when the account doesn't exist
 * [tools] Remove `rm -rf vendor/` from `make get_vendor_deps`
 * [x/auth] Recover ErrorOutOfGas panic in order to set sdk.Result attributes correctly
-* [x/stake] Add revoked to human-readable validator 
 * [spec] \#967 Inflation and distribution specs drastically improved
 * [tests] Add tests to example apps in docs
 * [x/gov] Votes on a proposal can now be queried
@@ -74,9 +68,6 @@ IMPROVEMENTS
 * [server] \#1930 Transactions indexer indexes all tags by default.
 
 BUG FIXES
-*  \#1666 Add intra-tx counter to the genesis validators
-*  \#1797 Fix off-by-one error in slashing for downtime
-*  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator
 *  \#1766 Fixes bad example for keybase identity
 *  \#1804 Fixes gen-tx genesis generation logic temporarily until upstream updates
 *  \#1799 Fix `gaiad export`
@@ -90,8 +81,5 @@ BUG FIXES
   structure `TxContext` in `x/auth/client/context`
   * Cleaned up documentation and API of what used to be `CoreContext`
   * Implemented `KeyType` enum for key info
-*  \#1666 Add intra-tx counter to the genesis validators
 * [tests] \#1551: Fixed invalid LCD test JSON payload in `doIBCTransfer`
-*  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator
-*  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator
 * [basecoin] Fixes coin transaction failure and account query [discussion](https://forum.cosmos.network/t/unmarshalbinarybare-expected-to-read-prefix-bytes-75fbfab8-since-it-is-registered-concrete-but-got-0a141dfa/664/6)

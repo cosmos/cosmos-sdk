@@ -32,6 +32,18 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Cod
 		delegatorTxsHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
+	// GET /stake/delegators/{delegatorAddr}/validators // Query all validators that a delegator is bonded to
+	r.HandleFunc(
+		"/stake/delegators/{delegatorAddr}/validators",
+		delegatorValidatorsHandlerFn(cliCtx, cdc),
+	).Methods("GET")
+
+	// GET /stake/delegators/{delegatorAddr}/validators/{validatorAddr} // Query a validator that a delegator is bonded to
+	r.HandleFunc(
+		"/stake/delegators/{delegatorAddr}/validators/{validatorAddr}",
+		delegatorValidatorHandlerFn(cliCtx, cdc),
+	).Methods("GET")
+
 	// GET /stake/delegators/{delegatorAddr}/delegations/{validatorAddr} // Query a delegation between a delegator and a validator
 	r.HandleFunc(
 		"/stake/delegators/{delegatorAddr}/delegations/{validatorAddr}",
@@ -55,6 +67,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Cod
 		"/stake/validators/{addr}",
 		validatorHandlerFn(cliCtx, cdc),
 	).Methods("GET")
+
 }
 
 // already resolve the rational shares to not handle this in the client

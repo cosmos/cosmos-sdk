@@ -389,6 +389,7 @@ func TestBonding(t *testing.T) {
 	defer cleanup()
 
 	validator1Owner := sdk.AccAddress(pks[0].Address())
+	validator := getValidator(t, port, validator1Owner)
 
 	// create bond TX
 	resultTx := doDelegate(t, port, seed, name, password, addr, validator1Owner)
@@ -407,6 +408,14 @@ func TestBonding(t *testing.T) {
 	// query validator
 	bond := getDelegation(t, port, addr, validator1Owner)
 	require.Equal(t, "60.0000000000", bond.Shares)
+
+	bondedValidators := getDelegatorValidators(t, port, addr)
+	require.Len(t, bondedValidators, 1)
+	require.Equal(t, validator1Owner, bondedValidators[0].Owner)
+	require.Equal(t, validator.DelegatorShares.Add(sdk.NewRat(60)).FloatString(), bondedValidators[0].DelegatorShares.FloatString())
+
+	bondedValidator := getDelegatorValidator(t, port, addr, validator1Owner)
+	require.Equal(t, validator1Owner, bondedValidator.Owner)
 
 	//////////////////////
 	// testing unbonding
@@ -442,6 +451,14 @@ func TestBonding(t *testing.T) {
 	assert.Equal(t, "30.0000000000", summary.Delegations[0].Shares)
 	assert.Len(t, summary.UnbondingDelegations, 1, "Delegation summary holds all unbonding-delegations")
 	assert.Equal(t, "30", summary.UnbondingDelegations[0].Balance.Amount.String())
+
+	// TODO Unbonding BondStatus is not currently implemented
+	// bondedValidators = getDelegatorValidators(t, port, addr)
+	// require.Len(t, bondedValidators, 1)
+	// require.Equal(t, sdk.Unbonding, bondedValidators[0].Status)
+	//
+	// bondedValidator = getDelegatorValidator(t, port, addr, validator1Owner)
+	// require.Equal(t, sdk.Unbonding, bondedValidator.Status)
 
 	// TODO add redelegation, need more complex capabilities such to mock context and
 	// TODO check summary for redelegation
@@ -803,6 +820,34 @@ func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, quer
 	err := cdc.UnmarshalJSON([]byte(body), &txs)
 	require.Nil(t, err)
 	return txs
+}
+
+func getDelegatorValidators(t *testing.T, port string, delegatorAddr sdk.AccAddress) []stake.BechValidator {
+
+	var res *http.Response
+	var body string
+	res, body = Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/validators", delegatorAddr), nil)
+
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var bondedValidators []stake.BechValidator
+	err := cdc.UnmarshalJSON([]byte(body), &bondedValidators)
+	require.Nil(t, err)
+	fmt.Println(fmt.Sprintf("–––> DelegatorVals: %v", bondedValidators))
+	return bondedValidators
+}
+
+func getDelegatorValidator(t *testing.T, port string, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) stake.BechValidator {
+
+	var res *http.Response
+	var body string
+	res, body = Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/validators/%s", delegatorAddr, validatorAddr), nil)
+
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var bondedValidator stake.BechValidator
+	err := cdc.UnmarshalJSON([]byte(body), &bondedValidator)
+	require.Nil(t, err)
+	fmt.Println(fmt.Sprintf("–––> DelegatorVal: %v", bondedValidator))
+	return bondedValidator
 }
 
 func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, validatorAddr sdk.AccAddress) (resultTx ctypes.ResultBroadcastTxCommit) {

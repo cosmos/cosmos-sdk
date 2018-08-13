@@ -54,6 +54,16 @@ and `SlashedSoFar` of `0`:
 
 ```golang
 onValidatorBonded(address sdk.ValAddress)
+
+  slashingPeriod := SlashingPeriod{
+      ValidatorAddr : address,
+      StartHeight   : CurrentHeight,
+      EndHeight     : 0,    
+      SlashedSoFar  : 0,
+  }
+  setSlashingPeriod(slashingPeriod)
+  
+  return
 ```
 
 #### Validator Unbonded
@@ -62,6 +72,12 @@ When a validator is unbonded, we update the in-progress `SlashingPeriod` with th
 
 ```golang
 onValidatorUnbonded(address sdk.ValAddress)
+
+  slashingPeriod = getSlashingPeriod(address, CurrentHeight)
+  slashingPeriod.EndHeight = CurrentHeight
+  setSlashingPeriod(slashingPeriod)
+
+  return
 ```
 
 #### Validator Slashed
@@ -71,7 +87,17 @@ address and the time of infraction, cap the fraction slashed as `max(SlashFracti
 (which may be `0`), and update the `SlashingPeriod` with the increased `SlashedSoFar`:
 
 ```golang
-beforeValidatorSlashed(address sdk.ValAddress, fraction sdk.Rat)
+beforeValidatorSlashed(address sdk.ValAddress, fraction sdk.Rat, infractionHeight int64)
+  
+  slashingPeriod = getSlashingPeriod(address, infractionHeight)
+  totalToSlash = max(slashingPeriod.SlashedSoFar, fraction)
+  slashingPeriod.SlashedSoFar = totalToSlash
+  setSlashingPeriod(slashingPeriod)
+
+  remainderToSlash = slashingPeriod.SlashedSoFar - totalToSlash
+  fraction = remainderToSlash
+
+  continue with slashing
 ```
 
 ### State Cleanup

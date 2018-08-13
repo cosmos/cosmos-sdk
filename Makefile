@@ -18,7 +18,7 @@ ci: get_tools get_vendor_deps install test_cover test_lint test
 check-ledger: 
 ifeq ($(LEDGER_ENABLED),true)
 ifndef GCC
-$(error "gcc not installed for ledger support, please install")
+$(error "gcc not installed for ledger support, please install or set LEDGER_ENABLED to false in the Makefile")
 endif
 else
 TMP_BUILD_TAGS := $(BUILD_TAGS)

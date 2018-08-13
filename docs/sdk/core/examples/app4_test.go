@@ -73,7 +73,7 @@ func TestBadMsg(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	sigs := []auth.StdSignature{auth.StdSignature{
+	sigs := []auth.StdSignature{{
 		PubKey:        priv1.PubKey(),
 		Signature:     sig,
 		AccountNumber: 0,
@@ -119,7 +119,7 @@ func TestMsgSend(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	sigs := []auth.StdSignature{auth.StdSignature{
+	sigs := []auth.StdSignature{{
 		PubKey:        priv1.PubKey(),
 		Signature:     sig,
 		AccountNumber: 0,

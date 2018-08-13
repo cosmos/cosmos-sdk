@@ -1,4 +1,6 @@
-# TESTNET STATUS
+# DEPRECATED
+
+See [testnets repo](https://github.com/cosmos/testnets).
 
 ## *July 22, 2018, 5:30 EST* - Gaia-7001 Consensus Failure 
 

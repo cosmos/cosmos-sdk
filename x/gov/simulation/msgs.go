@@ -35,11 +35,12 @@ func SimulateMsgSubmitProposal(k gov.Keeper, sk stake.Keeper) simulation.TestAnd
 		)
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		ctx, write := ctx.CacheContext()
-		pool := sk.GetPool(ctx)
-		pool.LooseTokens = pool.LooseTokens.Sub(sdk.NewRatFromInt(deposit.AmountOf(denom)))
-		sk.SetPool(ctx, pool)
 		result := gov.NewHandler(k)(ctx, msg)
 		if result.IsOK() {
+			// Update pool to keep invariants
+			pool := sk.GetPool(ctx)
+			pool.LooseTokens = pool.LooseTokens.Sub(sdk.NewRatFromInt(deposit.AmountOf(denom)))
+			sk.SetPool(ctx, pool)
 			write()
 		}
 		event(fmt.Sprintf("gov/MsgSubmitProposal/%v", result.IsOK()))
@@ -62,10 +63,11 @@ func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.TestAndRunTx {
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		ctx, write := ctx.CacheContext()
 		result := gov.NewHandler(k)(ctx, msg)
-		pool := sk.GetPool(ctx)
-		pool.LooseTokens = pool.LooseTokens.Sub(sdk.NewRatFromInt(deposit.AmountOf(denom)))
-		sk.SetPool(ctx, pool)
 		if result.IsOK() {
+			// Update pool to keep invariants
+			pool := sk.GetPool(ctx)
+			pool.LooseTokens = pool.LooseTokens.Sub(sdk.NewRatFromInt(deposit.AmountOf(denom)))
+			sk.SetPool(ctx, pool)
 			write()
 		}
 		event(fmt.Sprintf("gov/MsgDeposit/%v", result.IsOK()))

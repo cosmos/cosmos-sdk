@@ -40,6 +40,7 @@ func SimulateFromSeed(
 	// Setup event stats
 	events := make(map[string]uint)
 	event := func(what string) {
+		log += "\nevent - " + what
 		events[what]++
 	}
 
@@ -70,6 +71,8 @@ func SimulateFromSeed(
 
 		// Run the BeginBlock handler
 		app.BeginBlock(request)
+
+		log += "\nBeginBlock"
 
 		// Make sure invariants hold at beginning of block
 		AssertAllInvariants(t, app, invariants, log)
@@ -103,6 +106,11 @@ func SimulateFromSeed(
 		res := app.EndBlock(abci.RequestEndBlock{})
 		header.Height++
 		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
+
+		log += "\nEndBlock"
+
+		// Make sure invariants hold at end of block
+		AssertAllInvariants(t, app, invariants, log)
 
 		// Generate a random RequestBeginBlock with the current validator set for the next block
 		request = RandomRequestBeginBlock(t, r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, event, header, log)

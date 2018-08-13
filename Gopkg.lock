@@ -490,11 +490,11 @@
   version = "v0.23.0"
 
 [[projects]]
-  digest = "1:2ea7665579c64cda1873a395de97a2af02df1d06f4cb52128caf57f13249303c"
+  digest = "1:4dcb0dd65feecb068ce23a234d1a07c7868a1e39f52a6defcae0bb371d03abf6"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
   pruneopts = "UT"
-  revision = "a05312e1c998ad831b70eea41d009654f7f95985"
+  revision = "4296ee5701e945f9b3a7dbe51f402e0b9be57259"
 
 [[projects]]
   branch = "master"

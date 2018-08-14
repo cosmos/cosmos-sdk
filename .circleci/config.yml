@@ -154,6 +154,9 @@ jobs:
     working_directory: /home/circleci/go/src/github.com/cosmos/cosmos-sdk
     machine:
       image: circleci/classic:latest
+    environment:
+      GOBIN: /home/circleci/go/bin
+      GOPATH: /home/circleci/go/
     parallelism: 1
     steps:
       - checkout

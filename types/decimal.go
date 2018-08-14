@@ -283,7 +283,7 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 	}
 
 	// get the trucated quotient and remainder
-	quo, rem := d, big.NewInt(0)
+	quo, rem := big.NewInt(0), big.NewInt(0)
 	quo, rem = quo.QuoRem(d, precisionReuse, rem)
 
 	if rem.Sign() == 0 { // remainder is zero

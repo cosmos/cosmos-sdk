@@ -38,7 +38,7 @@ func (proxy GetterProxy) GovGetter() GetterProxy {
 }
 
 // Getter returns readonly struct,add Prefix "gov"
-func (proxy SetterProxy) GovSetter() SetterProxy {
+func (proxy SetterProxy)  GovSetter() SetterProxy {
 	return SetterProxy{proxy.GovGetter(),proxy.setter}
 }
 

@@ -12,16 +12,22 @@ import (
 	"github.com/tendermint/tendermint/libs/bech32"
 )
 
-// Bech32 prefixes
 const (
-	// expected address length
+	// AddrLen is the expected address length
 	AddrLen = 20
 
-	// Bech32 prefixes
+	// Bech32PrefixAccAddr defines the bech32 prefix of an account's address
 	Bech32PrefixAccAddr = "cosmosaccaddr"
-	Bech32PrefixAccPub  = "cosmosaccpub"
+	// Bech32PrefixAccPub defines the bech32 prefix of an account's public key
+	Bech32PrefixAccPub = "cosmosaccpub"
+	// Bech32PrefixValAddr defines the bech32 prefix of a validator's operator address
 	Bech32PrefixValAddr = "cosmosvaladdr"
-	Bech32PrefixValPub  = "cosmosvalpub"
+	// Bech32PrefixValPub defines the bech32 prefix of a validator's operator public key
+	Bech32PrefixValPub = "cosmosvalpub"
+	// Bech32PrefixTmAddr defines the bech32 prefix of a Tendermint node's address
+	Bech32PrefixTmAddr = "cosmostmaddr"
+	// Bech32PrefixTmPub defines the bech32 prefix of a Tendermint node's public key
+	Bech32PrefixTmPub = "cosmostmpub"
 )
 
 //__________________________________________________________

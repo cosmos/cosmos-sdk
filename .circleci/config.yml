@@ -151,15 +151,13 @@ jobs:
           command: bash <(curl -s https://codecov.io/bash) -f coverage.txt
 
   localnet:
-    working_directory: /go/src/github.com/cosmos/cosmos-sdk
+    working_directory: /home/circleci/go/src/github.com/cosmos/cosmos-sdk
     machine:
       image: circleci/classic:latest
-    environment:
-      GOBIN: /tmp/workspace/bin
     parallelism: 1
     steps:
       - attach_workspace:
-          at: /tmp/workspace
+          at: /home/circleci/go/workspace
       - restore_cache:
           key: v1-pkg-cache
       - restore_cache:
@@ -169,7 +167,7 @@ jobs:
           command: |
             set -x
             make build-linux
-            docker-compose up -d
+            make localnet-start
             docker run -it --network=bridge jackzampolin/gaiad-poll:latest ./poll.sh 40 5 10 gaianode0
 
 workflows:

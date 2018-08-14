@@ -160,16 +160,15 @@ jobs:
           key: v1-pkg-cache
       - restore_cache:
           key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          name: build-linux binary
-          command: |
-            ls -a
-            make build-linux
       - setup_remote_docker
       - run:
           name: run localnet and exit on failure
           command: |
             set -x
+            ls -al
+            echo "DIRECTORY: $(pwd)"
+            mkdir -p build/
+            cp /tmp/workspace/bin/gaiad build/
             docker-compose up -d
             docker run -it --network=bridge jackzampolin/gaiad-poll:latest ./poll.sh 40 5 10 gaianode0
 

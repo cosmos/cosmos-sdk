@@ -38,7 +38,7 @@ const (
 // When marshaled to a string or json, it uses bech32
 type AccAddress []byte
 
-// create an AccAddress from a hex string
+// AccAddressFromHex createS an AccAddress from a hex string.
 func AccAddressFromHex(address string) (addr AccAddress, err error) {
 	if len(address) == 0 {
 		return addr, errors.New("decoding bech32 address failed: must provide an address")
@@ -52,7 +52,7 @@ func AccAddressFromHex(address string) (addr AccAddress, err error) {
 	return AccAddress(bz), nil
 }
 
-// create an AccAddress from a bech32 string
+// AccAddressFromBech32 createS an AccAddress from a bech32 string.
 func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 	bz, err := GetFromBech32(address, Bech32PrefixAccAddr)
 	if err != nil {
@@ -62,23 +62,23 @@ func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 	return AccAddress(bz), nil
 }
 
-// Marshal needed for protobuf compatibility
+// Marshal needed for protobuf compatibility.
 func (bz AccAddress) Marshal() ([]byte, error) {
 	return bz, nil
 }
 
-// Unmarshal needed for protobuf compatibility
+// Unmarshal needed for protobuf compatibility.
 func (bz *AccAddress) Unmarshal(data []byte) error {
 	*bz = data
 	return nil
 }
 
-// Marshals to JSON using Bech32
+// MarshalJSON marshals to JSON using Bech32.
 func (bz AccAddress) MarshalJSON() ([]byte, error) {
 	return json.Marshal(bz.String())
 }
 
-// Unmarshals from JSON assuming Bech32 encoding
+// UnmarshalJSON unmarshals from JSON assuming Bech32 encoding.
 func (bz *AccAddress) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
@@ -95,11 +95,12 @@ func (bz *AccAddress) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Allow it to fulfill various interfaces in light-client, etc...
+// Bytes returns the raw bytes.
 func (bz AccAddress) Bytes() []byte {
 	return bz
 }
 
+// String implements the Stringer interface.
 func (bz AccAddress) String() string {
 	bech32Addr, err := bech32.ConvertAndEncode(Bech32PrefixAccAddr, bz.Bytes())
 	if err != nil {
@@ -109,7 +110,7 @@ func (bz AccAddress) String() string {
 	return bech32Addr
 }
 
-// For Printf / Sprintf, returns bech32 when using %s
+// Format implements the fmt.Formatter interface.
 func (bz AccAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
@@ -129,7 +130,7 @@ func (bz AccAddress) Format(s fmt.State, verb rune) {
 // (from over ABCI).  When marshaled to a string or json, it uses bech32
 type ValAddress []byte
 
-// create a ValAddress from a hex string
+// ValAddressFromHex creates a ValAddress from a hex string.
 func ValAddressFromHex(address string) (addr ValAddress, err error) {
 	if len(address) == 0 {
 		return addr, errors.New("decoding bech32 address failed: must provide an address")
@@ -143,7 +144,7 @@ func ValAddressFromHex(address string) (addr ValAddress, err error) {
 	return ValAddress(bz), nil
 }
 
-// create a ValAddress from a bech32 string
+// ValAddressFromBech32 creates a ValAddress from a bech32 string.
 func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 	bz, err := GetFromBech32(address, Bech32PrefixValAddr)
 	if err != nil {
@@ -153,23 +154,23 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 	return ValAddress(bz), nil
 }
 
-// Marshal needed for protobuf compatibility
+// Marshal needed for protobuf compatibility.
 func (bz ValAddress) Marshal() ([]byte, error) {
 	return bz, nil
 }
 
-// Unmarshal needed for protobuf compatibility
+// Unmarshal needed for protobuf compatibility.
 func (bz *ValAddress) Unmarshal(data []byte) error {
 	*bz = data
 	return nil
 }
 
-// Marshals to JSON using Bech32
+// MarshalJSON marshals to JSON using Bech32.
 func (bz ValAddress) MarshalJSON() ([]byte, error) {
 	return json.Marshal(bz.String())
 }
 
-// Unmarshals from JSON assuming Bech32 encoding
+// UnmarshalJSON unmarshals from JSON assuming Bech32 encoding.
 func (bz *ValAddress) UnmarshalJSON(data []byte) error {
 	var s string
 
@@ -187,11 +188,12 @@ func (bz *ValAddress) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Allow it to fulfill various interfaces in light-client, etc...
+// Bytes returns the raw bytes.
 func (bz ValAddress) Bytes() []byte {
 	return bz
 }
 
+// String implements the Stringer interface.
 func (bz ValAddress) String() string {
 	bech32Addr, err := bech32.ConvertAndEncode(Bech32PrefixValAddr, bz.Bytes())
 	if err != nil {
@@ -201,7 +203,7 @@ func (bz ValAddress) String() string {
 	return bech32Addr
 }
 
-// For Printf / Sprintf, returns bech32 when using %s
+// Format implements the fmt.Formatter interface.
 func (bz ValAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
@@ -217,12 +219,12 @@ func (bz ValAddress) Format(s fmt.State, verb rune) {
 // auxiliary
 // ----------------------------------------------------------------------------
 
-// Bech32ifyAccPub takes AccountPubKey and returns the bech32 encoded string
+// Bech32ifyAccPub takes AccountPubKey and returns the bech32 encoded string.
 func Bech32ifyAccPub(pub crypto.PubKey) (string, error) {
 	return bech32.ConvertAndEncode(Bech32PrefixAccPub, pub.Bytes())
 }
 
-// MustBech32ifyAccPub panics on bech32-encoding failure
+// MustBech32ifyAccPub panics on bech32-encoding failure.
 func MustBech32ifyAccPub(pub crypto.PubKey) string {
 	enc, err := Bech32ifyAccPub(pub)
 	if err != nil {
@@ -232,12 +234,13 @@ func MustBech32ifyAccPub(pub crypto.PubKey) string {
 	return enc
 }
 
-// Bech32ifyValPub returns the bech32 encoded string for a validator pubkey
+// Bech32ifyValPub returns the bech32 encoded string for a validator's
+// crypto.PubKey.
 func Bech32ifyValPub(pub crypto.PubKey) (string, error) {
 	return bech32.ConvertAndEncode(Bech32PrefixValPub, pub.Bytes())
 }
 
-// MustBech32ifyValPub panics on bech32-encoding failure
+// MustBech32ifyValPub panics on bech32-encoding failure.
 func MustBech32ifyValPub(pub crypto.PubKey) string {
 	enc, err := Bech32ifyValPub(pub)
 	if err != nil {
@@ -247,7 +250,7 @@ func MustBech32ifyValPub(pub crypto.PubKey) string {
 	return enc
 }
 
-// create a Pubkey from a string
+// GetAccPubKeyBech32 creates a crypto.PubKey from a string.
 func GetAccPubKeyBech32(address string) (pk crypto.PubKey, err error) {
 	bz, err := GetFromBech32(address, Bech32PrefixAccPub)
 	if err != nil {
@@ -262,7 +265,8 @@ func GetAccPubKeyBech32(address string) (pk crypto.PubKey, err error) {
 	return pk, nil
 }
 
-// create an Pubkey from a string, panics on error
+// MustGetAccPubKeyBech32 creates a crypto.PubKey from a string. It panics on
+// error.
 func MustGetAccPubKeyBech32(address string) (pk crypto.PubKey) {
 	pk, err := GetAccPubKeyBech32(address)
 	if err != nil {
@@ -272,7 +276,7 @@ func MustGetAccPubKeyBech32(address string) (pk crypto.PubKey) {
 	return pk
 }
 
-// decode a validator public key into a PubKey
+// GetValPubKeyBech32 decodes a validator public key into a crypto.PubKey.
 func GetValPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
 	bz, err := GetFromBech32(pubkey, Bech32PrefixValPub)
 	if err != nil {
@@ -287,7 +291,8 @@ func GetValPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
 	return pk, nil
 }
 
-// create an Pubkey from a string, panics on error
+// MustGetValPubKeyBech32 creates a crypto.PubKey from a string. It panics on
+// error.
 func MustGetValPubKeyBech32(address string) (pk crypto.PubKey) {
 	pk, err := GetValPubKeyBech32(address)
 	if err != nil {
@@ -297,7 +302,7 @@ func MustGetValPubKeyBech32(address string) (pk crypto.PubKey) {
 	return pk
 }
 
-// decode a bytestring from a bech32-encoded string
+// GetFromBech32 decodes a bytestring from a bech32-encoded string.
 func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 	if len(bech32str) == 0 {
 		return nil, errors.New("decoding bech32 address failed: must provide an address")

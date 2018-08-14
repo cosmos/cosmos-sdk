@@ -171,7 +171,7 @@ jobs:
           command: |
             set -x
             docker-compose up -d
-            docker run -it --network=host jackzampolin/gaiad-poll:latest
+            docker run -it --network=bridge jackzampolin/gaiad-poll:latest ./poll.sh 40 5 10 gaianode0
 
 workflows:
   version: 2

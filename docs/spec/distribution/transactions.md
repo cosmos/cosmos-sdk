@@ -122,30 +122,43 @@ func (vu ValidatorUpdate) ProcessPowerChangeCommission()
 
 ## Common Calculations 
 
-
 ### Update total validator accum
 
 The total amount of validator accum must be calculated in order to determine
-the amount of pool tokens which a validator is entitled to at a particular block. 
-This term is to be updated during a validator withdrawal. 
+the amount of pool tokens which a validator is entitled to at a particular
+block. The accum is always additive to the existing accum. This term is to be
+updates each time rewards are withdrawn from the system.  
 
 ``` 
-func (g Global) UpdateTotalValAccum() 
-
-TODO 
-
+func (g Global) UpdateTotalValAccum(height int64, totalBondedTokens Dec) 
+    blocks = height - g.TotalValAccumUpdateHeight
+    g.TotalValAccum += totalDelShares * blocks
 ```
 
 ### Update total delegator accum
 
-Each delegation holds multiple accumulation factors to specify its entitlement to
-the rewards from a validator. `Accum` is used to passively calculate
-each bonds entitled rewards from the `RewardPool`. `AccumProposer` is used to
-passively calculate each bonds entitled rewards from
-`ValidatorDistribution.ProposerRewardPool`
+The total amount of delegator accum must be updated in order to determine the
+amount of pool tokens which each delegator is entitled to, relative to the
+other delegators for that validator. The accum is always additive to
+the existing accum. This term is to be updated each time a
+withdrawal is made from a validator. 
 
 ``` 
-TODO
+func (vd ValidatorDistribution) UpdateTotalDelAccum(height int64, totalDelShares Dec) 
+    blocks = height - vd.TotalDelAccumUpdateHeight
+    vd.TotalDelAccum += totalDelShares * blocks
+```
+
+### Delegator accum
+
+Each delegation has a passively calculated accumulation factor to specify its
+entitlement to the rewards from a validator. `Accum` is used to passively
+calculate each bonds entitled rewards from the `Validator.Pool`. 
+
+``` 
+func (dd DelegatorDist) Accum(height int64, delegatorShares Dec) Dec
+    blocks = height - dd.WithdrawalHeight
+    return delegatorShares * blocks
 ```
 
 ### Global Pool to Validator Pool
@@ -155,7 +168,9 @@ proposer and receives new tokens - the relavent validator must move tokens from
 the passive global pool to thier own pool. 
 
 ``` 
-TODO
+func (dd DelegatorDist) ValidatorUpdate(g Global, totalBondedShares,  height int64, Tokens Dec) Dec
+
+    g.UpdateTotalValAccum(height, totalBondedShares)
 ```
 
 

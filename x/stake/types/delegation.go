@@ -143,7 +143,7 @@ func UnmarshalUBD(cdc *wire.Codec, key, value []byte) (ubd UnbondingDelegation, 
 
 	addrs := key[1:] // remove prefix bytes
 	if len(addrs) != 2*sdk.AddrLen {
-		err = fmt.Errorf("%v", ErrBadUnbondingDelegationAddr(DefaultCodespace).Data())
+		err = fmt.Errorf("%v", ErrBadDelegationAddr(DefaultCodespace).Data())
 		return
 	}
 	delAddr := sdk.AccAddress(addrs[:sdk.AddrLen])

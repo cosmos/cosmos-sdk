@@ -164,7 +164,6 @@ jobs:
           key: v1-pkg-cache
       - restore_cache:
           key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
-      - setup_remote_docker
       - run:
           name: run localnet and exit on failure
           command: |

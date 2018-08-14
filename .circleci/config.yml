@@ -154,10 +154,18 @@ jobs:
     <<: *defaults
     parallelism: 1
     steps:
-      - setup_remote_docker
+      - attach_workspace:
+          at: /tmp/workspace
+      - restore_cache:
+          key: v1-pkg-cache
+      - restore_cache:
+          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: build-linux binary
-          command: echo "$(pwd)" && make build-linux
+          command: |
+            ls -a
+            make build-linux
+      - setup_remote_docker
       - run:
           name: run localnet and exit on failure
           command: |

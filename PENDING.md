@@ -38,6 +38,7 @@ BREAKING CHANGES
 * [types] sdk.NewCoin now takes sdk.Int, sdk.NewInt64Coin takes int64
 * [cli] #1551: Officially removed `--name` from CLI commands
 * [cli] Genesis/key creation (`init`) now supports user-provided key passwords
+* [cli] unsafe_reset_all, show_validator, and show_node_id have been renamed to unsafe-reset-all, show-validator, and show-node-id
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus

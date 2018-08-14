@@ -19,7 +19,7 @@ If you want to become a validator for the Hub's `mainnet`, you should [research 
 Your `cosmosvalpub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
 
 ```bash
-gaiad tendermint show_validator
+gaiad tendermint show-validator
 ```
 
 Next, craft your `gaiacli stake create-validator` command:
@@ -31,7 +31,7 @@ Don't use more `steak` thank you have! You can always get more by using the [Fau
 ```bash
 gaiacli stake create-validator \
   --amount=5steak \
-  --pubkey=$(gaiad tendermint show_validator) \
+  --pubkey=$(gaiad tendermint show-validator) \
   --address-validator=<account_cosmosaccaddr>
   --moniker="choose a moniker" \
   --chain-id=gaia-7005 \
@@ -70,7 +70,7 @@ gaiacli stake validator \
 Your validator is active if the following command returns anything:
 
 ```bash
-gaiacli advanced tendermint validator-set | grep "$(gaiad tendermint show_validator)"
+gaiacli advanced tendermint validator-set | grep "$(gaiad tendermint show-validator)"
 ```
 
 You should also be able to see your validator on the [Explorer](https://explorecosmos.network/validators). You are looking for the `bech32` encoded `address` in the `~/.gaiad/config/priv_validator.json` file.

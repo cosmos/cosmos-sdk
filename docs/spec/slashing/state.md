@@ -38,7 +38,7 @@ The information stored for tracking validator liveness is as follows:
 type ValidatorSigningInfo struct {
     StartHeight           int64     // Height at which the validator became able to sign blocks
     IndexOffset           int64     // Offset into the signed block bit array
-    JailedUntil           int64     // Block height until which the validator is jailed,
+    JailedUntilHeight     int64     // Block height until which the validator is jailed,
                                     // or sentinel value of 0 for not jailed
     SignedBlocksCounter   int64     // Running counter of signed blocks
 }
@@ -53,7 +53,7 @@ Where:
 
 ### Slashing Period
 
-A slashing period is a start and end time associated with a particular validator,
+A slashing period is a start and end block height associated with a particular validator,
 within which only the "worst infraction counts": the total amount of slashing for
 infractions committed within the period (and discovered whenever) is capped at the
 penalty for the worst offense.
@@ -66,7 +66,7 @@ Slashing periods are indexed in the store as follows:
 
 - SlashingPeriod: ` 0x03 | ValTendermintAddr | StartHeight -> amino(slashingPeriod) `
 
-This allows us to look up slashing period by validator address, the only lookup necessary,
+This allows us to look up slashing period by a validator's address, the only lookup necessary,
 and iterate over start height to efficiently retrieve the most recent slashing period(s)
 or those beginning after a given height.
 

@@ -30,7 +30,9 @@ const (
 	Bech32PrefixTmPub = "cosmostmpub"
 )
 
-//__________________________________________________________
+// ----------------------------------------------------------------------------
+// account
+// ----------------------------------------------------------------------------
 
 // AccAddress a wrapper around bytes meant to represent an account address
 // When marshaled to a string or json, it uses bech32
@@ -41,10 +43,12 @@ func AccAddressFromHex(address string) (addr AccAddress, err error) {
 	if len(address) == 0 {
 		return addr, errors.New("decoding bech32 address failed: must provide an address")
 	}
+
 	bz, err := hex.DecodeString(address)
 	if err != nil {
 		return nil, err
 	}
+
 	return AccAddress(bz), nil
 }
 
@@ -54,6 +58,7 @@ func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return AccAddress(bz), nil
 }
 
@@ -85,6 +90,7 @@ func (bz *AccAddress) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+
 	*bz = bz2
 	return nil
 }
@@ -99,6 +105,7 @@ func (bz AccAddress) String() string {
 	if err != nil {
 		panic(err)
 	}
+
 	return bech32Addr
 }
 
@@ -114,7 +121,9 @@ func (bz AccAddress) Format(s fmt.State, verb rune) {
 	}
 }
 
-//__________________________________________________________
+// ----------------------------------------------------------------------------
+// validator owner
+// ----------------------------------------------------------------------------
 
 // AccAddress a wrapper around bytes meant to represent a validator address
 // (from over ABCI).  When marshaled to a string or json, it uses bech32
@@ -125,10 +134,12 @@ func ValAddressFromHex(address string) (addr ValAddress, err error) {
 	if len(address) == 0 {
 		return addr, errors.New("decoding bech32 address failed: must provide an address")
 	}
+
 	bz, err := hex.DecodeString(address)
 	if err != nil {
 		return nil, err
 	}
+
 	return ValAddress(bz), nil
 }
 
@@ -138,6 +149,7 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return ValAddress(bz), nil
 }
 
@@ -160,6 +172,7 @@ func (bz ValAddress) MarshalJSON() ([]byte, error) {
 // Unmarshals from JSON assuming Bech32 encoding
 func (bz *ValAddress) UnmarshalJSON(data []byte) error {
 	var s string
+
 	err := json.Unmarshal(data, &s)
 	if err != nil {
 		return nil
@@ -169,6 +182,7 @@ func (bz *ValAddress) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+
 	*bz = bz2
 	return nil
 }
@@ -183,6 +197,7 @@ func (bz ValAddress) String() string {
 	if err != nil {
 		panic(err)
 	}
+
 	return bech32Addr
 }
 
@@ -198,6 +213,10 @@ func (bz ValAddress) Format(s fmt.State, verb rune) {
 	}
 }
 
+// ----------------------------------------------------------------------------
+// auxiliary
+// ----------------------------------------------------------------------------
+
 // Bech32ifyAccPub takes AccountPubKey and returns the bech32 encoded string
 func Bech32ifyAccPub(pub crypto.PubKey) (string, error) {
 	return bech32.ConvertAndEncode(Bech32PrefixAccPub, pub.Bytes())
@@ -209,6 +228,7 @@ func MustBech32ifyAccPub(pub crypto.PubKey) string {
 	if err != nil {
 		panic(err)
 	}
+
 	return enc
 }
 
@@ -223,6 +243,7 @@ func MustBech32ifyValPub(pub crypto.PubKey) string {
 	if err != nil {
 		panic(err)
 	}
+
 	return enc
 }
 
@@ -247,6 +268,7 @@ func MustGetAccPubKeyBech32(address string) (pk crypto.PubKey) {
 	if err != nil {
 		panic(err)
 	}
+
 	return pk
 }
 
@@ -271,6 +293,7 @@ func MustGetValPubKeyBech32(address string) (pk crypto.PubKey) {
 	if err != nil {
 		panic(err)
 	}
+
 	return pk
 }
 
@@ -279,6 +302,7 @@ func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 	if len(bech32str) == 0 {
 		return nil, errors.New("decoding bech32 address failed: must provide an address")
 	}
+
 	hrp, bz, err := bech32.DecodeAndConvert(bech32str)
 	if err != nil {
 		return nil, err

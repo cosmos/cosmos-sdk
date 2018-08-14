@@ -150,6 +150,21 @@ jobs:
           name: upload
           command: bash <(curl -s https://codecov.io/bash) -f coverage.txt
 
+  localnet:
+    <<: *defaults
+    parallelism: 1
+    steps:
+      - setup_remote_docker
+      - run:
+          name: build-linux binary
+          command: make build-linux
+      - run:
+          name: run localnet and exit on failure
+          command: |
+            set -x
+            docker-compose up -d
+            docker run --network=host jackzampolin/gaiad-poll:latest
+
 workflows:
   version: 2
   test-suite:
@@ -165,6 +180,9 @@ workflows:
           requires:
             - setup_dependencies
       - test_cover:
+          requires:
+            - setup_dependencies
+      - localnet:
           requires:
             - setup_dependencies
       - upload_coverage:

@@ -24,7 +24,7 @@ ifeq ($(LEDGER_ENABLED),true)
    	   	BUILD_TAGS = $(filter-out ledger, $(TMP_BUILD_TAGS))
    	else
    	   	ifndef GCC
-   	   	   $(error "gcc not installed for ledger support, please install")
+   	   	   $(error "gcc not installed for ledger support, please install or set LEDGER_ENABLED to false in the Makefile")
    	   	endif
    	endif
 else

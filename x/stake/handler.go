@@ -1,6 +1,8 @@
 package stake
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/tags"
@@ -38,7 +40,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 
 	// Process provision inflation
 	blockTime := ctx.BlockHeader().Time
-	if blockTime-pool.InflationLastTime >= 3600 {
+	if blockTime.Sub(pool.InflationLastTime) >= time.Hour {
 		params := k.GetParams(ctx)
 		pool.InflationLastTime = blockTime
 		pool = pool.ProcessProvisions(params)

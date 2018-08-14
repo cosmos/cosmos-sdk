@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
@@ -184,7 +185,7 @@ func TestRemoveDelShares(t *testing.T) {
 	pool := Pool{
 		BondedTokens:      sdk.NewRat(248305),
 		LooseTokens:       sdk.NewRat(232147),
-		InflationLastTime: 0,
+		InflationLastTime: time.Unix(0, 0),
 		Inflation:         sdk.NewRat(7, 100),
 	}
 	shares := sdk.NewRat(29)
@@ -232,7 +233,7 @@ func TestPossibleOverflow(t *testing.T) {
 	pool := Pool{
 		LooseTokens:       sdk.NewRat(100),
 		BondedTokens:      poolTokens,
-		InflationLastTime: 0,
+		InflationLastTime: time.Unix(0, 0),
 		Inflation:         sdk.NewRat(7, 100),
 	}
 	tokens := int64(71)

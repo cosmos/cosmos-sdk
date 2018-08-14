@@ -1,5 +1,11 @@
 # Join the Testnet
 
+::: tip Current Testnet
+See the [testnet repo](https://github.com/cosmos/testnets) for 
+information on the latest testnet, including the correct version
+of the Cosmos-SDK to use and details about the genesis file.
+:::
+
 Please ensure you have the [Cosmos SDK](/getting-started/installation.md) installed. If you ran a full node on a previous testnet, please skip to [Upgrading From Previous Testnet](#upgrading-from-previous-testnet).
 
 ## Setting Up a New Node
@@ -52,9 +58,15 @@ Now it is time to upgrade the software:
 
 ```bash
 cd $GOPATH/src/github.com/cosmos/cosmos-sdk
-git fetch --all && git checkout v0.19.0
+git fetch --all && git checkout master
 make update_tools && make get_vendor_deps && make install
 ```
+
+Note we use `master` here since it contains the latest stable release.
+See the [testnet repo](https://github.com/cosmos/testnets) 
+for details on which version is needed for which testnet, 
+and the [SDK release page](https://github.com/cosmos/cosmos-sdk/releases) 
+for details on each release.
 
 Your full node has been cleanly upgraded!
 
@@ -62,12 +74,16 @@ Your full node has been cleanly upgraded!
 
 ### Copy the Genesis File
 
-Copy the testnet's `genesis.json` file and place it in `gaiad`'s config directory.
+Fetch the testnet's `genesis.json` file into `gaiad`'s config directory.
 
 ```bash
 mkdir -p $HOME/.gaiad/config
-cp -a $GOPATH/src/github.com/cosmos/cosmos-sdk/cmd/gaia/testnets/gaia-6002/genesis.json $HOME/.gaiad/config/genesis.json
+curl https://raw.githubusercontent.com/cosmos/testnets/master/latest/genesis.json > $HOME/.gaiad/config/genesis.json
 ```
+
+Note we use the `latest` directory in the [testnets repo](https://github.com/cosmos/testnets) 
+which contains details for the latest testnet. If you are connecting to a different testnet, ensure you
+get the right files.
 
 ### Add Seed Nodes
 
@@ -75,7 +91,7 @@ Your node needs to know how to find peers. You'll need to add healthy seed nodes
 
 ```toml
 # Comma separated list of seed nodes to connect to
-seeds = "38aa9bec3998f12ae9088b21a2d910d19d565c27@gaia-6002.coinculture.net:46656,80a35a46ce09cfb31ee220c8141a25e73e0b239b@seed.cosmos.cryptium.ch:46656,80a35a46ce09cfb31ee220c8141a25e73e0b239b@35.198.166.171:46656,032fa56301de335d835057fb6ad9f7ce2242a66d@165.227.236.213:46656"
+seeds = "718145d422a823fd2a4e1e36e91b92bb0c4ddf8e@gaia-testnet.coinculture.net:26656,5922bf29b48a18c2300b85cc53f424fce23927ab@67.207.73.206:26656,7c8b8fd03577cd4817f5be1f03d506f879df98d8@gaia-7000-seed1.interblock.io:26656,a28737ff02391a6e00a1d3b79befd57e68e8264c@gaia-7000-seed2.interblock.io:26656,987ffd26640cd03d08ed7e53b24dfaa7956e612d@gaia-7000-seed3.interblock.io:26656"
 ```
 
 If those seeds aren't working, you can find more seeds and persistent peers on the [Cosmos Explorer](https://explorecosmos.network/nodes). Open the the `Full Nodes` pane and select nodes that do not have private (`10.x.x.x`) or [local IP addresses](https://en.wikipedia.org/wiki/Private_network). The `Persistent Peer` field contains the connection string. For best results use 4-6.

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -115,7 +116,7 @@ func TestUnbondingDelegation(t *testing.T) {
 		DelegatorAddr:  addrDels[0],
 		ValidatorAddr:  addrVals[0],
 		CreationHeight: 0,
-		MinTime:        0,
+		MinTime:        time.Unix(0, 0),
 		Balance:        sdk.NewInt64Coin("steak", 5),
 	}
 
@@ -188,7 +189,7 @@ func TestGetRedelegationsFromValidator(t *testing.T) {
 		ValidatorSrcAddr: addrVals[0],
 		ValidatorDstAddr: addrVals[1],
 		CreationHeight:   0,
-		MinTime:          0,
+		MinTime:          time.Unix(0, 0),
 		SharesSrc:        sdk.NewRat(5),
 		SharesDst:        sdk.NewRat(5),
 	}
@@ -218,7 +219,7 @@ func TestRedelegation(t *testing.T) {
 		ValidatorSrcAddr: addrVals[0],
 		ValidatorDstAddr: addrVals[1],
 		CreationHeight:   0,
-		MinTime:          0,
+		MinTime:          time.Unix(0, 0),
 		SharesSrc:        sdk.NewRat(5),
 		SharesDst:        sdk.NewRat(5),
 	}

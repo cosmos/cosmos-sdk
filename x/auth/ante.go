@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"errors"
+	"runtime/debug"
 )
 
 const (
@@ -123,23 +125,37 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 }
 
 func NewFeeRefundHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.FeeRefundHandler {
-	return func(ctx sdk.Context, tx sdk.Tx, txResult sdk.Result) {
-		stdTx, ok := tx.(StdTx)
-		if !ok {
-			return
-		}
-		fee := StdFee{
-			Gas: stdTx.Fee.Gas,
-			Amount: sdk.Coins{fck.GetNativeFeeToken(ctx, stdTx.Fee.Amount)},
-		}
+	return func(ctx sdk.Context, tx sdk.Tx, txResult sdk.Result) (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = errors.New(fmt.Sprintf("encountered panic error during fee refund, recovered: %v\nstack:\n%v", r, string(debug.Stack())))
+			}
+		}()
+
 		txAccounts := GetSigners(ctx)
+		// If this tx failed in anteHandler, txAccount length will be less than 1
 		if len(txAccounts) < 1 {
-			return
+			return nil
 		}
 		firstAccount := txAccounts[0]
+		//If all gas has been consumed, then there is no necessary to run fee refund process
 		if txResult.GasWanted <= txResult.GasUsed {
-			return
+			return nil
 		}
+
+		stdTx, ok := tx.(StdTx)
+		if !ok {
+			return errors.New("transaction is not Stdtx")
+		}
+		// Refund process will also cost gas, but this is compensation for previous fee deduction.
+		// It is not reasonable to consume users' gas. So the context gas is reset to transaction gas
+		ctx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
+
+		fee := StdFee{
+			Gas: stdTx.Fee.Gas,
+			Amount: sdk.Coins{fck.GetNativeFeeToken(ctx, stdTx.Fee.Amount)}, // consume gas
+		}
+
 		unusedGas := txResult.GasWanted - txResult.GasUsed
 		var refundCoins sdk.Coins
 		for _,coin := range fee.Amount {
@@ -149,10 +165,15 @@ func NewFeeRefundHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.FeeRefun
 			}
 			refundCoins = append(refundCoins, newCoin)
 		}
-		coins := am.GetAccount(ctx, firstAccount.GetAddress()).GetCoins()
-		firstAccount.SetCoins(coins.Plus(refundCoins))
-		am.SetAccount(ctx, firstAccount)
-		fck.refundCollectedFees(ctx, refundCoins)
+		coins := am.GetAccount(ctx, firstAccount.GetAddress()).GetCoins()   // consume gas
+		err = firstAccount.SetCoins(coins.Plus(refundCoins))
+		if err != nil {
+			return err
+		}
+
+		am.SetAccount(ctx, firstAccount)                                    // consume gas
+		fck.refundCollectedFees(ctx, refundCoins)                           // consume gas
+		return
 	}
 }
 

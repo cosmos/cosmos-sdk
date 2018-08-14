@@ -184,8 +184,6 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 
 	gov.InitGenesis(ctx, app.govKeeper, gov.DefaultGenesisState())
 
-	params.InitParamGenesis(ctx, app.paramsKeeper, genesisState.ParamsData)
-
 	auth.InitGenesis(ctx,app.paramsKeeper.Setter(),auth.DefaultGenesisState())
 
 	return abci.ResponseInitChain{}

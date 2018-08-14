@@ -278,3 +278,25 @@ func TestGetter(t *testing.T) {
 	assert.Equal(t, def10, res)
 
 }
+
+func TestGetterSetterProxy(t *testing.T) {
+	skey := sdk.NewKVStoreKey("test")
+	ctx := defaultContext(skey)
+	setter := NewKeeper(wire.NewCodec(), skey).Setter()
+
+	key := "test"
+	value := "hello"
+	setter.Set(ctx,key,value)
+
+	actual,_ := setter.GetString(ctx,key)
+	assert.Equal(t,actual,value)
+
+	setter.GovSetter().Set(ctx,key,value)
+	actual1,_ := setter.GovSetter().GetString(ctx,key)
+	assert.Equal(t,actual1,value)
+
+	actual2,_ := setter.GetString(ctx,key)
+	assert.Equal(t,actual2,value)
+
+
+}

@@ -58,6 +58,7 @@ type EditDelegationsBody struct {
 	AccountNumber       int64                        `json:"account_number"`
 	Sequence            int64                        `json:"sequence"`
 	Gas                 int64                        `json:"gas"`
+	Fee                 string                       `json:"fee"`
 	Delegations         []msgDelegationsInput        `json:"delegations"`
 	BeginUnbondings     []msgBeginUnbondingInput     `json:"begin_unbondings"`
 	CompleteUnbondings  []msgCompleteUnbondingInput  `json:"complete_unbondings"`
@@ -254,6 +255,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 
 		// add gas to context
 		ctx = ctx.WithGas(m.Gas)
+		ctx = ctx.WithFee(m.Fee)
 
 		// sign messages
 		signedTxs := make([][]byte, len(messages[:]))

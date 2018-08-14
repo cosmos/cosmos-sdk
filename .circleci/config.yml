@@ -166,7 +166,7 @@ jobs:
             set -x
             make get_tools
             make get_vendor_deps
-            make build-linux
+            go build GOOS=linux GOARCH=amd64 -o build/gaiad ./cmd/gaia/cmd/gaiad
             make localnet-start
             docker run -it --network=host jackzampolin/gaiad-poll:latest ./poll.sh 40 5 10 localhost
 

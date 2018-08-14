@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
@@ -57,9 +58,10 @@ func (k Keeper) GoalBonded(ctx sdk.Context) (res sdk.Rat) {
 }
 
 // UnbondingTime
-func (k Keeper) UnbondingTime(ctx sdk.Context) (res int64) {
-	k.paramstore.Get(ctx, keyUnbondingTime, &res)
-	return
+func (k Keeper) UnbondingTime(ctx sdk.Context) time.Duration {
+	var t int64
+	k.paramstore.Get(ctx, keyUnbondingTime, &t)
+	return time.Duration(t) * time.Second
 }
 
 // MaxValidators - Maximum number of validators

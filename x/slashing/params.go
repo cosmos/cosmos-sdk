@@ -99,7 +99,7 @@ func (k Keeper) DoubleSignUnbondDuration(ctx sdk.Context) time.Duration {
 
 // Downtime unbond duration
 func (k Keeper) DowntimeUnbondDuration(ctx sdk.Context) time.Duration {
-	var t time.Duration
+	var t int64
 	k.paramstore.Get(ctx, downtimeUnbondDurationKey, &t)
 	return time.Duration(t) * time.Second
 }

@@ -26,7 +26,7 @@ func TestStakeWithRandomMessages(t *testing.T) {
 	stakeKey := sdk.NewKVStoreKey("stake")
 	paramsKey := sdk.NewKVStoreKey("params")
 	paramsTKey := sdk.NewTransientStoreKey("tparams")
-	paramstore := params.NewKeeper(mapp.Cdc, paramsKey, paramsTKey, nil).SubStore(stake.DefaultParamSpace)
+	paramstore := params.NewKeeper(mapp.Cdc, paramsKey, paramsTKey, nil).Subspace(stake.DefaultParamSpace)
 	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, coinKeeper, paramstore, stake.DefaultCodespace)
 	mapp.Router().AddRoute("stake", stake.NewHandler(stakeKeeper))
 	mapp.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {

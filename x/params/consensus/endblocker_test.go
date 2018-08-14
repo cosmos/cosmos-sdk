@@ -117,14 +117,25 @@ func TestEndBlocker(t *testing.T) {
 		},
 		empty,
 		&abci.ConsensusParams{
-			BlockSize:   &abci.BlockSize{1, 2, 3},
-			TxSize:      &abci.TxSize{4, 5},
-			BlockGossip: &abci.BlockGossip{6},
+			BlockSize: &abci.BlockSize{
+				MaxBytes: 1,
+				MaxTxs:   2,
+				MaxGas:   3,
+			},
+			TxSize: &abci.TxSize{
+				MaxBytes: 4,
+				MaxGas:   5,
+			},
+			BlockGossip: &abci.BlockGossip{
+				BlockPartSizeBytes: 6,
+			},
 		},
 		&abci.ConsensusParams{
-			BlockSize:   nil,
-			TxSize:      nil,
-			BlockGossip: &abci.BlockGossip{10},
+			BlockSize: nil,
+			TxSize:    nil,
+			BlockGossip: &abci.BlockGossip{
+				BlockPartSizeBytes: 10,
+			},
 		},
 	}
 

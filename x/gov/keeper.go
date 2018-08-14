@@ -30,7 +30,7 @@ type Keeper struct {
 	pk params.Keeper
 
 	// The reference to the Paramstore to get and set gov specific params
-	ps params.Store
+	ps params.Space
 
 	// The reference to the CoinKeeper to modify balances
 	ck bank.Keeper
@@ -52,7 +52,7 @@ type Keeper struct {
 }
 
 // NewGovernanceMapper returns a mapper that uses go-wire to (binary) encode and decode gov types.
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, pk params.Keeper, ps params.Store, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, pk params.Keeper, ps params.Space, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
 		storeKey:  key,
 		pk:        pk,

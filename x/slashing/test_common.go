@@ -48,7 +48,7 @@ func createTestCodec() *wire.Codec {
 	return cdc
 }
 
-func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, stake.Keeper, params.Store, Keeper) {
+func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, stake.Keeper, params.Space, Keeper) {
 	keyAcc := sdk.NewKVStoreKey("acc")
 	keyStake := sdk.NewKVStoreKey("stake")
 	keySlashing := sdk.NewKVStoreKey("slashing")
@@ -67,7 +67,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	cdc := createTestCodec()
 	accountMapper := auth.NewAccountMapper(cdc, keyAcc, auth.ProtoBaseAccount)
 	ck := bank.NewKeeper(accountMapper)
-	paramstore := params.NewKeeper(cdc, keyParams, tkeyParams, nil).SubStore(DefaultParamSpace)
+	paramstore := params.NewKeeper(cdc, keyParams, tkeyParams, nil).Subspace(DefaultParamSpace)
 	sk := stake.NewKeeper(cdc, keyStake, ck, paramstore, stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
 

@@ -21,7 +21,7 @@ const (
 
 	// bytes required to represent the above precision
 	// ceil(log2(9999999999))
-	DecimalPrecisionBytes = 34
+	DecimalPrecisionBits = 34
 )
 
 var (
@@ -59,7 +59,7 @@ func calcPrecisionMultiplier(prec int64) *big.Int {
 	return multiplier
 }
 
-// get the precision multiplier. Do not mutate result.
+// get the precision multiplier, do not mutate result
 func precisionMultiplier(prec int64) *big.Int {
 	if prec > Precision {
 		panic(fmt.Sprintf("too much precision, maximum %v, provided %v", Precision, prec))
@@ -176,9 +176,9 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 //nolint
 func (d Dec) IsZero() bool      { return (d.Int).Sign() == 0 } // Is equal to zero
 func (d Dec) Equal(d2 Dec) bool { return (d.Int).Cmp(d2.Int) == 0 }
-func (d Dec) GT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) == 1 }     // greater than
+func (d Dec) GT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) > 0 }      // greater than
 func (d Dec) GTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) >= 0 }     // greater than or equal
-func (d Dec) LT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) == -1 }    // less than
+func (d Dec) LT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) < 0 }      // less than
 func (d Dec) LTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) <= 0 }     // less than or equal
 func (d Dec) Neg() Dec          { return Dec{new(big.Int).Neg(d.Int)} } // reverse the decimal sign
 
@@ -186,7 +186,7 @@ func (d Dec) Neg() Dec          { return Dec{new(big.Int).Neg(d.Int)} } // rever
 func (d Dec) Add(d2 Dec) Dec {
 	res := new(big.Int).Add(d.Int, d2.Int)
 
-	if res.BitLen() > 255+DecimalPrecisionBytes {
+	if res.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
 	}
 	return Dec{res}
@@ -196,7 +196,7 @@ func (d Dec) Add(d2 Dec) Dec {
 func (d Dec) Sub(d2 Dec) Dec {
 	res := new(big.Int).Sub(d.Int, d2.Int)
 
-	if res.BitLen() > 255+DecimalPrecisionBytes {
+	if res.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
 	}
 	return Dec{res}
@@ -207,7 +207,7 @@ func (d Dec) Mul(d2 Dec) Dec {
 	mul := new(big.Int).Mul(d.Int, d2.Int)
 	chopped := chopPrecisionAndRound(mul)
 
-	if chopped.BitLen() > 255+DecimalPrecisionBytes {
+	if chopped.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
 	}
 	return Dec{chopped}
@@ -223,7 +223,7 @@ func (d Dec) Quo(d2 Dec) Dec {
 	quo := new(big.Int).Quo(mul, d2.Int)
 	chopped := chopPrecisionAndRound(quo)
 
-	if chopped.BitLen() > 255+DecimalPrecisionBytes {
+	if chopped.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
 	}
 	return Dec{chopped}
@@ -283,7 +283,7 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 	}
 
 	// get the trucated quotient and remainder
-	quo, rem := big.NewInt(0), big.NewInt(0)
+	quo, rem := d, big.NewInt(0)
 	quo, rem = quo.QuoRem(d, precisionReuse, rem)
 
 	if rem.Sign() == 0 { // remainder is zero
@@ -292,19 +292,16 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 
 	switch rem.Cmp(fivePrecision) {
 	case -1:
-		d = quo
-		return d
+		return quo
 	case 1:
-		d = quo.Add(quo, oneInt)
-		return d
+		return quo.Add(quo, oneInt)
 	default: // bankers rounding must take place
 		// always round to an even number
 		if quo.Bit(0) == 0 {
 			d = quo
 			return d
 		}
-		d = quo.Add(quo, oneInt)
-		return d
+		return quo.Add(quo, oneInt)
 	}
 }
 

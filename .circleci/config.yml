@@ -165,10 +165,7 @@ jobs:
           name: run localnet and exit on failure
           command: |
             set -x
-            ls -al
-            echo "DIRECTORY: $(pwd)"
-            mkdir -p build/
-            cp /tmp/workspace/bin/gaiad build/
+            make build-linux
             docker-compose up -d
             docker run -it --network=bridge jackzampolin/gaiad-poll:latest ./poll.sh 40 5 10 gaianode0
 

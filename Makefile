@@ -199,7 +199,7 @@ build-docker-gaiadnode:
 # Run a 4-node testnet locally
 localnet-start: localnet-stop
 	@if ! [ -f build/node0/gaiad/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/gaiad:Z tendermint/gaiadnode testnet --v 4 --o . --starting-ip-address 192.168.10.2 ; fi
-	docker-compose up
+	docker-compose up -d
 
 # Stop testnet
 localnet-stop:

@@ -298,8 +298,7 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 	default: // bankers rounding must take place
 		// always round to an even number
 		if quo.Bit(0) == 0 {
-			d = quo
-			return d
+			return quo
 		}
 		return quo.Add(quo, oneInt)
 	}

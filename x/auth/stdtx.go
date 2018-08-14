@@ -158,10 +158,10 @@ func (msg StdSignMsg) Bytes() []byte {
 
 // Standard Signature
 type StdSignature struct {
-	crypto.PubKey    `json:"pub_key"` // optional
-	crypto.Signature `json:"signature"`
-	AccountNumber    int64 `json:"account_number"`
-	Sequence         int64 `json:"sequence"`
+	crypto.PubKey `json:"pub_key"` // optional
+	Signature     []byte           `json:"signature"`
+	AccountNumber int64            `json:"account_number"`
+	Sequence      int64            `json:"sequence"`
 }
 
 // logic for standard transaction decoding

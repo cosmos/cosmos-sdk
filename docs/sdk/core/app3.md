@@ -160,7 +160,7 @@ The standard form for signatures is `StdSignature`:
 // the first transaction made by the account.
 type StdSignature struct {
 	crypto.PubKey    `json:"pub_key"` // optional
-	crypto.Signature `json:"signature"`
+	[]byte `json:"signature"`
 	AccountNumber    int64 `json:"account_number"`
 	Sequence         int64 `json:"sequence"`
 }

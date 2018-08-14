@@ -157,7 +157,7 @@ jobs:
       - setup_remote_docker
       - run:
           name: build-linux binary
-          command: make build-linux
+          command: echo "$(pwd)" && make build-linux
       - run:
           name: run localnet and exit on failure
           command: |

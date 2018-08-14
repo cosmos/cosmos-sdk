@@ -2,13 +2,13 @@
 
 >TODO: Replace with valid ICS number and possibly move to new location.
 
- * [Changelog](#changelog)
-  * [Abstract](#abstract)
-  * [Preliminary](#preliminary)
-  * [Specification](#specification)
-  * [Future Adaptations](#future-adaptations)
-  * [API](#api)
-  * [References](#references)
+* [Changelog](#changelog)
+* [Abstract](#abstract)
+* [Preliminary](#preliminary)
+* [Specification](#specification)
+* [Future Adaptations](#future-adaptations)
+* [API](#api)
+* [References](#references)
 
 ## Status
 
@@ -46,6 +46,7 @@ action or data, then such an application would have to either treat this as
 idempotent or have mechanisms in place to reject known signed messages.
 
 ## Preliminary
+
 The Cosmos message signing protocol will be parameterized with a cryptographic
 secure hashing algorithm `SHA-256` and a signing algorithm `S` that contains 
 the operations `sign` and `verify` which provide a digital signature over a set
@@ -55,7 +56,7 @@ Note, our goal here is not to provide context and reasoning about why necessaril
 these algorithms were chosen apart from the fact they are the defacto algorithms
 used in Tendermint and the Cosmos SDK and that they satisfy our needs for such
 cryptographic algorithms such as having resistance to collision and second
-pre-image attacks, as well as being deterministic and uniform.
+pre-image attacks, as well as being [deterministic](https://en.wikipedia.org/wiki/Hash_function#Determinism) and [uniform](https://en.wikipedia.org/wiki/Hash_function#Uniformity).
 
 ## Specification
 
@@ -128,6 +129,7 @@ the [JSON schema](http://json-schema.org/) specification as such:
 ```
 
 e.g.
+
 ```json
 {
   "@chain_id": "1",
@@ -158,27 +160,48 @@ to expand upon it's canonical JSON structure to include such functionality.
 Application developers and designers should formalize a standard set of APIs that
 adhere to the following specification:
 
-<hr>
+-----
 
-**cosmosSignBytes**
+### **cosmosSignBytes**
 
 Params:
+
 * `data`: the Cosmos signed message canonical JSON structure
-* `address`: 20 byte account address to sign data with
+* `address`: the Bech32 Cosmos account address to sign data with
 
 Returns:
+
 * `signature`: the Cosmos signature derived using signing algorithm `S`
 
-<hr>
+-----
 
-**cosmosSignBytesPass**
+### **cosmosSignBytesPassword**
 
 Params:
+
 * `data`: the Cosmos signed message canonical JSON structure
-* `address`: 20 byte account address to sign data with
+* `address`: the Bech32 Cosmos account address to sign data with
 * `password`: password of the account to sign data with
 
 Returns:
+
 * `signature`: the Cosmos signature derived using signing algorithm `S`
+
+-----
+
+### Examples
+
+Using the `secp256k1` as the DSA, `S`:
+
+```javascript
+data = {
+  "@chain_id": "1",
+  "@type": "message",
+  "text": "I hereby claim I am ABC on Keybase!"
+}
+
+cosmosSignBytes(data, "cosmosaccaddr1pvsch6cddahhrn5e8ekw0us50dpnugwnlfngt3")
+> "0x7fc4a495473045022100dec81a9820df0102381cdbf7e8b0f1e2cb64c58e0ecda1324543742e0388e41a02200df37905a6505c1b56a404e23b7473d2c0bc5bcda96771d2dda59df6ed2b98f8"
+```
 
 ## References

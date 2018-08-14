@@ -29,7 +29,7 @@ There are three types of key representations that are used:
 
 - `cosmosvalpub`
   - Generated when the node is created with `gaiad init`.
-  - Get this value with `gaiad tendermint show_validator`
+  - Get this value with `gaiad tendermint show-validator`
   - e.g. `cosmosvalpub1zcjduc3qcyj09qc03elte23zwshdx92jm6ce88fgc90rtqhjx8v0608qh5ssp0w94c`
 
 ### Generate Keys
@@ -59,7 +59,7 @@ gaiacli keys list
 View the validator pubkey for your node by typing:
 
 ```bash
-gaiad tendermint show_validator
+gaiad tendermint show-validator
 ```
 
 ::: danger Warning
@@ -120,7 +120,7 @@ On the testnet, we delegate `steak` instead of `atom`. Here's how you can bond t
 ```bash
 gaiacli stake delegate \
   --amount=10steak \
-  --address-validator=$(gaiad tendermint show_validator) \
+  --address-validator=$(gaiad tendermint show-validator) \
   --name=<key_name> \
   --chain-id=gaia-7005
 ```
@@ -137,7 +137,7 @@ If for any reason the validator misbehaves, or you want to unbond a certain amou
 
 ```bash
 gaiacli stake unbond begin \
-  --address-validator=$(gaiad tendermint show_validator) \
+  --address-validator=$(gaiad tendermint show-validator) \
   --shares=MAX \
   --name=<key_name> \
   --chain-id=gaia-7005
@@ -152,7 +152,7 @@ gaiacli account <account_cosmosaccaddr>
 
 gaiacli stake delegation \
   --address-delegator=<account_cosmosaccaddr> \
-  --address-validator=$(gaiad tendermint show_validator) \
+  --address-validator=$(gaiad tendermint show-validator) \
   --chain-id=gaia-7005
 ```
 

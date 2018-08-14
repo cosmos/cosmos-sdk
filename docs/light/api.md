@@ -479,6 +479,62 @@ Returns on error:
 }
 ```
 
+### /stake/delegators/{delegatorAddr}/validators - GET
+
+url: /stake/delegators/{delegatorAddr}/validators
+
+Functionality: Query all validators that a delegator is bonded to.
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{}
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"TODO",
+    "result":{}
+}
+```
+
+### /stake/delegators/{delegatorAddr}/validators/{validatorAddr} - GET
+
+url: /stake/delegators/{delegatorAddr}/validators/{validatorAddr}
+
+Functionality: Query a validator that a delegator is bonded to
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{}
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"TODO",
+    "result":{}
+}
+```
+
 ### /stake/delegators/{delegatorAddr}/txs - GET
 
 url: /stake/delegators/{delegatorAddr}/txs

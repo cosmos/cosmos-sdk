@@ -21,6 +21,26 @@ func NewGenesisState(startingProposalID int64, dp DepositProcedure, vp VotingPro
 	}
 }
 
+////////////////////  iris/cosmos-sdk begin///////////////////////////
+func NewIrisGenesisState(minDeposit sdk.Coins, depositPeriod int64, votingPeriod int64) GenesisState {
+	return GenesisState{
+		StartingProposalID: 1,
+		DepositProcedure: DepositProcedure{
+			MinDeposit:       minDeposit,
+			MaxDepositPeriod: depositPeriod,
+		},
+		VotingProcedure: VotingProcedure{
+			VotingPeriod: votingPeriod,
+		},
+		TallyingProcedure: TallyingProcedure{
+			Threshold:         sdk.NewRat(1, 2),
+			Veto:              sdk.NewRat(1, 3),
+			GovernancePenalty: sdk.NewRat(1, 100),
+		},
+	}
+}
+////////////////////  iris/cosmos-sdk end///////////////////////////
+
 // get raw genesis raw message for testing
 func DefaultGenesisState() GenesisState {
 	return GenesisState{

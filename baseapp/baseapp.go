@@ -644,7 +644,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// meter so we initialize upfront.
 	var gasWanted int64
 	ctx := app.getContextForAnte(mode, txBytes)
-	originalCtx := ctx
+	ctxWithNoCache := ctx
 	defer func() {
 		if r := recover(); r != nil {
 			switch rType := r.(type) {
@@ -658,11 +658,16 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		}
 
 		result.GasWanted = gasWanted
-		result.GasUsed = ctx.GasMeter().GasConsumed()
+		result.GasUsed = ctxWithNoCache.GasMeter().GasConsumed()
 
 		// Refund unspent fee
 		if app.feeRefundHandler != nil {
-			app.feeRefundHandler(originalCtx, tx, result)
+			err := app.feeRefundHandler(ctxWithNoCache, tx, result)
+			if err != nil {
+				result = sdk.ErrInternal(err.Error()).Result()
+				result.GasWanted = gasWanted
+				result.GasUsed = ctxWithNoCache.GasMeter().GasConsumed()
+			}
 		}
 	}()
 
@@ -681,7 +686,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		}
 		if !newCtx.IsZero() {
 			ctx = newCtx
-			originalCtx = newCtx
+			ctxWithNoCache = newCtx
 		}
 
 		gasWanted = anteResult.GasWanted
@@ -698,7 +703,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	ctx = ctx.WithMultiStore(msCache)
 	result = app.runMsgs(ctx, msgs)
-	result.GasWanted = gasWanted
 
 	// only update state if all messages pass and we're not in a simulation
 	if result.IsOK() && mode != runTxModeSimulate {

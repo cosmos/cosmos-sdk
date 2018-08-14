@@ -6,16 +6,15 @@ import (
 	"strings"
 )
 
-// nolint
+const Prefix = "gov/"
+
 const (
-	ParamStoreKeyDepositProcedureDeposit          = "gov/depositprocedure/deposit"
-	ParamStoreKeyDepositProcedureMaxDepositPeriod = "gov/depositprocedure/maxDepositPeriod"
-
-	ParamStoreKeyVotingProcedureVotingPeriod = "gov/votingprocedure/votingPeriod"
-
-	ParamStoreKeyTallyingProcedureThreshold = "gov/tallyingprocedure/threshold"
-	ParamStoreKeyTallyingProcedureVeto      = "gov/tallyingprocedure/veto"
-	ParamStoreKeyTallyingProcedurePenalty   = "gov/tallyingprocedure/penalty"
+	ParamStoreKeyDepositProcedureDeposit          = "depositprocedure/deposit"
+	ParamStoreKeyDepositProcedureMaxDepositPeriod = "depositprocedure/maxDepositPeriod"
+	ParamStoreKeyVotingProcedureVotingPeriod      = "votingprocedure/votingPeriod"
+	ParamStoreKeyTallyingProcedureThreshold       = "tallyingprocedure/threshold"
+	ParamStoreKeyTallyingProcedureVeto            = "tallyingprocedure/veto"
+	ParamStoreKeyTallyingProcedurePenalty         = "tallyingprocedure/penalty"
 )
 
 // =====================================================
@@ -47,34 +46,34 @@ func (keeper Keeper) GetTallyingProcedure(ctx sdk.Context) TallyingProcedure {
 
 func (keeper Keeper) setDepositProcedureDeposit(ctx sdk.Context, Deposit sdk.Coins) {
 	data := Deposit.String()
-	keeper.ps.Set(ctx, ParamStoreKeyDepositProcedureDeposit, &data)
+	keeper.ps.GovSetter().Set(ctx, ParamStoreKeyDepositProcedureDeposit, &data)
 }
 
 func (keeper Keeper) setDepositProcedureMaxDepositPeriod(ctx sdk.Context, MaxDepositPeriod int64) {
-	maxDepositPeriod := strconv.FormatInt(MaxDepositPeriod,10)
-	keeper.ps.Set(ctx, ParamStoreKeyDepositProcedureMaxDepositPeriod, &maxDepositPeriod)
+	maxDepositPeriod := strconv.FormatInt(MaxDepositPeriod, 10)
+	keeper.ps.GovSetter().Set(ctx, ParamStoreKeyDepositProcedureMaxDepositPeriod, &maxDepositPeriod)
 }
 
 func (keeper Keeper) setVotingProcedureVotingPeriod(ctx sdk.Context, VotingPeriod int64) {
-	votingPeriod := strconv.FormatInt(VotingPeriod,10)
-	keeper.ps.Set(ctx, ParamStoreKeyVotingProcedureVotingPeriod, &votingPeriod)
+	votingPeriod := strconv.FormatInt(VotingPeriod, 10)
+	keeper.ps.GovSetter().Set(ctx, ParamStoreKeyVotingProcedureVotingPeriod, &votingPeriod)
 }
 
 func (keeper Keeper) setTallyingProcedure(ctx sdk.Context, key string, rat sdk.Rat) {
 	str := rat.String()
-	keeper.ps.Set(ctx, key, &str)
+	keeper.ps.GovSetter().Set(ctx, key, &str)
 }
 
 func (keeper Keeper) getDepositProcedureDeposit(ctx sdk.Context) (Deposit sdk.Coins) {
 	var data string
-	keeper.ps.Get(ctx, ParamStoreKeyDepositProcedureDeposit, &data)
+	keeper.ps.GovSetter().Get(ctx, ParamStoreKeyDepositProcedureDeposit, &data)
 	Deposit, _ = sdk.ParseCoins(data)
 	return
 }
 
 func (keeper Keeper) getDepositProcedureMaxDepositPeriod(ctx sdk.Context) (MaxDepositPeriod int64) {
 	var maxDepositPeriod string
-	if keeper.ps.Get(ctx, ParamStoreKeyDepositProcedureMaxDepositPeriod, &maxDepositPeriod) == nil {
+	if keeper.ps.GovSetter().Get(ctx, ParamStoreKeyDepositProcedureMaxDepositPeriod, &maxDepositPeriod) == nil {
 		MaxDepositPeriod, _ = strconv.ParseInt(maxDepositPeriod, 10, 64)
 	}
 	return
@@ -82,7 +81,7 @@ func (keeper Keeper) getDepositProcedureMaxDepositPeriod(ctx sdk.Context) (MaxDe
 
 func (keeper Keeper) getVotingProcedureVotingPeriod(ctx sdk.Context) (VotingPeriod int64) {
 	var votingPeriod string
-	if keeper.ps.Get(ctx, ParamStoreKeyVotingProcedureVotingPeriod, &votingPeriod) == nil {
+	if keeper.ps.GovSetter().Get(ctx, ParamStoreKeyVotingProcedureVotingPeriod, &votingPeriod) == nil {
 		VotingPeriod, _ = strconv.ParseInt(votingPeriod, 10, 64)
 	}
 	return
@@ -90,7 +89,7 @@ func (keeper Keeper) getVotingProcedureVotingPeriod(ctx sdk.Context) (VotingPeri
 
 func (keeper Keeper) getTallyingProcedure(ctx sdk.Context, key string) sdk.Rat {
 	var data string
-	keeper.ps.Get(ctx, key, &data)
+	keeper.ps.GovSetter().Get(ctx, key, &data)
 	str := strings.Split(data, "/")
 	x, _ := strconv.ParseInt(str[0], 10, 64)
 	y, _ := strconv.ParseInt(str[1], 10, 64)

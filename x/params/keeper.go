@@ -77,15 +77,6 @@ func (k Keeper) setRaw(ctx sdk.Context, key string, param []byte) {
 	store.Set([]byte(key), param)
 }
 
-// Getter returns readonly struct
-func (k Keeper) Getter() Getter {
-	return Getter{k}
-}
-
-// Setter returns read/write struct
-func (k Keeper) Setter() Setter {
-	return Setter{Getter{k}}
-}
 
 // Getter exposes methods related with only getting params
 type Getter struct {

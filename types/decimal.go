@@ -29,6 +29,7 @@ var (
 	fivePrecision        = new(big.Int).Quo(precisionReuse, big.NewInt(2))
 	precisionMultipliers []*big.Int
 	zeroInt              = big.NewInt(0)
+	oneInt               = big.NewInt(1)
 	tenInt               = big.NewInt(10)
 )
 
@@ -118,8 +119,10 @@ func NewDecFromIntWithPrec(i Int, prec int64) Dec {
 //   345
 //   -456789
 //
-// NOTE an error will return if more decimal places
-// are provided in the string than the constant Precision
+// NOTE - An error will return if more decimal places
+// are provided in the string than the constant Precision.
+//
+// CONTRACT - This function does not mutate the input str.
 func NewDecFromStr(str string) (d Dec, err Error) {
 	if len(str) == 0 {
 		return d, ErrUnknownRequest("decimal string is empty")
@@ -127,7 +130,7 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 
 	// first extract any negative symbol
 	neg := false
-	if string(str[0]) == "-" {
+	if str[0] == '-' {
 		neg = true
 		str = str[1:]
 	}
@@ -150,7 +153,8 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 	}
 
 	if lenDecs > Precision {
-		return d, ErrUnknownRequest("too much Precision in decimal")
+		return d, ErrUnknownRequest(
+			fmt.Sprintf("too much precision, maximum %v, len decimal %v", Precision, lenDecs))
 	}
 
 	// add some extra zero's to correct to the Precision factor
@@ -160,7 +164,7 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 
 	combined, ok := new(big.Int).SetString(combinedStr, 10)
 	if !ok {
-		return d, ErrUnknownRequest("bad string to integer conversion")
+		return d, ErrUnknownRequest(fmt.Sprintf("bad string to integer conversion, combinedStr: %v", combinedStr))
 	}
 	if neg {
 		combined = new(big.Int).Neg(combined)
@@ -201,7 +205,7 @@ func (d Dec) Sub(d2 Dec) Dec {
 // multiplication
 func (d Dec) Mul(d2 Dec) Dec {
 	mul := new(big.Int).Mul(d.Int, d2.Int)
-	chopped := ChopPrecisionAndRound(mul)
+	chopped := chopPrecisionAndRound(mul)
 
 	if chopped.BitLen() > 255+DecimalPrecisionBytes {
 		panic("Int overflow")
@@ -217,7 +221,11 @@ func (d Dec) Quo(d2 Dec) Dec {
 	mul.Mul(mul, precisionReuse)
 
 	quo := new(big.Int).Quo(mul, d2.Int)
-	chopped := ChopPrecisionAndRound(quo)
+	chopped := chopPrecisionAndRound(quo)
+
+	if chopped.BitLen() > 255+DecimalPrecisionBytes {
+		panic("Int overflow")
+	}
 	return Dec{chopped}
 }
 
@@ -241,7 +249,7 @@ func (d Dec) ToLeftPaddedWithDecimals(totalDigits int8) string {
 // TODO panic if negative or if totalDigits < len(initStr)???
 // evaluate as an integer and return left padded string
 func (d Dec) ToLeftPadded(totalDigits int8) string {
-	chopped := ChopPrecisionAndRound(d.Int)
+	chopped := chopPrecisionAndRound(d.Int)
 	intStr := chopped.String()
 	fcode := `%0` + strconv.Itoa(int(totalDigits)) + `s`
 	return fmt.Sprintf(fcode, intStr)
@@ -259,16 +267,19 @@ func (d Dec) ToLeftPadded(totalDigits int8) string {
 // nolint - go-cyclo
 // Remove a Precision amount of rightmost digits and perform bankers rounding
 // on the remainder (gaussian rounding) on the digits which have been removed.
-func ChopPrecisionAndRound(d *big.Int) (chopped *big.Int) {
+//
+// TODO We should make this function  mutate the input. The functions here
+// don't need to allocate different memory for chopped after computing the
+// result
+func chopPrecisionAndRound(d *big.Int) *big.Int {
 
 	// remove the negative and add it back when returning
 	if d.Sign() == -1 {
 		// make d positive, compute chopped value, and then un-mutate d
 		d = d.Neg(d)
-		chopped = ChopPrecisionAndRound(d)
+		d = chopPrecisionAndRound(d)
 		d = d.Neg(d)
-		chopped.Neg(chopped)
-		return chopped
+		return d
 	}
 
 	// get the trucated quotient and remainder
@@ -279,39 +290,27 @@ func ChopPrecisionAndRound(d *big.Int) (chopped *big.Int) {
 		return quo
 	}
 
-	//lenWhole := len(d.String())
-	//if quo.Sign() == 0 { // only the decimal places (ex. 0.1234)
-	//lenWhole++
-	//}
-	//lenQuo := len(quo.String())
-	//lenRem := len(rem.String())
-	//leadingZeros := lenWhole - (lenQuo + lenRem) // leading zeros removed from the remainder
-
-	//zerosToAdd := int64(lenRem - 1 + leadingZeros)
-	//multiplier := new(big.Int).Exp(big.NewInt(10), big.NewInt(zerosToAdd), nil)
-	//fiveLine := new(big.Int).Mul(big.NewInt(5), multiplier)
-
 	switch rem.Cmp(fivePrecision) {
 	case -1:
-		chopped = quo
-		return
+		d = quo
+		return d
 	case 1:
-		chopped = quo.Add(quo, big.NewInt(1))
-		return
+		d = quo.Add(quo, oneInt)
+		return d
 	default: // bankers rounding must take place
 		// always round to an even number
 		if quo.Bit(0) == 0 {
-			chopped = quo
-			return
+			d = quo
+			return d
 		}
-		chopped = quo.Add(quo, big.NewInt(1))
-		return
+		d = quo.Add(quo, oneInt)
+		return d
 	}
 }
 
 // RoundInt64 rounds the decimal using bankers rounding
 func (d Dec) RoundInt64() int64 {
-	chopped := ChopPrecisionAndRound(d.Int)
+	chopped := chopPrecisionAndRound(d.Int)
 	if !chopped.IsInt64() {
 		panic("Int64() out of bound")
 	}
@@ -320,15 +319,35 @@ func (d Dec) RoundInt64() int64 {
 
 // RoundInt round the decimal using bankers rounding
 func (d Dec) RoundInt() Int {
-	return NewIntFromBigInt(ChopPrecisionAndRound(d.Int))
+	return NewIntFromBigInt(chopPrecisionAndRound(d.Int))
 }
 
 //___________________________________________________________________________________
 
+// reuse nil values
+var (
+	nilAmino string
+	nilJSON  []byte
+)
+
+func init() {
+	empty := new(big.Int)
+	bz, err := empty.MarshalText()
+	if err != nil {
+		panic("bad nil amino init")
+	}
+	nilAmino = string(bz)
+
+	nilJSON, err = json.Marshal(string(bz))
+	if err != nil {
+		panic("bad nil json init")
+	}
+}
+
 // wraps d.MarshalText()
 func (d Dec) MarshalAmino() (string, error) {
 	if d.Int == nil {
-		d.Int = new(big.Int)
+		return nilAmino, nil
 	}
 	bz, err := d.Int.MarshalText()
 	return string(bz), err
@@ -348,14 +367,14 @@ func (d *Dec) UnmarshalAmino(text string) (err error) {
 // MarshalJSON defines custom encoding scheme
 func (d Dec) MarshalJSON() ([]byte, error) {
 	if d.Int == nil {
-		d.Int = new(big.Int)
+		return nilJSON, nil
 	}
 
-	text, err := d.Int.MarshalText()
+	bz, err := d.Int.MarshalText()
 	if err != nil {
 		return nil, err
 	}
-	return json.Marshal(string(text))
+	return json.Marshal(string(bz))
 }
 
 // UnmarshalJSON defines custom decoding scheme

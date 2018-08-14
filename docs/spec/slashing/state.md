@@ -59,8 +59,8 @@ infractions committed within the period (and discovered whenever) is capped at t
 penalty for the worst offense.
 
 This period starts when a validator is first bonded and ends when a validator is slashed & jailed
-for double-signing (but does not end if they are slashed & jailed for just missing blocks).
-When the validator voluntarily unjails themselves (and possibly changes signing keys), they reset the period.
+for any reason. When the validator rejoins the validator set (perhaps through unjailing themselves,
+and perhaps also changing signing keys), they enter into a new period.
 
 Slashing periods are indexed in the store as follows:
 

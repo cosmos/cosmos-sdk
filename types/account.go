@@ -219,12 +219,12 @@ func (bz ValAddress) Format(s fmt.State, verb rune) {
 // auxiliary
 // ----------------------------------------------------------------------------
 
-// Bech32ifyAccPub takes AccountPubKey and returns the bech32 encoded string.
+// Bech32ifyAccPub returns a bech32 encoded string for a given account PubKey.
 func Bech32ifyAccPub(pub crypto.PubKey) (string, error) {
 	return bech32.ConvertAndEncode(Bech32PrefixAccPub, pub.Bytes())
 }
 
-// MustBech32ifyAccPub panics on bech32-encoding failure.
+// MustBech32ifyAccPub returns the result of Bech32ifyAccPub panicing on failure.
 func MustBech32ifyAccPub(pub crypto.PubKey) string {
 	enc, err := Bech32ifyAccPub(pub)
 	if err != nil {
@@ -234,13 +234,13 @@ func MustBech32ifyAccPub(pub crypto.PubKey) string {
 	return enc
 }
 
-// Bech32ifyValPub returns the bech32 encoded string for a validator's
-// crypto.PubKey.
+// Bech32ifyValPub returns a bech32 encoded string for a given validator
+// operator's PubKey.
 func Bech32ifyValPub(pub crypto.PubKey) (string, error) {
 	return bech32.ConvertAndEncode(Bech32PrefixValPub, pub.Bytes())
 }
 
-// MustBech32ifyValPub panics on bech32-encoding failure.
+// MustBech32ifyValPub returns the result of Bech32ifyValPub panicing on failure.
 func MustBech32ifyValPub(pub crypto.PubKey) string {
 	enc, err := Bech32ifyValPub(pub)
 	if err != nil {
@@ -250,7 +250,22 @@ func MustBech32ifyValPub(pub crypto.PubKey) string {
 	return enc
 }
 
-// GetAccPubKeyBech32 creates a crypto.PubKey from a string.
+// Bech32ifyTmPub returns a bech32 encoded string for a given validator's PubKey.
+func Bech32ifyTmPub(pub crypto.PubKey) (string, error) {
+	return bech32.ConvertAndEncode(Bech32PrefixTmPub, pub.Bytes())
+}
+
+// MustBech32ifyTmPub returns the result of Bech32ifyTmPub panicing on failure.
+func MustBech32ifyTmPub(pub crypto.PubKey) string {
+	enc, err := Bech32ifyValPub(pub)
+	if err != nil {
+		panic(err)
+	}
+
+	return enc
+}
+
+// GetAccPubKeyBech32 creates a PubKey from a string.
 func GetAccPubKeyBech32(address string) (pk crypto.PubKey, err error) {
 	bz, err := GetFromBech32(address, Bech32PrefixAccPub)
 	if err != nil {
@@ -265,8 +280,7 @@ func GetAccPubKeyBech32(address string) (pk crypto.PubKey, err error) {
 	return pk, nil
 }
 
-// MustGetAccPubKeyBech32 creates a crypto.PubKey from a string. It panics on
-// error.
+// MustGetAccPubKeyBech32 creates a PubKey from a string. It panics on error.
 func MustGetAccPubKeyBech32(address string) (pk crypto.PubKey) {
 	pk, err := GetAccPubKeyBech32(address)
 	if err != nil {
@@ -276,7 +290,7 @@ func MustGetAccPubKeyBech32(address string) (pk crypto.PubKey) {
 	return pk
 }
 
-// GetValPubKeyBech32 decodes a validator public key into a crypto.PubKey.
+// GetValPubKeyBech32 decodes a validator public key into a PubKey.
 func GetValPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
 	bz, err := GetFromBech32(pubkey, Bech32PrefixValPub)
 	if err != nil {
@@ -291,8 +305,7 @@ func GetValPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
 	return pk, nil
 }
 
-// MustGetValPubKeyBech32 creates a crypto.PubKey from a string. It panics on
-// error.
+// MustGetValPubKeyBech32 creates a PubKey from a string. It panics on error.
 func MustGetValPubKeyBech32(address string) (pk crypto.PubKey) {
 	pk, err := GetValPubKeyBech32(address)
 	if err != nil {
@@ -302,7 +315,7 @@ func MustGetValPubKeyBech32(address string) (pk crypto.PubKey) {
 	return pk
 }
 
-// GetFromBech32 decodes a bytestring from a bech32-encoded string.
+// GetFromBech32 decodes a bytestring from a bech32 encoded string.
 func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 	if len(bech32str) == 0 {
 		return nil, errors.New("decoding bech32 address failed: must provide an address")

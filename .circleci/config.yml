@@ -168,7 +168,7 @@ jobs:
             make get_vendor_deps
             make build-linux
             make localnet-start
-            docker run -it --network=bridge jackzampolin/gaiad-poll:latest ./poll.sh 40 5 10 gaianode0
+            docker run -it --network=host jackzampolin/gaiad-poll:latest ./poll.sh 40 5 10 localhost
 
 workflows:
   version: 2

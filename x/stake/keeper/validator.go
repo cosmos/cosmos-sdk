@@ -417,20 +417,24 @@ func (k Keeper) UpdateBondedValidators(
 			}
 		}
 
-		// increment bondedValidatorsCount / get the validator to bond
-		if !validator.Revoked {
-			if validator.Status != sdk.Bonded {
-				validatorToBond = validator
-				newValidatorBonded = true
+		if validator.Revoked {
+			// we should no longer consider jailed validators as they are ranked
+			// lower than any non-jailed/bonded validators
+			if validator.Status == sdk.Bonded {
+				panic(fmt.Sprintf("revoked validator cannot be bonded for address: %s\n", ownerAddr))
 			}
 
-			bondedValidatorsCount++
-
-			// sanity check
-		} else if validator.Status == sdk.Bonded {
-			panic(fmt.Sprintf("revoked validator cannot be bonded, address: %v\n", ownerAddr))
+			break
 		}
 
+		// increment the total number of bonded validators and potentially mark
+		// the validator to bond
+		if validator.Status != sdk.Bonded {
+			validatorToBond = validator
+			newValidatorBonded = true
+		}
+
+		bondedValidatorsCount++
 		iterator.Next()
 	}
 
@@ -468,7 +472,6 @@ func (k Keeper) UpdateBondedValidators(
 
 // full update of the bonded validator set, many can be added/kicked
 func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
-
 	store := ctx.KVStore(k.storeKey)
 
 	// clear the current validators store, add to the ToKickOut temp store
@@ -476,27 +479,26 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedIndexKey)
 	for ; iterator.Valid(); iterator.Next() {
 		ownerAddr := GetAddressFromValBondedIndexKey(iterator.Key())
-		toKickOut[string(ownerAddr)] = 0 // set anything
+		toKickOut[string(ownerAddr)] = 0
 	}
+
 	iterator.Close()
+
+	var validator types.Validator
 
 	oldCliffValidatorAddr := k.GetCliffValidator(ctx)
 	maxValidators := k.GetParams(ctx).MaxValidators
 	bondedValidatorsCount := 0
 
-	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey) // largest to smallest
-	var validator types.Validator
+	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
 	for {
 		if !iterator.Valid() || bondedValidatorsCount > int(maxValidators-1) {
 			break
 		}
 
-		// either retrieve the original validator from the store,
-		// or under the situation that this is the "new validator" just
-		// use the validator provided because it has not yet been updated
-		// in the main validator store
-		ownerAddr := iterator.Value()
 		var found bool
+
+		ownerAddr := iterator.Value()
 		validator, found = k.GetValidator(ctx, ownerAddr)
 		if !found {
 			panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
@@ -506,23 +508,26 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 		if found {
 			delete(toKickOut, string(ownerAddr))
 		} else {
-
-			// if it wasn't in the toKickOut group it means
-			// this wasn't a previously a validator, therefor
-			// update the validator to enter the validator group
+			// If the validator wasn't in the toKickOut group it means it wasn't
+			// previously a validator, therefor update the validator to enter
+			// the validator group.
 			validator = k.bondValidator(ctx, validator)
 		}
 
-		if !validator.Revoked {
-			bondedValidatorsCount++
-		} else {
+		if validator.Revoked {
+			// we should no longer consider jailed validators as they are ranked
+			// lower than any non-jailed/bonded validators
 			if validator.Status == sdk.Bonded {
-				panic(fmt.Sprintf("revoked validator cannot be bonded, address: %v\n", ownerAddr))
+				panic(fmt.Sprintf("revoked validator cannot be bonded for address: %s\n", ownerAddr))
 			}
+
+			break
 		}
 
+		bondedValidatorsCount++
 		iterator.Next()
 	}
+
 	iterator.Close()
 
 	// clear or set the cliff validator
@@ -532,7 +537,6 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 		k.clearCliffValidator(ctx)
 	}
 
-	// perform the actual kicks
 	kickOutValidators(k, ctx, toKickOut)
 	return
 }

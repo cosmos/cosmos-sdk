@@ -73,6 +73,7 @@ IMPROVEMENTS
 * [x/stake] \#1815 Sped up the processing of `EditValidator` txs.
 * [server] \#1930 Transactions indexer indexes all tags by default.
 * [x/stake] \#2000 Added tests for new staking endpoints
+* [x/stake] [#2023](https://github.com/cosmos/cosmos-sdk/pull/2023) Terminate iteration loop in `UpdateBondedValidators` and `UpdateBondedValidatorsFull` when the first revoked validator is encountered and perform a sanity check.
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators

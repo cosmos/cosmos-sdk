@@ -74,6 +74,7 @@ IMPROVEMENTS
 * [x/stake] \#1815 Sped up the processing of `EditValidator` txs.
 * [server] \#1930 Transactions indexer indexes all tags by default.
 * [x/stake] \#2000 Added tests for new staking endpoints
+* [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.
 
 BUG FIXES
 *  \#1666 Add intra-tx counter to the genesis validators

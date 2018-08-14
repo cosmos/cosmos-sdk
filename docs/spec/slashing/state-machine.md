@@ -80,6 +80,20 @@ onValidatorUnbonded(address sdk.ValAddress)
   return
 ```
 
+#### Validator Power Changed
+
+When a validator's power changes, we update the in-progress `SlashingPeriod` with the validator's current power:
+
+```golang
+onValidatorPowerChanged(address sdk.ValAddress, stakeBonded sdk.Rat)
+
+  slashingPeriod = getSlashingPeriod(address, CurrentHeight)
+  slashingPeriod.MaxStakeBonded = max(slashingPeriod.MaxStakeBonded, stakeBonded)
+  setSlashingPeriod(slashingPeriod)
+
+  return
+```
+
 #### Validator Slashed
 
 When a validator is slashed, we look up the appropriate `SlashingPeriod` based on the validator
@@ -90,11 +104,11 @@ address and the time of infraction, cap the fraction slashed as `max(SlashFracti
 beforeValidatorSlashed(address sdk.ValAddress, fraction sdk.Rat, infractionHeight int64)
   
   slashingPeriod = getSlashingPeriod(address, infractionHeight)
-  totalToSlash = max(slashingPeriod.SlashedSoFar, fraction)
-  slashingPeriod.SlashedSoFar = totalToSlash
+  totalFractionToSlash = max(slashingPeriod.SlashedSoFar, fraction)
+  slashingPeriod.FractionSlashedSoFar = totalToSlash
   setSlashingPeriod(slashingPeriod)
 
-  remainderToSlash = slashingPeriod.SlashedSoFar - totalToSlash
+  remainderToSlash = slashingPeriod.FractionSlashedSoFar - totalToSlash
   fraction = remainderToSlash
 
   continue with slashing

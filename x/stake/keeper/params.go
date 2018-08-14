@@ -58,10 +58,9 @@ func (k Keeper) GoalBonded(ctx sdk.Context) (res sdk.Rat) {
 }
 
 // UnbondingTime
-func (k Keeper) UnbondingTime(ctx sdk.Context) time.Duration {
-	var t int64
-	k.paramstore.Get(ctx, keyUnbondingTime, &t)
-	return time.Duration(t) * time.Second
+func (k Keeper) UnbondingTime(ctx sdk.Context) (res time.Duration) {
+	k.paramstore.Get(ctx, keyUnbondingTime, &res)
+	return
 }
 
 // MaxValidators - Maximum number of validators

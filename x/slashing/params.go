@@ -49,16 +49,16 @@ func HubDefaultParams() Params {
 	return Params{
 		// defaultMaxEvidenceAge = 60 * 60 * 24 * 7 * 3
 		// TODO Temporarily set to 2 minutes for testnets.
-		MaxEvidenceAge: 60 * 2,
+		MaxEvidenceAge: 60 * 2 * time.Second,
 
 		// TODO Temporarily set to five minutes for testnets
-		DoubleSignUnbondDuration: 60 * 5,
+		DoubleSignUnbondDuration: 60 * 5 * time.Second,
 
 		// TODO Temporarily set to 100 blocks for testnets
 		SignedBlocksWindow: 100,
 
 		// TODO Temporarily set to 10 minutes for testnets
-		DowntimeUnbondDuration: 60 * 10,
+		DowntimeUnbondDuration: 60 * 10 * time.Second,
 
 		MinSignedPerWindow: sdk.NewDecWithPrec(5, 1),
 
@@ -70,10 +70,9 @@ func HubDefaultParams() Params {
 
 // MaxEvidenceAge - Max age for evidence - 21 days (3 weeks)
 // MaxEvidenceAge = 60 * 60 * 24 * 7 * 3
-func (k Keeper) MaxEvidenceAge(ctx sdk.Context) time.Duration {
-	var t int64
-	k.paramstore.Get(ctx, maxEvidenceAgeKey, &t)
-	return time.Duration(t) * time.Second
+func (k Keeper) MaxEvidenceAge(ctx sdk.Context) (res time.Duration) {
+	k.paramstore.Get(ctx, maxEvidenceAgeKey, &res)
+	return
 }
 
 // SignedBlocksWindow - sliding window for downtime slashing
@@ -91,17 +90,15 @@ func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 }
 
 // Double-sign unbond duration
-func (k Keeper) DoubleSignUnbondDuration(ctx sdk.Context) time.Duration {
-	var t int64
-	k.paramstore.Get(ctx, doubleSignUnbondDurationKey, &t)
-	return time.Duration(t) * time.Second
+func (k Keeper) DoubleSignUnbondDuration(ctx sdk.Context) (res time.Duration) {
+	k.paramstore.Get(ctx, doubleSignUnbondDurationKey, &res)
+	return
 }
 
 // Downtime unbond duration
-func (k Keeper) DowntimeUnbondDuration(ctx sdk.Context) time.Duration {
-	var t int64
-	k.paramstore.Get(ctx, downtimeUnbondDurationKey, &t)
-	return time.Duration(t) * time.Second
+func (k Keeper) DowntimeUnbondDuration(ctx sdk.Context) (res time.Duration) {
+	k.paramstore.Get(ctx, downtimeUnbondDurationKey, &res)
+	return
 }
 
 // SlashFractionDoubleSign - currently default 5%

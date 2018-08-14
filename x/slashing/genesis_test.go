@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 func testEqualParams(t *testing.T, ctx sdk.Context, params Params, keeper Keeper) {
@@ -26,7 +27,7 @@ func TestGenesis(t *testing.T) {
 	ctx, _, _, store, k := createTestInput(t, def)
 
 	state := GenesisState{def}
-	err := InitGenesis(ctx, k, state)
+	err := InitGenesis(ctx, k, state, types.DefaultGenesisState())
 	require.Nil(t, err)
 	testEqualParams(t, ctx, def, k)
 

@@ -151,12 +151,12 @@ jobs:
           command: bash <(curl -s https://codecov.io/bash) -f coverage.txt
 
   localnet:
-    working_directory: /home/circleci/go/src/github.com/cosmos/cosmos-sdk
+    working_directory: /home/circleci/.go_workspace/src/github.com/cosmos/cosmos-sdk
     machine:
       image: circleci/classic:latest
     environment:
-      GOBIN: /home/circleci/go/bin
-      GOPATH: /home/circleci/go/
+      GOBIN: /home/circleci/.go_workspace/bin
+      GOPATH: /home/circleci/.go_workspace/
     parallelism: 1
     steps:
       - checkout

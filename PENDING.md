@@ -77,6 +77,7 @@ IMPROVEMENTS
 * [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.
 
 BUG FIXES
+*  \#1988 Make us compile on OpenBSD (disable ledger) [#1988] (https://github.com/cosmos/cosmos-sdk/issues/1988)
 *  \#1666 Add intra-tx counter to the genesis validators
 *  \#1797 Fix off-by-one error in slashing for downtime
 *  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator

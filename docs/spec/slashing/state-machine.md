@@ -49,7 +49,7 @@ In this section we describe the "hooks" - slashing module code that runs when ot
 
 Upon successful bonding of a validator (a given validator changing from "unbonded" state to "bonded" state,
 which may happen on delegation, on unjailing, etc), we create a new `SlashingPeriod` structure for the
-now-bonded validator, wich `StartHeight` of the current block, `EndHeight` of `0` (sentinel value for not-yet-ended),
+now-bonded validator, which `StartHeight` of the current block, `EndHeight` of `0` (sentinel value for not-yet-ended),
 and `SlashedSoFar` of `0`:
 
 ```golang

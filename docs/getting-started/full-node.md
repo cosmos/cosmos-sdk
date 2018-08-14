@@ -41,7 +41,7 @@ First, remove the outdated files and reset the data.
 
 ```bash
 rm $HOME/.gaiad/config/addrbook.json $HOME/.gaiad/config/genesis.json
-gaiad unsafe_reset_all
+gaiad unsafe-reset-all
 ```
 
 Your node is now in a pristine state while keeping the original `priv_validator.json` and `config.toml`. If you had any sentry nodes or full nodes setup before,

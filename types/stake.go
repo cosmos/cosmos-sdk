@@ -40,7 +40,7 @@ type Validator interface {
 	GetRevoked() bool         // whether the validator is revoked
 	GetMoniker() string       // moniker of the validator
 	GetStatus() BondStatus    // status of the validator
-	GetOwner() AccAddress     // owner AccAddress to receive/return validators coins
+	GetOwner() ValAddress     // owner address to receive/return validators coins
 	GetPubKey() crypto.PubKey // validation pubkey
 	GetPower() Rat            // validation power
 	GetTokens() Rat           // validation tokens

@@ -149,7 +149,7 @@ func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) (validator Val
 // validator. An error is returned if the owner or the owner's public key
 // cannot be converted to Bech32 format.
 func (v Validator) HumanReadableString() (string, error) {
-	bechTmPubKey, err := sdk.Bech32ifyTmPub(v.PubKey)
+	bechTmPubKey, err := sdk.Bech32ifyConsPub(v.PubKey)
 	if err != nil {
 		return "", err
 	}
@@ -201,7 +201,7 @@ type BechValidator struct {
 
 // get the bech validator from the the regular validator
 func (v Validator) Bech32Validator() (BechValidator, error) {
-	bechTmPubKey, err := sdk.Bech32ifyTmPub(v.PubKey)
+	bechTmPubKey, err := sdk.Bech32ifyConsPub(v.PubKey)
 	if err != nil {
 		return BechValidator{}, err
 	}

@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	// AddrLen is the expected address length
+	// AddrLen defines a valid address length
 	AddrLen = 20
 
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
@@ -24,10 +24,10 @@ const (
 	Bech32PrefixValAddr = "cosmosvaladdr"
 	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
 	Bech32PrefixValPub = "cosmosvalpub"
-	// Bech32PrefixTmAddr defines the Bech32 prefix of a Tendermint node's address
-	Bech32PrefixTmAddr = "cosmostmaddr"
-	// Bech32PrefixTmPub defines the Bech32 prefix of a Tendermint node's public key
-	Bech32PrefixTmPub = "cosmostmpub"
+	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
+	Bech32PrefixConsAddr = "cosmosconsaddr"
+	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
+	Bech32PrefixConsPub = "cosmosconspub"
 )
 
 // ----------------------------------------------------------------------------
@@ -250,13 +250,15 @@ func MustBech32ifyValPub(pub crypto.PubKey) string {
 	return enc
 }
 
-// Bech32ifyTmPub returns a Bech32 encoded string for a given validator's PubKey.
-func Bech32ifyTmPub(pub crypto.PubKey) (string, error) {
-	return bech32.ConvertAndEncode(Bech32PrefixTmPub, pub.Bytes())
+// Bech32ifyConsPub returns a Bech32 encoded string for a given consensus node's
+// PubKey.
+func Bech32ifyConsPub(pub crypto.PubKey) (string, error) {
+	return bech32.ConvertAndEncode(Bech32PrefixConsPub, pub.Bytes())
 }
 
-// MustBech32ifyTmPub returns the result of Bech32ifyTmPub panicing on failure.
-func MustBech32ifyTmPub(pub crypto.PubKey) string {
+// MustBech32ifyConsPub returns the result of Bech32ifyConsPub panicing on
+// failure.
+func MustBech32ifyConsPub(pub crypto.PubKey) string {
 	enc, err := Bech32ifyValPub(pub)
 	if err != nil {
 		panic(err)

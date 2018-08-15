@@ -83,7 +83,7 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 	}{
 		Description:   msg.Description,
 		ValidatorAddr: msg.ValidatorAddr,
-		PubKey:        sdk.MustBech32ifyValPub(msg.PubKey),
+		PubKey:        sdk.MustBech32ifyConsPub(msg.PubKey),
 		Delegation:    msg.Delegation,
 	})
 	if err != nil {

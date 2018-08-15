@@ -140,7 +140,7 @@ func GaiaAppGenTxNF(cdc *wire.Codec, pk crypto.PubKey, addr sdk.AccAddress, name
 	gaiaGenTx := GaiaGenTx{
 		Name:    name,
 		Address: addr,
-		PubKey:  sdk.MustBech32ifyAccPub(pk),
+		PubKey:  sdk.MustBech32ifyConsPub(pk),
 	}
 	bz, err = wire.MarshalJSONIndent(cdc, gaiaGenTx)
 	if err != nil {
@@ -190,8 +190,9 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		// add the validator
 		if len(genTx.Name) > 0 {
 			desc := stake.NewDescription(genTx.Name, "", "", "")
-			validator := stake.NewValidator(genTx.Address,
-				sdk.MustGetAccPubKeyBech32(genTx.PubKey), desc)
+			validator := stake.NewValidator(
+				genTx.Address, sdk.MustGetConsPubKeyBech32(genTx.PubKey), desc,
+			)
 
 			stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewRat(freeFermionVal)) // increase the supply
 

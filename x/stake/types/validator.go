@@ -149,14 +149,14 @@ func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) (validator Val
 // validator. An error is returned if the owner or the owner's public key
 // cannot be converted to Bech32 format.
 func (v Validator) HumanReadableString() (string, error) {
-	bechTmPubKey, err := sdk.Bech32ifyConsPub(v.PubKey)
+	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.PubKey)
 	if err != nil {
 		return "", err
 	}
 
 	resp := "Validator \n"
 	resp += fmt.Sprintf("Owner: %s\n", v.Owner)
-	resp += fmt.Sprintf("Validator: %s\n", bechTmPubKey)
+	resp += fmt.Sprintf("Validator: %s\n", bechConsPubKey)
 	resp += fmt.Sprintf("Revoked: %v\n", v.Revoked)
 	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
 	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens.FloatString())
@@ -201,14 +201,14 @@ type BechValidator struct {
 
 // get the bech validator from the the regular validator
 func (v Validator) Bech32Validator() (BechValidator, error) {
-	bechTmPubKey, err := sdk.Bech32ifyConsPub(v.PubKey)
+	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.PubKey)
 	if err != nil {
 		return BechValidator{}, err
 	}
 
 	return BechValidator{
 		Owner:   v.Owner,
-		PubKey:  bechTmPubKey,
+		PubKey:  bechConsPubKey,
 		Revoked: v.Revoked,
 
 		Status:          v.Status,

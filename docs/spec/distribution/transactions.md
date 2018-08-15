@@ -149,18 +149,6 @@ func (vd ValidatorDistribution) UpdateTotalDelAccum(height int64, totalDelShares
     vd.TotalDelAccum += totalDelShares * blocks
 ```
 
-### Get delegator accum
-
-Each delegation has a passively calculated accumulation factor to specify its
-entitlement to the rewards from a validator. `Accum` is used to passively
-calculate each bonds entitled rewards from the `Validator.Pool`. 
-
-``` 
-func (dd DelegatorDist) Accum(height int64, delegatorShares Dec) Dec
-    blocks = height - dd.WithdrawalHeight
-    return delegatorShares * blocks
-```
-
 ### Global pool to validator pool
 
 Everytime a validator or delegator make a withdraw or the validator is the
@@ -177,6 +165,7 @@ func (vd ValidatorDistribution) TakeAccum(g Global, height int64, totalBonded, v
     accum = blocks * vdTokens
     withdrawalTokens := g.Pool * accum / g.TotalValAccum 
     
+    g.TotalValAccum -= accumm
     vd.Pool += withdrawalTokens
     g.Pool -= withdrawalTokens
 
@@ -191,10 +180,18 @@ are subject to commission rate from the owner of the validator.
 
 ```
 func (dd DelegatorDist) WithdrawalRewards(g Global, vd ValidatorDistribution,
-    height int64, totalBonded, vdTokens Dec) g Global
+    height int64, totalBonded, vdTokens, totalDelShares, commissionRate Dec) (g Global, withdrawn Dec)
 
-    vd.TakeAccum(g, height, totalBonded, vdTokens) 
+    vd.UpdateTotalDelAccum(height, totalDelShares) 
+    g = vd.TakeAccum(g, height, totalBonded, vdTokens) 
     
+    blocks = height - dd.WithdrawalHeight
+    accum = delegatorShares * blocks * (1 - commissionRate)
+     
+    withdrawalTokens := vd.Pool * accum / cd.TotalDelAccum
+    vd.Pool -= withdrawalTokens
+    vd.TotalDelAccum -= accum
+    return withdrawalTokens
 
 ```
 
@@ -204,5 +201,18 @@ Similar to a delegator's entitlement, but with recipient shares based on the
 commission portion of bonded tokens.
 
 ```
-TODO
+func (dd DelegatorDist) WithdrawalCommission(g Global, vd ValidatorDistribution,
+    height int64, totalBonded, vdTokens, totalDelShares, commissionRate Dec) g Global
+
+    vd.UpdateTotalDelAccum(height, totalDelShares) 
+    g = vd.TakeAccum(g, height, totalBonded, vdTokens) 
+    
+    blocks = height - vd.CommissionWithdrawalHeight
+    accum = delegatorShares * blocks * (commissionRate)
+     
+    withdrawalTokens := vd.Pool * accum / cd.TotalDelAccum
+
+    vd.Pool -= withdrawalTokens
+    vd.TotalDelAccum -= accum
+
 ```

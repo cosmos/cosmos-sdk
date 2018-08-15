@@ -68,6 +68,7 @@ func TestRandBech32PubkeyConsistency(t *testing.T) {
 		require.Equal(t, consPub, mustConsPub)
 
 		require.Equal(t, valPub, accPub)
+		require.Equal(t, valPub, consPub)
 	}
 }
 

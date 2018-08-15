@@ -13,8 +13,8 @@ import (
 const (
 	deductFeesCost      sdk.Gas = 10
 	memoCostPerByte     sdk.Gas = 1
-	ed25519VerifyCost           = 100
-	secp256k1VerifyCost         = 170
+	ed25519VerifyCost           = 59
+	secp256k1VerifyCost         = 100
 	maxMemoCharacters           = 100
 )
 

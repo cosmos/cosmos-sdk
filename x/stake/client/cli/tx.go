@@ -17,6 +17,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/spf13/pflag"
+	"strings"
 )
 
 // GetCmdCreateValidator implements the create validator command handler.
@@ -95,7 +97,12 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
-		Short: "edit and existing validator account",
+		Short: "edit an existing validator account",
+		Long: strings.TrimSpace(`
+Edits an existing validator account. All flags are required. Example:
+
+gaiacli stake edit-validator --moniker "TestMoniker" --identity "identity..." --website "https://www.example.com/" --details "This is a test validator."
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
@@ -122,6 +129,9 @@ func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(fsDescriptionEdit)
+	fsDescriptionEdit.VisitAll(func(flag *pflag.Flag) {
+		cmd.MarkFlagRequired(flag.Name)
+	})
 
 	return cmd
 }

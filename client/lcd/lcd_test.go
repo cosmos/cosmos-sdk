@@ -376,11 +376,8 @@ func TestValidatorQuery(t *testing.T) {
 	require.Equal(t, 1, len(pks))
 
 	validator1Owner := sdk.AccAddress(pks[0].Address())
-
 	validator := getValidator(t, port, validator1Owner)
-	bech32ValAddress, err := sdk.Bech32ifyValPub(pks[0])
-	require.NoError(t, err)
-	assert.Equal(t, validator.PubKey, bech32ValAddress, "The returned validator does not hold the correct data")
+	assert.Equal(t, validator.Owner, validator1Owner, "The returned validator does not hold the correct data")
 }
 
 func TestBonding(t *testing.T) {

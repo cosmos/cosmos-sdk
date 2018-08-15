@@ -507,25 +507,40 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 		valAddress, err := sdk.AccAddressFromBech32(bech32validatorAddr)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
+			w.Write([]byte(fmt.Sprintf("error: %s", err.Error())))
 			return
 		}
 
-		kvs, err := cliCtx.QuerySubspace(stake.ValidatorsKey, storeName)
+		key := stake.GetValidatorKey(valAddress)
+
+		res, err := cliCtx.QueryStore(key, storeName)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
+			w.Write([]byte(fmt.Sprintf("couldn't query validator, error: %s", err.Error())))
 			return
 		}
 
-		validator, err := getValidator(valAddress, kvs, cdc)
+		// the query will return empty if there is no data for this record
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		validator, err := types.UnmarshalValidator(cdc, valAddress, res)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't query validator. Error: %s", err.Error())))
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
 			return
 		}
 
-		output, err = cdc.MarshalJSON(validator)
+		bech32Validator, err := validator.Bech32Validator()
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		output, err = cdc.MarshalJSON(bech32Validator)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))

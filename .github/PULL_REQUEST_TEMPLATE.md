@@ -1,14 +1,19 @@
 <!-- < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < ☺
-v                               ✰  Thanks for creating a PR! ✰    
+v                               ✰  Thanks for creating a PR! ✰
 v    Before smashing the submit button please review the checkboxes.
 v    If a checkbox is n/a - please still include it but + a little note why
 ☺ > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > >  -->
 
+- Targeted PR against correct branch
+  - `release/vxx.yy.zz` for a merge into a release candidate
+  - `master` for a merge of a release
+  - `develop` in the usual case
+
 - [ ] Linked to github-issue with discussion and accepted design OR link to spec that describes this work.
 - [ ] Wrote tests
 - [ ] Updated relevant documentation (`docs/`)
-- [ ] Added entries in `PENDING.md` with issue # 
-- [ ] rereviewed `Files changed` in the github PR explorer
+- [ ] Added entries in `PENDING.md` with issue #
+- [ ] reviewed `Files changed` in the github PR explorer
 
 ______
 

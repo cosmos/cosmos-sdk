@@ -45,7 +45,8 @@
 
 ## Governance
 
-- Circuit breaker (parameter change proposals, roughly the same implementation)
+- Circuit breaker 
+- Parameter change proposals (roughly the same implementation as circuit breaker)
 
 ## Documentation
 

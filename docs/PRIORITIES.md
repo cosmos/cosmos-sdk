@@ -1,78 +1,52 @@
+# High priority
+
 ## Fees
+
 - Collection
-  - Gas price based on parameter
-  - (which gets changed automatically)
-  - https://github.com/cosmos/cosmos-sdk/issues/1921
-  - Per block gas usage as %
-  - Windowing function
-    - Block N,
-    - For Block N-x ~ N, get average of %
-  - Should take into account time.
-  - Standard for querying this price // needs to be used by UX.
+  - Simple flat fee set in-config by validators & full nodes - ref [#1921](https://github.com/cosmos/cosmos-sdk/issues/1921)
 - Distribution
-  - MVP: 1 week, 1 week for testing.
+  - "Piggy bank" fee distribution - ref [#1944](https://github.com/cosmos/cosmos-sdk/pull/1944) (spec)
+- Reserve pool
+  - Collects in a special field for now, no spending
 
 ## Governance v2
-- V1 is just text proposals
-  - Software upgrade stuff
-    - https://github.com/cosmos/cosmos-sdk/issues/1734#issuecomment-407254938
-    - https://github.com/cosmos/cosmos-sdk/issues/1079
-- We need to test auto-flipping w/ threshold voting power.
-- Super simple:
-  - Only use text proposals
-  - On-chain mechanism for agreeing on when to "flip" to new functionality
+
+- Simple software upgrade proposals
+  - Implementation described in [#1079](https://github.com/cosmos/cosmos-sdk/issues/1079)
+  - Agree upon a block height to switch to new version
 
 ## Staking/Slashing/Stability
+
+- Miscellaneous minor staking issues
+  - [List here](https://github.com/cosmos/cosmos-sdk/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Astaking+label%3Aprelaunch)
 - Unbonding state for validators https://github.com/cosmos/cosmos-sdk/issues/1676
-- current: downtime, double signing during unbonding
-- who gets slashed when -- needs review about edge cases
-- need to communicate to everyone that lite has this edge case
-	- Issues:
-    - https://github.com/cosmos/cosmos-sdk/issues/1378
-    - https://github.com/cosmos/cosmos-sdk/issues/1348
-    - https://github.com/cosmos/cosmos-sdk/issues/1440
-  * Est Difficulty: Hard
-  * _*Note:*_ This feature needs to be fully fleshed out. Will require a meeting between @jaekwon, @cwgoes, @rigel, @zaki, @bucky to discuss the issues. @jackzampolin to facilitate.
+- Slashing period - ref [#2001](https://github.com/cosmos/cosmos-sdk/pull/2001) (spec)
+  - Various other slashing issues needing resolution - ref [#1256](https://github.com/cosmos/cosmos-sdk/issues/1256)
+- Update staking/slashing for NextValSet change
 
 ## Vesting
-- 24 accounts with NLocktime
-- “No funds can be transferred before timelock”
-- New atoms and such can be withdrawn right way
-- Requires being able to send fees and inflation to new account
+
+- Single `VestingAccount` allowing delegation/voting but no withdrawals
+- Ref [#1875](https://github.com/cosmos/cosmos-sdk/pull/1875) (spec)
 
 ## Multisig
-- Make it work with Cli
-- ADR
 
-## Reserve Pool
-- No withdrawing from it at launch
+- Already implemented on TM side, need simple CLI interface
 
-## Other:
-- Need to update for NextValidatorSet - need to upgrade SDK for it
-- Need to update for new ABCI changes - error string, tags are list of lists, proposer in header
-- Inflation ? 
+## Other
+
+- Need to update for new ABCI changes - error string, tags are list of lists, proposer in header (Tendermint 0.24?)
 
 ## Gas
-- Calculate gas
 
-## Reward proposer
-- Requires tendermint changes
+- Benchmark gas, choose better constants
 
 # Lower priority
 
-## Circuit Breaker
-- Kinda needed for enabling txs.
+## Governance
 
-## Governance proposal changes
-- V2 is parameter changes
+- Circuit breaker (parameter change proposals, roughly the same implementation)
 
-## Slashing/Stability
-- tendermint evidence: we don’t yet slash byzantine signatures (signing at all) when not bonded.
+## Documentation
 
-# Other priority
-
-## gaiad // gaiacli
-- Documentation // language
-
-## gaialite
-- Documentation // language
+- gaiad / gaiacli / gaialite documentation!

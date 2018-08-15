@@ -16,17 +16,17 @@ const (
 	// AddrLen is the expected address length
 	AddrLen = 20
 
-	// Bech32PrefixAccAddr defines the bech32 prefix of an account's address
+	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
 	Bech32PrefixAccAddr = "cosmosaccaddr"
-	// Bech32PrefixAccPub defines the bech32 prefix of an account's public key
+	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
 	Bech32PrefixAccPub = "cosmosaccpub"
-	// Bech32PrefixValAddr defines the bech32 prefix of a validator's operator address
+	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
 	Bech32PrefixValAddr = "cosmosvaladdr"
-	// Bech32PrefixValPub defines the bech32 prefix of a validator's operator public key
+	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
 	Bech32PrefixValPub = "cosmosvalpub"
-	// Bech32PrefixTmAddr defines the bech32 prefix of a Tendermint node's address
+	// Bech32PrefixTmAddr defines the Bech32 prefix of a Tendermint node's address
 	Bech32PrefixTmAddr = "cosmostmaddr"
-	// Bech32PrefixTmPub defines the bech32 prefix of a Tendermint node's public key
+	// Bech32PrefixTmPub defines the Bech32 prefix of a Tendermint node's public key
 	Bech32PrefixTmPub = "cosmostmpub"
 )
 
@@ -38,10 +38,10 @@ const (
 // When marshaled to a string or json, it uses bech32
 type AccAddress []byte
 
-// AccAddressFromHex createS an AccAddress from a hex string.
+// AccAddressFromHex creates an AccAddress from a hex string.
 func AccAddressFromHex(address string) (addr AccAddress, err error) {
 	if len(address) == 0 {
-		return addr, errors.New("decoding bech32 address failed: must provide an address")
+		return addr, errors.New("decoding Bech32 address failed: must provide an address")
 	}
 
 	bz, err := hex.DecodeString(address)
@@ -52,7 +52,7 @@ func AccAddressFromHex(address string) (addr AccAddress, err error) {
 	return AccAddress(bz), nil
 }
 
-// AccAddressFromBech32 createS an AccAddress from a bech32 string.
+// AccAddressFromBech32 creates an AccAddress from a Bech32 string.
 func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 	bz, err := GetFromBech32(address, Bech32PrefixAccAddr)
 	if err != nil {
@@ -133,7 +133,7 @@ type ValAddress []byte
 // ValAddressFromHex creates a ValAddress from a hex string.
 func ValAddressFromHex(address string) (addr ValAddress, err error) {
 	if len(address) == 0 {
-		return addr, errors.New("decoding bech32 address failed: must provide an address")
+		return addr, errors.New("decoding Bech32 address failed: must provide an address")
 	}
 
 	bz, err := hex.DecodeString(address)
@@ -144,7 +144,7 @@ func ValAddressFromHex(address string) (addr ValAddress, err error) {
 	return ValAddress(bz), nil
 }
 
-// ValAddressFromBech32 creates a ValAddress from a bech32 string.
+// ValAddressFromBech32 creates a ValAddress from a Bech32 string.
 func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 	bz, err := GetFromBech32(address, Bech32PrefixValAddr)
 	if err != nil {
@@ -219,7 +219,7 @@ func (bz ValAddress) Format(s fmt.State, verb rune) {
 // auxiliary
 // ----------------------------------------------------------------------------
 
-// Bech32ifyAccPub returns a bech32 encoded string for a given account PubKey.
+// Bech32ifyAccPub returns a Bech32 encoded string for a given account PubKey.
 func Bech32ifyAccPub(pub crypto.PubKey) (string, error) {
 	return bech32.ConvertAndEncode(Bech32PrefixAccPub, pub.Bytes())
 }
@@ -234,7 +234,7 @@ func MustBech32ifyAccPub(pub crypto.PubKey) string {
 	return enc
 }
 
-// Bech32ifyValPub returns a bech32 encoded string for a given validator
+// Bech32ifyValPub returns a Bech32 encoded string for a given validator
 // operator's PubKey.
 func Bech32ifyValPub(pub crypto.PubKey) (string, error) {
 	return bech32.ConvertAndEncode(Bech32PrefixValPub, pub.Bytes())
@@ -250,7 +250,7 @@ func MustBech32ifyValPub(pub crypto.PubKey) string {
 	return enc
 }
 
-// Bech32ifyTmPub returns a bech32 encoded string for a given validator's PubKey.
+// Bech32ifyTmPub returns a Bech32 encoded string for a given validator's PubKey.
 func Bech32ifyTmPub(pub crypto.PubKey) (string, error) {
 	return bech32.ConvertAndEncode(Bech32PrefixTmPub, pub.Bytes())
 }
@@ -315,10 +315,10 @@ func MustGetValPubKeyBech32(address string) (pk crypto.PubKey) {
 	return pk
 }
 
-// GetFromBech32 decodes a bytestring from a bech32 encoded string.
+// GetFromBech32 decodes a bytestring from a Bech32 encoded string.
 func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 	if len(bech32str) == 0 {
-		return nil, errors.New("decoding bech32 address failed: must provide an address")
+		return nil, errors.New("decoding Bech32 address failed: must provide an address")
 	}
 
 	hrp, bz, err := bech32.DecodeAndConvert(bech32str)
@@ -327,7 +327,7 @@ func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 	}
 
 	if hrp != prefix {
-		return nil, fmt.Errorf("invalid bech32 prefix. Expected %s, Got %s", prefix, hrp)
+		return nil, fmt.Errorf("invalid Bech32 prefix. Expected %s, Got %s", prefix, hrp)
 	}
 
 	return bz, nil

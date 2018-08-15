@@ -5,6 +5,9 @@ BREAKING CHANGES
 * Update to tendermint v0.23.0. This involves removing crypto.Pubkey,
 maintaining a validator address to pubkey map, and using time.Time instead of int64 for time. [SDK PR](https://github.com/cosmos/cosmos-sdk/pull/1927)
 
+IMPROVEMENTS
+* [x/auth] Signature verification's gas cost now accounts for pubkey type [#2046](https://github.com/tendermint/tendermint/pull/2046)
+
 ## PENDING
 
 BREAKING CHANGES

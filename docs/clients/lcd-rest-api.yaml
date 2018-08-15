@@ -493,6 +493,49 @@ paths:
         500:
           description: Internal Server Error
 
+  /stake/delegators/{delegatorAddr}/validators:
+    parameters:
+      - in: path
+        name: delegatorAddr
+        description: Bech32 AccAddress of Delegator
+        required: true
+        type: string
+    get:
+      summary: Query all validators that a delegator is bonded to
+      tags:
+        - stake
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+        404:
+          description: Not Found
+
+  /stake/delegators/{delegatorAddr}/validators/{validatorAddr}:
+    parameters:
+      - in: path
+        name: delegatorAddr
+        description: Bech32 AccAddress of Delegator
+        required: true
+        type: string
+      - in: path
+        name: validatorAddr
+        description: Bech32 ValAddress of Delegator
+        required: true
+        type: string
+    get:
+      summary: Query a validator that a delegator is bonded to
+      tags:
+        - stake
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+        404:
+          description: Not Found
+
   /stake/delegators/{delegatorAddr}/txs:
     parameters:
       - in: path

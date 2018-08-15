@@ -2,7 +2,6 @@ package types
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -115,14 +114,13 @@ func MustUnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) Validator 
 
 // unmarshal a redelegation from a store key and value
 func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) (validator Validator, err error) {
+	if len(ownerAddr) != sdk.AddrLen {
+		err = fmt.Errorf("%v", ErrBadValidatorAddr(DefaultCodespace).Data())
+		return
+	}
 	var storeValue validatorValue
 	err = cdc.UnmarshalBinary(value, &storeValue)
 	if err != nil {
-		return
-	}
-
-	if len(ownerAddr) != 20 {
-		err = errors.New("unexpected address length")
 		return
 	}
 

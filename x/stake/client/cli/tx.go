@@ -273,11 +273,12 @@ func getShares(
 		if err != nil {
 			return sharesAmount, errors.Errorf("cannot find delegation to determine percent Error: %v", err)
 		}
-
-		delegation := types.MustUnmarshalDelegation(cdc, key, resQuery)
+		delegation, err := types.UnmarshalDelegation(cdc, key, resQuery)
+		if err != nil {
+			return sdk.ZeroRat(), err
+		}
 		sharesAmount = sharesPercent.Mul(delegation.Shares)
 	}
-
 	return
 }
 

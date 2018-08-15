@@ -249,7 +249,7 @@ func (d Dec) ToLeftPaddedWithDecimals(totalDigits int8) string {
 // TODO panic if negative or if totalDigits < len(initStr)???
 // evaluate as an integer and return left padded string
 func (d Dec) ToLeftPadded(totalDigits int8) string {
-	chopped := chopPrecisionAndRound(d.Int)
+	chopped := chopPrecisionAndRoundNonMutative(d.Int)
 	intStr := chopped.String()
 	fcode := `%0` + strconv.Itoa(int(totalDigits)) + `s`
 	return fmt.Sprintf(fcode, intStr)
@@ -268,9 +268,7 @@ func (d Dec) ToLeftPadded(totalDigits int8) string {
 // Remove a Precision amount of rightmost digits and perform bankers rounding
 // on the remainder (gaussian rounding) on the digits which have been removed.
 //
-// TODO We should make this function  mutate the input. The functions here
-// don't need to allocate different memory for chopped after computing the
-// result
+// Mutates the input. Use the non-mutative version if that is undesired
 func chopPrecisionAndRound(d *big.Int) *big.Int {
 
 	// remove the negative and add it back when returning
@@ -283,7 +281,7 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 	}
 
 	// get the trucated quotient and remainder
-	quo, rem := big.NewInt(0), big.NewInt(0)
+	quo, rem := d, big.NewInt(0)
 	quo, rem = quo.QuoRem(d, precisionReuse, rem)
 
 	if rem.Sign() == 0 { // remainder is zero
@@ -304,9 +302,14 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 	}
 }
 
+func chopPrecisionAndRoundNonMutative(d *big.Int) *big.Int {
+	tmp := new(big.Int).Set(d)
+	return chopPrecisionAndRound(tmp)
+}
+
 // RoundInt64 rounds the decimal using bankers rounding
 func (d Dec) RoundInt64() int64 {
-	chopped := chopPrecisionAndRound(d.Int)
+	chopped := chopPrecisionAndRoundNonMutative(d.Int)
 	if !chopped.IsInt64() {
 		panic("Int64() out of bound")
 	}
@@ -315,7 +318,7 @@ func (d Dec) RoundInt64() int64 {
 
 // RoundInt round the decimal using bankers rounding
 func (d Dec) RoundInt() Int {
-	return NewIntFromBigInt(chopPrecisionAndRound(d.Int))
+	return NewIntFromBigInt(chopPrecisionAndRoundNonMutative(d.Int))
 }
 
 //___________________________________________________________________________________

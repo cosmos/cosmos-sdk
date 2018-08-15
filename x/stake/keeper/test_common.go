@@ -86,6 +86,20 @@ func ParamsNoInflation() types.Params {
 	}
 }
 
+// DefaultParams returns a default set of parameters.
+func defaultParamsForTest() types.Params {
+	return types.Params{
+		InflationRateChange: sdk.NewRat(13, 100),
+		InflationMax:        sdk.NewRat(20, 100),
+		InflationMin:        sdk.NewRat(7, 100),
+		GoalBonded:          sdk.NewRat(67, 100),
+		UnbondingTime:       int64(60 * 60 * 24 * 3),
+		MaxValidators:       100,
+		BondDenom:           "steak",
+		DenomPrecision:       0,
+	}
+}
+
 // hogpodge of all sorts of input required for testing
 func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountMapper, Keeper) {
 
@@ -109,7 +123,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	ck := bank.NewKeeper(accountMapper)
 	keeper := NewKeeper(cdc, keyStake, ck, types.DefaultCodespace)
 	keeper.SetPool(ctx, types.InitialPool())
-	keeper.SetNewParams(ctx, types.DefaultParams())
+	keeper.SetNewParams(ctx, defaultParamsForTest())
 	keeper.InitIntraTxCounter(ctx)
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously

@@ -15,7 +15,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-)
+	"github.com/cosmos/cosmos-sdk/x/params"
+
+	)
+
+func toBigInt(amount int) sdk.Int{
+	return Pow10(18).Mul(sdk.NewInt(int64(amount)))
+}
 
 // initialize the mock application for this module
 func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, []sdk.AccAddress, []crypto.PubKey, []crypto.PrivKey) {
@@ -24,20 +30,23 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 	stake.RegisterWire(mapp.Cdc)
 	RegisterWire(mapp.Cdc)
 
+	keyGlobalParams := sdk.NewKVStoreKey("params")
 	keyStake := sdk.NewKVStoreKey("stake")
 	keyGov := sdk.NewKVStoreKey("gov")
 
+	pk := params.NewKeeper(mapp.Cdc, keyGlobalParams)
 	ck := bank.NewKeeper(mapp.AccountMapper)
 	sk := stake.NewKeeper(mapp.Cdc, keyStake, ck, mapp.RegisterCodespace(stake.DefaultCodespace))
-	keeper := NewKeeper(mapp.Cdc, keyGov, ck, sk, DefaultCodespace)
-	mapp.Router().AddRoute("gov", NewHandler(keeper))
 
-	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyGov}))
+	keeper := NewKeeper(mapp.Cdc, keyGov,pk.Setter(), ck, sk, DefaultCodespace)
+	mapp.Router().AddRoute("gov", []*sdk.KVStoreKey{keyGov, mapp.KeyAccount, keyStake}, NewHandler(keeper))
+
+	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyGov, keyGlobalParams}))
 
 	mapp.SetEndBlocker(getEndBlocker(keeper))
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk))
 
-	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewCoin("steak", 42)})
+	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.Coin{"steak", toBigInt(42)}})
 	mock.SetGenesis(mapp, genAccs)
 
 	return mapp, keeper, sk, addrs, pubKeys, privKeys

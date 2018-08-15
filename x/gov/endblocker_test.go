@@ -9,7 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func TestTickExpiredDepositPeriod(t *testing.T) {
+func testTickExpiredDepositPeriod(t *testing.T) {
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
@@ -40,7 +40,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	require.False(t, shouldPopInactiveProposalQueue(ctx, keeper))
 }
 
-func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
+func testTickMultipleExpiredDepositPeriod(t *testing.T) {
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
@@ -82,7 +82,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.False(t, shouldPopInactiveProposalQueue(ctx, keeper))
 }
 
-func TestTickPassedDepositPeriod(t *testing.T) {
+func testTickPassedDepositPeriod(t *testing.T) {
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
@@ -125,7 +125,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	require.False(t, shouldPopActiveProposalQueue(ctx, keeper))
 }
 
-func TestTickPassedVotingPeriod(t *testing.T) {
+func testTickPassedVotingPeriod(t *testing.T) {
 	mapp, keeper, _, addrs, _, _ := getMockApp(t, 10)
 	SortAddresses(addrs)
 	mapp.BeginBlock(abci.RequestBeginBlock{})

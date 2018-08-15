@@ -31,6 +31,7 @@ type UnrevokeBody struct {
 	AccountNumber    int64  `json:"account_number"`
 	Sequence         int64  `json:"sequence"`
 	Gas              int64  `json:"gas"`
+	Fee              string `json:"fee"`
 	ValidatorAddr    string `json:"validator_addr"`
 }
 
@@ -71,6 +72,7 @@ func unrevokeRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.Core
 		}
 
 		ctx = ctx.WithGas(m.Gas)
+		ctx = ctx.WithFee(m.Fee)
 		ctx = ctx.WithChainID(m.ChainID)
 		ctx = ctx.WithAccountNumber(m.AccountNumber)
 		ctx = ctx.WithSequence(m.Sequence)

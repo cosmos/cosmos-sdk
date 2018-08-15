@@ -13,6 +13,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 const chainID = ""
@@ -25,10 +26,13 @@ type App struct {
 	Cdc        *wire.Codec // Cdc is public since the codec is passed into the module anyways
 	KeyMain    *sdk.KVStoreKey
 	KeyAccount *sdk.KVStoreKey
+	keyParams  *sdk.KVStoreKey
+	keyFeeCollection *sdk.KVStoreKey
 
 	// TODO: Abstract this out from not needing to be auth specifically
 	AccountMapper       auth.AccountMapper
-	FeeCollectionKeeper auth.FeeCollectionKeeper
+	paramsKeeper        params.Keeper
+	feeCollectionKeeper auth.FeeCollectionKeeper
 
 	GenesisAccounts  []auth.Account
 	TotalCoinsSupply sdk.Coins
@@ -52,6 +56,8 @@ func NewApp() *App {
 		Cdc:              cdc,
 		KeyMain:          sdk.NewKVStoreKey("main"),
 		KeyAccount:       sdk.NewKVStoreKey("acc"),
+		keyFeeCollection: sdk.NewKVStoreKey("fee"),
+		keyParams:        sdk.NewKVStoreKey("params"),
 		TotalCoinsSupply: sdk.Coins{},
 	}
 
@@ -64,8 +70,11 @@ func NewApp() *App {
 
 	// Initialize the app. The chainers and blockers can be overwritten before
 	// calling complete setup.
+	app.paramsKeeper = params.NewKeeper(cdc, app.keyParams)
+	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(cdc, app.keyFeeCollection, app.paramsKeeper.Getter())
 	app.SetInitChainer(app.InitChainer)
-	app.SetAnteHandler(auth.NewAnteHandler(app.AccountMapper, app.FeeCollectionKeeper))
+	app.SetAnteHandler(auth.NewAnteHandler(app.AccountMapper, app.feeCollectionKeeper))
+	app.SetFeeRefundHandler(auth.NewFeeRefundHandler(app.AccountMapper, app.feeCollectionKeeper))
 
 	return app
 }
@@ -75,11 +84,20 @@ func NewApp() *App {
 func (app *App) CompleteSetup(newKeys []*sdk.KVStoreKey) error {
 	newKeys = append(newKeys, app.KeyMain)
 	newKeys = append(newKeys, app.KeyAccount)
+	newKeys = append(newKeys, app.keyParams)
+	newKeys = append(newKeys, app.keyFeeCollection)
 
 	app.MountStoresIAVL(newKeys...)
 	err := app.LoadLatestVersion(app.KeyMain)
 
 	return err
+}
+
+func defaultGenesisStateForTest() auth.GenesisState {
+	return auth.GenesisState{
+		FeeTokenNative: "foocoin",
+		GasPriceThreshold: 0,
+	}
 }
 
 // InitChainer performs custom logic for initialization.
@@ -90,6 +108,7 @@ func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.Respo
 		acc.SetCoins(genacc.GetCoins())
 		app.AccountMapper.SetAccount(ctx, acc)
 	}
+	auth.InitGenesis(ctx, app.paramsKeeper.Setter(), defaultGenesisStateForTest())
 
 	return abci.ResponseInitChain{}
 }

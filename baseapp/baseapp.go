@@ -39,6 +39,8 @@ const (
 	runTxModeDeliver runTxMode = iota
 )
 
+type RunMsg func(ctx sdk.Context, msgs []sdk.Msg) sdk.Result
+
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
@@ -53,6 +55,7 @@ type BaseApp struct {
 	// must be set
 	txDecoder   sdk.TxDecoder   // unmarshal []byte into sdk.Tx
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
+	feeRefundHandler sdk.FeeRefundHandler // fee handler for fee refund
 
 	// may be nil
 	initChainer      sdk.InitChainer  // initialize state with validators and state blob
@@ -60,6 +63,7 @@ type BaseApp struct {
 	endBlocker       sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
 	addrPeerFilter   sdk.PeerFilter   // filter peers by address and port
 	pubkeyPeerFilter sdk.PeerFilter   // filter peers by public key
+	runMsg			 RunMsg
 
 	//--------------------
 	// Volatile
@@ -135,6 +139,13 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 	app.cms.MountStoreWithDB(key, typ, nil)
 }
 
+////////////////////  iris/cosmos-sdk begin  ///////////////////////////
+func (app *BaseApp) GetKVStore(key sdk.StoreKey) sdk.KVStore {
+	return app.cms.GetKVStore(key)
+}
+
+////////////////////  iris/cosmos-sdk end  ///////////////////////////
+
 // Set the txDecoder function
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
@@ -177,6 +188,9 @@ func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	app.anteHandler = ah
 }
+func (app *BaseApp) SetFeeRefundHandler(fh sdk.FeeRefundHandler) {
+	app.feeRefundHandler = fh
+}
 func (app *BaseApp) SetAddrPeerFilter(pf sdk.PeerFilter) {
 	app.addrPeerFilter = pf
 }
@@ -184,6 +198,10 @@ func (app *BaseApp) SetPubKeyPeerFilter(pf sdk.PeerFilter) {
 	app.pubkeyPeerFilter = pf
 }
 func (app *BaseApp) Router() Router { return app.router }
+
+func (app *BaseApp) SetRunMsg(runMsg RunMsg) {
+	app.runMsg = runMsg
+}
 
 // load latest application version
 func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
@@ -438,8 +456,41 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 // Implements ABCI
 func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
-	// Decode the Tx.
+
 	var result sdk.Result
+
+	////////////////////  iris/cosmos-sdk begin ///////////////////////////
+
+	upgradeKey := sdk.NewKVStoreKey("upgrade")
+	store := app.cms.GetStore(upgradeKey)
+
+	if store != nil {
+		kvStore, ok := store.(sdk.KVStore)
+		if ok {
+			bz := kvStore.Get([]byte("d"))
+			if len(bz) == 1 && bz[0] == byte(1) {
+				result = sdk.NewError(sdk.CodespaceUndefined, sdk.CodeOutOfService, "").Result()
+
+				return abci.ResponseCheckTx{
+					Code:      uint32(result.Code),
+					Data:      result.Data,
+					Log:       result.Log,
+					GasWanted: result.GasWanted,
+					GasUsed:   result.GasUsed,
+					Fee: cmn.KI64Pair{
+						[]byte(result.FeeDenom),
+						result.FeeAmount,
+					},
+					Tags: result.Tags,
+				}
+			}
+		}
+	}
+
+	////////////////////  iris/cosmos-sdk end ///////////////////////////
+
+	// Decode the Tx.
+
 	var tx, err = app.txDecoder(txBytes)
 	if err != nil {
 		result = err.Result()
@@ -524,6 +575,10 @@ func (app *BaseApp) getContextForAnte(mode runTxMode, txBytes []byte) (ctx sdk.C
 
 // Iterates through msgs and executes them
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg) (result sdk.Result) {
+	if app.runMsg != nil {
+		return app.runMsg(ctx, msgs)
+	}
+
 	// accumulate results
 	logs := make([]string, 0, len(msgs))
 	var data []byte   // NOTE: we just append them all (?!)
@@ -589,7 +644,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// meter so we initialize upfront.
 	var gasWanted int64
 	ctx := app.getContextForAnte(mode, txBytes)
-
+	ctxWithNoCache := ctx
 	defer func() {
 		if r := recover(); r != nil {
 			switch rType := r.(type) {
@@ -603,7 +658,17 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		}
 
 		result.GasWanted = gasWanted
-		result.GasUsed = ctx.GasMeter().GasConsumed()
+		result.GasUsed = ctxWithNoCache.GasMeter().GasConsumed()
+
+		// Refund unspent fee
+		if app.feeRefundHandler != nil {
+			err := app.feeRefundHandler(ctxWithNoCache, tx, result)
+			if err != nil {
+				result = sdk.ErrInternal(err.Error()).Result()
+				result.GasWanted = gasWanted
+				result.GasUsed = ctxWithNoCache.GasMeter().GasConsumed()
+			}
+		}
 	}()
 
 	var msgs = tx.GetMsgs()
@@ -621,9 +686,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		}
 		if !newCtx.IsZero() {
 			ctx = newCtx
+			ctxWithNoCache = newCtx
 		}
 
-		gasWanted = result.GasWanted
+		gasWanted = anteResult.GasWanted
 	}
 
 	// Keep the state in a transient CacheWrap in case processing the messages
@@ -637,7 +703,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	ctx = ctx.WithMultiStore(msCache)
 	result = app.runMsgs(ctx, msgs)
-	result.GasWanted = gasWanted
 
 	// only update state if all messages pass and we're not in a simulation
 	if result.IsOK() && mode != runTxModeSimulate {

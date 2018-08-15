@@ -22,7 +22,7 @@ func getMockApp(t *testing.T) *mock.App {
 	keyIBC := sdk.NewKVStoreKey("ibc")
 	ibcMapper := NewMapper(mapp.Cdc, keyIBC, mapp.RegisterCodespace(DefaultCodespace))
 	coinKeeper := bank.NewKeeper(mapp.AccountMapper)
-	mapp.Router().AddRoute("ibc", NewHandler(ibcMapper, coinKeeper))
+	mapp.Router().AddRoute("ibc", []*sdk.KVStoreKey{keyIBC}, NewHandler(ibcMapper, coinKeeper))
 
 	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyIBC}))
 	return mapp
@@ -37,7 +37,7 @@ func TestIBCMsgs(t *testing.T) {
 	priv1 := ed25519.GenPrivKey()
 	addr1 := sdk.AccAddress(priv1.PubKey().Address())
 	coins := sdk.Coins{sdk.NewCoin("foocoin", 10)}
-	var emptyCoins sdk.Coins
+	emptyCoins := sdk.Coins{sdk.NewCoin("foocoin", 0)}
 
 	acc := &auth.BaseAccount{
 		Address: addr1,

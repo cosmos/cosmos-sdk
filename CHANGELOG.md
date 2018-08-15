@@ -16,8 +16,8 @@ BREAKING CHANGES
 * Gaia CLI  (`gaiacli`)
   -  [x/stake] change `--keybase-sig` to `--identity`
   -  [x/stake] \#1828 Force user to specify amount on create-validator command by removing default
-  -  [x/gov] Change `--proposalID` to `--proposal-id` 
-  -  [x/stake, x/gov] \#1606 Use `--from` instead of adhoc flags like `--address-validator` 
+  -  [x/gov] Change `--proposalID` to `--proposal-id`
+  -  [x/stake, x/gov] \#1606 Use `--from` instead of adhoc flags like `--address-validator`
         and `--proposer` to indicate the sender address.
   -  \#1551 Remove `--name` completely
   -  Genesis/key creation (`gaiad init`) now supports user-provided key passwords
@@ -26,12 +26,12 @@ BREAKING CHANGES
   - [x/stake] Inflation doesn't use rationals in calculation (performance boost)
   - [x/stake] Persist a map from `addr->pubkey` in the state since BeginBlock
     doesn't provide pubkeys.
-  - [x/gov] \#1781 Added tags sub-package, changed tags to use dash-case 
+  - [x/gov] \#1781 Added tags sub-package, changed tags to use dash-case
   - [x/gov] \#1688 Governance parameters are now stored in globalparams store
   - [x/gov] \#1859 Slash validators who do not vote on a proposal
   - [x/gov] \#1914 added TallyResult type that gets stored in Proposal after tallying is finished
-  
-* SDK 
+
+* SDK
   - [baseapp] Msgs are no longer run on CheckTx, removed `ctx.IsCheckTx()`
   - [baseapp] NewBaseApp constructor takes sdk.TxDecoder as argument instead of wire.Codec
   - [types] sdk.NewCoin takes sdk.Int, sdk.NewInt64Coin takes int64
@@ -40,14 +40,14 @@ BREAKING CHANGES
       - Removed all tx related fields and logic (building & signing) to separate
         structure `TxContext` in `x/auth/client/context`
 
-* Tendermint 
+* Tendermint
     - v0.22.5 -> See [Tendermint PR](https://github.com/tendermint/tendermint/pull/1966)
-        - change all the cryptography imports. 
+        - change all the cryptography imports.
     - v0.23.0 -> See
       [Changelog](https://github.com/tendermint/tendermint/blob/v0.23.0/CHANGELOG.md#0230)
       and [SDK PR](https://github.com/cosmos/cosmos-sdk/pull/1927)
         - BeginBlock no longer includes crypto.Pubkey
-        - use time.Time instead of int64 for time. 
+        - use time.Time instead of int64 for time.
 
 FEATURES
 
@@ -56,11 +56,12 @@ FEATURES
 
 * Gaia CLI  (`gaiacli`)
     - [x/gov] added `query-proposals` command. Can filter by `depositer`, `voter`, and `status`
+    - [x/stake] \#2043 Added staking query cli cmds for unbonding-delegations and redelegations
 
 * Gaia
   - [networks] Added ansible scripts to upgrade seed nodes on a network
 
-* SDK 
+* SDK
   - [x/mock/simulation] Randomized simulation framework
      - Modules specify invariants and operations, preferably in an x/[module]/simulation package
      - Modules can test random combinations of their own operations
@@ -78,10 +79,10 @@ IMPROVEMENTS
   - [spec] \#967 Inflation and distribution specs drastically improved
   - [x/gov] \#1773 Votes on a proposal can now be queried
   - [x/gov] Initial governance parameters can now be set in the genesis file
-  - [x/stake] \#1815 Sped up the processing of `EditValidator` txs. 
+  - [x/stake] \#1815 Sped up the processing of `EditValidator` txs.
   - [config] \#1930 Transactions indexer indexes all tags by default.
 
-* SDK 
+* SDK
   - [baseapp] \#1587 Allow any alphanumeric character in route
   - [baseapp] Allow any alphanumeric character in route
   - [tools] Remove `rm -rf vendor/` from `make get_vendor_deps`
@@ -95,13 +96,14 @@ BUG FIXES
 
 * Gaia CLI  (`gaiacli`)
   -  \#1766 Fixes bad example for keybase identity
+  -  [x/stake] \#2021 Fixed repeated CLI commands in staking
 
 * Gaia
   - \#1804 Fixes gen-tx genesis generation logic temporarily until upstream updates
   - \#1799 Fix `gaiad export`
   - \#1839 Fixed bug where intra-tx counter wasn't set correctly for genesis validators
   - [x/stake] \#1858 Fixed bug where the cliff validator was not updated correctly
-  - [tests] \#1675 Fix non-deterministic `test_cover` 
+  - [tests] \#1675 Fix non-deterministic `test_cover`
   - [tests] \#1551 Fixed invalid LCD test JSON payload in `doIBCTransfer`
   - [basecoin] Fixes coin transaction failure and account query [discussion](https://forum.cosmos.network/t/unmarshalbinarybare-expected-to-read-prefix-bytes-75fbfab8-since-it-is-registered-concrete-but-got-0a141dfa/664/6)
   - [x/gov] \#1757 Fix VoteOption conversion to String
@@ -274,7 +276,7 @@ FEATURES
 * [types] Added MinInt and MinUint functions
 * [gaiad] `unsafe_reset_all` now resets addrbook.json
 * [democoin] add x/oracle, x/assoc
-* [tests] created a randomized testing framework. 
+* [tests] created a randomized testing framework.
   - Currently bank has limited functionality in the framework
   - Auth has its invariants checked within the framework
 * [tests] Add WaitForNextNBlocksTM helper method

@@ -1,4 +1,4 @@
-# ICS XXX: Cosmos Signed Messages
+# ICS 030: Cosmos Signed Messages
 
 >TODO: Replace with valid ICS number and possibly move to new location.
 

@@ -16,7 +16,7 @@ import (
 // ShowNodeIDCmd - ported from Tendermint, dump node ID to stdout
 func ShowNodeIDCmd(ctx *Context) *cobra.Command {
 	return &cobra.Command{
-		Use:   "show_node_id",
+		Use:   "show-node-id",
 		Short: "Show this node's ID",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := ctx.Config
@@ -34,7 +34,7 @@ func ShowNodeIDCmd(ctx *Context) *cobra.Command {
 func ShowValidatorCmd(ctx *Context) *cobra.Command {
 	flagJSON := "json"
 	cmd := cobra.Command{
-		Use:   "show_validator",
+		Use:   "show-validator",
 		Short: "Show this node's tendermint validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -68,7 +68,7 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 // UnsafeResetAllCmd - extension of the tendermint command, resets initialization
 func UnsafeResetAllCmd(ctx *Context) *cobra.Command {
 	return &cobra.Command{
-		Use:   "unsafe_reset_all",
+		Use:   "unsafe-reset-all",
 		Short: "Reset blockchain database, priv_validator.json file, and the logger",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := ctx.Config

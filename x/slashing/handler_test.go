@@ -20,7 +20,7 @@ func TestCannotUnrevokeUnlessRevoked(t *testing.T) {
 	require.True(t, got.IsOK())
 	stake.EndBlocker(ctx, sk)
 	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
-	require.True(t, sdk.NewRatFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
+	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
 
 	// assert non-revoked validator can't be unrevoked
 	got = slh(ctx, NewMsgUnrevoke(addr))

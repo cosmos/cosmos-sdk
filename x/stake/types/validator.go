@@ -26,21 +26,21 @@ type Validator struct {
 	Revoked bool           `json:"revoked"` // has the validator been revoked from bonded status?
 
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
-	Tokens          sdk.Rat        `json:"tokens"`           // delegated tokens (incl. self-delegation)
-	DelegatorShares sdk.Rat        `json:"delegator_shares"` // total shares issued to a validator's delegators
+	Tokens          sdk.Dec        `json:"tokens"`           // delegated tokens (incl. self-delegation)
+	DelegatorShares sdk.Dec        `json:"delegator_shares"` // total shares issued to a validator's delegators
 
 	Description        Description `json:"description"`           // description terms for the validator
 	BondHeight         int64       `json:"bond_height"`           // earliest height as a bonded validator
 	BondIntraTxCounter int16       `json:"bond_intra_tx_counter"` // block-local tx index of validator change
 	ProposerRewardPool sdk.Coins   `json:"proposer_reward_pool"`  // XXX reward pool collected from being the proposer
 
-	Commission            sdk.Rat `json:"commission"`              // XXX the commission rate of fees charged to any delegators
-	CommissionMax         sdk.Rat `json:"commission_max"`          // XXX maximum commission rate which this validator can ever charge
-	CommissionChangeRate  sdk.Rat `json:"commission_change_rate"`  // XXX maximum daily increase of the validator commission
-	CommissionChangeToday sdk.Rat `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
+	Commission            sdk.Dec `json:"commission"`              // XXX the commission rate of fees charged to any delegators
+	CommissionMax         sdk.Dec `json:"commission_max"`          // XXX maximum commission rate which this validator can ever charge
+	CommissionChangeRate  sdk.Dec `json:"commission_change_rate"`  // XXX maximum daily increase of the validator commission
+	CommissionChangeToday sdk.Dec `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
 
 	// fee related
-	LastBondedTokens sdk.Rat `json:"prev_bonded_tokens"` // Previous bonded tokens held
+	LastBondedTokens sdk.Dec `json:"prev_bonded_tokens"` // Previous bonded tokens held
 }
 
 // NewValidator - initialize a new validator
@@ -50,17 +50,17 @@ func NewValidator(owner sdk.AccAddress, pubKey crypto.PubKey, description Descri
 		PubKey:                pubKey,
 		Revoked:               false,
 		Status:                sdk.Unbonded,
-		Tokens:                sdk.ZeroRat(),
-		DelegatorShares:       sdk.ZeroRat(),
+		Tokens:                sdk.ZeroDec(),
+		DelegatorShares:       sdk.ZeroDec(),
 		Description:           description,
 		BondHeight:            int64(0),
 		BondIntraTxCounter:    int16(0),
 		ProposerRewardPool:    sdk.Coins{},
-		Commission:            sdk.ZeroRat(),
-		CommissionMax:         sdk.ZeroRat(),
-		CommissionChangeRate:  sdk.ZeroRat(),
-		CommissionChangeToday: sdk.ZeroRat(),
-		LastBondedTokens:      sdk.ZeroRat(),
+		Commission:            sdk.ZeroDec(),
+		CommissionMax:         sdk.ZeroDec(),
+		CommissionChangeRate:  sdk.ZeroDec(),
+		CommissionChangeToday: sdk.ZeroDec(),
+		LastBondedTokens:      sdk.ZeroDec(),
 	}
 }
 
@@ -69,17 +69,17 @@ type validatorValue struct {
 	PubKey                crypto.PubKey
 	Revoked               bool
 	Status                sdk.BondStatus
-	Tokens                sdk.Rat
-	DelegatorShares       sdk.Rat
+	Tokens                sdk.Dec
+	DelegatorShares       sdk.Dec
 	Description           Description
 	BondHeight            int64
 	BondIntraTxCounter    int16
 	ProposerRewardPool    sdk.Coins
-	Commission            sdk.Rat
-	CommissionMax         sdk.Rat
-	CommissionChangeRate  sdk.Rat
-	CommissionChangeToday sdk.Rat
-	LastBondedTokens      sdk.Rat
+	Commission            sdk.Dec
+	CommissionMax         sdk.Dec
+	CommissionChangeRate  sdk.Dec
+	CommissionChangeToday sdk.Dec
+	LastBondedTokens      sdk.Dec
 }
 
 // return the redelegation without fields contained within the key for the store
@@ -159,8 +159,8 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Validator: %s\n", bechVal)
 	resp += fmt.Sprintf("Revoked: %v\n", v.Revoked)
 	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
-	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens.FloatString())
-	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.FloatString())
+	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens.String())
+	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.String())
 	resp += fmt.Sprintf("Description: %s\n", v.Description)
 	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
 	resp += fmt.Sprintf("Proposer Reward Pool: %s\n", v.ProposerRewardPool.String())
@@ -182,21 +182,21 @@ type BechValidator struct {
 	Revoked bool           `json:"revoked"` // has the validator been revoked from bonded status?
 
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
-	Tokens          sdk.Rat        `json:"tokens"`           // delegated tokens (incl. self-delegation)
-	DelegatorShares sdk.Rat        `json:"delegator_shares"` // total shares issued to a validator's delegators
+	Tokens          sdk.Dec        `json:"tokens"`           // delegated tokens (incl. self-delegation)
+	DelegatorShares sdk.Dec        `json:"delegator_shares"` // total shares issued to a validator's delegators
 
 	Description        Description `json:"description"`           // description terms for the validator
 	BondHeight         int64       `json:"bond_height"`           // earliest height as a bonded validator
 	BondIntraTxCounter int16       `json:"bond_intra_tx_counter"` // block-local tx index of validator change
 	ProposerRewardPool sdk.Coins   `json:"proposer_reward_pool"`  // XXX reward pool collected from being the proposer
 
-	Commission            sdk.Rat `json:"commission"`              // XXX the commission rate of fees charged to any delegators
-	CommissionMax         sdk.Rat `json:"commission_max"`          // XXX maximum commission rate which this validator can ever charge
-	CommissionChangeRate  sdk.Rat `json:"commission_change_rate"`  // XXX maximum daily increase of the validator commission
-	CommissionChangeToday sdk.Rat `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
+	Commission            sdk.Dec `json:"commission"`              // XXX the commission rate of fees charged to any delegators
+	CommissionMax         sdk.Dec `json:"commission_max"`          // XXX maximum commission rate which this validator can ever charge
+	CommissionChangeRate  sdk.Dec `json:"commission_change_rate"`  // XXX maximum daily increase of the validator commission
+	CommissionChangeToday sdk.Dec `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
 
 	// fee related
-	LastBondedTokens sdk.Rat `json:"prev_bonded_shares"` // last bonded token amount
+	LastBondedTokens sdk.Dec `json:"prev_bonded_shares"` // last bonded token amount
 }
 
 // get the bech validator from the the regular validator
@@ -364,7 +364,7 @@ func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator,
 }
 
 // removes tokens from a validator
-func (v Validator) RemoveTokens(pool Pool, tokens sdk.Rat) (Validator, Pool) {
+func (v Validator) RemoveTokens(pool Pool, tokens sdk.Dec) (Validator, Pool) {
 	if v.Status == sdk.Bonded {
 		pool = pool.bondedTokensToLoose(tokens)
 	}
@@ -376,25 +376,25 @@ func (v Validator) RemoveTokens(pool Pool, tokens sdk.Rat) (Validator, Pool) {
 //_________________________________________________________________________________________________________
 
 // AddTokensFromDel adds tokens to a validator
-func (v Validator) AddTokensFromDel(pool Pool, amount int64) (Validator, Pool, sdk.Rat) {
+func (v Validator) AddTokensFromDel(pool Pool, amount int64) (Validator, Pool, sdk.Dec) {
 
 	// bondedShare/delegatedShare
 	exRate := v.DelegatorShareExRate()
-	amountRat := sdk.NewRat(amount)
+	amountDec := sdk.NewDec(amount)
 
 	if v.Status == sdk.Bonded {
-		pool = pool.looseTokensToBonded(amountRat)
+		pool = pool.looseTokensToBonded(amountDec)
 	}
 
-	v.Tokens = v.Tokens.Add(amountRat)
-	issuedShares := amountRat.Quo(exRate)
+	v.Tokens = v.Tokens.Add(amountDec)
+	issuedShares := amountDec.Quo(exRate)
 	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
 
 	return v, pool, issuedShares
 }
 
 // RemoveDelShares removes delegator shares from a validator.
-func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Rat) (Validator, Pool, sdk.Rat) {
+func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Pool, sdk.Dec) {
 	issuedTokens := v.DelegatorShareExRate().Mul(delShares)
 	v.Tokens = v.Tokens.Sub(issuedTokens)
 	v.DelegatorShares = v.DelegatorShares.Sub(delShares)
@@ -408,19 +408,19 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Rat) (Validator, Poo
 
 // DelegatorShareExRate gets the exchange rate of tokens over delegator shares.
 // UNITS: tokens/delegator-shares
-func (v Validator) DelegatorShareExRate() sdk.Rat {
+func (v Validator) DelegatorShareExRate() sdk.Dec {
 	if v.DelegatorShares.IsZero() {
-		return sdk.OneRat()
+		return sdk.OneDec()
 	}
 	return v.Tokens.Quo(v.DelegatorShares)
 }
 
 // Get the bonded tokens which the validator holds
-func (v Validator) BondedTokens() sdk.Rat {
+func (v Validator) BondedTokens() sdk.Dec {
 	if v.Status == sdk.Bonded {
 		return v.Tokens
 	}
-	return sdk.ZeroRat()
+	return sdk.ZeroDec()
 }
 
 //______________________________________________________________________
@@ -434,7 +434,7 @@ func (v Validator) GetMoniker() string          { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus   { return v.Status }
 func (v Validator) GetOwner() sdk.AccAddress    { return v.Owner }
 func (v Validator) GetPubKey() crypto.PubKey    { return v.PubKey }
-func (v Validator) GetPower() sdk.Rat           { return v.BondedTokens() }
-func (v Validator) GetTokens() sdk.Rat          { return v.Tokens }
-func (v Validator) GetDelegatorShares() sdk.Rat { return v.DelegatorShares }
+func (v Validator) GetPower() sdk.Dec           { return v.BondedTokens() }
+func (v Validator) GetTokens() sdk.Dec          { return v.Tokens }
+func (v Validator) GetDelegatorShares() sdk.Dec { return v.DelegatorShares }
 func (v Validator) GetBondHeight() int64        { return v.BondHeight }

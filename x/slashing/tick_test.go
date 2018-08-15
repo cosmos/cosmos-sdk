@@ -22,7 +22,7 @@ func TestBeginBlocker(t *testing.T) {
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
 	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
-	require.True(t, sdk.NewRatFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
+	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
 
 	val := abci.Validator{
 		Address: pk.Address(),

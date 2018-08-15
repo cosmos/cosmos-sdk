@@ -34,7 +34,7 @@ func init() {
 }
 
 func TestGaiaCLISend(t *testing.T) {
-	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe_reset_all", gaiadHome), "")
+	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", gaiadHome), "")
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), app.DefaultKeyPass)
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), app.DefaultKeyPass)
 
@@ -87,7 +87,7 @@ func TestGaiaCLISend(t *testing.T) {
 }
 
 func TestGaiaCLICreateValidator(t *testing.T) {
-	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe_reset_all", gaiadHome), "")
+	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", gaiadHome), "")
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), app.DefaultKeyPass)
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), app.DefaultKeyPass)
 	chainID := executeInit(t, fmt.Sprintf("gaiad init -o --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome))
@@ -132,7 +132,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 	validator := executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %s --output=json %v", barAddr, flags))
 	require.Equal(t, validator.Owner, barAddr)
-	require.True(sdk.RatEq(t, sdk.NewRat(2), validator.Tokens))
+	require.True(sdk.DecEq(t, sdk.NewDec(2), validator.Tokens))
 
 	// unbond a single share
 	unbondStr := fmt.Sprintf("gaiacli stake unbond begin %v", flags)
@@ -149,11 +149,11 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.Equal(t, int64(9), barAcc.GetCoins().AmountOf("steak").Int64(), "%v", barAcc)
 	*/
 	validator = executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %s --output=json %v", barAddr, flags))
-	require.Equal(t, "1/1", validator.Tokens.String())
+	require.Equal(t, "1.0000000000", validator.Tokens.String())
 }
 
 func TestGaiaCLISubmitProposal(t *testing.T) {
-	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe_reset_all", gaiadHome), "")
+	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", gaiadHome), "")
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), app.DefaultKeyPass)
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), app.DefaultKeyPass)
 	chainID := executeInit(t, fmt.Sprintf("gaiad init -o --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome))

@@ -239,27 +239,27 @@ func GetCmdBeginRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
 func getShares(
 	storeName string, cdc *wire.Codec, sharesAmountStr,
 	sharesPercentStr string, delegatorAddr, validatorAddr sdk.AccAddress,
-) (sharesAmount sdk.Rat, err error) {
+) (sharesAmount sdk.Dec, err error) {
 	switch {
 	case sharesAmountStr != "" && sharesPercentStr != "":
 		return sharesAmount, errors.Errorf("can either specify the amount OR the percent of the shares, not both")
 	case sharesAmountStr == "" && sharesPercentStr == "":
 		return sharesAmount, errors.Errorf("can either specify the amount OR the percent of the shares, not both")
 	case sharesAmountStr != "":
-		sharesAmount, err = sdk.NewRatFromDecimal(sharesAmountStr, types.MaxBondDenominatorPrecision)
+		sharesAmount, err = sdk.NewDecFromStr(sharesAmountStr)
 		if err != nil {
 			return sharesAmount, err
 		}
-		if !sharesAmount.GT(sdk.ZeroRat()) {
+		if !sharesAmount.GT(sdk.ZeroDec()) {
 			return sharesAmount, errors.Errorf("shares amount must be positive number (ex. 123, 1.23456789)")
 		}
 	case sharesPercentStr != "":
-		var sharesPercent sdk.Rat
-		sharesPercent, err = sdk.NewRatFromDecimal(sharesPercentStr, types.MaxBondDenominatorPrecision)
+		var sharesPercent sdk.Dec
+		sharesPercent, err = sdk.NewDecFromStr(sharesPercentStr)
 		if err != nil {
 			return sharesAmount, err
 		}
-		if !sharesPercent.GT(sdk.ZeroRat()) || !sharesPercent.LTE(sdk.OneRat()) {
+		if !sharesPercent.GT(sdk.ZeroDec()) || !sharesPercent.LTE(sdk.OneDec()) {
 			return sharesAmount, errors.Errorf("shares percent must be >0 and <=1 (ex. 0.01, 0.75, 1)")
 		}
 

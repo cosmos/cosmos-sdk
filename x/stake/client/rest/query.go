@@ -347,7 +347,7 @@ func delegationHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handle
 			DelegatorAddr: delegation.DelegatorAddr,
 			ValidatorAddr: delegation.ValidatorAddr,
 			Height:        delegation.Height,
-			Shares:        delegation.Shares.FloatString(),
+			Shares:        delegation.Shares.String(),
 		}
 
 		output, err := cdc.MarshalJSON(outputDelegation)

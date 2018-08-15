@@ -34,10 +34,12 @@ BREAKING CHANGES
   * `gaiacli gov vote --voter`
 * [x/gov] Added tags sub-package, changed tags to use dash-case
 * [x/gov] Governance parameters are now stored in globalparams store
+* [core] \#1807 Switch from use of rational to decimal
 * [lcd] \#1866 Updated lcd /slashing/signing_info endpoint to take cosmosvalpub instead of cosmosvaladdr
 * [types] sdk.NewCoin now takes sdk.Int, sdk.NewInt64Coin takes int64
 * [cli] #1551: Officially removed `--name` from CLI commands
 * [cli] Genesis/key creation (`init`) now supports user-provided key passwords
+* [cli] unsafe_reset_all, show_validator, and show_node_id have been renamed to unsafe-reset-all, show-validator, and show-node-id
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus
@@ -74,8 +76,10 @@ IMPROVEMENTS
 * [server] \#1930 Transactions indexer indexes all tags by default.
 * [x/stake] \#2000 Added tests for new staking endpoints
 * [x/stake] [#2023](https://github.com/cosmos/cosmos-sdk/pull/2023) Terminate iteration loop in `UpdateBondedValidators` and `UpdateBondedValidatorsFull` when the first revoked validator is encountered and perform a sanity check.
+* [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.
 
 BUG FIXES
+*  \#1988 Make us compile on OpenBSD (disable ledger) [#1988] (https://github.com/cosmos/cosmos-sdk/issues/1988)
 *  \#1666 Add intra-tx counter to the genesis validators
 *  \#1797 Fix off-by-one error in slashing for downtime
 *  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator

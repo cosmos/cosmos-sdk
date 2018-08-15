@@ -25,9 +25,9 @@ type VotingProcedure struct {
 
 ```go
 type TallyingProcedure struct {
-  Threshold         rational.Rational   //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
-  Veto              rational.Rational   //  Minimum proportion of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
-  GovernancePenalty sdk.Rat             //  Penalty if validator does not vote
+  Threshold         sdk.Dec   //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
+  Veto              sdk.Dec   //  Minimum proportion of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
+  GovernancePenalty sdk.Dec             //  Penalty if validator does not vote
   GracePeriod       int64               //  If validator entered validator set in this period of blocks before vote ended, governance penalty does not apply
 }
 ```
@@ -81,7 +81,7 @@ This type is used in a temp map when tallying
 
 ```go
   type ValidatorGovInfo struct {
-    Minus     sdk.Rat
+    Minus     sdk.Dec
     Vote      Vote
   }
 ```
@@ -103,17 +103,17 @@ type Proposal struct {
   VotingStartBlock      int64               //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
   CurrentStatus         ProposalStatus      //  Current status of the proposal
 
-  YesVotes              sdk.Rat
-  NoVotes               sdk.Rat
-  NoWithVetoVotes       sdk.Rat
-  AbstainVotes          sdk.Rat
+  YesVotes              sdk.Dec
+  NoVotes               sdk.Dec
+  NoWithVetoVotes       sdk.Dec
+  AbstainVotes          sdk.Dec
 }
 ```
 
 We also mention a method to update the tally for a given proposal:
 
 ```go
-  func (proposal Proposal) updateTally(vote byte, amount sdk.Rat)
+  func (proposal Proposal) updateTally(vote byte, amount sdk.Dec)
 ```
 
 ### Stores

@@ -24,6 +24,6 @@
 
 - name: Reset network
   when: UNSAFE_RESET_ALL | default(false) | bool
-  command: "sudo -u gaiad gaiad unsafe_reset_all"
+  command: "sudo -u gaiad gaiad unsafe-reset-all"
   notify: restart gaiad
 

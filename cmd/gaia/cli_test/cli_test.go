@@ -137,7 +137,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	// unbond a single share
 	unbondStr := fmt.Sprintf("gaiacli stake unbond begin %v", flags)
 	unbondStr += fmt.Sprintf(" --from=%s", "bar")
-	unbondStr += fmt.Sprintf(" --address-validator=%s", barAddr)
+	unbondStr += fmt.Sprintf(" --validator=%s", barAddr)
 	unbondStr += fmt.Sprintf(" --shares-amount=%v", "1")
 
 	success := executeWrite(t, unbondStr, app.DefaultKeyPass)

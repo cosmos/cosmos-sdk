@@ -62,7 +62,8 @@
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  version = "=v0.22.6"
+  source = "https://github.com/irisnet/tendermint.git"
+  version = "=v0.22.6-iris1"
 
 [[constraint]]
   name = "github.com/bartekn/go-bip39"

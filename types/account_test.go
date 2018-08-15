@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-var invalidstrs = []string{
+var invalidStrs = []string{
 	"",
 	"hello, world!",
 	"0xAA",
@@ -21,6 +21,8 @@ var invalidstrs = []string{
 	types.Bech32PrefixAccPub + "1234",
 	types.Bech32PrefixValAddr + "5678",
 	types.Bech32PrefixValPub + "BBAB",
+	types.Bech32PrefixConsAddr + "FF04",
+	types.Bech32PrefixConsPub + "6789",
 }
 
 func testMarshal(t *testing.T, original interface{}, res interface{}, marshal func() ([]byte, error), unmarshal func([]byte) error) {
@@ -95,7 +97,7 @@ func TestRandBech32AccAddrConsistency(t *testing.T) {
 		require.Equal(t, acc, res)
 	}
 
-	for _, str := range invalidstrs {
+	for _, str := range invalidStrs {
 		_, err := types.AccAddressFromHex(str)
 		require.NotNil(t, err)
 
@@ -130,7 +132,7 @@ func TestValAddr(t *testing.T) {
 		require.Equal(t, acc, res)
 	}
 
-	for _, str := range invalidstrs {
+	for _, str := range invalidStrs {
 		_, err := types.ValAddressFromHex(str)
 		require.NotNil(t, err)
 
@@ -138,6 +140,41 @@ func TestValAddr(t *testing.T) {
 		require.NotNil(t, err)
 
 		err = (*types.ValAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
+		require.NotNil(t, err)
+	}
+}
+
+func TestConsAddress(t *testing.T) {
+	var pub ed25519.PubKeyEd25519
+
+	for i := 0; i < 20; i++ {
+		rand.Read(pub[:])
+
+		acc := types.ConsAddress(pub.Address())
+		res := types.ConsAddress{}
+
+		testMarshal(t, &acc, &res, acc.MarshalJSON, (&res).UnmarshalJSON)
+		testMarshal(t, &acc, &res, acc.Marshal, (&res).Unmarshal)
+
+		str := acc.String()
+		res, err := types.ConsAddressFromBech32(str)
+		require.Nil(t, err)
+		require.Equal(t, acc, res)
+
+		str = hex.EncodeToString(acc)
+		res, err = types.ConsAddressFromHex(str)
+		require.Nil(t, err)
+		require.Equal(t, acc, res)
+	}
+
+	for _, str := range invalidStrs {
+		_, err := types.ConsAddressFromHex(str)
+		require.NotNil(t, err)
+
+		_, err = types.ConsAddressFromBech32(str)
+		require.NotNil(t, err)
+
+		err = (*types.ConsAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
 		require.NotNil(t, err)
 	}
 }

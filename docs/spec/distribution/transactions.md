@@ -120,14 +120,14 @@ func (vu ValidatorUpdate) ProcessPowerChangeCommission()
     scenario2.UpdateAdjustmentForPowerChange(vu.Height) 
 ```
 
-## Common Calculations 
+## Common calculations 
 
 ### Update total validator accum
 
 The total amount of validator accum must be calculated in order to determine
 the amount of pool tokens which a validator is entitled to at a particular
 block. The accum is always additive to the existing accum. This term is to be
-updates each time rewards are withdrawn from the system.  
+updates each time rewards are withdrawn from the system. 
 
 ``` 
 func (g Global) UpdateTotalValAccum(height int64, totalBondedTokens Dec) 
@@ -135,7 +135,7 @@ func (g Global) UpdateTotalValAccum(height int64, totalBondedTokens Dec)
     g.TotalValAccum += totalDelShares * blocks
 ```
 
-### Update total delegator accum
+### Update validator's accums
 
 The total amount of delegator accum must be updated in order to determine the
 amount of pool tokens which each delegator is entitled to, relative to the
@@ -149,7 +149,7 @@ func (vd ValidatorDistribution) UpdateTotalDelAccum(height int64, totalDelShares
     vd.TotalDelAccum += totalDelShares * blocks
 ```
 
-### Delegator accum
+### Get delegator accum
 
 Each delegation has a passively calculated accumulation factor to specify its
 entitlement to the rewards from a validator. `Accum` is used to passively
@@ -161,37 +161,44 @@ func (dd DelegatorDist) Accum(height int64, delegatorShares Dec) Dec
     return delegatorShares * blocks
 ```
 
-### Global Pool to Validator Pool
+### Global pool to validator pool
 
 Everytime a validator or delegator make a withdraw or the validator is the
 proposer and receives new tokens - the relavent validator must move tokens from
 the passive global pool to thier own pool. 
 
 ``` 
-func (dd DelegatorDist) ValidatorUpdate(g Global, totalBondedShares,  height int64, Tokens Dec) Dec
-
+func (vd ValidatorDistribution) TakeAccum(g Global, height int64, totalBonded, vdTokens Dec) g Global
     g.UpdateTotalValAccum(height, totalBondedShares)
+    g.UpdateValAccum(height, totalBondedShares)
+    
+    // update the validators pool
+    blocks = height - vd.GlobalWithdrawalHeight
+    accum = blocks * vdTokens
+    withdrawalTokens := g.Pool * accum / g.TotalValAccum 
+    
+    vd.Pool += withdrawalTokens
+    g.Pool -= withdrawalTokens
+
+    return g
 ```
 
 
-### Delegation's entitlement to ValidatorDistribution.Pool
+### Delegation's withdrawal
 
 For delegations (including validator's self-delegation) all fees from fee pool
-are subject to commission rate from the owner of the validator. The global
-shares should be taken as true number of global bonded shares. The recipients
-shares should be taken as the bonded tokens less the validator's commission.
-
-Each delegation holds multiple accumulation factors to specify its entitlement to
-the rewards from a validator. `Accum` is used to passively calculate
-each bonds entitled rewards from the `RewardPool`. `AccumProposer` is used to
-passively calculate each bonds entitled rewards from
-`ValidatorDistribution.ProposerRewardPool`
+are subject to commission rate from the owner of the validator. 
 
 ```
-TODO
+func (dd DelegatorDist) WithdrawalRewards(g Global, vd ValidatorDistribution,
+    height int64, totalBonded, vdTokens Dec) g Global
+
+    vd.TakeAccum(g, height, totalBonded, vdTokens) 
+    
+
 ```
 
-### Validators's commission entitlement to ValidatorDistribution.Pool
+### Validators's commission withdrawal
 
 Similar to a delegator's entitlement, but with recipient shares based on the
 commission portion of bonded tokens.

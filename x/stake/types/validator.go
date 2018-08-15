@@ -21,7 +21,7 @@ import (
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
 type Validator struct {
-	Owner   sdk.AccAddress `json:"owner"`   // sender of BondTx - UnbondTx returns here
+	Owner   sdk.ValAddress `json:"owner"`   // sender of BondTx - UnbondTx returns here
 	PubKey  crypto.PubKey  `json:"pub_key"` // pubkey of validator
 	Revoked bool           `json:"revoked"` // has the validator been revoked from bonded status?
 
@@ -44,7 +44,7 @@ type Validator struct {
 }
 
 // NewValidator - initialize a new validator
-func NewValidator(owner sdk.AccAddress, pubKey crypto.PubKey, description Description) Validator {
+func NewValidator(owner sdk.ValAddress, pubKey crypto.PubKey, description Description) Validator {
 	return Validator{
 		Owner:                 owner,
 		PubKey:                pubKey,
@@ -149,14 +149,14 @@ func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) (validator Val
 // validator. An error is returned if the owner or the owner's public key
 // cannot be converted to Bech32 format.
 func (v Validator) HumanReadableString() (string, error) {
-	bechVal, err := sdk.Bech32ifyValPub(v.PubKey)
+	bechTmPubKey, err := sdk.Bech32ifyTmPub(v.PubKey)
 	if err != nil {
 		return "", err
 	}
 
 	resp := "Validator \n"
 	resp += fmt.Sprintf("Owner: %s\n", v.Owner)
-	resp += fmt.Sprintf("Validator: %s\n", bechVal)
+	resp += fmt.Sprintf("Validator: %s\n", bechTmPubKey)
 	resp += fmt.Sprintf("Revoked: %v\n", v.Revoked)
 	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
 	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens.FloatString())
@@ -177,7 +177,7 @@ func (v Validator) HumanReadableString() (string, error) {
 
 // validator struct for bech output
 type BechValidator struct {
-	Owner   sdk.AccAddress `json:"owner"`   // in bech32
+	Owner   sdk.ValAddress `json:"owner"`   // in bech32
 	PubKey  string         `json:"pub_key"` // in bech32
 	Revoked bool           `json:"revoked"` // has the validator been revoked from bonded status?
 
@@ -201,14 +201,14 @@ type BechValidator struct {
 
 // get the bech validator from the the regular validator
 func (v Validator) Bech32Validator() (BechValidator, error) {
-	bechValPubkey, err := sdk.Bech32ifyValPub(v.PubKey)
+	bechTmPubKey, err := sdk.Bech32ifyTmPub(v.PubKey)
 	if err != nil {
 		return BechValidator{}, err
 	}
 
 	return BechValidator{
 		Owner:   v.Owner,
-		PubKey:  bechValPubkey,
+		PubKey:  bechTmPubKey,
 		Revoked: v.Revoked,
 
 		Status:          v.Status,
@@ -432,7 +432,7 @@ var _ sdk.Validator = Validator{}
 func (v Validator) GetRevoked() bool            { return v.Revoked }
 func (v Validator) GetMoniker() string          { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus   { return v.Status }
-func (v Validator) GetOwner() sdk.AccAddress    { return v.Owner }
+func (v Validator) GetOwner() sdk.ValAddress    { return v.Owner }
 func (v Validator) GetPubKey() crypto.PubKey    { return v.PubKey }
 func (v Validator) GetPower() sdk.Rat           { return v.BondedTokens() }
 func (v Validator) GetTokens() sdk.Rat          { return v.Tokens }

@@ -135,7 +135,7 @@ func ErrExistingUnbondingDelegation(codespace sdk.CodespaceType) sdk.Error {
 }
 
 func ErrBadRedelegationAddr(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInput, "unexpected address length for this (address, srcValidator, dstValidator) triple")
+	return sdk.NewError(codespace, CodeInvalidInput, "unexpected address length for this (address, srcValidator, dstValidator) tuple")
 }
 
 func ErrNoRedelegation(codespace sdk.CodespaceType) sdk.Error {

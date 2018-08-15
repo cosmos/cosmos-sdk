@@ -259,7 +259,7 @@ func Bech32ifyConsPub(pub crypto.PubKey) (string, error) {
 // MustBech32ifyConsPub returns the result of Bech32ifyConsPub panicing on
 // failure.
 func MustBech32ifyConsPub(pub crypto.PubKey) string {
-	enc, err := Bech32ifyValPub(pub)
+	enc, err := Bech32ifyConsPub(pub)
 	if err != nil {
 		panic(err)
 	}

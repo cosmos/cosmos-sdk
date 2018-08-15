@@ -42,18 +42,18 @@ func TestRandBech32PubkeyConsistency(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, bech32accpub, mustbech32accpub)
 
-		mustbech32valpub := types.MustBech32ifyValPub(pub)
-		bech32valpub, err := types.Bech32ifyValPub(pub)
+		mustBech32ConsPub := types.MustBech32ifyConsPub(pub)
+		bech32ConsPub, err := types.Bech32ifyConsPub(pub)
 		require.Nil(t, err)
-		require.Equal(t, bech32valpub, mustbech32valpub)
+		require.Equal(t, bech32ConsPub, mustBech32ConsPub)
 
 		mustaccpub := types.MustGetAccPubKeyBech32(bech32accpub)
 		accpub, err := types.GetAccPubKeyBech32(bech32accpub)
 		require.Nil(t, err)
 		require.Equal(t, accpub, mustaccpub)
 
-		mustvalpub := types.MustGetValPubKeyBech32(bech32valpub)
-		valpub, err := types.GetValPubKeyBech32(bech32valpub)
+		mustvalpub := types.MustGetValPubKeyBech32(bech32ConsPub)
+		valpub, err := types.GetValPubKeyBech32(bech32ConsPub)
 		require.Nil(t, err)
 		require.Equal(t, valpub, mustvalpub)
 

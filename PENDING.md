@@ -34,6 +34,7 @@ BREAKING CHANGES
   * `gaiacli gov vote --voter`
 * [x/gov] Added tags sub-package, changed tags to use dash-case
 * [x/gov] Governance parameters are now stored in globalparams store
+* [core] \#1807 Switch from use of rational to decimal
 * [lcd] \#1866 Updated lcd /slashing/signing_info endpoint to take cosmosvalpub instead of cosmosvaladdr
 * [types] sdk.NewCoin now takes sdk.Int, sdk.NewInt64Coin takes int64
 * [cli] #1551: Officially removed `--name` from CLI commands

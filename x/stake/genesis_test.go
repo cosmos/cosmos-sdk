@@ -17,7 +17,7 @@ func TestInitGenesis(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 
 	pool := keeper.GetPool(ctx)
-	pool.BondedTokens = sdk.NewRat(2)
+	pool.BondedTokens = sdk.NewDec(2)
 
 	params := keeper.GetParams(ctx)
 	var delegations []Delegation
@@ -32,11 +32,11 @@ func TestInitGenesis(t *testing.T) {
 
 	// initialize the validators
 	validators[0].Status = sdk.Bonded
-	validators[0].Tokens = sdk.OneRat()
-	validators[0].DelegatorShares = sdk.OneRat()
+	validators[0].Tokens = sdk.OneDec()
+	validators[0].DelegatorShares = sdk.OneDec()
 	validators[1].Status = sdk.Bonded
-	validators[1].Tokens = sdk.OneRat()
-	validators[1].DelegatorShares = sdk.OneRat()
+	validators[1].Tokens = sdk.OneDec()
+	validators[1].DelegatorShares = sdk.OneDec()
 
 	genesisState = types.NewGenesisState(pool, params, validators, delegations)
 	vals, err := InitGenesis(ctx, keeper, genesisState)
@@ -69,7 +69,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 	// Assigning 2 to the first 100 vals, 1 to the rest
 	pool := keeper.GetPool(ctx)
-	pool.BondedTokens = sdk.NewRat(int64(200 + (size - 100)))
+	pool.BondedTokens = sdk.NewDec(int64(200 + (size - 100)))
 
 	params := keeper.GetParams(ctx)
 	delegations := []Delegation{}
@@ -80,11 +80,11 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 		validators[i].Status = sdk.Bonded
 		if i < 100 {
-			validators[i].Tokens = sdk.NewRat(2)
-			validators[i].DelegatorShares = sdk.NewRat(2)
+			validators[i].Tokens = sdk.NewDec(2)
+			validators[i].DelegatorShares = sdk.NewDec(2)
 		} else {
-			validators[i].Tokens = sdk.OneRat()
-			validators[i].DelegatorShares = sdk.OneRat()
+			validators[i].Tokens = sdk.OneDec()
+			validators[i].DelegatorShares = sdk.OneDec()
 		}
 	}
 

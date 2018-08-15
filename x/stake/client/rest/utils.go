@@ -76,7 +76,7 @@ func getDelegatorDelegations(cliCtx context.CLIContext, cdc *wire.Codec, delegat
 		DelegatorAddr: delegation.DelegatorAddr,
 		ValidatorAddr: delegation.ValidatorAddr,
 		Height:        delegation.Height,
-		Shares:        delegation.Shares.FloatString(),
+		Shares:        delegation.Shares.String(),
 	}
 
 	return outputDelegation, http.StatusOK, "", nil

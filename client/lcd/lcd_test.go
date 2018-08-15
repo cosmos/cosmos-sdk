@@ -415,7 +415,7 @@ func TestBonding(t *testing.T) {
 	bondedValidators := getDelegatorValidators(t, port, addr)
 	require.Len(t, bondedValidators, 1)
 	require.Equal(t, validator1Owner, bondedValidators[0].Owner)
-	require.Equal(t, validator.DelegatorShares.Add(sdk.NewRat(60)).FloatString(), bondedValidators[0].DelegatorShares.FloatString())
+	require.Equal(t, validator.DelegatorShares.Add(sdk.NewDec(60)).String(), bondedValidators[0].DelegatorShares.String())
 
 	bondedValidator := getDelegatorValidator(t, port, addr, validator1Owner)
 	require.Equal(t, validator1Owner, bondedValidator.Owner)

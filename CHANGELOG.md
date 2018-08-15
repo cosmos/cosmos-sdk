@@ -56,7 +56,7 @@ FEATURES
 
 * Gaia CLI  (`gaiacli`)
     - [x/gov] added `query-proposals` command. Can filter by `depositer`, `voter`, and `status`
-    - [x/stake] \#2021 Added staking query cli cmds for unbonding-delegations and redelegations
+    - [x/stake] \#2043 Added staking query cli cmds for unbonding-delegations and redelegations
 
 * Gaia
   - [networks] Added ansible scripts to upgrade seed nodes on a network

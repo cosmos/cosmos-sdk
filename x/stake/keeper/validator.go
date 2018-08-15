@@ -425,6 +425,7 @@ func (k Keeper) UpdateBondedValidators(
 					panic("already decided to bond a validator, can't bond another!")
 				}
 				newValidatorBonded = true
+				fmt.Printf("Deciding to bond: %v\n", validator)
 			}
 
 			bondedValidatorsCount++
@@ -440,6 +441,8 @@ func (k Keeper) UpdateBondedValidators(
 	iterator.Close()
 
 	if newValidatorBonded && bytes.Equal(oldCliffValidatorAddr, validator.Owner) {
+		fmt.Printf("Validator: %v\n", validator)
+		fmt.Printf("Old cliff validator: %v\n", oldCliffValidatorAddr)
 		panic("cliff validator has not been changed, yet we bonded a new validator")
 	}
 

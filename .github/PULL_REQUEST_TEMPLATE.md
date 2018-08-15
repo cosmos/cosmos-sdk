@@ -4,7 +4,7 @@ v    Before smashing the submit button please review the checkboxes.
 v    If a checkbox is n/a - please still include it but + a little note why
 ☺ > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > >  -->
 
-- Targeted PR against correct branch
+- Targeted PR against correct branch:
   - `release/vxx.yy.zz` for a merge into a release candidate
   - `master` for a merge of a release
   - `develop` in the usual case
@@ -15,7 +15,6 @@ v    If a checkbox is n/a - please still include it but + a little note why
 - [ ] Wrote tests
 - [ ] Added entries in `PENDING.md` that include links to the relevant issue or PR that most accurately describes the change.
 - [ ] Updated `cmd/gaia` and `examples/`
-
 ___________________________________
 For Admin Use:
 - [ ] Added appropriate labels to PR (ex. wip, ready-for-review, docs)

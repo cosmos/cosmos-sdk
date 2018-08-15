@@ -219,7 +219,8 @@ func (bz ValAddress) Format(s fmt.State, verb rune) {
 // auxiliary
 // ----------------------------------------------------------------------------
 
-// Bech32ifyAccPub returns a Bech32 encoded string for a given account PubKey.
+// Bech32ifyAccPub returns a Bech32 encoded string containing the
+// Bech32PrefixAccPub prefix for a given account PubKey.
 func Bech32ifyAccPub(pub crypto.PubKey) (string, error) {
 	return bech32.ConvertAndEncode(Bech32PrefixAccPub, pub.Bytes())
 }
@@ -234,8 +235,8 @@ func MustBech32ifyAccPub(pub crypto.PubKey) string {
 	return enc
 }
 
-// Bech32ifyValPub returns a Bech32 encoded string for a given validator
-// operator's PubKey.
+// Bech32ifyValPub returns a Bech32 encoded string containing the
+// Bech32PrefixValPub prefix for a given validator operator's PubKey.
 func Bech32ifyValPub(pub crypto.PubKey) (string, error) {
 	return bech32.ConvertAndEncode(Bech32PrefixValPub, pub.Bytes())
 }
@@ -250,8 +251,8 @@ func MustBech32ifyValPub(pub crypto.PubKey) string {
 	return enc
 }
 
-// Bech32ifyConsPub returns a Bech32 encoded string for a given consensus node's
-// PubKey.
+// Bech32ifyConsPub returns a Bech32 encoded string containing the
+// Bech32PrefixConsPub prefixfor a given consensus node's PubKey.
 func Bech32ifyConsPub(pub crypto.PubKey) (string, error) {
 	return bech32.ConvertAndEncode(Bech32PrefixConsPub, pub.Bytes())
 }
@@ -267,9 +268,10 @@ func MustBech32ifyConsPub(pub crypto.PubKey) string {
 	return enc
 }
 
-// GetAccPubKeyBech32 creates a PubKey from a string.
-func GetAccPubKeyBech32(address string) (pk crypto.PubKey, err error) {
-	bz, err := GetFromBech32(address, Bech32PrefixAccPub)
+// GetAccPubKeyBech32 creates a PubKey for an account with a given public key
+// string using the Bech32 Bech32PrefixAccPub prefix.
+func GetAccPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
+	bz, err := GetFromBech32(pubkey, Bech32PrefixAccPub)
 	if err != nil {
 		return nil, err
 	}
@@ -282,9 +284,10 @@ func GetAccPubKeyBech32(address string) (pk crypto.PubKey, err error) {
 	return pk, nil
 }
 
-// MustGetAccPubKeyBech32 creates a PubKey from a string. It panics on error.
-func MustGetAccPubKeyBech32(address string) (pk crypto.PubKey) {
-	pk, err := GetAccPubKeyBech32(address)
+// MustGetAccPubKeyBech32 returns the result of GetAccPubKeyBech32 panicing on
+// failure.
+func MustGetAccPubKeyBech32(pubkey string) (pk crypto.PubKey) {
+	pk, err := GetAccPubKeyBech32(pubkey)
 	if err != nil {
 		panic(err)
 	}
@@ -292,7 +295,8 @@ func MustGetAccPubKeyBech32(address string) (pk crypto.PubKey) {
 	return pk
 }
 
-// GetValPubKeyBech32 decodes a validator public key into a PubKey.
+// GetValPubKeyBech32 creates a PubKey for a validator's operator with a given
+// public key string using the Bech32 Bech32PrefixValPub prefix.
 func GetValPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
 	bz, err := GetFromBech32(pubkey, Bech32PrefixValPub)
 	if err != nil {
@@ -307,9 +311,37 @@ func GetValPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
 	return pk, nil
 }
 
-// MustGetValPubKeyBech32 creates a PubKey from a string. It panics on error.
-func MustGetValPubKeyBech32(address string) (pk crypto.PubKey) {
-	pk, err := GetValPubKeyBech32(address)
+// MustGetValPubKeyBech32 returns the result of GetValPubKeyBech32 panicing on
+// failure.
+func MustGetValPubKeyBech32(pubkey string) (pk crypto.PubKey) {
+	pk, err := GetValPubKeyBech32(pubkey)
+	if err != nil {
+		panic(err)
+	}
+
+	return pk
+}
+
+// GetConsPubKeyBech32 creates a PubKey for a consensus node with a given public
+// key string using the Bech32 Bech32PrefixConsPub prefix.
+func GetConsPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
+	bz, err := GetFromBech32(pubkey, Bech32PrefixConsPub)
+	if err != nil {
+		return nil, err
+	}
+
+	pk, err = cryptoAmino.PubKeyFromBytes(bz)
+	if err != nil {
+		return nil, err
+	}
+
+	return pk, nil
+}
+
+// MustGetConsPubKeyBech32 returns the result of GetConsPubKeyBech32 panicing on
+// failure.
+func MustGetConsPubKeyBech32(pubkey string) (pk crypto.PubKey) {
+	pk, err := GetConsPubKeyBech32(pubkey)
 	if err != nil {
 		panic(err)
 	}
@@ -329,7 +361,7 @@ func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 	}
 
 	if hrp != prefix {
-		return nil, fmt.Errorf("invalid Bech32 prefix. Expected %s, Got %s", prefix, hrp)
+		return nil, fmt.Errorf("invalid Bech32 prefix; expected %s, got %s", prefix, hrp)
 	}
 
 	return bz, nil

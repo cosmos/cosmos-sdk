@@ -37,27 +37,37 @@ func TestRandBech32PubkeyConsistency(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		rand.Read(pub[:])
 
-		mustbech32accpub := types.MustBech32ifyAccPub(pub)
-		bech32accpub, err := types.Bech32ifyAccPub(pub)
+		mustBech32AccPub := types.MustBech32ifyAccPub(pub)
+		bech32AccPub, err := types.Bech32ifyAccPub(pub)
 		require.Nil(t, err)
-		require.Equal(t, bech32accpub, mustbech32accpub)
+		require.Equal(t, bech32AccPub, mustBech32AccPub)
+
+		mustBech32ValPub := types.MustBech32ifyValPub(pub)
+		bech32ValPub, err := types.Bech32ifyValPub(pub)
+		require.Nil(t, err)
+		require.Equal(t, bech32ValPub, mustBech32ValPub)
 
 		mustBech32ConsPub := types.MustBech32ifyConsPub(pub)
 		bech32ConsPub, err := types.Bech32ifyConsPub(pub)
 		require.Nil(t, err)
 		require.Equal(t, bech32ConsPub, mustBech32ConsPub)
 
-		mustaccpub := types.MustGetAccPubKeyBech32(bech32accpub)
-		accpub, err := types.GetAccPubKeyBech32(bech32accpub)
+		mustAccPub := types.MustGetAccPubKeyBech32(bech32AccPub)
+		accPub, err := types.GetAccPubKeyBech32(bech32AccPub)
 		require.Nil(t, err)
-		require.Equal(t, accpub, mustaccpub)
+		require.Equal(t, accPub, mustAccPub)
 
-		mustvalpub := types.MustGetValPubKeyBech32(bech32ConsPub)
-		valpub, err := types.GetValPubKeyBech32(bech32ConsPub)
+		mustValPub := types.MustGetValPubKeyBech32(bech32ValPub)
+		valPub, err := types.GetValPubKeyBech32(bech32ValPub)
 		require.Nil(t, err)
-		require.Equal(t, valpub, mustvalpub)
+		require.Equal(t, valPub, mustValPub)
 
-		require.Equal(t, valpub, accpub)
+		mustConsPub := types.MustGetConsPubKeyBech32(bech32ConsPub)
+		consPub, err := types.GetConsPubKeyBech32(bech32ConsPub)
+		require.Nil(t, err)
+		require.Equal(t, consPub, mustConsPub)
+
+		require.Equal(t, valPub, accPub)
 	}
 }
 

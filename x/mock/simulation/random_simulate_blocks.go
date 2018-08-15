@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -104,6 +105,10 @@ func SimulateFromSeed(
 		}
 
 		res := app.EndBlock(abci.RequestEndBlock{})
+
+		respCommit := app.Commit()
+		log += fmt.Sprintf("\nBlockHeight: %d, BlockHash: %s\n", header.Height, hex.EncodeToString(respCommit.Data))
+
 		header.Height++
 		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
 

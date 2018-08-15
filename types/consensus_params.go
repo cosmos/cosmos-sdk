@@ -8,11 +8,13 @@ import (
 // Reusing tmtype
 type ConsensusParams tmtypes.ConsensusParams
 
+// Convert ConsensusParams to ABCI type
 func (params ConsensusParams) ToABCI() *abci.ConsensusParams {
 	inner := tmtypes.ConsensusParams(params)
 	return tmtypes.TM2PB.ConsensusParams(&inner)
 }
 
+// Load ConsensusParams from ABCI type
 func (params *ConsensusParams) FromABCI(abciparams *abci.ConsensusParams) {
 	// Manually set nil members to empty value
 	if abciparams == nil {

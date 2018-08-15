@@ -68,7 +68,7 @@ func TestKeeper(t *testing.T) {
 	for _, kv := range kvs {
 		var param int64
 		bz := space.GetRaw(ctx, kv.key)
-		err := cdc.UnmarshalBinary(bz, &param)
+		err := cdc.UnmarshalJSON(bz, &param)
 		require.Nil(t, err)
 		require.Equal(t, kv.param, param)
 	}

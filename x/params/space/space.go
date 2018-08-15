@@ -3,7 +3,8 @@ package space
 import (
 	"fmt"
 	"reflect"
-	"regexp"
+
+	tmlibs "github.com/tendermint/tendermint/libs/common"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -20,7 +21,7 @@ type Space struct {
 
 // NewSpace constructs a store with namespace
 func NewSpace(cdc *wire.Codec, key sdk.StoreKey, tkey sdk.StoreKey, space string) Space {
-	if !isAlphaNumeric(space) {
+	if !tmlibs.IsASCIIText(space) {
 		panic("paramstore space expressions can only contain alphanumeric characters")
 	}
 
@@ -38,16 +39,13 @@ type Key struct {
 	s string
 }
 
-// copied from baseapp/router.go
-var isAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
-
 // Appending two keys with '/' as separator
 // Checks alpanumericity
 func (k Key) Append(keys ...string) (res Key) {
 	res = k
 
 	for _, key := range keys {
-		if !isAlphaNumeric(key) {
+		if !tmlibs.IsASCIIText(key) {
 			panic("parameter key expressions can only contain alphanumeric characters")
 		}
 		res.s = res.s + "/" + key
@@ -79,7 +77,10 @@ func (k Key) String() string {
 func (s Space) Get(ctx sdk.Context, key Key, ptr interface{}) {
 	store := ctx.KVStore(s.key).Prefix(s.space)
 	bz := store.Get(key.Bytes())
-	s.cdc.MustUnmarshalBinary(bz, ptr)
+	err := s.cdc.UnmarshalJSON(bz, ptr)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // GetIfExists do not modify ptr if the stored parameter is nil
@@ -89,7 +90,10 @@ func (s Space) GetIfExists(ctx sdk.Context, key Key, ptr interface{}) {
 	if bz == nil {
 		return
 	}
-	s.cdc.MustUnmarshalBinary(bz, ptr)
+	err := s.cdc.UnmarshalJSON(bz, ptr)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Get raw bytes of parameter from store
@@ -121,12 +125,12 @@ func (s Space) Set(ctx sdk.Context, key Key, param interface{}) error {
 		ptrty := reflect.PtrTo(reflect.TypeOf(param))
 		ptr := reflect.New(ptrty).Interface()
 
-		if s.cdc.UnmarshalBinary(bz, ptr) != nil {
+		if s.cdc.UnmarshalJSON(bz, ptr) != nil {
 			return fmt.Errorf("Type mismatch with stored param and provided param")
 		}
 	}
 
-	bz, err := s.cdc.MarshalBinary(param)
+	bz, err := s.cdc.MarshalJSON(param)
 	if err != nil {
 		return err
 	}

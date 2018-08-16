@@ -78,7 +78,7 @@ func (app *BaseApp) QueryRouter() QueryRouter {
 	if app.sealed {
 		panic("QueryRouter() on sealed BaseApp")
 	}
-	return app.queryrouter
+	return app.queryRouter
 }
 func (app *BaseApp) Seal()          { app.sealed = true }
 func (app *BaseApp) IsSealed() bool { return app.sealed }

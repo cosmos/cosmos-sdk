@@ -198,8 +198,6 @@ func (keeper Keeper) peekCurrentProposalID(ctx sdk.Context) (proposalID int64, e
 		return -1, ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
 	}
 	keeper.cdc.MustUnmarshalBinary(bz, &proposalID)
-	bz = keeper.cdc.MustMarshalBinary(proposalID + 1)
-	store.Set(KeyNextProposalID, bz)
 	return proposalID, nil
 }
 

@@ -17,12 +17,7 @@ type Vote struct {
 
 // Returns whether 2 votes are equal
 func (voteA Vote) Equals(voteB Vote) bool {
-	if voteA.Voter.Equals(voteB.Voter) &&
-		voteA.ProposalID == voteB.ProposalID &&
-		voteA.Option == voteB.Option {
-		return true
-	}
-	return false
+	return voteA.Voter.Equals(voteB.Voter) && voteA.ProposalID == voteB.ProposalID && voteA.Option == voteB.Option
 }
 
 // Returns whether a vote is empty
@@ -40,12 +35,7 @@ type Deposit struct {
 
 // Returns whether 2 deposits are equal
 func (depositA Deposit) Equals(depositB Deposit) bool {
-	if depositA.Depositer.Equals(depositB.Depositer) &&
-		depositA.ProposalID == depositB.ProposalID &&
-		depositA.Amount.IsEqual(depositB.Amount) {
-		return true
-	}
-	return false
+	return depositA.Depositer.Equals(depositB.Depositer) && depositA.ProposalID == depositB.ProposalID && depositA.Amount.IsEqual(depositB.Amount)
 }
 
 // Returns whether a deposit is empty

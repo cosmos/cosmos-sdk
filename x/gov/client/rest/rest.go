@@ -3,7 +3,6 @@ package rest
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -98,16 +97,13 @@ func depositHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.HandlerFu
 			return
 		}
 
-		proposalID, err := strconv.ParseInt(strProposalID, 10, 64)
-		if err != nil {
-			err := errors.Errorf("proposalID [%d] is not positive", proposalID)
-			w.Write([]byte(err.Error()))
-
+		proposalID, ok := parseInt64OrReturnBadRequest(strProposalID, w)
+		if !ok {
 			return
 		}
 
 		var req depositReq
-		err = buildReq(w, r, cdc, &req)
+		err := buildReq(w, r, cdc, &req)
 		if err != nil {
 			return
 		}
@@ -140,15 +136,13 @@ func voteHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.HandlerFunc 
 			return
 		}
 
-		proposalID, err := strconv.ParseInt(strProposalID, 10, 64)
-		if err != nil {
-			err := errors.Errorf("proposalID [%d] is not positive", proposalID)
-			w.Write([]byte(err.Error()))
+		proposalID, ok := parseInt64OrReturnBadRequest(strProposalID, w)
+		if !ok {
 			return
 		}
 
 		var req voteReq
-		err = buildReq(w, r, cdc, &req)
+		err := buildReq(w, r, cdc, &req)
 		if err != nil {
 			return
 		}
@@ -181,11 +175,8 @@ func queryProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		proposalID, err := strconv.ParseInt(strProposalID, 10, 64)
-		if err != nil {
-			err := errors.Errorf("proposalID [%d] is not positive", proposalID)
-			w.Write([]byte(err.Error()))
-
+		proposalID, ok := parseInt64OrReturnBadRequest(strProposalID, w)
+		if !ok {
 			return
 		}
 
@@ -232,12 +223,8 @@ func queryDepositHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		proposalID, err := strconv.ParseInt(strProposalID, 10, 64)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			err := errors.Errorf("proposalID [%d] is not positive", proposalID)
-			w.Write([]byte(err.Error()))
-
+		proposalID, ok := parseInt64OrReturnBadRequest(strProposalID, w)
+		if !ok {
 			return
 		}
 
@@ -313,12 +300,8 @@ func queryVoteHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		proposalID, err := strconv.ParseInt(strProposalID, 10, 64)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			err := errors.Errorf("proposalID [%s] is not positive", proposalID)
-			w.Write([]byte(err.Error()))
-
+		proposalID, ok := parseInt64OrReturnBadRequest(strProposalID, w)
+		if !ok {
 			return
 		}
 
@@ -395,12 +378,8 @@ func queryVotesOnProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		proposalID, err := strconv.ParseInt(strProposalID, 10, 64)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			err := errors.Errorf("proposalID [%s] is not positive", proposalID)
-			w.Write([]byte(err.Error()))
-
+		proposalID, ok := parseInt64OrReturnBadRequest(strProposalID, w)
+		if !ok {
 			return
 		}
 
@@ -442,6 +421,7 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 		strNumLatest := r.URL.Query().Get(RestNumLatest)
 
 		var err error
+		var ok bool
 		var voterAddr sdk.AccAddress
 		var depositerAddr sdk.AccAddress
 		var proposalStatus gov.ProposalStatus
@@ -479,11 +459,8 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 			}
 		}
 		if len(strNumLatest) != 0 {
-			numLatest, err = strconv.ParseInt(strNumLatest, 10, 64)
-			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				err := errors.Errorf("'%s' is not a valid int64", strNumLatest)
-				w.Write([]byte(err.Error()))
+			numLatest, ok = parseInt64OrReturnBadRequest(strNumLatest, w)
+			if !ok {
 				return
 			}
 		}

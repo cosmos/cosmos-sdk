@@ -40,6 +40,9 @@ BREAKING CHANGES
 * [cli] #1551: Officially removed `--name` from CLI commands
 * [cli] Genesis/key creation (`init`) now supports user-provided key passwords
 * [cli] unsafe_reset_all, show_validator, and show_node_id have been renamed to unsafe-reset-all, show-validator, and show-node-id
+* [cli] \#1901 Flag --address-validator renamed to --validator in stake and slashing commands
+* [types] \#1901 Validator interface's GetOwner() renamed to GetOperator()
+* [x/stake] \#1901 Validator type's Owner field renamed to Operator; Validator's GetOwner() renamed accordingly to comply with the SDK's Validator interface.
 
 FEATURES
 * [lcd] Can now query governance proposals by ProposalStatus

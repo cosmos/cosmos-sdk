@@ -136,13 +136,13 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
-	assert.Equal(t, addr1, validator.Owner)
+	assert.Equal(t, addr1, validator.Operator)
 	assert.Equal(t, pk1, validator.PubKey)
 	assert.Equal(t, sdk.NewDec(10), validator.BondedTokens())
 	assert.Equal(t, sdk.NewDec(10), validator.DelegatorShares)
 	assert.Equal(t, Description{}, validator.Description)
 
-	// two validators can't have the same owner address
+	// two validators can't have the same operator address
 	msgCreateValidator2 := newTestMsgCreateValidator(addr1, pk2, 10)
 	got = handleMsgCreateValidator(ctx, msgCreateValidator2, keeper)
 	require.False(t, got.IsOK(), "%v", got)
@@ -152,7 +152,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	got = handleMsgCreateValidator(ctx, msgCreateValidator3, keeper)
 	require.False(t, got.IsOK(), "%v", got)
 
-	// must have different pubkey and owner
+	// must have different pubkey and operator
 	msgCreateValidator4 := newTestMsgCreateValidator(addr2, pk2, 10)
 	got = handleMsgCreateValidator(ctx, msgCreateValidator4, keeper)
 	require.True(t, got.IsOK(), "%v", got)
@@ -160,7 +160,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
-	assert.Equal(t, addr2, validator.Owner)
+	assert.Equal(t, addr2, validator.Operator)
 	assert.Equal(t, pk2, validator.PubKey)
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
@@ -180,7 +180,7 @@ func TestDuplicatesMsgCreateValidatorOnBehalfOf(t *testing.T) {
 
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
-	assert.Equal(t, validatorAddr, validator.Owner)
+	assert.Equal(t, validatorAddr, validator.Operator)
 	assert.Equal(t, pk, validator.PubKey)
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))

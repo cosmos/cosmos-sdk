@@ -57,25 +57,47 @@ func createConfig(t *testing.T) (config *tmcfg.Config, close func()) {
 	return
 }
 
+func createGenesisDoc(t *testing.T, genesisFile string,
+	codec *amino.Codec) *tmtypes.GenesisDoc {
+	genesisDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
+	require.NoError(t, err)
+
+	// NOTE it's bad practice to reuse pk address for the owner address but doing
+	// in the test for simplicity
+	var appGenTxs []json.RawMessage
+
+	for _, validator := range genesisDoc.Validators {
+		pubKey := validator.PubKey
+
+		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(codec, pubKey,
+			sdk.AccAddress(pubKey.Address()), "moniker")
+
+		require.NoError(t, err)
+		appGenTxs = append(appGenTxs, appGenTx)
+	}
+
+	genesisState, err := gapp.GaiaAppGenState(codec, appGenTxs[:])
+	require.NoError(t, err)
+
+	appState, err := wire.MarshalJSONIndent(codec, genesisState)
+	require.NoError(t, err)
+
+	genesisDoc.AppState = appState
+	viper.Set(client.FlagChainID, genesisDoc.ChainID)
+	return genesisDoc
+}
+
 func createNode(t *testing.T, codec *amino.Codec, logger log.Logger,
-	createGenesisDoc func(*testing.T, string, *amino.Codec) *tmtypes.GenesisDoc) func() {
-	config, closeConfig := createConfig(t)
-
-	privValidator := pvm.LoadOrGenFilePV(config.PrivValidatorFile())
-	privValidator.Reset()
-
-	db := dbm.NewMemDB()
-	app := gapp.NewGaiaApp(logger, db, nil)
-
-	// XXX: need to set this so Gaia-Lite knows the tendermint node address!
-	viper.Set(client.FlagNode, config.RPC.ListenAddress)
+	config *tmcfg.Config, privValidator tmtypes.PrivValidator,
+	genesisDoc *tmtypes.GenesisDoc) func() {
+	app := gapp.NewGaiaApp(logger, dbm.NewMemDB(), nil)
 
 	dbProvider := func(*nm.DBContext) (dbm.DB, error) {
 		return dbm.NewMemDB(), nil
 	}
 
 	genesisDocProvider := func() (*tmtypes.GenesisDoc, error) {
-		return createGenesisDoc(t, config.GenesisFile(), codec), nil
+		return genesisDoc, nil
 	}
 
 	node, err := nm.NewNode(
@@ -95,7 +117,6 @@ func createNode(t *testing.T, codec *amino.Codec, logger log.Logger,
 	return func() {
 		node.Stop()
 		node.Wait()
-		closeConfig()
 	}
 }
 
@@ -155,46 +176,28 @@ func createTestNetwork(t *testing.T,
 	unfiltered := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	logger := log.NewFilter(unfiltered, log.AllowDebug())
 
-	nodeClose := createNode(t, codec, logger, createGenesisDoc)
+	config, closeConfig := createConfig(t)
+
+	privValidator := pvm.LoadOrGenFilePV(config.PrivValidatorFile())
+	privValidator.Reset()
+
+	genesisDoc := createGenesisDoc(t, config.GenesisFile(), codec)
+
+	// XXX: need to set this so Gaia-Lite knows the tendermint node address!
+	viper.Set(client.FlagNode, config.RPC.ListenAddress)
+
+	nodeClose := createNode(t, codec, logger, config, privValidator, genesisDoc)
 	gaiaLite, port := createGaiaLite(t, codec, logger)
 
 	close := func() {
 		nodeClose()
 		gaiaLite.Close()
+		closeConfig()
 	}
 
 	return "http://localhost:" + port, close
 }
 
-func createGenesisDoc(t *testing.T, genesisFile string,
-	codec *amino.Codec) *tmtypes.GenesisDoc {
-	genesisDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
-	require.NoError(t, err)
-
-	// NOTE it's bad practice to reuse pk address for the owner address but doing
-	// in the test for simplicity
-	var appGenTxs []json.RawMessage
-
-	for _, validator := range genesisDoc.Validators {
-		pubKey := validator.PubKey
-
-		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(codec, pubKey,
-			sdk.AccAddress(pubKey.Address()), "moniker")
-
-		require.NoError(t, err)
-		appGenTxs = append(appGenTxs, appGenTx)
-	}
-
-	genesisState, err := gapp.GaiaAppGenState(codec, appGenTxs[:])
-	require.NoError(t, err)
-
-	appState, err := wire.MarshalJSONIndent(codec, genesisState)
-	require.NoError(t, err)
-
-	genesisDoc.AppState = appState
-	viper.Set(client.FlagChainID, genesisDoc.ChainID)
-	return genesisDoc
-}
 func TestProvider(t *testing.T) {
 	// Create Pact connecting to local Daemon
 	pact := &dsl.Pact{

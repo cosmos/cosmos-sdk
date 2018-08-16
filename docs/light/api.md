@@ -694,9 +694,162 @@ Returns on failure:
 
 The GovernanceAPI exposes all functionality needed for casting votes on plain text, software upgrades and parameter change proposals.
 
-::: tip Note
-🚧 We are actively working on documentation for the governance module rest endpoints .
-:::
+### /gov/proposals - GET
+
+url: /gov/proposals
+
+Functionality: Query all submited proposals
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{
+     "proposals":[
+         "TODO"
+     ]
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"Could not create the transaction.",
+    "result":{}
+}
+```
+
+### /gov/proposals - POST
+
+url: /gov/proposals
+
+Functionality: Submit a proposal
+
+Parameter:
+
+| Parameter       | Type    | Default | Required | Description                                                  |
+| --------------- | ------- | ------- | -------- | ------------------------------------------------------------ |
+| title           | string  | null    | true     | title of the proposal                                        |
+| description     | string  | null    | true     | description of the proposal                                  |
+| proposal_type   | string  | null    | true     | type of proposal: `PlainTextProposal`, `SoftwareUpgradeProposal` |
+| proposer        | address |         | true     | address of the proposer                                      |
+| initial_deposit | string  |         |          | coins to add to the proposal's deposit                       |
+| name            | string  | null    | true     | name of the key                                              |
+| password        | string  | null    | true     | password of key                                              |
+| chain_id        | string  | null    | false    |                                                              |
+| account_number  | int64   |         |          |                                                              |
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"Could not create the transaction.",
+    "result":{}
+}
+```
+
+### /gov/proposals /{proposal-id}/votes - GET
+
+url: /gov/proposals /{proposal-id}/votes
+
+Functionality: Query all votes from a specific proposal
+
+
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{
+     "votes":[
+         "TODO"
+     ]
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"Could not create the transaction.",
+    "result":{}
+}
+```
+
+
+
+### /gov/proposals /{proposal-id}/votes - POST
+
+url: /gov/proposals /{proposal-id}/votes
+
+Functionality: Query all votes from a specific proposal
+
+| Parameter      | Type    | Default | Required | Description                                                  |
+| -------------- | ------- | ------- | -------- | ------------------------------------------------------------ |
+| voter          | address |         | true     | address of the voter                                         |
+| option         | string  |         | true     | value for the vote option:`Yes`, `No` `Abstain`, `NoWithVeto` |
+| name           | string  | null    | true     | name of the key                                              |
+| password       | string  | null    | true     | password of key                                              |
+| chain_id       | string  | null    | false    |                                                              |
+| account_number | int64   |         |          |                                                              |
+| sequence       | int64   |         |          |                                                              |
+| gas            | int64   |         |          |                                                              |
+| sequence       | int64  |         |          |                 |
+| gas            | int64  |         |          |                 |
+
+
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"Could not create the transaction.",
+    "result":{}
+}
+```
+
+
 
 
 

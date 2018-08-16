@@ -156,7 +156,7 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]m
 		i++
 	}
 	evidence := make([]abci.Evidence, 0)
-	if r.Float64() < evidenceFraction {
+	for r.Float64() < evidenceFraction {
 		height := header.Height
 		time := header.Time
 		if r.Float64() < pastEvidenceFraction {
@@ -175,6 +175,7 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]m
 			Time:             time,
 			TotalVotingPower: currentTotalVotingPower,
 		})
+		event("beginblock/evidence")
 	}
 	return abci.RequestBeginBlock{
 		Header: header,

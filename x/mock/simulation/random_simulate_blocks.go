@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"sort"
 	"testing"
 	"time"
 
@@ -126,6 +127,17 @@ func SimulateFromSeed(
 	DisplayEvents(events)
 }
 
+func getKeys(validators map[string]mockValidator) []string {
+	keys := make([]string, len(validators))
+	i := 0
+	for key := range validators {
+		keys[i] = key
+		i++
+	}
+	sort.Strings(keys)
+	return keys
+}
+
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
 func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]mockValidator, livenessTransitions TransitionMatrix, evidenceFraction float64,
 	pastTimes []time.Time, event func(string), header abci.Header, log string) abci.RequestBeginBlock {
@@ -133,8 +145,10 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]m
 		return abci.RequestBeginBlock{Header: header}
 	}
 	signingValidators := make([]abci.SigningValidator, len(validators))
-	i := 0
-	for _, mVal := range validators {
+	keys := getKeys(validators)
+
+	for i := 0; i < len(keys); i++ {
+		mVal := validators[keys[i]]
 		mVal.livenessState = livenessTransitions.NextState(r, mVal.livenessState)
 		signed := true
 
@@ -156,7 +170,6 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]m
 			Validator:       mVal.val,
 			SignedLastBlock: signed,
 		}
-		i++
 	}
 	evidence := make([]abci.Evidence, 0)
 	for r.Float64() < evidenceFraction {

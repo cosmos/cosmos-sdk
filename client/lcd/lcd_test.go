@@ -363,7 +363,7 @@ func TestValidatorsQuery(t *testing.T) {
 
 	// make sure all the validators were found (order unknown because sorted by owner addr)
 	foundVal := false
-	pkBech := sdk.MustBech32ifyValPub(pks[0])
+	pkBech := sdk.MustBech32ifyConsPub(pks[0])
 	if validators[0].PubKey == pkBech {
 		foundVal = true
 	}
@@ -378,7 +378,7 @@ func TestValidatorQuery(t *testing.T) {
 	validator1Owner := sdk.AccAddress(pks[0].Address())
 
 	validator := getValidator(t, port, validator1Owner)
-	bech32ValAddress, err := sdk.Bech32ifyValPub(pks[0])
+	bech32ValAddress, err := sdk.Bech32ifyConsPub(pks[0])
 	require.NoError(t, err)
 	assert.Equal(t, validator.PubKey, bech32ValAddress, "The returned validator does not hold the correct data")
 }
@@ -567,7 +567,7 @@ func TestUnrevoke(t *testing.T) {
 
 	// XXX: any less than this and it fails
 	tests.WaitForHeight(3, port)
-	pkString, _ := sdk.Bech32ifyValPub(pks[0])
+	pkString, _ := sdk.Bech32ifyConsPub(pks[0])
 	signingInfo := getSigningInfo(t, port, pkString)
 	tests.WaitForHeight(4, port)
 	require.Equal(t, true, signingInfo.IndexOffset > 0)

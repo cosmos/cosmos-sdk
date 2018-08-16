@@ -34,8 +34,8 @@ func SimulateFromSeed(
 ) {
 	log := fmt.Sprintf("Starting SimulateFromSeed with randomness created with seed %d", int(seed))
 	fmt.Printf("%s\n", log)
-	keys, accs := mock.GeneratePrivKeyAddressPairs(numKeys)
 	r := rand.New(rand.NewSource(seed))
+	keys, accs := mock.GeneratePrivKeyAddressPairsFromRand(r, numKeys)
 
 	// Setup event stats
 	events := make(map[string]uint)
@@ -119,7 +119,7 @@ func SimulateFromSeed(
 		validators = updateValidators(t, r, validators, res.ValidatorUpdates, event)
 	}
 
-	fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds): %d\n", header.Height, header.Time)
+	fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds): %v\n", header.Height, header.Time)
 	DisplayEvents(events)
 }
 

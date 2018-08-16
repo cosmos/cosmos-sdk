@@ -44,6 +44,6 @@ func (ts *transientStore) Gas(meter GasMeter, config GasConfig) KVStore {
 }
 
 // Implements Store.
-func (st *transientStore) GetStoreType() StoreType {
+func (ts *transientStore) GetStoreType() StoreType {
 	return sdk.StoreTypeTransient
 }

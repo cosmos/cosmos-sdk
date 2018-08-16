@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -130,6 +131,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 		},
 		numBlocks,
 		blockSize,
+		false,
 	)
 
 }
@@ -166,12 +168,14 @@ func TestAppStateDeterminism(t *testing.T) {
 			},
 			[]simulation.RandSetup{},
 			[]simulation.Invariant{noOpInvariant},
-			0,
-			10,
+			2,
+			1,
+			true,
 		)
 		appHash := app.LastCommitID().Hash
 		appHashList[i] = appHash
 	}
+	fmt.Println(appHashList)
 	for i := 1; i < numTimesToRun; i++ {
 		require.Equal(t, appHashList[0], appHashList[i])
 	}

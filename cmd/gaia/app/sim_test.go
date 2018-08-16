@@ -179,8 +179,8 @@ func TestAppStateDeterminism(t *testing.T) {
 			fmt.Printf(">>> APP HASH: %v, %X\n", appHash, appHash)
 			appHashList[j] = appHash
 		}
-		for i := 1; i < numTimesToRunPerSeed; i++ {
-			require.Equal(t, appHashList[0], appHashList[i])
+		for k := 1; k < numTimesToRunPerSeed; k++ {
+			require.Equal(t, appHashList[0], appHashList[k])
 		}
 	}
 }

@@ -465,6 +465,10 @@ func (k Keeper) UpdateBondedValidators(
 		panic("cliff validator has not been changed, yet we bonded a new validator")
 	}
 
+	if newValidatorBonded && bytes.Equal(oldCliffValidatorAddr, validator.Owner) {
+		panic("cliff validator has not been changed, yet we bonded a new validator")
+	}
+
 	// clear or set the cliff validator
 	if bondedValidatorsCount == int(maxValidators) {
 		k.setCliffValidator(ctx, validator, k.GetPool(ctx))

@@ -130,17 +130,13 @@ func TestFullGaiaSimulation(t *testing.T) {
 		},
 		numBlocks,
 		blockSize,
+		false,
 	)
 
 }
 
-// TODO: Make this not depend on Gaia or any of the modules,
-// and place it in random_simulation_test.go
-//
-// Test doesn't use `app.ExportAppStateAndValidators` as that panics with the following:
-// panic: Stored pool should not have been nil [recovered]
-//	panic: Stored pool should not have been nil
-// Change to `app.ExportAppStateAndValidators` once it is fixed
+// TODO: Make another test for the fuzzer itself, which just has noOp txs
+// and doesn't depend on gaia
 func TestAppStateDeterminism(t *testing.T) {
 	numTimesToRun := 5
 	appHashList := make([]json.RawMessage, numTimesToRun)
@@ -152,27 +148,39 @@ func TestAppStateDeterminism(t *testing.T) {
 		app := NewGaiaApp(logger, db, nil)
 
 		noOpInvariant := func(t *testing.T, baseapp *baseapp.BaseApp, log string) {}
-		noOpTestAndRunTx := func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-			privKeys []crypto.PrivKey, log string, event func(string),
-		) (action string, err sdk.Error) {
-			return "", nil
-		}
+		// noOpTestAndRunTx := func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		// 	privKeys []crypto.PrivKey, log string, event func(string),
+		// ) (action string, err sdk.Error) {
+		// 	return "", nil
+		// }
 
 		// Run randomized simulation
 		simulation.SimulateFromSeed(
 			t, app.BaseApp, appStateFn, seed,
 			[]simulation.TestAndRunTx{
-				noOpTestAndRunTx,
+				banksim.TestAndRunSingleInputMsgSend(app.accountMapper),
+				govsim.SimulateMsgSubmitProposal(app.govKeeper, app.stakeKeeper),
+				govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper),
+				govsim.SimulateMsgVote(app.govKeeper, app.stakeKeeper),
+				stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper),
+				stakesim.SimulateMsgEditValidator(app.stakeKeeper),
+				stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper),
+				stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper),
+				stakesim.SimulateMsgCompleteUnbonding(app.stakeKeeper),
+				stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper),
+				stakesim.SimulateMsgCompleteRedelegate(app.stakeKeeper),
+				slashingsim.SimulateMsgUnrevoke(app.slashingKeeper),
 			},
 			[]simulation.RandSetup{},
 			[]simulation.Invariant{noOpInvariant},
-			0,
-			10,
+			20,
+			20,
+			true,
 		)
 		appHash := app.LastCommitID().Hash
 		appHashList[i] = appHash
 	}
 	for i := 1; i < numTimesToRun; i++ {
-		require.Equal(t, appHashList[0], appHashList[i])
+		require.Equal(t, appHashList[0], appHashList[i], "appHashes: %v", appHashList)
 	}
 }

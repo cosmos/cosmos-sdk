@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"sort"
 	"testing"
 	"time"
 
@@ -20,17 +21,17 @@ import (
 // Simulate tests application by sending random messages.
 func Simulate(
 	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, ops []TestAndRunTx, setups []RandSetup,
-	invariants []Invariant, numBlocks int, blockSize int,
+	invariants []Invariant, numBlocks int, blockSize int, commit bool,
 ) {
 	time := time.Now().UnixNano()
-	SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numBlocks, blockSize)
+	SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numBlocks, blockSize, commit)
 }
 
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
 func SimulateFromSeed(
 	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, seed int64, ops []TestAndRunTx, setups []RandSetup,
-	invariants []Invariant, numBlocks int, blockSize int,
+	invariants []Invariant, numBlocks int, blockSize int, commit bool,
 ) {
 	log := fmt.Sprintf("Starting SimulateFromSeed with randomness created with seed %d", int(seed))
 	fmt.Printf("%s\n", log)
@@ -104,6 +105,9 @@ func SimulateFromSeed(
 		}
 
 		res := app.EndBlock(abci.RequestEndBlock{})
+		if commit {
+			app.Commit()
+		}
 		header.Height++
 		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
 
@@ -123,6 +127,17 @@ func SimulateFromSeed(
 	DisplayEvents(events)
 }
 
+func getKeys(validators map[string]mockValidator) []string {
+	keys := make([]string, len(validators))
+	i := 0
+	for key := range validators {
+		keys[i] = key
+		i++
+	}
+	sort.Strings(keys)
+	return keys
+}
+
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
 func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]mockValidator, livenessTransitions TransitionMatrix, evidenceFraction float64,
 	pastTimes []time.Time, event func(string), header abci.Header, log string) abci.RequestBeginBlock {
@@ -131,7 +146,9 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]m
 	}
 	signingValidators := make([]abci.SigningValidator, len(validators))
 	i := 0
-	for _, mVal := range validators {
+
+	for _, key := range getKeys(validators) {
+		mVal := validators[key]
 		mVal.livenessState = livenessTransitions.NextState(r, mVal.livenessState)
 		signed := true
 

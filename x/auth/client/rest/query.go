@@ -74,7 +74,7 @@ func QueryAccountRequestHandlerFn(
 }
 
 // register to Cosmos-LCD swagger routes
-func RegisterLCDRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext, cdc *wire.Codec, storeName string) {
+func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext, cdc *wire.Codec, storeName string) {
 	routerGroup.GET("accounts/:address",QueryKeysRequestHandlerFn(storeName,cdc,authcmd.GetAccountDecoder(cdc),ctx))
 }
 

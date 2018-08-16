@@ -141,7 +141,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 	}
 }
 
-func RegisterLCDRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext, cdc *wire.Codec, kb keys.Keybase) {
+func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext, cdc *wire.Codec, kb keys.Keybase) {
 	routerGroup.POST("/accounts/:address/send", SendRequestFn(cdc, ctx, kb))
 	routerGroup.POST("/create_transfer", CreateTransferTxForSignFn(cdc, ctx))
 	routerGroup.POST("/signed_transfer", ComposeAndBroadcastSignedTransferTxFn(cdc, ctx))

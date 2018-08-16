@@ -179,18 +179,18 @@ func createSwaggerHandler(server *gin.Engine, ctx context.CLIContext, cdc *wire.
 	}
 
 	if moduleEnabled(moduleArray,"key") {
-		keys.RegisterAll(server.Group("/"))
+		keys.RegisterSwaggerRoutes(server.Group("/"))
 	}
 
 	if moduleEnabled(moduleArray,"token") {
-		auth.RegisterLCDRoutes(server.Group("/"), ctx, cdc, "acc")
-		bank.RegisterLCDRoutes(server.Group("/"), ctx, cdc, kb)
+		auth.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc, "acc")
+		bank.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc, kb)
 	}
-/*
+
 	if moduleEnabled(moduleArray,"stake") {
-		stake.RegisterQueryLCDRoutes(server.Group("/"), ctx, cdc)
+		stake.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc)
 	}
-*/
+
 }
 
 func moduleEnabled(modules []string, name string) bool {

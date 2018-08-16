@@ -41,7 +41,7 @@ func RegisterRoutes(r *mux.Router) {
 }
 
 // resgister swagger REST routes
-func RegisterAll(routerGroup *gin.RouterGroup) {
+func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup) {
 	routerGroup.GET("/keys", QueryKeysRequest)
 	routerGroup.POST("/keys", AddNewKeyRequest)
 	routerGroup.GET("/keys/seed", SeedRequest)

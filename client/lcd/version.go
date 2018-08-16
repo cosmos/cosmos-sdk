@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/swag/example/celler/httputil"
 	"errors"
-	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/client/httputils"
 )
 
 // cli version REST handler endpoint
@@ -34,7 +34,7 @@ func NodeVersionRequestHandler(cliCtx context.CLIContext) http.HandlerFunc {
 
 func CLIVersionRequest(gtx *gin.Context) {
 	v := version.GetVersion()
-	utils.Response(gtx,v)
+	httputils.Response(gtx,v)
 }
 
 func NodeVersionRequest(cliCtx context.CLIContext) gin.HandlerFunc {
@@ -44,6 +44,6 @@ func NodeVersionRequest(cliCtx context.CLIContext) gin.HandlerFunc {
 			httputil.NewError(gtx, http.StatusInternalServerError, errors.New(fmt.Sprintf("Could't query version. Error: %s", err.Error())))
 			return
 		}
-		utils.Response(gtx,string(appVersion))
+		httputils.Response(gtx,string(appVersion))
 	}
 }

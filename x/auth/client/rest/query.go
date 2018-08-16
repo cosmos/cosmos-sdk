@@ -12,7 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gin-gonic/gin"
-	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/client/httputils"
 	"errors"
 )
 
@@ -85,29 +85,29 @@ func QueryKeysRequestHandlerFn(storeName string, cdc *wire.Codec, decoder auth.A
 
 		addr, err := sdk.AccAddressFromBech32(bech32addr)
 		if err != nil {
-			utils.NewError(gtx, http.StatusConflict, err)
+			httputils.NewError(gtx, http.StatusConflict, err)
 			return
 		}
 
 		res, err := ctx.QueryStore(auth.AddressStoreKey(addr), storeName)
 		if err != nil {
-			utils.NewError(gtx, http.StatusInternalServerError, errors.New(fmt.Sprintf("couldn't query account. Error: %s", err.Error())))
+			httputils.NewError(gtx, http.StatusInternalServerError, errors.New(fmt.Sprintf("couldn't query account. Error: %s", err.Error())))
 			return
 		}
 
 		// the query will return empty if there is no data for this account
 		if len(res) == 0 {
-			utils.Response(gtx,nil)
+			httputils.Response(gtx,nil)
 			return
 		}
 
 		// decode the value
 		account, err := decoder(res)
 		if err != nil {
-			utils.NewError(gtx, http.StatusInternalServerError, errors.New(fmt.Sprintf("couldn't parse query result. Result: %s. Error: %s", res, err.Error())))
+			httputils.NewError(gtx, http.StatusInternalServerError, errors.New(fmt.Sprintf("couldn't parse query result. Result: %s. Error: %s", res, err.Error())))
 			return
 		}
 
-		utils.Response(gtx,account)
+		httputils.Response(gtx,account)
 	}
 }

@@ -16,7 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"encoding/base64"
-	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/client/httputils"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"errors"
 )
@@ -210,16 +210,16 @@ func CreateTransferTxForSignFn(cdc *wire.Codec, ctx context.CLIContext) gin.Hand
 	return func(gtx *gin.Context) {
 		var transferBody transferBody
 		if err := gtx.BindJSON(&transferBody); err != nil {
-			utils.NewError(gtx, http.StatusBadRequest, err)
+			httputils.NewError(gtx, http.StatusBadRequest, err)
 			return
 		}
 
 		txForSign, _, err := composeTx(cdc, ctx, transferBody)
 		if err != nil {
 			if err.Code() == sdk.CodeInternal {
-				utils.NewError(gtx, http.StatusInternalServerError, err)
+				httputils.NewError(gtx, http.StatusInternalServerError, err)
 			} else {
-				utils.NewError(gtx, http.StatusBadRequest, err)
+				httputils.NewError(gtx, http.StatusBadRequest, err)
 			}
 			return
 		}
@@ -227,7 +227,7 @@ func CreateTransferTxForSignFn(cdc *wire.Codec, ctx context.CLIContext) gin.Hand
 		base64TxData := make([]byte, base64.StdEncoding.EncodedLen(len(txForSign.Bytes())))
 		base64.StdEncoding.Encode(base64TxData,txForSign.Bytes())
 
-		utils.Response(gtx,string(base64TxData))
+		httputils.Response(gtx,string(base64TxData))
 	}
 }
 
@@ -235,48 +235,48 @@ func ComposeAndBroadcastSignedTransferTxFn(cdc *wire.Codec, ctx context.CLIConte
 	return func(gtx *gin.Context) {
 		var signedTransaction signedBody
 		if err := gtx.BindJSON(&signedTransaction); err != nil {
-			utils.NewError(gtx, http.StatusBadRequest, err)
+			httputils.NewError(gtx, http.StatusBadRequest, err)
 			return
 		}
 
 		if signedTransaction.Signature == nil || signedTransaction.PublicKey == nil {
-			utils.NewError(gtx, http.StatusBadRequest, errors.New("signature or public key is empty"))
+			httputils.NewError(gtx, http.StatusBadRequest, errors.New("signature or public key is empty"))
 			return
 		}
 
 		signature, err := base64.StdEncoding.DecodeString(string(signedTransaction.Signature))
 		if err != nil {
-			utils.NewError(gtx, http.StatusBadRequest, err)
+			httputils.NewError(gtx, http.StatusBadRequest, err)
 			return
 		}
 		publicKey, err := base64.StdEncoding.DecodeString(string(signedTransaction.PublicKey))
 		if err != nil {
-			utils.NewError(gtx, http.StatusBadRequest, err)
+			httputils.NewError(gtx, http.StatusBadRequest, err)
 			return
 		}
 
 		txForSign, txCtx, errMsg := composeTx(cdc, ctx, signedTransaction.TransferBody)
 		if errMsg != nil {
 			if errMsg.Code() == sdk.CodeInternal {
-				utils.NewError(gtx, http.StatusInternalServerError, errMsg)
+				httputils.NewError(gtx, http.StatusInternalServerError, errMsg)
 			} else {
-				utils.NewError(gtx, http.StatusBadRequest, errMsg)
+				httputils.NewError(gtx, http.StatusBadRequest, errMsg)
 			}
 		}
 
 		txDataForBroadcast, err := txCtx.BuildTxWithSignature(cdc, txForSign, signature, publicKey)
 		if err != nil {
-			utils.NewError(gtx, http.StatusInternalServerError, err)
+			httputils.NewError(gtx, http.StatusInternalServerError, err)
 			return
 		}
 
 		res, err := ctx.BroadcastTx(txDataForBroadcast)
 		if err != nil {
-			utils.NewError(gtx, http.StatusInternalServerError, err)
+			httputils.NewError(gtx, http.StatusInternalServerError, err)
 			return
 		}
 
-		utils.Response(gtx,res)
+		httputils.Response(gtx,res)
 	}
 }
 
@@ -287,19 +287,19 @@ func SendRequestFn(cdc *wire.Codec, ctx context.CLIContext, kb keys.Keybase) gin
 
 		address, err := sdk.AccAddressFromBech32(bech32addr)
 		if err != nil {
-			utils.NewError(gtx, http.StatusBadRequest, err)
+			httputils.NewError(gtx, http.StatusBadRequest, err)
 			return
 		}
 
 		var m sendBody
 		if err := gtx.BindJSON(&m); err != nil {
-			utils.NewError(gtx, http.StatusBadRequest, err)
+			httputils.NewError(gtx, http.StatusBadRequest, err)
 			return
 		}
 
 		info, err := kb.Get(m.LocalAccountName)
 		if err != nil {
-			utils.NewError(gtx, http.StatusUnauthorized, err)
+			httputils.NewError(gtx, http.StatusUnauthorized, err)
 			return
 		}
 
@@ -307,14 +307,14 @@ func SendRequestFn(cdc *wire.Codec, ctx context.CLIContext, kb keys.Keybase) gin
 
 		to, err := sdk.AccAddressFromBech32(address.String())
 		if err != nil {
-			utils.NewError(gtx, http.StatusBadRequest, err)
+			httputils.NewError(gtx, http.StatusBadRequest, err)
 			return
 		}
 
 		// build message
 		msg := client.BuildMsg(from, to, m.Amount)
 		if err != nil { // XXX rechecking same error ?
-			utils.NewError(gtx, http.StatusInternalServerError, err)
+			httputils.NewError(gtx, http.StatusInternalServerError, err)
 			return
 		}
 
@@ -329,16 +329,16 @@ func SendRequestFn(cdc *wire.Codec, ctx context.CLIContext, kb keys.Keybase) gin
 
 		txBytes, err := txCtx.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
 		if err != nil {
-			utils.NewError(gtx, http.StatusUnauthorized, err)
+			httputils.NewError(gtx, http.StatusUnauthorized, err)
 			return
 		}
 
 		res, err := ctx.BroadcastTx(txBytes)
 		if err != nil {
-			utils.NewError(gtx, http.StatusInternalServerError, err)
+			httputils.NewError(gtx, http.StatusInternalServerError, err)
 			return
 		}
 
-		utils.Response(gtx,res)
+		httputils.Response(gtx,res)
 	}
 }

@@ -10,6 +10,9 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/spf13/cobra"
+	"github.com/gin-gonic/gin"
+	"errors"
+	"github.com/cosmos/cosmos-sdk/client/httputils"
 )
 
 func updateKeyCommand() *cobra.Command {
@@ -92,4 +95,37 @@ func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
+}
+
+func UpdateKeyRequest(gtx *gin.Context) {
+	name := gtx.Param("name")
+	var kb keys.Keybase
+	var m UpdateKeyBody
+
+	if err := gtx.BindJSON(&m); err != nil {
+		httputils.NewError(gtx, http.StatusBadRequest, err)
+		return
+	}
+
+	kb, err := GetKeyBase()
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	if len(m.NewPassword) < 8 || len(m.NewPassword) > 16 {
+		httputils.NewError(gtx, http.StatusBadRequest, errors.New("account password length should be between 8 and 16"))
+		return
+	}
+
+	getNewpass := func() (string, error) { return m.NewPassword, nil }
+
+	// TODO check if account exists and if password is correct
+	err = kb.Update(name, m.OldPassword, getNewpass)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusUnauthorized, err)
+		return
+	}
+
+	httputils.Response(gtx, "success")
 }

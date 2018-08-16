@@ -5,8 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
-	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 // SendTx implements a auxiliary handler that facilitates sending a series of
@@ -59,34 +57,4 @@ func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) 
 
 	// broadcast to a Tendermint node
 	return cliCtx.EnsureBroadcastTx(txBytes)
-}
-
-func NewError(ctx *gin.Context, errCode int, err error) {
-	errorResponse := HTTPError{
-		Api:	"2.0",
-		Code:   errCode,
-		ErrMsg: err.Error(),
-	}
-	ctx.JSON(errCode, errorResponse)
-}
-
-func Response(ctx *gin.Context, data interface{}) {
-	response := HTTPResponse{
-		Api:	"2.0",
-		Code:   0,
-		Result: data,
-	}
-	ctx.JSON(http.StatusOK, response)
-}
-
-type HTTPResponse struct {
-	Api 	string 		`json:"rest api" example:"2.0"`
-	Code    int    		`json:"code" example:"0"`
-	Result 	interface{} `json:"result"`
-}
-
-type HTTPError struct {
-	Api 	string 		`json:"rest api" example:"2.0"`
-	Code    int    		`json:"code" example:"500"`
-	ErrMsg 	string 		`json:"error message"`
 }

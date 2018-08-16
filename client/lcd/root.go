@@ -177,11 +177,11 @@ func createSwaggerHandler(server *gin.Engine, ctx context.CLIContext, cdc *wire.
 		server.GET("/version", CLIVersionRequest)
 		server.GET("/node_version", NodeVersionRequest(ctx))
 	}
-/*
+
 	if moduleEnabled(moduleArray,"key") {
 		keys.RegisterAll(server.Group("/"))
 	}
-*/
+
 	if moduleEnabled(moduleArray,"token") {
 		auth.RegisterLCDRoutes(server.Group("/"), ctx, cdc, "acc")
 		bank.RegisterLCDRoutes(server.Group("/"), ctx, cdc, kb)

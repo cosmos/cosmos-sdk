@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -84,6 +85,34 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 	return appState
 }
 
+func testAndRunTxs(app *GaiaApp) []simulation.TestAndRunTx {
+	return []simulation.TestAndRunTx{
+		banksim.TestAndRunSingleInputMsgSend(app.accountMapper),
+		govsim.SimulateMsgSubmitProposal(app.govKeeper, app.stakeKeeper),
+		govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper),
+		govsim.SimulateMsgVote(app.govKeeper, app.stakeKeeper),
+		stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper),
+		stakesim.SimulateMsgEditValidator(app.stakeKeeper),
+		stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper),
+		stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper),
+		stakesim.SimulateMsgCompleteUnbonding(app.stakeKeeper),
+		stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper),
+		stakesim.SimulateMsgCompleteRedelegate(app.stakeKeeper),
+		slashingsim.SimulateMsgUnrevoke(app.slashingKeeper),
+	}
+}
+
+func invariants(app *GaiaApp) []simulation.Invariant {
+	return []simulation.Invariant{
+		func(t *testing.T, baseapp *baseapp.BaseApp, log string) {
+			banksim.NonnegativeBalanceInvariant(app.accountMapper)(t, baseapp, log)
+			govsim.AllInvariants()(t, baseapp, log)
+			stakesim.AllInvariants(app.coinKeeper, app.stakeKeeper, app.accountMapper)(t, baseapp, log)
+			slashingsim.AllInvariants()(t, baseapp, log)
+		},
+	}
+}
+
 func TestFullGaiaSimulation(t *testing.T) {
 	if !enabled {
 		t.Skip("Skipping Gaia simulation")
@@ -100,34 +129,12 @@ func TestFullGaiaSimulation(t *testing.T) {
 	app := NewGaiaApp(logger, db, nil)
 	require.Equal(t, "GaiaApp", app.Name())
 
-	allInvariants := func(t *testing.T, baseapp *baseapp.BaseApp, log string) {
-		banksim.NonnegativeBalanceInvariant(app.accountMapper)(t, baseapp, log)
-		govsim.AllInvariants()(t, baseapp, log)
-		stakesim.AllInvariants(app.coinKeeper, app.stakeKeeper, app.accountMapper)(t, baseapp, log)
-		slashingsim.AllInvariants()(t, baseapp, log)
-	}
-
 	// Run randomized simulation
 	simulation.SimulateFromSeed(
 		t, app.BaseApp, appStateFn, seed,
-		[]simulation.TestAndRunTx{
-			banksim.TestAndRunSingleInputMsgSend(app.accountMapper),
-			govsim.SimulateMsgSubmitProposal(app.govKeeper, app.stakeKeeper),
-			govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper),
-			govsim.SimulateMsgVote(app.govKeeper, app.stakeKeeper),
-			stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper),
-			stakesim.SimulateMsgEditValidator(app.stakeKeeper),
-			stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper),
-			stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper),
-			stakesim.SimulateMsgCompleteUnbonding(app.stakeKeeper),
-			stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper),
-			stakesim.SimulateMsgCompleteRedelegate(app.stakeKeeper),
-			slashingsim.SimulateMsgUnrevoke(app.slashingKeeper),
-		},
+		testAndRunTxs(app),
 		[]simulation.RandSetup{},
-		[]simulation.Invariant{
-			allInvariants,
-		},
+		invariants(app),
 		numBlocks,
 		blockSize,
 	)
@@ -142,37 +149,36 @@ func TestFullGaiaSimulation(t *testing.T) {
 //	panic: Stored pool should not have been nil
 // Change to `app.ExportAppStateAndValidators` once it is fixed
 func TestAppStateDeterminism(t *testing.T) {
-	numTimesToRun := 5
-	appHashList := make([]json.RawMessage, numTimesToRun)
-
-	seed := rand.Int63()
-	for i := 0; i < numTimesToRun; i++ {
-		logger := log.NewNopLogger()
-		db := dbm.NewMemDB()
-		app := NewGaiaApp(logger, db, nil)
-
-		noOpInvariant := func(t *testing.T, baseapp *baseapp.BaseApp, log string) {}
-		noOpTestAndRunTx := func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-			privKeys []crypto.PrivKey, log string, event func(string),
-		) (action string, err sdk.Error) {
-			return "", nil
-		}
-
-		// Run randomized simulation
-		simulation.SimulateFromSeed(
-			t, app.BaseApp, appStateFn, seed,
-			[]simulation.TestAndRunTx{
-				noOpTestAndRunTx,
-			},
-			[]simulation.RandSetup{},
-			[]simulation.Invariant{noOpInvariant},
-			0,
-			10,
-		)
-		appHash := app.LastCommitID().Hash
-		appHashList[i] = appHash
+	if !enabled {
+		t.Skip("Skipping Gaia simulation")
 	}
-	for i := 1; i < numTimesToRun; i++ {
-		require.Equal(t, appHashList[0], appHashList[i])
+
+	numSeeds := 5
+	numTimesToRunPerSeed := 5
+	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
+
+	for i := 0; i < numSeeds; i++ {
+		seed := rand.Int63()
+		for j := 0; j < numTimesToRunPerSeed; j++ {
+			logger := log.NewNopLogger()
+			db := dbm.NewMemDB()
+			app := NewGaiaApp(logger, db, nil)
+
+			// Run randomized simulation
+			simulation.SimulateFromSeed(
+				t, app.BaseApp, appStateFn, seed,
+				testAndRunTxs(app),
+				[]simulation.RandSetup{},
+				[]simulation.Invariant{},
+				10,
+				20,
+			)
+			appHash := app.LastCommitID().Hash
+			fmt.Printf(">>> APP HASH: %v, %X\n", appHash, appHash)
+			appHashList[j] = appHash
+		}
+		for i := 1; i < numTimesToRunPerSeed; i++ {
+			require.Equal(t, appHashList[0], appHashList[i])
+		}
 	}
 }

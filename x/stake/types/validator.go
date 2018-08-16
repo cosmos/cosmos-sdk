@@ -20,9 +20,9 @@ import (
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
 type Validator struct {
-	Owner   sdk.AccAddress `json:"owner"`   // sender of BondTx - UnbondTx returns here
-	PubKey  crypto.PubKey  `json:"pub_key"` // pubkey of validator
-	Revoked bool           `json:"revoked"` // has the validator been revoked from bonded status?
+	Operator sdk.AccAddress `json:"operator"` // sender of BondTx - UnbondTx returns here
+	PubKey   crypto.PubKey  `json:"pub_key"`  // pubkey of validator
+	Revoked  bool           `json:"revoked"`  // has the validator been revoked from bonded status?
 
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
 	Tokens          sdk.Dec        `json:"tokens"`           // delegated tokens (incl. self-delegation)
@@ -43,9 +43,9 @@ type Validator struct {
 }
 
 // NewValidator - initialize a new validator
-func NewValidator(owner sdk.AccAddress, pubKey crypto.PubKey, description Description) Validator {
+func NewValidator(operator sdk.AccAddress, pubKey crypto.PubKey, description Description) Validator {
 	return Validator{
-		Owner:                 owner,
+		Operator:              operator,
 		PubKey:                pubKey,
 		Revoked:               false,
 		Status:                sdk.Unbonded,
@@ -103,8 +103,8 @@ func MustMarshalValidator(cdc *wire.Codec, validator Validator) []byte {
 }
 
 // unmarshal a redelegation from a store key and value
-func MustUnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) Validator {
-	validator, err := UnmarshalValidator(cdc, ownerAddr, value)
+func MustUnmarshalValidator(cdc *wire.Codec, operatorAddr, value []byte) Validator {
+	validator, err := UnmarshalValidator(cdc, operatorAddr, value)
 	if err != nil {
 		panic(err)
 	}
@@ -113,8 +113,8 @@ func MustUnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) Validator 
 }
 
 // unmarshal a redelegation from a store key and value
-func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) (validator Validator, err error) {
-	if len(ownerAddr) != sdk.AddrLen {
+func UnmarshalValidator(cdc *wire.Codec, operatorAddr, value []byte) (validator Validator, err error) {
+	if len(operatorAddr) != sdk.AddrLen {
 		err = fmt.Errorf("%v", ErrBadValidatorAddr(DefaultCodespace).Data())
 		return
 	}
@@ -125,7 +125,7 @@ func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) (validator Val
 	}
 
 	return Validator{
-		Owner:                 ownerAddr,
+		Operator:              operatorAddr,
 		PubKey:                storeValue.PubKey,
 		Revoked:               storeValue.Revoked,
 		Tokens:                storeValue.Tokens,
@@ -144,7 +144,7 @@ func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) (validator Val
 }
 
 // HumanReadableString returns a human readable string representation of a
-// validator. An error is returned if the owner or the owner's public key
+// validator. An error is returned if the operator or the operator's public key
 // cannot be converted to Bech32 format.
 func (v Validator) HumanReadableString() (string, error) {
 	bechVal, err := sdk.Bech32ifyValPub(v.PubKey)
@@ -153,7 +153,7 @@ func (v Validator) HumanReadableString() (string, error) {
 	}
 
 	resp := "Validator \n"
-	resp += fmt.Sprintf("Owner: %s\n", v.Owner)
+	resp += fmt.Sprintf("Operator: %s\n", v.Operator)
 	resp += fmt.Sprintf("Validator: %s\n", bechVal)
 	resp += fmt.Sprintf("Revoked: %v\n", v.Revoked)
 	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
@@ -175,9 +175,9 @@ func (v Validator) HumanReadableString() (string, error) {
 
 // validator struct for bech output
 type BechValidator struct {
-	Owner   sdk.AccAddress `json:"owner"`   // in bech32
-	PubKey  string         `json:"pub_key"` // in bech32
-	Revoked bool           `json:"revoked"` // has the validator been revoked from bonded status?
+	Operator sdk.AccAddress `json:"operator"` // in bech32
+	PubKey   string         `json:"pub_key"`  // in bech32
+	Revoked  bool           `json:"revoked"`  // has the validator been revoked from bonded status?
 
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
 	Tokens          sdk.Dec        `json:"tokens"`           // delegated tokens (incl. self-delegation)
@@ -205,9 +205,9 @@ func (v Validator) Bech32Validator() (BechValidator, error) {
 	}
 
 	return BechValidator{
-		Owner:   v.Owner,
-		PubKey:  bechValPubkey,
-		Revoked: v.Revoked,
+		Operator: v.Operator,
+		PubKey:   bechValPubkey,
+		Revoked:  v.Revoked,
 
 		Status:          v.Status,
 		Tokens:          v.Tokens,
@@ -233,7 +233,7 @@ func (v Validator) Bech32Validator() (BechValidator, error) {
 // nolint gocyclo - why dis fail?
 func (v Validator) Equal(c2 Validator) bool {
 	return v.PubKey.Equals(c2.PubKey) &&
-		bytes.Equal(v.Owner, c2.Owner) &&
+		bytes.Equal(v.Operator, c2.Operator) &&
 		v.Status.Equal(c2.Status) &&
 		v.Tokens.Equal(c2.Tokens) &&
 		v.DelegatorShares.Equal(c2.DelegatorShares) &&
@@ -430,7 +430,7 @@ var _ sdk.Validator = Validator{}
 func (v Validator) GetRevoked() bool            { return v.Revoked }
 func (v Validator) GetMoniker() string          { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus   { return v.Status }
-func (v Validator) GetOwner() sdk.AccAddress    { return v.Owner }
+func (v Validator) GetOperator() sdk.AccAddress { return v.Operator }
 func (v Validator) GetPubKey() crypto.PubKey    { return v.PubKey }
 func (v Validator) GetPower() sdk.Dec           { return v.BondedTokens() }
 func (v Validator) GetTokens() sdk.Dec          { return v.Tokens }

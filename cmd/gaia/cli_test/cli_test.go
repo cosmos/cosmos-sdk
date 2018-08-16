@@ -131,7 +131,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.Equal(t, int64(8), barAcc.GetCoins().AmountOf("steak").Int64(), "%v", barAcc)
 
 	validator := executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %s --output=json %v", barAddr, flags))
-	require.Equal(t, validator.Owner, barAddr)
+	require.Equal(t, validator.Operator, barAddr)
 	require.True(sdk.DecEq(t, sdk.NewDec(2), validator.Tokens))
 
 	// unbond a single share

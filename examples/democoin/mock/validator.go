@@ -19,7 +19,7 @@ func (v Validator) GetStatus() sdk.BondStatus {
 }
 
 // Implements sdk.Validator
-func (v Validator) GetOwner() sdk.AccAddress {
+func (v Validator) GetOperator() sdk.AccAddress {
 	return v.Address
 }
 

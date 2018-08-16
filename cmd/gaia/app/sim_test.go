@@ -142,13 +142,8 @@ func TestFullGaiaSimulation(t *testing.T) {
 
 }
 
-// TODO: Make this not depend on Gaia or any of the modules,
-// and place it in random_simulation_test.go
-//
-// Test doesn't use `app.ExportAppStateAndValidators` as that panics with the following:
-// panic: Stored pool should not have been nil [recovered]
-//	panic: Stored pool should not have been nil
-// Change to `app.ExportAppStateAndValidators` once it is fixed
+// TODO: Make another test for the fuzzer itself, which just has noOp txs
+// and doesn't depend on gaia
 func TestAppStateDeterminism(t *testing.T) {
 	if !enabled {
 		t.Skip("Skipping Gaia simulation")
@@ -171,7 +166,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				testAndRunTxs(app),
 				[]simulation.RandSetup{},
 				[]simulation.Invariant{},
-				10,
+				20,
 				20,
 				true,
 			)

@@ -63,6 +63,7 @@ func TestGovWithRandomMessages(t *testing.T) {
 			setup,
 		}, []simulation.Invariant{
 			AllInvariants(),
-		}, 10, 100, false,
+		}, 10, 100,
+		false,
 	)
 }

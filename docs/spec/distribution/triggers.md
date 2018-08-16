@@ -6,7 +6,7 @@
 
 The pool of a new delegator bond will be 0 for the height at which the bond was
 added, or the withdrawal has taken place. This is achieved by setting
-`DelegatorDist.WithdrawalHeight` to the height of the triggering transaction. 
+`DelegatorDistInfo.WithdrawalHeight` to the height of the triggering transaction. 
 
 ## Commission rate change
  
@@ -23,4 +23,4 @@ Additionally the change and associated height must be recorded in a
 
 Whenever a validator is slashed or enters/leaves the validator group all of the
 validator entitled reward tokens must be simultaniously withdrawn from
-`Global.Pool` and added to `ValidatorDistribution.Pool` 
+`Global.Pool` and added to `ValidatorDistInfo.Pool` 

@@ -96,6 +96,8 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 // Called every block, process inflation, update validator set
 func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 
+	logger := ctx.Logger().With("module", "x/gov")
+
 	resTags = sdk.NewTags()
 
 	// Delete proposals that haven't met minDeposit
@@ -109,6 +111,9 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		keeper.DeleteProposal(ctx, inactiveProposal)
 		resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
+
+		logger.Info("Proposal %d - \"%s\" - didn't mean minimum deposit (had only %s), deleted",
+			inactiveProposal.GetProposalID(), inactiveProposal.GetTitle(), inactiveProposal.GetTotalDeposit())
 	}
 
 	// Check if earliest Active Proposal ended voting period yet
@@ -136,6 +141,9 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		activeProposal.SetTallyResult(tallyResults)
 		keeper.SetProposal(ctx, activeProposal)
 
+		logger.Info("Proposal %d - \"%s\" - tallied, passed: %v",
+			activeProposal.GetProposalID(), activeProposal.GetTitle(), passes)
+
 		for _, valAddr := range nonVotingVals {
 			val := keeper.ds.GetValidatorSet().Validator(ctx, valAddr)
 			keeper.ds.GetValidatorSet().Slash(ctx,
@@ -143,6 +151,9 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 				ctx.BlockHeight(),
 				val.GetPower().RoundInt64(),
 				keeper.GetTallyingProcedure(ctx).GovernancePenalty)
+
+			logger.Info("Validator %s failed to vote on proposal %d, slashing",
+				val.GetOwner(), activeProposal.GetProposalID())
 		}
 
 		resTags.AppendTag(tags.Action, action)

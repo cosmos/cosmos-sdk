@@ -66,6 +66,9 @@ FEATURES
      - Modules specify invariants and operations, preferably in an x/[module]/simulation package
      - Modules can test random combinations of their own operations
      - Applications can integrate operations and invariants from modules together for an integrated simulation
+     - Simulates Tendermint's algorithm for validator set updates
+     - Simulates validator signing/downtime with a Markov chain, and occaisional double-signatures
+     - Includes simulated operations & invariants for staking, slashing, governance, and bank modules
   - [store] \#1481 Add transient store
   - [baseapp] Initialize validator set on ResponseInitChain
   - [baseapp] added BaseApp.Seal - ability to seal baseapp parameters once they've been set

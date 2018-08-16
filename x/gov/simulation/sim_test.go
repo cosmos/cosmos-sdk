@@ -10,29 +10,34 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
-// TestStakeWithRandomMessages
-func TestStakeWithRandomMessages(t *testing.T) {
+// TestGovWithRandomMessages
+func TestGovWithRandomMessages(t *testing.T) {
 	mapp := mock.NewApp()
 
 	bank.RegisterWire(mapp.Cdc)
+	gov.RegisterWire(mapp.Cdc)
 	mapper := mapp.AccountMapper
 	coinKeeper := bank.NewKeeper(mapper)
 	stakeKey := sdk.NewKVStoreKey("stake")
 	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, coinKeeper, stake.DefaultCodespace)
-	mapp.Router().AddRoute("stake", stake.NewHandler(stakeKeeper))
+	paramKey := sdk.NewKVStoreKey("params")
+	paramKeeper := params.NewKeeper(mapp.Cdc, paramKey)
+	govKey := sdk.NewKVStoreKey("gov")
+	govKeeper := gov.NewKeeper(mapp.Cdc, govKey, paramKeeper.Setter(), coinKeeper, stakeKeeper, gov.DefaultCodespace)
+	mapp.Router().AddRoute("gov", gov.NewHandler(govKeeper))
 	mapp.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-		validatorUpdates := stake.EndBlocker(ctx, stakeKeeper)
-		return abci.ResponseEndBlock{
-			ValidatorUpdates: validatorUpdates,
-		}
+		gov.EndBlocker(ctx, govKeeper)
+		return abci.ResponseEndBlock{}
 	})
 
-	err := mapp.CompleteSetup([]*sdk.KVStoreKey{stakeKey})
+	err := mapp.CompleteSetup([]*sdk.KVStoreKey{stakeKey, paramKey, govKey})
 	if err != nil {
 		panic(err)
 	}
@@ -42,20 +47,22 @@ func TestStakeWithRandomMessages(t *testing.T) {
 		return json.RawMessage("{}")
 	}
 
+	setup := func(r *rand.Rand, privKeys []crypto.PrivKey) {
+		ctx := mapp.NewContext(false, abci.Header{})
+		stake.InitGenesis(ctx, stakeKeeper, stake.DefaultGenesisState())
+		gov.InitGenesis(ctx, govKeeper, gov.DefaultGenesisState())
+	}
+
 	simulation.Simulate(
 		t, mapp.BaseApp, appStateFn,
 		[]simulation.TestAndRunTx{
-			SimulateMsgCreateValidator(mapper, stakeKeeper),
-			SimulateMsgEditValidator(stakeKeeper),
-			SimulateMsgDelegate(mapper, stakeKeeper),
-			SimulateMsgBeginUnbonding(mapper, stakeKeeper),
-			SimulateMsgCompleteUnbonding(stakeKeeper),
-			SimulateMsgBeginRedelegate(mapper, stakeKeeper),
-			SimulateMsgCompleteRedelegate(stakeKeeper),
+			SimulateMsgSubmitProposal(govKeeper, stakeKeeper),
+			SimulateMsgDeposit(govKeeper, stakeKeeper),
+			SimulateMsgVote(govKeeper, stakeKeeper),
 		}, []simulation.RandSetup{
-			Setup(mapp, stakeKeeper),
+			setup,
 		}, []simulation.Invariant{
-			AllInvariants(coinKeeper, stakeKeeper, mapp.AccountMapper),
+			AllInvariants(),
 		}, 10, 100,
 	)
 }

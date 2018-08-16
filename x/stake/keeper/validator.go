@@ -421,6 +421,9 @@ func (k Keeper) UpdateBondedValidators(
 		if !validator.Revoked {
 			if validator.Status != sdk.Bonded {
 				validatorToBond = validator
+				if newValidatorBonded {
+					panic("already decided to bond a validator, can't bond another!")
+				}
 				newValidatorBonded = true
 			}
 
@@ -435,6 +438,10 @@ func (k Keeper) UpdateBondedValidators(
 	}
 
 	iterator.Close()
+
+	if newValidatorBonded && bytes.Equal(oldCliffValidatorAddr, validator.Owner) {
+		panic("cliff validator has not been changed, yet we bonded a new validator")
+	}
 
 	// clear or set the cliff validator
 	if bondedValidatorsCount == int(maxValidators) {
@@ -556,7 +563,7 @@ func (k Keeper) unbondValidator(ctx sdk.Context, validator types.Validator) type
 
 	// sanity check
 	if validator.Status == sdk.Unbonded {
-		panic(fmt.Sprintf("should not already be unbonded,  validator: %v\n", validator))
+		panic(fmt.Sprintf("should not already be unbonded, validator: %v\n", validator))
 	}
 
 	// set the status

@@ -33,7 +33,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 
 		// Manually set indexes for the first time
 		keeper.SetValidatorByPubKeyIndex(ctx, validator)
-
 		keeper.SetValidatorByPowerIndex(ctx, validator, data.Pool)
 
 		if validator.Status == sdk.Bonded {

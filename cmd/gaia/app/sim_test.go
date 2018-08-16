@@ -137,6 +137,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 		invariants(app),
 		numBlocks,
 		blockSize,
+		false,
 	)
 
 }
@@ -172,6 +173,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				[]simulation.Invariant{},
 				10,
 				20,
+				true,
 			)
 			appHash := app.LastCommitID().Hash
 			fmt.Printf(">>> APP HASH: %v, %X\n", appHash, appHash)

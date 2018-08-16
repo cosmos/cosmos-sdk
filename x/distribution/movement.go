@@ -17,7 +17,7 @@ func BurnFeeHandler(ctx sdk.Context, _ sdk.Tx, collectedFees sdk.Coins) {}
 
 //// calculate the proposer reward
 //precommitPower := k.GetTotalPrecommitVotingPower(ctx)
-//toProposer := coinsMulRat(collectedFees, (sdk.NewRat(1, 100).Add(sdk.NewRat(4, 100).Mul(precommitPower).Quo(pool.BondedShares))))
+//toProposer := coinsMulRat(collectedFees, (sdk.NewDec(1, 100).Add(sdk.NewDec(4, 100).Mul(precommitPower).Quo(pool.BondedShares))))
 //candidate.ProposerRewardPool = candidate.ProposerRewardPool.Plus(toProposer)
 
 //toReservePool := coinsMulRat(collectedFees, params.ReservePoolFee)
@@ -34,10 +34,10 @@ func BurnFeeHandler(ctx sdk.Context, _ sdk.Tx, collectedFees sdk.Coins) {}
 //k.setPool(ctx, pool)
 //}
 
-//func coinsMulRat(coins sdk.Coins, rat sdk.Rat) sdk.Coins {
+//func coinsMulRat(coins sdk.Coins, rat sdk.Dec) sdk.Coins {
 //var res sdk.Coins
 //for _, coin := range coins {
-//coinMulAmt := rat.Mul(sdk.NewRat(coin.Amount)).Evaluate()
+//coinMulAmt := rat.Mul(sdk.NewDec(coin.Amount)).Evaluate()
 //coinMul := sdk.Coins{{coin.Denom, coinMulAmt}}
 //res = res.Plus(coinMul)
 //}
@@ -49,14 +49,14 @@ func BurnFeeHandler(ctx sdk.Context, _ sdk.Tx, collectedFees sdk.Coins) {}
 //// calculate adjustment changes for a candidate at a height
 //func CalculateAdjustmentChange(candidate Candidate, pool Pool, denoms []string, height int64) (Candidate, Pool) {
 
-//heightRat := sdk.NewRat(height)
-//lastHeightRat := sdk.NewRat(height - 1)
+//heightRat := sdk.NewDec(height)
+//lastHeightRat := sdk.NewDec(height - 1)
 //candidateFeeCount := candidate.BondedShares.Mul(heightRat)
 //poolFeeCount := pool.BondedShares.Mul(heightRat)
 
 //for i, denom := range denoms {
-//poolFeeSumReceived := sdk.NewRat(pool.FeeSumReceived.AmountOf(denom))
-//poolFeeRecent := sdk.NewRat(pool.FeeRecent.AmountOf(denom))
+//poolFeeSumReceived := sdk.NewDec(pool.FeeSumReceived.AmountOf(denom))
+//poolFeeRecent := sdk.NewDec(pool.FeeRecent.AmountOf(denom))
 //// calculate simple and projected pools
 //simplePool := candidateFeeCount.Quo(poolFeeCount).Mul(poolFeeSumReceived)
 //calc1 := candidate.PrevBondedShares.Mul(lastHeightRat).Quo(pool.PrevBondedShares.Mul(lastHeightRat)).Mul(poolFeeRecent)

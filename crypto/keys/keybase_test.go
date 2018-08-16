@@ -146,7 +146,7 @@ func TestSignVerify(t *testing.T) {
 	cases := []struct {
 		key   crypto.PubKey
 		data  []byte
-		sig   crypto.Signature
+		sig   []byte
 		valid bool
 	}{
 		// proper matches

@@ -48,7 +48,7 @@ func appStateFn(r *rand.Rand, accs []sdk.AccAddress) json.RawMessage {
 
 	// Default genesis state
 	stakeGenesis := stake.DefaultGenesisState()
-	stakeGenesis.Pool.LooseTokens = sdk.NewRat(1000)
+	stakeGenesis.Pool.LooseTokens = sdk.NewDec(1000)
 	genesis := GenesisState{
 		Accounts:  genesisAccounts,
 		StakeData: stakeGenesis,

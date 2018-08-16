@@ -7,20 +7,20 @@ import (
 // validatorGovInfo used for tallying
 type validatorGovInfo struct {
 	Address         sdk.AccAddress // sdk.AccAddress of the validator owner
-	Power           sdk.Rat        // Power of a Validator
-	DelegatorShares sdk.Rat        // Total outstanding delegator shares
-	Minus           sdk.Rat        // Minus of validator, used to compute validator's voting power
+	Power           sdk.Dec        // Power of a Validator
+	DelegatorShares sdk.Dec        // Total outstanding delegator shares
+	Minus           sdk.Dec        // Minus of validator, used to compute validator's voting power
 	Vote            VoteOption     // Vote of the validator
 }
 
 func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tallyResults TallyResult, nonVoting []sdk.AccAddress) {
-	results := make(map[VoteOption]sdk.Rat)
-	results[OptionYes] = sdk.ZeroRat()
-	results[OptionAbstain] = sdk.ZeroRat()
-	results[OptionNo] = sdk.ZeroRat()
-	results[OptionNoWithVeto] = sdk.ZeroRat()
+	results := make(map[VoteOption]sdk.Dec)
+	results[OptionYes] = sdk.ZeroDec()
+	results[OptionAbstain] = sdk.ZeroDec()
+	results[OptionNo] = sdk.ZeroDec()
+	results[OptionNoWithVeto] = sdk.ZeroDec()
 
-	totalVotingPower := sdk.ZeroRat()
+	totalVotingPower := sdk.ZeroDec()
 	currValidators := make(map[string]validatorGovInfo)
 
 	keeper.vs.IterateValidatorsBonded(ctx, func(index int64, validator sdk.Validator) (stop bool) {
@@ -28,7 +28,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 			Address:         validator.GetOwner(),
 			Power:           validator.GetPower(),
 			DelegatorShares: validator.GetDelegatorShares(),
-			Minus:           sdk.ZeroRat(),
+			Minus:           sdk.ZeroDec(),
 			Vote:            OptionEmpty,
 		}
 		return false
@@ -91,7 +91,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 	}
 
 	// If no one votes, proposal fails
-	if totalVotingPower.Sub(results[OptionAbstain]).Equal(sdk.ZeroRat()) {
+	if totalVotingPower.Sub(results[OptionAbstain]).Equal(sdk.ZeroDec()) {
 		return false, tallyResults, nonVoting
 	}
 	// If more than 1/3 of voters veto, proposal fails

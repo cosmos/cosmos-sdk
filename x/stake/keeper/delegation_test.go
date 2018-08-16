@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -31,7 +32,7 @@ func TestDelegation(t *testing.T) {
 	bond1to1 := types.Delegation{
 		DelegatorAddr: addrDels[0],
 		ValidatorAddr: addrVals[0],
-		Shares:        sdk.NewRat(9),
+		Shares:        sdk.NewDec(9),
 	}
 
 	// check the empty keeper first
@@ -45,18 +46,18 @@ func TestDelegation(t *testing.T) {
 	require.True(t, bond1to1.Equal(resBond))
 
 	// modify a records, save, and retrieve
-	bond1to1.Shares = sdk.NewRat(99)
+	bond1to1.Shares = sdk.NewDec(99)
 	keeper.SetDelegation(ctx, bond1to1)
 	resBond, found = keeper.GetDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
 	require.True(t, bond1to1.Equal(resBond))
 
 	// add some more records
-	bond1to2 := types.Delegation{addrDels[0], addrVals[1], sdk.NewRat(9), 0}
-	bond1to3 := types.Delegation{addrDels[0], addrVals[2], sdk.NewRat(9), 1}
-	bond2to1 := types.Delegation{addrDels[1], addrVals[0], sdk.NewRat(9), 2}
-	bond2to2 := types.Delegation{addrDels[1], addrVals[1], sdk.NewRat(9), 3}
-	bond2to3 := types.Delegation{addrDels[1], addrVals[2], sdk.NewRat(9), 4}
+	bond1to2 := types.Delegation{addrDels[0], addrVals[1], sdk.NewDec(9), 0}
+	bond1to3 := types.Delegation{addrDels[0], addrVals[2], sdk.NewDec(9), 1}
+	bond2to1 := types.Delegation{addrDels[1], addrVals[0], sdk.NewDec(9), 2}
+	bond2to2 := types.Delegation{addrDels[1], addrVals[1], sdk.NewDec(9), 3}
+	bond2to3 := types.Delegation{addrDels[1], addrVals[2], sdk.NewDec(9), 4}
 	keeper.SetDelegation(ctx, bond1to2)
 	keeper.SetDelegation(ctx, bond1to3)
 	keeper.SetDelegation(ctx, bond2to1)
@@ -115,7 +116,7 @@ func TestUnbondingDelegation(t *testing.T) {
 		DelegatorAddr:  addrDels[0],
 		ValidatorAddr:  addrVals[0],
 		CreationHeight: 0,
-		MinTime:        0,
+		MinTime:        time.Unix(0, 0),
 		Balance:        sdk.NewInt64Coin("steak", 5),
 	}
 
@@ -141,7 +142,7 @@ func TestUnbondingDelegation(t *testing.T) {
 func TestUnbondDelegation(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
-	pool.LooseTokens = sdk.NewRat(10)
+	pool.LooseTokens = sdk.NewDec(10)
 
 	//create a validator and a delegator to that validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -162,8 +163,8 @@ func TestUnbondDelegation(t *testing.T) {
 	keeper.SetDelegation(ctx, delegation)
 
 	var err error
-	var amount sdk.Rat
-	amount, err = keeper.unbond(ctx, addrDels[0], addrVals[0], sdk.NewRat(6))
+	var amount sdk.Dec
+	amount, err = keeper.unbond(ctx, addrDels[0], addrVals[0], sdk.NewDec(6))
 	require.NoError(t, err)
 	require.Equal(t, int64(6), amount.RoundInt64()) // shares to be added to an unbonding delegation / redelegation
 
@@ -188,9 +189,9 @@ func TestGetRedelegationsFromValidator(t *testing.T) {
 		ValidatorSrcAddr: addrVals[0],
 		ValidatorDstAddr: addrVals[1],
 		CreationHeight:   0,
-		MinTime:          0,
-		SharesSrc:        sdk.NewRat(5),
-		SharesDst:        sdk.NewRat(5),
+		MinTime:          time.Unix(0, 0),
+		SharesSrc:        sdk.NewDec(5),
+		SharesDst:        sdk.NewDec(5),
 	}
 
 	// set and retrieve a record
@@ -218,9 +219,9 @@ func TestRedelegation(t *testing.T) {
 		ValidatorSrcAddr: addrVals[0],
 		ValidatorDstAddr: addrVals[1],
 		CreationHeight:   0,
-		MinTime:          0,
-		SharesSrc:        sdk.NewRat(5),
-		SharesDst:        sdk.NewRat(5),
+		MinTime:          time.Unix(0, 0),
+		SharesSrc:        sdk.NewDec(5),
+		SharesDst:        sdk.NewDec(5),
 	}
 
 	// test shouldn't have and redelegations
@@ -241,8 +242,8 @@ func TestRedelegation(t *testing.T) {
 	require.True(t, has)
 
 	// modify a records, save, and retrieve
-	rd.SharesSrc = sdk.NewRat(21)
-	rd.SharesDst = sdk.NewRat(21)
+	rd.SharesSrc = sdk.NewDec(21)
+	rd.SharesDst = sdk.NewDec(21)
 	keeper.SetRedelegation(ctx, rd)
 
 	resBond, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])

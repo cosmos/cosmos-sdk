@@ -14,9 +14,14 @@ type prefixStore struct {
 	prefix []byte
 }
 
+func clone(bz []byte) (res []byte) {
+	res = make([]byte, len(bz))
+	copy(res, bz)
+	return
+}
+
 func (s prefixStore) key(key []byte) (res []byte) {
-	res = make([]byte, len(s.prefix))
-	copy(res, s.prefix)
+	res = clone(s.prefix)
 	res = append(res, key...)
 	return
 }
@@ -69,15 +74,14 @@ func (s prefixStore) Gas(meter GasMeter, config GasConfig) KVStore {
 
 // Implements KVStore
 func (s prefixStore) Iterator(start, end []byte) Iterator {
-	newstart := make([]byte, len(s.prefix))
-	copy(newstart, s.prefix)
+	newstart := clone(s.prefix)
 	newstart = append(newstart, start...)
 
-	newend := make([]byte, len(s.prefix))
+	var newend []byte
 	if end == nil {
 		newend = sdk.PrefixEndBytes(s.prefix)
 	} else {
-		copy(newend, s.prefix)
+		newend = clone(s.prefix)
 		newend = append(newend, end...)
 	}
 

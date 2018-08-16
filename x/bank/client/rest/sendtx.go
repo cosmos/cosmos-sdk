@@ -13,6 +13,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/client"
 
 	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"encoding/base64"
+	"github.com/cosmos/cosmos-sdk/client/utils"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	"errors"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
@@ -30,6 +36,26 @@ type sendBody struct {
 	AccountNumber    int64     `json:"account_number"`
 	Sequence         int64     `json:"sequence"`
 	Gas              int64     `json:"gas"`
+	Fee				 string    `json:"fee"`
+}
+
+type transferBody struct {
+	ChainID         string  `json:"chain_id"`
+	FromAddress		string	`json:"from_address"`
+	ToAddress		string	`json:"to_address"`
+	Amount			sdk.Int `json:"amount"`
+	Denomination 	string 	`json:"denomination"`
+	AccountNumber	int64	`json:"account_number"`
+	Sequence		int64	`json:"sequence"`
+	EnsureAccAndSeq bool 	`json:"ensure_account_sequence"`
+	Gas				int64	`json:"gas"`
+	Fee				string  `json:"fee"`
+}
+
+type signedBody struct {
+	TransferBody	transferBody	`json:"transfer_body"`
+	Signature		[]byte			`json:"signature_list"`
+	PublicKey		[]byte			`json:"public_key_list"`
 }
 
 var msgCdc = wire.NewCodec()
@@ -84,6 +110,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 		txCtx := authctx.TxContext{
 			Codec:         cdc,
 			Gas:           m.Gas,
+			Fee:           m.Fee,
 			ChainID:       m.ChainID,
 			AccountNumber: m.AccountNumber,
 			Sequence:      m.Sequence,
@@ -111,5 +138,207 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 		}
 
 		w.Write(output)
+	}
+}
+
+func RegisterLCDRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext, cdc *wire.Codec, kb keys.Keybase) {
+	routerGroup.POST("/accounts/:address/send", SendRequestFn(cdc, ctx, kb))
+	routerGroup.POST("/create_transfer", CreateTransferTxForSignFn(cdc, ctx))
+	routerGroup.POST("/signed_transfer", ComposeAndBroadcastSignedTransferTxFn(cdc, ctx))
+}
+
+func composeTx(cdc *wire.Codec, ctx context.CLIContext, transferBody transferBody) (auth.StdSignMsg, authctx.TxContext, sdk.Error) {
+
+	emptyMsg := auth.StdSignMsg{}
+	emptyTxContext := authctx.TxContext{}
+
+	amount := sdk.NewCoin(transferBody.Denomination, transferBody.Amount)
+	var amounts sdk.Coins
+	amounts = append(amounts, amount)
+
+	fromAddress, err := sdk.AccAddressFromBech32(transferBody.FromAddress)
+	if err != nil {
+		return emptyMsg, emptyTxContext, sdk.ErrInvalidAddress(err.Error())
+	}
+
+	toAddress, err := sdk.AccAddressFromBech32(transferBody.ToAddress)
+	if err != nil {
+		return emptyMsg, emptyTxContext, sdk.ErrInvalidAddress(err.Error())
+	}
+
+	// build message
+	msg := client.BuildMsg(fromAddress, toAddress, amounts)
+
+	accountNumber := transferBody.AccountNumber
+	sequence := transferBody.Sequence
+	gas := transferBody.Gas
+	fee := transferBody.Fee
+
+	if transferBody.EnsureAccAndSeq {
+		if ctx.AccDecoder == nil {
+			ctx = ctx.WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
+		}
+		accountNumber, err = ctx.GetAccountNumber(fromAddress)
+		if err != nil {
+			return emptyMsg, emptyTxContext, sdk.ErrInternal(err.Error())
+		}
+
+		sequence, err = ctx.GetAccountSequence(fromAddress)
+		if err != nil {
+			return emptyMsg, emptyTxContext, sdk.ErrInternal(err.Error())
+		}
+	}
+
+	txCtx := authctx.TxContext{
+		Codec:         cdc,
+		Gas:           gas,
+		Fee:           fee,
+		ChainID:       transferBody.ChainID,
+		AccountNumber: accountNumber,
+		Sequence:      sequence,
+	}
+
+	txForSign, err := txCtx.Build([]sdk.Msg{msg})
+	if err != nil {
+		return emptyMsg, emptyTxContext, sdk.ErrInternal(err.Error())
+	}
+
+	return txForSign, txCtx, nil
+}
+
+func CreateTransferTxForSignFn(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFunc {
+	return func(gtx *gin.Context) {
+		var transferBody transferBody
+		if err := gtx.BindJSON(&transferBody); err != nil {
+			utils.NewError(gtx, http.StatusBadRequest, err)
+			return
+		}
+
+		txForSign, _, err := composeTx(cdc, ctx, transferBody)
+		if err != nil {
+			if err.Code() == sdk.CodeInternal {
+				utils.NewError(gtx, http.StatusInternalServerError, err)
+			} else {
+				utils.NewError(gtx, http.StatusBadRequest, err)
+			}
+			return
+		}
+
+		base64TxData := make([]byte, base64.StdEncoding.EncodedLen(len(txForSign.Bytes())))
+		base64.StdEncoding.Encode(base64TxData,txForSign.Bytes())
+
+		utils.Response(gtx,string(base64TxData))
+	}
+}
+
+func ComposeAndBroadcastSignedTransferTxFn(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFunc {
+	return func(gtx *gin.Context) {
+		var signedTransaction signedBody
+		if err := gtx.BindJSON(&signedTransaction); err != nil {
+			utils.NewError(gtx, http.StatusBadRequest, err)
+			return
+		}
+
+		if signedTransaction.Signature == nil || signedTransaction.PublicKey == nil {
+			utils.NewError(gtx, http.StatusBadRequest, errors.New("signature or public key is empty"))
+			return
+		}
+
+		signature, err := base64.StdEncoding.DecodeString(string(signedTransaction.Signature))
+		if err != nil {
+			utils.NewError(gtx, http.StatusBadRequest, err)
+			return
+		}
+		publicKey, err := base64.StdEncoding.DecodeString(string(signedTransaction.PublicKey))
+		if err != nil {
+			utils.NewError(gtx, http.StatusBadRequest, err)
+			return
+		}
+
+		txForSign, txCtx, errMsg := composeTx(cdc, ctx, signedTransaction.TransferBody)
+		if errMsg != nil {
+			if errMsg.Code() == sdk.CodeInternal {
+				utils.NewError(gtx, http.StatusInternalServerError, errMsg)
+			} else {
+				utils.NewError(gtx, http.StatusBadRequest, errMsg)
+			}
+		}
+
+		txDataForBroadcast, err := txCtx.BuildTxWithSignature(cdc, txForSign, signature, publicKey)
+		if err != nil {
+			utils.NewError(gtx, http.StatusInternalServerError, err)
+			return
+		}
+
+		res, err := ctx.BroadcastTx(txDataForBroadcast)
+		if err != nil {
+			utils.NewError(gtx, http.StatusInternalServerError, err)
+			return
+		}
+
+		utils.Response(gtx,res)
+	}
+}
+
+func SendRequestFn(cdc *wire.Codec, ctx context.CLIContext, kb keys.Keybase) gin.HandlerFunc {
+	return func(gtx *gin.Context) {
+
+		bech32addr := gtx.Param("address")
+
+		address, err := sdk.AccAddressFromBech32(bech32addr)
+		if err != nil {
+			utils.NewError(gtx, http.StatusBadRequest, err)
+			return
+		}
+
+		var m sendBody
+		if err := gtx.BindJSON(&m); err != nil {
+			utils.NewError(gtx, http.StatusBadRequest, err)
+			return
+		}
+
+		info, err := kb.Get(m.LocalAccountName)
+		if err != nil {
+			utils.NewError(gtx, http.StatusUnauthorized, err)
+			return
+		}
+
+		from := sdk.AccAddress(info.GetPubKey().Address())
+
+		to, err := sdk.AccAddressFromBech32(address.String())
+		if err != nil {
+			utils.NewError(gtx, http.StatusBadRequest, err)
+			return
+		}
+
+		// build message
+		msg := client.BuildMsg(from, to, m.Amount)
+		if err != nil { // XXX rechecking same error ?
+			utils.NewError(gtx, http.StatusInternalServerError, err)
+			return
+		}
+
+		txCtx := authctx.TxContext{
+			Codec:         cdc,
+			Gas:           m.Gas,
+			Fee:           m.Fee,
+			ChainID:       m.ChainID,
+			AccountNumber: m.AccountNumber,
+			Sequence:      m.Sequence,
+		}
+
+		txBytes, err := txCtx.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
+		if err != nil {
+			utils.NewError(gtx, http.StatusUnauthorized, err)
+			return
+		}
+
+		res, err := ctx.BroadcastTx(txBytes)
+		if err != nil {
+			utils.NewError(gtx, http.StatusInternalServerError, err)
+			return
+		}
+
+		utils.Response(gtx,res)
 	}
 }

@@ -71,6 +71,7 @@ func main() {
 		tendermintCmd,
 		ibcCmd,
 		lcd.ServeCommand(cdc),
+		lcd.ServeSwaggerCommand(cdc),
 	)
 	rootCmd.AddCommand(
 		advancedCmd,

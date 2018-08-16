@@ -7,7 +7,7 @@
 The current annual inflation rate.
 
 ```golang
-type Inflation sdk.Rat 
+type Inflation sdk.Dec 
 ```
 
 ### InflationLastTime

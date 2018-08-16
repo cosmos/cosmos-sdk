@@ -3,3 +3,8 @@
 - name: restart datadog-agent
   service: name=datadog-agent state=restarted
 
+- name: restart rsyslog
+  service: name=rsyslog state=restarted
+
+- name: restart journald
+  service: name=systemd-journald state=restarted

@@ -199,7 +199,7 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 
 // Sign signs the msg with the named key.
 // It returns an error if the key doesn't exist or the decryption fails.
-func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig tmcrypto.Signature, pub tmcrypto.PubKey, err error) {
+func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub tmcrypto.PubKey, err error) {
 	info, err := kb.Get(name)
 	if err != nil {
 		return

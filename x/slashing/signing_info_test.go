@@ -2,6 +2,7 @@ package slashing
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -15,7 +16,7 @@ func TestGetSetValidatorSigningInfo(t *testing.T) {
 	newInfo := ValidatorSigningInfo{
 		StartHeight:         int64(4),
 		IndexOffset:         int64(3),
-		JailedUntil:         int64(2),
+		JailedUntil:         time.Unix(2, 0),
 		SignedBlocksCounter: int64(10),
 	}
 	keeper.setValidatorSigningInfo(ctx, sdk.ValAddress(addrs[0]), newInfo)
@@ -23,7 +24,7 @@ func TestGetSetValidatorSigningInfo(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, info.StartHeight, int64(4))
 	require.Equal(t, info.IndexOffset, int64(3))
-	require.Equal(t, info.JailedUntil, int64(2))
+	require.Equal(t, info.JailedUntil, time.Unix(2, 0).UTC())
 	require.Equal(t, info.SignedBlocksCounter, int64(10))
 }
 

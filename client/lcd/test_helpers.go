@@ -173,7 +173,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		accAuth.Coins = sdk.Coins{sdk.NewInt64Coin("steak", 100)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)
-		genesisState.StakeData.Pool.LooseTokens = genesisState.StakeData.Pool.LooseTokens.Add(sdk.NewRat(100))
+		genesisState.StakeData.Pool.LooseTokens = genesisState.StakeData.Pool.LooseTokens.Add(sdk.NewDec(100))
 	}
 
 	appState, err := wire.MarshalJSONIndent(cdc, genesisState)
@@ -223,7 +223,7 @@ func startTM(
 		proxy.NewLocalClientCreator(app),
 		genDocProvider,
 		dbProvider,
-		nm.DefaultMetricsProvider,
+		nm.DefaultMetricsProvider(tmcfg.Instrumentation),
 		logger.With("module", "node"),
 	)
 	if err != nil {

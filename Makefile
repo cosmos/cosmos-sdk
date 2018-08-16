@@ -5,6 +5,7 @@ BUILD_TAGS = netgo ledger
 BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
 GCC := $(shell command -v gcc 2> /dev/null)
 LEDGER_ENABLED ?= true
+UNAME_S := $(shell uname -s)
 all: get_tools get_vendor_deps install install_examples install_cosmos-sdk-cli test_lint test
 
 ########################################
@@ -17,12 +18,18 @@ ci: get_tools get_vendor_deps install test_cover test_lint test
 
 check-ledger: 
 ifeq ($(LEDGER_ENABLED),true)
-ifndef GCC
-$(error "gcc not installed for ledger support, please install")
-endif
+   	ifeq ($(UNAME_S),OpenBSD)
+   		$(info "OpenBSD detected, disabling ledger support (https://github.com/cosmos/cosmos-sdk/issues/1988)")
+   	   	TMP_BUILD_TAGS := $(BUILD_TAGS)
+   	   	BUILD_TAGS = $(filter-out ledger, $(TMP_BUILD_TAGS))
+   	else
+   	   	ifndef GCC
+   	   	   $(error "gcc not installed for ledger support, please install or set LEDGER_ENABLED to false in the Makefile")
+   	   	endif
+   	endif
 else
-TMP_BUILD_TAGS := $(BUILD_TAGS)
-BUILD_TAGS = $(filter-out ledger, $(TMP_BUILD_TAGS))
+	TMP_BUILD_TAGS := $(BUILD_TAGS)
+	BUILD_TAGS = $(filter-out ledger, $(TMP_BUILD_TAGS))
 endif
 
 build: check-ledger
@@ -100,6 +107,7 @@ get_dev_tools:
 
 get_vendor_deps:
 	@echo "--> Running dep ensure"
+	@rm -rf .vendor-new
 	@dep ensure -v
 
 draw_deps:

@@ -57,7 +57,7 @@
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  version = "=v0.22.6"
+  version = "=v0.23.0"
 
 [[constraint]]
   name = "github.com/bartekn/go-bip39"
@@ -65,7 +65,7 @@
 
 [[constraint]]
   name = "github.com/zondax/ledger-goclient"
-  revision = "39ba4728c137c75718a21f9b4b3280fa31b9139b"
+  revision = "4296ee5701e945f9b3a7dbe51f402e0b9be57259"
 
 [prune]
   go-tests = true

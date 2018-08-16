@@ -34,8 +34,6 @@ IMPROVEMENTS
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
-    * [ci] [#2057](https://github.com/cosmos/cosmos-sdk/pull/2057) Run `make localnet-start` on every commit and ensure network reaches at least 10 blocks
-
 
 * SDK
 

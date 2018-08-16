@@ -29,20 +29,20 @@ type VestingAccount interface {
 // Continuously vests by unlocking coins linearly with respect to time
 type ContinuousVestingAccount struct {
     BaseAccount
-    OriginalCoins sdk.Coins // Coins in account on Initialization
-    ReceivedCoins sdk.Coins // Coins received from other accounts
-    SentCoins     sdk.Coins // Coins sent to other accounts
+    OriginalVestingCoins sdk.Coins // Coins in account on Initialization
+    ReceivedCoins        sdk.Coins // Coins received from other accounts
+    SentCoins            sdk.Coins // Coins sent to other accounts
 
     // StartTime and EndTime used to calculate how much of OriginalCoins is unlocked at any given point
-    StartTime     time.Time
-    EndTime       time.Time
+    StartTime time.Time
+    EndTime   time.Time
 }
 
 // Uses time in context to calculate total unlocked coins
 SendableCoins(vacc ContinuousVestingAccount, ctx sdk.Context) sdk.Coins:
     
     // Coins unlocked by vesting schedule
-    unlockedCoins := ReceivedCoins - SentCoins + OriginalCoins * (Now - StartTime) / (EndTime - StartTime)
+    unlockedCoins := ReceivedCoins - SentCoins + OriginalVestingCoins * (Now - StartTime) / (EndTime - StartTime)
 
     // Must still check for currentCoins constraint since some unlocked coins may have been delegated.
     currentCoins := vacc.BaseAccount.GetCoins()
@@ -60,11 +60,11 @@ vacc, ok := acc.(VestingAccount); ok
 
 as well as to calculate the SendableCoins at any given moment.
 
-The `ContinuousVestingAccount` struct implements the Vesting account interface. It uses `OriginalCoins`, `ReceivedCoins`, 
+The `ContinuousVestingAccount` struct implements the Vesting account interface. It uses `OriginalVestingCoins`, `ReceivedCoins`, 
 `SentCoins`, `StartTime`, and `EndTime` to calculate how many coins are sendable at any given point. 
 Since the vesting restrictions need to be implemented on a per-module basis, the `ContinuousVestingAccount` implements 
 the `Account` interface exactly like `BaseAccount`. Thus, `ContinuousVestingAccount.GetCoins()` will return the total of 
-both locked coins and unlocked coins currently in the account.
+both locked coins and unlocked coins currently in the account. Delegated coins are deducted from `Account.GetCoins()`, but do not count against unlocked coins because they are still at stake and will be reinstated (partially if slashed) after waiting the full unbonding period.
 
 ##### Changes to Keepers/Handler
 
@@ -93,8 +93,8 @@ immediately after receiving them. Thus, handlers (like staking or bank) that sen
 originally own should increment `ReceivedCoins` by the amount sent.
 Unlocked coins that are sent to other accounts will increment the vesting account's `SentCoins` attribute.
 
-CONTRACT: Handlers SHOULD NOT update `ReceivedCoins` if they were originally sent from the vesting account. For example, if a vesting account unbonds from a validator, their tokens should be added back to account but `ReceivedCoins` SHOULD NOT be incremented.
-However when the staking handler is handing out fees/inflation rewards or a user sends coins to vesting account, then `ReceivedCoins` SHOULD be incremented.
+CONTRACT: Handlers SHOULD NOT update `ReceivedCoins` if they were originally sent from the vesting account. For example, if a vesting account unbonds from a validator, their tokens should be added back to account but staking handlers SHOULD NOT update `ReceivedCoins`.
+However when a user sends coins to vesting account, then `ReceivedCoins` SHOULD be incremented.
 
 ### Initializing at Genesis
 
@@ -117,10 +117,10 @@ initChainer:
         }
         if gacc.EndTime != 0:
             vestingAccount := ContinuouslyVestingAccount{
-                BaseAccount:   baseAccount,
-                OriginalCoins: gacc.GenesisCoins,
-                StartTime:     RequestInitChain.Time,
-                EndTime:       gacc.EndTime,
+                BaseAccount:          baseAccount,
+                OriginalVestingCoins: gacc.GenesisCoins,
+                StartTime:            RequestInitChain.Time,
+                EndTime:              gacc.EndTime,
             }
             AddAccountToState(vestingAccount)
         else:
@@ -130,7 +130,7 @@ initChainer:
 
 ### Formulas
 
-`OriginalCoins`: Amount of coins in account at Genesis
+`OriginalVestingCoins`: Amount of coins in account at Genesis
 
 `CurrentCoins`: Coins currently in the baseaccount (both locked and unlocked: `vestingAccount.GetCoins`)
 
@@ -144,16 +144,16 @@ initChainer:
 
 Maximum amount of coins vesting schedule allows to be sent:
 
-`ReceivedCoins - SentCoins + OriginalCoins * (Now - StartTime) / (EndTime - StartTime)`
+`ReceivedCoins - SentCoins + OriginalVestingCoins * (Now - StartTime) / (EndTime - StartTime)`
 
-`ReceivedCoins - SentCoins + OriginalCoins - LockedCoins`
+`ReceivedCoins - SentCoins + OriginalVestingCoins - LockedCoins`
 
 Coins currently in Account:
 
-`CurrentCoins = OriginalCoins + ReceivedCoins - Delegated - Sent`
+`CurrentCoins = OriginalVestingCoins + ReceivedCoins - Delegated - Sent`
 
 `CurrentCoins = vestingAccount.GetCoins()`
 
 **Maximum amount of coins spendable right now:**
 
-`min( ReceivedCoins - SentCoins + OriginalCoins - LockedCoins, CurrentCoins )`
+`min( ReceivedCoins - SentCoins + OriginalVestingCoins - LockedCoins, CurrentCoins )`

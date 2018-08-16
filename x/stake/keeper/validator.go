@@ -370,6 +370,13 @@ func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidato
 	return valPower
 }
 
+func printValidator(v types.Validator) string {
+	return fmt.Sprintf("(moniker: %s, power: %d, tokens: %s, status: %s, revoked: %v)\n",
+		v.GetMoniker(), v.GetPower().RoundInt64(), v.GetTokens().FloatString(),
+		sdk.BondStatusToString(v.Status), v.Revoked,
+	)
+}
+
 // Update the bonded validator group based on a change to the validator
 // affectedValidator. This function potentially adds the affectedValidator to
 // the bonded validator group which kicks out the cliff validator. Under this
@@ -388,7 +395,7 @@ func (k Keeper) UpdateBondedValidators(
 	ctx sdk.Context, affectedValidator types.Validator) (
 	updatedVal types.Validator, updated bool) {
 
-	fmt.Printf("\nUpdateBondedValidators with validator %v\n", affectedValidator)
+	fmt.Printf("\nUpdateBondedValidators with validator: %s\n", printValidator(affectedValidator))
 
 	store := ctx.KVStore(k.storeKey)
 
@@ -398,7 +405,13 @@ func (k Keeper) UpdateBondedValidators(
 	var validator, validatorToBond types.Validator
 	newValidatorBonded := false
 
+	oldCliff, ok := k.GetValidator(ctx, oldCliffValidatorAddr)
+	if ok {
+		fmt.Println("CURRENT CLIFF:", printValidator(oldCliff))
+	}
+
 	// create a validator iterator ranging from largest to smallest by power
+	fmt.Println("######################## START POWER ITERATION ########################")
 	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
 	for {
 		if !iterator.Valid() || bondedValidatorsCount > int(maxValidators-1) {
@@ -419,6 +432,8 @@ func (k Keeper) UpdateBondedValidators(
 			}
 		}
 
+		fmt.Println("CURRENT VALIDATOR IN ITERATION:", printValidator(validator))
+
 		// increment bondedValidatorsCount / get the validator to bond
 		if !validator.Revoked {
 			if validator.Status != sdk.Bonded {
@@ -427,7 +442,7 @@ func (k Keeper) UpdateBondedValidators(
 					panic("already decided to bond a validator, can't bond another!")
 				}
 				newValidatorBonded = true
-				fmt.Printf("Deciding to bond: %v\n", validator)
+				fmt.Printf("Deciding to bond: %s\n", printValidator(validator))
 			}
 
 			bondedValidatorsCount++
@@ -441,9 +456,10 @@ func (k Keeper) UpdateBondedValidators(
 	}
 
 	iterator.Close()
+	fmt.Println("######################## END POWER ITERATION ########################")
 
 	if newValidatorBonded && bytes.Equal(oldCliffValidatorAddr, validator.Owner) {
-		fmt.Printf("Validator: %v\n", validator)
+		fmt.Printf("Validator: %v\n", printValidator(validator))
 		fmt.Printf("Old cliff validator: %X\n", oldCliffValidatorAddr)
 		fmt.Printf("Bonded validators count: %d of max %d\n", bondedValidatorsCount, maxValidators)
 		panic("cliff validator has not been changed, yet we bonded a new validator")

@@ -218,7 +218,7 @@ workflows:
       - test_sim_modules:
           requires:
             - setup_dependencies
-      - test_sim_nondeterminism:
+      - test_sim_gaia_nondeterminism:
           requires:
             - setup_dependencies
       - test_sim_gaia_fast:

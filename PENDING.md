@@ -5,7 +5,20 @@ BREAKING CHANGES
 * Update to tendermint v0.23.0. This involves removing crypto.Pubkey,
 maintaining a validator address to pubkey map, and using time.Time instead of int64 for time. [SDK PR](https://github.com/cosmos/cosmos-sdk/pull/1927)
 
+<<<<<<< HEAD
 ## PENDING
+=======
+* Gaia REST API (`gaiacli advanced rest-server`)
+
+* Gaia CLI  (`gaiacli`)
+
+* Gaia
+    * Make the transient store key use a distinct store key.
+    
+* SDK 
+
+* Tendermint 
+>>>>>>> 0d41026a... Rename transient store key to be a unique key.
 
 BREAKING CHANGES
 * API
@@ -77,6 +90,7 @@ IMPROVEMENTS
 * [x/stake] \#2000 Added tests for new staking endpoints
 * [x/stake] [#2023](https://github.com/cosmos/cosmos-sdk/pull/2023) Terminate iteration loop in `UpdateBondedValidators` and `UpdateBondedValidatorsFull` when the first revoked validator is encountered and perform a sanity check.
 * [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.
+* [ci] [#2057](https://github.com/cosmos/cosmos-sdk/pull/2057) Run `make localnet-start` on every commit and ensure network reaches at least 10 blocks
 
 BUG FIXES
 *  \#1988 Make us compile on OpenBSD (disable ledger) [#1988] (https://github.com/cosmos/cosmos-sdk/issues/1988)

@@ -16,20 +16,20 @@ ci: get_tools get_vendor_deps install test_cover test_lint test
 ########################################
 ### Build/Install
 
-check-ledger: 
+check-ledger:
 ifeq ($(LEDGER_ENABLED),true)
-   	ifeq ($(UNAME_S),OpenBSD)
-   		$(info "OpenBSD detected, disabling ledger support (https://github.com/cosmos/cosmos-sdk/issues/1988)")
-   	   	TMP_BUILD_TAGS := $(BUILD_TAGS)
-   	   	BUILD_TAGS = $(filter-out ledger, $(TMP_BUILD_TAGS))
-   	else
-   	   	ifndef GCC
-   	   	   $(error "gcc not installed for ledger support, please install or set LEDGER_ENABLED to false in the Makefile")
-   	   	endif
-   	endif
+    ifeq ($(UNAME_S),OpenBSD)
+        $(info "OpenBSD detected, disabling ledger support (https://github.com/cosmos/cosmos-sdk/issues/1988)")
+        TMP_BUILD_TAGS := $(BUILD_TAGS)
+        BUILD_TAGS = $(filter-out ledger, $(TMP_BUILD_TAGS))
+    else
+        ifndef GCC
+           $(error "gcc not installed for ledger support, please install or set LEDGER_ENABLED to false in the Makefile")
+        endif
+    endif
 else
-	TMP_BUILD_TAGS := $(BUILD_TAGS)
-	BUILD_TAGS = $(filter-out ledger, $(TMP_BUILD_TAGS))
+  TMP_BUILD_TAGS := $(BUILD_TAGS)
+  BUILD_TAGS = $(filter-out ledger, $(TMP_BUILD_TAGS))
 endif
 
 build: check-ledger
@@ -199,7 +199,7 @@ build-docker-gaiadnode:
 # Run a 4-node testnet locally
 localnet-start: localnet-stop
 	@if ! [ -f build/node0/gaiad/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/gaiad:Z tendermint/gaiadnode testnet --v 4 --o . --starting-ip-address 192.168.10.2 ; fi
-	docker-compose up
+	docker-compose up -d
 
 # Stop testnet
 localnet-stop:

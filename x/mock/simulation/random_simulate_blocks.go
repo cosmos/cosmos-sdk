@@ -145,10 +145,10 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]m
 		return abci.RequestBeginBlock{Header: header}
 	}
 	signingValidators := make([]abci.SigningValidator, len(validators))
-	keys := getKeys(validators)
+	i := 0
 
-	for i := 0; i < len(keys); i++ {
-		mVal := validators[keys[i]]
+	for _, key := range getKeys(validators) {
+		mVal := validators[key]
 		mVal.livenessState = livenessTransitions.NextState(r, mVal.livenessState)
 		signed := true
 
@@ -170,6 +170,7 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]m
 			Validator:       mVal.val,
 			SignedLastBlock: signed,
 		}
+		i++
 	}
 	evidence := make([]abci.Evidence, 0)
 	for r.Float64() < evidenceFraction {

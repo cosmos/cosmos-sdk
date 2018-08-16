@@ -105,7 +105,7 @@ func GetTendermintUpdatesKey(ownerAddr sdk.AccAddress) []byte {
 
 // gets the key for delegator bond with validator
 // VALUE: stake/types.Delegation
-func GetDelegationKey(delegatorAddr, validatorAddr sdk.AccAddress) []byte {
+func GetDelegationKey(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) []byte {
 	return append(GetDelegationsKey(delegatorAddr), validatorAddr.Bytes()...)
 }
 

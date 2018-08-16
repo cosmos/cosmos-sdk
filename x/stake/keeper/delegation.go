@@ -8,8 +8,10 @@ import (
 )
 
 // load a delegation
-func (k Keeper) GetDelegation(ctx sdk.Context,
-	delegatorAddr, validatorAddr sdk.AccAddress) (delegation types.Delegation, found bool) {
+func (k Keeper) GetDelegation(
+	ctx sdk.Context,
+	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) (
+	delegation types.Delegation, found bool) {
 
 	store := ctx.KVStore(k.storeKey)
 	key := GetDelegationKey(delegatorAddr, validatorAddr)

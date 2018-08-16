@@ -50,7 +50,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 				return fmt.Errorf("must use --pubkey flag")
 			}
 
-			pk, err := sdk.GetValPubKeyBech32(pkStr)
+			pk, err := sdk.GetConsPubKeyBech32(pkStr)
 			if err != nil {
 				return err
 			}

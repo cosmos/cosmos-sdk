@@ -7,31 +7,36 @@ connections.
 The complete API is comprised of the sub-APIs of different modules. The modules in the Cosmos Hub
 (Gaia) API are:
 
-* ICS0 (TendermintAPI)
-* ICS1 (KeyAPI)
-* ICS20 (TokenAPI)
-* ICS21 (StakingAPI) - not yet implemented
-* ICS22 (GovernanceAPI) - not yet implemented
+- ICS0 (TendermintAPI)
+- ICS1 (KeyAPI)
+- ICS20 (TokenAPI)
+- ICS21 (StakingAPI)
+- ICS22 (GovernanceAPI) - not yet implemented
 
 Error messages my change and should be only used for display purposes. Error messages should not be
 used for determining the error type.
 
-## ICS0 - TendermintAPI - not yet implemented
+## ICS0 - TendermintAPI
 
 Exposes the same functionality as the Tendermint RPC from a full node. It aims to have a very
 similar API.
 
-### /broadcast_tx_sync - POST
+### /txs - POST
 
-url: /broadcast_tx_sync
+url: /txs
 
-Functionality: Submit a signed transaction synchronously. This returns a response from CheckTx.
+Functionality: Submit a signed transaction. Can be of type:
+
+- `return=sync`: returns a response from CheckTx
+- `return=async`: does not return a response from CheckTx
+- `return=block`: waits for for the transaction to be committed in a block
 
 Parameters:
 
-| Parameter   | Type   | Default | Required | Description     |
-| ----------- | ------ | ------- | -------- | --------------- |
-| transaction | string | null    | true     | signed tx bytes |
+| Parameter   | Type   | Default | Required | Description            |
+| ----------- | ------ | ------- | -------- | ---------------------- |
+| transaction | string | null    | true     | signed tx bytes        |
+| return      | string | null    | true     | broadcast return value |
 
 Returns on success:
 
@@ -55,95 +60,12 @@ Returns on failure:
 {
     "rest api":"2.0",
     "code":500,
-    "error":"Could not submit the transaction synchronously.",
+    "error":"Could not submit the transaction.",
     "result":{}
 }
 ```
 
-### /broadcast_tx_async - POST
 
-url: /broadcast_tx_async
-
-Functionality: Submit a signed transaction asynchronously. This does not return a response from CheckTx.
-
-Parameters:
-
-| Parameter   | Type   | Default | Required | Description     |
-| ----------- | ------ | ------- | -------- | --------------- |
-| transaction | string | null    | true     | signed tx bytes |
-
-Returns on success:
-
-```json
-{
-    "rest api":"2.0",
-    "code":200,
-    "error":"",
-    "result": {
-		"code":0,
-		"hash":"E39AAB7A537ABAA237831742DCE1117F187C3C52",
-		"data":"",
-		"log":""
-    }
-}
-```
-
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not submit the transaction asynchronously.",
-    "result":{}
-}
-```
-
-### /broadcast_tx_commit - POST
-
-url: /broadcast_tx_commit
-
-Functionality: Submit a signed transaction and waits for it to be committed in a block.
-
-Parameters:
-
-| Parameter   | Type   | Default | Required | Description     |
-| ----------- | ------ | ------- | -------- | --------------- |
-| transaction | string | null    | true     | signed tx bytes |
-
-Returns on success:
-
-```json
-{
-    "rest api":"2.0",
-    "code":200,
-    "error":"",
-    "result":{
-        "height":26682,
-        "hash":"75CA0F856A4DA078FC4911580360E70CEFB2EBEE",
-        "deliver_tx":{
-            "log":"",
-            "data":"",
-            "code":0
-        },
-        "check_tx":{
-        "log":"",
-        "data":"",
-        "code":0
-    }
-}
-```
-
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not commit the transaction.",
-    "result":{}
-}
-```
 
 ## ICS1 - KeyAPI
 
@@ -163,7 +85,7 @@ Returns on success:
     "code":200,
     "error":"",
     "result":{
-        "keys":[
+        "account":[
            {
                 "name":"monkey",
                 "address":"cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
@@ -191,56 +113,20 @@ Returns on failure:
 }
 ```
 
-### /keys/recover - POST
 
-url: /keys/recover
 
-Functionality: Recover your key from seed and persist it encrypted with the password.
+### /keys - POST
 
-Parameter:
-
-| Parameter | Type   | Default | Required | Description      |
-| --------- | ------ | ------- | -------- | ---------------- |
-| name      | string | null    | true     | name of key      |
-| password  | string | null    | true     | password of key  |
-| seed      | string | null    | true     | seed of key      |
-
-Returns on success:
-
-```json
-{
-    "rest api":"2.0",
-    "code":200,
-    "error":"",
-    "result":{
-        "address":"BD607C37147656A507A5A521AA9446EB72B2C907"
-    }
-}
-```
-
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not recover the key.",
-    "result":{}
-}
-```
-
-### /keys/create - POST
-
-url: /keys/create
+url: /keys
 
 Functionality: Create a new key.
 
 Parameter:
 
-| Parameter | Type   | Default | Required | Description      |
-| --------- | ------ | ------- | -------- | ---------------- |
-| name      | string | null    | true     | name of key      |
-| password  | string | null    | true     | password of key  |
+| Parameter | Type   | Default | Required | Description     |
+| --------- | ------ | ------- | -------- | --------------- |
+| name      | string | null    | true     | name of key     |
+| password  | string | null    | true     | password of key |
 
 Returns on success:
 
@@ -265,6 +151,8 @@ Returns on failure:
     "result":{}
 }
 ```
+
+
 
 ### /keys/{name} - GET
 
@@ -306,10 +194,10 @@ Functionality: Change the encryption password for the specified key.
 
 Parameters:
 
-| Parameter       | Type   | Default | Required | Description     |
-| --------------- | ------ | ------- | -------- | --------------- |
-| old_password    | string | null    | true     | old password    |
-| new_password    | string | null    | true     | new password    |
+| Parameter    | Type   | Default | Required | Description  |
+| ------------ | ------ | ------- | -------- | ------------ |
+| old_password | string | null    | true     | old password |
+| new_password | string | null    | true     | new password |
 
 Returns on success:
 
@@ -341,9 +229,9 @@ Functionality: Delete the specified key.
 
 Parameters:
 
-| Parameter | Type   | Default | Required | Description      |
-| --------- | ------ | ------- | -------- | ---------------- |
-| password  | string | null    | true     | password of key  |
+| Parameter | Type   | Default | Required | Description     |
+| --------- | ------ | ------- | -------- | --------------- |
+| password  | string | null    | true     | password of key |
 
 Returns on success:
 
@@ -367,15 +255,100 @@ Returns on failure:
 }
 ```
 
+### /keys/{name}/recover - POST
+
+url: /keys/{name}/recover
+
+Functionality: Recover your key from seed and persist it encrypted with the password.
+
+Parameter:
+
+| Parameter | Type   | Default | Required | Description     |
+| --------- | ------ | ------- | -------- | --------------- |
+| password  | string | null    | true     | password of key |
+| seed      | string | null    | true     | seed of key     |
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{
+        "address":"BD607C37147656A507A5A521AA9446EB72B2C907"
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"Could not recover the key.",
+    "result":{}
+}
+```
+
+
+
+### /auth/accounts/{address} - GET
+
+url: /auth/accounts/{address}
+
+Functionality: Query the information of an account .
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result": {
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{
+        "address": "82A57F8575BDFA22F5164C75361A21D2B0E11089",
+        "public_key": "PubKeyEd25519{A0EEEED3C9CE1A6988DEBFE347635834A1C0EBA0B4BB1125896A7072D22E650D}",
+        "coins": [
+            "atom": 300,
+            "photon": 15
+        ],
+        "account_number": 1,
+        "sequence": 7
+    }
+}
+}
+```
+
+Returns on error:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"Could not find the account",
+    "result":{}
+}
+```
+
+
+
 ## ICS20 - TokenAPI
 
 The TokenAPI exposes all functionality needed to query account balances and send transactions.
+
+
 
 ### /bank/balance/{account} - GET
 
 url: /bank/balance/{account}
 
-Functionality: Query the specified account.
+Functionality: Query the specified account's balance.
 
 Returns on success:
 
@@ -403,9 +376,9 @@ Returns on error:
 }
 ```
 
-### /bank/create_transfer - POST
+### /bank/transfer - POST
 
-url: /bank/create_transfer
+url: /bank/transfer
 
 Functionality: Create a transfer in the bank module.
 
@@ -457,7 +430,7 @@ Returns on success:
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.1",
     "code":200,
     "error":"",
     "result": {
@@ -489,7 +462,7 @@ Returns on success:
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.1",
     "code":200,
     "error":"",
     "result":{}
@@ -710,7 +683,94 @@ Returns on failure:
 {
     "rest api":"2.0",
     "code":500,
+    "error":"TODO",
+    "result":{}
+}
+```
+
+
+
+## ICS22 - GovernanceAPI
+
+The GovernanceAPI exposes all functionality needed for casting votes on plain text, software upgrades and parameter change proposals.
+
+::: tip Note
+🚧 We are actively working on documentation for the governance module rest endpoints .
+:::
+
+
+
+## ICS23 - SlashingAPI
+
+The SlashingAPI exposes all functionality needed for to slash validators and delegators in PoS.
+
+### /slashing/validator/{validatorAddr}/signing-info - GET
+
+url: /slashing/validator/{validatorAddr}/signing-info
+
+Functionality: Query the information from a single validator.
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{
+     "transaction":"TODO"
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
     "error":"Could not create the transaction.",
+    "result":{}
+}
+```
+
+### /slashing/validators/{validatorAddr}/unrevoke - POST
+
+url: /slashing/validators/{validatorAddr}/unrevoke
+
+Functionality: Query the information from a single validator.
+
+Parameter:
+
+| Parameter      | Type   | Default | Required | Description     |
+| -------------- | ------ | ------- | -------- | --------------- |
+| name           | string | null    | true     | name of the key |
+| password       | string | null    | true     | password of key |
+| chain_id       | string | null    | false    |                 |
+| account_number | int64  |         |          |                 |
+| sequence       | int64  |         |          |                 |
+| gas            | int64  |         |          |                 |
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{
+     "transaction":"TODO"
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"TODO",
     "result":{}
 }
 ```

@@ -165,6 +165,29 @@ jobs:
           name: upload
           command: bash <(curl -s https://codecov.io/bash) -f coverage.txt
 
+  localnet:
+      working_directory: /home/circleci/.go_workspace/src/github.com/cosmos/cosmos-sdk
+      machine:
+        image: circleci/classic:latest
+      environment:
+        GOBIN: /home/circleci/.go_workspace/bin
+        GOPATH: /home/circleci/.go_workspace/
+        GOOS: linux
+        GOARCH: amd64
+      parallelism: 1
+      steps:
+        - checkout
+        - run:
+            name: run localnet and exit on failure
+            command: |
+              set -x
+              make get_tools
+              make get_vendor_deps
+              make build-linux
+              make localnet-start
+              ./scripts/localnet-blocks-test.sh 40 5 10 localhost
+
+
 workflows:
   version: 2
   test-suite:
@@ -183,6 +206,9 @@ workflows:
           requires:
             - setup_dependencies
       - test_cover:
+          requires:
+            - setup_dependencies
+      - localnet:
           requires:
             - setup_dependencies
       - upload_coverage:

@@ -8,10 +8,10 @@ BREAKING CHANGES
 
 * Gaia
     * Make the transient store key use a distinct store key. [#2013](https://github.com/cosmos/cosmos-sdk/pull/2013)
-    
-* SDK 
 
-* Tendermint 
+* SDK
+
+* Tendermint
 
 
 FEATURES
@@ -22,9 +22,9 @@ FEATURES
 
 * Gaia
 
-* SDK 
+* SDK
 
-* Tendermint 
+* Tendermint
 
 
 IMPROVEMENTS
@@ -34,10 +34,12 @@ IMPROVEMENTS
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+    * [ci] [#2057](https://github.com/cosmos/cosmos-sdk/pull/2057) Run `make localnet-start` on every commit and ensure network reaches at least 10 blocks
 
-* SDK 
 
-* Tendermint 
+* SDK
+
+* Tendermint
 
 
 BUG FIXES
@@ -48,7 +50,6 @@ BUG FIXES
 
 * Gaia
 
-* SDK 
+* SDK
 
-* Tendermint 
-
+* Tendermint

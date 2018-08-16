@@ -8,10 +8,10 @@ BREAKING CHANGES
 
 * Gaia
     * Make the transient store key use a distinct store key. [#2013](https://github.com/cosmos/cosmos-sdk/pull/2013)
-    
-* SDK 
 
-* Tendermint 
+* SDK
+
+* Tendermint
 
 
 FEATURES
@@ -22,9 +22,9 @@ FEATURES
 
 * Gaia
 
-* SDK 
+* SDK
 
-* Tendermint 
+* Tendermint
 
 
 IMPROVEMENTS
@@ -35,9 +35,9 @@ IMPROVEMENTS
 
 * Gaia
 
-* SDK 
+* SDK
 
-* Tendermint 
+* Tendermint
 
 
 BUG FIXES
@@ -48,7 +48,6 @@ BUG FIXES
 
 * Gaia
 
-* SDK 
+* SDK
 
-* Tendermint 
-
+* Tendermint

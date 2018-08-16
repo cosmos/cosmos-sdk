@@ -84,6 +84,7 @@ IMPROVEMENTS
   - [x/gov] Initial governance parameters can now be set in the genesis file
   - [x/stake] \#1815 Sped up the processing of `EditValidator` txs.
   - [config] \#1930 Transactions indexer indexes all tags by default.
+  - [ci] [#2057](https://github.com/cosmos/cosmos-sdk/pull/2057) Run `make localnet-start` on every commit and ensure network reaches at least 10 blocks
 
 * SDK
   - [baseapp] \#1587 Allow any alphanumeric character in route

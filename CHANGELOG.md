@@ -112,7 +112,7 @@ BUG FIXES
   - [tests] \#1551 Fixed invalid LCD test JSON payload in `doIBCTransfer`
   - [basecoin] Fixes coin transaction failure and account query [discussion](https://forum.cosmos.network/t/unmarshalbinarybare-expected-to-read-prefix-bytes-75fbfab8-since-it-is-registered-concrete-but-got-0a141dfa/664/6)
   - [x/gov] \#1757 Fix VoteOption conversion to String
-
+  * [x/stake] [#2083] Fix broken invariant of bonded validator power decrease
 
 ## 0.23.1
 

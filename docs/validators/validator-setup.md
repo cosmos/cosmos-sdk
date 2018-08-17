@@ -1,7 +1,7 @@
 # Validator Setup
 
 ::: warning Current Testnet
-The current testnet is `gaia-7005`.
+The current testnet is `gaia-8000`.
 :::
 
 Before setting up your validator node, make sure you've already gone through the [Full Node Setup](/getting-started/full-node.md) guide.
@@ -19,7 +19,7 @@ If you want to become a validator for the Hub's `mainnet`, you should [research 
 Your `cosmosvalpub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
 
 ```bash
-gaiad tendermint show-validator
+gaiad tendermint show_validator
 ```
 
 Next, craft your `gaiacli stake create-validator` command:
@@ -31,15 +31,10 @@ Don't use more `steak` thank you have! You can always get more by using the [Fau
 ```bash
 gaiacli stake create-validator \
   --amount=5steak \
-<<<<<<< HEAD
-  --pubkey=$(gaiad tendermint show-validator) \
-  --address-validator=<account_cosmosaccaddr>
-=======
   --pubkey=$(gaiad tendermint show_validator) \
-  --validator=<account_cosmosaccaddr>
->>>>>>> 6f19f2ed... Rename --address-validator flag to --validator
+  --address-validator=<account_cosmosaccaddr>
   --moniker="choose a moniker" \
-  --chain-id=gaia-7005 \
+  --chain-id=gaia-8000 \
   --name=<key_name>
 ```
 
@@ -51,12 +46,12 @@ The `--identity` can be used as to verify identity with systems like Keybase or 
 
 ```bash
 gaiacli stake edit-validator
-  --validator=<account_cosmosaccaddr>
+  --address-validator=<account_cosmosaccaddr>
   --moniker="choose a moniker" \
   --website="https://cosmos.network" \
   --identity=6A0D65E29A4CBC8E
   --details="To infinity and beyond!"
-  --chain-id=gaia-7005 \
+  --chain-id=gaia-8000 \
   --name=<key_name>
 ```
 
@@ -66,25 +61,42 @@ View the validator's information with this command:
 
 ```bash
 gaiacli stake validator \
-<<<<<<< HEAD
   --address-validator=<account_cosmosaccaddr> \
-  --chain-id=gaia-7005
-=======
-  --validator=<account_cosmosaccaddr> \
-  --chain-id=gaia-6002
->>>>>>> 6f19f2ed... Rename --address-validator flag to --validator
+  --chain-id=gaia-8000
 ```
+
+
+
+### Track Validator Signing Information
+
+In order to keep track of a validator's signatures in the past you can do so by using the `signing-info` command:
+
+```bash
+gaiacli stake signing-information <validator-pubkey>\
+  --chain-id=gaia-8000
+```
+
+### Unrevoke Validator
+
+When a validator is `Revoked` for downtime, you must submit an `Unrevoke` transaction in order to be able to get block proposer rewards again (depends on the zone fee distribution).
+
+```bash
+gaiacli stake unrevoke \
+	--from=<key_name> \
+	--chain-id=gaia-8000
+```
+
+
 
 ### Confirm Your Validator is Running
 
 Your validator is active if the following command returns anything:
 
 ```bash
-gaiacli advanced tendermint validator-set | grep "$(gaiad tendermint show-validator)"
+gaiacli advanced tendermint validator-set | grep "$(gaiad tendermint show_validator)"
 ```
 
 You should also be able to see your validator on the [Explorer](https://explorecosmos.network/validators). You are looking for the `bech32` encoded `address` in the `~/.gaiad/config/priv_validator.json` file.
-
 
 ::: warning Note
 To be in the validator set, you need to have more total voting power than the 100th validator.
@@ -94,7 +106,7 @@ To be in the validator set, you need to have more total voting power than the 10
 
 ### Problem #1: My validator has `voting_power: 0`
 
-Your validator has become auto-unbonded. In `gaia-7005`, we unbond validators if they do not vote on `50` of the last `100` blocks. Since blocks are proposed every ~2 seconds, a validator unresponsive for ~100 seconds will become unbonded. This usually happens when your `gaiad` process crashes.
+Your validator has become auto-unbonded. In `gaia-8000`, we unbond validators if they do not vote on `50` of the last `100` blocks. Since blocks are proposed every ~2 seconds, a validator unresponsive for ~100 seconds will become unbonded. This usually happens when your `gaiad` process crashes.
 
 Here's how you can return the voting power back to your validator. First, if `gaiad` is not running, start it up again:
 
@@ -105,7 +117,7 @@ gaiad start
 Wait for your full node to catch up to the latest block. Next, run the following command. Note that `<cosmosaccaddr>` is the address of your validator account, and `<name>` is the name of the validator account. You can find this info by running `gaiacli keys list`.
 
 ```bash
-gaiacli stake unrevoke <cosmosaccaddr> --chain-id=gaia-7005 --name=<name>
+gaiacli stake unrevoke <cosmosaccaddr> --chain-id=gaia-8000 --name=<name>
 ```
 
 ::: danger Warning

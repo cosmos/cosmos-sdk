@@ -34,7 +34,7 @@ gaiacli stake create-validator \
   --pubkey=$(gaiad tendermint show_validator) \
   --address-validator=<account_cosmosaccaddr>
   --moniker="choose a moniker" \
-  --chain-id=gaia-8000 \
+  --chain-id=<chain_id> \
   --name=<key_name>
 ```
 
@@ -51,7 +51,7 @@ gaiacli stake edit-validator
   --website="https://cosmos.network" \
   --identity=6A0D65E29A4CBC8E
   --details="To infinity and beyond!"
-  --chain-id=gaia-8000 \
+  --chain-id=<chain_id> \
   --name=<key_name>
 ```
 
@@ -62,7 +62,7 @@ View the validator's information with this command:
 ```bash
 gaiacli stake validator \
   --address-validator=<account_cosmosaccaddr> \
-  --chain-id=gaia-8000
+  --chain-id=<chain_id>
 ```
 
 ### Track Validator Signing Information
@@ -71,7 +71,7 @@ In order to keep track of a validator's signatures in the past you can do so by 
 
 ```bash
 gaiacli stake signing-information <validator-pubkey>\
-  --chain-id=gaia-8000
+  --chain-id=<chain_id>
 ```
 
 ### Unrevoke Validator
@@ -81,7 +81,7 @@ When a validator is `Revoked` for downtime, you must submit an `Unrevoke` transa
 ```bash
 gaiacli stake unrevoke \
 	--from=<key_name> \
-	--chain-id=gaia-8000
+	--chain-id=<chain_id>
 ```
 
 ### Confirm Your Validator is Running
@@ -113,7 +113,7 @@ gaiad start
 Wait for your full node to catch up to the latest block. Next, run the following command. Note that `<cosmosaccaddr>` is the address of your validator account, and `<name>` is the name of the validator account. You can find this info by running `gaiacli keys list`.
 
 ```bash
-gaiacli stake unrevoke <cosmosaccaddr> --chain-id=gaia-8000 --name=<name>
+gaiacli stake unrevoke <cosmosaccaddr> --chain-id=<chain_id> --name=<name>
 ```
 
 ::: danger Warning

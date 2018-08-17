@@ -88,7 +88,7 @@ When you query an account balance with zero tokens, you will get this error: `No
 ```bash
 gaiacli send \
   --amount=10faucetToken \
-  --chain-id=gaia-8000 \
+  --chain-id=<chain_id> \
   --name=<key_name> \
   --to=<destination_cosmosaccaddr>
 ```
@@ -143,7 +143,7 @@ gaiacli stake delegate \
   --amount=10steak \
   --address-validator=$(gaiad tendermint show_validator) \
   --name=<key_name> \
-  --chain-id=gaia-8000
+  --chain-id=<chain_id>
 ```
 
 While tokens are bonded, they are pooled with all the other bonded tokens in the network. Validators and delegators obtain a percentage of shares that equal their stake in this pool.
@@ -179,7 +179,7 @@ gaiacli stake unbond begin \
   --address-validator=$(gaiad tendermint show-validator) \
   --shares-percent=100 \
   --from=<key_name> \
-  --chain-id=gaia-8000
+  --chain-id=<chain_id>
 ```
 
 Later you must complete the unbonding process by using the `gaiacli stake unbond complete` command:
@@ -188,7 +188,7 @@ Later you must complete the unbonding process by using the `gaiacli stake unbond
 gaiacli stake unbond complete \
   --address-validator=$(gaiad tendermint show-validator) \
   --from=<key_name> \
-  --chain-id=gaia-8000
+  --chain-id=<chain_id>
 ```
 
 ##### Query Unbonding-Delegations
@@ -219,7 +219,7 @@ gaiacli stake redelegate begin \
   --address-validator-dest=<account_cosmosaccaddr> \
   --shares-percent=50 \
   --from=<key_name> \
-  --chain-id=gaia-8000
+  --chain-id=<chain_id>
 ```
 
 Here you can also redelegate a specific `shares-amount` or a  `shares-percent` with the corresponding flags.
@@ -230,7 +230,7 @@ Later you must complete the redelegation process by using the `gaiacli stake red
 gaiacli stake unbond complete \
   --address-validator=$(gaiad tendermint show-validator) \
   --from=<key_name> \
-  --chain-id=gaia-8000
+  --chain-id=<chain_id>
 ```
 
 ##### Query Redelegations
@@ -283,7 +283,7 @@ gaiacli gov submit-proposal \
   --proposer=<account_cosmosaccaddr> \
   --deposit=<40steak> \
   --from=<name> \
-  --chain-id=gaia-8000
+  --chain-id=<chain_id>
 ```
 
 ##### Query proposals
@@ -313,7 +313,7 @@ gaiacli gov deposit \
   --depositer=<account_cosmosaccaddr> \
   --deposit=<200steak> \
   --from=<name> \
-  --chain-id=gaia-8000
+  --chain-id=<chain_id>
 ```
 
 > _NOTE_: Proposals that don't meet this requirement will be deleted after `MaxDepositPeriod` is reached.
@@ -328,7 +328,7 @@ gaiacli gov vote \
   --voter=<account_cosmosaccaddr> \
   --option=<Yes/No/NoWithVeto/Abstain> \
   --from=<name> \
-  --chain-id=gaia-8000
+  --chain-id=<chain_id>
 ```
 
 ##### Query vote

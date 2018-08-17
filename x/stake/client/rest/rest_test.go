@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	amino "github.com/tendermint/go-amino"
+	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmcfg "github.com/tendermint/tendermint/config"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -38,17 +39,18 @@ import (
 func createConfig(t *testing.T) (config *tmcfg.Config, close func()) {
 	dir, err := ioutil.TempDir("", "config")
 	require.NoError(t, err)
+
 	config = tmcfg.ResetTestRoot(dir)
 	config.Consensus.SkipTimeoutCommit = true
 	config.TxIndex.IndexAllTags = false
 
-	tmAddr, _, err := server.FreeTCPAddr()
+	p2pAddr, _, err := server.FreeTCPAddr()
 	require.NoError(t, err)
-	config.P2P.ListenAddress = tmAddr
+	config.P2P.ListenAddress = p2pAddr
 
-	rcpAddr, _, err := server.FreeTCPAddr()
+	rpcAddr, _, err := server.FreeTCPAddr()
 	require.NoError(t, err)
-	config.RPC.ListenAddress = rcpAddr
+	config.RPC.ListenAddress = rpcAddr
 
 	close = func() {
 		os.RemoveAll(dir)
@@ -57,8 +59,38 @@ func createConfig(t *testing.T) (config *tmcfg.Config, close func()) {
 	return
 }
 
+func createGenesisDoc(t *testing.T, genesisFile string,
+	codec *amino.Codec) *tmtypes.GenesisDoc {
+	genesisDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
+	require.NoError(t, err)
+
+	// NOTE it's bad practice to reuse pk address for the owner address but doing
+	// in the test for simplicity
+	var appGenTxs []json.RawMessage
+
+	for _, validator := range genesisDoc.Validators {
+		pubKey := validator.PubKey
+
+		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(codec, pubKey,
+			sdk.AccAddress(pubKey.Address()), "moniker")
+
+		require.NoError(t, err)
+		appGenTxs = append(appGenTxs, appGenTx)
+	}
+
+	genesisState, err := gapp.GaiaAppGenState(codec, appGenTxs[:])
+	require.NoError(t, err)
+
+	appState, err := wire.MarshalJSONIndent(codec, genesisState)
+	require.NoError(t, err)
+
+	genesisDoc.AppState = appState
+	viper.Set(client.FlagChainID, genesisDoc.ChainID)
+	return genesisDoc
+}
+
 func createNode(t *testing.T, codec *amino.Codec, logger log.Logger,
-	createGenesisDoc func(*testing.T, string, *amino.Codec) *tmtypes.GenesisDoc) func() {
+) (reset func(), close func()) {
 	config, closeConfig := createConfig(t)
 
 	privValidator := pvm.LoadOrGenFilePV(config.PrivValidatorFile())
@@ -92,15 +124,22 @@ func createNode(t *testing.T, codec *amino.Codec, logger log.Logger,
 	require.NoError(t, err)
 	tests.WaitForRPC(config.RPC.ListenAddress)
 
-	return func() {
+	reset = func() {
+		tcmd.ResetAll(config.DBDir(), config.P2P.AddrBookFile(),
+			config.PrivValidatorFile(), logger)
+	}
+
+	close = func() {
 		node.Stop()
 		node.Wait()
 		closeConfig()
 	}
+
+	return
 }
 
 // a stripped-down version of the Gaia-Lite handler
-func createDefaultHandler(t *testing.T, codec *wire.Codec) http.Handler {
+func createHandler(t *testing.T, codec *wire.Codec) http.Handler {
 	cliCtx := context.NewCLIContext().WithCodec(codec).WithLogger(os.Stdout)
 	router := mux.NewRouter()
 	rpc.RegisterRoutes(cliCtx, router)
@@ -117,29 +156,14 @@ func createDefaultHandler(t *testing.T, codec *wire.Codec) http.Handler {
 	return router
 }
 
-// This function handles Pact state requests for a particular test.
-func setupHandler(writer http.ResponseWriter, request *http.Request) {
-	var state *types.ProviderState
-	decoder := json.NewDecoder(request.Body)
-	decoder.Decode(&state)
-
-	if state.State == "delegated" {
-		// We don't do anything yet.
-	}
-
-	writer.Header().Set("Content-Type", "application/json")
-}
-
 func createGaiaLite(t *testing.T, codec *amino.Codec, logger log.Logger) (gaiaLite net.Listener,
 	port string) {
 	listenAddr, port, err := server.FreeTCPAddr()
 	require.NoError(t, err)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/setup", setupHandler)
-	mux.Handle("/", createDefaultHandler(t, codec))
+	handler := createHandler(t, codec)
 
-	gaiaLite, err = tmrpc.StartHTTPServer(listenAddr, mux, logger,
+	gaiaLite, err = tmrpc.StartHTTPServer(listenAddr, handler, logger,
 		tmrpc.Config{})
 
 	require.NoError(t, err)
@@ -148,52 +172,48 @@ func createGaiaLite(t *testing.T, codec *amino.Codec, logger log.Logger) (gaiaLi
 	return
 }
 
-func createTestNetwork(t *testing.T,
-	createGenesisDoc func(*testing.T, string, *amino.Codec) *tmtypes.GenesisDoc) (string, func()) {
+func createTestNetwork(t *testing.T) (url string, reset func(), close func()) {
 	codec := gapp.MakeCodec()
 
 	unfiltered := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	logger := log.NewFilter(unfiltered, log.AllowDebug())
 
-	nodeClose := createNode(t, codec, logger, createGenesisDoc)
+	reset, nodeClose := createNode(t, codec, logger)
 	gaiaLite, port := createGaiaLite(t, codec, logger)
+	url = "http://localhost:" + port
 
-	close := func() {
+	close = func() {
 		nodeClose()
 		gaiaLite.Close()
 	}
 
-	return "http://localhost:" + port, close
+	return
 }
 
-func createGenesisDoc(t *testing.T, genesisFile string,
-	codec *amino.Codec) *tmtypes.GenesisDoc {
-	genesisDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
+// Create a separate HTTP server to handle Pact state setup requests.
+func createSetupServer(t *testing.T, reset func()) string {
+	_, port, err := server.FreeTCPAddr()
 	require.NoError(t, err)
 
-	// NOTE it's bad practice to reuse pk address for the owner address but doing
-	// in the test for simplicity
-	var appGenTxs []json.RawMessage
+	handler := http.HandlerFunc(func(writer http.ResponseWriter,
+		request *http.Request) {
+		// Reset the state of the Gaiad node to genesis so that each test is
+		// indepedent.
+		reset()
 
-	for _, validator := range genesisDoc.Validators {
-		pubKey := validator.PubKey
+		var state *types.ProviderState
+		decoder := json.NewDecoder(request.Body)
+		decoder.Decode(&state)
 
-		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(codec, pubKey,
-			sdk.AccAddress(pubKey.Address()), "moniker")
+		if state.State == "delegated" {
+			// We don't do anything yet.
+		}
 
-		require.NoError(t, err)
-		appGenTxs = append(appGenTxs, appGenTx)
-	}
+		writer.Header().Set("Content-Type", "application/json")
+	})
 
-	genesisState, err := gapp.GaiaAppGenState(codec, appGenTxs[:])
-	require.NoError(t, err)
-
-	appState, err := wire.MarshalJSONIndent(codec, genesisState)
-	require.NoError(t, err)
-
-	genesisDoc.AppState = appState
-	viper.Set(client.FlagChainID, genesisDoc.ChainID)
-	return genesisDoc
+	go http.ListenAndServe(":"+port, handler)
+	return "http://localhost:" + port
 }
 func TestProvider(t *testing.T) {
 	// Create Pact connecting to local Daemon
@@ -203,14 +223,13 @@ func TestProvider(t *testing.T) {
 	}
 
 	// Start provider API in the background
-	baseURL, close := createTestNetwork(t, createGenesisDoc)
-	t.Log("baseURL: " + baseURL)
+	gaiaLiteURL, reset, close := createTestNetwork(t)
 	defer close()
 
 	// Verify the Provider with local Pact Files
 	pact.VerifyProvider(t, types.VerifyRequest{
-		ProviderBaseURL:        baseURL,
+		ProviderBaseURL:        gaiaLiteURL,
 		PactURLs:               []string{filepath.ToSlash("voyager-cosmos-lite.json")},
-		ProviderStatesSetupURL: baseURL + "/setup",
+		ProviderStatesSetupURL: createSetupServer(t, reset),
 	})
 }

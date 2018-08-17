@@ -156,16 +156,25 @@ type QueryTallyParams struct {
 func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	// TODO: Dependant on #1914
 
-	// var proposalID int64
-	// err2 := keeper.cdc.UnmarshalBinary(req.Data, proposalID)
-	// if err2 != nil {
-	// 	return []byte{}, sdk.ErrUnknownRequest()
-	// }
+	var proposalID int64
+	err2 := keeper.cdc.UnmarshalBinary(req.Data, proposalID)
+	if err2 != nil {
+		return []byte{}, sdk.ErrUnknownRequest("incorrectly formatted request data")
+	}
 
-	// proposal := keeper.GetProposal(ctx, proposalID)
-	// if proposal == nil {
-	// 	return []byte{}, ErrUnknownProposal(DefaultCodespace, proposalID)
-	// }
-	// _, tallyResult, _ := tally(ctx, keeper, proposal)
-	return nil, nil
+	proposal := keeper.GetProposal(ctx, proposalID)
+	if proposal == nil {
+		return []byte{}, ErrUnknownProposal(DefaultCodespace, proposalID)
+	}
+
+	if proposal.GetStatus() == StatusDepositPeriod {
+		return keeper.cdc.MustMarshalBinaryBare(EmptyTallyResult()), nil
+	}
+
+	if proposal.GetStatus() == StatusPassed || proposal.GetStatus() == StatusRejected {
+		return keeper.cdc.MustMarshalBinaryBare(proposal.GetTallyResult()), nil
+	}
+
+	_, tallyResult, _ := tally(ctx, keeper, proposal)
+	return keeper.cdc.MustMarshalBinaryBare(tallyResult), nil
 }

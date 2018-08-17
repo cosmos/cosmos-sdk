@@ -48,8 +48,6 @@ BUG FIXES
 
 * Gaia
 
-  * [x/stake] [#2077](https://github.com/cosmos/cosmos-sdk/pull/2077) Fixed invalid cliff power comparison
-
 * SDK
 
 * Tendermint

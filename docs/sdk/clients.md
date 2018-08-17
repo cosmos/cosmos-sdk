@@ -125,15 +125,13 @@ On the upcoming mainnet, you can delegate `atom` to a validator. These [delegato
 You can query the list of all validators of a specific chain:
 
 ```bash
-gaiacli stake validators \
-	--chain-id=gaia-8000
+gaiacli stake validators
 ```
 
 If you want to get the information of a single validator you can check it with:
 
 ```bash
-gaiacli stake validator <account_cosmosaccaddr> \
-	--chain-id=gaia-8000
+gaiacli stake validator <account_cosmosaccaddr>
 ```
 
 #### Bond Tokens
@@ -145,11 +143,7 @@ gaiacli stake delegate \
   --amount=10steak \
   --address-validator=$(gaiad tendermint show_validator) \
   --name=<key_name> \
-<<<<<<< HEAD
-  --chain-id=gaia-7005
-=======
   --chain-id=gaia-8000
->>>>>>> 1b16625e... Updated docs for clients
 ```
 
 While tokens are bonded, they are pooled with all the other bonded tokens in the network. Validators and delegators obtain a percentage of shares that equal their stake in this pool.
@@ -165,15 +159,13 @@ Once submitted a delegation to a validator, you can see it's information by usin
 ```bash
 gaiacli stake delegation \
 	--address-delegator=<account_cosmosaccaddr> \
-	--address-validator=$(gaiad tendermint show-validator) \
-	--chain-id=gaia-8000
+	--address-validator=$(gaiad tendermint show-validator)
 ```
 
 Or if you want to check all your current delegations with disctinct validators:
 
 ```bash
-gaiacli stake delegations <account_cosmosaccaddr> \
-	--chain-id=gaia-8000
+gaiacli stake delegations <account_cosmosaccaddr>
 ```
 
 You can also get previous delegation(s) status by adding the `--height` flag.
@@ -184,17 +176,10 @@ If for any reason the validator misbehaves, or you just want to unbond a certain
 
 ```bash
 gaiacli stake unbond begin \
-<<<<<<< HEAD
-  --address-validator=$(gaiad tendermint show_validator) \
-  --shares=MAX \
-  --name=<key_name> \
-  --chain-id=gaia-7005
-=======
   --address-validator=$(gaiad tendermint show-validator) \
   --shares-percent=100 \
   --from=<key_name> \
   --chain-id=gaia-8000
->>>>>>> 1b16625e... Updated docs for clients
 ```
 
 Later you must complete the unbonding process by using the `gaiacli stake unbond complete` command:
@@ -206,12 +191,6 @@ gaiacli stake unbond complete \
   --chain-id=gaia-8000
 ```
 
-<<<<<<< HEAD
-gaiacli stake delegation \
-  --address-delegator=<account_cosmosaccaddr> \
-  --address-validator=$(gaiad tendermint show_validator) \
-  --chain-id=gaia-7005
-=======
 ##### Query Unbonding-Delegations
 
 Once you begin an unbonding-delegation, you can see it's information by using the following command:
@@ -220,14 +199,12 @@ Once you begin an unbonding-delegation, you can see it's information by using th
 gaiacli stake unbonding-delegation \
 	--address-delegator=<account_cosmosaccaddr> \
 	--address-validator=$(gaiad tendermint show-validator) \
-	--chain-id=gaia-8000
 ```
 
 Or if you want to check all your current unbonding-delegations with disctinct validators:
 
 ```bash
-gaiacli stake unbonding-delegations <account_cosmosaccaddr> \
-	--chain-id=gaia-8000
+gaiacli stake unbonding-delegations <account_cosmosaccaddr>
 ```
 
 You can also get previous unbonding-delegation(s) status by adding the `--height` flag.
@@ -265,14 +242,12 @@ gaiacli stake redelegation \
 	--address-delegator=<account_cosmosaccaddr> \
 	--address-validator-source=$(gaiad tendermint show-validator) \
 	--address-validator-dest=<account_cosmosaccaddr> \
-	--chain-id=gaia-8000
 ```
 
 Or if you want to check all your current unbonding-delegations with disctinct validators:
 
 ```bash
-gaiacli stake redelegations <account_cosmosaccaddr> \
-	--chain-id=gaia-8000
+gaiacli stake redelegations <account_cosmosaccaddr>
 ```
 
 You can also get previous redelegation(s) status by adding the `--height` flag.
@@ -317,15 +292,13 @@ Once created, you can now query information of the proposal:
 
 ```bash
 gaiacli gov query-proposal \
-  --proposal-id=<proposal_id> \
-  --chain-id=gaia-8000
+  --proposal-id=<proposal_id>
 ```
 
 Or query all available proposals:
 
-```
-gaiacli gov query-proposals \
-  --chain-id=gaia-8000
+```bash
+gaiacli gov query-proposals
 ```
 
 You can also query proposals filtered by `voter` or `depositer` by using the corresponding flags.
@@ -365,17 +338,11 @@ Check the vote with the option you just submitted:
 ```bash
 gaiacli gov query-vote \
   --proposal-id=<proposal_id> \
-  --voter=<account_cosmosaccaddr> \
-  --chain-id=gaia-8000
->>>>>>> 1b16625e... Updated docs for clients
+  --voter=<account_cosmosaccaddr>
 ```
 
 ## Gaia-Lite
 
 ::: tip Note
-<<<<<<< HEAD
-🚧Documentation coming soon!
-=======
 🚧 We are actively working on documentation for Gaia-lite.
->>>>>>> 1b16625e... Updated docs for clients
 :::

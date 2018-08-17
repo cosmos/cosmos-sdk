@@ -134,12 +134,16 @@ test_sim_modules:
 	@echo "Running individual module simulations..."
 	@go test $(PACKAGES_SIMTEST)
 
+test_sim_gaia_nondeterminism:
+	@echo "Running nondeterminism test..."
+	@go test ./cmd/gaia/app -run TestAppStateDeterminism -SimulationEnabled=true -v -timeout 10m
+
 test_sim_gaia_fast:
-	@echo "Running full Gaia simulation. This may take several minutes..."
-	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=1000 -v -timeout 24h
+	@echo "Running quick Gaia simulation. This may take several minutes..."
+	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=200 -timeout 24h
 
 test_sim_gaia_slow:
-	@echo "Running full Gaia simulation. This may take several minutes..."
+	@echo "Running full Gaia simulation. This may take awhile!"
 	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationVerbose=true -v -timeout 24h
 
 test_cover:

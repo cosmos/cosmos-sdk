@@ -280,10 +280,6 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 		panic(fmt.Sprintf("cliff validator record not found for address: %v\n", cliffAddr))
 	}
 
-	// NOTE: We get the power via affectedVal since the store (by power key)
-	// has yet to be updated.
-	affectedValPower := affectedVal.GetPower()
-
 	// Create a validator iterator ranging from smallest to largest by power
 	// starting the current cliff validator's power.
 	start := GetValidatorsByPowerIndexKey(oldCliffVal, pool)
@@ -307,16 +303,19 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 		panic("failed to create valid validator power iterator")
 	}
 
+	affectedValRank := GetValidatorsByPowerIndexKey(affectedVal, pool)
+	newCliffValRank := GetValidatorsByPowerIndexKey(newCliffVal, pool)
+
 	if bytes.Equal(affectedVal.Owner, newCliffVal.Owner) {
 		// The affected validator remains the cliff validator, however, since
-		// the store does not contain the new power, set the new cliff
-		// validator to the affected validator.
-		bz := GetValidatorsByPowerIndexKey(affectedVal, pool)
-		store.Set(ValidatorPowerCliffKey, bz)
-	} else if affectedValPower.GT(newCliffVal.GetPower()) {
+		// the store does not contain the new power, update the new power rank.
+		store.Set(ValidatorPowerCliffKey, affectedValRank)
+	} else if bytes.Compare(affectedValRank, newCliffValRank) > 0 {
 		// The affected validator no longer remains the cliff validator as it's
-		// power is greater than the new current cliff validator.
+		// power is greater than the new cliff validator.
 		k.setCliffValidator(ctx, newCliffVal, pool)
+	} else {
+		panic("invariant broken: the cliff validator should change or it should remain the same")
 	}
 }
 

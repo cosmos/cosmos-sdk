@@ -103,6 +103,7 @@ BUG FIXES
   -  [x/stake] \#2021 Fixed repeated CLI commands in staking
 
 * Gaia
+  - [x/stake] [#2077](https://github.com/cosmos/cosmos-sdk/pull/2077) Fixed invalid cliff power comparison
   - \#1804 Fixes gen-tx genesis generation logic temporarily until upstream updates
   - \#1799 Fix `gaiad export`
   - \#1839 Fixed bug where intra-tx counter wasn't set correctly for genesis validators

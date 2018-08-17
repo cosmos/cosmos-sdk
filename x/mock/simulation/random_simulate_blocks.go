@@ -105,9 +105,6 @@ func SimulateFromSeed(
 		}
 
 		res := app.EndBlock(abci.RequestEndBlock{})
-		if commit {
-			app.Commit()
-		}
 		header.Height++
 		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
 
@@ -115,6 +112,10 @@ func SimulateFromSeed(
 
 		// Make sure invariants hold at end of block
 		AssertAllInvariants(t, app, invariants, log)
+
+		if commit {
+			app.Commit()
+		}
 
 		// Generate a random RequestBeginBlock with the current validator set for the next block
 		request = RandomRequestBeginBlock(t, r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, event, header, log)

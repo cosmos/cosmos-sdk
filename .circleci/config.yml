@@ -101,6 +101,22 @@ jobs:
             export PATH="$GOBIN:$PATH"
             make test_sim_modules
 
+  test_sim_gaia_nondeterminism:
+    <<: *defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - restore_cache:
+          key: v1-pkg-cache
+      - restore_cache:
+          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Test individual module simulations
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make test_sim_gaia_nondeterminism
+
   test_sim_gaia_fast:
     <<: *defaults
     parallelism: 1
@@ -200,6 +216,9 @@ workflows:
           requires:
             - setup_dependencies
       - test_sim_modules:
+          requires:
+            - setup_dependencies
+      - test_sim_gaia_nondeterminism:
           requires:
             - setup_dependencies
       - test_sim_gaia_fast:

@@ -11,7 +11,7 @@ The complete API is comprised of the sub-APIs of different modules. The modules 
 - ICS1 (KeyAPI)
 - ICS20 (TokenAPI)
 - ICS21 (StakingAPI)
-- ICS22 (GovernanceAPI) - not yet implemented
+- ICS22 (GovernanceAPI)
 
 Error messages my change and should be only used for display purposes. Error messages should not be
 used for determining the error type.
@@ -28,9 +28,9 @@ url: /txs
 Query Parameters:
 
 - `?return={sync|async|block}`:
-  * `return=sync`: Waits for the transaction to pass `CheckTx`
-  * `return=async`: Returns the request immediately after it is received by the server
-  * `return=block`: waits for for the transaction to be committed in a block
+  - `return=sync`: Waits for the transaction to pass `CheckTx`
+  - `return=async`: Returns the request immediately after it is received by the server
+  - `return=block`: waits for for the transaction to be committed in a block
 
 POST Body:
 
@@ -313,7 +313,7 @@ Returns on failure:
 
 
 
-### /auth/accounts/{address} - GET
+### GET /auth/accounts/{address}
 
 url: `/auth/accounts/{address}`
 
@@ -334,8 +334,8 @@ Returns on success:
         "address": "82A57F8575BDFA22F5164C75361A21D2B0E11089",
         "public_key": "PubKeyEd25519{A0EEEED3C9CE1A6988DEBFE347635834A1C0EBA0B4BB1125896A7072D22E650D}",
         "coins": [
-            "atom": 300,
-            "photon": 15
+            {"atom": 300},
+            {"photon": 15}
         ],
         "account_number": 1,
         "sequence": 7
@@ -401,7 +401,7 @@ Functionality: Create a transfer in the bank module.
 
 POST Body:
 
-```js
+```json
 {
   "amount": [
     {
@@ -516,7 +516,7 @@ Returns on success:
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.1",
     "code":200,
     "error":"",
     "result":{}
@@ -527,7 +527,7 @@ Returns on failure:
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.1",
     "code":500,
     "error":"TODO",
     "result":{}
@@ -782,7 +782,7 @@ Response on Success:
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.2",
     "code":200,
     "error":"",
     "result":{
@@ -797,7 +797,7 @@ Response on Failure:
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.2",
     "code":500,
     "error":"Could not create the transaction.",
     "result":{}
@@ -845,7 +845,7 @@ Returns on success:
 
 ```js
 {
-    "rest api":"2.0",
+    "rest api":"2.2",
     "code":200,
     "error":"",
     "result":{
@@ -865,6 +865,134 @@ Returns on failure:
 }
 ```
 
+### GET /gov/proposals/{proposal-id}
+
+url: `/gov/proposals/{proposal-id}`
+
+Functionality: Query a proposal
+
+Response on Success:
+
+```json
+{
+    "rest api":"2.2",
+    "code":200,
+    "error":"",
+    "result":{
+        "proposal_id": 1,
+        "title": "Example title",
+        "description": "a larger description with the details of the proposal",
+        "proposal_type": "Text",
+        "proposal_status": "DepositPeriod",
+        "tally_result": {
+            "yes": 0,
+            "abstain": 0,
+            "no": 0,
+            "no_with_veto": 0
+        },
+        "submit_block": 5238512,
+        "total_deposit": {"atom": 50},
+    	"voting_start_block": -1
+    }
+}
+```
+
+Response on Failure:
+
+```json
+{
+    "rest api":"2.2",
+    "code":500,
+    "error":"Could not create the transaction.",
+    "result":{}
+}
+```
+
+###
+
+### POST /gov/proposals/{proposal-id}/deposits
+
+url: `/gov/proposals/{proposal-id}/deposits`
+
+Functionality: Submit or rise a deposit to a proposal in order to make it active
+
+POST Body:
+
+```json
+{
+	"base_req": {
+    "name": "string",
+    "password": "string",
+    "chain_id": "string",
+    "account_number": 0,
+    "sequence": 0,
+    "gas": 0,
+  },
+  "depositer": "string",
+  "amount": 0,
+}
+```
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.2",
+    "code":200,
+    "error":"",
+    "result":{
+      "TODO": "TODO",
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"Could not create the transaction.",
+    "result":{}
+}
+```
+
+
+
+### GET /gov/proposals/{proposal-id}/deposits/{address}
+
+url: `/gov/proposals/{proposal-id}/deposits/{address}
+
+Functionality: Query a validator's deposit to submit a proposal
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.0",
+    "code":200,
+    "error":"",
+    "result":{
+        "amount": {"atom": 150},
+        "depositer": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
+        "proposal-id": 16
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.0",
+    "code":500,
+    "error":"Could not create the transaction.",
+    "result":{}
+}
+```
+
+
+
 ### GET /gov/proposals/{proposal-id}/votes
 
 url: `/gov/proposals/{proposal-id}/votes`
@@ -875,14 +1003,21 @@ Returns on success:
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.2",
     "code":200,
     "error":"",
-    "result":{
-     "votes":[
-         "TODO"
-     ]
-    }
+    "result": [
+        {
+            "proposal-id": 1,
+        	"voter": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
+        	"option": "no_with_veto"
+    	},
+        {
+            "proposal-id": 1,
+        	"voter": "cosmosaccaddr1849m9wncrqp6v4tkss6a3j8uzvuv0cp7f75lrq",
+        	"option": "yes"
+    	},
+    ]
 }
 ```
 
@@ -907,7 +1042,7 @@ Functionality: Vote for a specific proposal
 
 POST Body:
 
-```js
+```json
 {
 	"base_req": {
      // Name of key to use
@@ -930,7 +1065,7 @@ Returns on success:
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.2",
     "code":200,
     "error":"",
     "result":{
@@ -951,25 +1086,24 @@ Returns on failure:
 ```
 
 
-## ICS23 - SlashingAPI
 
-The SlashingAPI exposes all functionality needed for to slash validators and delegators in PoS.
+### GET /gov/proposals/{proposal-id}/votes/{address}
 
-### GET /slashing/validator/{validatorAddr}/signing-info
+url: `/gov/proposals/{proposal-id}/votes/{address}`
 
-url: `/slashing/validator/{validatorAddr}/signing-info`
-
-Functionality: Query the information from a single validator.
+Functionality: Get the current `Option` submited by an address
 
 Returns on success:
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.2",
     "code":200,
     "error":"",
     "result":{
-     "transaction":"TODO"
+        "proposal-id": 1,
+        "voter": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
+        "option": "no_with_veto"
     }
 }
 ```
@@ -985,11 +1119,47 @@ Returns on failure:
 }
 ```
 
-### POST /slashing/validators/{validatorAddr}/unrevokes
+
+
+## ICS23 - SlashingAPI
+
+The SlashingAPI exposes all functionality needed for to slash validators and delegators in PoS.
+
+### GET /slashing/validator/{validatorAddr}/signing-info
+
+url: `/slashing/validator/{validatorAddr}/signing-info`
+
+Functionality: Query the information from a single validator.
+
+Returns on success:
+
+```json
+{
+    "rest api":"2.3",
+    "code":200,
+    "error":"",
+    "result":{
+     "transaction":"TODO"
+    }
+}
+```
+
+Returns on failure:
+
+```json
+{
+    "rest api":"2.3",
+    "code":500,
+    "error":"Could not create the transaction.",
+    "result":{}
+}
+```
+
+### POST /slashing/validators/{validatorAddr}/unrevoke
 
 url: `/slashing/validators/{validatorAddr}/unrevoke`
 
-Functionality: Query the information from a single validator.
+Functionality: Submit a message to unrevoke a validator.
 
 POST Body:
 
@@ -1010,7 +1180,7 @@ Returns on success:
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.3",
     "code":200,
     "error":"",
     "result":{
@@ -1023,7 +1193,7 @@ Returns on failure:
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.3",
     "code":500,
     "error":"TODO",
     "result":{}

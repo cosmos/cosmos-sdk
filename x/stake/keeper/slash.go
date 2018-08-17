@@ -45,8 +45,6 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	}
 	ownerAddress := validator.GetOwner()
 
-	fmt.Printf("Slashing validator with owner %X\n", ownerAddress)
-
 	// Track remaining slash amount for the validator
 	// This will decrease when we slash unbondings and
 	// redelegations, as that stake has since unbonded

@@ -47,6 +47,7 @@ BUG FIXES
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+  * [x/stake] [#2083] Fix broken invariant of bonded validator power decrease
 
 * SDK
 

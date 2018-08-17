@@ -1,6 +1,8 @@
 package gov
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 )
@@ -152,8 +154,8 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 				val.GetPower().RoundInt64(),
 				keeper.GetTallyingProcedure(ctx).GovernancePenalty)
 
-			logger.Info("Validator %s failed to vote on proposal %d, slashing",
-				val.GetOwner(), activeProposal.GetProposalID())
+			logger.Info(fmt.Sprintf("Validator %s failed to vote on proposal %d, slashing",
+				val.GetOwner(), activeProposal.GetProposalID()))
 		}
 
 		resTags.AppendTag(tags.Action, action)

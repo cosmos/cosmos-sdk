@@ -153,7 +153,10 @@ func (s Space) SetRaw(ctx sdk.Context, key Key, param []byte) {
 	tstore.Set(keybz, []byte{})
 }
 
-// Iterates over raw parameters in the substore
+// Returns a KVStore identical with the paramspace
+func (s Space) KVStore(ctx sdk.Context) sdk.KVStore {
+	return ctx.KVStore(s.key).Prefix(s.space)
+}
 
 // Wrapper of Space, provides immutable functions only
 type ReadOnlySpace struct {

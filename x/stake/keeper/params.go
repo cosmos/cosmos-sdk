@@ -34,25 +34,25 @@ var (
 )
 
 // InflationRateChange - Maximum annual change in inflation rate
-func (k Keeper) InflationRateChange(ctx sdk.Context) (res sdk.Rat) {
+func (k Keeper) InflationRateChange(ctx sdk.Context) (res sdk.Dec) {
 	k.paramstore.Get(ctx, keyInflationRateChange, &res)
 	return
 }
 
 // InflationMax - Maximum inflation rate
-func (k Keeper) InflationMax(ctx sdk.Context) (res sdk.Rat) {
+func (k Keeper) InflationMax(ctx sdk.Context) (res sdk.Dec) {
 	k.paramstore.Get(ctx, keyInflationMax, &res)
 	return
 }
 
 // InflationMin - Minimum inflation rate
-func (k Keeper) InflationMin(ctx sdk.Context) (res sdk.Rat) {
+func (k Keeper) InflationMin(ctx sdk.Context) (res sdk.Dec) {
 	k.paramstore.Get(ctx, keyInflationMin, &res)
 	return
 }
 
 // GoalBonded - Goal of percent bonded atoms
-func (k Keeper) GoalBonded(ctx sdk.Context) (res sdk.Rat) {
+func (k Keeper) GoalBonded(ctx sdk.Context) (res sdk.Dec) {
 	k.paramstore.Get(ctx, keyGoalBonded, &res)
 	return
 }

@@ -35,13 +35,13 @@ var (
 
 // Params - used for initializing default parameter for slashing at genesis
 type Params struct {
-	MaxEvidenceAge           int64   `json:"max-evidence-age"`
-	SignedBlocksWindow       int64   `json:"signed-blocks-window"`
-	MinSignedPerWindow       sdk.Dec `json:"min-signed-per-window"`
-	DoubleSignUnbondDuration int64   `json:"doublesign-unbond-duration"`
-	DowntimeUnbondDuration   int64   `json:"downtime-unbond-duration"`
-	SlashFractionDoubleSign  sdk.Dec `json:"slash-fraction-doublesign"`
-	SlashFractionDowntime    sdk.Dec `json:"slash-fraction-downtime"`
+	MaxEvidenceAge           time.Duration `json:"max-evidence-age"`
+	SignedBlocksWindow       int64         `json:"signed-blocks-window"`
+	MinSignedPerWindow       sdk.Dec       `json:"min-signed-per-window"`
+	DoubleSignUnbondDuration time.Duration `json:"doublesign-unbond-duration"`
+	DowntimeUnbondDuration   time.Duration `json:"downtime-unbond-duration"`
+	SlashFractionDoubleSign  sdk.Dec       `json:"slash-fraction-doublesign"`
+	SlashFractionDowntime    sdk.Dec       `json:"slash-fraction-downtime"`
 }
 
 // Default parameters used by Cosmos Hub

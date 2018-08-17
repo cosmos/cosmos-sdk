@@ -12,7 +12,7 @@ import (
 func testEqualParams(t *testing.T, ctx sdk.Context, params Params, keeper Keeper) {
 	require.Equal(t, params.MaxEvidenceAge, keeper.MaxEvidenceAge(ctx))
 	require.Equal(t, params.SignedBlocksWindow, keeper.SignedBlocksWindow(ctx))
-	require.Equal(t, sdk.NewRat(params.SignedBlocksWindow).Mul(params.MinSignedPerWindow).RoundInt64(), keeper.MinSignedPerWindow(ctx))
+	require.Equal(t, sdk.NewDec(params.SignedBlocksWindow).Mul(params.MinSignedPerWindow).RoundInt64(), keeper.MinSignedPerWindow(ctx))
 	require.Equal(t, params.DoubleSignUnbondDuration, keeper.DoubleSignUnbondDuration(ctx))
 	require.Equal(t, params.DowntimeUnbondDuration, keeper.DowntimeUnbondDuration(ctx))
 
@@ -39,7 +39,7 @@ func TestGenesis(t *testing.T) {
 	store.Set(ctx, signedBlocksWindowKey, def.SignedBlocksWindow)
 	testEqualParams(t, ctx, def, k)
 
-	def.MinSignedPerWindow = sdk.OneRat()
+	def.MinSignedPerWindow = sdk.OneDec()
 	store.Set(ctx, minSignedPerWindowKey, def.MinSignedPerWindow)
 	testEqualParams(t, ctx, def, k)
 
@@ -51,11 +51,11 @@ func TestGenesis(t *testing.T) {
 	store.Set(ctx, downtimeUnbondDurationKey, def.DowntimeUnbondDuration)
 	testEqualParams(t, ctx, def, k)
 
-	def.SlashFractionDoubleSign = sdk.OneRat()
+	def.SlashFractionDoubleSign = sdk.OneDec()
 	store.Set(ctx, slashFractionDoubleSignKey, def.SlashFractionDoubleSign)
 	testEqualParams(t, ctx, def, k)
 
-	def.SlashFractionDowntime = sdk.OneRat()
+	def.SlashFractionDowntime = sdk.OneDec()
 	store.Set(ctx, slashFractionDowntimeKey, def.SlashFractionDowntime)
 	testEqualParams(t, ctx, def, k)
 }

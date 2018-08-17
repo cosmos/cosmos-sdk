@@ -54,7 +54,11 @@ func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) 
 		txCtx = txCtx.WithSequence(accSeq)
 	}
 
-	passphrase, err := keys.GetPassphrase(cliCtx.FromAddressName)
+	name, err := cliCtx.GetFromName()
+	if err != nil {
+		return err
+	}
+	passphrase, err := keys.GetPassphrase(name)
 	if err != nil {
 		return err
 	}
@@ -67,7 +71,7 @@ func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) 
 	}
 
 	// build and sign the transaction
-	txBytes, err := txCtx.BuildAndSign(cliCtx.FromAddressName, passphrase, msgs)
+	txBytes, err := txCtx.BuildAndSign(name, passphrase, msgs)
 	if err != nil {
 		return err
 	}

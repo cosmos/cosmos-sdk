@@ -14,6 +14,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ Keybase = dbKeybase{}
@@ -179,6 +180,12 @@ func (kb dbKeybase) List() ([]Info, error) {
 	iter := kb.db.Iterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
+		key := string(iter.Key())
+
+		if strings.HasSuffix(key, ".address") {
+			continue
+		}
+
 		info, err := readInfo(iter.Value())
 		if err != nil {
 			return nil, err
@@ -194,6 +201,15 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 	if len(bs) == 0 {
 		return nil, fmt.Errorf("Key %s not found", name)
 	}
+	return readInfo(bs)
+}
+
+func (kb dbKeybase) GetByAddress(address types.AccAddress) (Info, error) {
+	ik := kb.db.Get(addrKey((tmcrypto.Address)(address)))
+	if len(ik) == 0 {
+		return nil, fmt.Errorf("Key with address %s not found", address.String())
+	}
+	bs := kb.db.Get(ik)
 	return readInfo(bs)
 }
 
@@ -341,6 +357,7 @@ func (kb dbKeybase) Delete(name, passphrase string) error {
 		if err != nil {
 			return err
 		}
+		kb.db.DeleteSync(addrKey(linfo.GetPubKey().Address()))
 		kb.db.DeleteSync(infoKey(name))
 		return nil
 	case ledgerInfo:
@@ -348,9 +365,11 @@ func (kb dbKeybase) Delete(name, passphrase string) error {
 		if passphrase != "yes" {
 			return fmt.Errorf("enter 'yes' exactly to delete the key - this cannot be undone")
 		}
+		kb.db.DeleteSync(addrKey(info.GetPubKey().Address()))
 		kb.db.DeleteSync(infoKey(name))
 		return nil
 	}
+
 	return nil
 }
 
@@ -407,7 +426,14 @@ func (kb dbKeybase) writeOfflineKey(pub tmcrypto.PubKey, name string) Info {
 
 func (kb dbKeybase) writeInfo(info Info, name string) {
 	// write the info by key
-	kb.db.SetSync(infoKey(name), writeInfo(info))
+	key := infoKey(name)
+	kb.db.SetSync(key, writeInfo(info))
+	// store a pointer to the infokey by address for fast lookup
+	kb.db.SetSync(addrKey(info.GetPubKey().Address()), key)
+}
+
+func addrKey(address tmcrypto.Address) []byte {
+	return []byte(fmt.Sprintf("%s.address", address.String()))
 }
 
 func infoKey(name string) []byte {

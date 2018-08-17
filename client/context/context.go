@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 const ctxAccStoreName = "acc"
@@ -32,6 +33,8 @@ type CLIContext struct {
 	Async           bool
 	JSON            bool
 	PrintResponse   bool
+fromAddress   types.AccAddress
+	fromName      stringz
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
@@ -45,18 +48,18 @@ func NewCLIContext() CLIContext {
 	}
 
 	return CLIContext{
-		Client:          rpc,
-		NodeURI:         nodeURI,
-		AccountStore:    ctxAccStoreName,
+		Client:        rpc,
+		NodeURI:       nodeURI,
+		AccountStore:  ctxAccStoreName,
 		FromAddressName: viper.GetString(client.FlagFrom),
 		Height:          viper.GetInt64(client.FlagHeight),
 		Gas:             viper.GetInt64(client.FlagGas),
 		GasAdjustment:   viper.GetFloat64(client.FlagGasAdjustment),
-		TrustNode:       viper.GetBool(client.FlagTrustNode),
-		UseLedger:       viper.GetBool(client.FlagUseLedger),
-		Async:           viper.GetBool(client.FlagAsync),
-		JSON:            viper.GetBool(client.FlagJson),
-		PrintResponse:   viper.GetBool(client.FlagPrintResponse),
+		TrustNode:     viper.GetBool(client.FlagTrustNode),
+		UseLedger:     viper.GetBool(client.FlagUseLedger),
+		Async:         viper.GetBool(client.FlagAsync),
+		JSON:          viper.GetBool(client.FlagJson),
+		PrintResponse: viper.GetBool(client.FlagPrintResponse),
 	}
 }
 
@@ -85,10 +88,9 @@ func (ctx CLIContext) WithAccountStore(accountStore string) CLIContext {
 	return ctx
 }
 
-// WithFromAddressName returns a copy of the context with an updated from
-// address.
-func (ctx CLIContext) WithFromAddressName(addrName string) CLIContext {
-	ctx.FromAddressName = addrName
+// WithFrom returns a copy of the context with an updated from address.
+func (ctx CLIContext) WithFrom(addrName string) CLIContext {
+	ctx.From = addrName
 	return ctx
 }
 

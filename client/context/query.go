@@ -13,6 +13,7 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+		cskeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 // GetNode returns an RPC client. If the context's client is not defined, an
@@ -76,22 +77,53 @@ func (ctx CLIContext) GetAccount(address []byte) (auth.Account, error) {
 }
 
 // GetFromAddress returns the from address from the context's name.
-func (ctx CLIContext) GetFromAddress() (from sdk.AccAddress, err error) {
-	if ctx.FromAddressName == "" {
-		return nil, errors.Errorf("must provide a from address name")
+func (ctx CLIContext) GetFromAddress() (sdk.AccAddress, error) {
+	if ctx.fromAddress == nil {
+		if err := ctx.populateFromFields(); err != nil {
+			return nil, err
+		}
+	}
+
+	return ctx.fromAddress, nil
+}
+
+// GetFromname returns the key name for the current context.
+func (ctx CLIContext) GetFromName() (string, error) {
+	if ctx.fromName == "" {
+		if err := ctx.populateFromFields(); err != nil {
+			return "", err
+		}
+	}
+
+	return ctx.fromName, nil
+}
+
+func (ctx CLIContext) populateFromFields() error {
+	if ctx.From == "" {
+		return errors.Errorf("must provide a from address or name")
 	}
 
 	keybase, err := keys.GetKeyBase()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	info, err := keybase.Get(ctx.FromAddressName)
-	if err != nil {
-		return nil, errors.Errorf("no key for: %s", ctx.FromAddressName)
+	var info cskeys.Info
+	if addr, err := sdk.AccAddressFromBech32(ctx.From); err == nil {
+		info, err = keybase.GetByAddress(addr)
+		if err != nil {
+			return err
+		}
+	} else {
+		info, err = keybase.Get(ctx.From)
+		if err != nil {
+			return err
+		}
 	}
 
-	return sdk.AccAddress(info.GetPubKey().Address()), nil
+	ctx.fromAddress = (sdk.AccAddress)(info.GetPubKey().Address())
+	ctx.fromName = info.GetName()
+	return nil
 }
 
 // GetAccountNumber returns the next account number for the given account

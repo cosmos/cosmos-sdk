@@ -10,14 +10,8 @@ type QueryRouter interface {
 	Route(path string) (h sdk.Querier)
 }
 
-// map a transaction type to a handler and an initgenesis function
-type queryroute struct {
-	r string
-	h sdk.Querier
-}
-
 type queryrouter struct {
-	routes []queryroute
+	routes map[string]sdk.Querier
 }
 
 // nolint
@@ -25,27 +19,23 @@ type queryrouter struct {
 // TODO either make Function unexported or make return type (router) Exported
 func NewQueryRouter() *queryrouter {
 	return &queryrouter{
-		routes: make([]queryroute, 0),
+		routes: map[string]sdk.Querier{},
 	}
 }
 
-// AddRoute - TODO add description
-func (rtr *queryrouter) AddRoute(r string, h sdk.Querier) QueryRouter {
+// AddRoute - Adds an sdk.Querier to the route provided. Panics on duplicate
+func (rtr *queryrouter) AddRoute(r string, q sdk.Querier) QueryRouter {
 	if !isAlphaNumeric(r) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
-	rtr.routes = append(rtr.routes, queryroute{r, h})
-
+	if rtr.routes[r] != nil {
+		panic("route has already been initialized")
+	}
+	rtr.routes[r] = q
 	return rtr
 }
 
-// Route - TODO add description
-// TODO handle expressive matches.
+// Returns the sdk.Querier for a certain route path
 func (rtr *queryrouter) Route(path string) (h sdk.Querier) {
-	for _, route := range rtr.routes {
-		if route.r == path {
-			return route.h
-		}
-	}
-	return nil
+	return rtr.routes[path]
 }

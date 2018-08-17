@@ -111,13 +111,19 @@ func (bz AccAddress) Format(s fmt.State, verb rune) {
 
 // Returns boolean for whether two AccAddresses are Equal
 func (bz AccAddress) Equals(bz2 AccAddress) bool {
+	if bz.Empty() && bz2.Empty() {
+		return true
+	}
 	return (bytes.Compare(bz.Bytes(), bz2.Bytes()) == 0)
 }
 
 // Returns boolean for whether an AccAddress is empty
 func (bz AccAddress) Empty() bool {
+	if bz == nil {
+		return true
+	}
 	bz2 := AccAddress{}
-	return bz.Equals(bz2)
+	return (bytes.Compare(bz.Bytes(), bz2.Bytes()) == 0)
 }
 
 //__________________________________________________________
@@ -206,13 +212,19 @@ func (bz ValAddress) Format(s fmt.State, verb rune) {
 
 // Returns boolean for whether two ValAddresses are Equal
 func (bz ValAddress) Equals(bz2 ValAddress) bool {
+	if bz.Empty() && bz2.Empty() {
+		return true
+	}
 	return (bytes.Compare(bz.Bytes(), bz2.Bytes()) == 0)
 }
 
 // Returns boolean for whether an AccAddress is empty
 func (bz ValAddress) Empty() bool {
+	if bz == nil {
+		return true
+	}
 	bz2 := ValAddress{}
-	return bz.Equals(bz2)
+	return (bytes.Compare(bz.Bytes(), bz2.Bytes()) == 0)
 }
 
 // Bech32ifyAccPub takes AccountPubKey and returns the bech32 encoded string

@@ -370,6 +370,9 @@ func handleQueryP2P(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
 	// path[0] should be "custom" because "/custom" prefix is required for keeper queries.
 	// the queryRouter routes using path[1]. For example, in the path "custom/gov/proposal", queryRouter routes using "gov"
+	if path[1] == "" {
+		sdk.ErrUnknownRequest("No route for custom query specified").QueryResult()
+	}
 	querier := app.queryRouter.Route(path[1])
 	ctx := app.checkState.ctx
 	// Passes the rest of the path as an argument to the querier.
@@ -378,6 +381,7 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 	if err != nil {
 		return abci.ResponseQuery{
 			Code: uint32(err.ABCICode()),
+			Log:  err.ABCILog(),
 		}
 	}
 	return abci.ResponseQuery{

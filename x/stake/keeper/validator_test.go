@@ -48,7 +48,6 @@ func TestSetValidator(t *testing.T) {
 	updates := keeper.GetTendermintUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 	require.Equal(t, validator.ABCIValidator(), updates[0])
-
 }
 
 func TestUpdateValidatorByPowerIndex(t *testing.T) {
@@ -142,6 +141,19 @@ func TestCliffValidatorChange(t *testing.T) {
 	// assert cliff validator has not change but increased in power
 	cliffPower = keeper.GetCliffValidatorPower(ctx)
 	require.Equal(t, newCliffVal.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+	require.Equal(t, GetValidatorsByPowerIndexKey(newCliffVal, pool), cliffPower)
+
+	// add enough power to cliff validator to be equal in rank to next validator
+	newCliffVal, pool, _ = newCliffVal.AddTokensFromDel(pool, 9)
+	keeper.SetPool(ctx, pool)
+	newCliffVal = keeper.UpdateValidator(ctx, newCliffVal)
+
+	// assert new cliff validator due to power rank construction
+	newCliffVal = validators[numVals-maxVals+2]
+	require.Equal(t, newCliffVal.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+
+	// assert cliff validator power should have been updated
+	cliffPower = keeper.GetCliffValidatorPower(ctx)
 	require.Equal(t, GetValidatorsByPowerIndexKey(newCliffVal, pool), cliffPower)
 }
 

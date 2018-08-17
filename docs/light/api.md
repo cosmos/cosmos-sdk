@@ -21,22 +21,25 @@ used for determining the error type.
 Exposes the same functionality as the Tendermint RPC from a full node. It aims to have a very
 similar API.
 
-### /txs - POST
+### POST /txs
 
 url: /txs
 
-Functionality: Submit a signed transaction. Can be of type:
+Query Parameters:
 
-- `return=sync`: returns a response from CheckTx
-- `return=async`: does not return a response from CheckTx
-- `return=block`: waits for for the transaction to be committed in a block
+- `?return={sync|async|block}`:
+  * `return=sync`: Waits for the transaction to pass `CheckTx`
+  * `return=async`: Returns the request immediately after it is received by the server
+  * `return=block`: waits for for the transaction to be committed in a block
 
-Parameters:
+POST Body:
 
-| Parameter   | Type   | Default | Required | Description            |
-| ----------- | ------ | ------- | -------- | ---------------------- |
-| transaction | string | null    | true     | signed tx bytes        |
-| return      | string | null    | true     | broadcast return value |
+```js
+{
+  "transaction": "string",
+  "return": "string",
+}
+```
 
 Returns on success:
 
@@ -71,9 +74,9 @@ Returns on failure:
 
 This API exposes all functionality needed for key creation, signing and management.
 
-### /keys - GET
+### GET /keys
 
-url: /keys
+url: `/keys`
 
 Functionality: Gets a list of all the keys.
 
@@ -115,11 +118,21 @@ Returns on failure:
 
 
 
-### /keys - POST
+### POST /keys
 
-url: /keys
+url: `/keys`
 
 Functionality: Create a new key.
+
+POST Body:
+
+```js
+{
+  "name": "string",
+  "password": "string",
+  "seed": "string",
+}
+```
 
 Parameter:
 
@@ -154,9 +167,9 @@ Returns on failure:
 
 
 
-### /keys/{name} - GET
+### GET /keys/{name}
 
-url: /keys/{name}
+url: `/keys/{name}`
 
 Functionality: Get the information for the specified key.
 
@@ -186,18 +199,20 @@ Returns on failure:
 }
 ```
 
-### /keys/{name} - PUT
+### PUT /keys/{name}
 
-url: /keys/{name}
+url: `/keys/{name}`
 
 Functionality: Change the encryption password for the specified key.
 
-Parameters:
+PUT Body:
 
-| Parameter    | Type   | Default | Required | Description  |
-| ------------ | ------ | ------- | -------- | ------------ |
-| old_password | string | null    | true     | old password |
-| new_password | string | null    | true     | new password |
+```js
+{
+  "old_password": "string",
+  "new_password": "string",
+}
+```
 
 Returns on success:
 
@@ -221,17 +236,19 @@ Returns on failure:
 }
 ```
 
-### /keys/{name} - DELETE
+### DELETE /keys/{name}
 
 url: /keys/{name}
 
 Functionality: Delete the specified key.
 
-Parameters:
+DELETE Body:
 
-| Parameter | Type   | Default | Required | Description     |
-| --------- | ------ | ------- | -------- | --------------- |
-| password  | string | null    | true     | password of key |
+```js
+{
+  "password": "string",
+}
+```
 
 Returns on success:
 
@@ -255,18 +272,20 @@ Returns on failure:
 }
 ```
 
-### /keys/{name}/recover - POST
+### POST /keys/{name}/recover
 
-url: /keys/{name}/recover
+url: `/keys/{name}/recover`
 
 Functionality: Recover your key from seed and persist it encrypted with the password.
 
-Parameter:
+POST Body:
 
-| Parameter | Type   | Default | Required | Description     |
-| --------- | ------ | ------- | -------- | --------------- |
-| password  | string | null    | true     | password of key |
-| seed      | string | null    | true     | seed of key     |
+```js
+{
+  "password": "string",
+  "seed": "string",
+}
+```
 
 Returns on success:
 
@@ -296,7 +315,7 @@ Returns on failure:
 
 ### /auth/accounts/{address} - GET
 
-url: /auth/accounts/{address}
+url: `/auth/accounts/{address}`
 
 Functionality: Query the information of an account .
 
@@ -342,11 +361,9 @@ Returns on error:
 
 The TokenAPI exposes all functionality needed to query account balances and send transactions.
 
+### GET /bank/balance/{account}
 
-
-### /bank/balance/{account} - GET
-
-url: /bank/balance/{account}
+url: `/bank/balance/{account}`
 
 Functionality: Query the specified account's balance.
 
@@ -376,21 +393,30 @@ Returns on error:
 }
 ```
 
-### /bank/transfer - POST
+### POST /bank/transfers
 
-url: /bank/transfer
+url: `/bank/transfers`
 
 Functionality: Create a transfer in the bank module.
 
-Parameters:
+POST Body:
 
-| Parameter    | Type   | Default | Required | Description               |
-| ------------ | ------ | ------- | -------- | ------------------------- |
-| sender       | string | null    | true     | Address of sender         |
-| receiver     | string | null    | true     | address of receiver       |
-| chain_id     | string | null    | true     | chain id                  |
-| amount       | int    | null    | true     | amount of the token       |
-| denomonation | string | null    | true     | denomonation of the token |
+```js
+{
+  "amount": [
+    {
+      "denom": "string",
+      "amount": 64,
+    }
+  ],
+  "name": "string",
+  "password": "string",
+  "chain_id": "string",
+  "account_number": 64,
+  "sequence": 64,
+  "gas": 64,
+}
+```
 
 Returns on success:
 
@@ -420,9 +446,9 @@ Returns on failure:
 
 The StakingAPI exposes all functionality needed for validation and delegation in Proof-of-Stake.
 
-### /stake/delegators/{delegatorAddr} - GET
+### GET /stake/delegators/{delegatorAddr}
 
-url: /stake/delegators/{delegatorAddr}
+url: `/stake/delegators/{delegatorAddr}`
 
 Functionality: Get all delegations (delegation, undelegation) from a delegator.
 
@@ -452,9 +478,9 @@ Returns on error:
 }
 ```
 
-### /stake/delegators/{delegatorAddr}/validators - GET
+### GET /stake/delegators/{delegatorAddr}/validators
 
-url: /stake/delegators/{delegatorAddr}/validators
+url: `/stake/delegators/{delegatorAddr}/validators`
 
 Functionality: Query all validators that a delegator is bonded to.
 
@@ -480,9 +506,9 @@ Returns on failure:
 }
 ```
 
-### /stake/delegators/{delegatorAddr}/validators/{validatorAddr} - GET
+### GET /stake/delegators/{delegatorAddr}/validators/{validatorAddr}
 
-url: /stake/delegators/{delegatorAddr}/validators/{validatorAddr}
+url: `/stake/delegators/{delegatorAddr}/validators/{validatorAddr}`
 
 Functionality: Query a validator that a delegator is bonded to
 
@@ -508,9 +534,9 @@ Returns on failure:
 }
 ```
 
-### /stake/delegators/{delegatorAddr}/txs - GET
+### GET /stake/delegators/{delegatorAddr}/txs
 
-url: /stake/delegators/{delegatorAddr}/txs
+url: `/stake/delegators/{delegatorAddr}/txs`
 
 Functionality: Get all staking txs (i.e msgs) from a delegator.
 
@@ -538,11 +564,65 @@ Returns on failure:
 }
 ```
 
-### /stake/delegators/{delegatorAddr}/delegations - POST
+### POST /stake/delegators/{delegatorAddr}/delegations
 
-url: /stake/delegators/{delegatorAddr}/delegations
+url: `/stake/delegators/{delegatorAddr}/delegations`
 
-Functionality: Submit a delegation.
+Functionality: Submit or edit a delegation.
+
+> NOTE: Should this be a PUT instead of a POST? the code indicates that this is an edit operation
+
+POST Body:
+
+```js
+{
+  "name": "string",
+  "password": "string",
+  "chain_id": "string",
+  "account_number": 64,
+  "sequence": 64,
+  "gas": 64,
+  "delegations": [
+    {
+      "delegator_addr": "string",
+      "validator_addr": "string",
+      "delegation": {
+        "denom": "string",
+        "amount": 1234
+      }
+    }
+  ],
+  "begin_unbondings": [
+    {
+      "delegator_addr": "string",
+      "validator_addr": "string",
+      "shares": "string",
+    }
+  ],
+  "complete_unbondings": [
+    {
+      "delegator_addr": "string",
+      "validator_addr": "string",
+    }
+  ],
+  "begin_redelegates" [
+    {
+      "delegator_addr": "string",
+      "validator_src_addr": "string",
+      "validator_dst_addr": "string",
+      "shares": "string",
+    }
+  ]
+  "complete_redelegates": [
+    {
+      "delegator_addr": "string",
+      "validator_src_addr": "string",
+      "validator_dst_addr": "string",
+    }
+  ]
+}
+
+```
 
 Returns on success:
 
@@ -568,9 +648,9 @@ Returns on failure:
 }
 ```
 
-### /stake/delegators/{delegatorAddr}/delegations/{validatorAddr} - GET
+### GET /stake/delegators/{delegatorAddr}/delegations/{validatorAddr}
 
-url: /stake/delegators/{delegatorAddr}/delegations/{validatorAddr}
+url: `/stake/delegators/{delegatorAddr}/delegations/{validatorAddr}`
 
 Functionality: Query the current delegation status between a delegator and a validator.
 
@@ -598,9 +678,9 @@ Returns on failure:
 }
 ```
 
-### /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr} - GET
+### GET /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}
 
-url: /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}
+url: `/stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}`
 
 Functionality: Query all unbonding delegations between a delegator and a validator.
 
@@ -628,9 +708,9 @@ Returns on failure:
 }
 ```
 
-### /stake/validators - GET
+### GET /stake/validators
 
-url: /stake/validators
+url: `/stake/validators`
 
 Functionality: Get all validator candidates.
 
@@ -658,9 +738,9 @@ Returns on failure:
 }
 ```
 
-### /stake/validators/{validatorAddr} - GET
+### GET /stake/validators/{validatorAddr}
 
-url: /stake/validators/{validatorAddr}
+url: `/stake/validators/{validatorAddr}`
 
 Functionality: Query the information from a single validator.
 
@@ -688,19 +768,17 @@ Returns on failure:
 }
 ```
 
-
-
 ## ICS22 - GovernanceAPI
 
 The GovernanceAPI exposes all functionality needed for casting votes on plain text, software upgrades and parameter change proposals.
 
-### /gov/proposals - GET
+### GET /gov/proposals
 
-url: /gov/proposals
+url: `/gov/proposals`
 
 Functionality: Query all submited proposals
 
-Returns on success:
+Response on Success:
 
 ```json
 {
@@ -710,12 +788,12 @@ Returns on success:
     "result":{
      "proposals":[
          "TODO"
-     ]
+      ]
     }
 }
 ```
 
-Returns on failure:
+Response on Failure:
 
 ```json
 {
@@ -726,34 +804,52 @@ Returns on failure:
 }
 ```
 
-### /gov/proposals - POST
+### POST /gov/proposals
 
-url: /gov/proposals
+url: `/gov/proposals`
 
 Functionality: Submit a proposal
 
-Parameter:
+POST Body:
 
-| Parameter       | Type    | Default | Required | Description                                                  |
-| --------------- | ------- | ------- | -------- | ------------------------------------------------------------ |
-| title           | string  | null    | true     | title of the proposal                                        |
-| description     | string  | null    | true     | description of the proposal                                  |
-| proposal_type   | string  | null    | true     | type of proposal: `PlainTextProposal`, `SoftwareUpgradeProposal` |
-| proposer        | address |         | true     | address of the proposer                                      |
-| initial_deposit | string  |         |          | coins to add to the proposal's deposit                       |
-| name            | string  | null    | true     | name of the key                                              |
-| password        | string  | null    | true     | password of key                                              |
-| chain_id        | string  | null    | false    |                                                              |
-| account_number  | int64   |         |          |                                                              |
+```js
+{
+	"base_req": {
+     // Name of key to use
+    "name": "string",
+    // Password for that key
+    "password": "string",
+    "chain_id": "string",
+    "account_number": 64,
+    "sequence": 64,
+    "gas": 64,
+  },
+  // Title of the proposal
+  "title": "string",
+  // Description of the proposal
+  "description": "string",
+  // PlainTextProposal supported now. SoftwareUpgradeProposal and other types may be supported soon
+  "proposal_type": "string",
+  // A cosmosaccaddr address
+  "proposer": "string",
+  "initial_deposit": [
+      {
+	      "denom": "string",
+        "amount": 64,
+      }
+  ]
+}
+```
 
 Returns on success:
 
-```json
+```js
 {
     "rest api":"2.0",
     "code":200,
     "error":"",
     "result":{
+      "TODO": "TODO",
     }
 }
 ```
@@ -769,13 +865,11 @@ Returns on failure:
 }
 ```
 
-### /gov/proposals /{proposal-id}/votes - GET
+### GET /gov/proposals/{proposal-id}/votes
 
-url: /gov/proposals /{proposal-id}/votes
+url: `/gov/proposals/{proposal-id}/votes`
 
 Functionality: Query all votes from a specific proposal
-
-
 
 Returns on success:
 
@@ -805,26 +899,32 @@ Returns on failure:
 
 
 
-### /gov/proposals /{proposal-id}/votes - POST
+### POST /gov/proposals/{proposal-id}/votes
 
-url: /gov/proposals /{proposal-id}/votes
+url: `/gov/proposals/{proposal-id}/votes`
 
-Functionality: Query all votes from a specific proposal
+Functionality: Vote for a specific proposal
 
-| Parameter      | Type    | Default | Required | Description                                                  |
-| -------------- | ------- | ------- | -------- | ------------------------------------------------------------ |
-| voter          | address |         | true     | address of the voter                                         |
-| option         | string  |         | true     | value for the vote option:`Yes`, `No` `Abstain`, `NoWithVeto` |
-| name           | string  | null    | true     | name of the key                                              |
-| password       | string  | null    | true     | password of key                                              |
-| chain_id       | string  | null    | false    |                                                              |
-| account_number | int64   |         |          |                                                              |
-| sequence       | int64   |         |          |                                                              |
-| gas            | int64   |         |          |                                                              |
-| sequence       | int64  |         |          |                 |
-| gas            | int64  |         |          |                 |
+POST Body:
 
-
+```js
+{
+	"base_req": {
+     // Name of key to use
+    "name": "string",
+    // Password for that key
+    "password": "string",
+    "chain_id": "string",
+    "account_number": 64,
+    "sequence": 64,
+    "gas": 64,
+  },
+  // A cosmosaccaddr address
+  "voter": "string",
+  // Value of the vote option `Yes`, `No` `Abstain`, `NoWithVeto`
+  "option": "string",
+}
+```
 
 Returns on success:
 
@@ -834,6 +934,7 @@ Returns on success:
     "code":200,
     "error":"",
     "result":{
+      "TODO": "TODO",
     }
 }
 ```
@@ -850,16 +951,13 @@ Returns on failure:
 ```
 
 
-
-
-
 ## ICS23 - SlashingAPI
 
 The SlashingAPI exposes all functionality needed for to slash validators and delegators in PoS.
 
-### /slashing/validator/{validatorAddr}/signing-info - GET
+### GET /slashing/validator/{validatorAddr}/signing-info
 
-url: /slashing/validator/{validatorAddr}/signing-info
+url: `/slashing/validator/{validatorAddr}/signing-info`
 
 Functionality: Query the information from a single validator.
 
@@ -887,22 +985,26 @@ Returns on failure:
 }
 ```
 
-### /slashing/validators/{validatorAddr}/unrevoke - POST
+### POST /slashing/validators/{validatorAddr}/unrevokes
 
-url: /slashing/validators/{validatorAddr}/unrevoke
+url: `/slashing/validators/{validatorAddr}/unrevoke`
 
 Functionality: Query the information from a single validator.
 
-Parameter:
+POST Body:
 
-| Parameter      | Type   | Default | Required | Description     |
-| -------------- | ------ | ------- | -------- | --------------- |
-| name           | string | null    | true     | name of the key |
-| password       | string | null    | true     | password of key |
-| chain_id       | string | null    | false    |                 |
-| account_number | int64  |         |          |                 |
-| sequence       | int64  |         |          |                 |
-| gas            | int64  |         |          |                 |
+```js
+{
+  // Name of key to use
+  "name": "string",
+  // Password for that key
+  "password": "string",
+  "chain_id": "string",
+  "account_number": 64,
+  "sequence": 64,
+  "gas": 64,
+}
+```
 
 Returns on success:
 

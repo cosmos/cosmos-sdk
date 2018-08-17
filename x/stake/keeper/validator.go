@@ -280,6 +280,10 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 		panic(fmt.Sprintf("cliff validator record not found for address: %v\n", cliffAddr))
 	}
 
+	// NOTE: We get the power via affectedVal since the store (by power key)
+	// has yet to be updated.
+	affectedValPower := affectedVal.GetPower()
+
 	// Create a validator iterator ranging from smallest to largest by power
 	// starting the current cliff validator's power.
 	start := GetValidatorsByPowerIndexKey(oldCliffVal, pool)
@@ -309,12 +313,10 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 		// validator to the affected validator.
 		bz := GetValidatorsByPowerIndexKey(affectedVal, pool)
 		store.Set(ValidatorPowerCliffKey, bz)
-	} else if bytes.Compare(GetValidatorsByPowerIndexKey(affectedVal, pool), GetValidatorsByPowerIndexKey(newCliffVal, pool)) == 1 {
+	} else if affectedValPower.GT(newCliffVal.GetPower()) {
 		// The affected validator no longer remains the cliff validator as it's
 		// power is greater than the new current cliff validator.
 		k.setCliffValidator(ctx, newCliffVal, pool)
-	} else {
-		panic("either the cliff validator should change or it should remain the same")
 	}
 }
 
@@ -405,7 +407,6 @@ func (k Keeper) UpdateBondedValidators(
 		// situation that this is the "affected validator" just use the
 		// validator provided because it has not yet been updated in the store
 		ownerAddr := iterator.Value()
-
 		if bytes.Equal(ownerAddr, affectedValidator.Owner) {
 			validator = affectedValidator
 		} else {
@@ -449,22 +450,17 @@ func (k Keeper) UpdateBondedValidators(
 		k.clearCliffValidator(ctx)
 	}
 
-	// bond the new validator if applicable
+	// swap the cliff validator for a new validator if the affected validator
+	// was bonded
 	if newValidatorBonded {
-		// iff there was a cliff validator
+		// unbond the cliff validator
 		if oldCliffValidatorAddr != nil {
-			// unbond the cliff validator iff the affected validator was newly bonded
-			if bytes.Equal(validatorToBond.Owner, affectedValidator.Owner) {
-				cliffVal, found := k.GetValidator(ctx, oldCliffValidatorAddr)
-				if !found {
-					panic(fmt.Sprintf("validator record not found for address: %v\n", oldCliffValidatorAddr))
-				}
-
-				k.unbondValidator(ctx, cliffVal)
-			} else {
-				// otherwise unbond the affected validator, which must have been kicked
-				k.unbondValidator(ctx, affectedValidator)
+			cliffVal, found := k.GetValidator(ctx, oldCliffValidatorAddr)
+			if !found {
+				panic(fmt.Sprintf("validator record not found for address: %v\n", oldCliffValidatorAddr))
 			}
+
+			k.unbondValidator(ctx, cliffVal)
 		}
 
 		// bond the new validator

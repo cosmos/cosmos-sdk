@@ -387,7 +387,6 @@ func (k Keeper) UpdateBondedValidators(
 	ctx sdk.Context, affectedValidator types.Validator) (
 	updatedVal types.Validator, updated bool) {
 
-	pool := k.GetPool(ctx)
 	store := ctx.KVStore(k.storeKey)
 
 	oldCliffValidatorAddr := k.GetCliffValidator(ctx)
@@ -459,10 +458,7 @@ func (k Keeper) UpdateBondedValidators(
 				panic(fmt.Sprintf("validator record not found for address: %v\n", oldCliffValidatorAddr))
 			}
 
-			affectedValRank := GetValidatorsByPowerIndexKey(affectedValidator, pool)
-			valRank := GetValidatorsByPowerIndexKey(validator, pool)
-
-			if bytes.Compare(valRank, affectedValRank) < 0 {
+			if bytes.Equal(validatorToBond.Owner, affectedValidator.Owner) {
 				// unbond the old cliff validator iff the affected validator was
 				// newly bonded and has greater power
 				k.unbondValidator(ctx, oldCliffVal)

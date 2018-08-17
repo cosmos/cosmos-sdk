@@ -478,11 +478,13 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	var validators [4]types.Validator
 	for i, amt := range amts {
 		pool := keeper.GetPool(ctx)
-		validators[i] = types.NewValidator(Addrs[i], PKs[i], types.Description{})
+		moniker := fmt.Sprintf("val#%d", int64(i))
+		validators[i] = types.NewValidator(Addrs[i], PKs[i], types.Description{Moniker: moniker})
 		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
 		keeper.SetPool(ctx, pool)
 		validators[i] = keeper.UpdateValidator(ctx, validators[i])
 	}
+
 	for i := range amts {
 		validators[i], found = keeper.GetValidator(ctx, validators[i].Owner)
 		require.True(t, found)

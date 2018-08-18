@@ -27,7 +27,7 @@ type Msg interface {
     // This is what is signed.
     GetSignBytes() []byte
 
-	// GetSigners returns the addrs of signers that must sign.
+    // Signers returns the addrs of signers that must sign.
     // CONTRACT: All signatures must be present to be valid.
     // CONTRACT: Returns addrs in some deterministic order.
     GetSigners() []AccAddress
@@ -49,7 +49,7 @@ type MsgSend struct {
 }
 
 // Implements Msg.
-func (msg MsgSend) Type() string { return "send" }
+func (msg MsgSend) Type() string { return "bank" }
 ```
 
 It specifies that the message should be JSON marshaled and signed by the sender:
@@ -340,7 +340,7 @@ func handleTo(store sdk.KVStore, to sdk.AccAddress, amt sdk.Coins) sdk.Result {
 	accBytes, err := json.Marshal(acc)
 	if err != nil {
 		return sdk.ErrInternal("Account encoding error").Result()
-	}
+	Msg}
 
 	// Update store with updated receiver account
 	store.Set(to, accBytes)
@@ -421,18 +421,22 @@ Here is the complete setup for App1:
 
 ```go
 func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
+    cdc := wire.NewCodec()
 
     // Create the base application object.
-    app := bapp.NewBaseApp(app1Name, logger, db, tx1Decoder)
+    app := bapp.NewBaseApp(app1Name, cdc, logger, db)
 
     // Create a capability key for accessing the account store.
     keyAccount := sdk.NewKVStoreKey("acc")
+
+    // Determine how transactions are decoded.
+    app.SetTxDecoder(txDecoder)
 
     // Register message routes.
     // Note the handler receives the keyAccount and thus
     // gets access to the account store.
     app.Router().
-    	AddRoute("send", NewApp1Handler(keyAccount))
+    	AddRoute("bank", NewApp1Handler(keyAccount))
 
     // Mount stores and load the latest state.
     app.MountStoresIAVL(keyAccount)
@@ -450,11 +454,11 @@ We'll talk about how to connect this app object with the CLI, a REST API,
 the logger, and the filesystem later in the tutorial. For now, note that this is where we
 register handlers for messages and grant them access to stores.
 
-Here, we have only a single Msg type, `send`, a single store for accounts, and a single handler.
+Here, we have only a single Msg type, `bank`, a single store for accounts, and a single handler.
 The handler is granted access to the store by giving it the capability key.
 In future apps, we'll have multiple stores and handlers, and not every handler will get access to every store.
 
-After setting the message handling routes, the final
+After setting the transaction decoder and the message handling routes, the final
 step is to mount the stores and load the latest version.
 Since we only have one store, we only mount one.
 
@@ -488,4 +492,4 @@ We now have a complete implementation of a simple app!
 
 In the next section, we'll add another Msg type and another store. Once we have multiple message types
 we'll need a better way of decoding transactions, since we'll need to decode
-into the `Msg` interface. This is where we introduce Amino, a superior encoding scheme that lets us decode into interface types!
+<!-- into the `Msg` interface. This is where we introduce Amino, a superior encoding scheme that lets us decode into interface types! -->

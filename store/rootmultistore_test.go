@@ -13,14 +13,6 @@ import (
 
 const useDebugDB = false
 
-func TestStoreType(t *testing.T) {
-	db := dbm.NewMemDB()
-	store := NewCommitMultiStore(db)
-	store.MountStoreWithDB(
-		sdk.NewKVStoreKey("store1"), sdk.StoreTypeIAVL, db)
-
-}
-
 func TestMultistoreCommitLoad(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
 	if useDebugDB {

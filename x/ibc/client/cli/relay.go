@@ -4,19 +4,17 @@ import (
 	"os"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/keys"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/cosmos/cosmos-sdk/client/context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	wire "github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 
 // flags
@@ -38,7 +36,7 @@ type relayCommander struct {
 	logger log.Logger
 }
 
-// IBCRelayCmd implements the IBC relay command.
+// IBC relay command
 func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 	cmdr := relayCommander{
 		cdc:       cdc,
@@ -79,12 +77,10 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	fromChainNode := viper.GetString(FlagFromChainNode)
 	toChainID := viper.GetString(FlagToChainID)
 	toChainNode := viper.GetString(FlagToChainNode)
-
-	address, err := context.NewCLIContext().GetFromAddress()
+	address, err := context.NewCoreContextFromViper().GetFromAddress()
 	if err != nil {
 		panic(err)
 	}
-
 	c.address = address
 
 	c.loop(fromChainID, fromChainNode, toChainID, toChainNode)
@@ -92,10 +88,12 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 
 // This is nolinted as someone is in the process of refactoring this to remove the goto
 // nolint: gocyclo
-func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
-	cliCtx := context.NewCLIContext()
+func (c relayCommander) loop(fromChainID, fromChainNode, toChainID,
+	toChainNode string) {
 
-	passphrase, err := keys.ReadPassphraseFromStdin(cliCtx.FromAddressName)
+	ctx := context.NewCoreContextFromViper()
+	// get password
+	passphrase, err := ctx.GetPassphraseFromStdin(ctx.FromAddressName)
 	if err != nil {
 		panic(err)
 	}
@@ -124,14 +122,12 @@ OUTER:
 			c.logger.Error("error querying outgoing packet list length", "err", err)
 			continue OUTER //TODO replace with continue (I think it should just to the correct place where OUTER is now)
 		}
-
 		var egressLength int64
 		if egressLengthbz == nil {
 			egressLength = 0
 		} else if err = c.cdc.UnmarshalBinary(egressLengthbz, &egressLength); err != nil {
 			panic(err)
 		}
-
 		if egressLength > processed {
 			c.logger.Info("Detected IBC packet", "number", egressLength-1)
 		}
@@ -146,9 +142,7 @@ OUTER:
 			}
 
 			err = c.broadcastTx(seq, toChainNode, c.refine(egressbz, i, passphrase))
-
 			seq++
-
 			if err != nil {
 				c.logger.Error("error broadcasting ingress packet", "err", err)
 				continue OUTER // TODO replace to break, will break first loop then send back to the beginning (aka OUTER)
@@ -160,11 +154,11 @@ OUTER:
 }
 
 func query(node string, key []byte, storeName string) (res []byte, err error) {
-	return context.NewCLIContext().WithNodeURI(node).QueryStore(key, storeName)
+	return context.NewCoreContextFromViper().WithNodeURI(node).QueryStore(key, storeName)
 }
 
 func (c relayCommander) broadcastTx(seq int64, node string, tx []byte) error {
-	_, err := context.NewCLIContext().WithNodeURI(node).BroadcastTx(tx)
+	_, err := context.NewCoreContextFromViper().WithNodeURI(node).WithSequence(seq + 1).BroadcastTx(tx)
 	return err
 }
 
@@ -173,7 +167,6 @@ func (c relayCommander) getSequence(node string) int64 {
 	if err != nil {
 		panic(err)
 	}
-
 	if nil != res {
 		account, err := c.decoder(res)
 		if err != nil {
@@ -198,13 +191,10 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 		Sequence:  sequence,
 	}
 
-	txCtx := authctx.NewTxContextFromCLI().WithSequence(sequence).WithCodec(c.cdc)
-	cliCtx := context.NewCLIContext()
-
-	res, err := txCtx.BuildAndSign(cliCtx.FromAddressName, passphrase, []sdk.Msg{msg})
+	ctx := context.NewCoreContextFromViper().WithSequence(sequence)
+	res, err := ctx.SignAndBuild(ctx.FromAddressName, passphrase, []sdk.Msg{msg}, c.cdc)
 	if err != nil {
 		panic(err)
 	}
-
 	return res
 }

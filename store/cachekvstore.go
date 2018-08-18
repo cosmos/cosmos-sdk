@@ -85,11 +85,6 @@ func (ci *cacheKVStore) Prefix(prefix []byte) KVStore {
 	return prefixStore{ci, prefix}
 }
 
-// Implements KVStore
-func (ci *cacheKVStore) Gas(meter GasMeter, config GasConfig) KVStore {
-	return NewGasKVStore(meter, config, ci)
-}
-
 // Implements CacheKVStore.
 func (ci *cacheKVStore) Write() {
 	ci.mtx.Lock()

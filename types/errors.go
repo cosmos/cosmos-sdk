@@ -65,10 +65,6 @@ const (
 	MaximumCodespace CodespaceType = 65535
 )
 
-func unknownCodeMsg(code CodeType) string {
-	return fmt.Sprintf("unknown code %d", code)
-}
-
 // NOTE: Don't stringer this, we'll put better messages in later.
 // nolint: gocyclo
 func CodeToDefaultMsg(code CodeType) string {
@@ -86,7 +82,7 @@ func CodeToDefaultMsg(code CodeType) string {
 	case CodeUnknownRequest:
 		return "unknown request"
 	case CodeInvalidAddress:
-		return "invalid address"
+		return "invalid address "
 	case CodeInvalidPubKey:
 		return "invalid pubkey"
 	case CodeUnknownAddress:
@@ -100,7 +96,7 @@ func CodeToDefaultMsg(code CodeType) string {
 	case CodeMemoTooLarge:
 		return "memo too large"
 	default:
-		return unknownCodeMsg(code)
+		return fmt.Sprintf("unknown code %d", code)
 	}
 }
 
@@ -147,6 +143,13 @@ func ErrOutOfGas(msg string) Error {
 }
 func ErrMemoTooLarge(msg string) Error {
 	return newErrorWithRootCodespace(CodeMemoTooLarge, msg)
+}
+
+func ErrInvalidIp(msg string) Error {
+	return newErrorWithRootCodespace(CodeUnknownRequest, msg)
+}
+func ErrCommon(msg string) Error {
+	return newErrorWithRootCodespace(CodeUnknownRequest, msg)
 }
 
 //----------------------------------------

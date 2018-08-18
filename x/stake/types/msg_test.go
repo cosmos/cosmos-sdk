@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	coinPos  = sdk.NewInt64Coin("steak", 1000)
-	coinZero = sdk.NewInt64Coin("steak", 0)
-	coinNeg  = sdk.NewInt64Coin("steak", -10000)
+	coinPos  = sdk.NewCoin("steak", 1000)
+	coinZero = sdk.NewCoin("steak", 0)
+	coinNeg  = sdk.NewCoin("steak", -10000)
 )
 
 // test ValidateBasic for MsgCreateValidator
@@ -24,7 +24,7 @@ func TestMsgCreateValidator(t *testing.T) {
 		bond                                      sdk.Coin
 		expectPass                                bool
 	}{
-		{"basic good", "a", "b", "c", "d", addr1, pk1, coinPos, true},
+		{"basic good", "a", "b", "c", "d", addr1, pk1, coinPos, false},
 		{"partial description", "", "", "c", "", addr1, pk1, coinPos, true},
 		{"empty description", "", "", "", "", addr1, pk1, coinPos, false},
 		{"empty address", "a", "b", "c", "d", emptyAddr, pk1, coinPos, false},

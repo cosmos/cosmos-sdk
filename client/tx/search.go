@@ -7,15 +7,15 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 const (
@@ -31,18 +31,14 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tags := viper.GetStringSlice(flagTags)
 
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-
-			txs, err := searchTxs(cliCtx, cdc, tags)
+			txs, err := searchTxs(context.NewCoreContextFromViper(), cdc, tags)
 			if err != nil {
 				return err
 			}
-
 			output, err := cdc.MarshalJSON(txs)
 			if err != nil {
 				return err
 			}
-
 			fmt.Println(string(output))
 			return nil
 		},
@@ -57,22 +53,19 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]txInfo, error) {
+func searchTxs(ctx context.CoreContext, cdc *wire.Codec, tags []string) ([]txInfo, error) {
 	if len(tags) == 0 {
 		return nil, errors.New("must declare at least one tag to search")
 	}
-
 	// XXX: implement ANY
 	query := strings.Join(tags, " AND ")
-
 	// get the node
-	node, err := cliCtx.GetNode()
+	node, err := ctx.GetNode()
 	if err != nil {
 		return nil, err
 	}
 
 	prove := !viper.GetBool(client.FlagTrustNode)
-
 	// TODO: take these as args
 	page := 0
 	perPage := 100
@@ -105,7 +98,7 @@ func formatTxResults(cdc *wire.Codec, res []*ctypes.ResultTx) ([]txInfo, error) 
 // REST
 
 // Search Tx REST Handler
-func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc {
+func SearchTxRequestHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tag := r.FormValue("tag")
 		if tag == "" {
@@ -113,17 +106,14 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.H
 			w.Write([]byte("You need to provide at least a tag as a key=value pair to search for. Postfix the key with _bech32 to search bech32-encoded addresses or public keys"))
 			return
 		}
-
 		keyValue := strings.Split(tag, "=")
 		key := keyValue[0]
-
 		value, err := url.QueryUnescape(keyValue[1])
 		if err != nil {
 			w.WriteHeader(400)
 			w.Write([]byte("Could not decode address: " + err.Error()))
 			return
 		}
-
 		if strings.HasSuffix(key, "_bech32") {
 			bech32address := strings.Trim(value, "'")
 			prefix := strings.Split(bech32address, "1")[0]
@@ -137,7 +127,7 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.H
 			tag = strings.TrimRight(key, "_bech32") + "='" + sdk.AccAddress(bz).String() + "'"
 		}
 
-		txs, err := searchTxs(cliCtx, cdc, []string{tag})
+		txs, err := searchTxs(ctx, cdc, []string{tag})
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

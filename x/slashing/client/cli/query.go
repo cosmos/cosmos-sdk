@@ -13,26 +13,24 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 )
 
-// GetCmdQuerySigningInfo implements the command to query signing info.
+// get the command to query signing info
 func GetCmdQuerySigningInfo(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "signing-info [validator-pubkey]",
 		Short: "Query a validator's signing information",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+
 			pk, err := sdk.GetValPubKeyBech32(args[0])
 			if err != nil {
 				return err
 			}
-
 			key := slashing.GetValidatorSigningInfoKey(sdk.ValAddress(pk.Address()))
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-
-			res, err := cliCtx.QueryStore(key, storeName)
+			ctx := context.NewCoreContextFromViper()
+			res, err := ctx.QueryStore(key, storeName)
 			if err != nil {
 				return err
 			}
-
 			signingInfo := new(slashing.ValidatorSigningInfo)
 			cdc.MustUnmarshalBinary(res, signingInfo)
 

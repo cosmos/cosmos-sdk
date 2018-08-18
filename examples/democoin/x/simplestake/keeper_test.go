@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -38,12 +38,12 @@ func TestKeeperGetSet(t *testing.T) {
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
 	stakeKeeper := NewKeeper(capKey, bank.NewKeeper(accountMapper), DefaultCodespace)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	addr := sdk.AccAddress([]byte("some-address"))
+	addr := sdk.AccAddress([]byte("someaddress"))
 
 	bi := stakeKeeper.getBondInfo(ctx, addr)
 	require.Equal(t, bi, bondInfo{})
 
-	privKey := ed25519.GenPrivKey()
+	privKey := crypto.GenPrivKeyEd25519()
 
 	bi = bondInfo{
 		PubKey: privKey.PubKey(),
@@ -69,16 +69,16 @@ func TestBonding(t *testing.T) {
 	coinKeeper := bank.NewKeeper(accountMapper)
 	stakeKeeper := NewKeeper(capKey, coinKeeper, DefaultCodespace)
 	addr := sdk.AccAddress([]byte("some-address"))
-	privKey := ed25519.GenPrivKey()
+	privKey := crypto.GenPrivKeyEd25519()
 	pubKey := privKey.PubKey()
 
 	_, _, err := stakeKeeper.unbondWithoutCoins(ctx, addr)
 	require.Equal(t, err, ErrInvalidUnbond(DefaultCodespace))
 
-	_, err = stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin("steak", 10))
+	_, err = stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewCoin("steak", 10))
 	require.Nil(t, err)
 
-	power, err := stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin("steak", 10))
+	power, err := stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewCoin("steak", 10))
 	require.Nil(t, err)
 	require.Equal(t, int64(20), power)
 

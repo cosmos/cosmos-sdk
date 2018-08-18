@@ -6,14 +6,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
 func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
-	key := ed25519.GenPrivKey()
+	key := crypto.GenPrivKeyEd25519()
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())
 	return key, pub, addr
@@ -56,7 +55,7 @@ func TestBaseAccountCoins(t *testing.T) {
 	_, _, addr := keyPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
-	someCoins := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 246)}
+	someCoins := sdk.Coins{sdk.NewCoin("atom", 123), sdk.NewCoin("eth", 246)}
 
 	err := acc.SetCoins(someCoins)
 	require.Nil(t, err)
@@ -78,7 +77,7 @@ func TestBaseAccountMarshal(t *testing.T) {
 	_, pub, addr := keyPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
-	someCoins := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 246)}
+	someCoins := sdk.Coins{sdk.NewCoin("atom", 123), sdk.NewCoin("eth", 246)}
 	seq := int64(7)
 
 	// set everything on the account

@@ -1,9 +1,0 @@
----
-
-- name: systemctl
-  systemd: name=gaiacli enabled=yes daemon_reload=yes
-
-- name: restart gaiacli
-  service: name=gaiacli state=restarted
-
-

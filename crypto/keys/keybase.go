@@ -6,14 +6,13 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pkg/errors"
+	tcrypto "github.com/tendermint/tendermint/crypto"
+	dbm "github.com/tendermint/tendermint/libs/db"
+
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bip39"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	"github.com/pkg/errors"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/encoding/amino"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
 var _ Keybase = dbKeybase{}
@@ -44,12 +43,10 @@ const (
 )
 
 var (
-	// ErrUnsupportedSigningAlgo is raised when the caller tries to use a
-	// different signing scheme than secp256k1.
+	// ErrUnsupportedSigningAlgo is raised when the caller tries to use a different signing scheme than secp256k1.
 	ErrUnsupportedSigningAlgo = errors.New("unsupported signing algo: only secp256k1 is supported")
-
-	// ErrUnsupportedLanguage is raised when the caller tries to use a
-	// different language than english for creating a mnemonic sentence.
+	// ErrUnsupportedLanguage is raised when the caller tries to use a different language than english for creating
+	// a mnemonic sentence.
 	ErrUnsupportedLanguage = errors.New("unsupported language: only english is supported")
 )
 
@@ -150,7 +147,7 @@ func (kb dbKeybase) CreateLedger(name string, path crypto.DerivationPath, algo S
 
 // CreateOffline creates a new reference to an offline keypair
 // It returns the created key info
-func (kb dbKeybase) CreateOffline(name string, pub tmcrypto.PubKey) (Info, error) {
+func (kb dbKeybase) CreateOffline(name string, pub tcrypto.PubKey) (Info, error) {
 	return kb.writeOfflineKey(pub, name), nil
 }
 
@@ -165,9 +162,9 @@ func (kb *dbKeybase) persistDerivedKey(seed []byte, passwd, name, fullHdPath str
 	// if we have a password, use it to encrypt the private key and store it
 	// else store the public key only
 	if passwd != "" {
-		info = kb.writeLocalKey(secp256k1.PrivKeySecp256k1(derivedPriv), name, passwd)
+		info = kb.writeLocalKey(tcrypto.PrivKeySecp256k1(derivedPriv), name, passwd)
 	} else {
-		pubk := secp256k1.PrivKeySecp256k1(derivedPriv).PubKey()
+		pubk := tcrypto.PrivKeySecp256k1(derivedPriv).PubKey()
 		info = kb.writeOfflineKey(pubk, name)
 	}
 	return
@@ -199,12 +196,12 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 
 // Sign signs the msg with the named key.
 // It returns an error if the key doesn't exist or the decryption fails.
-func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig tmcrypto.Signature, pub tmcrypto.PubKey, err error) {
+func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig tcrypto.Signature, pub tcrypto.PubKey, err error) {
 	info, err := kb.Get(name)
 	if err != nil {
 		return
 	}
-	var priv tmcrypto.PrivKey
+	var priv tcrypto.PrivKey
 	switch info.(type) {
 	case localInfo:
 		linfo := info.(localInfo)
@@ -243,12 +240,12 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig tmcrypto.Sign
 	return sig, pub, nil
 }
 
-func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (tmcrypto.PrivKey, error) {
+func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (tcrypto.PrivKey, error) {
 	info, err := kb.Get(name)
 	if err != nil {
 		return nil, err
 	}
-	var priv tmcrypto.PrivKey
+	var priv tcrypto.PrivKey
 	switch info.(type) {
 	case localInfo:
 		linfo := info.(localInfo)
@@ -316,7 +313,7 @@ func (kb dbKeybase) ImportPubKey(name string, armor string) (err error) {
 	if err != nil {
 		return
 	}
-	pubKey, err := cryptoAmino.PubKeyFromBytes(pubBytes)
+	pubKey, err := tcrypto.PubKeyFromBytes(pubBytes)
 	if err != nil {
 		return
 	}
@@ -383,7 +380,7 @@ func (kb dbKeybase) Update(name, oldpass string, getNewpass func() (string, erro
 	}
 }
 
-func (kb dbKeybase) writeLocalKey(priv tmcrypto.PrivKey, name, passphrase string) Info {
+func (kb dbKeybase) writeLocalKey(priv tcrypto.PrivKey, name, passphrase string) Info {
 	// encrypt private key using passphrase
 	privArmor := encryptArmorPrivKey(priv, passphrase)
 	// make Info
@@ -393,13 +390,13 @@ func (kb dbKeybase) writeLocalKey(priv tmcrypto.PrivKey, name, passphrase string
 	return info
 }
 
-func (kb dbKeybase) writeLedgerKey(pub tmcrypto.PubKey, path crypto.DerivationPath, name string) Info {
+func (kb dbKeybase) writeLedgerKey(pub tcrypto.PubKey, path crypto.DerivationPath, name string) Info {
 	info := newLedgerInfo(name, pub, path)
 	kb.writeInfo(info, name)
 	return info
 }
 
-func (kb dbKeybase) writeOfflineKey(pub tmcrypto.PubKey, name string) Info {
+func (kb dbKeybase) writeOfflineKey(pub tcrypto.PubKey, name string) Info {
 	info := newOfflineInfo(name, pub)
 	kb.writeInfo(info, name)
 	return info

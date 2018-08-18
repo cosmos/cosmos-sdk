@@ -1,14 +1,11 @@
 package crypto
 
 import (
+	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	tcrypto "github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
 type byter interface {
@@ -65,12 +62,12 @@ func TestKeyEncodings(t *testing.T) {
 		privSize, pubSize int // binary sizes with the amino overhead
 	}{
 		{
-			privKey:  ed25519.GenPrivKey(),
+			privKey:  tcrypto.GenPrivKeyEd25519(),
 			privSize: 69,
 			pubSize:  37,
 		},
 		{
-			privKey:  secp256k1.GenPrivKey(),
+			privKey:  tcrypto.GenPrivKeySecp256k1(),
 			privSize: 37,
 			pubSize:  38,
 		},

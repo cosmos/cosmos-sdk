@@ -67,6 +67,7 @@ func newIAVLStore(tree *iavl.VersionedTree, numRecent int64, storeEvery int64) *
 
 // Implements Committer.
 func (st *iavlStore) Commit() CommitID {
+
 	// Save a new version.
 	hash, version, err := st.tree.SaveVersion()
 	if err != nil {
@@ -158,11 +159,6 @@ func (st *iavlStore) Delete(key []byte) {
 // Implements KVStore
 func (st *iavlStore) Prefix(prefix []byte) KVStore {
 	return prefixStore{st, prefix}
-}
-
-// Implements KVStore
-func (st *iavlStore) Gas(meter GasMeter, config GasConfig) KVStore {
-	return NewGasKVStore(meter, config, st)
 }
 
 // Implements KVStore.

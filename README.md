@@ -36,13 +36,8 @@ See the [install instructions](/docs/install.md)
 
 ## Quick Start
 
-- [Documentation](https://cosmos.network/docs/)
+- [Documentation](/docs)
 - [Examples](/examples)
-- [Cosmos Hub Specification](https://cosmos.network/docs/spec/)
-<!---
-uncomment once the godocs improve
-- [Godocs for API referrence](https://godoc.org/github.com/cosmos/cosmos-sdk)
--->
 
 ## Disambiguation
 

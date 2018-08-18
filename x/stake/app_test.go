@@ -9,16 +9,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var (
-	priv1 = ed25519.GenPrivKey()
+	priv1 = crypto.GenPrivKeyEd25519()
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
-	priv2 = ed25519.GenPrivKey()
+	priv2 = crypto.GenPrivKeyEd25519()
 	addr2 = sdk.AccAddress(priv2.PubKey().Address())
-	addr3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-	priv4 = ed25519.GenPrivKey()
+	addr3 = sdk.AccAddress(crypto.GenPrivKeyEd25519().PubKey().Address())
+	priv4 = crypto.GenPrivKeyEd25519()
 	addr4 = sdk.AccAddress(priv4.PubKey().Address())
 	coins = sdk.Coins{{"foocoin", sdk.NewInt(10)}}
 	fee   = auth.StdFee{
@@ -65,14 +65,12 @@ func getInitChainer(mapp *mock.App, keeper Keeper) sdk.InitChainer {
 		stakeGenesis := DefaultGenesisState()
 		stakeGenesis.Pool.LooseTokens = sdk.NewRat(100000)
 
-		validators, err := InitGenesis(ctx, keeper, stakeGenesis)
+		err := InitGenesis(ctx, keeper, stakeGenesis)
 		if err != nil {
 			panic(err)
 		}
 
-		return abci.ResponseInitChain{
-			Validators: validators,
-		}
+		return abci.ResponseInitChain{}
 	}
 }
 
@@ -108,8 +106,8 @@ func checkDelegation(
 func TestStakeMsgs(t *testing.T) {
 	mApp, keeper := getMockApp(t)
 
-	genCoin := sdk.NewInt64Coin("steak", 42)
-	bondCoin := sdk.NewInt64Coin("steak", 10)
+	genCoin := sdk.NewCoin("steak", 42)
+	bondCoin := sdk.NewCoin("steak", 10)
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,

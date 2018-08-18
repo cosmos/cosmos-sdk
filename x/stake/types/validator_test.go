@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,31 +26,19 @@ func TestValidatorEqual(t *testing.T) {
 
 func TestUpdateDescription(t *testing.T) {
 	d1 := Description{
+		Moniker:  doNotModifyDescVal,
+		Identity: doNotModifyDescVal,
+		Website:  doNotModifyDescVal,
+		Details:  doNotModifyDescVal,
+	}
+	d2 := Description{
 		Website: "https://validator.cosmos",
 		Details: "Test validator",
-	}
-
-	d2 := Description{
-		Moniker:  DoNotModifyDesc,
-		Identity: DoNotModifyDesc,
-		Website:  DoNotModifyDesc,
-		Details:  DoNotModifyDesc,
-	}
-
-	d3 := Description{
-		Moniker:  "",
-		Identity: "",
-		Website:  "",
-		Details:  "",
 	}
 
 	d, err := d1.UpdateDescription(d2)
 	require.Nil(t, err)
 	require.Equal(t, d, d1)
-
-	d, err = d1.UpdateDescription(d3)
-	require.Nil(t, err)
-	require.Equal(t, d, d3)
 }
 
 func TestABCIValidator(t *testing.T) {
@@ -243,6 +232,67 @@ func TestPossibleOverflow(t *testing.T) {
 	require.False(t, newValidator.DelegatorShareExRate().LT(sdk.ZeroRat()),
 		"Applying operation \"%s\" resulted in negative DelegatorShareExRate(): %v",
 		msg, newValidator.DelegatorShareExRate())
+}
+
+// run random operations in a random order on a random single-validator state, assert invariants hold
+func TestSingleValidatorIntegrationInvariants(t *testing.T) {
+	r := rand.New(rand.NewSource(41))
+
+	for i := 0; i < 10; i++ {
+		poolOrig, validatorsOrig := RandomSetup(r, 1)
+		require.Equal(t, 1, len(validatorsOrig))
+
+		// sanity check
+		AssertInvariants(t, "no operation",
+			poolOrig, validatorsOrig,
+			poolOrig, validatorsOrig)
+
+		for j := 0; j < 5; j++ {
+			poolMod, validatorMod, _, msg := RandomOperation(r)(r, poolOrig, validatorsOrig[0])
+
+			validatorsMod := make([]Validator, len(validatorsOrig))
+			copy(validatorsMod[:], validatorsOrig[:])
+			require.Equal(t, 1, len(validatorsOrig), "j %v", j)
+			require.Equal(t, 1, len(validatorsMod), "j %v", j)
+			validatorsMod[0] = validatorMod
+
+			AssertInvariants(t, msg,
+				poolOrig, validatorsOrig,
+				poolMod, validatorsMod)
+
+			poolOrig = poolMod
+			validatorsOrig = validatorsMod
+		}
+	}
+}
+
+// run random operations in a random order on a random multi-validator state, assert invariants hold
+func TestMultiValidatorIntegrationInvariants(t *testing.T) {
+	r := rand.New(rand.NewSource(42))
+
+	for i := 0; i < 10; i++ {
+		poolOrig, validatorsOrig := RandomSetup(r, 100)
+
+		AssertInvariants(t, "no operation",
+			poolOrig, validatorsOrig,
+			poolOrig, validatorsOrig)
+
+		for j := 0; j < 5; j++ {
+			index := int(r.Int31n(int32(len(validatorsOrig))))
+			poolMod, validatorMod, _, msg := RandomOperation(r)(r, poolOrig, validatorsOrig[index])
+			validatorsMod := make([]Validator, len(validatorsOrig))
+			copy(validatorsMod[:], validatorsOrig[:])
+			validatorsMod[index] = validatorMod
+
+			AssertInvariants(t, msg,
+				poolOrig, validatorsOrig,
+				poolMod, validatorsMod)
+
+			poolOrig = poolMod
+			validatorsOrig = validatorsMod
+
+		}
+	}
 }
 
 func TestHumanReadableString(t *testing.T) {

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,13 +14,8 @@ var codeTypes = []CodeType{
 	CodeUnauthorized,
 	CodeInsufficientFunds,
 	CodeUnknownRequest,
-	CodeInvalidAddress,
-	CodeInvalidPubKey,
 	CodeUnknownAddress,
-	CodeInsufficientCoins,
-	CodeInvalidCoins,
-	CodeOutOfGas,
-	CodeMemoTooLarge,
+	CodeInvalidPubKey,
 }
 
 type errFn func(msg string) Error
@@ -31,34 +27,24 @@ var errFns = []errFn{
 	ErrUnauthorized,
 	ErrInsufficientFunds,
 	ErrUnknownRequest,
-	ErrInvalidAddress,
-	ErrInvalidPubKey,
 	ErrUnknownAddress,
-	ErrInsufficientCoins,
-	ErrInvalidCoins,
-	ErrOutOfGas,
-	ErrMemoTooLarge,
+	ErrInvalidPubKey,
 }
 
 func TestCodeType(t *testing.T) {
 	require.True(t, ABCICodeOK.IsOK())
 
-	for tcnum, c := range codeTypes {
+	for _, c := range codeTypes {
 		msg := CodeToDefaultMsg(c)
-		require.NotEqual(t, unknownCodeMsg(c), msg, "Code expected to be known. tc #%d, code %d, msg %s", tcnum, c, msg)
+		require.False(t, strings.HasPrefix(msg, "Unknown code"))
 	}
-
-	msg := CodeToDefaultMsg(CodeOK)
-	require.Equal(t, unknownCodeMsg(CodeOK), msg)
 }
 
 func TestErrFn(t *testing.T) {
 	for i, errFn := range errFns {
 		err := errFn("")
 		codeType := codeTypes[i]
-		require.Equal(t, err.Code(), codeType, "Err function expected to return proper code. tc #%d", i)
-		require.Equal(t, err.Result().Code, ToABCICode(CodespaceRoot, codeType), "Err function expected to return proper ABCICode. tc #%d")
+		require.Equal(t, err.Code(), codeType)
+		require.Equal(t, err.Result().Code, ToABCICode(CodespaceRoot, codeType))
 	}
-
-	require.Equal(t, ABCICodeOK, ToABCICode(CodespaceRoot, CodeOK))
 }

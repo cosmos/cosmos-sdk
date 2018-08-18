@@ -9,6 +9,8 @@ import (
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	tx "github.com/cosmos/cosmos-sdk/client/tx"
+	sentype "github.com/cosmos/cosmos-sdk/examples/sentinel"
+	sentinel "github.com/cosmos/cosmos-sdk/examples/sentinel/rest"
 	"github.com/cosmos/cosmos-sdk/wire"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
@@ -74,25 +76,26 @@ func createHandler(cdc *wire.Codec) http.Handler {
 	r := mux.NewRouter()
 
 	kb, err := keys.GetKeyBase() //XXX
+	keeper := sentype.Keeper{}
 	if err != nil {
 		panic(err)
 	}
 
-	cliCtx := context.NewCLIContext().WithCodec(cdc).WithLogger(os.Stdout)
-
+	ctx := context.NewCoreContextFromViper()
 	// TODO: make more functional? aka r = keys.RegisterRoutes(r)
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
-	r.HandleFunc("/node_version", NodeVersionRequestHandler(cliCtx)).Methods("GET")
+	r.HandleFunc("/node_version", NodeVersionRequestHandler(ctx)).Methods("GET")
 
 	keys.RegisterRoutes(r)
-	rpc.RegisterRoutes(cliCtx, r)
-	tx.RegisterRoutes(cliCtx, r, cdc)
-	auth.RegisterRoutes(cliCtx, r, cdc, "acc")
-	bank.RegisterRoutes(cliCtx, r, cdc, kb)
-	ibc.RegisterRoutes(cliCtx, r, cdc, kb)
-	stake.RegisterRoutes(cliCtx, r, cdc, kb)
-	slashing.RegisterRoutes(cliCtx, r, cdc, kb)
-	gov.RegisterRoutes(cliCtx, r, cdc)
+	rpc.RegisterRoutes(ctx, r)
+	tx.RegisterRoutes(ctx, r, cdc)
+	auth.RegisterRoutes(ctx, r, cdc, "acc")
+	bank.RegisterRoutes(ctx, r, cdc, kb)
+	ibc.RegisterRoutes(ctx, r, cdc, kb)
+	stake.RegisterRoutes(ctx, r, cdc, kb)
+	slashing.RegisterRoutes(ctx, r, cdc, kb)
+	gov.RegisterRoutes(ctx, r, cdc)
+	sentinel.RegisterRoutes(ctx, r, cdc, keeper)
 
 	return r
 }

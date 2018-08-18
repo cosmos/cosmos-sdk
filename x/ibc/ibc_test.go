@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -29,7 +29,7 @@ func defaultContext(key sdk.StoreKey) sdk.Context {
 }
 
 func newAddress() sdk.AccAddress {
-	return sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
+	return sdk.AccAddress(crypto.GenPrivKeyEd25519().PubKey().Address())
 }
 
 func getCoins(ck bank.Keeper, ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, sdk.Error) {
@@ -71,7 +71,7 @@ func TestIBC(t *testing.T) {
 	dest := newAddress()
 	chainid := "ibcchain"
 	zero := sdk.Coins(nil)
-	mycoins := sdk.Coins{sdk.NewInt64Coin("mycoin", 10)}
+	mycoins := sdk.Coins{sdk.NewCoin("mycoin", 10)}
 
 	coins, _, err := ck.AddCoins(ctx, src, mycoins)
 	require.Nil(t, err)

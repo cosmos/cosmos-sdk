@@ -28,6 +28,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return handleMsgCompleteUnbonding(ctx, msg, k)
 		default:
 			return sdk.ErrTxDecode("invalid message parse in staking module").Result()
+
 		}
 	}
 }
@@ -35,15 +36,17 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 // Called every block, process inflation, update validator set
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Validator) {
 	pool := k.GetPool(ctx)
+	params := k.GetParams(ctx)
 
-	// Process provision inflation
+	// Process types.Validator Provisions
 	blockTime := ctx.BlockHeader().Time
-	if blockTime-pool.InflationLastTime >= 3600 {
-		params := k.GetParams(ctx)
+	if pool.InflationLastTime+blockTime >= 3600 {
 		pool.InflationLastTime = blockTime
 		pool = pool.ProcessProvisions(params)
-		k.SetPool(ctx, pool)
 	}
+
+	// save the params
+	k.SetPool(ctx, pool)
 
 	// reset the intra-transaction counter
 	k.SetIntraTxCounter(ctx, 0)
@@ -111,9 +114,7 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	}
 	validator.Description = description
 
-	// We don't need to run through all the power update logic within k.UpdateValidator
-	// We just need to override the entry in state, since only the description has changed.
-	k.SetValidator(ctx, validator)
+	k.UpdateValidator(ctx, validator)
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionEditValidator,
 		tags.DstValidator, []byte(msg.ValidatorAddr.String()),

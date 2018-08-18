@@ -3,13 +3,13 @@ package keys
 import (
 	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
 	amino "github.com/tendermint/go-amino"
-	"github.com/tendermint/tendermint/crypto/encoding/amino"
+	tcrypto "github.com/tendermint/tendermint/crypto"
 )
 
 var cdc = amino.NewCodec()
 
 func init() {
-	cryptoAmino.RegisterAmino(cdc)
+	tcrypto.RegisterAmino(cdc)
 	cdc.RegisterInterface((*Info)(nil), nil)
 	cdc.RegisterConcrete(ccrypto.PrivKeyLedgerSecp256k1{},
 		"tendermint/PrivKeyLedgerSecp256k1", nil)

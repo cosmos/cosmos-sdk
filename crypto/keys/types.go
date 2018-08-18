@@ -44,31 +44,10 @@ type Keybase interface {
 	ExportPrivateKeyObject(name string, passphrase string) (crypto.PrivKey, error)
 }
 
-// KeyType reflects a human-readable type for key listing.
-type KeyType uint
-
-// Info KeyTypes
-const (
-	TypeLocal   KeyType = 0
-	TypeLedger  KeyType = 1
-	TypeOffline KeyType = 2
-)
-
-var keyTypes = map[KeyType]string{
-	TypeLocal:   "local",
-	TypeLedger:  "ledger",
-	TypeOffline: "offline",
-}
-
-// String implements the stringer interface for KeyType.
-func (kt KeyType) String() string {
-	return keyTypes[kt]
-}
-
 // Info is the publicly exposed information about a keypair
 type Info interface {
 	// Human-readable type for key listing
-	GetType() KeyType
+	GetType() string
 	// Name of the key
 	GetName() string
 	// Public key
@@ -94,8 +73,8 @@ func newLocalInfo(name string, pub crypto.PubKey, privArmor string) Info {
 	}
 }
 
-func (i localInfo) GetType() KeyType {
-	return TypeLocal
+func (i localInfo) GetType() string {
+	return "local"
 }
 
 func (i localInfo) GetName() string {
@@ -121,8 +100,8 @@ func newLedgerInfo(name string, pub crypto.PubKey, path ccrypto.DerivationPath) 
 	}
 }
 
-func (i ledgerInfo) GetType() KeyType {
-	return TypeLedger
+func (i ledgerInfo) GetType() string {
+	return "ledger"
 }
 
 func (i ledgerInfo) GetName() string {
@@ -146,8 +125,8 @@ func newOfflineInfo(name string, pub crypto.PubKey) Info {
 	}
 }
 
-func (i offlineInfo) GetType() KeyType {
-	return TypeOffline
+func (i offlineInfo) GetType() string {
+	return "offline"
 }
 
 func (i offlineInfo) GetName() string {

@@ -7,7 +7,6 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
-// Wrapper type for dbm.Db with implementation of KVStore
 type dbStoreAdapter struct {
 	dbm.DB
 }
@@ -32,10 +31,5 @@ func (dsa dbStoreAdapter) Prefix(prefix []byte) KVStore {
 	return prefixStore{dsa, prefix}
 }
 
-// Implements KVStore
-func (dsa dbStoreAdapter) Gas(meter GasMeter, config GasConfig) KVStore {
-	return NewGasKVStore(meter, config, dsa)
-}
-
 // dbm.DB implements KVStore so we can CacheKVStore it.
-var _ KVStore = dbStoreAdapter{}
+var _ KVStore = dbStoreAdapter{dbm.DB(nil)}

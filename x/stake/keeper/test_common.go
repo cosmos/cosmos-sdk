@@ -24,8 +24,8 @@ import (
 
 // dummy addresses used for testing
 var (
-	Addrs       = createTestAddrs(100)
-	PKs         = createTestPubKeys(100)
+	Addrs       = createTestAddrs(500)
+	PKs         = createTestPubKeys(500)
 	emptyAddr   sdk.AccAddress
 	emptyPubkey crypto.PubKey
 
@@ -77,10 +77,10 @@ func MakeTestCodec() *wire.Codec {
 // default params without inflation
 func ParamsNoInflation() types.Params {
 	return types.Params{
-		InflationRateChange: sdk.ZeroRat(),
-		InflationMax:        sdk.ZeroRat(),
-		InflationMin:        sdk.ZeroRat(),
-		GoalBonded:          sdk.NewRat(67, 100),
+		InflationRateChange: sdk.ZeroDec(),
+		InflationMax:        sdk.ZeroDec(),
+		InflationMin:        sdk.ZeroDec(),
+		GoalBonded:          sdk.NewDecWithPrec(67, 2),
 		MaxValidators:       100,
 		BondDenom:           "steak",
 	}
@@ -119,7 +119,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 			{keeper.GetParams(ctx).BondDenom, sdk.NewInt(initCoins)},
 		})
 		require.Nil(t, err)
-		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewRat(initCoins))
+		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewDec(initCoins))
 		keeper.SetPool(ctx, pool)
 	}
 

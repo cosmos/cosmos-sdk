@@ -1,0 +1,9 @@
+init_config:
+
+instances:
+  - collect_connection_state: true
+    excluded_interfaces:
+      - lo
+      - lo0
+    collect_rate_metrics: true
+    collect_count_metrics: true

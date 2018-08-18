@@ -1,0 +1,14 @@
+$template DatadogFormat,"{{DD_API_KEY}} <%pri%>%protocol-version% %timestamp:::date-rfc3339% %HOSTNAME% %app-name% - - - %msg%\n"
+
+$imjournalRatelimitInterval 0
+$imjournalRatelimitBurst 0
+
+$DefaultNetstreamDriver gtls
+$DefaultNetstreamDriverCAFile /etc/ssl/certs/intake.logs.datadoghq.com.crt
+$ActionSendStreamDriver gtls
+$ActionSendStreamDriverMode 1
+$ActionSendStreamDriverAuthMode x509/name
+$ActionSendStreamDriverPermittedPeer *.logs.datadoghq.com
+*.* @@intake.logs.datadoghq.com:10516;DatadogFormat
+
+

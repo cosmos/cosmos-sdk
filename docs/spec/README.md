@@ -17,7 +17,8 @@ said, they provide a detailed resource for understanding the Cosmos-SDK.
 - [Governance](governance) - Proposals and voting.
 - [Staking](staking) - Proof-of-stake bonding, delegation, etc.
 - [Slashing](slashing) - Validator punishment mechanisms.
-- [Provisioning](provisioning) - Fee distribution, and atom provision distribution 
+- [Distribution](distribution) - Fee distribution, and atom provision distribution 
+- [Inflation](inflation) - Atom provision creation
 - [IBC](ibc) - Inter-Blockchain Communication (IBC) protocol.
 - [Other](other) - Other components of the Cosmos Hub, including the reserve 
   pool, All in Bits vesting, etc.

@@ -13,6 +13,10 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
+func init() {
+	BcryptSecurityParameter = 1
+}
+
 // TestKeyManagement makes sure we can manipulate these keys well
 func TestKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
@@ -142,7 +146,7 @@ func TestSignVerify(t *testing.T) {
 	cases := []struct {
 		key   crypto.PubKey
 		data  []byte
-		sig   crypto.Signature
+		sig   []byte
 		valid bool
 	}{
 		// proper matches

@@ -48,7 +48,7 @@ func NewApp() *App {
 
 	// Create your application object
 	app := &App{
-		BaseApp:          bam.NewBaseApp("mock", cdc, logger, db),
+		BaseApp:          bam.NewBaseApp("mock", logger, db, auth.DefaultTxDecoder(cdc)),
 		Cdc:              cdc,
 		KeyMain:          sdk.NewKVStoreKey("main"),
 		KeyAccount:       sdk.NewKVStoreKey("acc"),
@@ -66,6 +66,8 @@ func NewApp() *App {
 	// calling complete setup.
 	app.SetInitChainer(app.InitChainer)
 	app.SetAnteHandler(auth.NewAnteHandler(app.AccountMapper, app.FeeCollectionKeeper))
+
+	// Not sealing for custom extension
 
 	return app
 }
@@ -130,7 +132,7 @@ func SetGenesis(app *App, accs []auth.Account) {
 func GenTx(msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKey) auth.StdTx {
 	// Make the transaction free
 	fee := auth.StdFee{
-		Amount: sdk.Coins{sdk.NewCoin("foocoin", 0)},
+		Amount: sdk.Coins{sdk.NewInt64Coin("foocoin", 0)},
 		Gas:    100000,
 	}
 
@@ -203,8 +205,7 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 		(&baseAcc).SetCoins(coins)
 		accts[i] = &baseAcc
 	}
-
-	SetGenesis(app, accts)
+	app.GenesisAccounts = accts
 }
 
 // GetAllAccounts returns all accounts in the accountMapper.

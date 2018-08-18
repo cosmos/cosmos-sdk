@@ -31,7 +31,6 @@ type Context struct {
 
 // create a new context
 func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Logger) Context {
-
 	c := Context{
 		Context: context.Background(),
 		pst:     newThePast(),
@@ -41,7 +40,6 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 	c = c.WithBlockHeader(header)
 	c = c.WithBlockHeight(header.Height)
 	c = c.WithChainID(header.ChainID)
-	c = c.WithIsCheckTx(isCheckTx)
 	c = c.WithTxBytes(nil)
 	c = c.WithLogger(logger)
 	c = c.WithSigningValidators(nil)
@@ -71,7 +69,12 @@ func (c Context) Value(key interface{}) interface{} {
 
 // KVStore fetches a KVStore from the MultiStore.
 func (c Context) KVStore(key StoreKey) KVStore {
-	return c.multiStore().GetKVStoreWithGas(c.GasMeter(), key)
+	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), cachedDefaultGasConfig)
+}
+
+// TransientStore fetches a TransientStore from the MultiStore.
+func (c Context) TransientStore(key StoreKey) KVStore {
+	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), cachedTransientGasConfig)
 }
 
 //----------------------------------------
@@ -126,8 +129,8 @@ const (
 	contextKeyMultiStore contextKey = iota
 	contextKeyBlockHeader
 	contextKeyBlockHeight
+	contextKeyConsensusParams
 	contextKeyChainID
-	contextKeyIsCheckTx
 	contextKeyTxBytes
 	contextKeyLogger
 	contextKeySigningValidators
@@ -148,11 +151,11 @@ func (c Context) BlockHeader() abci.Header {
 func (c Context) BlockHeight() int64 {
 	return c.Value(contextKeyBlockHeight).(int64)
 }
+func (c Context) ConsensusParams() abci.ConsensusParams {
+	return c.Value(contextKeyConsensusParams).(abci.ConsensusParams)
+}
 func (c Context) ChainID() string {
 	return c.Value(contextKeyChainID).(string)
-}
-func (c Context) IsCheckTx() bool {
-	return c.Value(contextKeyIsCheckTx).(bool)
 }
 func (c Context) TxBytes() []byte {
 	return c.Value(contextKeyTxBytes).([]byte)
@@ -176,11 +179,15 @@ func (c Context) WithBlockHeader(header abci.Header) Context {
 func (c Context) WithBlockHeight(height int64) Context {
 	return c.withValue(contextKeyBlockHeight, height)
 }
+func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
+	if params == nil {
+		return c
+	}
+	return c.withValue(contextKeyConsensusParams, params).
+		WithGasMeter(NewGasMeter(params.TxSize.MaxGas))
+}
 func (c Context) WithChainID(chainID string) Context {
 	return c.withValue(contextKeyChainID, chainID)
-}
-func (c Context) WithIsCheckTx(isCheckTx bool) Context {
-	return c.withValue(contextKeyIsCheckTx, isCheckTx)
 }
 func (c Context) WithTxBytes(txBytes []byte) Context {
 	return c.withValue(contextKeyTxBytes, txBytes)

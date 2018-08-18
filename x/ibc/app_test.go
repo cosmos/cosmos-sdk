@@ -36,7 +36,7 @@ func TestIBCMsgs(t *testing.T) {
 
 	priv1 := ed25519.GenPrivKey()
 	addr1 := sdk.AccAddress(priv1.PubKey().Address())
-	coins := sdk.Coins{sdk.NewCoin("foocoin", 10)}
+	coins := sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 	var emptyCoins sdk.Coins
 
 	acc := &auth.BaseAccount{

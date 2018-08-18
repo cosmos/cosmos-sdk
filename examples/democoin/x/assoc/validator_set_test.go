@@ -32,11 +32,11 @@ func TestValidatorSet(t *testing.T) {
 	addr2 := []byte("addr2")
 
 	base := &mock.ValidatorSet{[]mock.Validator{
-		{addr1, sdk.NewRat(1)},
-		{addr2, sdk.NewRat(2)},
+		{addr1, sdk.NewDec(1)},
+		{addr2, sdk.NewDec(2)},
 	}}
 
-	valset := NewValidatorSet(wire.NewCodec(), sdk.NewPrefixStoreGetter(key, []byte("assoc")), base, 1, 5)
+	valset := NewValidatorSet(wire.NewCodec(), ctx.KVStore(key).Prefix([]byte("assoc")), base, 1, 5)
 
 	require.Equal(t, base.Validator(ctx, addr1), valset.Validator(ctx, addr1))
 	require.Equal(t, base.Validator(ctx, addr2), valset.Validator(ctx, addr2))

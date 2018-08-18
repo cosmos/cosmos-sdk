@@ -78,21 +78,21 @@ func createHandler(cdc *wire.Codec) http.Handler {
 		panic(err)
 	}
 
-	ctx := context.NewCoreContextFromViper()
+	cliCtx := context.NewCLIContext().WithCodec(cdc).WithLogger(os.Stdout)
 
 	// TODO: make more functional? aka r = keys.RegisterRoutes(r)
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
-	r.HandleFunc("/node_version", NodeVersionRequestHandler(ctx)).Methods("GET")
+	r.HandleFunc("/node_version", NodeVersionRequestHandler(cliCtx)).Methods("GET")
 
 	keys.RegisterRoutes(r)
-	rpc.RegisterRoutes(ctx, r)
-	tx.RegisterRoutes(ctx, r, cdc)
-	auth.RegisterRoutes(ctx, r, cdc, "acc")
-	bank.RegisterRoutes(ctx, r, cdc, kb)
-	ibc.RegisterRoutes(ctx, r, cdc, kb)
-	stake.RegisterRoutes(ctx, r, cdc, kb)
-	slashing.RegisterRoutes(ctx, r, cdc, kb)
-	gov.RegisterRoutes(ctx, r, cdc)
+	rpc.RegisterRoutes(cliCtx, r)
+	tx.RegisterRoutes(cliCtx, r, cdc)
+	auth.RegisterRoutes(cliCtx, r, cdc, "acc")
+	bank.RegisterRoutes(cliCtx, r, cdc, kb)
+	ibc.RegisterRoutes(cliCtx, r, cdc, kb)
+	stake.RegisterRoutes(cliCtx, r, cdc, kb)
+	slashing.RegisterRoutes(cliCtx, r, cdc, kb)
+	gov.RegisterRoutes(cliCtx, r, cdc)
 
 	return r
 }

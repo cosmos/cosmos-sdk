@@ -19,7 +19,7 @@ If you want to become a validator for the Hub's `mainnet`, you should [research 
 Your `cosmosvalpub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
 
 ```bash
-gaiad tendermint show_validator
+gaiad tendermint show-validator
 ```
 
 Next, craft your `gaiacli stake create-validator` command:
@@ -31,8 +31,13 @@ Don't use more `steak` thank you have! You can always get more by using the [Fau
 ```bash
 gaiacli stake create-validator \
   --amount=5steak \
-  --pubkey=$(gaiad tendermint show_validator) \
+<<<<<<< HEAD
+  --pubkey=$(gaiad tendermint show-validator) \
   --address-validator=<account_cosmosaccaddr>
+=======
+  --pubkey=$(gaiad tendermint show_validator) \
+  --validator=<account_cosmosaccaddr>
+>>>>>>> 6f19f2ed... Rename --address-validator flag to --validator
   --moniker="choose a moniker" \
   --chain-id=gaia-7005 \
   --name=<key_name>
@@ -42,14 +47,14 @@ gaiacli stake create-validator \
 
 You can edit your validator's public description. This info is to identify your validator, and will be relied on by delegators to decide which validators to stake to. Make sure to provide input for every flag below, otherwise the field will default to empty (`--moniker` defaults to the machine name).
 
-The `--keybase-sig` is a 16-digit string that is generated with a [keybase.io](https://keybase.io) account. It's a cryptographically secure method of verifying your identity across multiple online networks. The Keybase API allows us to retrieve your Keybase avatar. This is how you can add a logo to your validator profile.
+The `--identity` can be used as to verify identity with systems like Keybase or UPort. When using with Keybase `--identity` should be populated with a 16-digit string that is generated with a [keybase.io](https://keybase.io) account. It's a cryptographically secure method of verifying your identity across multiple online networks. The Keybase API allows us to retrieve your Keybase avatar. This is how you can add a logo to your validator profile.
 
 ```bash
 gaiacli stake edit-validator
-  --address-validator=<account_cosmosaccaddr>
+  --validator=<account_cosmosaccaddr>
   --moniker="choose a moniker" \
   --website="https://cosmos.network" \
-  --keybase-sig="6A0D65E29A4CBC8E"
+  --identity=6A0D65E29A4CBC8E
   --details="To infinity and beyond!"
   --chain-id=gaia-7005 \
   --name=<key_name>
@@ -61,8 +66,13 @@ View the validator's information with this command:
 
 ```bash
 gaiacli stake validator \
+<<<<<<< HEAD
   --address-validator=<account_cosmosaccaddr> \
   --chain-id=gaia-7005
+=======
+  --validator=<account_cosmosaccaddr> \
+  --chain-id=gaia-6002
+>>>>>>> 6f19f2ed... Rename --address-validator flag to --validator
 ```
 
 ### Confirm Your Validator is Running
@@ -70,7 +80,7 @@ gaiacli stake validator \
 Your validator is active if the following command returns anything:
 
 ```bash
-gaiacli advanced tendermint validator-set | grep "$(gaiad tendermint show_validator)"
+gaiacli advanced tendermint validator-set | grep "$(gaiad tendermint show-validator)"
 ```
 
 You should also be able to see your validator on the [Explorer](https://explorecosmos.network/validators). You are looking for the `bech32` encoded `address` in the `~/.gaiad/config/priv_validator.json` file.

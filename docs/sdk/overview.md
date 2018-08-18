@@ -1,14 +1,16 @@
 # Cosmos SDK Overview
 
-The Cosmos-SDK is a framework for building Tendermint ABCI applications in
-Golang. It is designed to allow developers to easily create custom interoperable
-blockchain applications within the Cosmos Network.
+The [Cosmos-SDK](https://github.com/cosmos/cosmos-sdk) is a framework for building multi-asset Proof-of-Stake (PoS) blockchains, like the Cosmos Hub, as well as Proof-Of-Authority (PoA) blockchains.
 
-To achieve its goals of flexibility and security, the SDK makes extensive use of
-the [object-capability
-model](https://en.wikipedia.org/wiki/Object-capability_model)
-and the [principle of least
-privilege](https://en.wikipedia.org/wiki/Principle_of_least_privilege).
+The goal of the Cosmos-SDK is to allow developers to easily create custom interoperable blockchain applications within the Cosmos Network without having to recreate common blockchain functionality, thus removing the complexity of building a Tendermint ABCI application. We envision the SDK as the npm-like framework to build secure blockchain applications on top of Tendermint.
+
+In terms of its design, the SDK optimizes flexibility and security. The framework is designed around a modular execution stack which allows applications to mix and match elements as desired. In addition, all modules are sandboxed for greater application security.
+
+It is based on two major principles:
+
+- **Composability:** Anyone can create a module for the Cosmos-SDK and integrating the already-built modules is as simple as importing them into your blockchain application.
+
+- **Capabilities:** The SDK is inspired by capabilities-based security, and informed by years of wrestling with blockchain state-machines. Most developers will need to access other 3rd party modules when building their own modules. Given that the Cosmos-SDK is an open framework and that we assume that some of those modules may be malicious, we designed the SDK using object-capabilities (ocaps) based principles. In practice, this means that instead of having each module keep an access control list for other modules, each module implements special objects called keepers that can be passed to other modules to grant a pre-defined set of capabilities. For example, if an instance of module A's keepers is passed to module B, the latter will be able to call a restricted set of module A's functions. The capabilities of each keeper are defined by the module's developer, and it's the developer's job to understand and audit the safety of foreign code from 3rd party modules based on the capabilities they are passing into each 3rd party module. For a deeper look at capabilities, you can read this [article](http://habitatchronicles.com/2017/05/what-are-capabilities/).
 
 For an introduction to object-capabilities, see this [article](http://habitatchronicles.com/2017/05/what-are-capabilities/).
 

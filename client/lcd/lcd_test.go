@@ -361,13 +361,13 @@ func TestValidatorsQuery(t *testing.T) {
 	validators := getValidators(t, port)
 	require.Equal(t, len(validators), 1)
 
-	// make sure all the validators were found (order unknown because sorted by owner addr)
+	// make sure all the validators were found (order unknown because sorted by operator addr)
 	foundVal := false
 	pkBech := sdk.MustBech32ifyValPub(pks[0])
 	if validators[0].PubKey == pkBech {
 		foundVal = true
 	}
-	require.True(t, foundVal, "pkBech %v, owner %v", pkBech, validators[0].Owner)
+	require.True(t, foundVal, "pkBech %v, operator %v", pkBech, validators[0].Operator)
 }
 
 func TestValidatorQuery(t *testing.T) {
@@ -375,9 +375,9 @@ func TestValidatorQuery(t *testing.T) {
 	defer cleanup()
 	require.Equal(t, 1, len(pks))
 
-	validator1Owner := sdk.AccAddress(pks[0].Address())
-	validator := getValidator(t, port, validator1Owner)
-	assert.Equal(t, validator.Owner, validator1Owner, "The returned validator does not hold the correct data")
+	validator1Operator := sdk.AccAddress(pks[0].Address())
+	validator := getValidator(t, port, validator1Operator)
+	assert.Equal(t, validator.Operator, validator1Operator, "The returned validator does not hold the correct data")
 }
 
 func TestBonding(t *testing.T) {
@@ -386,10 +386,11 @@ func TestBonding(t *testing.T) {
 	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
-	validator1Owner := sdk.AccAddress(pks[0].Address())
-	validator := getValidator(t, port, validator1Owner)
+	validator1Operator := sdk.AccAddress(pks[0].Address())
+	validator := getValidator(t, port, validator1Operator)
 
-	resultTx := doDelegate(t, port, seed, name, password, addr, validator1Owner, 60)
+	// create bond TX
+	resultTx := doDelegate(t, port, seed, name, password, addr, validator1Operator, 60)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -400,7 +401,8 @@ func TestBonding(t *testing.T) {
 
 	require.Equal(t, int64(40), coins.AmountOf(denom).Int64())
 
-	bond := getDelegation(t, port, addr, validator1Owner)
+	// query validator
+	bond := getDelegation(t, port, addr, validator1Operator)
 	require.Equal(t, "60.0000000000", bond.Shares)
 
 	summary := getDelegationSummary(t, port, addr)
@@ -411,16 +413,17 @@ func TestBonding(t *testing.T) {
 
 	bondedValidators := getDelegatorValidators(t, port, addr)
 	require.Len(t, bondedValidators, 1)
-	require.Equal(t, validator1Owner, bondedValidators[0].Owner)
+	require.Equal(t, validator1Operator, bondedValidators[0].Operator)
 	require.Equal(t, validator.DelegatorShares.Add(sdk.NewDec(60)).String(), bondedValidators[0].DelegatorShares.String())
 
-	bondedValidator := getDelegatorValidator(t, port, addr, validator1Owner)
-	require.Equal(t, validator1Owner, bondedValidator.Owner)
+	bondedValidator := getDelegatorValidator(t, port, addr, validator1Operator)
+	require.Equal(t, validator1Operator, bondedValidator.Operator)
 
 	//////////////////////
 	// testing unbonding
 
-	resultTx = doBeginUnbonding(t, port, seed, name, password, addr, validator1Owner, 60)
+	// create unbond TX
+	resultTx = doBeginUnbonding(t, port, seed, name, password, addr, validator1Operator, 60)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -431,7 +434,7 @@ func TestBonding(t *testing.T) {
 	coins = acc.GetCoins()
 	require.Equal(t, int64(40), coins.AmountOf("steak").Int64())
 
-	unbondings := getUndelegations(t, port, addr, validator1Owner)
+	unbondings := getUndelegations(t, port, addr, validator1Operator)
 	require.Len(t, unbondings, 1, "Unbondings holds all unbonding-delegations")
 	require.Equal(t, "60", unbondings[0].Balance.Amount.String())
 

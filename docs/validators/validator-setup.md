@@ -31,8 +31,13 @@ Don't use more `steak` thank you have! You can always get more by using the [Fau
 ```bash
 gaiacli stake create-validator \
   --amount=5steak \
+<<<<<<< HEAD
   --pubkey=$(gaiad tendermint show-validator) \
   --address-validator=<account_cosmosaccaddr>
+=======
+  --pubkey=$(gaiad tendermint show_validator) \
+  --validator=<account_cosmosaccaddr>
+>>>>>>> 6f19f2ed... Rename --address-validator flag to --validator
   --moniker="choose a moniker" \
   --chain-id=gaia-7005 \
   --name=<key_name>
@@ -46,7 +51,7 @@ The `--identity` can be used as to verify identity with systems like Keybase or 
 
 ```bash
 gaiacli stake edit-validator
-  --address-validator=<account_cosmosaccaddr>
+  --validator=<account_cosmosaccaddr>
   --moniker="choose a moniker" \
   --website="https://cosmos.network" \
   --identity=6A0D65E29A4CBC8E
@@ -61,8 +66,13 @@ View the validator's information with this command:
 
 ```bash
 gaiacli stake validator \
+<<<<<<< HEAD
   --address-validator=<account_cosmosaccaddr> \
   --chain-id=gaia-7005
+=======
+  --validator=<account_cosmosaccaddr> \
+  --chain-id=gaia-6002
+>>>>>>> 6f19f2ed... Rename --address-validator flag to --validator
 ```
 
 ### Confirm Your Validator is Running

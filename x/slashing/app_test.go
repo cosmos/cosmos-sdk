@@ -107,7 +107,7 @@ func TestSlashingMsgs(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 
 	validator := checkValidator(t, mapp, stakeKeeper, addr1, true)
-	require.Equal(t, addr1, validator.Owner)
+	require.Equal(t, addr1, validator.Operator)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.DecEq(t, sdk.NewDec(10), validator.BondedTokens()))
 	unrevokeMsg := MsgUnrevoke{ValidatorAddr: sdk.AccAddress(validator.PubKey.Address())}

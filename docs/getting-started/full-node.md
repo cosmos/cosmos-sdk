@@ -1,5 +1,11 @@
 # Join the Testnet
 
+::: tip Current Testnet
+See the [testnet repo](https://github.com/cosmos/testnets) for 
+information on the latest testnet, including the correct version
+of the Cosmos-SDK to use and details about the genesis file.
+:::
+
 Please ensure you have the [Cosmos SDK](/getting-started/installation.md) installed. If you ran a full node on a previous testnet, please skip to [Upgrading From Previous Testnet](#upgrading-from-previous-testnet).
 
 ## Setting Up a New Node
@@ -52,9 +58,15 @@ Now it is time to upgrade the software:
 
 ```bash
 cd $GOPATH/src/github.com/cosmos/cosmos-sdk
-git fetch --all && git checkout v0.23.1
+git fetch --all && git checkout master
 make update_tools && make get_vendor_deps && make install
 ```
+
+Note we use `master` here since it contains the latest stable release.
+See the [testnet repo](https://github.com/cosmos/testnets) 
+for details on which version is needed for which testnet, 
+and the [SDK release page](https://github.com/cosmos/cosmos-sdk/releases) 
+for details on each release.
 
 Your full node has been cleanly upgraded!
 
@@ -66,8 +78,12 @@ Fetch the testnet's `genesis.json` file into `gaiad`'s config directory.
 
 ```bash
 mkdir -p $HOME/.gaiad/config
-curl https://raw.githubusercontent.com/cosmos/testnets/master/gaia-7002/genesis.json > $HOME/.gaiad/config/genesis.json
+curl https://raw.githubusercontent.com/cosmos/testnets/master/latest/genesis.json > $HOME/.gaiad/config/genesis.json
 ```
+
+Note we use the `latest` directory in the [testnets repo](https://github.com/cosmos/testnets) 
+which contains details for the latest testnet. If you are connecting to a different testnet, ensure you
+get the right files.
 
 ### Add Seed Nodes
 

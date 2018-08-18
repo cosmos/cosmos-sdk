@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
+	"github.com/gin-gonic/gin"
 )
 
 // Commands registers a sub-tree of commands to interact with
@@ -37,4 +38,14 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/keys/{name}", GetKeyRequestHandler).Methods("GET")
 	r.HandleFunc("/keys/{name}", UpdateKeyRequestHandler).Methods("PUT")
 	r.HandleFunc("/keys/{name}", DeleteKeyRequestHandler).Methods("DELETE")
+}
+
+// resgister swagger REST routes
+func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup) {
+	routerGroup.GET("/keys", QueryKeysRequest)
+	routerGroup.POST("/keys", AddNewKeyRequest)
+	routerGroup.GET("/keys/seed", SeedRequest)
+	routerGroup.GET("/keys/get/:name", GetKeyRequest)
+	routerGroup.PUT("/keys/:name", UpdateKeyRequest)
+	routerGroup.DELETE("/keys/:name", DeleteKeyRequest)
 }

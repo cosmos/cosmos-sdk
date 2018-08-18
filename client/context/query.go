@@ -14,11 +14,18 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/wire"
+	"strings"
+	tendermintLiteProxy "github.com/tendermint/tendermint/lite/proxy"
 )
 
 // GetNode returns an RPC client. If the context's client is not defined, an
 // error is returned.
 func (ctx CLIContext) GetNode() (rpcclient.Client, error) {
+	if ctx.ClientMgr != nil {
+		return ctx.ClientMgr.getClient(), nil
+	}
 	if ctx.Client == nil {
 		return nil, errors.New("no RPC client defined")
 	}
@@ -296,8 +303,40 @@ func (ctx CLIContext) query(path string, key common.HexBytes) (res []byte, err e
 	}
 
 	resp := result.Response
-	if !resp.IsOK() {
+	if resp.Code != uint32(0) {
 		return res, errors.Errorf("query failed: (%d) %s", resp.Code, resp.Log)
+	}
+
+	// Data from trusted node or subspace doesn't need verification
+	if ctx.TrustNode || !isQueryStoreWithProof(path) {
+		return resp.Value,nil
+	}
+
+	if ctx.Cert == nil {
+		return resp.Value,errors.Errorf("missing valid certifier to verify data from untrusted node")
+	}
+
+	// AppHash for height H is in header H+1
+	commit, err := tendermintLiteProxy.GetCertifiedCommit(resp.Height+1, node, ctx.Cert)
+	if err != nil {
+		return nil, err
+	}
+
+	var multiStoreProof store.MultiStoreProof
+	cdc := wire.NewCodec()
+	err = cdc.UnmarshalBinary(resp.Proof, &multiStoreProof)
+	if err != nil {
+		return res, errors.Wrap(err, "failed to unmarshalBinary rangeProof")
+	}
+
+	// Validate the substore commit hash against trusted appHash
+	substoreCommitHash, err :=  store.VerifyMultiStoreCommitInfo(multiStoreProof.StoreName, multiStoreProof.CommitIDList, commit.Header.AppHash)
+	if err != nil {
+		return  nil, errors.Wrap(err, "failed in verifying the proof against appHash")
+	}
+	err = store.VerifyRangeProof(resp.Key, resp.Value, substoreCommitHash, &multiStoreProof.RangeProof)
+	if err != nil {
+		return  nil, errors.Wrap(err, "failed in the range proof verification")
 	}
 
 	return resp.Value, nil
@@ -308,4 +347,22 @@ func (ctx CLIContext) query(path string, key common.HexBytes) (res []byte, err e
 func (ctx CLIContext) queryStore(key cmn.HexBytes, storeName, endPath string) ([]byte, error) {
 	path := fmt.Sprintf("/store/%s/%s", storeName, endPath)
 	return ctx.query(path, key)
+}
+
+// isQueryStoreWithProof expects a format like /<queryType>/<storeName>/<subpath>
+// queryType can be app or store
+// if subpath equals to store or key, then return true
+func isQueryStoreWithProof(path string) (bool) {
+	if !strings.HasPrefix(path, "/") {
+		return false
+	}
+	paths := strings.SplitN(path[1:], "/", 3)
+	if len(paths) != 3 {
+		return false
+	}
+	// WARNING This should be consistent with query method in iavlstore.go
+	if paths[2] == "store" || paths[2] == "key" {
+		return true
+	}
+	return false
 }

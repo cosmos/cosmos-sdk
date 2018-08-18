@@ -452,21 +452,29 @@ func (k Keeper) UpdateBondedValidators(
 	// swap the cliff validator for a new validator if the affected validator
 	// was bonded
 	if newValidatorBonded {
-		// unbond the cliff validator
 		if oldCliffValidatorAddr != nil {
-			cliffVal, found := k.GetValidator(ctx, oldCliffValidatorAddr)
+			oldCliffVal, found := k.GetValidator(ctx, oldCliffValidatorAddr)
 			if !found {
 				panic(fmt.Sprintf("validator record not found for address: %v\n", oldCliffValidatorAddr))
 			}
 
-			k.unbondValidator(ctx, cliffVal)
+			if bytes.Equal(validatorToBond.Owner, affectedValidator.Owner) {
+				// unbond the old cliff validator iff the affected validator was
+				// newly bonded and has greater power
+				k.unbondValidator(ctx, oldCliffVal)
+			} else {
+				// otherwise unbond the affected validator, which must have been
+				// kicked out
+				affectedValidator = k.unbondValidator(ctx, affectedValidator)
+			}
 		}
 
-		// bond the new validator
 		validator = k.bondValidator(ctx, validatorToBond)
 		if bytes.Equal(validator.Owner, affectedValidator.Owner) {
 			return validator, true
 		}
+
+		return affectedValidator, true
 	}
 
 	return types.Validator{}, false

@@ -3,6 +3,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -110,7 +111,7 @@ func ErrBadSharesPercent(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "shares percent must be >0 and <=1")
 }
 
-func ErrNotMature(codespace sdk.CodespaceType, operation, descriptor string, got, min int64) sdk.Error {
+func ErrNotMature(codespace sdk.CodespaceType, operation, descriptor string, got, min time.Time) sdk.Error {
 	msg := fmt.Sprintf("%v is not mature requires a min %v of %v, currently it is %v",
 		operation, descriptor, got, min)
 	return sdk.NewError(codespace, CodeUnauthorized, msg)
@@ -118,6 +119,10 @@ func ErrNotMature(codespace sdk.CodespaceType, operation, descriptor string, got
 
 func ErrNoUnbondingDelegation(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "no unbonding delegation found")
+}
+
+func ErrExistingUnbondingDelegation(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDelegation, "existing unbonding delegation found")
 }
 
 func ErrNoRedelegation(codespace sdk.CodespaceType) sdk.Error {

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -70,9 +71,9 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 		ValidatorAddr:  addrVals[0],
 		CreationHeight: 0,
 		// expiration timestamp (beyond which the unbonding delegation shouldn't be slashed)
-		MinTime:        0,
-		InitialBalance: sdk.NewCoin(params.BondDenom, 10),
-		Balance:        sdk.NewCoin(params.BondDenom, 10),
+		MinTime:        time.Unix(0, 0),
+		InitialBalance: sdk.NewInt64Coin(params.BondDenom, 10),
+		Balance:        sdk.NewInt64Coin(params.BondDenom, 10),
 	}
 	keeper.SetUnbondingDelegation(ctx, ubd)
 
@@ -81,23 +82,23 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	require.Equal(t, int64(0), slashAmount.RoundInt64())
 
 	// after the expiration time, no longer eligible for slashing
-	ctx = ctx.WithBlockHeader(abci.Header{Time: int64(10)})
+	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(10, 0)})
 	keeper.SetUnbondingDelegation(ctx, ubd)
 	slashAmount = keeper.slashUnbondingDelegation(ctx, ubd, 0, fraction)
 	require.Equal(t, int64(0), slashAmount.RoundInt64())
 
 	// test valid slash, before expiration timestamp and to which stake contributed
 	oldPool := keeper.GetPool(ctx)
-	ctx = ctx.WithBlockHeader(abci.Header{Time: int64(0)})
+	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(0, 0)})
 	keeper.SetUnbondingDelegation(ctx, ubd)
 	slashAmount = keeper.slashUnbondingDelegation(ctx, ubd, 0, fraction)
 	require.Equal(t, int64(5), slashAmount.RoundInt64())
 	ubd, found := keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
 	// initialbalance unchanged
-	require.Equal(t, sdk.NewCoin(params.BondDenom, 10), ubd.InitialBalance)
+	require.Equal(t, sdk.NewInt64Coin(params.BondDenom, 10), ubd.InitialBalance)
 	// balance decreased
-	require.Equal(t, sdk.NewCoin(params.BondDenom, 5), ubd.Balance)
+	require.Equal(t, sdk.NewInt64Coin(params.BondDenom, 5), ubd.Balance)
 	newPool := keeper.GetPool(ctx)
 	require.Equal(t, int64(5), oldPool.LooseTokens.Sub(newPool.LooseTokens).RoundInt64())
 }
@@ -114,11 +115,11 @@ func TestSlashRedelegation(t *testing.T) {
 		ValidatorDstAddr: addrVals[1],
 		CreationHeight:   0,
 		// expiration timestamp (beyond which the redelegation shouldn't be slashed)
-		MinTime:        0,
+		MinTime:        time.Unix(0, 0),
 		SharesSrc:      sdk.NewRat(10),
 		SharesDst:      sdk.NewRat(10),
-		InitialBalance: sdk.NewCoin(params.BondDenom, 10),
-		Balance:        sdk.NewCoin(params.BondDenom, 10),
+		InitialBalance: sdk.NewInt64Coin(params.BondDenom, 10),
+		Balance:        sdk.NewInt64Coin(params.BondDenom, 10),
 	}
 	keeper.SetRedelegation(ctx, rd)
 
@@ -137,7 +138,7 @@ func TestSlashRedelegation(t *testing.T) {
 	require.Equal(t, int64(0), slashAmount.RoundInt64())
 
 	// after the expiration time, no longer eligible for slashing
-	ctx = ctx.WithBlockHeader(abci.Header{Time: int64(10)})
+	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(10, 0)})
 	keeper.SetRedelegation(ctx, rd)
 	validator, found = keeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
@@ -146,7 +147,7 @@ func TestSlashRedelegation(t *testing.T) {
 
 	// test valid slash, before expiration timestamp and to which stake contributed
 	oldPool := keeper.GetPool(ctx)
-	ctx = ctx.WithBlockHeader(abci.Header{Time: int64(0)})
+	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(0, 0)})
 	keeper.SetRedelegation(ctx, rd)
 	validator, found = keeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
@@ -155,9 +156,9 @@ func TestSlashRedelegation(t *testing.T) {
 	rd, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 	// initialbalance unchanged
-	require.Equal(t, sdk.NewCoin(params.BondDenom, 10), rd.InitialBalance)
+	require.Equal(t, sdk.NewInt64Coin(params.BondDenom, 10), rd.InitialBalance)
 	// balance decreased
-	require.Equal(t, sdk.NewCoin(params.BondDenom, 5), rd.Balance)
+	require.Equal(t, sdk.NewInt64Coin(params.BondDenom, 5), rd.Balance)
 	// shares decreased
 	del, found = keeper.GetDelegation(ctx, addrDels[0], addrVals[1])
 	require.True(t, found)
@@ -209,9 +210,9 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 		ValidatorAddr:  addrVals[0],
 		CreationHeight: 11,
 		// expiration timestamp (beyond which the unbonding delegation shouldn't be slashed)
-		MinTime:        0,
-		InitialBalance: sdk.NewCoin(params.BondDenom, 4),
-		Balance:        sdk.NewCoin(params.BondDenom, 4),
+		MinTime:        time.Unix(0, 0),
+		InitialBalance: sdk.NewInt64Coin(params.BondDenom, 4),
+		Balance:        sdk.NewInt64Coin(params.BondDenom, 4),
 	}
 	keeper.SetUnbondingDelegation(ctx, ubd)
 
@@ -310,11 +311,11 @@ func TestSlashWithRedelegation(t *testing.T) {
 		ValidatorSrcAddr: addrVals[0],
 		ValidatorDstAddr: addrVals[1],
 		CreationHeight:   11,
-		MinTime:          0,
+		MinTime:          time.Unix(0, 0),
 		SharesSrc:        sdk.NewRat(6),
 		SharesDst:        sdk.NewRat(6),
-		InitialBalance:   sdk.NewCoin(params.BondDenom, 6),
-		Balance:          sdk.NewCoin(params.BondDenom, 6),
+		InitialBalance:   sdk.NewInt64Coin(params.BondDenom, 6),
+		Balance:          sdk.NewInt64Coin(params.BondDenom, 6),
 	}
 	keeper.SetRedelegation(ctx, rd)
 
@@ -432,11 +433,11 @@ func TestSlashBoth(t *testing.T) {
 		ValidatorDstAddr: addrVals[1],
 		CreationHeight:   11,
 		// expiration timestamp (beyond which the redelegation shouldn't be slashed)
-		MinTime:        0,
+		MinTime:        time.Unix(0, 0),
 		SharesSrc:      sdk.NewRat(6),
 		SharesDst:      sdk.NewRat(6),
-		InitialBalance: sdk.NewCoin(params.BondDenom, 6),
-		Balance:        sdk.NewCoin(params.BondDenom, 6),
+		InitialBalance: sdk.NewInt64Coin(params.BondDenom, 6),
+		Balance:        sdk.NewInt64Coin(params.BondDenom, 6),
 	}
 	keeper.SetRedelegation(ctx, rdA)
 
@@ -454,9 +455,9 @@ func TestSlashBoth(t *testing.T) {
 		ValidatorAddr:  addrVals[0],
 		CreationHeight: 11,
 		// expiration timestamp (beyond which the unbonding delegation shouldn't be slashed)
-		MinTime:        0,
-		InitialBalance: sdk.NewCoin(params.BondDenom, 4),
-		Balance:        sdk.NewCoin(params.BondDenom, 4),
+		MinTime:        time.Unix(0, 0),
+		InitialBalance: sdk.NewInt64Coin(params.BondDenom, 4),
+		Balance:        sdk.NewInt64Coin(params.BondDenom, 4),
 	}
 	keeper.SetUnbondingDelegation(ctx, ubdA)
 

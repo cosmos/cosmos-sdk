@@ -11,6 +11,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -48,7 +49,7 @@ func NewApp() *App {
 
 	// Create your application object
 	app := &App{
-		BaseApp:          bam.NewBaseApp("mock", cdc, logger, db),
+		BaseApp:          bam.NewBaseApp("mock", logger, db, auth.DefaultTxDecoder(cdc)),
 		Cdc:              cdc,
 		KeyMain:          sdk.NewKVStoreKey("main"),
 		KeyAccount:       sdk.NewKVStoreKey("acc"),
@@ -66,6 +67,8 @@ func NewApp() *App {
 	// calling complete setup.
 	app.SetInitChainer(app.InitChainer)
 	app.SetAnteHandler(auth.NewAnteHandler(app.AccountMapper, app.FeeCollectionKeeper))
+
+	// Not sealing for custom extension
 
 	return app
 }
@@ -130,7 +133,7 @@ func SetGenesis(app *App, accs []auth.Account) {
 func GenTx(msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKey) auth.StdTx {
 	// Make the transaction free
 	fee := auth.StdFee{
-		Amount: sdk.Coins{sdk.NewCoin("foocoin", 0)},
+		Amount: sdk.Coins{sdk.NewInt64Coin("foocoin", 0)},
 		Gas:    100000,
 	}
 
@@ -171,7 +174,32 @@ func GeneratePrivKeyAddressPairs(n int) (keys []crypto.PrivKey, addrs []sdk.AccA
 	keys = make([]crypto.PrivKey, n, n)
 	addrs = make([]sdk.AccAddress, n, n)
 	for i := 0; i < n; i++ {
-		keys[i] = ed25519.GenPrivKey()
+		if rand.Int63()%2 == 0 {
+			keys[i] = secp256k1.GenPrivKey()
+		} else {
+			keys[i] = ed25519.GenPrivKey()
+		}
+		addrs[i] = sdk.AccAddress(keys[i].PubKey().Address())
+	}
+	return
+}
+
+// GeneratePrivKeyAddressPairsFromRand generates a total of n private key, address
+// pairs using the provided randomness source.
+func GeneratePrivKeyAddressPairsFromRand(rand *rand.Rand, n int) (keys []crypto.PrivKey, addrs []sdk.AccAddress) {
+	keys = make([]crypto.PrivKey, n, n)
+	addrs = make([]sdk.AccAddress, n, n)
+	for i := 0; i < n; i++ {
+		secret := make([]byte, 32)
+		_, err := rand.Read(secret)
+		if err != nil {
+			panic("Could not read randomness")
+		}
+		if rand.Int63()%2 == 0 {
+			keys[i] = secp256k1.GenPrivKeySecp256k1(secret)
+		} else {
+			keys[i] = ed25519.GenPrivKeyFromSecret(secret)
+		}
 		addrs[i] = sdk.AccAddress(keys[i].PubKey().Address())
 	}
 	return
@@ -203,8 +231,7 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 		(&baseAcc).SetCoins(coins)
 		accts[i] = &baseAcc
 	}
-
-	SetGenesis(app, accts)
+	app.GenesisAccounts = accts
 }
 
 // GetAllAccounts returns all accounts in the accountMapper.

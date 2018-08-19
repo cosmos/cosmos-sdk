@@ -1,0 +1,5 @@
+---
+
+- name: restart gaiad
+  service: name=gaiad state=restarted
+

@@ -1,0 +1,17 @@
+---
+
+- name: Disable journald rate-limiting
+  lineinfile: "dest=/etc/systemd/journald.conf regexp={{item.regexp}} line='{{item.line}}'"
+  with_items:
+  - { regexp: "^#RateLimitInterval", line: "RateLimitInterval=0s" }
+  - { regexp: "^#RateLimitBurst", line: "RateLimitBurst=0" }
+  notify: restart journald
+
+- name: Create journal directory for permanent logs
+  file: path=/var/log/journal state=directory
+  notify: restart journald
+
+- name: Set journal folder with systemd-tmpfiles
+  command: "systemd-tmpfiles --create --prefix /var/log/journal"
+  notify: restart journald
+

@@ -13,7 +13,7 @@ type BroadcastTxBody struct {
 }
 
 // BroadcastTx REST Handler
-func BroadcastTxRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
+func BroadcastTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m BroadcastTxBody
 
@@ -25,7 +25,7 @@ func BroadcastTxRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
 			return
 		}
 
-		res, err := ctx.BroadcastTx([]byte(m.TxBytes))
+		res, err := cliCtx.BroadcastTx([]byte(m.TxBytes))
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

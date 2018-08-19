@@ -62,7 +62,7 @@ jobs:
           name: Get metalinter
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_tools
+            make get_dev_tools
       - run:
           name: Lint source
           command: |
@@ -85,6 +85,54 @@ jobs:
             export PATH="$GOBIN:$PATH"
             make test_cli
 
+  test_sim_modules:
+    <<: *defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - restore_cache:
+          key: v1-pkg-cache
+      - restore_cache:
+          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Test individual module simulations
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make test_sim_modules
+
+  test_sim_gaia_nondeterminism:
+    <<: *defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - restore_cache:
+          key: v1-pkg-cache
+      - restore_cache:
+          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Test individual module simulations
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make test_sim_gaia_nondeterminism
+
+  test_sim_gaia_fast:
+    <<: *defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - restore_cache:
+          key: v1-pkg-cache
+      - restore_cache:
+          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Test full Gaia simulation
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make test_sim_gaia_fast
+
   test_cover:
     <<: *defaults
     parallelism: 4
@@ -101,9 +149,9 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make install
-            for pkg in $(go list github.com/cosmos/cosmos-sdk/... | grep -v /vendor/ | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test | circleci tests split --split-by=timings); do
+            for pkg in $(go list github.com/cosmos/cosmos-sdk/... | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test | grep -v '/simulation' | circleci tests split --split-by=timings); do
               id=$(basename "$pkg")
-              GOCACHE=off go test -v -timeout 8m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic "$pkg" | tee "/tmp/logs/$id-$RANDOM.log"
+              GOCACHE=off go test -timeout 8m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic "$pkg" | tee "/tmp/logs/$id-$RANDOM.log"
             done
       - persist_to_workspace:
           root: /tmp/workspace
@@ -133,6 +181,29 @@ jobs:
           name: upload
           command: bash <(curl -s https://codecov.io/bash) -f coverage.txt
 
+  localnet:
+      working_directory: /home/circleci/.go_workspace/src/github.com/cosmos/cosmos-sdk
+      machine:
+        image: circleci/classic:latest
+      environment:
+        GOBIN: /home/circleci/.go_workspace/bin
+        GOPATH: /home/circleci/.go_workspace/
+        GOOS: linux
+        GOARCH: amd64
+      parallelism: 1
+      steps:
+        - checkout
+        - run:
+            name: run localnet and exit on failure
+            command: |
+              set -x
+              make get_tools
+              make get_vendor_deps
+              make build-linux
+              make localnet-start
+              ./scripts/localnet-blocks-test.sh 40 5 10 localhost
+
+
 workflows:
   version: 2
   test-suite:
@@ -144,7 +215,19 @@ workflows:
       - test_cli:
           requires:
             - setup_dependencies
+      - test_sim_modules:
+          requires:
+            - setup_dependencies
+      - test_sim_gaia_nondeterminism:
+          requires:
+            - setup_dependencies
+      - test_sim_gaia_fast:
+          requires:
+            - setup_dependencies
       - test_cover:
+          requires:
+            - setup_dependencies
+      - localnet:
           requires:
             - setup_dependencies
       - upload_coverage:

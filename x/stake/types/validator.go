@@ -13,8 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
-const doNotModifyDescVal = "[do-not-modify]"
-
 // Validator defines the total amount of bond shares and their exchange rate to
 // coins. Accumulation of interest is modelled as an in increase in the
 // exchange rate, and slashing as a decrease.  When coins are delegated to this
@@ -250,6 +248,9 @@ func (v Validator) Equal(c2 Validator) bool {
 		v.LastBondedTokens.Equal(c2.LastBondedTokens)
 }
 
+// constant used in flags to indicate that description field should not be updated
+const DoNotModifyDesc = "[do-not-modify]"
+
 // Description - description fields for a validator
 type Description struct {
 	Moniker  string `json:"moniker"`  // name
@@ -271,16 +272,16 @@ func NewDescription(moniker, identity, website, details string) Description {
 // UpdateDescription updates the fields of a given description. An error is
 // returned if the resulting description contains an invalid length.
 func (d Description) UpdateDescription(d2 Description) (Description, sdk.Error) {
-	if d.Moniker == doNotModifyDescVal {
+	if d2.Moniker == DoNotModifyDesc {
 		d2.Moniker = d.Moniker
 	}
-	if d.Identity == doNotModifyDescVal {
+	if d2.Identity == DoNotModifyDesc {
 		d2.Identity = d.Identity
 	}
-	if d.Website == doNotModifyDescVal {
+	if d2.Website == DoNotModifyDesc {
 		d2.Website = d.Website
 	}
-	if d.Details == doNotModifyDescVal {
+	if d2.Details == DoNotModifyDesc {
 		d2.Details = d.Details
 	}
 
@@ -313,8 +314,9 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 // ABCIValidator returns an abci.Validator from a staked validator type.
 func (v Validator) ABCIValidator() abci.Validator {
 	return abci.Validator{
-		PubKey: tmtypes.TM2PB.PubKey(v.PubKey),
-		Power:  v.BondedTokens().RoundInt64(),
+		PubKey:  tmtypes.TM2PB.PubKey(v.PubKey),
+		Address: v.PubKey.Address(),
+		Power:   v.BondedTokens().RoundInt64(),
 	}
 }
 
@@ -322,8 +324,9 @@ func (v Validator) ABCIValidator() abci.Validator {
 // with with zero power used for validator updates.
 func (v Validator) ABCIValidatorZero() abci.Validator {
 	return abci.Validator{
-		PubKey: tmtypes.TM2PB.PubKey(v.PubKey),
-		Power:  0,
+		PubKey:  tmtypes.TM2PB.PubKey(v.PubKey),
+		Address: v.PubKey.Address(),
+		Power:   0,
 	}
 }
 
@@ -434,5 +437,6 @@ func (v Validator) GetStatus() sdk.BondStatus   { return v.Status }
 func (v Validator) GetOwner() sdk.AccAddress    { return v.Owner }
 func (v Validator) GetPubKey() crypto.PubKey    { return v.PubKey }
 func (v Validator) GetPower() sdk.Rat           { return v.BondedTokens() }
+func (v Validator) GetTokens() sdk.Rat          { return v.Tokens }
 func (v Validator) GetDelegatorShares() sdk.Rat { return v.DelegatorShares }
 func (v Validator) GetBondHeight() int64        { return v.BondHeight }

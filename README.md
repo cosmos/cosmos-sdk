@@ -36,11 +36,9 @@ See the
 
 See the [Cosmos Docs](https://cosmos.network/docs/)
 
-- [Getting started with the
-  SDK](https://cosmos.network/docs/sdk/core/intro.html)
+- [Getting started with the SDK](https://cosmos.network/docs/sdk/core/intro.html)
 - [SDK Examples](/examples)
-- [Join the
-  testnet](https://cosmos.network/docs/getting-started/full-node.html#run-a-full-node)
+- [Join the testnet](https://cosmos.network/docs/getting-started/full-node.html#run-a-full-node)
 
 ## Disambiguation
 

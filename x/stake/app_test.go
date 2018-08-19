@@ -65,12 +65,14 @@ func getInitChainer(mapp *mock.App, keeper Keeper) sdk.InitChainer {
 		stakeGenesis := DefaultGenesisState()
 		stakeGenesis.Pool.LooseTokens = sdk.NewRat(100000)
 
-		err := InitGenesis(ctx, keeper, stakeGenesis)
+		validators, err := InitGenesis(ctx, keeper, stakeGenesis)
 		if err != nil {
 			panic(err)
 		}
 
-		return abci.ResponseInitChain{}
+		return abci.ResponseInitChain{
+			Validators: validators,
+		}
 	}
 }
 
@@ -106,8 +108,8 @@ func checkDelegation(
 func TestStakeMsgs(t *testing.T) {
 	mApp, keeper := getMockApp(t)
 
-	genCoin := sdk.NewCoin("steak", 42)
-	bondCoin := sdk.NewCoin("steak", 10)
+	genCoin := sdk.NewInt64Coin("steak", 42)
+	bondCoin := sdk.NewInt64Coin("steak", 10)
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,

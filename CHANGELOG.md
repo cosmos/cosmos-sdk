@@ -1,5 +1,119 @@
 # Changelog
 
+## 0.24.0
+
+*August 13th, 2018*
+
+BREAKING CHANGES
+
+* Gaia REST API (`gaiacli advanced rest-server`)
+  - [x/stake] \#1880 More REST-ful endpoints (large refactor)
+  - [x/slashing] \#1866 `/slashing/signing_info` takes cosmosvalpub instead of cosmosvaladdr
+  - use time.Time instead of int64 for time. See Tendermint v0.23.0
+  - Signatures are no longer Amino encoded with prefixes (just encoded as raw
+    bytes) - see Tendermint v0.23.0
+
+* Gaia CLI  (`gaiacli`)
+  -  [x/stake] change `--keybase-sig` to `--identity`
+  -  [x/stake] \#1828 Force user to specify amount on create-validator command by removing default
+  -  [x/gov] Change `--proposalID` to `--proposal-id`
+  -  [x/stake, x/gov] \#1606 Use `--from` instead of adhoc flags like `--address-validator`
+        and `--proposer` to indicate the sender address.
+  -  \#1551 Remove `--name` completely
+  -  Genesis/key creation (`gaiad init`) now supports user-provided key passwords
+
+* Gaia
+  - [x/stake] Inflation doesn't use rationals in calculation (performance boost)
+  - [x/stake] Persist a map from `addr->pubkey` in the state since BeginBlock
+    doesn't provide pubkeys.
+  - [x/gov] \#1781 Added tags sub-package, changed tags to use dash-case
+  - [x/gov] \#1688 Governance parameters are now stored in globalparams store
+  - [x/gov] \#1859 Slash validators who do not vote on a proposal
+  - [x/gov] \#1914 added TallyResult type that gets stored in Proposal after tallying is finished
+
+* SDK
+  - [baseapp] Msgs are no longer run on CheckTx, removed `ctx.IsCheckTx()`
+  - [baseapp] NewBaseApp constructor takes sdk.TxDecoder as argument instead of wire.Codec
+  - [types] sdk.NewCoin takes sdk.Int, sdk.NewInt64Coin takes int64
+  - [x/auth] Default TxDecoder can be found in `x/auth` rather than baseapp
+  - [client] \#1551: Refactored `CoreContext` to `TxContext` and `QueryContext`
+      - Removed all tx related fields and logic (building & signing) to separate
+        structure `TxContext` in `x/auth/client/context`
+
+* Tendermint
+    - v0.22.5 -> See [Tendermint PR](https://github.com/tendermint/tendermint/pull/1966)
+        - change all the cryptography imports.
+    - v0.23.0 -> See
+      [Changelog](https://github.com/tendermint/tendermint/blob/v0.23.0/CHANGELOG.md#0230)
+      and [SDK PR](https://github.com/cosmos/cosmos-sdk/pull/1927)
+        - BeginBlock no longer includes crypto.Pubkey
+        - use time.Time instead of int64 for time.
+
+FEATURES
+
+* Gaia REST API (`gaiacli advanced rest-server`)
+    - [x/gov] Can now query governance proposals by ProposalStatus
+
+* Gaia CLI  (`gaiacli`)
+    - [x/gov] added `query-proposals` command. Can filter by `depositer`, `voter`, and `status`
+    - [x/stake] \#2043 Added staking query cli cmds for unbonding-delegations and redelegations
+
+* Gaia
+  - [networks] Added ansible scripts to upgrade seed nodes on a network
+
+* SDK
+  - [x/mock/simulation] Randomized simulation framework
+     - Modules specify invariants and operations, preferably in an x/[module]/simulation package
+     - Modules can test random combinations of their own operations
+     - Applications can integrate operations and invariants from modules together for an integrated simulation
+     - Simulates Tendermint's algorithm for validator set updates
+     - Simulates validator signing/downtime with a Markov chain, and occaisional double-signatures
+     - Includes simulated operations & invariants for staking, slashing, governance, and bank modules
+  - [store] \#1481 Add transient store
+  - [baseapp] Initialize validator set on ResponseInitChain
+  - [baseapp] added BaseApp.Seal - ability to seal baseapp parameters once they've been set
+  - [cosmos-sdk-cli] New `cosmos-sdk-cli` tool to quickly initialize a new
+    SDK-based project
+  - [scripts] added log output monitoring to DataDog using Ansible scripts
+
+IMPROVEMENTS
+
+* Gaia
+  - [spec] \#967 Inflation and distribution specs drastically improved
+  - [x/gov] \#1773 Votes on a proposal can now be queried
+  - [x/gov] Initial governance parameters can now be set in the genesis file
+  - [x/stake] \#1815 Sped up the processing of `EditValidator` txs.
+  - [config] \#1930 Transactions indexer indexes all tags by default.
+  - [ci] [#2057](https://github.com/cosmos/cosmos-sdk/pull/2057) Run `make localnet-start` on every commit and ensure network reaches at least 10 blocks
+
+* SDK
+  - [baseapp] \#1587 Allow any alphanumeric character in route
+  - [baseapp] Allow any alphanumeric character in route
+  - [tools] Remove `rm -rf vendor/` from `make get_vendor_deps`
+  - [x/auth] Recover ErrorOutOfGas panic in order to set sdk.Result attributes correctly
+  - [x/bank] Unit tests are now table-driven
+  - [tests] Add tests to example apps in docs
+  - [tests] Fixes ansible scripts to work with AWS too
+  - [tests] \#1806 CLI tests are now behind the build flag 'cli_test', so go test works on a new repo
+
+BUG FIXES
+
+* Gaia CLI  (`gaiacli`)
+  -  \#1766 Fixes bad example for keybase identity
+  -  [x/stake] \#2021 Fixed repeated CLI commands in staking
+
+* Gaia
+  - [x/stake] [#2077](https://github.com/cosmos/cosmos-sdk/pull/2077) Fixed invalid cliff power comparison
+  - \#1804 Fixes gen-tx genesis generation logic temporarily until upstream updates
+  - \#1799 Fix `gaiad export`
+  - \#1839 Fixed bug where intra-tx counter wasn't set correctly for genesis validators
+  - [x/stake] \#1858 Fixed bug where the cliff validator was not updated correctly
+  - [tests] \#1675 Fix non-deterministic `test_cover`
+  - [tests] \#1551 Fixed invalid LCD test JSON payload in `doIBCTransfer`
+  - [basecoin] Fixes coin transaction failure and account query [discussion](https://forum.cosmos.network/t/unmarshalbinarybare-expected-to-read-prefix-bytes-75fbfab8-since-it-is-registered-concrete-but-got-0a141dfa/664/6)
+  - [x/gov] \#1757 Fix VoteOption conversion to String
+  * [x/stake] [#2083] Fix broken invariant of bonded validator power decrease
+
 ## 0.23.1
 
 *July 27th, 2018*
@@ -20,7 +134,7 @@ IMPROVEMENTS
 * [cli] Improve error messages for all txs when the account doesn't exist
 * [tendermint] Update to v0.22.6
     - Updates the crypto imports/API (#1966)
-* [x/stake] Add revoked to human-readable validator 
+* [x/stake] Add revoked to human-readable validator
 
 BUG FIXES
 * [tendermint] Update to v0.22.6
@@ -77,6 +191,8 @@ BUG FIXES
 * [keys] \#1629 - updating password no longer asks for a new password when the first entered password was incorrect
 * [lcd] importing an account would create a random account
 * [server] 'gaiad init' command family now writes provided name as the moniker in `config.toml`
+* [build] Added Ledger build support via `LEDGER_ENABLED=true|false`
+  * True by default except when cross-compiling
 
 ## 0.20.0
 
@@ -165,7 +281,7 @@ FEATURES
 * [types] Added MinInt and MinUint functions
 * [gaiad] `unsafe_reset_all` now resets addrbook.json
 * [democoin] add x/oracle, x/assoc
-* [tests] created a randomized testing framework. 
+* [tests] created a randomized testing framework.
   - Currently bank has limited functionality in the framework
   - Auth has its invariants checked within the framework
 * [tests] Add WaitForNextNBlocksTM helper method

@@ -2,6 +2,7 @@ package stake
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -500,7 +501,7 @@ func TestUnbondingPeriod(t *testing.T) {
 
 	// set the unbonding time
 	params := keeper.GetParams(ctx)
-	params.UnbondingTime = 7
+	params.UnbondingTime = 7 * time.Second
 	keeper.SetParams(ctx, params)
 
 	// create the validator
@@ -516,19 +517,19 @@ func TestUnbondingPeriod(t *testing.T) {
 	// cannot complete unbonding at same time
 	msgCompleteUnbonding := NewMsgCompleteUnbonding(validatorAddr, validatorAddr)
 	got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbonding, keeper)
-	require.True(t, !got.IsOK(), "expected no error")
+	require.True(t, !got.IsOK(), "expected an error")
 
 	// cannot complete unbonding at time 6 seconds later
 	origHeader := ctx.BlockHeader()
 	headerTime6 := origHeader
-	headerTime6.Time += 6
+	headerTime6.Time = headerTime6.Time.Add(time.Second * 6)
 	ctx = ctx.WithBlockHeader(headerTime6)
 	got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbonding, keeper)
-	require.True(t, !got.IsOK(), "expected no error")
+	require.True(t, !got.IsOK(), "expected an error")
 
 	// can complete unbonding at time 7 seconds later
 	headerTime7 := origHeader
-	headerTime7.Time += 7
+	headerTime7.Time = headerTime7.Time.Add(time.Second * 7)
 	ctx = ctx.WithBlockHeader(headerTime7)
 	got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbonding, keeper)
 	require.True(t, got.IsOK(), "expected no error")
@@ -541,7 +542,7 @@ func TestRedelegationPeriod(t *testing.T) {
 
 	// set the unbonding time
 	params := keeper.GetParams(ctx)
-	params.UnbondingTime = 7
+	params.UnbondingTime = 7 * time.Second
 	keeper.SetParams(ctx, params)
 
 	// create the validators
@@ -580,14 +581,14 @@ func TestRedelegationPeriod(t *testing.T) {
 	// cannot complete redelegation at time 6 seconds later
 	origHeader := ctx.BlockHeader()
 	headerTime6 := origHeader
-	headerTime6.Time += 6
+	headerTime6.Time = headerTime6.Time.Add(time.Second * 6)
 	ctx = ctx.WithBlockHeader(headerTime6)
 	got = handleMsgCompleteRedelegate(ctx, msgCompleteRedelegate, keeper)
 	require.True(t, !got.IsOK(), "expected an error")
 
 	// can complete redelegation at time 7 seconds later
 	headerTime7 := origHeader
-	headerTime7.Time += 7
+	headerTime7.Time = headerTime7.Time.Add(time.Second * 7)
 	ctx = ctx.WithBlockHeader(headerTime7)
 	got = handleMsgCompleteRedelegate(ctx, msgCompleteRedelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error")

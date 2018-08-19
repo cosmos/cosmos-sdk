@@ -39,12 +39,8 @@ func handleMsgUnrevoke(ctx sdk.Context, msg MsgUnrevoke, k Keeper) sdk.Result {
 	}
 
 	// Cannot be unrevoked until out of jail
-	if ctx.BlockHeader().Time < info.JailedUntil {
+	if ctx.BlockHeader().Time.Before(info.JailedUntil) {
 		return ErrValidatorJailed(k.codespace).Result()
-	}
-
-	if ctx.IsCheckTx() {
-		return sdk.Result{}
 	}
 
 	// Update the starting height (so the validator can't be immediately revoked again)

@@ -1,5 +1,4 @@
-
-### Transaction Overview
+## Transaction Overview
 
 In this section we describe the processing of the transactions and the
 corresponding updates to the state. Transactions: 
@@ -22,6 +21,8 @@ Other notes:
  - `sdk.Rat` refers to a rational numeric type specified by the SDK.
  
 ### TxCreateValidator
+
+ - triggers: `distribution.CreateValidatorDistribution`
 
 A validator is created using the `TxCreateValidator` transaction.
 
@@ -82,7 +83,9 @@ editCandidacy(tx TxEditCandidacy):
     return
 ```
      	
-### TxDelegation
+### TxDelegate
+ 
+ - triggers: `distribution.CreateOrModDelegationDistribution`
 
 Within this transaction the delegator provides coins, and in return receives
 some amount of their validator's delegator-shares that are assigned to

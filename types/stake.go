@@ -43,6 +43,7 @@ type Validator interface {
 	GetOwner() AccAddress     // owner AccAddress to receive/return validators coins
 	GetPubKey() crypto.PubKey // validation pubkey
 	GetPower() Rat            // validation power
+	GetTokens() Rat           // validation tokens
 	GetDelegatorShares() Rat  // Total out standing delegator shares
 	GetBondHeight() int64     // height in which the validator became active
 }
@@ -50,8 +51,9 @@ type Validator interface {
 // validator which fulfills abci validator interface for use in Tendermint
 func ABCIValidator(v Validator) abci.Validator {
 	return abci.Validator{
-		PubKey: tmtypes.TM2PB.PubKey(v.GetPubKey()),
-		Power:  v.GetPower().RoundInt64(),
+		PubKey:  tmtypes.TM2PB.PubKey(v.GetPubKey()),
+		Address: v.GetPubKey().Address(),
+		Power:   v.GetPower().RoundInt64(),
 	}
 }
 

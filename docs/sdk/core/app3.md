@@ -160,7 +160,7 @@ The standard form for signatures is `StdSignature`:
 // the first transaction made by the account.
 type StdSignature struct {
 	crypto.PubKey    `json:"pub_key"` // optional
-	crypto.Signature `json:"signature"`
+	[]byte `json:"signature"`
 	AccountNumber    int64 `json:"account_number"`
 	Sequence         int64 `json:"sequence"`
 }
@@ -328,7 +328,7 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	cdc := NewCodec()
 
 	// Create the base application object.
-	app := bapp.NewBaseApp(app3Name, cdc, logger, db)
+	app := bapp.NewBaseApp(app3Name, logger, db, auth.DefaultTxDecoder(cdc))
 
 	// Create a key for accessing the account store.
 	keyAccount := sdk.NewKVStoreKey("acc")
@@ -360,6 +360,9 @@ Note we use `bank.NewHandler`, which handles only `bank.MsgSend`,
 and receives only the `bank.Keeper`. See the 
 [x/bank API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank)
 for more details.
+
+We also use the default txDecoder in `x/auth`, which decodes amino-encoded
+`auth.StdTx` transactions.
 
 ## Conclusion
 

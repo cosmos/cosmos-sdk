@@ -50,7 +50,7 @@ journalbeat:
   #move_metadata_to_field: ""
 
   # Specific units to monitor.
-  units: ["{{service}}.service"]
+  units: ["{{service}}.service","gaiacli.service"]
 
   # Specify Journal paths to open. You can pass an array of paths to Systemd Journal paths.
   # If you want to open Journal from directory just pass an array consisting of one element

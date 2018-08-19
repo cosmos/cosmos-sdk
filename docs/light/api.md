@@ -23,25 +23,22 @@ similar API.
 
 ### POST /txs
 
-url: /txs
+- **URL**: `/txs`
+- Query Parameters:
+  - `?return={sync|async|block}`:
+    - `return=sync`: Waits for the transaction to pass `CheckTx`
+    - `return=async`: Returns the request immediately after it is received by the server
+    - `return=block`: waits for for the transaction to be committed in a block
+- POST Body:
 
-Query Parameters:
-
-- `?return={sync|async|block}`:
-  - `return=sync`: Waits for the transaction to pass `CheckTx`
-  - `return=async`: Returns the request immediately after it is received by the server
-  - `return=block`: waits for for the transaction to be committed in a block
-
-POST Body:
-
-```js
+```json
 {
   "transaction": "string",
   "return": "string",
 }
 ```
 
-Returns on success:
+- Returns on success:
 
 ```json
 {
@@ -57,30 +54,15 @@ Returns on success:
 }
 ```
 
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not submit the transaction.",
-    "result":{}
-}
-```
-
-
-
 ## ICS1 - KeyAPI
 
 This API exposes all functionality needed for key creation, signing and management.
 
 ### GET /keys
 
-url: `/keys`
-
-Functionality: Gets a list of all the keys.
-
-Returns on success:
+- **URL**: `/keys`
+- **Functionality**: Gets a list of all the keys.
+- Returns on success:
 
 ```json
 {
@@ -105,41 +87,19 @@ Returns on success:
 }
 ```
 
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not retrieve the keys.",
-    "result":{}
-}
-```
-
-
-
 ### POST /keys
 
-url: `/keys`
+- **URL**: `/keys`
+- **Functionality**: Create a new key.
+- POST Body:
 
-Functionality: Create a new key.
-
-POST Body:
-
-```js
+```json
 {
   "name": "string",
   "password": "string",
   "seed": "string",
 }
 ```
-
-Parameter:
-
-| Parameter | Type   | Default | Required | Description     |
-| --------- | ------ | ------- | -------- | --------------- |
-| name      | string | null    | true     | name of key     |
-| password  | string | null    | true     | password of key |
 
 Returns on success:
 
@@ -154,26 +114,11 @@ Returns on success:
 }
 ```
 
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not create new key.",
-    "result":{}
-}
-```
-
-
-
 ### GET /keys/{name}
 
-url: `/keys/{name}`
-
-Functionality: Get the information for the specified key.
-
-Returns on success:
+- **URL** : `/keys/{name}`
+- **Functionality**: Get the information for the specified key.
+- Returns on success:
 
 ```json
 {
@@ -188,69 +133,43 @@ Returns on success:
 }
 ```
 
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not find information on the specified key.",
-    "result":{}
-}
-```
-
 ### PUT /keys/{name}
 
-url: `/keys/{name}`
+- **URL** : `/keys/{name}`
+- **Functionality**: Change the encryption password for the specified key.
+- PUT Body:
 
-Functionality: Change the encryption password for the specified key.
-
-PUT Body:
-
-```js
+```json
 {
   "old_password": "string",
   "new_password": "string",
 }
 ```
 
-Returns on success:
+- Returns on success:
 
 ```json
 {
     "rest api":"2.0",
     "code":200,
     "error":"",
-    "result":{}
-}
-```
-
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not update the specified key.",
     "result":{}
 }
 ```
 
 ### DELETE /keys/{name}
 
-url: /keys/{name}
+- **URL**: `/keys/{name}`
+- **Functionality**: Delete the specified key.
+- DELETE Body:
 
-Functionality: Delete the specified key.
-
-DELETE Body:
-
-```js
+```json
 {
   "password": "string",
 }
 ```
 
-Returns on success:
+- Returns on success:
 
 ```json
 {
@@ -261,33 +180,20 @@ Returns on success:
 }
 ```
 
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not delete the specified key.",
-    "result":{}
-}
-```
-
 ### POST /keys/{name}/recover
 
-url: `/keys/{name}/recover`
+- **URL**: `/keys/{name}/recover`
+- **Functionality**: Recover your key from seed and persist it encrypted with the password.
+- POST Body:
 
-Functionality: Recover your key from seed and persist it encrypted with the password.
-
-POST Body:
-
-```js
+```json
 {
   "password": "string",
   "seed": "string",
 }
 ```
 
-Returns on success:
+- Returns on success:
 
 ```json
 {
@@ -300,26 +206,11 @@ Returns on success:
 }
 ```
 
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not recover the key.",
-    "result":{}
-}
-```
-
-
-
 ### GET /auth/accounts/{address}
 
-url: `/auth/accounts/{address}`
-
-Functionality: Query the information of an account .
-
-Returns on success:
+- **URL**: `/auth/accounts/{address}`
+- **Functionality**: Query the information of an account .
+- Returns on success:
 
 ```json
 {
@@ -344,30 +235,15 @@ Returns on success:
 }
 ```
 
-Returns on error:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not find the account",
-    "result":{}
-}
-```
-
-
-
 ## ICS20 - TokenAPI
 
 The TokenAPI exposes all functionality needed to query account balances and send transactions.
 
 ### GET /bank/balance/{account}
 
-url: `/bank/balance/{account}`
-
-Functionality: Query the specified account's balance.
-
-Returns on success:
+- **URL**: `/bank/balance/{account}`
+- **Functionality**: Query the specified account's balance.
+- Returns on success:
 
 ```json
 {
@@ -382,24 +258,11 @@ Returns on success:
 }
 ```
 
-Returns on error:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not find any balance for the specified account.",
-    "result":{}
-}
-```
-
 ### POST /bank/transfers
 
-url: `/bank/transfers`
-
-Functionality: Create a transfer in the bank module.
-
-POST Body:
+- **URL**: `/bank/transfers`
+- **Functionality**: Create a transfer in the bank module.
+- POST Body:
 
 ```json
 {
@@ -418,7 +281,7 @@ POST Body:
 }
 ```
 
-Returns on success:
+- Returns on success:
 
 ```json
 {
@@ -431,28 +294,15 @@ Returns on success:
 }
 ```
 
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not create the transaction.",
-    "result":{}
-}
-```
-
 ## ICS21 - StakingAPI
 
 The StakingAPI exposes all functionality needed for validation and delegation in Proof-of-Stake.
 
 ### GET /stake/delegators/{delegatorAddr}
 
-url: `/stake/delegators/{delegatorAddr}`
-
-Functionality: Get all delegations (delegation, undelegation) from a delegator.
-
-Returns on success:
+- **URL**: `/stake/delegators/{delegatorAddr}`
+- **Functionality**: Get all delegations (delegation, undelegation) from a delegator.
+- Returns on success:
 
 ```json
 {
@@ -467,52 +317,26 @@ Returns on success:
 }
 ```
 
-Returns on error:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not find any balance for the specified account.",
-    "result":{}
-}
-```
-
 ### GET /stake/delegators/{delegatorAddr}/validators
 
-url: `/stake/delegators/{delegatorAddr}/validators`
-
-Functionality: Query all validators that a delegator is bonded to.
-
-Returns on success:
+- **URL**: `/stake/delegators/{delegatorAddr}/validators`
+- **Functionality**: Query all validators that a delegator is bonded to.
+- Returns on success:
 
 ```json
 {
     "rest api":"2.1",
     "code":200,
     "error":"",
-    "result":{}
-}
-```
-
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"TODO",
     "result":{}
 }
 ```
 
 ### GET /stake/delegators/{delegatorAddr}/validators/{validatorAddr}
 
-url: `/stake/delegators/{delegatorAddr}/validators/{validatorAddr}`
-
-Functionality: Query a validator that a delegator is bonded to
-
-Returns on success:
+- **URL**: `/stake/delegators/{delegatorAddr}/validators/{validatorAddr}`
+- **Functionality**: Query a validator that a delegator is bonded to
+- Returns on success:
 
 ```json
 {
@@ -523,24 +347,11 @@ Returns on success:
 }
 ```
 
-Returns on failure:
-
-```json
-{
-    "rest api":"2.1",
-    "code":500,
-    "error":"TODO",
-    "result":{}
-}
-```
-
 ### GET /stake/delegators/{delegatorAddr}/txs
 
-url: `/stake/delegators/{delegatorAddr}/txs`
-
-Functionality: Get all staking txs (i.e msgs) from a delegator.
-
-Returns on success:
+- **URL**: `/stake/delegators/{delegatorAddr}/txs`
+- **Functionality**: Get all staking txs (i.e msgs) from a delegator.
+- Returns on success:
 
 ```json
 {
@@ -553,28 +364,16 @@ Returns on success:
 }
 ```
 
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not create the transaction.",
-    "result":{}
-}
-```
-
 ### POST /stake/delegators/{delegatorAddr}/delegations
 
-url: `/stake/delegators/{delegatorAddr}/delegations`
+- **URL**: `/stake/delegators/{delegatorAddr}/delegations`
+- **Functionality**: Submit or edit a delegation.
 
-Functionality: Submit or edit a delegation.
+<!--NOTE Should this be a PUT instead of a POST? the code indicates that this is an edit operation-->:
 
-> NOTE: Should this be a PUT instead of a POST? the code indicates that this is an edit operation
+- POST Body:
 
-POST Body:
-
-```js
+```json
 {
   "name": "string",
   "password": "string",
@@ -624,7 +423,7 @@ POST Body:
 
 ```
 
-Returns on success:
+- Returns on success:
 
 ```json
 {
@@ -634,27 +433,14 @@ Returns on success:
     "result":{
      "transaction":"TODO"
     }
-}
-```
-
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not create the transaction.",
-    "result":{}
 }
 ```
 
 ### GET /stake/delegators/{delegatorAddr}/delegations/{validatorAddr}
 
-url: `/stake/delegators/{delegatorAddr}/delegations/{validatorAddr}`
-
-Functionality: Query the current delegation status between a delegator and a validator.
-
-Returns on success:
+- **URL**: `/stake/delegators/{delegatorAddr}/delegations/{validatorAddr}`
+- **Functionality**: Query the current delegation status between a delegator and a validator.
+- Returns on success:
 
 ```json
 {
@@ -664,27 +450,14 @@ Returns on success:
     "result":{
      "transaction":"TODO"
     }
-}
-```
-
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not create the transaction.",
-    "result":{}
 }
 ```
 
 ### GET /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}
 
-url: `/stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}`
-
-Functionality: Query all unbonding delegations between a delegator and a validator.
-
-Returns on success:
+- **URL**: `/stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}`
+- **Functionality**: Query all unbonding delegations between a delegator and a validator.
+- Returns on success:
 
 ```json
 {
@@ -694,27 +467,14 @@ Returns on success:
     "result":{
      "transaction":"TODO"
     }
-}
-```
-
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not create the transaction.",
-    "result":{}
 }
 ```
 
 ### GET /stake/validators
 
-url: `/stake/validators`
-
-Functionality: Get all validator candidates.
-
-Returns on success:
+- **URL**: `/stake/validators`
+- **Functionality**: Get all validator candidates.
+- Returns on success:
 
 ```json
 {
@@ -724,27 +484,14 @@ Returns on success:
     "result":{
      "transaction":"TODO"
     }
-}
-```
-
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not create the transaction.",
-    "result":{}
 }
 ```
 
 ### GET /stake/validators/{validatorAddr}
 
-url: `/stake/validators/{validatorAddr}`
-
-Functionality: Query the information from a single validator.
-
-Returns on success:
+- **URL**: `/stake/validators/{validatorAddr}`
+- **Functionality**: Query the information from a single validator.
+- Returns on success:
 
 ```json
 {
@@ -754,17 +501,6 @@ Returns on success:
     "result":{
      "transaction":"TODO"
     }
-}
-```
-
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"TODO",
-    "result":{}
 }
 ```
 
@@ -774,11 +510,9 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
 
 ### GET /gov/proposals
 
-url: `/gov/proposals`
-
-Functionality: Query all submited proposals
-
-Response on Success:
+- **URL**: `/gov/proposals`
+- **Functionality**: Query all submited proposals
+- Response on Success:
 
 ```json
 {
@@ -793,24 +527,11 @@ Response on Success:
 }
 ```
 
-Response on Failure:
-
-```json
-{
-    "rest api":"2.2",
-    "code":500,
-    "error":"Could not create the transaction.",
-    "result":{}
-}
-```
-
 ### POST /gov/proposals
 
-url: `/gov/proposals`
-
-Functionality: Submit a proposal
-
-POST Body:
+- **URL**: `/gov/proposals`
+- **Functionality**: Submit a proposal
+- POST Body:
 
 ```js
 {
@@ -841,9 +562,9 @@ POST Body:
 }
 ```
 
-Returns on success:
+- Returns on success:
 
-```js
+```json
 {
     "rest api":"2.2",
     "code":200,
@@ -854,24 +575,11 @@ Returns on success:
 }
 ```
 
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not create the transaction.",
-    "result":{}
-}
-```
-
 ### GET /gov/proposals/{proposal-id}
 
-url: `/gov/proposals/{proposal-id}`
-
-Functionality: Query a proposal
-
-Response on Success:
+- **URL**: `/gov/proposals/{proposal-id}`
+- **Functionality**: Query a proposal
+- Response on Success:
 
 ```json
 {
@@ -897,26 +605,11 @@ Response on Success:
 }
 ```
 
-Response on Failure:
-
-```json
-{
-    "rest api":"2.2",
-    "code":500,
-    "error":"Could not create the transaction.",
-    "result":{}
-}
-```
-
-###
-
 ### POST /gov/proposals/{proposal-id}/deposits
 
-url: `/gov/proposals/{proposal-id}/deposits`
-
-Functionality: Submit or rise a deposit to a proposal in order to make it active
-
-POST Body:
+- **URL**: `/gov/proposals/{proposal-id}/deposits`
+- **Functionality**: Submit or rise a deposit to a proposal in order to make it active
+- POST Body:
 
 ```json
 {
@@ -933,7 +626,7 @@ POST Body:
 }
 ```
 
-Returns on success:
+- Returns on success:
 
 ```json
 {
@@ -946,26 +639,11 @@ Returns on success:
 }
 ```
 
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not create the transaction.",
-    "result":{}
-}
-```
-
-
-
 ### GET /gov/proposals/{proposal-id}/deposits/{address}
 
-url: `/gov/proposals/{proposal-id}/deposits/{address}
-
-Functionality: Query a validator's deposit to submit a proposal
-
-Returns on success:
+- **URL**: `/gov/proposals/{proposal-id}/deposits/{address}`
+- **Functionality**: Query a validator's deposit to submit a proposal
+- Returns on success:
 
 ```json
 {
@@ -980,26 +658,13 @@ Returns on success:
 }
 ```
 
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not create the transaction.",
-    "result":{}
-}
-```
-
 
 
 ### GET /gov/proposals/{proposal-id}/votes
 
-url: `/gov/proposals/{proposal-id}/votes`
-
-Functionality: Query all votes from a specific proposal
-
-Returns on success:
+- **URL**: `/gov/proposals/{proposal-id}/votes`
+- **Functionality**: Query all votes from a specific proposal
+- Returns on success:
 
 ```json
 {
@@ -1021,26 +686,13 @@ Returns on success:
 }
 ```
 
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not create the transaction.",
-    "result":{}
-}
-```
-
 
 
 ### POST /gov/proposals/{proposal-id}/votes
 
-url: `/gov/proposals/{proposal-id}/votes`
-
-Functionality: Vote for a specific proposal
-
-POST Body:
+- **URL**: `/gov/proposals/{proposal-id}/votes`
+- **Functionality**: Vote for a specific proposal
+- POST Body:
 
 ```json
 {
@@ -1061,7 +713,7 @@ POST Body:
 }
 ```
 
-Returns on success:
+- Returns on success:
 
 ```json
 {
@@ -1074,26 +726,12 @@ Returns on success:
 }
 ```
 
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not create the transaction.",
-    "result":{}
-}
-```
-
-
-
 ### GET /gov/proposals/{proposal-id}/votes/{address}
 
-url: `/gov/proposals/{proposal-id}/votes/{address}`
+- **URL** : `/gov/proposals/{proposal-id}/votes/{address}`
+- **Functionality**: Get the current `Option` submited by an address
 
-Functionality: Get the current `Option` submited by an address
-
-Returns on success:
+- Returns on success:
 
 ```json
 {
@@ -1108,30 +746,16 @@ Returns on success:
 }
 ```
 
-Returns on failure:
-
-```json
-{
-    "rest api":"2.0",
-    "code":500,
-    "error":"Could not create the transaction.",
-    "result":{}
-}
-```
-
-
-
 ## ICS23 - SlashingAPI
 
 The SlashingAPI exposes all functionality needed for to slash validators and delegators in PoS.
 
 ### GET /slashing/validator/{validatorAddr}/signing-info
 
-url: `/slashing/validator/{validatorAddr}/signing-info`
+- **URL**: `/slashing/validator/{validatorAddr}/signing-info`
+- **Functionality**: Query the information from a single validator.
 
-Functionality: Query the information from a single validator.
-
-Returns on success:
+- Returns on success:
 
 ```json
 {
@@ -1144,24 +768,11 @@ Returns on success:
 }
 ```
 
-Returns on failure:
-
-```json
-{
-    "rest api":"2.3",
-    "code":500,
-    "error":"Could not create the transaction.",
-    "result":{}
-}
-```
-
 ### POST /slashing/validators/{validatorAddr}/unrevoke
 
-url: `/slashing/validators/{validatorAddr}/unrevoke`
-
-Functionality: Submit a message to unrevoke a validator.
-
-POST Body:
+- **URL**: `/slashing/validators/{validatorAddr}/unrevoke`
+- **Functionality**: Submit a message to unrevoke a validator.
+- POST Body:
 
 ```js
 {
@@ -1176,7 +787,7 @@ POST Body:
 }
 ```
 
-Returns on success:
+- Returns on success:
 
 ```json
 {
@@ -1186,16 +797,5 @@ Returns on success:
     "result":{
      "transaction":"TODO"
     }
-}
-```
-
-Returns on failure:
-
-```json
-{
-    "rest api":"2.3",
-    "code":500,
-    "error":"TODO",
-    "result":{}
 }
 ```

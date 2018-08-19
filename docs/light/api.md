@@ -66,7 +66,7 @@ This API exposes all functionality needed for key creation, signing and manageme
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"1.0",
     "code":200,
     "error":"",
     "result":{
@@ -105,7 +105,7 @@ Returns on success:
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"1.0",
     "code":200,
     "error":"",
     "result":{
@@ -122,7 +122,7 @@ Returns on success:
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"1.0",
     "code":200,
     "error":"",
     "result":{
@@ -173,7 +173,7 @@ Returns on success:
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"1.0",
     "code":200,
     "error":"",
     "result":{}
@@ -197,7 +197,7 @@ Returns on success:
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"1.0",
     "code":200,
     "error":"",
     "result":{
@@ -214,11 +214,7 @@ Returns on success:
 
 ```json
 {
-    "rest api":"2.0",
-    "code":200,
-    "error":"",
-    "result": {
-    "rest api":"2.0",
+    "rest api":"1.0",
     "code":200,
     "error":"",
     "result":{
@@ -368,9 +364,7 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 
 - **URL**: `/stake/delegators/{delegatorAddr}/delegations`
 - **Functionality**: Submit or edit a delegation.
-
-<!--NOTE Should this be a PUT instead of a POST? the code indicates that this is an edit operation-->:
-
+<!--NOTE Should this be a PUT instead of a POST? the code indicates that this is an edit operation-->
 - POST Body:
 
 ```json
@@ -404,14 +398,14 @@ The StakingAPI exposes all functionality needed for validation and delegation in
       "validator_addr": "string",
     }
   ],
-  "begin_redelegates" [
+  "begin_redelegates": [
     {
       "delegator_addr": "string",
       "validator_src_addr": "string",
       "validator_dst_addr": "string",
       "shares": "string",
     }
-  ]
+  ],
   "complete_redelegates": [
     {
       "delegator_addr": "string",
@@ -500,6 +494,51 @@ The StakingAPI exposes all functionality needed for validation and delegation in
     "error":"",
     "result":{
      "transaction":"TODO"
+    }
+}
+```
+
+### GET /stake/parameters
+
+- **URL**: `/stake/parameters`
+- **Functionality**: Get the current value of staking parameters.
+- Returns on success:
+
+```json
+{
+    "rest api":"2.1",
+    "code":200,
+    "error":"",
+    "result":{
+      "inflation_rate_change": 1300000000,
+      "inflation_max": 2000000000,
+      "inflation_min": 700000000,
+      "goal_bonded": 6700000000,
+      "unbonding_time": "72h0m0s",
+      "max_validators": 100,
+      "bond_denom": "atom"
+    }
+}
+```
+
+### GET /stake/pool
+
+- **URL**: `/stake/pool`
+- **Functionality**: Get the current value of the dynamic parameters of the current state (*i.e* `Pool`).
+- Returns on success:
+
+```json
+{
+    "rest api":"2.1",
+    "code":200,
+    "error":"",
+    "result":{
+      "loose_tokens": 0,
+      "bonded_tokens": 0,
+      "inflation_last_time": "1970-01-01 01:00:00 +0100 CET",
+      "inflation": 700000000,
+      "date_last_commission_reset": 0,
+      "prev_bonded_shares": 0,
     }
 }
 ```
@@ -694,7 +733,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
 - **Functionality**: Vote for a specific proposal
 - POST Body:
 
-```json
+```js
 {
 	"base_req": {
      // Name of key to use

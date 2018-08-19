@@ -16,4 +16,3 @@ EndBlock() ValidatorSetChanges
     ClearTendermintUpdates()
     return vsc
 ```
-

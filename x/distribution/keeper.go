@@ -23,13 +23,13 @@ package stake
 ////_________________________________________________________________________
 
 //// cummulative power of the non-absent prevotes
-//func (k Keeper) GetTotalPrecommitVotingPower(ctx sdk.Context) sdk.Rat {
+//func (k Keeper) GetTotalPrecommitVotingPower(ctx sdk.Context) sdk.Dec {
 //store := ctx.KVStore(k.storeKey)
 
 //// get absent prevote indexes
 //absents := ctx.AbsentValidators()
 
-//TotalPower := sdk.ZeroRat()
+//TotalPower := sdk.ZeroDec()
 //i := int32(0)
 //iterator := store.SubspaceIterator(ValidatorsBondedKey)
 //for ; iterator.Valid(); iterator.Next() {

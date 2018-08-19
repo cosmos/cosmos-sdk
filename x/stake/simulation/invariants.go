@@ -31,7 +31,7 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) sim
 		//pool := k.GetPool(ctx)
 
 		loose := sdk.ZeroInt()
-		bonded := sdk.ZeroRat()
+		bonded := sdk.ZeroDec()
 		am.IterateAccounts(ctx, func(acc auth.Account) bool {
 			loose = loose.Add(acc.GetCoins().AmountOf("steak"))
 			return false
@@ -70,7 +70,7 @@ func PositivePowerInvariant(k stake.Keeper) simulation.Invariant {
 	return func(t *testing.T, app *baseapp.BaseApp, log string) {
 		ctx := app.NewContext(false, abci.Header{})
 		k.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) bool {
-			require.True(t, validator.GetPower().GT(sdk.ZeroRat()), "validator with non-positive power stored")
+			require.True(t, validator.GetPower().GT(sdk.ZeroDec()), "validator with non-positive power stored")
 			return false
 		})
 	}

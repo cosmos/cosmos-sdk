@@ -17,6 +17,7 @@ const (
 	CodeInvalidDelegation CodeType = 102
 	CodeInvalidInput      CodeType = 103
 	CodeValidatorJailed   CodeType = 104
+	CodeInvalidAddress    CodeType = sdk.CodeInvalidAddress
 	CodeUnauthorized      CodeType = sdk.CodeUnauthorized
 	CodeInternal          CodeType = sdk.CodeInternal
 	CodeUnknownRequest    CodeType = sdk.CodeUnknownRequest
@@ -25,6 +26,10 @@ const (
 //validator
 func ErrNilValidatorAddr(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidInput, "validator address is nil")
+}
+
+func ErrBadValidatorAddr(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidAddress, "validator address is invalid")
 }
 
 func ErrNoValidatorFound(codespace sdk.CodespaceType) sdk.Error {
@@ -68,6 +73,10 @@ func ErrBadDenom(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "invalid coin denomination")
 }
 
+func ErrBadDelegationAddr(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidInput, "unexpected address length for this (address, validator) pair")
+}
+
 func ErrBadDelegationAmount(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "amount must be > 0")
 }
@@ -100,13 +109,6 @@ func ErrBadSharesAmount(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "shares must be > 0")
 }
 
-func ErrBadSharesPrecision(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation,
-		fmt.Sprintf("shares denominator must be < %s, try reducing the number of decimal points",
-			maximumBondingRationalDenominator.String()),
-	)
-}
-
 func ErrBadSharesPercent(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "shares percent must be >0 and <=1")
 }
@@ -123,6 +125,10 @@ func ErrNoUnbondingDelegation(codespace sdk.CodespaceType) sdk.Error {
 
 func ErrExistingUnbondingDelegation(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "existing unbonding delegation found")
+}
+
+func ErrBadRedelegationAddr(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidInput, "unexpected address length for this (address, srcValidator, dstValidator) tuple")
 }
 
 func ErrNoRedelegation(codespace sdk.CodespaceType) sdk.Error {

@@ -19,7 +19,7 @@ If you want to become a validator for the Hub's `mainnet`, you should [research 
 Your `cosmosvalpub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
 
 ```bash
-gaiad tendermint show_validator
+gaiad tendermint show-validator
 ```
 
 Next, craft your `gaiacli stake create-validator` command:
@@ -31,7 +31,7 @@ Don't use more `steak` thank you have! You can always get more by using the [Fau
 ```bash
 gaiacli stake create-validator \
   --amount=5steak \
-  --pubkey=$(gaiad tendermint show_validator) \
+  --pubkey=$(gaiad tendermint show-validator) \
   --address-validator=<account_cosmosaccaddr>
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \
@@ -46,7 +46,7 @@ The `--identity` can be used as to verify identity with systems like Keybase or 
 
 ```bash
 gaiacli stake edit-validator
-  --address-validator=<account_cosmosaccaddr>
+  --validator=<account_cosmosaccaddr>
   --moniker="choose a moniker" \
   --website="https://cosmos.network" \
   --identity=6A0D65E29A4CBC8E
@@ -60,9 +60,7 @@ gaiacli stake edit-validator
 View the validator's information with this command:
 
 ```bash
-gaiacli stake validator \
-  --address-validator=<account_cosmosaccaddr> \
-  --chain-id=<chain_id>
+gaiacli stake validator <account_cosmosaccaddr>
 ```
 
 ### Track Validator Signing Information
@@ -82,6 +80,8 @@ When a validator is `Revoked` for downtime, you must submit an `Unrevoke` transa
 gaiacli stake unrevoke \
 	--from=<key_name> \
 	--chain-id=<chain_id>
+  --validator=<account_cosmosaccaddr> \
+  --chain-id=gaia-6002
 ```
 
 ### Confirm Your Validator is Running
@@ -89,7 +89,7 @@ gaiacli stake unrevoke \
 Your validator is active if the following command returns anything:
 
 ```bash
-gaiacli advanced tendermint validator-set | grep "$(gaiad tendermint show_validator)"
+gaiacli advanced tendermint validator-set | grep "$(gaiad tendermint show-validator)"
 ```
 
 You should also be able to see your validator on the [Explorer](https://explorecosmos.network/validators). You are looking for the `bech32` encoded `address` in the `~/.gaiad/config/priv_validator.json` file.

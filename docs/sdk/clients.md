@@ -27,7 +27,7 @@ There are three types of key representations that are used:
   - e.g. `cosmosaccpub1zcjduc3q7fu03jnlu2xpl75s2nkt7krm6grh4cc5aqth73v0zwmea25wj2hsqhlqzm`
 - `cosmosvalpub`
   - Generated when the node is created with `gaiad init`.
-  - Get this value with `gaiad tendermint show_validator`
+  - Get this value with `gaiad tendermint show-validator`
   - e.g. `cosmosvalpub1zcjduc3qcyj09qc03elte23zwshdx92jm6ce88fgc90rtqhjx8v0608qh5ssp0w94c`
 
 #### Generate Keys
@@ -57,7 +57,7 @@ gaiacli keys list
 View the validator pubkey for your node by typing:
 
 ```bash
-gaiad tendermint show_validator
+gaiad tendermint show-validator
 ```
 
 ::: danger Warning
@@ -141,7 +141,7 @@ On the testnet, we delegate `steak` instead of `atom`. Here's how you can bond t
 ```bash
 gaiacli stake delegate \
   --amount=10steak \
-  --address-validator=$(gaiad tendermint show_validator) \
+  --validator=$(gaiad tendermint show-validator) \
   --name=<key_name> \
   --chain-id=<chain_id>
 ```

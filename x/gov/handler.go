@@ -155,7 +155,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 				keeper.GetTallyingProcedure(ctx).GovernancePenalty)
 
 			logger.Info(fmt.Sprintf("Validator %s failed to vote on proposal %d, slashing",
-				val.GetOwner(), activeProposal.GetProposalID()))
+				val.GetOperator(), activeProposal.GetProposalID()))
 		}
 
 		resTags.AppendTag(tags.Action, action)

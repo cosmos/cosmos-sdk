@@ -297,19 +297,19 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 //-----------------------------------------------------------
 // Tally Results
 type TallyResult struct {
-	Yes        sdk.Rat `json:"yes"`
-	Abstain    sdk.Rat `json:"abstain"`
-	No         sdk.Rat `json:"no"`
-	NoWithVeto sdk.Rat `json:"no_with_veto"`
+	Yes        sdk.Dec `json:"yes"`
+	Abstain    sdk.Dec `json:"abstain"`
+	No         sdk.Dec `json:"no"`
+	NoWithVeto sdk.Dec `json:"no_with_veto"`
 }
 
 // checks if two proposals are equal
 func EmptyTallyResult() TallyResult {
 	return TallyResult{
-		Yes:        sdk.ZeroRat(),
-		Abstain:    sdk.ZeroRat(),
-		No:         sdk.ZeroRat(),
-		NoWithVeto: sdk.ZeroRat(),
+		Yes:        sdk.ZeroDec(),
+		Abstain:    sdk.ZeroDec(),
+		No:         sdk.ZeroDec(),
+		NoWithVeto: sdk.ZeroDec(),
 	}
 }
 

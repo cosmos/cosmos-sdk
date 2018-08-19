@@ -538,14 +538,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a989b95f72fce8876213e8e20492525b4cf69a9e7fee7f1d9897983ee0d547e9"
+  digest = "1:4bd75b1a219bc590b05c976bbebf47f4e993314ebb5c7cbf2efe05a09a184d54"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "UT"
-  revision = "1c9583448a9c3aa0f9a6a5241bf73c0bd8aafded"
+  revision = "4e1fef5609515ec7a2cee7b5de30ba6d9b438cbf"
 
 [[projects]]
   digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"
@@ -576,7 +576,7 @@
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "UT"
-  revision = "d0a8f471bba2dbb160885b0000d814ee5d559bad"
+  revision = "383e8b2c3b9e36c4076b235b32537292176bae20"
 
 [[projects]]
   digest = "1:2dab32a43451e320e49608ff4542fdfc653c95dcc35d0065ec9c6c3dd540ed74"

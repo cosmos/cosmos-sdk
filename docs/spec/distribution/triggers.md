@@ -22,5 +22,5 @@ Additionally the change and associated height must be recorded in a
  - triggered-by: `stake.Slash`, `stake.UpdateValidator`
 
 Whenever a validator is slashed or enters/leaves the validator group all of the
-validator entitled reward tokens must be simultaniously withdrawn from
-`Global.Pool` and added to `ValidatorDistInfo.Pool` 
+validator entitled reward tokens must be simultaneously withdrawn from
+`Global.Pool` and added to `ValidatorDistInfo.Pool`. 

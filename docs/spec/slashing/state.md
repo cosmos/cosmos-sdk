@@ -1,6 +1,6 @@
-## State
+# State
 
-### Signing Info
+## Signing Info
 
 Every block includes a set of precommits by the validators for the previous block, 
 known as the LastCommit. A LastCommit is valid so long as it contains precommits from +2/3 of voting power.
@@ -51,7 +51,7 @@ Where:
 * `JailedUntil` is set whenever the candidate is revoked due to downtime
 * `SignedBlocksCounter` is a counter kept to avoid unnecessary array reads. `SignedBlocksBitArray.Sum() == SignedBlocksCounter` always.
 
-### Slashing Period
+## Slashing Period
 
 A slashing period is a start and end block height associated with a particular validator,
 within which only the "worst infraction counts": the total amount of slashing for

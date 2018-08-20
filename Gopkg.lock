@@ -375,7 +375,6 @@
   version = "v1.2.1"
 
 [[projects]]
-  branch = "master"
   digest = "1:b3cfb8d82b1601a846417c3f31c03a7961862cb2c98dcf0959c473843e6d9a2b"
   name = "github.com/syndtr/goleveldb"
   packages = [
@@ -499,9 +498,10 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7a71fffde456d746c52f9cd09c50b034533a3180fb1f6320abb149f2ccc579e5"
+  digest = "1:aaff04fa01d9b824fde6799759cc597b3ac3671b9ad31924c28b6557d0ee5284"
   name = "golang.org/x/crypto"
   packages = [
+    "bcrypt",
     "blowfish",
     "chacha20poly1305",
     "curve25519",
@@ -518,7 +518,8 @@
     "salsa20/salsa",
   ]
   pruneopts = "UT"
-  revision = "de0752318171da717af4ce24d0a2e8626afaeb11"
+  revision = "3764759f34a542a3aef74d6b02e35be7ab893bba"
+  source = "https://github.com/tendermint/crypto"
 
 [[projects]]
   digest = "1:d36f55a999540d29b6ea3c2ea29d71c76b1d9853fdcd3e5c5cb4836f2ba118f1"
@@ -537,7 +538,6 @@
   revision = "292b43bbf7cb8d35ddf40f8d5100ef3837cced3f"
 
 [[projects]]
-  branch = "master"
   digest = "1:4bd75b1a219bc590b05c976bbebf47f4e993314ebb5c7cbf2efe05a09a184d54"
   name = "golang.org/x/sys"
   packages = [
@@ -571,7 +571,6 @@
   version = "v0.3.0"
 
 [[projects]]
-  branch = "master"
   digest = "1:077c1c599507b3b3e9156d17d36e1e61928ee9b53a5b420f10f28ebd4a0b275c"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
@@ -667,7 +666,8 @@
     "github.com/tendermint/tendermint/types",
     "github.com/tendermint/tendermint/version",
     "github.com/zondax/ledger-goclient",
-    "golang.org/x/crypto/blowfish",
+    "golang.org/x/crypto/bcrypt",
+    "golang.org/x/crypto/pbkdf2",
     "golang.org/x/crypto/ripemd160",
   ]
   solver-name = "gps-cdcl"

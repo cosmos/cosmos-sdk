@@ -4,13 +4,14 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	cmn "github.com/tendermint/tendermint/libs/common"
+	"golang.org/x/crypto/bcrypt"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/armor"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
+
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 const (

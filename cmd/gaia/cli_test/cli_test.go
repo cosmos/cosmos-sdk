@@ -156,7 +156,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 	defaultParams := stake.DefaultParams()
 
-	params := executeGetPool(t, fmt.Sprintf("gaiacli stake parameters --output=json %v", flags))
+	params := executeGetParams(t, fmt.Sprintf("gaiacli stake parameters --output=json %v", flags))
 	require.True(t, defaultParams.Equal(params))
 }
 

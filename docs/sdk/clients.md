@@ -152,7 +152,7 @@ gaiacli stake delegation \
   --chain-id=gaia-7005
 ```
 
-### Query Parameters
+#### Query Parameters
 
 You can get the current parameters that define high level settings for staking:
 
@@ -171,7 +171,7 @@ With the above command you will get the values for:
 
 All this values can be updated though a `governance` process by submitting a parameter change `proposal`.
 
-### Query Pool
+#### Query Pool
 
 A staking `Pool` defines the dynamic parameters of the current state. You can query them with the following command:
 

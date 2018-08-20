@@ -63,6 +63,8 @@ func main() {
 			stakecmd.GetCmdEditValidator(cdc),
 			stakecmd.GetCmdDelegate(cdc),
 			stakecmd.GetCmdUnbond("stake", cdc),
+			stakecmd.GetCmdQueryPool("stake", cdc),
+			stakecmd.GetCmdQueryParams("stake", cdc),
 		)...)
 
 	// add proxy, version and key info

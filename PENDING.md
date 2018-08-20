@@ -45,6 +45,8 @@ BREAKING CHANGES
 * [x/stake] \#1901 Validator type's Owner field renamed to Operator; Validator's GetOwner() renamed accordingly to comply with the SDK's Validator interface.
 
 FEATURES
+* [lcd] Endpoints to query staking pool and params
+* [cli] Cmds to query staking pool and params
 * [lcd] Can now query governance proposals by ProposalStatus
 * [x/mock/simulation] Randomized simulation framework
   * Modules specify invariants and operations, preferably in an x/[module]/simulation package

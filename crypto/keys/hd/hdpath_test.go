@@ -3,8 +3,10 @@ package hd
 import (
 	"encoding/hex"
 	"fmt"
+	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bip39"
+	"github.com/stretchr/testify/assert"
 )
 
 var defaultBIP39Passphrase = ""
@@ -19,6 +21,53 @@ func ExampleStringifyPathParams() {
 	path := NewParams(44, 0, 0, false, 0)
 	fmt.Println(path.String())
 	// Output: 44'/0'/0'/0/0
+}
+
+func TestParamsFromPath(t *testing.T) {
+	goodCases := []struct {
+		params *BIP44Params
+		path   string
+	}{
+		{&BIP44Params{44, 0, 0, false, 0}, "44'/0'/0'/0/0"},
+		{&BIP44Params{44, 1, 0, false, 0}, "44'/1'/0'/0/0"},
+		{&BIP44Params{44, 0, 1, false, 0}, "44'/0'/1'/0/0"},
+		{&BIP44Params{44, 0, 0, true, 0}, "44'/0'/0'/1/0"},
+		{&BIP44Params{44, 0, 0, false, 1}, "44'/0'/0'/0/1"},
+		{&BIP44Params{44, 1, 1, true, 1}, "44'/1'/1'/1/1"},
+		{&BIP44Params{44, 118, 52, true, 41}, "44'/118'/52'/1/41"},
+	}
+
+	for i, c := range goodCases {
+		params, err := NewParamsFromPath(c.path)
+		errStr := fmt.Sprintf("%d %v", i, c)
+		assert.NoError(t, err, errStr)
+		assert.EqualValues(t, c.params, params, errStr)
+		assert.Equal(t, c.path, c.params.String())
+	}
+
+	badCases := []struct {
+		path string
+	}{
+		{"43'/0'/0'/0/0"},   // doesnt start with 44
+		{"44'/1'/0'/0/0/5"}, // too many fields
+		{"44'/0'/1'/0"},     // too few fields
+		{"44'/0'/0'/2/0"},   // change field can only be 0/1
+		{"44/0'/0'/0/0"},    // first field needs '
+		{"44'/0/0'/0/0"},    // second field needs '
+		{"44'/0'/0/0/0"},    // third field needs '
+		{"44'/0'/0'/0'/0"},  // fourth field must not have '
+		{"44'/0'/0'/0/0'"},  // fifth field must not have '
+		{"44'/-1'/0'/0/0"},  // no negatives
+		{"44'/0'/0'/-1/0"},  // no negatives
+	}
+
+	for i, c := range badCases {
+		params, err := NewParamsFromPath(c.path)
+		errStr := fmt.Sprintf("%d %v", i, c)
+		assert.Nil(t, params, errStr)
+		assert.Error(t, err, errStr)
+	}
+
 }
 
 //nolint

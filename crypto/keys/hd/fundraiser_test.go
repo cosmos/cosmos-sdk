@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/bartekn/go-bip39"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/bip39"
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"

@@ -59,6 +59,13 @@
   name = "github.com/tendermint/tendermint"
   version = "=v0.23.0"
 
+## deps without releases:
+
+[[constraint]]
+  name = "golang.org/x/crypto"
+  source = "https://github.com/tendermint/crypto"
+  branch = "master"
+
 [[constraint]]
   name = "github.com/bartekn/go-bip39"
   revision = "a05967ea095d81c8fe4833776774cfaff8e5036c"
@@ -66,6 +73,29 @@
 [[constraint]]
   name = "github.com/zondax/ledger-goclient"
   revision = "4296ee5701e945f9b3a7dbe51f402e0b9be57259"
+
+
+## transitive deps, with releases:
+
+[[override]]
+  name = "github.com/davecgh/go-spew"
+  version = "=v1.1.0"
+
+## transitive deps, without releases:
+#
+
+[[override]]
+  name = "github.com/syndtr/goleveldb"
+  revision = "c4c61651e9e37fa117f53c5a906d3b63090d8445"
+
+[[override]]
+  name = "golang.org/x/sys"
+  revision = "4e1fef5609515ec7a2cee7b5de30ba6d9b438cbf"
+
+[[override]]
+  name = "google.golang.org/genproto"
+  revision = "383e8b2c3b9e36c4076b235b32537292176bae20"
+
 
 [prune]
   go-tests = true

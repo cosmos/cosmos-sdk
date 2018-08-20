@@ -12,6 +12,7 @@ The complete API is comprised of the sub-APIs of different modules. The modules 
 - ICS20 (TokenAPI)
 - ICS21 (StakingAPI)
 - ICS22 (GovernanceAPI)
+- ICS23 (SlashingAPI)
 
 Error messages my change and should be only used for display purposes. Error messages should not be
 used for determining the error type.
@@ -364,7 +365,7 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 
 - **URL**: `/stake/delegators/{delegatorAddr}/delegations`
 - **Functionality**: Submit or edit a delegation.
-<!--NOTE Should this be a PUT instead of a POST? the code indicates that this is an edit operation-->
+  <!--NOTE Should this be a PUT instead of a POST? the code indicates that this is an edit operation-->
 - POST Body:
 
 ```json
@@ -574,30 +575,30 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
 
 ```js
 {
-	"base_req": {
-     // Name of key to use
-    "name": "string",
-    // Password for that key
-    "password": "string",
-    "chain_id": "string",
-    "account_number": 64,
-    "sequence": 64,
-    "gas": 64,
-  },
-  // Title of the proposal
-  "title": "string",
-  // Description of the proposal
-  "description": "string",
-  // PlainTextProposal supported now. SoftwareUpgradeProposal and other types may be supported soon
-  "proposal_type": "string",
-  // A cosmosaccaddr address
-  "proposer": "string",
-  "initial_deposit": [
-      {
-	      "denom": "string",
-        "amount": 64,
-      }
-  ]
+    "base_req": {
+        // Name of key to use
+    	"name": "string",
+    	// Password for that key
+    	"password": "string",
+    	"chain_id": "string",
+    	"account_number": 64,
+    	"sequence": 64,
+    	"gas": 64
+    },
+  	// Title of the proposal
+  	"title": "string",
+  	// Description of the proposal
+    "description": "string",
+  	// PlainTextProposal supported now. SoftwareUpgradeProposal and other types may be supported soon
+  	"proposal_type": "string",
+  	// A cosmosaccaddr address
+  	"proposer": "string",
+  	"initial_deposit": [
+        {
+            "denom": "string",
+            "amount": 64,
+      	}
+  	]
 }
 ```
 
@@ -652,13 +653,13 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
 
 ```json
 {
-	"base_req": {
-    "name": "string",
-    "password": "string",
-    "chain_id": "string",
-    "account_number": 0,
-    "sequence": 0,
-    "gas": 0,
+    "base_req": {
+    	"name": "string",
+    	"password": "string",
+    	"chain_id": "string",
+        "account_number": 0,
+    	"sequence": 0,
+    	"gas": 0
   },
   "depositer": "string",
   "amount": 0,
@@ -693,6 +694,26 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
         "amount": {"atom": 150},
         "depositer": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
         "proposal-id": 16
+    }
+}
+```
+
+### GET /gov/proposals/{proposal-id}/tally
+
+- **URL**: `/gov/proposals/{proposal-id}/tally`
+- **Functionality**: Get the tally of a given proposal.
+- Returns on success:
+
+```json
+{
+    "rest api":"2.2",
+    "code":200,
+    "error":"",
+    "result": {
+        "yes": 0,
+        "abstain": 0,
+        "no": 0,
+        "no_with_veto": 0
     }
 }
 ```
@@ -736,19 +757,17 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
 ```js
 {
 	"base_req": {
-     // Name of key to use
-    "name": "string",
-    // Password for that key
-    "password": "string",
-    "chain_id": "string",
-    "account_number": 64,
-    "sequence": 64,
-    "gas": 64,
-  },
-  // A cosmosaccaddr address
-  "voter": "string",
-  // Value of the vote option `Yes`, `No` `Abstain`, `NoWithVeto`
-  "option": "string",
+    	"name": "string",
+    	"password": "string",
+    	"chain_id": "string",
+    	"account_number": 0,
+    	"sequence": 0,
+    	"gas": 0
+  	},
+    // A cosmosaccaddr address
+  	"voter": "string",
+  	// Value of the vote option `Yes`, `No` `Abstain`, `NoWithVeto`
+  	"option": "string",
 }
 ```
 
@@ -769,7 +788,6 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
 
 - **URL** : `/gov/proposals/{proposal-id}/votes/{address}`
 - **Functionality**: Get the current `Option` submited by an address
-
 - Returns on success:
 
 ```json
@@ -793,7 +811,6 @@ The SlashingAPI exposes all functionality needed for to slash validators and del
 
 - **URL**: `/slashing/validator/{validatorAddr}/signing-info`
 - **Functionality**: Query the information from a single validator.
-
 - Returns on success:
 
 ```json

@@ -59,18 +59,18 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 	numInitiallyBonded := int64(50)
 	for i := 0; i < int(numInitiallyBonded); i++ {
 		validator := stake.NewValidator(accs[i], keys[i].PubKey(), stake.Description{})
-		validator.Tokens = sdk.NewRat(100)
-		validator.DelegatorShares = sdk.NewRat(100)
-		delegation := stake.Delegation{accs[i], accs[i], sdk.NewRat(100), 0}
+		validator.Tokens = sdk.NewDec(100)
+		validator.DelegatorShares = sdk.NewDec(100)
+		delegation := stake.Delegation{accs[i], accs[i], sdk.NewDec(100), 0}
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
-	stakeGenesis.Pool.LooseTokens = sdk.NewRat(int64(100*250) + (numInitiallyBonded * 100))
+	stakeGenesis.Pool.LooseTokens = sdk.NewDec(int64(100*250) + (numInitiallyBonded * 100))
 	stakeGenesis.Validators = validators
 	stakeGenesis.Bonds = delegations
 	// No inflation, for now
-	stakeGenesis.Params.InflationMax = sdk.NewRat(0)
-	stakeGenesis.Params.InflationMin = sdk.NewRat(0)
+	stakeGenesis.Params.InflationMax = sdk.NewDec(0)
+	stakeGenesis.Params.InflationMin = sdk.NewDec(0)
 	genesis := GenesisState{
 		Accounts:  genesisAccounts,
 		StakeData: stakeGenesis,

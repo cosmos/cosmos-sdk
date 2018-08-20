@@ -102,8 +102,8 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	keeper.SetParams(ctx, params)
 
 	// create a random pool
-	pool.LooseTokens = sdk.NewRat(10000)
-	pool.BondedTokens = sdk.NewRat(1234)
+	pool.LooseTokens = sdk.NewDec(10000)
+	pool.BondedTokens = sdk.NewDec(1234)
 	keeper.SetPool(ctx, pool)
 
 	validators := make([]types.Validator, numVals)
@@ -123,13 +123,13 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 
 	// remove enough tokens to kick out the validator below the current cliff
 	// validator and next in line cliff validator
-	nextCliffVal, pool, _ = nextCliffVal.RemoveDelShares(pool, sdk.NewRat(21))
+	nextCliffVal, pool, _ = nextCliffVal.RemoveDelShares(pool, sdk.NewDec(21))
 	keeper.SetPool(ctx, pool)
 	nextCliffVal = keeper.UpdateValidator(ctx, nextCliffVal)
 
 	// require the cliff validator has changed
 	cliffVal := validators[numVals-maxVals-1]
-	require.Equal(t, cliffVal.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+	require.Equal(t, cliffVal.Operator, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
 
 	// require the cliff validator power has changed
 	cliffPower := keeper.GetCliffValidatorPower(ctx)
@@ -142,7 +142,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 
 	// require all the validators have their respective statuses
 	for valIdx, status := range expectedValStatus {
-		valAddr := validators[valIdx].Owner
+		valAddr := validators[valIdx].Operator
 		val, _ := keeper.GetValidator(ctx, valAddr)
 
 		require.Equal(
@@ -213,7 +213,7 @@ func TestCliffValidatorChange(t *testing.T) {
 
 	// assert new cliff validator due to power rank construction
 	newCliffVal = validators[numVals-maxVals+2]
-	require.Equal(t, newCliffVal.Owner, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+	require.Equal(t, newCliffVal.Operator, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
 
 	// assert cliff validator power should have been updated
 	cliffPower = keeper.GetCliffValidatorPower(ctx)

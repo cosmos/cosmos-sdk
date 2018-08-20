@@ -236,8 +236,8 @@ func Setup(mapp *mock.App, k stake.Keeper) simulation.RandSetup {
 	return func(r *rand.Rand, privKeys []crypto.PrivKey) {
 		ctx := mapp.NewContext(false, abci.Header{})
 		gen := stake.DefaultGenesisState()
-		gen.Params.InflationMax = sdk.NewRat(0)
-		gen.Params.InflationMin = sdk.NewRat(0)
+		gen.Params.InflationMax = sdk.NewDec(0)
+		gen.Params.InflationMin = sdk.NewDec(0)
 		stake.InitGenesis(ctx, k, gen)
 		params := k.GetParams(ctx)
 		denom := params.BondDenom

@@ -39,7 +39,7 @@ func SimulateMsgSubmitProposal(k gov.Keeper, sk stake.Keeper) simulation.TestAnd
 		if result.IsOK() {
 			// Update pool to keep invariants
 			pool := sk.GetPool(ctx)
-			pool.LooseTokens = pool.LooseTokens.Sub(sdk.NewRatFromInt(deposit.AmountOf(denom)))
+			pool.LooseTokens = pool.LooseTokens.Sub(sdk.NewDecFromInt(deposit.AmountOf(denom)))
 			sk.SetPool(ctx, pool)
 			write()
 		}
@@ -66,7 +66,7 @@ func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.TestAndRunTx {
 		if result.IsOK() {
 			// Update pool to keep invariants
 			pool := sk.GetPool(ctx)
-			pool.LooseTokens = pool.LooseTokens.Sub(sdk.NewRatFromInt(deposit.AmountOf(denom)))
+			pool.LooseTokens = pool.LooseTokens.Sub(sdk.NewDecFromInt(deposit.AmountOf(denom)))
 			sk.SetPool(ctx, pool)
 			write()
 		}

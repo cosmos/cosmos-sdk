@@ -6,6 +6,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Pool - dynamic parameters of the current state
@@ -122,4 +123,22 @@ func (p Pool) NextInflation(params Params) (inflation sdk.Dec) {
 	}
 
 	return inflation
+}
+
+// unmarshal the current pool value from store key or panics
+func MustUnmarshalPool(cdc *wire.Codec, value []byte) Pool {
+	pool, err := UnmarshalPool(cdc, value)
+	if err != nil {
+		panic(err)
+	}
+	return pool
+}
+
+// unmarshal the current pool value from store key
+func UnmarshalPool(cdc *wire.Codec, value []byte) (pool Pool, err error) {
+	err = cdc.UnmarshalBinary(value, &pool)
+	if err != nil {
+		return
+	}
+	return
 }

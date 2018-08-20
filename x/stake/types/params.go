@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // defaultUnbondingTime reflects three weeks in seconds as the default
@@ -42,4 +43,22 @@ func DefaultParams() Params {
 		MaxValidators:       100,
 		BondDenom:           "steak",
 	}
+}
+
+// unmarshal the current staking params value from store key or panic
+func MustUnmarshalParams(cdc *wire.Codec, value []byte) Params {
+	params, err := UnmarshalParams(cdc, value)
+	if err != nil {
+		panic(err)
+	}
+	return params
+}
+
+// unmarshal the current staking params value from store key
+func UnmarshalParams(cdc *wire.Codec, value []byte) (params Params, err error) {
+	err = cdc.UnmarshalBinary(value, &params)
+	if err != nil {
+		return
+	}
+	return
 }

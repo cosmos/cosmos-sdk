@@ -1,14 +1,14 @@
-## Transaction & State Machine Interaction Overview
+# State Machine Interaction Overview
 
-### Conceptual overview
+## Conceptual overview
 
-#### States
+### States
 
 At any given time, there are any number of validator candidates registered in the state machine.
 Each block, the top `n` candidates who are not jailed become *bonded*, meaning that they may propose and vote on blocks.
 Validators who are *bonded* are *at stake*, meaning that part or all of their stake is at risk if they commit a protocol fault.
 
-#### Slashing period
+### Slashing period
 
 In order to mitigate the impact of initially likely categories of non-malicious protocol faults, the Cosmos Hub implements for each validator
 a *slashing period*, in which the amount by which a validator can be slashed is capped at the punishment for the worst violation. For example,
@@ -20,7 +20,7 @@ A new slashing period starts whenever a validator is bonded and ends whenever th
 The amount of tokens slashed relative to validator power for infractions committed within the slashing period, whenever they are discovered, is capped
 at the punishment for the worst infraction (which for the Cosmos Hub at launch will be double-signing a block).
 
-##### ASCII timelines
+#### ASCII timelines
 
 *Code*
 
@@ -57,11 +57,11 @@ Multiple infractions are committed within a single slashing period then later di
 The validator then unjails themself and rebonds, then commits a fourth infraction - which is discovered and punished at the full amount, since a new slashing period started
 when they unjailed and rebonded.
 
-### Transactions
+## Transactions
 
 In this section we describe the processing of transactions for the `slashing` module.
 
-#### TxUnjail
+### TxUnjail
 
 If a validator was automatically unbonded due to downtime and wishes to come back online &
 possibly rejoin the bonded set, it must send `TxUnjail`:
@@ -98,11 +98,11 @@ If the validator has enough stake to be in the top hundred, they will be automat
 and all delegators still delegated to the validator will be rebonded and begin to again collect
 provisions and rewards.
 
-### Interactions
+## Interactions
 
 In this section we describe the "hooks" - slashing module code that runs when other events happen.
 
-#### Validator Bonded
+### Validator Bonded
 
 Upon successful bonding of a validator (a given validator changing from "unbonded" state to "bonded" state,
 which may happen on delegation, on unjailing, etc), we create a new `SlashingPeriod` structure for the
@@ -123,7 +123,7 @@ onValidatorBonded(address sdk.ValAddress)
   return
 ```
 
-#### Validator Unbonded
+### Validator Unbonded
 
 When a validator is unbonded, we update the in-progress `SlashingPeriod` with the current block as the `EndHeight`:
 
@@ -137,7 +137,7 @@ onValidatorUnbonded(address sdk.ValAddress)
   return
 ```
 
-#### Validator Slashed
+### Validator Slashed
 
 When a validator is slashed, we look up the appropriate `SlashingPeriod` based on the validator
 address and the time of infraction, cap the fraction slashed as `max(SlashFraction, SlashedSoFar)`
@@ -168,7 +168,7 @@ whereas if they had `1000` steak bonded initially, the total amount slashed woul
 This means that any slashing events which utilize the slashing period (are capped-per-period) **must** *also* jail the validator when the infraction is discovered.
 Otherwise it would be possible for a validator to slash themselves intentionally at a low bond, then increase their bond but no longer be at stake since they would have already hit the `SlashedSoFar` cap.
 
-### State Cleanup
+## State Cleanup
 
 Once no evidence for a given slashing period can possibly be valid (the end time plus the unbonding period is less than the current time),
 old slashing periods should be cleaned up. This will be implemented post-launch.

@@ -2,6 +2,7 @@
 
 
 [[projects]]
+  branch = "master"
   digest = "1:09a7f74eb6bb3c0f14d8926610c87f569c5cff68e978d30e9a3540aeb626fdf0"
   name = "github.com/bartekn/go-bip39"
   packages = ["."]
@@ -46,6 +47,14 @@
   packages = ["bech32"]
   pruneopts = "UT"
   revision = "d4cc87b860166d00d6b5b9e0d3b3d71d6088d4d4"
+
+[[projects]]
+  branch = "master"
+  digest = "1:0427cfa11785c899dfe0ea6987bc0c9dea61647f6bb3987163d62c867f1cad6a"
+  name = "github.com/cosmos/go-bip39"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "555e2067c45d9fcd7292bf3b8e732bc10ac8c58e"
 
 [[projects]]
   digest = "1:a2c1d0e43bd3baaa071d1b9ed72c27d78169b2b269f71c105ac4ba34b1be4a39"
@@ -626,6 +635,7 @@
     "github.com/bartekn/go-bip39",
     "github.com/bgentry/speakeasy",
     "github.com/btcsuite/btcd/btcec",
+    "github.com/cosmos/go-bip39",
     "github.com/golang/protobuf/proto",
     "github.com/gorilla/mux",
     "github.com/mattn/go-isatty",

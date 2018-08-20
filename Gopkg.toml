@@ -67,8 +67,8 @@
   branch = "master"
 
 [[constraint]]
-  name = "github.com/bartekn/go-bip39"
-  revision = "a05967ea095d81c8fe4833776774cfaff8e5036c"
+  name = "github.com/cosmos/go-bip39"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/zondax/ledger-goclient"

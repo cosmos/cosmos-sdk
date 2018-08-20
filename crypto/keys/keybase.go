@@ -8,9 +8,9 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/cosmos/go-bip39"
+
 	"github.com/cosmos/cosmos-sdk/crypto"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/bip39"
-	fundraiser "github.com/cosmos/cosmos-sdk/crypto/keys/bip39/fundraiser"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 
@@ -50,6 +50,9 @@ const (
 const (
 	// used for deriving seed from mnemonic
 	defaultBIP39Passphrase = ""
+
+	// bits of entropy to draw when creating a mnemonic
+	defaultEntropySize = 256
 )
 
 var (
@@ -92,12 +95,15 @@ func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string
 
 	// default number of words (24):
 	// this generates a mnemonic directly from the number of words by reading system entropy.
-	// TODO: eliminate the `fundraiser` package completely and just break this up
-	mnemonicS, err := fundraiser.NewMnemonic(fundraiser.FreshKey)
+	entropy, err := bip39.NewEntropy(defaultEntropySize)
 	if err != nil {
 		return
 	}
-	mnemonic = strings.Join(mnemonicS, " ")
+	mnemonic, err = bip39.NewMnemonic(entropy)
+	if err != nil {
+		return
+	}
+
 	seed := bip39.NewSeed(mnemonic, defaultBIP39Passphrase)
 	info, err = kb.persistDerivedKey(seed, passwd, name, hd.FullFundraiserPath)
 	return

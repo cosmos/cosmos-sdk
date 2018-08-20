@@ -81,7 +81,7 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 
 // load a unbonding delegation
 func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
-	DelegatorAddr, ValidatorAddr sdk.AccAddress) (ubd types.UnbondingDelegation, found bool) {
+	DelegatorAddr sdk.AccAddress, ValidatorAddr sdk.ValAddress) (ubd types.UnbondingDelegation, found bool) {
 
 	store := ctx.KVStore(k.storeKey)
 	key := GetUBDKey(DelegatorAddr, ValidatorAddr)
@@ -95,7 +95,7 @@ func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
 }
 
 // load all unbonding delegations from a particular validator
-func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sdk.AccAddress) (ubds []types.UnbondingDelegation) {
+func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sdk.ValAddress) (ubds []types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, GetUBDsByValIndexKey(valAddr))
 	for {
@@ -220,15 +220,15 @@ func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 
 // Perform a delegation, set/update everything necessary within the store.
 func (k Keeper) Delegate(ctx sdk.Context, delegatorAddr sdk.AccAddress, bondAmt sdk.Coin,
-	validator types.Validator, subtractAccount bool) (newShares sdk.Rat, err sdk.Error) {
+	validator types.Validator, subtractAccount bool) (newShares sdk.Dec, err sdk.Error) {
 
 	// Get or create the delegator delegation
-	delegation, found := k.GetDelegation(ctx, delegatorAddr, validator.Owner)
+	delegation, found := k.GetDelegation(ctx, delegatorAddr, validator.Operator)
 	if !found {
 		delegation = types.Delegation{
 			DelegatorAddr: delegatorAddr,
-			ValidatorAddr: validator.Owner,
-			Shares:        sdk.ZeroRat(),
+			ValidatorAddr: validator.Operator,
+			Shares:        sdk.ZeroDec(),
 		}
 	}
 
@@ -255,8 +255,8 @@ func (k Keeper) Delegate(ctx sdk.Context, delegatorAddr sdk.AccAddress, bondAmt 
 }
 
 // unbond the the delegation return
-func (k Keeper) unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddress,
-	shares sdk.Rat) (amount sdk.Rat, err sdk.Error) {
+func (k Keeper) unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.ValAddress,
+	shares sdk.Dec) (amount sdk.Dec, err sdk.Error) {
 
 	// check if delegation has any shares in it unbond
 	delegation, found := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
@@ -284,9 +284,9 @@ func (k Keeper) unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddr
 	// remove the delegation
 	if delegation.Shares.IsZero() {
 
-		// if the delegation is the owner of the validator then
+		// if the delegation is the operator of the validator then
 		// trigger a revoke validator
-		if bytes.Equal(delegation.DelegatorAddr, validator.Owner) && validator.Revoked == false {
+		if bytes.Equal(delegation.DelegatorAddr, validator.Operator) && validator.Revoked == false {
 			validator.Revoked = true
 		}
 		k.RemoveDelegation(ctx, delegation)
@@ -305,7 +305,7 @@ func (k Keeper) unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddr
 	// update then remove validator if necessary
 	validator = k.UpdateValidator(ctx, validator)
 	if validator.DelegatorShares.IsZero() {
-		k.RemoveValidator(ctx, validator.Owner)
+		k.RemoveValidator(ctx, validator.Operator)
 	}
 
 	return
@@ -314,7 +314,7 @@ func (k Keeper) unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddr
 //______________________________________________________________________________________________________
 
 // complete unbonding an unbonding record
-func (k Keeper) BeginUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddress, sharesAmount sdk.Rat) sdk.Error {
+func (k Keeper) BeginUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr sdk.ValAddress, sharesAmount sdk.Dec) sdk.Error {
 
 	// TODO quick fix, instead we should use an index, see https://github.com/cosmos/cosmos-sdk/issues/1402
 	_, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
@@ -366,8 +366,8 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr 
 }
 
 // complete unbonding an unbonding record
-func (k Keeper) BeginRedelegation(ctx sdk.Context, delegatorAddr, validatorSrcAddr,
-	validatorDstAddr sdk.AccAddress, sharesAmount sdk.Rat) sdk.Error {
+func (k Keeper) BeginRedelegation(ctx sdk.Context, delegatorAddr sdk.AccAddress,
+	validatorSrcAddr, validatorDstAddr sdk.ValAddress, sharesAmount sdk.Dec) sdk.Error {
 
 	// check if this is a transitive redelegation
 	if k.HasReceivingRedelegation(ctx, delegatorAddr, validatorSrcAddr) {

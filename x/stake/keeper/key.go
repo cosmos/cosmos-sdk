@@ -36,8 +36,8 @@ const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
 
 // gets the key for the validator with address
 // VALUE: stake/types.Validator
-func GetValidatorKey(ownerAddr sdk.AccAddress) []byte {
-	return append(ValidatorsKey, ownerAddr.Bytes()...)
+func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
+	return append(ValidatorsKey, operatorAddr.Bytes()...)
 }
 
 // gets the key for the validator with pubkey
@@ -48,7 +48,7 @@ func GetValidatorByPubKeyIndexKey(pubkey crypto.PubKey) []byte {
 
 // gets the key for the current validator group
 // VALUE: none (key rearrangement with GetValKeyFromValBondedIndexKey)
-func GetValidatorsBondedIndexKey(ownerAddr sdk.AccAddress) []byte {
+func GetValidatorsBondedIndexKey(operatorAddr sdk.ValAddress) []byte {
 	return append(ValidatorsBondedIndexKey, ownerAddr.Bytes()...)
 }
 
@@ -97,8 +97,8 @@ func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 // get the key for the accumulated update validators
 // VALUE: abci.Validator
 // note records using these keys should never persist between blocks
-func GetTendermintUpdatesKey(ownerAddr sdk.AccAddress) []byte {
-	return append(TendermintUpdatesKey, ownerAddr.Bytes()...)
+func GetTendermintUpdatesKey(operatorAddr sdk.ValAddress) []byte {
+	return append(TendermintUpdatesKey, operatorAddr.Bytes()...)
 }
 
 //______________________________________________________________________________
@@ -118,7 +118,7 @@ func GetDelegationsKey(delegatorAddr sdk.AccAddress) []byte {
 
 // gets the key for an unbonding delegation by delegator and validator addr
 // VALUE: stake/types.UnbondingDelegation
-func GetUBDKey(delegatorAddr, validatorAddr sdk.AccAddress) []byte {
+func GetUBDKey(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) []byte {
 	return append(
 		GetUBDsKey(delegatorAddr.Bytes()),
 		validatorAddr.Bytes()...)
@@ -126,7 +126,7 @@ func GetUBDKey(delegatorAddr, validatorAddr sdk.AccAddress) []byte {
 
 // gets the index-key for an unbonding delegation, stored by validator-index
 // VALUE: none (key rearrangement used)
-func GetUBDByValIndexKey(delegatorAddr, validatorAddr sdk.AccAddress) []byte {
+func GetUBDByValIndexKey(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) []byte {
 	return append(GetUBDsByValIndexKey(validatorAddr), delegatorAddr.Bytes()...)
 }
 
@@ -149,7 +149,7 @@ func GetUBDsKey(delegatorAddr sdk.AccAddress) []byte {
 }
 
 // gets the prefix keyspace for the indexes of unbonding delegations for a validator
-func GetUBDsByValIndexKey(validatorAddr sdk.AccAddress) []byte {
+func GetUBDsByValIndexKey(validatorAddr sdk.ValAddress) []byte {
 	return append(UnbondingDelegationByValIndexKey, validatorAddr.Bytes()...)
 }
 
@@ -157,7 +157,7 @@ func GetUBDsByValIndexKey(validatorAddr sdk.AccAddress) []byte {
 
 // gets the key for a redelegation
 // VALUE: stake/types.RedelegationKey
-func GetREDKey(delegatorAddr, validatorSrcAddr, validatorDstAddr sdk.AccAddress) []byte {
+func GetREDKey(delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress) []byte {
 	return append(append(
 		GetREDsKey(delegatorAddr.Bytes()),
 		validatorSrcAddr.Bytes()...),
@@ -166,7 +166,7 @@ func GetREDKey(delegatorAddr, validatorSrcAddr, validatorDstAddr sdk.AccAddress)
 
 // gets the index-key for a redelegation, stored by source-validator-index
 // VALUE: none (key rearrangement used)
-func GetREDByValSrcIndexKey(delegatorAddr, validatorSrcAddr, validatorDstAddr sdk.AccAddress) []byte {
+func GetREDByValSrcIndexKey(delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress) []byte {
 	return append(append(
 		GetREDsFromValSrcIndexKey(validatorSrcAddr),
 		delegatorAddr.Bytes()...),
@@ -175,7 +175,7 @@ func GetREDByValSrcIndexKey(delegatorAddr, validatorSrcAddr, validatorDstAddr sd
 
 // gets the index-key for a redelegation, stored by destination-validator-index
 // VALUE: none (key rearrangement used)
-func GetREDByValDstIndexKey(delegatorAddr, validatorSrcAddr, validatorDstAddr sdk.AccAddress) []byte {
+func GetREDByValDstIndexKey(delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress) []byte {
 	return append(append(
 		GetREDsToValDstIndexKey(validatorDstAddr),
 		delegatorAddr.Bytes()...),
@@ -215,18 +215,18 @@ func GetREDsKey(delegatorAddr sdk.AccAddress) []byte {
 }
 
 // gets the prefix keyspace for all redelegations redelegating away from a source validator
-func GetREDsFromValSrcIndexKey(validatorSrcAddr sdk.AccAddress) []byte {
+func GetREDsFromValSrcIndexKey(validatorSrcAddr sdk.ValAddress) []byte {
 	return append(RedelegationByValSrcIndexKey, validatorSrcAddr.Bytes()...)
 }
 
 // gets the prefix keyspace for all redelegations redelegating towards a destination validator
-func GetREDsToValDstIndexKey(validatorDstAddr sdk.AccAddress) []byte {
+func GetREDsToValDstIndexKey(validatorDstAddr sdk.ValAddress) []byte {
 	return append(RedelegationByValDstIndexKey, validatorDstAddr.Bytes()...)
 }
 
 // gets the prefix keyspace for all redelegations redelegating towards a destination validator
 // from a particular delegator
-func GetREDsByDelToValDstIndexKey(delegatorAddr, validatorDstAddr sdk.AccAddress) []byte {
+func GetREDsByDelToValDstIndexKey(delegatorAddr sdk.AccAddress, validatorDstAddr sdk.ValAddress) []byte {
 	return append(
 		GetREDsToValDstIndexKey(validatorDstAddr),
 		delegatorAddr.Bytes()...)

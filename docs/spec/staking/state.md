@@ -13,7 +13,7 @@ type Pool struct {
     LooseTokens         int64   // tokens not associated with any bonded validator
     BondedTokens        int64   // reserve of bonded tokens
     InflationLastTime   int64   // block which the last inflation was processed // TODO make time
-    Inflation           sdk.Rat // current annual inflation rate
+    Inflation           sdk.Dec // current annual inflation rate
     
     DateLastCommissionReset int64  // unix timestamp for last commission accounting reset (daily)
 }
@@ -28,10 +28,10 @@ overall functioning of the stake module.
 
 ```golang
 type Params struct {
-    InflationRateChange sdk.Rat // maximum annual change in inflation rate
-	InflationMax        sdk.Rat // maximum inflation rate
-	InflationMin        sdk.Rat // minimum inflation rate
-	GoalBonded          sdk.Rat // Goal of percent bonded atoms
+    InflationRateChange sdk.Dec // maximum annual change in inflation rate
+	InflationMax        sdk.Dec // maximum inflation rate
+	InflationMin        sdk.Dec // minimum inflation rate
+	GoalBonded          sdk.Dec // Goal of percent bonded atoms
 
 	MaxValidators uint16 // maximum number of validators
 	BondDenom     string // bondable coin denomination
@@ -74,9 +74,9 @@ type Validator struct {
     Revoked         bool           // has the validator been revoked?
     
 	Status          sdk.BondStatus // validator status (bonded/unbonding/unbonded)
-	Tokens          sdk.Rat        // delegated tokens (incl. self-delegation)
-    DelegatorShares sdk.Rat        // total shares issued to a validator's delegators
-    SlashRatio      sdk.Rat        // increases each time the validator is slashed
+	Tokens          sdk.Dec        // delegated tokens (incl. self-delegation)
+    DelegatorShares sdk.Dec        // total shares issued to a validator's delegators
+    SlashRatio      sdk.Dec        // increases each time the validator is slashed
     
     Description        Description  // description terms for the validator
     
@@ -88,10 +88,10 @@ type Validator struct {
 }
 
 type CommissionInfo struct {
-    Rate        sdk.Rat  // the commission rate of fees charged to any delegators
-    Max         sdk.Rat  // maximum commission rate which this validator can ever charge
-    ChangeRate  sdk.Rat  // maximum daily increase of the validator commission
-    ChangeToday sdk.Rat  // commission rate change today, reset each day (UTC time)
+    Rate        sdk.Dec  // the commission rate of fees charged to any delegators
+    Max         sdk.Dec  // maximum commission rate which this validator can ever charge
+    ChangeRate  sdk.Dec  // maximum daily increase of the validator commission
+    ChangeToday sdk.Dec  // commission rate change today, reset each day (UTC time)
     LastChange  int64    // unix timestamp of last commission change
 }
 
@@ -117,7 +117,7 @@ the transaction is the owner of the bond.
 
 ```golang
 type Delegation struct {
-	Shares        sdk.Rat      // delegation shares recieved 
+	Shares        sdk.Dec      // delegation shares recieved 
 	Height        int64        // last height bond updated
 }
 ```
@@ -178,8 +178,8 @@ the original redelegation has been completed.
 
 ```golang
 type Redelegation struct {
-    SourceShares           sdk.Rat     // amount of source shares redelegating
-    DestinationShares      sdk.Rat     // amount of destination shares created at redelegation
+    SourceShares           sdk.Dec     // amount of source shares redelegating
+    DestinationShares      sdk.Dec     // amount of destination shares created at redelegation
     CompleteTime           int64       // unix time to complete redelegation
 }
 ```

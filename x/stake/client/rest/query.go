@@ -114,7 +114,7 @@ func delegatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 		}
 
 		for _, validator := range validators {
-			validatorAddr = validator.Owner
+			validatorAddr = validator.Operator
 
 			// Delegations
 			delegations, statusCode, errMsg, err := getDelegatorDelegations(cliCtx, cdc, delegatorAddr, validatorAddr)
@@ -347,7 +347,7 @@ func delegationHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handle
 			DelegatorAddr: delegation.DelegatorAddr,
 			ValidatorAddr: delegation.ValidatorAddr,
 			Height:        delegation.Height,
-			Shares:        delegation.Shares.FloatString(),
+			Shares:        delegation.Shares.String(),
 		}
 
 		output, err := cdc.MarshalJSON(outputDelegation)
@@ -400,7 +400,7 @@ func delegatorValidatorsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) ht
 
 		for _, validator := range validators {
 			// get all transactions from the delegator to val and append
-			validatorAccAddr = validator.Owner
+			validatorAccAddr = validator.Operator
 
 			validator, statusCode, errMsg, errRes := getDelegatorValidator(cliCtx, cdc, delegatorAddr, validatorAccAddr)
 			if errRes != nil {
@@ -507,25 +507,40 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 		valAddress, err := sdk.AccAddressFromBech32(bech32validatorAddr)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
+			w.Write([]byte(fmt.Sprintf("error: %s", err.Error())))
 			return
 		}
 
-		kvs, err := cliCtx.QuerySubspace(stake.ValidatorsKey, storeName)
+		key := stake.GetValidatorKey(valAddress)
+
+		res, err := cliCtx.QueryStore(key, storeName)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
+			w.Write([]byte(fmt.Sprintf("couldn't query validator, error: %s", err.Error())))
 			return
 		}
 
-		validator, err := getValidator(valAddress, kvs, cdc)
+		// the query will return empty if there is no data for this record
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		validator, err := types.UnmarshalValidator(cdc, valAddress, res)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't query validator. Error: %s", err.Error())))
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
 			return
 		}
 
-		output, err = cdc.MarshalJSON(validator)
+		bech32Validator, err := validator.Bech32Validator()
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		output, err = cdc.MarshalJSON(bech32Validator)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))

@@ -120,9 +120,9 @@ On the testnet, we delegate `steak` instead of `atom`. Here's how you can bond t
 ```bash
 gaiacli stake delegate \
   --amount=10steak \
-  --address-validator=$(gaiad tendermint show-validator) \
+  --validator=$(gaiad tendermint show-validator) \
   --name=<key_name> \
-  --chain-id=gaia-7005
+  --chain-id=gaia-6002
 ```
 
 While tokens are bonded, they are pooled with all the other bonded tokens in the network. Validators and delegators obtain a percentage of shares that equal their stake in this pool.
@@ -137,9 +137,9 @@ If for any reason the validator misbehaves, or you want to unbond a certain amou
 
 ```bash
 gaiacli stake unbond begin \
-  --address-validator=$(gaiad tendermint show-validator) \
+  --validator=$(gaiad tendermint show-validator) \
   --shares=MAX \
-  --name=<key_name> \
+  --from=<key_name> \
   --chain-id=gaia-7005
 ```
 
@@ -152,7 +152,7 @@ gaiacli account <account_cosmosaccaddr>
 
 gaiacli stake delegation \
   --address-delegator=<account_cosmosaccaddr> \
-  --address-validator=$(gaiad tendermint show-validator) \
+  --validator=$(gaiad tendermint show-validator) \
   --chain-id=gaia-7005
 ```
 

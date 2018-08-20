@@ -475,6 +475,20 @@ define({ "api": [
             "optional": false,
             "field": "gas",
             "description": "<p>Gas value.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "sig_name",
+            "description": "<p>NewAccountName.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "sig_password",
+            "description": "<p>NewAccountPassword.</p>"
           }
         ]
       }

@@ -628,6 +628,8 @@ func validateIp(host string) bool {
 * @apiParam {String} name Account name of Client
 * @apiParam {string} password password of account.
 * @apiParam {Number} gas Gas value.
+* @apiParam {String} sig_name NewAccountName.
+* @apiParam {String} sig_password NewAccountPassword.
 * @apiError AccountNotExists VPN Node not exists
 * @apiError AccountNameAlreadyExists The new account name is already exist
 * @apiError InsufficientFunds Funds are less than 100

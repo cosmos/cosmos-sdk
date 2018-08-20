@@ -37,7 +37,7 @@ handleMsgUnjail(tx TxUnjail)
     return
 ```
 
-If the validater has enough stake to be in the top hundred, they will be automatically rebonded,
+If the validator has enough stake to be in the top hundred, they will be automatically rebonded,
 and all delegators still delegated to the validator will be rebonded and begin to again collect
 provisions and rewards.
 

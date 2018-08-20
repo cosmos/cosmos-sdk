@@ -4,7 +4,7 @@
 
 Tendermint blocks can include
 [Evidence](https://github.com/tendermint/tendermint/blob/develop/docs/spec/blockchain/blockchain.md#evidence), which indicates that a validator
-committed malicious behaviour. The relevant information is forwarded to the
+committed malicious behavior. The relevant information is forwarded to the
 application as [ABCI
 Evidence](https://github.com/tendermint/tendermint/blob/develop/abci/types/types.proto#L259) in `abci.RequestBeginBlock`
 so that the validator an be accordingly punished.

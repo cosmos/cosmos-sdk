@@ -332,7 +332,7 @@ func TestSeedPhrase(t *testing.T) {
 
 	// let us re-create it from the mnemonic-phrase
 	params := *hd.NewFundraiserParams(0, 0)
-	newInfo, err := cstore.Derive(n2, mnemonic, p2, params)
+	newInfo, err := cstore.Derive(n2, mnemonic, defaultBIP39Passphrase, p2, params)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())
 	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())

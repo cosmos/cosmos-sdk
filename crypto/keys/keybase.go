@@ -49,7 +49,6 @@ const (
 
 const (
 	// used for deriving seed from mnemonic
-	// TODO: expose through the CLI
 	defaultBIP39Passphrase = ""
 )
 
@@ -136,8 +135,8 @@ func (kb dbKeybase) CreateFundraiserKey(name, mnemonic, passwd string) (info Inf
 	return
 }
 
-func (kb dbKeybase) Derive(name, mnemonic, passwd string, params hd.BIP44Params) (info Info, err error) {
-	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, defaultBIP39Passphrase)
+func (kb dbKeybase) Derive(name, mnemonic, passphrase, passwd string, params hd.BIP44Params) (info Info, err error) {
+	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, passphrase)
 	if err != nil {
 		return
 	}

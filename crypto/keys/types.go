@@ -25,8 +25,8 @@ type Keybase interface {
 	CreateKey(name, mnemonic, passwd string) (info Info, err error)
 	// CreateFundraiserKey takes a mnemonic and derives, a password
 	CreateFundraiserKey(name, mnemonic, passwd string) (info Info, err error)
-	// Derive derives a key from the passed mnemonic using a BIP44 path.
-	Derive(name, mnemonic, passwd string, params hd.BIP44Params) (Info, error)
+	// Derive derives a key from the mnemonic with the given passphrase using a BIP44 path and encrypts under the passwd.
+	Derive(name, mnemonic, passphrase, passwd string, params hd.BIP44Params) (Info, error)
 	// Create, store, and return a new Ledger key reference
 	CreateLedger(name string, path ccrypto.DerivationPath, algo SigningAlgo) (info Info, err error)
 

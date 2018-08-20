@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bip39"
+	fundraiser "github.com/cosmos/cosmos-sdk/crypto/keys/bip39/fundraiser"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/pkg/errors"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
@@ -41,6 +42,12 @@ const (
 	French
 	// Italian is currently not supported.
 	Italian
+)
+
+const (
+	// used for deriving seed from mnemonic
+	// TODO: expose through the CLI
+	defaultBIP39Passphrase = ""
 )
 
 var (
@@ -82,12 +89,14 @@ func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string
 	}
 
 	// default number of words (24):
-	mnemonicS, err := bip39.NewMnemonic(bip39.FreshKey)
+	// this generates a mnemonic directly from the number of words by reading system entropy.
+	// TODO: eliminate the `fundraiser` package completely and just break this up
+	mnemonicS, err := fundraiser.NewMnemonic(fundraiser.FreshKey)
 	if err != nil {
 		return
 	}
 	mnemonic = strings.Join(mnemonicS, " ")
-	seed := bip39.MnemonicToSeed(mnemonic)
+	seed := bip39.NewSeed(mnemonic, defaultBIP39Passphrase)
 	info, err = kb.persistDerivedKey(seed, passwd, name, hd.FullFundraiserPath)
 	return
 }
@@ -99,7 +108,7 @@ func (kb dbKeybase) CreateKey(name, mnemonic, passwd string) (info Info, err err
 		err = fmt.Errorf("recovering only works with 12 word (fundraiser) or 24 word mnemonics, got: %v words", len(words))
 		return
 	}
-	seed, err := bip39.MnemonicToSeedWithErrChecking(mnemonic)
+	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, defaultBIP39Passphrase)
 	if err != nil {
 		return
 	}
@@ -116,7 +125,7 @@ func (kb dbKeybase) CreateFundraiserKey(name, mnemonic, passwd string) (info Inf
 		err = fmt.Errorf("recovering only works with 12 word (fundraiser), got: %v words", len(words))
 		return
 	}
-	seed, err := bip39.MnemonicToSeedWithErrChecking(mnemonic)
+	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, defaultBIP39Passphrase)
 	if err != nil {
 		return
 	}
@@ -125,7 +134,7 @@ func (kb dbKeybase) CreateFundraiserKey(name, mnemonic, passwd string) (info Inf
 }
 
 func (kb dbKeybase) Derive(name, mnemonic, passwd string, params hd.BIP44Params) (info Info, err error) {
-	seed, err := bip39.MnemonicToSeedWithErrChecking(mnemonic)
+	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, defaultBIP39Passphrase)
 	if err != nil {
 		return
 	}

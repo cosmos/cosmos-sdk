@@ -175,20 +175,6 @@ Returns:
 
 -----
 
-### **cosmosSignBytesPassword**
-
-Params:
-
-* `data`: the Cosmos signed message canonical JSON structure
-* `address`: the Bech32 Cosmos account address to sign data with
-* `password`: password of the account to sign data with
-
-Returns:
-
-* `signature`: the Cosmos signature derived using signing algorithm `S`
-
------
-
 ### Examples
 
 Using the `secp256k1` as the DSA, `S`:

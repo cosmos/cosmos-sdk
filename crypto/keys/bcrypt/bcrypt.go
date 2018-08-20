@@ -1,6 +1,6 @@
 package bcrypt
 
-// MODIFIED BY TENDERMINT TO EXPOSE NONCE
+// MODIFIED BY TENDERMINT TO EXPOSE `salt` in `GenerateFromPassword`.
 // Copyright 2011 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.

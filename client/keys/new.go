@@ -73,14 +73,14 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 	useDefaults, _ := flags.GetBool(flagNewDefault)
 	bipFlag := flags.Lookup(flagBIP44Path)
 
+	bip44Params, err := getBIP44ParamsAndPath(bipFlag.Value.String(), bipFlag.Changed || useDefaults)
+	if err != nil {
+		return err
+	}
+
 	// if we're using ledger, only thing we need is the path.
 	// generate key and we're done.
 	if viper.GetBool(client.FlagUseLedger) {
-
-		bip44Params, _, err := getBIP44ParamsAndPath(bipFlag.Value.String(), bipFlag.Changed || useDefaults)
-		if err != nil {
-			return err
-		}
 
 		algo := keys.Secp256k1               // SigningAlgo(viper.GetString(flagType))
 		path := bip44Params.DerivationPath() // ccrypto.DerivationPath{44, 118, account, 0, index}
@@ -115,7 +115,7 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// apply bip39 passphrase and compute the seed
+	// get bip39 passphrase
 	var mnemonicPassphrase string
 	if !useDefaults {
 		fmt.Println("-------------------------------------")
@@ -127,16 +127,10 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// get the bip44 path
-	bip44Params, _, err := getBIP44ParamsAndPath(bipFlag.Value.String(), bipFlag.Changed || useDefaults)
-	if err != nil {
-		return err
-	}
-
-	// get an encryption password when generating a local key
+	// get the encryption password
 	fmt.Println("-------------------------------------")
 	encryptPassword, err := client.GetCheckPassword(
-		"> Enter a passphrase used to encrypt your key:",
+		"> Enter a passphrase to encrypt your key:",
 		"> Repeat the passphrase:", buf)
 	if err != nil {
 		return err
@@ -160,7 +154,7 @@ func readStdIn() (string, error) {
 	return strings.TrimSpace(mnemonic), nil
 }
 
-func getBIP44ParamsAndPath(path string, flagSet bool) (*hd.BIP44Params, string, error) {
+func getBIP44ParamsAndPath(path string, flagSet bool) (*hd.BIP44Params, error) {
 	bip44Path := path
 
 	// if it wasnt set in the flag, give it a chance to overide interactively
@@ -170,7 +164,7 @@ func getBIP44ParamsAndPath(path string, flagSet bool) (*hd.BIP44Params, string, 
 		var err error
 		bip44Path, err = readStdIn()
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 		if len(bip44Path) == 0 {
 			bip44Path = path
@@ -179,7 +173,7 @@ func getBIP44ParamsAndPath(path string, flagSet bool) (*hd.BIP44Params, string, 
 
 	bip44params, err := hd.NewParamsFromPath(bip44Path)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
-	return bip44params, bip44Path, nil
+	return bip44params, nil
 }

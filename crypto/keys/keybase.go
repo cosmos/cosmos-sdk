@@ -6,11 +6,14 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bip39"
 	fundraiser "github.com/cosmos/cosmos-sdk/crypto/keys/bip39/fundraiser"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	"github.com/pkg/errors"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
+
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -221,7 +224,7 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub t
 			err = fmt.Errorf("private key not available")
 			return
 		}
-		priv, err = unarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
+		priv, err = mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -265,7 +268,7 @@ func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (tmcr
 			err = fmt.Errorf("private key not available")
 			return nil, err
 		}
-		priv, err = unarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
+		priv, err = mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
 		if err != nil {
 			return nil, err
 		}
@@ -282,7 +285,7 @@ func (kb dbKeybase) Export(name string) (armor string, err error) {
 	if bz == nil {
 		return "", fmt.Errorf("no key to export with name %s", name)
 	}
-	return armorInfoBytes(bz), nil
+	return mintkey.ArmorInfoBytes(bz), nil
 }
 
 // ExportPubKey returns public keys in ASCII armored format.
@@ -297,7 +300,7 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 	if err != nil {
 		return
 	}
-	return armorPubKeyBytes(info.GetPubKey().Bytes()), nil
+	return mintkey.ArmorPubKeyBytes(info.GetPubKey().Bytes()), nil
 }
 
 func (kb dbKeybase) Import(name string, armor string) (err error) {
@@ -305,7 +308,7 @@ func (kb dbKeybase) Import(name string, armor string) (err error) {
 	if len(bz) > 0 {
 		return errors.New("Cannot overwrite data for name " + name)
 	}
-	infoBytes, err := unarmorInfoBytes(armor)
+	infoBytes, err := mintkey.UnarmorInfoBytes(armor)
 	if err != nil {
 		return
 	}
@@ -321,7 +324,7 @@ func (kb dbKeybase) ImportPubKey(name string, armor string) (err error) {
 	if len(bz) > 0 {
 		return errors.New("Cannot overwrite data for name " + name)
 	}
-	pubBytes, err := unarmorPubKeyBytes(armor)
+	pubBytes, err := mintkey.UnarmorPubKeyBytes(armor)
 	if err != nil {
 		return
 	}
@@ -346,7 +349,7 @@ func (kb dbKeybase) Delete(name, passphrase string) error {
 	switch info.(type) {
 	case localInfo:
 		linfo := info.(localInfo)
-		_, err = unarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
+		_, err = mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
 		if err != nil {
 			return err
 		}
@@ -377,7 +380,7 @@ func (kb dbKeybase) Update(name, oldpass string, getNewpass func() (string, erro
 	switch info.(type) {
 	case localInfo:
 		linfo := info.(localInfo)
-		key, err := unarmorDecryptPrivKey(linfo.PrivKeyArmor, oldpass)
+		key, err := mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, oldpass)
 		if err != nil {
 			return err
 		}
@@ -394,7 +397,7 @@ func (kb dbKeybase) Update(name, oldpass string, getNewpass func() (string, erro
 
 func (kb dbKeybase) writeLocalKey(priv tmcrypto.PrivKey, name, passphrase string) Info {
 	// encrypt private key using passphrase
-	privArmor := encryptArmorPrivKey(priv, passphrase)
+	privArmor := mintkey.EncryptArmorPrivKey(priv, passphrase)
 	// make Info
 	pub := priv.PubKey()
 	info := newLocalInfo(name, pub, privArmor)

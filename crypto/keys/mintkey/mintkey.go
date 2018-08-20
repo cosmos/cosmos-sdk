@@ -1,4 +1,4 @@
-package keys
+package mintkey
 
 import (
 	"encoding/hex"
@@ -34,11 +34,14 @@ const (
 // TODO: Consider increasing default
 var BcryptSecurityParameter = 12
 
-func armorInfoBytes(bz []byte) string {
+//-----------------------------------------------------------------
+// add armor
+
+func ArmorInfoBytes(bz []byte) string {
 	return armorBytes(bz, blockTypeKeyInfo)
 }
 
-func armorPubKeyBytes(bz []byte) string {
+func ArmorPubKeyBytes(bz []byte) string {
 	return armorBytes(bz, blockTypePubKey)
 }
 
@@ -50,11 +53,14 @@ func armorBytes(bz []byte, blockType string) string {
 	return armor.EncodeArmor(blockType, header, bz)
 }
 
-func unarmorInfoBytes(armorStr string) (bz []byte, err error) {
+//-----------------------------------------------------------------
+// remove armor
+
+func UnarmorInfoBytes(armorStr string) (bz []byte, err error) {
 	return unarmorBytes(armorStr, blockTypeKeyInfo)
 }
 
-func unarmorPubKeyBytes(armorStr string) (bz []byte, err error) {
+func UnarmorPubKeyBytes(armorStr string) (bz []byte, err error) {
 	return unarmorBytes(armorStr, blockTypePubKey)
 }
 
@@ -74,7 +80,10 @@ func unarmorBytes(armorStr, blockType string) (bz []byte, err error) {
 	return
 }
 
-func encryptArmorPrivKey(privKey crypto.PrivKey, passphrase string) string {
+//-----------------------------------------------------------------
+// encrypt/decrypt with armor
+
+func EncryptArmorPrivKey(privKey crypto.PrivKey, passphrase string) string {
 	saltBytes, encBytes := encryptPrivKey(privKey, passphrase)
 	header := map[string]string{
 		"kdf":  "bcrypt",
@@ -84,7 +93,18 @@ func encryptArmorPrivKey(privKey crypto.PrivKey, passphrase string) string {
 	return armorStr
 }
 
-func unarmorDecryptPrivKey(armorStr string, passphrase string) (crypto.PrivKey, error) {
+func encryptPrivKey(privKey crypto.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
+	saltBytes = crypto.CRandBytes(16)
+	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
+	if err != nil {
+		cmn.Exit("Error generating bcrypt key from passphrase: " + err.Error())
+	}
+	key = crypto.Sha256(key) // Get 32 bytes
+	privKeyBytes := privKey.Bytes()
+	return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
+}
+
+func UnarmorDecryptPrivKey(armorStr string, passphrase string) (crypto.PrivKey, error) {
 	var privKey crypto.PrivKey
 	blockType, header, encBytes, err := armor.DecodeArmor(armorStr)
 	if err != nil {
@@ -105,17 +125,6 @@ func unarmorDecryptPrivKey(armorStr string, passphrase string) (crypto.PrivKey, 
 	}
 	privKey, err = decryptPrivKey(saltBytes, encBytes, passphrase)
 	return privKey, err
-}
-
-func encryptPrivKey(privKey crypto.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
-	saltBytes = crypto.CRandBytes(16)
-	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
-	if err != nil {
-		cmn.Exit("Error generating bcrypt key from passphrase: " + err.Error())
-	}
-	key = crypto.Sha256(key) // Get 32 bytes
-	privKeyBytes := privKey.Bytes()
-	return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
 }
 
 func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privKey crypto.PrivKey, err error) {

@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
+
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
@@ -14,7 +17,7 @@ import (
 )
 
 func init() {
-	BcryptSecurityParameter = 1
+	mintkey.BcryptSecurityParameter = 1
 }
 
 // TestKeyManagement makes sure we can manipulate these keys well

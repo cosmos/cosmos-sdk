@@ -49,12 +49,11 @@
   revision = "d4cc87b860166d00d6b5b9e0d3b3d71d6088d4d4"
 
 [[projects]]
-  branch = "master"
-  digest = "1:0427cfa11785c899dfe0ea6987bc0c9dea61647f6bb3987163d62c867f1cad6a"
+  digest = "1:e8a3550c8786316675ff54ad6f09d265d129c9d986919af7f541afba50d87ce2"
   name = "github.com/cosmos/go-bip39"
   packages = ["."]
   pruneopts = "UT"
-  revision = "555e2067c45d9fcd7292bf3b8e732bc10ac8c58e"
+  revision = "52158e4697b87de16ed390e1bdaf813e581008fa"
 
 [[projects]]
   digest = "1:a2c1d0e43bd3baaa071d1b9ed72c27d78169b2b269f71c105ac4ba34b1be4a39"
@@ -174,13 +173,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a361611b8c8c75a1091f00027767f7779b29cb37c456a71b8f2604c88057ab40"
+  digest = "1:12247a2e99a060cc692f6680e5272c8adf0b8f572e6bce0d7095e624c958a240"
   name = "github.com/hashicorp/hcl"
   packages = [
     ".",
     "hcl/ast",
     "hcl/parser",
-    "hcl/printer",
     "hcl/scanner",
     "hcl/strconv",
     "hcl/token",
@@ -506,7 +504,6 @@
   revision = "4296ee5701e945f9b3a7dbe51f402e0b9be57259"
 
 [[projects]]
-  branch = "master"
   digest = "1:aaff04fa01d9b824fde6799759cc597b3ac3671b9ad31924c28b6557d0ee5284"
   name = "golang.org/x/crypto"
   packages = [
@@ -677,7 +674,6 @@
     "github.com/tendermint/tendermint/version",
     "github.com/zondax/ledger-goclient",
     "golang.org/x/crypto/bcrypt",
-    "golang.org/x/crypto/pbkdf2",
     "golang.org/x/crypto/ripemd160",
   ]
   solver-name = "gps-cdcl"

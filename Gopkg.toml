@@ -64,11 +64,11 @@
 [[constraint]]
   name = "golang.org/x/crypto"
   source = "https://github.com/tendermint/crypto"
-  branch = "master"
+  revision = "3764759f34a542a3aef74d6b02e35be7ab893bba"
 
 [[constraint]]
   name = "github.com/cosmos/go-bip39"
-  branch = "master"
+  revision = "52158e4697b87de16ed390e1bdaf813e581008fa"
 
 [[constraint]]
   name = "github.com/zondax/ledger-goclient"

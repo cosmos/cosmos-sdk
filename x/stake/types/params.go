@@ -54,10 +54,10 @@ func (p Params) HumanReadableString() string {
 	resp += fmt.Sprintf("Maximum Annual Inflation Rate Change: %s\n", p.InflationRateChange)
 	resp += fmt.Sprintf("Max Inflation Rate: %s\n", p.InflationMax)
 	resp += fmt.Sprintf("Min Inflation Tate: %s\n", p.InflationMin)
-	resp += fmt.Sprintf("Bonded Token Goal (%): %v\n", p.GoalBonded)
+	resp += fmt.Sprintf("Bonded Token Goal (%s): %s\n", "s", p.GoalBonded)
 	resp += fmt.Sprintf("Unbonding Time: %s\n", p.UnbondingTime)
-	resp += fmt.Sprintf("Max Validators: %v\n", p.MaxValidators)
-	resp += fmt.Sprintf("Bonded Coin Denomination: %d\n", p.BondDenom)
+	resp += fmt.Sprintf("Max Validators: %d: \n", p.MaxValidators)
+	resp += fmt.Sprintf("Bonded Coin Denomination: %s\n", p.BondDenom)
 	return resp
 }
 

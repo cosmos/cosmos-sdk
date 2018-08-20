@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	p2p "github.com/tendermint/tendermint/p2p"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
@@ -32,7 +33,7 @@ import (
 )
 
 func init() {
-	cryptoKeys.BcryptSecurityParameter = 1
+	mintkey.BcryptSecurityParameter = 1
 }
 
 func TestKeys(t *testing.T) {

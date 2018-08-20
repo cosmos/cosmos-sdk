@@ -37,10 +37,12 @@ var BcryptSecurityParameter = 12
 //-----------------------------------------------------------------
 // add armor
 
+// Armor the InfoBytes
 func ArmorInfoBytes(bz []byte) string {
 	return armorBytes(bz, blockTypeKeyInfo)
 }
 
+// Armor the PubKeyBytes
 func ArmorPubKeyBytes(bz []byte) string {
 	return armorBytes(bz, blockTypePubKey)
 }
@@ -56,10 +58,12 @@ func armorBytes(bz []byte, blockType string) string {
 //-----------------------------------------------------------------
 // remove armor
 
+// Unarmor the InfoBytes
 func UnarmorInfoBytes(armorStr string) (bz []byte, err error) {
 	return unarmorBytes(armorStr, blockTypeKeyInfo)
 }
 
+// Unarmor the PubKeyBytes
 func UnarmorPubKeyBytes(armorStr string) (bz []byte, err error) {
 	return unarmorBytes(armorStr, blockTypePubKey)
 }
@@ -83,6 +87,7 @@ func unarmorBytes(armorStr, blockType string) (bz []byte, err error) {
 //-----------------------------------------------------------------
 // encrypt/decrypt with armor
 
+// Encrypt and armor the private key.
 func EncryptArmorPrivKey(privKey crypto.PrivKey, passphrase string) string {
 	saltBytes, encBytes := encryptPrivKey(privKey, passphrase)
 	header := map[string]string{
@@ -104,6 +109,7 @@ func encryptPrivKey(privKey crypto.PrivKey, passphrase string) (saltBytes []byte
 	return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
 }
 
+// Unarmor and decrypt the private key.
 func UnarmorDecryptPrivKey(armorStr string, passphrase string) (crypto.PrivKey, error) {
 	var privKey crypto.PrivKey
 	blockType, header, encBytes, err := armor.DecodeArmor(armorStr)

@@ -9,7 +9,8 @@ import (
 // The wordlist to use
 var WordList = EnglishWordList
 
-var ReverseWordMap map[string]int = map[string]int{}
+// Lookup word index
+var ReverseWordMap = map[string]int{}
 
 func init() {
 	for i, v := range WordList {

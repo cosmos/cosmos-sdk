@@ -46,6 +46,7 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
+// nolint: gocyclo
 func runNewCmd(cmd *cobra.Command, args []string) error {
 
 	if len(args) != 1 || len(args[0]) == 0 {
@@ -77,6 +78,9 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 	if viper.GetBool(client.FlagUseLedger) {
 
 		bip44Params, _, err := getBIP44ParamsAndPath(bipFlag.Value.String(), bipFlag.Changed || useDefaults)
+		if err != nil {
+			return err
+		}
 
 		algo := keys.Secp256k1               // SigningAlgo(viper.GetString(flagType))
 		path := bip44Params.DerivationPath() // ccrypto.DerivationPath{44, 118, account, 0, index}
@@ -163,7 +167,8 @@ func getBIP44ParamsAndPath(path string, flagSet bool) (*hd.BIP44Params, string, 
 	if !flagSet {
 		fmt.Println("-------------------------------------")
 		fmt.Printf("> Enter your bip44 path. Default is %s\n", path)
-		bip44Path, err := readStdIn()
+		var err error
+		bip44Path, err = readStdIn()
 		if err != nil {
 			return nil, "", err
 		}

@@ -83,6 +83,7 @@ func NewMnemonic(entropy []byte) (string, error) {
 // MnemonicToByteArray takes a mnemonic string and turns it into a byte array
 // suitable for creating another mnemonic.
 // An error is returned if the mnemonic is invalid.
+// nolint: gocyclo
 func MnemonicToByteArray(mnemonic string) ([]byte, error) {
 	if IsMnemonicValid(mnemonic) == false {
 		return nil, fmt.Errorf("Invalid mnemonic")

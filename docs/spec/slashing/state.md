@@ -75,8 +75,6 @@ type SlashingPeriod struct {
     ValidatorAddr         sdk.ValAddress      // Tendermint address of the validator
     StartHeight           int64               // Block height at which slashing period begin
     EndHeight             int64               // Block height at which slashing period ended
-    MaxBondedStake        sdk.Rat             // Maximum bonded stake during period
-    StakeSlashedSoFar     sdk.Rat             // Amount of stake slashed so far
-    FractionSlashedSoFar  sdk.Rat             // Fraction slashed so far, cumulative
+    SlashedSoFar          sdk.Rat             // Fraction slashed so far, cumulative
 }
 ```

@@ -130,6 +130,20 @@ func NewFundraiserParams(account uint32, addressIdx uint32) *BIP44Params {
 	return NewParams(44, 118, account, false, addressIdx)
 }
 
+func (p BIP44Params) DerivationPath() []uint32 {
+	change := uint32(0)
+	if p.change {
+		change = 1
+	}
+	return []uint32{
+		p.purpose,
+		p.coinType,
+		p.account,
+		change,
+		p.addressIdx,
+	}
+}
+
 func (p BIP44Params) String() string {
 	var changeStr string
 	if p.change {

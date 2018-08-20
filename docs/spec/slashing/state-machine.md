@@ -161,9 +161,9 @@ beforeValidatorSlashed(address sdk.ValAddress, fraction sdk.Rat, infractionHeigh
 
 Slashing is capped fractionally per period, but the amount of total bonded stake associated with any given validator can change (by an unbounded amount) over that period.
 
-For example, with MaxFractionSlashedPerPeriod = `0.5`, if a validator is initially slashed at `0.4` near the start of a period when they have 100 steak bonded,
-then later slashed at `0.4` when they have `1000` steak bonded, the total amount slashed is just `40 + 100 = 140` (since the latter slash is capped at `0.1`) - 
-whereas if they had `1000` steak bonded initially, the total amount slashed would have been `500`.
+For example, with MaxFractionSlashedPerPeriod = `0.5`, if a validator is initially slashed at `0.4` near the start of a period when they have 100 stake bonded,
+then later slashed at `0.4` when they have `1000` stake bonded, the total amount slashed is just `40 + 100 = 140` (since the latter slash is capped at `0.1`) - 
+whereas if they had `1000` stake bonded initially, the first offense would have been slashed for `400` stake and the total amount slashed would have been `400 + 100 = 500`.
 
 This means that any slashing events which utilize the slashing period (are capped-per-period) **must** *also* jail the validator when the infraction is discovered.
 Otherwise it would be possible for a validator to slash themselves intentionally at a low bond, then increase their bond but no longer be at stake since they would have already hit the `SlashedSoFar` cap.

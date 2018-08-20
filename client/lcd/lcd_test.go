@@ -353,6 +353,35 @@ func TestTxs(t *testing.T) {
 	require.Equal(t, resultTx.Height, indexedTxs[0].Height)
 }
 
+func TestPoolQuery(t *testing.T) {
+	_, password := "test", "1234567890"
+	addr, _ := CreateAddr(t, "test", password, GetKeyBase(t))
+	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	defer cleanup()
+
+	res, body := Request(t, port, "GET", "/stake/pool", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.NotNil(t, body)
+}
+
+func TestParamsQuery(t *testing.T) {
+	_, password := "test", "1234567890"
+	addr, _ := CreateAddr(t, "test", password, GetKeyBase(t))
+	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	defer cleanup()
+
+	defaultParams := stake.DefaultParams()
+
+	res, body := Request(t, port, "GET", "/stake/parameters", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var params stake.Params
+	err := cdc.UnmarshalJSON([]byte(body), &params)
+	require.Nil(t, err)
+
+	require.True(t, defaultParams.Equal(params))
+}
+
 func TestValidatorsQuery(t *testing.T) {
 	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
 	defer cleanup()

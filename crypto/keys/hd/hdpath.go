@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
 // BIP44Prefix is the parts of the BIP32 HD path that are fixed by what we used during the fundraiser.
@@ -128,10 +127,15 @@ func derivePrivateKey(privKeyBytes [32]byte, chainCode [32]byte, index uint32, h
 		data = append([]byte{byte(0)}, privKeyBytes[:]...)
 	} else {
 		// this can't return an error:
-		pubkey := secp256k1.PrivKeySecp256k1(privKeyBytes).PubKey()
+		_, ecPub := btcec.PrivKeyFromBytes(btcec.S256(), privKeyBytes[:])
+		pubkeyBytes := ecPub.SerializeCompressed()
+		data = pubkeyBytes
 
+		/* By using btcec, we can remove the dependency on tendermint/crypto/secp256k1
+		pubkey := secp256k1.PrivKeySecp256k1(privKeyBytes).PubKey()
 		public := pubkey.(secp256k1.PubKeySecp256k1)
 		data = public[:]
+		*/
 	}
 	data = append(data, uint32ToBytes(index)...)
 	data2, chainCode2 := i64(chainCode[:], data)

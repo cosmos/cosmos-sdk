@@ -150,6 +150,14 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	*/
 	validator = executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %s --output=json %v", barAddr, flags))
 	require.Equal(t, "1.0000000000", validator.Tokens.String())
+
+	pool := executeGetPool(t, fmt.Sprintf("gaiacli stake pool --output=json %v", flags))
+	require.NotNil(t, pool)
+
+	defaultParams := stake.DefaultParams()
+
+	params := executeGetPool(t, fmt.Sprintf("gaiacli stake parameters --output=json %v", flags))
+	require.True(t, defaultParams.Equal(params))
 }
 
 func TestGaiaCLISubmitProposal(t *testing.T) {
@@ -328,6 +336,9 @@ func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {
 	return acc
 }
 
+//___________________________________________________________________________________
+// stake
+
 func executeGetValidator(t *testing.T, cmdStr string) stake.Validator {
 	out := tests.ExecuteT(t, cmdStr, "")
 	var validator stake.Validator
@@ -336,6 +347,27 @@ func executeGetValidator(t *testing.T, cmdStr string) stake.Validator {
 	require.NoError(t, err, "out %v\n, err %v", out, err)
 	return validator
 }
+
+func executeGetPool(t *testing.T, cmdStr string) stake.Pool {
+	out := tests.ExecuteT(t, cmdStr, "")
+	var pool stake.Pool
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &pool)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return pool
+}
+
+func executeGetParams(t *testing.T, cmdStr string) stake.Params {
+	out := tests.ExecuteT(t, cmdStr, "")
+	var params stake.Params
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &params)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return params
+}
+
+//___________________________________________________________________________________
+// gov
 
 func executeGetProposal(t *testing.T, cmdStr string) gov.Proposal {
 	out := tests.ExecuteT(t, cmdStr, "")

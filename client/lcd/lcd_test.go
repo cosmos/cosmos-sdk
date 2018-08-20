@@ -353,7 +353,7 @@ func TestTxs(t *testing.T) {
 	require.Equal(t, resultTx.Height, indexedTxs[0].Height)
 }
 
-func TestPoolQuery(t *testing.T) {
+func TestPoolParamsQuery(t *testing.T) {
 	_, password := "test", "1234567890"
 	addr, _ := CreateAddr(t, "test", password, GetKeyBase(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
@@ -362,23 +362,25 @@ func TestPoolQuery(t *testing.T) {
 	res, body := Request(t, port, "GET", "/stake/pool", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	require.NotNil(t, body)
-}
 
-func TestParamsQuery(t *testing.T) {
-	_, password := "test", "1234567890"
-	addr, _ := CreateAddr(t, "test", password, GetKeyBase(t))
-	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
-	defer cleanup()
+	initialPool := stake.InitialPool()
+	initialPool.LooseTokens = initialPool.LooseTokens.Add(sdk.NewDec(100))
+
+	var pool stake.Pool
+	err := cdc.UnmarshalJSON([]byte(body), &pool)
+	require.Nil(t, err)
+	require.Equal(t, initialPool.DateLastCommissionReset, pool.DateLastCommissionReset)
+	require.Equal(t, initialPool.PrevBondedShares, pool.PrevBondedShares)
+	// require.Equal(t, initialPool, pool)
 
 	defaultParams := stake.DefaultParams()
 
-	res, body := Request(t, port, "GET", "/stake/parameters", nil)
+	res, body = Request(t, port, "GET", "/stake/parameters", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var params stake.Params
-	err := cdc.UnmarshalJSON([]byte(body), &params)
+	err = cdc.UnmarshalJSON([]byte(body), &params)
 	require.Nil(t, err)
-
 	require.True(t, defaultParams.Equal(params))
 }
 

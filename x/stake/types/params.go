@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,6 +44,21 @@ func DefaultParams() Params {
 		MaxValidators:       100,
 		BondDenom:           "steak",
 	}
+}
+
+// HumanReadableString returns a human readable string representation of the
+// parameters.
+func (p Params) HumanReadableString() string {
+
+	resp := "Pool \n"
+	resp += fmt.Sprintf("Maximum Annual Inflation Rate Change: %s\n", p.InflationRateChange)
+	resp += fmt.Sprintf("Max Inflation Rate: %s\n", p.InflationMax)
+	resp += fmt.Sprintf("Min Inflation Tate: %s\n", p.InflationMin)
+	resp += fmt.Sprintf("Bonded Token Goal (%): %v\n", p.GoalBonded)
+	resp += fmt.Sprintf("Unbonding Time: %s\n", p.UnbondingTime)
+	resp += fmt.Sprintf("Max Validators: %v\n", p.MaxValidators)
+	resp += fmt.Sprintf("Bonded Coin Denomination: %d\n", p.BondDenom)
+	return resp
 }
 
 // unmarshal the current staking params value from store key or panic

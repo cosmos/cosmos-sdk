@@ -13,14 +13,6 @@
     DD_API_KEY: "{{DD_API_KEY}}"
     DD_HOST_TAGS: "testnet:{{TESTNET_NAME}},cluster:{{CLUSTER_NAME}}"
 
-- name: Set datadog.yaml config
-  template: src=datadog.yaml.j2 dest=/etc/datadog-agent/datadog.yaml
-  notify: restart datadog-agent
-
-- name: Set metrics config
-  copy: src=conf.d/ dest=/etc/datadog-agent/conf.d/
-  notify: restart datadog-agent
-
 - name: Disable journald rate-limiting
   lineinfile: "dest=/etc/systemd/journald.conf regexp={{item.regexp}} line='{{item.line}}'"
   with_items:

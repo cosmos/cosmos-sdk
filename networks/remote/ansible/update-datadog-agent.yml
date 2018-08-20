@@ -6,6 +6,5 @@
   any_errors_fatal: true
   gather_facts: no
   roles:
-    - install-datadog-agent
     - update-datadog-agent
 

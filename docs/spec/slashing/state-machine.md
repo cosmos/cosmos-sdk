@@ -66,22 +66,22 @@ In this section we describe the processing of transactions for the `slashing` mo
 If a validator was automatically unbonded due to downtime and wishes to come back online &
 possibly rejoin the bonded set, it must send `TxUnjail`:
 
-```golang
+```
 type TxUnjail struct {
     ValidatorAddr sdk.AccAddress
 }
 
 handleMsgUnjail(tx TxUnjail)
 
-    validator := getValidator(tx.ValidatorAddr)
-    if validator == nil
+    validator = getValidator(tx.ValidatorAddr)
+    if validator is nil
       fail with "No validator found"
 
-    if !validator.Jailed
+    if validator is not jailed
       fail with "Validator not jailed, cannot unjail"
 
-    info := getValidatorSigningInfo(operator)
-    if BlockHeader.Time.Before(info.JailedUntil)
+    info = getValidatorSigningInfo(operator)
+    if block time is before info.JailedUntil
       fail with "Validator still jailed, cannot unjail until period has expired"
 
     // Update the start height so the validator won't be immediately unbonded again
@@ -109,10 +109,10 @@ which may happen on delegation, on unjailing, etc), we create a new `SlashingPer
 now-bonded validator, which `StartHeight` of the current block, `EndHeight` of `0` (sentinel value for not-yet-ended),
 and `SlashedSoFar` of `0`:
 
-```golang
+```
 onValidatorBonded(address sdk.ValAddress)
 
-  slashingPeriod := SlashingPeriod{
+  slashingPeriod = SlashingPeriod{
       ValidatorAddr : address,
       StartHeight   : CurrentHeight,
       EndHeight     : 0,    
@@ -127,7 +127,7 @@ onValidatorBonded(address sdk.ValAddress)
 
 When a validator is unbonded, we update the in-progress `SlashingPeriod` with the current block as the `EndHeight`:
 
-```golang
+```
 onValidatorUnbonded(address sdk.ValAddress)
 
   slashingPeriod = getSlashingPeriod(address, CurrentHeight)
@@ -143,7 +143,7 @@ When a validator is slashed, we look up the appropriate `SlashingPeriod` based o
 address and the time of infraction, cap the fraction slashed as `max(SlashFraction, SlashedSoFar)`
 (which may be `0`), and update the `SlashingPeriod` with the increased `SlashedSoFar`:
 
-```golang
+```
 beforeValidatorSlashed(address sdk.ValAddress, fraction sdk.Rat, infractionHeight int64)
   
   slashingPeriod = getSlashingPeriod(address, infractionHeight)

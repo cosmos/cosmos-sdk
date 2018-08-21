@@ -37,6 +37,8 @@ import (
 	"github.com/tendermint/tendermint/proxy"
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
 	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/gin-gonic/gin"
+	"time"
 )
 
 // makePathname creates a unique pathname for each test. It will panic if it
@@ -206,6 +208,106 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	return cleanup, validatorsPKs, port
 }
 
+// InitializeTestLCD starts Tendermint and the LCD in process, listening on
+// their respective sockets where nValidators is the total number of validators
+// and initAddrs are the accounts to initialize with some steak tokens. It
+// returns a cleanup function, a set of validator public keys, and a port.
+func InitializeTestSwaggerLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress) (func(), []crypto.PubKey, string) {
+	config := GetConfig()
+	config.Consensus.TimeoutCommit = 100
+	config.Consensus.SkipTimeoutCommit = false
+	config.TxIndex.IndexAllTags = true
+
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	logger = log.NewFilter(logger, log.AllowError())
+
+	privValidatorFile := config.PrivValidatorFile()
+	privVal := pvm.LoadOrGenFilePV(privValidatorFile)
+	privVal.Reset()
+
+	db := dbm.NewMemDB()
+	app := gapp.NewGaiaApp(logger, db, nil)
+	cdc = gapp.MakeCodec()
+
+	genesisFile := config.GenesisFile()
+	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
+	require.NoError(t, err)
+
+	if nValidators < 1 {
+		panic("InitializeTestLCD must use at least one validator")
+	}
+
+	for i := 1; i < nValidators; i++ {
+		genDoc.Validators = append(genDoc.Validators,
+			tmtypes.GenesisValidator{
+				PubKey: ed25519.GenPrivKey().PubKey(),
+				Power:  1,
+				Name:   "val",
+			},
+		)
+	}
+
+	var validatorsPKs []crypto.PubKey
+
+	// NOTE: It's bad practice to reuse public key address for the owner
+	// address but doing in the test for simplicity.
+	var appGenTxs []json.RawMessage
+	for _, gdValidator := range genDoc.Validators {
+		pk := gdValidator.PubKey
+		validatorsPKs = append(validatorsPKs, pk)
+
+		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, sdk.AccAddress(pk.Address()), "test_val1")
+		require.NoError(t, err)
+
+		appGenTxs = append(appGenTxs, appGenTx)
+	}
+
+	genesisState, err := gapp.GaiaAppGenState(cdc, appGenTxs[:])
+	require.NoError(t, err)
+
+	// add some tokens to init accounts
+	for _, addr := range initAddrs {
+		accAuth := auth.NewBaseAccountWithAddress(addr)
+		accAuth.Coins = sdk.Coins{sdk.NewInt64Coin("steak", 100)}
+		acc := gapp.NewGenesisAccount(&accAuth)
+		genesisState.Accounts = append(genesisState.Accounts, acc)
+		genesisState.StakeData.Pool.LooseTokens = genesisState.StakeData.Pool.LooseTokens.Add(sdk.NewDec(100))
+	}
+
+	appState, err := wire.MarshalJSONIndent(cdc, genesisState)
+	require.NoError(t, err)
+	genDoc.AppState = appState
+
+	_, port, err := server.FreeTCPAddr()
+	require.NoError(t, err)
+
+	// XXX: Need to set this so LCD knows the tendermint node address!
+	viper.Set(client.FlagNodeList, config.RPC.ListenAddress)
+	viper.Set(client.FlagChainID, genDoc.ChainID)
+	viper.Set(client.FlagListenAddr, fmt.Sprintf("localhost:%s",port))
+	viper.Set(client.FlagSwaggerHostIP, "localhost")
+	viper.Set(client.FlagModules, "general,key,token,stake")
+	viper.Set(client.FlagTrustNode, false)
+
+	node, err := startTM(config, logger, genDoc, privVal, app)
+	require.NoError(t, err)
+
+	time.Sleep(2 * time.Second)
+	startSwaggerLCD(cdc)
+	time.Sleep(1 * time.Second)
+
+	//tests.WaitForLCDStart(port)
+	//tests.WaitForHeight(1, port)
+
+	cleanup := func() {
+		logger.Debug("cleaning up LCD initialization")
+		node.Stop()
+		node.Wait()
+	}
+
+	return cleanup, validatorsPKs, port
+}
+
 // startTM creates and starts an in-process Tendermint node with memDB and
 // in-process ABCI application. It returns the new node or any error that
 // occurred.
@@ -246,6 +348,14 @@ func startTM(
 // NOTE: This causes the thread to block.
 func startLCD(logger log.Logger, listenAddr string, cdc *wire.Codec) (net.Listener, error) {
 	return tmrpc.StartHTTPServer(listenAddr, createHandler(cdc), logger, tmrpc.Config{})
+}
+
+func startSwaggerLCD(cdc *wire.Codec) {
+	//Create swagger rest server
+	ginServer := gin.New()
+	createSwaggerHandler(ginServer, cdc)
+	listenAddr := viper.GetString(client.FlagListenAddr)
+	go ginServer.Run(listenAddr)
 }
 
 // Request makes a test LCD test request. It returns a response object and a

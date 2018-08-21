@@ -92,5 +92,10 @@ func QueryKeysRequest(gtx *gin.Context) {
 		httputils.NewError(gtx, http.StatusInternalServerError, err)
 		return
 	}
-	httputils.NormalResponse(gtx, keysOutput)
+	output, err := json.MarshalIndent(keysOutput, "", "  ")
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+	httputils.NormalResponse(gtx, output)
 }

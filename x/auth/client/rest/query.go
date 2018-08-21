@@ -97,7 +97,7 @@ func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, decoder auth.
 
 		// the query will return empty if there is no data for this account
 		if len(res) == 0 {
-			httputils.NormalResponse(gtx,nil)
+			httputils.NewError(gtx, http.StatusNoContent, fmt.Errorf("this account info is nil+"))
 			return
 		}
 
@@ -108,6 +108,13 @@ func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, decoder auth.
 			return
 		}
 
-		httputils.NormalResponse(gtx,account)
+		// print out whole account
+		output, err := cdc.MarshalJSON(account)
+		if err != nil {
+			httputils.NewError(gtx, http.StatusInternalServerError, fmt.Errorf("couldn't marshall query result. Error: %s", err.Error()))
+			return
+		}
+
+		httputils.NormalResponse(gtx,output)
 	}
 }

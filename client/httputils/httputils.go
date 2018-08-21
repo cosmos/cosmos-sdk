@@ -7,31 +7,25 @@ import (
 
 // NewError create error http response
 func NewError(ctx *gin.Context, errCode int, err error) {
-	errorResponse := httpError{
+	errorResponse := HttpError{
 		API:	"2.0",
 		Code:   errCode,
-		ErrMsg: err.Error(),
 	}
+	if err != nil {
+		errorResponse.ErrMsg = err.Error()
+	}
+
 	ctx.JSON(errCode, errorResponse)
 }
 
 // NormalResponse create normal http response
-func NormalResponse(ctx *gin.Context, data interface{}) {
-	response := httpResponse{
-		API:	"2.0",
-		Code:   0,
-		Result: data,
-	}
-	ctx.JSON(http.StatusOK, response)
+func NormalResponse(ctx *gin.Context, data []byte) {
+	ctx.Status(http.StatusOK)
+	ctx.Writer.Write(data)
 }
 
-type httpResponse struct {
-	API 	string 		`json:"rest api" example:"2.0"`
-	Code    int    		`json:"code" example:"0"`
-	Result 	interface{} `json:"result"`
-}
-
-type httpError struct {
+// HttpError is http response with error
+type HttpError struct {
 	API 	string 		`json:"rest api" example:"2.0"`
 	Code    int    		`json:"code" example:"500"`
 	ErrMsg 	string 		`json:"error message"`

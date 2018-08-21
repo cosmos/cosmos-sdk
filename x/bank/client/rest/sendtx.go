@@ -211,14 +211,20 @@ func composeTx(cdc *wire.Codec, ctx context.CLIContext, transferBody transferBod
 func createTransferTxForSignFn(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFunc {
 	return func(gtx *gin.Context) {
 		var transferBody transferBody
-		if err := gtx.BindJSON(&transferBody); err != nil {
+		body, err := ioutil.ReadAll(gtx.Request.Body)
+		if err != nil {
+			httputils.NewError(gtx, http.StatusBadRequest, err)
+			return
+		}
+		err = cdc.UnmarshalJSON(body, &transferBody)
+		if err != nil {
 			httputils.NewError(gtx, http.StatusBadRequest, err)
 			return
 		}
 
-		txForSign, _, err := composeTx(cdc, ctx, transferBody)
+		txForSign, _, errMsg := composeTx(cdc, ctx, transferBody)
 		if err != nil {
-			if err.Code() == sdk.CodeInternal {
+			if errMsg.Code() == sdk.CodeInternal {
 				httputils.NewError(gtx, http.StatusInternalServerError, err)
 			} else {
 				httputils.NewError(gtx, http.StatusBadRequest, err)
@@ -229,7 +235,7 @@ func createTransferTxForSignFn(cdc *wire.Codec, ctx context.CLIContext) gin.Hand
 		base64TxData := make([]byte, base64.StdEncoding.EncodedLen(len(txForSign.Bytes())))
 		base64.StdEncoding.Encode(base64TxData,txForSign.Bytes())
 
-		httputils.NormalResponse(gtx,string(base64TxData))
+		httputils.NormalResponse(gtx,base64TxData)
 	}
 }
 
@@ -237,7 +243,13 @@ func createTransferTxForSignFn(cdc *wire.Codec, ctx context.CLIContext) gin.Hand
 func composeAndBroadcastSignedTransferTxFn(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFunc {
 	return func(gtx *gin.Context) {
 		var signedTransaction signedBody
-		if err := gtx.BindJSON(&signedTransaction); err != nil {
+		body, err := ioutil.ReadAll(gtx.Request.Body)
+		if err != nil {
+			httputils.NewError(gtx, http.StatusBadRequest, err)
+			return
+		}
+		err = cdc.UnmarshalJSON(body, &signedTransaction)
+		if err != nil {
 			httputils.NewError(gtx, http.StatusBadRequest, err)
 			return
 		}
@@ -279,7 +291,13 @@ func composeAndBroadcastSignedTransferTxFn(cdc *wire.Codec, ctx context.CLIConte
 			return
 		}
 
-		httputils.NormalResponse(gtx,res)
+		output, err := wire.MarshalJSONIndent(cdc, res)
+		if err != nil {
+			httputils.NewError(gtx, http.StatusInternalServerError, err)
+			return
+		}
+
+		httputils.NormalResponse(gtx, output)
 	}
 }
 
@@ -296,7 +314,13 @@ func sendRequestFn(cdc *wire.Codec, ctx context.CLIContext, kb keys.Keybase) gin
 		}
 
 		var m sendBody
-		if err := gtx.BindJSON(&m); err != nil {
+		body, err := ioutil.ReadAll(gtx.Request.Body)
+		if err != nil {
+			httputils.NewError(gtx, http.StatusBadRequest, err)
+			return
+		}
+		err = msgCdc.UnmarshalJSON(body, &m)
+		if err != nil {
 			httputils.NewError(gtx, http.StatusBadRequest, err)
 			return
 		}
@@ -343,6 +367,12 @@ func sendRequestFn(cdc *wire.Codec, ctx context.CLIContext, kb keys.Keybase) gin
 			return
 		}
 
-		httputils.NormalResponse(gtx,res)
+		output, err := wire.MarshalJSONIndent(cdc, res)
+		if err != nil {
+			httputils.NewError(gtx, http.StatusInternalServerError, err)
+			return
+		}
+
+		httputils.NormalResponse(gtx, output)
 	}
 }

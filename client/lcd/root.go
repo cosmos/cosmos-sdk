@@ -28,7 +28,6 @@ import (
 	"strings"
 	"github.com/tendermint/tendermint/libs/cli"
 	tendermintLiteProxy "github.com/tendermint/tendermint/lite/proxy"
-	keyTypes "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"fmt"
 )
 
@@ -115,37 +114,10 @@ func ServeSwaggerCommand(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
 				With("module", "rest-server-swagger")
-
-			rootDir := viper.GetString(cli.HomeFlag)
-			nodeAddrs := viper.GetString(client.FlagNodeList)
-			chainID := viper.GetString(client.FlagChainID)
 			listenAddr := viper.GetString(client.FlagListenAddr)
-			//Get key store
-			kb, err := keys.GetKeyBase()
-			if err != nil {
-				panic(err)
-			}
-			//Split the node list string into multi full node URIs
-			nodeAddrArray := strings.Split(nodeAddrs,",")
-			if len(nodeAddrArray) < 1 {
-				panic(fmt.Errorf("missing node URIs"))
-			}
-			//Tendermint certifier can only connect to one full node. Here we assign the first full node to it
-			cert,err := tendermintLiteProxy.GetCertifier(chainID, rootDir, nodeAddrArray[0])
-			if err != nil {
-				panic(err)
-			}
-			//Create load balancing engine
-			clientMgr,err := context.NewClientManager(nodeAddrs)
-			if err != nil {
-				panic(err)
-			}
-			//Assign tendermint certifier and load balancing engine to ctx
-			ctx := context.NewCLIContext().WithCodec(cdc).WithLogger(os.Stdout).WithCert(cert).WithClientMgr(clientMgr)
-
 			//Create rest server
 			server := gin.New()
-			createSwaggerHandler(server, ctx, cdc, kb)
+			createSwaggerHandler(server, cdc)
 			go server.Run(listenAddr)
 
 			logger.Info("REST server started")
@@ -169,7 +141,33 @@ func ServeSwaggerCommand(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func createSwaggerHandler(server *gin.Engine, ctx context.CLIContext, cdc *wire.Codec, kb keyTypes.Keybase)  {
+func createSwaggerHandler(server *gin.Engine, cdc *wire.Codec)  {
+	rootDir := viper.GetString(cli.HomeFlag)
+	nodeAddrs := viper.GetString(client.FlagNodeList)
+	chainID := viper.GetString(client.FlagChainID)
+	//Get key store
+	kb, err := keys.GetKeyBase()
+	if err != nil {
+		panic(err)
+	}
+	//Split the node list string into multi full node URIs
+	nodeAddrArray := strings.Split(nodeAddrs,",")
+	if len(nodeAddrArray) < 1 {
+		panic(fmt.Errorf("missing node URIs"))
+	}
+	//Tendermint certifier can only connect to one full node. Here we assign the first full node to it
+	cert,err := tendermintLiteProxy.GetCertifier(chainID, rootDir, nodeAddrArray[0])
+	if err != nil {
+		panic(err)
+	}
+	//Create load balancing engine
+	clientMgr,err := context.NewClientManager(nodeAddrs)
+	if err != nil {
+		panic(err)
+	}
+	//Assign tendermint certifier and load balancing engine to ctx
+	ctx := context.NewCLIContext().WithCodec(cdc).WithLogger(os.Stdout).WithCert(cert).WithClientMgr(clientMgr)
+
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	modules := viper.GetString(client.FlagModules)
@@ -190,7 +188,7 @@ func createSwaggerHandler(server *gin.Engine, ctx context.CLIContext, cdc *wire.
 	}
 
 	if moduleEnabled(moduleArray,"stake") {
-		stake.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc)
+		stake.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc, kb)
 	}
 
 }

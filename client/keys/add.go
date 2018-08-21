@@ -239,12 +239,17 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(bz)
 }
 
+// nolint: gocyclo
 // AddNewKeyRequest is the handler of adding new key in swagger rest server
 func AddNewKeyRequest(gtx *gin.Context) {
-	var kb keys.Keybase
 	var m NewKeyBody
-
-	if err := gtx.BindJSON(&m); err != nil {
+	body, err := ioutil.ReadAll(gtx.Request.Body)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusBadRequest, err)
+		return
+	}
+	err = json.Unmarshal(body, &m)
+	if err != nil {
 		httputils.NewError(gtx, http.StatusBadRequest, err)
 		return
 	}
@@ -303,7 +308,13 @@ func AddNewKeyRequest(gtx *gin.Context) {
 
 	keyOutput.Seed = seed
 
-	httputils.NormalResponse(gtx, keyOutput)
+	bz, err := json.Marshal(keyOutput)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	httputils.NormalResponse(gtx, bz)
 
 }
 
@@ -337,5 +348,5 @@ func SeedRequest(gtx *gin.Context) {
 
 	seed := getSeed(algo)
 
-	httputils.NormalResponse(gtx, seed)
+	httputils.NormalResponse(gtx, []byte(seed))
 }

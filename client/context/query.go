@@ -284,6 +284,7 @@ func (ctx CLIContext) ensureBroadcastTx(txBytes []byte) error {
 	return nil
 }
 
+// nolint: gocyclo
 // query performs a query from a Tendermint node with the provided store name
 // and path.
 func (ctx CLIContext) query(path string, key common.HexBytes) (res []byte, err error) {

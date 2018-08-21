@@ -128,5 +128,5 @@ func UpdateKeyRequest(gtx *gin.Context) {
 		return
 	}
 
-	httputils.NormalResponse(gtx, "success")
+	httputils.NormalResponse(gtx, []byte("success"))
 }

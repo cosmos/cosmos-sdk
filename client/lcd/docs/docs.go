@@ -36,9 +36,9 @@ var doc = `{
     "host": "localhost:1317",
     "basePath": "/",
     "paths": {
-        "/stake/{delegator}/delegation/{validator}": {
+        "/stake/delegators/{delegatorAddr}": {
             "get": {
-                "description": "Get the delegation information between specific delegator and validator",
+                "description": "Get all delegations (delegation, undelegation and redelegation) from a delegator",
                 "consumes": [
                     "application/json"
                 ],
@@ -48,18 +48,177 @@ var doc = `{
                 "tags": [
                     "Stake Operation"
                 ],
-                "summary": "Query delegation information",
+                "summary": "Get all delegations from a delegator",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
-                        "name": "delegator",
+                        "name": "delegatorAddr",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/stake.DelegationSummary"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/stake/delegators/{delegatorAddr}/txs": {
+            "get": {
+                "description": "Get all staking txs (i.e msgs) from a delegator",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stake Operation"
+                ],
+                "summary": "Get all staking txs from a delegator",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+                        "name": "delegatorAddr",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/stake.txInfoArray"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/stake/delegators/{delegatorAddr}/validators": {
+            "get": {
+                "description": "Query all validators that a delegator is bonded to",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stake Operation"
+                ],
+                "summary": "Query all validators that a delegator is bonded to",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+                        "name": "delegatorAddr",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/stake.BechValidatorArray"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/stake/delegators/{delegatorAddr}/validators/{validatorAddr}": {
+            "get": {
+                "description": "Query a validator that a delegator is bonded to",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stake Operation"
+                ],
+                "summary": "Query a validator that a delegator is bonded to",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+                        "name": "delegatorAddr",
                         "in": "path"
                     },
                     {
                         "type": "string",
                         "description": "validator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
-                        "name": "validator",
+                        "name": "validatorAddr",
                         "in": "path"
                     }
                 ],
@@ -68,7 +227,7 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPResponse.stake_delegation"
+                            "$ref": "#/definitions/stake.BechValidator"
                         }
                     },
                     "400": {
@@ -95,9 +254,9 @@ var doc = `{
                 }
             }
         },
-        "/stake/{delegator}/ubd/{validator}": {
+        "/stake/delegators/{delegatorAddr}/delegations/{validatorAddr}": {
             "get": {
-                "description": "Get the unbound information between specific delegator and validator",
+                "description": "Query a delegation between a delegator and a validator",
                 "consumes": [
                     "application/json"
                 ],
@@ -107,18 +266,18 @@ var doc = `{
                 "tags": [
                     "Stake Operation"
                 ],
-                "summary": "Query unbound information",
+                "summary": "Query a delegation between a delegator and a validator",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
-                        "name": "delegator",
+                        "name": "delegatorAddr",
                         "in": "path"
                     },
                     {
                         "type": "string",
                         "description": "validator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
-                        "name": "validator",
+                        "name": "validatorAddr",
                         "in": "path"
                     }
                 ],
@@ -127,7 +286,7 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPResponse.stake_ubd"
+                            "$ref": "#/definitions/stake.DelegationWithoutRat"
                         }
                     },
                     "400": {
@@ -154,9 +313,9 @@ var doc = `{
                 }
             }
         },
-        "/stake/{delegator}/red/{validator_src}/{validator_dst}": {
+        "/stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}": {
             "get": {
-                "description": "Get the re-delegation information between specific delegator and validator",
+                "description": "Query all unbonding_delegations between a delegator and a validator",
                 "consumes": [
                     "application/json"
                 ],
@@ -166,24 +325,18 @@ var doc = `{
                 "tags": [
                     "Stake Operation"
                 ],
-                "summary": "Query re-delegation information",
+                "summary": "Query all unbonding_delegations between a delegator and a validator",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
-                        "name": "delegator",
+                        "name": "delegatorAddr",
                         "in": "path"
                     },
                     {
                         "type": "string",
-                        "description": "validator source address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
-                        "name": "validator_src",
-                        "in": "path"
-                    },
-                    {
-                        "type": "string",
-                        "description": "validator destination address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
-                        "name": "validator_dst",
+                        "description": "validator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+                        "name": "validatorAddr",
                         "in": "path"
                     }
                 ],
@@ -192,7 +345,7 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPResponse.stake_red"
+                            "$ref": "#/definitions/stake.UnbondingDelegationArray"
                         }
                     },
                     "400": {
@@ -219,9 +372,9 @@ var doc = `{
                 }
             }
         },
-        "/stake_validators": {
+        "/stake/validators": {
             "get": {
-                "description": "Query all validators' information",
+                "description": "Get all validators",
                 "consumes": [
                     "application/json"
                 ],
@@ -231,13 +384,129 @@ var doc = `{
                 "tags": [
                     "Stake Operation"
                 ],
-                "summary": "Query all validators' information",
+                "summary": "Get all validators",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPResponse.stake_validators"
+                            "$ref": "#/definitions/stake.BechValidatorArray"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/stake/validators/{addr}": {
+            "get": {
+                "description": "Get a single validator info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stake Operation"
+                ],
+                "summary": "Get a single validator info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "validator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+                        "name": "addr",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/stake.BechValidator"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/stake/delegators/:delegatorAddr/delegations": {
+            "post": {
+                "description": "Send stake related transactions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stake Operation"
+                ],
+                "summary": "Send stake related transaction",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+                        "name": "delegatorAddr",
+                        "in": "path"
+                    },
+                    {
+                        "description": "delegation parameters",
+                        "name": "EditDelegationsBody",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/stake.EditDelegationsBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/stake.transactionResult"
                         }
                     },
                     "400": {
@@ -290,7 +559,7 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPResponse.acoount_query"
+                            "$ref": "#/definitions/auth.BaseAccount"
                         }
                     },
                     "400": {
@@ -346,8 +615,7 @@ var doc = `{
                     "200": {
                         "description": "OK. The returned string is base64 encoding",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPResponse.string"
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -404,7 +672,7 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPResponse.tx_commit"
+                            "$ref": "#/definitions/bank.ResultBroadcastTxCommit"
                         }
                     },
                     "400": {
@@ -467,7 +735,7 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPResponse.tx_commit"
+                            "$ref": "#/definitions/bank.ResultBroadcastTxCommit"
                         }
                     },
                     "400": {
@@ -513,7 +781,7 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPResponse.keys.list"
+                            "$ref": "#/definitions/keys.KeyOutputs"
                         }
                     },
                     "400": {
@@ -568,7 +836,7 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPResponse.keys.add"
+                            "$ref": "#/definitions/keys.NewKeyResponse"
                         }
                     },
                     "400": {
@@ -621,7 +889,7 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPResponse.keys.get"
+                            "$ref": "#/definitions/keys.KeyOutput"
                         }
                     },
                     "400": {
@@ -665,8 +933,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPResponse.string"
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -727,8 +994,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPResponse.string"
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -787,8 +1053,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPResponse.string"
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -832,8 +1097,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPResponse.string"
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -877,8 +1141,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPResponse.string"
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -937,10 +1200,6 @@ var doc = `{
                 "data": {
                     "type": "string"
                 },
-                "fee": {
-                    "type": "object",
-                    "$ref": "#/definitions/common.KI64Pair"
-                },
                 "gas_used": {
                     "type": "integer"
                 },
@@ -970,10 +1229,6 @@ var doc = `{
                 },
                 "data": {
                     "type": "string"
-                },
-                "fee": {
-                    "type": "object",
-                    "$ref": "#/definitions/common.KI64Pair"
                 },
                 "gas_used": {
                     "type": "integer"
@@ -1050,7 +1305,7 @@ var doc = `{
                 "ensure_account_sequence": {
                     "type": "boolean"
                 },
-				"chain_id": {
+                "chain_id": {
                     "type": "string"
                 },
                 "from_address": {
@@ -1061,7 +1316,7 @@ var doc = `{
                 },
                 "fee": {
                     "type": "string",
-					"example": "10 monikerToken"
+                    "example": "10 monikerToken"
                 },
                 "sequence": {
                     "type": "integer"
@@ -1095,7 +1350,7 @@ var doc = `{
                 },
                 "fee": {
                     "type": "string",
-					"example": "10 monikerToken"
+                    "example": "10 monikerToken"
                 },
                 "sequence": {
                     "type": "integer"
@@ -1210,7 +1465,7 @@ var doc = `{
                 "password": {
                     "type": "string"
                 },
-				"seed": {
+                "seed": {
                     "type": "string"
                 }
             }
@@ -1242,108 +1497,22 @@ var doc = `{
                 }
             }
         },
-        "httputil.HTTPResponse.keys.list": {
+        "stake.msgDelegationsInput": {
             "type": "object",
             "properties": {
-                "rest api": {
-                    "type": "string",
-                    "example": "2.0"
-                },
-                "code": {
-                    "type": "integer",
-                    "example": 0
-                },
-                "result": {
-                    "type": "object",
-                    "$ref": "#/definitions/keys.KeyOutputs"
-                }
-            }
-        },
-        "httputil.HTTPResponse.keys.add": {
-            "type": "object",
-            "properties": {
-                "rest api": {
-                    "type": "string",
-                    "example": "2.0"
-                },
-                "code": {
-                    "type": "integer",
-                    "example": 0
-                },
-                "result": {
-                    "type": "object",
-                    "$ref": "#/definitions/keys.NewKeyResponse"
-                }
-            }
-        },
-        "httputil.HTTPResponse.keys.get": {
-            "type": "object",
-            "properties": {
-                "rest api": {
-                    "type": "string",
-                    "example": "2.0"
-                },
-                "code": {
-                    "type": "integer",
-                    "example": 0
-                },
-                "result": {
-                    "type": "object",
-                    "$ref": "#/definitions/keys.KeyOutput"
-                }
-            }
-        },
-        "httputil.HTTPResponse.string": {
-            "type": "object",
-            "properties": {
-                "rest api": {
-                    "type": "string",
-                    "example": "2.0"
-                },
-                "code": {
-                    "type": "integer",
-                    "example": 0
-                },
-                "result": {
+                "delegator_addr": {
                     "type": "string"
-                }
-            }
-        },
-        "httputil.HTTPResponse.acoount_query": {
-            "type": "object",
-            "properties": {
-                "rest api": {
-                    "type": "string",
-                    "example": "2.0"
                 },
-                "code": {
-                    "type": "integer",
-                    "example": 0
+                "validator_addr": {
+                    "type": "string"
                 },
-                "result": {
+                "delegation": {
                     "type": "object",
-                    "$ref": "#/definitions/auth.BaseAccount"
+                    "$ref": "#/definitions/sdk.Coin"
                 }
             }
         },
-        "httputil.HTTPResponse.tx_commit": {
-            "type": "object",
-            "properties": {
-                "rest api": {
-                    "type": "string",
-                    "example": "2.0"
-                },
-                "code": {
-                    "type": "integer",
-                    "example": 0
-                },
-                "result": {
-                    "type": "object",
-                    "$ref": "#/definitions/bank.ResultBroadcastTxCommit"
-                }
-            }
-        },
-        "stake.Delegation":{
+        "stake.msgBeginUnbondingInput": {
             "type": "object",
             "properties": {
                 "delegator_addr": {
@@ -1354,13 +1523,117 @@ var doc = `{
                 },
                 "shares": {
                     "type": "string"
-                },
-                "height": {
-                    "type": "integer"
                 }
             }
         },
-        "stake.UnbondingDelegation":{
+        "stake.msgCompleteUnbondingInput": {
+            "type": "object",
+            "properties": {
+                "delegator_addr": {
+                    "type": "string"
+                },
+                "validator_addr": {
+                    "type": "string"
+                }
+            }
+        },
+        "stake.msgBeginRedelegateInput": {
+            "type": "object",
+            "properties": {
+                "delegator_addr": {
+                    "type": "string"
+                },
+                "validator_src_addr": {
+                    "type": "string"
+                },
+                "validator_dst_addr": {
+                    "type": "string"
+                },
+                "shares": {
+                    "type": "string"
+                }
+            }
+        },
+        "stake.msgCompleteRedelegateInput": {
+            "type": "object",
+            "properties": {
+                "delegator_addr": {
+                    "type": "string"
+                },
+                "validator_src_addr": {
+                    "type": "string"
+                },
+                "validator_dst_addr": {
+                    "type": "string"
+                }
+            }
+        },
+        "stake.EditDelegationsBody": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "chain_id": {
+                    "type": "string"
+                },
+                "account_number": {
+                    "type": "integer"
+                },
+                "sequence": {
+                    "type": "integer"
+                },
+                "gas": {
+                    "type": "integer"
+                },
+                "delegations": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#/definitions/stake.msgDelegationsInput"
+                    }
+                },
+                "begin_unbondings": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#/definitions/stake.msgBeginUnbondingInput"
+                    }
+                },
+                "complete_unbondings": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#/definitions/stake.msgCompleteUnbondingInput"
+                    }
+                },
+                "begin_redelegates": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#/definitions/stake.msgBeginRedelegateInput"
+                    }
+                },
+                "complete_redelegates": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#/definitions/stake.msgCompleteRedelegateInput"
+                    }
+                }
+            }
+        },
+        "stake.transactionResult": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "$ref": "#/definitions/bank.ResultBroadcastTxCommit"
+            }
+        },
+        "stake.UnbondingDelegation": {
             "type": "object",
             "properties": {
                 "delegator_addr": {
@@ -1385,7 +1658,14 @@ var doc = `{
                 }
             }
         },
-        "stake.Redelegation":{
+        "stake.UnbondingDelegationArray": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "$ref": "#/definitions/stake.UnbondingDelegation"
+            }
+        },
+        "stake.Redelegation": {
             "type": "object",
             "properties": {
                 "delegator_addr": {
@@ -1419,32 +1699,34 @@ var doc = `{
                 }
             }
         },
-        "stake.PoolShares": {
-            "status": {
-                "type": "string"
-            },
-            "amount": {
-                "type": "string"
+        "stake.RedelegationArray": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "$ref": "#/definitions/stake.Redelegation"
             }
         },
         "stake.Description": {
-            "moniker": {
-                "type": "string"
-            },
-            "identity": {
-                "type": "string"
-            },
-            "website": {
-                "type": "string"
-            },
-            "details": {
-                "type": "string"
-            }
-        },
-        "stake.StakeValidatorOutput":{
             "type": "object",
             "properties": {
-                "owner": {
+                "moniker": {
+                    "type": "string"
+                },
+                "identity": {
+                    "type": "string"
+                },
+                "website": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "string"
+                }
+            }
+        },
+        "stake.BechValidator": {
+            "type": "object",
+            "properties": {
+                "operator": {
                     "type": "string"
                 },
                 "pub_key": {
@@ -1453,9 +1735,11 @@ var doc = `{
                 "revoked": {
                     "type": "boolean"
                 },
-                "pool_shares": {
-                    "type": "object",
-                    "$ref": "#/definitions/stake.PoolShares"
+                "status": {
+                    "type": "integer"
+                },
+                "tokens": {
+                    "type": "string"
                 },
                 "delegator_shares": {
                     "type": "string"
@@ -1485,78 +1769,83 @@ var doc = `{
                 },
                 "commission_change_today": {
                     "type": "string"
+                },
+                "prev_bonded_shares": {
+                    "type": "string"
                 }
             }
         },
-        "httputil.HTTPResponse.stake_delegation": {
+        "stake.BechValidatorArray": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "$ref": "#/definitions/stake.BechValidator"
+            }
+        },
+        "stake.DelegationWithoutRat": {
             "type": "object",
             "properties": {
-                "rest api": {
-                    "type": "string",
-                    "example": "2.0"
+                "delegator_addr": {
+                    "type": "string"
                 },
-                "code": {
-                    "type": "integer",
-                    "example": 0
+                "validator_addr": {
+                    "type": "string"
+                },
+                "shares": {
+                    "type": "string"
+                },
+                "height": {
+                    "type": "integer"
+                }
+            }
+        },
+        "stake.DelegationWithoutRatArray": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "$ref": "#/definitions/stake.DelegationWithoutRat"
+            }
+        },
+        "stake.DelegationSummary": {
+            "type": "object",
+            "properties": {
+                "redelegations": {
+                    "type": "object",
+                    "$ref": "#/definitions/stake.RedelegationArray"
+                },
+                "unbonding_delegations": {
+                    "type": "object",
+                    "$ref": "#/definitions/stake.UnbondingDelegationArray"
+                },
+                "delegations": {
+                    "type": "object",
+                    "$ref": "#/definitions/stake.DelegationWithoutRatArray"
+                }
+            }
+        },
+        "stake.txInfo": {
+            "type": "object",
+            "properties": {
+                "hash": {
+                    "type": "string"
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "tx": {
+                    "type": "string"
                 },
                 "result": {
                     "type": "object",
-                    "$ref": "#/definitions/stake.Delegation"
+                    "$ref": "#/definitions/bank.ResponseDeliverTx"
                 }
             }
         },
-        "httputil.HTTPResponse.stake_ubd": {
-            "type": "object",
-            "properties": {
-                "rest api": {
-                    "type": "string",
-                    "example": "2.0"
-                },
-                "code": {
-                    "type": "integer",
-                    "example": 0
-                },
-                "result": {
-                    "type": "object",
-                    "$ref": "#/definitions/stake.UnbondingDelegation"
-                }
-            }
-        },
-        "httputil.HTTPResponse.stake_red": {
-            "type": "object",
-            "properties": {
-                "rest api": {
-                    "type": "string",
-                    "example": "2.0"
-                },
-                "code": {
-                    "type": "integer",
-                    "example": 0
-                },
-                "result": {
-                    "type": "object",
-                    "$ref": "#/definitions/stake.Redelegation"
-                }
-            }
-        },
-        "httputil.HTTPResponse.stake_validators": {
-            "type": "object",
-            "properties": {
-                "rest api": {
-                    "type": "string",
-                    "example": "2.0"
-                },
-                "code": {
-                    "type": "integer",
-                    "example": 0
-                },
-                "result": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#/definitions/stake.StakeValidatorOutput"
-                    }
-                }
+        "stake.txInfoArray": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "$ref": "#/definitions/stake.txInfo"
             }
         }
     }

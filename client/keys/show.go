@@ -84,5 +84,10 @@ func GetKeyRequest(gtx *gin.Context) {
 		httputils.NewError(gtx, http.StatusInternalServerError, err)
 		return
 	}
-	httputils.NormalResponse(gtx, keyOutput)
+	output, err := json.MarshalIndent(keyOutput, "", "  ")
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+	httputils.NormalResponse(gtx, output)
 }

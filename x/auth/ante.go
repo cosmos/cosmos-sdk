@@ -5,13 +5,17 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
 const (
-	deductFeesCost    sdk.Gas = 10
-	memoCostPerByte   sdk.Gas = 1
-	verifyCost                = 100
-	maxMemoCharacters         = 100
+	deductFeesCost      sdk.Gas = 10
+	memoCostPerByte     sdk.Gas = 1
+	ed25519VerifyCost           = 59
+	secp256k1VerifyCost         = 100
+	maxMemoCharacters           = 100
 )
 
 // NewAnteHandler returns an AnteHandler that checks
@@ -187,12 +191,23 @@ func processSig(
 	}
 
 	// Check sig.
-	ctx.GasMeter().ConsumeGas(verifyCost, "ante verify")
+	consumeSignatureVerificationGas(ctx.GasMeter(), pubKey)
 	if !pubKey.VerifyBytes(signBytes, sig.Signature) {
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
 
 	return
+}
+
+func consumeSignatureVerificationGas(meter sdk.GasMeter, pubkey crypto.PubKey) {
+	switch pubkey.(type) {
+	case ed25519.PubKeyEd25519:
+		meter.ConsumeGas(ed25519VerifyCost, "ante verify: ed25519")
+	case secp256k1.PubKeySecp256k1:
+		meter.ConsumeGas(secp256k1VerifyCost, "ante verify: secp256k1")
+	default:
+		panic("Unrecognized signature type")
+	}
 }
 
 // Deduct the fee from the account.

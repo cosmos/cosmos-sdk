@@ -39,14 +39,6 @@ jobs:
           paths:
             - bin
             - profiles
-      - save_cache:
-          key: v1-pkg-cache
-          paths:
-            - /go/pkg
-      - save_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
-          paths:
-            - /go/src/github.com/cosmos/cosmos-sdk
 
   lint:
     <<: *defaults
@@ -54,10 +46,12 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - restore_cache:
-          key: v1-pkg-cache
-      - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
       - run:
           name: Get metalinter
           command: |
@@ -75,10 +69,12 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - restore_cache:
-          key: v1-pkg-cache
-      - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
       - run:
           name: Test cli
           command: |
@@ -91,10 +87,12 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - restore_cache:
-          key: v1-pkg-cache
-      - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
       - run:
           name: Test individual module simulations
           command: |
@@ -107,10 +105,12 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - restore_cache:
-          key: v1-pkg-cache
-      - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
       - run:
           name: Test individual module simulations
           command: |
@@ -123,10 +123,12 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - restore_cache:
-          key: v1-pkg-cache
-      - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
       - run:
           name: Test full Gaia simulation
           command: |
@@ -139,10 +141,12 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - restore_cache:
-          key: v1-pkg-cache
-      - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
       - run: mkdir -p /tmp/logs
       - run:
           name: Run tests
@@ -166,8 +170,12 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
       - run:
           name: gather
           command: |

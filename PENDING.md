@@ -1,4 +1,17 @@
-## PENDING
+## v0.24.1 PENDING
+
+BREAKING CHANGES
+
+FEATURES
+
+IMPROVEMENTS
+
+* [store] \#1952 Update IAVL dependency to v0.10.0
+
+BUG FIXES
+
+## v0.24.0 PENDING
+^--- PENDING wasn't purged on sdk v0.23.0 release.
 
 BREAKING CHANGES
 

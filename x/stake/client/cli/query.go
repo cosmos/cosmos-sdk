@@ -315,11 +315,11 @@ func GetCmdQueryUnbondingDelegations(storeName string, cdc *wire.Codec) *cobra.C
 }
 
 // GetCmdQueryRedelegation implements the command to query a single
-// unbonding-delegation record.
+// redelegation record.
 func GetCmdQueryRedelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unbonding-delegation",
-		Short: "Query an unbonding-delegation record based on delegator and validator address",
+		Use:   "redelegation",
+		Short: "Query a redelegation record based on delegator and a source and destination validator address",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			valSrcAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorSrc))
 			if err != nil {
@@ -376,11 +376,11 @@ func GetCmdQueryRedelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdQueryRedelegations implements the command to query all the
-// unbonding-delegation records for a delegator.
+// redelegation records for a delegator.
 func GetCmdQueryRedelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unbonding-delegations [delegator-addr]",
-		Short: "Query all unbonding-delegations records for one delegator",
+		Use:   "redelegations [delegator-addr]",
+		Short: "Query all redelegations records for one delegator",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])

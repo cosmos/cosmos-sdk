@@ -105,3 +105,4 @@ BUG FIXES
 *  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator
 * [basecoin] Fixes coin transaction failure and account query [discussion](https://forum.cosmos.network/t/unmarshalbinarybare-expected-to-read-prefix-bytes-75fbfab8-since-it-is-registered-concrete-but-got-0a141dfa/664/6)
 * [cli] \#1997 Handle panics gracefully when `gaiacli stake {delegation,unbond}` fail to unmarshal delegation.
+* \#2105 Fix DB Iterator leak, which may leak a go routine.

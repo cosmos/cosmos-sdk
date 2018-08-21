@@ -117,12 +117,19 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("steak").Int64())
 
+	defaultParams := stake.DefaultParams()
+	initialPool := stake.InitialPool()
+	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewDec(100)) // Delegate tx on GaiaAppGenState
+	initialPool = initialPool.ProcessProvisions(defaultParams)               // provisions are added to the pool every hour
+
 	// create validator
 	cvStr := fmt.Sprintf("gaiacli stake create-validator %v", flags)
 	cvStr += fmt.Sprintf(" --from=%s", "bar")
 	cvStr += fmt.Sprintf(" --pubkey=%s", barCeshPubKey)
 	cvStr += fmt.Sprintf(" --amount=%v", "2steak")
 	cvStr += fmt.Sprintf(" --moniker=%v", "bar-vally")
+
+	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewDec(1))
 
 	executeWrite(t, cvStr, app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
@@ -151,13 +158,13 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	validator = executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %s --output=json %v", barAddr, flags))
 	require.Equal(t, "1.0000000000", validator.Tokens.String())
 
-	pool := executeGetPool(t, fmt.Sprintf("gaiacli stake pool --output=json %v", flags))
-	require.NotNil(t, pool)
-
-	defaultParams := stake.DefaultParams()
-
 	params := executeGetParams(t, fmt.Sprintf("gaiacli stake parameters --output=json %v", flags))
 	require.True(t, defaultParams.Equal(params))
+
+	pool := executeGetPool(t, fmt.Sprintf("gaiacli stake pool --output=json %v", flags))
+	require.Equal(t, initialPool.DateLastCommissionReset, pool.DateLastCommissionReset)
+	require.Equal(t, initialPool.PrevBondedShares, pool.PrevBondedShares)
+	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
 }
 
 func TestGaiaCLISubmitProposal(t *testing.T) {

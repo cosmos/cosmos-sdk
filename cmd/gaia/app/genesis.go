@@ -191,7 +191,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		if len(genTx.Name) > 0 {
 			desc := stake.NewDescription(genTx.Name, "", "", "")
 			validator := stake.NewValidator(
-				genTx.Address, sdk.MustGetConsPubKeyBech32(genTx.PubKey), desc,
+				sdk.ValAddress(genTx.Address), sdk.MustGetConsPubKeyBech32(genTx.PubKey), desc,
 			)
 
 			stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDec(freeFermionVal)) // increase the supply
@@ -203,7 +203,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 
 			// create the self-delegation from the issuedDelShares
 			delegation := stake.Delegation{
-				DelegatorAddr: validator.Operator,
+				DelegatorAddr: sdk.AccAddress(validator.Operator),
 				ValidatorAddr: validator.Operator,
 				Shares:        issuedDelShares,
 				Height:        0,

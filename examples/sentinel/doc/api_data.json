@@ -101,7 +101,7 @@
       "examples": [
         {
           "title": "Response:",
-          "content": "{\n   \"status\": \"success\",\n   \"Hash\": \"629F4603A5A4DE598B58DC494CCC38DB9FD96604\",\n   \"Height\": 353,\n   \"Data\":\"eyJ0eXBlIjoic2VudGluZWwvcmVnaXN0ZXJ2cG4iLCJ2YWx1ZSI6eyJGc3BlZWQiOiIxMiIsIlBwZ2IiOiyJ0eXBlIjoic2VudGluZWwvcmVnaXN0ZXJ2cG4iLCJ2YW9==\",\n   \"Tags\": [\n       {\n           \"key\": \"VnBuIFByb3ZpZGVyIEFkZHJlc3M6\",\n           \"value\": \"Y29zbW9zYWNjYWRkcjF1ZG50Z3pzemVzbjd6M3htNjRoYWZ2amxlZ3JoMzh1a3p3OW03Zw==\"\n       },\n       {\n           \"key\": \"c2Vlc2lvbklk\",\n           \"value\": \"WVZJRW81Y0dIczdkb09UVzRDTk4=\"\n       }\n   ]\n}",
+          "content": "{\n   \"Success\": true,\n   \"Hash\": \"629F4603A5A4DE598B58DC494CCC38DB9FD96604\",\n   \"Height\": 353,\n   \"Data\":\"eyJ0eXBlIjoic2VudGluZWwvcmVnaXN0ZXJ2cG4iLCJ2YWx1ZSI6eyJGc3BlZWQiOiIxMiIsIlBwZ2IiOiyJ0eXBlIjoic2VudGluZWwvcmVnaXN0ZXJ2cG4iLCJ2YW9==\",\n   \"Tags\": [\n       {\n           \"key\": \"VnBuIFByb3ZpZGVyIEFkZHJlc3M6\",\n           \"value\": \"Y29zbW9zYWNjYWRkcjF1ZG50Z3pzemVzbjd6M3htNjRoYWZ2amxlZ3JoMzh1a3p3OW03Zw==\"\n       },\n       {\n           \"key\": \"c2Vlc2lvbklk\",\n           \"value\": \"WVZJRW81Y0dIczdkb09UVzRDTk4=\"\n       }\n   ]\n}",
           "type": "json"
         }
       ]
@@ -184,7 +184,7 @@
       "examples": [
         {
           "title": "Response:",
-          "content": "{\n\t{\n  \"status\": \"success\",\n  \"Hash\": \"868B602828FA48F1D4A03D9D066EB42DEC483AA0\",\n  \"Height\": 1092,\n  \"Data\": \"Qwi/dQ1h0GcdrppVOeyJ0eXBlIjoic2VudGluZWwvcmVnaXN0yJGc3BlZWQiOiIxMiIsIlBwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn192hhGfJVl3g=\",\n  \"Tags\": [\n{\n          \"key\": \"Y2xpZW50IFJlZnVuZCBBZGRyZXNzOg==\",\n          \"value\": \"Y29zbW9zYWNjYWRkcjFndnl0N2FnZHY4Z3h3OGR3bmYybms2cnByOGU5dDltY3hkeGV3cA==\"\n      }\n  ]\n}\n}",
+          "content": "{\n\t{\n  \"Success\": true,\n  \"Hash\": \"868B602828FA48F1D4A03D9D066EB42DEC483AA0\",\n  \"Height\": 1092,\n  \"Data\": \"Qwi/dQ1h0GcdrppVOeyJ0eXBlIjoic2VudGluZWwvcmVnaXN0yJGc3BlZWQiOiIxMiIsIlBwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn192hhGfJVl3g=\",\n  \"Tags\": [\n{\n          \"key\": \"Y2xpZW50IFJlZnVuZCBBZGRyZXNzOg==\",\n          \"value\": \"Y29zbW9zYWNjYWRkcjFndnl0N2FnZHY4Z3h3OGR3bmYybms2cnByOGU5dDltY3hkeGV3cA==\"\n      }\n  ]\n}\n}",
           "type": "json"
         }
       ]
@@ -256,7 +256,7 @@
       "examples": [
         {
           "title": "Response:",
-          "content": "{\n  \"status\": \"success\",\n  \"Hash\": \"32EF9DFB6BC24D3159A8310F1AE438BED479466E\",\n  \"Height\": 3698,\n  \"Data\": \"FRTjZrQKAswn4UeyJ0eXBlIwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn19Tb1W/Usl/KB3iflg==\",\n  \"Tags\": [\n      {\n          \"key\": \"ZGVsZXRlZCBWcG4gYWRkcmVzcw==\",\n          \"value\": \"42a0CgLMJ+FE29Vv1LJfygd4n5Y=\"\n     }\n ]\n}",
+          "content": "{\n  \"Success\": true,\n  \"Hash\": \"32EF9DFB6BC24D3159A8310F1AE438BED479466E\",\n  \"Height\": 3698,\n  \"Data\": \"FRTjZrQKAswn4UeyJ0eXBlIwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn19Tb1W/Usl/KB3iflg==\",\n  \"Tags\": [\n      {\n          \"key\": \"ZGVsZXRlZCBWcG4gYWRkcmVzcw==\",\n          \"value\": \"42a0CgLMJ+FE29Vv1LJfygd4n5Y=\"\n     }\n ]\n}",
           "type": "json"
         }
       ]
@@ -328,7 +328,7 @@
       "examples": [
         {
           "title": "Response:",
-          "content": "{\n  \"status\": \"success\",\n  \"Hash\": \"32EF9DFB6BC24D3159A8310F1AE438BED479466E\",\n  \"Height\": 3698,\n  \"Data\": \"FRTjZrQKAswn4UTeyJ0eXBlIjoic2VudGluZWWQiOiIxMiIsIlBwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn19b1W/Usl/KB3iflg==\",\n  \"Tags\": [\n      {\n          \"key\": \"ZGVsZXRlZCBWcG4gYWRkcmVzcw==\",\n          \"value\": \"42a0CgLMJ+FE29Vv1LJfygd4n5Y=\"\n     }\n ]\n}",
+          "content": "{\n  \"Success\": true,\n  \"Hash\": \"32EF9DFB6BC24D3159A8310F1AE438BED479466E\",\n  \"Height\": 3698,\n  \"Data\": \"FRTjZrQKAswn4UTeyJ0eXBlIjoic2VudGluZWWQiOiIxMiIsIlBwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn19b1W/Usl/KB3iflg==\",\n  \"Tags\": [\n      {\n          \"key\": \"ZGVsZXRlZCBWcG4gYWRkcmVzcw==\",\n          \"value\": \"42a0CgLMJ+FE29Vv1LJfygd4n5Y=\"\n     }\n ]\n}",
           "type": "json"
         }
       ]
@@ -538,7 +538,7 @@
       "examples": [
         {
           "title": "Response:",
-          "content": "{\n  \"status\": \"success\",\n  \"Hash\": \"D2C58CAFC580CC39A4CFAB4325991A9378AFE77D\",\n  \"Height\": 1196,\n  \"Data\": \"IjNwWGdHazB5MnBGceyJ0eXBlIjoic2VudGluZWwvcmVnaXN0ZXJ2cG4iLCJ2YWx1ZSI6eyJGc3BlZWQiOiIxMiIsIlBwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn19TdZdWIwak5xIg==\",\n  \"Tags\": [\n     {\n      \"key\": \"c2VuZGVyIGFkZHJlc3M=\",\n      \"value\": \"Y29zbW9zYWNjYWRkcjFuY3hlbGpjcjRnOWhzdmw3amRuempkazNyNzYyamUzenk4bXU5MA==\"\n     },\n    {\n     \"key\": \"c2Vlc2lvbiBpZA==\",\n     \"value\": \"M3BYZ0drMHkycEZxN1l1YjBqTnE=\"\n    }\n         ]\n}",
+          "content": "{\n  \"Success\": true,\n  \"Hash\": \"D2C58CAFC580CC39A4CFAB4325991A9378AFE77D\",\n  \"Height\": 1196,\n  \"Data\": \"IjNwWGdHazB5MnBGceyJ0eXBlIjoic2VudGluZWwvcmVnaXN0ZXJ2cG4iLCJ2YWx1ZSI6eyJGc3BlZWQiOiIxMiIsIlBwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn19TdZdWIwak5xIg==\",\n  \"Tags\": [\n     {\n      \"key\": \"c2VuZGVyIGFkZHJlc3M=\",\n      \"value\": \"Y29zbW9zYWNjYWRkcjFuY3hlbGpjcjRnOWhzdmw3amRuempkazNyNzYyamUzenk4bXU5MA==\"\n     },\n    {\n     \"key\": \"c2Vlc2lvbiBpZA==\",\n     \"value\": \"M3BYZ0drMHkycEZxN1l1YjBqTnE=\"\n    }\n         ]\n}",
           "type": "json"
         }
       ]
@@ -603,7 +603,7 @@
       "examples": [
         {
           "title": "Response:",
-          "content": "{\n{\n  \"status\": \"success\",\n   \"Hash\": \"CF8E073D624F7FA6A41C3CAD9B4A1DB693234225\",\n   \"Height\": 343,\n   \"Data\": \"eyJ0eXBlIjoic2VudGluZWwvcmVnaXN0ZXJ2cG4iLCJ2YWx1ZSI6eyJGc3BlZWQiOiIxMiIsIlBwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn19==\",\n   \"Tags\": [\n       {\n            \"key\": \"dnBuIHJlZ2lzdGVyZWQgYWRkcmVzcw==\",\n            \"value\": \"Y29zbW9zYWNjYWRkcjFlZ3RydjdxdGU0NnY2cXEzN3p0YzB2dzRuMmhrejZuempycDVhZQ==\"\n        }\n            ]\n}",
+          "content": "{\n{\n  \"Success\": true,\n   \"Hash\": \"CF8E073D624F7FA6A41C3CAD9B4A1DB693234225\",\n   \"Height\": 343,\n   \"Data\": \"eyJ0eXBlIjoic2VudGluZWwvcmVnaXN0ZXJ2cG4iLCJ2YWx1ZSI6eyJGc3BlZWQiOiIxMiIsIlBwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn19==\",\n   \"Tags\": [\n       {\n            \"key\": \"dnBuIHJlZ2lzdGVyZWQgYWRkcmVzcw==\",\n            \"value\": \"Y29zbW9zYWNjYWRkcjFlZ3RydjdxdGU0NnY2cXEzN3p0YzB2dzRuMmhrejZuempycDVhZQ==\"\n        }\n            ]\n}",
           "type": "json"
         }
       ]
@@ -729,7 +729,7 @@
       "examples": [
         {
           "title": "Response:",
-          "content": "{\n  \"status\": \"success\",\n  \"Hash\": \"CF8E073D624F7FA6A41C3CAD9B4A1DB693234225\",\n  \"Height\": 343,\n  \"Data\": \"eyJ0eXBlIjoic2VudGluZWwvcmVnaXN0ZXJ2cG4iLCJ2YWx1ZSI6eyJGc3BlZWQiOiIxMiIsIlBwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn19\",\n   \"Tags\": [\n       {\n           \"key\": \"dnBuIHJlZ2lzdGVyZWQgYWRkcmVzcw==\",\n           \"value\": \"Y29zbW9zYWNjYWRkcjFlZ3RydjdxdGU0NnY2cXEzN3p0YzB2dzRuMmhrejZuempycDVhZQ==\"\n       }\n\t\t    ]\n}",
+          "content": "{\n  \"Success\": true,\n  \"Hash\": \"CF8E073D624F7FA6A41C3CAD9B4A1DB693234225\",\n  \"Height\": 343,\n  \"Data\": \"eyJ0eXBlIjoic2VudGluZWwvcmVnaXN0ZXJ2cG4iLCJ2YWx1ZSI6eyJGc3BlZWQiOiIxMiIsIlBwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn19\",\n   \"Tags\": [\n       {\n           \"key\": \"dnBuIHJlZ2lzdGVyZWQgYWRkcmVzcw==\",\n           \"value\": \"Y29zbW9zYWNjYWRkcjFlZ3RydjdxdGU0NnY2cXEzN3p0YzB2dzRuMmhrejZuempycDVhZQ==\"\n       }\n\t\t    ]\n}",
           "type": "json"
         }
       ]

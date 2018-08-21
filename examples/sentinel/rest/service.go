@@ -224,7 +224,7 @@ func ServiceRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 *}
 * @apiSuccessExample Response:
 *{
-*   "status": "success",
+*   "Success": true,
 *   "Hash": "CF8E073D624F7FA6A41C3CAD9B4A1DB693234225",
 *   "Height": 343,
 *   "Data": "eyJ0eXBlIjoic2VudGluZWwvcmVnaXN0ZXJ2cG4iLCJ2YWx1ZSI6eyJGc3BlZWQiOiIxMiIsIlBwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn19",
@@ -238,21 +238,21 @@ func ServiceRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 */
 
 type Response struct {
-	Status string          `json:"status"`
-	Hash   string          `json:"Hash"`
-	Height int64           `json:"Height"`
-	Data   []byte          `json:"Data"`
-	Tags   []common.KVPair `json:"Tags"`
+	Success bool            `json:"status"`
+	Hash    string          `json:"Hash"`
+	Height  int64           `json:"Height"`
+	Data    []byte          `json:"Data"`
+	Tags    []common.KVPair `json:"Tags"`
 }
 
-func NewResponse(status string, hash string, height int64, data []byte, tags []common.KVPair) Response {
+func NewResponse(status bool, hash string, height int64, data []byte, tags []common.KVPair) Response {
 	//var res Response
 	return Response{
-		Status: status,
-		Height: height,
-		Hash:   hash,
-		Data:   data,
-		Tags:   tags,
+		Success: status,
+		Height:  height,
+		Hash:    hash,
+		Data:    data,
+		Tags:    tags,
 	}
 }
 func registervpnHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
@@ -322,7 +322,7 @@ func registervpnHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handler
 			w.Write([]byte(err.Error()))
 			return
 		}
-		respon := NewResponse("success", res.Hash.String(), res.Height, res.DeliverTx.Data, res.DeliverTx.Tags)
+		respon := NewResponse(true, res.Hash.String(), res.Height, res.DeliverTx.Data, res.DeliverTx.Tags)
 		data, err := json.MarshalIndent(respon, "", " ")
 		w.Write(data)
 	}
@@ -353,7 +353,7 @@ func registervpnHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handler
 * @apiSuccessExample Response:
 {
 *{
- *   "status": "success",
+ *   "Success": true,
 *    "Hash": "CF8E073D624F7FA6A41C3CAD9B4A1DB693234225",
 *    "Height": 343,
 *    "Data": "eyJ0eXBlIjoic2VudGluZWwvcmVnaXN0ZXJ2cG4iLCJ2YWx1ZSI6eyJGc3BlZWQiOiIxMiIsIlBwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn19==",
@@ -410,7 +410,7 @@ func registermasterdHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Han
 			w.Write([]byte(err.Error()))
 			return
 		}
-		respon := NewResponse("success", res.Hash.String(), res.Height, res.DeliverTx.Data, res.DeliverTx.Tags)
+		respon := NewResponse(true, res.Hash.String(), res.Height, res.DeliverTx.Data, res.DeliverTx.Tags)
 		data, err := json.MarshalIndent(respon, "", " ")
 		w.Write(data)
 	}
@@ -441,7 +441,7 @@ func registermasterdHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Han
 *}
 * @apiSuccessExample Response:
 {
- *   "status": "success",
+ *   "Success": true,
  *   "Hash": "32EF9DFB6BC24D3159A8310F1AE438BED479466E",
  *   "Height": 3698,
  *   "Data": "FRTjZrQKAswn4UTeyJ0eXBlIjoic2VudGluZWWQiOiIxMiIsIlBwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn19b1W/Usl/KB3iflg==",
@@ -504,7 +504,7 @@ func deleteVpnHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFu
 			w.Write([]byte(err.Error()))
 			return
 		}
-		respon := NewResponse("success", res.Hash.String(), res.Height, res.DeliverTx.Data, res.DeliverTx.Tags)
+		respon := NewResponse(true, res.Hash.String(), res.Height, res.DeliverTx.Data, res.DeliverTx.Tags)
 		data, err := json.MarshalIndent(respon, "", " ")
 		w.Write(data)
 	}
@@ -535,7 +535,7 @@ func deleteVpnHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFu
 *}
 * @apiSuccessExample Response:
 {
- *   "status": "success",
+ *   "Success": true,
  *   "Hash": "32EF9DFB6BC24D3159A8310F1AE438BED479466E",
  *   "Height": 3698,
  *   "Data": "FRTjZrQKAswn4UeyJ0eXBlIwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn19Tb1W/Usl/KB3iflg==",
@@ -592,7 +592,7 @@ func deleteMasterHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handle
 			w.Write([]byte(err.Error()))
 			return
 		}
-		respon := NewResponse("success", res.Hash.String(), res.Height, res.DeliverTx.Data, res.DeliverTx.Tags)
+		respon := NewResponse(true, res.Hash.String(), res.Height, res.DeliverTx.Data, res.DeliverTx.Tags)
 		data, err := json.MarshalIndent(respon, "", " ")
 		w.Write(data)
 	}
@@ -656,7 +656,7 @@ func validateIp(host string) bool {
 *}
 * @apiSuccessExample Response:
 {
-*   "status": "success",
+*   "Success": true,
 *   "Hash": "D2C58CAFC580CC39A4CFAB4325991A9378AFE77D",
 *   "Height": 1196,
 *   "Data": "IjNwWGdHazB5MnBGceyJ0eXBlIjoic2VudGluZWwvcmVnaXN0ZXJ2cG4iLCJ2YWx1ZSI6eyJGc3BlZWQiOiIxMiIsIlBwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn19TdZdWIwak5xIg==",
@@ -771,7 +771,7 @@ func PayVpnServiceHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handl
 			w.Write([]byte(err.Error()))
 			return
 		}
-		respon := NewResponse("success", res.Hash.String(), res.Height, res.DeliverTx.Data, res.DeliverTx.Tags)
+		respon := NewResponse(true, res.Hash.String(), res.Height, res.DeliverTx.Data, res.DeliverTx.Tags)
 		data, err := json.MarshalIndent(respon, "", " ")
 		w.Write(data)
 	}
@@ -869,7 +869,7 @@ func SendSignHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFun
 * @apiSuccessExample Response:
 *{
 *	{
- *   "status": "success",
+ *   "Success": true,
  *   "Hash": "868B602828FA48F1D4A03D9D066EB42DEC483AA0",
  *   "Height": 1092,
  *   "Data": "Qwi/dQ1h0GcdrppVOeyJ0eXBlIjoic2VudGluZWwvcmVnaXN0yJGc3BlZWQiOiIxMiIsIlBwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn192hhGfJVl3g=",
@@ -922,7 +922,7 @@ func RefundHandleFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		respon := NewResponse("success", res.Hash.String(), res.Height, res.DeliverTx.Data, res.DeliverTx.Tags)
+		respon := NewResponse(true, res.Hash.String(), res.Height, res.DeliverTx.Data, res.DeliverTx.Tags)
 		data, err := json.MarshalIndent(respon, "", " ")
 		w.Write(data)
 	}
@@ -970,7 +970,7 @@ func RefundHandleFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 *}
 * @apiSuccessExample Response:
 *{
-*    "status": "success",
+*    "Success": true,
 *    "Hash": "629F4603A5A4DE598B58DC494CCC38DB9FD96604",
 *    "Height": 353,
 *    "Data":"eyJ0eXBlIjoic2VudGluZWwvcmVnaXN0ZXJ2cG4iLCJ2YWx1ZSI6eyJGc3BlZWQiOiIxMiIsIlBwZ2IiOiyJ0eXBlIjoic2VudGluZWwvcmVnaXN0ZXJ2cG4iLCJ2YW9==",
@@ -1059,7 +1059,7 @@ func GetVpnPaymentHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handl
 			w.Write([]byte(err.Error()))
 			return
 		}
-		respon := NewResponse("success", res.Hash.String(), res.Height, res.DeliverTx.Data, res.DeliverTx.Tags)
+		respon := NewResponse(true, res.Hash.String(), res.Height, res.DeliverTx.Data, res.DeliverTx.Tags)
 		data, err := json.MarshalIndent(respon, "", " ")
 		w.Write(data)
 	}

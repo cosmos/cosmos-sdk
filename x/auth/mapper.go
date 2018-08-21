@@ -87,6 +87,7 @@ func (am AccountMapper) SetAccount(ctx sdk.Context, acc Account) {
 func (am AccountMapper) IterateAccounts(ctx sdk.Context, process func(Account) (stop bool)) {
 	store := ctx.KVStore(am.key)
 	iter := sdk.KVStorePrefixIterator(store, []byte("account:"))
+	defer iter.Close()
 	for {
 		if !iter.Valid() {
 			return

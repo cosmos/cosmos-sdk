@@ -1,26 +1,23 @@
-# Cosmos Hub (Gaia) LCD API
+# Cosmos Hub (Gaia-Lite) LCD API
 
-This document describes the API that is exposed by the specific LCD implementation of the Cosmos
-Hub (Gaia). Those APIs are exposed by a REST server and can easily be accessed over HTTP/WS(websocket)
+This document describes the API that is exposed by the specific Light Client Daemon (LCD) implementation of the Cosmos Hub (Gaia). Those APIs are exposed by a REST server and can easily be accessed over HTTP/WS (websocket)
 connections.
 
-The complete API is comprised of the sub-APIs of different modules. The modules in the Cosmos Hub
-(Gaia) API are:
+The complete API is comprised of the sub-APIs of different modules. The modules in the Cosmos Hub (Gaia-Lite) API are:
 
-- ICS0 (TendermintAPI)
-- ICS1 (KeyAPI)
-- ICS20 (TokenAPI)
-- ICS21 (StakingAPI)
-- ICS22 (GovernanceAPI)
-- ICS23 (SlashingAPI)
+- ICS0 ([TendermintAPI](api.md#ics0---tendermintapi))
+- ICS1 ([KeyAPI](api.md#ics1---keyapi))
+- ICS20 ([TokenAPI](api.md#ics20---tokenapi))
+- ICS21 ([StakingAPI](api.md#ics21---stakingapi))
+- ICS22 ([GovernanceAPI](api.md#ics22---governanceapi))
+- ICS23 ([SlashingAPI](api.md#ics23---slashingapi))
 
 Error messages my change and should be only used for display purposes. Error messages should not be
 used for determining the error type.
 
 ## ICS0 - TendermintAPI
 
-Exposes the same functionality as the Tendermint RPC from a full node. It aims to have a very
-similar API.
+Exposes the same functionality as the Tendermint RPC from a full node. It aims to have a very similar API.
 
 ### POST /txs
 
@@ -352,7 +349,7 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.1",
     "code":200,
     "error":"",
     "result":{
@@ -422,7 +419,7 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.1",
     "code":200,
     "error":"",
     "result":{
@@ -439,7 +436,7 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.1",
     "code":200,
     "error":"",
     "result":{
@@ -456,7 +453,7 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.1",
     "code":200,
     "error":"",
     "result":{
@@ -473,7 +470,7 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.1",
     "code":200,
     "error":"",
     "result":{
@@ -490,7 +487,7 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.1",
     "code":200,
     "error":"",
     "result":{
@@ -687,7 +684,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
 
 ```json
 {
-    "rest api":"2.0",
+    "rest api":"2.2",
     "code":200,
     "error":"",
     "result":{
@@ -805,7 +802,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
 
 ## ICS23 - SlashingAPI
 
-The SlashingAPI exposes all functionality needed for to slash validators and delegators in PoS.
+The SlashingAPI exposes all functionalities needed to slash (*i.e* penalize) validators and delegators in Proof-of-Stake. The penalization is a fine of the staking coin and jail time, defined by governance parameters. During the jail period, the penalized validator is `Revoked`.
 
 ### GET /slashing/validator/{validatorAddr}/signing-info
 
@@ -824,10 +821,10 @@ The SlashingAPI exposes all functionality needed for to slash validators and del
 }
 ```
 
-### POST /slashing/validators/{validatorAddr}/unrevoke
+### POST /slashing/validators/{validatorAddr}/unjail
 
-- **URL**: `/slashing/validators/{validatorAddr}/unrevoke`
-- **Functionality**: Submit a message to unrevoke a validator.
+- **URL**: `/slashing/validators/{validatorAddr}/unjail`
+- **Functionality**: Submit a message to unjail a validator after it has been penalized.
 - POST Body:
 
 ```js

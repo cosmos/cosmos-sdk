@@ -36,11 +36,15 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, params pa
 }
 
 // handle a validator signing two blocks at the same height
-func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight int64, timestamp time.Time, power int64) {
+func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractionHeight int64, timestamp time.Time, power int64) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	time := ctx.BlockHeader().Time
 	age := time.Sub(timestamp)
-	address := sdk.ValAddress(pubkey.Address())
+	address := sdk.ValAddress(addr)
+	pubkey, err := k.getPubkey(ctx, addr)
+	if err != nil {
+		panic(fmt.Sprintf("Validator address %v not found", addr))
+	}
 
 	// Double sign too old
 	maxEvidenceAge := k.MaxEvidenceAge(ctx)

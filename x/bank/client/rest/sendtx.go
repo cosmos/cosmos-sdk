@@ -239,6 +239,7 @@ func createTransferTxForSignFn(cdc *wire.Codec, ctx context.CLIContext) gin.Hand
 	}
 }
 
+// nolint: gocyclo
 // handler of composing and broadcasting transactions in swagger rest server
 func composeAndBroadcastSignedTransferTxFn(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFunc {
 	return func(gtx *gin.Context) {

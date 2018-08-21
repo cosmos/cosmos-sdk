@@ -208,7 +208,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	return cleanup, validatorsPKs, port
 }
 
-// InitializeTestLCD starts Tendermint and the LCD in process, listening on
+// InitializeTestSwaggerLCD starts Tendermint and the LCD swagger rest server in process, listening on
 // their respective sockets where nValidators is the total number of validators
 // and initAddrs are the accounts to initialize with some steak tokens. It
 // returns a cleanup function, a set of validator public keys, and a port.

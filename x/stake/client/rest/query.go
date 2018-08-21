@@ -635,6 +635,7 @@ func delegatorHandlerCreation(cdc *wire.Codec, cliCtx context.CLIContext) gin.Ha
 	}
 }
 
+// nolint: gocyclo
 func delegatorTxsHandlerCreation(cdc *wire.Codec, cliCtx context.CLIContext) gin.HandlerFunc {
 	return func(gtx *gin.Context) {
 		var output []byte

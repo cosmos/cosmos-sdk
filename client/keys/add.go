@@ -239,8 +239,8 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(bz)
 }
 
-// nolint: gocyclo
 // AddNewKeyRequest is the handler of adding new key in swagger rest server
+// nolint: gocyclo
 func AddNewKeyRequest(gtx *gin.Context) {
 	var m NewKeyBody
 	body, err := ioutil.ReadAll(gtx.Request.Body)

@@ -32,8 +32,8 @@ func TestValidatorSet(t *testing.T) {
 	addr2 := []byte("addr2")
 
 	base := &mock.ValidatorSet{[]mock.Validator{
-		{addr1, sdk.NewRat(1)},
-		{addr2, sdk.NewRat(2)},
+		{addr1, sdk.NewDec(1)},
+		{addr2, sdk.NewDec(2)},
 	}}
 
 	valset := NewValidatorSet(wire.NewCodec(), ctx.KVStore(key).Prefix([]byte("assoc")), base, 1, 5)

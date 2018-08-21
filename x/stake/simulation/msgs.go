@@ -132,7 +132,7 @@ func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.
 		msg := stake.MsgBeginUnbonding{
 			DelegatorAddr: delegatorAddress,
 			ValidatorAddr: validatorAddress,
-			SharesAmount:  sdk.NewRatFromInt(amount),
+			SharesAmount:  sdk.NewDecFromInt(amount),
 		}
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		ctx, write := ctx.CacheContext()
@@ -191,7 +191,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountMapper, k stake.Keeper) simulation
 			DelegatorAddr:    delegatorAddress,
 			ValidatorSrcAddr: sourceValidatorAddress,
 			ValidatorDstAddr: destValidatorAddress,
-			SharesAmount:     sdk.NewRatFromInt(amount),
+			SharesAmount:     sdk.NewDecFromInt(amount),
 		}
 		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		ctx, write := ctx.CacheContext()
@@ -235,7 +235,10 @@ func SimulateMsgCompleteRedelegate(k stake.Keeper) simulation.TestAndRunTx {
 func Setup(mapp *mock.App, k stake.Keeper) simulation.RandSetup {
 	return func(r *rand.Rand, privKeys []crypto.PrivKey) {
 		ctx := mapp.NewContext(false, abci.Header{})
-		stake.InitGenesis(ctx, k, stake.DefaultGenesisState())
+		gen := stake.DefaultGenesisState()
+		gen.Params.InflationMax = sdk.NewDec(0)
+		gen.Params.InflationMin = sdk.NewDec(0)
+		stake.InitGenesis(ctx, k, gen)
 		params := k.GetParams(ctx)
 		denom := params.BondDenom
 		loose := sdk.ZeroInt()
@@ -247,7 +250,7 @@ func Setup(mapp *mock.App, k stake.Keeper) simulation.RandSetup {
 			return false
 		})
 		pool := k.GetPool(ctx)
-		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewRat(loose.Int64(), 1))
+		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewDec(loose.Int64()))
 		k.SetPool(ctx, pool)
 	}
 }

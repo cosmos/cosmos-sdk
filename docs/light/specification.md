@@ -14,7 +14,7 @@ tree is the AppHash which will be included in block header.
 
 ![Simple Merkle Tree](pics/simpleMerkleTree.png)
 
-As we have discussed in [LCD trust-propagation](https://github.com/irisnet/cosmos-sdk/tree/bianjie/lcd_spec/docs/spec/lcd#trust-propagation), 
+As we have discussed in [LCD trust-propagation](https://github.com/irisnet/cosmos-sdk/tree/bianjie/lcd_spec/docs/spec/lcd#trust-propagation),
 the AppHash can be verified by checking voting power against a trusted validator set. Here we just
 need to build proof from ABCI state to AppHash. The proof contains two parts:
 
@@ -212,7 +212,7 @@ For instance:
 
 To improve LCD reliability and TPS, we recommend to connect LCD to more than one fullnode. But the
 complexity will increase a lot. So load balancing module will be imported as the adapter. Please
-refer to this link for detailed description: [load balancing](https://github.com/irisnet/cosmos-sdk/blob/bianjie/lcd_spec/docs/spec/lcd/loadbalance.md)
+refer to this link for detailed description: [load balancer](load_balancer.md)
 
 ## ICS1 (KeyAPI)
 
@@ -305,14 +305,52 @@ return KeyOutput{
 
 ## ICS20 (TokenAPI)
 
-### [/bank/balance/{account}](api.md#balanceaccount---get)
+### [/bank/balance/{account}](api.md#bankbalanceaccount---get)
 
 1. Decode the address from bech32 to hex.
 2. Send a query request to a full node. Ask for proof if required by Gaia Light.
 3. Verify the proof against the root of trust.
 
-### [/bank/create_transfer](api.md#create_transfer---post)
-  
+### [/bank/create_transfer](api.md#bankcreate_transfer---post)
+
 1. Check the parameters.
 2. Build the transaction with the specified parameters.
 3. Serialise the transaction and return the JSON encoded sign bytes.
+
+## ICS21 (StakingAPI)
+
+### [/stake/delegators/{delegatorAddr}](api.md#stakedelegatorsdelegatorAddr---get)
+
+TODO
+
+### [/stake/delegators/{delegatorAddr}/validators](api.md#stakedelegatorsdelegatorAddrvalidators---get)
+
+TODO
+
+### [/stake/delegators/{delegatorAddr}/validators/{validatorAddr}](api.md#stakedelegatorsdelegatorAddrvalidatorsvalidatorAddr---get)
+
+TODO
+
+### [/stake/delegators/{delegatorAddr}/txs](api.md#stakedelegatorsdelegatorAddrtxs---get)
+
+TODO
+
+### [/stake/delegators/{delegatorAddr}/delegations](api.md#stakedelegatorsdelegatorAddrdelegations---post)
+
+TODO
+
+### [/stake/delegators/{delegatorAddr}/delegations/{validatorAddr}](api.md#stakedelegatorsdelegatorAddrdelegationsvalidatorAddr---get)
+
+TODO
+
+### [/stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}](api.md#stakedelegatorsdelegatorAddrunbonding_delegationsvalidatorAddr---get)
+
+TODO
+
+### [/stake/validators](api.md#stakevalidators---get)
+
+TODO
+
+### [/stake/validators/{validatorAddr}](api.md#stakevalidatorsvalidatorAddr---get)
+
+TODO

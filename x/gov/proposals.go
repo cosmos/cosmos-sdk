@@ -27,6 +27,9 @@ type Proposal interface {
 	GetStatus() ProposalStatus
 	SetStatus(ProposalStatus)
 
+	GetTallyResult() TallyResult
+	SetTallyResult(TallyResult)
+
 	GetSubmitBlock() int64
 	SetSubmitBlock(int64)
 
@@ -39,17 +42,18 @@ type Proposal interface {
 
 // checks if two proposals are equal
 func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
-	if proposalA.GetProposalID() != proposalB.GetProposalID() ||
-		proposalA.GetTitle() != proposalB.GetTitle() ||
-		proposalA.GetDescription() != proposalB.GetDescription() ||
-		proposalA.GetProposalType() != proposalB.GetProposalType() ||
-		proposalA.GetStatus() != proposalB.GetStatus() ||
-		proposalA.GetSubmitBlock() != proposalB.GetSubmitBlock() ||
-		!(proposalA.GetTotalDeposit().IsEqual(proposalB.GetTotalDeposit())) ||
-		proposalA.GetVotingStartBlock() != proposalB.GetVotingStartBlock() {
-		return false
+	if proposalA.GetProposalID() == proposalB.GetProposalID() &&
+		proposalA.GetTitle() == proposalB.GetTitle() &&
+		proposalA.GetDescription() == proposalB.GetDescription() &&
+		proposalA.GetProposalType() == proposalB.GetProposalType() &&
+		proposalA.GetStatus() == proposalB.GetStatus() &&
+		proposalA.GetTallyResult().Equals(proposalB.GetTallyResult()) &&
+		proposalA.GetSubmitBlock() == proposalB.GetSubmitBlock() &&
+		proposalA.GetTotalDeposit().IsEqual(proposalB.GetTotalDeposit()) &&
+		proposalA.GetVotingStartBlock() == proposalB.GetVotingStartBlock() {
+		return true
 	}
-	return true
+	return false
 }
 
 //-----------------------------------------------------------
@@ -60,7 +64,8 @@ type TextProposal struct {
 	Description  string       `json:"description"`   //  Description of the proposal
 	ProposalType ProposalKind `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 
-	Status ProposalStatus `json:"proposal_status"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
+	Status      ProposalStatus `json:"proposal_status"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
+	TallyResult TallyResult    `json:"tally_result"`    //  Result of Tallys
 
 	SubmitBlock  int64     `json:"submit_block"`  //  Height of the block where TxGovSubmitProposal was included
 	TotalDeposit sdk.Coins `json:"total_deposit"` //  Current deposit on this proposal. Initial value is set at InitialDeposit
@@ -82,6 +87,8 @@ func (tp TextProposal) GetProposalType() ProposalKind              { return tp.P
 func (tp *TextProposal) SetProposalType(proposalType ProposalKind) { tp.ProposalType = proposalType }
 func (tp TextProposal) GetStatus() ProposalStatus                  { return tp.Status }
 func (tp *TextProposal) SetStatus(status ProposalStatus)           { tp.Status = status }
+func (tp TextProposal) GetTallyResult() TallyResult                { return tp.TallyResult }
+func (tp *TextProposal) SetTallyResult(tallyResult TallyResult)    { tp.TallyResult = tallyResult }
 func (tp TextProposal) GetSubmitBlock() int64                      { return tp.SubmitBlock }
 func (tp *TextProposal) SetSubmitBlock(submitBlock int64)          { tp.SubmitBlock = submitBlock }
 func (tp TextProposal) GetTotalDeposit() sdk.Coins                 { return tp.TotalDeposit }
@@ -167,11 +174,11 @@ func (pt *ProposalKind) UnmarshalJSON(data []byte) error {
 // Turns VoteOption byte to String
 func (pt ProposalKind) String() string {
 	switch pt {
-	case 0x01:
+	case ProposalTypeText:
 		return "Text"
-	case 0x02:
+	case ProposalTypeParameterChange:
 		return "ParameterChange"
-	case 0x03:
+	case ProposalTypeSoftwareUpgrade:
 		return "SoftwareUpgrade"
 	default:
 		return ""
@@ -285,4 +292,34 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	default:
 		s.Write([]byte(fmt.Sprintf("%v", byte(status))))
 	}
+}
+
+//-----------------------------------------------------------
+// Tally Results
+type TallyResult struct {
+	Yes        sdk.Dec `json:"yes"`
+	Abstain    sdk.Dec `json:"abstain"`
+	No         sdk.Dec `json:"no"`
+	NoWithVeto sdk.Dec `json:"no_with_veto"`
+}
+
+// checks if two proposals are equal
+func EmptyTallyResult() TallyResult {
+	return TallyResult{
+		Yes:        sdk.ZeroDec(),
+		Abstain:    sdk.ZeroDec(),
+		No:         sdk.ZeroDec(),
+		NoWithVeto: sdk.ZeroDec(),
+	}
+}
+
+// checks if two proposals are equal
+func (resultA TallyResult) Equals(resultB TallyResult) bool {
+	if resultA.Yes.Equal(resultB.Yes) &&
+		resultA.Abstain.Equal(resultB.Abstain) &&
+		resultA.No.Equal(resultB.No) &&
+		resultA.NoWithVeto.Equal(resultB.NoWithVeto) {
+		return true
+	}
+	return false
 }

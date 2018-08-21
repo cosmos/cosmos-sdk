@@ -9,7 +9,7 @@ import (
 // nolint
 const (
 	FlagAddressDelegator    = "address-delegator"
-	FlagAddressValidator    = "address-validator"
+	FlagAddressValidator    = "validator"
 	FlagAddressValidatorSrc = "addr-validator-source"
 	FlagAddressValidatorDst = "addr-validator-dest"
 	FlagPubKey              = "pubkey"

@@ -1,7 +1,6 @@
 package types
 
 import (
-	"math"
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,17 +10,10 @@ import (
 // name to idetify transaction types
 const MsgType = "stake"
 
-// Maximum amount of decimal points in the decimal representation of rationals
-// used in MsgBeginUnbonding / MsgBeginRedelegate
-const MaxBondDenominatorPrecision = 8
-
 // Verify interface at compile time
 var _, _, _ sdk.Msg = &MsgCreateValidator{}, &MsgEditValidator{}, &MsgDelegate{}
 var _, _ sdk.Msg = &MsgBeginUnbonding{}, &MsgCompleteUnbonding{}
 var _, _ sdk.Msg = &MsgBeginRedelegate{}, &MsgCompleteRedelegate{}
-
-// Initialize Int for the denominator
-var maximumBondingRationalDenominator = sdk.NewInt(int64(math.Pow10(MaxBondDenominatorPrecision)))
 
 //______________________________________________________________________
 
@@ -211,11 +203,11 @@ type MsgBeginRedelegate struct {
 	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`
 	ValidatorSrcAddr sdk.AccAddress `json:"validator_src_addr"`
 	ValidatorDstAddr sdk.AccAddress `json:"validator_dst_addr"`
-	SharesAmount     sdk.Rat        `json:"shares_amount"`
+	SharesAmount     sdk.Dec        `json:"shares_amount"`
 }
 
 func NewMsgBeginRedelegate(delegatorAddr, validatorSrcAddr,
-	validatorDstAddr sdk.AccAddress, sharesAmount sdk.Rat) MsgBeginRedelegate {
+	validatorDstAddr sdk.AccAddress, sharesAmount sdk.Dec) MsgBeginRedelegate {
 
 	return MsgBeginRedelegate{
 		DelegatorAddr:    delegatorAddr,
@@ -261,11 +253,8 @@ func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorDstAddr == nil {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if msg.SharesAmount.LTE(sdk.ZeroRat()) {
+	if msg.SharesAmount.LTE(sdk.ZeroDec()) {
 		return ErrBadSharesAmount(DefaultCodespace)
-	}
-	if msg.SharesAmount.Denom().GT(maximumBondingRationalDenominator) {
-		return ErrBadSharesPrecision(DefaultCodespace)
 	}
 	return nil
 }
@@ -322,10 +311,10 @@ func (msg MsgCompleteRedelegate) ValidateBasic() sdk.Error {
 type MsgBeginUnbonding struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
 	ValidatorAddr sdk.AccAddress `json:"validator_addr"`
-	SharesAmount  sdk.Rat        `json:"shares_amount"`
+	SharesAmount  sdk.Dec        `json:"shares_amount"`
 }
 
-func NewMsgBeginUnbonding(delegatorAddr, validatorAddr sdk.AccAddress, sharesAmount sdk.Rat) MsgBeginUnbonding {
+func NewMsgBeginUnbonding(delegatorAddr, validatorAddr sdk.AccAddress, sharesAmount sdk.Dec) MsgBeginUnbonding {
 	return MsgBeginUnbonding{
 		DelegatorAddr: delegatorAddr,
 		ValidatorAddr: validatorAddr,
@@ -362,11 +351,8 @@ func (msg MsgBeginUnbonding) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if msg.SharesAmount.LTE(sdk.ZeroRat()) {
+	if msg.SharesAmount.LTE(sdk.ZeroDec()) {
 		return ErrBadSharesAmount(DefaultCodespace)
-	}
-	if msg.SharesAmount.Denom().GT(maximumBondingRationalDenominator) {
-		return ErrBadSharesPrecision(DefaultCodespace)
 	}
 	return nil
 }

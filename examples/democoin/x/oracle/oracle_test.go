@@ -107,9 +107,9 @@ func TestOracle(t *testing.T) {
 	addr3 := []byte("addr3")
 	addr4 := []byte("addr4")
 	valset := &mock.ValidatorSet{[]mock.Validator{
-		{addr1, sdk.NewRat(7)},
-		{addr2, sdk.NewRat(7)},
-		{addr3, sdk.NewRat(1)},
+		{addr1, sdk.NewDec(7)},
+		{addr2, sdk.NewDec(7)},
+		{addr3, sdk.NewDec(1)},
 	}}
 
 	key := sdk.NewKVStoreKey("testkey")
@@ -119,7 +119,7 @@ func TestOracle(t *testing.T) {
 	require.Nil(t, err)
 	ctx = ctx.WithBlockHeader(abci.Header{ValidatorsHash: bz})
 
-	ork := NewKeeper(key, cdc, valset, sdk.NewRat(2, 3), 100)
+	ork := NewKeeper(key, cdc, valset, sdk.NewDecWithPrec(667, 3), 100) // 66.7%
 	h := seqHandler(ork, key, sdk.CodespaceRoot)
 
 	// Nonmock.Validator signed, transaction failed
@@ -171,7 +171,7 @@ func TestOracle(t *testing.T) {
 	require.Equal(t, 1, getSequence(ctx, key))
 
 	// Should handle mock.Validator set change
-	valset.AddValidator(mock.Validator{addr4, sdk.NewRat(12)})
+	valset.AddValidator(mock.Validator{addr4, sdk.NewDec(12)})
 	bz, err = json.Marshal(valset)
 	require.Nil(t, err)
 	ctx = ctx.WithBlockHeader(abci.Header{ValidatorsHash: bz})

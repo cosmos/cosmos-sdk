@@ -23,7 +23,7 @@ func (keeper Keeper) update(ctx sdk.Context, val sdk.Validator, valset sdk.Valid
 	// and recalculate voted power
 	hash := ctx.BlockHeader().ValidatorsHash
 	if !bytes.Equal(hash, info.Hash) {
-		info.Power = sdk.ZeroRat()
+		info.Power = sdk.ZeroDec()
 		info.Hash = hash
 		prefix := GetSignPrefix(p, keeper.cdc)
 		store := ctx.KVStore(keeper.key)

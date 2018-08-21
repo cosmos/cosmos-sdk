@@ -63,7 +63,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper) sdk.InitChainer {
 		mapp.InitChainer(ctx, req)
 
 		stakeGenesis := DefaultGenesisState()
-		stakeGenesis.Pool.LooseTokens = sdk.NewRat(100000)
+		stakeGenesis.Pool.LooseTokens = sdk.NewDec(100000)
 
 		validators, err := InitGenesis(ctx, keeper, stakeGenesis)
 		if err != nil {
@@ -90,14 +90,14 @@ func checkValidator(t *testing.T, mapp *mock.App, keeper Keeper,
 
 func checkDelegation(
 	t *testing.T, mapp *mock.App, keeper Keeper, delegatorAddr,
-	validatorAddr sdk.AccAddress, expFound bool, expShares sdk.Rat,
+	validatorAddr sdk.AccAddress, expFound bool, expShares sdk.Dec,
 ) {
 
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 	delegation, found := keeper.GetDelegation(ctxCheck, delegatorAddr, validatorAddr)
 	if expFound {
 		require.True(t, found)
-		require.True(sdk.RatEq(t, expShares, delegation.Shares))
+		require.True(sdk.DecEq(t, expShares, delegation.Shares))
 
 		return
 	}
@@ -136,9 +136,9 @@ func TestStakeMsgs(t *testing.T) {
 	mApp.BeginBlock(abci.RequestBeginBlock{})
 
 	validator := checkValidator(t, mApp, keeper, addr1, true)
-	require.Equal(t, addr1, validator.Owner)
+	require.Equal(t, addr1, validator.Operator)
 	require.Equal(t, sdk.Bonded, validator.Status)
-	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.BondedTokens()))
+	require.True(sdk.DecEq(t, sdk.NewDec(10), validator.BondedTokens()))
 
 	// addr1 create validator on behalf of addr2
 	createValidatorMsgOnBehalfOf := NewMsgCreateValidatorOnBehalfOf(addr1, addr2, priv2.PubKey(), bondCoin, description)
@@ -148,12 +148,12 @@ func TestStakeMsgs(t *testing.T) {
 	mApp.BeginBlock(abci.RequestBeginBlock{})
 
 	validator = checkValidator(t, mApp, keeper, addr2, true)
-	require.Equal(t, addr2, validator.Owner)
+	require.Equal(t, addr2, validator.Operator)
 	require.Equal(t, sdk.Bonded, validator.Status)
-	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.Tokens))
+	require.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
 
 	// check the bond that should have been created as well
-	checkDelegation(t, mApp, keeper, addr1, addr1, true, sdk.NewRat(10))
+	checkDelegation(t, mApp, keeper, addr1, addr1, true, sdk.NewDec(10))
 
 	// edit the validator
 	description = NewDescription("bar_moniker", "", "", "")
@@ -169,14 +169,14 @@ func TestStakeMsgs(t *testing.T) {
 
 	mock.SignCheckDeliver(t, mApp.BaseApp, []sdk.Msg{delegateMsg}, []int64{1}, []int64{1}, true, priv2)
 	mock.CheckBalance(t, mApp, addr2, sdk.Coins{genCoin.Minus(bondCoin)})
-	checkDelegation(t, mApp, keeper, addr2, addr1, true, sdk.NewRat(10))
+	checkDelegation(t, mApp, keeper, addr2, addr1, true, sdk.NewDec(10))
 
 	// begin unbonding
-	beginUnbondingMsg := NewMsgBeginUnbonding(addr2, addr1, sdk.NewRat(10))
+	beginUnbondingMsg := NewMsgBeginUnbonding(addr2, addr1, sdk.NewDec(10))
 	mock.SignCheckDeliver(t, mApp.BaseApp, []sdk.Msg{beginUnbondingMsg}, []int64{1}, []int64{2}, true, priv2)
 
 	// delegation should exist anymore
-	checkDelegation(t, mApp, keeper, addr2, addr1, false, sdk.Rat{})
+	checkDelegation(t, mApp, keeper, addr2, addr1, false, sdk.Dec{})
 
 	// balance should be the same because bonding not yet complete
 	mock.CheckBalance(t, mApp, addr2, sdk.Coins{genCoin.Minus(bondCoin)})

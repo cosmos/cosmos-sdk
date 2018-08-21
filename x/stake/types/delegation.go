@@ -2,8 +2,8 @@ package types
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -15,12 +15,12 @@ import (
 type Delegation struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
 	ValidatorAddr sdk.AccAddress `json:"validator_addr"`
-	Shares        sdk.Rat        `json:"shares"`
+	Shares        sdk.Dec        `json:"shares"`
 	Height        int64          `json:"height"` // Last height bond updated
 }
 
 type delegationValue struct {
-	Shares sdk.Rat
+	Shares sdk.Dec
 	Height int64
 }
 
@@ -47,12 +47,13 @@ func UnmarshalDelegation(cdc *wire.Codec, key, value []byte) (delegation Delegat
 	var storeValue delegationValue
 	err = cdc.UnmarshalBinary(value, &storeValue)
 	if err != nil {
+		err = fmt.Errorf("%v: %v", ErrNoDelegation(DefaultCodespace).Data(), err)
 		return
 	}
 
 	addrs := key[1:] // remove prefix bytes
 	if len(addrs) != 2*sdk.AddrLen {
-		err = errors.New("unexpected key length")
+		err = fmt.Errorf("%v", ErrBadDelegationAddr(DefaultCodespace).Data())
 		return
 	}
 	delAddr := sdk.AccAddress(addrs[:sdk.AddrLen])
@@ -80,7 +81,7 @@ var _ sdk.Delegation = Delegation{}
 // nolint - for sdk.Delegation
 func (d Delegation) GetDelegator() sdk.AccAddress { return d.DelegatorAddr }
 func (d Delegation) GetValidator() sdk.AccAddress { return d.ValidatorAddr }
-func (d Delegation) GetBondShares() sdk.Rat       { return d.Shares }
+func (d Delegation) GetBondShares() sdk.Dec       { return d.Shares }
 
 // HumanReadableString returns a human readable string representation of a
 // Delegation. An error is returned if the Delegation's delegator or validator
@@ -100,14 +101,14 @@ type UnbondingDelegation struct {
 	DelegatorAddr  sdk.AccAddress `json:"delegator_addr"`  // delegator
 	ValidatorAddr  sdk.AccAddress `json:"validator_addr"`  // validator unbonding from owner addr
 	CreationHeight int64          `json:"creation_height"` // height which the unbonding took place
-	MinTime        int64          `json:"min_time"`        // unix time for unbonding completion
+	MinTime        time.Time      `json:"min_time"`        // unix time for unbonding completion
 	InitialBalance sdk.Coin       `json:"initial_balance"` // atoms initially scheduled to receive at completion
 	Balance        sdk.Coin       `json:"balance"`         // atoms to receive at completion
 }
 
 type ubdValue struct {
 	CreationHeight int64
-	MinTime        int64
+	MinTime        time.Time
 	InitialBalance sdk.Coin
 	Balance        sdk.Coin
 }
@@ -142,7 +143,7 @@ func UnmarshalUBD(cdc *wire.Codec, key, value []byte) (ubd UnbondingDelegation, 
 
 	addrs := key[1:] // remove prefix bytes
 	if len(addrs) != 2*sdk.AddrLen {
-		err = errors.New("unexpected key length")
+		err = fmt.Errorf("%v", ErrBadDelegationAddr(DefaultCodespace).Data())
 		return
 	}
 	delAddr := sdk.AccAddress(addrs[:sdk.AddrLen])
@@ -186,20 +187,20 @@ type Redelegation struct {
 	ValidatorSrcAddr sdk.AccAddress `json:"validator_src_addr"` // validator redelegation source owner addr
 	ValidatorDstAddr sdk.AccAddress `json:"validator_dst_addr"` // validator redelegation destination owner addr
 	CreationHeight   int64          `json:"creation_height"`    // height which the redelegation took place
-	MinTime          int64          `json:"min_time"`           // unix time for redelegation completion
+	MinTime          time.Time      `json:"min_time"`           // unix time for redelegation completion
 	InitialBalance   sdk.Coin       `json:"initial_balance"`    // initial balance when redelegation started
 	Balance          sdk.Coin       `json:"balance"`            // current balance
-	SharesSrc        sdk.Rat        `json:"shares_src"`         // amount of source shares redelegating
-	SharesDst        sdk.Rat        `json:"shares_dst"`         // amount of destination shares redelegating
+	SharesSrc        sdk.Dec        `json:"shares_src"`         // amount of source shares redelegating
+	SharesDst        sdk.Dec        `json:"shares_dst"`         // amount of destination shares redelegating
 }
 
 type redValue struct {
 	CreationHeight int64
-	MinTime        int64
+	MinTime        time.Time
 	InitialBalance sdk.Coin
 	Balance        sdk.Coin
-	SharesSrc      sdk.Rat
-	SharesDst      sdk.Rat
+	SharesSrc      sdk.Dec
+	SharesDst      sdk.Dec
 }
 
 // return the redelegation without fields contained within the key for the store
@@ -234,7 +235,7 @@ func UnmarshalRED(cdc *wire.Codec, key, value []byte) (red Redelegation, err err
 
 	addrs := key[1:] // remove prefix bytes
 	if len(addrs) != 3*sdk.AddrLen {
-		err = errors.New("unexpected key length")
+		err = fmt.Errorf("%v", ErrBadRedelegationAddr(DefaultCodespace).Data())
 		return
 	}
 	delAddr := sdk.AccAddress(addrs[:sdk.AddrLen])

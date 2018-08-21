@@ -40,11 +40,11 @@ type Validator interface {
 	GetRevoked() bool         // whether the validator is revoked
 	GetMoniker() string       // moniker of the validator
 	GetStatus() BondStatus    // status of the validator
-	GetOwner() AccAddress     // owner AccAddress to receive/return validators coins
+	GetOperator() AccAddress  // owner AccAddress to receive/return validators coins
 	GetPubKey() crypto.PubKey // validation pubkey
-	GetPower() Rat            // validation power
-	GetTokens() Rat           // validation tokens
-	GetDelegatorShares() Rat  // Total out standing delegator shares
+	GetPower() Dec            // validation power
+	GetTokens() Dec           // validation tokens
+	GetDelegatorShares() Dec  // Total out standing delegator shares
 	GetBondHeight() int64     // height in which the validator became active
 }
 
@@ -68,10 +68,10 @@ type ValidatorSet interface {
 
 	Validator(Context, AccAddress) Validator            // get a particular validator by owner AccAddress
 	ValidatorByPubKey(Context, crypto.PubKey) Validator // get a particular validator by signing PubKey
-	TotalPower(Context) Rat                             // total power of the validator set
+	TotalPower(Context) Dec                             // total power of the validator set
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
-	Slash(Context, crypto.PubKey, int64, int64, Rat)
+	Slash(Context, crypto.PubKey, int64, int64, Dec)
 	Revoke(Context, crypto.PubKey)   // revoke a validator
 	Unrevoke(Context, crypto.PubKey) // unrevoke a validator
 }
@@ -82,7 +82,7 @@ type ValidatorSet interface {
 type Delegation interface {
 	GetDelegator() AccAddress // delegator AccAddress for the bond
 	GetValidator() AccAddress // validator owner AccAddress for the bond
-	GetBondShares() Rat       // amount of validator's shares
+	GetBondShares() Dec       // amount of validator's shares
 }
 
 // properties for the set of all delegations for a particular

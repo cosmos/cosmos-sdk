@@ -20,13 +20,9 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) (tags 
 	// Iterate over all the validators  which *should* have signed this block
 	// Store whether or not they have actually signed it and slash/unbond any
 	// which have missed too many blocks in a row (downtime slashing)
-	for _, signingValidator := range req.Validators {
+	for _, signingValidator := range req.LastCommitInfo.GetValidators() {
 		present := signingValidator.SignedLastBlock
-		pubkey, err := tmtypes.PB2TM.PubKey(signingValidator.Validator.PubKey)
-		if err != nil {
-			panic(err)
-		}
-		sk.handleValidatorSignature(ctx, pubkey, signingValidator.Validator.Power, present)
+		sk.handleValidatorSignature(ctx, signingValidator.Validator.Address, signingValidator.Validator.Power, present)
 	}
 
 	// Iterate through any newly discovered evidence of infraction

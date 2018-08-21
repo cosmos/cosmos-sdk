@@ -15,7 +15,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gin-gonic/gin"
-	"errors"
 	"github.com/cosmos/cosmos-sdk/client/httputils"
 )
 
@@ -558,7 +557,7 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 	}
 }
 
-func RegisterSwaggerQueryRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext, cdc *wire.Codec) {
+func registerSwaggerQueryRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext, cdc *wire.Codec) {
 	routerGroup.GET("/stake/:delegator/delegation/:validator", delegationHandlerFun(cdc, ctx))
 	routerGroup.GET("/stake/:delegator/ubd/:validator", ubdHandlerFun(cdc, ctx))
 	routerGroup.GET("/stake/:delegator/red/:validator_src/:validator_dst", redHandlerFun(cdc, ctx))
@@ -588,13 +587,13 @@ func delegationHandlerFun(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFu
 
 		res, err := ctx.QueryStore(key, storeName)
 		if err != nil {
-			httputils.NewError(gtx, http.StatusBadRequest, errors.New(fmt.Sprintf("couldn't query delegation. Error: %s", err.Error())))
+			httputils.NewError(gtx, http.StatusBadRequest, fmt.Errorf("couldn't query delegation. Error: %s", err.Error()))
 			return
 		}
 
 		// the query will return empty if there is no data for this record
 		if len(res) == 0 {
-			httputils.Response(gtx,nil)
+			httputils.NormalResponse(gtx,nil)
 			return
 		}
 
@@ -604,7 +603,7 @@ func delegationHandlerFun(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFu
 			return
 		}
 
-		httputils.Response(gtx,delegation)
+		httputils.NormalResponse(gtx,delegation)
 	}
 }
 
@@ -632,23 +631,23 @@ func ubdHandlerFun(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFunc {
 
 		res, err := ctx.QueryStore(key, storeName)
 		if err != nil {
-			httputils.NewError(gtx, http.StatusInternalServerError, errors.New(fmt.Sprintf("couldn't query unbonding-delegation. Error: %s", err.Error())))
+			httputils.NewError(gtx, http.StatusInternalServerError, fmt.Errorf("couldn't query unbonding-delegation. Error: %s", err.Error()))
 			return
 		}
 
 		// the query will return empty if there is no data for this record
 		if len(res) == 0 {
-			httputils.Response(gtx,nil)
+			httputils.NormalResponse(gtx,nil)
 			return
 		}
 
 		ubd, err := types.UnmarshalUBD(cdc, key, res)
 		if err != nil {
-			httputils.NewError(gtx, http.StatusInternalServerError, errors.New(fmt.Sprintf("couldn't query unbonding-delegation. Error: %s", err.Error())))
+			httputils.NewError(gtx, http.StatusInternalServerError, fmt.Errorf("couldn't query unbonding-delegation. Error: %s", err.Error()))
 			return
 		}
 
-		httputils.Response(gtx,ubd)
+		httputils.NormalResponse(gtx,ubd)
 	}
 }
 
@@ -682,23 +681,23 @@ func redHandlerFun(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFunc {
 
 		res, err := ctx.QueryStore(key, storeName)
 		if err != nil {
-			httputils.NewError(gtx, http.StatusInternalServerError, errors.New(fmt.Sprintf("couldn't query redelegation. Error: %s", err.Error())))
+			httputils.NewError(gtx, http.StatusInternalServerError, fmt.Errorf("couldn't query redelegation. Error: %s", err.Error()))
 			return
 		}
 
 		// the query will return empty if there is no data for this record
 		if len(res) == 0 {
-			httputils.Response(gtx,nil)
+			httputils.NormalResponse(gtx,nil)
 			return
 		}
 
 		red, err := types.UnmarshalRED(cdc, key, res)
 		if err != nil {
-			httputils.NewError(gtx, http.StatusInternalServerError, errors.New(fmt.Sprintf("couldn't query unbonding-delegation. Error: %s", err.Error())))
+			httputils.NewError(gtx, http.StatusInternalServerError, fmt.Errorf("couldn't query unbonding-delegation. Error: %s", err.Error()))
 			return
 		}
 
-		httputils.Response(gtx,red)
+		httputils.NormalResponse(gtx,red)
 	}
 }
 
@@ -706,13 +705,13 @@ func validatorsHandlerFun(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFu
 	return func(gtx *gin.Context) {
 		kvs, err := ctx.QuerySubspace(stake.ValidatorsKey, storeName)
 		if err != nil {
-			httputils.NewError(gtx, http.StatusInternalServerError, errors.New(fmt.Sprintf("couldn't query validators. Error: %s", err.Error())))
+			httputils.NewError(gtx, http.StatusInternalServerError, fmt.Errorf("couldn't query validators. Error: %s", err.Error()))
 			return
 		}
 
 		// the query will return empty if there are no validators
 		if len(kvs) == 0 {
-			httputils.Response(gtx,nil)
+			httputils.NormalResponse(gtx,nil)
 			return
 		}
 
@@ -723,7 +722,7 @@ func validatorsHandlerFun(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFu
 			addr := kv.Key[1:]
 			validator, err := types.UnmarshalValidator(cdc, addr, kv.Value)
 			if err != nil {
-				httputils.NewError(gtx, http.StatusInternalServerError, errors.New(fmt.Sprintf("couldn't query unbonding-delegation. Error: %s", err.Error())))
+				httputils.NewError(gtx, http.StatusInternalServerError, fmt.Errorf("couldn't query unbonding-delegation. Error: %s", err.Error()))
 				return
 			}
 
@@ -735,6 +734,6 @@ func validatorsHandlerFun(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFu
 			validators[i] = bech32Validator
 		}
 
-		httputils.Response(gtx,validators)
+		httputils.NormalResponse(gtx,validators)
 	}
 }

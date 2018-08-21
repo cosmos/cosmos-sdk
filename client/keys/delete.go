@@ -93,6 +93,7 @@ func DeleteKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 }
 
+// Handler of deleting specified key in swagger rest server
 func DeleteKeyRequest(gtx *gin.Context) {
 	name := gtx.Param("name")
 	var kb keys.Keybase
@@ -116,5 +117,5 @@ func DeleteKeyRequest(gtx *gin.Context) {
 		return
 	}
 
-	httputils.Response(gtx, "success")
+	httputils.NormalResponse(gtx, "success")
 }

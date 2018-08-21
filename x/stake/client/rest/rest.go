@@ -15,6 +15,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, k
 	registerTxRoutes(cliCtx, r, cdc, kb)
 }
 
+// RegisterSwaggerRoutes registers staking status query REST API handlers to a router
 func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext, cdc *wire.Codec) {
-	RegisterSwaggerQueryRoutes(routerGroup, ctx, cdc)
+	registerSwaggerQueryRoutes(routerGroup, ctx, cdc)
 }

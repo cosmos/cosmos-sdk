@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/viper"
 	"encoding/json"
 	"strings"
-	"errors"
 	"github.com/cosmos/cosmos-sdk/client"
 	"bytes"
 	"fmt"
@@ -1563,7 +1562,7 @@ var doc = `{
     }
 }`
 
-var TagToModuleDesc = `
+var tagToModuleDesc = `
 {
   "General":"general",
   "Key Management":"key",
@@ -1641,31 +1640,31 @@ func modularizeAPIs(modules string, paths map[string]interface{}) map[string]int
 	filteredAPIs := make(map[string]interface{})
 
 	var moduleToTag map[string]string
-	if err := json.Unmarshal([]byte(TagToModuleDesc), &moduleToTag); err != nil {
+	if err := json.Unmarshal([]byte(tagToModuleDesc), &moduleToTag); err != nil {
 		panic(err)
 	}
 	moduleArray := strings.Split(modules,",")
 
 	for path,operations := range paths {
 		if reflect.TypeOf(operations).String() != "map[string]interface {}" {
-			panic(errors.New(fmt.Sprintf("unexpected data type, expected: map[string]interface {}, got: %s",
-				reflect.TypeOf(operations).String())))
+			panic(fmt.Errorf("unexpected data type, expected: map[string]interface {}, got: %s",
+				reflect.TypeOf(operations).String()))
 		}
 		operationAPIs := operations.(map[string]interface{})
 		for operation,API := range operationAPIs {
 			if reflect.TypeOf(API).String() != "map[string]interface {}" {
-				panic(errors.New(fmt.Sprintf("unexpected data type, expected: map[string]interface {}, got: %s",
-					reflect.TypeOf(API).String())))
+				panic(fmt.Errorf("unexpected data type, expected: map[string]interface {}, got: %s",
+					reflect.TypeOf(API).String()))
 			}
 			APIInfo := API.(map[string]interface{})
 			tags := APIInfo["tags"].([]interface{})
 			if len(tags) != 1 {
-				panic(errors.New(fmt.Sprintf("only support one tag, got %d tags",len(tags))))
+				panic(fmt.Errorf("only support one tag, got %d tags",len(tags)))
 			}
 
 			if reflect.TypeOf(tags[0]).String() != "string" {
-				panic(errors.New(fmt.Sprintf("unexpected data type, expected: string, got: %s",
-					reflect.TypeOf(tags[0]).String())))
+				panic(fmt.Errorf("unexpected data type, expected: string, got: %s",
+					reflect.TypeOf(tags[0]).String()))
 			}
 			moduleName := moduleToTag[tags[0].(string)]
 			enable := moduleEnabled(moduleArray,moduleName)
@@ -1698,14 +1697,14 @@ func (s *s) ReadDoc() string {
 
 	addrInfo := strings.Split(listenAddr,":")
 	if len(addrInfo) != 2{
-		panic(errors.New("invalid listen address"))
+		panic(fmt.Errorf("invalid listen address"))
 	}
 	listenPort := addrInfo[1]
 	docs["host"] = swaggerHost + ":" + listenPort
 
 	if reflect.TypeOf(docs["info"]).String() != "map[string]interface {}" {
-		panic(errors.New(fmt.Sprintf("unexpected data type, expected: map[string]interface {}, got: %s",
-			reflect.TypeOf(docs["info"]).String())))
+		panic(fmt.Errorf("unexpected data type, expected: map[string]interface {}, got: %s",
+			reflect.TypeOf(docs["info"]).String()))
 	}
 	infos := docs["info"].(map[string]interface{})
 	description := infos["description"].(string)
@@ -1714,8 +1713,8 @@ func (s *s) ReadDoc() string {
 	docs["info"] = infos
 
 	if reflect.TypeOf(docs["paths"]).String() != "map[string]interface {}" {
-		panic(errors.New(fmt.Sprintf("unexpected data type, expected: map[string]interface {}, got: %s",
-			reflect.TypeOf(docs["paths"]).String())))
+		panic(fmt.Errorf("unexpected data type, expected: map[string]interface {}, got: %s",
+			reflect.TypeOf(docs["paths"]).String()))
 	}
 	paths := docs["paths"].(map[string]interface{})
 	docs["paths"] = modularizeAPIs(modules,paths)

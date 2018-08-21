@@ -19,6 +19,7 @@ import (
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	_ "github.com/cosmos/cosmos-sdk/client/lcd/docs"
 )
 
 // rootCmd is the entry point for this binary

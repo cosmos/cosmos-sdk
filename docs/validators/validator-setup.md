@@ -4,7 +4,7 @@
 The current testnet is `gaia-8000`.
 :::
 
-Before setting up your validator node, make sure you've already gone through the [Full Node Setup](/getting-started/full-node.md) guide.
+Before setting up your validator node, make sure you've already gone through the [Full Node Setup](/docs/getting-started/full-node.md) guide.
 
 ## Running a Validator Node
 

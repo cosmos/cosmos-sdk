@@ -97,7 +97,7 @@ func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 }
 
-// Handler of updating specified key in swagger rest server
+// UpdateKeyRequest is the handler of updating specified key in swagger rest server
 func UpdateKeyRequest(gtx *gin.Context) {
 	name := gtx.Param("name")
 	var kb keys.Keybase

@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// Create error http response
+// NewError create error http response
 func NewError(ctx *gin.Context, errCode int, err error) {
 	errorResponse := httpError{
 		API:	"2.0",
@@ -15,7 +15,7 @@ func NewError(ctx *gin.Context, errCode int, err error) {
 	ctx.JSON(errCode, errorResponse)
 }
 
-// Create normal http response
+// NormalResponse create normal http response
 func NormalResponse(ctx *gin.Context, data interface{}) {
 	response := httpResponse{
 		API:	"2.0",

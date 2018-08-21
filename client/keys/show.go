@@ -68,7 +68,7 @@ func GetKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(output)
 }
 
-// Handler of getting specified key in swagger rest server
+// GetKeyRequest is the handler of getting specified key in swagger rest server
 func GetKeyRequest(gtx *gin.Context) {
 	name := gtx.Param("name")
 

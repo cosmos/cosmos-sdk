@@ -40,7 +40,7 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/keys/{name}", DeleteKeyRequestHandler).Methods("DELETE")
 }
 
-// resgister swagger REST routes
+// RegisterSwaggerRoutes register swagger REST routes
 func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup) {
 	routerGroup.GET("/keys", QueryKeysRequest)
 	routerGroup.POST("/keys", AddNewKeyRequest)

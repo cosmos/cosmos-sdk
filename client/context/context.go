@@ -123,7 +123,7 @@ func (ctx CLIContext) WithCert(cert tendermintLite.Certifier) CLIContext {
 	return ctx
 }
 
-// WithCert - return a copy of the context with an updated ClientMgr
+// WithClientMgr - return a copy of the context with an updated ClientMgr
 func (ctx CLIContext) WithClientMgr(clientMgr *ClientManager) CLIContext {
 	ctx.ClientMgr = clientMgr
 	return ctx

@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// This is a manager of a set of rpc clients to full nodes.
+// ClientManager is a manager of a set of rpc clients to full nodes.
 // This manager can do load balancing upon these rpc clients.
 type ClientManager struct {
 	clients []rpcclient.Client
@@ -15,6 +15,7 @@ type ClientManager struct {
 	mutex sync.RWMutex
 }
 
+// NewClientManager create a new ClientManager
 func NewClientManager(nodeURIs string) (*ClientManager,error) {
 	if nodeURIs != "" {
 		nodeURLArray := strings.Split(nodeURIs, ",")

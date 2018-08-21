@@ -341,6 +341,41 @@ gaiacli gov query-vote \
   --voter=<account_cosmosaccaddr>
 ```
 
+#### Query Parameters
+
+You can get the current parameters that define high level settings for staking:
+
+```
+gaiacli stake parameters
+```
+
+With the above command you will get the values for:
+
+- Maximum and minumum Inflation rate
+- Maximum annual change in inflation rate,
+- Goal of bonded tokens (%)
+- Unbonding time
+- Maximum numbers of validators
+- Coin denomination for staking
+
+All this values can be updated though a `governance` process by submitting a parameter change `proposal`.
+
+#### Query Pool
+
+A staking `Pool` defines the dynamic parameters of the current state. You can query them with the following command:
+
+```
+gaiacli stake pool
+```
+
+With the `pool` command you will get the values for:
+
+- Loose and bonded tokens
+- Token supply
+- Current anual inflation and the block in which the last inflation was processed
+- Last recorded bonded shares
+
+
 ## Gaia-Lite
 
 ::: tip Note

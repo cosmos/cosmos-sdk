@@ -88,6 +88,8 @@ func main() {
 			stakecmd.GetCmdQueryValidators("stake", cdc),
 			stakecmd.GetCmdQueryDelegation("stake", cdc),
 			stakecmd.GetCmdQueryDelegations("stake", cdc),
+			stakecmd.GetCmdQueryParams("stake", cdc),
+			stakecmd.GetCmdQueryPool("stake", cdc),
 			stakecmd.GetCmdQueryUnbondingDelegation("stake", cdc),
 			stakecmd.GetCmdQueryUnbondingDelegations("stake", cdc),
 			stakecmd.GetCmdQueryRedelegation("stake", cdc),

@@ -417,3 +417,81 @@ func GetCmdQueryRedelegations(storeName string, cdc *wire.Codec) *cobra.Command 
 
 	return cmd
 }
+
+// GetCmdQueryPool implements the pool query command.
+func GetCmdQueryPool(storeName string, cdc *wire.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pool",
+		Short: "Query the current staking pool values",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			key := stake.PoolKey
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			res, err := cliCtx.QueryStore(key, storeName)
+			if err != nil {
+				return err
+			}
+
+			pool := types.MustUnmarshalPool(cdc, res)
+
+			switch viper.Get(cli.OutputFlag) {
+			case "text":
+				human := pool.HumanReadableString()
+
+				fmt.Println(human)
+
+			case "json":
+				// parse out the pool
+				output, err := wire.MarshalJSONIndent(cdc, pool)
+				if err != nil {
+					return err
+				}
+
+				fmt.Println(string(output))
+			}
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// GetCmdQueryPool implements the params query command.
+func GetCmdQueryParams(storeName string, cdc *wire.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "parameters",
+		Short: "Query the current staking parameters information",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			key := stake.ParamKey
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			res, err := cliCtx.QueryStore(key, storeName)
+			if err != nil {
+				return err
+			}
+
+			params := types.MustUnmarshalParams(cdc, res)
+
+			switch viper.Get(cli.OutputFlag) {
+			case "text":
+				human := params.HumanReadableString()
+
+				fmt.Println(human)
+
+			case "json":
+				// parse out the params
+				output, err := wire.MarshalJSONIndent(cdc, params)
+				if err != nil {
+					return err
+				}
+
+				fmt.Println(string(output))
+			}
+			return nil
+		},
+	}
+
+	return cmd
+}

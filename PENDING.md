@@ -23,8 +23,10 @@ BREAKING CHANGES
 FEATURES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  * [lcd] Endpoints to query staking pool and params
 
 * Gaia CLI  (`gaiacli`)
+  * [cli] Cmds to query staking pool and params
 
 * Gaia
 
@@ -63,4 +65,3 @@ BUG FIXES
     *  \#1988 Make us compile on OpenBSD (disable ledger) [#1988] (https://github.com/cosmos/cosmos-sdk/issues/1988)
 
 * Tendermint
-

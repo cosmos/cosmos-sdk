@@ -425,7 +425,8 @@ func (k Keeper) UpdateBondedValidators(
 				}
 				newValidatorBonded = true
 			}
-
+		} else {
+			// TODO: document why we must break here.
 			break
 		}
 

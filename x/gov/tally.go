@@ -42,9 +42,10 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 
 		// if validator, just record it in the map
 		// if delegator tally voting power
-		if val, ok := currValidators[vote.Voter.String()]; ok {
+		valAddr := sdk.ValAddress(vote.Voter)
+		if val, ok := currValidators[valAddr.String()]; ok {
 			val.Vote = vote.Option
-			currValidators[vote.Voter.String()] = val
+			currValidators[valAddr.String()] = val
 		} else {
 
 			keeper.ds.IterateDelegations(ctx, vote.Voter, func(index int64, delegation sdk.Delegation) (stop bool) {

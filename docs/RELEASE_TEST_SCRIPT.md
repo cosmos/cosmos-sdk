@@ -1,0 +1,17 @@
+This document should contain plain english instructions for testing functionality on `gaiad`. This “Script” is supposed to be run by 2 people who will each spin up a `gaiad` node and run the series of prompts below.
+
+- [Create a network of 2 nodes](getting-started/create-testnet.md)
+- [Generate an account](sdk/clients.md)
+- [Send funds from one account to the other](sdk/clients.md)
+- [Create a validator](validators/validator-setup.md)
+- [Edit a validator](validators/validator-setup.md)
+- [Delegate to validator](sdk/clients.md)
+- [Unbond from a validator](sdk/clients.md)
+- [View validators and verify output](validators/validator-setup.md)
+- [Query network status](getting-started/full-node.md)
+- [Create a proposal](validators/validator-setup.md)
+- [Query a proposal](validators/validator-setup.md)
+- [Vote on a proposal](validators/validator-setup.md)
+- [Query status of a proposal](validators/validator-setup.md)
+- [Query the votes on a proposal](validators/validator-setup.md)
+- [Export state and reload](getting-started/create-testnet.md)

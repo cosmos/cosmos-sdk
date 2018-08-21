@@ -40,7 +40,7 @@ type Validator interface {
 	GetRevoked() bool         // whether the validator is revoked
 	GetMoniker() string       // moniker of the validator
 	GetStatus() BondStatus    // status of the validator
-	GetOwner() AccAddress     // owner AccAddress to receive/return validators coins
+	GetOperator() AccAddress  // owner AccAddress to receive/return validators coins
 	GetPubKey() crypto.PubKey // validation pubkey
 	GetPower() Dec            // validation power
 	GetTokens() Dec           // validation tokens
@@ -51,8 +51,9 @@ type Validator interface {
 // validator which fulfills abci validator interface for use in Tendermint
 func ABCIValidator(v Validator) abci.Validator {
 	return abci.Validator{
-		PubKey: tmtypes.TM2PB.PubKey(v.GetPubKey()),
-		Power:  v.GetPower().RoundInt64(),
+		PubKey:  tmtypes.TM2PB.PubKey(v.GetPubKey()),
+		Address: v.GetPubKey().Address(),
+		Power:   v.GetPower().RoundInt64(),
 	}
 }
 

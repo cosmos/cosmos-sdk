@@ -238,17 +238,17 @@ func ServiceRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 */
 
 type Response struct {
-	Success bool            `json:"status"`
-	Hash    string          `json:"Hash"`
-	Height  int64           `json:"Height"`
-	Data    []byte          `json:"Data"`
-	Tags    []common.KVPair `json:"Tags"`
+	Success bool            `json:"sucess"`
+	Hash    string          `json:"hash"`
+	Height  int64           `json:"height"`
+	Data    []byte          `json:"data"`
+	Tags    []common.KVPair `json:"tags"`
 }
 
-func NewResponse(status bool, hash string, height int64, data []byte, tags []common.KVPair) Response {
+func NewResponse(sucess bool, hash string, height int64, data []byte, tags []common.KVPair) Response {
 	//var res Response
 	return Response{
-		Success: status,
+		Success: sucess,
 		Height:  height,
 		Hash:    hash,
 		Data:    data,

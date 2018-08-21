@@ -72,13 +72,12 @@ func QueryAccountRequestHandlerFn(
 	}
 }
 
-// register to Cosmos-LCD swagger routes
+// RegisterSwaggerRoutes - Central function to define account query related routes that get registered by the main application
 func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext, cdc *wire.Codec, storeName string) {
-	routerGroup.GET("accounts/:address",QueryAccountRequestHandler(storeName,cdc,authcmd.GetAccountDecoder(cdc),ctx))
+	routerGroup.GET("accounts/:address",queryAccountRequestHandler(storeName,cdc,authcmd.GetAccountDecoder(cdc),ctx))
 }
 
-// handler of query account in swagger rest server
-func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, decoder auth.AccountDecoder, ctx context.CLIContext) gin.HandlerFunc {
+func queryAccountRequestHandler(storeName string, cdc *wire.Codec, decoder auth.AccountDecoder, ctx context.CLIContext) gin.HandlerFunc {
 	return func(gtx *gin.Context) {
 
 		bech32addr := gtx.Param("address")

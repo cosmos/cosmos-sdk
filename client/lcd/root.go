@@ -145,6 +145,7 @@ func createSwaggerHandler(server *gin.Engine, cdc *wire.Codec)  {
 	rootDir := viper.GetString(cli.HomeFlag)
 	nodeAddrs := viper.GetString(client.FlagNodeList)
 	chainID := viper.GetString(client.FlagChainID)
+	modules := viper.GetString(client.FlagModules)
 	//Get key store
 	kb, err := keys.GetKeyBase()
 	if err != nil {
@@ -170,9 +171,7 @@ func createSwaggerHandler(server *gin.Engine, cdc *wire.Codec)  {
 
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	modules := viper.GetString(client.FlagModules)
 	moduleArray := strings.Split(modules,",")
-
 	if moduleEnabled(moduleArray,"general") {
 		server.GET("/version", CLIVersionRequest)
 		server.GET("/node_version", NodeVersionRequest(ctx))

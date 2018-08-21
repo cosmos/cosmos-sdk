@@ -141,10 +141,11 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 	}
 }
 
+// RegisterSwaggerRoutes - Central function to define routes that get registered by the main application
 func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext, cdc *wire.Codec, kb keys.Keybase) {
-	routerGroup.POST("/accounts/:address/send", SendRequestFn(cdc, ctx, kb))
-	routerGroup.POST("/create_transfer", CreateTransferTxForSignFn(cdc, ctx))
-	routerGroup.POST("/signed_transfer", ComposeAndBroadcastSignedTransferTxFn(cdc, ctx))
+	routerGroup.POST("/accounts/:address/send", sendRequestFn(cdc, ctx, kb))
+	routerGroup.POST("/create_transfer", createTransferTxForSignFn(cdc, ctx))
+	routerGroup.POST("/signed_transfer", composeAndBroadcastSignedTransferTxFn(cdc, ctx))
 }
 
 func composeTx(cdc *wire.Codec, ctx context.CLIContext, transferBody transferBody) (auth.StdSignMsg, authctx.TxContext, sdk.Error) {
@@ -206,7 +207,8 @@ func composeTx(cdc *wire.Codec, ctx context.CLIContext, transferBody transferBod
 	return txForSign, txCtx, nil
 }
 
-func CreateTransferTxForSignFn(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFunc {
+// handler of creating transfer transaction
+func createTransferTxForSignFn(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFunc {
 	return func(gtx *gin.Context) {
 		var transferBody transferBody
 		if err := gtx.BindJSON(&transferBody); err != nil {
@@ -227,11 +229,12 @@ func CreateTransferTxForSignFn(cdc *wire.Codec, ctx context.CLIContext) gin.Hand
 		base64TxData := make([]byte, base64.StdEncoding.EncodedLen(len(txForSign.Bytes())))
 		base64.StdEncoding.Encode(base64TxData,txForSign.Bytes())
 
-		httputils.Response(gtx,string(base64TxData))
+		httputils.NormalResponse(gtx,string(base64TxData))
 	}
 }
 
-func ComposeAndBroadcastSignedTransferTxFn(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFunc {
+// handler of composing and broadcasting transactions in swagger rest server
+func composeAndBroadcastSignedTransferTxFn(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFunc {
 	return func(gtx *gin.Context) {
 		var signedTransaction signedBody
 		if err := gtx.BindJSON(&signedTransaction); err != nil {
@@ -276,11 +279,12 @@ func ComposeAndBroadcastSignedTransferTxFn(cdc *wire.Codec, ctx context.CLIConte
 			return
 		}
 
-		httputils.Response(gtx,res)
+		httputils.NormalResponse(gtx,res)
 	}
 }
 
-func SendRequestFn(cdc *wire.Codec, ctx context.CLIContext, kb keys.Keybase) gin.HandlerFunc {
+// handler of sending tokens in swagger rest server
+func sendRequestFn(cdc *wire.Codec, ctx context.CLIContext, kb keys.Keybase) gin.HandlerFunc {
 	return func(gtx *gin.Context) {
 
 		bech32addr := gtx.Param("address")
@@ -339,6 +343,6 @@ func SendRequestFn(cdc *wire.Codec, ctx context.CLIContext, kb keys.Keybase) gin
 			return
 		}
 
-		httputils.Response(gtx,res)
+		httputils.NormalResponse(gtx,res)
 	}
 }

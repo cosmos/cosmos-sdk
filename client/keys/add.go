@@ -239,6 +239,7 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(bz)
 }
 
+// Handler of adding new key in swagger rest server
 func AddNewKeyRequest(gtx *gin.Context) {
 	var kb keys.Keybase
 	var m NewKeyBody
@@ -258,25 +259,30 @@ func AddNewKeyRequest(gtx *gin.Context) {
 		return
 	}
 	if len(m.Name) < 1 || len(m.Name) > 16 {
-		httputils.NewError(gtx, http.StatusBadRequest, errors.New("Account name length should not be longer than 16"))
+		httputils.NewError(gtx, http.StatusBadRequest, fmt.Errorf("account name length should not be longer than 16"))
 		return
 	}
 	for _, char := range []rune(m.Name) {
 		if !syntax.IsWordChar(char) {
-			httputils.NewError(gtx, http.StatusBadRequest, errors.New("Account name should not contains any char beyond [0-9A-Za-z]"))
+			httputils.NewError(gtx, http.StatusBadRequest, fmt.Errorf("account name should not contains any char beyond [0-9A-Za-z]"))
 			return
 		}
 	}
 	if len(m.Password) < 8 || len(m.Password) > 16 {
-		httputils.NewError(gtx, http.StatusBadRequest, errors.New("Account password length should be between 8 and 16"))
+		httputils.NewError(gtx, http.StatusBadRequest, fmt.Errorf("account password length should be between 8 and 16"))
 		return
 	}
 
 	// check if already exists
 	infos, err := kb.List()
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
 	for _, i := range infos {
 		if i.GetName() == m.Name {
-			httputils.NewError(gtx, http.StatusConflict, errors.New(fmt.Sprintf("Account with name %s already exists.", m.Name)))
+			httputils.NewError(gtx, http.StatusConflict, fmt.Errorf("Account with name %s already exists.", m.Name))
 			return
 		}
 	}
@@ -300,7 +306,7 @@ func AddNewKeyRequest(gtx *gin.Context) {
 
 	keyOutput.Seed = seed
 
-	httputils.Response(gtx, keyOutput)
+	httputils.NormalResponse(gtx, keyOutput)
 
 }
 
@@ -327,11 +333,12 @@ func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(seed))
 }
 
+// Handler of creating seed in swagger rest server
 func SeedRequest(gtx *gin.Context) {
 
 	algo := keys.SigningAlgo("secp256k1")
 
 	seed := getSeed(algo)
 
-	httputils.Response(gtx, seed)
+	httputils.NormalResponse(gtx, seed)
 }

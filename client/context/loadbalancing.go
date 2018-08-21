@@ -7,6 +7,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+// This is a manager of a set of rpc clients to full nodes.
+// This manager can do load balancing upon these rpc clients.
 type ClientManager struct {
 	clients []rpcclient.Client
 	currentIndex int
@@ -15,9 +17,9 @@ type ClientManager struct {
 
 func NewClientManager(nodeURIs string) (*ClientManager,error) {
 	if nodeURIs != "" {
-		nodeUrlArray := strings.Split(nodeURIs, ",")
+		nodeURLArray := strings.Split(nodeURIs, ",")
 		var clients []rpcclient.Client
-		for _, url := range nodeUrlArray {
+		for _, url := range nodeURLArray {
 			client := rpcclient.NewHTTP(url, "/websocket")
 			clients = append(clients, client)
 		}
@@ -26,9 +28,8 @@ func NewClientManager(nodeURIs string) (*ClientManager,error) {
 			clients: clients,
 		}
 		return mgr, nil
-	} else {
-		return nil, errors.New("missing node URIs")
 	}
+	return nil, errors.New("missing node URIs")
 }
 
 func (mgr *ClientManager) getClient() rpcclient.Client {

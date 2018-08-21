@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"os"
 
-	client "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	keys "github.com/cosmos/cosmos-sdk/client/keys"
-	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
-	tx "github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/wire"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
@@ -26,11 +26,10 @@ import (
 	"github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 	"strings"
-	"errors"
-	_ "github.com/cosmos/cosmos-sdk/client/lcd/docs"
 	"github.com/tendermint/tendermint/libs/cli"
 	tendermintLiteProxy "github.com/tendermint/tendermint/lite/proxy"
 	keyTypes "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"fmt"
 )
 
 // ServeCommand will generate a long-running rest server
@@ -106,6 +105,9 @@ func createHandler(cdc *wire.Codec) http.Handler {
 	return r
 }
 
+// ServeSwaggerCommand will generate a long-running rest server
+// that exposes functionality similar to the ServeCommand, but it provide swagger-ui
+// Which is much friendly for further development
 func ServeSwaggerCommand(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rest-server-swagger",
@@ -126,7 +128,7 @@ func ServeSwaggerCommand(cdc *wire.Codec) *cobra.Command {
 			//Split the node list string into multi full node URIs
 			nodeAddrArray := strings.Split(nodeAddrs,",")
 			if len(nodeAddrArray) < 1 {
-				panic(errors.New("missing node URIs"))
+				panic(fmt.Errorf("missing node URIs"))
 			}
 			//Tendermint certifier can only connect to one full node. Here we assign the first full node to it
 			cert,err := tendermintLiteProxy.GetCertifier(chainID, rootDir, nodeAddrArray[0])

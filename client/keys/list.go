@@ -70,6 +70,7 @@ func QueryKeysRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(output)
 }
 
+// Handler of listing all keys in swagger rest server
 func QueryKeysRequest(gtx *gin.Context) {
 	kb, err := GetKeyBase()
 	if err != nil {
@@ -83,7 +84,7 @@ func QueryKeysRequest(gtx *gin.Context) {
 	}
 	// an empty list will be JSONized as null, but we want to keep the empty list
 	if len(infos) == 0 {
-		httputils.Response(gtx, nil)
+		httputils.NormalResponse(gtx, nil)
 		return
 	}
 	keysOutput, err := Bech32KeysOutput(infos)
@@ -91,5 +92,5 @@ func QueryKeysRequest(gtx *gin.Context) {
 		httputils.NewError(gtx, http.StatusInternalServerError, err)
 		return
 	}
-	httputils.Response(gtx, keysOutput)
+	httputils.NormalResponse(gtx, keysOutput)
 }

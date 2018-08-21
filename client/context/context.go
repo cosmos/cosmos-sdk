@@ -118,13 +118,13 @@ func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 }
 
 // WithCert - return a copy of the context with an updated Cert
-func (c CLIContext) WithCert(cert tendermintLite.Certifier) CLIContext {
-	c.Cert = cert
-	return c
+func (ctx CLIContext) WithCert(cert tendermintLite.Certifier) CLIContext {
+	ctx.Cert = cert
+	return ctx
 }
 
 // WithCert - return a copy of the context with an updated ClientMgr
-func (c CLIContext) WithClientMgr(clientMgr *ClientManager) CLIContext {
-	c.ClientMgr = clientMgr
-	return c
+func (ctx CLIContext) WithClientMgr(clientMgr *ClientManager) CLIContext {
+	ctx.ClientMgr = clientMgr
+	return ctx
 }

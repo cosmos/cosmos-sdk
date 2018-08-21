@@ -68,6 +68,7 @@ func GetKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(output)
 }
 
+// Handler of getting specified key in swagger rest server
 func GetKeyRequest(gtx *gin.Context) {
 	name := gtx.Param("name")
 
@@ -83,5 +84,5 @@ func GetKeyRequest(gtx *gin.Context) {
 		httputils.NewError(gtx, http.StatusInternalServerError, err)
 		return
 	}
-	httputils.Response(gtx, keyOutput)
+	httputils.NormalResponse(gtx, keyOutput)
 }

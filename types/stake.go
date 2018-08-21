@@ -51,8 +51,9 @@ type Validator interface {
 // validator which fulfills abci validator interface for use in Tendermint
 func ABCIValidator(v Validator) abci.Validator {
 	return abci.Validator{
-		PubKey: tmtypes.TM2PB.PubKey(v.GetPubKey()),
-		Power:  v.GetPower().RoundInt64(),
+		PubKey:  tmtypes.TM2PB.PubKey(v.GetPubKey()),
+		Address: v.GetPubKey().Address(),
+		Power:   v.GetPower().RoundInt64(),
 	}
 }
 

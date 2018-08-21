@@ -42,16 +42,18 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 
 		// if validator, just record it in the map
 		// if delegator tally voting power
-		valAddr := sdk.ValAddress(vote.Voter)
-		if val, ok := currValidators[valAddr.String()]; ok {
+		valAddrStr := sdk.ValAddress(vote.Voter).String()
+		if val, ok := currValidators[valAddrStr]; ok {
 			val.Vote = vote.Option
-			currValidators[valAddr.String()] = val
+			currValidators[valAddrStr] = val
 		} else {
 
 			keeper.ds.IterateDelegations(ctx, vote.Voter, func(index int64, delegation sdk.Delegation) (stop bool) {
-				if val, ok := currValidators[delegation.GetValidator().String()]; ok {
+				valAddrStr := delegation.GetValidator().String()
+
+				if val, ok := currValidators[valAddrStr]; ok {
 					val.Minus = val.Minus.Add(delegation.GetBondShares())
-					currValidators[delegation.GetValidator().String()] = val
+					currValidators[valAddrStr] = val
 
 					delegatorShare := delegation.GetBondShares().Quo(val.DelegatorShares)
 					votingPower := val.Power.Mul(delegatorShare)
@@ -59,12 +61,14 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 					results[vote.Option] = results[vote.Option].Add(votingPower)
 					totalVotingPower = totalVotingPower.Add(votingPower)
 				}
+
 				return false
 			})
 		}
 
 		keeper.deleteVote(ctx, vote.ProposalID, vote.Voter)
 	}
+
 	votesIterator.Close()
 
 	// iterate over the validators again to tally their voting power and see

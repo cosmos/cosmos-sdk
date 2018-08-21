@@ -259,7 +259,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 
 	require.False(t, passes)
 	require.Equal(t, 1, len(nonVoting))
-	require.Equal(t, addrs[0], nonVoting[0])
+	require.Equal(t, sdk.ValAddress(addrs[0]), nonVoting[0])
 	require.False(t, tallyResults.Equals(EmptyTallyResult()))
 }
 

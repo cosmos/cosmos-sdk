@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/gorilla/mux"
 
 	"github.com/spf13/cobra"
+	"github.com/gin-gonic/gin"
+	"github.com/cosmos/cosmos-sdk/client/httputils"
 )
 
 var showKeysCmd = &cobra.Command{
@@ -64,4 +66,22 @@ func GetKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(output)
+}
+
+func GetKeyRequest(gtx *gin.Context) {
+	name := gtx.Param("name")
+
+	info, err := getKey(name)
+	// TODO check for the error if key actually does not exist, instead of assuming this as the reason
+	if err != nil {
+		httputils.NewError(gtx, http.StatusNotFound, err)
+		return
+	}
+
+	keyOutput, err := Bech32KeyOutput(info)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+	httputils.Response(gtx, keyOutput)
 }

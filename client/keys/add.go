@@ -16,6 +16,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
 	"github.com/tendermint/tendermint/libs/cli"
+	"github.com/gin-gonic/gin"
+	"github.com/cosmos/cosmos-sdk/client/httputils"
+	"regexp/syntax"
 )
 
 const (
@@ -236,6 +239,71 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(bz)
 }
 
+func AddNewKeyRequest(gtx *gin.Context) {
+	var kb keys.Keybase
+	var m NewKeyBody
+
+	kb, err := GetKeyBase()
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	if err := gtx.BindJSON(&m); err != nil {
+		httputils.NewError(gtx, http.StatusBadRequest, err)
+		return
+	}
+	if err != nil {
+		httputils.NewError(gtx, http.StatusBadRequest, err)
+		return
+	}
+	if len(m.Name) < 1 || len(m.Name) > 16 {
+		httputils.NewError(gtx, http.StatusBadRequest, errors.New("Account name length should not be longer than 16"))
+		return
+	}
+	for _, char := range []rune(m.Name) {
+		if !syntax.IsWordChar(char) {
+			httputils.NewError(gtx, http.StatusBadRequest, errors.New("Account name should not contains any char beyond [0-9A-Za-z]"))
+			return
+		}
+	}
+	if len(m.Password) < 8 || len(m.Password) > 16 {
+		httputils.NewError(gtx, http.StatusBadRequest, errors.New("Account password length should be between 8 and 16"))
+		return
+	}
+
+	// check if already exists
+	infos, err := kb.List()
+	for _, i := range infos {
+		if i.GetName() == m.Name {
+			httputils.NewError(gtx, http.StatusConflict, errors.New(fmt.Sprintf("Account with name %s already exists.", m.Name)))
+			return
+		}
+	}
+
+	// create account
+	seed := m.Seed
+	if seed == "" {
+		seed = getSeed(keys.Secp256k1)
+	}
+	info, err := kb.CreateKey(m.Name, seed, m.Password)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	keyOutput, err := Bech32KeyOutput(info)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	keyOutput.Seed = seed
+
+	httputils.Response(gtx, keyOutput)
+
+}
+
 // function to just a new seed to display in the UI before actually persisting it in the keybase
 func getSeed(algo keys.SigningAlgo) string {
 	kb := client.MockKeyBase()
@@ -257,4 +325,13 @@ func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	seed := getSeed(algo)
 	w.Write([]byte(seed))
+}
+
+func SeedRequest(gtx *gin.Context) {
+
+	algo := keys.SigningAlgo("secp256k1")
+
+	seed := getSeed(algo)
+
+	httputils.Response(gtx, seed)
 }

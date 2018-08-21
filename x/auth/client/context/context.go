@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // TxContext implements a transaction context created in SDK modules.
@@ -149,4 +150,35 @@ func (ctx TxContext) BuildAndSign(name, passphrase string, msgs []sdk.Msg) ([]by
 	}
 
 	return ctx.Sign(name, passphrase, msg)
+}
+
+// build the transaction from the msg
+func (ctx TxContext) BuildTxWithSignature(cdc *wire.Codec, msgs auth.StdSignMsg, signatureBytes []byte, publicKeyBytes []byte) ([]byte, error) {
+
+	var publicKey crypto.PubKey
+	err := cdc.UnmarshalBinaryBare(publicKeyBytes, &publicKey)
+	if err != nil {
+		return nil, err
+	}
+
+	stdSignatures := []auth.StdSignature{{
+		AccountNumber: ctx.AccountNumber,
+		Sequence:      ctx.Sequence,
+		PubKey:        publicKey,
+		Signature:     signatureBytes,
+	}}
+
+	memo := ctx.Memo
+	fee := sdk.Coin{}
+	if ctx.Fee != "" {
+		parsedFee, err := sdk.ParseCoin(ctx.Fee)
+		if err != nil {
+			return nil, err
+		}
+		fee = parsedFee
+	}
+
+	tx := auth.NewStdTx(msgs.Msgs, auth.NewStdFee(ctx.Gas, fee), stdSignatures, memo)
+
+	return ctx.Codec.MarshalBinary(tx)
 }

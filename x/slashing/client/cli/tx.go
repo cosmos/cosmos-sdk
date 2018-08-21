@@ -32,7 +32,7 @@ func GetCmdUnrevoke(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := slashing.NewMsgUnrevoke(validatorAddr)
+			msg := slashing.NewMsgUnrevoke(sdk.ValAddress(validatorAddr))
 
 			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},

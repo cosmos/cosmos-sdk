@@ -6,7 +6,7 @@ import (
 
 // validatorGovInfo used for tallying
 type validatorGovInfo struct {
-	Address         sdk.ValAddress // sdk.AccAddress of the validator owner
+	Address         sdk.ValAddress // address of the validator operator
 	Power           sdk.Dec        // Power of a Validator
 	DelegatorShares sdk.Dec        // Total outstanding delegator shares
 	Minus           sdk.Dec        // Minus of validator, used to compute validator's voting power
@@ -66,13 +66,15 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 	}
 	votesIterator.Close()
 
-	// Iterate over the validators again to tally their voting power and see who didn't vote
+	// iterate over the validators again to tally their voting power and see
+	// who didn't vote
 	nonVoting = []sdk.ValAddress{}
 	for _, val := range currValidators {
 		if val.Vote == OptionEmpty {
 			nonVoting = append(nonVoting, val.Address)
 			continue
 		}
+
 		sharesAfterMinus := val.DelegatorShares.Sub(val.Minus)
 		percentAfterMinus := sharesAfterMinus.Quo(val.DelegatorShares)
 		votingPower := val.Power.Mul(percentAfterMinus)

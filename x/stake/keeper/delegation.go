@@ -77,6 +77,28 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 
 //_____________________________________________________________________________________
 
+// load all unbonding-delegations for a delegator
+func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress,
+	maxRetrieve int16) (unbondingDelegations []types.UnbondingDelegation) {
+
+	store := ctx.KVStore(k.storeKey)
+	delegatorPrefixKey := GetUBDsKey(delegator)
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+
+	unbondingDelegations = make([]types.UnbondingDelegation, maxRetrieve)
+	i := 0
+	for ; ; i++ {
+		if !iterator.Valid() || i > int(maxRetrieve-1) {
+			break
+		}
+		unbondingDelegation := types.MustUnmarshalUBD(k.cdc, iterator.Key(), iterator.Value())
+		unbondingDelegations[i] = unbondingDelegation
+		iterator.Next()
+	}
+	iterator.Close()
+	return unbondingDelegations[:i] // trim
+}
+
 // load a unbonding delegation
 func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
 	DelegatorAddr, ValidatorAddr sdk.AccAddress) (ubd types.UnbondingDelegation, found bool) {
@@ -144,6 +166,28 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 }
 
 //_____________________________________________________________________________________
+
+// load all redelegations for a delegator
+func (k Keeper) GetRedelegations(ctx sdk.Context, delegator sdk.AccAddress,
+	maxRetrieve int16) (redelegations []types.Redelegation) {
+
+	store := ctx.KVStore(k.storeKey)
+	delegatorPrefixKey := GetREDsKey(delegator)
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+
+	redelegations = make([]types.Redelegation, maxRetrieve)
+	i := 0
+	for ; ; i++ {
+		if !iterator.Valid() || i > int(maxRetrieve-1) {
+			break
+		}
+		redelegation := types.MustUnmarshalRED(k.cdc, iterator.Key(), iterator.Value())
+		redelegations[i] = redelegation
+		iterator.Next()
+	}
+	iterator.Close()
+	return redelegations[:i] // trim
+}
 
 // load a redelegation
 func (k Keeper) GetRedelegation(ctx sdk.Context,

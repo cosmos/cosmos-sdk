@@ -205,7 +205,7 @@ func TestValidators(t *testing.T) {
 	require.NotEqual(t, rpc.ResultValidatorsOutput{}, resultVals)
 
 	require.Contains(t, resultVals.Validators[0].Address.String(), "cosmosvaladdr")
-	require.Contains(t, resultVals.Validators[0].PubKey, "cosmosvalpub")
+	require.Contains(t, resultVals.Validators[0].PubKey, "cosmosconspub")
 
 	// --
 

@@ -128,7 +128,7 @@ func TestCliffValidatorChange(t *testing.T) {
 
 	// assert new cliff validator to be set to the second lowest bonded validator by power
 	newCliffVal := validators[numVals-maxVals+1]
-	require.Equal(t, newCliffVal.Operator, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+	require.Equal(t, newCliffVal.Operator, sdk.ValAddress(keeper.GetCliffValidator(ctx)))
 
 	// assert cliff validator power should have been updated
 	cliffPower := keeper.GetCliffValidatorPower(ctx)
@@ -141,7 +141,7 @@ func TestCliffValidatorChange(t *testing.T) {
 
 	// assert cliff validator has not change but increased in power
 	cliffPower = keeper.GetCliffValidatorPower(ctx)
-	require.Equal(t, newCliffVal.Operator, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+	require.Equal(t, newCliffVal.Operator, sdk.ValAddress(keeper.GetCliffValidator(ctx)))
 	require.Equal(t, GetValidatorsByPowerIndexKey(newCliffVal, pool), cliffPower)
 }
 

@@ -58,14 +58,14 @@ func unrevokeRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.C
 			return
 		}
 
-		validatorAddr, err := sdk.AccAddressFromBech32(m.ValidatorAddr)
+		valAddr, err := sdk.ValAddressFromBech32(m.ValidatorAddr)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
 			return
 		}
 
-		if !bytes.Equal(info.GetPubKey().Address(), validatorAddr) {
+		if !bytes.Equal(info.GetPubKey().Address(), valAddr.Bytes()) {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte("Must use own validator address"))
 			return
@@ -79,7 +79,7 @@ func unrevokeRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.C
 			Gas:           m.Gas,
 		}
 
-		msg := slashing.NewMsgUnrevoke(validatorAddr)
+		msg := slashing.NewMsgUnrevoke(valAddr)
 
 		txBytes, err := txCtx.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
 		if err != nil {

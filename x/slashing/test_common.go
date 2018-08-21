@@ -99,10 +99,10 @@ func testAddr(addr string) sdk.AccAddress {
 	return res
 }
 
-func newTestMsgCreateValidator(address sdk.AccAddress, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
+func newTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
 	return stake.MsgCreateValidator{
 		Description:   stake.Description{},
-		DelegatorAddr: address,
+		DelegatorAddr: sdk.AccAddress(address),
 		ValidatorAddr: address,
 		PubKey:        pubKey,
 		Delegation:    sdk.Coin{"steak", amt},

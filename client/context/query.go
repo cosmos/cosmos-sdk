@@ -284,6 +284,7 @@ func (ctx CLIContext) ensureBroadcastTx(txBytes []byte) error {
 	return nil
 }
 
+// nolint: gocyclo
 // query performs a query from a Tendermint node with the provided store name
 // and path.
 func (ctx CLIContext) query(path string, key common.HexBytes) (res []byte, err error) {
@@ -312,8 +313,12 @@ func (ctx CLIContext) query(path string, key common.HexBytes) (res []byte, err e
 		return resp.Value,nil
 	}
 
+	// TODO: Later we consider to return error for missing valid certifier to verify data from untrusted node
 	if ctx.Cert == nil {
-		return resp.Value,errors.Errorf("missing valid certifier to verify data from untrusted node")
+		if ctx.Logger != nil {
+			io.WriteString(ctx.Logger, fmt.Sprintf("Missing valid certifier to verify data from untrusted node\n"))
+		}
+		return resp.Value, nil
 	}
 
 	// AppHash for height H is in header H+1

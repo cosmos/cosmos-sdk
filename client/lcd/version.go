@@ -31,13 +31,13 @@ func NodeVersionRequestHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-// handler of getting rest server version
+// CLIVersionRequest is the handler of getting rest server version
 func CLIVersionRequest(gtx *gin.Context) {
 	v := version.GetVersion()
-	httputils.NormalResponse(gtx,v)
+	httputils.NormalResponse(gtx, []byte(v))
 }
 
-// handler of getting connected node version
+// NodeVersionRequest is the handler of getting connected node version
 func NodeVersionRequest(cliCtx context.CLIContext) gin.HandlerFunc {
 	return func(gtx *gin.Context) {
 		appVersion, err := cliCtx.Query("/app/version")
@@ -45,6 +45,6 @@ func NodeVersionRequest(cliCtx context.CLIContext) gin.HandlerFunc {
 			httputil.NewError(gtx, http.StatusInternalServerError, fmt.Errorf("could't query version. error: %s", err.Error()))
 			return
 		}
-		httputils.NormalResponse(gtx,string(appVersion))
+		httputils.NormalResponse(gtx, appVersion)
 	}
 }

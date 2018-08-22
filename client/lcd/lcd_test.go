@@ -29,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/cosmos/cosmos-sdk/x/stake/client/rest"
+	"encoding/json"
 )
 
 func init() {
@@ -115,8 +116,113 @@ func TestKeys(t *testing.T) {
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 }
 
+func TestKeysSwaggerLCD(t *testing.T) {
+	name, password := "test", "1234567890"
+	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
+	cleanup, _, port := InitializeTestSwaggerLCD(t, 1, []sdk.AccAddress{addr})
+	defer cleanup()
+
+	// get seed
+	// TODO Do we really need this endpoint?
+	res, body := Request(t, port, "GET", "/keys/seed", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	reg, err := regexp.Compile(`([a-z]+ ){12}`)
+	require.Nil(t, err)
+	match := reg.MatchString(seed)
+	require.True(t, match, "Returned seed has wrong format", seed)
+
+	newName := "test_newname"
+	newPassword := "0987654321"
+
+	// add key
+	jsonStr := []byte(fmt.Sprintf(`{"name":"%s", "password":"%s", "seed":"%s"}`, newName, newPassword, seed))
+	res, body = Request(t, port, "POST", "/keys", jsonStr)
+
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var keyOutput keys.KeyOutput
+	err = json.Unmarshal([]byte(body), &keyOutput)
+	require.Nil(t, err, body)
+
+	addr2Bech32 := keyOutput.Address.String()
+	_, err = sdk.AccAddressFromBech32(addr2Bech32)
+	require.NoError(t, err, "Failed to return a correct bech32 address")
+
+	// test if created account is the correct account
+	expectedInfo, _ := GetKeyBase(t).CreateKey(newName, seed, newPassword)
+	expectedAccount := sdk.AccAddress(expectedInfo.GetPubKey().Address().Bytes())
+	assert.Equal(t, expectedAccount.String(), addr2Bech32)
+
+	// existing keys
+	res, body = Request(t, port, "GET", "/keys", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var m [2]keys.KeyOutput
+	err = cdc.UnmarshalJSON([]byte(body), &m)
+	require.Nil(t, err)
+
+	addrBech32 := addr.String()
+
+	require.Equal(t, name, m[0].Name, "Did not serve keys name correctly")
+	require.Equal(t, addrBech32, m[0].Address.String(), "Did not serve keys Address correctly")
+	require.Equal(t, newName, m[1].Name, "Did not serve keys name correctly")
+	require.Equal(t, addr2Bech32, m[1].Address.String(), "Did not serve keys Address correctly")
+
+	// select key
+	keyEndpoint := fmt.Sprintf("/keys/get/%s", newName)
+	res, body = Request(t, port, "GET", keyEndpoint, nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var m2 keys.KeyOutput
+	err = cdc.UnmarshalJSON([]byte(body), &m2)
+	require.Nil(t, err)
+
+	require.Equal(t, newName, m2.Name, "Did not serve keys name correctly")
+	require.Equal(t, addr2Bech32, m2.Address.String(), "Did not serve keys Address correctly")
+
+	// update key
+	jsonStr = []byte(fmt.Sprintf(`{
+		"old_password":"%s",
+		"new_password":"12345678901"
+	}`, newPassword))
+
+	keyEndpoint = fmt.Sprintf("/keys/%s", newName)
+	res, body = Request(t, port, "PUT", keyEndpoint, jsonStr)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	// here it should say unauthorized as we changed the password before
+	res, body = Request(t, port, "PUT", keyEndpoint, jsonStr)
+	require.Equal(t, http.StatusUnauthorized, res.StatusCode, body)
+
+	// delete key
+	jsonStr = []byte(`{"password":"12345678901"}`)
+	res, body = Request(t, port, "DELETE", keyEndpoint, jsonStr)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+}
+
 func TestVersion(t *testing.T) {
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	defer cleanup()
+
+	// node info
+	res, body := Request(t, port, "GET", "/version", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	reg, err := regexp.Compile(`\d+\.\d+\.\d+(-dev)?`)
+	require.Nil(t, err)
+	match := reg.MatchString(body)
+	require.True(t, match, body)
+
+	// node info
+	res, body = Request(t, port, "GET", "/node_version", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	reg, err = regexp.Compile(`\d+\.\d+\.\d+(-dev)?`)
+	require.Nil(t, err)
+	match = reg.MatchString(body)
+	require.True(t, match, body)
+}
+
+func TestVersionSwaggerLCD(t *testing.T) {
+	cleanup, _, port := InitializeTestSwaggerLCD(t, 1, []sdk.AccAddress{})
 	defer cleanup()
 
 	// node info
@@ -265,6 +371,50 @@ func TestCoinSend(t *testing.T) {
 	require.Equal(t, int64(1), mycoins.Amount.Int64())
 }
 
+func TestCoinSendSwaggerLCD(t *testing.T) {
+	name, password := "test", "1234567890"
+	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
+	cleanup, _, port := InitializeTestSwaggerLCD(t, 1, []sdk.AccAddress{addr})
+	defer cleanup()
+
+	bz, err := hex.DecodeString("8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6")
+	require.NoError(t, err)
+	someFakeAddr := sdk.AccAddress(bz)
+
+	// query empty
+	res, body := Request(t, port, "GET", fmt.Sprintf("/accounts/%s", someFakeAddr), nil)
+	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
+
+	acc := getAccount(t, port, addr)
+	initialBalance := acc.GetCoins()
+
+	// create TX
+	receiveAddr, resultTx := doSend(t, port, seed, name, password, addr)
+	// TODO current lcd rest server with swagger doesn't implement block interface
+	//tests.WaitForHeight(resultTx.Height+1, port)
+	time.Sleep(5 * time.Second)
+
+	// check if tx was committed
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+
+	// query sender
+	acc = getAccount(t, port, addr)
+	coins := acc.GetCoins()
+	mycoins := coins[0]
+
+	require.Equal(t, "steak", mycoins.Denom)
+	require.Equal(t, initialBalance[0].Amount.SubRaw(1), mycoins.Amount)
+
+	// query receiver
+	acc = getAccount(t, port, receiveAddr)
+	coins = acc.GetCoins()
+	mycoins = coins[0]
+
+	require.Equal(t, "steak", mycoins.Denom)
+	require.Equal(t, int64(1), mycoins.Amount.Int64())
+}
+
 func TestIBCTransfer(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
@@ -370,8 +520,35 @@ func TestValidatorsQuery(t *testing.T) {
 	require.True(t, foundVal, "pkBech %v, operator %v", pkBech, validators[0].Operator)
 }
 
+func TestValidatorsQueryFromSwaggerLCD(t *testing.T) {
+	cleanup, pks, port := InitializeTestSwaggerLCD(t, 1, []sdk.AccAddress{})
+	defer cleanup()
+	require.Equal(t, 1, len(pks))
+
+	validators := getValidators(t, port)
+	require.Equal(t, len(validators), 1)
+
+	// make sure all the validators were found (order unknown because sorted by operator addr)
+	foundVal := false
+	pkBech := sdk.MustBech32ifyValPub(pks[0])
+	if validators[0].PubKey == pkBech {
+		foundVal = true
+	}
+	require.True(t, foundVal, "pkBech %v, operator %v", pkBech, validators[0].Operator)
+}
+
 func TestValidatorQuery(t *testing.T) {
 	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	defer cleanup()
+	require.Equal(t, 1, len(pks))
+
+	validator1Operator := sdk.AccAddress(pks[0].Address())
+	validator := getValidator(t, port, validator1Operator)
+	assert.Equal(t, validator.Operator, validator1Operator, "The returned validator does not hold the correct data")
+}
+
+func TestValidatorQueryFromSwaggerLCD(t *testing.T) {
+	cleanup, pks, port := InitializeTestSwaggerLCD(t, 1, []sdk.AccAddress{})
 	defer cleanup()
 	require.Equal(t, 1, len(pks))
 
@@ -425,6 +602,95 @@ func TestBonding(t *testing.T) {
 	// create unbond TX
 	resultTx = doBeginUnbonding(t, port, seed, name, password, addr, validator1Operator, 60)
 	tests.WaitForHeight(resultTx.Height+1, port)
+
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+
+	// sender should have not received any coins as the unbonding has only just begun
+	acc = getAccount(t, port, addr)
+	coins = acc.GetCoins()
+	require.Equal(t, int64(40), coins.AmountOf("steak").Int64())
+
+	unbondings := getUndelegations(t, port, addr, validator1Operator)
+	require.Len(t, unbondings, 1, "Unbondings holds all unbonding-delegations")
+	require.Equal(t, "60", unbondings[0].Balance.Amount.String())
+
+	summary = getDelegationSummary(t, port, addr)
+
+	require.Len(t, summary.Delegations, 0, "Delegation summary holds all delegations")
+	require.Len(t, summary.UnbondingDelegations, 1, "Delegation summary holds all unbonding-delegations")
+	require.Equal(t, "60", summary.UnbondingDelegations[0].Balance.Amount.String())
+
+	bondedValidators = getDelegatorValidators(t, port, addr)
+	require.Len(t, bondedValidators, 0, "There's no delegation as the user withdraw all funds")
+
+	// TODO Undonding status not currently implemented
+	// require.Equal(t, sdk.Unbonding, bondedValidators[0].Status)
+
+	// TODO add redelegation, need more complex capabilities such to mock context and
+	// TODO check summary for redelegation
+	// assert.Len(t, summary.Redelegations, 1, "Delegation summary holds all redelegations")
+
+	// query txs
+	txs := getBondingTxs(t, port, addr, "")
+	assert.Len(t, txs, 2, "All Txs found")
+
+	txs = getBondingTxs(t, port, addr, "bond")
+	assert.Len(t, txs, 1, "All bonding txs found")
+
+	txs = getBondingTxs(t, port, addr, "unbond")
+	assert.Len(t, txs, 1, "All unbonding txs found")
+}
+
+func TestBondingFromSwaggerLCD(t *testing.T) {
+	name, password, denom := "test", "1234567890", "steak"
+	addr, seed := CreateAddr(t, name, password, GetKeyBase(t))
+	cleanup, pks, port := InitializeTestSwaggerLCD(t, 1, []sdk.AccAddress{addr})
+	defer cleanup()
+
+	validator1Operator := sdk.AccAddress(pks[0].Address())
+	validator := getValidator(t, port, validator1Operator)
+
+	// create bond TX
+	resultTx := doDelegate(t, port, seed, name, password, addr, validator1Operator, 60)
+	// TODO current lcd rest server with swagger doesn't implement block interface
+	//tests.WaitForHeight(resultTx.Height+1, port)
+	time.Sleep(6 * time.Second)
+
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+
+	acc := getAccount(t, port, addr)
+	coins := acc.GetCoins()
+
+	require.Equal(t, int64(40), coins.AmountOf(denom).Int64())
+
+	// query validator
+	bond := getDelegation(t, port, addr, validator1Operator)
+	require.Equal(t, "60.0000000000", bond.Shares)
+
+	summary := getDelegationSummary(t, port, addr)
+
+	require.Len(t, summary.Delegations, 1, "Delegation summary holds all delegations")
+	require.Equal(t, "60.0000000000", summary.Delegations[0].Shares)
+	require.Len(t, summary.UnbondingDelegations, 0, "Delegation summary holds all unbonding-delegations")
+
+	bondedValidators := getDelegatorValidators(t, port, addr)
+	require.Len(t, bondedValidators, 1)
+	require.Equal(t, validator1Operator, bondedValidators[0].Operator)
+	require.Equal(t, validator.DelegatorShares.Add(sdk.NewDec(60)).String(), bondedValidators[0].DelegatorShares.String())
+
+	bondedValidator := getDelegatorValidator(t, port, addr, validator1Operator)
+	require.Equal(t, validator1Operator, bondedValidator.Operator)
+
+	//////////////////////
+	// testing unbonding
+
+	// create unbond TX
+	resultTx = doBeginUnbonding(t, port, seed, name, password, addr, validator1Operator, 60)
+	// TODO current lcd rest server with swagger doesn't implement block interface
+	//tests.WaitForHeight(resultTx.Height+1, port)
+	time.Sleep(6 * time.Second)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)

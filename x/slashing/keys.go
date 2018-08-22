@@ -7,9 +7,12 @@ import (
 )
 
 var (
-	ValidatorSigningInfoKey     = []byte{0x01}
+	// Prefix for signing info
+	ValidatorSigningInfoKey = []byte{0x01}
+	// Prefix for signature bit array
 	ValidatorSigningBitArrayKey = []byte{0x02}
-	ValidatorSlashingPeriodKey  = []byte{0x03}
+	// Prefix for slashing period
+	ValidatorSlashingPeriodKey = []byte{0x03}
 )
 
 // Stored by *validator* address (not owner address)

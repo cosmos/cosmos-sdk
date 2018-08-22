@@ -78,7 +78,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		keyGov:           sdk.NewKVStoreKey("gov"),
 		keyFeeCollection: sdk.NewKVStoreKey("fee"),
 		keyParams:        sdk.NewKVStoreKey("params"),
-		tkeyParams:       sdk.NewTransientStoreKey("params"),
+		tkeyParams:       sdk.NewTransientStoreKey("transient_params"),
 	}
 
 	// define the accountMapper
@@ -104,6 +104,9 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
 		AddRoute("slashing", slashing.NewHandler(app.slashingKeeper)).
 		AddRoute("gov", gov.NewHandler(app.govKeeper))
+
+	app.QueryRouter().
+		AddRoute("gov", gov.NewQuerier(app.govKeeper))
 
 	// initialize BaseApp
 	app.SetInitChainer(app.initChainer)
@@ -185,7 +188,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	// load the address to pubkey map
 	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.StakeData)
 
-	gov.InitGenesis(ctx, app.govKeeper, gov.DefaultGenesisState())
+	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
 
 	return abci.ResponseInitChain{
 		Validators: validators,
@@ -208,6 +211,7 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 	genState := GenesisState{
 		Accounts:  accounts,
 		StakeData: stake.WriteGenesis(ctx, app.stakeKeeper),
+		GovData:   gov.WriteGenesis(ctx, app.govKeeper),
 	}
 	appState, err = wire.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {

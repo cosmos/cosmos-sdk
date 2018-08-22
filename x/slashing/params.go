@@ -66,8 +66,8 @@ var (
 	// TODO Temporarily set to five minutes for testnets
 	defaultDoubleSignUnbondDuration int64 = 60 * 5
 
-	// TODO Temporarily set to 100 blocks for testnets
-	defaultSignedBlocksWindow int64 = 100
+	// TODO Temporarily set to 10000 blocks for testnets
+	defaultSignedBlocksWindow int64 = 10000
 
 	// TODO Temporarily set to 10 minutes for testnets
 	defaultDowntimeUnbondDuration int64 = 60 * 10

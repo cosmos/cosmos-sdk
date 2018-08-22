@@ -1,7 +1,6 @@
 package slashing
 
 import (
-	"encoding/binary"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,11 +41,4 @@ type ValidatorSlashingPeriod struct {
 func (p ValidatorSlashingPeriod) HumanReadableString() string {
 	return fmt.Sprintf("Start height: %d, end height: %d, slashed so far: %v",
 		p.StartHeight, p.EndHeight, p.SlashedSoFar)
-}
-
-// Stored by *validator* address (not owner address) followed by start height
-func GetValidatorSlashingPeriodKey(v sdk.ValAddress, startHeight int64) []byte {
-	b := make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, uint64(startHeight))
-	return append([]byte{0x03}, append(v.Bytes(), b...)...)
 }

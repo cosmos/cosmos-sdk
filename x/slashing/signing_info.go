@@ -1,7 +1,6 @@
 package slashing
 
 import (
-	"encoding/binary"
 	"fmt"
 	"time"
 
@@ -70,16 +69,4 @@ type ValidatorSigningInfo struct {
 func (i ValidatorSigningInfo) HumanReadableString() string {
 	return fmt.Sprintf("Start height: %d, index offset: %d, jailed until: %v, signed blocks counter: %d",
 		i.StartHeight, i.IndexOffset, i.JailedUntil, i.SignedBlocksCounter)
-}
-
-// Stored by *validator* address (not owner address)
-func GetValidatorSigningInfoKey(v sdk.ValAddress) []byte {
-	return append([]byte{0x01}, v.Bytes()...)
-}
-
-// Stored by *validator* address (not owner address)
-func GetValidatorSigningBitArrayKey(v sdk.ValAddress, i int64) []byte {
-	b := make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, uint64(i))
-	return append([]byte{0x02}, append(v.Bytes(), b...)...)
 }

@@ -70,6 +70,7 @@ BUG FIXES
 * Gaia
 
 * SDK
-    *  \#1988 Make us compile on OpenBSD (disable ledger) [#1988] (https://github.com/cosmos/cosmos-sdk/issues/1988)
+    * \#1988 Make us compile on OpenBSD (disable ledger) [#1988] (https://github.com/cosmos/cosmos-sdk/issues/1988)
+    * \#2105 Fix DB Iterator leak, which may leak a go routine.
 
 * Tendermint

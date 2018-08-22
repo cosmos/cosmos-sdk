@@ -414,12 +414,12 @@
   revision = "d8387025d2b9d158cf4efb07e7ebf814bcce2057"
 
 [[projects]]
-  digest = "1:e9113641c839c21d8eaeb2c907c7276af1eddeed988df8322168c56b7e06e0e1"
+  digest = "1:e0a2a4be1e20c305badc2b0a7a9ab7fef6da500763bec23ab81df3b5f9eec9ee"
   name = "github.com/tendermint/go-amino"
   packages = ["."]
   pruneopts = "UT"
-  revision = "2106ca61d91029c931fd54968c2bb02dc96b1412"
-  version = "0.10.1"
+  revision = "a8328986c1608950fa5d3d1c0472cccc4f8fc02c"
+  version = "v0.12.0-rc0"
 
 [[projects]]
   digest = "1:d4a15d404afbf591e8be16fcda7f5ac87948d5c7531f9d909fd84cc730ab16e2"
@@ -495,6 +495,14 @@
   pruneopts = "UT"
   revision = "013b9cef642f875634c614019ab13b17570778ad"
   version = "v0.23.0"
+
+[[projects]]
+  digest = "1:bf6d9a827ea3cad964c2f863302e4f6823170d0b5ed16f72cf1184a7c615067e"
+  name = "github.com/tendermint/tmlibs"
+  packages = ["cli"]
+  pruneopts = "UT"
+  revision = "49596e0a1f48866603813df843c9409fc19805c6"
+  version = "v0.9.0"
 
 [[projects]]
   digest = "1:4dcb0dd65feecb068ce23a234d1a07c7868a1e39f52a6defcae0bb371d03abf6"
@@ -672,6 +680,7 @@
     "github.com/tendermint/tendermint/rpc/lib/server",
     "github.com/tendermint/tendermint/types",
     "github.com/tendermint/tendermint/version",
+    "github.com/tendermint/tmlibs/cli",
     "github.com/zondax/ledger-goclient",
     "golang.org/x/crypto/bcrypt",
     "golang.org/x/crypto/ripemd160",

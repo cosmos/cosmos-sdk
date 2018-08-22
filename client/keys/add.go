@@ -16,6 +16,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
 	"github.com/tendermint/tendermint/libs/cli"
+	"github.com/gin-gonic/gin"
+	"github.com/cosmos/cosmos-sdk/client/httputils"
+	"regexp/syntax"
 )
 
 const (
@@ -236,6 +239,85 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(bz)
 }
 
+// AddNewKeyRequest is the handler of adding new key in swagger rest server
+// nolint: gocyclo
+func AddNewKeyRequest(gtx *gin.Context) {
+	var m NewKeyBody
+	body, err := ioutil.ReadAll(gtx.Request.Body)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusBadRequest, err)
+		return
+	}
+	err = json.Unmarshal(body, &m)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusBadRequest, err)
+		return
+	}
+
+	if len(m.Name) < 1 || len(m.Name) > 16 {
+		httputils.NewError(gtx, http.StatusBadRequest, fmt.Errorf("account name length should not be longer than 16"))
+		return
+	}
+	for _, char := range []rune(m.Name) {
+		if !syntax.IsWordChar(char) {
+			httputils.NewError(gtx, http.StatusBadRequest, fmt.Errorf("account name should not contains any char beyond [_0-9A-Za-z]"))
+			return
+		}
+	}
+	if len(m.Password) < 8 || len(m.Password) > 16 {
+		httputils.NewError(gtx, http.StatusBadRequest, fmt.Errorf("account password length should be no less than 8 and no greater than 16"))
+		return
+	}
+
+	kb, err := GetKeyBase()
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	// check if already exists
+	infos, err := kb.List()
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	for _, i := range infos {
+		if i.GetName() == m.Name {
+			httputils.NewError(gtx, http.StatusConflict, fmt.Errorf("account with name %s already exists", m.Name))
+			return
+		}
+	}
+
+	// create account
+	seed := m.Seed
+	if seed == "" {
+		seed = getSeed(keys.Secp256k1)
+	}
+	info, err := kb.CreateKey(m.Name, seed, m.Password)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	keyOutput, err := Bech32KeyOutput(info)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	keyOutput.Seed = seed
+
+	bz, err := json.Marshal(keyOutput)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	httputils.NormalResponse(gtx, bz)
+
+}
+
 // function to just a new seed to display in the UI before actually persisting it in the keybase
 func getSeed(algo keys.SigningAlgo) string {
 	kb := client.MockKeyBase()
@@ -257,4 +339,14 @@ func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	seed := getSeed(algo)
 	w.Write([]byte(seed))
+}
+
+// SeedRequest is the handler of creating seed in swagger rest server
+func SeedRequest(gtx *gin.Context) {
+
+	algo := keys.SigningAlgo("secp256k1")
+
+	seed := getSeed(algo)
+
+	httputils.NormalResponse(gtx, []byte(seed))
 }

@@ -36,25 +36,25 @@ func (k Keeper) GetValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) (val
 func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshalValidator(k.cdc, validator)
-	store.Set(GetValidatorKey(validator.Owner), bz)
+	store.Set(GetValidatorKey(validator.Operator), bz)
 }
 
 // validator index
 func (k Keeper) SetValidatorByPubKeyIndex(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(GetValidatorByPubKeyIndexKey(validator.PubKey), validator.Owner)
+	store.Set(GetValidatorByPubKeyIndexKey(validator.PubKey), validator.Operator)
 }
 
 // validator index
 func (k Keeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Validator, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(GetValidatorsByPowerIndexKey(validator, pool), validator.Owner)
+	store.Set(GetValidatorsByPowerIndexKey(validator, pool), validator.Operator)
 }
 
 // validator index
 func (k Keeper) SetValidatorBondedIndex(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(GetValidatorsBondedIndexKey(validator.Owner), []byte{})
+	store.Set(GetValidatorsBondedIndexKey(validator.Operator), []byte{})
 }
 
 // used in testing
@@ -203,7 +203,7 @@ func (k Keeper) ClearTendermintUpdates(ctx sdk.Context) {
 func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
-	oldValidator, oldFound := k.GetValidator(ctx, validator.Owner)
+	oldValidator, oldFound := k.GetValidator(ctx, validator.Operator)
 
 	validator = k.updateForRevoking(ctx, oldFound, oldValidator, validator)
 	powerIncreasing := k.getPowerIncreasing(ctx, oldFound, oldValidator, validator)
@@ -220,11 +220,11 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 		(oldFound && oldValidator.Status == sdk.Bonded):
 
 		bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
-		store.Set(GetTendermintUpdatesKey(validator.Owner), bz)
+		store.Set(GetTendermintUpdatesKey(validator.Operator), bz)
 
 		if cliffPower != nil {
 			cliffAddr := sdk.AccAddress(k.GetCliffValidator(ctx))
-			if bytes.Equal(cliffAddr, validator.Owner) {
+			if bytes.Equal(cliffAddr, validator.Operator) {
 				k.updateCliffValidator(ctx, validator)
 			}
 		}
@@ -255,7 +255,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 		// if decreased in power but still bonded, update Tendermint validator
 		if oldFound && oldValidator.BondedTokens().GT(validator.BondedTokens()) {
 			bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
-			store.Set(GetTendermintUpdatesKey(validator.Owner), bz)
+			store.Set(GetTendermintUpdatesKey(validator.Operator), bz)
 		}
 	}
 
@@ -280,10 +280,6 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 		panic(fmt.Sprintf("cliff validator record not found for address: %v\n", cliffAddr))
 	}
 
-	// NOTE: We get the power via affectedVal since the store (by power key)
-	// has yet to be updated.
-	affectedValPower := affectedVal.GetPower()
-
 	// Create a validator iterator ranging from smallest to largest by power
 	// starting the current cliff validator's power.
 	start := GetValidatorsByPowerIndexKey(oldCliffVal, pool)
@@ -307,16 +303,19 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 		panic("failed to create valid validator power iterator")
 	}
 
-	if bytes.Equal(affectedVal.Owner, newCliffVal.Owner) {
+	affectedValRank := GetValidatorsByPowerIndexKey(affectedVal, pool)
+	newCliffValRank := GetValidatorsByPowerIndexKey(newCliffVal, pool)
+
+	if bytes.Equal(affectedVal.Operator, newCliffVal.Operator) {
 		// The affected validator remains the cliff validator, however, since
-		// the store does not contain the new power, set the new cliff
-		// validator to the affected validator.
-		bz := GetValidatorsByPowerIndexKey(affectedVal, pool)
-		store.Set(ValidatorPowerCliffKey, bz)
-	} else if affectedValPower.GT(newCliffVal.GetPower()) {
+		// the store does not contain the new power, update the new power rank.
+		store.Set(ValidatorPowerCliffKey, affectedValRank)
+	} else if bytes.Compare(affectedValRank, newCliffValRank) > 0 {
 		// The affected validator no longer remains the cliff validator as it's
-		// power is greater than the new current cliff validator.
+		// power is greater than the new cliff validator.
 		k.setCliffValidator(ctx, newCliffVal, pool)
+	} else {
+		panic("invariant broken: the cliff validator should change or it should remain the same")
 	}
 }
 
@@ -365,7 +364,7 @@ func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidato
 		store.Delete(GetValidatorsByPowerIndexKey(oldValidator, pool))
 	}
 	valPower = GetValidatorsByPowerIndexKey(newValidator, pool)
-	store.Set(valPower, newValidator.Owner)
+	store.Set(valPower, newValidator.Operator)
 
 	return valPower
 }
@@ -407,7 +406,7 @@ func (k Keeper) UpdateBondedValidators(
 		// situation that this is the "affected validator" just use the
 		// validator provided because it has not yet been updated in the store
 		ownerAddr := iterator.Value()
-		if bytes.Equal(ownerAddr, affectedValidator.Owner) {
+		if bytes.Equal(ownerAddr, affectedValidator.Operator) {
 			validator = affectedValidator
 		} else {
 			var found bool
@@ -421,20 +420,32 @@ func (k Keeper) UpdateBondedValidators(
 		if !validator.Revoked {
 			if validator.Status != sdk.Bonded {
 				validatorToBond = validator
+				if newValidatorBonded {
+					panic("already decided to bond a validator, can't bond another!")
+				}
 				newValidatorBonded = true
 			}
-
-			bondedValidatorsCount++
-
-			// sanity check
-		} else if validator.Status == sdk.Bonded {
-			panic(fmt.Sprintf("revoked validator cannot be bonded, address: %v\n", ownerAddr))
+		} else {
+			// TODO: document why we must break here.
+			break
 		}
 
+		// increment the total number of bonded validators and potentially mark
+		// the validator to bond
+		if validator.Status != sdk.Bonded {
+			validatorToBond = validator
+			newValidatorBonded = true
+		}
+
+		bondedValidatorsCount++
 		iterator.Next()
 	}
 
 	iterator.Close()
+
+	if newValidatorBonded && bytes.Equal(oldCliffValidatorAddr, validator.Operator) {
+		panic("cliff validator has not been changed, yet we bonded a new validator")
+	}
 
 	// clear or set the cliff validator
 	if bondedValidatorsCount == int(maxValidators) {
@@ -446,21 +457,29 @@ func (k Keeper) UpdateBondedValidators(
 	// swap the cliff validator for a new validator if the affected validator
 	// was bonded
 	if newValidatorBonded {
-		// unbond the cliff validator
 		if oldCliffValidatorAddr != nil {
-			cliffVal, found := k.GetValidator(ctx, oldCliffValidatorAddr)
+			oldCliffVal, found := k.GetValidator(ctx, oldCliffValidatorAddr)
 			if !found {
 				panic(fmt.Sprintf("validator record not found for address: %v\n", oldCliffValidatorAddr))
 			}
 
-			k.unbondValidator(ctx, cliffVal)
+			if bytes.Equal(validatorToBond.Operator, affectedValidator.Operator) {
+				// unbond the old cliff validator iff the affected validator was
+				// newly bonded and has greater power
+				k.unbondValidator(ctx, oldCliffVal)
+			} else {
+				// otherwise unbond the affected validator, which must have been
+				// kicked out
+				affectedValidator = k.unbondValidator(ctx, affectedValidator)
+			}
 		}
 
-		// bond the new validator
 		validator = k.bondValidator(ctx, validatorToBond)
-		if bytes.Equal(validator.Owner, affectedValidator.Owner) {
+		if bytes.Equal(validator.Operator, affectedValidator.Operator) {
 			return validator, true
 		}
+
+		return affectedValidator, true
 	}
 
 	return types.Validator{}, false
@@ -468,7 +487,6 @@ func (k Keeper) UpdateBondedValidators(
 
 // full update of the bonded validator set, many can be added/kicked
 func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
-
 	store := ctx.KVStore(k.storeKey)
 
 	// clear the current validators store, add to the ToKickOut temp store
@@ -476,27 +494,26 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedIndexKey)
 	for ; iterator.Valid(); iterator.Next() {
 		ownerAddr := GetAddressFromValBondedIndexKey(iterator.Key())
-		toKickOut[string(ownerAddr)] = 0 // set anything
+		toKickOut[string(ownerAddr)] = 0
 	}
+
 	iterator.Close()
+
+	var validator types.Validator
 
 	oldCliffValidatorAddr := k.GetCliffValidator(ctx)
 	maxValidators := k.GetParams(ctx).MaxValidators
 	bondedValidatorsCount := 0
 
-	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey) // largest to smallest
-	var validator types.Validator
+	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
 	for {
 		if !iterator.Valid() || bondedValidatorsCount > int(maxValidators-1) {
 			break
 		}
 
-		// either retrieve the original validator from the store,
-		// or under the situation that this is the "new validator" just
-		// use the validator provided because it has not yet been updated
-		// in the main validator store
-		ownerAddr := iterator.Value()
 		var found bool
+
+		ownerAddr := iterator.Value()
 		validator, found = k.GetValidator(ctx, ownerAddr)
 		if !found {
 			panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
@@ -506,23 +523,26 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 		if found {
 			delete(toKickOut, string(ownerAddr))
 		} else {
-
-			// if it wasn't in the toKickOut group it means
-			// this wasn't a previously a validator, therefor
-			// update the validator to enter the validator group
+			// If the validator wasn't in the toKickOut group it means it wasn't
+			// previously a validator, therefor update the validator to enter
+			// the validator group.
 			validator = k.bondValidator(ctx, validator)
 		}
 
-		if !validator.Revoked {
-			bondedValidatorsCount++
-		} else {
+		if validator.Revoked {
+			// we should no longer consider jailed validators as they are ranked
+			// lower than any non-jailed/bonded validators
 			if validator.Status == sdk.Bonded {
-				panic(fmt.Sprintf("revoked validator cannot be bonded, address: %v\n", ownerAddr))
+				panic(fmt.Sprintf("revoked validator cannot be bonded for address: %s\n", ownerAddr))
 			}
+
+			break
 		}
 
+		bondedValidatorsCount++
 		iterator.Next()
 	}
+
 	iterator.Close()
 
 	// clear or set the cliff validator
@@ -532,7 +552,6 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 		k.clearCliffValidator(ctx)
 	}
 
-	// perform the actual kicks
 	kickOutValidators(k, ctx, toKickOut)
 	return
 }
@@ -556,7 +575,7 @@ func (k Keeper) unbondValidator(ctx sdk.Context, validator types.Validator) type
 
 	// sanity check
 	if validator.Status == sdk.Unbonded {
-		panic(fmt.Sprintf("should not already be unbonded,  validator: %v\n", validator))
+		panic(fmt.Sprintf("should not already be unbonded, validator: %v\n", validator))
 	}
 
 	// set the status
@@ -568,10 +587,10 @@ func (k Keeper) unbondValidator(ctx sdk.Context, validator types.Validator) type
 
 	// add to accumulated changes for tendermint
 	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero())
-	store.Set(GetTendermintUpdatesKey(validator.Owner), bzABCI)
+	store.Set(GetTendermintUpdatesKey(validator.Operator), bzABCI)
 
 	// also remove from the Bonded types.Validators Store
-	store.Delete(GetValidatorsBondedIndexKey(validator.Owner))
+	store.Delete(GetValidatorsBondedIndexKey(validator.Operator))
 	return validator
 }
 
@@ -592,11 +611,11 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 
 	// save the now bonded validator record to the three referenced stores
 	k.SetValidator(ctx, validator)
-	store.Set(GetValidatorsBondedIndexKey(validator.Owner), []byte{})
+	store.Set(GetValidatorsBondedIndexKey(validator.Operator), []byte{})
 
 	// add to accumulated changes for tendermint
 	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidator())
-	store.Set(GetTendermintUpdatesKey(validator.Owner), bzABCI)
+	store.Set(GetTendermintUpdatesKey(validator.Operator), bzABCI)
 
 	return validator
 }
@@ -619,10 +638,10 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.AccAddress) {
 
 	// delete from the current and power weighted validator groups if the validator
 	// is bonded - and add validator with zero power to the validator updates
-	if store.Get(GetValidatorsBondedIndexKey(validator.Owner)) == nil {
+	if store.Get(GetValidatorsBondedIndexKey(validator.Operator)) == nil {
 		return
 	}
-	store.Delete(GetValidatorsBondedIndexKey(validator.Owner))
+	store.Delete(GetValidatorsBondedIndexKey(validator.Operator))
 
 	bz := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero())
 	store.Set(GetTendermintUpdatesKey(address), bz)
@@ -647,7 +666,7 @@ func (k Keeper) setCliffValidator(ctx sdk.Context, validator types.Validator, po
 	store := ctx.KVStore(k.storeKey)
 	bz := GetValidatorsByPowerIndexKey(validator, pool)
 	store.Set(ValidatorPowerCliffKey, bz)
-	store.Set(ValidatorCliffIndexKey, validator.Owner)
+	store.Set(ValidatorCliffIndexKey, validator.Operator)
 }
 
 // clear the current validator and power of the validator on the cliff

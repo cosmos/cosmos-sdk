@@ -15,6 +15,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"io/ioutil"
+	"encoding/json"
+	"strings"
 )
 
 const (
@@ -28,18 +31,51 @@ const (
 	flagDepositer         = "depositer"
 	flagStatus            = "status"
 	flagLatestProposalIDs = "latest"
+	flagProposal          = "proposal"
 )
+
+type proposal struct {
+	Title       string
+	Description string
+	Type        string
+	Deposit     string
+}
+
+var proposalFlags = []string{
+	flagTitle,
+	flagDescription,
+	flagProposalType,
+	flagDeposit,
+}
 
 // GetCmdSubmitProposal implements submitting a proposal transaction command.
 func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submit-proposal",
 		Short: "Submit a proposal along with an initial deposit",
+		Long: strings.TrimSpace(`
+Submit a proposal along with an initial deposit. Proposal title, description, type and deposit can be given directly or through a proposal JSON file. For example:
+
+$ gaiacli gov submit-proposal --proposal="path/to/proposal.json"
+
+where proposal.json contains:
+
+{
+  "title": "Test Proposal",
+  "description": "My awesome proposal",
+  "type": "Text",
+  "deposit": "1000test"
+}
+
+is equivalent to
+
+$ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="1000test"
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			title := viper.GetString(flagTitle)
-			description := viper.GetString(flagDescription)
-			strProposalType := viper.GetString(flagProposalType)
-			initialDeposit := viper.GetString(flagDeposit)
+			proposal, err := parseSubmitProposalFlags()
+			if err != nil {
+				return err
+			}
 
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
@@ -52,17 +88,17 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			amount, err := sdk.ParseCoins(initialDeposit)
+			amount, err := sdk.ParseCoins(proposal.Deposit)
 			if err != nil {
 				return err
 			}
 
-			proposalType, err := gov.ProposalTypeFromString(strProposalType)
+			proposalType, err := gov.ProposalTypeFromString(proposal.Type)
 			if err != nil {
 				return err
 			}
 
-			msg := gov.NewMsgSubmitProposal(title, description, proposalType, fromAddr, amount)
+			msg := gov.NewMsgSubmitProposal(proposal.Title, proposal.Description, proposalType, fromAddr, amount)
 
 			err = msg.ValidateBasic()
 			if err != nil {
@@ -80,8 +116,40 @@ func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().String(flagDescription, "", "description of proposal")
 	cmd.Flags().String(flagProposalType, "", "proposalType of proposal")
 	cmd.Flags().String(flagDeposit, "", "deposit of proposal")
+	cmd.Flags().String(flagProposal, "", "proposal file path (if this path is given, other proposal flags are ignored)")
 
 	return cmd
+}
+
+func parseSubmitProposalFlags() (*proposal, error) {
+	proposal := &proposal{}
+	proposalFile := viper.GetString(flagProposal)
+
+	if proposalFile == "" {
+		proposal.Title = viper.GetString(flagTitle)
+		proposal.Description = viper.GetString(flagDescription)
+		proposal.Type = viper.GetString(flagProposalType)
+		proposal.Deposit = viper.GetString(flagDeposit)
+		return proposal, nil
+	}
+
+	for _, flag := range proposalFlags {
+		if viper.GetString(flag) != "" {
+			return nil, fmt.Errorf("--%s flag provided alongside --proposal, which is a noop", flag)
+		}
+	}
+
+	contents, err := ioutil.ReadFile(proposalFile)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(contents, proposal)
+	if err != nil {
+		return nil, err
+	}
+
+	return proposal, nil
 }
 
 // GetCmdDeposit implements depositing tokens for an active proposal.

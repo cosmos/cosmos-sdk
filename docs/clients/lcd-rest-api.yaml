@@ -2,7 +2,7 @@ swagger: '2.0'
 info:
   version: '1.1.0'
   title: Gaia-Lite (former LCD) to interface with Cosmos BaseServer via REST
-  description: Specification for Gaia-lite provided by `gaiacli advanced rest-server`
+  description: Specification for Gaia-lite provided by `gaiacli rest-server`
 
 tags:
 - name: keys

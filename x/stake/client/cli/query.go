@@ -139,7 +139,10 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 			}
 
 			// parse out the delegation
-			delegation := types.MustUnmarshalDelegation(cdc, key, res)
+			delegation, err := types.UnmarshalDelegation(cdc, key, res)
+			if err != nil {
+				return err
+			}
 
 			switch viper.Get(cli.OutputFlag) {
 			case "text":
@@ -312,11 +315,11 @@ func GetCmdQueryUnbondingDelegations(storeName string, cdc *wire.Codec) *cobra.C
 }
 
 // GetCmdQueryRedelegation implements the command to query a single
-// unbonding-delegation record.
+// redelegation record.
 func GetCmdQueryRedelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unbonding-delegation",
-		Short: "Query an unbonding-delegation record based on delegator and validator address",
+		Use:   "redelegation",
+		Short: "Query a redelegation record based on delegator and a source and destination validator address",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			valSrcAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorSrc))
 			if err != nil {
@@ -373,11 +376,11 @@ func GetCmdQueryRedelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdQueryRedelegations implements the command to query all the
-// unbonding-delegation records for a delegator.
+// redelegation records for a delegator.
 func GetCmdQueryRedelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unbonding-delegations [delegator-addr]",
-		Short: "Query all unbonding-delegations records for one delegator",
+		Use:   "redelegations [delegator-addr]",
+		Short: "Query all redelegations records for one delegator",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
@@ -408,6 +411,84 @@ func GetCmdQueryRedelegations(storeName string, cdc *wire.Codec) *cobra.Command 
 			fmt.Println(string(output))
 
 			// TODO: output with proofs / machine parseable etc.
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// GetCmdQueryPool implements the pool query command.
+func GetCmdQueryPool(storeName string, cdc *wire.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pool",
+		Short: "Query the current staking pool values",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			key := stake.PoolKey
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			res, err := cliCtx.QueryStore(key, storeName)
+			if err != nil {
+				return err
+			}
+
+			pool := types.MustUnmarshalPool(cdc, res)
+
+			switch viper.Get(cli.OutputFlag) {
+			case "text":
+				human := pool.HumanReadableString()
+
+				fmt.Println(human)
+
+			case "json":
+				// parse out the pool
+				output, err := wire.MarshalJSONIndent(cdc, pool)
+				if err != nil {
+					return err
+				}
+
+				fmt.Println(string(output))
+			}
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// GetCmdQueryPool implements the params query command.
+func GetCmdQueryParams(storeName string, cdc *wire.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "parameters",
+		Short: "Query the current staking parameters information",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			key := stake.ParamKey
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			res, err := cliCtx.QueryStore(key, storeName)
+			if err != nil {
+				return err
+			}
+
+			params := types.MustUnmarshalParams(cdc, res)
+
+			switch viper.Get(cli.OutputFlag) {
+			case "text":
+				human := params.HumanReadableString()
+
+				fmt.Println(human)
+
+			case "json":
+				// parse out the params
+				output, err := wire.MarshalJSONIndent(cdc, params)
+				if err != nil {
+					return err
+				}
+
+				fmt.Println(string(output))
+			}
 			return nil
 		},
 	}

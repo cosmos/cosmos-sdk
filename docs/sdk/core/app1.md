@@ -469,7 +469,7 @@ Tendermint consensus engine. It would be initialized by a Genesis file, and it
 would be driven by blocks of transactions committed by the underlying Tendermint
 consensus. We'll talk more about ABCI and how this all works a bit later, but
 feel free to check the
-[specification](https://github.com/tendermint/tendermint/blob/master/docs/abci-spec.md).
+[specification](https://github.com/tendermint/tendermint/blob/master/docs/app-dev/abci-spec.md).
 We'll also see how to connect our app to a complete suite of components
 for running and using a live blockchain application.
 

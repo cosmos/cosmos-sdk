@@ -31,25 +31,25 @@ func TestHandleDoubleSign(t *testing.T) {
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
 	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
-	require.True(t, sdk.NewRatFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
+	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
 
 	// handle a signature to set signing info
 	keeper.handleValidatorSignature(ctx, val.Address(), amtInt, true)
 
 	// double sign less than max age
-	keeper.handleDoubleSign(ctx, val, 0, time.Unix(0, 0), amtInt)
+	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
 
 	// should be revoked
 	require.True(t, sk.Validator(ctx, addr).GetRevoked())
 	// unrevoke to measure power
 	sk.Unrevoke(ctx, val)
 	// power should be reduced
-	require.Equal(t, sdk.NewRatFromInt(amt).Mul(sdk.NewRat(19).Quo(sdk.NewRat(20))), sk.Validator(ctx, addr).GetPower())
+	require.Equal(t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))), sk.Validator(ctx, addr).GetPower())
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(keeper.MaxEvidenceAge(ctx))})
 
 	// double sign past max age
-	keeper.handleDoubleSign(ctx, val, 0, time.Unix(0, 0), amtInt)
-	require.Equal(t, sdk.NewRatFromInt(amt).Mul(sdk.NewRat(19).Quo(sdk.NewRat(20))), sk.Validator(ctx, addr).GetPower())
+	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
+	require.Equal(t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))), sk.Validator(ctx, addr).GetPower())
 }
 
 // Test a validator through uptime, downtime, revocation,
@@ -67,7 +67,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
 	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
-	require.True(t, sdk.NewRatFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
+	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
 	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))
 	require.False(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
@@ -131,7 +131,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should have been slashed
 	pool = sk.GetPool(ctx)
-	slashAmt := sdk.NewRat(amtInt).Mul(keeper.SlashFractionDowntime(ctx)).RoundInt64()
+	slashAmt := sdk.NewDec(amtInt).Mul(keeper.SlashFractionDowntime(ctx)).RoundInt64()
 	require.Equal(t, int64(amtInt)-slashAmt, pool.BondedTokens.RoundInt64())
 
 	// validator start height should have been changed
@@ -177,7 +177,7 @@ func TestHandleNewValidator(t *testing.T) {
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
 	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.SubRaw(amt)}})
-	require.Equal(t, sdk.NewRat(amt), sk.Validator(ctx, addr).GetPower())
+	require.Equal(t, sdk.NewDec(amt), sk.Validator(ctx, addr).GetPower())
 
 	// 1000 first blocks not a validator
 	ctx = ctx.WithBlockHeight(keeper.SignedBlocksWindow(ctx) + 1)

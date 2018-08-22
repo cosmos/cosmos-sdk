@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/spf13/pflag"
@@ -32,6 +33,7 @@ var (
 type GenesisState struct {
 	Accounts  []GenesisAccount   `json:"accounts"`
 	StakeData stake.GenesisState `json:"stake"`
+	GovData   gov.GenesisState   `json:"gov"`
 }
 
 // GenesisAccount doesn't need pubkey or sequence
@@ -185,7 +187,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		}
 		acc := NewGenesisAccount(&accAuth)
 		genaccs[i] = acc
-		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewRat(freeFermionsAcc)) // increase the supply
+		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDec(freeFermionsAcc)) // increase the supply
 
 		// add the validator
 		if len(genTx.Name) > 0 {
@@ -193,17 +195,17 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 			validator := stake.NewValidator(genTx.Address,
 				sdk.MustGetAccPubKeyBech32(genTx.PubKey), desc)
 
-			stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewRat(freeFermionVal)) // increase the supply
+			stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDec(freeFermionVal)) // increase the supply
 
 			// add some new shares to the validator
-			var issuedDelShares sdk.Rat
+			var issuedDelShares sdk.Dec
 			validator, stakeData.Pool, issuedDelShares = validator.AddTokensFromDel(stakeData.Pool, freeFermionVal)
 			stakeData.Validators = append(stakeData.Validators, validator)
 
 			// create the self-delegation from the issuedDelShares
 			delegation := stake.Delegation{
-				DelegatorAddr: validator.Owner,
-				ValidatorAddr: validator.Owner,
+				DelegatorAddr: validator.Operator,
+				ValidatorAddr: validator.Operator,
 				Shares:        issuedDelShares,
 				Height:        0,
 			}
@@ -216,6 +218,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 	genesisState = GenesisState{
 		Accounts:  genaccs,
 		StakeData: stakeData,
+		GovData:   gov.DefaultGenesisState(),
 	}
 	return
 }

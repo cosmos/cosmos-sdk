@@ -10,7 +10,7 @@ import (
 // Validator implements sdk.Validator
 type Validator struct {
 	Address sdk.AccAddress
-	Power   sdk.Rat
+	Power   sdk.Dec
 }
 
 // Implements sdk.Validator
@@ -19,7 +19,7 @@ func (v Validator) GetStatus() sdk.BondStatus {
 }
 
 // Implements sdk.Validator
-func (v Validator) GetOwner() sdk.AccAddress {
+func (v Validator) GetOperator() sdk.AccAddress {
 	return v.Address
 }
 
@@ -29,18 +29,18 @@ func (v Validator) GetPubKey() crypto.PubKey {
 }
 
 // Implements sdk.Validator
-func (v Validator) GetTokens() sdk.Rat {
-	return sdk.ZeroRat()
+func (v Validator) GetTokens() sdk.Dec {
+	return sdk.ZeroDec()
 }
 
 // Implements sdk.Validator
-func (v Validator) GetPower() sdk.Rat {
+func (v Validator) GetPower() sdk.Dec {
 	return v.Power
 }
 
 // Implements sdk.Validator
-func (v Validator) GetDelegatorShares() sdk.Rat {
-	return sdk.ZeroRat()
+func (v Validator) GetDelegatorShares() sdk.Dec {
+	return sdk.ZeroDec()
 }
 
 // Implements sdk.Validator
@@ -93,8 +93,8 @@ func (vs *ValidatorSet) ValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey)
 }
 
 // TotalPower implements sdk.ValidatorSet
-func (vs *ValidatorSet) TotalPower(ctx sdk.Context) sdk.Rat {
-	res := sdk.ZeroRat()
+func (vs *ValidatorSet) TotalPower(ctx sdk.Context) sdk.Dec {
+	res := sdk.ZeroDec()
 	for _, val := range vs.Validators {
 		res = res.Add(val.Power)
 	}
@@ -122,7 +122,7 @@ func (vs *ValidatorSet) RemoveValidator(addr sdk.AccAddress) {
 }
 
 // Implements sdk.ValidatorSet
-func (vs *ValidatorSet) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power int64, amt sdk.Rat) {
+func (vs *ValidatorSet) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, power int64, amt sdk.Dec) {
 	panic("not implemented")
 }
 

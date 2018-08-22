@@ -167,12 +167,10 @@ func (keeper Keeper) setInitialProposalID(ctx sdk.Context, proposalID int64) sdk
 
 // Get the last used proposal ID
 func (keeper Keeper) GetLastProposalID(ctx sdk.Context) (proposalID int64) {
-	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(KeyNextProposalID)
-	if bz == nil {
+	proposalID, err := keeper.peekCurrentProposalID(ctx)
+	if err != nil {
 		return 0
 	}
-	keeper.cdc.MustUnmarshalBinary(bz, &proposalID)
 	proposalID--
 	return
 }

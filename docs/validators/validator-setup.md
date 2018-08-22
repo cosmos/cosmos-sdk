@@ -16,7 +16,7 @@ If you want to become a validator for the Hub's `mainnet`, you should [research 
 
 ### Create Your Validator
 
-Your `cosmosvalpub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
+Your `cosmosconspub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
 
 ```bash
 gaiad tendermint show-validator
@@ -32,7 +32,7 @@ Don't use more `steak` thank you have! You can always get more by using the [Fau
 gaiacli stake create-validator \
   --amount=5steak \
   --pubkey=$(gaiad tendermint show-validator) \
-  --address-validator=<account_cosmosaccaddr>
+  --address-validator=<account_cosmosvaladdr>
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \
   --name=<key_name>
@@ -80,7 +80,7 @@ When a validator is `Revoked` for downtime, you must submit an `Unrevoke` transa
 gaiacli stake unrevoke \
 	--from=<key_name> \
 	--chain-id=<chain_id>
-  --validator=<account_cosmosaccaddr> \
+  --validator=<account_cosmosvaladdr> \
   --chain-id=gaia-6002
 ```
 

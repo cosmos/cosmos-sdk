@@ -251,7 +251,6 @@ func (err *sdkError) Code() CodeType {
 
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
-	_ = err.Error()
 	parsedErrMsg := parseCmnError(err.cmnError.Error())
 	jsonErr := newHumanReadableError(err.codespace, err.code, err.ABCICode(), parsedErrMsg)
 	bz, er := json.Marshal(jsonErr)

@@ -133,6 +133,13 @@ Libraries need not follow the model strictly, but would be wise to.
 
 The SDK utilizes [semantic versioning](https://semver.org/).
 
+### PR Targeting
+
+Ensure that you base and target your PR on the correct branch:
+  - `release/vxx.yy.zz` for a merge into a release candidate
+  - `master` for a merge of a release
+  - `develop` in the usual case
+
 ### Development Procedure:
   - the latest state of development is on `develop`
   - `develop` must never fail `make test` or `make test_cli`

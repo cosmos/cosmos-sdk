@@ -4,10 +4,7 @@ v    Before smashing the submit button please review the checkboxes.
 v    If a checkbox is n/a - please still include it but + a little note why
 ☺ > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > >  -->
 
-- Targeted PR against correct branch:
-  - `release/vxx.yy.zz` for a merge into a release candidate
-  - `master` for a merge of a release
-  - `develop` in the usual case
+- Targeted PR against correct branch (see [CONTRIBUTING.md](https://github.com/cosmos/cosmos-sdk/blob/develop/CONTRIBUTING.md#pr-targeting))
 
 - [ ] Linked to github-issue with discussion and accepted design OR link to spec that describes this work.
 - [ ] Updated all relevant documentation (`docs/`)

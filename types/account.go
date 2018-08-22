@@ -114,7 +114,7 @@ func (bz AccAddress) Equals(bz2 AccAddress) bool {
 	if bz.Empty() && bz2.Empty() {
 		return true
 	}
-	return (bytes.Compare(bz.Bytes(), bz2.Bytes()) == 0)
+	return bytes.Compare(bz.Bytes(), bz2.Bytes()) == 0
 }
 
 // Returns boolean for whether an AccAddress is empty
@@ -123,7 +123,7 @@ func (bz AccAddress) Empty() bool {
 		return true
 	}
 	bz2 := AccAddress{}
-	return (bytes.Compare(bz.Bytes(), bz2.Bytes()) == 0)
+	return bytes.Compare(bz.Bytes(), bz2.Bytes()) == 0
 }
 
 //__________________________________________________________
@@ -215,7 +215,7 @@ func (bz ValAddress) Equals(bz2 ValAddress) bool {
 	if bz.Empty() && bz2.Empty() {
 		return true
 	}
-	return (bytes.Compare(bz.Bytes(), bz2.Bytes()) == 0)
+	return bytes.Compare(bz.Bytes(), bz2.Bytes()) == 0
 }
 
 // Returns boolean for whether an AccAddress is empty
@@ -224,7 +224,7 @@ func (bz ValAddress) Empty() bool {
 		return true
 	}
 	bz2 := ValAddress{}
-	return (bytes.Compare(bz.Bytes(), bz2.Bytes()) == 0)
+	return bytes.Compare(bz.Bytes(), bz2.Bytes()) == 0
 }
 
 // Bech32ifyAccPub takes AccountPubKey and returns the bech32 encoded string

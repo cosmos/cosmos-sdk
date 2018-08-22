@@ -23,20 +23,45 @@ import (
 /// USE gofmt command for styling/structing the go code
 
 type MsgRegisterVpnService struct {
-	From     sdk.AccAddress
-	Ip       string
-	Netspeed int64
-	Ppgb     int64
-	Location string
+	From       sdk.AccAddress
+	Ip         string
+	NetSpeed   NetSpeed
+	PricePerGb int64
+	EncMethod  string
+	Location   Location
+
+	NodeType string
+	Version  string
+}
+type NetSpeed struct {
+	UploadSpeed   int64
+	DownloadSpeed int64
+}
+type Location struct {
+	Latitude  int64
+	Longitude int64
+	City      string
+	Country   string
 }
 
-func NewMsgRegisterVpnService(address sdk.AccAddress, ip string, ppgb int64, netspeed int64, location string) MsgRegisterVpnService {
+func NewMsgRegisterVpnService(address sdk.AccAddress, ip string, upload int64, download int64, ppgb int64, method string, latitude int64, long int64, city string, country string, nodetype string, version string) MsgRegisterVpnService {
 	return MsgRegisterVpnService{
-		From:     address,
-		Ip:       ip,
-		Ppgb:     ppgb,
-		Netspeed: netspeed,
-		Location: location,
+		From: address,
+		Ip:   ip,
+		NetSpeed: NetSpeed{
+			UploadSpeed:   upload,
+			DownloadSpeed: download,
+		},
+		PricePerGb: ppgb,
+		EncMethod:  method,
+		Location: Location{
+			Latitude:  latitude,
+			Longitude: long,
+			City:      city,
+			Country:   country,
+		},
+		NodeType: nodetype,
+		Version:  version,
 	}
 }
 
@@ -82,7 +107,7 @@ func (msc MsgRegisterVpnService) ValidateBasic() sdk.Error {
 	if msc.From == nil {
 		return sdk.ErrInvalidAddress("Invalid Address")
 	}
-	if reflect.TypeOf(msc.Ppgb) != reflect.TypeOf(a) || msc.Ppgb <= 0 || msc.Ppgb > 1000 {
+	if reflect.TypeOf(msc.PricePerGb) != reflect.TypeOf(a) || msc.PricePerGb <= 0 || msc.PricePerGb > 1000 {
 
 		return ErrInvalidPricePerGb("Price per GB is not Valid")
 	}
@@ -90,12 +115,12 @@ func (msc MsgRegisterVpnService) ValidateBasic() sdk.Error {
 
 		return ErrInvalidIpAdress("Invalid IP address")
 	}
-	if reflect.TypeOf(msc.Netspeed) != reflect.TypeOf(a) || msc.Netspeed <= 0 || msc.Netspeed >= 1000 {
+	if reflect.TypeOf(msc.NetSpeed.UploadSpeed) != reflect.TypeOf(a) || reflect.TypeOf(msc.NetSpeed.DownloadSpeed) != reflect.TypeOf(a) || msc.NetSpeed.UploadSpeed <= 0 || msc.NetSpeed.UploadSpeed >= 1000 || msc.NetSpeed.DownloadSpeed <= 0 || msc.NetSpeed.DownloadSpeed >= 1000 {
 		return ErrInvalidNetspeed("NetSpeed is not Valid")
 	}
-	if msc.Location == "" || reflect.TypeOf(msc.Location) != reflect.TypeOf(s) {
-		return ErrInvalidLocation("location is not Valid")
-	}
+	// if msc.Location == "" || reflect.TypeOf(msc.Location) != reflect.TypeOf(s) {
+	// 	return ErrInvalidLocation("location is not Valid")
+	// }
 	return nil
 }
 

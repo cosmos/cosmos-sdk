@@ -47,7 +47,7 @@ func (keeper Keeper) RegisterVpnService(ctx sdk.Context, msg MsgRegisterVpnServi
 	store := ctx.KVStore(keeper.sentStoreKey)
 	address := store.Get([]byte(sentKey))
 	if address == nil {
-		vpnreg := senttype.NewVpnRegister(msg.Ip, msg.Location, msg.Ppgb, msg.Netspeed)
+		vpnreg := senttype.NewVpnRegister(msg.Ip, msg.NetSpeed.UploadSpeed, msg.NetSpeed.DownloadSpeed, msg.PricePerGb, msg.EncMethod, msg.Location.Latitude, msg.Location.Longitude, msg.Location.City, msg.Location.Country, msg.NodeType, msg.Version)
 		bz, _ := keeper.cdc.MarshalBinary(vpnreg)
 		store.Set([]byte(sentKey), bz)
 		return msg.From, nil

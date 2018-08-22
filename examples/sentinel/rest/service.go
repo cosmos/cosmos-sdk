@@ -25,13 +25,20 @@ import (
 )
 
 type MsgRegisterVpnService struct {
-	Ip           string `json:"ip"`
-	Netspeed     int64  `json:"netspeed"`
-	Ppgb         int64  `json:"price_per_gb"`
-	Location     string `json:"location"`
-	Localaccount string `json:"name"`
-	Password     string `json:"password"`
-	Gas          int64  `json:"gas"`
+	Ip            string `json:"ip"`
+	UploadSpeed   int64  `json:"upload_speed"`
+	DownloadSpeed int64  `json:"download_speed"`
+	Ppgb          int64  `json:"price_per_gb"`
+	EncMethod     string `json:"enc_method"`
+	Latitude      int64  `json:"location_latitude"`
+	Longitude     int64  `json:"location_longitude"`
+	City          string `json:"location_city"`
+	Country       string `json:"location_country"`
+	NodeType      string `json:"node_type"`
+	Version       string `json:"version"`
+	Localaccount  string `json:"name"`
+	Password      string `json:"password"`
+	Gas           int64  `json:"gas"`
 }
 type MsgRegisterMasterNode struct {
 	Name     string `json:"name"`
@@ -169,9 +176,16 @@ func ServiceRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 * @apiName registerVPN
 * @apiGroup Sentinel-Tendermint
 * @apiParam {String} ip Ip address of VPN service provider.
-* @apiParam {Number} netspeed Net speed of VPN service.
+* @apiParam {Number} upload_speed Upload Net speed of VPN service.
+* @apiParam {Number} download_speed Download Net speed of VPN service.
 * @apiParam {Number} price_per_gb Price per GB.
-* @apiParam {String} location  Location of service provider.
+* @apiParam {String} encrytion_method Encryption method.
+* @apiParam {Number} location_latitude  Latitude Location of service provider.
+* @apiParam {Number} location_longitude  Longiude Location of service provider.
+* @apiParam {String} location_city  City Location of service provider.
+* @apiParam {String} location_country  Country Location of service provider.
+* @apiParam {String} node_type  Node type.
+* @apiParam {String} version version.
 * @apiParam {String} name Account name of service provider.
 * @apiParam {string} password password of account.
 * @apiParam {Number} gas Gas value.
@@ -285,9 +299,24 @@ func registervpnHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handler
 			w.Write([]byte(" entered invalid amount of price per Gb"))
 			return
 		}
-		if reflect.TypeOf(msg.Netspeed) != reflect.TypeOf(a) || msg.Netspeed < 0 {
+		if reflect.TypeOf(msg.UploadSpeed) != reflect.TypeOf(a) || reflect.TypeOf(msg.DownloadSpeed) != reflect.TypeOf(a) || msg.UploadSpeed <= 0 || msg.UploadSpeed >= 1000 || msg.DownloadSpeed <= 0 || msg.DownloadSpeed >= 1000 {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(" entered invalid details"))
+			return
+		}
+		if msg.Latitude <= -90 || msg.Longitude <= -180 || msg.Latitude > 90 || msg.Longitude > 180 || msg.City == "" || msg.Country == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(" entered invalid  Location details"))
+			return
+		}
+		if msg.NodeType == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(" Node type is required"))
+			return
+		}
+		if msg.Version == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(" Version is required"))
 			return
 		}
 		ctx = ctx.WithGas(msg.Gas)
@@ -307,7 +336,7 @@ func registervpnHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handler
 
 		}
 
-		msg1 := sentinel.NewMsgRegisterVpnService(addr, msg.Ip, msg.Ppgb, msg.Netspeed, msg.Location)
+		msg1 := sentinel.NewMsgRegisterVpnService(addr, msg.Ip, msg.Ppgb, msg.UploadSpeed, msg.DownloadSpeed, msg.EncMethod, msg.Latitude*100, msg.Longitude*100, msg.City, msg.Country, msg.NodeType, msg.Version)
 		txBytes, err := ctx.SignAndBuild(msg.Localaccount, msg.Password, []sdk.Msg{msg1}, cdc)
 
 		if err != nil {

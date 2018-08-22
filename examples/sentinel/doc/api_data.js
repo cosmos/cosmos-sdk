@@ -632,8 +632,15 @@ define({ "api": [
             "group": "Parameter",
             "type": "Number",
             "optional": false,
-            "field": "netspeed",
-            "description": "<p>Net speed of VPN service.</p>"
+            "field": "upload_speed",
+            "description": "<p>Upload Net speed of VPN service.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "download_speed",
+            "description": "<p>Download Net speed of VPN service.</p>"
           },
           {
             "group": "Parameter",
@@ -646,8 +653,50 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "location",
-            "description": "<p>Location of service provider.</p>"
+            "field": "encrytion_method",
+            "description": "<p>Encryption method.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "location_latitude",
+            "description": "<p>Latitude Location of service provider.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "location_longitude",
+            "description": "<p>Longiude Location of service provider.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "location_city",
+            "description": "<p>City Location of service provider.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "location_country",
+            "description": "<p>Country Location of service provider.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "node_type",
+            "description": "<p>Node type.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "version",
+            "description": "<p>version.</p>"
           },
           {
             "group": "Parameter",

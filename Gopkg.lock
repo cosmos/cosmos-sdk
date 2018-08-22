@@ -491,6 +491,14 @@
   version = "v0.23.0"
 
 [[projects]]
+  digest = "1:bf6d9a827ea3cad964c2f863302e4f6823170d0b5ed16f72cf1184a7c615067e"
+  name = "github.com/tendermint/tmlibs"
+  packages = ["cli"]
+  pruneopts = "UT"
+  revision = "49596e0a1f48866603813df843c9409fc19805c6"
+  version = "v0.9.0"
+
+[[projects]]
   digest = "1:4dcb0dd65feecb068ce23a234d1a07c7868a1e39f52a6defcae0bb371d03abf6"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
@@ -499,7 +507,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7a71fffde456d746c52f9cd09c50b034533a3180fb1f6320abb149f2ccc579e5"
+  digest = "1:27507554c6d4f060d8d700c31c624a43d3a92baa634e178ddc044bdf7d13b44a"
   name = "golang.org/x/crypto"
   packages = [
     "blowfish",
@@ -518,7 +526,7 @@
     "salsa20/salsa",
   ]
   pruneopts = "UT"
-  revision = "aabede6cba87e37f413b3e60ebfc214f8eeca1b0"
+  revision = "614d502a4dac94afa3a6ce146bd1736da82514c6"
 
 [[projects]]
   digest = "1:d36f55a999540d29b6ea3c2ea29d71c76b1d9853fdcd3e5c5cb4836f2ba118f1"
@@ -538,14 +546,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ead82e3e398388679f3ad77633a087ac31a47a6be59ae20841e1d1b3a3fbbd22"
+  digest = "1:a0e12bc26f317c0e2d497baf767285e1790e526e8dd46553c5a67fcbc8692157"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "UT"
-  revision = "1a700e749ce29638d0bbcb531cce1094ea096bd3"
+  revision = "3b58ed4ad3395d483fc92d5d14123ce2c3581fec"
 
 [[projects]]
   digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"
@@ -666,6 +674,7 @@
     "github.com/tendermint/tendermint/rpc/lib/server",
     "github.com/tendermint/tendermint/types",
     "github.com/tendermint/tendermint/version",
+    "github.com/tendermint/tmlibs/cli",
     "github.com/zondax/ledger-goclient",
     "golang.org/x/crypto/blowfish",
     "golang.org/x/crypto/ripemd160",

@@ -30,6 +30,17 @@ const (
 	Bech32PrefixConsPub = "cosmosconspub"
 )
 
+// Address defines an interface various implementations must implement
+type Address interface {
+	Marshal() ([]byte, error)
+	Unmarshal(data []byte) error
+	MarshalJSON() ([]byte, error)
+	UnmarshalJSON(data []byte) error
+	Bytes() []byte
+	String() string
+	Format(s fmt.State, verb rune)
+}
+
 // ----------------------------------------------------------------------------
 // account
 // ----------------------------------------------------------------------------

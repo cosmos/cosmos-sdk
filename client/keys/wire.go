@@ -1,6 +1,7 @@
 package keys
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
@@ -8,6 +9,8 @@ var cdc *wire.Codec
 
 func init() {
 	cdc = wire.NewCodec()
+
+	cdc.RegisterInterface((*sdk.Address)(nil), nil)
 	wire.RegisterCrypto(cdc)
 }
 

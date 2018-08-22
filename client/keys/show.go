@@ -19,8 +19,30 @@ var showKeysCmd = &cobra.Command{
 		name := args[0]
 		info, err := getKey(name)
 		if err == nil {
-			printInfo(info)
+			printKeyInfo(info, Bech32KeyOutput)
 		}
+		return err
+	},
+}
+
+var showValKeysCmd = &cobra.Command{
+	Use:   "show-validator <name>",
+	Short: "Show validator key info for the given name",
+	Long: `Return public key details of one local key for a given name that operates a validator
+
+Example:
+
+$ gaiacli keys show-validator node0
+`,
+	Args: cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		name := args[0]
+
+		info, err := getKey(name)
+		if err == nil {
+			printKeyInfo(info, Bech32ValKeyOutput)
+		}
+
 		return err
 	},
 }

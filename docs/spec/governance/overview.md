@@ -46,18 +46,15 @@ Then, deposits will automatically be refunded to their respective depositer.
 
 ### Proposal types
 
-In the initial version of the governance module, there are two types of 
+In the initial version of the governance module, there is only one type of
 proposal:
-* `PlainTextProposal` All the proposals that do not involve a modification of 
-  the source code go under this type. For example, an opinion poll would use a 
-  proposal of type `PlainTextProposal`.
-* `SoftwareUpgradeProposal`. If accepted, validators are expected to update 
-  their software in accordance with the proposal. They must do so by following 
-  a 2-steps process described in the [Software Upgrade](#software-upgrade) 
-  section below. Software upgrade roadmap may be discussed and agreed on via 
-  `PlainTextProposals`, but actual software upgrades must be performed via 
-  `SoftwareUpgradeProposals`.
 
+* `PlainTextProposal` All the proposals that do not involve a modification of
+  the source code go under this type. For example, an opinion poll would use a
+proposal of type `PlainTextProposal`.
+
+For information about software upgrades, see the [Software Upgrade
+Spec](software_upgrade.md).
 
 ## Vote
 
@@ -161,32 +158,3 @@ making it mechanically impossible for some validators to vote on it.
 ### Governance address
 
 Later, we may add permissionned keys that could only sign txs from certain modules. For the MVP, the `Governance address` will be the main validator address generated at account creation. This address corresponds to a different PrivKey than the Tendermint PrivKey which is responsible for signing consensus messages. Validators thus do not have to sign governance transactions with the sensitive Tendermint PrivKey.
-
-## Software Upgrade
-
-If proposals are of type `SoftwareUpgradeProposal`, then nodes need to upgrade 
-their software to the new version that was voted. This process is divided in 
-two steps.
-
-### Signal
-
-After a `SoftwareUpgradeProposal` is accepted, validators are expected to 
-download and install the new version of the software while continuing to run 
-the previous version. Once a validator has downloaded and installed the 
-upgrade, it will start signaling to the network that it is ready to switch by 
-including the proposal's `proposalID` in its *precommits*.(*Note: Confirmation 
-that we want it in the precommit?*)
-
-Note: There is only one signal slot per *precommit*. If several 
-`SoftwareUpgradeProposals` are accepted in a short timeframe, a pipeline will 
-form and they will be implemented one after the other in the order that they 
-were accepted.
-
-### Switch
-
-Once a block contains more than 2/3rd *precommits* where a common 
-`SoftwareUpgradeProposal` is signaled, all the nodes (including validator 
-nodes, non-validating full nodes and light-nodes) are expected to switch to the
-new version of the software. 
-
-*Note: Not clear how the flip is handled programatically*

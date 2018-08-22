@@ -62,18 +62,10 @@ func main() {
 			ibccmd.IBCRelayCmd(cdc),
 		)...)
 
-	advancedCmd := &cobra.Command{
-		Use:   "advanced",
-		Short: "Advanced subcommands",
-	}
-
-	advancedCmd.AddCommand(
+	rootCmd.AddCommand(
 		tendermintCmd,
 		ibcCmd,
 		lcd.ServeCommand(cdc),
-	)
-	rootCmd.AddCommand(
-		advancedCmd,
 		client.LineBreak,
 	)
 

@@ -12,10 +12,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	flagSelect = "select"
-)
-
 //BlockCommand returns the verified block data for a given heights
 func BlockCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -27,7 +23,6 @@ func BlockCommand() *cobra.Command {
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	// TODO: change this to false when we can
 	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
-	cmd.Flags().StringSlice(flagSelect, []string{"header", "tx"}, "Fields to return (header|txs|results)")
 	return cmd
 }
 
@@ -38,7 +33,6 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
-	// TODO: actually honor the --select flag!
 	// header -> BlockchainInfo
 	// header, tx -> Block
 	// results -> BlockResults

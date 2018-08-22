@@ -136,8 +136,8 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
-	if validator.Revoked == true {
-		return ErrValidatorRevoked(k.Codespace()).Result()
+	if validator.Jailed {
+		return ErrValidatorJailed(k.Codespace()).Result()
 	}
 	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator, true)
 	if err != nil {

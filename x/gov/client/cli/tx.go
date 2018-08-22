@@ -12,11 +12,11 @@ import (
 	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 
+	"encoding/json"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"io/ioutil"
-	"encoding/json"
 	"strings"
 )
 

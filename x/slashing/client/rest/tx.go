@@ -19,13 +19,13 @@ import (
 
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
 	r.HandleFunc(
-		"/slashing/unrevoke",
-		unrevokeRequestHandlerFn(cdc, kb, cliCtx),
+		"/slashing/unjail",
+		unjailRequestHandlerFn(cdc, kb, cliCtx),
 	).Methods("POST")
 }
 
-// Unrevoke TX body
-type UnrevokeBody struct {
+// Unjail TX body
+type UnjailBody struct {
 	LocalAccountName string `json:"name"`
 	Password         string `json:"password"`
 	ChainID          string `json:"chain_id"`
@@ -35,9 +35,9 @@ type UnrevokeBody struct {
 	ValidatorAddr    string `json:"validator_addr"`
 }
 
-func unrevokeRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
+func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var m UnrevokeBody
+		var m UnjailBody
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -79,7 +79,7 @@ func unrevokeRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.C
 			Gas:           m.Gas,
 		}
 
-		msg := slashing.NewMsgUnrevoke(validatorAddr)
+		msg := slashing.NewMsgUnjail(validatorAddr)
 
 		txBytes, err := txCtx.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
 		if err != nil {

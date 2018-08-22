@@ -48,7 +48,7 @@ type ValidatorSigningInfo struct {
 Where:
 * `StartHeight` is set to the height that the candidate became an active validator (with non-zero voting power).
 * `IndexOffset` is incremented each time the candidate was a bonded validator in a block (and may have signed a precommit or not).
-* `JailedUntil` is set whenever the candidate is revoked due to downtime
+* `JailedUntil` is set whenever the candidate is jailed due to downtime
 * `SignedBlocksCounter` is a counter kept to avoid unnecessary array reads. `SignedBlocksBitArray.Sum() == SignedBlocksCounter` always.
 
 ## Slashing Period

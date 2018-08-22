@@ -1,10 +1,10 @@
 package cli
 
 import (
-	"testing"
 	"github.com/spf13/viper"
-	"io/ioutil"
 	"github.com/stretchr/testify/require"
+	"io/ioutil"
+	"testing"
 )
 
 func TestParseSubmitProposalFlags(t *testing.T) {

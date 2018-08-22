@@ -35,6 +35,10 @@ func TestAndRunSingleInputMsgSend(mapper auth.AccountMapper) simulation.TestAndR
 		toAddr := sdk.AccAddress(toKey.PubKey().Address())
 		initFromCoins := mapper.GetAccount(ctx, fromAddr).GetCoins()
 
+		if len(initFromCoins) == 0 {
+			return "skipping, no coins at all", nil
+		}
+
 		denomIndex := r.Intn(len(initFromCoins))
 		amt, goErr := randPositiveInt(r, initFromCoins[denomIndex].Amount)
 		if goErr != nil {

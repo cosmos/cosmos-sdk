@@ -4,10 +4,20 @@ import (
 	"encoding/json"
 	"net/http"
 
-	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/gorilla/mux"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/pkg/errors"
+	"github.com/tendermint/tmlibs/cli"
+)
+
+const (
+	// FlagAddress is the flag for the user's address on the command line.
+	FlagAddress = "address"
+	// FlagPublicKey represents the user's public key on the command line.
+	FlagPublicKey = "pubkey"
 )
 
 var showKeysCmd = &cobra.Command{
@@ -18,11 +28,36 @@ var showKeysCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
 		info, err := getKey(name)
-		if err == nil {
-			printInfo(info)
+		if err != nil {
+			return err
 		}
-		return err
+
+		showAddress := viper.GetBool(FlagAddress)
+		showPublicKey := viper.GetBool(FlagPublicKey)
+		outputSet := cmd.Flag(cli.OutputFlag).Changed
+		if showAddress && showPublicKey {
+			return errors.New("cannot use both --address and --pubkey at once")
+		}
+		if outputSet && (showAddress || showPublicKey) {
+			return errors.New("cannot use --output with --address or --pubkey")
+		}
+		if showAddress {
+			printKeyAddress(info)
+			return nil
+		}
+		if showPublicKey {
+			printPubKey(info)
+			return nil
+		}
+
+		printInfo(info)
+		return nil
 	},
+}
+
+func init() {
+	showKeysCmd.Flags().Bool(FlagAddress, false, "output the address only (overrides --output)")
+	showKeysCmd.Flags().Bool(FlagPublicKey, false, "output the public key only (overrides --output)")
 }
 
 func getKey(name string) (keys.Info, error) {

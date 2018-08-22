@@ -1,7 +1,9 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
 
 	cmn "github.com/tendermint/tendermint/libs/common"
 
@@ -225,7 +227,11 @@ func (err *sdkError) TraceSDK(format string, args ...interface{}) Error {
 // Implements ABCIError.
 // Overrides err.Error.Error().
 func (err *sdkError) Error() string {
-	return fmt.Sprintf("Error{%d:%d,%#v}", err.codespace, err.code, err.cmnError)
+	return fmt.Sprintf(`ERROR:
+Codespace: %d
+Code: %d
+Message: %#v
+`, err.codespace, err.code, parseCmnError(err.cmnError.Error()))
 }
 
 // Implements ABCIError.
@@ -245,13 +251,15 @@ func (err *sdkError) Code() CodeType {
 
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
-	return fmt.Sprintf(`=== ABCI Log ===
-Codespace: %v
-Code:      %v
-ABCICode:  %v
-Error:     %#v
-=== /ABCI Log ===
-`, err.codespace, err.code, err.ABCICode(), err.cmnError)
+	_ = err.Error()
+	parsedErrMsg := parseCmnError(err.cmnError.Error())
+	jsonErr := newHumanReadableError(err.codespace, err.code, err.ABCICode(), parsedErrMsg)
+	bz, er := json.Marshal(jsonErr)
+	if er != nil {
+		panic(er)
+	}
+	stringifiedJSON := string(bz)
+	return stringifiedJSON
 }
 
 func (err *sdkError) Result() Result {
@@ -266,5 +274,27 @@ func (err *sdkError) QueryResult() abci.ResponseQuery {
 	return abci.ResponseQuery{
 		Code: uint32(err.ABCICode()),
 		Log:  err.ABCILog(),
+	}
+}
+
+func parseCmnError(err string) string {
+	errArray := strings.Split(err, "{")
+	return errArray[1][:len(errArray[1])-1]
+}
+
+// nolint
+type HumanReadableError struct {
+	Codespace CodespaceType `json:"codespace"`
+	Code      CodeType      `json:"code"`
+	ABCICode  ABCICodeType  `json:"abci_code"`
+	Message   string        `json:"message"`
+}
+
+func newHumanReadableError(codespace CodespaceType, code CodeType, ABCICode ABCICodeType, msg string) HumanReadableError {
+	return HumanReadableError{
+		Codespace: codespace,
+		Code:      code,
+		ABCICode:  ABCICode,
+		Message:   msg,
 	}
 }

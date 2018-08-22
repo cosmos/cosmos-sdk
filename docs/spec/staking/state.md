@@ -71,7 +71,7 @@ validator.
 ```golang
 type Validator struct {
     ConsensusPubKey crypto.PubKey  // Tendermint consensus pubkey of validator
-    Revoked         bool           // has the validator been revoked?
+    Jailed          bool           // has the validator been jailed?
     
 	Status          sdk.BondStatus // validator status (bonded/unbonding/unbonded)
 	Tokens          sdk.Dec        // delegated tokens (incl. self-delegation)

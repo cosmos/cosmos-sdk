@@ -60,9 +60,9 @@ func NewValidatorSigningInfo(startHeight int64, indexOffset int64, jailedUntil t
 
 // Signing info for a validator
 type ValidatorSigningInfo struct {
-	StartHeight         int64     `json:"start_height"`          // height at which validator was first a candidate OR was unrevoked
+	StartHeight         int64     `json:"start_height"`          // height at which validator was first a candidate OR was unjailed
 	IndexOffset         int64     `json:"index_offset"`          // index offset into signed block bit array
-	JailedUntil         time.Time `json:"jailed_until"`          // timestamp validator cannot be unrevoked until
+	JailedUntil         time.Time `json:"jailed_until"`          // timestamp validator cannot be unjailed until
 	SignedBlocksCounter int64     `json:"signed_blocks_counter"` // signed blocks counter (to avoid scanning the array every time)
 }
 

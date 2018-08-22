@@ -802,7 +802,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
 
 ## ICS23 - SlashingAPI
 
-The SlashingAPI exposes all functionalities needed to slash (*i.e* penalize) validators and delegators in Proof-of-Stake. The penalization is a fine of the staking coin and jail time, defined by governance parameters. During the jail period, the penalized validator is `Revoked`.
+The SlashingAPI exposes all functionalities needed to slash (*i.e* penalize) validators and delegators in Proof-of-Stake. The penalization is a fine of the staking coin and jail time, defined by governance parameters. During the jail period, the penalized validator is "jailed".
 
 ### GET /slashing/validator/{validatorAddr}/signing-info
 

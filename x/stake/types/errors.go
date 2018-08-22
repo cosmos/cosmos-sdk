@@ -44,8 +44,8 @@ func ErrValidatorPubKeyExists(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidValidator, "validator already exist for this pubkey, must use new validator pubkey")
 }
 
-func ErrValidatorRevoked(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "validator for this address is currently revoked")
+func ErrValidatorJailed(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "validator for this address is currently jailed")
 }
 
 func ErrBadRemoveValidator(codespace sdk.CodespaceType) sdk.Error {

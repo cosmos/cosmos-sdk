@@ -140,7 +140,7 @@ func GaiaAppGenTxNF(cdc *wire.Codec, pk crypto.PubKey, addr sdk.AccAddress, name
 	gaiaGenTx := GaiaGenTx{
 		Name:    name,
 		Address: addr,
-		PubKey:  sdk.MustBech32ifyConsPub(pk),
+		PubKey:  sdk.MustBech32ifyAccPub(pk),
 	}
 	bz, err = wire.MarshalJSONIndent(cdc, gaiaGenTx)
 	if err != nil {

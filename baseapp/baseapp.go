@@ -41,13 +41,14 @@ const (
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
-	Logger     log.Logger
-	name       string               // application name from abci.Info
-	db         dbm.DB               // common DB backend
-	cms        sdk.CommitMultiStore // Main (uncached) state
-	router     Router               // handle any kind of message
-	codespacer *sdk.Codespacer      // handle module codespacing
-	txDecoder  sdk.TxDecoder        // unmarshal []byte into sdk.Tx
+	Logger      log.Logger
+	name        string               // application name from abci.Info
+	db          dbm.DB               // common DB backend
+	cms         sdk.CommitMultiStore // Main (uncached) state
+	router      Router               // handle any kind of message
+	queryRouter QueryRouter          // router for redirecting query calls
+	codespacer  *sdk.Codespacer      // handle module codespacing
+	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
 
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
 
@@ -84,13 +85,14 @@ var _ abci.Application = (*BaseApp)(nil)
 // Accepts variable number of option functions, which act on the BaseApp to set configuration choices
 func NewBaseApp(name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp)) *BaseApp {
 	app := &BaseApp{
-		Logger:     logger,
-		name:       name,
-		db:         db,
-		cms:        store.NewCommitMultiStore(db),
-		router:     NewRouter(),
-		codespacer: sdk.NewCodespacer(),
-		txDecoder:  txDecoder,
+		Logger:      logger,
+		name:        name,
+		db:          db,
+		cms:         store.NewCommitMultiStore(db),
+		router:      NewRouter(),
+		queryRouter: NewQueryRouter(),
+		codespacer:  sdk.NewCodespacer(),
+		txDecoder:   txDecoder,
 	}
 
 	// Register the undefined & root codespaces, which should not be used by
@@ -266,6 +268,7 @@ func (app *BaseApp) FilterPeerByPubKey(info string) abci.ResponseQuery {
 	return abci.ResponseQuery{}
 }
 
+// Splits a string path using the delimter '/'.  i.e. "this/is/funny" becomes []string{"this", "is", "funny"}
 func splitPath(requestPath string) (path []string) {
 	path = strings.Split(requestPath, "/")
 	// first element is empty string
@@ -291,6 +294,8 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		return handleQueryStore(app, path, req)
 	case "p2p":
 		return handleQueryP2P(app, path, req)
+	case "custom":
+		return handleQueryCustom(app, path, req)
 	}
 
 	msg := "unknown query path"
@@ -360,6 +365,33 @@ func handleQueryP2P(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 
 	msg := "Expected path is p2p filter <addr|pubkey> <parameter>"
 	return sdk.ErrUnknownRequest(msg).QueryResult()
+}
+
+func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
+	// path[0] should be "custom" because "/custom" prefix is required for keeper queries.
+	// the queryRouter routes using path[1]. For example, in the path "custom/gov/proposal", queryRouter routes using "gov"
+	if path[1] == "" {
+		sdk.ErrUnknownRequest("No route for custom query specified").QueryResult()
+	}
+	querier := app.queryRouter.Route(path[1])
+	if querier == nil {
+		sdk.ErrUnknownRequest(fmt.Sprintf("no custom querier found for route %s", path[1])).QueryResult()
+	}
+
+	ctx := sdk.NewContext(app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.Logger)
+	// Passes the rest of the path as an argument to the querier.
+	// For example, in the path "custom/gov/proposal/test", the gov querier gets []string{"proposal", "test"} as the path
+	resBytes, err := querier(ctx, path[2:], req)
+	if err != nil {
+		return abci.ResponseQuery{
+			Code: uint32(err.ABCICode()),
+			Log:  err.ABCILog(),
+		}
+	}
+	return abci.ResponseQuery{
+		Code:  uint32(sdk.ABCICodeOK),
+		Value: resBytes,
+	}
 }
 
 // BeginBlock implements the ABCI application interface.

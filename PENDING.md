@@ -34,6 +34,7 @@ FEATURES
 * Gaia
 
 * SDK
+  * [querier] added custom querier functionality, so ABCI query requests can be handled by keepers
 
 * Tendermint
 

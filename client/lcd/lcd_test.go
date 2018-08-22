@@ -390,6 +390,7 @@ func TestCoinSendSwaggerLCD(t *testing.T) {
 
 	// create TX
 	receiveAddr, resultTx := doSend(t, port, seed, name, password, addr)
+	// TODO current lcd rest server with swagger doesn't implement block interface
 	//tests.WaitForHeight(resultTx.Height+1, port)
 	time.Sleep(5 * time.Second)
 
@@ -524,7 +525,7 @@ func TestValidatorsQueryFromSwaggerLCD(t *testing.T) {
 	defer cleanup()
 	require.Equal(t, 1, len(pks))
 
-	validators := getValidatorsFromSwaggerLCD(t, port)
+	validators := getValidators(t, port)
 	require.Equal(t, len(validators), 1)
 
 	// make sure all the validators were found (order unknown because sorted by operator addr)
@@ -601,6 +602,95 @@ func TestBonding(t *testing.T) {
 	// create unbond TX
 	resultTx = doBeginUnbonding(t, port, seed, name, password, addr, validator1Operator, 60)
 	tests.WaitForHeight(resultTx.Height+1, port)
+
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+
+	// sender should have not received any coins as the unbonding has only just begun
+	acc = getAccount(t, port, addr)
+	coins = acc.GetCoins()
+	require.Equal(t, int64(40), coins.AmountOf("steak").Int64())
+
+	unbondings := getUndelegations(t, port, addr, validator1Operator)
+	require.Len(t, unbondings, 1, "Unbondings holds all unbonding-delegations")
+	require.Equal(t, "60", unbondings[0].Balance.Amount.String())
+
+	summary = getDelegationSummary(t, port, addr)
+
+	require.Len(t, summary.Delegations, 0, "Delegation summary holds all delegations")
+	require.Len(t, summary.UnbondingDelegations, 1, "Delegation summary holds all unbonding-delegations")
+	require.Equal(t, "60", summary.UnbondingDelegations[0].Balance.Amount.String())
+
+	bondedValidators = getDelegatorValidators(t, port, addr)
+	require.Len(t, bondedValidators, 0, "There's no delegation as the user withdraw all funds")
+
+	// TODO Undonding status not currently implemented
+	// require.Equal(t, sdk.Unbonding, bondedValidators[0].Status)
+
+	// TODO add redelegation, need more complex capabilities such to mock context and
+	// TODO check summary for redelegation
+	// assert.Len(t, summary.Redelegations, 1, "Delegation summary holds all redelegations")
+
+	// query txs
+	txs := getBondingTxs(t, port, addr, "")
+	assert.Len(t, txs, 2, "All Txs found")
+
+	txs = getBondingTxs(t, port, addr, "bond")
+	assert.Len(t, txs, 1, "All bonding txs found")
+
+	txs = getBondingTxs(t, port, addr, "unbond")
+	assert.Len(t, txs, 1, "All unbonding txs found")
+}
+
+func TestBondingFromSwaggerLCD(t *testing.T) {
+	name, password, denom := "test", "1234567890", "steak"
+	addr, seed := CreateAddr(t, name, password, GetKeyBase(t))
+	cleanup, pks, port := InitializeTestSwaggerLCD(t, 1, []sdk.AccAddress{addr})
+	defer cleanup()
+
+	validator1Operator := sdk.AccAddress(pks[0].Address())
+	validator := getValidator(t, port, validator1Operator)
+
+	// create bond TX
+	resultTx := doDelegate(t, port, seed, name, password, addr, validator1Operator, 60)
+	// TODO current lcd rest server with swagger doesn't implement block interface
+	//tests.WaitForHeight(resultTx.Height+1, port)
+	time.Sleep(6 * time.Second)
+
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+
+	acc := getAccount(t, port, addr)
+	coins := acc.GetCoins()
+
+	require.Equal(t, int64(40), coins.AmountOf(denom).Int64())
+
+	// query validator
+	bond := getDelegation(t, port, addr, validator1Operator)
+	require.Equal(t, "60.0000000000", bond.Shares)
+
+	summary := getDelegationSummary(t, port, addr)
+
+	require.Len(t, summary.Delegations, 1, "Delegation summary holds all delegations")
+	require.Equal(t, "60.0000000000", summary.Delegations[0].Shares)
+	require.Len(t, summary.UnbondingDelegations, 0, "Delegation summary holds all unbonding-delegations")
+
+	bondedValidators := getDelegatorValidators(t, port, addr)
+	require.Len(t, bondedValidators, 1)
+	require.Equal(t, validator1Operator, bondedValidators[0].Operator)
+	require.Equal(t, validator.DelegatorShares.Add(sdk.NewDec(60)).String(), bondedValidators[0].DelegatorShares.String())
+
+	bondedValidator := getDelegatorValidator(t, port, addr, validator1Operator)
+	require.Equal(t, validator1Operator, bondedValidator.Operator)
+
+	//////////////////////
+	// testing unbonding
+
+	// create unbond TX
+	resultTx = doBeginUnbonding(t, port, seed, name, password, addr, validator1Operator, 60)
+	// TODO current lcd rest server with swagger doesn't implement block interface
+	//tests.WaitForHeight(resultTx.Height+1, port)
+	time.Sleep(6 * time.Second)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
@@ -1132,15 +1222,6 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 
 func getValidators(t *testing.T, port string) []stake.BechValidator {
 	res, body := Request(t, port, "GET", "/stake/validators", nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var validators []stake.BechValidator
-	err := cdc.UnmarshalJSON([]byte(body), &validators)
-	require.Nil(t, err)
-	return validators
-}
-
-func getValidatorsFromSwaggerLCD(t *testing.T, port string) []stake.BechValidator {
-	res, body := Request(t, port, "GET", "/stake_validators", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var validators []stake.BechValidator
 	err := cdc.UnmarshalJSON([]byte(body), &validators)

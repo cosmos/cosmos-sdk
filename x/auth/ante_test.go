@@ -360,7 +360,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	var tx sdk.Tx
 	msg := newTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []int64{0}, []int64{0}
-	fee := NewStdFee(0, sdk.NewInt64Coin("atom", 0))
+	fee := NewStdFee(1, sdk.NewInt64Coin("atom", 0))
 
 	// tx does not have enough gas
 	tx = newTestTx(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee)

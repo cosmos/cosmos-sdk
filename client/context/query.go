@@ -10,7 +10,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/tendermint/tendermint/libs/common"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -27,8 +26,8 @@ func (ctx CLIContext) GetNode() (rpcclient.Client, error) {
 }
 
 // Query performs a query for information about the connected node.
-func (ctx CLIContext) Query(path string) (res []byte, err error) {
-	return ctx.query(path, nil)
+func (ctx CLIContext) Query(path string, data cmn.HexBytes) (res []byte, err error) {
+	return ctx.query(path, data)
 }
 
 // Query information about the connected node with a data payload
@@ -284,7 +283,7 @@ func (ctx CLIContext) ensureBroadcastTx(txBytes []byte) error {
 
 // query performs a query from a Tendermint node with the provided store name
 // and path.
-func (ctx CLIContext) query(path string, key common.HexBytes) (res []byte, err error) {
+func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err error) {
 	node, err := ctx.GetNode()
 	if err != nil {
 		return res, err

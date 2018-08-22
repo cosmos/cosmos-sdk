@@ -35,7 +35,11 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		}
 
 		// set the gas meter
-		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
+		if stdTx.Fee.Gas == 0 {
+			newCtx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+		} else {
+			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
+		}
 
 		// AnteHandlers must have their own defer/recover in order
 		// for the BaseApp to know how much gas was used!

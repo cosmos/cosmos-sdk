@@ -44,11 +44,11 @@ func initClientCommand() *cobra.Command {
 }
 
 // Register REST endpoints
-func RegisterRoutes(ctx context.CoreContext, r *mux.Router) {
-	r.HandleFunc("/node_info", NodeInfoRequestHandlerFn(ctx)).Methods("GET")
-	r.HandleFunc("/syncing", NodeSyncingRequestHandlerFn(ctx)).Methods("GET")
-	r.HandleFunc("/blocks/latest", LatestBlockRequestHandlerFn(ctx)).Methods("GET")
-	r.HandleFunc("/blocks/{height}", BlockRequestHandlerFn(ctx)).Methods("GET")
-	r.HandleFunc("/validatorsets/latest", LatestValidatorSetRequestHandlerFn(ctx)).Methods("GET")
-	r.HandleFunc("/validatorsets/{height}", ValidatorSetRequestHandlerFn(ctx)).Methods("GET")
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
+	r.HandleFunc("/node_info", NodeInfoRequestHandlerFn(cliCtx)).Methods("GET")
+	r.HandleFunc("/syncing", NodeSyncingRequestHandlerFn(cliCtx)).Methods("GET")
+	r.HandleFunc("/blocks/latest", LatestBlockRequestHandlerFn(cliCtx)).Methods("GET")
+	r.HandleFunc("/blocks/{height}", BlockRequestHandlerFn(cliCtx)).Methods("GET")
+	r.HandleFunc("/validatorsets/latest", LatestValidatorSetRequestHandlerFn(cliCtx)).Methods("GET")
+	r.HandleFunc("/validatorsets/{height}", ValidatorSetRequestHandlerFn(cliCtx)).Methods("GET")
 }

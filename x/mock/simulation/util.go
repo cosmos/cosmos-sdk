@@ -3,8 +3,9 @@ package simulation
 import (
 	"fmt"
 	"math/rand"
+	"sort"
 
-	crypto "github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -39,8 +40,15 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 
 // Pretty-print events as a table
 func DisplayEvents(events map[string]uint) {
-	// TODO
-	fmt.Printf("Events: %v\n", events)
+	var keys []string
+	for key := range events {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	fmt.Printf("Event statistics: \n")
+	for _, key := range keys {
+		fmt.Printf("  % 60s => %d\n", key, events[key])
+	}
 }
 
 // Pick a random key from an array

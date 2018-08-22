@@ -96,6 +96,9 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	if err != nil {
 		cmn.Exit(err.Error())
 	}
+
+	app.Seal()
+
 	return app
 }
 

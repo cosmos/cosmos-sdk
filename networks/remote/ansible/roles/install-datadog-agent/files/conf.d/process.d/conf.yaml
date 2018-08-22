@@ -1,0 +1,15 @@
+init_config:
+
+instances:
+- name: ssh
+  search_string: ['ssh', 'sshd']
+  thresholds:
+    critical: [1, 5]
+- name: gaiad
+  search_string: ['gaiad']
+  thresholds:
+    critical: [1, 1]
+- name: gaiacli
+  search_string: ['gaiacli']
+  thresholds:
+    critical: [1, 1]

@@ -25,3 +25,15 @@ func TestPrefixEndBytes(t *testing.T) {
 		require.Equal(t, test.expected, end)
 	}
 }
+
+func TestCommitID(t *testing.T) {
+	var empty CommitID
+	require.True(t, empty.IsZero())
+
+	var nonempty CommitID
+	nonempty = CommitID{
+		Version: 1,
+		Hash:    []byte("testhash"),
+	}
+	require.False(t, nonempty.IsZero())
+}

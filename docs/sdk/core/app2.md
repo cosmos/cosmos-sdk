@@ -150,7 +150,7 @@ func NewCodec() *wire.Codec {
 ```
 
 Note: We also register the types in the `tendermint/tendermint/crypto` module so that `crypto.PubKey`
-and `crypto.Signature` are encoded/decoded correctly.
+is encoded/decoded correctly.
 
 Amino supports encoding and decoding in both a binary and JSON format.
 See the [codec API docs](https://godoc.org/github.com/tendermint/go-amino#Codec) for more details.
@@ -166,7 +166,7 @@ type app2Tx struct {
     sdk.Msg
     
     PubKey    crypto.PubKey
-    Signature crypto.Signature
+    Signature []byte
 }
 
 // This tx only has one Msg.

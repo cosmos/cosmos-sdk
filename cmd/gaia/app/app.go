@@ -78,7 +78,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		keyGov:           sdk.NewKVStoreKey("gov"),
 		keyFeeCollection: sdk.NewKVStoreKey("fee"),
 		keyParams:        sdk.NewKVStoreKey("params"),
-		tkeyParams:       sdk.NewTransientStoreKey("params"),
+		tkeyParams:       sdk.NewTransientStoreKey("transient_params"),
 	}
 
 	// define the accountMapper
@@ -146,10 +146,10 @@ func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 // application updates every end block
 // nolint: unparam
 func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-
+	tags := gov.EndBlocker(ctx, app.govKeeper)
 	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
-	tags, _ := gov.EndBlocker(ctx, app.govKeeper)
-
+	// Add these new validators to the addr -> pubkey map.
+	app.slashingKeeper.AddValidators(ctx, validatorUpdates)
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
 		Tags:             tags,
@@ -181,6 +181,9 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 		// return sdk.ErrGenesisParse("").TraceCause(err, "")
 	}
+
+	// load the address to pubkey map
+	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.StakeData)
 
 	gov.InitGenesis(ctx, app.govKeeper, gov.DefaultGenesisState())
 

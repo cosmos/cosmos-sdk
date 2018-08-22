@@ -2,12 +2,11 @@
 
 ### Pool
 
- - key: `01`
- - value: `amino(pool)`
-
 The pool is a space for all dynamic global state of the Cosmos Hub.  It tracks
 information about the total amounts of Atoms in all states, moving Atom
 inflation information, etc.
+
+ - Pool: `0x01 -> amino(pool)`
 
 ```golang
 type Pool struct {
@@ -21,11 +20,11 @@ type Pool struct {
 ```
 
 ### Params
- - key: `00`
- - value: `amino(params)`
 
 Params is global data structure that stores system parameters and defines
 overall functioning of the stake module. 
+
+ - Params: `0x00 -> amino(params)`
 
 ```golang
 type Params struct {
@@ -81,16 +80,11 @@ type Validator struct {
     
     Description        Description  // description terms for the validator
     
-    // Needed for ordering vals in the bypower key
+    // Needed for ordering vals in the by-power key
     BondHeight         int64        // earliest height as a bonded validator
     BondIntraTxCounter int16        // block-local tx index of validator change
     
-    CommissionInfo      CommissionInfo // info about the validator's commission
-    
-    ProposerRewardPool sdk.Coins    // reward pool collected from being the proposer
-    
-    // TODO: maybe this belongs in distribution module ?
-	LastBondedTokens   sdk.Rat     // last bonded token amount
+    CommissionInfo     CommissionInfo // info about the validator's commission
 }
 
 type CommissionInfo struct {

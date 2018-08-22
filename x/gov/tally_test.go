@@ -21,7 +21,7 @@ func createValidators(t *testing.T, stakeHandler sdk.Handler, ctx sdk.Context, a
 	require.True(t, len(addrs) <= len(pubkeys), "Not enough pubkeys specified at top of file.")
 	dummyDescription := stake.NewDescription("T", "E", "S", "T")
 	for i := 0; i < len(addrs); i++ {
-		valCreateMsg := stake.NewMsgCreateValidator(addrs[i], pubkeys[i], sdk.NewCoin("steak", coinAmt[i]), dummyDescription)
+		valCreateMsg := stake.NewMsgCreateValidator(addrs[i], pubkeys[i], sdk.NewInt64Coin("steak", coinAmt[i]), dummyDescription)
 		res := stakeHandler(ctx, valCreateMsg)
 		require.True(t, res.IsOK())
 	}
@@ -40,9 +40,10 @@ func TestTallyNoOneVotes(t *testing.T) {
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
-	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.False(t, passes)
+	require.True(t, tallyResults.Equals(EmptyTallyResult()))
 }
 
 func TestTallyOnlyValidatorsAllYes(t *testing.T) {
@@ -63,9 +64,10 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[1], OptionYes)
 	require.Nil(t, err)
 
-	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.True(t, passes)
+	require.False(t, tallyResults.Equals(EmptyTallyResult()))
 }
 
 func TestTallyOnlyValidators51No(t *testing.T) {
@@ -86,7 +88,7 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[1], OptionNo)
 	require.Nil(t, err)
 
-	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, _, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.False(t, passes)
 }
@@ -111,9 +113,10 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNo)
 	require.Nil(t, err)
 
-	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.True(t, passes)
+	require.False(t, tallyResults.Equals(EmptyTallyResult()))
 }
 
 func TestTallyOnlyValidatorsVetoed(t *testing.T) {
@@ -136,9 +139,10 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNoWithVeto)
 	require.Nil(t, err)
 
-	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.False(t, passes)
+	require.False(t, tallyResults.Equals(EmptyTallyResult()))
 }
 
 func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
@@ -161,9 +165,10 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionYes)
 	require.Nil(t, err)
 
-	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.True(t, passes)
+	require.False(t, tallyResults.Equals(EmptyTallyResult()))
 }
 
 func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
@@ -186,9 +191,10 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNo)
 	require.Nil(t, err)
 
-	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.False(t, passes)
+	require.False(t, tallyResults.Equals(EmptyTallyResult()))
 }
 
 func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
@@ -209,11 +215,12 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNo)
 	require.Nil(t, err)
 
-	passes, nonVoting := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults, nonVoting := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.False(t, passes)
 	require.Equal(t, 1, len(nonVoting))
 	require.Equal(t, addrs[0], nonVoting[0])
+	require.False(t, tallyResults.Equals(EmptyTallyResult()))
 }
 
 func TestTallyDelgatorOverride(t *testing.T) {
@@ -224,7 +231,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 
 	createValidators(t, stakeHandler, ctx, addrs[:3], []int64{5, 6, 7})
 
-	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewCoin("steak", 30))
+	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewInt64Coin("steak", 30))
 	stakeHandler(ctx, delegator1Msg)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -241,9 +248,10 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[3], OptionNo)
 	require.Nil(t, err)
 
-	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.False(t, passes)
+	require.False(t, tallyResults.Equals(EmptyTallyResult()))
 }
 
 func TestTallyDelgatorInherit(t *testing.T) {
@@ -254,7 +262,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 
 	createValidators(t, stakeHandler, ctx, addrs[:3], []int64{5, 6, 7})
 
-	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewCoin("steak", 30))
+	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewInt64Coin("steak", 30))
 	stakeHandler(ctx, delegator1Msg)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -269,10 +277,11 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionYes)
 	require.Nil(t, err)
 
-	passes, nonVoting := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults, nonVoting := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.True(t, passes)
 	require.Equal(t, 0, len(nonVoting))
+	require.False(t, tallyResults.Equals(EmptyTallyResult()))
 }
 
 func TestTallyDelgatorMultipleOverride(t *testing.T) {
@@ -283,9 +292,9 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 
 	createValidators(t, stakeHandler, ctx, addrs[:3], []int64{5, 6, 7})
 
-	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewCoin("steak", 10))
+	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewInt64Coin("steak", 10))
 	stakeHandler(ctx, delegator1Msg)
-	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], addrs[1], sdk.NewCoin("steak", 10))
+	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], addrs[1], sdk.NewInt64Coin("steak", 10))
 	stakeHandler(ctx, delegator1Msg2)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -302,9 +311,10 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[3], OptionNo)
 	require.Nil(t, err)
 
-	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.False(t, passes)
+	require.False(t, tallyResults.Equals(EmptyTallyResult()))
 }
 
 func TestTallyDelgatorMultipleInherit(t *testing.T) {
@@ -314,16 +324,16 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	stakeHandler := stake.NewHandler(sk)
 
 	dummyDescription := stake.NewDescription("T", "E", "S", "T")
-	val1CreateMsg := stake.NewMsgCreateValidator(addrs[0], ed25519.GenPrivKey().PubKey(), sdk.NewCoin("steak", 25), dummyDescription)
+	val1CreateMsg := stake.NewMsgCreateValidator(addrs[0], ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin("steak", 25), dummyDescription)
 	stakeHandler(ctx, val1CreateMsg)
-	val2CreateMsg := stake.NewMsgCreateValidator(addrs[1], ed25519.GenPrivKey().PubKey(), sdk.NewCoin("steak", 6), dummyDescription)
+	val2CreateMsg := stake.NewMsgCreateValidator(addrs[1], ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin("steak", 6), dummyDescription)
 	stakeHandler(ctx, val2CreateMsg)
-	val3CreateMsg := stake.NewMsgCreateValidator(addrs[2], ed25519.GenPrivKey().PubKey(), sdk.NewCoin("steak", 7), dummyDescription)
+	val3CreateMsg := stake.NewMsgCreateValidator(addrs[2], ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin("steak", 7), dummyDescription)
 	stakeHandler(ctx, val3CreateMsg)
 
-	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewCoin("steak", 10))
+	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewInt64Coin("steak", 10))
 	stakeHandler(ctx, delegator1Msg)
-	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], addrs[1], sdk.NewCoin("steak", 10))
+	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], addrs[1], sdk.NewInt64Coin("steak", 10))
 	stakeHandler(ctx, delegator1Msg2)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -338,9 +348,10 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNo)
 	require.Nil(t, err)
 
-	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.False(t, passes)
+	require.False(t, tallyResults.Equals(EmptyTallyResult()))
 }
 
 func TestTallyRevokedValidator(t *testing.T) {
@@ -350,10 +361,9 @@ func TestTallyRevokedValidator(t *testing.T) {
 	stakeHandler := stake.NewHandler(sk)
 
 	createValidators(t, stakeHandler, ctx, addrs[:3], []int64{25, 6, 7})
-
-	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewCoin("steak", 10))
+	delegator1Msg := stake.NewMsgDelegate(addrs[3], addrs[2], sdk.NewInt64Coin("steak", 10))
 	stakeHandler(ctx, delegator1Msg)
-	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], addrs[1], sdk.NewCoin("steak", 10))
+	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], addrs[1], sdk.NewInt64Coin("steak", 10))
 	stakeHandler(ctx, delegator1Msg2)
 
 	val2, found := sk.GetValidator(ctx, addrs[1])
@@ -372,7 +382,8 @@ func TestTallyRevokedValidator(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNo)
 	require.Nil(t, err)
 
-	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.True(t, passes)
+	require.False(t, tallyResults.Equals(EmptyTallyResult()))
 }

@@ -71,6 +71,7 @@ func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description 
 		Description:      description,
 		ProposalType:     proposalType,
 		Status:           StatusDepositPeriod,
+		TallyResult:      EmptyTallyResult(),
 		TotalDeposit:     sdk.Coins{},
 		SubmitBlock:      ctx.BlockHeight(),
 		VotingStartBlock: -1, // TODO: Make Time
@@ -116,6 +117,18 @@ func (keeper Keeper) setInitialProposalID(ctx sdk.Context, proposalID int64) sdk
 	bz = keeper.cdc.MustMarshalBinary(proposalID)
 	store.Set(KeyNextProposalID, bz)
 	return nil
+}
+
+// Get the last used proposal ID
+func (keeper Keeper) GetLastProposalID(ctx sdk.Context) (proposalID int64) {
+	store := ctx.KVStore(keeper.storeKey)
+	bz := store.Get(KeyNextProposalID)
+	if bz == nil {
+		return 0
+	}
+	keeper.cdc.MustUnmarshalBinary(bz, &proposalID)
+	proposalID--
+	return
 }
 
 func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID int64, err sdk.Error) {

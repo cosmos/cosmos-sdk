@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+
 	"github.com/pkg/errors"
 )
 
@@ -67,23 +69,24 @@ func writeErr(w *http.ResponseWriter, status int, msg string) {
 	(*w).Write([]byte(err.Error()))
 }
 
-// TODO: Build this function out into a more generic base-request (probably should live in client/lcd)
-func signAndBuild(w http.ResponseWriter, ctx context.CoreContext, baseReq baseReq, msg sdk.Msg, cdc *wire.Codec) {
-	ctx = ctx.WithAccountNumber(baseReq.AccountNumber)
-	ctx = ctx.WithSequence(baseReq.Sequence)
-	ctx = ctx.WithChainID(baseReq.ChainID)
+// TODO: Build this function out into a more generic base-request
+// (probably should live in client/lcd).
+func signAndBuild(w http.ResponseWriter, cliCtx context.CLIContext, baseReq baseReq, msg sdk.Msg, cdc *wire.Codec) {
+	txCtx := authctx.TxContext{
+		Codec:         cdc,
+		AccountNumber: baseReq.AccountNumber,
+		Sequence:      baseReq.Sequence,
+		ChainID:       baseReq.ChainID,
+		Gas:           baseReq.Gas,
+	}
 
-	// add gas to context
-	ctx = ctx.WithGas(baseReq.Gas)
-
-	txBytes, err := ctx.SignAndBuild(baseReq.Name, baseReq.Password, []sdk.Msg{msg}, cdc)
+	txBytes, err := txCtx.BuildAndSign(baseReq.Name, baseReq.Password, []sdk.Msg{msg})
 	if err != nil {
 		writeErr(&w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	// send
-	res, err := ctx.BroadcastTx(txBytes)
+	res, err := cliCtx.BroadcastTx(txBytes)
 	if err != nil {
 		writeErr(&w, http.StatusInternalServerError, err.Error())
 		return

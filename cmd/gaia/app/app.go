@@ -188,7 +188,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	// load the address to pubkey map
 	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.StakeData)
 
-	gov.InitGenesis(ctx, app.govKeeper, gov.DefaultGenesisState())
+	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
 
 	return abci.ResponseInitChain{
 		Validators: validators,
@@ -211,6 +211,7 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 	genState := GenesisState{
 		Accounts:  accounts,
 		StakeData: stake.WriteGenesis(ctx, app.stakeKeeper),
+		GovData:   gov.WriteGenesis(ctx, app.govKeeper),
 	}
 	appState, err = wire.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {

@@ -8,7 +8,7 @@ Restart=on-failure
 User=gaiad
 Group=gaiad
 PermissionsStartOnly=true
-ExecStart=/usr/bin/gaiacli advanced rest-server --laddr {{GAIAD_ADDRESS}}
+ExecStart=/usr/bin/gaiacli rest-server --laddr {{GAIAD_ADDRESS}}
 ExecReload=/bin/kill -HUP $MAINPID
 KillSignal=SIGTERM
 

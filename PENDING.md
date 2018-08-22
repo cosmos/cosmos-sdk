@@ -9,6 +9,7 @@ BREAKING CHANGES
     * [x/stake] Validator.Owner renamed to Validator.Operator
     * [cli] unsafe_reset_all, show_validator, and show_node_id have been renamed to unsafe-reset-all, show-validator, and show-node-id
     * [cli] \#2061 changed proposalID in governance REST endpoints to proposal-id
+    * [cli] \#2014 `gaiacli advanced` no longer exists - to access `ibc`, `rest-server`, and `validator-set` commands use `gaiacli ibc`, `gaiacli rest-server`, and `gaiacli tendermint`, respectively
 
 * Gaia
     * Make the transient store key use a distinct store key. [#2013](https://github.com/cosmos/cosmos-sdk/pull/2013)
@@ -42,6 +43,7 @@ IMPROVEMENTS
     * [x/stake] \#2000 Added tests for new staking endpoints
 
 * Gaia CLI  (`gaiacli`)
+    * [cli] #2060 removed `--select` from `block` command
 
 * Gaia
     * [x/stake] [#2023](https://github.com/cosmos/cosmos-sdk/pull/2023) Terminate iteration loop in `UpdateBondedValidators` and `UpdateBondedValidatorsFull` when the first revoked validator is encountered and perform a sanity check. 

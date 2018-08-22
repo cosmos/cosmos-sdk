@@ -38,4 +38,5 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/keys/{name}", GetKeyRequestHandler).Methods("GET")
 	r.HandleFunc("/keys/{name}", UpdateKeyRequestHandler).Methods("PUT")
 	r.HandleFunc("/keys/{name}", DeleteKeyRequestHandler).Methods("DELETE")
+	r.HandleFunc("/keys/validator/{name}", GetValKeyRequestHandler).Methods("GET")
 }

@@ -61,23 +61,35 @@ func getKey(name string) (keys.Info, error) {
 
 // get key REST handler
 func GetKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
+	getKeyRequestHandler(w, r, Bech32KeyOutput)
+}
+
+// GetValKeyRequestHandler implements the request handler for getting a
+// validator's key information.
+func GetValKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
+	getKeyRequestHandler(w, r, Bech32ValKeyOutput)
+}
+
+func getKeyRequestHandler(w http.ResponseWriter, r *http.Request, bechKeyOut bechKeyOutFn) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
 	info, err := getKey(name)
-	// TODO check for the error if key actually does not exist, instead of assuming this as the reason
+	// TODO: check for the error if key actually does not exist, instead of
+	// assuming this as the reason
 	if err != nil {
 		w.WriteHeader(404)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	keyOutput, err := Bech32KeyOutput(info)
+	keyOutput, err := bechKeyOut(info)
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
 		return
 	}
+
 	output, err := json.MarshalIndent(keyOutput, "", "  ")
 	if err != nil {
 		w.WriteHeader(500)

@@ -21,6 +21,8 @@ const KeyDBName = "keys"
 // keybase is used to make GetKeyBase a singleton
 var keybase keys.Keybase
 
+type bechKeyOutFn func(keyInfo keys.Info) (KeyOutput, error)
+
 // TODO make keybase take a database not load from the directory
 
 // initialize a keybase based on the configuration
@@ -150,7 +152,7 @@ func Bech32ValKeyOutput(keyInfo keys.Info) (KeyOutput, error) {
 	}, nil
 }
 
-func printKeyInfo(keyInfo keys.Info, bechKeyOut func(keyInfo keys.Info) (KeyOutput, error)) {
+func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 	ko, err := bechKeyOut(keyInfo)
 	if err != nil {
 		panic(err)

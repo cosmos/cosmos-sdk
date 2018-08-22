@@ -41,6 +41,7 @@ IMPROVEMENTS
     * [x/stake] \#2000 Added tests for new staking endpoints
 
 * Gaia CLI  (`gaiacli`)
+    * [cli] #2060 removed `--select` from `block` command
 
 * Gaia
     * [x/stake] [#2023](https://github.com/cosmos/cosmos-sdk/pull/2023) Terminate iteration loop in `UpdateBondedValidators` and `UpdateBondedValidatorsFull` when the first revoked validator is encountered and perform a sanity check. 

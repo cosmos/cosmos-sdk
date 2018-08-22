@@ -80,9 +80,9 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
 
-	// slash and revoke the first validator
+	// slash and jail the first validator
 	keeper.Slash(ctx, keep.PKs[0], 0, initBond, sdk.NewDecWithPrec(5, 1))
-	keeper.Revoke(ctx, keep.PKs[0])
+	keeper.Jail(ctx, keep.PKs[0])
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	require.Equal(t, sdk.Unbonded, validator.Status)               // ensure is unbonded
@@ -387,7 +387,7 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 		require.Equal(t, balanceExpd, balanceGot, "expected account to have %d, got %d", balanceExpd, balanceGot)
 	}
 
-	// unbond them all by revoking delegation
+	// unbond them all by removing delegation
 	for i, validatorAddr := range validatorAddrs {
 		_, found := keeper.GetValidator(ctx, validatorAddr)
 		require.True(t, found)
@@ -449,7 +449,7 @@ func TestMultipleMsgDelegate(t *testing.T) {
 	}
 }
 
-func TestRevokeValidator(t *testing.T) {
+func TestJailValidator(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 	validatorAddr, delegatorAddr := keep.Addrs[0], keep.Addrs[1]
 	_ = setInstantUnbondPeriod(keeper, ctx)
@@ -476,9 +476,9 @@ func TestRevokeValidator(t *testing.T) {
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.True(t, validator.Revoked, "%v", validator)
+	require.True(t, validator.Jailed, "%v", validator)
 
-	// test that this address cannot yet be bonded too because is revoked
+	// test that this address cannot yet be bonded too because is jailed
 	got = handleMsgDelegate(ctx, msgDelegate, keeper)
 	require.False(t, got.IsOK(), "expected error, got %v", got)
 

@@ -34,7 +34,7 @@ func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params) {
 	return ctx, keeper, params
 }
 
-// tests Revoke, Unrevoke
+// tests Jail, Unjail
 func TestRevocation(t *testing.T) {
 	// setup
 	ctx, keeper, _ := setupHelper(t, 10)
@@ -44,19 +44,19 @@ func TestRevocation(t *testing.T) {
 	// initial state
 	val, found := keeper.GetValidator(ctx, addr)
 	require.True(t, found)
-	require.False(t, val.GetRevoked())
+	require.False(t, val.GetJailed())
 
-	// test revoke
-	keeper.Revoke(ctx, pk)
+	// test jail
+	keeper.Jail(ctx, pk)
 	val, found = keeper.GetValidator(ctx, addr)
 	require.True(t, found)
-	require.True(t, val.GetRevoked())
+	require.True(t, val.GetJailed())
 
-	// test unrevoke
-	keeper.Unrevoke(ctx, pk)
+	// test unjail
+	keeper.Unjail(ctx, pk)
 	val, found = keeper.GetValidator(ctx, addr)
 	require.True(t, found)
-	require.False(t, val.GetRevoked())
+	require.False(t, val.GetJailed())
 
 }
 

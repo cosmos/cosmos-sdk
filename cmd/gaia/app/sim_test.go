@@ -98,7 +98,7 @@ func testAndRunTxs(app *GaiaApp) []simulation.TestAndRunTx {
 		stakesim.SimulateMsgCompleteUnbonding(app.stakeKeeper),
 		stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper),
 		stakesim.SimulateMsgCompleteRedelegate(app.stakeKeeper),
-		slashingsim.SimulateMsgUnrevoke(app.slashingKeeper),
+		slashingsim.SimulateMsgUnjail(app.slashingKeeper),
 	}
 }
 

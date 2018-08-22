@@ -22,7 +22,7 @@ import (
 type Validator struct {
 	Operator sdk.AccAddress `json:"operator"` // sender of BondTx - UnbondTx returns here
 	PubKey   crypto.PubKey  `json:"pub_key"`  // pubkey of validator
-	Revoked  bool           `json:"revoked"`  // has the validator been revoked from bonded status?
+	Jailed   bool           `json:"jailed"`   // has the validator been jailed from bonded status?
 
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
 	Tokens          sdk.Dec        `json:"tokens"`           // delegated tokens (incl. self-delegation)
@@ -47,7 +47,7 @@ func NewValidator(operator sdk.AccAddress, pubKey crypto.PubKey, description Des
 	return Validator{
 		Operator:              operator,
 		PubKey:                pubKey,
-		Revoked:               false,
+		Jailed:                false,
 		Status:                sdk.Unbonded,
 		Tokens:                sdk.ZeroDec(),
 		DelegatorShares:       sdk.ZeroDec(),
@@ -66,7 +66,7 @@ func NewValidator(operator sdk.AccAddress, pubKey crypto.PubKey, description Des
 // what's kept in the store value
 type validatorValue struct {
 	PubKey                crypto.PubKey
-	Revoked               bool
+	Jailed                bool
 	Status                sdk.BondStatus
 	Tokens                sdk.Dec
 	DelegatorShares       sdk.Dec
@@ -85,7 +85,7 @@ type validatorValue struct {
 func MustMarshalValidator(cdc *wire.Codec, validator Validator) []byte {
 	val := validatorValue{
 		PubKey:                validator.PubKey,
-		Revoked:               validator.Revoked,
+		Jailed:                validator.Jailed,
 		Status:                validator.Status,
 		Tokens:                validator.Tokens,
 		DelegatorShares:       validator.DelegatorShares,
@@ -127,7 +127,7 @@ func UnmarshalValidator(cdc *wire.Codec, operatorAddr, value []byte) (validator 
 	return Validator{
 		Operator:              operatorAddr,
 		PubKey:                storeValue.PubKey,
-		Revoked:               storeValue.Revoked,
+		Jailed:                storeValue.Jailed,
 		Tokens:                storeValue.Tokens,
 		Status:                storeValue.Status,
 		DelegatorShares:       storeValue.DelegatorShares,
@@ -155,7 +155,7 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp := "Validator \n"
 	resp += fmt.Sprintf("Operator: %s\n", v.Operator)
 	resp += fmt.Sprintf("Validator: %s\n", bechVal)
-	resp += fmt.Sprintf("Revoked: %v\n", v.Revoked)
+	resp += fmt.Sprintf("Jailed: %v\n", v.Jailed)
 	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
 	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens.String())
 	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.String())
@@ -177,7 +177,7 @@ func (v Validator) HumanReadableString() (string, error) {
 type BechValidator struct {
 	Operator sdk.AccAddress `json:"operator"` // in bech32
 	PubKey   string         `json:"pub_key"`  // in bech32
-	Revoked  bool           `json:"revoked"`  // has the validator been revoked from bonded status?
+	Jailed   bool           `json:"jailed"`   // has the validator been jailed from bonded status?
 
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
 	Tokens          sdk.Dec        `json:"tokens"`           // delegated tokens (incl. self-delegation)
@@ -207,7 +207,7 @@ func (v Validator) Bech32Validator() (BechValidator, error) {
 	return BechValidator{
 		Operator: v.Operator,
 		PubKey:   bechValPubkey,
-		Revoked:  v.Revoked,
+		Jailed:   v.Jailed,
 
 		Status:          v.Status,
 		Tokens:          v.Tokens,
@@ -429,7 +429,7 @@ func (v Validator) BondedTokens() sdk.Dec {
 var _ sdk.Validator = Validator{}
 
 // nolint - for sdk.Validator
-func (v Validator) GetRevoked() bool            { return v.Revoked }
+func (v Validator) GetJailed() bool             { return v.Jailed }
 func (v Validator) GetMoniker() string          { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus   { return v.Status }
 func (v Validator) GetOperator() sdk.AccAddress { return v.Operator }

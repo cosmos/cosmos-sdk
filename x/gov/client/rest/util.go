@@ -107,10 +107,10 @@ func parseInt64OrReturnBadRequest(s string, w http.ResponseWriter) (n int64, ok 
 	var err error
 	n, err = strconv.ParseInt(s, 10, 64)
 	if err != nil {
-	  w.WriteHeader(http.StatusBadRequest)
-	  err := fmt.Errorf("'%s' is not a valid int64", s)
-	  w.Write([]byte(err.Error()))
-	  return 0, false
+		w.WriteHeader(http.StatusBadRequest)
+		err := fmt.Errorf("'%s' is not a valid int64", s)
+		w.Write([]byte(err.Error()))
+		return 0, false
 	}
 	return n, true
-  }
+}

@@ -7,9 +7,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/gorilla/mux"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/pkg/errors"
 	"github.com/tendermint/tmlibs/cli"
 )
 

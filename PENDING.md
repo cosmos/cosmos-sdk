@@ -21,7 +21,7 @@ BREAKING CHANGES
 * SDK
     * [core] \#1807 Switch from use of rational to decimal
     * [types] \#1901 Validator interface's GetOwner() renamed to GetOperator()
-    * [x/slashing] [#2001](https://github.com/cosmos/cosmos-sdk/pull/2121) - Implement slashing period
+    * [x/slashing] [#2122](https://github.com/cosmos/cosmos-sdk/pull/2122) - Implement slashing period
 
 * Tendermint
 

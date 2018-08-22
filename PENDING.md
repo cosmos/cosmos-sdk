@@ -46,11 +46,12 @@ IMPROVEMENTS
     * [cli] #2060 removed `--select` from `block` command
 
 * Gaia
-    * [x/stake] [#2023](https://github.com/cosmos/cosmos-sdk/pull/2023) Terminate iteration loop in `UpdateBondedValidators` and `UpdateBondedValidatorsFull` when the first revoked validator is encountered and perform a sanity check. 
+    * [x/stake] [#2023](https://github.com/cosmos/cosmos-sdk/pull/2023) Terminate iteration loop in `UpdateBondedValidators` and `UpdateBondedValidatorsFull` when the first revoked validator is encountered and perform a sanity check.
     * [x/auth] Signature verification's gas cost now accounts for pubkey type. [#2046](https://github.com/tendermint/tendermint/pull/2046)
 
 * SDK
     * [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.
+    * [types] \#2119 Parsed error messages and ABCI log errors to make them more human readable.
 
 * Tendermint
 

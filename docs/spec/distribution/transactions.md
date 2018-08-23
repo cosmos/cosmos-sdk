@@ -1,9 +1,9 @@
 # Transactions
 
-## TxWithdrawDelegation
+## TxWithdrawDelegationRewards
 
 When a delegator wishes to withdraw their rewards it must send
-`TxWithdrawDelegation`. Note that parts of this transaction logic are also
+`TxWithdrawDelegationRewards`. Note that parts of this transaction logic are also
 triggered each with any change in individual delegations, such as an unbond,
 redelegation, or delegation of additional tokens to a specific validator.  
 
@@ -16,7 +16,7 @@ type TxWithdrawDelegationRewards struct {
 func WithdrawDelegationRewards(delegatorAddr, withdrawAddr sdk.AccAddress) 
     height = GetHeight()
     withdraw = GetDelegatorAllWithdraws(delegatorAddr, height)
-    AddCoins(withdrawAddr, totalEntitlment.TruncateDecimal())
+    AddCoins(withdrawAddr, withdraw.TruncateDecimal())
 
 func GetDelegatorAllWithdraws(delegatorAddr sdk.AccAddress, height int64) DecCoins
     
@@ -33,15 +33,6 @@ func GetDelegatorAllWithdraws(delegatorAddr sdk.AccAddress, height int64) DecCoi
         valInfo = GetValidatorDistInfo(delegation.ValidatorAddr)
         validator = GetValidator(delegation.ValidatorAddr)
 
-        // get all commission rate changes since last withdraw
-        vus = GetValidatorUpdates(delegation.ValidatorAddr, delInfo.WithdrawalHeight) 
-        
-        for vu = range vus {
-            global, diWithdraw = delInfo.WithdrawRewards(global, valInfo, vu.Height, pool.BondedTokens, 
-                       validator.Tokens, validator.DelegatorShares, vu.OldCommissionRate)
-            withdraw += diWithdraw
-        }
-
         global, diWithdraw = delInfo.WithdrawRewards(global, valInfo, height, pool.BondedTokens, 
                    validator.Tokens, validator.DelegatorShares, validator.Commission)
         withdraw += diWithdraw
@@ -50,7 +41,38 @@ func GetDelegatorAllWithdraws(delegatorAddr sdk.AccAddress, height int64) DecCoi
     return withdraw
 ```
 
-## TxWithdrawValidator
+## TxWithdrawDelegationReward
+
+under special circumstances a delegator may wish to withdraw rewards from only
+a single validator. 
+
+```golang
+type TxWithdrawDelegationReward struct {
+    delegatorAddr sdk.AccAddress
+    validatorAddr sdk.AccAddress
+    withdrawAddr  sdk.AccAddress // address to make the withdrawal to
+}
+
+func WithdrawDelegationReward(delegatorAddr, validatorAddr, withdrawAddr sdk.AccAddress) 
+    height = GetHeight()
+    
+    // get all distribution scenarios
+    pool = stake.GetPool() 
+    global = GetGlobal() 
+    delInfo = GetDelegationDistInfo(delegatorAddr,
+                    validatorAddr)
+    valInfo = GetValidatorDistInfo(validatorAddr)
+    validator = GetValidator(validatorAddr)
+
+    global, withdraw = delInfo.WithdrawRewards(global, valInfo, height, pool.BondedTokens, 
+               validator.Tokens, validator.DelegatorShares, validator.Commission)
+
+    SetGlobal(global) 
+    AddCoins(withdrawAddr, withdraw.TruncateDecimal())
+```
+
+
+## TxWithdrawValidatorRewards
 
 When a validator wishes to withdraw their rewards it must send
 `TxWithdrawValidatorRewards`. Note that parts of this transaction logic are also
@@ -78,11 +100,11 @@ func WithdrawValidatorRewards(operatorAddr, withdrawAddr sdk.AccAddress)
 
     // withdrawal validator commission rewards
     global, commission = valInfo.WithdrawCommission(global, valInfo, height, pool.BondedTokens, 
-               validator.Tokens, validator.DelegatorShares, validator.Commission)
+               validator.Tokens, validator.Commission)
     withdraw += commission
     SetGlobal(global) 
 
-    AddCoins(withdrawAddr, totalEntitlment.TruncateDecimal())
+    AddCoins(withdrawAddr, withdraw.TruncateDecimal())
 ```
     
 ## Common calculations 
@@ -118,12 +140,13 @@ func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares Dec
 
 ### Global pool to validator pool
 
-Every time a validator or delegator executes a withdrawal or the validator is the
-proposer and receives new tokens, the relevant validator must move tokens from
-the passive global pool to their own pool. 
+Every time a validator or delegator executes a withdrawal or the validator is
+the proposer and receives new tokens, the relevant validator must move tokens
+from the passive global pool to their own pool. It is at this point that the
+commission is withdrawn
 
 ``` 
-func (vi ValidatorDistInfo) TakeAccum(g Global, height int64, totalBonded, vdTokens Dec) g Global
+func (vi ValidatorDistInfo) TakeAccum(g Global, height int64, totalBonded, vdTokens, commissionRate Dec) g Global
     g.UpdateTotalValAccum(height, totalBondedShares)
     g.UpdateValAccum(height, totalBondedShares)
     
@@ -132,9 +155,11 @@ func (vi ValidatorDistInfo) TakeAccum(g Global, height int64, totalBonded, vdTok
     vi.GlobalWithdrawalHeight = height
     accum = blocks * vdTokens
     withdrawalTokens := g.Pool * accum / g.TotalValAccum 
+    commission := withdrawalTokens * commissionRate
     
     g.TotalValAccum -= accumm
-    vi.Pool += withdrawalTokens
+    vi.PoolCommission += commission
+    vi.PoolCommissionFree += withdrawalTokens - commission
     g.Pool -= withdrawalTokens
 
     return g
@@ -143,19 +168,19 @@ func (vi ValidatorDistInfo) TakeAccum(g Global, height int64, totalBonded, vdTok
 
 ### Delegation reward withdrawal
 
-For delegations (including validator's self-delegation) all rewards from reward pool
-are subject to commission rate from the operator of the validator. 
+For delegations (including validator's self-delegation) all rewards from reward
+pool have already had the validator's commission taken away.
 
 ```
 func (di DelegatorDistInfo) WithdrawRewards(g Global, vi ValidatorDistInfo,
     height int64, totalBonded, vdTokens, totalDelShares, commissionRate Dec) (g Global, withdrawn DecCoins)
 
     vi.UpdateTotalDelAccum(height, totalDelShares) 
-    g = vi.TakeAccum(g, height, totalBonded, vdTokens) 
+    g = vi.TakeAccum(g, height, totalBonded, vdTokens, commissionRate) 
     
     blocks = height - di.WithdrawalHeight
     di.WithdrawalHeight = height
-    accum = delegatorShares * blocks * (1 - commissionRate)
+    accum = delegatorShares * blocks 
      
     withdrawalTokens := vi.Pool * accum / vi.TotalDelAccum
     vi.TotalDelAccum -= accum
@@ -168,25 +193,16 @@ func (di DelegatorDistInfo) WithdrawRewards(g Global, vi ValidatorDistInfo,
 
 ### Validator commission withdrawal
 
-Similar to a delegator's entitlement, but with recipient shares based on the
-commission portion of bonded tokens.
+Commission is calculated each time rewards enter into the validator.
 
 ```
 func (vi ValidatorDistInfo) WithdrawCommission(g Global, height int64, 
-          totalBonded, vdTokens, totalDelShares, commissionRate Dec) (g Global, withdrawn DecCoins)
+          totalBonded, vdTokens, commissionRate Dec) (g Global, withdrawn DecCoins)
 
-    vi.UpdateTotalDelAccum(height, totalDelShares) 
-    g = vi.TakeAccum(g, height, totalBonded, vdTokens) 
+    g = vi.TakeAccum(g, height, totalBonded, vdTokens, commissionRate) 
     
-    blocks = height - vi.CommissionWithdrawalHeight
-    vi.CommissionWithdrawalHeight = height
-    accum = delegatorShares * blocks * (commissionRate)
-     
-    withdrawalTokens := vi.Pool * accum / vi.TotalDelAccum
-    vi.TotalDelAccum -= accum
-
-    vi.Pool -= withdrawalTokens
-    vi.TotalDelAccum -= accum
+    withdrawalTokens := vi.PoolCommission 
+    vi.PoolCommission = 0
 
     return g, withdrawalTokens
 ```

@@ -42,10 +42,9 @@ Validator distribution information for the relevant validator is updated each ti
 
 ```golang
 type ValidatorDistInfo struct {
-    CommissionWithdrawalHeight int64    // last height this validator withdrew commission
-
     GlobalWithdrawalHeight     int64    // last height this validator withdrew from the global pool
-    Pool                       DecCoins // reward pool collected held within this validator (includes proposer rewards)
+    Pool                       DecCoins // rewards owed to delegators, commission has already been charged (includes proposer reward)
+    PoolCommission             DecCoins // commission collected by this validator (pending withdrawal) 
 
     TotalDelAccumUpdateHeight  int64    // last height which the total delegator accum was updated
     TotalDelAccum              sdk.Dec  // total proposer pool accumulation factor held by delegators
@@ -65,25 +64,5 @@ only the height of the last withdrawal and its current properties.
 ```golang
 type DelegatorDistInfo struct {
     WithdrawalHeight int64    // last time this delegation withdrew rewards
-}
-```
-
-### Validator Update
-
-Every instance that a validator:
- - enters into the bonded state, 
- - leaves the bonded state,
- - is slashed, or
- - changes its commission rate, 
-
-information about the state change to each validator must be recorded as a `ValidatorUpdate`.
-Each power change is indexed by validator and its block height. 
-
- - ValidatorUpdate: `0x03 | ValOperatorAddr | amino(Height) -> amino(ValidatorUpdate)`
-
-```golang
-type ValidatorUpdate struct {
-    Height                        int64     // block height of update
-    OldCommissionRate             sdk.Dec   // commission rate at this height
 }
 ```

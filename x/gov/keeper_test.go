@@ -130,6 +130,7 @@ func TestDeposits(t *testing.T) {
 	require.Equal(t, fourSteak, deposit.Amount)
 	depositsIterator.Next()
 	require.False(t, depositsIterator.Valid())
+	depositsIterator.Close()
 
 	// Test Refund Deposits
 	deposit, found = keeper.GetDeposit(ctx, proposalID, addrs[1])
@@ -196,6 +197,7 @@ func TestVotes(t *testing.T) {
 	require.Equal(t, OptionNoWithVeto, vote.Option)
 	votesIterator.Next()
 	require.False(t, votesIterator.Valid())
+	votesIterator.Close()
 }
 
 func TestProposalQueues(t *testing.T) {

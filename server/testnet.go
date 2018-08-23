@@ -20,7 +20,7 @@ import (
 var (
 	nodeDirPrefix = "node-dir-prefix"
 	nValidators   = "v"
-	outputDir     = "o"
+	outputDir     = "output-dir"
 
 	startingIPAddress = "starting-ip-address"
 )
@@ -49,7 +49,7 @@ Example:
 	}
 	cmd.Flags().Int(nValidators, 4,
 		"Number of validators to initialize the testnet with")
-	cmd.Flags().String(outputDir, "./mytestnet",
+	cmd.Flags().StringP(outputDir, "o", "./mytestnet",
 		"Directory to store initialization data for the testnet")
 	cmd.Flags().String(nodeDirPrefix, "node",
 		"Prefix the directory name for each node with (node results in node0, node1, ...)")

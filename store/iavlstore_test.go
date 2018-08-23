@@ -168,6 +168,7 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 		require.EqualValues(t, value, expectedKey)
 		i++
 	}
+	iter.Close()
 	require.Equal(t, len(expected), i)
 
 	iter = sdk.KVStorePrefixIterator(iavlStore, []byte{byte(55), byte(255), byte(255)})
@@ -183,6 +184,7 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 		require.EqualValues(t, value, []byte("test4"))
 		i++
 	}
+	iter.Close()
 	require.Equal(t, len(expected), i)
 
 	iter = sdk.KVStorePrefixIterator(iavlStore, []byte{byte(255), byte(255)})
@@ -198,6 +200,7 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 		require.EqualValues(t, value, []byte("test4"))
 		i++
 	}
+	iter.Close()
 	require.Equal(t, len(expected), i)
 }
 

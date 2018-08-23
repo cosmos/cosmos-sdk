@@ -37,7 +37,7 @@ func (b BondStatus) Equal(b2 BondStatus) bool {
 
 // validator for a delegated proof of stake system
 type Validator interface {
-	GetRevoked() bool         // whether the validator is revoked
+	GetJailed() bool          // whether the validator is jailed
 	GetMoniker() string       // moniker of the validator
 	GetStatus() BondStatus    // status of the validator
 	GetOperator() AccAddress  // owner AccAddress to receive/return validators coins
@@ -51,8 +51,9 @@ type Validator interface {
 // validator which fulfills abci validator interface for use in Tendermint
 func ABCIValidator(v Validator) abci.Validator {
 	return abci.Validator{
-		PubKey: tmtypes.TM2PB.PubKey(v.GetPubKey()),
-		Power:  v.GetPower().RoundInt64(),
+		PubKey:  tmtypes.TM2PB.PubKey(v.GetPubKey()),
+		Address: v.GetPubKey().Address(),
+		Power:   v.GetPower().RoundInt64(),
 	}
 }
 
@@ -72,8 +73,8 @@ type ValidatorSet interface {
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
 	Slash(Context, crypto.PubKey, int64, int64, Dec)
-	Revoke(Context, crypto.PubKey)   // revoke a validator
-	Unrevoke(Context, crypto.PubKey) // unrevoke a validator
+	Jail(Context, crypto.PubKey)   // jail a validator
+	Unjail(Context, crypto.PubKey) // unjail a validator
 }
 
 //_______________________________________________________________________________

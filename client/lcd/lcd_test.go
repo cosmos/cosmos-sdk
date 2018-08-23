@@ -353,6 +353,42 @@ func TestTxs(t *testing.T) {
 	require.Equal(t, resultTx.Height, indexedTxs[0].Height)
 }
 
+func TestPoolParamsQuery(t *testing.T) {
+	_, password := "test", "1234567890"
+	addr, _ := CreateAddr(t, "test", password, GetKeyBase(t))
+	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	defer cleanup()
+
+	defaultParams := stake.DefaultParams()
+
+	res, body := Request(t, port, "GET", "/stake/parameters", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var params stake.Params
+	err := cdc.UnmarshalJSON([]byte(body), &params)
+	require.Nil(t, err)
+	require.True(t, defaultParams.Equal(params))
+
+	res, body = Request(t, port, "GET", "/stake/pool", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.NotNil(t, body)
+
+	initialPool := stake.InitialPool()
+	initialPool.LooseTokens = initialPool.LooseTokens.Add(sdk.NewDec(100))
+	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewDec(100))     // Delegate tx on GaiaAppGenState
+	initialPool.LooseTokens = initialPool.LooseTokens.Add(sdk.NewDec(int64(50))) // freeFermionsAcc = 50 on GaiaAppGenState
+
+	var pool stake.Pool
+	err = cdc.UnmarshalJSON([]byte(body), &pool)
+	require.Nil(t, err)
+	require.Equal(t, initialPool.DateLastCommissionReset, pool.DateLastCommissionReset)
+	require.Equal(t, initialPool.PrevBondedShares, pool.PrevBondedShares)
+	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
+	require.Equal(t, initialPool.NextInflation(params), pool.Inflation)
+	initialPool = initialPool.ProcessProvisions(params) // provisions are added to the pool every hour
+	require.Equal(t, initialPool.LooseTokens, pool.LooseTokens)
+}
+
 func TestValidatorsQuery(t *testing.T) {
 	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
 	defer cleanup()
@@ -559,7 +595,7 @@ func TestVote(t *testing.T) {
 	require.Equal(t, gov.OptionYes, vote.Option)
 }
 
-func TestUnrevoke(t *testing.T) {
+func TestUnjail(t *testing.T) {
 	_, password := "test", "1234567890"
 	addr, _ := CreateAddr(t, "test", password, GetKeyBase(t))
 	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})

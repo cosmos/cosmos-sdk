@@ -134,7 +134,14 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 	for key, param := range rs.storesParams {
 		if param.typ != sdk.StoreTypeTransient {
 			if _, ok := newStores[key]; !ok {
-				return fmt.Errorf("unused CommitStoreLoader: %v", key)
+				////////////////////  iris/cosmos-sdk begin ///////////////////////////
+				id := CommitID{}
+				store, err := rs.loadCommitStoreFromParams(key, id, param)
+				if err != nil {
+					return fmt.Errorf("failed to load rootMultiStore: %v", err)
+				}
+				newStores[key] = store
+				////////////////////  iris/cosmos-sdk end ///////////////////////////
 			}
 		}
 	}
@@ -229,7 +236,7 @@ func (rs *rootMultiStore) CacheMultiStore() CacheMultiStore {
 
 // Implements MultiStore.
 func (rs *rootMultiStore) GetStore(key StoreKey) Store {
-	return rs.stores[key]
+	return rs.getStoreByName(key.Name())
 }
 
 // GetKVStore implements the MultiStore interface. If tracing is enabled on the
@@ -288,6 +295,25 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 	// trim the path and make the query
 	req.Path = subpath
 	res := queryable.Query(req)
+
+	////////////////////  iris/cosmos-sdk begin///////////////////////////
+	// WARNING This should be consistent with query method in iavlstore.go
+	if !req.Prove || subpath != "/store" && subpath != "/key" {
+		return res
+	}
+
+	//Load commit info from db
+	commitInfo, errMsg := getCommitInfo(rs.db,res.Height)
+	if errMsg != nil {
+		return sdk.ErrInternal(errMsg.Error()).QueryResult()
+	}
+
+	res.Proof, errMsg = BuildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
+	if errMsg != nil {
+		return sdk.ErrInternal(errMsg.Error()).QueryResult()
+	}
+	////////////////////  iris/cosmos-sdk end///////////////////////////
+
 	return res
 }
 
@@ -440,32 +466,76 @@ func setLatestVersion(batch dbm.Batch, version int64) {
 	batch.Set([]byte(latestVersionKey), latestBytes)
 }
 
+////////////////////  iris/cosmos-sdk begin///////////////////////////
 // Commits each store and returns a new commitInfo.
 func commitStores(version int64, storeMap map[StoreKey]CommitStore) commitInfo {
-	storeInfos := make([]storeInfo, 0, len(storeMap))
 
+	storemap := make(map[string]CommitStore)
 	for key, store := range storeMap {
-		// Commit
-		commitID := store.Commit()
+		storemap[key.Name()] = store
+	}
 
-		if store.GetStoreType() == sdk.StoreTypeTransient {
-			continue
+	upgrade := storemap["upgrade"]
+	if upgrade != nil {
+
+		upgradeStore := upgrade.(KVStore)
+		bz := upgradeStore.Get([]byte("k/")) //CurrentStoreKey
+		storekeys := string(bz)              //splitby":"
+		storekeyslist := strings.Split(storekeys, ":")
+		storeInfos := make([]storeInfo, 0, len(storekeyslist))
+
+		for _, key := range storekeyslist {
+			if store, ok := storemap[key]; ok {
+				// Commit
+				commitID := store.Commit()
+
+				if store.GetStoreType() == sdk.StoreTypeTransient {
+					continue
+				}
+
+				// Record CommitID
+				si := storeInfo{}
+				si.Name = key
+				si.Core.CommitID = commitID
+				// si.Core.StoreType = store.GetStoreType()
+				storeInfos = append(storeInfos, si)
+			}
+		}
+		ci := commitInfo{
+			Version:    version,
+			StoreInfos: storeInfos,
+		}
+		return ci
+
+	} else {
+
+		storeInfos := make([]storeInfo, 0, len(storeMap))
+
+		for key, store := range storeMap {
+			// Commit
+			commitID := store.Commit()
+
+			if store.GetStoreType() == sdk.StoreTypeTransient {
+				continue
+			}
+
+			// Record CommitID
+			si := storeInfo{}
+			si.Name = key.Name()
+			si.Core.CommitID = commitID
+			// si.Core.StoreType = store.GetStoreType()
+			storeInfos = append(storeInfos, si)
 		}
 
-		// Record CommitID
-		si := storeInfo{}
-		si.Name = key.Name()
-		si.Core.CommitID = commitID
-		// si.Core.StoreType = store.GetStoreType()
-		storeInfos = append(storeInfos, si)
+		ci := commitInfo{
+			Version:    version,
+			StoreInfos: storeInfos,
+		}
+		return ci
 	}
-
-	ci := commitInfo{
-		Version:    version,
-		StoreInfos: storeInfos,
-	}
-	return ci
 }
+
+////////////////////  iris/cosmos-sdk end///////////////////////////
 
 // Gets commitInfo from disk.
 func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {

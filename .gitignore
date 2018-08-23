@@ -28,6 +28,8 @@ profile.out
 *.log
 vagrant
 
+data/
+
 # IDE
 .idea/
 *.iml

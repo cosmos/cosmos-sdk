@@ -66,6 +66,7 @@ install_examples:
 	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecli
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democoind
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democli
+	go install $(BUILD_FLAGS) ./examples/kvstore
 
 install_cosmos-sdk-cli:
 	go install $(BUILD_FLAGS) ./cmd/cosmos-sdk-cli

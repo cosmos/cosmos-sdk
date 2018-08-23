@@ -41,7 +41,7 @@ A single infraction is committed then later discovered, at which point the valid
 
 *Multiple infractions*
 
-<---------------------------->   
+<--------------------------->   
 [----------C<sub>1</sub>--C<sub>2</sub>---C<sub>3</sub>---D<sub>1</sub>,D<sub>2</sub>,D<sub>3</sub>V<sub>u</sub>-----]
 
 Multiple infractions are committed within a single slashing period then later discovered, at which point the validator is unbonded and slashed for only the worst infraction.
@@ -49,7 +49,7 @@ Multiple infractions are committed within a single slashing period then later di
 *Multiple infractions after rebonding*
 
 
-<---------------------------->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<-------------->  
+<--------------------------->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<------------->  
 [----------C<sub>1</sub>--C<sub>2</sub>---C<sub>3</sub>---D<sub>1</sub>,D<sub>2</sub>,D<sub>3</sub>V<sub>u</sub>---V<sub>b</sub>---C<sub>4</sub>----D<sub>4</sub>,V<sub>u</sub>--]
 
 Multiple infractions are committed within a single slashing period then later discovered, at which point the validator is unbonded and slashed for only the worst infraction.

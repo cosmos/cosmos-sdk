@@ -11,25 +11,25 @@ var cdc = wire.NewCodec()
 const MsgType = "slashing"
 
 // verify interface at compile time
-var _ sdk.Msg = &MsgUnrevoke{}
+var _ sdk.Msg = &MsgUnjail{}
 
-// MsgUnrevoke - struct for unrevoking revoked validator
-type MsgUnrevoke struct {
+// MsgUnjail - struct for unjailing jailed validator
+type MsgUnjail struct {
 	ValidatorAddr sdk.AccAddress `json:"address"` // address of the validator owner
 }
 
-func NewMsgUnrevoke(validatorAddr sdk.AccAddress) MsgUnrevoke {
-	return MsgUnrevoke{
+func NewMsgUnjail(validatorAddr sdk.AccAddress) MsgUnjail {
+	return MsgUnjail{
 		ValidatorAddr: validatorAddr,
 	}
 }
 
 //nolint
-func (msg MsgUnrevoke) Type() string                 { return MsgType }
-func (msg MsgUnrevoke) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.ValidatorAddr} }
+func (msg MsgUnjail) Type() string                 { return MsgType }
+func (msg MsgUnjail) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.ValidatorAddr} }
 
 // get the bytes for the message signer to sign on
-func (msg MsgUnrevoke) GetSignBytes() []byte {
+func (msg MsgUnjail) GetSignBytes() []byte {
 	b, err := cdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
@@ -38,7 +38,7 @@ func (msg MsgUnrevoke) GetSignBytes() []byte {
 }
 
 // quick validity check
-func (msg MsgUnrevoke) ValidateBasic() sdk.Error {
+func (msg MsgUnjail) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return ErrBadValidatorAddr(DefaultCodespace)
 	}

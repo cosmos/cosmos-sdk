@@ -72,12 +72,12 @@ gaiacli stake signing-information <validator-pubkey>\
   --chain-id=<chain_id>
 ```
 
-### Unrevoke Validator
+### Unjail Validator
 
-When a validator is `Revoked` for downtime, you must submit an `Unrevoke` transaction in order to be able to get block proposer rewards again (depends on the zone fee distribution).
+When a validator is "jailed" for downtime, you must submit an `Unjail` transaction in order to be able to get block proposer rewards again (depends on the zone fee distribution).
 
 ```bash
-gaiacli stake unrevoke \
+gaiacli stake unjail \
 	--from=<key_name> \
 	--chain-id=<chain_id>
   --validator=<account_cosmosaccaddr> \
@@ -113,11 +113,11 @@ gaiad start
 Wait for your full node to catch up to the latest block. Next, run the following command. Note that `<cosmosaccaddr>` is the address of your validator account, and `<name>` is the name of the validator account. You can find this info by running `gaiacli keys list`.
 
 ```bash
-gaiacli stake unrevoke <cosmosaccaddr> --chain-id=<chain_id> --name=<name>
+gaiacli stake unjail <cosmosaccaddr> --chain-id=<chain_id> --name=<name>
 ```
 
 ::: danger Warning
-If you don't wait for `gaiad` to sync before running `unrevoke`, you will receive an error message telling you your validator is still jailed.
+If you don't wait for `gaiad` to sync before running `unjail`, you will receive an error message telling you your validator is still jailed.
 :::
 
 Lastly, check your validator again to see if your voting power is back.

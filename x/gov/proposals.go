@@ -110,6 +110,7 @@ type ProposalKind byte
 
 //nolint
 const (
+	ProposalTypeNil             ProposalKind = 0x00
 	ProposalTypeText            ProposalKind = 0x01
 	ProposalTypeParameterChange ProposalKind = 0x02
 	ProposalTypeSoftwareUpgrade ProposalKind = 0x03
@@ -203,6 +204,7 @@ type ProposalStatus byte
 
 //nolint
 const (
+	StatusNil           ProposalStatus = 0x00
 	StatusDepositPeriod ProposalStatus = 0x01
 	StatusVotingPeriod  ProposalStatus = 0x02
 	StatusPassed        ProposalStatus = 0x03
@@ -220,6 +222,8 @@ func ProposalStatusFromString(str string) (ProposalStatus, error) {
 		return StatusPassed, nil
 	case "Rejected":
 		return StatusRejected, nil
+	case "":
+		return StatusNil, nil
 	default:
 		return ProposalStatus(0xff), errors.Errorf("'%s' is not a valid proposal status", str)
 	}

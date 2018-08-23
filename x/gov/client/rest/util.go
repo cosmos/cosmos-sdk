@@ -1,8 +1,10 @@
 package rest
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -99,4 +101,16 @@ func signAndBuild(w http.ResponseWriter, cliCtx context.CLIContext, baseReq base
 	}
 
 	w.Write(output)
+}
+
+func parseInt64OrReturnBadRequest(s string, w http.ResponseWriter) (n int64, ok bool) {
+	var err error
+	n, err = strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		err := fmt.Errorf("'%s' is not a valid int64", s)
+		w.Write([]byte(err.Error()))
+		return 0, false
+	}
+	return n, true
 }

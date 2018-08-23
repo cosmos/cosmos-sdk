@@ -57,7 +57,8 @@ func (fck FeeCollectionKeeper) addCollectedFees(ctx sdk.Context, coins sdk.Coins
 }
 
 ////////////////////  iris/cosmos-sdk begin///////////////////////////
-func (fck FeeCollectionKeeper) refundCollectedFees(ctx sdk.Context, coins sdk.Coins) sdk.Coins {
+// RefundCollectedFees deducts fees from fee collector
+func (fck FeeCollectionKeeper) RefundCollectedFees(ctx sdk.Context, coins sdk.Coins) sdk.Coins {
 	newCoins := fck.GetCollectedFees(ctx).Minus(coins)
 	if !newCoins.IsNotNegative() {
 		panic("fee collector contains negative coins")

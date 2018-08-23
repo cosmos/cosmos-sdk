@@ -74,7 +74,7 @@ func QueryAccountRequestHandlerFn(
 
 // RegisterSwaggerRoutes - Central function to define account query related routes that get registered by the main application
 func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext, cdc *wire.Codec, storeName string) {
-	routerGroup.GET("accounts/:address",queryAccountRequestHandler(storeName,cdc,authcmd.GetAccountDecoder(cdc),ctx))
+	routerGroup.GET("bank/balance/:address",queryAccountRequestHandler(storeName,cdc,authcmd.GetAccountDecoder(cdc),ctx))
 }
 
 func queryAccountRequestHandler(storeName string, cdc *wire.Codec, decoder auth.AccountDecoder, ctx context.CLIContext) gin.HandlerFunc {

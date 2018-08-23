@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/gin-gonic/gin"
 	"github.com/cosmos/cosmos-sdk/client/httputils"
+	"io/ioutil"
 )
 
 func deleteKeyCommand() *cobra.Command {
@@ -96,10 +97,15 @@ func DeleteKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 // DeleteKeyRequest is the handler of deleting specified key in swagger rest server
 func DeleteKeyRequest(gtx *gin.Context) {
 	name := gtx.Param("name")
-	var kb keys.Keybase
 	var m DeleteKeyBody
 
-	if err := gtx.BindJSON(&m); err != nil {
+	body, err := ioutil.ReadAll(gtx.Request.Body)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusBadRequest, err)
+		return
+	}
+	err = cdc.UnmarshalJSON(body, &m)
+	if err != nil {
 		httputils.NewError(gtx, http.StatusBadRequest, err)
 		return
 	}

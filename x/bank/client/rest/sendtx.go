@@ -27,11 +27,9 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, k
 }
 
 type sendBody struct {
-	// fees is not used currently
-	// Fees             sdk.Coin  `json="fees"`
-	Amount           sdk.Coins `json:"amount"`
-	LocalAccountName string    `json:"name"`
+	Name             string    `json:"name"`
 	Password         string    `json:"password"`
+	Amount           sdk.Coins `json:"amount"`
 	ChainID          string    `json:"chain_id"`
 	AccountNumber    int64     `json:"account_number"`
 	Sequence         int64     `json:"sequence"`
@@ -146,6 +144,7 @@ func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext,
 	routerGroup.POST("/accounts/:address/send", sendRequestFn(cdc, ctx, kb))
 	routerGroup.POST("/create_transfer", createTransferTxForSignFn(cdc, ctx))
 	routerGroup.POST("/signed_transfer", composeAndBroadcastSignedTransferTxFn(cdc, ctx))
+	routerGroup.POST("/bank/transfers", composeAndBroadcastSignedTransferTxFn(cdc, ctx))
 }
 
 func composeTx(cdc *wire.Codec, ctx context.CLIContext, transferBody transferBody) (auth.StdSignMsg, authctx.TxContext, sdk.Error) {

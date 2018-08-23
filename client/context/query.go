@@ -23,8 +23,8 @@ import (
 // GetNode returns an RPC client. If the context's client is not defined, an
 // error is returned.
 func (ctx CLIContext) GetNode() (rpcclient.Client, error) {
-	if ctx.ClientMgr != nil {
-		return ctx.ClientMgr.getClient(), nil
+	if ctx.ClientManager != nil {
+		return ctx.ClientManager.getClient(), nil
 	}
 	if ctx.Client == nil {
 		return nil, errors.New("no RPC client defined")
@@ -314,7 +314,7 @@ func (ctx CLIContext) query(path string, key common.HexBytes) (res []byte, err e
 	}
 
 	// TODO: Later we consider to return error for missing valid certifier to verify data from untrusted node
-	if ctx.Cert == nil {
+	if ctx.Certifier == nil {
 		if ctx.Logger != nil {
 			io.WriteString(ctx.Logger, fmt.Sprintf("Missing valid certifier to verify data from untrusted node\n"))
 		}
@@ -322,7 +322,7 @@ func (ctx CLIContext) query(path string, key common.HexBytes) (res []byte, err e
 	}
 
 	// AppHash for height H is in header H+1
-	commit, err := tendermintLiteProxy.GetCertifiedCommit(resp.Height+1, node, ctx.Cert)
+	commit, err := tendermintLiteProxy.GetCertifiedCommit(resp.Height+1, node, ctx.Certifier)
 	if err != nil {
 		return nil, err
 	}

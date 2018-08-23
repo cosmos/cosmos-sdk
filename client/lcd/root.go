@@ -157,17 +157,17 @@ func createSwaggerHandler(server *gin.Engine, cdc *wire.Codec)  {
 		panic(fmt.Errorf("missing node URIs"))
 	}
 	//Tendermint certifier can only connect to one full node. Here we assign the first full node to it
-	cert,err := tendermintLiteProxy.GetCertifier(chainID, rootDir, nodeAddrArray[0])
+	certifier, err := tendermintLiteProxy.GetCertifier(chainID, rootDir, nodeAddrArray[0])
 	if err != nil {
 		panic(err)
 	}
 	//Create load balancing engine
-	clientMgr,err := context.NewClientManager(nodeAddrs)
+	clientManager, err := context.NewClientManager(nodeAddrs)
 	if err != nil {
 		panic(err)
 	}
 	//Assign tendermint certifier and load balancing engine to ctx
-	ctx := context.NewCLIContext().WithCodec(cdc).WithLogger(os.Stdout).WithCert(cert).WithClientMgr(clientMgr)
+	ctx := context.NewCLIContext().WithCodec(cdc).WithLogger(os.Stdout).WithCertifier(certifier).WithClientManager(clientManager)
 
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

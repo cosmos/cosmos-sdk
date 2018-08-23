@@ -180,7 +180,7 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
-	err = json.Unmarshal(body, &m)
+	err = cdc.UnmarshalJSON(body, &m)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -248,7 +248,7 @@ func AddNewKeyRequest(gtx *gin.Context) {
 		httputils.NewError(gtx, http.StatusBadRequest, err)
 		return
 	}
-	err = json.Unmarshal(body, &m)
+	err = cdc.UnmarshalJSON(body, &m)
 	if err != nil {
 		httputils.NewError(gtx, http.StatusBadRequest, err)
 		return

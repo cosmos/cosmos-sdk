@@ -140,6 +140,10 @@ Ensure that you base and target your PR on the correct branch:
   - `master` for a merge of a release
   - `develop` in the usual case
 
+All feature additions should be targeted against `develop`. Bug fixes for an outstanding release candidate
+should be targeted against the release candidate branch. Release candidate branches themselves should be the
+only pull requests targeted directly against master.
+
 ### Development Procedure:
   - the latest state of development is on `develop`
   - `develop` must never fail `make test` or `make test_cli`

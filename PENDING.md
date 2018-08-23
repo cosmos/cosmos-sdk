@@ -21,6 +21,7 @@ BREAKING CHANGES
 * SDK
     * [core] \#1807 Switch from use of rational to decimal
     * [types] \#1901 Validator interface's GetOwner() renamed to GetOperator()
+    * [types] \#2119 Parsed error messages and ABCI log errors to make them more human readable.
 
 * Tendermint
 
@@ -51,7 +52,7 @@ IMPROVEMENTS
     * [cli] #2060 removed `--select` from `block` command
 
 * Gaia
-    * [x/stake] [#2023](https://github.com/cosmos/cosmos-sdk/pull/2023) Terminate iteration loop in `UpdateBondedValidators` and `UpdateBondedValidatorsFull` when the first revoked validator is encountered and perform a sanity check. 
+    * [x/stake] [#2023](https://github.com/cosmos/cosmos-sdk/pull/2023) Terminate iteration loop in `UpdateBondedValidators` and `UpdateBondedValidatorsFull` when the first revoked validator is encountered and perform a sanity check.
     * [x/auth] Signature verification's gas cost now accounts for pubkey type. [#2046](https://github.com/tendermint/tendermint/pull/2046)
 
 * SDK

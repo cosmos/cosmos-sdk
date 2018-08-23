@@ -2,7 +2,6 @@ package types
 
 import (
 	"math/big"
-	"math/rand"
 	"testing"
 
 	wire "github.com/cosmos/cosmos-sdk/wire"
@@ -49,22 +48,22 @@ func TestNewFromDecimal(t *testing.T) {
 		{"0.foobar.", true, Rat{}},
 	}
 
-	for tcIndex, tc := range tests {
+	for _, tc := range tests {
 		res, err := NewRatFromDecimal(tc.decimalStr, 4)
 		if tc.expErr {
-			require.NotNil(t, err, tc.decimalStr, "error expected, tc #%d", tcIndex)
+			require.NotNil(t, err, tc.decimalStr)
 		} else {
-			require.Nil(t, err, tc.decimalStr, "unexpected error, tc #%d", tcIndex)
-			require.True(t, res.Equal(tc.exp), tc.decimalStr, "equality was incorrect, tc #%d", tcIndex)
+			require.Nil(t, err, tc.decimalStr)
+			require.True(t, res.Equal(tc.exp), tc.decimalStr)
 		}
 
 		// negative tc
 		res, err = NewRatFromDecimal("-"+tc.decimalStr, 4)
 		if tc.expErr {
-			require.NotNil(t, err, tc.decimalStr, "error expected (negative case), tc #%d", tcIndex)
+			require.NotNil(t, err, tc.decimalStr)
 		} else {
-			require.Nil(t, err, tc.decimalStr, "unexpected error (negative case), tc #%d", tcIndex)
-			require.True(t, res.Equal(tc.exp.Mul(NewRat(-1))), tc.decimalStr, "equality was incorrect (negative case), tc #%d", tcIndex)
+			require.Nil(t, err, tc.decimalStr)
+			require.True(t, res.Equal(tc.exp.Mul(NewRat(-1))), tc.decimalStr)
 		}
 	}
 }
@@ -100,10 +99,10 @@ func TestEqualities(t *testing.T) {
 		{NewRat(-1, 7), NewRat(-3, 7), true, false, false},
 	}
 
-	for tcIndex, tc := range tests {
-		require.Equal(t, tc.gt, tc.r1.GT(tc.r2), "GT result is incorrect, tc #%d", tcIndex)
-		require.Equal(t, tc.lt, tc.r1.LT(tc.r2), "LT result is incorrect, tc #%d", tcIndex)
-		require.Equal(t, tc.eq, tc.r1.Equal(tc.r2), "equality result is incorrect, tc #%d", tcIndex)
+	for _, tc := range tests {
+		require.Equal(t, tc.gt, tc.r1.GT(tc.r2))
+		require.Equal(t, tc.lt, tc.r1.LT(tc.r2))
+		require.Equal(t, tc.eq, tc.r1.Equal(tc.r2))
 	}
 
 }
@@ -136,15 +135,15 @@ func TestArithmetic(t *testing.T) {
 		{NewRat(100), NewRat(1, 7), NewRat(100, 7), NewRat(700), NewRat(701, 7), NewRat(699, 7)},
 	}
 
-	for tcIndex, tc := range tests {
-		require.True(t, tc.resMul.Equal(tc.r1.Mul(tc.r2)), "r1 %v, r2 %v. tc #%d", tc.r1.Rat, tc.r2.Rat, tcIndex)
-		require.True(t, tc.resAdd.Equal(tc.r1.Add(tc.r2)), "r1 %v, r2 %v. tc #%d", tc.r1.Rat, tc.r2.Rat, tcIndex)
-		require.True(t, tc.resSub.Equal(tc.r1.Sub(tc.r2)), "r1 %v, r2 %v. tc #%d", tc.r1.Rat, tc.r2.Rat, tcIndex)
+	for _, tc := range tests {
+		require.True(t, tc.resMul.Equal(tc.r1.Mul(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
+		require.True(t, tc.resAdd.Equal(tc.r1.Add(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
+		require.True(t, tc.resSub.Equal(tc.r1.Sub(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
 
 		if tc.r2.Num().IsZero() { // panic for divide by zero
 			require.Panics(t, func() { tc.r1.Quo(tc.r2) })
 		} else {
-			require.True(t, tc.resDiv.Equal(tc.r1.Quo(tc.r2)), "r1 %v, r2 %v. tc #%d", tc.r1.Rat, tc.r2.Rat, tcIndex)
+			require.True(t, tc.resDiv.Equal(tc.r1.Quo(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
 		}
 	}
 }
@@ -169,9 +168,9 @@ func TestEvaluate(t *testing.T) {
 		{NewRat(113, 12), 9},
 	}
 
-	for tcIndex, tc := range tests {
-		require.Equal(t, tc.res, tc.r1.RoundInt64(), "%v. tc #%d", tc.r1, tcIndex)
-		require.Equal(t, tc.res*-1, tc.r1.Mul(NewRat(-1)).RoundInt64(), "%v. tc #%d", tc.r1.Mul(NewRat(-1)), tcIndex)
+	for _, tc := range tests {
+		require.Equal(t, tc.res, tc.r1.RoundInt64(), "%v", tc.r1)
+		require.Equal(t, tc.res*-1, tc.r1.Mul(NewRat(-1)).RoundInt64(), "%v", tc.r1.Mul(NewRat(-1)))
 	}
 }
 
@@ -193,10 +192,10 @@ func TestRound(t *testing.T) {
 		{NewRat(1, 2), NewRat(1, 2), 1000},
 	}
 
-	for tcIndex, tc := range tests {
-		require.Equal(t, tc.res, tc.r.Round(tc.precFactor), "%v", tc.r, "incorrect rounding, tc #%d", tcIndex)
+	for _, tc := range tests {
+		require.Equal(t, tc.res, tc.r.Round(tc.precFactor), "%v", tc.r)
 		negR1, negRes := tc.r.Mul(NewRat(-1)), tc.res.Mul(NewRat(-1))
-		require.Equal(t, negRes, negR1.Round(tc.precFactor), "%v", negR1, "incorrect rounding (negative case), tc #%d", tcIndex)
+		require.Equal(t, negRes, negR1.Round(tc.precFactor), "%v", negR1)
 	}
 }
 
@@ -212,8 +211,8 @@ func TestToLeftPadded(t *testing.T) {
 		{NewRat(1000, 3), 8, "00000333"},
 		{NewRat(1000, 3), 12, "000000000333"},
 	}
-	for tcIndex, tc := range tests {
-		require.Equal(t, tc.res, tc.rat.ToLeftPadded(tc.digits), "incorrect left padding, tc #%d", tcIndex)
+	for _, tc := range tests {
+		require.Equal(t, tc.res, tc.rat.ToLeftPadded(tc.digits))
 	}
 }
 
@@ -297,13 +296,11 @@ func TestRatsEqual(t *testing.T) {
 		{[]Rat{NewRat(1), NewRat(0)}, []Rat{NewRat(1), NewRat(0)}, true},
 		{[]Rat{NewRat(1), NewRat(0)}, []Rat{NewRat(0), NewRat(1)}, false},
 		{[]Rat{NewRat(1), NewRat(0)}, []Rat{NewRat(1)}, false},
-		{[]Rat{NewRat(1), NewRat(2)}, []Rat{NewRat(2), NewRat(4)}, false},
-		{[]Rat{NewRat(3), NewRat(18)}, []Rat{NewRat(1), NewRat(6)}, false},
 	}
 
-	for tcIndex, tc := range tests {
-		require.Equal(t, tc.eq, RatsEqual(tc.r1s, tc.r2s), "equality of rational arrays is incorrect, tc #%d", tcIndex)
-		require.Equal(t, tc.eq, RatsEqual(tc.r2s, tc.r1s), "equality of rational arrays is incorrect (converse), tc #%d", tcIndex)
+	for _, tc := range tests {
+		require.Equal(t, tc.eq, RatsEqual(tc.r1s, tc.r2s))
+		require.Equal(t, tc.eq, RatsEqual(tc.r2s, tc.r1s))
 	}
 
 }
@@ -317,86 +314,4 @@ func TestStringOverflow(t *testing.T) {
 		"29728537197630860939575850336935951464/37134458148982045574552091851127630409",
 		rat3.String(),
 	)
-}
-
-// Tests below uses randomness
-// Since we are using *big.Rat as underlying value
-// and (U/)Int is immutable value(see TestImmutability(U/)Int)
-// it is safe to use randomness in the tests
-func TestArithRat(t *testing.T) {
-	for i := 0; i < 20; i++ {
-		n1 := NewInt(int64(rand.Int31()))
-		d1 := NewInt(int64(rand.Int31()))
-		rat1 := NewRatFromInt(n1, d1)
-
-		n2 := NewInt(int64(rand.Int31()))
-		d2 := NewInt(int64(rand.Int31()))
-		rat2 := NewRatFromInt(n2, d2)
-
-		n1d2 := n1.Mul(d2)
-		n2d1 := n2.Mul(d1)
-
-		cases := []struct {
-			nres Int
-			dres Int
-			rres Rat
-		}{
-			{n1d2.Add(n2d1), d1.Mul(d2), rat1.Add(rat2)},
-			{n1d2.Sub(n2d1), d1.Mul(d2), rat1.Sub(rat2)},
-			{n1.Mul(n2), d1.Mul(d2), rat1.Mul(rat2)},
-			{n1d2, n2d1, rat1.Quo(rat2)},
-		}
-
-		for _, tc := range cases {
-			require.Equal(t, NewRatFromInt(tc.nres, tc.dres), tc.rres)
-		}
-	}
-}
-
-func TestCompRat(t *testing.T) {
-	for i := 0; i < 20; i++ {
-		n1 := NewInt(int64(rand.Int31()))
-		d1 := NewInt(int64(rand.Int31()))
-		rat1 := NewRatFromInt(n1, d1)
-
-		n2 := NewInt(int64(rand.Int31()))
-		d2 := NewInt(int64(rand.Int31()))
-		rat2 := NewRatFromInt(n2, d2)
-
-		n1d2 := n1.Mul(d2)
-		n2d1 := n2.Mul(d1)
-
-		cases := []struct {
-			ires bool
-			rres bool
-		}{
-			{n1d2.Equal(n2d1), rat1.Equal(rat2)},
-			{n1d2.GT(n2d1), rat1.GT(rat2)},
-			{n1d2.LT(n2d1), rat1.LT(rat2)},
-			{n1d2.GT(n2d1) || n1d2.Equal(n2d1), rat1.GTE(rat2)},
-			{n1d2.LT(n2d1) || n1d2.Equal(n2d1), rat1.LTE(rat2)},
-		}
-
-		for _, tc := range cases {
-			require.Equal(t, tc.ires, tc.rres)
-		}
-	}
-}
-
-func TestImmutabilityRat(t *testing.T) {
-	for i := 0; i < 20; i++ {
-		n := int64(rand.Int31())
-		r := NewRat(n)
-		z := ZeroRat()
-		o := OneRat()
-
-		r.Add(z)
-		r.Sub(z)
-		r.Mul(o)
-		r.Quo(o)
-
-		require.Equal(t, n, r.RoundInt64())
-		require.True(t, NewRat(n).Equal(r))
-	}
-
 }

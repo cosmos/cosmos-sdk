@@ -4,20 +4,19 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/gorilla/mux"
+
+	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/bank/client"
-
-	"github.com/gorilla/mux"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/accounts/{address}/send", SendRequestHandlerFn(cdc, kb, cliCtx)).Methods("POST")
+func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
+	r.HandleFunc("/accounts/{address}/send", SendRequestHandlerFn(cdc, kb, ctx)).Methods("POST")
 }
 
 type sendBody struct {
@@ -39,7 +38,7 @@ func init() {
 }
 
 // SendRequestHandlerFn - http request handler to send coins to a address
-func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
+func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collect data
 		vars := mux.Vars(r)
@@ -81,22 +80,23 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 			return
 		}
 
-		txCtx := authctx.TxContext{
-			Codec:         cdc,
-			Gas:           m.Gas,
-			ChainID:       m.ChainID,
-			AccountNumber: m.AccountNumber,
-			Sequence:      m.Sequence,
-		}
+		// add gas to context
+		ctx = ctx.WithGas(m.Gas)
+		// add chain-id to context
+		ctx = ctx.WithChainID(m.ChainID)
 
-		txBytes, err := txCtx.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
+		// sign
+		ctx = ctx.WithAccountNumber(m.AccountNumber)
+		ctx = ctx.WithSequence(m.Sequence)
+		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, []sdk.Msg{msg}, cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		res, err := cliCtx.BroadcastTx(txBytes)
+		// send
+		res, err := ctx.BroadcastTx(txBytes)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

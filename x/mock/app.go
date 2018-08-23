@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -48,7 +47,7 @@ func NewApp() *App {
 
 	// Create your application object
 	app := &App{
-		BaseApp:          bam.NewBaseApp("mock", logger, db, auth.DefaultTxDecoder(cdc)),
+		BaseApp:          bam.NewBaseApp("mock", cdc, logger, db),
 		Cdc:              cdc,
 		KeyMain:          sdk.NewKVStoreKey("main"),
 		KeyAccount:       sdk.NewKVStoreKey("acc"),
@@ -66,8 +65,6 @@ func NewApp() *App {
 	// calling complete setup.
 	app.SetInitChainer(app.InitChainer)
 	app.SetAnteHandler(auth.NewAnteHandler(app.AccountMapper, app.FeeCollectionKeeper))
-
-	// Not sealing for custom extension
 
 	return app
 }
@@ -100,7 +97,7 @@ func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.Respo
 // their addresses, pubkeys, and privkeys.
 func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []auth.Account, addrs []sdk.AccAddress, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
 	for i := 0; i < numAccs; i++ {
-		privKey := ed25519.GenPrivKey()
+		privKey := crypto.GenPrivKeyEd25519()
 		pubKey := privKey.PubKey()
 		addr := sdk.AccAddress(pubKey.Address())
 
@@ -132,7 +129,7 @@ func SetGenesis(app *App, accs []auth.Account) {
 func GenTx(msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKey) auth.StdTx {
 	// Make the transaction free
 	fee := auth.StdFee{
-		Amount: sdk.Coins{sdk.NewInt64Coin("foocoin", 0)},
+		Amount: sdk.Coins{sdk.NewCoin("foocoin", 0)},
 		Gas:    100000,
 	}
 
@@ -161,7 +158,7 @@ func GeneratePrivKeys(n int) (keys []crypto.PrivKey) {
 	// TODO: Randomize this between ed25519 and secp256k1
 	keys = make([]crypto.PrivKey, n, n)
 	for i := 0; i < n; i++ {
-		keys[i] = ed25519.GenPrivKey()
+		keys[i] = crypto.GenPrivKeyEd25519()
 	}
 
 	return
@@ -173,7 +170,7 @@ func GeneratePrivKeyAddressPairs(n int) (keys []crypto.PrivKey, addrs []sdk.AccA
 	keys = make([]crypto.PrivKey, n, n)
 	addrs = make([]sdk.AccAddress, n, n)
 	for i := 0; i < n; i++ {
-		keys[i] = ed25519.GenPrivKey()
+		keys[i] = crypto.GenPrivKeyEd25519()
 		addrs[i] = sdk.AccAddress(keys[i].PubKey().Address())
 	}
 	return
@@ -205,7 +202,8 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 		(&baseAcc).SetCoins(coins)
 		accts[i] = &baseAcc
 	}
-	app.GenesisAccounts = accts
+
+	SetGenesis(app, accts)
 }
 
 // GetAllAccounts returns all accounts in the accountMapper.

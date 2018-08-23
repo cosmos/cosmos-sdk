@@ -2,19 +2,18 @@ package cli
 
 import (
 	"encoding/hex"
-	"os"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	wire "github.com/cosmos/cosmos-sdk/wire"
+
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 
 const (
@@ -23,35 +22,37 @@ const (
 	flagChain  = "chain"
 )
 
-// IBCTransferCmd implements the IBC transfer command.
+// IBC transfer command
 func IBCTransferCmd(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "transfer",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithLogger(os.Stdout).
-				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
+			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
-			from, err := cliCtx.GetFromAddress()
+			// get the from address
+			from, err := ctx.GetFromAddress()
 			if err != nil {
 				return err
 			}
 
+			// build the message
 			msg, err := buildMsg(from)
 			if err != nil {
 				return err
 			}
 
-			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
+			// get password
+			err = ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
+			if err != nil {
+				return err
+			}
+			return nil
 		},
 	}
 
 	cmd.Flags().String(flagTo, "", "Address to send coins")
 	cmd.Flags().String(flagAmount, "", "Amount of coins to send")
 	cmd.Flags().String(flagChain, "", "Destination chain to send coins")
-
 	return cmd
 }
 

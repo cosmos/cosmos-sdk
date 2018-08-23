@@ -1,29 +1,5 @@
 # TESTNET STATUS
 
-## *July 22, 2018, 5:30 EST* - Gaia-7001 Consensus Failure 
-
-- [Consensus Failure at Block 24570](https://github.com/cosmos/cosmos-sdk/issues/1787)
-
-
-## *July 17, 2018, 4:00 EST* - New Testnet Gaia-7001 
-
-- New testnet with fixes for the genesis file 
-- Increased max validators to 128
-
-## *July 17, 2018, 3:00 EST* - Gaia-7000 consensus failure
-
-- Misconfiguration in the genesis file led to a consensus failure
-- New genesis file for gaia-7001 will be up soon
-
-## *July 17, 2018, 2:40 EST* - Gaia-7000 is making blocks!
-
-- Gaia-7000 is live and making blocks!
-
-## *July 16, 2018, 17:00 EST* - New Testnet Gaia-7000
-
-- Gaia-7000 is up!
-- 108 validators in the genesis.json file.
-
 ## *July 2, 2018, 1:00 EST* - Gaia-6002 slashing failure
 
 - Gaia-6002 has been halted due to a slashing issue.

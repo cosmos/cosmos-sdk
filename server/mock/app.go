@@ -30,10 +30,13 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	capKeyMainStore := sdk.NewKVStoreKey("main")
 
 	// Create BaseApp.
-	baseApp := bam.NewBaseApp("kvstore", logger, db, decodeTx)
+	baseApp := bam.NewBaseApp("kvstore", nil, logger, db)
 
 	// Set mounts for BaseApp's MultiStore.
 	baseApp.MountStoresIAVL(capKeyMainStore)
+
+	// Set Tx decoder
+	baseApp.SetTxDecoder(decodeTx)
 
 	baseApp.SetInitChainer(InitChainer(capKeyMainStore))
 

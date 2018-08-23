@@ -20,6 +20,10 @@ type Keeper struct {
 	am auth.AccountMapper
 }
 
+// func Newam() Keeper {
+// 	return 
+// }
+
 // NewKeeper returns a new Keeper
 func NewKeeper(am auth.AccountMapper) Keeper {
 	return Keeper{am: am}

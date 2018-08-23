@@ -6,8 +6,6 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/params"
-
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -26,23 +24,20 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 	stake.RegisterWire(mapp.Cdc)
 	RegisterWire(mapp.Cdc)
 
-	keyGlobalParams := sdk.NewKVStoreKey("params")
 	keyStake := sdk.NewKVStoreKey("stake")
 	keyGov := sdk.NewKVStoreKey("gov")
 
-	pk := params.NewKeeper(mapp.Cdc, keyGlobalParams)
 	ck := bank.NewKeeper(mapp.AccountMapper)
 	sk := stake.NewKeeper(mapp.Cdc, keyStake, ck, mapp.RegisterCodespace(stake.DefaultCodespace))
-	keeper := NewKeeper(mapp.Cdc, keyGov, pk.Setter(), ck, sk, DefaultCodespace)
+	keeper := NewKeeper(mapp.Cdc, keyGov, ck, sk, DefaultCodespace)
 	mapp.Router().AddRoute("gov", NewHandler(keeper))
+
+	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyGov}))
 
 	mapp.SetEndBlocker(getEndBlocker(keeper))
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk))
 
-	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyGov, keyGlobalParams}))
-
-	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewInt64Coin("steak", 42)})
-
+	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewCoin("steak", 42)})
 	mock.SetGenesis(mapp, genAccs)
 
 	return mapp, keeper, sk, addrs, pubKeys, privKeys
@@ -51,7 +46,7 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 // gov and stake endblocker
 func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-		tags := EndBlocker(ctx, keeper)
+		tags, _ := EndBlocker(ctx, keeper)
 		return abci.ResponseEndBlock{
 			Tags: tags,
 		}
@@ -66,14 +61,12 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakeKeeper stake.Keeper) sdk
 		stakeGenesis := stake.DefaultGenesisState()
 		stakeGenesis.Pool.LooseTokens = sdk.NewRat(100000)
 
-		validators, err := stake.InitGenesis(ctx, stakeKeeper, stakeGenesis)
+		err := stake.InitGenesis(ctx, stakeKeeper, stakeGenesis)
 		if err != nil {
 			panic(err)
 		}
 		InitGenesis(ctx, keeper, DefaultGenesisState())
-		return abci.ResponseInitChain{
-			Validators: validators,
-		}
+		return abci.ResponseInitChain{}
 	}
 }
 

@@ -7,20 +7,19 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-
-	"github.com/gorilla/mux"
 )
 
-func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
+func registerTxRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
 	r.HandleFunc(
 		"/slashing/unrevoke",
-		unrevokeRequestHandlerFn(cdc, kb, cliCtx),
+		unrevokeRequestHandlerFn(cdc, kb, ctx),
 	).Methods("POST")
 }
 
@@ -35,7 +34,7 @@ type UnrevokeBody struct {
 	ValidatorAddr    string `json:"validator_addr"`
 }
 
-func unrevokeRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
+func unrevokeRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m UnrevokeBody
 		body, err := ioutil.ReadAll(r.Body)
@@ -71,24 +70,21 @@ func unrevokeRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.C
 			return
 		}
 
-		txCtx := authctx.TxContext{
-			Codec:         cdc,
-			ChainID:       m.ChainID,
-			AccountNumber: m.AccountNumber,
-			Sequence:      m.Sequence,
-			Gas:           m.Gas,
-		}
+		ctx = ctx.WithGas(m.Gas)
+		ctx = ctx.WithChainID(m.ChainID)
+		ctx = ctx.WithAccountNumber(m.AccountNumber)
+		ctx = ctx.WithSequence(m.Sequence)
 
 		msg := slashing.NewMsgUnrevoke(validatorAddr)
 
-		txBytes, err := txCtx.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
+		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, []sdk.Msg{msg}, cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		res, err := cliCtx.BroadcastTx(txBytes)
+		res, err := ctx.BroadcastTx(txBytes)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

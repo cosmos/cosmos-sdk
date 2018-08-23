@@ -14,15 +14,11 @@ type Coin struct {
 	Amount Int    `json:"amount"`
 }
 
-func NewCoin(denom string, amount Int) Coin {
+func NewCoin(denom string, amount int64) Coin {
 	return Coin{
 		Denom:  denom,
-		Amount: amount,
+		Amount: NewInt(amount),
 	}
-}
-
-func NewInt64Coin(denom string, amount int64) Coin {
-	return NewCoin(denom, NewInt(amount))
 }
 
 // String provides a human-readable representation of a coin

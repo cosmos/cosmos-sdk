@@ -7,8 +7,6 @@ import (
 	"fmt"
 
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/encoding/amino"
-
 	"github.com/tendermint/tendermint/libs/bech32"
 )
 
@@ -227,7 +225,7 @@ func GetAccPubKeyBech32(address string) (pk crypto.PubKey, err error) {
 		return nil, err
 	}
 
-	pk, err = cryptoAmino.PubKeyFromBytes(bz)
+	pk, err = crypto.PubKeyFromBytes(bz)
 	if err != nil {
 		return nil, err
 	}
@@ -251,7 +249,7 @@ func GetValPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
 		return nil, err
 	}
 
-	pk, err = cryptoAmino.PubKeyFromBytes(bz)
+	pk, err = crypto.PubKeyFromBytes(bz)
 	if err != nil {
 		return nil, err
 	}

@@ -6,8 +6,6 @@ import (
 	"fmt"
 
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -15,6 +13,7 @@ import (
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 const (
@@ -22,7 +21,7 @@ const (
 )
 
 var (
-	issuer = ed25519.GenPrivKey().PubKey().Address()
+	issuer = crypto.GenPrivKeyEd25519().PubKey().Address()
 )
 
 func NewCodec() *wire.Codec {
@@ -30,7 +29,6 @@ func NewCodec() *wire.Codec {
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(MsgSend{}, "example/MsgSend", nil)
 	cdc.RegisterConcrete(MsgIssue{}, "example/MsgIssue", nil)
-	cryptoAmino.RegisterAmino(cdc)
 	return cdc
 }
 
@@ -39,7 +37,7 @@ func NewApp2(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	cdc := NewCodec()
 
 	// Create the base application object.
-	app := bapp.NewBaseApp(app2Name, logger, db, tx2Decoder(cdc))
+	app := bapp.NewBaseApp(app2Name, cdc, logger, db)
 
 	// Create a key for accessing the account store.
 	keyAccount := sdk.NewKVStoreKey("acc")
@@ -181,9 +179,7 @@ type coinInfo struct {
 // Simple tx to wrap the Msg.
 type app2Tx struct {
 	sdk.Msg
-
-	PubKey    crypto.PubKey
-	Signature crypto.Signature
+	Signatures []auth.StdSignature
 }
 
 // This tx only has one Msg.
@@ -191,20 +187,8 @@ func (tx app2Tx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{tx.Msg}
 }
 
-func (tx app2Tx) GetSignature() crypto.Signature {
-	return tx.Signature
-}
-
-// Amino decode app2Tx. Capable of decoding both MsgSend and MsgIssue
-func tx2Decoder(cdc *wire.Codec) sdk.TxDecoder {
-	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
-		var tx app2Tx
-		err := cdc.UnmarshalBinary(txBytes, &tx)
-		if err != nil {
-			return nil, sdk.ErrTxDecode(err.Error())
-		}
-		return tx, nil
-	}
+func (tx app2Tx) GetSignatures() []auth.StdSignature {
+	return tx.Signatures
 }
 
 //------------------------------------------------------------------
@@ -218,22 +202,28 @@ func antehandler(ctx sdk.Context, tx sdk.Tx) (_ sdk.Context, _ sdk.Result, abort
 		return ctx, sdk.ErrTxDecode("Tx must be of format app2Tx").Result(), true
 	}
 
-	// expect only one msg and one signer in app2Tx
+	// expect only one msg in app2Tx
 	msg := tx.GetMsgs()[0]
-	signerAddr := msg.GetSigners()[0]
 
-	signBytes := msg.GetSignBytes()
+	signerAddrs := msg.GetSigners()
 
-	sig := appTx.GetSignature()
-
-	// check that submitted pubkey belongs to required address
-	if !bytes.Equal(appTx.PubKey.Address(), signerAddr) {
-		return ctx, sdk.ErrUnauthorized("Provided Pubkey does not match required address").Result(), true
+	if len(signerAddrs) != len(appTx.GetSignatures()) {
+		return ctx, sdk.ErrUnauthorized("Number of signatures do not match required amount").Result(), true
 	}
 
-	// check that signature is over expected signBytes
-	if !appTx.PubKey.VerifyBytes(signBytes, sig) {
-		return ctx, sdk.ErrUnauthorized("Signature verification failed").Result(), true
+	signBytes := msg.GetSignBytes()
+	for i, addr := range signerAddrs {
+		sig := appTx.GetSignatures()[i]
+
+		// check that submitted pubkey belongs to required address
+		if !bytes.Equal(sig.PubKey.Address(), addr) {
+			return ctx, sdk.ErrUnauthorized("Provided Pubkey does not match required address").Result(), true
+		}
+
+		// check that signature is over expected signBytes
+		if !sig.PubKey.VerifyBytes(signBytes, sig.Signature) {
+			return ctx, sdk.ErrUnauthorized("Signature verification failed").Result(), true
+		}
 	}
 
 	// authentication passed, app to continue processing by sending msg to handler

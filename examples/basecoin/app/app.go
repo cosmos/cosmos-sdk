@@ -53,7 +53,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.Ba
 	// create your application type
 	var app = &BasecoinApp{
 		cdc:        cdc,
-		BaseApp:    bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...),
+		BaseApp:    bam.NewBaseApp(appName, cdc, logger, db, baseAppOptions...),
 		keyMain:    sdk.NewKVStoreKey("main"),
 		keyAccount: sdk.NewKVStoreKey("acc"),
 		keyIBC:     sdk.NewKVStoreKey("ibc"),
@@ -85,8 +85,6 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.Ba
 	if err != nil {
 		cmn.Exit(err.Error())
 	}
-
-	app.Seal()
 
 	return app
 }

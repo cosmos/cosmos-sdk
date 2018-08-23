@@ -4,28 +4,25 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-
-	"github.com/gorilla/mux"
 )
 
 // register REST routes
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, storeName string) {
+func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, storeName string) {
 	r.HandleFunc(
 		"/accounts/{address}",
-		QueryAccountRequestHandlerFn(storeName, cdc, authcmd.GetAccountDecoder(cdc), cliCtx),
+		QueryAccountRequestHandlerFn(storeName, cdc, authcmd.GetAccountDecoder(cdc), ctx),
 	).Methods("GET")
 }
 
 // query accountREST Handler
-func QueryAccountRequestHandlerFn(
-	storeName string, cdc *wire.Codec,
-	decoder auth.AccountDecoder, cliCtx context.CLIContext,
-) http.HandlerFunc {
+func QueryAccountRequestHandlerFn(storeName string, cdc *wire.Codec, decoder auth.AccountDecoder, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32addr := vars["address"]
@@ -37,7 +34,7 @@ func QueryAccountRequestHandlerFn(
 			return
 		}
 
-		res, err := cliCtx.QueryStore(auth.AddressStoreKey(addr), storeName)
+		res, err := ctx.QueryStore(auth.AddressStoreKey(addr), storeName)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("couldn't query account. Error: %s", err.Error())))

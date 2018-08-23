@@ -2,14 +2,14 @@ package crypto
 
 import (
 	"github.com/tendermint/go-amino"
-	"github.com/tendermint/tendermint/crypto/encoding/amino"
+	tcrypto "github.com/tendermint/tendermint/crypto"
 )
 
 var cdc = amino.NewCodec()
 
 func init() {
 	RegisterAmino(cdc)
-	cryptoAmino.RegisterAmino(cdc)
+	tcrypto.RegisterAmino(cdc)
 }
 
 // RegisterAmino registers all go-crypto related types in the given (amino) codec.

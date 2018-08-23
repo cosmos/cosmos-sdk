@@ -9,11 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var (
-	priv1  = ed25519.GenPrivKey()
+	priv1  = crypto.GenPrivKeyEd25519()
 	pubKey = priv1.PubKey()
 	addr1  = sdk.AccAddress(pubKey.Address())
 

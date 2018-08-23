@@ -80,15 +80,13 @@ func (p Pool) bondedTokensToLoose(bondedTokens sdk.Rat) Pool {
 //_______________________________________________________________________
 // Inflation
 
-const precision = 10000            // increased to this precision for accuracy
+const precision = 100000000000     // increased to this precision for accuracy
 var hrsPerYrRat = sdk.NewRat(8766) // as defined by a julian year of 365.25 days
 
 // process provisions for an hour period
 func (p Pool) ProcessProvisions(params Params) Pool {
 	p.Inflation = p.NextInflation(params)
-	provisions := p.Inflation.
-		Mul(p.TokenSupply().Round(precision)).
-		Quo(hrsPerYrRat)
+	provisions := p.Inflation.Mul(p.TokenSupply()).Quo(hrsPerYrRat)
 
 	// TODO add to the fees provisions
 	p.LooseTokens = p.LooseTokens.Add(provisions)
@@ -105,10 +103,7 @@ func (p Pool) NextInflation(params Params) (inflation sdk.Rat) {
 	// 7% and 20%.
 
 	// (1 - bondedRatio/GoalBonded) * InflationRateChange
-	inflationRateChangePerYear := sdk.OneRat().
-		Sub(p.BondedRatio().Round(precision).
-			Quo(params.GoalBonded)).
-		Mul(params.InflationRateChange)
+	inflationRateChangePerYear := sdk.OneRat().Sub(p.BondedRatio().Quo(params.GoalBonded)).Mul(params.InflationRateChange)
 	inflationRateChange := inflationRateChangePerYear.Quo(hrsPerYrRat)
 
 	// increase the new annual inflation for this next cycle

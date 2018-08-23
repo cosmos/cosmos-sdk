@@ -26,7 +26,7 @@ func (keeper Keeper) update(ctx sdk.Context, val sdk.Validator, valset sdk.Valid
 		info.Power = sdk.ZeroRat()
 		info.Hash = hash
 		prefix := GetSignPrefix(p, keeper.cdc)
-		store := ctx.KVStore(keeper.key)
+		store := keeper.key.KVStore(ctx)
 		iter := sdk.KVStorePrefixIterator(store, prefix)
 		for ; iter.Valid(); iter.Next() {
 			if valset.Validator(ctx, iter.Value()) != nil {

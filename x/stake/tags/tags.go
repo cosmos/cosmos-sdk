@@ -2,7 +2,7 @@
 package tags
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -14,10 +14,10 @@ var (
 	ActionBeginRedelegation    = []byte("begin-redelegation")
 	ActionCompleteRedelegation = []byte("complete-redelegation")
 
-	Action       = sdk.TagAction
-	SrcValidator = sdk.TagSrcValidator
-	DstValidator = sdk.TagDstValidator
-	Delegator    = sdk.TagDelegator
+	Action       = types.TagAction
+	SrcValidator = types.TagSrcValidator
+	DstValidator = types.TagDstValidator
+	Delegator    = types.TagDelegator
 	Moniker      = "moniker"
-	Identity     = "identity"
+	Identity     = "Identity"
 )

@@ -35,7 +35,7 @@ func init() {
 
 func TestKeys(t *testing.T) {
 	name, password := "test", "1234567890"
-	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
+	addr, seed := CreateAddr(t, "test", password, GetKB(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -65,7 +65,7 @@ func TestKeys(t *testing.T) {
 	require.NoError(t, err, "Failed to return a correct bech32 address")
 
 	// test if created account is the correct account
-	expectedInfo, _ := GetKeyBase(t).CreateKey(newName, seed, newPassword)
+	expectedInfo, _ := GetKB(t).CreateKey(newName, seed, newPassword)
 	expectedAccount := sdk.AccAddress(expectedInfo.GetPubKey().Address().Bytes())
 	assert.Equal(t, expectedAccount.String(), addr2Bech32)
 
@@ -223,7 +223,7 @@ func TestValidators(t *testing.T) {
 
 func TestCoinSend(t *testing.T) {
 	name, password := "test", "1234567890"
-	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
+	addr, seed := CreateAddr(t, "test", password, GetKB(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -265,7 +265,7 @@ func TestCoinSend(t *testing.T) {
 
 func TestIBCTransfer(t *testing.T) {
 	name, password := "test", "1234567890"
-	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
+	addr, seed := CreateAddr(t, "test", password, GetKB(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -294,7 +294,7 @@ func TestIBCTransfer(t *testing.T) {
 
 func TestTxs(t *testing.T) {
 	name, password := "test", "1234567890"
-	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
+	addr, seed := CreateAddr(t, "test", password, GetKB(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -358,25 +358,30 @@ func TestTxs(t *testing.T) {
 }
 
 func TestValidatorsQuery(t *testing.T) {
-	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	cleanup, pks, port := InitializeTestLCD(t, 2, []sdk.AccAddress{})
 	defer cleanup()
-	require.Equal(t, 1, len(pks))
+	require.Equal(t, 2, len(pks))
 
 	validators := getValidators(t, port)
-	require.Equal(t, len(validators), 1)
+	require.Equal(t, len(validators), 2)
 
 	// make sure all the validators were found (order unknown because sorted by owner addr)
-	foundVal := false
-	pkBech := sdk.MustBech32ifyValPub(pks[0])
-	if validators[0].PubKey == pkBech {
-		foundVal = true
+	foundVal1, foundVal2 := false, false
+	pk1Bech := sdk.MustBech32ifyValPub(pks[0])
+	pk2Bech := sdk.MustBech32ifyValPub(pks[1])
+	if validators[0].PubKey == pk1Bech || validators[1].PubKey == pk1Bech {
+		foundVal1 = true
 	}
-	require.True(t, foundVal, "pkBech %v, owner %v", pkBech, validators[0].Owner)
+	if validators[0].PubKey == pk2Bech || validators[1].PubKey == pk2Bech {
+		foundVal2 = true
+	}
+	require.True(t, foundVal1, "pk1Bech %v, owner1 %v, owner2 %v", pk1Bech, validators[0].Owner, validators[1].Owner)
+	require.True(t, foundVal2, "pk2Bech %v, owner1 %v, owner2 %v", pk2Bech, validators[0].Owner, validators[1].Owner)
 }
 
 func TestBonding(t *testing.T) {
 	name, password, denom := "test", "1234567890", "steak"
-	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
+	addr, seed := CreateAddr(t, "test", password, GetKB(t))
 	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -426,7 +431,7 @@ func TestBonding(t *testing.T) {
 
 func TestSubmitProposal(t *testing.T) {
 	name, password := "test", "1234567890"
-	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
+	addr, seed := CreateAddr(t, "test", password, GetKB(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -448,7 +453,7 @@ func TestSubmitProposal(t *testing.T) {
 
 func TestDeposit(t *testing.T) {
 	name, password := "test", "1234567890"
-	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
+	addr, seed := CreateAddr(t, "test", password, GetKB(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -473,16 +478,16 @@ func TestDeposit(t *testing.T) {
 
 	// query proposal
 	proposal = getProposal(t, port, proposalID)
-	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{sdk.NewInt64Coin("steak", 10)}))
+	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{sdk.NewCoin("steak", 10)}))
 
 	// query deposit
 	deposit := getDeposit(t, port, proposalID, addr)
-	require.True(t, deposit.Amount.IsEqual(sdk.Coins{sdk.NewInt64Coin("steak", 10)}))
+	require.True(t, deposit.Amount.IsEqual(sdk.Coins{sdk.NewCoin("steak", 10)}))
 }
 
 func TestVote(t *testing.T) {
 	name, password := "test", "1234567890"
-	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
+	addr, seed := CreateAddr(t, "test", password, GetKB(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -520,14 +525,14 @@ func TestVote(t *testing.T) {
 
 func TestUnrevoke(t *testing.T) {
 	_, password := "test", "1234567890"
-	addr, _ := CreateAddr(t, "test", password, GetKeyBase(t))
+	addr, _ := CreateAddr(t, "test", password, GetKB(t))
 	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
 	// XXX: any less than this and it fails
 	tests.WaitForHeight(3, port)
-	pkString, _ := sdk.Bech32ifyValPub(pks[0])
-	signingInfo := getSigningInfo(t, port, pkString)
+
+	signingInfo := getSigningInfo(t, port, sdk.ValAddress(pks[0].Address()))
 	tests.WaitForHeight(4, port)
 	require.Equal(t, true, signingInfo.IndexOffset > 0)
 	require.Equal(t, int64(0), signingInfo.JailedUntil)
@@ -537,8 +542,8 @@ func TestUnrevoke(t *testing.T) {
 func TestProposalsQuery(t *testing.T) {
 	name, password1 := "test", "1234567890"
 	name2, password2 := "test2", "1234567890"
-	addr, seed := CreateAddr(t, "test", password1, GetKeyBase(t))
-	addr2, seed2 := CreateAddr(t, "test2", password2, GetKeyBase(t))
+	addr, seed := CreateAddr(t, "test", password1, GetKB(t))
+	addr2, seed2 := CreateAddr(t, "test2", password2, GetKB(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr, addr2})
 	defer cleanup()
 
@@ -564,16 +569,6 @@ func TestProposalsQuery(t *testing.T) {
 	resultTx = doDeposit(t, port, seed2, name2, password2, addr2, proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
-	// Only proposals #1 should be in Deposit Period
-	proposals := getProposalsFilterStatus(t, port, gov.StatusDepositPeriod)
-	require.Len(t, proposals, 1)
-	require.Equal(t, proposalID1, proposals[0].GetProposalID())
-	// Only proposals #2 and #3 should be in Voting Period
-	proposals = getProposalsFilterStatus(t, port, gov.StatusVotingPeriod)
-	require.Len(t, proposals, 2)
-	require.Equal(t, proposalID2, proposals[0].GetProposalID())
-	require.Equal(t, proposalID3, proposals[1].GetProposalID())
-
 	// Addr1 votes on proposals #2 & #3
 	resultTx = doVote(t, port, seed, name, password1, addr, proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
@@ -585,7 +580,7 @@ func TestProposalsQuery(t *testing.T) {
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Test query all proposals
-	proposals = getProposalsAll(t, port)
+	proposals := getProposalsAll(t, port)
 	require.Equal(t, proposalID1, (proposals[0]).GetProposalID())
 	require.Equal(t, proposalID2, (proposals[1]).GetProposalID())
 	require.Equal(t, proposalID3, (proposals[2]).GetProposalID())
@@ -611,17 +606,6 @@ func TestProposalsQuery(t *testing.T) {
 	// Test query voted and deposited by addr1
 	proposals = getProposalsFilterVoterDepositer(t, port, addr, addr)
 	require.Equal(t, proposalID2, (proposals[0]).GetProposalID())
-
-	// Test query votes on Proposal 2
-	votes := getVotes(t, port, proposalID2)
-	require.Len(t, votes, 1)
-	require.Equal(t, addr, votes[0].Voter)
-
-	// Test query votes on Proposal 3
-	votes = getVotes(t, port, proposalID3)
-	require.Len(t, votes, 2)
-	require.True(t, addr.String() == votes[0].Voter.String() || addr.String() == votes[1].Voter.String())
-	require.True(t, addr2.String() == votes[0].Voter.String() || addr2.String() == votes[1].Voter.String())
 }
 
 //_____________________________________________________________________________
@@ -647,8 +631,9 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.AccAddress
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
+
 	// send
-	coinbz, err := cdc.MarshalJSON(sdk.NewInt64Coin("steak", 1))
+	coinbz, err := cdc.MarshalJSON(sdk.NewCoin("steak", 1))
 	if err != nil {
 		panic(err)
 	}
@@ -692,7 +677,7 @@ func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Acc
 		"account_number":"%d",
 		"sequence": "%d",
 		"gas": "100000",
-		"src_chain_id": "%s",
+		"chain_id": "%s",
 		"amount":[
 			{
 				"denom": "%s",
@@ -700,7 +685,6 @@ func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Acc
 			}
 		]
 	}`, name, password, accnum, sequence, chainID, "steak"))
-
 	res, body := Request(t, port, "POST", fmt.Sprintf("/ibc/testchain/%s/send", receiveAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -710,8 +694,8 @@ func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Acc
 	return resultTx
 }
 
-func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.ValidatorSigningInfo {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/slashing/signing_info/%s", validatorPubKey), nil)
+func getSigningInfo(t *testing.T, port string, validatorAddr sdk.ValAddress) slashing.ValidatorSigningInfo {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/slashing/signing_info/%s", validatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var signingInfo slashing.ValidatorSigningInfo
 	err := cdc.UnmarshalJSON([]byte(body), &signingInfo)
@@ -784,7 +768,7 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 		"password": "%s",
 		"account_number": "%d",
 		"sequence": "%d",
-		"gas": "20000",
+		"gas": "10000",
 		"chain_id": "%s",
 		"delegations": [],
 		"begin_unbondings": [
@@ -886,15 +870,6 @@ func getVote(t *testing.T, port string, proposalID int64, voterAddr sdk.AccAddre
 	return vote
 }
 
-func getVotes(t *testing.T, port string, proposalID int64) []gov.Vote {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d/votes", proposalID), nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var votes []gov.Vote
-	err := cdc.UnmarshalJSON([]byte(body), &votes)
-	require.Nil(t, err)
-	return votes
-}
-
 func getProposalsAll(t *testing.T, port string) []gov.Proposal {
 	res, body := Request(t, port, "GET", "/gov/proposals", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -927,16 +902,6 @@ func getProposalsFilterVoter(t *testing.T, port string, voterAddr sdk.AccAddress
 
 func getProposalsFilterVoterDepositer(t *testing.T, port string, voterAddr, depositerAddr sdk.AccAddress) []gov.Proposal {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals?depositer=%s&voter=%s", depositerAddr, voterAddr), nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	var proposals []gov.Proposal
-	err := cdc.UnmarshalJSON([]byte(body), &proposals)
-	require.Nil(t, err)
-	return proposals
-}
-
-func getProposalsFilterStatus(t *testing.T, port string, status gov.ProposalStatus) []gov.Proposal {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals?status=%s", status), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var proposals []gov.Proposal

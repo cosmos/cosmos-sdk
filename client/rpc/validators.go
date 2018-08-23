@@ -58,9 +58,9 @@ func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error
 	}, nil
 }
 
-func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
+func getValidators(ctx context.CoreContext, height *int64) ([]byte, error) {
 	// get the node
-	node, err := cliCtx.GetNode()
+	node, err := ctx.GetNode()
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,6 @@ func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		BlockHeight: validatorsRes.BlockHeight,
 		Validators:  make([]ValidatorOutput, len(validatorsRes.Validators)),
 	}
-
 	for i := 0; i < len(validatorsRes.Validators); i++ {
 		outputValidatorsRes.Validators[i], err = bech32ValidatorOutput(validatorsRes.Validators[i])
 		if err != nil {
@@ -86,7 +85,6 @@ func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return output, nil
 }
 
@@ -106,7 +104,7 @@ func printValidators(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	output, err := getValidators(context.NewCLIContext(), height)
+	output, err := getValidators(context.NewCoreContextFromViper(), height)
 	if err != nil {
 		return err
 	}
@@ -118,25 +116,22 @@ func printValidators(cmd *cobra.Command, args []string) error {
 // REST
 
 // Validator Set at a height REST handler
-func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func ValidatorSetRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-
 		height, err := strconv.ParseInt(vars["height"], 10, 64)
 		if err != nil {
 			w.WriteHeader(400)
 			w.Write([]byte("ERROR: Couldn't parse block height. Assumed format is '/validatorsets/{height}'."))
 			return
 		}
-
-		chainHeight, err := GetChainHeight(cliCtx)
+		chainHeight, err := GetChainHeight(ctx)
 		if height > chainHeight {
 			w.WriteHeader(404)
 			w.Write([]byte("ERROR: Requested block height is bigger then the chain length."))
 			return
 		}
-
-		output, err := getValidators(cliCtx, &height)
+		output, err := getValidators(ctx, &height)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))
@@ -148,22 +143,20 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // Latest Validator Set REST handler
-func LatestValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func LatestValidatorSetRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		height, err := GetChainHeight(cliCtx)
+		height, err := GetChainHeight(ctx)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))
 			return
 		}
-
-		output, err := getValidators(cliCtx, &height)
+		output, err := getValidators(ctx, &height)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))
 			return
 		}
-
 		w.Write(output)
 	}
 }

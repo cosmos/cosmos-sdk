@@ -13,6 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
+const doNotModifyDescVal = "[do-not-modify]"
+
 // Validator defines the total amount of bond shares and their exchange rate to
 // coins. Accumulation of interest is modelled as an in increase in the
 // exchange rate, and slashing as a decrease.  When coins are delegated to this
@@ -145,34 +147,6 @@ func UnmarshalValidator(cdc *wire.Codec, ownerAddr, value []byte) (validator Val
 	}, nil
 }
 
-// HumanReadableString returns a human readable string representation of a
-// validator. An error is returned if the owner or the owner's public key
-// cannot be converted to Bech32 format.
-func (v Validator) HumanReadableString() (string, error) {
-	bechVal, err := sdk.Bech32ifyValPub(v.PubKey)
-	if err != nil {
-		return "", err
-	}
-
-	resp := "Validator \n"
-	resp += fmt.Sprintf("Owner: %s\n", v.Owner)
-	resp += fmt.Sprintf("Validator: %s\n", bechVal)
-	resp += fmt.Sprintf("Revoked: %v\n", v.Revoked)
-	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
-	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens.FloatString())
-	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.FloatString())
-	resp += fmt.Sprintf("Description: %s\n", v.Description)
-	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
-	resp += fmt.Sprintf("Proposer Reward Pool: %s\n", v.ProposerRewardPool.String())
-	resp += fmt.Sprintf("Commission: %s\n", v.Commission.String())
-	resp += fmt.Sprintf("Max Commission Rate: %s\n", v.CommissionMax.String())
-	resp += fmt.Sprintf("Commission Change Rate: %s\n", v.CommissionChangeRate.String())
-	resp += fmt.Sprintf("Commission Change Today: %s\n", v.CommissionChangeToday.String())
-	resp += fmt.Sprintf("Previous Bonded Tokens: %s\n", v.LastBondedTokens.String())
-
-	return resp, nil
-}
-
 //___________________________________________________________________
 
 // validator struct for bech output
@@ -248,9 +222,6 @@ func (v Validator) Equal(c2 Validator) bool {
 		v.LastBondedTokens.Equal(c2.LastBondedTokens)
 }
 
-// constant used in flags to indicate that description field should not be updated
-const DoNotModifyDesc = "[do-not-modify]"
-
 // Description - description fields for a validator
 type Description struct {
 	Moniker  string `json:"moniker"`  // name
@@ -272,16 +243,16 @@ func NewDescription(moniker, identity, website, details string) Description {
 // UpdateDescription updates the fields of a given description. An error is
 // returned if the resulting description contains an invalid length.
 func (d Description) UpdateDescription(d2 Description) (Description, sdk.Error) {
-	if d2.Moniker == DoNotModifyDesc {
+	if d.Moniker == doNotModifyDescVal {
 		d2.Moniker = d.Moniker
 	}
-	if d2.Identity == DoNotModifyDesc {
+	if d.Identity == doNotModifyDescVal {
 		d2.Identity = d.Identity
 	}
-	if d2.Website == DoNotModifyDesc {
+	if d.Website == doNotModifyDescVal {
 		d2.Website = d.Website
 	}
-	if d2.Details == DoNotModifyDesc {
+	if d.Details == doNotModifyDescVal {
 		d2.Details = d.Details
 	}
 
@@ -435,6 +406,32 @@ func (v Validator) GetStatus() sdk.BondStatus   { return v.Status }
 func (v Validator) GetOwner() sdk.AccAddress    { return v.Owner }
 func (v Validator) GetPubKey() crypto.PubKey    { return v.PubKey }
 func (v Validator) GetPower() sdk.Rat           { return v.BondedTokens() }
-func (v Validator) GetTokens() sdk.Rat          { return v.Tokens }
 func (v Validator) GetDelegatorShares() sdk.Rat { return v.DelegatorShares }
 func (v Validator) GetBondHeight() int64        { return v.BondHeight }
+
+// HumanReadableString returns a human readable string representation of a
+// validator. An error is returned if the owner or the owner's public key
+// cannot be converted to Bech32 format.
+func (v Validator) HumanReadableString() (string, error) {
+	bechVal, err := sdk.Bech32ifyValPub(v.PubKey)
+	if err != nil {
+		return "", err
+	}
+
+	resp := "Validator \n"
+	resp += fmt.Sprintf("Owner: %s\n", v.Owner)
+	resp += fmt.Sprintf("Validator: %s\n", bechVal)
+	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
+	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens.FloatString())
+	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.FloatString())
+	resp += fmt.Sprintf("Description: %s\n", v.Description)
+	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
+	resp += fmt.Sprintf("Proposer Reward Pool: %s\n", v.ProposerRewardPool.String())
+	resp += fmt.Sprintf("Commission: %s\n", v.Commission.String())
+	resp += fmt.Sprintf("Max Commission Rate: %s\n", v.CommissionMax.String())
+	resp += fmt.Sprintf("Commission Change Rate: %s\n", v.CommissionChangeRate.String())
+	resp += fmt.Sprintf("Commission Change Today: %s\n", v.CommissionChangeToday.String())
+	resp += fmt.Sprintf("Previous Bonded Tokens: %s\n", v.LastBondedTokens.String())
+
+	return resp, nil
+}

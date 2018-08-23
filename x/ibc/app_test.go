@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // initialize the mock application for this module
@@ -34,9 +34,9 @@ func TestIBCMsgs(t *testing.T) {
 	sourceChain := "source-chain"
 	destChain := "dest-chain"
 
-	priv1 := ed25519.GenPrivKey()
+	priv1 := crypto.GenPrivKeyEd25519()
 	addr1 := sdk.AccAddress(priv1.PubKey().Address())
-	coins := sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
+	coins := sdk.Coins{sdk.NewCoin("foocoin", 10)}
 	var emptyCoins sdk.Coins
 
 	acc := &auth.BaseAccount{

@@ -6,16 +6,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ KVStore = prefixStore{}
-
 type prefixStore struct {
-	parent KVStore
+	store  KVStore
 	prefix []byte
 }
 
 // Implements Store
 func (s prefixStore) GetStoreType() StoreType {
-	return s.parent.GetStoreType()
+	return sdk.StoreTypePrefix
 }
 
 // Implements CacheWrap
@@ -30,32 +28,27 @@ func (s prefixStore) CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap 
 
 // Implements KVStore
 func (s prefixStore) Get(key []byte) []byte {
-	return s.parent.Get(append(s.prefix, key...))
+	return s.store.Get(append(s.prefix, key...))
 }
 
 // Implements KVStore
 func (s prefixStore) Has(key []byte) bool {
-	return s.parent.Has(append(s.prefix, key...))
+	return s.store.Has(append(s.prefix, key...))
 }
 
 // Implements KVStore
 func (s prefixStore) Set(key, value []byte) {
-	s.parent.Set(append(s.prefix, key...), value)
+	s.store.Set(append(s.prefix, key...), value)
 }
 
 // Implements KVStore
 func (s prefixStore) Delete(key []byte) {
-	s.parent.Delete(append(s.prefix, key...))
+	s.store.Delete(append(s.prefix, key...))
 }
 
 // Implements KVStore
 func (s prefixStore) Prefix(prefix []byte) KVStore {
 	return prefixStore{s, prefix}
-}
-
-// Implements KVStore
-func (s prefixStore) Gas(meter GasMeter, config GasConfig) KVStore {
-	return NewGasKVStore(meter, config, s)
 }
 
 // Implements KVStore
@@ -67,7 +60,7 @@ func (s prefixStore) Iterator(start, end []byte) Iterator {
 	}
 	return prefixIterator{
 		prefix: s.prefix,
-		iter:   s.parent.Iterator(append(s.prefix, start...), end),
+		iter:   s.store.Iterator(append(s.prefix, start...), end),
 	}
 }
 
@@ -80,7 +73,7 @@ func (s prefixStore) ReverseIterator(start, end []byte) Iterator {
 	}
 	return prefixIterator{
 		prefix: s.prefix,
-		iter:   s.parent.ReverseIterator(start, end),
+		iter:   s.store.ReverseIterator(start, end),
 	}
 }
 

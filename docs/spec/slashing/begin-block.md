@@ -76,7 +76,7 @@ This ensures that offending validators are punished the same amount whether they
 act as a single validator with X stake or as N validators with collectively X
 stake.
 
-Double signature slashes are capped by the slashing period as described in [state-machine.md](state-machine.md).
+The amount slashed for all double signature infractions committed within a single slashing period is capped as described in [state-machine.md](state-machine.md).
 
 ## Uptime tracking
 
@@ -117,4 +117,4 @@ for val in block.Validators:
   SigningInfo.Set(val.Address, signInfo)
 ```
 
-Downtime slashes are *not* capped by the slashing period, although they do reset it (since the validator is unbonded).
+The amount slashed for downtime slashes is *not* capped by the slashing period in which they are committed, although they do reset it (since the validator is unbonded).

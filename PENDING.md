@@ -56,6 +56,7 @@ IMPROVEMENTS
 
 * SDK
     * [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.
+    * [cli] \#1632 Add integration tests to ensure `basecoind init && basecoind` start sequences run successfully for both `democoin` and `basecoin` examples.
 
 * Tendermint
 

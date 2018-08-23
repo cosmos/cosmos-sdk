@@ -55,7 +55,7 @@ gaiacli keys show <account_name>
 View the validator operator's address via:
 
 ```shell
-gaiacli keys show-validator <account_name>
+gaiacli keys show <account_name> --bech=val
 ```
 
 You can see all your available keys by typing:

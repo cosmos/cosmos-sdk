@@ -63,7 +63,7 @@ jobs:
             export PATH="$GOBIN:$PATH"
             make test_lint
 
-  test_cli:
+  integration_tests:
     <<: *defaults
     parallelism: 1
     steps:
@@ -80,21 +80,6 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make test_cli
-
-  test_examples:
-    <<: *defaults
-    parallelism: 1
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - restore_cache:
-          key: v1-pkg-cache
-      - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          name: Test examples
-          command: |
-            export PATH="$GOBIN:$PATH"
             make test_examples
 
   test_sim_modules:
@@ -236,7 +221,7 @@ workflows:
       - lint:
           requires:
             - setup_dependencies
-      - test_cli:
+      - integration_tests:
           requires:
             - setup_dependencies
       - test_sim_modules:

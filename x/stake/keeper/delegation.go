@@ -221,11 +221,11 @@ func (k Keeper) Delegate(ctx sdk.Context, delegatorAddr sdk.AccAddress, bondAmt 
 	validator types.Validator, subtractAccount bool) (newShares sdk.Dec, err sdk.Error) {
 
 	// Get or create the delegator delegation
-	delegation, found := k.GetDelegation(ctx, delegatorAddr, validator.Owner)
+	delegation, found := k.GetDelegation(ctx, delegatorAddr, validator.Operator)
 	if !found {
 		delegation = types.Delegation{
 			DelegatorAddr: delegatorAddr,
-			ValidatorAddr: validator.Owner,
+			ValidatorAddr: validator.Operator,
 			Shares:        sdk.ZeroDec(),
 		}
 	}
@@ -282,10 +282,10 @@ func (k Keeper) unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddr
 	// remove the delegation
 	if delegation.Shares.IsZero() {
 
-		// if the delegation is the owner of the validator then
-		// trigger a revoke validator
-		if bytes.Equal(delegation.DelegatorAddr, validator.Owner) && validator.Revoked == false {
-			validator.Revoked = true
+		// if the delegation is the operator of the validator then
+		// trigger a jail validator
+		if bytes.Equal(delegation.DelegatorAddr, validator.Operator) && validator.Jailed == false {
+			validator.Jailed = true
 		}
 		k.RemoveDelegation(ctx, delegation)
 	} else {
@@ -303,7 +303,7 @@ func (k Keeper) unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddr
 	// update then remove validator if necessary
 	validator = k.UpdateValidator(ctx, validator)
 	if validator.DelegatorShares.IsZero() {
-		k.RemoveValidator(ctx, validator.Owner)
+		k.RemoveValidator(ctx, validator.Operator)
 	}
 
 	return

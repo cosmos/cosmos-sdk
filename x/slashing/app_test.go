@@ -107,15 +107,15 @@ func TestSlashingMsgs(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 
 	validator := checkValidator(t, mapp, stakeKeeper, addr1, true)
-	require.Equal(t, addr1, validator.Owner)
+	require.Equal(t, addr1, validator.Operator)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.DecEq(t, sdk.NewDec(10), validator.BondedTokens()))
-	unrevokeMsg := MsgUnrevoke{ValidatorAddr: sdk.AccAddress(validator.PubKey.Address())}
+	unjailMsg := MsgUnjail{ValidatorAddr: sdk.AccAddress(validator.PubKey.Address())}
 
 	// no signing info yet
 	checkValidatorSigningInfo(t, mapp, keeper, sdk.ValAddress(addr1), false)
 
-	// unrevoke should fail with unknown validator
-	res := mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{unrevokeMsg}, []int64{0}, []int64{1}, false, priv1)
-	require.Equal(t, sdk.ToABCICode(DefaultCodespace, CodeValidatorNotRevoked), res.Code)
+	// unjail should fail with unknown validator
+	res := mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{unjailMsg}, []int64{0}, []int64{1}, false, priv1)
+	require.Equal(t, sdk.ToABCICode(DefaultCodespace, CodeValidatorNotJailed), res.Code)
 }

@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/spf13/pflag"
@@ -32,6 +33,7 @@ var (
 type GenesisState struct {
 	Accounts  []GenesisAccount   `json:"accounts"`
 	StakeData stake.GenesisState `json:"stake"`
+	GovData   gov.GenesisState   `json:"gov"`
 }
 
 // GenesisAccount doesn't need pubkey or sequence
@@ -202,8 +204,8 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 
 			// create the self-delegation from the issuedDelShares
 			delegation := stake.Delegation{
-				DelegatorAddr: validator.Owner,
-				ValidatorAddr: validator.Owner,
+				DelegatorAddr: validator.Operator,
+				ValidatorAddr: validator.Operator,
 				Shares:        issuedDelShares,
 				Height:        0,
 			}
@@ -216,6 +218,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 	genesisState = GenesisState{
 		Accounts:  genaccs,
 		StakeData: stakeData,
+		GovData:   gov.DefaultGenesisState(),
 	}
 	return
 }

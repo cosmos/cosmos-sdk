@@ -19,7 +19,7 @@ func (v Validator) GetStatus() sdk.BondStatus {
 }
 
 // Implements sdk.Validator
-func (v Validator) GetOwner() sdk.AccAddress {
+func (v Validator) GetOperator() sdk.AccAddress {
 	return v.Address
 }
 
@@ -44,7 +44,7 @@ func (v Validator) GetDelegatorShares() sdk.Dec {
 }
 
 // Implements sdk.Validator
-func (v Validator) GetRevoked() bool {
+func (v Validator) GetJailed() bool {
 	return false
 }
 
@@ -127,11 +127,11 @@ func (vs *ValidatorSet) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int6
 }
 
 // Implements sdk.ValidatorSet
-func (vs *ValidatorSet) Revoke(ctx sdk.Context, pubkey crypto.PubKey) {
+func (vs *ValidatorSet) Jail(ctx sdk.Context, pubkey crypto.PubKey) {
 	panic("not implemented")
 }
 
 // Implements sdk.ValidatorSet
-func (vs *ValidatorSet) Unrevoke(ctx sdk.Context, pubkey crypto.PubKey) {
+func (vs *ValidatorSet) Unjail(ctx sdk.Context, pubkey crypto.PubKey) {
 	panic("not implemented")
 }

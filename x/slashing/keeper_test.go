@@ -37,18 +37,18 @@ func TestHandleDoubleSign(t *testing.T) {
 	keeper.handleValidatorSignature(ctx, val.Address(), amtInt, true)
 
 	// double sign less than max age
-	keeper.handleDoubleSign(ctx, val, 0, time.Unix(0, 0), amtInt)
+	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
 
-	// should be revoked
-	require.True(t, sk.Validator(ctx, addr).GetRevoked())
-	// unrevoke to measure power
-	sk.Unrevoke(ctx, val)
+	// should be jailed
+	require.True(t, sk.Validator(ctx, addr).GetJailed())
+	// unjail to measure power
+	sk.Unjail(ctx, val)
 	// power should be reduced
 	require.Equal(t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))), sk.Validator(ctx, addr).GetPower())
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(keeper.MaxEvidenceAge(ctx))})
 
 	// double sign past max age
-	keeper.handleDoubleSign(ctx, val, 0, time.Unix(0, 0), amtInt)
+	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
 	require.Equal(t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))), sk.Validator(ctx, addr).GetPower())
 }
 
@@ -112,17 +112,17 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)-1, info.SignedBlocksCounter)
 
-	// validator should have been revoked
+	// validator should have been jailed
 	validator, _ = sk.GetValidatorByPubKey(ctx, val)
 	require.Equal(t, sdk.Unbonded, validator.GetStatus())
 
 	// unrevocation should fail prior to jail expiration
-	got = slh(ctx, NewMsgUnrevoke(addr))
+	got = slh(ctx, NewMsgUnjail(addr))
 	require.False(t, got.IsOK())
 
 	// unrevocation should succeed after jail expiration
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(keeper.DowntimeUnbondDuration(ctx))})
-	got = slh(ctx, NewMsgUnrevoke(addr))
+	got = slh(ctx, NewMsgUnjail(addr))
 	require.True(t, got.IsOK())
 
 	// validator should be rebonded now
@@ -140,7 +140,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, height, info.StartHeight)
 	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)-1, info.SignedBlocksCounter)
 
-	// validator should not be immediately revoked again
+	// validator should not be immediately jailed again
 	height++
 	ctx = ctx.WithBlockHeight(height)
 	keeper.handleValidatorSignature(ctx, val.Address(), amtInt, false)
@@ -154,7 +154,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 		keeper.handleValidatorSignature(ctx, val.Address(), amtInt, false)
 	}
 
-	// validator should be revoked again after 500 unsigned blocks
+	// validator should be jailed again after 500 unsigned blocks
 	nextHeight = height + keeper.MinSignedPerWindow(ctx) + 1
 	for ; height <= nextHeight; height++ {
 		ctx = ctx.WithBlockHeight(height)
@@ -166,7 +166,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 // Test a new validator entering the validator set
 // Ensure that SigningInfo.StartHeight is set correctly
-// and that they are not immediately revoked
+// and that they are not immediately jailed
 func TestHandleNewValidator(t *testing.T) {
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t)
@@ -194,16 +194,16 @@ func TestHandleNewValidator(t *testing.T) {
 	require.Equal(t, int64(1), info.SignedBlocksCounter)
 	require.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
 
-	// validator should be bonded still, should not have been revoked or slashed
+	// validator should be bonded still, should not have been jailed or slashed
 	validator, _ := sk.GetValidatorByPubKey(ctx, val)
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 	pool := sk.GetPool(ctx)
 	require.Equal(t, int64(100), pool.BondedTokens.RoundInt64())
 }
 
-// Test a revoked validator being "down" twice
+// Test a jailed validator being "down" twice
 // Ensure that they're only slashed once
-func TestHandleAlreadyRevoked(t *testing.T) {
+func TestHandleAlreadyJailed(t *testing.T) {
 
 	// initial setup
 	ctx, _, sk, _, keeper := createTestInput(t)
@@ -228,7 +228,7 @@ func TestHandleAlreadyRevoked(t *testing.T) {
 		keeper.handleValidatorSignature(ctx, val.Address(), amtInt, false)
 	}
 
-	// validator should have been revoked and slashed
+	// validator should have been jailed and slashed
 	validator, _ := sk.GetValidatorByPubKey(ctx, val)
 	require.Equal(t, sdk.Unbonded, validator.GetStatus())
 

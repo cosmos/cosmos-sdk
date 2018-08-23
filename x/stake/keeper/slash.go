@@ -43,7 +43,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 			pubkey.Address()))
 		return
 	}
-	ownerAddress := validator.GetOwner()
+	operatorAddress := validator.GetOperator()
 
 	// Track remaining slash amount for the validator
 	// This will decrease when we slash unbondings and
@@ -68,7 +68,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	case infractionHeight < ctx.BlockHeight():
 
 		// Iterate through unbonding delegations from slashed validator
-		unbondingDelegations := k.GetUnbondingDelegationsFromValidator(ctx, ownerAddress)
+		unbondingDelegations := k.GetUnbondingDelegationsFromValidator(ctx, operatorAddress)
 		for _, unbondingDelegation := range unbondingDelegations {
 			amountSlashed := k.slashUnbondingDelegation(ctx, unbondingDelegation, infractionHeight, slashFactor)
 			if amountSlashed.IsZero() {
@@ -78,7 +78,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 		}
 
 		// Iterate through redelegations from slashed validator
-		redelegations := k.GetRedelegationsFromValidator(ctx, ownerAddress)
+		redelegations := k.GetRedelegationsFromValidator(ctx, operatorAddress)
 		for _, redelegation := range redelegations {
 			amountSlashed := k.slashRedelegation(ctx, validator, redelegation, infractionHeight, slashFactor)
 			if amountSlashed.IsZero() {
@@ -103,7 +103,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	validator = k.UpdateValidator(ctx, validator)
 	// remove validator if it has been reduced to zero shares
 	if validator.Tokens.IsZero() {
-		k.RemoveValidator(ctx, validator.Owner)
+		k.RemoveValidator(ctx, validator.Operator)
 	}
 
 	// Log that a slash occurred!
@@ -115,31 +115,31 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	return
 }
 
-// revoke a validator
-func (k Keeper) Revoke(ctx sdk.Context, pubkey crypto.PubKey) {
-	k.setRevoked(ctx, pubkey, true)
+// jail a validator
+func (k Keeper) Jail(ctx sdk.Context, pubkey crypto.PubKey) {
+	k.setJailed(ctx, pubkey, true)
 	logger := ctx.Logger().With("module", "x/stake")
-	logger.Info(fmt.Sprintf("Validator %s revoked", pubkey.Address()))
+	logger.Info(fmt.Sprintf("Validator %s jailed", pubkey.Address()))
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 	return
 }
 
-// unrevoke a validator
-func (k Keeper) Unrevoke(ctx sdk.Context, pubkey crypto.PubKey) {
-	k.setRevoked(ctx, pubkey, false)
+// unjail a validator
+func (k Keeper) Unjail(ctx sdk.Context, pubkey crypto.PubKey) {
+	k.setJailed(ctx, pubkey, false)
 	logger := ctx.Logger().With("module", "x/stake")
-	logger.Info(fmt.Sprintf("Validator %s unrevoked", pubkey.Address()))
+	logger.Info(fmt.Sprintf("Validator %s unjailed", pubkey.Address()))
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 	return
 }
 
-// set the revoked flag on a validator
-func (k Keeper) setRevoked(ctx sdk.Context, pubkey crypto.PubKey, revoked bool) {
+// set the jailed flag on a validator
+func (k Keeper) setJailed(ctx sdk.Context, pubkey crypto.PubKey, jailed bool) {
 	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
-		panic(fmt.Errorf("Validator with pubkey %s not found, cannot set revoked to %v", pubkey, revoked))
+		panic(fmt.Errorf("Validator with pubkey %s not found, cannot set jailed to %v", pubkey, jailed))
 	}
-	validator.Revoked = revoked
+	validator.Jailed = jailed
 	k.UpdateValidator(ctx, validator) // update validator, possibly unbonding or bonding it
 	return
 }

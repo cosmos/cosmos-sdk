@@ -68,6 +68,18 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Cod
 		validatorHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
+	// Get the current state of the staking pool
+	r.HandleFunc(
+		"/stake/pool",
+		poolHandlerFn(cliCtx, cdc),
+	).Methods("GET")
+
+	// Get the current staking parameter values
+	r.HandleFunc(
+		"/stake/parameters",
+		paramsHandlerFn(cliCtx, cdc),
+	).Methods("GET")
+
 }
 
 // already resolve the rational shares to not handle this in the client
@@ -114,7 +126,7 @@ func delegatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 		}
 
 		for _, validator := range validators {
-			validatorAddr = validator.Owner
+			validatorAddr = validator.Operator
 
 			// Delegations
 			delegations, statusCode, errMsg, err := getDelegatorDelegations(cliCtx, cdc, delegatorAddr, validatorAddr)
@@ -400,7 +412,7 @@ func delegatorValidatorsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) ht
 
 		for _, validator := range validators {
 			// get all transactions from the delegator to val and append
-			validatorAccAddr = validator.Owner
+			validatorAccAddr = validator.Operator
 
 			validator, statusCode, errMsg, errRes := getDelegatorValidator(cliCtx, cdc, delegatorAddr, validatorAccAddr)
 			if errRes != nil {
@@ -551,6 +563,66 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
+		w.Write(output)
+	}
+}
+
+// HTTP request handler to query the pool information
+func poolHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		key := stake.PoolKey
+
+		res, err := cliCtx.QueryStore(key, storeName)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("couldn't query pool. Error: %s", err.Error())))
+			return
+		}
+
+		pool, err := types.UnmarshalPool(cdc, res)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		output, err := cdc.MarshalJSON(pool)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		w.Write(output)
+	}
+}
+
+// HTTP request handler to query the staking params values
+func paramsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		key := stake.ParamKey
+
+		res, err := cliCtx.QueryStore(key, storeName)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("couldn't query parameters. Error: %s", err.Error())))
+			return
+		}
+
+		params, err := types.UnmarshalParams(cdc, res)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		output, err := cdc.MarshalJSON(params)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
 		w.Write(output)
 	}
 }

@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestMsgUnrevokeGetSignBytes(t *testing.T) {
+func TestMsgUnjailGetSignBytes(t *testing.T) {
 	addr := sdk.AccAddress("abcd")
-	msg := NewMsgUnrevoke(sdk.ValAddress(addr))
+	msg := NewMsgUnjail(sdk.ValAddress(addr))
 	bytes := msg.GetSignBytes()
 	require.Equal(t, string(bytes), `{"address":"cosmosvaladdr1v93xxeqamr0mv"}`)
 }

@@ -419,7 +419,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	require.False(t, tallyResults.Equals(EmptyTallyResult()))
 }
 
-func TestTallyRevokedValidator(t *testing.T) {
+func TestTallyJailedValidator(t *testing.T) {
 	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
@@ -440,7 +440,7 @@ func TestTallyRevokedValidator(t *testing.T) {
 
 	val2, found := sk.GetValidator(ctx, sdk.ValAddress(addrs[1]))
 	require.True(t, found)
-	sk.Revoke(ctx, val2.PubKey)
+	sk.Jail(ctx, val2.PubKey)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()

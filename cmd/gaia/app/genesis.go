@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/spf13/pflag"
@@ -32,6 +33,7 @@ var (
 type GenesisState struct {
 	Accounts  []GenesisAccount   `json:"accounts"`
 	StakeData stake.GenesisState `json:"stake"`
+	GovData   gov.GenesisState   `json:"gov"`
 }
 
 // GenesisAccount doesn't need pubkey or sequence
@@ -140,7 +142,7 @@ func GaiaAppGenTxNF(cdc *wire.Codec, pk crypto.PubKey, addr sdk.AccAddress, name
 	gaiaGenTx := GaiaGenTx{
 		Name:    name,
 		Address: addr,
-		PubKey:  sdk.MustBech32ifyAccPub(pk),
+		PubKey:  sdk.MustBech32ifyValPub(pk),
 	}
 	bz, err = wire.MarshalJSONIndent(cdc, gaiaGenTx)
 	if err != nil {
@@ -191,7 +193,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		if len(genTx.Name) > 0 {
 			desc := stake.NewDescription(genTx.Name, "", "", "")
 			validator := stake.NewValidator(
-				sdk.ValAddress(genTx.Address), sdk.MustGetConsPubKeyBech32(genTx.PubKey), desc,
+				sdk.ValAddress(genTx.Address), sdk.MustGetValPubKeyBech32(genTx.PubKey), desc,
 			)
 
 			stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDec(freeFermionVal)) // increase the supply
@@ -217,6 +219,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 	genesisState = GenesisState{
 		Accounts:  genaccs,
 		StakeData: stakeData,
+		GovData:   gov.DefaultGenesisState(),
 	}
 	return
 }

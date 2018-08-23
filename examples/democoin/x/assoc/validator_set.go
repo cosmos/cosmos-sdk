@@ -93,6 +93,7 @@ func (valset ValidatorSet) Dissociate(ctx sdk.Context, base sdk.ValAddress, asso
 func (valset ValidatorSet) Associations(ctx sdk.Context, base sdk.ValAddress) (res []sdk.ValAddress) {
 	res = make([]sdk.ValAddress, valset.maxAssoc)
 	iter := sdk.KVStorePrefixIterator(valset.store, GetAssocPrefix(base))
+	defer iter.Close()
 	i := 0
 	for ; iter.Valid(); iter.Next() {
 		key := iter.Key()

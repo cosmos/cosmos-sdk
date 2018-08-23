@@ -62,18 +62,10 @@ func main() {
 			ibccmd.IBCRelayCmd(cdc),
 		)...)
 
-	advancedCmd := &cobra.Command{
-		Use:   "advanced",
-		Short: "Advanced subcommands",
-	}
-
-	advancedCmd.AddCommand(
+	rootCmd.AddCommand(
 		tendermintCmd,
 		ibcCmd,
 		lcd.ServeCommand(cdc),
-	)
-	rootCmd.AddCommand(
-		advancedCmd,
 		client.LineBreak,
 	)
 
@@ -103,7 +95,7 @@ func main() {
 			stakecmd.GetCmdDelegate(cdc),
 			stakecmd.GetCmdUnbond("stake", cdc),
 			stakecmd.GetCmdRedelegate("stake", cdc),
-			slashingcmd.GetCmdUnrevoke(cdc),
+			slashingcmd.GetCmdUnjail(cdc),
 		)...)
 	rootCmd.AddCommand(
 		stakeCmd,

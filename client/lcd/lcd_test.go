@@ -62,7 +62,7 @@ func TestKeys(t *testing.T) {
 	err = wire.Cdc.UnmarshalJSON([]byte(body), &resp)
 	require.Nil(t, err, body)
 
-	addr2Bech32 := resp.Address.String()
+	addr2Bech32 := resp.Address
 	_, err = sdk.AccAddressFromBech32(addr2Bech32)
 	require.NoError(t, err, "Failed to return a correct bech32 address")
 
@@ -81,9 +81,9 @@ func TestKeys(t *testing.T) {
 	addrBech32 := addr.String()
 
 	require.Equal(t, name, m[0].Name, "Did not serve keys name correctly")
-	require.Equal(t, addrBech32, m[0].Address.String(), "Did not serve keys Address correctly")
+	require.Equal(t, addrBech32, m[0].Address, "Did not serve keys Address correctly")
 	require.Equal(t, newName, m[1].Name, "Did not serve keys name correctly")
-	require.Equal(t, addr2Bech32, m[1].Address.String(), "Did not serve keys Address correctly")
+	require.Equal(t, addr2Bech32, m[1].Address, "Did not serve keys Address correctly")
 
 	// select key
 	keyEndpoint := fmt.Sprintf("/keys/%s", newName)
@@ -94,7 +94,7 @@ func TestKeys(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, newName, m2.Name, "Did not serve keys name correctly")
-	require.Equal(t, addr2Bech32, m2.Address.String(), "Did not serve keys Address correctly")
+	require.Equal(t, addr2Bech32, m2.Address, "Did not serve keys Address correctly")
 
 	// update key
 	jsonStr = []byte(fmt.Sprintf(`{
@@ -595,7 +595,7 @@ func TestVote(t *testing.T) {
 	require.Equal(t, gov.OptionYes, vote.Option)
 }
 
-func TestUnrevoke(t *testing.T) {
+func TestUnjail(t *testing.T) {
 	_, password := "test", "1234567890"
 	addr, _ := CreateAddr(t, "test", password, GetKeyBase(t))
 	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})

@@ -77,7 +77,7 @@ func TestBeginBlocker(t *testing.T) {
 		BeginBlocker(ctx, req, keeper)
 	}
 
-	// validator should be revoked
+	// validator should be jailed
 	validator, found := sk.GetValidatorByPubKey(ctx, pk)
 	require.True(t, found)
 	require.Equal(t, sdk.Unbonded, validator.GetStatus())

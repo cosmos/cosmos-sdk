@@ -205,7 +205,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 	pool := k.GetPool(ctx)
 	oldValidator, oldFound := k.GetValidator(ctx, validator.Operator)
 
-	validator = k.updateForRevoking(ctx, oldFound, oldValidator, validator)
+	validator = k.updateForJailing(ctx, oldFound, oldValidator, validator)
 	powerIncreasing := k.getPowerIncreasing(ctx, oldFound, oldValidator, validator)
 	validator.BondHeight, validator.BondIntraTxCounter = k.bondIncrement(ctx, oldFound, oldValidator, validator)
 	valPower := k.updateValidatorPower(ctx, oldFound, oldValidator, validator, pool)
@@ -216,7 +216,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 	// perform the following:
 	// a) update Tendermint
 	// b) check if the cliff validator needs to be updated
-	case powerIncreasing && !validator.Revoked &&
+	case powerIncreasing && !validator.Jailed &&
 		(oldFound && oldValidator.Status == sdk.Bonded):
 
 		bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
@@ -293,8 +293,8 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 			panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
 		}
 
-		if currVal.Status != sdk.Bonded || currVal.Revoked {
-			panic(fmt.Sprintf("unexpected revoked or unbonded validator for address: %s\n", ownerAddr))
+		if currVal.Status != sdk.Bonded || currVal.Jailed {
+			panic(fmt.Sprintf("unexpected jailed or unbonded validator for address: %s\n", ownerAddr))
 		}
 
 		newCliffVal = currVal
@@ -319,11 +319,11 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 	}
 }
 
-func (k Keeper) updateForRevoking(ctx sdk.Context, oldFound bool, oldValidator, newValidator types.Validator) types.Validator {
-	if newValidator.Revoked && oldFound && oldValidator.Status == sdk.Bonded {
+func (k Keeper) updateForJailing(ctx sdk.Context, oldFound bool, oldValidator, newValidator types.Validator) types.Validator {
+	if newValidator.Jailed && oldFound && oldValidator.Status == sdk.Bonded {
 		newValidator = k.unbondValidator(ctx, newValidator)
 
-		// need to also clear the cliff validator spot because the revoke has
+		// need to also clear the cliff validator spot because the jail has
 		// opened up a new spot which will be filled when
 		// updateValidatorsBonded is called
 		k.clearCliffValidator(ctx)
@@ -417,7 +417,7 @@ func (k Keeper) UpdateBondedValidators(
 		}
 
 		// increment bondedValidatorsCount / get the validator to bond
-		if !validator.Revoked {
+		if !validator.Jailed {
 			if validator.Status != sdk.Bonded {
 				validatorToBond = validator
 				if newValidatorBonded {
@@ -529,11 +529,11 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 			validator = k.bondValidator(ctx, validator)
 		}
 
-		if validator.Revoked {
+		if validator.Jailed {
 			// we should no longer consider jailed validators as they are ranked
 			// lower than any non-jailed/bonded validators
 			if validator.Status == sdk.Bonded {
-				panic(fmt.Sprintf("revoked validator cannot be bonded for address: %s\n", ownerAddr))
+				panic(fmt.Sprintf("jailed validator cannot be bonded for address: %s\n", ownerAddr))
 			}
 
 			break

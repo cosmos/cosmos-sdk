@@ -14,12 +14,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// GetCmdUnrevoke implements the create unrevoke validator command.
-func GetCmdUnrevoke(cdc *wire.Codec) *cobra.Command {
+// GetCmdUnjail implements the create unjail validator command.
+func GetCmdUnjail(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unrevoke",
+		Use:   "unjail",
 		Args:  cobra.ExactArgs(0),
-		Short: "unrevoke validator previously revoked for downtime",
+		Short: "unjail validator previously jailed for downtime",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
@@ -27,12 +27,12 @@ func GetCmdUnrevoke(cdc *wire.Codec) *cobra.Command {
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			validatorAddr, err := cliCtx.GetFromAddress()
+			valAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
 
-			msg := slashing.NewMsgUnrevoke(sdk.ValAddress(validatorAddr))
+			msg := slashing.NewMsgUnjail(sdk.ValAddress(valAddr))
 
 			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},

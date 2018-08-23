@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -29,17 +30,6 @@ const (
 	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
 	Bech32PrefixConsPub = "cosmosconspub"
 )
-
-// Address defines an interface various implementations must implement
-type Address interface {
-	Marshal() ([]byte, error)
-	Unmarshal(data []byte) error
-	MarshalJSON() ([]byte, error)
-	UnmarshalJSON(data []byte) error
-	Bytes() []byte
-	String() string
-	Format(s fmt.State, verb rune)
-}
 
 // ----------------------------------------------------------------------------
 // account
@@ -71,6 +61,25 @@ func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 	}
 
 	return AccAddress(bz), nil
+}
+
+// Returns boolean for whether two AccAddresses are Equal
+func (aa AccAddress) Equals(aa2 AccAddress) bool {
+	if aa.Empty() && aa2.Empty() {
+		return true
+	}
+
+	return bytes.Compare(aa.Bytes(), aa2.Bytes()) == 0
+}
+
+// Returns boolean for whether an AccAddress is empty
+func (aa AccAddress) Empty() bool {
+	if aa == nil {
+		return true
+	}
+
+	aa2 := AccAddress{}
+	return bytes.Compare(aa.Bytes(), aa2.Bytes()) == 0
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf
@@ -167,6 +176,25 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 	return ValAddress(bz), nil
 }
 
+// Returns boolean for whether two ValAddresses are Equal
+func (va ValAddress) Equals(va2 ValAddress) bool {
+	if va.Empty() && va2.Empty() {
+		return true
+	}
+
+	return bytes.Compare(va.Bytes(), va2.Bytes()) == 0
+}
+
+// Returns boolean for whether an AccAddress is empty
+func (va ValAddress) Empty() bool {
+	if va == nil {
+		return true
+	}
+
+	va2 := ValAddress{}
+	return bytes.Compare(va.Bytes(), va2.Bytes()) == 0
+}
+
 // Marshal returns the raw address bytes. It is needed for protobuf
 // compatibility.
 func (va ValAddress) Marshal() ([]byte, error) {
@@ -260,6 +288,25 @@ func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 	}
 
 	return ConsAddress(bz), nil
+}
+
+// Returns boolean for whether two ConsAddress are Equal
+func (ca ConsAddress) Equals(ca2 ConsAddress) bool {
+	if ca.Empty() && ca2.Empty() {
+		return true
+	}
+
+	return bytes.Compare(ca.Bytes(), ca2.Bytes()) == 0
+}
+
+// Returns boolean for whether an ConsAddress is empty
+func (ca ConsAddress) Empty() bool {
+	if ca == nil {
+		return true
+	}
+
+	ca2 := ConsAddress{}
+	return bytes.Compare(ca.Bytes(), ca2.Bytes()) == 0
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf

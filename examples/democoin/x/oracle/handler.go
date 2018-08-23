@@ -28,6 +28,7 @@ func (keeper Keeper) update(ctx sdk.Context, val sdk.Validator, valset sdk.Valid
 		prefix := GetSignPrefix(p, keeper.cdc)
 		store := ctx.KVStore(keeper.key)
 		iter := sdk.KVStorePrefixIterator(store, prefix)
+		defer iter.Close()
 		for ; iter.Valid(); iter.Next() {
 			if valset.Validator(ctx, iter.Value()) != nil {
 				store.Delete(iter.Key())

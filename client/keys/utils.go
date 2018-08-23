@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
@@ -99,11 +99,11 @@ func SetKeyBase(kb keys.Keybase) {
 
 // used for outputting keys.Info over REST
 type KeyOutput struct {
-	Name    string      `json:"name"`
-	Type    string      `json:"type"`
-	Address sdk.Address `json:"address"`
-	PubKey  string      `json:"pub_key"`
-	Seed    string      `json:"seed,omitempty"`
+	Name    string `json:"name"`
+	Type    string `json:"type"`
+	Address string `json:"address"`
+	PubKey  string `json:"pub_key"`
+	Seed    string `json:"seed,omitempty"`
 }
 
 // create a list of KeyOutput in bech32 format
@@ -130,7 +130,25 @@ func Bech32KeyOutput(info keys.Info) (KeyOutput, error) {
 	return KeyOutput{
 		Name:    info.GetName(),
 		Type:    info.GetType().String(),
-		Address: &accAddr,
+		Address: accAddr.String(),
+		PubKey:  bechPubKey,
+	}, nil
+}
+
+// Bech32ConsKeyOutput returns key output for a consensus node's key
+// information.
+func Bech32ConsKeyOutput(keyInfo keys.Info) (KeyOutput, error) {
+	consAddr := sdk.ConsAddress(keyInfo.GetPubKey().Address().Bytes())
+
+	bechPubKey, err := sdk.Bech32ifyConsPub(keyInfo.GetPubKey())
+	if err != nil {
+		return KeyOutput{}, err
+	}
+
+	return KeyOutput{
+		Name:    keyInfo.GetName(),
+		Type:    keyInfo.GetType().String(),
+		Address: consAddr.String(),
 		PubKey:  bechPubKey,
 	}, nil
 }
@@ -147,7 +165,7 @@ func Bech32ValKeyOutput(keyInfo keys.Info) (KeyOutput, error) {
 	return KeyOutput{
 		Name:    keyInfo.GetName(),
 		Type:    keyInfo.GetType().String(),
-		Address: &valAddr,
+		Address: valAddr.String(),
 		PubKey:  bechPubKey,
 	}, nil
 }
@@ -194,4 +212,22 @@ func printInfos(infos []keys.Info) {
 
 func printKeyOutput(ko KeyOutput) {
 	fmt.Printf("%s\t%s\t%s\t%s\n", ko.Name, ko.Type, ko.Address, ko.PubKey)
+}
+
+func printKeyAddress(info keys.Info, bechKeyOut bechKeyOutFn) {
+	ko, err := bechKeyOut(info)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(ko.Address)
+}
+
+func printPubKey(info keys.Info, bechKeyOut bechKeyOutFn) {
+	ko, err := bechKeyOut(info)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(ko.PubKey)
 }

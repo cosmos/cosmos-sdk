@@ -284,9 +284,9 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 	if delegation.Shares.IsZero() {
 
 		// if the delegation is the operator of the validator then
-		// trigger a revoke validator
-		if bytes.Equal(delegation.DelegatorAddr, validator.Operator) && validator.Revoked == false {
-			validator.Revoked = true
+		// trigger a jail validator
+		if bytes.Equal(delegation.DelegatorAddr, validator.Operator) && validator.Jailed == false {
+			validator.Jailed = true
 		}
 		k.RemoveDelegation(ctx, delegation)
 	} else {

@@ -16,16 +16,16 @@ This module will be used by the Cosmos Hub, the first hub in the Cosmos ecosyste
 
 ## Contents
 
+1. **[Overview](overview.md)**
 1. **[State](state.md)**
     1. [SigningInfo](state.md#signing-info)
     1. [SlashingPeriod](state.md#slashing-period)
-1. **[Overview](overview.md)**
 1. **[Transactions](transactions.md)**
-    1. Unjail
+    1. [Unjail](transactions.md#unjail)
 1. **[Hooks](hooks.md)**
-    1. Validator Bonded
-    1. Validator Unbonding
-    1. Validator Slashed
+    1. [Validator Bonded](hooks.md#validator-bonded)
+    1. [Validator Unbonded](hooks.md#validator-unbonded)
+    1. [Validator Slashed](hooks.md#validator-slashed)
 1. **[Begin Block](begin-block.md)**
     1. [Evidence handling](begin-block.md#evidence-handling)
     1. [Uptime tracking](begin-block.md#uptime-tracking)

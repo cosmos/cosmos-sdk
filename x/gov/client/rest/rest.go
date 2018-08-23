@@ -479,3 +479,46 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 		w.Write(res)
 	}
 }
+
+// nolint: gocyclo
+// todo: Split this functionality into helper functions to remove the above
+func queryTallyOnProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		strProposalID := vars[RestProposalID]
+
+		if len(strProposalID) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			err := errors.New("proposalId required but not specified")
+			w.Write([]byte(err.Error()))
+
+			return
+		}
+
+		proposalID, ok := parseInt64OrReturnBadRequest(strProposalID, w)
+		if !ok {
+			return
+		}
+
+		cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+		params := gov.QueryTallyParams{
+			ProposalID: proposalID,
+		}
+		bz, err := cdc.MarshalJSON(params)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		res, err := cliCtx.QueryWithData("custom/gov/tally", bz)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		w.Write(res)
+	}
+}

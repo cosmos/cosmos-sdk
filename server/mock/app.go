@@ -121,9 +121,15 @@ func AppGenState(_ *wire.Codec, _ []json.RawMessage) (appState json.RawMessage, 
 	return
 }
 
+// AppGenStateEmpty returns an empty transaction state for mocking.
+func AppGenStateEmpty(_ *wire.Codec, _ []json.RawMessage) (appState json.RawMessage, err error) {
+	appState = json.RawMessage(``)
+	return
+}
+
 // Return a validator, not much else
 func AppGenTx(_ *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTx) (
-	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
+		appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
 	validator = tmtypes.GenesisValidator{
 		PubKey: pk,

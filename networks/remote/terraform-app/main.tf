@@ -9,11 +9,16 @@ variable "SERVERS" {
   default = "1"
 }
 
+variable "MAX_ZONES" {
+  description = "Maximum number of availability zones to use"
+  default = "4"
+}
+
 #See https://docs.aws.amazon.com/general/latest/gr/rande.html#ec2_region
 #eu-west-3 does not contain CentOS images
 variable "REGION" {
   description = "AWS Regions"
-  default = "us-east-2"
+  default = "us-east-1"
 }
 
 variable "SSH_PRIVATE_FILE" {
@@ -26,6 +31,11 @@ variable "SSH_PUBLIC_FILE" {
   type = "string"
 }
 
+variable "CERTIFICATE_ARN" {
+  description = "Load-balancer certificate AWS ARN"
+  type = "string"
+}
+
 # ap-southeast-1 and ap-southeast-2 does not contain the newer CentOS 1704 image
 variable "image" {
   description = "AWS image name"
@@ -34,7 +44,7 @@ variable "image" {
 
 variable "instance_type" {
   description = "AWS instance type"
-  default = "t2.medium"
+  default = "t2.large"
 }
 
 provider "aws" {
@@ -48,7 +58,9 @@ module "nodes" {
   instance_type    = "${var.instance_type}"
   ssh_public_file  = "${var.SSH_PUBLIC_FILE}"
   ssh_private_file = "${var.SSH_PRIVATE_FILE}"
+  certificate_arn  = "${var.CERTIFICATE_ARN}"
   SERVERS          = "${var.SERVERS}"
+  max_zones        = "${var.MAX_ZONES}"
 }
 
 output "public_ips" {

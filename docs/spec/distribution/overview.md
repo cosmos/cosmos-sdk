@@ -36,20 +36,32 @@ Fees are pooled within a global pool, as well as validator specific
 proposer-reward pools. The mechanisms used allow for validators and delegators
 to independently and lazily withdraw their rewards.  
 
-As a part of the lazy computations, each validator and delegator holds an
-accumulation term which is used to estimate what their approximate fair portion
-of tokens held in the global pool is owed to them. This approximation of owed
-rewards would be equivalent to the active distribution under the situation that
-there was a constant flow of incoming reward tokens every block. Because this
-is not the case, the approximation of owed rewards will deviate from the active
-distribution based on fluctuations of incoming reward tokens as well as timing
-of reward withdrawal by other delegators and validators from the reward pool.
+## Shortcomings 
+
+As a part of the lazy computations, each delegator holds an accumulation term
+specific to each validator which is used to estimate what their approximate
+fair portion of tokens held in the global pool is owed to them. 
+
+```
+entitlement = delegator-accumulation / all-delegators-accumulation
+```
+
+Under the circumstance that there were constant and equal flow of incoming
+reward tokens every block, this distribution mechanism would be equal to the
+active distribution (distribute individually to all delegators each block).
+However this is unrealistic so deviations from the active distribution will
+occur based on fluctuations of incoming reward tokens as well as timing of
+reward withdrawal by other delegators. 
+
+If you happen to know that incoming rewards are about significantly move up,
+you are incentivized to not withdraw until after this event, increasing the
+worth of your existing _accum_.
 
 ## Affect on Staking
 
 Charging commission on Atom provisions while also allowing for Atom-provisions
 to be auto-bonded (distributed directly to the validators bonded stake) is
-problematic within DPoS. Fundamentally these two mechnisms are mutually
+problematic within DPoS. Fundamentally these two mechanisms are mutually
 exclusive. If there are Atom commissions and auto-bonding Atoms, the portion
 of Atoms the reward distribution calculation would become very large as the Atom
 portion for each delegator would change each block making a withdrawal of rewards

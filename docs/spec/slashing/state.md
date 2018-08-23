@@ -54,9 +54,9 @@ Where:
 ## Slashing Period
 
 A slashing period is a start and end block height associated with a particular validator,
-within which only the "worst infraction counts": the total amount of slashing for
-infractions committed within the period (and discovered whenever) is capped at the
-penalty for the worst offense.
+within which only the "worst infraction counts" (see the [Overview](overview.md)): the total
+amount of slashing for infractions committed within the period (and discovered whenever) is
+capped at the penalty for the worst offense.
 
 This period starts when a validator is first bonded and ends when a validator is slashed & jailed
 for any reason. When the validator rejoins the validator set (perhaps through unjailing themselves,

@@ -6,6 +6,7 @@
   any_errors_fatal: true
   gather_facts: no
   roles:
+    - setup-journald
     - install-datadog-agent
     - update-datadog-agent
 

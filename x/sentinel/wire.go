@@ -6,7 +6,7 @@ import (
 
 func RegisterWire(cdc *wire.Codec) {
 	cdc.RegisterConcrete(MsgRegisterVpnService{}, "sentinel/registervpn", nil)
-	// cdc.RegisterConcrete(MsgQueryRegisteredVpnService{}, "sentinel/queryvpnservice", nil)
+	//cdc.RegisterConcrete(MsgQueryRegisteredVpnService{}, "sentinel/queryvpnservice", nil)
 	cdc.RegisterConcrete(MsgDeleteVpnUser{}, "sentienl/deletevpnservice", nil)
 	cdc.RegisterConcrete(MsgRegisterMasterNode{}, "sentinel/masternoderegistration", nil)
 	// cdc.RegisterConcrete(MsgQueryFromMasterNode{}, "sentienl/querythevpnservice", nil)

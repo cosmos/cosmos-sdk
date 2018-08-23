@@ -2,8 +2,6 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/bech32"
@@ -82,20 +80,20 @@ func GetBech32Signature(sign crypto.Signature) (string, error) {
 
 }
 
-func GetBech64Signature(address string) (pk crypto.Signature, err error) {
-	hrp, bz, err := DecodeAndConvert(address)
-	if err != nil {
-		return nil, err
-	}
-	if hrp != "" {
-		return nil, fmt.Errorf("invalid bech32 prefix. Expected %s, Got %s", "", hrp)
-	}
-
-	pk, err = crypto.SignatureFromBytes(bz)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return pk, nil
-}
+//func GetBech64Signature(address string) (pk crypto.Signature, err error) {
+//	hrp, bz, err := DecodeAndConvert(address)
+//	if err != nil {
+//		return nil, err
+//	}
+//	if hrp != "" {
+//		return nil, fmt.Errorf("invalid bech32 prefix. Expected %s, Got %s", "", hrp)
+//	}
+//
+//	pk, err = crypto.SignatureFromBytes(bz)
+//
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return pk, nil
+//}

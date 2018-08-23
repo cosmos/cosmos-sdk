@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	sentinel "github.com/cosmos/cosmos-sdk/examples/sut"
+	sentinel "github.com/cosmos/cosmos-sdk/x/sentinel"
 	"github.com/spf13/viper"
 
 	"github.com/spf13/cobra"

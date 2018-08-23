@@ -9,9 +9,9 @@ import (
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	tx "github.com/cosmos/cosmos-sdk/client/tx"
-	sentype "github.com/cosmos/cosmos-sdk/examples/sentinel"
-	sentinel "github.com/cosmos/cosmos-sdk/examples/sentinel/rest"
 	"github.com/cosmos/cosmos-sdk/wire"
+	sentype "github.com/cosmos/cosmos-sdk/x/sentinel"
+	sentinel "github.com/cosmos/cosmos-sdk/x/sentinel/rest"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
@@ -76,12 +76,12 @@ func createHandler(cdc *wire.Codec) http.Handler {
 	r := mux.NewRouter()
 
 	kb, err := keys.GetKeyBase() //XXX
-	keeper := sentype.Keeper{}
 	if err != nil {
 		panic(err)
 	}
-
+	keeper := sentype.Keeper{}
 	ctx := context.NewCoreContextFromViper()
+
 	// TODO: make more functional? aka r = keys.RegisterRoutes(r)
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
 	r.HandleFunc("/node_version", NodeVersionRequestHandler(ctx)).Methods("GET")

@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	sent "github.com/cosmos/cosmos-sdk/examples/sentinel"
+	sent "github.com/cosmos/cosmos-sdk/x/sentinel"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
 

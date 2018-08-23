@@ -4,7 +4,7 @@ import (
 	"math"
 	"time"
 
-	senttype "github.com/cosmos/cosmos-sdk/examples/sentinel/types"
+	senttype "github.com/cosmos/cosmos-sdk/x/sentinel/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -210,6 +210,6 @@ func (keeper Keeper) NewMsgDecoder(acc []byte) (senttype.Registervpn, sdk.Error)
 
 }
 
-func (keeper Keeper) GetsentStore(ctx sdk.Context, msg MsgRegisterMasterNode) (sdk.KVStore, sdk.AccAddress) {
-	return ctx.KVStore(keeper.sentStoreKey), addr1
-}
+//func (keeper Keeper) GetsentStore(ctx sdk.Context, msg MsgRegisterMasterNode) (sdk.KVStore, sdk.AccAddress) {
+//	return ctx.KVStore(keeper.sentStoreKey), addr1
+//}

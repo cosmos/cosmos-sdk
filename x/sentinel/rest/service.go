@@ -16,125 +16,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	ckeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/examples/sentinel"
-	senttype "github.com/cosmos/cosmos-sdk/examples/sentinel/types"
+	"github.com/cosmos/cosmos-sdk/x/sentinel"
+	senttype "github.com/cosmos/cosmos-sdk/x/sentinel/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	"github.com/gorilla/mux"
+	"github.com/tendermint/tendermint/crypto"
 )
 
-type MsgRegisterVpnService struct {
-	Ip            string `json:"ip"`
-	UploadSpeed   int64  `json:"upload_speed"`
-	DownloadSpeed int64  `json:"download_speed"`
-	Ppgb          int64  `json:"price_per_gb"`
-	EncMethod     string `json:"enc_method"`
-	Latitude      int64  `json:"location_latitude"`
-	Longitude     int64  `json:"location_longitude"`
-	City          string `json:"location_city"`
-	Country       string `json:"location_country"`
-	NodeType      string `json:"node_type"`
-	Version       string `json:"version"`
-	Localaccount  string `json:"name"`
-	Password      string `json:"password"`
-	Gas           int64  `json:"gas"`
-}
-type MsgRegisterMasterNode struct {
-	Name     string `json:"name"`
-	Gas      int64  `json:"gas"`
-	Password string `json:"password"`
-}
 
-type MsgDeleteVpnUser struct {
-	Address  string `json:"address", omitempty`
-	Name     string `json:"name"`
-	Password string `json:"password"`
-	Gas      int64  `json:"gas"`
-}
-type MsgDeleteMasterNode struct {
-	Address  string `json:"address", omitempty`
-	Name     string `json:"name"`
-	Password string `json:"password"`
-	Gas      int64  `json:"gas"`
-}
-type MsgPayVpnService struct {
-	Coins        string `json:"amount", omitempty`
-	Vpnaddr      string `json:"vaddress", omitempty`
-	Localaccount string `json:"name"`
-	Password     string `json:"password"`
-	Gas          int64  `json:"gas"`
-	NewName      string `json:"sig_name"`
-	NewPassword  string `json:"sig_password"`
-}
-
-type MsgGetVpnPayment struct {
-	Coins        string `json:"amount"`
-	Sessionid    string `json:"session_id"`
-	Counter      int64  `json:"counter"`
-	Localaccount string `json:"name"`
-	Gas          int64  `json:"gas"`
-	IsFinal      bool   `json:"isfinal"`
-	Password     string `json:"password"`
-	Signature    string `json:"sign"`
-}
-
-type MsgRefund struct {
-	Name      string `json:"name"`
-	Password  string `json:"password"`
-	Sessionid string `json:"session_id", omitempty`
-	Gas       int64  `json:"gas"`
-}
-
-type ClientSignature struct {
-	Coins        string `json:"amount"`
-	Sessionid    string `json:"session_id"`
-	Counter      int64  `json:"counter"`
-	IsFinal      bool   `json:"isfinal"`
-	Localaccount string `json:"name"`
-	Password     string `json:"password"`
-}
-
-func ServiceRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
-
-	r.HandleFunc(
-		"/register/vpn",
-		registervpnHandlerFn(ctx, cdc),
-	).Methods("POST")
-
-	r.HandleFunc(
-		"/register/master",
-		registermasterdHandlerFn(ctx, cdc),
-	).Methods("POST")
-
-	r.HandleFunc(
-		"/refund",
-		RefundHandleFn(ctx, cdc),
-	).Methods("POST")
-
-	r.HandleFunc(
-		"/master",
-		deleteMasterHandlerFn(ctx, cdc),
-	).Methods("DELETE")
-
-	r.HandleFunc(
-		"/vpn",
-		deleteVpnHandlerFn(ctx, cdc),
-	).Methods("DELETE")
-	r.HandleFunc(
-		"/vpn/pay",
-		PayVpnServiceHandlerFn(ctx, cdc),
-	).Methods("POST")
-	r.HandleFunc(
-		"/send-sign",
-		SendSignHandlerFn(ctx, cdc),
-	).Methods("POST")
-	r.HandleFunc(
-		"/vpn/getpayment",
-		GetVpnPaymentHandlerFn(ctx, cdc),
-	).Methods("POST")
-
-}
 
 /**
 * @api {get} /keys/seed To get seeds for generate keys.
@@ -251,13 +141,6 @@ func ServiceRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 *}
 */
 
-type Response struct {
-	Success bool            `json:"sucess"`
-	Hash    string          `json:"hash"`
-	Height  int64           `json:"height"`
-	Data    []byte          `json:"data"`
-	Tags    []common.KVPair `json:"tags"`
-}
 
 func NewResponse(sucess bool, hash string, height int64, data []byte, tags []common.KVPair) Response {
 	//var res Response
@@ -722,12 +605,12 @@ func PayVpnServiceHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handl
 		}
 
 		seed := getSeed(keys.Secp256k1)
-		if msg.NewName == "" {
+		if msg.SigName == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(" Enter the Name."))
 			return
 		}
-		if msg.NewPassword == "" {
+		if msg.SigPassword == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(" Enter  the Password."))
 			return
@@ -762,13 +645,13 @@ func PayVpnServiceHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handl
 		}
 		infos, err := kb.List()
 		for _, i := range infos {
-			if i.GetName() == msg.NewName {
+			if i.GetName() == msg.SigName {
 				w.WriteHeader(http.StatusConflict)
-				w.Write([]byte(fmt.Sprintf("Account with name %s already exists.", msg.NewName)))
+				w.Write([]byte(fmt.Sprintf("Account with name %s already exists.", msg.SigName)))
 				return
 			}
 		}
-		info, err := kb.CreateKey(msg.NewName, seed, msg.NewPassword)
+		info, err := kb.CreateKey(msg.SigName, seed, msg.SigPassword)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
@@ -1015,6 +898,13 @@ func RefundHandleFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 *    ]
 *}
 */
+
+
+
+
+
+
+
 func GetVpnPaymentHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -1058,7 +948,9 @@ func GetVpnPaymentHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handl
 			sdk.ErrInternal("Parse Coins failed")
 		}
 
-		sig, err := senttype.GetBech64Signature(msg.Signature)
+		var sig crypto.Signature
+		//sig, err := senttype.GetBech64Signature(msg.Signature)
+		cdc.UnmarshalBinaryBare([]byte(msg.Signature),&sig)
 		if err != nil {
 			w.Write([]byte("Signature from string conversion failed"))
 		}

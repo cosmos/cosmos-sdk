@@ -1,12 +1,12 @@
 package types
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	cmn "github.com/tendermint/tendermint/libs/common"
 
+	"github.com/cosmos/cosmos-sdk/wire"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -251,9 +251,15 @@ func (err *sdkError) Code() CodeType {
 
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
+	cdc := wire.NewCodec()
 	parsedErrMsg := parseCmnError(err.cmnError.Error())
-	jsonErr := newHumanReadableError(err.codespace, err.code, err.ABCICode(), parsedErrMsg)
-	bz, er := json.Marshal(jsonErr)
+	jsonErr := humanReadableError{
+		Codespace: err.codespace,
+		Code:      err.code,
+		ABCICode:  err.ABCICode(),
+		Message:   parsedErrMsg,
+	}
+	bz, er := cdc.MarshalJSON(jsonErr)
 	if er != nil {
 		panic(er)
 	}
@@ -277,23 +283,16 @@ func (err *sdkError) QueryResult() abci.ResponseQuery {
 }
 
 func parseCmnError(err string) string {
-	errArray := strings.Split(err, "{")
-	return errArray[1][:len(errArray[1])-1]
+	if idx := strings.Index(err, "{"); idx != -1 {
+		err = err[idx+1 : len(err)-1]
+	}
+	return err
 }
 
 // nolint
-type HumanReadableError struct {
+type humanReadableError struct {
 	Codespace CodespaceType `json:"codespace"`
 	Code      CodeType      `json:"code"`
 	ABCICode  ABCICodeType  `json:"abci_code"`
 	Message   string        `json:"message"`
-}
-
-func newHumanReadableError(codespace CodespaceType, code CodeType, ABCICode ABCICodeType, msg string) HumanReadableError {
-	return HumanReadableError{
-		Codespace: codespace,
-		Code:      code,
-		ABCICode:  ABCICode,
-		Message:   msg,
-	}
 }

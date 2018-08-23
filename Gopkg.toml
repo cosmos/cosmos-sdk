@@ -57,7 +57,7 @@
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  version = "=v0.23.0"
+  version = "=v0.23.1-rc0"
 
 [[constraint]]
   name = "github.com/bartekn/go-bip39"

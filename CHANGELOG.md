@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.24.2
+
+*August 22nd, 2018*
+
+BUG FIXES
+
+* Tendermint
+  - Fix unbounded consensus WAL growth 
+
+## 0.24.1
+
+*August 21st, 2018*
+
+BUG FIXES
+
+* Gaia
+  - [x/slashing] Evidence tracking now uses validator address instead of validator pubkey
+
 ## 0.24.0
 
 *August 13th, 2018*

@@ -37,7 +37,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	keeper.handleValidatorSignature(ctx, val.Address(), amtInt, true)
 
 	// double sign less than max age
-	keeper.handleDoubleSign(ctx, val, 0, time.Unix(0, 0), amtInt)
+	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
 
 	// should be revoked
 	require.True(t, sk.Validator(ctx, addr).GetRevoked())
@@ -48,7 +48,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(keeper.MaxEvidenceAge(ctx))})
 
 	// double sign past max age
-	keeper.handleDoubleSign(ctx, val, 0, time.Unix(0, 0), amtInt)
+	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
 	require.Equal(t, sdk.NewRatFromInt(amt).Mul(sdk.NewRat(19).Quo(sdk.NewRat(20))), sk.Validator(ctx, addr).GetPower())
 }
 

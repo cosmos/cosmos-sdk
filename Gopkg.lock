@@ -394,8 +394,10 @@
     "types",
     "version"
   ]
-  revision = "013b9cef642f875634c614019ab13b17570778ad"
-  version = "v0.23.0"
+  pruneopts = "UT"
+  revision = "81df19e68ab1519399fccf0cab81cb75bf9d782e"
+  version = "v0.23.1-rc0"
+
 
 [[projects]]
   name = "github.com/zondax/ledger-goclient"

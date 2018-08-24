@@ -340,7 +340,7 @@ func TestCoinSend(t *testing.T) {
 	someFakeAddr := sdk.AccAddress(bz)
 
 	// query empty
-	res, body := Request(t, port, "GET", fmt.Sprintf("/accounts/%s", someFakeAddr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/bank/balance/%s", someFakeAddr), nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	acc := getAccount(t, port, addr)
@@ -382,7 +382,7 @@ func TestCoinSendSwaggerLCD(t *testing.T) {
 	someFakeAddr := sdk.AccAddress(bz)
 
 	// query empty
-	res, body := Request(t, port, "GET", fmt.Sprintf("/accounts/%s", someFakeAddr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/bank/balance/%s", someFakeAddr), nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	acc := getAccount(t, port, addr)
@@ -934,7 +934,7 @@ func TestProposalsQuery(t *testing.T) {
 //_____________________________________________________________________________
 // get the account to get the sequence
 func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/accounts/%s", addr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/bank/balance/%s", addr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var acc auth.Account
 	err := cdc.UnmarshalJSON([]byte(body), &acc)
@@ -967,9 +967,11 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.AccAddress
 		"sequence":"%d",
 		"gas": "10000",
 		"amount":[%s],
-		"chain_id":"%s"
-	}`, name, password, accnum, sequence, coinbz, chainID))
-	res, body := Request(t, port, "POST", fmt.Sprintf("/accounts/%s/send", receiveAddr), jsonStr)
+		"chain_id":"%s",
+		"signed": true,
+		"to_address":"%s"
+	}`, name, password, accnum, sequence, coinbz, chainID, receiveAddr))
+	res, body := Request(t, port, "POST", "/bank/transfers", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err = cdc.UnmarshalJSON([]byte(body), &resultTx)

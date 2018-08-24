@@ -301,6 +301,9 @@ func (ctx CLIContext) proofVerify(path string, resp abci.ResponseQuery) error {
 	}
 
 	node, err := ctx.GetNode()
+	if err != nil {
+		return err
+	}
 	// AppHash for height H is in header H+1
 	commit, err := tendermintLiteProxy.GetCertifiedCommit(resp.Height+1, node, ctx.Certifier)
 	if err != nil {

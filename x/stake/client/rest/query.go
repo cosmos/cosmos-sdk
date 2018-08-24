@@ -50,7 +50,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Cod
 		delegationHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
-	// Query all unbonding_delegations between a delegator and a validator
+	// Query a unbonding-delegation between a delegator and a validator
 	r.HandleFunc(
 		"/stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}",
 		unbondingDelegationsHandlerFn(cliCtx, cdc),

@@ -40,18 +40,65 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 	return delegations
 }
 
+// load all validators that a delegator is bonded to
+func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAddress,
+	maxRetrieve ...int16) (validators []types.Validator) {
+
+	store := ctx.KVStore(k.storeKey)
+	delegatorPrefixKey := GetDelegationsKey(delegatorAddr)
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+
+	if len(maxRetrieve) > 0 {
+		validators = make([]types.Validator, maxRetrieve[0])
+	}
+
+	i := 0
+	for ; ; i++ {
+		if !iterator.Valid() || (len(maxRetrieve) > 0 && i > int(maxRetrieve[0]-1)) {
+			break
+		}
+		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
+		validator, found := k.GetValidator(ctx, delegation.ValidatorAddr)
+		if !found {
+			panic(types.ErrNoValidatorFound(types.DefaultCodespace))
+		}
+		validators[i] = validator
+		iterator.Next()
+	}
+	iterator.Close()
+	return validators[:i] // trim
+}
+
+// load a validator that a delegator is bonded to
+func (k Keeper) GetDelegatorValidator(ctx sdk.Context, delegatorAddr sdk.AccAddress,
+	validatorAddr sdk.AccAddress) (validator types.Validator) {
+
+	delegation, found := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
+	if !found {
+		panic(types.ErrNoDelegation(types.DefaultCodespace))
+	}
+	validator, found = k.GetValidator(ctx, delegation.ValidatorAddr)
+	if !found {
+		panic(types.ErrNoValidatorFound(types.DefaultCodespace))
+	}
+	return
+}
+
 // load all delegations for a delegator
 func (k Keeper) GetDelegations(ctx sdk.Context, delegator sdk.AccAddress,
-	maxRetrieve int16) (delegations []types.Delegation) {
+	maxRetrieve ...int16) (delegations []types.Delegation) {
 
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 
-	delegations = make([]types.Delegation, maxRetrieve)
+	if len(maxRetrieve) > 0 {
+		delegations = make([]types.Delegation, maxRetrieve[0])
+	}
+
 	i := 0
 	for ; ; i++ {
-		if !iterator.Valid() || i > int(maxRetrieve-1) {
+		if !iterator.Valid() || (len(maxRetrieve) > 0 && i > int(maxRetrieve[0]-1)) {
 			break
 		}
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
@@ -67,6 +114,9 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
 	b := types.MustMarshalDelegation(k.cdc, delegation)
 	store.Set(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr), b)
+	// append ? to validator Delegators
+	// append ? to delegator Validators
+	// append ? to delegator Delegations
 }
 
 // remove the delegation
@@ -79,16 +129,19 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 
 // load all unbonding-delegations for a delegator
 func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress,
-	maxRetrieve int16) (unbondingDelegations []types.UnbondingDelegation) {
+	maxRetrieve ...int16) (unbondingDelegations []types.UnbondingDelegation) {
 
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetUBDsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 
-	unbondingDelegations = make([]types.UnbondingDelegation, maxRetrieve)
+	if len(maxRetrieve) > 0 {
+		unbondingDelegations = make([]types.UnbondingDelegation, maxRetrieve[0])
+	}
+
 	i := 0
 	for ; ; i++ {
-		if !iterator.Valid() || i > int(maxRetrieve-1) {
+		if !iterator.Valid() || (len(maxRetrieve) > 0 && i > int(maxRetrieve[0]-1)) {
 			break
 		}
 		unbondingDelegation := types.MustUnmarshalUBD(k.cdc, iterator.Key(), iterator.Value())
@@ -169,16 +222,19 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 
 // load all redelegations for a delegator
 func (k Keeper) GetRedelegations(ctx sdk.Context, delegator sdk.AccAddress,
-	maxRetrieve int16) (redelegations []types.Redelegation) {
+	maxRetrieve ...int16) (redelegations []types.Redelegation) {
 
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetREDsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 
-	redelegations = make([]types.Redelegation, maxRetrieve)
+	if len(maxRetrieve) > 0 {
+		redelegations = make([]types.Redelegation, maxRetrieve[0])
+	}
+
 	i := 0
 	for ; ; i++ {
-		if !iterator.Valid() || i > int(maxRetrieve-1) {
+		if !iterator.Valid() || (len(maxRetrieve) > 0 && i > int(maxRetrieve[0]-1)) {
 			break
 		}
 		redelegation := types.MustUnmarshalRED(k.cdc, iterator.Key(), iterator.Value())

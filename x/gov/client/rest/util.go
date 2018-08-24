@@ -77,9 +77,9 @@ func signAndBuild(w http.ResponseWriter, cliCtx context.CLIContext, baseReq base
 	}
 
 	if baseReq.Gas == 0 {
-		newCtx, httperr, err := enrichContextWithGas(txCtx, cliCtx, baseReq.Name, baseReq.Password, msg)
+		newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, baseReq.Name, baseReq.Password, []sdk.Msg{msg})
 		if err != nil {
-			utils.WriteErrorResponse(&w, httperr, err.Error())
+			utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
 			return
 		}
 		txCtx = newCtx
@@ -115,16 +115,4 @@ func parseInt64OrReturnBadRequest(s string, w http.ResponseWriter) (n int64, ok 
 		return 0, false
 	}
 	return n, true
-}
-
-func enrichContextWithGas(txCtx authctx.TxContext, cliCtx context.CLIContext, name, password string, msg sdk.Msg) (authctx.TxContext, int, error) {
-	txBytes, err := utils.BuildAndSignTxWithZeroGas(txCtx, name, password, []sdk.Msg{msg})
-	if err != nil {
-		return txCtx, http.StatusInternalServerError, err
-	}
-	_, adjusted, err := utils.CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, cliCtx.GasAdjustment)
-	if err != nil {
-		return txCtx, http.StatusUnauthorized, err
-	}
-	return txCtx.WithGas(adjusted), http.StatusOK, nil
 }

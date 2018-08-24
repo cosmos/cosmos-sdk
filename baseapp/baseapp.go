@@ -498,10 +498,9 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 func (app *BaseApp) getContextForAnte(mode runTxMode, txBytes []byte) (ctx sdk.Context) {
 	// Get the context
 	ctx = getState(app, mode).ctx.WithTxBytes(txBytes)
-	if mode != runTxModeDeliver {
-		return
+	if mode == runTxModeDeliver {
+		ctx = ctx.WithSigningValidators(app.signedValidators)
 	}
-	ctx = ctx.WithSigningValidators(app.signedValidators)
 	return
 }
 
@@ -568,10 +567,10 @@ func getState(app *BaseApp, mode runTxMode) *state {
 }
 
 func (app *BaseApp) initializeContext(ctx sdk.Context, mode runTxMode) sdk.Context {
-	if mode != runTxModeSimulate {
-		return ctx
+	if mode == runTxModeSimulate {
+		ctx = ctx.WithMultiStore(getState(app, runTxModeSimulate).CacheMultiStore())
 	}
-	return ctx.WithMultiStore(getState(app, runTxModeSimulate).CacheMultiStore())
+	return ctx
 }
 
 // runTx processes a transaction. The transactions is proccessed via an

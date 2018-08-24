@@ -59,9 +59,11 @@ func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) 
 		return err
 	}
 
-	txCtx, err = enrichCtxWithGasIfGasAuto(txCtx, cliCtx, passphrase, msgs)
-	if err != nil {
-		return err
+	if cliCtx.Gas == 0 {
+		txCtx, err = EnrichCtxWithGas(txCtx, cliCtx, cliCtx.FromAddressName, passphrase, msgs)
+		if err != nil {
+			return err
+		}
 	}
 
 	// build and sign the transaction
@@ -73,20 +75,19 @@ func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) 
 	return cliCtx.EnsureBroadcastTx(txBytes)
 }
 
-func enrichCtxWithGasIfGasAuto(txCtx authctx.TxContext, cliCtx context.CLIContext, passphrase string, msgs []sdk.Msg) (authctx.TxContext, error) {
-	if cliCtx.Gas == 0 {
-		txBytes, err := BuildAndSignTxWithZeroGas(txCtx, cliCtx.FromAddressName, passphrase, msgs)
-		if err != nil {
-			return txCtx, err
-		}
-		estimate, adjusted, err := CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, cliCtx.GasAdjustment)
-		if err != nil {
-			return txCtx, err
-		}
-		fmt.Fprintf(os.Stderr, "gas: [estimated = %v] [adjusted = %v]\n", estimate, adjusted)
-		return txCtx.WithGas(adjusted), nil
+// EnrichCtxWithGas calculates the gas estimate that would be consumed by the
+// transaction and set the transaction's respective value accordingly.
+func EnrichCtxWithGas(txCtx authctx.TxContext, cliCtx context.CLIContext, name, passphrase string, msgs []sdk.Msg) (authctx.TxContext, error) {
+	txBytes, err := BuildAndSignTxWithZeroGas(txCtx, name, passphrase, msgs)
+	if err != nil {
+		return txCtx, err
 	}
-	return txCtx, nil
+	estimate, adjusted, err := CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, cliCtx.GasAdjustment)
+	if err != nil {
+		return txCtx, err
+	}
+	fmt.Fprintf(os.Stderr, "gas: [estimated = %v] [adjusted = %v]\n", estimate, adjusted)
+	return txCtx.WithGas(adjusted), nil
 }
 
 // BuildAndSignTxWithZeroGas builds transactions with GasWanted set to 0.

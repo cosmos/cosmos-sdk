@@ -276,9 +276,9 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 			m.Sequence++
 
 			if m.Gas == 0 {
-				newCtx, httperr, err := enrichContextWithGas(txCtx, cliCtx, m.LocalAccountName, m.Password, msg)
+				newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, m.Password, []sdk.Msg{msg})
 				if err != nil {
-					utils.WriteErrorResponse(&w, httperr, err.Error())
+					utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
 					return
 				}
 				txCtx = newCtx
@@ -315,16 +315,4 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 
 		w.Write(output)
 	}
-}
-
-func enrichContextWithGas(txCtx authcliCtx.TxContext, cliCtx context.CLIContext, name, password string, msg sdk.Msg) (authcliCtx.TxContext, int, error) {
-	txBytes, err := utils.BuildAndSignTxWithZeroGas(txCtx, name, password, []sdk.Msg{msg})
-	if err != nil {
-		return txCtx, http.StatusInternalServerError, err
-	}
-	_, adjusted, err := utils.CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, cliCtx.GasAdjustment)
-	if err != nil {
-		return txCtx, http.StatusUnauthorized, err
-	}
-	return txCtx.WithGas(adjusted), http.StatusOK, nil
 }

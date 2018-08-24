@@ -267,6 +267,10 @@ func TestCoinSend(t *testing.T) {
 	// test failure with too little gas
 	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, 100)
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
+
+	// test success with just enough gas
+	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, 3000)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
 }
 
 func TestIBCTransfer(t *testing.T) {

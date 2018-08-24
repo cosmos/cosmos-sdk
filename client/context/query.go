@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"strings"
 	tendermintLiteProxy "github.com/tendermint/tendermint/lite/proxy"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // GetNode returns an RPC client. If the context's client is not defined, an
@@ -284,7 +285,47 @@ func (ctx CLIContext) ensureBroadcastTx(txBytes []byte) error {
 	return nil
 }
 
-// nolint: gocyclo
+// proofVerify perform response proof verification
+func (ctx CLIContext) proofVerify(path string, resp abci.ResponseQuery) error {
+	// Data from trusted node or subspace query doesn't need verification
+	if ctx.TrustNode || !isQueryStoreWithProof(path) {
+		return nil
+	}
+
+	// TODO: Later we consider to return error for missing valid certifier to verify data from untrusted node
+	if ctx.Certifier == nil {
+		if ctx.Logger != nil {
+			io.WriteString(ctx.Logger, fmt.Sprintf("Missing valid certifier to verify data from untrusted node\n"))
+		}
+		return nil
+	}
+
+	node, err := ctx.GetNode()
+	// AppHash for height H is in header H+1
+	commit, err := tendermintLiteProxy.GetCertifiedCommit(resp.Height+1, node, ctx.Certifier)
+	if err != nil {
+		return err
+	}
+
+	var multiStoreProof store.MultiStoreProof
+	cdc := wire.NewCodec()
+	err = cdc.UnmarshalBinary(resp.Proof, &multiStoreProof)
+	if err != nil {
+		return  errors.Wrap(err, "failed to unmarshalBinary rangeProof")
+	}
+
+	// Validate the substore commit hash against trusted appHash
+	substoreCommitHash, err :=  store.VerifyMultiStoreCommitInfo(multiStoreProof.StoreName, multiStoreProof.CommitIDList, commit.Header.AppHash)
+	if err != nil {
+		return  errors.Wrap(err, "failed in verifying the proof against appHash")
+	}
+	err = store.VerifyRangeProof(resp.Key, resp.Value, substoreCommitHash, &multiStoreProof.RangeProof)
+	if err != nil {
+		return  errors.Wrap(err, "failed in the range proof verification")
+	}
+	return nil
+}
+
 // query performs a query from a Tendermint node with the provided store name
 // and path.
 func (ctx CLIContext) query(path string, key common.HexBytes) (res []byte, err error) {
@@ -308,40 +349,9 @@ func (ctx CLIContext) query(path string, key common.HexBytes) (res []byte, err e
 		return res, errors.Errorf("query failed: (%d) %s", resp.Code, resp.Log)
 	}
 
-	// Data from trusted node or subspace doesn't need verification
-	if ctx.TrustNode || !isQueryStoreWithProof(path) {
-		return resp.Value,nil
-	}
-
-	// TODO: Later we consider to return error for missing valid certifier to verify data from untrusted node
-	if ctx.Certifier == nil {
-		if ctx.Logger != nil {
-			io.WriteString(ctx.Logger, fmt.Sprintf("Missing valid certifier to verify data from untrusted node\n"))
-		}
-		return resp.Value, nil
-	}
-
-	// AppHash for height H is in header H+1
-	commit, err := tendermintLiteProxy.GetCertifiedCommit(resp.Height+1, node, ctx.Certifier)
+	err = ctx.proofVerify(path, resp)
 	if err != nil {
 		return nil, err
-	}
-
-	var multiStoreProof store.MultiStoreProof
-	cdc := wire.NewCodec()
-	err = cdc.UnmarshalBinary(resp.Proof, &multiStoreProof)
-	if err != nil {
-		return res, errors.Wrap(err, "failed to unmarshalBinary rangeProof")
-	}
-
-	// Validate the substore commit hash against trusted appHash
-	substoreCommitHash, err :=  store.VerifyMultiStoreCommitInfo(multiStoreProof.StoreName, multiStoreProof.CommitIDList, commit.Header.AppHash)
-	if err != nil {
-		return  nil, errors.Wrap(err, "failed in verifying the proof against appHash")
-	}
-	err = store.VerifyRangeProof(resp.Key, resp.Value, substoreCommitHash, &multiStoreProof.RangeProof)
-	if err != nil {
-		return  nil, errors.Wrap(err, "failed in the range proof verification")
 	}
 
 	return resp.Value, nil

@@ -533,7 +533,7 @@ var doc = `{
                 }
             }
         },
-        "/accounts/{address}": {
+        "/bank/balance/{address}": {
             "get": {
                 "description": "Get the detailed information for specific address",
                 "consumes": [
@@ -586,120 +586,7 @@ var doc = `{
                 }
             }
         },
-        "/create_transfer": {
-            "post": {
-                "description": "Build transaction",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Token Operation"
-                ],
-                "summary": "Build transaction",
-                "parameters": [
-                    {
-                        "description": "create transaction parameters",
-                        "name": "transferBody",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/bank.transferBody"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK. The returned string is base64 encoding",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/signed_transfer": {
-            "post": {
-                "description": "Broadcast signed transaction.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Token Operation"
-                ],
-                "summary": "Broadcast signed transaction",
-                "parameters": [
-                    {
-                        "description": "Signed transaction. Transaction data, signatures and public keys should be base64 encoding",
-                        "name": "signedTransaction",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/bank.signedBody"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/bank.ResultBroadcastTxCommit"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/accounts/{address}/send": {
+        "/bank/transfers": {
             "post": {
                 "description": "This API require the Cosmos-LCD have keystore module. It will ask keystore module for transaction signature",
                 "consumes": [
@@ -714,19 +601,13 @@ var doc = `{
                 "summary": "Send coins to a address",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "address to send asset",
-                        "name": "address",
-                        "in": "path"
-                    },
-                    {
                         "description": "transfer asset",
                         "name": "sendAsset",
                         "in": "body",
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/bank.sendBody"
+                            "$ref": "#/definitions/bank.transferBody"
                         }
                     }
                 ],
@@ -1293,43 +1174,13 @@ var doc = `{
         "bank.transferBody": {
             "type": "object",
             "properties": {
-                "account_number": {
-                    "type": "integer"
-                },
-                "amount": {
-                    "type": "integer"
-                },
-                "denomination": {
+                "name": {
                     "type": "string"
-                },
-                "ensure_account_sequence": {
-                    "type": "boolean"
-                },
-                "chain_id": {
-                    "type": "string"
-                },
-                "from_address": {
-                    "type": "string"
-                },
-                "gas": {
-                    "type": "integer"
-                },
-                "fee": {
-                    "type": "string",
-                    "example": "10 monikerToken"
-                },
-                "sequence": {
-                    "type": "integer"
                 },
                 "to_address": {
                     "type": "string"
-                }
-            }
-        },
-        "bank.sendBody": {
-            "type": "object",
-            "properties": {
-                "name": {
+                },
+                "from_address": {
                     "type": "string"
                 },
                 "amount": {
@@ -1343,17 +1194,25 @@ var doc = `{
                     "type": "string"
                 },
                 "account_number": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "gas": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "fee": {
                     "type": "string",
-                    "example": "10 monikerToken"
+                    "example": "1steak"
                 },
                 "sequence": {
-                    "type": "integer"
+                    "type": "string"
+                },
+                "signed": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "ensure_account_sequence": {
+                    "type": "boolean",
+                    "example": false
                 }
             }
         },

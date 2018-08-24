@@ -187,14 +187,10 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	if m.Name == "" {
+
+	if paramCheck(m) != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("You have to specify a name for the locally stored account."))
-		return
-	}
-	if m.Password == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("You have to specify a password for the locally stored account."))
+		w.Write([]byte(err.Error()))
 		return
 	}
 
@@ -239,8 +235,23 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(bz)
 }
 
+// paramCheck performs add new key parameters checking
+func paramCheck(m NewKeyBody) error {
+	if len(m.Name) < 1 || len(m.Name) > 16 {
+		return fmt.Errorf("account name length should not be longer than 16")
+	}
+	for _, char := range []rune(m.Name) {
+		if !syntax.IsWordChar(char) {
+			return fmt.Errorf("account name should not contains any char beyond [_0-9A-Za-z]")
+		}
+	}
+	if len(m.Password) < 8 || len(m.Password) > 16 {
+		return fmt.Errorf("account password length should be no less than 8 and no greater than 16")
+	}
+	return nil
+}
+
 // AddNewKeyRequest is the handler of adding new key in swagger rest server
-// nolint: gocyclo
 func AddNewKeyRequest(gtx *gin.Context) {
 	var m NewKeyBody
 	body, err := ioutil.ReadAll(gtx.Request.Body)
@@ -254,19 +265,8 @@ func AddNewKeyRequest(gtx *gin.Context) {
 		return
 	}
 
-	if len(m.Name) < 1 || len(m.Name) > 16 {
-		httputils.NewError(gtx, http.StatusBadRequest, fmt.Errorf("account name length should not be longer than 16"))
-		return
-	}
-	for _, char := range []rune(m.Name) {
-		if !syntax.IsWordChar(char) {
-			httputils.NewError(gtx, http.StatusBadRequest, fmt.Errorf("account name should not contains any char beyond [_0-9A-Za-z]"))
-			return
-		}
-	}
-	if len(m.Password) < 8 || len(m.Password) > 16 {
-		httputils.NewError(gtx, http.StatusBadRequest, fmt.Errorf("account password length should be no less than 8 and no greater than 16"))
-		return
+	if paramCheck(m) != nil {
+		httputils.NewError(gtx, http.StatusBadRequest, err)
 	}
 
 	kb, err := GetKeyBase()

@@ -69,7 +69,7 @@ func QueryKeysRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(output)
 }
 
-// DeleteKeyRequest is the handler of listing all keys in swagger rest server
+// QueryKeysRequest is the handler of listing all keys in swagger rest server
 func QueryKeysRequest(gtx *gin.Context) {
 	kb, err := GetKeyBase()
 	if err != nil {

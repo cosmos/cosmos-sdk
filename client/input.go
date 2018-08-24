@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/bgentry/speakeasy"
-	isatty "github.com/mattn/go-isatty"
+	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
 )
 
@@ -44,13 +44,8 @@ func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {
 
 // GetSeed will request a seed phrase from stdin and trims off
 // leading/trailing spaces
-func GetSeed(prompt string, buf *bufio.Reader) (seed string, err error) {
-	if inputIsTty() {
-		fmt.Println(prompt)
-	}
-	seed, err = readLineFromBuf(buf)
-	seed = strings.TrimSpace(seed)
-	return
+func GetSeed(prompt string, buf *bufio.Reader) (string, error) {
+	return GetString(prompt, buf)
 }
 
 // GetCheckPassword will prompt for a password twice to verify they
@@ -98,6 +93,18 @@ func GetConfirmation(prompt string, buf *bufio.Reader) (bool, error) {
 			return false, nil
 		}
 	}
+}
+
+func GetString(prompt string, buf *bufio.Reader) (string, error) {
+	if inputIsTty() && prompt != "" {
+		fmt.Println(prompt)
+	}
+
+	out, err := readLineFromBuf(buf)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(out), nil
 }
 
 // inputIsTty returns true iff we have an interactive prompt,

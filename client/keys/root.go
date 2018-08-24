@@ -25,6 +25,8 @@ func Commands() *cobra.Command {
 		client.LineBreak,
 		deleteKeyCommand(),
 		updateKeyCommand(),
+		mnemonicCommand(),
+		newCommand(),
 	)
 	return cmd
 }

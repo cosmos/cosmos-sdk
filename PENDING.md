@@ -16,8 +16,9 @@ BREAKING CHANGES
 * Gaia
     * Make the transient store key use a distinct store key. [#2013](https://github.com/cosmos/cosmos-sdk/pull/2013)
     * [x/stake] \#1901 Validator type's Owner field renamed to Operator; Validator's GetOwner() renamed accordingly to comply with the SDK's Validator interface.
+    * [docs] [#2001](https://github.com/cosmos/cosmos-sdk/pull/2001) Update slashing spec for slashing period
     * [x/stake, x/slashing] [#1305](https://github.com/cosmos/cosmos-sdk/issues/1305) - Rename "revoked" to "jailed"
-
+    
 * SDK
     * [core] \#1807 Switch from use of rational to decimal
     * [types] \#1901 Validator interface's GetOwner() renamed to GetOperator()

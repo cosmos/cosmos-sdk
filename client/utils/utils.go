@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
 	amino "github.com/tendermint/go-amino"
+	"github.com/tendermint/tendermint/libs/common"
 )
 
 // DefaultGasAdjustment is applied to gas estimates to avoid tx
@@ -58,7 +59,7 @@ func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) 
 		return err
 	}
 
-	txCtx, err = enrichCtxWithGasIfGasAuto(txCtx, cliCtx, cliCtx.FromAddressName, passphrase, msgs)
+	txCtx, err = enrichCtxWithGasIfGasAuto(txCtx, cliCtx, passphrase, msgs)
 	if err != nil {
 		return err
 	}
@@ -72,35 +73,43 @@ func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) 
 	return cliCtx.EnsureBroadcastTx(txBytes)
 }
 
-func enrichCtxWithGasIfGasAuto(txCtx authctx.TxContext, cliCtx context.CLIContext, name, passphrase string, msgs []sdk.Msg) (authctx.TxContext, error) {
+func enrichCtxWithGasIfGasAuto(txCtx authctx.TxContext, cliCtx context.CLIContext, passphrase string, msgs []sdk.Msg) (authctx.TxContext, error) {
 	if cliCtx.Gas == 0 {
-		return EnrichTxContextWithGas(txCtx, cliCtx, name, passphrase, msgs)
+		txBytes, err := BuildAndSignTxWithZeroGas(txCtx, cliCtx.FromAddressName, passphrase, msgs)
+		if err != nil {
+			return txCtx, err
+		}
+		estimate, adjusted, err := CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, cliCtx.GasAdjustment)
+		if err != nil {
+			return txCtx, err
+		}
+		fmt.Fprintf(os.Stderr, "gas: [estimated = %v] [adjusted = %v]\n", estimate, adjusted)
+		return txCtx.WithGas(adjusted), nil
 	}
 	return txCtx, nil
 }
 
-// EnrichTxContextWithGas simulates the execution of a transaction to
-// then populate the relevant TxContext.Gas field with the estimate
-// obtained by the query.
-func EnrichTxContextWithGas(txCtx authctx.TxContext, cliCtx context.CLIContext, name, passphrase string, msgs []sdk.Msg) (authctx.TxContext, error) {
-	txCtxSimulation := txCtx.WithGas(0)
-	txBytes, err := txCtxSimulation.BuildAndSign(name, passphrase, msgs)
-	if err != nil {
-		return txCtx, err
-	}
+// BuildAndSignTxWithZeroGas builds transactions with GasWanted set to 0.
+func BuildAndSignTxWithZeroGas(txCtx authctx.TxContext, name, passphrase string, msgs []sdk.Msg) ([]byte, error) {
+	return txCtx.WithGas(0).BuildAndSign(name, passphrase, msgs)
+}
+
+// CalculateGas simulates the execution of a transaction and returns
+// both the estimate obtained by the query and the adjusted amount.
+func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *amino.Codec, txBytes []byte, adjustment float64) (estimate, adjusted int64, err error) {
 	// run a simulation (via /app/simulate query) to
 	// estimate gas and update TxContext accordingly
-	rawRes, err := cliCtx.Query("/app/simulate", txBytes)
+	rawRes, err := queryFunc("/app/simulate", txBytes)
 	if err != nil {
-		return txCtx, err
+		return
 	}
-	estimate, err := parseQueryResponse(cliCtx.Codec, rawRes)
+	estimate, err = parseQueryResponse(cdc, rawRes)
 	if err != nil {
-		return txCtx, err
+		return
 	}
-	adjusted := adjustGasEstimate(estimate, cliCtx.GasAdjustment)
+	adjusted = adjustGasEstimate(estimate, adjustment)
 	fmt.Fprintf(os.Stderr, "gas: [estimated = %v] [adjusted = %v]\n", estimate, adjusted)
-	return txCtx.WithGas(adjusted), nil
+	return
 }
 
 func adjustGasEstimate(estimate int64, adjustment float64) int64 {

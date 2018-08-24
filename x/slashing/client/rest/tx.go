@@ -78,11 +78,12 @@ func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLI
 		msg := slashing.NewMsgUnjail(validatorAddr)
 
 		if m.Gas == 0 {
-			txCtx, err = utils.EnrichTxContextWithGas(txCtx, cliCtx, m.LocalAccountName, m.Password, []sdk.Msg{msg})
+			newCtx, httperr, err := enrichContextWithGas(txCtx, cliCtx, m.LocalAccountName, m.Password, msg)
 			if err != nil {
-				utils.WriteErrorResponse(&w, http.StatusUnauthorized, err.Error())
+				utils.WriteErrorResponse(&w, httperr, err.Error())
 				return
 			}
+			txCtx = newCtx
 		}
 
 		txBytes, err := txCtx.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
@@ -105,4 +106,16 @@ func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLI
 
 		w.Write(output)
 	}
+}
+
+func enrichContextWithGas(txCtx authctx.TxContext, cliCtx context.CLIContext, name, password string, msg sdk.Msg) (authctx.TxContext, int, error) {
+	txBytes, err := utils.BuildAndSignTxWithZeroGas(txCtx, name, password, []sdk.Msg{msg})
+	if err != nil {
+		return txCtx, http.StatusInternalServerError, err
+	}
+	_, adjusted, err := utils.CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, cliCtx.GasAdjustment)
+	if err != nil {
+		return txCtx, http.StatusUnauthorized, err
+	}
+	return txCtx.WithGas(adjusted), http.StatusOK, nil
 }

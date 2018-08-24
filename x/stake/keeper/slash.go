@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/x/stake/types"
 	"github.com/tendermint/tendermint/crypto"
+	"math"
 )
 
 // Slash a validator for an infraction committed at a known height
@@ -33,6 +34,14 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1471
 
 	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
+	
+	precisionNumber := math.Pow10(int(validator.TokenPrecision))
+	if precisionNumber > math.MaxInt64 {
+		panic(fmt.Errorf("precision is too high, int64 is overflow"))
+	}
+	tokenPrecision := sdk.NewInt(int64(precisionNumber))
+	slashAmount = slashAmount.Mul(sdk.NewRatFromInt(tokenPrecision))
+	
 	if !found {
 		// If not found, the validator must have been overslashed and removed - so we don't need to do anything
 		// NOTE:  Correctness dependent on invariant that unbonding delegations / redelegations must also have been completely

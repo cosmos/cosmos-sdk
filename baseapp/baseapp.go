@@ -493,6 +493,8 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 	return nil
 }
 
+// retrieve the context for the ante handler and store the tx bytes; store
+// the signing validators if the tx runs within the deliverTx() state.
 func (app *BaseApp) getContextForAnte(mode runTxMode, txBytes []byte) (ctx sdk.Context) {
 	// Get the context
 	ctx = getState(app, mode).ctx.WithTxBytes(txBytes)
@@ -565,7 +567,7 @@ func getState(app *BaseApp, mode runTxMode) *state {
 	return app.deliverState
 }
 
-func (app *BaseApp) applyTxMode(ctx sdk.Context, mode runTxMode) sdk.Context {
+func (app *BaseApp) initializeContext(ctx sdk.Context, mode runTxMode) sdk.Context {
 	if mode != runTxModeSimulate {
 		return ctx
 	}
@@ -582,7 +584,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	var gasWanted int64
 	var msCache sdk.CacheMultiStore
 	ctx := app.getContextForAnte(mode, txBytes)
-	ctx = app.applyTxMode(ctx, mode)
+	ctx = app.initializeContext(ctx, mode)
 
 	defer func() {
 		if r := recover(); r != nil {

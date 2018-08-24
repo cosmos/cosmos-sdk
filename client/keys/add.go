@@ -188,20 +188,11 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if paramCheck(m) != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	errCode, err := paramCheck(kb, m)
+	if err != nil {
+		w.WriteHeader(errCode)
 		w.Write([]byte(err.Error()))
 		return
-	}
-
-	// check if already exists
-	infos, err := kb.List()
-	for _, i := range infos {
-		if i.GetName() == m.Name {
-			w.WriteHeader(http.StatusConflict)
-			w.Write([]byte(fmt.Sprintf("Account with name %s already exists.", m.Name)))
-			return
-		}
 	}
 
 	// create account
@@ -236,19 +227,32 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // paramCheck performs add new key parameters checking
-func paramCheck(m NewKeyBody) error {
+func paramCheck(kb keys.Keybase, m NewKeyBody) (int, error) {
 	if len(m.Name) < 1 || len(m.Name) > 16 {
-		return fmt.Errorf("account name length should not be longer than 16")
+		return http.StatusBadRequest, fmt.Errorf("account name length should not be longer than 16")
 	}
 	for _, char := range []rune(m.Name) {
 		if !syntax.IsWordChar(char) {
-			return fmt.Errorf("account name should not contains any char beyond [_0-9A-Za-z]")
+			return http.StatusBadRequest, fmt.Errorf("account name should not contains any char beyond [_0-9A-Za-z]")
 		}
 	}
 	if len(m.Password) < 8 || len(m.Password) > 16 {
-		return fmt.Errorf("account password length should be no less than 8 and no greater than 16")
+		return http.StatusBadRequest, fmt.Errorf("account password length should be no less than 8 and no greater than 16")
 	}
-	return nil
+
+	// check if already exists
+	infos, err := kb.List()
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	for _, i := range infos {
+		if i.GetName() == m.Name {
+			return http.StatusConflict, fmt.Errorf("account with name %s already exists", m.Name)
+		}
+	}
+
+	return 0, nil
 }
 
 // AddNewKeyRequest is the handler of adding new key in swagger rest server
@@ -265,28 +269,15 @@ func AddNewKeyRequest(gtx *gin.Context) {
 		return
 	}
 
-	if paramCheck(m) != nil {
-		httputils.NewError(gtx, http.StatusBadRequest, err)
-	}
-
 	kb, err := GetKeyBase()
 	if err != nil {
 		httputils.NewError(gtx, http.StatusInternalServerError, err)
 		return
 	}
 
-	// check if already exists
-	infos, err := kb.List()
+	errCode, err := paramCheck(kb, m)
 	if err != nil {
-		httputils.NewError(gtx, http.StatusInternalServerError, err)
-		return
-	}
-
-	for _, i := range infos {
-		if i.GetName() == m.Name {
-			httputils.NewError(gtx, http.StatusConflict, fmt.Errorf("account with name %s already exists", m.Name))
-			return
-		}
+		httputils.NewError(gtx, errCode, err)
 	}
 
 	// create account

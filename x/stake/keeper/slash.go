@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/x/stake/types"
 	"github.com/tendermint/tendermint/crypto"
+	"math"
 )
 
 // Slash a validator for an infraction committed at a known height

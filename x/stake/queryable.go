@@ -9,6 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+// TODO Redelegations
 func NewQuerier(k keeper.Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
@@ -22,10 +23,10 @@ func NewQuerier(k keeper.Keeper) sdk.Querier {
 			return queryDelegatorValidators(ctx, path[1:], req, k)
 		case "delegatorValidator":
 			return queryDelegatorValidator(ctx, path[1:], req, k)
-		case "delegatorDelegations":
-			return queryDelegatorDelegations(ctx, path[1:], req, k)
-		case "delegatorUnbondingDelegations":
-			return queryDelegatorUnbondingDelegations(ctx, path[1:], req, k)
+		case "delegation":
+			return queryDelegation(ctx, path[1:], req, k)
+		case "unbonding-delegation":
+			return queryUnbondingDelegation(ctx, path[1:], req, k)
 		case "pool":
 			return queryPool(ctx, path[1:], req, k)
 		case "parameters":
@@ -77,12 +78,13 @@ func queryValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k kee
 	}
 
 	res, errRes = wire.MarshalJSONIndent(k.Codec(), validator)
-	if err != nil {
-		panic(err.Error())
+	if errRes != nil {
+		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
 	}
 	return res, nil
 }
 
+// TODO query with limit
 // func queryDelegator(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
 // 	var params QueryAddressParams
 // 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
@@ -97,6 +99,7 @@ func queryValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k kee
 // 	return res, nil
 // }
 
+// TODO query with limit
 func queryDelegatorValidators(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
 	var params QueryAddressParams
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
@@ -129,7 +132,7 @@ func queryDelegatorValidator(ctx sdk.Context, path []string, req abci.RequestQue
 	return res, nil
 }
 
-func queryDelegatorDelegations(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
+func queryDelegation(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
 	var params QueryBondsParams
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
@@ -148,7 +151,7 @@ func queryDelegatorDelegations(ctx sdk.Context, path []string, req abci.RequestQ
 	return res, nil
 }
 
-func queryDelegatorUnbondingDelegations(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
+func queryUnbondingDelegation(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
 	var params QueryBondsParams
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {

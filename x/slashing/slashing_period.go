@@ -7,6 +7,21 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Cap an infraction's slash amount by the slashing period in which it was committed
+func (k Keeper) capBySlashingPeriod(ctx sdk.Context, address sdk.ValAddress, fraction sdk.Dec, infractionHeight int64) (revisedFraction sdk.Dec) {
+
+	// Calculate total amount to be slashed
+	slashingPeriod := k.getValidatorSlashingPeriodForHeight(ctx, address, infractionHeight)
+	totalToSlash := sdk.MaxDec(slashingPeriod.SlashedSoFar, fraction)
+	slashingPeriod.SlashedSoFar = totalToSlash
+	k.setValidatorSlashingPeriod(ctx, slashingPeriod)
+
+	// Calculate remainder
+	revisedFraction = slashingPeriod.SlashedSoFar.Sub(totalToSlash)
+	return
+
+}
+
 // Stored by *validator* address (not owner address)
 func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk.ValAddress, height int64) (slashingPeriod ValidatorSlashingPeriod) {
 	store := ctx.KVStore(k.storeKey)

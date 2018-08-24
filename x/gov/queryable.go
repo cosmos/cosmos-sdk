@@ -41,15 +41,15 @@ type QueryProposalsParams struct {
 
 func queryProposals(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	var params QueryProposalsParams
-	err = keeper.cdc.UnmarshalJSON(req.Data, &params)
-	if err != nil {
-		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", err2.Error()))
+	errRes := keeper.cdc.UnmarshalJSON(req.Data, &params)
+	if errRes != nil {
+		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", errRes.Error()))
 	}
 
 	proposals := keeper.GetProposalsFiltered(ctx, params.Voter, params.Depositer, params.ProposalStatus, params.NumLatestProposals)
 
-	res, err = wire.MarshalJSONIndent(keeper.cdc, proposals)
-	if err != nil {
+	res, errRes = wire.MarshalJSONIndent(keeper.cdc, proposals)
+	if errRes != nil {
 		panic("could not marshal result to JSON")
 	}
 	return res, nil
@@ -62,9 +62,9 @@ type QueryProposalParams struct {
 
 func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	var params QueryProposalParams
-	err2 := keeper.cdc.UnmarshalJSON(req.Data, &params)
-	if err2 != nil {
-		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", err2.Error()))
+	errRes := keeper.cdc.UnmarshalJSON(req.Data, &params)
+	if errRes != nil {
+		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", errRes.Error()))
 	}
 
 	proposal := keeper.GetProposal(ctx, params.ProposalID)
@@ -72,8 +72,8 @@ func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		return []byte{}, ErrUnknownProposal(DefaultCodespace, params.ProposalID)
 	}
 
-	res, err2 := wire.MarshalJSONIndent(keeper.cdc, proposal)
-	if err2 != nil {
+	res, errRes = wire.MarshalJSONIndent(keeper.cdc, proposal)
+	if errRes != nil {
 		panic("could not marshal result to JSON")
 	}
 	return res, nil
@@ -87,14 +87,14 @@ type QueryDepositParams struct {
 
 func queryDeposit(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	var params QueryDepositParams
-	err2 := keeper.cdc.UnmarshalJSON(req.Data, &params)
-	if err2 != nil {
-		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", err2.Error()))
+	errRes := keeper.cdc.UnmarshalJSON(req.Data, &params)
+	if errRes != nil {
+		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", errRes.Error()))
 	}
 
 	deposit, _ := keeper.GetDeposit(ctx, params.ProposalID, params.Depositer)
-	res, err2 := wire.MarshalJSONIndent(keeper.cdc, deposit)
-	if err2 != nil {
+	res, errRes = wire.MarshalJSONIndent(keeper.cdc, deposit)
+	if errRes != nil {
 		panic("could not marshal result to JSON")
 	}
 	return res, nil
@@ -108,14 +108,14 @@ type QueryVoteParams struct {
 
 func queryVote(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	var params QueryVoteParams
-	err2 := keeper.cdc.UnmarshalJSON(req.Data, &params)
-	if err2 != nil {
-		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", err2.Error()))
+	errRes := keeper.cdc.UnmarshalJSON(req.Data, &params)
+	if errRes != nil {
+		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", errRes.Error()))
 	}
 
 	vote, _ := keeper.GetVote(ctx, params.ProposalID, params.Voter)
-	res, err2 := wire.MarshalJSONIndent(keeper.cdc, vote)
-	if err2 != nil {
+	res, errRes = wire.MarshalJSONIndent(keeper.cdc, vote)
+	if errRes != nil {
 		panic("could not marshal result to JSON")
 	}
 	return res, nil
@@ -128,9 +128,9 @@ type QueryDepositsParams struct {
 
 func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	var params QueryDepositParams
-	err2 := keeper.cdc.UnmarshalJSON(req.Data, &params)
-	if err2 != nil {
-		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", err2.Error()))
+	errRes := keeper.cdc.UnmarshalJSON(req.Data, &params)
+	if errRes != nil {
+		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", errRes.Error()))
 	}
 
 	var deposits []Deposit
@@ -141,8 +141,8 @@ func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		deposits = append(deposits, deposit)
 	}
 
-	res, err2 := wire.MarshalJSONIndent(keeper.cdc, deposits)
-	if err2 != nil {
+	res, errRes = wire.MarshalJSONIndent(keeper.cdc, deposits)
+	if errRes != nil {
 		panic("could not marshal result to JSON")
 	}
 	return res, nil
@@ -155,10 +155,10 @@ type QueryVotesParams struct {
 
 func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	var params QueryVotesParams
-	err2 := keeper.cdc.UnmarshalJSON(req.Data, &params)
+	errRes := keeper.cdc.UnmarshalJSON(req.Data, &params)
 
-	if err2 != nil {
-		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", err2.Error()))
+	if errRes != nil {
+		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", errRes.Error()))
 	}
 
 	var votes []Vote
@@ -169,8 +169,8 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 		votes = append(votes, vote)
 	}
 
-	res, err2 := wire.MarshalJSONIndent(keeper.cdc, votes)
-	if err2 != nil {
+	res, errRes = wire.MarshalJSONIndent(keeper.cdc, votes)
+	if errRes != nil {
 		panic("could not marshal result to JSON")
 	}
 	return res, nil
@@ -185,9 +185,9 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 	// TODO: Dependant on #1914
 
 	var proposalID int64
-	err2 := keeper.cdc.UnmarshalJSON(req.Data, proposalID)
-	if err2 != nil {
-		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", err2.Error()))
+	errRes := keeper.cdc.UnmarshalJSON(req.Data, proposalID)
+	if errRes != nil {
+		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", errRes.Error()))
 	}
 
 	proposal := keeper.GetProposal(ctx, proposalID)
@@ -205,8 +205,8 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 		_, tallyResult, _ = tally(ctx, keeper, proposal)
 	}
 
-	res, err2 := wire.MarshalJSONIndent(keeper.cdc, tallyResult)
-	if err2 != nil {
+	res, errRes = wire.MarshalJSONIndent(keeper.cdc, tallyResult)
+	if errRes != nil {
 		panic("could not marshal result to JSON")
 	}
 	return res, nil

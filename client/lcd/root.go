@@ -110,7 +110,7 @@ func createHandler(cdc *wire.Codec) http.Handler {
 func ServeSwaggerCommand(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rest-server-swagger",
-		Short: "Start LCD (light-client daemon), a local REST server with swagger-ui, default uri: http://localhost:1317/swagger/index.html",
+		Short: "Start Gaia-lite (gaia light client daemon), a local REST server with swagger-ui, default url: http://localhost:1317/swagger/index.html",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
 				With("module", "rest-server-swagger")
@@ -134,7 +134,7 @@ func ServeSwaggerCommand(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().String(client.FlagListenAddr, "localhost:1317", "Address for server to listen on.")
 	cmd.Flags().String(client.FlagNodeList, "tcp://localhost:26657", "Node list to connect to, example: \"tcp://10.10.10.10:26657,tcp://20.20.20.20:26657\".")
 	cmd.Flags().String(client.FlagChainID, "", "ID of chain we connect to, must be specified.")
-	cmd.Flags().String(client.FlagSwaggerHostIP, "localhost", "The host IP of the Cosmos-LCD server, swagger will send request to this host.")
+	cmd.Flags().String(client.FlagSwaggerHostIP, "localhost", "The host IP of the Gaia-lite server, swagger-ui will send request to this host.")
 	cmd.Flags().String(client.FlagModules, "general,key,token", "Enabled modules.")
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust full nodes or not.")
 
@@ -154,20 +154,20 @@ func createSwaggerHandler(server *gin.Engine, cdc *wire.Codec)  {
 	//Split the node list string into multi full node URIs
 	nodeAddrArray := strings.Split(nodeAddrs,",")
 	if len(nodeAddrArray) < 1 {
-		panic(fmt.Errorf("missing node URIs"))
+		panic(fmt.Errorf("missing node URLs"))
 	}
 	//Tendermint certifier can only connect to one full node. Here we assign the first full node to it
-	cert,err := tendermintLiteProxy.GetCertifier(chainID, rootDir, nodeAddrArray[0])
+	certifier, err := tendermintLiteProxy.GetCertifier(chainID, rootDir, nodeAddrArray[0])
 	if err != nil {
 		panic(err)
 	}
 	//Create load balancing engine
-	clientMgr,err := context.NewClientManager(nodeAddrs)
+	clientManager, err := context.NewClientManager(nodeAddrs)
 	if err != nil {
 		panic(err)
 	}
 	//Assign tendermint certifier and load balancing engine to ctx
-	ctx := context.NewCLIContext().WithCodec(cdc).WithLogger(os.Stdout).WithCert(cert).WithClientMgr(clientMgr)
+	ctx := context.NewCLIContext().WithCodec(cdc).WithLogger(os.Stdout).WithCertifier(certifier).WithClientManager(clientManager)
 
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

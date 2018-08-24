@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"errors"
 	"github.com/cosmos/cosmos-sdk/client/httputils"
+	"io/ioutil"
 )
 
 func updateKeyCommand() *cobra.Command {
@@ -100,10 +101,15 @@ func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 // UpdateKeyRequest is the handler of updating specified key in swagger rest server
 func UpdateKeyRequest(gtx *gin.Context) {
 	name := gtx.Param("name")
-	var kb keys.Keybase
 	var m UpdateKeyBody
 
-	if err := gtx.BindJSON(&m); err != nil {
+	body, err := ioutil.ReadAll(gtx.Request.Body)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusBadRequest, err)
+		return
+	}
+	err = cdc.UnmarshalJSON(body, &m)
+	if err != nil {
 		httputils.NewError(gtx, http.StatusBadRequest, err)
 		return
 	}

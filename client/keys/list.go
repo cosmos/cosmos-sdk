@@ -1,7 +1,6 @@
 package keys
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/spf13/cobra"
@@ -61,7 +60,7 @@ func QueryKeysRequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	output, err := json.MarshalIndent(keysOutput, "", "  ")
+	output, err := cdc.MarshalJSONIndent(keysOutput, "", "  ")
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
@@ -70,7 +69,7 @@ func QueryKeysRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(output)
 }
 
-// DeleteKeyRequest is the handler of listing all keys in swagger rest server
+// QueryKeysRequest is the handler of listing all keys in swagger rest server
 func QueryKeysRequest(gtx *gin.Context) {
 	kb, err := GetKeyBase()
 	if err != nil {
@@ -92,7 +91,7 @@ func QueryKeysRequest(gtx *gin.Context) {
 		httputils.NewError(gtx, http.StatusInternalServerError, err)
 		return
 	}
-	output, err := json.MarshalIndent(keysOutput, "", "  ")
+	output, err := cdc.MarshalJSONIndent(keysOutput, "", "  ")
 	if err != nil {
 		httputils.NewError(gtx, http.StatusInternalServerError, err)
 		return

@@ -1,19 +1,40 @@
+## Transactions
 
-### TxProveLive
+In this section we describe the processing of transactions for the `slashing` module.
 
-If a validator was automatically unbonded due to liveness issues and wishes to
-assert it is still online, it can send `TxProveLive`:
+### Unjail
 
-```golang
-type TxProveLive struct {
-    PubKey crypto.PubKey
+If a validator was automatically unbonded due to downtime and wishes to come back online &
+possibly rejoin the bonded set, it must send `TxUnjail`:
+
+```
+type TxUnjail struct {
+    ValidatorAddr sdk.AccAddress
 }
+
+handleMsgUnjail(tx TxUnjail)
+
+    validator = getValidator(tx.ValidatorAddr)
+    if validator == nil
+      fail with "No validator found"
+
+    if !validator.Jailed
+      fail with "Validator not jailed, cannot unjail"
+
+    info = getValidatorSigningInfo(operator)
+    if block time < info.JailedUntil
+      fail with "Validator still jailed, cannot unjail until period has expired"
+
+    // Update the start height so the validator won't be immediately unbonded again
+    info.StartHeight = BlockHeight
+    setValidatorSigningInfo(info)
+
+    validator.Jailed = false
+    setValidator(validator)
+
+    return
 ```
 
-All delegators in the temporary unbonding pool which have not
-transacted to move will be bonded back to the now-live validator and begin to
-once again collect provisions and rewards. 
-
-```
-TODO: pseudo-code
-```
+If the validator has enough stake to be in the top `n = MaximumBondedValidators`, they will be automatically rebonded,
+and all delegators still delegated to the validator will be rebonded and begin to again collect
+provisions and rewards.

@@ -106,7 +106,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 		keyAcc,                // target store
 		auth.ProtoBaseAccount, // prototype
 	)
-	ck := bank.NewKeeper(accountMapper)
+	ck := bank.NewBaseKeeper(accountMapper)
 	keeper := NewKeeper(cdc, keyStake, ck, types.DefaultCodespace)
 	keeper.SetPool(ctx, types.InitialPool())
 	keeper.SetNewParams(ctx, types.DefaultParams())

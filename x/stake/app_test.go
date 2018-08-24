@@ -34,7 +34,7 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	RegisterWire(mApp.Cdc)
 
 	keyStake := sdk.NewKVStoreKey("stake")
-	coinKeeper := bank.NewKeeper(mApp.AccountMapper)
+	coinKeeper := bank.NewBaseKeeper(mApp.AccountMapper)
 	keeper := NewKeeper(mApp.Cdc, keyStake, coinKeeper, mApp.RegisterCodespace(DefaultCodespace))
 
 	mApp.Router().AddRoute("stake", NewHandler(keeper))

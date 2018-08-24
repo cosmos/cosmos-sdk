@@ -24,7 +24,7 @@ func TestGovWithRandomMessages(t *testing.T) {
 	bank.RegisterWire(mapp.Cdc)
 	gov.RegisterWire(mapp.Cdc)
 	mapper := mapp.AccountMapper
-	coinKeeper := bank.NewKeeper(mapper)
+	coinKeeper := bank.NewBaseKeeper(mapper)
 	stakeKey := sdk.NewKVStoreKey("stake")
 	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, coinKeeper, stake.DefaultCodespace)
 	paramKey := sdk.NewKVStoreKey("params")

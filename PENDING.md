@@ -60,6 +60,9 @@ IMPROVEMENTS
 * SDK
     * [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.
     * [cli] \#1632 Add integration tests to ensure `basecoind init && basecoind` start sequences run successfully for both `democoin` and `basecoin` examples.
+    * [x/bank] \#2145 Implement `bank.Keeper`, `bank.SendKeeper` and `bank.ViewKeeper`
+    interfaces to allow applications built on the SDK to define custom banking business
+    logic.
 
 * Tendermint
 

@@ -738,27 +738,22 @@ func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.Acc
 		panic(err)
 	}
 
-	jsonStr := func() []byte {
-		if gas > 0 {
-			return []byte(fmt.Sprintf(`{
-				"name":"%s",
-				"password":"%s",
-				"account_number":"%d",
-				"sequence":"%d",
-				"amount":[%s],
-				"chain_id":"%s",
-				"gas":"%v"
-			}`, name, password, accnum, sequence, coinbz, chainID, gas))
-		}
-		return []byte(fmt.Sprintf(`{
-			"name":"%s",
-			"password":"%s",
-			"account_number":"%d",
-			"sequence":"%d",
-			"amount":[%s],
-			"chain_id":"%s"
-		}`, name, password, accnum, sequence, coinbz, chainID))
-	}()
+	gasStr := ""
+	if gas > 0 {
+		gasStr = fmt.Sprintf(`
+		"gas":"%v",
+		`, gas)
+	}
+	jsonStr := []byte(fmt.Sprintf(`{
+		%v
+		"name":"%s",
+		"password":"%s",
+		"account_number":"%d",
+		"sequence":"%d",
+		"amount":[%s],
+		"chain_id":"%s"
+	}`, gasStr, name, password, accnum, sequence, coinbz, chainID))
+
 	res, body = Request(t, port, "POST", fmt.Sprintf("/accounts/%s/send", receiveAddr), jsonStr)
 	return
 }

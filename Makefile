@@ -110,6 +110,11 @@ get_vendor_deps:
 	@rm -rf .vendor-new
 	@dep ensure -v
 
+get_vendor_deps_ci:
+	@echo "--> Running dep ensure"
+	@rm -rf .vendor-new
+	@dep ensure -v -vendor-only
+
 draw_deps:
 	@# requires brew install graphviz or apt-get install graphviz
 	go get github.com/RobotsAndPencils/goviz

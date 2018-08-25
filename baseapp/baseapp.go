@@ -608,7 +608,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// run the ante handler
 	if app.anteHandler != nil {
-		newCtx, result, abort := app.anteHandler(ctx, tx)
+		newCtx, result, abort := app.anteHandler(ctx, tx, (mode == runTxModeSimulate))
 		if abort {
 			return result
 		}

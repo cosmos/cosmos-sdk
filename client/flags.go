@@ -4,6 +4,7 @@ import "github.com/spf13/cobra"
 
 // nolint
 const (
+	DefaultGasLimit      = 200000
 	DefaultGasAdjustment = 1.2
 
 	FlagUseLedger     = "ledger"
@@ -52,7 +53,7 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().String(FlagChainID, "", "Chain ID of tendermint node")
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
-		c.Flags().Int64(FlagGas, 0, "gas limit to set per-transaction; set to 0 to calculate required gas automatically")
+		c.Flags().Int64(FlagGas, DefaultGasLimit, "gas limit to set per-transaction; set to 0 to calculate required gas automatically")
 		c.Flags().Float64(FlagGasAdjustment, DefaultGasAdjustment, "adjustment factor to be multiplied against the estimate returned by the tx simulation")
 		c.Flags().Bool(FlagAsync, false, "broadcast transactions asynchronously")
 		c.Flags().Bool(FlagJson, false, "return output in json format")

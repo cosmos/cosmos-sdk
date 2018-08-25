@@ -25,7 +25,7 @@ const (
 func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 	return func(
-		ctx sdk.Context, tx sdk.Tx,
+		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
 
 		// This AnteHandler requires Txs to be StdTxs
@@ -35,7 +35,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		}
 
 		// set the gas meter
-		if stdTx.Fee.Gas == 0 {
+		if simulate {
 			newCtx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 		} else {
 			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))

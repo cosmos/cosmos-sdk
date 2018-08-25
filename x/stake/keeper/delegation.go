@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -311,6 +312,32 @@ func (k Keeper) unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddr
 
 //______________________________________________________________________________________________________
 
+// get info for begin functions: MinTime and CreationHeight
+func (k Keeper) getBeginInfo(ctx sdk.Context, params types.Params, validatorSrcAddr sdk.AccAddress) (
+	minTime time.Time, height int64, completeNow bool) {
+
+	validator, found := k.GetValidator(ctx, validatorSrcAddr)
+	switch {
+	case !found || validator.Status == sdk.Bonded:
+
+		// longest wait - just unbonding period from now
+		minTime = ctx.BlockHeader().Time.Add(params.UnbondingTime)
+		height = ctx.BlockHeader().Height
+		return minTime, height, false
+
+	case validator.Status == sdk.Unbonding:
+		minTime = validator.UnbondingMinTime
+		height = validator.UnbondingHeight
+		return minTime, height, false
+
+	case validator.Status == sdk.Unbonded:
+		return minTime, height, true
+
+	default:
+		panic("unknown validator status")
+	}
+}
+
 // complete unbonding an unbonding record
 func (k Keeper) BeginUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddress, sharesAmount sdk.Dec) sdk.Error {
 
@@ -327,12 +354,22 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr sdk
 
 	// create the unbonding delegation
 	params := k.GetParams(ctx)
-	minTime := ctx.BlockHeader().Time.Add(params.UnbondingTime)
+	minTime, height, completeNow := k.getBeginInfo(ctx, params, validatorAddr)
 	balance := sdk.Coin{params.BondDenom, returnAmount.RoundInt()}
+
+	// no need to create the ubd object just complete now
+	if completeNow {
+		_, _, err := k.coinKeeper.AddCoins(ctx, delegatorAddr, sdk.Coins{balance})
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 
 	ubd := types.UnbondingDelegation{
 		DelegatorAddr:  delegatorAddr,
 		ValidatorAddr:  validatorAddr,
+		CreationHeight: height,
 		MinTime:        minTime,
 		Balance:        balance,
 		InitialBalance: balance,
@@ -390,11 +427,19 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delegatorAddr, validatorSrcAd
 
 	// create the unbonding delegation
 	minTime := ctx.BlockHeader().Time.Add(params.UnbondingTime)
+	height := ctx.BlockHeader().Height
+
+	minTime, height, completeNow := k.getBeginInfo(ctx, params, validatorSrcAddr)
+
+	if completeNow { // no need to create the redelegation object
+		return nil
+	}
 
 	red := types.Redelegation{
 		DelegatorAddr:    delegatorAddr,
 		ValidatorSrcAddr: validatorSrcAddr,
 		ValidatorDstAddr: validatorDstAddr,
+		CreationHeight:   height,
 		MinTime:          minTime,
 		SharesDst:        sharesCreated,
 		SharesSrc:        sharesAmount,

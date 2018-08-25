@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -25,6 +26,11 @@ type (
 	// If the invariant has been broken, the function should halt the
 	// test and output the log.
 	Invariant func(t *testing.T, app *baseapp.BaseApp, log string)
+
+	mockValidator struct {
+		val           abci.Validator
+		livenessState int
+	}
 )
 
 // PeriodicInvariant returns an Invariant function closure that asserts

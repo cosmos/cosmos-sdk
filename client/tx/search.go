@@ -27,7 +27,20 @@ const (
 func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "txs",
-		Short: "Search for all transactions that match the given tags",
+		Short: "Search for all transactions that match the given tags.",
+		Long: strings.TrimSpace(`
+Search for transactions that match the given tags. By default, transactions must match ALL tags 
+passed to the --tags option. To match any transaction, use the --any option.
+
+For example:
+
+$ gaiacli tendermint txs --tag test1,test2
+
+will match any transaction tagged with both test1,test2. To match a transaction tagged with either
+test1 or test2, use:
+
+$ gaiacli tendermint txs --tag test1,test2 --any
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tags := viper.GetStringSlice(flagTags)
 
@@ -52,7 +65,7 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 
 	// TODO: change this to false once proofs built in
 	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
-	cmd.Flags().StringSlice(flagTags, nil, "Tags that must match (may provide multiple)")
+	cmd.Flags().StringSlice(flagTags, nil, "Comma-separated list of tags that must match")
 	cmd.Flags().Bool(flagAny, false, "Return transactions that match ANY tag, rather than ALL")
 	return cmd
 }

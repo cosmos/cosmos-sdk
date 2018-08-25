@@ -2,9 +2,11 @@ package types
 
 import (
 	"bytes"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // defaultUnbondingTime reflects three weeks in seconds as the default
@@ -42,4 +44,37 @@ func DefaultParams() Params {
 		MaxValidators:       100,
 		BondDenom:           "steak",
 	}
+}
+
+// HumanReadableString returns a human readable string representation of the
+// parameters.
+func (p Params) HumanReadableString() string {
+
+	resp := "Pool \n"
+	resp += fmt.Sprintf("Maximum Annual Inflation Rate Change: %s\n", p.InflationRateChange)
+	resp += fmt.Sprintf("Max Inflation Rate: %s\n", p.InflationMax)
+	resp += fmt.Sprintf("Min Inflation Tate: %s\n", p.InflationMin)
+	resp += fmt.Sprintf("Bonded Token Goal (%s): %s\n", "s", p.GoalBonded)
+	resp += fmt.Sprintf("Unbonding Time: %s\n", p.UnbondingTime)
+	resp += fmt.Sprintf("Max Validators: %d: \n", p.MaxValidators)
+	resp += fmt.Sprintf("Bonded Coin Denomination: %s\n", p.BondDenom)
+	return resp
+}
+
+// unmarshal the current staking params value from store key or panic
+func MustUnmarshalParams(cdc *wire.Codec, value []byte) Params {
+	params, err := UnmarshalParams(cdc, value)
+	if err != nil {
+		panic(err)
+	}
+	return params
+}
+
+// unmarshal the current staking params value from store key
+func UnmarshalParams(cdc *wire.Codec, value []byte) (params Params, err error) {
+	err = cdc.UnmarshalBinary(value, &params)
+	if err != nil {
+		return
+	}
+	return
 }

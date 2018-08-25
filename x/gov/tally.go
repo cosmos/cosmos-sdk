@@ -36,6 +36,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 
 	// iterate over all the votes
 	votesIterator := keeper.GetVotes(ctx, proposal.GetProposalID())
+	defer votesIterator.Close()
 	for ; votesIterator.Valid(); votesIterator.Next() {
 		vote := &Vote{}
 		keeper.cdc.MustUnmarshalBinary(votesIterator.Value(), vote)
@@ -64,7 +65,6 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 
 		keeper.deleteVote(ctx, vote.ProposalID, vote.Voter)
 	}
-	votesIterator.Close()
 
 	// Iterate over the validators again to tally their voting power and see who didn't vote
 	nonVoting = []sdk.AccAddress{}

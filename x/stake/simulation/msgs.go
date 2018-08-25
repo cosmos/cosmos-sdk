@@ -235,7 +235,10 @@ func SimulateMsgCompleteRedelegate(k stake.Keeper) simulation.TestAndRunTx {
 func Setup(mapp *mock.App, k stake.Keeper) simulation.RandSetup {
 	return func(r *rand.Rand, privKeys []crypto.PrivKey) {
 		ctx := mapp.NewContext(false, abci.Header{})
-		stake.InitGenesis(ctx, k, stake.DefaultGenesisState())
+		gen := stake.DefaultGenesisState()
+		gen.Params.InflationMax = sdk.NewDec(0)
+		gen.Params.InflationMin = sdk.NewDec(0)
+		stake.InitGenesis(ctx, k, gen)
 		params := k.GetParams(ctx)
 		denom := params.BondDenom
 		loose := sdk.ZeroInt()

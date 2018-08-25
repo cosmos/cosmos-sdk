@@ -48,7 +48,6 @@ func TestSetValidator(t *testing.T) {
 	updates := keeper.GetTendermintUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 	require.Equal(t, validator.ABCIValidator(), updates[0])
-
 }
 
 func TestUpdateValidatorByPowerIndex(t *testing.T) {
@@ -87,6 +86,69 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	require.True(t, found)
 	power = GetValidatorsByPowerIndexKey(validator, pool)
 	require.True(t, keeper.validatorByPowerIndexExists(ctx, power))
+}
+
+func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
+	numVals := 10
+	maxVals := 5
+
+	// create context, keeper, and pool for tests
+	ctx, _, keeper := CreateTestInput(t, false, 0)
+	pool := keeper.GetPool(ctx)
+
+	// create keeper parameters
+	params := keeper.GetParams(ctx)
+	params.MaxValidators = uint16(maxVals)
+	keeper.SetParams(ctx, params)
+
+	// create a random pool
+	pool.LooseTokens = sdk.NewDec(10000)
+	pool.BondedTokens = sdk.NewDec(1234)
+	keeper.SetPool(ctx, pool)
+
+	validators := make([]types.Validator, numVals)
+	for i := 0; i < len(validators); i++ {
+		moniker := fmt.Sprintf("val#%d", int64(i))
+		val := types.NewValidator(Addrs[i], PKs[i], types.Description{Moniker: moniker})
+		val.BondHeight = int64(i)
+		val.BondIntraTxCounter = int16(i)
+		val, pool, _ = val.AddTokensFromDel(pool, int64((i+1)*10))
+
+		keeper.SetPool(ctx, pool)
+		val = keeper.UpdateValidator(ctx, val)
+		validators[i] = val
+	}
+
+	nextCliffVal := validators[numVals-maxVals+1]
+
+	// remove enough tokens to kick out the validator below the current cliff
+	// validator and next in line cliff validator
+	nextCliffVal, pool, _ = nextCliffVal.RemoveDelShares(pool, sdk.NewDec(21))
+	keeper.SetPool(ctx, pool)
+	nextCliffVal = keeper.UpdateValidator(ctx, nextCliffVal)
+
+	// require the cliff validator has changed
+	cliffVal := validators[numVals-maxVals-1]
+	require.Equal(t, cliffVal.Operator, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+
+	// require the cliff validator power has changed
+	cliffPower := keeper.GetCliffValidatorPower(ctx)
+	require.Equal(t, GetValidatorsByPowerIndexKey(cliffVal, pool), cliffPower)
+
+	expectedValStatus := map[int]sdk.BondStatus{
+		9: sdk.Bonded, 8: sdk.Bonded, 7: sdk.Bonded, 5: sdk.Bonded, 4: sdk.Bonded,
+		0: sdk.Unbonded, 1: sdk.Unbonded, 2: sdk.Unbonded, 3: sdk.Unbonded, 6: sdk.Unbonded,
+	}
+
+	// require all the validators have their respective statuses
+	for valIdx, status := range expectedValStatus {
+		valAddr := validators[valIdx].Operator
+		val, _ := keeper.GetValidator(ctx, valAddr)
+
+		require.Equal(
+			t, val.GetStatus(), status,
+			fmt.Sprintf("expected validator to have status: %s", sdk.BondStatusToString(status)))
+	}
 }
 
 func TestCliffValidatorChange(t *testing.T) {
@@ -142,6 +204,19 @@ func TestCliffValidatorChange(t *testing.T) {
 	// assert cliff validator has not change but increased in power
 	cliffPower = keeper.GetCliffValidatorPower(ctx)
 	require.Equal(t, newCliffVal.Operator, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+	require.Equal(t, GetValidatorsByPowerIndexKey(newCliffVal, pool), cliffPower)
+
+	// add enough power to cliff validator to be equal in rank to next validator
+	newCliffVal, pool, _ = newCliffVal.AddTokensFromDel(pool, 9)
+	keeper.SetPool(ctx, pool)
+	newCliffVal = keeper.UpdateValidator(ctx, newCliffVal)
+
+	// assert new cliff validator due to power rank construction
+	newCliffVal = validators[numVals-maxVals+2]
+	require.Equal(t, newCliffVal.Operator, sdk.AccAddress(keeper.GetCliffValidator(ctx)))
+
+	// assert cliff validator power should have been updated
+	cliffPower = keeper.GetCliffValidatorPower(ctx)
 	require.Equal(t, GetValidatorsByPowerIndexKey(newCliffVal, pool), cliffPower)
 }
 
@@ -403,11 +478,13 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	var validators [4]types.Validator
 	for i, amt := range amts {
 		pool := keeper.GetPool(ctx)
-		validators[i] = types.NewValidator(Addrs[i], PKs[i], types.Description{})
+		moniker := fmt.Sprintf("val#%d", int64(i))
+		validators[i] = types.NewValidator(Addrs[i], PKs[i], types.Description{Moniker: moniker})
 		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
 		keeper.SetPool(ctx, pool)
 		validators[i] = keeper.UpdateValidator(ctx, validators[i])
 	}
+
 	for i := range amts {
 		validators[i], found = keeper.GetValidator(ctx, validators[i].Operator)
 		require.True(t, found)

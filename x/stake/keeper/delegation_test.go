@@ -16,11 +16,11 @@ func TestDelegation(t *testing.T) {
 	pool := keeper.GetPool(ctx)
 
 	//construct the validators
-	amts := []int64{9, 8, 7}
+	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
 	var validators [3]types.Validator
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(addrVals[i], PKs[i], types.Description{})
-		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, sdk.NewInt(amt))
+		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
 	}
 
 	keeper.SetPool(ctx, pool)

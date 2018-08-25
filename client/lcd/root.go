@@ -109,11 +109,11 @@ func createHandler(cdc *wire.Codec) http.Handler {
 // Which is much friendly for further development
 func ServeSwaggerCommand(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "rest-server-swagger",
+		Use:   "lite-server",
 		Short: "Start Gaia-lite (gaia light client daemon), a local REST server with swagger-ui, default url: http://localhost:1317/swagger/index.html",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
-				With("module", "rest-server-swagger")
+				With("module", "lite-server")
 			listenAddr := viper.GetString(client.FlagListenAddr)
 			//Create rest server
 			server := gin.New()

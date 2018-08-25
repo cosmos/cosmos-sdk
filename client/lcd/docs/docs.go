@@ -470,6 +470,96 @@ var doc = `{
                 }
             }
         },
+        "/stake/pool": {
+            "get": {
+                "description": "Query the staking pool information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stake Operation"
+                ],
+                "summary": "Query the staking pool information",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/stake.pool"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/stake/parameters": {
+            "get": {
+                "description": "Query the staking params values",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stake Operation"
+                ],
+                "summary": "Query the staking params values",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/stake.params"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/stake/delegators/:delegatorAddr/delegations": {
             "post": {
                 "description": "Send stake related transactions",
@@ -1705,6 +1795,55 @@ var doc = `{
             "items": {
                 "type": "object",
                 "$ref": "#/definitions/stake.txInfo"
+            }
+        },
+        "stake.pool": {
+            "type": "object",
+            "properties": {
+                "loose_tokens": {
+                    "type": "string"
+                },
+                "bonded_tokens": {
+                    "type": "integer"
+                },
+                "inflation_last_time": {
+                    "type": "string"
+                },
+                "inflation": {
+                    "type": "string"
+                },
+                "date_last_commission_reset": {
+                    "type": "integer"
+                },
+                "prev_bonded_shares": {
+                    "type": "string"
+                }
+            }
+        },
+        "stake.params": {
+            "type": "object",
+            "properties": {
+                "inflation_rate_change": {
+                    "type": "string"
+                },
+                "inflation_max": {
+                    "type": "string"
+                },
+                "inflation_min": {
+                    "type": "string"
+                },
+                "goal_bonded": {
+                    "type": "string"
+                },
+                "unbonding_time": {
+                    "type": "string"
+                },
+                "max_validators": {
+                    "type": "integer"
+                },
+                "bond_denom": {
+                    "type": "string"
+                }
             }
         }
     }

@@ -374,6 +374,24 @@
   version = "v1.2.1"
 
 [[projects]]
+  name = "github.com/swaggo/gin-swagger"
+  packages = [
+    ".",
+    "swaggerFiles"
+  ]
+  revision = "8cf3fa9932e247205d1cf2be6fd13a9d09ceb9a4"
+  version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/swaggo/swag"
+  packages = [
+    ".",
+    "example/celler/httputil"
+  ]
+  revision = "db2ee6c14a35e4fca95b0d75054296ef2b699050"
+  version = "v1.3.2"
+
+[[projects]]
   branch = "master"
   digest = "1:f2ffd421680b0a3f7887501b3c6974bcf19217ecd301d0e2c9b681940ec363d5"
   name = "github.com/syndtr/goleveldb"

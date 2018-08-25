@@ -1,10 +1,11 @@
 package keys
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/spf13/cobra"
+	"github.com/gin-gonic/gin"
+	"github.com/cosmos/cosmos-sdk/client/httputils"
 )
 
 // CMD
@@ -59,11 +60,41 @@ func QueryKeysRequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	output, err := json.MarshalIndent(keysOutput, "", "  ")
+	output, err := cdc.MarshalJSONIndent(keysOutput, "", "  ")
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
 		return
 	}
 	w.Write(output)
+}
+
+// QueryKeysRequest is the handler of listing all keys in swagger rest server
+func QueryKeysRequest(gtx *gin.Context) {
+	kb, err := GetKeyBase()
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+	infos, err := kb.List()
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+	// an empty list will be JSONized as null, but we want to keep the empty list
+	if len(infos) == 0 {
+		httputils.NormalResponse(gtx, nil)
+		return
+	}
+	keysOutput, err := Bech32KeysOutput(infos)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+	output, err := cdc.MarshalJSONIndent(keysOutput, "", "  ")
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+	httputils.NormalResponse(gtx, output)
 }

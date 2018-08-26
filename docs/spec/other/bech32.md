@@ -7,12 +7,12 @@ In the Cosmos network, keys and addresses may refer to a number of different rol
 
 ## HRP table     
 
-| HRP        | Definition |
+| HRP           | Definition |
 | ------------- |:-------------:|
-| `cosmosaccaddr`     | Cosmos Account Address     |
-| `cosmosaccpub`      | Cosmos Account Public Key  |
-| `cosmosvaladdr`     | Cosmos Consensus Address   |
-| `cosmosvalpub`      | Cosmos Consensus Public Key|
+| `cosmos`      | Cosmos Account Address     |
+| `cosmospub`   | Cosmos Account Public Key  |
+| `cosmosval`   | Cosmos Validator Consensus Address   |
+| `cosmosval`   | Cosmos Validator Consensus Public Key|
 
 ## Encoding
 

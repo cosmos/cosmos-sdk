@@ -45,17 +45,22 @@ func (k Key) String() string {
 	return k.s
 }
 
+// Used for associating paramstore key and field of param structs
 type KeyFieldPair struct {
 	Key   Key
 	Field interface{}
 }
 
+// Slice of KeyFieldPair
 type KeyFieldPairs []KeyFieldPair
 
+// Interface for structs containing parameters for a module
 type ParamStruct interface {
 	KeyFieldPairs() KeyFieldPairs
 }
 
+// Takes a map from key string to byte slice and
+// unmarshalles it to ParamStruct
 func UnmarshalParamsFromMap(m map[string][]byte, cdc *wire.Codec, ps ParamStruct) error {
 	for _, p := range ps.KeyFieldPairs() {
 		err := cdc.UnmarshalJSON(m[p.Key.String()], p.Field)

@@ -36,6 +36,7 @@ type Params struct {
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
 }
 
+// Implements params.ParamStruct
 func (p *Params) KeyFieldPairs() params.KeyFieldPairs {
 	return params.KeyFieldPairs{
 		{KeyInflationRateChange(), &p.InflationRateChange},

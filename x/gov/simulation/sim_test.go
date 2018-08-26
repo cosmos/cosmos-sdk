@@ -25,19 +25,20 @@ func TestGovWithRandomMessages(t *testing.T) {
 	gov.RegisterWire(mapp.Cdc)
 	mapper := mapp.AccountMapper
 	coinKeeper := bank.NewKeeper(mapper)
-	stakeKey := sdk.NewKVStoreKey("stake")
-	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, coinKeeper, stake.DefaultCodespace)
 	paramKey := sdk.NewKVStoreKey("params")
-	paramKeeper := params.NewKeeper(mapp.Cdc, paramKey)
+	paramTKey := sdk.NewTransientStoreKey("transient_params")
+	paramKeeper := params.NewKeeper(mapp.Cdc, paramKey, paramTKey, nil)
+	stakeKey := sdk.NewKVStoreKey("stake")
+	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, coinKeeper, paramKeeper.Subspace(stake.DefaultParamSpace), stake.DefaultCodespace)
 	govKey := sdk.NewKVStoreKey("gov")
-	govKeeper := gov.NewKeeper(mapp.Cdc, govKey, paramKeeper.Setter(), coinKeeper, stakeKeeper, gov.DefaultCodespace)
+	govKeeper := gov.NewKeeper(mapp.Cdc, govKey, paramKeeper, paramKeeper.Subspace(gov.DefaultParamSpace), coinKeeper, stakeKeeper, gov.DefaultCodespace)
 	mapp.Router().AddRoute("gov", gov.NewHandler(govKeeper))
 	mapp.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 		gov.EndBlocker(ctx, govKeeper)
 		return abci.ResponseEndBlock{}
 	})
 
-	err := mapp.CompleteSetup([]*sdk.KVStoreKey{stakeKey, paramKey, govKey})
+	err := mapp.CompleteSetup(stakeKey, paramKey, paramTKey, govKey)
 	if err != nil {
 		panic(err)
 	}

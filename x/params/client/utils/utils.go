@@ -8,6 +8,7 @@ import (
 // TODO: remove hardcoded storename
 const storeName = "params"
 
+// Query parameters from node with CLIContext
 func QueryParams(cliCtx context.CLIContext, subStoreName string, ps params.ParamStruct) error {
 	m := make(map[string][]byte)
 

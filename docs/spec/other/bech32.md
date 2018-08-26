@@ -9,10 +9,10 @@ In the Cosmos network, keys and addresses may refer to a number of different rol
 
 | HRP           | Definition |
 | ------------- |:-------------:|
-| `cosa`        | Cosmos Account Address     |
-| `cosapub`     | Cosmos Account Public Key  |
-| `cosv`        | Cosmos Validator Consensus Address   |
-| `cosvpub`     | Cosmos Validator Consensus Public Key|
+| `cosmos`      | Cosmos Account Address     |
+| `cosmospub`   | Cosmos Account Public Key  |
+| `cosmosval`   | Cosmos Validator Consensus Address   |
+| `cosmosval`   | Cosmos Validator Consensus Public Key|
 
 ## Encoding
 

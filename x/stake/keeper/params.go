@@ -4,33 +4,23 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 // Default parameter namespace
 const (
-	DefaultParamSpace = "Stake"
+	DefaultParamSpace = "stake"
 )
-
-// nolint - Key generators for parameter access
-func KeyInflationRateChange() params.Key { return params.NewKey("InflationRateChange") }
-func KeyInflationMax() params.Key        { return params.NewKey("InflationMax") }
-func KeyInflationMin() params.Key        { return params.NewKey("InflationMin") }
-func KeyGoalBonded() params.Key          { return params.NewKey("GoalBonded") }
-func KeyUnbondingTime() params.Key       { return params.NewKey("UnbondingTime") }
-func KeyMaxValidators() params.Key       { return params.NewKey("MaxValidators") }
-func KeyBondDenom() params.Key           { return params.NewKey("BondDenom") }
 
 // Cached parameter keys
 var (
-	keyInflationRateChange = KeyInflationRateChange()
-	keyInflationMax        = KeyInflationMax()
-	keyInflationMin        = KeyInflationMin()
-	keyGoalBonded          = KeyGoalBonded()
-	keyUnbondingTime       = KeyUnbondingTime()
-	keyMaxValidators       = KeyMaxValidators()
-	keyBondDenom           = KeyBondDenom()
+	keyInflationRateChange = types.KeyInflationRateChange()
+	keyInflationMax        = types.KeyInflationMax()
+	keyInflationMin        = types.KeyInflationMin()
+	keyGoalBonded          = types.KeyGoalBonded()
+	keyUnbondingTime       = types.KeyUnbondingTime()
+	keyMaxValidators       = types.KeyMaxValidators()
+	keyBondDenom           = types.KeyBondDenom()
 )
 
 // InflationRateChange - Maximum annual change in inflation rate

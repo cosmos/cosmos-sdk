@@ -10,7 +10,7 @@ import (
 
 // Default parameter namespace
 const (
-	DefaultParamSpace = "Slashing"
+	DefaultParamSpace = "slashing"
 )
 
 // nolint - Key generators for parameter access

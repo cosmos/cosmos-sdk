@@ -34,45 +34,6 @@ func NewSpace(cdc *wire.Codec, key sdk.StoreKey, tkey sdk.StoreKey, space string
 	}
 }
 
-// Wrapper for key string
-type Key struct {
-	s string
-}
-
-// Appending two keys with '/' as separator
-// Checks alpanumericity
-func (k Key) Append(keys ...string) (res Key) {
-	res = k
-
-	for _, key := range keys {
-		if !tmlibs.IsASCIIText(key) {
-			panic("parameter key expressions can only contain alphanumeric characters")
-		}
-		res.s = res.s + "/" + key
-	}
-	return
-}
-
-// NewKey constructs a key from a list of strings
-func NewKey(keys ...string) (res Key) {
-	if len(keys) < 1 {
-		panic("length of parameter keys must not be zero")
-	}
-	res = Key{keys[0]}
-
-	return res.Append(keys[1:]...)
-}
-
-// KeyBytes make KVStore key bytes from Key
-func (k Key) Bytes() []byte {
-	return []byte(k.s)
-}
-
-// Human readable string
-func (k Key) String() string {
-	return k.s
-}
-
 // Get parameter from store
 func (s Space) Get(ctx sdk.Context, key Key, ptr interface{}) {
 	store := ctx.KVStore(s.key).Prefix(s.space)

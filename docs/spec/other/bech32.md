@@ -12,7 +12,7 @@ In the Cosmos network, keys and addresses may refer to a number of different rol
 | `cosmos`      | Cosmos Account Address     |
 | `cosmospub`   | Cosmos Account Public Key  |
 | `cosmosval`   | Cosmos Validator Consensus Address   |
-| `cosmosval`   | Cosmos Validator Consensus Public Key|
+| `cosmosvalpub`| Cosmos Validator Consensus Public Key|
 
 ## Encoding
 

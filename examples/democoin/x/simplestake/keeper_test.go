@@ -19,24 +19,27 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
+func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey, *sdk.KVStoreKey) {
 	db := dbm.NewMemDB()
 	authKey := sdk.NewKVStoreKey("authkey")
+	bankKey := sdk.NewKVStoreKey("bankkey")
 	capKey := sdk.NewKVStoreKey("capkey")
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(bankKey, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(authKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
-	return ms, authKey, capKey
+	return ms, authKey, bankKey, capKey
 }
 
 func TestKeeperGetSet(t *testing.T) {
-	ms, authKey, capKey := setupMultiStore()
+	ms, authKey, bankKey, capKey := setupMultiStore()
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
-	stakeKeeper := NewKeeper(capKey, bank.NewKeeper(accountMapper), DefaultCodespace)
+	bankKeeper := bank.NewKeeper(cdc, bankKey, accountMapper, bank.DefaultCodespace)
+	stakeKeeper := NewKeeper(capKey, bankKeeper, DefaultCodespace)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	addr := sdk.AccAddress([]byte("some-address"))
 
@@ -59,14 +62,14 @@ func TestKeeperGetSet(t *testing.T) {
 }
 
 func TestBonding(t *testing.T) {
-	ms, authKey, capKey := setupMultiStore()
+	ms, authKey, bankKey, capKey := setupMultiStore()
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
-	coinKeeper := bank.NewKeeper(accountMapper)
+	coinKeeper := bank.NewKeeper(cdc, bankKey, accountMapper, bank.DefaultCodespace)
 	stakeKeeper := NewKeeper(capKey, coinKeeper, DefaultCodespace)
 	addr := sdk.AccAddress([]byte("some-address"))
 	privKey := ed25519.GenPrivKey()

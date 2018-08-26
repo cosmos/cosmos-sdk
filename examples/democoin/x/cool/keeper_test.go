@@ -15,23 +15,25 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
+func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey, *sdk.KVStoreKey) {
 	db := dbm.NewMemDB()
+	authKey := sdk.NewKVStoreKey("authKey")
+	bankKey := sdk.NewKVStoreKey("bankKey")
 	capKey := sdk.NewKVStoreKey("capkey")
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
-	return ms, capKey
+	return ms, authKey, bankKey, capKey
 }
 
 func TestCoolKeeper(t *testing.T) {
-	ms, capKey := setupMultiStore()
+	ms, authKey, bankKey, capKey := setupMultiStore()
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
-	am := auth.NewAccountMapper(cdc, capKey, auth.ProtoBaseAccount)
+	am := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	ck := bank.NewKeeper(am)
+	ck := bank.NewKeeper(cdc, bankKey, am, bank.DefaultCodespace)
 	keeper := NewKeeper(capKey, ck, DefaultCodespace)
 
 	err := InitGenesis(ctx, keeper, Genesis{"icy"})

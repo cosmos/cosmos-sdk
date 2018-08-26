@@ -130,12 +130,13 @@ type GaiaApp struct {
 	cdc *wire.Codec
 
 	// keys to access the substores
-	keyMain     *sdk.KVStoreKey
-	keyAccount  *sdk.KVStoreKey
-	keyIBC      *sdk.KVStoreKey
-	keyStake    *sdk.KVStoreKey
-	keySlashing *sdk.KVStoreKey
-	keyParams   *sdk.KVStoreKey
+	keyMain       *sdk.KVStoreKey
+	keyAccount    *sdk.KVStoreKey
+	keyBankDenoms *sdk.KVStoreKey
+	keyIBC        *sdk.KVStoreKey
+	keyStake      *sdk.KVStoreKey
+	keySlashing   *sdk.KVStoreKey
+	keyParams     *sdk.KVStoreKey
 
 	// Manage getting and setting accounts
 	accountMapper       auth.AccountMapper
@@ -155,14 +156,15 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 
 	// create your application object
 	var app = &GaiaApp{
-		BaseApp:     bApp,
-		cdc:         cdc,
-		keyMain:     sdk.NewKVStoreKey("main"),
-		keyAccount:  sdk.NewKVStoreKey("acc"),
-		keyIBC:      sdk.NewKVStoreKey("ibc"),
-		keyStake:    sdk.NewKVStoreKey("stake"),
-		keySlashing: sdk.NewKVStoreKey("slashing"),
-		keyParams:   sdk.NewKVStoreKey("params"),
+		BaseApp:       bApp,
+		cdc:           cdc,
+		keyMain:       sdk.NewKVStoreKey("main"),
+		keyAccount:    sdk.NewKVStoreKey("acc"),
+		keyBankDenoms: sdk.NewKVStoreKey("bankdenoms"),
+		keyIBC:        sdk.NewKVStoreKey("ibc"),
+		keyStake:      sdk.NewKVStoreKey("stake"),
+		keySlashing:   sdk.NewKVStoreKey("slashing"),
+		keyParams:     sdk.NewKVStoreKey("params"),
 	}
 
 	// define the accountMapper
@@ -173,7 +175,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 	)
 
 	// add handlers
-	app.coinKeeper = bank.NewKeeper(app.accountMapper)
+	app.coinKeeper = bank.NewKeeper(app.cdc, app.keyBankDenoms, app.accountMapper, app.RegisterCodespace(bank.DefaultCodespace))
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams)
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))

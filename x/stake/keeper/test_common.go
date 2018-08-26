@@ -90,11 +90,13 @@ func ParamsNoInflation() types.Params {
 func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountMapper, Keeper) {
 
 	keyStake := sdk.NewKVStoreKey("stake")
+	keyBank := sdk.NewKVStoreKey("bank")
 	keyAcc := sdk.NewKVStoreKey("acc")
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyBank, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
@@ -106,7 +108,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 		keyAcc,                // target store
 		auth.ProtoBaseAccount, // prototype
 	)
-	ck := bank.NewKeeper(accountMapper)
+	ck := bank.NewKeeper(cdc, keyBank, accountMapper, bank.DefaultCodespace)
 	keeper := NewKeeper(cdc, keyStake, ck, types.DefaultCodespace)
 	keeper.SetPool(ctx, types.InitialPool())
 	keeper.SetNewParams(ctx, types.DefaultParams())
@@ -115,7 +117,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range Addrs {
 		pool := keeper.GetPool(ctx)
-		_, _, err := ck.AddCoins(ctx, addr, sdk.Coins{
+		_, err := ck.AddCoins(ctx, addr, sdk.Coins{
 			{keeper.GetParams(ctx).BondDenom, sdk.NewInt(initCoins)},
 		})
 		require.Nil(t, err)

@@ -50,6 +50,7 @@ func createTestCodec() *wire.Codec {
 
 func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, params.Setter, Keeper) {
 	keyAcc := sdk.NewKVStoreKey("acc")
+	keyBank := sdk.NewKVStoreKey("bank")
 	keyStake := sdk.NewKVStoreKey("stake")
 	keySlashing := sdk.NewKVStoreKey("slashing")
 	keyParams := sdk.NewKVStoreKey("params")
@@ -64,7 +65,7 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, para
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewTMLogger(os.Stdout))
 	cdc := createTestCodec()
 	accountMapper := auth.NewAccountMapper(cdc, keyAcc, auth.ProtoBaseAccount)
-	ck := bank.NewKeeper(accountMapper)
+	ck := bank.NewKeeper(cdc, keyBank, accountMapper, bank.DefaultCodespace)
 	params := params.NewKeeper(cdc, keyParams)
 	sk := stake.NewKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
@@ -75,7 +76,7 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, para
 	require.Nil(t, err)
 
 	for _, addr := range addrs {
-		_, _, err = ck.AddCoins(ctx, addr, sdk.Coins{
+		_, err = ck.AddCoins(ctx, addr, sdk.Coins{
 			{sk.GetParams(ctx).BondDenom, initCoins},
 		})
 	}

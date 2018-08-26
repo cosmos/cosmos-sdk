@@ -15,8 +15,10 @@ import (
 func getBenchmarkMockApp() (*mock.App, error) {
 	mapp := mock.NewApp()
 
+	bankDenomKey := sdk.NewKVStoreKey("bankDenomKey")
+
 	RegisterWire(mapp.Cdc)
-	coinKeeper := NewKeeper(mapp.AccountMapper)
+	coinKeeper := NewKeeper(mapp.Cdc, bankDenomKey, mapp.AccountMapper, mapp.RegisterCodespace(DefaultCodespace))
 	mapp.Router().AddRoute("bank", NewHandler(coinKeeper))
 
 	err := mapp.CompleteSetup([]*sdk.KVStoreKey{})

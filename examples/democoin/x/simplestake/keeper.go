@@ -66,7 +66,7 @@ func (k Keeper) Bond(ctx sdk.Context, addr sdk.AccAddress, pubKey crypto.PubKey,
 		return 0, ErrIncorrectStakingToken(k.codespace)
 	}
 
-	_, _, err := k.ck.SubtractCoins(ctx, addr, []sdk.Coin{stake})
+	_, err := k.ck.SubtractCoins(ctx, addr, []sdk.Coin{stake})
 	if err != nil {
 		return 0, err
 	}
@@ -95,7 +95,7 @@ func (k Keeper) Unbond(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, int
 
 	returnedBond := sdk.NewInt64Coin(stakingToken, bi.Power)
 
-	_, _, err := k.ck.AddCoins(ctx, addr, []sdk.Coin{returnedBond})
+	_, err := k.ck.AddCoins(ctx, addr, []sdk.Coin{returnedBond})
 	if err != nil {
 		return bi.PubKey, bi.Power, err
 	}

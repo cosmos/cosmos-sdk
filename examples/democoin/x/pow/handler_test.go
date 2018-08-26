@@ -15,14 +15,14 @@ import (
 )
 
 func TestPowHandler(t *testing.T) {
-	ms, capKey := setupMultiStore()
+	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
 	am := auth.NewAccountMapper(cdc, capKey, auth.ProtoBaseAccount)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	config := NewConfig("pow", int64(1))
-	ck := bank.NewKeeper(am)
+	ck := bank.NewKeeper(cdc, capKey2, am, bank.DefaultCodespace)
 	keeper := NewKeeper(capKey, config, ck, DefaultCodespace)
 
 	handler := keeper.Handler

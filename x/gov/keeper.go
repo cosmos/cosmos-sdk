@@ -334,7 +334,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 	}
 
 	// Subtract coins from depositer's account
-	_, _, err := keeper.ck.SubtractCoins(ctx, depositerAddr, depositAmount)
+	_, err := keeper.ck.SubtractCoins(ctx, depositerAddr, depositAmount)
 	if err != nil {
 		return err, false
 	}
@@ -379,7 +379,7 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID int64) {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinary(depositsIterator.Value(), deposit)
 
-		_, _, err := keeper.ck.AddCoins(ctx, deposit.Depositer, deposit.Amount)
+		_, err := keeper.ck.AddCoins(ctx, deposit.Depositer, deposit.Amount)
 		if err != nil {
 			panic("should not happen")
 		}

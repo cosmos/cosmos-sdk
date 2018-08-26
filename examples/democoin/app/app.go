@@ -35,6 +35,7 @@ type DemocoinApp struct {
 	// keys to access the substores
 	capKeyMainStore    *sdk.KVStoreKey
 	capKeyAccountStore *sdk.KVStoreKey
+	keyBankDenoms      *sdk.KVStoreKey
 	capKeyPowStore     *sdk.KVStoreKey
 	capKeyIBCStore     *sdk.KVStoreKey
 	capKeyStakingStore *sdk.KVStoreKey
@@ -62,6 +63,7 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 		cdc:                cdc,
 		capKeyMainStore:    sdk.NewKVStoreKey("main"),
 		capKeyAccountStore: sdk.NewKVStoreKey("acc"),
+		keyBankDenoms:      sdk.NewKVStoreKey("bankdenoms"),
 		capKeyPowStore:     sdk.NewKVStoreKey("pow"),
 		capKeyIBCStore:     sdk.NewKVStoreKey("ibc"),
 		capKeyStakingStore: sdk.NewKVStoreKey("stake"),
@@ -75,7 +77,7 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	)
 
 	// Add handlers.
-	app.coinKeeper = bank.NewKeeper(app.accountMapper)
+	app.coinKeeper = bank.NewKeeper(app.cdc, app.keyBankDenoms, app.accountMapper, app.RegisterCodespace(bank.DefaultCodespace))
 	app.coolKeeper = cool.NewKeeper(app.capKeyMainStore, app.coinKeeper, app.RegisterCodespace(cool.DefaultCodespace))
 	app.powKeeper = pow.NewKeeper(app.capKeyPowStore, pow.NewConfig("pow", int64(1)), app.coinKeeper, app.RegisterCodespace(pow.DefaultCodespace))
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))

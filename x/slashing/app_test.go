@@ -28,7 +28,7 @@ func getMockApp(t *testing.T) (*mock.App, stake.Keeper, Keeper) {
 	keyStake := sdk.NewKVStoreKey("stake")
 	keySlashing := sdk.NewKVStoreKey("slashing")
 	keyParams := sdk.NewKVStoreKey("params")
-	tkeyParams := sdk.NewTransientStoreKey("params")
+	tkeyParams := sdk.NewTransientStoreKey("transient_params")
 	coinKeeper := bank.NewKeeper(mapp.AccountMapper)
 	paramstore := params.NewKeeper(mapp.Cdc, keyParams, tkeyParams, nil).Subspace(DefaultParamSpace)
 	stakeKeeper := stake.NewKeeper(mapp.Cdc, keyStake, coinKeeper, paramstore, mapp.RegisterCodespace(stake.DefaultCodespace))

@@ -49,7 +49,7 @@ func TestKeeper(t *testing.T) {
 	}
 
 	skey := sdk.NewKVStoreKey("test")
-	tkey := sdk.NewTransientStoreKey("test")
+	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := defaultContext(skey, tkey)
 	space := NewKeeper(wire.NewCodec(), skey, tkey, nil).Subspace("test")
 
@@ -86,7 +86,7 @@ func TestKeeper(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	key := sdk.NewKVStoreKey("test")
-	tkey := sdk.NewTransientStoreKey("test")
+	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := defaultContext(key, tkey)
 	keeper := NewKeeper(createTestCodec(), key, tkey, nil)
 

@@ -27,7 +27,7 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 	RegisterWire(mapp.Cdc)
 
 	keyGlobalParams := sdk.NewKVStoreKey("params")
-	tkeyGlobalParams := sdk.NewTransientStoreKey("params")
+	tkeyGlobalParams := sdk.NewTransientStoreKey("transient_params")
 	keyStake := sdk.NewKVStoreKey("stake")
 	keyGov := sdk.NewKVStoreKey("gov")
 

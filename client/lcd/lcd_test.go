@@ -400,10 +400,12 @@ func TestValidatorsQuery(t *testing.T) {
 	// make sure all the validators were found (order unknown because sorted by operator addr)
 	foundVal := false
 	pkBech := sdk.MustBech32ifyValPub(pks[0])
-	if validators[0].PubKey == pkBech {
+	pk, err := sdk.GetValPubKeyBech32(pkBech)
+	require.Nil(t, err)
+	if validators[0].PubKey == pk {
 		foundVal = true
 	}
-	require.True(t, foundVal, "pkBech %v, operator %v", pkBech, validators[0].Operator)
+	require.True(t, foundVal, "pkBech %v, operator %v", pk, validators[0].Operator)
 }
 
 func TestValidatorQuery(t *testing.T) {
@@ -990,19 +992,19 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 	return results[0]
 }
 
-func getValidators(t *testing.T, port string) []stake.BechValidator {
+func getValidators(t *testing.T, port string) []stake.Validator {
 	res, body := Request(t, port, "GET", "/stake/validators", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var validators []stake.BechValidator
+	var validators []stake.Validator
 	err := cdc.UnmarshalJSON([]byte(body), &validators)
 	require.Nil(t, err)
 	return validators
 }
 
-func getValidator(t *testing.T, port string, validatorAddr sdk.AccAddress) stake.BechValidator {
+func getValidator(t *testing.T, port string, validatorAddr sdk.AccAddress) stake.Validator {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/validators/%s", validatorAddr.String()), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var validator stake.BechValidator
+	var validator stake.Validator
 	err := cdc.UnmarshalJSON([]byte(body), &validator)
 	require.Nil(t, err)
 	return validator

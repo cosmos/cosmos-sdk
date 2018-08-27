@@ -13,6 +13,8 @@ var (
 	ValidatorSigningBitArrayKey = []byte{0x02}
 	// Prefix for slashing period
 	ValidatorSlashingPeriodKey = []byte{0x03}
+	// Prefix for address-pubkey relation
+	AddrPubkeyRelationKey = []byte{0x04}
 )
 
 // Stored by *validator* address (not owner address)
@@ -37,4 +39,8 @@ func GetValidatorSlashingPeriodKey(v sdk.ValAddress, startHeight int64) []byte {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, uint64(startHeight))
 	return append(GetValidatorSlashingPeriodPrefix(v), b...)
+}
+
+func getAddrPubkeyRelationKey(address []byte) []byte {
+	return append(AddrPubkeyRelationKey, address...)
 }

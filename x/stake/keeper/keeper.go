@@ -31,11 +31,12 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.
 }
 
 // Set the validator hooks
-func (k Keeper) SetValidatorHooks(v sdk.ValidatorHooks) {
+func (k Keeper) SetValidatorHooks(v sdk.ValidatorHooks) Keeper {
 	if k.validatorHooks != nil {
 		panic("cannot set validator hooks twice")
 	}
 	k.validatorHooks = v
+	return k
 }
 
 //_________________________________________________________________________

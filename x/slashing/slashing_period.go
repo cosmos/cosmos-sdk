@@ -28,9 +28,9 @@ func (k Keeper) capBySlashingPeriod(ctx sdk.Context, address sdk.ValAddress, fra
 // Stored by *validator* address (not owner address)
 func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk.ValAddress, height int64) (slashingPeriod ValidatorSlashingPeriod) {
 	store := ctx.KVStore(k.storeKey)
-	start := GetValidatorSlashingPeriodKey(address, height)
-	end := sdk.PrefixEndBytes(GetValidatorSlashingPeriodPrefix(address))
-	iterator := store.Iterator(start, end)
+	start := GetValidatorSlashingPeriodPrefix(address)
+	end := sdk.PrefixEndBytes(GetValidatorSlashingPeriodKey(address, height))
+	iterator := store.ReverseIterator(start, end)
 	if !iterator.Valid() {
 		panic("expected to find slashing period, but none was found")
 	}

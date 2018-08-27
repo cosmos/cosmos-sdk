@@ -23,11 +23,11 @@ func TestGetSetValidatorSlashingPeriod(t *testing.T) {
 	// Get at start height
 	retrieved := keeper.getValidatorSlashingPeriodForHeight(ctx, addr, height)
 	require.Equal(t, addr, retrieved.ValidatorAddr)
-	// Get before start height
-	retrieved = keeper.getValidatorSlashingPeriodForHeight(ctx, addr, int64(0))
+	// Get after start height (works)
+	retrieved = keeper.getValidatorSlashingPeriodForHeight(ctx, addr, int64(6))
 	require.Equal(t, addr, retrieved.ValidatorAddr)
-	// Get after start height (panic)
-	require.Panics(t, func() { keeper.getValidatorSlashingPeriodForHeight(ctx, addr, int64(6)) })
+	// Get before start height (panic)
+	require.Panics(t, func() { keeper.getValidatorSlashingPeriodForHeight(ctx, addr, int64(0)) })
 	// Get after end height (panic)
 	newPeriod.EndHeight = int64(4)
 	keeper.setValidatorSlashingPeriod(ctx, newPeriod)

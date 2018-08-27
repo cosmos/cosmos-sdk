@@ -56,8 +56,13 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Double sign confirmed
 	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d less than max age of %d", pubkey.Address(), infractionHeight, age, maxEvidenceAge))
 
+	// Cap by slashing period
+	fraction := k.SlashFractionDoubleSign(ctx)
+	revisedFraction := k.capBySlashingPeriod(ctx, address, fraction, infractionHeight)
+	logger.Info(fmt.Sprintf("Fraction slashed capped by slashing period from %v to %v", fraction, revisedFraction))
+
 	// Slash validator
-	k.validatorSet.Slash(ctx, pubkey, infractionHeight, power, k.SlashFractionDoubleSign(ctx))
+	k.validatorSet.Slash(ctx, pubkey, infractionHeight, power, revisedFraction)
 
 	// Jail validator
 	k.validatorSet.Jail(ctx, pubkey)
@@ -168,8 +173,4 @@ func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address, pubk
 func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(getAddrPubkeyRelationKey(addr))
-}
-
-func getAddrPubkeyRelationKey(address []byte) []byte {
-	return append([]byte{0x03}, address...)
 }

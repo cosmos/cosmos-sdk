@@ -16,12 +16,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	ckeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/x/sentinel"
-	senttype "github.com/cosmos/cosmos-sdk/x/sentinel/types"
+	"github.com/cosmos/cosmos-sdk/examples/sentinel"
+	senttype "github.com/cosmos/cosmos-sdk/examples/sentinel/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/gorilla/mux"
 )
 
 
@@ -69,7 +69,7 @@ import (
 * @apiParam {Number} upload_speed Upload Net speed of VPN service.
 * @apiParam {Number} download_speed Download Net speed of VPN service.
 * @apiParam {Number} price_per_gb Price per GB.
-* @apiParam {String} encrytion_method Encryption method.
+* @apiParam {String} enc_method Encryption method.
 * @apiParam {Number} location_latitude  Latitude Location of service provider.
 * @apiParam {Number} location_longitude  Longiude Location of service provider.
 * @apiParam {String} location_city  City Location of service provider.
@@ -176,18 +176,18 @@ func registervpnHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handler
 			return
 
 		}
-		if reflect.TypeOf(msg.Ppgb) != reflect.TypeOf(a) || msg.Ppgb < 0 || msg.Ppgb > 100000 {
+		if reflect.TypeOf(msg.Ppgb) != reflect.TypeOf(a) || msg.Ppgb < 0 {
 
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(" entered invalid amount of price per Gb"))
 			return
 		}
-		if reflect.TypeOf(msg.UploadSpeed) != reflect.TypeOf(a) || reflect.TypeOf(msg.DownloadSpeed) != reflect.TypeOf(a) || msg.UploadSpeed <= 0 || msg.UploadSpeed >= 1000 || msg.DownloadSpeed <= 0 || msg.DownloadSpeed >= 1000 {
+		if msg.UploadSpeed <= 0 || msg.DownloadSpeed <= 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(" entered invalid details"))
+			w.Write([]byte(" entered invalid net speed details"))
 			return
 		}
-		if msg.Latitude <= -90 || msg.Longitude <= -180 || msg.Latitude > 90 || msg.Longitude > 180 || msg.City == "" || msg.Country == "" {
+		if msg.Latitude <= -90*10000 || msg.Longitude <= -180*10000 || msg.Latitude > 90*10000 || msg.Longitude > 180*10000 || msg.City == "" || msg.Country == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(" entered invalid  Location details"))
 			return
@@ -219,7 +219,8 @@ func registervpnHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handler
 
 		}
 
-		msg1 := sentinel.NewMsgRegisterVpnService(addr, msg.Ip, msg.Ppgb, msg.UploadSpeed, msg.DownloadSpeed, msg.EncMethod, msg.Latitude*100, msg.Longitude*100, msg.City, msg.Country, msg.NodeType, msg.Version)
+		msg1 := sentinel.NewMsgRegisterVpnService(addr, msg.Ip, msg.Ppgb, msg.UploadSpeed, msg.DownloadSpeed, msg.EncMethod, msg.Latitude, msg.Longitude, msg.City, msg.Country, msg.NodeType, msg.Version)
+
 		txBytes, err := ctx.SignAndBuild(msg.Localaccount, msg.Password, []sdk.Msg{msg1}, cdc)
 
 		if err != nil {
@@ -639,7 +640,7 @@ func PayVpnServiceHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handl
 			sdk.ErrInternal("Parse Coins Failed")
 		}
 		coin := sdk.Coins{sdk.NewCoin(coins[0].Denom, 100)}
-		if !coins.Minus(coin).IsPositive() {
+		if !coins.Minus(coin).IsPositive() || !coins.Minus(coin).IsZero() {
 			w.Write([]byte("Funds must be Greaterthan or equals to 100"))
 			return
 		}
@@ -948,9 +949,7 @@ func GetVpnPaymentHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handl
 			sdk.ErrInternal("Parse Coins failed")
 		}
 
-		var sig crypto.Signature
-		//sig, err := senttype.GetBech64Signature(msg.Signature)
-		cdc.UnmarshalBinaryBare([]byte(msg.Signature),&sig)
+		sig, err := senttype.GetBech64Signature(msg.Signature)
 		if err != nil {
 			w.Write([]byte("Signature from string conversion failed"))
 		}
@@ -985,4 +984,66 @@ func GetVpnPaymentHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handl
 		w.Write(data)
 	}
 	return nil
+}
+
+func SendTokenHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		msg := SendTokens{}
+		body, err := ioutill.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		err = json.Unmarshal(body, &msg)
+		if err != nil {
+			sentinel.ErrUnMarshal("UnMarshal of MessageType is failed")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		if msg.Coins == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(" invalid amount."))
+			return
+		}
+		coins, err := sdk.ParseCoins(msg.Coins)
+		if err != nil {
+			sdk.ErrInternal("Parse Coins failed")
+		}
+		ctx = ctx.WithFromAddressName(msg.Name)
+		ctx = ctx.WithGas(msg.Gas)
+		addr, err := ctx.GetFromAddress()
+		if err != nil {
+			sdk.ErrInvalidAddress("The given Adress is Invalid")
+		}
+		to, err := sdk.AccAddressFromBech32(msg.ToAddress)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		ctx = ctx.WithDecoder(authcmd.GetAccountDecoder(cdc))
+		acc, err := ctx.GetAccountNumber(addr)
+		seq, err := ctx.NextSequence(addr)
+		ctx = ctx.WithSequence(seq)
+		ctx = ctx.WithAccountNumber(acc)
+		msg1 := sentinel.NewMsgSendTokens(addr, coins, to)
+		txBytes, err := ctx.SignAndBuild(msg.Name, msg.Password, []sdk.Msg{msg1}, cdc)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		res, err := ctx.BroadcastTx(txBytes)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		respon := NewResponse(true, res.Hash.String(), res.Height, res.DeliverTx.Data, res.DeliverTx.Tags)
+		data, err := json.MarshalIndent(respon, "", " ")
+		w.Write(data)
+
+	}
 }

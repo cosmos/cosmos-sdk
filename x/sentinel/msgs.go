@@ -107,7 +107,7 @@ func (msc MsgRegisterVpnService) ValidateBasic() sdk.Error {
 	if msc.From == nil {
 		return sdk.ErrInvalidAddress("Invalid Address")
 	}
-	if reflect.TypeOf(msc.PricePerGb) != reflect.TypeOf(a) || msc.PricePerGb <= 0 || msc.PricePerGb > 1000 {
+	if reflect.TypeOf(msc.PricePerGb) != reflect.TypeOf(a) || msc.PricePerGb < 0 {
 
 		return ErrInvalidPricePerGb("Price per GB is not Valid")
 	}
@@ -115,12 +115,9 @@ func (msc MsgRegisterVpnService) ValidateBasic() sdk.Error {
 
 		return ErrInvalidIpAdress("Invalid IP address")
 	}
-	if reflect.TypeOf(msc.NetSpeed.UploadSpeed) != reflect.TypeOf(a) || reflect.TypeOf(msc.NetSpeed.DownloadSpeed) != reflect.TypeOf(a) || msc.NetSpeed.UploadSpeed <= 0 || msc.NetSpeed.UploadSpeed >= 1000 || msc.NetSpeed.DownloadSpeed <= 0 || msc.NetSpeed.DownloadSpeed >= 1000 {
+	if reflect.TypeOf(msc.NetSpeed.UploadSpeed) != reflect.TypeOf(a) || reflect.TypeOf(msc.NetSpeed.DownloadSpeed) != reflect.TypeOf(a) || msc.NetSpeed.UploadSpeed <= 0 || msc.NetSpeed.DownloadSpeed <= 0 {
 		return ErrInvalidNetspeed("NetSpeed is not Valid")
 	}
-	// if msc.Location == "" || reflect.TypeOf(msc.Location) != reflect.TypeOf(s) {
-	// 	return ErrInvalidLocation("location is not Valid")
-	// }
 	return nil
 }
 
@@ -443,3 +440,38 @@ func (msc MsgRefund) GetSigners() []sdk.AccAddress {
 }
 
 //msg Decoder fo the Query:
+type MsgSendTokens struct {
+	From  sdk.AccAddress
+	To    sdk.AccAddress
+	Coins sdk.Coins
+}
+
+func NewMsgSendTokens(from sdk.AccAddress, coins sdk.Coins, to sdk.AccAddress) MsgSendTokens {
+	return MsgSendTokens{
+		From:  from,
+		To:    to,
+		Coins: coins,
+	}
+
+}
+func (msc MsgSendTokens) Type() string {
+	return "sentinel"
+}
+
+func (msc MsgSendTokens) GetSignBytes() []byte {
+	byte_format, err := json.Marshal(msc)
+	if err != nil {
+		return nil
+	}
+	return byte_format
+}
+
+func (msc MsgSendTokens) ValidateBasic() sdk.Error {
+	if msc.To == nil || msc.From == nil {
+		return sdk.ErrInvalidAddress("Invalid Address")
+	}
+	return nil
+}
+func (msc MsgSendTokens) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msc.From}
+}

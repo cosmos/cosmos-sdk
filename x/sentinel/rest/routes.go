@@ -38,7 +38,7 @@ func ServiceRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 		PayVpnServiceHandlerFn(ctx, cdc),
 	).Methods("POST")
 	r.HandleFunc(
-		"/send-sign",                     // Off-chain  Tx (client to service provider)
+		"/send-sign",    // Off-chain  Tx (client to service provider)
 		SendSignHandlerFn(ctx, cdc),
 	).Methods("POST")
 	r.HandleFunc(
@@ -47,6 +47,16 @@ func ServiceRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 	).Methods("POST")
 
 }
+
+func QueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, keeper sent.Keeper) {
+	
+	r.HandleFunc(
+		"/query_vpn/{address}",
+		queryvpnHandlerFn(cdc, ctx, keeper),
+	).Methods("GET")
+
+}
+
 
 func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, keeper sentinel.Keeper) {
 

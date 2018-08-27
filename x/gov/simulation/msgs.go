@@ -21,7 +21,7 @@ const (
 )
 
 // SimulateMsgSubmitProposal
-func SimulateMsgSubmitProposal(k gov.Keeper, sk stake.Keeper) simulation.TestAndRunTx {
+func SimulateMsgSubmitProposal(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
 		key := simulation.RandomKey(r, keys)
 		addr := sdk.AccAddress(key.PubKey().Address())
@@ -50,7 +50,7 @@ func SimulateMsgSubmitProposal(k gov.Keeper, sk stake.Keeper) simulation.TestAnd
 }
 
 // SimulateMsgDeposit
-func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.TestAndRunTx {
+func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
 		key := simulation.RandomKey(r, keys)
 		addr := sdk.AccAddress(key.PubKey().Address())
@@ -77,7 +77,7 @@ func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.TestAndRunTx {
 }
 
 // SimulateMsgVote
-func SimulateMsgVote(k gov.Keeper, sk stake.Keeper) simulation.TestAndRunTx {
+func SimulateMsgVote(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
 		key := simulation.RandomKey(r, keys)
 		addr := sdk.AccAddress(key.PubKey().Address())

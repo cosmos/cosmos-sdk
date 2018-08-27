@@ -1,8 +1,9 @@
 package crypto
 
 import (
-	"errors"
 	"fmt"
+
+	"github.com/pkg/errors"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
@@ -10,15 +11,16 @@ import (
 )
 
 var (
-	ledgerDevice    LedgerSECP256K1
-	ledgerDeviceErr error
-
-	// ErrMissingLedgerDevice is used to reflect that a ledger device load has
-	// not been attempted.
-	ErrMissingLedgerDevice = errors.New("missing ledger device")
+	// DiscoverLedger defines a function to be invoked at runtime for discovering
+	// a connected Ledger device.
+	DiscoverLedger DiscoverLedgerFn
 )
 
 type (
+	// DiscoverLedgerFn defines a Ledger discovery function that returns a
+	// connected device or an error upon failure.
+	DiscoverLedgerFn func() (LedgerSECP256K1, error)
+
 	// DerivationPath represents a Ledger derivation path.
 	DerivationPath []uint32
 
@@ -47,18 +49,21 @@ type (
 // CONTRACT: The ledger device, ledgerDevice, must be loaded and set prior to
 // any creation of a PrivKeyLedgerSecp256k1.
 func NewPrivKeyLedgerSecp256k1(path DerivationPath) (tmcrypto.PrivKey, error) {
-	if ledgerDevice == nil {
-		err := ErrMissingLedgerDevice
-		if ledgerDeviceErr != nil {
-			err = ledgerDeviceErr
+	var ledgerDevice LedgerSECP256K1
+
+	if DiscoverLedger != nil {
+		device, err := DiscoverLedger()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create PrivKeyLedgerSecp256k1")
 		}
 
-		return nil, fmt.Errorf("failed to create PrivKeyLedgerSecp256k1: %v", err)
+		ledgerDevice = device
+	} else {
+		return nil, errors.New("no ledger discovery function defined")
 	}
 
 	pkl := &PrivKeyLedgerSecp256k1{Path: path, ledger: ledgerDevice}
 
-	// cache the pubkey for later use
 	pubKey, err := pkl.getPubKey()
 	if err != nil {
 		return nil, err

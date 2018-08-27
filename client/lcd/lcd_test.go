@@ -124,7 +124,11 @@ func TestKeysSwaggerLCD(t *testing.T) {
 
 	// get seed
 	// TODO Do we really need this endpoint?
-	res, body := Request(t, port, "GET", "/keys/seed", nil)
+	recoverKeyURL := fmt.Sprintf("/keys/%s/recover", "test_recover")
+	seedRecover := "divorce meat banana embody near until uncover wait uniform capital crawl test praise cloud foil monster garbage hedgehog wrong skate there bonus box odor"
+	passwordRecover := "1234567890"
+	jsonStrRecover := []byte(fmt.Sprintf(`{"seed":"%s", "password":"%s"}`, seedRecover, passwordRecover))
+	res, body := Request(t, port, "POST", recoverKeyURL, jsonStrRecover)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	reg, err := regexp.Compile(`([a-z]+ ){12}`)
 	require.Nil(t, err)
@@ -156,7 +160,7 @@ func TestKeysSwaggerLCD(t *testing.T) {
 	res, body = Request(t, port, "GET", "/keys", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var m [2]keys.KeyOutput
+	var m [3]keys.KeyOutput
 	err = cdc.UnmarshalJSON([]byte(body), &m)
 	require.Nil(t, err)
 
@@ -168,7 +172,7 @@ func TestKeysSwaggerLCD(t *testing.T) {
 	require.Equal(t, addr2Bech32, m[1].Address.String(), "Did not serve keys Address correctly")
 
 	// select key
-	keyEndpoint := fmt.Sprintf("/keys/get/%s", newName)
+	keyEndpoint := fmt.Sprintf("/keys/%s", newName)
 	res, body = Request(t, port, "GET", keyEndpoint, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var m2 keys.KeyOutput

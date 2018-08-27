@@ -85,8 +85,8 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	keeper.Jail(ctx, keep.PKs[0])
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, sdk.Unbonded, validator.Status)               // ensure is unbonded
-	require.Equal(t, int64(500000), validator.Tokens.RoundInt64()) // ensure is unbonded
+	require.Equal(t, sdk.Unbonding, validator.Status)              // ensure is unbonding
+	require.Equal(t, int64(500000), validator.Tokens.RoundInt64()) // ensure tokens slashed
 
 	// the old power record should have been deleted as the power changed
 	require.False(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power))

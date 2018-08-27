@@ -161,7 +161,7 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Description: %s\n", v.Description)
 	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
 	resp += fmt.Sprintf("Unbonding Height: %d\n", v.UnbondingHeight)
-	resp += fmt.Sprintf("Minimum Unbonding Time: %d\n", v.UnbondingMinTime)
+	resp += fmt.Sprintf("Minimum Unbonding Time: %v\n", v.UnbondingMinTime)
 	resp += fmt.Sprintf("Commission: %s\n", v.Commission.String())
 	resp += fmt.Sprintf("Max Commission Rate: %s\n", v.CommissionMax.String())
 	resp += fmt.Sprintf("Commission Change Rate: %s\n", v.CommissionChangeRate.String())

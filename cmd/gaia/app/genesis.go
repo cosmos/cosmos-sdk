@@ -25,7 +25,7 @@ const DefaultKeyPass = "12345678"
 
 var (
 	// bonded tokens given to genesis validators/accounts
-	freeFermionVal  = sdk.NewInt(100)
+	freeFermionVal  = int64(100)
 	freeFermionsAcc = sdk.NewInt(50)
 )
 
@@ -152,7 +152,7 @@ func GaiaAppGenTxNF(cdc *wire.Codec, pk crypto.PubKey, addr sdk.AccAddress, name
 
 	validator = tmtypes.GenesisValidator{
 		PubKey: pk,
-		Power:  freeFermionVal.Int64(),
+		Power:  freeFermionVal,
 	}
 	return
 }
@@ -195,11 +195,11 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 			validator := stake.NewValidator(genTx.Address,
 				sdk.MustGetAccPubKeyBech32(genTx.PubKey), desc)
 
-			stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionVal)) // increase the supply
+			stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDec(freeFermionVal)) // increase the supply
 
 			// add some new shares to the validator
 			var issuedDelShares sdk.Dec
-			validator, stakeData.Pool, issuedDelShares = validator.AddTokensFromDel(stakeData.Pool, freeFermionVal)
+			validator, stakeData.Pool, issuedDelShares = validator.AddTokensFromDel(stakeData.Pool, sdk.NewInt(freeFermionVal))
 			stakeData.Validators = append(stakeData.Validators, validator)
 
 			// create the self-delegation from the issuedDelShares

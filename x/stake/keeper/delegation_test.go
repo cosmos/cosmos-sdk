@@ -180,6 +180,14 @@ func TestUnbondDelegation(t *testing.T) {
 	require.Equal(t, int64(4), pool.BondedTokens.RoundInt64())
 }
 
+func TestUndelegateFromUnbondingValidator(t *testing.T) {
+	require.Fail(t)
+}
+
+func TestUndelegateFromUnbondedValidator(t *testing.T) {
+	require.Fail(t)
+}
+
 // Make sure that that the retrieving the delegations doesn't affect the state
 func TestGetRedelegationsFromValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
@@ -258,4 +266,12 @@ func TestRedelegation(t *testing.T) {
 	keeper.RemoveRedelegation(ctx, rd)
 	_, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.False(t, found)
+}
+
+func TestRedelegationFromUnbondingValidator(t *testing.T) {
+	require.Fail(t)
+}
+
+func TestRedelegationFromUnbondedValidator(t *testing.T) {
+	require.Fail(t)
 }

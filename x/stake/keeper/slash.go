@@ -18,6 +18,8 @@ import (
 //    Infraction committed equal to or less than an unbonding period in the past,
 //    so all unbonding delegations and redelegations from that height are stored
 // CONTRACT:
+//    Slash will not slash unbonded validators (for the above reason)
+// CONTRACT:
 //    Infraction committed at the current height or at a past height,
 //    not at a height in the future
 func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight int64, power int64, slashFactor sdk.Dec) {
@@ -44,23 +46,14 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 		return
 	}
 
-	// do not slash if unbonded
-	unbonded := false
+	// slashing should not be slashing unbonded
 	if validator.Status == sdk.Unbonded {
-		unbonded = true
+		panic(fmt.Sprintf("should not be slashing unbonded validator: %v", validator))
 	} else if validator.Status == sdk.Unbonding {
 		ctxTime := ctx.BlockHeader().Time
 		if ctxTime.After(validator.UnbondingMinTime) {
-
-			// TODO should we also just update the
-			//   validator status to unbonded here?
-			unbonded = true
+			panic(fmt.Sprintf("should not be slashing unbonded validator: %v", validator))
 		}
-	}
-	if unbonded {
-		logger.Info(fmt.Sprintf(
-			"failed attempt to slash an unbonded validator"))
-		return
 	}
 
 	operatorAddress := validator.GetOperator()

@@ -17,6 +17,11 @@ variable "SERVERS" {
   default = "1"
 }
 
+variable "max_zones" {
+  description = "Maximum number of availability zones to use"
+  default = "1"
+}
+
 variable "ssh_private_file" {
   description = "SSH private key file to be used to connect to the nodes"
   type = "string"
@@ -24,6 +29,11 @@ variable "ssh_private_file" {
 
 variable "ssh_public_file" {
   description = "SSH public key file to be used on the nodes"
+  type = "string"
+}
+
+variable "certificate_arn" {
+  description = "Load-balancer SSL certificate AWS ARN"
   type = "string"
 }
 

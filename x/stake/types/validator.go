@@ -371,11 +371,11 @@ func (v Validator) RemoveTokens(pool Pool, tokens sdk.Dec) (Validator, Pool) {
 //_________________________________________________________________________________________________________
 
 // AddTokensFromDel adds tokens to a validator
-func (v Validator) AddTokensFromDel(pool Pool, amount int64) (Validator, Pool, sdk.Dec) {
+func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool, sdk.Dec) {
 
 	// bondedShare/delegatedShare
 	exRate := v.DelegatorShareExRate()
-	amountDec := sdk.NewDec(amount)
+	amountDec := sdk.NewDecFromInt(amount)
 
 	if v.Status == sdk.Bonded {
 		pool = pool.looseTokensToBonded(amountDec)

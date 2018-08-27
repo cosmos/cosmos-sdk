@@ -23,6 +23,7 @@ BREAKING CHANGES
     * [core] \#1807 Switch from use of rational to decimal
     * [types] \#1901 Validator interface's GetOwner() renamed to GetOperator()
     * [types] \#2119 Parsed error messages and ABCI log errors to make them more human readable.
+    * [simulation] Rename TestAndRunTx to Operation [#2153](https://github.com/cosmos/cosmos-sdk/pull/2153)
 
 * Tendermint
 
@@ -45,12 +46,15 @@ FEATURES
 
 
 IMPROVEMENTS
+* [tools] Improved terraform and ansible scripts for infrastructure deployment
+* [tools] Added ansible script to enable process core dumps
 
 * Gaia REST API (`gaiacli advanced rest-server`)
     * [x/stake] \#2000 Added tests for new staking endpoints
 
 * Gaia CLI  (`gaiacli`)
     * [cli] #2060 removed `--select` from `block` command
+    * [cli] #2128 fixed segfault when exporting directly after `gaiad init`
 
 * Gaia
     * [x/stake] [#2023](https://github.com/cosmos/cosmos-sdk/pull/2023) Terminate iteration loop in `UpdateBondedValidators` and `UpdateBondedValidatorsFull` when the first revoked validator is encountered and perform a sanity check.
@@ -59,9 +63,9 @@ IMPROVEMENTS
 * SDK
     * [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.
     * [cli] \#1632 Add integration tests to ensure `basecoind init && basecoind` start sequences run successfully for both `democoin` and `basecoin` examples.
+    * [simulation] Make timestamps randomized [#2153](https://github.com/cosmos/cosmos-sdk/pull/2153)
 
 * Tendermint
-
 
 BUG FIXES
 

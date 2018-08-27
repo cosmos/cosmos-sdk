@@ -18,7 +18,7 @@ import (
 )
 
 // SimulateMsgCreateValidator
-func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation.TestAndRunTx {
+func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
 
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
@@ -58,7 +58,7 @@ func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation
 }
 
 // SimulateMsgEditValidator
-func SimulateMsgEditValidator(k stake.Keeper) simulation.TestAndRunTx {
+func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
 
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
@@ -89,7 +89,7 @@ func SimulateMsgEditValidator(k stake.Keeper) simulation.TestAndRunTx {
 }
 
 // SimulateMsgDelegate
-func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) simulation.TestAndRunTx {
+func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
 
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
@@ -124,7 +124,7 @@ func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) simulation.TestAn
 }
 
 // SimulateMsgBeginUnbonding
-func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.TestAndRunTx {
+func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
 
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
@@ -159,7 +159,7 @@ func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.
 }
 
 // SimulateMsgCompleteUnbonding
-func SimulateMsgCompleteUnbonding(k stake.Keeper) simulation.TestAndRunTx {
+func SimulateMsgCompleteUnbonding(k stake.Keeper) simulation.Operation {
 
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
@@ -185,7 +185,7 @@ func SimulateMsgCompleteUnbonding(k stake.Keeper) simulation.TestAndRunTx {
 }
 
 // SimulateMsgBeginRedelegate
-func SimulateMsgBeginRedelegate(m auth.AccountMapper, k stake.Keeper) simulation.TestAndRunTx {
+func SimulateMsgBeginRedelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
 
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
@@ -224,7 +224,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountMapper, k stake.Keeper) simulation
 }
 
 // SimulateMsgCompleteRedelegate
-func SimulateMsgCompleteRedelegate(k stake.Keeper) simulation.TestAndRunTx {
+func SimulateMsgCompleteRedelegate(k stake.Keeper) simulation.Operation {
 
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {

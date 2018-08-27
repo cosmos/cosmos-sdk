@@ -12,6 +12,13 @@ func (k Keeper) capBySlashingPeriod(ctx sdk.Context, address sdk.ValAddress, fra
 
 	// Calculate total amount to be slashed
 	slashingPeriod := k.getValidatorSlashingPeriodForHeight(ctx, address, infractionHeight)
+
+	// Sanity check
+	if slashingPeriod.EndHeight > 0 && slashingPeriod.EndHeight < infractionHeight {
+		panic(fmt.Sprintf("slashing period ended before infraction: infraction height %d, slashing period ended at %d", infractionHeight, slashingPeriod.EndHeight))
+	}
+
+	// Calculate the total slash amount
 	totalToSlash := sdk.MaxDec(slashingPeriod.SlashedSoFar, fraction)
 
 	// Calculate remainder
@@ -36,9 +43,6 @@ func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk
 		panic("expected to find slashing period, but none was found")
 	}
 	slashingPeriod = k.unmarshalSlashingPeriodKeyValue(iterator.Key(), iterator.Value())
-	if slashingPeriod.EndHeight > 0 && slashingPeriod.EndHeight < height {
-		panic(fmt.Sprintf("slashing period ended before infraction: infraction height %d, slashing period ended at %d", height, slashingPeriod.EndHeight))
-	}
 	return
 }
 

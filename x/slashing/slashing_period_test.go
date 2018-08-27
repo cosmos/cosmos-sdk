@@ -31,7 +31,7 @@ func TestGetSetValidatorSlashingPeriod(t *testing.T) {
 	// Get after end height (panic)
 	newPeriod.EndHeight = int64(4)
 	keeper.setValidatorSlashingPeriod(ctx, newPeriod)
-	require.Panics(t, func() { keeper.getValidatorSlashingPeriodForHeight(ctx, addr, height) })
+	require.Panics(t, func() { keeper.capBySlashingPeriod(ctx, addr, sdk.ZeroDec(), height) })
 	// Back to old end height
 	newPeriod.EndHeight = height + 10
 	keeper.setValidatorSlashingPeriod(ctx, newPeriod)

@@ -103,5 +103,8 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 		return true, tallyResults, nonVoting
 	}
 	// If more than 1/2 of non-abstaining voters vote No, proposal fails
+
+	SortAddresses(nonVoting)
+
 	return false, tallyResults, nonVoting
 }

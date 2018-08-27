@@ -75,5 +75,5 @@ BUG FIXES
 * SDK
     * \#1988 Make us compile on OpenBSD (disable ledger) [#1988] (https://github.com/cosmos/cosmos-sdk/issues/1988)
     * \#2105 Fix DB Iterator leak, which may leak a go routine.
-
+    * \#2158 Fix non-deterministic ordering of validator iteration when slashing in `gov EndBlocker`
 * Tendermint

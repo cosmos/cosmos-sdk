@@ -46,6 +46,8 @@ FEATURES
 
 
 IMPROVEMENTS
+* [tools] Improved terraform and ansible scripts for infrastructure deployment
+* [tools] Added ansible script to enable process core dumps
 
 * Gaia REST API (`gaiacli advanced rest-server`)
     * [x/stake] \#2000 Added tests for new staking endpoints
@@ -64,7 +66,6 @@ IMPROVEMENTS
     * [simulation] Make timestamps randomized [#2153](https://github.com/cosmos/cosmos-sdk/pull/2153)
 
 * Tendermint
-
 
 BUG FIXES
 

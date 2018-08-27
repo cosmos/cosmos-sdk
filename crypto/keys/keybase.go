@@ -88,6 +88,7 @@ func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string
 	return
 }
 
+// GenerateMnemonic generates a mnemonic using the provided language and entropy.
 func (kb dbKeybase) GenerateMnemonic(language Language, entropy []byte) (string, error) {
 	if language != English {
 		return "", ErrUnsupportedLanguage

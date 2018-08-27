@@ -95,6 +95,7 @@ func GetConfirmation(prompt string, buf *bufio.Reader) (bool, error) {
 	}
 }
 
+// GetString simply returns the trimmed string output of a given reader.
 func GetString(prompt string, buf *bufio.Reader) (string, error) {
 	if inputIsTty() && prompt != "" {
 		fmt.Println(prompt)

@@ -170,6 +170,8 @@ func i64(key []byte, data []byte) (IL [32]byte, IR [32]byte) {
 	return
 }
 
+// ParamsFromString instantiates a BIP44Params object from the given string
+// derivation path. Performs validation on the path.
 func ParamsFromString(path string) (*BIP44Params, error) {
 	initialSplits := strings.Split(path, "/")
 	var splits [5]string

@@ -378,6 +378,13 @@ With the `pool` command you will get the values for:
 
 ## Gaia-Lite
 
-::: tip Note
-🚧 We are actively working on documentation for Gaia-lite.
-:::
+The Gaia-Lite is a light gaiad node. Unlike gaiad full node, it doesn't participate consensus and execute transactions, so it only require very little storage and calculation resource. However, it can provide the same security as a gaia full node.
+
+It provides modular rest APIs. Through these APIs, you can send transactions and query blockchain information. Besides, all query results with proof will be verified against the validator set and merkle hash algorithm. 
+
+You can start a gaia-lite node with the following command:
+```
+gaiacli lite-server --chain-id {your chain id}
+```
+
+Please refer to this [getting start](../light/getting_started.md) for detailed description about how to run gaia-lite.

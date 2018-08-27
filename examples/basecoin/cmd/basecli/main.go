@@ -79,6 +79,7 @@ func main() {
 	rootCmd.AddCommand(
 		client.LineBreak,
 		lcd.ServeCommand(cdc),
+		lcd.ServeSwaggerCommand(cdc),
 		keys.Commands(),
 		client.LineBreak,
 		version.VersionCmd,

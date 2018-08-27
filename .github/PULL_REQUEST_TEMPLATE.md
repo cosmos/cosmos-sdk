@@ -11,7 +11,7 @@ v    If a checkbox is n/a - please still include it but + a little note why
 - [ ] Updated relevant documentation (`docs/`)
 - [ ] Added entries in `PENDING.md` with issue # 
 - [ ] Reviewed `Files changed` in the github PR explorer
-- [ ] Added or improved `godoc` comments top of public functions (if applicable)
+- [ ] Added or improved `godoc` comments above functions (if applicable)
 ______
 
 For Admin Use:

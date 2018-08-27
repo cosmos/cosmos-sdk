@@ -69,34 +69,33 @@ func (k Keeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator)
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
 
 	i := 0
-	for ; ; i++ {
-		if !iterator.Valid() {
-			break
-		}
+	for ; iterator.Valid(); iterator.Next() {
 		addr := iterator.Key()[1:]
 		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
 		validators = append(validators, validator)
-		iterator.Next()
+		i++
 	}
 	iterator.Close()
 	return validators
 }
 
 // Get the set of all validators, retrieve a maxRetrieve number of records
-func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve int16) (validators []types.Validator) {
+func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve ...int16) (validators []types.Validator) {
+	if len(maxRetrieve) == 0 {
+		return k.GetAllValidators(ctx)
+	}
+	validators = make([]types.Validator, maxRetrieve[0])
+
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
 
-	validators = make([]types.Validator, maxRetrieve)
 	i := 0
-	for ; ; i++ {
-		if !iterator.Valid() || i > int(maxRetrieve-1) {
-			break
-		}
+	for ; iterator.Valid() && i < int(maxRetrieve[0]); iterator.Next() {
 		addr := iterator.Key()[1:]
 		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
+
 		validators[i] = validator
-		iterator.Next()
+		i++
 	}
 	iterator.Close()
 	return validators[:i] // trim
@@ -123,7 +122,7 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validat
 		address := GetAddressFromValBondedIndexKey(iterator.Key())
 		validator, found := k.GetValidator(ctx, address)
 		if !found {
-			panic(fmt.Sprintf("validator record not found for address: %v\n", address))
+			panic(types.ErrNoValidatorFound(types.DefaultCodespace))
 		}
 
 		validators[i] = validator
@@ -142,20 +141,16 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 	validators := make([]types.Validator, maxValidators)
 	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey) // largest to smallest
 	i := 0
-	for {
-		if !iterator.Valid() || i > int(maxValidators-1) {
-			break
-		}
+	for ; iterator.Valid() && i < int(maxValidators); iterator.Next() {
 		address := iterator.Value()
 		validator, found := k.GetValidator(ctx, address)
 		if !found {
-			panic(fmt.Sprintf("validator record not found for address: %v\n", address))
+			panic(types.ErrNoValidatorFound(types.DefaultCodespace))
 		}
 		if validator.Status == sdk.Bonded {
 			validators[i] = validator
 			i++
 		}
-		iterator.Next()
 	}
 	iterator.Close()
 	return validators[:i] // trim
@@ -412,7 +407,7 @@ func (k Keeper) UpdateBondedValidators(
 			var found bool
 			validator, found = k.GetValidator(ctx, ownerAddr)
 			if !found {
-				panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
+				panic(types.ErrNoValidatorFound(types.DefaultCodespace))
 			}
 		}
 

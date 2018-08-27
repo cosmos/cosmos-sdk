@@ -39,25 +39,23 @@ func NewQuerier(k keeper.Keeper) sdk.Querier {
 
 // Params for queries:
 // - 'custom/stake/delegator'
-// - 'custom/stake/delegator/txs'
-// - 'custom/stake/delegator/validators'
+// - 'custom/stake/delegatorValidators'
 // - 'custom/stake/validator'
 type QueryAddressParams struct {
-	accountAddr sdk.AccAddress
+	AccountAddr sdk.AccAddress
 }
 
 // Params for queries
-// - 'custom/stake/delegator/delegations'
-// - 'custom/stake/delegator/unbonding_delegations'
-// - 'custom/stake/delegator/validator'
+// - 'custom/stake/delegation'
+// - 'custom/stake/unbonding-delegation'
+// - 'custom/stake/delegatorValidator'
 type QueryBondsParams struct {
-	delegatorAddr sdk.AccAddress
-	validatorAddr sdk.AccAddress
+	DelegatorAddr sdk.AccAddress
+	ValidatorAddr sdk.AccAddress
 }
 
 func queryValidators(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
-	validators := k.GetAllValidators(ctx)
-
+	validators := k.GetValidators(ctx)
 	res, errRes := wire.MarshalJSONIndent(k.Codec(), validators)
 	if err != nil {
 		panic(errRes.Error())
@@ -72,7 +70,7 @@ func queryValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k kee
 		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data: \n%s", err.Error()))
 	}
 
-	validator, found := k.GetValidator(ctx, params.accountAddr)
+	validator, found := k.GetValidator(ctx, params.AccountAddr)
 	if !found {
 		return []byte{}, ErrNoValidatorFound(DefaultCodespace)
 	}
@@ -85,7 +83,7 @@ func queryValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k kee
 }
 
 // TODO query with limit
-// func queryDelegator(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
+// func queryDelegator(ctx sdk.Context, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
 // 	var params QueryAddressParams
 // 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 // 	if errRes != nil {
@@ -102,12 +100,13 @@ func queryValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k kee
 // TODO query with limit
 func queryDelegatorValidators(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
 	var params QueryAddressParams
+
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
 		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data :\n%s", errRes.Error()))
 	}
 
-	validators := k.GetDelegatorValidators(ctx, params.accountAddr)
+	validators := k.GetDelegatorValidators(ctx, params.AccountAddr)
 
 	res, errRes = wire.MarshalJSONIndent(k.Codec(), validators)
 	if errRes != nil {
@@ -123,7 +122,7 @@ func queryDelegatorValidator(ctx sdk.Context, path []string, req abci.RequestQue
 		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data :\n%s", errRes.Error()))
 	}
 
-	validator := k.GetDelegatorValidator(ctx, params.delegatorAddr, params.validatorAddr)
+	validator := k.GetDelegatorValidator(ctx, params.DelegatorAddr, params.ValidatorAddr)
 
 	res, errRes = wire.MarshalJSONIndent(k.Codec(), validator)
 	if errRes != nil {
@@ -139,7 +138,7 @@ func queryDelegation(ctx sdk.Context, path []string, req abci.RequestQuery, k ke
 		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data :\n%s", errRes.Error()))
 	}
 
-	delegation, found := k.GetDelegation(ctx, params.delegatorAddr, params.validatorAddr)
+	delegation, found := k.GetDelegation(ctx, params.DelegatorAddr, params.ValidatorAddr)
 	if !found {
 		return []byte{}, ErrNoDelegation(DefaultCodespace)
 	}
@@ -158,7 +157,7 @@ func queryUnbondingDelegation(ctx sdk.Context, path []string, req abci.RequestQu
 		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data :\n%s", errRes.Error()))
 	}
 
-	unbond, found := k.GetUnbondingDelegation(ctx, params.delegatorAddr, params.validatorAddr)
+	unbond, found := k.GetUnbondingDelegation(ctx, params.DelegatorAddr, params.ValidatorAddr)
 	if !found {
 		return []byte{}, ErrNoUnbondingDelegation(DefaultCodespace)
 	}

@@ -35,7 +35,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 
 	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
 	
-	precisionNumber := math.Pow10(int(validator.TokenPrecision))
+	precisionNumber := math.Pow10(18)
 	if precisionNumber > math.MaxInt64 {
 		panic(fmt.Errorf("precision is too high, int64 is overflow"))
 	}

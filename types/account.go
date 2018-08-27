@@ -17,11 +17,14 @@ const (
 	// expected address length
 	AddrLen = 20
 
+	////////////////////  iris/cosmos-sdk begin  ///////////////////////////
 	// Bech32 prefixes
-	Bech32PrefixAccAddr = "cosmosaccaddr"
-	Bech32PrefixAccPub  = "cosmosaccpub"
-	Bech32PrefixValAddr = "cosmosvaladdr"
-	Bech32PrefixValPub  = "cosmosvalpub"
+	Bech32PrefixAccAddr = "faa"
+	Bech32PrefixAccPub  = "fap"
+	Bech32PrefixValAddr = "fva"
+	Bech32PrefixValPub  = "fvp"
+
+	////////////////////  iris/cosmos-sdk end  ///////////////////////////
 )
 
 //__________________________________________________________

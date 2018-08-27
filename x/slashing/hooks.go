@@ -27,6 +27,11 @@ type ValidatorHooks struct {
 	k Keeper
 }
 
+// Return a sdk.ValidatorHooks interface over the wrapper struct
+func (k Keeper) ValidatorHooks() sdk.ValidatorHooks {
+	return ValidatorHooks{k}
+}
+
 // Implements sdk.ValidatorHooks
 func (v ValidatorHooks) OnValidatorBonded(ctx sdk.Context, address sdk.ValAddress) {
 	v.k.onValidatorBonded(ctx, address)

@@ -13,11 +13,14 @@ func (k Keeper) capBySlashingPeriod(ctx sdk.Context, address sdk.ValAddress, fra
 	// Calculate total amount to be slashed
 	slashingPeriod := k.getValidatorSlashingPeriodForHeight(ctx, address, infractionHeight)
 	totalToSlash := sdk.MaxDec(slashingPeriod.SlashedSoFar, fraction)
+
+	// Calculate remainder
+	revisedFraction = totalToSlash.Sub(slashingPeriod.SlashedSoFar)
+
+	// Update slashing period
 	slashingPeriod.SlashedSoFar = totalToSlash
 	k.setValidatorSlashingPeriod(ctx, slashingPeriod)
 
-	// Calculate remainder
-	revisedFraction = slashingPeriod.SlashedSoFar.Sub(totalToSlash)
 	return
 
 }

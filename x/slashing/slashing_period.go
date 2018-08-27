@@ -28,6 +28,7 @@ func (k Keeper) capBySlashingPeriod(ctx sdk.Context, address sdk.ValAddress, fra
 // Stored by *validator* address (not owner address)
 func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk.ValAddress, height int64) (slashingPeriod ValidatorSlashingPeriod) {
 	store := ctx.KVStore(k.storeKey)
+	// Get the most recent slashing period at or before the infraction height
 	start := GetValidatorSlashingPeriodPrefix(address)
 	end := sdk.PrefixEndBytes(GetValidatorSlashingPeriodKey(address, height))
 	iterator := store.ReverseIterator(start, end)

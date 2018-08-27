@@ -22,16 +22,33 @@ func TestGetSetValidatorSlashingPeriod(t *testing.T) {
 	keeper.setValidatorSlashingPeriod(ctx, newPeriod)
 	// Get at start height
 	retrieved := keeper.getValidatorSlashingPeriodForHeight(ctx, addr, height)
-	require.Equal(t, addr, retrieved.ValidatorAddr)
+	require.Equal(t, newPeriod, retrieved)
 	// Get after start height (works)
 	retrieved = keeper.getValidatorSlashingPeriodForHeight(ctx, addr, int64(6))
-	require.Equal(t, addr, retrieved.ValidatorAddr)
+	require.Equal(t, newPeriod, retrieved)
 	// Get before start height (panic)
 	require.Panics(t, func() { keeper.getValidatorSlashingPeriodForHeight(ctx, addr, int64(0)) })
 	// Get after end height (panic)
 	newPeriod.EndHeight = int64(4)
 	keeper.setValidatorSlashingPeriod(ctx, newPeriod)
 	require.Panics(t, func() { keeper.getValidatorSlashingPeriodForHeight(ctx, addr, height) })
+	// Back to old end height
+	newPeriod.EndHeight = height + 10
+	keeper.setValidatorSlashingPeriod(ctx, newPeriod)
+	// Set a new, later period
+	anotherPeriod := ValidatorSlashingPeriod{
+		ValidatorAddr: addr,
+		StartHeight:   height + 1,
+		EndHeight:     height + 11,
+		SlashedSoFar:  sdk.ZeroDec(),
+	}
+	keeper.setValidatorSlashingPeriod(ctx, anotherPeriod)
+	// Old period retrieved for prior height
+	retrieved = keeper.getValidatorSlashingPeriodForHeight(ctx, addr, height)
+	require.Equal(t, newPeriod, retrieved)
+	// New period retrieved at new height
+	retrieved = keeper.getValidatorSlashingPeriodForHeight(ctx, addr, height+1)
+	require.Equal(t, anotherPeriod, retrieved)
 }
 
 func TestValidatorSlashingPeriodCap(t *testing.T) {
@@ -52,4 +69,7 @@ func TestValidatorSlashingPeriodCap(t *testing.T) {
 	// Second slash should be capped
 	fractionB := keeper.capBySlashingPeriod(ctx, addr, half, height)
 	require.True(t, fractionB.Equal(sdk.ZeroDec()))
+	// Third slash should be capped to difference
+	fractionC := keeper.capBySlashingPeriod(ctx, addr, sdk.OneDec(), height)
+	require.True(t, fractionC.Equal(half))
 }

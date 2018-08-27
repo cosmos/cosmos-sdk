@@ -35,8 +35,8 @@ func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk
 		panic("expected to find slashing period, but none was found")
 	}
 	slashingPeriod = k.unmarshalSlashingPeriodKeyValue(iterator.Key(), iterator.Value())
-	if slashingPeriod.EndHeight < height {
-		panic("slashing period ended before infraction")
+	if slashingPeriod.EndHeight > 0 && slashingPeriod.EndHeight < height {
+		panic(fmt.Sprintf("slashing period ended before infraction: infraction height %d, slashing period ended at %d", height, slashingPeriod.EndHeight))
 	}
 	return
 }

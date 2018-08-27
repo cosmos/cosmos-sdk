@@ -11,15 +11,15 @@ import (
 )
 
 var (
-	// DiscoverLedger defines a function to be invoked at runtime for discovering
+	// discoverLedger defines a function to be invoked at runtime for discovering
 	// a connected Ledger device.
-	DiscoverLedger DiscoverLedgerFn
+	discoverLedger discoverLedgerFn
 )
 
 type (
-	// DiscoverLedgerFn defines a Ledger discovery function that returns a
+	// discoverLedgerFn defines a Ledger discovery function that returns a
 	// connected device or an error upon failure.
-	DiscoverLedgerFn func() (LedgerSECP256K1, error)
+	discoverLedgerFn func() (LedgerSECP256K1, error)
 
 	// DerivationPath represents a Ledger derivation path.
 	DerivationPath []uint32
@@ -51,8 +51,8 @@ type (
 func NewPrivKeyLedgerSecp256k1(path DerivationPath) (tmcrypto.PrivKey, error) {
 	var ledgerDevice LedgerSECP256K1
 
-	if DiscoverLedger != nil {
-		device, err := DiscoverLedger()
+	if discoverLedger != nil {
+		device, err := discoverLedger()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create PrivKeyLedgerSecp256k1")
 		}

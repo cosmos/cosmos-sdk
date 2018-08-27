@@ -17,6 +17,7 @@ const (
 	FundRaiserChecksumSize = 4
 	// FreshKey is the sentence length used for newly created keys (24 words).
 	FreshKey ValidSentenceLen = 24
+	// FreshkeyEntropySize is the expected amount of entropy (in bytes) to generate a 24-word mnemonic.
 	FreshKeyEntropySize = 32
 	// Size of the checksum employed for new keys
 	FreshKeyChecksumSize = 8

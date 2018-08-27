@@ -32,7 +32,7 @@ const (
 	FullFundraiserPath = BIP44Prefix + "0'/0/0"
 )
 
-var BIP44Component = regexp.MustCompile(`[\d]+'`)
+var bip44Component = regexp.MustCompile(`[\d]+'`)
 
 // BIP44Params wraps BIP 44 params (5 level BIP 32 path).
 // To receive a canonical string representation ala
@@ -172,6 +172,7 @@ func i64(key []byte, data []byte) (IL [32]byte, IR [32]byte) {
 
 // ParamsFromString instantiates a BIP44Params object from the given string
 // derivation path. Performs validation on the path.
+// nolint: gocyclo
 func ParamsFromString(path string) (*BIP44Params, error) {
 	initialSplits := strings.Split(path, "/")
 	var splits [5]string
@@ -194,9 +195,9 @@ func ParamsFromString(path string) (*BIP44Params, error) {
 		copy(splits[:], initialSplits[:])
 	}
 
-	if !BIP44Component.MatchString(splits[0]) ||
-			!BIP44Component.MatchString(splits[1]) ||
-			!BIP44Component.MatchString(splits[2]) {
+	if !bip44Component.MatchString(splits[0]) ||
+			!bip44Component.MatchString(splits[1]) ||
+			!bip44Component.MatchString(splits[2]) {
 		return nil, errors.New("mal-formed path")
 	}
 

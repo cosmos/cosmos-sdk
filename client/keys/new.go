@@ -25,6 +25,7 @@ func newCommand() *cobra.Command {
 	return cmd
 }
 
+// nolint: gocyclo
 func runNewCommand(cmd *cobra.Command, args []string) error {
 	name := args[0]
 

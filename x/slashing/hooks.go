@@ -21,3 +21,21 @@ func (k Keeper) onValidatorUnbonded(ctx sdk.Context, address sdk.ValAddress) {
 	slashingPeriod.EndHeight = ctx.BlockHeight()
 	k.setValidatorSlashingPeriod(ctx, slashingPeriod)
 }
+
+// Wrapper struct for sdk.ValidatorHooks
+type ValidatorHooks struct {
+	k Keeper
+}
+
+// Implements sdk.ValidatorHooks
+func (v ValidatorHooks) OnValidatorBonded(ctx sdk.Context, address sdk.ValAddress) {
+	v.k.onValidatorBonded(ctx, address)
+}
+
+// Implements sdk.ValidatorHooks
+func (v ValidatorHooks) OnValidatorUnbonded(ctx sdk.Context, address sdk.ValAddress) {
+	v.k.onValidatorUnbonded(ctx, address)
+}
+
+// Assert implementation
+var _ sdk.ValidatorHooks = ValidatorHooks{}

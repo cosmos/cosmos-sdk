@@ -95,3 +95,9 @@ type DelegationSet interface {
 	IterateDelegations(ctx Context, delegator AccAddress,
 		fn func(index int64, delegation Delegation) (stop bool))
 }
+
+// validator event hooks
+type ValidatorHooks interface {
+	OnValidatorBonded(ctx Context, address ValAddress)   // Must be called when a validator is bonded
+	OnValidatorUnbonded(ctx Context, address ValAddress) // Must be called when a validator is unbonded
+}

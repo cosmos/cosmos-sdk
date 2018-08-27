@@ -16,7 +16,7 @@ import (
 )
 
 // SimulateMsgUnjail
-func SimulateMsgUnjail(k slashing.Keeper) simulation.TestAndRunTx {
+func SimulateMsgUnjail(k slashing.Keeper) simulation.Operation {
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
 		key := simulation.RandomKey(r, keys)
 		address := sdk.AccAddress(key.PubKey().Address())

@@ -3,7 +3,6 @@ package app
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"math/rand"
 	"testing"
 
@@ -87,7 +86,7 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 
 func testAndRunTxs(app *GaiaApp) []simulation.Operation {
 	return []simulation.Operation{
-		banksim.TestAndRunSingleInputMsgSend(app.accountMapper),
+		banksim.SimulateSingleInputMsgSend(app.accountMapper),
 		govsim.SimulateMsgSubmitProposal(app.govKeeper, app.stakeKeeper),
 		govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper),
 		govsim.SimulateMsgVote(app.govKeeper, app.stakeKeeper),
@@ -171,11 +170,10 @@ func TestAppStateDeterminism(t *testing.T) {
 				true,
 			)
 			appHash := app.LastCommitID().Hash
-			fmt.Printf(">>> APP HASH: %v, %X\n", appHash, appHash)
 			appHashList[j] = appHash
 		}
 		for k := 1; k < numTimesToRunPerSeed; k++ {
-			require.Equal(t, appHashList[0], appHashList[k])
+			require.Equal(t, appHashList[0], appHashList[k], "appHash list: %v", appHashList)
 		}
 	}
 }

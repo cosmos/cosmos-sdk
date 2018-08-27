@@ -17,7 +17,7 @@ import (
 
 // SimulateMsgUnjail
 func SimulateMsgUnjail(k slashing.Keeper) simulation.Operation {
-	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
+	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
 		key := simulation.RandomKey(r, keys)
 		address := sdk.AccAddress(key.PubKey().Address())
 		msg := slashing.NewMsgUnjail(address)
@@ -29,6 +29,6 @@ func SimulateMsgUnjail(k slashing.Keeper) simulation.Operation {
 		}
 		event(fmt.Sprintf("slashing/MsgUnjail/%v", result.IsOK()))
 		action = fmt.Sprintf("TestMsgUnjail: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
-		return action, nil
+		return action, nil, nil
 	}
 }

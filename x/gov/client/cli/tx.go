@@ -244,7 +244,7 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdQueryProposal implements the query proposal command.
-func GetCmdQueryProposal(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryProposal(queryRoute string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query-proposal",
 		Short: "query proposal details",
@@ -261,7 +261,7 @@ func GetCmdQueryProposal(storeName string, cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			res, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
+			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/proposal", queryRoute), bz)
 			if err != nil {
 				return err
 			}
@@ -278,7 +278,7 @@ func GetCmdQueryProposal(storeName string, cdc *wire.Codec) *cobra.Command {
 
 // nolint: gocyclo
 // GetCmdQueryProposals implements a query proposals command.
-func GetCmdQueryProposals(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryProposals(queryRoute string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query-proposals",
 		Short: "query proposals with optional filters",
@@ -323,12 +323,26 @@ func GetCmdQueryProposals(storeName string, cdc *wire.Codec) *cobra.Command {
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, err := cliCtx.QueryWithData("custom/gov/proposals", bz)
+			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/proposals", queryRoute), bz)
 			if err != nil {
 				return err
 			}
 
-			fmt.Println(string(res))
+			var matchingProposals []gov.Proposal
+			err = cdc.UnmarshalJSON(res, &matchingProposals)
+			if err != nil {
+				return err
+			}
+
+			if len(matchingProposals) == 0 {
+				fmt.Println("No matching proposals found")
+				return nil
+			}
+
+			for _, proposal := range matchingProposals {
+				fmt.Printf("  %d - %s\n", proposal.GetProposalID(), proposal.GetTitle())
+			}
+
 			return nil
 		},
 	}
@@ -343,7 +357,7 @@ func GetCmdQueryProposals(storeName string, cdc *wire.Codec) *cobra.Command {
 
 // Command to Get a Proposal Information
 // GetCmdQueryVote implements the query proposal vote command.
-func GetCmdQueryVote(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryVote(queryRoute string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query-vote",
 		Short: "query vote",
@@ -365,7 +379,7 @@ func GetCmdQueryVote(storeName string, cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			res, err := cliCtx.QueryWithData("custom/gov/vote", bz)
+			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/vote", queryRoute), bz)
 			if err != nil {
 				return err
 			}
@@ -382,7 +396,7 @@ func GetCmdQueryVote(storeName string, cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdQueryVotes implements the command to query for proposal votes.
-func GetCmdQueryVotes(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryVotes(queryRoute string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query-votes",
 		Short: "query votes on a proposal",
@@ -398,7 +412,7 @@ func GetCmdQueryVotes(storeName string, cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			res, err := cliCtx.QueryWithData("custom/gov/votes", bz)
+			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/votes", queryRoute), bz)
 			if err != nil {
 				return err
 			}
@@ -415,7 +429,7 @@ func GetCmdQueryVotes(storeName string, cdc *wire.Codec) *cobra.Command {
 
 // Command to Get a specific Deposit Information
 // GetCmdQueryDeposit implements the query proposal deposit command.
-func GetCmdQueryDeposit(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryDeposit(queryRoute string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query-deposit",
 		Short: "query deposit",
@@ -437,7 +451,7 @@ func GetCmdQueryDeposit(storeName string, cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			res, err := cliCtx.QueryWithData("custom/gov/deposit", bz)
+			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/deposit", queryRoute), bz)
 			if err != nil {
 				return err
 			}
@@ -454,7 +468,7 @@ func GetCmdQueryDeposit(storeName string, cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdQueryDeposits implements the command to query for proposal deposits.
-func GetCmdQueryDeposits(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryDeposits(queryRoute string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query-deposits",
 		Short: "query deposits on a proposal",
@@ -470,7 +484,7 @@ func GetCmdQueryDeposits(storeName string, cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			res, err := cliCtx.QueryWithData("custom/gov/deposits", bz)
+			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/deposits", queryRoute), bz)
 			if err != nil {
 				return err
 			}
@@ -486,7 +500,7 @@ func GetCmdQueryDeposits(storeName string, cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdQueryDeposits implements the command to query for proposal deposits.
-func GetCmdQueryTally(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryTally(queryRoute string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query-tally",
 		Short: "get the tally of a proposal vote",
@@ -502,7 +516,7 @@ func GetCmdQueryTally(storeName string, cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			res, err := cliCtx.QueryWithData("custom/gov/tally", bz)
+			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/tally", queryRoute), bz)
 			if err != nil {
 				return err
 			}

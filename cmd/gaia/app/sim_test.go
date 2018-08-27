@@ -85,8 +85,8 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 	return appState
 }
 
-func testAndRunTxs(app *GaiaApp) []simulation.TestAndRunTx {
-	return []simulation.TestAndRunTx{
+func testAndRunTxs(app *GaiaApp) []simulation.Operation {
+	return []simulation.Operation{
 		banksim.TestAndRunSingleInputMsgSend(app.accountMapper),
 		govsim.SimulateMsgSubmitProposal(app.govKeeper, app.stakeKeeper),
 		govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper),

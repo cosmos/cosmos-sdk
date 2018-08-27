@@ -20,7 +20,7 @@ import (
 
 // TestAndRunSingleInputMsgSend tests and runs a single msg send, with one input and one output, where both
 // accounts already exist.
-func TestAndRunSingleInputMsgSend(mapper auth.AccountMapper) simulation.TestAndRunTx {
+func TestAndRunSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation {
 	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
 		fromKey := simulation.RandomKey(r, keys)
 		fromAddr := sdk.AccAddress(fromKey.PubKey().Address())

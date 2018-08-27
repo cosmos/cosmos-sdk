@@ -55,7 +55,7 @@ func TestGovWithRandomMessages(t *testing.T) {
 
 	simulation.Simulate(
 		t, mapp.BaseApp, appStateFn,
-		[]simulation.TestAndRunTx{
+		[]simulation.Operation{
 			SimulateMsgSubmitProposal(govKeeper, stakeKeeper),
 			SimulateMsgDeposit(govKeeper, stakeKeeper),
 			SimulateMsgVote(govKeeper, stakeKeeper),

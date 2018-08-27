@@ -9,6 +9,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/wire"
 	tmtypes "github.com/tendermint/tendermint/types"
+	"io/ioutil"
+	"path"
 )
 
 // ExportCmd dumps app state to JSON.
@@ -19,6 +21,21 @@ func ExportCmd(ctx *Context, cdc *wire.Codec, appExporter AppExporter) *cobra.Co
 		RunE: func(cmd *cobra.Command, args []string) error {
 			home := viper.GetString("home")
 			traceStore := viper.GetString(flagTraceStore)
+			emptyState, err := isEmptyState(home)
+			if err != nil {
+				return err
+			}
+
+			if emptyState {
+				fmt.Println("WARNING: State is not initialized. Returning genesis file.")
+				genesisFile := path.Join(home, "config", "genesis.json")
+				genesis, err := ioutil.ReadFile(genesisFile)
+				if err != nil {
+					return err
+				}
+				fmt.Println(string(genesis))
+				return nil
+			}
 
 			appState, validators, err := appExporter(home, ctx.Logger, traceStore)
 			if err != nil {
@@ -42,4 +59,13 @@ func ExportCmd(ctx *Context, cdc *wire.Codec, appExporter AppExporter) *cobra.Co
 			return nil
 		},
 	}
+}
+
+func isEmptyState(home string) (bool, error) {
+	files, err := ioutil.ReadDir(path.Join(home, "data"))
+	if err != nil {
+		return false, err
+	}
+
+	return len(files) == 0, nil
 }

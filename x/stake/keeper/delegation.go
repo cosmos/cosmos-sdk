@@ -41,29 +41,49 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 }
 
 // load all validators that a delegator is bonded to
-func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAddress,
-	maxRetrieve ...int16) (validators []types.Validator) {
+func (k Keeper) GetAllDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAddress) (validators []types.Validator) {
 
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(delegatorAddr)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 
-	if len(maxRetrieve) > 0 {
-		validators = make([]types.Validator, maxRetrieve[0])
-	}
-
 	i := 0
-	for ; ; i++ {
-		if !iterator.Valid() || (len(maxRetrieve) > 0 && i > int(maxRetrieve[0]-1)) {
-			break
-		}
-		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
+	for ; iterator.Valid(); iterator.Next() {
+		addr := iterator.Key()
+		delegation := types.MustUnmarshalDelegation(k.cdc, addr, iterator.Value())
 		validator, found := k.GetValidator(ctx, delegation.ValidatorAddr)
 		if !found {
 			panic(types.ErrNoValidatorFound(types.DefaultCodespace))
 		}
 		validators[i] = validator
-		iterator.Next()
+		i++
+	}
+	iterator.Close()
+	return validators[:i] // trim
+}
+
+// load all validators that a delegator is bonded to
+func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAddress,
+	maxRetrieve ...int16) (validators []types.Validator) {
+
+	if len(maxRetrieve) == 0 {
+		return k.GetAllDelegatorValidators(ctx, delegatorAddr)
+	}
+	validators = make([]types.Validator, maxRetrieve[0])
+	store := ctx.KVStore(k.storeKey)
+	delegatorPrefixKey := GetDelegationsKey(delegatorAddr)
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+
+	i := 0
+	for ; iterator.Valid() && i < int(maxRetrieve[0]); iterator.Next() {
+		addr := iterator.Key()
+		delegation := types.MustUnmarshalDelegation(k.cdc, addr, iterator.Value())
+		validator, found := k.GetValidator(ctx, delegation.ValidatorAddr)
+		if !found {
+			panic(types.ErrNoValidatorFound(types.DefaultCodespace))
+		}
+		validators[i] = validator
+		i++
 	}
 	iterator.Close()
 	return validators[:i] // trim

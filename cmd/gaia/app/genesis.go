@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/spf13/pflag"
@@ -31,9 +32,10 @@ var (
 
 // State to Unmarshal
 type GenesisState struct {
-	Accounts  []GenesisAccount   `json:"accounts"`
-	StakeData stake.GenesisState `json:"stake"`
-	GovData   gov.GenesisState   `json:"gov"`
+	Accounts     []GenesisAccount      `json:"accounts"`
+	StakeData    stake.GenesisState    `json:"stake"`
+	GovData      gov.GenesisState      `json:"gov"`
+	SlashingData slashing.GenesisState `json:"slashing"`
 }
 
 // GenesisAccount doesn't need pubkey or sequence
@@ -169,6 +171,8 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 	// start with the default staking genesis state
 	stakeData := stake.DefaultGenesisState()
 
+	slashingData := slashing.HubDefaultGenesisState()
+
 	// get genesis flag account information
 	genaccs := make([]GenesisAccount, len(appGenTxs))
 	for i, appGenTx := range appGenTxs {
@@ -216,9 +220,10 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 
 	// create the final app state
 	genesisState = GenesisState{
-		Accounts:  genaccs,
-		StakeData: stakeData,
-		GovData:   gov.DefaultGenesisState(),
+		Accounts:     genaccs,
+		StakeData:    stakeData,
+		GovData:      gov.DefaultGenesisState(),
+		SlashingData: slashingData,
 	}
 	return
 }

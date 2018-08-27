@@ -247,6 +247,7 @@ const (
 	StoreTypeDB
 	StoreTypeIAVL
 	StoreTypeTransient
+	StoreTypeImmutable
 )
 
 //----------------------------------------

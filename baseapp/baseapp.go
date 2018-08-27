@@ -63,9 +63,12 @@ type BaseApp struct {
 	// Volatile
 	// checkState is set on initialization and reset on Commit.
 	// deliverState is set in InitChain and BeginBlock and cleared on Commit.
-	// See methods setCheckState and setDeliverState.
-	checkState       *state                  // for CheckTx
-	deliverState     *state                  // for DeliverTx
+	// See methods		app.setCheckState and setDeliverState.
+	checkState    *state // for CheckTx
+	checkParams   sdk.ConsensusParams
+	deliverState  *state // for DeliverTx
+	deliverParams sdk.ConsensusParams
+
 	signedValidators []abci.SigningValidator // absent validators from begin block
 
 	// flag for sealing
@@ -206,12 +209,32 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 	}
 }
 
+func (app *BaseApp) setCheckParams(params *abci.ConsensusParams) {
+	var sdkparams sdk.ConsensusParams
+	(&sdkparams).FromABCI(params)
+	app.checkParams = sdkparams
+}
+
+func (app *BaseApp) getCheckContext() sdk.Context {
+	return app.checkState.ctx.WithConsensusParams(app.checkParams)
+}
+
 func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:  ms,
 		ctx: sdk.NewContext(ms, header, false, app.Logger),
 	}
+}
+
+func (app *BaseApp) setDeliverParams(params *abci.ConsensusParams) {
+	var sdkparams sdk.ConsensusParams
+	(&sdkparams).FromABCI(params)
+	app.deliverParams = sdkparams
+}
+
+func (app *BaseApp) getDeliverContext() sdk.Context {
+	return app.deliverState.ctx.WithConsensusParams(app.deliverParams)
 }
 
 //______________________________________________________________________________
@@ -240,12 +263,14 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	// Initialize the deliver state and check state with ChainID and run initChain
 	app.setDeliverState(abci.Header{ChainID: req.ChainId})
+	app.setDeliverParams(req.ConsensusParams)
 	app.setCheckState(abci.Header{ChainID: req.ChainId})
+	app.setCheckParams(req.ConsensusParams)
 
 	if app.initChainer == nil {
 		return
 	}
-	res = app.initChainer(app.deliverState.ctx, req)
+	res = app.initChainer(app.getDeliverContext(), req)
 
 	// NOTE: we don't commit, but BeginBlock for block 1
 	// starts from this deliverState
@@ -415,7 +440,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	if app.beginBlocker != nil {
-		res = app.beginBlocker(app.deliverState.ctx, req)
+		res = app.beginBlocker(app.getDeliverContext(), req)
 	}
 
 	// set the signed validators for addition to context in deliverTx
@@ -496,10 +521,15 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 func (app *BaseApp) getContextForAnte(mode runTxMode, txBytes []byte) (ctx sdk.Context) {
 	// Get the context
 	if mode == runTxModeCheck || mode == runTxModeSimulate {
-		ctx = app.checkState.ctx.WithTxBytes(txBytes)
+		ctx = app.getCheckContext().WithTxBytes(txBytes)
 	} else {
-		ctx = app.deliverState.ctx.WithTxBytes(txBytes)
+		ctx = app.getDeliverContext().WithTxBytes(txBytes)
 		ctx = ctx.WithSigningValidators(app.signedValidators)
+	}
+
+	params := ctx.ConsensusParams()
+	if params.TxSize.MaxGas != 0 {
+		ctx = ctx.WithGasMeter(sdk.NewGasMeter(params.TxSize.MaxGas))
 	}
 
 	return
@@ -634,6 +664,50 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	return
 }
 
+// Copied from tendermint/tendermint/types/params.go
+func updateConsensusParams(params *abci.ConsensusParams, updates *abci.ConsensusParams) (res *abci.ConsensusParams) {
+	res = new(abci.ConsensusParams)
+	res.BlockSize = new(abci.BlockSize)
+	res.TxSize = new(abci.TxSize)
+	res.BlockGossip = new(abci.BlockGossip)
+
+	if updates == nil {
+		return
+	}
+
+	if updates.BlockSize != nil {
+		if updates.BlockSize.MaxBytes > 0 {
+			res.BlockSize.MaxBytes = updates.BlockSize.MaxBytes
+		} else {
+			res.BlockSize.MaxBytes = params.BlockSize.MaxBytes
+		}
+		if updates.BlockSize.MaxTxs > 0 {
+			res.BlockSize.MaxTxs = updates.BlockSize.MaxTxs
+		} else {
+			res.BlockSize.MaxTxs = params.BlockSize.MaxTxs
+		}
+		if updates.BlockSize.MaxGas > 0 {
+			res.BlockSize.MaxGas = updates.BlockSize.MaxGas
+		} else {
+			res.BlockSize.MaxGas = params.BlockSize.MaxGas
+		}
+	}
+	if updates.TxSize != nil {
+		if updates.TxSize.MaxBytes > 0 {
+			params.TxSize.MaxBytes = updates.TxSize.MaxBytes
+		}
+		if updates.TxSize.MaxGas > 0 {
+			params.TxSize.MaxGas = updates.TxSize.MaxGas
+		}
+	}
+	if updates.BlockGossip != nil {
+		if updates.BlockGossip.BlockPartSizeBytes > 0 {
+			params.BlockGossip.BlockPartSizeBytes = updates.BlockGossip.BlockPartSizeBytes
+		}
+	}
+	return
+}
+
 // EndBlock implements the ABCI application interface.
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	if app.deliverState.ms.TracingEnabled() {
@@ -642,6 +716,16 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 	if app.endBlocker != nil {
 		res = app.endBlocker(app.deliverState.ctx, req)
+	}
+
+	// Use consensus parameter from last block
+	params := app.getDeliverContext().ConsensusParams().ToABCI()
+	app.setCheckParams(params)
+
+	if res.ConsensusParamUpdates != nil {
+		// Update consensus parameter
+		newparams := updateConsensusParams(params, res.ConsensusParamUpdates)
+		app.setDeliverParams(newparams)
 	}
 
 	return

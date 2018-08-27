@@ -466,6 +466,7 @@ func TestCheckTx(t *testing.T) {
 	require.Equal(t, nTxs, storedCounter)
 
 	// If a block is committed, CheckTx state should be reset.
+	app.InitChain(abci.RequestInitChain{})
 	app.BeginBlock(abci.RequestBeginBlock{})
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
@@ -491,6 +492,8 @@ func TestDeliverTx(t *testing.T) {
 	// Create same codec used in txDecoder
 	codec := wire.NewCodec()
 	registerTestCodec(codec)
+
+	app.InitChain(abci.RequestInitChain{})
 
 	nBlocks := 3
 	txPerHeight := 5

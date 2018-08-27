@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
@@ -13,16 +14,18 @@ type Keeper struct {
 	storeKey   sdk.StoreKey
 	cdc        *wire.Codec
 	coinKeeper bank.Keeper
+	paramstore params.Space
 
 	// codespace
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, paramstore params.Space, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:   key,
 		cdc:        cdc,
 		coinKeeper: ck,
+		paramstore: paramstore,
 		codespace:  codespace,
 	}
 	return keeper
@@ -33,45 +36,6 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.
 // return the codespace
 func (k Keeper) Codespace() sdk.CodespaceType {
 	return k.codespace
-}
-
-//_________________________________________________________________________
-// some generic reads/writes that don't need their own files
-
-// load/save the global staking params
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-
-	b := store.Get(ParamKey)
-	if b == nil {
-		panic("Stored params should not have been nil")
-	}
-
-	k.cdc.MustUnmarshalBinary(b, &params)
-	return
-}
-
-// Need a distinct function because setParams depends on an existing previous
-// record of params to exist (to check if maxValidators has changed) - and we
-// panic on retrieval if it doesn't exist - hence if we use setParams for the very
-// first params set it will panic.
-func (k Keeper) SetNewParams(ctx sdk.Context, params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinary(params)
-	store.Set(ParamKey, b)
-}
-
-// set the params
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	exParams := k.GetParams(ctx)
-
-	// if max validator count changes, must recalculate validator set
-	if exParams.MaxValidators != params.MaxValidators {
-		k.UpdateBondedValidatorsFull(ctx)
-	}
-	b := k.cdc.MustMarshalBinary(params)
-	store.Set(ParamKey, b)
 }
 
 //_______________________________________________________________________

@@ -9,15 +9,28 @@ import (
 
 // nolint
 const (
-	ParamStoreKeyDepositProcedure  = "gov/depositprocedure"
-	ParamStoreKeyVotingProcedure   = "gov/votingprocedure"
-	ParamStoreKeyTallyingProcedure = "gov/tallyingprocedure"
+	DefaultParamSpace = "gov"
+)
+
+// nolint - Paramstore key constructor
+func ParamStoreKeyDepositProcedure() params.Key  { return params.NewKey("depositprocedure") }
+func ParamStoreKeyVotingProcedure() params.Key   { return params.NewKey("votingprocedure") }
+func ParamStoreKeyTallyingProcedure() params.Key { return params.NewKey("tallyingprocedure") }
+
+// Cached parameter store keys
+var (
+	paramStoreKeyDepositProcedure  = ParamStoreKeyDepositProcedure()
+	paramStoreKeyVotingProcedure   = ParamStoreKeyVotingProcedure()
+	paramStoreKeyTallyingProcedure = ParamStoreKeyTallyingProcedure()
 )
 
 // Governance Keeper
 type Keeper struct {
-	// The reference to the ParamSetter to get and set Global Params
-	ps params.Setter
+	// The reference to the Param Keeper to get and set Global Params
+	pk params.Keeper
+
+	// The reference to the Paramstore to get and set gov specific params
+	ps params.Space
 
 	// The reference to the CoinKeeper to modify balances
 	ck bank.Keeper
@@ -39,9 +52,10 @@ type Keeper struct {
 }
 
 // NewGovernanceMapper returns a mapper that uses go-wire to (binary) encode and decode gov types.
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ps params.Setter, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, pk params.Keeper, ps params.Space, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
 		storeKey:  key,
+		pk:        pk,
 		ps:        ps,
 		ck:        ck,
 		ds:        ds,
@@ -212,34 +226,34 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 // Returns the current Deposit Procedure from the global param store
 func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) DepositProcedure {
 	var depositProcedure DepositProcedure
-	keeper.ps.Get(ctx, ParamStoreKeyDepositProcedure, &depositProcedure)
+	keeper.ps.Get(ctx, paramStoreKeyDepositProcedure, &depositProcedure)
 	return depositProcedure
 }
 
 // Returns the current Voting Procedure from the global param store
 func (keeper Keeper) GetVotingProcedure(ctx sdk.Context) VotingProcedure {
 	var votingProcedure VotingProcedure
-	keeper.ps.Get(ctx, ParamStoreKeyVotingProcedure, &votingProcedure)
+	keeper.ps.Get(ctx, paramStoreKeyVotingProcedure, &votingProcedure)
 	return votingProcedure
 }
 
 // Returns the current Tallying Procedure from the global param store
 func (keeper Keeper) GetTallyingProcedure(ctx sdk.Context) TallyingProcedure {
 	var tallyingProcedure TallyingProcedure
-	keeper.ps.Get(ctx, ParamStoreKeyTallyingProcedure, &tallyingProcedure)
+	keeper.ps.Get(ctx, paramStoreKeyTallyingProcedure, &tallyingProcedure)
 	return tallyingProcedure
 }
 
 func (keeper Keeper) setDepositProcedure(ctx sdk.Context, depositProcedure DepositProcedure) {
-	keeper.ps.Set(ctx, ParamStoreKeyDepositProcedure, &depositProcedure)
+	keeper.ps.Set(ctx, paramStoreKeyDepositProcedure, &depositProcedure)
 }
 
 func (keeper Keeper) setVotingProcedure(ctx sdk.Context, votingProcedure VotingProcedure) {
-	keeper.ps.Set(ctx, ParamStoreKeyVotingProcedure, &votingProcedure)
+	keeper.ps.Set(ctx, paramStoreKeyVotingProcedure, &votingProcedure)
 }
 
 func (keeper Keeper) setTallyingProcedure(ctx sdk.Context, tallyingProcedure TallyingProcedure) {
-	keeper.ps.Set(ctx, ParamStoreKeyTallyingProcedure, &tallyingProcedure)
+	keeper.ps.Set(ctx, paramStoreKeyTallyingProcedure, &tallyingProcedure)
 }
 
 // =====================================================

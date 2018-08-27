@@ -44,8 +44,8 @@ func RegisterRoutes(r *mux.Router) {
 func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup) {
 	routerGroup.GET("/keys", QueryKeysRequest)
 	routerGroup.POST("/keys", AddNewKeyRequest)
-	routerGroup.GET("/keys/seed", SeedRequest)
-	routerGroup.GET("/keys/get/:name", GetKeyRequest)
+	routerGroup.POST("/keys/:name/recover", RecoverResuest)
+	routerGroup.GET("/keys/:name", GetKeyRequest)
 	routerGroup.PUT("/keys/:name", UpdateKeyRequest)
 	routerGroup.DELETE("/keys/:name", DeleteKeyRequest)
 }

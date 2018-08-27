@@ -834,8 +834,71 @@ var doc = `{
                 }
             }
         },
-        "/keys/get/{name}": {
-            "get": {
+        "/keys/{name}/recover": {
+            "post": {
+                "description": "Recover a key from seed",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Key Management"
+                ],
+				"parameters": [
+                    {
+                        "type": "string",
+                        "description": "key name",
+                        "name": "name",
+                        "in": "path"
+                    },
+					{
+                        "description": "seed and password for a new key",
+                        "name": "seedAndPwd",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/keys.RecoverKeyBody"
+                        }
+                    }
+                ],
+                "summary": "Recover a key from seed",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/keys.KeyOutput"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/keys/{name}": {
+			"get": {
                 "description": "Get detailed information for specific key name",
                 "consumes": [
                     "application/json"
@@ -885,53 +948,7 @@ var doc = `{
                         }
                     }
                 }
-            }
-        },
-        "/keys/seed": {
-            "get": {
-                "description": "Get a seed for creating key",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Key Management"
-                ],
-                "summary": "Get a seed",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/keys/{name}": {
+            },
             "put": {
                 "description": "The keys are protected by the password, here this API provides a way to change the password",
                 "consumes": [
@@ -1411,6 +1428,17 @@ var doc = `{
                 "name": {
                     "type": "string"
                 },
+                "password": {
+                    "type": "string"
+                },
+                "seed": {
+                    "type": "string"
+                }
+            }
+        },
+        "keys.RecoverKeyBody": {
+            "type": "object",
+            "properties": {
                 "password": {
                     "type": "string"
                 },

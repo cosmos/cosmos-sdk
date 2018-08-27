@@ -59,7 +59,7 @@ func NewPrivKeyLedgerSecp256k1(path DerivationPath) (tmcrypto.PrivKey, error) {
 
 		ledgerDevice = device
 	} else {
-		return nil, errors.New("no ledger discovery function defined")
+		return nil, errors.New("no Ledger discovery function defined")
 	}
 
 	pkl := &PrivKeyLedgerSecp256k1{Path: path, ledger: ledgerDevice}

@@ -80,3 +80,4 @@ BUG FIXES
     * \#2105 Fix DB Iterator leak, which may leak a go routine.
 
 * Tendermint
+    * \#1712 Replace db_path with db_dir in automatically generated configuration files.

@@ -11,10 +11,15 @@ import (
 )
 
 type (
-	// TestAndRunTx produces a fuzzed transaction, and ensures the state
-	// transition was as expected. It returns a descriptive message "action"
-	// about what this fuzzed tx actually did, for ease of debugging.
-	TestAndRunTx func(
+	// Operation runs a state machine transition,
+	// and ensures the transition happened as expected.
+	// The operation could be running and testing a fuzzed transaction,
+	// or doing the same for a message.
+	//
+	// For ease of debugging,
+	// an operation returns a descriptive message "action",
+	// which details what this fuzzed state machine transition actually did.
+	Operation func(
 		t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		privKeys []crypto.PrivKey, log string, event func(string),
 	) (action string, err sdk.Error)

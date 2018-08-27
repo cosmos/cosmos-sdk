@@ -384,7 +384,7 @@ It provides modular rest APIs. Through these APIs, you can send transactions and
 
 You can start a gaia-lite node with the following command:
 ```
-gaiacli lite-server --chain-id {your chain id}
+gaiacli lite-server --chain-id=<chain_id>
 ```
 
 Please refer to this [getting start](../light/getting_started.md) for detailed description about how to run gaia-lite.

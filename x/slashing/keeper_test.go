@@ -53,6 +53,58 @@ func TestHandleDoubleSign(t *testing.T) {
 	require.Equal(t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))), sk.Validator(ctx, addr).GetPower())
 }
 
+// Test that the amount a validator is slashed for multiple double signs
+// is correctly capped by the slashing period in which they were committed
+func TestSlashingPeriodCap(t *testing.T) {
+
+	// initial setup
+	ctx, ck, sk, _, keeper := createTestInput(t)
+	sk = sk.WithValidatorHooks(keeper.ValidatorHooks())
+	amtInt := int64(100)
+	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
+	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, val, amt))
+	require.True(t, got.IsOK())
+	validatorUpdates := stake.EndBlocker(ctx, sk)
+	keeper.AddValidators(ctx, validatorUpdates)
+	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
+	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
+
+	// handle a signature to set signing info
+	keeper.handleValidatorSignature(ctx, val.Address(), amtInt, true)
+
+	// double sign less than max age
+	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
+
+	// should be jailed
+	require.True(t, sk.Validator(ctx, addr).GetJailed())
+	// update block height
+	ctx = ctx.WithBlockHeight(int64(1))
+	// unjail to measure power
+	sk.Unjail(ctx, val)
+	// power should be reduced
+	require.Equal(t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))), sk.Validator(ctx, addr).GetPower())
+
+	// double sign again, same slashing period
+	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
+	// should be jailed
+	require.True(t, sk.Validator(ctx, addr).GetJailed())
+	// update block height
+	ctx = ctx.WithBlockHeight(int64(2))
+	// unjail to measure power
+	sk.Unjail(ctx, val)
+	// power should be equal, no more should have been slashed
+	require.Equal(t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))), sk.Validator(ctx, addr).GetPower())
+
+	// double sign again, new slashing period
+	keeper.handleDoubleSign(ctx, val.Address(), 2, time.Unix(0, 0), amtInt)
+	// should be jailed
+	require.True(t, sk.Validator(ctx, addr).GetJailed())
+	// unjail to measure power
+	sk.Unjail(ctx, val)
+	// power should be reduced
+	require.Equal(t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(18).Quo(sdk.NewDec(20))), sk.Validator(ctx, addr).GetPower())
+}
+
 // Test a validator through uptime, downtime, revocation,
 // unrevocation, starting height reset, and revocation again
 func TestHandleAbsentValidator(t *testing.T) {

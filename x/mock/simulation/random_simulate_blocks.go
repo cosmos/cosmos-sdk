@@ -186,14 +186,15 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]m
 		for r.Float64() < evidenceFraction {
 			height := header.Height
 			time := header.Time
+			vals := signingValidators
 			if r.Float64() < pastEvidenceFraction {
 				height = int64(r.Intn(int(header.Height)))
 				time = pastTimes[height]
+				vals = pastSigningValidators[height]
 			}
-			past := pastSigningValidators[height]
-			validator := past[r.Intn(len(past))].Validator
+			validator := vals[r.Intn(len(vals))].Validator
 			var totalVotingPower int64
-			for _, val := range past {
+			for _, val := range vals {
 				totalVotingPower += val.Validator.Power
 			}
 			evidence = append(evidence, abci.Evidence{

@@ -27,7 +27,7 @@ jobs:
           name: dependencies
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_vendor_deps_ci
+            make get_vendor_deps
       - run:
           name: binaries
           command: |
@@ -51,7 +51,7 @@ jobs:
           name: dependencies
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_vendor_deps_ci
+            make get_vendor_deps
       - run:
           name: Get metalinter
           command: |
@@ -74,7 +74,7 @@ jobs:
           name: dependencies
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_vendor_deps_ci
+            make get_vendor_deps
       - run:
           name: Test cli
           command: |
@@ -93,7 +93,7 @@ jobs:
           name: dependencies
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_vendor_deps_ci
+            make get_vendor_deps
       - run:
           name: Test individual module simulations
           command: |
@@ -111,7 +111,7 @@ jobs:
           name: dependencies
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_vendor_deps_ci
+            make get_vendor_deps
       - run:
           name: Test individual module simulations
           command: |
@@ -129,7 +129,7 @@ jobs:
           name: dependencies
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_vendor_deps_ci
+            make get_vendor_deps
       - run:
           name: Test full Gaia simulation
           command: |
@@ -147,7 +147,7 @@ jobs:
           name: dependencies
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_vendor_deps_ci
+            make get_vendor_deps
       - run: mkdir -p /tmp/logs
       - run:
           name: Run tests
@@ -176,7 +176,7 @@ jobs:
           name: dependencies
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_vendor_deps_ci
+            make get_vendor_deps
       - run:
           name: gather
           command: |
@@ -207,7 +207,7 @@ jobs:
             command: |
               set -x
               make get_tools
-              make get_vendor_deps_ci
+              make get_vendor_deps
               make build-linux
               make localnet-start
               ./scripts/localnet-blocks-test.sh 40 5 10 localhost

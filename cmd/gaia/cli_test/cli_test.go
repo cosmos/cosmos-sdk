@@ -285,7 +285,7 @@ func TestGaiaCLIKeysNew(t *testing.T) {
 
 	// happy path with defaults
 	executeInit(t, fmt.Sprintf("gaiad init -o --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome))
-	executeWrite(t, fmt.Sprintf("gaiacli --home=%s keys new --default=true %s", gaiacliHome, keyName))
+	executeWrite(t, fmt.Sprintf("gaiacli --home=%s keys new --default=true %s", gaiacliHome, keyName), "honk")
 	keyAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show %s --output=json --home=%s", keyName, gaiacliHome))
 	require.NotNil(t, keyAddr)
 }

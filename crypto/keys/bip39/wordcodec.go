@@ -29,6 +29,9 @@ func NewMnemonic(len ValidSentenceLen) ([]string, error) {
 	return NewMnemonicWithEntropy(len, nil)
 }
 
+// NewMnemonic will return a BIP44 mnemonic with the given sentence length using
+// the provided byte slices as an entropy. If no entropy is provided, system
+// entropy will be used.
 func NewMnemonicWithEntropy(sLen ValidSentenceLen, providedEntropy []byte) ([]string, error) {
 	entropySize := calcEntropySize(sLen)
 	var entropy []byte

@@ -196,8 +196,8 @@ func ParamsFromString(path string) (*BIP44Params, error) {
 	}
 
 	if !bip44Component.MatchString(splits[0]) ||
-			!bip44Component.MatchString(splits[1]) ||
-			!bip44Component.MatchString(splits[2]) {
+		!bip44Component.MatchString(splits[1]) ||
+		!bip44Component.MatchString(splits[2]) {
 		return nil, errors.New("mal-formed path")
 	}
 

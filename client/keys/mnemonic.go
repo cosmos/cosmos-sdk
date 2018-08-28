@@ -15,16 +15,16 @@ import (
 )
 
 const (
-	flagEntropy = "user"
+	flagUserEntropy = "user"
 )
 
 func mnemonicCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "mnemonic",
-		Short: "Creates a new mnemonic for use in key generation. Uses system entropy by default.",
+		Short: "Generate a mnemonic from system or user-supplied entropy",
 		RunE:  runMnemonicCmd,
 	}
-	cmd.Flags().Bool(flagEntropy, false, "Prompt the use to enter entropy. Otherwise, use the system's entropy.")
+	cmd.Flags().Bool(flagUserEntropy, false, "Prompt the use to enter entropy. Otherwise, use the system's entropy.")
 	return cmd
 }
 
@@ -34,7 +34,7 @@ func runMnemonicCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if !viper.GetBool(flagEntropy) {
+	if !viper.GetBool(flagUserEntropy) {
 		return outputMnemonic(kb, nil)
 	}
 
@@ -52,7 +52,7 @@ func runMnemonicCmd(cmd *cobra.Command, args []string) error {
 	}()
 
 	go func() {
-		fmt.Println("Please provide entropy using your keyboard and press enter.")
+		fmt.Println("Please provide entropy:")
 		scanner := bufio.NewScanner(stdin)
 		for scanner.Scan() {
 			buf.Write(scanner.Bytes())

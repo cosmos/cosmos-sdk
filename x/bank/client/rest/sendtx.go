@@ -38,7 +38,7 @@ type transferBody struct {
 	Sequence         int64     `json:"sequence"`
 	Gas              int64     `json:"gas"`
 	Fee		         string    `json:"fee"`
-	Signed		     bool      `json:"signed"`
+	Generate		 bool      `json:"generate"`
 	EnsureAccAndSeq  bool 	   `json:"ensure_account_sequence"`
 }
 
@@ -83,7 +83,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 			return
 		}
 
-		if !transferBody.Signed {
+		if transferBody.Generate {
 			w.Write(txForSign.Bytes())
 			return
 		}
@@ -98,8 +98,8 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 	}
 }
 
-// RegisterSwaggerRoutes - Central function to define routes that get registered by the main application
-func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext, cdc *wire.Codec, kb keys.Keybase) {
+// registerSwaggerTxRoutes - Central function to define routes that get registered by the main application
+func registerSwaggerTxRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext, cdc *wire.Codec, kb keys.Keybase) {
 	routerGroup.POST("/bank/transfers", transferRequestFn(cdc, ctx, kb))
 }
 
@@ -133,7 +133,7 @@ func transferRequestFn(cdc *wire.Codec, ctx context.CLIContext, kb keys.Keybase)
 			return
 		}
 
-		if !transferBody.Signed {
+		if transferBody.Generate {
 			httputils.NormalResponse(gtx, txForSign.Bytes())
 			return
 		}
@@ -150,7 +150,7 @@ func transferRequestFn(cdc *wire.Codec, ctx context.CLIContext, kb keys.Keybase)
 // paramPreprocess performs transferBody preprocess
 func paramPreprocess(body transferBody, kb keys.Keybase) (transferBody, int, error) {
 	if body.Name == "" {
-		if body.Signed {
+		if !body.Generate {
 			return transferBody{}, http.StatusBadRequest, fmt.Errorf("missing key name, can't sign transaction")
 		}
 		if body.FromAddress == "" {

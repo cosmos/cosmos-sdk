@@ -48,4 +48,5 @@ func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup) {
 	routerGroup.GET("/keys/:name", GetKeyRequest)
 	routerGroup.PUT("/keys/:name", UpdateKeyRequest)
 	routerGroup.DELETE("/keys/:name", DeleteKeyRequest)
+	routerGroup.POST("/keys/:name/sign", SignResuest)
 }

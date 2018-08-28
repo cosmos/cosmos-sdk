@@ -10,7 +10,7 @@ To start a rest server, we need to specify the following parameters:
 | laddr           | string    | "tcp://localhost:1317"  | false    | Address for server to listen on |
 | trust-node      | bool      | false                   | false    | Trust full nodes or not |
 | swagger-host-ip | string    | "localhost"             | false    | The host IP of the Gaia-lite server, swagger-ui will send request to this host |
-| modules         | string    | "general,key,token"     | false    | Enabled modules |
+| modules         | string    | "general,key,bank"      | false    | Enabled modules |
 
 Sample command to start gaia-lite node:
 ```
@@ -31,8 +31,7 @@ The gaia-lite node can connect to multiple full nodes. Then gaia-lite will do lo
 ```
 gaiacli lite-server --chain-id=<chain_id> --node-list=tcp://10.10.10.10:26657,tcp://20.20.20.20:26657
 ```
-
-The gaia-lite support modular rest APIs. Now it supports four modules: general, key, token and stake. If you need all of them, just start it with this command:
- ```
- gaiacli lite-server --chain-id=<chain_id> --modules=general,key,token,stake
- ```
+Gaia-lite is built in a modular format. Each Cosmos module defines it's own RPC API. Currently the following modules are supported: general, transaction, key, bank, staking, governance, and slashing.
+```
+gaiacli lite-server --chain-id=<chain_id> --modules=general,key,bank,staking
+```

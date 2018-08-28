@@ -19,8 +19,8 @@ import (
 var doc = `{
     "swagger": "2.0",
     "info": {
-        "description": "All cosmos-lcd supported APIs will be shown by this swagger-ui page. You can access these APIs through this page.",
-        "title": "Swagger Cosmos-LCD API",
+        "description": "All Gaia-lite supported APIs will be shown by this swagger-ui page. You can access these APIs through this page.",
+        "title": "Gaia-lite Swagger-UI",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "API Support",
@@ -560,7 +560,7 @@ var doc = `{
                 }
             }
         },
-        "/stake/delegators/:delegatorAddr/delegations": {
+        "/stake/delegators/{delegatorAddr}/delegations": {
             "post": {
                 "description": "Send stake related transactions",
                 "consumes": [
@@ -623,7 +623,7 @@ var doc = `{
                 }
             }
         },
-        "/bank/balance/{address}": {
+        "/bank/balances/{address}": {
             "get": {
                 "description": "Get the detailed information for specific address",
                 "consumes": [
@@ -649,7 +649,7 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/auth.BaseAccount"
+                            "$ref": "#/definitions/sdk.Coins"
                         }
                     },
                     "400": {
@@ -678,7 +678,7 @@ var doc = `{
         },
         "/bank/transfers": {
             "post": {
-                "description": "This API require the Cosmos-LCD have keystore module. It will ask keystore module for transaction signature",
+                "description": "This API require the Gaia-lite has keystore module. It will ask keystore module for transaction signature",
                 "consumes": [
                     "application/json"
                 ],
@@ -897,6 +897,68 @@ var doc = `{
                 }
             }
         },
+        "/keys/{name}/sign": {
+            "post": {
+                "description": "Sign user specified bytes array",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Key Management"
+                ],
+				"parameters": [
+                    {
+                        "type": "string",
+                        "description": "key name",
+                        "name": "name",
+                        "in": "path"
+                    },
+					{
+                        "description": "seed and password for a new key",
+                        "name": "txAndPwd",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/keys.SignBody"
+                        }
+                    }
+                ],
+                "summary": "Sign user specified bytes array",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/keys/{name}": {
 			"get": {
                 "description": "Get detailed information for specific key name",
@@ -1068,6 +1130,116 @@ var doc = `{
                 }
             }
         },
+        "/auth/accounts/{address}": {
+            "get": {
+                "description": "Get the detailed information for specific address",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Key Management"
+                ],
+                "summary": "Query account information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "address",
+                        "name": "address",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/auth.BaseAccount"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/txs": {
+            "post": {
+                "description": "Broadcast transaction",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transaction"
+                ],
+				"parameters": [
+					{
+                        "description": "seed and password for a new key",
+                        "name": "txAndReturn",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/tx.TxBody"
+                        }
+                    }
+                ],
+                "summary": "Broadcast transaction",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/bank.ResultBroadcastTxCommit"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/node_version": {
             "get": {
                 "description": "Get connected full node version",
@@ -1114,7 +1286,7 @@ var doc = `{
         },
         "/version": {
             "get": {
-                "description": "Get Cosmos-LCD version",
+                "description": "Get Gaia-lite version",
                 "consumes": [
                     "application/json"
                 ],
@@ -1124,7 +1296,7 @@ var doc = `{
                 "tags": [
                     "General"
                 ],
-                "summary": "Get Cosmos-LCD version",
+                "summary": "Get Gaia-lite version",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1313,9 +1485,9 @@ var doc = `{
                 "sequence": {
                     "type": "string"
                 },
-                "signed": {
+                "generate": {
                     "type": "boolean",
-                    "example": true
+                    "example": false
                 },
                 "ensure_account_sequence": {
                     "type": "boolean",
@@ -1447,6 +1619,17 @@ var doc = `{
                 }
             }
         },
+        "keys.SignBody": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "tx_bytes": {
+                    "type": "string"
+                }
+            }
+        },
         "keys.UpdateKeyBody": {
             "type": "object",
             "properties": {
@@ -1455,6 +1638,18 @@ var doc = `{
                 },
                 "old_password": {
                     "type": "string"
+                }
+            }
+        },
+        "tx.TxBody": {
+            "type": "object",
+            "properties": {
+                "transaction": {
+                    "type": "string"
+                },
+                "return": {
+                    "type": "string",
+                    "example": "block"
                 }
             }
         },
@@ -1881,8 +2076,9 @@ var tagToModuleDesc = `
 {
   "General":"general",
   "Key Management":"key",
-  "Token Operation":"token",
-  "Stake Operation":"stake"
+  "Token Operation":"bank",
+  "Stake Operation":"staking",
+  "Transaction":"transaction"
 }
 `
 
@@ -1901,7 +2097,7 @@ func addOptionsToDesc (desc string) string {
 	buffer.WriteString(desc)
 	buffer.WriteString("\n")
 
-	buffer.WriteString("Cosmos-LCD starting options:")
+	buffer.WriteString("Gaid-lite starting options:")
 	buffer.WriteString("\n")
 
 	buffer.WriteString(cli.HomeFlag)

@@ -32,7 +32,7 @@ Exposes the same functionality as the Tendermint RPC from a full node. It aims t
 ```json
 {
   "transaction": "string",
-  "return": "string",
+  "return": "async"
 }
 ```
 
@@ -40,15 +40,11 @@ Exposes the same functionality as the Tendermint RPC from a full node. It aims t
 
 ```json
 {
-    "rest api":"2.0",
-    "code":200,
-    "error":"",
-    "result":{
+    
 	"code":0,
 	"hash":"0D33F2F03A5234F38706E43004489E061AC40A2E",
 	"data":"",
 	"log":""
-    }
 }
 ```
 
@@ -63,26 +59,18 @@ This API exposes all functionality needed for key creation, signing and manageme
 - Returns on success:
 
 ```json
-{
-    "rest api":"1.0",
-    "code":200,
-    "error":"",
-    "result":{
-        "account":[
-           {
-                "name":"monkey",
-                "address":"cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
-                "pub_key":"cosmosaccpub1zcjduc3q8s8ha96ry4xc5xvjp9tr9w9p0e5lk5y0rpjs5epsfxs4wmf72x3shvus0t"
-            },
-            {
-                "name":"test",
-                "address":"cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-                "pub_key":"cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
-            }
-        ],
-        "block_height":5241
-    }
-}
+[
+   {
+        "name":"monkey",
+        "address":"cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
+        "pub_key":"cosmosaccpub1zcjduc3q8s8ha96ry4xc5xvjp9tr9w9p0e5lk5y0rpjs5epsfxs4wmf72x3shvus0t"
+   },
+   {
+        "name":"test",
+        "address":"cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
+        "pub_key":"cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
+   }
+]
 ```
 
 ### POST /keys
@@ -93,9 +81,9 @@ This API exposes all functionality needed for key creation, signing and manageme
 
 ```json
 {
-  "name": "string",
-  "password": "string",
-  "seed": "string",
+    "name": "string",
+    "password": "string",
+    "seed": "string"
 }
 ```
 
@@ -103,12 +91,11 @@ Returns on success:
 
 ```json
 {
-    "rest api":"1.0",
-    "code":200,
-    "error":"",
-    "result":{
-        "seed":"crime carpet recycle erase simple prepare moral dentist fee cause pitch trigger when velvet animal abandon"
-    }
+    "name":"test2",
+    "type":"local",
+    "address":"cosmosaccaddr17pjnvcae9pktplx0jz5r0vn8ugsqmfuzwsvzzj",
+    "pub_key":"cosmosaccpub1addwnpepq0gxp200rysljv9v645llj3y3d3t4vjrdcnl8dnk540fnmu25h6tgustsyt",
+    "seed":"muffin novel usual evoke camp canal decade asthma creek lend record media adapt fresh brisk govern plate debris come mother behave coil process next"
 }
 ```
 
@@ -120,14 +107,10 @@ Returns on success:
 
 ```json
 {
-    "rest api":"1.0",
-    "code":200,
-    "error":"",
-    "result":{
-        "name":"test",
-            "address":"cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-            "pub_key":"cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
-    }
+  "name": "test1",
+  "type": "local",
+  "address": "cosmosaccaddr1dla9p5dycmwndmqfehlymwvvjjtfkfw4he576q",
+  "pub_key": "cosmosaccpub1addwnpepqgdykrxehg3k9vttjref3dhndtnsy5r3k5f30kekv8elqdluj5ktgl86nwd"
 }
 ```
 
@@ -140,19 +123,14 @@ Returns on success:
 ```json
 {
   "old_password": "string",
-  "new_password": "string",
+  "new_password": "string"
 }
 ```
 
 - Returns on success:
 
-```json
-{
-    "rest api":"2.0",
-    "code":200,
-    "error":"",
-    "result":{}
-}
+```string
+success
 ```
 
 ### DELETE /keys/{name}
@@ -163,19 +141,14 @@ Returns on success:
 
 ```json
 {
-  "password": "string",
+  "password": "string"
 }
 ```
 
 - Returns on success:
 
-```json
-{
-    "rest api":"1.0",
-    "code":200,
-    "error":"",
-    "result":{}
-}
+```string
+success
 ```
 
 ### POST /keys/{name}/recover
@@ -187,7 +160,7 @@ Returns on success:
 ```json
 {
   "password": "string",
-  "seed": "string",
+  "seed": "string"
 }
 ```
 
@@ -195,12 +168,10 @@ Returns on success:
 
 ```json
 {
-    "rest api":"1.0",
-    "code":200,
-    "error":"",
-    "result":{
-        "address":"BD607C37147656A507A5A521AA9446EB72B2C907"
-    }
+    "name":"test2",
+    "type":"local",
+    "address":"cosmosaccaddr17pjnvcae9pktplx0jz5r0vn8ugsqmfuzwsvzzj",
+    "pub_key":"cosmosaccpub1addwnpepq0gxp200rysljv9v645llj3y3d3t4vjrdcnl8dnk540fnmu25h6tgustsyt"
 }
 ```
 
@@ -212,20 +183,26 @@ Returns on success:
 
 ```json
 {
-    "rest api":"1.0",
-    "code":200,
-    "error":"",
-    "result":{
-        "address": "82A57F8575BDFA22F5164C75361A21D2B0E11089",
-        "public_key": "PubKeyEd25519{A0EEEED3C9CE1A6988DEBFE347635834A1C0EBA0B4BB1125896A7072D22E650D}",
+    "type": "auth/Account",
+    "value": {
+        "address": "cosmosaccaddr1zvl8p2w6v90k0geerqsnz3e6jxa2rzg3wvupmn",
         "coins": [
-            {"atom": 300},
-            {"photon": 15}
+            {
+                "denom": "monikerToken",
+                "amount": "990"
+            },
+            {
+                "denom": "steak",
+                "amount": "49"
+            }
         ],
-        "account_number": 1,
-        "sequence": 7
+        "public_key": {
+            "type": "tendermint/PubKeySecp256k1",
+            "value": "Aje2CWOpo0mcrfZy0Q+zSabeHjvT7oEuXuKljLU9agE/"
+        },
+        "account_number": "0",
+        "sequence": "1"
     }
-}
 }
 ```
 
@@ -240,38 +217,42 @@ The TokenAPI exposes all functionality needed to query account balances and send
 - Returns on success:
 
 ```json
-{
-    "rest api":"2.0",
-    "code":200,
-    "error":"",
-    "result": {
-        "atom":1000,
-        "photon":500,
-        "ether":20
+[
+    {
+        "denom":"monikerToken",
+        "amount":"990"
+    },
+    {
+        "denom":"steak",
+        "amount":"49"
     }
-}
+]
 ```
 
 ### POST /bank/transfers
 
 - **URL**: `/bank/transfers`
 - **Functionality**: Create a transfer in the bank module.
-- POST Body:
+- POST Body, generate is false:
 
 ```json
 {
+  "account_number": "0",
   "amount": [
     {
-      "denom": "string",
-      "amount": 64,
+      "amount": "10",
+      "denom": "monikerToken"
     }
   ],
-  "name": "string",
-  "password": "string",
-  "chain_id": "string",
-  "account_number": 64,
-  "sequence": 64,
-  "gas": 64,
+  "chain_id": "test-chain-KfHYRV",
+  "ensure_account_sequence": false,
+  "fee": "",
+  "gas": "10000",
+  "generate": false,
+  "name": "moniker",
+  "password": "12345678",
+  "sequence": "1",
+  "to_address": "cosmosaccaddr17pjnvcae9pktplx0jz5r0vn8ugsqmfuzwsvzzj"
 }
 ```
 
@@ -279,12 +260,97 @@ The TokenAPI exposes all functionality needed to query account balances and send
 
 ```json
 {
-    "rest api":"2.0",
-    "code":200,
-    "error":"",
-    "result":{
-     "transaction":"TODO:<JSON sign bytes for the transaction>"
-    }
+  "check_tx": {
+    "log": "Msg 0: ",
+    "gasWanted": "10000",
+    "gasUsed": "1242"
+  },
+  "deliver_tx": {
+    "log": "Msg 0: ",
+    "gasWanted": "10000",
+    "gasUsed": "3288",
+    "tags": [
+      {
+        "key": "c2VuZGVy",
+        "value": "Y29zbW9zYWNjYWRkcjF6dmw4cDJ3NnY5MGswZ2VlcnFzbnozZTZqeGEycnpnM3d2dXBtbg=="
+      },
+      {
+        "key": "cmVjaXBpZW50",
+        "value": "Y29zbW9zYWNjYWRkcjE3cGpudmNhZTlwa3RwbHgwano1cjB2bjh1Z3NxbWZ1endzdnp6ag=="
+      }
+    ]
+  },
+  "hash": "3474141FF827BDB85F39EF94D3B6B93E3D3C2A7A",
+  "height": "1574"
+}
+```
+
+- POST Body, generate is true:
+
+```json
+{
+    "account_number": "0",
+    "amount": [
+        {
+            "amount": "10",
+            "denom": "monikerToken"
+        }
+    ],
+    "chain_id": "test-chain-KfHYRV",
+    "ensure_account_sequence": false,
+    "fee": "1steak",
+    "gas": "10000",
+    "generate": true,
+    "name": "moniker",
+    "password": "12345678",
+    "sequence": "2",
+    "to_address": "cosmosaccaddr17pjnvcae9pktplx0jz5r0vn8ugsqmfuzwsvzzj"
+}
+```
+
+- Returns on success:
+
+```json
+{
+    "account_number": "0",
+    "chain_id": "test-chain-KfHYRV",
+    "fee": {
+        "amount": [
+            {
+                "amount": "1",
+                "denom": "steak"
+            }
+        ],
+        "gas": "10000"
+    },
+    "memo": "",
+    "msgs": [
+        {
+            "inputs": [
+                {
+                    "address": "cosmosaccaddr1zvl8p2w6v90k0geerqsnz3e6jxa2rzg3wvupmn",
+                    "coins": [
+                        {
+                            "amount": "10",
+                            "denom": "monikerToken"
+                        }
+                    ]
+                }
+            ],
+            "outputs": [
+                {
+                    "address": "cosmosaccaddr17pjnvcae9pktplx0jz5r0vn8ugsqmfuzwsvzzj",
+                    "coins": [
+                        {
+                            "amount": "10",
+                            "denom": "monikerToken"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "sequence": "2"
 }
 ```
 
@@ -300,14 +366,16 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 
 ```json
 {
-    "rest api":"2.1",
-    "code":200,
-    "error":"",
-    "result": {
-        "atom":1000,
-        "photon":500,
-        "ether":20
-    }
+    "delegations": [
+        {
+            "delegator_addr": "cosmosaccaddr1zvl8p2w6v90k0geerqsnz3e6jxa2rzg3wvupmn",
+            "validator_addr": "cosmosaccaddr1zvl8p2w6v90k0geerqsnz3e6jxa2rzg3wvupmn",
+            "shares": "100.0000000000",
+            "height": "0"
+        }
+    ],
+    "unbonding_delegations": null,
+    "redelegations": null
 }
 ```
 
@@ -318,12 +386,30 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 - Returns on success:
 
 ```json
-{
-    "rest api":"2.1",
-    "code":200,
-    "error":"",
-    "result":{}
-}
+[
+    {
+        "operator": "cosmosaccaddr1zvl8p2w6v90k0geerqsnz3e6jxa2rzg3wvupmn",
+        "pub_key": "cosmosvalpub1zcjduepq6lql7kxcsrss2wmaxmsv5afkprdqshhupafqc7h37h0wmlhvkn5qrcky3x",
+        "jailed": false,
+        "status": 2,
+        "tokens": "1000000000000",
+        "delegator_shares": "1000000000000",
+        "description": {
+            "moniker": "moniker",
+            "identity": "",
+            "website": "",
+            "details": ""
+        },
+        "bond_height": "0",
+        "bond_intra_tx_counter": 0,
+        "proposer_reward_pool": null,
+        "commission": "0",
+        "commission_max": "0",
+        "commission_change_rate": "0",
+        "commission_change_today": "0",
+        "prev_bonded_shares": "0"
+    }
+]
 ```
 
 ### GET /stake/delegators/{delegatorAddr}/validators/{validatorAddr}
@@ -334,10 +420,26 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 
 ```json
 {
-    "rest api":"2.1",
-    "code":200,
-    "error":"",
-    "result":{}
+    "operator": "cosmosaccaddr1zvl8p2w6v90k0geerqsnz3e6jxa2rzg3wvupmn",
+    "pub_key": "cosmosvalpub1zcjduepq6lql7kxcsrss2wmaxmsv5afkprdqshhupafqc7h37h0wmlhvkn5qrcky3x",
+    "jailed": false,
+    "status": 2,
+    "tokens": "1000000000000",
+    "delegator_shares": "1000000000000",
+    "description": {
+        "moniker": "moniker",
+        "identity": "",
+        "website": "",
+        "details": ""
+    },
+    "bond_height": "0",
+    "bond_intra_tx_counter": 0,
+    "proposer_reward_pool": null,
+    "commission": "0",
+    "commission_max": "0",
+    "commission_change_rate": "0",
+    "commission_change_today": "0",
+    "prev_bonded_shares": "0"
 }
 ```
 
@@ -348,14 +450,29 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 - Returns on success:
 
 ```json
-{
-    "rest api":"2.1",
-    "code":200,
-    "error":"",
-    "result":{
-     "transaction":"TODO"
-    }
-}
+[
+  {
+    "hash": "string",
+    "height": 0,
+    "result": {
+      "code": 0,
+      "data": "string",
+      "gas_used": 0,
+      "gas_wanted": 0,
+      "info": "string",
+      "log": "string",
+      "tags": [
+        [
+          {
+            "key": "string",
+            "value": 0
+          }
+        ]
+      ]
+    },
+    "tx": "string"
+  }
+]
 ```
 
 ### POST /stake/delegators/{delegatorAddr}/delegations
@@ -387,13 +504,13 @@ The StakingAPI exposes all functionality needed for validation and delegation in
     {
       "delegator_addr": "string",
       "validator_addr": "string",
-      "shares": "string",
+      "shares": "string"
     }
   ],
   "complete_unbondings": [
     {
       "delegator_addr": "string",
-      "validator_addr": "string",
+      "validator_addr": "string"
     }
   ],
   "begin_redelegates": [
@@ -401,14 +518,14 @@ The StakingAPI exposes all functionality needed for validation and delegation in
       "delegator_addr": "string",
       "validator_src_addr": "string",
       "validator_dst_addr": "string",
-      "shares": "string",
+      "shares": "string"
     }
   ],
   "complete_redelegates": [
     {
       "delegator_addr": "string",
       "validator_src_addr": "string",
-      "validator_dst_addr": "string",
+      "validator_dst_addr": "string"
     }
   ]
 }
@@ -419,12 +536,28 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 
 ```json
 {
-    "rest api":"2.1",
-    "code":200,
-    "error":"",
-    "result":{
-     "transaction":"TODO"
-    }
+  "check_tx": {
+    "log": "Msg 0: ",
+    "gasWanted": "10000",
+    "gasUsed": "1242"
+  },
+  "deliver_tx": {
+    "log": "Msg 0: ",
+    "gasWanted": "10000",
+    "gasUsed": "3288",
+    "tags": [
+      {
+        "key": "c2VuZGVy",
+        "value": "Y29zbW9zYWNjYWRkcjF6dmw4cDJ3NnY5MGswZ2VlcnFzbnozZTZqeGEycnpnM3d2dXBtbg=="
+      },
+      {
+        "key": "cmVjaXBpZW50",
+        "value": "Y29zbW9zYWNjYWRkcjE3cGpudmNhZTlwa3RwbHgwano1cjB2bjh1Z3NxbWZ1endzdnp6ag=="
+      }
+    ]
+  },
+  "hash": "3474141FF827BDB85F39EF94D3B6B93E3D3C2A7A",
+  "height": "1574"
 }
 ```
 
@@ -436,12 +569,10 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 
 ```json
 {
-    "rest api":"2.1",
-    "code":200,
-    "error":"",
-    "result":{
-     "transaction":"TODO"
-    }
+    "delegator_addr": "cosmosaccaddr1zvl8p2w6v90k0geerqsnz3e6jxa2rzg3wvupmn",
+    "validator_addr": "cosmosaccaddr1zvl8p2w6v90k0geerqsnz3e6jxa2rzg3wvupmn",
+    "shares": "100.0000000000",
+    "height": "0"
 }
 ```
 
@@ -452,14 +583,22 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 - Returns on success:
 
 ```json
-{
-    "rest api":"2.1",
-    "code":200,
-    "error":"",
-    "result":{
-     "transaction":"TODO"
-    }
-}
+[
+  {
+    "balance": {
+      "amount": "string",
+      "denom": "string"
+    },
+    "creation_height": 0,
+    "delegator_addr": "string",
+    "initial_balance": {
+      "amount": "string",
+      "denom": "string"
+    },
+    "min_time": 0,
+    "validator_addr": "string"
+  }
+]
 ```
 
 ### GET /stake/validators
@@ -469,14 +608,30 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 - Returns on success:
 
 ```json
-{
-    "rest api":"2.1",
-    "code":200,
-    "error":"",
-    "result":{
-     "transaction":"TODO"
+[
+    {
+        "operator": "cosmosaccaddr1zvl8p2w6v90k0geerqsnz3e6jxa2rzg3wvupmn",
+        "pub_key": "cosmosvalpub1zcjduepq6lql7kxcsrss2wmaxmsv5afkprdqshhupafqc7h37h0wmlhvkn5qrcky3x",
+        "jailed": false,
+        "status": 2,
+        "tokens": "1000000000000",
+        "delegator_shares": "1000000000000",
+        "description": {
+            "moniker": "moniker",
+            "identity": "",
+            "website": "",
+            "details": ""
+        },
+        "bond_height": "0",
+        "bond_intra_tx_counter": 0,
+        "proposer_reward_pool": null,
+        "commission": "0",
+        "commission_max": "0",
+        "commission_change_rate": "0",
+        "commission_change_today": "0",
+        "prev_bonded_shares": "0"
     }
-}
+]
 ```
 
 ### GET /stake/validators/{validatorAddr}
@@ -487,12 +642,26 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 
 ```json
 {
-    "rest api":"2.1",
-    "code":200,
-    "error":"",
-    "result":{
-     "transaction":"TODO"
-    }
+    "operator": "cosmosaccaddr1zvl8p2w6v90k0geerqsnz3e6jxa2rzg3wvupmn",
+    "pub_key": "cosmosvalpub1zcjduepq6lql7kxcsrss2wmaxmsv5afkprdqshhupafqc7h37h0wmlhvkn5qrcky3x",
+    "jailed": false,
+    "status": 2,
+    "tokens": "1000000000000",
+    "delegator_shares": "1000000000000",
+    "description": {
+        "moniker": "moniker",
+        "identity": "",
+        "website": "",
+        "details": ""
+    },
+    "bond_height": "0",
+    "bond_intra_tx_counter": 0,
+    "proposer_reward_pool": null,
+    "commission": "0",
+    "commission_max": "0",
+    "commission_change_rate": "0",
+    "commission_change_today": "0",
+    "prev_bonded_shares": "0"
 }
 ```
 
@@ -504,18 +673,13 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 
 ```json
 {
-    "rest api":"2.1",
-    "code":200,
-    "error":"",
-    "result":{
-      "inflation_rate_change": 1300000000,
-      "inflation_max": 2000000000,
-      "inflation_min": 700000000,
-      "goal_bonded": 6700000000,
-      "unbonding_time": "72h0m0s",
-      "max_validators": 100,
-      "bond_denom": "atom"
-    }
+    "inflation_rate_change": "1300000000",
+    "inflation_max": "2000000000",
+    "inflation_min": "700000000",
+    "goal_bonded": "6700000000",
+    "unbonding_time": "259200000000000",
+    "max_validators": 100,
+    "bond_denom": "steak"
 }
 ```
 
@@ -527,17 +691,12 @@ The StakingAPI exposes all functionality needed for validation and delegation in
 
 ```json
 {
-    "rest api":"2.1",
-    "code":200,
-    "error":"",
-    "result":{
-      "loose_tokens": 0,
-      "bonded_tokens": 0,
-      "inflation_last_time": "1970-01-01 01:00:00 +0100 CET",
-      "inflation": 700000000,
-      "date_last_commission_reset": 0,
-      "prev_bonded_shares": 0,
-    }
+    "loose_tokens": "500035934654",
+    "bonded_tokens": "1000000000000",
+    "inflation_last_time": "2018-08-28T06:40:39.617950067Z",
+    "inflation": "700002217",
+    "date_last_commission_reset": "0",
+    "prev_bonded_shares": "0"
 }
 ```
 
@@ -570,7 +729,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
 - **Functionality**: Submit a proposal
 - POST Body:
 
-```js
+```json
 {
     "base_req": {
         // Name of key to use
@@ -593,7 +752,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
   	"initial_deposit": [
         {
             "denom": "string",
-            "amount": 64,
+            "amount": 64
       	}
   	]
 }
@@ -607,7 +766,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     "code":200,
     "error":"",
     "result":{
-      "TODO": "TODO",
+      "TODO": "TODO"
     }
 }
 ```
@@ -659,7 +818,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     	"gas": 0
   },
   "depositer": "string",
-  "amount": 0,
+  "amount": 0
 }
 ```
 
@@ -671,7 +830,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     "code":200,
     "error":"",
     "result":{
-      "TODO": "TODO",
+      "TODO": "TODO"
     }
 }
 ```
@@ -738,7 +897,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
             "proposal-id": 1,
         	"voter": "cosmosaccaddr1849m9wncrqp6v4tkss6a3j8uzvuv0cp7f75lrq",
         	"option": "yes"
-    	},
+    	}
     ]
 }
 ```
@@ -751,7 +910,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
 - **Functionality**: Vote for a specific proposal
 - POST Body:
 
-```js
+```json
 {
 	"base_req": {
     	"name": "string",
@@ -764,7 +923,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     // A cosmosaccaddr address
   	"voter": "string",
   	// Value of the vote option `Yes`, `No` `Abstain`, `NoWithVeto`
-  	"option": "string",
+  	"option": "string"
 }
 ```
 
@@ -776,7 +935,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     "code":200,
     "error":"",
     "result":{
-      "TODO": "TODO",
+      "TODO": "TODO"
     }
 }
 ```
@@ -827,7 +986,7 @@ The SlashingAPI exposes all functionalities needed to slash (*i.e* penalize) val
 - **Functionality**: Submit a message to unjail a validator after it has been penalized.
 - POST Body:
 
-```js
+```json
 {
   // Name of key to use
   "name": "string",
@@ -836,7 +995,7 @@ The SlashingAPI exposes all functionalities needed to slash (*i.e* penalize) val
   "chain_id": "string",
   "account_number": 64,
   "sequence": 64,
-  "gas": 64,
+  "gas": 64
 }
 ```
 

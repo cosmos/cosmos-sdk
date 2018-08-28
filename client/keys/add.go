@@ -216,7 +216,7 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	keyOutput.Seed = seed
 
-	bz, err := json.Marshal(keyOutput)
+	bz, err := cdc.MarshalJSON(keyOutput)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -339,7 +339,7 @@ type RecoverKeyBody struct {
 	Seed     string `json:"seed"`
 }
 
-// SeedRequest is the handler of creating seed in swagger rest server
+// RecoverResuest is the handler of creating seed in swagger rest server
 func RecoverResuest(gtx *gin.Context) {
 	name := gtx.Param("name")
 	var m RecoverKeyBody
@@ -378,7 +378,7 @@ func RecoverResuest(gtx *gin.Context) {
 		return
 	}
 
-	bz, err := json.Marshal(keyOutput)
+	bz, err := cdc.MarshalJSON(keyOutput)
 	if err != nil {
 		httputils.NewError(gtx, http.StatusInternalServerError, err)
 		return

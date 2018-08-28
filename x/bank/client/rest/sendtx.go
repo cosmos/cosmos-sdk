@@ -65,7 +65,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 		}
 		transferBody, errCode, err := paramPreprocess(transferBody, kb)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusBadRequest, err.Error())
+			utils.WriteErrorResponse(&w, errCode, err.Error())
 			return
 		}
 

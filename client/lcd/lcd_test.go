@@ -1022,7 +1022,7 @@ func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.Acc
 		"sequence":"%d",
 		"amount":[%s],
 		"chain_id":"%s",
-		"generate": true,
+		"generate": false,
 		"to_address":"%s"
 	}`, gasStr, name, password, accnum, sequence, coinbz, chainID, receiveAddr))
 	res, body = Request(t, port, "POST", "/bank/transfers", jsonStr)

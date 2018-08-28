@@ -35,5 +35,5 @@ func ErrValidatorNotJailed(codespace sdk.CodespaceType) sdk.Error {
 }
 
 func ErrMissingSelfDelegation(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeMissingSelfDelegation, "validator has no self-delegation, cannot be unjailed")
+	return sdk.NewError(codespace, CodeMissingSelfDelegation, "validator has no self-delegation; cannot be unjailed")
 }

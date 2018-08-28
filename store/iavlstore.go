@@ -332,39 +332,42 @@ func (iter *iavlIterator) Domain() (start, end []byte) {
 func (iter *iavlIterator) Valid() bool {
 	iter.waitInit()
 	iter.mtx.Lock()
-	defer iter.mtx.Unlock()
 
-	return !iter.invalid
+	validity := !iter.invalid
+	iter.mtx.Unlock()
+	return validity
 }
 
 // Implements Iterator.
 func (iter *iavlIterator) Next() {
 	iter.waitInit()
 	iter.mtx.Lock()
-	defer iter.mtx.Unlock()
-	iter.assertIsValid()
+	iter.assertIsValid(true)
 
 	iter.receiveNext()
+	iter.mtx.Unlock()
 }
 
 // Implements Iterator.
 func (iter *iavlIterator) Key() []byte {
 	iter.waitInit()
 	iter.mtx.Lock()
-	defer iter.mtx.Unlock()
-	iter.assertIsValid()
+	iter.assertIsValid(true)
 
-	return iter.key
+	key := iter.key
+	iter.mtx.Unlock()
+	return key
 }
 
 // Implements Iterator.
 func (iter *iavlIterator) Value() []byte {
 	iter.waitInit()
 	iter.mtx.Lock()
-	defer iter.mtx.Unlock()
-	iter.assertIsValid()
+	iter.assertIsValid(true)
 
-	return iter.value
+	val := iter.value
+	iter.mtx.Unlock()
+	return val
 }
 
 // Implements Iterator.
@@ -375,14 +378,14 @@ func (iter *iavlIterator) Close() {
 //----------------------------------------
 
 func (iter *iavlIterator) setNext(key, value []byte) {
-	iter.assertIsValid()
+	iter.assertIsValid(false)
 
 	iter.key = key
 	iter.value = value
 }
 
 func (iter *iavlIterator) setInvalid() {
-	iter.assertIsValid()
+	iter.assertIsValid(false)
 
 	iter.invalid = true
 }
@@ -400,8 +403,14 @@ func (iter *iavlIterator) receiveNext() {
 	}
 }
 
-func (iter *iavlIterator) assertIsValid() {
+// assertIsValid panics if the iterator is invalid. If unlockMutex is true,
+// it also unlocks the mutex before panicing, to prevent deadlocks in code that
+// recovers from panics
+func (iter *iavlIterator) assertIsValid(unlockMutex bool) {
 	if iter.invalid {
+		if unlockMutex {
+			iter.mtx.Unlock()
+		}
 		panic("invalid iterator")
 	}
 }

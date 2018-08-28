@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.24.2
+
+*August 22nd, 2018*
+
+BUG FIXES
+
+* Tendermint
+  - Fix unbounded consensus WAL growth 
+
 ## 0.24.1
 
 *August 21st, 2018*

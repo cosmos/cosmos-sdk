@@ -132,6 +132,10 @@ test: test_unit
 test_cli:
 	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test` -tags=cli_test
 
+test_examples:
+	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/examples/basecoin/cli_test` -tags=cli_test
+	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/examples/democoin/cli_test` -tags=cli_test
+
 test_unit:
 	@go test $(PACKAGES_NOSIMULATION)
 
@@ -148,7 +152,7 @@ test_sim_gaia_nondeterminism:
 
 test_sim_gaia_fast:
 	@echo "Running quick Gaia simulation. This may take several minutes..."
-	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=200 -timeout 24h
+	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=50 -v -timeout 24h
 
 test_sim_gaia_slow:
 	@echo "Running full Gaia simulation. This may take awhile!"

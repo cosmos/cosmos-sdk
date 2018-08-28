@@ -7,13 +7,5 @@
 REGION="$(($2 + 1))"
 RNODE="$(($3 + 1))"
 ID="$((${REGION} * 100 + ${RNODE}))"
-echo "$ID" > /etc/gaiad-nodeid
-
-#Create gaiad user
-useradd -m -s /bin/bash gaiad
-
-#Reload services to enable the gaiad service (note that the gaiad binary is not available yet)
-systemctl daemon-reload
-systemctl enable gaiad
-
+echo "$ID" > /etc/nodeid
 

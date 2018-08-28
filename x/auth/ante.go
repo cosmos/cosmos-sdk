@@ -25,7 +25,7 @@ const (
 func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 	return func(
-		ctx sdk.Context, tx sdk.Tx,
+		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
 
 		// This AnteHandler requires Txs to be StdTxs
@@ -35,7 +35,11 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		}
 
 		// set the gas meter
-		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
+		if simulate {
+			newCtx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+		} else {
+			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
+		}
 
 		// AnteHandlers must have their own defer/recover in order
 		// for the BaseApp to know how much gas was used!

@@ -176,10 +176,11 @@ func addCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, amt s
 // NOTE: Make sure to revert state changes from tx on error
 func sendCoins(ctx sdk.Context, am auth.AccountMapper, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
 	// check if sender is vesting account
+	blockTime := ctx.BlockHeader().Time
 	vacc, ok := am.GetAccount(ctx, fromAddr).(auth.VestingAccount)
-	if ok && vacc.IsVesting(ctx) {
+	if ok && vacc.IsVesting(blockTime) {
 		// check if account has enough unlocked coins
-		sendableCoins := vacc.SendableCoins(ctx)
+		sendableCoins := vacc.SendableCoins(blockTime)
 		if !sendableCoins.IsGTE(amt) {
 			return nil, sdk.ErrInsufficientCoins(fmt.Sprintf("Vesting account does not have enough unlocked coins: %s < %s", sendableCoins, amt))
 		}
@@ -198,7 +199,7 @@ func sendCoins(ctx sdk.Context, am auth.AccountMapper, fromAddr sdk.AccAddress, 
 	}
 	// check if receiver is a vesting account
 	vacc, ok = am.GetAccount(ctx, fromAddr).(auth.VestingAccount)
-	if ok && vacc.IsVesting(ctx) {
+	if ok && vacc.IsVesting(blockTime) {
 		// Track the transfer amount
 		vacc.TrackTransfers(amt)
 	}
@@ -209,14 +210,15 @@ func sendCoins(ctx sdk.Context, am auth.AccountMapper, fromAddr sdk.AccAddress, 
 // InputOutputCoins handles a list of inputs and outputs
 // NOTE: Make sure to revert state changes from tx on error
 func inputOutputCoins(ctx sdk.Context, am auth.AccountMapper, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error) {
+	blockTime := ctx.BlockHeader().Time
 	allTags := sdk.EmptyTags()
 
 	for _, in := range inputs {
 		// Check if sender is vesting account
 		vacc, ok := am.GetAccount(ctx, in.Address).(auth.VestingAccount)
-		if ok && vacc.IsVesting(ctx) {
+		if ok && vacc.IsVesting(blockTime) {
 			// check if vesting account has enough unlocked coins
-			sendableCoins := vacc.SendableCoins(ctx)
+			sendableCoins := vacc.SendableCoins(blockTime)
 			if !sendableCoins.IsGTE(in.Coins) {
 				return nil, sdk.ErrInsufficientCoins(fmt.Sprintf("Vesting account does not have enough unlocked coins: %s < %s", sendableCoins, in.Coins))
 			}
@@ -239,7 +241,7 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountMapper, inputs []Input, ou
 
 		// check if receiver is a vesting account
 		vacc, ok := am.GetAccount(ctx, out.Address).(auth.VestingAccount)
-		if ok && vacc.IsVesting(ctx) {
+		if ok && vacc.IsVesting(blockTime) {
 			// Track the transfer amount
 			vacc.TrackTransfers(out.Coins)
 		}

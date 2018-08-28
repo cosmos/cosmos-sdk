@@ -72,6 +72,7 @@ FEATURES
     * [\#966](https://github.com/cosmos/cosmos-sdk/issues/966) Add --generate-only flag to build an unsigned transaction and write it to STDOUT.
     * [\#1953](https://github.com/cosmos/cosmos-sdk/issues/1953) New `sign` command to sign transactions generated with the --generate-only flag.
     * [\#1954](https://github.com/cosmos/cosmos-sdk/issues/1954) New `broadcast` command to broadcast transactions generated offline and signed with the `sign` command.
+  * [cli] \#2220 Add `gaiacli config` feature to interactively create CLI config files to reduce the number of required flags
 
 * Gaia
   * [cli] #2170 added ability to show the node's address via `gaiad tendermint show-address`

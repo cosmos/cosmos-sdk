@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmTypes "github.com/tendermint/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/spf13/viper"
 )
 
 // TODO these next two functions feel kinda hacky based on their placement
@@ -27,8 +28,10 @@ func ValidatorCommand() *cobra.Command {
 		RunE:  printValidators,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
+	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	return cmd
 }
 

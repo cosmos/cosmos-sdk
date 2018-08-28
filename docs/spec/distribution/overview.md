@@ -23,7 +23,7 @@ distribution occurs, withdrawal of rewards must also occur.
  - Whenever a validator chooses to change the commission on rewards, all accumulated 
    commission rewards must be simultaneously withdrawn.
 
-The above scenarios are covered in `triggers.md`.
+The above scenarios are covered in `hooks.md`.
 
 The distribution mechanism outlines herein is used to lazily distribute the
 following rewards between validators and associated delegators:

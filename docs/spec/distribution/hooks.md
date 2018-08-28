@@ -1,4 +1,4 @@
-# Triggers
+# Hooks
 
 ## Create or modify delegation distribution
  

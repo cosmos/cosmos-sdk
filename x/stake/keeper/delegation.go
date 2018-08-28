@@ -307,7 +307,7 @@ func (k Keeper) unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddr
 		k.RemoveValidator(ctx, validator.Operator)
 	}
 
-	return
+	return amount, nil
 }
 
 //______________________________________________________________________________________________________

@@ -12,6 +12,7 @@ BREAKING CHANGES
     * [cli] \#1983 you can now pass --pubkey or --address to gaiacli keys show to return a plaintext representation of the key's address or public key for use with other commands
     * [cli] \#2061 changed proposalID in governance REST endpoints to proposal-id
     * [cli] \#2014 `gaiacli advanced` no longer exists - to access `ibc`, `rest-server`, and `validator-set` commands use `gaiacli ibc`, `gaiacli rest-server`, and `gaiacli tendermint`, respectively
+    * [makefile] `get_vendor_deps` no longer updates lock file it just updates vendor directory. Use `update_vendor_deps` to update the lock file. [#2152](https://github.com/cosmos/cosmos-sdk/pull/2152)
 
 * Gaia
     * Make the transient store key use a distinct store key. [#2013](https://github.com/cosmos/cosmos-sdk/pull/2013)
@@ -44,6 +45,7 @@ FEATURES
 
 * SDK
   * [querier] added custom querier functionality, so ABCI query requests can be handled by keepers
+  * [simulation] \#1924 allow operations to specify future operations
 
 * Tendermint
 
@@ -83,5 +85,7 @@ BUG FIXES
 * SDK
     * \#1988 Make us compile on OpenBSD (disable ledger) [#1988] (https://github.com/cosmos/cosmos-sdk/issues/1988)
     * \#2105 Fix DB Iterator leak, which may leak a go routine.
+    * [ledger] \#2064 Fix inability to sign and send transactions via the LCD by
+    loading a Ledger device at runtime.
 
 * Tendermint

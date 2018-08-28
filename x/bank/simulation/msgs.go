@@ -18,10 +18,10 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-// TestAndRunSingleInputMsgSend tests and runs a single msg send, with one input and one output, where both
+// SimulateSingleInputMsgSend tests and runs a single msg send, with one input and one output, where both
 // accounts already exist.
-func TestAndRunSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation {
-	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
+func SimulateSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation {
+	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOps []simulation.FutureOperation, err sdk.Error) {
 		fromKey := simulation.RandomKey(r, keys)
 		fromAddr := sdk.AccAddress(fromKey.PubKey().Address())
 		toKey := simulation.RandomKey(r, keys)
@@ -36,13 +36,13 @@ func TestAndRunSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operatio
 		initFromCoins := mapper.GetAccount(ctx, fromAddr).GetCoins()
 
 		if len(initFromCoins) == 0 {
-			return "skipping, no coins at all", nil
+			return "skipping, no coins at all", nil, nil
 		}
 
 		denomIndex := r.Intn(len(initFromCoins))
 		amt, goErr := randPositiveInt(r, initFromCoins[denomIndex].Amount)
 		if goErr != nil {
-			return "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, nil
+			return "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, nil, nil
 		}
 
 		action = fmt.Sprintf("%s is sending %s %s to %s",
@@ -61,7 +61,7 @@ func TestAndRunSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operatio
 		sendAndVerifyMsgSend(t, app, mapper, msg, ctx, log, []crypto.PrivKey{fromKey})
 		event("bank/sendAndVerifyMsgSend/ok")
 
-		return action, nil
+		return action, nil, nil
 	}
 }
 

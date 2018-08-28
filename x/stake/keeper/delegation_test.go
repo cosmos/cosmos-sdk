@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// tests GetDelegation, GetDelegations, SetDelegation, RemoveDelegation, GetDelegations
+// tests GetDelegation, GetDelegatorDelegations, SetDelegation, RemoveDelegation, GetDelegatorDelegations
 func TestDelegation(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 10)
 	pool := keeper.GetPool(ctx)
@@ -65,16 +65,16 @@ func TestDelegation(t *testing.T) {
 	keeper.SetDelegation(ctx, bond2to3)
 
 	// test all bond retrieve capabilities
-	resBonds := keeper.GetDelegations(ctx, addrDels[0], 5)
+	resBonds := keeper.GetDelegatorDelegations(ctx, addrDels[0], 5)
 	require.Equal(t, 3, len(resBonds))
 	require.True(t, bond1to1.Equal(resBonds[0]))
 	require.True(t, bond1to2.Equal(resBonds[1]))
 	require.True(t, bond1to3.Equal(resBonds[2]))
-	resBonds = keeper.GetDelegations(ctx, addrDels[0], 3)
+	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[0], 3)
 	require.Equal(t, 3, len(resBonds))
-	resBonds = keeper.GetDelegations(ctx, addrDels[0], 2)
+	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[0], 2)
 	require.Equal(t, 2, len(resBonds))
-	resBonds = keeper.GetDelegations(ctx, addrDels[1], 5)
+	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 3, len(resBonds))
 	require.True(t, bond2to1.Equal(resBonds[0]))
 	require.True(t, bond2to2.Equal(resBonds[1]))
@@ -92,7 +92,7 @@ func TestDelegation(t *testing.T) {
 	keeper.RemoveDelegation(ctx, bond2to3)
 	_, found = keeper.GetDelegation(ctx, addrDels[1], addrVals[2])
 	require.False(t, found)
-	resBonds = keeper.GetDelegations(ctx, addrDels[1], 5)
+	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 2, len(resBonds))
 	require.True(t, bond2to1.Equal(resBonds[0]))
 	require.True(t, bond2to2.Equal(resBonds[1]))
@@ -104,7 +104,7 @@ func TestDelegation(t *testing.T) {
 	require.False(t, found)
 	_, found = keeper.GetDelegation(ctx, addrDels[1], addrVals[1])
 	require.False(t, found)
-	resBonds = keeper.GetDelegations(ctx, addrDels[1], 5)
+	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 0, len(resBonds))
 }
 
@@ -130,7 +130,7 @@ func TestUnbondingDelegation(t *testing.T) {
 	ubd.Balance = sdk.NewInt64Coin("steak", 21)
 	keeper.SetUnbondingDelegation(ctx, ubd)
 
-	resUnbonds := keeper.GetUnbondingDelegations(ctx, addrDels[0], 5)
+	resUnbonds := keeper.GetDelegatorUnbondingDelegations(ctx, addrDels[0], 5)
 	require.Equal(t, 1, len(resUnbonds))
 
 	resUnbond, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
@@ -142,7 +142,7 @@ func TestUnbondingDelegation(t *testing.T) {
 	_, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.False(t, found)
 
-	resUnbonds = keeper.GetUnbondingDelegations(ctx, addrDels[0], 5)
+	resUnbonds = keeper.GetDelegatorUnbondingDelegations(ctx, addrDels[0], 5)
 	require.Equal(t, 0, len(resUnbonds))
 
 }

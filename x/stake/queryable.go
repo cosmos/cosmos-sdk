@@ -23,6 +23,10 @@ func NewQuerier(k keep.Keeper) sdk.Querier {
 			return queryDelegatorValidators(ctx, path[1:], req, k)
 		case "delegatorValidator":
 			return queryDelegatorValidator(ctx, path[1:], req, k)
+		case "pool":
+			return queryPool(ctx, k)
+		case "parameters":
+			return queryParameters(ctx, k)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown stake query endpoint")
 		}

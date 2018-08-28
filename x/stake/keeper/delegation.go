@@ -28,54 +28,29 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 	iterator := sdk.KVStorePrefixIterator(store, DelegationKey)
 
 	i := 0
-	for ; ; i++ {
-		if !iterator.Valid() {
-			break
-		}
+	for ; iterator.Valid(); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
 		delegations = append(delegations, delegation)
-		iterator.Next()
+		i++
 	}
 	iterator.Close()
 	return delegations
 }
 
 // load all validators that a delegator is bonded to
-func (k Keeper) GetAllDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAddress) (validators []types.Validator) {
+func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAddress,
+	maxRetrieve ...int16) (validators []types.Validator) {
 
+	retrieve := len(maxRetrieve) > 0
+	if retrieve {
+		validators = make([]types.Validator, maxRetrieve[0])
+	}
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(delegatorAddr)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 
 	i := 0
-	for ; iterator.Valid(); iterator.Next() {
-		addr := iterator.Key()
-		delegation := types.MustUnmarshalDelegation(k.cdc, addr, iterator.Value())
-		validator, found := k.GetValidator(ctx, delegation.ValidatorAddr)
-		if !found {
-			panic(types.ErrNoValidatorFound(types.DefaultCodespace))
-		}
-		validators = append(validators, validator)
-		i++
-	}
-	iterator.Close()
-	return validators[:i] // trim
-}
-
-// load all validators that a delegator is bonded to
-func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAddress,
-	maxRetrieve ...int16) (validators []types.Validator) {
-
-	if len(maxRetrieve) == 0 {
-		return k.GetAllDelegatorValidators(ctx, delegatorAddr)
-	}
-	validators = make([]types.Validator, maxRetrieve[0])
-	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := GetDelegationsKey(delegatorAddr)           // XXX NOTHING STORED HERE
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
-
-	i := 0
-	for ; iterator.Valid() && i < int(maxRetrieve[0]); iterator.Next() {
+	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
 		addr := iterator.Key()
 		delegation := types.MustUnmarshalDelegation(k.cdc, addr, iterator.Value())
 		validator, found := k.GetValidator(ctx, delegation.ValidatorAddr)
@@ -105,25 +80,21 @@ func (k Keeper) GetDelegatorValidator(ctx sdk.Context, delegatorAddr sdk.AccAddr
 }
 
 // load all delegations for a delegator
-func (k Keeper) GetDelegations(ctx sdk.Context, delegator sdk.AccAddress,
+func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve ...int16) (delegations []types.Delegation) {
-
+	retrieve := len(maxRetrieve) > 0
+	if retrieve {
+		delegations = make([]types.Delegation, maxRetrieve[0])
+	}
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 
-	if len(maxRetrieve) > 0 {
-		delegations = make([]types.Delegation, maxRetrieve[0])
-	}
-
 	i := 0
-	for ; ; i++ {
-		if !iterator.Valid() || (len(maxRetrieve) > 0 && i > int(maxRetrieve[0]-1)) {
-			break
-		}
+	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
 		delegations[i] = delegation
-		iterator.Next()
+		i++
 	}
 	iterator.Close()
 	return delegations[:i] // trim
@@ -136,29 +107,6 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store.Set(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr), b)
 }
 
-// set delegation and assign it to a delegator
-func (k Keeper) SetDelegatorDelegations(ctx sdk.Context, delegation types.Delegation) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(GetDelegationsKey(delegation.DelegatorAddr))
-
-	var delegations []types.Delegation
-	err := k.Codec().UnmarshalJSON(bz, delegations)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	delegations = append(delegations, delegation)
-	b, err := k.Codec().MarshalJSON(delegations)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	store.Set(GetDelegationsKey(delegation.DelegatorAddr), b) // update array
-	// append ? to validator Delegators
-	// append ? to delegator Validators
-	// append ? to delegator Delegations
-}
-
 // remove the delegation
 func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
@@ -168,25 +116,22 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 //_____________________________________________________________________________________
 
 // load all unbonding-delegations for a delegator
-func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress,
+func (k Keeper) GetDelegatorUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve ...int16) (unbondingDelegations []types.UnbondingDelegation) {
 
+	retrieve := len(maxRetrieve) > 0
+	if retrieve {
+		unbondingDelegations = make([]types.UnbondingDelegation, maxRetrieve[0])
+	}
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetUBDsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 
-	if len(maxRetrieve) > 0 {
-		unbondingDelegations = make([]types.UnbondingDelegation, maxRetrieve[0])
-	}
-
 	i := 0
-	for ; ; i++ {
-		if !iterator.Valid() || (len(maxRetrieve) > 0 && i > int(maxRetrieve[0]-1)) {
-			break
-		}
+	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
 		unbondingDelegation := types.MustUnmarshalUBD(k.cdc, iterator.Key(), iterator.Value())
 		unbondingDelegations[i] = unbondingDelegation
-		iterator.Next()
+		i++
 	}
 	iterator.Close()
 	return unbondingDelegations[:i] // trim
@@ -211,16 +156,14 @@ func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
 func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sdk.AccAddress) (ubds []types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, GetUBDsByValIndexKey(valAddr))
-	for {
-		if !iterator.Valid() {
-			break
-		}
+
+	for ; iterator.Valid(); iterator.Next() {
 		key := GetUBDKeyFromValIndexKey(iterator.Key())
 		value := store.Get(key)
 		ubd := types.MustUnmarshalUBD(k.cdc, key, value)
 		ubds = append(ubds, ubd)
-		iterator.Next()
 	}
+
 	iterator.Close()
 	return ubds
 }
@@ -264,22 +207,19 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 func (k Keeper) GetRedelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve ...int16) (redelegations []types.Redelegation) {
 
+	retrieve := len(maxRetrieve) > 0
+	if retrieve {
+		redelegations = make([]types.Redelegation, maxRetrieve[0])
+	}
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetREDsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 
-	if len(maxRetrieve) > 0 {
-		redelegations = make([]types.Redelegation, maxRetrieve[0])
-	}
-
 	i := 0
-	for ; ; i++ {
-		if !iterator.Valid() || (len(maxRetrieve) > 0 && i > int(maxRetrieve[0]-1)) {
-			break
-		}
+	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
 		redelegation := types.MustUnmarshalRED(k.cdc, iterator.Key(), iterator.Value())
 		redelegations[i] = redelegation
-		iterator.Next()
+		i++
 	}
 	iterator.Close()
 	return redelegations[:i] // trim
@@ -304,15 +244,11 @@ func (k Keeper) GetRedelegation(ctx sdk.Context,
 func (k Keeper) GetRedelegationsFromValidator(ctx sdk.Context, valAddr sdk.AccAddress) (reds []types.Redelegation) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, GetREDsFromValSrcIndexKey(valAddr))
-	for {
-		if !iterator.Valid() {
-			break
-		}
+	for ; iterator.Valid(); iterator.Next() {
 		key := GetREDKeyFromValSrcIndexKey(iterator.Key())
 		value := store.Get(key)
 		red := types.MustUnmarshalRED(k.cdc, key, value)
 		reds = append(reds, red)
-		iterator.Next()
 	}
 	iterator.Close()
 	return reds
@@ -468,7 +404,7 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr sdk
 	// create the unbonding delegation
 	params := k.GetParams(ctx)
 	minTime := ctx.BlockHeader().Time.Add(params.UnbondingTime)
-	balance := sdk.Coin{params.BondDenom, returnAmount.RoundInt()}
+	balance := sdk.NewCoin(params.BondDenom, returnAmount.RoundInt())
 
 	ubd := types.UnbondingDelegation{
 		DelegatorAddr:  delegatorAddr,
@@ -518,7 +454,7 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delegatorAddr, validatorSrcAd
 	}
 
 	params := k.GetParams(ctx)
-	returnCoin := sdk.Coin{params.BondDenom, returnAmount.RoundInt()}
+	returnCoin := sdk.NewCoin(params.BondDenom, returnAmount.RoundInt())
 	dstValidator, found := k.GetValidator(ctx, validatorDstAddr)
 	if !found {
 		return types.ErrBadRedelegationDst(k.Codespace())

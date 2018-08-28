@@ -175,6 +175,18 @@ func addCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, amt s
 // SendCoins moves coins from one account to another
 // NOTE: Make sure to revert state changes from tx on error
 func sendCoins(ctx sdk.Context, am auth.AccountMapper, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
+	// check if sender is vesting account
+	vacc, ok := am.GetAccount(ctx, fromAddr).(auth.VestingAccount)
+	if ok && vacc.IsVesting(ctx) {
+		// check if account has enough unlocked coins
+		sendableCoins := vacc.SendableCoins(ctx)
+		if !sendableCoins.IsGTE(amt) {
+			return nil, sdk.ErrInsufficientCoins(fmt.Sprintf("Vesting account does not have enough unlocked coins: %s < %s", sendableCoins, amt))
+		}
+		// Track the transfer amount (send negated)
+		vacc.TrackTransfers(amt.Negative())
+	}
+
 	_, subTags, err := subtractCoins(ctx, am, fromAddr, amt)
 	if err != nil {
 		return nil, err
@@ -183,6 +195,12 @@ func sendCoins(ctx sdk.Context, am auth.AccountMapper, fromAddr sdk.AccAddress, 
 	_, addTags, err := addCoins(ctx, am, toAddr, amt)
 	if err != nil {
 		return nil, err
+	}
+	// check if receiver is a vesting account
+	vacc, ok = am.GetAccount(ctx, fromAddr).(auth.VestingAccount)
+	if ok && vacc.IsVesting(ctx) {
+		// Track the transfer amount
+		vacc.TrackTransfers(amt)
 	}
 
 	return subTags.AppendTags(addTags), nil
@@ -194,6 +212,18 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountMapper, inputs []Input, ou
 	allTags := sdk.EmptyTags()
 
 	for _, in := range inputs {
+		// Check if sender is vesting account
+		vacc, ok := am.GetAccount(ctx, in.Address).(auth.VestingAccount)
+		if ok && vacc.IsVesting(ctx) {
+			// check if vesting account has enough unlocked coins
+			sendableCoins := vacc.SendableCoins(ctx)
+			if !sendableCoins.IsGTE(in.Coins) {
+				return nil, sdk.ErrInsufficientCoins(fmt.Sprintf("Vesting account does not have enough unlocked coins: %s < %s", sendableCoins, in.Coins))
+			}
+			// Track the transfer amount (send negated)
+			vacc.TrackTransfers(in.Coins.Negative())
+		}
+
 		_, tags, err := subtractCoins(ctx, am, in.Address, in.Coins)
 		if err != nil {
 			return nil, err
@@ -206,6 +236,14 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountMapper, inputs []Input, ou
 		if err != nil {
 			return nil, err
 		}
+
+		// check if receiver is a vesting account
+		vacc, ok := am.GetAccount(ctx, out.Address).(auth.VestingAccount)
+		if ok && vacc.IsVesting(ctx) {
+			// Track the transfer amount
+			vacc.TrackTransfers(out.Coins)
+		}
+
 		allTags = allTags.AppendTags(tags)
 	}
 

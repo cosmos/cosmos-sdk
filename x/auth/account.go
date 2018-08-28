@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"time"
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,10 +31,12 @@ type Account interface {
 // AccountDecoder unmarshals account bytes
 type AccountDecoder func(accountBytes []byte) (Account, error)
 
+var _ Account = (*BaseAccount)(nil)
+var _ VestingAccount = (*ContinuousVestingAccount)(nil)
+var _ VestingAccount = (*DelayTransferAccount)(nil)
+
 //-----------------------------------------------------------
 // BaseAccount
-
-var _ Account = (*BaseAccount)(nil)
 
 // BaseAccount - base account structure.
 // Extend this by embedding this in your AppAccount.
@@ -113,6 +116,133 @@ func (acc *BaseAccount) GetSequence() int64 {
 func (acc *BaseAccount) SetSequence(seq int64) error {
 	acc.Sequence = seq
 	return nil
+}
+
+// VestingAccount is an account that can define a vesting schedule
+// Vesting coins can still be delegated, but only transferred after they have vested
+type VestingAccount interface {
+	Account
+
+	// Returns true if account is still vesting, else false
+	// CONTRACT: After account is done vesting, account behaves exactly like BaseAccount
+    IsVesting(time.Time) bool
+
+    // Calculates amount of coins that can be sent to other accounts given the current time
+	SendableCoins(time.Time) sdk.Coins
+	// Called on bank transfer functions (e.g. bank.SendCoins and bank.InputOutputCoins)
+	// Used to track coins that are transferred in and out of vesting account after initialization
+	TrackTransfers(sdk.Coins)
+}
+
+// Implement Vesting Interface. Continuously vests coins linearly from StartTime until EndTime
+type ContinuousVestingAccount struct {
+	BaseAccount
+    OriginalVestingCoins sdk.Coins // Coins in account on Initialization
+    TransferredCoins     sdk.Coins // Net coins transferred into and out of account. May be negative
+
+    // StartTime and EndTime used to calculate how much of OriginalCoins is unlocked at any given point
+    StartTime time.Time
+    EndTime   time.Time
+}
+
+func NewContinuousVestingAccount(addr sdk.AccAddress, originalCoins sdk.Coins, startTime, endTime time.Time) ContinuousVestingAccount {
+	bacc := BaseAccount{
+		Address: addr,
+		Coins: originalCoins,
+	}
+	return ContinuousVestingAccount{
+		BaseAccount: bacc,
+		OriginalVestingCoins: originalCoins,
+		StartTime: startTime,
+		EndTime: endTime,
+	}
+}
+
+// Implements VestingAccount interface.
+func (vacc ContinuousVestingAccount) IsVesting(blockTime time.Time) bool {
+	return blockTime.Unix() > vacc.EndTime.Unix()
+}
+
+// Implement Vesting Account interface. Uses time in context to calculate how many coins
+// has been released by vesting schedule and then accounts for unlocked coins that have
+// already been transferred or delegated
+func (vacc ContinuousVestingAccount) SendableCoins(blockTime time.Time) sdk.Coins {
+	unlockedCoins := vacc.TransferredCoins
+	scale := float64(blockTime.Unix() - vacc.StartTime.Unix()) / float64(vacc.EndTime.Unix() - vacc.StartTime.Unix())
+
+	// Add original coins unlocked by vesting schedule
+	for _, c := range vacc.OriginalVestingCoins {
+		amt := int64(float64(c.Amount.Int64()) * scale)
+
+		// Must constrain with coins left in account
+		// Since some unlocked coins may have left account due to delegation
+		currentAmount := vacc.GetCoins().AmountOf(c.Denom).Int64()
+		if currentAmount < amt {
+			amt = currentAmount
+			// prevent double count of transferred coins
+			amt -= vacc.TransferredCoins.AmountOf(c.Denom).Int64()
+		}
+		
+		// Add non-zero coins
+		if amt != 0 {
+			coin := sdk.NewInt64Coin(c.Denom, amt)
+			unlockedCoins = unlockedCoins.Plus(sdk.Coins{coin})
+		}
+	}
+
+	return unlockedCoins
+}
+
+// Implement Vesting Account. Track transfers in and out of account
+// Send amounts must be negated
+func (vacc *ContinuousVestingAccount) TrackTransfers(coins sdk.Coins) {
+	vacc.TransferredCoins = vacc.TransferredCoins.Plus(coins)
+}
+
+// Implements Vesting Account. Vests all original coins after EndTime but keeps them 
+// all locked until that point.
+type DelayTransferAccount struct {
+	BaseAccount
+	TransferredCoins sdk.Coins // Any received coins are sendable immediately
+
+	// All coins unlocked after EndTime
+	EndTime time.Time
+}
+
+func NewDelayTransferAccount(addr sdk.AccAddress, originalCoins sdk.Coins, endTime time.Time) DelayTransferAccount {
+	bacc := BaseAccount{
+		Address: addr,
+		Coins: originalCoins,
+	}
+	return DelayTransferAccount{
+		BaseAccount: bacc,
+		EndTime: endTime,
+	}
+}
+
+// Implements VestingAccount
+func (vacc DelayTransferAccount) IsVesting(blockTime time.Time) bool {
+	return blockTime.Unix() > vacc.EndTime.Unix()
+}
+
+// Implements VestingAccount. If Time < EndTime return only net transferred coins
+// Else return all coins in account (like BaseAccount)
+func (vacc DelayTransferAccount) SendableCoins(blockTime time.Time) sdk.Coins {
+	// Check if ctx.Time < EndTime
+	if blockTime.Unix() < vacc.EndTime.Unix() {
+		// Return net transferred coins
+		// If positive, then those coins are sendable
+		return vacc.TransferredCoins
+	}
+	
+	// If EndTime has passed, DelayTransferAccount behaves like BaseAccount
+	return vacc.BaseAccount.GetCoins()
+}
+
+// Implement Vesting Account. Track transfers in and out of account
+// Send amounts must be negated
+func (vacc *DelayTransferAccount) TrackTransfers(coins sdk.Coins) {
+	vacc.TransferredCoins = vacc.TransferredCoins.Plus(coins)
 }
 
 //----------------------------------------

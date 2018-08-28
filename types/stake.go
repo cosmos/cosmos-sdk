@@ -75,6 +75,8 @@ type ValidatorSet interface {
 	Slash(Context, crypto.PubKey, int64, int64, Dec)
 	Jail(Context, crypto.PubKey)   // jail a validator
 	Unjail(Context, crypto.PubKey) // unjail a validator
+
+	Delegation(Context, AccAddress, AccAddress) Delegation
 }
 
 //_______________________________________________________________________________

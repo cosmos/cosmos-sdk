@@ -72,7 +72,7 @@ func QueryAccountRequestHandlerFn(
 	}
 }
 
-// RegisterSwaggerRoutes - Central function to define account query related routes that get registered by the main application
+// RegisterSwaggerRoutes registers account query related routes to Gaia-lite server
 func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext, cdc *wire.Codec, storeName string) {
 	routerGroup.GET("/auth/accounts/:address",queryAccountRequestHandler(storeName,cdc,authcmd.GetAccountDecoder(cdc),ctx))
 }

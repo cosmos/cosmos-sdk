@@ -344,7 +344,7 @@ func TestCoinSend(t *testing.T) {
 	someFakeAddr := sdk.AccAddress(bz)
 
 	// query empty
-	res, body := Request(t, port, "GET", fmt.Sprintf("/bank/balance/%s", someFakeAddr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", someFakeAddr), nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	acc := getAccount(t, port, addr)
@@ -386,7 +386,7 @@ func TestCoinSendSwaggerLCD(t *testing.T) {
 	someFakeAddr := sdk.AccAddress(bz)
 
 	// query empty
-	res, body := Request(t, port, "GET", fmt.Sprintf("/bank/balance/%s", someFakeAddr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", someFakeAddr), nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	acc := getAccount(t, port, addr)
@@ -974,7 +974,7 @@ func TestProposalsQuery(t *testing.T) {
 //_____________________________________________________________________________
 // get the account to get the sequence
 func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/bank/balance/%s", addr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", addr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var acc auth.Account
 	err := cdc.UnmarshalJSON([]byte(body), &acc)

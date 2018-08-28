@@ -25,7 +25,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec) {
 	// r.HandleFunc("/txs/broadcast", BroadcastTxRequestHandler).Methods("POST")
 }
 
-
+// RegisterSwaggerRoutes registers transaction related REST routes to Gaia-lite server
 func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext, cdc *wire.Codec) {
 	routerGroup.POST("/txs", BroadcastTxRequest(cdc, ctx))
 }

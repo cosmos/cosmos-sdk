@@ -40,7 +40,7 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/keys/{name}", DeleteKeyRequestHandler).Methods("DELETE")
 }
 
-// RegisterSwaggerRoutes - Central function to define key management related routes that get registered by the main application
+// RegisterSwaggerRoutes registers key management related routes to Gaia-lite server
 func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup) {
 	routerGroup.GET("/keys", QueryKeysRequest)
 	routerGroup.POST("/keys", AddNewKeyRequest)

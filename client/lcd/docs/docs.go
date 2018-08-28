@@ -46,7 +46,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Get all delegations from a delegator",
                 "parameters": [
@@ -99,7 +99,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Get all staking txs from a delegator",
                 "parameters": [
@@ -152,7 +152,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Query all validators that a delegator is bonded to",
                 "parameters": [
@@ -205,7 +205,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Query a validator that a delegator is bonded to",
                 "parameters": [
@@ -264,7 +264,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Query a delegation between a delegator and a validator",
                 "parameters": [
@@ -323,7 +323,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Query all unbonding_delegations between a delegator and a validator",
                 "parameters": [
@@ -382,7 +382,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Get all validators",
                 "responses": {
@@ -427,7 +427,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Get a single validator info",
                 "parameters": [
@@ -480,7 +480,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Query the staking pool information",
                 "responses": {
@@ -525,7 +525,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Query the staking params values",
                 "responses": {
@@ -570,7 +570,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Send stake related transaction",
                 "parameters": [
@@ -633,7 +633,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Token Operation"
+                    "Bank"
                 ],
                 "summary": "Query account information",
                 "parameters": [
@@ -686,7 +686,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Token Operation"
+                    "Bank"
                 ],
                 "summary": "Send coins to a address",
                 "parameters": [
@@ -2076,8 +2076,8 @@ var tagToModuleDesc = `
 {
   "General":"general",
   "Key Management":"key",
-  "Token Operation":"bank",
-  "Stake Operation":"staking",
+  "Bank":"bank",
+  "Staking":"staking",
   "Transaction":"transaction"
 }
 `

@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	FlagSync     = "sync"
-	FlagAsync     = "async"
-	FlagBlock     = "block"
+	flagSync     = "sync"
+	flagAsync     = "async"
+	flagBlock     = "block"
 )
 // Tx Broadcast Body
 type BroadcastTxBody struct {
@@ -46,15 +46,17 @@ func BroadcastTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-type TxBody struct {
+// BroadcastBody contains the data of tx and specify how to broadcast tx
+type BroadcastBody struct {
 	Transaction string `json:"transaction"`
 	Return string `json:"return"`
 }
 
 // BroadcastTxRequest REST Handler
+// nolint: gocyclo
 func BroadcastTxRequest(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFunc {
 	return func(gtx *gin.Context) {
-		var txBody TxBody
+		var txBody BroadcastBody
 		body, err := ioutil.ReadAll(gtx.Request.Body)
 		if err != nil {
 			httputils.NewError(gtx, http.StatusBadRequest, err)
@@ -67,7 +69,7 @@ func BroadcastTxRequest(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFunc
 		}
 		var output []byte
 		switch txBody.Return {
-		case FlagBlock:
+		case flagBlock:
 			res, err := ctx.BroadcastTx([]byte(txBody.Transaction))
 			if err != nil {
 				httputils.NewError(gtx, http.StatusInternalServerError, err)
@@ -78,7 +80,7 @@ func BroadcastTxRequest(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFunc
 				httputils.NewError(gtx, http.StatusInternalServerError, err)
 				return
 			}
-		case FlagSync:
+		case flagSync:
 			res, err := ctx.BroadcastTxSync([]byte(txBody.Transaction))
 			if err != nil {
 				httputils.NewError(gtx, http.StatusInternalServerError, err)
@@ -89,7 +91,7 @@ func BroadcastTxRequest(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFunc
 				httputils.NewError(gtx, http.StatusInternalServerError, err)
 				return
 			}
-		case FlagAsync:
+		case flagAsync:
 			res, err := ctx.BroadcastTxAsync([]byte(txBody.Transaction))
 			if err != nil {
 				httputils.NewError(gtx, http.StatusInternalServerError, err)

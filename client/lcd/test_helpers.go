@@ -286,7 +286,7 @@ func InitializeTestSwaggerLCD(t *testing.T, nValidators int, initAddrs []sdk.Acc
 	viper.Set(client.FlagChainID, genDoc.ChainID)
 	viper.Set(client.FlagListenAddr, fmt.Sprintf("localhost:%s",port))
 	viper.Set(client.FlagSwaggerHostIP, "localhost")
-	viper.Set(client.FlagModules, "general,key,token,stake")
+	viper.Set(client.FlagModules, "general,key,bank,staking")
 	viper.Set(client.FlagTrustNode, false)
 
 	node, err := startTM(config, logger, genDoc, privVal, app)

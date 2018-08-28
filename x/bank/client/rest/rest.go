@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
-// RegisterRoutes registers staking-related REST handlers to a router
+// RegisterRoutes registers bank-related REST handlers to Gaia-lite server
 func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext, cdc *wire.Codec, kb keys.Keybase) {
 	registerSwaggerQueryRoutes(routerGroup, ctx, cdc, "acc")
 	registerSwaggerTxRoutes(routerGroup, ctx, cdc, kb)

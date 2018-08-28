@@ -40,7 +40,6 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	amount := int64(10)
 	valAddr, valPubKey, bondAmount := addrs[0], pks[0], sdk.NewInt(amount)
 	msgCreateVal := newTestMsgCreateValidator(valAddr, valPubKey, bondAmount)
-
 	got := stake.NewHandler(stakeKeeper)(ctx, msgCreateVal)
 	require.True(t, got.IsOK(), "expected create validator msg to be ok, got: %v", got)
 
@@ -56,21 +55,21 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	// delegate tokens to the validator
 	delAddr := addrs[1]
 	msgDelegate := newTestMsgDelegate(delAddr, valAddr, bondAmount)
-
 	got = stake.NewHandler(stakeKeeper)(ctx, msgDelegate)
 	require.True(t, got.IsOK(), "expected delegation to be ok, got %v", got)
 
-	// unbond validator total self-delegations (which should jail the validator)
 	unbondShares := sdk.NewDec(10)
-	msgBeginUnbonding := stake.NewMsgBeginUnbonding(valAddr, valAddr, unbondShares)
-	msgCompleteUnbonding := stake.NewMsgCompleteUnbonding(valAddr, valAddr)
 
+	// unbond validator total self-delegations (which should jail the validator)
+	msgBeginUnbonding := stake.NewMsgBeginUnbonding(valAddr, valAddr, unbondShares)
 	got = stake.NewHandler(stakeKeeper)(ctx, msgBeginUnbonding)
 	require.True(t, got.IsOK(), "expected begin unbonding validator msg to be ok, got: %v", got)
 
+	msgCompleteUnbonding := stake.NewMsgCompleteUnbonding(valAddr, valAddr)
 	got = stake.NewHandler(stakeKeeper)(ctx, msgCompleteUnbonding)
 	require.True(t, got.IsOK(), "expected complete unbonding validator msg to be ok, got: %v", got)
 
+	// verify validator still exists and is jailed
 	validator, found := stakeKeeper.GetValidator(ctx, valAddr)
 	require.True(t, found)
 	require.True(t, validator.GetJailed())
@@ -81,7 +80,6 @@ func TestJailedValidatorDelegations(t *testing.T) {
 
 	// self-delegate to validator
 	msgSelfDelegate := newTestMsgDelegate(valAddr, valAddr, bondAmount)
-
 	got = stake.NewHandler(stakeKeeper)(ctx, msgSelfDelegate)
 	require.True(t, got.IsOK(), "expected delegation to not be ok, got %v", got)
 

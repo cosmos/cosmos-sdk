@@ -55,7 +55,7 @@ func (k Keeper) GetAllDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.Acc
 		if !found {
 			panic(types.ErrNoValidatorFound(types.DefaultCodespace))
 		}
-		validators[i] = validator
+		validators = append(validators, validator)
 		i++
 	}
 	iterator.Close()
@@ -71,7 +71,7 @@ func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAdd
 	}
 	validators = make([]types.Validator, maxRetrieve[0])
 	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := GetDelegationsKey(delegatorAddr)
+	delegatorPrefixKey := GetDelegationsKey(delegatorAddr)           // XXX NOTHING STORED HERE
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 
 	i := 0
@@ -82,7 +82,7 @@ func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAdd
 		if !found {
 			panic(types.ErrNoValidatorFound(types.DefaultCodespace))
 		}
-		validators[i] = validator
+		validators = append(validators, validator)
 		i++
 	}
 	iterator.Close()
@@ -134,6 +134,26 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
 	b := types.MustMarshalDelegation(k.cdc, delegation)
 	store.Set(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr), b)
+}
+
+// set delegation and assign it to a delegator
+func (k Keeper) SetDelegatorDelegations(ctx sdk.Context, delegation types.Delegation) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(GetDelegationsKey(delegation.DelegatorAddr))
+
+	var delegations []types.Delegation
+	err := k.Codec().UnmarshalJSON(bz, delegations)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	delegations = append(delegations, delegation)
+	b, err := k.Codec().MarshalJSON(delegations)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	store.Set(GetDelegationsKey(delegation.DelegatorAddr), b) // update array
 	// append ? to validator Delegators
 	// append ? to delegator Validators
 	// append ? to delegator Delegations

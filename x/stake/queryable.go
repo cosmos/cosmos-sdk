@@ -5,16 +5,16 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
+	keep "github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // TODO Redelegations
-func NewQuerier(k keeper.Keeper) sdk.Querier {
+func NewQuerier(k keep.Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
 		case "validators":
-			return queryValidators(ctx, path[1:], req, k)
+			return queryValidators(ctx, path[1:], k)
 		case "validator":
 			return queryValidator(ctx, path[1:], req, k)
 		// case "delegator":
@@ -23,14 +23,6 @@ func NewQuerier(k keeper.Keeper) sdk.Querier {
 			return queryDelegatorValidators(ctx, path[1:], req, k)
 		case "delegatorValidator":
 			return queryDelegatorValidator(ctx, path[1:], req, k)
-		case "delegation":
-			return queryDelegation(ctx, path[1:], req, k)
-		case "unbonding-delegation":
-			return queryUnbondingDelegation(ctx, path[1:], req, k)
-		case "pool":
-			return queryPool(ctx, path[1:], req, k)
-		case "parameters":
-			return queryParameters(ctx, path[1:], req, k)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown stake query endpoint")
 		}
@@ -54,7 +46,7 @@ type QueryBondsParams struct {
 	ValidatorAddr sdk.AccAddress
 }
 
-func queryValidators(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
+func queryValidators(ctx sdk.Context, path []string, k keep.Keeper) (res []byte, err sdk.Error) {
 	validators := k.GetValidators(ctx)
 	res, errRes := wire.MarshalJSONIndent(k.Codec(), validators)
 	if err != nil {
@@ -63,7 +55,7 @@ func queryValidators(ctx sdk.Context, path []string, req abci.RequestQuery, k ke
 	return res, nil
 }
 
-func queryValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
+func queryValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryAddressParams
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
@@ -98,7 +90,7 @@ func queryValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k kee
 // }
 
 // TODO query with limit
-func queryDelegatorValidators(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
+func queryDelegatorValidators(ctx sdk.Context, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryAddressParams
 
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
@@ -115,7 +107,7 @@ func queryDelegatorValidators(ctx sdk.Context, path []string, req abci.RequestQu
 	return res, nil
 }
 
-func queryDelegatorValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
+func queryDelegatorValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryBondsParams
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
@@ -131,8 +123,9 @@ func queryDelegatorValidator(ctx sdk.Context, path []string, req abci.RequestQue
 	return res, nil
 }
 
-func queryDelegation(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
+func queryDelegation(ctx sdk.Context, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryBondsParams
+	fmt.Printf("ReqQuery: %v\n", req.Path)
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
 		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data :\n%s", errRes.Error()))
@@ -150,7 +143,7 @@ func queryDelegation(ctx sdk.Context, path []string, req abci.RequestQuery, k ke
 	return res, nil
 }
 
-func queryUnbondingDelegation(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
+func queryUnbondingDelegation(ctx sdk.Context, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryBondsParams
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
@@ -169,22 +162,22 @@ func queryUnbondingDelegation(ctx sdk.Context, path []string, req abci.RequestQu
 	return res, nil
 }
 
-func queryPool(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
-	pool := k.GetPool(ctx)
-
-	res, errRes := wire.MarshalJSONIndent(k.Codec(), pool)
-	if errRes != nil {
-		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
-	}
-	return res, nil
-}
-
-func queryParameters(ctx sdk.Context, path []string, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
-	params := k.GetParams(ctx)
-
-	res, errRes := wire.MarshalJSONIndent(k.Codec(), params)
-	if errRes != nil {
-		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
-	}
-	return res, nil
-}
+// func queryPool(ctx sdk.Context, k keep.Keeper) (res []byte, err sdk.Error) {
+// 	pool := k.GetPool(ctx)
+//
+// 	res, errRes := wire.MarshalJSONIndent(k.Codec(), pool)
+// 	if errRes != nil {
+// 		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
+// 	}
+// 	return res, nil
+// }
+//
+// func queryParameters(ctx sdk.Context, k keep.Keeper) (res []byte, err sdk.Error) {
+// 	params := k.GetParams(ctx)
+//
+// 	res, errRes := wire.MarshalJSONIndent(k.Codec(), params)
+// 	if errRes != nil {
+// 		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
+// 	}
+// 	return res, nil
+// }

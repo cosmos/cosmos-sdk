@@ -49,20 +49,16 @@ type (
 // CONTRACT: The ledger device, ledgerDevice, must be loaded and set prior to
 // any creation of a PrivKeyLedgerSecp256k1.
 func NewPrivKeyLedgerSecp256k1(path DerivationPath) (tmcrypto.PrivKey, error) {
-	var ledgerDevice LedgerSECP256K1
-
-	if discoverLedger != nil {
-		device, err := discoverLedger()
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to create PrivKeyLedgerSecp256k1")
-		}
-
-		ledgerDevice = device
-	} else {
+	if discoverLedger == nil {
 		return nil, errors.New("no Ledger discovery function defined")
 	}
 
-	pkl := &PrivKeyLedgerSecp256k1{Path: path, ledger: ledgerDevice}
+	device, err := discoverLedger()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create PrivKeyLedgerSecp256k1")
+	}
+
+	pkl := &PrivKeyLedgerSecp256k1{Path: path, ledger: device}
 
 	pubKey, err := pkl.getPubKey()
 	if err != nil {

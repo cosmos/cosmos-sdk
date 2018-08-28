@@ -57,6 +57,7 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 	return &cmd
 }
 
+// ShowAddressCmd - show this node's validator address
 func ShowAddressCmd(ctx *Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show-address",

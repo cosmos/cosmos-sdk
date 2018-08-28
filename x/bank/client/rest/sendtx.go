@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -54,31 +55,26 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 		var transferBody transferBody
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(&w, http.StatusBadRequest, err.Error())
 			return
 		}
 		err = msgCdc.UnmarshalJSON(body, &transferBody)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(&w, http.StatusBadRequest, err.Error())
 			return
 		}
 		transferBody, errCode, err := paramPreprocess(transferBody, kb)
 		if err != nil {
-			w.WriteHeader(errCode)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(&w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		txForSign, _, errMsg := composeTx(cdc, cliCtx, transferBody)
 		if err != nil {
 			if errMsg.Code() == sdk.CodeInternal {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(err.Error()))
+				utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
 			} else {
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(err.Error()))
+				utils.WriteErrorResponse(&w, http.StatusBadRequest, err.Error())
 			}
 			return
 		}
@@ -120,7 +116,6 @@ func transferRequestFn(cdc *wire.Codec, ctx context.CLIContext, kb keys.Keybase)
 		transferBody, errCode, err := paramPreprocess(transferBody, kb)
 		if err != nil {
 			httputils.NewError(gtx, errCode, err)
-			return
 		}
 
 		txForSign, _, errMsg := composeTx(cdc, ctx, transferBody)
@@ -266,6 +261,14 @@ func composeTx(cdc *wire.Codec, ctx context.CLIContext, transferBody transferBod
 		ChainID:       transferBody.ChainID,
 		AccountNumber: accountNumber,
 		Sequence:      sequence,
+	}
+
+	if txCtx.Gas == 0 {
+		newCtx, err := utils.EnrichCtxWithGas(txCtx, ctx, transferBody.Name, transferBody.Password, []sdk.Msg{msg})
+		if err != nil {
+			return emptyMsg, emptyTxContext, sdk.ErrInternal(err.Error())
+		}
+		txCtx = newCtx
 	}
 
 	txForSign, err := txCtx.Build([]sdk.Msg{msg})

@@ -79,7 +79,7 @@ resource "aws_instance" "node" {
   }
 
   root_block_device {
-    volume_size = 20
+    volume_size = 40
   }
 
   connection {
@@ -93,14 +93,8 @@ resource "aws_instance" "node" {
     destination = "/tmp/terraform.sh"
   }
 
-  provisioner "file" {
-    source = "files/gaiad.service"
-    destination = "/tmp/gaiad.service"
-  }
-
   provisioner "remote-exec" {
     inline = [
-      "sudo cp /tmp/gaiad.service /etc/systemd/system/gaiad.service",
       "chmod +x /tmp/terraform.sh",
       "sudo /tmp/terraform.sh ${var.name} ${var.multiplier} ${count.index}",
     ]

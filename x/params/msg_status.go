@@ -24,7 +24,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 // NewAnteHandler returns an AnteHandler that checks
 // whether msg type is activate or not
 func NewAnteHandler(k Keeper) sdk.AnteHandler {
-	return func(ctx sdk.Context, tx sdk.Tx) (sdk.Context, sdk.Result, bool) {
+	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, sdk.Result, bool) {
 		for _, msg := range tx.GetMsgs() {
 			ok := k.Getter().GetBoolWithDefault(ctx, ActivatedParamKey(msg.Type()), false)
 			if !ok {

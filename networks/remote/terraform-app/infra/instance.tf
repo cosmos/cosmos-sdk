@@ -13,7 +13,7 @@ data "aws_ami" "linux" {
 
 resource "aws_instance" "node" {
 #  depends_on = ["${element(aws_route_table_association.route_table_association.*,count.index)}"]
-  count = "${var.SERVERS*length(data.aws_availability_zones.zones.names)}"
+  count = "${var.SERVERS*min(length(data.aws_availability_zones.zones.names),var.max_zones)}"
   ami = "${data.aws_ami.linux.image_id}"
   instance_type = "${var.instance_type}"
   key_name = "${aws_key_pair.key.key_name}"
@@ -33,7 +33,7 @@ resource "aws_instance" "node" {
   }
 
   root_block_device {
-    volume_size = 20
+    volume_size = 40
   }
 
   connection {
@@ -47,14 +47,8 @@ resource "aws_instance" "node" {
     destination = "/tmp/terraform.sh"
   }
 
-  provisioner "file" {
-    source = "files/gaiad.service"
-    destination = "/tmp/gaiad.service"
-  }
-
   provisioner "remote-exec" {
     inline = [
-      "sudo cp /tmp/gaiad.service /etc/systemd/system/gaiad.service",
       "chmod +x /tmp/terraform.sh",
       "sudo /tmp/terraform.sh ${var.name} ${count.index}",
     ]

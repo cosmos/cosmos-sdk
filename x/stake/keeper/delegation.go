@@ -239,7 +239,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delegatorAddr sdk.AccAddress, bondAmt 
 	}
 
 	pool := k.GetPool(ctx)
-	validator, pool, newShares = validator.AddTokensFromDel(pool, bondAmt.Amount.Int64())
+	validator, pool, newShares = validator.AddTokensFromDel(pool, bondAmt.Amount)
 	delegation.Shares = delegation.Shares.Add(newShares)
 
 	// Update delegation height

@@ -5,52 +5,62 @@ import (
 	"io/ioutil"
 	"github.com/cosmos/cosmos-sdk/client/httputils"
 	"net/http"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"encoding/base64"
+	"fmt"
 )
 
-type SignBody struct {
-	Tx            []byte `json:"tx_bytes"`
-	Password      string `json:"password"`
+const (
+	flagFrom = "from"
+	flagPassword = "password"
+	flagTx = "tx"
+)
+
+func init() {
+	keySignCmd.Flags().String(flagFrom, "", "Name of private key with which to sign")
+	keySignCmd.Flags().String(flagPassword, "", "Password of private key")
+	keySignCmd.Flags().String(flagTx, "", "Base64 encoded tx data for sign")
 }
-/*
-var showKeysCmd = &cobra.Command{
-	Use:   "sign <name>",
-	Short: "Show key info for the given name",
-	Long:  `Return public details of one local key.`,
-	Args:  cobra.ExactArgs(1),
+
+var keySignCmd = &cobra.Command{
+	Use:   "sign",
+	Short: "Sign user specified data",
+	Long:  `Sign user data with specified key and password`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		name := args[0]
-		info, err := getKey(name)
+		name := viper.GetString(flagFrom)
+		password := viper.GetString(flagPassword)
+		tx := viper.GetString(flagTx)
+
+		decodedTx, err := base64.StdEncoding.DecodeString(tx)
 		if err != nil {
 			return err
 		}
 
-		showAddress := viper.GetBool(FlagAddress)
-		showPublicKey := viper.GetBool(FlagPublicKey)
-		outputSet := cmd.Flag(cli.OutputFlag).Changed
-		if showAddress && showPublicKey {
-			return errors.New("cannot use both --address and --pubkey at once")
-		}
-		if outputSet && (showAddress || showPublicKey) {
-			return errors.New("cannot use --output with --address or --pubkey")
-		}
-		if showAddress {
-			printKeyAddress(info)
-			return nil
-		}
-		if showPublicKey {
-			printPubKey(info)
-			return nil
+		kb, err := GetKeyBase()
+		if err != nil {
+			return err
 		}
 
-		printInfo(info)
+		sig, _, err := kb.Sign(name, password, decodedTx)
+		if err != nil {
+			return err
+		}
+		encoded := base64.StdEncoding.EncodeToString(sig)
+		fmt.Println(string(encoded))
 		return nil
 	},
 }
-*/
+
+type keySignBody struct {
+	Tx            []byte `json:"tx_bytes"`
+	Password      string `json:"password"`
+}
+
 // SignResuest is the handler of creating seed in swagger rest server
 func SignResuest(gtx *gin.Context) {
 	name := gtx.Param("name")
-	var m SignBody
+	var m keySignBody
 	body, err := ioutil.ReadAll(gtx.Request.Body)
 	if err != nil {
 		httputils.NewError(gtx, http.StatusBadRequest, err)
@@ -73,11 +83,7 @@ func SignResuest(gtx *gin.Context) {
 		return
 	}
 
-	output, err := cdc.MarshalJSON(sig)
-	if err != nil {
-		httputils.NewError(gtx, http.StatusInternalServerError, err)
-		return
-	}
+	encoded := base64.StdEncoding.EncodeToString(sig)
 
-	httputils.NormalResponse(gtx, output)
+	httputils.NormalResponse(gtx, []byte(encoded))
 }

@@ -7,6 +7,7 @@ import (
 	keep "github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -23,27 +24,28 @@ func newTestBondQuery(delegatorAddr, validatorAddr sdk.AccAddress) QueryBondsPar
 	}
 }
 
-// func TestQueryParametersPool(t *testing.T) {
-// 	cdc := keep.MakeTestCodec()
-// 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
-//
-// 	res, err := queryParameters(ctx, keeper)
-// 	require.Nil(t, err)
-//
-// 	params, errRes := types.UnmarshalParams(cdc, res)
-// 	assert.Nil(t, errRes)
-// 	assert.Equal(t, keeper.GetParams(ctx), params)
-//
-// 	res, err = queryPool(ctx, keeper)
-// 	require.Nil(t, err)
-//
-// 	pool, errRes := types.UnmarshalPool(cdc, res)
-// 	assert.Nil(t, errRes)
-// 	assert.Equal(t, keeper.GetPool(ctx), pool)
-// }
+func TestQueryParametersPool(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+
+	res, err := queryParameters(ctx, keeper)
+	require.Nil(t, err)
+
+	var params types.Params
+	errRes := keeper.Codec().UnmarshalJSON(res, &params)
+	assert.Nil(t, errRes)
+	assert.Equal(t, keeper.GetParams(ctx), params)
+
+	res, err = queryPool(ctx, keeper)
+	require.Nil(t, err)
+
+	var pool types.Pool
+	errRes = keeper.Codec().UnmarshalJSON(res, &pool)
+	assert.Nil(t, errRes)
+	assert.Equal(t, keeper.GetPool(ctx), pool)
+}
 
 func TestQueryValidators(t *testing.T) {
-	cdc := keep.MakeTestCodec()
+
 	ctx, _, keeper := keep.CreateTestInput(t, false, 10000)
 
 	addr1, addr2 := keep.Addrs[0], keep.Addrs[1]
@@ -61,7 +63,7 @@ func TestQueryValidators(t *testing.T) {
 	assert.Nil(t, err)
 
 	var validatorsResp []types.Validator
-	errRes := cdc.UnmarshalJSON(res, &validatorsResp)
+	errRes := keeper.Codec().UnmarshalJSON(res, &validatorsResp)
 	assert.Nil(t, errRes)
 
 	assert.Equal(t, len(validators), len(validatorsResp))
@@ -80,7 +82,7 @@ func TestQueryValidators(t *testing.T) {
 	assert.Nil(t, err)
 
 	var validator types.Validator
-	errRes = cdc.UnmarshalJSON(res, &validator)
+	errRes = keeper.Codec().UnmarshalJSON(res, &validator)
 	assert.Nil(t, errRes)
 
 	assert.Equal(t, validators[0], validator)

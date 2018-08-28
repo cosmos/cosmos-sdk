@@ -162,22 +162,22 @@ func queryUnbondingDelegation(ctx sdk.Context, path []string, req abci.RequestQu
 	return res, nil
 }
 
-// func queryPool(ctx sdk.Context, k keep.Keeper) (res []byte, err sdk.Error) {
-// 	pool := k.GetPool(ctx)
-//
-// 	res, errRes := wire.MarshalJSONIndent(k.Codec(), pool)
-// 	if errRes != nil {
-// 		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
-// 	}
-// 	return res, nil
-// }
-//
-// func queryParameters(ctx sdk.Context, k keep.Keeper) (res []byte, err sdk.Error) {
-// 	params := k.GetParams(ctx)
-//
-// 	res, errRes := wire.MarshalJSONIndent(k.Codec(), params)
-// 	if errRes != nil {
-// 		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
-// 	}
-// 	return res, nil
-// }
+func queryPool(ctx sdk.Context, k keep.Keeper) (res []byte, err sdk.Error) {
+	pool := k.GetPool(ctx)
+
+	res, errRes := wire.MarshalJSONIndent(k.Codec(), pool)
+	if errRes != nil {
+		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
+	}
+	return res, nil
+}
+
+func queryParameters(ctx sdk.Context, k keep.Keeper) (res []byte, err sdk.Error) {
+	params := k.GetParams(ctx)
+
+	res, errRes := wire.MarshalJSONIndent(k.Codec(), params)
+	if errRes != nil {
+		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
+	}
+	return res, nil
+}

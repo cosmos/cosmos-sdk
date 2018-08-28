@@ -124,7 +124,11 @@ func TestKeysSwaggerLCD(t *testing.T) {
 
 	// get seed
 	// TODO Do we really need this endpoint?
-	res, body := Request(t, port, "GET", "/keys/seed", nil)
+	recoverKeyURL := fmt.Sprintf("/keys/%s/recover", "test_recover")
+	seedRecover := "divorce meat banana embody near until uncover wait uniform capital crawl test praise cloud foil monster garbage hedgehog wrong skate there bonus box odor"
+	passwordRecover := "1234567890"
+	jsonStrRecover := []byte(fmt.Sprintf(`{"seed":"%s", "password":"%s"}`, seedRecover, passwordRecover))
+	res, body := Request(t, port, "POST", recoverKeyURL, jsonStrRecover)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	reg, err := regexp.Compile(`([a-z]+ ){12}`)
 	require.Nil(t, err)
@@ -156,7 +160,7 @@ func TestKeysSwaggerLCD(t *testing.T) {
 	res, body = Request(t, port, "GET", "/keys", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var m [2]keys.KeyOutput
+	var m [3]keys.KeyOutput
 	err = cdc.UnmarshalJSON([]byte(body), &m)
 	require.Nil(t, err)
 
@@ -168,7 +172,7 @@ func TestKeysSwaggerLCD(t *testing.T) {
 	require.Equal(t, addr2Bech32, m[1].Address.String(), "Did not serve keys Address correctly")
 
 	// select key
-	keyEndpoint := fmt.Sprintf("/keys/get/%s", newName)
+	keyEndpoint := fmt.Sprintf("/keys/%s", newName)
 	res, body = Request(t, port, "GET", keyEndpoint, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var m2 keys.KeyOutput
@@ -340,7 +344,7 @@ func TestCoinSend(t *testing.T) {
 	someFakeAddr := sdk.AccAddress(bz)
 
 	// query empty
-	res, body := Request(t, port, "GET", fmt.Sprintf("/bank/balance/%s", someFakeAddr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", someFakeAddr), nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	acc := getAccount(t, port, addr)
@@ -382,7 +386,7 @@ func TestCoinSendSwaggerLCD(t *testing.T) {
 	someFakeAddr := sdk.AccAddress(bz)
 
 	// query empty
-	res, body := Request(t, port, "GET", fmt.Sprintf("/bank/balance/%s", someFakeAddr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", someFakeAddr), nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	acc := getAccount(t, port, addr)
@@ -501,6 +505,42 @@ func TestTxs(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, len(indexedTxs))
 	require.Equal(t, resultTx.Height, indexedTxs[0].Height)
+}
+
+func TestPoolParamsQuery(t *testing.T) {
+	_, password := "test", "1234567890"
+	addr, _ := CreateAddr(t, "test", password, GetKeyBase(t))
+	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	defer cleanup()
+
+	defaultParams := stake.DefaultParams()
+
+	res, body := Request(t, port, "GET", "/stake/parameters", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var params stake.Params
+	err := cdc.UnmarshalJSON([]byte(body), &params)
+	require.Nil(t, err)
+	require.True(t, defaultParams.Equal(params))
+
+	res, body = Request(t, port, "GET", "/stake/pool", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.NotNil(t, body)
+
+	initialPool := stake.InitialPool()
+	initialPool.LooseTokens = initialPool.LooseTokens.Add(sdk.NewDec(100))
+	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewDec(100))     // Delegate tx on GaiaAppGenState
+	initialPool.LooseTokens = initialPool.LooseTokens.Add(sdk.NewDec(int64(50))) // freeFermionsAcc = 50 on GaiaAppGenState
+
+	var pool stake.Pool
+	err = cdc.UnmarshalJSON([]byte(body), &pool)
+	require.Nil(t, err)
+	require.Equal(t, initialPool.DateLastCommissionReset, pool.DateLastCommissionReset)
+	require.Equal(t, initialPool.PrevBondedShares, pool.PrevBondedShares)
+	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
+	require.Equal(t, initialPool.NextInflation(params), pool.Inflation)
+	initialPool = initialPool.ProcessProvisions(params) // provisions are added to the pool every hour
+	require.Equal(t, initialPool.LooseTokens, pool.LooseTokens)
 }
 
 func TestValidatorsQuery(t *testing.T) {
@@ -825,7 +865,7 @@ func TestVote(t *testing.T) {
 	require.Equal(t, gov.OptionYes, vote.Option)
 }
 
-func TestUnrevoke(t *testing.T) {
+func TestUnjail(t *testing.T) {
 	_, password := "test", "1234567890"
 	addr, _ := CreateAddr(t, "test", password, GetKeyBase(t))
 	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
@@ -934,7 +974,7 @@ func TestProposalsQuery(t *testing.T) {
 //_____________________________________________________________________________
 // get the account to get the sequence
 func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/bank/balance/%s", addr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", addr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var acc auth.Account
 	err := cdc.UnmarshalJSON([]byte(body), &acc)

@@ -39,6 +39,11 @@ func (ctx CLIContext) Query(path string) (res []byte, err error) {
 	return ctx.query(path, nil)
 }
 
+// Query information about the connected node with a data payload
+func (ctx CLIContext) QueryWithData(path string, data []byte) (res []byte, err error) {
+	return ctx.query(path, data)
+}
+
 // QueryStore performs a query from a Tendermint node with the provided key and
 // store name.
 func (ctx CLIContext) QueryStore(key cmn.HexBytes, storeName string) (res []byte, err error) {
@@ -156,6 +161,22 @@ func (ctx CLIContext) BroadcastTxAsync(tx []byte) (*ctypes.ResultBroadcastTx, er
 	}
 
 	res, err := node.BroadcastTxAsync(tx)
+	if err != nil {
+		return res, err
+	}
+
+	return res, err
+}
+
+// BroadcastTxSync broadcasts transaction bytes to a Tendermint node
+// synchronously.
+func (ctx CLIContext) BroadcastTxSync(tx []byte) (*ctypes.ResultBroadcastTx, error) {
+	node, err := ctx.GetNode()
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := node.BroadcastTxSync(tx)
 	if err != nil {
 		return res, err
 	}

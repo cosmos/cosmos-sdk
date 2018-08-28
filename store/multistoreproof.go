@@ -5,7 +5,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
 	"github.com/tendermint/iavl"
-	"github.com/tendermint/tendermint/crypto/merkle"
 	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
@@ -55,15 +54,16 @@ func BuildMultiStoreProof(iavlProof []byte, storeName string, storeInfos []store
 // verify multiStoreCommitInfo against appHash
 func VerifyMultiStoreCommitInfo(storeName string, multiStoreCommitInfo []SubstoreCommitID, appHash []byte) ([]byte, error) {
 	var substoreCommitHash []byte
-	var kvPairs cmn.KVPairs
+	var storeInfos []storeInfo
+	var height int64
 	for _, multiStoreCommitID := range multiStoreCommitInfo {
 
 		if multiStoreCommitID.Name == storeName {
 			substoreCommitHash = multiStoreCommitID.CommitHash
+			height = multiStoreCommitID.Version
 		}
-
-		keyHash := []byte(multiStoreCommitID.Name)
 		storeInfo := storeInfo{
+			Name: multiStoreCommitID.Name,
 			Core: storeCore{
 				CommitID: sdk.CommitID{
 					Version: multiStoreCommitID.Version,
@@ -72,29 +72,19 @@ func VerifyMultiStoreCommitInfo(storeName string, multiStoreCommitInfo []Substor
 			},
 		}
 
-		kvPairs = append(kvPairs, cmn.KVPair{
-			Key:   keyHash,
-			Value: storeInfo.Hash(),
-		})
+		storeInfos = append(storeInfos, storeInfo)
 	}
 	if len(substoreCommitHash) == 0 {
 		return nil, cmn.NewError("failed to get substore root commit hash by store name")
 	}
-	if kvPairs == nil {
-		return nil, cmn.NewError("failed to extract information from multiStoreCommitInfo")
-	}
-	//sort the kvPair list
-	kvPairs.Sort()
 
-	//Rebuild simple merkle hash tree
-	var hashList [][]byte
-	for _, kvPair := range kvPairs {
-		hashResult := merkle.SimpleHashFromTwoHashes(kvPair.Key, kvPair.Value)
-		hashList = append(hashList, hashResult)
+	ci := commitInfo{
+		Version:    height,
+		StoreInfos: storeInfos,
 	}
 
-	if !bytes.Equal(appHash, simpleHashFromHashes(hashList)) {
-		return nil, cmn.NewError("The merkle root of multiStoreCommitInfo doesn't equal to appHash")
+	if !bytes.Equal(appHash, ci.Hash()) {
+		return nil, cmn.NewError("the merkle root of multiStoreCommitInfo doesn't equal to appHash")
 	}
 	return substoreCommitHash, nil
 }
@@ -123,18 +113,4 @@ func VerifyRangeProof(key, value []byte, substoreCommitHash []byte, rangeProof *
 	}
 
 	return nil
-}
-
-func simpleHashFromHashes(hashes [][]byte) []byte {
-	// Recursive impl.
-	switch len(hashes) {
-	case 0:
-		return nil
-	case 1:
-		return hashes[0]
-	default:
-		left := simpleHashFromHashes(hashes[:(len(hashes)+1)/2])
-		right := simpleHashFromHashes(hashes[(len(hashes)+1)/2:])
-		return merkle.SimpleHashFromTwoHashes(left, right)
-	}
 }

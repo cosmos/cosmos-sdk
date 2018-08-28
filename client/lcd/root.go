@@ -109,11 +109,11 @@ func createHandler(cdc *wire.Codec) http.Handler {
 // Which is much friendly for further development
 func ServeSwaggerCommand(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "rest-server-swagger",
+		Use:   "lite-server",
 		Short: "Start Gaia-lite (gaia light client daemon), a local REST server with swagger-ui, default url: http://localhost:1317/swagger/index.html",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
-				With("module", "rest-server-swagger")
+				With("module", "lite-server")
 			listenAddr := viper.GetString(client.FlagListenAddr)
 			//Create rest server
 			server := gin.New()
@@ -135,7 +135,7 @@ func ServeSwaggerCommand(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().String(client.FlagNodeList, "tcp://localhost:26657", "Node list to connect to, example: \"tcp://10.10.10.10:26657,tcp://20.20.20.20:26657\".")
 	cmd.Flags().String(client.FlagChainID, "", "ID of chain we connect to, must be specified.")
 	cmd.Flags().String(client.FlagSwaggerHostIP, "localhost", "The host IP of the Gaia-lite server, swagger-ui will send request to this host.")
-	cmd.Flags().String(client.FlagModules, "general,key,token", "Enabled modules.")
+	cmd.Flags().String(client.FlagModules, "general,key,bank", "Enabled modules.")
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust full nodes or not.")
 
 	return cmd
@@ -177,19 +177,31 @@ func createSwaggerHandler(server *gin.Engine, cdc *wire.Codec)  {
 		server.GET("/node_version", NodeVersionRequest(ctx))
 	}
 
-	if moduleEnabled(moduleArray,"key") {
-		keys.RegisterSwaggerRoutes(server.Group("/"))
+	if moduleEnabled(moduleArray,"transaction") {
+		tx.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc)
 	}
 
-	if moduleEnabled(moduleArray,"token") {
+	if moduleEnabled(moduleArray,"key") {
+		keys.RegisterSwaggerRoutes(server.Group("/"))
 		auth.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc, "acc")
+	}
+
+	if moduleEnabled(moduleArray,"bank") {
 		bank.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc, kb)
 	}
 
-	if moduleEnabled(moduleArray,"stake") {
+	if moduleEnabled(moduleArray,"staking") {
 		stake.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc, kb)
 	}
+/*
+	if moduleEnabled(moduleArray,"governance") {
+		gov.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc, kb)
+	}
 
+	if moduleEnabled(moduleArray,"slashing") {
+		slashing.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc, kb)
+	}
+*/
 }
 
 func moduleEnabled(modules []string, name string) bool {

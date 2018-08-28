@@ -188,7 +188,7 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errCode, err := paramCheck(kb, m)
+	errCode, err := paramCheck(kb, m.Name, m.Password)
 	if err != nil {
 		w.WriteHeader(errCode)
 		w.Write([]byte(err.Error()))
@@ -216,7 +216,7 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	keyOutput.Seed = seed
 
-	bz, err := json.Marshal(keyOutput)
+	bz, err := cdc.MarshalJSON(keyOutput)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -227,16 +227,16 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // paramCheck performs add new key parameters checking
-func paramCheck(kb keys.Keybase, m NewKeyBody) (int, error) {
-	if len(m.Name) < 1 || len(m.Name) > 16 {
+func paramCheck(kb keys.Keybase, name, password string) (int, error) {
+	if len(name) < 1 || len(name) > 16 {
 		return http.StatusBadRequest, fmt.Errorf("account name length should not be longer than 16")
 	}
-	for _, char := range []rune(m.Name) {
+	for _, char := range []rune(name) {
 		if !syntax.IsWordChar(char) {
 			return http.StatusBadRequest, fmt.Errorf("account name should not contains any char beyond [_0-9A-Za-z]")
 		}
 	}
-	if len(m.Password) < 8 || len(m.Password) > 16 {
+	if len(password) < 8 || len(password) > 16 {
 		return http.StatusBadRequest, fmt.Errorf("account password length should be no less than 8 and no greater than 16")
 	}
 
@@ -247,8 +247,8 @@ func paramCheck(kb keys.Keybase, m NewKeyBody) (int, error) {
 	}
 
 	for _, i := range infos {
-		if i.GetName() == m.Name {
-			return http.StatusConflict, fmt.Errorf("account with name %s already exists", m.Name)
+		if i.GetName() == name {
+			return http.StatusConflict, fmt.Errorf("account with name %s already exists", name)
 		}
 	}
 
@@ -275,9 +275,10 @@ func AddNewKeyRequest(gtx *gin.Context) {
 		return
 	}
 
-	errCode, err := paramCheck(kb, m)
+	errCode, err := paramCheck(kb, m.Name, m.Password)
 	if err != nil {
 		httputils.NewError(gtx, errCode, err)
+		return
 	}
 
 	// create account
@@ -332,12 +333,56 @@ func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(seed))
 }
 
-// SeedRequest is the handler of creating seed in swagger rest server
-func SeedRequest(gtx *gin.Context) {
+// RecoverKeyBody is recover key request REST body
+type RecoverKeyBody struct {
+	Password string `json:"password"`
+	Seed     string `json:"seed"`
+}
 
-	algo := keys.SigningAlgo("secp256k1")
+// RecoverResuest is the handler of creating seed in swagger rest server
+func RecoverResuest(gtx *gin.Context) {
+	name := gtx.Param("name")
+	var m RecoverKeyBody
+	body, err := ioutil.ReadAll(gtx.Request.Body)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusBadRequest, err)
+		return
+	}
+	err = cdc.UnmarshalJSON(body, &m)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusBadRequest, err)
+		return
+	}
 
-	seed := getSeed(algo)
+	kb, err := GetKeyBase()
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
 
-	httputils.NormalResponse(gtx, []byte(seed))
+	errCode, err := paramCheck(kb, name, m.Password)
+	if err != nil {
+		httputils.NewError(gtx, errCode, err)
+		return
+	}
+
+	info, err := kb.CreateKey(name, m.Seed, m.Password)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	keyOutput, err := Bech32KeyOutput(info)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	bz, err := cdc.MarshalJSON(keyOutput)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	httputils.NormalResponse(gtx, bz)
 }

@@ -23,6 +23,7 @@ func Commands() *cobra.Command {
 		addKeyCommand(),
 		listKeysCmd,
 		showKeysCmd,
+		keySignCmd,
 		client.LineBreak,
 		deleteKeyCommand(),
 		updateKeyCommand(),
@@ -40,12 +41,13 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/keys/{name}", DeleteKeyRequestHandler).Methods("DELETE")
 }
 
-// RegisterSwaggerRoutes - Central function to define key management related routes that get registered by the main application
+// RegisterSwaggerRoutes registers key management related routes to Gaia-lite server
 func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup) {
 	routerGroup.GET("/keys", QueryKeysRequest)
 	routerGroup.POST("/keys", AddNewKeyRequest)
-	routerGroup.GET("/keys/seed", SeedRequest)
-	routerGroup.GET("/keys/get/:name", GetKeyRequest)
+	routerGroup.POST("/keys/:name/recover", RecoverResuest)
+	routerGroup.GET("/keys/:name", GetKeyRequest)
 	routerGroup.PUT("/keys/:name", UpdateKeyRequest)
 	routerGroup.DELETE("/keys/:name", DeleteKeyRequest)
+	routerGroup.POST("/keys/:name/sign", SignResuest)
 }

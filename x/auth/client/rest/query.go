@@ -18,7 +18,7 @@ import (
 // register REST routes
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, storeName string) {
 	r.HandleFunc(
-		"/bank/balance/{address}",
+		"/auth/accounts/{address}",
 		QueryAccountRequestHandlerFn(storeName, cdc, authcmd.GetAccountDecoder(cdc), cliCtx),
 	).Methods("GET")
 }
@@ -72,9 +72,9 @@ func QueryAccountRequestHandlerFn(
 	}
 }
 
-// RegisterSwaggerRoutes - Central function to define account query related routes that get registered by the main application
+// RegisterSwaggerRoutes registers account query related routes to Gaia-lite server
 func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext, cdc *wire.Codec, storeName string) {
-	routerGroup.GET("bank/balance/:address",queryAccountRequestHandler(storeName,cdc,authcmd.GetAccountDecoder(cdc),ctx))
+	routerGroup.GET("/auth/accounts/:address",queryAccountRequestHandler(storeName,cdc,authcmd.GetAccountDecoder(cdc),ctx))
 }
 
 func queryAccountRequestHandler(storeName string, cdc *wire.Codec, decoder auth.AccountDecoder, ctx context.CLIContext) gin.HandlerFunc {

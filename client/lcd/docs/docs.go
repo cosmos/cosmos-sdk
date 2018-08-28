@@ -19,8 +19,8 @@ import (
 var doc = `{
     "swagger": "2.0",
     "info": {
-        "description": "All cosmos-lcd supported APIs will be shown by this swagger-ui page. You can access these APIs through this page.",
-        "title": "Swagger Cosmos-LCD API",
+        "description": "All Gaia-lite supported APIs will be shown by this swagger-ui page. You can access these APIs through this page.",
+        "title": "Gaia-lite Swagger-UI",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "API Support",
@@ -46,7 +46,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Get all delegations from a delegator",
                 "parameters": [
@@ -99,7 +99,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Get all staking txs from a delegator",
                 "parameters": [
@@ -152,7 +152,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Query all validators that a delegator is bonded to",
                 "parameters": [
@@ -205,7 +205,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Query a validator that a delegator is bonded to",
                 "parameters": [
@@ -264,7 +264,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Query a delegation between a delegator and a validator",
                 "parameters": [
@@ -323,7 +323,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Query all unbonding_delegations between a delegator and a validator",
                 "parameters": [
@@ -382,7 +382,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Get all validators",
                 "responses": {
@@ -427,7 +427,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Get a single validator info",
                 "parameters": [
@@ -470,7 +470,97 @@ var doc = `{
                 }
             }
         },
-        "/stake/delegators/:delegatorAddr/delegations": {
+        "/stake/pool": {
+            "get": {
+                "description": "Query the staking pool information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Staking"
+                ],
+                "summary": "Query the staking pool information",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/stake.pool"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/stake/parameters": {
+            "get": {
+                "description": "Query the staking params values",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Staking"
+                ],
+                "summary": "Query the staking params values",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/stake.params"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/stake/delegators/{delegatorAddr}/delegations": {
             "post": {
                 "description": "Send stake related transactions",
                 "consumes": [
@@ -480,7 +570,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Stake Operation"
+                    "Staking"
                 ],
                 "summary": "Send stake related transaction",
                 "parameters": [
@@ -533,7 +623,7 @@ var doc = `{
                 }
             }
         },
-        "/bank/balance/{address}": {
+        "/bank/balances/{address}": {
             "get": {
                 "description": "Get the detailed information for specific address",
                 "consumes": [
@@ -543,7 +633,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Token Operation"
+                    "Bank"
                 ],
                 "summary": "Query account information",
                 "parameters": [
@@ -559,7 +649,7 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/auth.BaseAccount"
+                            "$ref": "#/definitions/sdk.Coins"
                         }
                     },
                     "400": {
@@ -588,7 +678,7 @@ var doc = `{
         },
         "/bank/transfers": {
             "post": {
-                "description": "This API require the Cosmos-LCD have keystore module. It will ask keystore module for transaction signature",
+                "description": "This API require the Gaia-lite has keystore module. It will ask keystore module for transaction signature",
                 "consumes": [
                     "application/json"
                 ],
@@ -596,7 +686,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Token Operation"
+                    "Bank"
                 ],
                 "summary": "Send coins to a address",
                 "parameters": [
@@ -744,8 +834,133 @@ var doc = `{
                 }
             }
         },
-        "/keys/get/{name}": {
-            "get": {
+        "/keys/{name}/recover": {
+            "post": {
+                "description": "Recover a key from seed",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Key Management"
+                ],
+				"parameters": [
+                    {
+                        "type": "string",
+                        "description": "key name",
+                        "name": "name",
+                        "in": "path"
+                    },
+					{
+                        "description": "seed and password for a new key",
+                        "name": "seedAndPwd",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/keys.RecoverKeyBody"
+                        }
+                    }
+                ],
+                "summary": "Recover a key from seed",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/keys.KeyOutput"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/keys/{name}/sign": {
+            "post": {
+                "description": "Sign user specified bytes array",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Key Management"
+                ],
+				"parameters": [
+                    {
+                        "type": "string",
+                        "description": "key name",
+                        "name": "name",
+                        "in": "path"
+                    },
+					{
+                        "description": "seed and password for a new key",
+                        "name": "txAndPwd",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/keys.SignBody"
+                        }
+                    }
+                ],
+                "summary": "Sign user specified bytes array",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/keys/{name}": {
+			"get": {
                 "description": "Get detailed information for specific key name",
                 "consumes": [
                     "application/json"
@@ -795,53 +1010,7 @@ var doc = `{
                         }
                     }
                 }
-            }
-        },
-        "/keys/seed": {
-            "get": {
-                "description": "Get a seed for creating key",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Key Management"
-                ],
-                "summary": "Get a seed",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/httputil.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/keys/{name}": {
+            },
             "put": {
                 "description": "The keys are protected by the password, here this API provides a way to change the password",
                 "consumes": [
@@ -961,6 +1130,116 @@ var doc = `{
                 }
             }
         },
+        "/auth/accounts/{address}": {
+            "get": {
+                "description": "Get the detailed information for specific address",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Key Management"
+                ],
+                "summary": "Query account information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "address",
+                        "name": "address",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/auth.BaseAccount"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/txs": {
+            "post": {
+                "description": "Broadcast transaction",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transaction"
+                ],
+				"parameters": [
+					{
+                        "description": "seed and password for a new key",
+                        "name": "txAndReturn",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/tx.TxBody"
+                        }
+                    }
+                ],
+                "summary": "Broadcast transaction",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/bank.ResultBroadcastTxCommit"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/node_version": {
             "get": {
                 "description": "Get connected full node version",
@@ -1007,7 +1286,7 @@ var doc = `{
         },
         "/version": {
             "get": {
-                "description": "Get Cosmos-LCD version",
+                "description": "Get Gaia-lite version",
                 "consumes": [
                     "application/json"
                 ],
@@ -1017,7 +1296,7 @@ var doc = `{
                 "tags": [
                     "General"
                 ],
-                "summary": "Get Cosmos-LCD version",
+                "summary": "Get Gaia-lite version",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1206,9 +1485,9 @@ var doc = `{
                 "sequence": {
                     "type": "string"
                 },
-                "signed": {
+                "generate": {
                     "type": "boolean",
-                    "example": true
+                    "example": false
                 },
                 "ensure_account_sequence": {
                     "type": "boolean",
@@ -1329,6 +1608,28 @@ var doc = `{
                 }
             }
         },
+        "keys.RecoverKeyBody": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "seed": {
+                    "type": "string"
+                }
+            }
+        },
+        "keys.SignBody": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "tx_bytes": {
+                    "type": "string"
+                }
+            }
+        },
         "keys.UpdateKeyBody": {
             "type": "object",
             "properties": {
@@ -1337,6 +1638,18 @@ var doc = `{
                 },
                 "old_password": {
                     "type": "string"
+                }
+            }
+        },
+        "tx.TxBody": {
+            "type": "object",
+            "properties": {
+                "transaction": {
+                    "type": "string"
+                },
+                "return": {
+                    "type": "string",
+                    "example": "block"
                 }
             }
         },
@@ -1706,6 +2019,55 @@ var doc = `{
                 "type": "object",
                 "$ref": "#/definitions/stake.txInfo"
             }
+        },
+        "stake.pool": {
+            "type": "object",
+            "properties": {
+                "loose_tokens": {
+                    "type": "string"
+                },
+                "bonded_tokens": {
+                    "type": "integer"
+                },
+                "inflation_last_time": {
+                    "type": "string"
+                },
+                "inflation": {
+                    "type": "string"
+                },
+                "date_last_commission_reset": {
+                    "type": "integer"
+                },
+                "prev_bonded_shares": {
+                    "type": "string"
+                }
+            }
+        },
+        "stake.params": {
+            "type": "object",
+            "properties": {
+                "inflation_rate_change": {
+                    "type": "string"
+                },
+                "inflation_max": {
+                    "type": "string"
+                },
+                "inflation_min": {
+                    "type": "string"
+                },
+                "goal_bonded": {
+                    "type": "string"
+                },
+                "unbonding_time": {
+                    "type": "string"
+                },
+                "max_validators": {
+                    "type": "integer"
+                },
+                "bond_denom": {
+                    "type": "string"
+                }
+            }
         }
     }
 }`
@@ -1714,8 +2076,9 @@ var tagToModuleDesc = `
 {
   "General":"general",
   "Key Management":"key",
-  "Token Operation":"token",
-  "Stake Operation":"stake"
+  "Bank":"bank",
+  "Staking":"staking",
+  "Transaction":"transaction"
 }
 `
 
@@ -1734,7 +2097,7 @@ func addOptionsToDesc (desc string) string {
 	buffer.WriteString(desc)
 	buffer.WriteString("\n")
 
-	buffer.WriteString("Cosmos-LCD starting options:")
+	buffer.WriteString("Gaid-lite starting options:")
 	buffer.WriteString("\n")
 
 	buffer.WriteString(cli.HomeFlag)

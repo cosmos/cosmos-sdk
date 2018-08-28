@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
@@ -172,4 +172,20 @@ func printInfos(infos []keys.Info) {
 
 func printKeyOutput(ko KeyOutput) {
 	fmt.Printf("%s\t%s\t%s\t%s\n", ko.Name, ko.Type, ko.Address, ko.PubKey)
+}
+
+func printKeyAddress(info keys.Info) {
+	ko, err := Bech32KeyOutput(info)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(ko.Address.String())
+}
+
+func printPubKey(info keys.Info) {
+	ko, err := Bech32KeyOutput(info)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(ko.PubKey)
 }

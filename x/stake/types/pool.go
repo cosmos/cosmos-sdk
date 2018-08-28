@@ -6,13 +6,14 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Pool - dynamic parameters of the current state
 type Pool struct {
 	LooseTokens       sdk.Dec   `json:"loose_tokens"`        // tokens which are not bonded in a validator
 	BondedTokens      sdk.Dec   `json:"bonded_tokens"`       // reserve of bonded tokens
-	InflationLastTime time.Time `json:"inflation_last_time"` // block which the last inflation was processed // TODO make time
+	InflationLastTime time.Time `json:"inflation_last_time"` // block which the last inflation was processed
 	Inflation         sdk.Dec   `json:"inflation"`           // current annual inflation rate
 
 	DateLastCommissionReset int64 `json:"date_last_commission_reset"` // unix timestamp for last commission accounting reset (daily)
@@ -122,4 +123,38 @@ func (p Pool) NextInflation(params Params) (inflation sdk.Dec) {
 	}
 
 	return inflation
+}
+
+// HumanReadableString returns a human readable string representation of a
+// pool.
+func (p Pool) HumanReadableString() string {
+
+	resp := "Pool \n"
+	resp += fmt.Sprintf("Loose Tokens: %s\n", p.LooseTokens)
+	resp += fmt.Sprintf("Bonded Tokens: %s\n", p.BondedTokens)
+	resp += fmt.Sprintf("Token Supply: %s\n", p.TokenSupply())
+	resp += fmt.Sprintf("Bonded Ratio: %v\n", p.BondedRatio())
+	resp += fmt.Sprintf("Previous Inflation Block: %s\n", p.InflationLastTime)
+	resp += fmt.Sprintf("Inflation: %v\n", p.Inflation)
+	resp += fmt.Sprintf("Date of Last Commission Reset: %d\n", p.DateLastCommissionReset)
+	resp += fmt.Sprintf("Previous Bonded Shares: %v\n", p.PrevBondedShares)
+	return resp
+}
+
+// unmarshal the current pool value from store key or panics
+func MustUnmarshalPool(cdc *wire.Codec, value []byte) Pool {
+	pool, err := UnmarshalPool(cdc, value)
+	if err != nil {
+		panic(err)
+	}
+	return pool
+}
+
+// unmarshal the current pool value from store key
+func UnmarshalPool(cdc *wire.Codec, value []byte) (pool Pool, err error) {
+	err = cdc.UnmarshalBinary(value, &pool)
+	if err != nil {
+		return
+	}
+	return
 }

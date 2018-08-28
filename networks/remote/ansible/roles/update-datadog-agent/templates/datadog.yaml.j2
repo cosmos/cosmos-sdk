@@ -28,10 +28,10 @@ api_key: {{DD_API_KEY}}
 
 # Setting this option to "yes" will force the agent to only use TLS 1.2 when
 # pushing data to the url specified in "dd_url".
-# force_tls_12: no
+force_tls_12: yes
 
 # Force the hostname to whatever you want. (default: auto-detected)
-# hostname: mymachine.mydomain
+hostname: {{inventory_hostname}}
 
 # Make the agent use "hostname -f" on unix-based systems as a last resort
 # way of determining the hostname instead of Golang "os.Hostname()"
@@ -220,7 +220,7 @@ collect_ec2_tags: true
 # Logs agent
 #
 # Logs agent is disabled by default
-logs_enabled: true
+#logs_enabled: true
 #
 # Enable logs collection for all containers, disabled by default
 # logs_config:

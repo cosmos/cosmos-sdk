@@ -1,4 +1,4 @@
 ---
 
-GAIAD_ADDRESS: tcp://0.0.0.0:1317
+GAIACLI_ADDRESS: tcp://0.0.0.0:1317
 

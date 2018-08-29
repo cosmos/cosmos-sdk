@@ -94,7 +94,7 @@ func TestSlashingPeriodCap(t *testing.T) {
 	// unjail to measure power
 	sk.Unjail(ctx, val)
 	// power should be equal, no more should have been slashed
-	expectedPower := sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20)))
+	expectedPower = sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20)))
 	require.Equal(t, expectedPower, sk.Validator(ctx, addr).GetPower())
 
 	// double sign again, new slashing period
@@ -104,7 +104,7 @@ func TestSlashingPeriodCap(t *testing.T) {
 	// unjail to measure power
 	sk.Unjail(ctx, val)
 	// power should be reduced
-	expectedPower := sdk.NewDecFromInt(amt).Mul(sdk.NewDec(18).Quo(sdk.NewDec(20)))
+	expectedPower = sdk.NewDecFromInt(amt).Mul(sdk.NewDec(18).Quo(sdk.NewDec(20)))
 	require.Equal(t, expectedPower, sk.Validator(ctx, addr).GetPower())
 }
 

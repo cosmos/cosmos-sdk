@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// key prefix bytes
 var (
 	ValidatorSigningInfoKey     = []byte{0x01} // Prefix for signing info
 	ValidatorSigningBitArrayKey = []byte{0x02} // Prefix for signature bit array

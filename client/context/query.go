@@ -305,12 +305,8 @@ func (ctx CLIContext) ensureBroadcastTx(txBytes []byte) error {
 	return nil
 }
 
-// proofVerify perform response proof verification
-func (ctx CLIContext) proofVerify(path string, resp abci.ResponseQuery) error {
-	// Data from trusted node or subspace query doesn't need verification
-	if ctx.TrustNode || !isQueryStoreWithProof(path) {
-		return nil
-	}
+// verifyProof perform response proof verification
+func (ctx CLIContext) verifyProof(path string, resp abci.ResponseQuery) error {
 
 	// TODO: Later we consider to return error for missing valid certifier to verify data from untrusted node
 	if ctx.Certifier == nil {
@@ -338,7 +334,8 @@ func (ctx CLIContext) proofVerify(path string, resp abci.ResponseQuery) error {
 	}
 
 	// Validate the substore commit hash against trusted appHash
-	substoreCommitHash, err :=  store.VerifyMultiStoreCommitInfo(multiStoreProof.StoreName, multiStoreProof.CommitIDList, commit.Header.AppHash)
+	substoreCommitHash, err :=  store.VerifyMultiStoreCommitInfo(multiStoreProof.StoreName,
+		multiStoreProof.CommitIDList, commit.Header.AppHash)
 	if err != nil {
 		return  errors.Wrap(err, "failed in verifying the proof against appHash")
 	}
@@ -368,11 +365,16 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 	}
 
 	resp := result.Response
-	if resp.Code != uint32(0) {
+	if resp.IsOK() {
 		return res, errors.Errorf("query failed: (%d) %s", resp.Code, resp.Log)
 	}
 
-	err = ctx.proofVerify(path, resp)
+	// Data from trusted node or subspace query doesn't need verification
+	if ctx.TrustNode || !isQueryStoreWithProof(path) {
+		return resp.Value, nil
+	}
+
+	err = ctx.verifyProof(path, resp)
 	if err != nil {
 		return nil, err
 	}
@@ -398,7 +400,8 @@ func isQueryStoreWithProof(path string) (bool) {
 	if len(paths) != 3 {
 		return false
 	}
-	// WARNING This should be consistent with query method in iavlstore.go
+	// Currently, only when query path[2] is store or key, will proof be included in response.
+	// If there are some changes about proof building in iavlstore.go, we must change code here to keep consistency with iavlstore.go
 	if paths[2] == "store" || paths[2] == "key" {
 		return true
 	}

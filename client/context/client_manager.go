@@ -1,22 +1,22 @@
 package context
 
 import (
+	"github.com/pkg/errors"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"strings"
 	"sync"
-	"github.com/pkg/errors"
 )
 
 // ClientManager is a manager of a set of rpc clients to full nodes.
 // This manager can do load balancing upon these rpc clients.
 type ClientManager struct {
-	clients []rpcclient.Client
+	clients      []rpcclient.Client
 	currentIndex int
-	mutex sync.RWMutex
+	mutex        sync.Mutex
 }
 
 // NewClientManager create a new ClientManager
-func NewClientManager(nodeURIs string) (*ClientManager,error) {
+func NewClientManager(nodeURIs string) (*ClientManager, error) {
 	if nodeURIs != "" {
 		nodeURLArray := strings.Split(nodeURIs, ",")
 		var clients []rpcclient.Client
@@ -26,7 +26,7 @@ func NewClientManager(nodeURIs string) (*ClientManager,error) {
 		}
 		mgr := &ClientManager{
 			currentIndex: 0,
-			clients: clients,
+			clients:      clients,
 		}
 		return mgr, nil
 	}
@@ -39,7 +39,7 @@ func (mgr *ClientManager) getClient() rpcclient.Client {
 
 	client := mgr.clients[mgr.currentIndex]
 	mgr.currentIndex++
-	if mgr.currentIndex >= len(mgr.clients){
+	if mgr.currentIndex >= len(mgr.clients) {
 		mgr.currentIndex = 0
 	}
 	return client

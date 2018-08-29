@@ -263,6 +263,14 @@ func TestCoinSend(t *testing.T) {
 
 	require.Equal(t, "steak", mycoins.Denom)
 	require.Equal(t, int64(1), mycoins.Amount.Int64())
+
+	// test failure with too little gas
+	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, 100)
+	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
+
+	// test success with just enough gas
+	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, 3000)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
 }
 
 func TestIBCTransfer(t *testing.T) {
@@ -712,7 +720,7 @@ func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
 	return acc
 }
 
-func doSend(t *testing.T, port, seed, name, password string, addr sdk.AccAddress) (receiveAddr sdk.AccAddress, resultTx ctypes.ResultBroadcastTxCommit) {
+func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.AccAddress, gas int64) (res *http.Response, body string, receiveAddr sdk.AccAddress) {
 
 	// create receive address
 	kb := client.MockKeyBase()
@@ -730,19 +738,31 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.AccAddress
 		panic(err)
 	}
 
+	gasStr := ""
+	if gas > 0 {
+		gasStr = fmt.Sprintf(`
+		"gas":"%v",
+		`, gas)
+	}
 	jsonStr := []byte(fmt.Sprintf(`{
+		%v
 		"name":"%s",
 		"password":"%s",
 		"account_number":"%d",
 		"sequence":"%d",
-		"gas": "10000",
 		"amount":[%s],
 		"chain_id":"%s"
-	}`, name, password, accnum, sequence, coinbz, chainID))
-	res, body := Request(t, port, "POST", fmt.Sprintf("/accounts/%s/send", receiveAddr), jsonStr)
+	}`, gasStr, name, password, accnum, sequence, coinbz, chainID))
+
+	res, body = Request(t, port, "POST", fmt.Sprintf("/accounts/%s/send", receiveAddr), jsonStr)
+	return
+}
+
+func doSend(t *testing.T, port, seed, name, password string, addr sdk.AccAddress) (receiveAddr sdk.AccAddress, resultTx ctypes.ResultBroadcastTxCommit) {
+	res, body, receiveAddr := doSendWithGas(t, port, seed, name, password, addr, 0)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	err = cdc.UnmarshalJSON([]byte(body), &resultTx)
+	err := cdc.UnmarshalJSON([]byte(body), &resultTx)
 	require.Nil(t, err)
 
 	return receiveAddr, resultTx
@@ -768,7 +788,6 @@ func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Acc
 		"password": "%s",
 		"account_number":"%d",
 		"sequence": "%d",
-		"gas": "100000",
 		"src_chain_id": "%s",
 		"amount":[
 			{
@@ -887,7 +906,6 @@ func doDelegate(t *testing.T, port, seed, name, password string, delegatorAddr, 
 		"password": "%s",
 		"account_number": "%d",
 		"sequence": "%d",
-		"gas": "10000",
 		"chain_id": "%s",
 		"delegations": [
 			{
@@ -925,7 +943,6 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 		"password": "%s",
 		"account_number": "%d",
 		"sequence": "%d",
-		"gas": "20000",
 		"chain_id": "%s",
 		"delegations": [],
 		"begin_unbondings": [
@@ -964,7 +981,6 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 		"password": "%s",
 		"account_number": "%d",
 		"sequence": "%d",
-		"gas": "10000",
 		"chain_id": "%s",
 		"delegations": [],
 		"begin_unbondings": [],
@@ -1116,8 +1132,7 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 			"password": "%s",
 			"chain_id": "%s",
 			"account_number":"%d",
-			"sequence":"%d",
-			"gas":"100000"
+			"sequence":"%d"
 		}
 	}`, proposerAddr, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", "/gov/proposals", jsonStr)
@@ -1147,8 +1162,7 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 			"password": "%s",
 			"chain_id": "%s",
 			"account_number":"%d",
-			"sequence": "%d",
-			"gas":"100000"
+			"sequence": "%d"
 		}
 	}`, proposerAddr, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", fmt.Sprintf("/gov/proposals/%d/deposits", proposalID), jsonStr)
@@ -1178,8 +1192,7 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ac
 			"password": "%s",
 			"chain_id": "%s",
 			"account_number": "%d",
-			"sequence": "%d",
-			"gas":"100000"
+			"sequence": "%d"
 		}
 	}`, proposerAddr, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", fmt.Sprintf("/gov/proposals/%d/votes", proposalID), jsonStr)

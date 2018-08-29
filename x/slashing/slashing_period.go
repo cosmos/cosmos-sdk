@@ -27,7 +27,7 @@ func (k Keeper) capBySlashingPeriod(ctx sdk.Context, address sdk.ValAddress, fra
 
 	// Update the slashing period struct
 	slashingPeriod.SlashedSoFar = totalToSlash
-	k.setValidatorSlashingPeriod(ctx, slashingPeriod)
+	k.addOrUpdateValidatorSlashingPeriod(ctx, slashingPeriod)
 
 	return
 }
@@ -53,7 +53,7 @@ func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk
 // This function sets a validator slashing period for a particular validator,
 // start height, end height, and current slashed-so-far total, or updates
 // an existing slashing period for the same validator and start height.
-func (k Keeper) setValidatorSlashingPeriod(ctx sdk.Context, slashingPeriod ValidatorSlashingPeriod) {
+func (k Keeper) addOrUpdateValidatorSlashingPeriod(ctx sdk.Context, slashingPeriod ValidatorSlashingPeriod) {
 	slashingPeriodValue := ValidatorSlashingPeriodValue{
 		EndHeight:    slashingPeriod.EndHeight,
 		SlashedSoFar: slashingPeriod.SlashedSoFar,

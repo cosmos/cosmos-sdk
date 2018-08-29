@@ -638,5 +638,4 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	// no ubd should have been found, coins should have been returned direcly to account
 	ubd, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.False(t, found, "%v", ubd)
-	require.Fail(t, "")
 }

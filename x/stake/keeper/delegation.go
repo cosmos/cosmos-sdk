@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"bytes"
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -257,56 +256,44 @@ func (k Keeper) Delegate(ctx sdk.Context, delegatorAddr sdk.AccAddress, bondAmt 
 // unbond the the delegation return
 func (k Keeper) unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddress,
 	shares sdk.Dec) (amount sdk.Dec, err sdk.Error) {
-	fmt.Println("wackydebugoutput unbond 0")
 
 	// check if delegation has any shares in it unbond
 	delegation, found := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
 	if !found {
-		fmt.Println("wackydebugoutput unbond 1")
 		err = types.ErrNoDelegatorForAddress(k.Codespace())
 		return
 	}
-	fmt.Println("wackydebugoutput unbond 2")
 
 	// retrieve the amount to remove
 	if delegation.Shares.LT(shares) {
-		fmt.Println("wackydebugoutput unbond 3")
 		err = types.ErrNotEnoughDelegationShares(k.Codespace(), delegation.Shares.String())
 		return
 	}
-	fmt.Println("wackydebugoutput unbond 4")
 
 	// get validator
 	validator, found := k.GetValidator(ctx, validatorAddr)
 	if !found {
-		fmt.Println("wackydebugoutput unbond 5")
 		err = types.ErrNoValidatorFound(k.Codespace())
 		return
 	}
-	fmt.Println("wackydebugoutput unbond 6")
 
 	// subtract shares from delegator
 	delegation.Shares = delegation.Shares.Sub(shares)
 
 	// remove the delegation
 	if delegation.Shares.IsZero() {
-		fmt.Println("wackydebugoutput unbond 7")
 
 		// if the delegation is the operator of the validator then
 		// trigger a jail validator
 		if bytes.Equal(delegation.DelegatorAddr, validator.Operator) && validator.Jailed == false {
-			fmt.Println("wackydebugoutput unbond 8")
 			validator.Jailed = true
 		}
-		fmt.Println("wackydebugoutput unbond 9")
 		k.RemoveDelegation(ctx, delegation)
 	} else {
-		fmt.Println("wackydebugoutput unbond 10")
 		// Update height
 		delegation.Height = ctx.BlockHeight()
 		k.SetDelegation(ctx, delegation)
 	}
-	fmt.Println("wackydebugoutput unbond 11")
 
 	// remove the coins from the validator
 	pool := k.GetPool(ctx)
@@ -316,12 +303,9 @@ func (k Keeper) unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddr
 
 	// update then remove validator if necessary
 	validator = k.UpdateValidator(ctx, validator)
-	fmt.Printf("debug validator: %v\n", validator)
 	if validator.DelegatorShares.IsZero() {
-		fmt.Println("wackydebugoutput unbond 12")
 		k.RemoveValidator(ctx, validator.Operator)
 	}
-	fmt.Println("wackydebugoutput unbond 13")
 
 	return
 }
@@ -331,7 +315,6 @@ func (k Keeper) unbond(ctx sdk.Context, delegatorAddr, validatorAddr sdk.AccAddr
 // get info for begin functions: MinTime and CreationHeight
 func (k Keeper) getBeginInfo(ctx sdk.Context, params types.Params, validatorSrcAddr sdk.AccAddress) (
 	minTime time.Time, height int64, completeNow bool) {
-	fmt.Println("wackydebugoutput getBeginInfo 0")
 
 	validator, found := k.GetValidator(ctx, validatorSrcAddr)
 	switch {
@@ -420,38 +403,27 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delegatorAddr, validatorAddr 
 // complete unbonding an unbonding record
 func (k Keeper) BeginRedelegation(ctx sdk.Context, delegatorAddr, validatorSrcAddr,
 	validatorDstAddr sdk.AccAddress, sharesAmount sdk.Dec) sdk.Error {
-	fmt.Println("wackydebugoutput BeginRedelegation 0")
 
 	// check if this is a transitive redelegation
 	if k.HasReceivingRedelegation(ctx, delegatorAddr, validatorSrcAddr) {
-		fmt.Println("wackydebugoutput BeginRedelegation 1")
 		return types.ErrTransitiveRedelegation(k.Codespace())
 	}
-	fmt.Println("wackydebugoutput BeginRedelegation 2")
 
 	returnAmount, err := k.unbond(ctx, delegatorAddr, validatorSrcAddr, sharesAmount)
 	if err != nil {
-		fmt.Println("wackydebugoutput BeginRedelegation 3")
 		return err
 	}
-	fmt.Println("wackydebugoutput BeginRedelegation 4")
 
 	params := k.GetParams(ctx)
 	returnCoin := sdk.Coin{params.BondDenom, returnAmount.RoundInt()}
-	fmt.Printf("debug returnCoin: %v\n", returnCoin)
-	fmt.Println("wackydebugoutput BeginRedelegation 5")
 	dstValidator, found := k.GetValidator(ctx, validatorDstAddr)
 	if !found {
-		fmt.Println("wackydebugoutput BeginRedelegation 6")
 		return types.ErrBadRedelegationDst(k.Codespace())
 	}
-	fmt.Println("wackydebugoutput BeginRedelegation 7")
 	sharesCreated, err := k.Delegate(ctx, delegatorAddr, returnCoin, dstValidator, false)
 	if err != nil {
-		fmt.Println("wackydebugoutput BeginRedelegation 8")
 		return err
 	}
-	fmt.Println("wackydebugoutput BeginRedelegation 9")
 
 	// create the unbonding delegation
 	minTime := ctx.BlockHeader().Time.Add(params.UnbondingTime)
@@ -460,10 +432,8 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delegatorAddr, validatorSrcAd
 	minTime, height, completeNow := k.getBeginInfo(ctx, params, validatorSrcAddr)
 
 	if completeNow { // no need to create the redelegation object
-		fmt.Println("wackydebugoutput BeginRedelegation 10")
 		return nil
 	}
-	fmt.Println("wackydebugoutput BeginRedelegation 11")
 
 	red := types.Redelegation{
 		DelegatorAddr:    delegatorAddr,
@@ -476,7 +446,6 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delegatorAddr, validatorSrcAd
 		Balance:          returnCoin,
 		InitialBalance:   returnCoin,
 	}
-	fmt.Println("wackydebugoutput BeginRedelegation 13")
 	k.SetRedelegation(ctx, red)
 	return nil
 }

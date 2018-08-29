@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestLoadBalancing(t *testing.T) {
+func TestClientManager(t *testing.T) {
 	nodeURIs := "10.10.10.10:26657,20.20.20.20:26657,30.30.30.30:26657"
 	clientMgr, err := NewClientManager(nodeURIs)
 	assert.Empty(t, err)

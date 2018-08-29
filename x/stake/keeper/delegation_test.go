@@ -91,7 +91,7 @@ func TestDelegation(t *testing.T) {
 
 	resVals := keeper.GetDelegatorValidators(ctx, addrDels[0])
 	require.Equal(t, 3, len(resVals))
-	resVals = keeper.GetDelegatorValidators(ctx, addrDels[1])
+	resVals = keeper.GetDelegatorValidators(ctx, addrDels[1], 4)
 	require.Equal(t, 3, len(resVals))
 
 	for i := 0; i < 3; i++ {
@@ -114,10 +114,13 @@ func TestDelegation(t *testing.T) {
 	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[1])
 	require.Equal(t, 2, len(resBonds))
 
-	// resBondsNoRat := keeper.GetDelegatorDelegationsWithoutRat(ctx, addrDels[1])
-	// require.Equal(t, 2, len(resBondsNoRat))
-	// require.Equal(t, bond2to1.Shares.String(), resBondsNoRat[0].Shares)
-	// require.Equal(t, bond2to1.Shares.String(), resBondsNoRat[1].Shares)
+	resBondsNoRat := keeper.GetDelegatorDelegationsWithoutRat(ctx, addrDels[1])
+	require.Equal(t, 2, len(resBondsNoRat))
+	require.Equal(t, bond2to1.Shares.String(), resBondsNoRat[0].Shares)
+	require.Equal(t, bond2to1.Shares.String(), resBondsNoRat[1].Shares)
+
+	resBondsNoRat = keeper.GetDelegatorDelegationsWithoutRat(ctx, addrDels[1], 5)
+	require.Equal(t, 2, len(resBondsNoRat))
 
 	// delete all the records from delegator 2
 	keeper.RemoveDelegation(ctx, bond2to1)
@@ -274,6 +277,10 @@ func TestRedelegation(t *testing.T) {
 	require.True(t, redelegations[0].Equal(resRed))
 
 	redelegations = keeper.GetRedelegations(ctx, addrDels[0], 5)
+	require.Equal(t, 1, len(redelegations))
+	require.True(t, redelegations[0].Equal(resRed))
+
+	redelegations = keeper.GetRedelegations(ctx, addrDels[0])
 	require.Equal(t, 1, len(redelegations))
 	require.True(t, redelegations[0].Equal(resRed))
 

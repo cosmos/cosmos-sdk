@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
-	"math"
 )
 
 // load a delegation
@@ -204,16 +203,7 @@ func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 // Perform a delegation, set/update everything necessary within the store.
 func (k Keeper) Delegate(ctx sdk.Context, delegatorAddr sdk.AccAddress, bondAmt sdk.Coin,
 	validator types.Validator, subtractAccount bool) (newShares sdk.Rat, err sdk.Error) {
-	precisionNumber := math.Pow10(int(validator.TokenPrecision))
-	if precisionNumber > math.MaxInt64 {
-		panic("precision is too high, int64 is overflow")
-	}
-	tokenPrecision := int64(precisionNumber)
-	equivalentPower := bondAmt.Amount.Div(sdk.NewInt(tokenPrecision))
-	if equivalentPower.Equal(sdk.NewInt(0)) {
-		err = sdk.ErrInsufficientCoins("affected voting power is zero, this delegation doesn't make sense")
-		return
-	}
+
 	// Get or create the delegator delegation
 	delegation, found := k.GetDelegation(ctx, delegatorAddr, validator.Owner)
 	if !found {

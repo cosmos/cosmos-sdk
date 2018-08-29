@@ -150,14 +150,16 @@ func TestQueryDelegation(t *testing.T) {
 	delegation, found := keeper.GetDelegation(ctx, addr2, addr1)
 	assert.True(t, found)
 
+	delegationNoRat := types.NewDelegationWithoutRat(delegation)
+
 	res, err = queryDelegation(ctx, []string{query.Path}, query, keeper)
 	assert.Nil(t, err)
 
-	var delegationRes types.Delegation
+	var delegationRes types.DelegationWithoutRat
 	errRes = keeper.Codec().UnmarshalJSON(res, &delegationRes)
 	assert.Nil(t, errRes)
 
-	assert.Equal(t, delegation, delegationRes)
+	assert.Equal(t, delegationNoRat, delegationRes)
 
 	// Query unbonging delegation
 
@@ -181,4 +183,19 @@ func TestQueryDelegation(t *testing.T) {
 
 	assert.Equal(t, unbond, unbondRes)
 
+	// Query Delegator Summary
+
+	query = abci.RequestQuery{
+		Path: "/custom/stake/delegator",
+		Data: bz,
+	}
+
+	res, err = queryDelegator(ctx, []string{query.Path}, query, keeper)
+	assert.Nil(t, err)
+
+	var summary types.DelegationSummary
+	errRes = keeper.Codec().UnmarshalJSON(res, &summary)
+	assert.Nil(t, errRes)
+
+	assert.Equal(t, unbond, summary.UnbondingDelegations[0])
 }

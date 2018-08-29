@@ -24,6 +24,30 @@ type delegationValue struct {
 	Height int64
 }
 
+// defines a delegation without type Rat for shares
+type DelegationWithoutRat struct {
+	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
+	ValidatorAddr sdk.AccAddress `json:"validator_addr"`
+	Shares        string         `json:"shares"`
+	Height        int64          `json:"height"`
+}
+
+// aggregates of all delegations, unbondings and redelegations
+type DelegationSummary struct {
+	Delegations          []DelegationWithoutRat `json:"delegations"`
+	UnbondingDelegations []UnbondingDelegation  `json:"unbonding_delegations"`
+	Redelegations        []Redelegation         `json:"redelegations"`
+}
+
+func NewDelegationWithoutRat(delegation Delegation) DelegationWithoutRat {
+	return DelegationWithoutRat{
+		DelegatorAddr: delegation.DelegatorAddr,
+		ValidatorAddr: delegation.ValidatorAddr,
+		Height:        delegation.Height,
+		Shares:        delegation.Shares.String(),
+	}
+}
+
 // return the delegation without fields contained within the key for the store
 func MustMarshalDelegation(cdc *wire.Codec, delegation Delegation) []byte {
 	val := delegationValue{

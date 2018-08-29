@@ -13,6 +13,8 @@ type (
 	BechValidator         = types.BechValidator
 	Description           = types.Description
 	Delegation            = types.Delegation
+	DelegationWithoutRat  = types.DelegationWithoutRat
+	DelegationSummary     = types.DelegationSummary
 	UnbondingDelegation   = types.UnbondingDelegation
 	Redelegation          = types.Redelegation
 	Params                = types.Params

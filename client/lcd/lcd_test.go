@@ -28,7 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	"github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 )
 
 func init() {
@@ -801,11 +800,11 @@ func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.
 
 // ============= Stake Module ================
 
-func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.AccAddress) rest.DelegationWithoutRat {
+func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.AccAddress) stake.DelegationWithoutRat {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/delegations/%s", delegatorAddr, validatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var bond rest.DelegationWithoutRat
+	var bond stake.DelegationWithoutRat
 	err := cdc.UnmarshalJSON([]byte(body), &bond)
 	require.Nil(t, err)
 
@@ -823,11 +822,11 @@ func getUndelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk
 	return unbondings
 }
 
-func getDelegationSummary(t *testing.T, port string, delegatorAddr sdk.AccAddress) rest.DelegationSummary {
+func getDelegationSummary(t *testing.T, port string, delegatorAddr sdk.AccAddress) stake.DelegationSummary {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s", delegatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var summary rest.DelegationSummary
+	var summary stake.DelegationSummary
 
 	err := cdc.UnmarshalJSON([]byte(body), &summary)
 	require.Nil(t, err)

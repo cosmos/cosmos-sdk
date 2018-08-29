@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	keep "github.com/cosmos/cosmos-sdk/x/stake/keeper"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -17,8 +18,8 @@ func NewQuerier(k keep.Keeper) sdk.Querier {
 			return queryValidators(ctx, path[1:], k)
 		case "validator":
 			return queryValidator(ctx, path[1:], req, k)
-			// case "delegator":
-			// 	return queryDelegator(ctx, path[1:], req, k)
+		case "delegator":
+			return queryDelegator(ctx, path[1:], req, k)
 		case "delegation":
 			return queryDelegation(ctx, path[1:], req, k)
 		case "unbonding-delegation":
@@ -85,19 +86,28 @@ func queryValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k kee
 }
 
 // TODO query with limit
-// func queryDelegator(ctx sdk.Context, req abci.RequestQuery, k keeper.Keeper) (res []byte, err sdk.Error) {
-// 	var params QueryAddressParams
-// 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
-// 	if errRes != nil {
-// 		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", errRes.Error()))
-// 	}
-//
-// 	res, errRes = wire.MarshalJSONIndent(k.Codec(), deposit)
-// 	if errRes != nil {
-// 		panic("could not marshal result to JSON")
-// 	}
-// 	return res, nil
-// }
+func queryDelegator(ctx sdk.Context, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
+	var params QueryAddressParams
+	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
+	if errRes != nil {
+		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", errRes.Error()))
+	}
+	delegations := k.GetDelegatorDelegationsWithoutRat(ctx, params.AccountAddr)
+	unbondingDelegations := k.GetDelegatorUnbondingDelegations(ctx, params.AccountAddr)
+	redelegations := k.GetRedelegations(ctx, params.AccountAddr)
+
+	summary := types.DelegationSummary{
+		Delegations:          delegations,
+		UnbondingDelegations: unbondingDelegations,
+		Redelegations:        redelegations,
+	}
+
+	res, errRes = wire.MarshalJSONIndent(k.Codec(), summary)
+	if errRes != nil {
+		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
+	}
+	return res, nil
+}
 
 // TODO query with limit
 func queryDelegatorValidators(ctx sdk.Context, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
@@ -147,7 +157,8 @@ func queryDelegation(ctx sdk.Context, path []string, req abci.RequestQuery, k ke
 		return []byte{}, ErrNoDelegation(DefaultCodespace)
 	}
 
-	res, errRes = wire.MarshalJSONIndent(k.Codec(), delegation)
+	outputDelegation := types.NewDelegationWithoutRat(delegation)
+	res, errRes = wire.MarshalJSONIndent(k.Codec(), outputDelegation)
 	if errRes != nil {
 		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
 	}

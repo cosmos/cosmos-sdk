@@ -20,21 +20,27 @@ func TestGetSetValidatorSlashingPeriod(t *testing.T) {
 		SlashedSoFar:  sdk.ZeroDec(),
 	}
 	keeper.setValidatorSlashingPeriod(ctx, newPeriod)
+
 	// Get at start height
 	retrieved := keeper.getValidatorSlashingPeriodForHeight(ctx, addr, height)
 	require.Equal(t, newPeriod, retrieved)
+
 	// Get after start height (works)
 	retrieved = keeper.getValidatorSlashingPeriodForHeight(ctx, addr, int64(6))
 	require.Equal(t, newPeriod, retrieved)
+
 	// Get before start height (panic)
 	require.Panics(t, func() { keeper.getValidatorSlashingPeriodForHeight(ctx, addr, int64(0)) })
+
 	// Get after end height (panic)
 	newPeriod.EndHeight = int64(4)
 	keeper.setValidatorSlashingPeriod(ctx, newPeriod)
 	require.Panics(t, func() { keeper.capBySlashingPeriod(ctx, addr, sdk.ZeroDec(), height) })
+
 	// Back to old end height
 	newPeriod.EndHeight = height + 10
 	keeper.setValidatorSlashingPeriod(ctx, newPeriod)
+
 	// Set a new, later period
 	anotherPeriod := ValidatorSlashingPeriod{
 		ValidatorAddr: addr,
@@ -43,9 +49,11 @@ func TestGetSetValidatorSlashingPeriod(t *testing.T) {
 		SlashedSoFar:  sdk.ZeroDec(),
 	}
 	keeper.setValidatorSlashingPeriod(ctx, anotherPeriod)
+
 	// Old period retrieved for prior height
 	retrieved = keeper.getValidatorSlashingPeriodForHeight(ctx, addr, height)
 	require.Equal(t, newPeriod, retrieved)
+
 	// New period retrieved at new height
 	retrieved = keeper.getValidatorSlashingPeriodForHeight(ctx, addr, height+1)
 	require.Equal(t, anotherPeriod, retrieved)
@@ -63,12 +71,15 @@ func TestValidatorSlashingPeriodCap(t *testing.T) {
 	}
 	keeper.setValidatorSlashingPeriod(ctx, newPeriod)
 	half := sdk.NewDec(1).Quo(sdk.NewDec(2))
+
 	// First slash should be full
 	fractionA := keeper.capBySlashingPeriod(ctx, addr, half, height)
 	require.True(t, fractionA.Equal(half))
+
 	// Second slash should be capped
 	fractionB := keeper.capBySlashingPeriod(ctx, addr, half, height)
 	require.True(t, fractionB.Equal(sdk.ZeroDec()))
+
 	// Third slash should be capped to difference
 	fractionC := keeper.capBySlashingPeriod(ctx, addr, sdk.OneDec(), height)
 	require.True(t, fractionC.Equal(half))

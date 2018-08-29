@@ -56,7 +56,8 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Double sign confirmed
 	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d less than max age of %d", pubkey.Address(), infractionHeight, age, maxEvidenceAge))
 
-	// Cap by slashing period
+	// Cap the amount slashed to the penalty for the worst infraction
+	// within the slashing period when this infraction was committed
 	fraction := k.SlashFractionDoubleSign(ctx)
 	revisedFraction := k.capBySlashingPeriod(ctx, address, fraction, infractionHeight)
 	logger.Info(fmt.Sprintf("Fraction slashed capped by slashing period from %v to %v", fraction, revisedFraction))

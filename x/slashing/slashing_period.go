@@ -10,7 +10,7 @@ import (
 // Cap an infraction's slash amount by the slashing period in which it was committed
 func (k Keeper) capBySlashingPeriod(ctx sdk.Context, address sdk.ValAddress, fraction sdk.Dec, infractionHeight int64) (revisedFraction sdk.Dec) {
 
-	// Calculate total amount to be slashed
+	// Fetch the newest slashing period starting before this infraction was committed
 	slashingPeriod := k.getValidatorSlashingPeriodForHeight(ctx, address, infractionHeight)
 
 	// Sanity check
@@ -18,21 +18,24 @@ func (k Keeper) capBySlashingPeriod(ctx sdk.Context, address sdk.ValAddress, fra
 		panic(fmt.Sprintf("slashing period ended before infraction: infraction height %d, slashing period ended at %d", infractionHeight, slashingPeriod.EndHeight))
 	}
 
-	// Calculate the total slash amount
+	// Calculate the updated total slash amount
+	// This is capped at the slashing fraction for the worst infraction within this slashing period
 	totalToSlash := sdk.MaxDec(slashingPeriod.SlashedSoFar, fraction)
 
-	// Calculate remainder
+	// Calculate the remainder which we now must slash
 	revisedFraction = totalToSlash.Sub(slashingPeriod.SlashedSoFar)
 
-	// Update slashing period
+	// Update the slashing period struct
 	slashingPeriod.SlashedSoFar = totalToSlash
 	k.setValidatorSlashingPeriod(ctx, slashingPeriod)
 
 	return
-
 }
 
-// Stored by *validator* address (not owner address)
+// Stored by validator Tendermint address (not owner address)
+// This function retrieves the most recent slashing period starting
+// before a particular height - so the slashing period that was "in effect"
+// at the time of an infraction committed at that height.
 func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk.ValAddress, height int64) (slashingPeriod ValidatorSlashingPeriod) {
 	store := ctx.KVStore(k.storeKey)
 	// Get the most recent slashing period at or before the infraction height
@@ -46,7 +49,10 @@ func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk
 	return
 }
 
-// Stored by *validator* address (not owner address)
+// Stored by validator Tendermint address (not owner address)
+// This function sets a validator slashing period for a particular validator,
+// start height, end height, and current slashed-so-far total, or updates
+// an existing slashing period for the same validator and start height.
 func (k Keeper) setValidatorSlashingPeriod(ctx sdk.Context, slashingPeriod ValidatorSlashingPeriod) {
 	slashingPeriodValue := ValidatorSlashingPeriodValue{
 		EndHeight:    slashingPeriod.EndHeight,
@@ -82,7 +88,7 @@ func NewValidatorSlashingPeriod(startHeight int64, endHeight int64, slashedSoFar
 
 // Slashing period for a validator
 type ValidatorSlashingPeriod struct {
-	ValidatorAddr sdk.ValAddress `json:"validator"`      // validator which this slashing period is for
+	ValidatorAddr sdk.ValAddress `json:"validator_addr"` // validator which this slashing period is for
 	StartHeight   int64          `json:"start_height"`   // starting height of the slashing period
 	EndHeight     int64          `json:"end_height"`     // ending height of the slashing period, or sentinel value of 0 for in-progress
 	SlashedSoFar  sdk.Dec        `json:"slashed_so_far"` // fraction of validator stake slashed so far in this slashing period

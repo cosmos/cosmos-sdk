@@ -15,7 +15,7 @@ func (k Keeper) onValidatorBonded(ctx sdk.Context, address sdk.ValAddress) {
 	k.setValidatorSlashingPeriod(ctx, slashingPeriod)
 }
 
-// Mark the slashing period as having ended when a validator is unbonded
+// Mark the slashing period as having ended when a validator begins unbonding
 func (k Keeper) onValidatorUnbonded(ctx sdk.Context, address sdk.ValAddress) {
 	slashingPeriod := k.getValidatorSlashingPeriodForHeight(ctx, address, ctx.BlockHeight())
 	slashingPeriod.EndHeight = ctx.BlockHeight()
@@ -26,6 +26,9 @@ func (k Keeper) onValidatorUnbonded(ctx sdk.Context, address sdk.ValAddress) {
 type ValidatorHooks struct {
 	k Keeper
 }
+
+// Assert implementation
+var _ sdk.ValidatorHooks = ValidatorHooks{}
 
 // Return a sdk.ValidatorHooks interface over the wrapper struct
 func (k Keeper) ValidatorHooks() sdk.ValidatorHooks {
@@ -41,6 +44,3 @@ func (v ValidatorHooks) OnValidatorBonded(ctx sdk.Context, address sdk.ValAddres
 func (v ValidatorHooks) OnValidatorUnbonded(ctx sdk.Context, address sdk.ValAddress) {
 	v.k.onValidatorUnbonded(ctx, address)
 }
-
-// Assert implementation
-var _ sdk.ValidatorHooks = ValidatorHooks{}

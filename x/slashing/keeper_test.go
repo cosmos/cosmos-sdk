@@ -82,7 +82,8 @@ func TestSlashingPeriodCap(t *testing.T) {
 	// unjail to measure power
 	sk.Unjail(ctx, val)
 	// power should be reduced
-	require.Equal(t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))), sk.Validator(ctx, addr).GetPower())
+	expectedPower := sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20)))
+	require.Equal(t, expectedPower, sk.Validator(ctx, addr).GetPower())
 
 	// double sign again, same slashing period
 	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
@@ -93,7 +94,8 @@ func TestSlashingPeriodCap(t *testing.T) {
 	// unjail to measure power
 	sk.Unjail(ctx, val)
 	// power should be equal, no more should have been slashed
-	require.Equal(t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))), sk.Validator(ctx, addr).GetPower())
+	expectedPower := sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20)))
+	require.Equal(t, expectedPower, sk.Validator(ctx, addr).GetPower())
 
 	// double sign again, new slashing period
 	keeper.handleDoubleSign(ctx, val.Address(), 2, time.Unix(0, 0), amtInt)
@@ -102,7 +104,8 @@ func TestSlashingPeriodCap(t *testing.T) {
 	// unjail to measure power
 	sk.Unjail(ctx, val)
 	// power should be reduced
-	require.Equal(t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(18).Quo(sdk.NewDec(20))), sk.Validator(ctx, addr).GetPower())
+	expectedPower := sdk.NewDecFromInt(amt).Mul(sdk.NewDec(18).Quo(sdk.NewDec(20)))
+	require.Equal(t, expectedPower, sk.Validator(ctx, addr).GetPower())
 }
 
 // Test a validator through uptime, downtime, revocation,

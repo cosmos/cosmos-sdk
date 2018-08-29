@@ -3,6 +3,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/rand"
 	"sort"
 	"testing"
@@ -20,7 +21,7 @@ import (
 
 // Simulate tests application by sending random messages.
 func Simulate(
-	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, ops []TestAndRunTx, setups []RandSetup,
+	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, ops []Operation, setups []RandSetup,
 	invariants []Invariant, numBlocks int, blockSize int, commit bool,
 ) {
 	time := time.Now().UnixNano()
@@ -30,12 +31,20 @@ func Simulate(
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
 func SimulateFromSeed(
-	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, seed int64, ops []TestAndRunTx, setups []RandSetup,
+	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, seed int64, ops []Operation, setups []RandSetup,
 	invariants []Invariant, numBlocks int, blockSize int, commit bool,
 ) {
 	log := fmt.Sprintf("Starting SimulateFromSeed with randomness created with seed %d", int(seed))
-	fmt.Printf("%s\n", log)
 	r := rand.New(rand.NewSource(seed))
+
+	unixTime := r.Int63n(int64(math.Pow(2, 40)))
+
+	// Set the timestamp for simulation
+	timestamp := time.Unix(unixTime, 0)
+	log = fmt.Sprintf("%s\nStarting the simulation from time %v, unixtime %v", log, timestamp.UTC().Format(time.UnixDate), timestamp.Unix())
+	fmt.Printf("%s\n", log)
+	timeDiff := maxTimePerBlock - minTimePerBlock
+
 	keys, accs := mock.GeneratePrivKeyAddressPairsFromRand(r, numKeys)
 
 	// Setup event stats
@@ -44,9 +53,6 @@ func SimulateFromSeed(
 		log += "\nevent - " + what
 		events[what]++
 	}
-
-	timestamp := time.Unix(0, 0)
-	timeDiff := maxTimePerBlock - minTimePerBlock
 
 	res := app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, keys, accs)})
 	validators := make(map[string]mockValidator)
@@ -64,6 +70,8 @@ func SimulateFromSeed(
 	request := abci.RequestBeginBlock{Header: header}
 
 	var pastTimes []time.Time
+	// These are operations which have been queued by previous operations
+	operationQueue := make(map[int][]Operation)
 
 	for i := 0; i < numBlocks; i++ {
 
@@ -90,9 +98,14 @@ func SimulateFromSeed(
 		default:
 			thisBlockSize = r.Intn(blockSize * 4)
 		}
+		// Run queued operations. Ignores blocksize if blocksize is too small
+		log, numQueuedOpsRan := runQueuedOperations(operationQueue, int(header.Height), t, r, app, ctx, keys, log, event)
+		opCount += numQueuedOpsRan
+		thisBlockSize -= numQueuedOpsRan
 		for j := 0; j < thisBlockSize; j++ {
-			logUpdate, err := ops[r.Intn(len(ops))](t, r, app, ctx, keys, log, event)
+			logUpdate, futureOps, err := ops[r.Intn(len(ops))](t, r, app, ctx, keys, log, event)
 			log += "\n" + logUpdate
+			queueOperations(operationQueue, futureOps)
 
 			require.Nil(t, err, log)
 			if onOperation {
@@ -126,6 +139,39 @@ func SimulateFromSeed(
 
 	fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds): %v\n", header.Height, header.Time)
 	DisplayEvents(events)
+}
+
+// adds all future operations into the operation queue.
+func queueOperations(queuedOperations map[int][]Operation, futureOperations []FutureOperation) {
+	if futureOperations == nil {
+		return
+	}
+	for _, futureOp := range futureOperations {
+		if val, ok := queuedOperations[futureOp.BlockHeight]; ok {
+			queuedOperations[futureOp.BlockHeight] = append(val, futureOp.Op)
+		} else {
+			queuedOperations[futureOp.BlockHeight] = []Operation{futureOp.Op}
+		}
+	}
+}
+
+func runQueuedOperations(queueOperations map[int][]Operation, height int, t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+	privKeys []crypto.PrivKey, log string, event func(string)) (updatedLog string, numOpsRan int) {
+	updatedLog = log
+	if queuedOps, ok := queueOperations[height]; ok {
+		numOps := len(queuedOps)
+		for i := 0; i < numOps; i++ {
+			// For now, queued operations cannot queue more operations.
+			// If a need arises for us to support queued messages to queue more messages, this can
+			// be changed.
+			logUpdate, _, err := queuedOps[i](t, r, app, ctx, privKeys, updatedLog, event)
+			updatedLog += "\n" + logUpdate
+			require.Nil(t, err, updatedLog)
+		}
+		delete(queueOperations, height)
+		return updatedLog, numOps
+	}
+	return log, 0
 }
 
 func getKeys(validators map[string]mockValidator) []string {

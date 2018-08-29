@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -32,15 +33,13 @@ func QueryAccountRequestHandlerFn(
 
 		addr, err := sdk.AccAddressFromBech32(bech32addr)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		res, err := cliCtx.QueryStore(auth.AddressStoreKey(addr), storeName)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't query account. Error: %s", err.Error())))
+			utils.WriteErrorResponse(&w, http.StatusInternalServerError, fmt.Sprintf("couldn't query account. Error: %s", err.Error()))
 			return
 		}
 
@@ -53,16 +52,14 @@ func QueryAccountRequestHandlerFn(
 		// decode the value
 		account, err := decoder(res)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't parse query result. Result: %s. Error: %s", res, err.Error())))
+			utils.WriteErrorResponse(&w, http.StatusInternalServerError, fmt.Sprintf("couldn't parse query result. Result: %s. Error: %s", res, err.Error()))
 			return
 		}
 
 		// print out whole account
 		output, err := cdc.MarshalJSON(account)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't marshall query result. Error: %s", err.Error())))
+			utils.WriteErrorResponse(&w, http.StatusInternalServerError, fmt.Sprintf("couldn't marshall query result. Error: %s", err.Error()))
 			return
 		}
 

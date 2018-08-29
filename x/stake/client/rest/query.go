@@ -369,7 +369,7 @@ func delegatorValidatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) htt
 func validatorsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		res, err := cliCtx.Query("custom/stake/validators")
+		res, err := cliCtx.QueryWithData("custom/stake/validators", nil)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
@@ -421,7 +421,7 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 // HTTP request handler to query the pool information
 func poolHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res, err := cliCtx.Query("custom/stake/pool")
+		res, err := cliCtx.QueryWithData("custom/stake/pool", nil)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
@@ -436,7 +436,7 @@ func poolHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc 
 // HTTP request handler to query the staking params values
 func paramsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res, err := cliCtx.Query("custom/stake/parameters")
+		res, err := cliCtx.QueryWithData("custom/stake/parameters", nil)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

@@ -1,12 +1,13 @@
-# End-Block
+# Begin-Block
 
-## Slashing
+## Evidence handling
 
 Tendermint blocks can include
 [Evidence](https://github.com/tendermint/tendermint/blob/develop/docs/spec/blockchain/blockchain.md#evidence), which indicates that a validator
-committed malicious behaviour. The relevant information is forwarded to the
+committed malicious behavior. The relevant information is forwarded to the
 application as [ABCI
-Evidence](https://github.com/tendermint/tendermint/blob/develop/abci/types/types.proto#L259), so the validator an be accordingly punished.
+Evidence](https://github.com/tendermint/tendermint/blob/develop/abci/types/types.proto#L259) in `abci.RequestBeginBlock`
+so that the validator an be accordingly punished.
 
 For some `evidence` to be valid, it must satisfy:
 
@@ -75,7 +76,9 @@ This ensures that offending validators are punished the same amount whether they
 act as a single validator with X stake or as N validators with collectively X
 stake.
 
-## Automatic Unbonding
+The amount slashed for all double signature infractions committed within a single slashing period is capped as described in [state-machine.md](state-machine.md).
+
+## Uptime tracking
 
 At the beginning of each block, we update the signing info for each validator and check if they should be automatically unbonded:
 
@@ -113,3 +116,5 @@ for val in block.Validators:
 
   SigningInfo.Set(val.Address, signInfo)
 ```
+
+The amount slashed for downtime slashes is *not* capped by the slashing period in which they are committed, although they do reset it (since the validator is unbonded).

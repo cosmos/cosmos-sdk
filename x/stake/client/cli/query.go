@@ -423,7 +423,7 @@ func GetCmdQueryPool(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pool",
 		Short: "Query the current staking pool values",
-		Args:  cobra.ExactArgs(0),
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := stake.PoolKey
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -462,7 +462,7 @@ func GetCmdQueryParams(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "parameters",
 		Short: "Query the current staking parameters information",
-		Args:  cobra.ExactArgs(0),
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := stake.ParamKey
 			cliCtx := context.NewCLIContext().WithCodec(cdc)

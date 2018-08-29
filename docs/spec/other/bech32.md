@@ -6,14 +6,14 @@ In the Cosmos network, keys and addresses may refer to a number of different rol
 
 ## HRP table
 
-| HRP            | Definition                           |
-|----------------|--------------------------------------|
-| cosmosaccaddr  | Cosmos Account Address               |
-| cosmosaccpub   | Cosmos Account Public Key            |
-| cosmosconsaddr | Cosmos Consensus Address             |
-| cosmosconspub  | Cosmos Consensus Public Key          |
-| cosmosvaladdr  | Cosmos Validator Operator Address    |
-| cosmosvalpub   | Cosmos Validator Operator Public Key |
+| HRP           | Definition                           |
+|---------------|--------------------------------------|
+| cosmos        | Cosmos Account Address               |
+| cosmospub     | Cosmos Account Public Key            |
+| cosmoscons    | Cosmos Consensus Address             |
+| cosmosconspub | Cosmos Consensus Public Key          |
+| cosmosval     | Cosmos Validator Operator Address    |
+| cosmosvalpub  | Cosmos Validator Operator Public Key |
 
 ## Encoding
 

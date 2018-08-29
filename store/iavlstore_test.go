@@ -468,7 +468,7 @@ func TestIAVLStoreQuery(t *testing.T) {
 func BenchmarkIAVLIteratorNext(b *testing.B) {
 	db := dbm.NewMemDB()
 	treeSize := 1000
-	tree := iavl.NewVersionedTree(db, cacheSize)
+	tree := iavl.NewMutableTree(db, cacheSize)
 	for i := 0; i < treeSize; i++ {
 		key := cmn.RandBytes(4)
 		value := cmn.RandBytes(50)

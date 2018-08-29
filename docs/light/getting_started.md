@@ -16,6 +16,10 @@ Sample command to start gaia-lite node:
 ```
 gaiacli lite-server --chain-id=<chain_id>
 ```
+Please refer to the following url for Swagger-UI:
+```
+http://localhost:1317/swagger/index.html
+```
 
 When the connected full node is trusted, then the proof is not necessary, so you can run gaia-lite node with trust-node option:
 ```

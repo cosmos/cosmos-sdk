@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	tendermintLite"github.com/tendermint/tendermint/lite"
+	tendermintLite "github.com/tendermint/tendermint/lite"
 )
 
 const ctxAccStoreName = "acc"
@@ -23,6 +23,8 @@ type CLIContext struct {
 	Client          rpcclient.Client
 	Logger          io.Writer
 	Height          int64
+	Gas             int64
+	GasAdjustment   float64
 	NodeURI         string
 	FromAddressName string
 	AccountStore    string
@@ -51,6 +53,8 @@ func NewCLIContext() CLIContext {
 		AccountStore:    ctxAccStoreName,
 		FromAddressName: viper.GetString(client.FlagFrom),
 		Height:          viper.GetInt64(client.FlagHeight),
+		Gas:             viper.GetInt64(client.FlagGas),
+		GasAdjustment:   viper.GetFloat64(client.FlagGasAdjustment),
 		TrustNode:       viper.GetBool(client.FlagTrustNode),
 		UseLedger:       viper.GetBool(client.FlagUseLedger),
 		Async:           viper.GetBool(client.FlagAsync),

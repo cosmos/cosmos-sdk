@@ -20,7 +20,7 @@ func CLIVersionRequestHandler(w http.ResponseWriter, r *http.Request) {
 // connected node version REST handler endpoint
 func NodeVersionRequestHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		version, err := cliCtx.Query("/app/version")
+		version, err := cliCtx.Query("/app/version", nil)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("Could't query version. Error: %s", err.Error())))
@@ -40,7 +40,7 @@ func CLIVersionRequest(gtx *gin.Context) {
 // NodeVersionRequest is the handler of getting connected node version
 func NodeVersionRequest(cliCtx context.CLIContext) gin.HandlerFunc {
 	return func(gtx *gin.Context) {
-		appVersion, err := cliCtx.Query("/app/version")
+		appVersion, err := cliCtx.Query("/app/version", nil)
 		if err != nil {
 			httputil.NewError(gtx, http.StatusInternalServerError, fmt.Errorf("could't query version. error: %s", err.Error()))
 			return

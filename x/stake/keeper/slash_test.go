@@ -206,16 +206,6 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	require.Equal(t, sdk.NewDec(5).RoundInt64(), oldPool.BondedTokens.Sub(newPool.BondedTokens).RoundInt64())
 }
 
-// slash an unbonding validator
-func TestSlashUnbondingValidator(t *testing.T) {
-	require.Fail(t)
-}
-
-// fail an attept to slash an unbonded validator
-func TestSlashUnbondedValidator(t *testing.T) {
-	require.Fail(t)
-}
-
 // tests Slash at a previous height with an unbonding delegation
 func TestSlashWithUnbondingDelegation(t *testing.T) {
 	ctx, keeper, params := setupHelper(t, 10)

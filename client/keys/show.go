@@ -9,8 +9,10 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+  "github.com/spf13/viper"
 	"github.com/tendermint/tmlibs/cli"
+	"github.com/gin-gonic/gin"
+	"github.com/cosmos/cosmos-sdk/client/httputils"
 )
 
 const (
@@ -99,4 +101,28 @@ func GetKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(output)
+}
+
+// GetKeyRequest is the handler of getting specified key in swagger rest server
+func GetKeyRequest(gtx *gin.Context) {
+	name := gtx.Param("name")
+
+	info, err := getKey(name)
+	// TODO check for the error if key actually does not exist, instead of assuming this as the reason
+	if err != nil {
+		httputils.NewError(gtx, http.StatusNotFound, err)
+		return
+	}
+
+	keyOutput, err := Bech32KeyOutput(info)
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+	output, err := json.MarshalIndent(keyOutput, "", "  ")
+	if err != nil {
+		httputils.NewError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+	httputils.NormalResponse(gtx, output)
 }

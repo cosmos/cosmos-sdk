@@ -46,14 +46,9 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 		return
 	}
 
-	// slashing should not be slashing unbonded
-	if validator.Status == sdk.Unbonded {
+	// should not be slashing unbonded
+	if validator.IsUnbonded(ctx) {
 		panic(fmt.Sprintf("should not be slashing unbonded validator: %v", validator))
-	} else if validator.Status == sdk.Unbonding {
-		ctxTime := ctx.BlockHeader().Time
-		if ctxTime.After(validator.UnbondingMinTime) {
-			panic(fmt.Sprintf("should not be slashing unbonded validator: %v", validator))
-		}
 	}
 
 	operatorAddress := validator.GetOperator()

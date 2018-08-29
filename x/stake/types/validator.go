@@ -418,6 +418,19 @@ func (v Validator) BondedTokens() sdk.Dec {
 	return sdk.ZeroDec()
 }
 
+// Returns if the validator should be considered unbonded
+func (v Validator) IsUnbonded(ctx sdk.Context) bool {
+	if v.Status == sdk.Unbonded {
+		return true
+	} else if v.Status == sdk.Unbonding {
+		ctxTime := ctx.BlockHeader().Time
+		if ctxTime.After(v.UnbondingMinTime) {
+			return true
+		}
+	}
+	return false
+}
+
 //______________________________________________________________________
 
 // ensure fulfills the sdk validator types

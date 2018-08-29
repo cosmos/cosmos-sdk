@@ -18,7 +18,7 @@ BREAKING CHANGES
     * [x/stake] \#1901 Validator type's Owner field renamed to Operator; Validator's GetOwner() renamed accordingly to comply with the SDK's Validator interface.
     * [docs] [#2001](https://github.com/cosmos/cosmos-sdk/pull/2001) Update slashing spec for slashing period
     * [x/stake, x/slashing] [#1305](https://github.com/cosmos/cosmos-sdk/issues/1305) - Rename "revoked" to "jailed"
-    
+
 * SDK
     * [core] \#1807 Switch from use of rational to decimal
     * [types] \#1901 Validator interface's GetOwner() renamed to GetOperator()
@@ -60,6 +60,7 @@ IMPROVEMENTS
 * SDK
     * [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.
     * [cli] \#1632 Add integration tests to ensure `basecoind init && basecoind` start sequences run successfully for both `democoin` and `basecoin` examples.
+    * [x/stake] \#2139 Add stake queriers for increased performance of Gaia-lite endpoints
 
 * Tendermint
 

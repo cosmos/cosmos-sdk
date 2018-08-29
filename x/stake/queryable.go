@@ -17,8 +17,12 @@ func NewQuerier(k keep.Keeper) sdk.Querier {
 			return queryValidators(ctx, path[1:], k)
 		case "validator":
 			return queryValidator(ctx, path[1:], req, k)
-		// case "delegator":
-		// 	return queryDelegator(ctx, path[1:], req, k)
+			// case "delegator":
+			// 	return queryDelegator(ctx, path[1:], req, k)
+		case "delegation":
+			return queryDelegation(ctx, path[1:], req, k)
+		case "unbonding-delegation":
+			return queryUnbondingDelegation(ctx, path[1:], req, k)
 		case "delegatorValidators":
 			return queryDelegatorValidators(ctx, path[1:], req, k)
 		case "delegatorValidator":
@@ -52,6 +56,7 @@ type QueryBondsParams struct {
 
 func queryValidators(ctx sdk.Context, path []string, k keep.Keeper) (res []byte, err sdk.Error) {
 	validators := k.GetValidators(ctx)
+
 	res, errRes := wire.MarshalJSONIndent(k.Codec(), validators)
 	if err != nil {
 		panic(errRes.Error())
@@ -61,6 +66,7 @@ func queryValidators(ctx sdk.Context, path []string, k keep.Keeper) (res []byte,
 
 func queryValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryAddressParams
+
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
 		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data: \n%s", err.Error()))
@@ -113,6 +119,7 @@ func queryDelegatorValidators(ctx sdk.Context, path []string, req abci.RequestQu
 
 func queryDelegatorValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryBondsParams
+
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
 		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data :\n%s", errRes.Error()))
@@ -129,7 +136,7 @@ func queryDelegatorValidator(ctx sdk.Context, path []string, req abci.RequestQue
 
 func queryDelegation(ctx sdk.Context, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryBondsParams
-	fmt.Printf("ReqQuery: %v\n", req.Path)
+
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
 		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data :\n%s", errRes.Error()))
@@ -149,6 +156,7 @@ func queryDelegation(ctx sdk.Context, path []string, req abci.RequestQuery, k ke
 
 func queryUnbondingDelegation(ctx sdk.Context, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryBondsParams
+
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
 		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data :\n%s", errRes.Error()))

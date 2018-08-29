@@ -72,7 +72,7 @@ func TestQueryValidators(t *testing.T) {
 	// Query each validator
 	queryParams := newTestAddrQuery(addr1)
 	bz, errRes := keeper.Codec().MarshalJSON(queryParams)
-	assert.Nil(t, err)
+	assert.Nil(t, errRes)
 
 	query := abci.RequestQuery{
 		Path: "/custom/stake/delegation",
@@ -86,7 +86,6 @@ func TestQueryValidators(t *testing.T) {
 	assert.Nil(t, errRes)
 
 	assert.Equal(t, validators[0], validator)
-	// TODO test error outcomes
 }
 
 func TestQueryDelegation(t *testing.T) {
@@ -122,6 +121,7 @@ func TestQueryDelegation(t *testing.T) {
 	assert.Equal(t, len(delValidators), len(validatorsResp))
 	assert.ElementsMatch(t, delValidators, validatorsResp)
 
+	// Query bonded validator
 	queryBondParams := newTestBondQuery(addr2, addr1)
 	bz, errRes = keeper.Codec().MarshalJSON(queryBondParams)
 	assert.Nil(t, errRes)
@@ -137,23 +137,48 @@ func TestQueryDelegation(t *testing.T) {
 	var validator types.Validator
 	errRes = keeper.Codec().UnmarshalJSON(res, &validator)
 	assert.Nil(t, errRes)
+
 	assert.Equal(t, delValidators[0], validator)
 
-	// Query bonded validator
+	// Query delegation
 
 	query = abci.RequestQuery{
 		Path: "/custom/stake/delegation",
 		Data: bz,
 	}
 
-	// delegation, found := keeper.GetDelegation(ctx, addr2, addr1)
-	// assert.True(t, found)
-	//
-	// res, err = queryDelegation(ctx, []string{query.Path}, query, keeper)
-	// assert.Nil(t, err)
-	//
-	// var delegationRes types.Delegation
-	// errRes = cdc.UnmarshalJSON(res, &validatorsResp)
-	// assert.Nil(t, errRes)
+	delegation, found := keeper.GetDelegation(ctx, addr2, addr1)
+	assert.True(t, found)
+
+	res, err = queryDelegation(ctx, []string{query.Path}, query, keeper)
+	assert.Nil(t, err)
+
+	var delegationRes types.Delegation
+	errRes = keeper.Codec().UnmarshalJSON(res, &delegationRes)
+	assert.Nil(t, errRes)
+
+	assert.Equal(t, delegation, delegationRes)
+
+	// Query unbonging delegation
+
+	msg3 := types.NewMsgBeginUnbonding(addr2, addr1, sdk.NewDec(10))
+	handleMsgBeginUnbonding(ctx, msg3, keeper)
+
+	query = abci.RequestQuery{
+		Path: "/custom/stake/unbonding-delegation",
+		Data: bz,
+	}
+
+	unbond, found := keeper.GetUnbondingDelegation(ctx, addr2, addr1)
+	assert.True(t, found)
+
+	res, err = queryUnbondingDelegation(ctx, []string{query.Path}, query, keeper)
+	assert.Nil(t, err)
+
+	var unbondRes types.UnbondingDelegation
+	errRes = keeper.Codec().UnmarshalJSON(res, &unbondRes)
+	assert.Nil(t, errRes)
+
+	assert.Equal(t, unbond, unbondRes)
 
 }

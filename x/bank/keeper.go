@@ -18,13 +18,10 @@ const (
 // Keeper defines a module interface that facilitates the transfer of coins
 // between accounts.
 type Keeper interface {
-	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	SendKeeper
 	SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error
-	HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) bool
 	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
 	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
-	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
-	InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error)
 }
 
 var _ Keeper = (*BaseKeeper)(nil)
@@ -89,8 +86,7 @@ func (keeper BaseKeeper) InputOutputCoins(ctx sdk.Context, inputs []Input, outpu
 // SendKeeper defines a module interface that facilitates the transfer of coins
 // between accounts without the possibility of creating coins.
 type SendKeeper interface {
-	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) bool
+	ViewKeeper
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 	InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error)
 }

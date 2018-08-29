@@ -76,6 +76,8 @@ type ValidatorSet interface {
 	Jail(Context, crypto.PubKey)   // jail a validator
 	Unjail(Context, crypto.PubKey) // unjail a validator
 
+	// Delegation allows for getting a particular delegation for a given validator
+	// and delegator outside the scope of the staking module.
 	Delegation(Context, AccAddress, AccAddress) Delegation
 }
 

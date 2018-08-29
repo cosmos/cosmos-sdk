@@ -86,5 +86,6 @@ BUG FIXES
     * \#2105 Fix DB Iterator leak, which may leak a go routine.
     * [ledger] \#2064 Fix inability to sign and send transactions via the LCD by
     loading a Ledger device at runtime.
+    * \#2158 Fix non-deterministic ordering of validator iteration when slashing in `gov EndBlocker`
 
 * Tendermint

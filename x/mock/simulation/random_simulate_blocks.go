@@ -115,7 +115,7 @@ func SimulateFromSeed(
 			logUpdate, futureOps, err := ops[r.Intn(len(ops))](tb, r, app, ctx, keys, log, event)
 			log = updateLog(testingmode, log, logUpdate)
 			if err != nil {
-				tb.Fatalf("error on operation %d, %v", opCount, err)
+				tb.Fatalf("error on operation %d, %v, log %s", opCount, err, log)
 			}
 
 			queueOperations(operationQueue, futureOps)
@@ -160,7 +160,7 @@ func SimulateFromSeed(
 }
 
 func updateLog(testingmode bool, log string, update string, args ...interface{}) (updatedLog string) {
-	if testingmode == true {
+	if testingmode {
 		update = fmt.Sprintf(update, args...)
 		return fmt.Sprintf("%s\n%s", log, update)
 	}

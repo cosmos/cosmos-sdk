@@ -22,6 +22,8 @@ import (
 // CONTRACT:
 //    Infraction committed at the current height or at a past height,
 //    not at a height in the future
+//
+// nolint: gocyclo
 func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight int64, power int64, slashFactor sdk.Dec) {
 	logger := ctx.Logger().With("module", "x/stake")
 

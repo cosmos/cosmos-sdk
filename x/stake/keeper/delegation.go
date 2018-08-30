@@ -426,9 +426,6 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delegatorAddr, validatorSrcAd
 	}
 
 	// create the unbonding delegation
-	minTime := ctx.BlockHeader().Time.Add(params.UnbondingTime)
-	height := ctx.BlockHeader().Height
-
 	minTime, height, completeNow := k.getBeginInfo(ctx, params, validatorSrcAddr)
 
 	if completeNow { // no need to create the redelegation object

@@ -17,6 +17,7 @@ import (
 
 // SimulateMsgCreateValidator
 func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
+	handler := stake.NewHandler(k)
 	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
 		denom := k.GetParams(ctx).BondDenom
 		description := stake.Description{
@@ -43,7 +44,7 @@ func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation
 			tb.Fatalf("expected msg to pass ValidateBasic: %s, log %s", msg.GetSignBytes(), log)
 		}
 		ctx, write := ctx.CacheContext()
-		result := stake.NewHandler(k)(ctx, msg)
+		result := handler(ctx, msg)
 		if result.IsOK() {
 			write()
 		}
@@ -56,6 +57,7 @@ func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation
 
 // SimulateMsgEditValidator
 func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
+	handler := stake.NewHandler(k)
 	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
 		description := stake.Description{
 			Moniker:  simulation.RandStringOfLength(r, 10),
@@ -74,7 +76,7 @@ func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
 			tb.Fatalf("expected msg to pass ValidateBasic: %s, log %s", msg.GetSignBytes(), log)
 		}
 		ctx, write := ctx.CacheContext()
-		result := stake.NewHandler(k)(ctx, msg)
+		result := handler(ctx, msg)
 		if result.IsOK() {
 			write()
 		}
@@ -86,6 +88,7 @@ func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
 
 // SimulateMsgDelegate
 func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
+	handler := stake.NewHandler(k)
 	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
 		denom := k.GetParams(ctx).BondDenom
 		validatorKey := simulation.RandomKey(r, keys)
@@ -108,7 +111,7 @@ func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operat
 			tb.Fatalf("expected msg to pass ValidateBasic: %s, log %s", msg.GetSignBytes(), log)
 		}
 		ctx, write := ctx.CacheContext()
-		result := stake.NewHandler(k)(ctx, msg)
+		result := handler(ctx, msg)
 		if result.IsOK() {
 			write()
 		}
@@ -120,6 +123,7 @@ func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operat
 
 // SimulateMsgBeginUnbonding
 func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
+	handler := stake.NewHandler(k)
 	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
 		denom := k.GetParams(ctx).BondDenom
 		validatorKey := simulation.RandomKey(r, keys)
@@ -142,7 +146,7 @@ func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.
 			tb.Fatalf("expected msg to pass ValidateBasic: %s, log %s", msg.GetSignBytes(), log)
 		}
 		ctx, write := ctx.CacheContext()
-		result := stake.NewHandler(k)(ctx, msg)
+		result := handler(ctx, msg)
 		if result.IsOK() {
 			write()
 		}
@@ -154,6 +158,7 @@ func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.
 
 // SimulateMsgCompleteUnbonding
 func SimulateMsgCompleteUnbonding(k stake.Keeper) simulation.Operation {
+	handler := stake.NewHandler(k)
 	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
 		validatorKey := simulation.RandomKey(r, keys)
 		validatorAddress := sdk.AccAddress(validatorKey.PubKey().Address())
@@ -167,7 +172,7 @@ func SimulateMsgCompleteUnbonding(k stake.Keeper) simulation.Operation {
 			tb.Fatalf("expected msg to pass ValidateBasic: %s, log %s", msg.GetSignBytes(), log)
 		}
 		ctx, write := ctx.CacheContext()
-		result := stake.NewHandler(k)(ctx, msg)
+		result := handler(ctx, msg)
 		if result.IsOK() {
 			write()
 		}
@@ -179,6 +184,7 @@ func SimulateMsgCompleteUnbonding(k stake.Keeper) simulation.Operation {
 
 // SimulateMsgBeginRedelegate
 func SimulateMsgBeginRedelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
+	handler := stake.NewHandler(k)
 	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
 		denom := k.GetParams(ctx).BondDenom
 		sourceValidatorKey := simulation.RandomKey(r, keys)
@@ -205,7 +211,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountMapper, k stake.Keeper) simulation
 			tb.Fatalf("expected msg to pass ValidateBasic: %s, log %s", msg.GetSignBytes(), log)
 		}
 		ctx, write := ctx.CacheContext()
-		result := stake.NewHandler(k)(ctx, msg)
+		result := handler(ctx, msg)
 		if result.IsOK() {
 			write()
 		}
@@ -217,6 +223,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountMapper, k stake.Keeper) simulation
 
 // SimulateMsgCompleteRedelegate
 func SimulateMsgCompleteRedelegate(k stake.Keeper) simulation.Operation {
+	handler := stake.NewHandler(k)
 	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
 		validatorSrcKey := simulation.RandomKey(r, keys)
 		validatorSrcAddress := sdk.AccAddress(validatorSrcKey.PubKey().Address())
@@ -233,7 +240,7 @@ func SimulateMsgCompleteRedelegate(k stake.Keeper) simulation.Operation {
 			tb.Fatalf("expected msg to pass ValidateBasic: %s, log %s", msg.GetSignBytes(), log)
 		}
 		ctx, write := ctx.CacheContext()
-		result := stake.NewHandler(k)(ctx, msg)
+		result := handler(ctx, msg)
 		if result.IsOK() {
 			write()
 		}

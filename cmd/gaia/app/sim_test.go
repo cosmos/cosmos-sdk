@@ -30,6 +30,7 @@ var (
 	enabled      bool
 	verbose      bool
 	usegoleveldb bool
+	commit       bool
 )
 
 func init() {
@@ -39,6 +40,7 @@ func init() {
 	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")
 	flag.BoolVar(&verbose, "SimulationVerbose", false, "Verbose log output")
 	flag.BoolVar(&usegoleveldb, "SimulationGoLevelDB", false, "Use GoLevelDB instead of memdb")
+	flag.BoolVar(&commit, "SimulationCommit", false, "Have the simulation commit")
 }
 
 func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage {
@@ -137,7 +139,7 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 		invariants(app), // these shouldn't get ran
 		10,
 		100,
-		false,
+		commit,
 	)
 }
 
@@ -165,7 +167,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 		invariants(app),
 		numBlocks,
 		blockSize,
-		false,
+		commit,
 	)
 
 }

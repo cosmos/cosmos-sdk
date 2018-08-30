@@ -22,6 +22,9 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/libs/log"
 	tmserver "github.com/tendermint/tendermint/rpc/lib/server"
+	tendermintLiteProxy "github.com/tendermint/tendermint/lite/proxy"
+	"github.com/tendermint/tendermint/libs/cli"
+	tendermintLite "github.com/tendermint/tendermint/lite"
 )
 
 // ServeCommand will generate a long-running rest server
@@ -80,6 +83,17 @@ func createHandler(cdc *wire.Codec) http.Handler {
 
 	cliCtx := context.NewCLIContext().WithCodec(cdc).WithLogger(os.Stdout)
 
+	chainID := viper.GetString(client.FlagChainID)
+	home := viper.GetString(cli.HomeFlag)
+	nodeURI := viper.GetString(client.FlagNode)
+	var certifier tendermintLite.Certifier
+	if chainID != "" && home != "" && nodeURI != ""{
+		certifier, err = tendermintLiteProxy.GetCertifier(chainID, home, nodeURI)
+		if err != nil {
+			panic(err)
+		}
+		cliCtx = cliCtx.WithCertifier(certifier)
+	}
 	// TODO: make more functional? aka r = keys.RegisterRoutes(r)
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
 	r.HandleFunc("/node_version", NodeVersionRequestHandler(cliCtx)).Methods("GET")

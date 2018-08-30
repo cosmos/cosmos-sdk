@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
 	"sort"
 	"testing"
 	"time"
@@ -28,6 +29,26 @@ func Simulate(
 	SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numBlocks, blockSize, commit)
 }
 
+func initChain(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress, setups []RandSetup, app *baseapp.BaseApp,
+	appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage) (validators map[string]mockValidator) {
+	res := app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, keys, accs)})
+	validators = make(map[string]mockValidator)
+	for _, validator := range res.Validators {
+		validators[string(validator.Address)] = mockValidator{validator, GetMemberOfInitialState(r, initialLivenessWeightings)}
+	}
+
+	for i := 0; i < len(setups); i++ {
+		setups[i](r, keys)
+	}
+
+	return
+}
+
+func randTimestamp(r *rand.Rand) time.Time {
+	unixTime := r.Int63n(int64(math.Pow(2, 40)))
+	return time.Unix(unixTime, 0)
+}
+
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
 func SimulateFromSeed(
@@ -36,11 +57,7 @@ func SimulateFromSeed(
 ) {
 	log := fmt.Sprintf("Starting SimulateFromSeed with randomness created with seed %d", int(seed))
 	r := rand.New(rand.NewSource(seed))
-
-	unixTime := r.Int63n(int64(math.Pow(2, 40)))
-
-	// Set the timestamp for simulation
-	timestamp := time.Unix(unixTime, 0)
+	timestamp := randTimestamp(r)
 	log = fmt.Sprintf("%s\nStarting the simulation from time %v, unixtime %v", log, timestamp.UTC().Format(time.UnixDate), timestamp.Unix())
 	fmt.Printf("%s\n", log)
 	timeDiff := maxTimePerBlock - minTimePerBlock
@@ -54,30 +71,18 @@ func SimulateFromSeed(
 		events[what]++
 	}
 
-	res := app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, keys, accs)})
-	validators := make(map[string]mockValidator)
-	for _, validator := range res.Validators {
-		validators[string(validator.Address)] = mockValidator{validator, GetMemberOfInitialState(r, initialLivenessWeightings)}
-	}
-
-	for i := 0; i < len(setups); i++ {
-		setups[i](r, keys)
-	}
+	validators := initChain(r, keys, accs, setups, app, appStateFn)
 
 	header := abci.Header{Height: 0, Time: timestamp}
 	opCount := 0
 
 	request := abci.RequestBeginBlock{Header: header}
 
-	var pastTimes []time.Time
+	var lastHeaderTime time.Time
 	// These are operations which have been queued by previous operations
 	operationQueue := make(map[int][]Operation)
 
 	for i := 0; i < numBlocks; i++ {
-
-		// Log the header time for future lookup
-		pastTimes = append(pastTimes, header.Time)
-
 		// Run the BeginBlock handler
 		app.BeginBlock(request)
 
@@ -88,16 +93,8 @@ func SimulateFromSeed(
 
 		ctx := app.NewContext(false, header)
 
-		var thisBlockSize int
-		load := r.Float64()
-		switch {
-		case load < 0.33:
-			thisBlockSize = 0
-		case load < 0.66:
-			thisBlockSize = r.Intn(blockSize * 2)
-		default:
-			thisBlockSize = r.Intn(blockSize * 4)
-		}
+		thisBlockSize := getBlockSize(r, blockSize)
+
 		// Run queued operations. Ignores blocksize if blocksize is too small
 		log, numQueuedOpsRan := runQueuedOperations(operationQueue, int(header.Height), t, r, app, ctx, keys, log, event)
 		opCount += numQueuedOpsRan
@@ -119,6 +116,7 @@ func SimulateFromSeed(
 
 		res := app.EndBlock(abci.RequestEndBlock{})
 		header.Height++
+		lastHeaderTime = header.Time
 		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
 
 		log += "\nEndBlock"
@@ -131,7 +129,7 @@ func SimulateFromSeed(
 		}
 
 		// Generate a random RequestBeginBlock with the current validator set for the next block
-		request = RandomRequestBeginBlock(t, r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, event, header, log)
+		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, lastHeaderTime, event, header, log)
 
 		// Update the validator set
 		validators = updateValidators(t, r, validators, res.ValidatorUpdates, event)
@@ -139,6 +137,84 @@ func SimulateFromSeed(
 
 	fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds): %v\n", header.Height, header.Time)
 	DisplayEvents(events)
+}
+
+func getBlockSize(r *rand.Rand, blockSize int) int {
+	load := r.Float64()
+	switch {
+	case load < 0.33:
+		return 0
+	case load < 0.66:
+		return r.Intn(blockSize * 2)
+	default:
+		return r.Intn(blockSize * 4)
+	}
+}
+
+// Simulate from seed, benchmarks
+func BenchmarkSimulationFromSeed(b *testing.B, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage,
+	seed int64, ops []Operation, setups []RandSetup, numBlocks int, blockSize int, commit bool) {
+	r := rand.New(rand.NewSource(seed))
+	timestamp := randTimestamp(r)
+	timeDiff := maxTimePerBlock - minTimePerBlock
+	keys, accs := mock.GeneratePrivKeyAddressPairsFromRand(r, numKeys)
+
+	// Setup event stats
+	events := make(map[string]uint)
+	event := func(what string) {
+		events[what]++
+	}
+
+	validators := initChain(r, keys, accs, setups, app, appStateFn)
+
+	header := abci.Header{Height: 0, Time: timestamp}
+	opCount := 0
+
+	request := abci.RequestBeginBlock{Header: header}
+
+	var lastHeaderTime time.Time
+	// These are operations which have been queued by previous operations
+	operationQueue := make(map[int][]Operation)
+	b.ResetTimer()
+
+	for i := 0; i < numBlocks; i++ {
+
+		// Run the BeginBlock handler
+		app.BeginBlock(request)
+
+		ctx := app.NewContext(false, header)
+
+		thisBlockSize := getBlockSize(r, blockSize)
+
+		// Run queued operations. Ignores blocksize if blocksize is too small
+		log, numQueuedOpsRan := runQueuedOperations(operationQueue, int(header.Height), b, r, app, ctx, keys, "", event)
+		opCount += numQueuedOpsRan
+		thisBlockSize -= numQueuedOpsRan
+		for j := 0; j < thisBlockSize; j++ {
+			_, futureOps, err := ops[r.Intn(len(ops))](b, r, app, ctx, keys, "", event)
+			queueOperations(operationQueue, futureOps)
+			if err != nil {
+				b.Fatalf("error on operation %d, %v", opCount, err)
+			}
+			opCount++
+		}
+
+		res := app.EndBlock(abci.RequestEndBlock{})
+		header.Height++
+		lastHeaderTime = header.Time
+		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
+		if commit {
+			app.Commit()
+		}
+
+		// Generate a random RequestBeginBlock with the current validator set for the next block
+		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, lastHeaderTime, event, header, log)
+
+		// Update the validator set
+		validators = updateValidators(b, r, validators, res.ValidatorUpdates, event)
+	}
+	DisplayEvents(events)
+	fmt.Printf("Benchmark simulation ran %d operations\n", opCount)
 }
 
 // adds all future operations into the operation queue.
@@ -155,7 +231,7 @@ func queueOperations(queuedOperations map[int][]Operation, futureOperations []Fu
 	}
 }
 
-func runQueuedOperations(queueOperations map[int][]Operation, height int, t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+func runQueuedOperations(queueOperations map[int][]Operation, height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 	privKeys []crypto.PrivKey, log string, event func(string)) (updatedLog string, numOpsRan int) {
 	updatedLog = log
 	if queuedOps, ok := queueOperations[height]; ok {
@@ -164,9 +240,12 @@ func runQueuedOperations(queueOperations map[int][]Operation, height int, t *tes
 			// For now, queued operations cannot queue more operations.
 			// If a need arises for us to support queued messages to queue more messages, this can
 			// be changed.
-			logUpdate, _, err := queuedOps[i](t, r, app, ctx, privKeys, updatedLog, event)
-			updatedLog += "\n" + logUpdate
-			require.Nil(t, err, updatedLog)
+			logUpdate, _, err := queuedOps[i](tb, r, app, ctx, privKeys, updatedLog, event)
+			updatedLog = fmt.Sprintf("%s\n%s", updatedLog, logUpdate)
+			if err != nil {
+				fmt.Fprint(os.Stderr, updatedLog)
+				tb.FailNow()
+			}
 		}
 		delete(queueOperations, height)
 		return updatedLog, numOps
@@ -186,8 +265,8 @@ func getKeys(validators map[string]mockValidator) []string {
 }
 
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
-func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]mockValidator, livenessTransitions TransitionMatrix, evidenceFraction float64,
-	pastTimes []time.Time, event func(string), header abci.Header, log string) abci.RequestBeginBlock {
+func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, livenessTransitions TransitionMatrix, evidenceFraction float64,
+	lastHeaderTime time.Time, event func(string), header abci.Header, log string) abci.RequestBeginBlock {
 	if len(validators) == 0 {
 		return abci.RequestBeginBlock{Header: header}
 	}
@@ -219,13 +298,14 @@ func RandomRequestBeginBlock(t *testing.T, r *rand.Rand, validators map[string]m
 		}
 		i++
 	}
+	// TODO: Determine capacity before allocation
 	evidence := make([]abci.Evidence, 0)
 	for r.Float64() < evidenceFraction {
 		height := header.Height
 		time := header.Time
 		if r.Float64() < pastEvidenceFraction {
 			height = int64(r.Intn(int(header.Height)))
-			time = pastTimes[height]
+			time = lastHeaderTime
 		}
 		validator := signingValidators[r.Intn(len(signingValidators))].Validator
 		var currentTotalVotingPower int64
@@ -258,11 +338,19 @@ func AssertAllInvariants(t *testing.T, app *baseapp.BaseApp, tests []Invariant, 
 }
 
 // updateValidators mimicks Tendermint's update logic
-func updateValidators(t *testing.T, r *rand.Rand, current map[string]mockValidator, updates []abci.Validator, event func(string)) map[string]mockValidator {
+func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValidator, updates []abci.Validator, event func(string)) map[string]mockValidator {
 	for _, update := range updates {
 		switch {
 		case update.Power == 0:
-			require.NotNil(t, current[string(update.PubKey.Data)], "tried to delete a nonexistent validator")
+			// // TEMPORARY DEBUG CODE TO PROVE THAT THE OLD METHOD WAS BROKEN
+			// // (i.e. didn't catch in the event of problem)
+			// if val, ok := tb.(*testing.T); ok {
+			// 	require.NotNil(val, current[string(update.PubKey.Data)])
+			// }
+			// // CORRECT CHECK
+			// if _, ok := current[string(update.PubKey.Data)]; !ok {
+			// 	tb.Fatalf("tried to delete a nonexistent validator")
+			// }
 			event("endblock/validatorupdates/kicked")
 			delete(current, string(update.PubKey.Data))
 		default:

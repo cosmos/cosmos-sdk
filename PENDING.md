@@ -45,6 +45,7 @@ FEATURES
 * SDK
   * [querier] added custom querier functionality, so ABCI query requests can be handled by keepers
   * [simulation] \#1924 allow operations to specify future operations
+  * [simulation] Add benchmarking capabilities
 
 * Tendermint
 

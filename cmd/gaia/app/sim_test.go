@@ -112,6 +112,27 @@ func invariants(app *GaiaApp) []simulation.Invariant {
 	}
 }
 
+// Profile with:
+// /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$ -cpuprofile cpu.out
+func BenchmarkFullGaiaSimulation(b *testing.B) {
+	// Setup Gaia application
+	var logger log.Logger
+	logger = log.NewNopLogger()
+	db := dbm.NewMemDB()
+	app := NewGaiaApp(logger, db, nil)
+
+	// Run randomized simulation
+	// TODO parameterize numbers, save for a later PR
+	simulation.BenchmarkSimulationFromSeed(
+		b, app.BaseApp, appStateFn, seed,
+		testAndRunTxs(app),
+		[]simulation.RandSetup{},
+		10,
+		100,
+		false,
+	)
+}
+
 func TestFullGaiaSimulation(t *testing.T) {
 	if !enabled {
 		t.Skip("Skipping Gaia simulation")

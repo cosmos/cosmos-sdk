@@ -21,7 +21,7 @@ import (
 // SimulateSingleInputMsgSend tests and runs a single msg send, with one input and one output, where both
 // accounts already exist.
 func SimulateSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation {
-	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOps []simulation.FutureOperation, err sdk.Error) {
+	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOps []simulation.FutureOperation, err sdk.Error) {
 		fromKey := simulation.RandomKey(r, keys)
 		fromAddr := sdk.AccAddress(fromKey.PubKey().Address())
 		toKey := simulation.RandomKey(r, keys)
@@ -58,7 +58,7 @@ func SimulateSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation 
 			Inputs:  []bank.Input{bank.NewInput(fromAddr, coins)},
 			Outputs: []bank.Output{bank.NewOutput(toAddr, coins)},
 		}
-		sendAndVerifyMsgSend(t, app, mapper, msg, ctx, log, []crypto.PrivKey{fromKey})
+		sendAndVerifyMsgSend(tb, app, mapper, msg, ctx, log, []crypto.PrivKey{fromKey})
 		event("bank/sendAndVerifyMsgSend/ok")
 
 		return action, nil, nil
@@ -66,7 +66,7 @@ func SimulateSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation 
 }
 
 // Sends and verifies the transition of a msg send. This fails if there are repeated inputs or outputs
-func sendAndVerifyMsgSend(t *testing.T, app *baseapp.BaseApp, mapper auth.AccountMapper, msg bank.MsgSend, ctx sdk.Context, log string, privkeys []crypto.PrivKey) {
+func sendAndVerifyMsgSend(tb testing.TB, app *baseapp.BaseApp, mapper auth.AccountMapper, msg bank.MsgSend, ctx sdk.Context, log string, privkeys []crypto.PrivKey) {
 	initialInputAddrCoins := make([]sdk.Coins, len(msg.Inputs))
 	initialOutputAddrCoins := make([]sdk.Coins, len(msg.Outputs))
 	AccountNumbers := make([]int64, len(msg.Inputs))
@@ -91,12 +91,12 @@ func sendAndVerifyMsgSend(t *testing.T, app *baseapp.BaseApp, mapper auth.Accoun
 		// TODO: Do this in a more 'canonical' way
 		fmt.Println(res)
 		fmt.Println(log)
-		t.FailNow()
+		tb.FailNow()
 	}
 
 	for i := 0; i < len(msg.Inputs); i++ {
 		terminalInputCoins := mapper.GetAccount(ctx, msg.Inputs[i].Address).GetCoins()
-		require.Equal(t,
+		require.Equal(tb,
 			initialInputAddrCoins[i].Minus(msg.Inputs[i].Coins),
 			terminalInputCoins,
 			fmt.Sprintf("Input #%d had an incorrect amount of coins\n%s", i, log),
@@ -104,11 +104,9 @@ func sendAndVerifyMsgSend(t *testing.T, app *baseapp.BaseApp, mapper auth.Accoun
 	}
 	for i := 0; i < len(msg.Outputs); i++ {
 		terminalOutputCoins := mapper.GetAccount(ctx, msg.Outputs[i].Address).GetCoins()
-		require.Equal(t,
-			initialOutputAddrCoins[i].Plus(msg.Outputs[i].Coins),
-			terminalOutputCoins,
-			fmt.Sprintf("Output #%d had an incorrect amount of coins\n%s", i, log),
-		)
+		if !terminalOutputCoins.IsEqual(initialOutputAddrCoins[i].Plus(msg.Outputs[i].Coins)) {
+			tb.Fatalf("Output #%d had an incorrect amount of coins\n%s", i, log)
+		}
 	}
 }
 

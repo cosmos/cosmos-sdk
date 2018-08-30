@@ -85,14 +85,12 @@ func SimulateFromSeed(
 	for i := 0; i < numBlocks; i++ {
 		// Run the BeginBlock handler
 		app.BeginBlock(request)
-
 		log += "\nBeginBlock"
 
 		// Make sure invariants hold at beginning of block
 		AssertAllInvariants(t, app, invariants, log)
 
 		ctx := app.NewContext(false, header)
-
 		thisBlockSize := getBlockSize(r, blockSize)
 
 		// Run queued operations. Ignores blocksize if blocksize is too small
@@ -102,9 +100,10 @@ func SimulateFromSeed(
 		for j := 0; j < thisBlockSize; j++ {
 			logUpdate, futureOps, err := ops[r.Intn(len(ops))](t, r, app, ctx, keys, log, event)
 			log += "\n" + logUpdate
+			require.Nil(t, err, log)
+
 			queueOperations(operationQueue, futureOps)
 
-			require.Nil(t, err, log)
 			if onOperation {
 				AssertAllInvariants(t, app, invariants, log)
 			}
@@ -118,12 +117,10 @@ func SimulateFromSeed(
 		header.Height++
 		lastHeaderTime = header.Time
 		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
-
 		log += "\nEndBlock"
 
 		// Make sure invariants hold at end of block
 		AssertAllInvariants(t, app, invariants, log)
-
 		if commit {
 			app.Commit()
 		}
@@ -178,12 +175,9 @@ func BenchmarkSimulationFromSeed(b *testing.B, app *baseapp.BaseApp, appStateFn 
 	b.ResetTimer()
 
 	for i := 0; i < numBlocks; i++ {
-
 		// Run the BeginBlock handler
 		app.BeginBlock(request)
-
 		ctx := app.NewContext(false, header)
-
 		thisBlockSize := getBlockSize(r, blockSize)
 
 		// Run queued operations. Ignores blocksize if blocksize is too small

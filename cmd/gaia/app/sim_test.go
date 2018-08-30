@@ -123,10 +123,11 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 
 	// Run randomized simulation
 	// TODO parameterize numbers, save for a later PR
-	simulation.BenchmarkSimulationFromSeed(
+	simulation.SimulateFromSeed(
 		b, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
 		[]simulation.RandSetup{},
+		invariants(app), // these shouldn't get ran
 		10,
 		100,
 		false,

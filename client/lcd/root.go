@@ -19,12 +19,12 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/libs/cli"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/libs/log"
-	tmserver "github.com/tendermint/tendermint/rpc/lib/server"
-	tendermintLiteProxy "github.com/tendermint/tendermint/lite/proxy"
-	"github.com/tendermint/tendermint/libs/cli"
 	tendermintLite "github.com/tendermint/tendermint/lite"
+	tendermintLiteProxy "github.com/tendermint/tendermint/lite/proxy"
+	tmserver "github.com/tendermint/tendermint/rpc/lib/server"
 )
 
 // ServeCommand will generate a long-running rest server
@@ -88,7 +88,7 @@ func createHandler(cdc *wire.Codec) http.Handler {
 	home := viper.GetString(cli.HomeFlag)
 	nodeURI := viper.GetString(client.FlagNode)
 	var certifier tendermintLite.Certifier
-	if chainID != "" && home != "" && nodeURI != ""{
+	if chainID != "" && home != "" && nodeURI != "" {
 		certifier, err = tendermintLiteProxy.GetCertifier(chainID, home, nodeURI)
 		if err != nil {
 			panic(err)

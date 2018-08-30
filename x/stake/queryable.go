@@ -60,7 +60,7 @@ func queryValidators(ctx sdk.Context, path []string, k keep.Keeper) (res []byte,
 
 	res, errRes := wire.MarshalJSONIndent(k.Codec(), validators)
 	if err != nil {
-		panic(errRes.Error())
+		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}
 	return res, nil
 }
@@ -70,7 +70,7 @@ func queryValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k kee
 
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data: \n%s", err.Error()))
+		return []byte{}, sdk.ErrUnknownAddress(fmt.Sprintf("incorrectly formatted request address: %s", err.Error()))
 	}
 
 	validator, found := k.GetValidator(ctx, params.AccountAddr)
@@ -80,7 +80,7 @@ func queryValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k kee
 
 	res, errRes = wire.MarshalJSONIndent(k.Codec(), validator)
 	if errRes != nil {
-		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
+		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}
 	return res, nil
 }
@@ -90,7 +90,7 @@ func queryDelegator(ctx sdk.Context, path []string, req abci.RequestQuery, k kee
 	var params QueryAddressParams
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", errRes.Error()))
+		return []byte{}, sdk.ErrUnknownAddress(fmt.Sprintf("incorrectly formatted request address: %s", errRes.Error()))
 	}
 	delegations := k.GetDelegatorDelegationsWithoutRat(ctx, params.AccountAddr)
 	unbondingDelegations := k.GetDelegatorUnbondingDelegations(ctx, params.AccountAddr)
@@ -104,7 +104,7 @@ func queryDelegator(ctx sdk.Context, path []string, req abci.RequestQuery, k kee
 
 	res, errRes = wire.MarshalJSONIndent(k.Codec(), summary)
 	if errRes != nil {
-		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
+		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}
 	return res, nil
 }
@@ -115,14 +115,14 @@ func queryDelegatorValidators(ctx sdk.Context, path []string, req abci.RequestQu
 
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data :\n%s", errRes.Error()))
+		return []byte{}, sdk.ErrUnknownAddress(fmt.Sprintf("incorrectly formatted request address: %s", errRes.Error()))
 	}
 
 	validators := k.GetDelegatorValidators(ctx, params.AccountAddr)
 
 	res, errRes = wire.MarshalJSONIndent(k.Codec(), validators)
 	if errRes != nil {
-		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
+		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}
 	return res, nil
 }
@@ -132,14 +132,14 @@ func queryDelegatorValidator(ctx sdk.Context, path []string, req abci.RequestQue
 
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data :\n%s", errRes.Error()))
+		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request address: %s", errRes.Error()))
 	}
 
 	validator := k.GetDelegatorValidator(ctx, params.DelegatorAddr, params.ValidatorAddr)
 
 	res, errRes = wire.MarshalJSONIndent(k.Codec(), validator)
 	if errRes != nil {
-		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
+		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}
 	return res, nil
 }
@@ -149,7 +149,7 @@ func queryDelegation(ctx sdk.Context, path []string, req abci.RequestQuery, k ke
 
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data :\n%s", errRes.Error()))
+		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request address: %s", errRes.Error()))
 	}
 
 	delegation, found := k.GetDelegation(ctx, params.DelegatorAddr, params.ValidatorAddr)
@@ -160,7 +160,7 @@ func queryDelegation(ctx sdk.Context, path []string, req abci.RequestQuery, k ke
 	outputDelegation := types.NewDelegationWithoutRat(delegation)
 	res, errRes = wire.MarshalJSONIndent(k.Codec(), outputDelegation)
 	if errRes != nil {
-		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
+		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}
 	return res, nil
 }
@@ -170,7 +170,7 @@ func queryUnbondingDelegation(ctx sdk.Context, path []string, req abci.RequestQu
 
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data :\n%s", errRes.Error()))
+		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request address: %s", errRes.Error()))
 	}
 
 	unbond, found := k.GetUnbondingDelegation(ctx, params.DelegatorAddr, params.ValidatorAddr)
@@ -180,7 +180,7 @@ func queryUnbondingDelegation(ctx sdk.Context, path []string, req abci.RequestQu
 
 	res, errRes = wire.MarshalJSONIndent(k.Codec(), unbond)
 	if errRes != nil {
-		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
+		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}
 	return res, nil
 }
@@ -190,7 +190,7 @@ func queryPool(ctx sdk.Context, k keep.Keeper) (res []byte, err sdk.Error) {
 
 	res, errRes := wire.MarshalJSONIndent(k.Codec(), pool)
 	if errRes != nil {
-		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
+		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}
 	return res, nil
 }
@@ -200,7 +200,7 @@ func queryParameters(ctx sdk.Context, k keep.Keeper) (res []byte, err sdk.Error)
 
 	res, errRes := wire.MarshalJSONIndent(k.Codec(), params)
 	if errRes != nil {
-		panic(fmt.Sprintf("could not marshal result to JSON:\n%s", errRes.Error()))
+		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}
 	return res, nil
 }

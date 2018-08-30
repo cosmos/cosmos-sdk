@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
-	"github.com/stretchr/testify/require"
 )
 
 // Simulate tests application by sending random messages.
@@ -52,13 +51,22 @@ func randTimestamp(r *rand.Rand) time.Time {
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
 func SimulateFromSeed(
-	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, seed int64, ops []Operation, setups []RandSetup,
+	tb testing.TB, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, seed int64, ops []Operation, setups []RandSetup,
 	invariants []Invariant, numBlocks int, blockSize int, commit bool,
 ) {
+	var t *testing.T
+	var b *testing.B
+	testingmode := false
+	if _t, ok := tb.(*testing.T); ok {
+		t = _t
+		testingmode = true
+	} else {
+		b = tb.(*testing.B)
+	}
 	log := fmt.Sprintf("Starting SimulateFromSeed with randomness created with seed %d", int(seed))
 	r := rand.New(rand.NewSource(seed))
 	timestamp := randTimestamp(r)
-	log = fmt.Sprintf("%s\nStarting the simulation from time %v, unixtime %v", log, timestamp.UTC().Format(time.UnixDate), timestamp.Unix())
+	log = updateLog(testingmode, log, "Starting the simulation from time %v, unixtime %v", timestamp.UTC().Format(time.UnixDate), timestamp.Unix())
 	fmt.Printf("%s\n", log)
 	timeDiff := maxTimePerBlock - minTimePerBlock
 
@@ -67,7 +75,7 @@ func SimulateFromSeed(
 	// Setup event stats
 	events := make(map[string]uint)
 	event := func(what string) {
-		log += "\nevent - " + what
+		log = updateLog(testingmode, log, "event - "+what)
 		events[what]++
 	}
 
@@ -82,32 +90,40 @@ func SimulateFromSeed(
 	// These are operations which have been queued by previous operations
 	operationQueue := make(map[int][]Operation)
 
+	if !testingmode {
+		b.ResetTimer()
+	}
+
 	for i := 0; i < numBlocks; i++ {
 		// Run the BeginBlock handler
 		app.BeginBlock(request)
-		log += "\nBeginBlock"
+		log = updateLog(testingmode, log, "BeginBlock")
 
-		// Make sure invariants hold at beginning of block
-		AssertAllInvariants(t, app, invariants, log)
+		if testingmode {
+			// Make sure invariants hold at beginning of block
+			AssertAllInvariants(t, app, invariants, log)
+		}
 
 		ctx := app.NewContext(false, header)
 		thisBlockSize := getBlockSize(r, blockSize)
 
 		// Run queued operations. Ignores blocksize if blocksize is too small
-		log, numQueuedOpsRan := runQueuedOperations(operationQueue, int(header.Height), t, r, app, ctx, keys, log, event)
+		log, numQueuedOpsRan := runQueuedOperations(operationQueue, int(header.Height), tb, r, app, ctx, keys, log, event)
 		opCount += numQueuedOpsRan
 		thisBlockSize -= numQueuedOpsRan
 		for j := 0; j < thisBlockSize; j++ {
-			logUpdate, futureOps, err := ops[r.Intn(len(ops))](t, r, app, ctx, keys, log, event)
-			log += "\n" + logUpdate
-			require.Nil(t, err, log)
+			logUpdate, futureOps, err := ops[r.Intn(len(ops))](tb, r, app, ctx, keys, log, event)
+			log = updateLog(testingmode, log, logUpdate)
+			if err != nil {
+				tb.Fatalf("error on operation %d, %v", opCount, err)
+			}
 
 			queueOperations(operationQueue, futureOps)
 
-			if onOperation {
+			if onOperation && testingmode {
 				AssertAllInvariants(t, app, invariants, log)
 			}
-			if opCount%200 == 0 {
+			if testingmode && opCount%200 == 0 {
 				fmt.Printf("\rSimulating... block %d/%d, operation %d.", header.Height, numBlocks, opCount)
 			}
 			opCount++
@@ -119,8 +135,10 @@ func SimulateFromSeed(
 		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
 		log += "\nEndBlock"
 
-		// Make sure invariants hold at end of block
-		AssertAllInvariants(t, app, invariants, log)
+		if testingmode {
+			// Make sure invariants hold at end of block
+			AssertAllInvariants(t, app, invariants, log)
+		}
 		if commit {
 			app.Commit()
 		}
@@ -129,11 +147,21 @@ func SimulateFromSeed(
 		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, lastHeaderTime, event, header, log)
 
 		// Update the validator set
-		validators = updateValidators(t, r, validators, res.ValidatorUpdates, event)
+		validators = updateValidators(tb, r, validators, res.ValidatorUpdates, event)
 	}
 
-	fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds): %v\n", header.Height, header.Time)
+	if testingmode {
+		fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds): %v\n", header.Height, header.Time)
+	}
 	DisplayEvents(events)
+}
+
+func updateLog(testingmode bool, log string, update string, args ...interface{}) (updatedLog string) {
+	if testingmode == true {
+		update = fmt.Sprintf(update, args)
+		return fmt.Sprintf("%s\n%s", log, update)
+	}
+	return ""
 }
 
 func getBlockSize(r *rand.Rand, blockSize int) int {
@@ -146,69 +174,6 @@ func getBlockSize(r *rand.Rand, blockSize int) int {
 	default:
 		return r.Intn(blockSize * 4)
 	}
-}
-
-// Simulate from seed, benchmarks
-func BenchmarkSimulationFromSeed(b *testing.B, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage,
-	seed int64, ops []Operation, setups []RandSetup, numBlocks int, blockSize int, commit bool) {
-	r := rand.New(rand.NewSource(seed))
-	timestamp := randTimestamp(r)
-	timeDiff := maxTimePerBlock - minTimePerBlock
-	keys, accs := mock.GeneratePrivKeyAddressPairsFromRand(r, numKeys)
-
-	// Setup event stats
-	events := make(map[string]uint)
-	event := func(what string) {
-		events[what]++
-	}
-
-	validators := initChain(r, keys, accs, setups, app, appStateFn)
-
-	header := abci.Header{Height: 0, Time: timestamp}
-	opCount := 0
-
-	request := abci.RequestBeginBlock{Header: header}
-
-	var lastHeaderTime time.Time
-	// These are operations which have been queued by previous operations
-	operationQueue := make(map[int][]Operation)
-	b.ResetTimer()
-
-	for i := 0; i < numBlocks; i++ {
-		// Run the BeginBlock handler
-		app.BeginBlock(request)
-		ctx := app.NewContext(false, header)
-		thisBlockSize := getBlockSize(r, blockSize)
-
-		// Run queued operations. Ignores blocksize if blocksize is too small
-		log, numQueuedOpsRan := runQueuedOperations(operationQueue, int(header.Height), b, r, app, ctx, keys, "", event)
-		opCount += numQueuedOpsRan
-		thisBlockSize -= numQueuedOpsRan
-		for j := 0; j < thisBlockSize; j++ {
-			_, futureOps, err := ops[r.Intn(len(ops))](b, r, app, ctx, keys, "", event)
-			queueOperations(operationQueue, futureOps)
-			if err != nil {
-				b.Fatalf("error on operation %d, %v", opCount, err)
-			}
-			opCount++
-		}
-
-		res := app.EndBlock(abci.RequestEndBlock{})
-		header.Height++
-		lastHeaderTime = header.Time
-		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
-		if commit {
-			app.Commit()
-		}
-
-		// Generate a random RequestBeginBlock with the current validator set for the next block
-		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, lastHeaderTime, event, header, log)
-
-		// Update the validator set
-		validators = updateValidators(b, r, validators, res.ValidatorUpdates, event)
-	}
-	DisplayEvents(events)
-	fmt.Printf("Benchmark simulation ran %d operations\n", opCount)
 }
 
 // adds all future operations into the operation queue.

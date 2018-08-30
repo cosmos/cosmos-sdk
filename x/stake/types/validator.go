@@ -316,7 +316,7 @@ func (v Validator) ABCIValidator() abci.Validator {
 	return abci.Validator{
 		PubKey:  tmtypes.TM2PB.PubKey(v.PubKey),
 		Address: v.PubKey.Address(),
-		Power:   v.BondedTokens().RoundInt64(),
+		Power:   v.GetPower().RoundInt64(),
 	}
 }
 
@@ -436,7 +436,10 @@ func (v Validator) GetMoniker() string          { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus   { return v.Status }
 func (v Validator) GetOwner() sdk.AccAddress    { return v.Owner }
 func (v Validator) GetPubKey() crypto.PubKey    { return v.PubKey }
-func (v Validator) GetPower() sdk.Rat           { return v.BondedTokens() }
+func (v Validator) GetPower() sdk.Rat           {
+	tokenPrecision := sdk.NewIntWithDecimal(1, 18)
+	return v.BondedTokens().Quo(sdk.NewRatFromInt(tokenPrecision))
+}
 func (v Validator) GetTokens() sdk.Rat          { return v.Tokens }
 func (v Validator) GetDelegatorShares() sdk.Rat { return v.DelegatorShares }
 func (v Validator) GetBondHeight() int64        { return v.BondHeight }

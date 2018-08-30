@@ -43,7 +43,7 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 			valPubKey := privValidator.PubKey
 
 			if viper.GetBool(client.FlagJson) {
-				return printCryptoWire(valPubKey)
+				return printlnJSON(valPubKey)
 			}
 			pubkey, err := sdk.Bech32ifyValPub(valPubKey)
 			if err != nil {
@@ -68,7 +68,7 @@ func ShowAddressCmd(ctx *Context) *cobra.Command {
 			valAddr := (sdk.ValAddress)(privValidator.Address)
 
 			if viper.GetBool(client.FlagJson) {
-				return printCryptoWire(valAddr)
+				return printlnJSON(valAddr)
 			}
 
 			fmt.Println(valAddr.String())
@@ -80,10 +80,10 @@ func ShowAddressCmd(ctx *Context) *cobra.Command {
 	return cmd
 }
 
-func printCryptoWire(data interface{}) error {
+func printlnJSON(v interface{}) error {
 	cdc := wire.NewCodec()
 	wire.RegisterCrypto(cdc)
-	marshalled, err := cdc.MarshalJSON(data)
+	marshalled, err := cdc.MarshalJSON(v)
 	if err != nil {
 		return err
 	}

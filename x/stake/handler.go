@@ -76,6 +76,12 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
+	tokenPrecision := sdk.NewIntWithDecimal(1, 18)
+	equivalentPower := msg.Delegation.Amount.Div(tokenPrecision)
+	if equivalentPower.Equal(sdk.NewInt(0)) {
+		return sdk.ErrInsufficientCoins("delegate token amount for new created validator is too small, voting power is zero, this validator creation doesn't make sense").Result()
+	}
+
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPubKeyIndex(ctx, validator)

@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -51,4 +52,10 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc("/blocks/{height}", BlockRequestHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/validatorsets/latest", LatestValidatorSetRequestHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/validatorsets/{height}", ValidatorSetRequestHandlerFn(cliCtx)).Methods("GET")
+}
+
+// RegisterSwaggerRoutes registers block related REST routes to Gaia-lite server
+func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup, ctx context.CLIContext) {
+	routerGroup.GET("/blocks/latest", LatestBlockRequestHandlerCreation(ctx))
+	routerGroup.GET("/block/:height", BlockRequestHandlerCreation(ctx))
 }

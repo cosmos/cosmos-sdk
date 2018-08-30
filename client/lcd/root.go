@@ -178,6 +178,10 @@ func createSwaggerHandler(server *gin.Engine, cdc *wire.Codec) {
 		server.GET("/node_version", NodeVersionRequest(ctx))
 	}
 
+	if utils.StringArrayContains(moduleArray, "block") {
+		rpc.RegisterSwaggerRoutes(server.Group("/"), ctx)
+	}
+
 	if utils.StringArrayContains(moduleArray, "transaction") {
 		tx.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc)
 	}

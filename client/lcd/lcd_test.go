@@ -18,6 +18,7 @@ import (
 	p2p "github.com/tendermint/tendermint/p2p"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
+	"encoding/json"
 	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
@@ -115,8 +116,117 @@ func TestKeys(t *testing.T) {
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 }
 
+func TestKeysGaiaLite(t *testing.T) {
+	name, password := "test", "1234567890"
+	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
+	cleanup, _, port := InitializeTestGaiaLite(t, 1, []sdk.AccAddress{addr})
+	defer cleanup()
+
+	// get seed
+	// TODO Do we really need this endpoint?
+	recoverKeyURL := fmt.Sprintf("/keys/%s/recover", "test_recover")
+	seedRecover := "divorce meat banana embody near until uncover wait uniform capital crawl test praise cloud foil monster garbage hedgehog wrong skate there bonus box odor"
+	passwordRecover := "1234567890"
+	jsonStrRecover := []byte(fmt.Sprintf(`{"seed":"%s", "password":"%s"}`, seedRecover, passwordRecover))
+	res, body := Request(t, port, "POST", recoverKeyURL, jsonStrRecover)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	reg, err := regexp.Compile(`([a-z]+ ){12}`)
+	require.Nil(t, err)
+	match := reg.MatchString(seed)
+	require.True(t, match, "Returned seed has wrong format", seed)
+
+	newName := "test_newname"
+	newPassword := "0987654321"
+
+	// add key
+	jsonStr := []byte(fmt.Sprintf(`{"name":"%s", "password":"%s", "seed":"%s"}`, newName, newPassword, seed))
+	res, body = Request(t, port, "POST", "/keys", jsonStr)
+
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var keyOutput keys.KeyOutput
+	err = json.Unmarshal([]byte(body), &keyOutput)
+	require.Nil(t, err, body)
+
+	addr2Bech32 := keyOutput.Address.String()
+	_, err = sdk.AccAddressFromBech32(addr2Bech32)
+	require.NoError(t, err, "Failed to return a correct bech32 address")
+
+	// test if created account is the correct account
+	expectedInfo, _ := GetKeyBase(t).CreateKey(newName, seed, newPassword)
+	expectedAccount := sdk.AccAddress(expectedInfo.GetPubKey().Address().Bytes())
+	assert.Equal(t, expectedAccount.String(), addr2Bech32)
+
+	// existing keys
+	res, body = Request(t, port, "GET", "/keys", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var m [3]keys.KeyOutput
+	err = cdc.UnmarshalJSON([]byte(body), &m)
+	require.Nil(t, err)
+
+	addrBech32 := addr.String()
+
+	require.Equal(t, name, m[0].Name, "Did not serve keys name correctly")
+	require.Equal(t, addrBech32, m[0].Address.String(), "Did not serve keys Address correctly")
+	require.Equal(t, newName, m[1].Name, "Did not serve keys name correctly")
+	require.Equal(t, addr2Bech32, m[1].Address.String(), "Did not serve keys Address correctly")
+
+	// select key
+	keyEndpoint := fmt.Sprintf("/keys/%s", newName)
+	res, body = Request(t, port, "GET", keyEndpoint, nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var m2 keys.KeyOutput
+	err = cdc.UnmarshalJSON([]byte(body), &m2)
+	require.Nil(t, err)
+
+	require.Equal(t, newName, m2.Name, "Did not serve keys name correctly")
+	require.Equal(t, addr2Bech32, m2.Address.String(), "Did not serve keys Address correctly")
+
+	// update key
+	jsonStr = []byte(fmt.Sprintf(`{
+		"old_password":"%s",
+		"new_password":"12345678901"
+	}`, newPassword))
+
+	keyEndpoint = fmt.Sprintf("/keys/%s", newName)
+	res, body = Request(t, port, "PUT", keyEndpoint, jsonStr)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	// here it should say unauthorized as we changed the password before
+	res, body = Request(t, port, "PUT", keyEndpoint, jsonStr)
+	require.Equal(t, http.StatusUnauthorized, res.StatusCode, body)
+
+	// delete key
+	jsonStr = []byte(`{"password":"12345678901"}`)
+	res, body = Request(t, port, "DELETE", keyEndpoint, jsonStr)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+}
+
 func TestVersion(t *testing.T) {
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	defer cleanup()
+
+	// node info
+	res, body := Request(t, port, "GET", "/version", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	reg, err := regexp.Compile(`\d+\.\d+\.\d+(-dev)?`)
+	require.Nil(t, err)
+	match := reg.MatchString(body)
+	require.True(t, match, body)
+
+	// node info
+	res, body = Request(t, port, "GET", "/node_version", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	reg, err = regexp.Compile(`\d+\.\d+\.\d+(-dev)?`)
+	require.Nil(t, err)
+	match = reg.MatchString(body)
+	require.True(t, match, body)
+}
+
+func TestVersionGaiaLite(t *testing.T) {
+	cleanup, _, port := InitializeTestGaiaLite(t, 1, []sdk.AccAddress{})
 	defer cleanup()
 
 	// node info
@@ -187,6 +297,36 @@ func TestBlock(t *testing.T) {
 	// --
 
 	res, body = Request(t, port, "GET", "/blocks/1000000000", nil)
+	require.Equal(t, http.StatusNotFound, res.StatusCode, body)
+}
+
+func TestBlockGaiaLite(t *testing.T) {
+	cleanup, _, port := InitializeTestGaiaLite(t, 1, []sdk.AccAddress{})
+	defer cleanup()
+
+	var resultBlock ctypes.ResultBlock
+
+	res, body := Request(t, port, "GET", "/blocks/latest", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	err := cdc.UnmarshalJSON([]byte(body), &resultBlock)
+	require.Nil(t, err, "Couldn't parse block")
+
+	require.NotEqual(t, ctypes.ResultBlock{}, resultBlock)
+
+	// --
+
+	res, body = Request(t, port, "GET", "/block/1", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	err = wire.Cdc.UnmarshalJSON([]byte(body), &resultBlock)
+	require.Nil(t, err, "Couldn't parse block")
+
+	require.NotEqual(t, ctypes.ResultBlock{}, resultBlock)
+
+	// --
+
+	res, body = Request(t, port, "GET", "/block/1000000000", nil)
 	require.Equal(t, http.StatusNotFound, res.StatusCode, body)
 }
 
@@ -270,6 +410,56 @@ func TestCoinSend(t *testing.T) {
 
 	// test success with just enough gas
 	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, 3000)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+}
+
+func TestCoinSendGaiaLite(t *testing.T) {
+	name, password := "test", "1234567890"
+	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
+	cleanup, _, port := InitializeTestGaiaLite(t, 1, []sdk.AccAddress{addr})
+	defer cleanup()
+
+	bz, err := hex.DecodeString("8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6")
+	require.NoError(t, err)
+	someFakeAddr := sdk.AccAddress(bz)
+
+	// query empty
+	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", someFakeAddr), nil)
+	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
+
+	acc := getAccountGaiaLite(t, port, addr)
+	initialBalance := acc.GetCoins()
+
+	// create TX
+	receiveAddr, resultTx := doSendGaiaLite(t, port, seed, name, password, addr)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// check if tx was committed
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+
+	// query sender
+	acc = getAccountGaiaLite(t, port, addr)
+	coins := acc.GetCoins()
+	mycoins := coins[0]
+
+	require.Equal(t, "steak", mycoins.Denom)
+	require.Equal(t, initialBalance[0].Amount.SubRaw(1), mycoins.Amount)
+
+	// query receiver
+	acc = getAccountGaiaLite(t, port, receiveAddr)
+	coins = acc.GetCoins()
+	mycoins = coins[0]
+
+	require.Equal(t, "steak", mycoins.Denom)
+	require.Equal(t, int64(1), mycoins.Amount.Int64())
+
+	// test failure with too little gas
+	res, body, _ = doSendWithGasGaiaLite(t, port, seed, name, password, addr, 100)
+	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
+
+	// test success with just enough gas
+	res, body, _ = doSendWithGasGaiaLite(t, port, seed, name, password, addr, 3000)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 }
 
@@ -720,6 +910,15 @@ func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
 	return acc
 }
 
+func getAccountGaiaLite(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", addr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var acc auth.Account
+	err := cdc.UnmarshalJSON([]byte(body), &acc)
+	require.Nil(t, err)
+	return acc
+}
+
 func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.AccAddress, gas int64) (res *http.Response, body string, receiveAddr sdk.AccAddress) {
 
 	// create receive address
@@ -758,8 +957,58 @@ func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.Acc
 	return
 }
 
+func doSendWithGasGaiaLite(t *testing.T, port, seed, name, password string, addr sdk.AccAddress, gas int64) (res *http.Response, body string, receiveAddr sdk.AccAddress) {
+
+	// create receive address
+	kb := client.MockKeyBase()
+	receiveInfo, _, err := kb.CreateMnemonic("receive_address", cryptoKeys.English, "1234567890", cryptoKeys.SigningAlgo("secp256k1"))
+	require.Nil(t, err)
+	receiveAddr = sdk.AccAddress(receiveInfo.GetPubKey().Address())
+
+	acc := getAccountGaiaLite(t, port, addr)
+	accnum := acc.GetAccountNumber()
+	sequence := acc.GetSequence()
+	chainID := viper.GetString(client.FlagChainID)
+	// send
+	coinbz, err := cdc.MarshalJSON(sdk.NewInt64Coin("steak", 1))
+	if err != nil {
+		panic(err)
+	}
+
+	gasStr := ""
+	if gas > 0 {
+		gasStr = fmt.Sprintf(`
+		"gas":"%v",
+		`, gas)
+	}
+	jsonStr := []byte(fmt.Sprintf(`{
+		%v
+		"name":"%s",
+		"password":"%s",
+		"account_number":"%d",
+		"sequence":"%d",
+		"amount":[%s],
+		"chain_id":"%s",
+		"generate": false,
+		"to_address":"%s"
+	}`, gasStr, name, password, accnum, sequence, coinbz, chainID, receiveAddr))
+
+	res, body = Request(t, port, "POST", "/bank/transfers", jsonStr)
+	return
+}
+
 func doSend(t *testing.T, port, seed, name, password string, addr sdk.AccAddress) (receiveAddr sdk.AccAddress, resultTx ctypes.ResultBroadcastTxCommit) {
 	res, body, receiveAddr := doSendWithGas(t, port, seed, name, password, addr, 0)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	err := cdc.UnmarshalJSON([]byte(body), &resultTx)
+	require.Nil(t, err)
+
+	return receiveAddr, resultTx
+}
+
+func doSendGaiaLite(t *testing.T, port, seed, name, password string, addr sdk.AccAddress) (receiveAddr sdk.AccAddress, resultTx ctypes.ResultBroadcastTxCommit) {
+	res, body, receiveAddr := doSendWithGasGaiaLite(t, port, seed, name, password, addr, 0)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err := cdc.UnmarshalJSON([]byte(body), &resultTx)

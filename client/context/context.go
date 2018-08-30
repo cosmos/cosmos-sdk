@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/viper"
 
+	tendermintLite "github.com/tendermint/tendermint/lite"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 )
 
@@ -32,6 +33,7 @@ type CLIContext struct {
 	Async           bool
 	JSON            bool
 	PrintResponse   bool
+	Certifier       tendermintLite.Certifier
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
@@ -115,5 +117,11 @@ func (ctx CLIContext) WithClient(client rpcclient.Client) CLIContext {
 // WithUseLedger returns a copy of the context with an updated UseLedger flag.
 func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 	ctx.UseLedger = useLedger
+	return ctx
+}
+
+// WithCertifier - return a copy of the context with an updated Certifier
+func (ctx CLIContext) WithCertifier(certifier tendermintLite.Certifier) CLIContext {
+	ctx.Certifier = certifier
 	return ctx
 }

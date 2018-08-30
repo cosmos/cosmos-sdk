@@ -19,8 +19,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/libs/cli"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/libs/log"
+	tendermintLite "github.com/tendermint/tendermint/lite"
+	tendermintLiteProxy "github.com/tendermint/tendermint/lite/proxy"
 	tmserver "github.com/tendermint/tendermint/rpc/lib/server"
 )
 
@@ -66,6 +69,7 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().String(client.FlagChainID, "", "The chain ID to connect to")
 	cmd.Flags().String(client.FlagNode, "tcp://localhost:26657", "Address of the node to connect to")
 	cmd.Flags().Int(flagMaxOpenConnections, 1000, "The number of maximum open connections")
+	cmd.Flags().Bool(client.FlagTrustNode, false, "Whether trust connected full node")
 
 	return cmd
 }
@@ -80,6 +84,17 @@ func createHandler(cdc *wire.Codec) http.Handler {
 
 	cliCtx := context.NewCLIContext().WithCodec(cdc).WithLogger(os.Stdout)
 
+	chainID := viper.GetString(client.FlagChainID)
+	home := viper.GetString(cli.HomeFlag)
+	nodeURI := viper.GetString(client.FlagNode)
+	var certifier tendermintLite.Certifier
+	if chainID != "" && home != "" && nodeURI != "" {
+		certifier, err = tendermintLiteProxy.GetCertifier(chainID, home, nodeURI)
+		if err != nil {
+			panic(err)
+		}
+		cliCtx = cliCtx.WithCertifier(certifier)
+	}
 	// TODO: make more functional? aka r = keys.RegisterRoutes(r)
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
 	r.HandleFunc("/node_version", NodeVersionRequestHandler(cliCtx)).Methods("GET")

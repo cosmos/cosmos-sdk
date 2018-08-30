@@ -14,6 +14,7 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 	"reflect"
 	"strings"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 )
 
 var doc = `{
@@ -633,15 +634,6 @@ func addOptionsToDesc(desc string) string {
 	return buffer.String()
 }
 
-func moduleEnabled(modules []string, name string) bool {
-	for _, moduleName := range modules {
-		if moduleName == name {
-			return true
-		}
-	}
-	return false
-}
-
 func modularizeAPIs(modules string, paths map[string]interface{}) map[string]interface{} {
 	filteredAPIs := make(map[string]interface{})
 
@@ -673,7 +665,7 @@ func modularizeAPIs(modules string, paths map[string]interface{}) map[string]int
 					reflect.TypeOf(tags[0]).String()))
 			}
 			moduleName := moduleToTag[tags[0].(string)]
-			enable := moduleEnabled(moduleArray, moduleName)
+			enable := utils.StringArrayContains(moduleArray, moduleName)
 
 			if enable {
 				if filteredAPIs[path] != nil {

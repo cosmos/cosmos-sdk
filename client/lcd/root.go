@@ -88,6 +88,7 @@ func createHandler(cdc *wire.Codec) http.Handler {
 
 	keys.RegisterRoutes(r)
 	rpc.RegisterRoutes(ctx, r)
+	sentinel.RegisterRoutes(ctx, r, cdc, keeper)
 	tx.RegisterRoutes(ctx, r, cdc)
 	auth.RegisterRoutes(ctx, r, cdc, "acc")
 	bank.RegisterRoutes(ctx, r, cdc, kb)
@@ -95,7 +96,6 @@ func createHandler(cdc *wire.Codec) http.Handler {
 	stake.RegisterRoutes(ctx, r, cdc, kb)
 	slashing.RegisterRoutes(ctx, r, cdc, kb)
 	gov.RegisterRoutes(ctx, r, cdc)
-	sentinel.RegisterRoutes(ctx, r, cdc, keeper)
 
 	return r
 }

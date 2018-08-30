@@ -28,7 +28,7 @@ func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 
 	// Determine how transactions are decoded.
 	app.SetTxDecoder(txDecoder)
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+
 	// Register message routes.
 	// Note the handler gets access to the account store.
 	app.Router().
@@ -44,7 +44,7 @@ func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 }
 
 //------------------------------------------------------------------
-// Msg                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+// Msg
 
 // MsgSend implements sdk.Msg
 var _ sdk.Msg = MsgSend{}
@@ -182,7 +182,7 @@ func handleTo(store sdk.KVStore, to sdk.AccAddress, amt sdk.Coins) sdk.Result {
 		// Receiver account does not already exist, create a new one.
 		acc = appAccount{}
 	} else {
-		// Receiver account already exists                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     . Retrieve and decode it.
+		// Receiver account already exists. Retrieve and decode it.
 		err := json.Unmarshal(accBytes, &acc)
 		if err != nil {
 			return sdk.ErrInternal("Account decoding error").Result()

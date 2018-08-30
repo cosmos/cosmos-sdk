@@ -319,7 +319,7 @@ func (msc MsgSigntoVpn) GetSignBytes() []byte {
 func (msc MsgSigntoVpn) ValidateBasic() sdk.Error {
 	var a []byte
 	if msc.Coins.IsZero() || !(msc.Coins.IsNotNegative()) {
-		return sdk.ErrInsufficientFunds("Error insufficent coins")
+		return sdk.ErrInsufficientFunds("Error insufficient coins")
 	}
 	if reflect.TypeOf(msc.Sessionid) != reflect.TypeOf(a) {
 		return ErrInvalidSessionid(" Invalid SessionId")
@@ -391,7 +391,7 @@ func (msc MsgGetVpnPayment) GetSignBytes() []byte {
 
 func (msc MsgGetVpnPayment) ValidateBasic() sdk.Error {
 	if msc.Coins.IsZero() || !(msc.Coins.IsNotNegative()) {
-		return sdk.ErrInsufficientFunds("Error insufficent coins")
+		return sdk.ErrInsufficientFunds("Error insufficient coins")
 	}
 	return nil
 }

@@ -16,7 +16,7 @@ import (
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/accounts/{address}/send", SendRequestHandlerFn(cdc, kb, ctx)).Methods("POST")
+	r.HandleFunc("/send", SendRequestHandlerFn(cdc, kb, ctx)).Methods("POST")
 }
 
 type sendBody struct {
@@ -29,6 +29,7 @@ type sendBody struct {
 	AccountNumber    int64     `json:"account_number"`
 	Sequence         int64     `json:"sequence"`
 	Gas              int64     `json:"gas"`
+	Address          string `json:"address"`
 }
 
 var msgCdc = wire.NewCodec()
@@ -41,15 +42,6 @@ func init() {
 func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collect data
-		vars := mux.Vars(r)
-		bech32addr := vars["address"]
-
-		to, err := sdk.AccAddressFromBech32(bech32addr)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
 
 		var m sendBody
 		body, err := ioutil.ReadAll(r.Body)
@@ -64,6 +56,14 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 			w.Write([]byte(err.Error()))
 			return
 		}
+
+		to, err := sdk.AccAddressFromBech32(m.Address)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
 
 		info, err := kb.Get(m.LocalAccountName)
 		if err != nil {

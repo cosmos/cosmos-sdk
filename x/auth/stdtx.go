@@ -162,4 +162,3 @@ type StdSignature struct {
 	AccountNumber    int64 `json:"account_number"`
 	Sequence         int64 `json:"sequence"`
 }
-	

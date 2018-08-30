@@ -178,11 +178,7 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body)
 	err = json.Unmarshal(body, &m)
-	// a, err := json.Marshal(m)
-	// if err != nil {
 
-	// }
-	//w.Write(a)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))

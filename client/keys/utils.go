@@ -25,7 +25,7 @@ var keybase keys.Keybase
 
 // initialize a keybase based on the configuration
 func GetKeyBase() (keys.Keybase, error) {
-	rootDir := viper.GetString(cli.HomeFlag) //cli.HomeFlag
+	rootDir := viper.GetString(cli.HomeFlag)
 	return GetKeyBaseFromDir(rootDir)
 }
 

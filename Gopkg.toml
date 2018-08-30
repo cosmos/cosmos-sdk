@@ -52,10 +52,17 @@
   name = "github.com/stretchr/testify"
   version = "=1.2.1"
 
+[[override]]
+  name = "github.com/tendermint/go-amino"
+  version = "=0.10.1"
+
+[[override]]
+  name = "github.com/tendermint/iavl"
+  version = "=v0.9.2"
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  version = "=v0.23.1"
+  version = "=v0.22.8"
 
 [[constraint]]
   name = "github.com/bartekn/go-bip39"

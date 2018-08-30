@@ -9,16 +9,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 var (
-	priv1 = crypto.GenPrivKeyEd25519()
+	priv1 = ed25519.GenPrivKey()
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
-	priv2 = crypto.GenPrivKeyEd25519()
+	priv2 = ed25519.GenPrivKey()
 	addr2 = sdk.AccAddress(priv2.PubKey().Address())
-	addr3 = sdk.AccAddress(crypto.GenPrivKeyEd25519().PubKey().Address())
-	priv4 = crypto.GenPrivKeyEd25519()
+	addr3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
+	priv4 = ed25519.GenPrivKey()
 	addr4 = sdk.AccAddress(priv4.PubKey().Address())
 	coins = sdk.Coins{{"foocoin", sdk.NewInt(10)}}
 	fee   = auth.StdFee{

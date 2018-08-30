@@ -4,11 +4,11 @@ import (
 	"math"
 	"time"
 
-	senttype "github.com/cosmos/cosmos-sdk/x/sentinel/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	senttype "github.com/cosmos/cosmos-sdk/x/sentinel/types"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -98,7 +98,7 @@ func (keeper Keeper) PayVpnService(ctx sdk.Context, msg MsgPayVpnService) (strin
 	sentKey := senttype.GetNewSessionId()
 	vpnpub, err := keeper.account.GetPubKey(ctx, msg.Vpnaddr)
 	if err != nil {
-		ErrInvalidPubKey("Vpn pubkey failed")
+		return "", ErrInvalidPubKey("Vpn pubkey failed")
 	}
 	session := senttype.GetNewSessionMap(msg.Coins, vpnpub, msg.Pubkey, msg.From)
 	store := ctx.KVStore(keeper.sentStoreKey)
@@ -208,6 +208,18 @@ func (keeper Keeper) NewMsgDecoder(acc []byte) (senttype.Registervpn, sdk.Error)
 	}
 	return msg, ErrUnMarshal("Unmarshal of bytes failed")
 
+}
+
+func (keeper Keeper) SendTokens(ctx sdk.Context, msg MsgSendTokens) (sdk.AccAddress, sdk.Error) {
+	_, _, err := keeper.coinKeeper.SubtractCoins(ctx, msg.From, msg.Coins)
+	if err != nil {
+		return nil, sdk.ErrInsufficientFunds("Insufficient funds")
+	}
+	_, _, err = keeper.coinKeeper.AddCoins(ctx, msg.To, msg.Coins)
+	if err != nil {
+		return nil, sdk.ErrInsufficientFunds("Failed to retrive funds")
+	}
+	return msg.To, nil
 }
 
 //func (keeper Keeper) GetsentStore(ctx sdk.Context, msg MsgRegisterMasterNode) (sdk.KVStore, sdk.AccAddress) {

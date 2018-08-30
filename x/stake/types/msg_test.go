@@ -24,7 +24,7 @@ func TestMsgCreateValidator(t *testing.T) {
 		bond                                      sdk.Coin
 		expectPass                                bool
 	}{
-		{"basic good", "a", "b", "c", "d", addr1, pk1, coinPos, false},
+		{"basic good", "a", "b", "c", "d", addr1, pk1, coinPos, true},
 		{"partial description", "", "", "c", "", addr1, pk1, coinPos, true},
 		{"empty description", "", "", "", "", addr1, pk1, coinPos, false},
 		{"empty address", "a", "b", "c", "d", emptyAddr, pk1, coinPos, false},

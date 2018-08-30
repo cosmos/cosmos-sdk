@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -25,7 +24,6 @@ func statusCommand() *cobra.Command {
 
 func getNodeStatus(ctx context.CoreContext) (*ctypes.ResultStatus, error) {
 	// get the node
-
 	node, err := ctx.GetNode()
 	if err != nil {
 		return &ctypes.ResultStatus{}, err
@@ -40,16 +38,13 @@ func printNodeStatus(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	// loc := status.SyncInfo.LatestBlockTime
+
 	output, err := cdc.MarshalJSON(status)
 	// output, err := cdc.MarshalJSONIndent(res, "  ", "")
 	if err != nil {
 		return err
 	}
-	fmt.Println(status.SyncInfo.LatestBlockTime)
-	// fmt.Println(loc)
-	// fmt.Println(reflect.TypeOf(loc))
-	fmt.Println(time.Now())
+
 	fmt.Println(string(output))
 	return nil
 }
@@ -59,12 +54,6 @@ func printNodeStatus(cmd *cobra.Command, args []string) error {
 // REST handler for node info
 func NodeInfoRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		data, err := cdc.MarshalJSON(ctx)
-		if err != nil {
-
-		}
-
 		status, err := getNodeStatus(ctx)
 		if err != nil {
 			w.WriteHeader(500)
@@ -80,9 +69,6 @@ func NodeInfoRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
 			return
 		}
 		w.Write(output)
-		w.Write(data)
-		w.Write([]byte(ctx.ChainID))
-		w.Write([]byte("data Enterd"))
 	}
 }
 

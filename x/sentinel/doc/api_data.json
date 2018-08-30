@@ -653,7 +653,7 @@
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "encrytion_method",
+            "field": "enc_method",
             "description": "<p>Encryption method.</p>"
           },
           {
@@ -773,6 +773,66 @@
           "type": "json"
         }
       ]
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Response:",
+          "content": "{\n  \"Success\": true,\n  \"Hash\": \"CF8E073D624F7FA6A41C3CAD9B4A1DB693234225\",\n  \"Height\": 343,\n  \"Data\": \"eyJ0eXBlIjoic2VudGluZWwvcmVnaXN0ZXJ2cG4iLCJ2YWx1ZSI6eyJGc3BlZWQiOiIxMiIsIlBwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn19\",\n   \"Tags\": [\n       {\n           \"key\": \"dnBuIHJlZ2lzdGVyZWQgYWRkcmVzcw==\",\n           \"value\": \"Y29zbW9zYWNjYWRkcjFlZ3RydjdxdGU0NnY2cXEzN3p0YzB2dzRuMmhrejZuempycDVhZQ==\"\n       }\n\t\t    ]\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "rest/service.go",
+    "groupTitle": "Sentinel_Tendermint"
+  },
+  {
+    "type": "post",
+    "url": "/send",
+    "title": "To send money to account.",
+    "name": "sendTokens",
+    "group": "Sentinel_Tendermint",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "name",
+            "description": "<p>Name Account holder name.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "password",
+            "description": "<p>Password password for account.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "to",
+            "description": "<p>To address.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "amount",
+            "description": "<p>Amount to send.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "gas",
+            "description": "<p>gas value.</p>"
+          }
+        ]
+      }
     },
     "success": {
       "examples": [

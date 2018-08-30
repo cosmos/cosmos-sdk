@@ -1,5 +1,58 @@
 # Changelog
 
+## 0.23.1
+
+*July 27th, 2018*
+
+BUG FIXES
+  * [tendermint] Update to v0.22.7
+    - [consensus, blockchain] Register the Evidence interface so it can be
+      marshalled/unmarshalled by the blockchain and consensus reactors
+
+## 0.23.0
+
+*July 25th, 2018*
+
+BREAKING CHANGES
+* [x/stake] Fixed the period check for the inflation calculation
+
+IMPROVEMENTS
+* [cli] Improve error messages for all txs when the account doesn't exist
+* [tendermint] Update to v0.22.6
+    - Updates the crypto imports/API (#1966)
+* [x/stake] Add revoked to human-readable validator 
+
+BUG FIXES
+* [tendermint] Update to v0.22.6
+    - Fixes some security vulnerabilities reported in the [Bug Bounty](https://hackerone.com/tendermint)
+*  \#1797 Fix off-by-one error in slashing for downtime
+*  \#1787 Fixed bug where Tally fails due to revoked/unbonding validator
+*  \#1666 Add intra-tx counter to the genesis validators
+
+## 0.22.0
+
+*July 16th, 2018*
+
+BREAKING CHANGES
+* [x/gov] Increase VotingPeriod, DepositPeriod, and MinDeposit
+
+IMPROVEMENTS
+* [gaiad] Default config updates:
+    - `timeout_commit=5000` so blocks only made every 5s
+    - `prof_listen_addr=localhost:6060` so profile server is on by default
+    - `p2p.send_rate` and `p2p.recv_rate` increases 10x (~5MB/s)
+
+BUG FIXES
+* [server] Fix to actually overwrite default tendermint config
+
+## 0.21.1
+
+*July 14th, 2018*
+
+BUG FIXES
+* [build] Added Ledger build support via `LEDGER_ENABLED=true|false`
+  * True by default except when cross-compiling
+
 ## 0.21.0
 
 *July 13th, 2018*

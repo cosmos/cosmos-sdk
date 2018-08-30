@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -97,7 +98,7 @@ func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.Respo
 // their addresses, pubkeys, and privkeys.
 func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []auth.Account, addrs []sdk.AccAddress, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
 	for i := 0; i < numAccs; i++ {
-		privKey := crypto.GenPrivKeyEd25519()
+		privKey := ed25519.GenPrivKey()
 		pubKey := privKey.PubKey()
 		addr := sdk.AccAddress(pubKey.Address())
 
@@ -158,7 +159,7 @@ func GeneratePrivKeys(n int) (keys []crypto.PrivKey) {
 	// TODO: Randomize this between ed25519 and secp256k1
 	keys = make([]crypto.PrivKey, n, n)
 	for i := 0; i < n; i++ {
-		keys[i] = crypto.GenPrivKeyEd25519()
+		keys[i] = ed25519.GenPrivKey()
 	}
 
 	return
@@ -170,7 +171,7 @@ func GeneratePrivKeyAddressPairs(n int) (keys []crypto.PrivKey, addrs []sdk.AccA
 	keys = make([]crypto.PrivKey, n, n)
 	addrs = make([]sdk.AccAddress, n, n)
 	for i := 0; i < n; i++ {
-		keys[i] = crypto.GenPrivKeyEd25519()
+		keys[i] = ed25519.GenPrivKey()
 		addrs[i] = sdk.AccAddress(keys[i].PubKey().Address())
 	}
 	return

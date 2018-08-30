@@ -11,7 +11,6 @@ import (
 
 func TestParams(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
-	t.Log(ctx)
 	expParams := types.DefaultParams()
 
 	//check that the empty keeper loads the default
@@ -22,12 +21,11 @@ func TestParams(t *testing.T) {
 	expParams.MaxValidators = 777
 	keeper.SetParams(ctx, expParams)
 	resParams = keeper.GetParams(ctx)
-	require.False(t, expParams.Equal(resParams))
+	require.True(t, expParams.Equal(resParams))
 }
 
 func TestPool(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
-	t.Log(ctx)
 	expPool := types.InitialPool()
 
 	//check that the empty keeper loads the default
@@ -38,5 +36,5 @@ func TestPool(t *testing.T) {
 	expPool.BondedTokens = sdk.NewRat(777)
 	keeper.SetPool(ctx, expPool)
 	resPool = keeper.GetPool(ctx)
-	require.False(t, expPool.Equal(resPool))
+	require.True(t, expPool.Equal(resPool))
 }

@@ -18,7 +18,6 @@ import (
 	p2p "github.com/tendermint/tendermint/p2p"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"encoding/json"
 	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
@@ -103,92 +102,6 @@ func TestKeys(t *testing.T) {
 		"new_password":"12345678901"
 	}`, newPassword))
 
-	res, body = Request(t, port, "PUT", keyEndpoint, jsonStr)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	// here it should say unauthorized as we changed the password before
-	res, body = Request(t, port, "PUT", keyEndpoint, jsonStr)
-	require.Equal(t, http.StatusUnauthorized, res.StatusCode, body)
-
-	// delete key
-	jsonStr = []byte(`{"password":"12345678901"}`)
-	res, body = Request(t, port, "DELETE", keyEndpoint, jsonStr)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-}
-
-func TestKeysGaiaLite(t *testing.T) {
-	name, password := "test", "1234567890"
-	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
-	cleanup, _, port := InitializeTestGaiaLite(t, 1, []sdk.AccAddress{addr})
-	defer cleanup()
-
-	// get seed
-	// TODO Do we really need this endpoint?
-	recoverKeyURL := fmt.Sprintf("/keys/%s/recover", "test_recover")
-	seedRecover := "divorce meat banana embody near until uncover wait uniform capital crawl test praise cloud foil monster garbage hedgehog wrong skate there bonus box odor"
-	passwordRecover := "1234567890"
-	jsonStrRecover := []byte(fmt.Sprintf(`{"seed":"%s", "password":"%s"}`, seedRecover, passwordRecover))
-	res, body := Request(t, port, "POST", recoverKeyURL, jsonStrRecover)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	reg, err := regexp.Compile(`([a-z]+ ){12}`)
-	require.Nil(t, err)
-	match := reg.MatchString(seed)
-	require.True(t, match, "Returned seed has wrong format", seed)
-
-	newName := "test_newname"
-	newPassword := "0987654321"
-
-	// add key
-	jsonStr := []byte(fmt.Sprintf(`{"name":"%s", "password":"%s", "seed":"%s"}`, newName, newPassword, seed))
-	res, body = Request(t, port, "POST", "/keys", jsonStr)
-
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var keyOutput keys.KeyOutput
-	err = json.Unmarshal([]byte(body), &keyOutput)
-	require.Nil(t, err, body)
-
-	addr2Bech32 := keyOutput.Address.String()
-	_, err = sdk.AccAddressFromBech32(addr2Bech32)
-	require.NoError(t, err, "Failed to return a correct bech32 address")
-
-	// test if created account is the correct account
-	expectedInfo, _ := GetKeyBase(t).CreateKey(newName, seed, newPassword)
-	expectedAccount := sdk.AccAddress(expectedInfo.GetPubKey().Address().Bytes())
-	assert.Equal(t, expectedAccount.String(), addr2Bech32)
-
-	// existing keys
-	res, body = Request(t, port, "GET", "/keys", nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	var m [3]keys.KeyOutput
-	err = cdc.UnmarshalJSON([]byte(body), &m)
-	require.Nil(t, err)
-
-	addrBech32 := addr.String()
-
-	require.Equal(t, name, m[0].Name, "Did not serve keys name correctly")
-	require.Equal(t, addrBech32, m[0].Address.String(), "Did not serve keys Address correctly")
-	require.Equal(t, newName, m[1].Name, "Did not serve keys name correctly")
-	require.Equal(t, addr2Bech32, m[1].Address.String(), "Did not serve keys Address correctly")
-
-	// select key
-	keyEndpoint := fmt.Sprintf("/keys/%s", newName)
-	res, body = Request(t, port, "GET", keyEndpoint, nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var m2 keys.KeyOutput
-	err = cdc.UnmarshalJSON([]byte(body), &m2)
-	require.Nil(t, err)
-
-	require.Equal(t, newName, m2.Name, "Did not serve keys name correctly")
-	require.Equal(t, addr2Bech32, m2.Address.String(), "Did not serve keys Address correctly")
-
-	// update key
-	jsonStr = []byte(fmt.Sprintf(`{
-		"old_password":"%s",
-		"new_password":"12345678901"
-	}`, newPassword))
-
-	keyEndpoint = fmt.Sprintf("/keys/%s", newName)
 	res, body = Request(t, port, "PUT", keyEndpoint, jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 

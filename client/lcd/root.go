@@ -178,31 +178,18 @@ func createSwaggerHandler(server *gin.Engine, cdc *wire.Codec) {
 		server.GET("/node_version", NodeVersionRequest(ctx))
 	}
 
+	// Add block apis for lcd test
 	if utils.StringArrayContains(moduleArray, "block") {
 		rpc.RegisterSwaggerRoutes(server.Group("/"), ctx)
 	}
+	// This API belongs to ICS20, later it will be moved under key management category
+	auth.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc, "acc")
 
 	if utils.StringArrayContains(moduleArray, "transaction") {
 		tx.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc)
 	}
 
-	if utils.StringArrayContains(moduleArray, "key") {
-		keys.RegisterSwaggerRoutes(server.Group("/"))
-		auth.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc, "acc")
-	}
-
 	if utils.StringArrayContains(moduleArray, "bank") {
 		bank.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc, kb)
 	}
-	/*
-		if moduleEnabled(moduleArray,"staking") {
-			stake.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc, kb)
-		}
-		if moduleEnabled(moduleArray,"governance") {
-			gov.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc, kb)
-		}
-		if moduleEnabled(moduleArray,"slashing") {
-			slashing.RegisterSwaggerRoutes(server.Group("/"), ctx, cdc, kb)
-		}
-	*/
 }

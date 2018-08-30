@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 )
 
@@ -67,34 +66,4 @@ func QueryKeysRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(output)
-}
-
-// QueryKeysRequest is the handler of listing all keys in swagger rest server
-func QueryKeysRequest(gtx *gin.Context) {
-	kb, err := GetKeyBase()
-	if err != nil {
-		newError(gtx, http.StatusInternalServerError, err)
-		return
-	}
-	infos, err := kb.List()
-	if err != nil {
-		newError(gtx, http.StatusInternalServerError, err)
-		return
-	}
-	// an empty list will be JSONized as null, but we want to keep the empty list
-	if len(infos) == 0 {
-		normalResponse(gtx, nil)
-		return
-	}
-	keysOutput, err := Bech32KeysOutput(infos)
-	if err != nil {
-		newError(gtx, http.StatusInternalServerError, err)
-		return
-	}
-	output, err := cdc.MarshalJSONIndent(keysOutput, "", "  ")
-	if err != nil {
-		newError(gtx, http.StatusInternalServerError, err)
-		return
-	}
-	normalResponse(gtx, output)
 }

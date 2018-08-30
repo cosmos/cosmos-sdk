@@ -213,36 +213,6 @@ func TestBlock(t *testing.T) {
 	require.Equal(t, http.StatusNotFound, res.StatusCode, body)
 }
 
-func TestBlockGaiaLite(t *testing.T) {
-	cleanup, _, port := InitializeTestGaiaLite(t, 1, []sdk.AccAddress{})
-	defer cleanup()
-
-	var resultBlock ctypes.ResultBlock
-
-	res, body := Request(t, port, "GET", "/blocks/latest", nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	err := cdc.UnmarshalJSON([]byte(body), &resultBlock)
-	require.Nil(t, err, "Couldn't parse block")
-
-	require.NotEqual(t, ctypes.ResultBlock{}, resultBlock)
-
-	// --
-
-	res, body = Request(t, port, "GET", "/block/1", nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	err = wire.Cdc.UnmarshalJSON([]byte(body), &resultBlock)
-	require.Nil(t, err, "Couldn't parse block")
-
-	require.NotEqual(t, ctypes.ResultBlock{}, resultBlock)
-
-	// --
-
-	res, body = Request(t, port, "GET", "/block/1000000000", nil)
-	require.Equal(t, http.StatusNotFound, res.StatusCode, body)
-}
-
 func TestValidators(t *testing.T) {
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
 	defer cleanup()
@@ -345,7 +315,8 @@ func TestCoinSendGaiaLite(t *testing.T) {
 
 	// create TX
 	receiveAddr, resultTx := doSendGaiaLite(t, port, seed, name, password, addr)
-	tests.WaitForHeight(resultTx.Height+1, port)
+	time.Sleep(3 * time.Second)
+	//tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was committed
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)

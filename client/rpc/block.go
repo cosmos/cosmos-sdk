@@ -8,8 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 
-	"github.com/cosmos/cosmos-sdk/client/utils"
-	"github.com/gin-gonic/gin"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 )
@@ -134,45 +132,5 @@ func LatestBlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 		w.Write(output)
-	}
-}
-
-// REST handler to get a block
-func BlockRequestHandlerCreation(cliCtx context.CLIContext) gin.HandlerFunc {
-	return func(gtx *gin.Context) {
-		heightString := gtx.Param("height")
-		height, err := strconv.ParseInt(heightString, 10, 64)
-		if err != nil {
-			utils.NewError(gtx, http.StatusBadRequest, fmt.Errorf("ERROR: Couldn't parse block height. Assumed format is '/block/{height}'."))
-			return
-		}
-		chainHeight, err := GetChainHeight(cliCtx)
-		if height > chainHeight {
-			utils.NewError(gtx, http.StatusNotFound, fmt.Errorf("ERROR: Requested block height is bigger then the chain length."))
-			return
-		}
-		output, err := getBlock(cliCtx, &height)
-		if err != nil {
-			utils.NewError(gtx, http.StatusInternalServerError, err)
-			return
-		}
-		utils.NormalResponse(gtx, output)
-	}
-}
-
-// REST handler to get the latest block
-func LatestBlockRequestHandlerCreation(cliCtx context.CLIContext) gin.HandlerFunc {
-	return func(gtx *gin.Context) {
-		height, err := GetChainHeight(cliCtx)
-		if err != nil {
-			utils.NewError(gtx, http.StatusInternalServerError, err)
-			return
-		}
-		output, err := getBlock(cliCtx, &height)
-		if err != nil {
-			utils.NewError(gtx, http.StatusInternalServerError, err)
-			return
-		}
-		utils.NormalResponse(gtx, output)
 	}
 }

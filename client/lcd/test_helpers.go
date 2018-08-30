@@ -295,8 +295,9 @@ func InitializeTestGaiaLite(t *testing.T, nValidators int, initAddrs []sdk.AccAd
 	time.Sleep(3 * time.Second)
 	startSwaggerLCD(cdc)
 
-	tests.WaitForLCDStart(port)
-	tests.WaitForHeight(1, port)
+	time.Sleep(1 * time.Second)
+	//tests.WaitForLCDStart(port)
+	//tests.WaitForHeight(1, port)
 
 	cleanup := func() {
 		logger.Debug("cleaning up LCD initialization")

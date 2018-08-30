@@ -336,15 +336,15 @@ func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValida
 	for _, update := range updates {
 		switch {
 		case update.Power == 0:
-			// // TEMPORARY DEBUG CODE TO PROVE THAT THE OLD METHOD WAS BROKEN
-			// // (i.e. didn't catch in the event of problem)
-			// if val, ok := tb.(*testing.T); ok {
-			// 	require.NotNil(val, current[string(update.PubKey.Data)])
-			// }
-			// // CORRECT CHECK
-			// if _, ok := current[string(update.PubKey.Data)]; !ok {
-			// 	tb.Fatalf("tried to delete a nonexistent validator")
-			// }
+			// TEMPORARY DEBUG CODE TO PROVE THAT THE OLD METHOD WAS BROKEN
+			// (i.e. didn't catch in the event of problem)
+			if val, ok := tb.(*testing.T); ok {
+				require.NotNil(val, current[string(update.PubKey.Data)])
+			}
+			// CORRECT CHECK
+			if _, ok := current[string(update.PubKey.Data)]; !ok {
+				tb.Fatalf("tried to delete a nonexistent validator")
+			}
 			event("endblock/validatorupdates/kicked")
 			delete(current, string(update.PubKey.Data))
 		default:

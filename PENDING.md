@@ -13,6 +13,7 @@ BREAKING CHANGES
     * [cli] \#2061 changed proposalID in governance REST endpoints to proposal-id
     * [cli] \#2014 `gaiacli advanced` no longer exists - to access `ibc`, `rest-server`, and `validator-set` commands use `gaiacli ibc`, `gaiacli rest-server`, and `gaiacli tendermint`, respectively
     * [makefile] `get_vendor_deps` no longer updates lock file it just updates vendor directory. Use `update_vendor_deps` to update the lock file. [#2152](https://github.com/cosmos/cosmos-sdk/pull/2152)
+    * [cli] \#2190 `gaiacli init --gen-txs` is now `gaiacli init --with-txs` to reduce confusion
 
 * Gaia
     * Make the transient store key use a distinct store key. [#2013](https://github.com/cosmos/cosmos-sdk/pull/2013)

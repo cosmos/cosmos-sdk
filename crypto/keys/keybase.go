@@ -182,6 +182,7 @@ func (kb dbKeybase) List() ([]Info, error) {
 	for ; iter.Valid(); iter.Next() {
 		key := string(iter.Key())
 
+		// need to exclude any keys in storage that have an address suffix
 		if strings.HasSuffix(key, ".address") {
 			continue
 		}

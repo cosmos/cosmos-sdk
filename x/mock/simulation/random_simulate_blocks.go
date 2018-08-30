@@ -75,7 +75,7 @@ func SimulateFromSeed(
 	// Setup event stats
 	events := make(map[string]uint)
 	event := func(what string) {
-		log = updateLog(testingmode, log, "event - "+what)
+		log = updateLog(testingmode, log, "event - %s", what)
 		events[what]++
 	}
 
@@ -119,12 +119,13 @@ func SimulateFromSeed(
 			}
 
 			queueOperations(operationQueue, futureOps)
-
-			if onOperation && testingmode {
-				AssertAllInvariants(t, app, invariants, log)
-			}
-			if testingmode && opCount%200 == 0 {
-				fmt.Printf("\rSimulating... block %d/%d, operation %d.", header.Height, numBlocks, opCount)
+			if testingmode {
+				if onOperation {
+					AssertAllInvariants(t, app, invariants, log)
+				}
+				if opCount%200 == 0 {
+					fmt.Printf("\rSimulating... block %d/%d, operation %d.", header.Height, numBlocks, opCount)
+				}
 			}
 			opCount++
 		}
@@ -133,7 +134,7 @@ func SimulateFromSeed(
 		header.Height++
 		lastHeaderTime = header.Time
 		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
-		log += "\nEndBlock"
+		log = updateLog(testingmode, log, "EndBlock")
 
 		if testingmode {
 			// Make sure invariants hold at end of block
@@ -152,13 +153,15 @@ func SimulateFromSeed(
 
 	if testingmode {
 		fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds): %v\n", header.Height, header.Time)
+	} else {
+		fmt.Printf("%d operations ran\n", opCount)
 	}
 	DisplayEvents(events)
 }
 
 func updateLog(testingmode bool, log string, update string, args ...interface{}) (updatedLog string) {
 	if testingmode == true {
-		update = fmt.Sprintf(update, args)
+		update = fmt.Sprintf(update, args...)
 		return fmt.Sprintf("%s\n%s", log, update)
 	}
 	return ""

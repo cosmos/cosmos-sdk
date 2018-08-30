@@ -34,7 +34,6 @@ type CLIContext struct {
 	JSON            bool
 	PrintResponse   bool
 	Certifier       tendermintLite.Certifier
-	ClientManager   *ClientManager
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
@@ -124,11 +123,5 @@ func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 // WithCertifier - return a copy of the context with an updated Certifier
 func (ctx CLIContext) WithCertifier(certifier tendermintLite.Certifier) CLIContext {
 	ctx.Certifier = certifier
-	return ctx
-}
-
-// WithClientManager - return a copy of the context with an updated ClientManager
-func (ctx CLIContext) WithClientManager(clientManager *ClientManager) CLIContext {
-	ctx.ClientManager = clientManager
 	return ctx
 }

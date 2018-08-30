@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"math/rand"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,11 +24,12 @@ import (
 )
 
 var (
-	seed      int64
-	numBlocks int
-	blockSize int
-	enabled   bool
-	verbose   bool
+	seed         int64
+	numBlocks    int
+	blockSize    int
+	enabled      bool
+	verbose      bool
+	usegoleveldb bool
 )
 
 func init() {
@@ -36,6 +38,7 @@ func init() {
 	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "Operations per block")
 	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")
 	flag.BoolVar(&verbose, "SimulationVerbose", false, "Verbose log output")
+	flag.BoolVar(&usegoleveldb, "SimulationGoLevelDB", false, "Use GoLevelDB instead of memdb")
 }
 
 func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage {
@@ -118,7 +121,11 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 	// Setup Gaia application
 	var logger log.Logger
 	logger = log.NewNopLogger()
-	db := dbm.NewMemDB()
+	var db dbm.DB
+	db = dbm.NewMemDB()
+	if usegoleveldb {
+		db, _ = dbm.NewGoLevelDB("Simulation", os.TempDir())
+	}
 	app := NewGaiaApp(logger, db, nil)
 
 	// Run randomized simulation

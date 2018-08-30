@@ -54,15 +54,7 @@ func SimulateFromSeed(
 	tb testing.TB, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, seed int64, ops []Operation, setups []RandSetup,
 	invariants []Invariant, numBlocks int, blockSize int, commit bool,
 ) {
-	var t *testing.T
-	var b *testing.B
-	testingmode := false
-	if _t, ok := tb.(*testing.T); ok {
-		t = _t
-		testingmode = true
-	} else {
-		b = tb.(*testing.B)
-	}
+	testingmode, t, b := getTestingMode(tb)
 	log := fmt.Sprintf("Starting SimulateFromSeed with randomness created with seed %d", int(seed))
 	r := rand.New(rand.NewSource(seed))
 	timestamp := randTimestamp(r)
@@ -93,6 +85,7 @@ func SimulateFromSeed(
 	if !testingmode {
 		b.ResetTimer()
 	}
+	blockSimulator := createBlockSimulator(testingmode, tb, t, event, invariants, ops, operationQueue, numBlocks)
 
 	for i := 0; i < numBlocks; i++ {
 		// Run the BeginBlock handler
@@ -111,24 +104,8 @@ func SimulateFromSeed(
 		log, numQueuedOpsRan := runQueuedOperations(operationQueue, int(header.Height), tb, r, app, ctx, keys, log, event)
 		opCount += numQueuedOpsRan
 		thisBlockSize -= numQueuedOpsRan
-		for j := 0; j < thisBlockSize; j++ {
-			logUpdate, futureOps, err := ops[r.Intn(len(ops))](tb, r, app, ctx, keys, log, event)
-			log = updateLog(testingmode, log, logUpdate)
-			if err != nil {
-				tb.Fatalf("error on operation %d, %v, log %s", opCount, err, log)
-			}
-
-			queueOperations(operationQueue, futureOps)
-			if testingmode {
-				if onOperation {
-					AssertAllInvariants(t, app, invariants, log)
-				}
-				if opCount%200 == 0 {
-					fmt.Printf("\rSimulating... block %d/%d, operation %d.", header.Height, numBlocks, opCount)
-				}
-			}
-			opCount++
-		}
+		log, operations := blockSimulator(thisBlockSize, r, app, ctx, keys, log, header)
+		opCount += operations
 
 		res := app.EndBlock(abci.RequestEndBlock{})
 		header.Height++
@@ -151,12 +128,47 @@ func SimulateFromSeed(
 		validators = updateValidators(tb, r, validators, res.ValidatorUpdates, event)
 	}
 
-	if testingmode {
-		fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds): %v\n", header.Height, header.Time)
-	} else {
-		fmt.Printf("%d operations ran\n", opCount)
-	}
+	fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds), : %v, operations ran %d\n", header.Height, header.Time, opCount)
 	DisplayEvents(events)
+}
+
+// Returns a function to simulate blocks. Written like this to avoid constant parameters being passed everytime, to minimize
+// memory overhead
+func createBlockSimulator(testingmode bool, tb testing.TB, t *testing.T, event func(string), invariants []Invariant, ops []Operation, operationQueue map[int][]Operation, totalNumBlocks int) func(
+	blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, privKeys []crypto.PrivKey, log string, header abci.Header) (updatedLog string, opCount int) {
+	return func(blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		keys []crypto.PrivKey, log string, header abci.Header) (updatedLog string, opCount int) {
+		for j := 0; j < blocksize; j++ {
+			logUpdate, futureOps, err := ops[r.Intn(len(ops))](tb, r, app, ctx, keys, log, event)
+			log = updateLog(testingmode, log, logUpdate)
+			if err != nil {
+				tb.Fatalf("error on operation %d within block %d, %v, log %s", header.Height, opCount, err, log)
+			}
+
+			queueOperations(operationQueue, futureOps)
+			if testingmode {
+				if onOperation {
+					AssertAllInvariants(t, app, invariants, log)
+				}
+				if opCount%50 == 0 {
+					fmt.Printf("\rSimulating... block %d/%d, operation %d/%d.", header.Height, totalNumBlocks, opCount, blocksize)
+				}
+			}
+			opCount++
+		}
+		return log, opCount
+	}
+}
+
+func getTestingMode(tb testing.TB) (testingmode bool, t *testing.T, b *testing.B) {
+	testingmode = false
+	if _t, ok := tb.(*testing.T); ok {
+		t = _t
+		testingmode = true
+	} else {
+		b = tb.(*testing.B)
+	}
+	return
 }
 
 func updateLog(testingmode bool, log string, update string, args ...interface{}) (updatedLog string) {

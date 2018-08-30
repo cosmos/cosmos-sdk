@@ -16,13 +16,6 @@ const (
 	storeName = "sentinel"
 )
 
-func QueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, keeper sent.Keeper) {
-	r.HandleFunc(
-		"/query_vpn/{address}",
-		queryvpnHandlerFn(cdc, ctx, keeper),
-	).Methods("GET")
-
-}
 
 func queryvpnHandlerFn(cdc *wire.Codec, ctx context.CoreContext, k sent.Keeper) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

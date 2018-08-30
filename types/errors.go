@@ -82,7 +82,7 @@ func CodeToDefaultMsg(code CodeType) string {
 	case CodeUnknownRequest:
 		return "unknown request"
 	case CodeInvalidAddress:
-		return "invalid address "
+		return "invalid address"
 	case CodeInvalidPubKey:
 		return "invalid pubkey"
 	case CodeUnknownAddress:
@@ -143,13 +143,6 @@ func ErrOutOfGas(msg string) Error {
 }
 func ErrMemoTooLarge(msg string) Error {
 	return newErrorWithRootCodespace(CodeMemoTooLarge, msg)
-}
-
-func ErrInvalidIp(msg string) Error {
-	return newErrorWithRootCodespace(CodeUnknownRequest, msg)
-}
-func ErrCommon(msg string) Error {
-	return newErrorWithRootCodespace(CodeUnknownRequest, msg)
 }
 
 //----------------------------------------

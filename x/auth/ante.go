@@ -166,14 +166,9 @@ func processSig(
 		}
 	}
 
-	// Implements Signature
 	// Check sig.
 	ctx.GasMeter().ConsumeGas(verifyCost, "ante verify")
-	//a:=pubKey.VerifyBytes(signBytes, sig.Signature)
 	if !pubKey.VerifyBytes(signBytes, sig.Signature) {
-
-		// a := sdk.ErrUnauthorized("signature verification failed").Stacktrace()
-		// panic(a)
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
 

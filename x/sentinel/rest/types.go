@@ -76,9 +76,17 @@ type ClientSignature struct {
 }
 
 type Response struct {
-	Success bool            `json:"sucess"`
+	Success bool            `json:"success"`
 	Hash    string          `json:"hash"`
 	Height  int64           `json:"height"`
 	Data    []byte          `json:"data"`
 	Tags    []common.KVPair `json:"tags"`
+}
+
+type SendTokens struct {
+	Name      string `json:"name"`
+	Password  string `json:"password"`
+	ToAddress string `json:"to"`
+	Coins     string `json:"amount"`
+	Gas       int64  `json:"gas"`
 }

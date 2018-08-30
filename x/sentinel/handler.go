@@ -21,6 +21,8 @@ func NewHandler(k Keeper) sdk.Handler {
 			return handleMsgGetVpnPayment(ctx, k, msg)
 		case MsgRefund:
 			return handleMsgRefund(ctx, k, msg)
+		case MsgSendTokens:
+			return handleMsgMsgSendTokens(ctx, k, msg)
 		default:
 			return sdk.ErrUnknownRequest("unrecognized message").Result()
 		}
@@ -36,6 +38,19 @@ func handleMsgRegisterMasterNode(ctx sdk.Context, keeper Keeper, msg MsgRegister
 	return sdk.Result{
 		Tags: msg.Tags(),
 		Data: d,
+	}
+}
+
+func handleMsgMsgSendTokens(ctx sdk.Context, keeper Keeper, msg MsgSendTokens) sdk.Result {
+	address, err := keeper.SendTokens(ctx, msg)
+	if err != nil {
+		return err.Result()
+	}
+	d, _ := keeper.cdc.MarshalJSON(msg)
+	tags := sdk.NewTags("Transfer to Address:", []byte(address.String()))
+	return sdk.Result{
+		Data: d,
+		Tags: tags,
 	}
 }
 

@@ -340,7 +340,7 @@ func handleTo(store sdk.KVStore, to sdk.AccAddress, amt sdk.Coins) sdk.Result {
 	accBytes, err := json.Marshal(acc)
 	if err != nil {
 		return sdk.ErrInternal("Account encoding error").Result()
-	Msg}
+	}
 
 	// Update store with updated receiver account
 	store.Set(to, accBytes)
@@ -492,4 +492,4 @@ We now have a complete implementation of a simple app!
 
 In the next section, we'll add another Msg type and another store. Once we have multiple message types
 we'll need a better way of decoding transactions, since we'll need to decode
-<!-- into the `Msg` interface. This is where we introduce Amino, a superior encoding scheme that lets us decode into interface types! -->
+into the `Msg` interface. This is where we introduce Amino, a superior encoding scheme that lets us decode into interface types!

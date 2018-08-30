@@ -11,20 +11,18 @@ import (
 
 	ioutill "io/ioutil"
 
+	"github.com/tendermint/tendermint/crypto"
 	common "github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	ckeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/examples/sentinel"
-	senttype "github.com/cosmos/cosmos-sdk/examples/sentinel/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	"github.com/gorilla/mux"
+	"github.com/cosmos/cosmos-sdk/x/sentinel"
+	senttype "github.com/cosmos/cosmos-sdk/x/sentinel/types"
 )
-
-
 
 /**
 * @api {get} /keys/seed To get seeds for generate keys.
@@ -141,11 +139,10 @@ import (
 *}
 */
 
-
-func NewResponse(sucess bool, hash string, height int64, data []byte, tags []common.KVPair) Response {
+func NewResponse(success bool, hash string, height int64, data []byte, tags []common.KVPair) Response {
 	//var res Response
 	return Response{
-		Success: sucess,
+		Success: success,
 		Height:  height,
 		Hash:    hash,
 		Data:    data,
@@ -206,7 +203,7 @@ func registervpnHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handler
 		ctx = ctx.WithFromAddressName(msg.Localaccount)
 		addr, err := ctx.GetFromAddress()
 		if err != nil {
-			sdk.ErrInvalidAddress("The given Adress is Invalid")
+			sdk.ErrInvalidAddress("The given Address is Invalid")
 		}
 		ctx = ctx.WithDecoder(authcmd.GetAccountDecoder(cdc))
 		acc, err := ctx.GetAccountNumber(addr)
@@ -293,7 +290,7 @@ func registermasterdHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Han
 		ctx = ctx.WithGas(msg.Gas)
 		addr, err := ctx.GetFromAddress()
 		if err != nil {
-			sdk.ErrInvalidAddress("The given Adress is Invalid")
+			sdk.ErrInvalidAddress("The given Address is Invalid")
 		}
 		ctx = ctx.WithGas(msg.Gas)
 		ctx = ctx.WithDecoder(authcmd.GetAccountDecoder(cdc))
@@ -485,7 +482,7 @@ func deleteMasterHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handle
 		ctx = ctx.WithFromAddressName(msg.Name)
 		addr, err := ctx.GetFromAddress()
 		if err != nil {
-			sdk.ErrInvalidAddress("The given Adress is Invalid")
+			sdk.ErrInvalidAddress("The given Address is Invalid")
 		}
 		ctx = ctx.WithDecoder(authcmd.GetAccountDecoder(cdc))
 		acc, err := ctx.GetAccountNumber(addr)
@@ -640,8 +637,8 @@ func PayVpnServiceHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handl
 			sdk.ErrInternal("Parse Coins Failed")
 		}
 		coin := sdk.Coins{sdk.NewCoin(coins[0].Denom, 100)}
-		if !coins.Minus(coin).IsPositive() || !coins.Minus(coin).IsZero() {
-			w.Write([]byte("Funds must be Greaterthan or equals to 100"))
+		if !coins.Minus(coin).IsPositive() {
+			w.Write([]byte("Funds must be Greater than or equals to 100"))
 			return
 		}
 		infos, err := kb.List()
@@ -663,7 +660,7 @@ func PayVpnServiceHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handl
 		ctx = ctx.WithDecoder(authcmd.GetAccountDecoder(cdc))
 		addr, err := ctx.GetFromAddress()
 		if err != nil {
-			sdk.ErrInvalidAddress("The given Adress is Invalid")
+			sdk.ErrInvalidAddress("The given Address is Invalid")
 			return
 		}
 		acc, err := ctx.GetAccountNumber(addr)
@@ -692,7 +689,7 @@ func PayVpnServiceHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handl
 }
 
 //To create client signature....... This is not a transaction......
-func SendSignHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
+func SendSignHandlerFn() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var kb keys.Keybase
 		msg := ClientSignature{}
@@ -814,7 +811,7 @@ func RefundHandleFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 		ctx = ctx.WithGas(msg.Gas)
 		addr, err := ctx.GetFromAddress()
 		if err != nil {
-			sdk.ErrInvalidAddress("The given Adress is Invalid")
+			sdk.ErrInvalidAddress("The given Address is Invalid")
 		}
 		ctx = ctx.WithDecoder(authcmd.GetAccountDecoder(cdc))
 		acc, err := ctx.GetAccountNumber(addr)
@@ -900,12 +897,6 @@ func RefundHandleFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 *}
 */
 
-
-
-
-
-
-
 func GetVpnPaymentHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -949,7 +940,9 @@ func GetVpnPaymentHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handl
 			sdk.ErrInternal("Parse Coins failed")
 		}
 
-		sig, err := senttype.GetBech64Signature(msg.Signature)
+		var sig crypto.Signature
+		//sig, err := senttype.GetBech64Signature(msg.Signature)
+		cdc.UnmarshalBinaryBare([]byte(msg.Signature), &sig)
 		if err != nil {
 			w.Write([]byte("Signature from string conversion failed"))
 		}
@@ -986,6 +979,31 @@ func GetVpnPaymentHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handl
 	return nil
 }
 
+/**
+* @api {post} /send To send money to account.
+* @apiName sendTokens
+* @apiGroup Sentinel-Tendermint
+* @apiParam {String} name Name Account holder name.
+* @apiParam {String} password Password password for account.
+* @apiParam {String} to To address.
+* @apiParam {String} amount Amount to send.
+* @apiParam {Number} gas gas value.
+*
+* @apiSuccessExample Response:
+*{
+*   "Success": true,
+*   "Hash": "CF8E073D624F7FA6A41C3CAD9B4A1DB693234225",
+*   "Height": 343,
+*   "Data": "eyJ0eXBlIjoic2VudGluZWwvcmVnaXN0ZXJ2cG4iLCJ2YWx1ZSI6eyJGc3BlZWQiOiIxMiIsIlBwZ2IiOiIyMyIsIkxvY2F0aW9uIjoiaHlkIn19",
+*    "Tags": [
+*        {
+*            "key": "dnBuIHJlZ2lzdGVyZWQgYWRkcmVzcw==",
+*            "value": "Y29zbW9zYWNjYWRkcjFlZ3RydjdxdGU0NnY2cXEzN3p0YzB2dzRuMmhrejZuempycDVhZQ=="
+*        }
+*		    ]
+*}
+ */
+
 func SendTokenHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -1015,7 +1033,7 @@ func SendTokenHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFu
 		ctx = ctx.WithGas(msg.Gas)
 		addr, err := ctx.GetFromAddress()
 		if err != nil {
-			sdk.ErrInvalidAddress("The given Adress is Invalid")
+			sdk.ErrInvalidAddress("The given Address is Invalid")
 		}
 		to, err := sdk.AccAddressFromBech32(msg.ToAddress)
 		if err != nil {

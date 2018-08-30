@@ -28,7 +28,6 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return handleMsgCompleteUnbonding(ctx, msg, k)
 		default:
 			return sdk.ErrTxDecode("invalid message parse in staking module").Result()
-
 		}
 	}
 }
@@ -40,7 +39,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 
 	// Process types.Validator Provisions
 	blockTime := ctx.BlockHeader().Time
-	if pool.InflationLastTime+blockTime >= 3600 {
+	if blockTime-pool.InflationLastTime >= 3600 {
 		pool.InflationLastTime = blockTime
 		pool = pool.ProcessProvisions(params)
 	}

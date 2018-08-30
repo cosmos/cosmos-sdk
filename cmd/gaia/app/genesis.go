@@ -19,7 +19,7 @@ import (
 var (
 	// bonded tokens given to genesis validators/accounts
 	freeFermionVal  = int64(100)
-	freeFermionsAcc = int64(50)
+	freeFermionsAcc = int64(5000)
 )
 
 // State to Unmarshal
@@ -155,7 +155,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		// create the genesis account, give'm few steaks and a buncha token with there name
 		accAuth := auth.NewBaseAccountWithAddress(genTx.Address)
 		accAuth.Coins = sdk.Coins{
-			{genTx.Name + "Token", sdk.NewInt(1000)},
+			{genTx.Name, sdk.NewInt(2000000000)},
 			{"steak", sdk.NewInt(freeFermionsAcc)},
 		}
 		acc := NewGenesisAccount(&accAuth)

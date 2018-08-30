@@ -15,6 +15,11 @@ func ServiceRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 	).Methods("POST")
 
 	r.HandleFunc(
+		"/send",
+		SendTokenHandlerFn(ctx, cdc),
+	).Methods("POST") 
+
+	r.HandleFunc(
 		"/register/master",   // master node
 		registermasterdHandlerFn(ctx, cdc),
 	).Methods("POST")
@@ -39,7 +44,7 @@ func ServiceRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 	).Methods("POST")
 	r.HandleFunc(
 		"/send-sign",    // Off-chain  Tx (client to service provider)
-		SendSignHandlerFn(ctx, cdc),
+		SendSignHandlerFn(),
 	).Methods("POST")
 	r.HandleFunc(
 		"/vpn/getpayment",    // service provider to chain (from kv store)
@@ -48,7 +53,7 @@ func ServiceRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 
 }
 
-func QueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, keeper sent.Keeper) {
+func QueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, keeper sentinel.Keeper) {
 	
 	r.HandleFunc(
 		"/query_vpn/{address}",

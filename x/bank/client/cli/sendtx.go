@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -68,7 +66,7 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			msg := client.BuildMsg(from, to, coins)
-			fmt.Println(" from address is %s :", ctx.FromAddressName)
+
 			err = ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, []sdk.Msg{msg}, cdc)
 			if err != nil {
 				return err

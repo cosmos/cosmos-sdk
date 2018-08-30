@@ -4,15 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
-
-	bip39 "github.com/bartekn/go-bip39"
+		"github.com/bartekn/go-bip39"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 )
 
@@ -95,9 +93,8 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 	// get the mnemonic
 	var mnemonic string
 	if !useDefaults {
-		fmt.Println("> Enter your bip39 mnemonic.")
-		fmt.Println("> If you don't have one, just hit enter, and one will be generated for you.")
-		mnemonic, err = readStdIn()
+		printPrefixed("Enter your bip39 mnemonic.")
+		mnemonic, err = client.GetString("> If you don't have one, just hit enter, and one will be generated for you.", buf)
 		if err != nil {
 			return err
 		}
@@ -118,17 +115,16 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 	// get bip39 passphrase
 	var mnemonicPassphrase string
 	if !useDefaults {
-		fmt.Println("-------------------------------------")
-		fmt.Println("> Enter your bip39 passphrase.")
-		fmt.Println("> If you don't have one, just hit enter, and the default \"\" will be used")
-		mnemonicPassphrase, err = readStdIn()
+		printStep()
+		printPrefixed("Enter your bip39 passphrase.")
+		mnemonicPassphrase, err = client.GetString("> If you don't have one, just hit enter, and the default \"\" will be used", buf)
 		if err != nil {
 			return err
 		}
 	}
 
 	// get the encryption password
-	fmt.Println("-------------------------------------")
+	printStep()
 	encryptPassword, err := client.GetCheckPassword(
 		"> Enter a passphrase to encrypt your key:",
 		"> Repeat the passphrase:", buf)
@@ -145,24 +141,16 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func readStdIn() (string, error) {
-	reader := bufio.NewReader(os.Stdin)
-	mnemonic, err := reader.ReadString('\n')
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(mnemonic), nil
-}
-
 func getBIP44ParamsAndPath(path string, flagSet bool) (*hd.BIP44Params, error) {
+	buf := bufio.NewReader(os.Stdin)
 	bip44Path := path
 
 	// if it wasnt set in the flag, give it a chance to overide interactively
 	if !flagSet {
-		fmt.Println("-------------------------------------")
-		fmt.Printf("> Enter your bip44 path. Default is %s\n", path)
+		printStep()
+		
 		var err error
-		bip44Path, err = readStdIn()
+		bip44Path, err = client.GetString(fmt.Sprintf("> Enter your bip44 path. Default is %s\n", path), buf)
 		if err != nil {
 			return nil, err
 		}
@@ -176,4 +164,12 @@ func getBIP44ParamsAndPath(path string, flagSet bool) (*hd.BIP44Params, error) {
 		return nil, err
 	}
 	return bip44params, nil
+}
+
+func printPrefixed(msg string) {
+	fmt.Printf("> %s\n", msg)
+}
+
+func printStep() {
+	printPrefixed("-------------------------------------")
 }

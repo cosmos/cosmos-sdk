@@ -18,23 +18,23 @@ const ctxAccStoreName = "acc"
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
 type CLIContext struct {
-	Codec           *wire.Codec
-	AccDecoder      auth.AccountDecoder
-	Client          rpcclient.Client
-	Logger          io.Writer
-	Height          int64
-	Gas             int64
-	GasAdjustment   float64
-	NodeURI         string
-	FromAddressName string
-	AccountStore    string
-	TrustNode       bool
-	UseLedger       bool
-	Async           bool
-	JSON            bool
-	PrintResponse   bool
-fromAddress   types.AccAddress
-	fromName      stringz
+	Codec         *wire.Codec
+	AccDecoder    auth.AccountDecoder
+	Client        rpcclient.Client
+	Logger        io.Writer
+	Height        int64
+	Gas           int64
+	GasAdjustment float64
+	NodeURI       string
+	From          string
+	AccountStore  string
+	TrustNode     bool
+	UseLedger     bool
+	Async         bool
+	JSON          bool
+	PrintResponse bool
+	fromAddress   types.AccAddress
+	fromName      string
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
@@ -51,10 +51,10 @@ func NewCLIContext() CLIContext {
 		Client:        rpc,
 		NodeURI:       nodeURI,
 		AccountStore:  ctxAccStoreName,
-		FromAddressName: viper.GetString(client.FlagFrom),
-		Height:          viper.GetInt64(client.FlagHeight),
-		Gas:             viper.GetInt64(client.FlagGas),
-		GasAdjustment:   viper.GetFloat64(client.FlagGasAdjustment),
+		From:          viper.GetString(client.FlagFrom),
+		Height:        viper.GetInt64(client.FlagHeight),
+		Gas:           viper.GetInt64(client.FlagGas),
+		GasAdjustment: viper.GetFloat64(client.FlagGasAdjustment),
 		TrustNode:     viper.GetBool(client.FlagTrustNode),
 		UseLedger:     viper.GetBool(client.FlagUseLedger),
 		Async:         viper.GetBool(client.FlagAsync),

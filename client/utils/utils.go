@@ -64,7 +64,7 @@ func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) 
 	}
 
 	if cliCtx.Gas == 0 {
-		txCtx, err = EnrichCtxWithGas(txCtx, cliCtx, cliCtx.FromAddressName, passphrase, msgs)
+		txCtx, err = EnrichCtxWithGas(txCtx, cliCtx, name, passphrase, msgs)
 		if err != nil {
 			return err
 		}

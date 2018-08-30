@@ -15,7 +15,9 @@ import (
 	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
+	"github.com/gin-gonic/gin"
 	"github.com/tendermint/tendermint/libs/cli"
+	"regexp/syntax"
 )
 
 const (
@@ -257,4 +259,142 @@ func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	seed := getSeed(algo)
 	w.Write([]byte(seed))
+}
+
+// paramCheck performs add new key parameters checking
+func paramCheck(kb keys.Keybase, name, password string) (int, error) {
+	if len(name) < 1 || len(name) > 16 {
+		return http.StatusBadRequest, fmt.Errorf("account name length should not be longer than 16")
+	}
+	for _, char := range []rune(name) {
+		if !syntax.IsWordChar(char) {
+			return http.StatusBadRequest, fmt.Errorf("account name should not contains any char beyond [_0-9A-Za-z]")
+		}
+	}
+	if len(password) < 8 || len(password) > 16 {
+		return http.StatusBadRequest, fmt.Errorf("account password length should be no less than 8 and no greater than 16")
+	}
+
+	// check if already exists
+	infos, err := kb.List()
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	for _, i := range infos {
+		if i.GetName() == name {
+			return http.StatusConflict, fmt.Errorf("account with name %s already exists", name)
+		}
+	}
+
+	return 0, nil
+}
+
+// AddNewKeyRequest is the handler of adding new key in swagger rest server
+func AddNewKeyRequest(gtx *gin.Context) {
+	var m NewKeyBody
+	body, err := ioutil.ReadAll(gtx.Request.Body)
+	if err != nil {
+		newError(gtx, http.StatusBadRequest, err)
+		return
+	}
+	err = cdc.UnmarshalJSON(body, &m)
+	if err != nil {
+		newError(gtx, http.StatusBadRequest, err)
+		return
+	}
+
+	kb, err := GetKeyBase()
+	if err != nil {
+		newError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	errCode, err := paramCheck(kb, m.Name, m.Password)
+	if err != nil {
+		newError(gtx, errCode, err)
+		return
+	}
+
+	// create account
+	seed := m.Seed
+	if seed == "" {
+		seed = getSeed(keys.Secp256k1)
+	}
+	info, err := kb.CreateKey(m.Name, seed, m.Password)
+	if err != nil {
+		newError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	keyOutput, err := Bech32KeyOutput(info)
+	if err != nil {
+		newError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	keyOutput.Seed = seed
+
+	bz, err := json.Marshal(keyOutput)
+	if err != nil {
+		newError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	normalResponse(gtx, bz)
+
+}
+
+// RecoverKeyBody is recover key request REST body
+type RecoverKeyBody struct {
+	Password string `json:"password"`
+	Seed     string `json:"seed"`
+}
+
+// RecoverResuest is the handler of creating seed in swagger rest server
+func RecoverResuest(gtx *gin.Context) {
+	name := gtx.Param("name")
+	var m RecoverKeyBody
+	body, err := ioutil.ReadAll(gtx.Request.Body)
+	if err != nil {
+		newError(gtx, http.StatusBadRequest, err)
+		return
+	}
+	err = cdc.UnmarshalJSON(body, &m)
+	if err != nil {
+		newError(gtx, http.StatusBadRequest, err)
+		return
+	}
+
+	kb, err := GetKeyBase()
+	if err != nil {
+		newError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	errCode, err := paramCheck(kb, name, m.Password)
+	if err != nil {
+		newError(gtx, errCode, err)
+		return
+	}
+
+	info, err := kb.CreateKey(name, m.Seed, m.Password)
+	if err != nil {
+		newError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	keyOutput, err := Bech32KeyOutput(info)
+	if err != nil {
+		newError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	bz, err := cdc.MarshalJSON(keyOutput)
+	if err != nil {
+		newError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	normalResponse(gtx, bz)
 }

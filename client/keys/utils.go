@@ -13,6 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 // KeyDBName is the directory under root where we store the keys
@@ -188,4 +190,30 @@ func printPubKey(info keys.Info) {
 		panic(err)
 	}
 	fmt.Println(ko.PubKey)
+}
+
+// newError create error http response
+func newError(ctx *gin.Context, errCode int, err error) {
+	errorResponse := HTTPError{
+		API:  "2.0",
+		Code: errCode,
+	}
+	if err != nil {
+		errorResponse.ErrMsg = err.Error()
+	}
+
+	ctx.JSON(errCode, errorResponse)
+}
+
+// normalResponse create normal http response
+func normalResponse(ctx *gin.Context, data []byte) {
+	ctx.Status(http.StatusOK)
+	ctx.Writer.Write(data)
+}
+
+// HTTPError wrapper error in http response
+type HTTPError struct {
+	API    string `json:"rest api"`
+	Code   int    `json:"code"`
+	ErrMsg string `json:"error message"`
 }

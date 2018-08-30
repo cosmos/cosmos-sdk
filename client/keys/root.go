@@ -2,6 +2,7 @@ package keys
 
 import (
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 )
@@ -20,6 +21,7 @@ func Commands() *cobra.Command {
 	}
 	cmd.AddCommand(
 		addKeyCommand(),
+		keySignCmd,
 		listKeysCmd,
 		showKeysCmd,
 		client.LineBreak,
@@ -37,4 +39,15 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/keys/{name}", GetKeyRequestHandler).Methods("GET")
 	r.HandleFunc("/keys/{name}", UpdateKeyRequestHandler).Methods("PUT")
 	r.HandleFunc("/keys/{name}", DeleteKeyRequestHandler).Methods("DELETE")
+}
+
+// RegisterSwaggerRoutes registers key management related routes to Gaia-lite server
+func RegisterSwaggerRoutes(routerGroup *gin.RouterGroup) {
+	routerGroup.GET("/keys", QueryKeysRequest)
+	routerGroup.POST("/keys", AddNewKeyRequest)
+	routerGroup.POST("/keys/:name/recover", RecoverResuest)
+	routerGroup.GET("/keys/:name", GetKeyRequest)
+	routerGroup.PUT("/keys/:name", UpdateKeyRequest)
+	routerGroup.DELETE("/keys/:name", DeleteKeyRequest)
+	routerGroup.POST("/keys/:name/sign", SignResuest)
 }

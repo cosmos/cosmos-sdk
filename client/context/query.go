@@ -18,6 +18,9 @@ import (
 // GetNode returns an RPC client. If the context's client is not defined, an
 // error is returned.
 func (ctx CLIContext) GetNode() (rpcclient.Client, error) {
+	if ctx.ClientManager != nil {
+		return ctx.ClientManager.getClient(), nil
+	}
 	if ctx.Client == nil {
 		return nil, errors.New("no RPC client defined")
 	}
@@ -152,6 +155,22 @@ func (ctx CLIContext) BroadcastTxAsync(tx []byte) (*ctypes.ResultBroadcastTx, er
 	}
 
 	res, err := node.BroadcastTxAsync(tx)
+	if err != nil {
+		return res, err
+	}
+
+	return res, err
+}
+
+// BroadcastTxSync broadcasts transaction bytes to a Tendermint node
+// synchronously.
+func (ctx CLIContext) BroadcastTxSync(tx []byte) (*ctypes.ResultBroadcastTx, error) {
+	node, err := ctx.GetNode()
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := node.BroadcastTxSync(tx)
 	if err != nil {
 		return res, err
 	}

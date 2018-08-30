@@ -6,10 +6,12 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/gorilla/mux"
 
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 )
 
 func updateKeyCommand() *cobra.Command {
@@ -92,4 +94,43 @@ func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
+}
+
+// UpdateKeyRequest is the handler of updating specified key in swagger rest server
+func UpdateKeyRequest(gtx *gin.Context) {
+	name := gtx.Param("name")
+	var m UpdateKeyBody
+
+	body, err := ioutil.ReadAll(gtx.Request.Body)
+	if err != nil {
+		newError(gtx, http.StatusBadRequest, err)
+		return
+	}
+	err = cdc.UnmarshalJSON(body, &m)
+	if err != nil {
+		newError(gtx, http.StatusBadRequest, err)
+		return
+	}
+
+	kb, err := GetKeyBase()
+	if err != nil {
+		newError(gtx, http.StatusInternalServerError, err)
+		return
+	}
+
+	if len(m.NewPassword) < 8 || len(m.NewPassword) > 16 {
+		newError(gtx, http.StatusBadRequest, fmt.Errorf("account password length should be between 8 and 16"))
+		return
+	}
+
+	getNewpass := func() (string, error) { return m.NewPassword, nil }
+
+	// TODO check if account exists and if password is correct
+	err = kb.Update(name, m.OldPassword, getNewpass)
+	if err != nil {
+		newError(gtx, http.StatusUnauthorized, err)
+		return
+	}
+
+	normalResponse(gtx, []byte("success"))
 }

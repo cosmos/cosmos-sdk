@@ -127,3 +127,12 @@ func parseQueryResponse(cdc *amino.Codec, rawRes []byte) (int64, error) {
 	}
 	return simulationResult.GasUsed, nil
 }
+
+func StringArrayContains(modules []string, name string) bool {
+	for _, moduleName := range modules {
+		if moduleName == name {
+			return true
+		}
+	}
+	return false
+}

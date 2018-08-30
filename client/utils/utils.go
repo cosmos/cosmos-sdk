@@ -32,27 +32,11 @@ func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) 
 		return err
 	}
 
-	// TODO: (ref #1903) Allow for user supplied account number without
-	// automatically doing a manual lookup.
-	if txCtx.AccountNumber == 0 {
-		accNum, err := cliCtx.GetAccountNumber(from)
-		if err != nil {
-			return err
-		}
-
-		txCtx = txCtx.WithAccountNumber(accNum)
+	txCtxPtr, err := lookupTxCtx(txCtx, cliCtx, from)
+	if err != nil {
+		return err
 	}
-
-	// TODO: (ref #1903) Allow for user supplied account sequence without
-	// automatically doing a manual lookup.
-	if txCtx.Sequence == 0 {
-		accSeq, err := cliCtx.GetAccountSequence(from)
-		if err != nil {
-			return err
-		}
-
-		txCtx = txCtx.WithSequence(accSeq)
-	}
+	txCtx = *txCtxPtr
 
 	name, err := cliCtx.GetFromName()
 	if err != nil {
@@ -77,6 +61,32 @@ func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) 
 	}
 	// broadcast to a Tendermint node
 	return cliCtx.EnsureBroadcastTx(txBytes)
+}
+
+func lookupTxCtx(txCtx authctx.TxContext, cliCtx context.CLIContext, from []byte) (*authctx.TxContext, error) {
+	// TODO: (ref #1903) Allow for user supplied account number without
+	// automatically doing a manual lookup.
+	if txCtx.AccountNumber == 0 {
+		accNum, err := cliCtx.GetAccountNumber(from)
+		if err != nil {
+			return nil, err
+		}
+
+		txCtx = txCtx.WithAccountNumber(accNum)
+	}
+
+	// TODO: (ref #1903) Allow for user supplied account sequence without
+	// automatically doing a manual lookup.
+	if txCtx.Sequence == 0 {
+		accSeq, err := cliCtx.GetAccountSequence(from)
+		if err != nil {
+			return nil, err
+		}
+
+		txCtx = txCtx.WithSequence(accSeq)
+	}
+
+	return &txCtx, nil
 }
 
 // EnrichCtxWithGas calculates the gas estimate that would be consumed by the

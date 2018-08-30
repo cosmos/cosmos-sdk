@@ -88,7 +88,7 @@ func (ctx CLIContext) WithAccountStore(accountStore string) CLIContext {
 	return ctx
 }
 
-// WithFrom returns a copy of the context with an updated from address orname.
+// WithFrom returns a copy of the context with an updated from address or name.
 func (ctx CLIContext) WithFrom(from string) CLIContext {
 	ctx.From = from
 	return ctx

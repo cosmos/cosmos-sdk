@@ -10,14 +10,14 @@ import (
 
 	"github.com/pkg/errors"
 
-	cmn "github.com/tendermint/tendermint/libs/common"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/wire"
-	"strings"
-	tendermintLiteProxy "github.com/tendermint/tendermint/lite/proxy"
 	abci "github.com/tendermint/tendermint/abci/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	tendermintLiteProxy "github.com/tendermint/tendermint/lite/proxy"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"strings"
 )
 
 // GetNode returns an RPC client. If the context's client is not defined, an
@@ -351,18 +351,18 @@ func (ctx CLIContext) verifyProof(path string, resp abci.ResponseQuery) error {
 	cdc := wire.NewCodec()
 	err = cdc.UnmarshalBinary(resp.Proof, &multiStoreProof)
 	if err != nil {
-		return  errors.Wrap(err, "failed to unmarshalBinary rangeProof")
+		return errors.Wrap(err, "failed to unmarshalBinary rangeProof")
 	}
 
 	// Validate the substore commit hash against trusted appHash
-	substoreCommitHash, err :=  store.VerifyMultiStoreCommitInfo(multiStoreProof.StoreName,
+	substoreCommitHash, err := store.VerifyMultiStoreCommitInfo(multiStoreProof.StoreName,
 		multiStoreProof.CommitIDList, commit.Header.AppHash)
 	if err != nil {
-		return  errors.Wrap(err, "failed in verifying the proof against appHash")
+		return errors.Wrap(err, "failed in verifying the proof against appHash")
 	}
 	err = store.VerifyRangeProof(resp.Key, resp.Value, substoreCommitHash, &multiStoreProof.RangeProof)
 	if err != nil {
-		return  errors.Wrap(err, "failed in the range proof verification")
+		return errors.Wrap(err, "failed in the range proof verification")
 	}
 	return nil
 }
@@ -377,7 +377,7 @@ func (ctx CLIContext) queryStore(key cmn.HexBytes, storeName, endPath string) ([
 // isQueryStoreWithProof expects a format like /<queryType>/<storeName>/<subpath>
 // queryType can be app or store
 // if subpath equals to "/store" or "/key", then return true
-func isQueryStoreWithProof(path string) (bool) {
+func isQueryStoreWithProof(path string) bool {
 	if !strings.HasPrefix(path, "/") {
 		return false
 	}

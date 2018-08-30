@@ -9,8 +9,8 @@ import (
 
 	"github.com/spf13/viper"
 
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	tendermintLite "github.com/tendermint/tendermint/lite"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
 )
 
 const ctxAccStoreName = "acc"

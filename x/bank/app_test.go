@@ -123,7 +123,7 @@ func TestMsgSendWithAccounts(t *testing.T) {
 			msgs:       []sdk.Msg{sendMsg1, sendMsg2},
 			accNums:    []int64{0},
 			accSeqs:    []int64{0},
-			expSimPass: true,
+			expSimPass: false,
 			expPass:    false,
 			privKeys:   []crypto.PrivKey{priv1},
 		},

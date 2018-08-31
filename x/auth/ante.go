@@ -68,9 +68,6 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		sigs := stdTx.GetSignatures() // When simulating, this would just be a 0-length slice.
 		signerAddrs := stdTx.GetSigners()
 		msgs := tx.GetMsgs()
-		if simulate {
-			sigs = make([]StdSignature, len(signerAddrs))
-		}
 
 		// charge gas for the memo
 		newCtx.GasMeter().ConsumeGas(memoCostPerByte*sdk.Gas(len(stdTx.GetMemo())), "memo")
@@ -160,20 +157,16 @@ func processSig(
 	accnum := acc.GetAccountNumber()
 	seq := acc.GetSequence()
 
-	// Perform checks that wouldn't pass successfully in simulation, i.e. sig
-	// would be empty as simulated transactions come with no signatures whatsoever.
-	if !simulate {
-		// Check account number.
-		if accnum != sig.AccountNumber {
-			return nil, sdk.ErrInvalidSequence(
-				fmt.Sprintf("Invalid account number. Got %d, expected %d", sig.AccountNumber, accnum)).Result()
-		}
+	// Check account number.
+	if accnum != sig.AccountNumber {
+		return nil, sdk.ErrInvalidSequence(
+			fmt.Sprintf("Invalid account number. Got %d, expected %d", sig.AccountNumber, accnum)).Result()
+	}
 
-		// Check sequence number.
-		if seq != sig.Sequence {
-			return nil, sdk.ErrInvalidSequence(
-				fmt.Sprintf("Invalid sequence. Got %d, expected %d", sig.Sequence, seq)).Result()
-		}
+	// Check sequence number.
+	if seq != sig.Sequence {
+		return nil, sdk.ErrInvalidSequence(
+			fmt.Sprintf("Invalid sequence. Got %d, expected %d", sig.Sequence, seq)).Result()
 	}
 	err := acc.SetSequence(seq + 1)
 	if err != nil {

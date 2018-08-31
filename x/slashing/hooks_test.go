@@ -16,11 +16,11 @@ func TestHookOnValidatorBonded(t *testing.T) {
 	require.Equal(t, ValidatorSlashingPeriod{addr, ctx.BlockHeight(), 0, sdk.ZeroDec()}, period)
 }
 
-func TestHookOnValidatorUnbonded(t *testing.T) {
+func TestHookOnValidatorBeginUnbonding(t *testing.T) {
 	ctx, _, _, _, keeper := createTestInput(t)
 	addr := sdk.ValAddress(addrs[0])
 	keeper.onValidatorBonded(ctx, addr)
-	keeper.onValidatorUnbonded(ctx, addr)
+	keeper.onValidatorBeginUnbonding(ctx, addr)
 	period := keeper.getValidatorSlashingPeriodForHeight(ctx, addr, ctx.BlockHeight())
 	require.Equal(t, ValidatorSlashingPeriod{addr, ctx.BlockHeight(), ctx.BlockHeight(), sdk.ZeroDec()}, period)
 }

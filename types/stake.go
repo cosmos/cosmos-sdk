@@ -102,6 +102,6 @@ type DelegationSet interface {
 // validators are bonded and unbonded. The second keeper must implement
 // this interface, which then the staking keeper can call.
 type ValidatorHooks interface {
-	OnValidatorBonded(ctx Context, address ValAddress)   // Must be called when a validator is bonded
-	OnValidatorUnbonded(ctx Context, address ValAddress) // Must be called when a validator begins unbonding
+	OnValidatorBonded(ctx Context, address ValAddress)         // Must be called when a validator is bonded
+	OnValidatorBeginUnbonding(ctx Context, address ValAddress) // Must be called when a validator begins unbonding
 }

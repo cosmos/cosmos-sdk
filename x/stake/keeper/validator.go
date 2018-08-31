@@ -594,7 +594,7 @@ func (k Keeper) unbondValidator(ctx sdk.Context, validator types.Validator) type
 
 	// call the unbond hook if present
 	if k.validatorHooks != nil {
-		k.validatorHooks.OnValidatorUnbonded(ctx, validator.ValAddress())
+		k.validatorHooks.OnValidatorBeginUnbonding(ctx, validator.ValAddress())
 	}
 
 	// return updated validator

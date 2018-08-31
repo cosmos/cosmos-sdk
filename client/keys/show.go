@@ -25,7 +25,7 @@ const (
 
 func showKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show <name>",
+		Use:   "show [name]",
 		Short: "Show key info for the given name",
 		Long:  `Return public details of one local key.`,
 		Args:  cobra.ExactArgs(1),
@@ -43,7 +43,6 @@ func showKeysCmd() *cobra.Command {
 			if showAddress && showPublicKey {
 				return errors.New("cannot use both --address and --pubkey at once")
 			}
-
 			if outputSet && (showAddress || showPublicKey) {
 				return errors.New("cannot use --output with --address or --pubkey")
 			}
@@ -53,17 +52,14 @@ func showKeysCmd() *cobra.Command {
 				return err
 			}
 
-			if showAddress {
+			switch {
+			case showAddress:
 				printKeyAddress(info, bechKeyOut)
-				return nil
-			}
-
-			if showPublicKey {
+			case showPublicKey:
 				printPubKey(info, bechKeyOut)
-				return nil
+			default:
+				printKeyInfo(info, bechKeyOut)
 			}
-
-			printKeyInfo(info, bechKeyOut)
 			return nil
 		},
 	}

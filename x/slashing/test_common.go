@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -61,7 +62,7 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, para
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
-	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewTMLogger(os.Stdout))
+	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))
 	cdc := createTestCodec()
 	accountMapper := auth.NewAccountMapper(cdc, keyAcc, auth.ProtoBaseAccount)
 	ck := bank.NewKeeper(accountMapper)
@@ -106,5 +107,13 @@ func newTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt
 		ValidatorAddr: address,
 		PubKey:        pubKey,
 		Delegation:    sdk.Coin{"steak", amt},
+	}
+}
+
+func newTestMsgDelegate(delAddr, valAddr sdk.AccAddress, delAmount sdk.Int) stake.MsgDelegate {
+	return stake.MsgDelegate{
+		DelegatorAddr: delAddr,
+		ValidatorAddr: valAddr,
+		Delegation:    sdk.Coin{"steak", delAmount},
 	}
 }

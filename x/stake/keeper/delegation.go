@@ -288,6 +288,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 		if bytes.Equal(delegation.DelegatorAddr, validator.Operator) && validator.Jailed == false {
 			validator.Jailed = true
 		}
+
 		k.RemoveDelegation(ctx, delegation)
 	} else {
 		// Update height
@@ -307,7 +308,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 		k.RemoveValidator(ctx, validator.Operator)
 	}
 
-	return
+	return amount, nil
 }
 
 //______________________________________________________________________________________________________

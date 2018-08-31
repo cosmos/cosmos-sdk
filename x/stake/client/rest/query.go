@@ -87,7 +87,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Cod
 // defines a delegation without type Rat for shares
 type DelegationWithoutRat struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-	ValidatorAddr sdk.AccAddress `json:"validator_addr"`
+	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
 	Shares        string         `json:"shares"`
 	Height        int64          `json:"height"`
 }
@@ -103,14 +103,14 @@ type DelegationSummary struct {
 func delegatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		var validatorAddr sdk.AccAddress
+		var valAddr sdk.ValAddress
 		var delegationSummary = DelegationSummary{}
 
 		// read parameters
 		vars := mux.Vars(r)
 		bech32delegator := vars["delegatorAddr"]
 
-		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
+		delAddr, err := sdk.AccAddressFromBech32(bech32delegator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -126,10 +126,10 @@ func delegatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 		}
 
 		for _, validator := range validators {
-			validatorAddr = validator.Operator
+			valAddr = validator.Operator
 
 			// Delegations
-			delegations, statusCode, errMsg, err := getDelegatorDelegations(cliCtx, cdc, delegatorAddr, validatorAddr)
+			delegations, statusCode, errMsg, err := getDelegatorDelegations(cliCtx, cdc, delAddr, valAddr)
 			if err != nil {
 				w.WriteHeader(statusCode)
 				w.Write([]byte(fmt.Sprintf("%s%s", errMsg, err.Error())))
@@ -140,7 +140,7 @@ func delegatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 			}
 
 			// Undelegations
-			unbondingDelegation, statusCode, errMsg, err := getDelegatorUndelegations(cliCtx, cdc, delegatorAddr, validatorAddr)
+			unbondingDelegation, statusCode, errMsg, err := getDelegatorUndelegations(cliCtx, cdc, delAddr, valAddr)
 			if err != nil {
 				w.WriteHeader(statusCode)
 				w.Write([]byte(fmt.Sprintf("%s%s", errMsg, err.Error())))
@@ -153,7 +153,7 @@ func delegatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 			// Redelegations
 			// only querying redelegations to a validator as this should give us already all relegations
 			// if we also would put in redelegations from, we would have every redelegation double
-			redelegations, statusCode, errMsg, err := getDelegatorRedelegations(cliCtx, cdc, delegatorAddr, validatorAddr)
+			redelegations, statusCode, errMsg, err := getDelegatorRedelegations(cliCtx, cdc, delAddr, valAddr)
 			if err != nil {
 				w.WriteHeader(statusCode)
 				w.Write([]byte(fmt.Sprintf("%s%s", errMsg, err.Error())))
@@ -259,22 +259,21 @@ func unbondingDelegationsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) h
 		bech32delegator := vars["delegatorAddr"]
 		bech32validator := vars["validatorAddr"]
 
-		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
+		delAddr, err := sdk.AccAddressFromBech32(bech32delegator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		validatorAddr, err := sdk.AccAddressFromBech32(bech32validator)
+		valAddr, err := sdk.ValAddressFromBech32(bech32validator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		validatorAddrAcc := sdk.AccAddress(validatorAddr)
 
-		key := stake.GetUBDKey(delegatorAddr, validatorAddrAcc)
+		key := stake.GetUBDKey(delAddr, valAddr)
 
 		res, err := cliCtx.QueryStore(key, storeName)
 		if err != nil {
@@ -318,22 +317,21 @@ func delegationHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handle
 		bech32delegator := vars["delegatorAddr"]
 		bech32validator := vars["validatorAddr"]
 
-		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
+		delAddr, err := sdk.AccAddressFromBech32(bech32delegator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		validatorAddr, err := sdk.AccAddressFromBech32(bech32validator)
+		valAddr, err := sdk.ValAddressFromBech32(bech32validator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		validatorAddrAcc := sdk.AccAddress(validatorAddr)
 
-		key := stake.GetDelegationKey(delegatorAddr, validatorAddrAcc)
+		key := stake.GetDelegationKey(delAddr, valAddr)
 
 		res, err := cliCtx.QueryStore(key, storeName)
 		if err != nil {
@@ -377,7 +375,7 @@ func delegationHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handle
 func delegatorValidatorsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		var validatorAccAddr sdk.AccAddress
+		var valAddr sdk.ValAddress
 		var bondedValidators []types.BechValidator
 
 		// read parameters
@@ -412,9 +410,9 @@ func delegatorValidatorsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) ht
 
 		for _, validator := range validators {
 			// get all transactions from the delegator to val and append
-			validatorAccAddr = validator.Operator
+			valAddr = validator.Operator
 
-			validator, statusCode, errMsg, errRes := getDelegatorValidator(cliCtx, cdc, delegatorAddr, validatorAccAddr)
+			validator, statusCode, errMsg, errRes := getDelegatorValidator(cliCtx, cdc, delegatorAddr, valAddr)
 			if errRes != nil {
 				w.WriteHeader(statusCode)
 				w.Write([]byte(fmt.Sprintf("%s%s", errMsg, errRes.Error())))
@@ -444,8 +442,8 @@ func delegatorValidatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) htt
 		bech32delegator := vars["delegatorAddr"]
 		bech32validator := vars["validatorAddr"]
 
-		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
-		validatorAccAddr, err := sdk.AccAddressFromBech32(bech32validator)
+		delAddr, err := sdk.AccAddressFromBech32(bech32delegator)
+		valAddr, err := sdk.ValAddressFromBech32(bech32validator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))
@@ -454,7 +452,7 @@ func delegatorValidatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) htt
 
 		// Check if there if the delegator is bonded or redelegated to the validator
 
-		validator, statusCode, errMsg, err := getDelegatorValidator(cliCtx, cdc, delegatorAddr, validatorAccAddr)
+		validator, statusCode, errMsg, err := getDelegatorValidator(cliCtx, cdc, delAddr, valAddr)
 		if err != nil {
 			w.WriteHeader(statusCode)
 			w.Write([]byte(fmt.Sprintf("%s%s", errMsg, err.Error())))
@@ -516,14 +514,15 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 		// read parameters
 		vars := mux.Vars(r)
 		bech32validatorAddr := vars["addr"]
-		valAddress, err := sdk.AccAddressFromBech32(bech32validatorAddr)
+
+		valAddr, err := sdk.ValAddressFromBech32(bech32validatorAddr)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(fmt.Sprintf("error: %s", err.Error())))
 			return
 		}
 
-		key := stake.GetValidatorKey(valAddress)
+		key := stake.GetValidatorKey(valAddr)
 
 		res, err := cliCtx.QueryStore(key, storeName)
 		if err != nil {
@@ -538,7 +537,7 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 			return
 		}
 
-		validator, err := types.UnmarshalValidator(cdc, valAddress, res)
+		validator, err := types.UnmarshalValidator(cdc, valAddr, res)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))

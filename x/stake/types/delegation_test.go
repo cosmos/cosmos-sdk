@@ -10,12 +10,12 @@ import (
 
 func TestDelegationEqual(t *testing.T) {
 	d1 := Delegation{
-		DelegatorAddr: addr1,
+		DelegatorAddr: sdk.AccAddress(addr1),
 		ValidatorAddr: addr2,
 		Shares:        sdk.NewDec(100),
 	}
 	d2 := Delegation{
-		DelegatorAddr: addr1,
+		DelegatorAddr: sdk.AccAddress(addr1),
 		ValidatorAddr: addr2,
 		Shares:        sdk.NewDec(100),
 	}
@@ -23,7 +23,7 @@ func TestDelegationEqual(t *testing.T) {
 	ok := d1.Equal(d2)
 	require.True(t, ok)
 
-	d2.ValidatorAddr = addr3
+	d2.ValidatorAddr = sdk.ValAddress(addr3)
 	d2.Shares = sdk.NewDec(200)
 
 	ok = d1.Equal(d2)
@@ -32,7 +32,7 @@ func TestDelegationEqual(t *testing.T) {
 
 func TestDelegationHumanReadableString(t *testing.T) {
 	d := Delegation{
-		DelegatorAddr: addr1,
+		DelegatorAddr: sdk.AccAddress(addr1),
 		ValidatorAddr: addr2,
 		Shares:        sdk.NewDec(100),
 	}
@@ -46,18 +46,18 @@ func TestDelegationHumanReadableString(t *testing.T) {
 
 func TestUnbondingDelegationEqual(t *testing.T) {
 	ud1 := UnbondingDelegation{
-		DelegatorAddr: addr1,
+		DelegatorAddr: sdk.AccAddress(addr1),
 		ValidatorAddr: addr2,
 	}
 	ud2 := UnbondingDelegation{
-		DelegatorAddr: addr1,
+		DelegatorAddr: sdk.AccAddress(addr1),
 		ValidatorAddr: addr2,
 	}
 
 	ok := ud1.Equal(ud2)
 	require.True(t, ok)
 
-	ud2.ValidatorAddr = addr3
+	ud2.ValidatorAddr = sdk.ValAddress(addr3)
 
 	ud2.MinTime = time.Unix(20*20*2, 0)
 	ok = ud1.Equal(ud2)
@@ -66,7 +66,7 @@ func TestUnbondingDelegationEqual(t *testing.T) {
 
 func TestUnbondingDelegationHumanReadableString(t *testing.T) {
 	ud := UnbondingDelegation{
-		DelegatorAddr: addr1,
+		DelegatorAddr: sdk.AccAddress(addr1),
 		ValidatorAddr: addr2,
 	}
 
@@ -79,12 +79,12 @@ func TestUnbondingDelegationHumanReadableString(t *testing.T) {
 
 func TestRedelegationEqual(t *testing.T) {
 	r1 := Redelegation{
-		DelegatorAddr:    addr1,
+		DelegatorAddr:    sdk.AccAddress(addr1),
 		ValidatorSrcAddr: addr2,
 		ValidatorDstAddr: addr3,
 	}
 	r2 := Redelegation{
-		DelegatorAddr:    addr1,
+		DelegatorAddr:    sdk.AccAddress(addr1),
 		ValidatorSrcAddr: addr2,
 		ValidatorDstAddr: addr3,
 	}
@@ -102,7 +102,7 @@ func TestRedelegationEqual(t *testing.T) {
 
 func TestRedelegationHumanReadableString(t *testing.T) {
 	r := Redelegation{
-		DelegatorAddr:    addr1,
+		DelegatorAddr:    sdk.AccAddress(addr1),
 		ValidatorSrcAddr: addr2,
 		ValidatorDstAddr: addr3,
 		SharesDst:        sdk.NewDec(10),

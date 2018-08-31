@@ -110,9 +110,7 @@ func (ctx TxContext) Build(msgs []sdk.Msg) (auth.StdSignMsg, error) {
 		Sequence:      ctx.Sequence,
 		Memo:          ctx.Memo,
 		Msgs:          msgs,
-
-		// TODO: run simulate to estimate gas?
-		Fee: auth.NewStdFee(ctx.Gas, fee),
+		Fee:           auth.NewStdFee(ctx.Gas, fee),
 	}, nil
 }
 

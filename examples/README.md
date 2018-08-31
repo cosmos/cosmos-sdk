@@ -103,10 +103,10 @@ basecli keys list
 You should now see alice, bob and charlie's account all show up.
 
 ```
-NAME: 	ADDRESS:					                PUBKEY:
-alice   cosmosaccaddr1khygs0qh7gz3p4m39u00mjhvgvc2dcpxhsuh5f	cosmosaccpub1addwnpepq0w037u5g7y7lvdvsred2dehg90j84k0weyss5ynysf0nnnax74agrsxns6
-bob     cosmosaccaddr18se8tz6kwwfga6k2yjsu7n64e9z52nen29rhzz	cosmosaccpub1addwnpepqwe97n8lryxrzvamrvjfj24jys3uzf8wndfvqa2l7mh5nsv4jrvdznvyeg6
-charlie cosmosaccaddr13wq5mklhn03ljpd4dkph5rflk5a3ssma2ag07q	cosmosaccpub1addwnpepqdmtxv35rrmv2dvcr3yhfyxj7dzrd4z4rnhmclksq4g55a4wpl54clvx33l
+NAME: 	ADDRESS:                                        PUBKEY:
+alice   cosmos1khygs0qh7gz3p4m39u00mjhvgvc2dcpxhsuh5f	cosmospub1addwnpepq0w037u5g7y7lvdvsred2dehg90j84k0weyss5ynysf0nnnax74agrsxns6
+bob     cosmos18se8tz6kwwfga6k2yjsu7n64e9z52nen29rhzz	cosmospub1addwnpepqwe97n8lryxrzvamrvjfj24jys3uzf8wndfvqa2l7mh5nsv4jrvdznvyeg6
+charlie cosmos13wq5mklhn03ljpd4dkph5rflk5a3ssma2ag07q	cosmospub1addwnpepqdmtxv35rrmv2dvcr3yhfyxj7dzrd4z4rnhmclksq4g55a4wpl54clvx33l
 ```
 
 
@@ -115,15 +115,15 @@ charlie cosmosaccaddr13wq5mklhn03ljpd4dkph5rflk5a3ssma2ag07q	cosmosaccpub1addwnp
 Lets send bob and charlie some tokens. First, lets query alice's account so we can see what kind of tokens she has:
 
 ```
-basecli account cosmosaccaddr1khygs0qh7gz3p4m39u00mjhvgvc2dcpxhsuh5f
+basecli account cosmos1khygs0qh7gz3p4m39u00mjhvgvc2dcpxhsuh5f
 ```
 
-Where `cosmosaccaddr1khygs0qh7gz3p4m39u00mjhvgvc2dcpxhsuh5f` is alice's address we got from running `basecli keys list`. You should see a large amount of "mycoin" there. If you search for bob's or charlie's address, the command will fail, because they haven't been added into the blockchain database yet since they have no coins. We need to send them some!
+Where `cosmos1khygs0qh7gz3p4m39u00mjhvgvc2dcpxhsuh5f` is alice's address we got from running `basecli keys list`. You should see a large amount of "mycoin" there. If you search for bob's or charlie's address, the command will fail, because they haven't been added into the blockchain database yet since they have no coins. We need to send them some!
 
 The following command will send coins from alice, to bob:
 
 ```
-basecli send --from=alice --amount=10000mycoin --to=cosmosaccaddr18se8tz6kwwfga6k2yjsu7n64e9z52nen29rhzz
+basecli send --from=alice --amount=10000mycoin --to=cosmos18se8tz6kwwfga6k2yjsu7n64e9z52nen29rhzz
 --sequence=0 --chain-id=test-chain-AE4XQo
 ```
 
@@ -136,13 +136,13 @@ Flag Descriptions:
 Now if we check bobs account, it should have `10000 mycoin`. You can do so by running :
 
 ```
-basecli account cosmosaccaddr18se8tz6kwwfga6k2yjsu7n64e9z52nen29rhzz
+basecli account cosmos18se8tz6kwwfga6k2yjsu7n64e9z52nen29rhzz
 ```
 
 Now lets send some from bob to charlie. Make sure you send less than bob has, otherwise the transaction will fail:
 
 ```
-basecli send --from=bob --amount=5000mycoin --to=cosmosaccaddr13wq5mklhn03ljpd4dkph5rflk5a3ssma2ag07q
+basecli send --from=bob --amount=5000mycoin --to=cosmos13wq5mklhn03ljpd4dkph5rflk5a3ssma2ag07q
 --sequence=0 --chain-id=test-chain-AE4XQo
 ```
 
@@ -151,7 +151,7 @@ Note how we use the ``--from`` flag to select a different account to send from.
 Lets now try to send from bob back to alice:
 
 ```
-basecli send --from=bob --amount=3000mycoin --to=cosmosaccaddr1khygs0qh7gz3p4m39u00mjhvgvc2dcpxhsuh5f
+basecli send --from=bob --amount=3000mycoin --to=cosmos1khygs0qh7gz3p4m39u00mjhvgvc2dcpxhsuh5f
 --sequence=1 --chain-id=test-chain-AE4XQo
 ```
 

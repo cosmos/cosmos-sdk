@@ -12,17 +12,26 @@ BREAKING CHANGES
     * [cli] \#1983 you can now pass --pubkey or --address to gaiacli keys show to return a plaintext representation of the key's address or public key for use with other commands
     * [cli] \#2061 changed proposalID in governance REST endpoints to proposal-id
     * [cli] \#2014 `gaiacli advanced` no longer exists - to access `ibc`, `rest-server`, and `validator-set` commands use `gaiacli ibc`, `gaiacli rest-server`, and `gaiacli tendermint`, respectively
+    * [makefile] `get_vendor_deps` no longer updates lock file it just updates vendor directory. Use `update_vendor_deps` to update the lock file. [#2152](https://github.com/cosmos/cosmos-sdk/pull/2152)
+    * [cli] \#2190 `gaiacli init --gen-txs` is now `gaiacli init --with-txs` to reduce confusion
+    * \#2040 All commands that utilize a validator's address must now use the new
+    bech32 prefix, `cosmosval`. A validator's Tendermint signing key and address
+    now use a new bech32 prefix, `cosmoscons`.
 
 * Gaia
     * Make the transient store key use a distinct store key. [#2013](https://github.com/cosmos/cosmos-sdk/pull/2013)
     * [x/stake] \#1901 Validator type's Owner field renamed to Operator; Validator's GetOwner() renamed accordingly to comply with the SDK's Validator interface.
     * [docs] [#2001](https://github.com/cosmos/cosmos-sdk/pull/2001) Update slashing spec for slashing period
     * [x/stake, x/slashing] [#1305](https://github.com/cosmos/cosmos-sdk/issues/1305) - Rename "revoked" to "jailed"
+    * [x/stake] \#2040 Validator operator type has now changed to `sdk.ValAddress`
+      * A new bech32 prefix has been introduced for Tendermint signing keys and
+        addresses, `cosmosconspub` and `cosmoscons` respectively.
     
 * SDK
     * [core] \#1807 Switch from use of rational to decimal
     * [types] \#1901 Validator interface's GetOwner() renamed to GetOperator()
     * [types] \#2119 Parsed error messages and ABCI log errors to make them more human readable.
+    * [simulation] Rename TestAndRunTx to Operation [#2153](https://github.com/cosmos/cosmos-sdk/pull/2153)
 
 * Tendermint
 
@@ -35,22 +44,31 @@ FEATURES
 * Gaia CLI  (`gaiacli`)
   * [cli] Cmds to query staking pool and params
   * [gov][cli] #2062 added `--proposal` flag to `submit-proposal` that allows a JSON file containing a proposal to be passed in
+  * \#2040 Add `--bech` to `gaiacli keys show` and respective REST endpoint to
+  provide desired Bech32 prefix encoding
+  * [cli] \#2047 Setting the --gas flag value to 0 triggers a simulation of the tx before the actual execution. The gas estimate obtained via the simulation will be used as gas limit in the actual execution.
+  * [cli] \#2047 The --gas-adjustment flag can be used to adjust the estimate obtained via the simulation triggered by --gas=0.
 
 * Gaia
+  * [cli] #2170 added ability to show the node's address via `gaiad tendermint show-address`
 
 * SDK
   * [querier] added custom querier functionality, so ABCI query requests can be handled by keepers
+  * [simulation] \#1924 allow operations to specify future operations
 
 * Tendermint
 
 
 IMPROVEMENTS
+* [tools] Improved terraform and ansible scripts for infrastructure deployment
+* [tools] Added ansible script to enable process core dumps
 
 * Gaia REST API (`gaiacli advanced rest-server`)
     * [x/stake] \#2000 Added tests for new staking endpoints
 
 * Gaia CLI  (`gaiacli`)
     * [cli] #2060 removed `--select` from `block` command
+    * [cli] #2128 fixed segfault when exporting directly after `gaiad init`
 
 * Gaia
     * [x/stake] [#2023](https://github.com/cosmos/cosmos-sdk/pull/2023) Terminate iteration loop in `UpdateBondedValidators` and `UpdateBondedValidatorsFull` when the first revoked validator is encountered and perform a sanity check.
@@ -60,9 +78,10 @@ IMPROVEMENTS
     * [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.
     * [spec] Added simple piggy bank distribution spec
     * [cli] \#1632 Add integration tests to ensure `basecoind init && basecoind` start sequences run successfully for both `democoin` and `basecoin` examples.
+    * [store] Speedup IAVL iteration, and consequently everything that requires IAVL iteration. [#2143](https://github.com/cosmos/cosmos-sdk/issues/2143)
+    * [simulation] Make timestamps randomized [#2153](https://github.com/cosmos/cosmos-sdk/pull/2153)
 
 * Tendermint
-
 
 BUG FIXES
 
@@ -76,5 +95,8 @@ BUG FIXES
 * SDK
     * \#1988 Make us compile on OpenBSD (disable ledger) [#1988] (https://github.com/cosmos/cosmos-sdk/issues/1988)
     * \#2105 Fix DB Iterator leak, which may leak a go routine.
+    * [ledger] \#2064 Fix inability to sign and send transactions via the LCD by
+    loading a Ledger device at runtime.
+    * \#2158 Fix non-deterministic ordering of validator iteration when slashing in `gov EndBlocker`
 
 * Tendermint

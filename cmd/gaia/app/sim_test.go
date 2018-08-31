@@ -3,7 +3,6 @@ package app
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"math/rand"
 	"testing"
 
@@ -58,10 +57,10 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 	// XXX Try different numbers of initially bonded validators
 	numInitiallyBonded := int64(50)
 	for i := 0; i < int(numInitiallyBonded); i++ {
-		validator := stake.NewValidator(accs[i], keys[i].PubKey(), stake.Description{})
+		validator := stake.NewValidator(sdk.ValAddress(accs[i]), keys[i].PubKey(), stake.Description{})
 		validator.Tokens = sdk.NewDec(100)
 		validator.DelegatorShares = sdk.NewDec(100)
-		delegation := stake.Delegation{accs[i], accs[i], sdk.NewDec(100), 0}
+		delegation := stake.Delegation{accs[i], sdk.ValAddress(accs[i]), sdk.NewDec(100), 0}
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
@@ -85,9 +84,9 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 	return appState
 }
 
-func testAndRunTxs(app *GaiaApp) []simulation.TestAndRunTx {
-	return []simulation.TestAndRunTx{
-		banksim.TestAndRunSingleInputMsgSend(app.accountMapper),
+func testAndRunTxs(app *GaiaApp) []simulation.Operation {
+	return []simulation.Operation{
+		banksim.SimulateSingleInputMsgSend(app.accountMapper),
 		govsim.SimulateMsgSubmitProposal(app.govKeeper, app.stakeKeeper),
 		govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper),
 		govsim.SimulateMsgVote(app.govKeeper, app.stakeKeeper),
@@ -171,11 +170,10 @@ func TestAppStateDeterminism(t *testing.T) {
 				true,
 			)
 			appHash := app.LastCommitID().Hash
-			fmt.Printf(">>> APP HASH: %v, %X\n", appHash, appHash)
 			appHashList[j] = appHash
 		}
 		for k := 1; k < numTimesToRunPerSeed; k++ {
-			require.Equal(t, appHashList[0], appHashList[k])
+			require.Equal(t, appHashList[0], appHashList[k], "appHash list: %v", appHashList)
 		}
 	}
 }

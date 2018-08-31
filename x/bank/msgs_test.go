@@ -187,7 +187,7 @@ func TestMsgSendGetSignBytes(t *testing.T) {
 	}
 	res := msg.GetSignBytes()
 
-	expected := `{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]}`
+	expected := `{"inputs":[{"address":"cosmos1d9h8qat57ljhcm","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmos1da6hgur4wsmpnjyg","coins":[{"amount":"10","denom":"atom"}]}]}`
 	require.Equal(t, expected, string(res))
 }
 
@@ -257,7 +257,7 @@ func TestMsgIssueGetSignBytes(t *testing.T) {
 	}
 	res := msg.GetSignBytes()
 
-	expected := `{"banker":"cosmosaccaddr1d9h8qat5e4ehc5","outputs":[{"address":"cosmosaccaddr1d3hkzm3dveex7mfdvfsku6cwsauqd","coins":[{"amount":"10","denom":"atom"}]}]}`
+	expected := `{"banker":"cosmos1d9h8qat57ljhcm","outputs":[{"address":"cosmos1d3hkzm3dveex7mfdvfsku6cjngpcj","coins":[{"amount":"10","denom":"atom"}]}]}`
 	require.Equal(t, expected, string(res))
 }
 

@@ -1,14 +1,18 @@
 package context
 
 import (
-	"io"
-
+	"bytes"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"io"
 
 	"github.com/spf13/viper"
 
+	"github.com/tendermint/tendermint/libs/cli"
+	tmlite "github.com/tendermint/tendermint/lite"
+	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 )
 
@@ -33,6 +37,7 @@ type CLIContext struct {
 	JSON            bool
 	PrintResponse   bool
 	ClientManager   *ClientManager
+	Certifier       tmlite.Certifier
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
@@ -58,7 +63,38 @@ func NewCLIContext() CLIContext {
 		Async:           viper.GetBool(client.FlagAsync),
 		JSON:            viper.GetBool(client.FlagJson),
 		PrintResponse:   viper.GetBool(client.FlagPrintResponse),
+		Certifier:       createCertifier(),
 	}
+}
+
+func createCertifier() tmlite.Certifier {
+	trustNode := viper.GetBool(client.FlagTrustNode)
+	if trustNode {
+		return nil
+	}
+	chainID := viper.GetString(client.FlagChainID)
+	home := viper.GetString(cli.HomeFlag)
+	nodeURI := viper.GetString(client.FlagNode)
+
+	var errMsg bytes.Buffer
+	if chainID == "" {
+		errMsg.WriteString("chain-id ")
+	}
+	if home == "" {
+		errMsg.WriteString("home ")
+	}
+	if nodeURI == "" {
+		errMsg.WriteString("node ")
+	}
+	// errMsg is not empty
+	if errMsg.Len() != 0 {
+		panic(fmt.Errorf("can't create certifier for distrust mode, empty values from these options: %s", errMsg.String()))
+	}
+	certifier, err := tmliteProxy.GetCertifier(chainID, home, nodeURI)
+	if err != nil {
+		panic(err)
+	}
+	return certifier
 }
 
 // WithCodec returns a copy of the context with an updated codec.
@@ -122,5 +158,11 @@ func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 // WithClientManager - return a copy of the context with an updated ClientManager
 func (ctx CLIContext) WithClientManager(clientManager *ClientManager) CLIContext {
 	ctx.ClientManager = clientManager
+	return ctx
+}
+
+// WithCertifier - return a copy of the context with an updated Certifier
+func (ctx CLIContext) WithCertifier(certifier tmlite.Certifier) CLIContext {
+	ctx.Certifier = certifier
 	return ctx
 }

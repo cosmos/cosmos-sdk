@@ -114,8 +114,8 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
 
-		logger.Info("Proposal %d - \"%s\" - didn't mean minimum deposit (had only %s), deleted",
-			inactiveProposal.GetProposalID(), inactiveProposal.GetTitle(), inactiveProposal.GetTotalDeposit())
+		logger.Info(fmt.Sprintf("Proposal %d - \"%s\" - didn't mean minimum deposit (had only %s), deleted",
+			inactiveProposal.GetProposalID(), inactiveProposal.GetTitle(), inactiveProposal.GetTotalDeposit()))
 	}
 
 	// Check if earliest Active Proposal ended voting period yet
@@ -143,8 +143,8 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		activeProposal.SetTallyResult(tallyResults)
 		keeper.SetProposal(ctx, activeProposal)
 
-		logger.Info("Proposal %d - \"%s\" - tallied, passed: %v",
-			activeProposal.GetProposalID(), activeProposal.GetTitle(), passes)
+		logger.Info(fmt.Sprintf("Proposal %d - \"%s\" - tallied, passed: %v",
+			activeProposal.GetProposalID(), activeProposal.GetTitle(), passes))
 
 		for _, valAddr := range nonVotingVals {
 			val := keeper.ds.GetValidatorSet().Validator(ctx, valAddr)

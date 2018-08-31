@@ -77,6 +77,20 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakeKeeper stake.Keeper) sdk
 	}
 }
 
+// TODO: Remove once address interface has been implemented (ref: #2186)
+func SortValAddresses(addrs []sdk.ValAddress) {
+	var byteAddrs [][]byte
+	for _, addr := range addrs {
+		byteAddrs = append(byteAddrs, addr.Bytes())
+	}
+
+	SortByteArrays(byteAddrs)
+
+	for i, byteAddr := range byteAddrs {
+		addrs[i] = byteAddr
+	}
+}
+
 // Sorts Addresses
 func SortAddresses(addrs []sdk.AccAddress) {
 	var byteAddrs [][]byte

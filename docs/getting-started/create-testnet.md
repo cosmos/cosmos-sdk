@@ -13,7 +13,7 @@ Now these json files need to be aggregated together via Github, a Google form, p
 Place all files on one computer in `$HOME/.gaiad/gen-tx/`
 
 ```bash
-gaiad init --gen-txs -o --chain=<chain-name>
+gaiad init --with-txs -o --chain=<chain-name>
 ```
 
 This will generate a `genesis.json` in `$HOME/.gaiad/config/genesis.json` distribute this file to all validators on your testnet.

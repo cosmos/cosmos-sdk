@@ -33,12 +33,12 @@ var (
 		Addrs[0],
 		Addrs[1],
 	}
-	addrVals = []sdk.AccAddress{
-		Addrs[2],
-		Addrs[3],
-		Addrs[4],
-		Addrs[5],
-		Addrs[6],
+	addrVals = []sdk.ValAddress{
+		sdk.ValAddress(Addrs[2]),
+		sdk.ValAddress(Addrs[3]),
+		sdk.ValAddress(Addrs[4]),
+		sdk.ValAddress(Addrs[5]),
+		sdk.ValAddress(Addrs[6]),
 	}
 )
 

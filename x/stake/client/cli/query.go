@@ -17,11 +17,11 @@ import (
 // GetCmdQueryValidator implements the validator query command.
 func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "validator [owner-addr]",
+		Use:   "validator [operator-addr]",
 		Short: "Query a validator",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			addr, err := sdk.AccAddressFromBech32(args[0])
+			addr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
@@ -120,7 +120,7 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 		Use:   "delegation",
 		Short: "Query a delegation based on address and validator address",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			valAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidator))
+			valAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -222,7 +222,7 @@ func GetCmdQueryUnbondingDelegation(storeName string, cdc *wire.Codec) *cobra.Co
 		Use:   "unbonding-delegation",
 		Short: "Query an unbonding-delegation record based on delegator and validator address",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			valAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidator))
+			valAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -321,12 +321,12 @@ func GetCmdQueryRedelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 		Use:   "redelegation",
 		Short: "Query a redelegation record based on delegator and a source and destination validator address",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			valSrcAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorSrc))
+			valSrcAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidatorSrc))
 			if err != nil {
 				return err
 			}
 
-			valDstAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorDst))
+			valDstAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidatorDst))
 			if err != nil {
 				return err
 			}
@@ -423,7 +423,7 @@ func GetCmdQueryPool(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pool",
 		Short: "Query the current staking pool values",
-		Args:  cobra.ExactArgs(0),
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := stake.PoolKey
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -462,7 +462,7 @@ func GetCmdQueryParams(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "parameters",
 		Short: "Query the current staking parameters information",
-		Args:  cobra.ExactArgs(0),
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := stake.ParamKey
 			cliCtx := context.NewCLIContext().WithCodec(cdc)

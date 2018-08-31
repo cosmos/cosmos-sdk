@@ -19,10 +19,13 @@ type (
 	// For ease of debugging,
 	// an operation returns a descriptive message "action",
 	// which details what this fuzzed state machine transition actually did.
+	//
+	// Operations can optionally provide a list of "FutureOperations" to run later
+	// These will be ran at the beginning of the corresponding block.
 	Operation func(
 		t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		privKeys []crypto.PrivKey, log string, event func(string),
-	) (action string, err sdk.Error)
+	) (action string, futureOperations []FutureOperation, err sdk.Error)
 
 	// RandSetup performs the random setup the mock module needs.
 	RandSetup func(r *rand.Rand, privKeys []crypto.PrivKey)
@@ -35,6 +38,15 @@ type (
 	mockValidator struct {
 		val           abci.Validator
 		livenessState int
+	}
+
+	// FutureOperation is an operation which will be ran at the
+	// beginning of the provided BlockHeight.
+	// In the (likely) event that multiple operations are queued at the same
+	// block height, they will execute in a FIFO pattern.
+	FutureOperation struct {
+		BlockHeight int
+		Op          Operation
 	}
 )
 

@@ -1,12 +1,12 @@
 package context
 
 import (
-	"io"
 	"bytes"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"io"
 
 	"github.com/spf13/viper"
 

@@ -24,9 +24,9 @@ type delegationValue struct {
 	Height int64
 }
 
-// TODO Remove DelegationWithoutDec. See \#2096
-
-// defines a delegation without type Rat for shares
+// DelegationWithoutDec defines a delegation without the type sdk.Dec for shares
+//
+// TODO: Remove this type (ref: #2096)
 type DelegationWithoutDec struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
 	ValidatorAddr sdk.ValAddress `json:"validator_addr"`

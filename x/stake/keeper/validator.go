@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"container/list"
 	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -11,12 +12,37 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
+type cachedValidator struct {
+	val        types.Validator
+	marshalled string
+}
+
+var validatorCache = make(map[string]cachedValidator, 1000)
+var validatorCacheList = list.New()
+
 // get a single validator
 func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	value := store.Get(GetValidatorKey(addr))
 	if value == nil {
 		return validator, false
+	}
+	// return cached validator
+	strValue := string(value)
+	if val, ok := validatorCache[strValue]; ok {
+		valToReturn := val.val
+		// Doesn't mutate the cache's value
+		valToReturn.Operator = addr
+		return valToReturn, true
+	} else { // get validator from cache
+		validator = types.MustUnmarshalValidator(k.cdc, addr, value)
+		cachedVal := cachedValidator{validator, strValue}
+		validatorCache[strValue] = cachedValidator{validator, strValue}
+		validatorCacheList.PushBack(cachedVal)
+		if validatorCacheList.Len() > 500 {
+			valToRemove := validatorCacheList.Remove(validatorCacheList.Front()).(cachedValidator)
+			delete(validatorCache, valToRemove.marshalled)
+		}
 	}
 	validator = types.MustUnmarshalValidator(k.cdc, addr, value)
 	return validator, true

@@ -2,7 +2,8 @@ package context
 
 import (
 	"io"
-
+	"bytes"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -10,11 +11,9 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/tendermint/libs/cli"
-	tendermintLite "github.com/tendermint/tendermint/lite"
 	tmlite "github.com/tendermint/tendermint/lite"
-	tendermintLiteProxy "github.com/tendermint/tendermint/lite/proxy"
+	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	"fmt"
 )
 
 const ctxAccStoreName = "acc"
@@ -50,22 +49,6 @@ func NewCLIContext() CLIContext {
 		rpc = rpcclient.NewHTTP(nodeURI, "/websocket")
 	}
 
-	trustNode := viper.GetBool(client.FlagTrustNode)
-	var certifier tendermintLite.Certifier
-	if !trustNode {
-		chainID := viper.GetString(client.FlagChainID)
-		home := viper.GetString(cli.HomeFlag)
-		if chainID != "" && home != "" && nodeURI != "" {
-			var err error
-			certifier, err = tendermintLiteProxy.GetCertifier(chainID, home, nodeURI)
-			if err != nil {
-				panic(err)
-			}
-		} else {
-			panic(fmt.Errorf("can't create certifier for distrust mode, values from these options may be empty: --chain-id, --home or --node"))
-		}
-	}
-
 	return CLIContext{
 		Client:          rpc,
 		NodeURI:         nodeURI,
@@ -74,13 +57,43 @@ func NewCLIContext() CLIContext {
 		Height:          viper.GetInt64(client.FlagHeight),
 		Gas:             viper.GetInt64(client.FlagGas),
 		GasAdjustment:   viper.GetFloat64(client.FlagGasAdjustment),
-		TrustNode:       trustNode,
+		TrustNode:       viper.GetBool(client.FlagTrustNode),
 		UseLedger:       viper.GetBool(client.FlagUseLedger),
 		Async:           viper.GetBool(client.FlagAsync),
 		JSON:            viper.GetBool(client.FlagJson),
 		PrintResponse:   viper.GetBool(client.FlagPrintResponse),
-		Certifier:       certifier,
+		Certifier:       createCertifier(),
 	}
+}
+
+func createCertifier() tmlite.Certifier {
+	trustNode := viper.GetBool(client.FlagTrustNode)
+	if !trustNode {
+		chainID := viper.GetString(client.FlagChainID)
+		home := viper.GetString(cli.HomeFlag)
+		nodeURI := viper.GetString(client.FlagNode)
+
+		var errMsg bytes.Buffer
+		if chainID == "" {
+			errMsg.WriteString("chain-id ")
+		}
+		if home == "" {
+			errMsg.WriteString("home ")
+		}
+		if nodeURI == "" {
+			errMsg.WriteString("node ")
+		}
+		// errMsg is not empty
+		if errMsg.Len() != 0 {
+			panic(fmt.Errorf("can't create certifier for distrust mode, empty values from these options: %s", errMsg.String()))
+		}
+		certifier, err := tmliteProxy.GetCertifier(chainID, home, nodeURI)
+		if err != nil {
+			panic(err)
+		}
+		return certifier
+	}
+	return nil
 }
 
 // WithCodec returns a copy of the context with an updated codec.

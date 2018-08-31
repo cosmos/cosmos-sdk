@@ -129,7 +129,7 @@ func AppGenStateEmpty(_ *wire.Codec, _ []json.RawMessage) (appState json.RawMess
 
 // Return a validator, not much else
 func AppGenTx(_ *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTx) (
-		appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
+	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
 	validator = tmtypes.GenesisValidator{
 		PubKey: pk,

@@ -92,7 +92,7 @@ var doc = `{
         },
         "/bank/transfers": {
             "post": {
-                "description": "This API require the Gaia-lite has keystore module. It will ask keystore module for transaction signature",
+                "description": "This API can be used to transfer tokens or just get transfer tokens transaction bytes array. \nIf generate field is true, the API will just return a transaction byte array. Otherwise name field must be specified and the transaction will be signed and broadcast. \nIf both from_address and name field are specified, please make sure the from_address equals to the address of the key",
                 "consumes": [
                     "application/json"
                 ],
@@ -102,11 +102,11 @@ var doc = `{
                 "tags": [
                     "Bank ICS20"
                 ],
-                "summary": "Send coins to a address",
+                "summary": "Transfer tokens",
                 "parameters": [
                     {
                         "description": "transfer asset",
-                        "name": "sendAsset",
+                        "name": "transferToken",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -202,7 +202,7 @@ var doc = `{
         },
         "/txs": {
             "post": {
-                "description": "Broadcast transaction in user specified way",
+                "description": "Broadcast transaction in user specified broadcast type. The supported broadcast types are: block, sync and async. \nblock: return after the transaction is included in a block. \n sync: return after checkTx is finished. \n async: return immediately only with transaction hash",
                 "consumes": [
                     "application/json"
                 ],
@@ -215,7 +215,7 @@ var doc = `{
 				"parameters": [
 					{
                         "description": "tx byte array and return type",
-                        "name": "txAndReturn",
+                        "name": "txBroadcast",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -548,10 +548,6 @@ var doc = `{
                 "generate": {
                     "type": "boolean",
                     "example": false
-                },
-                "ensure_account_sequence": {
-                    "type": "boolean",
-                    "example": false
                 }
             }
         },
@@ -561,7 +557,7 @@ var doc = `{
                 "transaction": {
                     "type": "string"
                 },
-                "return": {
+                "broadcast_type": {
                     "type": "string",
                     "example": "block"
                 }

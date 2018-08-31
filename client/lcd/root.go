@@ -5,11 +5,11 @@ import (
 	"os"
 
 	"fmt"
-	client "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	keys "github.com/cosmos/cosmos-sdk/client/keys"
-	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
-	tx "github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/wire"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
@@ -24,10 +24,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
-	"github.com/tendermint/tendermint/libs/cli"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/libs/log"
-	tendermintLiteProxy "github.com/tendermint/tendermint/lite/proxy"
 	tmserver "github.com/tendermint/tendermint/rpc/lib/server"
 	"strings"
 )
@@ -114,18 +112,18 @@ func ServeSwaggerCommand(cdc *wire.Codec) *cobra.Command {
 		Short: "Start Gaia-lite (gaia light client daemon), a local REST server with swagger-ui, default url: http://localhost:1317/swagger/index.html",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
-				With("module", "lite-server")
+				With("module", "Gaia-lite server")
 			listenAddr := viper.GetString(client.FlagListenAddr)
 			//Create rest server
 			server := gin.New()
 			createSwaggerHandler(server, cdc)
 			go server.Run(listenAddr)
 
-			logger.Info("REST server started")
+			logger.Info("Gaia-lite server started")
 
 			// Wait forever and cleanup
 			cmn.TrapSignal(func() {
-				logger.Info("Closing rest server...")
+				logger.Info("Closing Gaia-lite server...")
 			})
 
 			return nil
@@ -143,9 +141,7 @@ func ServeSwaggerCommand(cdc *wire.Codec) *cobra.Command {
 }
 
 func createSwaggerHandler(server *gin.Engine, cdc *wire.Codec) {
-	rootDir := viper.GetString(cli.HomeFlag)
 	nodeAddrs := viper.GetString(client.FlagNodeList)
-	chainID := viper.GetString(client.FlagChainID)
 	modules := viper.GetString(client.FlagModules)
 	//Get key store
 	kb, err := keys.GetKeyBase()
@@ -157,18 +153,15 @@ func createSwaggerHandler(server *gin.Engine, cdc *wire.Codec) {
 	if len(nodeAddrArray) < 1 {
 		panic(fmt.Errorf("missing node URLs"))
 	}
-	//Tendermint certifier can only connect to one full node. Here we assign the first full node to it
-	certifier, err := tendermintLiteProxy.GetCertifier(chainID, rootDir, nodeAddrArray[0])
-	if err != nil {
-		panic(err)
-	}
+	//Create certifier with the first full node
+	viper.Set(client.FlagNode, nodeAddrArray[0])
 	//Create load balancing engine
 	clientManager, err := context.NewClientManager(nodeAddrs)
 	if err != nil {
 		panic(err)
 	}
 	//Assign tendermint certifier and load balancing engine to ctx
-	ctx := context.NewCLIContext().WithCodec(cdc).WithLogger(os.Stdout).WithCertifier(certifier).WithClientManager(clientManager)
+	ctx := context.NewCLIContext().WithCodec(cdc).WithLogger(os.Stdout).WithClientManager(clientManager)
 
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

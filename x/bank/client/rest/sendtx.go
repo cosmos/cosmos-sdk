@@ -16,7 +16,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/mux"
 	"github.com/tendermint/tendermint/libs/bech32"
@@ -51,7 +50,6 @@ type transferBody struct {
 	Gas             int64     `json:"gas"`
 	Fee             string    `json:"fee"`
 	Generate        bool      `json:"generate"`
-	EnsureAccAndSeq bool      `json:"ensure_account_sequence"`
 }
 
 var msgCdc = wire.NewCodec()
@@ -281,21 +279,6 @@ func composeTx(cdc *wire.Codec, ctx context.CLIContext, transferBody transferBod
 	sequence := transferBody.Sequence
 	gas := transferBody.Gas
 	fee := transferBody.Fee
-
-	if transferBody.EnsureAccAndSeq {
-		if ctx.AccDecoder == nil {
-			ctx = ctx.WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
-		}
-		accountNumber, err = ctx.GetAccountNumber(fromAddress)
-		if err != nil {
-			return emptyMsg, emptyTxContext, sdk.ErrInternal(err.Error())
-		}
-
-		sequence, err = ctx.GetAccountSequence(fromAddress)
-		if err != nil {
-			return emptyMsg, emptyTxContext, sdk.ErrInternal(err.Error())
-		}
-	}
 
 	txCtx := authctx.TxContext{
 		Codec:         cdc,

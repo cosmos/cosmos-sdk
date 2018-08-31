@@ -49,8 +49,8 @@ func BroadcastTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 // BroadcastBody contains the data of tx and specify how to broadcast tx
 type BroadcastBody struct {
-	Transaction string `json:"transaction"`
-	Return      string `json:"return"`
+	Transaction   string `json:"transaction"`
+	BroadcastType string `json:"broadcast_type"`
 }
 
 // BroadcastTxRequest - Handler of broadcast tx
@@ -69,7 +69,7 @@ func BroadcastTxRequest(cdc *wire.Codec, ctx context.CLIContext) gin.HandlerFunc
 			return
 		}
 		var output []byte
-		switch txBody.Return {
+		switch txBody.BroadcastType {
 		case flagBlock:
 			res, err := ctx.BroadcastTx([]byte(txBody.Transaction))
 			if err != nil {

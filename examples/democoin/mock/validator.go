@@ -135,8 +135,3 @@ func (vs *ValidatorSet) Jail(ctx sdk.Context, pubkey crypto.PubKey) {
 func (vs *ValidatorSet) Unjail(ctx sdk.Context, pubkey crypto.PubKey) {
 	panic("not implemented")
 }
-
-// Implements sdk.ValidatorSet
-func (vs *ValidatorSet) Delegation(ctx sdk.Context, addrDel, addrVal sdk.AccAddress) sdk.Delegation {
-	panic("not implemented")
-}

@@ -27,12 +27,12 @@ func GetCmdUnjail(cdc *wire.Codec) *cobra.Command {
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			validatorAddr, err := cliCtx.GetFromAddress()
+			valAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
 
-			msg := slashing.NewMsgUnjail(validatorAddr)
+			msg := slashing.NewMsgUnjail(sdk.ValAddress(valAddr))
 
 			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},

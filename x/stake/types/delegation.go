@@ -14,7 +14,7 @@ import (
 // pubKey.
 type Delegation struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-	ValidatorAddr sdk.AccAddress `json:"validator_addr"`
+	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
 	Shares        sdk.Dec        `json:"shares"`
 	Height        int64          `json:"height"` // Last height bond updated
 }
@@ -56,8 +56,9 @@ func UnmarshalDelegation(cdc *wire.Codec, key, value []byte) (delegation Delegat
 		err = fmt.Errorf("%v", ErrBadDelegationAddr(DefaultCodespace).Data())
 		return
 	}
+
 	delAddr := sdk.AccAddress(addrs[:sdk.AddrLen])
-	valAddr := sdk.AccAddress(addrs[sdk.AddrLen:])
+	valAddr := sdk.ValAddress(addrs[sdk.AddrLen:])
 
 	return Delegation{
 		DelegatorAddr: delAddr,
@@ -80,7 +81,7 @@ var _ sdk.Delegation = Delegation{}
 
 // nolint - for sdk.Delegation
 func (d Delegation) GetDelegator() sdk.AccAddress { return d.DelegatorAddr }
-func (d Delegation) GetValidator() sdk.AccAddress { return d.ValidatorAddr }
+func (d Delegation) GetValidator() sdk.ValAddress { return d.ValidatorAddr }
 func (d Delegation) GetBondShares() sdk.Dec       { return d.Shares }
 
 // HumanReadableString returns a human readable string representation of a
@@ -99,7 +100,7 @@ func (d Delegation) HumanReadableString() (string, error) {
 // UnbondingDelegation reflects a delegation's passive unbonding queue.
 type UnbondingDelegation struct {
 	DelegatorAddr  sdk.AccAddress `json:"delegator_addr"`  // delegator
-	ValidatorAddr  sdk.AccAddress `json:"validator_addr"`  // validator unbonding from owner addr
+	ValidatorAddr  sdk.ValAddress `json:"validator_addr"`  // validator unbonding from operator addr
 	CreationHeight int64          `json:"creation_height"` // height which the unbonding took place
 	MinTime        time.Time      `json:"min_time"`        // unix time for unbonding completion
 	InitialBalance sdk.Coin       `json:"initial_balance"` // atoms initially scheduled to receive at completion
@@ -147,7 +148,7 @@ func UnmarshalUBD(cdc *wire.Codec, key, value []byte) (ubd UnbondingDelegation, 
 		return
 	}
 	delAddr := sdk.AccAddress(addrs[:sdk.AddrLen])
-	valAddr := sdk.AccAddress(addrs[sdk.AddrLen:])
+	valAddr := sdk.ValAddress(addrs[sdk.AddrLen:])
 
 	return UnbondingDelegation{
 		DelegatorAddr:  delAddr,
@@ -184,8 +185,8 @@ func (d UnbondingDelegation) HumanReadableString() (string, error) {
 // Redelegation reflects a delegation's passive re-delegation queue.
 type Redelegation struct {
 	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`     // delegator
-	ValidatorSrcAddr sdk.AccAddress `json:"validator_src_addr"` // validator redelegation source owner addr
-	ValidatorDstAddr sdk.AccAddress `json:"validator_dst_addr"` // validator redelegation destination owner addr
+	ValidatorSrcAddr sdk.ValAddress `json:"validator_src_addr"` // validator redelegation source operator addr
+	ValidatorDstAddr sdk.ValAddress `json:"validator_dst_addr"` // validator redelegation destination operator addr
 	CreationHeight   int64          `json:"creation_height"`    // height which the redelegation took place
 	MinTime          time.Time      `json:"min_time"`           // unix time for redelegation completion
 	InitialBalance   sdk.Coin       `json:"initial_balance"`    // initial balance when redelegation started
@@ -239,8 +240,8 @@ func UnmarshalRED(cdc *wire.Codec, key, value []byte) (red Redelegation, err err
 		return
 	}
 	delAddr := sdk.AccAddress(addrs[:sdk.AddrLen])
-	valSrcAddr := sdk.AccAddress(addrs[sdk.AddrLen : 2*sdk.AddrLen])
-	valDstAddr := sdk.AccAddress(addrs[2*sdk.AddrLen:])
+	valSrcAddr := sdk.ValAddress(addrs[sdk.AddrLen : 2*sdk.AddrLen])
+	valDstAddr := sdk.ValAddress(addrs[2*sdk.AddrLen:])
 
 	return Redelegation{
 		DelegatorAddr:    delAddr,

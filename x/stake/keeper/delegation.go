@@ -70,7 +70,7 @@ func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAdd
 
 // load a validator that a delegator is bonded to
 func (k Keeper) GetDelegatorValidator(ctx sdk.Context, delegatorAddr sdk.AccAddress,
-	validatorAddr sdk.AccAddress) (validator types.Validator) {
+	validatorAddr sdk.ValAddress) (validator types.Validator) {
 
 	delegation, found := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
 	if !found {

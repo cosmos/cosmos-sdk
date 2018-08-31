@@ -54,9 +54,14 @@ func NewQuerier(k keep.Keeper) sdk.Querier {
 // defines the params for the following queries:
 // - 'custom/stake/delegator'
 // - 'custom/stake/delegatorValidators'
+type QueryDelegatorParams struct {
+	DelegatorAddr sdk.AccAddress
+}
+
+// defines the params for the following queries:
 // - 'custom/stake/validator'
-type QueryAddressParams struct {
-	AccountAddr sdk.AccAddress
+type QueryValidatorParams struct {
+	ValidatorAddr sdk.ValAddress
 }
 
 // defines the params for the following queries:
@@ -65,7 +70,7 @@ type QueryAddressParams struct {
 // - 'custom/stake/delegatorValidator'
 type QueryBondsParams struct {
 	DelegatorAddr sdk.AccAddress
-	ValidatorAddr sdk.AccAddress
+	ValidatorAddr sdk.ValAddress
 }
 
 func queryValidators(ctx sdk.Context, path []string, k keep.Keeper) (res []byte, err sdk.Error) {
@@ -79,14 +84,14 @@ func queryValidators(ctx sdk.Context, path []string, k keep.Keeper) (res []byte,
 }
 
 func queryValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryAddressParams
+	var params QueryValidatorParams
 
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
 		return []byte{}, sdk.ErrUnknownAddress(fmt.Sprintf("incorrectly formatted request address: %s", err.Error()))
 	}
 
-	validator, found := k.GetValidator(ctx, params.AccountAddr)
+	validator, found := k.GetValidator(ctx, params.ValidatorAddr)
 	if !found {
 		return []byte{}, ErrNoValidatorFound(DefaultCodespace)
 	}
@@ -100,14 +105,14 @@ func queryValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k kee
 
 // TODO query with limit
 func queryDelegator(ctx sdk.Context, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryAddressParams
+	var params QueryDelegatorParams
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
 		return []byte{}, sdk.ErrUnknownAddress(fmt.Sprintf("incorrectly formatted request address: %s", errRes.Error()))
 	}
-	delegations := k.GetDelegatorDelegationsWithoutRat(ctx, params.AccountAddr)
-	unbondingDelegations := k.GetDelegatorUnbondingDelegations(ctx, params.AccountAddr)
-	redelegations := k.GetRedelegations(ctx, params.AccountAddr)
+	delegations := k.GetDelegatorDelegationsWithoutRat(ctx, params.DelegatorAddr)
+	unbondingDelegations := k.GetDelegatorUnbondingDelegations(ctx, params.DelegatorAddr)
+	redelegations := k.GetRedelegations(ctx, params.DelegatorAddr)
 
 	summary := types.DelegationSummary{
 		Delegations:          delegations,
@@ -124,14 +129,14 @@ func queryDelegator(ctx sdk.Context, path []string, req abci.RequestQuery, k kee
 
 // TODO query with limit
 func queryDelegatorValidators(ctx sdk.Context, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryAddressParams
+	var params QueryDelegatorParams
 
 	errRes := k.Codec().UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
 		return []byte{}, sdk.ErrUnknownAddress(fmt.Sprintf("incorrectly formatted request address: %s", errRes.Error()))
 	}
 
-	validators := k.GetDelegatorValidators(ctx, params.AccountAddr)
+	validators := k.GetDelegatorValidators(ctx, params.DelegatorAddr)
 
 	res, errRes = wire.MarshalJSONIndent(k.Codec(), validators)
 	if errRes != nil {

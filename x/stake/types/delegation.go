@@ -29,7 +29,7 @@ type delegationValue struct {
 // defines a delegation without type Rat for shares
 type DelegationWithoutDec struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-	ValidatorAddr sdk.AccAddress `json:"validator_addr"`
+	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
 	Shares        string         `json:"shares"`
 	Height        int64          `json:"height"`
 }

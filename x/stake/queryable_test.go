@@ -11,13 +11,19 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func newTestAddrQuery(accountAddr sdk.AccAddress) QueryAddressParams {
-	return QueryAddressParams{
-		AccountAddr: accountAddr,
+func newTestDelegatorQuery(delegatorAddr sdk.AccAddress) QueryDelegatorParams {
+	return QueryDelegatorParams{
+		DelegatorAddr: delegatorAddr,
 	}
 }
 
-func newTestBondQuery(delegatorAddr, validatorAddr sdk.AccAddress) QueryBondsParams {
+func newTestValidatorQuery(validatorAddr sdk.ValAddress) QueryValidatorParams {
+	return QueryValidatorParams{
+		ValidatorAddr: validatorAddr,
+	}
+}
+
+func newTestBondQuery(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) QueryBondsParams {
 	return QueryBondsParams{
 		DelegatorAddr: delegatorAddr,
 		ValidatorAddr: validatorAddr,
@@ -70,7 +76,7 @@ func TestQueryValidators(t *testing.T) {
 	assert.ElementsMatch(t, validators, validatorsResp)
 
 	// Query each validator
-	queryParams := newTestAddrQuery(addr1)
+	queryParams := newTestDelegatorQuery(addr1)
 	bz, errRes := keeper.Codec().MarshalJSON(queryParams)
 	assert.Nil(t, errRes)
 
@@ -101,7 +107,7 @@ func TestQueryDelegation(t *testing.T) {
 	handleMsgDelegate(ctx, msg2, keeper)
 
 	// Query Delegator bonded validators
-	queryParams := newTestAddrQuery(addr2)
+	queryParams := newTestDelegatorQuery(addr2)
 	bz, errRes := keeper.Codec().MarshalJSON(queryParams)
 	assert.Nil(t, errRes)
 

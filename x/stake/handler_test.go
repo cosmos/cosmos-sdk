@@ -198,7 +198,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	setInstantUnbondPeriod(keeper, ctx)
 
 	bondAmount := int64(10)
-	valAddr, valPubKey := keep.Addrs[0], keep.PKs[0]
+	valAddr, valPubKey := sdk.ValAddress(keep.Addrs[0]), keep.PKs[0]
 	delAddr := keep.Addrs[1]
 
 	// create validator
@@ -226,8 +226,8 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 
 	// unbond validator total self-delegations (which should jail the validator)
 	unbondShares := sdk.NewDec(10)
-	msgBeginUnbonding := NewMsgBeginUnbonding(valAddr, valAddr, unbondShares)
-	msgCompleteUnbonding := NewMsgCompleteUnbonding(valAddr, valAddr)
+	msgBeginUnbonding := NewMsgBeginUnbonding(sdk.AccAddress(valAddr), valAddr, unbondShares)
+	msgCompleteUnbonding := NewMsgCompleteUnbonding(sdk.AccAddress(valAddr), valAddr)
 
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 	require.True(t, got.IsOK(), "expected begin unbonding validator msg to be ok, got %v", got)
@@ -253,7 +253,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	require.False(t, got.IsOK(), "expected delegation to not be ok, got %v", got)
 
 	// verify the validator can still self-delegate
-	msgSelfDelegate := newTestMsgDelegate(valAddr, valAddr, bondAmount)
+	msgSelfDelegate := newTestMsgDelegate(sdk.AccAddress(valAddr), valAddr, bondAmount)
 	got = handleMsgDelegate(ctx, msgSelfDelegate, keeper)
 	require.True(t, got.IsOK(), "expected delegation to not be ok, got %v", got)
 

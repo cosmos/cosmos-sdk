@@ -137,6 +137,6 @@ func (vs *ValidatorSet) Unjail(ctx sdk.Context, pubkey crypto.PubKey) {
 }
 
 // Implements sdk.ValidatorSet
-func (vs *ValidatorSet) Delegation(ctx sdk.Context, addrDel, addrVal sdk.AccAddress) sdk.Delegation {
+func (vs *ValidatorSet) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.ValAddress) sdk.Delegation {
 	panic("not implemented")
 }

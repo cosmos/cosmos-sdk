@@ -38,7 +38,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 
 	// create a validator
 	amount := int64(10)
-	valAddr, valPubKey, bondAmount := addrs[0], pks[0], sdk.NewInt(amount)
+	valAddr, valPubKey, bondAmount := sdk.ValAddress(addrs[0]), pks[0], sdk.NewInt(amount)
 	msgCreateVal := newTestMsgCreateValidator(valAddr, valPubKey, bondAmount)
 	got := stake.NewHandler(stakeKeeper)(ctx, msgCreateVal)
 	require.True(t, got.IsOK(), "expected create validator msg to be ok, got: %v", got)
@@ -50,7 +50,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 		JailedUntil:         time.Unix(0, 0),
 		SignedBlocksCounter: int64(0),
 	}
-	slashingKeeper.setValidatorSigningInfo(ctx, sdk.ValAddress(valAddr), newInfo)
+	slashingKeeper.setValidatorSigningInfo(ctx, valAddr, newInfo)
 
 	// delegate tokens to the validator
 	delAddr := addrs[1]
@@ -61,11 +61,11 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	unbondShares := sdk.NewDec(10)
 
 	// unbond validator total self-delegations (which should jail the validator)
-	msgBeginUnbonding := stake.NewMsgBeginUnbonding(valAddr, valAddr, unbondShares)
+	msgBeginUnbonding := stake.NewMsgBeginUnbonding(sdk.AccAddress(valAddr), valAddr, unbondShares)
 	got = stake.NewHandler(stakeKeeper)(ctx, msgBeginUnbonding)
 	require.True(t, got.IsOK(), "expected begin unbonding validator msg to be ok, got: %v", got)
 
-	msgCompleteUnbonding := stake.NewMsgCompleteUnbonding(valAddr, valAddr)
+	msgCompleteUnbonding := stake.NewMsgCompleteUnbonding(sdk.AccAddress(valAddr), valAddr)
 	got = stake.NewHandler(stakeKeeper)(ctx, msgCompleteUnbonding)
 	require.True(t, got.IsOK(), "expected complete unbonding validator msg to be ok, got: %v", got)
 
@@ -79,7 +79,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	require.False(t, got.IsOK(), "expected jailed validator to not be able to unjail, got: %v", got)
 
 	// self-delegate to validator
-	msgSelfDelegate := newTestMsgDelegate(valAddr, valAddr, bondAmount)
+	msgSelfDelegate := newTestMsgDelegate(sdk.AccAddress(valAddr), valAddr, bondAmount)
 	got = stake.NewHandler(stakeKeeper)(ctx, msgSelfDelegate)
 	require.True(t, got.IsOK(), "expected delegation to not be ok, got %v", got)
 

@@ -25,7 +25,7 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 	}
 
 	// cannot be unjailed if no self-delegation exists
-	selfDel := k.validatorSet.Delegation(ctx, msg.ValidatorAddr, msg.ValidatorAddr)
+	selfDel := k.validatorSet.Delegation(ctx, sdk.AccAddress(msg.ValidatorAddr), msg.ValidatorAddr)
 	if selfDel == nil {
 		return ErrMissingSelfDelegation(k.codespace).Result()
 	}

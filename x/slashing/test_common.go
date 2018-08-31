@@ -110,7 +110,7 @@ func newTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt
 	}
 }
 
-func newTestMsgDelegate(delAddr, valAddr sdk.AccAddress, delAmount sdk.Int) stake.MsgDelegate {
+func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmount sdk.Int) stake.MsgDelegate {
 	return stake.MsgDelegate{
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,

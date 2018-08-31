@@ -68,32 +68,32 @@ func NewCLIContext() CLIContext {
 
 func createCertifier() tmlite.Certifier {
 	trustNode := viper.GetBool(client.FlagTrustNode)
-	if !trustNode {
-		chainID := viper.GetString(client.FlagChainID)
-		home := viper.GetString(cli.HomeFlag)
-		nodeURI := viper.GetString(client.FlagNode)
-
-		var errMsg bytes.Buffer
-		if chainID == "" {
-			errMsg.WriteString("chain-id ")
-		}
-		if home == "" {
-			errMsg.WriteString("home ")
-		}
-		if nodeURI == "" {
-			errMsg.WriteString("node ")
-		}
-		// errMsg is not empty
-		if errMsg.Len() != 0 {
-			panic(fmt.Errorf("can't create certifier for distrust mode, empty values from these options: %s", errMsg.String()))
-		}
-		certifier, err := tmliteProxy.GetCertifier(chainID, home, nodeURI)
-		if err != nil {
-			panic(err)
-		}
-		return certifier
+	if trustNode {
+		return nil
 	}
-	return nil
+	chainID := viper.GetString(client.FlagChainID)
+	home := viper.GetString(cli.HomeFlag)
+	nodeURI := viper.GetString(client.FlagNode)
+
+	var errMsg bytes.Buffer
+	if chainID == "" {
+		errMsg.WriteString("chain-id ")
+	}
+	if home == "" {
+		errMsg.WriteString("home ")
+	}
+	if nodeURI == "" {
+		errMsg.WriteString("node ")
+	}
+	// errMsg is not empty
+	if errMsg.Len() != 0 {
+		panic(fmt.Errorf("can't create certifier for distrust mode, empty values from these options: %s", errMsg.String()))
+	}
+	certifier, err := tmliteProxy.GetCertifier(chainID, home, nodeURI)
+	if err != nil {
+		panic(err)
+	}
+	return certifier
 }
 
 // WithCodec returns a copy of the context with an updated codec.

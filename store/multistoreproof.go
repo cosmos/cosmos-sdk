@@ -15,12 +15,9 @@ type MultiStoreProof struct {
 }
 
 // buildMultiStoreProof build MultiStoreProof based on iavl proof and storeInfos
-func buildMultiStoreProof(iavlProof []byte, storeName string, storeInfos []storeInfo) ([]byte, error) {
+func buildMultiStoreProof(iavlProof []byte, storeName string, storeInfos []storeInfo) []byte {
 	var rangeProof iavl.RangeProof
-	err := cdc.UnmarshalBinary(iavlProof, &rangeProof)
-	if err != nil {
-		return nil, err
-	}
+	cdc.MustUnmarshalBinary(iavlProof, &rangeProof)
 
 	msp := MultiStoreProof{
 		StoreInfos: storeInfos,
@@ -28,12 +25,8 @@ func buildMultiStoreProof(iavlProof []byte, storeName string, storeInfos []store
 		RangeProof: rangeProof,
 	}
 
-	proof, err := cdc.MarshalBinary(msp)
-	if err != nil {
-		return nil, err
-	}
-
-	return proof, nil
+	proof := cdc.MustMarshalBinary(msp)
+	return proof
 }
 
 // VerifyMultiStoreCommitInfo verify multiStoreCommitInfo against appHash
@@ -64,20 +57,20 @@ func VerifyMultiStoreCommitInfo(storeName string, storeInfos []storeInfo, appHas
 // VerifyRangeProof verify iavl RangeProof
 func VerifyRangeProof(key, value []byte, substoreCommitHash []byte, rangeProof *iavl.RangeProof) error {
 
-	// Verify the proof to ensure data integrity.
+	// verify the proof to ensure data integrity.
 	err := rangeProof.Verify(substoreCommitHash)
 	if err != nil {
 		return errors.Wrap(err, "proof root hash doesn't equal to substore commit root hash")
 	}
 
 	if len(value) != 0 {
-		// Verify existence proof
+		// verify existence proof
 		err = rangeProof.VerifyItem(key, value)
 		if err != nil {
 			return errors.Wrap(err, "failed in existence verification")
 		}
 	} else {
-		// Verify absence proof
+		// verify absence proof
 		err = rangeProof.VerifyAbsence(key)
 		if err != nil {
 			return errors.Wrap(err, "failed in absence verification")

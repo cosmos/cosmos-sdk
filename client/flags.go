@@ -27,7 +27,6 @@ const (
 	FlagSwaggerHostIP = "swagger-host-ip"
 	FlagModules       = "modules"
 	FlagNodeList      = "node-list"
-	FlagTrustStore    = "trust-store"
 )
 
 // LineBreak can be included in a command list to provide a blank line

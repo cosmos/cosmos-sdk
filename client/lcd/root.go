@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"os"
 
-	client "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	keys "github.com/cosmos/cosmos-sdk/client/keys"
-	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
-	tx "github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/wire"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
@@ -19,11 +19,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/libs/cli"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/libs/log"
-	tendermintLite "github.com/tendermint/tendermint/lite"
-	tendermintLiteProxy "github.com/tendermint/tendermint/lite/proxy"
 	tmserver "github.com/tendermint/tendermint/rpc/lib/server"
 )
 
@@ -84,17 +81,6 @@ func createHandler(cdc *wire.Codec) http.Handler {
 
 	cliCtx := context.NewCLIContext().WithCodec(cdc).WithLogger(os.Stdout)
 
-	chainID := viper.GetString(client.FlagChainID)
-	home := viper.GetString(cli.HomeFlag)
-	nodeURI := viper.GetString(client.FlagNode)
-	var certifier tendermintLite.Certifier
-	if chainID != "" && home != "" && nodeURI != "" {
-		certifier, err = tendermintLiteProxy.GetCertifier(chainID, home, nodeURI)
-		if err != nil {
-			panic(err)
-		}
-		cliCtx = cliCtx.WithCertifier(certifier)
-	}
 	// TODO: make more functional? aka r = keys.RegisterRoutes(r)
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
 	r.HandleFunc("/node_version", NodeVersionRequestHandler(cliCtx)).Methods("GET")

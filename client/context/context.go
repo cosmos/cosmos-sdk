@@ -9,8 +9,12 @@ import (
 
 	"github.com/spf13/viper"
 
+	"github.com/tendermint/tendermint/libs/cli"
+	tendermintLite "github.com/tendermint/tendermint/lite"
 	tmlite "github.com/tendermint/tendermint/lite"
+	tendermintLiteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	"fmt"
 )
 
 const ctxAccStoreName = "acc"
@@ -46,6 +50,22 @@ func NewCLIContext() CLIContext {
 		rpc = rpcclient.NewHTTP(nodeURI, "/websocket")
 	}
 
+	trustNode := viper.GetBool(client.FlagTrustNode)
+	var certifier tendermintLite.Certifier
+	if !trustNode {
+		chainID := viper.GetString(client.FlagChainID)
+		home := viper.GetString(cli.HomeFlag)
+		if chainID != "" && home != "" && nodeURI != "" {
+			var err error
+			certifier, err = tendermintLiteProxy.GetCertifier(chainID, home, nodeURI)
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			panic(fmt.Errorf("can't create certifier for distrust mode, values from these options may be empty: --chain-id, --home or --node"))
+		}
+	}
+
 	return CLIContext{
 		Client:          rpc,
 		NodeURI:         nodeURI,
@@ -54,11 +74,12 @@ func NewCLIContext() CLIContext {
 		Height:          viper.GetInt64(client.FlagHeight),
 		Gas:             viper.GetInt64(client.FlagGas),
 		GasAdjustment:   viper.GetFloat64(client.FlagGasAdjustment),
-		TrustNode:       viper.GetBool(client.FlagTrustNode),
+		TrustNode:       trustNode,
 		UseLedger:       viper.GetBool(client.FlagUseLedger),
 		Async:           viper.GetBool(client.FlagAsync),
 		JSON:            viper.GetBool(client.FlagJson),
 		PrintResponse:   viper.GetBool(client.FlagPrintResponse),
+		Certifier:       certifier,
 	}
 }
 

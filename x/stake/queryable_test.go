@@ -11,6 +11,12 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+var (
+	addrAcc1, addrAcc2 = keep.Addrs[0], keep.Addrs[1]
+	addrVal1, addrVal2 = sdk.ValAddress(keep.Addrs[0]), sdk.ValAddress(keep.Addrs[1])
+	pk1, pk2           = keep.PKs[0], keep.PKs[1]
+)
+
 func newTestDelegatorQuery(delegatorAddr sdk.AccAddress) QueryDelegatorParams {
 	return QueryDelegatorParams{
 		DelegatorAddr: delegatorAddr,
@@ -54,13 +60,10 @@ func TestQueryValidators(t *testing.T) {
 
 	ctx, _, keeper := keep.CreateTestInput(t, false, 10000)
 
-	addr1, addr2 := keep.Addrs[0], keep.Addrs[1]
-	pk1, pk2 := keep.PKs[0], keep.PKs[1]
-
 	// Create Validators
-	msg1 := types.NewMsgCreateValidator(addr1, pk1, sdk.NewCoin("steak", sdk.NewInt(1000)), Description{})
+	msg1 := types.NewMsgCreateValidator(addrVal1, pk1, sdk.NewCoin("steak", sdk.NewInt(1000)), Description{})
 	handleMsgCreateValidator(ctx, msg1, keeper)
-	msg2 := types.NewMsgCreateValidator(addr2, pk2, sdk.NewCoin("steak", sdk.NewInt(100)), Description{})
+	msg2 := types.NewMsgCreateValidator(addrVal2, pk2, sdk.NewCoin("steak", sdk.NewInt(100)), Description{})
 	handleMsgCreateValidator(ctx, msg2, keeper)
 
 	// Query Validators
@@ -76,12 +79,12 @@ func TestQueryValidators(t *testing.T) {
 	assert.ElementsMatch(t, validators, validatorsResp)
 
 	// Query each validator
-	queryParams := newTestDelegatorQuery(addr1)
+	queryParams := newTestValidatorQuery(addrVal1)
 	bz, errRes := keeper.Codec().MarshalJSON(queryParams)
 	assert.Nil(t, errRes)
 
 	query := abci.RequestQuery{
-		Path: "/custom/stake/delegation",
+		Path: "/custom/stake/validator",
 		Data: bz,
 	}
 	res, err = queryValidator(ctx, []string{query.Path}, query, keeper)
@@ -97,17 +100,14 @@ func TestQueryValidators(t *testing.T) {
 func TestQueryDelegation(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 10000)
 
-	addr1, addr2 := keep.Addrs[0], keep.Addrs[1]
-	pk1, _ := keep.PKs[0], keep.PKs[1]
-
 	// Create Validators and Delegation
-	msg1 := types.NewMsgCreateValidator(addr1, pk1, sdk.NewCoin("steak", sdk.NewInt(1000)), Description{})
+	msg1 := types.NewMsgCreateValidator(addrVal1, pk1, sdk.NewCoin("steak", sdk.NewInt(1000)), Description{})
 	handleMsgCreateValidator(ctx, msg1, keeper)
-	msg2 := types.NewMsgDelegate(addr2, addr1, sdk.NewCoin("steak", sdk.NewInt(20)))
+	msg2 := types.NewMsgDelegate(addrAcc2, addrVal1, sdk.NewCoin("steak", sdk.NewInt(20)))
 	handleMsgDelegate(ctx, msg2, keeper)
 
 	// Query Delegator bonded validators
-	queryParams := newTestDelegatorQuery(addr2)
+	queryParams := newTestDelegatorQuery(addrAcc2)
 	bz, errRes := keeper.Codec().MarshalJSON(queryParams)
 	assert.Nil(t, errRes)
 
@@ -116,7 +116,7 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	delValidators := keeper.GetDelegatorValidators(ctx, addr2)
+	delValidators := keeper.GetDelegatorValidators(ctx, addrAcc2)
 	res, err := queryDelegatorValidators(ctx, []string{query.Path}, query, keeper)
 	assert.Nil(t, err)
 
@@ -128,7 +128,7 @@ func TestQueryDelegation(t *testing.T) {
 	assert.ElementsMatch(t, delValidators, validatorsResp)
 
 	// Query bonded validator
-	queryBondParams := newTestBondQuery(addr2, addr1)
+	queryBondParams := newTestBondQuery(addrAcc2, addrVal1)
 	bz, errRes = keeper.Codec().MarshalJSON(queryBondParams)
 	assert.Nil(t, errRes)
 
@@ -153,7 +153,7 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	delegation, found := keeper.GetDelegation(ctx, addr2, addr1)
+	delegation, found := keeper.GetDelegation(ctx, addrAcc2, addrVal1)
 	assert.True(t, found)
 
 	delegationNoRat := types.NewDelegationWithoutDec(delegation)
@@ -169,7 +169,7 @@ func TestQueryDelegation(t *testing.T) {
 
 	// Query unbonging delegation
 
-	msg3 := types.NewMsgBeginUnbonding(addr2, addr1, sdk.NewDec(10))
+	msg3 := types.NewMsgBeginUnbonding(addrAcc2, addrVal1, sdk.NewDec(10))
 	handleMsgBeginUnbonding(ctx, msg3, keeper)
 
 	query = abci.RequestQuery{
@@ -177,7 +177,7 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	unbond, found := keeper.GetUnbondingDelegation(ctx, addr2, addr1)
+	unbond, found := keeper.GetUnbondingDelegation(ctx, addrAcc2, addrVal1)
 	assert.True(t, found)
 
 	res, err = queryUnbondingDelegation(ctx, []string{query.Path}, query, keeper)

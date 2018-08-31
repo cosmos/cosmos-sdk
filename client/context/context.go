@@ -36,6 +36,7 @@ type CLIContext struct {
 	Async           bool
 	JSON            bool
 	PrintResponse   bool
+	ClientManager   *ClientManager
 	Certifier       tmlite.Certifier
 }
 
@@ -151,6 +152,12 @@ func (ctx CLIContext) WithClient(client rpcclient.Client) CLIContext {
 // WithUseLedger returns a copy of the context with an updated UseLedger flag.
 func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 	ctx.UseLedger = useLedger
+	return ctx
+}
+
+// WithClientManager - return a copy of the context with an updated ClientManager
+func (ctx CLIContext) WithClientManager(clientManager *ClientManager) CLIContext {
+	ctx.ClientManager = clientManager
 	return ctx
 }
 

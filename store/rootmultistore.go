@@ -292,19 +292,16 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 	req.Path = subpath
 	res := queryable.Query(req)
 
-	// Currently, only when query subpath is "/store" or "/key", will proof be included in response.
-	// If there are some changes about proof building in iavlstore.go, we must change code here to keep consistency with iavlstore.go
-	if !req.Prove || subpath != "/store" && subpath != "/key" {
+	if !req.Prove || !RequireProof(subpath) {
 		return res
 	}
 
-	//Load commit info from db
 	commitInfo, errMsg := getCommitInfo(rs.db, res.Height)
 	if errMsg != nil {
 		return sdk.ErrInternal(errMsg.Error()).QueryResult()
 	}
 
-	res.Proof, errMsg = BuildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
+	res.Proof, errMsg = buildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
 	if errMsg != nil {
 		return sdk.ErrInternal(errMsg.Error()).QueryResult()
 	}

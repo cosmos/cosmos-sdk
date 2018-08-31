@@ -42,6 +42,7 @@ FEATURES
   * [cli] \#2047 The --gas-adjustment flag can be used to adjust the estimate obtained via the simulation triggered by --gas=0.
 
 * Gaia
+  * [cli] #2170 added ability to show the node's address via `gaiad tendermint show-address`
 
 * SDK
   * [querier] added custom querier functionality, so ABCI query requests can be handled by keepers

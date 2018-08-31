@@ -63,38 +63,25 @@ func (k Keeper) validatorByPowerIndexExists(ctx sdk.Context, power []byte) bool 
 	return store.Get(power) != nil
 }
 
-// Get the set of all validators with no limits, used during genesis dump
-func (k Keeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator) {
-	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
-
-	i := 0
-	for ; iterator.Valid(); iterator.Next() {
-		addr := iterator.Key()[1:]
-		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
-		validators = append(validators, validator)
-		i++
-	}
-	iterator.Close()
-	return validators
-}
-
-// Get the set of all validators, retrieve a maxRetrieve number of records
+// Get the set of all validators, retrieve an optional maxRetrieve number of records
 func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve ...int16) (validators []types.Validator) {
-	if len(maxRetrieve) == 0 {
-		return k.GetAllValidators(ctx)
+	retrieve := len(maxRetrieve) > 0
+	if retrieve {
+		validators = make([]types.Validator, maxRetrieve[0])
 	}
-	validators = make([]types.Validator, maxRetrieve[0])
 
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
 
 	i := 0
-	for ; iterator.Valid() && i < int(maxRetrieve[0]); iterator.Next() {
+	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
 		addr := iterator.Key()[1:]
 		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
-
-		validators[i] = validator
+		if retrieve {
+			validators[i] = validator
+		} else {
+			validators = append(validators, validator)
+		}
 		i++
 	}
 	iterator.Close()

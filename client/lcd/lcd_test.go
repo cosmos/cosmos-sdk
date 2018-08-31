@@ -819,11 +819,11 @@ func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.
 
 // ============= Stake Module ================
 
-func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.AccAddress) stake.DelegationWithoutRat {
+func getDelegation(t *testing.T, port string, delegatorAddr, validatorAddr sdk.AccAddress) stake.DelegationWithoutDec {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/delegations/%s", delegatorAddr, validatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var bond stake.DelegationWithoutRat
+	var bond stake.DelegationWithoutDec
 	err := cdc.UnmarshalJSON([]byte(body), &bond)
 	require.Nil(t, err)
 

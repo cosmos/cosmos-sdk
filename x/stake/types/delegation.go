@@ -24,8 +24,10 @@ type delegationValue struct {
 	Height int64
 }
 
+// TODO Remove DelegationWithoutDec. See \#2096
+
 // defines a delegation without type Rat for shares
-type DelegationWithoutRat struct {
+type DelegationWithoutDec struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
 	ValidatorAddr sdk.AccAddress `json:"validator_addr"`
 	Shares        string         `json:"shares"`
@@ -34,13 +36,13 @@ type DelegationWithoutRat struct {
 
 // aggregates of all delegations, unbondings and redelegations
 type DelegationSummary struct {
-	Delegations          []DelegationWithoutRat `json:"delegations"`
+	Delegations          []DelegationWithoutDec `json:"delegations"`
 	UnbondingDelegations []UnbondingDelegation  `json:"unbonding_delegations"`
 	Redelegations        []Redelegation         `json:"redelegations"`
 }
 
-func NewDelegationWithoutRat(delegation Delegation) DelegationWithoutRat {
-	return DelegationWithoutRat{
+func NewDelegationWithoutDec(delegation Delegation) DelegationWithoutDec {
+	return DelegationWithoutDec{
 		DelegatorAddr: delegation.DelegatorAddr,
 		ValidatorAddr: delegation.ValidatorAddr,
 		Height:        delegation.Height,

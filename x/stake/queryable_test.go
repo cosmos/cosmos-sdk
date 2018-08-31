@@ -150,12 +150,12 @@ func TestQueryDelegation(t *testing.T) {
 	delegation, found := keeper.GetDelegation(ctx, addr2, addr1)
 	assert.True(t, found)
 
-	delegationNoRat := types.NewDelegationWithoutRat(delegation)
+	delegationNoRat := types.NewDelegationWithoutDec(delegation)
 
 	res, err = queryDelegation(ctx, []string{query.Path}, query, keeper)
 	assert.Nil(t, err)
 
-	var delegationRes types.DelegationWithoutRat
+	var delegationRes types.DelegationWithoutDec
 	errRes = keeper.Codec().UnmarshalJSON(res, &delegationRes)
 	assert.Nil(t, errRes)
 
@@ -167,7 +167,7 @@ func TestQueryDelegation(t *testing.T) {
 	handleMsgBeginUnbonding(ctx, msg3, keeper)
 
 	query = abci.RequestQuery{
-		Path: "/custom/stake/unbonding-delegation",
+		Path: "/custom/stake/unbondingDelegation",
 		Data: bz,
 	}
 

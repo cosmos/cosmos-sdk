@@ -10,27 +10,40 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// TODO Redelegations
+// nolint
+const (
+	QueryValidators          = "validators"
+	QueryValidator           = "validator"
+	QueryDelegator           = "delegator"
+	QueryDelegation          = "delegation"
+	QueryUnbondingDelegation = "unbondingDelegation"
+	QueryDelegatorValidators = "delegatorValidators"
+	QueryDelegatorValidator  = "delegatorValidator"
+	QueryPool                = "pool"
+	QueryParameters          = "parameters"
+)
+
+// creates a querier for staking REST endpoints
 func NewQuerier(k keep.Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
-		case "validators":
+		case QueryValidators:
 			return queryValidators(ctx, path[1:], k)
-		case "validator":
+		case QueryValidator:
 			return queryValidator(ctx, path[1:], req, k)
-		case "delegator":
+		case QueryDelegator:
 			return queryDelegator(ctx, path[1:], req, k)
-		case "delegation":
+		case QueryDelegation:
 			return queryDelegation(ctx, path[1:], req, k)
-		case "unbonding-delegation":
+		case QueryUnbondingDelegation:
 			return queryUnbondingDelegation(ctx, path[1:], req, k)
-		case "delegatorValidators":
+		case QueryDelegatorValidators:
 			return queryDelegatorValidators(ctx, path[1:], req, k)
-		case "delegatorValidator":
+		case QueryDelegatorValidator:
 			return queryDelegatorValidator(ctx, path[1:], req, k)
-		case "pool":
+		case QueryPool:
 			return queryPool(ctx, k)
-		case "parameters":
+		case QueryParameters:
 			return queryParameters(ctx, k)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown stake query endpoint")
@@ -38,7 +51,7 @@ func NewQuerier(k keep.Keeper) sdk.Querier {
 	}
 }
 
-// Params for queries:
+// defines the params for the following queries:
 // - 'custom/stake/delegator'
 // - 'custom/stake/delegatorValidators'
 // - 'custom/stake/validator'
@@ -46,9 +59,9 @@ type QueryAddressParams struct {
 	AccountAddr sdk.AccAddress
 }
 
-// Params for queries
+// defines the params for the following queries:
 // - 'custom/stake/delegation'
-// - 'custom/stake/unbonding-delegation'
+// - 'custom/stake/unbondingDelegation'
 // - 'custom/stake/delegatorValidator'
 type QueryBondsParams struct {
 	DelegatorAddr sdk.AccAddress
@@ -157,7 +170,7 @@ func queryDelegation(ctx sdk.Context, path []string, req abci.RequestQuery, k ke
 		return []byte{}, ErrNoDelegation(DefaultCodespace)
 	}
 
-	outputDelegation := types.NewDelegationWithoutRat(delegation)
+	outputDelegation := types.NewDelegationWithoutDec(delegation)
 	res, errRes = wire.MarshalJSONIndent(k.Codec(), outputDelegation)
 	if errRes != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))

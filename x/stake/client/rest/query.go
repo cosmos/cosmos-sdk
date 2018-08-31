@@ -49,7 +49,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Cod
 		delegationHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
-	// Query all unbonding_delegations between a delegator and a validator
+	// Query all unbonding delegations between a delegator and a validator
 	r.HandleFunc(
 		"/stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}",
 		unbondingDelegationHandlerFn(cliCtx, cdc),
@@ -195,7 +195,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Hand
 	}
 }
 
-// HTTP request handler to query an unbonding-delegation
+// HTTP request handler to query an unbonding delegation
 func unbondingDelegationHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -228,7 +228,7 @@ func unbondingDelegationHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) ht
 			return
 		}
 
-		res, err := cliCtx.QueryWithData("custom/stake/unbonding-delegation", bz)
+		res, err := cliCtx.QueryWithData("custom/stake/unbondingDelegation", bz)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

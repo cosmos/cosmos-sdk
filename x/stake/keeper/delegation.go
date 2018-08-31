@@ -27,11 +27,9 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, DelegationKey)
 
-	i := 0
 	for ; iterator.Valid(); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
 		delegations = append(delegations, delegation)
-		i++
 	}
 	iterator.Close()
 	return delegations
@@ -111,10 +109,10 @@ func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddres
 
 // load all delegations for a delegator
 func (k Keeper) GetDelegatorDelegationsWithoutRat(ctx sdk.Context, delegator sdk.AccAddress,
-	maxRetrieve ...int16) (delegations []types.DelegationWithoutRat) {
+	maxRetrieve ...int16) (delegations []types.DelegationWithoutDec) {
 	retrieve := len(maxRetrieve) > 0
 	if retrieve {
-		delegations = make([]types.DelegationWithoutRat, maxRetrieve[0])
+		delegations = make([]types.DelegationWithoutDec, maxRetrieve[0])
 	}
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(delegator)
@@ -123,7 +121,7 @@ func (k Keeper) GetDelegatorDelegationsWithoutRat(ctx sdk.Context, delegator sdk
 	i := 0
 	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
-		delegationWithoutRat := types.NewDelegationWithoutRat(delegation)
+		delegationWithoutRat := types.NewDelegationWithoutDec(delegation)
 		if retrieve {
 			delegations[i] = delegationWithoutRat
 		} else {
@@ -211,8 +209,8 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sd
 func (k Keeper) IterateUnbondingDelegations(ctx sdk.Context, fn func(index int64, ubd types.UnbondingDelegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, UnbondingDelegationKey)
-	i := int64(0)
-	for ; iterator.Valid(); iterator.Next() {
+
+	for i := int64(0); iterator.Valid(); iterator.Next() {
 		ubd := types.MustUnmarshalUBD(k.cdc, iterator.Key(), iterator.Value())
 		stop := fn(i, ubd)
 		if stop {

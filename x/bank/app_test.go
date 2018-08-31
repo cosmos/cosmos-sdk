@@ -21,6 +21,7 @@ type (
 	}
 
 	appTestCase struct {
+		expSimPass       bool
 		expPass          bool
 		msgs             []sdk.Msg
 		accNums          []int64
@@ -107,27 +108,29 @@ func TestMsgSendWithAccounts(t *testing.T) {
 
 	testCases := []appTestCase{
 		{
-			msgs:     []sdk.Msg{sendMsg1},
-			accNums:  []int64{0},
-			accSeqs:  []int64{0},
-			expPass:  true,
-			privKeys: []crypto.PrivKey{priv1},
+			msgs:       []sdk.Msg{sendMsg1},
+			accNums:    []int64{0},
+			accSeqs:    []int64{0},
+			expSimPass: true,
+			expPass:    true,
+			privKeys:   []crypto.PrivKey{priv1},
 			expectedBalances: []expectedBalance{
 				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 57)}},
 				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}},
 			},
 		},
 		{
-			msgs:     []sdk.Msg{sendMsg1, sendMsg2},
-			accNums:  []int64{0},
-			accSeqs:  []int64{0},
-			expPass:  false,
-			privKeys: []crypto.PrivKey{priv1},
+			msgs:       []sdk.Msg{sendMsg1, sendMsg2},
+			accNums:    []int64{0},
+			accSeqs:    []int64{0},
+			expSimPass: true,
+			expPass:    false,
+			privKeys:   []crypto.PrivKey{priv1},
 		},
 	}
 
 	for _, tc := range testCases {
-		mock.SignCheckDeliver(t, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expPass, tc.privKeys...)
+		mock.SignCheckDeliver(t, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
 			mock.CheckBalance(t, mapp, eb.addr, eb.coins)
@@ -144,7 +147,7 @@ func TestMsgSendWithAccounts(t *testing.T) {
 	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
 
 	// resigning the tx with the bumped sequence should work
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{sendMsg1, sendMsg2}, []int64{0}, []int64{1}, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{sendMsg1, sendMsg2}, []int64{0}, []int64{1}, true, true, priv1)
 }
 
 func TestMsgSendMultipleOut(t *testing.T) {
@@ -163,11 +166,12 @@ func TestMsgSendMultipleOut(t *testing.T) {
 
 	testCases := []appTestCase{
 		{
-			msgs:     []sdk.Msg{sendMsg2},
-			accNums:  []int64{0},
-			accSeqs:  []int64{0},
-			expPass:  true,
-			privKeys: []crypto.PrivKey{priv1},
+			msgs:       []sdk.Msg{sendMsg2},
+			accNums:    []int64{0},
+			accSeqs:    []int64{0},
+			expSimPass: true,
+			expPass:    true,
+			privKeys:   []crypto.PrivKey{priv1},
 			expectedBalances: []expectedBalance{
 				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
 				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 47)}},
@@ -177,7 +181,7 @@ func TestMsgSendMultipleOut(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		mock.SignCheckDeliver(t, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expPass, tc.privKeys...)
+		mock.SignCheckDeliver(t, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
 			mock.CheckBalance(t, mapp, eb.addr, eb.coins)
@@ -205,11 +209,12 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 
 	testCases := []appTestCase{
 		{
-			msgs:     []sdk.Msg{sendMsg3},
-			accNums:  []int64{0, 2},
-			accSeqs:  []int64{0, 0},
-			expPass:  true,
-			privKeys: []crypto.PrivKey{priv1, priv4},
+			msgs:       []sdk.Msg{sendMsg3},
+			accNums:    []int64{0, 2},
+			accSeqs:    []int64{0, 0},
+			expSimPass: true,
+			expPass:    true,
+			privKeys:   []crypto.PrivKey{priv1, priv4},
 			expectedBalances: []expectedBalance{
 				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
 				{addr4, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
@@ -220,7 +225,7 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		mock.SignCheckDeliver(t, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expPass, tc.privKeys...)
+		mock.SignCheckDeliver(t, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
 			mock.CheckBalance(t, mapp, eb.addr, eb.coins)
@@ -240,22 +245,24 @@ func TestMsgSendDependent(t *testing.T) {
 
 	testCases := []appTestCase{
 		{
-			msgs:     []sdk.Msg{sendMsg1},
-			accNums:  []int64{0},
-			accSeqs:  []int64{0},
-			expPass:  true,
-			privKeys: []crypto.PrivKey{priv1},
+			msgs:       []sdk.Msg{sendMsg1},
+			accNums:    []int64{0},
+			accSeqs:    []int64{0},
+			expSimPass: true,
+			expPass:    true,
+			privKeys:   []crypto.PrivKey{priv1},
 			expectedBalances: []expectedBalance{
 				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
 				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}},
 			},
 		},
 		{
-			msgs:     []sdk.Msg{sendMsg4},
-			accNums:  []int64{1},
-			accSeqs:  []int64{0},
-			expPass:  true,
-			privKeys: []crypto.PrivKey{priv2},
+			msgs:       []sdk.Msg{sendMsg4},
+			accNums:    []int64{1},
+			accSeqs:    []int64{0},
+			expSimPass: true,
+			expPass:    true,
+			privKeys:   []crypto.PrivKey{priv2},
 			expectedBalances: []expectedBalance{
 				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 42)}},
 			},
@@ -263,7 +270,7 @@ func TestMsgSendDependent(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		mock.SignCheckDeliver(t, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expPass, tc.privKeys...)
+		mock.SignCheckDeliver(t, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
 			mock.CheckBalance(t, mapp, eb.addr, eb.coins)

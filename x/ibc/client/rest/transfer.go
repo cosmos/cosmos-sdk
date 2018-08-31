@@ -33,6 +33,7 @@ type transferBody struct {
 
 // TransferRequestHandler - http request handler to transfer coins to a address
 // on a different chain via IBC
+// nolint: gocyclo
 func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -76,10 +77,14 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.C
 			Gas:           m.Gas,
 		}
 
-		if m.Gas == 0 {
-			newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, m.Password, []sdk.Msg{msg})
+		if utils.HasDryRunArg(r) || m.Gas == 0 {
+			newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
 			if err != nil {
 				utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+				return
+			}
+			if utils.HasDryRunArg(r) {
+				utils.WriteSimulationResponse(&w, txCtx.Gas)
 				return
 			}
 			txCtx = newCtx

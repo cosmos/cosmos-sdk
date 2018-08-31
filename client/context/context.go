@@ -37,6 +37,7 @@ type CLIContext struct {
 	JSON            bool
 	PrintResponse   bool
 	Certifier       tmlite.Certifier
+	DryRun          bool
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
@@ -63,6 +64,7 @@ func NewCLIContext() CLIContext {
 		JSON:            viper.GetBool(client.FlagJson),
 		PrintResponse:   viper.GetBool(client.FlagPrintResponse),
 		Certifier:       createCertifier(),
+		DryRun:          viper.GetBool(client.FlagDryRun),
 	}
 }
 

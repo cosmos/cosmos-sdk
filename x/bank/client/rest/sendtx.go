@@ -40,6 +40,7 @@ func init() {
 }
 
 // SendRequestHandlerFn - http request handler to send coins to a address
+// nolint: gocyclo
 func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collect data
@@ -85,10 +86,14 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 			Sequence:      m.Sequence,
 		}
 
-		if m.Gas == 0 {
-			newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, m.Password, []sdk.Msg{msg})
+		if utils.HasDryRunArg(r) || m.Gas == 0 {
+			newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
 			if err != nil {
 				utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+				return
+			}
+			if utils.HasDryRunArg(r) {
+				utils.WriteSimulationResponse(&w, txCtx.Gas)
 				return
 			}
 			txCtx = newCtx

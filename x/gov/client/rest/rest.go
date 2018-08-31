@@ -81,7 +81,7 @@ func postProposalHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.Hand
 			return
 		}
 
-		signAndBuild(w, cliCtx, req.BaseReq, msg, cdc)
+		signAndBuild(w, r, cliCtx, req.BaseReq, msg, cdc)
 	}
 }
 
@@ -118,7 +118,7 @@ func depositHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.HandlerFu
 			return
 		}
 
-		signAndBuild(w, cliCtx, req.BaseReq, msg, cdc)
+		signAndBuild(w, r, cliCtx, req.BaseReq, msg, cdc)
 	}
 }
 
@@ -155,7 +155,7 @@ func voteHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.HandlerFunc 
 			return
 		}
 
-		signAndBuild(w, cliCtx, req.BaseReq, msg, cdc)
+		signAndBuild(w, r, cliCtx, req.BaseReq, msg, cdc)
 	}
 }
 

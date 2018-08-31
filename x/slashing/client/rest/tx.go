@@ -36,6 +36,7 @@ type UnjailBody struct {
 	ValidatorAddr    string `json:"validator_addr"`
 }
 
+// nolint: gocyclo
 func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m UnjailBody
@@ -77,10 +78,14 @@ func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLI
 
 		msg := slashing.NewMsgUnjail(valAddr)
 
-		if m.Gas == 0 {
-			newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, m.Password, []sdk.Msg{msg})
+		if utils.HasDryRunArg(r) || m.Gas == 0 {
+			newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
 			if err != nil {
 				utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+				return
+			}
+			if utils.HasDryRunArg(r) {
+				utils.WriteSimulationResponse(&w, txCtx.Gas)
 				return
 			}
 			txCtx = newCtx

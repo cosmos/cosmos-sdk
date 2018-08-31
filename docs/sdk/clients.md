@@ -95,6 +95,8 @@ When you query an account balance with zero tokens, you will get this error: `No
 
 ### Send Tokens
 
+The following command could be used to send coins from one account to another:
+
 ```bash
 gaiacli send \
   --amount=10faucetToken \
@@ -110,7 +112,7 @@ The `--amount` flag accepts the format `--amount=<value|coin_name>`.
 ::: tip Note
 You may want to cap the maximum gas that can be consumed by the transaction via the `--gas` flag.
 If set to 0, the gas limit will be automatically estimated.
-Gas estimate might be inaccurate as state changes could occur in between the end of the simulation and the actual execution of a transaction, thus an adjustment is applied on top of the original estimate in order to ensure the transaction is broadcasted successfully. The adjustment can be controlled via the `--gas-adjustment` flag, whose default value is 1.2.
+Gas estimate might be inaccurate as state changes could occur in between the end of the simulation and the actual execution of a transaction, thus an adjustment is applied on top of the original estimate in order to ensure the transaction is broadcasted successfully. The adjustment can be controlled via the `--gas-adjustment` flag, whose default value is 1.0.
 :::
 
 Now, view the updated balances of the origin and destination accounts:
@@ -124,6 +126,17 @@ You can also check your balance at a given block by using the `--block` flag:
 
 ```bash
 gaiacli account <account_cosmos> --block=<block_height>
+```
+
+You can simulate a transaction without actually broadcasting it by appending the `--dry-run` flag to the command line:
+
+```bash
+gaiacli send \
+  --amount=10faucetToken \
+  --chain-id=<chain_id> \
+  --name=<key_name> \
+  --to=<destination_cosmosaccaddr> \
+  --dry-run
 ```
 
 ### Staking

@@ -66,7 +66,7 @@ func (req baseReq) baseReqValidate(w http.ResponseWriter) bool {
 
 // TODO: Build this function out into a more generic base-request
 // (probably should live in client/lcd).
-func signAndBuild(w http.ResponseWriter, cliCtx context.CLIContext, baseReq baseReq, msg sdk.Msg, cdc *wire.Codec) {
+func signAndBuild(w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext, baseReq baseReq, msg sdk.Msg, cdc *wire.Codec) {
 	var err error
 	txCtx := authctx.TxContext{
 		Codec:         cdc,
@@ -76,10 +76,14 @@ func signAndBuild(w http.ResponseWriter, cliCtx context.CLIContext, baseReq base
 		Gas:           baseReq.Gas,
 	}
 
-	if baseReq.Gas == 0 {
-		newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, baseReq.Name, baseReq.Password, []sdk.Msg{msg})
+	if utils.HasDryRunArg(r) || baseReq.Gas == 0 {
+		newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, baseReq.Name, []sdk.Msg{msg})
 		if err != nil {
 			utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		if utils.HasDryRunArg(r) {
+			utils.WriteSimulationResponse(&w, txCtx.Gas)
 			return
 		}
 		txCtx = newCtx

@@ -276,10 +276,14 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 
 			m.Sequence++
 
-			if m.Gas == 0 {
-				newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, m.Password, []sdk.Msg{msg})
+			if utils.HasDryRunArg(r) || m.Gas == 0 {
+				newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
 				if err != nil {
 					utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+					return
+				}
+				if utils.HasDryRunArg(r) {
+					utils.WriteSimulationResponse(&w, txCtx.Gas)
 					return
 				}
 				txCtx = newCtx

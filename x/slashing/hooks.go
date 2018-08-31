@@ -5,7 +5,7 @@ import (
 )
 
 // Create a new slashing period when a validator is bonded
-func (k Keeper) onValidatorBonded(ctx sdk.Context, address sdk.ValAddress) {
+func (k Keeper) onValidatorBonded(ctx sdk.Context, address sdk.ConsAddress) {
 	slashingPeriod := ValidatorSlashingPeriod{
 		ValidatorAddr: address,
 		StartHeight:   ctx.BlockHeight(),
@@ -16,7 +16,7 @@ func (k Keeper) onValidatorBonded(ctx sdk.Context, address sdk.ValAddress) {
 }
 
 // Mark the slashing period as having ended when a validator begins unbonding
-func (k Keeper) onValidatorBeginUnbonding(ctx sdk.Context, address sdk.ValAddress) {
+func (k Keeper) onValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddress) {
 	slashingPeriod := k.getValidatorSlashingPeriodForHeight(ctx, address, ctx.BlockHeight())
 	slashingPeriod.EndHeight = ctx.BlockHeight()
 	k.addOrUpdateValidatorSlashingPeriod(ctx, slashingPeriod)
@@ -36,11 +36,11 @@ func (k Keeper) ValidatorHooks() sdk.ValidatorHooks {
 }
 
 // Implements sdk.ValidatorHooks
-func (v ValidatorHooks) OnValidatorBonded(ctx sdk.Context, address sdk.ValAddress) {
+func (v ValidatorHooks) OnValidatorBonded(ctx sdk.Context, address sdk.ConsAddress) {
 	v.k.onValidatorBonded(ctx, address)
 }
 
 // Implements sdk.ValidatorHooks
-func (v ValidatorHooks) OnValidatorBeginUnbonding(ctx sdk.Context, address sdk.ValAddress) {
+func (v ValidatorHooks) OnValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddress) {
 	v.k.onValidatorBeginUnbonding(ctx, address)
 }

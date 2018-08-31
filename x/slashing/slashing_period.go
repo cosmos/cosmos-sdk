@@ -8,7 +8,7 @@ import (
 )
 
 // Cap an infraction's slash amount by the slashing period in which it was committed
-func (k Keeper) capBySlashingPeriod(ctx sdk.Context, address sdk.ValAddress, fraction sdk.Dec, infractionHeight int64) (revisedFraction sdk.Dec) {
+func (k Keeper) capBySlashingPeriod(ctx sdk.Context, address sdk.ConsAddress, fraction sdk.Dec, infractionHeight int64) (revisedFraction sdk.Dec) {
 
 	// Fetch the newest slashing period starting before this infraction was committed
 	slashingPeriod := k.getValidatorSlashingPeriodForHeight(ctx, address, infractionHeight)
@@ -36,7 +36,7 @@ func (k Keeper) capBySlashingPeriod(ctx sdk.Context, address sdk.ValAddress, fra
 // This function retrieves the most recent slashing period starting
 // before a particular height - so the slashing period that was "in effect"
 // at the time of an infraction committed at that height.
-func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk.ValAddress, height int64) (slashingPeriod ValidatorSlashingPeriod) {
+func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk.ConsAddress, height int64) (slashingPeriod ValidatorSlashingPeriod) {
 	store := ctx.KVStore(k.storeKey)
 	// Get the most recent slashing period at or before the infraction height
 	start := GetValidatorSlashingPeriodPrefix(address)
@@ -67,7 +67,7 @@ func (k Keeper) addOrUpdateValidatorSlashingPeriod(ctx sdk.Context, slashingPeri
 func (k Keeper) unmarshalSlashingPeriodKeyValue(key []byte, value []byte) ValidatorSlashingPeriod {
 	var slashingPeriodValue ValidatorSlashingPeriodValue
 	k.cdc.MustUnmarshalBinary(value, &slashingPeriodValue)
-	address := sdk.ValAddress(key[1 : 1+sdk.AddrLen])
+	address := sdk.ConsAddress(key[1 : 1+sdk.AddrLen])
 	startHeight := int64(binary.LittleEndian.Uint64(key[1+sdk.AddrLen : 1+sdk.AddrLen+8]))
 	return ValidatorSlashingPeriod{
 		ValidatorAddr: address,
@@ -88,10 +88,10 @@ func NewValidatorSlashingPeriod(startHeight int64, endHeight int64, slashedSoFar
 
 // Slashing period for a validator
 type ValidatorSlashingPeriod struct {
-	ValidatorAddr sdk.ValAddress `json:"validator_addr"` // validator which this slashing period is for
-	StartHeight   int64          `json:"start_height"`   // starting height of the slashing period
-	EndHeight     int64          `json:"end_height"`     // ending height of the slashing period, or sentinel value of 0 for in-progress
-	SlashedSoFar  sdk.Dec        `json:"slashed_so_far"` // fraction of validator stake slashed so far in this slashing period
+	ValidatorAddr sdk.ConsAddress `json:"validator_addr"` // validator which this slashing period is for
+	StartHeight   int64           `json:"start_height"`   // starting height of the slashing period
+	EndHeight     int64           `json:"end_height"`     // ending height of the slashing period, or sentinel value of 0 for in-progress
+	SlashedSoFar  sdk.Dec         `json:"slashed_so_far"` // fraction of validator stake slashed so far in this slashing period
 }
 
 // Value part of slashing period (validator address & start height are stored in the key)

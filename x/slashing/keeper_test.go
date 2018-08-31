@@ -31,7 +31,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	require.True(t, got.IsOK())
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
-	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
+	require.Equal(t, ck.GetCoins(ctx, sdk.AccAddress(addr)), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
 	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, sdk.ValAddress(addr)).GetPower()))
 
 	// handle a signature to set signing info
@@ -72,7 +72,7 @@ func TestSlashingPeriodCap(t *testing.T) {
 	require.True(t, got.IsOK())
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
-	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
+	require.Equal(t, ck.GetCoins(ctx, sdk.AccAddress(addr)), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
 	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
 
 	// handle a signature to set signing info
@@ -129,9 +129,9 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.True(t, got.IsOK())
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
-	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
+	require.Equal(t, ck.GetCoins(ctx, sdk.AccAddress(addr)), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
 	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, sdk.ValAddress(addr)).GetPower()))
-	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))
+	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.False(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, int64(0), info.IndexOffset)
@@ -146,7 +146,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 		ctx = ctx.WithBlockHeight(height)
 		keeper.handleValidatorSignature(ctx, val.Address(), amtInt, true)
 	}
-	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))
+	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, keeper.SignedBlocksWindow(ctx), info.SignedBlocksCounter)
@@ -156,7 +156,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 		ctx = ctx.WithBlockHeight(height)
 		keeper.handleValidatorSignature(ctx, val.Address(), amtInt, false)
 	}
-	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))
+	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx), info.SignedBlocksCounter)
@@ -170,7 +170,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	// 501st block missed
 	ctx = ctx.WithBlockHeight(height)
 	keeper.handleValidatorSignature(ctx, val.Address(), amtInt, false)
-	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))
+	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)-1, info.SignedBlocksCounter)
@@ -198,7 +198,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, int64(amtInt)-slashAmt, pool.BondedTokens.RoundInt64())
 
 	// validator start height should have been changed
-	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))
+	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, height, info.StartHeight)
 	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)-1, info.SignedBlocksCounter)
@@ -239,7 +239,7 @@ func TestHandleNewValidator(t *testing.T) {
 	require.True(t, got.IsOK())
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
-	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.SubRaw(amt)}})
+	require.Equal(t, ck.GetCoins(ctx, sdk.AccAddress(addr)), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.SubRaw(amt)}})
 	require.Equal(t, sdk.NewDec(amt), sk.Validator(ctx, sdk.ValAddress(addr)).GetPower())
 
 	// 1000 first blocks not a validator
@@ -250,7 +250,7 @@ func TestHandleNewValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeight(keeper.SignedBlocksWindow(ctx) + 2)
 	keeper.handleValidatorSignature(ctx, val.Address(), 100, false)
 
-	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(val.Address()))
+	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(keeper.SignedBlocksWindow(ctx)+1), info.StartHeight)
 	require.Equal(t, int64(2), info.IndexOffset)

@@ -247,8 +247,8 @@ func (v Validator) Equal(c2 Validator) bool {
 }
 
 // return the TM validator address
-func (v Validator) ValAddress() sdk.ValAddress {
-	return sdk.ValAddress(v.PubKey.Address())
+func (v Validator) ConsAddress() sdk.ConsAddress {
+	return sdk.ConsAddress(v.PubKey.Address())
 }
 
 // constant used in flags to indicate that description field should not be updated

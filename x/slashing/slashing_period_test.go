@@ -10,7 +10,7 @@ import (
 
 func TestGetSetValidatorSlashingPeriod(t *testing.T) {
 	ctx, _, _, _, keeper := createTestInput(t)
-	addr := sdk.ValAddress(addrs[0])
+	addr := sdk.ConsAddress(addrs[0])
 	height := int64(5)
 	require.Panics(t, func() { keeper.getValidatorSlashingPeriodForHeight(ctx, addr, height) })
 	newPeriod := ValidatorSlashingPeriod{
@@ -61,7 +61,7 @@ func TestGetSetValidatorSlashingPeriod(t *testing.T) {
 
 func TestValidatorSlashingPeriodCap(t *testing.T) {
 	ctx, _, _, _, keeper := createTestInput(t)
-	addr := sdk.ValAddress(addrs[0])
+	addr := sdk.ConsAddress(addrs[0])
 	height := int64(5)
 	newPeriod := ValidatorSlashingPeriod{
 		ValidatorAddr: addr,

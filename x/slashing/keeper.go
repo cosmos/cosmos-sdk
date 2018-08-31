@@ -40,7 +40,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	logger := ctx.Logger().With("module", "x/slashing")
 	time := ctx.BlockHeader().Time
 	age := time.Sub(timestamp)
-	address := sdk.ValAddress(addr)
+	address := sdk.ConsAddress(addr)
 	pubkey, err := k.getPubkey(ctx, addr)
 	if err != nil {
 		panic(fmt.Sprintf("Validator address %v not found", addr))
@@ -82,7 +82,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, power int64, signed bool) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	height := ctx.BlockHeight()
-	address := sdk.ValAddress(addr)
+	address := sdk.ConsAddress(addr)
 	pubkey, err := k.getPubkey(ctx, addr)
 	if err != nil {
 		panic(fmt.Sprintf("Validator address %v not found", addr))

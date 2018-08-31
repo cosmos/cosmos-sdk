@@ -112,6 +112,7 @@ func AddCommands(
 	tendermintCmd.AddCommand(
 		ShowNodeIDCmd(ctx),
 		ShowValidatorCmd(ctx),
+		ShowAddressCmd(ctx),
 	)
 
 	rootCmd.AddCommand(

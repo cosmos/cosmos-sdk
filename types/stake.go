@@ -40,7 +40,7 @@ type Validator interface {
 	GetJailed() bool          // whether the validator is jailed
 	GetMoniker() string       // moniker of the validator
 	GetStatus() BondStatus    // status of the validator
-	GetOperator() AccAddress  // owner AccAddress to receive/return validators coins
+	GetOperator() ValAddress  // owner address to receive/return validators coins
 	GetPubKey() crypto.PubKey // validation pubkey
 	GetPower() Dec            // validation power
 	GetTokens() Dec           // validation tokens
@@ -67,7 +67,7 @@ type ValidatorSet interface {
 	IterateValidatorsBonded(Context,
 		func(index int64, validator Validator) (stop bool))
 
-	Validator(Context, AccAddress) Validator            // get a particular validator by owner AccAddress
+	Validator(Context, ValAddress) Validator            // get a particular validator by operator
 	ValidatorByPubKey(Context, crypto.PubKey) Validator // get a particular validator by signing PubKey
 	TotalPower(Context) Dec                             // total power of the validator set
 
@@ -82,7 +82,7 @@ type ValidatorSet interface {
 // delegation bond for a delegated proof of stake system
 type Delegation interface {
 	GetDelegator() AccAddress // delegator AccAddress for the bond
-	GetValidator() AccAddress // validator owner AccAddress for the bond
+	GetValidator() ValAddress // validator operator address
 	GetBondShares() Dec       // amount of validator's shares
 }
 

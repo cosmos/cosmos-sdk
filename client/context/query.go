@@ -347,7 +347,7 @@ func (ctx CLIContext) verifyProof(path string, resp abci.ResponseQuery) error {
 		return errors.Wrap(err, "failed to unmarshalBinary rangeProof")
 	}
 
-	// Validate the substore commit hash against trusted appHash
+	// Verify the substore commit hash against trusted appHash
 	substoreCommitHash, err := store.VerifyMultiStoreCommitInfo(multiStoreProof.StoreName,
 		multiStoreProof.StoreInfos, commit.Header.AppHash)
 	if err != nil {

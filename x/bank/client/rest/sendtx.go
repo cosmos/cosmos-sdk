@@ -51,32 +51,32 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 
 		to, err := sdk.AccAddressFromBech32(bech32addr)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusBadRequest, err.Error())
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		var m sendBody
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusBadRequest, err.Error())
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 		err = msgCdc.UnmarshalJSON(body, &m)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusBadRequest, err.Error())
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		info, err := kb.Get(m.LocalAccountName)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusUnauthorized, err.Error())
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 
 		// build message
 		msg := client.BuildMsg(sdk.AccAddress(info.GetPubKey().Address()), to, m.Amount)
 		if err != nil { // XXX rechecking same error ?
-			utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -88,7 +88,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 			Sequence:      m.Sequence,
 		}
 
-		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(&w, m.GasAdjustment, cliclient.DefaultGasAdjustment)
+		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, cliclient.DefaultGasAdjustment)
 		if !ok {
 			return
 		}
@@ -97,11 +97,11 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 		if utils.HasDryRunArg(r) || m.Gas == 0 {
 			newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
 			if err != nil {
-				utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 			if utils.HasDryRunArg(r) {
-				utils.WriteSimulationResponse(&w, txCtx.Gas)
+				utils.WriteSimulationResponse(w, txCtx.Gas)
 				return
 			}
 			txCtx = newCtx
@@ -109,19 +109,19 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 
 		txBytes, err := txCtx.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusUnauthorized, err.Error())
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 
 		res, err := cliCtx.BroadcastTx(txBytes)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		output, err := wire.MarshalJSONIndent(cdc, res)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 

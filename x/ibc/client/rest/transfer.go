@@ -44,26 +44,26 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.C
 
 		to, err := sdk.AccAddressFromBech32(bech32addr)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusBadRequest, err.Error())
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		var m transferBody
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusBadRequest, err.Error())
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		err = cdc.UnmarshalJSON(body, &m)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusBadRequest, err.Error())
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		info, err := kb.Get(m.LocalAccountName)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusUnauthorized, err.Error())
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 
@@ -79,7 +79,7 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.C
 			Gas:           m.Gas,
 		}
 
-		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(&w, m.GasAdjustment, client.DefaultGasAdjustment)
+		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, client.DefaultGasAdjustment)
 		if !ok {
 			return
 		}
@@ -88,11 +88,11 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.C
 		if utils.HasDryRunArg(r) || m.Gas == 0 {
 			newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
 			if err != nil {
-				utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 			if utils.HasDryRunArg(r) {
-				utils.WriteSimulationResponse(&w, txCtx.Gas)
+				utils.WriteSimulationResponse(w, txCtx.Gas)
 				return
 			}
 			txCtx = newCtx
@@ -100,19 +100,19 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.C
 
 		txBytes, err := txCtx.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusUnauthorized, err.Error())
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 
 		res, err := cliCtx.BroadcastTx(txBytes)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		output, err := cdc.MarshalJSON(res)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 

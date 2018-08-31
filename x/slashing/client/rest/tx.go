@@ -44,29 +44,29 @@ func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLI
 		var m UnjailBody
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusBadRequest, err.Error())
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 		err = json.Unmarshal(body, &m)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusBadRequest, err.Error())
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		info, err := kb.Get(m.LocalAccountName)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusUnauthorized, err.Error())
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 
 		valAddr, err := sdk.ValAddressFromBech32(m.ValidatorAddr)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error()))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error()))
 			return
 		}
 
 		if !bytes.Equal(info.GetPubKey().Address(), valAddr) {
-			utils.WriteErrorResponse(&w, http.StatusUnauthorized, "Must use own validator address")
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, "Must use own validator address")
 			return
 		}
 
@@ -80,7 +80,7 @@ func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLI
 
 		msg := slashing.NewMsgUnjail(valAddr)
 
-		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(&w, m.GasAdjustment, client.DefaultGasAdjustment)
+		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, client.DefaultGasAdjustment)
 		if !ok {
 			return
 		}
@@ -89,11 +89,11 @@ func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLI
 		if utils.HasDryRunArg(r) || m.Gas == 0 {
 			newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
 			if err != nil {
-				utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 			if utils.HasDryRunArg(r) {
-				utils.WriteSimulationResponse(&w, txCtx.Gas)
+				utils.WriteSimulationResponse(w, txCtx.Gas)
 				return
 			}
 			txCtx = newCtx
@@ -101,19 +101,19 @@ func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLI
 
 		txBytes, err := txCtx.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusUnauthorized, "Must use own validator address")
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, "Must use own validator address")
 			return
 		}
 
 		res, err := cliCtx.BroadcastTx(txBytes)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		output, err := json.MarshalIndent(res, "", "  ")
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 

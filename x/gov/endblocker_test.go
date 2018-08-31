@@ -178,12 +178,17 @@ func TestSlashing(t *testing.T) {
 	govHandler := NewHandler(keeper)
 	stakeHandler := stake.NewHandler(sk)
 
-	createValidators(t, stakeHandler, ctx, addrs[:3], []int64{25, 6, 7})
+	valAddrs := make([]sdk.ValAddress, len(addrs[:3]))
+	for i, addr := range addrs[:3] {
+		valAddrs[i] = sdk.ValAddress(addr)
+	}
+
+	createValidators(t, stakeHandler, ctx, valAddrs, []int64{25, 6, 7})
 
 	initTotalPower := keeper.ds.GetValidatorSet().TotalPower(ctx)
-	val0Initial := keeper.ds.GetValidatorSet().Validator(ctx, addrs[0]).GetPower().Quo(initTotalPower)
-	val1Initial := keeper.ds.GetValidatorSet().Validator(ctx, addrs[1]).GetPower().Quo(initTotalPower)
-	val2Initial := keeper.ds.GetValidatorSet().Validator(ctx, addrs[2]).GetPower().Quo(initTotalPower)
+	val0Initial := keeper.ds.GetValidatorSet().Validator(ctx, sdk.ValAddress(addrs[0])).GetPower().Quo(initTotalPower)
+	val1Initial := keeper.ds.GetValidatorSet().Validator(ctx, sdk.ValAddress(addrs[1])).GetPower().Quo(initTotalPower)
+	val2Initial := keeper.ds.GetValidatorSet().Validator(ctx, sdk.ValAddress(addrs[2])).GetPower().Quo(initTotalPower)
 
 	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewInt64Coin("steak", 15)})
 
@@ -209,9 +214,9 @@ func TestSlashing(t *testing.T) {
 	require.False(t, keeper.GetProposal(ctx, proposalID).GetTallyResult().Equals(EmptyTallyResult()))
 
 	endTotalPower := keeper.ds.GetValidatorSet().TotalPower(ctx)
-	val0End := keeper.ds.GetValidatorSet().Validator(ctx, addrs[0]).GetPower().Quo(endTotalPower)
-	val1End := keeper.ds.GetValidatorSet().Validator(ctx, addrs[1]).GetPower().Quo(endTotalPower)
-	val2End := keeper.ds.GetValidatorSet().Validator(ctx, addrs[2]).GetPower().Quo(endTotalPower)
+	val0End := keeper.ds.GetValidatorSet().Validator(ctx, sdk.ValAddress(addrs[0])).GetPower().Quo(endTotalPower)
+	val1End := keeper.ds.GetValidatorSet().Validator(ctx, sdk.ValAddress(addrs[1])).GetPower().Quo(endTotalPower)
+	val2End := keeper.ds.GetValidatorSet().Validator(ctx, sdk.ValAddress(addrs[2])).GetPower().Quo(endTotalPower)
 
 	require.True(t, val0End.GTE(val0Initial))
 	require.True(t, val1End.LT(val1Initial))

@@ -186,7 +186,7 @@ data = {
   "text": "I hereby claim I am ABC on Keybase!"
 }
 
-cosmosSignBytes(data, "cosmosaccaddr1pvsch6cddahhrn5e8ekw0us50dpnugwnlfngt3")
+cosmosSignBytes(data, "cosmos1pvsch6cddahhrn5e8ekw0us50dpnugwnlfngt3")
 > "0x7fc4a495473045022100dec81a9820df0102381cdbf7e8b0f1e2cb64c58e0ecda1324543742e0388e41a02200df37905a6505c1b56a404e23b7473d2c0bc5bcda96771d2dda59df6ed2b98f8"
 ```
 

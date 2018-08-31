@@ -73,7 +73,7 @@ func getInitChainer(mapp *mock.App, keeper stake.Keeper) sdk.InitChainer {
 func checkValidator(t *testing.T, mapp *mock.App, keeper stake.Keeper,
 	addr sdk.AccAddress, expFound bool) stake.Validator {
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
-	validator, found := keeper.GetValidator(ctxCheck, addr1)
+	validator, found := keeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
 	require.Equal(t, expFound, found)
 	return validator
 }
@@ -100,17 +100,17 @@ func TestSlashingMsgs(t *testing.T) {
 	mock.SetGenesis(mapp, accs)
 	description := stake.NewDescription("foo_moniker", "", "", "")
 	createValidatorMsg := stake.NewMsgCreateValidator(
-		addr1, priv1.PubKey(), bondCoin, description,
+		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description,
 	)
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{createValidatorMsg}, []int64{0}, []int64{0}, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin.Minus(bondCoin)})
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 
 	validator := checkValidator(t, mapp, stakeKeeper, addr1, true)
-	require.Equal(t, addr1, validator.Operator)
+	require.Equal(t, sdk.ValAddress(addr1), validator.Operator)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.DecEq(t, sdk.NewDec(10), validator.BondedTokens()))
-	unjailMsg := MsgUnjail{ValidatorAddr: sdk.AccAddress(validator.PubKey.Address())}
+	unjailMsg := MsgUnjail{ValidatorAddr: sdk.ValAddress(validator.PubKey.Address())}
 
 	// no signing info yet
 	checkValidatorSigningInfo(t, mapp, keeper, sdk.ValAddress(addr1), false)

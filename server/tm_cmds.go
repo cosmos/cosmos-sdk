@@ -45,10 +45,12 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 			if viper.GetBool(client.FlagJson) {
 				return printlnJSON(valPubKey)
 			}
-			pubkey, err := sdk.Bech32ifyValPub(valPubKey)
+
+			pubkey, err := sdk.Bech32ifyConsPub(valPubKey)
 			if err != nil {
 				return err
 			}
+
 			fmt.Println(pubkey)
 			return nil
 		},

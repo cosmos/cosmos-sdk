@@ -128,7 +128,8 @@ func printCreate(info keys.Info, seed string) {
 	output := viper.Get(cli.OutputFlag)
 	switch output {
 	case "text":
-		printInfo(info)
+		printKeyInfo(info, Bech32KeyOutput)
+
 		// print seed unless requested not to.
 		if !viper.GetBool(client.FlagUseLedger) && !viper.GetBool(flagNoBackup) {
 			fmt.Println("**Important** write this seed phrase in a safe place.")

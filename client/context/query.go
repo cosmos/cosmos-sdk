@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
-	tendermintLiteProxy "github.com/tendermint/tendermint/lite/proxy"
+	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"strings"
@@ -325,12 +325,8 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 // verifyProof perform response proof verification
 func (ctx CLIContext) verifyProof(path string, resp abci.ResponseQuery) error {
 
-	// TODO: Later we consider to return error for missing valid certifier to verify data from untrusted node
 	if ctx.Certifier == nil {
-		if ctx.Logger != nil {
-			io.WriteString(ctx.Logger, fmt.Sprintf("Missing valid certifier to verify data from untrusted node\n"))
-		}
-		return nil
+		return fmt.Errorf("missing valid certifier to verify data from untrusted node")
 	}
 
 	node, err := ctx.GetNode()
@@ -338,11 +334,8 @@ func (ctx CLIContext) verifyProof(path string, resp abci.ResponseQuery) error {
 		return err
 	}
 
-	// TODO: need improvement
-	// If the the node http client connect to a full node which can't produce or receive new blocks,
-	// then here the code will wait for a while and return error if time is out.
 	// AppHash for height H is in header H+1
-	commit, err := tendermintLiteProxy.GetCertifiedCommit(resp.Height+1, node, ctx.Certifier)
+	commit, err := tmliteProxy.GetCertifiedCommit(resp.Height+1, node, ctx.Certifier)
 	if err != nil {
 		return err
 	}
@@ -356,7 +349,7 @@ func (ctx CLIContext) verifyProof(path string, resp abci.ResponseQuery) error {
 
 	// Validate the substore commit hash against trusted appHash
 	substoreCommitHash, err := store.VerifyMultiStoreCommitInfo(multiStoreProof.StoreName,
-		multiStoreProof.CommitIDList, commit.Header.AppHash)
+		multiStoreProof.StoreInfos, commit.Header.AppHash)
 	if err != nil {
 		return errors.Wrap(err, "failed in verifying the proof against appHash")
 	}
@@ -376,7 +369,6 @@ func (ctx CLIContext) queryStore(key cmn.HexBytes, storeName, endPath string) ([
 
 // isQueryStoreWithProof expects a format like /<queryType>/<storeName>/<subpath>
 // queryType can be app or store
-// if subpath equals to "/store" or "/key", then return true
 func isQueryStoreWithProof(path string) bool {
 	if !strings.HasPrefix(path, "/") {
 		return false
@@ -385,9 +377,8 @@ func isQueryStoreWithProof(path string) bool {
 	if len(paths) != 3 {
 		return false
 	}
-	// Currently, only when query subpath is "/store" or "/key", will proof be included in response.
-	// If there are some changes about proof building in iavlstore.go, we must change code here to keep consistency with iavlstore.go
-	if paths[2] == "store" || paths[2] == "key" {
+
+	if store.RequireProof("/" + paths[2]) {
 		return true
 	}
 	return false

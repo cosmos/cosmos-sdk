@@ -58,6 +58,7 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagAsync, false, "broadcast transactions asynchronously")
 		c.Flags().Bool(FlagJson, false, "return output in json format")
 		c.Flags().Bool(FlagPrintResponse, true, "return tx response (only works with async = false)")
+		c.Flags().Bool(FlagTrustNode, true, "Don't verify proofs for query responses")
 	}
 	return cmds
 }

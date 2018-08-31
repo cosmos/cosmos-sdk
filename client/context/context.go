@@ -37,6 +37,7 @@ type CLIContext struct {
 	JSON            bool
 	PrintResponse   bool
 	Certifier       tmlite.Certifier
+	DryRun          bool
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
@@ -63,6 +64,7 @@ func NewCLIContext() CLIContext {
 		JSON:            viper.GetBool(client.FlagJson),
 		PrintResponse:   viper.GetBool(client.FlagPrintResponse),
 		Certifier:       createCertifier(),
+		DryRun:          viper.GetBool(client.FlagDryRun),
 	}
 }
 
@@ -157,5 +159,11 @@ func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 // WithCertifier - return a copy of the context with an updated Certifier
 func (ctx CLIContext) WithCertifier(certifier tmlite.Certifier) CLIContext {
 	ctx.Certifier = certifier
+	return ctx
+}
+
+// WithGasAdjustment returns a copy of the context with an updated GasAdjustment flag.
+func (ctx CLIContext) WithGasAdjustment(adjustment float64) CLIContext {
+	ctx.GasAdjustment = adjustment
 	return ctx
 }

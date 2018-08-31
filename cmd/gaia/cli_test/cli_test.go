@@ -58,6 +58,13 @@ func TestGaiaCLISend(t *testing.T) {
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("steak").Int64())
 
+	// Test --dry-run
+	success := executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%s --from=foo --dry-run", flags, barAddr), app.DefaultKeyPass)
+	require.True(t, success)
+	// Check state didn't change
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
+	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("steak").Int64())
+
 	// test autosequencing
 	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
@@ -148,6 +155,10 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewDec(1))
 
+	// Test --dry-run
+	success := executeWrite(t, cvStr+" --dry-run", app.DefaultKeyPass)
+	require.True(t, success)
+
 	executeWrite(t, cvStr, app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
 
@@ -164,7 +175,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	unbondStr += fmt.Sprintf(" --validator=%s", sdk.ValAddress(barAddr))
 	unbondStr += fmt.Sprintf(" --shares-amount=%v", "1")
 
-	success := executeWrite(t, unbondStr, app.DefaultKeyPass)
+	success = executeWrite(t, unbondStr, app.DefaultKeyPass)
 	require.True(t, success)
 	tests.WaitForNextNBlocksTM(2, port)
 
@@ -210,6 +221,10 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	spStr += fmt.Sprintf(" --type=%s", "Text")
 	spStr += fmt.Sprintf(" --title=%s", "Test")
 	spStr += fmt.Sprintf(" --description=%s", "test")
+
+	// Test --dry-run
+	success := executeWrite(t, spStr+" --dry-run", app.DefaultKeyPass)
+	require.True(t, success)
 
 	executeWrite(t, spStr, app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)

@@ -2,6 +2,7 @@ package lcd
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -265,11 +266,21 @@ func TestCoinSend(t *testing.T) {
 	require.Equal(t, int64(1), mycoins.Amount.Int64())
 
 	// test failure with too little gas
-	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, 100)
+	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, 100, 0, "")
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
-	// test success with just enough gas
-	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, 3000)
+	// test failure with wrong adjustment
+	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, 0, 0.1, "")
+	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
+
+	// run simulation and test success with estimated gas
+	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, 0, 0, "?simulate=true")
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var responseBody struct {
+		GasEstimate int64 `json:"gas_estimate"`
+	}
+	require.Nil(t, json.Unmarshal([]byte(body), &responseBody))
+	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, responseBody.GasEstimate, 0, "")
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 }
 
@@ -720,7 +731,7 @@ func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
 	return acc
 }
 
-func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.AccAddress, gas int64) (res *http.Response, body string, receiveAddr sdk.AccAddress) {
+func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.AccAddress, gas int64, gasAdjustment float64, queryStr string) (res *http.Response, body string, receiveAddr sdk.AccAddress) {
 
 	// create receive address
 	kb := client.MockKeyBase()
@@ -744,22 +755,28 @@ func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.Acc
 		"gas":"%v",
 		`, gas)
 	}
+	gasAdjustmentStr := ""
+	if gasAdjustment > 0 {
+		gasStr = fmt.Sprintf(`
+		"gas_adjustment":"%v",
+		`, gasAdjustment)
+	}
 	jsonStr := []byte(fmt.Sprintf(`{
-		%v
+		%v%v
 		"name":"%s",
 		"password":"%s",
 		"account_number":"%d",
 		"sequence":"%d",
 		"amount":[%s],
 		"chain_id":"%s"
-	}`, gasStr, name, password, accnum, sequence, coinbz, chainID))
+	}`, gasStr, gasAdjustmentStr, name, password, accnum, sequence, coinbz, chainID))
 
-	res, body = Request(t, port, "POST", fmt.Sprintf("/accounts/%s/send", receiveAddr), jsonStr)
+	res, body = Request(t, port, "POST", fmt.Sprintf("/accounts/%s/send%v", receiveAddr, queryStr), jsonStr)
 	return
 }
 
 func doSend(t *testing.T, port, seed, name, password string, addr sdk.AccAddress) (receiveAddr sdk.AccAddress, resultTx ctypes.ResultBroadcastTxCommit) {
-	res, body, receiveAddr := doSendWithGas(t, port, seed, name, password, addr, 0)
+	res, body, receiveAddr := doSendWithGas(t, port, seed, name, password, addr, 0, 0, "")
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err := cdc.UnmarshalJSON([]byte(body), &resultTx)

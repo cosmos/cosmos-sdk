@@ -56,13 +56,13 @@ func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLI
 			return
 		}
 
-		validatorAddr, err := sdk.AccAddressFromBech32(m.ValidatorAddr)
+		valAddr, err := sdk.ValAddressFromBech32(m.ValidatorAddr)
 		if err != nil {
 			utils.WriteErrorResponse(&w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error()))
 			return
 		}
 
-		if !bytes.Equal(info.GetPubKey().Address(), validatorAddr) {
+		if !bytes.Equal(info.GetPubKey().Address(), valAddr) {
 			utils.WriteErrorResponse(&w, http.StatusUnauthorized, "Must use own validator address")
 			return
 		}
@@ -75,7 +75,7 @@ func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLI
 			Gas:           m.Gas,
 		}
 
-		msg := slashing.NewMsgUnjail(validatorAddr)
+		msg := slashing.NewMsgUnjail(valAddr)
 
 		if m.Gas == 0 {
 			newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, m.Password, []sdk.Msg{msg})

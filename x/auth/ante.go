@@ -175,14 +175,11 @@ func processSig(
 				fmt.Sprintf("Invalid sequence. Got %d, expected %d", sig.Sequence, seq)).Result()
 		}
 	}
-	// Increment sequence number
 	err := acc.SetSequence(seq + 1)
 	if err != nil {
 		// Handle w/ #870
 		panic(err)
 	}
-	// If pubkey is not known for account,
-	// set it from the StdSignature.
 	pubKey, res := processPubKey(acc, sig, simulate)
 	if !res.IsOK() {
 		return nil, res

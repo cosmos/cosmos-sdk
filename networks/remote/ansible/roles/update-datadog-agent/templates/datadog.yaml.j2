@@ -31,7 +31,7 @@ api_key: {{DD_API_KEY}}
 force_tls_12: yes
 
 # Force the hostname to whatever you want. (default: auto-detected)
-hostname: {{inventory_hostname}}
+hostname: {{inventory_hostname | replace ("_","-")}}
 
 # Make the agent use "hostname -f" on unix-based systems as a last resort
 # way of determining the hostname instead of Golang "os.Hostname()"

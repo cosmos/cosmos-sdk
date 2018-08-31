@@ -378,7 +378,7 @@ func isQueryStoreWithProof(path string) bool {
 		return false
 	}
 
-	if store.RequireProof(paths[2]) {
+	if store.RequireProof("/" + paths[2]) {
 		return true
 	}
 	return false

@@ -64,7 +64,7 @@ func VerifyMultiStoreCommitInfo(storeName string, storeInfos []storeInfo, appHas
 // VerifyRangeProof verify iavl RangeProof
 func VerifyRangeProof(key, value []byte, substoreCommitHash []byte, rangeProof *iavl.RangeProof) error {
 
-	// Validate the proof to ensure data integrity.
+	// Verify the proof to ensure data integrity.
 	err := rangeProof.Verify(substoreCommitHash)
 	if err != nil {
 		return errors.Wrap(err, "proof root hash doesn't equal to substore commit root hash")

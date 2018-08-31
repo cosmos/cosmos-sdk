@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	tendermintLite "github.com/tendermint/tendermint/lite"
 )
 
 const ctxAccStoreName = "acc"
@@ -32,6 +33,8 @@ type CLIContext struct {
 	Async           bool
 	JSON            bool
 	PrintResponse   bool
+	Certifier       tendermintLite.Certifier
+	ClientManager   *ClientManager
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
@@ -115,5 +118,17 @@ func (ctx CLIContext) WithClient(client rpcclient.Client) CLIContext {
 // WithUseLedger returns a copy of the context with an updated UseLedger flag.
 func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 	ctx.UseLedger = useLedger
+	return ctx
+}
+
+// WithCertifier - return a copy of the context with an updated Certifier
+func (ctx CLIContext) WithCertifier(certifier tendermintLite.Certifier) CLIContext {
+	ctx.Certifier = certifier
+	return ctx
+}
+
+// WithClientManager - return a copy of the context with an updated ClientManager
+func (ctx CLIContext) WithClientManager(clientManager *ClientManager) CLIContext {
+	ctx.ClientManager = clientManager
 	return ctx
 }

@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	cliclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -31,6 +32,7 @@ type sendBody struct {
 	AccountNumber    int64     `json:"account_number"`
 	Sequence         int64     `json:"sequence"`
 	Gas              int64     `json:"gas"`
+	GasAdjustment    string    `json:"gas_adjustment"`
 }
 
 var msgCdc = wire.NewCodec()
@@ -85,6 +87,12 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 			AccountNumber: m.AccountNumber,
 			Sequence:      m.Sequence,
 		}
+
+		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(&w, m.GasAdjustment, cliclient.DefaultGasAdjustment)
+		if !ok {
+			return
+		}
+		cliCtx = cliCtx.WithGasAdjustment(adjustment)
 
 		if utils.HasDryRunArg(r) || m.Gas == 0 {
 			newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, []sdk.Msg{msg})

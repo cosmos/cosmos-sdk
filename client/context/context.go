@@ -159,5 +159,9 @@ func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 // WithCertifier - return a copy of the context with an updated Certifier
 func (ctx CLIContext) WithCertifier(certifier tmlite.Certifier) CLIContext {
 	ctx.Certifier = certifier
+
+// WithGasAdjustment returns a copy of the context with an updated GasAdjustment flag.
+func (ctx CLIContext) WithGasAdjustment(adjustment float64) CLIContext {
+	ctx.GasAdjustment = adjustment
 	return ctx
 }

@@ -4,8 +4,11 @@ import "github.com/spf13/cobra"
 
 // nolint
 const (
-	DefaultGasLimit      = 200000
+	// DefaultGasAdjustment is applied to gas estimates to avoid tx
+	// execution failures due to state changes that might
+	// occur between the tx simulation and the actual run.
 	DefaultGasAdjustment = 1.0
+	DefaultGasLimit      = 200000
 
 	FlagUseLedger     = "ledger"
 	FlagChainID       = "chain-id"

@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -29,6 +30,7 @@ type transferBody struct {
 	AccountNumber    int64     `json:"account_number"`
 	Sequence         int64     `json:"sequence"`
 	Gas              int64     `json:"gas"`
+	GasAdjustment    string    `json:"gas_adjustment"`
 }
 
 // TransferRequestHandler - http request handler to transfer coins to a address
@@ -76,6 +78,12 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.C
 			Sequence:      m.Sequence,
 			Gas:           m.Gas,
 		}
+
+		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(&w, m.GasAdjustment, client.DefaultGasAdjustment)
+		if !ok {
+			return
+		}
+		cliCtx = cliCtx.WithGasAdjustment(adjustment)
 
 		if utils.HasDryRunArg(r) || m.Gas == 0 {
 			newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, []sdk.Msg{msg})

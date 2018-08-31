@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,6 +21,7 @@ type baseReq struct {
 	AccountNumber int64  `json:"account_number"`
 	Sequence      int64  `json:"sequence"`
 	Gas           int64  `json:"gas"`
+	GasAdjustment string `json:"gas_adjustment"`
 }
 
 func buildReq(w http.ResponseWriter, r *http.Request, cdc *wire.Codec, req interface{}) error {
@@ -75,6 +77,12 @@ func signAndBuild(w http.ResponseWriter, r *http.Request, cliCtx context.CLICont
 		ChainID:       baseReq.ChainID,
 		Gas:           baseReq.Gas,
 	}
+
+	adjustment, ok := utils.ParseFloat64OrReturnBadRequest(&w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
+	if !ok {
+		return
+	}
+	cliCtx = cliCtx.WithGasAdjustment(adjustment)
 
 	if utils.HasDryRunArg(r) || baseReq.Gas == 0 {
 		newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, baseReq.Name, []sdk.Msg{msg})

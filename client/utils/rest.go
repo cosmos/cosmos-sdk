@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 )
 
 const (
@@ -27,4 +28,18 @@ func WriteSimulationResponse(w *http.ResponseWriter, gas int64) {
 // the dry run argument and its value is set to "true".
 func HasDryRunArg(r *http.Request) bool {
 	return r.URL.Query().Get(queryArgDryRun) == "true"
+}
+
+// ParseFloat64OrReturnBadRequest converts s to a float64 value. It returns a default
+// value if the string is empty. Write
+func ParseFloat64OrReturnBadRequest(w *http.ResponseWriter, s string, defaultIfEmpty float64) (n float64, ok bool) {
+	if len(s) == 0 {
+		return defaultIfEmpty, true
+	}
+	n, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return n, false
+	}
+	return n, true
 }

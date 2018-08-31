@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -33,6 +34,7 @@ type UnjailBody struct {
 	AccountNumber    int64  `json:"account_number"`
 	Sequence         int64  `json:"sequence"`
 	Gas              int64  `json:"gas"`
+	GasAdjustment    string `json:"gas_adjustment"`
 	ValidatorAddr    string `json:"validator_addr"`
 }
 
@@ -77,6 +79,12 @@ func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLI
 		}
 
 		msg := slashing.NewMsgUnjail(valAddr)
+
+		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(&w, m.GasAdjustment, client.DefaultGasAdjustment)
+		if !ok {
+			return
+		}
+		cliCtx = cliCtx.WithGasAdjustment(adjustment)
 
 		if utils.HasDryRunArg(r) || m.Gas == 0 {
 			newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, []sdk.Msg{msg})

@@ -124,10 +124,14 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 	var logger log.Logger
 	logger = log.NewNopLogger()
 	var db dbm.DB
-	db = dbm.NewMemDB()
 	if usegoleveldb {
-		db, _ = dbm.NewGoLevelDB("Simulation", os.TempDir())
+		dir := os.TempDir()
+		db, _ = dbm.NewGoLevelDB("Simulation", dir)
+		defer os.RemoveAll(dir)
+	} else {
+		db = dbm.NewMemDB()
 	}
+	defer db.Close()
 	app := NewGaiaApp(logger, db, nil)
 
 	// Run randomized simulation

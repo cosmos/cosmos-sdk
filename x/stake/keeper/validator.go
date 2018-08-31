@@ -34,16 +34,17 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 		// Doesn't mutate the cache's value
 		valToReturn.Operator = addr
 		return valToReturn, true
-	} else { // get validator from cache
-		validator = types.MustUnmarshalValidator(k.cdc, addr, value)
-		cachedVal := cachedValidator{validator, strValue}
-		validatorCache[strValue] = cachedValidator{validator, strValue}
-		validatorCacheList.PushBack(cachedVal)
-		if validatorCacheList.Len() > 500 {
-			valToRemove := validatorCacheList.Remove(validatorCacheList.Front()).(cachedValidator)
-			delete(validatorCache, valToRemove.marshalled)
-		}
 	}
+	// get validator from cache
+	validator = types.MustUnmarshalValidator(k.cdc, addr, value)
+	cachedVal := cachedValidator{validator, strValue}
+	validatorCache[strValue] = cachedValidator{validator, strValue}
+	validatorCacheList.PushBack(cachedVal)
+	if validatorCacheList.Len() > 500 {
+		valToRemove := validatorCacheList.Remove(validatorCacheList.Front()).(cachedValidator)
+		delete(validatorCache, valToRemove.marshalled)
+	}
+
 	validator = types.MustUnmarshalValidator(k.cdc, addr, value)
 	return validator, true
 }

@@ -7,11 +7,21 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 // defaultUnbondingTime reflects three weeks in seconds as the default
 // unbonding time.
 const defaultUnbondingTime time.Duration = 60 * 60 * 24 * 3 * time.Second
+
+// nolint - Key generators for parameter access
+func KeyInflationRateChange() params.Key { return params.NewKey("InflationRateChange") }
+func KeyInflationMax() params.Key        { return params.NewKey("InflationMax") }
+func KeyInflationMin() params.Key        { return params.NewKey("InflationMin") }
+func KeyGoalBonded() params.Key          { return params.NewKey("GoalBonded") }
+func KeyUnbondingTime() params.Key       { return params.NewKey("UnbondingTime") }
+func KeyMaxValidators() params.Key       { return params.NewKey("MaxValidators") }
+func KeyBondDenom() params.Key           { return params.NewKey("BondDenom") }
 
 // Params defines the high level settings for staking
 type Params struct {
@@ -24,6 +34,19 @@ type Params struct {
 
 	MaxValidators uint16 `json:"max_validators"` // maximum number of validators
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
+}
+
+// Implements params.ParamStruct
+func (p *Params) KeyFieldPairs() params.KeyFieldPairs {
+	return params.KeyFieldPairs{
+		{KeyInflationRateChange(), &p.InflationRateChange},
+		{KeyInflationMax(), &p.InflationMax},
+		{KeyInflationMin(), &p.InflationMin},
+		{KeyGoalBonded(), &p.GoalBonded},
+		{KeyUnbondingTime(), &p.UnbondingTime},
+		{KeyMaxValidators(), &p.MaxValidators},
+		{KeyBondDenom(), &p.BondDenom},
+	}
 }
 
 // Equal returns a boolean determining if two Param types are identical.

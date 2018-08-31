@@ -1,9 +1,10 @@
 package params
 
 import (
+	"reflect"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
@@ -14,267 +15,123 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func defaultContext(key sdk.StoreKey) sdk.Context {
+func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
+	cms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db)
 	cms.LoadLatestVersion()
 	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 	return ctx
 }
 
+type s struct{}
+
+func createTestCodec() *codec.Codec {
+	cdc := codec.NewCodec()
+	sdk.RegisterWire(cdc)
+	cdc.RegisterConcrete(s{}, "test/s", nil)
+	return cdc
+}
+
 func TestKeeper(t *testing.T) {
 	kvs := []struct {
-		key   string
+		key   Key
 		param int64
 	}{
-		{"key1", 10},
-		{"key2", 55},
-		{"key3", 182},
-		{"key4", 17582},
-		{"key5", 2768554},
+		{NewKey("key1"), 10},
+		{NewKey("key2"), 55},
+		{NewKey("key3"), 182},
+		{NewKey("key4"), 17582},
+		{NewKey("key5"), 2768554},
+		{NewKey("space1", "key1"), 1157279},
+		{NewKey("space1", "key2"), 9058701},
 	}
 
 	skey := sdk.NewKVStoreKey("test")
-	ctx := defaultContext(skey)
-	setter := NewKeeper(codec.New(), skey).Setter()
+	tkey := sdk.NewTransientStoreKey("transient_test")
+	ctx := defaultContext(skey, tkey)
+	space := NewKeeper(codec.NewCodec(), skey, tkey).Subspace("test")
 
 	for _, kv := range kvs {
-		err := setter.Set(ctx, kv.key, kv.param)
-		assert.Nil(t, err)
+		err := space.Set(ctx, kv.key, kv.param)
+		require.Nil(t, err)
 	}
 
 	for _, kv := range kvs {
 		var param int64
-		err := setter.Get(ctx, kv.key, &param)
-		assert.Nil(t, err)
-		assert.Equal(t, kv.param, param)
+		require.NotPanics(t, func() { space.Get(ctx, kv.key, &param) })
+		require.Equal(t, kv.param, param)
 	}
 
 	cdc := codec.New()
 	for _, kv := range kvs {
 		var param int64
-		bz := setter.GetRaw(ctx, kv.key)
-		err := cdc.UnmarshalBinary(bz, &param)
-		assert.Nil(t, err)
-		assert.Equal(t, kv.param, param)
+		bz := space.GetRaw(ctx, kv.key)
+		err := cdc.UnmarshalJSON(bz, &param)
+		require.Nil(t, err)
+		require.Equal(t, kv.param, param)
 	}
 
 	for _, kv := range kvs {
 		var param bool
-		err := setter.Get(ctx, kv.key, &param)
-		assert.NotNil(t, err)
+		require.Panics(t, func() { space.Get(ctx, kv.key, &param) })
 	}
 
 	for _, kv := range kvs {
-		err := setter.Set(ctx, kv.key, true)
-		assert.NotNil(t, err)
+		err := space.Set(ctx, kv.key, true)
+		require.NotNil(t, err)
 	}
 }
 
-func TestGetter(t *testing.T) {
+func TestGet(t *testing.T) {
 	key := sdk.NewKVStoreKey("test")
-	ctx := defaultContext(key)
-	keeper := NewKeeper(codec.New(), key)
+	tkey := sdk.NewTransientStoreKey("transient_test")
+	ctx := defaultContext(key, tkey)
+	keeper := NewKeeper(createTestCodec(), key, tkey)
 
-	g := keeper.Getter()
-	s := keeper.Setter()
+	space := keeper.Subspace("test")
 
 	kvs := []struct {
-		key   string
+		key   Key
 		param interface{}
+		zero  interface{}
+		ptr   interface{}
 	}{
-		{"string", "test"},
-		{"bool", true},
-		{"int16", int16(1)},
-		{"int32", int32(1)},
-		{"int64", int64(1)},
-		{"uint16", uint16(1)},
-		{"uint32", uint32(1)},
-		{"uint64", uint64(1)},
-		{"int", sdk.NewInt(1)},
-		{"uint", sdk.NewUint(1)},
-		{"rat", sdk.NewDec(1)},
+		{NewKey("string"), "test", "", new(string)},
+		{NewKey("bool"), true, false, new(bool)},
+		{NewKey("int16"), int16(1), int16(0), new(int16)},
+		{NewKey("int32"), int32(1), int32(0), new(int32)},
+		{NewKey("int64"), int64(1), int64(0), new(int64)},
+		{NewKey("uint16"), uint16(1), uint16(0), new(uint16)},
+		{NewKey("uint32"), uint32(1), uint32(0), new(uint32)},
+		{NewKey("uint64"), uint64(1), uint64(0), new(uint64)},
+		/*
+			{NewKey("int"), sdk.NewInt(1), *new(sdk.Int), new(sdk.Int)},
+			{NewKey("uint"), sdk.NewUint(1), *new(sdk.Uint), new(sdk.Uint)},
+			{NewKey("dec"), sdk.NewDec(1), *new(sdk.Dec), new(sdk.Dec)},
+		*/
 	}
 
-	assert.NotPanics(t, func() { s.SetString(ctx, kvs[0].key, "test") })
-	assert.NotPanics(t, func() { s.SetBool(ctx, kvs[1].key, true) })
-	assert.NotPanics(t, func() { s.SetInt16(ctx, kvs[2].key, int16(1)) })
-	assert.NotPanics(t, func() { s.SetInt32(ctx, kvs[3].key, int32(1)) })
-	assert.NotPanics(t, func() { s.SetInt64(ctx, kvs[4].key, int64(1)) })
-	assert.NotPanics(t, func() { s.SetUint16(ctx, kvs[5].key, uint16(1)) })
-	assert.NotPanics(t, func() { s.SetUint32(ctx, kvs[6].key, uint32(1)) })
-	assert.NotPanics(t, func() { s.SetUint64(ctx, kvs[7].key, uint64(1)) })
-	assert.NotPanics(t, func() { s.SetInt(ctx, kvs[8].key, sdk.NewInt(1)) })
-	assert.NotPanics(t, func() { s.SetUint(ctx, kvs[9].key, sdk.NewUint(1)) })
-	assert.NotPanics(t, func() { s.SetDec(ctx, kvs[10].key, sdk.NewDec(1)) })
+	for _, kv := range kvs {
+		require.NotPanics(t, func() { space.Set(ctx, kv.key, kv.param) })
+	}
 
-	var res interface{}
-	var err error
+	for _, kv := range kvs {
+		require.NotPanics(t, func() { space.GetIfExists(ctx, NewKey("invalid"), kv.ptr) })
+		require.Equal(t, kv.zero, reflect.ValueOf(kv.ptr).Elem().Interface())
+		require.Panics(t, func() { space.Get(ctx, NewKey("invalid"), kv.ptr) })
+		require.Equal(t, kv.zero, reflect.ValueOf(kv.ptr).Elem().Interface())
 
-	// String
-	def0 := "default"
-	res, err = g.GetString(ctx, kvs[0].key)
-	assert.Nil(t, err)
-	assert.Equal(t, kvs[0].param, res)
+		require.NotPanics(t, func() { space.GetIfExists(ctx, kv.key, kv.ptr) })
+		require.Equal(t, kv.param, reflect.ValueOf(kv.ptr).Elem().Interface())
+		require.NotPanics(t, func() { space.Get(ctx, kv.key, kv.ptr) })
+		require.Equal(t, kv.param, reflect.ValueOf(kv.ptr).Elem().Interface())
 
-	_, err = g.GetString(ctx, "invalid")
-	assert.NotNil(t, err)
+		require.Panics(t, func() { space.Get(ctx, NewKey("invalid"), kv.ptr) })
+		require.Equal(t, kv.param, reflect.ValueOf(kv.ptr).Elem().Interface())
 
-	res = g.GetStringWithDefault(ctx, kvs[0].key, def0)
-	assert.Equal(t, kvs[0].param, res)
-
-	res = g.GetStringWithDefault(ctx, "invalid", def0)
-	assert.Equal(t, def0, res)
-
-	// Bool
-	def1 := false
-	res, err = g.GetBool(ctx, kvs[1].key)
-	assert.Nil(t, err)
-	assert.Equal(t, kvs[1].param, res)
-
-	_, err = g.GetBool(ctx, "invalid")
-	assert.NotNil(t, err)
-
-	res = g.GetBoolWithDefault(ctx, kvs[1].key, def1)
-	assert.Equal(t, kvs[1].param, res)
-
-	res = g.GetBoolWithDefault(ctx, "invalid", def1)
-	assert.Equal(t, def1, res)
-
-	// Int16
-	def2 := int16(0)
-	res, err = g.GetInt16(ctx, kvs[2].key)
-	assert.Nil(t, err)
-	assert.Equal(t, kvs[2].param, res)
-
-	_, err = g.GetInt16(ctx, "invalid")
-	assert.NotNil(t, err)
-
-	res = g.GetInt16WithDefault(ctx, kvs[2].key, def2)
-	assert.Equal(t, kvs[2].param, res)
-
-	res = g.GetInt16WithDefault(ctx, "invalid", def2)
-	assert.Equal(t, def2, res)
-
-	// Int32
-	def3 := int32(0)
-	res, err = g.GetInt32(ctx, kvs[3].key)
-	assert.Nil(t, err)
-	assert.Equal(t, kvs[3].param, res)
-
-	_, err = g.GetInt32(ctx, "invalid")
-	assert.NotNil(t, err)
-
-	res = g.GetInt32WithDefault(ctx, kvs[3].key, def3)
-	assert.Equal(t, kvs[3].param, res)
-
-	res = g.GetInt32WithDefault(ctx, "invalid", def3)
-	assert.Equal(t, def3, res)
-
-	// Int64
-	def4 := int64(0)
-	res, err = g.GetInt64(ctx, kvs[4].key)
-	assert.Nil(t, err)
-	assert.Equal(t, kvs[4].param, res)
-
-	_, err = g.GetInt64(ctx, "invalid")
-	assert.NotNil(t, err)
-
-	res = g.GetInt64WithDefault(ctx, kvs[4].key, def4)
-	assert.Equal(t, kvs[4].param, res)
-
-	res = g.GetInt64WithDefault(ctx, "invalid", def4)
-	assert.Equal(t, def4, res)
-
-	// Uint16
-	def5 := uint16(0)
-	res, err = g.GetUint16(ctx, kvs[5].key)
-	assert.Nil(t, err)
-	assert.Equal(t, kvs[5].param, res)
-
-	_, err = g.GetUint16(ctx, "invalid")
-	assert.NotNil(t, err)
-
-	res = g.GetUint16WithDefault(ctx, kvs[5].key, def5)
-	assert.Equal(t, kvs[5].param, res)
-
-	res = g.GetUint16WithDefault(ctx, "invalid", def5)
-	assert.Equal(t, def5, res)
-
-	// Uint32
-	def6 := uint32(0)
-	res, err = g.GetUint32(ctx, kvs[6].key)
-	assert.Nil(t, err)
-	assert.Equal(t, kvs[6].param, res)
-
-	_, err = g.GetUint32(ctx, "invalid")
-	assert.NotNil(t, err)
-
-	res = g.GetUint32WithDefault(ctx, kvs[6].key, def6)
-	assert.Equal(t, kvs[6].param, res)
-
-	res = g.GetUint32WithDefault(ctx, "invalid", def6)
-	assert.Equal(t, def6, res)
-
-	// Uint64
-	def7 := uint64(0)
-	res, err = g.GetUint64(ctx, kvs[7].key)
-	assert.Nil(t, err)
-	assert.Equal(t, kvs[7].param, res)
-
-	_, err = g.GetUint64(ctx, "invalid")
-	assert.NotNil(t, err)
-
-	res = g.GetUint64WithDefault(ctx, kvs[7].key, def7)
-	assert.Equal(t, kvs[7].param, res)
-
-	res = g.GetUint64WithDefault(ctx, "invalid", def7)
-	assert.Equal(t, def7, res)
-
-	// Int
-	def8 := sdk.NewInt(0)
-	res, err = g.GetInt(ctx, kvs[8].key)
-	assert.Nil(t, err)
-	assert.Equal(t, kvs[8].param, res)
-
-	_, err = g.GetInt(ctx, "invalid")
-	assert.NotNil(t, err)
-
-	res = g.GetIntWithDefault(ctx, kvs[8].key, def8)
-	assert.Equal(t, kvs[8].param, res)
-
-	res = g.GetIntWithDefault(ctx, "invalid", def8)
-	assert.Equal(t, def8, res)
-
-	// Uint
-	def9 := sdk.NewUint(0)
-	res, err = g.GetUint(ctx, kvs[9].key)
-	assert.Nil(t, err)
-	assert.Equal(t, kvs[9].param, res)
-
-	_, err = g.GetUint(ctx, "invalid")
-	assert.NotNil(t, err)
-
-	res = g.GetUintWithDefault(ctx, kvs[9].key, def9)
-	assert.Equal(t, kvs[9].param, res)
-
-	res = g.GetUintWithDefault(ctx, "invalid", def9)
-	assert.Equal(t, def9, res)
-
-	// Rat
-	def10 := sdk.NewDec(0)
-	res, err = g.GetDec(ctx, kvs[10].key)
-	assert.Nil(t, err)
-	assert.Equal(t, kvs[10].param, res)
-
-	_, err = g.GetDec(ctx, "invalid")
-	assert.NotNil(t, err)
-
-	res = g.GetDecWithDefault(ctx, kvs[10].key, def10)
-	assert.Equal(t, kvs[10].param, res)
-
-	res = g.GetDecWithDefault(ctx, "invalid", def10)
-	assert.Equal(t, def10, res)
-
+		require.Panics(t, func() { space.Get(ctx, kv.key, nil) })
+		require.Panics(t, func() { space.Get(ctx, kv.key, new(s)) })
+	}
 }

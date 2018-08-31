@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
@@ -15,17 +16,19 @@ type Keeper struct {
 	cdc        *codec.Codec
 	bankKeeper bank.Keeper
 	hooks      sdk.StakingHooks
+	paramstore params.Space
 
 	// codespace
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, paramstore params.Space, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:   key,
 		storeTKey:  tkey,
 		cdc:        cdc,
 		bankKeeper: ck,
+		paramstore: paramstore,
 		hooks:      nil,
 		codespace:  codespace,
 	}
@@ -46,29 +49,6 @@ func (k Keeper) WithHooks(sh sdk.StakingHooks) Keeper {
 // return the codespace
 func (k Keeper) Codespace() sdk.CodespaceType {
 	return k.codespace
-}
-
-//_________________________________________________________________________
-// some generic reads/writes that don't need their own files
-
-// load/save the global staking params
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-
-	b := store.Get(ParamKey)
-	if b == nil {
-		panic("Stored params should not have been nil")
-	}
-
-	k.cdc.MustUnmarshalBinary(b, &params)
-	return
-}
-
-// set the params
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinary(params)
-	store.Set(ParamKey, b)
 }
 
 //_______________________________________________________________________

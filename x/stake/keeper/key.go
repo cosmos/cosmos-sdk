@@ -12,7 +12,8 @@ import (
 //nolint
 var (
 	// Keys for store prefixes
-	ParamKey                         = []byte{0x00} // key for parameters relating to staking
+	// TODO DEPRECATED: delete in next release and reorder keys
+	// ParamKey                         = []byte{0x00} // key for parameters relating to staking
 	PoolKey                          = []byte{0x01} // key for the staking pools
 	ValidatorsKey                    = []byte{0x02} // prefix for each key to a validator
 	ValidatorsByConsAddrKey          = []byte{0x03} // prefix for each key to a validator index, by pubkey

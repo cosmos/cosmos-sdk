@@ -12,7 +12,7 @@ import (
 
 func TestCannotUnjailUnlessJailed(t *testing.T) {
 	// initial setup
-	ctx, ck, sk, _, keeper := createTestInput(t)
+	ctx, ck, sk, _, keeper := createTestInput(t, HubDefaultParams())
 	slh := NewHandler(keeper)
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
@@ -30,7 +30,7 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 }
 
 func TestJailedValidatorDelegations(t *testing.T) {
-	ctx, _, stakeKeeper, _, slashingKeeper := createTestInput(t)
+	ctx, _, stakeKeeper, _, slashingKeeper := createTestInput(t, HubDefaultParams())
 
 	stakeParams := stakeKeeper.GetParams(ctx)
 	stakeParams.UnbondingTime = 0

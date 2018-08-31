@@ -13,13 +13,13 @@ import (
 func newGasKVStore() KVStore {
 	meter := sdk.NewGasMeter(1000)
 	mem := dbStoreAdapter{dbm.NewMemDB()}
-	return NewGasKVStore(meter, sdk.DefaultGasConfig(), mem)
+	return NewGasKVStore(meter, sdk.DefaultKVGasConfig(), mem)
 }
 
-func TestGasKVStoreBasic(t *testing.T) {
+func TestKVGasKVStoreBasic(t *testing.T) {
 	mem := dbStoreAdapter{dbm.NewMemDB()}
 	meter := sdk.NewGasMeter(1000)
-	st := NewGasKVStore(meter, sdk.DefaultGasConfig(), mem)
+	st := NewGasKVStore(meter, sdk.DefaultKVGasConfig(), mem)
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
 	st.Set(keyFmt(1), valFmt(1))
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
@@ -28,10 +28,10 @@ func TestGasKVStoreBasic(t *testing.T) {
 	require.Equal(t, meter.GasConsumed(), sdk.Gas(193))
 }
 
-func TestGasKVStoreIterator(t *testing.T) {
+func TestKVGasKVStoreIterator(t *testing.T) {
 	mem := dbStoreAdapter{dbm.NewMemDB()}
 	meter := sdk.NewGasMeter(1000)
-	st := NewGasKVStore(meter, sdk.DefaultGasConfig(), mem)
+	st := NewGasKVStore(meter, sdk.DefaultKVGasConfig(), mem)
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
 	require.Empty(t, st.Get(keyFmt(2)), "Expected `key2` to be empty")
 	st.Set(keyFmt(1), valFmt(1))
@@ -52,24 +52,24 @@ func TestGasKVStoreIterator(t *testing.T) {
 	require.Equal(t, meter.GasConsumed(), sdk.Gas(384))
 }
 
-func TestGasKVStoreOutOfGasSet(t *testing.T) {
+func TestKVGasKVStoreOutOfGasSet(t *testing.T) {
 	mem := dbStoreAdapter{dbm.NewMemDB()}
 	meter := sdk.NewGasMeter(0)
-	st := NewGasKVStore(meter, sdk.DefaultGasConfig(), mem)
+	st := NewGasKVStore(meter, sdk.DefaultKVGasConfig(), mem)
 	require.Panics(t, func() { st.Set(keyFmt(1), valFmt(1)) }, "Expected out-of-gas")
 }
 
-func TestGasKVStoreOutOfGasIterator(t *testing.T) {
+func TestKVGasKVStoreOutOfGasIterator(t *testing.T) {
 	mem := dbStoreAdapter{dbm.NewMemDB()}
 	meter := sdk.NewGasMeter(200)
-	st := NewGasKVStore(meter, sdk.DefaultGasConfig(), mem)
+	st := NewGasKVStore(meter, sdk.DefaultKVGasConfig(), mem)
 	st.Set(keyFmt(1), valFmt(1))
 	iterator := st.Iterator(nil, nil)
 	iterator.Next()
 	require.Panics(t, func() { iterator.Value() }, "Expected out-of-gas")
 }
 
-func testGasKVStoreWrap(t *testing.T, store KVStore) {
+func testKVGasKVStoreWrap(t *testing.T, store KVStore) {
 	meter := sdk.NewGasMeter(10000)
 
 	store = store.Gas(meter, sdk.GasConfig{HasCost: 10})
@@ -84,22 +84,22 @@ func testGasKVStoreWrap(t *testing.T, store KVStore) {
 	require.Equal(t, int64(40), meter.GasConsumed())
 }
 
-func TestGasKVStoreWrap(t *testing.T) {
+func TestKVGasKVStoreWrap(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newTree(t, db)
 	iavl := newIAVLStore(tree, numRecent, storeEvery)
-	testGasKVStoreWrap(t, iavl)
+	testKVGasKVStoreWrap(t, iavl)
 
 	st := NewCacheKVStore(iavl)
-	testGasKVStoreWrap(t, st)
+	testKVGasKVStoreWrap(t, st)
 
 	pref := st.Prefix([]byte("prefix"))
-	testGasKVStoreWrap(t, pref)
+	testKVGasKVStoreWrap(t, pref)
 
 	dsa := dbStoreAdapter{dbm.NewMemDB()}
-	testGasKVStoreWrap(t, dsa)
+	testKVGasKVStoreWrap(t, dsa)
 
 	ts := newTransientStore()
-	testGasKVStoreWrap(t, ts)
+	testKVGasKVStoreWrap(t, ts)
 
 }

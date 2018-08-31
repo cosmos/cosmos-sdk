@@ -40,7 +40,6 @@ var (
 	GetValidatorsByPowerIndexKey = keeper.GetValidatorsByPowerIndexKey
 	GetDelegationKey             = keeper.GetDelegationKey
 	GetDelegationsKey            = keeper.GetDelegationsKey
-	ParamKey                     = keeper.ParamKey
 	PoolKey                      = keeper.PoolKey
 	ValidatorsKey                = keeper.ValidatorsKey
 	ValidatorsByConsAddrKey      = keeper.ValidatorsByConsAddrKey
@@ -59,6 +58,14 @@ var (
 	GetREDsFromValSrcIndexKey    = keeper.GetREDsFromValSrcIndexKey
 	GetREDsToValDstIndexKey      = keeper.GetREDsToValDstIndexKey
 	GetREDsByDelToValDstIndexKey = keeper.GetREDsByDelToValDstIndexKey
+
+	DefaultParamSpace      = keeper.DefaultParamSpace
+	KeyInflationRateChange = types.KeyInflationRateChange
+	KeyInflationMax        = types.KeyInflationMax
+	KeyGoalBonded          = types.KeyGoalBonded
+	KeyUnbondingTime       = types.KeyUnbondingTime
+	KeyMaxValidators       = types.KeyMaxValidators
+	KeyBondDenom           = types.KeyBondDenom
 
 	DefaultParams         = types.DefaultParams
 	InitialPool           = types.InitialPool

@@ -243,6 +243,7 @@ func getKeys(validators map[string]mockValidator) []string {
 }
 
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
+// nolint: unparam
 func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, livenessTransitions TransitionMatrix, evidenceFraction float64,
 	pastTimes []time.Time, pastSigningValidators [][]abci.SigningValidator, event func(string), header abci.Header, log string) abci.RequestBeginBlock {
 	if len(validators) == 0 {

@@ -2,10 +2,12 @@ package store
 
 import (
 	"encoding/hex"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/iavl"
 	cmn "github.com/tendermint/tendermint/libs/common"
-	"testing"
+	"github.com/tendermint/tendermint/libs/db"
 )
 
 func TestVerifyMultiStoreCommitInfo(t *testing.T) {
@@ -91,7 +93,7 @@ func TestVerifyMultiStoreCommitInfo(t *testing.T) {
 }
 
 func TestVerifyRangeProof(t *testing.T) {
-	tree := iavl.NewTree(nil, 0)
+	tree := iavl.NewMutableTree(db.NewMemDB(), 0)
 
 	rand := cmn.NewRand()
 	rand.Seed(0) // for determinism
@@ -100,7 +102,7 @@ func TestVerifyRangeProof(t *testing.T) {
 		tree.Set(key, []byte(rand.Str(8)))
 	}
 
-	root := tree.Hash()
+	root := tree.WorkingHash()
 
 	key := []byte{0x32}
 	val, proof, err := tree.GetWithProof(key)

@@ -56,6 +56,7 @@ type iavlStore struct {
 }
 
 // CONTRACT: tree should be fully loaded.
+// nolint: unparam
 func newIAVLStore(tree *iavl.MutableTree, numRecent int64, storeEvery int64) *iavlStore {
 	st := &iavlStore{
 		tree:       tree,

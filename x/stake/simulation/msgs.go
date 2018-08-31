@@ -258,6 +258,7 @@ func SimulateMsgCompleteRedelegate(k stake.Keeper) simulation.Operation {
 }
 
 // Setup
+// nolint: errcheck
 func Setup(mapp *mock.App, k stake.Keeper) simulation.RandSetup {
 	return func(r *rand.Rand, privKeys []crypto.PrivKey) {
 		ctx := mapp.NewContext(false, abci.Header{})

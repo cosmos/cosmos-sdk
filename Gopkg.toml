@@ -67,6 +67,14 @@
   name = "github.com/zondax/ledger-goclient"
   revision = "4296ee5701e945f9b3a7dbe51f402e0b9be57259"
 
+[[constraint]]
+  name = "github.com/swaggo/gin-swagger"
+  version = "=v1.0.0"
+
+[[constraint]]
+  name = "github.com/swaggo/swag"
+  version = "=v1.3.2"
+
 [prune]
   go-tests = true
   unused-packages = true

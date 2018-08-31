@@ -127,3 +127,13 @@ func parseQueryResponse(cdc *amino.Codec, rawRes []byte) (int64, error) {
 	}
 	return simulationResult.GasUsed, nil
 }
+
+// StringArrayContains judge whether the sting array contains the
+func StringArrayContains(stringArray []string, targetString string) bool {
+	for _, str := range stringArray {
+		if str == targetString {
+			return true
+		}
+	}
+	return false
+}

@@ -18,6 +18,7 @@ import (
 	slashingcmd "github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 
+	_ "github.com/cosmos/cosmos-sdk/client/lcd/docs"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 )
 
@@ -66,6 +67,7 @@ func main() {
 		tendermintCmd,
 		ibcCmd,
 		lcd.ServeCommand(cdc),
+		lcd.ServeSwaggerCommand(cdc),
 		client.LineBreak,
 	)
 

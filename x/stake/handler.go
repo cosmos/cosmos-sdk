@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake/tags"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"math"
 )
 
 func NewHandler(k keeper.Keeper) sdk.Handler {
@@ -74,6 +75,16 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	}
 	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
+	}
+
+	precisionNumber := math.Pow10(int(k.GetParams(ctx).DenomPrecision))
+	if precisionNumber > math.MaxInt64 {
+		panic("precision is too high, int64 is overflow")
+	}
+	tokenPrecision := int64(precisionNumber)
+	equivalentPower := msg.Delegation.Amount.Div(sdk.NewInt(tokenPrecision))
+	if equivalentPower.Equal(sdk.NewInt(0)) {
+		return sdk.ErrInsufficientCoins("delegate token amount for new created validator is too small, voting power is zero, this validator creation doesn't make sense").Result()
 	}
 
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)

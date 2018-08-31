@@ -22,6 +22,20 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 	return validator, true
 }
 
+// get a single validator with Bech32 prefix
+func (k Keeper) GetBechValidator(ctx sdk.Context, addr sdk.ValAddress) (bechValidator types.BechValidator, found bool) {
+	validator, found := k.GetValidator(ctx, addr)
+	if !found {
+		return bechValidator, false
+	}
+
+	bechValidator, err := validator.Bech32Validator()
+	if err != nil {
+		panic(err.Error())
+	}
+	return bechValidator, true
+}
+
 // get a single validator by pubkey
 func (k Keeper) GetValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -30,6 +44,20 @@ func (k Keeper) GetValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) (val
 		return validator, false
 	}
 	return k.GetValidator(ctx, addr)
+}
+
+// get a single validator by pubkey with Bech32 prefix
+func (k Keeper) GetBechalidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) (bechValidator types.BechValidator, found bool) {
+	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
+	if !found {
+		return bechValidator, false
+	}
+
+	bechValidator, err := validator.Bech32Validator()
+	if err != nil {
+		panic(err.Error())
+	}
+	return bechValidator, true
 }
 
 // set the main record holding validator details
@@ -81,6 +109,37 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve ...int16) (validators
 			validators[i] = validator
 		} else {
 			validators = append(validators, validator)
+		}
+		i++
+	}
+	iterator.Close()
+	return validators[:i] // trim
+}
+
+// Get the set of all validators, retrieve an optional maxRetrieve number of records
+func (k Keeper) GetBechValidators(ctx sdk.Context, maxRetrieve ...int16) (validators []types.BechValidator) {
+	retrieve := len(maxRetrieve) > 0
+	if retrieve {
+		validators = make([]types.BechValidator, maxRetrieve[0])
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
+
+	i := 0
+	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
+		addr := iterator.Key()[1:]
+		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
+
+		bechValidator, err := validator.Bech32Validator()
+		if err != nil {
+			panic(err.Error())
+		}
+
+		if retrieve {
+			validators[i] = bechValidator
+		} else {
+			validators = append(validators, bechValidator)
 		}
 		i++
 	}

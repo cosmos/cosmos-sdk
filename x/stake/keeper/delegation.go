@@ -36,7 +36,7 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 	return delegations
 }
 
-// load all validators that a delegator is bonded to
+// load all validators that a delegator is bonded to or retrieve a limited amount
 func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAddress,
 	maxRetrieve ...int16) (validators []types.Validator) {
 
@@ -83,7 +83,7 @@ func (k Keeper) GetDelegatorValidator(ctx sdk.Context, delegatorAddr sdk.AccAddr
 	return
 }
 
-// load all delegations for a delegator
+// load all delegations for a delegator or retrieve a limited amount
 func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve ...int16) (delegations []types.Delegation) {
 	retrieve := len(maxRetrieve) > 0
@@ -108,7 +108,7 @@ func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddres
 	return delegations[:i] // trim
 }
 
-// load all delegations for a delegator
+// load all delegations for a delegator or retrieve a limited amount
 func (k Keeper) GetDelegatorDelegationsWithoutRat(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve ...int16) (delegations []types.DelegationWithoutDec) {
 	retrieve := len(maxRetrieve) > 0
@@ -149,7 +149,7 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 
 //_____________________________________________________________________________________
 
-// load all unbonding-delegations for a delegator
+// load all unbonding-delegations for a delegator or retrieve a limited amount
 func (k Keeper) GetDelegatorUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve ...int16) (unbondingDelegations []types.UnbondingDelegation) {
 
@@ -241,7 +241,7 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 
 //_____________________________________________________________________________________
 
-// load all redelegations for a delegator
+// load all redelegations for a delegator or retrieve a limited amount
 func (k Keeper) GetRedelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve ...int16) (redelegations []types.Redelegation) {
 

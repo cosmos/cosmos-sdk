@@ -48,6 +48,7 @@ FEATURES
   provide desired Bech32 prefix encoding
   * [cli] \#2047 Setting the --gas flag value to 0 triggers a simulation of the tx before the actual execution. The gas estimate obtained via the simulation will be used as gas limit in the actual execution.
   * [cli] \#2047 The --gas-adjustment flag can be used to adjust the estimate obtained via the simulation triggered by --gas=0.
+  * [cli] #2155 Added `mnemonic` and `keys new` commands to support interactive key generation
 
 * Gaia
   * [cli] #2170 added ability to show the node's address via `gaiad tendermint show-address`

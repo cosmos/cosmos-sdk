@@ -4,6 +4,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bip39"
+	"testing"
+	"github.com/stretchr/testify/require"
 )
 
 //nolint
@@ -72,4 +74,53 @@ func ExampleSomeBIP32TestVecs() {
 	// BIP 32 example
 	//
 	// c4c11d8c03625515905d7e89d25dfc66126fbc629ecca6db489a1a72fc4bda78
+}
+
+func TestParamsFromString(t *testing.T) {
+	params, err := ParamsFromString("m/44'/1'/1'/0/4")
+	require.Nil(t, err)
+	require.Equal(t, params.purpose, uint32(44))
+	require.Equal(t, params.coinType, uint32(1))
+	require.Equal(t, params.account, uint32(1))
+	require.Equal(t, params.change, false)
+	require.Equal(t, params.addressIdx, uint32(4))
+
+	// supports both formats
+	params, err = ParamsFromString("44'/1'/1'/0/4")
+	require.Nil(t, err)
+	require.Equal(t, params.purpose, uint32(44))
+	require.Equal(t, params.coinType, uint32(1))
+	require.Equal(t, params.account, uint32(1))
+	require.Equal(t, params.change, false)
+	require.Equal(t, params.addressIdx, uint32(4))
+
+	// explodes when 6-parts but no m/
+	params, err = ParamsFromString("44'/1'/1'/0/0/0")
+	require.Error(t, err)
+
+	// explodes when > 6 parts or < 5 parts
+	params, err = ParamsFromString("m/44'/1'/1'/0/0/0/0")
+	require.Error(t, err)
+	params, err = ParamsFromString("1'/0/0/0")
+	require.Error(t, err)
+
+	// explodes if ' is omitted
+	params, err = ParamsFromString("m/44/1'/1'/0/4")
+	require.Error(t, err)
+	params, err = ParamsFromString("m/44'/1/1'/0/4")
+	require.Error(t, err)
+	params, err = ParamsFromString("m/44'/1'/1/0/4")
+	require.Error(t, err)
+
+	// explodes if things are not numberic
+	params, err = ParamsFromString("m/44'/z'/1'/0/4")
+	require.Error(t, err)
+
+	// explodes if change is not 0 or 1
+	params, err = ParamsFromString("m/44'/1'/1'/2/4")
+	require.Error(t, err)
+
+	// ignores whitespace
+	params, err = ParamsFromString("m/ 44'  / 1'  / 1'/0/4")
+	require.Nil(t, err)
 }

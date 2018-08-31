@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"strings"
 )
 
 var (
@@ -276,6 +277,31 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, "  2 - Apples", proposalsQuery)
 }
 
+func TestGaiaCLIKeysNew(t *testing.T) {
+	keyName := "testKey"
+	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", gaiadHome), "")
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), app.DefaultKeyPass)
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), app.DefaultKeyPass)
+
+	// happy path with defaults
+	executeInit(t, fmt.Sprintf("gaiad init -o --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome))
+	executeWrite(t, fmt.Sprintf("gaiacli --home=%s keys new --default=true %s", gaiacliHome, keyName), "honk")
+	keyAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show %s --output=json --home=%s", keyName, gaiacliHome))
+	require.NotNil(t, keyAddr)
+}
+
+func TestGaiaCLIMnemonic(t *testing.T) {
+	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", gaiadHome), "")
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), app.DefaultKeyPass)
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), app.DefaultKeyPass)
+	executeMnemonic(t, fmt.Sprintf("gaiacli keys mnemonic"), "", "")
+	executeMnemonic(t,
+		fmt.Sprintf("gaiacli keys mnemonic --user"),
+		"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+		"donor anxiety expect little beef pass agree choice donor anxiety expect little beef pass agree choice donor anxiety expect little beef pass agree cattle",
+	)
+}
+
 //___________________________________________________________________________________
 // helper methods
 
@@ -430,4 +456,13 @@ func executeGetVotes(t *testing.T, cmdStr string) []gov.Vote {
 	err := cdc.UnmarshalJSON([]byte(out), &votes)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
 	return votes
+}
+
+func executeMnemonic(t *testing.T, cmdStr string, entropy string, expectedMnemonic string) {
+	out := tests.ExecuteT(t, cmdStr, entropy)
+	require.True(t, len(strings.Split(out, " ")) > 24)
+
+	if expectedMnemonic != "" {
+		require.Contains(t, out, expectedMnemonic)
+	}
 }

@@ -23,6 +23,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"regexp"
 )
 
 // BIP44Prefix is the parts of the BIP32 HD path that are fixed by what we used during the fundraiser.
@@ -30,6 +31,8 @@ const (
 	BIP44Prefix        = "44'/118'/"
 	FullFundraiserPath = BIP44Prefix + "0'/0/0"
 )
+
+var bip44Component = regexp.MustCompile(`[\d]+'`)
 
 // BIP44Params wraps BIP 44 params (5 level BIP 32 path).
 // To receive a canonical string representation ala
@@ -165,4 +168,72 @@ func i64(key []byte, data []byte) (IL [32]byte, IR [32]byte) {
 	copy(IL[:], I[:32])
 	copy(IR[:], I[32:])
 	return
+}
+
+// ParamsFromString instantiates a BIP44Params object from the given string
+// derivation path. Performs validation on the path.
+// nolint: gocyclo
+func ParamsFromString(path string) (*BIP44Params, error) {
+	initialSplits := strings.Split(path, "/")
+	var splits [5]string
+
+	if len(initialSplits) != 5 && len(initialSplits) != 6 {
+		return nil, errors.New("path must have 5 or 6 components")
+	}
+
+	for i, s := range initialSplits {
+		initialSplits[i] = strings.TrimSpace(s)
+	}
+
+	if len(initialSplits) == 6 {
+		if initialSplits[0] != "m" {
+			return nil, errors.New("path must start with m/")
+		}
+
+		copy(splits[:], initialSplits[1:])
+	} else {
+		copy(splits[:], initialSplits[:])
+	}
+
+	if !bip44Component.MatchString(splits[0]) ||
+		!bip44Component.MatchString(splits[1]) ||
+		!bip44Component.MatchString(splits[2]) {
+		return nil, errors.New("mal-formed path")
+	}
+
+	purpose, err := toPathInt(splits[0])
+	if err != nil {
+		return nil, err
+	}
+	coinType, err := toPathInt(splits[1])
+	if err != nil {
+		return nil, err
+	}
+	account, err := toPathInt(splits[2])
+	if err != nil {
+		return nil, err
+	}
+
+	if splits[3] != "0" && splits[3] != "1" {
+		return nil, errors.New("mal-formed path")
+	}
+
+	change := splits[3] == "1"
+	addressIdx, err := toPathInt(splits[4])
+	if err != nil {
+		return nil, err
+	}
+
+	return &BIP44Params{
+		purpose:    purpose,
+		coinType:   coinType,
+		account:    account,
+		change:     change,
+		addressIdx: addressIdx,
+	}, nil
+}
+
+func toPathInt(component string) (uint32, error) {
+	out, err := strconv.Atoi(strings.Replace(component, "'", "", 1))
+	return uint32(out), err
 }

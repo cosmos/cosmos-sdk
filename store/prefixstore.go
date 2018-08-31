@@ -13,6 +13,18 @@ type prefixStore struct {
 	prefix []byte
 }
 
+func clone(bz []byte) (res []byte) {
+	res = make([]byte, len(bz))
+	copy(res, bz)
+	return
+}
+
+func (s prefixStore) key(key []byte) (res []byte) {
+	res = clone(s.prefix)
+	res = append(res, key...)
+	return
+}
+
 // Implements Store
 func (s prefixStore) GetStoreType() StoreType {
 	return s.parent.GetStoreType()
@@ -30,22 +42,23 @@ func (s prefixStore) CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap 
 
 // Implements KVStore
 func (s prefixStore) Get(key []byte) []byte {
-	return s.parent.Get(append(s.prefix, key...))
+	res := s.parent.Get(s.key(key))
+	return res
 }
 
 // Implements KVStore
 func (s prefixStore) Has(key []byte) bool {
-	return s.parent.Has(append(s.prefix, key...))
+	return s.parent.Has(s.key(key))
 }
 
 // Implements KVStore
 func (s prefixStore) Set(key, value []byte) {
-	s.parent.Set(append(s.prefix, key...), value)
+	s.parent.Set(s.key(key), value)
 }
 
 // Implements KVStore
 func (s prefixStore) Delete(key []byte) {
-	s.parent.Delete(append(s.prefix, key...))
+	s.parent.Delete(s.key(key))
 }
 
 // Implements KVStore
@@ -60,27 +73,40 @@ func (s prefixStore) Gas(meter GasMeter, config GasConfig) KVStore {
 
 // Implements KVStore
 func (s prefixStore) Iterator(start, end []byte) Iterator {
+	newstart := clone(s.prefix)
+	newstart = append(newstart, start...)
+
+	var newend []byte
 	if end == nil {
-		end = sdk.PrefixEndBytes(s.prefix)
+		newend = sdk.PrefixEndBytes(s.prefix)
 	} else {
-		end = append(s.prefix, end...)
+		newend = clone(s.prefix)
+		newend = append(newend, end...)
 	}
+
 	return prefixIterator{
 		prefix: s.prefix,
-		iter:   s.parent.Iterator(append(s.prefix, start...), end),
+		iter:   s.parent.Iterator(newstart, newend),
 	}
 }
 
 // Implements KVStore
 func (s prefixStore) ReverseIterator(start, end []byte) Iterator {
+	newstart := make([]byte, len(s.prefix), len(start))
+	copy(newstart, s.prefix)
+	newstart = append(newstart, start...)
+
+	newend := make([]byte, len(s.prefix)+len(end))
 	if end == nil {
-		end = sdk.PrefixEndBytes(s.prefix)
+		newend = sdk.PrefixEndBytes(s.prefix)
 	} else {
-		end = append(s.prefix, end...)
+		copy(newend, s.prefix)
+		newend = append(newend, end...)
 	}
+
 	return prefixIterator{
 		prefix: s.prefix,
-		iter:   s.parent.ReverseIterator(start, end),
+		iter:   s.parent.ReverseIterator(newstart, newend),
 	}
 }
 

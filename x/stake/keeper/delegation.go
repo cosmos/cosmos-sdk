@@ -315,7 +315,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 //______________________________________________________________________________________________________
 
 // get info for begin functions: MinTime and CreationHeight
-func (k Keeper) getBeginInfo(ctx sdk.Context, params types.Params, valSrcAddr sdk.ValAddress) (
+func (k Keeper) getBeginInfo(ctx sdk.Context, valSrcAddr sdk.ValAddress) (
 	minTime time.Time, height int64, completeNow bool) {
 
 	validator, found := k.GetValidator(ctx, valSrcAddr)
@@ -323,7 +323,7 @@ func (k Keeper) getBeginInfo(ctx sdk.Context, params types.Params, valSrcAddr sd
 	case !found || validator.Status == sdk.Bonded:
 
 		// the longest wait - just unbonding period from now
-		minTime = ctx.BlockHeader().Time.Add(params.UnbondingTime)
+		minTime = ctx.BlockHeader().Time.Add(k.UnbondingTime(ctx))
 		height = ctx.BlockHeader().Height
 		return minTime, height, false
 
@@ -356,9 +356,8 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context,
 	}
 
 	// create the unbonding delegation
-	params := k.GetParams(ctx)
-	minTime, height, completeNow := k.getBeginInfo(ctx, params, valAddr)
-	balance := sdk.Coin{params.BondDenom, returnAmount.RoundInt()}
+	minTime, height, completeNow := k.getBeginInfo(ctx, valAddr)
+	balance := sdk.Coin{k.BondDenom(ctx), returnAmount.RoundInt()}
 
 	// no need to create the ubd object just complete now
 	if completeNow {
@@ -417,8 +416,7 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 		return err
 	}
 
-	params := k.GetParams(ctx)
-	returnCoin := sdk.Coin{params.BondDenom, returnAmount.RoundInt()}
+	returnCoin := sdk.Coin{k.BondDenom(ctx), returnAmount.RoundInt()}
 	dstValidator, found := k.GetValidator(ctx, valDstAddr)
 	if !found {
 		return types.ErrBadRedelegationDst(k.Codespace())
@@ -429,7 +427,7 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 
 	// create the unbonding delegation
-	minTime, height, completeNow := k.getBeginInfo(ctx, params, valSrcAddr)
+	minTime, height, completeNow := k.getBeginInfo(ctx, valSrcAddr)
 
 	if completeNow { // no need to create the redelegation object
 		return nil

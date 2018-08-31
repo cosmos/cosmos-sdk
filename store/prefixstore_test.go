@@ -81,7 +81,7 @@ func TestCacheKVStorePrefix(t *testing.T) {
 func TestGasKVStorePrefix(t *testing.T) {
 	meter := sdk.NewGasMeter(100000000)
 	mem := dbStoreAdapter{dbm.NewMemDB()}
-	gasStore := NewGasKVStore(meter, sdk.DefaultGasConfig(), mem)
+	gasStore := NewGasKVStore(meter, sdk.DefaultKVGasConfig(), mem)
 
 	testPrefixStore(t, gasStore, []byte("test"))
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	paramutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
@@ -464,15 +465,13 @@ func GetCmdQueryParams(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "Query the current staking parameters information",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			key := stake.ParamKey
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, err := cliCtx.QueryStore(key, storeName)
+			var params types.Params
+			err := paramutils.QueryParams(cliCtx, storeName, &params)
 			if err != nil {
 				return err
 			}
-
-			params := types.MustUnmarshalParams(cdc, res)
 
 			switch viper.Get(cli.OutputFlag) {
 			case "text":

@@ -13,7 +13,7 @@ import (
 )
 
 func TestBeginBlocker(t *testing.T) {
-	ctx, ck, sk, _, keeper := createTestInput(t)
+	ctx, ck, sk, _, keeper := createTestInput(t, HubDefaultParams())
 	addr, pk, amt := addrs[2], pks[2], sdk.NewInt(100)
 
 	// bond the validator

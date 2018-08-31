@@ -301,10 +301,7 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 		return sdk.ErrInternal(errMsg.Error()).QueryResult()
 	}
 
-	res.Proof, errMsg = buildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
-	if errMsg != nil {
-		return sdk.ErrInternal(errMsg.Error()).QueryResult()
-	}
+	res.Proof = buildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
 
 	return res
 }

@@ -37,7 +37,6 @@ import (
 	"github.com/tendermint/tendermint/proxy"
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"time"
 )
 
 // makePathname creates a unique pathname for each test. It will panic if it
@@ -191,7 +190,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	node, err := startTM(config, logger, genDoc, privVal, app)
 	require.NoError(t, err)
 
-	time.Sleep(3 * time.Second)
+	tests.WaitForNextHeightTM(tests.ExtractPortFromAddress(config.RPC.ListenAddress))
 	lcd, err := startLCD(logger, listenAddr, cdc)
 	require.NoError(t, err)
 

@@ -1,16 +1,16 @@
 package server
 
 import (
-	"testing"
-	"github.com/stretchr/testify/require"
-	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/tendermint/tendermint/libs/log"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	"os"
 	"bytes"
+	"github.com/cosmos/cosmos-sdk/server/mock"
+	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/stretchr/testify/require"
+	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
+	"github.com/tendermint/tendermint/libs/log"
 	"io"
-		"github.com/cosmos/cosmos-sdk/server/mock"
-	)
+	"os"
+	"testing"
+)
 
 func TestEmptyState(t *testing.T) {
 	defer setupViper(t)()

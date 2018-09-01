@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	cliclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -31,6 +32,7 @@ type sendBody struct {
 	AccountNumber    int64     `json:"account_number"`
 	Sequence         int64     `json:"sequence"`
 	Gas              int64     `json:"gas"`
+	GasAdjustment    string    `json:"gas_adjustment"`
 }
 
 var msgCdc = wire.NewCodec()
@@ -40,6 +42,7 @@ func init() {
 }
 
 // SendRequestHandlerFn - http request handler to send coins to a address
+// nolint: gocyclo
 func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collect data
@@ -48,32 +51,32 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 
 		to, err := sdk.AccAddressFromBech32(bech32addr)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusBadRequest, err.Error())
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		var m sendBody
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusBadRequest, err.Error())
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 		err = msgCdc.UnmarshalJSON(body, &m)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusBadRequest, err.Error())
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		info, err := kb.Get(m.LocalAccountName)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusUnauthorized, err.Error())
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 
 		// build message
 		msg := client.BuildMsg(sdk.AccAddress(info.GetPubKey().Address()), to, m.Amount)
 		if err != nil { // XXX rechecking same error ?
-			utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -85,10 +88,20 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 			Sequence:      m.Sequence,
 		}
 
-		if m.Gas == 0 {
-			newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, m.Password, []sdk.Msg{msg})
+		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, cliclient.DefaultGasAdjustment)
+		if !ok {
+			return
+		}
+		cliCtx = cliCtx.WithGasAdjustment(adjustment)
+
+		if utils.HasDryRunArg(r) || m.Gas == 0 {
+			newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
 			if err != nil {
-				utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+			if utils.HasDryRunArg(r) {
+				utils.WriteSimulationResponse(w, txCtx.Gas)
 				return
 			}
 			txCtx = newCtx
@@ -96,19 +109,19 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 
 		txBytes, err := txCtx.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusUnauthorized, err.Error())
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 
 		res, err := cliCtx.BroadcastTx(txBytes)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		output, err := wire.MarshalJSONIndent(cdc, res)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 

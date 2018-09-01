@@ -12,7 +12,7 @@ import (
 )
 
 // get a single validator
-func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.AccAddress) (validator types.Validator, found bool) {
+func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	value := store.Get(GetValidatorKey(addr))
 	if value == nil {
@@ -224,7 +224,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 		store.Set(GetTendermintUpdatesKey(validator.Operator), bz)
 
 		if cliffPower != nil {
-			cliffAddr := sdk.AccAddress(k.GetCliffValidator(ctx))
+			cliffAddr := sdk.ValAddress(k.GetCliffValidator(ctx))
 			if bytes.Equal(cliffAddr, validator.Operator) {
 				k.updateCliffValidator(ctx, validator)
 			}
@@ -275,7 +275,7 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
-	cliffAddr := sdk.AccAddress(k.GetCliffValidator(ctx))
+	cliffAddr := sdk.ValAddress(k.GetCliffValidator(ctx))
 
 	oldCliffVal, found := k.GetValidator(ctx, cliffAddr)
 	if !found {
@@ -603,6 +603,13 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 
 	// also remove from the Bonded types.Validators Store
 	store.Delete(GetValidatorsBondedIndexKey(validator.Operator))
+
+	// call the unbond hook if present
+	if k.validatorHooks != nil {
+		k.validatorHooks.OnValidatorBeginUnbonding(ctx, validator.ConsAddress())
+	}
+
+	// return updated validator
 	return validator
 }
 
@@ -629,11 +636,17 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidator())
 	store.Set(GetTendermintUpdatesKey(validator.Operator), bzABCI)
 
+	// call the bond hook if present
+	if k.validatorHooks != nil {
+		k.validatorHooks.OnValidatorBonded(ctx, validator.ConsAddress())
+	}
+
+	// return updated validator
 	return validator
 }
 
 // remove the validator record and associated indexes
-func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.AccAddress) {
+func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 
 	// first retrieve the old validator record
 	validator, found := k.GetValidator(ctx, address)

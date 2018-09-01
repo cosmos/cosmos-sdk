@@ -12,58 +12,31 @@ import (
 	"github.com/tendermint/tendermint/libs/common"
 )
 
-// DefaultGasAdjustment is applied to gas estimates to avoid tx
-// execution failures due to state changes that might
-// occur between the tx simulation and the actual run.
-const DefaultGasAdjustment = 1.2
-
 // SendTx implements a auxiliary handler that facilitates sending a series of
 // messages in a signed transaction given a TxContext and a QueryContext. It
 // ensures that the account exists, has a proper number and sequence set. In
 // addition, it builds and signs a transaction with the supplied messages.
 // Finally, it broadcasts the signed transaction to a node.
 func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) error {
-	if err := cliCtx.EnsureAccountExists(); err != nil {
-		return err
-	}
-
-	from, err := cliCtx.GetFromAddress()
+	txCtx, err := prepareTxContext(txCtx, cliCtx)
 	if err != nil {
 		return err
 	}
-
-	// TODO: (ref #1903) Allow for user supplied account number without
-	// automatically doing a manual lookup.
-	if txCtx.AccountNumber == 0 {
-		accNum, err := cliCtx.GetAccountNumber(from)
+	autogas := cliCtx.DryRun || (cliCtx.Gas == 0)
+	if autogas {
+		txCtx, err = EnrichCtxWithGas(txCtx, cliCtx, cliCtx.FromAddressName, msgs)
 		if err != nil {
 			return err
 		}
-
-		txCtx = txCtx.WithAccountNumber(accNum)
+		fmt.Fprintf(os.Stdout, "estimated gas = %v\n", txCtx.Gas)
 	}
-
-	// TODO: (ref #1903) Allow for user supplied account sequence without
-	// automatically doing a manual lookup.
-	if txCtx.Sequence == 0 {
-		accSeq, err := cliCtx.GetAccountSequence(from)
-		if err != nil {
-			return err
-		}
-
-		txCtx = txCtx.WithSequence(accSeq)
+	if cliCtx.DryRun {
+		return nil
 	}
 
 	passphrase, err := keys.GetPassphrase(cliCtx.FromAddressName)
 	if err != nil {
 		return err
-	}
-
-	if cliCtx.Gas == 0 {
-		txCtx, err = EnrichCtxWithGas(txCtx, cliCtx, cliCtx.FromAddressName, passphrase, msgs)
-		if err != nil {
-			return err
-		}
 	}
 
 	// build and sign the transaction
@@ -75,24 +48,24 @@ func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) 
 	return cliCtx.EnsureBroadcastTx(txBytes)
 }
 
-// EnrichCtxWithGas calculates the gas estimate that would be consumed by the
-// transaction and set the transaction's respective value accordingly.
-func EnrichCtxWithGas(txCtx authctx.TxContext, cliCtx context.CLIContext, name, passphrase string, msgs []sdk.Msg) (authctx.TxContext, error) {
-	txBytes, err := BuildAndSignTxWithZeroGas(txCtx, name, passphrase, msgs)
+// SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
+func SimulateMsgs(txCtx authctx.TxContext, cliCtx context.CLIContext, name string, msgs []sdk.Msg, gas int64) (estimated, adjusted int64, err error) {
+	txBytes, err := txCtx.WithGas(gas).BuildWithPubKey(name, msgs)
 	if err != nil {
-		return txCtx, err
+		return
 	}
-	estimate, adjusted, err := CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, cliCtx.GasAdjustment)
-	if err != nil {
-		return txCtx, err
-	}
-	fmt.Fprintf(os.Stderr, "gas: [estimated = %v] [adjusted = %v]\n", estimate, adjusted)
-	return txCtx.WithGas(adjusted), nil
+	estimated, adjusted, err = CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, cliCtx.GasAdjustment)
+	return
 }
 
-// BuildAndSignTxWithZeroGas builds transactions with GasWanted set to 0.
-func BuildAndSignTxWithZeroGas(txCtx authctx.TxContext, name, passphrase string, msgs []sdk.Msg) ([]byte, error) {
-	return txCtx.WithGas(0).BuildAndSign(name, passphrase, msgs)
+// EnrichCtxWithGas calculates the gas estimate that would be consumed by the
+// transaction and set the transaction's respective value accordingly.
+func EnrichCtxWithGas(txCtx authctx.TxContext, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (authctx.TxContext, error) {
+	_, adjusted, err := SimulateMsgs(txCtx, cliCtx, name, msgs, 0)
+	if err != nil {
+		return txCtx, err
+	}
+	return txCtx.WithGas(adjusted), nil
 }
 
 // CalculateGas simulates the execution of a transaction and returns
@@ -109,14 +82,10 @@ func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *
 		return
 	}
 	adjusted = adjustGasEstimate(estimate, adjustment)
-	fmt.Fprintf(os.Stderr, "gas: [estimated = %v] [adjusted = %v]\n", estimate, adjusted)
 	return
 }
 
 func adjustGasEstimate(estimate int64, adjustment float64) int64 {
-	if adjustment == 0 {
-		return int64(DefaultGasAdjustment * float64(estimate))
-	}
 	return int64(adjustment * float64(estimate))
 }
 
@@ -126,4 +95,36 @@ func parseQueryResponse(cdc *amino.Codec, rawRes []byte) (int64, error) {
 		return 0, err
 	}
 	return simulationResult.GasUsed, nil
+}
+
+func prepareTxContext(txCtx authctx.TxContext, cliCtx context.CLIContext) (authctx.TxContext, error) {
+	if err := cliCtx.EnsureAccountExists(); err != nil {
+		return txCtx, err
+	}
+
+	from, err := cliCtx.GetFromAddress()
+	if err != nil {
+		return txCtx, err
+	}
+
+	// TODO: (ref #1903) Allow for user supplied account number without
+	// automatically doing a manual lookup.
+	if txCtx.AccountNumber == 0 {
+		accNum, err := cliCtx.GetAccountNumber(from)
+		if err != nil {
+			return txCtx, err
+		}
+		txCtx = txCtx.WithAccountNumber(accNum)
+	}
+
+	// TODO: (ref #1903) Allow for user supplied account sequence without
+	// automatically doing a manual lookup.
+	if txCtx.Sequence == 0 {
+		accSeq, err := cliCtx.GetAccountSequence(from)
+		if err != nil {
+			return txCtx, err
+		}
+		txCtx = txCtx.WithSequence(accSeq)
+	}
+	return txCtx, nil
 }

@@ -38,7 +38,9 @@ func TestJailedValidatorDelegations(t *testing.T) {
 
 	// create a validator
 	amount := int64(10)
-	valAddr, valPubKey, bondAmount := sdk.ValAddress(addrs[0]), pks[0], sdk.NewInt(amount)
+	valPubKey, bondAmount := pks[0], sdk.NewInt(amount)
+	consAddr, valAddr := sdk.ConsAddress(addrs[0]), sdk.ValAddress(addrs[1])
+
 	msgCreateVal := newTestMsgCreateValidator(valAddr, valPubKey, bondAmount)
 	got := stake.NewHandler(stakeKeeper)(ctx, msgCreateVal)
 	require.True(t, got.IsOK(), "expected create validator msg to be ok, got: %v", got)
@@ -50,11 +52,10 @@ func TestJailedValidatorDelegations(t *testing.T) {
 		JailedUntil:         time.Unix(0, 0),
 		SignedBlocksCounter: int64(0),
 	}
-	consAddr := sdk.ConsAddress(valAddr.Bytes())
 	slashingKeeper.setValidatorSigningInfo(ctx, consAddr, newInfo)
 
 	// delegate tokens to the validator
-	delAddr := sdk.AccAddress(addrs[1])
+	delAddr := sdk.AccAddress(addrs[2])
 	msgDelegate := newTestMsgDelegate(delAddr, valAddr, bondAmount)
 	got = stake.NewHandler(stakeKeeper)(ctx, msgDelegate)
 	require.True(t, got.IsOK(), "expected delegation to be ok, got %v", got)

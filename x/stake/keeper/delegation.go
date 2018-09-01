@@ -315,10 +315,10 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 //______________________________________________________________________________________________________
 
 // get info for begin functions: MinTime and CreationHeight
-func (k Keeper) getBeginInfo(ctx sdk.Context, params types.Params, validatorSrcAddr sdk.AccAddress) (
+func (k Keeper) getBeginInfo(ctx sdk.Context, params types.Params, valSrcAddr sdk.ValAddress) (
 	minTime time.Time, height int64, completeNow bool) {
 
-	validator, found := k.GetValidator(ctx, validatorSrcAddr)
+	validator, found := k.GetValidator(ctx, valSrcAddr)
 	switch {
 	case !found || validator.Status == sdk.Bonded:
 
@@ -357,12 +357,12 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context,
 
 	// create the unbonding delegation
 	params := k.GetParams(ctx)
-	minTime, height, completeNow := k.getBeginInfo(ctx, params, validatorAddr)
+	minTime, height, completeNow := k.getBeginInfo(ctx, params, valAddr)
 	balance := sdk.Coin{params.BondDenom, returnAmount.RoundInt()}
 
 	// no need to create the ubd object just complete now
 	if completeNow {
-		_, _, err := k.coinKeeper.AddCoins(ctx, delegatorAddr, sdk.Coins{balance})
+		_, _, err := k.coinKeeper.AddCoins(ctx, delAddr, sdk.Coins{balance})
 		if err != nil {
 			return err
 		}
@@ -429,7 +429,7 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 
 	// create the unbonding delegation
-	minTime, height, completeNow := k.getBeginInfo(ctx, params, validatorSrcAddr)
+	minTime, height, completeNow := k.getBeginInfo(ctx, params, valSrcAddr)
 
 	if completeNow { // no need to create the redelegation object
 		return nil

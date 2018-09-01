@@ -246,6 +246,11 @@ func (v Validator) Equal(c2 Validator) bool {
 		v.LastBondedTokens.Equal(c2.LastBondedTokens)
 }
 
+// return the TM validator address
+func (v Validator) ConsAddress() sdk.ConsAddress {
+	return sdk.ConsAddress(v.PubKey.Address())
+}
+
 // constant used in flags to indicate that description field should not be updated
 const DoNotModifyDesc = "[do-not-modify]"
 

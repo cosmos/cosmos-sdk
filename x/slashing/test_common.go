@@ -31,10 +31,10 @@ var (
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51"),
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
 	}
-	addrs = []sdk.AccAddress{
-		sdk.AccAddress(pks[0].Address()),
-		sdk.AccAddress(pks[1].Address()),
-		sdk.AccAddress(pks[2].Address()),
+	addrs = []sdk.ValAddress{
+		sdk.ValAddress(pks[0].Address()),
+		sdk.ValAddress(pks[1].Address()),
+		sdk.ValAddress(pks[2].Address()),
 	}
 	initCoins = sdk.NewInt(200)
 )
@@ -76,7 +76,7 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, para
 	require.Nil(t, err)
 
 	for _, addr := range addrs {
-		_, _, err = ck.AddCoins(ctx, addr, sdk.Coins{
+		_, _, err = ck.AddCoins(ctx, sdk.AccAddress(addr), sdk.Coins{
 			{sk.GetParams(ctx).BondDenom, initCoins},
 		})
 	}

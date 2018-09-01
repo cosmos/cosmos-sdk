@@ -591,6 +591,13 @@ func (k Keeper) unbondValidator(ctx sdk.Context, validator types.Validator) type
 
 	// also remove from the Bonded types.Validators Store
 	store.Delete(GetValidatorsBondedIndexKey(validator.Operator))
+
+	// call the unbond hook if present
+	if k.validatorHooks != nil {
+		k.validatorHooks.OnValidatorBeginUnbonding(ctx, validator.ConsAddress())
+	}
+
+	// return updated validator
 	return validator
 }
 
@@ -617,6 +624,12 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidator())
 	store.Set(GetTendermintUpdatesKey(validator.Operator), bzABCI)
 
+	// call the bond hook if present
+	if k.validatorHooks != nil {
+		k.validatorHooks.OnValidatorBonded(ctx, validator.ConsAddress())
+	}
+
+	// return updated validator
 	return validator
 }
 

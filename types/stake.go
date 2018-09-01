@@ -99,3 +99,13 @@ type DelegationSet interface {
 	IterateDelegations(ctx Context, delegator AccAddress,
 		fn func(index int64, delegation Delegation) (stop bool))
 }
+
+// validator event hooks
+// These can be utilized to communicate between a staking keeper
+// and another keeper which must take particular actions when
+// validators are bonded and unbonded. The second keeper must implement
+// this interface, which then the staking keeper can call.
+type ValidatorHooks interface {
+	OnValidatorBonded(ctx Context, address ConsAddress)         // Must be called when a validator is bonded
+	OnValidatorBeginUnbonding(ctx Context, address ConsAddress) // Must be called when a validator begins unbonding
+}

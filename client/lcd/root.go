@@ -66,7 +66,7 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().String(client.FlagChainID, "", "The chain ID to connect to")
 	cmd.Flags().String(client.FlagNode, "tcp://localhost:26657", "Address of the node to connect to")
 	cmd.Flags().Int(flagMaxOpenConnections, 1000, "The number of maximum open connections")
-	cmd.Flags().Bool(client.FlagDistrustNode, true, "Whether trust connected full node")
+	cmd.Flags().Bool(client.FlagDistrustNode, true, "Verify proofs for query responses if true")
 
 	return cmd
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
+	tmliteErr "github.com/tendermint/tendermint/lite/errors"
 )
 
 //BlockCommand returns the verified block data for a given heights
@@ -23,7 +24,7 @@ func BlockCommand() *cobra.Command {
 		RunE:  printBlock,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	cmd.Flags().Bool(client.FlagDistrustNode, true, "Don't verify proofs for responses")
+	cmd.Flags().Bool(client.FlagDistrustNode, true, "Verify proofs for query responses if true")
 	cmd.Flags().String(client.FlagChainID, "", "The chain ID to connect to")
 	return cmd
 }
@@ -46,7 +47,9 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	distrustNode := viper.GetBool(client.FlagDistrustNode)
 	if distrustNode {
 		check, err := tmliteProxy.GetCertifiedCommit(*height, node, cliCtx.Certifier)
-		if err != nil {
+		if tmliteErr.IsCommitNotFoundErr(err) {
+			return nil, context.ErrGetVerifyCommit(*height)
+		} else if err != nil {
 			return nil, err
 		}
 

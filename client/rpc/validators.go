@@ -16,6 +16,7 @@ import (
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	tmTypes "github.com/tendermint/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
+	tmliteErr "github.com/tendermint/tendermint/lite/errors"
 )
 
 // TODO these next two functions feel kinda hacky based on their placement
@@ -29,7 +30,7 @@ func ValidatorCommand() *cobra.Command {
 		RunE:  printValidators,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	cmd.Flags().Bool(client.FlagDistrustNode, true, "Don't verify proofs for responses")
+	cmd.Flags().Bool(client.FlagDistrustNode, true, "Verify proofs for query responses if true")
 	cmd.Flags().String(client.FlagChainID, "", "The chain ID to connect to")
 	return cmd
 }
@@ -78,7 +79,9 @@ func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 
 	if distrustNode {
 		check, err := tmliteProxy.GetCertifiedCommit(*height, node, cliCtx.Certifier)
-		if err != nil {
+		if tmliteErr.IsCommitNotFoundErr(err) {
+			return nil, context.ErrGetVerifyCommit(*height)
+		} else if err != nil {
 			return nil, err
 		}
 

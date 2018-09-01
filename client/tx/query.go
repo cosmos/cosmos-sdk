@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
+	tmliteErr "github.com/tendermint/tendermint/lite/errors"
 )
 
 // QueryTxCmd implements the default command for a tx query.
@@ -47,7 +48,7 @@ func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	cmd.Flags().String(client.FlagChainID, "", "The chain ID to connect to")
-	cmd.Flags().Bool(client.FlagDistrustNode, true, "Don't verify proofs for responses")
+	cmd.Flags().Bool(client.FlagDistrustNode, true, "Verify proofs for query responses if true")
 	return cmd
 }
 
@@ -74,7 +75,9 @@ func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string, dist
 
 	if distrustNode {
 		check, err := tmliteProxy.GetCertifiedCommit(info.Height, node, cliCtx.Certifier)
-		if err != nil {
+		if tmliteErr.IsCommitNotFoundErr(err) {
+			return nil, context.ErrGetVerifyCommit(info.Height)
+		} else if err != nil {
 			return nil, err
 		}
 

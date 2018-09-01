@@ -25,13 +25,12 @@ import (
 )
 
 var (
-	seed         int64
-	numBlocks    int
-	blockSize    int
-	enabled      bool
-	verbose      bool
-	usegoleveldb bool
-	commit       bool
+	seed      int64
+	numBlocks int
+	blockSize int
+	enabled   bool
+	verbose   bool
+	commit    bool
 )
 
 func init() {
@@ -40,7 +39,6 @@ func init() {
 	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "Operations per block")
 	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")
 	flag.BoolVar(&verbose, "SimulationVerbose", false, "Verbose log output")
-	flag.BoolVar(&usegoleveldb, "SimulationGoLevelDB", false, "Use GoLevelDB instead of memdb")
 	flag.BoolVar(&commit, "SimulationCommit", false, "Have the simulation commit")
 }
 
@@ -126,14 +124,12 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 	var logger log.Logger
 	logger = log.NewNopLogger()
 	var db dbm.DB
-	if usegoleveldb {
-		dir := os.TempDir()
-		db, _ = dbm.NewGoLevelDB("Simulation", dir)
-		defer os.RemoveAll(dir)
-	} else {
-		db = dbm.NewMemDB()
-	}
-	defer db.Close()
+	dir := os.TempDir()
+	db, _ = dbm.NewGoLevelDB("Simulation", dir)
+	defer func() {
+		db.Close()
+		os.RemoveAll(dir)
+	}()
 	app := NewGaiaApp(logger, db, nil)
 
 	// Run randomized simulation

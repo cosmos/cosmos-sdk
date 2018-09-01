@@ -54,11 +54,11 @@ func SimulateFromSeed(
 	tb testing.TB, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, seed int64, ops []Operation, setups []RandSetup,
 	invariants []Invariant, numBlocks int, blockSize int, commit bool,
 ) {
-	testingmode, t, b := getTestingMode(tb)
+	testingMode, t, b := getTestingMode(tb)
 	log := fmt.Sprintf("Starting SimulateFromSeed with randomness created with seed %d", int(seed))
 	r := rand.New(rand.NewSource(seed))
 	timestamp := randTimestamp(r)
-	log = updateLog(testingmode, log, "Starting the simulation from time %v, unixtime %v", timestamp.UTC().Format(time.UnixDate), timestamp.Unix())
+	log = updateLog(testingMode, log, "Starting the simulation from time %v, unixtime %v", timestamp.UTC().Format(time.UnixDate), timestamp.Unix())
 	fmt.Printf("%s\n", log)
 	timeDiff := maxTimePerBlock - minTimePerBlock
 
@@ -67,7 +67,7 @@ func SimulateFromSeed(
 	// Setup event stats
 	events := make(map[string]uint)
 	event := func(what string) {
-		log = updateLog(testingmode, log, "event - %s", what)
+		log = updateLog(testingMode, log, "event - %s", what)
 		events[what]++
 	}
 
@@ -78,21 +78,24 @@ func SimulateFromSeed(
 
 	request := abci.RequestBeginBlock{Header: header}
 
-	var lastHeaderTime time.Time
+	var pastTimes []time.Time
 	// These are operations which have been queued by previous operations
 	operationQueue := make(map[int][]Operation)
 
-	if !testingmode {
+	if !testingMode {
 		b.ResetTimer()
 	}
-	blockSimulator := createBlockSimulator(testingmode, tb, t, event, invariants, ops, operationQueue, numBlocks)
+	blockSimulator := createBlockSimulator(testingMode, tb, t, event, invariants, ops, operationQueue, numBlocks)
 
 	for i := 0; i < numBlocks; i++ {
+		// Log the header time for future lookup
+		pastTimes = append(pastTimes, header.Time)
+
 		// Run the BeginBlock handler
 		app.BeginBlock(request)
-		log = updateLog(testingmode, log, "BeginBlock")
+		log = updateLog(testingMode, log, "BeginBlock")
 
-		if testingmode {
+		if testingMode {
 			// Make sure invariants hold at beginning of block
 			AssertAllInvariants(t, app, invariants, log)
 		}
@@ -109,11 +112,10 @@ func SimulateFromSeed(
 
 		res := app.EndBlock(abci.RequestEndBlock{})
 		header.Height++
-		lastHeaderTime = header.Time
 		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
-		log = updateLog(testingmode, log, "EndBlock")
+		log = updateLog(testingMode, log, "EndBlock")
 
-		if testingmode {
+		if testingMode {
 			// Make sure invariants hold at end of block
 			AssertAllInvariants(t, app, invariants, log)
 		}
@@ -122,7 +124,7 @@ func SimulateFromSeed(
 		}
 
 		// Generate a random RequestBeginBlock with the current validator set for the next block
-		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, lastHeaderTime, event, header, log)
+		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, event, header, log)
 
 		// Update the validator set
 		validators = updateValidators(tb, r, validators, res.ValidatorUpdates, event)
@@ -134,19 +136,19 @@ func SimulateFromSeed(
 
 // Returns a function to simulate blocks. Written like this to avoid constant parameters being passed everytime, to minimize
 // memory overhead
-func createBlockSimulator(testingmode bool, tb testing.TB, t *testing.T, event func(string), invariants []Invariant, ops []Operation, operationQueue map[int][]Operation, totalNumBlocks int) func(
+func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event func(string), invariants []Invariant, ops []Operation, operationQueue map[int][]Operation, totalNumBlocks int) func(
 	blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, privKeys []crypto.PrivKey, log string, header abci.Header) (updatedLog string, opCount int) {
 	return func(blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		keys []crypto.PrivKey, log string, header abci.Header) (updatedLog string, opCount int) {
 		for j := 0; j < blocksize; j++ {
 			logUpdate, futureOps, err := ops[r.Intn(len(ops))](tb, r, app, ctx, keys, log, event)
-			log = updateLog(testingmode, log, logUpdate)
+			log = updateLog(testingMode, log, logUpdate)
 			if err != nil {
 				tb.Fatalf("error on operation %d within block %d, %v, log %s", header.Height, opCount, err, log)
 			}
 
 			queueOperations(operationQueue, futureOps)
-			if testingmode {
+			if testingMode {
 				if onOperation {
 					AssertAllInvariants(t, app, invariants, log)
 				}
@@ -160,19 +162,19 @@ func createBlockSimulator(testingmode bool, tb testing.TB, t *testing.T, event f
 	}
 }
 
-func getTestingMode(tb testing.TB) (testingmode bool, t *testing.T, b *testing.B) {
-	testingmode = false
+func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) {
+	testingMode = false
 	if _t, ok := tb.(*testing.T); ok {
 		t = _t
-		testingmode = true
+		testingMode = true
 	} else {
 		b = tb.(*testing.B)
 	}
 	return
 }
 
-func updateLog(testingmode bool, log string, update string, args ...interface{}) (updatedLog string) {
-	if testingmode {
+func updateLog(testingMode bool, log string, update string, args ...interface{}) (updatedLog string) {
+	if testingMode {
 		update = fmt.Sprintf(update, args...)
 		return fmt.Sprintf("%s\n%s", log, update)
 	}
@@ -240,7 +242,7 @@ func getKeys(validators map[string]mockValidator) []string {
 
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
 func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, livenessTransitions TransitionMatrix, evidenceFraction float64,
-	lastHeaderTime time.Time, event func(string), header abci.Header, log string) abci.RequestBeginBlock {
+	pastTimes []time.Time, event func(string), header abci.Header, log string) abci.RequestBeginBlock {
 	if len(validators) == 0 {
 		return abci.RequestBeginBlock{Header: header}
 	}
@@ -279,7 +281,7 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 		time := header.Time
 		if r.Float64() < pastEvidenceFraction {
 			height = int64(r.Intn(int(header.Height)))
-			time = lastHeaderTime
+			time = pastTimes[height]
 		}
 		validator := signingValidators[r.Intn(len(signingValidators))].Validator
 		var currentTotalVotingPower int64

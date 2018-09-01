@@ -18,7 +18,7 @@ import (
 func GetCmdUnjail(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unjail",
-		Args:  cobra.ExactArgs(0),
+		Args:  cobra.NoArgs,
 		Short: "unjail validator previously jailed for downtime",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
@@ -27,12 +27,12 @@ func GetCmdUnjail(cdc *wire.Codec) *cobra.Command {
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			validatorAddr, err := cliCtx.GetFromAddress()
+			valAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
 
-			msg := slashing.NewMsgUnjail(validatorAddr)
+			msg := slashing.NewMsgUnjail(sdk.ValAddress(valAddr))
 
 			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},

@@ -464,3 +464,26 @@ func TestIAVLStoreQuery(t *testing.T) {
 	require.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	require.Equal(t, v1, qres.Value)
 }
+
+func BenchmarkIAVLIteratorNext(b *testing.B) {
+	db := dbm.NewMemDB()
+	treeSize := 1000
+	tree := iavl.NewVersionedTree(db, cacheSize)
+	for i := 0; i < treeSize; i++ {
+		key := cmn.RandBytes(4)
+		value := cmn.RandBytes(50)
+		tree.Set(key, value)
+	}
+	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
+	iterators := make([]Iterator, b.N/treeSize)
+	for i := 0; i < len(iterators); i++ {
+		iterators[i] = iavlStore.Iterator([]byte{0}, []byte{255, 255, 255, 255, 255})
+	}
+	b.ResetTimer()
+	for i := 0; i < len(iterators); i++ {
+		iter := iterators[i]
+		for j := 0; j < treeSize; j++ {
+			iter.Next()
+		}
+	}
+}

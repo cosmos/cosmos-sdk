@@ -29,11 +29,6 @@ resource "digitalocean_droplet" "cluster" {
     destination = "/tmp/terraform.sh"
   }
 
-  provisioner "file" {
-    source = "files/gaiad.service"
-    destination = "/etc/systemd/system/gaiad.service"
-  }
-
   provisioner "remote-exec" {
     inline = [
       "chmod +x /tmp/terraform.sh",

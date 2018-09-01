@@ -23,14 +23,14 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *wire
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		pk, err := sdk.GetValPubKeyBech32(vars["validator"])
+		pk, err := sdk.GetConsPubKeyBech32(vars["validator"])
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		key := slashing.GetValidatorSigningInfoKey(sdk.ValAddress(pk.Address()))
+		key := slashing.GetValidatorSigningInfoKey(sdk.ConsAddress(pk.Address()))
 
 		res, err := cliCtx.QueryStore(key, storeName)
 		if err != nil {

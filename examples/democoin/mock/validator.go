@@ -9,7 +9,7 @@ import (
 
 // Validator implements sdk.Validator
 type Validator struct {
-	Address sdk.AccAddress
+	Address sdk.ValAddress
 	Power   sdk.Dec
 }
 
@@ -19,7 +19,7 @@ func (v Validator) GetStatus() sdk.BondStatus {
 }
 
 // Implements sdk.Validator
-func (v Validator) GetOperator() sdk.AccAddress {
+func (v Validator) GetOperator() sdk.ValAddress {
 	return v.Address
 }
 
@@ -78,9 +78,9 @@ func (vs *ValidatorSet) IterateValidatorsBonded(ctx sdk.Context, fn func(index i
 }
 
 // Validator implements sdk.ValidatorSet
-func (vs *ValidatorSet) Validator(ctx sdk.Context, addr sdk.AccAddress) sdk.Validator {
+func (vs *ValidatorSet) Validator(ctx sdk.Context, addr sdk.ValAddress) sdk.Validator {
 	for _, val := range vs.Validators {
-		if bytes.Equal(val.Address, addr) {
+		if bytes.Equal(val.Address.Bytes(), addr.Bytes()) {
 			return val
 		}
 	}
@@ -133,5 +133,10 @@ func (vs *ValidatorSet) Jail(ctx sdk.Context, pubkey crypto.PubKey) {
 
 // Implements sdk.ValidatorSet
 func (vs *ValidatorSet) Unjail(ctx sdk.Context, pubkey crypto.PubKey) {
+	panic("not implemented")
+}
+
+// Implements sdk.ValidatorSet
+func (vs *ValidatorSet) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.ValAddress) sdk.Delegation {
 	panic("not implemented")
 }

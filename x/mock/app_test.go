@@ -61,14 +61,14 @@ func TestCheckAndDeliverGenTx(t *testing.T) {
 	SignCheckDeliver(
 		t, mApp.BaseApp, []sdk.Msg{msg},
 		[]int64{accs[0].GetAccountNumber()}, []int64{accs[0].GetSequence()},
-		true, privKeys[0],
+		true, true, privKeys[0],
 	)
 
 	// Signing a tx with the wrong privKey should result in an auth error
 	res := SignCheckDeliver(
 		t, mApp.BaseApp, []sdk.Msg{msg},
 		[]int64{accs[1].GetAccountNumber()}, []int64{accs[1].GetSequence() + 1},
-		false, privKeys[1],
+		true, false, privKeys[1],
 	)
 	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
 
@@ -76,7 +76,7 @@ func TestCheckAndDeliverGenTx(t *testing.T) {
 	SignCheckDeliver(
 		t, mApp.BaseApp, []sdk.Msg{msg},
 		[]int64{accs[0].GetAccountNumber()}, []int64{accs[0].GetSequence() + 1},
-		true, privKeys[0],
+		true, true, privKeys[0],
 	)
 }
 

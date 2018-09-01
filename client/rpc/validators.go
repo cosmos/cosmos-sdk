@@ -45,7 +45,7 @@ type ResultValidatorsOutput struct {
 }
 
 func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
-	bechValPubkey, err := sdk.Bech32ifyValPub(validator.PubKey)
+	bechValPubkey, err := sdk.Bech32ifyConsPub(validator.PubKey)
 	if err != nil {
 		return ValidatorOutput{}, err
 	}

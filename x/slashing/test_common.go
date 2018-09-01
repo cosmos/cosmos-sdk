@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -30,10 +31,10 @@ var (
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51"),
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
 	}
-	addrs = []sdk.AccAddress{
-		sdk.AccAddress(pks[0].Address()),
-		sdk.AccAddress(pks[1].Address()),
-		sdk.AccAddress(pks[2].Address()),
+	addrs = []sdk.ValAddress{
+		sdk.ValAddress(pks[0].Address()),
+		sdk.ValAddress(pks[1].Address()),
+		sdk.ValAddress(pks[2].Address()),
 	}
 	initCoins = sdk.NewInt(200)
 )
@@ -61,7 +62,7 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, para
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
-	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewTMLogger(os.Stdout))
+	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))
 	cdc := createTestCodec()
 	accountMapper := auth.NewAccountMapper(cdc, keyAcc, auth.ProtoBaseAccount)
 	ck := bank.NewKeeper(accountMapper)
@@ -75,7 +76,7 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, para
 	require.Nil(t, err)
 
 	for _, addr := range addrs {
-		_, _, err = ck.AddCoins(ctx, addr, sdk.Coins{
+		_, _, err = ck.AddCoins(ctx, sdk.AccAddress(addr), sdk.Coins{
 			{sk.GetParams(ctx).BondDenom, initCoins},
 		})
 	}
@@ -99,12 +100,20 @@ func testAddr(addr string) sdk.AccAddress {
 	return res
 }
 
-func newTestMsgCreateValidator(address sdk.AccAddress, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
+func newTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
 	return stake.MsgCreateValidator{
 		Description:   stake.Description{},
-		DelegatorAddr: address,
+		DelegatorAddr: sdk.AccAddress(address),
 		ValidatorAddr: address,
 		PubKey:        pubKey,
 		Delegation:    sdk.Coin{"steak", amt},
+	}
+}
+
+func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmount sdk.Int) stake.MsgDelegate {
+	return stake.MsgDelegate{
+		DelegatorAddr: delAddr,
+		ValidatorAddr: valAddr,
+		Delegation:    sdk.Coin{"steak", delAmount},
 	}
 }

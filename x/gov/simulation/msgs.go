@@ -20,9 +20,10 @@ const (
 	denom = "steak"
 )
 
-// SimulateMsgSubmitProposal
+// SimulateMsgSubmitProposal simulates a msg Submit Proposal
+// Note: Currently doesn't ensure that the proposal txt is in JSON form
 func SimulateMsgSubmitProposal(k gov.Keeper, sk stake.Keeper) simulation.Operation {
-	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
+	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOps []simulation.FutureOperation, err sdk.Error) {
 		key := simulation.RandomKey(r, keys)
 		addr := sdk.AccAddress(key.PubKey().Address())
 		deposit := randomDeposit(r)
@@ -45,18 +46,18 @@ func SimulateMsgSubmitProposal(k gov.Keeper, sk stake.Keeper) simulation.Operati
 		}
 		event(fmt.Sprintf("gov/MsgSubmitProposal/%v", result.IsOK()))
 		action = fmt.Sprintf("TestMsgSubmitProposal: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
-		return action, nil
+		return action, nil, nil
 	}
 }
 
 // SimulateMsgDeposit
 func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.Operation {
-	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
+	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
 		key := simulation.RandomKey(r, keys)
 		addr := sdk.AccAddress(key.PubKey().Address())
 		proposalID, ok := randomProposalID(r, k, ctx)
 		if !ok {
-			return "no-operation", nil
+			return "no-operation", nil, nil
 		}
 		deposit := randomDeposit(r)
 		msg := gov.NewMsgDeposit(addr, proposalID, deposit)
@@ -72,18 +73,18 @@ func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 		}
 		event(fmt.Sprintf("gov/MsgDeposit/%v", result.IsOK()))
 		action = fmt.Sprintf("TestMsgDeposit: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
-		return action, nil
+		return action, nil, nil
 	}
 }
 
 // SimulateMsgVote
 func SimulateMsgVote(k gov.Keeper, sk stake.Keeper) simulation.Operation {
-	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
+	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
 		key := simulation.RandomKey(r, keys)
 		addr := sdk.AccAddress(key.PubKey().Address())
 		proposalID, ok := randomProposalID(r, k, ctx)
 		if !ok {
-			return "no-operation", nil
+			return "no-operation", nil, nil
 		}
 		option := randomVotingOption(r)
 		msg := gov.NewMsgVote(addr, proposalID, option)
@@ -95,7 +96,7 @@ func SimulateMsgVote(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 		}
 		event(fmt.Sprintf("gov/MsgVote/%v", result.IsOK()))
 		action = fmt.Sprintf("TestMsgVote: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
-		return action, nil
+		return action, nil, nil
 	}
 }
 

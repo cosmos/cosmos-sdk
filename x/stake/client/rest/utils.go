@@ -24,10 +24,10 @@ func contains(stringSlice []string, txType string) bool {
 	return false
 }
 
-func getDelegatorValidator(cliCtx context.CLIContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
+func getDelegatorValidator(cliCtx context.CLIContext, cdc *wire.Codec, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (
 	bech32Validator types.BechValidator, httpStatusCode int, errMsg string, err error) {
 
-	key := stake.GetDelegationKey(delegatorAddr, validatorAddr)
+	key := stake.GetDelegationKey(delAddr, valAddr)
 	res, err := cliCtx.QueryStore(key, storeName)
 	if err != nil {
 		return types.BechValidator{}, http.StatusInternalServerError, "couldn't query delegation. Error: ", err
@@ -36,7 +36,7 @@ func getDelegatorValidator(cliCtx context.CLIContext, cdc *wire.Codec, delegator
 		return types.BechValidator{}, http.StatusNoContent, "", nil
 	}
 
-	key = stake.GetValidatorKey(validatorAddr)
+	key = stake.GetValidatorKey(valAddr)
 	res, err = cliCtx.QueryStore(key, storeName)
 	if err != nil {
 		return types.BechValidator{}, http.StatusInternalServerError, "couldn't query validator. Error: ", err
@@ -44,7 +44,7 @@ func getDelegatorValidator(cliCtx context.CLIContext, cdc *wire.Codec, delegator
 	if len(res) == 0 {
 		return types.BechValidator{}, http.StatusNoContent, "", nil
 	}
-	validator, err := types.UnmarshalValidator(cdc, validatorAddr, res)
+	validator, err := types.UnmarshalValidator(cdc, valAddr, res)
 	if err != nil {
 		return types.BechValidator{}, http.StatusBadRequest, "", err
 	}
@@ -56,9 +56,11 @@ func getDelegatorValidator(cliCtx context.CLIContext, cdc *wire.Codec, delegator
 	return bech32Validator, http.StatusOK, "", nil
 }
 
-func getDelegatorDelegations(cliCtx context.CLIContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
+func getDelegatorDelegations(
+	cliCtx context.CLIContext, cdc *wire.Codec, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (
 	outputDelegation DelegationWithoutRat, httpStatusCode int, errMsg string, err error) {
-	delegationKey := stake.GetDelegationKey(delegatorAddr, validatorAddr)
+
+	delegationKey := stake.GetDelegationKey(delAddr, valAddr)
 	marshalledDelegation, err := cliCtx.QueryStore(delegationKey, storeName)
 	if err != nil {
 		return DelegationWithoutRat{}, http.StatusInternalServerError, "couldn't query delegation. Error: ", err
@@ -83,9 +85,11 @@ func getDelegatorDelegations(cliCtx context.CLIContext, cdc *wire.Codec, delegat
 	return outputDelegation, http.StatusOK, "", nil
 }
 
-func getDelegatorUndelegations(cliCtx context.CLIContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
+func getDelegatorUndelegations(
+	cliCtx context.CLIContext, cdc *wire.Codec, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (
 	unbonds types.UnbondingDelegation, httpStatusCode int, errMsg string, err error) {
-	undelegationKey := stake.GetUBDKey(delegatorAddr, validatorAddr)
+
+	undelegationKey := stake.GetUBDKey(delAddr, valAddr)
 	marshalledUnbondingDelegation, err := cliCtx.QueryStore(undelegationKey, storeName)
 	if err != nil {
 		return types.UnbondingDelegation{}, http.StatusInternalServerError, "couldn't query unbonding-delegation. Error: ", err
@@ -102,10 +106,11 @@ func getDelegatorUndelegations(cliCtx context.CLIContext, cdc *wire.Codec, deleg
 	return unbondingDelegation, http.StatusOK, "", nil
 }
 
-func getDelegatorRedelegations(cliCtx context.CLIContext, cdc *wire.Codec, delegatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) (
+func getDelegatorRedelegations(
+	cliCtx context.CLIContext, cdc *wire.Codec, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (
 	regelegations types.Redelegation, httpStatusCode int, errMsg string, err error) {
 
-	key := stake.GetREDsByDelToValDstIndexKey(delegatorAddr, validatorAddr)
+	key := stake.GetREDsByDelToValDstIndexKey(delAddr, valAddr)
 	marshalledRedelegations, err := cliCtx.QueryStore(key, storeName)
 	if err != nil {
 		return types.Redelegation{}, http.StatusInternalServerError, "couldn't query redelegation. Error: ", err

@@ -71,13 +71,13 @@ This API exposes all functionality needed for key creation, signing and manageme
         "account":[
            {
                 "name":"monkey",
-                "address":"cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
-                "pub_key":"cosmosaccpub1zcjduc3q8s8ha96ry4xc5xvjp9tr9w9p0e5lk5y0rpjs5epsfxs4wmf72x3shvus0t"
+                "address":"cosmos1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
+                "pub_key":"cosmospub1zcjduc3q8s8ha96ry4xc5xvjp9tr9w9p0e5lk5y0rpjs5epsfxs4wmf72x3shvus0t"
             },
             {
                 "name":"test",
-                "address":"cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-                "pub_key":"cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
+                "address":"cosmos1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
+                "pub_key":"cosmospub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
             }
         ],
         "block_height":5241
@@ -125,8 +125,8 @@ Returns on success:
     "error":"",
     "result":{
         "name":"test",
-            "address":"cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-            "pub_key":"cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
+            "address":"cosmos1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
+            "pub_key":"cosmospub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
     }
 }
 ```
@@ -588,7 +588,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     "description": "string",
   	// PlainTextProposal supported now. SoftwareUpgradeProposal and other types may be supported soon
   	"proposal_type": "string",
-  	// A cosmosaccaddr address
+  	// A cosmos address
   	"proposer": "string",
   	"initial_deposit": [
         {
@@ -689,7 +689,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     "error":"",
     "result":{
         "amount": {"atom": 150},
-        "depositer": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
+        "depositer": "cosmos1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
         "proposal-id": 16
     }
 }
@@ -731,12 +731,12 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     "result": [
         {
             "proposal-id": 1,
-        	"voter": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
+        	"voter": "cosmos1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
         	"option": "no_with_veto"
     	},
         {
             "proposal-id": 1,
-        	"voter": "cosmosaccaddr1849m9wncrqp6v4tkss6a3j8uzvuv0cp7f75lrq",
+        	"voter": "cosmos1849m9wncrqp6v4tkss6a3j8uzvuv0cp7f75lrq",
         	"option": "yes"
     	},
     ]
@@ -761,7 +761,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     	"sequence": 0,
     	"gas": 0
   	},
-    // A cosmosaccaddr address
+    // A cosmos address
   	"voter": "string",
   	// Value of the vote option `Yes`, `No` `Abstain`, `NoWithVeto`
   	"option": "string",
@@ -794,7 +794,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     "error":"",
     "result":{
         "proposal-id": 1,
-        "voter": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
+        "voter": "cosmos1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
         "option": "no_with_veto"
     }
 }

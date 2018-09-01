@@ -20,7 +20,7 @@ import (
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
 type Validator struct {
-	Operator sdk.AccAddress `json:"operator"` // sender of BondTx - UnbondTx returns here
+	Operator sdk.ValAddress `json:"operator"` // sender of BondTx - UnbondTx returns here
 	PubKey   crypto.PubKey  `json:"pub_key"`  // pubkey of validator
 	Jailed   bool           `json:"jailed"`   // has the validator been jailed from bonded status?
 
@@ -43,7 +43,7 @@ type Validator struct {
 }
 
 // NewValidator - initialize a new validator
-func NewValidator(operator sdk.AccAddress, pubKey crypto.PubKey, description Description) Validator {
+func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description) Validator {
 	return Validator{
 		Operator:              operator,
 		PubKey:                pubKey,
@@ -147,14 +147,14 @@ func UnmarshalValidator(cdc *wire.Codec, operatorAddr, value []byte) (validator 
 // validator. An error is returned if the operator or the operator's public key
 // cannot be converted to Bech32 format.
 func (v Validator) HumanReadableString() (string, error) {
-	bechVal, err := sdk.Bech32ifyValPub(v.PubKey)
+	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.PubKey)
 	if err != nil {
 		return "", err
 	}
 
 	resp := "Validator \n"
 	resp += fmt.Sprintf("Operator: %s\n", v.Operator)
-	resp += fmt.Sprintf("Validator: %s\n", bechVal)
+	resp += fmt.Sprintf("Validator: %s\n", bechConsPubKey)
 	resp += fmt.Sprintf("Jailed: %v\n", v.Jailed)
 	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
 	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens.String())
@@ -175,7 +175,7 @@ func (v Validator) HumanReadableString() (string, error) {
 
 // validator struct for bech output
 type BechValidator struct {
-	Operator sdk.AccAddress `json:"operator"` // in bech32
+	Operator sdk.ValAddress `json:"operator"` // in bech32
 	PubKey   string         `json:"pub_key"`  // in bech32
 	Jailed   bool           `json:"jailed"`   // has the validator been jailed from bonded status?
 
@@ -199,14 +199,14 @@ type BechValidator struct {
 
 // get the bech validator from the the regular validator
 func (v Validator) Bech32Validator() (BechValidator, error) {
-	bechValPubkey, err := sdk.Bech32ifyValPub(v.PubKey)
+	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.PubKey)
 	if err != nil {
 		return BechValidator{}, err
 	}
 
 	return BechValidator{
 		Operator: v.Operator,
-		PubKey:   bechValPubkey,
+		PubKey:   bechConsPubKey,
 		Jailed:   v.Jailed,
 
 		Status:          v.Status,
@@ -244,6 +244,11 @@ func (v Validator) Equal(c2 Validator) bool {
 		v.CommissionChangeRate.Equal(c2.CommissionChangeRate) &&
 		v.CommissionChangeToday.Equal(c2.CommissionChangeToday) &&
 		v.LastBondedTokens.Equal(c2.LastBondedTokens)
+}
+
+// return the TM validator address
+func (v Validator) ConsAddress() sdk.ConsAddress {
+	return sdk.ConsAddress(v.PubKey.Address())
 }
 
 // constant used in flags to indicate that description field should not be updated
@@ -432,7 +437,7 @@ var _ sdk.Validator = Validator{}
 func (v Validator) GetJailed() bool             { return v.Jailed }
 func (v Validator) GetMoniker() string          { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus   { return v.Status }
-func (v Validator) GetOperator() sdk.AccAddress { return v.Operator }
+func (v Validator) GetOperator() sdk.ValAddress { return v.Operator }
 func (v Validator) GetPubKey() crypto.PubKey    { return v.PubKey }
 func (v Validator) GetPower() sdk.Dec           { return v.BondedTokens() }
 func (v Validator) GetTokens() sdk.Dec          { return v.Tokens }

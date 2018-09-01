@@ -10,9 +10,14 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/wire"
+	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
+	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"strings"
 )
 
 // GetNode returns an RPC client. If the context's client is not defined, an
@@ -304,7 +309,55 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 		return res, errors.Errorf("query failed: (%d) %s", resp.Code, resp.Log)
 	}
 
+	// Data from trusted node or subspace query doesn't need verification
+	if ctx.TrustNode || !isQueryStoreWithProof(path) {
+		return resp.Value, nil
+	}
+
+	err = ctx.verifyProof(path, resp)
+	if err != nil {
+		return nil, err
+	}
+
 	return resp.Value, nil
+}
+
+// verifyProof perform response proof verification
+func (ctx CLIContext) verifyProof(path string, resp abci.ResponseQuery) error {
+
+	if ctx.Certifier == nil {
+		return fmt.Errorf("missing valid certifier to verify data from untrusted node")
+	}
+
+	node, err := ctx.GetNode()
+	if err != nil {
+		return err
+	}
+
+	// AppHash for height H is in header H+1
+	commit, err := tmliteProxy.GetCertifiedCommit(resp.Height+1, node, ctx.Certifier)
+	if err != nil {
+		return err
+	}
+
+	var multiStoreProof store.MultiStoreProof
+	cdc := wire.NewCodec()
+	err = cdc.UnmarshalBinary(resp.Proof, &multiStoreProof)
+	if err != nil {
+		return errors.Wrap(err, "failed to unmarshalBinary rangeProof")
+	}
+
+	// Verify the substore commit hash against trusted appHash
+	substoreCommitHash, err := store.VerifyMultiStoreCommitInfo(multiStoreProof.StoreName,
+		multiStoreProof.StoreInfos, commit.Header.AppHash)
+	if err != nil {
+		return errors.Wrap(err, "failed in verifying the proof against appHash")
+	}
+	err = store.VerifyRangeProof(resp.Key, resp.Value, substoreCommitHash, &multiStoreProof.RangeProof)
+	if err != nil {
+		return errors.Wrap(err, "failed in the range proof verification")
+	}
+	return nil
 }
 
 // queryStore performs a query from a Tendermint node with the provided a store
@@ -312,4 +365,21 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 func (ctx CLIContext) queryStore(key cmn.HexBytes, storeName, endPath string) ([]byte, error) {
 	path := fmt.Sprintf("/store/%s/%s", storeName, endPath)
 	return ctx.query(path, key)
+}
+
+// isQueryStoreWithProof expects a format like /<queryType>/<storeName>/<subpath>
+// queryType can be app or store
+func isQueryStoreWithProof(path string) bool {
+	if !strings.HasPrefix(path, "/") {
+		return false
+	}
+	paths := strings.SplitN(path[1:], "/", 3)
+	if len(paths) != 3 {
+		return false
+	}
+
+	if store.RequireProof("/" + paths[2]) {
+		return true
+	}
+	return false
 }

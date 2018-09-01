@@ -39,7 +39,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	// create a validator
 	amount := int64(10)
 	valPubKey, bondAmount := pks[0], sdk.NewInt(amount)
-	consAddr, valAddr := sdk.ConsAddress(addrs[0]), sdk.ValAddress(addrs[1])
+	valAddr, consAddr := sdk.ValAddress(addrs[1]), sdk.ConsAddress(addrs[0])
 
 	msgCreateVal := newTestMsgCreateValidator(valAddr, valPubKey, bondAmount)
 	got := stake.NewHandler(stakeKeeper)(ctx, msgCreateVal)

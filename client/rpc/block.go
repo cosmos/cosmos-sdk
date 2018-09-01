@@ -48,7 +48,7 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	if distrustNode {
 		check, err := tmliteProxy.GetCertifiedCommit(*height, node, cliCtx.Certifier)
 		if tmliteErr.IsCommitNotFoundErr(err) {
-			return nil, context.ErrGetVerifyCommit(*height)
+			return nil, context.ErrVerifyCommit(*height)
 		} else if err != nil {
 			return nil, err
 		}

@@ -12,10 +12,10 @@ func ErrInvalidAccount(addr sdk.AccAddress) error {
 Are you sure there has been a transaction involving it?`, addr)
 }
 
-// ErrGetVerifyCommit returns a common error reflecting that the blockchain commit at a given
+// ErrVerifyCommit returns a common error reflecting that the blockchain commit at a given
 // height can't be verified. The reason is that the base checkpoint of the certifier is
 // newer than the given height
-func ErrGetVerifyCommit(height int64) error {
+func ErrVerifyCommit(height int64) error {
 	return errors.Errorf(`The base checkpoint of the certifier is newer than height %d. 
 Can't verify blockchain commit proof at this height. Please try again and set distrust-node option to false`, height)
 }

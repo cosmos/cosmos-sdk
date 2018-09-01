@@ -76,7 +76,7 @@ func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string, dist
 	if distrustNode {
 		check, err := tmliteProxy.GetCertifiedCommit(info.Height, node, cliCtx.Certifier)
 		if tmliteErr.IsCommitNotFoundErr(err) {
-			return nil, context.ErrGetVerifyCommit(info.Height)
+			return nil, context.ErrVerifyCommit(info.Height)
 		} else if err != nil {
 			return nil, err
 		}

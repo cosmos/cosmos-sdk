@@ -98,7 +98,7 @@ func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]Inf
 		for _, tx := range res.Txs {
 			check, err := tmliteProxy.GetCertifiedCommit(tx.Height, node, cliCtx.Certifier)
 			if tmliteErr.IsCommitNotFoundErr(err) {
-				return nil, context.ErrGetVerifyCommit(tx.Height)
+				return nil, context.ErrVerifyCommit(tx.Height)
 			} else if err != nil {
 				return nil, err
 			}

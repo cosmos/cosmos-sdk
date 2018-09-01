@@ -10,6 +10,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 )
 
 //BlockCommand returns the verified block data for a given heights
@@ -21,8 +23,8 @@ func BlockCommand() *cobra.Command {
 		RunE:  printBlock,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	// TODO: change this to false when we can
-	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
+	cmd.Flags().Bool(client.FlagDistrustNode, true, "Don't verify proofs for responses")
+	cmd.Flags().String(client.FlagChainID, "", "The chain ID to connect to")
 	return cmd
 }
 
@@ -39,6 +41,24 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	res, err := node.Block(height)
 	if err != nil {
 		return nil, err
+	}
+
+	distrustNode := viper.GetBool(client.FlagDistrustNode)
+	if distrustNode {
+		check, err := tmliteProxy.GetCertifiedCommit(*height, node, cliCtx.Certifier)
+		if err != nil {
+			return nil, err
+		}
+
+		err = tmliteProxy.ValidateBlockMeta(res.BlockMeta, check)
+		if err != nil {
+			return nil, err
+		}
+
+		err = tmliteProxy.ValidateBlock(res.Block, check)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// TODO move maarshalling into cmd/rest functions

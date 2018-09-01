@@ -19,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 )
 
 // QueryTxCmd implements the default command for a tx query.
@@ -30,11 +31,11 @@ func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// find the key to look up the account
 			hashHexStr := args[0]
-			trustNode := viper.GetBool(client.FlagTrustNode)
+			distrustNode := viper.GetBool(client.FlagDistrustNode)
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			output, err := queryTx(cdc, cliCtx, hashHexStr, trustNode)
+			output, err := queryTx(cdc, cliCtx, hashHexStr, distrustNode)
 			if err != nil {
 				return err
 			}
@@ -45,13 +46,12 @@ func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-
-	// TODO: change this to false when we can
-	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
+	cmd.Flags().String(client.FlagChainID, "", "The chain ID to connect to")
+	cmd.Flags().Bool(client.FlagDistrustNode, true, "Don't verify proofs for responses")
 	return cmd
 }
 
-func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string, trustNode bool) ([]byte, error) {
+func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string, distrustNode bool) ([]byte, error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string, trus
 		return nil, err
 	}
 
-	res, err := node.Tx(hash, !trustNode)
+	res, err := node.Tx(hash, distrustNode)
 	if err != nil {
 		return nil, err
 	}
@@ -70,6 +70,18 @@ func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string, trus
 	info, err := formatTxResult(cdc, res)
 	if err != nil {
 		return nil, err
+	}
+
+	if distrustNode {
+		check, err := tmliteProxy.GetCertifiedCommit(info.Height, node, cliCtx.Certifier)
+		if err != nil {
+			return nil, err
+		}
+
+		err = res.Proof.Validate(check.Header.DataHash)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return wire.MarshalJSONIndent(cdc, info)

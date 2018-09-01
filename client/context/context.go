@@ -14,6 +14,7 @@ import (
 	tmlite "github.com/tendermint/tendermint/lite"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	"os"
 )
 
 const ctxAccStoreName = "acc"
@@ -31,7 +32,7 @@ type CLIContext struct {
 	NodeURI         string
 	FromAddressName string
 	AccountStore    string
-	TrustNode       bool
+	DistrustNode    bool
 	UseLedger       bool
 	Async           bool
 	JSON            bool
@@ -58,7 +59,7 @@ func NewCLIContext() CLIContext {
 		Height:          viper.GetInt64(client.FlagHeight),
 		Gas:             viper.GetInt64(client.FlagGas),
 		GasAdjustment:   viper.GetFloat64(client.FlagGasAdjustment),
-		TrustNode:       viper.GetBool(client.FlagTrustNode),
+		DistrustNode:    viper.GetBool(client.FlagDistrustNode),
 		UseLedger:       viper.GetBool(client.FlagUseLedger),
 		Async:           viper.GetBool(client.FlagAsync),
 		JSON:            viper.GetBool(client.FlagJson),
@@ -69,8 +70,8 @@ func NewCLIContext() CLIContext {
 }
 
 func createCertifier() tmlite.Certifier {
-	trustNode := viper.GetBool(client.FlagTrustNode)
-	if trustNode {
+	distrustNode := viper.GetBool(client.FlagDistrustNode)
+	if !distrustNode {
 		return nil
 	}
 	chainID := viper.GetString(client.FlagChainID)
@@ -79,22 +80,24 @@ func createCertifier() tmlite.Certifier {
 
 	var errMsg bytes.Buffer
 	if chainID == "" {
-		errMsg.WriteString("chain-id ")
+		errMsg.WriteString("--chain-id ")
 	}
 	if home == "" {
-		errMsg.WriteString("home ")
+		errMsg.WriteString("--home ")
 	}
 	if nodeURI == "" {
-		errMsg.WriteString("node ")
+		errMsg.WriteString("--node ")
 	}
-	// errMsg is not empty
 	if errMsg.Len() != 0 {
-		panic(fmt.Errorf("can't create certifier for distrust mode, empty values from these options: %s", errMsg.String()))
+		fmt.Printf("must specify these options: %s in distrust mode\n", errMsg.String())
+		os.Exit(1)
 	}
+
 	certifier, err := tmliteProxy.GetCertifier(chainID, home, nodeURI)
 	if err != nil {
 		panic(err)
 	}
+
 	return certifier
 }
 
@@ -131,8 +134,8 @@ func (ctx CLIContext) WithFromAddressName(addrName string) CLIContext {
 }
 
 // WithTrustNode returns a copy of the context with an updated TrustNode flag.
-func (ctx CLIContext) WithTrustNode(trustNode bool) CLIContext {
-	ctx.TrustNode = trustNode
+func (ctx CLIContext) WithDistrustNode(distrustNode bool) CLIContext {
+	ctx.DistrustNode = distrustNode
 	return ctx
 }
 

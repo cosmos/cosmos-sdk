@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
@@ -62,9 +63,8 @@ $ gaiacli tendermint txs --tag test1,test2 --any
 	}
 
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-
-	// TODO: change this to false once proofs built in
-	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
+	cmd.Flags().String(client.FlagChainID, "", "The chain ID to connect to")
+	cmd.Flags().Bool(client.FlagDistrustNode, true, "Don't verify proofs for responses")
 	cmd.Flags().StringSlice(flagTags, nil, "Comma-separated list of tags that must match")
 	cmd.Flags().Bool(flagAny, false, "Return transactions that match ANY tag, rather than ALL")
 	return cmd
@@ -84,7 +84,7 @@ func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]Inf
 		return nil, err
 	}
 
-	prove := !viper.GetBool(client.FlagTrustNode)
+	prove := viper.GetBool(client.FlagDistrustNode)
 
 	// TODO: take these as args
 	page := 0
@@ -93,7 +93,19 @@ func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]Inf
 	if err != nil {
 		return nil, err
 	}
+	if prove {
+		for _, tx := range res.Txs {
+			check, err := tmliteProxy.GetCertifiedCommit(tx.Height, node, cliCtx.Certifier)
+			if err != nil {
+				return nil, err
+			}
 
+			err = tx.Proof.Validate(check.Header.DataHash)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 	info, err := FormatTxResults(cdc, res.Txs)
 	if err != nil {
 		return nil, err

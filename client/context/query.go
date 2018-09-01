@@ -296,7 +296,7 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 
 	opts := rpcclient.ABCIQueryOptions{
 		Height:  ctx.Height,
-		Trusted: ctx.TrustNode,
+		Trusted: !ctx.DistrustNode,
 	}
 
 	result, err := node.ABCIQueryWithOptions(path, key, opts)
@@ -309,8 +309,8 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 		return res, errors.Errorf("query failed: (%d) %s", resp.Code, resp.Log)
 	}
 
-	// Data from trusted node or subspace query doesn't need verification
-	if ctx.TrustNode || !isQueryStoreWithProof(path) {
+	// data from trusted node or subspace query doesn't need verification
+	if !ctx.DistrustNode || !isQueryStoreWithProof(path) {
 		return resp.Value, nil
 	}
 
@@ -348,15 +348,17 @@ func (ctx CLIContext) verifyProof(path string, resp abci.ResponseQuery) error {
 	}
 
 	// Verify the substore commit hash against trusted appHash
-	substoreCommitHash, err := store.VerifyMultiStoreCommitInfo(multiStoreProof.StoreName,
-		multiStoreProof.StoreInfos, commit.Header.AppHash)
+	substoreCommitHash, err := store.VerifyMultiStoreCommitInfo(
+		multiStoreProof.StoreName, multiStoreProof.StoreInfos, commit.Header.AppHash)
 	if err != nil {
 		return errors.Wrap(err, "failed in verifying the proof against appHash")
 	}
+
 	err = store.VerifyRangeProof(resp.Key, resp.Value, substoreCommitHash, &multiStoreProof.RangeProof)
 	if err != nil {
 		return errors.Wrap(err, "failed in the range proof verification")
 	}
+
 	return nil
 }
 

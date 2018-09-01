@@ -12,12 +12,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
+// Cache the amino decoding of validators, as it can be the case that repeated slashing calls
+// cause many calls to GetValidator, which were shown to throttle the state machine in our
+// simulation. Note this is quite biased though, as the simulator does more slashes than a
+// live chain should, however we require the slashing to be fast as noone pays gas for it.
 type cachedValidator struct {
 	val        types.Validator
 	marshalled string
 }
 
-var validatorCache = make(map[string]cachedValidator, 1000)
+var validatorCache = make(map[string]cachedValidator, 500)
 var validatorCacheList = list.New()
 
 // get a single validator
@@ -27,7 +31,7 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 	if value == nil {
 		return validator, false
 	}
-	// return cached validator
+	// If these amino encoded bytes are in the cache, return the cached validator
 	strValue := string(value)
 	if val, ok := validatorCache[strValue]; ok {
 		valToReturn := val.val
@@ -35,11 +39,12 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 		valToReturn.Operator = addr
 		return valToReturn, true
 	}
-	// get validator from cache
+	// amino bytes weren't found in cache, so amino unmarshal and add it to the cache
 	validator = types.MustUnmarshalValidator(k.cdc, addr, value)
 	cachedVal := cachedValidator{validator, strValue}
 	validatorCache[strValue] = cachedValidator{validator, strValue}
 	validatorCacheList.PushBack(cachedVal)
+	// if the cache is too big, pop off the last element from it
 	if validatorCacheList.Len() > 500 {
 		valToRemove := validatorCacheList.Remove(validatorCacheList.Front()).(cachedValidator)
 		delete(validatorCache, valToRemove.marshalled)

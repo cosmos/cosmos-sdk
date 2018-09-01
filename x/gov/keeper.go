@@ -66,15 +66,14 @@ func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description 
 		return nil
 	}
 	var proposal Proposal = &TextProposal{
-		ProposalID:       proposalID,
-		Title:            title,
-		Description:      description,
-		ProposalType:     proposalType,
-		Status:           StatusDepositPeriod,
-		TallyResult:      EmptyTallyResult(),
-		TotalDeposit:     sdk.Coins{},
-		SubmitBlock:      ctx.BlockHeight(),
-		VotingStartBlock: -1, // TODO: Make Time
+		ProposalID:   proposalID,
+		Title:        title,
+		Description:  description,
+		ProposalType: proposalType,
+		Status:       StatusDepositPeriod,
+		TallyResult:  EmptyTallyResult(),
+		TotalDeposit: sdk.Coins{},
+		SubmitTime:   ctx.BlockHeader().Time,
 	}
 	keeper.SetProposal(ctx, proposal)
 	keeper.InactiveProposalQueuePush(ctx, proposal)
@@ -200,7 +199,7 @@ func (keeper Keeper) peekCurrentProposalID(ctx sdk.Context) (proposalID int64, e
 }
 
 func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
-	proposal.SetVotingStartBlock(ctx.BlockHeight())
+	proposal.SetVotingStartTime(ctx.BlockHeader().Time)
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 	keeper.ActiveProposalQueuePush(ctx, proposal)

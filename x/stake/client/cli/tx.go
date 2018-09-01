@@ -269,7 +269,8 @@ func getShares(
 		key := stake.GetDelegationKey(delAddr, valAddr)
 		cliCtx := context.NewCLIContext().
 			WithCodec(cdc).
-			WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
+			WithAccountDecoder(authcmd.GetAccountDecoder(cdc)).
+			WithCertifier(context.CreateCertifier())
 
 		resQuery, err := cliCtx.QueryStore(key, storeName)
 		if err != nil {

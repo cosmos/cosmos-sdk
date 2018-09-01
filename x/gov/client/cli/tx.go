@@ -249,7 +249,7 @@ func GetCmdQueryProposal(queryRoute string, cdc *wire.Codec) *cobra.Command {
 		Use:   "query-proposal",
 		Short: "query proposal details",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 			proposalID := viper.GetInt64(flagProposalID)
 
 			params := gov.QueryProposalParams{
@@ -321,7 +321,7 @@ func GetCmdQueryProposals(queryRoute string, cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/proposals", queryRoute), bz)
 			if err != nil {
@@ -362,7 +362,7 @@ func GetCmdQueryVote(queryRoute string, cdc *wire.Codec) *cobra.Command {
 		Use:   "query-vote",
 		Short: "query vote",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 			proposalID := viper.GetInt64(flagProposalID)
 
 			voterAddr, err := sdk.AccAddressFromBech32(viper.GetString(flagVoter))
@@ -401,7 +401,7 @@ func GetCmdQueryVotes(queryRoute string, cdc *wire.Codec) *cobra.Command {
 		Use:   "query-votes",
 		Short: "query votes on a proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 			proposalID := viper.GetInt64(flagProposalID)
 
 			params := gov.QueryVotesParams{
@@ -434,7 +434,7 @@ func GetCmdQueryDeposit(queryRoute string, cdc *wire.Codec) *cobra.Command {
 		Use:   "query-deposit",
 		Short: "query deposit",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 			proposalID := viper.GetInt64(flagProposalID)
 
 			depositerAddr, err := sdk.AccAddressFromBech32(viper.GetString(flagDepositer))
@@ -473,7 +473,7 @@ func GetCmdQueryDeposits(queryRoute string, cdc *wire.Codec) *cobra.Command {
 		Use:   "query-deposits",
 		Short: "query deposits on a proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 			proposalID := viper.GetInt64(flagProposalID)
 
 			params := gov.QueryDepositsParams{
@@ -505,7 +505,7 @@ func GetCmdQueryTally(queryRoute string, cdc *wire.Codec) *cobra.Command {
 		Use:   "query-tally",
 		Short: "get the tally of a proposal vote",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 			proposalID := viper.GetInt64(flagProposalID)
 
 			params := gov.QueryTallyParams{

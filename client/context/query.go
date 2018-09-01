@@ -10,6 +10,8 @@ import (
 
 	"github.com/pkg/errors"
 
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/wire"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -17,7 +19,6 @@ import (
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	"strings"
 )
 
 // GetNode returns an RPC client. If the context's client is not defined, an
@@ -309,7 +310,7 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 		return res, errors.Errorf("query failed: (%d) %s", resp.Code, resp.Log)
 	}
 
-	// Data from trusted node or subspace query doesn't need verification
+	// data from trusted node or subspace query doesn't need verification
 	if ctx.TrustNode || !isQueryStoreWithProof(path) {
 		return resp.Value, nil
 	}
@@ -324,7 +325,6 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 
 // verifyProof perform response proof verification
 func (ctx CLIContext) verifyProof(path string, resp abci.ResponseQuery) error {
-
 	if ctx.Certifier == nil {
 		return fmt.Errorf("missing valid certifier to verify data from untrusted node")
 	}
@@ -342,21 +342,25 @@ func (ctx CLIContext) verifyProof(path string, resp abci.ResponseQuery) error {
 
 	var multiStoreProof store.MultiStoreProof
 	cdc := wire.NewCodec()
+
 	err = cdc.UnmarshalBinary(resp.Proof, &multiStoreProof)
 	if err != nil {
 		return errors.Wrap(err, "failed to unmarshalBinary rangeProof")
 	}
 
-	// Verify the substore commit hash against trusted appHash
-	substoreCommitHash, err := store.VerifyMultiStoreCommitInfo(multiStoreProof.StoreName,
-		multiStoreProof.StoreInfos, commit.Header.AppHash)
+	// verify the substore commit hash against trusted appHash
+	substoreCommitHash, err := store.VerifyMultiStoreCommitInfo(
+		multiStoreProof.StoreName, multiStoreProof.StoreInfos, commit.Header.AppHash,
+	)
 	if err != nil {
 		return errors.Wrap(err, "failed in verifying the proof against appHash")
 	}
+
 	err = store.VerifyRangeProof(resp.Key, resp.Value, substoreCommitHash, &multiStoreProof.RangeProof)
 	if err != nil {
 		return errors.Wrap(err, "failed in the range proof verification")
 	}
+
 	return nil
 }
 
@@ -381,5 +385,6 @@ func isQueryStoreWithProof(path string) bool {
 	if store.RequireProof("/" + paths[2]) {
 		return true
 	}
+
 	return false
 }

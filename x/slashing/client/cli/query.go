@@ -26,7 +26,7 @@ func GetCmdQuerySigningInfo(storeName string, cdc *wire.Codec) *cobra.Command {
 			}
 
 			key := slashing.GetValidatorSigningInfoKey(sdk.ConsAddress(pk.Address()))
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 			res, err := cliCtx.QueryStore(key, storeName)
 			if err != nil {

@@ -27,7 +27,7 @@ func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 			}
 
 			key := stake.GetValidatorKey(addr)
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 			res, err := cliCtx.QueryStore(key, storeName)
 			if err != nil {
@@ -71,7 +71,7 @@ func GetCmdQueryValidators(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "Query for all validators",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := stake.ValidatorsKey
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 			resKVs, err := cliCtx.QuerySubspace(key, storeName)
 			if err != nil {
@@ -131,7 +131,7 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 			}
 
 			key := stake.GetDelegationKey(delAddr, valAddr)
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 			res, err := cliCtx.QueryStore(key, storeName)
 			if err != nil {
@@ -186,7 +186,7 @@ func GetCmdQueryDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 			}
 
 			key := stake.GetDelegationsKey(delegatorAddr)
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 			resKVs, err := cliCtx.QuerySubspace(key, storeName)
 			if err != nil {
@@ -233,7 +233,7 @@ func GetCmdQueryUnbondingDelegation(storeName string, cdc *wire.Codec) *cobra.Co
 			}
 
 			key := stake.GetUBDKey(delAddr, valAddr)
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 			res, err := cliCtx.QueryStore(key, storeName)
 			if err != nil {
@@ -285,7 +285,7 @@ func GetCmdQueryUnbondingDelegations(storeName string, cdc *wire.Codec) *cobra.C
 			}
 
 			key := stake.GetUBDsKey(delegatorAddr)
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 			resKVs, err := cliCtx.QuerySubspace(key, storeName)
 			if err != nil {
@@ -337,7 +337,7 @@ func GetCmdQueryRedelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 			}
 
 			key := stake.GetREDKey(delAddr, valSrcAddr, valDstAddr)
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 			res, err := cliCtx.QueryStore(key, storeName)
 			if err != nil {
@@ -389,7 +389,7 @@ func GetCmdQueryRedelegations(storeName string, cdc *wire.Codec) *cobra.Command 
 			}
 
 			key := stake.GetREDsKey(delegatorAddr)
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 			resKVs, err := cliCtx.QuerySubspace(key, storeName)
 			if err != nil {
@@ -426,7 +426,7 @@ func GetCmdQueryPool(storeName string, cdc *wire.Codec) *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := stake.PoolKey
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 			res, err := cliCtx.QueryStore(key, storeName)
 			if err != nil {
@@ -465,7 +465,7 @@ func GetCmdQueryParams(storeName string, cdc *wire.Codec) *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := stake.ParamKey
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 			res, err := cliCtx.QueryStore(key, storeName)
 			if err != nil {

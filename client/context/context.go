@@ -3,10 +3,11 @@ package context
 import (
 	"bytes"
 	"fmt"
+	"io"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"io"
 
 	"github.com/spf13/viper"
 
@@ -63,16 +64,18 @@ func NewCLIContext() CLIContext {
 		Async:           viper.GetBool(client.FlagAsync),
 		JSON:            viper.GetBool(client.FlagJson),
 		PrintResponse:   viper.GetBool(client.FlagPrintResponse),
-		Certifier:       createCertifier(),
 		DryRun:          viper.GetBool(client.FlagDryRun),
 	}
 }
 
-func createCertifier() tmlite.Certifier {
+// CreateCertifier creates a Tendermint lite certifier used for proof
+// verification.
+func CreateCertifier() tmlite.Certifier {
 	trustNode := viper.GetBool(client.FlagTrustNode)
 	if trustNode {
 		return nil
 	}
+
 	chainID := viper.GetString(client.FlagChainID)
 	home := viper.GetString(cli.HomeFlag)
 	nodeURI := viper.GetString(client.FlagNode)
@@ -87,14 +90,16 @@ func createCertifier() tmlite.Certifier {
 	if nodeURI == "" {
 		errMsg.WriteString("node ")
 	}
-	// errMsg is not empty
+
 	if errMsg.Len() != 0 {
-		panic(fmt.Errorf("can't create certifier for distrust mode, empty values from these options: %s", errMsg.String()))
+		panic(fmt.Errorf("failed to create certifier for distrust mode; empty values from these options: %s", errMsg.String()))
 	}
+
 	certifier, err := tmliteProxy.GetCertifier(chainID, home, nodeURI)
 	if err != nil {
 		panic(err)
 	}
+
 	return certifier
 }
 

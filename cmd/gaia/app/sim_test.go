@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
@@ -54,7 +55,7 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 			Coins:   coins,
 		})
 	}
-
+	govGenesis := gov.DefaultGenesisState()
 	// Default genesis state
 	stakeGenesis := stake.DefaultGenesisState()
 	var validators []stake.Validator
@@ -78,6 +79,7 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 	genesis := GenesisState{
 		Accounts:  genesisAccounts,
 		StakeData: stakeGenesis,
+		GovData:   govGenesis,
 	}
 
 	// Marshal genesis
@@ -141,8 +143,8 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 		testAndRunTxs(app),
 		[]simulation.RandSetup{},
 		invariants(app), // these shouldn't get ran
-		10,
-		100,
+		210,
+		blockSize,
 		commit,
 	)
 }

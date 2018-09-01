@@ -175,7 +175,7 @@ func queryProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		cliCtx := context.NewCLIContext().WithCodec(cdc)
+		cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 		params := gov.QueryProposalParams{
 			ProposalID: proposalID,
@@ -227,7 +227,7 @@ func queryDepositHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		cliCtx := context.NewCLIContext().WithCodec(cdc)
+		cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 		params := gov.QueryDepositParams{
 			ProposalID: proposalID,
@@ -294,7 +294,7 @@ func queryVoteHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		cliCtx := context.NewCLIContext().WithCodec(cdc)
+		cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 		params := gov.QueryVoteParams{
 			Voter:      voterAddr,
@@ -352,7 +352,7 @@ func queryVotesOnProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		cliCtx := context.NewCLIContext().WithCodec(cdc)
+		cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 		params := gov.QueryVotesParams{
 			ProposalID: proposalID,
@@ -427,7 +427,7 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		cliCtx := context.NewCLIContext().WithCodec(cdc)
+		cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 		res, err := cliCtx.QueryWithData("custom/gov/proposals", bz)
 		if err != nil {
@@ -459,7 +459,7 @@ func queryTallyOnProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		cliCtx := context.NewCLIContext().WithCodec(cdc)
+		cliCtx := context.NewCLIContext().WithCodec(cdc).WithCertifier(context.CreateCertifier())
 
 		params := gov.QueryTallyParams{
 			ProposalID: proposalID,

@@ -137,7 +137,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 
 	expectedValStatus := map[int]sdk.BondStatus{
 		9: sdk.Bonded, 8: sdk.Bonded, 7: sdk.Bonded, 5: sdk.Bonded, 4: sdk.Bonded,
-		0: sdk.Unbonded, 1: sdk.Unbonded, 2: sdk.Unbonded, 3: sdk.Unbonded, 6: sdk.Unbonded,
+		0: sdk.Unbonding, 1: sdk.Unbonding, 2: sdk.Unbonding, 3: sdk.Unbonding, 6: sdk.Unbonding,
 	}
 
 	// require all the validators have their respective statuses
@@ -145,9 +145,11 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 		valAddr := validators[valIdx].Operator
 		val, _ := keeper.GetValidator(ctx, valAddr)
 
-		require.Equal(
-			t, val.GetStatus(), status,
-			fmt.Sprintf("expected validator to have status: %s", sdk.BondStatusToString(status)))
+		assert.Equal(
+			t, status, val.GetStatus(),
+			fmt.Sprintf("expected validator at index %v to have status: %s",
+				valIdx,
+				sdk.BondStatusToString(status)))
 	}
 }
 
@@ -610,8 +612,8 @@ func TestFullValidatorSetPowerChange(t *testing.T) {
 		validators[i], found = keeper.GetValidator(ctx, validators[i].Operator)
 		require.True(t, found)
 	}
-	assert.Equal(t, sdk.Unbonded, validators[0].Status)
-	assert.Equal(t, sdk.Unbonded, validators[1].Status)
+	assert.Equal(t, sdk.Unbonding, validators[0].Status)
+	assert.Equal(t, sdk.Unbonding, validators[1].Status)
 	assert.Equal(t, sdk.Bonded, validators[2].Status)
 	assert.Equal(t, sdk.Bonded, validators[3].Status)
 	assert.Equal(t, sdk.Unbonded, validators[4].Status)

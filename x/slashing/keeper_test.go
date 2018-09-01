@@ -177,7 +177,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should have been jailed
 	validator, _ = sk.GetValidatorByPubKey(ctx, val)
-	require.Equal(t, sdk.Unbonded, validator.GetStatus())
+	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 
 	// unrevocation should fail prior to jail expiration
 	got = slh(ctx, NewMsgUnjail(sdk.ValAddress(addr)))
@@ -224,7 +224,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 		keeper.handleValidatorSignature(ctx, val.Address(), amtInt, false)
 	}
 	validator, _ = sk.GetValidatorByPubKey(ctx, val)
-	require.Equal(t, sdk.Unbonded, validator.GetStatus())
+	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 }
 
 // Test a new validator entering the validator set
@@ -293,7 +293,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 
 	// validator should have been jailed and slashed
 	validator, _ := sk.GetValidatorByPubKey(ctx, val)
-	require.Equal(t, sdk.Unbonded, validator.GetStatus())
+	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 
 	// validator should have been slashed
 	require.Equal(t, int64(amtInt-1), validator.GetTokens().RoundInt64())

@@ -45,6 +45,7 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) sim
 			case sdk.Bonded:
 				bonded = bonded.Add(validator.GetPower())
 			case sdk.Unbonding:
+				loose = loose.Add(validator.GetTokens().RoundInt())
 			case sdk.Unbonded:
 				loose = loose.Add(validator.GetTokens().RoundInt())
 			}

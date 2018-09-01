@@ -19,6 +19,7 @@ import (
 func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
 	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
+
 		denom := k.GetParams(ctx).BondDenom
 		description := stake.Description{
 			Moniker: simulation.RandStringOfLength(r, 10),
@@ -59,6 +60,7 @@ func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation
 func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
 	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
+
 		description := stake.Description{
 			Moniker:  simulation.RandStringOfLength(r, 10),
 			Identity: simulation.RandStringOfLength(r, 10),
@@ -90,6 +92,7 @@ func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
 func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
 	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
+
 		denom := k.GetParams(ctx).BondDenom
 		validatorKey := simulation.RandomKey(r, keys)
 		validatorAddress := sdk.ValAddress(validatorKey.PubKey().Address())
@@ -125,6 +128,7 @@ func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operat
 func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
 	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
+
 		denom := k.GetParams(ctx).BondDenom
 		validatorKey := simulation.RandomKey(r, keys)
 		validatorAddress := sdk.ValAddress(validatorKey.PubKey().Address())
@@ -160,6 +164,7 @@ func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.
 func SimulateMsgCompleteUnbonding(k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
 	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
+
 		validatorKey := simulation.RandomKey(r, keys)
 		validatorAddress := sdk.ValAddress(validatorKey.PubKey().Address())
 		delegatorKey := simulation.RandomKey(r, keys)
@@ -186,6 +191,7 @@ func SimulateMsgCompleteUnbonding(k stake.Keeper) simulation.Operation {
 func SimulateMsgBeginRedelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
 	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
+
 		denom := k.GetParams(ctx).BondDenom
 		sourceValidatorKey := simulation.RandomKey(r, keys)
 		sourceValidatorAddress := sdk.ValAddress(sourceValidatorKey.PubKey().Address())
@@ -225,6 +231,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountMapper, k stake.Keeper) simulation
 func SimulateMsgCompleteRedelegate(k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
 	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
+
 		validatorSrcKey := simulation.RandomKey(r, keys)
 		validatorSrcAddress := sdk.ValAddress(validatorSrcKey.PubKey().Address())
 		validatorDstKey := simulation.RandomKey(r, keys)

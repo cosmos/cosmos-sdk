@@ -23,6 +23,8 @@ BREAKING CHANGES
     * [x/stake] \#1901 Validator type's Owner field renamed to Operator; Validator's GetOwner() renamed accordingly to comply with the SDK's Validator interface.
     * [docs] [#2001](https://github.com/cosmos/cosmos-sdk/pull/2001) Update slashing spec for slashing period
     * [x/stake, x/slashing] [#1305](https://github.com/cosmos/cosmos-sdk/issues/1305) - Rename "revoked" to "jailed"
+    * [x/stake] [#1676] Revoked and jailed validators put into the unbonding state
+    * [x/stake] [#1877] Redelegations/unbonding-delegation from unbonding validator have reduced time
     * [x/stake] \#2040 Validator operator type has now changed to `sdk.ValAddress`
       * A new bech32 prefix has been introduced for Tendermint signing keys and
         addresses, `cosmosconspub` and `cosmoscons` respectively.

@@ -160,7 +160,7 @@ test_sim_gaia_fast:
 	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=50 -v -timeout 24h
 
 test_sim_gaia_slow:
-	@echo "Running full Gaia simulation. This may take awhile!"
+	@echo "Running full Gaia simulation. This may take a while!"
 	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationVerbose=true -v -timeout 24h
 
 test_cover:

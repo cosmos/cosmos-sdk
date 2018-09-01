@@ -153,7 +153,7 @@ func (v Validator) HumanReadableString() (string, error) {
 	}
 
 	resp := "Validator \n"
-	resp += fmt.Sprintf("Operator: %s\n", v.Operator)
+	resp += fmt.Sprintf("Operator: %s\n", v.Operator.String())
 	resp += fmt.Sprintf("Validator: %s\n", bechConsPubKey)
 	resp += fmt.Sprintf("Jailed: %v\n", v.Jailed)
 	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
@@ -175,9 +175,9 @@ func (v Validator) HumanReadableString() (string, error) {
 
 // validator struct for bech output
 type BechValidator struct {
-	Operator sdk.ValAddress `json:"operator"` // in bech32
-	PubKey   string         `json:"pub_key"`  // in bech32
-	Jailed   bool           `json:"jailed"`   // has the validator been jailed from bonded status?
+	Operator string `json:"operator"` // in bech32
+	PubKey   string `json:"pub_key"`  // in bech32
+	Jailed   bool   `json:"jailed"`   // has the validator been jailed from bonded status?
 
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
 	Tokens          sdk.Dec        `json:"tokens"`           // delegated tokens (incl. self-delegation)
@@ -205,7 +205,7 @@ func (v Validator) Bech32Validator() (BechValidator, error) {
 	}
 
 	return BechValidator{
-		Operator: v.Operator,
+		Operator: v.Operator.String(),
 		PubKey:   bechConsPubKey,
 		Jailed:   v.Jailed,
 

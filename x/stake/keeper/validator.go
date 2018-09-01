@@ -47,7 +47,7 @@ func (k Keeper) GetValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) (val
 }
 
 // get a single validator by pubkey with Bech32 prefix
-func (k Keeper) GetBechalidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) (bechValidator types.BechValidator, found bool) {
+func (k Keeper) GetBechValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) (bechValidator types.BechValidator, found bool) {
 	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
 		return bechValidator, false
@@ -91,7 +91,7 @@ func (k Keeper) validatorByPowerIndexExists(ctx sdk.Context, power []byte) bool 
 	return store.Get(power) != nil
 }
 
-// Get the set of all validators, retrieve an optional maxRetrieve number of records
+// Get the set of all validators. If maxRetrieve is supplied, the respective amount will be returned.
 func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve ...int16) (validators []types.Validator) {
 	retrieve := len(maxRetrieve) > 0
 	if retrieve {
@@ -116,7 +116,7 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve ...int16) (validators
 	return validators[:i] // trim
 }
 
-// Get the set of all validators, retrieve an optional maxRetrieve number of records
+// Get the set of all validators.  If maxRetrieve is supplied, the respective amount will be returned.
 func (k Keeper) GetBechValidators(ctx sdk.Context, maxRetrieve ...int16) (validators []types.BechValidator) {
 	retrieve := len(maxRetrieve) > 0
 	if retrieve {

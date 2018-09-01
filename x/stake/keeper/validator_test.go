@@ -25,8 +25,15 @@ func TestSetValidator(t *testing.T) {
 	keeper.SetPool(ctx, pool)
 	keeper.UpdateValidator(ctx, validator)
 
+	bechValidator, err := validator.Bech32Validator()
+	require.Nil(t, err)
+
+	resBechVal, found := keeper.GetBechValidator(ctx, addrVals[0])
+	require.True(t, found)
+	assert.Equal(t, bechValidator.Operator, resBechVal.Operator)
+
 	// after the save the validator should be bonded
-	validator, found := keeper.GetValidator(ctx, addrVals[0])
+	validator, found = keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))

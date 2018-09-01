@@ -67,11 +67,11 @@ func TestQueryValidators(t *testing.T) {
 	handleMsgCreateValidator(ctx, msg2, keeper)
 
 	// Query Validators
-	validators := keeper.GetValidators(ctx)
+	validators := keeper.GetBechValidators(ctx)
 	res, err := queryValidators(ctx, []string{""}, keeper)
 	assert.Nil(t, err)
 
-	var validatorsResp []types.Validator
+	var validatorsResp []types.BechValidator
 	errRes := keeper.Codec().UnmarshalJSON(res, &validatorsResp)
 	assert.Nil(t, errRes)
 
@@ -90,7 +90,7 @@ func TestQueryValidators(t *testing.T) {
 	res, err = queryValidator(ctx, []string{query.Path}, query, keeper)
 	assert.Nil(t, err)
 
-	var validator types.Validator
+	var validator types.BechValidator
 	errRes = keeper.Codec().UnmarshalJSON(res, &validator)
 	assert.Nil(t, errRes)
 
@@ -116,11 +116,11 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	delValidators := keeper.GetDelegatorValidators(ctx, addrAcc2)
+	delValidators := keeper.GetDelegatorBechValidators(ctx, addrAcc2)
 	res, err := queryDelegatorValidators(ctx, []string{query.Path}, query, keeper)
 	assert.Nil(t, err)
 
-	var validatorsResp []types.Validator
+	var validatorsResp []types.BechValidator
 	errRes = keeper.Codec().UnmarshalJSON(res, &validatorsResp)
 	assert.Nil(t, errRes)
 
@@ -140,7 +140,7 @@ func TestQueryDelegation(t *testing.T) {
 	res, err = queryDelegatorValidator(ctx, []string{query.Path}, query, keeper)
 	assert.Nil(t, err)
 
-	var validator types.Validator
+	var validator types.BechValidator
 	errRes = keeper.Codec().UnmarshalJSON(res, &validator)
 	assert.Nil(t, errRes)
 

@@ -36,7 +36,7 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 	return delegations
 }
 
-// Return all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned
+// Return all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned.
 func (k Keeper) GetDelegatorBechValidators(ctx sdk.Context, delegatorAddr sdk.AccAddress,
 	maxRetrieve ...int16) (validators []types.BechValidator) {
 
@@ -73,7 +73,7 @@ func (k Keeper) GetDelegatorBechValidators(ctx sdk.Context, delegatorAddr sdk.Ac
 	return validators[:i] // trim
 }
 
-// Return all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned
+// Return all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned.
 func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAddress,
 	maxRetrieve ...int16) (validators []types.Validator) {
 
@@ -135,7 +135,7 @@ func (k Keeper) GetDelegatorValidator(ctx sdk.Context, delegatorAddr sdk.AccAddr
 	return
 }
 
-// return all delegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned
+// Return all delegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned.
 func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve ...int16) (delegations []types.Delegation) {
 	retrieve := len(maxRetrieve) > 0
@@ -160,7 +160,7 @@ func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddres
 	return delegations[:i] // trim
 }
 
-// Return all delegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned
+// Return all delegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned.
 func (k Keeper) GetDelegatorDelegationsWithoutRat(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve ...int16) (delegations []types.DelegationWithoutDec) {
 	retrieve := len(maxRetrieve) > 0
@@ -201,7 +201,7 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 
 //_____________________________________________________________________________________
 
-// Return all unbonding delegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned
+// Return all unbonding delegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned.
 func (k Keeper) GetDelegatorUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve ...int16) (unbondingDelegations []types.UnbondingDelegation) {
 
@@ -293,7 +293,7 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 
 //_____________________________________________________________________________________
 
-// Return all redelegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned
+// Return all redelegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned.
 func (k Keeper) GetRedelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve ...int16) (redelegations []types.Redelegation) {
 

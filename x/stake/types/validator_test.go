@@ -24,6 +24,29 @@ func TestValidatorEqual(t *testing.T) {
 	require.False(t, ok)
 }
 
+func TestBech32Validator(t *testing.T) {
+	val1 := NewValidator(addr1, pk1, Description{})
+	val2 := NewValidator(addr1, pk1, Description{})
+
+	val1Bech, err := val1.Bech32Validator()
+	require.Nil(t, err)
+	val2Bech, err := val2.Bech32Validator()
+	require.Nil(t, err)
+
+	bechPubKey, err := sdk.Bech32ifyConsPub(val1.PubKey)
+	require.Nil(t, err)
+
+	require.Equal(t, val1Bech, val2Bech)
+	require.Equal(t, val1.Operator.String(), val1Bech.Operator)
+	require.Equal(t, bechPubKey, val2Bech.PubKey)
+
+	val2 = NewValidator(addr2, pk2, Description{})
+	val2Bech, err = val2.Bech32Validator()
+	require.Nil(t, err)
+
+	require.NotEqual(t, val1Bech, val2Bech)
+}
+
 func TestUpdateDescription(t *testing.T) {
 	d1 := Description{
 		Website: "https://validator.cosmos",

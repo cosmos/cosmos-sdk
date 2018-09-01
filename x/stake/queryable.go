@@ -74,7 +74,7 @@ type QueryBondsParams struct {
 }
 
 func queryValidators(ctx sdk.Context, path []string, k keep.Keeper) (res []byte, err sdk.Error) {
-	validators := k.GetValidators(ctx)
+	validators := k.GetBechValidators(ctx)
 
 	res, errRes := wire.MarshalJSONIndent(k.Codec(), validators)
 	if err != nil {
@@ -91,7 +91,7 @@ func queryValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k kee
 		return []byte{}, sdk.ErrUnknownAddress(fmt.Sprintf("incorrectly formatted request address: %s", err.Error()))
 	}
 
-	validator, found := k.GetValidator(ctx, params.ValidatorAddr)
+	validator, found := k.GetBechValidator(ctx, params.ValidatorAddr)
 	if !found {
 		return []byte{}, ErrNoValidatorFound(DefaultCodespace)
 	}
@@ -136,7 +136,7 @@ func queryDelegatorValidators(ctx sdk.Context, path []string, req abci.RequestQu
 		return []byte{}, sdk.ErrUnknownAddress(fmt.Sprintf("incorrectly formatted request address: %s", errRes.Error()))
 	}
 
-	validators := k.GetDelegatorValidators(ctx, params.DelegatorAddr)
+	validators := k.GetDelegatorBechValidators(ctx, params.DelegatorAddr)
 
 	res, errRes = wire.MarshalJSONIndent(k.Codec(), validators)
 	if errRes != nil {
@@ -153,7 +153,7 @@ func queryDelegatorValidator(ctx sdk.Context, path []string, req abci.RequestQue
 		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request address: %s", errRes.Error()))
 	}
 
-	validator := k.GetDelegatorValidator(ctx, params.DelegatorAddr, params.ValidatorAddr)
+	validator := k.GetDelegatorBechValidator(ctx, params.DelegatorAddr, params.ValidatorAddr)
 
 	res, errRes = wire.MarshalJSONIndent(k.Codec(), validator)
 	if errRes != nil {

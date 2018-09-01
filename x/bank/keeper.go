@@ -186,6 +186,7 @@ func sendCoins(ctx sdk.Context, am auth.AccountMapper, fromAddr sdk.AccAddress, 
 		}
 		// Track the transfer amount (send negated)
 		vacc.TrackTransfers(amt.Negative())
+		am.SetAccount(ctx, vacc)
 	}
 
 	_, subTags, err := subtractCoins(ctx, am, fromAddr, amt)
@@ -198,10 +199,11 @@ func sendCoins(ctx sdk.Context, am auth.AccountMapper, fromAddr sdk.AccAddress, 
 		return nil, err
 	}
 	// check if receiver is a vesting account
-	vacc, ok = am.GetAccount(ctx, fromAddr).(auth.VestingAccount)
-	if ok && vacc.IsVesting(blockTime) {
+	vacc2, ok := am.GetAccount(ctx, toAddr).(auth.VestingAccount)
+	if ok && vacc2.IsVesting(blockTime) {
 		// Track the transfer amount
-		vacc.TrackTransfers(amt)
+		vacc2.TrackTransfers(amt)
+		am.SetAccount(ctx, vacc2)
 	}
 
 	return subTags.AppendTags(addTags), nil
@@ -224,6 +226,7 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountMapper, inputs []Input, ou
 			}
 			// Track the transfer amount (send negated)
 			vacc.TrackTransfers(in.Coins.Negative())
+			am.SetAccount(ctx, vacc)
 		}
 
 		_, tags, err := subtractCoins(ctx, am, in.Address, in.Coins)
@@ -244,6 +247,7 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountMapper, inputs []Input, ou
 		if ok && vacc.IsVesting(blockTime) {
 			// Track the transfer amount
 			vacc.TrackTransfers(out.Coins)
+			am.SetAccount(ctx, vacc)
 		}
 
 		allTags = allTags.AppendTags(tags)

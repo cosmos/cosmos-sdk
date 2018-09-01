@@ -160,7 +160,7 @@ func NewContinuousVestingAccount(addr sdk.AccAddress, originalCoins sdk.Coins, s
 
 // Implements VestingAccount interface.
 func (vacc ContinuousVestingAccount) IsVesting(blockTime time.Time) bool {
-	return blockTime.Unix() > vacc.EndTime.Unix()
+	return blockTime.Unix() < vacc.EndTime.Unix()
 }
 
 // Implement Vesting Account interface. Uses time in context to calculate how many coins
@@ -168,24 +168,24 @@ func (vacc ContinuousVestingAccount) IsVesting(blockTime time.Time) bool {
 // already been transferred or delegated
 func (vacc ContinuousVestingAccount) SendableCoins(blockTime time.Time) sdk.Coins {
 	unlockedCoins := vacc.TransferredCoins
-	scale := float64(blockTime.Unix() - vacc.StartTime.Unix()) / float64(vacc.EndTime.Unix() - vacc.StartTime.Unix())
+	scale := sdk.NewDec(blockTime.Unix() - vacc.StartTime.Unix()).Quo(sdk.NewDec(vacc.EndTime.Unix() - vacc.StartTime.Unix()))
 
 	// Add original coins unlocked by vesting schedule
 	for _, c := range vacc.OriginalVestingCoins {
-		amt := int64(float64(c.Amount.Int64()) * scale)
+		amt := sdk.NewDecFromInt(c.Amount).Mul(scale).RoundInt()
 
 		// Must constrain with coins left in account
 		// Since some unlocked coins may have left account due to delegation
-		currentAmount := vacc.GetCoins().AmountOf(c.Denom).Int64()
-		if currentAmount < amt {
+		currentAmount := vacc.GetCoins().AmountOf(c.Denom)
+		if currentAmount.LT(amt) {
 			amt = currentAmount
 			// prevent double count of transferred coins
-			amt -= vacc.TransferredCoins.AmountOf(c.Denom).Int64()
+			amt = amt.Sub(vacc.TransferredCoins.AmountOf(c.Denom))
 		}
 		
 		// Add non-zero coins
-		if amt != 0 {
-			coin := sdk.NewInt64Coin(c.Denom, amt)
+		if !amt.IsZero() {
+			coin := sdk.NewCoin(c.Denom, amt)
 			unlockedCoins = unlockedCoins.Plus(sdk.Coins{coin})
 		}
 	}
@@ -222,7 +222,7 @@ func NewDelayTransferAccount(addr sdk.AccAddress, originalCoins sdk.Coins, endTi
 
 // Implements VestingAccount
 func (vacc DelayTransferAccount) IsVesting(blockTime time.Time) bool {
-	return blockTime.Unix() > vacc.EndTime.Unix()
+	return blockTime.Unix() < vacc.EndTime.Unix()
 }
 
 // Implements VestingAccount. If Time < EndTime return only net transferred coins
@@ -249,8 +249,11 @@ func (vacc *DelayTransferAccount) TrackTransfers(coins sdk.Coins) {
 // Wire
 
 // Most users shouldn't use this, but this comes handy for tests.
-func RegisterBaseAccount(cdc *wire.Codec) {
+func RegisterAccount(cdc *wire.Codec) {
 	cdc.RegisterInterface((*Account)(nil), nil)
+	cdc.RegisterInterface((*VestingAccount)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
+	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)
+	cdc.RegisterConcrete(&DelayTransferAccount{}, "cosmos-sdk/DelayTransferAccount", nil)
 	wire.RegisterCrypto(cdc)
 }

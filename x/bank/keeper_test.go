@@ -1,6 +1,7 @@
 package bank
 
 import (
+	"time"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -30,7 +31,7 @@ func TestKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
 
 	cdc := wire.NewCodec()
-	auth.RegisterBaseAccount(cdc)
+	auth.RegisterAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
@@ -115,7 +116,7 @@ func TestSendKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
 
 	cdc := wire.NewCodec()
-	auth.RegisterBaseAccount(cdc)
+	auth.RegisterAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
@@ -184,7 +185,7 @@ func TestViewKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
 
 	cdc := wire.NewCodec()
-	auth.RegisterBaseAccount(cdc)
+	auth.RegisterAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
@@ -206,4 +207,83 @@ func TestViewKeeper(t *testing.T) {
 	require.True(t, viewKeeper.HasCoins(ctx, addr, sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}))
 	require.False(t, viewKeeper.HasCoins(ctx, addr, sdk.Coins{sdk.NewInt64Coin("foocoin", 15)}))
 	require.False(t, viewKeeper.HasCoins(ctx, addr, sdk.Coins{sdk.NewInt64Coin("barcoin", 5)}))
+}
+
+func TestVesting(t *testing.T) {
+	ms, authKey := setupMultiStore()
+
+	cdc := wire.NewCodec()
+	auth.RegisterAccount(cdc)
+
+	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(500, 0)}, false, log.NewNopLogger())
+	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
+	coinKeeper := NewKeeper(accountMapper)
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+
+	vacc := auth.NewContinuousVestingAccount(addr1, sdk.Coins{{"steak", sdk.NewInt(100)}}, time.Unix(0, 0), time.Unix(1000, 0))
+	accountMapper.SetAccount(ctx, &vacc)
+
+	// Try sending more than sendable coins
+    _, err := coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{{"steak", sdk.NewInt(70)}})
+
+	require.NotNil(t, err, "Keeper did not error")
+	require.Equal(t, sdk.CodeType(10), err.Code(), "Did not error with insufficient coins")
+
+	// Send less than sendable coins
+	_, err = coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{{"steak", sdk.NewInt(40)}})
+
+	require.Nil(t, err, "Keeper errored on valid transfer")
+	acc := accountMapper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	require.Equal(t, sdk.Coins{{"steak", sdk.NewInt(-40)}}, acc.TransferredCoins, "Did not track transfers")
+
+	// Receive coins
+	addr3 := sdk.AccAddress([]byte("addr3"))
+	acc3 := auth.NewBaseAccountWithAddress(addr3)
+	acc3.SetCoins(sdk.Coins{{"steak", sdk.NewInt(50)}})
+	accountMapper.SetAccount(ctx, &acc3)
+
+	_, err = coinKeeper.SendCoins(ctx, addr3, addr1, sdk.Coins{{"steak", sdk.NewInt(50)}})
+
+	acc = accountMapper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+
+	require.Nil(t, err, "Send to a vesting account failed")
+	require.Equal(t, sdk.Coins{{"steak", sdk.NewInt(10)}}, acc.TransferredCoins, "Transferred coins did not change")
+
+	// Send transferred coins
+	_, err = coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{{"steak", sdk.NewInt(60)}})
+
+	require.Nil(t, err, "Sending transferred coins failed")
+
+	acc = accountMapper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+
+	require.Equal(t, sdk.Coins{{"steak", sdk.NewInt(-50)}}, acc.TransferredCoins, "Transferred coins did not update correctly")
+}
+
+func TestVestingInputOutput(t *testing.T) {
+	ms, authKey := setupMultiStore()
+
+	cdc := wire.NewCodec()
+	auth.RegisterAccount(cdc)
+
+	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(500, 0)}, false, log.NewNopLogger())
+	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
+	coinKeeper := NewKeeper(accountMapper)
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+
+	vacc := auth.NewContinuousVestingAccount(addr1, sdk.Coins{{"steak", sdk.NewInt(100)}}, time.Unix(0, 0), time.Unix(1000, 0))
+	accountMapper.SetAccount(ctx, &vacc)
+
+	inputs := []Input{{addr1, sdk.Coins{{"steak", sdk.NewInt(50)}}}}
+	outputs := []Output{{addr1, sdk.Coins{{"steak", sdk.NewInt(20)}}}, {addr2, sdk.Coins{{"steak", sdk.NewInt(30)}}}}
+	_, err := coinKeeper.InputOutputCoins(ctx, inputs, outputs)
+
+	require.Nil(t, err, "InputOutput failed on valid vested spend")
+
+	acc := accountMapper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+
+	require.Equal(t, sdk.Coins{{"steak", sdk.NewInt(-30)}}, acc.TransferredCoins, "Transferred coins did not update correctly")
 }

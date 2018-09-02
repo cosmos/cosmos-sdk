@@ -1,15 +1,15 @@
 package keys
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/gorilla/mux"
 
 	"github.com/spf13/cobra"
+	"io/ioutil"
 )
 
 func deleteKeyCommand() *cobra.Command {
@@ -65,17 +65,23 @@ func DeleteKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	var kb keys.Keybase
 	var m DeleteKeyBody
 
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&m)
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	err = cdc.UnmarshalJSON(body, &m)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
 	kb, err = GetKeyBase()
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
@@ -83,10 +89,10 @@ func DeleteKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO handle error if key is not available or pass is wrong
 	err = kb.Delete(name, m.Password)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 }

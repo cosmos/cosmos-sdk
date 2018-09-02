@@ -1,7 +1,6 @@
 package keys
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -108,7 +107,7 @@ func GetKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	bechKeyOut, err := getBechKeyOut(bechPrefix)
 	if err != nil {
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
 	}
@@ -117,21 +116,21 @@ func GetKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: check for the error if key actually does not exist, instead of
 	// assuming this as the reason
 	if err != nil {
-		w.WriteHeader(404)
+		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
 	keyOutput, err := bechKeyOut(info)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	output, err := json.MarshalIndent(keyOutput, "", "  ")
+	output, err := cdc.MarshalJSONIndent(keyOutput, "", "  ")
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}

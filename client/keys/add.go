@@ -1,7 +1,6 @@
 package keys
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -172,13 +171,24 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	kb, err := GetKeyBase()
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
-	err = json.Unmarshal(body, &m)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	err = cdc.UnmarshalJSON(body, &m)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -227,7 +237,7 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	keyOutput.Seed = seed
 
-	bz, err := json.Marshal(keyOutput)
+	bz, err := cdc.MarshalJSON(keyOutput)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -272,8 +282,14 @@ func RecoverKeyResuestHandler(w http.ResponseWriter, r *http.Request) {
 	name := vars["name"]
 	var m RecoverKeyBody
 
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&m)
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	err = cdc.UnmarshalJSON(body, &m)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
@@ -286,7 +302,6 @@ func RecoverKeyResuestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-
 
 	info, err := kb.CreateKey(name, m.Seed, m.Password)
 	if err != nil {

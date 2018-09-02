@@ -164,7 +164,28 @@ type NewKeyBody struct {
 	Seed     string `json:"seed"`
 }
 
-// add new key REST handler
+func paramCheck(m NewKeyBody, kb keys.Keybase) (int, string) {
+	if m.Name == "" {
+		return http.StatusBadRequest, fmt.Sprintf("You have to specify a name for the locally stored account.")
+	}
+	if m.Password == "" {
+		return http.StatusBadRequest, fmt.Sprintf("You have to specify a password for the locally stored account.")
+	}
+
+	// check if already exists
+	infos, err := kb.List()
+	if err != nil {
+		return http.StatusInternalServerError, err.Error()
+	}
+	for _, i := range infos {
+		if i.GetName() == m.Name {
+			return http.StatusConflict, fmt.Sprintf("Account with name %s already exists.", m.Name)
+		}
+	}
+	return http.StatusOK, ""
+}
+
+// AddNewKeyRequestHandler add new key REST handler
 func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	var kb keys.Keybase
 	var m NewKeyBody
@@ -190,32 +211,12 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
+	code, errMsg := paramCheck(m, kb)
+	if code != http.StatusOK {
+		w.WriteHeader(code)
+		w.Write([]byte(errMsg))
 		return
 	}
-	if m.Name == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("You have to specify a name for the locally stored account."))
-		return
-	}
-	if m.Password == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("You have to specify a password for the locally stored account."))
-		return
-	}
-
-	// check if already exists
-	infos, err := kb.List()
-	for _, i := range infos {
-		if i.GetName() == m.Name {
-			w.WriteHeader(http.StatusConflict)
-			w.Write([]byte(fmt.Sprintf("Account with name %s already exists.", m.Name)))
-			return
-		}
-	}
-
 	// create account
 	seed := m.Seed
 	if seed == "" {

@@ -17,6 +17,7 @@ BREAKING CHANGES
     * \#2040 All commands that utilize a validator's address must now use the new
     bech32 prefix, `cosmosval`. A validator's Tendermint signing key and address
     now use a new bech32 prefix, `cosmoscons`.
+    * [cli] \#2215 `gaiacli rest-server` was renamed to `gaiacli lite-server`. In `gaiacli lite-server`, swagger-ui is supported.
 
 * Gaia
     * Make the transient store key use a distinct store key. [#2013](https://github.com/cosmos/cosmos-sdk/pull/2013)

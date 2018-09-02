@@ -266,8 +266,8 @@ type RecoverKeyBody struct {
 	Seed     string `json:"seed"`
 }
 
-// RecoverResuestHandler is the handler of creating seed in swagger rest server
-func RecoverResuestHandler(w http.ResponseWriter, r *http.Request) {
+// RecoverKeyResuestHandler is the handler of creating seed in swagger rest server
+func RecoverKeyResuestHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 	var m RecoverKeyBody
@@ -275,14 +275,14 @@ func RecoverResuestHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&m)
 	if err != nil {
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
 	kb, err := GetKeyBase()
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
@@ -290,21 +290,21 @@ func RecoverResuestHandler(w http.ResponseWriter, r *http.Request) {
 
 	info, err := kb.CreateKey(name, m.Seed, m.Password)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
 	keyOutput, err := Bech32KeyOutput(info)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
 	bz, err := cdc.MarshalJSON(keyOutput)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}

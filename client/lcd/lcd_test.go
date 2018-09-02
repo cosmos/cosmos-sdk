@@ -43,12 +43,11 @@ func TestKeys(t *testing.T) {
 	defer cleanup()
 
 	// recover key
-	recoverKeyURL := fmt.Sprintf("/keys/%s/recover", "test_recover")
-	seedRecover := "divorce meat banana embody near until uncover wait uniform capital crawl test praise cloud foil monster garbage hedgehog wrong skate there bonus box odor"
-	passwordRecover := "1234567890"
-	jsonStrRecover := []byte(fmt.Sprintf(`{"seed":"%s", "password":"%s"}`, seedRecover, passwordRecover))
-	res, body := Request(t, port, "POST", recoverKeyURL, jsonStrRecover)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	res, body := doRecoverKey(t, port, seed)
+	var response keys.KeyOutput
+	err := wire.Cdc.UnmarshalJSON([]byte(body), &response)
+	require.Nil(t, err, body)
+
 	reg, err := regexp.Compile(`([a-z]+ ){12}`)
 	require.Nil(t, err)
 	match := reg.MatchString(seed)
@@ -786,6 +785,15 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.AccAddress
 	require.Nil(t, err)
 
 	return receiveAddr, resultTx
+}
+
+func doRecoverKey(t *testing.T, port, seed string) (*http.Response, string) {
+	recoverKeyURL := fmt.Sprintf("/keys/%s/recover", "test_recover")
+	passwordRecover := "1234567890"
+	jsonStrRecover := []byte(fmt.Sprintf(`{"seed":"%s", "password":"%s"}`, seed, passwordRecover))
+	res, body := Request(t, port, "POST", recoverKeyURL, jsonStrRecover)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	return res, body
 }
 
 func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.AccAddress) (resultTx ctypes.ResultBroadcastTxCommit) {

@@ -18,9 +18,10 @@ import (
 // live chain should, however we require the slashing to be fast as noone pays gas for it.
 type cachedValidator struct {
 	val        types.Validator
-	marshalled string
+	marshalled string // marshalled amino bytes for the validator object (not operator address)
 }
 
+// validatorCache-key: validator amino bytes
 var validatorCache = make(map[string]cachedValidator, 500)
 var validatorCacheList = list.New()
 
@@ -31,6 +32,7 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 	if value == nil {
 		return validator, false
 	}
+
 	// If these amino encoded bytes are in the cache, return the cached validator
 	strValue := string(value)
 	if val, ok := validatorCache[strValue]; ok {
@@ -39,11 +41,13 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 		valToReturn.Operator = addr
 		return valToReturn, true
 	}
+
 	// amino bytes weren't found in cache, so amino unmarshal and add it to the cache
 	validator = types.MustUnmarshalValidator(k.cdc, addr, value)
 	cachedVal := cachedValidator{validator, strValue}
 	validatorCache[strValue] = cachedValidator{validator, strValue}
 	validatorCacheList.PushBack(cachedVal)
+
 	// if the cache is too big, pop off the last element from it
 	if validatorCacheList.Len() > 500 {
 		valToRemove := validatorCacheList.Remove(validatorCacheList.Front()).(cachedValidator)

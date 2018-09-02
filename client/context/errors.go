@@ -16,6 +16,6 @@ Are you sure there has been a transaction involving it?`, addr)
 // height can't be verified. The reason is that the base checkpoint of the certifier is
 // newer than the given height
 func ErrVerifyCommit(height int64) error {
-	return errors.Errorf(`The base checkpoint of the certifier is newer than height %d. 
-Can't verify blockchain commit proof at this height. Please try again and set distrust-node option to false`, height)
+	return errors.Errorf(`The height of base truststore in gaia-lite is higher than height %d. 
+Can't verify blockchain proof at this height. Please set --distrust-node false and try again`, height)
 }

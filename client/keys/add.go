@@ -259,3 +259,55 @@ func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
 	seed := getSeed(algo)
 	w.Write([]byte(seed))
 }
+
+// RecoverKeyBody is recover key request REST body
+type RecoverKeyBody struct {
+	Password string `json:"password"`
+	Seed     string `json:"seed"`
+}
+
+// RecoverResuestHandler is the handler of creating seed in swagger rest server
+func RecoverResuestHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	name := vars["name"]
+	var m RecoverKeyBody
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&m)
+	if err != nil {
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	kb, err := GetKeyBase()
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+
+	info, err := kb.CreateKey(name, m.Seed, m.Password)
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	keyOutput, err := Bech32KeyOutput(info)
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	bz, err := cdc.MarshalJSON(keyOutput)
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	w.Write(bz)
+}

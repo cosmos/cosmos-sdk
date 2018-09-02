@@ -42,9 +42,12 @@ func TestKeys(t *testing.T) {
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
-	// get seed
-	// TODO Do we really need this endpoint?
-	res, body := Request(t, port, "GET", "/keys/seed", nil)
+	// recover key
+	recoverKeyURL := fmt.Sprintf("/keys/%s/recover", "test_recover")
+	seedRecover := "divorce meat banana embody near until uncover wait uniform capital crawl test praise cloud foil monster garbage hedgehog wrong skate there bonus box odor"
+	passwordRecover := "1234567890"
+	jsonStrRecover := []byte(fmt.Sprintf(`{"seed":"%s", "password":"%s"}`, seedRecover, passwordRecover))
+	res, body := Request(t, port, "POST", recoverKeyURL, jsonStrRecover)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	reg, err := regexp.Compile(`([a-z]+ ){12}`)
 	require.Nil(t, err)
@@ -75,7 +78,7 @@ func TestKeys(t *testing.T) {
 	// existing keys
 	res, body = Request(t, port, "GET", "/keys", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var m [2]keys.KeyOutput
+	var m [3]keys.KeyOutput
 	err = cdc.UnmarshalJSON([]byte(body), &m)
 	require.Nil(t, err)
 
@@ -235,7 +238,7 @@ func TestCoinSend(t *testing.T) {
 	someFakeAddr := sdk.AccAddress(bz)
 
 	// query empty
-	res, body := Request(t, port, "GET", fmt.Sprintf("/accounts/%s", someFakeAddr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", someFakeAddr), nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	acc := getAccount(t, port, addr)
@@ -723,7 +726,7 @@ func TestProposalsQuery(t *testing.T) {
 //_____________________________________________________________________________
 // get the account to get the sequence
 func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/accounts/%s", addr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", addr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var acc auth.Account
 	err := cdc.UnmarshalJSON([]byte(body), &acc)
@@ -771,7 +774,7 @@ func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.Acc
 		"chain_id":"%s"
 	}`, gasStr, gasAdjustmentStr, name, password, accnum, sequence, coinbz, chainID))
 
-	res, body = Request(t, port, "POST", fmt.Sprintf("/accounts/%s/send%v", receiveAddr, queryStr), jsonStr)
+	res, body = Request(t, port, "POST", fmt.Sprintf("/bank/%s/transfers%v", receiveAddr, queryStr), jsonStr)
 	return
 }
 

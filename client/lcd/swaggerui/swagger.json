@@ -1,0 +1,2074 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "All Gaia-lite supported APIs will be shown by this swagger-ui page. You can access these APIs through this page.",
+    "version": "1.0",
+    "title": "Gaia-lite Swagger-UI",
+    "termsOfService": "http://swagger.io/terms/",
+    "contact": {
+      "name": "API Support",
+      "url": "http://www.swagger.io/support",
+      "email": "support@swagger.io"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host": "localhost:1317",
+  "basePath": "/",
+  "paths": {
+    "/bank/balances/{address}": {
+      "get": {
+        "tags": [
+          "ICS20: Bank"
+        ],
+        "summary": "Get token information",
+        "description": "Get token information of user specific address",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "description": "address",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/sdk.Coins"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/bank/{address}/transfers": {
+      "post": {
+        "tags": [
+          "ICS20: Bank"
+        ],
+        "summary": "Transfer tokens",
+        "description": "This API can be used to transfer tokens to specific address",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "address",
+            "description": "address to send token",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "transferToken",
+            "description": "transfer asset",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/body.bank.Transfer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/response.BroadcastTxCommitResult"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/keys": {
+      "get": {
+        "description": "Get all keys in the key store",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS1: Key Management"
+        ],
+        "summary": "list all keys",
+        "operationId": "queryKeysRequest",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.keys.KeyOutputs"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Create a new key and persistent it to the key store",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS1: Key Management"
+        ],
+        "summary": "Create a account",
+        "parameters": [
+          {
+            "description": "name and password for a new key",
+            "name": "nameAndPwd",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/body.keys.NewKey"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.keys.NewKey"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/keys/{name}/recover": {
+      "post": {
+        "description": "Recover a key from seed and persistent it to the key store",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS1: Key Management"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "description": "key name",
+            "name": "name",
+            "required": true,
+            "in": "path"
+          },
+          {
+            "description": "seed and password for a new key",
+            "name": "seedAndPwd",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/body.keys.RecoverKey"
+            }
+          }
+        ],
+        "summary": "Recover a key from seed",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.keys.KeyOutput"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/keys/{name}/sign": {
+      "post": {
+        "description": "Sign user specified byte array, tx byte array must be base64 encoding",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS1: Key Management"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "description": "key name",
+            "name": "name",
+            "required": true,
+            "in": "path"
+          },
+          {
+            "description": "seed and password for a new key",
+            "name": "txAndPwd",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/body.keys.Sign"
+            }
+          }
+        ],
+        "summary": "Sign user specified bytes array",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/keys/{name}": {
+      "get": {
+        "description": "Get key detailed information by its name",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS1: Key Management"
+        ],
+        "summary": "Get key information",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "key name",
+            "name": "name",
+            "required": true,
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.keys.KeyOutput"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "Update key password",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS1: Key Management"
+        ],
+        "summary": "Update key password",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "key name",
+            "name": "name",
+            "required": true,
+            "in": "path"
+          },
+          {
+            "description": "key name",
+            "name": "pwd",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/body.keys.UpdateKey"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete key by its name",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS1: Key Management"
+        ],
+        "summary": "Delete key by its name",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "key name",
+            "name": "name",
+            "required": true,
+            "in": "path"
+          },
+          {
+            "description": "password",
+            "name": "pwd",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/body.keys.DeleteKey"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/auth/accounts/{address}": {
+      "get": {
+        "tags": [
+          "ICS1: Key Management"
+        ],
+        "summary": "Query account information",
+        "description": "Get the detailed information for specific address",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "description": "address",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/response.auth.BaseAccount"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/txs": {
+      "post": {
+        "tags": [
+          "ICS0: Transaction"
+        ],
+        "summary": "Broadcast transaction",
+        "description": "Broadcast transaction in user specified broadcast type. The supported broadcast types are: block, sync and async. \nblock: return after the transaction is included in a block. \n sync: return after checkTx is finished. \n async: return immediately only with transaction hash",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "txBroadcast",
+            "description": "tx byte array and return type",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/body.tx.Broadcast"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/response.BroadcastTxCommitResult"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/stake/delegators/{delegatorAddr}": {
+      "get": {
+        "description": "Get all delegations (delegation, undelegation and redelegation) from a delegator",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS21: Staking"
+        ],
+        "summary": "Get all delegations from a delegator",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "name": "delegatorAddr",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.stake.DelegationSummary"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/stake/delegators/{delegatorAddr}/txs": {
+      "get": {
+        "description": "Get all staking txs (i.e msgs) from a delegator",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS21: Staking"
+        ],
+        "summary": "Get all staking txs from a delegator",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "name": "delegatorAddr",
+            "required": true,
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.stake.TxInfos"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/stake/delegators/{delegatorAddr}/validators": {
+      "get": {
+        "description": "Query all validators that a delegator is bonded to",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS21: Staking"
+        ],
+        "summary": "Query all validators that a delegator is bonded to",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "name": "delegatorAddr",
+            "required": true,
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.stake.BechValidators"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/stake/delegators/{delegatorAddr}/validators/{validatorAddr}": {
+      "get": {
+        "description": "Query a validator that a delegator is bonded to",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS21: Staking"
+        ],
+        "summary": "Query a validator that a delegator is bonded to",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "name": "delegatorAddr",
+            "required": true,
+            "in": "path"
+          },
+          {
+            "type": "string",
+            "description": "validator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "name": "validatorAddr",
+            "required": true,
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.stake.BechValidator"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/stake/delegators/{delegatorAddr}/delegations/{validatorAddr}": {
+      "get": {
+        "description": "Query a delegation between a delegator and a validator",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS21: Staking"
+        ],
+        "summary": "Query a delegation between a delegator and a validator",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "name": "delegatorAddr",
+            "required": true,
+            "in": "path"
+          },
+          {
+            "type": "string",
+            "description": "validator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "name": "validatorAddr",
+            "required": true,
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.stake.DelegationWithoutRat"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}": {
+      "get": {
+        "description": "Query all unbonding_delegations between a delegator and a validator",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS21: Staking"
+        ],
+        "summary": "Query all unbonding_delegations between a delegator and a validator",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "name": "delegatorAddr",
+            "required": true,
+            "in": "path"
+          },
+          {
+            "type": "string",
+            "description": "validator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "name": "validatorAddr",
+            "required": true,
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.stake.UnbondingDelegations"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/stake/validators": {
+      "get": {
+        "description": "Get all validators",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS21: Staking"
+        ],
+        "summary": "Get all validators",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.stake.BechValidators"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/stake/validators/{addr}": {
+      "get": {
+        "description": "Get a single validator info",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS21: Staking"
+        ],
+        "summary": "Get a single validator info",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "validator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "name": "addr",
+            "required": true,
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.stake.BechValidator"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/stake/pool": {
+      "get": {
+        "description": "Query the staking pool information",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS21: Staking"
+        ],
+        "summary": "Query the staking pool information",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.stake.Pool"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/stake/parameters": {
+      "get": {
+        "description": "Query the staking parameters values",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS21: Staking"
+        ],
+        "summary": "Query the staking parameters values",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.stake.Params"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/stake/delegators/{delegatorAddr}/delegations": {
+      "post": {
+        "description": "Send stake related transactions",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS21: Staking"
+        ],
+        "summary": "Send stake related transaction",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "name": "delegatorAddr",
+            "required": true,
+            "in": "path"
+          },
+          {
+            "description": "delegation parameters",
+            "name": "EditDelegationsBody",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/body.stake.EditDelegations"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.stake.TransactionResult"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/node_version": {
+      "get": {
+        "tags": [
+          "Version"
+        ],
+        "summary": "Get connected full node version",
+        "description": "Get connected full node version",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/version": {
+      "get": {
+        "tags": [
+          "Version"
+        ],
+        "summary": "Get Gaia-lite version",
+        "description": "Get Gaia-lite version",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "sdk.Coin": {
+      "type": "object",
+      "properties": {
+        "denom": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "string"
+        }
+      }
+    },
+    "sdk.Coins": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/sdk.Coin"
+      }
+    },
+    "common.KVPair": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer"
+        }
+      }
+    },
+    "common.KVPairs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/common.KVPair"
+      }
+    },
+    "common.KI64Pair": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer"
+        }
+      }
+    },
+    "response.CheckTxResult": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "string"
+        },
+        "gas_used": {
+          "type": "integer"
+        },
+        "gas_wanted": {
+          "type": "integer"
+        },
+        "info": {
+          "type": "string"
+        },
+        "log": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/common.KVPairs"
+          }
+        }
+      },
+      "example": {
+        "code": 0,
+        "data": "data",
+        "log": "log",
+        "gas_used": 6,
+        "gas_wanted": 1,
+        "info": "info",
+        "tags": [
+          "",
+          ""
+        ]
+      }
+    },
+    "response.DeliverTxResult": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "string"
+        },
+        "gas_used": {
+          "type": "integer"
+        },
+        "gas_wanted": {
+          "type": "integer"
+        },
+        "info": {
+          "type": "string"
+        },
+        "log": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/common.KVPairs"
+          }
+        }
+      },
+      "example": {
+        "code": 5,
+        "data": "data",
+        "log": "log",
+        "gas_used": 5,
+        "gas_wanted": 2,
+        "info": "info",
+        "tags": [
+          "",
+          ""
+        ]
+      }
+    },
+    "response.BroadcastTxCommitResult": {
+      "type": "object",
+      "properties": {
+        "check_tx": {
+          "$ref": "#/definitions/response.CheckTxResult"
+        },
+        "deliver_tx": {
+          "$ref": "#/definitions/response.DeliverTxResult"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "height": {
+          "type": "integer"
+        }
+      },
+      "example": {
+        "check_tx": {
+          "code": 0,
+          "data": "data",
+          "log": "log",
+          "gas_used": 6,
+          "gas_wanted": 1,
+          "info": "info",
+          "tags": [
+            "",
+            ""
+          ]
+        },
+        "deliver_tx": {
+          "code": 5,
+          "data": "data",
+          "log": "log",
+          "gas_used": 5,
+          "gas_wanted": 2,
+          "info": "info",
+          "tags": [
+            "",
+            ""
+          ]
+        },
+        "hash": "hash",
+        "height": 7
+      }
+    },
+    "response.httputil.HTTPError": {
+      "type": "object",
+      "properties": {
+        "rest api": {
+          "type": "string",
+          "example": "2.0"
+        },
+        "code": {
+          "type": "integer",
+          "example": 500
+        },
+        "error message": {
+          "type": "string"
+        }
+      }
+    },
+    "response.auth.BaseAccount": {
+      "type": "object",
+      "properties": {
+        "account_number": {
+          "type": "integer"
+        },
+        "address": {
+          "type": "string"
+        },
+        "coins": {
+          "$ref": "#/definitions/sdk.Coins"
+        },
+        "public_key": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "integer"
+        }
+      },
+      "example": {
+        "public_key": "public_key",
+        "account_number": 0,
+        "sequence": 6,
+        "address": "address",
+        "coins": ""
+      }
+    },
+    "body.bank.Transfer": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "amount": {
+          "$ref": "#/definitions/sdk.Coins"
+        },
+        "password": {
+          "type": "string"
+        },
+        "chain_id": {
+          "type": "string"
+        },
+        "account_number": {
+          "type": "string"
+        },
+        "gas": {
+          "type": "string"
+        },
+        "fee": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "string"
+        }
+      }
+    },
+    "body.tx.Broadcast": {
+      "type": "object",
+      "properties": {
+        "transaction": {
+          "type": "string"
+        },
+        "broadcast_type": {
+          "type": "string",
+          "example": "block"
+        }
+      }
+    },
+    "body.keys.DeleteKey": {
+      "type": "object",
+      "properties": {
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "response.keys.KeyOutput": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "pub_key": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "response.keys.KeyOutputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/definitions/response.keys.KeyOutput"
+      }
+    },
+    "response.keys.NewKey": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "pub_key": {
+          "type": "string"
+        },
+        "seed": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "body.keys.NewKey": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "seed": {
+          "type": "string"
+        }
+      }
+    },
+    "body.keys.RecoverKey": {
+      "type": "object",
+      "properties": {
+        "password": {
+          "type": "string"
+        },
+        "seed": {
+          "type": "string"
+        }
+      }
+    },
+    "body.keys.Sign": {
+      "type": "object",
+      "properties": {
+        "password": {
+          "type": "string"
+        },
+        "tx_bytes": {
+          "type": "string"
+        }
+      }
+    },
+    "body.keys.UpdateKey": {
+      "type": "object",
+      "properties": {
+        "new_password": {
+          "type": "string"
+        },
+        "old_password": {
+          "type": "string"
+        }
+      }
+    },
+    "body.stake.MsgDelegationsInput": {
+      "type": "object",
+      "properties": {
+        "delegator_addr": {
+          "type": "string"
+        },
+        "validator_addr": {
+          "type": "string"
+        },
+        "delegation": {
+          "type": "object",
+          "$ref": "#/definitions/sdk.Coin"
+        }
+      }
+    },
+    "body.stake.MsgBeginUnbondingInput": {
+      "type": "object",
+      "properties": {
+        "delegator_addr": {
+          "type": "string"
+        },
+        "validator_addr": {
+          "type": "string"
+        },
+        "shares": {
+          "type": "string"
+        }
+      }
+    },
+    "body.stake.MsgCompleteUnbondingInput": {
+      "type": "object",
+      "properties": {
+        "delegator_addr": {
+          "type": "string"
+        },
+        "validator_addr": {
+          "type": "string"
+        }
+      }
+    },
+    "body.stake.MsgBeginRedelegateInput": {
+      "type": "object",
+      "properties": {
+        "delegator_addr": {
+          "type": "string"
+        },
+        "validator_src_addr": {
+          "type": "string"
+        },
+        "validator_dst_addr": {
+          "type": "string"
+        },
+        "shares": {
+          "type": "string"
+        }
+      }
+    },
+    "body.stake.MsgCompleteRedelegateInput": {
+      "type": "object",
+      "properties": {
+        "delegator_addr": {
+          "type": "string"
+        },
+        "validator_src_addr": {
+          "type": "string"
+        },
+        "validator_dst_addr": {
+          "type": "string"
+        }
+      }
+    },
+    "body.stake.EditDelegations": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "chain_id": {
+          "type": "string"
+        },
+        "account_number": {
+          "type": "integer"
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "gas": {
+          "type": "integer"
+        },
+        "delegations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/body.stake.MsgDelegationsInput"
+          }
+        },
+        "begin_unbondings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/body.stake.MsgBeginUnbondingInput"
+          }
+        },
+        "complete_unbondings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/body.stake.MsgCompleteUnbondingInput"
+          }
+        },
+        "begin_redelegates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/body.stake.MsgBeginRedelegateInput"
+          }
+        },
+        "complete_redelegates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/body.stake.MsgCompleteRedelegateInput"
+          }
+        }
+      }
+    },
+    "response.stake.TransactionResult": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/definitions/response.BroadcastTxCommitResult"
+      }
+    },
+    "response.stake.UnbondingDelegation": {
+      "type": "object",
+      "properties": {
+        "delegator_addr": {
+          "type": "string"
+        },
+        "validator_addr": {
+          "type": "string"
+        },
+        "initial_balance": {
+          "type": "object",
+          "$ref": "#/definitions/sdk.Coin"
+        },
+        "balance": {
+          "type": "object",
+          "$ref": "#/definitions/sdk.Coin"
+        },
+        "creation_height": {
+          "type": "integer"
+        },
+        "min_time": {
+          "type": "integer"
+        }
+      }
+    },
+    "response.stake.UnbondingDelegations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/definitions/response.stake.UnbondingDelegation"
+      }
+    },
+    "response.stake.Redelegation": {
+      "type": "object",
+      "properties": {
+        "delegator_addr": {
+          "type": "string"
+        },
+        "validator_src_addr": {
+          "type": "string"
+        },
+        "validator_dst_addr": {
+          "type": "string"
+        },
+        "creation_height": {
+          "type": "integer"
+        },
+        "min_time": {
+          "type": "integer"
+        },
+        "initial_balance": {
+          "type": "object",
+          "$ref": "#/definitions/sdk.Coin"
+        },
+        "balance": {
+          "type": "object",
+          "$ref": "#/definitions/sdk.Coin"
+        },
+        "shares_src": {
+          "type": "string"
+        },
+        "shares_dst": {
+          "type": "string"
+        }
+      }
+    },
+    "response.stake.Redelegations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/definitions/response.stake.Redelegation"
+      }
+    },
+    "response.stake.Description": {
+      "type": "object",
+      "properties": {
+        "moniker": {
+          "type": "string"
+        },
+        "identity": {
+          "type": "string"
+        },
+        "website": {
+          "type": "string"
+        },
+        "details": {
+          "type": "string"
+        }
+      }
+    },
+    "response.stake.BechValidator": {
+      "type": "object",
+      "properties": {
+        "operator": {
+          "type": "string"
+        },
+        "pub_key": {
+          "type": "string"
+        },
+        "revoked": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "integer"
+        },
+        "tokens": {
+          "type": "string"
+        },
+        "delegator_shares": {
+          "type": "string"
+        },
+        "description": {
+          "type": "object",
+          "$ref": "#/definitions/response.stake.Description"
+        },
+        "bond_height": {
+          "type": "integer"
+        },
+        "bond_intra_tx_counter": {
+          "type": "integer"
+        },
+        "proposer_reward_pool": {
+          "type": "object",
+          "$ref": "#/definitions/sdk.Coins"
+        },
+        "commission": {
+          "type": "string"
+        },
+        "commission_max": {
+          "type": "string"
+        },
+        "commission_change_rate": {
+          "type": "string"
+        },
+        "commission_change_today": {
+          "type": "string"
+        },
+        "prev_bonded_shares": {
+          "type": "string"
+        }
+      }
+    },
+    "response.stake.BechValidators": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/definitions/response.stake.BechValidator"
+      }
+    },
+    "response.stake.DelegationWithoutRat": {
+      "type": "object",
+      "properties": {
+        "delegator_addr": {
+          "type": "string"
+        },
+        "validator_addr": {
+          "type": "string"
+        },
+        "shares": {
+          "type": "string"
+        },
+        "height": {
+          "type": "integer"
+        }
+      }
+    },
+    "response.stake.DelegationWithoutRats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/definitions/response.stake.DelegationWithoutRat"
+      }
+    },
+    "response.stake.DelegationSummary": {
+      "type": "object",
+      "properties": {
+        "redelegations": {
+          "type": "object",
+          "$ref": "#/definitions/response.stake.Redelegations"
+        },
+        "unbonding_delegations": {
+          "type": "object",
+          "$ref": "#/definitions/response.stake.UnbondingDelegations"
+        },
+        "delegations": {
+          "type": "object",
+          "$ref": "#/definitions/response.stake.DelegationWithoutRats"
+        }
+      }
+    },
+    "response.stake.TxInfo": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string"
+        },
+        "height": {
+          "type": "integer"
+        },
+        "tx": {
+          "type": "string"
+        },
+        "result": {
+          "type": "object",
+          "$ref": "#/definitions/response.DeliverTxResult"
+        }
+      }
+    },
+    "response.stake.TxInfos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/definitions/response.stake.TxInfo"
+      }
+    },
+    "response.stake.Pool": {
+      "type": "object",
+      "properties": {
+        "loose_tokens": {
+          "type": "string"
+        },
+        "bonded_tokens": {
+          "type": "integer"
+        },
+        "inflation_last_time": {
+          "type": "string"
+        },
+        "inflation": {
+          "type": "string"
+        },
+        "date_last_commission_reset": {
+          "type": "integer"
+        },
+        "prev_bonded_shares": {
+          "type": "string"
+        }
+      }
+    },
+    "response.stake.Params": {
+      "type": "object",
+      "properties": {
+        "inflation_rate_change": {
+          "type": "string"
+        },
+        "inflation_max": {
+          "type": "string"
+        },
+        "inflation_min": {
+          "type": "string"
+        },
+        "goal_bonded": {
+          "type": "string"
+        },
+        "unbonding_time": {
+          "type": "string"
+        },
+        "max_validators": {
+          "type": "integer"
+        },
+        "bond_denom": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

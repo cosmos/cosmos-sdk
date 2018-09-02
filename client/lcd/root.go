@@ -17,6 +17,7 @@ import (
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 	"github.com/gorilla/mux"
+	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -37,12 +38,20 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 		Short: "Start LCD (light-client daemon), a local REST server",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			listenAddr := viper.GetString(flagListenAddr)
-			handler := createHandler(cdc)
+			router := createHandler(cdc)
+
+			statikFS, err := fs.New()
+			if err != nil {
+				panic(err)
+			}
+			staticServer := http.FileServer(statikFS)
+			router.PathPrefix("/swaggerui/").Handler(http.StripPrefix("/swaggerui/", staticServer))
+
 			logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "rest-server")
 			maxOpen := viper.GetInt(flagMaxOpenConnections)
 
 			listener, err := tmserver.StartHTTPServer(
-				listenAddr, handler, logger,
+				listenAddr, router, logger,
 				tmserver.Config{MaxOpenConnections: maxOpen},
 			)
 			if err != nil {
@@ -71,7 +80,7 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func createHandler(cdc *wire.Codec) http.Handler {
+func createHandler(cdc *wire.Codec) *mux.Router {
 	r := mux.NewRouter()
 
 	kb, err := keys.GetKeyBase() //XXX

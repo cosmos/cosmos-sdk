@@ -67,6 +67,10 @@
   name = "github.com/zondax/ledger-goclient"
   revision = "4296ee5701e945f9b3a7dbe51f402e0b9be57259"
 
+[[constraint]]
+  name = "github.com/rakyll/statik"
+  version = "=v0.1.4"
+
 [prune]
   go-tests = true
   unused-packages = true

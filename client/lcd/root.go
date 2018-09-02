@@ -34,8 +34,8 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 	flagMaxOpenConnections := "max-open"
 
 	cmd := &cobra.Command{
-		Use:   "rest-server",
-		Short: "Start LCD (light-client daemon), a local REST server",
+		Use:   "lite-server",
+		Short: "Start Gaia-lite server daemon, a local REST server",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			listenAddr := viper.GetString(flagListenAddr)
 			router := createHandler(cdc)
@@ -58,7 +58,7 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			logger.Info("REST server started")
+			logger.Info("Gaia-lite server started")
 
 			// wait forever and cleanup
 			cmn.TrapSignal(func() {

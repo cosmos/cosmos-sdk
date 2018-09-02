@@ -11,8 +11,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	tmliteErr "github.com/tendermint/tendermint/lite/errors"
+	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 )
 
 //BlockCommand returns the verified block data for a given heights

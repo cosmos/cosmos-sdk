@@ -19,8 +19,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	tmliteErr "github.com/tendermint/tendermint/lite/errors"
+	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 )
 
 // QueryTxCmd implements the default command for a tx query.
@@ -131,13 +131,13 @@ func QueryTxRequestHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.Ha
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		hashHexStr := vars["hash"]
-		trustNode, err := strconv.ParseBool(r.FormValue("trust_node"))
-		// trustNode defaults to true
+		distrustNode, err := strconv.ParseBool(r.FormValue("distrust_node"))
+		// distrustNode defaults to true
 		if err != nil {
-			trustNode = true
+			distrustNode = true
 		}
 
-		output, err := queryTx(cdc, cliCtx, hashHexStr, trustNode)
+		output, err := queryTx(cdc, cliCtx, hashHexStr, distrustNode)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

@@ -13,10 +13,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/viper"
+	tmliteErr "github.com/tendermint/tendermint/lite/errors"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	tmTypes "github.com/tendermint/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
-	tmliteErr "github.com/tendermint/tendermint/lite/errors"
 )
 
 // TODO these next two functions feel kinda hacky based on their placement

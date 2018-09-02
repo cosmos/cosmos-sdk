@@ -15,9 +15,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	tmliteErr "github.com/tendermint/tendermint/lite/errors"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmliteErr "github.com/tendermint/tendermint/lite/errors"
 )
 
 const (

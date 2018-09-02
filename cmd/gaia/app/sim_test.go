@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"math/rand"
 	"os"
 	"testing"
@@ -118,7 +119,7 @@ func invariants(app *GaiaApp) []simulation.Invariant {
 }
 
 // Profile with:
-// /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$ -cpuprofile cpu.out
+// /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$ -SimulationCommit=true -cpuprofile cpu.out
 func BenchmarkFullGaiaSimulation(b *testing.B) {
 	// Setup Gaia application
 	var logger log.Logger
@@ -139,10 +140,15 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 		testAndRunTxs(app),
 		[]simulation.RandSetup{},
 		invariants(app), // these shouldn't get ran
-		210,
+		numBlocks,
 		blockSize,
 		commit,
 	)
+	if commit {
+		fmt.Println("GoLevelDB Stats")
+		fmt.Println(db.Stats()["leveldb.stats"])
+		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
+	}
 }
 
 func TestFullGaiaSimulation(t *testing.T) {
@@ -171,7 +177,9 @@ func TestFullGaiaSimulation(t *testing.T) {
 		blockSize,
 		commit,
 	)
-
+	if commit {
+		fmt.Println("Database Size", db.Stats()["database.size"])
+	}
 }
 
 // TODO: Make another test for the fuzzer itself, which just has noOp txs

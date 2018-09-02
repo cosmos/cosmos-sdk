@@ -21,7 +21,7 @@ func TestBeginBlocker(t *testing.T) {
 	require.True(t, got.IsOK())
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
-	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
+	require.Equal(t, ck.GetCoins(ctx, sdk.AccAddress(addr)), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
 	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, sdk.ValAddress(addr)).GetPower()))
 
 	val := abci.Validator{
@@ -40,7 +40,7 @@ func TestBeginBlocker(t *testing.T) {
 	}
 	BeginBlocker(ctx, req, keeper)
 
-	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ValAddress(pk.Address()))
+	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(pk.Address()))
 	require.True(t, found)
 	require.Equal(t, ctx.BlockHeight(), info.StartHeight)
 	require.Equal(t, int64(1), info.IndexOffset)
@@ -80,5 +80,5 @@ func TestBeginBlocker(t *testing.T) {
 	// validator should be jailed
 	validator, found := sk.GetValidatorByPubKey(ctx, pk)
 	require.True(t, found)
-	require.Equal(t, sdk.Unbonded, validator.GetStatus())
+	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 }

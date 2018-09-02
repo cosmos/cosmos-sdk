@@ -91,6 +91,7 @@ func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.
 	if !ok {
 		return nil
 	}
+
 	return bond
 }
 

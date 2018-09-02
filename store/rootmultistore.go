@@ -291,6 +291,18 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 	// trim the path and make the query
 	req.Path = subpath
 	res := queryable.Query(req)
+
+	if !req.Prove || !RequireProof(subpath) {
+		return res
+	}
+
+	commitInfo, errMsg := getCommitInfo(rs.db, res.Height)
+	if errMsg != nil {
+		return sdk.ErrInternal(errMsg.Error()).QueryResult()
+	}
+
+	res.Proof = buildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
+
 	return res
 }
 

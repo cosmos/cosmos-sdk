@@ -33,13 +33,13 @@ func QueryAccountRequestHandlerFn(
 
 		addr, err := sdk.AccAddressFromBech32(bech32addr)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusInternalServerError, err.Error())
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		res, err := cliCtx.QueryStore(auth.AddressStoreKey(addr), storeName)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusInternalServerError, fmt.Sprintf("couldn't query account. Error: %s", err.Error()))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("couldn't query account. Error: %s", err.Error()))
 			return
 		}
 
@@ -52,14 +52,14 @@ func QueryAccountRequestHandlerFn(
 		// decode the value
 		account, err := decoder(res)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusInternalServerError, fmt.Sprintf("couldn't parse query result. Result: %s. Error: %s", res, err.Error()))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("couldn't parse query result. Result: %s. Error: %s", res, err.Error()))
 			return
 		}
 
 		// print out whole account
 		output, err := cdc.MarshalJSON(account)
 		if err != nil {
-			utils.WriteErrorResponse(&w, http.StatusInternalServerError, fmt.Sprintf("couldn't marshall query result. Error: %s", err.Error()))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("couldn't marshall query result. Error: %s", err.Error()))
 			return
 		}
 

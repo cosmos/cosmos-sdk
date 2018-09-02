@@ -85,8 +85,8 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	keeper.Jail(ctx, keep.PKs[0])
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, sdk.Unbonded, validator.Status)               // ensure is unbonded
-	require.Equal(t, int64(500000), validator.Tokens.RoundInt64()) // ensure is unbonded
+	require.Equal(t, sdk.Unbonding, validator.Status)              // ensure is unbonding
+	require.Equal(t, int64(500000), validator.Tokens.RoundInt64()) // ensure tokens slashed
 
 	// the old power record should have been deleted as the power changed
 	require.False(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power))
@@ -191,6 +191,97 @@ func TestDuplicatesMsgCreateValidatorOnBehalfOf(t *testing.T) {
 	msgCreateValidatorOnBehalfOf.PubKey = keep.PKs[1]
 	got = handleMsgCreateValidator(ctx, msgCreateValidatorOnBehalfOf, keeper)
 	require.False(t, got.IsOK(), "%v", got)
+}
+
+func TestLegacyValidatorDelegations(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, int64(1000))
+	setInstantUnbondPeriod(keeper, ctx)
+
+	bondAmount := int64(10)
+	valAddr, valPubKey := sdk.ValAddress(keep.Addrs[0]), keep.PKs[0]
+	delAddr := keep.Addrs[1]
+
+	// create validator
+	msgCreateVal := newTestMsgCreateValidator(valAddr, valPubKey, bondAmount)
+	got := handleMsgCreateValidator(ctx, msgCreateVal, keeper)
+	require.True(t, got.IsOK(), "expected create validator msg to be ok, got %v", got)
+
+	// verify the validator exists and has the correct attributes
+	validator, found := keeper.GetValidator(ctx, valAddr)
+	require.True(t, found)
+	require.Equal(t, sdk.Bonded, validator.Status)
+	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt64())
+	require.Equal(t, bondAmount, validator.BondedTokens().RoundInt64())
+
+	// delegate tokens to the validator
+	msgDelegate := newTestMsgDelegate(delAddr, valAddr, bondAmount)
+	got = handleMsgDelegate(ctx, msgDelegate, keeper)
+	require.True(t, got.IsOK(), "expected delegation to be ok, got %v", got)
+
+	// verify validator bonded shares
+	validator, found = keeper.GetValidator(ctx, valAddr)
+	require.True(t, found)
+	require.Equal(t, bondAmount*2, validator.DelegatorShares.RoundInt64())
+	require.Equal(t, bondAmount*2, validator.BondedTokens().RoundInt64())
+
+	// unbond validator total self-delegations (which should jail the validator)
+	unbondShares := sdk.NewDec(10)
+	msgBeginUnbonding := NewMsgBeginUnbonding(sdk.AccAddress(valAddr), valAddr, unbondShares)
+	msgCompleteUnbonding := NewMsgCompleteUnbonding(sdk.AccAddress(valAddr), valAddr)
+
+	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
+	require.True(t, got.IsOK(), "expected begin unbonding validator msg to be ok, got %v", got)
+
+	got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbonding, keeper)
+	require.True(t, got.IsOK(), "expected complete unbonding validator msg to be ok, got %v", got)
+
+	// verify the validator record still exists, is jailed, and has correct tokens
+	validator, found = keeper.GetValidator(ctx, valAddr)
+	require.True(t, found)
+	require.True(t, validator.Jailed)
+	require.Equal(t, sdk.NewDec(10), validator.Tokens)
+
+	// verify delegation still exists
+	bond, found := keeper.GetDelegation(ctx, delAddr, valAddr)
+	require.True(t, found)
+	require.Equal(t, bondAmount, bond.Shares.RoundInt64())
+	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt64())
+
+	// verify a delegator cannot create a new delegation to the now jailed validator
+	msgDelegate = newTestMsgDelegate(delAddr, valAddr, bondAmount)
+	got = handleMsgDelegate(ctx, msgDelegate, keeper)
+	require.False(t, got.IsOK(), "expected delegation to not be ok, got %v", got)
+
+	// verify the validator can still self-delegate
+	msgSelfDelegate := newTestMsgDelegate(sdk.AccAddress(valAddr), valAddr, bondAmount)
+	got = handleMsgDelegate(ctx, msgSelfDelegate, keeper)
+	require.True(t, got.IsOK(), "expected delegation to not be ok, got %v", got)
+
+	// verify validator bonded shares
+	validator, found = keeper.GetValidator(ctx, valAddr)
+	require.True(t, found)
+	require.Equal(t, bondAmount*2, validator.DelegatorShares.RoundInt64())
+	require.Equal(t, bondAmount*2, validator.Tokens.RoundInt64())
+
+	// unjail the validator now that is has non-zero self-delegated shares
+	keeper.Unjail(ctx, valPubKey)
+
+	// verify the validator can now accept delegations
+	msgDelegate = newTestMsgDelegate(delAddr, valAddr, bondAmount)
+	got = handleMsgDelegate(ctx, msgDelegate, keeper)
+	require.True(t, got.IsOK(), "expected delegation to be ok, got %v", got)
+
+	// verify validator bonded shares
+	validator, found = keeper.GetValidator(ctx, valAddr)
+	require.True(t, found)
+	require.Equal(t, bondAmount*3, validator.DelegatorShares.RoundInt64())
+	require.Equal(t, bondAmount*3, validator.Tokens.RoundInt64())
+
+	// verify new delegation
+	bond, found = keeper.GetDelegation(ctx, delAddr, valAddr)
+	require.True(t, found)
+	require.Equal(t, bondAmount*2, bond.Shares.RoundInt64())
+	require.Equal(t, bondAmount*3, validator.DelegatorShares.RoundInt64())
 }
 
 func TestIncrementsMsgDelegate(t *testing.T) {

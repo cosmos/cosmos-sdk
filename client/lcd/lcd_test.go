@@ -313,6 +313,21 @@ func TestIBCTransfer(t *testing.T) {
 	// TODO: query ibc egress packet state
 }
 
+func TestCoinSendGenerateOnly(t *testing.T) {
+	name, password := "test", "1234567890"
+	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
+	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	defer cleanup()
+	// create TX
+	res, body, _ := doSendWithGas(t, port, seed, name, password, addr, 0, 0, "?generate_only=true")
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var msg auth.StdTx
+	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &msg))
+	require.Equal(t, len(msg.Msgs), 1)
+	require.Equal(t, msg.Msgs[0].Type(), "bank")
+	require.Equal(t, msg.Msgs[0].GetSigners(), []sdk.AccAddress{addr})
+}
+
 func TestTxs(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))

@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/tendermint/libs/cli"
+	"github.com/tendermint/tendermint/libs/log"
 	tmlite "github.com/tendermint/tendermint/lite"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -36,7 +37,7 @@ type CLIContext struct {
 	Async           bool
 	JSON            bool
 	PrintResponse   bool
-	Certifier       tmlite.Certifier
+	Verifier        tmlite.Verifier
 	DryRun          bool
 }
 
@@ -63,12 +64,12 @@ func NewCLIContext() CLIContext {
 		Async:           viper.GetBool(client.FlagAsync),
 		JSON:            viper.GetBool(client.FlagJson),
 		PrintResponse:   viper.GetBool(client.FlagPrintResponse),
-		Certifier:       createCertifier(),
+		Verifier:        createVerifier(),
 		DryRun:          viper.GetBool(client.FlagDryRun),
 	}
 }
 
-func createCertifier() tmlite.Certifier {
+func createVerifier() tmlite.Verifier {
 	trustNode := viper.GetBool(client.FlagTrustNode)
 	if trustNode {
 		return nil
@@ -91,11 +92,13 @@ func createCertifier() tmlite.Certifier {
 	if errMsg.Len() != 0 {
 		panic(fmt.Errorf("can't create certifier for distrust mode, empty values from these options: %s", errMsg.String()))
 	}
-	certifier, err := tmliteProxy.GetCertifier(chainID, home, nodeURI)
+	node := rpcclient.NewHTTP(nodeURI, "/websocket")
+	// TODO Utilize ctx.Logger correctly
+	verifier, err := tmliteProxy.NewVerifier(chainID, home, node, log.NewNopLogger())
 	if err != nil {
 		panic(err)
 	}
-	return certifier
+	return verifier
 }
 
 // WithCodec returns a copy of the context with an updated codec.
@@ -156,9 +159,9 @@ func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 	return ctx
 }
 
-// WithCertifier - return a copy of the context with an updated Certifier
-func (ctx CLIContext) WithCertifier(certifier tmlite.Certifier) CLIContext {
-	ctx.Certifier = certifier
+// WithVerifier - return a copy of the context with an updated Verifier
+func (ctx CLIContext) WithVerifier(verifier tmlite.Verifier) CLIContext {
+	ctx.Verifier = verifier
 	return ctx
 }
 

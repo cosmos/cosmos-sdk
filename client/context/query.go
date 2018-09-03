@@ -325,8 +325,8 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 // verifyProof perform response proof verification
 func (ctx CLIContext) verifyProof(path string, resp abci.ResponseQuery) error {
 
-	if ctx.Certifier == nil {
-		return fmt.Errorf("missing valid certifier to verify data from untrusted node")
+	if ctx.Verifier == nil {
+		return fmt.Errorf("missing valid verifier to verify data from untrusted node")
 	}
 
 	node, err := ctx.GetNode()
@@ -335,7 +335,7 @@ func (ctx CLIContext) verifyProof(path string, resp abci.ResponseQuery) error {
 	}
 
 	// AppHash for height H is in header H+1
-	commit, err := tmliteProxy.GetCertifiedCommit(resp.Height+1, node, ctx.Certifier)
+	commit, err := tmliteProxy.GetCertifiedCommit(resp.Height+1, node, ctx.Verifier)
 	if err != nil {
 		return err
 	}

@@ -1,24 +1,24 @@
 # Transactions
 
-## TxWithdrawDelegationRewards
+## TxWithdrawDelegationRewardsAll
 
 When a delegator wishes to withdraw their rewards it must send
-`TxWithdrawDelegationRewards`. Note that parts of this transaction logic are also
+`TxWithdrawDelegationRewardsAll`. Note that parts of this transaction logic are also
 triggered each with any change in individual delegations, such as an unbond,
 redelegation, or delegation of additional tokens to a specific validator.  
 
 ```golang
-type TxWithdrawDelegationRewards struct {
+type TxWithdrawDelegationRewardsAll struct {
     delegatorAddr sdk.AccAddress
     withdrawAddr  sdk.AccAddress // address to make the withdrawal to
 }
 
-func WithdrawDelegationRewards(delegatorAddr, withdrawAddr sdk.AccAddress) 
+func WithdrawDelegationRewardsAll(delegatorAddr, withdrawAddr sdk.AccAddress) 
     height = GetHeight()
-    withdraw = GetDelegatorAllWithdraws(delegatorAddr, height)
+    withdraw = GetDelegatorRewardsAll(delegatorAddr, height)
     AddCoins(withdrawAddr, withdraw.TruncateDecimal())
 
-func GetDelegatorAllWithdraws(delegatorAddr sdk.AccAddress, height int64) DecCoins
+func GetDelegatorRewardsAll(delegatorAddr sdk.AccAddress, height int64) DecCoins
     
     // get all distribution scenarios
     delegations = GetDelegations(delegatorAddr)
@@ -72,22 +72,22 @@ func WithdrawDelegationReward(delegatorAddr, validatorAddr, withdrawAddr sdk.Acc
 ```
 
 
-## TxWithdrawValidatorRewards
+## TxWithdrawValidatorRewardsAll
 
 When a validator wishes to withdraw their rewards it must send
-`TxWithdrawValidatorRewards`. Note that parts of this transaction logic are also
+`TxWithdrawValidatorRewardsAll`. Note that parts of this transaction logic are also
 triggered each with any change in individual delegations, such as an unbond,
 redelegation, or delegation of additional tokens to a specific validator. This
 transaction withdraws the validators commission fee, as well as any rewards
 earning on their self-delegation. 
 
 ```
-type TxWithdrawValidatorRewards struct {
+type TxWithdrawValidatorRewardsAll struct {
     operatorAddr sdk.AccAddress // validator address to withdraw from 
     withdrawAddr sdk.AccAddress // address to make the withdrawal to
 }
 
-func WithdrawValidatorRewards(operatorAddr, withdrawAddr sdk.AccAddress)
+func WithdrawValidatorRewardsAll(operatorAddr, withdrawAddr sdk.AccAddress)
 
     height = GetHeight()
     global = GetGlobal() 
@@ -96,7 +96,7 @@ func WithdrawValidatorRewards(operatorAddr, withdrawAddr sdk.AccAddress)
     validator = GetValidator(delegation.ValidatorAddr)
 
     // withdraw self-delegation
-    withdraw = GetDelegatorAllWithdraws(validator.OperatorAddr, height)
+    withdraw = GetDelegatorRewardsAll(validator.OperatorAddr, height)
 
     // withdrawal validator commission rewards
     global, commission = valInfo.WithdrawCommission(global, valInfo, height, pool.BondedTokens, 
@@ -117,10 +117,11 @@ block. The accum is always additive to the existing accum. This term is to be
 updated each time rewards are withdrawn from the system. 
 
 ``` 
-func (g Global) UpdateTotalValAccum(height int64, totalBondedTokens Dec) 
+func (g Global) UpdateTotalValAccum(height int64, totalBondedTokens Dec) Global
     blocks = height - g.TotalValAccumUpdateHeight
     g.TotalValAccum += totalDelShares * blocks
     g.TotalValAccumUpdateHeight = height
+    return g
 ```
 
 ### Update validator's accums
@@ -132,10 +133,11 @@ the existing accum. This term is to be updated each time a
 withdrawal is made from a validator. 
 
 ``` 
-func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares Dec) 
+func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares Dec) ValidatorDistInfo
     blocks = height - vi.TotalDelAccumUpdateHeight
     vi.TotalDelAccum += totalDelShares * blocks
     vi.TotalDelAccumUpdateHeight = height
+    return vi
 ```
 
 ### Global pool to validator pool
@@ -146,9 +148,10 @@ from the passive global pool to their own pool. It is at this point that the
 commission is withdrawn
 
 ``` 
-func (vi ValidatorDistInfo) TakeAccum(g Global, height int64, totalBonded, vdTokens, commissionRate Dec) g Global
+func (vi ValidatorDistInfo) TakeAccum(g Global, height int64, totalBonded, vdTokens, commissionRate Dec) (
+                                vi ValidatorDistInfo, g Global)
+
     g.UpdateTotalValAccum(height, totalBondedShares)
-    g.UpdateValAccum(height, totalBondedShares)
     
     // update the validators pool
     blocks = height - vi.GlobalWithdrawalHeight
@@ -162,7 +165,7 @@ func (vi ValidatorDistInfo) TakeAccum(g Global, height int64, totalBonded, vdTok
     vi.PoolCommissionFree += withdrawalTokens - commission
     g.Pool -= withdrawalTokens
 
-    return g
+    return vi, g
 ```
 
 
@@ -173,7 +176,8 @@ pool have already had the validator's commission taken away.
 
 ```
 func (di DelegatorDistInfo) WithdrawRewards(g Global, vi ValidatorDistInfo,
-    height int64, totalBonded, vdTokens, totalDelShares, commissionRate Dec) (g Global, withdrawn DecCoins)
+    height int64, totalBonded, vdTokens, totalDelShares, commissionRate Dec) (
+    di DelegatorDistInfo, g Global, withdrawn DecCoins)
 
     vi.UpdateTotalDelAccum(height, totalDelShares) 
     g = vi.TakeAccum(g, height, totalBonded, vdTokens, commissionRate) 
@@ -187,7 +191,7 @@ func (di DelegatorDistInfo) WithdrawRewards(g Global, vi ValidatorDistInfo,
 
     vi.Pool -= withdrawalTokens
     vi.TotalDelAccum -= accum
-    return g, withdrawalTokens
+    return di, g, withdrawalTokens
 
 ```
 
@@ -197,12 +201,13 @@ Commission is calculated each time rewards enter into the validator.
 
 ```
 func (vi ValidatorDistInfo) WithdrawCommission(g Global, height int64, 
-          totalBonded, vdTokens, commissionRate Dec) (g Global, withdrawn DecCoins)
+          totalBonded, vdTokens, commissionRate Dec) (
+          vi ValidatorDistInfo, g Global, withdrawn DecCoins)
 
     g = vi.TakeAccum(g, height, totalBonded, vdTokens, commissionRate) 
     
     withdrawalTokens := vi.PoolCommission 
     vi.PoolCommission = 0
 
-    return g, withdrawalTokens
+    return vi, g, withdrawalTokens
 ```

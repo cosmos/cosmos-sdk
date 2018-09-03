@@ -9,7 +9,7 @@ Due to the rest handlers and related data structures are distributed in many sub
     go get github.com/rakyll/statik
     ```
 2. Edit API docs
-    1. Directly Edit API docs manually: `client/lcd/swaggerui/swagger.jso`
+    1. Directly Edit API docs manually: `client/lcd/swaggerui/swagger.json`
     2. Edit API docs within this [SwaggerHub](https://app.swaggerhub.com). Please refer to this [link](https://app.swaggerhub.com/help/index) for how to use the about website to edit API docs.
 3. Download `swagger.json` and replace the old `swagger.json` under `client/lcd/swaggerui` folds
 4. Regenerate `client/lcd/statik/statik.go` file

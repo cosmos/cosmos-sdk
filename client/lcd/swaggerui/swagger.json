@@ -38,7 +38,7 @@
             "description": "tx byte array and return type",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/body.tx.Broadcast"
+              "$ref": "#/definitions/tx.Broadcast"
             }
           }
         ],
@@ -46,25 +46,25 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/response.BroadcastTxCommitResult"
+              "$ref": "#/responses/BroadcastTxCommitResult"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -89,28 +89,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.keys.KeyOutputs"
+              "$ref": "#/responses/keys.KeyOutputs"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -135,7 +135,7 @@
             "required": true,
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/body.keys.NewKey"
+              "$ref": "#/definitions/keys.NewKey"
             }
           }
         ],
@@ -144,28 +144,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.keys.NewKey"
+              "$ref": "#/responses/keys.NewKey"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -198,7 +198,7 @@
             "required": true,
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/body.keys.RecoverKey"
+              "$ref": "#/definitions/keys.RecoverKey"
             }
           }
         ],
@@ -208,28 +208,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.keys.KeyOutput"
+              "$ref": "#/responses/keys.KeyOutput"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -262,7 +262,7 @@
             "required": true,
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/body.keys.Sign"
+              "$ref": "#/definitions/keys.Sign"
             }
           }
         ],
@@ -278,21 +278,21 @@
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -325,28 +325,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.keys.KeyOutput"
+              "$ref": "#/responses/keys.KeyOutput"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -377,7 +377,7 @@
             "in": "body",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/body.keys.UpdateKey"
+              "$ref": "#/definitions/keys.UpdateKey"
             }
           }
         ],
@@ -392,21 +392,21 @@
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -437,7 +437,7 @@
             "in": "body",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/body.keys.DeleteKey"
+              "$ref": "#/definitions/keys.DeleteKey"
             }
           }
         ],
@@ -452,21 +452,21 @@
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -498,25 +498,25 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/response.auth.BaseAccount"
+              "$ref": "#/responses/auth.BaseAccount"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -554,19 +554,19 @@
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -599,7 +599,7 @@
             "description": "transfer asset",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/body.bank.Transfer"
+              "$ref": "#/definitions/bank.Transfer"
             }
           }
         ],
@@ -607,25 +607,25 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/response.BroadcastTxCommitResult"
+              "$ref": "#/responses/BroadcastTxCommitResult"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -658,28 +658,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.stake.DelegationSummary"
+              "$ref": "#/responses/stake.DelegationSummary"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -712,28 +712,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.stake.TxInfos"
+              "$ref": "#/responses/stake.TxInfos"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -766,28 +766,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.stake.BechValidators"
+              "$ref": "#/responses/stake.BechValidators"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -827,28 +827,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.stake.BechValidator"
+              "$ref": "#/responses/stake.BechValidator"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -888,28 +888,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.stake.DelegationWithoutRat"
+              "$ref": "#/responses/stake.DelegationWithoutRat"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -949,28 +949,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.stake.UnbondingDelegations"
+              "$ref": "#/responses/stake.UnbondingDelegations"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -994,28 +994,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.stake.BechValidators"
+              "$ref": "#/responses/stake.BechValidators"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -1048,28 +1048,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.stake.BechValidator"
+              "$ref": "#/responses/stake.BechValidator"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -1093,28 +1093,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.stake.Pool"
+              "$ref": "#/responses/stake.Pool"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -1138,28 +1138,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.stake.Params"
+              "$ref": "#/responses/stake.Params"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -1193,7 +1193,7 @@
             "required": true,
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/body.stake.EditDelegations"
+              "$ref": "#/definitions/stake.EditDelegations"
             }
           }
         ],
@@ -1202,28 +1202,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.stake.TransactionResult"
+              "$ref": "#/responses/stake.TransactionResult"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -1250,7 +1250,7 @@
             "required": true,
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/body.gov.PostProposalReq"
+              "$ref": "#/definitions/gov.PostProposalReq"
             }
           }
         ],
@@ -1259,28 +1259,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.BroadcastTxCommitResult"
+              "$ref": "#/responses/BroadcastTxCommitResult"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -1302,28 +1302,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.gov.TextProposals"
+              "$ref": "#/responses/gov.TextProposals"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -1357,7 +1357,7 @@
             "required": true,
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/body.gov.DepositReq"
+              "$ref": "#/definitions/gov.DepositReq"
             }
           }
         ],
@@ -1366,28 +1366,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.BroadcastTxCommitResult"
+              "$ref": "#/responses/BroadcastTxCommitResult"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -1421,7 +1421,7 @@
             "required": true,
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/body.gov.VoteReq"
+              "$ref": "#/definitions/gov.VoteReq"
             }
           }
         ],
@@ -1430,28 +1430,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.BroadcastTxCommitResult"
+              "$ref": "#/responses/BroadcastTxCommitResult"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -1482,28 +1482,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.gov.Votes"
+              "$ref": "#/responses/gov.Votes"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -1536,28 +1536,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.gov.TextProposal"
+              "$ref": "#/responses/gov.TextProposal"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -1597,28 +1597,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.gov.Deposit"
+              "$ref": "#/responses/gov.Deposit"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -1658,28 +1658,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.gov.Vote"
+              "$ref": "#/responses/gov.Vote"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -1706,7 +1706,7 @@
             "required": true,
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/body.slahing.UnjailBody"
+              "$ref": "#/definitions/slahing.UnjailBody"
             }
           }
         ],
@@ -1715,28 +1715,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.BroadcastTxCommitResult"
+              "$ref": "#/responses/BroadcastTxCommitResult"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -1769,28 +1769,28 @@
             "description": "OK",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.slahing.ValidatorSigningInfo"
+              "$ref": "#/responses/slahing.ValidatorSigningInfo"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
               "type": "object",
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -1820,19 +1820,19 @@
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -1862,19 +1862,19 @@
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
+              "$ref": "#/responses/httputil.HTTPError"
             }
           }
         }
@@ -1899,6 +1899,312 @@
         "$ref": "#/definitions/sdk.Coin"
       }
     },
+    "bank.Transfer": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "amount": {
+          "$ref": "#/definitions/sdk.Coins"
+        },
+        "password": {
+          "type": "string"
+        },
+        "chain_id": {
+          "type": "string"
+        },
+        "account_number": {
+          "type": "string"
+        },
+        "gas": {
+          "type": "string"
+        },
+        "fee": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "string"
+        }
+      }
+    },
+    "tx.Broadcast": {
+      "type": "object",
+      "properties": {
+        "transaction": {
+          "type": "string"
+        },
+        "return": {
+          "type": "string"
+        }
+      }
+    },
+    "keys.DeleteKey": {
+      "type": "object",
+      "properties": {
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "keys.NewKey": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "seed": {
+          "type": "string"
+        }
+      }
+    },
+    "keys.RecoverKey": {
+      "type": "object",
+      "properties": {
+        "password": {
+          "type": "string"
+        },
+        "seed": {
+          "type": "string"
+        }
+      }
+    },
+    "keys.Sign": {
+      "type": "object",
+      "properties": {
+        "password": {
+          "type": "string"
+        },
+        "tx_bytes": {
+          "type": "string"
+        }
+      }
+    },
+    "keys.UpdateKey": {
+      "type": "object",
+      "properties": {
+        "new_password": {
+          "type": "string"
+        },
+        "old_password": {
+          "type": "string"
+        }
+      }
+    },
+    "stake.MsgDelegationsInput": {
+      "type": "object",
+      "properties": {
+        "delegator_addr": {
+          "type": "string"
+        },
+        "validator_addr": {
+          "type": "string"
+        },
+        "delegation": {
+          "type": "object",
+          "$ref": "#/definitions/sdk.Coin"
+        }
+      }
+    },
+    "stake.MsgBeginUnbondingInput": {
+      "type": "object",
+      "properties": {
+        "delegator_addr": {
+          "type": "string"
+        },
+        "validator_addr": {
+          "type": "string"
+        },
+        "shares": {
+          "type": "string"
+        }
+      }
+    },
+    "stake.MsgCompleteUnbondingInput": {
+      "type": "object",
+      "properties": {
+        "delegator_addr": {
+          "type": "string"
+        },
+        "validator_addr": {
+          "type": "string"
+        }
+      }
+    },
+    "stake.MsgBeginRedelegateInput": {
+      "type": "object",
+      "properties": {
+        "delegator_addr": {
+          "type": "string"
+        },
+        "validator_src_addr": {
+          "type": "string"
+        },
+        "validator_dst_addr": {
+          "type": "string"
+        },
+        "shares": {
+          "type": "string"
+        }
+      }
+    },
+    "stake.MsgCompleteRedelegateInput": {
+      "type": "object",
+      "properties": {
+        "delegator_addr": {
+          "type": "string"
+        },
+        "validator_src_addr": {
+          "type": "string"
+        },
+        "validator_dst_addr": {
+          "type": "string"
+        }
+      }
+    },
+    "stake.EditDelegations": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "chain_id": {
+          "type": "string"
+        },
+        "account_number": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "string"
+        },
+        "gas": {
+          "type": "string"
+        },
+        "delegations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/stake.MsgDelegationsInput"
+          }
+        },
+        "begin_unbondings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/stake.MsgBeginUnbondingInput"
+          }
+        },
+        "complete_unbondings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/stake.MsgCompleteUnbondingInput"
+          }
+        },
+        "begin_redelegates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/stake.MsgBeginRedelegateInput"
+          }
+        },
+        "complete_redelegates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/stake.MsgCompleteRedelegateInput"
+          }
+        }
+      }
+    },
+    "gov.PostProposalReq": {
+      "type": "object",
+      "properties": {
+        "base_req": {
+          "$ref": "#/definitions/common.BaseRequest"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "proposal_type": {
+          "type": "string"
+        },
+        "proposer": {
+          "type": "string"
+        },
+        "initial_deposit": {
+          "$ref": "#/definitions/sdk.Coins"
+        }
+      }
+    },
+    "gov.DepositReq": {
+      "type": "object",
+      "properties": {
+        "base_req": {
+          "$ref": "#/definitions/common.BaseRequest"
+        },
+        "depositer": {
+          "type": "string"
+        },
+        "amount": {
+          "$ref": "#/definitions/sdk.Coins"
+        }
+      }
+    },
+    "gov.VoteReq": {
+      "type": "object",
+      "properties": {
+        "base_req": {
+          "$ref": "#/definitions/common.BaseRequest"
+        },
+        "voter": {
+          "type": "string"
+        },
+        "option": {
+          "type": "string"
+        }
+      }
+    },
+    "slahing.UnjailBody": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "chain_id": {
+          "type": "string"
+        },
+        "account_number": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "string"
+        },
+        "gas": {
+          "type": "string"
+        },
+        "gas_adjustment": {
+          "type": "string"
+        },
+        "validator_addr": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "responses": {
     "common.KVPair": {
       "type": "object",
       "properties": {
@@ -1913,7 +2219,7 @@
     "common.KVPairs": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/common.KVPair"
+        "$ref": "#/responses/common.KVPair"
       }
     },
     "common.KI64Pair": {
@@ -1947,7 +2253,7 @@
         }
       }
     },
-    "response.CheckTxResult": {
+    "CheckTxResult": {
       "type": "object",
       "properties": {
         "code": {
@@ -1971,7 +2277,7 @@
         "tags": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/common.KVPairs"
+            "$ref": "#/responses/common.KVPairs"
           }
         }
       },
@@ -1988,7 +2294,7 @@
         ]
       }
     },
-    "response.DeliverTxResult": {
+    "DeliverTxResult": {
       "type": "object",
       "properties": {
         "code": {
@@ -2012,7 +2318,7 @@
         "tags": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/common.KVPairs"
+            "$ref": "#/responses/common.KVPairs"
           }
         }
       },
@@ -2029,14 +2335,14 @@
         ]
       }
     },
-    "response.BroadcastTxCommitResult": {
+    "BroadcastTxCommitResult": {
       "type": "object",
       "properties": {
         "check_tx": {
-          "$ref": "#/definitions/response.CheckTxResult"
+          "$ref": "#/responses/CheckTxResult"
         },
         "deliver_tx": {
-          "$ref": "#/definitions/response.DeliverTxResult"
+          "$ref": "#/responses/DeliverTxResult"
         },
         "hash": {
           "type": "string"
@@ -2074,7 +2380,7 @@
         "height": 7
       }
     },
-    "response.httputil.HTTPError": {
+    "httputil.HTTPError": {
       "type": "object",
       "properties": {
         "rest api": {
@@ -2090,7 +2396,7 @@
         }
       }
     },
-    "response.auth.BaseAccount": {
+    "auth.BaseAccount": {
       "type": "object",
       "properties": {
         "account_number": {
@@ -2117,55 +2423,7 @@
         "coins": ""
       }
     },
-    "body.bank.Transfer": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "amount": {
-          "$ref": "#/definitions/sdk.Coins"
-        },
-        "password": {
-          "type": "string"
-        },
-        "chain_id": {
-          "type": "string"
-        },
-        "account_number": {
-          "type": "string"
-        },
-        "gas": {
-          "type": "string"
-        },
-        "fee": {
-          "type": "string"
-        },
-        "sequence": {
-          "type": "string"
-        }
-      }
-    },
-    "body.tx.Broadcast": {
-      "type": "object",
-      "properties": {
-        "transaction": {
-          "type": "string"
-        },
-        "return": {
-          "type": "string"
-        }
-      }
-    },
-    "body.keys.DeleteKey": {
-      "type": "object",
-      "properties": {
-        "password": {
-          "type": "string"
-        }
-      }
-    },
-    "response.keys.KeyOutput": {
+    "keys.KeyOutput": {
       "type": "object",
       "properties": {
         "address": {
@@ -2182,14 +2440,14 @@
         }
       }
     },
-    "response.keys.KeyOutputs": {
+    "keys.KeyOutputs": {
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "#/definitions/response.keys.KeyOutput"
+        "$ref": "#/responses/keys.KeyOutput"
       }
     },
-    "response.keys.NewKey": {
+    "keys.NewKey": {
       "type": "object",
       "properties": {
         "name": {
@@ -2209,190 +2467,14 @@
         }
       }
     },
-    "body.keys.NewKey": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        },
-        "seed": {
-          "type": "string"
-        }
-      }
-    },
-    "body.keys.RecoverKey": {
-      "type": "object",
-      "properties": {
-        "password": {
-          "type": "string"
-        },
-        "seed": {
-          "type": "string"
-        }
-      }
-    },
-    "body.keys.Sign": {
-      "type": "object",
-      "properties": {
-        "password": {
-          "type": "string"
-        },
-        "tx_bytes": {
-          "type": "string"
-        }
-      }
-    },
-    "body.keys.UpdateKey": {
-      "type": "object",
-      "properties": {
-        "new_password": {
-          "type": "string"
-        },
-        "old_password": {
-          "type": "string"
-        }
-      }
-    },
-    "body.stake.MsgDelegationsInput": {
-      "type": "object",
-      "properties": {
-        "delegator_addr": {
-          "type": "string"
-        },
-        "validator_addr": {
-          "type": "string"
-        },
-        "delegation": {
-          "type": "object",
-          "$ref": "#/definitions/sdk.Coin"
-        }
-      }
-    },
-    "body.stake.MsgBeginUnbondingInput": {
-      "type": "object",
-      "properties": {
-        "delegator_addr": {
-          "type": "string"
-        },
-        "validator_addr": {
-          "type": "string"
-        },
-        "shares": {
-          "type": "string"
-        }
-      }
-    },
-    "body.stake.MsgCompleteUnbondingInput": {
-      "type": "object",
-      "properties": {
-        "delegator_addr": {
-          "type": "string"
-        },
-        "validator_addr": {
-          "type": "string"
-        }
-      }
-    },
-    "body.stake.MsgBeginRedelegateInput": {
-      "type": "object",
-      "properties": {
-        "delegator_addr": {
-          "type": "string"
-        },
-        "validator_src_addr": {
-          "type": "string"
-        },
-        "validator_dst_addr": {
-          "type": "string"
-        },
-        "shares": {
-          "type": "string"
-        }
-      }
-    },
-    "body.stake.MsgCompleteRedelegateInput": {
-      "type": "object",
-      "properties": {
-        "delegator_addr": {
-          "type": "string"
-        },
-        "validator_src_addr": {
-          "type": "string"
-        },
-        "validator_dst_addr": {
-          "type": "string"
-        }
-      }
-    },
-    "body.stake.EditDelegations": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        },
-        "chain_id": {
-          "type": "string"
-        },
-        "account_number": {
-          "type": "string"
-        },
-        "sequence": {
-          "type": "string"
-        },
-        "gas": {
-          "type": "string"
-        },
-        "delegations": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/body.stake.MsgDelegationsInput"
-          }
-        },
-        "begin_unbondings": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/body.stake.MsgBeginUnbondingInput"
-          }
-        },
-        "complete_unbondings": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/body.stake.MsgCompleteUnbondingInput"
-          }
-        },
-        "begin_redelegates": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/body.stake.MsgBeginRedelegateInput"
-          }
-        },
-        "complete_redelegates": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/body.stake.MsgCompleteRedelegateInput"
-          }
-        }
-      }
-    },
-    "response.stake.TransactionResult": {
+    "stake.TransactionResult": {
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "#/definitions/response.BroadcastTxCommitResult"
+        "$ref": "#/responses/BroadcastTxCommitResult"
       }
     },
-    "response.stake.UnbondingDelegation": {
+    "stake.UnbondingDelegation": {
       "type": "object",
       "properties": {
         "delegator_addr": {
@@ -2417,14 +2499,14 @@
         }
       }
     },
-    "response.stake.UnbondingDelegations": {
+    "stake.UnbondingDelegations": {
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "#/definitions/response.stake.UnbondingDelegation"
+        "$ref": "#/responses/stake.UnbondingDelegation"
       }
     },
-    "response.stake.Redelegation": {
+    "stake.Redelegation": {
       "type": "object",
       "properties": {
         "delegator_addr": {
@@ -2458,14 +2540,14 @@
         }
       }
     },
-    "response.stake.Redelegations": {
+    "stake.Redelegations": {
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "#/definitions/response.stake.Redelegation"
+        "$ref": "#/responses/stake.Redelegation"
       }
     },
-    "response.stake.Description": {
+    "stake.Description": {
       "type": "object",
       "properties": {
         "moniker": {
@@ -2482,7 +2564,7 @@
         }
       }
     },
-    "response.stake.BechValidator": {
+    "stake.BechValidator": {
       "type": "object",
       "properties": {
         "operator": {
@@ -2505,7 +2587,7 @@
         },
         "description": {
           "type": "object",
-          "$ref": "#/definitions/response.stake.Description"
+          "$ref": "#/responses/stake.Description"
         },
         "bond_height": {
           "type": "integer"
@@ -2534,14 +2616,14 @@
         }
       }
     },
-    "response.stake.BechValidators": {
+    "stake.BechValidators": {
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "#/definitions/response.stake.BechValidator"
+        "$ref": "#/responses/stake.BechValidator"
       }
     },
-    "response.stake.DelegationWithoutRat": {
+    "stake.DelegationWithoutRat": {
       "type": "object",
       "properties": {
         "delegator_addr": {
@@ -2558,31 +2640,31 @@
         }
       }
     },
-    "response.stake.DelegationWithoutRats": {
+    "stake.DelegationWithoutRats": {
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "#/definitions/response.stake.DelegationWithoutRat"
+        "$ref": "#/responses/stake.DelegationWithoutRat"
       }
     },
-    "response.stake.DelegationSummary": {
+    "stake.DelegationSummary": {
       "type": "object",
       "properties": {
         "redelegations": {
           "type": "object",
-          "$ref": "#/definitions/response.stake.Redelegations"
+          "$ref": "#/responses/stake.Redelegations"
         },
         "unbonding_delegations": {
           "type": "object",
-          "$ref": "#/definitions/response.stake.UnbondingDelegations"
+          "$ref": "#/responses/stake.UnbondingDelegations"
         },
         "delegations": {
           "type": "object",
-          "$ref": "#/definitions/response.stake.DelegationWithoutRats"
+          "$ref": "#/responses/stake.DelegationWithoutRats"
         }
       }
     },
-    "response.stake.TxInfo": {
+    "stake.TxInfo": {
       "type": "object",
       "properties": {
         "hash": {
@@ -2596,18 +2678,18 @@
         },
         "result": {
           "type": "object",
-          "$ref": "#/definitions/response.DeliverTxResult"
+          "$ref": "#/responses/DeliverTxResult"
         }
       }
     },
-    "response.stake.TxInfos": {
+    "stake.TxInfos": {
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "#/definitions/response.stake.TxInfo"
+        "$ref": "#/responses/stake.TxInfo"
       }
     },
-    "response.stake.Pool": {
+    "stake.Pool": {
       "type": "object",
       "properties": {
         "loose_tokens": {
@@ -2630,7 +2712,7 @@
         }
       }
     },
-    "response.stake.Params": {
+    "stake.Params": {
       "type": "object",
       "properties": {
         "inflation_rate_change": {
@@ -2656,44 +2738,7 @@
         }
       }
     },
-    "body.gov.PostProposalReq": {
-      "type": "object",
-      "properties": {
-        "base_req": {
-          "$ref": "#/definitions/common.BaseRequest"
-        },
-        "title": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "proposal_type": {
-          "type": "string"
-        },
-        "proposer": {
-          "type": "string"
-        },
-        "initial_deposit": {
-          "$ref": "#/definitions/sdk.Coins"
-        }
-      }
-    },
-    "body.gov.DepositReq": {
-      "type": "object",
-      "properties": {
-        "base_req": {
-          "$ref": "#/definitions/common.BaseRequest"
-        },
-        "depositer": {
-          "type": "string"
-        },
-        "amount": {
-          "$ref": "#/definitions/sdk.Coins"
-        }
-      }
-    },
-    "body.gov.VoteReq": {
+    "gov.TextProposal": {
       "type": "object",
       "properties": {
         "base_req": {
@@ -2707,21 +2752,7 @@
         }
       }
     },
-    "response.gov.TextProposal": {
-      "type": "object",
-      "properties": {
-        "base_req": {
-          "$ref": "#/definitions/common.BaseRequest"
-        },
-        "voter": {
-          "type": "string"
-        },
-        "option": {
-          "type": "string"
-        }
-      }
-    },
-    "response.gov.Deposit": {
+    "gov.Deposit": {
       "type": "object",
       "properties": {
         "amount": {
@@ -2735,7 +2766,7 @@
         }
       }
     },
-    "response.gov.Vote": {
+    "gov.Vote": {
       "type": "object",
       "properties": {
         "voter": {
@@ -2749,19 +2780,19 @@
         }
       }
     },
-    "response.gov.Votes": {
+    "gov.Votes": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/response.gov.Vote"
+        "$ref": "#/responses/gov.Vote"
       }
     },
-    "response.gov.TextProposals": {
+    "gov.TextProposals": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/response.gov.TextProposal"
+        "$ref": "#/responses/gov.TextProposal"
       }
     },
-    "response.slahing.ValidatorSigningInfo": {
+    "slahing.ValidatorSigningInfo": {
       "type": "object",
       "properties": {
         "start_height": {
@@ -2774,35 +2805,6 @@
           "type": "integer"
         },
         "jailed_until": {
-          "type": "string"
-        }
-      }
-    },
-    "body.slahing.UnjailBody": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        },
-        "chain_id": {
-          "type": "string"
-        },
-        "account_number": {
-          "type": "string"
-        },
-        "sequence": {
-          "type": "string"
-        },
-        "gas": {
-          "type": "string"
-        },
-        "gas_adjustment": {
-          "type": "string"
-        },
-        "validator_addr": {
           "type": "string"
         }
       }

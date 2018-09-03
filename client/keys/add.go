@@ -164,12 +164,12 @@ type NewKeyBody struct {
 	Seed     string `json:"seed"`
 }
 
-func paramCheck(m NewKeyBody, kb keys.Keybase) (int, string) {
-	if m.Name == "" {
-		return http.StatusBadRequest, fmt.Sprintf("You have to specify a name for the locally stored account.")
+func paramCheck(name, password string, kb keys.Keybase) (int, string) {
+	if name == "" {
+		return http.StatusBadRequest, "You have to specify a name for the locally stored account."
 	}
-	if m.Password == "" {
-		return http.StatusBadRequest, fmt.Sprintf("You have to specify a password for the locally stored account.")
+	if password == "" {
+		return http.StatusBadRequest, "You have to specify a password for the locally stored account."
 	}
 
 	// check if already exists
@@ -178,8 +178,8 @@ func paramCheck(m NewKeyBody, kb keys.Keybase) (int, string) {
 		return http.StatusInternalServerError, err.Error()
 	}
 	for _, i := range infos {
-		if i.GetName() == m.Name {
-			return http.StatusConflict, fmt.Sprintf("Account with name %s already exists.", m.Name)
+		if i.GetName() == name {
+			return http.StatusConflict, fmt.Sprintf("Account with name %s already exists.", name)
 		}
 	}
 	return http.StatusOK, ""
@@ -211,7 +211,7 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	code, errMsg := paramCheck(m, kb)
+	code, errMsg := paramCheck(m.Name, m.Password, kb)
 	if code != http.StatusOK {
 		w.WriteHeader(code)
 		w.Write([]byte(errMsg))
@@ -301,6 +301,13 @@ func RecoverKeyResuestHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
+		return
+	}
+
+	code, errMsg := paramCheck(name, m.Password, kb)
+	if code != http.StatusOK {
+		w.WriteHeader(code)
+		w.Write([]byte(errMsg))
 		return
 	}
 

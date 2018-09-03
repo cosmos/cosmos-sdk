@@ -30,7 +30,7 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *wire
 			return
 		}
 
-		key := slashing.GetValidatorSigningInfoKey(sdk.ValAddress(pk.Address()))
+		key := slashing.GetValidatorSigningInfoKey(sdk.ConsAddress(pk.Address()))
 
 		res, err := cliCtx.QueryStore(key, storeName)
 		if err != nil {

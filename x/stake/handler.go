@@ -1,6 +1,7 @@
 package stake
 
 import (
+	"bytes"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -128,17 +129,19 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 }
 
 func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) sdk.Result {
-
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if !found {
 		return ErrNoValidatorFound(k.Codespace()).Result()
 	}
+
 	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
-	if validator.Jailed {
+
+	if validator.Jailed && !bytes.Equal(validator.Operator, msg.DelegatorAddr) {
 		return ErrValidatorJailed(k.Codespace()).Result()
 	}
+
 	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator, true)
 	if err != nil {
 		return err.Result()
@@ -149,6 +152,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
 		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
 	)
+
 	return sdk.Result{
 		Tags: tags,
 	}

@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	wire "github.com/cosmos/cosmos-sdk/wire"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/libs/log"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
 func newTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
@@ -566,4 +566,64 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 
 	acc2 = mapper.GetAccount(ctx, addr2)
 	require.Nil(t, acc2.GetPubKey())
+}
+
+func TestProcessPubKey(t *testing.T) {
+	ms, capKey, _ := setupMultiStore()
+	cdc := wire.NewCodec()
+	RegisterBaseAccount(cdc)
+	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
+	// keys
+	_, addr1 := privAndAddr()
+	priv2, _ := privAndAddr()
+	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
+	type args struct {
+		acc      Account
+		sig      StdSignature
+		simulate bool
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"no sigs, simulate off", args{acc1, StdSignature{}, false}, true},
+		{"no sigs, simulate on", args{acc1, StdSignature{}, true}, false},
+		{"pubkey doesn't match addr, simulate off", args{acc1, StdSignature{PubKey: priv2.PubKey()}, false}, true},
+		{"pubkey doesn't match addr, simulate on", args{acc1, StdSignature{PubKey: priv2.PubKey()}, true}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := processPubKey(tt.args.acc, tt.args.sig, tt.args.simulate)
+			require.Equal(t, tt.wantErr, !err.IsOK())
+		})
+	}
+}
+
+func TestConsumeSignatureVerificationGas(t *testing.T) {
+	type args struct {
+		meter  sdk.GasMeter
+		pubkey crypto.PubKey
+	}
+	tests := []struct {
+		name        string
+		args        args
+		gasConsumed int64
+		wantPanic   bool
+	}{
+		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), ed25519.GenPrivKey().PubKey()}, ed25519VerifyCost, false},
+		{"PubKeySecp256k1", args{sdk.NewInfiniteGasMeter(), secp256k1.GenPrivKey().PubKey()}, secp256k1VerifyCost, false},
+		{"unknown key", args{sdk.NewInfiniteGasMeter(), nil}, 0, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.wantPanic {
+				require.Panics(t, func() { consumeSignatureVerificationGas(tt.args.meter, tt.args.pubkey) })
+			} else {
+				consumeSignatureVerificationGas(tt.args.meter, tt.args.pubkey)
+				require.Equal(t, tt.args.meter.GasConsumed(), tt.gasConsumed)
+			}
+		})
+	}
 }

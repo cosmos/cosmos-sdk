@@ -105,7 +105,7 @@ func (aa *AccAddress) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	aa2, err := AccAddressFromBech32(s)

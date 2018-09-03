@@ -209,6 +209,7 @@ func queueOperations(queuedOperations map[int][]Operation, futureOperations []Fu
 	}
 }
 
+// nolint: errcheck
 func runQueuedOperations(queueOperations map[int][]Operation, height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 	privKeys []crypto.PrivKey, log string, event func(string)) (updatedLog string, numOpsRan int) {
 	updatedLog = log
@@ -321,6 +322,7 @@ func AssertAllInvariants(t *testing.T, app *baseapp.BaseApp, tests []Invariant, 
 }
 
 // updateValidators mimicks Tendermint's update logic
+// nolint: unparam
 func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValidator, updates []abci.Validator, event func(string)) map[string]mockValidator {
 	for _, update := range updates {
 		switch {

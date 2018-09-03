@@ -27,12 +27,12 @@ func TestHandleDoubleSign(t *testing.T) {
 	sk = sk.WithValidatorHooks(keeper.ValidatorHooks())
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
-	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(sdk.ValAddress(addr), val, amt))
+	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, val, amt))
 	require.True(t, got.IsOK())
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
 	require.Equal(t, ck.GetCoins(ctx, sdk.AccAddress(addr)), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
-	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, sdk.ValAddress(addr)).GetPower()))
+	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
 
 	// handle a signature to set signing info
 	keeper.handleValidatorSignature(ctx, val.Address(), amtInt, true)
@@ -41,13 +41,13 @@ func TestHandleDoubleSign(t *testing.T) {
 	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
 
 	// should be jailed
-	require.True(t, sk.Validator(ctx, sdk.ValAddress(addr)).GetJailed())
+	require.True(t, sk.Validator(ctx, addr).GetJailed())
 	// unjail to measure power
 	sk.Unjail(ctx, val)
 	// power should be reduced
 	require.Equal(
 		t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))),
-		sk.Validator(ctx, sdk.ValAddress(addr)).GetPower(),
+		sk.Validator(ctx, addr).GetPower(),
 	)
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(keeper.MaxEvidenceAge(ctx))})
 
@@ -55,7 +55,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
 	require.Equal(
 		t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))),
-		sk.Validator(ctx, sdk.ValAddress(addr)).GetPower(),
+		sk.Validator(ctx, addr).GetPower(),
 	)
 }
 
@@ -125,12 +125,12 @@ func TestHandleAbsentValidator(t *testing.T) {
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	sh := stake.NewHandler(sk)
 	slh := NewHandler(keeper)
-	got := sh(ctx, newTestMsgCreateValidator(sdk.ValAddress(addr), val, amt))
+	got := sh(ctx, newTestMsgCreateValidator(addr, val, amt))
 	require.True(t, got.IsOK())
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
 	require.Equal(t, ck.GetCoins(ctx, sdk.AccAddress(addr)), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
-	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, sdk.ValAddress(addr)).GetPower()))
+	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
 	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.False(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
@@ -180,12 +180,12 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 
 	// unrevocation should fail prior to jail expiration
-	got = slh(ctx, NewMsgUnjail(sdk.ValAddress(addr)))
+	got = slh(ctx, NewMsgUnjail(addr))
 	require.False(t, got.IsOK())
 
 	// unrevocation should succeed after jail expiration
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(keeper.DowntimeUnbondDuration(ctx))})
-	got = slh(ctx, NewMsgUnjail(sdk.ValAddress(addr)))
+	got = slh(ctx, NewMsgUnjail(addr))
 	require.True(t, got.IsOK())
 
 	// validator should be rebonded now
@@ -235,12 +235,12 @@ func TestHandleNewValidator(t *testing.T) {
 	ctx, ck, sk, _, keeper := createTestInput(t)
 	addr, val, amt := addrs[0], pks[0], int64(100)
 	sh := stake.NewHandler(sk)
-	got := sh(ctx, newTestMsgCreateValidator(sdk.ValAddress(addr), val, sdk.NewInt(amt)))
+	got := sh(ctx, newTestMsgCreateValidator(addr, val, sdk.NewInt(amt)))
 	require.True(t, got.IsOK())
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
 	require.Equal(t, ck.GetCoins(ctx, sdk.AccAddress(addr)), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.SubRaw(amt)}})
-	require.Equal(t, sdk.NewDec(amt), sk.Validator(ctx, sdk.ValAddress(addr)).GetPower())
+	require.Equal(t, sdk.NewDec(amt), sk.Validator(ctx, addr).GetPower())
 
 	// 1000 first blocks not a validator
 	ctx = ctx.WithBlockHeight(keeper.SignedBlocksWindow(ctx) + 1)
@@ -273,7 +273,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	sh := stake.NewHandler(sk)
-	got := sh(ctx, newTestMsgCreateValidator(sdk.ValAddress(addr), val, amt))
+	got := sh(ctx, newTestMsgCreateValidator(addr, val, amt))
 	require.True(t, got.IsOK())
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)

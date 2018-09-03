@@ -1,17 +1,4 @@
-## v0.24.1 PENDING
-
-BREAKING CHANGES
-
-FEATURES
-
-IMPROVEMENTS
-
-* [store] \#1952 Update IAVL dependency to v0.10.0
-
-BUG FIXES
-
-## v0.24.0 PENDING
-^--- PENDING wasn't purged on sdk v0.23.0 release.
+## PENDING
 
 BREAKING CHANGES
 
@@ -98,6 +85,7 @@ IMPROVEMENTS
     * [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.
     * [cli] \#1632 Add integration tests to ensure `basecoind init && basecoind` start sequences run successfully for both `democoin` and `basecoin` examples.
     * [store] Speedup IAVL iteration, and consequently everything that requires IAVL iteration. [#2143](https://github.com/cosmos/cosmos-sdk/issues/2143)
+    * [store] \#1952 Update IAVL dependency to v0.10.0
     * [simulation] Make timestamps randomized [#2153](https://github.com/cosmos/cosmos-sdk/pull/2153)
 
 * Tendermint

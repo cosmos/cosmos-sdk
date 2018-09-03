@@ -102,12 +102,16 @@ func TestDelegation(t *testing.T) {
 
 		resVal := keeper.GetDelegatorValidator(ctx, addrDels[0], addrVals[i])
 		require.Equal(t, addrVals[i], resVal.GetOperator())
-		resBechVal := keeper.GetDelegatorBechValidator(ctx, addrDels[0], addrVals[i])
+
+		resBechVal, err := resVal.Bech32Validator()
+		require.Nil(t, err)
 		require.Equal(t, addrVals[i].String(), resBechVal.Operator)
 
 		resVal = keeper.GetDelegatorValidator(ctx, addrDels[1], addrVals[i])
 		require.Equal(t, addrVals[i], resVal.GetOperator())
-		resBechVal = keeper.GetDelegatorBechValidator(ctx, addrDels[1], addrVals[i])
+
+		resBechVal, err = resVal.Bech32Validator()
+		require.Nil(t, err)
 		require.Equal(t, addrVals[i].String(), resBechVal.Operator)
 	}
 
@@ -122,14 +126,6 @@ func TestDelegation(t *testing.T) {
 
 	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[1])
 	require.Equal(t, 2, len(resBonds))
-
-	resBondsNoRat := keeper.GetDelegatorDelegationsWithoutRat(ctx, addrDels[1])
-	require.Equal(t, 2, len(resBondsNoRat))
-	require.Equal(t, bond2to1.Shares.String(), resBondsNoRat[0].Shares)
-	require.Equal(t, bond2to1.Shares.String(), resBondsNoRat[1].Shares)
-
-	resBondsNoRat = keeper.GetDelegatorDelegationsWithoutRat(ctx, addrDels[1], 5)
-	require.Equal(t, 2, len(resBondsNoRat))
 
 	// delete all the records from delegator 2
 	keeper.RemoveDelegation(ctx, bond2to1)
@@ -167,10 +163,10 @@ func TestUnbondingDelegation(t *testing.T) {
 	ubd.Balance = sdk.NewInt64Coin("steak", 21)
 	keeper.SetUnbondingDelegation(ctx, ubd)
 
-	resUnbonds := keeper.GetDelegatorUnbondingDelegations(ctx, addrDels[0], 5)
+	resUnbonds := keeper.GetUnbondingDelegations(ctx, addrDels[0], 5)
 	require.Equal(t, 1, len(resUnbonds))
 
-	resUnbonds = keeper.GetDelegatorUnbondingDelegations(ctx, addrDels[0])
+	resUnbonds = keeper.GetUnbondingDelegations(ctx, addrDels[0])
 	require.Equal(t, 1, len(resUnbonds))
 
 	resUnbond, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
@@ -182,7 +178,7 @@ func TestUnbondingDelegation(t *testing.T) {
 	_, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.False(t, found)
 
-	resUnbonds = keeper.GetDelegatorUnbondingDelegations(ctx, addrDels[0], 5)
+	resUnbonds = keeper.GetUnbondingDelegations(ctx, addrDels[0], 5)
 	require.Equal(t, 0, len(resUnbonds))
 
 }

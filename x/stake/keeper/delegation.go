@@ -37,105 +37,6 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 	return delegations
 }
 
-// Return all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned.
-func (k Keeper) GetDelegatorBechValidators(ctx sdk.Context, delegatorAddr sdk.AccAddress,
-	maxRetrieve ...int16) (validators []types.BechValidator) {
-
-	retrieve := len(maxRetrieve) > 0
-	if retrieve {
-		validators = make([]types.BechValidator, maxRetrieve[0])
-	}
-	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := GetDelegationsKey(delegatorAddr)
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
-
-	i := 0
-	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
-		addr := iterator.Key()
-		delegation := types.MustUnmarshalDelegation(k.cdc, addr, iterator.Value())
-		validator, found := k.GetValidator(ctx, delegation.ValidatorAddr)
-		if !found {
-			panic(types.ErrNoValidatorFound(types.DefaultCodespace))
-		}
-
-		bechValidator, err := validator.Bech32Validator()
-		if err != nil {
-			panic(err.Error())
-		}
-
-		if retrieve {
-			validators[i] = bechValidator
-		} else {
-			validators = append(validators, bechValidator)
-		}
-		i++
-	}
-	iterator.Close()
-	return validators[:i] // trim
-}
-
-// Return all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned.
-func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAddress,
-	maxRetrieve ...int16) (validators []types.Validator) {
-
-	retrieve := len(maxRetrieve) > 0
-	if retrieve {
-		validators = make([]types.Validator, maxRetrieve[0])
-	}
-	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := GetDelegationsKey(delegatorAddr)
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
-
-	i := 0
-	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
-		addr := iterator.Key()
-		delegation := types.MustUnmarshalDelegation(k.cdc, addr, iterator.Value())
-		validator, found := k.GetValidator(ctx, delegation.ValidatorAddr)
-		if !found {
-			panic(types.ErrNoValidatorFound(types.DefaultCodespace))
-		}
-
-		if retrieve {
-			validators[i] = validator
-		} else {
-			validators = append(validators, validator)
-		}
-
-		i++
-	}
-	iterator.Close()
-	return validators[:i] // trim
-}
-
-// return a validator that a delegator is bonded to
-func (k Keeper) GetDelegatorBechValidator(ctx sdk.Context, delegatorAddr sdk.AccAddress,
-	validatorAddr sdk.ValAddress) (bechValidator types.BechValidator) {
-
-	validator := k.GetDelegatorValidator(ctx, delegatorAddr, validatorAddr)
-	bechValidator, err := validator.Bech32Validator()
-	if err != nil {
-		panic(err.Error())
-	}
-
-	return
-}
-
-// return a validator that a delegator is bonded to
-func (k Keeper) GetDelegatorValidator(ctx sdk.Context, delegatorAddr sdk.AccAddress,
-	validatorAddr sdk.ValAddress) (validator types.Validator) {
-
-	delegation, found := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
-	if !found {
-		panic(types.ErrNoDelegation(types.DefaultCodespace))
-	}
-
-	validator, found = k.GetValidator(ctx, delegation.ValidatorAddr)
-	if !found {
-		panic(types.ErrNoValidatorFound(types.DefaultCodespace))
-	}
-	return
-}
-
 // Return all delegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned.
 func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve ...int16) (delegations []types.Delegation) {
@@ -161,32 +62,6 @@ func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddres
 	return delegations[:i] // trim
 }
 
-// Return all delegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned.
-func (k Keeper) GetDelegatorDelegationsWithoutRat(ctx sdk.Context, delegator sdk.AccAddress,
-	maxRetrieve ...int16) (delegations []types.DelegationWithoutDec) {
-	retrieve := len(maxRetrieve) > 0
-	if retrieve {
-		delegations = make([]types.DelegationWithoutDec, maxRetrieve[0])
-	}
-	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := GetDelegationsKey(delegator)
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
-
-	i := 0
-	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
-		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
-		delegationWithoutRat := types.NewDelegationWithoutDec(delegation)
-		if retrieve {
-			delegations[i] = delegationWithoutRat
-		} else {
-			delegations = append(delegations, delegationWithoutRat)
-		}
-		i++
-	}
-	iterator.Close()
-	return delegations[:i] // trim
-}
-
 // set the delegation
 func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
@@ -203,7 +78,7 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 //_____________________________________________________________________________________
 
 // Return all unbonding delegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned.
-func (k Keeper) GetDelegatorUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress,
+func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve ...int16) (unbondingDelegations []types.UnbondingDelegation) {
 
 	retrieve := len(maxRetrieve) > 0
@@ -349,7 +224,7 @@ func (k Keeper) GetRedelegationsFromValidator(ctx sdk.Context, valAddr sdk.ValAd
 	return reds
 }
 
-// check if validator has an incoming redelegation
+// check if validator is receiving a redelegation
 func (k Keeper) HasReceivingRedelegation(ctx sdk.Context,
 	delAddr sdk.AccAddress, valDstAddr sdk.ValAddress) bool {
 
@@ -527,7 +402,7 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context,
 	// create the unbonding delegation
 	params := k.GetParams(ctx)
 	minTime, height, completeNow := k.getBeginInfo(ctx, params, valAddr)
-  balance := sdk.NewCoin(params.BondDenom, returnAmount.RoundInt())
+	balance := sdk.NewCoin(params.BondDenom, returnAmount.RoundInt())
 
 	// no need to create the ubd object just complete now
 	if completeNow {

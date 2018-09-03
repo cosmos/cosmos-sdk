@@ -20,20 +20,20 @@ func newTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt
 	return types.NewMsgCreateValidator(address, pubKey, sdk.NewCoin("steak", sdk.NewInt(amt)), Description{})
 }
 
-func newTestMsgDelegate(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, amt int64) MsgDelegate {
+func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt int64) MsgDelegate {
 	return MsgDelegate{
-		DelegatorAddr: delegatorAddr,
-		ValidatorAddr: validatorAddr,
+		DelegatorAddr: delAddr,
+		ValidatorAddr: valAddr,
 		Delegation:    sdk.NewCoin("steak", sdk.NewInt(amt)),
 	}
 }
 
-func newTestMsgCreateValidatorOnBehalfOf(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, validatorPubKey crypto.PubKey, amt int64) MsgCreateValidator {
+func newTestMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.ValAddress, valPubKey crypto.PubKey, amt int64) MsgCreateValidator {
 	return MsgCreateValidator{
 		Description:   Description{},
-		DelegatorAddr: delegatorAddr,
-		ValidatorAddr: validatorAddr,
-		PubKey:        validatorPubKey,
+		DelegatorAddr: delAddr,
+		ValidatorAddr: valAddr,
+		PubKey:        valPubKey,
 		Delegation:    sdk.NewCoin("steak", sdk.NewInt(amt)),
 	}
 }

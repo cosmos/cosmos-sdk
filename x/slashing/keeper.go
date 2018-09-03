@@ -138,7 +138,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 }
 
 // AddValidators adds the validators to the keepers validator addr to pubkey mapping.
-func (k Keeper) AddValidators(ctx sdk.Context, vals []abci.Validator) {
+func (k Keeper) AddValidators(ctx sdk.Context, vals []abci.ValidatorUpdate) {
 	for i := 0; i < len(vals); i++ {
 		val := vals[i]
 		pubkey, err := tmtypes.PB2TM.PubKey(val.PubKey)

@@ -317,12 +317,12 @@ func (v Validator) ABCIValidator() abci.Validator {
 	}
 }
 
-// ABCIValidatorZero returns an abci.Validator from a staked validator type
+// ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staked validator type
 // with with zero power used for validator updates.
-func (v Validator) ABCIValidatorZero() abci.Validator {
-	return abci.Validator{
-		Address: v.PubKey.Address(),
-		Power:   0,
+func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
+	return abci.ValidatorUpdate{
+		PubKey: tmtypes.TM2PB.PubKey(v.PubKey),
+		Power:  0,
 	}
 }
 

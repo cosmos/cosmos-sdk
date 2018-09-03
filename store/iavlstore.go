@@ -239,7 +239,7 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		var KVs []KVPair
 		iterator := sdk.KVStorePrefixIterator(st, subspace)
 		for ; iterator.Valid(); iterator.Next() {
-			KVs = append(KVs, KVPair{iterator.Key(), iterator.Value()})
+			KVs = append(KVs, KVPair{Key: iterator.Key(), Value: iterator.Value()})
 		}
 		iterator.Close()
 		res.Value = cdc.MustMarshalBinary(KVs)
@@ -309,7 +309,7 @@ func (iter *iavlIterator) iterateRoutine() {
 			select {
 			case <-iter.quitCh:
 				return true // done with iteration.
-			case iter.iterCh <- cmn.KVPair{key, value}:
+			case iter.iterCh <- cmn.KVPair{Key: key, Value: value}:
 				return false // yay.
 			}
 		},

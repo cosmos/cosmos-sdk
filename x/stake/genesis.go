@@ -15,7 +15,7 @@ import (
 // addition, it also sets any delegations found in data. Finally, it updates
 // the bonded validators.
 // Returns final validator set after applying all declaration and delegations
-func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res []abci.Validator, err error) {
+func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res []abci.ValidatorUpdate, err error) {
 	keeper.SetPool(ctx, data.Pool)
 	keeper.SetNewParams(ctx, data.Params)
 	keeper.InitIntraTxCounter(ctx)
@@ -47,9 +47,9 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	keeper.UpdateBondedValidatorsFull(ctx)
 
 	vals := keeper.GetValidatorsBonded(ctx)
-	res = make([]abci.Validator, len(vals))
+	res = make([]abci.ValidatorUpdate, len(vals))
 	for i, val := range vals {
-		res[i] = sdk.ABCIValidator(val)
+		res[i] = sdk.ABCIValidatorUpdate(val)
 	}
 	return
 }

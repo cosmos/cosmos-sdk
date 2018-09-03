@@ -60,7 +60,7 @@ FEATURES
 * SDK
   * [querier] added custom querier functionality, so ABCI query requests can be handled by keepers
   * [simulation] \#1924 allow operations to specify future operations
-  * [simulation] \#1924 Add benchmarking capabilities
+  * [simulation] \#1924 Add benchmarking capabilities, with makefile commands "test_sim_gaia_benchmark, test_sim_gaia_profile"
 
 * Tendermint
 

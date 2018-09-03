@@ -22,6 +22,7 @@ func Commands() *cobra.Command {
 		addKeyCommand(),
 		listKeysCmd,
 		showKeysCmd(),
+		signCommand(),
 		client.LineBreak,
 		deleteKeyCommand(),
 		updateKeyCommand(),

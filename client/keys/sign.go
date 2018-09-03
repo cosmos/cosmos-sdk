@@ -16,39 +16,41 @@ const (
 	flagTx       = "tx"
 )
 
-func init() {
-	keySignCmd.Flags().String(flagFrom, "", "Name of private key with which to sign")
-	keySignCmd.Flags().String(flagPassword, "", "Password of private key")
-	keySignCmd.Flags().String(flagTx, "", "Base64 encoded tx data for sign")
+func signCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "sign",
+		Short: "Sign user specified data",
+		Long:  `Sign user data with specified key and password`,
+		RunE:  runSignCmd,
+	}
+	cmd.Flags().String(flagFrom, "", "Name of private key with which to sign")
+	cmd.Flags().String(flagPassword, "", "Password of private key")
+	cmd.Flags().String(flagTx, "", "Base64 encoded tx data for sign")
+	return cmd
 }
 
-var keySignCmd = &cobra.Command{
-	Use:   "sign",
-	Short: "Sign user specified data",
-	Long:  `Sign user data with specified key and password`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		name := viper.GetString(flagFrom)
-		password := viper.GetString(flagPassword)
-		tx := viper.GetString(flagTx)
+func runSignCmd(cmd *cobra.Command, args []string) error {
+	name := viper.GetString(flagFrom)
+	password := viper.GetString(flagPassword)
+	tx := viper.GetString(flagTx)
 
-		decodedTx, err := base64.StdEncoding.DecodeString(tx)
-		if err != nil {
-			return err
-		}
+	decodedTx, err := base64.StdEncoding.DecodeString(tx)
+	if err != nil {
+		return err
+	}
 
-		kb, err := GetKeyBase()
-		if err != nil {
-			return err
-		}
+	kb, err := GetKeyBase()
+	if err != nil {
+		return err
+	}
 
-		sig, _, err := kb.Sign(name, password, decodedTx)
-		if err != nil {
-			return err
-		}
-		encoded := base64.StdEncoding.EncodeToString(sig)
-		fmt.Println(string(encoded))
-		return nil
-	},
+	sig, _, err := kb.Sign(name, password, decodedTx)
+	if err != nil {
+		return err
+	}
+	encoded := base64.StdEncoding.EncodeToString(sig)
+	fmt.Println(string(encoded))
+	return nil
 }
 
 type keySignBody struct {

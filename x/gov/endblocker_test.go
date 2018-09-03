@@ -2,6 +2,7 @@ package gov
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -28,12 +29,18 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	require.NotNil(t, keeper.InactiveProposalQueuePeek(ctx))
 	require.False(t, shouldPopInactiveProposalQueue(ctx, keeper))
 
-	ctx = ctx.WithBlockHeight(10)
+	newHeader := ctx.BlockHeader()
+	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
+	ctx = ctx.WithBlockHeader(newHeader)
+
 	EndBlocker(ctx, keeper)
 	require.NotNil(t, keeper.InactiveProposalQueuePeek(ctx))
 	require.False(t, shouldPopInactiveProposalQueue(ctx, keeper))
 
-	ctx = ctx.WithBlockHeight(250)
+	newHeader = ctx.BlockHeader()
+	newHeader.Time = ctx.BlockHeader().Time.Add(keeper.GetDepositProcedure(ctx).MaxDepositPeriod)
+	ctx = ctx.WithBlockHeader(newHeader)
+
 	require.NotNil(t, keeper.InactiveProposalQueuePeek(ctx))
 	require.True(t, shouldPopInactiveProposalQueue(ctx, keeper))
 	EndBlocker(ctx, keeper)
@@ -59,7 +66,10 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.NotNil(t, keeper.InactiveProposalQueuePeek(ctx))
 	require.False(t, shouldPopInactiveProposalQueue(ctx, keeper))
 
-	ctx = ctx.WithBlockHeight(10)
+	newHeader := ctx.BlockHeader()
+	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(2) * time.Second)
+	ctx = ctx.WithBlockHeader(newHeader)
+
 	EndBlocker(ctx, keeper)
 	require.NotNil(t, keeper.InactiveProposalQueuePeek(ctx))
 	require.False(t, shouldPopInactiveProposalQueue(ctx, keeper))
@@ -68,14 +78,20 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	res = govHandler(ctx, newProposalMsg2)
 	require.True(t, res.IsOK())
 
-	ctx = ctx.WithBlockHeight(205)
+	newHeader = ctx.BlockHeader()
+	newHeader.Time = ctx.BlockHeader().Time.Add(keeper.GetDepositProcedure(ctx).MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
+	ctx = ctx.WithBlockHeader(newHeader)
+
 	require.NotNil(t, keeper.InactiveProposalQueuePeek(ctx))
 	require.True(t, shouldPopInactiveProposalQueue(ctx, keeper))
 	EndBlocker(ctx, keeper)
 	require.NotNil(t, keeper.InactiveProposalQueuePeek(ctx))
 	require.False(t, shouldPopInactiveProposalQueue(ctx, keeper))
 
-	ctx = ctx.WithBlockHeight(215)
+	newHeader = ctx.BlockHeader()
+	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(5) * time.Second)
+	ctx = ctx.WithBlockHeader(newHeader)
+
 	require.NotNil(t, keeper.InactiveProposalQueuePeek(ctx))
 	require.True(t, shouldPopInactiveProposalQueue(ctx, keeper))
 	EndBlocker(ctx, keeper)
@@ -105,7 +121,10 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	require.NotNil(t, keeper.InactiveProposalQueuePeek(ctx))
 	require.False(t, shouldPopInactiveProposalQueue(ctx, keeper))
 
-	ctx = ctx.WithBlockHeight(10)
+	newHeader := ctx.BlockHeader()
+	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
+	ctx = ctx.WithBlockHeader(newHeader)
+
 	EndBlocker(ctx, keeper)
 	require.NotNil(t, keeper.InactiveProposalQueuePeek(ctx))
 	require.False(t, shouldPopInactiveProposalQueue(ctx, keeper))
@@ -146,14 +165,20 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	var proposalID int64
 	keeper.cdc.UnmarshalBinaryBare(res.Data, &proposalID)
 
-	ctx = ctx.WithBlockHeight(10)
+	newHeader := ctx.BlockHeader()
+	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
+	ctx = ctx.WithBlockHeader(newHeader)
+
 	newDepositMsg := NewMsgDeposit(addrs[1], proposalID, sdk.Coins{sdk.NewInt64Coin("steak", 5)})
 	res = govHandler(ctx, newDepositMsg)
 	require.True(t, res.IsOK())
 
 	EndBlocker(ctx, keeper)
 
-	ctx = ctx.WithBlockHeight(215)
+	newHeader = ctx.BlockHeader()
+	newHeader.Time = ctx.BlockHeader().Time.Add(keeper.GetDepositProcedure(ctx).MaxDepositPeriod).Add(keeper.GetDepositProcedure(ctx).MaxDepositPeriod)
+	ctx = ctx.WithBlockHeader(newHeader)
+
 	require.True(t, shouldPopActiveProposalQueue(ctx, keeper))
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
 	require.True(t, depositsIterator.Valid())
@@ -197,7 +222,10 @@ func TestSlashing(t *testing.T) {
 	var proposalID int64
 	keeper.cdc.UnmarshalBinaryBare(res.Data, &proposalID)
 
-	ctx = ctx.WithBlockHeight(10)
+	newHeader := ctx.BlockHeader()
+	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
+	ctx = ctx.WithBlockHeader(newHeader)
+
 	require.Equal(t, StatusVotingPeriod, keeper.GetProposal(ctx, proposalID).GetStatus())
 
 	newVoteMsg := NewMsgVote(addrs[0], proposalID, OptionYes)
@@ -206,7 +234,10 @@ func TestSlashing(t *testing.T) {
 
 	EndBlocker(ctx, keeper)
 
-	ctx = ctx.WithBlockHeight(215)
+	newHeader = ctx.BlockHeader()
+	newHeader.Time = ctx.BlockHeader().Time.Add(keeper.GetDepositProcedure(ctx).MaxDepositPeriod).Add(keeper.GetDepositProcedure(ctx).MaxDepositPeriod)
+	ctx = ctx.WithBlockHeader(newHeader)
+
 	require.Equal(t, StatusVotingPeriod, keeper.GetProposal(ctx, proposalID).GetStatus())
 
 	EndBlocker(ctx, keeper)

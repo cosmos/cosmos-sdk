@@ -47,7 +47,7 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 			staticServer := http.FileServer(statikFS)
 			router.PathPrefix("/swaggerui/").Handler(http.StripPrefix("/swaggerui/", staticServer))
 
-			logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "rest-server")
+			logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "lite-server")
 			maxOpen := viper.GetInt(flagMaxOpenConnections)
 
 			listener, err := tmserver.StartHTTPServer(

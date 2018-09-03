@@ -18,63 +18,13 @@
   "host": "localhost:1317",
   "basePath": "/",
   "paths": {
-    "/bank/balances/{address}": {
-      "get": {
-        "tags": [
-          "ICS20: Bank"
-        ],
-        "summary": "Get token information",
-        "description": "Get token information of user specific address",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "address",
-            "in": "path",
-            "description": "address",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/sdk.Coins"
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "$ref": "#/definitions/response.httputil.HTTPError"
-            }
-          }
-        }
-      }
-    },
-    "/bank/{address}/transfers": {
+    "/txs": {
       "post": {
         "tags": [
-          "ICS20: Bank"
+          "ICS0: Transaction"
         ],
-        "summary": "Transfer tokens",
-        "description": "This API can be used to transfer tokens to specific address",
+        "summary": "Broadcast transaction",
+        "description": "Broadcast transaction in user specified broadcast type. The supported broadcast types are: block, sync and async. \nblock: return after the transaction is included in a block. \n sync: return after checkTx is finished. \n async: return immediately only with transaction hash",
         "consumes": [
           "application/json"
         ],
@@ -83,19 +33,12 @@
         ],
         "parameters": [
           {
-            "in": "path",
-            "name": "address",
-            "description": "address to send token",
-            "required": true,
-            "type": "string"
-          },
-          {
             "in": "body",
-            "name": "transferToken",
-            "description": "transfer asset",
+            "name": "txBroadcast",
+            "description": "tx byte array and return type",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/body.bank.Transfer"
+              "$ref": "#/definitions/body.tx.Broadcast"
             }
           }
         ],
@@ -579,13 +522,13 @@
         }
       }
     },
-    "/txs": {
-      "post": {
+    "/bank/balances/{address}": {
+      "get": {
         "tags": [
-          "ICS0: Transaction"
+          "ICS20: Bank"
         ],
-        "summary": "Broadcast transaction",
-        "description": "Broadcast transaction in user specified broadcast type. The supported broadcast types are: block, sync and async. \nblock: return after the transaction is included in a block. \n sync: return after checkTx is finished. \n async: return immediately only with transaction hash",
+        "summary": "Get token information",
+        "description": "Get token information of user specific address",
         "consumes": [
           "application/json"
         ],
@@ -594,12 +537,69 @@
         ],
         "parameters": [
           {
+            "name": "address",
+            "in": "path",
+            "description": "address",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/sdk.Coins"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/bank/{address}/transfers": {
+      "post": {
+        "tags": [
+          "ICS20: Bank"
+        ],
+        "summary": "Transfer tokens",
+        "description": "This API can be used to transfer tokens to specific address",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "address",
+            "description": "address to send token",
+            "required": true,
+            "type": "string"
+          },
+          {
             "in": "body",
-            "name": "txBroadcast",
-            "description": "tx byte array and return type",
+            "name": "transferToken",
+            "description": "transfer asset",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/body.tx.Broadcast"
+              "$ref": "#/definitions/body.bank.Transfer"
             }
           }
         ],
@@ -647,7 +647,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "description": "delegator address",
             "name": "delegatorAddr",
             "in": "path",
             "required": true
@@ -701,7 +701,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "description": "delegator address",
             "name": "delegatorAddr",
             "required": true,
             "in": "path"
@@ -755,7 +755,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "description": "delegator address",
             "name": "delegatorAddr",
             "required": true,
             "in": "path"
@@ -809,14 +809,14 @@
         "parameters": [
           {
             "type": "string",
-            "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "description": "delegator address",
             "name": "delegatorAddr",
             "required": true,
             "in": "path"
           },
           {
             "type": "string",
-            "description": "validator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "description": "validator address",
             "name": "validatorAddr",
             "required": true,
             "in": "path"
@@ -870,14 +870,14 @@
         "parameters": [
           {
             "type": "string",
-            "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "description": "delegator address",
             "name": "delegatorAddr",
             "required": true,
             "in": "path"
           },
           {
             "type": "string",
-            "description": "validator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "description": "validator address",
             "name": "validatorAddr",
             "required": true,
             "in": "path"
@@ -931,14 +931,14 @@
         "parameters": [
           {
             "type": "string",
-            "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "description": "delegator address",
             "name": "delegatorAddr",
             "required": true,
             "in": "path"
           },
           {
             "type": "string",
-            "description": "validator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "description": "validator address",
             "name": "validatorAddr",
             "required": true,
             "in": "path"
@@ -1037,7 +1037,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "validator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "description": "validator address",
             "name": "addr",
             "required": true,
             "in": "path"
@@ -1181,7 +1181,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "delegator address, example: cosmosaccaddr1t48m77vw08fqygkz96l3neqdzrnuvh6ansk7ks",
+            "description": "delegator address",
             "name": "delegatorAddr",
             "required": true,
             "in": "path"
@@ -1203,6 +1203,573 @@
             "schema": {
               "type": "object",
               "$ref": "#/definitions/response.stake.TransactionResult"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/gov/proposals": {
+      "post": {
+        "description": "Send transaction to launch a proposal",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS22: Governance"
+        ],
+        "summary": "Launch a proposal",
+        "parameters": [
+          {
+            "description": "proposal information",
+            "name": "postProposalBody",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/body.gov.PostProposalReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.BroadcastTxCommitResult"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Query proposals information with parameters",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS22: Governance"
+        ],
+        "summary": "Query proposals",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.gov.TextProposals"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/gov/proposals/{proposal-id}/deposits": {
+      "post": {
+        "description": "Send transaction to deposit token to proposal",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS22: Governance"
+        ],
+        "summary": "Deposit token to a proposal",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "proposal id",
+            "name": "proposal-id",
+            "required": true,
+            "in": "path"
+          },
+          {
+            "description": "deposit information",
+            "name": "depositBody",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/body.gov.DepositReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.BroadcastTxCommitResult"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/gov/proposals/{proposal-id}/votes": {
+      "post": {
+        "description": "Send transaction to vote a proposal",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS22: Governance"
+        ],
+        "summary": "Vote a proposal",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "proposal id",
+            "name": "proposal-id",
+            "required": true,
+            "in": "path"
+          },
+          {
+            "description": "vote information",
+            "name": "voteBody",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/body.gov.VoteReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.BroadcastTxCommitResult"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Query voters information by proposal-id",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS22: Governance"
+        ],
+        "summary": "Query voters",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "proposal id",
+            "name": "proposal-id",
+            "required": true,
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.gov.Votes"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/gov/proposals/{proposal-id}": {
+      "get": {
+        "description": "Query proposal by id",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS22: Governance"
+        ],
+        "summary": "Query proposal",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "proposal id",
+            "name": "proposal-id",
+            "required": true,
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.gov.TextProposal"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/gov/proposals/{proposal-id}/deposits/{depositer}": {
+      "get": {
+        "description": "Query deposit by proposal-id and depositer address",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS22: Governance"
+        ],
+        "summary": "Query deposit",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "proposal id",
+            "name": "proposal-id",
+            "required": true,
+            "in": "path"
+          },
+          {
+            "type": "string",
+            "description": "depositer address",
+            "name": "depositer",
+            "required": true,
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.gov.Deposit"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/gov/proposals/{proposal-id}/votes/{voter}": {
+      "get": {
+        "description": "Query vote information by proposal-id and voter address",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS22: Governance"
+        ],
+        "summary": "Query vote",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "proposal id",
+            "name": "proposal-id",
+            "required": true,
+            "in": "path"
+          },
+          {
+            "type": "string",
+            "description": "voter address",
+            "name": "voter",
+            "required": true,
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.gov.Vote"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/slashing/unjail": {
+      "post": {
+        "description": "Send transaction to unjail validator",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS23: Slashing"
+        ],
+        "summary": "Send transaction to unjail validator",
+        "parameters": [
+          {
+            "description": "unjail validator information",
+            "name": "unjailBody",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/body.slahing.UnjailBody"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.BroadcastTxCommitResult"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.httputil.HTTPError"
+            }
+          }
+        }
+      }
+    },
+    "/slashing/signing_info/{validator}": {
+      "get": {
+        "description": "Query validator signing_info",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ICS23: Slashing"
+        ],
+        "summary": "Query validator signing_info",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "validator address",
+            "name": "validatorAddr",
+            "required": true,
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/response.slahing.ValidatorSigningInfo"
             }
           },
           "400": {
@@ -1357,6 +1924,26 @@
         },
         "value": {
           "type": "integer"
+        }
+      }
+    },
+    "common.BaseRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "chain_id": {
+          "type": "string"
+        },
+        "account_number": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "string"
         }
       }
     },
@@ -1565,9 +2152,8 @@
         "transaction": {
           "type": "string"
         },
-        "broadcast_type": {
-          "type": "string",
-          "example": "block"
+        "return": {
+          "type": "string"
         }
       }
     },
@@ -1754,13 +2340,13 @@
           "type": "string"
         },
         "account_number": {
-          "type": "integer"
+          "type": "string"
         },
         "sequence": {
-          "type": "integer"
+          "type": "string"
         },
         "gas": {
-          "type": "integer"
+          "type": "string"
         },
         "delegations": {
           "type": "array",
@@ -2066,6 +2652,157 @@
           "type": "integer"
         },
         "bond_denom": {
+          "type": "string"
+        }
+      }
+    },
+    "body.gov.PostProposalReq": {
+      "type": "object",
+      "properties": {
+        "base_req": {
+          "$ref": "#/definitions/common.BaseRequest"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "proposal_type": {
+          "type": "string"
+        },
+        "proposer": {
+          "type": "string"
+        },
+        "initial_deposit": {
+          "$ref": "#/definitions/sdk.Coins"
+        }
+      }
+    },
+    "body.gov.DepositReq": {
+      "type": "object",
+      "properties": {
+        "base_req": {
+          "$ref": "#/definitions/common.BaseRequest"
+        },
+        "depositer": {
+          "type": "string"
+        },
+        "amount": {
+          "$ref": "#/definitions/sdk.Coins"
+        }
+      }
+    },
+    "body.gov.VoteReq": {
+      "type": "object",
+      "properties": {
+        "base_req": {
+          "$ref": "#/definitions/common.BaseRequest"
+        },
+        "voter": {
+          "type": "string"
+        },
+        "option": {
+          "type": "string"
+        }
+      }
+    },
+    "response.gov.TextProposal": {
+      "type": "object",
+      "properties": {
+        "base_req": {
+          "$ref": "#/definitions/common.BaseRequest"
+        },
+        "voter": {
+          "type": "string"
+        },
+        "option": {
+          "type": "string"
+        }
+      }
+    },
+    "response.gov.Deposit": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "$ref": "#/definitions/common.BaseRequest"
+        },
+        "voter": {
+          "type": "string"
+        },
+        "option": {
+          "type": "string"
+        }
+      }
+    },
+    "response.gov.Vote": {
+      "type": "object",
+      "properties": {
+        "voter": {
+          "$ref": "string"
+        },
+        "proposal_id": {
+          "type": "integer"
+        },
+        "option": {
+          "type": "string"
+        }
+      }
+    },
+    "response.gov.Votes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/response.gov.Vote"
+      }
+    },
+    "response.gov.TextProposals": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/response.gov.TextProposal"
+      }
+    },
+    "response.slahing.ValidatorSigningInfo": {
+      "type": "object",
+      "properties": {
+        "start_height": {
+          "$ref": "integer"
+        },
+        "index_offset": {
+          "type": "integer"
+        },
+        "signed_blocks_counter": {
+          "type": "integer"
+        },
+        "jailed_until": {
+          "type": "string"
+        }
+      }
+    },
+    "body.slahing.UnjailBody": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "chain_id": {
+          "type": "string"
+        },
+        "account_number": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "string"
+        },
+        "gas": {
+          "type": "string"
+        },
+        "gas_adjustment": {
+          "type": "string"
+        },
+        "validator_addr": {
           "type": "string"
         }
       }

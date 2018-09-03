@@ -77,9 +77,9 @@ func SimulateFromSeed(
 	opCount := 0
 
 	var pastTimes []time.Time
-	var pastSigningValidators [][]abci.SigningValidator
+	var pastVoteInfos [][]abci.VoteInfo
 
-	request := RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastSigningValidators, event, header, log)
+	request := RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastVoteInfos, event, header, log)
 	// These are operations which have been queued by previous operations
 	operationQueue := make(map[int][]Operation)
 
@@ -91,7 +91,7 @@ func SimulateFromSeed(
 	for i := 0; i < numBlocks; i++ {
 		// Log the header time for future lookup
 		pastTimes = append(pastTimes, header.Time)
-		pastSigningValidators = append(pastSigningValidators, request.LastCommitInfo.Validators)
+		pastVoteInfos = append(pastVoteInfos, request.LastCommitInfo.Validators)
 
 		// Run the BeginBlock handler
 		app.BeginBlock(request)
@@ -126,7 +126,7 @@ func SimulateFromSeed(
 		}
 
 		// Generate a random RequestBeginBlock with the current validator set for the next block
-		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastSigningValidators, event, header, log)
+		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastVoteInfos, event, header, log)
 
 		// Update the validator set
 		validators = updateValidators(tb, r, validators, res.ValidatorUpdates, event)
@@ -244,11 +244,11 @@ func getKeys(validators map[string]mockValidator) []string {
 
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
 func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, livenessTransitions TransitionMatrix, evidenceFraction float64,
-	pastTimes []time.Time, pastSigningValidators [][]abci.SigningValidator, event func(string), header abci.Header, log string) abci.RequestBeginBlock {
+	pastTimes []time.Time, pastVoteInfos [][]abci.VoteInfo, event func(string), header abci.Header, log string) abci.RequestBeginBlock {
 	if len(validators) == 0 {
 		return abci.RequestBeginBlock{Header: header}
 	}
-	signingValidators := make([]abci.SigningValidator, len(validators))
+	voteInfos := make([]abci.VoteInfo, len(validators))
 	i := 0
 	for _, key := range getKeys(validators) {
 		mVal := validators[key]
@@ -269,7 +269,7 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 		} else {
 			event("beginblock/signing/missed")
 		}
-		signingValidators[i] = abci.SigningValidator{
+		voteInfos[i] = abci.VoteInfo{
 			Validator:       mVal.val,
 			SignedLastBlock: signed,
 		}
@@ -282,11 +282,11 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 		for r.Float64() < evidenceFraction {
 			height := header.Height
 			time := header.Time
-			vals := signingValidators
+			vals := voteInfos
 			if r.Float64() < pastEvidenceFraction {
 				height = int64(r.Intn(int(header.Height)))
 				time = pastTimes[height]
-				vals = pastSigningValidators[height]
+				vals = pastVoteInfos[height]
 			}
 			validator := vals[r.Intn(len(vals))].Validator
 			var totalVotingPower int64
@@ -306,7 +306,7 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 	return abci.RequestBeginBlock{
 		Header: header,
 		LastCommitInfo: abci.LastCommitInfo{
-			Validators: signingValidators,
+			Validators: voteInfos,
 		},
 		ByzantineValidators: evidence,
 	}

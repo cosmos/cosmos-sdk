@@ -53,12 +53,27 @@ func TestGovWithRandomMessages(t *testing.T) {
 		gov.InitGenesis(ctx, govKeeper, gov.DefaultGenesisState())
 	}
 
+	// Test with unscheduled votes
 	simulation.Simulate(
 		t, mapp.BaseApp, appStateFn,
 		[]simulation.Operation{
 			SimulateMsgSubmitProposal(govKeeper, stakeKeeper),
 			SimulateMsgDeposit(govKeeper, stakeKeeper),
 			SimulateMsgVote(govKeeper, stakeKeeper),
+		}, []simulation.RandSetup{
+			setup,
+		}, []simulation.Invariant{
+			AllInvariants(),
+		}, 10, 100,
+		false,
+	)
+
+	// Test with scheduled votes
+	simulation.Simulate(
+		t, mapp.BaseApp, appStateFn,
+		[]simulation.Operation{
+			SimulateSubmittingVotingAndSlashingForProposal(govKeeper, stakeKeeper),
+			SimulateMsgDeposit(govKeeper, stakeKeeper),
 		}, []simulation.RandSetup{
 			setup,
 		}, []simulation.Invariant{

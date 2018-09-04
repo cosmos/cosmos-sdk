@@ -148,7 +148,7 @@ from the passive global pool to their own pool. It is at this point that the
 commission is withdrawn
 
 ``` 
-func (vi ValidatorDistInfo) TakeAccum(g Global, height int64, totalBonded, vdTokens, commissionRate Dec) (
+func (vi ValidatorDistInfo) TakeGlobalRewards(g Global, height int64, totalBonded, vdTokens, commissionRate Dec) (
                                 vi ValidatorDistInfo, g Global)
 
     g.UpdateTotalValAccum(height, totalBondedShares)
@@ -180,7 +180,7 @@ func (di DelegatorDistInfo) WithdrawRewards(g Global, vi ValidatorDistInfo,
     di DelegatorDistInfo, g Global, withdrawn DecCoins)
 
     vi.UpdateTotalDelAccum(height, totalDelShares) 
-    g = vi.TakeAccum(g, height, totalBonded, vdTokens, commissionRate) 
+    g = vi.TakeGlobalRewards(g, height, totalBonded, vdTokens, commissionRate) 
     
     blocks = height - di.WithdrawalHeight
     di.WithdrawalHeight = height
@@ -204,7 +204,7 @@ func (vi ValidatorDistInfo) WithdrawCommission(g Global, height int64,
           totalBonded, vdTokens, commissionRate Dec) (
           vi ValidatorDistInfo, g Global, withdrawn DecCoins)
 
-    g = vi.TakeAccum(g, height, totalBonded, vdTokens, commissionRate) 
+    g = vi.TakeGlobalRewards(g, height, totalBonded, vdTokens, commissionRate) 
     
     withdrawalTokens := vi.PoolCommission 
     vi.PoolCommission = 0

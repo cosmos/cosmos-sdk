@@ -1,6 +1,9 @@
 package stake
 
 import (
+	"bytes"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/tags"
@@ -35,17 +38,15 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 // Called every block, process inflation, update validator set
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Validator) {
 	pool := k.GetPool(ctx)
-	params := k.GetParams(ctx)
 
-	// Process types.Validator Provisions
+	// Process provision inflation
 	blockTime := ctx.BlockHeader().Time
-	if blockTime-pool.InflationLastTime >= 3600 {
+	if blockTime.Sub(pool.InflationLastTime) >= time.Hour {
+		params := k.GetParams(ctx)
 		pool.InflationLastTime = blockTime
 		pool = pool.ProcessProvisions(params)
+		k.SetPool(ctx, pool)
 	}
-
-	// save the params
-	k.SetPool(ctx, pool)
 
 	// reset the intra-transaction counter
 	k.SetIntraTxCounter(ctx, 0)
@@ -113,7 +114,9 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	}
 	validator.Description = description
 
-	k.UpdateValidator(ctx, validator)
+	// We don't need to run through all the power update logic within k.UpdateValidator
+	// We just need to override the entry in state, since only the description has changed.
+	k.SetValidator(ctx, validator)
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionEditValidator,
 		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
@@ -126,17 +129,19 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 }
 
 func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) sdk.Result {
-
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if !found {
 		return ErrNoValidatorFound(k.Codespace()).Result()
 	}
+
 	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
-	if validator.Revoked == true {
-		return ErrValidatorRevoked(k.Codespace()).Result()
+
+	if validator.Jailed && !bytes.Equal(validator.Operator, msg.DelegatorAddr) {
+		return ErrValidatorJailed(k.Codespace()).Result()
 	}
+
 	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator, true)
 	if err != nil {
 		return err.Result()
@@ -147,6 +152,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
 		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
 	)
+
 	return sdk.Result{
 		Tags: tags,
 	}

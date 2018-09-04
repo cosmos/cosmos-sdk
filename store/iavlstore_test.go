@@ -168,6 +168,7 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 		require.EqualValues(t, value, expectedKey)
 		i++
 	}
+	iter.Close()
 	require.Equal(t, len(expected), i)
 
 	iter = sdk.KVStorePrefixIterator(iavlStore, []byte{byte(55), byte(255), byte(255)})
@@ -183,6 +184,7 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 		require.EqualValues(t, value, []byte("test4"))
 		i++
 	}
+	iter.Close()
 	require.Equal(t, len(expected), i)
 
 	iter = sdk.KVStorePrefixIterator(iavlStore, []byte{byte(255), byte(255)})
@@ -198,6 +200,7 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 		require.EqualValues(t, value, []byte("test4"))
 		i++
 	}
+	iter.Close()
 	require.Equal(t, len(expected), i)
 }
 
@@ -446,6 +449,7 @@ func TestIAVLStoreQuery(t *testing.T) {
 	require.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	require.Equal(t, v3, qres.Value)
 	query2 := abci.RequestQuery{Path: "/key", Data: k2, Height: cid.Version}
+
 	qres = iavlStore.Query(query2)
 	require.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	require.Equal(t, v2, qres.Value)
@@ -459,4 +463,27 @@ func TestIAVLStoreQuery(t *testing.T) {
 	qres = iavlStore.Query(query0)
 	require.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	require.Equal(t, v1, qres.Value)
+}
+
+func BenchmarkIAVLIteratorNext(b *testing.B) {
+	db := dbm.NewMemDB()
+	treeSize := 1000
+	tree := iavl.NewVersionedTree(db, cacheSize)
+	for i := 0; i < treeSize; i++ {
+		key := cmn.RandBytes(4)
+		value := cmn.RandBytes(50)
+		tree.Set(key, value)
+	}
+	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
+	iterators := make([]Iterator, b.N/treeSize)
+	for i := 0; i < len(iterators); i++ {
+		iterators[i] = iavlStore.Iterator([]byte{0}, []byte{255, 255, 255, 255, 255})
+	}
+	b.ResetTimer()
+	for i := 0; i < len(iterators); i++ {
+		iter := iterators[i]
+		for j := 0; j < treeSize; j++ {
+			iter.Next()
+		}
+	}
 }

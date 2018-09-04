@@ -2,9 +2,11 @@ package types
 
 import (
 	"fmt"
+	"strings"
 
 	cmn "github.com/tendermint/tendermint/libs/common"
 
+	"github.com/cosmos/cosmos-sdk/wire"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -65,6 +67,10 @@ const (
 	MaximumCodespace CodespaceType = 65535
 )
 
+func unknownCodeMsg(code CodeType) string {
+	return fmt.Sprintf("unknown code %d", code)
+}
+
 // NOTE: Don't stringer this, we'll put better messages in later.
 // nolint: gocyclo
 func CodeToDefaultMsg(code CodeType) string {
@@ -96,7 +102,7 @@ func CodeToDefaultMsg(code CodeType) string {
 	case CodeMemoTooLarge:
 		return "memo too large"
 	default:
-		return fmt.Sprintf("unknown code %d", code)
+		return unknownCodeMsg(code)
 	}
 }
 
@@ -221,7 +227,11 @@ func (err *sdkError) TraceSDK(format string, args ...interface{}) Error {
 // Implements ABCIError.
 // Overrides err.Error.Error().
 func (err *sdkError) Error() string {
-	return fmt.Sprintf("Error{%d:%d,%#v}", err.codespace, err.code, err.cmnError)
+	return fmt.Sprintf(`ERROR:
+Codespace: %d
+Code: %d
+Message: %#v
+`, err.codespace, err.code, parseCmnError(err.cmnError.Error()))
 }
 
 // Implements ABCIError.
@@ -241,13 +251,20 @@ func (err *sdkError) Code() CodeType {
 
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
-	return fmt.Sprintf(`=== ABCI Log ===
-Codespace: %v
-Code:      %v
-ABCICode:  %v
-Error:     %#v
-=== /ABCI Log ===
-`, err.codespace, err.code, err.ABCICode(), err.cmnError)
+	cdc := wire.NewCodec()
+	parsedErrMsg := parseCmnError(err.cmnError.Error())
+	jsonErr := humanReadableError{
+		Codespace: err.codespace,
+		Code:      err.code,
+		ABCICode:  err.ABCICode(),
+		Message:   parsedErrMsg,
+	}
+	bz, er := cdc.MarshalJSON(jsonErr)
+	if er != nil {
+		panic(er)
+	}
+	stringifiedJSON := string(bz)
+	return stringifiedJSON
 }
 
 func (err *sdkError) Result() Result {
@@ -263,4 +280,19 @@ func (err *sdkError) QueryResult() abci.ResponseQuery {
 		Code: uint32(err.ABCICode()),
 		Log:  err.ABCILog(),
 	}
+}
+
+func parseCmnError(err string) string {
+	if idx := strings.Index(err, "{"); idx != -1 {
+		err = err[idx+1 : len(err)-1]
+	}
+	return err
+}
+
+// nolint
+type humanReadableError struct {
+	Codespace CodespaceType `json:"codespace"`
+	Code      CodeType      `json:"code"`
+	ABCICode  ABCICodeType  `json:"abci_code"`
+	Message   string        `json:"message"`
 }

@@ -41,16 +41,17 @@ var (
 //parameter names, init command
 var (
 	FlagOverwrite = "overwrite"
-	FlagGenTxs    = "gen-txs"
+	FlagWithTxs   = "with-txs"
 	FlagIP        = "ip"
 	FlagChainID   = "chain-id"
 )
 
 // genesis piece structure for creating combined genesis
 type GenesisTx struct {
-	NodeID   string          `json:"node_id"`
-	IP       string          `json:"ip"`
-	AppGenTx json.RawMessage `json:"app_gen_tx"`
+	NodeID    string                   `json:"node_id"`
+	IP        string                   `json:"ip"`
+	Validator tmtypes.GenesisValidator `json:"validator"`
+	AppGenTx  json.RawMessage          `json:"app_gen_tx"`
 }
 
 // Storage for init command input parameters
@@ -120,15 +121,16 @@ func gentxWithConfig(cdc *wire.Codec, appInit AppInit, config *cfg.Config, genTx
 	nodeID := string(nodeKey.ID())
 	pubKey := readOrCreatePrivValidator(config)
 
-	appGenTx, cliPrint, _, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
+	appGenTx, cliPrint, validator, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
 	if err != nil {
 		return
 	}
 
 	tx := GenesisTx{
-		NodeID:   nodeID,
-		IP:       genTxConfig.IP,
-		AppGenTx: appGenTx,
+		NodeID:    nodeID,
+		IP:        genTxConfig.IP,
+		Validator: validator,
+		AppGenTx:  appGenTx,
 	}
 	bz, err := wire.MarshalJSONIndent(cdc, tx)
 	if err != nil {
@@ -167,7 +169,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 			config.SetRoot(viper.GetString(tmcli.HomeFlag))
 			initConfig := InitConfig{
 				viper.GetString(FlagChainID),
-				viper.GetBool(FlagGenTxs),
+				viper.GetBool(FlagWithTxs),
 				filepath.Join(config.RootDir, "config", "gentx"),
 				viper.GetBool(FlagOverwrite),
 			}
@@ -196,7 +198,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	}
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().String(FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().Bool(FlagGenTxs, false, "apply genesis transactions from [--home]/config/gentx/")
+	cmd.Flags().Bool(FlagWithTxs, false, "apply existing genesis transactions from [--home]/config/gentx/")
 	cmd.Flags().AddFlagSet(appInit.FlagsAppGenState)
 	cmd.Flags().AddFlagSet(appInit.FlagsAppGenTx) // need to add this flagset for when no GenTx's provided
 	cmd.AddCommand(GenTxCmd(ctx, cdc, appInit))
@@ -310,6 +312,7 @@ func processGenTxs(genTxsDir string, cdc *wire.Codec) (
 		genTx := genTxs[nodeID]
 
 		// combine some stuff
+		validators = append(validators, genTx.Validator)
 		appGenTxs = append(appGenTxs, genTx.AppGenTx)
 
 		// Add a persistent peer

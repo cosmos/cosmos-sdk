@@ -1,0 +1,15 @@
+---
+
+- name: Copy binary
+  copy:
+    src: "{{GAIACLI_BINARY}}"
+    dest: /usr/bin/gaiacli
+    mode: 0755
+  notify: restart gaiacli
+
+- name: Copy service
+  template:
+    src: gaiacli.service.j2
+    dest: /etc/systemd/system/gaiacli.service
+  notify: systemctl
+

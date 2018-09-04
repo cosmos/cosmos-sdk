@@ -1,0 +1,61 @@
+---
+
+- name: Ensure keys folder exists locally
+  file: path=keys state=directory
+  connection: local
+  run_once: true
+  become: no
+
+- name: Create gaiad user
+  user: name=gaiad home=/home/gaiad shell=/bin/bash
+
+- name: Copy binary
+  copy:
+    src: "{{BINARY}}"
+    dest: /usr/bin
+    mode: 0755
+
+- name: Copy service file
+  copy: src=gaiad.service dest=/etc/systemd/system/gaiad.service mode=0755
+  notify: reload systemd
+
+- name: Get node ID
+  command: "cat /etc/nodeid"
+  changed_when: false
+  register: nodeid
+
+- name: gaiad init
+  command: "/usr/bin/gaiad init --chain-id={{TESTNET_NAME}} --name=fullnode{{nodeid.stdout_lines[0]}}"
+  become: yes
+  become_user: gaiad
+  register: initresult
+  args:
+    creates: /home/gaiad/.gaiad/config
+
+- name: Get wallet word seed from result of initial transaction locally
+  when: initresult["changed"]
+  shell: "echo '{{initresult.stdout}}' | python -c 'import json,sys ; print json.loads(\"\".join(sys.stdin.readlines()))[\"app_message\"][\"secret\"]'"
+  changed_when: false
+  register: walletkey
+  connection: local
+
+- name: Write wallet word seed to local files
+  when: initresult["changed"]
+  copy: "content={{walletkey.stdout}} dest=keys/node{{nodeid.stdout_lines[0]}}"
+  become: no
+  connection: local
+
+- name: Copy genesis file
+  copy:
+    src: "{{GENESISFILE}}"
+    dest: /home/gaiad/.gaiad/config/genesis.json
+  become: yes
+  become_user: gaiad
+
+- name: Copy config.toml file
+  copy:
+    src: "{{CONFIGFILE}}"
+    dest: /home/gaiad/.gaiad/config/config.toml
+  become: yes
+  become_user: gaiad
+

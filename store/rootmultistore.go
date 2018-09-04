@@ -68,6 +68,9 @@ func (rs *rootMultiStore) MountStoreWithDB(key StoreKey, typ StoreType, db dbm.D
 	if _, ok := rs.storesParams[key]; ok {
 		panic(fmt.Sprintf("rootMultiStore duplicate store key %v", key))
 	}
+	if _, ok := rs.keysByName[key.Name()]; ok {
+		panic(fmt.Sprintf("rootMultiStore duplicate store key name %v", key))
+	}
 	rs.storesParams[key] = storeParams{
 		key: key,
 		typ: typ,
@@ -99,7 +102,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 	if ver == 0 {
 		for key, storeParams := range rs.storesParams {
 			id := CommitID{}
-			store, err := rs.loadCommitStoreFromParams(id, storeParams)
+			store, err := rs.loadCommitStoreFromParams(key, id, storeParams)
 			if err != nil {
 				return fmt.Errorf("failed to load rootMultiStore: %v", err)
 			}
@@ -122,17 +125,20 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 	for _, storeInfo := range cInfo.StoreInfos {
 		key, commitID := rs.nameToKey(storeInfo.Name), storeInfo.Core.CommitID
 		storeParams := rs.storesParams[key]
-		store, err := rs.loadCommitStoreFromParams(commitID, storeParams)
+		store, err := rs.loadCommitStoreFromParams(key, commitID, storeParams)
 		if err != nil {
 			return fmt.Errorf("failed to load rootMultiStore: %v", err)
 		}
 		newStores[key] = store
 	}
 
-	// If any CommitStoreLoaders were not used, return error.
-	for key := range rs.storesParams {
-		if _, ok := newStores[key]; !ok {
-			return fmt.Errorf("unused CommitStoreLoader: %v", key)
+	// TODO: detecting transient is quite adhoc
+	// If any nontransient CommitStoreLoaders were not used, return error.
+	for key, param := range rs.storesParams {
+		if param.typ != sdk.StoreTypeTransient {
+			if _, ok := newStores[key]; !ok {
+				return fmt.Errorf("unused CommitStoreLoader: %v", key)
+			}
 		}
 	}
 
@@ -242,10 +248,7 @@ func (rs *rootMultiStore) GetKVStore(key StoreKey) KVStore {
 	return store
 }
 
-// Implements MultiStore.
-func (rs *rootMultiStore) GetKVStoreWithGas(meter sdk.GasMeter, key StoreKey) KVStore {
-	return NewGasKVStore(meter, rs.GetKVStore(key))
-}
+// Implements MultiStore
 
 // getStoreByName will first convert the original name to
 // a special key, before looking up the CommitStore.
@@ -288,6 +291,18 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 	// trim the path and make the query
 	req.Path = subpath
 	res := queryable.Query(req)
+
+	if !req.Prove || !RequireProof(subpath) {
+		return res
+	}
+
+	commitInfo, errMsg := getCommitInfo(rs.db, res.Height)
+	if errMsg != nil {
+		return sdk.ErrInternal(errMsg.Error()).QueryResult()
+	}
+
+	res.Proof = buildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
+
 	return res
 }
 
@@ -309,7 +324,7 @@ func parsePath(path string) (storeName string, subpath string, err sdk.Error) {
 
 //----------------------------------------
 
-func (rs *rootMultiStore) loadCommitStoreFromParams(id CommitID, params storeParams) (store CommitStore, err error) {
+func (rs *rootMultiStore) loadCommitStoreFromParams(key sdk.StoreKey, id CommitID, params storeParams) (store CommitStore, err error) {
 	var db dbm.DB
 	if params.db != nil {
 		db = dbm.NewPrefixDB(params.db, []byte("s/_/"))
@@ -326,6 +341,14 @@ func (rs *rootMultiStore) loadCommitStoreFromParams(id CommitID, params storePar
 		return
 	case sdk.StoreTypeDB:
 		panic("dbm.DB is not a CommitStore")
+	case sdk.StoreTypeTransient:
+		_, ok := key.(*sdk.TransientStoreKey)
+		if !ok {
+			err = fmt.Errorf("invalid StoreKey for StoreTypeTransient: %s", key.String())
+			return
+		}
+		store = newTransientStore()
+		return
 	default:
 		panic(fmt.Sprintf("unrecognized store type %v", params.typ))
 	}
@@ -439,6 +462,10 @@ func commitStores(version int64, storeMap map[StoreKey]CommitStore) commitInfo {
 	for key, store := range storeMap {
 		// Commit
 		commitID := store.Commit()
+
+		if store.GetStoreType() == sdk.StoreTypeTransient {
+			continue
+		}
 
 		// Record CommitID
 		si := storeInfo{}

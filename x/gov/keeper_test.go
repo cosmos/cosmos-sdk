@@ -10,13 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// overwrite defaults for testing
-func init() {
-	defaultMinDeposit = 10
-	defaultMaxDepositPeriod = 200
-	defaultVotingPeriod = 200
-}
-
 func TestGetSetProposal(t *testing.T) {
 	mapp, keeper, _, _, _, _ := getMockApp(t, 0)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
@@ -70,14 +63,14 @@ func TestDeposits(t *testing.T) {
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
 
-	fourSteak := sdk.Coins{sdk.NewCoin("steak", 4)}
-	fiveSteak := sdk.Coins{sdk.NewCoin("steak", 5)}
+	fourSteak := sdk.Coins{sdk.NewInt64Coin("steak", 4)}
+	fiveSteak := sdk.Coins{sdk.NewInt64Coin("steak", 5)}
 
 	addr0Initial := keeper.ck.GetCoins(ctx, addrs[0])
 	addr1Initial := keeper.ck.GetCoins(ctx, addrs[1])
 
-	// require.True(t, addr0Initial.IsEqual(sdk.Coins{sdk.NewCoin("steak", 42)}))
-	require.Equal(t, sdk.Coins{sdk.NewCoin("steak", 42)}, addr0Initial)
+	// require.True(t, addr0Initial.IsEqual(sdk.Coins{sdk.NewInt64Coin("steak", 42)}))
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin("steak", 42)}, addr0Initial)
 
 	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{}))
 
@@ -137,6 +130,7 @@ func TestDeposits(t *testing.T) {
 	require.Equal(t, fourSteak, deposit.Amount)
 	depositsIterator.Next()
 	require.False(t, depositsIterator.Valid())
+	depositsIterator.Close()
 
 	// Test Refund Deposits
 	deposit, found = keeper.GetDeposit(ctx, proposalID, addrs[1])
@@ -203,6 +197,7 @@ func TestVotes(t *testing.T) {
 	require.Equal(t, OptionNoWithVeto, vote.Option)
 	votesIterator.Next()
 	require.False(t, votesIterator.Valid())
+	votesIterator.Close()
 }
 
 func TestProposalQueues(t *testing.T) {

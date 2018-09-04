@@ -8,17 +8,17 @@ import (
 
 // Keeper of the oracle store
 type Keeper struct {
-	key sdk.KVStoreGetter
+	key sdk.StoreKey
 	cdc *wire.Codec
 
 	valset sdk.ValidatorSet
 
-	supermaj sdk.Rat
+	supermaj sdk.Dec
 	timeout  int64
 }
 
 // NewKeeper constructs a new keeper
-func NewKeeper(key sdk.KVStoreGetter, cdc *wire.Codec, valset sdk.ValidatorSet, supermaj sdk.Rat, timeout int64) Keeper {
+func NewKeeper(key sdk.StoreKey, cdc *wire.Codec, valset sdk.ValidatorSet, supermaj sdk.Dec, timeout int64) Keeper {
 	if timeout < 0 {
 		panic("Timeout should not be negative")
 	}
@@ -46,7 +46,7 @@ const (
 
 // Info for each payload
 type Info struct {
-	Power      sdk.Rat
+	Power      sdk.Dec
 	Hash       []byte
 	LastSigned int64
 	Status     InfoStatus
@@ -55,7 +55,7 @@ type Info struct {
 // EmptyInfo construct an empty Info
 func EmptyInfo(ctx sdk.Context) Info {
 	return Info{
-		Power:      sdk.ZeroRat(),
+		Power:      sdk.ZeroDec(),
 		Hash:       ctx.BlockHeader().ValidatorsHash,
 		LastSigned: ctx.BlockHeight(),
 		Status:     Pending,
@@ -64,7 +64,7 @@ func EmptyInfo(ctx sdk.Context) Info {
 
 // Info returns the information about a payload
 func (keeper Keeper) Info(ctx sdk.Context, p Payload) (res Info) {
-	store := keeper.key.KVStore(ctx)
+	store := ctx.KVStore(keeper.key)
 
 	key := GetInfoKey(p, keeper.cdc)
 	bz := store.Get(key)
@@ -77,7 +77,7 @@ func (keeper Keeper) Info(ctx sdk.Context, p Payload) (res Info) {
 }
 
 func (keeper Keeper) setInfo(ctx sdk.Context, p Payload, info Info) {
-	store := keeper.key.KVStore(ctx)
+	store := ctx.KVStore(keeper.key)
 
 	key := GetInfoKey(p, keeper.cdc)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(info)
@@ -85,21 +85,21 @@ func (keeper Keeper) setInfo(ctx sdk.Context, p Payload, info Info) {
 }
 
 func (keeper Keeper) sign(ctx sdk.Context, p Payload, signer sdk.AccAddress) {
-	store := keeper.key.KVStore(ctx)
+	store := ctx.KVStore(keeper.key)
 
 	key := GetSignKey(p, signer, keeper.cdc)
 	store.Set(key, signer)
 }
 
 func (keeper Keeper) signed(ctx sdk.Context, p Payload, signer sdk.AccAddress) bool {
-	store := keeper.key.KVStore(ctx)
+	store := ctx.KVStore(keeper.key)
 
 	key := GetSignKey(p, signer, keeper.cdc)
 	return store.Has(key)
 }
 
 func (keeper Keeper) clearSigns(ctx sdk.Context, p Payload) {
-	store := keeper.key.KVStore(ctx)
+	store := ctx.KVStore(keeper.key)
 
 	prefix := GetSignPrefix(p, keeper.cdc)
 

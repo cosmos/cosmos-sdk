@@ -1,0 +1,12 @@
+---
+
+- name: Stop datadog service
+  failed_when: false
+  service: name=datadog-agent state=stopped
+
+- name: Uninstall datadg-agent
+  yum: name=datadog-agent state=absent
+
+- name: Remove datadog-agent folder
+  file: path=/etc/datadog-agent state=absent
+

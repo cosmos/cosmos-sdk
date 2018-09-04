@@ -12,7 +12,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -95,9 +96,9 @@ func runHackCmd(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func base64ToPub(b64 string) crypto.PubKeyEd25519 {
+func base64ToPub(b64 string) ed25519.PubKeyEd25519 {
 	data, _ := base64.StdEncoding.DecodeString(b64)
-	var pubKey crypto.PubKeyEd25519
+	var pubKey ed25519.PubKeyEd25519
 	copy(pubKey[:], data)
 	return pubKey
 
@@ -149,7 +150,7 @@ type GaiaApp struct {
 func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseApp)) *GaiaApp {
 	cdc := MakeCodec()
 
-	bApp := bam.NewBaseApp(appName, cdc, logger, db, baseAppOptions...)
+	bApp := bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(os.Stdout)
 
 	// create your application object
@@ -194,6 +195,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 	if err != nil {
 		cmn.Exit(err.Error())
 	}
+
+	app.Seal()
 
 	return app
 }

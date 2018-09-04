@@ -13,6 +13,29 @@ import (
 
 const useDebugDB = false
 
+func TestStoreType(t *testing.T) {
+	db := dbm.NewMemDB()
+	store := NewCommitMultiStore(db)
+	store.MountStoreWithDB(
+		sdk.NewKVStoreKey("store1"), sdk.StoreTypeIAVL, db)
+
+}
+
+func TestStoreMount(t *testing.T) {
+	db := dbm.NewMemDB()
+	store := NewCommitMultiStore(db)
+
+	key1 := sdk.NewKVStoreKey("store1")
+	key2 := sdk.NewKVStoreKey("store2")
+	dup1 := sdk.NewKVStoreKey("store1")
+
+	require.NotPanics(t, func() { store.MountStoreWithDB(key1, sdk.StoreTypeIAVL, db) })
+	require.NotPanics(t, func() { store.MountStoreWithDB(key2, sdk.StoreTypeIAVL, db) })
+
+	require.Panics(t, func() { store.MountStoreWithDB(key1, sdk.StoreTypeIAVL, db) })
+	require.Panics(t, func() { store.MountStoreWithDB(dup1, sdk.StoreTypeIAVL, db) })
+}
+
 func TestMultistoreCommitLoad(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
 	if useDebugDB {
@@ -125,6 +148,11 @@ func TestMultiStoreQuery(t *testing.T) {
 	cid = multi.Commit()
 	ver := cid.Version
 
+	// Reload multistore from database
+	multi = newMultiStoreWithMounts(db)
+	err = multi.LoadLatestVersion()
+	require.Nil(t, err)
+
 	// Test bad path.
 	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
 	qres := multi.Query(query)
@@ -165,11 +193,11 @@ func TestMultiStoreQuery(t *testing.T) {
 func newMultiStoreWithMounts(db dbm.DB) *rootMultiStore {
 	store := NewCommitMultiStore(db)
 	store.MountStoreWithDB(
-		sdk.NewKVStoreKey("store1"), sdk.StoreTypeIAVL, db)
+		sdk.NewKVStoreKey("store1"), sdk.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(
-		sdk.NewKVStoreKey("store2"), sdk.StoreTypeIAVL, db)
+		sdk.NewKVStoreKey("store2"), sdk.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(
-		sdk.NewKVStoreKey("store3"), sdk.StoreTypeIAVL, db)
+		sdk.NewKVStoreKey("store3"), sdk.StoreTypeIAVL, nil)
 	return store
 }
 

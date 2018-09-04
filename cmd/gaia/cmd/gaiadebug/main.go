@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 func init() {
@@ -116,11 +117,11 @@ func runPubKeyCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	var pubKey crypto.PubKeyEd25519
+	var pubKey ed25519.PubKeyEd25519
 	if pubKeyI == nil {
 		copy(pubKey[:], pubkeyBytes)
 	} else {
-		pubKey = pubKeyI.(crypto.PubKeyEd25519)
+		pubKey = pubKeyI.(ed25519.PubKeyEd25519)
 		pubkeyBytes = pubKey[:]
 	}
 

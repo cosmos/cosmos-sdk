@@ -1,6 +1,8 @@
 package gov
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 )
@@ -94,7 +96,9 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 }
 
 // Called every block, process inflation, update validator set
-func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags, nonVotingVals []sdk.AccAddress) {
+func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
+
+	logger := ctx.Logger().With("module", "x/gov")
 
 	resTags = sdk.NewTags()
 
@@ -109,21 +113,22 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags, nonVotingVals
 		keeper.DeleteProposal(ctx, inactiveProposal)
 		resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
-	}
 
-	var passes bool
+		logger.Info(fmt.Sprintf("Proposal %d - \"%s\" - didn't mean minimum deposit (had only %s), deleted",
+			inactiveProposal.GetProposalID(), inactiveProposal.GetTitle(), inactiveProposal.GetTotalDeposit()))
+	}
 
 	// Check if earliest Active Proposal ended voting period yet
 	for shouldPopActiveProposalQueue(ctx, keeper) {
 		activeProposal := keeper.ActiveProposalQueuePop(ctx)
 
 		proposalStartBlock := activeProposal.GetVotingStartBlock()
-		votingPeriod := keeper.GetVotingProcedure().VotingPeriod
+		votingPeriod := keeper.GetVotingProcedure(ctx).VotingPeriod
 		if ctx.BlockHeight() < proposalStartBlock+votingPeriod {
 			continue
 		}
 
-		passes, nonVotingVals = tally(ctx, keeper, activeProposal)
+		passes, tallyResults, nonVotingVals := tally(ctx, keeper, activeProposal)
 		proposalIDBytes := keeper.cdc.MustMarshalBinary(activeProposal.GetProposalID())
 		var action []byte
 		if passes {
@@ -135,16 +140,32 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags, nonVotingVals
 			activeProposal.SetStatus(StatusRejected)
 			action = tags.ActionProposalRejected
 		}
+		activeProposal.SetTallyResult(tallyResults)
 		keeper.SetProposal(ctx, activeProposal)
+
+		logger.Info(fmt.Sprintf("Proposal %d - \"%s\" - tallied, passed: %v",
+			activeProposal.GetProposalID(), activeProposal.GetTitle(), passes))
+
+		for _, valAddr := range nonVotingVals {
+			val := keeper.ds.GetValidatorSet().Validator(ctx, valAddr)
+			keeper.ds.GetValidatorSet().Slash(ctx,
+				val.GetPubKey(),
+				ctx.BlockHeight(),
+				val.GetPower().RoundInt64(),
+				keeper.GetTallyingProcedure(ctx).GovernancePenalty)
+
+			logger.Info(fmt.Sprintf("Validator %s failed to vote on proposal %d, slashing",
+				val.GetOperator(), activeProposal.GetProposalID()))
+		}
 
 		resTags.AppendTag(tags.Action, action)
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
 	}
 
-	return resTags, nonVotingVals
+	return resTags
 }
 func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
-	depositProcedure := keeper.GetDepositProcedure()
+	depositProcedure := keeper.GetDepositProcedure(ctx)
 	peekProposal := keeper.InactiveProposalQueuePeek(ctx)
 
 	if peekProposal == nil {
@@ -158,7 +179,7 @@ func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 }
 
 func shouldPopActiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
-	votingProcedure := keeper.GetVotingProcedure()
+	votingProcedure := keeper.GetVotingProcedure(ctx)
 	peekProposal := keeper.ActiveProposalQueuePeek(ctx)
 
 	if peekProposal == nil {

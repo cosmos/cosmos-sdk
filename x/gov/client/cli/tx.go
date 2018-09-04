@@ -99,13 +99,13 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 			}
 
 			msg := gov.NewMsgSubmitProposal(proposal.Title, proposal.Description, proposalType, fromAddr, amount)
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(txCtx, cliCtx, []sdk.Msg{msg})
-			}
-
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
+			}
+
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(txCtx, cliCtx, []sdk.Msg{msg})
 			}
 
 			// Build and sign the transaction, then broadcast to Tendermint
@@ -180,12 +180,13 @@ func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 			}
 
 			msg := gov.NewMsgDeposit(depositerAddr, proposalID, amount)
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(txCtx, cliCtx, []sdk.Msg{msg})
-			}
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
+			}
+
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(txCtx, cliCtx, []sdk.Msg{msg})
 			}
 
 			// Build and sign the transaction, then broadcast to a Tendermint
@@ -226,12 +227,13 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 			}
 
 			msg := gov.NewMsgVote(voterAddr, proposalID, byteVoteOption)
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(txCtx, cliCtx, []sdk.Msg{msg})
-			}
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
+			}
+
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(txCtx, cliCtx, []sdk.Msg{msg})
 			}
 
 			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]",

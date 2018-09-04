@@ -1,8 +1,8 @@
 package bank
 
 import (
-	"time"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -226,7 +226,7 @@ func TestVesting(t *testing.T) {
 	accountMapper.SetAccount(ctx, &vacc)
 
 	// Try sending more than sendable coins
-    _, err := coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{{"steak", sdk.NewInt(70)}})
+	_, err := coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{{"steak", sdk.NewInt(70)}})
 
 	require.NotNil(t, err, "Keeper did not error")
 	require.Equal(t, sdk.CodeType(10), err.Code(), "Did not error with insufficient coins")

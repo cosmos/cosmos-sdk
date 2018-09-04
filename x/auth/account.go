@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"time"
 	"errors"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -125,36 +125,37 @@ type VestingAccount interface {
 
 	// Returns true if account is still vesting, else false
 	// CONTRACT: After account is done vesting, account behaves exactly like BaseAccount
-    IsVesting(time.Time) bool
+	IsVesting(time.Time) bool
 
-    // Calculates amount of coins that can be sent to other accounts given the current time
+	// Calculates amount of coins that can be sent to other accounts given the current blocktime
 	SendableCoins(time.Time) sdk.Coins
 	// Called on bank transfer functions (e.g. bank.SendCoins and bank.InputOutputCoins)
 	// Used to track coins that are transferred in and out of vesting account after initialization
+	// while account is still vesting
 	TrackTransfers(sdk.Coins)
 }
 
 // Implement Vesting Interface. Continuously vests coins linearly from StartTime until EndTime
 type ContinuousVestingAccount struct {
 	BaseAccount
-    OriginalVestingCoins sdk.Coins // Coins in account on Initialization
-    TransferredCoins     sdk.Coins // Net coins transferred into and out of account. May be negative
+	OriginalVestingCoins sdk.Coins // Coins in account on Initialization
+	TransferredCoins     sdk.Coins // Net coins transferred into and out of account. May be negative
 
-    // StartTime and EndTime used to calculate how much of OriginalCoins is unlocked at any given point
-    StartTime time.Time
-    EndTime   time.Time
+	// StartTime and EndTime used to calculate how much of OriginalCoins is unlocked at any given point
+	StartTime time.Time
+	EndTime   time.Time
 }
 
 func NewContinuousVestingAccount(addr sdk.AccAddress, originalCoins sdk.Coins, startTime, endTime time.Time) ContinuousVestingAccount {
 	bacc := BaseAccount{
 		Address: addr,
-		Coins: originalCoins,
+		Coins:   originalCoins,
 	}
 	return ContinuousVestingAccount{
-		BaseAccount: bacc,
+		BaseAccount:          bacc,
 		OriginalVestingCoins: originalCoins,
-		StartTime: startTime,
-		EndTime: endTime,
+		StartTime:            startTime,
+		EndTime:              endTime,
 	}
 }
 
@@ -182,7 +183,7 @@ func (vacc ContinuousVestingAccount) SendableCoins(blockTime time.Time) sdk.Coin
 			// prevent double count of transferred coins
 			amt = amt.Sub(vacc.TransferredCoins.AmountOf(c.Denom))
 		}
-		
+
 		// Add non-zero coins
 		if !amt.IsZero() {
 			coin := sdk.NewCoin(c.Denom, amt)
@@ -199,7 +200,7 @@ func (vacc *ContinuousVestingAccount) TrackTransfers(coins sdk.Coins) {
 	vacc.TransferredCoins = vacc.TransferredCoins.Plus(coins)
 }
 
-// Implements Vesting Account. Vests all original coins after EndTime but keeps them 
+// Implements Vesting Account. Vests all original coins after EndTime but keeps them
 // all locked until that point.
 type DelayTransferAccount struct {
 	BaseAccount
@@ -212,11 +213,11 @@ type DelayTransferAccount struct {
 func NewDelayTransferAccount(addr sdk.AccAddress, originalCoins sdk.Coins, endTime time.Time) DelayTransferAccount {
 	bacc := BaseAccount{
 		Address: addr,
-		Coins: originalCoins,
+		Coins:   originalCoins,
 	}
 	return DelayTransferAccount{
 		BaseAccount: bacc,
-		EndTime: endTime,
+		EndTime:     endTime,
 	}
 }
 
@@ -245,7 +246,7 @@ func (vacc DelayTransferAccount) SendableCoins(blockTime time.Time) sdk.Coins {
 		}
 		return sendableCoins
 	}
-	
+
 	// If EndTime has passed, DelayTransferAccount behaves like BaseAccount
 	return vacc.BaseAccount.GetCoins()
 }

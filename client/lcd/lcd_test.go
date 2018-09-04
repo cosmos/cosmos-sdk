@@ -326,6 +326,7 @@ func TestCoinSendGenerateOnly(t *testing.T) {
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, msg.Msgs[0].Type(), "bank")
 	require.Equal(t, msg.Msgs[0].GetSigners(), []sdk.AccAddress{addr})
+	require.Equal(t, 0, len(msg.Signatures))
 }
 
 func TestTxs(t *testing.T) {

@@ -164,6 +164,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	msg := unmarshalStdTx(t, stdout)
 	require.NotZero(t, msg.Fee.Gas)
 	require.Equal(t, len(msg.Msgs), 1)
+	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test --dry-run
 	success = executeWrite(t, cvStr+" --dry-run", app.DefaultKeyPass)
@@ -240,6 +241,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	msg := unmarshalStdTx(t, stdout)
 	require.NotZero(t, msg.Fee.Gas)
 	require.Equal(t, len(msg.Msgs), 1)
+	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test --dry-run
 	success = executeWrite(t, spStr+" --dry-run", app.DefaultKeyPass)
@@ -271,6 +273,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	msg = unmarshalStdTx(t, stdout)
 	require.NotZero(t, msg.Fee.Gas)
 	require.Equal(t, len(msg.Msgs), 1)
+	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	executeWrite(t, depositStr, app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
@@ -294,6 +297,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	msg = unmarshalStdTx(t, stdout)
 	require.NotZero(t, msg.Fee.Gas)
 	require.Equal(t, len(msg.Msgs), 1)
+	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	executeWrite(t, voteStr, app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
@@ -350,6 +354,7 @@ func TestGaiaCLISendGenerateOnly(t *testing.T) {
 	msg := unmarshalStdTx(t, stdout)
 	require.Equal(t, msg.Fee.Gas, int64(client.DefaultGasLimit))
 	require.Equal(t, len(msg.Msgs), 1)
+	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test generate sendTx, estimate gas
 	success, stdout, stderr = executeWriteRetStdStreams(t, fmt.Sprintf(
@@ -370,6 +375,7 @@ func TestGaiaCLISendGenerateOnly(t *testing.T) {
 	msg = unmarshalStdTx(t, stdout)
 	require.Equal(t, msg.Fee.Gas, int64(100))
 	require.Equal(t, len(msg.Msgs), 1)
+	require.Equal(t, 0, len(msg.GetSignatures()))
 }
 
 //___________________________________________________________________________________

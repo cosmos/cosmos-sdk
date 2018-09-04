@@ -140,13 +140,13 @@ func (am AccountMapper) GetNextAccountNumber(ctx sdk.Context) int64 {
 	if bz == nil {
 		accNumber = 0
 	} else {
-		err := am.cdc.UnmarshalBinary(bz, &accNumber)
+		err := am.cdc.UnmarshalBinaryLengthPrefixed(bz, &accNumber)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	bz = am.cdc.MustMarshalBinary(accNumber + 1)
+	bz = am.cdc.MustMarshalBinaryLengthPrefixed(accNumber + 1)
 	store.Set(globalAccountNumberKey, bz)
 
 	return accNumber
@@ -156,7 +156,7 @@ func (am AccountMapper) GetNextAccountNumber(ctx sdk.Context) int64 {
 // misc.
 
 func (am AccountMapper) encodeAccount(acc Account) []byte {
-	bz, err := am.cdc.MarshalBinaryBare(acc)
+	bz, err := am.cdc.MarshalBinary(acc)
 	if err != nil {
 		panic(err)
 	}
@@ -164,7 +164,7 @@ func (am AccountMapper) encodeAccount(acc Account) []byte {
 }
 
 func (am AccountMapper) decodeAccount(bz []byte) (acc Account) {
-	err := am.cdc.UnmarshalBinaryBare(bz, &acc)
+	err := am.cdc.UnmarshalBinary(bz, &acc)
 	if err != nil {
 		panic(err)
 	}

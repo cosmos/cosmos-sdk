@@ -76,7 +76,7 @@ func (ctx CoreContext) QuerySubspace(cdc *wire.Codec, subspace []byte, storeName
 	if err != nil {
 		return res, err
 	}
-	cdc.MustUnmarshalBinary(resRaw, &res)
+	cdc.MustUnmarshalBinaryLengthPrefixed(resRaw, &res)
 	return
 }
 
@@ -181,7 +181,7 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msgs []sdk.Msg, cdc
 	// marshal bytes
 	tx := auth.NewStdTx(signMsg.Msgs, signMsg.Fee, sigs, memo)
 
-	return cdc.MarshalBinary(tx)
+	return cdc.MarshalBinaryLengthPrefixed(tx)
 }
 
 // sign and build the transaction from the msg

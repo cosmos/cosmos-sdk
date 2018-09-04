@@ -47,7 +47,7 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 		panic("Stored params should not have been nil")
 	}
 
-	k.cdc.MustUnmarshalBinary(b, &params)
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &params)
 	return
 }
 
@@ -57,7 +57,7 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 // first params set it will panic.
 func (k Keeper) SetNewParams(ctx sdk.Context, params types.Params) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinary(params)
+	b := k.cdc.MustMarshalBinaryLengthPrefixed(params)
 	store.Set(ParamKey, b)
 }
 
@@ -70,7 +70,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	if exParams.MaxValidators != params.MaxValidators {
 		k.UpdateBondedValidatorsFull(ctx)
 	}
-	b := k.cdc.MustMarshalBinary(params)
+	b := k.cdc.MustMarshalBinaryLengthPrefixed(params)
 	store.Set(ParamKey, b)
 }
 
@@ -83,14 +83,14 @@ func (k Keeper) GetPool(ctx sdk.Context) (pool types.Pool) {
 	if b == nil {
 		panic("Stored pool should not have been nil")
 	}
-	k.cdc.MustUnmarshalBinary(b, &pool)
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &pool)
 	return
 }
 
 // set the pool
 func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinary(pool)
+	b := k.cdc.MustMarshalBinaryLengthPrefixed(pool)
 	store.Set(PoolKey, b)
 }
 
@@ -110,13 +110,13 @@ func (k Keeper) GetIntraTxCounter(ctx sdk.Context) int16 {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(IntraTxCounterKey)
 	var counter int16
-	k.cdc.MustUnmarshalBinary(b, &counter)
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &counter)
 	return counter
 }
 
 // set the current in-block validator operation counter
 func (k Keeper) SetIntraTxCounter(ctx sdk.Context, counter int16) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinary(counter)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(counter)
 	store.Set(IntraTxCounterKey, bz)
 }

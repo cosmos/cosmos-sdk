@@ -14,7 +14,7 @@ type byter interface {
 
 func checkAminoBinary(t *testing.T, src byter, dst interface{}, size int) {
 	// Marshal to binary bytes.
-	bz, err := cdc.MarshalBinaryBare(src)
+	bz, err := cdc.MarshalBinary(src)
 	require.Nil(t, err, "%+v", err)
 	// Make sure this is compatible with current (Bytes()) encoding.
 	require.Equal(t, src.Bytes(), bz, "Amino binary vs Bytes() mismatch")
@@ -23,7 +23,7 @@ func checkAminoBinary(t *testing.T, src byter, dst interface{}, size int) {
 		require.Equal(t, size, len(bz), "Amino binary size mismatch")
 	}
 	// Unmarshal.
-	err = cdc.UnmarshalBinaryBare(bz, dst)
+	err = cdc.UnmarshalBinary(bz, dst)
 	require.Nil(t, err, "%+v", err)
 }
 

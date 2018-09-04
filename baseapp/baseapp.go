@@ -156,7 +156,7 @@ func defaultTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
 
 		// StdTx.Msg is an interface. The concrete types
 		// are registered by MakeTxCodec
-		err := cdc.UnmarshalBinary(txBytes, &tx)
+		err := cdc.UnmarshalBinaryLengthPrefixed(txBytes, &tx)
 		if err != nil {
 			return nil, sdk.ErrTxDecode("").TraceSDK(err.Error())
 		}
@@ -364,7 +364,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 		default:
 			result = sdk.ErrUnknownRequest(fmt.Sprintf("Unknown query: %s", path)).Result()
 		}
-		value := app.cdc.MustMarshalBinary(result)
+		value := app.cdc.MustMarshalBinaryLengthPrefixed(result)
 		return abci.ResponseQuery{
 			Code:  uint32(sdk.ABCICodeOK),
 			Value: value,

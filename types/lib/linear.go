@@ -107,19 +107,19 @@ func (m Linear) Len() (res uint64) {
 	if bz == nil {
 		return 0
 	}
-	m.cdc.MustUnmarshalBinary(bz, &res)
+	m.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
 // Get implements List
 func (m Linear) Get(index uint64, ptr interface{}) error {
 	bz := m.store.Get(m.ElemKey(index))
-	return m.cdc.UnmarshalBinary(bz, ptr)
+	return m.cdc.UnmarshalBinaryLengthPrefixed(bz, ptr)
 }
 
 // Set implements List
 func (m Linear) Set(index uint64, value interface{}) {
-	bz := m.cdc.MustMarshalBinary(value)
+	bz := m.cdc.MustMarshalBinaryLengthPrefixed(value)
 	m.store.Set(m.ElemKey(index), bz)
 }
 
@@ -132,7 +132,7 @@ func (m Linear) Delete(index uint64) {
 func (m Linear) Push(value interface{}) {
 	length := m.Len()
 	m.Set(length, value)
-	m.store.Set(m.LengthKey(), m.cdc.MustMarshalBinary(length+1))
+	m.store.Set(m.LengthKey(), m.cdc.MustMarshalBinaryLengthPrefixed(length+1))
 }
 
 // IterateRead implements List
@@ -140,7 +140,7 @@ func (m Linear) Iterate(ptr interface{}, fn func(uint64) bool) {
 	iter := sdk.KVStorePrefixIterator(m.store, []byte{0x01})
 	for ; iter.Valid(); iter.Next() {
 		v := iter.Value()
-		m.cdc.MustUnmarshalBinary(v, ptr)
+		m.cdc.MustUnmarshalBinaryLengthPrefixed(v, ptr)
 		k := iter.Key()
 		s := string(k[len(k)-20:])
 		index, err := strconv.ParseUint(s, 10, 64)
@@ -197,12 +197,12 @@ func (m Linear) getTop() (res uint64) {
 		return 0
 	}
 
-	m.cdc.MustUnmarshalBinary(bz, &res)
+	m.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
 func (m Linear) setTop(top uint64) {
-	bz := m.cdc.MustMarshalBinary(top)
+	bz := m.cdc.MustMarshalBinaryLengthPrefixed(top)
 	m.store.Set(m.TopKey(), bz)
 }
 

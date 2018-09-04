@@ -22,8 +22,8 @@ type Pool struct {
 
 // nolint
 func (p Pool) Equal(p2 Pool) bool {
-	bz1 := MsgCdc.MustMarshalBinary(&p)
-	bz2 := MsgCdc.MustMarshalBinary(&p2)
+	bz1 := MsgCdc.MustMarshalBinaryLengthPrefixed(&p)
+	bz2 := MsgCdc.MustMarshalBinaryLengthPrefixed(&p2)
 	return bytes.Equal(bz1, bz2)
 }
 

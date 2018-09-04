@@ -355,7 +355,7 @@ func testTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
 		if len(txBytes) == 0 {
 			return nil, sdk.ErrTxDecode("txBytes are empty")
 		}
-		err := cdc.UnmarshalBinary(txBytes, &tx)
+		err := cdc.UnmarshalBinaryLengthPrefixed(txBytes, &tx)
 		if err != nil {
 			return nil, sdk.ErrTxDecode("").TraceSDK(err.Error())
 		}
@@ -446,7 +446,7 @@ func TestCheckTx(t *testing.T) {
 
 	for i := int64(0); i < nTxs; i++ {
 		tx := newTxCounter(i, 0)
-		txBytes, err := app.cdc.MarshalBinary(tx)
+		txBytes, err := app.cdc.MarshalBinaryLengthPrefixed(tx)
 		require.NoError(t, err)
 		r := app.CheckTx(txBytes)
 		assert.True(t, r.IsOK(), fmt.Sprintf("%v", r))
@@ -488,7 +488,7 @@ func TestDeliverTx(t *testing.T) {
 		for i := 0; i < txPerHeight; i++ {
 			counter := int64(blockN*txPerHeight + i)
 			tx := newTxCounter(counter, counter)
-			txBytes, err := app.cdc.MarshalBinary(tx)
+			txBytes, err := app.cdc.MarshalBinaryLengthPrefixed(tx)
 			require.NoError(t, err)
 			res := app.DeliverTx(txBytes)
 			require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
@@ -523,7 +523,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	{
 		app.BeginBlock(abci.RequestBeginBlock{})
 		tx := newTxCounter(0, 0, 1, 2)
-		txBytes, err := app.cdc.MarshalBinary(tx)
+		txBytes, err := app.cdc.MarshalBinaryLengthPrefixed(tx)
 		require.NoError(t, err)
 		res := app.DeliverTx(txBytes)
 		require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
@@ -544,7 +544,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 		tx := newTxCounter(1, 3)
 		tx.Msgs = append(tx.Msgs, msgCounter2{0})
 		tx.Msgs = append(tx.Msgs, msgCounter2{1})
-		txBytes, err := app.cdc.MarshalBinary(tx)
+		txBytes, err := app.cdc.MarshalBinaryLengthPrefixed(tx)
 		require.NoError(t, err)
 		res := app.DeliverTx(txBytes)
 		require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
@@ -607,7 +607,7 @@ func TestSimulateTx(t *testing.T) {
 		require.Equal(t, int64(gasConsumed), result.GasUsed)
 
 		// simulate by calling Query with encoded tx
-		txBytes, err := app.cdc.MarshalBinary(tx)
+		txBytes, err := app.cdc.MarshalBinaryLengthPrefixed(tx)
 		require.Nil(t, err)
 		query := abci.RequestQuery{
 			Path: "/app/simulate",
@@ -617,7 +617,7 @@ func TestSimulateTx(t *testing.T) {
 		require.True(t, queryResult.IsOK(), queryResult.Log)
 
 		var res sdk.Result
-		app.cdc.MustUnmarshalBinary(queryResult.Value, &res)
+		app.cdc.MustUnmarshalBinaryLengthPrefixed(queryResult.Value, &res)
 		require.True(t, res.IsOK(), res.Log)
 		require.Equal(t, gasConsumed, res.GasUsed, res.Log)
 		app.EndBlock(abci.RequestEndBlock{})
@@ -691,7 +691,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 		registerTestCodec(newCdc)
 		newCdc.RegisterConcrete(&msgNoDecode{}, "cosmos-sdk/baseapp/msgNoDecode", nil)
 
-		txBytes, err := newCdc.MarshalBinary(tx)
+		txBytes, err := newCdc.MarshalBinaryLengthPrefixed(tx)
 		require.NoError(t, err)
 		res := app.DeliverTx(txBytes)
 		require.EqualValues(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeTxDecode), res.Code)

@@ -220,7 +220,7 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			}
 			res.Value = value
 			cdc := amino.NewCodec()
-			p, err := cdc.MarshalBinary(proof)
+			p, err := cdc.MarshalBinaryLengthPrefixed(proof)
 			if err != nil {
 				res.Log = err.Error()
 				break
@@ -238,7 +238,7 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			KVs = append(KVs, KVPair{iterator.Key(), iterator.Value()})
 		}
 		iterator.Close()
-		res.Value = cdc.MustMarshalBinary(KVs)
+		res.Value = cdc.MustMarshalBinaryLengthPrefixed(KVs)
 	default:
 		msg := fmt.Sprintf("Unexpected Query path: %v", req.Path)
 		return sdk.ErrUnknownRequest(msg).QueryResult()

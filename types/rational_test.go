@@ -255,11 +255,11 @@ func TestSerializationGoWireJSON(t *testing.T) {
 
 func TestSerializationGoWireBinary(t *testing.T) {
 	r := NewRat(1, 3)
-	bz, err := cdc.MarshalBinary(r)
+	bz, err := cdc.MarshalBinaryLengthPrefixed(r)
 	require.NoError(t, err)
 
 	var r2 Rat
-	err = cdc.UnmarshalBinary(bz, &r2)
+	err = cdc.UnmarshalBinaryLengthPrefixed(bz, &r2)
 	require.NoError(t, err)
 	require.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
 }

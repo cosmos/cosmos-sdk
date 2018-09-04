@@ -37,13 +37,13 @@ func (fck FeeCollectionKeeper) GetCollectedFees(ctx sdk.Context) sdk.Coins {
 	}
 
 	feePool := &(sdk.Coins{})
-	fck.cdc.MustUnmarshalBinary(bz, feePool)
+	fck.cdc.MustUnmarshalBinaryLengthPrefixed(bz, feePool)
 	return *feePool
 }
 
 // Sets to Collected Fee Pool
 func (fck FeeCollectionKeeper) setCollectedFees(ctx sdk.Context, coins sdk.Coins) {
-	bz := fck.cdc.MustMarshalBinary(coins)
+	bz := fck.cdc.MustMarshalBinaryLengthPrefixed(coins)
 	store := ctx.KVStore(fck.key)
 	store.Set(collectedFeesKey, bz)
 }

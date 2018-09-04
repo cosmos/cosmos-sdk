@@ -21,7 +21,7 @@ func GetAccountCmdDefault(storeName string, cdc *wire.Codec) *cobra.Command {
 func GetAccountDecoder(cdc *wire.Codec) auth.AccountDecoder {
 	return func(accBytes []byte) (acct auth.Account, err error) {
 		// acct := new(auth.BaseAccount)
-		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
+		err = cdc.UnmarshalBinary(accBytes, &acct)
 		if err != nil {
 			panic(err)
 		}

@@ -55,7 +55,7 @@ func TestKeeper(t *testing.T) {
 	for _, kv := range kvs {
 		var param int64
 		bz := setter.GetRaw(ctx, kv.key)
-		err := cdc.UnmarshalBinary(bz, &param)
+		err := cdc.UnmarshalBinaryLengthPrefixed(bz, &param)
 		assert.Nil(t, err)
 		assert.Equal(t, kv.param, param)
 	}

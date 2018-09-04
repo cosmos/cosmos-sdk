@@ -188,7 +188,7 @@ func GetCmdQueryProposal(storeName string, cdc *wire.Codec) *cobra.Command {
 			}
 
 			var proposal gov.Proposal
-			cdc.MustUnmarshalBinary(res, &proposal)
+			cdc.MustUnmarshalBinaryLengthPrefixed(res, &proposal)
 			output, err := wire.MarshalJSONIndent(cdc, proposal)
 			if err != nil {
 				return err
@@ -224,7 +224,7 @@ func GetCmdQueryVote(storeName string, cdc *wire.Codec) *cobra.Command {
 			}
 
 			var vote gov.Vote
-			cdc.MustUnmarshalBinary(res, &vote)
+			cdc.MustUnmarshalBinaryLengthPrefixed(res, &vote)
 			output, err := wire.MarshalJSONIndent(cdc, vote)
 			if err != nil {
 				return err
@@ -256,7 +256,7 @@ func GetCmdQueryVotes(storeName string, cdc *wire.Codec) *cobra.Command {
 			}
 
 			var proposal gov.Proposal
-			cdc.MustUnmarshalBinary(res, &proposal)
+			cdc.MustUnmarshalBinaryLengthPrefixed(res, &proposal)
 
 			if proposal.GetStatus() != gov.StatusVotingPeriod {
 				fmt.Println("Proposal not in voting period.")
@@ -271,7 +271,7 @@ func GetCmdQueryVotes(storeName string, cdc *wire.Codec) *cobra.Command {
 			var votes []gov.Vote
 			for i := 0; i < len(res2); i++ {
 				var vote gov.Vote
-				cdc.MustUnmarshalBinary(res2[i].Value, &vote)
+				cdc.MustUnmarshalBinaryLengthPrefixed(res2[i].Value, &vote)
 				votes = append(votes, vote)
 			}
 

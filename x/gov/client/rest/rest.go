@@ -195,7 +195,7 @@ func queryProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 		}
 
 		var proposal gov.Proposal
-		cdc.MustUnmarshalBinary(res, &proposal)
+		cdc.MustUnmarshalBinaryLengthPrefixed(res, &proposal)
 		output, err := wire.MarshalJSONIndent(cdc, proposal)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -260,7 +260,7 @@ func queryDepositHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 		}
 
 		var deposit gov.Deposit
-		cdc.MustUnmarshalBinary(res, &deposit)
+		cdc.MustUnmarshalBinaryLengthPrefixed(res, &deposit)
 		output, err := wire.MarshalJSONIndent(cdc, deposit)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -326,7 +326,7 @@ func queryVoteHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 		}
 
 		var vote gov.Vote
-		cdc.MustUnmarshalBinary(res, &vote)
+		cdc.MustUnmarshalBinaryLengthPrefixed(res, &vote)
 		output, err := wire.MarshalJSONIndent(cdc, vote)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -369,7 +369,7 @@ func queryVotesOnProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 		}
 
 		var proposal gov.Proposal
-		cdc.MustUnmarshalBinary(res, &proposal)
+		cdc.MustUnmarshalBinaryLengthPrefixed(res, &proposal)
 
 		if proposal.GetStatus() != gov.StatusVotingPeriod {
 			err := errors.Errorf("proposal is not in Voting Period", proposalID)
@@ -388,7 +388,7 @@ func queryVotesOnProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 
 		for i := 0; i < len(res2); i++ {
 			var vote gov.Vote
-			cdc.MustUnmarshalBinary(res2[i].Value, &vote)
+			cdc.MustUnmarshalBinaryLengthPrefixed(res2[i].Value, &vote)
 			votes = append(votes, vote)
 		}
 
@@ -454,7 +454,7 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 		var maxProposalID int64
-		cdc.MustUnmarshalBinary(res, &maxProposalID)
+		cdc.MustUnmarshalBinaryLengthPrefixed(res, &maxProposalID)
 
 		matchingProposals := []gov.Proposal{}
 
@@ -479,7 +479,7 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 			}
 
 			var proposal gov.Proposal
-			cdc.MustUnmarshalBinary(res, &proposal)
+			cdc.MustUnmarshalBinaryLengthPrefixed(res, &proposal)
 
 			if len(strProposalStatus) != 0 {
 				if proposal.GetStatus() != proposalStatus {

@@ -37,7 +37,7 @@ func GetAccountDecoder(cdc *wire.Codec) auth.AccountDecoder {
 			return nil, sdk.ErrTxDecode("accBytes are empty")
 		}
 		acct := new(AppAccount)
-		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
+		err = cdc.UnmarshalBinary(accBytes, &acct)
 		if err != nil {
 			panic(err)
 		}

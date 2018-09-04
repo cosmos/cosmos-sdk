@@ -439,7 +439,7 @@ func TestSubmitProposal(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	var proposalID int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID)
+	cdc.UnmarshalBinary(resultTx.DeliverTx.GetData(), &proposalID)
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
@@ -461,7 +461,7 @@ func TestDeposit(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	var proposalID int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID)
+	cdc.UnmarshalBinary(resultTx.DeliverTx.GetData(), &proposalID)
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
@@ -495,7 +495,7 @@ func TestVote(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	var proposalID int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID)
+	cdc.UnmarshalBinary(resultTx.DeliverTx.GetData(), &proposalID)
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
@@ -545,17 +545,17 @@ func TestProposalsQuery(t *testing.T) {
 	// Addr1 proposes (and deposits) proposals #1 and #2
 	resultTx := doSubmitProposal(t, port, seed, name, password1, addr)
 	var proposalID1 int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID1)
+	cdc.UnmarshalBinary(resultTx.DeliverTx.GetData(), &proposalID1)
 	tests.WaitForHeight(resultTx.Height+1, port)
 	resultTx = doSubmitProposal(t, port, seed, name, password1, addr)
 	var proposalID2 int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID2)
+	cdc.UnmarshalBinary(resultTx.DeliverTx.GetData(), &proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 proposes (and deposits) proposals #3
 	resultTx = doSubmitProposal(t, port, seed2, name2, password2, addr2)
 	var proposalID3 int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID3)
+	cdc.UnmarshalBinary(resultTx.DeliverTx.GetData(), &proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 deposits on proposals #2 & #3

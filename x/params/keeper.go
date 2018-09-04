@@ -41,7 +41,7 @@ func InitKeeper(ctx sdk.Context, cdc *wire.Codec, key sdk.StoreKey, params ...in
 func (k Keeper) get(ctx sdk.Context, key string, ptr interface{}) error {
 	store := ctx.KVStore(k.key)
 	bz := store.Get([]byte(key))
-	return k.cdc.UnmarshalBinary(bz, ptr)
+	return k.cdc.UnmarshalBinaryLengthPrefixed(bz, ptr)
 }
 
 // getRaw returns raw byte slice
@@ -58,12 +58,12 @@ func (k Keeper) set(ctx sdk.Context, key string, param interface{}) error {
 		ptrty := reflect.PtrTo(reflect.TypeOf(param))
 		ptr := reflect.New(ptrty).Interface()
 
-		if k.cdc.UnmarshalBinary(bz, ptr) != nil {
+		if k.cdc.UnmarshalBinaryLengthPrefixed(bz, ptr) != nil {
 			return fmt.Errorf("Type mismatch with stored param and provided param")
 		}
 	}
 
-	bz, err := k.cdc.MarshalBinary(param)
+	bz, err := k.cdc.MarshalBinaryLengthPrefixed(param)
 	if err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func (k Getter) GetRaw(ctx sdk.Context, key string) []byte {
 func (k Getter) GetString(ctx sdk.Context, key string) (res string, err error) {
 	store := ctx.KVStore(k.k.key)
 	bz := store.Get([]byte(key))
-	err = k.k.cdc.UnmarshalBinary(bz, &res)
+	err = k.k.cdc.UnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -115,7 +115,7 @@ func (k Getter) GetString(ctx sdk.Context, key string) (res string, err error) {
 func (k Getter) GetBool(ctx sdk.Context, key string) (res bool, err error) {
 	store := ctx.KVStore(k.k.key)
 	bz := store.Get([]byte(key))
-	err = k.k.cdc.UnmarshalBinary(bz, &res)
+	err = k.k.cdc.UnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -123,7 +123,7 @@ func (k Getter) GetBool(ctx sdk.Context, key string) (res bool, err error) {
 func (k Getter) GetInt16(ctx sdk.Context, key string) (res int16, err error) {
 	store := ctx.KVStore(k.k.key)
 	bz := store.Get([]byte(key))
-	err = k.k.cdc.UnmarshalBinary(bz, &res)
+	err = k.k.cdc.UnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -131,7 +131,7 @@ func (k Getter) GetInt16(ctx sdk.Context, key string) (res int16, err error) {
 func (k Getter) GetInt32(ctx sdk.Context, key string) (res int32, err error) {
 	store := ctx.KVStore(k.k.key)
 	bz := store.Get([]byte(key))
-	err = k.k.cdc.UnmarshalBinary(bz, &res)
+	err = k.k.cdc.UnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -139,7 +139,7 @@ func (k Getter) GetInt32(ctx sdk.Context, key string) (res int32, err error) {
 func (k Getter) GetInt64(ctx sdk.Context, key string) (res int64, err error) {
 	store := ctx.KVStore(k.k.key)
 	bz := store.Get([]byte(key))
-	err = k.k.cdc.UnmarshalBinary(bz, &res)
+	err = k.k.cdc.UnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -147,7 +147,7 @@ func (k Getter) GetInt64(ctx sdk.Context, key string) (res int64, err error) {
 func (k Getter) GetUint16(ctx sdk.Context, key string) (res uint16, err error) {
 	store := ctx.KVStore(k.k.key)
 	bz := store.Get([]byte(key))
-	err = k.k.cdc.UnmarshalBinary(bz, &res)
+	err = k.k.cdc.UnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -155,7 +155,7 @@ func (k Getter) GetUint16(ctx sdk.Context, key string) (res uint16, err error) {
 func (k Getter) GetUint32(ctx sdk.Context, key string) (res uint32, err error) {
 	store := ctx.KVStore(k.k.key)
 	bz := store.Get([]byte(key))
-	err = k.k.cdc.UnmarshalBinary(bz, &res)
+	err = k.k.cdc.UnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -163,7 +163,7 @@ func (k Getter) GetUint32(ctx sdk.Context, key string) (res uint32, err error) {
 func (k Getter) GetUint64(ctx sdk.Context, key string) (res uint64, err error) {
 	store := ctx.KVStore(k.k.key)
 	bz := store.Get([]byte(key))
-	err = k.k.cdc.UnmarshalBinary(bz, &res)
+	err = k.k.cdc.UnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -171,7 +171,7 @@ func (k Getter) GetUint64(ctx sdk.Context, key string) (res uint64, err error) {
 func (k Getter) GetInt(ctx sdk.Context, key string) (res sdk.Int, err error) {
 	store := ctx.KVStore(k.k.key)
 	bz := store.Get([]byte(key))
-	err = k.k.cdc.UnmarshalBinary(bz, &res)
+	err = k.k.cdc.UnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -179,7 +179,7 @@ func (k Getter) GetInt(ctx sdk.Context, key string) (res sdk.Int, err error) {
 func (k Getter) GetUint(ctx sdk.Context, key string) (res sdk.Uint, err error) {
 	store := ctx.KVStore(k.k.key)
 	bz := store.Get([]byte(key))
-	err = k.k.cdc.UnmarshalBinary(bz, &res)
+	err = k.k.cdc.UnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -187,7 +187,7 @@ func (k Getter) GetUint(ctx sdk.Context, key string) (res sdk.Uint, err error) {
 func (k Getter) GetRat(ctx sdk.Context, key string) (res sdk.Rat, err error) {
 	store := ctx.KVStore(k.k.key)
 	bz := store.Get([]byte(key))
-	err = k.k.cdc.UnmarshalBinary(bz, &res)
+	err = k.k.cdc.UnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -198,7 +198,7 @@ func (k Getter) GetStringWithDefault(ctx sdk.Context, key string, def string) (r
 	if bz == nil {
 		return def
 	}
-	k.k.cdc.MustUnmarshalBinary(bz, &res)
+	k.k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -209,7 +209,7 @@ func (k Getter) GetBoolWithDefault(ctx sdk.Context, key string, def bool) (res b
 	if bz == nil {
 		return def
 	}
-	k.k.cdc.MustUnmarshalBinary(bz, &res)
+	k.k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -220,7 +220,7 @@ func (k Getter) GetInt16WithDefault(ctx sdk.Context, key string, def int16) (res
 	if bz == nil {
 		return def
 	}
-	k.k.cdc.MustUnmarshalBinary(bz, &res)
+	k.k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -231,7 +231,7 @@ func (k Getter) GetInt32WithDefault(ctx sdk.Context, key string, def int32) (res
 	if bz == nil {
 		return def
 	}
-	k.k.cdc.MustUnmarshalBinary(bz, &res)
+	k.k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -242,7 +242,7 @@ func (k Getter) GetInt64WithDefault(ctx sdk.Context, key string, def int64) (res
 	if bz == nil {
 		return def
 	}
-	k.k.cdc.MustUnmarshalBinary(bz, &res)
+	k.k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -253,7 +253,7 @@ func (k Getter) GetUint16WithDefault(ctx sdk.Context, key string, def uint16) (r
 	if bz == nil {
 		return def
 	}
-	k.k.cdc.MustUnmarshalBinary(bz, &res)
+	k.k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -264,7 +264,7 @@ func (k Getter) GetUint32WithDefault(ctx sdk.Context, key string, def uint32) (r
 	if bz == nil {
 		return def
 	}
-	k.k.cdc.MustUnmarshalBinary(bz, &res)
+	k.k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -275,7 +275,7 @@ func (k Getter) GetUint64WithDefault(ctx sdk.Context, key string, def uint64) (r
 	if bz == nil {
 		return def
 	}
-	k.k.cdc.MustUnmarshalBinary(bz, &res)
+	k.k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -286,7 +286,7 @@ func (k Getter) GetIntWithDefault(ctx sdk.Context, key string, def sdk.Int) (res
 	if bz == nil {
 		return def
 	}
-	k.k.cdc.MustUnmarshalBinary(bz, &res)
+	k.k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -297,7 +297,7 @@ func (k Getter) GetUintWithDefault(ctx sdk.Context, key string, def sdk.Uint) (r
 	if bz == nil {
 		return def
 	}
-	k.k.cdc.MustUnmarshalBinary(bz, &res)
+	k.k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
@@ -308,7 +308,7 @@ func (k Getter) GetRatWithDefault(ctx sdk.Context, key string, def sdk.Rat) (res
 	if bz == nil {
 		return def
 	}
-	k.k.cdc.MustUnmarshalBinary(bz, &res)
+	k.k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 

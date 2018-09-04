@@ -135,7 +135,7 @@ func TestOptions(t *testing.T) {
 	var actual int
 
 	// Checking keys.LengthKey
-	err := cdc.UnmarshalBinary(store.Get(keys.LengthKey), &len)
+	err := cdc.UnmarshalBinaryLengthPrefixed(store.Get(keys.LengthKey), &len)
 	require.Nil(t, err)
 	require.Equal(t, len, linear.Len())
 
@@ -143,14 +143,14 @@ func TestOptions(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		linear.Get(uint64(i), &expected)
 		bz := store.Get(append(keys.ElemKey, []byte(fmt.Sprintf("%020d", i))...))
-		err = cdc.UnmarshalBinary(bz, &actual)
+		err = cdc.UnmarshalBinaryLengthPrefixed(bz, &actual)
 		require.Nil(t, err)
 		require.Equal(t, expected, actual)
 	}
 
 	linear.Pop()
 
-	err = cdc.UnmarshalBinary(store.Get(keys.TopKey), &top)
+	err = cdc.UnmarshalBinaryLengthPrefixed(store.Get(keys.TopKey), &top)
 	require.Nil(t, err)
 	require.Equal(t, top, linear.getTop())
 

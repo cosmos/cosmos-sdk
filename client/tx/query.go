@@ -100,7 +100,7 @@ type txInfo struct {
 
 func parseTx(cdc *wire.Codec, txBytes []byte) (sdk.Tx, error) {
 	var tx auth.StdTx
-	err := cdc.UnmarshalBinary(txBytes, &tx)
+	err := cdc.UnmarshalBinaryLengthPrefixed(txBytes, &tx)
 	if err != nil {
 		return nil, err
 	}

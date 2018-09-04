@@ -98,7 +98,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
 	var proposalID int64
-	keeper.cdc.UnmarshalBinaryBare(res.Data, &proposalID)
+	keeper.cdc.UnmarshalBinary(res.Data, &proposalID)
 
 	EndBlocker(ctx, keeper)
 	require.NotNil(t, keeper.InactiveProposalQueuePeek(ctx))
@@ -142,7 +142,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
 	var proposalID int64
-	keeper.cdc.UnmarshalBinaryBare(res.Data, &proposalID)
+	keeper.cdc.UnmarshalBinary(res.Data, &proposalID)
 
 	ctx = ctx.WithBlockHeight(10)
 	newDepositMsg := NewMsgDeposit(addrs[1], proposalID, sdk.Coins{sdk.NewCoin("steak", 5)})

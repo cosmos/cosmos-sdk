@@ -230,7 +230,7 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig tmcrypto.Sign
 		if err != nil {
 			return nil, nil, err
 		}
-		cdc.MustUnmarshalBinary([]byte(signed), sig)
+		cdc.MustUnmarshalBinaryLengthPrefixed([]byte(signed), sig)
 		return sig, linfo.GetPubKey(), nil
 	}
 	sig, err = priv.Sign(msg)

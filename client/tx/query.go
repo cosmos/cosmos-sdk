@@ -32,11 +32,11 @@ func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// find the key to look up the account
 			hashHexStr := args[0]
-			distrustNode := viper.GetBool(client.FlagDistrustNode)
+			trustNode := viper.GetBool(client.FlagTrustNode)
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			output, err := queryTx(cdc, cliCtx, hashHexStr, distrustNode)
+			output, err := queryTx(cdc, cliCtx, hashHexStr, !trustNode)
 			if err != nil {
 				return err
 			}
@@ -48,7 +48,6 @@ func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	cmd.Flags().String(client.FlagChainID, "", "The chain ID to connect to")
-	cmd.Flags().Bool(client.FlagDistrustNode, true, "Verify proofs for query responses if true")
 	return cmd
 }
 

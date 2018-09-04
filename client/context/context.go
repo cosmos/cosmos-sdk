@@ -32,7 +32,7 @@ type CLIContext struct {
 	NodeURI         string
 	FromAddressName string
 	AccountStore    string
-	DistrustNode    bool
+	TrustNode       bool
 	UseLedger       bool
 	Async           bool
 	JSON            bool
@@ -59,7 +59,7 @@ func NewCLIContext() CLIContext {
 		Height:          viper.GetInt64(client.FlagHeight),
 		Gas:             viper.GetInt64(client.FlagGas),
 		GasAdjustment:   viper.GetFloat64(client.FlagGasAdjustment),
-		DistrustNode:    viper.GetBool(client.FlagDistrustNode),
+		TrustNode:       viper.GetBool(client.FlagTrustNode),
 		UseLedger:       viper.GetBool(client.FlagUseLedger),
 		Async:           viper.GetBool(client.FlagAsync),
 		JSON:            viper.GetBool(client.FlagJson),
@@ -70,8 +70,8 @@ func NewCLIContext() CLIContext {
 }
 
 func createCertifier() tmlite.Certifier {
-	distrustNode := viper.GetBool(client.FlagDistrustNode)
-	if !distrustNode {
+	trustNode := viper.GetBool(client.FlagTrustNode)
+	if trustNode {
 		return nil
 	}
 	chainID := viper.GetString(client.FlagChainID)
@@ -134,8 +134,8 @@ func (ctx CLIContext) WithFromAddressName(addrName string) CLIContext {
 }
 
 // WithTrustNode returns a copy of the context with an updated TrustNode flag.
-func (ctx CLIContext) WithDistrustNode(distrustNode bool) CLIContext {
-	ctx.DistrustNode = distrustNode
+func (ctx CLIContext) WithTrustNode(trustNode bool) CLIContext {
+	ctx.TrustNode = trustNode
 	return ctx
 }
 

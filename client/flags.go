@@ -16,7 +16,7 @@ const (
 	FlagHeight        = "height"
 	FlagGas           = "gas"
 	FlagGasAdjustment = "gas-adjustment"
-	FlagDistrustNode  = "distrust-node"
+	FlagTrustNode     = "trust-node"
 	FlagFrom          = "from"
 	FlagName          = "name"
 	FlagAccountNumber = "account-number"
@@ -36,7 +36,6 @@ var LineBreak = &cobra.Command{Run: func(*cobra.Command, []string) {}}
 // GetCommands adds common flags to query commands
 func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {
-		c.Flags().Bool(FlagDistrustNode, true, "Verify proofs for responses if true")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
 		c.Flags().String(FlagChainID, "", "Chain ID of tendermint node")
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
@@ -61,7 +60,6 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagAsync, false, "broadcast transactions asynchronously")
 		c.Flags().Bool(FlagJson, false, "return output in json format")
 		c.Flags().Bool(FlagPrintResponse, true, "return tx response (only works with async = false)")
-		c.Flags().Bool(FlagDistrustNode, false, "Verify proofs for query responses if true")
 		c.Flags().Bool(FlagDryRun, false, "ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it")
 	}
 	return cmds

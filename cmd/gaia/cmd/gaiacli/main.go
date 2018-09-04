@@ -37,6 +37,8 @@ func main() {
 	// the below functions and eliminate global vars, like we do
 	// with the cdc
 
+	// add trust-node as root level flag
+	rootCmd.Flags().Bool(client.FlagTrustNode, false, "Don't verify proofs for query responses")
 	// add standard rpc commands
 	rpc.AddCommands(rootCmd)
 

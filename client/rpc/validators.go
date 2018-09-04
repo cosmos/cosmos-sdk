@@ -30,7 +30,6 @@ func ValidatorCommand() *cobra.Command {
 		RunE:  printValidators,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	cmd.Flags().Bool(client.FlagDistrustNode, true, "Verify proofs for query responses if true")
 	cmd.Flags().String(client.FlagChainID, "", "The chain ID to connect to")
 	return cmd
 }
@@ -75,9 +74,9 @@ func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
-	distrustNode := viper.GetBool(client.FlagDistrustNode)
+	trustNode := viper.GetBool(client.FlagTrustNode)
 
-	if distrustNode {
+	if !trustNode {
 		check, err := tmliteProxy.GetCertifiedCommit(*height, node, cliCtx.Certifier)
 		if tmliteErr.IsCommitNotFoundErr(err) {
 			return nil, context.ErrVerifyCommit(*height)

@@ -296,7 +296,7 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 
 	opts := rpcclient.ABCIQueryOptions{
 		Height:  ctx.Height,
-		Trusted: !ctx.DistrustNode,
+		Trusted: !ctx.TrustNode,
 	}
 
 	result, err := node.ABCIQueryWithOptions(path, key, opts)
@@ -310,7 +310,7 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 	}
 
 	// data from trusted node or subspace query doesn't need verification
-	if !ctx.DistrustNode || !isQueryStoreWithProof(path) {
+	if !ctx.TrustNode || !isQueryStoreWithProof(path) {
 		return resp.Value, nil
 	}
 

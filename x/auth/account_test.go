@@ -157,3 +157,40 @@ func TestSendableCoinsContinuousVesting(t *testing.T) {
 			i, c.transferredCoins, c.delegatedCoins, c.blockTime.Unix()))
 	}
 }
+
+func TestSendableCoinsDelayTransfer(t *testing.T) {
+	cases := []struct {
+		blockTime        time.Time
+		transferredCoins sdk.Coins
+		delegatedCoins   sdk.Coins
+		expectedSendable sdk.Coins
+	}{
+		// No transfers or delegations
+		{time.Unix(500, 0), sdk.Coins(nil), sdk.Coins(nil), sdk.Coins(nil)},                          // Before EndTime. All coins locked
+		{time.Unix(1000, 0), sdk.Coins(nil), sdk.Coins(nil), sdk.Coins{{"steak", sdk.NewInt(1000)}}}, // At Endtime, all coins unlocked
+
+		// Transfers
+		{time.Unix(500, 0), sdk.Coins{{"steak", sdk.NewInt(100)}}, sdk.Coins(nil), sdk.Coins{{"steak", sdk.NewInt(100)}}},   // Transfer before EndTime
+		{time.Unix(1000, 0), sdk.Coins{{"steak", sdk.NewInt(100)}}, sdk.Coins(nil), sdk.Coins{{"steak", sdk.NewInt(1100)}}}, // Transfer after EndTime
+
+		// Delegations
+		{time.Unix(1000, 0), sdk.Coins(nil), sdk.Coins{{"steak", sdk.NewInt(800)}}, sdk.Coins{{"steak", sdk.NewInt(200)}}}, // Some unlocked coins are delegated
+
+		// Transfers and Delegations
+		{time.Unix(500, 0), sdk.Coins{{"steak", sdk.NewInt(500)}}, sdk.Coins{{"steak", sdk.NewInt(1000)}}, sdk.Coins{{"steak", sdk.NewInt(500)}}}, // Delegate all locked coins
+		{time.Unix(500, 0), sdk.Coins{{"steak", sdk.NewInt(500)}}, sdk.Coins{{"steak", sdk.NewInt(1300)}}, sdk.Coins{{"steak", sdk.NewInt(200)}}}, // Delegate all locked coins and some transferred coins
+	}
+
+	for i, c := range cases {
+		_, _, addr := keyPubAddr()
+		vacc := NewDelayTransferAccount(addr, sdk.Coins{{"steak", sdk.NewInt(1000)}}, time.Unix(1000, 0))
+		coins := vacc.GetCoins().Plus(c.transferredCoins)
+		coins = coins.Minus(c.delegatedCoins) // delegation is not tracked
+		vacc.SetCoins(coins)
+		vacc.TrackTransfers(c.transferredCoins)
+
+		sendable := vacc.SendableCoins(c.blockTime)
+		require.Equal(t, c.expectedSendable, sendable, fmt.Sprintf("Expected sendablecoins is incorrect for testcase %d: {Transferred: %s, Delegated: %s, Time: %d",
+			i, c.transferredCoins, c.delegatedCoins, c.blockTime.Unix()))
+	}
+}

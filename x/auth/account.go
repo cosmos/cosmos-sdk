@@ -232,7 +232,18 @@ func (vacc DelayTransferAccount) SendableCoins(blockTime time.Time) sdk.Coins {
 	if blockTime.Unix() < vacc.EndTime.Unix() {
 		// Return net transferred coins
 		// If positive, then those coins are sendable
-		return vacc.TransferredCoins
+		sendableCoins := vacc.TransferredCoins
+		for _, c := range vacc.TransferredCoins {
+			// Must constrain with coins left in account
+			// Since some unlocked coins may have left account due to delegation
+			amt := sendableCoins.AmountOf(c.Denom)
+			currentAmount := vacc.GetCoins().AmountOf(c.Denom)
+			if currentAmount.LT(amt) {
+				delta := sdk.Coin{c.Denom, amt.Sub(currentAmount)}
+				sendableCoins = sendableCoins.Minus(sdk.Coins{delta})
+			}
+		}
+		return sendableCoins
 	}
 	
 	// If EndTime has passed, DelayTransferAccount behaves like BaseAccount

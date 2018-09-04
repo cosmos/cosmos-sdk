@@ -287,3 +287,120 @@ func TestVestingInputOutput(t *testing.T) {
 
 	require.Equal(t, sdk.Coins{{"steak", sdk.NewInt(-30)}}, acc.TransferredCoins, "Transferred coins did not update correctly")
 }
+
+func TestDelayTransferSend(t *testing.T) {
+	ms, authKey := setupMultiStore()
+
+	cdc := wire.NewCodec()
+	auth.RegisterAccount(cdc)
+
+	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(500, 0)}, false, log.NewNopLogger())
+	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
+	coinKeeper := NewKeeper(accountMapper)
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+
+	dtacc := auth.NewDelayTransferAccount(addr1, sdk.Coins{{"steak", sdk.NewInt(100)}}, time.Unix(1000, 0))
+	accountMapper.SetAccount(ctx, &dtacc)
+
+	acc := auth.NewBaseAccountWithAddress(addr2)
+	acc.SetCoins(sdk.Coins{{"steak", sdk.NewInt(50)}})
+	accountMapper.SetAccount(ctx, &acc)
+
+	// Send coins before EndTime fails
+	_, err := coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{{"steak", sdk.NewInt(1)}})
+
+	require.NotNil(t, err, "Keeper did not error trying to send locked coins")
+	require.Equal(t, sdk.CodeType(10), err.Code(), "Did not error with insufficient coins")
+
+	// Receive coins
+	coinKeeper.SendCoins(ctx, addr2, addr1, sdk.Coins{{"steak", sdk.NewInt(50)}})
+
+	recoverAcc := accountMapper.GetAccount(ctx, addr1).(*auth.DelayTransferAccount)
+	require.Equal(t, sdk.Coins{{"steak", sdk.NewInt(50)}}, recoverAcc.TransferredCoins, "Transferred coins did not update correctly")
+
+	// Spend some of Received Coins
+	_, err = coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{{"steak", sdk.NewInt(25)}})
+
+	recoverAcc = accountMapper.GetAccount(ctx, addr1).(*auth.DelayTransferAccount)
+	require.Nil(t, err, "Keeper errorred on valid spend")
+	require.Equal(t, sdk.Coins{{"steak", sdk.NewInt(25)}}, recoverAcc.TransferredCoins, "Transferred coins did not update correctly")
+
+	// Fast-forward to EndTime
+	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1000, 0)})
+
+	// Spend all unlocked coins
+	_, err = coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{{"steak", sdk.NewInt(125)}})
+
+	recoverAcc = accountMapper.GetAccount(ctx, addr1).(*auth.DelayTransferAccount)
+	require.Nil(t, err, "Keeper errorred on valid spend")
+	require.Equal(t, sdk.Coins(nil), recoverAcc.GetCoins(), "SendableCoins is incorrect")
+	require.False(t, recoverAcc.IsVesting(ctx.BlockHeader().Time), "Account still vesting after EndTime")
+}
+
+func TestDelayTransferInputOutput(t *testing.T) {
+	ms, authKey := setupMultiStore()
+
+	cdc := wire.NewCodec()
+	auth.RegisterAccount(cdc)
+
+	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(500, 0)}, false, log.NewNopLogger())
+	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
+	coinKeeper := NewKeeper(accountMapper)
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+
+	vacc := auth.NewDelayTransferAccount(addr1, sdk.Coins{{"steak", sdk.NewInt(100)}}, time.Unix(1000, 0))
+	accountMapper.SetAccount(ctx, &vacc)
+
+	acc := auth.NewBaseAccountWithAddress(addr2)
+	acc.SetCoins(sdk.Coins{{"steak", sdk.NewInt(50)}})
+	accountMapper.SetAccount(ctx, &acc)
+
+	// Transfer coins to delay transfer account
+	coinKeeper.SendCoins(ctx, addr2, addr1, sdk.Coins{{"steak", sdk.NewInt(50)}})
+
+	inputs := []Input{{addr1, sdk.Coins{{"steak", sdk.NewInt(50)}}}}
+	outputs := []Output{{addr1, sdk.Coins{{"steak", sdk.NewInt(20)}}}, {addr2, sdk.Coins{{"steak", sdk.NewInt(30)}}}}
+	_, err := coinKeeper.InputOutputCoins(ctx, inputs, outputs)
+
+	require.Nil(t, err, "InputOutput failed on valid vested spend")
+
+	recoverAcc := accountMapper.GetAccount(ctx, addr1).(*auth.DelayTransferAccount)
+
+	require.Equal(t, sdk.Coins{{"steak", sdk.NewInt(20)}}, recoverAcc.TransferredCoins, "Transferred coins did not update correctly")
+}
+
+func TestSubtractVesting(t *testing.T) {
+	// SubtractCoins must still work without restriction on vesting accounts so that they can still delegate.
+	ms, authKey := setupMultiStore()
+
+	cdc := wire.NewCodec()
+	auth.RegisterAccount(cdc)
+
+	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
+	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
+	coinKeeper := NewKeeper(accountMapper)
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+	amt := sdk.Coins{{"steak", sdk.NewInt(100)}}
+
+	vacc := auth.NewContinuousVestingAccount(addr1, amt, time.Unix(0, 0), time.Unix(1000, 0))
+	accountMapper.SetAccount(ctx, &vacc)
+
+	dtacc := auth.NewDelayTransferAccount(addr2, amt, time.Unix(1000, 0))
+	accountMapper.SetAccount(ctx, &dtacc)
+
+	res, _, err := coinKeeper.SubtractCoins(ctx, addr1, amt)
+
+	require.Nil(t, err, "ContinuousVestingAccount fails on SubtractCoins")
+	require.Equal(t, sdk.Coins(nil), res, "Coins did not update correctly")
+
+	res, _, err = coinKeeper.SubtractCoins(ctx, addr2, amt)
+
+	require.Nil(t, err, "DelayTransferAccount fails on SubtractCoins")
+	require.Equal(t, sdk.Coins(nil), res, "Coins did not update correctly")
+}

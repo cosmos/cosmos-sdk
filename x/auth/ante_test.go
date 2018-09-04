@@ -111,7 +111,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
-	RegisterBaseAccount(cdc)
+	RegisterAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
@@ -164,7 +164,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
-	RegisterBaseAccount(cdc)
+	RegisterAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
@@ -223,7 +223,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
-	RegisterBaseAccount(cdc)
+	RegisterAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
@@ -301,7 +301,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
-	RegisterBaseAccount(cdc)
+	RegisterAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
@@ -343,7 +343,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
-	RegisterBaseAccount(cdc)
+	RegisterAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
@@ -386,7 +386,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
-	RegisterBaseAccount(cdc)
+	RegisterAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
@@ -437,7 +437,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
-	RegisterBaseAccount(cdc)
+	RegisterAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
@@ -518,7 +518,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
-	RegisterBaseAccount(cdc)
+	RegisterAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)

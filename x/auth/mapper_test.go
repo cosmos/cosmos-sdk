@@ -28,7 +28,7 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
 func TestAccountMapperGetSet(t *testing.T) {
 	ms, capKey, _ := setupMultiStore()
 	cdc := wire.NewCodec()
-	RegisterBaseAccount(cdc)
+	RegisterAccount(cdc)
 
 	// make context and mapper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())

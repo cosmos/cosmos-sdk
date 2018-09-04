@@ -107,3 +107,4 @@ BUG FIXES
     * \#2158 Fix non-deterministic ordering of validator iteration when slashing in `gov EndBlocker`
 
 * Tendermint
+    * \#1712 Replace db_path with db_dir in automatically generated configuration files.

@@ -36,7 +36,7 @@ func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			output, err := queryTx(cdc, cliCtx, hashHexStr, !trustNode)
+			output, err := queryTx(cdc, cliCtx, hashHexStr, trustNode)
 			if err != nil {
 				return err
 			}
@@ -51,7 +51,7 @@ func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string, distrustNode bool) ([]byte, error) {
+func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string, trustNode bool) ([]byte, error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string, dist
 		return nil, err
 	}
 
-	res, err := node.Tx(hash, distrustNode)
+	res, err := node.Tx(hash, !trustNode)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string, dist
 		return nil, err
 	}
 
-	if distrustNode {
+	if !trustNode {
 		check, err := tmliteProxy.GetCertifiedCommit(info.Height, node, cliCtx.Certifier)
 		if tmliteErr.IsCommitNotFoundErr(err) {
 			return nil, context.ErrVerifyCommit(info.Height)
@@ -130,13 +130,13 @@ func QueryTxRequestHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.Ha
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		hashHexStr := vars["hash"]
-		distrustNode, err := strconv.ParseBool(r.FormValue("distrust_node"))
-		// distrustNode defaults to true
+		trustNode, err := strconv.ParseBool(r.FormValue("trust_node"))
+		// trustNode defaults to true
 		if err != nil {
-			distrustNode = true
+			trustNode = true
 		}
 
-		output, err := queryTx(cdc, cliCtx, hashHexStr, distrustNode)
+		output, err := queryTx(cdc, cliCtx, hashHexStr, trustNode)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

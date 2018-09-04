@@ -129,7 +129,7 @@ func SimulateFromSeed(
 		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastSigningValidators, event, header, log)
 
 		// Update the validator set
-		validators = updateValidators(tb, r, validators, res.ValidatorUpdates, event)
+		validators = updateValidators(tb, r, log, validators, res.ValidatorUpdates, event)
 	}
 
 	fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds), : %v, operations ran %d\n", header.Height, header.Time, opCount)
@@ -320,19 +320,14 @@ func AssertAllInvariants(t *testing.T, app *baseapp.BaseApp, tests []Invariant, 
 }
 
 // updateValidators mimicks Tendermint's update logic
-func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValidator, updates []abci.Validator, event func(string)) map[string]mockValidator {
+func updateValidators(tb testing.TB, r *rand.Rand, log string, current map[string]mockValidator, updates []abci.Validator, event func(string)) map[string]mockValidator {
 	for _, update := range updates {
 		switch {
 		case update.Power == 0:
-			// // TEMPORARY DEBUG CODE TO PROVE THAT THE OLD METHOD WAS BROKEN
-			// // (i.e. didn't catch in the event of problem)
-			// if val, ok := tb.(*testing.T); ok {
-			// 	require.NotNil(val, current[string(update.PubKey.Data)])
-			// }
-			// // CORRECT CHECK
-			// if _, ok := current[string(update.PubKey.Data)]; !ok {
-			// 	tb.Fatalf("tried to delete a nonexistent validator")
-			// }
+			if _, ok := current[string(update.PubKey.Data)]; !ok {
+				tb.Fatalf("tried to delete a nonexistent validator: %v", log)
+			}
+
 			event("endblock/validatorupdates/kicked")
 			delete(current, string(update.PubKey.Data))
 		default:

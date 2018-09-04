@@ -3,11 +3,17 @@ package utils
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	auth "github.com/cosmos/cosmos-sdk/x/auth"
+	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
 )
 
 const (
-	queryArgDryRun = "simulate"
+	queryArgDryRun       = "simulate"
+	queryArgGenerateOnly = "generate_only"
 )
 
 // WriteErrorResponse prepares and writes a HTTP error
@@ -26,9 +32,10 @@ func WriteSimulationResponse(w http.ResponseWriter, gas int64) {
 
 // HasDryRunArg returns true if the request's URL query contains
 // the dry run argument and its value is set to "true".
-func HasDryRunArg(r *http.Request) bool {
-	return r.URL.Query().Get(queryArgDryRun) == "true"
-}
+func HasDryRunArg(r *http.Request) bool { return urlQueryHasArg(r.URL, queryArgDryRun) }
+
+// HasGenerateOnlyArg returns whether a URL's query "generate-only" parameter is set to "true".
+func HasGenerateOnlyArg(r *http.Request) bool { return urlQueryHasArg(r.URL, queryArgGenerateOnly) }
 
 // ParseFloat64OrReturnBadRequest converts s to a float64 value. It returns a default
 // value if the string is empty. Write
@@ -43,3 +50,21 @@ func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEm
 	}
 	return n, true
 }
+
+// WriteGenerateStdTxResponse writes response for the generate_only mode.
+func WriteGenerateStdTxResponse(w http.ResponseWriter, txCtx authctx.TxContext, msgs []sdk.Msg) {
+	stdMsg, err := txCtx.Build(msgs)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	output, err := txCtx.Codec.MarshalJSON(auth.NewStdTx(stdMsg.Msgs, stdMsg.Fee, nil, stdMsg.Memo))
+	if err != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	w.Write(output)
+	return
+}
+
+func urlQueryHasArg(url *url.URL, arg string) bool { return url.Query().Get(arg) == "true" }

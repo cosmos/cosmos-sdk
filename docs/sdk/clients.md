@@ -139,6 +139,17 @@ gaiacli send \
   --dry-run
 ```
 
+Furthermore, you can build a transaction and print its JSON format to STDOUT by appending `--generate-only` to the list of the command line arguments:
+
+```bash
+gaiacli send \
+  --amount=10faucetToken \
+  --chain-id=<chain_id> \
+  --name=<key_name> \
+  --to=<destination_cosmosaccaddr> \
+  --generate-only
+```
+
 ### Staking
 
 #### Set up a Validator

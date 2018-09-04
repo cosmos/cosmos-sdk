@@ -44,6 +44,7 @@ FEATURES
 * Gaia REST API (`gaiacli advanced rest-server`)
   * [lcd] Endpoints to query staking pool and params
   * [lcd] \#2110 Add support for `simulate=true` requests query argument to endpoints that send txs to run simulations of transactions
+  * [lcd] \#966 Add support for `generate_only=true` query argument to generate offline unsigned transactions
 
 * Gaia CLI  (`gaiacli`)
   * [cli] Cmds to query staking pool and params

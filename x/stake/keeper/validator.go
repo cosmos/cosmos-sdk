@@ -214,15 +214,19 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.Validator)
 		abciValBytes := iterator.Value()
 		k.cdc.MustUnmarshalBinary(abciValBytes, &abciVal)
 
-		val, ok := k.GetValidator(ctx, abciVal.GetAddress())
-		if !ok {
-			panic(fmt.Sprintf("validator record not found for address: %v\n", abciVal.GetAddress()))
-		}
+		val, found := k.GetValidator(ctx, abciVal.GetAddress())
+		if found {
+			// The validator is new or already exists in the store and must adhere to
+			// Tendermint invariants.
+			prevBonded := val.BondHeight < ctx.BlockHeight()
+			zeroPower := val.GetPower().Equal(sdk.ZeroDec())
 
-		prevBonded := val.BondHeight < ctx.BlockHeight()
-		zeroPower := val.GetPower().Equal(sdk.ZeroDec())
-
-		if !zeroPower || zeroPower && prevBonded {
+			if !zeroPower || zeroPower && prevBonded {
+				updates = append(updates, abciVal)
+			}
+		} else {
+			// Add the ABCI validator in such a case where the validator was removed
+			// from the store as it must have existed before.
 			updates = append(updates, abciVal)
 		}
 	}

@@ -201,16 +201,32 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 // Accumulated updates to the active/bonded validator set for tendermint
 
 // get the most recently updated validators
+//
+// CONTRACT: Only validators with non-zero power or zero-power that were bonded
+// at the previous block height are returned to Tendermint.
 func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.Validator) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, TendermintUpdatesKey) //smallest to largest
+	iterator := sdk.KVStorePrefixIterator(store, TendermintUpdatesKey)
 	for ; iterator.Valid(); iterator.Next() {
-		valBytes := iterator.Value()
-		var val abci.Validator
-		k.cdc.MustUnmarshalBinary(valBytes, &val)
-		updates = append(updates, val)
+		var abciVal abci.Validator
+
+		abciValBytes := iterator.Value()
+		k.cdc.MustUnmarshalBinary(abciValBytes, &abciVal)
+
+		val, ok := k.GetValidator(ctx, abciVal.GetAddress())
+		if !ok {
+			panic(fmt.Sprintf("validator record not found for address: %v\n", abciVal.GetAddress()))
+		}
+
+		prevBonded := val.BondHeight < ctx.BlockHeight()
+		zeroPower := val.GetPower().Equal(sdk.ZeroDec())
+
+		if !zeroPower || zeroPower && prevBonded {
+			updates = append(updates, abciVal)
+		}
 	}
+
 	iterator.Close()
 	return
 }

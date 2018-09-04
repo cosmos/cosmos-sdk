@@ -277,6 +277,7 @@ func TestVestingInputOutput(t *testing.T) {
 	vacc := auth.NewContinuousVestingAccount(addr1, sdk.Coins{{"steak", sdk.NewInt(100)}}, time.Unix(0, 0), time.Unix(1000, 0))
 	accountMapper.SetAccount(ctx, &vacc)
 
+	// Send some coins back to self to check if transferredCoins updates correctly
 	inputs := []Input{{addr1, sdk.Coins{{"steak", sdk.NewInt(50)}}}}
 	outputs := []Output{{addr1, sdk.Coins{{"steak", sdk.NewInt(20)}}}, {addr2, sdk.Coins{{"steak", sdk.NewInt(30)}}}}
 	_, err := coinKeeper.InputOutputCoins(ctx, inputs, outputs)
@@ -362,6 +363,7 @@ func TestDelayTransferInputOutput(t *testing.T) {
 	// Transfer coins to delay transfer account
 	coinKeeper.SendCoins(ctx, addr2, addr1, sdk.Coins{{"steak", sdk.NewInt(50)}})
 
+	// Send some coins back to self to check if transferredCoins updates correctly
 	inputs := []Input{{addr1, sdk.Coins{{"steak", sdk.NewInt(50)}}}}
 	outputs := []Output{{addr1, sdk.Coins{{"steak", sdk.NewInt(20)}}}, {addr2, sdk.Coins{{"steak", sdk.NewInt(30)}}}}
 	_, err := coinKeeper.InputOutputCoins(ctx, inputs, outputs)
@@ -374,7 +376,7 @@ func TestDelayTransferInputOutput(t *testing.T) {
 }
 
 func TestSubtractVesting(t *testing.T) {
-	// SubtractCoins must still work without restriction on vesting accounts so that they can still delegate.
+	// SubtractCoins must still work without vesting restriction so that they can delegate locked coins.
 	ms, authKey := setupMultiStore()
 
 	cdc := wire.NewCodec()

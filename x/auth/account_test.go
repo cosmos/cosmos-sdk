@@ -120,7 +120,7 @@ func TestSendableCoinsContinuousVesting(t *testing.T) {
 		// No tranfers
 		{time.Unix(0, 0), sdk.Coins(nil), sdk.Coins(nil), sdk.Coins(nil)},                            // No coins available on initialization
 		{time.Unix(500, 0), sdk.Coins(nil), sdk.Coins(nil), sdk.Coins{{"steak", sdk.NewInt(500)}}},   // Half coins available at halfway point
-		{time.Unix(1000, 0), sdk.Coins(nil), sdk.Coins(nil), sdk.Coins{{"steak", sdk.NewInt(1000)}}}, // All coins availaible after EndTime
+		{time.Unix(1000, 0), sdk.Coins(nil), sdk.Coins(nil), sdk.Coins{{"steak", sdk.NewInt(1000)}}}, // All coins available after EndTime
 		{time.Unix(2000, 0), sdk.Coins(nil), sdk.Coins(nil), sdk.Coins{{"steak", sdk.NewInt(1000)}}}, // SendableCoins doesn't linearly increase after EndTime
 		
 		// Transfers
@@ -134,14 +134,14 @@ func TestSendableCoinsContinuousVesting(t *testing.T) {
 		{time.Unix(1000, 0), sdk.Coins(nil), sdk.Coins{{"steak", sdk.NewInt(1000)}}, sdk.Coins(nil)}, // All coins are delegated
 
 		// Integration Tests: Transfers and Delegations
-		{time.Unix(0, 0), sdk.Coins{{"photon", sdk.NewInt(10)}, {"steak", sdk.NewInt(10)}}, sdk.Coins{{"steak", sdk.NewInt(5)}}, sdk.Coins{{"photon", sdk.NewInt(10)}, {"steak", sdk.NewInt(10)}}}, // Delegate some of transferred tokens
-		{time.Unix(500, 0), sdk.Coins{{"steak", sdk.NewInt(10)}}, sdk.Coins{{"steak", sdk.NewInt(400)}}, sdk.Coins{{"steak", sdk.NewInt(510)}}},
-		{time.Unix(500, 0), sdk.Coins{{"steak", sdk.NewInt(10)}}, sdk.Coins{{"steak", sdk.NewInt(800)}}, sdk.Coins{{"steak", sdk.NewInt(210)}}},
-		{time.Unix(500, 0), sdk.Coins{{"steak", sdk.NewInt(10)}}, sdk.Coins{{"steak", sdk.NewInt(1005)}}, sdk.Coins{{"steak", sdk.NewInt(5)}}},
+		{time.Unix(0, 0), sdk.Coins{{"photon", sdk.NewInt(10)}, {"steak", sdk.NewInt(10)}}, sdk.Coins{{"steak", sdk.NewInt(5)}}, sdk.Coins{{"photon", sdk.NewInt(10)}, {"steak", sdk.NewInt(10)}}}, // Delegate some of transferred coins
+		{time.Unix(500, 0), sdk.Coins{{"steak", sdk.NewInt(10)}}, sdk.Coins{{"steak", sdk.NewInt(400)}}, sdk.Coins{{"steak", sdk.NewInt(510)}}}, // Delegate locked coins only
+		{time.Unix(500, 0), sdk.Coins{{"steak", sdk.NewInt(10)}}, sdk.Coins{{"steak", sdk.NewInt(800)}}, sdk.Coins{{"steak", sdk.NewInt(210)}}}, // Delegate all locked coins and some unlocked coins
+		{time.Unix(500, 0), sdk.Coins{{"steak", sdk.NewInt(10)}}, sdk.Coins{{"steak", sdk.NewInt(1005)}}, sdk.Coins{{"steak", sdk.NewInt(5)}}},  // Delegate all locked coins and most of unlocked coins (including some transferred coins)
 
-		{time.Unix(500, 0), sdk.Coins{{"steak", sdk.NewInt(-10)}}, sdk.Coins{{"steak", sdk.NewInt(400)}}, sdk.Coins{{"steak", sdk.NewInt(490)}}},
-		{time.Unix(500, 0), sdk.Coins{{"steak", sdk.NewInt(-10)}}, sdk.Coins{{"steak", sdk.NewInt(800)}}, sdk.Coins{{"steak", sdk.NewInt(190)}}},
-		{time.Unix(500, 0), sdk.Coins{{"steak", sdk.NewInt(-10)}}, sdk.Coins{{"steak", sdk.NewInt(990)}}, sdk.Coins(nil)},
+		{time.Unix(500, 0), sdk.Coins{{"steak", sdk.NewInt(-10)}}, sdk.Coins{{"steak", sdk.NewInt(400)}}, sdk.Coins{{"steak", sdk.NewInt(490)}}}, // Transfer unlocked coins, delegate locked coins
+		{time.Unix(500, 0), sdk.Coins{{"steak", sdk.NewInt(-10)}}, sdk.Coins{{"steak", sdk.NewInt(800)}}, sdk.Coins{{"steak", sdk.NewInt(190)}}}, // Transfer unlocked coins, delegate locked and unlocked coins
+		{time.Unix(500, 0), sdk.Coins{{"steak", sdk.NewInt(-10)}}, sdk.Coins{{"steak", sdk.NewInt(990)}}, sdk.Coins(nil)},                        // Transfer unlocked coins, delegate rest of account
 	}
 
 	for i, c := range cases {

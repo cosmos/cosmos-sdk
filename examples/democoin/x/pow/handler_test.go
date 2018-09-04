@@ -17,7 +17,7 @@ import (
 func TestPowHandler(t *testing.T) {
 	ms, capKey := setupMultiStore()
 	cdc := wire.NewCodec()
-	auth.RegisterBaseAccount(cdc)
+	auth.RegisterAccount(cdc)
 
 	am := auth.NewAccountMapper(cdc, capKey, auth.ProtoBaseAccount)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())

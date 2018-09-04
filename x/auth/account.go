@@ -194,7 +194,7 @@ func (vacc ContinuousVestingAccount) SendableCoins(blockTime time.Time) sdk.Coin
 }
 
 // Implement Vesting Account. Track transfers in and out of account
-// Send amounts must be negated
+// CONTRACT: Send amounts must be negated
 func (vacc *ContinuousVestingAccount) TrackTransfers(coins sdk.Coins) {
 	vacc.TransferredCoins = vacc.TransferredCoins.Plus(coins)
 }

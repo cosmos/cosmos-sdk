@@ -156,6 +156,9 @@ func (c Context) BlockHeader() abci.Header {
 func (c Context) BlockHeight() int64 {
 	return c.Value(contextKeyBlockHeight).(int64)
 }
+func (c Context) ConsensusParams() ConsensusParams {
+	return c.Value(contextKeyConsensusParams).(ConsensusParams)
+}
 func (c Context) ChainID() string {
 	return c.Value(contextKeyChainID).(string)
 }
@@ -186,6 +189,9 @@ func (c Context) WithBlockHeader(header abci.Header) Context {
 }
 func (c Context) WithBlockHeight(height int64) Context {
 	return c.withValue(contextKeyBlockHeight, height)
+}
+func (c Context) WithConsensusParams(params ConsensusParams) Context {
+	return c.withValue(contextKeyConsensusParams, params)
 }
 func (c Context) WithChainID(chainID string) Context {
 	return c.withValue(contextKeyChainID, chainID)

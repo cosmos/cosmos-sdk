@@ -492,6 +492,8 @@ func TestDeliverTx(t *testing.T) {
 	codec := wire.NewCodec()
 	registerTestCodec(codec)
 
+	app.InitChain(abci.RequestInitChain{})
+
 	nBlocks := 3
 	txPerHeight := 5
 	for blockN := 0; blockN < nBlocks; blockN++ {

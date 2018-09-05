@@ -47,7 +47,7 @@ func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	cmd.Flags().Bool(client.FlagTrustNode, false, "Don't verify proofs for responses if true")
+	cmd.Flags().Bool(client.FlagTrustNode, false, "Don't verify proofs for query responses")
 	cmd.Flags().String(client.FlagChainID, "", "The chain ID to connect to")
 	return cmd
 }

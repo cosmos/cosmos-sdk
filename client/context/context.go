@@ -70,8 +70,8 @@ func NewCLIContext() CLIContext {
 }
 
 func createCertifier() tmlite.Certifier {
-	flagPredefined := viper.IsSet(client.FlagTrustNode)
-	if !flagPredefined {
+	trustNodeDefined := viper.IsSet(client.FlagTrustNode)
+	if !trustNodeDefined {
 		return nil
 	}
 

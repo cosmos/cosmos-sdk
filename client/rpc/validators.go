@@ -30,8 +30,8 @@ func ValidatorCommand() *cobra.Command {
 		RunE:  printValidators,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	cmd.Flags().Bool(client.FlagTrustNode, false, "Don't verify proofs for query responses")
-	cmd.Flags().String(client.FlagChainID, "", "The chain ID to connect to")
+	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
 	return cmd
 }
 

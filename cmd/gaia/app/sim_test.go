@@ -189,7 +189,7 @@ func TestAppStateDeterminism(t *testing.T) {
 		t.Skip("Skipping Gaia simulation")
 	}
 
-	numSeeds := 5
+	numSeeds := 3
 	numTimesToRunPerSeed := 5
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
@@ -206,10 +206,11 @@ func TestAppStateDeterminism(t *testing.T) {
 				testAndRunTxs(app),
 				[]simulation.RandSetup{},
 				[]simulation.Invariant{},
-				20,
-				20,
-				true,
+				50,
+				100,
+				false,
 			)
+			app.Commit()
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
 		}

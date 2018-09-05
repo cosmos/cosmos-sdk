@@ -70,10 +70,16 @@ func NewCLIContext() CLIContext {
 }
 
 func createCertifier() tmlite.Certifier {
+	flagPredefined := viper.IsSet(client.FlagTrustNode)
+	if !flagPredefined {
+		return nil
+	}
+
 	trustNode := viper.GetBool(client.FlagTrustNode)
 	if trustNode {
 		return nil
 	}
+
 	chainID := viper.GetString(client.FlagChainID)
 	home := viper.GetString(cli.HomeFlag)
 	nodeURI := viper.GetString(client.FlagNode)

@@ -64,6 +64,7 @@ $ gaiacli tendermint txs --tag test1,test2 --any
 	}
 
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	cmd.Flags().Bool(client.FlagTrustNode, false, "Don't verify proofs for responses if true")
 	cmd.Flags().String(client.FlagChainID, "", "The chain ID to connect to")
 	cmd.Flags().StringSlice(flagTags, nil, "Comma-separated list of tags that must match")
 	cmd.Flags().Bool(flagAny, false, "Return transactions that match ANY tag, rather than ALL")

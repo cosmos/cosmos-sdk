@@ -26,9 +26,8 @@ BREAKING CHANGES
     * [x/stake] [#1676] Revoked and jailed validators put into the unbonding state
     * [x/stake] [#1877] Redelegations/unbonding-delegation from unbonding validator have reduced time
     * [x/stake] \#2040 Validator operator type has now changed to `sdk.ValAddress`
-      * A new bech32 prefix has been introduced for Tendermint signing keys and
-        addresses, `cosmosconspub` and `cosmoscons` respectively.
-    
+          * A new bech32 prefix has been introduced for Tendermint signing keys and addresses, `cosmosconspub` and `cosmoscons` respectively.
+   
 * SDK
     * [core] \#1807 Switch from use of rational to decimal
     * [types] \#1901 Validator interface's GetOwner() renamed to GetOperator()
@@ -91,6 +90,7 @@ IMPROVEMENTS
     * [cli] \#1632 Add integration tests to ensure `basecoind init && basecoind` start sequences run successfully for both `democoin` and `basecoin` examples.
     * [store] Speedup IAVL iteration, and consequently everything that requires IAVL iteration. [#2143](https://github.com/cosmos/cosmos-sdk/issues/2143)
     * [simulation] Make timestamps randomized [#2153](https://github.com/cosmos/cosmos-sdk/pull/2153)
+    * [x/stake] \#2139 Add stake queriers for increased performance of Gaia-lite endpoints
 
 * Tendermint
 

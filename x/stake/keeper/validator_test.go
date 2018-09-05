@@ -25,8 +25,15 @@ func TestSetValidator(t *testing.T) {
 	keeper.SetPool(ctx, pool)
 	keeper.UpdateValidator(ctx, validator)
 
+	bechValidator, err := validator.Bech32Validator()
+	require.Nil(t, err)
+
+	resBechVal, found := keeper.GetBechValidator(ctx, addrVals[0])
+	require.True(t, found)
+	assert.Equal(t, bechValidator.Operator, resBechVal.Operator)
+
 	// after the save the validator should be bonded
-	validator, found := keeper.GetValidator(ctx, addrVals[0])
+	validator, found = keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
@@ -43,7 +50,15 @@ func TestSetValidator(t *testing.T) {
 
 	resVals = keeper.GetValidatorsByPower(ctx)
 	require.Equal(t, 1, len(resVals))
-	assert.True(ValEq(t, validator, resVals[0]))
+	require.True(ValEq(t, validator, resVals[0]))
+
+	resVals = keeper.GetValidators(ctx)
+	require.Equal(t, 1, len(resVals))
+	require.True(ValEq(t, validator, resVals[0]))
+
+	resVals = keeper.GetValidators(ctx, 10)
+	require.Equal(t, 1, len(resVals))
+	require.True(ValEq(t, validator, resVals[0]))
 
 	updates := keeper.GetTendermintUpdates(ctx)
 	require.Equal(t, 1, len(updates))
@@ -267,7 +282,10 @@ func TestValidatorBasics(t *testing.T) {
 	_, found := keeper.GetValidator(ctx, addrVals[0])
 	require.False(t, found)
 	resVals := keeper.GetValidatorsBonded(ctx)
-	assert.Zero(t, len(resVals))
+	require.Zero(t, len(resVals))
+
+	resVals = keeper.GetValidators(ctx)
+	require.Zero(t, len(resVals))
 
 	pool = keeper.GetPool(ctx)
 	assert.True(sdk.DecEq(t, sdk.ZeroDec(), pool.BondedTokens))

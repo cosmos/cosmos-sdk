@@ -58,6 +58,20 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 	return validator, true
 }
 
+// get a single validator with Bech32 prefix
+func (k Keeper) GetBechValidator(ctx sdk.Context, addr sdk.ValAddress) (bechValidator types.BechValidator, found bool) {
+	validator, found := k.GetValidator(ctx, addr)
+	if !found {
+		return bechValidator, false
+	}
+
+	bechValidator, err := validator.Bech32Validator()
+	if err != nil {
+		panic(err.Error())
+	}
+	return bechValidator, true
+}
+
 // get a single validator by pubkey
 func (k Keeper) GetValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -66,6 +80,20 @@ func (k Keeper) GetValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) (val
 		return validator, false
 	}
 	return k.GetValidator(ctx, addr)
+}
+
+// get a single validator by pubkey with Bech32 prefix
+func (k Keeper) GetBechValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) (bechValidator types.BechValidator, found bool) {
+	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
+	if !found {
+		return bechValidator, false
+	}
+
+	bechValidator, err := validator.Bech32Validator()
+	if err != nil {
+		panic(err.Error())
+	}
+	return bechValidator, true
 }
 
 // set the main record holding validator details
@@ -99,40 +127,57 @@ func (k Keeper) validatorByPowerIndexExists(ctx sdk.Context, power []byte) bool 
 	return store.Get(power) != nil
 }
 
-// Get the set of all validators with no limits, used during genesis dump
-func (k Keeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator) {
+// Get the set of all validators. If maxRetrieve is supplied, the respective amount will be returned.
+func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve ...int16) (validators []types.Validator) {
+	retrieve := len(maxRetrieve) > 0
+	if retrieve {
+		validators = make([]types.Validator, maxRetrieve[0])
+	}
+
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
 
 	i := 0
-	for ; ; i++ {
-		if !iterator.Valid() {
-			break
-		}
+	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
 		addr := iterator.Key()[1:]
 		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
-		validators = append(validators, validator)
-		iterator.Next()
+		if retrieve {
+			validators[i] = validator
+		} else {
+			validators = append(validators, validator)
+		}
+		i++
 	}
 	iterator.Close()
-	return validators
+	return validators[:i] // trim
 }
 
-// Get the set of all validators, retrieve a maxRetrieve number of records
-func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve int16) (validators []types.Validator) {
+// Get the set of all validators.  If maxRetrieve is supplied, the respective amount will be returned.
+func (k Keeper) GetBechValidators(ctx sdk.Context, maxRetrieve ...int16) (validators []types.BechValidator) {
+	retrieve := len(maxRetrieve) > 0
+	if retrieve {
+		validators = make([]types.BechValidator, maxRetrieve[0])
+	}
+
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
 
-	validators = make([]types.Validator, maxRetrieve)
 	i := 0
-	for ; ; i++ {
-		if !iterator.Valid() || i > int(maxRetrieve-1) {
-			break
-		}
+	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
 		addr := iterator.Key()[1:]
 		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
-		validators[i] = validator
-		iterator.Next()
+
+		bechValidator, err := validator.Bech32Validator()
+		if err != nil {
+			panic(err.Error())
+		}
+
+		if retrieve {
+			validators[i] = bechValidator
+		} else {
+			validators = append(validators, bechValidator)
+		}
+		i++
 	}
 	iterator.Close()
 	return validators[:i] // trim
@@ -159,7 +204,7 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validat
 		address := GetAddressFromValBondedIndexKey(iterator.Key())
 		validator, found := k.GetValidator(ctx, address)
 		if !found {
-			panic(fmt.Sprintf("validator record not found for address: %v\n", address))
+			panic(types.ErrNoValidatorFound(types.DefaultCodespace))
 		}
 
 		validators[i] = validator
@@ -178,20 +223,16 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 	validators := make([]types.Validator, maxValidators)
 	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey) // largest to smallest
 	i := 0
-	for {
-		if !iterator.Valid() || i > int(maxValidators-1) {
-			break
-		}
+	for ; iterator.Valid() && i < int(maxValidators); iterator.Next() {
 		address := iterator.Value()
 		validator, found := k.GetValidator(ctx, address)
 		if !found {
-			panic(fmt.Sprintf("validator record not found for address: %v\n", address))
+			panic(types.ErrNoValidatorFound(types.DefaultCodespace))
 		}
 		if validator.Status == sdk.Bonded {
 			validators[i] = validator
 			i++
 		}
-		iterator.Next()
 	}
 	iterator.Close()
 	return validators[:i] // trim
@@ -453,7 +494,7 @@ func (k Keeper) UpdateBondedValidators(
 			var found bool
 			validator, found = k.GetValidator(ctx, ownerAddr)
 			if !found {
-				panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
+				panic(types.ErrNoValidatorFound(types.DefaultCodespace))
 			}
 		}
 

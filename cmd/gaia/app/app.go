@@ -107,7 +107,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		AddRoute("gov", gov.NewHandler(app.govKeeper))
 
 	app.QueryRouter().
-		AddRoute("gov", gov.NewQuerier(app.govKeeper))
+		AddRoute("gov", gov.NewQuerier(app.govKeeper)).
+		AddRoute("stake", stake.NewQuerier(app.stakeKeeper))
 
 	// initialize BaseApp
 	app.SetInitChainer(app.initChainer)

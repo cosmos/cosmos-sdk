@@ -64,6 +64,24 @@ func (k Keeper) GetDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	return delegations[:i] // trim
 }
 
+// iterate through all of the delegations from a delegator
+func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress,
+	fn func(index int64, del types.Delegation) (stop bool)) {
+
+	store := ctx.KVStore(k.storeKey)
+	delegatorPrefixKey := GetDelegationsKey(delAddr)
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+	for i := int64(0); iterator.Valid(); iterator.Next() {
+		del := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
+		stop := fn(i, del)
+		if stop {
+			break
+		}
+		i++
+	}
+	iterator.Close()
+}
+
 // set the delegation
 func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store := ctx.KVStore(k.storeKey)

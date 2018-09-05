@@ -10,15 +10,12 @@ type ValidatorDistInfo struct {
 	Pool                   DecCoins // rewards owed to delegators, commission has already been charged (includes proposer reward)
 	PoolCommission         DecCoins // commission collected by this validator (pending withdrawal)
 
-	TotalDelAccumUpdateHeight int64   // last height which the total delegator accum was updated
-	TotalDelAccum             sdk.Dec // total proposer pool accumulation factor held by delegators
+	DelAccum TotalAccum `json:"dek_accum"` // total proposer pool accumulation factor held by delegators
 }
 
 // update total delegator accumululation
 func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares Dec) ValidatorDistInfo {
-	blocks = height - vi.TotalDelAccumUpdateHeight
-	vi.TotalDelAccum += totalDelShares * blocks
-	vi.TotalDelAccumUpdateHeight = height
+	vi.DelAccum = vi.DelAccum.Update(height, totalDelShares)
 	return vi
 }
 

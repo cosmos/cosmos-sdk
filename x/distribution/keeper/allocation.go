@@ -2,29 +2,33 @@ package keeper
 
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
-// XXX TODO
-func (k Keeper) AllocateFees(ctx sdk.Context, feesCollected sdk.Coins, proposerAddr sdk.ConsAddress,
-	sumPowerPrecommitValidators, totalBondedTokens, communityTax, proposerCommissionRate sdk.Dec) {
+// Allocate fees handles distribution of the collected fees
+func (k Keeper) AllocateFees(ctx sdk.Context, feesCollected sdk.Coins, proposerAddr sdk.ConsAddress) {
 
-	feePool := k.GetFeePool()
+	sumPowerPrecommitValidators := sdk.NewDec(1) // XXX TODO actually calculate this
+	communityTax := sdk.NewDecWithPrec(1, 2)     // XXX TODO get from global params store
+
+	feePool := k.GetFeePool(ctx)
+	stakePool := k.stakeKeeper.GetPool(ctx)
+
 	proserValidator := k.stakeKeeper.GetValidatorFromConsAddr(ctx, proposerAddr)
-	proposer := k.GetFeeDistribution(ctx, proserValidator.OperatorAddr)
+	proposerDist := k.GetFeeDistribution(ctx, proserValidator.OperatorAddr)
 
 	feesCollectedDec := NewDecCoins(feesCollected)
 	proposerMultiplier := sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(4, 2).Mul(
-		sumPowerPrecommitValidators).Div(totalBondedTokens))
+		sumPowerPrecommitValidators).Div(stakePool.BondedTokens))
 	proposerReward := feesCollectedDec.Mul(proposerMultiplier)
 
-	commission := proposerReward.Mul(proposerCommissionRate)
-	proposer.PoolCommission = proposer.PoolCommission.Add(commission)
-	proposer.Pool = proposer.Pool.Add(proposerReward.Sub(commission))
+	commission := proposerReward.Mul(proserValidator.Commission)
+	proposerDist.PoolCommission = proposerDist.PoolCommission.Add(commission)
+	proposerDist.Pool = proposerDist.Pool.Add(proposerReward.Sub(commission))
 
 	communityFunding := feesCollectedDec.Mul(communityTax)
 	feePool.CommunityFund = feePool.CommunityFund.Add(communityFunding)
 
-	poolReceived = feesCollectedDec - proposerReward - communityFunding
+	poolReceived := feesCollectedDec.Sub(proposerReward).Sub(communityFunding)
 	feePool.Pool = feePool.Pool.Add(poolReceived)
 
-	SetValidatorDistribution(proposer)
+	SetValidatorDistribution(proposerDist)
 	SetFeePool(feePool)
 }

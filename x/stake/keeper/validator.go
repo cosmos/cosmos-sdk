@@ -203,7 +203,8 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 // get the most recently updated validators
 //
 // CONTRACT: Only validators with non-zero power or zero-power that were bonded
-// at the previous block height are returned to Tendermint.
+// at the previous block height or were removed from the validator set entirely
+// are returned to Tendermint.
 func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.Validator) {
 	store := ctx.KVStore(k.storeKey)
 

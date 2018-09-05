@@ -3,9 +3,13 @@ package keeper
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
 // XXX TODO
-func AllocateFees(feesCollected sdk.Coins, feePool FeePool, proposer ValidatorDistribution,
+func (k Keeper) AllocateFees(ctx sdk.Context, feesCollected sdk.Coins, proposerAddr ValidatorDistribution,
 	sumPowerPrecommitValidators, totalBondedTokens, communityTax,
 	proposerCommissionRate sdk.Dec) {
+
+	feePool := k.GetFeePool()
+	proposerOpAddr := Stake.Get
+	proposer := GetFeeDistribution()
 
 	feesCollectedDec = MakeDecCoins(feesCollected)
 	proposerReward = feesCollectedDec * (0.01 + 0.04*sumPowerPrecommitValidators/totalBondedTokens)

@@ -2,15 +2,6 @@ package types
 
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
-// coins with decimal
-type DecCoins []DecCoin
-
-// Coins which can have additional decimal points
-type DecCoin struct {
-	Amount sdk.Dec `json:"amount"`
-	Denom  string  `json:"denom"`
-}
-
 // total accumulation tracker
 type TotalAccum struct {
 	UpdateHeight int64   `json:"update_height"`

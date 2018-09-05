@@ -26,18 +26,18 @@ func GetDelegatorRewardsAll(delegatorAddr sdk.AccAddress, height int64) DecCoins
     // collect all entitled rewards
     withdraw = 0
     pool = stake.GetPool() 
-    global = GetGlobal() 
+    feePool = GetFeePool() 
     for delegation = range delegations 
         delInfo = GetDelegationDistInfo(delegation.DelegatorAddr,
                         delegation.ValidatorAddr)
         valInfo = GetValidatorDistInfo(delegation.ValidatorAddr)
         validator = GetValidator(delegation.ValidatorAddr)
 
-        global, diWithdraw = delInfo.WithdrawRewards(global, valInfo, height, pool.BondedTokens, 
+        feePool, diWithdraw = delInfo.WithdrawRewards(feePool, valInfo, height, pool.BondedTokens, 
                    validator.Tokens, validator.DelegatorShares, validator.Commission)
         withdraw += diWithdraw
 
-    SetGlobal(global) 
+    SetFeePool(feePool) 
     return withdraw
 ```
 
@@ -58,16 +58,16 @@ func WithdrawDelegationReward(delegatorAddr, validatorAddr, withdrawAddr sdk.Acc
     
     // get all distribution scenarios
     pool = stake.GetPool() 
-    global = GetGlobal() 
+    feePool = GetFeePool() 
     delInfo = GetDelegationDistInfo(delegatorAddr,
                     validatorAddr)
     valInfo = GetValidatorDistInfo(validatorAddr)
     validator = GetValidator(validatorAddr)
 
-    global, withdraw = delInfo.WithdrawRewards(global, valInfo, height, pool.BondedTokens, 
+    feePool, withdraw = delInfo.WithdrawRewards(feePool, valInfo, height, pool.BondedTokens, 
                validator.Tokens, validator.DelegatorShares, validator.Commission)
 
-    SetGlobal(global) 
+    SetFeePool(feePool) 
     AddCoins(withdrawAddr, withdraw.TruncateDecimal())
 ```
 
@@ -90,7 +90,7 @@ type TxWithdrawValidatorRewardsAll struct {
 func WithdrawValidatorRewardsAll(operatorAddr, withdrawAddr sdk.AccAddress)
 
     height = GetHeight()
-    global = GetGlobal() 
+    feePool = GetFeePool() 
     pool = GetPool() 
     ValInfo = GetValidatorDistInfo(delegation.ValidatorAddr)
     validator = GetValidator(delegation.ValidatorAddr)
@@ -99,10 +99,10 @@ func WithdrawValidatorRewardsAll(operatorAddr, withdrawAddr sdk.AccAddress)
     withdraw = GetDelegatorRewardsAll(validator.OperatorAddr, height)
 
     // withdrawal validator commission rewards
-    global, commission = valInfo.WithdrawCommission(global, valInfo, height, pool.BondedTokens, 
+    feePool, commission = valInfo.WithdrawCommission(feePool, valInfo, height, pool.BondedTokens, 
                validator.Tokens, validator.Commission)
     withdraw += commission
-    SetGlobal(global) 
+    SetFeePool(feePool) 
 
     AddCoins(withdrawAddr, withdraw.TruncateDecimal())
 ```
@@ -117,7 +117,7 @@ block. The accum is always additive to the existing accum. This term is to be
 updated each time rewards are withdrawn from the system. 
 
 ``` 
-func (g Global) UpdateTotalValAccum(height int64, totalBondedTokens Dec) Global
+func (g FeePool) UpdateTotalValAccum(height int64, totalBondedTokens Dec) FeePool
     blocks = height - g.TotalValAccumUpdateHeight
     g.TotalValAccum += totalDelShares * blocks
     g.TotalValAccumUpdateHeight = height
@@ -140,7 +140,7 @@ func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares Dec
     return vi
 ```
 
-### Global pool to validator pool
+### FeePool pool to validator pool
 
 Every time a validator or delegator executes a withdrawal or the validator is
 the proposer and receives new tokens, the relevant validator must move tokens
@@ -148,14 +148,14 @@ from the passive global pool to their own pool. It is at this point that the
 commission is withdrawn
 
 ``` 
-func (vi ValidatorDistInfo) TakeGlobalRewards(g Global, height int64, totalBonded, vdTokens, commissionRate Dec) (
-                                vi ValidatorDistInfo, g Global)
+func (vi ValidatorDistInfo) TakeFeePoolRewards(g FeePool, height int64, totalBonded, vdTokens, commissionRate Dec) (
+                                vi ValidatorDistInfo, g FeePool)
 
     g.UpdateTotalValAccum(height, totalBondedShares)
     
     // update the validators pool
-    blocks = height - vi.GlobalWithdrawalHeight
-    vi.GlobalWithdrawalHeight = height
+    blocks = height - vi.FeePoolWithdrawalHeight
+    vi.FeePoolWithdrawalHeight = height
     accum = blocks * vdTokens
     withdrawalTokens := g.Pool * accum / g.TotalValAccum 
     commission := withdrawalTokens * commissionRate
@@ -175,12 +175,12 @@ For delegations (including validator's self-delegation) all rewards from reward
 pool have already had the validator's commission taken away.
 
 ```
-func (di DelegatorDistInfo) WithdrawRewards(g Global, vi ValidatorDistInfo,
+func (di DelegatorDistInfo) WithdrawRewards(g FeePool, vi ValidatorDistInfo,
     height int64, totalBonded, vdTokens, totalDelShares, commissionRate Dec) (
-    di DelegatorDistInfo, g Global, withdrawn DecCoins)
+    di DelegatorDistInfo, g FeePool, withdrawn DecCoins)
 
     vi.UpdateTotalDelAccum(height, totalDelShares) 
-    g = vi.TakeGlobalRewards(g, height, totalBonded, vdTokens, commissionRate) 
+    g = vi.TakeFeePoolRewards(g, height, totalBonded, vdTokens, commissionRate) 
     
     blocks = height - di.WithdrawalHeight
     di.WithdrawalHeight = height
@@ -200,11 +200,11 @@ func (di DelegatorDistInfo) WithdrawRewards(g Global, vi ValidatorDistInfo,
 Commission is calculated each time rewards enter into the validator.
 
 ```
-func (vi ValidatorDistInfo) WithdrawCommission(g Global, height int64, 
+func (vi ValidatorDistInfo) WithdrawCommission(g FeePool, height int64, 
           totalBonded, vdTokens, commissionRate Dec) (
-          vi ValidatorDistInfo, g Global, withdrawn DecCoins)
+          vi ValidatorDistInfo, g FeePool, withdrawn DecCoins)
 
-    g = vi.TakeGlobalRewards(g, height, totalBonded, vdTokens, commissionRate) 
+    g = vi.TakeFeePoolRewards(g, height, totalBonded, vdTokens, commissionRate) 
     
     withdrawalTokens := vi.PoolCommission 
     vi.PoolCommission = 0

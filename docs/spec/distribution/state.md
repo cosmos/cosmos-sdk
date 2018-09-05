@@ -1,9 +1,9 @@
 ## State
 
-### Global
+### FeePool
 
 All globally tracked parameters for distribution are stored within
-`Global`. Rewards are collected and added to the reward pool and
+`FeePool`. Rewards are collected and added to the reward pool and
 distributed to validators/delegators from here. 
 
 Note that the reward pool holds decimal coins (`DecCoins`) to allow 
@@ -11,7 +11,7 @@ for fractions of coins to be received from operations like inflation.
 When coins are distributed from the pool they are truncated back to 
 `sdk.Coins` which are non-decimal. 
 
- - Global:  `0x00 -> amino(global)`
+ - FeePool:  `0x00 -> amino(FeePool)`
 
 ```golang
 // coins with decimal 
@@ -22,7 +22,7 @@ type DecCoin struct {
     Denom  string
 }
 
-type Global struct {
+type FeePool struct {
     TotalValAccumUpdateHeight  int64    // last height which the total validator accum was updated
     TotalValAccum              sdk.Dec  // total valdator accum held by validators
     Pool                       DecCoins // funds for all validators which have yet to be withdrawn
@@ -42,7 +42,7 @@ Validator distribution information for the relevant validator is updated each ti
 
 ```golang
 type ValidatorDistInfo struct {
-    GlobalWithdrawalHeight     int64    // last height this validator withdrew from the global pool
+    FewPoolWithdrawalHeight     int64    // last height this validator withdrew from the global fee pool
     Pool                       DecCoins // rewards owed to delegators, commission has already been charged (includes proposer reward)
     PoolCommission             DecCoins // commission collected by this validator (pending withdrawal) 
 

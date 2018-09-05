@@ -32,7 +32,7 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck types.CoinKeeper,
 //______________________________________________________________________
 
 // get the global fee pool distribution info
-func (k Keeper) GetFeePool(ctx sdk.Context) (feePool types.Global) {
+func (k Keeper) GetFeePool(ctx sdk.Context) (feePool types.FeePool) {
 	store := ctx.KVStore(k.storeKey)
 
 	b := store.Get(GlobalKey)
@@ -45,7 +45,7 @@ func (k Keeper) GetFeePool(ctx sdk.Context) (feePool types.Global) {
 }
 
 // set the global fee pool distribution info
-func (k Keeper) SetFeePool(ctx sdk.Context, feePool types.Global) {
+func (k Keeper) SetFeePool(ctx sdk.Context, feePool types.FeePool) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(feePool)
 	store.Set(GlobalKey, b)

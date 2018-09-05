@@ -1,7 +1,7 @@
 # End Block
 
 At each endblock, the fees received are allocated to the proposer, community fund,
-and global pool.  When the validator is the proposer of the round, that
+and pool.  When the validator is the proposer of the round, that
 validator (and their delegators) receives between 1% and 5% of fee rewards, the
 reserve community tax is then charged, then the remainder is distributed
 proportionally by voting power to all bonded validators independent of whether
@@ -15,7 +15,7 @@ pool which validator holds individually
 (`ValidatorDistribution.ProvisionsRewardPool`). 
 
 ```
-func AllocateFees(feesCollected sdk.Coins, global Global, proposer ValidatorDistribution, 
+func AllocateFees(feesCollected sdk.Coins, feePool FeePool, proposer ValidatorDistribution, 
               sumPowerPrecommitValidators, totalBondedTokens, communityTax, 
               proposerCommissionRate sdk.Dec)
 
@@ -28,13 +28,11 @@ func AllocateFees(feesCollected sdk.Coins, global Global, proposer ValidatorDist
      proposer.Pool += proposerReward - commission
      
      communityFunding = feesCollectedDec * communityTax
-     global.CommunityFund += communityFunding
+     feePool.CommunityFund += communityFunding
      
      poolReceived = feesCollectedDec - proposerReward - communityFunding
-     global.Pool += poolReceived
-     global.EverReceivedPool += poolReceived
-     global.LastReceivedPool = poolReceived
+     feePool.Pool += poolReceived
 
      SetValidatorDistribution(proposer)
-     SetGlobal(global)
+     SetFeePool(feePool)
 ```

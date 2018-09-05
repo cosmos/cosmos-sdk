@@ -95,7 +95,7 @@ func createCertifier() tmlite.Certifier {
 		errMsg.WriteString("--node ")
 	}
 	if errMsg.Len() != 0 {
-		fmt.Printf("must specify these options: %s in distrust mode\n", errMsg.String())
+		fmt.Printf("must specify these options: %s when --trust-node is false\n", errMsg.String())
 		os.Exit(1)
 	}
 

@@ -949,8 +949,8 @@ func TestGetTendermintUpdatesBonded(t *testing.T) {
 		validators[i] = keeper.UpdateValidator(ctx, validators[i])
 	}
 
-	// add a validator that goes from zero power, to non-zero power, back to zero
-	// power
+	// add a new validator that goes from zero power, to non-zero power, back to
+	// zero power
 	pool := keeper.GetPool(ctx)
 	valPubKey := PKs[len(validators)+1]
 	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
@@ -965,9 +965,20 @@ func TestGetTendermintUpdatesBonded(t *testing.T) {
 	validator, pool, _ = validator.RemoveDelShares(pool, sdk.NewDecFromInt(amt))
 	validator = keeper.UpdateValidator(ctx, validator)
 
+	// add a new validator that increases in power
+	valPubKey = PKs[len(validators)+2]
+	valAddr = sdk.ValAddress(valPubKey.Address().Bytes())
+
+	validator = types.NewValidator(valAddr, valPubKey, types.Description{})
+	validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(500))
+
+	keeper.SetPool(ctx, pool)
+	validator = keeper.UpdateValidator(ctx, validator)
+
 	// verify initial Tendermint updates are correct
 	updates = keeper.GetTendermintUpdates(ctx)
-	require.Equal(t, len(validators), len(updates))
-	require.Equal(t, validators[0].ABCIValidator(), updates[0])
-	require.Equal(t, validators[1].ABCIValidator(), updates[1])
+	require.Equal(t, len(validators)+1, len(updates))
+	require.Equal(t, validator.ABCIValidator(), updates[0])
+	require.Equal(t, validators[0].ABCIValidator(), updates[1])
+	require.Equal(t, validators[1].ABCIValidator(), updates[2])
 }

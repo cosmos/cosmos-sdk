@@ -224,9 +224,15 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub t
 		}
 	case offlineInfo:
 		linfo := info.(offlineInfo)
-		fmt.Fprintf(os.Stderr, "Bytes to sign:\n%s", msg)
+		_, err = fmt.Fprintf(os.Stderr, "Bytes to sign:\n%s", msg)
+		if err != nil {
+			panic(err)
+		}
 		buf := bufio.NewReader(os.Stdin)
-		fmt.Fprintf(os.Stderr, "\nEnter Amino-encoded signature:\n")
+		_, err = fmt.Fprintf(os.Stderr, "\nEnter Amino-encoded signature:\n")
+		if err != nil {
+			panic(err)
+		}
 		// Will block until user inputs the signature
 		signed, err := buf.ReadString('\n')
 		if err != nil {

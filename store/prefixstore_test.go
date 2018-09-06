@@ -1,6 +1,7 @@
 package store
 
 import (
+	"bytes"
 	"math/rand"
 	"testing"
 
@@ -105,7 +106,75 @@ func TestPrefixStoreIterate(t *testing.T) {
 		pIter.Next()
 	}
 
-	require.Equal(t, bIter.Valid(), pIter.Valid())
 	bIter.Close()
 	pIter.Close()
+}
+
+func TestPrefixStoreIteratorEdgeCase(t *testing.T) {
+	db := dbm.NewMemDB()
+	baseStore := dbStoreAdapter{db}
+
+	// overflow in cpIncr
+	prefix := []byte{0xAA, 0xFF, 0xFF}
+	prefixStore := baseStore.Prefix(prefix)
+
+	// ascending order
+	baseStore.Set([]byte{0xAA, 0xFF, 0xFE}, []byte{})
+	baseStore.Set([]byte{0xAA, 0xFF, 0xFE, 0x00}, []byte{})
+	baseStore.Set([]byte{0xAA, 0xFF, 0xFF}, []byte{})
+	baseStore.Set([]byte{0xAA, 0xFF, 0xFF, 0x00}, []byte{})
+	baseStore.Set([]byte{0xAB}, []byte{})
+	baseStore.Set([]byte{0xAB, 0x00}, []byte{})
+	baseStore.Set([]byte{0xAB, 0x00, 0x00}, []byte{})
+
+	for iter := prefixStore.Iterator(nil, nil); iter.Valid(); iter.Next() {
+		require.True(t, bytes.HasPrefix(iter.Key(), prefix))
+	}
+}
+
+func TestPrefixStoreReverseIteratorEdgeCase(t *testing.T) {
+	db := dbm.NewMemDB()
+	baseStore := dbStoreAdapter{db}
+
+	// overflow in cpIncr
+	prefix := []byte{0xAA, 0xFF, 0xFF}
+	prefixStore := baseStore.Prefix(prefix)
+
+	// descending order
+	baseStore.Set([]byte{0xAB, 0x00, 0x00}, []byte{})
+	baseStore.Set([]byte{0xAB, 0x00}, []byte{})
+	baseStore.Set([]byte{0xAB}, []byte{})
+	baseStore.Set([]byte{0xAA, 0xFF, 0xFF, 0x00}, []byte{})
+	baseStore.Set([]byte{0xAA, 0xFF, 0xFF}, []byte{})
+	baseStore.Set([]byte{0xAA, 0xFF, 0xFE, 0x00}, []byte{})
+	baseStore.Set([]byte{0xAA, 0xFF, 0xFE}, []byte{})
+
+	iter := prefixStore.ReverseIterator(nil, nil)
+	for ; iter.Valid(); iter.Next() {
+		require.True(t, bytes.HasPrefix(iter.Key(), prefix))
+	}
+
+	iter.Close()
+
+	db = dbm.NewMemDB()
+	baseStore = dbStoreAdapter{db}
+
+	// underflow in cpDecr
+	prefix = []byte{0xAA, 0x00, 0x00}
+	prefixStore = baseStore.Prefix(prefix)
+
+	baseStore.Set([]byte{0xAB, 0x00, 0x01, 0x00, 0x00}, []byte{})
+	baseStore.Set([]byte{0xAB, 0x00, 0x01, 0x00}, []byte{})
+	baseStore.Set([]byte{0xAB, 0x00, 0x01}, []byte{})
+	baseStore.Set([]byte{0xAA, 0x00, 0x00, 0x00}, []byte{})
+	baseStore.Set([]byte{0xAA, 0x00, 0x00}, []byte{})
+	baseStore.Set([]byte{0xA9, 0xFF, 0xFF, 0x00}, []byte{})
+	baseStore.Set([]byte{0xA9, 0xFF, 0xFF}, []byte{})
+
+	iter = prefixStore.ReverseIterator(nil, nil)
+	for ; iter.Valid(); iter.Next() {
+		require.True(t, bytes.HasPrefix(iter.Key(), prefix))
+	}
+
+	iter.Close()
 }

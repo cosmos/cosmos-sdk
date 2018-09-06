@@ -136,7 +136,7 @@ func TestStakeMsgs(t *testing.T) {
 	mApp.BeginBlock(abci.RequestBeginBlock{})
 
 	validator := checkValidator(t, mApp, keeper, sdk.ValAddress(addr1), true)
-	require.Equal(t, sdk.ValAddress(addr1), validator.Operator)
+	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddr)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.DecEq(t, sdk.NewDec(10), validator.BondedTokens()))
 
@@ -150,7 +150,7 @@ func TestStakeMsgs(t *testing.T) {
 	mApp.BeginBlock(abci.RequestBeginBlock{})
 
 	validator = checkValidator(t, mApp, keeper, sdk.ValAddress(addr2), true)
-	require.Equal(t, sdk.ValAddress(addr2), validator.Operator)
+	require.Equal(t, sdk.ValAddress(addr2), validator.OperatorAddr)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
 

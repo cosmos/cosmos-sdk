@@ -223,11 +223,11 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 	validator types.Validator, subtractAccount bool) (newShares sdk.Dec, err sdk.Error) {
 
 	// Get or create the delegator delegation
-	delegation, found := k.GetDelegation(ctx, delAddr, validator.Operator)
+	delegation, found := k.GetDelegation(ctx, delAddr, validator.OperatorAddr)
 	if !found {
 		delegation = types.Delegation{
 			DelegatorAddr: delAddr,
-			ValidatorAddr: validator.Operator,
+			ValidatorAddr: validator.OperatorAddr,
 			Shares:        sdk.ZeroDec(),
 		}
 	}
@@ -286,7 +286,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 
 		// if the delegation is the operator of the validator then
 		// trigger a jail validator
-		if bytes.Equal(delegation.DelegatorAddr, validator.Operator) && validator.Jailed == false {
+		if bytes.Equal(delegation.DelegatorAddr, validator.OperatorAddr) && validator.Jailed == false {
 			validator.Jailed = true
 		}
 
@@ -306,7 +306,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 	// update then remove validator if necessary
 	validator = k.UpdateValidator(ctx, validator)
 	if validator.DelegatorShares.IsZero() {
-		k.RemoveValidator(ctx, validator.Operator)
+		k.RemoveValidator(ctx, validator.OperatorAddr)
 	}
 
 	return amount, nil

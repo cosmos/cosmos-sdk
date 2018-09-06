@@ -30,6 +30,10 @@ BREAKING CHANGES
         addresses, `cosmosconspub` and `cosmoscons` respectively.
     
 * SDK
+    * [core] \#2219 Update to Tendermint 0.24.0
+      * Validator set updates delayed by one block
+      * BFT timestamp that can safely be used by applications
+      * Fixed maximum block size enforcement
     * [core] \#1807 Switch from use of rational to decimal
     * [types] \#1901 Validator interface's GetOwner() renamed to GetOperator()
     * [x/slashing] [#2122](https://github.com/cosmos/cosmos-sdk/pull/2122) - Implement slashing period

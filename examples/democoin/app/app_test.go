@@ -33,7 +33,7 @@ func setGenesis(bapp *DemocoinApp, trend string, accs ...auth.BaseAccount) error
 	}
 
 	// Initialize the chain
-	vals := []abci.Validator{}
+	vals := []abci.ValidatorUpdate{}
 	bapp.InitChain(abci.RequestInitChain{Validators: vals, AppStateBytes: stateBytes})
 	bapp.Commit()
 

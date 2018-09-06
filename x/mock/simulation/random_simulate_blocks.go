@@ -33,7 +33,12 @@ func initChain(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress, setup
 	res := app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, keys, accs)})
 	validators = make(map[string]mockValidator)
 	for _, validator := range res.Validators {
-		validators[string(validator.Address)] = mockValidator{validator, GetMemberOfInitialState(r, initialLivenessWeightings)}
+		pubkey, err := tmtypes.PB2TM.PubKey(validator.PubKey)
+		if err != nil {
+			panic(err)
+		}
+		address := pubkey.Address()
+		validators[string(address)] = mockValidator{validator, GetMemberOfInitialState(r, initialLivenessWeightings)}
 	}
 
 	for i := 0; i < len(setups); i++ {
@@ -91,7 +96,7 @@ func SimulateFromSeed(
 	for i := 0; i < numBlocks; i++ {
 		// Log the header time for future lookup
 		pastTimes = append(pastTimes, header.Time)
-		pastVoteInfos = append(pastVoteInfos, request.LastCommitInfo.Validators)
+		pastVoteInfos = append(pastVoteInfos, request.LastCommitInfo.Votes)
 
 		// Run the BeginBlock handler
 		app.BeginBlock(request)
@@ -271,8 +276,14 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 		} else {
 			event("beginblock/signing/missed")
 		}
+		pubkey, err := tmtypes.PB2TM.PubKey(mVal.val.PubKey)
+		if err != nil {
+			panic(err)
+		}
 		voteInfos[i] = abci.VoteInfo{
-			Validator:       mVal.val,
+			Validator: abci.Validator{
+				Address: pubkey.Address(),
+			},
 			SignedLastBlock: signed,
 		}
 		i++
@@ -308,7 +319,7 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 	return abci.RequestBeginBlock{
 		Header: header,
 		LastCommitInfo: abci.LastCommitInfo{
-			Validators: voteInfos,
+			Votes: voteInfos,
 		},
 		ByzantineValidators: evidence,
 	}
@@ -323,7 +334,7 @@ func AssertAllInvariants(t *testing.T, app *baseapp.BaseApp, tests []Invariant, 
 
 // updateValidators mimicks Tendermint's update logic
 // nolint: unparam
-func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValidator, updates []abci.Validator, event func(string)) map[string]mockValidator {
+func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValidator, updates []abci.ValidatorUpdate, event func(string)) map[string]mockValidator {
 	for _, update := range updates {
 		switch {
 		case update.Power == 0:

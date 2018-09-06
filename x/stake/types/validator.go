@@ -317,8 +317,17 @@ func (v Validator) ABCIValidator() abci.Validator {
 	}
 }
 
+// ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staked validator type
+// with the full validator power
+func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
+	return abci.ValidatorUpdate{
+		PubKey: tmtypes.TM2PB.PubKey(v.PubKey),
+		Power:  v.BondedTokens().RoundInt64(),
+	}
+}
+
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staked validator type
-// with with zero power used for validator updates.
+// with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
 		PubKey: tmtypes.TM2PB.PubKey(v.PubKey),

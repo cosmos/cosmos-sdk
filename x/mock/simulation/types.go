@@ -36,7 +36,7 @@ type (
 	Invariant func(t *testing.T, app *baseapp.BaseApp, log string)
 
 	mockValidator struct {
-		val           abci.Validator
+		val           abci.ValidatorUpdate
 		livenessState int
 	}
 

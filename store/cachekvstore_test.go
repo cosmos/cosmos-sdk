@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,8 +14,8 @@ func newCacheKVStore() CacheKVStore {
 	return NewCacheKVStore(mem)
 }
 
-func keyFmt(i int) []byte { return bz(cmn.Fmt("key%0.8d", i)) }
-func valFmt(i int) []byte { return bz(cmn.Fmt("value%0.8d", i)) }
+func keyFmt(i int) []byte { return bz(fmt.Sprintf("key%0.8d", i)) }
+func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
 func TestCacheKVStore(t *testing.T) {
 	mem := dbStoreAdapter{dbm.NewMemDB()}

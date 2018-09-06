@@ -533,11 +533,7 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 	bondedValidatorsCount := 0
 
 	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
-	for {
-		if !iterator.Valid() || bondedValidatorsCount > int(maxValidators-1) {
-			break
-		}
-
+	for ; iterator.Valid() && bondedValidatorsCount < int(maxValidators); iterator.Next() {
 		var found bool
 
 		ownerAddr := iterator.Value()
@@ -562,12 +558,10 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 			if validator.Status == sdk.Bonded {
 				panic(fmt.Sprintf("jailed validator cannot be bonded for address: %s\n", ownerAddr))
 			}
-
 			break
 		}
 
 		bondedValidatorsCount++
-		iterator.Next()
 	}
 
 	iterator.Close()

@@ -26,10 +26,10 @@ type delegationValue struct {
 
 // defines a delegation with string value for the shares
 type DelegationREST struct {
-	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
-	Shares        string         `json:"shares"`
-	Height        int64          `json:"height"`
+	DelegatorAddr string `json:"delegator_addr"`
+	ValidatorAddr string `json:"validator_addr"`
+	Shares        string `json:"shares"`
+	Height        int64  `json:"height"`
 }
 
 // aggregates of all delegations, unbondings and redelegations
@@ -115,8 +115,8 @@ func (d Delegation) HumanReadableString() (string, error) {
 // changes delegation shares to string format
 func (d Delegation) ToRest() DelegationREST {
 	return DelegationREST{
-		DelegatorAddr: d.DelegatorAddr,
-		ValidatorAddr: d.ValidatorAddr,
+		DelegatorAddr: d.DelegatorAddr.String(),
+		ValidatorAddr: d.ValidatorAddr.String(),
 		Height:        d.Height,
 		Shares:        d.Shares.String(),
 	}

@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	keep "github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -44,16 +43,16 @@ func TestQueryParametersPool(t *testing.T) {
 
 	var params types.Params
 	errRes := keeper.Codec().UnmarshalJSON(res, &params)
-	assert.Nil(t, errRes)
-	assert.Equal(t, keeper.GetParams(ctx), params)
+	require.Nil(t, errRes)
+	require.Equal(t, keeper.GetParams(ctx), params)
 
 	res, err = queryPool(ctx, keeper)
 	require.Nil(t, err)
 
 	var pool types.Pool
 	errRes = keeper.Codec().UnmarshalJSON(res, &pool)
-	assert.Nil(t, errRes)
-	assert.Equal(t, keeper.GetPool(ctx), pool)
+	require.Nil(t, errRes)
+	require.Equal(t, keeper.GetPool(ctx), pool)
 }
 
 func TestQueryValidators(t *testing.T) {
@@ -67,34 +66,40 @@ func TestQueryValidators(t *testing.T) {
 	handleMsgCreateValidator(ctx, msg2, keeper)
 
 	// Query Validators
-	validators := keeper.GetBechValidators(ctx)
+	var bechValidators []types.BechValidator
+	validators := keeper.GetValidators(ctx)
+	for _, val := range validators {
+		bechVal, err := val.Bech32Validator()
+		require.Nil(t, err)
+		bechValidators = append(bechValidators, bechVal)
+	}
 	res, err := queryValidators(ctx, []string{""}, keeper)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	var validatorsResp []types.BechValidator
 	errRes := keeper.Codec().UnmarshalJSON(res, &validatorsResp)
-	assert.Nil(t, errRes)
+	require.Nil(t, errRes)
 
-	assert.Equal(t, len(validators), len(validatorsResp))
-	assert.ElementsMatch(t, validators, validatorsResp)
+	require.Equal(t, len(bechValidators), len(validatorsResp))
+	require.ElementsMatch(t, bechValidators, validatorsResp)
 
 	// Query each validator
 	queryParams := newTestValidatorQuery(addrVal1)
 	bz, errRes := keeper.Codec().MarshalJSON(queryParams)
-	assert.Nil(t, errRes)
+	require.Nil(t, errRes)
 
 	query := abci.RequestQuery{
 		Path: "/custom/stake/validator",
 		Data: bz,
 	}
 	res, err = queryValidator(ctx, []string{query.Path}, query, keeper)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	var validator types.BechValidator
 	errRes = keeper.Codec().UnmarshalJSON(res, &validator)
-	assert.Nil(t, errRes)
+	require.Nil(t, errRes)
 
-	assert.Equal(t, validators[0], validator)
+	require.Equal(t, validators[0], validator)
 }
 
 func TestQueryDelegation(t *testing.T) {
@@ -109,7 +114,7 @@ func TestQueryDelegation(t *testing.T) {
 	// Query Delegator bonded validators
 	queryParams := newTestDelegatorQuery(addrAcc2)
 	bz, errRes := keeper.Codec().MarshalJSON(queryParams)
-	assert.Nil(t, errRes)
+	require.Nil(t, errRes)
 
 	query := abci.RequestQuery{
 		Path: "/custom/stake/delegatorValidators",
@@ -118,19 +123,19 @@ func TestQueryDelegation(t *testing.T) {
 
 	delValidators := keeper.GetDelegatorBechValidators(ctx, addrAcc2)
 	res, err := queryDelegatorValidators(ctx, []string{query.Path}, query, keeper)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	var validatorsResp []types.BechValidator
 	errRes = keeper.Codec().UnmarshalJSON(res, &validatorsResp)
-	assert.Nil(t, errRes)
+	require.Nil(t, errRes)
 
-	assert.Equal(t, len(delValidators), len(validatorsResp))
-	assert.ElementsMatch(t, delValidators, validatorsResp)
+	require.Equal(t, len(delValidators), len(validatorsResp))
+	require.ElementsMatch(t, delValidators, validatorsResp)
 
 	// Query bonded validator
 	queryBondParams := newTestBondQuery(addrAcc2, addrVal1)
 	bz, errRes = keeper.Codec().MarshalJSON(queryBondParams)
-	assert.Nil(t, errRes)
+	require.Nil(t, errRes)
 
 	query = abci.RequestQuery{
 		Path: "/custom/stake/delegatorValidator",
@@ -138,13 +143,13 @@ func TestQueryDelegation(t *testing.T) {
 	}
 
 	res, err = queryDelegatorValidator(ctx, []string{query.Path}, query, keeper)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	var validator types.BechValidator
 	errRes = keeper.Codec().UnmarshalJSON(res, &validator)
-	assert.Nil(t, errRes)
+	require.Nil(t, errRes)
 
-	assert.Equal(t, delValidators[0], validator)
+	require.Equal(t, delValidators[0], validator)
 
 	// Query delegation
 
@@ -154,18 +159,18 @@ func TestQueryDelegation(t *testing.T) {
 	}
 
 	delegation, found := keeper.GetDelegation(ctx, addrAcc2, addrVal1)
-	assert.True(t, found)
+	require.True(t, found)
 
-	delegationNoRat := types.NewDelegationWithoutDec(delegation)
+	delegationREST := delegation.ToRest()
 
 	res, err = queryDelegation(ctx, []string{query.Path}, query, keeper)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
-	var delegationRes types.DelegationWithoutDec
-	errRes = keeper.Codec().UnmarshalJSON(res, &delegationRes)
-	assert.Nil(t, errRes)
+	var delegationRestRes types.DelegationREST
+	errRes = keeper.Codec().UnmarshalJSON(res, &delegationRestRes)
+	require.Nil(t, errRes)
 
-	assert.Equal(t, delegationNoRat, delegationRes)
+	require.Equal(t, delegationREST, delegationRestRes)
 
 	// Query unbonging delegation
 
@@ -178,16 +183,16 @@ func TestQueryDelegation(t *testing.T) {
 	}
 
 	unbond, found := keeper.GetUnbondingDelegation(ctx, addrAcc2, addrVal1)
-	assert.True(t, found)
+	require.True(t, found)
 
 	res, err = queryUnbondingDelegation(ctx, []string{query.Path}, query, keeper)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	var unbondRes types.UnbondingDelegation
 	errRes = keeper.Codec().UnmarshalJSON(res, &unbondRes)
-	assert.Nil(t, errRes)
+	require.Nil(t, errRes)
 
-	assert.Equal(t, unbond, unbondRes)
+	require.Equal(t, unbond, unbondRes)
 
 	// Query Delegator Summary
 
@@ -197,11 +202,11 @@ func TestQueryDelegation(t *testing.T) {
 	}
 
 	res, err = queryDelegator(ctx, []string{query.Path}, query, keeper)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	var summary types.DelegationSummary
 	errRes = keeper.Codec().UnmarshalJSON(res, &summary)
-	assert.Nil(t, errRes)
+	require.Nil(t, errRes)
 
-	assert.Equal(t, unbond, summary.UnbondingDelegations[0])
+	require.Equal(t, unbond, summary.UnbondingDelegations[0])
 }

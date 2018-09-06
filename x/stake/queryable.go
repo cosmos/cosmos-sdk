@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	keep "github.com/cosmos/cosmos-sdk/x/stake/keeper"
-	"github.com/cosmos/cosmos-sdk/x/stake/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -101,7 +100,7 @@ func queryValidator(ctx sdk.Context, path []string, req abci.RequestQuery, k kee
 		return nil, sdk.ErrInternal(fmt.Sprintf("could not bech32ify validator: %s", errRes.Error()))
 	}
 
-	res, errRes = wire.MarshalJSONIndent(k.Codec(), validator)
+	res, errRes = wire.MarshalJSONIndent(k.Codec(), bechValidator)
 	if errRes != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}
@@ -115,20 +114,20 @@ func queryDelegator(ctx sdk.Context, path []string, req abci.RequestQuery, k kee
 	if errRes != nil {
 		return []byte{}, sdk.ErrUnknownAddress(fmt.Sprintf("incorrectly formatted request address: %s", errRes.Error()))
 	}
-	delegations := k.GetDelegatorDelegations(ctx, params.DelegatorAddr)
-	unbondingDelegations := k.GetUnbondingDelegations(ctx, params.DelegatorAddr)
-	redelegations := k.GetRedelegations(ctx, params.DelegatorAddr)
-
-	summary := types.DelegationSummary{
-		Delegations:          delegations,
-		UnbondingDelegations: unbondingDelegations,
-		Redelegations:        redelegations,
-	}
-
-	res, errRes = wire.MarshalJSONIndent(k.Codec(), summary)
-	if errRes != nil {
-		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
-	}
+	// delegations := k.GetDelegatorDelegations(ctx, params.DelegatorAddr)
+	// unbondingDelegations := k.GetUnbondingDelegations(ctx, params.DelegatorAddr)
+	// redelegations := k.GetRedelegations(ctx, params.DelegatorAddr)
+	//
+	// summary := types.DelegationSummary{
+	// 	Delegations:          delegations,
+	// 	UnbondingDelegations: unbondingDelegations,
+	// 	Redelegations:        redelegations,
+	// }
+	//
+	// res, errRes = wire.MarshalJSONIndent(k.Codec(), summary)
+	// if errRes != nil {
+	// 	return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
+	// }
 	return res, nil
 }
 
@@ -165,7 +164,7 @@ func queryDelegatorValidator(ctx sdk.Context, path []string, req abci.RequestQue
 		return nil, sdk.ErrInternal(fmt.Sprintf("could not bech32ify validator: %s", errRes.Error()))
 	}
 
-	res, errRes = wire.MarshalJSONIndent(k.Codec(), validator)
+	res, errRes = wire.MarshalJSONIndent(k.Codec(), bechValidator)
 	if errRes != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}

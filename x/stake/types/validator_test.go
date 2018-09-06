@@ -33,7 +33,7 @@ func TestBech32Validator(t *testing.T) {
 	val2Bech, err := val2.Bech32Validator()
 	require.Nil(t, err)
 
-	bechPubKey, err := sdk.Bech32ifyValPub(val1.PubKey)
+	bechPubKey, err := sdk.Bech32ifyConsPub(val1.PubKey) // cosmosconspub...
 	require.Nil(t, err)
 
 	require.Equal(t, val1Bech, val2Bech)

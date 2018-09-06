@@ -30,6 +30,19 @@ func TestDelegationEqual(t *testing.T) {
 	require.False(t, ok)
 }
 
+func TestDelegationToRest(t *testing.T) {
+	d := Delegation{
+		DelegatorAddr: sdk.AccAddress(addr1),
+		ValidatorAddr: addr2,
+		Shares:        sdk.NewDec(100),
+	}
+
+	rest := d.ToRest()
+	require.Equal(t, d.DelegatorAddr.String(), rest.DelegatorAddr)
+	require.Equal(t, d.ValidatorAddr.String(), rest.ValidatorAddr)
+	require.Equal(t, d.Shares.String(), rest.Shares)
+}
+
 func TestDelegationHumanReadableString(t *testing.T) {
 	d := Delegation{
 		DelegatorAddr: sdk.AccAddress(addr1),

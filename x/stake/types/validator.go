@@ -197,7 +197,7 @@ type BechValidator struct {
 
 // get the bech validator from the the regular validator
 func (v Validator) Bech32Validator() (BechValidator, error) {
-	bechConsPubKey, err := sdk.Bech32ifyValPub(v.PubKey)
+	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.PubKey)
 	if err != nil {
 		return BechValidator{}, err
 	}

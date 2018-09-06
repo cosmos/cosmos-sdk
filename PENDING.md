@@ -92,7 +92,7 @@ IMPROVEMENTS
     * [store] Speedup IAVL iteration, and consequently everything that requires IAVL iteration. [#2143](https://github.com/cosmos/cosmos-sdk/issues/2143)
     * [store] \#1952 Update IAVL dependency to v0.10.0
     * [simulation] Make timestamps randomized [#2153](https://github.com/cosmos/cosmos-sdk/pull/2153)
-    * [x/stake] \#2139 Add stake queriers for increased performance of Gaia-lite endpoints
+    * [x/stake] \#2249 Add stake `Queriers` for Gaia-lite endpoints. This increases the staking endpoints performance by reusing the staking `keeper` logic for queries.
 
 * Tendermint
 

@@ -1,9 +1,7 @@
 package types
 
 import (
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // status of a validator
@@ -46,22 +44,6 @@ type Validator interface {
 	GetTokens() Dec           // validation tokens
 	GetDelegatorShares() Dec  // Total out standing delegator shares
 	GetBondHeight() int64     // height in which the validator became active
-}
-
-// validator which fulfills abci validator interface for use in Tendermint
-func ABCIValidator(v Validator) abci.Validator {
-	return abci.Validator{
-		Address: v.GetPubKey().Address(),
-		Power:   v.GetPower().RoundInt64(),
-	}
-}
-
-// validator which fulfills abci validator update interface for use in Tendermint
-func ABCIValidatorUpdate(v Validator) abci.ValidatorUpdate {
-	return abci.ValidatorUpdate{
-		PubKey: tmtypes.TM2PB.PubKey(v.GetPubKey()),
-		Power:  v.GetPower().RoundInt64(),
-	}
 }
 
 // properties for the set of all validators

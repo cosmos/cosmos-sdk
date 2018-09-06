@@ -309,14 +309,6 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 	return d, nil
 }
 
-// ABCIValidator returns an abci.Validator from a staked validator type.
-func (v Validator) ABCIValidator() abci.Validator {
-	return abci.Validator{
-		Address: v.PubKey.Address(),
-		Power:   v.BondedTokens().RoundInt64(),
-	}
-}
-
 // ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staked validator type
 // with the full validator power
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {

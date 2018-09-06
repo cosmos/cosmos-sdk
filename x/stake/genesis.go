@@ -49,7 +49,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	vals := keeper.GetValidatorsBonded(ctx)
 	res = make([]abci.ValidatorUpdate, len(vals))
 	for i, val := range vals {
-		res[i] = sdk.ABCIValidatorUpdate(val)
+		res[i] = val.ABCIValidatorUpdate()
 	}
 	return
 }

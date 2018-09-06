@@ -256,7 +256,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 	case powerIncreasing && !validator.Jailed &&
 		(oldFound && oldValidator.Status == sdk.Bonded):
 
-		bz := k.cdc.MustMarshalBinary(sdk.ABCIValidatorUpdate(validator))
+		bz := k.cdc.MustMarshalBinary(validator.ABCIValidatorUpdate())
 		store.Set(GetTendermintUpdatesKey(validator.Operator), bz)
 
 		if cliffPower != nil {
@@ -292,7 +292,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 
 		// if decreased in power but still bonded, update Tendermint validator
 		if oldFound && oldValidator.BondedTokens().GT(validator.BondedTokens()) {
-			bz := k.cdc.MustMarshalBinary(sdk.ABCIValidatorUpdate(validator))
+			bz := k.cdc.MustMarshalBinary(validator.ABCIValidatorUpdate())
 			store.Set(GetTendermintUpdatesKey(validator.Operator), bz)
 		}
 	}
@@ -671,7 +671,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	store.Set(GetValidatorsBondedIndexKey(validator.Operator), []byte{})
 
 	// add to accumulated changes for tendermint
-	bzABCI := k.cdc.MustMarshalBinary(sdk.ABCIValidatorUpdate(validator))
+	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidatorUpdate())
 	store.Set(GetTendermintUpdatesKey(validator.Operator), bzABCI)
 
 	// call the bond hook if present

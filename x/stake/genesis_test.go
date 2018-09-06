@@ -55,7 +55,7 @@ func TestInitGenesis(t *testing.T) {
 
 	abcivals := make([]abci.ValidatorUpdate, len(vals))
 	for i, val := range validators {
-		abcivals[i] = sdk.ABCIValidatorUpdate(val)
+		abcivals[i] = val.ABCIValidatorUpdate()
 	}
 
 	require.Equal(t, abcivals, vals)
@@ -94,7 +94,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 	abcivals := make([]abci.ValidatorUpdate, 100)
 	for i, val := range validators[:100] {
-		abcivals[i] = sdk.ABCIValidatorUpdate(val)
+		abcivals[i] = val.ABCIValidatorUpdate()
 	}
 
 	require.Equal(t, abcivals, vals)

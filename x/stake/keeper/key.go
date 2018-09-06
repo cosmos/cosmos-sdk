@@ -26,10 +26,10 @@ var (
 	IntraTxCounterKey                = []byte{0x09} // key for intra-block tx index
 	DelegationKey                    = []byte{0x0A} // key for a delegation
 	UnbondingDelegationKey           = []byte{0x0B} // key for an unbonding-delegation
-	UnbondingDelegationByValIndexKey = []byte{0x0C} // prefix for each key for an unbonding-delegation, by validator owner
+	UnbondingDelegationByValIndexKey = []byte{0x0C} // prefix for each key for an unbonding-delegation, by validator operator
 	RedelegationKey                  = []byte{0x0D} // key for a redelegation
-	RedelegationByValSrcIndexKey     = []byte{0x0E} // prefix for each key for an redelegation, by source validator owner
-	RedelegationByValDstIndexKey     = []byte{0x0F} // prefix for each key for an redelegation, by destination validator owner
+	RedelegationByValSrcIndexKey     = []byte{0x0E} // prefix for each key for an redelegation, by source validator operator
+	RedelegationByValDstIndexKey     = []byte{0x0F} // prefix for each key for an redelegation, by destination validator operator
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -41,7 +41,7 @@ func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
 }
 
 // gets the key for the validator with pubkey
-// VALUE: validator owner address ([]byte)
+// VALUE: validator operator address ([]byte)
 func GetValidatorByPubKeyIndexKey(pubkey crypto.PubKey) []byte {
 	return append(ValidatorsByPubKeyIndexKey, pubkey.Bytes()...)
 }
@@ -52,7 +52,7 @@ func GetValidatorsBondedIndexKey(operatorAddr sdk.ValAddress) []byte {
 	return append(ValidatorsBondedIndexKey, operatorAddr.Bytes()...)
 }
 
-// Get the validator owner address from ValBondedIndexKey
+// Get the validator operator address from ValBondedIndexKey
 func GetAddressFromValBondedIndexKey(IndexKey []byte) []byte {
 	return IndexKey[1:] // remove prefix bytes
 }
@@ -60,7 +60,7 @@ func GetAddressFromValBondedIndexKey(IndexKey []byte) []byte {
 // get the validator by power index.
 // Power index is the key used in the power-store, and represents the relative
 // power ranking of the validator.
-// VALUE: validator owner address ([]byte)
+// VALUE: validator operator address ([]byte)
 func GetValidatorsByPowerIndexKey(validator types.Validator, pool types.Pool) []byte {
 	// NOTE the address doesn't need to be stored because counter bytes must always be different
 	return getValidatorPowerRank(validator, pool)

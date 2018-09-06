@@ -145,7 +145,7 @@ func (aa AccAddress) Format(s fmt.State, verb rune) {
 }
 
 // ----------------------------------------------------------------------------
-// validator owner
+// validator operator
 // ----------------------------------------------------------------------------
 
 // ValAddress defines a wrapper around bytes meant to present a validator's

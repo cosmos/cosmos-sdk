@@ -163,6 +163,7 @@ func getValidators(validatorKVs []sdk.KVPair, cdc *wire.Codec) ([]types.BechVali
 }
 
 //  gets all Bech32 validators from a key
+// nolint: unparam
 func getBech32Validators(storeName string, cliCtx context.CLIContext, cdc *wire.Codec) (
 	validators []types.BechValidator, httpStatusCode int, errMsg string, err error) {
 

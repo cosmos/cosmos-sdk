@@ -68,6 +68,9 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			msg := client.BuildMsg(from, to, coins)
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(txCtx, cliCtx, []sdk.Msg{msg})
+			}
 
 			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},

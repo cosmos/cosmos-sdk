@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	auth "github.com/cosmos/cosmos-sdk/x/auth"
 	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
 	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/common"
@@ -28,7 +29,7 @@ func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) 
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(os.Stdout, "estimated gas = %v\n", txCtx.Gas)
+		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txCtx.Gas)
 	}
 	if cliCtx.DryRun {
 		return nil
@@ -85,6 +86,19 @@ func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *
 	return
 }
 
+// PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
+func PrintUnsignedStdTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) (err error) {
+	stdTx, err := buildUnsignedStdTx(txCtx, cliCtx, msgs)
+	if err != nil {
+		return
+	}
+	json, err := txCtx.Codec.MarshalJSON(stdTx)
+	if err == nil {
+		fmt.Printf("%s\n", json)
+	}
+	return
+}
+
 func adjustGasEstimate(estimate int64, adjustment float64) int64 {
 	return int64(adjustment * float64(estimate))
 }
@@ -127,4 +141,25 @@ func prepareTxContext(txCtx authctx.TxContext, cliCtx context.CLIContext) (authc
 		txCtx = txCtx.WithSequence(accSeq)
 	}
 	return txCtx, nil
+}
+
+// buildUnsignedStdTx builds a StdTx as per the parameters passed in the
+// contexts. Gas is automatically estimated if gas wanted is set to 0.
+func buildUnsignedStdTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
+	txCtx, err = prepareTxContext(txCtx, cliCtx)
+	if err != nil {
+		return
+	}
+	if txCtx.Gas == 0 {
+		txCtx, err = EnrichCtxWithGas(txCtx, cliCtx, cliCtx.FromAddressName, msgs)
+		if err != nil {
+			return
+		}
+		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txCtx.Gas)
+	}
+	stdSignMsg, err := txCtx.Build(msgs)
+	if err != nil {
+		return
+	}
+	return auth.NewStdTx(stdSignMsg.Msgs, stdSignMsg.Fee, nil, stdSignMsg.Memo), nil
 }

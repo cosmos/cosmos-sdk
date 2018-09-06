@@ -372,6 +372,7 @@ func (k Keeper) updateForJailing(ctx sdk.Context, oldFound bool, oldValidator, n
 	return newValidator
 }
 
+// nolint: unparam
 func (k Keeper) getPowerIncreasing(ctx sdk.Context, oldFound bool, oldValidator, newValidator types.Validator) bool {
 	if oldFound && oldValidator.BondedTokens().LT(newValidator.BondedTokens()) {
 		return true
@@ -380,6 +381,7 @@ func (k Keeper) getPowerIncreasing(ctx sdk.Context, oldFound bool, oldValidator,
 }
 
 // get the bond height and incremented intra-tx counter
+// nolint: unparam
 func (k Keeper) bondIncrement(ctx sdk.Context, oldFound bool, oldValidator,
 	newValidator types.Validator) (height int64, intraTxCounter int16) {
 

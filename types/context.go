@@ -30,6 +30,7 @@ type Context struct {
 }
 
 // create a new context
+// nolint: unparam
 func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Logger) Context {
 	c := Context{
 		Context: context.Background(),

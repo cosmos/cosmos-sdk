@@ -187,6 +187,7 @@ func (pt ProposalKind) String() string {
 }
 
 // For Printf / Sprintf, returns bech32 when using %s
+// nolint: errcheck
 func (pt ProposalKind) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
@@ -289,6 +290,7 @@ func (status ProposalStatus) String() string {
 }
 
 // For Printf / Sprintf, returns bech32 when using %s
+// nolint: errcheck
 func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

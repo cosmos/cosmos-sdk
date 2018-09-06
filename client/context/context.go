@@ -3,10 +3,11 @@ package context
 import (
 	"bytes"
 	"fmt"
+	"io"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"io"
 
 	"github.com/spf13/viper"
 
@@ -39,6 +40,7 @@ type CLIContext struct {
 	PrintResponse   bool
 	Verifier        tmlite.Verifier
 	DryRun          bool
+	GenerateOnly    bool
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
@@ -66,6 +68,7 @@ func NewCLIContext() CLIContext {
 		PrintResponse:   viper.GetBool(client.FlagPrintResponse),
 		Verifier:        createVerifier(),
 		DryRun:          viper.GetBool(client.FlagDryRun),
+		GenerateOnly:    viper.GetBool(client.FlagGenerateOnly),
 	}
 }
 

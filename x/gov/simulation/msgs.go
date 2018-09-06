@@ -86,6 +86,7 @@ func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 }
 
 // SimulateMsgVote
+// nolint: unparam
 func SimulateMsgVote(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
 		key := simulation.RandomKey(r, keys)

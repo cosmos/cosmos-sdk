@@ -297,6 +297,11 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 				txCtx = newCtx
 			}
 
+			if utils.HasGenerateOnlyArg(r) {
+				utils.WriteGenerateStdTxResponse(w, txCtx, []sdk.Msg{msg})
+				return
+			}
+
 			txBytes, err := txCtx.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())

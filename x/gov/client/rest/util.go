@@ -96,6 +96,12 @@ func signAndBuild(w http.ResponseWriter, r *http.Request, cliCtx context.CLICont
 		}
 		txCtx = newCtx
 	}
+
+	if utils.HasGenerateOnlyArg(r) {
+		utils.WriteGenerateStdTxResponse(w, txCtx, []sdk.Msg{msg})
+		return
+	}
+
 	txBytes, err := txCtx.BuildAndSign(baseReq.Name, baseReq.Password, []sdk.Msg{msg})
 	if err != nil {
 		utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())

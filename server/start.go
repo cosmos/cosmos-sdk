@@ -85,6 +85,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	return nil
 }
 
+// nolint: unparam
 func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 	cfg := ctx.Config
 	home := cfg.RootDir

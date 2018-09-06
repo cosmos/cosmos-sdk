@@ -15,7 +15,8 @@ BREAKING CHANGES
     * [makefile] `get_vendor_deps` no longer updates lock file it just updates vendor directory. Use `update_vendor_deps` to update the lock file. [#2152](https://github.com/cosmos/cosmos-sdk/pull/2152)
     * [cli] \#2190 `gaiacli init --gen-txs` is now `gaiacli init --with-txs` to reduce confusion
     * [cli] [\#2221](https://github.com/cosmos/cosmos-sdk/issues/2221) All commands that
-    utilize a validator's address must now use the new Bech32 prefix, `cosmosvaloper`.
+    utilize a validator's operator address must now use the new Bech32 prefix,
+    `cosmosvaloper`.
 
 * Gaia
     * Make the transient store key use a distinct store key. [#2013](https://github.com/cosmos/cosmos-sdk/pull/2013)

@@ -25,7 +25,7 @@ const (
 
 // creates a querier for staking REST endpoints
 func NewQuerier(k keep.Keeper, cdc *wire.Codec) sdk.Querier {
-	return func(ctx sdk.Context, req abci.RequestQuery) (res []byte, err sdk.Error) {
+	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
 		case QueryValidators:
 			return queryValidators(ctx, cdc, k)

@@ -19,7 +19,7 @@ import (
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-		"path"
+	"path"
 	"os"
 	"github.com/spf13/viper"
 )

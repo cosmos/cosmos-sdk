@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 	keep "github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 	"github.com/stretchr/testify/require"
@@ -36,27 +37,28 @@ func newTestBondQuery(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress
 }
 
 func TestQueryParametersPool(t *testing.T) {
+	cdc := wire.NewCodec()
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 
-	res, err := queryParameters(ctx, keeper)
+	res, err := queryParameters(ctx, cdc, keeper)
 	require.Nil(t, err)
 
 	var params types.Params
-	errRes := keeper.Codec().UnmarshalJSON(res, &params)
+	errRes := cdc.UnmarshalJSON(res, &params)
 	require.Nil(t, errRes)
 	require.Equal(t, keeper.GetParams(ctx), params)
 
-	res, err = queryPool(ctx, keeper)
+	res, err = queryPool(ctx, cdc, keeper)
 	require.Nil(t, err)
 
 	var pool types.Pool
-	errRes = keeper.Codec().UnmarshalJSON(res, &pool)
+	errRes = cdc.UnmarshalJSON(res, &pool)
 	require.Nil(t, errRes)
 	require.Equal(t, keeper.GetPool(ctx), pool)
 }
 
 func TestQueryValidators(t *testing.T) {
-
+	cdc := wire.NewCodec()
 	ctx, _, keeper := keep.CreateTestInput(t, false, 10000)
 
 	// Create Validators
@@ -73,11 +75,11 @@ func TestQueryValidators(t *testing.T) {
 		require.Nil(t, err)
 		bechValidators = append(bechValidators, bechVal)
 	}
-	res, err := queryValidators(ctx, []string{""}, keeper)
+	res, err := queryValidators(ctx, cdc, []string{""}, keeper)
 	require.Nil(t, err)
 
 	var validatorsResp []types.BechValidator
-	errRes := keeper.Codec().UnmarshalJSON(res, &validatorsResp)
+	errRes := cdc.UnmarshalJSON(res, &validatorsResp)
 	require.Nil(t, errRes)
 
 	require.Equal(t, len(bechValidators), len(validatorsResp))
@@ -85,24 +87,25 @@ func TestQueryValidators(t *testing.T) {
 
 	// Query each validator
 	queryParams := newTestValidatorQuery(addrVal1)
-	bz, errRes := keeper.Codec().MarshalJSON(queryParams)
+	bz, errRes := cdc.MarshalJSON(queryParams)
 	require.Nil(t, errRes)
 
 	query := abci.RequestQuery{
 		Path: "/custom/stake/validator",
 		Data: bz,
 	}
-	res, err = queryValidator(ctx, []string{query.Path}, query, keeper)
+	res, err = queryValidator(ctx, cdc, []string{query.Path}, query, keeper)
 	require.Nil(t, err)
 
 	var validator types.BechValidator
-	errRes = keeper.Codec().UnmarshalJSON(res, &validator)
+	errRes = cdc.UnmarshalJSON(res, &validator)
 	require.Nil(t, errRes)
 
 	require.Equal(t, validators[0], validator)
 }
 
 func TestQueryDelegation(t *testing.T) {
+	cdc := wire.NewCodec()
 	ctx, _, keeper := keep.CreateTestInput(t, false, 10000)
 
 	// Create Validators and Delegation
@@ -113,7 +116,7 @@ func TestQueryDelegation(t *testing.T) {
 
 	// Query Delegator bonded validators
 	queryParams := newTestDelegatorQuery(addrAcc2)
-	bz, errRes := keeper.Codec().MarshalJSON(queryParams)
+	bz, errRes := cdc.MarshalJSON(queryParams)
 	require.Nil(t, errRes)
 
 	query := abci.RequestQuery{
@@ -122,11 +125,11 @@ func TestQueryDelegation(t *testing.T) {
 	}
 
 	delValidators := keeper.GetDelegatorBechValidators(ctx, addrAcc2)
-	res, err := queryDelegatorValidators(ctx, []string{query.Path}, query, keeper)
+	res, err := queryDelegatorValidators(ctx, cdc, []string{query.Path}, query, keeper)
 	require.Nil(t, err)
 
 	var validatorsResp []types.BechValidator
-	errRes = keeper.Codec().UnmarshalJSON(res, &validatorsResp)
+	errRes = cdc.UnmarshalJSON(res, &validatorsResp)
 	require.Nil(t, errRes)
 
 	require.Equal(t, len(delValidators), len(validatorsResp))
@@ -134,7 +137,7 @@ func TestQueryDelegation(t *testing.T) {
 
 	// Query bonded validator
 	queryBondParams := newTestBondQuery(addrAcc2, addrVal1)
-	bz, errRes = keeper.Codec().MarshalJSON(queryBondParams)
+	bz, errRes = cdc.MarshalJSON(queryBondParams)
 	require.Nil(t, errRes)
 
 	query = abci.RequestQuery{
@@ -142,11 +145,11 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err = queryDelegatorValidator(ctx, []string{query.Path}, query, keeper)
+	res, err = queryDelegatorValidator(ctx, cdc, []string{query.Path}, query, keeper)
 	require.Nil(t, err)
 
 	var validator types.BechValidator
-	errRes = keeper.Codec().UnmarshalJSON(res, &validator)
+	errRes = cdc.UnmarshalJSON(res, &validator)
 	require.Nil(t, errRes)
 
 	require.Equal(t, delValidators[0], validator)
@@ -163,11 +166,11 @@ func TestQueryDelegation(t *testing.T) {
 
 	delegationREST := delegation.ToRest()
 
-	res, err = queryDelegation(ctx, []string{query.Path}, query, keeper)
+	res, err = queryDelegation(ctx, cdc, []string{query.Path}, query, keeper)
 	require.Nil(t, err)
 
 	var delegationRestRes types.DelegationREST
-	errRes = keeper.Codec().UnmarshalJSON(res, &delegationRestRes)
+	errRes = cdc.UnmarshalJSON(res, &delegationRestRes)
 	require.Nil(t, errRes)
 
 	require.Equal(t, delegationREST, delegationRestRes)
@@ -185,11 +188,11 @@ func TestQueryDelegation(t *testing.T) {
 	unbond, found := keeper.GetUnbondingDelegation(ctx, addrAcc2, addrVal1)
 	require.True(t, found)
 
-	res, err = queryUnbondingDelegation(ctx, []string{query.Path}, query, keeper)
+	res, err = queryUnbondingDelegation(ctx, cdc, []string{query.Path}, query, keeper)
 	require.Nil(t, err)
 
 	var unbondRes types.UnbondingDelegation
-	errRes = keeper.Codec().UnmarshalJSON(res, &unbondRes)
+	errRes = cdc.UnmarshalJSON(res, &unbondRes)
 	require.Nil(t, errRes)
 
 	require.Equal(t, unbond, unbondRes)
@@ -201,11 +204,11 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err = queryDelegator(ctx, []string{query.Path}, query, keeper)
+	res, err = queryDelegator(ctx, cdc, []string{query.Path}, query, keeper)
 	require.Nil(t, err)
 
 	var summary types.DelegationSummary
-	errRes = keeper.Codec().UnmarshalJSON(res, &summary)
+	errRes = cdc.UnmarshalJSON(res, &summary)
 	require.Nil(t, errRes)
 
 	require.Equal(t, unbond, summary.UnbondingDelegations[0])

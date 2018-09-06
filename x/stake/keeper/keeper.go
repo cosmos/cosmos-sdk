@@ -46,11 +46,6 @@ func (k Keeper) Codespace() sdk.CodespaceType {
 	return k.codespace
 }
 
-// return the codec
-func (k Keeper) Codec() *wire.Codec {
-	return k.cdc
-}
-
 //_________________________________________________________________________
 // some generic reads/writes that don't need their own files
 

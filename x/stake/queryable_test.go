@@ -69,7 +69,7 @@ func TestQueryValidators(t *testing.T) {
 
 	// Query Validators
 	bechValidators := keeper.GetBechValidators(ctx)
-	res, err := queryValidators(ctx, cdc, []string{""}, keeper)
+	res, err := queryValidators(ctx, cdc, keeper)
 	require.Nil(t, err)
 
 	var validatorsResp []types.BechValidator
@@ -88,7 +88,7 @@ func TestQueryValidators(t *testing.T) {
 		Path: "/custom/stake/validator",
 		Data: bz,
 	}
-	res, err = queryValidator(ctx, cdc, []string{query.Path}, query, keeper)
+	res, err = queryValidator(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
 	var bechValidator types.BechValidator
@@ -119,7 +119,7 @@ func TestQueryDelegation(t *testing.T) {
 	}
 
 	delValidators := keeper.GetDelegatorBechValidators(ctx, addrAcc2)
-	res, err := queryDelegatorValidators(ctx, cdc, []string{query.Path}, query, keeper)
+	res, err := queryDelegatorValidators(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
 	var validatorsResp []types.BechValidator
@@ -139,7 +139,7 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err = queryDelegatorValidator(ctx, cdc, []string{query.Path}, query, keeper)
+	res, err = queryDelegatorValidator(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
 	var validator types.BechValidator
@@ -160,7 +160,7 @@ func TestQueryDelegation(t *testing.T) {
 
 	delegationREST := delegation.ToRest()
 
-	res, err = queryDelegation(ctx, cdc, []string{query.Path}, query, keeper)
+	res, err = queryDelegation(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
 	var delegationRestRes types.DelegationREST
@@ -182,7 +182,7 @@ func TestQueryDelegation(t *testing.T) {
 	unbond, found := keeper.GetUnbondingDelegation(ctx, addrAcc2, addrVal1)
 	require.True(t, found)
 
-	res, err = queryUnbondingDelegation(ctx, cdc, []string{query.Path}, query, keeper)
+	res, err = queryUnbondingDelegation(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
 	var unbondRes types.UnbondingDelegation
@@ -198,7 +198,7 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err = queryDelegator(ctx, cdc, []string{query.Path}, query, keeper)
+	res, err = queryDelegator(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
 	var summary types.DelegationSummary

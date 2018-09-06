@@ -73,7 +73,7 @@ type QueryBondsParams struct {
 	ValidatorAddr sdk.ValAddress
 }
 
-func queryValidators(ctx sdk.Context, cdc *wire.Codec, path []string, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryValidators(ctx sdk.Context, cdc *wire.Codec, k keep.Keeper) (res []byte, err sdk.Error) {
 	validators := k.GetBechValidators(ctx)
 
 	res, errRes := wire.MarshalJSONIndent(cdc, validators)

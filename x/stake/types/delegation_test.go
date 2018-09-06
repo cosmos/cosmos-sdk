@@ -128,3 +128,20 @@ func TestRedelegationHumanReadableString(t *testing.T) {
 	require.Nil(t, err)
 	require.NotEmpty(t, valStr)
 }
+
+func TestRedelegationToRest(t *testing.T) {
+	red := Redelegation{
+		DelegatorAddr:    sdk.AccAddress(addr1),
+		ValidatorSrcAddr: addr2,
+		ValidatorDstAddr: addr3,
+		SharesDst:        sdk.NewDec(10),
+		SharesSrc:        sdk.NewDec(20),
+	}
+
+	rest := red.ToRest()
+	require.Equal(t, red.DelegatorAddr.String(), rest.DelegatorAddr)
+	require.Equal(t, red.ValidatorSrcAddr.String(), rest.ValidatorSrcAddr)
+	require.Equal(t, red.SharesSrc.String(), rest.SharesSrc)
+	require.Equal(t, red.ValidatorDstAddr.String(), rest.ValidatorDstAddr)
+	require.Equal(t, red.SharesDst.String(), rest.SharesDst)
+}

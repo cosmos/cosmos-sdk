@@ -90,3 +90,84 @@ func (k Keeper) GetDelegatorValidator(ctx sdk.Context, delegatorAddr sdk.AccAddr
 	}
 	return
 }
+
+// Return all delegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned.
+func (k Keeper) GetDelegatorDelegationsREST(ctx sdk.Context, delegator sdk.AccAddress,
+	maxRetrieve ...int16) (delegations []types.DelegationREST) {
+	retrieve := len(maxRetrieve) > 0
+	if retrieve {
+		delegations = make([]types.DelegationREST, maxRetrieve[0])
+	}
+	store := ctx.KVStore(k.storeKey)
+	delegatorPrefixKey := GetDelegationsKey(delegator)
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+
+	i := 0
+	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
+		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
+		if retrieve {
+			delegations[i] = delegation.ToRest()
+		} else {
+			delegations = append(delegations, delegation.ToRest())
+		}
+		i++
+	}
+	iterator.Close()
+	return delegations[:i] // trim
+}
+
+// Return all redelegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned.
+func (k Keeper) GetRedelegationsREST(ctx sdk.Context, delegator sdk.AccAddress,
+	maxRetrieve ...int16) (redelegations []types.RedelegationREST) {
+
+	retrieve := len(maxRetrieve) > 0
+	if retrieve {
+		redelegations = make([]types.RedelegationREST, maxRetrieve[0])
+	}
+	store := ctx.KVStore(k.storeKey)
+	delegatorPrefixKey := GetREDsKey(delegator)
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+
+	i := 0
+	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
+		redelegation := types.MustUnmarshalRED(k.cdc, iterator.Key(), iterator.Value())
+		if retrieve {
+			redelegations[i] = redelegation.ToRest()
+		} else {
+			redelegations = append(redelegations, redelegation.ToRest())
+		}
+		i++
+	}
+	iterator.Close()
+	return redelegations[:i] // trim
+}
+
+// Get the set of all validators. If maxRetrieve is supplied, the respective amount will be returned.
+func (k Keeper) GetBechValidators(ctx sdk.Context, maxRetrieve ...int16) (validators []types.BechValidator) {
+	retrieve := len(maxRetrieve) > 0
+	if retrieve {
+		validators = make([]types.BechValidator, maxRetrieve[0])
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
+
+	i := 0
+	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
+		addr := iterator.Key()[1:]
+		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
+		bechValidator, err := validator.Bech32Validator()
+		if err != nil {
+			panic(err.Error())
+		}
+
+		if retrieve {
+			validators[i] = bechValidator
+		} else {
+			validators = append(validators, bechValidator)
+		}
+		i++
+	}
+	iterator.Close()
+	return validators[:i] // trim
+}

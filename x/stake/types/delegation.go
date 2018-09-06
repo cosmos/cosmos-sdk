@@ -231,15 +231,15 @@ type redValue struct {
 
 // defines a redelegation with string value for the shares
 type RedelegationREST struct {
-	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`     // delegator
-	ValidatorSrcAddr sdk.ValAddress `json:"validator_src_addr"` // validator redelegation source operator addr
-	ValidatorDstAddr sdk.ValAddress `json:"validator_dst_addr"` // validator redelegation destination operator addr
-	CreationHeight   int64          `json:"creation_height"`    // height which the redelegation took place
-	MinTime          time.Time      `json:"min_time"`           // unix time for redelegation completion
-	InitialBalance   sdk.Coin       `json:"initial_balance"`    // initial balance when redelegation started
-	Balance          sdk.Coin       `json:"balance"`            // current balance
-	SharesSrc        string         `json:"shares_src"`         // amount of source shares redelegating
-	SharesDst        string         `json:"shares_dst"`         // amount of destination shares redelegating
+	DelegatorAddr    string    `json:"delegator_addr"`     // delegator
+	ValidatorSrcAddr string    `json:"validator_src_addr"` // validator redelegation source operator addr
+	ValidatorDstAddr string    `json:"validator_dst_addr"` // validator redelegation destination operator addr
+	CreationHeight   int64     `json:"creation_height"`    // height which the redelegation took place
+	MinTime          time.Time `json:"min_time"`           // unix time for redelegation completion
+	InitialBalance   sdk.Coin  `json:"initial_balance"`    // initial balance when redelegation started
+	Balance          sdk.Coin  `json:"balance"`            // current balance
+	SharesSrc        string    `json:"shares_src"`         // amount of source shares redelegating
+	SharesDst        string    `json:"shares_dst"`         // amount of destination shares redelegating
 }
 
 // return the redelegation without fields contained within the key for the store
@@ -304,9 +304,9 @@ func (d Redelegation) Equal(d2 Redelegation) bool {
 // changes redelegation shares to string format
 func (d Redelegation) ToRest() RedelegationREST {
 	return RedelegationREST{
-		DelegatorAddr:    d.DelegatorAddr,
-		ValidatorSrcAddr: d.ValidatorSrcAddr,
-		ValidatorDstAddr: d.ValidatorDstAddr,
+		DelegatorAddr:    d.DelegatorAddr.String(),
+		ValidatorSrcAddr: d.ValidatorSrcAddr.String(),
+		ValidatorDstAddr: d.ValidatorDstAddr.String(),
 		CreationHeight:   d.CreationHeight,
 		MinTime:          d.MinTime,
 		InitialBalance:   d.InitialBalance,

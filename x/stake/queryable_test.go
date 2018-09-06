@@ -68,13 +68,7 @@ func TestQueryValidators(t *testing.T) {
 	handleMsgCreateValidator(ctx, msg2, keeper)
 
 	// Query Validators
-	var bechValidators []types.BechValidator
-	validators := keeper.GetValidators(ctx)
-	for _, val := range validators {
-		bechVal, err := val.Bech32Validator()
-		require.Nil(t, err)
-		bechValidators = append(bechValidators, bechVal)
-	}
+	bechValidators := keeper.GetBechValidators(ctx)
 	res, err := queryValidators(ctx, cdc, []string{""}, keeper)
 	require.Nil(t, err)
 
@@ -97,11 +91,11 @@ func TestQueryValidators(t *testing.T) {
 	res, err = queryValidator(ctx, cdc, []string{query.Path}, query, keeper)
 	require.Nil(t, err)
 
-	var validator types.BechValidator
-	errRes = cdc.UnmarshalJSON(res, &validator)
+	var bechValidator types.BechValidator
+	errRes = cdc.UnmarshalJSON(res, &bechValidator)
 	require.Nil(t, errRes)
 
-	require.Equal(t, validators[0], validator)
+	require.Equal(t, bechValidators[0], bechValidator)
 }
 
 func TestQueryDelegation(t *testing.T) {

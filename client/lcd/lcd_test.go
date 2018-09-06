@@ -416,7 +416,7 @@ func TestValidatorsQuery(t *testing.T) {
 	require.Equal(t, len(validators), 1)
 
 	// make sure all the validators were found (order unknown because sorted by operator addr)
-	pkBech, err := sdk.Bech32ifyValPub(pks[0])
+	pkBech, err := sdk.Bech32ifyConsPub(pks[0])
 	require.Nil(t, err)
 	require.Equal(t, pkBech, validators[0].PubKey)
 }

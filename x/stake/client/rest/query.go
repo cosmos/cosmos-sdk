@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -140,7 +141,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Hand
 		node, err := cliCtx.GetNode()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			w.Write([]byte(fmt.Sprintf("Couldn't get current Node information. Error: %s", err.Error())))
 			return
 		}
 
@@ -198,7 +199,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Hand
 	}
 }
 
-// HTTP request handler to query an unbonding delegation
+// HTTP request handler to query an unbonding-delegation
 func unbondingDelegationHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

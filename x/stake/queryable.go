@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	keep "github.com/cosmos/cosmos-sdk/x/stake/keeper"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -73,7 +74,7 @@ type QueryBondsParams struct {
 }
 
 func queryValidators(ctx sdk.Context, cdc *wire.Codec, path []string, k keep.Keeper) (res []byte, err sdk.Error) {
-	validators := k.GetValidators(ctx)
+	validators := k.GetBechValidators(ctx)
 
 	res, errRes := wire.MarshalJSONIndent(cdc, validators)
 	if err != nil {
@@ -114,20 +115,20 @@ func queryDelegator(ctx sdk.Context, cdc *wire.Codec, path []string, req abci.Re
 	if errRes != nil {
 		return []byte{}, sdk.ErrUnknownAddress(fmt.Sprintf("incorrectly formatted request address: %s", errRes.Error()))
 	}
-	// delegations := k.GetDelegatorDelegations(ctx, params.DelegatorAddr)
-	// unbondingDelegations := k.GetUnbondingDelegations(ctx, params.DelegatorAddr)
-	// redelegations := k.GetRedelegations(ctx, params.DelegatorAddr)
-	//
-	// summary := types.DelegationSummary{
-	// 	Delegations:          delegations,
-	// 	UnbondingDelegations: unbondingDelegations,
-	// 	Redelegations:        redelegations,
-	// }
-	//
-	// res, errRes = wire.MarshalJSONIndent(cdc, summary)
-	// if errRes != nil {
-	// 	return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
-	// }
+	delegations := k.GetDelegatorDelegationsREST(ctx, params.DelegatorAddr)
+	unbondingDelegations := k.GetUnbondingDelegations(ctx, params.DelegatorAddr)
+	redelegations := k.GetRedelegationsREST(ctx, params.DelegatorAddr)
+
+	summary := types.DelegationSummary{
+		Delegations:          delegations,
+		UnbondingDelegations: unbondingDelegations,
+		Redelegations:        redelegations,
+	}
+
+	res, errRes = wire.MarshalJSONIndent(cdc, summary)
+	if errRes != nil {
+		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
+	}
 	return res, nil
 }
 

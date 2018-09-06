@@ -38,7 +38,6 @@ phrase, otherwise, a new key will be generated.`,
 	}
 	cmd.Flags().StringP(flagType, "t", "secp256k1", "Type of private key (secp256k1|ed25519)")
 	cmd.Flags().Bool(client.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
-	viper.BindPFlag(client.FlagUseLedger, cmd.Flags().Lookup(client.FlagUseLedger))
 	cmd.Flags().Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")

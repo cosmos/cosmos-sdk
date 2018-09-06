@@ -16,7 +16,6 @@ import (
 type cliConfig struct {
 	Home      string `toml:"home"`
 	ChainID   string `toml:"chain_id"`
-	Ledger    bool   `toml:"ledger"`
 	TrustNode bool   `toml:"trust_node"`
 	Encoding  string `toml:"encoding"`
 	Output    string `toml:"output"`
@@ -59,10 +58,6 @@ func runConfigCmd(cmd *cobra.Command, args [] string) error {
 	if err != nil {
 		return err
 	}
-	useLedger, err := handleUseLedger(stdin)
-	if err != nil {
-		return err
-	}
 
 	encoding := "btc"
 	output := "text"
@@ -81,7 +76,6 @@ func runConfigCmd(cmd *cobra.Command, args [] string) error {
 	cfg := &cliConfig{
 		Home:      gaiaCLIHome,
 		ChainID:   chainID,
-		Ledger:    useLedger,
 		TrustNode: trustNode,
 		Encoding:  encoding,
 		Output:    output,
@@ -89,7 +83,7 @@ func runConfigCmd(cmd *cobra.Command, args [] string) error {
 		Trace:     false,
 	}
 
-	return processGaiaCLIConfig(cfg)
+	return createGaiaCLIConfig(cfg)
 }
 
 func handleGaiaDHome(dir string, stdin *bufio.Reader) (string, error) {
@@ -106,26 +100,28 @@ func handleGaiaDHome(dir string, stdin *bufio.Reader) (string, error) {
 }
 
 func handleGaiaCLIHome(dir string, stdin *bufio.Reader) (string, error) {
-	home, err := GetString("Where is your gaiacli home directory? (Default: ~/.gaiacli)", stdin)
+	dirName := ".gaiacli"
+	home, err := GetString(fmt.Sprintf("Where is your gaiacli home directory? (Default: ~/%s)", dirName), stdin)
 	if err != nil {
 		return "", err
 	}
 
 	if home == "" {
-		home = path.Join(dir, ".gaiacli")
+		home = path.Join(dir, dirName)
 	}
 
 	return home, nil
 }
 
 func handleNode(stdin *bufio.Reader) (string, error) {
-	node, err := GetString("Where is your validator node running? (Default: tcp://localhost:26657)", stdin)
+	defaultNode := "tcp://localhost:26657"
+	node, err := GetString(fmt.Sprintf("Where is your validator node running? (Default: %s)", defaultNode), stdin)
 	if err != nil {
 		return "", err
 	}
 
 	if node == "" {
-		node = "tcp://localhost:26657"
+		node = defaultNode
 	}
 
 	return node, nil
@@ -133,10 +129,6 @@ func handleNode(stdin *bufio.Reader) (string, error) {
 
 func handleTrustNode(stdin *bufio.Reader) (bool, error) {
 	return GetConfirmation("Do you trust this node?", stdin)
-}
-
-func handleUseLedger(stdin *bufio.Reader) (bool, error) {
-	return GetConfirmation("Do you want to use a Ledger device?", stdin)
 }
 
 func processGaiaDConfig(cfgPath string) (string, error) {
@@ -165,7 +157,7 @@ func processGaiaDConfig(cfgPath string) (string, error) {
 	return chainID, nil
 }
 
-func processGaiaCLIConfig(cfg *cliConfig) error {
+func createGaiaCLIConfig(cfg *cliConfig) error {
 	cfgPath := path.Join(cfg.Home, "config")
 	err := os.MkdirAll(cfgPath, os.ModePerm)
 	if err != nil {

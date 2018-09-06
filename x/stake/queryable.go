@@ -25,22 +25,22 @@ const (
 
 // creates a querier for staking REST endpoints
 func NewQuerier(k keep.Keeper, cdc *wire.Codec) sdk.Querier {
-	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
+	return func(ctx sdk.Context, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
 		case QueryValidators:
-			return queryValidators(ctx, cdc, path[1:], k)
+			return queryValidators(ctx, cdc, k)
 		case QueryValidator:
-			return queryValidator(ctx, cdc, path[1:], req, k)
+			return queryValidator(ctx, cdc, req, k)
 		case QueryDelegator:
-			return queryDelegator(ctx, cdc, path[1:], req, k)
+			return queryDelegator(ctx, cdc, req, k)
 		case QueryDelegation:
-			return queryDelegation(ctx, cdc, path[1:], req, k)
+			return queryDelegation(ctx, cdc, req, k)
 		case QueryUnbondingDelegation:
-			return queryUnbondingDelegation(ctx, cdc, path[1:], req, k)
+			return queryUnbondingDelegation(ctx, cdc, req, k)
 		case QueryDelegatorValidators:
-			return queryDelegatorValidators(ctx, cdc, path[1:], req, k)
+			return queryDelegatorValidators(ctx, cdc, req, k)
 		case QueryDelegatorValidator:
-			return queryDelegatorValidator(ctx, cdc, path[1:], req, k)
+			return queryDelegatorValidator(ctx, cdc, req, k)
 		case QueryPool:
 			return queryPool(ctx, cdc, k)
 		case QueryParameters:
@@ -83,7 +83,7 @@ func queryValidators(ctx sdk.Context, cdc *wire.Codec, path []string, k keep.Kee
 	return res, nil
 }
 
-func queryValidator(ctx sdk.Context, cdc *wire.Codec, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryValidator(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryValidatorParams
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
@@ -109,7 +109,7 @@ func queryValidator(ctx sdk.Context, cdc *wire.Codec, path []string, req abci.Re
 }
 
 // TODO query with limit
-func queryDelegator(ctx sdk.Context, cdc *wire.Codec, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryDelegator(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryDelegatorParams
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
@@ -133,7 +133,7 @@ func queryDelegator(ctx sdk.Context, cdc *wire.Codec, path []string, req abci.Re
 }
 
 // TODO query with limit
-func queryDelegatorValidators(ctx sdk.Context, cdc *wire.Codec, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryDelegatorValidators(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryDelegatorParams
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
@@ -150,7 +150,7 @@ func queryDelegatorValidators(ctx sdk.Context, cdc *wire.Codec, path []string, r
 	return res, nil
 }
 
-func queryDelegatorValidator(ctx sdk.Context, cdc *wire.Codec, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryDelegatorValidator(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryBondsParams
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
@@ -172,7 +172,7 @@ func queryDelegatorValidator(ctx sdk.Context, cdc *wire.Codec, path []string, re
 	return res, nil
 }
 
-func queryDelegation(ctx sdk.Context, cdc *wire.Codec, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryDelegation(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryBondsParams
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
@@ -193,7 +193,7 @@ func queryDelegation(ctx sdk.Context, cdc *wire.Codec, path []string, req abci.R
 	return res, nil
 }
 
-func queryUnbondingDelegation(ctx sdk.Context, cdc *wire.Codec, path []string, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryUnbondingDelegation(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryBondsParams
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)

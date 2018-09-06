@@ -58,7 +58,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Cod
 	// Get all validators
 	r.HandleFunc(
 		"/stake/validators",
-		validatorsHandlerFn(cliCtx, cdc),
+		validatorsHandlerFn(cliCtx),
 	).Methods("GET")
 
 	// Get a single validator info
@@ -70,13 +70,13 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Cod
 	// Get the current state of the staking pool
 	r.HandleFunc(
 		"/stake/pool",
-		poolHandlerFn(cliCtx, cdc),
+		poolHandlerFn(cliCtx),
 	).Methods("GET")
 
 	// Get the current staking parameter values
 	r.HandleFunc(
 		"/stake/parameters",
-		paramsHandlerFn(cliCtx, cdc),
+		paramsHandlerFn(cliCtx),
 	).Methods("GET")
 
 }
@@ -376,7 +376,7 @@ func delegatorValidatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) htt
 }
 
 // HTTP request handler to query list of validators
-func validatorsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc {
+func validatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Type", "application/json")
@@ -434,7 +434,7 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 }
 
 // HTTP request handler to query the pool information
-func poolHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc {
+func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Type", "application/json")
@@ -452,7 +452,7 @@ func poolHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc 
 }
 
 // HTTP request handler to query the staking params values
-func paramsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc {
+func paramsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Type", "application/json")

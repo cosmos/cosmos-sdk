@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
-// load a delegation
+// return a specific delegation
 func (k Keeper) GetDelegation(ctx sdk.Context,
 	delAddr sdk.AccAddress, valAddr sdk.ValAddress) (
 	delegation types.Delegation, found bool) {
@@ -24,41 +24,39 @@ func (k Keeper) GetDelegation(ctx sdk.Context,
 	return delegation, true
 }
 
-// load all delegations used during genesis dump
+// return all delegations used during genesis dump
 func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, DelegationKey)
 
-	i := 0
-	for ; ; i++ {
-		if !iterator.Valid() {
-			break
-		}
+	for ; iterator.Valid(); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
 		delegations = append(delegations, delegation)
-		iterator.Next()
 	}
 	iterator.Close()
 	return delegations
 }
 
-// load all delegations for a delegator
-func (k Keeper) GetDelegations(ctx sdk.Context, delegator sdk.AccAddress,
-	maxRetrieve int16) (delegations []types.Delegation) {
-
+// Return all delegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned.
+func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress,
+	maxRetrieve ...int16) (delegations []types.Delegation) {
+	retrieve := len(maxRetrieve) > 0
+	if retrieve {
+		delegations = make([]types.Delegation, maxRetrieve[0])
+	}
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 
-	delegations = make([]types.Delegation, maxRetrieve)
 	i := 0
-	for ; ; i++ {
-		if !iterator.Valid() || i > int(maxRetrieve-1) {
-			break
-		}
+	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
-		delegations[i] = delegation
-		iterator.Next()
+		if retrieve {
+			delegations[i] = delegation
+		} else {
+			delegations = append(delegations, delegation)
+		}
+		i++
 	}
 	iterator.Close()
 	return delegations[:i] // trim
@@ -71,7 +69,7 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store.Set(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr), b)
 }
 
-// remove the delegation
+// remove a delegation from store
 func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr))
@@ -79,7 +77,33 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 
 //_____________________________________________________________________________________
 
-// load a unbonding delegation
+// Return all unbonding delegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned.
+func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress,
+	maxRetrieve ...int16) (unbondingDelegations []types.UnbondingDelegation) {
+
+	retrieve := len(maxRetrieve) > 0
+	if retrieve {
+		unbondingDelegations = make([]types.UnbondingDelegation, maxRetrieve[0])
+	}
+	store := ctx.KVStore(k.storeKey)
+	delegatorPrefixKey := GetUBDsKey(delegator)
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+
+	i := 0
+	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
+		unbondingDelegation := types.MustUnmarshalUBD(k.cdc, iterator.Key(), iterator.Value())
+		if retrieve {
+			unbondingDelegations[i] = unbondingDelegation
+		} else {
+			unbondingDelegations = append(unbondingDelegations, unbondingDelegation)
+		}
+		i++
+	}
+	iterator.Close()
+	return unbondingDelegations[:i] // trim
+}
+
+// return a unbonding delegation
 func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
 	delAddr sdk.AccAddress, valAddr sdk.ValAddress) (ubd types.UnbondingDelegation, found bool) {
 
@@ -94,20 +118,18 @@ func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
 	return ubd, true
 }
 
-// load all unbonding delegations from a particular validator
+// return all unbonding delegations from a particular validator
 func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sdk.ValAddress) (ubds []types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, GetUBDsByValIndexKey(valAddr))
-	for {
-		if !iterator.Valid() {
-			break
-		}
+
+	for ; iterator.Valid(); iterator.Next() {
 		key := GetUBDKeyFromValIndexKey(iterator.Key())
 		value := store.Get(key)
 		ubd := types.MustUnmarshalUBD(k.cdc, key, value)
 		ubds = append(ubds, ubd)
-		iterator.Next()
 	}
+
 	iterator.Close()
 	return ubds
 }
@@ -116,8 +138,8 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sd
 func (k Keeper) IterateUnbondingDelegations(ctx sdk.Context, fn func(index int64, ubd types.UnbondingDelegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, UnbondingDelegationKey)
-	i := int64(0)
-	for ; iterator.Valid(); iterator.Next() {
+
+	for i := int64(0); iterator.Valid(); iterator.Next() {
 		ubd := types.MustUnmarshalUBD(k.cdc, iterator.Key(), iterator.Value())
 		stop := fn(i, ubd)
 		if stop {
@@ -147,7 +169,33 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 
 //_____________________________________________________________________________________
 
-// load a redelegation
+// Return all redelegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned.
+func (k Keeper) GetRedelegations(ctx sdk.Context, delegator sdk.AccAddress,
+	maxRetrieve ...int16) (redelegations []types.Redelegation) {
+
+	retrieve := len(maxRetrieve) > 0
+	if retrieve {
+		redelegations = make([]types.Redelegation, maxRetrieve[0])
+	}
+	store := ctx.KVStore(k.storeKey)
+	delegatorPrefixKey := GetREDsKey(delegator)
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+
+	i := 0
+	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
+		redelegation := types.MustUnmarshalRED(k.cdc, iterator.Key(), iterator.Value())
+		if retrieve {
+			redelegations[i] = redelegation
+		} else {
+			redelegations = append(redelegations, redelegation)
+		}
+		i++
+	}
+	iterator.Close()
+	return redelegations[:i] // trim
+}
+
+// return a redelegation
 func (k Keeper) GetRedelegation(ctx sdk.Context,
 	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) (red types.Redelegation, found bool) {
 
@@ -162,25 +210,21 @@ func (k Keeper) GetRedelegation(ctx sdk.Context,
 	return red, true
 }
 
-// load all redelegations from a particular validator
+// return all redelegations from a particular validator
 func (k Keeper) GetRedelegationsFromValidator(ctx sdk.Context, valAddr sdk.ValAddress) (reds []types.Redelegation) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, GetREDsFromValSrcIndexKey(valAddr))
-	for {
-		if !iterator.Valid() {
-			break
-		}
+	for ; iterator.Valid(); iterator.Next() {
 		key := GetREDKeyFromValSrcIndexKey(iterator.Key())
 		value := store.Get(key)
 		red := types.MustUnmarshalRED(k.cdc, key, value)
 		reds = append(reds, red)
-		iterator.Next()
 	}
 	iterator.Close()
 	return reds
 }
 
-// has a redelegation
+// check if validator is receiving a redelegation
 func (k Keeper) HasReceivingRedelegation(ctx sdk.Context,
 	delAddr sdk.AccAddress, valDstAddr sdk.ValAddress) bool {
 
@@ -358,7 +402,7 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context,
 	// create the unbonding delegation
 	params := k.GetParams(ctx)
 	minTime, height, completeNow := k.getBeginInfo(ctx, params, valAddr)
-	balance := sdk.Coin{params.BondDenom, returnAmount.RoundInt()}
+	balance := sdk.NewCoin(params.BondDenom, returnAmount.RoundInt())
 
 	// no need to create the ubd object just complete now
 	if completeNow {
@@ -418,7 +462,7 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 
 	params := k.GetParams(ctx)
-	returnCoin := sdk.Coin{params.BondDenom, returnAmount.RoundInt()}
+	returnCoin := sdk.NewCoin(params.BondDenom, returnAmount.RoundInt())
 	dstValidator, found := k.GetValidator(ctx, valDstAddr)
 	if !found {
 		return types.ErrBadRedelegationDst(k.Codespace())

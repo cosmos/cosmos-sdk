@@ -17,14 +17,14 @@ import (
 //______________________________________________________________________
 
 func newTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt int64) MsgCreateValidator {
-	return types.NewMsgCreateValidator(address, pubKey, sdk.Coin{"steak", sdk.NewInt(amt)}, Description{})
+	return types.NewMsgCreateValidator(address, pubKey, sdk.NewCoin("steak", sdk.NewInt(amt)), Description{})
 }
 
 func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt int64) MsgDelegate {
 	return MsgDelegate{
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
-		Delegation:    sdk.Coin{"steak", sdk.NewInt(amt)},
+		Delegation:    sdk.NewCoin("steak", sdk.NewInt(amt)),
 	}
 }
 
@@ -34,7 +34,7 @@ func newTestMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.Val
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
 		PubKey:        valPubKey,
-		Delegation:    sdk.Coin{"steak", sdk.NewInt(amt)},
+		Delegation:    sdk.NewCoin("steak", sdk.NewInt(amt)),
 	}
 }
 

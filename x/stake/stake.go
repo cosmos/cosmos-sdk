@@ -13,8 +13,11 @@ type (
 	BechValidator         = types.BechValidator
 	Description           = types.Description
 	Delegation            = types.Delegation
+	DelegationREST        = types.DelegationREST
+	DelegationSummary     = types.DelegationSummary
 	UnbondingDelegation   = types.UnbondingDelegation
 	Redelegation          = types.Redelegation
+	RedelegationREST      = types.RedelegationREST
 	Params                = types.Params
 	Pool                  = types.Pool
 	MsgCreateValidator    = types.MsgCreateValidator

@@ -24,6 +24,21 @@ type delegationValue struct {
 	Height int64
 }
 
+// defines a delegation with string value for the shares
+type DelegationREST struct {
+	DelegatorAddr string `json:"delegator_addr"`
+	ValidatorAddr string `json:"validator_addr"`
+	Shares        string `json:"shares"`
+	Height        int64  `json:"height"`
+}
+
+// aggregates of all delegations, unbondings and redelegations
+type DelegationSummary struct {
+	Delegations          []DelegationREST      `json:"delegations"`
+	UnbondingDelegations []UnbondingDelegation `json:"unbonding_delegations"`
+	Redelegations        []RedelegationREST    `json:"redelegations"`
+}
+
 // return the delegation without fields contained within the key for the store
 func MustMarshalDelegation(cdc *wire.Codec, delegation Delegation) []byte {
 	val := delegationValue{
@@ -95,6 +110,16 @@ func (d Delegation) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Height: %d", d.Height)
 
 	return resp, nil
+}
+
+// changes delegation shares to string format
+func (d Delegation) ToRest() DelegationREST {
+	return DelegationREST{
+		DelegatorAddr: d.DelegatorAddr.String(),
+		ValidatorAddr: d.ValidatorAddr.String(),
+		Height:        d.Height,
+		Shares:        d.Shares.String(),
+	}
 }
 
 // UnbondingDelegation reflects a delegation's passive unbonding queue.
@@ -204,6 +229,19 @@ type redValue struct {
 	SharesDst      sdk.Dec
 }
 
+// defines a redelegation with string value for the shares
+type RedelegationREST struct {
+	DelegatorAddr    string    `json:"delegator_addr"`     // delegator
+	ValidatorSrcAddr string    `json:"validator_src_addr"` // validator redelegation source operator addr
+	ValidatorDstAddr string    `json:"validator_dst_addr"` // validator redelegation destination operator addr
+	CreationHeight   int64     `json:"creation_height"`    // height which the redelegation took place
+	MinTime          time.Time `json:"min_time"`           // unix time for redelegation completion
+	InitialBalance   sdk.Coin  `json:"initial_balance"`    // initial balance when redelegation started
+	Balance          sdk.Coin  `json:"balance"`            // current balance
+	SharesSrc        string    `json:"shares_src"`         // amount of source shares redelegating
+	SharesDst        string    `json:"shares_dst"`         // amount of destination shares redelegating
+}
+
 // return the redelegation without fields contained within the key for the store
 func MustMarshalRED(cdc *wire.Codec, red Redelegation) []byte {
 	val := redValue{
@@ -261,6 +299,20 @@ func (d Redelegation) Equal(d2 Redelegation) bool {
 	bz1 := MsgCdc.MustMarshalBinary(&d)
 	bz2 := MsgCdc.MustMarshalBinary(&d2)
 	return bytes.Equal(bz1, bz2)
+}
+
+// changes redelegation shares to string format
+func (d Redelegation) ToRest() RedelegationREST {
+	return RedelegationREST{
+		DelegatorAddr:    d.DelegatorAddr.String(),
+		ValidatorSrcAddr: d.ValidatorSrcAddr.String(),
+		ValidatorDstAddr: d.ValidatorDstAddr.String(),
+		CreationHeight:   d.CreationHeight,
+		MinTime:          d.MinTime,
+		InitialBalance:   d.InitialBalance,
+		SharesSrc:        d.SharesSrc.String(),
+		SharesDst:        d.SharesDst.String(),
+	}
 }
 
 // HumanReadableString returns a human readable string representation of a

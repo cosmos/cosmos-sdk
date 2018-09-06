@@ -422,10 +422,7 @@ func (k Keeper) UpdateBondedValidators(
 
 	// create a validator iterator ranging from largest to smallest by power
 	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
-	for {
-		if !iterator.Valid() || bondedValidatorsCount > int(maxValidators-1) {
-			break
-		}
+	for ; iterator.Valid() && bondedValidatorsCount < int(maxValidators); iterator.Next() {
 
 		// either retrieve the original validator from the store, or under the
 		// situation that this is the "affected validator" just use the
@@ -463,7 +460,6 @@ func (k Keeper) UpdateBondedValidators(
 		}
 
 		bondedValidatorsCount++
-		iterator.Next()
 	}
 
 	iterator.Close()

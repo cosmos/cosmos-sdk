@@ -297,21 +297,16 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 	res := queryable.Query(req)
 
 	////////////////////  iris/cosmos-sdk begin///////////////////////////
-	// WARNING This should be consistent with query method in iavlstore.go
-	if !req.Prove || subpath != "/store" && subpath != "/key" {
+	if !req.Prove || !RequireProof(subpath) {
 		return res
 	}
 
-	//Load commit info from db
-	commitInfo, errMsg := getCommitInfo(rs.db,res.Height)
+	commitInfo, errMsg := getCommitInfo(rs.db, res.Height)
 	if errMsg != nil {
 		return sdk.ErrInternal(errMsg.Error()).QueryResult()
 	}
 
-	res.Proof, errMsg = BuildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
-	if errMsg != nil {
-		return sdk.ErrInternal(errMsg.Error()).QueryResult()
-	}
+	res.Proof = buildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
 	////////////////////  iris/cosmos-sdk end///////////////////////////
 
 	return res

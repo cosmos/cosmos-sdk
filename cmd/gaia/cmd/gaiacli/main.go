@@ -127,6 +127,7 @@ func main() {
 	rootCmd.AddCommand(
 		client.GetCommands(
 			authcmd.GetAccountCmd("acc", cdc, authcmd.GetAccountDecoder(cdc)),
+			authcmd.GetSignCommand(cdc, authcmd.GetAccountDecoder(cdc)),
 		)...)
 	rootCmd.AddCommand(
 		client.PostCommands(

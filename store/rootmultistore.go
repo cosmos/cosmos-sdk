@@ -301,7 +301,7 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 		return res
 	}
 
-	commitInfo, errMsg := getCommitInfo(rs.db,res.Height)
+	commitInfo, errMsg := getCommitInfo(rs.db, res.Height)
 	if errMsg != nil {
 		return sdk.ErrInternal(errMsg.Error()).QueryResult()
 	}

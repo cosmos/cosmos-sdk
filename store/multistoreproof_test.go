@@ -2,8 +2,10 @@ package store
 
 import (
 	"encoding/hex"
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/tendermint/iavl"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	"testing"
 )
 
 func TestVerifyMultiStoreCommitInfo(t *testing.T) {
@@ -86,4 +88,29 @@ func TestVerifyMultiStoreCommitInfo(t *testing.T) {
 
 	_, err = VerifyMultiStoreCommitInfo(storeName, storeInfos, appHash)
 	assert.Error(t, err, "appHash doesn't match to the merkle root of multiStoreCommitInfo")
+}
+
+func TestVerifyRangeProof(t *testing.T) {
+	tree := iavl.NewTree(nil, 0)
+	rand := cmn.NewRand()
+	rand.Seed(0) // for determinism
+	for _, ikey := range []byte{0x11, 0x32, 0x50, 0x72, 0x99} {
+		key := []byte{ikey}
+		tree.Set(key, []byte(rand.Str(8)))
+	}
+	root := tree.Hash()
+	key := []byte{0x32}
+	val, proof, err := tree.GetWithProof(key)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, val)
+	assert.NotEmpty(t, proof)
+	err = VerifyRangeProof(key, val, root, proof)
+	assert.Nil(t, err)
+	key = []byte{0x40}
+	val, proof, err = tree.GetWithProof(key)
+	assert.Nil(t, err)
+	assert.Empty(t, val)
+	assert.NotEmpty(t, proof)
+	err = VerifyRangeProof(key, val, root, proof)
+	assert.Nil(t, err)
 }

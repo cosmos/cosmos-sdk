@@ -71,7 +71,7 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.C
 		packet := ibc.NewIBCPacket(sdk.AccAddress(info.GetPubKey().Address()), to, m.Amount, m.SrcChainID, destChainID)
 		msg := ibc.IBCTransferMsg{packet}
 
-		txCtx := authctx.TxBuilder{
+		txBld := authctx.TxBuilder{
 			Codec:         cdc,
 			ChainID:       m.SrcChainID,
 			AccountNumber: m.AccountNumber,
@@ -86,24 +86,24 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.C
 		cliCtx = cliCtx.WithGasAdjustment(adjustment)
 
 		if utils.HasDryRunArg(r) || m.Gas == 0 {
-			newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
+			newCtx, err := utils.EnrichCtxWithGas(txBld, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 			if utils.HasDryRunArg(r) {
-				utils.WriteSimulationResponse(w, txCtx.Gas)
+				utils.WriteSimulationResponse(w, txBld.Gas)
 				return
 			}
-			txCtx = newCtx
+			txBld = newCtx
 		}
 
 		if utils.HasGenerateOnlyArg(r) {
-			utils.WriteGenerateStdTxResponse(w, txCtx, []sdk.Msg{msg})
+			utils.WriteGenerateStdTxResponse(w, txBld, []sdk.Msg{msg})
 			return
 		}
 
-		txBytes, err := txCtx.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
+		txBytes, err := txBld.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return

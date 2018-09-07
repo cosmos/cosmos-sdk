@@ -21,7 +21,7 @@ func GetCmdUnjail(cdc *wire.Codec) *cobra.Command {
 		Args:  cobra.NoArgs,
 		Short: "unjail validator previously jailed for downtime",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txCtx := authctx.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBld := authctx.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
@@ -34,9 +34,9 @@ func GetCmdUnjail(cdc *wire.Codec) *cobra.Command {
 
 			msg := slashing.NewMsgUnjail(sdk.ValAddress(valAddr))
 			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(txCtx, cliCtx, []sdk.Msg{msg})
+				return utils.PrintUnsignedStdTx(txBld, cliCtx, []sdk.Msg{msg})
 			}
-			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
+			return utils.SendTx(txBld, cliCtx, []sdk.Msg{msg})
 		},
 	}
 

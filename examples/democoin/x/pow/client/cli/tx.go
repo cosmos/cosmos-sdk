@@ -22,7 +22,7 @@ func MineCmd(cdc *wire.Codec) *cobra.Command {
 		Short: "Mine some coins with proof-of-work!",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txCtx := authctx.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBld := authctx.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
@@ -53,7 +53,7 @@ func MineCmd(cdc *wire.Codec) *cobra.Command {
 
 			// Build and sign the transaction, then broadcast to a Tendermint
 			// node.
-			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
+			return utils.SendTx(txBld, cliCtx, []sdk.Msg{msg})
 		},
 	}
 }

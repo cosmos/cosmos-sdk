@@ -199,10 +199,10 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 		Sequence:  sequence,
 	}
 
-	txCtx := authctx.NewTxBuilderFromCLI().WithSequence(sequence).WithCodec(c.cdc)
+	txBld := authctx.NewTxBuilderFromCLI().WithSequence(sequence).WithCodec(c.cdc)
 	cliCtx := context.NewCLIContext()
 
-	res, err := txCtx.BuildAndSign(cliCtx.FromAddressName, passphrase, []sdk.Msg{msg})
+	res, err := txBld.BuildAndSign(cliCtx.FromAddressName, passphrase, []sdk.Msg{msg})
 	if err != nil {
 		panic(err)
 	}

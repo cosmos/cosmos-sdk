@@ -210,6 +210,7 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 // Procedures
 
 // Returns the current Deposit Procedure from the global param store
+// nolint: errcheck
 func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) DepositProcedure {
 	var depositProcedure DepositProcedure
 	keeper.ps.Get(ctx, ParamStoreKeyDepositProcedure, &depositProcedure)
@@ -217,6 +218,7 @@ func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) DepositProcedure {
 }
 
 // Returns the current Voting Procedure from the global param store
+// nolint: errcheck
 func (keeper Keeper) GetVotingProcedure(ctx sdk.Context) VotingProcedure {
 	var votingProcedure VotingProcedure
 	keeper.ps.Get(ctx, ParamStoreKeyVotingProcedure, &votingProcedure)
@@ -224,20 +226,24 @@ func (keeper Keeper) GetVotingProcedure(ctx sdk.Context) VotingProcedure {
 }
 
 // Returns the current Tallying Procedure from the global param store
+// nolint: errcheck
 func (keeper Keeper) GetTallyingProcedure(ctx sdk.Context) TallyingProcedure {
 	var tallyingProcedure TallyingProcedure
 	keeper.ps.Get(ctx, ParamStoreKeyTallyingProcedure, &tallyingProcedure)
 	return tallyingProcedure
 }
 
+// nolint: errcheck
 func (keeper Keeper) setDepositProcedure(ctx sdk.Context, depositProcedure DepositProcedure) {
 	keeper.ps.Set(ctx, ParamStoreKeyDepositProcedure, &depositProcedure)
 }
 
+// nolint: errcheck
 func (keeper Keeper) setVotingProcedure(ctx sdk.Context, votingProcedure VotingProcedure) {
 	keeper.ps.Set(ctx, ParamStoreKeyVotingProcedure, &votingProcedure)
 }
 
+// nolint: errcheck
 func (keeper Keeper) setTallyingProcedure(ctx sdk.Context, tallyingProcedure TallyingProcedure) {
 	keeper.ps.Set(ctx, ParamStoreKeyTallyingProcedure, &tallyingProcedure)
 }

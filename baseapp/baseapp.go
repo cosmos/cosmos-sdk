@@ -345,6 +345,7 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) (res a
 	return queryable.Query(req)
 }
 
+// nolint: unparam
 func handleQueryP2P(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
 	// "/p2p" prefix for p2p queries
 	if len(path) >= 4 {

@@ -163,6 +163,7 @@ func query(node string, key []byte, storeName string) (res []byte, err error) {
 	return context.NewCLIContext().WithNodeURI(node).QueryStore(key, storeName)
 }
 
+// nolint: unparam
 func (c relayCommander) broadcastTx(seq int64, node string, tx []byte) error {
 	_, err := context.NewCLIContext().WithNodeURI(node).BroadcastTx(tx)
 	return err

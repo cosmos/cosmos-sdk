@@ -86,6 +86,7 @@ func (app *App) CompleteSetup(newKeys []*sdk.KVStoreKey) error {
 }
 
 // InitChainer performs custom logic for initialization.
+// nolint: errcheck
 func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.ResponseInitChain {
 	// Load the genesis accounts
 	for _, genacc := range app.GenesisAccounts {
@@ -207,6 +208,7 @@ func GeneratePrivKeyAddressPairsFromRand(rand *rand.Rand, n int) (keys []crypto.
 
 // RandomSetGenesis set genesis accounts with random coin values using the
 // provided addresses and coin denominations.
+// nolint: errcheck
 func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []string) {
 	accts := make([]auth.Account, len(addrs), len(addrs))
 	randCoinIntervals := []BigInterval{

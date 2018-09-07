@@ -127,8 +127,12 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 // jail a validator
 func (k Keeper) Jail(ctx sdk.Context, pubkey crypto.PubKey) {
 	k.setJailed(ctx, pubkey, true)
+	validatorAddr, err := sdk.ValAddressFromHex(pubkey.Address().String())
+	if err != nil {
+		panic(err.Error())
+	}
 	logger := ctx.Logger().With("module", "x/stake")
-	logger.Info(fmt.Sprintf("validator %s jailed", pubkey.Address()))
+	logger.Info(fmt.Sprintf("validator %s jailed", validatorAddr.String()))
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 	return
 }
@@ -136,8 +140,12 @@ func (k Keeper) Jail(ctx sdk.Context, pubkey crypto.PubKey) {
 // unjail a validator
 func (k Keeper) Unjail(ctx sdk.Context, pubkey crypto.PubKey) {
 	k.setJailed(ctx, pubkey, false)
+	validatorAddr, err := sdk.ValAddressFromHex(pubkey.Address().String())
+	if err != nil {
+		panic(err.Error())
+	}
 	logger := ctx.Logger().With("module", "x/stake")
-	logger.Info(fmt.Sprintf("validator %s unjailed", pubkey.Address()))
+	logger.Info(fmt.Sprintf("validator %s unjailed", validatorAddr.String()))
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 	return
 }

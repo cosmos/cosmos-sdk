@@ -5,7 +5,8 @@
 - [ ] 3. Merge items in `PENDING.md` into the `CHANGELOG.md`. While doing this make sure that each entry contains links to issues/PRs for each item
 - [ ] 4. Summarize breaking API changes section under “Breaking Changes” section to the `CHANGELOG.md` to bring attention to any breaking API changes that affect RPC consumers.
 - [ ] 5. Tag the commit `{ .Release.Name }-rcN`
-- [ ] 6. Kick off 1 day of automated fuzz testing
-- [ ] 7. Release Lead assigns 2 people to perform [buddy testing script](/docs/RELEASE_TEST_SCRIPT.md) and update the relevant documentation
-- [ ] 8. If errors are found in either #6 or #7 go back to #2 (*NOTE*: be sure to increment the `rcN`)
-- [ ] 9. After #6 and #7 have successfully completed then merge the release PR and push the final release tag
+- [ ] 6. Open a branch & PR to merge the pending release back into `develop`. If any changes are made to the release branch, they must also be made to the pending develop merge, and both must pass tests.
+- [ ] 7. Kick off 1 day of automated fuzz testing
+- [ ] 8. Release Lead assigns 2 people to perform [buddy testing script](/docs/RELEASE_TEST_SCRIPT.md) and update the relevant documentation
+- [ ] 9. If errors are found in either #6 or #7 go back to #2 (*NOTE*: be sure to increment the `rcN`)
+- [ ] 10. After #6 and #7 have successfully completed then merge the release PR and push the final release tag

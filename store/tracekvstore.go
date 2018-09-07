@@ -179,6 +179,7 @@ func (tkv *TraceKVStore) CacheWrapWithTrace(_ io.Writer, _ TraceContext) CacheWr
 
 // writeOperation writes a KVStore operation to the underlying io.Writer as
 // JSON-encoded data where the key/value pair is base64 encoded.
+// nolint: errcheck
 func writeOperation(w io.Writer, op operation, tc TraceContext, key, value []byte) {
 	traceOp := traceOperation{
 		Operation: op,

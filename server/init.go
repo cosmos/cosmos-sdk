@@ -344,6 +344,7 @@ func readOrCreatePrivValidator(tmConfig *cfg.Config) crypto.PubKey {
 
 // writeGenesisFile creates and writes the genesis configuration to disk. An
 // error is returned if building or writing the configuration to file fails.
+// nolint: unparam
 func writeGenesisFile(cdc *wire.Codec, genesisFile, chainID string, validators []tmtypes.GenesisValidator, appState json.RawMessage) error {
 	genDoc := tmtypes.GenesisDoc{
 		ChainID:    chainID,

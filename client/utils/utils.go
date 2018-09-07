@@ -24,9 +24,15 @@ func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) 
 	if err != nil {
 		return err
 	}
+
+	name, err := cliCtx.GetFromName()
+	if err != nil {
+		return err
+	}
+
 	autogas := cliCtx.DryRun || (cliCtx.Gas == 0)
 	if autogas {
-		txCtx, err = EnrichCtxWithGas(txCtx, cliCtx, cliCtx.FromAddressName, msgs)
+		txCtx, err = EnrichCtxWithGas(txCtx, cliCtx, name, msgs)
 		if err != nil {
 			return err
 		}
@@ -36,13 +42,13 @@ func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) 
 		return nil
 	}
 
-	passphrase, err := keys.GetPassphrase(cliCtx.FromAddressName)
+	passphrase, err := keys.GetPassphrase(name)
 	if err != nil {
 		return err
 	}
 
 	// build and sign the transaction
-	txBytes, err := txCtx.BuildAndSign(cliCtx.FromAddressName, passphrase, msgs)
+	txBytes, err := txCtx.BuildAndSign(name, passphrase, msgs)
 	if err != nil {
 		return err
 	}
@@ -195,7 +201,12 @@ func buildUnsignedStdTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs
 		return
 	}
 	if txCtx.Gas == 0 {
-		txCtx, err = EnrichCtxWithGas(txCtx, cliCtx, cliCtx.FromAddressName, msgs)
+		var name string
+		name, err = cliCtx.GetFromName()
+		if err != nil {
+			return
+		}
+		txCtx, err = EnrichCtxWithGas(txCtx, cliCtx, name, msgs)
 		if err != nil {
 			return
 		}

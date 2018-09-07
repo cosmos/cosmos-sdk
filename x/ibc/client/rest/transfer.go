@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 
 	"github.com/gorilla/mux"
@@ -71,7 +71,7 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.C
 		packet := ibc.NewIBCPacket(sdk.AccAddress(info.GetPubKey().Address()), to, m.Amount, m.SrcChainID, destChainID)
 		msg := ibc.IBCTransferMsg{packet}
 
-		txBld := authctx.TxBuilder{
+		txBld := authtxb.TxBuilder{
 			Codec:         cdc,
 			ChainID:       m.SrcChainID,
 			AccountNumber: m.AccountNumber,

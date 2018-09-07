@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/common"
 )
@@ -18,7 +18,7 @@ import (
 // ensures that the account exists, has a proper number and sequence set. In
 // addition, it builds and signs a transaction with the supplied messages.
 // Finally, it broadcasts the signed transaction to a node.
-func SendTx(txBld authctx.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) error {
+func SendTx(txBld authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) error {
 	txBld, err := prepareTxContext(txBld, cliCtx)
 	if err != nil {
 		return err
@@ -50,7 +50,7 @@ func SendTx(txBld authctx.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) 
 }
 
 // SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
-func SimulateMsgs(txBld authctx.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg, gas int64) (estimated, adjusted int64, err error) {
+func SimulateMsgs(txBld authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg, gas int64) (estimated, adjusted int64, err error) {
 	txBytes, err := txBld.WithGas(gas).BuildWithPubKey(name, msgs)
 	if err != nil {
 		return
@@ -61,7 +61,7 @@ func SimulateMsgs(txBld authctx.TxBuilder, cliCtx context.CLIContext, name strin
 
 // EnrichCtxWithGas calculates the gas estimate that would be consumed by the
 // transaction and set the transaction's respective value accordingly.
-func EnrichCtxWithGas(txBld authctx.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (authctx.TxBuilder, error) {
+func EnrichCtxWithGas(txBld authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (authtxb.TxBuilder, error) {
 	_, adjusted, err := SimulateMsgs(txBld, cliCtx, name, msgs, 0)
 	if err != nil {
 		return txBld, err
@@ -87,7 +87,7 @@ func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *
 }
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
-func PrintUnsignedStdTx(txBld authctx.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (err error) {
+func PrintUnsignedStdTx(txBld authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (err error) {
 	stdTx, err := buildUnsignedStdTx(txBld, cliCtx, msgs)
 	if err != nil {
 		return
@@ -111,7 +111,7 @@ func parseQueryResponse(cdc *amino.Codec, rawRes []byte) (int64, error) {
 	return simulationResult.GasUsed, nil
 }
 
-func prepareTxContext(txBld authctx.TxBuilder, cliCtx context.CLIContext) (authctx.TxBuilder, error) {
+func prepareTxContext(txBld authtxb.TxBuilder, cliCtx context.CLIContext) (authtxb.TxBuilder, error) {
 	if err := cliCtx.EnsureAccountExists(); err != nil {
 		return txBld, err
 	}
@@ -145,7 +145,7 @@ func prepareTxContext(txBld authctx.TxBuilder, cliCtx context.CLIContext) (authc
 
 // buildUnsignedStdTx builds a StdTx as per the parameters passed in the
 // contexts. Gas is automatically estimated if gas wanted is set to 0.
-func buildUnsignedStdTx(txBld authctx.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
+func buildUnsignedStdTx(txBld authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
 	txBld, err = prepareTxContext(txBld, cliCtx)
 	if err != nil {
 		return

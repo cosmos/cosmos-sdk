@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/bank/client"
 
@@ -80,7 +80,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 			return
 		}
 
-		txBld := authctx.TxBuilder{
+		txBld := authtxb.TxBuilder{
 			Codec:         cdc,
 			Gas:           m.Gas,
 			ChainID:       m.ChainID,

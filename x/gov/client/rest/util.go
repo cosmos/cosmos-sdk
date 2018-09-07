@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
 type baseReq struct {
@@ -70,7 +70,7 @@ func (req baseReq) baseReqValidate(w http.ResponseWriter) bool {
 // (probably should live in client/lcd).
 func signAndBuild(w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext, baseReq baseReq, msg sdk.Msg, cdc *wire.Codec) {
 	var err error
-	txBld := authctx.TxBuilder{
+	txBld := authtxb.TxBuilder{
 		Codec:         cdc,
 		AccountNumber: baseReq.AccountNumber,
 		Sequence:      baseReq.Sequence,

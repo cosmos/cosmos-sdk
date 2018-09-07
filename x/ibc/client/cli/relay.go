@@ -10,7 +10,7 @@ import (
 	wire "github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 
 	"github.com/spf13/cobra"
@@ -199,7 +199,7 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 		Sequence:  sequence,
 	}
 
-	txBld := authctx.NewTxBuilderFromCLI().WithSequence(sequence).WithCodec(c.cdc)
+	txBld := authtxb.NewTxBuilderFromCLI().WithSequence(sequence).WithCodec(c.cdc)
 	cliCtx := context.NewCLIContext()
 
 	res, err := txBld.BuildAndSign(cliCtx.FromAddressName, passphrase, []sdk.Msg{msg})

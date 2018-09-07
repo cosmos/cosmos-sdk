@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -30,7 +30,7 @@ func BondTxCmd(cdc *wire.Codec) *cobra.Command {
 		Use:   "bond",
 		Short: "Bond to a validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBld := authctx.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBld := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
@@ -84,7 +84,7 @@ func UnbondTxCmd(cdc *wire.Codec) *cobra.Command {
 		Use:   "unbond",
 		Short: "Unbond from a validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBld := authctx.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBld := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout)

@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	authcliCtx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/gorilla/mux"
@@ -263,7 +263,7 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 			i++
 		}
 
-		txBld := authcliCtx.TxBuilder{
+		txBld := authtxb.TxBuilder{
 			Codec:   cdc,
 			ChainID: m.ChainID,
 			Gas:     m.Gas,

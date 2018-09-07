@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
 // QuizTxCmd invokes the coolness quiz transaction.
@@ -21,7 +21,7 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 		Short: "What's cooler than being cool?",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBld := authctx.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBld := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
@@ -46,7 +46,7 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 		Short: "You're so cool, tell us what is cool!",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBld := authctx.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBld := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).

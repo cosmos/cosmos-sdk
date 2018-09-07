@@ -8,7 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
 const (
@@ -52,7 +52,7 @@ func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEm
 }
 
 // WriteGenerateStdTxResponse writes response for the generate_only mode.
-func WriteGenerateStdTxResponse(w http.ResponseWriter, txBld authctx.TxBuilder, msgs []sdk.Msg) {
+func WriteGenerateStdTxResponse(w http.ResponseWriter, txBld authtxb.TxBuilder, msgs []sdk.Msg) {
 	stdMsg, err := txBld.Build(msgs)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())

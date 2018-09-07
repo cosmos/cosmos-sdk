@@ -28,6 +28,7 @@ BREAKING CHANGES
     * [x/stake] \#2040 Validator operator type has now changed to `sdk.ValAddress`
       * A new bech32 prefix has been introduced for Tendermint signing keys and
         addresses, `cosmosconspub` and `cosmoscons` respectively.
+    * [x/slashing] \#1789 Slashing changes for Tendermint validator set offset (NextValSet)
     
 * SDK
     * [core] \#2219 Update to Tendermint 0.24.0

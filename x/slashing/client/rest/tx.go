@@ -70,7 +70,7 @@ func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLI
 			return
 		}
 
-		txBld := authtxb.TxBuilder{
+		txBldr := authtxb.TxBuilder{
 			Codec:         cdc,
 			ChainID:       m.ChainID,
 			AccountNumber: m.AccountNumber,
@@ -87,24 +87,24 @@ func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLI
 		cliCtx = cliCtx.WithGasAdjustment(adjustment)
 
 		if utils.HasDryRunArg(r) || m.Gas == 0 {
-			newCtx, err := utils.EnrichCtxWithGas(txBld, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
+			newCtx, err := utils.EnrichCtxWithGas(txBldr, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 			if utils.HasDryRunArg(r) {
-				utils.WriteSimulationResponse(w, txBld.Gas)
+				utils.WriteSimulationResponse(w, txBldr.Gas)
 				return
 			}
-			txBld = newCtx
+			txBldr = newCtx
 		}
 
 		if utils.HasGenerateOnlyArg(r) {
-			utils.WriteGenerateStdTxResponse(w, txBld, []sdk.Msg{msg})
+			utils.WriteGenerateStdTxResponse(w, txBldr, []sdk.Msg{msg})
 			return
 		}
 
-		txBytes, err := txBld.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
+		txBytes, err := txBldr.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusUnauthorized, "Must use own validator address")
 			return

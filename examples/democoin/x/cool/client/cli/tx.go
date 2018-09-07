@@ -21,7 +21,7 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 		Short: "What's cooler than being cool?",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBld := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
@@ -34,7 +34,7 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 
 			msg := cool.NewMsgQuiz(from, args[0])
 
-			return utils.SendTx(txBld, cliCtx, []sdk.Msg{msg})
+			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 }
@@ -46,7 +46,7 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 		Short: "You're so cool, tell us what is cool!",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBld := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
@@ -59,7 +59,7 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 
 			msg := cool.NewMsgSetTrend(from, args[0])
 
-			return utils.SendTx(txBld, cliCtx, []sdk.Msg{msg})
+			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 }

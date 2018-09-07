@@ -70,7 +70,7 @@ func (req baseReq) baseReqValidate(w http.ResponseWriter) bool {
 // (probably should live in client/lcd).
 func signAndBuild(w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext, baseReq baseReq, msg sdk.Msg, cdc *wire.Codec) {
 	var err error
-	txBld := authtxb.TxBuilder{
+	txBldr := authtxb.TxBuilder{
 		Codec:         cdc,
 		AccountNumber: baseReq.AccountNumber,
 		Sequence:      baseReq.Sequence,
@@ -85,24 +85,24 @@ func signAndBuild(w http.ResponseWriter, r *http.Request, cliCtx context.CLICont
 	cliCtx = cliCtx.WithGasAdjustment(adjustment)
 
 	if utils.HasDryRunArg(r) || baseReq.Gas == 0 {
-		newCtx, err := utils.EnrichCtxWithGas(txBld, cliCtx, baseReq.Name, []sdk.Msg{msg})
+		newCtx, err := utils.EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, []sdk.Msg{msg})
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 		if utils.HasDryRunArg(r) {
-			utils.WriteSimulationResponse(w, txBld.Gas)
+			utils.WriteSimulationResponse(w, txBldr.Gas)
 			return
 		}
-		txBld = newCtx
+		txBldr = newCtx
 	}
 
 	if utils.HasGenerateOnlyArg(r) {
-		utils.WriteGenerateStdTxResponse(w, txBld, []sdk.Msg{msg})
+		utils.WriteGenerateStdTxResponse(w, txBldr, []sdk.Msg{msg})
 		return
 	}
 
-	txBytes, err := txBld.BuildAndSign(baseReq.Name, baseReq.Password, []sdk.Msg{msg})
+	txBytes, err := txBldr.BuildAndSign(baseReq.Name, baseReq.Password, []sdk.Msg{msg})
 	if err != nil {
 		utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return

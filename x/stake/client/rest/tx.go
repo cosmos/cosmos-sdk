@@ -263,7 +263,7 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 			i++
 		}
 
-		txBld := authtxb.TxBuilder{
+		txBldr := authtxb.TxBuilder{
 			Codec:   cdc,
 			ChainID: m.ChainID,
 			Gas:     m.Gas,
@@ -273,8 +273,8 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 		signedTxs := make([][]byte, len(messages[:]))
 		for i, msg := range messages {
 			// increment sequence for each message
-			txBld = txBld.WithAccountNumber(m.AccountNumber)
-			txBld = txBld.WithSequence(m.Sequence)
+			txBldr = txBldr.WithAccountNumber(m.AccountNumber)
+			txBldr = txBldr.WithSequence(m.Sequence)
 
 			m.Sequence++
 
@@ -285,24 +285,24 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 			cliCtx = cliCtx.WithGasAdjustment(adjustment)
 
 			if utils.HasDryRunArg(r) || m.Gas == 0 {
-				newCtx, err := utils.EnrichCtxWithGas(txBld, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
+				newCtx, err := utils.EnrichCtxWithGas(txBldr, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
 				if err != nil {
 					utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 					return
 				}
 				if utils.HasDryRunArg(r) {
-					utils.WriteSimulationResponse(w, txBld.Gas)
+					utils.WriteSimulationResponse(w, txBldr.Gas)
 					return
 				}
-				txBld = newCtx
+				txBldr = newCtx
 			}
 
 			if utils.HasGenerateOnlyArg(r) {
-				utils.WriteGenerateStdTxResponse(w, txBld, []sdk.Msg{msg})
+				utils.WriteGenerateStdTxResponse(w, txBldr, []sdk.Msg{msg})
 				return
 			}
 
-			txBytes, err := txBld.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
+			txBytes, err := txBldr.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 				return

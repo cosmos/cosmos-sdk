@@ -28,8 +28,7 @@ BREAKING CHANGES
     * [x/stake] [\#2040](https://github.com/cosmos/cosmos-sdk/issues/2040) Validator operator type has now changed to `sdk.ValAddress`
       * A new bech32 prefix has been introduced for Tendermint signing keys and
         addresses, `cosmosconspub` and `cosmoscons` respectively.
-    * [x/gov] \#2195 Made governance use BFT Time instead of Block Heights for deposit and voting periods.
-    
+
 * SDK
     * [core] [\#1807](https://github.com/cosmos/cosmos-sdk/issues/1807) Switch from use of rational to decimal
     * [types] [\#1901](https://github.com/cosmos/cosmos-sdk/issues/1901) Validator interface's GetOwner() renamed to GetOperator()

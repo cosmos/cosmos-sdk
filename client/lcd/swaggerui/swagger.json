@@ -46,25 +46,25 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/responses/BroadcastTxCommitResult"
+              "$ref": "#/definitions/BroadcastTxCommitResult"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/responses/httputil.HTTPError"
+              "$ref": "#/definitions/HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
-              "$ref": "#/responses/httputil.HTTPError"
+              "$ref": "#/definitions/HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/responses/httputil.HTTPError"
+              "$ref": "#/definitions/HTTPError"
             }
           }
         }
@@ -102,19 +102,19 @@
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/responses/httputil.HTTPError"
+              "$ref": "#/definitions/HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
-              "$ref": "#/responses/httputil.HTTPError"
+              "$ref": "#/definitions/HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/responses/httputil.HTTPError"
+              "$ref": "#/definitions/HTTPError"
             }
           }
         }
@@ -155,25 +155,25 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/responses/BroadcastTxCommitResult"
+              "$ref": "#/definitions/BroadcastTxCommitResult"
             }
           },
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/responses/httputil.HTTPError"
+              "$ref": "#/definitions/HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
-              "$ref": "#/responses/httputil.HTTPError"
+              "$ref": "#/definitions/HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/responses/httputil.HTTPError"
+              "$ref": "#/definitions/HTTPError"
             }
           }
         }
@@ -192,7 +192,6 @@
         "produces": [
           "application/json"
         ],
-        "parameters": [],
         "responses": {
           "200": {
             "description": "OK",
@@ -203,19 +202,19 @@
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/responses/httputil.HTTPError"
+              "$ref": "#/definitions/HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
-              "$ref": "#/responses/httputil.HTTPError"
+              "$ref": "#/definitions/HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/responses/httputil.HTTPError"
+              "$ref": "#/definitions/HTTPError"
             }
           }
         }
@@ -234,7 +233,6 @@
         "produces": [
           "application/json"
         ],
-        "parameters": [],
         "responses": {
           "200": {
             "description": "OK",
@@ -245,19 +243,19 @@
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/responses/httputil.HTTPError"
+              "$ref": "#/definitions/HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
-              "$ref": "#/responses/httputil.HTTPError"
+              "$ref": "#/definitions/HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/responses/httputil.HTTPError"
+              "$ref": "#/definitions/HTTPError"
             }
           }
         }
@@ -321,9 +319,7 @@
           "type": "string"
         }
       }
-    }
-  },
-  "responses": {
+    },
     "common.KVPair": {
       "type": "object",
       "properties": {
@@ -338,38 +334,7 @@
     "common.KVPairs": {
       "type": "array",
       "items": {
-        "$ref": "#/responses/common.KVPair"
-      }
-    },
-    "common.KI64Pair": {
-      "type": "object",
-      "properties": {
-        "key": {
-          "type": "string"
-        },
-        "value": {
-          "type": "integer"
-        }
-      }
-    },
-    "common.BaseRequest": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        },
-        "chain_id": {
-          "type": "string"
-        },
-        "account_number": {
-          "type": "string"
-        },
-        "sequence": {
-          "type": "string"
-        }
+        "$ref": "#/definitions/common.KVPair"
       }
     },
     "CheckTxResult": {
@@ -396,7 +361,7 @@
         "tags": {
           "type": "array",
           "items": {
-            "$ref": "#/responses/common.KVPairs"
+            "$ref": "#/definitions/common.KVPairs"
           }
         }
       },
@@ -437,7 +402,7 @@
         "tags": {
           "type": "array",
           "items": {
-            "$ref": "#/responses/common.KVPairs"
+            "$ref": "#/definitions/common.KVPairs"
           }
         }
       },
@@ -458,10 +423,10 @@
       "type": "object",
       "properties": {
         "check_tx": {
-          "$ref": "#/responses/CheckTxResult"
+          "$ref": "#/definitions/CheckTxResult"
         },
         "deliver_tx": {
-          "$ref": "#/responses/DeliverTxResult"
+          "$ref": "#/definitions/DeliverTxResult"
         },
         "hash": {
           "type": "string"
@@ -499,7 +464,7 @@
         "height": 7
       }
     },
-    "httputil.HTTPError": {
+    "HTTPError": {
       "type": "object",
       "properties": {
         "rest api": {

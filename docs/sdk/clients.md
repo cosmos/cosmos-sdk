@@ -147,7 +147,16 @@ gaiacli send \
   --chain-id=<chain_id> \
   --name=<key_name> \
   --to=<destination_cosmosaccaddr> \
-  --generate-only
+  --generate-only > unsignedSendTx.json
+```
+
+You can now sign the transaction file generated through the `--generate-only` flag by providing your key to the following command:
+
+```bash
+gaiacli sign \
+  --chain-id=<chain_id> \
+  --name=<key_name>
+  unsignedSendTx.json > signedSendTx.json
 ```
 
 ### Staking

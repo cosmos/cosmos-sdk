@@ -229,6 +229,75 @@ Returns on success:
 }
 ```
 
+### POST /auth/accounts/sign
+
+- **URL**: `/auth/sign`
+- **Functionality**: Sign a transaction without broadcasting it.
+- Returns on success:
+
+```json
+{
+    "rest api": "1.0",
+    "code": 200,
+    "error": "",
+    "result": {
+        "type": "auth/StdTx",
+        "value": {
+            "msg": [
+                {
+                    "type": "cosmos-sdk/Send",
+                    "value": {
+                        "inputs": [
+                            {
+                                "address": "cosmos1ql4ekxkujf3xllk8h5ldhhgh4ylpu7kwec6q3d",
+                                "coins": [
+                                    {
+                                        "denom": "steak",
+                                        "amount": "1"
+                                    }
+                                ]
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "address": "cosmos1dhyqhg4px33ed3erqymls0hc7q2lxw9hhfwklj",
+                                "coins": [
+                                    {
+                                        "denom": "steak",
+                                        "amount": "1"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ],
+            "fee": {
+                "amount": [
+                    {
+                        "denom": "",
+                        "amount": "0"
+                    }
+                ],
+                "gas": "2742"
+            },
+            "signatures": [
+                {
+                    "pub_key": {
+                        "type": "tendermint/PubKeySecp256k1",
+                        "value": "A2A/f2IYnrPUMTMqhwN81oas9jurtfcsvxdeLlNw3gGy"
+                    },
+                    "signature": "MEQCIGVn73y9QLwBa3vmsAD1bs3ygX75Wo+lAFSAUDs431ZPAiBWAf2amyqTCDXE9J87rL9QF9sd5JvVMt7goGSuamPJwg==",
+                    "account_number": "1",
+                    "sequence": "0"
+                }
+            ],
+            "memo": ""
+        }
+    }
+}
+```
+
 ## ICS20 - TokenAPI
 
 The TokenAPI exposes all functionality needed to query account balances and send transactions.

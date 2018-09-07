@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 
@@ -99,6 +100,49 @@ func PrintUnsignedStdTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs
 	return
 }
 
+// SignStdTx appends a signature to a StdTx and returns a copy of a it. If appendSig
+// is false, it replaces the signatures already attached with the new signature.
+func SignStdTx(txCtx authctx.TxContext, cliCtx context.CLIContext, name string, stdTx auth.StdTx, appendSig bool) (auth.StdTx, error) {
+	var signedStdTx auth.StdTx
+
+	keybase, err := keys.GetKeyBase()
+	if err != nil {
+		return signedStdTx, err
+	}
+	info, err := keybase.Get(name)
+	if err != nil {
+		return signedStdTx, err
+	}
+	addr := info.GetPubKey().Address()
+
+	// Check whether the address is a signer
+	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
+		fmt.Fprintf(os.Stderr, "WARNING: The generated transaction's intended signer does not match the given signer: '%v'", name)
+	}
+
+	if txCtx.AccountNumber == 0 {
+		accNum, err := cliCtx.GetAccountNumber(addr)
+		if err != nil {
+			return signedStdTx, err
+		}
+		txCtx = txCtx.WithAccountNumber(accNum)
+	}
+
+	if txCtx.Sequence == 0 {
+		accSeq, err := cliCtx.GetAccountSequence(addr)
+		if err != nil {
+			return signedStdTx, err
+		}
+		txCtx = txCtx.WithSequence(accSeq)
+	}
+
+	passphrase, err := keys.GetPassphrase(name)
+	if err != nil {
+		return signedStdTx, err
+	}
+	return txCtx.SignStdTx(name, passphrase, stdTx, appendSig)
+}
+
 func adjustGasEstimate(estimate int64, adjustment float64) int64 {
 	return int64(adjustment * float64(estimate))
 }
@@ -162,4 +206,13 @@ func buildUnsignedStdTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs
 		return
 	}
 	return auth.NewStdTx(stdSignMsg.Msgs, stdSignMsg.Fee, nil, stdSignMsg.Memo), nil
+}
+
+func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {
+	for _, s := range signers {
+		if bytes.Equal(user.Bytes(), s.Bytes()) {
+			return true
+		}
+	}
+	return false
 }

@@ -52,7 +52,7 @@ func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEm
 }
 
 // WriteGenerateStdTxResponse writes response for the generate_only mode.
-func WriteGenerateStdTxResponse(w http.ResponseWriter, txCtx authctx.TxContext, msgs []sdk.Msg) {
+func WriteGenerateStdTxResponse(w http.ResponseWriter, txCtx authctx.TxBuilder, msgs []sdk.Msg) {
 	stdMsg, err := txCtx.Build(msgs)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())

@@ -14,11 +14,11 @@ import (
 )
 
 // SendTx implements a auxiliary handler that facilitates sending a series of
-// messages in a signed transaction given a TxContext and a QueryContext. It
+// messages in a signed transaction given a TxBuilder and a QueryContext. It
 // ensures that the account exists, has a proper number and sequence set. In
 // addition, it builds and signs a transaction with the supplied messages.
 // Finally, it broadcasts the signed transaction to a node.
-func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) error {
+func SendTx(txCtx authctx.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) error {
 	txCtx, err := prepareTxContext(txCtx, cliCtx)
 	if err != nil {
 		return err
@@ -50,7 +50,7 @@ func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) 
 }
 
 // SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
-func SimulateMsgs(txCtx authctx.TxContext, cliCtx context.CLIContext, name string, msgs []sdk.Msg, gas int64) (estimated, adjusted int64, err error) {
+func SimulateMsgs(txCtx authctx.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg, gas int64) (estimated, adjusted int64, err error) {
 	txBytes, err := txCtx.WithGas(gas).BuildWithPubKey(name, msgs)
 	if err != nil {
 		return
@@ -61,7 +61,7 @@ func SimulateMsgs(txCtx authctx.TxContext, cliCtx context.CLIContext, name strin
 
 // EnrichCtxWithGas calculates the gas estimate that would be consumed by the
 // transaction and set the transaction's respective value accordingly.
-func EnrichCtxWithGas(txCtx authctx.TxContext, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (authctx.TxContext, error) {
+func EnrichCtxWithGas(txCtx authctx.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (authctx.TxBuilder, error) {
 	_, adjusted, err := SimulateMsgs(txCtx, cliCtx, name, msgs, 0)
 	if err != nil {
 		return txCtx, err
@@ -73,7 +73,7 @@ func EnrichCtxWithGas(txCtx authctx.TxContext, cliCtx context.CLIContext, name s
 // both the estimate obtained by the query and the adjusted amount.
 func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *amino.Codec, txBytes []byte, adjustment float64) (estimate, adjusted int64, err error) {
 	// run a simulation (via /app/simulate query) to
-	// estimate gas and update TxContext accordingly
+	// estimate gas and update TxBuilder accordingly
 	rawRes, err := queryFunc("/app/simulate", txBytes)
 	if err != nil {
 		return
@@ -87,7 +87,7 @@ func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *
 }
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
-func PrintUnsignedStdTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) (err error) {
+func PrintUnsignedStdTx(txCtx authctx.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (err error) {
 	stdTx, err := buildUnsignedStdTx(txCtx, cliCtx, msgs)
 	if err != nil {
 		return
@@ -111,7 +111,7 @@ func parseQueryResponse(cdc *amino.Codec, rawRes []byte) (int64, error) {
 	return simulationResult.GasUsed, nil
 }
 
-func prepareTxContext(txCtx authctx.TxContext, cliCtx context.CLIContext) (authctx.TxContext, error) {
+func prepareTxContext(txCtx authctx.TxBuilder, cliCtx context.CLIContext) (authctx.TxBuilder, error) {
 	if err := cliCtx.EnsureAccountExists(); err != nil {
 		return txCtx, err
 	}
@@ -145,7 +145,7 @@ func prepareTxContext(txCtx authctx.TxContext, cliCtx context.CLIContext) (authc
 
 // buildUnsignedStdTx builds a StdTx as per the parameters passed in the
 // contexts. Gas is automatically estimated if gas wanted is set to 0.
-func buildUnsignedStdTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
+func buildUnsignedStdTx(txCtx authctx.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
 	txCtx, err = prepareTxContext(txCtx, cliCtx)
 	if err != nil {
 		return

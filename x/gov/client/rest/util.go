@@ -70,7 +70,7 @@ func (req baseReq) baseReqValidate(w http.ResponseWriter) bool {
 // (probably should live in client/lcd).
 func signAndBuild(w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext, baseReq baseReq, msg sdk.Msg, cdc *wire.Codec) {
 	var err error
-	txCtx := authctx.TxContext{
+	txCtx := authctx.TxBuilder{
 		Codec:         cdc,
 		AccountNumber: baseReq.AccountNumber,
 		Sequence:      baseReq.Sequence,

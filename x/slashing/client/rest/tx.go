@@ -70,7 +70,7 @@ func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLI
 			return
 		}
 
-		txCtx := authctx.TxContext{
+		txCtx := authctx.TxBuilder{
 			Codec:         cdc,
 			ChainID:       m.ChainID,
 			AccountNumber: m.AccountNumber,

@@ -11,8 +11,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-// TxContext implements a transaction context created in SDK modules.
-type TxContext struct {
+// TxBuilder implements a transaction context created in SDK modules.
+type TxBuilder struct {
 	Codec         *wire.Codec
 	AccountNumber int64
 	Sequence      int64
@@ -22,9 +22,9 @@ type TxContext struct {
 	Fee           string
 }
 
-// NewTxContextFromCLI returns a new initialized TxContext with parameters from
+// NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
 // the command line using Viper.
-func NewTxContextFromCLI() TxContext {
+func NewTxBuilderFromCLI() TxBuilder {
 	// if chain ID is not specified manually, read default chain ID
 	chainID := viper.GetString(client.FlagChainID)
 	if chainID == "" {
@@ -34,7 +34,7 @@ func NewTxContextFromCLI() TxContext {
 		}
 	}
 
-	return TxContext{
+	return TxBuilder{
 		ChainID:       chainID,
 		Gas:           viper.GetInt64(client.FlagGas),
 		AccountNumber: viper.GetInt64(client.FlagAccountNumber),
@@ -45,58 +45,58 @@ func NewTxContextFromCLI() TxContext {
 }
 
 // WithCodec returns a copy of the context with an updated codec.
-func (ctx TxContext) WithCodec(cdc *wire.Codec) TxContext {
-	ctx.Codec = cdc
-	return ctx
+func (bld TxBuilder) WithCodec(cdc *wire.Codec) TxBuilder {
+	bld.Codec = cdc
+	return bld
 }
 
 // WithChainID returns a copy of the context with an updated chainID.
-func (ctx TxContext) WithChainID(chainID string) TxContext {
-	ctx.ChainID = chainID
-	return ctx
+func (bld TxBuilder) WithChainID(chainID string) TxBuilder {
+	bld.ChainID = chainID
+	return bld
 }
 
 // WithGas returns a copy of the context with an updated gas.
-func (ctx TxContext) WithGas(gas int64) TxContext {
-	ctx.Gas = gas
-	return ctx
+func (bld TxBuilder) WithGas(gas int64) TxBuilder {
+	bld.Gas = gas
+	return bld
 }
 
 // WithFee returns a copy of the context with an updated fee.
-func (ctx TxContext) WithFee(fee string) TxContext {
-	ctx.Fee = fee
-	return ctx
+func (bld TxBuilder) WithFee(fee string) TxBuilder {
+	bld.Fee = fee
+	return bld
 }
 
 // WithSequence returns a copy of the context with an updated sequence number.
-func (ctx TxContext) WithSequence(sequence int64) TxContext {
-	ctx.Sequence = sequence
-	return ctx
+func (bld TxBuilder) WithSequence(sequence int64) TxBuilder {
+	bld.Sequence = sequence
+	return bld
 }
 
 // WithMemo returns a copy of the context with an updated memo.
-func (ctx TxContext) WithMemo(memo string) TxContext {
-	ctx.Memo = memo
-	return ctx
+func (bld TxBuilder) WithMemo(memo string) TxBuilder {
+	bld.Memo = memo
+	return bld
 }
 
 // WithAccountNumber returns a copy of the context with an account number.
-func (ctx TxContext) WithAccountNumber(accnum int64) TxContext {
-	ctx.AccountNumber = accnum
-	return ctx
+func (bld TxBuilder) WithAccountNumber(accnum int64) TxBuilder {
+	bld.AccountNumber = accnum
+	return bld
 }
 
-// Build builds a single message to be signed from a TxContext given a set of
+// Build builds a single message to be signed from a TxBuilder given a set of
 // messages. It returns an error if a fee is supplied but cannot be parsed.
-func (ctx TxContext) Build(msgs []sdk.Msg) (auth.StdSignMsg, error) {
-	chainID := ctx.ChainID
+func (bld TxBuilder) Build(msgs []sdk.Msg) (auth.StdSignMsg, error) {
+	chainID := bld.ChainID
 	if chainID == "" {
 		return auth.StdSignMsg{}, errors.Errorf("chain ID required but not specified")
 	}
 
 	fee := sdk.Coin{}
-	if ctx.Fee != "" {
-		parsedFee, err := sdk.ParseCoin(ctx.Fee)
+	if bld.Fee != "" {
+		parsedFee, err := sdk.ParseCoin(bld.Fee)
 		if err != nil {
 			return auth.StdSignMsg{}, err
 		}
@@ -105,18 +105,18 @@ func (ctx TxContext) Build(msgs []sdk.Msg) (auth.StdSignMsg, error) {
 	}
 
 	return auth.StdSignMsg{
-		ChainID:       ctx.ChainID,
-		AccountNumber: ctx.AccountNumber,
-		Sequence:      ctx.Sequence,
-		Memo:          ctx.Memo,
+		ChainID:       bld.ChainID,
+		AccountNumber: bld.AccountNumber,
+		Sequence:      bld.Sequence,
+		Memo:          bld.Memo,
 		Msgs:          msgs,
-		Fee:           auth.NewStdFee(ctx.Gas, fee),
+		Fee:           auth.NewStdFee(bld.Gas, fee),
 	}, nil
 }
 
 // Sign signs a transaction given a name, passphrase, and a single message to
 // signed. An error is returned if signing fails.
-func (ctx TxContext) Sign(name, passphrase string, msg auth.StdSignMsg) ([]byte, error) {
+func (bld TxBuilder) Sign(name, passphrase string, msg auth.StdSignMsg) ([]byte, error) {
 	keybase, err := keys.GetKeyBase()
 	if err != nil {
 		return nil, err
@@ -134,27 +134,27 @@ func (ctx TxContext) Sign(name, passphrase string, msg auth.StdSignMsg) ([]byte,
 		Signature:     sig,
 	}}
 
-	return ctx.Codec.MarshalBinary(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
+	return bld.Codec.MarshalBinary(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
 }
 
 // BuildAndSign builds a single message to be signed, and signs a transaction
 // with the built message given a name, passphrase, and a set of
 // messages.
-func (ctx TxContext) BuildAndSign(name, passphrase string, msgs []sdk.Msg) ([]byte, error) {
-	msg, err := ctx.Build(msgs)
+func (bld TxBuilder) BuildAndSign(name, passphrase string, msgs []sdk.Msg) ([]byte, error) {
+	msg, err := bld.Build(msgs)
 	if err != nil {
 		return nil, err
 	}
 
-	return ctx.Sign(name, passphrase, msg)
+	return bld.Sign(name, passphrase, msg)
 }
 
-// BuildWithPubKey builds a single message to be signed from a TxContext given a set of
+// BuildWithPubKey builds a single message to be signed from a TxBuilder given a set of
 // messages and attach the public key associated to the given name.
 // It returns an error if a fee is supplied but cannot be parsed or the key cannot be
 // retrieved.
-func (ctx TxContext) BuildWithPubKey(name string, msgs []sdk.Msg) ([]byte, error) {
-	msg, err := ctx.Build(msgs)
+func (bld TxBuilder) BuildWithPubKey(name string, msgs []sdk.Msg) ([]byte, error) {
+	msg, err := bld.Build(msgs)
 	if err != nil {
 		return nil, err
 	}
@@ -175,5 +175,5 @@ func (ctx TxContext) BuildWithPubKey(name string, msgs []sdk.Msg) ([]byte, error
 		PubKey:        info.GetPubKey(),
 	}}
 
-	return ctx.Codec.MarshalBinary(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
+	return bld.Codec.MarshalBinary(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
 }

@@ -22,7 +22,7 @@ func MineCmd(cdc *wire.Codec) *cobra.Command {
 		Short: "Mine some coins with proof-of-work!",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			txCtx := authctx.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).

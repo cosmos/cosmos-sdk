@@ -263,7 +263,7 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 			i++
 		}
 
-		txCtx := authcliCtx.TxContext{
+		txCtx := authcliCtx.TxBuilder{
 			Codec:   cdc,
 			ChainID: m.ChainID,
 			Gas:     m.Gas,

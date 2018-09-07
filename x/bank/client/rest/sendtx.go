@@ -80,7 +80,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 			return
 		}
 
-		txCtx := authctx.TxContext{
+		txCtx := authctx.TxBuilder{
 			Codec:         cdc,
 			Gas:           m.Gas,
 			ChainID:       m.ChainID,

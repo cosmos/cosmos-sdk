@@ -71,7 +71,7 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.C
 		packet := ibc.NewIBCPacket(sdk.AccAddress(info.GetPubKey().Address()), to, m.Amount, m.SrcChainID, destChainID)
 		msg := ibc.IBCTransferMsg{packet}
 
-		txCtx := authctx.TxContext{
+		txCtx := authctx.TxBuilder{
 			Codec:         cdc,
 			ChainID:       m.SrcChainID,
 			AccountNumber: m.AccountNumber,

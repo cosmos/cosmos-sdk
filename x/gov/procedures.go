@@ -1,15 +1,13 @@
 package gov
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Procedure around Deposits for governance
 type DepositProcedure struct {
-	MinDeposit       sdk.Coins     `json:"min_deposit"`        //  Minimum deposit for a proposal to enter voting period.
-	MaxDepositPeriod time.Duration `json:"max_deposit_period"` //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
+	MinDeposit       sdk.Coins `json:"min_deposit"`        //  Minimum deposit for a proposal to enter voting period.
+	MaxDepositPeriod int64     `json:"max_deposit_period"` //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
 }
 
 // Procedure around Tallying votes in governance
@@ -21,5 +19,5 @@ type TallyingProcedure struct {
 
 // Procedure around Voting in governance
 type VotingProcedure struct {
-	VotingPeriod time.Duration `json:"voting_period"` //  Length of the voting period.
+	VotingPeriod int64 `json:"voting_period"` //  Length of the voting period.
 }

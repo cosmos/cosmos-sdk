@@ -314,11 +314,12 @@ func TestIBCTransfer(t *testing.T) {
 	// TODO: query ibc egress packet state
 }
 
-func TestCoinSendGenerateAndSign(t *testing.T) {
+func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
+	acc := getAccount(t, port, addr)
 
 	// generate TX
 	res, body, _ := doSendWithGas(t, port, seed, name, password, addr, 0, 0, "?generate_only=true")
@@ -329,10 +330,10 @@ func TestCoinSendGenerateAndSign(t *testing.T) {
 	require.Equal(t, msg.Msgs[0].Type(), "bank")
 	require.Equal(t, msg.Msgs[0].GetSigners(), []sdk.AccAddress{addr})
 	require.Equal(t, 0, len(msg.Signatures))
+	gasEstimate := msg.Fee.Gas
 
 	// sign tx
 	var signedMsg auth.StdTx
-	acc := getAccount(t, port, addr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 
@@ -346,13 +347,30 @@ func TestCoinSendGenerateAndSign(t *testing.T) {
 	}
 	json, err := cdc.MarshalJSON(payload)
 	require.Nil(t, err)
-	res, body = Request(t, port, "POST", "/sign", json)
+	res, body = Request(t, port, "POST", "/tx/sign", json)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &signedMsg))
 	require.Equal(t, len(msg.Msgs), len(signedMsg.Msgs))
 	require.Equal(t, msg.Msgs[0].Type(), signedMsg.Msgs[0].Type())
 	require.Equal(t, msg.Msgs[0].GetSigners(), signedMsg.Msgs[0].GetSigners())
 	require.Equal(t, 1, len(signedMsg.Signatures))
+
+	// broadcast tx
+	broadcastPayload := struct {
+		Tx auth.StdTx `json:"tx"`
+	}{Tx: signedMsg}
+	json, err = cdc.MarshalJSON(broadcastPayload)
+	require.Nil(t, err)
+	res, body = Request(t, port, "POST", "/tx/broadcast", json)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	// check if tx was committed
+	var resultTx ctypes.ResultBroadcastTxCommit
+	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &resultTx))
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, gasEstimate, resultTx.DeliverTx.GasWanted)
+	require.Equal(t, gasEstimate, resultTx.DeliverTx.GasUsed)
 }
 
 func TestTxs(t *testing.T) {

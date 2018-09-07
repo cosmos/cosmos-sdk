@@ -108,6 +108,7 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve ...int16) (validators
 
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
+	defer iterator.Close()
 
 	i := 0
 	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
@@ -120,7 +121,6 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve ...int16) (validators
 		}
 		i++
 	}
-	iterator.Close()
 	return validators[:i] // trim
 }
 
@@ -135,6 +135,8 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validat
 	validators = make([]types.Validator, maxValidators)
 
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedIndexKey)
+	defer iterator.Close()
+
 	i := 0
 	for ; iterator.Valid(); iterator.Next() {
 
@@ -151,7 +153,6 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validat
 		validators[i] = validator
 		i++
 	}
-	iterator.Close()
 	return validators[:i] // trim
 }
 
@@ -162,7 +163,10 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
 	validators := make([]types.Validator, maxValidators)
+
 	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey) // largest to smallest
+	defer iterator.Close()
+
 	i := 0
 	for ; iterator.Valid() && i < int(maxValidators); iterator.Next() {
 		address := iterator.Value()
@@ -175,7 +179,6 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 			i++
 		}
 	}
-	iterator.Close()
 	return validators[:i] // trim
 }
 
@@ -187,13 +190,14 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.Validator)
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, TendermintUpdatesKey) //smallest to largest
+	defer iterator.Close()
+
 	for ; iterator.Valid(); iterator.Next() {
 		valBytes := iterator.Value()
 		var val abci.Validator
 		k.cdc.MustUnmarshalBinary(valBytes, &val)
 		updates = append(updates, val)
 	}
-	iterator.Close()
 	return
 }
 

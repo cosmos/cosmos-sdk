@@ -16,6 +16,7 @@ func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAdd
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(delegatorAddr)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+	defer iterator.Close()
 
 	i := 0
 	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
@@ -34,7 +35,6 @@ func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAdd
 
 		i++
 	}
-	iterator.Close()
 	return validators[:i] // trim
 }
 
@@ -49,6 +49,7 @@ func (k Keeper) GetDelegatorBechValidators(ctx sdk.Context, delegatorAddr sdk.Ac
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(delegatorAddr)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+	defer iterator.Close()
 
 	i := 0
 	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
@@ -71,7 +72,6 @@ func (k Keeper) GetDelegatorBechValidators(ctx sdk.Context, delegatorAddr sdk.Ac
 		}
 		i++
 	}
-	iterator.Close()
 	return validators[:i] // trim
 }
 
@@ -101,6 +101,7 @@ func (k Keeper) GetDelegatorDelegationsREST(ctx sdk.Context, delegator sdk.AccAd
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+	defer iterator.Close()
 
 	i := 0
 	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
@@ -112,7 +113,6 @@ func (k Keeper) GetDelegatorDelegationsREST(ctx sdk.Context, delegator sdk.AccAd
 		}
 		i++
 	}
-	iterator.Close()
 	return delegations[:i] // trim
 }
 
@@ -127,6 +127,7 @@ func (k Keeper) GetRedelegationsREST(ctx sdk.Context, delegator sdk.AccAddress,
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetREDsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+	defer iterator.Close()
 
 	i := 0
 	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
@@ -138,7 +139,6 @@ func (k Keeper) GetRedelegationsREST(ctx sdk.Context, delegator sdk.AccAddress,
 		}
 		i++
 	}
-	iterator.Close()
 	return redelegations[:i] // trim
 }
 
@@ -151,6 +151,7 @@ func (k Keeper) GetBechValidators(ctx sdk.Context, maxRetrieve ...int16) (valida
 
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
+	defer iterator.Close()
 
 	i := 0
 	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
@@ -168,6 +169,5 @@ func (k Keeper) GetBechValidators(ctx sdk.Context, maxRetrieve ...int16) (valida
 		}
 		i++
 	}
-	iterator.Close()
 	return validators[:i] // trim
 }

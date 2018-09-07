@@ -28,12 +28,12 @@ func (k Keeper) GetDelegation(ctx sdk.Context,
 func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, DelegationKey)
+	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
 		delegations = append(delegations, delegation)
 	}
-	iterator.Close()
 	return delegations
 }
 
@@ -47,6 +47,7 @@ func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddres
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+	defer iterator.Close()
 
 	i := 0
 	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
@@ -58,7 +59,6 @@ func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddres
 		}
 		i++
 	}
-	iterator.Close()
 	return delegations[:i] // trim
 }
 
@@ -88,6 +88,7 @@ func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddres
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetUBDsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+	defer iterator.Close()
 
 	i := 0
 	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
@@ -99,7 +100,6 @@ func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddres
 		}
 		i++
 	}
-	iterator.Close()
 	return unbondingDelegations[:i] // trim
 }
 
@@ -122,6 +122,7 @@ func (k Keeper) GetUnbondingDelegation(ctx sdk.Context,
 func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sdk.ValAddress) (ubds []types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, GetUBDsByValIndexKey(valAddr))
+	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		key := GetUBDKeyFromValIndexKey(iterator.Key())
@@ -129,8 +130,6 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sd
 		ubd := types.MustUnmarshalUBD(k.cdc, key, value)
 		ubds = append(ubds, ubd)
 	}
-
-	iterator.Close()
 	return ubds
 }
 
@@ -138,6 +137,7 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sd
 func (k Keeper) IterateUnbondingDelegations(ctx sdk.Context, fn func(index int64, ubd types.UnbondingDelegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, UnbondingDelegationKey)
+	defer iterator.Close()
 
 	for i := int64(0); iterator.Valid(); iterator.Next() {
 		ubd := types.MustUnmarshalUBD(k.cdc, iterator.Key(), iterator.Value())
@@ -147,7 +147,6 @@ func (k Keeper) IterateUnbondingDelegations(ctx sdk.Context, fn func(index int64
 		}
 		i++
 	}
-	iterator.Close()
 }
 
 // set the unbonding delegation and associated index
@@ -180,6 +179,7 @@ func (k Keeper) GetRedelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetREDsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+	defer iterator.Close()
 
 	i := 0
 	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
@@ -191,7 +191,6 @@ func (k Keeper) GetRedelegations(ctx sdk.Context, delegator sdk.AccAddress,
 		}
 		i++
 	}
-	iterator.Close()
 	return redelegations[:i] // trim
 }
 
@@ -214,13 +213,14 @@ func (k Keeper) GetRedelegation(ctx sdk.Context,
 func (k Keeper) GetRedelegationsFromValidator(ctx sdk.Context, valAddr sdk.ValAddress) (reds []types.Redelegation) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, GetREDsFromValSrcIndexKey(valAddr))
+	defer iterator.Close()
+
 	for ; iterator.Valid(); iterator.Next() {
 		key := GetREDKeyFromValSrcIndexKey(iterator.Key())
 		value := store.Get(key)
 		red := types.MustUnmarshalRED(k.cdc, key, value)
 		reds = append(reds, red)
 	}
-	iterator.Close()
 	return reds
 }
 
@@ -231,13 +231,13 @@ func (k Keeper) HasReceivingRedelegation(ctx sdk.Context,
 	store := ctx.KVStore(k.storeKey)
 	prefix := GetREDsByDelToValDstIndexKey(delAddr, valDstAddr)
 	iterator := sdk.KVStorePrefixIterator(store, prefix) //smallest to largest
+	defer iterator.Close()
 
 	found := false
 	if iterator.Valid() {
 		//record found
 		found = true
 	}
-	iterator.Close()
 	return found
 }
 

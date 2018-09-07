@@ -13,11 +13,14 @@ import (
 	"github.com/tendermint/tendermint/libs/common"
 )
 
-// CompleteAndBroadcastTxCli implements a auxiliary handler that facilitates sending a series of
-// messages in a signed transaction given a TxBuilder and a QueryContext. It
-// ensures that the account exists, has a proper number and sequence set. In
-// addition, it builds and signs a transaction with the supplied messages.
-// Finally, it broadcasts the signed transaction to a node.
+// CompleteAndBroadcastTxCli implements a utility function that
+// facilitates sending a series of messages in a signed
+// transaction given a TxBuilder and a QueryContext. It ensures
+// that the account exists, has a proper number and sequence
+// set. In addition, it builds and signs a transaction with the
+// supplied messages.  Finally, it broadcasts the signed
+// transaction to a node.
+// NOTE: Also see CompleteAndBroadcastTxREST.
 func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) error {
 	txBldr, err := prepareTxBuilder(txBldr, cliCtx)
 	if err != nil {
@@ -46,57 +49,9 @@ func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		return err
 	}
 	// broadcast to a Tendermint node
-	return cliCtx.EnsureBroadcastTx(txBytes)
+	_, err = cliCtx.BroadcastTx(txBytes)
+	return err
 }
-
-/*
-func CompleteAndBroadcastTxREST(txBldr authctx.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) error {
-
-	adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, cliclient.DefaultGasAdjustment)
-	if !ok {
-		return
-	}
-	cliCtx = cliCtx.WithGasAdjustment(adjustment)
-
-	if utils.HasDryRunArg(r) || m.Gas == 0 {
-		newCtx, err := utils.EnrichCtxWithGas(txBldr, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-		if utils.HasDryRunArg(r) {
-			utils.WriteSimulationResponse(w, txBldr.Gas)
-			return
-		}
-		txBldr = newCtx
-	}
-
-	if utils.HasGenerateOnlyArg(r) {
-		utils.WriteGenerateStdTxResponse(w, txBldr, []sdk.Msg{msg})
-		return
-	}
-
-	txBytes, err := txBldr.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
-	if err != nil {
-		utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
-		return
-	}
-
-	res, err := cliCtx.BroadcastTx(txBytes)
-	if err != nil {
-		utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	output, err := wire.MarshalJSONIndent(cdc, res)
-	if err != nil {
-		utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	w.Write(output)
-}
-*/
 
 // SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
 func SimulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg, gas int64) (estimated, adjusted int64, err error) {

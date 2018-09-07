@@ -54,14 +54,8 @@ type msgCompleteUnbondingInput struct {
 }
 
 // the request body for edit delegations
-type EditDelegationsBody struct {
-	LocalAccountName    string                       `json:"name"`
-	Password            string                       `json:"password"`
-	ChainID             string                       `json:"chain_id"`
-	AccountNumber       int64                        `json:"account_number"`
-	Sequence            int64                        `json:"sequence"`
-	Gas                 int64                        `json:"gas"`
-	GasAdjustment       string                       `json:"gas_adjustment"`
+type EditDelegationsReq struct {
+	BaseReq             utils.BaseReq                `json:"base_req"`
 	Delegations         []msgDelegationsInput        `json:"delegations"`
 	BeginUnbondings     []msgBeginUnbondingInput     `json:"begin_unbondings"`
 	CompleteUnbondings  []msgCompleteUnbondingInput  `json:"complete_unbondings"`
@@ -72,9 +66,11 @@ type EditDelegationsBody struct {
 // nolint: gocyclo
 // TODO: Split this up into several smaller functions, and remove the above nolint
 // TODO: use sdk.ValAddress instead of sdk.AccAddress for validators in messages
+// TODO: Seriously consider how to refactor... do we need to make it multiple txs?
+//       If not, we can just use CompleteAndBroadcastTxREST.
 func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var m EditDelegationsBody
+		var req EditDelegationsReq
 
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -83,14 +79,14 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 			return
 		}
 
-		err = cdc.UnmarshalJSON(body, &m)
+		err = cdc.UnmarshalJSON(body, &req)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		info, err := kb.Get(m.LocalAccountName)
+		info, err := kb.Get(req.BaseReq.Name)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(err.Error()))
@@ -98,14 +94,14 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 		}
 
 		// build messages
-		messages := make([]sdk.Msg, len(m.Delegations)+
-			len(m.BeginRedelegates)+
-			len(m.CompleteRedelegates)+
-			len(m.BeginUnbondings)+
-			len(m.CompleteUnbondings))
+		messages := make([]sdk.Msg, len(req.Delegations)+
+			len(req.BeginRedelegates)+
+			len(req.CompleteRedelegates)+
+			len(req.BeginUnbondings)+
+			len(req.CompleteUnbondings))
 
 		i := 0
-		for _, msg := range m.Delegations {
+		for _, msg := range req.Delegations {
 			delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddr)
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error()))
@@ -132,7 +128,7 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 			i++
 		}
 
-		for _, msg := range m.BeginRedelegates {
+		for _, msg := range req.BeginRedelegates {
 			delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddr)
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error()))
@@ -171,7 +167,7 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 			i++
 		}
 
-		for _, msg := range m.CompleteRedelegates {
+		for _, msg := range req.CompleteRedelegates {
 			delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddr)
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error()))
@@ -204,7 +200,7 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 			i++
 		}
 
-		for _, msg := range m.BeginUnbondings {
+		for _, msg := range req.BeginUnbondings {
 			delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddr)
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error()))
@@ -237,7 +233,7 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 			i++
 		}
 
-		for _, msg := range m.CompleteUnbondings {
+		for _, msg := range req.CompleteUnbondings {
 			delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddr)
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error()))
@@ -265,27 +261,27 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 
 		txBldr := authtxb.TxBuilder{
 			Codec:   cdc,
-			ChainID: m.ChainID,
-			Gas:     m.Gas,
+			ChainID: req.BaseReq.ChainID,
+			Gas:     req.BaseReq.Gas,
 		}
 
 		// sign messages
 		signedTxs := make([][]byte, len(messages[:]))
 		for i, msg := range messages {
 			// increment sequence for each message
-			txBldr = txBldr.WithAccountNumber(m.AccountNumber)
-			txBldr = txBldr.WithSequence(m.Sequence)
+			txBldr = txBldr.WithAccountNumber(req.BaseReq.AccountNumber)
+			txBldr = txBldr.WithSequence(req.BaseReq.Sequence)
 
-			m.Sequence++
+			req.BaseReq.Sequence++
 
-			adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, client.DefaultGasAdjustment)
+			adjustment, ok := utils.ParseFloat64OrReturnBadRequestDefault(w, req.BaseReq.GasAdjustment, client.DefaultGasAdjustment)
 			if !ok {
 				return
 			}
 			cliCtx = cliCtx.WithGasAdjustment(adjustment)
 
-			if utils.HasDryRunArg(r) || m.Gas == 0 {
-				newCtx, err := utils.EnrichCtxWithGas(txBldr, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
+			if utils.HasDryRunArg(r) || req.BaseReq.Gas == 0 {
+				newCtx, err := utils.EnrichCtxWithGas(txBldr, cliCtx, req.BaseReq.Name, []sdk.Msg{msg})
 				if err != nil {
 					utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 					return
@@ -302,7 +298,7 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 				return
 			}
 
-			txBytes, err := txBldr.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
+			txBytes, err := txBldr.BuildAndSign(req.BaseReq.Name, req.BaseReq.Password, []sdk.Msg{msg})
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 				return

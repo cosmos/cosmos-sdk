@@ -13,6 +13,7 @@ import (
 
 // ExecuteT executes the command, pipes any input to STDIN and return STDOUT,
 // logging STDOUT/STDERR to t.
+// nolint: errcheck
 func ExecuteT(t *testing.T, cmd, input string) (out string) {
 	t.Log("Running", cmn.Cyan(cmd))
 

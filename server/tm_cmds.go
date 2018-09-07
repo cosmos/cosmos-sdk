@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/p2p"
@@ -32,7 +33,6 @@ func ShowNodeIDCmd(ctx *Context) *cobra.Command {
 
 // ShowValidator - ported from Tendermint, show this node's validator info
 func ShowValidatorCmd(ctx *Context) *cobra.Command {
-	flagJSON := "json"
 	cmd := cobra.Command{
 		Use:   "show-validator",
 		Short: "Show this node's tendermint validator info",
@@ -42,27 +42,55 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 			privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorFile())
 			valPubKey := privValidator.PubKey
 
-			if viper.GetBool(flagJSON) {
-
-				cdc := wire.NewCodec()
-				wire.RegisterCrypto(cdc)
-				pubKeyJSONBytes, err := cdc.MarshalJSON(valPubKey)
-				if err != nil {
-					return err
-				}
-				fmt.Println(string(pubKeyJSONBytes))
-				return nil
+			if viper.GetBool(client.FlagJson) {
+				return printlnJSON(valPubKey)
 			}
-			pubkey, err := sdk.Bech32ifyValPub(valPubKey)
+
+			pubkey, err := sdk.Bech32ifyConsPub(valPubKey)
 			if err != nil {
 				return err
 			}
+
 			fmt.Println(pubkey)
 			return nil
 		},
 	}
-	cmd.Flags().Bool(flagJSON, false, "get machine parseable output")
+	cmd.Flags().Bool(client.FlagJson, false, "get machine parseable output")
 	return &cmd
+}
+
+// ShowAddressCmd - show this node's validator address
+func ShowAddressCmd(ctx *Context) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "show-address",
+		Short: "Shows this node's tendermint validator address",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg := ctx.Config
+			privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorFile())
+			valAddr := (sdk.ValAddress)(privValidator.Address)
+
+			if viper.GetBool(client.FlagJson) {
+				return printlnJSON(valAddr)
+			}
+
+			fmt.Println(valAddr.String())
+			return nil
+		},
+	}
+
+	cmd.Flags().Bool(client.FlagJson, false, "get machine parseable output")
+	return cmd
+}
+
+func printlnJSON(v interface{}) error {
+	cdc := wire.NewCodec()
+	wire.RegisterCrypto(cdc)
+	marshalled, err := cdc.MarshalJSON(v)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(marshalled))
+	return nil
 }
 
 // UnsafeResetAllCmd - extension of the tendermint command, resets initialization

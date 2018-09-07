@@ -415,6 +415,14 @@ func MinDec(d1, d2 Dec) Dec {
 	return d2
 }
 
+// maximum decimal between two
+func MaxDec(d1, d2 Dec) Dec {
+	if d1.LT(d2) {
+		return d2
+	}
+	return d1
+}
+
 // intended to be used with require/assert:  require.True(DecEq(...))
 func DecEq(t *testing.T, exp, got Dec) (*testing.T, bool, string, Dec, Dec) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp, got

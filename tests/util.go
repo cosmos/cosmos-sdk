@@ -10,6 +10,7 @@ import (
 	tmclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/lib/client"
+	"strings"
 )
 
 // Wait for the next tendermint block from the Tendermint RPC
@@ -183,6 +184,17 @@ func WaitForRPC(laddr string) {
 		fmt.Printf("Waiting for RPC server to start on %s:%v\n", laddr, err)
 		time.Sleep(time.Millisecond)
 	}
+}
+
+// ExtractPortFromAddress extract port from listenAddress
+// The listenAddress must be some strings like tcp://0.0.0.0:12345
+func ExtractPortFromAddress(listenAddress string) string {
+	stringList := strings.Split(listenAddress, ":")
+	length := len(stringList)
+	if length != 3 {
+		panic(fmt.Errorf("expected listen address: tcp://0.0.0.0:12345, got %s", listenAddress))
+	}
+	return stringList[2]
 }
 
 var cdc = amino.NewCodec()

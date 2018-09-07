@@ -68,8 +68,8 @@ func (keeper Keeper) Handle(h Handler, ctx sdk.Context, o Msg, codespace sdk.Cod
 	}
 	info.LastSigned = ctx.BlockHeight()
 
-	// Check the signer is a validater
-	val := valset.Validator(ctx, signer)
+	// check the signer is a validator
+	val := valset.Validator(ctx, sdk.ValAddress(signer))
 	if val == nil {
 		return ErrNotValidator(codespace, signer).Result()
 	}

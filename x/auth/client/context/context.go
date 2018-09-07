@@ -117,24 +117,11 @@ func (ctx TxContext) Build(msgs []sdk.Msg) (auth.StdSignMsg, error) {
 // Sign signs a transaction given a name, passphrase, and a single message to
 // signed. An error is returned if signing fails.
 func (ctx TxContext) Sign(name, passphrase string, msg auth.StdSignMsg) ([]byte, error) {
-	keybase, err := keys.GetKeyBase()
+	sig, err := MakeSignature(name, passphrase, msg)
 	if err != nil {
 		return nil, err
 	}
-
-	sig, pubkey, err := keybase.Sign(name, passphrase, msg.Bytes())
-	if err != nil {
-		return nil, err
-	}
-
-	sigs := []auth.StdSignature{{
-		AccountNumber: msg.AccountNumber,
-		Sequence:      msg.Sequence,
-		PubKey:        pubkey,
-		Signature:     sig,
-	}}
-
-	return ctx.Codec.MarshalBinary(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
+	return ctx.Codec.MarshalBinary(auth.NewStdTx(msg.Msgs, msg.Fee, []auth.StdSignature{sig}, msg.Memo))
 }
 
 // BuildAndSign builds a single message to be signed, and signs a transaction
@@ -147,4 +134,76 @@ func (ctx TxContext) BuildAndSign(name, passphrase string, msgs []sdk.Msg) ([]by
 	}
 
 	return ctx.Sign(name, passphrase, msg)
+}
+
+// BuildWithPubKey builds a single message to be signed from a TxContext given a set of
+// messages and attach the public key associated to the given name.
+// It returns an error if a fee is supplied but cannot be parsed or the key cannot be
+// retrieved.
+func (ctx TxContext) BuildWithPubKey(name string, msgs []sdk.Msg) ([]byte, error) {
+	msg, err := ctx.Build(msgs)
+	if err != nil {
+		return nil, err
+	}
+
+	keybase, err := keys.GetKeyBase()
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := keybase.Get(name)
+	if err != nil {
+		return nil, err
+	}
+
+	sigs := []auth.StdSignature{{
+		AccountNumber: msg.AccountNumber,
+		Sequence:      msg.Sequence,
+		PubKey:        info.GetPubKey(),
+	}}
+
+	return ctx.Codec.MarshalBinary(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
+}
+
+// SignStdTx appends a signature to a StdTx and returns a copy of a it. If append
+// is false, it replaces the signatures already attached with the new signature.
+func (ctx TxContext) SignStdTx(name, passphrase string, stdTx auth.StdTx, appendSig bool) (signedStdTx auth.StdTx, err error) {
+	stdSignature, err := MakeSignature(name, passphrase, auth.StdSignMsg{
+		ChainID:       ctx.ChainID,
+		AccountNumber: ctx.AccountNumber,
+		Sequence:      ctx.Sequence,
+		Fee:           stdTx.Fee,
+		Msgs:          stdTx.GetMsgs(),
+		Memo:          stdTx.GetMemo(),
+	})
+	if err != nil {
+		return
+	}
+
+	sigs := stdTx.GetSignatures()
+	if len(sigs) == 0 || !appendSig {
+		sigs = []auth.StdSignature{stdSignature}
+	} else {
+		sigs = append(sigs, stdSignature)
+	}
+	signedStdTx = auth.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, sigs, stdTx.GetMemo())
+	return
+}
+
+// MakeSignature builds a StdSignature given key name, passphrase, and a StdSignMsg.
+func MakeSignature(name, passphrase string, msg auth.StdSignMsg) (sig auth.StdSignature, err error) {
+	keybase, err := keys.GetKeyBase()
+	if err != nil {
+		return
+	}
+	sigBytes, pubkey, err := keybase.Sign(name, passphrase, msg.Bytes())
+	if err != nil {
+		return
+	}
+	return auth.StdSignature{
+		AccountNumber: msg.AccountNumber,
+		Sequence:      msg.Sequence,
+		PubKey:        pubkey,
+		Signature:     sigBytes,
+	}, nil
 }

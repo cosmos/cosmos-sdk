@@ -1,6 +1,8 @@
 package context
 
 import (
+	"bytes"
+	"fmt"
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -9,6 +11,9 @@ import (
 
 	"github.com/spf13/viper"
 
+	"github.com/tendermint/tendermint/libs/cli"
+	tmlite "github.com/tendermint/tendermint/lite"
+	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -18,21 +23,24 @@ const ctxAccStoreName = "acc"
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
 type CLIContext struct {
-	Codec         *wire.Codec
-	AccDecoder    auth.AccountDecoder
-	Client        rpcclient.Client
-	Logger        io.Writer
-	Height        int64
-	Gas           int64
-	GasAdjustment float64
-	NodeURI       string
-	From          string
-	AccountStore  string
-	TrustNode     bool
-	UseLedger     bool
-	Async         bool
-	JSON          bool
-	PrintResponse bool
+	Codec           *wire.Codec
+	AccDecoder      auth.AccountDecoder
+	Client          rpcclient.Client
+	Logger          io.Writer
+	Height          int64
+	Gas             int64
+	GasAdjustment   float64
+	NodeURI         string
+	From string
+	AccountStore    string
+	TrustNode       bool
+	UseLedger       bool
+	Async           bool
+	JSON            bool
+	PrintResponse   bool
+	Certifier       tmlite.Certifier
+	DryRun          bool
+	GenerateOnly    bool
 	fromAddress   types.AccAddress
 	fromName      string
 }
@@ -60,7 +68,40 @@ func NewCLIContext() CLIContext {
 		Async:         viper.GetBool(client.FlagAsync),
 		JSON:          viper.GetBool(client.FlagJson),
 		PrintResponse: viper.GetBool(client.FlagPrintResponse),
+		Certifier:       createCertifier(),
+		DryRun:          viper.GetBool(client.FlagDryRun),
+		GenerateOnly:    viper.GetBool(client.FlagGenerateOnly),
 	}
+}
+
+func createCertifier() tmlite.Certifier {
+	trustNode := viper.GetBool(client.FlagTrustNode)
+	if trustNode {
+		return nil
+	}
+	chainID := viper.GetString(client.FlagChainID)
+	home := viper.GetString(cli.HomeFlag)
+	nodeURI := viper.GetString(client.FlagNode)
+
+	var errMsg bytes.Buffer
+	if chainID == "" {
+		errMsg.WriteString("chain-id ")
+	}
+	if home == "" {
+		errMsg.WriteString("home ")
+	}
+	if nodeURI == "" {
+		errMsg.WriteString("node ")
+	}
+	// errMsg is not empty
+	if errMsg.Len() != 0 {
+		panic(fmt.Errorf("can't create certifier for distrust mode, empty values from these options: %s", errMsg.String()))
+	}
+	certifier, err := tmliteProxy.GetCertifier(chainID, home, nodeURI)
+	if err != nil {
+		panic(err)
+	}
+	return certifier
 }
 
 // WithCodec returns a copy of the context with an updated codec.
@@ -117,5 +158,17 @@ func (ctx CLIContext) WithClient(client rpcclient.Client) CLIContext {
 // WithUseLedger returns a copy of the context with an updated UseLedger flag.
 func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 	ctx.UseLedger = useLedger
+	return ctx
+}
+
+// WithCertifier - return a copy of the context with an updated Certifier
+func (ctx CLIContext) WithCertifier(certifier tmlite.Certifier) CLIContext {
+	ctx.Certifier = certifier
+	return ctx
+}
+
+// WithGasAdjustment returns a copy of the context with an updated GasAdjustment flag.
+func (ctx CLIContext) WithGasAdjustment(adjustment float64) CLIContext {
+	ctx.GasAdjustment = adjustment
 	return ctx
 }

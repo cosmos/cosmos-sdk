@@ -2,120 +2,75 @@ package store
 
 import (
 	"bytes"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
 	"github.com/tendermint/iavl"
-	"github.com/tendermint/tendermint/crypto/merkle"
 	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
-// commitID of substores, such as acc store, gov store
-type SubstoreCommitID struct {
-	Name       string       `json:"name"`
-	Version    int64        `json:"version"`
-	CommitHash cmn.HexBytes `json:"commit_hash"`
-}
-
-// proof of store which have multi substores
+// MultiStoreProof defines a collection of store proofs in a multi-store
 type MultiStoreProof struct {
-	CommitIDList []SubstoreCommitID `json:"commit_id_list"`
-	StoreName    string             `json:"store_name"`
-	RangeProof   iavl.RangeProof    `json:"range_proof"`
+	StoreInfos []storeInfo
+	StoreName  string
+	RangeProof iavl.RangeProof
 }
 
-// build MultiStoreProof based on iavl proof and storeInfos
-func BuildMultiStoreProof(iavlProof []byte, storeName string, storeInfos []storeInfo) ([]byte, error) {
+// buildMultiStoreProof build MultiStoreProof based on iavl proof and storeInfos
+func buildMultiStoreProof(iavlProof []byte, storeName string, storeInfos []storeInfo) []byte {
 	var rangeProof iavl.RangeProof
-	err := cdc.UnmarshalBinary(iavlProof, &rangeProof)
-	if err != nil {
-		return nil, err
+	cdc.MustUnmarshalBinary(iavlProof, &rangeProof)
+
+	msp := MultiStoreProof{
+		StoreInfos: storeInfos,
+		StoreName:  storeName,
+		RangeProof: rangeProof,
 	}
 
-	var multiStoreProof MultiStoreProof
-	for _, storeInfo := range storeInfos {
-
-		commitID := SubstoreCommitID{
-			Name:       storeInfo.Name,
-			Version:    storeInfo.Core.CommitID.Version,
-			CommitHash: storeInfo.Core.CommitID.Hash,
-		}
-		multiStoreProof.CommitIDList = append(multiStoreProof.CommitIDList, commitID)
-	}
-	multiStoreProof.StoreName = storeName
-	multiStoreProof.RangeProof = rangeProof
-
-	proof, err := cdc.MarshalBinary(multiStoreProof)
-	if err != nil {
-		return nil, err
-	}
-
-	return proof, nil
+	proof := cdc.MustMarshalBinary(msp)
+	return proof
 }
 
-// verify multiStoreCommitInfo against appHash
-func VerifyMultiStoreCommitInfo(storeName string, multiStoreCommitInfo []SubstoreCommitID, appHash []byte) ([]byte, error) {
+// VerifyMultiStoreCommitInfo verify multiStoreCommitInfo against appHash
+func VerifyMultiStoreCommitInfo(storeName string, storeInfos []storeInfo, appHash []byte) ([]byte, error) {
 	var substoreCommitHash []byte
-	var kvPairs cmn.KVPairs
-	for _, multiStoreCommitID := range multiStoreCommitInfo {
-
-		if multiStoreCommitID.Name == storeName {
-			substoreCommitHash = multiStoreCommitID.CommitHash
+	var height int64
+	for _, storeInfo := range storeInfos {
+		if storeInfo.Name == storeName {
+			substoreCommitHash = storeInfo.Core.CommitID.Hash
+			height = storeInfo.Core.CommitID.Version
 		}
-
-		keyHash := []byte(multiStoreCommitID.Name)
-		storeInfo := storeInfo{
-			Core: storeCore{
-				CommitID: sdk.CommitID{
-					Version: multiStoreCommitID.Version,
-					Hash:    multiStoreCommitID.CommitHash,
-				},
-			},
-		}
-
-		kvPairs = append(kvPairs, cmn.KVPair{
-			Key:   keyHash,
-			Value: storeInfo.Hash(),
-		})
 	}
 	if len(substoreCommitHash) == 0 {
 		return nil, cmn.NewError("failed to get substore root commit hash by store name")
 	}
-	if kvPairs == nil {
-		return nil, cmn.NewError("failed to extract information from multiStoreCommitInfo")
-	}
-	//sort the kvPair list
-	kvPairs.Sort()
 
-	//Rebuild simple merkle hash tree
-	var hashList [][]byte
-	for _, kvPair := range kvPairs {
-		hashResult := merkle.SimpleHashFromTwoHashes(kvPair.Key, kvPair.Value)
-		hashList = append(hashList, hashResult)
+	ci := commitInfo{
+		Version:    height,
+		StoreInfos: storeInfos,
 	}
 
-	if !bytes.Equal(appHash, simpleHashFromHashes(hashList)) {
-		return nil, cmn.NewError("The merkle root of multiStoreCommitInfo doesn't equal to appHash")
+	if !bytes.Equal(appHash, ci.Hash()) {
+		return nil, cmn.NewError("the merkle root of multiStoreCommitInfo doesn't equal to appHash")
 	}
 	return substoreCommitHash, nil
 }
 
-// verify iavl proof
+// VerifyRangeProof verify iavl RangeProof
 func VerifyRangeProof(key, value []byte, substoreCommitHash []byte, rangeProof *iavl.RangeProof) error {
 
-	// Validate the proof to ensure data integrity.
+	// verify the proof to ensure data integrity.
 	err := rangeProof.Verify(substoreCommitHash)
 	if err != nil {
 		return errors.Wrap(err, "proof root hash doesn't equal to substore commit root hash")
 	}
 
 	if len(value) != 0 {
-		// Validate existence proof
+		// verify existence proof
 		err = rangeProof.VerifyItem(key, value)
 		if err != nil {
 			return errors.Wrap(err, "failed in existence verification")
 		}
 	} else {
-		// Validate absence proof
+		// verify absence proof
 		err = rangeProof.VerifyAbsence(key)
 		if err != nil {
 			return errors.Wrap(err, "failed in absence verification")
@@ -125,16 +80,12 @@ func VerifyRangeProof(key, value []byte, substoreCommitHash []byte, rangeProof *
 	return nil
 }
 
-func simpleHashFromHashes(hashes [][]byte) []byte {
-	// Recursive impl.
-	switch len(hashes) {
-	case 0:
-		return nil
-	case 1:
-		return hashes[0]
-	default:
-		left := simpleHashFromHashes(hashes[:(len(hashes)+1)/2])
-		right := simpleHashFromHashes(hashes[(len(hashes)+1)/2:])
-		return merkle.SimpleHashFromTwoHashes(left, right)
+// RequireProof return whether proof is require for the subpath
+func RequireProof(subpath string) bool {
+	// Currently, only when query subpath is "/store" or "/key", will proof be included in response.
+	// If there are some changes about proof building in iavlstore.go, we must change code here to keep consistency with iavlstore.go:212
+	if subpath == "/store" || subpath == "/key" {
+		return true
 	}
+	return false
 }

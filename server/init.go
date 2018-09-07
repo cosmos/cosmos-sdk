@@ -41,7 +41,7 @@ var (
 //parameter names, init command
 var (
 	FlagOverwrite = "overwrite"
-	FlagGenTxs    = "gen-txs"
+	FlagWithTxs   = "with-txs"
 	FlagIP        = "ip"
 	FlagChainID   = "chain-id"
 )
@@ -169,7 +169,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 			config.SetRoot(viper.GetString(tmcli.HomeFlag))
 			initConfig := InitConfig{
 				viper.GetString(FlagChainID),
-				viper.GetBool(FlagGenTxs),
+				viper.GetBool(FlagWithTxs),
 				filepath.Join(config.RootDir, "config", "gentx"),
 				viper.GetBool(FlagOverwrite),
 			}
@@ -198,7 +198,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	}
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().String(FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().Bool(FlagGenTxs, false, "apply genesis transactions from [--home]/config/gentx/")
+	cmd.Flags().Bool(FlagWithTxs, false, "apply existing genesis transactions from [--home]/config/gentx/")
 	cmd.Flags().AddFlagSet(appInit.FlagsAppGenState)
 	cmd.Flags().AddFlagSet(appInit.FlagsAppGenTx) // need to add this flagset for when no GenTx's provided
 	cmd.AddCommand(GenTxCmd(ctx, cdc, appInit))
@@ -344,6 +344,7 @@ func readOrCreatePrivValidator(tmConfig *cfg.Config) crypto.PubKey {
 
 // writeGenesisFile creates and writes the genesis configuration to disk. An
 // error is returned if building or writing the configuration to file fails.
+// nolint: unparam
 func writeGenesisFile(cdc *wire.Codec, genesisFile, chainID string, validators []tmtypes.GenesisValidator, appState json.RawMessage) error {
 	genDoc := tmtypes.GenesisDoc{
 		ChainID:    chainID,

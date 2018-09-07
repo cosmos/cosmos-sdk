@@ -5,8 +5,6 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -16,12 +14,14 @@ import (
 )
 
 // SimulateMsgUnjail
-func SimulateMsgUnjail(k slashing.Keeper) simulation.TestAndRunTx {
-	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
+func SimulateMsgUnjail(k slashing.Keeper) simulation.Operation {
+	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
 		key := simulation.RandomKey(r, keys)
-		address := sdk.AccAddress(key.PubKey().Address())
+		address := sdk.ValAddress(key.PubKey().Address())
 		msg := slashing.NewMsgUnjail(address)
-		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		if msg.ValidateBasic() != nil {
+			tb.Fatalf("expected msg to pass ValidateBasic: %s, log %s", msg.GetSignBytes(), log)
+		}
 		ctx, write := ctx.CacheContext()
 		result := slashing.NewHandler(k)(ctx, msg)
 		if result.IsOK() {
@@ -29,6 +29,6 @@ func SimulateMsgUnjail(k slashing.Keeper) simulation.TestAndRunTx {
 		}
 		event(fmt.Sprintf("slashing/MsgUnjail/%v", result.IsOK()))
 		action = fmt.Sprintf("TestMsgUnjail: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
-		return action, nil
+		return action, nil, nil
 	}
 }

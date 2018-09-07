@@ -710,15 +710,15 @@ definitions:
   Address:
     type: string
     description: bech32 encoded addres
-    example: cosmosaccaddr:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
+    example: cosmos:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
   ValidatorAddress:
     type: string
     description: bech32 encoded addres
-    example: cosmosvaladdr:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
+    example: cosmosval:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
   PubKey:
     type: string
     description: bech32 encoded public key
-    example: cosmosaccpub:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
+    example: cosmospub:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
   ValidatorPubKey:
     type: string
     description: bech32 encoded public key

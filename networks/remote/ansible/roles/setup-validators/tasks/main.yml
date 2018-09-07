@@ -6,14 +6,21 @@
   run_once: true
   become: no
 
+- name: Create gaiad user
+  user: name=gaiad home=/home/gaiad shell=/bin/bash
+
 - name: Copy binary
   copy:
     src: "{{BINARY}}"
     dest: /usr/bin
     mode: 0755
 
+- name: Copy service file
+  copy: src=gaiad.service dest=/etc/systemd/system/gaiad.service mode=0755
+  notify: reload systemd
+
 - name: Get node ID
-  command: "cat /etc/gaiad-nodeid"
+  command: "cat /etc/nodeid"
   changed_when: false
   register: nodeid
 
@@ -63,7 +70,7 @@
   unarchive: src=files/gen-tx.tgz dest=/home/gaiad/.gaiad/config/gentx owner=gaiad
 
 - name: Generate genesis.json
-  command: "/usr/bin/gaiad init --gen-txs --name=node{{nodeid.stdout_lines[0]}} --chain-id={{TESTNET_NAME}}"
+  command: "/usr/bin/gaiad init --with-txs --name=node{{nodeid.stdout_lines[0]}} --chain-id={{TESTNET_NAME}}"
   become: yes
   become_user: gaiad
   args:

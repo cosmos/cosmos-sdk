@@ -25,6 +25,7 @@ func AllInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) simula
 }
 
 // SupplyInvariants checks that the total supply reflects all held loose tokens, bonded tokens, and unbonding delegations
+// nolint: unparam
 func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) simulation.Invariant {
 	return func(t *testing.T, app *baseapp.BaseApp, log string) {
 		ctx := app.NewContext(false, abci.Header{})
@@ -45,6 +46,7 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) sim
 			case sdk.Bonded:
 				bonded = bonded.Add(validator.GetPower())
 			case sdk.Unbonding:
+				loose = loose.Add(validator.GetTokens().RoundInt())
 			case sdk.Unbonded:
 				loose = loose.Add(validator.GetTokens().RoundInt())
 			}

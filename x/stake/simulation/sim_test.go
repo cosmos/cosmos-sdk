@@ -44,7 +44,7 @@ func TestStakeWithRandomMessages(t *testing.T) {
 
 	simulation.Simulate(
 		t, mapp.BaseApp, appStateFn,
-		[]simulation.TestAndRunTx{
+		[]simulation.Operation{
 			SimulateMsgCreateValidator(mapper, stakeKeeper),
 			SimulateMsgEditValidator(stakeKeeper),
 			SimulateMsgDelegate(mapper, stakeKeeper),

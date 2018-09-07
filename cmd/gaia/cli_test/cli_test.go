@@ -5,6 +5,7 @@ package clitest
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"testing"
 
@@ -332,7 +333,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, "  2 - Apples", proposalsQuery)
 }
 
-func TestGaiaCLISendGenerateOnly(t *testing.T) {
+func TestGaiaCLISendGenerateAndSign(t *testing.T) {
 	chainID, servAddr, port := initializeFixtures(t)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
@@ -343,6 +344,7 @@ func TestGaiaCLISendGenerateOnly(t *testing.T) {
 	tests.WaitForTMStart(port)
 	tests.WaitForNextNBlocksTM(2, port)
 
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
 	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
 
 	// Test generate sendTx with default gas
@@ -376,6 +378,35 @@ func TestGaiaCLISendGenerateOnly(t *testing.T) {
 	require.Equal(t, msg.Fee.Gas, int64(100))
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
+
+	// Write the output to disk
+	unsignedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(unsignedTxFile.Name())
+
+	// Test sign --print-sigs
+	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
+		"gaiacli sign %v --print-sigs %v", flags, unsignedTxFile.Name()))
+	require.True(t, success)
+	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n", fooAddr.String()), stdout)
+
+	// Test sign
+	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
+		"gaiacli sign %v --name=foo %v", flags, unsignedTxFile.Name()), app.DefaultKeyPass)
+	require.True(t, success)
+	msg = unmarshalStdTx(t, stdout)
+	require.Equal(t, len(msg.Msgs), 1)
+	require.Equal(t, 1, len(msg.GetSignatures()))
+	require.Equal(t, fooAddr.String(), msg.GetSigners()[0].String())
+
+	// Write the output to disk
+	signedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(signedTxFile.Name())
+
+	// Test sign --print-signatures
+	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
+		"gaiacli sign %v --print-sigs %v", flags, signedTxFile.Name()))
+	require.True(t, success)
+	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n 0: %v\n", fooAddr.String(), fooAddr.String()), stdout)
 }
 
 //___________________________________________________________________________________
@@ -406,6 +437,15 @@ func unmarshalStdTx(t *testing.T, s string) (stdTx auth.StdTx) {
 	cdc := app.MakeCodec()
 	require.Nil(t, cdc.UnmarshalJSON([]byte(s), &stdTx))
 	return
+}
+
+func writeToNewTempFile(t *testing.T, s string) *os.File {
+	fp, err := ioutil.TempFile(os.TempDir(), "cosmos_cli_test_")
+	require.Nil(t, err)
+	//	defer os.Remove(signedTxFile.Name())
+	_, err = fp.WriteString(s)
+	require.Nil(t, err)
+	return fp
 }
 
 //___________________________________________________________________________________

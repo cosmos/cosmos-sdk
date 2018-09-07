@@ -19,6 +19,7 @@ type SignBody struct {
 	ChainID          string     `json:"chain_id"`
 	AccountNumber    int64      `json:"account_number"`
 	Sequence         int64      `json:"sequence"`
+	AppendSig        bool       `json:"append_sig"`
 }
 
 // sign tx REST handler
@@ -44,7 +45,7 @@ func SignTxRequestHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.Han
 			Sequence:      m.Sequence,
 		}
 
-		signedTx, err := txCtx.SignStdTx(m.LocalAccountName, m.Password, m.Tx, false)
+		signedTx, err := txCtx.SignStdTx(m.LocalAccountName, m.Password, m.Tx, m.AppendSig)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

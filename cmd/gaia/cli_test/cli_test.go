@@ -442,7 +442,6 @@ func unmarshalStdTx(t *testing.T, s string) (stdTx auth.StdTx) {
 func writeToNewTempFile(t *testing.T, s string) *os.File {
 	fp, err := ioutil.TempFile(os.TempDir(), "cosmos_cli_test_")
 	require.Nil(t, err)
-	//	defer os.Remove(signedTxFile.Name())
 	_, err = fp.WriteString(s)
 	require.Nil(t, err)
 	return fp

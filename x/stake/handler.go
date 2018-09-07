@@ -52,7 +52,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 	k.SetIntraTxCounter(ctx, 0)
 
 	// calculate validator set changes
-	ValidatorUpdates = k.GetTendermintUpdates(ctx)
+	ValidatorUpdates = k.GetValidTendermintUpdates(ctx)
 	k.ClearTendermintUpdates(ctx)
 	return
 }

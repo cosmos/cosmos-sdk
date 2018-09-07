@@ -50,7 +50,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 
 	// should not be slashing unbonded
 	if validator.IsUnbonded(ctx) {
-		panic(fmt.Sprintf("should not be slashing unbonded validator: %v", validator))
+		panic(fmt.Sprintf("should not be slashing unbonded validator: %s", validator.GetOperator()))
 	}
 
 	operatorAddress := validator.GetOperator()
@@ -72,7 +72,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 
 		// Special-case slash at current height for efficiency - we don't need to look through unbonding delegations or redelegations
 		logger.Info(fmt.Sprintf(
-			"Slashing at current height %d, not scanning unbonding delegations & redelegations",
+			"slashing at current height %d, not scanning unbonding delegations & redelegations",
 			infractionHeight))
 
 	case infractionHeight < ctx.BlockHeight():
@@ -117,7 +117,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 
 	// Log that a slash occurred!
 	logger.Info(fmt.Sprintf(
-		"Validator %s slashed by slash factor of %s, burned %v tokens",
+		"validator %s slashed by slash factor of %s; burned %v tokens",
 		validator.GetOperator(), slashFactor.String(), tokensToBurn))
 
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
@@ -128,7 +128,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 func (k Keeper) Jail(ctx sdk.Context, pubkey crypto.PubKey) {
 	k.setJailed(ctx, pubkey, true)
 	logger := ctx.Logger().With("module", "x/stake")
-	logger.Info(fmt.Sprintf("Validator %s jailed", pubkey.Address()))
+	logger.Info(fmt.Sprintf("validator %s jailed", pubkey.Address()))
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 	return
 }
@@ -137,7 +137,7 @@ func (k Keeper) Jail(ctx sdk.Context, pubkey crypto.PubKey) {
 func (k Keeper) Unjail(ctx sdk.Context, pubkey crypto.PubKey) {
 	k.setJailed(ctx, pubkey, false)
 	logger := ctx.Logger().With("module", "x/stake")
-	logger.Info(fmt.Sprintf("Validator %s unjailed", pubkey.Address()))
+	logger.Info(fmt.Sprintf("validator %s unjailed", pubkey.Address()))
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 	return
 }
@@ -146,7 +146,7 @@ func (k Keeper) Unjail(ctx sdk.Context, pubkey crypto.PubKey) {
 func (k Keeper) setJailed(ctx sdk.Context, pubkey crypto.PubKey, isJailed bool) {
 	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
-		panic(fmt.Errorf("Validator with pubkey %s not found, cannot set jailed to %v", pubkey, isJailed))
+		panic(fmt.Errorf("validator with pubkey %s not found, cannot set jailed to %v", pubkey, isJailed))
 	}
 	validator.Jailed = isJailed
 	k.UpdateValidator(ctx, validator) // update validator, possibly unbonding or bonding it

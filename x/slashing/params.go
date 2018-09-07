@@ -15,6 +15,12 @@ const (
 	DowntimeUnbondDurationKey   = "slashing/DowntimeUnbondDuration"
 	SlashFractionDoubleSignKey  = "slashing/SlashFractionDoubleSign"
 	SlashFractionDowntimeKey    = "slashing/SlashFractionDowntime"
+
+	// Delay, in blocks, between when validator updates are returned to Tendermint and when they are applied
+	// For example, if this is 0, the validator set at the end of a block will sign the next block, or
+	// if this is 1, the validator set at the end of a block will sign the block after the next.
+	// Constant as this should not change without a hard fork.
+	ValidatorUpdateDelay int64 = 1
 )
 
 // MaxEvidenceAge - Max age for evidence - 21 days (3 weeks)

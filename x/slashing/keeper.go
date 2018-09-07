@@ -62,8 +62,11 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	revisedFraction := k.capBySlashingPeriod(ctx, address, fraction, infractionHeight)
 	logger.Info(fmt.Sprintf("Fraction slashed capped by slashing period from %v to %v", fraction, revisedFraction))
 
+	// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height.
+	distributionHeight := infractionHeight - ValidatorUpdateDelay
+
 	// Slash validator
-	k.validatorSet.Slash(ctx, pubkey, infractionHeight, power, revisedFraction)
+	k.validatorSet.Slash(ctx, pubkey, distributionHeight, power, revisedFraction)
 
 	// Jail validator
 	k.validatorSet.Jail(ctx, pubkey)
@@ -123,7 +126,10 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			// Downtime confirmed: slash and jail the validator
 			logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",
 				pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx)))
-			k.validatorSet.Slash(ctx, pubkey, height, power, k.SlashFractionDowntime(ctx))
+			// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
+			// and subtract an additional 1 since this is the LastCommit.
+			distributionHeight := height - ValidatorUpdateDelay - 1
+			k.validatorSet.Slash(ctx, pubkey, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			k.validatorSet.Jail(ctx, pubkey)
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeUnbondDuration(ctx))
 		} else {

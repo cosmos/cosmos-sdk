@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  branch = "master"
+  digest = "1:7736fc6da04620727f8f3aa2ced8d77be8e074a302820937aa5993848c769b27"
+  name = "github.com/ZondaX/hid-go"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "48b08affede2cea076a3cf13b2e3f72ed262b743"
+
+[[projects]]
   digest = "1:09a7f74eb6bb3c0f14d8926610c87f569c5cff68e978d30e9a3540aeb626fdf0"
   name = "github.com/bartekn/go-bip39"
   packages = ["."]
@@ -23,14 +31,6 @@
   pruneopts = "UT"
   revision = "4aabc24848ce5fd31929f7d1e4ea74d3709c14cd"
   version = "v0.1.0"
-
-[[projects]]
-  branch = "master"
-  digest = "1:70f6b224a59b2fa453debffa85c77f71063d8754b90c8c4fbad5794e2c382b0f"
-  name = "github.com/brejski/hid"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "06112dcfcc50a7e0e4fd06e17f9791e788fdaafc"
 
 [[projects]]
   branch = "master"
@@ -498,11 +498,12 @@
   version = "v0.9.0"
 
 [[projects]]
-  digest = "1:4dcb0dd65feecb068ce23a234d1a07c7868a1e39f52a6defcae0bb371d03abf6"
+  digest = "1:7886f86064faff6f8d08a3eb0e8c773648ff5a2e27730831e2bfbf07467f6666"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
   pruneopts = "UT"
-  revision = "4296ee5701e945f9b3a7dbe51f402e0b9be57259"
+  revision = "58598458c11bc0ad1c1b8dac3dc3e11eaf270b79"
+  version = "v0.1.0"
 
 [[projects]]
   branch = "master"

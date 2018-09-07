@@ -3,7 +3,6 @@ package gov
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/pkg/errors"
 
@@ -31,14 +30,14 @@ type Proposal interface {
 	GetTallyResult() TallyResult
 	SetTallyResult(TallyResult)
 
-	GetSubmitTime() time.Time
-	SetSubmitTime(time.Time)
+	GetSubmitBlock() int64
+	SetSubmitBlock(int64)
 
 	GetTotalDeposit() sdk.Coins
 	SetTotalDeposit(sdk.Coins)
 
-	GetVotingStartTime() time.Time
-	SetVotingStartTime(time.Time)
+	GetVotingStartBlock() int64
+	SetVotingStartBlock(int64)
 }
 
 // checks if two proposals are equal
@@ -49,9 +48,9 @@ func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 		proposalA.GetProposalType() == proposalB.GetProposalType() &&
 		proposalA.GetStatus() == proposalB.GetStatus() &&
 		proposalA.GetTallyResult().Equals(proposalB.GetTallyResult()) &&
-		proposalA.GetSubmitTime().Equal(proposalB.GetSubmitTime()) &&
+		proposalA.GetSubmitBlock() == proposalB.GetSubmitBlock() &&
 		proposalA.GetTotalDeposit().IsEqual(proposalB.GetTotalDeposit()) &&
-		proposalA.GetVotingStartTime().Equal(proposalB.GetVotingStartTime()) {
+		proposalA.GetVotingStartBlock() == proposalB.GetVotingStartBlock() {
 		return true
 	}
 	return false
@@ -68,10 +67,10 @@ type TextProposal struct {
 	Status      ProposalStatus `json:"proposal_status"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
 	TallyResult TallyResult    `json:"tally_result"`    //  Result of Tallys
 
-	SubmitTime   time.Time `json:"submit_block"`  //  Height of the block where TxGovSubmitProposal was included
+	SubmitBlock  int64     `json:"submit_block"`  //  Height of the block where TxGovSubmitProposal was included
 	TotalDeposit sdk.Coins `json:"total_deposit"` //  Current deposit on this proposal. Initial value is set at InitialDeposit
 
-	VotingStartTime time.Time `json:"voting_start_block"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	VotingStartBlock int64 `json:"voting_start_block"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
 }
 
 // Implements Proposal Interface
@@ -90,13 +89,13 @@ func (tp TextProposal) GetStatus() ProposalStatus                  { return tp.S
 func (tp *TextProposal) SetStatus(status ProposalStatus)           { tp.Status = status }
 func (tp TextProposal) GetTallyResult() TallyResult                { return tp.TallyResult }
 func (tp *TextProposal) SetTallyResult(tallyResult TallyResult)    { tp.TallyResult = tallyResult }
-func (tp TextProposal) GetSubmitTime() time.Time                   { return tp.SubmitTime }
-func (tp *TextProposal) SetSubmitTime(submitTime time.Time)        { tp.SubmitTime = submitTime }
+func (tp TextProposal) GetSubmitBlock() int64                      { return tp.SubmitBlock }
+func (tp *TextProposal) SetSubmitBlock(submitBlock int64)          { tp.SubmitBlock = submitBlock }
 func (tp TextProposal) GetTotalDeposit() sdk.Coins                 { return tp.TotalDeposit }
 func (tp *TextProposal) SetTotalDeposit(totalDeposit sdk.Coins)    { tp.TotalDeposit = totalDeposit }
-func (tp TextProposal) GetVotingStartTime() time.Time              { return tp.VotingStartTime }
-func (tp *TextProposal) SetVotingStartTime(votingStartTime time.Time) {
-	tp.VotingStartTime = votingStartTime
+func (tp TextProposal) GetVotingStartBlock() int64                 { return tp.VotingStartBlock }
+func (tp *TextProposal) SetVotingStartBlock(votingStartBlock int64) {
+	tp.VotingStartBlock = votingStartBlock
 }
 
 //-----------------------------------------------------------

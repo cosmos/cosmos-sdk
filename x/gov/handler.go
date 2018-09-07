@@ -114,7 +114,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
 
-		logger.Info(fmt.Sprintf("Proposal %d - \"%s\" - didn't mean minimum deposit (had only %s), deleted",
+		logger.Info(fmt.Sprintf("Proposal %d (%s) didn't meet minimum deposit (had only %s). Deleted",
 			inactiveProposal.GetProposalID(), inactiveProposal.GetTitle(), inactiveProposal.GetTotalDeposit()))
 	}
 
@@ -143,7 +143,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		activeProposal.SetTallyResult(tallyResults)
 		keeper.SetProposal(ctx, activeProposal)
 
-		logger.Info(fmt.Sprintf("Proposal %d - \"%s\" - tallied, passed: %v",
+		logger.Info(fmt.Sprintf("Proposal %d (%s) tallied. Passed: %v",
 			activeProposal.GetProposalID(), activeProposal.GetTitle(), passes))
 
 		for _, valAddr := range nonVotingVals {
@@ -154,7 +154,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 				val.GetPower().RoundInt64(),
 				keeper.GetTallyingProcedure(ctx).GovernancePenalty)
 
-			logger.Info(fmt.Sprintf("Validator %s failed to vote on proposal %d, slashing",
+			logger.Info(fmt.Sprintf("Validator %s failed to vote on proposal %d. Slashing",
 				val.GetOperator(), activeProposal.GetProposalID()))
 		}
 

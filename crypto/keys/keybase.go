@@ -42,6 +42,8 @@ const (
 	French
 	// Italian is currently not supported.
 	Italian
+	addressSuffix = "address"
+	infoSuffix    = "info"
 )
 
 var (
@@ -182,16 +184,14 @@ func (kb dbKeybase) List() ([]Info, error) {
 	for ; iter.Valid(); iter.Next() {
 		key := string(iter.Key())
 
-		// need to exclude any keys in storage that have an address suffix
-		if strings.HasSuffix(key, ".address") {
-			continue
+		// need to include only keys in storage that have an info suffix
+		if strings.HasSuffix(key, infoSuffix) {
+			info, err := readInfo(iter.Value())
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, info)
 		}
-
-		info, err := readInfo(iter.Value())
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, info)
 	}
 	return res, nil
 }
@@ -208,7 +208,7 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 func (kb dbKeybase) GetByAddress(address types.AccAddress) (Info, error) {
 	ik := kb.db.Get(addrKey((tmcrypto.Address)(address)))
 	if len(ik) == 0 {
-		return nil, fmt.Errorf("Key with address %s not found", address.String())
+		return nil, fmt.Errorf("key with address %s not found", address.String())
 	}
 	bs := kb.db.Get(ik)
 	return readInfo(bs)
@@ -434,9 +434,9 @@ func (kb dbKeybase) writeInfo(info Info, name string) {
 }
 
 func addrKey(address tmcrypto.Address) []byte {
-	return []byte(fmt.Sprintf("%s.address", address.String()))
+	return []byte(fmt.Sprintf("%s.%s", address.String(), addressSuffix))
 }
 
 func infoKey(name string) []byte {
-	return []byte(fmt.Sprintf("%s.info", name))
+	return []byte(fmt.Sprintf("%s.%s", name, infoSuffix))
 }

@@ -32,11 +32,10 @@ func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) 
 		return err
 	}
 
-	txCtxPtr, err := lookupTxCtx(txCtx, cliCtx, from)
+	txCtx, err = lookupTxCtx(txCtx, cliCtx, from)
 	if err != nil {
 		return err
 	}
-	txCtx = *txCtxPtr
 
 	name, err := cliCtx.GetFromName()
 	if err != nil {
@@ -63,13 +62,13 @@ func SendTx(txCtx authctx.TxContext, cliCtx context.CLIContext, msgs []sdk.Msg) 
 	return cliCtx.EnsureBroadcastTx(txBytes)
 }
 
-func lookupTxCtx(txCtx authctx.TxContext, cliCtx context.CLIContext, from []byte) (*authctx.TxContext, error) {
+func lookupTxCtx(txCtx authctx.TxContext, cliCtx context.CLIContext, from []byte) (authctx.TxContext, error) {
 	// TODO: (ref #1903) Allow for user supplied account number without
 	// automatically doing a manual lookup.
 	if txCtx.AccountNumber == 0 {
 		accNum, err := cliCtx.GetAccountNumber(from)
 		if err != nil {
-			return nil, err
+			return txCtx, err
 		}
 
 		txCtx = txCtx.WithAccountNumber(accNum)
@@ -80,13 +79,13 @@ func lookupTxCtx(txCtx authctx.TxContext, cliCtx context.CLIContext, from []byte
 	if txCtx.Sequence == 0 {
 		accSeq, err := cliCtx.GetAccountSequence(from)
 		if err != nil {
-			return nil, err
+			return txCtx, err
 		}
 
 		txCtx = txCtx.WithSequence(accSeq)
 	}
 
-	return &txCtx, nil
+	return txCtx, nil
 }
 
 // EnrichCtxWithGas calculates the gas estimate that would be consumed by the

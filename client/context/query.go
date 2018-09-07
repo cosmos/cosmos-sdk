@@ -13,7 +13,7 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-		cskeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	cskeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 // GetNode returns an RPC client. If the context's client is not defined, an
@@ -87,7 +87,7 @@ func (ctx CLIContext) GetFromAddress() (sdk.AccAddress, error) {
 	return ctx.fromAddress, nil
 }
 
-// GetFromname returns the key name for the current context.
+// GetFromName returns the key name for the current context.
 func (ctx CLIContext) GetFromName() (string, error) {
 	if ctx.fromName == "" {
 		if err := ctx.populateFromFields(); err != nil {

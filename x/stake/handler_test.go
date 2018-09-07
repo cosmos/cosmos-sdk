@@ -430,7 +430,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		initBond,
 	}
 	for _, c := range errorCases {
-		unbondShares := sdk.NewDec(int64(c))
+		unbondShares := sdk.NewDec(c)
 		msgBeginUnbonding := NewMsgBeginUnbonding(delegatorAddr, validatorAddr, unbondShares)
 		got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 		require.False(t, got.IsOK(), "expected unbond msg to fail")

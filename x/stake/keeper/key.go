@@ -68,6 +68,7 @@ func GetValidatorsByPowerIndexKey(validator types.Validator, pool types.Pool) []
 
 // get the power ranking of a validator
 // NOTE the larger values are of higher value
+// nolint: unparam
 func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 
 	potentialPower := validator.Tokens

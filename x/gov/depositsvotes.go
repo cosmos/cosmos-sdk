@@ -132,6 +132,7 @@ func (vo VoteOption) String() string {
 }
 
 // For Printf / Sprintf, returns bech32 when using %s
+// nolint: errcheck
 func (vo VoteOption) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

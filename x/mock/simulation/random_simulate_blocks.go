@@ -209,6 +209,7 @@ func queueOperations(queuedOperations map[int][]Operation, futureOperations []Fu
 	}
 }
 
+// nolint: errcheck
 func runQueuedOperations(queueOperations map[int][]Operation, height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 	privKeys []crypto.PrivKey, log string, event func(string)) (updatedLog string, numOpsRan int) {
 	updatedLog = log
@@ -243,6 +244,7 @@ func getKeys(validators map[string]mockValidator) []string {
 }
 
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
+// nolint: unparam
 func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, livenessTransitions TransitionMatrix, evidenceFraction float64,
 	pastTimes []time.Time, pastSigningValidators [][]abci.SigningValidator, event func(string), header abci.Header, log string) abci.RequestBeginBlock {
 	if len(validators) == 0 {
@@ -320,6 +322,7 @@ func AssertAllInvariants(t *testing.T, app *baseapp.BaseApp, tests []Invariant, 
 }
 
 // updateValidators mimicks Tendermint's update logic
+// nolint: unparam
 func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValidator, updates []abci.Validator, event func(string)) map[string]mockValidator {
 	for _, update := range updates {
 		switch {

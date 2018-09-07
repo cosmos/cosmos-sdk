@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  branch = "master"
+  digest = "1:7736fc6da04620727f8f3aa2ced8d77be8e074a302820937aa5993848c769b27"
+  name = "github.com/ZondaX/hid-go"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "48b08affede2cea076a3cf13b2e3f72ed262b743"
+
+[[projects]]
   digest = "1:09a7f74eb6bb3c0f14d8926610c87f569c5cff68e978d30e9a3540aeb626fdf0"
   name = "github.com/bartekn/go-bip39"
   packages = ["."]
@@ -23,14 +31,6 @@
   pruneopts = "UT"
   revision = "4aabc24848ce5fd31929f7d1e4ea74d3709c14cd"
   version = "v0.1.0"
-
-[[projects]]
-  branch = "master"
-  digest = "1:70f6b224a59b2fa453debffa85c77f71063d8754b90c8c4fbad5794e2c382b0f"
-  name = "github.com/brejski/hid"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "06112dcfcc50a7e0e4fd06e17f9791e788fdaafc"
 
 [[projects]]
   branch = "master"
@@ -415,12 +415,12 @@
   version = "v0.12.0-rc0"
 
 [[projects]]
-  digest = "1:d4a15d404afbf591e8be16fcda7f5ac87948d5c7531f9d909fd84cc730ab16e2"
+  digest = "1:e99ef92d64f2391efbbfb15310df635f96247532bbac2676ea43e466d706401d"
   name = "github.com/tendermint/iavl"
   packages = ["."]
   pruneopts = "UT"
-  revision = "35f66e53d9b01e83b30de68b931f54b2477a94c9"
-  version = "v0.9.2"
+  revision = "e5726c0066ccdd299a2ec9262f93c7896cdfcd87"
+  version = "v0.10.0"
 
 [[projects]]
   digest = "1:4f15e95fe3888cc75dd34f407d6394cbc7fd3ff24920851b92b295f6a8b556e6"
@@ -498,11 +498,12 @@
   version = "v0.9.0"
 
 [[projects]]
-  digest = "1:4dcb0dd65feecb068ce23a234d1a07c7868a1e39f52a6defcae0bb371d03abf6"
+  digest = "1:7886f86064faff6f8d08a3eb0e8c773648ff5a2e27730831e2bfbf07467f6666"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
   pruneopts = "UT"
-  revision = "4296ee5701e945f9b3a7dbe51f402e0b9be57259"
+  revision = "58598458c11bc0ad1c1b8dac3dc3e11eaf270b79"
+  version = "v0.1.0"
 
 [[projects]]
   branch = "master"
@@ -552,7 +553,7 @@
     "unix",
   ]
   pruneopts = "UT"
-  revision = "11551d06cbcc94edc80a0facaccbda56473c19c1"
+  revision = "4ea2f632f6e912459fe60b26b1749377f0d889d5"
 
 [[projects]]
   digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"

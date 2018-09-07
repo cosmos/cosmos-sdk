@@ -438,7 +438,8 @@ func TestValidatorsQuery(t *testing.T) {
 	if validators[0].ConsPubKey == pkBech {
 		foundVal = true
 	}
-	require.True(t, foundVal, "pkBech %v, operator %v", pkBech, validators[0].ConsPubKey)
+
+	require.True(t, foundVal, "pkBech %v, operator %v", pkBech, validators[0].OperatorAddr)
 }
 
 func TestValidatorQuery(t *testing.T) {

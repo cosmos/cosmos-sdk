@@ -722,7 +722,7 @@ definitions:
   ValidatorPubKey:
     type: string
     description: bech32 encoded public key
-    example: cosmosvaloperpub:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
+    example: cosmosvalconspub:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
   Coins:
     type: object
     properties:

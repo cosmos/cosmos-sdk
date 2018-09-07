@@ -136,9 +136,6 @@ func TestDelegation(t *testing.T) {
 	require.False(t, found)
 	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 0, len(resBonds))
-
-	// resBondsNoRat = keeper.GetDelegatorDelegationsWithoutRat(ctx, addrDels[1], 5)
-	// require.Equal(t, 0, len(resBondsNoRat))
 }
 
 // tests Get/Set/Remove UnbondingDelegation

@@ -3,7 +3,9 @@ package app
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"math/rand"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
@@ -28,6 +31,7 @@ var (
 	blockSize int
 	enabled   bool
 	verbose   bool
+	commit    bool
 )
 
 func init() {
@@ -36,6 +40,7 @@ func init() {
 	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "Operations per block")
 	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")
 	flag.BoolVar(&verbose, "SimulationVerbose", false, "Verbose log output")
+	flag.BoolVar(&commit, "SimulationCommit", false, "Have the simulation commit")
 }
 
 func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage {
@@ -49,7 +54,7 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 			Coins:   coins,
 		})
 	}
-
+	govGenesis := gov.DefaultGenesisState()
 	// Default genesis state
 	stakeGenesis := stake.DefaultGenesisState()
 	var validators []stake.Validator
@@ -73,6 +78,7 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 	genesis := GenesisState{
 		Accounts:  genesisAccounts,
 		StakeData: stakeGenesis,
+		GovData:   govGenesis,
 	}
 
 	// Marshal genesis
@@ -112,6 +118,39 @@ func invariants(app *GaiaApp) []simulation.Invariant {
 	}
 }
 
+// Profile with:
+// /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$ -SimulationCommit=true -cpuprofile cpu.out
+func BenchmarkFullGaiaSimulation(b *testing.B) {
+	// Setup Gaia application
+	var logger log.Logger
+	logger = log.NewNopLogger()
+	var db dbm.DB
+	dir := os.TempDir()
+	db, _ = dbm.NewGoLevelDB("Simulation", dir)
+	defer func() {
+		db.Close()
+		os.RemoveAll(dir)
+	}()
+	app := NewGaiaApp(logger, db, nil)
+
+	// Run randomized simulation
+	// TODO parameterize numbers, save for a later PR
+	simulation.SimulateFromSeed(
+		b, app.BaseApp, appStateFn, seed,
+		testAndRunTxs(app),
+		[]simulation.RandSetup{},
+		invariants(app), // these shouldn't get ran
+		numBlocks,
+		blockSize,
+		commit,
+	)
+	if commit {
+		fmt.Println("GoLevelDB Stats")
+		fmt.Println(db.Stats()["leveldb.stats"])
+		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
+	}
+}
+
 func TestFullGaiaSimulation(t *testing.T) {
 	if !enabled {
 		t.Skip("Skipping Gaia simulation")
@@ -136,9 +175,11 @@ func TestFullGaiaSimulation(t *testing.T) {
 		invariants(app),
 		numBlocks,
 		blockSize,
-		false,
+		commit,
 	)
-
+	if commit {
+		fmt.Println("Database Size", db.Stats()["database.size"])
+	}
 }
 
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
@@ -148,7 +189,7 @@ func TestAppStateDeterminism(t *testing.T) {
 		t.Skip("Skipping Gaia simulation")
 	}
 
-	numSeeds := 5
+	numSeeds := 3
 	numTimesToRunPerSeed := 5
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
@@ -165,10 +206,11 @@ func TestAppStateDeterminism(t *testing.T) {
 				testAndRunTxs(app),
 				[]simulation.RandSetup{},
 				[]simulation.Invariant{},
-				20,
-				20,
-				true,
+				50,
+				100,
+				false,
 			)
+			app.Commit()
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
 		}

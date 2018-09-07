@@ -43,6 +43,9 @@ func IBCTransferCmd(cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(txCtx, cliCtx, []sdk.Msg{msg})
+			}
 
 			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},

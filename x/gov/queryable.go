@@ -36,6 +36,7 @@ type QueryProposalParams struct {
 	ProposalID int64
 }
 
+// nolint: unparam
 func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	var params QueryProposalParams
 	err2 := keeper.cdc.UnmarshalJSON(req.Data, &params)
@@ -61,6 +62,7 @@ type QueryDepositParams struct {
 	Depositer  sdk.AccAddress
 }
 
+// nolint: unparam
 func queryDeposit(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	var params QueryDepositParams
 	err2 := keeper.cdc.UnmarshalJSON(req.Data, &params)
@@ -82,6 +84,7 @@ type QueryVoteParams struct {
 	Voter      sdk.AccAddress
 }
 
+// nolint: unparam
 func queryVote(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	var params QueryVoteParams
 	err2 := keeper.cdc.UnmarshalJSON(req.Data, &params)
@@ -102,6 +105,7 @@ type QueryDepositsParams struct {
 	ProposalID int64
 }
 
+// nolint: unparam
 func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	var params QueryDepositParams
 	err2 := keeper.cdc.UnmarshalJSON(req.Data, &params)
@@ -129,6 +133,7 @@ type QueryVotesParams struct {
 	ProposalID int64
 }
 
+// nolint: unparam
 func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	var params QueryVotesParams
 	err2 := keeper.cdc.UnmarshalJSON(req.Data, &params)
@@ -160,6 +165,7 @@ type QueryProposalsParams struct {
 	NumLatestProposals int64
 }
 
+// nolint: unparam
 func queryProposals(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	var params QueryProposalsParams
 	err2 := keeper.cdc.UnmarshalJSON(req.Data, &params)
@@ -181,6 +187,7 @@ type QueryTallyParams struct {
 	ProposalID int64
 }
 
+// nolint: unparam
 func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	// TODO: Dependant on #1914
 

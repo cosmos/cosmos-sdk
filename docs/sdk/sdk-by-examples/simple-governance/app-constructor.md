@@ -33,16 +33,16 @@ var cdc = MakeCodec()
 - Instantiate the keepers. Note that keepers generally need access to other module's keepers. In this case, make sure you only pass an instance of the keeper for the functionality that is needed. If a keeper only needs to read in another module's store, a read-only keeper should be passed to it.
 
 ```go
-app.coinKeeper = bank.NewKeeper(app.accountMapper)
-app.stakeKeeper = simplestake.NewKeeper(app.capKeyStakingStore, app.coinKeeper,app.RegisterCodespace(simplestake.DefaultCodespace))
-app.simpleGovKeeper = simpleGov.NewKeeper(app.capKeySimpleGovStore, app.coinKeeper, app.stakeKeeper, app.RegisterCodespace(simpleGov.DefaultCodespace))
+app.bankKeeper = bank.NewKeeper(app.accountMapper)
+app.stakeKeeper = simplestake.NewKeeper(app.capKeyStakingStore, app.bankKeeper,app.RegisterCodespace(simplestake.DefaultCodespace))
+app.simpleGovKeeper = simpleGov.NewKeeper(app.capKeySimpleGovStore, app.bankKeeper, app.stakeKeeper, app.RegisterCodespace(simpleGov.DefaultCodespace))
 ```
 
 - Declare the handlers.
 
 ```go
 app.Router().
-        AddRoute("bank", bank.NewHandler(app.coinKeeper)).
+        AddRoute("bank", bank.NewHandler(app.bankKeeper)).
         AddRoute("simplestake", simplestake.NewHandler(app.stakeKeeper)).
         AddRoute("simpleGov", simpleGov.NewHandler(app.simpleGovKeeper))
 ```

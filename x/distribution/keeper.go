@@ -4,7 +4,7 @@ package stake
 //type Keeper struct {
 //storeKey   sdk.StoreKey
 //cdc        *wire.Codec
-//coinKeeper bank.Keeper
+//bankKeeper bank.Keeper
 
 //// codespace
 //codespace sdk.CodespaceType
@@ -14,7 +14,7 @@ package stake
 //keeper := Keeper{
 //storeKey:   key,
 //cdc:        cdc,
-//coinKeeper: ck,
+//bankKeeper: ck,
 //codespace:  codespace,
 //}
 //return keeper

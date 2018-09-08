@@ -132,6 +132,7 @@ func main() {
 	rootCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),
+			bankcmd.GetBroadcastCommand(cdc),
 		)...)
 
 	// add proxy, version and key info

@@ -226,12 +226,11 @@ Returns on success:
         "sequence": 7
     }
 }
-}
 ```
 
-### POST /auth/accounts/sign
+### POST /auth/tx/sign
 
-- **URL**: `/auth/sign`
+- **URL**: `/auth/tx/sign`
 - **Functionality**: Sign a transaction without broadcasting it.
 - Returns on success:
 
@@ -294,6 +293,45 @@ Returns on success:
             ],
             "memo": ""
         }
+    }
+}
+```
+
+### POST /auth/tx/broadcast
+
+- **URL**: `/auth/broadcast`
+- **Functionality**: Broadcast a transaction.
+- Returns on success:
+
+```json
+{
+    "rest api": "1.0",
+    "code": 200,
+    "error": "",
+    "result":
+    {
+        "check_tx": {
+            "log": "Msg 0: ",
+            "gasWanted": "2742",
+            "gasUsed": "1002"
+        },
+        "deliver_tx": {
+            "log": "Msg 0: ",
+            "gasWanted": "2742",
+            "gasUsed": "2742",
+            "tags": [
+                {
+                    "key": "c2VuZGVy",
+                    "value": "Y29zbW9zMXdjNTl6ZXU3MmNjdnp5ZWR6ZGE1N3pzcXh2eXZ2Y3poaHBhdDI4"
+                },
+                {
+                    "key": "cmVjaXBpZW50",
+                    "value": "Y29zbW9zMTJ4OTNmY3V2azg3M3o1ejZnejRlNTl2dnlxcXp1eDdzdDcwNWd5"
+                }
+            ]
+        },
+        "hash": "784314784503582AC885BD6FB0D2A5B79FF703A7",
+        "height": "5"
     }
 }
 ```

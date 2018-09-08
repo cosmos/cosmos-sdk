@@ -159,6 +159,12 @@ gaiacli sign \
   unsignedSendTx.json > signedSendTx.json
 ```
 
+You can broadcast the signed transaction to a node by providing the JSON file to the following command:
+
+```
+gaiacli broadcast --node=<node> signedSendTx.json
+```
+
 ### Staking
 
 #### Set up a Validator

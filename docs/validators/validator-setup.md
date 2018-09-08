@@ -16,7 +16,7 @@ If you want to become a validator for the Hub's `mainnet`, you should [research 
 
 ### Create Your Validator
 
-Your `cosmosconspub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
+Your `cosmosvalconspub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
 
 ```bash
 gaiad tendermint show-validator

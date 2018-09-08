@@ -21,13 +21,13 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(key sdk.StoreKey, coinKeeper bank.Keeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(key sdk.StoreKey, bankKeeper bank.Keeper, codespace sdk.CodespaceType) Keeper {
 	cdc := wire.NewCodec()
 	wire.RegisterCrypto(cdc)
 	return Keeper{
 		key:       key,
 		cdc:       cdc,
-		ck:        coinKeeper,
+		ck:        bankKeeper,
 		codespace: codespace,
 	}
 }

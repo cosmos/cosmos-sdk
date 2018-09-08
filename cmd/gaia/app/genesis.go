@@ -205,8 +205,8 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 
 			// create the self-delegation from the issuedDelShares
 			delegation := stake.Delegation{
-				DelegatorAddr: sdk.AccAddress(validator.Operator),
-				ValidatorAddr: validator.Operator,
+				DelegatorAddr: sdk.AccAddress(validator.OperatorAddr),
+				ValidatorAddr: validator.OperatorAddr,
 				Shares:        issuedDelShares,
 				Height:        0,
 			}

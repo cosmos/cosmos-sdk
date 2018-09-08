@@ -206,8 +206,8 @@ func TestValidators(t *testing.T) {
 
 	require.NotEqual(t, rpc.ResultValidatorsOutput{}, resultVals)
 
-	require.Contains(t, resultVals.Validators[0].Address.String(), "cosmosval")
-	require.Contains(t, resultVals.Validators[0].PubKey, "cosmosconspub")
+	require.Contains(t, resultVals.Validators[0].Address.String(), "cosmosvaloper")
+	require.Contains(t, resultVals.Validators[0].PubKey, "cosmosvalconspub")
 
 	// --
 
@@ -461,10 +461,11 @@ func TestValidatorsQuery(t *testing.T) {
 	// make sure all the validators were found (order unknown because sorted by operator addr)
 	foundVal := false
 	pkBech := sdk.MustBech32ifyConsPub(pks[0])
-	if validators[0].PubKey == pkBech {
+	if validators[0].ConsPubKey == pkBech {
 		foundVal = true
 	}
-	require.True(t, foundVal, "pkBech %v, operator %v", pkBech, validators[0].Operator)
+
+	require.True(t, foundVal, "pkBech %v, operator %v", pkBech, validators[0].OperatorAddr)
 }
 
 func TestValidatorQuery(t *testing.T) {
@@ -474,7 +475,7 @@ func TestValidatorQuery(t *testing.T) {
 
 	validator1Operator := sdk.ValAddress(pks[0].Address())
 	validator := getValidator(t, port, validator1Operator)
-	assert.Equal(t, validator.Operator, validator1Operator, "The returned validator does not hold the correct data")
+	assert.Equal(t, validator.OperatorAddr, validator1Operator, "The returned validator does not hold the correct data")
 }
 
 func TestBonding(t *testing.T) {
@@ -510,11 +511,11 @@ func TestBonding(t *testing.T) {
 
 	bondedValidators := getDelegatorValidators(t, port, addr)
 	require.Len(t, bondedValidators, 1)
-	require.Equal(t, validator1Operator, bondedValidators[0].Operator)
+	require.Equal(t, validator1Operator, bondedValidators[0].OperatorAddr)
 	require.Equal(t, validator.DelegatorShares.Add(sdk.NewDec(60)).String(), bondedValidators[0].DelegatorShares.String())
 
 	bondedValidator := getDelegatorValidator(t, port, addr, validator1Operator)
-	require.Equal(t, validator1Operator, bondedValidator.Operator)
+	require.Equal(t, validator1Operator, bondedValidator.OperatorAddr)
 
 	//////////////////////
 	// testing unbonding

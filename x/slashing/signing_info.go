@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Stored by *validator* address (not owner address)
+// Stored by *validator* address (not operator address)
 func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress) (info ValidatorSigningInfo, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(GetValidatorSigningInfoKey(address))
@@ -20,14 +20,14 @@ func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress
 	return
 }
 
-// Stored by *validator* address (not owner address)
+// Stored by *validator* address (not operator address)
 func (k Keeper) setValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress, info ValidatorSigningInfo) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(info)
 	store.Set(GetValidatorSigningInfoKey(address), bz)
 }
 
-// Stored by *validator* address (not owner address)
+// Stored by *validator* address (not operator address)
 func (k Keeper) getValidatorSigningBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64) (signed bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(GetValidatorSigningBitArrayKey(address, index))
@@ -40,7 +40,7 @@ func (k Keeper) getValidatorSigningBitArray(ctx sdk.Context, address sdk.ConsAdd
 	return
 }
 
-// Stored by *validator* address (not owner address)
+// Stored by *validator* address (not operator address)
 func (k Keeper) setValidatorSigningBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64, signed bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(signed)

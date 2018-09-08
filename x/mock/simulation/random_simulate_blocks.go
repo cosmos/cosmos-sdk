@@ -85,7 +85,7 @@ func SimulateFromSeed(
 		<-c
 		fmt.Printf("Exiting early due to SIGTERM, on block %d, operation %d\n", header.Height, opCount)
 		DisplayEvents(events)
-		os.Exit(1)
+		os.Exit(128 + int(syscall.SIGTERM))
 	}()
 
 	var pastTimes []time.Time

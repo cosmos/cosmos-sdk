@@ -25,7 +25,7 @@ module.exports = {
           "/getting-started/voyager",
           "/getting-started/installation",
           "/getting-started/join-testnet",
-          "/getting-started/create-testnet"
+          "/getting-started/networks"
         ]
       },
       {

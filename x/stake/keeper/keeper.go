@@ -12,7 +12,7 @@ import (
 type Keeper struct {
 	storeKey       sdk.StoreKey
 	cdc            *wire.Codec
-	coinKeeper     bank.Keeper
+	bankKeeper     bank.Keeper
 	validatorHooks sdk.ValidatorHooks
 
 	// codespace
@@ -23,7 +23,7 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.
 	keeper := Keeper{
 		storeKey:       key,
 		cdc:            cdc,
-		coinKeeper:     ck,
+		bankKeeper:     ck,
 		validatorHooks: nil,
 		codespace:      codespace,
 	}

@@ -714,7 +714,7 @@ definitions:
   ValidatorAddress:
     type: string
     description: bech32 encoded addres
-    example: cosmosval:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
+    example: cosmosvaloper:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
   PubKey:
     type: string
     description: bech32 encoded public key
@@ -722,7 +722,7 @@ definitions:
   ValidatorPubKey:
     type: string
     description: bech32 encoded public key
-    example: cosmosvalpub:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
+    example: cosmosvalconspub:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
   Coins:
     type: object
     properties:

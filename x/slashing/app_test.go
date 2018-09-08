@@ -107,10 +107,10 @@ func TestSlashingMsgs(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 
 	validator := checkValidator(t, mapp, stakeKeeper, addr1, true)
-	require.Equal(t, sdk.ValAddress(addr1), validator.Operator)
+	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddr)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.DecEq(t, sdk.NewDec(10), validator.BondedTokens()))
-	unjailMsg := MsgUnjail{ValidatorAddr: sdk.ValAddress(validator.PubKey.Address())}
+	unjailMsg := MsgUnjail{ValidatorAddr: sdk.ValAddress(validator.ConsPubKey.Address())}
 
 	// no signing info yet
 	checkValidatorSigningInfo(t, mapp, keeper, sdk.ConsAddress(addr1), false)

@@ -13,10 +13,10 @@ BREAKING CHANGES
     * [cli] [\#2061](https://github.com/cosmos/cosmos-sdk/issues/2061) changed proposalID in governance REST endpoints to proposal-id
     * [cli] [\#2014](https://github.com/cosmos/cosmos-sdk/issues/2014) `gaiacli advanced` no longer exists - to access `ibc`, `rest-server`, and `validator-set` commands use `gaiacli ibc`, `gaiacli rest-server`, and `gaiacli tendermint`, respectively
     * [makefile] `get_vendor_deps` no longer updates lock file it just updates vendor directory. Use `update_vendor_deps` to update the lock file. [#2152](https://github.com/cosmos/cosmos-sdk/pull/2152)
+    * [cli] [\#2221](https://github.com/cosmos/cosmos-sdk/issues/2221) All commands that
+    utilize a validator's operator address must now use the new Bech32 prefix,
+    `cosmosvaloper`.
     * [cli] [\#2190](https://github.com/cosmos/cosmos-sdk/issues/2190) `gaiacli init --gen-txs` is now `gaiacli init --with-txs` to reduce confusion
-    * [\#2040](https://github.com/cosmos/cosmos-sdk/issues/2040) All commands that utilize a validator's address must now use the new
-    bech32 prefix, `cosmosval`. A validator's Tendermint signing key and address
-    now use a new bech32 prefix, `cosmoscons`.
 
 * Gaia
     * Make the transient store key use a distinct store key. [#2013](https://github.com/cosmos/cosmos-sdk/pull/2013)
@@ -25,11 +25,15 @@ BREAKING CHANGES
     * [x/stake, x/slashing] [#1305](https://github.com/cosmos/cosmos-sdk/issues/1305) - Rename "revoked" to "jailed"
     * [x/stake] [#1676] Revoked and jailed validators put into the unbonding state
     * [x/stake] [#1877] Redelegations/unbonding-delegation from unbonding validator have reduced time
-    * [x/stake] [\#2040](https://github.com/cosmos/cosmos-sdk/issues/2040) Validator operator type has now changed to `sdk.ValAddress`
-      * A new bech32 prefix has been introduced for Tendermint signing keys and
-        addresses, `cosmosconspub` and `cosmoscons` respectively.
-    * [x/gov] \#2195 Made governance use BFT Time instead of Block Heights for deposit and voting periods.
-
+    * [x/stake] [\#2040](https://github.com/cosmos/cosmos-sdk/issues/2040) Validator
+    operator type has now changed to `sdk.ValAddress`
+    * [x/stake] [\#2221](https://github.com/cosmos/cosmos-sdk/issues/2221) New
+    Bech32 prefixes have been introduced for a validator's consensus address and
+    public key: `cosmosvalcons` and `cosmosvalconspub` respectively. Also, existing Bech32 prefixes have been
+    renamed for accounts and validator operators:
+      * `cosmosaccaddr` / `cosmosaccpub` => `cosmos` / `cosmospub`
+      * `cosmosvaladdr` / `cosmosvalpub` => `cosmosvaloper` / `cosmosvaloperpub`
+    
 * SDK
     * [core] [\#1807](https://github.com/cosmos/cosmos-sdk/issues/1807) Switch from use of rational to decimal
     * [types] [\#1901](https://github.com/cosmos/cosmos-sdk/issues/1901) Validator interface's GetOwner() renamed to GetOperator()

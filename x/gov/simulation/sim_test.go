@@ -24,13 +24,13 @@ func TestGovWithRandomMessages(t *testing.T) {
 	bank.RegisterWire(mapp.Cdc)
 	gov.RegisterWire(mapp.Cdc)
 	mapper := mapp.AccountMapper
-	coinKeeper := bank.NewKeeper(mapper)
+	bankKeeper := bank.NewKeeper(mapper)
 	stakeKey := sdk.NewKVStoreKey("stake")
-	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, coinKeeper, stake.DefaultCodespace)
+	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, bankKeeper, stake.DefaultCodespace)
 	paramKey := sdk.NewKVStoreKey("params")
 	paramKeeper := params.NewKeeper(mapp.Cdc, paramKey)
 	govKey := sdk.NewKVStoreKey("gov")
-	govKeeper := gov.NewKeeper(mapp.Cdc, govKey, paramKeeper.Setter(), coinKeeper, stakeKeeper, gov.DefaultCodespace)
+	govKeeper := gov.NewKeeper(mapp.Cdc, govKey, paramKeeper.Setter(), bankKeeper, stakeKeeper, gov.DefaultCodespace)
 	mapp.Router().AddRoute("gov", gov.NewHandler(govKeeper))
 	mapp.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 		gov.EndBlocker(ctx, govKeeper)

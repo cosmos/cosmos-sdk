@@ -21,9 +21,9 @@ import (
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
 type Validator struct {
-	Operator sdk.ValAddress `json:"operator"` // sender of BondTx - UnbondTx returns here
-	PubKey   crypto.PubKey  `json:"pub_key"`  // pubkey of validator
-	Jailed   bool           `json:"jailed"`   // has the validator been jailed from bonded status?
+	OperatorAddr sdk.ValAddress `json:"operator_address"` // address of the validator's operator
+	ConsPubKey   crypto.PubKey  `json:"consensus_pubkey"` // the consensus public key of the validator
+	Jailed       bool           `json:"jailed"`           // has the validator been jailed from bonded status?
 
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
 	Tokens          sdk.Dec        `json:"tokens"`           // delegated tokens (incl. self-delegation)
@@ -45,8 +45,8 @@ type Validator struct {
 // NewValidator - initialize a new validator
 func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description) Validator {
 	return Validator{
-		Operator:              operator,
-		PubKey:                pubKey,
+		OperatorAddr:          operator,
+		ConsPubKey:            pubKey,
 		Jailed:                false,
 		Status:                sdk.Unbonded,
 		Tokens:                sdk.ZeroDec(),
@@ -65,7 +65,7 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Des
 
 // what's kept in the store value
 type validatorValue struct {
-	PubKey                crypto.PubKey
+	ConsPubKey            crypto.PubKey
 	Jailed                bool
 	Status                sdk.BondStatus
 	Tokens                sdk.Dec
@@ -84,7 +84,7 @@ type validatorValue struct {
 // return the redelegation without fields contained within the key for the store
 func MustMarshalValidator(cdc *wire.Codec, validator Validator) []byte {
 	val := validatorValue{
-		PubKey:                validator.PubKey,
+		ConsPubKey:            validator.ConsPubKey,
 		Jailed:                validator.Jailed,
 		Status:                validator.Status,
 		Tokens:                validator.Tokens,
@@ -124,8 +124,8 @@ func UnmarshalValidator(cdc *wire.Codec, operatorAddr, value []byte) (validator 
 	}
 
 	return Validator{
-		Operator:              operatorAddr,
-		PubKey:                storeValue.PubKey,
+		OperatorAddr:          operatorAddr,
+		ConsPubKey:            storeValue.ConsPubKey,
 		Jailed:                storeValue.Jailed,
 		Tokens:                storeValue.Tokens,
 		Status:                storeValue.Status,
@@ -146,14 +146,14 @@ func UnmarshalValidator(cdc *wire.Codec, operatorAddr, value []byte) (validator 
 // validator. An error is returned if the operator or the operator's public key
 // cannot be converted to Bech32 format.
 func (v Validator) HumanReadableString() (string, error) {
-	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.PubKey)
+	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.ConsPubKey)
 	if err != nil {
 		return "", err
 	}
 
 	resp := "Validator \n"
-	resp += fmt.Sprintf("Operator: %s\n", v.Operator)
-	resp += fmt.Sprintf("Validator: %s\n", bechConsPubKey)
+	resp += fmt.Sprintf("Operator Address: %s\n", v.OperatorAddr)
+	resp += fmt.Sprintf("Validator Consensus Pubkey: %s\n", bechConsPubKey)
 	resp += fmt.Sprintf("Jailed: %v\n", v.Jailed)
 	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
 	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens.String())
@@ -174,9 +174,9 @@ func (v Validator) HumanReadableString() (string, error) {
 
 // validator struct for bech output
 type BechValidator struct {
-	Operator sdk.ValAddress `json:"operator"` // in bech32
-	PubKey   string         `json:"pub_key"`  // in bech32
-	Jailed   bool           `json:"jailed"`   // has the validator been jailed from bonded status?
+	OperatorAddr sdk.ValAddress `json:"operator_address"` // the bech32 address of the validator's operator
+	ConsPubKey   string         `json:"consensus_pubkey"` // the bech32 consensus public key of the validator
+	Jailed       bool           `json:"jailed"`           // has the validator been jailed from bonded status?
 
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
 	Tokens          sdk.Dec        `json:"tokens"`           // delegated tokens (incl. self-delegation)
@@ -197,15 +197,15 @@ type BechValidator struct {
 
 // get the bech validator from the the regular validator
 func (v Validator) Bech32Validator() (BechValidator, error) {
-	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.PubKey)
+	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.ConsPubKey)
 	if err != nil {
 		return BechValidator{}, err
 	}
 
 	return BechValidator{
-		Operator: v.Operator,
-		PubKey:   bechConsPubKey,
-		Jailed:   v.Jailed,
+		OperatorAddr: v.OperatorAddr,
+		ConsPubKey:   bechConsPubKey,
+		Jailed:       v.Jailed,
 
 		Status:          v.Status,
 		Tokens:          v.Tokens,
@@ -229,8 +229,8 @@ func (v Validator) Bech32Validator() (BechValidator, error) {
 // only the vitals - does not check bond height of IntraTxCounter
 // nolint gocyclo - why dis fail?
 func (v Validator) Equal(c2 Validator) bool {
-	return v.PubKey.Equals(c2.PubKey) &&
-		bytes.Equal(v.Operator, c2.Operator) &&
+	return v.ConsPubKey.Equals(c2.ConsPubKey) &&
+		bytes.Equal(v.OperatorAddr, c2.OperatorAddr) &&
 		v.Status.Equal(c2.Status) &&
 		v.Tokens.Equal(c2.Tokens) &&
 		v.DelegatorShares.Equal(c2.DelegatorShares) &&
@@ -243,7 +243,7 @@ func (v Validator) Equal(c2 Validator) bool {
 
 // return the TM validator address
 func (v Validator) ConsAddress() sdk.ConsAddress {
-	return sdk.ConsAddress(v.PubKey.Address())
+	return sdk.ConsAddress(v.ConsPubKey.Address())
 }
 
 // constant used in flags to indicate that description field should not be updated
@@ -313,7 +313,7 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 // with the full validator power
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
-		PubKey: tmtypes.TM2PB.PubKey(v.PubKey),
+		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey),
 		Power:  v.BondedTokens().RoundInt64(),
 	}
 }
@@ -322,7 +322,7 @@ func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
-		PubKey: tmtypes.TM2PB.PubKey(v.PubKey),
+		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey),
 		Power:  0,
 	}
 }
@@ -445,8 +445,8 @@ var _ sdk.Validator = Validator{}
 func (v Validator) GetJailed() bool             { return v.Jailed }
 func (v Validator) GetMoniker() string          { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus   { return v.Status }
-func (v Validator) GetOperator() sdk.ValAddress { return v.Operator }
-func (v Validator) GetPubKey() crypto.PubKey    { return v.PubKey }
+func (v Validator) GetOperator() sdk.ValAddress { return v.OperatorAddr }
+func (v Validator) GetPubKey() crypto.PubKey    { return v.ConsPubKey }
 func (v Validator) GetPower() sdk.Dec           { return v.BondedTokens() }
 func (v Validator) GetTokens() sdk.Dec          { return v.Tokens }
 func (v Validator) GetDelegatorShares() sdk.Dec { return v.DelegatorShares }

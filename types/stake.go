@@ -38,7 +38,7 @@ type Validator interface {
 	GetJailed() bool          // whether the validator is jailed
 	GetMoniker() string       // moniker of the validator
 	GetStatus() BondStatus    // status of the validator
-	GetOperator() ValAddress  // owner address to receive/return validators coins
+	GetOperator() ValAddress  // operator address to receive/return validators coins
 	GetPubKey() crypto.PubKey // validation pubkey
 	GetPower() Dec            // validation power
 	GetTokens() Dec           // validation tokens
@@ -48,11 +48,11 @@ type Validator interface {
 
 // properties for the set of all validators
 type ValidatorSet interface {
-	// iterate through validator by owner-AccAddress, execute func for each validator
+	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(Context,
 		func(index int64, validator Validator) (stop bool))
 
-	// iterate through bonded validator by pubkey-AccAddress, execute func for each validator
+	// iterate through bonded validators by operator address, execute func for each validator
 	IterateValidatorsBonded(Context,
 		func(index int64, validator Validator) (stop bool))
 

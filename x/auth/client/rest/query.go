@@ -21,7 +21,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, s
 		QueryAccountRequestHandlerFn(storeName, cdc, authcmd.GetAccountDecoder(cdc), cliCtx),
 	).Methods("GET")
 	r.HandleFunc(
-		"/sign",
+		"/tx/sign",
 		SignTxRequestHandlerFn(cdc, cliCtx),
 	).Methods("POST")
 }

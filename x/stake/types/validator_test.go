@@ -57,23 +57,24 @@ func TestABCIValidatorUpdate(t *testing.T) {
 	validator := NewValidator(addr1, pk1, Description{})
 
 	abciVal := validator.ABCIValidatorUpdate()
-	require.Equal(t, tmtypes.TM2PB.PubKey(pk1), abciVal.PubKey)
+	require.Equal(t, tmtypes.TM2PB.PubKey(validator.ConsPubKey), abciVal.PubKey)
 	require.Equal(t, validator.BondedTokens().RoundInt64(), abciVal.Power)
 }
 
 func TestABCIValidatorUpdateZero(t *testing.T) {
 	validator := NewValidator(addr1, pk1, Description{})
 
+
 	abciVal := validator.ABCIValidatorUpdateZero()
-	require.Equal(t, tmtypes.TM2PB.PubKey(validator.PubKey), abciVal.PubKey)
+	require.Equal(t, tmtypes.TM2PB.PubKey(validator.ConsPubKey), abciVal.PubKey)
 	require.Equal(t, int64(0), abciVal.Power)
 }
 
 func TestRemoveTokens(t *testing.T) {
 
 	validator := Validator{
-		Operator:        addr1,
-		PubKey:          pk1,
+		OperatorAddr:    addr1,
+		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          sdk.NewDec(100),
 		DelegatorShares: sdk.NewDec(100),
@@ -148,8 +149,8 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 // TODO refactor to make simpler like the AddToken tests above
 func TestRemoveDelShares(t *testing.T) {
 	valA := Validator{
-		Operator:        addr1,
-		PubKey:          pk1,
+		OperatorAddr:    addr1,
+		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          sdk.NewDec(100),
 		DelegatorShares: sdk.NewDec(100),
@@ -176,8 +177,8 @@ func TestRemoveDelShares(t *testing.T) {
 	poolTokens := sdk.NewDec(5102)
 	delShares := sdk.NewDec(115)
 	validator := Validator{
-		Operator:        addr1,
-		PubKey:          pk1,
+		OperatorAddr:    addr1,
+		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          poolTokens,
 		DelegatorShares: delShares,
@@ -229,8 +230,8 @@ func TestPossibleOverflow(t *testing.T) {
 	poolTokens := sdk.NewDec(2159)
 	delShares := sdk.NewDec(391432570689183511).Quo(sdk.NewDec(40113011844664))
 	validator := Validator{
-		Operator:        addr1,
-		PubKey:          pk1,
+		OperatorAddr:    addr1,
+		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          poolTokens,
 		DelegatorShares: delShares,

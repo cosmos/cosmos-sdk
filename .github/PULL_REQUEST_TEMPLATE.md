@@ -10,8 +10,8 @@ v    If a checkbox is n/a - please still include it but + a little note why
 - [ ] Wrote tests
 - [ ] Updated relevant documentation (`docs/`)
 - [ ] Added entries in `PENDING.md` with issue # 
-- [ ] rereviewed `Files changed` in the github PR explorer
-
+- [ ] Reviewed `Files changed` in the github PR explorer
+- [ ] Added or improved `godoc` comments above functions (if applicable)
 ______
 
 For Admin Use:

@@ -114,5 +114,6 @@ BUG FIXES
     * [ledger] [\#2064](https://github.com/cosmos/cosmos-sdk/issues/2064) Fix inability to sign and send transactions via the LCD by
     loading a Ledger device at runtime.
     * [\#2158](https://github.com/cosmos/cosmos-sdk/issues/2158) Fix non-deterministic ordering of validator iteration when slashing in `gov EndBlocker`
+    * [simulation] \#1924 Make simulation stop on SIGTERM
 
 * Tendermint

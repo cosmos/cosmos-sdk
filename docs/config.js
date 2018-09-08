@@ -24,7 +24,7 @@ module.exports = {
         children: [
           "/getting-started/voyager",
           "/getting-started/installation",
-          "/getting-started/full-node",
+          "/getting-started/join-testnet",
           "/getting-started/create-testnet"
         ]
       },

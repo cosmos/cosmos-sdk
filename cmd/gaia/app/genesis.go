@@ -179,12 +179,38 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 			return
 		}
 
-		genaccs[i] = createGenesisAccount(genTx)
+		// create the genesis account, give'm few steaks and a buncha token with there name
+		accAuth := auth.NewBaseAccountWithAddress(genTx.Address)
+		accAuth.Coins = sdk.Coins{
+			{genTx.Name + "Token", sdk.NewInt(1000)},
+			{"steak", freeFermionsAcc},
+		}
+		genaccs[i] = NewGenesisAccount(&accAuth)
 		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc)) // increase the supply
 
 		// add the validator
 		if len(genTx.Name) > 0 {
-			addGenesisValidator(genTx, &stakeData)
+			desc := stake.NewDescription(genTx.Name, "", "", "")
+			validator := stake.NewValidator(
+				sdk.ValAddress(genTx.Address), sdk.MustGetConsPubKeyBech32(genTx.PubKey), desc,
+			)
+
+			stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDec(freeFermionVal)) // increase the supply
+
+			// add some new shares to the validator
+			var issuedDelShares sdk.Dec
+			validator, stakeData.Pool, issuedDelShares = validator.AddTokensFromDel(stakeData.Pool, sdk.NewInt(freeFermionVal))
+			stakeData.Validators = append(stakeData.Validators, validator)
+
+			// create the self-delegation from the issuedDelShares
+			delegation := stake.Delegation{
+				DelegatorAddr: sdk.AccAddress(validator.Operator),
+				ValidatorAddr: validator.Operator,
+				Shares:        issuedDelShares,
+				Height:        0,
+			}
+
+			stakeData.Bonds = append(stakeData.Bonds, delegation)
 		}
 	}
 
@@ -194,51 +220,14 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 		StakeData: stakeData,
 		GovData:   gov.DefaultGenesisState(),
 	}
-	err = GaiaValidateGenesisState(cdc, genesisState)
 	return
-}
-
-func createGenesisAccount(genTx GaiaGenTx) GenesisAccount {
-	// create the genesis account, give'm few steaks and a buncha token with there name
-	accAuth := auth.NewBaseAccountWithAddress(genTx.Address)
-	accAuth.Coins = sdk.Coins{
-		{genTx.Name + "Token", sdk.NewInt(1000)},
-		{"steak", freeFermionsAcc},
-	}
-	return NewGenesisAccount(&accAuth)
-}
-
-// mutates stakeData
-func addGenesisValidator(genTx GaiaGenTx, stakeDataPtr *stake.GenesisState) {
-	stakeData := *stakeDataPtr
-	desc := stake.NewDescription(genTx.Name, "", "", "")
-	validator := stake.NewValidator(
-		sdk.ValAddress(genTx.Address), sdk.MustGetConsPubKeyBech32(genTx.PubKey), desc,
-	)
-
-	stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDec(freeFermionVal)) // increase the supply
-
-	// add some new shares to the validator
-	var issuedDelShares sdk.Dec
-	validator, stakeData.Pool, issuedDelShares = validator.AddTokensFromDel(stakeData.Pool, sdk.NewInt(freeFermionVal))
-	stakeData.Validators = append(stakeData.Validators, validator)
-
-	// create the self-delegation from the issuedDelShares
-	delegation := stake.Delegation{
-		DelegatorAddr: sdk.AccAddress(validator.Operator),
-		ValidatorAddr: validator.Operator,
-		Shares:        issuedDelShares,
-		Height:        0,
-	}
-
-	stakeData.Bonds = append(stakeData.Bonds, delegation)
 }
 
 // GaiaValidateGenesisState ensures that the genesis state obeys the expected invariants
 // TODO: No validators are both bonded and revoked (#2088)
 // TODO: Error if there is a duplicate validator (#1708)
 // TODO: Ensure all state machine parameters are in genesis (#1704)
-func GaiaValidateGenesisState(cdc *wire.Codec, genesisState GenesisState) (err error) {
+func GaiaValidateGenesisState(genesisState GenesisState) (err error) {
 	err = validateGenesisStateAccounts(genesisState.Accounts)
 	if err != nil {
 		return

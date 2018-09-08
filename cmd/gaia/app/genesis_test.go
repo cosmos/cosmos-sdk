@@ -18,12 +18,39 @@ func makeGenesisState(genTxs []GaiaGenTx) GenesisState {
 	// get genesis flag account information
 	genaccs := make([]GenesisAccount, len(genTxs))
 	for i, genTx := range genTxs {
-		genaccs[i] = createGenesisAccount(genTx)
+
+		// create the genesis account, give'm few steaks and a buncha token with there name
+		accAuth := auth.NewBaseAccountWithAddress(genTx.Address)
+		accAuth.Coins = sdk.Coins{
+			{genTx.Name + "Token", sdk.NewInt(1000)},
+			{"steak", freeFermionsAcc},
+		}
+		genaccs[i] = NewGenesisAccount(&accAuth)
 		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc)) // increase the supply
 
 		// add the validator
 		if len(genTx.Name) > 0 {
-			addGenesisValidator(genTx, &stakeData)
+			desc := stake.NewDescription(genTx.Name, "", "", "")
+			validator := stake.NewValidator(
+				sdk.ValAddress(genTx.Address), sdk.MustGetConsPubKeyBech32(genTx.PubKey), desc,
+			)
+
+			stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDec(freeFermionVal)) // increase the supply
+
+			// add some new shares to the validator
+			var issuedDelShares sdk.Dec
+			validator, stakeData.Pool, issuedDelShares = validator.AddTokensFromDel(stakeData.Pool, sdk.NewInt(freeFermionVal))
+			stakeData.Validators = append(stakeData.Validators, validator)
+
+			// create the self-delegation from the issuedDelShares
+			delegation := stake.Delegation{
+				DelegatorAddr: sdk.AccAddress(validator.Operator),
+				ValidatorAddr: validator.Operator,
+				Shares:        issuedDelShares,
+				Height:        0,
+			}
+
+			stakeData.Bonds = append(stakeData.Bonds, delegation)
 		}
 	}
 
@@ -70,6 +97,6 @@ func TestGaiaGenesisValidation(t *testing.T) {
 	genTxs[0] = GaiaGenTx{"", sdk.AccAddress(addr), ""}
 	genTxs[1] = GaiaGenTx{"", sdk.AccAddress(addr), ""}
 	genesisState := makeGenesisState(genTxs)
-	err := GaiaValidateGenesisState(nil, genesisState)
+	err := GaiaValidateGenesisState(genesisState)
 	require.NotNil(t, err)
 }

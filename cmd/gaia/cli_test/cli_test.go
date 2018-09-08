@@ -422,8 +422,14 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
 
-	success = executeWrite(t, fmt.Sprintf("gaiacli broadcast %v %v", flags, signedTxFile.Name()))
+	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf("gaiacli broadcast %v --json %v", flags, signedTxFile.Name()))
 	require.True(t, success)
+	var result struct {
+		Response abci.ResponseDeliverTx
+	}
+	require.Nil(t, app.MakeCodec().UnmarshalJSON([]byte(stdout), &result))
+	require.Equal(t, msg.Fee.Gas, result.Response.GasUsed)
+	require.Equal(t, msg.Fee.Gas, result.Response.GasWanted)
 	tests.WaitForNextNBlocksTM(2, port)
 
 	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", barAddr, flags))

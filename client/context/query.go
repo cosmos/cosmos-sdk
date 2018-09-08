@@ -255,11 +255,11 @@ func (ctx CLIContext) ensureBroadcastTx(txBytes []byte) error {
 		type toJSON struct {
 			Height   int64
 			TxHash   string
-			Response string
+			Response abci.ResponseDeliverTx
 		}
 
 		if ctx.Logger != nil {
-			resJSON := toJSON{res.Height, res.Hash.String(), fmt.Sprintf("%+v", res.DeliverTx)}
+			resJSON := toJSON{res.Height, res.Hash.String(), res.DeliverTx}
 			bz, err := ctx.Codec.MarshalJSON(resJSON)
 			if err != nil {
 				return err

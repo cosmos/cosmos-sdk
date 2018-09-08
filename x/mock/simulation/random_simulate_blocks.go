@@ -6,7 +6,9 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"os/signal"
 	"sort"
+	"syscall"
 	"testing"
 	"time"
 
@@ -80,6 +82,16 @@ func SimulateFromSeed(
 
 	header := abci.Header{Height: 0, Time: timestamp}
 	opCount := 0
+
+	// Setup code to catch SIGTERM's
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		fmt.Printf("Exiting early due to SIGTERM, on block %d, operation %d\n", header.Height, opCount)
+		DisplayEvents(events)
+		os.Exit(128 + int(syscall.SIGTERM))
+	}()
 
 	var pastTimes []time.Time
 	var pastVoteInfos [][]abci.VoteInfo

@@ -11,6 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	cmn "github.com/tendermint/tendermint/libs/common"
 
@@ -112,8 +113,17 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
 
 	// Enable auto gas
-	success = executeWrite(t, fmt.Sprintf("gaiacli send %v --gas=0 --amount=10steak --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
+	success, stdout, _ := executeWriteRetStdStreams(t, fmt.Sprintf("gaiacli send %v --json --gas=0 --amount=10steak --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
 	require.True(t, success)
+	// check that gas wanted == gas used
+	cdc := app.MakeCodec()
+	jsonOutput := struct {
+		Height   int64
+		TxHash   string
+		Response abci.ResponseDeliverTx
+	}{}
+	require.Nil(t, cdc.UnmarshalJSON([]byte(stdout), &jsonOutput))
+	require.Equal(t, jsonOutput.Response.GasWanted, jsonOutput.Response.GasUsed)
 	tests.WaitForNextNBlocksTM(2, port)
 	// Check state has changed accordingly
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))

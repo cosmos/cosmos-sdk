@@ -31,7 +31,7 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 
 	// Set various mappers/keepers to interact easily with underlying stores
 	accountMapper := auth.NewAccountMapper(cdc, keyAccount, auth.ProtoBaseAccount)
-	coinKeeper := bank.NewKeeper(accountMapper)
+	bankKeeper := bank.NewKeeper(accountMapper)
 	feeKeeper := auth.NewFeeCollectionKeeper(cdc, keyFees)
 
 	app.SetAnteHandler(auth.NewAnteHandler(accountMapper, feeKeeper))
@@ -39,7 +39,7 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	// Register message routes.
 	// Note the handler gets access to
 	app.Router().
-		AddRoute("bank", bank.NewHandler(coinKeeper))
+		AddRoute("bank", bank.NewHandler(bankKeeper))
 
 	// Mount stores and load the latest state.
 	app.MountStoresIAVL(keyAccount, keyFees)

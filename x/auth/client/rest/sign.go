@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
 // SignBody defines the properties of a sign request's body.
@@ -39,13 +39,13 @@ func SignTxRequestHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.Han
 			return
 		}
 
-		txCtx := authctx.TxContext{
+		txBldr := authtxb.TxBuilder{
 			ChainID:       m.ChainID,
 			AccountNumber: m.AccountNumber,
 			Sequence:      m.Sequence,
 		}
 
-		signedTx, err := txCtx.SignStdTx(m.LocalAccountName, m.Password, m.Tx, m.AppendSig)
+		signedTx, err := txBldr.SignStdTx(m.LocalAccountName, m.Password, m.Tx, m.AppendSig)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

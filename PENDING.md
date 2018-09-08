@@ -105,6 +105,7 @@ BUG FIXES
 
 * Gaia CLI  (`gaiacli`)
     * [cli] [\#1997](https://github.com/cosmos/cosmos-sdk/issues/1997) Handle panics gracefully when `gaiacli stake {delegation,unbond}` fail to unmarshal delegation.
+    * [cli] [\#2265](https://github.com/cosmos/cosmos-sdk/issues/2265) Fix JSON formatting of the `gaiacli send` command.
 
 * Gaia
 

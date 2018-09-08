@@ -15,7 +15,7 @@ var _ sdk.Msg = &MsgUnjail{}
 
 // MsgUnjail - struct for unjailing jailed validator
 type MsgUnjail struct {
-	ValidatorAddr sdk.ValAddress `json:"address"` // address of the validator owner
+	ValidatorAddr sdk.ValAddress `json:"address"` // address of the validator operator
 }
 
 func NewMsgUnjail(validatorAddr sdk.ValAddress) MsgUnjail {

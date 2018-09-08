@@ -126,7 +126,7 @@ func delegatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 		}
 
 		for _, validator := range validators {
-			valAddr = validator.Operator
+			valAddr = validator.OperatorAddr
 
 			// Delegations
 			delegations, statusCode, errMsg, err := getDelegatorDelegations(cliCtx, cdc, delAddr, valAddr)
@@ -410,7 +410,7 @@ func delegatorValidatorsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) ht
 
 		for _, validator := range validators {
 			// get all transactions from the delegator to val and append
-			valAddr = validator.Operator
+			valAddr = validator.OperatorAddr
 
 			validator, statusCode, errMsg, errRes := getDelegatorValidator(cliCtx, cdc, delegatorAddr, valAddr)
 			if errRes != nil {

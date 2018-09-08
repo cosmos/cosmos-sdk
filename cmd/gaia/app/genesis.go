@@ -213,8 +213,8 @@ func addValidatorToStakeData(genTx GaiaGenTx, stakeData stake.GenesisState) stak
 
 	// create the self-delegation from the issuedDelShares
 	delegation := stake.Delegation{
-		DelegatorAddr: sdk.AccAddress(validator.Operator),
-		ValidatorAddr: validator.Operator,
+		DelegatorAddr: sdk.AccAddress(validator.OperatorAddr),
+		ValidatorAddr: validator.OperatorAddr,
 		Shares:        issuedDelShares,
 		Height:        0,
 	}

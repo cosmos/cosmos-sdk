@@ -96,6 +96,7 @@ IMPROVEMENTS
     * [x/stake] [x/slashing] Ensure delegation invariants to jailed validators [#1883](https://github.com/cosmos/cosmos-sdk/issues/1883).
     * [x/stake] Improve speed of GetValidator, which was shown to be a performance bottleneck. [#2046](https://github.com/tendermint/tendermint/pull/2200)
     * [genesis] \#2229 Ensure that there are no duplicate accounts in the genesis state.
+    * Add SDK validation to `config.toml` (namely disabling `create_empty_blocks`) \#1571
 * SDK
     * [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.
     * [spec] Added simple piggy bank distribution spec

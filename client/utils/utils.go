@@ -202,6 +202,11 @@ func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 	}
 	if txBldr.Gas == 0 {
 		var name string
+		name, err = cliCtx.GetFromName()
+		if err != nil {
+			return
+		}
+
 		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, name, msgs)
 		if err != nil {
 			return

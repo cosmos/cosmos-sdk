@@ -104,7 +104,8 @@ func (ctx CLIContext) GetFromName() (string, error) {
 	return ctx.fromName, nil
 }
 
-func (ctx CLIContext) populateFromFields() error {
+// NOTE: mutates state so must be pointer receiver
+func (ctx *CLIContext) populateFromFields() error {
 	if ctx.From == "" {
 		return errors.Errorf("must provide a from address or name")
 	}
@@ -127,7 +128,7 @@ func (ctx CLIContext) populateFromFields() error {
 		}
 	}
 
-	ctx.fromAddress = (sdk.AccAddress)(info.GetPubKey().Address())
+	ctx.fromAddress = info.GetAddress()
 	ctx.fromName = info.GetName()
 	return nil
 }

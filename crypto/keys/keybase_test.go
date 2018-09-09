@@ -104,7 +104,7 @@ func TestKeyManagement(t *testing.T) {
 	// addr cache gets nuked
 	err = cstore.Delete(n2, p2)
 	require.NoError(t, err)
-	require.False(t, db.Has(addrKey(i2.GetPubKey().Address())))
+	require.False(t, db.Has(addrKey(i2.GetAddress())))
 }
 
 // TestSignVerify does some detailed checks on how we sign and validate

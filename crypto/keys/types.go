@@ -10,7 +10,6 @@ import (
 
 // Keybase exposes operations on a generic keystore
 type Keybase interface {
-
 	// CRUD on the keystore
 	List() ([]Info, error)
 	Get(name string) (Info, error)
@@ -75,6 +74,8 @@ type Info interface {
 	GetName() string
 	// Public key
 	GetPubKey() crypto.PubKey
+	// Address
+	GetAddress() types.AccAddress
 }
 
 var _ Info = &localInfo{}
@@ -108,6 +109,10 @@ func (i localInfo) GetPubKey() crypto.PubKey {
 	return i.PubKey
 }
 
+func (i localInfo) GetAddress() types.AccAddress {
+	return i.PubKey.Address().Bytes()
+}
+
 // ledgerInfo is the public information about a Ledger key
 type ledgerInfo struct {
 	Name   string                 `json:"name"`
@@ -135,6 +140,10 @@ func (i ledgerInfo) GetPubKey() crypto.PubKey {
 	return i.PubKey
 }
 
+func (i ledgerInfo) GetAddress() types.AccAddress {
+	return i.PubKey.Address().Bytes()
+}
+
 // offlineInfo is the public information about an offline key
 type offlineInfo struct {
 	Name   string        `json:"name"`
@@ -158,6 +167,10 @@ func (i offlineInfo) GetName() string {
 
 func (i offlineInfo) GetPubKey() crypto.PubKey {
 	return i.PubKey
+}
+
+func (i offlineInfo) GetAddress() types.AccAddress {
+	return i.PubKey.Address().Bytes()
 }
 
 // encoding info

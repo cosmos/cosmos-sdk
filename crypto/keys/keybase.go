@@ -206,7 +206,7 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 }
 
 func (kb dbKeybase) GetByAddress(address types.AccAddress) (Info, error) {
-	ik := kb.db.Get(addrKey((tmcrypto.Address)(address)))
+	ik := kb.db.Get(addrKey(address))
 	if len(ik) == 0 {
 		return nil, fmt.Errorf("key with address %s not found", address.String())
 	}
@@ -364,7 +364,7 @@ func (kb dbKeybase) Delete(name, passphrase string) error {
 		if err != nil {
 			return err
 		}
-		kb.db.DeleteSync(addrKey(linfo.GetPubKey().Address()))
+		kb.db.DeleteSync(addrKey(linfo.GetAddress()))
 		kb.db.DeleteSync(infoKey(name))
 		return nil
 	case ledgerInfo:
@@ -372,7 +372,7 @@ func (kb dbKeybase) Delete(name, passphrase string) error {
 		if passphrase != "yes" {
 			return fmt.Errorf("enter 'yes' exactly to delete the key - this cannot be undone")
 		}
-		kb.db.DeleteSync(addrKey(info.GetPubKey().Address()))
+		kb.db.DeleteSync(addrKey(info.GetAddress()))
 		kb.db.DeleteSync(infoKey(name))
 		return nil
 	}
@@ -436,10 +436,10 @@ func (kb dbKeybase) writeInfo(info Info, name string) {
 	key := infoKey(name)
 	kb.db.SetSync(key, writeInfo(info))
 	// store a pointer to the infokey by address for fast lookup
-	kb.db.SetSync(addrKey(info.GetPubKey().Address()), key)
+	kb.db.SetSync(addrKey(info.GetAddress()), key)
 }
 
-func addrKey(address tmcrypto.Address) []byte {
+func addrKey(address types.AccAddress) []byte {
 	return []byte(fmt.Sprintf("%s.%s", address.String(), addressSuffix))
 }
 

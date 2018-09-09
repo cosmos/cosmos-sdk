@@ -93,9 +93,8 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 func testAndRunTxs(app *GaiaApp) []simulation.Operation {
 	return []simulation.Operation{
 		banksim.SimulateSingleInputMsgSend(app.accountMapper),
-		govsim.SimulateMsgSubmitProposal(app.govKeeper, app.stakeKeeper),
+		govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakeKeeper),
 		govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper),
-		govsim.SimulateMsgVote(app.govKeeper, app.stakeKeeper),
 		stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper),
 		stakesim.SimulateMsgEditValidator(app.stakeKeeper),
 		stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper),
@@ -112,7 +111,7 @@ func invariants(app *GaiaApp) []simulation.Invariant {
 		func(t *testing.T, baseapp *baseapp.BaseApp, log string) {
 			banksim.NonnegativeBalanceInvariant(app.accountMapper)(t, baseapp, log)
 			govsim.AllInvariants()(t, baseapp, log)
-			stakesim.AllInvariants(app.coinKeeper, app.stakeKeeper, app.accountMapper)(t, baseapp, log)
+			stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper, app.accountMapper)(t, baseapp, log)
 			slashingsim.AllInvariants()(t, baseapp, log)
 		},
 	}

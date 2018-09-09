@@ -129,7 +129,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 
 	// require the cliff validator has changed
 	cliffVal := validators[numVals-maxVals-1]
-	require.Equal(t, cliffVal.Operator, sdk.ValAddress(keeper.GetCliffValidator(ctx)))
+	require.Equal(t, cliffVal.OperatorAddr, sdk.ValAddress(keeper.GetCliffValidator(ctx)))
 
 	// require the cliff validator power has changed
 	cliffPower := keeper.GetCliffValidatorPower(ctx)
@@ -142,7 +142,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 
 	// require all the validators have their respective statuses
 	for valIdx, status := range expectedValStatus {
-		valAddr := validators[valIdx].Operator
+		valAddr := validators[valIdx].OperatorAddr
 		val, _ := keeper.GetValidator(ctx, valAddr)
 
 		assert.Equal(
@@ -192,7 +192,7 @@ func TestCliffValidatorChange(t *testing.T) {
 
 	// assert new cliff validator to be set to the second lowest bonded validator by power
 	newCliffVal := validators[numVals-maxVals+1]
-	require.Equal(t, newCliffVal.Operator, sdk.ValAddress(keeper.GetCliffValidator(ctx)))
+	require.Equal(t, newCliffVal.OperatorAddr, sdk.ValAddress(keeper.GetCliffValidator(ctx)))
 
 	// assert cliff validator power should have been updated
 	cliffPower := keeper.GetCliffValidatorPower(ctx)
@@ -205,7 +205,7 @@ func TestCliffValidatorChange(t *testing.T) {
 
 	// assert cliff validator has not change but increased in power
 	cliffPower = keeper.GetCliffValidatorPower(ctx)
-	require.Equal(t, newCliffVal.Operator, sdk.ValAddress(keeper.GetCliffValidator(ctx)))
+	require.Equal(t, newCliffVal.OperatorAddr, sdk.ValAddress(keeper.GetCliffValidator(ctx)))
 	require.Equal(t, GetValidatorsByPowerIndexKey(newCliffVal, pool), cliffPower)
 
 	// add enough power to cliff validator to be equal in rank to next validator
@@ -215,7 +215,7 @@ func TestCliffValidatorChange(t *testing.T) {
 
 	// assert new cliff validator due to power rank construction
 	newCliffVal = validators[numVals-maxVals+2]
-	require.Equal(t, newCliffVal.Operator, sdk.ValAddress(keeper.GetCliffValidator(ctx)))
+	require.Equal(t, newCliffVal.OperatorAddr, sdk.ValAddress(keeper.GetCliffValidator(ctx)))
 
 	// assert cliff validator power should have been updated
 	cliffPower = keeper.GetCliffValidatorPower(ctx)
@@ -317,7 +317,7 @@ func TestValidatorBasics(t *testing.T) {
 	assert.True(ValEq(t, validators[2], resVals[2]))
 
 	// remove a record
-	keeper.RemoveValidator(ctx, validators[1].Operator)
+	keeper.RemoveValidator(ctx, validators[1].OperatorAddr)
 	_, found = keeper.GetValidator(ctx, addrVals[1])
 	require.False(t, found)
 }
@@ -346,11 +346,11 @@ func GetValidatorSortingUnmixed(t *testing.T) {
 	assert.Equal(t, sdk.NewDec(100), resValidators[2].BondedTokens(), "%v", resValidators)
 	assert.Equal(t, sdk.NewDec(1), resValidators[3].BondedTokens(), "%v", resValidators)
 	assert.Equal(t, sdk.NewDec(0), resValidators[4].BondedTokens(), "%v", resValidators)
-	assert.Equal(t, validators[3].Operator, resValidators[0].Operator, "%v", resValidators)
-	assert.Equal(t, validators[4].Operator, resValidators[1].Operator, "%v", resValidators)
-	assert.Equal(t, validators[1].Operator, resValidators[2].Operator, "%v", resValidators)
-	assert.Equal(t, validators[2].Operator, resValidators[3].Operator, "%v", resValidators)
-	assert.Equal(t, validators[0].Operator, resValidators[4].Operator, "%v", resValidators)
+	assert.Equal(t, validators[3].OperatorAddr, resValidators[0].OperatorAddr, "%v", resValidators)
+	assert.Equal(t, validators[4].OperatorAddr, resValidators[1].OperatorAddr, "%v", resValidators)
+	assert.Equal(t, validators[1].OperatorAddr, resValidators[2].OperatorAddr, "%v", resValidators)
+	assert.Equal(t, validators[2].OperatorAddr, resValidators[3].OperatorAddr, "%v", resValidators)
+	assert.Equal(t, validators[0].OperatorAddr, resValidators[4].OperatorAddr, "%v", resValidators)
 
 	// test a basic increase in voting power
 	validators[3].Tokens = sdk.NewDec(500)
@@ -457,11 +457,11 @@ func GetValidatorSortingMixed(t *testing.T) {
 	assert.Equal(t, sdk.NewDec(100), resValidators[2].BondedTokens(), "%v", resValidators)
 	assert.Equal(t, sdk.NewDec(1), resValidators[3].BondedTokens(), "%v", resValidators)
 	assert.Equal(t, sdk.NewDec(0), resValidators[4].BondedTokens(), "%v", resValidators)
-	assert.Equal(t, validators[3].Operator, resValidators[0].Operator, "%v", resValidators)
-	assert.Equal(t, validators[4].Operator, resValidators[1].Operator, "%v", resValidators)
-	assert.Equal(t, validators[1].Operator, resValidators[2].Operator, "%v", resValidators)
-	assert.Equal(t, validators[2].Operator, resValidators[3].Operator, "%v", resValidators)
-	assert.Equal(t, validators[0].Operator, resValidators[4].Operator, "%v", resValidators)
+	assert.Equal(t, validators[3].OperatorAddr, resValidators[0].OperatorAddr, "%v", resValidators)
+	assert.Equal(t, validators[4].OperatorAddr, resValidators[1].OperatorAddr, "%v", resValidators)
+	assert.Equal(t, validators[1].OperatorAddr, resValidators[2].OperatorAddr, "%v", resValidators)
+	assert.Equal(t, validators[2].OperatorAddr, resValidators[3].OperatorAddr, "%v", resValidators)
+	assert.Equal(t, validators[0].OperatorAddr, resValidators[4].OperatorAddr, "%v", resValidators)
 }
 
 // TODO separate out into multiple tests
@@ -488,7 +488,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	}
 
 	for i := range amts {
-		validators[i], found = keeper.GetValidator(ctx, validators[i].Operator)
+		validators[i], found = keeper.GetValidator(ctx, validators[i].OperatorAddr)
 		require.True(t, found)
 	}
 	resValidators := keeper.GetValidatorsByPower(ctx)
@@ -512,7 +512,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	// validator 3 enters bonded validator set
 	ctx = ctx.WithBlockHeight(40)
 
-	validators[3], found = keeper.GetValidator(ctx, validators[3].Operator)
+	validators[3], found = keeper.GetValidator(ctx, validators[3].OperatorAddr)
 	require.True(t, found)
 	validators[3], pool, _ = validators[3].AddTokensFromDel(pool, sdk.NewInt(1))
 	keeper.SetPool(ctx, pool)
@@ -539,7 +539,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	require.Equal(t, nMax, uint16(len(resValidators)))
 	assert.True(ValEq(t, validators[0], resValidators[0]))
 	assert.True(ValEq(t, validators[2], resValidators[1]))
-	validator, exists := keeper.GetValidator(ctx, validators[3].Operator)
+	validator, exists := keeper.GetValidator(ctx, validators[3].OperatorAddr)
 	require.Equal(t, exists, true)
 	require.Equal(t, int64(40), validator.BondHeight)
 }
@@ -609,7 +609,7 @@ func TestFullValidatorSetPowerChange(t *testing.T) {
 	}
 	for i := range amts {
 		var found bool
-		validators[i], found = keeper.GetValidator(ctx, validators[i].Operator)
+		validators[i], found = keeper.GetValidator(ctx, validators[i].OperatorAddr)
 		require.True(t, found)
 	}
 	assert.Equal(t, sdk.Unbonding, validators[0].Status)
@@ -682,13 +682,13 @@ func TestGetTendermintUpdatesAllNone(t *testing.T) {
 	keeper.ClearTendermintUpdates(ctx)
 	require.Equal(t, 0, len(keeper.GetTendermintUpdates(ctx)))
 
-	keeper.RemoveValidator(ctx, validators[0].Operator)
-	keeper.RemoveValidator(ctx, validators[1].Operator)
+	keeper.RemoveValidator(ctx, validators[0].OperatorAddr)
+	keeper.RemoveValidator(ctx, validators[1].OperatorAddr)
 
 	updates = keeper.GetTendermintUpdates(ctx)
 	assert.Equal(t, 2, len(updates))
-	assert.Equal(t, tmtypes.TM2PB.PubKey(validators[0].PubKey), updates[0].PubKey)
-	assert.Equal(t, tmtypes.TM2PB.PubKey(validators[1].PubKey), updates[1].PubKey)
+	assert.Equal(t, tmtypes.TM2PB.PubKey(validators[0].ConsPubKey), updates[0].PubKey)
+	assert.Equal(t, tmtypes.TM2PB.PubKey(validators[1].ConsPubKey), updates[1].PubKey)
 	assert.Equal(t, int64(0), updates[0].Power)
 	assert.Equal(t, int64(0), updates[1].Power)
 }

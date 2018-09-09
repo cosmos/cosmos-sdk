@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"github.com/pelletier/go-toml"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 type cliConfig struct {
@@ -57,7 +57,7 @@ func runConfigCmd(cmd *cobra.Command, args [] string) error {
 	encoding := "btc"
 	output := "text"
 	var chainID string
-	chainID, err = utils.DefaultChainID()
+	chainID, err = types.DefaultChainID()
 	if err != nil {
 		fmt.Println("Couldn't populate ChainID, so using an empty one.")
 	}

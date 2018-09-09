@@ -9,11 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/common"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // SendTx implements a auxiliary handler that facilitates sending a series of
@@ -50,6 +48,16 @@ func SendTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg)
 	}
 	// broadcast to a Tendermint node
 	return cliCtx.EnsureBroadcastTx(txBytes)
+}
+
+// SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
+func SimulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg, gas int64) (estimated, adjusted int64, err error) {
+	txBytes, err := txBldr.WithGas(gas).BuildWithPubKey(name, msgs)
+	if err != nil {
+		return
+}
+	estimated, adjusted, err = CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, cliCtx.GasAdjustment)
+	return
 }
 
 // EnrichCtxWithGas calculates the gas estimate that would be consumed by the

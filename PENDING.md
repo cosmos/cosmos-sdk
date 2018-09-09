@@ -17,9 +17,6 @@ BREAKING CHANGES
     utilize a validator's operator address must now use the new Bech32 prefix,
     `cosmosvaloper`.
     * [cli] [\#2190](https://github.com/cosmos/cosmos-sdk/issues/2190) `gaiacli init --gen-txs` is now `gaiacli init --with-txs` to reduce confusion
-    * [\#2040](https://github.com/cosmos/cosmos-sdk/issues/2040) All commands that utilize a validator's address must now use the new
-    bech32 prefix, `cosmosval`. A validator's Tendermint signing key and address
-    now use a new bech32 prefix, `cosmoscons`.
     * [cli] \#2073 --from can now be either an address or a key name
 
 

@@ -23,24 +23,24 @@ const ctxAccStoreName = "acc"
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
 type CLIContext struct {
-	Codec           *wire.Codec
-	AccDecoder      auth.AccountDecoder
-	Client          rpcclient.Client
-	Logger          io.Writer
-	Height          int64
-	Gas             int64
-	GasAdjustment   float64
-	NodeURI         string
-	From string
-	AccountStore    string
-	TrustNode       bool
-	UseLedger       bool
-	Async           bool
-	JSON            bool
-	PrintResponse   bool
-	Certifier       tmlite.Certifier
-	DryRun          bool
-	GenerateOnly    bool
+	Codec         *wire.Codec
+	AccDecoder    auth.AccountDecoder
+	Client        rpcclient.Client
+	Logger        io.Writer
+	Height        int64
+	Gas           int64
+	GasAdjustment float64
+	NodeURI       string
+	From          string
+	AccountStore  string
+	TrustNode     bool
+	UseLedger     bool
+	Async         bool
+	JSON          bool
+	PrintResponse bool
+	Certifier     tmlite.Certifier
+	DryRun        bool
+	GenerateOnly  bool
 	fromAddress   types.AccAddress
 	fromName      string
 }
@@ -68,9 +68,9 @@ func NewCLIContext() CLIContext {
 		Async:         viper.GetBool(client.FlagAsync),
 		JSON:          viper.GetBool(client.FlagJson),
 		PrintResponse: viper.GetBool(client.FlagPrintResponse),
-		Certifier:       createCertifier(),
-		DryRun:          viper.GetBool(client.FlagDryRun),
-		GenerateOnly:    viper.GetBool(client.FlagGenerateOnly),
+		Certifier:     createCertifier(),
+		DryRun:        viper.GetBool(client.FlagDryRun),
+		GenerateOnly:  viper.GetBool(client.FlagGenerateOnly),
 	}
 }
 

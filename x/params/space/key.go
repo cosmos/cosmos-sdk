@@ -8,19 +8,20 @@ import (
 
 // Wrapper for key string
 type Key struct {
-	s string
+	s []byte
 }
 
 // Appending two keys with '/' as separator
-// Checks alpanumericity
+// Checks alphanumericity
 func (k Key) Append(keys ...string) (res Key) {
-	res = k
+	res.s = make([]byte, len(k.s))
+	copy(res.s, k.s)
 
 	for _, key := range keys {
 		if !tmlibs.IsASCIIText(key) {
 			panic("parameter key expressions can only contain alphanumeric characters")
 		}
-		res.s = res.s + "/" + key
+		res.s = append(append(res.s, byte('/')), []byte(key)...)
 	}
 	return
 }
@@ -30,19 +31,19 @@ func NewKey(keys ...string) (res Key) {
 	if len(keys) < 1 {
 		panic("length of parameter keys must not be zero")
 	}
-	res = Key{keys[0]}
+	res = Key{[]byte(keys[0])}
 
 	return res.Append(keys[1:]...)
 }
 
 // KeyBytes make KVStore key bytes from Key
 func (k Key) Bytes() []byte {
-	return []byte(k.s)
+	return k.s
 }
 
 // Human readable string
 func (k Key) String() string {
-	return k.s
+	return string(k.s)
 }
 
 // Used for associating paramstore key and field of param structs

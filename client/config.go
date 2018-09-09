@@ -6,11 +6,10 @@ import (
 	"bufio"
 	"path"
 	"os"
-	"github.com/pkg/errors"
-	"encoding/json"
 	"io/ioutil"
 	"github.com/pelletier/go-toml"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 )
 
 type cliConfig struct {
@@ -42,10 +41,6 @@ func runConfigCmd(cmd *cobra.Command, args [] string) error {
 	}
 
 	stdin := BufferStdin()
-	gaiaDHome, err := handleGaiaDHome(home, stdin)
-	if err != nil {
-		return err
-	}
 	gaiaCLIHome, err := handleGaiaCLIHome(home, stdin)
 	if err != nil {
 		return err
@@ -62,15 +57,9 @@ func runConfigCmd(cmd *cobra.Command, args [] string) error {
 	encoding := "btc"
 	output := "text"
 	var chainID string
-
-	gaiaDCfgPath := path.Join(gaiaDHome, "config")
-	if info, err := os.Stat(gaiaDCfgPath); err == nil && info.IsDir() {
-		chainID, err = processGaiaDConfig(gaiaDCfgPath)
-		if err != nil {
-			fmt.Println("Couldn't get gaiad file. Using empty chainID.")
-		}
-	} else {
-		fmt.Println("No gaiad config found. Using empty chainID.")
+	chainID, err = utils.DefaultChainID()
+	if err != nil {
+		fmt.Println("Couldn't populate ChainID, so using an empty one.")
 	}
 
 	cfg := &cliConfig{
@@ -84,19 +73,6 @@ func runConfigCmd(cmd *cobra.Command, args [] string) error {
 	}
 
 	return createGaiaCLIConfig(cfg)
-}
-
-func handleGaiaDHome(dir string, stdin *bufio.Reader) (string, error) {
-	home, err := GetString("Where is your gaiad home directory? (Default: ~/.gaiad)", stdin)
-	if err != nil {
-		return "", err
-	}
-
-	if home == "" {
-		home = path.Join(dir, ".gaiad")
-	}
-
-	return home, nil
 }
 
 func handleGaiaCLIHome(dir string, stdin *bufio.Reader) (string, error) {
@@ -129,32 +105,6 @@ func handleNode(stdin *bufio.Reader) (string, error) {
 
 func handleTrustNode(stdin *bufio.Reader) (bool, error) {
 	return GetConfirmation("Do you trust this node?", stdin)
-}
-
-func processGaiaDConfig(cfgPath string) (string, error) {
-	fp := path.Join(cfgPath, "genesis.json")
-	info, err := os.Stat(fp)
-	if err != nil {
-		return "", err
-	}
-
-	if info.IsDir() {
-		return "", errors.New("is directory")
-	}
-
-	genesis, err := ioutil.ReadFile(fp)
-	if err != nil {
-		return "", err
-	}
-
-	var data map[string]interface{}
-	json.Unmarshal(genesis, &data)
-	chainID, ok := data["chain_id"].(string)
-	if !ok {
-		return "", errors.New("chain_id is not a string")
-	}
-
-	return chainID, nil
 }
 
 func createGaiaCLIConfig(cfg *cliConfig) error {

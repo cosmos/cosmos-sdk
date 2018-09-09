@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 )
 
 // TxBuilder implements a transaction context created in SDK modules.
@@ -30,7 +31,7 @@ func NewTxBuilderFromCLI() TxBuilder {
 	// if chain ID is not specified manually, read default chain ID
 	chainID := viper.GetString(client.FlagChainID)
 	if chainID == "" {
-		defaultChainID, err := defaultChainID()
+		defaultChainID, err := utils.DefaultChainID()
 		if err != nil {
 			chainID = defaultChainID
 		}
@@ -155,7 +156,7 @@ func (bldr TxBuilder) BuildWithPubKey(name string, msgs []sdk.Msg) ([]byte, erro
 		return nil, err
 	}
 
-	info, err := keybase.Get(name)
+	sig, pubkey, err := keybase.Sign(name, passphrase, msg.Bytes())
 	if err != nil {
 		return nil, err
 	}
@@ -163,14 +164,16 @@ func (bldr TxBuilder) BuildWithPubKey(name string, msgs []sdk.Msg) ([]byte, erro
 	sigs := []auth.StdSignature{{
 		AccountNumber: msg.AccountNumber,
 		Sequence:      msg.Sequence,
-		PubKey:        info.GetPubKey(),
+		PubKey:        pubkey,
+		Signature:     sig,
 	}}
 
 	return bldr.Codec.MarshalBinary(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
 }
 
-// SignStdTx appends a signature to a StdTx and returns a copy of a it. If append
-// is false, it replaces the signatures already attached with the new signature.
+// BuildAndSign builds a single message to be signed, and signs a transaction
+// with the built message given a name, passphrase, and a set of
+// messages.
 func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx auth.StdTx, appendSig bool) (signedStdTx auth.StdTx, err error) {
 	stdSignature, err := MakeSignature(name, passphrase, auth.StdSignMsg{
 		ChainID:       bldr.ChainID,
@@ -181,33 +184,8 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx auth.StdTx, appen
 		Memo:          stdTx.GetMemo(),
 	})
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	sigs := stdTx.GetSignatures()
-	if len(sigs) == 0 || !appendSig {
-		sigs = []auth.StdSignature{stdSignature}
-	} else {
-		sigs = append(sigs, stdSignature)
-	}
-	signedStdTx = auth.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, sigs, stdTx.GetMemo())
-	return
-}
-
-// MakeSignature builds a StdSignature given key name, passphrase, and a StdSignMsg.
-func MakeSignature(name, passphrase string, msg auth.StdSignMsg) (sig auth.StdSignature, err error) {
-	keybase, err := keys.GetKeyBase()
-	if err != nil {
-		return
-	}
-	sigBytes, pubkey, err := keybase.Sign(name, passphrase, msg.Bytes())
-	if err != nil {
-		return
-	}
-	return auth.StdSignature{
-		AccountNumber: msg.AccountNumber,
-		Sequence:      msg.Sequence,
-		PubKey:        pubkey,
-		Signature:     sigBytes,
-	}, nil
+	return ctx.Sign(name, passphrase, msg)
 }

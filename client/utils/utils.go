@@ -8,10 +8,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	auth "github.com/cosmos/cosmos-sdk/x/auth"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	amino "github.com/tendermint/go-amino"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/common"
+	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // SendTx implements a auxiliary handler that facilitates sending a series of
@@ -142,6 +144,25 @@ func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name stri
 	}
 	estimated, adjusted, err = CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, txBldr.GasAdjustment)
 	return
+}
+
+// DefaultChainID returns the chain ID from the genesis file if present. An
+// error is returned if the file cannot be read or parsed.
+//
+// TODO: This should be removed and the chainID should always be provided by
+// the end user.
+func DefaultChainID() (string, error) {
+	cfg, err := tcmd.ParseConfig()
+	if err != nil {
+		return "", err
+	}
+
+	doc, err := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
+	if err != nil {
+		return "", err
+	}
+
+	return doc.ChainID, nil
 }
 
 func adjustGasEstimate(estimate int64, adjustment float64) int64 {

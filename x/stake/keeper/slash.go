@@ -28,7 +28,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	logger := ctx.Logger().With("module", "x/stake")
 
 	if slashFactor.LT(sdk.ZeroDec()) {
-		panic(fmt.Errorf("attempted to slash with a negative slashFactor: %v", slashFactor))
+		panic(fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor))
 	}
 
 	// Amount of slashing = slash slashFactor * power at time of infraction
@@ -132,7 +132,7 @@ func (k Keeper) Jail(ctx sdk.Context, pubkey crypto.PubKey) {
 		panic(err.Error())
 	}
 	logger := ctx.Logger().With("module", "x/stake")
-	logger.Info(fmt.Sprintf("validator %s jailed", validatorAddr.String()))
+	logger.Info(fmt.Sprintf("validator %s jailed", validatorAddr))
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 	return
 }
@@ -145,7 +145,7 @@ func (k Keeper) Unjail(ctx sdk.Context, pubkey crypto.PubKey) {
 		panic(err.Error())
 	}
 	logger := ctx.Logger().With("module", "x/stake")
-	logger.Info(fmt.Sprintf("validator %s unjailed", validatorAddr.String()))
+	logger.Info(fmt.Sprintf("validator %s unjailed", validatorAddr))
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 	return
 }

@@ -114,8 +114,14 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
 
-		logger.Info(fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %v steak (had only %s steak); deleted",
-			inactiveProposal.GetProposalID(), inactiveProposal.GetTitle(), keeper.GetDepositProcedure(ctx).MinDeposit.AmountOf("steak"), inactiveProposal.GetTotalDeposit().AmountOf("steak")))
+		logger.Info(
+			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %v steak (had only %s steak); deleted",
+				inactiveProposal.GetProposalID(),
+				inactiveProposal.GetTitle(),
+				keeper.GetDepositProcedure(ctx).MinDeposit.AmountOf("steak"),
+				inactiveProposal.GetTotalDeposit().AmountOf("steak"),
+			),
+		)
 	}
 
 	// Check if earliest Active Proposal ended voting period yet

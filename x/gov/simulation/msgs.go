@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-	"testing"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -45,10 +44,13 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, sk stake.Keepe
 	})
 	statePercentageArray := []float64{1, .9, .75, .4, .15, 0}
 	curNumVotesState := 1
-	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOps []simulation.FutureOperation, err sdk.Error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
 		// 1) submit proposal now
 		sender := simulation.RandomKey(r, keys)
-		msg := simulationCreateMsgSubmitProposal(tb, r, sender, log)
+		msg, err := simulationCreateMsgSubmitProposal(r, sender)
+		if err != nil {
+			return "", nil, err
+		}
 		action = simulateHandleMsgSubmitProposal(msg, sk, handler, ctx, event)
 		proposalID := k.GetLastProposalID(ctx)
 		// 2) Schedule operations for votes
@@ -77,9 +79,12 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, sk stake.Keepe
 // Note: Currently doesn't ensure that the proposal txt is in JSON form
 func SimulateMsgSubmitProposal(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 	handler := gov.NewHandler(k)
-	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOps []simulation.FutureOperation, err sdk.Error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
 		sender := simulation.RandomKey(r, keys)
-		msg := simulationCreateMsgSubmitProposal(tb, r, sender, log)
+		msg, err := simulationCreateMsgSubmitProposal(r, sender)
+		if err != nil {
+			return "", nil, err
+		}
 		action = simulateHandleMsgSubmitProposal(msg, sk, handler, ctx, event)
 		return action, nil, nil
 	}
@@ -100,10 +105,10 @@ func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, sk stake.Keeper,
 	return action
 }
 
-func simulationCreateMsgSubmitProposal(tb testing.TB, r *rand.Rand, sender crypto.PrivKey, log string) gov.MsgSubmitProposal {
+func simulationCreateMsgSubmitProposal(r *rand.Rand, sender crypto.PrivKey) (msg gov.MsgSubmitProposal, err error) {
 	addr := sdk.AccAddress(sender.PubKey().Address())
 	deposit := randomDeposit(r)
-	msg := gov.NewMsgSubmitProposal(
+	msg = gov.NewMsgSubmitProposal(
 		simulation.RandStringOfLength(r, 5),
 		simulation.RandStringOfLength(r, 5),
 		gov.ProposalTypeText,
@@ -111,14 +116,14 @@ func simulationCreateMsgSubmitProposal(tb testing.TB, r *rand.Rand, sender crypt
 		deposit,
 	)
 	if msg.ValidateBasic() != nil {
-		tb.Fatalf("expected msg to pass ValidateBasic: %s, log %s", msg.GetSignBytes(), log)
+		err = fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 	}
-	return msg
+	return
 }
 
 // SimulateMsgDeposit
 func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.Operation {
-	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
 		key := simulation.RandomKey(r, keys)
 		addr := sdk.AccAddress(key.PubKey().Address())
 		proposalID, ok := randomProposalID(r, k, ctx)
@@ -128,7 +133,7 @@ func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 		deposit := randomDeposit(r)
 		msg := gov.NewMsgDeposit(addr, proposalID, deposit)
 		if msg.ValidateBasic() != nil {
-			tb.Fatalf("expected msg to pass ValidateBasic: %s, log %s", msg.GetSignBytes(), log)
+			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 		ctx, write := ctx.CacheContext()
 		result := gov.NewHandler(k)(ctx, msg)
@@ -153,7 +158,7 @@ func SimulateMsgVote(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 
 // nolint: unparam
 func operationSimulateMsgVote(k gov.Keeper, sk stake.Keeper, key crypto.PrivKey, proposalID int64) simulation.Operation {
-	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
 		if key == nil {
 			key = simulation.RandomKey(r, keys)
 		}
@@ -168,7 +173,7 @@ func operationSimulateMsgVote(k gov.Keeper, sk stake.Keeper, key crypto.PrivKey,
 		option := randomVotingOption(r)
 		msg := gov.NewMsgVote(addr, proposalID, option)
 		if msg.ValidateBasic() != nil {
-			tb.Fatalf("expected msg to pass ValidateBasic: %s, log %s", msg.GetSignBytes(), log)
+			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 		ctx, write := ctx.CacheContext()
 		result := gov.NewHandler(k)(ctx, msg)

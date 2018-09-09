@@ -14,7 +14,6 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -108,12 +107,10 @@ func testAndRunTxs(app *GaiaApp) []simulation.Operation {
 
 func invariants(app *GaiaApp) []simulation.Invariant {
 	return []simulation.Invariant{
-		func(t *testing.T, baseapp *baseapp.BaseApp, log string) {
-			banksim.NonnegativeBalanceInvariant(app.accountMapper)(t, baseapp, log)
-			govsim.AllInvariants()(t, baseapp, log)
-			stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper, app.accountMapper)(t, baseapp, log)
-			slashingsim.AllInvariants()(t, baseapp, log)
-		},
+		banksim.NonnegativeBalanceInvariant(app.accountMapper),
+		govsim.AllInvariants(),
+		stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper, app.accountMapper),
+		slashingsim.AllInvariants(),
 	}
 }
 

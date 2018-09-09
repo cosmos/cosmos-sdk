@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"math/rand"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,18 +21,18 @@ type (
 	//
 	// Operations can optionally provide a list of "FutureOperations" to run later
 	// These will be ran at the beginning of the corresponding block.
-	Operation func(
-		tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		privKeys []crypto.PrivKey, log string, event func(string),
-	) (action string, futureOperations []FutureOperation, err sdk.Error)
+	Operation func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		privKeys []crypto.PrivKey, event func(string),
+	) (action string, futureOperations []FutureOperation, err error)
 
 	// RandSetup performs the random setup the mock module needs.
 	RandSetup func(r *rand.Rand, privKeys []crypto.PrivKey)
 
 	// An Invariant is a function which tests a particular invariant.
-	// If the invariant has been broken, the function should halt the
-	// test and output the log.
-	Invariant func(t *testing.T, app *baseapp.BaseApp, log string)
+	// If the invariant has been broken, it should return an error
+	// containing a descriptive message about what happened.
+	// The simulator will then halt and print the logs.
+	Invariant func(app *baseapp.BaseApp) error
 
 	mockValidator struct {
 		val           abci.Validator
@@ -54,9 +53,10 @@ type (
 // a given invariant if the mock application's last block modulo the given
 // period is congruent to the given offset.
 func PeriodicInvariant(invariant Invariant, period int, offset int) Invariant {
-	return func(t *testing.T, app *baseapp.BaseApp, log string) {
+	return func(app *baseapp.BaseApp) error {
 		if int(app.LastBlockHeight())%period == offset {
-			invariant(t, app, log)
+			return invariant(app)
 		}
+		return nil
 	}
 }

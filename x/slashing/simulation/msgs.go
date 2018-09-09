@@ -3,7 +3,6 @@ package simulation
 import (
 	"fmt"
 	"math/rand"
-	"testing"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -15,7 +14,7 @@ import (
 
 // SimulateMsgUnjail
 func SimulateMsgUnjail(k slashing.Keeper) simulation.Operation {
-	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
 		key := simulation.RandomKey(r, keys)
 		address := sdk.ValAddress(key.PubKey().Address())
 		msg := slashing.NewMsgUnjail(address)

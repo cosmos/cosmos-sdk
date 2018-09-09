@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/big"
 	"math/rand"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,7 +18,7 @@ import (
 // SimulateSingleInputMsgSend tests and runs a single msg send, with one input and one output, where both
 // accounts already exist.
 func SimulateSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation {
-	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
 		fromKey := simulation.RandomKey(r, keys)
 		fromAddr := sdk.AccAddress(fromKey.PubKey().Address())
 		toKey := simulation.RandomKey(r, keys)
@@ -55,7 +54,7 @@ func SimulateSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation 
 			Inputs:  []bank.Input{bank.NewInput(fromAddr, coins)},
 			Outputs: []bank.Output{bank.NewOutput(toAddr, coins)},
 		}
-		goErr = sendAndVerifyMsgSend(tb, app, mapper, msg, ctx, []crypto.PrivKey{fromKey})
+		goErr = sendAndVerifyMsgSend(app, mapper, msg, ctx, []crypto.PrivKey{fromKey})
 		if goErr != nil {
 			return "", nil, goErr
 		}
@@ -66,7 +65,7 @@ func SimulateSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation 
 }
 
 // Sends and verifies the transition of a msg send. This fails if there are repeated inputs or outputs
-func sendAndVerifyMsgSend(tb testing.TB, app *baseapp.BaseApp, mapper auth.AccountMapper, msg bank.MsgSend, ctx sdk.Context, privkeys []crypto.PrivKey) error {
+func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper auth.AccountMapper, msg bank.MsgSend, ctx sdk.Context, privkeys []crypto.PrivKey) error {
 	initialInputAddrCoins := make([]sdk.Coins, len(msg.Inputs))
 	initialOutputAddrCoins := make([]sdk.Coins, len(msg.Outputs))
 	AccountNumbers := make([]int64, len(msg.Inputs))
@@ -89,20 +88,19 @@ func sendAndVerifyMsgSend(tb testing.TB, app *baseapp.BaseApp, mapper auth.Accou
 	res := app.Deliver(tx)
 	if !res.IsOK() {
 		// TODO: Do this in a more 'canonical' way
-		fmt.Println(res)
-		tb.FailNow()
+		return fmt.Errorf("Deliver failed %v", res)
 	}
 
 	for i := 0; i < len(msg.Inputs); i++ {
 		terminalInputCoins := mapper.GetAccount(ctx, msg.Inputs[i].Address).GetCoins()
 		if !initialInputAddrCoins[i].Minus(msg.Inputs[i].Coins).IsEqual(terminalInputCoins) {
-			return fmt.Errorf("Input #%d had an incorrect amount of coins", i)
+			return fmt.Errorf("input #%d had an incorrect amount of coins", i)
 		}
 	}
 	for i := 0; i < len(msg.Outputs); i++ {
 		terminalOutputCoins := mapper.GetAccount(ctx, msg.Outputs[i].Address).GetCoins()
 		if !terminalOutputCoins.IsEqual(initialOutputAddrCoins[i].Plus(msg.Outputs[i].Coins)) {
-			return fmt.Errorf("Output #%d had an incorrect amount of coins", i)
+			return fmt.Errorf("output #%d had an incorrect amount of coins", i)
 		}
 	}
 	return nil

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-	"testing"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -45,10 +44,10 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, sk stake.Keepe
 	})
 	statePercentageArray := []float64{1, .9, .75, .4, .15, 0}
 	curNumVotesState := 1
-	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
 		// 1) submit proposal now
 		sender := simulation.RandomKey(r, keys)
-		msg, err := simulationCreateMsgSubmitProposal(tb, r, sender)
+		msg, err := simulationCreateMsgSubmitProposal(r, sender)
 		if err != nil {
 			return "", nil, err
 		}
@@ -80,9 +79,9 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, sk stake.Keepe
 // Note: Currently doesn't ensure that the proposal txt is in JSON form
 func SimulateMsgSubmitProposal(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 	handler := gov.NewHandler(k)
-	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
 		sender := simulation.RandomKey(r, keys)
-		msg, err := simulationCreateMsgSubmitProposal(tb, r, sender)
+		msg, err := simulationCreateMsgSubmitProposal(r, sender)
 		if err != nil {
 			return "", nil, err
 		}
@@ -106,7 +105,7 @@ func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, sk stake.Keeper,
 	return action
 }
 
-func simulationCreateMsgSubmitProposal(tb testing.TB, r *rand.Rand, sender crypto.PrivKey) (msg gov.MsgSubmitProposal, err error) {
+func simulationCreateMsgSubmitProposal(r *rand.Rand, sender crypto.PrivKey) (msg gov.MsgSubmitProposal, err error) {
 	addr := sdk.AccAddress(sender.PubKey().Address())
 	deposit := randomDeposit(r)
 	msg = gov.NewMsgSubmitProposal(
@@ -124,7 +123,7 @@ func simulationCreateMsgSubmitProposal(tb testing.TB, r *rand.Rand, sender crypt
 
 // SimulateMsgDeposit
 func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.Operation {
-	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
 		key := simulation.RandomKey(r, keys)
 		addr := sdk.AccAddress(key.PubKey().Address())
 		proposalID, ok := randomProposalID(r, k, ctx)
@@ -159,7 +158,7 @@ func SimulateMsgVote(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 
 // nolint: unparam
 func operationSimulateMsgVote(k gov.Keeper, sk stake.Keeper, key crypto.PrivKey, proposalID int64) simulation.Operation {
-	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
 		if key == nil {
 			key = simulation.RandomKey(r, keys)
 		}

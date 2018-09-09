@@ -158,7 +158,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event f
 	return func(blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		keys []crypto.PrivKey, header abci.Header, logWriter func(string)) (opCount int) {
 		for j := 0; j < blocksize; j++ {
-			logUpdate, futureOps, err := ops[r.Intn(len(ops))](tb, r, app, ctx, keys, event)
+			logUpdate, futureOps, err := ops[r.Intn(len(ops))](r, app, ctx, keys, event)
 			if err != nil {
 				displayLogs()
 				tb.Fatalf("error on operation %d within block %d, %v", header.Height, opCount, err)
@@ -226,7 +226,7 @@ func runQueuedOperations(queueOperations map[int][]Operation, height int, tb tes
 			// For now, queued operations cannot queue more operations.
 			// If a need arises for us to support queued messages to queue more messages, this can
 			// be changed.
-			logUpdate, _, err := queuedOps[i](tb, r, app, ctx, privKeys, event)
+			logUpdate, _, err := queuedOps[i](r, app, ctx, privKeys, event)
 			logWriter(logUpdate)
 			if err != nil {
 				displayLogs()

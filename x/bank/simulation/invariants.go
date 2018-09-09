@@ -20,7 +20,7 @@ func NonnegativeBalanceInvariant(mapper auth.AccountMapper) simulation.Invariant
 		for _, acc := range accts {
 			coins := acc.GetCoins()
 			if !coins.IsNotNegative() {
-				return fmt.Errorf("%s has a negative denomination of %s\n",
+				return fmt.Errorf("%s has a negative denomination of %s",
 					acc.GetAddress().String(),
 					coins.String())
 			}

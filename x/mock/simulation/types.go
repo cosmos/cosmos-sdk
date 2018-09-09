@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"math/rand"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,8 +21,7 @@ type (
 	//
 	// Operations can optionally provide a list of "FutureOperations" to run later
 	// These will be ran at the beginning of the corresponding block.
-	Operation func(
-		tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+	Operation func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		privKeys []crypto.PrivKey, event func(string),
 	) (action string, futureOperations []FutureOperation, err error)
 

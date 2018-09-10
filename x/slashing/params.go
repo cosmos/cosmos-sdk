@@ -14,13 +14,15 @@ const (
 )
 
 // nolint - Key generators for parameter access
-func MaxEvidenceAgeKey() params.Key           { return params.NewKey("MaxEvidenceAge") }
-func SignedBlocksWindowKey() params.Key       { return params.NewKey("SignedBlocksWindow") }
-func MinSignedPerWindowKey() params.Key       { return params.NewKey("MinSignedPerWindow") }
-func DoubleSignUnbondDurationKey() params.Key { return params.NewKey("DoubleSignUnbondDuration") }
-func DowntimeUnbondDurationKey() params.Key   { return params.NewKey("DowntimeUnbondDuration") }
-func SlashFractionDoubleSignKey() params.Key  { return params.NewKey("SlashFractionDoubleSign") }
-func SlashFractionDowntimeKey() params.Key    { return params.NewKey("SlashFractionDowntime") }
+func MaxEvidenceAgeKey() params.Key     { return params.NewKey([]byte("MaxEvidenceAge")) }
+func SignedBlocksWindowKey() params.Key { return params.NewKey([]byte("SignedBlocksWindow")) }
+func MinSignedPerWindowKey() params.Key { return params.NewKey([]byte("MinSignedPerWindow")) }
+func DoubleSignUnbondDurationKey() params.Key {
+	return params.NewKey([]byte("DoubleSignUnbondDuration"))
+}
+func DowntimeUnbondDurationKey() params.Key  { return params.NewKey([]byte("DowntimeUnbondDuration")) }
+func SlashFractionDoubleSignKey() params.Key { return params.NewKey([]byte("SlashFractionDoubleSign")) }
+func SlashFractionDowntimeKey() params.Key   { return params.NewKey([]byte("SlashFractionDowntime")) }
 
 // Cached parameter keys
 var (

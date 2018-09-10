@@ -15,13 +15,13 @@ import (
 const defaultUnbondingTime time.Duration = 60 * 60 * 24 * 3 * time.Second
 
 // nolint - Key generators for parameter access
-func KeyInflationRateChange() params.Key { return params.NewKey("InflationRateChange") }
-func KeyInflationMax() params.Key        { return params.NewKey("InflationMax") }
-func KeyInflationMin() params.Key        { return params.NewKey("InflationMin") }
-func KeyGoalBonded() params.Key          { return params.NewKey("GoalBonded") }
-func KeyUnbondingTime() params.Key       { return params.NewKey("UnbondingTime") }
-func KeyMaxValidators() params.Key       { return params.NewKey("MaxValidators") }
-func KeyBondDenom() params.Key           { return params.NewKey("BondDenom") }
+func KeyInflationRateChange() params.Key { return params.NewKey([]byte("InflationRateChange")) }
+func KeyInflationMax() params.Key        { return params.NewKey([]byte("InflationMax")) }
+func KeyInflationMin() params.Key        { return params.NewKey([]byte("InflationMin")) }
+func KeyGoalBonded() params.Key          { return params.NewKey([]byte("GoalBonded")) }
+func KeyUnbondingTime() params.Key       { return params.NewKey([]byte("UnbondingTime")) }
+func KeyMaxValidators() params.Key       { return params.NewKey([]byte("MaxValidators")) }
+func KeyBondDenom() params.Key           { return params.NewKey([]byte("BondDenom")) }
 
 // Params defines the high level settings for staking
 type Params struct {

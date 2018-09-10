@@ -7,7 +7,6 @@ import (
 // distribution fee handler
 func DistributionFeeHandler(ctx sdk.Context, _ sdk.Tx, collectedFees sdk.Coins) {
 
-	k.
 }
 
 //////////////////////////////////////////////////////////////////////////////////

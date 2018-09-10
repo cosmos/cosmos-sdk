@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	wire "github.com/tendermint/go-wire"
@@ -38,7 +38,7 @@ var (
 func GetCmdWithdrawDelegationRewardsAll(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-rewards [delegator]",
-		Short: "withdraw rewards from delegation accounts",
+		Short: "withdraw rewards for all delegations",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
@@ -61,7 +61,7 @@ func GetCmdWithdrawDelegationRewardsAll(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := stake.NewMsgDelegate(delAddr, valAddr, amount)
+			msg := distr.NewMsgDelegate(delAddr, valAddr, amount)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})

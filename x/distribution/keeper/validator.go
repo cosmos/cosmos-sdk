@@ -28,21 +28,22 @@ func (k Keeper) SetValidatorDistInfo(ctx sdk.Context, vdi types.ValidatorDistInf
 }
 
 // XXX TODO
-func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr, withdrawAddr sdk.AccAddress) {
-	height = ctx.BlockHeight()
-	feePool = k.GetFeePool(ctx)
-	pool = k.stakeKeeper.GetPool(ctx)
-	ValInfo = k.GetValidatorDistInfo(delegation.ValidatorAddr)
-	validator = k.GetValidator(delegation.ValidatorAddr)
+func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context,
+	operatorAddr sdk.ValAddress, withdrawAddr sdk.AccAddress) {
 
 	// withdraw self-delegation
-	withdraw = k.GetDelegatorRewardsAll(validator.OperatorAddr, height)
+	height := ctx.BlockHeight()
+	validator := k.GetValidator(operatorAddr)
+	withdraw := k.GetDelegatorRewardsAll(validator.OperatorAddr, height)
 
 	// withdrawal validator commission rewards
-	feePool, commission = valInfo.WithdrawCommission(feePool, valInfo, height, pool.BondedTokens,
+	pool := k.stakeKeeper.GetPool(ctx)
+	valInfo := k.GetValidatorDistInfo(operatorAddr)
+	feePool := k.GetFeePool(ctx)
+	feePool, commission := valInfo.WithdrawCommission(feePool, valInfo, height, pool.BondedTokens,
 		validator.Tokens, validator.Commission)
-	withdraw += commission
-	SetFeePool(feePool)
+	withdraw = withdraw.Add(commission)
+	k.SetFeePool(feePool)
 
 	k.coinKeeper.AddCoins(withdrawAddr, withdraw.TruncateDecimal())
 }

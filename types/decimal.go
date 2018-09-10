@@ -323,6 +323,32 @@ func (d Dec) RoundInt() Int {
 
 //___________________________________________________________________________________
 
+// similar to chopPrecisionAndRound, but always rounds down
+func chopPrecisionAndTruncate(d *big.Int) *big.Int {
+	return d.Quo(d, precisionReuse)
+}
+
+func chopPrecisionAndTruncateNonMutative(d *big.Int) *big.Int {
+	tmp := new(big.Int).Set(d)
+	return chopPrecisionAndTruncate(tmp)
+}
+
+// RoundInt64 rounds the decimal using bankers rounding
+func (d Dec) TruncateInt64() int64 {
+	chopped := chopPrecisionAndTruncateNonMutative(d.Int)
+	if !chopped.IsInt64() {
+		panic("Int64() out of bound")
+	}
+	return chopped.Int64()
+}
+
+// RoundInt round the decimal using bankers rounding
+func (d Dec) TruncateInt() Int {
+	return NewIntFromBigInt(chopPrecisionAndTruncateNonMutative(d.Int))
+}
+
+//___________________________________________________________________________________
+
 // reuse nil values
 var (
 	nilAmino string

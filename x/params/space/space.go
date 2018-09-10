@@ -30,7 +30,7 @@ func NewSpace(cdc *wire.Codec, key sdk.StoreKey, tkey sdk.StoreKey, space string
 		key:  key,
 		tkey: tkey,
 
-		space: []byte(space + "/"),
+		space: append([]byte(space), '/'),
 	}
 }
 

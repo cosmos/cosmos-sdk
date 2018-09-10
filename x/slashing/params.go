@@ -45,7 +45,7 @@ type Params struct {
 }
 
 // Default parameters used by Cosmos Hub
-func HubDefaultParams() Params {
+func DefaultParams() Params {
 	return Params{
 		// defaultMaxEvidenceAge = 60 * 60 * 24 * 7 * 3
 		// TODO Temporarily set to 2 minutes for testnets.

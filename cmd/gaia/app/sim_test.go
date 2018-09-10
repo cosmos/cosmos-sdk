@@ -78,7 +78,7 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 	genesis := GenesisState{
 		Accounts:     genesisAccounts,
 		StakeData:    stakeGenesis,
-		SlashingData: slashing.HubDefaultGenesisState(),
+		SlashingData: slashing.DefaultGenesisState(),
 		GovData:      govGenesis,
 	}
 

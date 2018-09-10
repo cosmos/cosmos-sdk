@@ -172,7 +172,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 	// start with the default staking genesis state
 	stakeData := stake.DefaultGenesisState()
 
-	slashingData := slashing.HubDefaultGenesisState()
+	slashingData := slashing.DefaultGenesisState()
 
 	// get genesis flag account information
 	genaccs := make([]GenesisAccount, len(appGenTxs))

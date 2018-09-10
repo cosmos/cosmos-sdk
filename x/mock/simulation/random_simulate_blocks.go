@@ -84,9 +84,9 @@ func SimulateFromSeed(
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	go func() {
-		receivedSyscall := <-c
-		fmt.Printf("Exiting early due to %s, on block %d, operation %d\n", receivedSyscall, header.Height, opCount)
-		simError = fmt.Errorf("Exited due to %s", receivedSyscall)
+		receivedSignal := <-c
+		fmt.Printf("Exiting early due to %s, on block %d, operation %d\n", receivedSignal, header.Height, opCount)
+		simError = fmt.Errorf("Exited due to %s", receivedSignal)
 		stopEarly = true
 	}()
 

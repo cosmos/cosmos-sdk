@@ -31,7 +31,7 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 	keyGov := sdk.NewKVStoreKey("gov")
 
 	pk := params.NewKeeper(mapp.Cdc, keyGlobalParams)
-	ck := bank.NewKeeper(mapp.AccountMapper)
+	ck := bank.NewBaseKeeper(mapp.AccountMapper)
 	sk := stake.NewKeeper(mapp.Cdc, keyStake, ck, mapp.RegisterCodespace(stake.DefaultCodespace))
 	keeper := NewKeeper(mapp.Cdc, keyGov, pk.Setter(), ck, sk, DefaultCodespace)
 	mapp.Router().AddRoute("gov", NewHandler(keeper))

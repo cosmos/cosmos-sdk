@@ -626,12 +626,12 @@ func TestSimulateTx(t *testing.T) {
 		// simulate a message, check gas reported
 		result := app.Simulate(tx)
 		require.True(t, result.IsOK(), result.Log)
-		require.Equal(t, int64(gasConsumed), result.GasUsed)
+		require.Equal(t, gasConsumed, result.GasUsed)
 
 		// simulate again, same result
 		result = app.Simulate(tx)
 		require.True(t, result.IsOK(), result.Log)
-		require.Equal(t, int64(gasConsumed), result.GasUsed)
+		require.Equal(t, gasConsumed, result.GasUsed)
 
 		// simulate by calling Query with encoded tx
 		txBytes, err := codec.MarshalBinary(tx)

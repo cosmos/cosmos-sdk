@@ -112,7 +112,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 
 	// remove validator if it has no more tokens
 	if validator.Tokens.IsZero() {
-		k.RemoveValidator(ctx, validator.Operator)
+		k.RemoveValidator(ctx, validator.OperatorAddr)
 	}
 
 	// Log that a slash occurred!
@@ -203,6 +203,7 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 // the unbonding delegation had enough stake to slash
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
+// nolint: unparam
 func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, redelegation types.Redelegation,
 	infractionHeight int64, slashFactor sdk.Dec) (slashAmount sdk.Dec) {
 

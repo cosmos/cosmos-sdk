@@ -38,7 +38,7 @@ type SimpleGovApp struct {
 
     // keepers
     feeCollectionKeeper auth.FeeCollectionKeeper
-    coinKeeper          bank.Keeper
+    bankKeeper          bank.Keeper
     stakeKeeper         simplestake.Keeper
     simpleGovKeeper     simpleGov.Keeper
 

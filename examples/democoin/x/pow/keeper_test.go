@@ -35,7 +35,7 @@ func TestPowKeeperGetSet(t *testing.T) {
 	am := auth.NewAccountMapper(cdc, capKey, auth.ProtoBaseAccount)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	config := NewConfig("pow", int64(1))
-	ck := bank.NewKeeper(am)
+	ck := bank.NewBaseKeeper(am)
 	keeper := NewKeeper(capKey, config, ck, DefaultCodespace)
 
 	err := InitGenesis(ctx, keeper, Genesis{uint64(1), uint64(0)})

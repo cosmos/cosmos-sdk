@@ -126,7 +126,7 @@ func delegatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 		}
 
 		for _, validator := range validators {
-			valAddr = validator.Operator
+			valAddr = validator.OperatorAddr
 
 			// Delegations
 			delegations, statusCode, errMsg, err := getDelegatorDelegations(cliCtx, cdc, delAddr, valAddr)
@@ -376,7 +376,7 @@ func delegatorValidatorsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) ht
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		var valAddr sdk.ValAddress
-		var bondedValidators []types.BechValidator
+		var bondedValidators []types.Validator
 
 		// read parameters
 		vars := mux.Vars(r)
@@ -410,7 +410,7 @@ func delegatorValidatorsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) ht
 
 		for _, validator := range validators {
 			// get all transactions from the delegator to val and append
-			valAddr = validator.Operator
+			valAddr = validator.OperatorAddr
 
 			validator, statusCode, errMsg, errRes := getDelegatorValidator(cliCtx, cdc, delegatorAddr, valAddr)
 			if errRes != nil {
@@ -544,14 +544,7 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 			return
 		}
 
-		bech32Validator, err := validator.Bech32Validator()
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		output, err = cdc.MarshalJSON(bech32Validator)
+		output, err = cdc.MarshalJSON(validator)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))

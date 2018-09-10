@@ -10,6 +10,8 @@ import (
 
 	"github.com/pkg/errors"
 
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/wire"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -17,7 +19,6 @@ import (
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	"strings"
 )
 
 // GetNode returns an RPC client. If the context's client is not defined, an
@@ -254,11 +255,11 @@ func (ctx CLIContext) ensureBroadcastTx(txBytes []byte) error {
 		type toJSON struct {
 			Height   int64
 			TxHash   string
-			Response string
+			Response abci.ResponseDeliverTx
 		}
 
 		if ctx.Logger != nil {
-			resJSON := toJSON{res.Height, res.Hash.String(), fmt.Sprintf("%+v", res.DeliverTx)}
+			resJSON := toJSON{res.Height, res.Hash.String(), res.DeliverTx}
 			bz, err := ctx.Codec.MarshalJSON(resJSON)
 			if err != nil {
 				return err
@@ -323,6 +324,7 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 }
 
 // verifyProof perform response proof verification
+// nolint: unparam
 func (ctx CLIContext) verifyProof(path string, resp abci.ResponseQuery) error {
 
 	if ctx.Certifier == nil {

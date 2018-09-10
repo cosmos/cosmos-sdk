@@ -226,6 +226,113 @@ Returns on success:
         "sequence": 7
     }
 }
+```
+
+### POST /auth/tx/sign
+
+- **URL**: `/auth/tx/sign`
+- **Functionality**: Sign a transaction without broadcasting it.
+- Returns on success:
+
+```json
+{
+    "rest api": "1.0",
+    "code": 200,
+    "error": "",
+    "result": {
+        "type": "auth/StdTx",
+        "value": {
+            "msg": [
+                {
+                    "type": "cosmos-sdk/Send",
+                    "value": {
+                        "inputs": [
+                            {
+                                "address": "cosmos1ql4ekxkujf3xllk8h5ldhhgh4ylpu7kwec6q3d",
+                                "coins": [
+                                    {
+                                        "denom": "steak",
+                                        "amount": "1"
+                                    }
+                                ]
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "address": "cosmos1dhyqhg4px33ed3erqymls0hc7q2lxw9hhfwklj",
+                                "coins": [
+                                    {
+                                        "denom": "steak",
+                                        "amount": "1"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ],
+            "fee": {
+                "amount": [
+                    {
+                        "denom": "",
+                        "amount": "0"
+                    }
+                ],
+                "gas": "2742"
+            },
+            "signatures": [
+                {
+                    "pub_key": {
+                        "type": "tendermint/PubKeySecp256k1",
+                        "value": "A2A/f2IYnrPUMTMqhwN81oas9jurtfcsvxdeLlNw3gGy"
+                    },
+                    "signature": "MEQCIGVn73y9QLwBa3vmsAD1bs3ygX75Wo+lAFSAUDs431ZPAiBWAf2amyqTCDXE9J87rL9QF9sd5JvVMt7goGSuamPJwg==",
+                    "account_number": "1",
+                    "sequence": "0"
+                }
+            ],
+            "memo": ""
+        }
+    }
+}
+```
+
+### POST /auth/tx/broadcast
+
+- **URL**: `/auth/broadcast`
+- **Functionality**: Broadcast a transaction.
+- Returns on success:
+
+```json
+{
+    "rest api": "1.0",
+    "code": 200,
+    "error": "",
+    "result":
+    {
+        "check_tx": {
+            "log": "Msg 0: ",
+            "gasWanted": "2742",
+            "gasUsed": "1002"
+        },
+        "deliver_tx": {
+            "log": "Msg 0: ",
+            "gasWanted": "2742",
+            "gasUsed": "2742",
+            "tags": [
+                {
+                    "key": "c2VuZGVy",
+                    "value": "Y29zbW9zMXdjNTl6ZXU3MmNjdnp5ZWR6ZGE1N3pzcXh2eXZ2Y3poaHBhdDI4"
+                },
+                {
+                    "key": "cmVjaXBpZW50",
+                    "value": "Y29zbW9zMTJ4OTNmY3V2azg3M3o1ejZnejRlNTl2dnlxcXp1eDdzdDcwNWd5"
+                }
+            ]
+        },
+        "hash": "784314784503582AC885BD6FB0D2A5B79FF703A7",
+        "height": "5"
+    }
 }
 ```
 

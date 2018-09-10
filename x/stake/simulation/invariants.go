@@ -1,9 +1,7 @@
 package simulation
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/require"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,16 +15,24 @@ import (
 // AllInvariants runs all invariants of the stake module.
 // Currently: total supply, positive power
 func AllInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) simulation.Invariant {
-	return func(t *testing.T, app *baseapp.BaseApp, log string) {
-		SupplyInvariants(ck, k, am)(t, app, log)
-		PositivePowerInvariant(k)(t, app, log)
-		ValidatorSetInvariant(k)(t, app, log)
+	return func(app *baseapp.BaseApp) error {
+		err := SupplyInvariants(ck, k, am)(app)
+		if err != nil {
+			return err
+		}
+		err = PositivePowerInvariant(k)(app)
+		if err != nil {
+			return err
+		}
+		err = ValidatorSetInvariant(k)(app)
+		return err
 	}
 }
 
 // SupplyInvariants checks that the total supply reflects all held loose tokens, bonded tokens, and unbonding delegations
+// nolint: unparam
 func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) simulation.Invariant {
-	return func(t *testing.T, app *baseapp.BaseApp, log string) {
+	return func(app *baseapp.BaseApp) error {
 		ctx := app.NewContext(false, abci.Header{})
 		//pool := k.GetPool(ctx)
 
@@ -63,23 +69,30 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) sim
 		//   pool.BondedTokens.RoundInt64(), bonded.RoundInt64(), log)
 
 		// TODO Inflation check on total supply
+		return nil
 	}
 }
 
 // PositivePowerInvariant checks that all stored validators have > 0 power
 func PositivePowerInvariant(k stake.Keeper) simulation.Invariant {
-	return func(t *testing.T, app *baseapp.BaseApp, log string) {
+	return func(app *baseapp.BaseApp) error {
 		ctx := app.NewContext(false, abci.Header{})
+		var err error
 		k.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) bool {
-			require.True(t, validator.GetPower().GT(sdk.ZeroDec()), "validator with non-positive power stored")
+			if !validator.GetPower().GT(sdk.ZeroDec()) {
+				err = fmt.Errorf("validator with non-positive power stored. (pubkey %v)", validator.GetPubKey())
+				return true
+			}
 			return false
 		})
+		return err
 	}
 }
 
 // ValidatorSetInvariant checks equivalence of Tendermint validator set and SDK validator set
 func ValidatorSetInvariant(k stake.Keeper) simulation.Invariant {
-	return func(t *testing.T, app *baseapp.BaseApp, log string) {
+	return func(app *baseapp.BaseApp) error {
 		// TODO
+		return nil
 	}
 }

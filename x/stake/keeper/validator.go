@@ -219,7 +219,7 @@ func (k Keeper) GetValidTendermintUpdates(ctx sdk.Context) (updates []abci.Valid
 		if found {
 			// The validator is new or already exists in the store and must adhere to
 			// Tendermint invariants.
-			prevBonded := val.BondHeight < ctx.BlockHeight()
+			prevBonded := val.BondHeight < ctx.BlockHeight() && val.BondHeight > val.UnbondingHeight
 			zeroPower := val.GetPower().Equal(sdk.ZeroDec())
 
 			if !zeroPower || zeroPower && prevBonded {

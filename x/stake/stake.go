@@ -3,6 +3,7 @@ package stake
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
+	"github.com/cosmos/cosmos-sdk/x/stake/querier"
 	"github.com/cosmos/cosmos-sdk/x/stake/tags"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
@@ -77,6 +78,8 @@ var (
 	NewMsgCompleteUnbonding         = types.NewMsgCompleteUnbonding
 	NewMsgBeginRedelegate           = types.NewMsgBeginRedelegate
 	NewMsgCompleteRedelegate        = types.NewMsgCompleteRedelegate
+
+	NewQuerier = querier.NewQuerier
 )
 
 const (

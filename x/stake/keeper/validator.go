@@ -482,22 +482,21 @@ func (k Keeper) UpdateBondedValidators(
 
 		// if we've reached jailed validators no further bonded validators exist
 		if validator.Jailed {
-			break
-		}
-
-		// increment bondedValidatorsCount / get the validator to bond
-		if validator.Status != sdk.Bonded {
-			validatorToBond = validator
-			if newValidatorBonded {
-				panic("already decided to bond a validator, can't bond another!")
+			if validator.Status == sdk.Bonded {
+				panic(fmt.Sprintf("jailed validator cannot be bonded, address: %X\n", ownerAddr))
 			}
-			newValidatorBonded = true
+
+			break
 		}
 
 		// increment the total number of bonded validators and potentially mark
 		// the validator to bond
 		if validator.Status != sdk.Bonded {
 			validatorToBond = validator
+			if newValidatorBonded {
+				panic("already decided to bond a validator, can't bond another!")
+			}
+
 			newValidatorBonded = true
 		}
 

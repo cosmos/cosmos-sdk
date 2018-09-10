@@ -176,15 +176,20 @@ func (ci *cacheKVStore) dirtyItems(ascending bool) []cmn.KVPair {
 		items = append(items, cmn.KVPair{Key: []byte(key), Value: cacheValue.value})
 	}
 
-	sort.Slice(items, func(i, j int) bool {
-		if ascending {
-			return bytes.Compare(items[i].Key, items[j].Key) < 0
-		}
-
-		return bytes.Compare(items[i].Key, items[j].Key) > 0
-	})
+	sort.Slice(items, bytesCmpFunc(items, ascending))
 
 	return items
+}
+
+func bytesCmpFunc(items []cmn.KVPair, ascending bool) func(i, j int) bool {
+	if ascending {
+		return func(i, j int) bool {
+			return bytes.Compare(items[i].Key, items[j].Key) < 0
+		}
+	}
+	return func(i, j int) bool {
+		return bytes.Compare(items[i].Key, items[j].Key) > 0
+	}
 }
 
 //----------------------------------------

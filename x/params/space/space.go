@@ -77,7 +77,7 @@ func (s Space) Modified(ctx sdk.Context, key Key) bool {
 }
 
 // Set parameter, return error if stored parameter has different type from input
-func (s Space) Set(ctx sdk.Context, key Key, param interface{}) error {
+func (s Space) Set(ctx sdk.Context, key Key, param interface{}) {
 	store := ctx.KVStore(s.key).Prefix(s.space)
 	keybz := key.Bytes()
 
@@ -87,20 +87,18 @@ func (s Space) Set(ctx sdk.Context, key Key, param interface{}) error {
 		ptr := reflect.New(ptrty).Interface()
 
 		if s.cdc.UnmarshalJSON(bz, ptr) != nil {
-			return fmt.Errorf("Type mismatch with stored param and provided param")
+			panic(fmt.Errorf("Type mismatch with stored param and provided param"))
 		}
 	}
 
 	bz, err := s.cdc.MarshalJSON(param)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	store.Set(keybz, bz)
 
 	tstore := ctx.KVStore(s.tkey).Prefix(s.space)
 	tstore.Set(keybz, []byte{})
-
-	return nil
 }
 
 // Set raw bytes of parameter

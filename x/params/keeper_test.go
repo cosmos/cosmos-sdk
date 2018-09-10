@@ -54,8 +54,7 @@ func TestKeeper(t *testing.T) {
 	space := NewKeeper(codec.NewCodec(), skey, tkey).Subspace("test")
 
 	for _, kv := range kvs {
-		err := space.Set(ctx, kv.key, kv.param)
-		require.Nil(t, err)
+		require.NotPanics(t, func() { space.Set(ctx, kv.key, kv.param) })
 	}
 
 	for _, kv := range kvs {
@@ -79,8 +78,7 @@ func TestKeeper(t *testing.T) {
 	}
 
 	for _, kv := range kvs {
-		err := space.Set(ctx, kv.key, true)
-		require.NotNil(t, err)
+		require.Panics(t, func() { space.Set(ctx, kv.key, true) })
 	}
 }
 

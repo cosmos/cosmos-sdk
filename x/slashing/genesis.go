@@ -19,7 +19,7 @@ func DefaultGenesisState() GenesisState {
 
 // InitGenesis initialize default parameters
 // and the keeper's address to pubkey map
-func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState, sdata types.GenesisState) error {
+func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState, sdata types.GenesisState) {
 	for _, validator := range sdata.Validators {
 		keeper.addPubkey(ctx, validator.GetPubKey())
 	}
@@ -32,5 +32,4 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState, sdata types.
 	keeper.paramstore.Set(ctx, downtimeUnbondDurationKey, p.DowntimeUnbondDuration)
 	keeper.paramstore.Set(ctx, slashFractionDoubleSignKey, p.SlashFractionDoubleSign)
 	keeper.paramstore.Set(ctx, slashFractionDowntimeKey, p.SlashFractionDowntime)
-	return nil
 }

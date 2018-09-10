@@ -88,8 +88,9 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	require.Nil(t, err)
 	keeper := NewKeeper(cdc, keySlashing, sk, paramstore, DefaultCodespace)
 
-	err = InitGenesis(ctx, keeper, GenesisState{defaults}, genesis)
-	require.Nil(t, err)
+	require.NotPanics(t, func() {
+		InitGenesis(ctx, keeper, GenesisState{defaults}, genesis)
+	})
 
 	return ctx, ck, sk, paramstore, keeper
 }

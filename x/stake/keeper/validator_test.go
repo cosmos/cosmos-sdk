@@ -1020,7 +1020,7 @@ func TestGetValidTendermintUpdatesBondTransition(t *testing.T) {
 	ctx = ctx.WithBlockHeight(1)
 	pool := keeper.GetPool(ctx)
 
-	validator, found := keeper.GetValidator(ctx, validators[0].Operator)
+	validator, found := keeper.GetValidator(ctx, validators[0].OperatorAddr)
 	require.True(t, found)
 
 	validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(1))
@@ -1036,7 +1036,7 @@ func TestGetValidTendermintUpdatesBondTransition(t *testing.T) {
 	ctx = ctx.WithBlockHeight(2)
 	pool = keeper.GetPool(ctx)
 
-	validator, found = keeper.GetValidator(ctx, validators[1].Operator)
+	validator, found = keeper.GetValidator(ctx, validators[1].OperatorAddr)
 	require.True(t, found)
 
 	validator, pool, _ = validator.RemoveDelShares(pool, validator.DelegatorShares)

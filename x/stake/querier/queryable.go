@@ -1,4 +1,4 @@
-package stake
+package querier
 
 import (
 	"fmt"
@@ -74,9 +74,14 @@ type QueryBondsParams struct {
 }
 
 func queryValidators(ctx sdk.Context, cdc *wire.Codec, k keep.Keeper) (res []byte, err sdk.Error) {
-	validators := k.GetBechValidators(ctx)
+	validators := k.GetValidators(ctx)
 
-	res, errRes := wire.MarshalJSONIndent(cdc, validators)
+	bechValidators, err := validatorsToBech32(validators)
+	if err != nil {
+		return nil, err
+	}
+
+	res, errRes := wire.MarshalJSONIndent(cdc, bechValidators)
 	if err != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}
@@ -93,11 +98,11 @@ func queryValidator(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQuery, k k
 
 	validator, found := k.GetValidator(ctx, params.ValidatorAddr)
 	if !found {
-		return []byte{}, ErrNoValidatorFound(DefaultCodespace)
+		return []byte{}, types.ErrNoValidatorFound(types.DefaultCodespace)
 	}
 
 	bechValidator, errRes := validator.Bech32Validator()
-	if err != nil {
+	if errRes != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("could not bech32ify validator: %s", errRes.Error()))
 	}
 
@@ -115,9 +120,9 @@ func queryDelegator(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQuery, k k
 	if errRes != nil {
 		return []byte{}, sdk.ErrUnknownAddress(fmt.Sprintf("incorrectly formatted request address: %s", errRes.Error()))
 	}
-	delegations := k.GetDelegatorDelegationsREST(ctx, params.DelegatorAddr)
+	delegations := k.GetDelegatorDelegations(ctx, params.DelegatorAddr)
 	unbondingDelegations := k.GetUnbondingDelegations(ctx, params.DelegatorAddr)
-	redelegations := k.GetRedelegationsREST(ctx, params.DelegatorAddr)
+	redelegations := k.GetRedelegations(ctx, params.DelegatorAddr)
 
 	summary := types.DelegationSummary{
 		Delegations:          delegations,
@@ -141,9 +146,14 @@ func queryDelegatorValidators(ctx sdk.Context, cdc *wire.Codec, req abci.Request
 		return []byte{}, sdk.ErrUnknownAddress(fmt.Sprintf("incorrectly formatted request address: %s", errRes.Error()))
 	}
 
-	validators := k.GetDelegatorBechValidators(ctx, params.DelegatorAddr)
+	validators := k.GetDelegatorValidators(ctx, params.DelegatorAddr)
 
-	res, errRes = wire.MarshalJSONIndent(cdc, validators)
+	bechValidators, err := validatorsToBech32(validators)
+	if err != nil {
+		return nil, err
+	}
+
+	res, errRes = wire.MarshalJSONIndent(cdc, bechValidators)
 	if errRes != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}
@@ -182,11 +192,10 @@ func queryDelegation(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQuery, k 
 
 	delegation, found := k.GetDelegation(ctx, params.DelegatorAddr, params.ValidatorAddr)
 	if !found {
-		return []byte{}, ErrNoDelegation(DefaultCodespace)
+		return []byte{}, types.ErrNoDelegation(types.DefaultCodespace)
 	}
 
-	delegationREST := delegation.ToRest()
-	res, errRes = wire.MarshalJSONIndent(cdc, delegationREST)
+	res, errRes = wire.MarshalJSONIndent(cdc, delegation)
 	if errRes != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}
@@ -203,7 +212,7 @@ func queryUnbondingDelegation(ctx sdk.Context, cdc *wire.Codec, req abci.Request
 
 	unbond, found := k.GetUnbondingDelegation(ctx, params.DelegatorAddr, params.ValidatorAddr)
 	if !found {
-		return []byte{}, ErrNoUnbondingDelegation(DefaultCodespace)
+		return []byte{}, types.ErrNoUnbondingDelegation(types.DefaultCodespace)
 	}
 
 	res, errRes = wire.MarshalJSONIndent(cdc, unbond)

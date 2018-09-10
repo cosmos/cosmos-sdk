@@ -1,4 +1,4 @@
-package stake
+package querier
 
 import (
 	"testing"
@@ -62,22 +62,22 @@ func TestQueryValidators(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 10000)
 
 	// Create Validators
-	msg1 := types.NewMsgCreateValidator(addrVal1, pk1, sdk.NewCoin("steak", sdk.NewInt(1000)), Description{})
+	msg1 := types.NewMsgCreateValidator(addrVal1, pk1, sdk.NewCoin("steak", sdk.NewInt(1000)), types.Description{})
 	handleMsgCreateValidator(ctx, msg1, keeper)
-	msg2 := types.NewMsgCreateValidator(addrVal2, pk2, sdk.NewCoin("steak", sdk.NewInt(100)), Description{})
+	msg2 := types.NewMsgCreateValidator(addrVal2, pk2, sdk.NewCoin("steak", sdk.NewInt(100)), types.Description{})
 	handleMsgCreateValidator(ctx, msg2, keeper)
 
 	// Query Validators
-	bechValidators := keeper.GetBechValidators(ctx)
+	validators := keeper.GetValidators(ctx)
 	res, err := queryValidators(ctx, cdc, keeper)
 	require.Nil(t, err)
 
-	var validatorsResp []types.BechValidator
+	var validatorsResp []types.Validator
 	errRes := cdc.UnmarshalJSON(res, &validatorsResp)
 	require.Nil(t, errRes)
 
-	require.Equal(t, len(bechValidators), len(validatorsResp))
-	require.ElementsMatch(t, bechValidators, validatorsResp)
+	require.Equal(t, len(validators), len(validatorsResp))
+	require.ElementsMatch(t, validators, validatorsResp)
 
 	// Query each validator
 	queryParams := newTestValidatorQuery(addrVal1)
@@ -91,11 +91,11 @@ func TestQueryValidators(t *testing.T) {
 	res, err = queryValidator(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	var bechValidator types.BechValidator
-	errRes = cdc.UnmarshalJSON(res, &bechValidator)
+	var validator types.Validator
+	errRes = cdc.UnmarshalJSON(res, &validator)
 	require.Nil(t, errRes)
 
-	require.Equal(t, bechValidators[0], bechValidator)
+	require.Equal(t, validators[0], validator)
 }
 
 func TestQueryDelegation(t *testing.T) {
@@ -103,7 +103,7 @@ func TestQueryDelegation(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 10000)
 
 	// Create Validators and Delegation
-	msg1 := types.NewMsgCreateValidator(addrVal1, pk1, sdk.NewCoin("steak", sdk.NewInt(1000)), Description{})
+	msg1 := types.NewMsgCreateValidator(addrVal1, pk1, sdk.NewCoin("steak", sdk.NewInt(1000)), types.Description{})
 	handleMsgCreateValidator(ctx, msg1, keeper)
 	msg2 := types.NewMsgDelegate(addrAcc2, addrVal1, sdk.NewCoin("steak", sdk.NewInt(20)))
 	handleMsgDelegate(ctx, msg2, keeper)
@@ -118,7 +118,7 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	delValidators := keeper.GetDelegatorBechValidators(ctx, addrAcc2)
+	delValidators := keeper.GetDelegatorValidators(ctx, addrAcc2)
 	res, err := queryDelegatorValidators(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
@@ -158,16 +158,14 @@ func TestQueryDelegation(t *testing.T) {
 	delegation, found := keeper.GetDelegation(ctx, addrAcc2, addrVal1)
 	require.True(t, found)
 
-	delegationREST := delegation.ToRest()
-
 	res, err = queryDelegation(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	var delegationRestRes types.DelegationREST
-	errRes = cdc.UnmarshalJSON(res, &delegationRestRes)
+	var delegationRes types.Delegation
+	errRes = cdc.UnmarshalJSON(res, &delegationRes)
 	require.Nil(t, errRes)
 
-	require.Equal(t, delegationREST, delegationRestRes)
+	require.Equal(t, delegation, delegationRes)
 
 	// Query unbonging delegation
 

@@ -30,19 +30,6 @@ func TestDelegationEqual(t *testing.T) {
 	require.False(t, ok)
 }
 
-func TestDelegationToRest(t *testing.T) {
-	d := Delegation{
-		DelegatorAddr: sdk.AccAddress(addr1),
-		ValidatorAddr: addr2,
-		Shares:        sdk.NewDec(100),
-	}
-
-	rest := d.ToRest()
-	require.Equal(t, d.DelegatorAddr.String(), rest.DelegatorAddr)
-	require.Equal(t, d.ValidatorAddr.String(), rest.ValidatorAddr)
-	require.Equal(t, d.Shares.String(), rest.Shares)
-}
-
 func TestDelegationHumanReadableString(t *testing.T) {
 	d := Delegation{
 		DelegatorAddr: sdk.AccAddress(addr1),
@@ -127,21 +114,4 @@ func TestRedelegationHumanReadableString(t *testing.T) {
 	valStr, err := r.HumanReadableString()
 	require.Nil(t, err)
 	require.NotEmpty(t, valStr)
-}
-
-func TestRedelegationToRest(t *testing.T) {
-	red := Redelegation{
-		DelegatorAddr:    sdk.AccAddress(addr1),
-		ValidatorSrcAddr: addr2,
-		ValidatorDstAddr: addr3,
-		SharesDst:        sdk.NewDec(10),
-		SharesSrc:        sdk.NewDec(20),
-	}
-
-	rest := red.ToRest()
-	require.Equal(t, red.DelegatorAddr.String(), rest.DelegatorAddr)
-	require.Equal(t, red.ValidatorSrcAddr.String(), rest.ValidatorSrcAddr)
-	require.Equal(t, red.SharesSrc.String(), rest.SharesSrc)
-	require.Equal(t, red.ValidatorDstAddr.String(), rest.ValidatorDstAddr)
-	require.Equal(t, red.SharesDst.String(), rest.SharesDst)
 }

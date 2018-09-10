@@ -478,12 +478,12 @@ func TestValidatorsQuery(t *testing.T) {
 
 	// make sure all the validators were found (order unknown because sorted by operator addr)
 	foundVal := false
-	pkBech := sdk.MustBech32ifyConsPub(pks[0])
-	if validators[0].ConsPubKey == pkBech {
+
+	if validators[0].ConsPubKey == pks[0] {
 		foundVal = true
 	}
 
-	require.True(t, foundVal, "pkBech %v, operator %v", pkBech, validators[0].OperatorAddr)
+	require.True(t, foundVal, "pk %v, operator %v", pks[0], validators[0].OperatorAddr)
 }
 
 func TestValidatorQuery(t *testing.T) {
@@ -950,11 +950,11 @@ func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, quer
 	return txs
 }
 
-func getDelegatorValidators(t *testing.T, port string, delegatorAddr sdk.AccAddress) []stake.BechValidator {
+func getDelegatorValidators(t *testing.T, port string, delegatorAddr sdk.AccAddress) []stake.Validator {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/validators", delegatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var bondedValidators []stake.BechValidator
+	var bondedValidators []stake.Validator
 
 	err := cdc.UnmarshalJSON([]byte(body), &bondedValidators)
 	require.Nil(t, err)
@@ -962,11 +962,11 @@ func getDelegatorValidators(t *testing.T, port string, delegatorAddr sdk.AccAddr
 	return bondedValidators
 }
 
-func getDelegatorValidator(t *testing.T, port string, delAddr sdk.AccAddress, valAddr sdk.ValAddress) stake.BechValidator {
+func getDelegatorValidator(t *testing.T, port string, delAddr sdk.AccAddress, valAddr sdk.ValAddress) stake.Validator {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/validators/%s", delAddr, valAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var bondedValidator stake.BechValidator
+	var bondedValidator stake.Validator
 	err := cdc.UnmarshalJSON([]byte(body), &bondedValidator)
 	require.Nil(t, err)
 
@@ -1086,19 +1086,19 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 	return results[0]
 }
 
-func getValidators(t *testing.T, port string) []stake.BechValidator {
+func getValidators(t *testing.T, port string) []stake.Validator {
 	res, body := Request(t, port, "GET", "/stake/validators", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var validators []stake.BechValidator
+	var validators []stake.Validator
 	err := cdc.UnmarshalJSON([]byte(body), &validators)
 	require.Nil(t, err)
 	return validators
 }
 
-func getValidator(t *testing.T, port string, valAddr sdk.ValAddress) stake.BechValidator {
+func getValidator(t *testing.T, port string, valAddr sdk.ValAddress) stake.Validator {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/validators/%s", valAddr.String()), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var validator stake.BechValidator
+	var validator stake.Validator
 	err := cdc.UnmarshalJSON([]byte(body), &validator)
 	require.Nil(t, err)
 	return validator

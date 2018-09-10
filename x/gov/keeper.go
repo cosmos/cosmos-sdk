@@ -13,9 +13,9 @@ const (
 )
 
 // nolint - Paramstore key constructor
-func ParamStoreKeyDepositProcedure() params.Key  { return params.NewKey("depositprocedure") }
-func ParamStoreKeyVotingProcedure() params.Key   { return params.NewKey("votingprocedure") }
-func ParamStoreKeyTallyingProcedure() params.Key { return params.NewKey("tallyingprocedure") }
+func ParamStoreKeyDepositProcedure() params.Key  { return params.NewKey([]byte("depositprocedure")) }
+func ParamStoreKeyVotingProcedure() params.Key   { return params.NewKey([]byte("votingprocedure")) }
+func ParamStoreKeyTallyingProcedure() params.Key { return params.NewKey([]byte("tallyingprocedure")) }
 
 // Cached parameter store keys
 var (

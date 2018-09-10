@@ -1,8 +1,6 @@
 package space
 
 import (
-	tmlibs "github.com/tendermint/tendermint/libs/common"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
@@ -13,21 +11,23 @@ type Key struct {
 
 // Appending two keys with '/' as separator
 // Checks alphanumericity
-func (k Key) Append(keys ...string) (res Key) {
+func (k Key) Append(keys ...[]byte) (res Key) {
 	res.s = make([]byte, len(k.s))
 	copy(res.s, k.s)
 
 	for _, key := range keys {
-		if !tmlibs.IsASCIIText(key) {
-			panic("parameter key expressions can only contain alphanumeric characters")
+		for _, b := range key {
+			if !(32 <= b && b <= 126) {
+				panic("parameter key expressions can only contain alphanumeric characters")
+			}
 		}
-		res.s = append(append(res.s, byte('/')), []byte(key)...)
+		res.s = append(append(res.s, byte('/')), key...)
 	}
 	return
 }
 
 // NewKey constructs a key from a list of strings
-func NewKey(keys ...string) (res Key) {
+func NewKey(keys ...[]byte) (res Key) {
 	if len(keys) < 1 {
 		panic("length of parameter keys must not be zero")
 	}

@@ -728,6 +728,6 @@ func (k Keeper) clearCliffValidator(ctx sdk.Context) {
 
 func ensureValidatorFound(found bool, ownerAddr []byte) {
 	if !found {
-		panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
+		panic(fmt.Sprintf("validator record not found for address: %X\n", ownerAddr))
 	}
 }

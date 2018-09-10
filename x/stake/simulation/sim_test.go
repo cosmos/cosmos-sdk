@@ -44,14 +44,14 @@ func TestStakeWithRandomMessages(t *testing.T) {
 
 	simulation.Simulate(
 		t, mapp.BaseApp, appStateFn,
-		[]simulation.Operation{
-			SimulateMsgCreateValidator(mapper, stakeKeeper),
-			SimulateMsgEditValidator(stakeKeeper),
-			SimulateMsgDelegate(mapper, stakeKeeper),
-			SimulateMsgBeginUnbonding(mapper, stakeKeeper),
-			SimulateMsgCompleteUnbonding(stakeKeeper),
-			SimulateMsgBeginRedelegate(mapper, stakeKeeper),
-			SimulateMsgCompleteRedelegate(stakeKeeper),
+		[]simulation.WeightedOperation{
+			{10, SimulateMsgCreateValidator(mapper, stakeKeeper)},
+			{5, SimulateMsgEditValidator(stakeKeeper)},
+			{15, SimulateMsgDelegate(mapper, stakeKeeper)},
+			{10, SimulateMsgBeginUnbonding(mapper, stakeKeeper)},
+			{3, SimulateMsgCompleteUnbonding(stakeKeeper)},
+			{10, SimulateMsgBeginRedelegate(mapper, stakeKeeper)},
+			{3, SimulateMsgCompleteRedelegate(stakeKeeper)},
 		}, []simulation.RandSetup{
 			Setup(mapp, stakeKeeper),
 		}, []simulation.Invariant{

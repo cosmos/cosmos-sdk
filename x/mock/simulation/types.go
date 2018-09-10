@@ -47,6 +47,13 @@ type (
 		BlockHeight int
 		Op          Operation
 	}
+
+	// WeightedOperation is an operation with associated weight.
+	// This is used to bias the selection operation within the simulator.
+	WeightedOperation struct {
+		Weight int
+		Op     Operation
+	}
 )
 
 // PeriodicInvariant returns an Invariant function closure that asserts

@@ -56,10 +56,10 @@ func TestGovWithRandomMessages(t *testing.T) {
 	// Test with unscheduled votes
 	simulation.Simulate(
 		t, mapp.BaseApp, appStateFn,
-		[]simulation.Operation{
-			SimulateMsgSubmitProposal(govKeeper, stakeKeeper),
-			SimulateMsgDeposit(govKeeper, stakeKeeper),
-			SimulateMsgVote(govKeeper, stakeKeeper),
+		[]simulation.WeightedOperation{
+			{2, SimulateMsgSubmitProposal(govKeeper, stakeKeeper)},
+			{3, SimulateMsgDeposit(govKeeper, stakeKeeper)},
+			{20, SimulateMsgVote(govKeeper, stakeKeeper)},
 		}, []simulation.RandSetup{
 			setup,
 		}, []simulation.Invariant{
@@ -71,9 +71,9 @@ func TestGovWithRandomMessages(t *testing.T) {
 	// Test with scheduled votes
 	simulation.Simulate(
 		t, mapp.BaseApp, appStateFn,
-		[]simulation.Operation{
-			SimulateSubmittingVotingAndSlashingForProposal(govKeeper, stakeKeeper),
-			SimulateMsgDeposit(govKeeper, stakeKeeper),
+		[]simulation.WeightedOperation{
+			{10, SimulateSubmittingVotingAndSlashingForProposal(govKeeper, stakeKeeper)},
+			{5, SimulateMsgDeposit(govKeeper, stakeKeeper)},
 		}, []simulation.RandSetup{
 			setup,
 		}, []simulation.Invariant{

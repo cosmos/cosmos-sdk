@@ -89,19 +89,19 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 	return appState
 }
 
-func testAndRunTxs(app *GaiaApp) []simulation.Operation {
-	return []simulation.Operation{
-		banksim.SimulateSingleInputMsgSend(app.accountMapper),
-		govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakeKeeper),
-		govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper),
-		stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper),
-		stakesim.SimulateMsgEditValidator(app.stakeKeeper),
-		stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper),
-		stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper),
-		stakesim.SimulateMsgCompleteUnbonding(app.stakeKeeper),
-		stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper),
-		stakesim.SimulateMsgCompleteRedelegate(app.stakeKeeper),
-		slashingsim.SimulateMsgUnjail(app.slashingKeeper),
+func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
+	return []simulation.WeightedOperation{
+		{100, banksim.SimulateSingleInputMsgSend(app.accountMapper)},
+		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakeKeeper)},
+		{100, govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper)},
+		{100, stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper)},
+		{5, stakesim.SimulateMsgEditValidator(app.stakeKeeper)},
+		{100, stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper)},
+		{100, stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper)},
+		{100, stakesim.SimulateMsgCompleteUnbonding(app.stakeKeeper)},
+		{100, stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper)},
+		{100, stakesim.SimulateMsgCompleteRedelegate(app.stakeKeeper)},
+		{100, slashingsim.SimulateMsgUnjail(app.slashingKeeper)},
 	}
 }
 

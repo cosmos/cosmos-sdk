@@ -25,35 +25,31 @@ func contains(stringSlice []string, txType string) bool {
 }
 
 func getDelegatorValidator(cliCtx context.CLIContext, cdc *wire.Codec, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (
-	bech32Validator types.BechValidator, httpStatusCode int, errMsg string, err error) {
+	validator types.Validator, httpStatusCode int, errMsg string, err error) {
 
 	key := stake.GetDelegationKey(delAddr, valAddr)
 	res, err := cliCtx.QueryStore(key, storeName)
 	if err != nil {
-		return types.BechValidator{}, http.StatusInternalServerError, "couldn't query delegation. Error: ", err
+		return types.Validator{}, http.StatusInternalServerError, "couldn't query delegation. Error: ", err
 	}
 	if len(res) == 0 {
-		return types.BechValidator{}, http.StatusNoContent, "", nil
+		return types.Validator{}, http.StatusNoContent, "", nil
 	}
 
 	key = stake.GetValidatorKey(valAddr)
 	res, err = cliCtx.QueryStore(key, storeName)
 	if err != nil {
-		return types.BechValidator{}, http.StatusInternalServerError, "couldn't query validator. Error: ", err
+		return types.Validator{}, http.StatusInternalServerError, "couldn't query validator. Error: ", err
 	}
 	if len(res) == 0 {
-		return types.BechValidator{}, http.StatusNoContent, "", nil
+		return types.Validator{}, http.StatusNoContent, "", nil
 	}
-	validator, err := types.UnmarshalValidator(cdc, valAddr, res)
+	validator, err = types.UnmarshalValidator(cdc, valAddr, res)
 	if err != nil {
-		return types.BechValidator{}, http.StatusBadRequest, "", err
-	}
-	bech32Validator, err = validator.Bech32Validator()
-	if err != nil {
-		return types.BechValidator{}, http.StatusBadRequest, "", err
+		return types.Validator{}, http.StatusBadRequest, "", err
 	}
 
-	return bech32Validator, http.StatusOK, "", nil
+	return validator, http.StatusOK, "", nil
 }
 
 func getDelegatorDelegations(
@@ -143,8 +139,8 @@ func queryTxs(node rpcclient.Client, cdc *wire.Codec, tag string, delegatorAddr 
 }
 
 // gets all validators
-func getValidators(validatorKVs []sdk.KVPair, cdc *wire.Codec) ([]types.BechValidator, error) {
-	validators := make([]types.BechValidator, len(validatorKVs))
+func getValidators(validatorKVs []sdk.KVPair, cdc *wire.Codec) ([]types.Validator, error) {
+	validators := make([]types.Validator, len(validatorKVs))
 	for i, kv := range validatorKVs {
 
 		addr := kv.Key[1:]
@@ -153,11 +149,7 @@ func getValidators(validatorKVs []sdk.KVPair, cdc *wire.Codec) ([]types.BechVali
 			return nil, err
 		}
 
-		bech32Validator, err := validator.Bech32Validator()
-		if err != nil {
-			return nil, err
-		}
-		validators[i] = bech32Validator
+		validators[i] = validator
 	}
 	return validators, nil
 }
@@ -165,7 +157,7 @@ func getValidators(validatorKVs []sdk.KVPair, cdc *wire.Codec) ([]types.BechVali
 //  gets all Bech32 validators from a key
 // nolint: unparam
 func getBech32Validators(storeName string, cliCtx context.CLIContext, cdc *wire.Codec) (
-	validators []types.BechValidator, httpStatusCode int, errMsg string, err error) {
+	validators []types.Validator, httpStatusCode int, errMsg string, err error) {
 
 	// Get all validators using key
 	kvs, err := cliCtx.QuerySubspace(stake.ValidatorsKey, storeName)

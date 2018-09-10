@@ -193,11 +193,6 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 		panic(err)
 	}
 
-	err = slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakeData)
-	if err != nil {
-		panic(err)
-	}
-
 	return abci.ResponseInitChain{
 		Validators: validators,
 	}

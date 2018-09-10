@@ -1,10 +1,10 @@
 # Overview
 
-Lotion is an alternative to the Cosmos SDK and allows you to create blockchain apps in JavaScript. It aims to make writing new blockchain apps fast and fun, and builds on top of Tendermint using the ABCI protocol. Lotion lets you write secure, scalable applications that can easily interoperate with other blockchains on the Cosmos Network using IBC.
+Lotion is an alternative to the Cosmos SDK and allows you to create blockchain apps in JavaScript. It aims to make writing new blockchain apps fast and easy by using the ABCI protocol to build on top of Tendermint. Lotion lets you write secure, scalable applications that can easily interoperate with other blockchains on the Cosmos Network using IBC.
 
 Lotion itself is a tiny framework; its true power comes from the network of small, focused modules built upon it. Adding a fully-featured cryptocurrency to your blockchain, for example, takes only a few lines of code.
 
-For more information see the [website](https://lotionjs.com) and [GitHub repo](https://github.com/keppel/lotion), which expand on the following example.
+For more information see the [website](https://lotionjs.com) and [GitHub repo](https://github.com/keppel/lotion), for complete documentation which expands on the following example.
 
 ## Building an App
 

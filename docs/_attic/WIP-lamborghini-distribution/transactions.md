@@ -213,7 +213,7 @@ Note that the distribution scenario structures are found in `state.md`.
 #### Delegation's entitlement to Global.Pool
 
 For delegations (including validator's self-delegation) all fees from fee pool
-are subject to commission rate from the owner of the validator. The global
+are subject to commission rate from the operator of the validator. The global
 shares should be taken as true number of global bonded shares. The recipients
 shares should be taken as the bonded tokens less the validator's commission.
 

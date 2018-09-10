@@ -1016,13 +1016,13 @@ func TestGetValidTendermintUpdatesBondTransition(t *testing.T) {
 	keeper.ClearTendermintUpdates(ctx)
 	require.Equal(t, 0, len(keeper.GetValidTendermintUpdates(ctx)))
 
-	ctx = ctx.WithBlockHeight(1)
-
 	// delegate to validator with lowest power but not enough to bond
+	ctx = ctx.WithBlockHeight(1)
+	pool := keeper.GetPool(ctx)
+
 	validator, found := keeper.GetValidator(ctx, validators[0].Operator)
 	require.True(t, found)
 
-	pool := keeper.GetPool(ctx)
 	validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(1))
 
 	keeper.SetPool(ctx, pool)

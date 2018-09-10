@@ -60,24 +60,33 @@ func TestQueryParametersPool(t *testing.T) {
 func TestQueryValidators(t *testing.T) {
 	cdc := wire.NewCodec()
 	ctx, _, keeper := keep.CreateTestInput(t, false, 10000)
+	pool := keeper.GetPool(ctx)
 
 	// Create Validators
-	msg1 := types.NewMsgCreateValidator(addrVal1, pk1, sdk.NewCoin("steak", sdk.NewInt(1000)), types.Description{})
-	handleMsgCreateValidator(ctx, msg1, keeper)
-	msg2 := types.NewMsgCreateValidator(addrVal2, pk2, sdk.NewCoin("steak", sdk.NewInt(100)), types.Description{})
-	handleMsgCreateValidator(ctx, msg2, keeper)
+	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8)}
+	var validators [2]types.Validator
+	for i, amt := range amts {
+		validators[i] = types.NewValidator(sdk.ValAddress(keep.Addrs[i]), keep.PKs[i], types.Description{})
+		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
+	}
+	keeper.SetPool(ctx, pool)
+	validators[0] = keeper.UpdateValidator(ctx, validators[0])
+	validators[1] = keeper.UpdateValidator(ctx, validators[1])
 
 	// Query Validators
-	validators := keeper.GetValidators(ctx)
+	queriedValidators := keeper.GetValidators(ctx)
+	bechValidators, err := validatorsToBech32(queriedValidators)
+	require.Nil(t, err)
+
 	res, err := queryValidators(ctx, cdc, keeper)
 	require.Nil(t, err)
 
-	var validatorsResp []types.Validator
+	var validatorsResp []types.BechValidator
 	errRes := cdc.UnmarshalJSON(res, &validatorsResp)
 	require.Nil(t, errRes)
 
-	require.Equal(t, len(validators), len(validatorsResp))
-	require.ElementsMatch(t, validators, validatorsResp)
+	require.Equal(t, len(bechValidators), len(validatorsResp))
+	require.ElementsMatch(t, bechValidators, validatorsResp)
 
 	// Query each validator
 	queryParams := newTestValidatorQuery(addrVal1)
@@ -91,11 +100,11 @@ func TestQueryValidators(t *testing.T) {
 	res, err = queryValidator(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	var validator types.Validator
+	var validator types.BechValidator
 	errRes = cdc.UnmarshalJSON(res, &validator)
 	require.Nil(t, errRes)
 
-	require.Equal(t, validators[0], validator)
+	require.Equal(t, bechValidators[0], validator)
 }
 
 func TestQueryDelegation(t *testing.T) {
@@ -103,10 +112,10 @@ func TestQueryDelegation(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 10000)
 
 	// Create Validators and Delegation
-	msg1 := types.NewMsgCreateValidator(addrVal1, pk1, sdk.NewCoin("steak", sdk.NewInt(1000)), types.Description{})
-	handleMsgCreateValidator(ctx, msg1, keeper)
-	msg2 := types.NewMsgDelegate(addrAcc2, addrVal1, sdk.NewCoin("steak", sdk.NewInt(20)))
-	handleMsgDelegate(ctx, msg2, keeper)
+	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
+	keeper.SetValidator(ctx, val1)
+
+	keeper.Delegate(ctx, addrAcc2, sdk.NewCoin("steak", sdk.NewInt(20)), val1, true)
 
 	// Query Delegator bonded validators
 	queryParams := newTestDelegatorQuery(addrAcc2)
@@ -119,6 +128,9 @@ func TestQueryDelegation(t *testing.T) {
 	}
 
 	delValidators := keeper.GetDelegatorValidators(ctx, addrAcc2)
+	delBechValidators, err := validatorsToBech32(delValidators)
+	require.Nil(t, err)
+
 	res, err := queryDelegatorValidators(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
@@ -126,8 +138,8 @@ func TestQueryDelegation(t *testing.T) {
 	errRes = cdc.UnmarshalJSON(res, &validatorsResp)
 	require.Nil(t, errRes)
 
-	require.Equal(t, len(delValidators), len(validatorsResp))
-	require.ElementsMatch(t, delValidators, validatorsResp)
+	require.Equal(t, len(delBechValidators), len(validatorsResp))
+	require.ElementsMatch(t, delBechValidators, validatorsResp)
 
 	// Query bonded validator
 	queryBondParams := newTestBondQuery(addrAcc2, addrVal1)
@@ -146,7 +158,7 @@ func TestQueryDelegation(t *testing.T) {
 	errRes = cdc.UnmarshalJSON(res, &validator)
 	require.Nil(t, errRes)
 
-	require.Equal(t, delValidators[0], validator)
+	require.Equal(t, delBechValidators[0], validator)
 
 	// Query delegation
 
@@ -168,9 +180,7 @@ func TestQueryDelegation(t *testing.T) {
 	require.Equal(t, delegation, delegationRes)
 
 	// Query unbonging delegation
-
-	msg3 := types.NewMsgBeginUnbonding(addrAcc2, addrVal1, sdk.NewDec(10))
-	handleMsgBeginUnbonding(ctx, msg3, keeper)
+	keeper.BeginUnbonding(ctx, addrAcc2, val1.Operator, sdk.NewDec(10))
 
 	query = abci.RequestQuery{
 		Path: "/custom/stake/unbondingDelegation",

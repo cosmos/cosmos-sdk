@@ -453,6 +453,7 @@ func TestBonding(t *testing.T) {
 	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
+	amt := sdk.NewDec(60)
 	validator1Operator := sdk.ValAddress(pks[0].Address())
 	validator := getValidator(t, port, validator1Operator)
 
@@ -470,18 +471,18 @@ func TestBonding(t *testing.T) {
 
 	// query validator
 	bond := getDelegation(t, port, addr, validator1Operator)
-	require.Equal(t, "60.0000000000", bond.Shares)
+	require.Equal(t, amt, bond.Shares)
 
 	summary := getDelegationSummary(t, port, addr)
 
 	require.Len(t, summary.Delegations, 1, "Delegation summary holds all delegations")
-	require.Equal(t, "60.0000000000", summary.Delegations[0].Shares)
+	require.Equal(t, amt, summary.Delegations[0].Shares)
 	require.Len(t, summary.UnbondingDelegations, 0, "Delegation summary holds all unbonding-delegations")
 
 	bondedValidators := getDelegatorValidators(t, port, addr)
 	require.Len(t, bondedValidators, 1)
 	require.Equal(t, validator1Operator.String(), bondedValidators[0].Operator)
-	require.Equal(t, validator.DelegatorShares.Add(sdk.NewDec(60)).String(), bondedValidators[0].DelegatorShares.String())
+	require.Equal(t, validator.DelegatorShares.Add(amt).String(), bondedValidators[0].DelegatorShares.String())
 
 	bondedValidator := getDelegatorValidator(t, port, addr, validator1Operator)
 	require.Equal(t, validator1Operator.String(), bondedValidator.Operator)

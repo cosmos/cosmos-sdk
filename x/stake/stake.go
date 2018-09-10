@@ -27,6 +27,9 @@ type (
 	MsgBeginRedelegate    = types.MsgBeginRedelegate
 	MsgCompleteRedelegate = types.MsgCompleteRedelegate
 	GenesisState          = types.GenesisState
+	QueryDelegatorParams  = querier.QueryDelegatorParams
+	QueryValidatorParams  = querier.QueryValidatorParams
+	QueryBondsParams      = querier.QueryBondsParams
 )
 
 var (

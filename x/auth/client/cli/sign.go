@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/spf13/cobra"
 	amino "github.com/tendermint/go-amino"
 )
@@ -51,9 +51,9 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 
 		name := viper.GetString(client.FlagName)
 		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(decoder)
-		txCtx := authctx.NewTxContextFromCLI()
+		txBldr := authtxb.NewTxBuilderFromCLI()
 
-		newTx, err := utils.SignStdTx(txCtx, cliCtx, name, stdTx, viper.GetBool(flagAppend))
+		newTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, viper.GetBool(flagAppend))
 		if err != nil {
 			return err
 		}

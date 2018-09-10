@@ -13,10 +13,10 @@ BREAKING CHANGES
     * [cli] [\#2061](https://github.com/cosmos/cosmos-sdk/issues/2061) changed proposalID in governance REST endpoints to proposal-id
     * [cli] [\#2014](https://github.com/cosmos/cosmos-sdk/issues/2014) `gaiacli advanced` no longer exists - to access `ibc`, `rest-server`, and `validator-set` commands use `gaiacli ibc`, `gaiacli rest-server`, and `gaiacli tendermint`, respectively
     * [makefile] `get_vendor_deps` no longer updates lock file it just updates vendor directory. Use `update_vendor_deps` to update the lock file. [#2152](https://github.com/cosmos/cosmos-sdk/pull/2152)
+    * [cli] [\#2221](https://github.com/cosmos/cosmos-sdk/issues/2221) All commands that
+    utilize a validator's operator address must now use the new Bech32 prefix,
+    `cosmosvaloper`.
     * [cli] [\#2190](https://github.com/cosmos/cosmos-sdk/issues/2190) `gaiacli init --gen-txs` is now `gaiacli init --with-txs` to reduce confusion
-    * [\#2040](https://github.com/cosmos/cosmos-sdk/issues/2040) All commands that utilize a validator's address must now use the new
-    bech32 prefix, `cosmosval`. A validator's Tendermint signing key and address
-    now use a new bech32 prefix, `cosmoscons`.
 
 * Gaia
     * Make the transient store key use a distinct store key. [#2013](https://github.com/cosmos/cosmos-sdk/pull/2013)
@@ -25,17 +25,22 @@ BREAKING CHANGES
     * [x/stake, x/slashing] [#1305](https://github.com/cosmos/cosmos-sdk/issues/1305) - Rename "revoked" to "jailed"
     * [x/stake] [#1676] Revoked and jailed validators put into the unbonding state
     * [x/stake] [#1877] Redelegations/unbonding-delegation from unbonding validator have reduced time
-    * [x/stake] [\#2040](https://github.com/cosmos/cosmos-sdk/issues/2040) Validator operator type has now changed to `sdk.ValAddress`
-      * A new bech32 prefix has been introduced for Tendermint signing keys and
-        addresses, `cosmosconspub` and `cosmoscons` respectively.
-    * [x/gov] \#2195 Made governance use BFT Time instead of Block Heights for deposit and voting periods.
-
+    * [x/stake] [\#2040](https://github.com/cosmos/cosmos-sdk/issues/2040) Validator
+    operator type has now changed to `sdk.ValAddress`
+    * [x/stake] [\#2221](https://github.com/cosmos/cosmos-sdk/issues/2221) New
+    Bech32 prefixes have been introduced for a validator's consensus address and
+    public key: `cosmosvalcons` and `cosmosvalconspub` respectively. Also, existing Bech32 prefixes have been
+    renamed for accounts and validator operators:
+      * `cosmosaccaddr` / `cosmosaccpub` => `cosmos` / `cosmospub`
+      * `cosmosvaladdr` / `cosmosvalpub` => `cosmosvaloper` / `cosmosvaloperpub`
+    
 * SDK
     * [core] [\#1807](https://github.com/cosmos/cosmos-sdk/issues/1807) Switch from use of rational to decimal
     * [types] [\#1901](https://github.com/cosmos/cosmos-sdk/issues/1901) Validator interface's GetOwner() renamed to GetOperator()
     * [x/slashing] [#2122](https://github.com/cosmos/cosmos-sdk/pull/2122) - Implement slashing period
     * [types] [\#2119](https://github.com/cosmos/cosmos-sdk/issues/2119) Parsed error messages and ABCI log errors to make them more human readable.
     * [simulation] Rename TestAndRunTx to Operation [#2153](https://github.com/cosmos/cosmos-sdk/pull/2153)
+    * [simulation] Remove log and testing.TB from Operation and Invariants, in favor of using errors \#2282
     * [tools] Removed gocyclo [#2211](https://github.com/cosmos/cosmos-sdk/issues/2211)
     * [baseapp] Remove `SetTxDecoder` in favor of requiring the decoder be set in baseapp initialization. [#1441](https://github.com/cosmos/cosmos-sdk/issues/1441)
 
@@ -45,10 +50,11 @@ BREAKING CHANGES
 FEATURES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
-  * [lcd] Endpoints to query staking pool and params
-  * [lcd] [\#2110](https://github.com/cosmos/cosmos-sdk/issues/2110) Add support for `simulate=true` requests query argument to endpoints that send txs to run simulations of transactions
-  * [lcd] [\#966](https://github.com/cosmos/cosmos-sdk/issues/966) Add support for `generate_only=true` query argument to generate offline unsigned transactions
-  * [lcd] [\#1953](https://github.com/cosmos/cosmos-sdk/issues/1953) Add /sign endpoint to sign transactions generated with `generate_only=true`.
+  * [gaia-lite] Endpoints to query staking pool and params
+  * [gaia-lite] [\#2110](https://github.com/cosmos/cosmos-sdk/issues/2110) Add support for `simulate=true` requests query argument to endpoints that send txs to run simulations of transactions
+  * [gaia-lite] [\#966](https://github.com/cosmos/cosmos-sdk/issues/966) Add support for `generate_only=true` query argument to generate offline unsigned transactions
+  * [gaia-lite] [\#1953](https://github.com/cosmos/cosmos-sdk/issues/1953) Add /sign endpoint to sign transactions generated with `generate_only=true`.
+  * [gaia-lite] [\#1954](https://github.com/cosmos/cosmos-sdk/issues/1954) Add /broadcast endpoint to broadcast transactions signed by the /sign endpoint.
 
 * Gaia CLI  (`gaiacli`)
   * [cli] Cmds to query staking pool and params
@@ -61,6 +67,7 @@ FEATURES
   * [cli] [\#2204](https://github.com/cosmos/cosmos-sdk/issues/2204) Support generating and broadcasting messages with multiple signatures via command line:
     * [\#966](https://github.com/cosmos/cosmos-sdk/issues/966) Add --generate-only flag to build an unsigned transaction and write it to STDOUT.
     * [\#1953](https://github.com/cosmos/cosmos-sdk/issues/1953) New `sign` command to sign transactions generated with the --generate-only flag.
+    * [\#1954](https://github.com/cosmos/cosmos-sdk/issues/1954) New `broadcast` command to broadcast transactions generated offline and signed with the `sign` command.
 
 * Gaia
   * [cli] #2170 added ability to show the node's address via `gaiad tendermint show-address`
@@ -89,13 +96,16 @@ IMPROVEMENTS
     * [x/auth] Signature verification's gas cost now accounts for pubkey type. [#2046](https://github.com/tendermint/tendermint/pull/2046)
     * [x/stake] [x/slashing] Ensure delegation invariants to jailed validators [#1883](https://github.com/cosmos/cosmos-sdk/issues/1883).
     * [x/stake] Improve speed of GetValidator, which was shown to be a performance bottleneck. [#2046](https://github.com/tendermint/tendermint/pull/2200)
+    * [genesis] \#2229 Ensure that there are no duplicate accounts or validators in the genesis state.
+    
 * SDK
     * [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.
     * [spec] Added simple piggy bank distribution spec
     * [cli] [\#1632](https://github.com/cosmos/cosmos-sdk/issues/1632) Add integration tests to ensure `basecoind init && basecoind` start sequences run successfully for both `democoin` and `basecoin` examples.
     * [store] Speedup IAVL iteration, and consequently everything that requires IAVL iteration. [#2143](https://github.com/cosmos/cosmos-sdk/issues/2143)
-    * [store] \#1952 Update IAVL dependency to v0.10.0
+    * [store] \#1952, \#2281 Update IAVL dependency to v0.11.0
     * [simulation] Make timestamps randomized [#2153](https://github.com/cosmos/cosmos-sdk/pull/2153)
+    * [simulation] Make logs not just pure strings, speeding it up by a large factor at greater block heights \#2282
 
 * Tendermint
 
@@ -105,6 +115,7 @@ BUG FIXES
 
 * Gaia CLI  (`gaiacli`)
     * [cli] [\#1997](https://github.com/cosmos/cosmos-sdk/issues/1997) Handle panics gracefully when `gaiacli stake {delegation,unbond}` fail to unmarshal delegation.
+    * [cli] [\#2265](https://github.com/cosmos/cosmos-sdk/issues/2265) Fix JSON formatting of the `gaiacli send` command.
 
 * Gaia
 
@@ -114,5 +125,6 @@ BUG FIXES
     * [ledger] [\#2064](https://github.com/cosmos/cosmos-sdk/issues/2064) Fix inability to sign and send transactions via the LCD by
     loading a Ledger device at runtime.
     * [\#2158](https://github.com/cosmos/cosmos-sdk/issues/2158) Fix non-deterministic ordering of validator iteration when slashing in `gov EndBlocker`
+    * [simulation] \#1924 Make simulation stop on SIGTERM
 
 * Tendermint

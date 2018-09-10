@@ -151,7 +151,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 
 	var validatorsPKs []crypto.PubKey
 
-	// NOTE: It's bad practice to reuse public key address for the owner
+	// NOTE: It's bad practice to reuse public key address for the operator
 	// address but doing in the test for simplicity.
 	var appGenTxs []json.RawMessage
 	for _, gdValidator := range genDoc.Validators {

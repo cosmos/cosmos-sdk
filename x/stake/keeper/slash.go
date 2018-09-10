@@ -112,7 +112,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 
 	// remove validator if it has no more tokens
 	if validator.Tokens.IsZero() {
-		k.RemoveValidator(ctx, validator.Operator)
+		k.RemoveValidator(ctx, validator.OperatorAddr)
 	}
 
 	// Log that a slash occurred!

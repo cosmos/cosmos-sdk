@@ -20,6 +20,10 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, s
 		"/accounts/{address}",
 		QueryAccountRequestHandlerFn(storeName, cdc, authcmd.GetAccountDecoder(cdc), cliCtx),
 	).Methods("GET")
+	r.HandleFunc(
+		"/tx/sign",
+		SignTxRequestHandlerFn(cdc, cliCtx),
+	).Methods("POST")
 }
 
 // query accountREST Handler

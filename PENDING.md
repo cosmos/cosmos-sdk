@@ -103,6 +103,7 @@ IMPROVEMENTS
     * [spec] Added simple piggy bank distribution spec
     * [cli] [\#1632](https://github.com/cosmos/cosmos-sdk/issues/1632) Add integration tests to ensure `basecoind init && basecoind` start sequences run successfully for both `democoin` and `basecoin` examples.
     * [store] Speedup IAVL iteration, and consequently everything that requires IAVL iteration. [#2143](https://github.com/cosmos/cosmos-sdk/issues/2143)
+    * [store] Slightly speedup cache iteration. \#2287
     * [store] \#1952, \#2281 Update IAVL dependency to v0.11.0
     * [simulation] Make timestamps randomized [#2153](https://github.com/cosmos/cosmos-sdk/pull/2153)
     * [simulation] Make logs not just pure strings, speeding it up by a large factor at greater block heights \#2282

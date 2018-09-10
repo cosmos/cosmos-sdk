@@ -1,8 +1,8 @@
 package store
 
 import (
-	dbm "github.com/tendermint/tendermint/libs/db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
 var _ KVStore = (*transientStore)(nil)

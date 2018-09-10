@@ -3,7 +3,6 @@ package simulation
 import (
 	"fmt"
 	"math/rand"
-	"testing"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -15,12 +14,12 @@ import (
 
 // SimulateMsgUnjail
 func SimulateMsgUnjail(k slashing.Keeper) simulation.Operation {
-	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOp []simulation.FutureOperation, err sdk.Error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
 		key := simulation.RandomKey(r, keys)
 		address := sdk.ValAddress(key.PubKey().Address())
 		msg := slashing.NewMsgUnjail(address)
 		if msg.ValidateBasic() != nil {
-			tb.Fatalf("expected msg to pass ValidateBasic: %s, log %s", msg.GetSignBytes(), log)
+			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 		ctx, write := ctx.CacheContext()
 		result := slashing.NewHandler(k)(ctx, msg)

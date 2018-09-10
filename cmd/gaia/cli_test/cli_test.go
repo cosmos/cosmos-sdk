@@ -26,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	"io/ioutil"
 )
 
 var (
@@ -489,6 +488,7 @@ trust_node = true
 	require.NoError(t, err)
 	require.Equal(t, expectedConfig, string(config))
 }
+
 //___________________________________________________________________________________
 // helper methods
 

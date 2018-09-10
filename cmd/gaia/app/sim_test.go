@@ -77,7 +77,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	genesis := GenesisState{
 		Accounts:     genesisAccounts,
 		StakeData:    stakeGenesis,
-		SlashingData: slashing.HubDefaultGenesisState(),
+		SlashingData: slashing.DefaultGenesisState(),
 		GovData:      govGenesis,
 	}
 

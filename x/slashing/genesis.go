@@ -11,9 +11,9 @@ type GenesisState struct {
 }
 
 // HubDefaultGenesisState - default GenesisState used by Cosmos Hub
-func HubDefaultGenesisState() GenesisState {
+func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		Params: HubDefaultParams(),
+		Params: DefaultParams(),
 	}
 }
 

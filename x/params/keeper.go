@@ -30,17 +30,12 @@ func NewKeeper(cdc *codec.Codec, key *sdk.KVStoreKey, tkey *sdk.TransientStoreKe
 }
 
 // Allocate substore used for keepers
-func (k Keeper) Subspace(space string) Space {
-	_, ok := k.spaces[space]
+func (k Keeper) Subspace(spacename string) Space {
+	_, ok := k.spaces[spacename]
 	if ok {
 		panic("subspace already occupied")
 	}
 
-	return k.UnsafeSubspace(space)
-}
-
-// Get substore without checking existing allocation
-func (k Keeper) UnsafeSubspace(spacename string) Space {
 	if spacename == "" {
 		panic("cannot use empty string for subspace")
 	}
@@ -50,4 +45,13 @@ func (k Keeper) UnsafeSubspace(spacename string) Space {
 	k.spaces[spacename] = &space
 
 	return space
+}
+
+// Get existing subspace from keeper
+func (k Keeper) GetSubspace(spacename string) (Space, bool) {
+	space, ok := k.spaces[spacename]
+	if !ok {
+		return Space{}, false
+	}
+	return *space, ok
 }

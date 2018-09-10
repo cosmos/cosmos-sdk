@@ -24,7 +24,7 @@ func setGenesis(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
 	genesisState := GenesisState{
 		Accounts:     genaccs,
 		StakeData:    stake.DefaultGenesisState(),
-		SlashingData: slashing.HubDefaultGenesisState(),
+		SlashingData: slashing.DefaultGenesisState(),
 	}
 
 	stateBytes, err := codec.MarshalJSONIndent(gapp.cdc, genesisState)

@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -85,9 +84,9 @@ func SimulateFromSeed(
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	go func() {
-		<-c
-		fmt.Printf("Exiting early due to SIGTERM/SIGINT, on block %d, operation %d\n", header.Height, opCount)
-		simError = errors.New("Exited due to SIGTERM/SIGINT")
+		receivedSyscall := <-c
+		fmt.Printf("Exiting early due to %s, on block %d, operation %d\n", receivedSyscall, header.Height, opCount)
+		simError = fmt.Errorf("Exited due to %s", receivedSyscall)
 		stopEarly = true
 	}()
 

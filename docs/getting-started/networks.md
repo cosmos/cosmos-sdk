@@ -70,7 +70,7 @@ make build-linux
 # Create configuration
 docker run -v `pwd`/build:/gaiad tendermint/gaiadnode testnet -o . --v 1
 
-#Run the node
+# Run the node
 docker run -v `pwd`/build:/gaiad tendermint/gaiadnode
 ```
 

@@ -34,7 +34,7 @@ func GetValidatorSlashingPeriodPrefix(v sdk.ConsAddress) []byte {
 // stored by *Tendermint* address (not operator address) followed by start height
 func GetValidatorSlashingPeriodKey(v sdk.ConsAddress, startHeight int64) []byte {
 	b := make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, uint64(startHeight))
+	binary.LittleEndian.PutUint64(b, ^uint64(startHeight)) // Newest-first, invert the height
 	return append(GetValidatorSlashingPeriodPrefix(v), b...)
 }
 

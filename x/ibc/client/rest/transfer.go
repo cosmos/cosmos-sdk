@@ -29,7 +29,7 @@ type transferBody struct {
 	SrcChainID       string    `json:"src_chain_id"`
 	AccountNumber    int64     `json:"account_number"`
 	Sequence         int64     `json:"sequence"`
-	Gas              int64     `json:"gas"`
+	Gas              string    `json:"gas"`
 	GasAdjustment    string    `json:"gas_adjustment"`
 }
 
@@ -71,21 +71,26 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.C
 		packet := ibc.NewIBCPacket(sdk.AccAddress(info.GetPubKey().Address()), to, m.Amount, m.SrcChainID, destChainID)
 		msg := ibc.IBCTransferMsg{packet}
 
-		txBldr := authtxb.TxBuilder{
-			Codec:         cdc,
-			ChainID:       m.SrcChainID,
-			AccountNumber: m.AccountNumber,
-			Sequence:      m.Sequence,
-			Gas:           m.Gas,
+		simulateGas, gas, err := client.ReadGasFlag(m.Gas)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
 		}
-
 		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, client.DefaultGasAdjustment)
 		if !ok {
 			return
 		}
-		cliCtx = cliCtx.WithGasAdjustment(adjustment)
+		txBldr := authtxb.TxBuilder{
+			Codec:         cdc,
+			Gas:           gas,
+			GasAdjustment: adjustment,
+			SimulateGas:   simulateGas,
+			ChainID:       m.SrcChainID,
+			AccountNumber: m.AccountNumber,
+			Sequence:      m.Sequence,
+		}
 
-		if utils.HasDryRunArg(r) || m.Gas == 0 {
+		if utils.HasDryRunArg(r) || txBldr.SimulateGas {
 			newCtx, err := utils.EnrichCtxWithGas(txBldr, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())

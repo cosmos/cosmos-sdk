@@ -37,7 +37,7 @@ func ErrNoValidatorFound(codespace sdk.CodespaceType) sdk.Error {
 }
 
 func ErrValidatorOwnerExists(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "validator already exist for this owner-address, must use new validator-owner address")
+	return sdk.NewError(codespace, CodeInvalidValidator, "validator already exist for this operator address, must use new validator operator address")
 }
 
 func ErrValidatorPubKeyExists(codespace sdk.CodespaceType) sdk.Error {

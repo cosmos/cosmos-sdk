@@ -2,6 +2,7 @@ package auth
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -190,6 +191,13 @@ func processSig(
 	return
 }
 
+var dummySecp256k1Pubkey secp256k1.PubKeySecp256k1
+
+func init() {
+	bz, _ := hex.DecodeString("035AD6810A47F073553FF30D2FCC7E0D3B1C0B74B61A1AAA2582344037151E143A")
+	copy(dummySecp256k1Pubkey[:], bz)
+}
+
 func processPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey, sdk.Result) {
 	// If pubkey is not known for account,
 	// set it from the StdSignature.
@@ -200,7 +208,7 @@ func processPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 		// and gasKVStore.Set() shall consume the largest amount, i.e.
 		// it takes more gas to verifiy secp256k1 keys than ed25519 ones.
 		if pubKey == nil {
-			return secp256k1.GenPrivKey().PubKey(), sdk.Result{}
+			return dummySecp256k1Pubkey, sdk.Result{}
 		}
 		return pubKey, sdk.Result{}
 	}

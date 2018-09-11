@@ -1,6 +1,7 @@
 package slashing
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 
@@ -38,20 +39,20 @@ func (k Keeper) capBySlashingPeriod(ctx sdk.Context, address sdk.ConsAddress, fr
 // at the time of an infraction committed at that height.
 func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk.ConsAddress, height int64) (slashingPeriod ValidatorSlashingPeriod) {
 	store := ctx.KVStore(k.storeKey)
+	// Get the most recent slashing period at or before the infraction height
+	start := GetValidatorSlashingPeriodPrefix(address)
+	end := sdk.PrefixEndBytes(GetValidatorSlashingPeriodKey(address, height))
+	fmt.Printf("start: %X, end: %X, diff: %v\n", start, end, bytes.Compare(start, end))
 	// TODO
-	itr := store.Prefix(ValidatorSlashingPeriodKey).Iterator(nil, nil)
+	itr := sdk.KVStorePrefixIterator(store, GetValidatorSlashingPeriodPrefix(address))
 	for itr.Valid() {
 		fmt.Printf("Key: %X\n", itr.Key())
 		period := k.unmarshalSlashingPeriodKeyValue(itr.Key(), itr.Value())
-		fmt.Printf("Key: %X, period: %v\n", itr.Key(), period)
+		fmt.Printf("Found %X => %v\n", address, period)
 		itr.Next()
 	}
-	// TODO
-	// Get the most recent slashing period at or before the infraction height
-	start := GetValidatorSlashingPeriodKey(address, height)
-	end := sdk.PrefixEndBytes(GetValidatorSlashingPeriodKey(address, height))
-	fmt.Printf("start: %X, end: %X\n", start, end)
-	iterator := store.Iterator(start, end)
+	// END TODO
+	iterator := store.ReverseIterator(start, end)
 	if !iterator.Valid() {
 		panic(fmt.Sprintf("expected to find slashing period for validator %s before height %d, but none was found", address, height))
 	}
@@ -70,7 +71,7 @@ func (k Keeper) addOrUpdateValidatorSlashingPeriod(ctx sdk.Context, slashingPeri
 	}
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(slashingPeriodValue)
-	fmt.Printf("Set slashing period for validator: %s\n", slashingPeriod.ValidatorAddr)
+	fmt.Printf("Set slashing period for validator: %X => %s\n", GetValidatorSlashingPeriodKey(slashingPeriod.ValidatorAddr, slashingPeriod.StartHeight), slashingPeriod.ValidatorAddr)
 	store.Set(GetValidatorSlashingPeriodKey(slashingPeriod.ValidatorAddr, slashingPeriod.StartHeight), bz)
 }
 
@@ -79,7 +80,7 @@ func (k Keeper) unmarshalSlashingPeriodKeyValue(key []byte, value []byte) Valida
 	var slashingPeriodValue ValidatorSlashingPeriodValue
 	k.cdc.MustUnmarshalBinary(value, &slashingPeriodValue)
 	address := sdk.ConsAddress(key[1 : 1+sdk.AddrLen])
-	startHeight := int64(^binary.LittleEndian.Uint64(key[1+sdk.AddrLen : 1+sdk.AddrLen+8]))
+	startHeight := int64(binary.LittleEndian.Uint64(key[1+sdk.AddrLen : 1+sdk.AddrLen+8]))
 	return ValidatorSlashingPeriod{
 		ValidatorAddr: address,
 		StartHeight:   startHeight,

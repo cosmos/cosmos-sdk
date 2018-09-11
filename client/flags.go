@@ -12,9 +12,9 @@ const (
 	// DefaultGasAdjustment is applied to gas estimates to avoid tx
 	// execution failures due to state changes that might
 	// occur between the tx simulation and the actual run.
-	DefaultGasAdjustment  = 1.0
-	DefaultGasLimit       = 200000
-	GasFlagSimulateString = "simulate"
+	DefaultGasAdjustment = 1.0
+	DefaultGasLimit      = 200000
+	GasFlagSimulate      = "simulate"
 
 	FlagUseLedger     = "ledger"
 	FlagChainID       = "chain-id"
@@ -76,7 +76,7 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagGenerateOnly, false, "build an unsigned transaction and write it to STDOUT")
 		// --gas can accept integers and "simulate"
 		c.Flags().Var(&GasFlagVar, "gas", fmt.Sprintf(
-			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)", GasFlagSimulateString, DefaultGasLimit))
+			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)", GasFlagSimulate, DefaultGasLimit))
 	}
 	return cmds
 }
@@ -100,7 +100,7 @@ func (v *GasSetting) Set(s string) (err error) {
 
 func (v *GasSetting) String() string {
 	if v.Simulate {
-		return GasFlagSimulateString
+		return GasFlagSimulate
 	}
 	return strconv.FormatInt(v.Gas, 10)
 }
@@ -110,12 +110,12 @@ func ReadGasFlag(s string) (simulate bool, gas int64, err error) {
 	switch s {
 	case "":
 		gas = DefaultGasLimit
-	case GasFlagSimulateString:
+	case GasFlagSimulate:
 		simulate = true
 	default:
 		gas, err = strconv.ParseInt(s, 10, 64)
 		if err != nil {
-			err = fmt.Errorf("gas must be either integer or %q", GasFlagSimulateString)
+			err = fmt.Errorf("gas must be either integer or %q", GasFlagSimulate)
 			return
 		}
 	}

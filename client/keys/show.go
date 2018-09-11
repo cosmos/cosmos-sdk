@@ -10,8 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tmlibs/cli"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 const (

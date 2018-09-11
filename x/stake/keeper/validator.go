@@ -158,9 +158,7 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validat
 		}
 		address := GetAddressFromValBondedIndexKey(iterator.Key())
 		validator, found := k.GetValidator(ctx, address)
-		if !found {
-			panic(fmt.Sprintf("validator record not found for address: %v\n", address))
-		}
+		ensureValidatorFound(found, address)
 
 		validators[i] = validator
 		i++
@@ -184,9 +182,8 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 		}
 		address := iterator.Value()
 		validator, found := k.GetValidator(ctx, address)
-		if !found {
-			panic(fmt.Sprintf("validator record not found for address: %v\n", address))
-		}
+		ensureValidatorFound(found, address)
+
 		if validator.Status == sdk.Bonded {
 			validators[i] = validator
 			i++
@@ -327,9 +324,7 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 	if iterator.Valid() {
 		ownerAddr := iterator.Value()
 		currVal, found := k.GetValidator(ctx, ownerAddr)
-		if !found {
-			panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
-		}
+		ensureValidatorFound(found, ownerAddr)
 
 		if currVal.Status != sdk.Bonded || currVal.Jailed {
 			panic(fmt.Sprintf("unexpected jailed or unbonded validator for address: %s\n", ownerAddr))
@@ -454,9 +449,7 @@ func (k Keeper) UpdateBondedValidators(
 		} else {
 			var found bool
 			validator, found = k.GetValidator(ctx, ownerAddr)
-			if !found {
-				panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
-			}
+			ensureValidatorFound(found, ownerAddr)
 		}
 
 		// if we've reached jailed validators no further bonded validators exist
@@ -502,9 +495,7 @@ func (k Keeper) UpdateBondedValidators(
 	if newValidatorBonded {
 		if oldCliffValidatorAddr != nil {
 			oldCliffVal, found := k.GetValidator(ctx, oldCliffValidatorAddr)
-			if !found {
-				panic(fmt.Sprintf("validator record not found for address: %v\n", oldCliffValidatorAddr))
-			}
+			ensureValidatorFound(found, oldCliffValidatorAddr)
 
 			if bytes.Equal(validatorToBond.OperatorAddr, affectedValidator.OperatorAddr) {
 
@@ -560,9 +551,7 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 
 		ownerAddr := iterator.Value()
 		validator, found = k.GetValidator(ctx, ownerAddr)
-		if !found {
-			panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
-		}
+		ensureValidatorFound(found, ownerAddr)
 
 		_, found = toKickOut[string(ownerAddr)]
 		if found {
@@ -605,9 +594,7 @@ func kickOutValidators(k Keeper, ctx sdk.Context, toKickOut map[string]byte) {
 	for key := range toKickOut {
 		ownerAddr := []byte(key)
 		validator, found := k.GetValidator(ctx, ownerAddr)
-		if !found {
-			panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
-		}
+		ensureValidatorFound(found, ownerAddr)
 		k.beginUnbondingValidator(ctx, validator)
 	}
 }
@@ -737,4 +724,10 @@ func (k Keeper) clearCliffValidator(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(ValidatorPowerCliffKey)
 	store.Delete(ValidatorCliffIndexKey)
+}
+
+func ensureValidatorFound(found bool, ownerAddr []byte) {
+	if !found {
+		panic(fmt.Sprintf("validator record not found for address: %X\n", ownerAddr))
+	}
 }

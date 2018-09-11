@@ -3,7 +3,7 @@ package keeper
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
 // Allocate fees handles distribution of the collected fees
-func (k Keeper) AllocateFees(ctx sdk.Context, feesCollected sdk.Coins, proposerAddr sdk.ConsAddress) {
+func (k Keeper) AllocateFees(ctx sdk.Context, _ sdk.Tx, feesCollected sdk.Coins, proposerAddr sdk.ConsAddress) {
 
 	sumPowerPrecommitValidators := sdk.NewDec(1) // XXX TODO actually calculate this
 	communityTax := sdk.NewDecWithPrec(1, 2)     // XXX TODO get from global params store

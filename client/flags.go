@@ -115,7 +115,7 @@ func ReadGasFlag(s string) (simulate bool, gas int64, err error) {
 	default:
 		gas, err = strconv.ParseInt(s, 10, 64)
 		if err != nil {
-			err = fmt.Errorf("it must be either integer or %q", GasFlagSimulateString)
+			err = fmt.Errorf("gas must be either integer or %q", GasFlagSimulateString)
 			return
 		}
 	}

@@ -243,6 +243,11 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 	validator.BondHeight, validator.BondIntraTxCounter = k.bondIncrement(ctx, oldFound, oldValidator, validator)
 	valPower := k.updateValidatorPower(ctx, oldFound, oldValidator, validator, pool)
 	cliffPower := k.GetCliffValidatorPower(ctx)
+	cliffValExists := (cliffPower != nil)
+	var valPowerLTcliffPower bool
+	if cliffValExists {
+		valPowerLTcliffPower = (bytes.Compare(valPower, cliffPower) == -1)
+	}
 
 	switch {
 
@@ -256,7 +261,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 		bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
 		store.Set(GetTendermintUpdatesKey(validator.OperatorAddr), bz)
 
-		if cliffPower != nil {
+		if cliffValExists {
 			cliffAddr := sdk.ValAddress(k.GetCliffValidator(ctx))
 			if bytes.Equal(cliffAddr, validator.OperatorAddr) {
 				k.updateCliffValidator(ctx, validator)
@@ -264,14 +269,13 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 		}
 
 	// if is a new validator and the new power is less than the cliff validator
-	case cliffPower != nil && !oldFound &&
-		bytes.Compare(valPower, cliffPower) == -1: //(valPower < cliffPower
+	case cliffValExists && !oldFound && valPowerLTcliffPower:
 		// skip to completion
 
 		// if was unbonded and the new power is less than the cliff validator
-	case cliffPower != nil &&
+	case cliffValExists &&
 		(oldFound && oldValidator.Status == sdk.Unbonded) &&
-		bytes.Compare(valPower, cliffPower) == -1: //(valPower < cliffPower
+		valPowerLTcliffPower: //(valPower < cliffPower
 		// skip to completion
 
 	default:

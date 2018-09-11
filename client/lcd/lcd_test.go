@@ -270,8 +270,12 @@ func TestCoinSend(t *testing.T) {
 	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, "100", 0, "")
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
-	// test failure with too negative gas
+	// test failure with negative gas
 	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, "-200", 0, "")
+	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
+
+	// test failure with 0 gas
+	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, "0", 0, "")
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
 	// test failure with wrong adjustment

@@ -116,6 +116,10 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	success = executeWrite(t, fmt.Sprintf("gaiacli send %v --gas=-100 --amount=10steak --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
 	require.False(t, success)
 
+	// Test failure with 0 gas
+	success = executeWrite(t, fmt.Sprintf("gaiacli send %v --gas=0 --amount=10steak --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
+	require.False(t, success)
+
 	// Enable auto gas
 	success, stdout, _ := executeWriteRetStdStreams(t, fmt.Sprintf("gaiacli send %v --json --gas=simulate --amount=10steak --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
 	require.True(t, success)

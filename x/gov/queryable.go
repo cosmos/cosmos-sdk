@@ -8,7 +8,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// nolint
+// query endpoints supported by the governance Querier
 const (
 	QueryProposals = "proposals"
 	QueryProposal  = "proposal"

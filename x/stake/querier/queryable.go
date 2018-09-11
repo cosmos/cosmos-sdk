@@ -10,7 +10,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// nolint
+// query endpoints supported by the staking Querier
 const (
 	QueryValidators          = "validators"
 	QueryValidator           = "validator"
@@ -74,7 +74,8 @@ type QueryBondsParams struct {
 }
 
 func queryValidators(ctx sdk.Context, cdc *wire.Codec, k keep.Keeper) (res []byte, err sdk.Error) {
-	validators := k.GetValidators(ctx)
+	stakeParams := k.GetParams(ctx)
+	validators := k.GetValidators(ctx, stakeParams.MaxValidators)
 
 	res, errRes := wire.MarshalJSONIndent(cdc, validators)
 	if err != nil {
@@ -109,9 +110,9 @@ func queryDelegator(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQuery, k k
 	if errRes != nil {
 		return []byte{}, sdk.ErrUnknownAddress(fmt.Sprintf("incorrectly formatted request address: %s", errRes.Error()))
 	}
-	delegations := k.GetDelegatorDelegations(ctx, params.DelegatorAddr)
-	unbondingDelegations := k.GetUnbondingDelegations(ctx, params.DelegatorAddr)
-	redelegations := k.GetRedelegations(ctx, params.DelegatorAddr)
+	delegations := k.GetAllDelegatorDelegations(ctx, params.DelegatorAddr)
+	unbondingDelegations := k.GetAllUnbondingDelegations(ctx, params.DelegatorAddr)
+	redelegations := k.GetAllRedelegations(ctx, params.DelegatorAddr)
 
 	summary := types.DelegationSummary{
 		Delegations:          delegations,
@@ -129,12 +130,14 @@ func queryDelegator(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQuery, k k
 func queryDelegatorValidators(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryDelegatorParams
 
+	stakeParams := k.GetParams(ctx)
+
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
 		return []byte{}, sdk.ErrUnknownAddress(fmt.Sprintf("incorrectly formatted request address: %s", errRes.Error()))
 	}
 
-	validators := k.GetDelegatorValidators(ctx, params.DelegatorAddr)
+	validators := k.GetDelegatorValidators(ctx, params.DelegatorAddr, stakeParams.MaxValidators)
 
 	res, errRes = wire.MarshalJSONIndent(cdc, validators)
 	if errRes != nil {

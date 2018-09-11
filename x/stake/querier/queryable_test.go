@@ -61,6 +61,7 @@ func TestQueryValidators(t *testing.T) {
 	cdc := wire.NewCodec()
 	ctx, _, keeper := keep.CreateTestInput(t, false, 10000)
 	pool := keeper.GetPool(ctx)
+	params := keeper.GetParams(ctx)
 
 	// Create Validators
 	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8)}
@@ -74,7 +75,7 @@ func TestQueryValidators(t *testing.T) {
 	validators[1] = keeper.UpdateValidator(ctx, validators[1])
 
 	// Query Validators
-	queriedValidators := keeper.GetValidators(ctx)
+	queriedValidators := keeper.GetValidators(ctx, params.MaxValidators)
 
 	res, err := queryValidators(ctx, cdc, keeper)
 	require.Nil(t, err)
@@ -108,6 +109,7 @@ func TestQueryValidators(t *testing.T) {
 func TestQueryDelegation(t *testing.T) {
 	cdc := wire.NewCodec()
 	ctx, _, keeper := keep.CreateTestInput(t, false, 10000)
+	params := keeper.GetParams(ctx)
 
 	// Create Validators and Delegation
 	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
@@ -125,7 +127,7 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	delValidators := keeper.GetDelegatorValidators(ctx, addrAcc2)
+	delValidators := keeper.GetDelegatorValidators(ctx, addrAcc2, params.MaxValidators)
 
 	res, err := queryDelegatorValidators(ctx, cdc, query, keeper)
 	require.Nil(t, err)

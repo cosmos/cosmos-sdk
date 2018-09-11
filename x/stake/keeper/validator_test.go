@@ -45,7 +45,7 @@ func TestSetValidator(t *testing.T) {
 	require.Equal(t, 1, len(resVals))
 	require.True(ValEq(t, validator, resVals[0]))
 
-	resVals = keeper.GetValidators(ctx)
+	resVals = keeper.GetValidators(ctx, 1)
 	require.Equal(t, 1, len(resVals))
 	require.True(ValEq(t, validator, resVals[0]))
 
@@ -277,7 +277,7 @@ func TestValidatorBasics(t *testing.T) {
 	resVals := keeper.GetValidatorsBonded(ctx)
 	require.Zero(t, len(resVals))
 
-	resVals = keeper.GetValidators(ctx)
+	resVals = keeper.GetValidators(ctx, 2)
 	require.Zero(t, len(resVals))
 
 	pool = keeper.GetPool(ctx)

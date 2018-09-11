@@ -39,27 +39,22 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 
 // Return all delegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned.
 func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress,
-	maxRetrieve ...int16) (delegations []types.Delegation) {
-	retrieve := len(maxRetrieve) > 0
-	if retrieve {
-		delegations = make([]types.Delegation, maxRetrieve[0])
-	}
+	maxRetrieve uint16) (delegations []types.Delegation) {
+
+	delegations = make([]types.Delegation, maxRetrieve)
+
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 	defer iterator.Close()
 
 	i := 0
-	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
+	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
-		if retrieve {
-			delegations[i] = delegation
-		} else {
-			delegations = append(delegations, delegation)
-		}
+		delegations[i] = delegation
 		i++
 	}
-	return delegations[:i] // trim
+	return delegations[:i] // trim if the array length < maxRetrieve
 }
 
 // set the delegation
@@ -77,30 +72,24 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 
 //_____________________________________________________________________________________
 
-// Return all unbonding delegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned.
+// return a given amount of all the delegator unbonding-delegations
 func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress,
-	maxRetrieve ...int16) (unbondingDelegations []types.UnbondingDelegation) {
+	maxRetrieve uint16) (unbondingDelegations []types.UnbondingDelegation) {
 
-	retrieve := len(maxRetrieve) > 0
-	if retrieve {
-		unbondingDelegations = make([]types.UnbondingDelegation, maxRetrieve[0])
-	}
+	unbondingDelegations = make([]types.UnbondingDelegation, maxRetrieve)
+
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetUBDsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 	defer iterator.Close()
 
 	i := 0
-	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
+	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
 		unbondingDelegation := types.MustUnmarshalUBD(k.cdc, iterator.Key(), iterator.Value())
-		if retrieve {
-			unbondingDelegations[i] = unbondingDelegation
-		} else {
-			unbondingDelegations = append(unbondingDelegations, unbondingDelegation)
-		}
+		unbondingDelegations[i] = unbondingDelegation
 		i++
 	}
-	return unbondingDelegations[:i] // trim
+	return unbondingDelegations[:i] // trim if the array length < maxRetrieve
 }
 
 // return a unbonding delegation
@@ -141,8 +130,7 @@ func (k Keeper) IterateUnbondingDelegations(ctx sdk.Context, fn func(index int64
 
 	for i := int64(0); iterator.Valid(); iterator.Next() {
 		ubd := types.MustUnmarshalUBD(k.cdc, iterator.Key(), iterator.Value())
-		stop := fn(i, ubd)
-		if stop {
+		if stop := fn(i, ubd); stop {
 			break
 		}
 		i++
@@ -168,30 +156,23 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 
 //_____________________________________________________________________________________
 
-// Return all redelegations for a delegator. If maxRetrieve is supplied, the respective amount will be returned.
+// return a given amount of all the delegator redelegations
 func (k Keeper) GetRedelegations(ctx sdk.Context, delegator sdk.AccAddress,
-	maxRetrieve ...int16) (redelegations []types.Redelegation) {
+	maxRetrieve uint16) (redelegations []types.Redelegation) {
+	redelegations = make([]types.Redelegation, maxRetrieve)
 
-	retrieve := len(maxRetrieve) > 0
-	if retrieve {
-		redelegations = make([]types.Redelegation, maxRetrieve[0])
-	}
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetREDsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 	defer iterator.Close()
 
 	i := 0
-	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
+	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
 		redelegation := types.MustUnmarshalRED(k.cdc, iterator.Key(), iterator.Value())
-		if retrieve {
-			redelegations[i] = redelegation
-		} else {
-			redelegations = append(redelegations, redelegation)
-		}
+		redelegations[i] = redelegation
 		i++
 	}
-	return redelegations[:i] // trim
+	return redelegations[:i] // trim if the array length < maxRetrieve
 }
 
 // return a redelegation

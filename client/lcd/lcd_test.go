@@ -1279,7 +1279,6 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ac
 		}
 	}`, proposerAddr, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", fmt.Sprintf("/gov/proposals/%d/votes", proposalID), jsonStr)
-	fmt.Println(res)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var results ctypes.ResultBroadcastTxCommit

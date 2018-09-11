@@ -100,25 +100,19 @@ func (k Keeper) validatorByPowerIndexExists(ctx sdk.Context, power []byte) bool 
 }
 
 // Get the set of all validators. If maxRetrieve is supplied, the respective amount will be returned.
-func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve ...int16) (validators []types.Validator) {
-	retrieve := len(maxRetrieve) > 0
-	if retrieve {
-		validators = make([]types.Validator, maxRetrieve[0])
-	}
+func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint16) (validators []types.Validator) {
+
+	validators = make([]types.Validator, maxRetrieve)
 
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
 	defer iterator.Close()
 
 	i := 0
-	for ; iterator.Valid() && (!retrieve || (retrieve && i < int(maxRetrieve[0]))); iterator.Next() {
+	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
 		addr := iterator.Key()[1:]
 		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
-		if retrieve {
-			validators[i] = validator
-		} else {
-			validators = append(validators, validator)
-		}
+		validators[i] = validator
 		i++
 	}
 	return validators[:i] // trim
@@ -207,10 +201,11 @@ func (k Keeper) ClearTendermintUpdates(ctx sdk.Context) {
 
 	// delete subspace
 	iterator := sdk.KVStorePrefixIterator(store, TendermintUpdatesKey)
+	defer iterator.Close()
+
 	for ; iterator.Valid(); iterator.Next() {
 		store.Delete(iterator.Key())
 	}
-	iterator.Close()
 }
 
 //___________________________________________________________________________

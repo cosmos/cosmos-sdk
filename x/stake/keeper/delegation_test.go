@@ -90,7 +90,7 @@ func TestDelegation(t *testing.T) {
 	require.True(t, bond2to2.Equal(allBonds[4]))
 	require.True(t, bond2to3.Equal(allBonds[5]))
 
-	resVals := keeper.GetDelegatorValidators(ctx, addrDels[0])
+	resVals := keeper.GetDelegatorValidators(ctx, addrDels[0], 3)
 	require.Equal(t, 3, len(resVals))
 	resVals = keeper.GetDelegatorValidators(ctx, addrDels[1], 4)
 	require.Equal(t, 3, len(resVals))
@@ -113,7 +113,7 @@ func TestDelegation(t *testing.T) {
 	require.True(t, bond2to1.Equal(resBonds[0]))
 	require.True(t, bond2to2.Equal(resBonds[1]))
 
-	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[1])
+	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[1], 2)
 	require.Equal(t, 2, len(resBonds))
 
 	// delete all the records from delegator 2
@@ -152,7 +152,7 @@ func TestUnbondingDelegation(t *testing.T) {
 	resUnbonds := keeper.GetUnbondingDelegations(ctx, addrDels[0], 5)
 	require.Equal(t, 1, len(resUnbonds))
 
-	resUnbonds = keeper.GetUnbondingDelegations(ctx, addrDels[0])
+	resUnbonds = keeper.GetUnbondingDelegations(ctx, addrDels[0], 3)
 	require.Equal(t, 1, len(resUnbonds))
 
 	resUnbond, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
@@ -453,7 +453,7 @@ func TestRedelegation(t *testing.T) {
 	require.Equal(t, 1, len(redelegations))
 	require.True(t, redelegations[0].Equal(resRed))
 
-	redelegations = keeper.GetRedelegations(ctx, addrDels[0])
+	redelegations = keeper.GetRedelegations(ctx, addrDels[0], 1)
 	require.Equal(t, 1, len(redelegations))
 	require.True(t, redelegations[0].Equal(resRed))
 

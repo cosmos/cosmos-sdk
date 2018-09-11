@@ -72,7 +72,7 @@ func TestDelegation(t *testing.T) {
 	require.True(t, bond1to1.Equal(resBonds[0]))
 	require.True(t, bond1to2.Equal(resBonds[1]))
 	require.True(t, bond1to3.Equal(resBonds[2]))
-	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[0], 3)
+	resBonds = keeper.GetAllDelegatorDelegations(ctx, addrDels[0])
 	require.Equal(t, 3, len(resBonds))
 	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[0], 2)
 	require.Equal(t, 2, len(resBonds))
@@ -113,7 +113,7 @@ func TestDelegation(t *testing.T) {
 	require.True(t, bond2to1.Equal(resBonds[0]))
 	require.True(t, bond2to2.Equal(resBonds[1]))
 
-	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[1], 2)
+	resBonds = keeper.GetAllDelegatorDelegations(ctx, addrDels[1])
 	require.Equal(t, 2, len(resBonds))
 
 	// delete all the records from delegator 2
@@ -152,7 +152,7 @@ func TestUnbondingDelegation(t *testing.T) {
 	resUnbonds := keeper.GetUnbondingDelegations(ctx, addrDels[0], 5)
 	require.Equal(t, 1, len(resUnbonds))
 
-	resUnbonds = keeper.GetUnbondingDelegations(ctx, addrDels[0], 3)
+	resUnbonds = keeper.GetAllUnbondingDelegations(ctx, addrDels[0])
 	require.Equal(t, 1, len(resUnbonds))
 
 	resUnbond, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
@@ -165,6 +165,9 @@ func TestUnbondingDelegation(t *testing.T) {
 	require.False(t, found)
 
 	resUnbonds = keeper.GetUnbondingDelegations(ctx, addrDels[0], 5)
+	require.Equal(t, 0, len(resUnbonds))
+
+	resUnbonds = keeper.GetAllUnbondingDelegations(ctx, addrDels[0])
 	require.Equal(t, 0, len(resUnbonds))
 
 }
@@ -453,7 +456,7 @@ func TestRedelegation(t *testing.T) {
 	require.Equal(t, 1, len(redelegations))
 	require.True(t, redelegations[0].Equal(resRed))
 
-	redelegations = keeper.GetRedelegations(ctx, addrDels[0], 1)
+	redelegations = keeper.GetAllRedelegations(ctx, addrDels[0])
 	require.Equal(t, 1, len(redelegations))
 	require.True(t, redelegations[0].Equal(resRed))
 
@@ -484,6 +487,9 @@ func TestRedelegation(t *testing.T) {
 	require.False(t, found)
 
 	redelegations = keeper.GetRedelegations(ctx, addrDels[0], 5)
+	require.Equal(t, 0, len(redelegations))
+
+	redelegations = keeper.GetAllRedelegations(ctx, addrDels[0])
 	require.Equal(t, 0, len(redelegations))
 }
 

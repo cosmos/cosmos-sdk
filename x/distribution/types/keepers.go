@@ -12,6 +12,12 @@ type StakeKeeper interface {
 }
 
 // expected coin keeper
-type CoinKeeper interface {
+type BankKeeper interface {
 	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
+}
+
+// from ante handler
+type FeeCollectionKeeper interface {
+	GetCollectedFees(ctx sdk.Context) sdk.Coins
+	ClearCollectedFees(ctx sdk.Context)
 }

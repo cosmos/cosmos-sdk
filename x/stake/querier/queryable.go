@@ -76,12 +76,7 @@ type QueryBondsParams struct {
 func queryValidators(ctx sdk.Context, cdc *wire.Codec, k keep.Keeper) (res []byte, err sdk.Error) {
 	validators := k.GetValidators(ctx)
 
-	bechValidators, err := validatorsToBech32(validators)
-	if err != nil {
-		return nil, err
-	}
-
-	res, errRes := wire.MarshalJSONIndent(cdc, bechValidators)
+	res, errRes := wire.MarshalJSONIndent(cdc, validators)
 	if err != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}
@@ -101,19 +96,13 @@ func queryValidator(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQuery, k k
 		return []byte{}, types.ErrNoValidatorFound(types.DefaultCodespace)
 	}
 
-	bechValidator, errRes := validator.Bech32Validator()
-	if errRes != nil {
-		return nil, sdk.ErrInternal(fmt.Sprintf("could not bech32ify validator: %s", errRes.Error()))
-	}
-
-	res, errRes = wire.MarshalJSONIndent(cdc, bechValidator)
+	res, errRes = wire.MarshalJSONIndent(cdc, validator)
 	if errRes != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}
 	return res, nil
 }
 
-// TODO query with limit
 func queryDelegator(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryDelegatorParams
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
@@ -137,7 +126,6 @@ func queryDelegator(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQuery, k k
 	return res, nil
 }
 
-// TODO query with limit
 func queryDelegatorValidators(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryDelegatorParams
 
@@ -148,12 +136,7 @@ func queryDelegatorValidators(ctx sdk.Context, cdc *wire.Codec, req abci.Request
 
 	validators := k.GetDelegatorValidators(ctx, params.DelegatorAddr)
 
-	bechValidators, err := validatorsToBech32(validators)
-	if err != nil {
-		return nil, err
-	}
-
-	res, errRes = wire.MarshalJSONIndent(cdc, bechValidators)
+	res, errRes = wire.MarshalJSONIndent(cdc, validators)
 	if errRes != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}
@@ -170,12 +153,7 @@ func queryDelegatorValidator(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQ
 
 	validator := k.GetDelegatorValidator(ctx, params.DelegatorAddr, params.ValidatorAddr)
 
-	bechValidator, errRes := validator.Bech32Validator()
-	if err != nil {
-		return nil, sdk.ErrInternal(fmt.Sprintf("could not bech32ify validator: %s", errRes.Error()))
-	}
-
-	res, errRes = wire.MarshalJSONIndent(cdc, bechValidator)
+	res, errRes = wire.MarshalJSONIndent(cdc, validator)
 	if errRes != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}

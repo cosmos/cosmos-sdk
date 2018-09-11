@@ -75,18 +75,16 @@ func TestQueryValidators(t *testing.T) {
 
 	// Query Validators
 	queriedValidators := keeper.GetValidators(ctx)
-	bechValidators, err := validatorsToBech32(queriedValidators)
-	require.Nil(t, err)
 
 	res, err := queryValidators(ctx, cdc, keeper)
 	require.Nil(t, err)
 
-	var validatorsResp []types.BechValidator
+	var validatorsResp []types.Validator
 	errRes := cdc.UnmarshalJSON(res, &validatorsResp)
 	require.Nil(t, errRes)
 
-	require.Equal(t, len(bechValidators), len(validatorsResp))
-	require.ElementsMatch(t, bechValidators, validatorsResp)
+	require.Equal(t, len(queriedValidators), len(validatorsResp))
+	require.ElementsMatch(t, queriedValidators, validatorsResp)
 
 	// Query each validator
 	queryParams := newTestValidatorQuery(addrVal1)
@@ -100,11 +98,11 @@ func TestQueryValidators(t *testing.T) {
 	res, err = queryValidator(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	var validator types.BechValidator
+	var validator types.Validator
 	errRes = cdc.UnmarshalJSON(res, &validator)
 	require.Nil(t, errRes)
 
-	require.Equal(t, bechValidators[0], validator)
+	require.Equal(t, queriedValidators[0], validator)
 }
 
 func TestQueryDelegation(t *testing.T) {
@@ -128,18 +126,16 @@ func TestQueryDelegation(t *testing.T) {
 	}
 
 	delValidators := keeper.GetDelegatorValidators(ctx, addrAcc2)
-	delBechValidators, err := validatorsToBech32(delValidators)
-	require.Nil(t, err)
 
 	res, err := queryDelegatorValidators(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	var validatorsResp []types.BechValidator
+	var validatorsResp []types.Validator
 	errRes = cdc.UnmarshalJSON(res, &validatorsResp)
 	require.Nil(t, errRes)
 
-	require.Equal(t, len(delBechValidators), len(validatorsResp))
-	require.ElementsMatch(t, delBechValidators, validatorsResp)
+	require.Equal(t, len(delValidators), len(validatorsResp))
+	require.ElementsMatch(t, delValidators, validatorsResp)
 
 	// Query bonded validator
 	queryBondParams := newTestBondQuery(addrAcc2, addrVal1)
@@ -154,11 +150,11 @@ func TestQueryDelegation(t *testing.T) {
 	res, err = queryDelegatorValidator(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	var validator types.BechValidator
+	var validator types.Validator
 	errRes = cdc.UnmarshalJSON(res, &validator)
 	require.Nil(t, errRes)
 
-	require.Equal(t, delBechValidators[0], validator)
+	require.Equal(t, delValidators[0], validator)
 
 	// Query delegation
 
@@ -180,7 +176,7 @@ func TestQueryDelegation(t *testing.T) {
 	require.Equal(t, delegation, delegationRes)
 
 	// Query unbonging delegation
-	keeper.BeginUnbonding(ctx, addrAcc2, val1.Operator, sdk.NewDec(10))
+	keeper.BeginUnbonding(ctx, addrAcc2, val1.OperatorAddr, sdk.NewDec(10))
 
 	query = abci.RequestQuery{
 		Path: "/custom/stake/unbondingDelegation",

@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
 type baseReq struct {
@@ -70,7 +70,7 @@ func (req baseReq) baseReqValidate(w http.ResponseWriter) bool {
 // (probably should live in client/lcd).
 func signAndBuild(w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext, baseReq baseReq, msg sdk.Msg, cdc *wire.Codec) {
 	var err error
-	txCtx := authctx.TxContext{
+	txBldr := authtxb.TxBuilder{
 		Codec:         cdc,
 		AccountNumber: baseReq.AccountNumber,
 		Sequence:      baseReq.Sequence,
@@ -85,24 +85,24 @@ func signAndBuild(w http.ResponseWriter, r *http.Request, cliCtx context.CLICont
 	cliCtx = cliCtx.WithGasAdjustment(adjustment)
 
 	if utils.HasDryRunArg(r) || baseReq.Gas == 0 {
-		newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, baseReq.Name, []sdk.Msg{msg})
+		newCtx, err := utils.EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, []sdk.Msg{msg})
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 		if utils.HasDryRunArg(r) {
-			utils.WriteSimulationResponse(w, txCtx.Gas)
+			utils.WriteSimulationResponse(w, txBldr.Gas)
 			return
 		}
-		txCtx = newCtx
+		txBldr = newCtx
 	}
 
 	if utils.HasGenerateOnlyArg(r) {
-		utils.WriteGenerateStdTxResponse(w, txCtx, []sdk.Msg{msg})
+		utils.WriteGenerateStdTxResponse(w, txBldr, []sdk.Msg{msg})
 		return
 	}
 
-	txBytes, err := txCtx.BuildAndSign(baseReq.Name, baseReq.Password, []sdk.Msg{msg})
+	txBytes, err := txBldr.BuildAndSign(baseReq.Name, baseReq.Password, []sdk.Msg{msg})
 	if err != nil {
 		utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return

@@ -21,9 +21,9 @@ func TestStakeWithRandomMessages(t *testing.T) {
 
 	bank.RegisterWire(mapp.Cdc)
 	mapper := mapp.AccountMapper
-	coinKeeper := bank.NewKeeper(mapper)
+	bankKeeper := bank.NewBaseKeeper(mapper)
 	stakeKey := sdk.NewKVStoreKey("stake")
-	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, coinKeeper, stake.DefaultCodespace)
+	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, bankKeeper, stake.DefaultCodespace)
 	mapp.Router().AddRoute("stake", stake.NewHandler(stakeKeeper))
 	mapp.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 		validatorUpdates := stake.EndBlocker(ctx, stakeKeeper)
@@ -55,7 +55,7 @@ func TestStakeWithRandomMessages(t *testing.T) {
 		}, []simulation.RandSetup{
 			Setup(mapp, stakeKeeper),
 		}, []simulation.Invariant{
-			AllInvariants(coinKeeper, stakeKeeper, mapp.AccountMapper),
+			AllInvariants(bankKeeper, stakeKeeper, mapp.AccountMapper),
 		}, 10, 100,
 		false,
 	)

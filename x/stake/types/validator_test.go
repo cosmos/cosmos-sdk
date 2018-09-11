@@ -6,6 +6,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -22,29 +24,6 @@ func TestValidatorEqual(t *testing.T) {
 
 	ok = val1.Equal(val2)
 	require.False(t, ok)
-}
-
-func TestBech32Validator(t *testing.T) {
-	val1 := NewValidator(addr1, pk1, Description{})
-	val2 := NewValidator(addr1, pk1, Description{})
-
-	val1Bech, err := val1.Bech32Validator()
-	require.Nil(t, err)
-	val2Bech, err := val2.Bech32Validator()
-	require.Nil(t, err)
-
-	bechPubKey, err := sdk.Bech32ifyConsPub(val1.PubKey) // cosmosconspub...
-	require.Nil(t, err)
-
-	require.Equal(t, val1Bech, val2Bech)
-	require.Equal(t, val1.Operator.String(), val1Bech.Operator)
-	require.Equal(t, bechPubKey, val2Bech.PubKey)
-
-	val2 = NewValidator(addr2, pk2, Description{})
-	val2Bech, err = val2.Bech32Validator()
-	require.Nil(t, err)
-
-	require.NotEqual(t, val1Bech, val2Bech)
 }
 
 func TestUpdateDescription(t *testing.T) {
@@ -80,7 +59,7 @@ func TestABCIValidator(t *testing.T) {
 	validator := NewValidator(addr1, pk1, Description{})
 
 	abciVal := validator.ABCIValidator()
-	require.Equal(t, tmtypes.TM2PB.PubKey(validator.PubKey), abciVal.PubKey)
+	require.Equal(t, tmtypes.TM2PB.PubKey(validator.ConsPubKey), abciVal.PubKey)
 	require.Equal(t, validator.BondedTokens().RoundInt64(), abciVal.Power)
 }
 
@@ -88,15 +67,15 @@ func TestABCIValidatorZero(t *testing.T) {
 	validator := NewValidator(addr1, pk1, Description{})
 
 	abciVal := validator.ABCIValidatorZero()
-	require.Equal(t, tmtypes.TM2PB.PubKey(validator.PubKey), abciVal.PubKey)
+	require.Equal(t, tmtypes.TM2PB.PubKey(validator.ConsPubKey), abciVal.PubKey)
 	require.Equal(t, int64(0), abciVal.Power)
 }
 
 func TestRemoveTokens(t *testing.T) {
 
 	validator := Validator{
-		Operator:        addr1,
-		PubKey:          pk1,
+		OperatorAddr:    addr1,
+		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          sdk.NewDec(100),
 		DelegatorShares: sdk.NewDec(100),
@@ -171,8 +150,8 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 // TODO refactor to make simpler like the AddToken tests above
 func TestRemoveDelShares(t *testing.T) {
 	valA := Validator{
-		Operator:        addr1,
-		PubKey:          pk1,
+		OperatorAddr:    addr1,
+		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          sdk.NewDec(100),
 		DelegatorShares: sdk.NewDec(100),
@@ -199,8 +178,8 @@ func TestRemoveDelShares(t *testing.T) {
 	poolTokens := sdk.NewDec(5102)
 	delShares := sdk.NewDec(115)
 	validator := Validator{
-		Operator:        addr1,
-		PubKey:          pk1,
+		OperatorAddr:    addr1,
+		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          poolTokens,
 		DelegatorShares: delShares,
@@ -252,8 +231,8 @@ func TestPossibleOverflow(t *testing.T) {
 	poolTokens := sdk.NewDec(2159)
 	delShares := sdk.NewDec(391432570689183511).Quo(sdk.NewDec(40113011844664))
 	validator := Validator{
-		Operator:        addr1,
-		PubKey:          pk1,
+		OperatorAddr:    addr1,
+		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          poolTokens,
 		DelegatorShares: delShares,
@@ -282,4 +261,16 @@ func TestHumanReadableString(t *testing.T) {
 	valStr, err := validator.HumanReadableString()
 	require.Nil(t, err)
 	require.NotEmpty(t, valStr)
+}
+
+func TestValidatorMarshalUnmarshalJSON(t *testing.T) {
+	validator := NewValidator(addr1, pk1, Description{})
+	js, err := wire.Cdc.MarshalJSON(validator)
+	require.NoError(t, err)
+	require.NotEmpty(t, js)
+	require.Contains(t, string(js), "\"consensus_pubkey\":\"cosmosvalconspu")
+	got := &Validator{}
+	err = wire.Cdc.UnmarshalJSON(js, got)
+	assert.NoError(t, err)
+	assert.Equal(t, validator, *got)
 }

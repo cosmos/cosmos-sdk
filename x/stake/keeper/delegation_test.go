@@ -100,16 +100,8 @@ func TestDelegation(t *testing.T) {
 		resVal := keeper.GetDelegatorValidator(ctx, addrDels[0], addrVals[i])
 		require.Equal(t, addrVals[i], resVal.GetOperator())
 
-		resBechVal, err := resVal.Bech32Validator()
-		require.Nil(t, err)
-		require.Equal(t, addrVals[i].String(), resBechVal.Operator)
-
 		resVal = keeper.GetDelegatorValidator(ctx, addrDels[1], addrVals[i])
 		require.Equal(t, addrVals[i], resVal.GetOperator())
-
-		resBechVal, err = resVal.Bech32Validator()
-		require.Nil(t, err)
-		require.Equal(t, addrVals[i].String(), resBechVal.Operator)
 	}
 
 	// delete a record

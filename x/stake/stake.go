@@ -11,7 +11,6 @@ import (
 type (
 	Keeper                = keeper.Keeper
 	Validator             = types.Validator
-	BechValidator         = types.BechValidator
 	Description           = types.Description
 	Delegation            = types.Delegation
 	DelegationSummary     = types.DelegationSummary

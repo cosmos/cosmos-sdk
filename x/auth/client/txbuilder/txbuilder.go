@@ -16,7 +16,7 @@ type TxBuilder struct {
 	Codec         *wire.Codec
 	AccountNumber int64
 	Sequence      int64
-	Gas           int64 // TODO: should this turn into uint64? requires further discussion
+	Gas           int64 // TODO: should this turn into uint64? requires further discussion - see #2173
 	GasAdjustment float64
 	SimulateGas   bool
 	ChainID       string

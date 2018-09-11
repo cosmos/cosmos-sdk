@@ -14,15 +14,15 @@ type prefixStore struct {
 	prefix []byte
 }
 
-func clone(bz []byte) (res []byte) {
-	res = make([]byte, len(bz))
+func cloneAppend(bz []byte, tail []byte) (res []byte) {
+	res = make([]byte, len(bz)+len(tail))
 	copy(res, bz)
+	res = append(res, bz...)
 	return
 }
 
 func (s prefixStore) key(key []byte) (res []byte) {
-	res = clone(s.prefix)
-	res = append(res, key...)
+	res = cloneAppend(s.prefix, key)
 	return
 }
 
@@ -75,19 +75,19 @@ func (s prefixStore) Gas(meter GasMeter, config GasConfig) KVStore {
 // Implements KVStore
 // Check https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db.go#L106
 func (s prefixStore) Iterator(start, end []byte) Iterator {
-	newstart := append(clone(s.prefix), start...)
+	newstart := cloneAppend(s.prefix, start)
 
 	var newend []byte
 	if end == nil {
 		newend = cpIncr(s.prefix)
 	} else {
-		newend = append(clone(s.prefix), end...)
+		newend = cloneAppend(s.prefix, end)
 	}
 
 	return prefixIterator{
 		prefix: s.prefix,
-		start:  newstart,
-		end:    newend,
+		start:  start,
+		end:    end,
 		iter:   s.parent.Iterator(newstart, newend),
 	}
 
@@ -100,14 +100,14 @@ func (s prefixStore) ReverseIterator(start, end []byte) Iterator {
 	if start == nil {
 		newstart = cpIncr(s.prefix)
 	} else {
-		newstart = append(clone(s.prefix), start...)
+		newstart = cloneAppend(s.prefix, start)
 	}
 
 	var newend []byte
 	if end == nil {
-		newend = cpIncr(s.prefix)
+		newend = cpDecr(s.prefix)
 	} else {
-		newend = append(clone(s.prefix), end...)
+		newend = cloneAppend(s.prefix, end)
 	}
 
 	iter := s.parent.ReverseIterator(newstart, newend)
@@ -117,8 +117,8 @@ func (s prefixStore) ReverseIterator(start, end []byte) Iterator {
 
 	return prefixIterator{
 		prefix: s.prefix,
-		start:  newstart,
-		end:    newend,
+		start:  start,
+		end:    end,
 		iter:   iter,
 	}
 }
@@ -187,7 +187,8 @@ func cpDecr(bz []byte) (ret []byte) {
 	if len(bz) == 0 {
 		panic("cpDecr expects non-zero bz length")
 	}
-	ret = clone(bz)
+	ret = make([]byte, len(bz))
+	copy(ret, bz)
 	for i := len(bz) - 1; i >= 0; i-- {
 		if ret[i] > byte(0x00) {
 			ret[i]--

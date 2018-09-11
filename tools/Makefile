@@ -6,7 +6,7 @@ all: get_tools
 
 DEP = github.com/golang/dep/cmd/dep
 GOLINT = github.com/tendermint/lint/golint
-GOMETALINTER = gopkg.in/alecthomas/gometalinter.v2
+GOMETALINTER = github.com/alecthomas/gometalinter
 UNCONVERT = github.com/mdempsky/unconvert
 INEFFASSIGN = github.com/gordonklaus/ineffassign
 MISSPELL = github.com/client9/misspell/cmd/misspell

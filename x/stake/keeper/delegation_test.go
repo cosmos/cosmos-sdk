@@ -97,10 +97,12 @@ func TestDelegation(t *testing.T) {
 
 	for i := 0; i < 3; i++ {
 
-		resVal := keeper.GetDelegatorValidator(ctx, addrDels[0], addrVals[i])
+		resVal, err := keeper.GetDelegatorValidator(ctx, addrDels[0], addrVals[i])
+		require.Nil(t, err)
 		require.Equal(t, addrVals[i], resVal.GetOperator())
 
-		resVal = keeper.GetDelegatorValidator(ctx, addrDels[1], addrVals[i])
+		resVal, err = keeper.GetDelegatorValidator(ctx, addrDels[1], addrVals[i])
+		require.Nil(t, err)
 		require.Equal(t, addrVals[i], resVal.GetOperator())
 	}
 

@@ -154,7 +154,10 @@ func queryDelegatorValidator(ctx sdk.Context, cdc *wire.Codec, req abci.RequestQ
 		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request address: %s", errRes.Error()))
 	}
 
-	validator := k.GetDelegatorValidator(ctx, params.DelegatorAddr, params.ValidatorAddr)
+	validator, err := k.GetDelegatorValidator(ctx, params.DelegatorAddr, params.ValidatorAddr)
+	if err != nil {
+		return
+	}
 
 	res, errRes = wire.MarshalJSONIndent(cdc, validator)
 	if errRes != nil {

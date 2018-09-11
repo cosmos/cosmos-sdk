@@ -122,8 +122,10 @@ func (ctx CLIContext) GetAccountSequence(address []byte) (int64, error) {
 	return account.GetSequence(), nil
 }
 
-// BroadcastTx broadcasts transaction bytes to a Tendermint node.
-func (ctx CLIContext) BroadcastTx(tx []byte) (*ctypes.ResultBroadcastTxCommit, error) {
+// BroadcastTxCommit broadcasts, transaction bytes to a
+// Tendermint node, and waits for a commit.
+// TODO Move to another file that isn't query.go.
+func (ctx CLIContext) BroadcastTxCommit(tx []byte) (*ctypes.ResultBroadcastTxCommit, error) {
 	node, err := ctx.GetNode()
 	if err != nil {
 		return nil, err
@@ -151,6 +153,7 @@ func (ctx CLIContext) BroadcastTx(tx []byte) (*ctypes.ResultBroadcastTxCommit, e
 
 // BroadcastTxAsync broadcasts transaction bytes to a Tendermint node
 // asynchronously.
+// TODO Move to another file that isn't query.go.
 func (ctx CLIContext) BroadcastTxAsync(tx []byte) (*ctypes.ResultBroadcastTx, error) {
 	node, err := ctx.GetNode()
 	if err != nil {
@@ -201,22 +204,59 @@ func (ctx CLIContext) EnsureAccountExistsFromAddr(addr sdk.AccAddress) error {
 	return nil
 }
 
-// EnsureBroadcastTx broadcasts a transactions either synchronously or
+// BroadcastTx broadcasts a transactions either synchronously or
 // asynchronously based on the context parameters. The result of the broadcast
 // is parsed into an intermediate structure which is logged if the context has
 // a logger defined.
-func (ctx CLIContext) EnsureBroadcastTx(txBytes []byte) error {
+// TODO Move to another file that isn't query.go.
+func (ctx CLIContext) BroadcastTx(txBytes []byte) (*ctypes.ResultBroadcastTxCommit, error) {
 	if ctx.Async {
-		return ctx.ensureBroadcastTxAsync(txBytes)
+		res, err := ctx.broadcastTxAsync(txBytes)
+		resCommit := resultBroadcastTxToCommit(res)
+		return resCommit, err
+	} else {
+		return ctx.broadcastTxCommit(txBytes)
 	}
-
-	return ctx.ensureBroadcastTx(txBytes)
 }
 
-func (ctx CLIContext) ensureBroadcastTxAsync(txBytes []byte) error {
+// TODO: This should get deleted eventually, and perhaps
+// ctypes.ResultBroadcastTx be stripped of unused fields, and
+// ctypes.ResultBroadcastTxCommit returned for tendermint RPC
+// BroadcastTxSync.  This may also require changing the name
+// from ResultBroadcastTxCommit to ResultBroadcastTxSync or
+// something else.
+// The motivation is that we want a unified type to return, and
+// the better option is the one that can hold CheckTx/DeliverTx
+// responses optionally.
+func resultBroadcastTxToCommit(res *ctypes.ResultBroadcastTx) *ctypes.ResultBroadcastTxCommit {
+	return &ctypes.ResultBroadcastTxCommit{
+		Hash: res.Hash,
+		// NOTE: other fields are unused for async.
+	}
+}
+
+// CheckTx result
+type ResultBroadcastTx struct {
+	Code uint32       `json:"code"`
+	Data cmn.HexBytes `json:"data"`
+	Log  string       `json:"log"`
+
+	Hash cmn.HexBytes `json:"hash"`
+}
+
+// CheckTx and DeliverTx results
+type ResultBroadcastTxCommit struct {
+	CheckTx   abci.ResponseCheckTx   `json:"check_tx"`
+	DeliverTx abci.ResponseDeliverTx `json:"deliver_tx"`
+	Hash      cmn.HexBytes           `json:"hash"`
+	Height    int64                  `json:"height"`
+}
+
+// TODO Move to another file that isn't query.go.
+func (ctx CLIContext) broadcastTxAsync(txBytes []byte) (*ctypes.ResultBroadcastTx, error) {
 	res, err := ctx.BroadcastTxAsync(txBytes)
 	if err != nil {
-		return err
+		return res, err
 	}
 
 	if ctx.JSON {
@@ -228,7 +268,7 @@ func (ctx CLIContext) ensureBroadcastTxAsync(txBytes []byte) error {
 			resJSON := toJSON{res.Hash.String()}
 			bz, err := ctx.Codec.MarshalJSON(resJSON)
 			if err != nil {
-				return err
+				return res, err
 			}
 
 			ctx.Logger.Write(bz)
@@ -240,13 +280,14 @@ func (ctx CLIContext) ensureBroadcastTxAsync(txBytes []byte) error {
 		}
 	}
 
-	return nil
+	return res, nil
 }
 
-func (ctx CLIContext) ensureBroadcastTx(txBytes []byte) error {
-	res, err := ctx.BroadcastTx(txBytes)
+// TODO Move to another file that isn't query.go.
+func (ctx CLIContext) broadcastTxCommit(txBytes []byte) (*ctypes.ResultBroadcastTxCommit, error) {
+	res, err := ctx.BroadcastTxCommit(txBytes)
 	if err != nil {
-		return err
+		return res, err
 	}
 
 	if ctx.JSON {
@@ -262,14 +303,14 @@ func (ctx CLIContext) ensureBroadcastTx(txBytes []byte) error {
 			resJSON := toJSON{res.Height, res.Hash.String(), res.DeliverTx}
 			bz, err := ctx.Codec.MarshalJSON(resJSON)
 			if err != nil {
-				return err
+				return res, err
 			}
 
 			ctx.Logger.Write(bz)
 			io.WriteString(ctx.Logger, "\n")
 		}
 
-		return nil
+		return res, nil
 	}
 
 	if ctx.Logger != nil {
@@ -284,7 +325,7 @@ func (ctx CLIContext) ensureBroadcastTx(txBytes []byte) error {
 		io.WriteString(ctx.Logger, resStr)
 	}
 
-	return nil
+	return res, nil
 }
 
 // query performs a query from a Tendermint node with the provided store name

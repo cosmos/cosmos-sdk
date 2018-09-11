@@ -1,16 +1,13 @@
 package rest
 
 import (
-	"io/ioutil"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 
 	"github.com/gorilla/mux"
@@ -21,16 +18,10 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, k
 	r.HandleFunc("/ibc/{destchain}/{address}/send", TransferRequestHandlerFn(cdc, kb, cliCtx)).Methods("POST")
 }
 
-type transferBody struct {
+type transferReq struct {
+	BaseReq utils.BaseReq `json:"base_req"`
 	// Fees             sdk.Coin  `json="fees"`
-	Amount           sdk.Coins `json:"amount"`
-	LocalAccountName string    `json:"name"`
-	Password         string    `json:"password"`
-	SrcChainID       string    `json:"src_chain_id"`
-	AccountNumber    int64     `json:"account_number"`
-	Sequence         int64     `json:"sequence"`
-	Gas              int64     `json:"gas"`
-	GasAdjustment    string    `json:"gas_adjustment"`
+	Amount sdk.Coins `json:"amount"`
 }
 
 // TransferRequestHandler - http request handler to transfer coins to a address
@@ -48,79 +39,25 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.C
 			return
 		}
 
-		var m transferBody
-		body, err := ioutil.ReadAll(r.Body)
+		var req transferReq
+		err = utils.ReadRESTReq(w, r, cdc, &req)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if !req.BaseReq.BaseReqValidate(w) {
 			return
 		}
 
-		err = cdc.UnmarshalJSON(body, &m)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		info, err := kb.Get(m.LocalAccountName)
+		info, err := kb.Get(req.BaseReq.Name)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 
-		// build message
-		packet := ibc.NewIBCPacket(sdk.AccAddress(info.GetPubKey().Address()), to, m.Amount, m.SrcChainID, destChainID)
+		// create the message
+		packet := ibc.NewIBCPacket(sdk.AccAddress(info.GetPubKey().Address()), to, req.Amount, req.BaseReq.ChainID, destChainID)
 		msg := ibc.IBCTransferMsg{packet}
 
-		txBldr := authtxb.TxBuilder{
-			Codec:         cdc,
-			ChainID:       m.SrcChainID,
-			AccountNumber: m.AccountNumber,
-			Sequence:      m.Sequence,
-			Gas:           m.Gas,
-		}
-
-		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, client.DefaultGasAdjustment)
-		if !ok {
-			return
-		}
-		cliCtx = cliCtx.WithGasAdjustment(adjustment)
-
-		if utils.HasDryRunArg(r) || m.Gas == 0 {
-			newCtx, err := utils.EnrichCtxWithGas(txBldr, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
-			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-				return
-			}
-			if utils.HasDryRunArg(r) {
-				utils.WriteSimulationResponse(w, txBldr.Gas)
-				return
-			}
-			txBldr = newCtx
-		}
-
-		if utils.HasGenerateOnlyArg(r) {
-			utils.WriteGenerateStdTxResponse(w, txBldr, []sdk.Msg{msg})
-			return
-		}
-
-		txBytes, err := txBldr.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
-			return
-		}
-
-		res, err := cliCtx.BroadcastTx(txBytes)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		output, err := cdc.MarshalJSON(res)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		w.Write(output)
+		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }

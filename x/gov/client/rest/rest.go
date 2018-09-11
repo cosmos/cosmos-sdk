@@ -41,7 +41,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec) {
 }
 
 type postProposalReq struct {
-	BaseReq        baseReq          `json:"base_req"`
+	BaseReq        utils.BaseReq    `json:"base_req"`
 	Title          string           `json:"title"`           //  Title of the proposal
 	Description    string           `json:"description"`     //  Description of the proposal
 	ProposalType   gov.ProposalKind `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
@@ -50,13 +50,13 @@ type postProposalReq struct {
 }
 
 type depositReq struct {
-	BaseReq   baseReq        `json:"base_req"`
+	BaseReq   utils.BaseReq  `json:"base_req"`
 	Depositer sdk.AccAddress `json:"depositer"` // Address of the depositer
 	Amount    sdk.Coins      `json:"amount"`    // Coins to add to the proposal's deposit
 }
 
 type voteReq struct {
-	BaseReq baseReq        `json:"base_req"`
+	BaseReq utils.BaseReq  `json:"base_req"`
 	Voter   sdk.AccAddress `json:"voter"`  //  address of the voter
 	Option  gov.VoteOption `json:"option"` //  option from OptionSet chosen by the voter
 }
@@ -64,12 +64,12 @@ type voteReq struct {
 func postProposalHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req postProposalReq
-		err := buildReq(w, r, cdc, &req)
+		err := utils.ReadRESTReq(w, r, cdc, &req)
 		if err != nil {
 			return
 		}
 
-		if !req.BaseReq.baseReqValidate(w) {
+		if !req.BaseReq.BaseReqValidate(w) {
 			return
 		}
 
@@ -81,7 +81,7 @@ func postProposalHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.Hand
 			return
 		}
 
-		signAndBuild(w, r, cliCtx, req.BaseReq, msg, cdc)
+		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 
@@ -96,17 +96,17 @@ func depositHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.HandlerFu
 			return
 		}
 
-		proposalID, ok := parseInt64OrReturnBadRequest(strProposalID, w)
+		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
 
 		var req depositReq
-		err := buildReq(w, r, cdc, &req)
+		err := utils.ReadRESTReq(w, r, cdc, &req)
 		if err != nil {
 			return
 		}
-		if !req.BaseReq.baseReqValidate(w) {
+		if !req.BaseReq.BaseReqValidate(w) {
 			return
 		}
 
@@ -118,7 +118,7 @@ func depositHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.HandlerFu
 			return
 		}
 
-		signAndBuild(w, r, cliCtx, req.BaseReq, msg, cdc)
+		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 
@@ -133,17 +133,17 @@ func voteHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.HandlerFunc 
 			return
 		}
 
-		proposalID, ok := parseInt64OrReturnBadRequest(strProposalID, w)
+		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
 
 		var req voteReq
-		err := buildReq(w, r, cdc, &req)
+		err := utils.ReadRESTReq(w, r, cdc, &req)
 		if err != nil {
 			return
 		}
-		if !req.BaseReq.baseReqValidate(w) {
+		if !req.BaseReq.BaseReqValidate(w) {
 			return
 		}
 
@@ -155,7 +155,7 @@ func voteHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.HandlerFunc 
 			return
 		}
 
-		signAndBuild(w, r, cliCtx, req.BaseReq, msg, cdc)
+		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 
@@ -170,7 +170,7 @@ func queryProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		proposalID, ok := parseInt64OrReturnBadRequest(strProposalID, w)
+		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -209,7 +209,7 @@ func queryDepositHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		proposalID, ok := parseInt64OrReturnBadRequest(strProposalID, w)
+		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -276,7 +276,7 @@ func queryVoteHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		proposalID, ok := parseInt64OrReturnBadRequest(strProposalID, w)
+		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -347,7 +347,7 @@ func queryVotesOnProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		proposalID, ok := parseInt64OrReturnBadRequest(strProposalID, w)
+		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -414,7 +414,7 @@ func queryProposalsWithParameterFn(cdc *wire.Codec) http.HandlerFunc {
 			params.ProposalStatus = proposalStatus
 		}
 		if len(strNumLatest) != 0 {
-			numLatest, ok := parseInt64OrReturnBadRequest(strNumLatest, w)
+			numLatest, ok := utils.ParseInt64OrReturnBadRequest(w, strNumLatest)
 			if !ok {
 				return
 			}
@@ -454,7 +454,7 @@ func queryTallyOnProposalHandlerFn(cdc *wire.Codec) http.HandlerFunc {
 			return
 		}
 
-		proposalID, ok := parseInt64OrReturnBadRequest(strProposalID, w)
+		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}

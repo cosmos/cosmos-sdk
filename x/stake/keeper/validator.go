@@ -401,12 +401,12 @@ func (k Keeper) getPowerIncreasing(ctx sdk.Context, oldFound bool, oldValidator,
 // get the bond height and incremented intra-tx counter
 // nolint: unparam
 func (k Keeper) bondIncrement(
-	ctx sdk.Context, found bool, validator types.Validator) (height int64, intraTxCounter int16) {
+	ctx sdk.Context, found bool, oldValidator types.Validator) (height int64, intraTxCounter int16) {
 
 	// if already a validator, copy the old block height and counter
-	if found && validator.Status == sdk.Bonded {
-		height = validator.BondHeight
-		intraTxCounter = validator.BondIntraTxCounter
+	if found && oldValidator.Status == sdk.Bonded {
+		height = oldValidator.BondHeight
+		intraTxCounter = oldValidator.BondIntraTxCounter
 		return
 	}
 

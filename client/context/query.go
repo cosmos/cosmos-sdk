@@ -309,7 +309,7 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 		return res, errors.Errorf("query failed: (%d) %s", resp.Code, resp.Log)
 	}
 
-	// data from trusted node or subspace query doesn't need verification
+	// Data from trusted node or subspace query doesn't need verification.
 	if ctx.TrustNode || !isQueryStoreWithProof(path) {
 		return resp.Value, nil
 	}

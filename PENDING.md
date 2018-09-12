@@ -43,6 +43,7 @@ BREAKING CHANGES
     * [simulation] Remove log and testing.TB from Operation and Invariants, in favor of using errors \#2282
     * [tools] Removed gocyclo [#2211](https://github.com/cosmos/cosmos-sdk/issues/2211)
     * [baseapp] Remove `SetTxDecoder` in favor of requiring the decoder be set in baseapp initialization. [#1441](https://github.com/cosmos/cosmos-sdk/issues/1441)
+    * [store] Change storeInfo within the root multistore to use tmhash instead of ripemd160 \#2308
 
 * Tendermint
 

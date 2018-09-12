@@ -908,7 +908,7 @@ func TestGetValidTendermintUpdatesPowerDecrease(t *testing.T) {
 	require.Equal(t, validators[1].ABCIValidator(), updates[1])
 }
 
-func TestGetValidTendermintUpdatesBonded(t *testing.T) {
+func TestGetValidTendermintUpdatesNewValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 1000)
 	params := keeper.GetParams(ctx)
 	params.MaxValidators = uint16(3)
@@ -981,4 +981,79 @@ func TestGetValidTendermintUpdatesBonded(t *testing.T) {
 	require.Equal(t, validator.ABCIValidator(), updates[0])
 	require.Equal(t, validators[0].ABCIValidator(), updates[1])
 	require.Equal(t, validators[1].ABCIValidator(), updates[2])
+}
+
+func TestGetValidTendermintUpdatesBondTransition(t *testing.T) {
+	ctx, _, keeper := CreateTestInput(t, false, 1000)
+	params := keeper.GetParams(ctx)
+	params.MaxValidators = uint16(2)
+
+	keeper.SetParams(ctx, params)
+
+	amts := []int64{100, 200, 300}
+	var validators [3]types.Validator
+
+	// initialize some validators into the state
+	for i, amt := range amts {
+		pool := keeper.GetPool(ctx)
+		moniker := fmt.Sprintf("%d", i)
+		valPubKey := PKs[i+1]
+		valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
+
+		validators[i] = types.NewValidator(valAddr, valPubKey, types.Description{Moniker: moniker})
+		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, sdk.NewInt(amt))
+
+		keeper.SetPool(ctx, pool)
+		validators[i] = keeper.UpdateValidator(ctx, validators[i])
+	}
+
+	// verify initial Tendermint updates are correct
+	updates := keeper.GetValidTendermintUpdates(ctx)
+	require.Equal(t, 2, len(updates))
+	require.Equal(t, validators[2].ABCIValidator(), updates[0])
+	require.Equal(t, validators[1].ABCIValidator(), updates[1])
+
+	keeper.ClearTendermintUpdates(ctx)
+	require.Equal(t, 0, len(keeper.GetValidTendermintUpdates(ctx)))
+
+	// delegate to validator with lowest power but not enough to bond
+	ctx = ctx.WithBlockHeight(1)
+	pool := keeper.GetPool(ctx)
+
+	validator, found := keeper.GetValidator(ctx, validators[0].OperatorAddr)
+	require.True(t, found)
+
+	validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(1))
+
+	keeper.SetPool(ctx, pool)
+	validators[0] = keeper.UpdateValidator(ctx, validator)
+
+	// verify initial Tendermint updates are correct
+	require.Equal(t, 0, len(keeper.GetValidTendermintUpdates(ctx)))
+
+	// create a series of events that will bond and unbond the validator with
+	// lowest power in a single block context (height)
+	ctx = ctx.WithBlockHeight(2)
+	pool = keeper.GetPool(ctx)
+
+	validator, found = keeper.GetValidator(ctx, validators[1].OperatorAddr)
+	require.True(t, found)
+
+	validator, pool, _ = validator.RemoveDelShares(pool, validator.DelegatorShares)
+
+	keeper.SetPool(ctx, pool)
+	validator = keeper.UpdateValidator(ctx, validator)
+
+	validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(250))
+
+	keeper.SetPool(ctx, pool)
+	validators[1] = keeper.UpdateValidator(ctx, validator)
+
+	// verify initial Tendermint updates are correct
+	updates = keeper.GetValidTendermintUpdates(ctx)
+	require.Equal(t, 1, len(updates))
+	require.Equal(t, validators[1].ABCIValidator(), updates[0])
+
+	keeper.ClearTendermintUpdates(ctx)
+	require.Equal(t, 0, len(keeper.GetValidTendermintUpdates(ctx)))
 }

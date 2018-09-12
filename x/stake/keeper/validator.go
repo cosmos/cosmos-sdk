@@ -219,7 +219,7 @@ func (k Keeper) GetValidTendermintUpdates(ctx sdk.Context) (updates []abci.Valid
 		if found {
 			// The validator is new or already exists in the store and must adhere to
 			// Tendermint invariants.
-			prevBonded := val.BondHeight < ctx.BlockHeight()
+			prevBonded := val.BondHeight < ctx.BlockHeight() && val.BondHeight > val.UnbondingHeight
 			zeroPower := val.GetPower().Equal(sdk.ZeroDec())
 
 			if !zeroPower || zeroPower && prevBonded {
@@ -264,7 +264,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 
 	validator = k.updateForJailing(ctx, oldFound, oldValidator, validator)
 	powerIncreasing := k.getPowerIncreasing(ctx, oldFound, oldValidator, validator)
-	validator.BondHeight, validator.BondIntraTxCounter = k.bondIncrement(ctx, oldFound, oldValidator, validator)
+	validator.BondHeight, validator.BondIntraTxCounter = k.bondIncrement(ctx, oldFound, oldValidator)
 	valPower := k.updateValidatorPower(ctx, oldFound, oldValidator, validator, pool)
 	cliffPower := k.GetCliffValidatorPower(ctx)
 
@@ -336,7 +336,7 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 
 	oldCliffVal, found := k.GetValidator(ctx, cliffAddr)
 	if !found {
-		panic(fmt.Sprintf("cliff validator record not found for address: %v\n", cliffAddr))
+		panic(fmt.Sprintf("cliff validator record not found for address: %X\n", cliffAddr))
 	}
 
 	// Create a validator iterator ranging from smallest to largest by power
@@ -349,11 +349,11 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 		ownerAddr := iterator.Value()
 		currVal, found := k.GetValidator(ctx, ownerAddr)
 		if !found {
-			panic(fmt.Sprintf("validator record not found for address: %v\n", ownerAddr))
+			panic(fmt.Sprintf("validator record not found for address: %X\n", ownerAddr))
 		}
 
 		if currVal.Status != sdk.Bonded || currVal.Jailed {
-			panic(fmt.Sprintf("unexpected jailed or unbonded validator for address: %s\n", ownerAddr))
+			panic(fmt.Sprintf("unexpected jailed or unbonded validator for address: %X\n", ownerAddr))
 		}
 
 		newCliffVal = currVal
@@ -366,13 +366,10 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 	newCliffValRank := GetValidatorsByPowerIndexKey(newCliffVal, pool)
 
 	if bytes.Equal(affectedVal.OperatorAddr, newCliffVal.OperatorAddr) {
-
 		// The affected validator remains the cliff validator, however, since
 		// the store does not contain the new power, update the new power rank.
 		store.Set(ValidatorPowerCliffKey, affectedValRank)
-
 	} else if bytes.Compare(affectedValRank, newCliffValRank) > 0 {
-
 		// The affected validator no longer remains the cliff validator as it's
 		// power is greater than the new cliff validator.
 		k.setCliffValidator(ctx, newCliffVal, pool)
@@ -403,18 +400,20 @@ func (k Keeper) getPowerIncreasing(ctx sdk.Context, oldFound bool, oldValidator,
 
 // get the bond height and incremented intra-tx counter
 // nolint: unparam
-func (k Keeper) bondIncrement(ctx sdk.Context, oldFound bool, oldValidator,
-	newValidator types.Validator) (height int64, intraTxCounter int16) {
+func (k Keeper) bondIncrement(
+	ctx sdk.Context, found bool, oldValidator types.Validator) (height int64, intraTxCounter int16) {
 
-	// if already a validator, copy the old block height and counter, else set them
-	if oldFound && oldValidator.Status == sdk.Bonded {
+	// if already a validator, copy the old block height and counter
+	if found && oldValidator.Status == sdk.Bonded {
 		height = oldValidator.BondHeight
 		intraTxCounter = oldValidator.BondIntraTxCounter
 		return
 	}
+
 	height = ctx.BlockHeight()
 	counter := k.GetIntraTxCounter(ctx)
 	intraTxCounter = counter
+
 	k.SetIntraTxCounter(ctx, counter+1)
 	return
 }
@@ -482,22 +481,20 @@ func (k Keeper) UpdateBondedValidators(
 
 		// if we've reached jailed validators no further bonded validators exist
 		if validator.Jailed {
-			break
-		}
-
-		// increment bondedValidatorsCount / get the validator to bond
-		if validator.Status != sdk.Bonded {
-			validatorToBond = validator
-			if newValidatorBonded {
-				panic("already decided to bond a validator, can't bond another!")
+			if validator.Status == sdk.Bonded {
+				panic(fmt.Sprintf("jailed validator cannot be bonded, address: %X\n", ownerAddr))
 			}
-			newValidatorBonded = true
+
+			break
 		}
 
 		// increment the total number of bonded validators and potentially mark
 		// the validator to bond
 		if validator.Status != sdk.Bonded {
 			validatorToBond = validator
+			if newValidatorBonded {
+				panic("already decided to bond a validator, can't bond another!")
+			}
 			newValidatorBonded = true
 		}
 
@@ -533,7 +530,6 @@ func (k Keeper) UpdateBondedValidators(
 				// validator was newly bonded and has greater power
 				k.beginUnbondingValidator(ctx, oldCliffVal)
 			} else {
-
 				// otherwise begin unbonding the affected validator, which must
 				// have been kicked out
 				affectedValidator = k.beginUnbondingValidator(ctx, affectedValidator)
@@ -682,6 +678,8 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	if validator.Status == sdk.Bonded {
 		panic(fmt.Sprintf("should not already be bonded, validator: %v\n", validator))
 	}
+
+	validator.BondHeight = ctx.BlockHeight()
 
 	// set the status
 	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)

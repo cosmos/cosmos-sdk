@@ -158,7 +158,7 @@ func SimulateFromSeed(
 		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastSigningValidators, event, header)
 
 		// Update the validator set
-		validators = updateValidators(tb, r, log, validators, res.ValidatorUpdates, event)
+		validators = updateValidators(tb, r, validators, res.ValidatorUpdates, event)
 	}
 	if stopEarly {
 		DisplayEvents(events)
@@ -340,15 +340,14 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 }
 
 // updateValidators mimicks Tendermint's update logic
-func updateValidators(
-	tb testing.TB, r *rand.Rand, log string, current map[string]mockValidator,
-	updates []abci.Validator, event func(string)) map[string]mockValidator {
+// nolint: unparam
+func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValidator, updates []abci.Validator, event func(string)) map[string]mockValidator {
 
 	for _, update := range updates {
 		switch {
 		case update.Power == 0:
 			if _, ok := current[string(update.PubKey.Data)]; !ok {
-				tb.Fatalf("tried to delete a nonexistent validator: %v", log)
+				tb.Fatalf("tried to delete a nonexistent validator")
 			}
 
 			event("endblock/validatorupdates/kicked")

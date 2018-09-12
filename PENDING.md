@@ -47,7 +47,6 @@ BREAKING CHANGES
 
 * Tendermint
 
-
 FEATURES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
@@ -111,6 +110,7 @@ IMPROVEMENTS
     * [simulation] Make logs not just pure strings, speeding it up by a large factor at greater block heights \#2282
     * [simulation] Add a concept of weighting the operations \#2303
     * [simulation] Logs get written to file if large, and also get printed on panics \#2285
+    * [gaiad] \#1992 Add optional flag to `gaiad testnet` to make config directory of daemon (default `gaiad`) and cli (default `gaiacli`) configurable
 
 * Tendermint
 

@@ -8,22 +8,33 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+// query endpoints supported by the governance Querier
+const (
+	QueryProposals = "proposals"
+	QueryProposal  = "proposal"
+	QueryDeposits  = "deposits"
+	QueryDeposit   = "deposit"
+	QueryVotes     = "votes"
+	QueryVote      = "vote"
+	QueryTally     = "tally"
+)
+
 func NewQuerier(keeper Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
-		case "proposal":
-			return queryProposal(ctx, path[1:], req, keeper)
-		case "deposit":
-			return queryDeposit(ctx, path[1:], req, keeper)
-		case "vote":
-			return queryVote(ctx, path[1:], req, keeper)
-		case "deposits":
-			return queryDeposits(ctx, path[1:], req, keeper)
-		case "votes":
-			return queryVotes(ctx, path[1:], req, keeper)
-		case "proposals":
+		case QueryProposals:
 			return queryProposals(ctx, path[1:], req, keeper)
-		case "tally":
+		case QueryProposal:
+			return queryProposal(ctx, path[1:], req, keeper)
+		case QueryDeposits:
+			return queryDeposits(ctx, path[1:], req, keeper)
+		case QueryDeposit:
+			return queryDeposit(ctx, path[1:], req, keeper)
+		case QueryVotes:
+			return queryVotes(ctx, path[1:], req, keeper)
+		case QueryVote:
+			return queryVote(ctx, path[1:], req, keeper)
+		case QueryTally:
 			return queryTally(ctx, path[1:], req, keeper)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown gov query endpoint")

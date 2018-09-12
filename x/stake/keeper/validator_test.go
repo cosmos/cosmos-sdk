@@ -633,27 +633,6 @@ func TestFullValidatorSetPowerChange(t *testing.T) {
 	assert.True(ValEq(t, validators[2], resValidators[1]))
 }
 
-// clear the tracked changes to the gotValidator set
-func TestClearTendermintUpdates(t *testing.T) {
-	ctx, _, keeper := CreateTestInput(t, false, 1000)
-
-	amts := []int64{100, 400, 200}
-	validators := make([]types.Validator, len(amts))
-	for i, amt := range amts {
-		pool := keeper.GetPool(ctx)
-		validators[i] = types.NewValidator(sdk.ValAddress(Addrs[i]), PKs[i], types.Description{})
-		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, sdk.NewInt(amt))
-		keeper.SetPool(ctx, pool)
-		keeper.UpdateValidator(ctx, validators[i])
-	}
-
-	updates := keeper.GetTendermintUpdates(ctx)
-	require.Equal(t, len(amts), len(updates))
-	keeper.ClearTendermintUpdates(ctx)
-	updates = keeper.GetTendermintUpdates(ctx)
-	require.Equal(t, 0, len(updates))
-}
-
 func TestGetTendermintUpdatesAllNone(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 1000)
 

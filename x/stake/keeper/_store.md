@@ -37,7 +37,7 @@ prefixed areas of the staking store which are accessed in `x/stake/keeper.go`.
                         retrieving validator by tendermint index
 
 ## Tendermint Updates
- - Prefix Key Space:    TendermintUpdatesKey
+ - Prefix Key Space:    TendermintUpdatesTKey
  - Key/Sort:            Validator Operator Address
  - Value:               Tendermint ABCI Validator
  - Contains:            Validators are queued to affect the consensus validation set in Tendermint

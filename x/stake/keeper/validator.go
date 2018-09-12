@@ -199,9 +199,9 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 
 // get the most recently updated validators
 func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.Validator) {
-	store := ctx.KVStore(k.storeKey)
+	tstore := ctx.TransientStore(k.storeTKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, TendermintUpdatesKey) //smallest to largest
+	iterator := sdk.KVStorePrefixIterator(tstore, TendermintUpdatesTKey) //smallest to largest
 	for ; iterator.Valid(); iterator.Next() {
 		valBytes := iterator.Value()
 		var val abci.Validator
@@ -210,18 +210,6 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.Validator)
 	}
 	iterator.Close()
 	return
-}
-
-// remove all validator update entries after applied to Tendermint
-func (k Keeper) ClearTendermintUpdates(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
-
-	// delete subspace
-	iterator := sdk.KVStorePrefixIterator(store, TendermintUpdatesKey)
-	for ; iterator.Valid(); iterator.Next() {
-		store.Delete(iterator.Key())
-	}
-	iterator.Close()
 }
 
 //___________________________________________________________________________
@@ -259,7 +247,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 		(oldFound && oldValidator.Status == sdk.Bonded):
 
 		bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
-		store.Set(GetTendermintUpdatesKey(validator.OperatorAddr), bz)
+		store.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bz)
 
 		if cliffValExists {
 			cliffAddr := sdk.ValAddress(k.GetCliffValidator(ctx))
@@ -294,7 +282,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 		// if decreased in power but still bonded, update Tendermint validator
 		if oldFound && oldValidator.BondedTokens().GT(validator.BondedTokens()) {
 			bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
-			store.Set(GetTendermintUpdatesKey(validator.OperatorAddr), bz)
+			store.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bz)
 		}
 	}
 
@@ -628,7 +616,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 
 	// add to accumulated changes for tendermint
 	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero())
-	store.Set(GetTendermintUpdatesKey(validator.OperatorAddr), bzABCI)
+	store.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bzABCI)
 
 	// also remove from the Bonded types.Validators Store
 	store.Delete(GetValidatorsBondedIndexKey(validator.OperatorAddr))
@@ -663,7 +651,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 
 	// add to accumulated changes for tendermint
 	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidator())
-	store.Set(GetTendermintUpdatesKey(validator.OperatorAddr), bzABCI)
+	store.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bzABCI)
 
 	// call the bond hook if present
 	if k.validatorHooks != nil {
@@ -698,7 +686,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store.Delete(GetValidatorsBondedIndexKey(validator.OperatorAddr))
 
 	bz := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero())
-	store.Set(GetTendermintUpdatesKey(address), bz)
+	store.Set(GetTendermintUpdatesTKey(address), bz)
 }
 
 //__________________________________________________________________________

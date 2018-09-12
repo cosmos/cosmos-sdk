@@ -1,8 +1,8 @@
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
-COMMIT_HASH := $(shell git rev-parse --short HEAD)
+VERSION := $(shell git describe --tags --long | sed 's/v\(.*\)/\1/')
 BUILD_TAGS = netgo ledger
-BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
+BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags "-X github.com/cosmos/cosmos-sdk/version.Version=${VERSION}"
 GCC := $(shell command -v gcc 2> /dev/null)
 LEDGER_ENABLED ?= true
 UNAME_S := $(shell uname -s)

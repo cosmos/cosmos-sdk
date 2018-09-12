@@ -679,7 +679,6 @@
     "github.com/tendermint/tmlibs/cli",
     "github.com/zondax/ledger-goclient",
     "golang.org/x/crypto/blowfish",
-    "golang.org/x/crypto/ripemd160",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

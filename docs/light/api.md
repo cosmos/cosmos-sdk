@@ -763,7 +763,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     	"chain_id": "string",
         "account_number": 0,
     	"sequence": 0,
-    	"gas": 0
+    	"gas": "simulate"
   },
   "depositer": "string",
   "amount": 0,
@@ -866,7 +866,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     	"chain_id": "string",
     	"account_number": 0,
     	"sequence": 0,
-    	"gas": 0
+    	"gas": "simulate"
   	},
     // A cosmos address
   	"voter": "string",

@@ -156,13 +156,16 @@ func SimulateMsgVote(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 	return operationSimulateMsgVote(k, sk, nil, -1)
 }
 
+
 // nolint: unparam
 func operationSimulateMsgVote(k gov.Keeper, sk stake.Keeper, key crypto.PrivKey, proposalID int64) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
 		if key == nil {
 			key = simulation.RandomKey(r, keys)
 		}
+
 		var ok bool
+
 		if proposalID < 0 {
 			proposalID, ok = randomProposalID(r, k, ctx)
 			if !ok {
@@ -171,15 +174,18 @@ func operationSimulateMsgVote(k gov.Keeper, sk stake.Keeper, key crypto.PrivKey,
 		}
 		addr := sdk.AccAddress(key.PubKey().Address())
 		option := randomVotingOption(r)
+
 		msg := gov.NewMsgVote(addr, proposalID, option)
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
+
 		ctx, write := ctx.CacheContext()
 		result := gov.NewHandler(k)(ctx, msg)
 		if result.IsOK() {
 			write()
 		}
+
 		event(fmt.Sprintf("gov/MsgVote/%v", result.IsOK()))
 		action = fmt.Sprintf("TestMsgVote: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil

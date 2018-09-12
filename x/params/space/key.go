@@ -31,7 +31,7 @@ func NewKey(keys ...[]byte) (res Key) {
 	if len(keys) < 1 {
 		panic("length of parameter keys must not be zero")
 	}
-	res = Key{[]byte(keys[0])}
+	res = Key{keys[0]}
 
 	return res.Append(keys[1:]...)
 }

@@ -151,7 +151,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 
 	var validatorsPKs []crypto.PubKey
 
-	// NOTE: It's bad practice to reuse public key address for the owner
+	// NOTE: It's bad practice to reuse public key address for the operator
 	// address but doing in the test for simplicity.
 	var appGenTxs []json.RawMessage
 	for _, gdValidator := range genDoc.Validators {
@@ -173,7 +173,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		accAuth.Coins = sdk.Coins{sdk.NewInt64Coin("steak", 100)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)
-		genesisState.StakeData.Pool.LooseTokens = genesisState.StakeData.Pool.LooseTokens.Add(sdk.NewRat(100))
+		genesisState.StakeData.Pool.LooseTokens = genesisState.StakeData.Pool.LooseTokens.Add(sdk.NewDec(100))
 	}
 
 	appState, err := wire.MarshalJSONIndent(cdc, genesisState)
@@ -190,6 +190,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	node, err := startTM(config, logger, genDoc, privVal, app)
 	require.NoError(t, err)
 
+	tests.WaitForNextHeightTM(tests.ExtractPortFromAddress(config.RPC.ListenAddress))
 	lcd, err := startLCD(logger, listenAddr, cdc)
 	require.NoError(t, err)
 

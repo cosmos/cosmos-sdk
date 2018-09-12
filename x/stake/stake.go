@@ -10,7 +10,6 @@ import (
 type (
 	Keeper                = keeper.Keeper
 	Validator             = types.Validator
-	BechValidator         = types.BechValidator
 	Description           = types.Description
 	Delegation            = types.Delegation
 	UnbondingDelegation   = types.UnbondingDelegation
@@ -94,7 +93,7 @@ var (
 	ErrNoValidatorFound      = types.ErrNoValidatorFound
 	ErrValidatorOwnerExists  = types.ErrValidatorOwnerExists
 	ErrValidatorPubKeyExists = types.ErrValidatorPubKeyExists
-	ErrValidatorRevoked      = types.ErrValidatorRevoked
+	ErrValidatorJailed       = types.ErrValidatorJailed
 	ErrBadRemoveValidator    = types.ErrBadRemoveValidator
 	ErrDescriptionLength     = types.ErrDescriptionLength
 	ErrCommissionNegative    = types.ErrCommissionNegative

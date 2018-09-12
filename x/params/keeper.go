@@ -23,6 +23,7 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey) Keeper {
 }
 
 // InitKeeper constructs a new Keeper with initial parameters
+// nolint: errcheck
 func InitKeeper(ctx sdk.Context, cdc *wire.Codec, key sdk.StoreKey, params ...interface{}) Keeper {
 	if len(params)%2 != 0 {
 		panic("Odd params list length for InitKeeper")
@@ -183,8 +184,8 @@ func (k Getter) GetUint(ctx sdk.Context, key string) (res sdk.Uint, err error) {
 	return
 }
 
-// GetRat is helper function for rat params
-func (k Getter) GetRat(ctx sdk.Context, key string) (res sdk.Rat, err error) {
+// GetDec is helper function for decimal params
+func (k Getter) GetDec(ctx sdk.Context, key string) (res sdk.Dec, err error) {
 	store := ctx.KVStore(k.k.key)
 	bz := store.Get([]byte(key))
 	err = k.k.cdc.UnmarshalBinary(bz, &res)
@@ -301,8 +302,8 @@ func (k Getter) GetUintWithDefault(ctx sdk.Context, key string, def sdk.Uint) (r
 	return
 }
 
-// GetRatWithDefault is helper function for sdk.Rat params with default value
-func (k Getter) GetRatWithDefault(ctx sdk.Context, key string, def sdk.Rat) (res sdk.Rat) {
+// GetDecWithDefault is helper function for sdk.Dec params with default value
+func (k Getter) GetDecWithDefault(ctx sdk.Context, key string, def sdk.Dec) (res sdk.Dec) {
 	store := ctx.KVStore(k.k.key)
 	bz := store.Get([]byte(key))
 	if bz == nil {
@@ -397,8 +398,8 @@ func (k Setter) SetUint(ctx sdk.Context, key string, param sdk.Uint) {
 	}
 }
 
-// SetRat is helper function for rat params
-func (k Setter) SetRat(ctx sdk.Context, key string, param sdk.Rat) {
+// SetDec is helper function for decimal params
+func (k Setter) SetDec(ctx sdk.Context, key string, param sdk.Dec) {
 	if err := k.k.set(ctx, key, param); err != nil {
 		panic(err)
 	}

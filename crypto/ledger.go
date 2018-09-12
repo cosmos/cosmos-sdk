@@ -6,13 +6,16 @@ import (
 	ledger "github.com/zondax/ledger-goclient"
 )
 
-// If ledger support (build tag) has been enabled, automically attempt to load
-// and set the ledger device, ledgerDevice, if it has not already been set.
+// If ledger support (build tag) has been enabled, which implies a CGO dependency,
+// set the discoverLedger function which is responsible for loading the Ledger
+// device at runtime or returning an error.
 func init() {
-	device, err := ledger.FindLedger()
-	if err != nil {
-		ledgerDeviceErr = err
-	} else {
-		ledgerDevice = device
+	discoverLedger = func() (LedgerSECP256K1, error) {
+		device, err := ledger.FindLedger()
+		if err != nil {
+			return nil, err
+		}
+
+		return device, nil
 	}
 }

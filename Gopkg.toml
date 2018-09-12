@@ -49,15 +49,15 @@
 
 [[override]]
   name = "github.com/tendermint/go-amino"
-  version = "=0.10.1"
+  version = "=v0.12.0-rc0"
 
 [[override]]
   name = "github.com/tendermint/iavl"
-  version = "=v0.9.2"
+  version = "=v0.11.0"
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  version = "=v0.23.0"
+  version = "=v0.23.1-rc0"
 
 [[constraint]]
   name = "github.com/bartekn/go-bip39"
@@ -65,7 +65,7 @@
 
 [[constraint]]
   name = "github.com/zondax/ledger-goclient"
-  revision = "39ba4728c137c75718a21f9b4b3280fa31b9139b"
+  version = "=v0.1.0"
 
 [prune]
   go-tests = true

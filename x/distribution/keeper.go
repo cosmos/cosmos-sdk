@@ -4,7 +4,7 @@ package stake
 //type Keeper struct {
 //storeKey   sdk.StoreKey
 //cdc        *wire.Codec
-//coinKeeper bank.Keeper
+//bankKeeper bank.Keeper
 
 //// codespace
 //codespace sdk.CodespaceType
@@ -14,7 +14,7 @@ package stake
 //keeper := Keeper{
 //storeKey:   key,
 //cdc:        cdc,
-//coinKeeper: ck,
+//bankKeeper: ck,
 //codespace:  codespace,
 //}
 //return keeper
@@ -23,13 +23,13 @@ package stake
 ////_________________________________________________________________________
 
 //// cummulative power of the non-absent prevotes
-//func (k Keeper) GetTotalPrecommitVotingPower(ctx sdk.Context) sdk.Rat {
+//func (k Keeper) GetTotalPrecommitVotingPower(ctx sdk.Context) sdk.Dec {
 //store := ctx.KVStore(k.storeKey)
 
 //// get absent prevote indexes
 //absents := ctx.AbsentValidators()
 
-//TotalPower := sdk.ZeroRat()
+//TotalPower := sdk.ZeroDec()
 //i := int32(0)
 //iterator := store.SubspaceIterator(ValidatorsBondedKey)
 //for ; iterator.Valid(); iterator.Next() {

@@ -33,12 +33,12 @@ var (
 		Addrs[0],
 		Addrs[1],
 	}
-	addrVals = []sdk.AccAddress{
-		Addrs[2],
-		Addrs[3],
-		Addrs[4],
-		Addrs[5],
-		Addrs[6],
+	addrVals = []sdk.ValAddress{
+		sdk.ValAddress(Addrs[2]),
+		sdk.ValAddress(Addrs[3]),
+		sdk.ValAddress(Addrs[4]),
+		sdk.ValAddress(Addrs[5]),
+		sdk.ValAddress(Addrs[6]),
 	}
 )
 
@@ -77,10 +77,10 @@ func MakeTestCodec() *wire.Codec {
 // default params without inflation
 func ParamsNoInflation() types.Params {
 	return types.Params{
-		InflationRateChange: sdk.ZeroRat(),
-		InflationMax:        sdk.ZeroRat(),
-		InflationMin:        sdk.ZeroRat(),
-		GoalBonded:          sdk.NewRat(67, 100),
+		InflationRateChange: sdk.ZeroDec(),
+		InflationMax:        sdk.ZeroDec(),
+		InflationMin:        sdk.ZeroDec(),
+		GoalBonded:          sdk.NewDecWithPrec(67, 2),
 		MaxValidators:       100,
 		BondDenom:           "steak",
 	}
@@ -106,7 +106,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 		keyAcc,                // target store
 		auth.ProtoBaseAccount, // prototype
 	)
-	ck := bank.NewKeeper(accountMapper)
+	ck := bank.NewBaseKeeper(accountMapper)
 	keeper := NewKeeper(cdc, keyStake, ck, types.DefaultCodespace)
 	keeper.SetPool(ctx, types.InitialPool())
 	keeper.SetNewParams(ctx, types.DefaultParams())
@@ -119,7 +119,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 			{keeper.GetParams(ctx).BondDenom, sdk.NewInt(initCoins)},
 		})
 		require.Nil(t, err)
-		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewRat(initCoins))
+		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewDec(initCoins))
 		keeper.SetPool(ctx, pool)
 	}
 

@@ -110,6 +110,7 @@ type ProposalKind byte
 
 //nolint
 const (
+	ProposalTypeNil             ProposalKind = 0x00
 	ProposalTypeText            ProposalKind = 0x01
 	ProposalTypeParameterChange ProposalKind = 0x02
 	ProposalTypeSoftwareUpgrade ProposalKind = 0x03
@@ -186,6 +187,7 @@ func (pt ProposalKind) String() string {
 }
 
 // For Printf / Sprintf, returns bech32 when using %s
+// nolint: errcheck
 func (pt ProposalKind) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
@@ -203,6 +205,7 @@ type ProposalStatus byte
 
 //nolint
 const (
+	StatusNil           ProposalStatus = 0x00
 	StatusDepositPeriod ProposalStatus = 0x01
 	StatusVotingPeriod  ProposalStatus = 0x02
 	StatusPassed        ProposalStatus = 0x03
@@ -220,6 +223,8 @@ func ProposalStatusFromString(str string) (ProposalStatus, error) {
 		return StatusPassed, nil
 	case "Rejected":
 		return StatusRejected, nil
+	case "":
+		return StatusNil, nil
 	default:
 		return ProposalStatus(0xff), errors.Errorf("'%s' is not a valid proposal status", str)
 	}
@@ -285,6 +290,7 @@ func (status ProposalStatus) String() string {
 }
 
 // For Printf / Sprintf, returns bech32 when using %s
+// nolint: errcheck
 func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
@@ -297,19 +303,19 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 //-----------------------------------------------------------
 // Tally Results
 type TallyResult struct {
-	Yes        sdk.Rat `json:"yes"`
-	Abstain    sdk.Rat `json:"abstain"`
-	No         sdk.Rat `json:"no"`
-	NoWithVeto sdk.Rat `json:"no_with_veto"`
+	Yes        sdk.Dec `json:"yes"`
+	Abstain    sdk.Dec `json:"abstain"`
+	No         sdk.Dec `json:"no"`
+	NoWithVeto sdk.Dec `json:"no_with_veto"`
 }
 
 // checks if two proposals are equal
 func EmptyTallyResult() TallyResult {
 	return TallyResult{
-		Yes:        sdk.ZeroRat(),
-		Abstain:    sdk.ZeroRat(),
-		No:         sdk.ZeroRat(),
-		NoWithVeto: sdk.ZeroRat(),
+		Yes:        sdk.ZeroDec(),
+		Abstain:    sdk.ZeroDec(),
+		No:         sdk.ZeroDec(),
+		NoWithVeto: sdk.ZeroDec(),
 	}
 }
 

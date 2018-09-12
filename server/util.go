@@ -51,6 +51,10 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 		if err != nil {
 			return err
 		}
+		err = validateConfig(config)
+		if err != nil {
+			return err
+		}
 		logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 		logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, cfg.DefaultLogLevel())
 		if err != nil {
@@ -96,6 +100,14 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 	return
 }
 
+// validate the config with the sdk's requirements.
+func validateConfig(conf *cfg.Config) error {
+	if conf.Consensus.CreateEmptyBlocks == false {
+		return errors.New("config option CreateEmptyBlocks = false is currently unsupported")
+	}
+	return nil
+}
+
 // add server commands
 func AddCommands(
 	ctx *Context, cdc *wire.Codec,
@@ -112,6 +124,7 @@ func AddCommands(
 	tendermintCmd.AddCommand(
 		ShowNodeIDCmd(ctx),
 		ShowValidatorCmd(ctx),
+		ShowAddressCmd(ctx),
 	)
 
 	rootCmd.AddCommand(

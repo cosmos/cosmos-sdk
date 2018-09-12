@@ -10,7 +10,7 @@ import (
 	wire "github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 
 	"github.com/spf13/cobra"
@@ -163,6 +163,7 @@ func query(node string, key []byte, storeName string) (res []byte, err error) {
 	return context.NewCLIContext().WithNodeURI(node).QueryStore(key, storeName)
 }
 
+// nolint: unparam
 func (c relayCommander) broadcastTx(seq int64, node string, tx []byte) error {
 	_, err := context.NewCLIContext().WithNodeURI(node).BroadcastTx(tx)
 	return err
@@ -198,10 +199,10 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 		Sequence:  sequence,
 	}
 
-	txCtx := authctx.NewTxContextFromCLI().WithSequence(sequence).WithCodec(c.cdc)
+	txBldr := authtxb.NewTxBuilderFromCLI().WithSequence(sequence).WithCodec(c.cdc)
 	cliCtx := context.NewCLIContext()
 
-	res, err := txCtx.BuildAndSign(cliCtx.FromAddressName, passphrase, []sdk.Msg{msg})
+	res, err := txBldr.BuildAndSign(cliCtx.FromAddressName, passphrase, []sdk.Msg{msg})
 	if err != nil {
 		panic(err)
 	}

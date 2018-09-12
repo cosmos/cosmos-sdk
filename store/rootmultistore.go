@@ -5,10 +5,9 @@ import (
 	"io"
 	"strings"
 
-	"golang.org/x/crypto/ripemd160"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -67,6 +66,9 @@ func (rs *rootMultiStore) MountStoreWithDB(key StoreKey, typ StoreType, db dbm.D
 	}
 	if _, ok := rs.storesParams[key]; ok {
 		panic(fmt.Sprintf("rootMultiStore duplicate store key %v", key))
+	}
+	if _, ok := rs.keysByName[key.Name()]; ok {
+		panic(fmt.Sprintf("rootMultiStore duplicate store key name %v", key))
 	}
 	rs.storesParams[key] = storeParams{
 		key: key,
@@ -288,6 +290,18 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 	// trim the path and make the query
 	req.Path = subpath
 	res := queryable.Query(req)
+
+	if !req.Prove || !RequireProof(subpath) {
+		return res
+	}
+
+	commitInfo, errMsg := getCommitInfo(rs.db, res.Height)
+	if errMsg != nil {
+		return sdk.ErrInternal(errMsg.Error()).QueryResult()
+	}
+
+	res.Proof = buildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
+
 	return res
 }
 
@@ -409,7 +423,7 @@ func (si storeInfo) Hash() []byte {
 	// Doesn't write Name, since merkle.SimpleHashFromMap() will
 	// include them via the keys.
 	bz, _ := cdc.MarshalBinary(si.Core) // Does not error
-	hasher := ripemd160.New()
+	hasher := tmhash.New()
 	_, err := hasher.Write(bz)
 	if err != nil {
 		// TODO: Handle with #870

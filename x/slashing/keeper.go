@@ -36,11 +36,15 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, params pa
 }
 
 // handle a validator signing two blocks at the same height
-func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight int64, timestamp time.Time, power int64) {
+func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractionHeight int64, timestamp time.Time, power int64) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	time := ctx.BlockHeader().Time
 	age := time.Sub(timestamp)
-	address := sdk.ValAddress(pubkey.Address())
+	address := sdk.ConsAddress(addr)
+	pubkey, err := k.getPubkey(ctx, addr)
+	if err != nil {
+		panic(fmt.Sprintf("Validator address %v not found", addr))
+	}
 
 	// Double sign too old
 	maxEvidenceAge := k.MaxEvidenceAge(ctx)
@@ -52,13 +56,19 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, infracti
 	// Double sign confirmed
 	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d less than max age of %d", pubkey.Address(), infractionHeight, age, maxEvidenceAge))
 
-	// Slash validator
-	k.validatorSet.Slash(ctx, pubkey, infractionHeight, power, k.SlashFractionDoubleSign(ctx))
+	// Cap the amount slashed to the penalty for the worst infraction
+	// within the slashing period when this infraction was committed
+	fraction := k.SlashFractionDoubleSign(ctx)
+	revisedFraction := k.capBySlashingPeriod(ctx, address, fraction, infractionHeight)
+	logger.Info(fmt.Sprintf("Fraction slashed capped by slashing period from %v to %v", fraction, revisedFraction))
 
-	// Revoke validator
-	k.validatorSet.Revoke(ctx, pubkey)
+	// Slash validator
+	k.validatorSet.Slash(ctx, pubkey, infractionHeight, power, revisedFraction)
 
 	// Jail validator
+	k.validatorSet.Jail(ctx, pubkey)
+
+	// Set validator jail duration
 	signInfo, found := k.getValidatorSigningInfo(ctx, address)
 	if !found {
 		panic(fmt.Sprintf("Expected signing info for validator %s but not found", address))
@@ -72,7 +82,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, pubkey crypto.PubKey, infracti
 func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, power int64, signed bool) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	height := ctx.BlockHeight()
-	address := sdk.ValAddress(addr)
+	address := sdk.ConsAddress(addr)
 	pubkey, err := k.getPubkey(ctx, addr)
 	if err != nil {
 		panic(fmt.Sprintf("Validator address %v not found", addr))
@@ -109,16 +119,16 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)
 	if height > minHeight && signInfo.SignedBlocksCounter < k.MinSignedPerWindow(ctx) {
 		validator := k.validatorSet.ValidatorByPubKey(ctx, pubkey)
-		if validator != nil && !validator.GetRevoked() {
-			// Downtime confirmed, slash, revoke, and jail the validator
+		if validator != nil && !validator.GetJailed() {
+			// Downtime confirmed: slash and jail the validator
 			logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",
 				pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx)))
 			k.validatorSet.Slash(ctx, pubkey, height, power, k.SlashFractionDowntime(ctx))
-			k.validatorSet.Revoke(ctx, pubkey)
+			k.validatorSet.Jail(ctx, pubkey)
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeUnbondDuration(ctx))
 		} else {
-			// Validator was (a) not found or (b) already revoked, don't slash
-			logger.Info(fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store or already revoked",
+			// Validator was (a) not found or (b) already jailed, don't slash
+			logger.Info(fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store or already jailed",
 				pubkey.Address()))
 		}
 	}
@@ -164,8 +174,4 @@ func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address, pubk
 func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(getAddrPubkeyRelationKey(addr))
-}
-
-func getAddrPubkeyRelationKey(address []byte) []byte {
-	return append([]byte{0x03}, address...)
 }

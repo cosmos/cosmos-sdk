@@ -31,7 +31,7 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 	keyGov := sdk.NewKVStoreKey("gov")
 
 	pk := params.NewKeeper(mapp.Cdc, keyGlobalParams)
-	ck := bank.NewKeeper(mapp.AccountMapper)
+	ck := bank.NewBaseKeeper(mapp.AccountMapper)
 	sk := stake.NewKeeper(mapp.Cdc, keyStake, ck, mapp.RegisterCodespace(stake.DefaultCodespace))
 	keeper := NewKeeper(mapp.Cdc, keyGov, pk.Setter(), ck, sk, DefaultCodespace)
 	mapp.Router().AddRoute("gov", NewHandler(keeper))
@@ -64,7 +64,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakeKeeper stake.Keeper) sdk
 		mapp.InitChainer(ctx, req)
 
 		stakeGenesis := stake.DefaultGenesisState()
-		stakeGenesis.Pool.LooseTokens = sdk.NewRat(100000)
+		stakeGenesis.Pool.LooseTokens = sdk.NewDec(100000)
 
 		validators, err := stake.InitGenesis(ctx, stakeKeeper, stakeGenesis)
 		if err != nil {
@@ -74,6 +74,20 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakeKeeper stake.Keeper) sdk
 		return abci.ResponseInitChain{
 			Validators: validators,
 		}
+	}
+}
+
+// TODO: Remove once address interface has been implemented (ref: #2186)
+func SortValAddresses(addrs []sdk.ValAddress) {
+	var byteAddrs [][]byte
+	for _, addr := range addrs {
+		byteAddrs = append(byteAddrs, addr.Bytes())
+	}
+
+	SortByteArrays(byteAddrs)
+
+	for i, byteAddr := range byteAddrs {
+		addrs[i] = byteAddr
 	}
 }
 

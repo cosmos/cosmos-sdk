@@ -11,6 +11,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -85,6 +86,7 @@ func (app *App) CompleteSetup(newKeys []*sdk.KVStoreKey) error {
 }
 
 // InitChainer performs custom logic for initialization.
+// nolint: errcheck
 func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.ResponseInitChain {
 	// Load the genesis accounts
 	for _, genacc := range app.GenesisAccounts {
@@ -173,7 +175,32 @@ func GeneratePrivKeyAddressPairs(n int) (keys []crypto.PrivKey, addrs []sdk.AccA
 	keys = make([]crypto.PrivKey, n, n)
 	addrs = make([]sdk.AccAddress, n, n)
 	for i := 0; i < n; i++ {
-		keys[i] = ed25519.GenPrivKey()
+		if rand.Int63()%2 == 0 {
+			keys[i] = secp256k1.GenPrivKey()
+		} else {
+			keys[i] = ed25519.GenPrivKey()
+		}
+		addrs[i] = sdk.AccAddress(keys[i].PubKey().Address())
+	}
+	return
+}
+
+// GeneratePrivKeyAddressPairsFromRand generates a total of n private key, address
+// pairs using the provided randomness source.
+func GeneratePrivKeyAddressPairsFromRand(rand *rand.Rand, n int) (keys []crypto.PrivKey, addrs []sdk.AccAddress) {
+	keys = make([]crypto.PrivKey, n, n)
+	addrs = make([]sdk.AccAddress, n, n)
+	for i := 0; i < n; i++ {
+		secret := make([]byte, 32)
+		_, err := rand.Read(secret)
+		if err != nil {
+			panic("Could not read randomness")
+		}
+		if rand.Int63()%2 == 0 {
+			keys[i] = secp256k1.GenPrivKeySecp256k1(secret)
+		} else {
+			keys[i] = ed25519.GenPrivKeyFromSecret(secret)
+		}
 		addrs[i] = sdk.AccAddress(keys[i].PubKey().Address())
 	}
 	return
@@ -181,6 +208,7 @@ func GeneratePrivKeyAddressPairs(n int) (keys []crypto.PrivKey, addrs []sdk.AccA
 
 // RandomSetGenesis set genesis accounts with random coin values using the
 // provided addresses and coin denominations.
+// nolint: errcheck
 func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []string) {
 	accts := make([]auth.Account, len(addrs), len(addrs))
 	randCoinIntervals := []BigInterval{

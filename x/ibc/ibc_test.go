@@ -65,7 +65,7 @@ func TestIBC(t *testing.T) {
 	ctx := defaultContext(key)
 
 	am := auth.NewAccountMapper(cdc, key, auth.ProtoBaseAccount)
-	ck := bank.NewKeeper(am)
+	ck := bank.NewBaseKeeper(am)
 
 	src := newAddress()
 	dest := newAddress()

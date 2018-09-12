@@ -20,12 +20,12 @@ func GetCmdQuerySigningInfo(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "Query a validator's signing information",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pk, err := sdk.GetValPubKeyBech32(args[0])
+			pk, err := sdk.GetConsPubKeyBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			key := slashing.GetValidatorSigningInfoKey(sdk.ValAddress(pk.Address()))
+			key := slashing.GetValidatorSigningInfoKey(sdk.ConsAddress(pk.Address()))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			res, err := cliCtx.QueryStore(key, storeName)

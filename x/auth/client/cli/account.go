@@ -30,6 +30,7 @@ func GetAccountDecoder(cdc *wire.Codec) auth.AccountDecoder {
 
 // GetAccountCmd returns a query account that will display the state of the
 // account at a given address.
+// nolint: unparam
 func GetAccountCmd(storeName string, cdc *wire.Codec, decoder auth.AccountDecoder) *cobra.Command {
 	return &cobra.Command{
 		Use:   "account [address]",

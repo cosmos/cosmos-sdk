@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"os"
 
-	client "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	keys "github.com/cosmos/cosmos-sdk/client/keys"
-	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
-	tx "github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/wire"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
@@ -66,6 +66,7 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().String(client.FlagChainID, "", "The chain ID to connect to")
 	cmd.Flags().String(client.FlagNode, "tcp://localhost:26657", "Address of the node to connect to")
 	cmd.Flags().Int(flagMaxOpenConnections, 1000, "The number of maximum open connections")
+	cmd.Flags().Bool(client.FlagTrustNode, false, "Whether trust connected full node")
 
 	return cmd
 }

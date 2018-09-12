@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
@@ -16,29 +18,30 @@ func TestBankWithRandomMessages(t *testing.T) {
 
 	bank.RegisterWire(mapp.Cdc)
 	mapper := mapp.AccountMapper
-	coinKeeper := bank.NewKeeper(mapper)
-	mapp.Router().AddRoute("bank", bank.NewHandler(coinKeeper))
+	bankKeeper := bank.NewBaseKeeper(mapper)
+	mapp.Router().AddRoute("bank", bank.NewHandler(bankKeeper))
 
 	err := mapp.CompleteSetup([]*sdk.KVStoreKey{})
 	if err != nil {
 		panic(err)
 	}
 
-	appStateFn := func(r *rand.Rand, accs []sdk.AccAddress) json.RawMessage {
+	appStateFn := func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage {
 		mock.RandomSetGenesis(r, mapp, accs, []string{"stake"})
 		return json.RawMessage("{}")
 	}
 
 	simulation.Simulate(
 		t, mapp.BaseApp, appStateFn,
-		[]simulation.TestAndRunTx{
-			TestAndRunSingleInputMsgSend(mapper),
+		[]simulation.WeightedOperation{
+			{1, SimulateSingleInputMsgSend(mapper)},
 		},
 		[]simulation.RandSetup{},
 		[]simulation.Invariant{
 			NonnegativeBalanceInvariant(mapper),
 			TotalCoinsInvariant(mapper, func() sdk.Coins { return mapp.TotalCoinsSupply }),
 		},
-		100, 30, 30,
+		30, 30,
+		false,
 	)
 }

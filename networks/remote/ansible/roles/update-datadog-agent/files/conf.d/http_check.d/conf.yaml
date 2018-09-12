@@ -1,0 +1,13 @@
+init_config:
+
+instances:
+  - name: gaiad
+    url: http://localhost:26657/status
+    timeout: 1
+    content_match: '"latest_block_height": "0",'
+    reverse_content_match: true
+
+  - name: gaiacli
+    url: http://localhost:1317/node_version
+    timeout: 1
+

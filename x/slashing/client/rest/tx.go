@@ -7,11 +7,13 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 
 	"github.com/gorilla/mux"
@@ -19,86 +21,102 @@ import (
 
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
 	r.HandleFunc(
-		"/slashing/unrevoke",
-		unrevokeRequestHandlerFn(cdc, kb, cliCtx),
+		"/slashing/unjail",
+		unjailRequestHandlerFn(cdc, kb, cliCtx),
 	).Methods("POST")
 }
 
-// Unrevoke TX body
-type UnrevokeBody struct {
+// Unjail TX body
+type UnjailBody struct {
 	LocalAccountName string `json:"name"`
 	Password         string `json:"password"`
 	ChainID          string `json:"chain_id"`
 	AccountNumber    int64  `json:"account_number"`
 	Sequence         int64  `json:"sequence"`
 	Gas              int64  `json:"gas"`
+	GasAdjustment    string `json:"gas_adjustment"`
 	ValidatorAddr    string `json:"validator_addr"`
 }
 
-func unrevokeRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
+// nolint: gocyclo
+func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var m UnrevokeBody
+		var m UnjailBody
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 		err = json.Unmarshal(body, &m)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		info, err := kb.Get(m.LocalAccountName)
 		if err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 
-		validatorAddr, err := sdk.AccAddressFromBech32(m.ValidatorAddr)
+		valAddr, err := sdk.ValAddressFromBech32(m.ValidatorAddr)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error()))
 			return
 		}
 
-		if !bytes.Equal(info.GetPubKey().Address(), validatorAddr) {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("Must use own validator address"))
+		if !bytes.Equal(info.GetPubKey().Address(), valAddr) {
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, "Must use own validator address")
 			return
 		}
 
-		txCtx := authctx.TxContext{
+		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, client.DefaultGasAdjustment)
+		if !ok {
+			return
+		}
+		txBldr := authtxb.TxBuilder{
 			Codec:         cdc,
 			ChainID:       m.ChainID,
 			AccountNumber: m.AccountNumber,
 			Sequence:      m.Sequence,
 			Gas:           m.Gas,
+			GasAdjustment: adjustment,
 		}
 
-		msg := slashing.NewMsgUnrevoke(validatorAddr)
+		msg := slashing.NewMsgUnjail(valAddr)
+		if utils.HasDryRunArg(r) || m.Gas == 0 {
+			newCtx, err := utils.EnrichCtxWithGas(txBldr, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+			if utils.HasDryRunArg(r) {
+				utils.WriteSimulationResponse(w, txBldr.Gas)
+				return
+			}
+			txBldr = newCtx
+		}
 
-		txBytes, err := txCtx.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
+		if utils.HasGenerateOnlyArg(r) {
+			utils.WriteGenerateStdTxResponse(w, txBldr, []sdk.Msg{msg})
+			return
+		}
+
+		txBytes, err := txBldr.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
 		if err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, "Must use own validator address")
 			return
 		}
 
 		res, err := cliCtx.BroadcastTx(txBytes)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		output, err := json.MarshalIndent(res, "", "  ")
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 

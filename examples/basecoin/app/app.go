@@ -37,7 +37,7 @@ type BasecoinApp struct {
 	// manage getting and setting accounts
 	accountMapper       auth.AccountMapper
 	feeCollectionKeeper auth.FeeCollectionKeeper
-	coinKeeper          bank.Keeper
+	bankKeeper          bank.Keeper
 	ibcMapper           ibc.Mapper
 }
 
@@ -67,13 +67,13 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.Ba
 			return &types.AppAccount{}
 		},
 	)
-	app.coinKeeper = bank.NewKeeper(app.accountMapper)
+	app.bankKeeper = bank.NewBaseKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 
 	// register message routes
 	app.Router().
-		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
-		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper))
+		AddRoute("bank", bank.NewHandler(app.bankKeeper)).
+		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.bankKeeper))
 
 	// perform initialization logic
 	app.SetInitChainer(app.initChainer)

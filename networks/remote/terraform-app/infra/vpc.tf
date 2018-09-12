@@ -33,7 +33,7 @@ data "aws_availability_zones" "zones" {
 }
 
 resource "aws_subnet" "subnet" {
-  count                   = "${length(data.aws_availability_zones.zones.names)}"
+  count                   = "${min(length(data.aws_availability_zones.zones.names),var.max_zones)}"
   vpc_id                  = "${aws_vpc.vpc.id}"
   availability_zone       = "${element(data.aws_availability_zones.zones.names,count.index)}"
   cidr_block              = "${cidrsubnet(aws_vpc.vpc.cidr_block, 8, count.index)}"
@@ -45,7 +45,7 @@ resource "aws_subnet" "subnet" {
 }
 
 resource "aws_route_table_association" "route_table_association" {
-  count = "${length(data.aws_availability_zones.zones.names)}"
+  count = "${min(length(data.aws_availability_zones.zones.names),var.max_zones)}"
   subnet_id = "${element(aws_subnet.subnet.*.id,count.index)}"
   route_table_id = "${aws_route_table.route_table.id}"
 }
@@ -66,8 +66,15 @@ resource "aws_security_group" "secgroup" {
   }
 
   ingress {
-    from_port = 80
-    to_port = 80
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port = 1317
+    to_port = 1317
     protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }

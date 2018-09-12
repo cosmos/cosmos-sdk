@@ -109,6 +109,7 @@ IMPROVEMENTS
     * [store] \#1952, \#2281 Update IAVL dependency to v0.11.0
     * [simulation] Make timestamps randomized [#2153](https://github.com/cosmos/cosmos-sdk/pull/2153)
     * [simulation] Make logs not just pure strings, speeding it up by a large factor at greater block heights \#2282
+    * [simulation] Add a concept of weighting the operations \#2303
     * [simulation] Logs get written to file if large, and also get printed on panics \#2285
 
 * Tendermint

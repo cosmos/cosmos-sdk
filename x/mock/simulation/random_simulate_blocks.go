@@ -25,7 +25,7 @@ import (
 
 // Simulate tests application by sending random messages.
 func Simulate(
-	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, ops []Operation, setups []RandSetup,
+	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, ops []WeightedOperation, setups []RandSetup,
 	invariants []Invariant, numBlocks int, blockSize int, commit bool,
 ) error {
 	time := time.Now().UnixNano()
@@ -55,7 +55,7 @@ func randTimestamp(r *rand.Rand) time.Time {
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
 func SimulateFromSeed(
-	tb testing.TB, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, seed int64, ops []Operation, setups []RandSetup,
+	tb testing.TB, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, seed int64, ops []WeightedOperation, setups []RandSetup,
 	invariants []Invariant, numBlocks int, blockSize int, commit bool,
 ) (simError error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
@@ -171,12 +171,27 @@ func SimulateFromSeed(
 
 // Returns a function to simulate blocks. Written like this to avoid constant parameters being passed everytime, to minimize
 // memory overhead
-func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event func(string), invariants []Invariant, ops []Operation, operationQueue map[int][]Operation, totalNumBlocks int, displayLogs func()) func(
+func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event func(string), invariants []Invariant, ops []WeightedOperation, operationQueue map[int][]Operation, totalNumBlocks int, displayLogs func()) func(
 	blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, privKeys []crypto.PrivKey, header abci.Header, logWriter func(string)) (opCount int) {
+	totalOpWeight := 0
+	for i := 0; i < len(ops); i++ {
+		totalOpWeight += ops[i].Weight
+	}
+	selectOp := func(r *rand.Rand) Operation {
+		x := r.Intn(totalOpWeight)
+		for i := 0; i < len(ops); i++ {
+			if x <= ops[i].Weight {
+				return ops[i].Op
+			}
+			x -= ops[i].Weight
+		}
+		// shouldn't happen
+		return ops[0].Op
+	}
 	return func(blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		keys []crypto.PrivKey, header abci.Header, logWriter func(string)) (opCount int) {
 		for j := 0; j < blocksize; j++ {
-			logUpdate, futureOps, err := ops[r.Intn(len(ops))](r, app, ctx, keys, event)
+			logUpdate, futureOps, err := selectOp(r)(r, app, ctx, keys, event)
 			if err != nil {
 				displayLogs()
 				tb.Fatalf("error on operation %d within block %d, %v", header.Height, opCount, err)

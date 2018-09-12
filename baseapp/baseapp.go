@@ -128,7 +128,7 @@ func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
 }
 
 // Mount stores to the provided keys in the BaseApp multistore
-func (app *BaseApp) MountStores(storeType sdk.StoreType, keys ...*sdk.KVStoreKey) {
+func (app *BaseApp) MountStoresTransient(storeType sdk.StoreType, keys ...*sdk.TransientStoreKey) {
 	for _, key := range keys {
 		app.MountStore(key, storeType)
 	}

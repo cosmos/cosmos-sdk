@@ -90,7 +90,7 @@ func ParamsNoInflation() types.Params {
 func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountMapper, Keeper) {
 
 	keyStake := sdk.NewKVStoreKey("stake")
-	tkeyStake := sdk.NewKVStoreKey("transient_stake")
+	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
 	keyAcc := sdk.NewKVStoreKey("acc")
 
 	db := dbm.NewMemDB()

@@ -11,7 +11,7 @@ import (
 // keeper of the stake store
 type Keeper struct {
 	storeKey       sdk.StoreKey
-	storeTKey      sdk.TransientStoreKey
+	storeTKey      sdk.StoreKey
 	cdc            *wire.Codec
 	bankKeeper     bank.Keeper
 	validatorHooks sdk.ValidatorHooks
@@ -20,7 +20,7 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, tkey sdk.TransientStoreKey, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *wire.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:       key,
 		storeTKey:      tkey,

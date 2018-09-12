@@ -75,7 +75,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		keyAccount:       sdk.NewKVStoreKey("acc"),
 		keyIBC:           sdk.NewKVStoreKey("ibc"),
 		keyStake:         sdk.NewKVStoreKey("stake"),
-		tkeyStake:        sdk.NewKVStoreKey("transient_stake"),
+		tkeyStake:        sdk.NewTransientStoreKey("transient_stake"),
 		keySlashing:      sdk.NewKVStoreKey("slashing"),
 		keyGov:           sdk.NewKVStoreKey("gov"),
 		keyFeeCollection: sdk.NewKVStoreKey("fee"),
@@ -118,7 +118,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
 	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake,
 		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams)
-	app.MountStores(sdk.StoreTypeTransient, app.tkeyParams, app.tkeyStake)
+	app.MountStoresTransient(sdk.StoreTypeTransient, app.tkeyParams, app.tkeyStake)
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
 		cmn.Exit(err.Error())

@@ -2,6 +2,7 @@ package store
 
 import (
 	"bytes"
+
 	"github.com/pkg/errors"
 	"github.com/tendermint/iavl"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -47,7 +48,6 @@ func VerifyMultiStoreCommitInfo(storeName string, storeInfos []storeInfo, appHas
 		Version:    height,
 		StoreInfos: storeInfos,
 	}
-
 	if !bytes.Equal(appHash, ci.Hash()) {
 		return nil, cmn.NewError("the merkle root of multiStoreCommitInfo doesn't equal to appHash")
 	}

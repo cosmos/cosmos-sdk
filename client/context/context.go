@@ -27,8 +27,6 @@ type CLIContext struct {
 	Client          rpcclient.Client
 	Logger          io.Writer
 	Height          int64
-	Gas             int64
-	GasAdjustment   float64
 	NodeURI         string
 	FromAddressName string
 	AccountStore    string
@@ -58,8 +56,6 @@ func NewCLIContext() CLIContext {
 		AccountStore:    ctxAccStoreName,
 		FromAddressName: viper.GetString(client.FlagFrom),
 		Height:          viper.GetInt64(client.FlagHeight),
-		Gas:             viper.GetInt64(client.FlagGas),
-		GasAdjustment:   viper.GetFloat64(client.FlagGasAdjustment),
 		TrustNode:       viper.GetBool(client.FlagTrustNode),
 		UseLedger:       viper.GetBool(client.FlagUseLedger),
 		Async:           viper.GetBool(client.FlagAsync),
@@ -162,11 +158,5 @@ func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 // WithCertifier - return a copy of the context with an updated Certifier
 func (ctx CLIContext) WithCertifier(certifier tmlite.Certifier) CLIContext {
 	ctx.Certifier = certifier
-	return ctx
-}
-
-// WithGasAdjustment returns a copy of the context with an updated GasAdjustment flag.
-func (ctx CLIContext) WithGasAdjustment(adjustment float64) CLIContext {
-	ctx.GasAdjustment = adjustment
 	return ctx
 }

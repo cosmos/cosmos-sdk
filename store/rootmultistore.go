@@ -5,10 +5,9 @@ import (
 	"io"
 	"strings"
 
-	"golang.org/x/crypto/ripemd160"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -424,7 +423,7 @@ func (si storeInfo) Hash() []byte {
 	// Doesn't write Name, since merkle.SimpleHashFromMap() will
 	// include them via the keys.
 	bz, _ := cdc.MarshalBinary(si.Core) // Does not error
-	hasher := ripemd160.New()
+	hasher := tmhash.New()
 	_, err := hasher.Write(bz)
 	if err != nil {
 		// TODO: Handle with #870

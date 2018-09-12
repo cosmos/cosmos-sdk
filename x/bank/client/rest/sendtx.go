@@ -32,7 +32,7 @@ type sendBody struct {
 	ChainID          string    `json:"chain_id"`
 	AccountNumber    int64     `json:"account_number"`
 	Sequence         int64     `json:"sequence"`
-	Gas              int64     `json:"gas"`
+	Gas              string    `json:"gas"`
 	GasAdjustment    string    `json:"gas_adjustment"`
 }
 
@@ -81,31 +81,37 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLICo
 			return
 		}
 
-		txBldr := authtxb.TxBuilder{
-			Codec:         cdc,
-			Gas:           m.Gas,
-			ChainID:       m.ChainID,
-			AccountNumber: m.AccountNumber,
-			Sequence:      m.Sequence,
+		simulateGas, gas, err := cliclient.ReadGasFlag(m.Gas)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
 		}
 
 		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, cliclient.DefaultGasAdjustment)
 		if !ok {
 			return
 		}
-		cliCtx = cliCtx.WithGasAdjustment(adjustment)
+		txBldr := authtxb.TxBuilder{
+			Codec:         cdc,
+			Gas:           gas,
+			GasAdjustment: adjustment,
+			SimulateGas:   simulateGas,
+			ChainID:       m.ChainID,
+			AccountNumber: m.AccountNumber,
+			Sequence:      m.Sequence,
+		}
 
-		if utils.HasDryRunArg(r) || m.Gas == 0 {
-			newCtx, err := utils.EnrichCtxWithGas(txBldr, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
+		if utils.HasDryRunArg(r) || txBldr.SimulateGas {
+			newBldr, err := utils.EnrichCtxWithGas(txBldr, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 			if utils.HasDryRunArg(r) {
-				utils.WriteSimulationResponse(w, txBldr.Gas)
+				utils.WriteSimulationResponse(w, newBldr.Gas)
 				return
 			}
-			txBldr = newCtx
+			txBldr = newBldr
 		}
 
 		if utils.HasGenerateOnlyArg(r) {

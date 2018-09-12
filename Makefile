@@ -161,7 +161,7 @@ test_sim_gaia_fast:
 
 test_sim_gaia_full:
 	@echo "Running full multi-seed Gaia simulation. This may take awhile!"
-	@go test ./cmd/gaia/app -run TestMultiSeedGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationVerbose=true -v -timeout 24h
+	@sh scripts/multisim.sh
 
 SIM_NUM_BLOCKS ?= 210
 SIM_BLOCK_SIZE ?= 200

@@ -183,53 +183,6 @@ func TestFullGaiaSimulation(t *testing.T) {
 	require.Nil(t, err)
 }
 
-func TestMultiSeedGaiaSimulation(t *testing.T) {
-	if !enabled {
-		t.Skip("Skipping multi-seed Gaia simulation")
-	}
-
-	r := rand.New(rand.NewSource(seed))
-
-	done := make(chan bool)
-	numSeeds := 10
-
-	for i := 0; i < numSeeds; i++ {
-		go func() {
-			// Pick a random seed
-			runSeed := r.Int63()
-
-			// Setup Gaia application
-			var logger log.Logger
-			if verbose {
-				logger = log.TestingLogger()
-			} else {
-				logger = log.NewNopLogger()
-			}
-			db := dbm.NewMemDB()
-			app := NewGaiaApp(logger, db, nil)
-			require.Equal(t, "GaiaApp", app.Name())
-
-			// Run randomized simulation
-			err := simulation.SimulateFromSeed(
-				t, app.BaseApp, appStateFn, runSeed,
-				testAndRunTxs(app),
-				[]simulation.RandSetup{},
-				invariants(app),
-				numBlocks,
-				blockSize,
-				commit,
-			)
-			require.Nil(t, err)
-
-			done <- true
-		}()
-	}
-
-	for i := 0; i < numSeeds; i++ {
-		<-done
-	}
-}
-
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
 // and doesn't depend on gaia
 func TestAppStateDeterminism(t *testing.T) {

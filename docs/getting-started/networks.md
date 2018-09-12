@@ -38,49 +38,85 @@ To start a 4 node testnet run:
 make localnet-start
 ```
 
-The nodes bind their RPC servers to ports 26657, 26660, 26662, and 26664 on the host.
-This file creates a 4-node network using the gaiadnode image.
-The nodes of the network expose their P2P and RPC endpoints to the host machine on ports 26656-26657, 26659-26660, 26661-26662, and 26663-26664 respectively.
+This command creates a 4-node network using the gaiadnode image.
+The ports for each node are found in this table:
+
+| Node ID | P2P Port | RPC Port |
+| --------|-------|------|
+| `gaianode0` | `26656` | `26657` |
+| `gaianode1` | `26659` | `26660` |
+| `gaianode2` | `26661` | `26662` |
+| `gaianode3` | `26663` | `26664` |
 
 To update the binary, just rebuild it and restart the nodes:
 
 ```
-make build-linux
-make localnet-stop
-make localnet-start
+make build-linux localnet-stop localnet-start
 ```
 
 ### Configuration
 
 The `make localnet-start` creates files for a 4-node testnet in `./build` by calling the `gaiad testnet` command.
+This outputs a handful of files in the `./build` directory:
 
-The `./build` directory is mounted to the `/gaiad` mount point to attach the binary and config files to the container.
-
-For instance, to create a single node testnet:
-
+```tree -L 2 build/
+build/
+├── gaiacli
+├── gaiad
+├── gentxs
+│   ├── node0.json
+│   ├── node1.json
+│   ├── node2.json
+│   └── node3.json
+├── node0
+│   ├── gaiacli
+│   │   ├── key_seed.json
+│   │   └── keys
+│   └── gaiad
+│       ├── ${LOG:-gaiad.log}
+│       ├── config
+│       └── data
+├── node1
+│   ├── gaiacli
+│   │   └── key_seed.json
+│   └── gaiad
+│       ├── ${LOG:-gaiad.log}
+│       ├── config
+│       └── data
+├── node2
+│   ├── gaiacli
+│   │   └── key_seed.json
+│   └── gaiad
+│       ├── ${LOG:-gaiad.log}
+│       ├── config
+│       └── data
+└── node3
+    ├── gaiacli
+    │   └── key_seed.json
+    └── gaiad
+        ├── ${LOG:-gaiad.log}
+        ├── config
+        └── data
 ```
-cd $GOPATH/src/github.com/cosmos/cosmos-sdk
 
-# Clear the build folder
-rm -rf ./build
-
-# Build binary
-make build-linux
-
-# Create configuration
-docker run -v `pwd`/build:/gaiad tendermint/gaiadnode testnet -o . --v 1
-
-# Run the node
-docker run -v `pwd`/build:/gaiad tendermint/gaiadnode
-```
+Each `./build/nodeN` directory is mounted to the `/gaiad` directory in each container.
 
 ### Logging
 
-Logs are saved under the attached volume, in the `gaiad.log` file and written to the screen.
+Logs are saved under each `./build/nodeN/gaiad/gaia.log`. Watch them stream in with, for example:
+
+```
+tail -f build/node0/gaiad/gaia.log
+```
 
 ### Special binaries
 
-If you have multiple binaries with different names, you can specify which one to run with the BINARY environment variable. The path of the binary is relative to the attached volume.
+If you have multiple binaries with different names, you can specify which one to run with the BINARY environment variable. The path of the binary is relative to the attached volume. For example:
+
+```
+# Run with custom binary
+BINARY=gaiafoo make localnet-start
+```
 
 ## Remote Testnet
 
@@ -150,4 +186,24 @@ You can install the DataDog agent with:
 
 ```
 make datadog-install
+```
+
+### Single-node testnet
+
+To create a single node testnet:
+
+```
+cd $GOPATH/src/github.com/cosmos/cosmos-sdk
+
+# Clear the build folder
+rm -rf ./build
+
+# Build binary
+make build-linux
+
+# Create configuration
+docker run -v `pwd`/build:/gaiad tendermint/gaiadnode testnet -o . --v 1
+
+# Run the node
+docker run -v `pwd`/build:/gaiad tendermint/gaiadnode
 ```

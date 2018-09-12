@@ -31,7 +31,7 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 
 	// Set various mappers/keepers to interact easily with underlying stores
 	accountMapper := auth.NewAccountMapper(cdc, keyAccount, auth.ProtoBaseAccount)
-	bankKeeper := bank.NewKeeper(accountMapper)
+	bankKeeper := bank.NewBaseKeeper(accountMapper)
 	feeKeeper := auth.NewFeeCollectionKeeper(cdc, keyFees)
 
 	app.SetAnteHandler(auth.NewAnteHandler(accountMapper, feeKeeper))

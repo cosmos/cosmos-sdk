@@ -75,7 +75,7 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	)
 
 	// Add handlers.
-	app.bankKeeper = bank.NewKeeper(app.accountMapper)
+	app.bankKeeper = bank.NewBaseKeeper(app.accountMapper)
 	app.coolKeeper = cool.NewKeeper(app.capKeyMainStore, app.bankKeeper, app.RegisterCodespace(cool.DefaultCodespace))
 	app.powKeeper = pow.NewKeeper(app.capKeyPowStore, pow.NewConfig("pow", int64(1)), app.bankKeeper, app.RegisterCodespace(pow.DefaultCodespace))
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))

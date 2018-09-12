@@ -61,8 +61,9 @@ FEATURES
   * [gov][cli] #2062 added `--proposal` flag to `submit-proposal` that allows a JSON file containing a proposal to be passed in
   * [\#2040](https://github.com/cosmos/cosmos-sdk/issues/2040) Add `--bech` to `gaiacli keys show` and respective REST endpoint to
   provide desired Bech32 prefix encoding
-  * [cli] [\#2047](https://github.com/cosmos/cosmos-sdk/issues/2047) Setting the --gas flag value to 0 triggers a simulation of the tx before the actual execution. The gas estimate obtained via the simulation will be used as gas limit in the actual execution.
-  * [cli] [\#2047](https://github.com/cosmos/cosmos-sdk/issues/2047) The --gas-adjustment flag can be used to adjust the estimate obtained via the simulation triggered by --gas=0.
+  * [cli] [\#2047](https://github.com/cosmos/cosmos-sdk/issues/2047) [\#2306](https://github.com/cosmos/cosmos-sdk/pull/2306) Passing --gas=simulate triggers a simulation of the tx before the actual execution.
+  The gas estimate obtained via the simulation will be used as gas limit in the actual execution.
+  * [cli] [\#2047](https://github.com/cosmos/cosmos-sdk/issues/2047) The --gas-adjustment flag can be used to adjust the estimate obtained via the simulation triggered by --gas=simulate.
   * [cli] [\#2110](https://github.com/cosmos/cosmos-sdk/issues/2110) Add --dry-run flag to perform a simulation of a transaction without broadcasting it. The --gas flag is ignored as gas would be automatically estimated.
   * [cli] [\#2204](https://github.com/cosmos/cosmos-sdk/issues/2204) Support generating and broadcasting messages with multiple signatures via command line:
     * [\#966](https://github.com/cosmos/cosmos-sdk/issues/966) Add --generate-only flag to build an unsigned transaction and write it to STDOUT.
@@ -97,6 +98,7 @@ IMPROVEMENTS
     * [x/stake] [x/slashing] Ensure delegation invariants to jailed validators [#1883](https://github.com/cosmos/cosmos-sdk/issues/1883).
     * [x/stake] Improve speed of GetValidator, which was shown to be a performance bottleneck. [#2046](https://github.com/tendermint/tendermint/pull/2200)
     * [genesis] \#2229 Ensure that there are no duplicate accounts or validators in the genesis state.
+    * Add SDK validation to `config.toml` (namely disabling `create_empty_blocks`) \#1571
     
 * SDK
     * [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.
@@ -107,6 +109,7 @@ IMPROVEMENTS
     * [simulation] Make timestamps randomized [#2153](https://github.com/cosmos/cosmos-sdk/pull/2153)
     * [simulation] Make logs not just pure strings, speeding it up by a large factor at greater block heights \#2282
     * [simulation] Add a concept of weighting the operations \#2303
+    * [simulation] Logs get written to file if large, and also get printed on panics \#2285
 
 * Tendermint
 

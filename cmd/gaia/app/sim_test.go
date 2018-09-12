@@ -131,7 +131,7 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 
 	// Run randomized simulation
 	// TODO parameterize numbers, save for a later PR
-	simulation.SimulateFromSeed(
+	err := simulation.SimulateFromSeed(
 		b, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
 		[]simulation.RandSetup{},
@@ -140,6 +140,10 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 		blockSize,
 		commit,
 	)
+	if err != nil {
+		fmt.Println(err)
+		b.Fail()
+	}
 	if commit {
 		fmt.Println("GoLevelDB Stats")
 		fmt.Println(db.Stats()["leveldb.stats"])
@@ -164,7 +168,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	simulation.SimulateFromSeed(
+	err := simulation.SimulateFromSeed(
 		t, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
 		[]simulation.RandSetup{},
@@ -176,6 +180,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 	if commit {
 		fmt.Println("Database Size", db.Stats()["database.size"])
 	}
+	require.Nil(t, err)
 }
 
 // TODO: Make another test for the fuzzer itself, which just has noOp txs

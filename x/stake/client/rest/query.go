@@ -376,7 +376,7 @@ func delegatorValidatorsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) ht
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		var valAddr sdk.ValAddress
-		var bondedValidators []types.BechValidator
+		var bondedValidators []types.Validator
 
 		// read parameters
 		vars := mux.Vars(r)
@@ -544,14 +544,7 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Handler
 			return
 		}
 
-		bech32Validator, err := validator.Bech32Validator()
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		output, err = cdc.MarshalJSON(bech32Validator)
+		output, err = cdc.MarshalJSON(validator)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("Error: %s", err.Error())))

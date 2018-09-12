@@ -6,6 +6,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -259,4 +261,16 @@ func TestHumanReadableString(t *testing.T) {
 	valStr, err := validator.HumanReadableString()
 	require.Nil(t, err)
 	require.NotEmpty(t, valStr)
+}
+
+func TestValidatorMarshalUnmarshalJSON(t *testing.T) {
+	validator := NewValidator(addr1, pk1, Description{})
+	js, err := wire.Cdc.MarshalJSON(validator)
+	require.NoError(t, err)
+	require.NotEmpty(t, js)
+	require.Contains(t, string(js), "\"consensus_pubkey\":\"cosmosvalconspu")
+	got := &Validator{}
+	err = wire.Cdc.UnmarshalJSON(js, got)
+	assert.NoError(t, err)
+	assert.Equal(t, validator, *got)
 }

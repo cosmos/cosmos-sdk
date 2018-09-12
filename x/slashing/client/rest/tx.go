@@ -70,22 +70,20 @@ func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLI
 			return
 		}
 
+		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, client.DefaultGasAdjustment)
+		if !ok {
+			return
+		}
 		txBldr := authtxb.TxBuilder{
 			Codec:         cdc,
 			ChainID:       m.ChainID,
 			AccountNumber: m.AccountNumber,
 			Sequence:      m.Sequence,
 			Gas:           m.Gas,
+			GasAdjustment: adjustment,
 		}
 
 		msg := slashing.NewMsgUnjail(valAddr)
-
-		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, client.DefaultGasAdjustment)
-		if !ok {
-			return
-		}
-		cliCtx = cliCtx.WithGasAdjustment(adjustment)
-
 		if utils.HasDryRunArg(r) || m.Gas == 0 {
 			newCtx, err := utils.EnrichCtxWithGas(txBldr, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
 			if err != nil {

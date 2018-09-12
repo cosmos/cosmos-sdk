@@ -12,7 +12,7 @@ import (
 	ioutill "io/ioutil"
 
 	"github.com/tendermint/tendermint/crypto"
-	common "github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	ckeys "github.com/cosmos/cosmos-sdk/client/keys"
@@ -941,12 +941,13 @@ func GetVpnPaymentHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handl
 		}
 
 		var sig crypto.Signature
-		//sig, err := senttype.GetBech64Signature(msg.Signature)
+		sig, err = senttype.GetBech64Signature(msg.Signature)
 		cdc.UnmarshalBinaryBare([]byte(msg.Signature), &sig)
+		//sig,err=cryptoAmino.SignatureFromBytes([]byte(msg.Signature))
 		if err != nil {
 			w.Write([]byte("Signature from string conversion failed"))
 		}
-
+		
 		ctx = ctx.WithFromAddressName(msg.Localaccount)
 		ctx = ctx.WithGas(msg.Gas)
 		ctx = ctx.WithDecoder(authcmd.GetAccountDecoder(cdc))

@@ -1,9 +1,6 @@
 package types
 
 import (
-	"math/rand"
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -21,24 +18,13 @@ type Session struct {
 	Status           uint8
 }
 
-func GetNewSessionId() []byte {
-
-	bytes := make([]byte, 20)
-	for i := 0; i < 20; i++ {
-		bytes[i] = pool[rand.Intn(len(pool))]
-	}
-	// fmt.Println(bytes)
-	return bytes
-
-}
-func GetNewSessionMap(coins sdk.Coins, vpnpub crypto.PubKey, cpub crypto.PubKey, caddr sdk.AccAddress) Session {
-	ti := time.Now().UnixNano()
+func GetNewSessionMap(coins sdk.Coins, vpnpub crypto.PubKey, cpub crypto.PubKey, caddr sdk.AccAddress, time int64) Session {
 	return Session{
 		TotalLockedCoins: coins,
 		ReleasedCoins:    coins.Minus(coins),
 		VpnPubKey:        vpnpub,
 		CPubKey:          cpub,
-		Timestamp:        ti,
+		Timestamp:        time,
 		CAddress:         caddr,
 		Status:           1,
 	}

@@ -14,7 +14,6 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -108,12 +107,10 @@ func testAndRunTxs(app *GaiaApp) []simulation.Operation {
 
 func invariants(app *GaiaApp) []simulation.Invariant {
 	return []simulation.Invariant{
-		func(t *testing.T, baseapp *baseapp.BaseApp, log string) {
-			banksim.NonnegativeBalanceInvariant(app.accountMapper)(t, baseapp, log)
-			govsim.AllInvariants()(t, baseapp, log)
-			stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper, app.accountMapper)(t, baseapp, log)
-			slashingsim.AllInvariants()(t, baseapp, log)
-		},
+		banksim.NonnegativeBalanceInvariant(app.accountMapper),
+		govsim.AllInvariants(),
+		stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper, app.accountMapper),
+		slashingsim.AllInvariants(),
 	}
 }
 
@@ -134,7 +131,7 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 
 	// Run randomized simulation
 	// TODO parameterize numbers, save for a later PR
-	simulation.SimulateFromSeed(
+	err := simulation.SimulateFromSeed(
 		b, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
 		[]simulation.RandSetup{},
@@ -143,6 +140,10 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 		blockSize,
 		commit,
 	)
+	if err != nil {
+		fmt.Println(err)
+		b.Fail()
+	}
 	if commit {
 		fmt.Println("GoLevelDB Stats")
 		fmt.Println(db.Stats()["leveldb.stats"])
@@ -167,7 +168,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	simulation.SimulateFromSeed(
+	err := simulation.SimulateFromSeed(
 		t, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
 		[]simulation.RandSetup{},
@@ -179,6 +180,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 	if commit {
 		fmt.Println("Database Size", db.Stats()["database.size"])
 	}
+	require.Nil(t, err)
 }
 
 // TODO: Make another test for the fuzzer itself, which just has noOp txs

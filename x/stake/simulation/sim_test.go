@@ -21,7 +21,7 @@ func TestStakeWithRandomMessages(t *testing.T) {
 
 	bank.RegisterWire(mapp.Cdc)
 	mapper := mapp.AccountMapper
-	bankKeeper := bank.NewKeeper(mapper)
+	bankKeeper := bank.NewBaseKeeper(mapper)
 	stakeKey := sdk.NewKVStoreKey("stake")
 	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, bankKeeper, stake.DefaultCodespace)
 	mapp.Router().AddRoute("stake", stake.NewHandler(stakeKeeper))

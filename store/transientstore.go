@@ -1,6 +1,7 @@
 package store
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
@@ -40,4 +41,9 @@ func (ts *transientStore) Prefix(prefix []byte) KVStore {
 // Implements KVStore
 func (ts *transientStore) Gas(meter GasMeter, config GasConfig) KVStore {
 	return NewGasKVStore(meter, config, ts)
+}
+
+// Implements Store.
+func (ts *transientStore) GetStoreType() StoreType {
+	return sdk.StoreTypeTransient
 }

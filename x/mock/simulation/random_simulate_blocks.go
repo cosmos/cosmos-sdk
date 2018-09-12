@@ -7,7 +7,9 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"sort"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -25,9 +27,9 @@ import (
 func Simulate(
 	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, ops []Operation, setups []RandSetup,
 	invariants []Invariant, numBlocks int, blockSize int, commit bool,
-) {
+) error {
 	time := time.Now().UnixNano()
-	SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numBlocks, blockSize, commit)
+	return SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numBlocks, blockSize, commit)
 }
 
 func initChain(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress, setups []RandSetup, app *baseapp.BaseApp,
@@ -55,13 +57,14 @@ func randTimestamp(r *rand.Rand) time.Time {
 func SimulateFromSeed(
 	tb testing.TB, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, seed int64, ops []Operation, setups []RandSetup,
 	invariants []Invariant, numBlocks int, blockSize int, commit bool,
-) {
+) (simError error) {
+	// in case we have to end early, don't os.Exit so that we can run cleanup code.
+	stopEarly := false
 	testingMode, t, b := getTestingMode(tb)
-	log := fmt.Sprintf("Starting SimulateFromSeed with randomness created with seed %d", int(seed))
+	fmt.Printf("Starting SimulateFromSeed with randomness created with seed %d\n", int(seed))
 	r := rand.New(rand.NewSource(seed))
 	timestamp := randTimestamp(r)
-	log = updateLog(testingMode, log, "Starting the simulation from time %v, unixtime %v", timestamp.UTC().Format(time.UnixDate), timestamp.Unix())
-	fmt.Printf("%s\n", log)
+	fmt.Printf("Starting the simulation from time %v, unixtime %v\n", timestamp.UTC().Format(time.UnixDate), timestamp.Unix())
 	timeDiff := maxTimePerBlock - minTimePerBlock
 
 	keys, accs := mock.GeneratePrivKeyAddressPairsFromRand(r, numKeys)
@@ -69,7 +72,6 @@ func SimulateFromSeed(
 	// Setup event stats
 	events := make(map[string]uint)
 	event := func(what string) {
-		log = updateLog(testingMode, log, "event - %s", what)
 		events[what]++
 	}
 
@@ -80,91 +82,111 @@ func SimulateFromSeed(
 
 	// Setup code to catch SIGTERM's
 	c := make(chan os.Signal)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	go func() {
-		<-c
-		fmt.Printf("Exiting early due to SIGTERM, on block %d, operation %d\n", header.Height, opCount)
-		DisplayEvents(events)
-		os.Exit(128 + int(syscall.SIGTERM))
+		receivedSignal := <-c
+		fmt.Printf("Exiting early due to %s, on block %d, operation %d\n", receivedSignal, header.Height, opCount)
+		simError = fmt.Errorf("Exited due to %s", receivedSignal)
+		stopEarly = true
 	}()
 
 	var pastTimes []time.Time
 	var pastSigningValidators [][]abci.SigningValidator
 
-	request := RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastSigningValidators, event, header, log)
+	request := RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastSigningValidators, event, header)
 	// These are operations which have been queued by previous operations
 	operationQueue := make(map[int][]Operation)
+	var blockLogBuilders []*strings.Builder
 
+	if testingMode {
+		blockLogBuilders = make([]*strings.Builder, numBlocks)
+	}
+	displayLogs := logPrinter(testingMode, blockLogBuilders)
+	blockSimulator := createBlockSimulator(testingMode, tb, t, event, invariants, ops, operationQueue, numBlocks, displayLogs)
 	if !testingMode {
 		b.ResetTimer()
+	} else {
+		// Recover logs in case of panic
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Println("Panic with err\n", r)
+				stackTrace := string(debug.Stack())
+				fmt.Println(stackTrace)
+				displayLogs()
+				simError = fmt.Errorf("Simulation halted due to panic on block %d", header.Height)
+			}
+		}()
 	}
-	blockSimulator := createBlockSimulator(testingMode, tb, t, event, invariants, ops, operationQueue, numBlocks)
 
-	for i := 0; i < numBlocks; i++ {
+	for i := 0; i < numBlocks && !stopEarly; i++ {
 		// Log the header time for future lookup
 		pastTimes = append(pastTimes, header.Time)
 		pastSigningValidators = append(pastSigningValidators, request.LastCommitInfo.Validators)
 
 		// Run the BeginBlock handler
 		app.BeginBlock(request)
-		log = updateLog(testingMode, log, "BeginBlock")
 
 		if testingMode {
 			// Make sure invariants hold at beginning of block
-			AssertAllInvariants(t, app, invariants, log)
+			assertAllInvariants(t, app, invariants, displayLogs)
 		}
+		logWriter := addLogMessage(testingMode, blockLogBuilders, i)
 
 		ctx := app.NewContext(false, header)
 		thisBlockSize := getBlockSize(r, blockSize)
 
 		// Run queued operations. Ignores blocksize if blocksize is too small
-		log, numQueuedOpsRan := runQueuedOperations(operationQueue, int(header.Height), tb, r, app, ctx, keys, log, event)
-		opCount += numQueuedOpsRan
+		numQueuedOpsRan := runQueuedOperations(operationQueue, int(header.Height), tb, r, app, ctx, keys, logWriter, displayLogs, event)
 		thisBlockSize -= numQueuedOpsRan
-		log, operations := blockSimulator(thisBlockSize, r, app, ctx, keys, log, header)
-		opCount += operations
+		operations := blockSimulator(thisBlockSize, r, app, ctx, keys, header, logWriter)
+		opCount += operations + numQueuedOpsRan
 
 		res := app.EndBlock(abci.RequestEndBlock{})
 		header.Height++
 		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
-		log = updateLog(testingMode, log, "EndBlock")
+		logWriter("EndBlock")
 
 		if testingMode {
 			// Make sure invariants hold at end of block
-			AssertAllInvariants(t, app, invariants, log)
+			assertAllInvariants(t, app, invariants, displayLogs)
 		}
 		if commit {
 			app.Commit()
 		}
 
 		// Generate a random RequestBeginBlock with the current validator set for the next block
-		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastSigningValidators, event, header, log)
+		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastSigningValidators, event, header)
 
 		// Update the validator set
 		validators = updateValidators(tb, r, log, validators, res.ValidatorUpdates, event)
 	}
-
+	if stopEarly {
+		DisplayEvents(events)
+		return
+	}
 	fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds), : %v, operations ran %d\n", header.Height, header.Time, opCount)
 	DisplayEvents(events)
+	return nil
 }
 
 // Returns a function to simulate blocks. Written like this to avoid constant parameters being passed everytime, to minimize
 // memory overhead
-func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event func(string), invariants []Invariant, ops []Operation, operationQueue map[int][]Operation, totalNumBlocks int) func(
-	blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, privKeys []crypto.PrivKey, log string, header abci.Header) (updatedLog string, opCount int) {
+func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event func(string), invariants []Invariant, ops []Operation, operationQueue map[int][]Operation, totalNumBlocks int, displayLogs func()) func(
+	blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, privKeys []crypto.PrivKey, header abci.Header, logWriter func(string)) (opCount int) {
 	return func(blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		keys []crypto.PrivKey, log string, header abci.Header) (updatedLog string, opCount int) {
+		keys []crypto.PrivKey, header abci.Header, logWriter func(string)) (opCount int) {
 		for j := 0; j < blocksize; j++ {
-			logUpdate, futureOps, err := ops[r.Intn(len(ops))](tb, r, app, ctx, keys, log, event)
-			log = updateLog(testingMode, log, logUpdate)
+			logUpdate, futureOps, err := ops[r.Intn(len(ops))](r, app, ctx, keys, event)
 			if err != nil {
-				tb.Fatalf("error on operation %d within block %d, %v, log %s", header.Height, opCount, err, log)
+				displayLogs()
+				tb.Fatalf("error on operation %d within block %d, %v", header.Height, opCount, err)
 			}
+			logWriter(logUpdate)
 
 			queueOperations(operationQueue, futureOps)
 			if testingMode {
 				if onOperation {
-					AssertAllInvariants(t, app, invariants, log)
+					assertAllInvariants(t, app, invariants, displayLogs)
 				}
 				if opCount%50 == 0 {
 					fmt.Printf("\rSimulating... block %d/%d, operation %d/%d.  ", header.Height, totalNumBlocks, opCount, blocksize)
@@ -172,7 +194,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event f
 			}
 			opCount++
 		}
-		return log, opCount
+		return opCount
 	}
 }
 
@@ -185,14 +207,6 @@ func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B
 		b = tb.(*testing.B)
 	}
 	return
-}
-
-func updateLog(testingMode bool, log string, update string, args ...interface{}) (updatedLog string) {
-	if testingMode {
-		update = fmt.Sprintf(update, args...)
-		return fmt.Sprintf("%s\n%s", log, update)
-	}
-	return ""
 }
 
 func getBlockSize(r *rand.Rand, blockSize int) int {
@@ -223,25 +237,24 @@ func queueOperations(queuedOperations map[int][]Operation, futureOperations []Fu
 
 // nolint: errcheck
 func runQueuedOperations(queueOperations map[int][]Operation, height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-	privKeys []crypto.PrivKey, log string, event func(string)) (updatedLog string, numOpsRan int) {
-	updatedLog = log
+	privKeys []crypto.PrivKey, logWriter func(string), displayLogs func(), event func(string)) (numOpsRan int) {
 	if queuedOps, ok := queueOperations[height]; ok {
 		numOps := len(queuedOps)
 		for i := 0; i < numOps; i++ {
 			// For now, queued operations cannot queue more operations.
 			// If a need arises for us to support queued messages to queue more messages, this can
 			// be changed.
-			logUpdate, _, err := queuedOps[i](tb, r, app, ctx, privKeys, updatedLog, event)
-			updatedLog = fmt.Sprintf("%s\n%s", updatedLog, logUpdate)
+			logUpdate, _, err := queuedOps[i](r, app, ctx, privKeys, event)
+			logWriter(logUpdate)
 			if err != nil {
-				fmt.Fprint(os.Stderr, updatedLog)
+				displayLogs()
 				tb.FailNow()
 			}
 		}
 		delete(queueOperations, height)
-		return updatedLog, numOps
+		return numOps
 	}
-	return log, 0
+	return 0
 }
 
 func getKeys(validators map[string]mockValidator) []string {
@@ -258,7 +271,7 @@ func getKeys(validators map[string]mockValidator) []string {
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
 // nolint: unparam
 func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, livenessTransitions TransitionMatrix, evidenceFraction float64,
-	pastTimes []time.Time, pastSigningValidators [][]abci.SigningValidator, event func(string), header abci.Header, log string) abci.RequestBeginBlock {
+	pastTimes []time.Time, pastSigningValidators [][]abci.SigningValidator, event func(string), header abci.Header) abci.RequestBeginBlock {
 	if len(validators) == 0 {
 		return abci.RequestBeginBlock{Header: header}
 	}
@@ -323,13 +336,6 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 			Validators: signingValidators,
 		},
 		ByzantineValidators: evidence,
-	}
-}
-
-// AssertAllInvariants asserts a list of provided invariants against application state
-func AssertAllInvariants(t *testing.T, app *baseapp.BaseApp, tests []Invariant, log string) {
-	for i := 0; i < len(tests); i++ {
-		tests[i](t, app, log)
 	}
 }
 

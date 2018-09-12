@@ -18,7 +18,7 @@ func TestBankWithRandomMessages(t *testing.T) {
 
 	bank.RegisterWire(mapp.Cdc)
 	mapper := mapp.AccountMapper
-	bankKeeper := bank.NewKeeper(mapper)
+	bankKeeper := bank.NewBaseKeeper(mapper)
 	mapp.Router().AddRoute("bank", bank.NewHandler(bankKeeper))
 
 	err := mapp.CompleteSetup([]*sdk.KVStoreKey{})

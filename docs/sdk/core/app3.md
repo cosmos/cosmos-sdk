@@ -285,7 +285,7 @@ it can't increment sequence numbers, change PubKeys, or otherwise.
 A `bank.Keeper` is easily instantiated from an `AccountMapper`:
 
 ```go
-bankKeeper = bank.NewKeeper(accountMapper)
+bankKeeper = bank.NewBaseKeeper(accountMapper)
 ```
 
 We can then use it within a handler, instead of working directly with the
@@ -336,7 +336,7 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 
 	// Set various mappers/keepers to interact easily with underlying stores
 	accountMapper := auth.NewAccountMapper(cdc, keyAccount, auth.ProtoBaseAccount)
-	bankKeeper := bank.NewKeeper(accountMapper)
+	bankKeeper := bank.NewBaseKeeper(accountMapper)
 	feeKeeper := auth.NewFeeCollectionKeeper(cdc, keyFees)
 
 	app.SetAnteHandler(auth.NewAnteHandler(accountMapper, feeKeeper))

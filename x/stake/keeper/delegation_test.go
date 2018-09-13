@@ -647,7 +647,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	require.False(t, found, "%v", ubd)
 }
 
-func TestBeginRedelegationPower(t *testing.T) {
+func TestBeginRedelegationZeroPower(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 1000)
 	params := keeper.GetParams(ctx)
 	params.MaxValidators = uint16(2)

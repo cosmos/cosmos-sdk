@@ -165,7 +165,6 @@ func createLiteHandler(cdc *wire.Codec) *mux.Router {
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
 	r.HandleFunc("/node_version", NodeVersionRequestHandler(cliCtx)).Methods("GET")
 
-	tx.RegisterLiteRoutes(cliCtx, r, cdc)
 	bank.RegisterLiteRoutes(cliCtx, r, cdc, kb)
 
 	return r

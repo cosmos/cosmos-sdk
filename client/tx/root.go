@@ -23,8 +23,3 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec) {
 	// r.HandleFunc("/txs/sign", SignTxRequstHandler).Methods("POST")
 	// r.HandleFunc("/txs/broadcast", BroadcastTxRequestHandler).Methods("POST")
 }
-
-// RegisterLiteRoutes registers REST routes to gaia-lite
-func RegisterLiteRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec) {
-	r.HandleFunc("/txs", BroadcastTxRequestHandlerFn(cdc, cliCtx)).Methods("POST")
-}

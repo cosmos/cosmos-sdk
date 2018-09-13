@@ -17,7 +17,7 @@ import (
 // register REST routes
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, storeName string) {
 	r.HandleFunc(
-		"/auth/accounts/{address}",
+		"/accounts/{address}",
 		QueryAccountRequestHandlerFn(storeName, cdc, authcmd.GetAccountDecoder(cdc), cliCtx),
 	).Methods("GET")
 	r.HandleFunc(

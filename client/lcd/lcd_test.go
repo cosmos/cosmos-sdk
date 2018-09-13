@@ -238,7 +238,7 @@ func TestCoinSend(t *testing.T) {
 	someFakeAddr := sdk.AccAddress(bz)
 
 	// query empty
-	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", someFakeAddr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/accounts/%s", someFakeAddr), nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	acc := getAccount(t, port, addr)
@@ -368,7 +368,8 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	// broadcast tx
 	broadcastPayload := struct {
 		Tx auth.StdTx `json:"tx"`
-	}{Tx: signedMsg}
+		Return string `json:"return"`
+	}{Tx: signedMsg, Return: "block"}
 	json, err = cdc.MarshalJSON(broadcastPayload)
 	require.Nil(t, err)
 	res, body = Request(t, port, "POST", "/tx/broadcast", json)
@@ -794,7 +795,7 @@ func TestProposalsQuery(t *testing.T) {
 //_____________________________________________________________________________
 // get the account to get the sequence
 func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", addr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/accounts/%s", addr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var acc auth.Account
 	err := cdc.UnmarshalJSON([]byte(body), &acc)
@@ -842,7 +843,7 @@ func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.Acc
 		"chain_id":"%s"
 	}`, gasStr, gasAdjustmentStr, name, password, accnum, sequence, coinbz, chainID))
 
-	res, body = Request(t, port, "POST", fmt.Sprintf("/bank/%s/transfers%v", receiveAddr, queryStr), jsonStr)
+	res, body = Request(t, port, "POST", fmt.Sprintf("/accounts/%s/send%v", receiveAddr, queryStr), jsonStr)
 	return
 }
 

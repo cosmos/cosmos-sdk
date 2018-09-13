@@ -9,20 +9,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-
 	"github.com/gorilla/mux"
 )
 
-// register REST routes
-func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, storeName string) {
-	r.HandleFunc(
-		"/bank/balances/{address}",
-		QueryBalancesRequestHandlerFn(storeName, cdc, authcmd.GetAccountDecoder(cdc), cliCtx),
-	).Methods("GET")
-}
-
-// query balances Handler
+// QueryBalancesRequestHandlerFn query balances Handler
 func QueryBalancesRequestHandlerFn(
 	storeName string, cdc *wire.Codec,
 	decoder auth.AccountDecoder, cliCtx context.CLIContext,

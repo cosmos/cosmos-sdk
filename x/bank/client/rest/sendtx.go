@@ -17,16 +17,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// registerSendTxRoutes - Central function to define routes that get registered by the main application
-func registerSendTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/bank/{address}/transfers", SendRequestHandlerFn(cdc, kb, cliCtx)).Methods("POST")
-}
-
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/accounts/{address}/send", SendRequestHandlerFn(cdc, kb, cliCtx)).Methods("POST")
-	r.HandleFunc("/tx/broadcast", BroadcastTxRequestHandlerFn(cdc, cliCtx)).Methods("POST")
-}
-
 type sendBody struct {
 	// fees is not used currently
 	// Fees             sdk.Coin  `json="fees"`

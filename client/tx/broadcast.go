@@ -1,90 +1,37 @@
 package tx
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/wire"
-	"io/ioutil"
-)
-
-const (
-	flagSync  = "sync"
-	flagAsync = "async"
-	flagBlock = "block"
 )
 
 // Tx Broadcast Body
-// BroadcastBody contains the data of tx and specify how to broadcast tx
-type BroadcastBody struct {
-	Transaction string `json:"transaction"`
-	Return      string `json:"return"`
+type BroadcastTxBody struct {
+	TxBytes string `json:"tx"`
 }
 
-// BroadcastTxRequestHandlerFn REST Handler
-// nolint: gocyclo
-func BroadcastTxRequestHandlerFn(cdc *wire.Codec, ctx context.CLIContext) http.HandlerFunc {
+// BroadcastTx REST Handler
+func BroadcastTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var txBody BroadcastBody
-		body, err := ioutil.ReadAll(r.Body)
+		var m BroadcastTxBody
+
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&m)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(400)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		err = cdc.UnmarshalJSON(body, &txBody)
+
+		res, err := cliCtx.BroadcastTx([]byte(m.TxBytes))
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		var output []byte
-		switch txBody.Return {
-		case flagBlock:
-			res, err := ctx.BroadcastTx([]byte(txBody.Transaction))
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(err.Error()))
-				return
-			}
-			output, err = cdc.MarshalJSON(res)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(err.Error()))
-				return
-			}
-		case flagSync:
-			res, err := ctx.BroadcastTxSync([]byte(txBody.Transaction))
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(err.Error()))
-				return
-			}
-			output, err = cdc.MarshalJSON(res)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(err.Error()))
-				return
-			}
-		case flagAsync:
-			res, err := ctx.BroadcastTxAsync([]byte(txBody.Transaction))
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(err.Error()))
-				return
-			}
-			output, err = cdc.MarshalJSON(res)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(err.Error()))
-				return
-			}
-		default:
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("unsupported return type. supported types: block, sync, async"))
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		w.Write(output)
+
+		w.Write([]byte(string(res.Height)))
 	}
 }

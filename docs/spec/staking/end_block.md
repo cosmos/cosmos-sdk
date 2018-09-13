@@ -12,7 +12,7 @@ the changes cleared
 
 ```golang
 EndBlock() ValidatorSetChanges
-    vsc = GetTendermintUpdates()
+    vsc = GetValidTendermintUpdates()
     ClearTendermintUpdates()
     return vsc
 ```

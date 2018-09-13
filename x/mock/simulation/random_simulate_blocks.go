@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"sort"
 	"strings"
 	"syscall"
@@ -23,12 +24,13 @@ import (
 )
 
 // Simulate tests application by sending random messages.
-func Simulate(
-	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, ops []Operation, setups []RandSetup,
-	invariants []Invariant, numBlocks int, blockSize int, commit bool,
-) {
+func Simulate(t *testing.T, app *baseapp.BaseApp,
+	appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage,
+	ops []WeightedOperation, setups []RandSetup,
+	invariants []Invariant, numBlocks int, blockSize int, commit bool) error {
+
 	time := time.Now().UnixNano()
-	SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numBlocks, blockSize, commit)
+	return SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numBlocks, blockSize, commit)
 }
 
 func initChain(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress, setups []RandSetup, app *baseapp.BaseApp,
@@ -53,10 +55,13 @@ func randTimestamp(r *rand.Rand) time.Time {
 
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
-func SimulateFromSeed(
-	tb testing.TB, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, seed int64, ops []Operation, setups []RandSetup,
-	invariants []Invariant, numBlocks int, blockSize int, commit bool,
-) {
+func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
+	appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage,
+	seed int64, ops []WeightedOperation, setups []RandSetup, invariants []Invariant,
+	numBlocks int, blockSize int, commit bool) (simError error) {
+
+	// in case we have to end early, don't os.Exit so that we can run cleanup code.
+	stopEarly := false
 	testingMode, t, b := getTestingMode(tb)
 	fmt.Printf("Starting SimulateFromSeed with randomness created with seed %d\n", int(seed))
 	r := rand.New(rand.NewSource(seed))
@@ -79,12 +84,12 @@ func SimulateFromSeed(
 
 	// Setup code to catch SIGTERM's
 	c := make(chan os.Signal)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	go func() {
-		<-c
-		fmt.Printf("Exiting early due to SIGTERM, on block %d, operation %d\n", header.Height, opCount)
-		DisplayEvents(events)
-		os.Exit(128 + int(syscall.SIGTERM))
+		receivedSignal := <-c
+		fmt.Printf("Exiting early due to %s, on block %d, operation %d\n", receivedSignal, header.Height, opCount)
+		simError = fmt.Errorf("Exited due to %s", receivedSignal)
+		stopEarly = true
 	}()
 
 	var pastTimes []time.Time
@@ -95,15 +100,27 @@ func SimulateFromSeed(
 	operationQueue := make(map[int][]Operation)
 	var blockLogBuilders []*strings.Builder
 
-	if !testingMode {
-		b.ResetTimer()
-	} else {
+	if testingMode {
 		blockLogBuilders = make([]*strings.Builder, numBlocks)
 	}
 	displayLogs := logPrinter(testingMode, blockLogBuilders)
 	blockSimulator := createBlockSimulator(testingMode, tb, t, event, invariants, ops, operationQueue, numBlocks, displayLogs)
+	if !testingMode {
+		b.ResetTimer()
+	} else {
+		// Recover logs in case of panic
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Println("Panic with err\n", r)
+				stackTrace := string(debug.Stack())
+				fmt.Println(stackTrace)
+				displayLogs()
+				simError = fmt.Errorf("Simulation halted due to panic on block %d", header.Height)
+			}
+		}()
+	}
 
-	for i := 0; i < numBlocks; i++ {
+	for i := 0; i < numBlocks && !stopEarly; i++ {
 		// Log the header time for future lookup
 		pastTimes = append(pastTimes, header.Time)
 		pastSigningValidators = append(pastSigningValidators, request.LastCommitInfo.Validators)
@@ -122,10 +139,9 @@ func SimulateFromSeed(
 
 		// Run queued operations. Ignores blocksize if blocksize is too small
 		numQueuedOpsRan := runQueuedOperations(operationQueue, int(header.Height), tb, r, app, ctx, keys, logWriter, displayLogs, event)
-		opCount += numQueuedOpsRan
 		thisBlockSize -= numQueuedOpsRan
 		operations := blockSimulator(thisBlockSize, r, app, ctx, keys, header, logWriter)
-		opCount += operations
+		opCount += operations + numQueuedOpsRan
 
 		res := app.EndBlock(abci.RequestEndBlock{})
 		header.Height++
@@ -146,19 +162,38 @@ func SimulateFromSeed(
 		// Update the validator set
 		validators = updateValidators(tb, r, validators, res.ValidatorUpdates, event)
 	}
-
+	if stopEarly {
+		DisplayEvents(events)
+		return
+	}
 	fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds), : %v, operations ran %d\n", header.Height, header.Time, opCount)
 	DisplayEvents(events)
+	return nil
 }
 
 // Returns a function to simulate blocks. Written like this to avoid constant parameters being passed everytime, to minimize
 // memory overhead
-func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event func(string), invariants []Invariant, ops []Operation, operationQueue map[int][]Operation, totalNumBlocks int, displayLogs func()) func(
+func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event func(string), invariants []Invariant, ops []WeightedOperation, operationQueue map[int][]Operation, totalNumBlocks int, displayLogs func()) func(
 	blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, privKeys []crypto.PrivKey, header abci.Header, logWriter func(string)) (opCount int) {
+	totalOpWeight := 0
+	for i := 0; i < len(ops); i++ {
+		totalOpWeight += ops[i].Weight
+	}
+	selectOp := func(r *rand.Rand) Operation {
+		x := r.Intn(totalOpWeight)
+		for i := 0; i < len(ops); i++ {
+			if x <= ops[i].Weight {
+				return ops[i].Op
+			}
+			x -= ops[i].Weight
+		}
+		// shouldn't happen
+		return ops[0].Op
+	}
 	return func(blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		keys []crypto.PrivKey, header abci.Header, logWriter func(string)) (opCount int) {
 		for j := 0; j < blocksize; j++ {
-			logUpdate, futureOps, err := ops[r.Intn(len(ops))](r, app, ctx, keys, event)
+			logUpdate, futureOps, err := selectOp(r)(r, app, ctx, keys, event)
 			if err != nil {
 				displayLogs()
 				tb.Fatalf("error on operation %d within block %d, %v", header.Height, opCount, err)
@@ -324,18 +359,14 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 // updateValidators mimicks Tendermint's update logic
 // nolint: unparam
 func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValidator, updates []abci.Validator, event func(string)) map[string]mockValidator {
+
 	for _, update := range updates {
 		switch {
 		case update.Power == 0:
-			// // TEMPORARY DEBUG CODE TO PROVE THAT THE OLD METHOD WAS BROKEN
-			// // (i.e. didn't catch in the event of problem)
-			// if val, ok := tb.(*testing.T); ok {
-			// 	require.NotNil(val, current[string(update.PubKey.Data)])
-			// }
-			// // CORRECT CHECK
-			// if _, ok := current[string(update.PubKey.Data)]; !ok {
-			// 	tb.Fatalf("tried to delete a nonexistent validator")
-			// }
+			if _, ok := current[string(update.PubKey.Data)]; !ok {
+				tb.Fatalf("tried to delete a nonexistent validator")
+			}
+
 			event("endblock/validatorupdates/kicked")
 			delete(current, string(update.PubKey.Data))
 		default:
@@ -350,5 +381,6 @@ func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValida
 			}
 		}
 	}
+
 	return current
 }

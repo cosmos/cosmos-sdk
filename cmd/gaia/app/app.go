@@ -43,6 +43,7 @@ type GaiaApp struct {
 	keyAccount       *sdk.KVStoreKey
 	keyIBC           *sdk.KVStoreKey
 	keyStake         *sdk.KVStoreKey
+	tkeyStake        *sdk.TransientStoreKey
 	keySlashing      *sdk.KVStoreKey
 	keyGov           *sdk.KVStoreKey
 	keyFeeCollection *sdk.KVStoreKey
@@ -74,6 +75,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		keyAccount:       sdk.NewKVStoreKey("acc"),
 		keyIBC:           sdk.NewKVStoreKey("ibc"),
 		keyStake:         sdk.NewKVStoreKey("stake"),
+		tkeyStake:        sdk.NewTransientStoreKey("transient_stake"),
 		keySlashing:      sdk.NewKVStoreKey("slashing"),
 		keyGov:           sdk.NewKVStoreKey("gov"),
 		keyFeeCollection: sdk.NewKVStoreKey("fee"),
@@ -92,7 +94,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	app.bankKeeper = bank.NewBaseKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams)
-	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.bankKeeper, app.RegisterCodespace(stake.DefaultCodespace))
+	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.tkeyStake, app.bankKeeper, app.RegisterCodespace(stake.DefaultCodespace))
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.paramsKeeper.Getter(), app.RegisterCodespace(slashing.DefaultCodespace))
 	app.stakeKeeper = app.stakeKeeper.WithValidatorHooks(app.slashingKeeper.ValidatorHooks())
 	app.govKeeper = gov.NewKeeper(app.cdc, app.keyGov, app.paramsKeeper.Setter(), app.bankKeeper, app.stakeKeeper, app.RegisterCodespace(gov.DefaultCodespace))
@@ -114,8 +116,9 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
-	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake, app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams)
-	app.MountStore(app.tkeyParams, sdk.StoreTypeTransient)
+	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake,
+		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams)
+	app.MountStoresTransient(app.tkeyParams, app.tkeyStake)
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
 		cmn.Exit(err.Error())

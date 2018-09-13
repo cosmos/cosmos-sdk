@@ -20,7 +20,7 @@ type baseReq struct {
 	ChainID       string `json:"chain_id"`
 	AccountNumber int64  `json:"account_number"`
 	Sequence      int64  `json:"sequence"`
-	Gas           int64  `json:"gas"`
+	Gas           string `json:"gas"`
 	GasAdjustment string `json:"gas_adjustment"`
 }
 
@@ -69,32 +69,37 @@ func (req baseReq) baseReqValidate(w http.ResponseWriter) bool {
 // TODO: Build this function out into a more generic base-request
 // (probably should live in client/lcd).
 func signAndBuild(w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext, baseReq baseReq, msg sdk.Msg, cdc *wire.Codec) {
-	var err error
-	txBldr := authtxb.TxBuilder{
-		Codec:         cdc,
-		AccountNumber: baseReq.AccountNumber,
-		Sequence:      baseReq.Sequence,
-		ChainID:       baseReq.ChainID,
-		Gas:           baseReq.Gas,
+	simulateGas, gas, err := client.ReadGasFlag(baseReq.Gas)
+	if err != nil {
+		utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
 	if !ok {
 		return
 	}
-	cliCtx = cliCtx.WithGasAdjustment(adjustment)
+	txBldr := authtxb.TxBuilder{
+		Codec:         cdc,
+		Gas:           gas,
+		GasAdjustment: adjustment,
+		SimulateGas:   simulateGas,
+		ChainID:       baseReq.ChainID,
+		AccountNumber: baseReq.AccountNumber,
+		Sequence:      baseReq.Sequence,
+	}
 
-	if utils.HasDryRunArg(r) || baseReq.Gas == 0 {
-		newCtx, err := utils.EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, []sdk.Msg{msg})
+	if utils.HasDryRunArg(r) || txBldr.SimulateGas {
+		newBldr, err := utils.EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, []sdk.Msg{msg})
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 		if utils.HasDryRunArg(r) {
-			utils.WriteSimulationResponse(w, txBldr.Gas)
+			utils.WriteSimulationResponse(w, newBldr.Gas)
 			return
 		}
-		txBldr = newCtx
+		txBldr = newBldr
 	}
 
 	if utils.HasGenerateOnlyArg(r) {

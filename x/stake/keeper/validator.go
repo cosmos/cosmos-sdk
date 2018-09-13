@@ -128,7 +128,7 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint16) (validators [
 		validators[i] = validator
 		i++
 	}
-	return validators[:i] // trim
+	return validators[:i] // trim if the array length < maxRetrieve
 }
 
 //___________________________________________________________________________
@@ -169,7 +169,7 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 	maxValidators := k.GetParams(ctx).MaxValidators
 	validators := make([]types.Validator, maxValidators)
 
-	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey) // largest to smallest
+	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
 	defer iterator.Close()
 
 	i := 0
@@ -197,7 +197,7 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 func (k Keeper) GetValidTendermintUpdates(ctx sdk.Context) (updates []abci.Validator) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, TendermintUpdatesKey) //smallest to largest
+	iterator := sdk.KVStorePrefixIterator(store, TendermintUpdatesKey)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

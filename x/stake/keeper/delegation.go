@@ -45,7 +45,7 @@ func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddres
 
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(delegator)
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
 	defer iterator.Close()
 
 	i := 0
@@ -80,7 +80,7 @@ func (k Keeper) GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddres
 
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetUBDsKey(delegator)
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
 	defer iterator.Close()
 
 	i := 0
@@ -163,7 +163,7 @@ func (k Keeper) GetRedelegations(ctx sdk.Context, delegator sdk.AccAddress,
 
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetREDsKey(delegator)
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
 	defer iterator.Close()
 
 	i := 0
@@ -211,12 +211,11 @@ func (k Keeper) HasReceivingRedelegation(ctx sdk.Context,
 
 	store := ctx.KVStore(k.storeKey)
 	prefix := GetREDsByDelToValDstIndexKey(delAddr, valDstAddr)
-	iterator := sdk.KVStorePrefixIterator(store, prefix) //smallest to largest
+	iterator := sdk.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
 
 	found := false
 	if iterator.Valid() {
-		//record found
 		found = true
 	}
 	return found

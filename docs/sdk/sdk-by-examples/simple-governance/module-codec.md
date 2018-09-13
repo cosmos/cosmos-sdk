@@ -1,4 +1,4 @@
-## Wire 
+## Codec
 
 **File: [`x/simple_governance/codec.go`](https://github.com/cosmos/cosmos-sdk/blob/fedekunze/module_tutorial/examples/simpleGov/x/simple_governance/codec.go)**
 

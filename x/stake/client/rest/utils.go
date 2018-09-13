@@ -83,7 +83,7 @@ func queryDelegator(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		vars := mux.Vars(r)
-		bech32delegator := vars["validatorAddr"]
+		bech32delegator := vars["delegatorAddr"]
 
 		w.Header().Set("Content-Type", "application/json")
 

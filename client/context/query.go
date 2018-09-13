@@ -12,7 +12,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/irisnet/irishub/client/context"
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/lite"
@@ -329,7 +328,7 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 func (ctx CLIContext) Certify(height int64) (lite.Commit, error) {
 	check, err := tmliteProxy.GetCertifiedCommit(height, ctx.Client, ctx.Certifier)
 	if tmliteErr.IsCommitNotFoundErr(err) {
-		return lite.Commit{}, context.ErrVerifyCommit(height)
+		return lite.Commit{}, ErrVerifyCommit(height)
 	} else if err != nil {
 		return lite.Commit{}, err
 	}

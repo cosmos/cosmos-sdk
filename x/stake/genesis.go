@@ -60,7 +60,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 func WriteGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	pool := keeper.GetPool(ctx)
 	params := keeper.GetParams(ctx)
-	validators := keeper.GetValidators(ctx, params.MaxValidators)
+	validators := keeper.GetAllValidators(ctx)
 	bonds := keeper.GetAllDelegations(ctx)
 
 	return types.GenesisState{

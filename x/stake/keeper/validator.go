@@ -99,12 +99,25 @@ func (k Keeper) validatorByPowerIndexExists(ctx sdk.Context, power []byte) bool 
 	return store.Get(power) != nil
 }
 
-// Get the set of all validators. If maxRetrieve is supplied, the respective amount will be returned.
-func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint16) (validators []types.Validator) {
+// Get the set of all validators with no limits, used during genesis dump
+func (k Keeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
+	defer iterator.Close()
 
+	for ; iterator.Valid(); iterator.Next() {
+		addr := iterator.Key()[1:]
+		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
+		validators = append(validators, validator)
+	}
+	return validators
+}
+
+// return a given amount of all the validators
+func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint16) (validators []types.Validator) {
+	store := ctx.KVStore(k.storeKey)
 	validators = make([]types.Validator, maxRetrieve)
 
-	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
 	defer iterator.Close()
 

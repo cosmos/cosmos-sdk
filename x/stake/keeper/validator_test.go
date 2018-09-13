@@ -59,6 +59,9 @@ func TestSetValidator(t *testing.T) {
 	updates := keeper.GetValidTendermintUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 	require.Equal(t, validator.ABCIValidator(), updates[0])
+
+	allVals := keeper.GetAllValidators(ctx)
+	require.Equal(t, 1, len(allVals))
 }
 
 func TestUpdateValidatorByPowerIndex(t *testing.T) {

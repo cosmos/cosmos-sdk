@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -265,12 +265,12 @@ func TestHumanReadableString(t *testing.T) {
 
 func TestValidatorMarshalUnmarshalJSON(t *testing.T) {
 	validator := NewValidator(addr1, pk1, Description{})
-	js, err := wire.Cdc.MarshalJSON(validator)
+	js, err := codec.Cdc.MarshalJSON(validator)
 	require.NoError(t, err)
 	require.NotEmpty(t, js)
 	require.Contains(t, string(js), "\"consensus_pubkey\":\"cosmosvalconspu")
 	got := &Validator{}
-	err = wire.Cdc.UnmarshalJSON(js, got)
+	err = codec.Cdc.UnmarshalJSON(js, got)
 	assert.NoError(t, err)
 	assert.Equal(t, validator, *got)
 }

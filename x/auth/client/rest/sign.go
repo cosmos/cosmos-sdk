@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
@@ -23,7 +23,7 @@ type SignBody struct {
 }
 
 // sign tx REST handler
-func SignTxRequestHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m SignBody
@@ -51,7 +51,7 @@ func SignTxRequestHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.Han
 			return
 		}
 
-		output, err := wire.MarshalJSONIndent(cdc, signedTx)
+		output, err := codec.MarshalJSONIndent(cdc, signedTx)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

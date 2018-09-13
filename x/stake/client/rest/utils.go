@@ -6,8 +6,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/cosmos/cosmos-sdk/x/stake/tags"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -24,7 +24,7 @@ func contains(stringSlice []string, txType string) bool {
 	return false
 }
 
-func getDelegatorValidator(cliCtx context.CLIContext, cdc *wire.Codec, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (
+func getDelegatorValidator(cliCtx context.CLIContext, cdc *codec.Codec, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (
 	validator types.Validator, httpStatusCode int, errMsg string, err error) {
 
 	key := stake.GetDelegationKey(delAddr, valAddr)
@@ -53,7 +53,7 @@ func getDelegatorValidator(cliCtx context.CLIContext, cdc *wire.Codec, delAddr s
 }
 
 func getDelegatorDelegations(
-	cliCtx context.CLIContext, cdc *wire.Codec, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (
+	cliCtx context.CLIContext, cdc *codec.Codec, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (
 	outputDelegation DelegationWithoutRat, httpStatusCode int, errMsg string, err error) {
 
 	delegationKey := stake.GetDelegationKey(delAddr, valAddr)
@@ -82,7 +82,7 @@ func getDelegatorDelegations(
 }
 
 func getDelegatorUndelegations(
-	cliCtx context.CLIContext, cdc *wire.Codec, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (
+	cliCtx context.CLIContext, cdc *codec.Codec, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (
 	unbonds types.UnbondingDelegation, httpStatusCode int, errMsg string, err error) {
 
 	undelegationKey := stake.GetUBDKey(delAddr, valAddr)
@@ -103,7 +103,7 @@ func getDelegatorUndelegations(
 }
 
 func getDelegatorRedelegations(
-	cliCtx context.CLIContext, cdc *wire.Codec, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (
+	cliCtx context.CLIContext, cdc *codec.Codec, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (
 	regelegations types.Redelegation, httpStatusCode int, errMsg string, err error) {
 
 	key := stake.GetREDsByDelToValDstIndexKey(delAddr, valAddr)
@@ -125,7 +125,7 @@ func getDelegatorRedelegations(
 }
 
 // queries staking txs
-func queryTxs(node rpcclient.Client, cdc *wire.Codec, tag string, delegatorAddr string) ([]tx.Info, error) {
+func queryTxs(node rpcclient.Client, cdc *codec.Codec, tag string, delegatorAddr string) ([]tx.Info, error) {
 	page := 0
 	perPage := 100
 	prove := false
@@ -139,7 +139,7 @@ func queryTxs(node rpcclient.Client, cdc *wire.Codec, tag string, delegatorAddr 
 }
 
 // gets all validators
-func getValidators(validatorKVs []sdk.KVPair, cdc *wire.Codec) ([]types.Validator, error) {
+func getValidators(validatorKVs []sdk.KVPair, cdc *codec.Codec) ([]types.Validator, error) {
 	validators := make([]types.Validator, len(validatorKVs))
 	for i, kv := range validatorKVs {
 
@@ -156,7 +156,7 @@ func getValidators(validatorKVs []sdk.KVPair, cdc *wire.Codec) ([]types.Validato
 
 //  gets all Bech32 validators from a key
 // nolint: unparam
-func getBech32Validators(storeName string, cliCtx context.CLIContext, cdc *wire.Codec) (
+func getBech32Validators(storeName string, cliCtx context.CLIContext, cdc *codec.Codec) (
 	validators []types.Validator, httpStatusCode int, errMsg string, err error) {
 
 	// Get all validators using key

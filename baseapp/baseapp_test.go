@@ -14,8 +14,8 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 var (
@@ -34,14 +34,14 @@ func defaultLogger() log.Logger {
 func newBaseApp(name string, options ...func(*BaseApp)) *BaseApp {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	codec := wire.NewCodec()
+	codec := codec.New()
 	registerTestCodec(codec)
 	return NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
 }
 
-func registerTestCodec(cdc *wire.Codec) {
+func registerTestCodec(cdc *codec.Codec) {
 	// register Tx, Msg
-	sdk.RegisterWire(cdc)
+	sdk.RegisterCodec(cdc)
 
 	// register test types
 	cdc.RegisterConcrete(&txTest{}, "cosmos-sdk/baseapp/txTest", nil)
@@ -350,7 +350,7 @@ func (msg msgCounter2) ValidateBasic() sdk.Error {
 }
 
 // amino decode
-func testTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
+func testTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var tx txTest
 		if len(txBytes) == 0 {
@@ -448,7 +448,7 @@ func TestCheckTx(t *testing.T) {
 	app.InitChain(abci.RequestInitChain{})
 
 	// Create same codec used in txDecoder
-	codec := wire.NewCodec()
+	codec := codec.New()
 	registerTestCodec(codec)
 
 	for i := int64(0); i < nTxs; i++ {
@@ -489,7 +489,7 @@ func TestDeliverTx(t *testing.T) {
 	app := setupBaseApp(t, anteOpt, routerOpt)
 
 	// Create same codec used in txDecoder
-	codec := wire.NewCodec()
+	codec := codec.New()
 	registerTestCodec(codec)
 
 	nBlocks := 3
@@ -532,7 +532,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	app := setupBaseApp(t, anteOpt, routerOpt)
 
 	// Create same codec used in txDecoder
-	codec := wire.NewCodec()
+	codec := codec.New()
 	registerTestCodec(codec)
 
 	// run a multi-msg tx
@@ -613,8 +613,8 @@ func TestSimulateTx(t *testing.T) {
 	app.InitChain(abci.RequestInitChain{})
 
 	// Create same codec used in txDecoder
-	codec := wire.NewCodec()
-	registerTestCodec(codec)
+	cdc := codec.New()
+	registerTestCodec(cdc)
 
 	nBlocks := 3
 	for blockN := 0; blockN < nBlocks; blockN++ {
@@ -634,7 +634,7 @@ func TestSimulateTx(t *testing.T) {
 		require.Equal(t, gasConsumed, result.GasUsed)
 
 		// simulate by calling Query with encoded tx
-		txBytes, err := codec.MarshalBinary(tx)
+		txBytes, err := cdc.MarshalBinary(tx)
 		require.Nil(t, err)
 		query := abci.RequestQuery{
 			Path: "/app/simulate",
@@ -644,7 +644,7 @@ func TestSimulateTx(t *testing.T) {
 		require.True(t, queryResult.IsOK(), queryResult.Log)
 
 		var res sdk.Result
-		wire.Cdc.MustUnmarshalBinary(queryResult.Value, &res)
+		codec.Cdc.MustUnmarshalBinary(queryResult.Value, &res)
 		require.Nil(t, err, "Result unmarshalling failed")
 		require.True(t, res.IsOK(), res.Log)
 		require.Equal(t, gasConsumed, res.GasUsed, res.Log)
@@ -721,7 +721,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 		tx.Msgs = append(tx.Msgs, msgNoDecode{})
 
 		// new codec so we can encode the tx, but we shouldn't be able to decode
-		newCdc := wire.NewCodec()
+		newCdc := codec.New()
 		registerTestCodec(newCdc)
 		newCdc.RegisterConcrete(&msgNoDecode{}, "cosmos-sdk/baseapp/msgNoDecode", nil)
 

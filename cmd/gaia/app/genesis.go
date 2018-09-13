@@ -6,10 +6,10 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -92,7 +92,7 @@ type GaiaGenTx struct {
 
 // GaiaAppGenTx generates a Gaia genesis transaction.
 func GaiaAppGenTx(
-	cdc *wire.Codec, pk crypto.PubKey, genTxConfig config.GenTx,
+	cdc *codec.Codec, pk crypto.PubKey, genTxConfig config.GenTx,
 ) (appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 	if genTxConfig.Name == "" {
 		return nil, nil, tmtypes.GenesisValidator{}, errors.New("Must specify --name (validator moniker)")
@@ -136,7 +136,7 @@ func GaiaAppGenTx(
 }
 
 // Generate a gaia genesis transaction without flags
-func GaiaAppGenTxNF(cdc *wire.Codec, pk crypto.PubKey, addr sdk.AccAddress, name string) (
+func GaiaAppGenTxNF(cdc *codec.Codec, pk crypto.PubKey, addr sdk.AccAddress, name string) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
 	var bz []byte
@@ -145,7 +145,7 @@ func GaiaAppGenTxNF(cdc *wire.Codec, pk crypto.PubKey, addr sdk.AccAddress, name
 		Address: addr,
 		PubKey:  sdk.MustBech32ifyConsPub(pk),
 	}
-	bz, err = wire.MarshalJSONIndent(cdc, gaiaGenTx)
+	bz, err = codec.MarshalJSONIndent(cdc, gaiaGenTx)
 	if err != nil {
 		return
 	}
@@ -160,7 +160,7 @@ func GaiaAppGenTxNF(cdc *wire.Codec, pk crypto.PubKey, addr sdk.AccAddress, name
 
 // Create the core parameters for genesis initialization for gaia
 // note that the pubkey input is this machines pubkey
-func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState GenesisState, err error) {
+func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisState GenesisState, err error) {
 
 	if len(appGenTxs) == 0 {
 		err = errors.New("must provide at least genesis transaction")
@@ -280,13 +280,13 @@ func validateGenesisStateAccounts(accs []GenesisAccount) (err error) {
 }
 
 // GaiaAppGenState but with JSON
-func GaiaAppGenStateJSON(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
+func GaiaAppGenStateJSON(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
 
 	// create the final app state
 	genesisState, err := GaiaAppGenState(cdc, appGenTxs)
 	if err != nil {
 		return nil, err
 	}
-	appState, err = wire.MarshalJSONIndent(cdc, genesisState)
+	appState, err = codec.MarshalJSONIndent(cdc, genesisState)
 	return
 }

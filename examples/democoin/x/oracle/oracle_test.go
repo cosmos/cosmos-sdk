@@ -9,10 +9,10 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/mock"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 func defaultContext(keys ...sdk.StoreKey) sdk.Context {
@@ -39,8 +39,8 @@ func (o seqOracle) ValidateBasic() sdk.Error {
 	return nil
 }
 
-func makeCodec() *wire.Codec {
-	var cdc = wire.NewCodec()
+func makeCodec() *codec.Codec {
+	var cdc = codec.New()
 
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(Msg{}, "test/Oracle", nil)
@@ -79,7 +79,7 @@ func getSequence(ctx sdk.Context, key sdk.StoreKey) int {
 	if seqbz == nil {
 		seq = 0
 	} else {
-		wire.NewCodec().MustUnmarshalBinary(seqbz, &seq)
+		codec.New().MustUnmarshalBinary(seqbz, &seq)
 	}
 
 	return seq
@@ -93,7 +93,7 @@ func handleSeqOracle(ctx sdk.Context, key sdk.StoreKey, o seqOracle) sdk.Error {
 		return sdk.NewError(sdk.CodespaceRoot, 1, "")
 	}
 
-	bz := wire.NewCodec().MustMarshalBinary(seq + 1)
+	bz := codec.New().MustMarshalBinary(seq + 1)
 	store.Set([]byte("seq"), bz)
 
 	return nil

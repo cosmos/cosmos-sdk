@@ -12,8 +12,8 @@ import (
 
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/wire"
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
@@ -343,7 +343,7 @@ func (ctx CLIContext) verifyProof(path string, resp abci.ResponseQuery) error {
 	}
 
 	var multiStoreProof store.MultiStoreProof
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	err = cdc.UnmarshalBinary(resp.Proof, &multiStoreProof)
 	if err != nil {
 		return errors.Wrap(err, "failed to unmarshalBinary rangeProof")

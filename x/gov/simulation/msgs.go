@@ -156,7 +156,6 @@ func SimulateMsgVote(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 	return operationSimulateMsgVote(k, sk, nil, -1)
 }
 
-
 // nolint: unparam
 func operationSimulateMsgVote(k gov.Keeper, sk stake.Keeper, key crypto.PrivKey, proposalID int64) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {

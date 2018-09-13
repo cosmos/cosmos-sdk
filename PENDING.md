@@ -45,6 +45,7 @@ BREAKING CHANGES
     * [tools] Removed gocyclo [#2211](https://github.com/cosmos/cosmos-sdk/issues/2211)
     * [baseapp] Remove `SetTxDecoder` in favor of requiring the decoder be set in baseapp initialization. [#1441](https://github.com/cosmos/cosmos-sdk/issues/1441)
     * [store] Change storeInfo within the root multistore to use tmhash instead of ripemd160 \#2308
+    * [codec] \#2324 All referrences to wire have been renamed to codec. Additionally, wire.NewCodec is now codec.New().
 
 * Tendermint
 

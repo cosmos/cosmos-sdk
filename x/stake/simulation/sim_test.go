@@ -19,7 +19,7 @@ import (
 func TestStakeWithRandomMessages(t *testing.T) {
 	mapp := mock.NewApp()
 
-	bank.RegisterWire(mapp.Cdc)
+	bank.RegisterCodec(mapp.Cdc)
 	mapper := mapp.AccountMapper
 	bankKeeper := bank.NewBaseKeeper(mapper)
 	stakeKey := sdk.NewKVStoreKey("stake")

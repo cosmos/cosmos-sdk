@@ -10,8 +10,8 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
@@ -30,7 +30,7 @@ const (
 // Extended ABCI application
 type DemocoinApp struct {
 	*bam.BaseApp
-	cdc *wire.Codec
+	cdc *codec.Codec
 
 	// keys to access the substores
 	capKeyMainStore    *sdk.KVStoreKey
@@ -103,15 +103,15 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 }
 
 // custom tx codec
-func MakeCodec() *wire.Codec {
-	var cdc = wire.NewCodec()
-	wire.RegisterCrypto(cdc) // Register crypto.
-	sdk.RegisterWire(cdc)    // Register Msgs
-	cool.RegisterWire(cdc)
-	pow.RegisterWire(cdc)
-	bank.RegisterWire(cdc)
-	ibc.RegisterWire(cdc)
-	simplestake.RegisterWire(cdc)
+func MakeCodec() *codec.Codec {
+	var cdc = codec.New()
+	codec.RegisterCrypto(cdc) // Register crypto.
+	sdk.RegisterCodec(cdc)    // Register Msgs
+	cool.RegisterCodec(cdc)
+	pow.RegisterCodec(cdc)
+	bank.RegisterCodec(cdc)
+	ibc.RegisterCodec(cdc)
+	simplestake.RegisterCodec(cdc)
 
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
@@ -182,7 +182,7 @@ func (app *DemocoinApp) ExportAppStateAndValidators() (appState json.RawMessage,
 		POWGenesis:  pow.WriteGenesis(ctx, app.powKeeper),
 		CoolGenesis: cool.WriteGenesis(ctx, app.coolKeeper),
 	}
-	appState, err = wire.MarshalJSONIndent(app.cdc, genState)
+	appState, err = codec.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {
 		return nil, nil, err
 	}

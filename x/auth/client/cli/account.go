@@ -6,18 +6,18 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // GetAccountCmdDefault invokes the GetAccountCmd for the auth.BaseAccount type.
-func GetAccountCmdDefault(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetAccountCmdDefault(storeName string, cdc *codec.Codec) *cobra.Command {
 	return GetAccountCmd(storeName, cdc, GetAccountDecoder(cdc))
 }
 
 // GetAccountDecoder gets the account decoder for auth.DefaultAccount.
-func GetAccountDecoder(cdc *wire.Codec) auth.AccountDecoder {
+func GetAccountDecoder(cdc *codec.Codec) auth.AccountDecoder {
 	return func(accBytes []byte) (acct auth.Account, err error) {
 		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
 		if err != nil {
@@ -31,7 +31,7 @@ func GetAccountDecoder(cdc *wire.Codec) auth.AccountDecoder {
 // GetAccountCmd returns a query account that will display the state of the
 // account at a given address.
 // nolint: unparam
-func GetAccountCmd(storeName string, cdc *wire.Codec, decoder auth.AccountDecoder) *cobra.Command {
+func GetAccountCmd(storeName string, cdc *codec.Codec, decoder auth.AccountDecoder) *cobra.Command {
 	return &cobra.Command{
 		Use:   "account [address]",
 		Short: "Query account balance",
@@ -58,7 +58,7 @@ func GetAccountCmd(storeName string, cdc *wire.Codec, decoder auth.AccountDecode
 				return err
 			}
 
-			output, err := wire.MarshalJSONIndent(cdc, acc)
+			output, err := codec.MarshalJSONIndent(cdc, acc)
 			if err != nil {
 				return err
 			}

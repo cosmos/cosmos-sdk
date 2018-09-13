@@ -13,9 +13,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // init parameters
@@ -25,7 +25,7 @@ var CoolAppInit = server.AppInit{
 }
 
 // coolGenAppParams sets up the app_state and appends the cool app state
-func CoolAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
+func CoolAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
 	appState, err = server.SimpleAppGenState(cdc, appGenTxs)
 	if err != nil {
 		return

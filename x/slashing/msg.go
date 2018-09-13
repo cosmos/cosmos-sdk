@@ -1,11 +1,11 @@
 package slashing
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
-var cdc = wire.NewCodec()
+var cdc = codec.New()
 
 // name to identify transaction types
 const MsgType = "slashing"

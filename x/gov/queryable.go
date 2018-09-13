@@ -3,8 +3,8 @@ package gov
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -60,7 +60,7 @@ func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		return []byte{}, ErrUnknownProposal(DefaultCodespace, params.ProposalID)
 	}
 
-	bz, err2 := wire.MarshalJSONIndent(keeper.cdc, proposal)
+	bz, err2 := codec.MarshalJSONIndent(keeper.cdc, proposal)
 	if err2 != nil {
 		panic("could not marshal result to JSON")
 	}
@@ -82,7 +82,7 @@ func queryDeposit(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
 	}
 
 	deposit, _ := keeper.GetDeposit(ctx, params.ProposalID, params.Depositer)
-	bz, err2 := wire.MarshalJSONIndent(keeper.cdc, deposit)
+	bz, err2 := codec.MarshalJSONIndent(keeper.cdc, deposit)
 	if err2 != nil {
 		panic("could not marshal result to JSON")
 	}
@@ -104,7 +104,7 @@ func queryVote(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Kee
 	}
 
 	vote, _ := keeper.GetVote(ctx, params.ProposalID, params.Voter)
-	bz, err2 := wire.MarshalJSONIndent(keeper.cdc, vote)
+	bz, err2 := codec.MarshalJSONIndent(keeper.cdc, vote)
 	if err2 != nil {
 		panic("could not marshal result to JSON")
 	}
@@ -132,7 +132,7 @@ func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		deposits = append(deposits, deposit)
 	}
 
-	bz, err2 := wire.MarshalJSONIndent(keeper.cdc, deposits)
+	bz, err2 := codec.MarshalJSONIndent(keeper.cdc, deposits)
 	if err2 != nil {
 		panic("could not marshal result to JSON")
 	}
@@ -161,7 +161,7 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 		votes = append(votes, vote)
 	}
 
-	bz, err2 := wire.MarshalJSONIndent(keeper.cdc, votes)
+	bz, err2 := codec.MarshalJSONIndent(keeper.cdc, votes)
 	if err2 != nil {
 		panic("could not marshal result to JSON")
 	}
@@ -186,7 +186,7 @@ func queryProposals(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
 
 	proposals := keeper.GetProposalsFiltered(ctx, params.Voter, params.Depositer, params.ProposalStatus, params.NumLatestProposals)
 
-	bz, err2 := wire.MarshalJSONIndent(keeper.cdc, proposals)
+	bz, err2 := codec.MarshalJSONIndent(keeper.cdc, proposals)
 	if err2 != nil {
 		panic("could not marshal result to JSON")
 	}
@@ -223,7 +223,7 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 		_, tallyResult, _ = tally(ctx, keeper, proposal)
 	}
 
-	bz, err2 := wire.MarshalJSONIndent(keeper.cdc, tallyResult)
+	bz, err2 := codec.MarshalJSONIndent(keeper.cdc, tallyResult)
 	if err2 != nil {
 		panic("could not marshal result to JSON")
 	}

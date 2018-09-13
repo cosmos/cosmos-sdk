@@ -11,7 +11,7 @@ import (
 
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -30,7 +30,7 @@ var (
 const nodeDirPerm = 0755
 
 // get cmd to initialize all files for tendermint testnet and application
-func TestnetFilesCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
+func TestnetFilesCmd(ctx *Context, cdc *codec.Codec, appInit AppInit) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "testnet",
 		Short: "Initialize files for a Gaiad testnet",
@@ -65,7 +65,7 @@ Example:
 	return cmd
 }
 
-func testnetWithConfig(config *cfg.Config, cdc *wire.Codec, appInit AppInit) error {
+func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit AppInit) error {
 	outDir := viper.GetString(outputDir)
 	numValidators := viper.GetInt(nValidators)
 

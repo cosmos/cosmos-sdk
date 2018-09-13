@@ -3,7 +3,7 @@ package server
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -83,8 +83,8 @@ func ShowAddressCmd(ctx *Context) *cobra.Command {
 }
 
 func printlnJSON(v interface{}) error {
-	cdc := wire.NewCodec()
-	wire.RegisterCrypto(cdc)
+	cdc := codec.New()
+	codec.RegisterCrypto(cdc)
 	marshalled, err := cdc.MarshalJSON(v)
 	if err != nil {
 		return err

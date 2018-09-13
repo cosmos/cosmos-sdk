@@ -8,14 +8,14 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 // GetCmdQueryValidator implements the validator query command.
-func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryValidator(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validator [operator-addr]",
 		Short: "Query a validator",
@@ -48,7 +48,7 @@ func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 
 			case "json":
 				// parse out the validator
-				output, err := wire.MarshalJSONIndent(cdc, validator)
+				output, err := codec.MarshalJSONIndent(cdc, validator)
 				if err != nil {
 					return err
 				}
@@ -65,7 +65,7 @@ func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdQueryValidators implements the query all validators command.
-func GetCmdQueryValidators(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryValidators(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validators",
 		Short: "Query for all validators",
@@ -97,7 +97,7 @@ func GetCmdQueryValidators(storeName string, cdc *wire.Codec) *cobra.Command {
 					fmt.Println(resp)
 				}
 			case "json":
-				output, err := wire.MarshalJSONIndent(cdc, validators)
+				output, err := codec.MarshalJSONIndent(cdc, validators)
 				if err != nil {
 					return err
 				}
@@ -115,7 +115,7 @@ func GetCmdQueryValidators(storeName string, cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdQueryDelegation the query delegation command.
-func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryDelegation(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegation",
 		Short: "Query a delegation based on address and validator address",
@@ -153,7 +153,7 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 
 				fmt.Println(resp)
 			case "json":
-				output, err := wire.MarshalJSONIndent(cdc, delegation)
+				output, err := codec.MarshalJSONIndent(cdc, delegation)
 				if err != nil {
 					return err
 				}
@@ -174,7 +174,7 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 
 // GetCmdQueryDelegations implements the command to query all the delegations
 // made from one delegator.
-func GetCmdQueryDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryDelegations(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegations [delegator-addr]",
 		Short: "Query all delegations made from one delegator",
@@ -200,7 +200,7 @@ func GetCmdQueryDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 				delegations = append(delegations, delegation)
 			}
 
-			output, err := wire.MarshalJSONIndent(cdc, delegations)
+			output, err := codec.MarshalJSONIndent(cdc, delegations)
 			if err != nil {
 				return err
 			}
@@ -217,7 +217,7 @@ func GetCmdQueryDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 
 // GetCmdQueryUnbondingDelegation implements the command to query a single
 // unbonding-delegation record.
-func GetCmdQueryUnbondingDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryUnbondingDelegation(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbonding-delegation",
 		Short: "Query an unbonding-delegation record based on delegator and validator address",
@@ -252,7 +252,7 @@ func GetCmdQueryUnbondingDelegation(storeName string, cdc *wire.Codec) *cobra.Co
 
 				fmt.Println(resp)
 			case "json":
-				output, err := wire.MarshalJSONIndent(cdc, ubd)
+				output, err := codec.MarshalJSONIndent(cdc, ubd)
 				if err != nil {
 					return err
 				}
@@ -273,7 +273,7 @@ func GetCmdQueryUnbondingDelegation(storeName string, cdc *wire.Codec) *cobra.Co
 
 // GetCmdQueryUnbondingDelegations implements the command to query all the
 // unbonding-delegation records for a delegator.
-func GetCmdQueryUnbondingDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryUnbondingDelegations(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbonding-delegations [delegator-addr]",
 		Short: "Query all unbonding-delegations records for one delegator",
@@ -299,7 +299,7 @@ func GetCmdQueryUnbondingDelegations(storeName string, cdc *wire.Codec) *cobra.C
 				ubds = append(ubds, ubd)
 			}
 
-			output, err := wire.MarshalJSONIndent(cdc, ubds)
+			output, err := codec.MarshalJSONIndent(cdc, ubds)
 			if err != nil {
 				return err
 			}
@@ -316,7 +316,7 @@ func GetCmdQueryUnbondingDelegations(storeName string, cdc *wire.Codec) *cobra.C
 
 // GetCmdQueryRedelegation implements the command to query a single
 // redelegation record.
-func GetCmdQueryRedelegation(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryRedelegation(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegation",
 		Short: "Query a redelegation record based on delegator and a source and destination validator address",
@@ -356,7 +356,7 @@ func GetCmdQueryRedelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 
 				fmt.Println(resp)
 			case "json":
-				output, err := wire.MarshalJSONIndent(cdc, red)
+				output, err := codec.MarshalJSONIndent(cdc, red)
 				if err != nil {
 					return err
 				}
@@ -377,7 +377,7 @@ func GetCmdQueryRedelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 
 // GetCmdQueryRedelegations implements the command to query all the
 // redelegation records for a delegator.
-func GetCmdQueryRedelegations(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryRedelegations(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegations [delegator-addr]",
 		Short: "Query all redelegations records for one delegator",
@@ -403,7 +403,7 @@ func GetCmdQueryRedelegations(storeName string, cdc *wire.Codec) *cobra.Command 
 				reds = append(reds, red)
 			}
 
-			output, err := wire.MarshalJSONIndent(cdc, reds)
+			output, err := codec.MarshalJSONIndent(cdc, reds)
 			if err != nil {
 				return err
 			}
@@ -419,7 +419,7 @@ func GetCmdQueryRedelegations(storeName string, cdc *wire.Codec) *cobra.Command 
 }
 
 // GetCmdQueryPool implements the pool query command.
-func GetCmdQueryPool(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryPool(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pool",
 		Short: "Query the current staking pool values",
@@ -443,7 +443,7 @@ func GetCmdQueryPool(storeName string, cdc *wire.Codec) *cobra.Command {
 
 			case "json":
 				// parse out the pool
-				output, err := wire.MarshalJSONIndent(cdc, pool)
+				output, err := codec.MarshalJSONIndent(cdc, pool)
 				if err != nil {
 					return err
 				}
@@ -458,7 +458,7 @@ func GetCmdQueryPool(storeName string, cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdQueryPool implements the params query command.
-func GetCmdQueryParams(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryParams(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "parameters",
 		Short: "Query the current staking parameters information",
@@ -482,7 +482,7 @@ func GetCmdQueryParams(storeName string, cdc *wire.Codec) *cobra.Command {
 
 			case "json":
 				// parse out the params
-				output, err := wire.MarshalJSONIndent(cdc, params)
+				output, err := codec.MarshalJSONIndent(cdc, params)
 				if err != nil {
 					return err
 				}

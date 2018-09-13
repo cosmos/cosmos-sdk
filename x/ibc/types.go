@@ -3,16 +3,16 @@ package ibc
 import (
 	"encoding/json"
 
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
 var (
-	msgCdc *wire.Codec
+	msgCdc *codec.Codec
 )
 
 func init() {
-	msgCdc = wire.NewCodec()
+	msgCdc = codec.New()
 }
 
 // ------------------------------

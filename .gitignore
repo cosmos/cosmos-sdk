@@ -22,6 +22,7 @@ mytestnet
 # Testing
 coverage.txt
 profile.out
+cmd/gaia/app/simulation*.txt
 
 # Vagrant
 .vagrant/

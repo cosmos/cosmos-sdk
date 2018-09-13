@@ -32,7 +32,7 @@ func getMockApp(t *testing.T) *mock.App {
 
 	mapp.SetInitChainer(getInitChainer(mapp, keeper))
 
-	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyPOW}))
+	require.NoError(t, mapp.CompleteSetup(keyPOW))
 
 	mapp.Seal()
 

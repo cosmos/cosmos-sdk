@@ -115,7 +115,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
 
 		logger.Info(
-			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %v steak (had only %s steak); deleted",
+			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %v steak (had only %v steak); deleted",
 				inactiveProposal.GetProposalID(),
 				inactiveProposal.GetTitle(),
 				keeper.GetDepositProcedure(ctx).MinDeposit.AmountOf("steak"),

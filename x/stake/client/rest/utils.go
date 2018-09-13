@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/stake/tags"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 )

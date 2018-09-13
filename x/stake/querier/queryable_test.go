@@ -3,8 +3,8 @@ package querier
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	keep "github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 	"github.com/stretchr/testify/require"
@@ -37,7 +37,7 @@ func newTestBondQuery(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress
 }
 
 func TestQueryParametersPool(t *testing.T) {
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 
 	res, err := queryParameters(ctx, cdc, keeper)
@@ -58,7 +58,7 @@ func TestQueryParametersPool(t *testing.T) {
 }
 
 func TestQueryValidators(t *testing.T) {
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	ctx, _, keeper := keep.CreateTestInput(t, false, 10000)
 	pool := keeper.GetPool(ctx)
 	params := keeper.GetParams(ctx)
@@ -107,7 +107,7 @@ func TestQueryValidators(t *testing.T) {
 }
 
 func TestQueryDelegation(t *testing.T) {
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	ctx, _, keeper := keep.CreateTestInput(t, false, 10000)
 	params := keeper.GetParams(ctx)
 

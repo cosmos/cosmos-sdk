@@ -200,7 +200,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 }
 
 // HTTP request handler to query an unbonding-delegation
-func unbondingDelegationHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc {
+func unbondingDelegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32delegator := vars["delegatorAddr"]

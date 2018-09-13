@@ -438,15 +438,13 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 
 	srcVal, found := k.GetValidator(ctx, valSrcAddr)
-	if !found {
-		return types.ErrBadRedelegationSrc(k.Codespace())
-	}
-
-	// Do not allow a redelegation that would result in a bonded source validator
-	// having rounded zero power as that would signal an update to Tendermint to
-	// remove it from the validator set.
-	if !validRedelegationSrc(srcVal) {
-		return types.ErrBadRedelegationSrcPower(k.Codespace())
+	if found {
+		// Do not allow a redelegation that would result in a bonded source validator
+		// having rounded zero power as that would signal an update to Tendermint to
+		// remove it from the validator set.
+		if !validRedelegationSrc(srcVal) {
+			return types.ErrBadRedelegationSrcPower(k.Codespace())
+		}
 	}
 
 	params := k.GetParams(ctx)

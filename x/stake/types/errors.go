@@ -135,10 +135,6 @@ func ErrNoRedelegation(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "no redelegation found")
 }
 
-func ErrBadRedelegationSrc(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "redelegation source validator not found")
-}
-
 func ErrBadRedelegationSrcPower(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "redelegation results in source validator with rounded zero power")
 }

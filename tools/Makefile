@@ -93,6 +93,7 @@ ifdef STATIK_CHECK
 	@echo "Statik is already installed.  Run 'make update_tools' to update."
 else
 	@echo "Installing statik"
+	go version
 	go get -v $(STATIK)
 endif
 

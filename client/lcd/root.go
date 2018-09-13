@@ -107,7 +107,7 @@ func ServeLiteCommand(cdc *wire.Codec) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "lite-server",
-		Short: "Start Gaia-lite server daemon, a local REST server with swagger-ui, default url: http//localhost:1317/swaggerui/",
+		Short: "Start Gaia-lite server daemon, a local REST server with swagger-ui, default url: http://localhost:1317/swagger-ui/",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			listenAddr := viper.GetString(flagListenAddr)
 			router := createLiteHandler(cdc)
@@ -117,7 +117,7 @@ func ServeLiteCommand(cdc *wire.Codec) *cobra.Command {
 				panic(err)
 			}
 			staticServer := http.FileServer(statikFS)
-			router.PathPrefix("/swaggerui/").Handler(http.StripPrefix("/swaggerui/", staticServer))
+			router.PathPrefix("/swagger-ui/").Handler(http.StripPrefix("/swagger-ui/", staticServer))
 
 			logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "lite-server")
 			maxOpen := viper.GetInt(flagMaxOpenConnections)

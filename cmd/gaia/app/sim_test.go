@@ -209,9 +209,9 @@ func TestAppStateDeterminism(t *testing.T) {
 				[]simulation.Invariant{},
 				50,
 				100,
-				false,
+				true,
 			)
-			app.Commit()
+			//app.Commit()
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
 		}

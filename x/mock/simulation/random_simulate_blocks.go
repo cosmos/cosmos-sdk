@@ -24,10 +24,11 @@ import (
 )
 
 // Simulate tests application by sending random messages.
-func Simulate(
-	t *testing.T, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, ops []WeightedOperation, setups []RandSetup,
-	invariants []Invariant, numBlocks int, blockSize int, commit bool,
-) error {
+func Simulate(t *testing.T, app *baseapp.BaseApp,
+	appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage,
+	ops []WeightedOperation, setups []RandSetup,
+	invariants []Invariant, numBlocks int, blockSize int, commit bool) error {
+
 	time := time.Now().UnixNano()
 	return SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numBlocks, blockSize, commit)
 }
@@ -54,10 +55,11 @@ func randTimestamp(r *rand.Rand) time.Time {
 
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
-func SimulateFromSeed(
-	tb testing.TB, app *baseapp.BaseApp, appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage, seed int64, ops []WeightedOperation, setups []RandSetup,
-	invariants []Invariant, numBlocks int, blockSize int, commit bool,
-) (simError error) {
+func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
+	appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage,
+	seed int64, ops []WeightedOperation, setups []RandSetup, invariants []Invariant,
+	numBlocks int, blockSize int, commit bool) (simError error) {
+
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	stopEarly := false
 	testingMode, t, b := getTestingMode(tb)

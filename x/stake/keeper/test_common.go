@@ -90,10 +90,12 @@ func ParamsNoInflation() types.Params {
 func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountMapper, Keeper) {
 
 	keyStake := sdk.NewKVStoreKey("stake")
+	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
 	keyAcc := sdk.NewKVStoreKey("acc")
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
+	ms.MountStoreWithDB(tkeyStake, sdk.StoreTypeTransient, nil)
 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
@@ -107,7 +109,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 		auth.ProtoBaseAccount, // prototype
 	)
 	ck := bank.NewBaseKeeper(accountMapper)
-	keeper := NewKeeper(cdc, keyStake, ck, types.DefaultCodespace)
+	keeper := NewKeeper(cdc, keyStake, tkeyStake, ck, types.DefaultCodespace)
 	keeper.SetPool(ctx, types.InitialPool())
 	keeper.SetNewParams(ctx, types.DefaultParams())
 	keeper.InitIntraTxCounter(ctx)

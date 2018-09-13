@@ -21,7 +21,8 @@ type BroadcastBody struct {
 	Return      string `json:"return"`
 }
 
-// BroadcastTx REST Handler
+// BroadcastTxRequestHandlerFn REST Handler
+// nolint: gocyclo
 func BroadcastTxRequestHandlerFn(cdc *wire.Codec, ctx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var txBody BroadcastBody

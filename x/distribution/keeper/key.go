@@ -6,9 +6,12 @@ import (
 
 // keys/key-prefixes
 var (
-	GlobalKey            = []byte{0x00} // key for global distribution state
+	FeePoolKey           = []byte{0x00} // key for global distribution state
 	ValidatorDistInfoKey = []byte{0x01} // prefix for each key to a validator distribution
 	DelegatorDistInfoKey = []byte{0x02} // prefix for each key to a delegation distribution
+
+	// transient
+	ProposerKey = []byte{0x00} // key for storing the proposer operator address
 )
 
 // gets the key for the validator distribution info from address

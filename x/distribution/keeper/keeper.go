@@ -9,6 +9,7 @@ import (
 // keeper of the stake store
 type Keeper struct {
 	storeKey    sdk.StoreKey
+	storeTKey   sdk.StoreKey
 	cdc         *wire.Codec
 	coinKeeper  types.CoinKeeper
 	stakeKeeper types.StakeKeeper
@@ -17,11 +18,12 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck types.CoinKeeper,
+func NewKeeper(cdc *wire.Codec, key, tkey sdk.StoreKey, ck types.CoinKeeper,
 	sk types.StakeKeeper, codespace sdk.CodespaceType) Keeper {
 
 	keeper := Keeper{
 		storeKey:   key,
+		storeTKey:  tkey,
 		cdc:        cdc,
 		coinKeeper: ck,
 		codespace:  codespace,
@@ -35,7 +37,7 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck types.CoinKeeper,
 func (k Keeper) GetFeePool(ctx sdk.Context) (feePool types.FeePool) {
 	store := ctx.KVStore(k.storeKey)
 
-	b := store.Get(GlobalKey)
+	b := store.Get(FeePoolKey)
 	if b == nil {
 		panic("Stored fee pool should not have been nil")
 	}
@@ -48,5 +50,14 @@ func (k Keeper) GetFeePool(ctx sdk.Context) (feePool types.FeePool) {
 func (k Keeper) SetFeePool(ctx sdk.Context, feePool types.FeePool) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(feePool)
-	store.Set(GlobalKey, b)
+	store.Set(FeePoolKey, b)
+}
+
+//______________________________________________________________________
+
+// set the global fee pool distribution info
+func (k Keeper) GetFeePool(ctx sdk.Context, proposerPK sdk.PubKey) {
+	store := ctx.KVStore(k.storeKey)
+	b := k.cdc.MustMarshalBinary(proposerPK)
+	store.Set(ProposerKey, b)
 }

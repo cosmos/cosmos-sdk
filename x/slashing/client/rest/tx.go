@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 
 	"github.com/gorilla/mux"
@@ -70,36 +70,39 @@ func unjailRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLI
 			return
 		}
 
-		txCtx := authctx.TxContext{
+		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, client.DefaultGasAdjustment)
+		if !ok {
+			return
+		}
+		txBldr := authtxb.TxBuilder{
 			Codec:         cdc,
 			ChainID:       m.ChainID,
 			AccountNumber: m.AccountNumber,
 			Sequence:      m.Sequence,
 			Gas:           m.Gas,
+			GasAdjustment: adjustment,
 		}
 
 		msg := slashing.NewMsgUnjail(valAddr)
-
-		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, client.DefaultGasAdjustment)
-		if !ok {
-			return
-		}
-		cliCtx = cliCtx.WithGasAdjustment(adjustment)
-
 		if utils.HasDryRunArg(r) || m.Gas == 0 {
-			newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
+			newCtx, err := utils.EnrichCtxWithGas(txBldr, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 			if utils.HasDryRunArg(r) {
-				utils.WriteSimulationResponse(w, txCtx.Gas)
+				utils.WriteSimulationResponse(w, txBldr.Gas)
 				return
 			}
-			txCtx = newCtx
+			txBldr = newCtx
 		}
 
-		txBytes, err := txCtx.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
+		if utils.HasGenerateOnlyArg(r) {
+			utils.WriteGenerateStdTxResponse(w, txBldr, []sdk.Msg{msg})
+			return
+		}
+
+		txBytes, err := txBldr.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusUnauthorized, "Must use own validator address")
 			return

@@ -52,8 +52,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 	k.SetIntraTxCounter(ctx, 0)
 
 	// calculate validator set changes
-	ValidatorUpdates = k.GetTendermintUpdates(ctx)
-	k.ClearTendermintUpdates(ctx)
+	ValidatorUpdates = k.GetValidTendermintUpdates(ctx)
 	return
 }
 
@@ -138,7 +137,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
-	if validator.Jailed && !bytes.Equal(validator.Operator, msg.DelegatorAddr) {
+	if validator.Jailed && !bytes.Equal(validator.OperatorAddr, msg.DelegatorAddr) {
 		return ErrValidatorJailed(k.Codespace()).Result()
 	}
 

@@ -29,8 +29,8 @@ var (
 )
 
 // make a tree and save it
-func newTree(t *testing.T, db dbm.DB) (*iavl.VersionedTree, CommitID) {
-	tree := iavl.NewVersionedTree(db, cacheSize)
+func newTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, CommitID) {
+	tree := iavl.NewMutableTree(db, cacheSize)
 	for k, v := range treeData {
 		tree.Set([]byte(k), []byte(v))
 	}
@@ -325,7 +325,7 @@ type pruneState struct {
 
 func testPruning(t *testing.T, numRecent int64, storeEvery int64, states []pruneState) {
 	db := dbm.NewMemDB()
-	tree := iavl.NewVersionedTree(db, cacheSize)
+	tree := iavl.NewMutableTree(db, cacheSize)
 	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
 	for step, state := range states {
 		for _, ver := range state.stored {
@@ -344,7 +344,7 @@ func testPruning(t *testing.T, numRecent int64, storeEvery int64, states []prune
 
 func TestIAVLNoPrune(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree := iavl.NewVersionedTree(db, cacheSize)
+	tree := iavl.NewMutableTree(db, cacheSize)
 	iavlStore := newIAVLStore(tree, numRecent, int64(1))
 	nextVersion(iavlStore)
 	for i := 1; i < 100; i++ {
@@ -359,7 +359,7 @@ func TestIAVLNoPrune(t *testing.T) {
 
 func TestIAVLPruneEverything(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree := iavl.NewVersionedTree(db, cacheSize)
+	tree := iavl.NewMutableTree(db, cacheSize)
 	iavlStore := newIAVLStore(tree, int64(0), int64(0))
 	nextVersion(iavlStore)
 	for i := 1; i < 100; i++ {
@@ -377,7 +377,7 @@ func TestIAVLPruneEverything(t *testing.T) {
 
 func TestIAVLStoreQuery(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree := iavl.NewVersionedTree(db, cacheSize)
+	tree := iavl.NewMutableTree(db, cacheSize)
 	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
 
 	k1, v1 := []byte("key1"), []byte("val1")
@@ -468,7 +468,7 @@ func TestIAVLStoreQuery(t *testing.T) {
 func BenchmarkIAVLIteratorNext(b *testing.B) {
 	db := dbm.NewMemDB()
 	treeSize := 1000
-	tree := iavl.NewVersionedTree(db, cacheSize)
+	tree := iavl.NewMutableTree(db, cacheSize)
 	for i := 0; i < treeSize; i++ {
 		key := cmn.RandBytes(4)
 		value := cmn.RandBytes(50)

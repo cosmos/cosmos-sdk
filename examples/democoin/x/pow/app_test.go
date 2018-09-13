@@ -25,14 +25,14 @@ func getMockApp(t *testing.T) *mock.App {
 
 	RegisterWire(mapp.Cdc)
 	keyPOW := sdk.NewKVStoreKey("pow")
-	coinKeeper := bank.NewKeeper(mapp.AccountMapper)
+	bankKeeper := bank.NewBaseKeeper(mapp.AccountMapper)
 	config := Config{"pow", 1}
-	keeper := NewKeeper(keyPOW, config, coinKeeper, mapp.RegisterCodespace(DefaultCodespace))
+	keeper := NewKeeper(keyPOW, config, bankKeeper, mapp.RegisterCodespace(DefaultCodespace))
 	mapp.Router().AddRoute("pow", keeper.Handler)
 
 	mapp.SetInitChainer(getInitChainer(mapp, keeper))
 
-	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyPOW}))
+	require.NoError(t, mapp.CompleteSetup(keyPOW))
 
 	mapp.Seal()
 

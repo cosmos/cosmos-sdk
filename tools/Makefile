@@ -23,8 +23,9 @@ INEFFASSIGN_CHECK := $(shell command -v ineffassign 2> /dev/null)
 MISSPELL_CHECK := $(shell command -v misspell 2> /dev/null)
 ERRCHECK_CHECK := $(shell command -v errcheck 2> /dev/null)
 UNPARAM_CHECK := $(shell command -v unparam 2> /dev/null)
-GOCYCLO_CHECK := $(shell command -v gocyclo 2> /dev/null)
+# GOCYCLO_CHECK := $(shell command -v gocyclo 2> /dev/null)
 STATIK_CHECK := $(shell command -v statik 2> /dev/null)
+
 
 check_tools:
 ifndef DEP_CHECK
@@ -139,12 +140,12 @@ else
 	@echo "Installing unparam"
 	go get -v $(UNPARAM)
 endif
-ifdef GOCYCLO_CHECK
-	@echo "gocyclo is already installed.  Run 'make update_tools' to update."
-else
-	@echo "Installing gocyclo"
-	go get -v $(GOCYCLO)
-endif
+# ifdef GOCYCLO_CHECK
+# 	@echo "gocyclo is already installed.  Run 'make update_tools' to update."
+# else
+# 	@echo "Installing gocyclo"
+# 	go get -v $(GOCYCLO)
+# endif
 ifdef STATIK_CHECK
 	@echo "statik is already installed.  Run 'make update_tools' to update."
 else
@@ -172,8 +173,8 @@ update_dev_tools:
 	go get -u -v $(ERRCHECK)
 	@echo "Updating unparam"
 	go get -u -v $(UNPARAM)
-	@echo "Updating goyclo"
-	go get -u -v $(GOCYCLO)
+	# @echo "Updating goyclo"
+	# go get -u -v $(GOCYCLO)
 	@echo "Updating statik"
 	go get -u -v $(STATIK)
 

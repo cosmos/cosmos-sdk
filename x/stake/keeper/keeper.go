@@ -11,19 +11,21 @@ import (
 // keeper of the stake store
 type Keeper struct {
 	storeKey       sdk.StoreKey
+	storeTKey      sdk.StoreKey
 	cdc            *wire.Codec
-	coinKeeper     bank.Keeper
+	bankKeeper     bank.Keeper
 	validatorHooks sdk.ValidatorHooks
 
 	// codespace
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *wire.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:       key,
+		storeTKey:      tkey,
 		cdc:            cdc,
-		coinKeeper:     ck,
+		bankKeeper:     ck,
 		validatorHooks: nil,
 		codespace:      codespace,
 	}

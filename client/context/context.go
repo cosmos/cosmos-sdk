@@ -3,10 +3,11 @@ package context
 import (
 	"bytes"
 	"fmt"
+	"io"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"io"
 
 	"github.com/spf13/viper"
 
@@ -26,8 +27,6 @@ type CLIContext struct {
 	Client          rpcclient.Client
 	Logger          io.Writer
 	Height          int64
-	Gas             int64
-	GasAdjustment   float64
 	NodeURI         string
 	FromAddressName string
 	AccountStore    string
@@ -38,6 +37,7 @@ type CLIContext struct {
 	PrintResponse   bool
 	Certifier       tmlite.Certifier
 	DryRun          bool
+	GenerateOnly    bool
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
@@ -56,8 +56,6 @@ func NewCLIContext() CLIContext {
 		AccountStore:    ctxAccStoreName,
 		FromAddressName: viper.GetString(client.FlagFrom),
 		Height:          viper.GetInt64(client.FlagHeight),
-		Gas:             viper.GetInt64(client.FlagGas),
-		GasAdjustment:   viper.GetFloat64(client.FlagGasAdjustment),
 		TrustNode:       viper.GetBool(client.FlagTrustNode),
 		UseLedger:       viper.GetBool(client.FlagUseLedger),
 		Async:           viper.GetBool(client.FlagAsync),
@@ -65,6 +63,7 @@ func NewCLIContext() CLIContext {
 		PrintResponse:   viper.GetBool(client.FlagPrintResponse),
 		Certifier:       createCertifier(),
 		DryRun:          viper.GetBool(client.FlagDryRun),
+		GenerateOnly:    viper.GetBool(client.FlagGenerateOnly),
 	}
 }
 
@@ -159,11 +158,5 @@ func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 // WithCertifier - return a copy of the context with an updated Certifier
 func (ctx CLIContext) WithCertifier(certifier tmlite.Certifier) CLIContext {
 	ctx.Certifier = certifier
-	return ctx
-}
-
-// WithGasAdjustment returns a copy of the context with an updated GasAdjustment flag.
-func (ctx CLIContext) WithGasAdjustment(adjustment float64) CLIContext {
-	ctx.GasAdjustment = adjustment
 	return ctx
 }

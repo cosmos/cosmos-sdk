@@ -253,7 +253,7 @@ first time.
 
 Accounts are serialized and stored in a Merkle tree under the key
 ``base/a/<address>``, where ``<address>`` is the address of the account.
-Typically, the address of the account is the 20-byte ``RIPEMD160`` hash
+Typically, the address of the account is the first 20-bytes of the ``sha256`` hash
 of the public key, but other formats are acceptable as well, as defined
 in the `Tendermint crypto
 library <https://github.com/tendermint/tendermint/tree/master/crypto>`__. The Merkle tree

@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	authcliCtx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/gorilla/mux"
@@ -60,7 +60,7 @@ type EditDelegationsBody struct {
 	ChainID             string                       `json:"chain_id"`
 	AccountNumber       int64                        `json:"account_number"`
 	Sequence            int64                        `json:"sequence"`
-	Gas                 int64                        `json:"gas"`
+	Gas                 string                       `json:"gas"`
 	GasAdjustment       string                       `json:"gas_adjustment"`
 	Delegations         []msgDelegationsInput        `json:"delegations"`
 	BeginUnbondings     []msgBeginUnbondingInput     `json:"begin_unbondings"`
@@ -263,41 +263,50 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 			i++
 		}
 
-		txCtx := authcliCtx.TxContext{
-			Codec:   cdc,
-			ChainID: m.ChainID,
-			Gas:     m.Gas,
+		simulateGas, gas, err := client.ReadGasFlag(m.Gas)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, client.DefaultGasAdjustment)
+		if !ok {
+			return
+		}
+		txBldr := authtxb.TxBuilder{
+			Codec:         cdc,
+			Gas:           gas,
+			GasAdjustment: adjustment,
+			SimulateGas:   simulateGas,
+			ChainID:       m.ChainID,
 		}
 
 		// sign messages
 		signedTxs := make([][]byte, len(messages[:]))
 		for i, msg := range messages {
 			// increment sequence for each message
-			txCtx = txCtx.WithAccountNumber(m.AccountNumber)
-			txCtx = txCtx.WithSequence(m.Sequence)
-
+			txBldr = txBldr.WithAccountNumber(m.AccountNumber)
+			txBldr = txBldr.WithSequence(m.Sequence)
 			m.Sequence++
 
-			adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, client.DefaultGasAdjustment)
-			if !ok {
-				return
-			}
-			cliCtx = cliCtx.WithGasAdjustment(adjustment)
-
-			if utils.HasDryRunArg(r) || m.Gas == 0 {
-				newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
+			if utils.HasDryRunArg(r) || txBldr.SimulateGas {
+				newBldr, err := utils.EnrichCtxWithGas(txBldr, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
 				if err != nil {
 					utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 					return
 				}
 				if utils.HasDryRunArg(r) {
-					utils.WriteSimulationResponse(w, txCtx.Gas)
+					utils.WriteSimulationResponse(w, newBldr.Gas)
 					return
 				}
-				txCtx = newCtx
+				txBldr = newBldr
 			}
 
-			txBytes, err := txCtx.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
+			if utils.HasGenerateOnlyArg(r) {
+				utils.WriteGenerateStdTxResponse(w, txBldr, []sdk.Msg{msg})
+				return
+			}
+
+			txBytes, err := txBldr.BuildAndSign(m.LocalAccountName, m.Password, []sdk.Msg{msg})
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 				return

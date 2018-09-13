@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
 type baseReq struct {
@@ -20,7 +20,7 @@ type baseReq struct {
 	ChainID       string `json:"chain_id"`
 	AccountNumber int64  `json:"account_number"`
 	Sequence      int64  `json:"sequence"`
-	Gas           int64  `json:"gas"`
+	Gas           string `json:"gas"`
 	GasAdjustment string `json:"gas_adjustment"`
 }
 
@@ -69,34 +69,45 @@ func (req baseReq) baseReqValidate(w http.ResponseWriter) bool {
 // TODO: Build this function out into a more generic base-request
 // (probably should live in client/lcd).
 func signAndBuild(w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext, baseReq baseReq, msg sdk.Msg, cdc *wire.Codec) {
-	var err error
-	txCtx := authctx.TxContext{
-		Codec:         cdc,
-		AccountNumber: baseReq.AccountNumber,
-		Sequence:      baseReq.Sequence,
-		ChainID:       baseReq.ChainID,
-		Gas:           baseReq.Gas,
+	simulateGas, gas, err := client.ReadGasFlag(baseReq.Gas)
+	if err != nil {
+		utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
 	if !ok {
 		return
 	}
-	cliCtx = cliCtx.WithGasAdjustment(adjustment)
+	txBldr := authtxb.TxBuilder{
+		Codec:         cdc,
+		Gas:           gas,
+		GasAdjustment: adjustment,
+		SimulateGas:   simulateGas,
+		ChainID:       baseReq.ChainID,
+		AccountNumber: baseReq.AccountNumber,
+		Sequence:      baseReq.Sequence,
+	}
 
-	if utils.HasDryRunArg(r) || baseReq.Gas == 0 {
-		newCtx, err := utils.EnrichCtxWithGas(txCtx, cliCtx, baseReq.Name, []sdk.Msg{msg})
+	if utils.HasDryRunArg(r) || txBldr.SimulateGas {
+		newBldr, err := utils.EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, []sdk.Msg{msg})
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 		if utils.HasDryRunArg(r) {
-			utils.WriteSimulationResponse(w, txCtx.Gas)
+			utils.WriteSimulationResponse(w, newBldr.Gas)
 			return
 		}
-		txCtx = newCtx
+		txBldr = newBldr
 	}
-	txBytes, err := txCtx.BuildAndSign(baseReq.Name, baseReq.Password, []sdk.Msg{msg})
+
+	if utils.HasGenerateOnlyArg(r) {
+		utils.WriteGenerateStdTxResponse(w, txBldr, []sdk.Msg{msg})
+		return
+	}
+
+	txBytes, err := txBldr.BuildAndSign(baseReq.Name, baseReq.Password, []sdk.Msg{msg})
 	if err != nil {
 		utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return

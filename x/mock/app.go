@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"fmt"
 	"math/rand"
 	"os"
 
@@ -75,17 +76,28 @@ func NewApp() *App {
 
 // CompleteSetup completes the application setup after the routes have been
 // registered.
-func (app *App) CompleteSetup(newKeys []*sdk.KVStoreKey) error {
+func (app *App) CompleteSetup(newKeys ...sdk.StoreKey) error {
 	newKeys = append(newKeys, app.KeyMain)
 	newKeys = append(newKeys, app.KeyAccount)
 
-	app.MountStoresIAVL(newKeys...)
+	for _, key := range newKeys {
+		switch key.(type) {
+		case *sdk.KVStoreKey:
+			app.MountStore(key, sdk.StoreTypeIAVL)
+		case *sdk.TransientStoreKey:
+			app.MountStore(key, sdk.StoreTypeTransient)
+		default:
+			return fmt.Errorf("unsupported StoreKey: %+v", key)
+		}
+	}
+
 	err := app.LoadLatestVersion(app.KeyMain)
 
 	return err
 }
 
 // InitChainer performs custom logic for initialization.
+// nolint: errcheck
 func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.ResponseInitChain {
 	// Load the genesis accounts
 	for _, genacc := range app.GenesisAccounts {
@@ -207,6 +219,7 @@ func GeneratePrivKeyAddressPairsFromRand(rand *rand.Rand, n int) (keys []crypto.
 
 // RandomSetGenesis set genesis accounts with random coin values using the
 // provided addresses and coin denominations.
+// nolint: errcheck
 func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []string) {
 	accts := make([]auth.Account, len(addrs), len(addrs))
 	randCoinIntervals := []BigInterval{

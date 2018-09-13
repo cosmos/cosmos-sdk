@@ -23,6 +23,7 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey) Keeper {
 }
 
 // InitKeeper constructs a new Keeper with initial parameters
+// nolint: errcheck
 func InitKeeper(ctx sdk.Context, cdc *wire.Codec, key sdk.StoreKey, params ...interface{}) Keeper {
 	if len(params)%2 != 0 {
 		panic("Odd params list length for InitKeeper")

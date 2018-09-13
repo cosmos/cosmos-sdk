@@ -26,6 +26,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -207,8 +208,8 @@ func TestValidators(t *testing.T) {
 
 	require.NotEqual(t, rpc.ResultValidatorsOutput{}, resultVals)
 
-	require.Contains(t, resultVals.Validators[0].Address.String(), "cosmosval")
-	require.Contains(t, resultVals.Validators[0].PubKey, "cosmosconspub")
+	require.Contains(t, resultVals.Validators[0].Address.String(), "cosmosvaloper")
+	require.Contains(t, resultVals.Validators[0].PubKey, "cosmosvalconspub")
 
 	// --
 
@@ -268,21 +269,29 @@ func TestCoinSend(t *testing.T) {
 	require.Equal(t, int64(1), mycoins.Amount.Int64())
 
 	// test failure with too little gas
-	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, 100, 0, "")
+	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, "100", 0, "")
+	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
+
+	// test failure with negative gas
+	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, "-200", 0, "")
+	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
+
+	// test failure with 0 gas
+	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, "0", 0, "")
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
 	// test failure with wrong adjustment
-	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, 0, 0.1, "")
+	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, "simulate", 0.1, "")
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
 	// run simulation and test success with estimated gas
-	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, 0, 0, "?simulate=true")
+	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, "", 0, "?simulate=true")
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var responseBody struct {
 		GasEstimate int64 `json:"gas_estimate"`
 	}
 	require.Nil(t, json.Unmarshal([]byte(body), &responseBody))
-	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, responseBody.GasEstimate, 0, "")
+	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, fmt.Sprintf("%v", responseBody.GasEstimate), 0, "")
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 }
 
@@ -313,6 +322,65 @@ func TestIBCTransfer(t *testing.T) {
 	require.Equal(t, initialBalance[0].Amount.SubRaw(1), mycoins.Amount)
 
 	// TODO: query ibc egress packet state
+}
+
+func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
+	name, password := "test", "1234567890"
+	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
+	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	defer cleanup()
+	acc := getAccount(t, port, addr)
+
+	// generate TX
+	res, body, _ := doSendWithGas(t, port, seed, name, password, addr, "simulate", 0, "?generate_only=true")
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var msg auth.StdTx
+	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &msg))
+	require.Equal(t, len(msg.Msgs), 1)
+	require.Equal(t, msg.Msgs[0].Type(), "bank")
+	require.Equal(t, msg.Msgs[0].GetSigners(), []sdk.AccAddress{addr})
+	require.Equal(t, 0, len(msg.Signatures))
+	gasEstimate := msg.Fee.Gas
+
+	// sign tx
+	var signedMsg auth.StdTx
+	accnum := acc.GetAccountNumber()
+	sequence := acc.GetSequence()
+
+	payload := authrest.SignBody{
+		Tx:               msg,
+		LocalAccountName: name,
+		Password:         password,
+		ChainID:          viper.GetString(client.FlagChainID),
+		AccountNumber:    accnum,
+		Sequence:         sequence,
+	}
+	json, err := cdc.MarshalJSON(payload)
+	require.Nil(t, err)
+	res, body = Request(t, port, "POST", "/tx/sign", json)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &signedMsg))
+	require.Equal(t, len(msg.Msgs), len(signedMsg.Msgs))
+	require.Equal(t, msg.Msgs[0].Type(), signedMsg.Msgs[0].Type())
+	require.Equal(t, msg.Msgs[0].GetSigners(), signedMsg.Msgs[0].GetSigners())
+	require.Equal(t, 1, len(signedMsg.Signatures))
+
+	// broadcast tx
+	broadcastPayload := struct {
+		Tx auth.StdTx `json:"tx"`
+	}{Tx: signedMsg}
+	json, err = cdc.MarshalJSON(broadcastPayload)
+	require.Nil(t, err)
+	res, body = Request(t, port, "POST", "/tx/broadcast", json)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	// check if tx was committed
+	var resultTx ctypes.ResultBroadcastTxCommit
+	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &resultTx))
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, gasEstimate, resultTx.DeliverTx.GasWanted)
+	require.Equal(t, gasEstimate, resultTx.DeliverTx.GasUsed)
 }
 
 func TestTxs(t *testing.T) {
@@ -420,11 +488,12 @@ func TestValidatorsQuery(t *testing.T) {
 
 	// make sure all the validators were found (order unknown because sorted by operator addr)
 	foundVal := false
-	pkBech := sdk.MustBech32ifyConsPub(pks[0])
-	if validators[0].PubKey == pkBech {
+
+	if validators[0].ConsPubKey == pks[0] {
 		foundVal = true
 	}
-	require.True(t, foundVal, "pkBech %v, operator %v", pkBech, validators[0].Operator)
+
+	require.True(t, foundVal, "pk %v, operator %v", pks[0], validators[0].OperatorAddr)
 }
 
 func TestValidatorQuery(t *testing.T) {
@@ -434,7 +503,7 @@ func TestValidatorQuery(t *testing.T) {
 
 	validator1Operator := sdk.ValAddress(pks[0].Address())
 	validator := getValidator(t, port, validator1Operator)
-	assert.Equal(t, validator.Operator, validator1Operator, "The returned validator does not hold the correct data")
+	assert.Equal(t, validator.OperatorAddr, validator1Operator, "The returned validator does not hold the correct data")
 }
 
 func TestBonding(t *testing.T) {
@@ -470,11 +539,11 @@ func TestBonding(t *testing.T) {
 
 	bondedValidators := getDelegatorValidators(t, port, addr)
 	require.Len(t, bondedValidators, 1)
-	require.Equal(t, validator1Operator, bondedValidators[0].Operator)
+	require.Equal(t, validator1Operator, bondedValidators[0].OperatorAddr)
 	require.Equal(t, validator.DelegatorShares.Add(sdk.NewDec(60)).String(), bondedValidators[0].DelegatorShares.String())
 
 	bondedValidator := getDelegatorValidator(t, port, addr, validator1Operator)
-	require.Equal(t, validator1Operator, bondedValidator.Operator)
+	require.Equal(t, validator1Operator, bondedValidator.OperatorAddr)
 
 	//////////////////////
 	// testing unbonding
@@ -733,7 +802,7 @@ func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
 	return acc
 }
 
-func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.AccAddress, gas int64, gasAdjustment float64, queryStr string) (res *http.Response, body string, receiveAddr sdk.AccAddress) {
+func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.AccAddress, gas string, gasAdjustment float64, queryStr string) (res *http.Response, body string, receiveAddr sdk.AccAddress) {
 
 	// create receive address
 	kb := client.MockKeyBase()
@@ -752,14 +821,14 @@ func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.Acc
 	}
 
 	gasStr := ""
-	if gas > 0 {
+	if len(gas) != 0 {
 		gasStr = fmt.Sprintf(`
-		"gas":"%v",
+		"gas":%q,
 		`, gas)
 	}
 	gasAdjustmentStr := ""
 	if gasAdjustment > 0 {
-		gasStr = fmt.Sprintf(`
+		gasAdjustmentStr = fmt.Sprintf(`
 		"gas_adjustment":"%v",
 		`, gasAdjustment)
 	}
@@ -778,7 +847,7 @@ func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.Acc
 }
 
 func doSend(t *testing.T, port, seed, name, password string, addr sdk.AccAddress) (receiveAddr sdk.AccAddress, resultTx ctypes.ResultBroadcastTxCommit) {
-	res, body, receiveAddr := doSendWithGas(t, port, seed, name, password, addr, 0, 0, "")
+	res, body, receiveAddr := doSendWithGas(t, port, seed, name, password, addr, "", 0, "")
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err := cdc.UnmarshalJSON([]byte(body), &resultTx)
@@ -900,11 +969,11 @@ func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, quer
 	return txs
 }
 
-func getDelegatorValidators(t *testing.T, port string, delegatorAddr sdk.AccAddress) []stake.BechValidator {
+func getDelegatorValidators(t *testing.T, port string, delegatorAddr sdk.AccAddress) []stake.Validator {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/validators", delegatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var bondedValidators []stake.BechValidator
+	var bondedValidators []stake.Validator
 
 	err := cdc.UnmarshalJSON([]byte(body), &bondedValidators)
 	require.Nil(t, err)
@@ -912,11 +981,11 @@ func getDelegatorValidators(t *testing.T, port string, delegatorAddr sdk.AccAddr
 	return bondedValidators
 }
 
-func getDelegatorValidator(t *testing.T, port string, delAddr sdk.AccAddress, valAddr sdk.ValAddress) stake.BechValidator {
+func getDelegatorValidator(t *testing.T, port string, delAddr sdk.AccAddress, valAddr sdk.ValAddress) stake.Validator {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/validators/%s", delAddr, valAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var bondedValidator stake.BechValidator
+	var bondedValidator stake.Validator
 	err := cdc.UnmarshalJSON([]byte(body), &bondedValidator)
 	require.Nil(t, err)
 
@@ -1036,19 +1105,19 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 	return results[0]
 }
 
-func getValidators(t *testing.T, port string) []stake.BechValidator {
+func getValidators(t *testing.T, port string) []stake.Validator {
 	res, body := Request(t, port, "GET", "/stake/validators", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var validators []stake.BechValidator
+	var validators []stake.Validator
 	err := cdc.UnmarshalJSON([]byte(body), &validators)
 	require.Nil(t, err)
 	return validators
 }
 
-func getValidator(t *testing.T, port string, valAddr sdk.ValAddress) stake.BechValidator {
+func getValidator(t *testing.T, port string, valAddr sdk.ValAddress) stake.Validator {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/validators/%s", valAddr.String()), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var validator stake.BechValidator
+	var validator stake.Validator
 	err := cdc.UnmarshalJSON([]byte(body), &validator)
 	require.Nil(t, err)
 	return validator

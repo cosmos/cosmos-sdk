@@ -136,8 +136,8 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
-	assert.Equal(t, addr1, validator.Operator)
-	assert.Equal(t, pk1, validator.PubKey)
+	assert.Equal(t, addr1, validator.OperatorAddr)
+	assert.Equal(t, pk1, validator.ConsPubKey)
 	assert.Equal(t, sdk.NewDec(10), validator.BondedTokens())
 	assert.Equal(t, sdk.NewDec(10), validator.DelegatorShares)
 	assert.Equal(t, Description{}, validator.Description)
@@ -160,8 +160,8 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
-	assert.Equal(t, addr2, validator.Operator)
-	assert.Equal(t, pk2, validator.PubKey)
+	assert.Equal(t, addr2, validator.OperatorAddr)
+	assert.Equal(t, pk2, validator.ConsPubKey)
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 	assert.Equal(t, Description{}, validator.Description)
@@ -180,8 +180,8 @@ func TestDuplicatesMsgCreateValidatorOnBehalfOf(t *testing.T) {
 
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
-	assert.Equal(t, validatorAddr, validator.Operator)
-	assert.Equal(t, pk, validator.PubKey)
+	assert.Equal(t, validatorAddr, validator.OperatorAddr)
+	assert.Equal(t, pk, validator.ConsPubKey)
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 	assert.Equal(t, Description{}, validator.Description)
@@ -430,7 +430,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		initBond,
 	}
 	for _, c := range errorCases {
-		unbondShares := sdk.NewDec(int64(c))
+		unbondShares := sdk.NewDec(c)
 		msgBeginUnbonding := NewMsgBeginUnbonding(delegatorAddr, validatorAddr, unbondShares)
 		got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 		require.False(t, got.IsOK(), "expected unbond msg to fail")

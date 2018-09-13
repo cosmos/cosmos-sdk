@@ -438,6 +438,7 @@ func (k Keeper) UpdateBondedValidators(
 	updatedVal types.Validator, updated bool) {
 
 	store := ctx.KVStore(k.storeKey)
+	pool := k.GetPool(ctx)
 
 	oldCliffValidatorAddr := k.GetCliffValidator(ctx)
 	maxValidators := k.GetParams(ctx).MaxValidators
@@ -507,11 +508,15 @@ func (k Keeper) UpdateBondedValidators(
 			oldCliffVal, found := k.GetValidator(ctx, oldCliffValidatorAddr)
 			ensureValidatorFound(found, oldCliffValidatorAddr)
 
-			if bytes.Equal(validatorToBond.OperatorAddr, affectedValidator.OperatorAddr) {
+			affectedValRank := GetValidatorsByPowerIndexKey(affectedValidator, pool)
+			oldCliffValRank := GetValidatorsByPowerIndexKey(oldCliffVal, pool)
 
-				// begin unbonding the old cliff validator iff the affected
-				// validator was newly bonded and has greater power
-				k.beginUnbondingValidator(ctx, oldCliffVal)
+			if bytes.Equal(validatorToBond.OperatorAddr, affectedValidator.OperatorAddr) {
+				if bytes.Compare(affectedValRank, oldCliffValRank) > 0 {
+					// begin unbonding the old cliff validator iff the affected
+					// validator was newly bonded and has greater power
+					k.beginUnbondingValidator(ctx, oldCliffVal)
+				}
 			} else {
 				// otherwise begin unbonding the affected validator, which must
 				// have been kicked out

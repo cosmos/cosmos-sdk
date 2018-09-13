@@ -67,6 +67,7 @@ func main() {
 		tendermintCmd,
 		ibcCmd,
 		lcd.ServeCommand(cdc),
+		lcd.ServeLiteCommand(cdc),
 		client.LineBreak,
 	)
 

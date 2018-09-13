@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/examples/democoin/mock"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 func defaultContext(key sdk.StoreKey) sdk.Context {
@@ -36,7 +36,7 @@ func TestValidatorSet(t *testing.T) {
 		{addr2, sdk.NewDec(2)},
 	}}
 
-	valset := NewValidatorSet(wire.NewCodec(), ctx.KVStore(key).Prefix([]byte("assoc")), base, 1, 5)
+	valset := NewValidatorSet(codec.New(), ctx.KVStore(key).Prefix([]byte("assoc")), base, 1, 5)
 
 	require.Equal(t, base.Validator(ctx, addr1), valset.Validator(ctx, addr1))
 	require.Equal(t, base.Validator(ctx, addr2), valset.Validator(ctx, addr2))

@@ -24,7 +24,7 @@ import (
 	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	tests "github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -61,7 +61,7 @@ func TestKeys(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var resp keys.KeyOutput
-	err = wire.Cdc.UnmarshalJSON([]byte(body), &resp)
+	err = codec.Cdc.UnmarshalJSON([]byte(body), &resp)
 	require.Nil(t, err, body)
 
 	addr2Bech32 := resp.Address
@@ -181,7 +181,7 @@ func TestBlock(t *testing.T) {
 	res, body = Request(t, port, "GET", "/blocks/1", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	err = wire.Cdc.UnmarshalJSON([]byte(body), &resultBlock)
+	err = codec.Cdc.UnmarshalJSON([]byte(body), &resultBlock)
 	require.Nil(t, err, "Couldn't parse block")
 
 	require.NotEqual(t, ctypes.ResultBlock{}, resultBlock)

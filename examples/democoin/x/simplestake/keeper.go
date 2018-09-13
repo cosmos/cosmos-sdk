@@ -4,7 +4,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
@@ -17,13 +17,13 @@ type Keeper struct {
 	ck bank.Keeper
 
 	key       sdk.StoreKey
-	cdc       *wire.Codec
+	cdc       *codec.Codec
 	codespace sdk.CodespaceType
 }
 
 func NewKeeper(key sdk.StoreKey, bankKeeper bank.Keeper, codespace sdk.CodespaceType) Keeper {
-	cdc := wire.NewCodec()
-	wire.RegisterCrypto(cdc)
+	cdc := codec.New()
+	codec.RegisterCrypto(cdc)
 	return Keeper{
 		key:       key,
 		cdc:       cdc,

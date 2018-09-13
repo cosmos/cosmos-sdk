@@ -42,7 +42,7 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	}
 
 	// TODO move maarshalling into cmd/rest functions
-	// output, err := tmwire.MarshalJSON(res)
+	// output, err := tmcodec.MarshalJSON(res)
 	output, err := cdc.MarshalJSON(res)
 	if err != nil {
 		return nil, err

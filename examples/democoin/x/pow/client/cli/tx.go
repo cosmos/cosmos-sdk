@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/pow"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 
@@ -16,7 +16,7 @@ import (
 )
 
 // command to mine some pow!
-func MineCmd(cdc *wire.Codec) *cobra.Command {
+func MineCmd(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "mine [difficulty] [count] [nonce] [solution]",
 		Short: "Mine some coins with proof-of-work!",

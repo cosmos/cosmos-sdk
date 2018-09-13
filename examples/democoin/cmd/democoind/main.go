@@ -15,7 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // init parameters
@@ -25,7 +25,7 @@ var CoolAppInit = server.AppInit{
 }
 
 // coolGenAppParams sets up the app_state and appends the cool app state
-func CoolAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
+func CoolAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
 	appState, err = server.SimpleAppGenState(cdc, appGenTxs)
 	if err != nil {
 		return

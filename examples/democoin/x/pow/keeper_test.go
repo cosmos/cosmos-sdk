@@ -11,7 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	auth "github.com/cosmos/cosmos-sdk/x/auth"
 	bank "github.com/cosmos/cosmos-sdk/x/bank"
 )
@@ -29,7 +29,7 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
 
 func TestPowKeeperGetSet(t *testing.T) {
 	ms, capKey := setupMultiStore()
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
 	am := auth.NewAccountMapper(cdc, capKey, auth.ProtoBaseAccount)

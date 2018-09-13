@@ -24,7 +24,7 @@
 [https://developers.google.com/protocol-buffers/](https://developers.google.com/protocol-buffers/)
 
 ##### 8:
-[https://github.com/tendermint/go-wire](https://github.com/tendermint/go-wire)
+[https://github.com/tendermint/go-codec](https://github.com/tendermint/go-codec)
 
 ##### 9:
 [https://developers.google.com/protocol-buffers/docs/proto3](https://developers.google.com/protocol-buffers/docs/proto3)

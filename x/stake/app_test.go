@@ -31,7 +31,7 @@ var (
 func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	mApp := mock.NewApp()
 
-	RegisterWire(mApp.Cdc)
+	RegisterCodec(mApp.Cdc)
 
 	keyStake := sdk.NewKVStoreKey("stake")
 	tkeyStake := sdk.NewTransientStoreKey("transient_stake")

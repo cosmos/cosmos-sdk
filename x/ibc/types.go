@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
+	codec "github.com/cosmos/cosmos-sdk/codec"
 )
 
 var (
-	msgCdc *wire.Codec
+	msgCdc *codec.Codec
 )
 
 func init() {
-	msgCdc = wire.NewCodec()
+	msgCdc = codec.New()
 }
 
 // ------------------------------

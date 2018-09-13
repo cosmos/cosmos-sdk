@@ -5,17 +5,17 @@ import (
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // Keeper manages global parameter store
 type Keeper struct {
-	cdc *wire.Codec
+	cdc *codec.Codec
 	key sdk.StoreKey
 }
 
 // NewKeeper constructs a new Keeper
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey) Keeper {
 	return Keeper{
 		cdc: cdc,
 		key: key,
@@ -24,7 +24,7 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey) Keeper {
 
 // InitKeeper constructs a new Keeper with initial parameters
 // nolint: errcheck
-func InitKeeper(ctx sdk.Context, cdc *wire.Codec, key sdk.StoreKey, params ...interface{}) Keeper {
+func InitKeeper(ctx sdk.Context, cdc *codec.Codec, key sdk.StoreKey, params ...interface{}) Keeper {
 	if len(params)%2 != 0 {
 		panic("Odd params list length for InitKeeper")
 	}

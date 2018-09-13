@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/simplestake"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 
@@ -25,7 +25,7 @@ const (
 )
 
 // simple bond tx
-func BondTxCmd(cdc *wire.Codec) *cobra.Command {
+func BondTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bond",
 		Short: "Bond to a validator",
@@ -79,7 +79,7 @@ func BondTxCmd(cdc *wire.Codec) *cobra.Command {
 }
 
 // simple unbond tx
-func UnbondTxCmd(cdc *wire.Codec) *cobra.Command {
+func UnbondTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbond",
 		Short: "Unbond from a validator",

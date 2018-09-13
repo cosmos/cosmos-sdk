@@ -72,8 +72,7 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-
-func createHandler(cdc *wire.Codec) *mux.Router {
+func createHandler(cdc *wire.Codec) http.Handler {
 	r := mux.NewRouter()
 
 	kb, err := keys.GetKeyBase() //XXX

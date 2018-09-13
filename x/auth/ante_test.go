@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	codec "github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"

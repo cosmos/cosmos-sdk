@@ -2,8 +2,8 @@ package server
 
 import (
 	"bytes"
-	"github.com/cosmos/cosmos-sdk/server/mock"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server/mock"
 	"github.com/stretchr/testify/require"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/libs/log"

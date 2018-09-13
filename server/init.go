@@ -26,9 +26,9 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/codec"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 //Parameter names, for init gen-tx command

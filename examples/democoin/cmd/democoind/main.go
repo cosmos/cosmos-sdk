@@ -13,9 +13,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // init parameters

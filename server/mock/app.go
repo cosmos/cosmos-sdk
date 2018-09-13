@@ -12,9 +12,9 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	gc "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // NewApp creates a simple mock kvstore app for testing. It should work

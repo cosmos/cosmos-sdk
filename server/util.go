@@ -11,8 +11,8 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/version"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"

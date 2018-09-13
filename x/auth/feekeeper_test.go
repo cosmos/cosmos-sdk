@@ -8,8 +8,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	codec "github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (

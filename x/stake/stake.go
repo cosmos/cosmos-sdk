@@ -65,7 +65,7 @@ var (
 	NewDescription      = types.NewDescription
 	NewGenesisState     = types.NewGenesisState
 	DefaultGenesisState = types.DefaultGenesisState
-	RegisterCodec        = types.RegisterCodec
+	RegisterCodec       = types.RegisterCodec
 
 	NewMsgCreateValidator           = types.NewMsgCreateValidator
 	NewMsgCreateValidatorOnBehalfOf = types.NewMsgCreateValidatorOnBehalfOf

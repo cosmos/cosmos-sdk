@@ -17,8 +17,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterSendTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
+// registerSendTxRoutes - Central function to define routes that get registered by the main application
+func registerSendTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
 	r.HandleFunc("/bank/{address}/transfers", SendRequestHandlerFn(cdc, kb, cliCtx)).Methods("POST")
 }
 

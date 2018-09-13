@@ -278,7 +278,7 @@ type RecoverKeyBody struct {
 }
 
 // RecoverKeyResuestHandler is the handler of creating seed in swagger rest server
-func RecoverKeyResuestHandler(w http.ResponseWriter, r *http.Request) {
+func RecoverKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 	var m RecoverKeyBody

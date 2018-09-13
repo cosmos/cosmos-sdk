@@ -4,19 +4,15 @@ Due to the rest handlers and related data structures are distributed in many sub
 
 ## Steps
  
-1. Install the command line tool first.
+1. Install the swagger-ui generate tool first.
     ```
-    go get github.com/rakyll/statik
+    make update_dev_tools
     ```
 2. Edit API docs
     1. Directly Edit API docs manually: `client/lcd/swaggerui/swagger.json`
     2. Edit API docs within this [SwaggerHub](https://app.swaggerhub.com). Please refer to this [document](https://app.swaggerhub.com/help/index) for how to use the about website to edit API docs.
 3. Download `swagger.json` and replace the old `swagger.json` under `client/lcd/swaggerui` folds
-4. Regenerate `client/lcd/statik/statik.go` file
-    ```
-    rm client/lcd/statik/statik.go && statik -src=client/lcd/swaggerui -dest=client/lcd
-    ```
-5. Compile new gaiacli
+4. Compile new gaiacli
     ```
     make install
     ```

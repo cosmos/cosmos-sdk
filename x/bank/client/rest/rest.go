@@ -10,5 +10,5 @@ import (
 // RegisterRoutes registers bank-related REST handlers to a router
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
 	registerQueryRoutes(cliCtx, r, cdc, "acc")
-	RegisterSendTxRoutes(cliCtx, r, cdc, kb)
+	registerSendTxRoutes(cliCtx, r, cdc, kb)
 }

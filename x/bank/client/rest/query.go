@@ -18,12 +18,12 @@ import (
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, storeName string) {
 	r.HandleFunc(
 		"/bank/balances/{address}",
-		QueryAccountRequestHandlerFn(storeName, cdc, authcmd.GetAccountDecoder(cdc), cliCtx),
+		QueryBalancesRequestHandlerFn(storeName, cdc, authcmd.GetAccountDecoder(cdc), cliCtx),
 	).Methods("GET")
 }
 
 // query balances Handler
-func QueryAccountRequestHandlerFn(
+func QueryBalancesRequestHandlerFn(
 	storeName string, cdc *wire.Codec,
 	decoder auth.AccountDecoder, cliCtx context.CLIContext,
 ) http.HandlerFunc {

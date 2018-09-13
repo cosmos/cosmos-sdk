@@ -32,7 +32,7 @@ TMP_BUILD_TAGS := $(BUILD_TAGS)
 BUILD_TAGS = $(filter-out ledger, $(TMP_BUILD_TAGS))
 endif
 
-build: check-ledger
+build: check-ledger update_gaia_lite_docs
 ifeq ($(OS),Windows_NT)
 	go build $(BUILD_FLAGS) -o build/gaiad.exe ./cmd/gaia/cmd/gaiad
 	go build $(BUILD_FLAGS) -o build/gaiacli.exe ./cmd/gaia/cmd/gaiacli
@@ -43,6 +43,9 @@ endif
 
 build-linux:
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
+
+update_gaia_lite_docs:
+	@statik -src=client/lcd/swaggerui -dest=client/lcd
 
 build_cosmos-sdk-cli:
 ifeq ($(OS),Windows_NT)
@@ -64,7 +67,7 @@ else
 	go build $(BUILD_FLAGS) -o build/democli ./examples/democoin/cmd/democli
 endif
 
-install: check-ledger
+install: check-ledger update_gaia_lite_docs
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
 

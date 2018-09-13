@@ -450,6 +450,7 @@ func (k Keeper) UpdateBondedValidators(
 	updatedVal types.Validator, updated bool) {
 
 	store := ctx.KVStore(k.storeKey)
+	pool := k.GetPool(ctx)
 
 	oldCliffValidatorAddr := k.GetCliffValidator(ctx)
 	maxValidators := k.GetParams(ctx).MaxValidators

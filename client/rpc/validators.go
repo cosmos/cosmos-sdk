@@ -12,9 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/viper"
-	tmliteErr "github.com/tendermint/tendermint/lite/errors"
-	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	tmTypes "github.com/tendermint/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
@@ -75,13 +72,9 @@ func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
-	trustNode := viper.GetBool(client.FlagTrustNode)
-
-	if !trustNode {
-		check, err := tmliteProxy.GetCertifiedCommit(*height, node, cliCtx.Certifier)
-		if tmliteErr.IsCommitNotFoundErr(err) {
-			return nil, context.ErrVerifyCommit(*height)
-		} else if err != nil {
+	if !cliCtx.TrustNode {
+		check, err := cliCtx.Certify(*height)
+		if err != nil {
 			return nil, err
 		}
 

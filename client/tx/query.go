@@ -10,7 +10,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
@@ -19,8 +18,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	tmliteErr "github.com/tendermint/tendermint/lite/errors"
-	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 )
 
 // QueryTxCmd implements the default command for a tx query.
@@ -32,11 +29,10 @@ func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// find the key to look up the account
 			hashHexStr := args[0]
-			trustNode := viper.GetBool(client.FlagTrustNode)
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			output, err := queryTx(cdc, cliCtx, hashHexStr, trustNode)
+			output, err := queryTx(cdc, cliCtx, hashHexStr, cliCtx.TrustNode)
 			if err != nil {
 				return err
 			}
@@ -74,10 +70,8 @@ func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string, trus
 	}
 
 	if !trustNode {
-		check, err := tmliteProxy.GetCertifiedCommit(info.Height, node, cliCtx.Certifier)
-		if tmliteErr.IsCommitNotFoundErr(err) {
-			return nil, context.ErrVerifyCommit(info.Height)
-		} else if err != nil {
+		check, err := cliCtx.Certify(res.Height)
+		if err != nil {
 			return nil, err
 		}
 

@@ -10,8 +10,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	tmliteErr "github.com/tendermint/tendermint/lite/errors"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 )
 
@@ -44,12 +42,9 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
-	trustNode := viper.GetBool(client.FlagTrustNode)
-	if !trustNode {
-		check, err := tmliteProxy.GetCertifiedCommit(*height, node, cliCtx.Certifier)
-		if tmliteErr.IsCommitNotFoundErr(err) {
-			return nil, context.ErrVerifyCommit(*height)
-		} else if err != nil {
+	if !cliCtx.TrustNode {
+		check, err := cliCtx.Certify(*height)
+		if err != nil {
 			return nil, err
 		}
 

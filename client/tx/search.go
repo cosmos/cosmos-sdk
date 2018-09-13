@@ -15,8 +15,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	tmliteErr "github.com/tendermint/tendermint/lite/errors"
-	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
@@ -85,7 +83,7 @@ func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]Inf
 		return nil, err
 	}
 
-	prove := !viper.GetBool(client.FlagTrustNode)
+	prove := !cliCtx.TrustNode
 
 	// TODO: take these as args
 	page := 0
@@ -96,10 +94,8 @@ func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]Inf
 	}
 	if prove {
 		for _, tx := range res.Txs {
-			check, err := tmliteProxy.GetCertifiedCommit(tx.Height, node, cliCtx.Certifier)
-			if tmliteErr.IsCommitNotFoundErr(err) {
-				return nil, context.ErrVerifyCommit(tx.Height)
-			} else if err != nil {
+			check, err := cliCtx.Certify(tx.Height)
+			if err != nil {
 				return nil, err
 			}
 

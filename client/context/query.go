@@ -12,8 +12,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/irisnet/irishub/client/context"
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/lite"
+	tmliteErr "github.com/tendermint/tendermint/lite/errors"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -322,6 +325,17 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 	return resp.Value, nil
 }
 
+// Certify verifies the consensus proof at given height
+func (ctx CLIContext) Certify(height int64) (lite.Commit, error) {
+	check, err := tmliteProxy.GetCertifiedCommit(height, ctx.Client, ctx.Certifier)
+	if tmliteErr.IsCommitNotFoundErr(err) {
+		return lite.Commit{}, context.ErrVerifyCommit(height)
+	} else if err != nil {
+		return lite.Commit{}, err
+	}
+	return check, nil
+}
+
 // verifyProof perform response proof verification
 func (ctx CLIContext) verifyProof(path string, resp abci.ResponseQuery) error {
 
@@ -329,13 +343,8 @@ func (ctx CLIContext) verifyProof(path string, resp abci.ResponseQuery) error {
 		return fmt.Errorf("missing valid certifier to verify data from untrusted node")
 	}
 
-	node, err := ctx.GetNode()
-	if err != nil {
-		return err
-	}
-
 	// AppHash for height H is in header H+1
-	commit, err := tmliteProxy.GetCertifiedCommit(resp.Height+1, node, ctx.Certifier)
+	commit, err := ctx.Certify(resp.Height + 1)
 	if err != nil {
 		return err
 	}

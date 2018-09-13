@@ -101,7 +101,7 @@ IMPROVEMENTS
     * [x/stake] Improve speed of GetValidator, which was shown to be a performance bottleneck. [#2046](https://github.com/tendermint/tendermint/pull/2200)
     * [genesis] \#2229 Ensure that there are no duplicate accounts or validators in the genesis state.
     * Add SDK validation to `config.toml` (namely disabling `create_empty_blocks`) \#1571
-    
+
 * SDK
     * [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.
     * [spec] Added simple piggy bank distribution spec
@@ -113,6 +113,7 @@ IMPROVEMENTS
     * [simulation] Add a concept of weighting the operations \#2303
     * [simulation] Logs get written to file if large, and also get printed on panics \#2285
     * [gaiad] \#1992 Add optional flag to `gaiad testnet` to make config directory of daemon (default `gaiad`) and cli (default `gaiacli`) configurable
+    * [x/stake] Add stake `Queriers` for Gaia-lite endpoints. This increases the staking endpoints performance by reusing the staking `keeper` logic for queries. [#2249](https://github.com/cosmos/cosmos-sdk/pull/2149)
 
 * Tendermint
 

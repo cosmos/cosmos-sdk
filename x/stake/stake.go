@@ -3,6 +3,7 @@ package stake
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
+	"github.com/cosmos/cosmos-sdk/x/stake/querier"
 	"github.com/cosmos/cosmos-sdk/x/stake/tags"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
@@ -12,6 +13,7 @@ type (
 	Validator             = types.Validator
 	Description           = types.Description
 	Delegation            = types.Delegation
+	DelegationSummary     = types.DelegationSummary
 	UnbondingDelegation   = types.UnbondingDelegation
 	Redelegation          = types.Redelegation
 	Params                = types.Params
@@ -24,6 +26,9 @@ type (
 	MsgBeginRedelegate    = types.MsgBeginRedelegate
 	MsgCompleteRedelegate = types.MsgCompleteRedelegate
 	GenesisState          = types.GenesisState
+	QueryDelegatorParams  = querier.QueryDelegatorParams
+	QueryValidatorParams  = querier.QueryValidatorParams
+	QueryBondsParams      = querier.QueryBondsParams
 )
 
 var (
@@ -75,6 +80,8 @@ var (
 	NewMsgCompleteUnbonding         = types.NewMsgCompleteUnbonding
 	NewMsgBeginRedelegate           = types.NewMsgBeginRedelegate
 	NewMsgCompleteRedelegate        = types.NewMsgCompleteRedelegate
+
+	NewQuerier = querier.NewQuerier
 )
 
 const (

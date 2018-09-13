@@ -22,6 +22,7 @@ type SignBody struct {
 	AppendSig        bool       `json:"append_sig"`
 }
 
+// nolint: unparam
 // sign tx REST handler
 func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 

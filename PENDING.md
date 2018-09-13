@@ -128,6 +128,9 @@ BUG FIXES
 * Gaia
   * [x/stake] Return correct Tendermint validator update set on `EndBlocker` by not
   including non previously bonded validators that have zero power. [#2189](https://github.com/cosmos/cosmos-sdk/issues/2189)
+  * [x/stake] [\#2241](https://github.com/cosmos/cosmos-sdk/issues/2241) Do not allow
+  redelegations that would result in a bonded source validator with rounded zero
+  power.
 
 * SDK
     * [\#1988](https://github.com/cosmos/cosmos-sdk/issues/1988) Make us compile on OpenBSD (disable ledger) [#1988] (https://github.com/cosmos/cosmos-sdk/issues/1988)

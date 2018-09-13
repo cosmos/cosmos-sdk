@@ -88,6 +88,12 @@ else
 	@echo "Installing dep"
 	go get -v $(DEP)
 endif
+ifdef STATIK_CHECK
+	@echo "Statik is already installed.  Run 'make update_tools' to update."
+else
+	@echo "Installing statik"
+	go get -v $(STATIK)
+endif
 
 get_dev_tools:
 	$(MAKE) get_tools
@@ -139,8 +145,8 @@ else
 	@echo "Installing gocyclo"
 	go get -v $(GOCYCLO)
 endif
-ifndef STATIK_CHECK
-	@echo "No statik in path.  Install with 'make get_tools'."
+ifdef STATIK_CHECK
+	@echo "statik is already installed.  Run 'make update_tools' to update."
 else
 	@echo "Installing statik"
 	go get -v $(STATIK)

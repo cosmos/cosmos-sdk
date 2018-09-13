@@ -16,6 +16,7 @@ docs/_build
 examples/basecoin/app/data
 baseapp/data/*
 client/lcd/keys/*
+client/lcd/statik/*
 mytestnet
 
 # Testing

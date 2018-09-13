@@ -65,7 +65,6 @@ type MultiStore interface { //nolint
 	// Convenience for fetching substores.
 	GetStore(StoreKey) Store
 	GetKVStore(StoreKey) KVStore
-	//GetTransientStore(StoreKey) TransientStore
 
 	// TracingEnabled returns if tracing is enabled for the MultiStore.
 	TracingEnabled() bool

@@ -78,10 +78,6 @@ func (c Context) TransientStore(key StoreKey) KVStore {
 	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), cachedTransientGasConfig)
 }
 
-//func (c Context) TransientStore(key StoreKey) TrStore {
-//return c.multiStore().GetTransientStore(key).Gas(c.GasMeter(), cachedTransientGasConfig)
-//}
-
 //----------------------------------------
 // With* (setting a value)
 

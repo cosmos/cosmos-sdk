@@ -909,7 +909,7 @@ func TestGetValidTendermintUpdatesNewValidator(t *testing.T) {
 	require.Equal(t, validators[0].ABCIValidator(), updates[0])
 	require.Equal(t, validators[1].ABCIValidator(), updates[1])
 
-	keeper.ClearTendermintUpdates(ctx)
+	clearTendermintUpdates(ctx, keeper)
 	require.Equal(t, 0, len(keeper.GetValidTendermintUpdates(ctx)))
 
 	// update initial validator set
@@ -985,7 +985,7 @@ func TestGetValidTendermintUpdatesBondTransition(t *testing.T) {
 	require.Equal(t, validators[2].ABCIValidator(), updates[0])
 	require.Equal(t, validators[1].ABCIValidator(), updates[1])
 
-	keeper.ClearTendermintUpdates(ctx)
+	clearTendermintUpdates(ctx, keeper)
 	require.Equal(t, 0, len(keeper.GetValidTendermintUpdates(ctx)))
 
 	// delegate to validator with lowest power but not enough to bond
@@ -1026,6 +1026,6 @@ func TestGetValidTendermintUpdatesBondTransition(t *testing.T) {
 	require.Equal(t, 1, len(updates))
 	require.Equal(t, validators[1].ABCIValidator(), updates[0])
 
-	keeper.ClearTendermintUpdates(ctx)
+	clearTendermintUpdates(ctx, keeper)
 	require.Equal(t, 0, len(keeper.GetValidTendermintUpdates(ctx)))
 }

@@ -10,12 +10,14 @@ const (
 )
 
 // nolint - Key generators for parameter access
-func BlockMaxBytesKey() params.Key      { return params.NewKey("BlockSize", "MaxBytes") }
-func BlockMaxTxsKey() params.Key        { return params.NewKey("BlockSize", "MaxTxs") }
-func BlockMaxGasKey() params.Key        { return params.NewKey("BlockSize", "MaxGas") }
-func TxMaxBytesKey() params.Key         { return params.NewKey("TxSize", "MaxBytes") }
-func TxMaxGasKey() params.Key           { return params.NewKey("TxSize", "MaxGas") }
-func BlockPartSizeBytesKey() params.Key { return params.NewKey("BlockGossip", "PartSizeBytes") }
+func BlockMaxBytesKey() params.Key { return params.NewKey("BlockSize", "MaxBytes") }
+func BlockMaxTxsKey() params.Key   { return params.NewKey("BlockSize", "MaxTxs") }
+func BlockMaxGasKey() params.Key   { return params.NewKey("BlockSize", "MaxGas") }
+func TxMaxBytesKey() params.Key    { return params.NewKey("TxSize", "MaxBytes") }
+func TxMaxGasKey() params.Key      { return params.NewKey("TxSize", "MaxGas") }
+func BlockPartSizeBytesKey() params.Key {
+	return params.NewKey("BlockGossip", "PartSizeBytes")
+}
 
 // Cached parameter keys
 var (

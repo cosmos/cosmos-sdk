@@ -14,7 +14,7 @@ type KeyFieldPairs = space.KeyFieldPairs
 type ParamStruct = space.ParamStruct
 
 // nolint - reexport
-func NewKey(keys ...[]byte) Key {
+func NewKey(keys ...string) Key {
 	return space.NewKey(keys...)
 }
 func UnmarshalParamsFromMap(m map[string][]byte, cdc *wire.Codec, ps space.ParamStruct) error {

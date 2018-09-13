@@ -1,17 +1,21 @@
 package types
- import (
+
+import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
- // Reusing tmtype
+
+// Reusing tmtype
 type ConsensusParams tmtypes.ConsensusParams
- // Convert ConsensusParams to ABCI type
+
+// Convert ConsensusParams to ABCI type
 func (params ConsensusParams) ToABCI() *abci.ConsensusParams {
 	inner := tmtypes.ConsensusParams(params)
 	return tmtypes.TM2PB.ConsensusParams(&inner)
 }
- // Load ConsensusParams from ABCI type
-func (params *ConsensusParams) FromABCI(abciparams *abci.ConsensusParams) {
+
+// Load ConsensusParams from ABCI type
+func (params *ConsensusParams) FromABCI(abciparams *abci.ConsensusParams) *ConsensusParams {
 	// Manually set nil members to empty value
 	if abciparams == nil {
 		abciparams = &abci.ConsensusParams{
@@ -30,5 +34,11 @@ func (params *ConsensusParams) FromABCI(abciparams *abci.ConsensusParams) {
 			abciparams.BlockGossip = &abci.BlockGossip{}
 		}
 	}
- 	*params = ConsensusParams(tmtypes.PB2TM.ConsensusParams(abciparams))
+	*params = ConsensusParams(tmtypes.PB2TM.ConsensusParams(abciparams))
+	return params
+}
+
+func ReadConsensusParams(abciparams *abci.ConsensusParams) (params ConsensusParams) {
+	(&params).FromABCI(abciparams)
+	return
 }

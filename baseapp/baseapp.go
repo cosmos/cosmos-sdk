@@ -64,10 +64,10 @@ type BaseApp struct {
 	// checkState is set on initialization and reset on Commit.
 	// deliverState is set in InitChain and BeginBlock and cleared on Commit.
 	// See methods		app.setCheckState and setDeliverState.
-	checkState    *state // for CheckTx
-	checkParams   sdk.ConsensusParams
-	deliverState  *state // for DeliverTx
-	deliverParams sdk.ConsensusParams
+	checkState             *state // for CheckTx
+	deliverState           *state // for DeliverTx
+	checkConsensusParams   sdk.ConsensusParams
+	deliverConsensusParams sdk.ConsensusParams
 
 	signedValidators []abci.SigningValidator // absent validators from begin block
 
@@ -210,38 +210,32 @@ func (st *state) CacheMultiStore() sdk.CacheMultiStore {
 
 func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
+	ctx := sdk.NewContext(ms, header, true, app.Logger)
+	ctx = ctx.WithConsensusParams(app.checkConsensusParams)
+
 	app.checkState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, app.Logger),
+		ctx: ctx,
 	}
-}
-
-func (app *BaseApp) setCheckParams(params *abci.ConsensusParams) {
-	var sdkparams sdk.ConsensusParams
-	(&sdkparams).FromABCI(params)
-	app.checkParams = sdkparams
-}
-
-func (app *BaseApp) getCheckContext() sdk.Context {
-	return app.checkState.ctx.WithConsensusParams(app.checkParams)
 }
 
 func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
+	ctx := sdk.NewContext(ms, header, false, app.Logger)
+	ctx = ctx.WithConsensusParams(app.deliverConsensusParams)
+
 	app.deliverState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.Logger),
+		ctx: ctx,
 	}
 }
 
-func (app *BaseApp) setDeliverParams(params *abci.ConsensusParams) {
-	var sdkparams sdk.ConsensusParams
-	(&sdkparams).FromABCI(params)
-	app.deliverParams = sdkparams
+func (app *BaseApp) setCheckConsensusParams(params sdk.ConsensusParams) {
+	app.checkConsensusParams = params
 }
 
-func (app *BaseApp) getDeliverContext() sdk.Context {
-	return app.deliverState.ctx.WithConsensusParams(app.deliverParams)
+func (app *BaseApp) setDeliverConsensusParams(params sdk.ConsensusParams) {
+	app.deliverConsensusParams = params
 }
 
 //______________________________________________________________________________
@@ -268,16 +262,18 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 // Implements ABCI
 // InitChain runs the initialization logic directly on the CommitMultiStore and commits it.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
-	// Initialize the deliver state and check state with ChainID and run initChain
+	// Initialize the deliver state and check state
+	// with ChainID
 	app.setDeliverState(abci.Header{ChainID: req.ChainId})
-	app.setDeliverParams(req.ConsensusParams)
 	app.setCheckState(abci.Header{ChainID: req.ChainId})
-	app.setCheckParams(req.ConsensusParams)
+	app.setDeliverConsensusParams(sdk.ReadConsensusParams(req.ConsensusParams))
+	app.setCheckConsensusParams(sdk.ReadConsensusParams(req.ConsensusParams))
 
+	// Run initChain
 	if app.initChainer == nil {
 		return
 	}
-	res = app.initChainer(app.getDeliverContext(), req)
+	res = app.initChainer(app.deliverState.ctx, req)
 
 	// NOTE: we don't commit, but BeginBlock for block 1
 	// starts from this deliverState
@@ -448,9 +444,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	if app.beginBlocker != nil {
-		res = app.beginBlocker(app.getDeliverContext(), req)
+		res = app.beginBlocker(app.deliverState.ctx, req)
 	}
-
 	// set the signed validators for addition to context in deliverTx
 	// TODO: communicate this result to the address to pubkey map in slashing
 	app.signedValidators = req.LastCommitInfo.GetValidators()
@@ -621,6 +616,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// meter so we initialize upfront.
 	var gasWanted int64
 	var msCache sdk.CacheMultiStore
+
 	ctx := app.getContextForAnte(mode, txBytes)
 	ctx = app.initializeContext(ctx, mode)
 
@@ -739,14 +735,14 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 		res = app.endBlocker(app.deliverState.ctx, req)
 	}
 
-	// Use consensus parameter from last block
-	params := app.getDeliverContext().ConsensusParams().ToABCI()
-	app.setCheckParams(params)
+	app.setCheckConsensusParams(app.deliverConsensusParams)
 
 	if res.ConsensusParamUpdates != nil {
 		// Update consensus parameter
+		// Will be applied at BeginBlock for DeliverState
+		params := app.deliverConsensusParams.ToABCI()
 		newparams := updateConsensusParams(params, res.ConsensusParamUpdates)
-		app.setDeliverParams(newparams)
+		app.setDeliverConsensusParams(sdk.ReadConsensusParams(newparams))
 	}
 
 	return

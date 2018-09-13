@@ -3,8 +3,8 @@ package tx
 import (
 	"encoding/hex"
 	"fmt"
-	"net/http"
 	"github.com/tendermint/tendermint/libs/common"
+	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"

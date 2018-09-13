@@ -24,6 +24,13 @@ type delegationValue struct {
 	Height int64
 }
 
+// aggregates of all delegations, unbondings and redelegations
+type DelegationSummary struct {
+	Delegations          []Delegation          `json:"delegations"`
+	UnbondingDelegations []UnbondingDelegation `json:"unbonding_delegations"`
+	Redelegations        []Redelegation        `json:"redelegations"`
+}
+
 // return the delegation without fields contained within the key for the store
 func MustMarshalDelegation(cdc *codec.Codec, delegation Delegation) []byte {
 	val := delegationValue{

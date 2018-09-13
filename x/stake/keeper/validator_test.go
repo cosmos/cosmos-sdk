@@ -59,11 +59,22 @@ func TestSetValidator(t *testing.T) {
 
 	resVals = keeper.GetValidatorsByPower(ctx)
 	require.Equal(t, 1, len(resVals))
-	assert.True(ValEq(t, validator, resVals[0]))
+	require.True(ValEq(t, validator, resVals[0]))
+
+	resVals = keeper.GetValidators(ctx, 1)
+	require.Equal(t, 1, len(resVals))
+	require.True(ValEq(t, validator, resVals[0]))
+
+	resVals = keeper.GetValidators(ctx, 10)
+	require.Equal(t, 1, len(resVals))
+	require.True(ValEq(t, validator, resVals[0]))
 
 	updates := keeper.GetValidTendermintUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 	require.Equal(t, validator.ABCIValidator(), updates[0])
+
+	allVals := keeper.GetAllValidators(ctx)
+	require.Equal(t, 1, len(allVals))
 }
 
 func TestUpdateValidatorByPowerIndex(t *testing.T) {
@@ -283,7 +294,10 @@ func TestValidatorBasics(t *testing.T) {
 	_, found := keeper.GetValidator(ctx, addrVals[0])
 	require.False(t, found)
 	resVals := keeper.GetValidatorsBonded(ctx)
-	assert.Zero(t, len(resVals))
+	require.Zero(t, len(resVals))
+
+	resVals = keeper.GetValidators(ctx, 2)
+	require.Zero(t, len(resVals))
 
 	pool = keeper.GetPool(ctx)
 	assert.True(sdk.DecEq(t, sdk.ZeroDec(), pool.BondedTokens))

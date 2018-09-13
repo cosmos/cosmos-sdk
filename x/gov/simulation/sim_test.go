@@ -26,7 +26,8 @@ func TestGovWithRandomMessages(t *testing.T) {
 	mapper := mapp.AccountMapper
 	bankKeeper := bank.NewBaseKeeper(mapper)
 	stakeKey := sdk.NewKVStoreKey("stake")
-	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, bankKeeper, stake.DefaultCodespace)
+	stakeTKey := sdk.NewTransientStoreKey("transient_stake")
+	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, stakeTKey, bankKeeper, stake.DefaultCodespace)
 	paramKey := sdk.NewKVStoreKey("params")
 	paramKeeper := params.NewKeeper(mapp.Cdc, paramKey)
 	govKey := sdk.NewKVStoreKey("gov")
@@ -37,7 +38,7 @@ func TestGovWithRandomMessages(t *testing.T) {
 		return abci.ResponseEndBlock{}
 	})
 
-	err := mapp.CompleteSetup([]*sdk.KVStoreKey{stakeKey, paramKey, govKey})
+	err := mapp.CompleteSetup(stakeKey, stakeTKey, paramKey, govKey)
 	if err != nil {
 		panic(err)
 	}

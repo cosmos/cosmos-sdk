@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -644,4 +645,77 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	// no ubd should have been found, coins should have been returned direcly to account
 	ubd, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.False(t, found, "%v", ubd)
+}
+
+func TestBeginRedelegationPower(t *testing.T) {
+	ctx, _, keeper := CreateTestInput(t, false, 1000)
+	params := keeper.GetParams(ctx)
+	params.MaxValidators = uint16(2)
+
+	keeper.SetParams(ctx, params)
+
+	amts := []int64{100, 100}
+	var validators [2]types.Validator
+
+	// initialize some validators into the state
+	for i, amt := range amts {
+		pool := keeper.GetPool(ctx)
+		moniker := fmt.Sprintf("%d", i)
+		valPubKey := PKs[i+1]
+		valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
+
+		validators[i] = types.NewValidator(valAddr, valPubKey, types.Description{Moniker: moniker})
+		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, sdk.NewInt(amt))
+
+		keeper.SetPool(ctx, pool)
+		validators[i] = keeper.UpdateValidator(ctx, validators[i])
+	}
+
+	delAddr := sdk.AccAddress(validators[0].OperatorAddr)
+	srcValAddr := validators[0].OperatorAddr
+	destValAddr := validators[1].OperatorAddr
+
+	sharesPercent, err := sdk.NewDecFromStr("0.95")
+	require.NoError(t, err)
+
+	// create self-delegation
+	selfDel := types.Delegation{
+		DelegatorAddr: delAddr,
+		ValidatorAddr: srcValAddr,
+		Shares:        validators[0].DelegatorShares,
+	}
+	keeper.SetDelegation(ctx, selfDel)
+
+	// begin a redelegation with 95% shares delegated from source to destintation
+	// validator
+	delegation, found := keeper.GetDelegation(ctx, delAddr, srcValAddr)
+	require.True(t, found)
+
+	sharesAmount := sharesPercent.Mul(delegation.Shares)
+	err = keeper.BeginRedelegation(ctx, delAddr, srcValAddr, destValAddr, sharesAmount)
+	require.NoError(t, err)
+
+	// get updated validators
+	for i, val := range validators {
+		val, _ = keeper.GetValidator(ctx, val.OperatorAddr)
+		validators[i] = val
+	}
+
+	// verify Tendermint updates
+	updates := keeper.GetValidTendermintUpdates(ctx)
+	require.Equal(t, 2, len(updates))
+	require.Equal(t, updates[0], validators[0].ABCIValidator())
+	require.Equal(t, updates[1], validators[1].ABCIValidator())
+
+	clearTendermintUpdates(ctx, keeper)
+	require.Equal(t, 0, len(keeper.GetValidTendermintUpdates(ctx)))
+
+	delegation, found = keeper.GetDelegation(ctx, delAddr, srcValAddr)
+	require.True(t, found)
+
+	// verify that another redelegation of 95% of remaining shares, which will
+	// reflect zero power when rounded, cannot be made
+	sharesAmount = sharesPercent.Mul(delegation.Shares)
+	err = keeper.BeginRedelegation(ctx, delAddr, srcValAddr, destValAddr, sharesAmount)
+	require.Error(t, err)
 }

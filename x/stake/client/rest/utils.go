@@ -129,17 +129,17 @@ func getDelegatorRedelegations(
 }
 
 // queries staking txs
-func queryTxs(node rpcclient.Client, cdc *wire.Codec, tag string, delegatorAddr string) ([]tx.Info, error) {
+func queryTxs(node rpcclient.Client, cliCtx context.CLIContext, cdc *wire.Codec, tag string, delegatorAddr string) ([]tx.Info, error) {
 	page := 0
 	perPage := 100
-	prove := false
+	prove := !cliCtx.TrustNode
 	query := fmt.Sprintf("%s='%s' AND %s='%s'", tags.Action, tag, tags.Delegator, delegatorAddr)
 	res, err := node.TxSearch(query, prove, page, perPage)
 	if err != nil {
 		return nil, err
 	}
 
-	return tx.FormatTxResults(cdc, res.Txs)
+	return tx.FormatTxResults(cdc, cliCtx, res.Txs)
 }
 
 // gets all validators

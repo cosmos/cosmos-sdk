@@ -234,7 +234,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.Hand
 		}
 
 		for _, action := range actions {
-			foundTxs, errQuery := queryTxs(node, cdc, action, delegatorAddr)
+			foundTxs, errQuery := queryTxs(node, cliCtx, cdc, action, delegatorAddr)
 			if errQuery != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("error querying transactions. Error: %s", errQuery.Error())))

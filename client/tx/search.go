@@ -92,20 +92,8 @@ func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]Inf
 	if err != nil {
 		return nil, err
 	}
-	if prove {
-		for _, tx := range res.Txs {
-			check, err := cliCtx.Certify(tx.Height)
-			if err != nil {
-				return nil, err
-			}
 
-			err = tx.Proof.Validate(check.Header.DataHash)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-	info, err := FormatTxResults(cdc, res.Txs)
+	info, err := FormatTxResults(cdc, cliCtx, res.Txs)
 	if err != nil {
 		return nil, err
 	}
@@ -114,11 +102,11 @@ func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]Inf
 }
 
 // parse the indexed txs into an array of Info
-func FormatTxResults(cdc *wire.Codec, res []*ctypes.ResultTx) ([]Info, error) {
+func FormatTxResults(cdc *wire.Codec, cliCtx context.CLIContext, res []*ctypes.ResultTx) ([]Info, error) {
 	var err error
 	out := make([]Info, len(res))
 	for i := range res {
-		out[i], err = formatTxResult(cdc, res[i])
+		out[i], err = formatTxResult(cdc, cliCtx, res[i])
 		if err != nil {
 			return nil, err
 		}

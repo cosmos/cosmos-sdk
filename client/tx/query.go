@@ -4,8 +4,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
-	"strconv"
-
 	"github.com/tendermint/tendermint/libs/common"
 
 	"github.com/gorilla/mux"
@@ -32,7 +30,7 @@ func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			output, err := queryTx(cdc, cliCtx, hashHexStr, cliCtx.TrustNode)
+			output, err := queryTx(cdc, cliCtx, hashHexStr)
 			if err != nil {
 				return err
 			}
@@ -48,7 +46,7 @@ func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string, trustNode bool) ([]byte, error) {
+func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string) ([]byte, error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
 		return nil, err
@@ -59,33 +57,32 @@ func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string, trus
 		return nil, err
 	}
 
-	res, err := node.Tx(hash, !trustNode)
+	res, err := node.Tx(hash, !cliCtx.TrustNode)
 	if err != nil {
 		return nil, err
 	}
 
-	info, err := formatTxResult(cdc, res)
+	info, err := formatTxResult(cdc, cliCtx, res)
 	if err != nil {
 		return nil, err
-	}
-
-	if !trustNode {
-		check, err := cliCtx.Certify(res.Height)
-		if err != nil {
-			return nil, err
-		}
-
-		err = res.Proof.Validate(check.Header.DataHash)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return wire.MarshalJSONIndent(cdc, info)
 }
 
-func formatTxResult(cdc *wire.Codec, res *ctypes.ResultTx) (Info, error) {
-	// TODO: verify the proof if requested
+func formatTxResult(cdc *wire.Codec, cliCtx context.CLIContext, res *ctypes.ResultTx) (Info, error) {
+	if !cliCtx.TrustNode {
+		check, err := cliCtx.Certify(res.Height)
+		if err != nil {
+			return Info{}, err
+		}
+
+		err = res.Proof.Validate(check.Header.DataHash)
+		if err != nil {
+			return Info{}, err
+		}
+	}
+
 	tx, err := parseTx(cdc, res.Tx)
 	if err != nil {
 		return Info{}, err
@@ -125,13 +122,8 @@ func QueryTxRequestHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.Ha
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		hashHexStr := vars["hash"]
-		trustNode, err := strconv.ParseBool(r.FormValue("trust_node"))
-		// trustNode defaults to true
-		if err != nil {
-			trustNode = true
-		}
 
-		output, err := queryTx(cdc, cliCtx, hashHexStr, trustNode)
+		output, err := queryTx(cdc, cliCtx, hashHexStr)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

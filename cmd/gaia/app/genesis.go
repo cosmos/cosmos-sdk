@@ -136,7 +136,7 @@ func GaiaAppGenTx(
 }
 
 // Generate a gaia genesis transaction without flags
-func GaiaAppGenTxNF(cdc *codec.Codec, pk crypto.PubKey, addr sdk.AccAddress, name string) (
+func GaiaAppGenTxNF(cdc *codec.Codec, pk crypto.PubKey, addr sdk.AccAddress, name string, powers ...int64) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
 	var bz []byte
@@ -152,9 +152,16 @@ func GaiaAppGenTxNF(cdc *codec.Codec, pk crypto.PubKey, addr sdk.AccAddress, nam
 	appGenTx = json.RawMessage(bz)
 
 	validator = tmtypes.GenesisValidator{
+		Name:   name,
 		PubKey: pk,
 		Power:  freeFermionVal,
 	}
+
+	// set a custom power if the parameter is present
+	if len(powers) > 0 {
+		validator.Power = powers[0]
+	}
+
 	return
 }
 
@@ -227,8 +234,8 @@ func addValidatorToStakeData(genTx GaiaGenTx, stakeData stake.GenesisState) stak
 func genesisAccountFromGenTx(genTx GaiaGenTx) GenesisAccount {
 	accAuth := auth.NewBaseAccountWithAddress(genTx.Address)
 	accAuth.Coins = sdk.Coins{
-		{genTx.Name + "Token", sdk.NewInt(1000)},
-		{"steak", freeFermionsAcc},
+		sdk.NewCoin(fmt.Sprintf("%sToken", genTx.Name), sdk.NewInt(1000)),
+		sdk.NewCoin("steak", freeFermionsAcc),
 	}
 	return NewGenesisAccount(&accAuth)
 }

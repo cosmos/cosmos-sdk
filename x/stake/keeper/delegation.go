@@ -278,8 +278,9 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 	return
 }
 
-// unbond the the delegation return
-func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress,
+// unbondShares attempts to unbond shares for a given delegator from a source
+// validator. The total amount of issued tokens are returned.
+func (k Keeper) unbondShares(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress,
 	shares sdk.Dec) (amount sdk.Dec, err sdk.Error) {
 
 	// verify the delegation exists in order to remove shares from it
@@ -369,7 +370,7 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context,
 		return types.ErrExistingUnbondingDelegation(k.Codespace())
 	}
 
-	returnAmount, err := k.unbond(ctx, delAddr, valAddr, sharesAmount)
+	returnAmount, err := k.unbondShares(ctx, delAddr, valAddr, sharesAmount)
 	if err != nil {
 		return err
 	}
@@ -432,7 +433,7 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 		return types.ErrTransitiveRedelegation(k.Codespace())
 	}
 
-	returnAmount, err := k.unbond(ctx, delAddr, valSrcAddr, sharesAmount)
+	returnAmount, err := k.unbondShares(ctx, delAddr, valSrcAddr, sharesAmount)
 	if err != nil {
 		return err
 	}

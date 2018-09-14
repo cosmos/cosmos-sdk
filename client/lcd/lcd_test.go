@@ -177,7 +177,7 @@ func TestBlock(t *testing.T) {
 
 	// --
 
-	res, body = Request(t, port, "GET", "/blocks/1", nil)
+	res, body = Request(t, port, "GET", "/blocks/2", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err = codec.Cdc.UnmarshalJSON([]byte(body), &resultBlock)
@@ -210,7 +210,7 @@ func TestValidators(t *testing.T) {
 
 	// --
 
-	res, body = Request(t, port, "GET", "/validatorsets/1", nil)
+	res, body = Request(t, port, "GET", "/validatorsets/2", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err = cdc.UnmarshalJSON([]byte(body), &resultVals)

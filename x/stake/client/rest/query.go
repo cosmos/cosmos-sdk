@@ -181,7 +181,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 		}
 
 		for _, action := range actions {
-			foundTxs, errQuery := queryTxs(node, cdc, action, delegatorAddr)
+			foundTxs, errQuery := queryTxs(node, cliCtx, cdc, action, delegatorAddr)
 			if errQuery != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(errQuery.Error()))

@@ -84,7 +84,7 @@ func TestGaiaGenesisValidation(t *testing.T) {
 	genesisState := makeGenesisState(genTxs)
 	err := GaiaValidateGenesisState(genesisState)
 	require.NotNil(t, err)
-	// Test bonded + revoked validator fails
+	// Test bonded + jailed validator fails
 	genesisState = makeGenesisState(genTxs[:1])
 	val1 := stakeTypes.NewValidator(addr1, pk1, stakeTypes.Description{Moniker: "test #2"})
 	val1.Jailed = true

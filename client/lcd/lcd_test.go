@@ -498,9 +498,9 @@ func TestValidatorQuery(t *testing.T) {
 	defer cleanup()
 	require.Equal(t, 1, len(pks))
 
-	validator1Operator := sdk.ValAddress(pks[0].Address())
-	validator := getValidator(t, port, validator1Operator)
-	assert.Equal(t, validator.OperatorAddr, validator1Operator, "The returned validator does not hold the correct data")
+	validatorOperator1 := sdk.ValAddress(pks[0].Address())
+	validator := getValidator(t, port, validatorOperator1)
+	assert.Equal(t, validator.OperatorAddr, validatorOperator1, "The returned validator does not hold the correct data")
 }
 
 func TestBonding(t *testing.T) {
@@ -510,11 +510,11 @@ func TestBonding(t *testing.T) {
 	defer cleanup()
 
 	amt := sdk.NewDec(60)
-	validator1Operator := sdk.ValAddress(pks[0].Address())
-	validator := getValidator(t, port, validator1Operator)
+	validatorOperator1 := sdk.ValAddress(pks[0].Address())
+	validator := getValidator(t, port, validatorOperator1)
 
 	// create bond TX
-	resultTx := doDelegate(t, port, seed, name, password, addr, validator1Operator, 60)
+	resultTx := doDelegate(t, port, seed, name, password, addr, validatorOperator1, 60)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -526,7 +526,7 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, int64(40), coins.AmountOf(denom).Int64())
 
 	// query validator
-	bond := getDelegation(t, port, addr, validator1Operator)
+	bond := getDelegation(t, port, addr, validatorOperator1)
 	require.Equal(t, amt, bond.Shares)
 
 	summary := getDelegationSummary(t, port, addr)
@@ -537,16 +537,16 @@ func TestBonding(t *testing.T) {
 
 	bondedValidators := getDelegatorValidators(t, port, addr)
 	require.Len(t, bondedValidators, 1)
-	require.Equal(t, validator1Operator, bondedValidators[0].OperatorAddr)
+	require.Equal(t, validatorOperator1, bondedValidators[0].OperatorAddr)
 	require.Equal(t, validator.DelegatorShares.Add(amt).String(), bondedValidators[0].DelegatorShares.String())
 
-	bondedValidator := getDelegatorValidator(t, port, addr, validator1Operator)
-	require.Equal(t, validator1Operator, bondedValidator.OperatorAddr)
+	bondedValidator := getDelegatorValidator(t, port, addr, validatorOperator1)
+	require.Equal(t, validatorOperator1, bondedValidator.OperatorAddr)
 
 	// test unbonding
 
 	// create unbond TX
-	resultTx = doBeginUnbonding(t, port, seed, name, password, addr, validator1Operator, 60)
+	resultTx = doBeginUnbonding(t, port, seed, name, password, addr, validatorOperator1, 60)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -557,16 +557,25 @@ func TestBonding(t *testing.T) {
 	coins = acc.GetCoins()
 	require.Equal(t, int64(40), coins.AmountOf("steak").Int64())
 
-	unbonding := getUndelegation(t, port, addr, validator1Operator)
+	unbonding := getUndelegation(t, port, addr, validatorOperator1)
 	require.Equal(t, "60", unbonding.Balance.Amount.String())
 
 	// test redelegation
 
-	// resultTx = doBeginRedelegation(t, port, seed, name, password, addr, valSrcAddr, valDstAddr)
+	// resultTx = doBeginRedelegation(t, port, seed, name, password, addr, validatorOperator1, validatorOperator2, 30)
 	// tests.WaitForHeight(resultTx.Height+1, port)
 	//
 	// require.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	// require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+
+	// redelegation := getRedelegation(t, port, addr, validatorOperator1, validatorOperator2)
+	// require.Equal(t, validatorOperator1.String(), redelegation.ValidatorSrcAddr.String())
+	// require.Equal(t, validatorOperator2.String(), redelegation.ValidatorDstAddr.String())
+	// require.Equal(t, "30", redelegation.Balance.Amount.String())
+
+	// TODO test that the bond to the validatorSrc has decreased
+
+	// TODO test that the bond to the validatorDst has increased
 
 	// test delegator summary
 
@@ -574,7 +583,7 @@ func TestBonding(t *testing.T) {
 
 	require.Len(t, summary.Delegations, 0, "Delegation summary holds all delegations")
 	require.Len(t, summary.UnbondingDelegations, 1, "Delegation summary holds all unbonding-delegations")
-	require.Equal(t, "60", summary.UnbondingDelegations[0].Balance.Amount.String())
+	// assert.Len(t, summary.Redelegations, 1, "Delegation summary holds all redelegations")
 
 	bondedValidators = getDelegatorValidators(t, port, addr)
 	require.Len(t, bondedValidators, 0, "There's no delegation as the user withdraw all funds")
@@ -584,8 +593,6 @@ func TestBonding(t *testing.T) {
 
 	// TODO add redelegation, need more complex capabilities such to mock context and
 	// TODO check summary for redelegation
-
-	// assert.Len(t, summary.Redelegations, 1, "Delegation summary holds all redelegations")
 
 	// query txs
 	txs := getBondingTxs(t, port, addr, "")
@@ -1079,7 +1086,7 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 }
 
 func doBeginRedelegation(t *testing.T, port, seed, name, password string,
-	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) (resultTx ctypes.ResultBroadcastTxCommit) {
+	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, amount int64) (resultTx ctypes.ResultBroadcastTxCommit) {
 
 	acc := getAccount(t, port, delAddr)
 	accnum := acc.GetAccountNumber()
@@ -1101,11 +1108,11 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 				"delegator_addr": "%s",
 				"validator_src_addr": "%s",
 				"validator_dst_addr": "%s",
-				"shares": "30"
+				"shares": "%d"
 			}
 		],
 		"complete_redelegates": []
-	}`, name, password, accnum, sequence, chainID, delAddr, valSrcAddr, valDstAddr))
+	}`, name, password, accnum, sequence, chainID, delAddr, valSrcAddr, valDstAddr, amount))
 
 	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)

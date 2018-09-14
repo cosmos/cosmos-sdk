@@ -31,5 +31,14 @@ func queryTxs(node rpcclient.Client, cliCtx context.CLIContext, cdc *codec.Codec
 		return nil, err
 	}
 
+	if prove {
+		for _, txData := range res.Txs {
+			err := tx.ValidateTxResult(cliCtx, txData)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	return tx.FormatTxResults(cdc, cliCtx, res.Txs)
 }

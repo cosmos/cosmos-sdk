@@ -93,6 +93,15 @@ func searchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string) ([]In
 		return nil, err
 	}
 
+	if prove {
+		for _, tx := range res.Txs {
+			err := ValidateTxResult(cliCtx, tx)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	info, err := FormatTxResults(cdc, cliCtx, res.Txs)
 	if err != nil {
 		return nil, err
@@ -106,7 +115,7 @@ func FormatTxResults(cdc *codec.Codec, cliCtx context.CLIContext, res []*ctypes.
 	var err error
 	out := make([]Info, len(res))
 	for i := range res {
-		out[i], err = formatTxResult(cdc, cliCtx, res[i])
+		out[i], err = formatTxResult(cdc, res[i])
 		if err != nil {
 			return nil, err
 		}

@@ -62,7 +62,14 @@ func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) ([]
 		return nil, err
 	}
 
-	info, err := formatTxResult(cdc, cliCtx, res)
+	if !cliCtx.TrustNode {
+		err := ValidateTxResult(cliCtx, res)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	info, err := formatTxResult(cdc, res)
 	if err != nil {
 		return nil, err
 	}
@@ -70,19 +77,21 @@ func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) ([]
 	return codec.MarshalJSONIndent(cdc, info)
 }
 
-func formatTxResult(cdc *codec.Codec, cliCtx context.CLIContext, res *ctypes.ResultTx) (Info, error) {
-	if !cliCtx.TrustNode {
-		check, err := cliCtx.Certify(res.Height)
-		if err != nil {
-			return Info{}, err
-		}
-
-		err = res.Proof.Validate(check.Header.DataHash)
-		if err != nil {
-			return Info{}, err
-		}
+// ValidateTxResult performs transaction verification
+func ValidateTxResult(cliCtx context.CLIContext, res *ctypes.ResultTx) error {
+	check, err := cliCtx.Certify(res.Height)
+	if err != nil {
+		return err
 	}
 
+	err = res.Proof.Validate(check.Header.DataHash)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func formatTxResult(cdc *codec.Codec, res *ctypes.ResultTx) (Info, error) {
 	tx, err := parseTx(cdc, res.Tx)
 	if err != nil {
 		return Info{}, err

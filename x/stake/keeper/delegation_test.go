@@ -699,7 +699,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	require.False(t, found, "%v", ubd)
 }
 
-func TestBeginRedelegationZeroPower(t *testing.T) {
+func TestBeginRedelegationTendermintUpdate(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 1000)
 	params := keeper.GetParams(ctx)
 	params.MaxValidators = uint16(2)
@@ -765,9 +765,24 @@ func TestBeginRedelegationZeroPower(t *testing.T) {
 	delegation, found = keeper.GetDelegation(ctx, delAddr, srcValAddr)
 	require.True(t, found)
 
-	// verify that another redelegation of 95% of remaining shares, which will
-	// reflect zero power when rounded, cannot be made
+	// Verify that another redelegation of 95% of remaining shares, which will
+	// reflect zero power when rounded, does not result in a zero-power Tendermint
+	// update.
 	sharesAmount = sharesPercent.Mul(delegation.Shares)
 	err = keeper.BeginRedelegation(ctx, delAddr, srcValAddr, destValAddr, sharesAmount)
-	require.Error(t, err)
+	require.NoError(t, err)
+
+	// get updated validators
+	for i, val := range validators {
+		val, _ = keeper.GetValidator(ctx, val.OperatorAddr)
+		validators[i] = val
+	}
+
+	// verify Tendermint updates
+	updates = keeper.GetValidTendermintUpdates(ctx)
+	require.Equal(t, 1, len(updates))
+	require.Equal(t, updates[0], validators[1].ABCIValidator())
+
+	clearTendermintUpdates(ctx, keeper)
+	require.Equal(t, 0, len(keeper.GetValidTendermintUpdates(ctx)))
 }

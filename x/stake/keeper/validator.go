@@ -225,6 +225,22 @@ func (k Keeper) GetValidTendermintUpdates(ctx sdk.Context) (updates []abci.Valid
 	return
 }
 
+// validTendermintUpdate returns a boolean determining if a given validator
+// should be sent to Tendermint as a valid update. A valid update adheres to the
+// following invariant: a given validator was previously bonded and has zero power
+// (non-rounded) OR has non-zero power (rounded).
+func validTendermintUpdate(ctx sdk.Context, val types.Validator) bool {
+	prevBonded := val.BondHeight < ctx.BlockHeight() && val.BondHeight > val.UnbondingHeight
+	zeroPower := val.GetPower().IsZero()
+	tinyPower := val.GetPower().RoundInt64() == 0
+
+	if (!zeroPower && !tinyPower) || (prevBonded && zeroPower) {
+		return true
+	}
+
+	return false
+}
+
 //___________________________________________________________________________
 
 // Perform all the necessary steps for when a validator changes its power. This

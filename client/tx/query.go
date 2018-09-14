@@ -3,14 +3,11 @@ package tx
 import (
 	"encoding/hex"
 	"fmt"
-	"net/http"
-	"strconv"
-
 	"github.com/tendermint/tendermint/libs/common"
+	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
@@ -30,11 +27,10 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// find the key to look up the account
 			hashHexStr := args[0]
-			trustNode := viper.GetBool(client.FlagTrustNode)
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			output, err := queryTx(cdc, cliCtx, hashHexStr, trustNode)
+			output, err := queryTx(cdc, cliCtx, hashHexStr)
 			if err != nil {
 				return err
 			}
@@ -45,13 +41,12 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-
-	// TODO: change this to false when we can
-	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
+	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
 	return cmd
 }
 
-func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string, trustNode bool) ([]byte, error) {
+func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) ([]byte, error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
 		return nil, err
@@ -62,9 +57,16 @@ func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string, tru
 		return nil, err
 	}
 
-	res, err := node.Tx(hash, !trustNode)
+	res, err := node.Tx(hash, !cliCtx.TrustNode)
 	if err != nil {
 		return nil, err
+	}
+
+	if !cliCtx.TrustNode {
+		err := ValidateTxResult(cliCtx, res)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	info, err := formatTxResult(cdc, res)
@@ -75,8 +77,21 @@ func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string, tru
 	return codec.MarshalJSONIndent(cdc, info)
 }
 
+// ValidateTxResult performs transaction verification
+func ValidateTxResult(cliCtx context.CLIContext, res *ctypes.ResultTx) error {
+	check, err := cliCtx.Certify(res.Height)
+	if err != nil {
+		return err
+	}
+
+	err = res.Proof.Validate(check.Header.DataHash)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func formatTxResult(cdc *codec.Codec, res *ctypes.ResultTx) (Info, error) {
-	// TODO: verify the proof if requested
 	tx, err := parseTx(cdc, res.Tx)
 	if err != nil {
 		return Info{}, err
@@ -116,13 +131,8 @@ func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.H
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		hashHexStr := vars["hash"]
-		trustNode, err := strconv.ParseBool(r.FormValue("trust_node"))
-		// trustNode defaults to true
-		if err != nil {
-			trustNode = true
-		}
 
-		output, err := queryTx(cdc, cliCtx, hashHexStr, trustNode)
+		output, err := queryTx(cdc, cliCtx, hashHexStr)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

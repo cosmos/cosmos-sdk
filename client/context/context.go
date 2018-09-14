@@ -15,6 +15,7 @@ import (
 	tmlite "github.com/tendermint/tendermint/lite"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	"os"
 )
 
 const ctxAccStoreName = "acc"
@@ -68,32 +69,40 @@ func NewCLIContext() CLIContext {
 }
 
 func createCertifier() tmlite.Certifier {
+	trustNodeDefined := viper.IsSet(client.FlagTrustNode)
+	if !trustNodeDefined {
+		return nil
+	}
+
 	trustNode := viper.GetBool(client.FlagTrustNode)
 	if trustNode {
 		return nil
 	}
+
 	chainID := viper.GetString(client.FlagChainID)
 	home := viper.GetString(cli.HomeFlag)
 	nodeURI := viper.GetString(client.FlagNode)
 
 	var errMsg bytes.Buffer
 	if chainID == "" {
-		errMsg.WriteString("chain-id ")
+		errMsg.WriteString("--chain-id ")
 	}
 	if home == "" {
-		errMsg.WriteString("home ")
+		errMsg.WriteString("--home ")
 	}
 	if nodeURI == "" {
-		errMsg.WriteString("node ")
+		errMsg.WriteString("--node ")
 	}
-	// errMsg is not empty
 	if errMsg.Len() != 0 {
-		panic(fmt.Errorf("can't create certifier for distrust mode, empty values from these options: %s", errMsg.String()))
+		fmt.Printf("must specify these options: %s when --trust-node is false\n", errMsg.String())
+		os.Exit(1)
 	}
+
 	certifier, err := tmliteProxy.GetCertifier(chainID, home, nodeURI)
 	if err != nil {
 		panic(err)
 	}
+
 	return certifier
 }
 

@@ -234,7 +234,7 @@ func genesisAccountFromGenTx(genTx GaiaGenTx) GenesisAccount {
 }
 
 // GaiaValidateGenesisState ensures that the genesis state obeys the expected invariants
-// TODO: No validators are both bonded and revoked (#2088)
+// TODO: No validators are both bonded and jailed (#2088)
 // TODO: Error if there is a duplicate validator (#1708)
 // TODO: Ensure all state machine parameters are in genesis (#1704)
 func GaiaValidateGenesisState(genesisState GenesisState) (err error) {
@@ -258,7 +258,7 @@ func validateGenesisStateValidators(validators []stakeTypes.Validator) (err erro
 			return fmt.Errorf("Duplicate validator in genesis state: moniker %v, Address %v", val.Description.Moniker, val.ConsAddress())
 		}
 		if val.Jailed && val.Status == sdk.Bonded {
-			return fmt.Errorf("Validator is bonded and revoked in genesis state: moniker %v, Address %v", val.Description.Moniker, val.ConsAddress())
+			return fmt.Errorf("Validator is bonded and jailed in genesis state: moniker %v, Address %v", val.Description.Moniker, val.ConsAddress())
 		}
 		addrMap[strKey] = true
 	}

@@ -14,7 +14,7 @@ type Pool struct {
     BondedTokens        int64   // reserve of bonded tokens
     InflationLastTime   int64   // block which the last inflation was processed // TODO make time
     Inflation           sdk.Dec // current annual inflation rate
-    
+
     DateLastCommissionReset int64  // unix timestamp for last commission accounting reset (daily)
 }
 ```
@@ -29,41 +29,40 @@ overall functioning of the stake module.
 ```golang
 type Params struct {
     InflationRateChange sdk.Dec // maximum annual change in inflation rate
-	InflationMax        sdk.Dec // maximum inflation rate
-	InflationMin        sdk.Dec // minimum inflation rate
-	GoalBonded          sdk.Dec // Goal of percent bonded atoms
+    InflationMax        sdk.Dec // maximum inflation rate
+    InflationMin        sdk.Dec // minimum inflation rate
+    GoalBonded          sdk.Dec // Goal of percent bonded atoms
 
-	MaxValidators uint16 // maximum number of validators
-	BondDenom     string // bondable coin denomination
+    MaxValidators uint16 // maximum number of validators
+    BondDenom     string // bondable coin denomination
 }
 ```
 
 ### Validator
 
-Validators are identified according to the `ValOwnerAddr`, 
-an SDK account address for the owner of the validator.
+Validators are identified according to the `OperatorAddr`, an SDK validator
+address for the operator of the validator.
 
-Validators also have a `ValTendermintAddr`, the address 
-of the public key of the validator.
+Validators also have a `ConsPubKey`, the public key of the validator.
 
 Validators are indexed in the store using the following maps:
 
- - Validators: `0x02 | ValOwnerAddr -> amino(validator)`
- - ValidatorsByPubKey: `0x03 | ValTendermintAddr -> ValOwnerAddr`
- - ValidatorsByPower: `0x05 | power | blockHeight | blockTx  -> ValOwnerAddr`
+- Validators: `0x02 | OperatorAddr -> amino(validator)`
+- ValidatorsByPubKey: `0x03 | ConsPubKey -> OperatorAddr`
+- ValidatorsByPower: `0x05 | power | blockHeight | blockTx  -> OperatorAddr`
 
- `Validators` is the primary index - it ensures that each owner can have only one
- associated validator, where the public key of that validator can change in the
- future. Delegators can refer to the immutable owner of the validator, without
- concern for the changing public key.
+`Validators` is the primary index - it ensures that each operator can have only one
+associated validator, where the public key of that validator can change in the
+future. Delegators can refer to the immutable operator of the validator, without
+concern for the changing public key.
 
- `ValidatorsByPubKey` is a secondary index that enables lookups for slashing.
- When Tendermint reports evidence, it provides the validator address, so this
- map is needed to find the owner.
+`ValidatorsByPubKey` is a secondary index that enables lookups for slashing.
+When Tendermint reports evidence, it provides the validator address, so this
+map is needed to find the operator.
 
- `ValidatorsByPower` is a secondary index that provides a sorted list of
- potential validators to quickly determine the current active set. For instance,
- the first 100 validators in this list can be returned with every EndBlock.
+`ValidatorsByPower` is a secondary index that provides a sorted list of
+potential validators to quickly determine the current active set. For instance,
+the first 100 validators in this list can be returned with every EndBlock.
 
 The `Validator` holds the current state and some historical actions of the
 validator.
@@ -72,18 +71,18 @@ validator.
 type Validator struct {
     ConsensusPubKey crypto.PubKey  // Tendermint consensus pubkey of validator
     Jailed          bool           // has the validator been jailed?
-    
-	Status          sdk.BondStatus // validator status (bonded/unbonding/unbonded)
-	Tokens          sdk.Dec        // delegated tokens (incl. self-delegation)
+
+    Status          sdk.BondStatus // validator status (bonded/unbonding/unbonded)
+    Tokens          sdk.Dec        // delegated tokens (incl. self-delegation)
     DelegatorShares sdk.Dec        // total shares issued to a validator's delegators
     SlashRatio      sdk.Dec        // increases each time the validator is slashed
-    
+
     Description        Description  // description terms for the validator
-    
+
     // Needed for ordering vals in the by-power key
     BondHeight         int64        // earliest height as a bonded validator
     BondIntraTxCounter int16        // block-local tx index of validator change
-    
+
     CommissionInfo     CommissionInfo // info about the validator's commission
 }
 
@@ -96,42 +95,41 @@ type CommissionInfo struct {
 }
 
 type Description struct {
-	Moniker  string // name
-	Identity string // optional identity signature (ex. UPort or Keybase)
-	Website  string // optional website link
-	Details  string // optional details
+    Moniker  string // name
+    Identity string // optional identity signature (ex. UPort or Keybase)
+    Website  string // optional website link
+    Details  string // optional details
 }
 ```
 
 ### Delegation
 
-Delegations are identified by combining `DelegatorAddr` (the address of the delegator) with the ValOwnerAddr 
-Delegators are indexed in the store as follows:
+Delegations are identified by combining `DelegatorAddr` (the address of the delegator)
+with the `OperatorAddr` Delegators are indexed in the store as follows:
 
- - Delegation: ` 0x0A | DelegatorAddr | ValOwnerAddr -> amino(delegation)`
+- Delegation: ` 0x0A | DelegatorAddr | OperatorAddr -> amino(delegation)`
 
 Atom holders may delegate coins to validators; under this circumstance their
-funds are held in a `Delegation` data structure. It is owned by one 
-delegator, and is associated with the shares for one validator. The sender of 
+funds are held in a `Delegation` data structure. It is owned by one
+delegator, and is associated with the shares for one validator. The sender of
 the transaction is the owner of the bond.
 
 ```golang
 type Delegation struct {
-	Shares        sdk.Dec      // delegation shares recieved 
-	Height        int64        // last height bond updated
+    Shares        sdk.Dec   // delegation shares received
+    Height        int64     // last height bond updated
 }
 ```
 
 ### UnbondingDelegation
 
-Shares in a `Delegation` can be unbonded, but they must for some time exist as an `UnbondingDelegation`,
-where shares can be reduced if Byzantine behaviour is detected.
+Shares in a `Delegation` can be unbonded, but they must for some time exist as an `UnbondingDelegation`, where shares can be reduced if Byzantine behavior is detected.
 
 `UnbondingDelegation` are indexed in the store as:
 
- - UnbondingDelegationByDelegator: ` 0x0B | DelegatorAddr | ValOwnerAddr ->
+- UnbondingDelegationByDelegator: ` 0x0B | DelegatorAddr | OperatorAddr ->
    amino(unbondingDelegation)`
- - UnbondingDelegationByValOwner: ` 0x0C | ValOwnerAddr | DelegatorAddr | ValOwnerAddr ->
+- UnbondingDelegationByValOwner: ` 0x0C | OperatorAddr | DelegatorAddr | OperatorAddr ->
    nil`
 
  The first map here is used in queries, to lookup all unbonding delegations for
@@ -148,26 +146,26 @@ type UnbondingDelegation struct {
     Tokens           sdk.Coins   // the value in Atoms of the amount of shares which are unbonding
     CompleteTime     int64       // unix time to complete redelegation
 }
-``` 
+```
 
 ### Redelegation
 
-Shares in a `Delegation` can be rebonded to a different validator, but they must for some time exist as a `Redelegation`,
-where shares can be reduced if Byzantine behaviour is detected. This is tracked
-as moving a delegation from a `FromValOwnerAddr` to a `ToValOwnerAddr`.
+Shares in a `Delegation` can be rebonded to a different validator, but they must
+for some time exist as a `Redelegation`, where shares can be reduced if Byzantine
+behavior is detected. This is tracked as moving a delegation from a `FromOperatorAddr`
+to a `ToOperatorAddr`.
 
 `Redelegation` are indexed in the store as:
 
- - Redelegations: `0x0D | DelegatorAddr | FromValOwnerAddr | ToValOwnerAddr ->
+ - Redelegations: `0x0D | DelegatorAddr | FromOperatorAddr | ToOperatorAddr ->
    amino(redelegation)`
- - RedelegationsBySrc: `0x0E | FromValOwnerAddr | ToValOwnerAddr |
+ - RedelegationsBySrc: `0x0E | FromOperatorAddr | ToOperatorAddr |
    DelegatorAddr -> nil`
- - RedelegationsByDst: `0x0F | ToValOwnerAddr | FromValOwnerAddr | DelegatorAddr
+ - RedelegationsByDst: `0x0F | ToOperatorAddr | FromOperatorAddr | DelegatorAddr
    -> nil`
 
-
 The first map here is used for queries, to lookup all redelegations for a given
-delegator. The second map is used for slashing based on the FromValOwnerAddr,
+delegator. The second map is used for slashing based on the `FromOperatorAddr`,
 while the third map is for slashing based on the ToValOwnerAddr.
 
 A redelegation object is created every time a redelegation occurs. The

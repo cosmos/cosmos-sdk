@@ -22,14 +22,16 @@ var (
 	ValidatorsByPowerIndexKey        = []byte{0x05} // prefix for each key to a validator index, sorted by power
 	ValidatorCliffIndexKey           = []byte{0x06} // key for the validator index of the cliff validator
 	ValidatorPowerCliffKey           = []byte{0x07} // key for the power of the validator on the cliff
-	TendermintUpdatesKey             = []byte{0x08} // prefix for each key to a validator which is being updated
-	IntraTxCounterKey                = []byte{0x09} // key for intra-block tx index
-	DelegationKey                    = []byte{0x0A} // key for a delegation
-	UnbondingDelegationKey           = []byte{0x0B} // key for an unbonding-delegation
-	UnbondingDelegationByValIndexKey = []byte{0x0C} // prefix for each key for an unbonding-delegation, by validator owner
-	RedelegationKey                  = []byte{0x0D} // key for a redelegation
-	RedelegationByValSrcIndexKey     = []byte{0x0E} // prefix for each key for an redelegation, by source validator owner
-	RedelegationByValDstIndexKey     = []byte{0x0F} // prefix for each key for an redelegation, by destination validator owner
+	IntraTxCounterKey                = []byte{0x08} // key for intra-block tx index
+	DelegationKey                    = []byte{0x09} // key for a delegation
+	UnbondingDelegationKey           = []byte{0x0A} // key for an unbonding-delegation
+	UnbondingDelegationByValIndexKey = []byte{0x0B} // prefix for each key for an unbonding-delegation, by validator operator
+	RedelegationKey                  = []byte{0x0C} // key for a redelegation
+	RedelegationByValSrcIndexKey     = []byte{0x0D} // prefix for each key for an redelegation, by source validator operator
+	RedelegationByValDstIndexKey     = []byte{0x0E} // prefix for each key for an redelegation, by destination validator operator
+
+	// Keys for store prefixes (transient)
+	TendermintUpdatesTKey = []byte{0x00} // prefix for each key to a validator which is being updated
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -41,7 +43,7 @@ func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
 }
 
 // gets the key for the validator with pubkey
-// VALUE: validator owner address ([]byte)
+// VALUE: validator operator address ([]byte)
 func GetValidatorByPubKeyIndexKey(pubkey crypto.PubKey) []byte {
 	return append(ValidatorsByPubKeyIndexKey, pubkey.Bytes()...)
 }
@@ -52,7 +54,7 @@ func GetValidatorsBondedIndexKey(operatorAddr sdk.ValAddress) []byte {
 	return append(ValidatorsBondedIndexKey, operatorAddr.Bytes()...)
 }
 
-// Get the validator owner address from ValBondedIndexKey
+// Get the validator operator address from ValBondedIndexKey
 func GetAddressFromValBondedIndexKey(IndexKey []byte) []byte {
 	return IndexKey[1:] // remove prefix bytes
 }
@@ -60,7 +62,7 @@ func GetAddressFromValBondedIndexKey(IndexKey []byte) []byte {
 // get the validator by power index.
 // Power index is the key used in the power-store, and represents the relative
 // power ranking of the validator.
-// VALUE: validator owner address ([]byte)
+// VALUE: validator operator address ([]byte)
 func GetValidatorsByPowerIndexKey(validator types.Validator, pool types.Pool) []byte {
 	// NOTE the address doesn't need to be stored because counter bytes must always be different
 	return getValidatorPowerRank(validator, pool)
@@ -68,6 +70,7 @@ func GetValidatorsByPowerIndexKey(validator types.Validator, pool types.Pool) []
 
 // get the power ranking of a validator
 // NOTE the larger values are of higher value
+// nolint: unparam
 func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 
 	potentialPower := validator.Tokens
@@ -97,8 +100,8 @@ func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 // get the key for the accumulated update validators
 // VALUE: abci.Validator
 // note records using these keys should never persist between blocks
-func GetTendermintUpdatesKey(operatorAddr sdk.ValAddress) []byte {
-	return append(TendermintUpdatesKey, operatorAddr.Bytes()...)
+func GetTendermintUpdatesTKey(operatorAddr sdk.ValAddress) []byte {
+	return append(TendermintUpdatesTKey, operatorAddr.Bytes()...)
 }
 
 //______________________________________________________________________________

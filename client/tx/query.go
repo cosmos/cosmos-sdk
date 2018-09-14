@@ -13,13 +13,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // QueryTxCmd implements the default command for a tx query.
-func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
+func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tx [hash]",
 		Short: "Matches this txhash over all committed blocks",
@@ -46,7 +46,7 @@ func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string) ([]byte, error) {
+func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) ([]byte, error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
 		return nil, err
@@ -67,10 +67,10 @@ func queryTx(cdc *wire.Codec, cliCtx context.CLIContext, hashHexStr string) ([]b
 		return nil, err
 	}
 
-	return wire.MarshalJSONIndent(cdc, info)
+	return codec.MarshalJSONIndent(cdc, info)
 }
 
-func formatTxResult(cdc *wire.Codec, cliCtx context.CLIContext, res *ctypes.ResultTx) (Info, error) {
+func formatTxResult(cdc *codec.Codec, cliCtx context.CLIContext, res *ctypes.ResultTx) (Info, error) {
 	if !cliCtx.TrustNode {
 		check, err := cliCtx.Certify(res.Height)
 		if err != nil {
@@ -104,7 +104,7 @@ type Info struct {
 	Result abci.ResponseDeliverTx `json:"result"`
 }
 
-func parseTx(cdc *wire.Codec, txBytes []byte) (sdk.Tx, error) {
+func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {
 	var tx auth.StdTx
 
 	err := cdc.UnmarshalBinary(txBytes, &tx)
@@ -118,7 +118,7 @@ func parseTx(cdc *wire.Codec, txBytes []byte) (sdk.Tx, error) {
 // REST
 
 // transaction query REST handler
-func QueryTxRequestHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		hashHexStr := vars["hash"]

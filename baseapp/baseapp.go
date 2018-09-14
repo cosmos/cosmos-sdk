@@ -14,10 +14,10 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Key to store the header in the DB itself.
@@ -120,10 +120,17 @@ func (app *BaseApp) RegisterCodespace(codespace sdk.CodespaceType) sdk.Codespace
 	return app.codespacer.RegisterNext(codespace)
 }
 
-// Mount a store to the provided key in the BaseApp multistore
+// Mount IAVL stores to the provided keys in the BaseApp multistore
 func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
 	for _, key := range keys {
 		app.MountStore(key, sdk.StoreTypeIAVL)
+	}
+}
+
+// Mount stores to the provided keys in the BaseApp multistore
+func (app *BaseApp) MountStoresTransient(keys ...*sdk.TransientStoreKey) {
+	for _, key := range keys {
+		app.MountStore(key, sdk.StoreTypeTransient)
 	}
 }
 
@@ -324,7 +331,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 		}
 
 		// Encode with json
-		value := wire.Cdc.MustMarshalBinary(result)
+		value := codec.Cdc.MustMarshalBinary(result)
 		return abci.ResponseQuery{
 			Code:  uint32(sdk.ABCICodeOK),
 			Value: value,
@@ -345,6 +352,7 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) (res a
 	return queryable.Query(req)
 }
 
+// nolint: unparam
 func handleQueryP2P(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
 	// "/p2p" prefix for p2p queries
 	if len(path) >= 4 {

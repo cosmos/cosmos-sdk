@@ -1,11 +1,11 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// Register concrete types on wire codec
-func RegisterWire(cdc *wire.Codec) {
+// Register concrete types on codec codec
+func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgCreateValidator{}, "cosmos-sdk/MsgCreateValidator", nil)
 	cdc.RegisterConcrete(MsgEditValidator{}, "cosmos-sdk/MsgEditValidator", nil)
 	cdc.RegisterConcrete(MsgDelegate{}, "cosmos-sdk/MsgDelegate", nil)
@@ -16,12 +16,12 @@ func RegisterWire(cdc *wire.Codec) {
 }
 
 // generic sealed codec to be used throughout sdk
-var MsgCdc *wire.Codec
+var MsgCdc *codec.Codec
 
 func init() {
-	cdc := wire.NewCodec()
-	RegisterWire(cdc)
-	wire.RegisterCrypto(cdc)
+	cdc := codec.New()
+	RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
 	MsgCdc = cdc
 	//MsgCdc = cdc.Seal() //TODO use when upgraded to go-amino 0.9.10
 }

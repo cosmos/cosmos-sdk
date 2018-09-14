@@ -3,18 +3,18 @@ package stake
 //// keeper of the staking store
 //type Keeper struct {
 //storeKey   sdk.StoreKey
-//cdc        *wire.Codec
-//coinKeeper bank.Keeper
+//cdc        *codec.Codec
+//bankKeeper bank.Keeper
 
 //// codespace
 //codespace sdk.CodespaceType
 //}
 
-//func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
+//func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
 //keeper := Keeper{
 //storeKey:   key,
 //cdc:        cdc,
-//coinKeeper: ck,
+//bankKeeper: ck,
 //codespace:  codespace,
 //}
 //return keeper

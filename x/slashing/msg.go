@@ -1,11 +1,11 @@
 package slashing
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
-var cdc = wire.NewCodec()
+var cdc = codec.New()
 
 // name to identify transaction types
 const MsgType = "slashing"
@@ -15,7 +15,7 @@ var _ sdk.Msg = &MsgUnjail{}
 
 // MsgUnjail - struct for unjailing jailed validator
 type MsgUnjail struct {
-	ValidatorAddr sdk.ValAddress `json:"address"` // address of the validator owner
+	ValidatorAddr sdk.ValAddress `json:"address"` // address of the validator operator
 }
 
 func NewMsgUnjail(validatorAddr sdk.ValAddress) MsgUnjail {

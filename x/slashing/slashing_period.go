@@ -32,7 +32,7 @@ func (k Keeper) capBySlashingPeriod(ctx sdk.Context, address sdk.ConsAddress, fr
 	return
 }
 
-// Stored by validator Tendermint address (not owner address)
+// Stored by validator Tendermint address (not operator address)
 // This function retrieves the most recent slashing period starting
 // before a particular height - so the slashing period that was "in effect"
 // at the time of an infraction committed at that height.
@@ -49,7 +49,7 @@ func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk
 	return
 }
 
-// Stored by validator Tendermint address (not owner address)
+// Stored by validator Tendermint address (not operator address)
 // This function sets a validator slashing period for a particular validator,
 // start height, end height, and current slashed-so-far total, or updates
 // an existing slashing period for the same validator and start height.

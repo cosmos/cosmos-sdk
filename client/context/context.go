@@ -3,10 +3,11 @@ package context
 import (
 	"bytes"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"io"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/spf13/viper"
 
@@ -22,13 +23,11 @@ const ctxAccStoreName = "acc"
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
 type CLIContext struct {
-	Codec           *wire.Codec
+	Codec           *codec.Codec
 	AccDecoder      auth.AccountDecoder
 	Client          rpcclient.Client
 	Logger          io.Writer
 	Height          int64
-	Gas             int64
-	GasAdjustment   float64
 	NodeURI         string
 	FromAddressName string
 	AccountStore    string
@@ -39,6 +38,7 @@ type CLIContext struct {
 	PrintResponse   bool
 	Certifier       tmlite.Certifier
 	DryRun          bool
+	GenerateOnly    bool
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
@@ -57,8 +57,6 @@ func NewCLIContext() CLIContext {
 		AccountStore:    ctxAccStoreName,
 		FromAddressName: viper.GetString(client.FlagFrom),
 		Height:          viper.GetInt64(client.FlagHeight),
-		Gas:             viper.GetInt64(client.FlagGas),
-		GasAdjustment:   viper.GetFloat64(client.FlagGasAdjustment),
 		TrustNode:       viper.GetBool(client.FlagTrustNode),
 		UseLedger:       viper.GetBool(client.FlagUseLedger),
 		Async:           viper.GetBool(client.FlagAsync),
@@ -66,6 +64,7 @@ func NewCLIContext() CLIContext {
 		PrintResponse:   viper.GetBool(client.FlagPrintResponse),
 		Certifier:       createCertifier(),
 		DryRun:          viper.GetBool(client.FlagDryRun),
+		GenerateOnly:    viper.GetBool(client.FlagGenerateOnly),
 	}
 }
 
@@ -108,7 +107,7 @@ func createCertifier() tmlite.Certifier {
 }
 
 // WithCodec returns a copy of the context with an updated codec.
-func (ctx CLIContext) WithCodec(cdc *wire.Codec) CLIContext {
+func (ctx CLIContext) WithCodec(cdc *codec.Codec) CLIContext {
 	ctx.Codec = cdc
 	return ctx
 }
@@ -168,11 +167,5 @@ func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 // WithCertifier - return a copy of the context with an updated Certifier
 func (ctx CLIContext) WithCertifier(certifier tmlite.Certifier) CLIContext {
 	ctx.Certifier = certifier
-	return ctx
-}
-
-// WithGasAdjustment returns a copy of the context with an updated GasAdjustment flag.
-func (ctx CLIContext) WithGasAdjustment(adjustment float64) CLIContext {
-	ctx.GasAdjustment = adjustment
 	return ctx
 }

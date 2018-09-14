@@ -6,10 +6,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 
 	"encoding/json"
@@ -49,7 +49,7 @@ var proposalFlags = []string{
 }
 
 // GetCmdSubmitProposal implements submitting a proposal transaction command.
-func GetCmdSubmitProposal(cdc *wire.Codec) *cobra.Command {
+func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "submit-proposal",
 		Short: "Submit a proposal along with an initial deposit",
@@ -77,7 +77,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 				return err
 			}
 
-			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
@@ -99,16 +99,19 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 			}
 
 			msg := gov.NewMsgSubmitProposal(proposal.Title, proposal.Description, proposalType, fromAddr, amount)
-
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
 			}
 
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
+			}
+
 			// Build and sign the transaction, then broadcast to Tendermint
 			// proposalID must be returned, and it is a part of response.
 			cliCtx.PrintResponse = true
-			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
+			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -153,12 +156,12 @@ func parseSubmitProposalFlags() (*proposal, error) {
 }
 
 // GetCmdDeposit implements depositing tokens for an active proposal.
-func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
+func GetCmdDeposit(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deposit",
 		Short: "deposit tokens for activing proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
@@ -177,15 +180,18 @@ func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 			}
 
 			msg := gov.NewMsgDeposit(depositerAddr, proposalID, amount)
-
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
 			}
 
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
+			}
+
 			// Build and sign the transaction, then broadcast to a Tendermint
 			// node.
-			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
+			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -196,12 +202,12 @@ func GetCmdDeposit(cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdVote implements creating a new vote command.
-func GetCmdVote(cdc *wire.Codec) *cobra.Command {
+func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "vote",
 		Short: "vote for an active proposal, options: Yes/No/NoWithVeto/Abstain",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
@@ -221,10 +227,13 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 			}
 
 			msg := gov.NewMsgVote(voterAddr, proposalID, byteVoteOption)
-
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
+			}
+
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 
 			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]",
@@ -233,7 +242,7 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 
 			// Build and sign the transaction, then broadcast to a Tendermint
 			// node.
-			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
+			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -244,7 +253,7 @@ func GetCmdVote(cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdQueryProposal implements the query proposal command.
-func GetCmdQueryProposal(queryRoute string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryProposal(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query-proposal",
 		Short: "query proposal details",
@@ -278,7 +287,7 @@ func GetCmdQueryProposal(queryRoute string, cdc *wire.Codec) *cobra.Command {
 
 // nolint: gocyclo
 // GetCmdQueryProposals implements a query proposals command.
-func GetCmdQueryProposals(queryRoute string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryProposals(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query-proposals",
 		Short: "query proposals with optional filters",
@@ -357,7 +366,7 @@ func GetCmdQueryProposals(queryRoute string, cdc *wire.Codec) *cobra.Command {
 
 // Command to Get a Proposal Information
 // GetCmdQueryVote implements the query proposal vote command.
-func GetCmdQueryVote(queryRoute string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryVote(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query-vote",
 		Short: "query vote",
@@ -396,7 +405,7 @@ func GetCmdQueryVote(queryRoute string, cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdQueryVotes implements the command to query for proposal votes.
-func GetCmdQueryVotes(queryRoute string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryVotes(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query-votes",
 		Short: "query votes on a proposal",
@@ -429,7 +438,7 @@ func GetCmdQueryVotes(queryRoute string, cdc *wire.Codec) *cobra.Command {
 
 // Command to Get a specific Deposit Information
 // GetCmdQueryDeposit implements the query proposal deposit command.
-func GetCmdQueryDeposit(queryRoute string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryDeposit(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query-deposit",
 		Short: "query deposit",
@@ -468,7 +477,7 @@ func GetCmdQueryDeposit(queryRoute string, cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdQueryDeposits implements the command to query for proposal deposits.
-func GetCmdQueryDeposits(queryRoute string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryDeposits(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query-deposits",
 		Short: "query deposits on a proposal",
@@ -500,7 +509,7 @@ func GetCmdQueryDeposits(queryRoute string, cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdQueryDeposits implements the command to query for proposal deposits.
-func GetCmdQueryTally(queryRoute string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryTally(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query-tally",
 		Short: "get the tally of a proposal vote",

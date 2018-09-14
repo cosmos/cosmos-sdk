@@ -15,6 +15,7 @@ func ActivatedParamKey(ty string) string {
 }
 
 // InitGenesis stores activated type to param store
+// nolint: errcheck
 func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	for _, ty := range data.ActivatedTypes {
 		k.set(ctx, ActivatedParamKey(ty), true)

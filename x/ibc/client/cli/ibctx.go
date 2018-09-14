@@ -7,10 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 
 	"github.com/spf13/cobra"
@@ -24,11 +24,11 @@ const (
 )
 
 // IBCTransferCmd implements the IBC transfer command.
-func IBCTransferCmd(cdc *wire.Codec) *cobra.Command {
+func IBCTransferCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "transfer",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
@@ -43,8 +43,11 @@ func IBCTransferCmd(cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
+			}
 
-			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
+			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 

@@ -1,8 +1,8 @@
 package gov
 
 import (
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
@@ -31,15 +31,15 @@ type Keeper struct {
 	// The (unexposed) keys used to access the stores from the Context.
 	storeKey sdk.StoreKey
 
-	// The wire codec for binary encoding/decoding.
-	cdc *wire.Codec
+	// The codec codec for binary encoding/decoding.
+	cdc *codec.Codec
 
 	// Reserved codespace
 	codespace sdk.CodespaceType
 }
 
-// NewGovernanceMapper returns a mapper that uses go-wire to (binary) encode and decode gov types.
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ps params.Setter, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
+// NewGovernanceMapper returns a mapper that uses go-codec to (binary) encode and decode gov types.
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ps params.Setter, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
 		storeKey:  key,
 		ps:        ps,
@@ -51,8 +51,8 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ps params.Setter, ck bank.Keep
 	}
 }
 
-// Returns the go-wire codec.
-func (keeper Keeper) WireCodec() *wire.Codec {
+// Returns the go-codec codec.
+func (keeper Keeper) WireCodec() *codec.Codec {
 	return keeper.cdc
 }
 
@@ -210,6 +210,7 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 // Procedures
 
 // Returns the current Deposit Procedure from the global param store
+// nolint: errcheck
 func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) DepositProcedure {
 	var depositProcedure DepositProcedure
 	keeper.ps.Get(ctx, ParamStoreKeyDepositProcedure, &depositProcedure)
@@ -217,6 +218,7 @@ func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) DepositProcedure {
 }
 
 // Returns the current Voting Procedure from the global param store
+// nolint: errcheck
 func (keeper Keeper) GetVotingProcedure(ctx sdk.Context) VotingProcedure {
 	var votingProcedure VotingProcedure
 	keeper.ps.Get(ctx, ParamStoreKeyVotingProcedure, &votingProcedure)
@@ -224,20 +226,24 @@ func (keeper Keeper) GetVotingProcedure(ctx sdk.Context) VotingProcedure {
 }
 
 // Returns the current Tallying Procedure from the global param store
+// nolint: errcheck
 func (keeper Keeper) GetTallyingProcedure(ctx sdk.Context) TallyingProcedure {
 	var tallyingProcedure TallyingProcedure
 	keeper.ps.Get(ctx, ParamStoreKeyTallyingProcedure, &tallyingProcedure)
 	return tallyingProcedure
 }
 
+// nolint: errcheck
 func (keeper Keeper) setDepositProcedure(ctx sdk.Context, depositProcedure DepositProcedure) {
 	keeper.ps.Set(ctx, ParamStoreKeyDepositProcedure, &depositProcedure)
 }
 
+// nolint: errcheck
 func (keeper Keeper) setVotingProcedure(ctx sdk.Context, votingProcedure VotingProcedure) {
 	keeper.ps.Set(ctx, ParamStoreKeyVotingProcedure, &votingProcedure)
 }
 
+// nolint: errcheck
 func (keeper Keeper) setTallyingProcedure(ctx sdk.Context, tallyingProcedure TallyingProcedure) {
 	keeper.ps.Set(ctx, ParamStoreKeyTallyingProcedure, &tallyingProcedure)
 }

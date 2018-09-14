@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
@@ -27,7 +27,7 @@ import (
 // ServeCommand will generate a long-running rest server
 // (aka Light Client Daemon) that exposes functionality similar
 // to the cli, but over rest
-func ServeCommand(cdc *wire.Codec) *cobra.Command {
+func ServeCommand(cdc *codec.Codec) *cobra.Command {
 	flagListenAddr := "laddr"
 	flagCORS := "cors"
 	flagMaxOpenConnections := "max-open"
@@ -71,7 +71,7 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func createHandler(cdc *wire.Codec) http.Handler {
+func createHandler(cdc *codec.Codec) http.Handler {
 	r := mux.NewRouter()
 
 	kb, err := keys.GetKeyBase() //XXX

@@ -20,10 +20,10 @@ know the ordering of messages / objects after they were initially created.
 
 ## Decision
 
-Create a global message counter field of type uint64.
-The choice of uint64 is because it is only getting incremented by
-one, and thus has a space of 18 quintillion values to go through, so
-there is no fear of overflow.
+Create a global message counter field of type int64.
+Note that with int64's, there is no fear of overflow under normal use,
+as it is only getting incremented by one,
+and thus has a space of 9 quintillion values to go through.
 
 This counter must be persisted in state, but can just be read and written on 
 begin/end block respectively.

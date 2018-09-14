@@ -198,7 +198,7 @@ func TestUnbondDelegation(t *testing.T) {
 	}
 	keeper.SetDelegation(ctx, delegation)
 
-	amount, err := keeper.unbond(ctx, addrDels[0], addrVals[0], sdk.NewDec(6))
+	amount, err := keeper.unbondShares(ctx, addrDels[0], addrVals[0], sdk.NewDec(6))
 	require.NoError(t, err)
 	require.Equal(t, int64(6), amount.RoundInt64()) // shares to be added to an unbonding delegation / redelegation
 

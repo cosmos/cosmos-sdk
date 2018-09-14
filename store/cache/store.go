@@ -1,4 +1,4 @@
-package cachekv
+package cache
 
 import (
 	"bytes"
@@ -9,6 +9,8 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/store/trace"
 )
 
 // If value is nil but deleted is false, it means the parent doesn't have the
@@ -34,11 +36,6 @@ func NewStore(parent sdk.KVStore) *Store {
 		cache:  make(map[string]cValue),
 		parent: parent,
 	}
-}
-
-// Implements Store.
-func (ci *Store) GetStoreType() sdk.StoreType {
-	return ci.parent.GetStoreType()
 }
 
 // Implements sdk.KVStore.
@@ -82,16 +79,6 @@ func (ci *Store) Delete(key []byte) {
 	ci.setCacheValue(key, nil, true, true)
 }
 
-// Implements sdk.KVStore
-func (ci *Store) Prefix(pref []byte) sdk.KVStore {
-	return prefix.NewStore(ci, pref)
-}
-
-// Implements sdk.KVStore
-func (ci *Store) Gas(meter GasMeter, config GasConfig) sdk.KVStore {
-	return NewGasKVStore(meter, config, ci)
-}
-
 // Implements Store.
 func (ci *Store) Write() {
 	ci.mtx.Lock()
@@ -129,13 +116,13 @@ func (ci *Store) Write() {
 // To cache-wrap this Store further.
 
 // Implements CacheWrapper.
-func (ci *Store) CacheWrap() CacheWrap {
+func (ci *Store) CacheWrap() sdk.CacheWrap {
 	return NewStore(ci)
 }
 
 // CacheWrapWithTrace implements the CacheWrapper interface.
-func (ci *Store) CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap {
-	return NewStore(NewTraceKVStore(ci, w, tc))
+func (ci *Store) CacheWrapWithTrace(w io.Writer, tc sdk.TraceContext) sdk.CacheWrap {
+	return NewStore(trace.NewStore(ci, w, tc))
 }
 
 //----------------------------------------

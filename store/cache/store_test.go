@@ -1,4 +1,4 @@
-package cachekv
+package cache_test
 
 import (
 	"fmt"
@@ -7,19 +7,24 @@ import (
 	"github.com/stretchr/testify/require"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 )
 
-func newCacheKVStore() CacheKVStore {
-	mem := dbStoreAdapter{dbm.NewMemDB()}
-	return NewCacheKVStore(mem)
+func newCacheKVStore() sdk.CacheKVStore {
+	mem := dbadapter.NewStore(dbm.NewMemDB())
+	return cachekv.NewStore(mem)
 }
 
 func keyFmt(i int) []byte { return bz(fmt.Sprintf("key%0.8d", i)) }
 func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
 func TestCacheKVStore(t *testing.T) {
-	mem := dbStoreAdapter{dbm.NewMemDB()}
-	st := NewCacheKVStore(mem)
+	mem := dbadapter.NewStore(dbm.NewMemDB())
+	st := cachekv.NewStore(mem)
 
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
 
@@ -45,11 +50,11 @@ func TestCacheKVStore(t *testing.T) {
 	require.Equal(t, valFmt(2), st.Get(keyFmt(1)))
 
 	// make a new one, check it
-	st = NewCacheKVStore(mem)
+	st = cachekv.NewStore(mem)
 	require.Equal(t, valFmt(2), st.Get(keyFmt(1)))
 
 	// make a new one and delete - should not be removed from mem
-	st = NewCacheKVStore(mem)
+	st = cachekv.NewStore(mem)
 	st.Delete(keyFmt(1))
 	require.Empty(t, st.Get(keyFmt(1)))
 	require.Equal(t, mem.Get(keyFmt(1)), valFmt(2))
@@ -61,8 +66,8 @@ func TestCacheKVStore(t *testing.T) {
 }
 
 func TestCacheKVStoreNested(t *testing.T) {
-	mem := dbStoreAdapter{dbm.NewMemDB()}
-	st := NewCacheKVStore(mem)
+	mem := dbadapter.NewStore(dbm.NewMemDB())
+	st := cachekv.NewStore(mem)
 
 	// set. check its there on st and not on mem.
 	st.Set(keyFmt(1), valFmt(1))
@@ -70,7 +75,7 @@ func TestCacheKVStoreNested(t *testing.T) {
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
 
 	// make a new from st and check
-	st2 := NewCacheKVStore(st)
+	st2 := cachekv.NewStore(st)
 	require.Equal(t, valFmt(1), st2.Get(keyFmt(1)))
 
 	// update the value on st2, check it only effects st2
@@ -312,7 +317,7 @@ func randInt(n int) int {
 }
 
 // useful for replaying a error case if we find one
-func doOp(st CacheKVStore, truth dbm.DB, op int, args ...int) {
+func doOp(st sdk.CacheKVStore, truth dbm.DB, op int, args ...int) {
 	switch op {
 	case opSet:
 		k := args[0]
@@ -335,7 +340,7 @@ func doOp(st CacheKVStore, truth dbm.DB, op int, args ...int) {
 	}
 }
 
-func doRandomOp(st CacheKVStore, truth dbm.DB, maxKey int) {
+func doRandomOp(st sdk.CacheKVStore, truth dbm.DB, maxKey int) {
 	r := randInt(totalOps)
 	switch r {
 	case opSet:
@@ -362,7 +367,7 @@ func doRandomOp(st CacheKVStore, truth dbm.DB, maxKey int) {
 //-------------------------------------------------------------------------------------------
 
 // iterate over whole domain
-func assertIterateDomain(t *testing.T, st KVStore, expectedN int) {
+func assertIterateDomain(t *testing.T, st sdk.KVStore, expectedN int) {
 	itr := st.Iterator(nil, nil)
 	var i = 0
 	for ; itr.Valid(); itr.Next() {
@@ -374,7 +379,7 @@ func assertIterateDomain(t *testing.T, st KVStore, expectedN int) {
 	require.Equal(t, expectedN, i)
 }
 
-func assertIterateDomainCheck(t *testing.T, st KVStore, mem dbm.DB, r []keyRange) {
+func assertIterateDomainCheck(t *testing.T, st sdk.KVStore, mem dbm.DB, r []keyRange) {
 	// iterate over each and check they match the other
 	itr := st.Iterator(nil, nil)
 	itr2 := mem.Iterator(nil, nil) // ground truth
@@ -404,7 +409,7 @@ func assertIterateDomainCheck(t *testing.T, st KVStore, mem dbm.DB, r []keyRange
 	require.False(t, itr2.Valid())
 }
 
-func assertIterateDomainCompare(t *testing.T, st KVStore, mem dbm.DB) {
+func assertIterateDomainCompare(t *testing.T, st sdk.KVStore, mem dbm.DB) {
 	// iterate over each and check they match the other
 	itr := st.Iterator(nil, nil)
 	itr2 := mem.Iterator(nil, nil) // ground truth
@@ -412,7 +417,7 @@ func assertIterateDomainCompare(t *testing.T, st KVStore, mem dbm.DB) {
 	checkIterators(t, itr2, itr)
 }
 
-func checkIterators(t *testing.T, itr, itr2 Iterator) {
+func checkIterators(t *testing.T, itr, itr2 sdk.Iterator) {
 	for ; itr.Valid(); itr.Next() {
 		require.True(t, itr2.Valid())
 		k, v := itr.Key(), itr.Value()
@@ -427,14 +432,14 @@ func checkIterators(t *testing.T, itr, itr2 Iterator) {
 
 //--------------------------------------------------------
 
-func setRange(st KVStore, mem dbm.DB, start, end int) {
+func setRange(st sdk.KVStore, mem dbm.DB, start, end int) {
 	for i := start; i < end; i++ {
 		st.Set(keyFmt(i), valFmt(i))
 		mem.Set(keyFmt(i), valFmt(i))
 	}
 }
 
-func deleteRange(st KVStore, mem dbm.DB, start, end int) {
+func deleteRange(st sdk.KVStore, mem dbm.DB, start, end int) {
 	for i := start; i < end; i++ {
 		st.Delete(keyFmt(i))
 		mem.Delete(keyFmt(i))

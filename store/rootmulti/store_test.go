@@ -1,4 +1,4 @@
-package store
+package rootmulti
 
 import (
 	"testing"
@@ -46,7 +46,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	require.Nil(t, err)
 
 	// New store has empty last commit.
-	commitID := CommitID{}
+	commitID := sdk.CommitID{}
 	checkStore(t, store, commitID, commitID)
 
 	// Make sure we can get stores by name.
@@ -137,11 +137,11 @@ func TestMultiStoreQuery(t *testing.T) {
 	require.Nil(t, garbage)
 
 	// Set and commit data in one store.
-	store1 := multi.getStoreByName("store1").(KVStore)
+	store1 := multi.getStoreByName("store1").(sdk.KVStore)
 	store1.Set(k, v)
 
 	// ... and another.
-	store2 := multi.getStoreByName("store2").(KVStore)
+	store2 := multi.getStoreByName("store2").(sdk.KVStore)
 	store2.Set(k2, v2)
 
 	// Commit the multistore.
@@ -201,20 +201,20 @@ func newMultiStoreWithMounts(db dbm.DB) *rootMultiStore {
 	return store
 }
 
-func checkStore(t *testing.T, store *rootMultiStore, expect, got CommitID) {
+func checkStore(t *testing.T, store *rootMultiStore, expect, got sdk.CommitID) {
 	require.Equal(t, expect, got)
 	require.Equal(t, expect, store.LastCommitID())
 
 }
 
-func getExpectedCommitID(store *rootMultiStore, ver int64) CommitID {
-	return CommitID{
+func getExpectedCommitID(store *rootMultiStore, ver int64) sdk.CommitID {
+	return sdk.CommitID{
 		Version: ver,
 		Hash:    hashStores(store.stores),
 	}
 }
 
-func hashStores(stores map[StoreKey]CommitStore) []byte {
+func hashStores(stores map[sdk.StoreKey]sdk.CommitStore) []byte {
 	m := make(map[string]merkle.Hasher, len(stores))
 	for key, store := range stores {
 		name := key.Name()

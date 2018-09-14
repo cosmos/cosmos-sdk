@@ -1,7 +1,9 @@
-package store
+package cache
 
 import (
 	"bytes"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // cacheMergeIterator merges a parent Iterator and a cache Iterator.
@@ -12,14 +14,14 @@ import (
 //
 // TODO: Optimize by memoizing.
 type cacheMergeIterator struct {
-	parent    Iterator
-	cache     Iterator
+	parent    sdk.Iterator
+	cache     sdk.Iterator
 	ascending bool
 }
 
-var _ Iterator = (*cacheMergeIterator)(nil)
+var _ sdk.Iterator = (*cacheMergeIterator)(nil)
 
-func newCacheMergeIterator(parent, cache Iterator, ascending bool) *cacheMergeIterator {
+func newCacheMergeIterator(parent, cache sdk.Iterator, ascending bool) *cacheMergeIterator {
 	iter := &cacheMergeIterator{
 		parent:    parent,
 		cache:     cache,

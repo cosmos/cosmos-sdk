@@ -26,7 +26,6 @@ const (
 )
 
 type Store interface { //nolint
-	GetStoreType() StoreType
 	CacheWrapper
 }
 
@@ -95,7 +94,7 @@ type CommitMultiStore interface {
 
 	// Mount a store of type using the given db.
 	// If db == nil, the new store will use the CommitMultiStore db.
-	MountStoreWithDB(key StoreKey, typ StoreType, db dbm.DB)
+	MountStoreWithDB(key StoreKey, db dbm.DB)
 
 	// Panics on a nil key.
 	GetCommitStore(key StoreKey) CommitStore
@@ -182,6 +181,11 @@ type CommitKVStore interface {
 	KVStore
 }
 
+type MountableStore interface {
+	CommitStore
+	Load()
+}
+
 //----------------------------------------
 // CacheWrap
 
@@ -224,20 +228,6 @@ func (cid CommitID) IsZero() bool { //nolint
 func (cid CommitID) String() string {
 	return fmt.Sprintf("CommitID{%v:%X}", cid.Hash, cid.Version)
 }
-
-//----------------------------------------
-// Store types
-
-// kind of store
-type StoreType int
-
-const (
-	//nolint
-	StoreTypeMulti StoreType = iota
-	StoreTypeDB
-	StoreTypeIAVL
-	StoreTypeTransient
-)
 
 //----------------------------------------
 // Keys for accessing substores

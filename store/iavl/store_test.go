@@ -1,4 +1,4 @@
-package store
+package iavl
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ var (
 )
 
 // make a tree and save it
-func newTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, CommitID) {
+func newTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, sdk.CommitID) {
 	tree := iavl.NewMutableTree(db, cacheSize)
 	for k, v := range treeData {
 		tree.Set([]byte(k), []byte(v))
@@ -41,7 +41,7 @@ func newTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, CommitID) {
 	}
 	hash, ver, err := tree.SaveVersion()
 	require.Nil(t, err)
-	return tree, CommitID{ver, hash}
+	return tree, sdk.CommitID{ver, hash}
 }
 
 func TestIAVLStoreGetSetHasDelete(t *testing.T) {
@@ -385,12 +385,12 @@ func TestIAVLStoreQuery(t *testing.T) {
 	v3 := []byte("val3")
 
 	ksub := []byte("key")
-	KVs0 := []KVPair{}
-	KVs1 := []KVPair{
+	KVs0 := []sdk.KVPair{}
+	KVs1 := []sdk.KVPair{
 		{Key: k1, Value: v1},
 		{Key: k2, Value: v2},
 	}
-	KVs2 := []KVPair{
+	KVs2 := []sdk.KVPair{
 		{Key: k1, Value: v3},
 		{Key: k2, Value: v2},
 	}
@@ -475,7 +475,7 @@ func BenchmarkIAVLIteratorNext(b *testing.B) {
 		tree.Set(key, value)
 	}
 	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
-	iterators := make([]Iterator, b.N/treeSize)
+	iterators := make([]sdk.Iterator, b.N/treeSize)
 	for i := 0; i < len(iterators); i++ {
 		iterators[i] = iavlStore.Iterator([]byte{0}, []byte{255, 255, 255, 255, 255})
 	}

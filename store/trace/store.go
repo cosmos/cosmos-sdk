@@ -1,4 +1,4 @@
-package store
+package trace
 
 import (
 	"encoding/base64"
@@ -44,7 +44,7 @@ type (
 
 // NewTraceKVStore returns a reference to a new traceKVStore given a parent
 // KVStore implementation and a buffered writer.
-func NewTraceKVStore(parent sdk.KVStore, writer io.Writer, tc sdk.TraceContext) *TraceKVStore {
+func NewStore(parent sdk.KVStore, writer io.Writer, tc sdk.TraceContext) *TraceKVStore {
 	return &TraceKVStore{parent: parent, writer: writer, context: tc}
 }
 
@@ -147,12 +147,6 @@ func (ti *traceIterator) Value() []byte {
 // Close implements the Iterator interface.
 func (ti *traceIterator) Close() {
 	ti.parent.Close()
-}
-
-// GetStoreType implements the KVStore interface. It returns the underlying
-// KVStore type.
-func (tkv *TraceKVStore) GetStoreType() sdk.StoreType {
-	return tkv.parent.GetStoreType()
 }
 
 // CacheWrap implements the KVStore interface. It panics as a TraceKVStore

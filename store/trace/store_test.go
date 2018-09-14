@@ -1,4 +1,4 @@
-package store
+package trace
 
 import (
 	"bytes"
@@ -8,9 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	dbm "github.com/tendermint/tendermint/libs/db"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var kvPairs = []KVPair{
+var kvPairs = []sdk.KVPair{
 	{Key: keyFmt(1), Value: valFmt(1)},
 	{Key: keyFmt(2), Value: valFmt(2)},
 	{Key: keyFmt(3), Value: valFmt(3)},
@@ -28,7 +30,7 @@ func newTraceKVStore(w io.Writer) *TraceKVStore {
 
 func newEmptyTraceKVStore(w io.Writer) *TraceKVStore {
 	memDB := dbStoreAdapter{dbm.NewMemDB()}
-	tc := TraceContext(map[string]interface{}{"blockHeight": 64})
+	tc := sdk.TraceContext(map[string]interface{}{"blockHeight": 64})
 
 	return NewTraceKVStore(memDB, w, tc)
 }
@@ -263,13 +265,13 @@ func TestTestTraceKVStoreReverseIterator(t *testing.T) {
 
 func TestTraceKVStorePrefix(t *testing.T) {
 	store := newEmptyTraceKVStore(nil)
-	pStore := store.Prefix([]byte("trace_prefix"))
-	require.IsType(t, prefixStore{}, pStore)
+	pStore := prefix.NewStore(store, []byte("trace_prefix"))
+	require.IsType(t, prefix.Store{}, pStore)
 }
 
 func TestTraceKVStoreGetStoreType(t *testing.T) {
 	memDB := dbStoreAdapter{dbm.NewMemDB()}
-	store := newEmptyTraceKVStore(nil)
+	store := NewEmptyStore(nil)
 	require.Equal(t, memDB.GetStoreType(), store.GetStoreType())
 }
 

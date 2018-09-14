@@ -1,4 +1,4 @@
-package store
+package gas
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newGasKVStore() KVStore {
+func newGasKVStore() sdk.KVStore {
 	meter := sdk.NewGasMeter(1000)
 	mem := dbStoreAdapter{dbm.NewMemDB()}
 	return NewGasKVStore(meter, sdk.KVGasConfig(), mem)
@@ -69,7 +69,7 @@ func TestGasKVStoreOutOfGasIterator(t *testing.T) {
 	require.Panics(t, func() { iterator.Value() }, "Expected out-of-gas")
 }
 
-func testGasKVStoreWrap(t *testing.T, store KVStore) {
+func testGasKVStoreWrap(t *testing.T, store sdk.KVStore) {
 	meter := sdk.NewGasMeter(10000)
 
 	store = store.Gas(meter, sdk.GasConfig{HasCost: 10})

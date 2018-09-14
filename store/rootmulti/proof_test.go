@@ -1,4 +1,4 @@
-package store
+package rootmulti
 
 import (
 	"encoding/hex"
@@ -9,6 +9,8 @@ import (
 	"github.com/tendermint/iavl"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/libs/db"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestVerifyMultiStoreCommitInfo(t *testing.T) {
@@ -23,7 +25,7 @@ func TestVerifyMultiStoreCommitInfo(t *testing.T) {
 	storeInfos = append(storeInfos, storeInfo{
 		Name: "gov",
 		Core: storeCore{
-			CommitID: CommitID{
+			CommitID: sdk.CommitID{
 				Version: 689,
 				Hash:    gocRootHash,
 			},
@@ -33,7 +35,7 @@ func TestVerifyMultiStoreCommitInfo(t *testing.T) {
 	storeInfos = append(storeInfos, storeInfo{
 		Name: "main",
 		Core: storeCore{
-			CommitID: CommitID{
+			CommitID: sdk.CommitID{
 				Version: 689,
 				Hash:    nil,
 			},
@@ -44,7 +46,7 @@ func TestVerifyMultiStoreCommitInfo(t *testing.T) {
 	storeInfos = append(storeInfos, storeInfo{
 		Name: "acc",
 		Core: storeCore{
-			CommitID: CommitID{
+			CommitID: sdk.CommitID{
 				Version: 689,
 				Hash:    accRootHash,
 			},
@@ -54,7 +56,7 @@ func TestVerifyMultiStoreCommitInfo(t *testing.T) {
 	storeInfos = append(storeInfos, storeInfo{
 		Name: "ibc",
 		Core: storeCore{
-			CommitID: CommitID{
+			CommitID: sdk.CommitID{
 				Version: 689,
 				Hash:    nil,
 			},
@@ -65,7 +67,7 @@ func TestVerifyMultiStoreCommitInfo(t *testing.T) {
 	storeInfos = append(storeInfos, storeInfo{
 		Name: "stake",
 		Core: storeCore{
-			CommitID: CommitID{
+			CommitID: sdk.CommitID{
 				Version: 689,
 				Hash:    stakeRootHash,
 			},
@@ -76,7 +78,7 @@ func TestVerifyMultiStoreCommitInfo(t *testing.T) {
 	storeInfos = append(storeInfos, storeInfo{
 		Name: "slashing",
 		Core: storeCore{
-			CommitID: CommitID{
+			CommitID: sdk.CommitID{
 				Version: 689,
 				Hash:    slashingRootHash,
 			},

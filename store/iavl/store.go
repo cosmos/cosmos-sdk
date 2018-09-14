@@ -1,4 +1,4 @@
-package store
+package iavl
 
 import (
 	"fmt"
@@ -12,6 +12,9 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/store/cache"
+	"github.com/cosmos/cosmos-sdk/store/trace"
 )
 
 const (
@@ -19,7 +22,7 @@ const (
 )
 
 // load the iavl store
-func LoadIAVLStore(db dbm.DB, id CommitID, pruning sdk.PruningStrategy) (CommitStore, error) {
+func LoadIAVLStore(db dbm.DB, id sdk.CommitID, pruning sdk.PruningStrategy) (sdk.CommitStore, error) {
 	tree := iavl.NewMutableTree(db, defaultIAVLCacheSize)
 	_, err := tree.LoadVersion(id.Version)
 	if err != nil {
@@ -32,11 +35,11 @@ func LoadIAVLStore(db dbm.DB, id CommitID, pruning sdk.PruningStrategy) (CommitS
 
 //----------------------------------------
 
-var _ KVStore = (*iavlStore)(nil)
-var _ CommitStore = (*iavlStore)(nil)
-var _ Queryable = (*iavlStore)(nil)
+var _ sdk.KVStore = (*iavlStore)(nil)
+var _ sdk.CommitStore = (*iavlStore)(nil)
+var _ sdk.Queryable = (*iavlStore)(nil)
 
-// iavlStore Implements KVStore and CommitStore.
+// iavlStore Implements sdk.KVStore and sdk.CommitStore.
 type iavlStore struct {
 
 	// The underlying tree.
@@ -67,7 +70,7 @@ func newIAVLStore(tree *iavl.MutableTree, numRecent int64, storeEvery int64) *ia
 }
 
 // Implements Committer.
-func (st *iavlStore) Commit() CommitID {
+func (st *iavlStore) Commit() sdk.CommitID {
 	// Save a new version.
 	hash, version, err := st.tree.SaveVersion()
 	if err != nil {
@@ -87,15 +90,15 @@ func (st *iavlStore) Commit() CommitID {
 		}
 	}
 
-	return CommitID{
+	return sdk.CommitID{
 		Version: version,
 		Hash:    hash,
 	}
 }
 
 // Implements Committer.
-func (st *iavlStore) LastCommitID() CommitID {
-	return CommitID{
+func (st *iavlStore) LastCommitID() sdk.CommitID {
+	return sdk.CommitID{
 		Version: st.tree.Version(),
 		Hash:    st.tree.Hash(),
 	}
@@ -121,58 +124,43 @@ func (st *iavlStore) VersionExists(version int64) bool {
 }
 
 // Implements Store.
-func (st *iavlStore) GetStoreType() StoreType {
-	return sdk.StoreTypeIAVL
-}
-
-// Implements Store.
-func (st *iavlStore) CacheWrap() CacheWrap {
-	return NewCacheKVStore(st)
+func (st *iavlStore) CacheWrap() sdk.CacheWrap {
+	return cache.NewStore(st)
 }
 
 // CacheWrapWithTrace implements the Store interface.
-func (st *iavlStore) CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap {
-	return NewCacheKVStore(NewTraceKVStore(st, w, tc))
+func (st *iavlStore) CacheWrapWithTrace(w io.Writer, tc sdk.TraceContext) sdk.CacheWrap {
+	return cache.NewStore(trace.NewStore(st, w, tc))
 }
 
-// Implements KVStore.
+// Implements sdk.KVStore.
 func (st *iavlStore) Set(key, value []byte) {
 	st.tree.Set(key, value)
 }
 
-// Implements KVStore.
+// Implements sdk.KVStore.
 func (st *iavlStore) Get(key []byte) (value []byte) {
 	_, v := st.tree.Get(key)
 	return v
 }
 
-// Implements KVStore.
+// Implements sdk.KVStore.
 func (st *iavlStore) Has(key []byte) (exists bool) {
 	return st.tree.Has(key)
 }
 
-// Implements KVStore.
+// Implements sdk.KVStore.
 func (st *iavlStore) Delete(key []byte) {
 	st.tree.Remove(key)
 }
 
-// Implements KVStore
-func (st *iavlStore) Prefix(prefix []byte) KVStore {
-	return prefixStore{st, prefix}
-}
-
-// Implements KVStore
-func (st *iavlStore) Gas(meter GasMeter, config GasConfig) KVStore {
-	return NewGasKVStore(meter, config, st)
-}
-
-// Implements KVStore.
-func (st *iavlStore) Iterator(start, end []byte) Iterator {
+// Implements sdk.KVStore.
+func (st *iavlStore) Iterator(start, end []byte) sdk.Iterator {
 	return newIAVLIterator(st.tree.ImmutableTree, start, end, true)
 }
 
-// Implements KVStore.
-func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
+// Implements sdk.KVStore.
+func (st *iavlStore) ReverseIterator(start, end []byte) sdk.Iterator {
 	return newIAVLIterator(st.tree.ImmutableTree, start, end, false)
 }
 
@@ -237,10 +225,10 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	case "/subspace":
 		subspace := req.Data
 		res.Key = subspace
-		var KVs []KVPair
+		var KVs []sdk.KVPair
 		iterator := sdk.KVStorePrefixIterator(st, subspace)
 		for ; iterator.Valid(); iterator.Next() {
-			KVs = append(KVs, KVPair{Key: iterator.Key(), Value: iterator.Value()})
+			KVs = append(KVs, sdk.KVPair{Key: iterator.Key(), Value: iterator.Value()})
 		}
 		iterator.Close()
 		res.Value = cdc.MustMarshalBinary(KVs)
@@ -282,7 +270,7 @@ type iavlIterator struct {
 	value   []byte // The current value
 }
 
-var _ Iterator = (*iavlIterator)(nil)
+var _ sdk.Iterator = (*iavlIterator)(nil)
 
 // newIAVLIterator will create a new iavlIterator.
 // CONTRACT: Caller must release the iavlIterator, as each one creates a new

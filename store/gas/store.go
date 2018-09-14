@@ -1,4 +1,4 @@
-package store
+package gas
 
 import (
 	"io"
@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ KVStore = &gasKVStore{}
+var _ sdk.KVStore = &gasKVStore{}
 
 // gasKVStore applies gas tracking to an underlying KVStore. It implements the
 // KVStore interface.
@@ -27,80 +27,53 @@ func NewGasKVStore(gasMeter sdk.GasMeter, gasConfig sdk.GasConfig, parent sdk.KV
 	return kvs
 }
 
-// Implements Store.
-func (gs *gasKVStore) GetStoreType() sdk.StoreType {
-	return gs.parent.GetStoreType()
-}
-
-// Implements KVStore.
-func (gs *gasKVStore) Get(key []byte) (value []byte) {
-	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostFlat, sdk.GasReadCostFlatDesc)
-	value = gs.parent.Get(key)
-
+// Implements sdk.KVStore.
+func (gi *gasKVStore) Get(key []byte) (value []byte) {
+	gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostFlat, sdk.GasReadCostFlatDesc)
+	value = gi.parent.Get(key)
 	// TODO overflow-safe math?
-	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*sdk.Gas(len(value)), sdk.GasReadPerByteDesc)
+	gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*sdk.Gas(len(value)), sdk.GasReadPerByteDesc)
 
 	return value
 }
 
-// Implements KVStore.
-func (gs *gasKVStore) Set(key []byte, value []byte) {
-	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, sdk.GasWriteCostFlatDesc)
+// Implements sdk.KVStore.
+func (gi *gasKVStore) Set(key []byte, value []byte) {
+	gi.gasMeter.ConsumeGas(gi.gasConfig.WriteCostFlat, sdk.GasWriteCostFlatDesc)
 	// TODO overflow-safe math?
-	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*sdk.Gas(len(value)), sdk.GasWritePerByteDesc)
-	gs.parent.Set(key, value)
+	gi.gasMeter.ConsumeGas(gi.gasConfig.WriteCostPerByte*sdk.Gas(len(value)), sdk.GasWritePerByteDesc)
+	gi.parent.Set(key, value)
 }
 
-// Implements KVStore.
-func (gs *gasKVStore) Has(key []byte) bool {
-	gs.gasMeter.ConsumeGas(gs.gasConfig.HasCost, sdk.GasHasDesc)
-	return gs.parent.Has(key)
+// Implements sdk.KVStore.
+func (gi *gasKVStore) Has(key []byte) bool {
+	gi.gasMeter.ConsumeGas(gi.gasConfig.HasCost, sdk.GasHasDesc)
+	return gi.parent.Has(key)
 }
 
-// Implements KVStore.
-func (gs *gasKVStore) Delete(key []byte) {
-	// charge gas to prevent certain attack vectors even though space is being freed
-	gs.gasMeter.ConsumeGas(gs.gasConfig.DeleteCost, sdk.GasDeleteDesc)
-	gs.parent.Delete(key)
+// Implements sdk.KVStore.
+func (gi *gasKVStore) Delete(key []byte) {
+	gi.gasMeter.ConsumeGas(gi.gasConfig.DeleteCost, sdk.GasDeleteDesc)
+	gi.parent.Delete(key)
 }
 
-// Implements KVStore
-func (gs *gasKVStore) Prefix(prefix []byte) KVStore {
-	// Keep gasstore layer at the top
-	return &gasKVStore{
-		gasMeter:  gs.gasMeter,
-		gasConfig: gs.gasConfig,
-		parent:    prefixStore{gs.parent, prefix},
-	}
+// Implements sdk.KVStore.
+func (gi *gasKVStore) Iterator(start, end []byte) sdk.Iterator {
+	return gi.iterator(start, end, true)
 }
 
-// Implements KVStore
-func (gs *gasKVStore) Gas(meter GasMeter, config GasConfig) KVStore {
-	return NewGasKVStore(meter, config, gs)
+// Implements sdk.KVStore.
+func (gi *gasKVStore) ReverseIterator(start, end []byte) sdk.Iterator {
+	return gi.iterator(start, end, false)
 }
 
-// Iterator implements the KVStore interface. It returns an iterator which
-// incurs a flat gas cost for seeking to the first key/value pair and a variable
-// gas cost based on the current value's length if the iterator is valid.
-func (gs *gasKVStore) Iterator(start, end []byte) sdk.Iterator {
-	return gs.iterator(start, end, true)
-}
-
-// ReverseIterator implements the KVStore interface. It returns a reverse
-// iterator which incurs a flat gas cost for seeking to the first key/value pair
-// and a variable gas cost based on the current value's length if the iterator
-// is valid.
-func (gs *gasKVStore) ReverseIterator(start, end []byte) sdk.Iterator {
-	return gs.iterator(start, end, false)
-}
-
-// Implements KVStore.
-func (gs *gasKVStore) CacheWrap() sdk.CacheWrap {
+// Implements sdk.KVStore.
+func (gi *gasKVStore) CacheWrap() sdk.CacheWrap {
 	panic("cannot CacheWrap a GasKVStore")
 }
 
-// CacheWrapWithTrace implements the KVStore interface.
-func (gs *gasKVStore) CacheWrapWithTrace(_ io.Writer, _ TraceContext) CacheWrap {
+// CacheWrapWithTrace implements the sdk.KVStore interface.
+func (gi *gasKVStore) CacheWrapWithTrace(_ io.Writer, _ sdk.TraceContext) sdk.CacheWrap {
 	panic("cannot CacheWrapWithTrace a GasKVStore")
 }
 

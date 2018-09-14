@@ -6,8 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/cache"
+	"github.com/cosmos/cosmos-sdk/store/trace"
 )
 
 var _ sdk.KVStore = Store{}
@@ -16,7 +16,7 @@ var _ sdk.KVStore = Store{}
 // both gives access only to the limited subset of the store
 // for convinience or safety
 type Store struct {
-	parent KVStore
+	parent sdk.KVStore
 	prefix []byte
 }
 
@@ -27,7 +27,7 @@ func cloneAppend(bz []byte, tail []byte) (res []byte) {
 	return
 }
 
-func (s prefixStore) key(key []byte) (res []byte) {
+func (s Store) key(key []byte) (res []byte) {
 	if key == nil {
 		panic("nil key on prefixStore")
 	}
@@ -35,19 +35,14 @@ func (s prefixStore) key(key []byte) (res []byte) {
 	return
 }
 
-// Implements Store
-func (s Store) GetStoreType() sdk.StoreType {
-	return s.parent.GetStoreType()
-}
-
 // Implements CacheWrap
 func (s Store) CacheWrap() sdk.CacheWrap {
-	return cachekv.NewStore(s)
+	return cache.NewStore(s)
 }
 
 // CacheWrapWithTrace implements the KVStore interface.
 func (s Store) CacheWrapWithTrace(w io.Writer, tc sdk.TraceContext) sdk.CacheWrap {
-	return cachekv.NewStore(tracekv.NewStore(s, w, tc))
+	return cache.NewStore(trace.NewStore(s, w, tc))
 }
 
 // Implements KVStore
@@ -71,18 +66,8 @@ func (s Store) Delete(key []byte) {
 }
 
 // Implements KVStore
-func (s Store) Prefix(prefix []byte) sdk.KVStore {
-	return Store{s, prefix}
-}
-
-// Implements KVStore
-func (s Store) Gas(meter sdk.GasMeter, config sdk.GasConfig) sdk.KVStore {
-	return NewGasKVStore(meter, config, s)
-}
-
-// Implements KVStore
 // Check https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db.go#L106
-func (s Store) Iterator(start, end []byte) Iterator {
+func (s Store) Iterator(start, end []byte) sdk.Iterator {
 	newstart := cloneAppend(s.prefix, start)
 
 	var newend []byte
@@ -99,7 +84,7 @@ func (s Store) Iterator(start, end []byte) Iterator {
 
 // Implements KVStore
 // Check https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db.go#L129
-func (s Store) ReverseIterator(start, end []byte) Iterator {
+func (s Store) ReverseIterator(start, end []byte) sdk.Iterator {
 	var newstart []byte
 	if start == nil {
 		newstart = cpIncr(s.prefix)
@@ -127,11 +112,11 @@ var _ sdk.Iterator = (*prefixIterator)(nil)
 type prefixIterator struct {
 	prefix     []byte
 	start, end []byte
-	iter       Iterator
+	iter       sdk.Iterator
 	valid      bool
 }
 
-func newPrefixIterator(prefix, start, end []byte, parent Iterator) *prefixIterator {
+func newPrefixIterator(prefix, start, end []byte, parent sdk.Iterator) *prefixIterator {
 	return &prefixIterator{
 		prefix: prefix,
 		start:  start,
@@ -218,7 +203,7 @@ func cpDecr(bz []byte) (ret []byte) {
 	return nil
 }
 
-func skipOne(iter Iterator, skipKey []byte) {
+func skipOne(iter sdk.Iterator, skipKey []byte) {
 	if iter.Valid() {
 		if bytes.Equal(iter.Key(), skipKey) {
 			iter.Next()

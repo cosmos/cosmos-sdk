@@ -1,4 +1,4 @@
-package store
+package iavl
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"

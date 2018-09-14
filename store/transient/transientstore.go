@@ -1,49 +1,36 @@
-package store
+package transient
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
+
+	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 )
 
-var _ KVStore = (*transientStore)(nil)
+var _ sdk.KVStore = (*Store)(nil)
 
 // transientStore is a wrapper for a MemDB with Commiter implementation
-type transientStore struct {
-	dbStoreAdapter
+type Store struct {
+	dbadapter.Store
 }
 
 // Constructs new MemDB adapter
-func newTransientStore() *transientStore {
-	return &transientStore{dbStoreAdapter{dbm.NewMemDB()}}
+func NewStore() *Store {
+	return &Store{dbadapter.Store{dbm.NewMemDB()}}
 }
 
 // Implements CommitStore
 // Commit cleans up transientStore.
-func (ts *transientStore) Commit() (id CommitID) {
-	ts.dbStoreAdapter = dbStoreAdapter{dbm.NewMemDB()}
+func (ts *Store) Commit() (id sdk.CommitID) {
+	ts.Store = dbadapter.Store{dbm.NewMemDB()}
 	return
 }
 
 // Implements CommitStore
-func (ts *transientStore) SetPruning(pruning PruningStrategy) {
+func (ts *Store) SetPruning(pruning sdk.PruningStrategy) {
 }
 
 // Implements CommitStore
-func (ts *transientStore) LastCommitID() (id CommitID) {
+func (ts *Store) LastCommitID() (id sdk.CommitID) {
 	return
-}
-
-// Implements KVStore
-func (ts *transientStore) Prefix(prefix []byte) KVStore {
-	return prefixStore{ts, prefix}
-}
-
-// Implements KVStore
-func (ts *transientStore) Gas(meter GasMeter, config GasConfig) KVStore {
-	return NewGasKVStore(meter, config, ts)
-}
-
-// Implements Store.
-func (ts *transientStore) GetStoreType() StoreType {
-	return sdk.StoreTypeTransient
 }

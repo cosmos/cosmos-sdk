@@ -189,7 +189,9 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 //_________________________________________________________________________
 // Accumulated updates to the active/bonded validator set for tendermint
 
-// get the most recently updated validators
+// GetValidTendermintUpdates returns the most recently valid updated validators.
+//
+// NOTE: This will significantly be refactored via #2312
 //
 // CONTRACT: Only validators with non-zero power or zero-power that were bonded
 // at the previous block height or were removed from the validator set entirely
@@ -209,11 +211,8 @@ func (k Keeper) GetValidTendermintUpdates(ctx sdk.Context) (updates []abci.Valid
 		val, found := k.GetValidator(ctx, abciVal.GetAddress())
 		if found {
 			// The validator is new or already exists in the store and must adhere to
-			// Tendermint invariants.
-			prevBonded := val.BondHeight < ctx.BlockHeight() && val.BondHeight > val.UnbondingHeight
-			zeroPower := val.GetPower().Equal(sdk.ZeroDec())
-
-			if !zeroPower || zeroPower && prevBonded {
+			// Tendermint update invariants.
+			if validTendermintUpdate(ctx, val) {
 				updates = append(updates, abciVal)
 			}
 		} else {
@@ -222,6 +221,7 @@ func (k Keeper) GetValidTendermintUpdates(ctx sdk.Context) (updates []abci.Valid
 			updates = append(updates, abciVal)
 		}
 	}
+
 	return
 }
 

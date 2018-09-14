@@ -76,9 +76,10 @@ func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 }
 
 // validator index
-func (k Keeper) SetValidatorByPubKeyIndex(ctx sdk.Context, validator types.Validator) {
+func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(GetValidatorByPubKeyIndexKey(validator.ConsPubKey), validator.OperatorAddr)
+	consAddr := sdk.consAddress{validator.Address()}
+	store.Set(GetValidatorByPubKeyIndexKey(consAddr), validator.OperatorAddr)
 }
 
 // validator index

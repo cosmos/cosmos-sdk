@@ -2,15 +2,14 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // Allocate fees handles distribution of the collected fees
-func (k Keeper) AllocateFees(ctx sdk.Context, req abci.RequestBeginBlock) {
+func (k Keeper) AllocateFees(ctx sdk.Context) {
 
 	// get the proposer of this block
-	proposerAddr := req.Header.Proposer.PubKey // XXX use address?
-	proserValidator := k.stakeKeeper.GetValidatorFromConsAddr(ctx, proposerAddr)
+	proposerConsAddr := k.GetProposerConsAddr(ctx)
+	proserValidator := k.stakeKeeper.GetValidatorFromConsAddr(ctx, proposerConsAddr)
 	proposerDist := k.GetFeeDistribution(ctx, proserValidator.OperatorAddr)
 
 	// get the fees which have been getting collected through all the

@@ -11,7 +11,7 @@ type TotalAccum struct {
 // update total validator accumulation factor
 func (ta TotalAccum) Update(height int64, accumCreatedPerBlock sdk.Dec) TotalAccum {
 	blocks := height - ta.UpdateHeight
-	f.Accum += accumCreatedPerBlock.Mul(sdk.NewDec(blocks))
+	f.Accum = f.Accum.Add(accumCreatedPerBlock.Mul(sdk.NewDec(blocks)))
 	ta.UpdateHeight = height
 	return ta
 }

@@ -87,3 +87,16 @@ func (coins DecCoins) Plus(coinsB DecCoins) DecCoins {
 		}
 	}
 }
+
+// multiply all the coins by a multiple
+func (coins DecCoins) Mul(multiple sdk.Dec) DecCoins {
+	products := make([]DecCoin, len(coins))
+	for i, coin := range coins {
+		product := DecCoins{
+			Denom:  coin.Denom,
+			Amount: coin.Amount.Mul(multiple),
+		}
+		products[i] = product
+	}
+	return products
+}

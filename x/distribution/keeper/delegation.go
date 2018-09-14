@@ -3,7 +3,6 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 // get the delegator distribution info
@@ -35,17 +34,17 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr,
 	withdrawAddr sdk.AccAddress, validatorAddr sdk.ValAddress) {
 
 	height := ctx.BlockHeight()
-	pool := stake.GetPool()
-	feePool := GetFeePool()
-	delInfo := GetDelegationDistInfo(delegatorAddr, validatorAddr)
-	valInfo := GetValidatorDistInfo(validatorAddr)
-	validator := GetValidator(validatorAddr)
+	pool := k.sk.GetPool(ctx)
+	feePool := k.GetFeePool(ctx)
+	delInfo := k.GetDelegationDistInfo(ctx, delegatorAddr, validatorAddr)
+	valInfo := k.GetValidatorDistInfo(ctx, validatorAddr)
+	validator := k.GetValidator(ctx, validatorAddr)
 
 	feePool, withdraw := delInfo.WithdrawRewards(feePool, valInfo, height, pool.BondedTokens,
 		validator.Tokens, validator.DelegatorShares, validator.Commission)
 
-	SetFeePool(feePool)
-	AddCoins(withdrawAddr, withdraw.TruncateDecimal())
+	k.SetFeePool(ctx, feePool)
+	k.ck.AddCoins(ctx, withdrawAddr, withdraw.TruncateDecimal())
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -61,14 +60,14 @@ func (k Keeper) WithdrawDelegationRewardsAll(ctx sdk.Context, delegatorAddr, wit
 func (k Keeper) GetDelegatorRewardsAll(ctx sdk.Context, delAddr sdk.AccAddress, height int64) DecCoins {
 
 	withdraw := sdk.NewDec(0)
-	pool := stake.GetPool()
-	feePool := GetFeePool()
+	pool := k.sk.GetPool(ctx)
+	feePool := k.GetFeePool(ctx)
 
 	// iterate over all the delegations
 	operationAtDelegation := func(_ int64, del types.Delegation) (stop bool) {
-		delInfo := GetDelegationDistInfo(delAddr, del.ValidatorAddr)
-		valInfo := GetValidatorDistInfo(del.ValidatorAddr)
-		validator := GetValidator(del.ValidatorAddr)
+		delInfo := k.GetDelegationDistInfo(ctx, delAddr, del.ValidatorAddr)
+		valInfo := k.GetValidatorDistInfo(ctx, del.ValidatorAddr)
+		validator := k.sk.GetValidator(ctx, del.ValidatorAddr)
 
 		feePool, diWithdraw := delInfo.WithdrawRewards(feePool, valInfo, height, pool.BondedTokens,
 			validator.Tokens, validator.DelegatorShares, validator.Commission)
@@ -78,6 +77,6 @@ func (k Keeper) GetDelegatorRewardsAll(ctx sdk.Context, delAddr sdk.AccAddress, 
 	}
 	k.stakeKeeper.IterateDelegations(ctx, delAddr, operationAtDelegation)
 
-	SetFeePool(feePool)
+	k.SetFeePool(ctx, feePool)
 	return withdraw
 }

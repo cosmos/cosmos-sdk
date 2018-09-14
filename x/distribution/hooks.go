@@ -26,3 +26,29 @@ Whenever a validator is slashed or enters/leaves the validator group all of the
 validator entitled reward tokens must be simultaneously withdrawn from
 `Global.Pool` and added to `ValidatorDistInfo.Pool`.
 */
+
+// Create a new validator distribution record
+func (k Keeper) onValidatorBonded(ctx sdk.Context, address sdk.ConsAddress) {
+	slashingPeriod := ValidatorSlashingPeriod{
+		ValidatorAddr: address,
+		StartHeight:   ctx.BlockHeight(),
+		EndHeight:     0,
+		SlashedSoFar:  sdk.ZeroDec(),
+	}
+	k.addOrUpdateValidatorSlashingPeriod(ctx, slashingPeriod)
+}
+
+//_________________________________________________________________________________________
+
+// Wrapper struct for sdk.ValidatorHooks
+type ValidatorHooks struct {
+	k Keeper
+}
+
+var _ sdk.ValidatorHooks = ValidatorHooks{}
+
+// nolint
+func (k Keeper) ValidatorHooks() sdk.ValidatorHooks { return ValidatorHooks{k} }
+func (v ValidatorHooks) OnValidatorBonded(ctx sdk.Context, address sdk.ConsAddress) {
+	v.k.onValidatorBonded(ctx, address)
+}

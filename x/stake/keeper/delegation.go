@@ -438,16 +438,6 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 		return err
 	}
 
-	srcVal, found := k.GetValidator(ctx, valSrcAddr)
-	if found {
-		// Do not allow a redelegation that would result in a bonded source validator
-		// having rounded zero power as that would signal an update to Tendermint to
-		// remove it from the validator set.
-		if !validRedelegationSrc(srcVal) {
-			return types.ErrBadRedelegationSrcPower(k.Codespace())
-		}
-	}
-
 	params := k.GetParams(ctx)
 	returnCoin := sdk.NewCoin(params.BondDenom, returnAmount.RoundInt())
 
@@ -502,17 +492,4 @@ func (k Keeper) CompleteRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 
 	k.RemoveRedelegation(ctx, red)
 	return nil
-}
-
-// validRedelegationSrc checks if a source validator in a redelegation is invalid
-// or not. A source validator is invalid if after the shares have been removed,
-// the validator is bonded, has non-zero tokens, but whose rounded power is zero
-// as this would signal an update to Tendermint to remove it from the validator
-// set.
-func validRedelegationSrc(srcVal types.Validator) bool {
-	if srcVal.Status == sdk.Bonded && !srcVal.Tokens.IsZero() && srcVal.GetPower().RoundInt64() == 0 {
-		return false
-	}
-
-	return true
 }

@@ -70,7 +70,6 @@ type QueryValidatorParams struct {
 // defines the params for the following queries:
 // - 'custom/stake/delegation'
 // - 'custom/stake/unbondingDelegation'
-// - 'custom/stake/redelegation'
 // - 'custom/stake/delegatorValidator'
 type QueryBondsParams struct {
 	DelegatorAddr sdk.AccAddress

@@ -36,6 +36,16 @@ func newTestBondQuery(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress
 	}
 }
 
+func newTestRedelegationQuery(
+	delegatorAddr sdk.AccAddress,
+	validatorSrcAddr, validatorDstAddr sdk.ValAddress) QueryRedelegationParams {
+	return QueryRedelegationParams{
+		DelegatorAddr:    delegatorAddr,
+		ValidatorSrcAddr: validatorSrcAddr,
+		ValidatorDstAddr: validatorDstAddr,
+	}
+}
+
 func TestQueryParametersPool(t *testing.T) {
 	cdc := codec.New()
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
@@ -212,4 +222,41 @@ func TestQueryDelegation(t *testing.T) {
 	require.Nil(t, errRes)
 
 	require.Equal(t, unbond, summary.UnbondingDelegations[0])
+}
+
+func TestQueryRedelegation(t *testing.T) {
+	cdc := codec.New()
+	ctx, _, keeper := keep.CreateTestInput(t, false, 10000)
+
+	// Create Validators and Delegation
+	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
+	val2 := types.NewValidator(addrVal2, pk2, types.Description{})
+	keeper.SetValidator(ctx, val1)
+	keeper.SetValidator(ctx, val2)
+
+	keeper.Delegate(ctx, addrAcc2, sdk.NewCoin("steak", sdk.NewInt(100)), val1, true)
+
+	// Query redelegation
+	keeper.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddr, val2.OperatorAddr, sdk.NewDec(20))
+
+	queryRedParams := newTestRedelegationQuery(addrAcc2, val1.OperatorAddr, val2.OperatorAddr)
+	bz, errRes := cdc.MarshalJSON(queryRedParams)
+	require.Nil(t, errRes)
+
+	query := abci.RequestQuery{
+		Path: "/custom/stake/redelegation",
+		Data: bz,
+	}
+
+	redelegation, found := keeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddr, val2.OperatorAddr)
+	require.True(t, found)
+
+	res, err := queryRedelegation(ctx, cdc, query, keeper)
+	require.Nil(t, err)
+
+	var redelegationRes types.Redelegation
+	errRes = cdc.UnmarshalJSON(res, &redelegationRes)
+	require.Nil(t, errRes)
+
+	require.Equal(t, redelegation, redelegationRes)
 }

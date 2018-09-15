@@ -33,6 +33,7 @@ var _ sdk.Msg = MsgSetTrend{}
 
 // nolint
 func (msg MsgSetTrend) Type() string                 { return "cool" }
+func (msg MsgSetTrend) Name() string                 { return "set_trend" }
 func (msg MsgSetTrend) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Sender} }
 func (msg MsgSetTrend) String() string {
 	return fmt.Sprintf("MsgSetTrend{Sender: %v, Cool: %v}", msg.Sender, msg.Cool)
@@ -83,6 +84,7 @@ var _ sdk.Msg = MsgQuiz{}
 
 // nolint
 func (msg MsgQuiz) Type() string                 { return "cool" }
+func (msg MsgQuiz) Name() string                 { return "quiz" }
 func (msg MsgQuiz) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Sender} }
 func (msg MsgQuiz) String() string {
 	return fmt.Sprintf("MsgQuiz{Sender: %v, CoolAnswer: %v}", msg.Sender, msg.CoolAnswer)

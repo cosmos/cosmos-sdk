@@ -77,6 +77,7 @@ type MsgIssue struct {
 
 // Implements Msg.
 func (msg MsgIssue) Type() string { return "issue" }
+func (msg MsgIssue) Name() string { return "issue" }
 
 // Implements Msg. Ensures addresses are valid and Coin is positive
 func (msg MsgIssue) ValidateBasic() sdk.Error {

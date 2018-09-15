@@ -24,6 +24,7 @@ type testMsg struct {
 }
 
 func (tx testMsg) Type() string                       { return msgType }
+func (tx testMsg) Name() string                       { return "test" }
 func (tx testMsg) GetMsg() sdk.Msg                    { return tx }
 func (tx testMsg) GetMemo() string                    { return "" }
 func (tx testMsg) GetSignBytes() []byte               { return nil }

@@ -9,15 +9,15 @@ import (
 
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/store/utils"
 )
 
-var kvPairs = []sdk.KVPair{
-	{Key: keyFmt(1), Value: valFmt(1)},
-	{Key: keyFmt(2), Value: valFmt(2)},
-	{Key: keyFmt(3), Value: valFmt(3)},
+var kvPairs = []types.KVPair{
+	{Key: utils.KeyFmt(1), Value: utils.ValFmt(1)},
+	{Key: utils.KeyFmt(2), Value: utils.ValFmt(2)},
+	{Key: utils.KeyFmt(3), Value: utils.ValFmt(3)},
 }
 
 func newStore(w io.Writer) *Store {
@@ -31,10 +31,10 @@ func newStore(w io.Writer) *Store {
 }
 
 func newEmptyStore(w io.Writer) *Store {
-	memDB := dbStoreAdapter{dbm.NewMemDB()}
-	tc := sdk.TraceContext(map[string]interface{}{"blockHeight": 64})
+	memDB := dbadapter.NewStore(dbm.NewMemDB())
+	tc := types.TraceContext(map[string]interface{}{"blockHeight": 64})
 
-	return NewStore(memDB, w, tc)
+	return NewStore(memDB, &types.Tracer{w, tc})
 }
 
 func TestStoreGet(t *testing.T) {
@@ -266,7 +266,7 @@ func TestTestStoreReverseIterator(t *testing.T) {
 }
 
 func TestStoreGetStoreType(t *testing.T) {
-	memDB := dbStoreAdapter{dbm.NewMemDB()}
+	memDB := dbadapter.NewStore(dbm.NewMemDB())
 	store := NewEmptyStore(nil)
 	require.Equal(t, memDB.GetStoreType(), store.GetStoreType())
 }

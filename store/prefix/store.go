@@ -3,16 +3,16 @@ package prefix
 import (
 	"bytes"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-var _ sdk.KVStore = Store{}
+var _ types.KVStore = Store{}
 
 // prefixStore is similar with tendermint/tendermint/libs/db/prefix_db
 // both gives access only to the limited subset of the store
 // for convinience or safety
 type Store struct {
-	parent sdk.KVStore
+	parent types.KVStore
 	prefix []byte
 }
 
@@ -30,7 +30,7 @@ func (s Store) key(key []byte) (res []byte) {
 	res = cloneAppend(s.prefix, key)
 	return
 }
-func NewStore(parent sdk.KVStore, prefix []byte) Store {
+func NewStore(parent types.KVStore, prefix []byte) Store {
 	return Store{
 		parent: parent,
 		prefix: prefix,
@@ -59,7 +59,7 @@ func (s Store) Delete(key []byte) {
 
 // Implements KVStore
 // Check https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db.go#L106
-func (s Store) Iterator(start, end []byte) sdk.Iterator {
+func (s Store) Iterator(start, end []byte) types.Iterator {
 	newstart := cloneAppend(s.prefix, start)
 
 	var newend []byte
@@ -76,7 +76,7 @@ func (s Store) Iterator(start, end []byte) sdk.Iterator {
 
 // Implements KVStore
 // Check https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db.go#L129
-func (s Store) ReverseIterator(start, end []byte) sdk.Iterator {
+func (s Store) ReverseIterator(start, end []byte) types.Iterator {
 	var newstart []byte
 	if start == nil {
 		newstart = cpIncr(s.prefix)
@@ -99,16 +99,16 @@ func (s Store) ReverseIterator(start, end []byte) sdk.Iterator {
 	return newPrefixIterator(s.prefix, start, end, iter)
 }
 
-var _ sdk.Iterator = (*prefixIterator)(nil)
+var _ types.Iterator = (*prefixIterator)(nil)
 
 type prefixIterator struct {
 	prefix     []byte
 	start, end []byte
-	iter       sdk.Iterator
+	iter       types.Iterator
 	valid      bool
 }
 
-func newPrefixIterator(prefix, start, end []byte, parent sdk.Iterator) *prefixIterator {
+func newPrefixIterator(prefix, start, end []byte, parent types.Iterator) *prefixIterator {
 	return &prefixIterator{
 		prefix: prefix,
 		start:  start,
@@ -170,9 +170,9 @@ func stripPrefix(key []byte, prefix []byte) []byte {
 	return key[len(prefix):]
 }
 
-// wrapping sdk.PrefixEndBytes
+// wrapping types.PrefixEndBytes
 func cpIncr(bz []byte) []byte {
-	return sdk.PrefixEndBytes(bz)
+	return types.PrefixEndBytes(bz)
 }
 
 // copied from github.com/tendermint/tendermint/libs/db/util.go
@@ -195,7 +195,7 @@ func cpDecr(bz []byte) (ret []byte) {
 	return nil
 }
 
-func skipOne(iter sdk.Iterator, skipKey []byte) {
+func skipOne(iter types.Iterator, skipKey []byte) {
 	if iter.Valid() {
 		if bytes.Equal(iter.Key(), skipKey) {
 			iter.Next()

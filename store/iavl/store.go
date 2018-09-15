@@ -10,7 +10,7 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 )
 
 // load the iavl store
-func (*iavlStore) LoadVersion(db dbm.DB, id sdk.CommitID) (sdk.CommitStore, error) {
+func (*iavlStore) LoadVersion(db dbm.DB, id types.CommitID) (types.CommitStore, error) {
 	tree := iavl.NewMutableTree(db, defaultIAVLCacheSize)
 	_, err := tree.LoadVersion(id.Version)
 	if err != nil {
@@ -30,11 +30,11 @@ func (*iavlStore) LoadVersion(db dbm.DB, id sdk.CommitID) (sdk.CommitStore, erro
 
 //----------------------------------------
 
-var _ sdk.KVStore = (*iavlStore)(nil)
-var _ sdk.CommitStore = (*iavlStore)(nil)
-var _ sdk.Queryable = (*iavlStore)(nil)
+var _ types.KVStore = (*iavlStore)(nil)
+var _ types.CommitStore = (*iavlStore)(nil)
+var _ types.Queryable = (*iavlStore)(nil)
 
-// iavlStore Implements sdk.KVStore and sdk.CommitStore.
+// iavlStore Implements types.KVStore and types.CommitStore.
 type iavlStore struct {
 
 	// The underlying tree.
@@ -65,7 +65,7 @@ func newIAVLStore(tree *iavl.MutableTree, numRecent int64, storeEvery int64) *ia
 }
 
 // Implements Committer.
-func (st *iavlStore) Commit() sdk.CommitID {
+func (st *iavlStore) Commit() types.CommitID {
 	// Save a new version.
 	hash, version, err := st.tree.SaveVersion()
 	if err != nil {
@@ -85,29 +85,29 @@ func (st *iavlStore) Commit() sdk.CommitID {
 		}
 	}
 
-	return sdk.CommitID{
+	return types.CommitID{
 		Version: version,
 		Hash:    hash,
 	}
 }
 
 // Implements Committer.
-func (st *iavlStore) LastCommitID() sdk.CommitID {
-	return sdk.CommitID{
+func (st *iavlStore) LastCommitID() types.CommitID {
+	return types.CommitID{
 		Version: st.tree.Version(),
 		Hash:    st.tree.Hash(),
 	}
 }
 
 // Implements Committer.
-func (st *iavlStore) SetPruning(pruning sdk.PruningStrategy) {
+func (st *iavlStore) SetPruning(pruning types.PruningStrategy) {
 	switch pruning {
-	case sdk.PruneEverything:
+	case types.PruneEverything:
 		st.numRecent = 0
 		st.storeEvery = 0
-	case sdk.PruneNothing:
+	case types.PruneNothing:
 		st.storeEvery = 1
-	case sdk.PruneSyncable:
+	case types.PruneSyncable:
 		st.numRecent = 100
 		st.storeEvery = 10000
 	}
@@ -118,34 +118,34 @@ func (st *iavlStore) VersionExists(version int64) bool {
 	return st.tree.VersionExists(version)
 }
 
-// Implements sdk.KVStore.
+// Implements types.KVStore.
 func (st *iavlStore) Set(key, value []byte) {
 	st.tree.Set(key, value)
 }
 
-// Implements sdk.KVStore.
+// Implements types.KVStore.
 func (st *iavlStore) Get(key []byte) (value []byte) {
 	_, v := st.tree.Get(key)
 	return v
 }
 
-// Implements sdk.KVStore.
+// Implements types.KVStore.
 func (st *iavlStore) Has(key []byte) (exists bool) {
 	return st.tree.Has(key)
 }
 
-// Implements sdk.KVStore.
+// Implements types.KVStore.
 func (st *iavlStore) Delete(key []byte) {
 	st.tree.Remove(key)
 }
 
-// Implements sdk.KVStore.
-func (st *iavlStore) Iterator(start, end []byte) sdk.Iterator {
+// Implements types.KVStore.
+func (st *iavlStore) Iterator(start, end []byte) types.Iterator {
 	return newIAVLIterator(st.tree.ImmutableTree, start, end, true)
 }
 
-// Implements sdk.KVStore.
-func (st *iavlStore) ReverseIterator(start, end []byte) sdk.Iterator {
+// Implements types.KVStore.
+func (st *iavlStore) ReverseIterator(start, end []byte) types.Iterator {
 	return newIAVLIterator(st.tree.ImmutableTree, start, end, false)
 }
 
@@ -173,7 +173,7 @@ func getHeight(tree *iavl.MutableTree, req abci.RequestQuery) int64 {
 func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	if len(req.Data) == 0 {
 		msg := "Query cannot be zero length"
-		return sdk.ErrTxDecode(msg).QueryResult()
+		return types.ErrTxDecode(msg).QueryResult()
 	}
 
 	tree := st.tree
@@ -210,16 +210,16 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	case "/subspace":
 		subspace := req.Data
 		res.Key = subspace
-		var KVs []sdk.KVPair
-		iterator := sdk.KVStorePrefixIterator(st, subspace)
+		var KVs []types.KVPair
+		iterator := types.KVStorePrefixIterator(st, subspace)
 		for ; iterator.Valid(); iterator.Next() {
-			KVs = append(KVs, sdk.KVPair{Key: iterator.Key(), Value: iterator.Value()})
+			KVs = append(KVs, types.KVPair{Key: iterator.Key(), Value: iterator.Value()})
 		}
 		iterator.Close()
 		res.Value = cdc.MustMarshalBinary(KVs)
 	default:
 		msg := fmt.Sprintf("Unexpected Query path: %v", req.Path)
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		return types.ErrUnknownRequest(msg).QueryResult()
 	}
 	return
 }
@@ -255,7 +255,7 @@ type iavlIterator struct {
 	value   []byte // The current value
 }
 
-var _ sdk.Iterator = (*iavlIterator)(nil)
+var _ types.Iterator = (*iavlIterator)(nil)
 
 // newIAVLIterator will create a new iavlIterator.
 // CONTRACT: Caller must release the iavlIterator, as each one creates a new

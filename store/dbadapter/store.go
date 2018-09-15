@@ -1,10 +1,10 @@
 package dbadapter
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	"github.com/cosmos/cosmos-sdk/store/cache"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // Wrapper type for dbm.Db with implementation of KVStore
@@ -17,9 +17,9 @@ func NewStore(parent dbm.DB) Store {
 }
 
 // Implements KVStore.
-func (dsa Store) CacheWrap() sdk.CacheKVStore {
+func (dsa Store) CacheWrap() types.CacheKVStore {
 	return cache.NewStore(dsa)
 }
 
 // dbm.DB implements KVStore so we can CacheKVStore it.
-var _ sdk.KVStore = Store{}
+var _ types.KVStore = Store{}

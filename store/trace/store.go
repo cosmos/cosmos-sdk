@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 const (
@@ -25,8 +25,8 @@ type (
 	// TODO: Should we use a buffered writer and implement Commit on
 	// Store?
 	Store struct {
-		parent sdk.KVStore
-		tracer *sdk.Tracer
+		parent types.KVStore
+		tracer *types.Tracer
 	}
 
 	// operation represents an IO operation
@@ -43,7 +43,7 @@ type (
 
 // NewStore returns a reference to a new traceKVStore given a parent
 // KVStore implementation and a buffered writer.
-func NewStore(parent sdk.KVStore, tracer *sdk.Tracer) *Store {
+func NewStore(parent types.KVStore, tracer *types.Tracer) *Store {
 	return &Store{parent: parent, tracer: tracer}
 }
 
@@ -78,20 +78,20 @@ func (tkv *Store) Has(key []byte) bool {
 
 // Iterator implements the KVStore interface. It delegates the Iterator call
 // the to the parent KVStore.
-func (tkv *Store) Iterator(start, end []byte) sdk.Iterator {
+func (tkv *Store) Iterator(start, end []byte) types.Iterator {
 	return tkv.iterator(start, end, true)
 }
 
 // ReverseIterator implements the KVStore interface. It delegates the
 // ReverseIterator call the to the parent KVStore.
-func (tkv *Store) ReverseIterator(start, end []byte) sdk.Iterator {
+func (tkv *Store) ReverseIterator(start, end []byte) types.Iterator {
 	return tkv.iterator(start, end, false)
 }
 
 // iterator facilitates iteration over a KVStore. It delegates the necessary
 // calls to it's parent KVStore.
-func (tkv *Store) iterator(start, end []byte, ascending bool) sdk.Iterator {
-	var parent sdk.Iterator
+func (tkv *Store) iterator(start, end []byte, ascending bool) types.Iterator {
+	var parent types.Iterator
 
 	if ascending {
 		parent = tkv.parent.Iterator(start, end)
@@ -103,11 +103,11 @@ func (tkv *Store) iterator(start, end []byte, ascending bool) sdk.Iterator {
 }
 
 type traceIterator struct {
-	parent sdk.Iterator
-	tracer *sdk.Tracer
+	parent types.Iterator
+	tracer *types.Tracer
 }
 
-func newTraceIterator(tracer *sdk.Tracer, parent sdk.Iterator) sdk.Iterator {
+func newTraceIterator(tracer *types.Tracer, parent types.Iterator) types.Iterator {
 	return &traceIterator{parent: parent, tracer: tracer}
 }
 
@@ -149,14 +149,14 @@ func (ti *traceIterator) Close() {
 
 // CacheWrap implements the KVStore interface. It panics as a Store
 // cannot be cache wrapped.
-func (tkv *Store) CacheWrap() sdk.CacheKVStore {
+func (tkv *Store) CacheWrap() types.CacheKVStore {
 	panic("cannot CacheWrap a Store")
 }
 
 // writeOperation writes a KVStore operation to the underlying io.Writer as
 // JSON-encoded data where the key/value pair is base64 encoded.
 // nolint: errcheck
-func writeOperation(tracer *sdk.Tracer, op operation, key, value []byte) {
+func writeOperation(tracer *types.Tracer, op operation, key, value []byte) {
 	traceOp := traceOperation{
 		Operation: op,
 		Key:       base64.StdEncoding.EncodeToString(key),

@@ -3,11 +3,10 @@ package cachemulti
 import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/store/cache"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/trace"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 //----------------------------------------
@@ -16,19 +15,19 @@ import (
 // Store holds many cache-wrapped stores.
 // Implements MultiStore.
 type Store struct {
-	db         sdk.CacheKVStore
-	stores     map[sdk.StoreKey]sdk.CacheKVStore
-	keysByName map[string]sdk.StoreKey
+	db         types.CacheKVStore
+	stores     map[types.StoreKey]types.CacheKVStore
+	keysByName map[string]types.StoreKey
 
-	tracer *sdk.Tracer
+	tracer *types.Tracer
 }
 
-var _ sdk.CacheMultiStore = Store{}
+var _ types.CacheMultiStore = Store{}
 
-func NewStore(db dbm.DB, keysByName map[string]sdk.StoreKey, stores map[sdk.StoreKey]sdk.CommitKVStore, tracer *sdk.Tracer) Store {
+func NewStore(db dbm.DB, keysByName map[string]types.StoreKey, stores map[types.StoreKey]types.CommitKVStore, tracer *types.Tracer) Store {
 	cms := Store{
 		db:         cache.NewStore(dbadapter.NewStore(db)),
-		stores:     make(map[sdk.StoreKey]sdk.CacheKVStore, len(stores)),
+		stores:     make(map[types.StoreKey]types.CacheKVStore, len(stores)),
 		keysByName: keysByName,
 		tracer:     tracer,
 	}
@@ -47,7 +46,7 @@ func NewStore(db dbm.DB, keysByName map[string]sdk.StoreKey, stores map[sdk.Stor
 func newCacheMultiStoreFromCMS(cms Store) Store {
 	cms2 := Store{
 		db:     cache.NewStore(cms.db),
-		stores: make(map[sdk.StoreKey]sdk.CacheKVStore, len(cms.stores)),
+		stores: make(map[types.StoreKey]types.CacheKVStore, len(cms.stores)),
 		tracer: cms.tracer,
 	}
 
@@ -63,7 +62,7 @@ func newCacheMultiStoreFromCMS(cms Store) Store {
 }
 
 // Implements MultiStore
-func (cms Store) GetTracer() *sdk.Tracer {
+func (cms Store) GetTracer() *types.Tracer {
 	return cms.tracer
 }
 
@@ -76,11 +75,11 @@ func (cms Store) Write() {
 }
 
 // Implements MultiStore.
-func (cms Store) CacheWrap() sdk.CacheMultiStore {
+func (cms Store) CacheWrap() types.CacheMultiStore {
 	return newCacheMultiStoreFromCMS(cms)
 }
 
 // Implements MultiStore.
-func (cms Store) GetKVStore(key sdk.StoreKey) sdk.KVStore {
-	return cms.stores[key].(sdk.KVStore)
+func (cms Store) GetKVStore(key types.StoreKey) types.KVStore {
+	return cms.stores[key].(types.KVStore)
 }

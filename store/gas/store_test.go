@@ -6,17 +6,17 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/store/utils"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/stretchr/testify/require"
 )
 
-func newGasTank(limit sdk.Gas) *sdk.GasTank {
-	return sdk.NewGasTank(sdk.NewGasMeter(limit), sdk.KVGasConfig())
+func newGasTank(limit types.Gas) *types.GasTank {
+	return types.NewGasTank(types.NewGasMeter(limit), types.KVGasConfig())
 }
 
-func newGasKVStore() sdk.KVStore {
+func newGasKVStore() types.KVStore {
 	tank := newGasTank(1000)
 	mem := dbadapter.NewStore(dbm.NewMemDB())
 	return NewStore(tank, mem)
@@ -31,7 +31,7 @@ func TestGasKVStoreBasic(t *testing.T) {
 	require.Equal(t, utils.ValFmt(1), st.Get(utils.KeyFmt(1)))
 	st.Delete(utils.KeyFmt(1))
 	require.Empty(t, st.Get(utils.KeyFmt(1)), "Expected `key1` to be empty")
-	require.Equal(t, tank.GasConsumed(), sdk.Gas(193))
+	require.Equal(t, tank.GasConsumed(), types.Gas(193))
 }
 
 func TestGasKVStoreIterator(t *testing.T) {
@@ -55,7 +55,7 @@ func TestGasKVStoreIterator(t *testing.T) {
 	iterator.Next()
 	require.False(t, iterator.Valid())
 	require.Panics(t, iterator.Next)
-	require.Equal(t, tank.GasConsumed(), sdk.Gas(384))
+	require.Equal(t, tank.GasConsumed(), types.Gas(384))
 }
 
 func TestGasKVStoreOutOfGasSet(t *testing.T) {
@@ -75,9 +75,9 @@ func TestGasKVStoreOutOfGasIterator(t *testing.T) {
 	require.Panics(t, func() { iterator.Value() }, "Expected out-of-gas")
 }
 
-func testGasKVStoreWrap(t *testing.T, store sdk.KVStore) {
-	meter := sdk.NewGasMeter(10000)
-	tank := sdk.NewGasTank(meter, sdk.GasConfig{HasCostFlat: 10})
+func testGasKVStoreWrap(t *testing.T, store types.KVStore) {
+	meter := types.NewGasMeter(10000)
+	tank := types.NewGasTank(meter, types.GasConfig{HasCostFlat: 10})
 
 	store = NewStore(tank, store)
 	require.Equal(t, int64(0), meter.GasConsumed())
@@ -85,7 +85,7 @@ func testGasKVStoreWrap(t *testing.T, store sdk.KVStore) {
 	store.Has([]byte("key"))
 	require.Equal(t, int64(10), meter.GasConsumed())
 
-	tank = sdk.NewGasTank(meter, sdk.GasConfig{HasCostFlat: 20})
+	tank = types.NewGasTank(meter, types.GasConfig{HasCostFlat: 20})
 	store = NewStore(tank, store)
 
 	store.Has([]byte("key"))

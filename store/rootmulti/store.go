@@ -10,10 +10,9 @@ import (
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/trace"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 const (
@@ -21,40 +20,40 @@ const (
 	commitInfoKeyFmt = "s/%d" // s/<version>
 )
 
-// Store is composed of many sdk.CommitStores. Name contrasts with
-// cacheMultiStore which is for cache-wrapping other sdk.MultiStores. It implements
+// Store is composed of many types.CommitStores. Name contrasts with
+// cacheMultiStore which is for cache-wrapping other types.MultiStores. It implements
 // the CommitMultiStore interface.
 type Store struct {
 	db           dbm.DB
-	lastCommitID sdk.CommitID
-	pruning      sdk.PruningStrategy
-	storesParams map[sdk.StoreKey]storeParams
-	stores       map[sdk.StoreKey]sdk.CommitKVStore
-	keysByName   map[string]sdk.StoreKey
+	lastCommitID types.CommitID
+	pruning      types.PruningStrategy
+	storesParams map[types.StoreKey]storeParams
+	stores       map[types.StoreKey]types.CommitKVStore
+	keysByName   map[string]types.StoreKey
 
-	tracer *sdk.Tracer
+	tracer *types.Tracer
 }
 
-var _ sdk.CommitMultiStore = (*Store)(nil)
-var _ sdk.Queryable = (*Store)(nil)
+var _ types.CommitMultiStore = (*Store)(nil)
+var _ types.Queryable = (*Store)(nil)
 
 // nolint
 func NewCommitMultiStore(db dbm.DB) *Store {
 	return &Store{
 		db:           db,
-		storesParams: make(map[sdk.StoreKey]storeParams),
-		stores:       make(map[sdk.StoreKey]sdk.CommitKVStore),
-		keysByName:   make(map[string]sdk.StoreKey),
+		storesParams: make(map[types.StoreKey]storeParams),
+		stores:       make(map[types.StoreKey]types.CommitKVStore),
+		keysByName:   make(map[string]types.StoreKey),
 	}
 }
 
 // Implements MultiStore
-func (rs *Store) GetTracer() *sdk.Tracer {
+func (rs *Store) GetTracer() *types.Tracer {
 	return rs.tracer
 }
 
 // Implements CommitMultiStore
-func (rs *Store) SetPruning(pruning sdk.PruningStrategy) {
+func (rs *Store) SetPruning(pruning types.PruningStrategy) {
 	rs.pruning = pruning
 	for _, substore := range rs.stores {
 		substore.SetPruning(pruning)
@@ -62,9 +61,9 @@ func (rs *Store) SetPruning(pruning sdk.PruningStrategy) {
 }
 
 // Implements CommitMultiStore.
-func (rs *Store) MountStoreWithDB(key sdk.StoreKey, db dbm.DB) {
+func (rs *Store) MountStoreWithDB(key types.StoreKey, db dbm.DB) {
 	if key == nil {
-		panic("MountIAVLStore() key cannot be nil")
+		panic("MountStoreWithDB() key cannot be nil")
 	}
 	if _, ok := rs.storesParams[key]; ok {
 		panic(fmt.Sprintf("Store duplicate store key %v", key))
@@ -80,13 +79,13 @@ func (rs *Store) MountStoreWithDB(key sdk.StoreKey, db dbm.DB) {
 }
 
 // Implements CommitMultiStore.
-func (rs *Store) GetCommitStore(key sdk.StoreKey) sdk.CommitStore {
+func (rs *Store) GetCommitStore(key types.StoreKey) types.CommitStore {
 	return rs.stores[key]
 }
 
 // Implements CommitMultiStore.
-func (rs *Store) GetCommitKVStore(key sdk.StoreKey) sdk.CommitKVStore {
-	return rs.stores[key].(sdk.CommitKVStore)
+func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
+	return rs.stores[key].(types.CommitKVStore)
 }
 
 // Implements CommitMultiStore.
@@ -98,8 +97,8 @@ func (rs *Store) LoadLatestVersion() error {
 // Implements CommitMultiStore.
 func (rs *Store) LoadMultiStoreVersion(ver int64) error {
 	// Convert StoreInfos slice to map
-	var lastCommitID sdk.CommitID
-	infos := make(map[sdk.StoreKey]storeInfo)
+	var lastCommitID types.CommitID
+	infos := make(map[types.StoreKey]storeInfo)
 	if ver != 0 {
 		// Get commitInfo
 		cInfo, err := getCommitInfo(rs.db, ver)
@@ -115,9 +114,9 @@ func (rs *Store) LoadMultiStoreVersion(ver int64) error {
 	}
 
 	// Load each Store
-	var newStores = make(map[sdk.StoreKey]sdk.CommitKVStore)
+	var newStores = make(map[types.StoreKey]types.CommitKVStore)
 	for key, storeParams := range rs.storesParams {
-		var id sdk.CommitID
+		var id types.CommitID
 		if info, ok := infos[key]; ok {
 			id = info.Core.CommitID
 		}
@@ -138,12 +137,12 @@ func (rs *Store) LoadMultiStoreVersion(ver int64) error {
 // +CommitStore
 
 // Implements Committer/CommitStore.
-func (rs *Store) LastCommitID() sdk.CommitID {
+func (rs *Store) LastCommitID() types.CommitID {
 	return rs.lastCommitID
 }
 
 // Implements Committer/CommitStore.
-func (rs *Store) Commit() sdk.CommitID {
+func (rs *Store) Commit() types.CommitID {
 
 	// Commit stores.
 	version := rs.lastCommitID.Version + 1
@@ -156,7 +155,7 @@ func (rs *Store) Commit() sdk.CommitID {
 	batch.Write()
 
 	// Prepare for next version.
-	commitID := sdk.CommitID{
+	commitID := types.CommitID{
 		Version: version,
 		Hash:    commitInfo.Hash(),
 	}
@@ -167,16 +166,16 @@ func (rs *Store) Commit() sdk.CommitID {
 //----------------------------------------
 // +MultiStore
 
-// Implements sdk.MultiStore.
-func (rs *Store) CacheWrap() sdk.CacheMultiStore {
+// Implements types.MultiStore.
+func (rs *Store) CacheWrap() types.CacheMultiStore {
 	return cachemulti.NewStore(rs.db, rs.keysByName, rs.stores, rs.tracer)
 }
 
-// GetKVStore implements the sdk.MultiStore interface. If tracing is enabled on the
+// GetKVStore implements the types.MultiStore interface. If tracing is enabled on the
 // Store, a wrapped TraceKVStore will be returned with the given
-// tracer, otherwise, the original sdk.KVStore will be returned.
-func (rs *Store) GetKVStore(key sdk.StoreKey) sdk.KVStore {
-	store := rs.stores[key].(sdk.KVStore)
+// tracer, otherwise, the original types.KVStore will be returned.
+func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
+	store := rs.stores[key].(types.KVStore)
 
 	if rs.tracer.Enabled() {
 		store = trace.NewStore(store, rs.tracer)
@@ -185,14 +184,14 @@ func (rs *Store) GetKVStore(key sdk.StoreKey) sdk.KVStore {
 	return store
 }
 
-// Implements sdk.MultiStore
+// Implements types.MultiStore
 
 // getStoreByName will first convert the original name to
-// a special key, before looking up the sdk.CommitStore.
+// a special key, before looking up the types.CommitStore.
 // This is not exposed to the extensions (which will need the
-// sdk.StoreKey), but is useful in main, and particularly app.Query,
-// in order to convert human strings into sdk.CommitStores.
-func (rs *Store) getStoreByName(name string) sdk.KVStore {
+// types.StoreKey), but is useful in main, and particularly app.Query,
+// in order to convert human strings into types.CommitStores.
+func (rs *Store) getStoreByName(name string) types.KVStore {
 	key := rs.keysByName[name]
 	if key == nil {
 		return nil
@@ -217,12 +216,12 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	store := rs.getStoreByName(storeName)
 	if store == nil {
 		msg := fmt.Sprintf("no such store: %s", storeName)
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		return types.ErrUnknownRequest(msg).QueryResult()
 	}
-	queryable, ok := store.(sdk.Queryable)
+	queryable, ok := store.(types.Queryable)
 	if !ok {
 		msg := fmt.Sprintf("store %s doesn't support queries", storeName)
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		return types.ErrUnknownRequest(msg).QueryResult()
 	}
 
 	// trim the path and make the query
@@ -235,7 +234,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 
 	commitInfo, errMsg := getCommitInfo(rs.db, res.Height)
 	if errMsg != nil {
-		return sdk.ErrInternal(errMsg.Error()).QueryResult()
+		return types.ErrInternal(errMsg.Error()).QueryResult()
 	}
 
 	res.Proof = buildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
@@ -246,9 +245,9 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 // parsePath expects a format like /<storeName>[/<subpath>]
 // Must start with /, subpath may be empty
 // Returns error if it doesn't start with /
-func parsePath(path string) (storeName string, subpath string, err sdk.Error) {
+func parsePath(path string) (storeName string, subpath string, err types.Error) {
 	if !strings.HasPrefix(path, "/") {
-		err = sdk.ErrUnknownRequest(fmt.Sprintf("invalid path: %s", path))
+		err = types.ErrUnknownRequest(fmt.Sprintf("invalid path: %s", path))
 		return
 	}
 	paths := strings.SplitN(path[1:], "/", 2)
@@ -261,7 +260,7 @@ func parsePath(path string) (storeName string, subpath string, err sdk.Error) {
 
 //----------------------------------------
 
-func (rs *Store) loadCommitStoreFromParams(key sdk.StoreKey, id sdk.CommitID, params storeParams) (store sdk.CommitKVStore, err error) {
+func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (store types.CommitKVStore, err error) {
 	var db dbm.DB
 	if params.db != nil {
 		db = dbm.NewPrefixDB(params.db, []byte("s/_/"))
@@ -269,7 +268,7 @@ func (rs *Store) loadCommitStoreFromParams(key sdk.StoreKey, id sdk.CommitID, pa
 		db = dbm.NewPrefixDB(rs.db, []byte("s/k:"+params.key.Name()+"/"))
 	}
 
-	store = reflect.Zero(params.typ).Interface().(sdk.CommitKVStore)
+	store = reflect.Zero(params.typ).Interface().(types.CommitKVStore)
 	err = store.LoadKVStoreVersion(db, id)
 	if err != nil {
 		store.SetPruning(rs.pruning)
@@ -280,19 +279,19 @@ func (rs *Store) loadCommitStoreFromParams(key sdk.StoreKey, id sdk.CommitID, pa
 	// XXX: move to store subdirectories LoadKVStoreVersion
 	/*
 		switch params.typ {
-		case sdk.StoreTypeMulti:
-			panic("recursive sdk.MultiStores not yet supported")
+		case types.StoreTypeMulti:
+			panic("recursive types.MultiStores not yet supported")
 			// TODO: id?
 			// return NewCommitMultiStore(db, id)
-		case sdk.StoreTypeIAVL:
+		case types.StoreTypeIAVL:
 			store, err = LoadIAVLStore(db, id, rs.pruning)
 			return
-		case sdk.StoreTypeDB:
-			panic("dbm.DB is not a sdk.CommitStore")
-		case sdk.StoreTypeTransient:
-			_, ok := key.(*sdk.TransientStoreKey)
+		case types.StoreTypeDB:
+			panic("dbm.DB is not a types.CommitStore")
+		case types.StoreTypeTransient:
+			_, ok := key.(*types.TransientStoreKey)
 			if !ok {
-				err = fmt.Errorf("invalid sdk.StoreKey for sdk.StoreTypeTransient: %s", key.String())
+				err = fmt.Errorf("invalid types.StoreKey for types.StoreTypeTransient: %s", key.String())
 				return
 			}
 			store = transient.NewStore()
@@ -303,7 +302,7 @@ func (rs *Store) loadCommitStoreFromParams(key sdk.StoreKey, id sdk.CommitID, pa
 	*/
 }
 
-func (rs *Store) nameToKey(name string) sdk.StoreKey {
+func (rs *Store) nameToKey(name string) types.StoreKey {
 	for key := range rs.storesParams {
 		if key.Name() == name {
 			return key
@@ -316,7 +315,7 @@ func (rs *Store) nameToKey(name string) sdk.StoreKey {
 // storeParams
 
 type storeParams struct {
-	key sdk.StoreKey
+	key types.StoreKey
 	db  dbm.DB
 	typ reflect.Type
 }
@@ -330,7 +329,7 @@ type commitInfo struct {
 	// Version
 	Version int64
 
-	// sdk.Store info for
+	// types.Store info for
 	StoreInfos []storeInfo
 }
 
@@ -344,8 +343,8 @@ func (ci commitInfo) Hash() []byte {
 	return merkle.SimpleHashFromMap(m)
 }
 
-func (ci commitInfo) CommitID() sdk.CommitID {
-	return sdk.CommitID{
+func (ci commitInfo) CommitID() types.CommitID {
+	return types.CommitID{
 		Version: ci.Version,
 		Hash:    ci.Hash(),
 	}
@@ -363,8 +362,8 @@ type storeInfo struct {
 }
 
 type storeCore struct {
-	// sdk.StoreType sdk.StoreType
-	CommitID sdk.CommitID
+	// types.StoreType types.StoreType
+	CommitID types.CommitID
 	// ... maybe add more state
 }
 
@@ -405,7 +404,7 @@ func setLatestVersion(batch dbm.Batch, version int64) {
 }
 
 // Commits each store and returns a new commitInfo.
-func commitStores(version int64, storeMap map[sdk.StoreKey]sdk.CommitKVStore) commitInfo {
+func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore) commitInfo {
 	storeInfos := make([]storeInfo, 0, len(storeMap))
 
 	for key, store := range storeMap {
@@ -416,7 +415,7 @@ func commitStores(version int64, storeMap map[sdk.StoreKey]sdk.CommitKVStore) co
 			continue
 		}
 
-		// Record sdk.CommitID
+		// Record types.CommitID
 		si := storeInfo{}
 		si.Name = key.Name()
 		si.Core.CommitID = commitID

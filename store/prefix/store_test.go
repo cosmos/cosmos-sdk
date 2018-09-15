@@ -9,7 +9,7 @@ import (
 	"github.com/tendermint/iavl"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 type kvpair struct {
@@ -30,7 +30,7 @@ func genRandomKVPairs(t *testing.T) []kvpair {
 	return kvps
 }
 
-func setRandomKVPairs(t *testing.T, store KVStore) []kvpair {
+func setRandomKVPairs(t *testing.T, store types.KVStore) []kvpair {
 	kvps := genRandomKVPairs(t)
 	for _, kvp := range kvps {
 		store.Set(kvp.key, kvp.value)
@@ -38,9 +38,9 @@ func setRandomKVPairs(t *testing.T, store KVStore) []kvpair {
 	return kvps
 }
 
-func testPrefixStore(t *testing.T, baseStore KVStore, prefix []byte) {
-	prefixStore := baseStore.Prefix(prefix)
-	prefixPrefixStore := prefixStore.Prefix([]byte("prefix"))
+func testPrefixStore(t *testing.T, baseStore types.KVStore, prefix []byte) {
+	prefixStore := NewStore(baseStore, prefix)
+	prefixPrefixStore := NewStore(prefixStore, []byte("prefix"))
 
 	require.Panics(t, func() { prefixStore.Get(nil) })
 	require.Panics(t, func() { prefixStore.Set(nil, []byte{}) })
@@ -82,15 +82,15 @@ func TestIAVLStorePrefix(t *testing.T) {
 }
 
 func TestCacheKVStorePrefix(t *testing.T) {
-	cacheStore := newCacheKVStore()
+	cacheStore := newCachetypes.KVStore()
 
 	testPrefixStore(t, cacheStore, []byte("test"))
 }
 
 func TestGasKVStorePrefix(t *testing.T) {
-	meter := sdk.NewGasMeter(100000000)
+	meter := types.NewGasMeter(100000000)
 	mem := dbStoreAdapter{dbm.NewMemDB()}
-	gasStore := NewGasKVStore(meter, sdk.KVGasConfig(), mem)
+	gasStore := gas.NewStore(meter, types.KVGasConfig(), mem)
 
 	testPrefixStore(t, gasStore, []byte("test"))
 }
@@ -103,8 +103,8 @@ func TestPrefixStoreIterate(t *testing.T) {
 
 	setRandomKVPairs(t, prefixStore)
 
-	bIter := sdk.KVStorePrefixIterator(baseStore, prefix)
-	pIter := sdk.KVStorePrefixIterator(prefixStore, nil)
+	bIter := types.KVStorePrefixIterator(baseStore, prefix)
+	pIter := types.KVStorePrefixIterator(prefixStore, nil)
 
 	for bIter.Valid() && pIter.Valid() {
 		require.Equal(t, bIter.Key(), append(prefix, pIter.Key()...))
@@ -230,7 +230,7 @@ func TestPrefixStoreReverseIteratorEdgeCase(t *testing.T) {
 
 // Tests below are ported from https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db_test.go
 
-func mockStoreWithStuff() sdk.KVStore {
+func mockStoreWithStuff() types.KVStore {
 	db := dbm.NewMemDB()
 	store := dbStoreAdapter{db}
 	// Under "key" prefix
@@ -246,49 +246,49 @@ func mockStoreWithStuff() sdk.KVStore {
 	return store
 }
 
-func checkValue(t *testing.T, store sdk.KVStore, key []byte, expected []byte) {
+func checkValue(t *testing.T, store types.KVStore, key []byte, expected []byte) {
 	bz := store.Get(key)
 	require.Equal(t, expected, bz)
 }
 
-func checkValid(t *testing.T, itr sdk.Iterator, expected bool) {
+func checkValid(t *testing.T, itr types.Iterator, expected bool) {
 	valid := itr.Valid()
 	require.Equal(t, expected, valid)
 }
 
-func checkNext(t *testing.T, itr sdk.Iterator, expected bool) {
+func checkNext(t *testing.T, itr types.Iterator, expected bool) {
 	itr.Next()
 	valid := itr.Valid()
 	require.Equal(t, expected, valid)
 }
 
-func checkDomain(t *testing.T, itr sdk.Iterator, start, end []byte) {
+func checkDomain(t *testing.T, itr types.Iterator, start, end []byte) {
 	ds, de := itr.Domain()
 	require.Equal(t, start, ds)
 	require.Equal(t, end, de)
 }
 
-func checkItem(t *testing.T, itr sdk.Iterator, key, value []byte) {
+func checkItem(t *testing.T, itr types.Iterator, key, value []byte) {
 	require.Exactly(t, key, itr.Key())
 	require.Exactly(t, value, itr.Value())
 }
 
-func checkInvalid(t *testing.T, itr sdk.Iterator) {
+func checkInvalid(t *testing.T, itr types.Iterator) {
 	checkValid(t, itr, false)
 	checkKeyPanics(t, itr)
 	checkValuePanics(t, itr)
 	checkNextPanics(t, itr)
 }
 
-func checkKeyPanics(t *testing.T, itr sdk.Iterator) {
+func checkKeyPanics(t *testing.T, itr types.Iterator) {
 	require.Panics(t, func() { itr.Key() })
 }
 
-func checkValuePanics(t *testing.T, itr sdk.Iterator) {
+func checkValuePanics(t *testing.T, itr types.Iterator) {
 	require.Panics(t, func() { itr.Value() })
 }
 
-func checkNextPanics(t *testing.T, itr sdk.Iterator) {
+func checkNextPanics(t *testing.T, itr types.Iterator) {
 	require.Panics(t, func() { itr.Next() })
 }
 

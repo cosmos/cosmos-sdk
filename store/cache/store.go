@@ -7,7 +7,7 @@ import (
 
 	cmn "github.com/tendermint/tendermint/libs/common"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // If value is nil but deleted is false, it means the parent doesn't have the
@@ -18,24 +18,24 @@ type cValue struct {
 	dirty   bool
 }
 
-// Store wraps an in-memory cache around an underlying sdk.KVStore.
+// Store wraps an in-memory cache around an underlying types.KVStore.
 type Store struct {
 	mtx    sync.Mutex
 	cache  map[string]cValue
-	parent sdk.KVStore
+	parent types.KVStore
 }
 
-var _ sdk.CacheKVStore = (*Store)(nil)
+var _ types.CacheKVStore = (*Store)(nil)
 
 // nolint
-func NewStore(parent sdk.KVStore) *Store {
+func NewStore(parent types.KVStore) *Store {
 	return &Store{
 		cache:  make(map[string]cValue),
 		parent: parent,
 	}
 }
 
-// Implements sdk.KVStore.
+// Implements types.KVStore.
 func (ci *Store) Get(key []byte) (value []byte) {
 	ci.mtx.Lock()
 	defer ci.mtx.Unlock()
@@ -52,7 +52,7 @@ func (ci *Store) Get(key []byte) (value []byte) {
 	return value
 }
 
-// Implements sdk.KVStore.
+// Implements types.KVStore.
 func (ci *Store) Set(key []byte, value []byte) {
 	ci.mtx.Lock()
 	defer ci.mtx.Unlock()
@@ -61,13 +61,13 @@ func (ci *Store) Set(key []byte, value []byte) {
 	ci.setCacheValue(key, value, false, true)
 }
 
-// Implements sdk.KVStore.
+// Implements types.KVStore.
 func (ci *Store) Has(key []byte) bool {
 	value := ci.Get(key)
 	return value != nil
 }
 
-// Implements sdk.KVStore.
+// Implements types.KVStore.
 func (ci *Store) Delete(key []byte) {
 	ci.mtx.Lock()
 	defer ci.mtx.Unlock()
@@ -109,25 +109,25 @@ func (ci *Store) Write() {
 	ci.cache = make(map[string]cValue)
 }
 
-func (ci *Store) CacheWrap() sdk.CacheKVStore {
+func (ci *Store) CacheWrap() types.CacheKVStore {
 	return NewStore(ci)
 }
 
 //----------------------------------------
 // Iteration
 
-// Implements sdk.KVStore.
-func (ci *Store) Iterator(start, end []byte) sdk.Iterator {
+// Implements types.KVStore.
+func (ci *Store) Iterator(start, end []byte) types.Iterator {
 	return ci.iterator(start, end, true)
 }
 
-// Implements sdk.KVStore.
-func (ci *Store) ReverseIterator(start, end []byte) sdk.Iterator {
+// Implements types.KVStore.
+func (ci *Store) ReverseIterator(start, end []byte) types.Iterator {
 	return ci.iterator(start, end, false)
 }
 
-func (ci *Store) iterator(start, end []byte, ascending bool) sdk.Iterator {
-	var parent, cache sdk.Iterator
+func (ci *Store) iterator(start, end []byte, ascending bool) types.Iterator {
+	var parent, cache types.Iterator
 
 	if ascending {
 		parent = ci.parent.Iterator(start, end)

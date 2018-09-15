@@ -4,4 +4,4 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-var cdc = codec.NewCodec()
+var cdc = codec.New()

@@ -18,16 +18,15 @@ const (
 )
 
 type (
-	// TraceKVStore implements the KVStore interface with tracing enabled.
+	// Store implements the KVStore interface with tracing enabled.
 	// Operations are traced on each core KVStore call and written to the
 	// underlying io.writer.
 	//
 	// TODO: Should we use a buffered writer and implement Commit on
-	// TraceKVStore?
-	TraceKVStore struct {
-		parent  sdk.KVStore
-		writer  io.Writer
-		context sdk.TraceContext
+	// Store?
+	Store struct {
+		parent sdk.KVStore
+		tracer *sdk.Tracer
 	}
 
 	// operation represents an IO operation
@@ -42,56 +41,56 @@ type (
 	}
 )
 
-// NewTraceKVStore returns a reference to a new traceKVStore given a parent
+// NewStore returns a reference to a new traceKVStore given a parent
 // KVStore implementation and a buffered writer.
-func NewStore(parent sdk.KVStore, writer io.Writer, tc sdk.TraceContext) *TraceKVStore {
-	return &TraceKVStore{parent: parent, writer: writer, context: tc}
+func NewStore(parent sdk.KVStore, tracer *sdk.Tracer) *Store {
+	return &Store{parent: parent, tracer: tracer}
 }
 
 // Get implements the KVStore interface. It traces a read operation and
 // delegates a Get call to the parent KVStore.
-func (tkv *TraceKVStore) Get(key []byte) []byte {
+func (tkv *Store) Get(key []byte) []byte {
 	value := tkv.parent.Get(key)
 
-	writeOperation(tkv.writer, readOp, tkv.context, key, value)
+	writeOperation(tkv.tracer, readOp, key, value)
 	return value
 }
 
 // Set implements the KVStore interface. It traces a write operation and
 // delegates the Set call to the parent KVStore.
-func (tkv *TraceKVStore) Set(key []byte, value []byte) {
-	writeOperation(tkv.writer, writeOp, tkv.context, key, value)
+func (tkv *Store) Set(key []byte, value []byte) {
+	writeOperation(tkv.tracer, writeOp, key, value)
 	tkv.parent.Set(key, value)
 }
 
 // Delete implements the KVStore interface. It traces a write operation and
 // delegates the Delete call to the parent KVStore.
-func (tkv *TraceKVStore) Delete(key []byte) {
-	writeOperation(tkv.writer, deleteOp, tkv.context, key, nil)
+func (tkv *Store) Delete(key []byte) {
+	writeOperation(tkv.tracer, deleteOp, key, nil)
 	tkv.parent.Delete(key)
 }
 
 // Has implements the KVStore interface. It delegates the Has call to the
 // parent KVStore.
-func (tkv *TraceKVStore) Has(key []byte) bool {
+func (tkv *Store) Has(key []byte) bool {
 	return tkv.parent.Has(key)
 }
 
 // Iterator implements the KVStore interface. It delegates the Iterator call
 // the to the parent KVStore.
-func (tkv *TraceKVStore) Iterator(start, end []byte) sdk.Iterator {
+func (tkv *Store) Iterator(start, end []byte) sdk.Iterator {
 	return tkv.iterator(start, end, true)
 }
 
 // ReverseIterator implements the KVStore interface. It delegates the
 // ReverseIterator call the to the parent KVStore.
-func (tkv *TraceKVStore) ReverseIterator(start, end []byte) sdk.Iterator {
+func (tkv *Store) ReverseIterator(start, end []byte) sdk.Iterator {
 	return tkv.iterator(start, end, false)
 }
 
 // iterator facilitates iteration over a KVStore. It delegates the necessary
 // calls to it's parent KVStore.
-func (tkv *TraceKVStore) iterator(start, end []byte, ascending bool) sdk.Iterator {
+func (tkv *Store) iterator(start, end []byte, ascending bool) sdk.Iterator {
 	var parent sdk.Iterator
 
 	if ascending {
@@ -100,17 +99,16 @@ func (tkv *TraceKVStore) iterator(start, end []byte, ascending bool) sdk.Iterato
 		parent = tkv.parent.ReverseIterator(start, end)
 	}
 
-	return newTraceIterator(tkv.writer, parent, tkv.context)
+	return newTraceIterator(tkv.tracer, parent)
 }
 
 type traceIterator struct {
-	parent  sdk.Iterator
-	writer  io.Writer
-	context sdk.TraceContext
+	parent sdk.Iterator
+	tracer *sdk.Tracer
 }
 
-func newTraceIterator(w io.Writer, parent sdk.Iterator, tc sdk.TraceContext) sdk.Iterator {
-	return &traceIterator{writer: w, parent: parent, context: tc}
+func newTraceIterator(tracer *sdk.Tracer, parent sdk.Iterator) sdk.Iterator {
+	return &traceIterator{parent: parent, tracer: tracer}
 }
 
 // Domain implements the Iterator interface.
@@ -132,7 +130,7 @@ func (ti *traceIterator) Next() {
 func (ti *traceIterator) Key() []byte {
 	key := ti.parent.Key()
 
-	writeOperation(ti.writer, iterKeyOp, ti.context, key, nil)
+	writeOperation(ti.tracer, iterKeyOp, key, nil)
 	return key
 }
 
@@ -140,7 +138,7 @@ func (ti *traceIterator) Key() []byte {
 func (ti *traceIterator) Value() []byte {
 	value := ti.parent.Value()
 
-	writeOperation(ti.writer, iterValueOp, ti.context, nil, value)
+	writeOperation(ti.tracer, iterValueOp, nil, value)
 	return value
 }
 
@@ -149,28 +147,23 @@ func (ti *traceIterator) Close() {
 	ti.parent.Close()
 }
 
-// CacheWrap implements the KVStore interface. It panics as a TraceKVStore
+// CacheWrap implements the KVStore interface. It panics as a Store
 // cannot be cache wrapped.
-func (tkv *TraceKVStore) CacheWrap() sdk.CacheWrap {
-	panic("cannot CacheWrap a TraceKVStore")
-}
-
-// CacheWrapWithTrace implements the KVStore interface. It panics as a
-// TraceKVStore cannot be cache wrapped.
-func (tkv *TraceKVStore) CacheWrapWithTrace(_ io.Writer, _ sdk.TraceContext) sdk.CacheWrap {
-	panic("cannot CacheWrapWithTrace a TraceKVStore")
+func (tkv *Store) CacheWrap() sdk.CacheKVStore {
+	panic("cannot CacheWrap a Store")
 }
 
 // writeOperation writes a KVStore operation to the underlying io.Writer as
 // JSON-encoded data where the key/value pair is base64 encoded.
 // nolint: errcheck
-func writeOperation(w io.Writer, op operation, tc sdk.TraceContext, key, value []byte) {
+func writeOperation(tracer *sdk.Tracer, op operation, key, value []byte) {
 	traceOp := traceOperation{
 		Operation: op,
 		Key:       base64.StdEncoding.EncodeToString(key),
 		Value:     base64.StdEncoding.EncodeToString(value),
 	}
 
+	tc := tracer.Context
 	if tc != nil {
 		traceOp.Metadata = tc
 	}
@@ -180,6 +173,7 @@ func writeOperation(w io.Writer, op operation, tc sdk.TraceContext, key, value [
 		panic(fmt.Sprintf("failed to serialize trace operation: %v", err))
 	}
 
+	w := tracer.Writer
 	if _, err := w.Write(raw); err != nil {
 		panic(fmt.Sprintf("failed to write trace operation: %v", err))
 	}

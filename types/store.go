@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"io"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -25,21 +24,12 @@ const (
 	PruneNothing PruningStrategy = iota
 )
 
-type Store interface { //nolint
-	CacheWrapper
-}
-
-// something that can persist to disk
-type Committer interface {
+// Stores of MultiStore must implement CommitStore.
+type CommitStore interface {
+	// CONTRACT: return zero CommitID to skip writing
 	Commit() CommitID
 	LastCommitID() CommitID
 	SetPruning(PruningStrategy)
-}
-
-// Stores of MultiStore must implement CommitStore.
-type CommitStore interface {
-	Committer
-	Store
 }
 
 // Queryable allows a Store to expose internal state to the abci.Query
@@ -54,42 +44,31 @@ type Queryable interface {
 // MultiStore
 
 type MultiStore interface { //nolint
-	Store
-
-	// Cache wrap MultiStore.
-	// NOTE: Caller should probably not call .Write() on each, but
-	// call CacheMultiStore.Write().
-	CacheMultiStore() CacheMultiStore
-
 	// Convenience for fetching substores.
-	GetStore(StoreKey) Store
 	GetKVStore(StoreKey) KVStore
 
-	// TracingEnabled returns if tracing is enabled for the MultiStore.
-	TracingEnabled() bool
+	// TODO: recursive multistore not yet supported
+	// GetMultiStore(StoreKey) MultiStore
 
-	// WithTracer sets the tracer for the MultiStore that the underlying
-	// stores will utilize to trace operations. A MultiStore is returned.
-	WithTracer(w io.Writer) MultiStore
+	GetTracer() *Tracer
 
-	// WithTracingContext sets the tracing context for a MultiStore. It is
-	// implied that the caller should update the context when necessary between
-	// tracing operations. A MultiStore is returned.
-	WithTracingContext(TraceContext) MultiStore
-
-	// ResetTraceContext resets the current tracing context.
-	ResetTraceContext() MultiStore
+	// CacheWrap cache wraps
+	// Having this method here because there is currently no
+	// implementation of MultiStore that panics on CacheWrap().
+	// Move this method to CacheWrapperMultiStore when needed
+	CacheWrap() CacheMultiStore
 }
 
 // From MultiStore.CacheMultiStore()....
 type CacheMultiStore interface {
 	MultiStore
+
 	Write() // Writes operations to underlying KVStore
 }
 
 // A non-cache MultiStore.
 type CommitMultiStore interface {
-	Committer
+	CommitStore
 	MultiStore
 
 	// Mount a store of type using the given db.
@@ -102,6 +81,10 @@ type CommitMultiStore interface {
 	// Panics on a nil key.
 	GetCommitKVStore(key StoreKey) CommitKVStore
 
+	// Panics on a nil key.
+	// TODO: recursive multistore not yet supported
+	// GetCommitMultiStore(key StoreKey) CommitMultiStore
+
 	// Load the latest persisted version.  Called once after all
 	// calls to Mount*Store() are complete.
 	LoadLatestVersion() error
@@ -110,7 +93,7 @@ type CommitMultiStore interface {
 	// version, or when the last commit attempt didn't complete,
 	// the next commit after loading must be idempotent (return the
 	// same commit id).  Otherwise the behavior is undefined.
-	LoadVersion(ver int64) error
+	LoadMultiStoreVersion(ver int64) error
 }
 
 //---------subsp-------------------------------
@@ -118,8 +101,6 @@ type CommitMultiStore interface {
 
 // KVStore is a simple interface to get/set data
 type KVStore interface {
-	Store
-
 	// Get returns nil iff key doesn't exist. Panics on nil key.
 	Get(key []byte) []byte
 
@@ -150,6 +131,7 @@ type KVStore interface {
 
 	// TODO Not yet implemented.
 	// GetSubKVStore(key *storeKey) KVStore
+
 }
 
 // Alias iterator to db's Iterator for convenience.
@@ -165,11 +147,18 @@ func KVStoreReversePrefixIterator(kvs KVStore, prefix []byte) Iterator {
 	return kvs.ReverseIterator(prefix, PrefixEndBytes(prefix))
 }
 
+type CacheWrapperKVStore interface {
+	KVStore
+
+	// CacheWrap cache wraps
+	CacheWrap() CacheKVStore
+}
+
 // CacheKVStore cache-wraps a KVStore.  After calling .Write() on
 // the CacheKVStore, all previously created CacheKVStores on the
 // object expire.
 type CacheKVStore interface {
-	KVStore
+	CacheWrapperKVStore
 
 	// Writes operations to underlying KVStore
 	Write()
@@ -177,39 +166,14 @@ type CacheKVStore interface {
 
 // Stores of MultiStore must implement CommitStore.
 type CommitKVStore interface {
-	Committer
-	KVStore
-}
-
-type MountableStore interface {
 	CommitStore
-	Load()
-}
+	KVStore
 
-//----------------------------------------
-// CacheWrap
-
-// CacheWrap makes the most appropriate cache-wrap. For example,
-// IAVLStore.CacheWrap() returns a CacheKVStore. CacheWrap should not return
-// a Committer, since Commit cache-wraps make no sense. It can return KVStore,
-// HeapStore, SpaceStore, etc.
-type CacheWrap interface {
-	// Write syncs with the underlying store.
-	Write()
-
-	// CacheWrap recursively wraps again.
-	CacheWrap() CacheWrap
-
-	// CacheWrapWithTrace recursively wraps again with tracing enabled.
-	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
-}
-
-type CacheWrapper interface { //nolint
-	// CacheWrap cache wraps.
-	CacheWrap() CacheWrap
-
-	// CacheWrapWithTrace cache wraps with tracing enabled.
-	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
+	// Load a specific persisted version.  When you load an old
+	// version, or when the last commit attempt didn't complete,
+	// the next commit after loading must be idempotent (return the
+	// same commit id).  Otherwise the behavior is undefined.
+	LoadKVStoreVersion(db dbm.DB, id CommitID) error
 }
 
 //----------------------------------------
@@ -320,9 +284,3 @@ func (key *TransientStoreKey) String() string {
 
 // key-value result for iterator queries
 type KVPair cmn.KVPair
-
-//----------------------------------------
-
-// TraceContext contains TraceKVStore context data. It will be written with
-// every trace operation.
-type TraceContext map[string]interface{}

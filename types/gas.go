@@ -76,8 +76,8 @@ func (g *infiniteGasMeter) ConsumeGas(amount Gas, descriptor string) {
 
 // GasConfig defines gas cost for each operation on KVStores
 type GasConfig struct {
-	HasCost          Gas
-	DeleteCost       Gas
+	HasCostFlat      Gas
+	DeleteCostFlat   Gas
 	ReadCostFlat     Gas
 	ReadCostPerByte  Gas
 	WriteCostFlat    Gas
@@ -89,8 +89,8 @@ type GasConfig struct {
 // KVGasConfig returns a default gas config for KVStores.
 func KVGasConfig() GasConfig {
 	return GasConfig{
-		HasCost:          10,
-		DeleteCost:       10,
+		HasCostFlat:      10,
+		DeleteCostFlat:   10,
 		ReadCostFlat:     10,
 		ReadCostPerByte:  1,
 		WriteCostFlat:    10,
@@ -104,4 +104,48 @@ func KVGasConfig() GasConfig {
 func TransientGasConfig() GasConfig {
 	// TODO: define gasconfig for transient stores
 	return KVGasConfig()
+}
+
+type GasTank struct {
+	GasMeter
+	Config GasConfig
+}
+
+func NewGasTank(meter GasMeter, config GasConfig) *GasTank {
+	return &GasTank{
+		GasMeter: meter,
+		Config:   config,
+	}
+}
+
+func (tank *GasTank) HasFlat() {
+	tank.GasMeter.ConsumeGas(tank.Config.HasCostFlat, "HasFlat")
+}
+
+func (tank *GasTank) DeleteFlat() {
+	tank.GasMeter.ConsumeGas(tank.Config.DeleteCostFlat, "DeleteFlat")
+}
+
+func (tank *GasTank) ReadFlat() {
+	tank.GasMeter.ConsumeGas(tank.Config.ReadCostFlat, "ReadFlat")
+}
+
+func (tank *GasTank) ReadBytes(length int) {
+	tank.GasMeter.ConsumeGas(tank.Config.ReadCostPerByte*int64(length), "ReadPerByte")
+}
+
+func (tank *GasTank) WriteFlat() {
+	tank.GasMeter.ConsumeGas(tank.Config.WriteCostFlat, "WriteFlat")
+}
+
+func (tank *GasTank) WriteBytes(length int) {
+	tank.GasMeter.ConsumeGas(tank.Config.WriteCostPerByte*int64(length), "WritePerByte")
+}
+
+func (tank *GasTank) ValueBytes(length int) {
+	tank.GasMeter.ConsumeGas(tank.Config.ValueCostPerByte*int64(length), "ValuePerByte")
+}
+
+func (tank *GasTank) IterNextFlat() {
+	tank.GasMeter.ConsumeGas(tank.Config.IterNextCostFlat, "IterNext")
 }

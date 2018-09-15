@@ -10,6 +10,8 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 )
 
 var kvPairs = []sdk.KVPair{
@@ -18,8 +20,8 @@ var kvPairs = []sdk.KVPair{
 	{Key: keyFmt(3), Value: valFmt(3)},
 }
 
-func newTraceKVStore(w io.Writer) *TraceKVStore {
-	store := newEmptyTraceKVStore(w)
+func newStore(w io.Writer) *Store {
+	store := newEmptyStore(w)
 
 	for _, kvPair := range kvPairs {
 		store.Set(kvPair.Key, kvPair.Value)
@@ -28,14 +30,14 @@ func newTraceKVStore(w io.Writer) *TraceKVStore {
 	return store
 }
 
-func newEmptyTraceKVStore(w io.Writer) *TraceKVStore {
+func newEmptyStore(w io.Writer) *Store {
 	memDB := dbStoreAdapter{dbm.NewMemDB()}
 	tc := sdk.TraceContext(map[string]interface{}{"blockHeight": 64})
 
-	return NewTraceKVStore(memDB, w, tc)
+	return NewStore(memDB, w, tc)
 }
 
-func TestTraceKVStoreGet(t *testing.T) {
+func TestStoreGet(t *testing.T) {
 	testCases := []struct {
 		key           []byte
 		expectedValue []byte
@@ -61,7 +63,7 @@ func TestTraceKVStoreGet(t *testing.T) {
 	for _, tc := range testCases {
 		var buf bytes.Buffer
 
-		store := newTraceKVStore(&buf)
+		store := newStore(&buf)
 		buf.Reset()
 		value := store.Get(tc.key)
 
@@ -70,7 +72,7 @@ func TestTraceKVStoreGet(t *testing.T) {
 	}
 }
 
-func TestTraceKVStoreSet(t *testing.T) {
+func TestStoreSet(t *testing.T) {
 	testCases := []struct {
 		key         []byte
 		value       []byte
@@ -91,7 +93,7 @@ func TestTraceKVStoreSet(t *testing.T) {
 	for _, tc := range testCases {
 		var buf bytes.Buffer
 
-		store := newEmptyTraceKVStore(&buf)
+		store := newEmptyStore(&buf)
 		buf.Reset()
 		store.Set(tc.key, tc.value)
 
@@ -99,7 +101,7 @@ func TestTraceKVStoreSet(t *testing.T) {
 	}
 }
 
-func TestTraceKVStoreDelete(t *testing.T) {
+func TestStoreDelete(t *testing.T) {
 	testCases := []struct {
 		key         []byte
 		expectedOut string
@@ -117,7 +119,7 @@ func TestTraceKVStoreDelete(t *testing.T) {
 	for _, tc := range testCases {
 		var buf bytes.Buffer
 
-		store := newTraceKVStore(&buf)
+		store := newStore(&buf)
 		buf.Reset()
 		store.Delete(tc.key)
 
@@ -125,7 +127,7 @@ func TestTraceKVStoreDelete(t *testing.T) {
 	}
 }
 
-func TestTraceKVStoreHas(t *testing.T) {
+func TestStoreHas(t *testing.T) {
 	testCases := []struct {
 		key      []byte
 		expected bool
@@ -143,7 +145,7 @@ func TestTraceKVStoreHas(t *testing.T) {
 	for _, tc := range testCases {
 		var buf bytes.Buffer
 
-		store := newTraceKVStore(&buf)
+		store := newStore(&buf)
 		buf.Reset()
 		ok := store.Has(tc.key)
 
@@ -151,10 +153,10 @@ func TestTraceKVStoreHas(t *testing.T) {
 	}
 }
 
-func TestTestTraceKVStoreIterator(t *testing.T) {
+func TestTestStoreIterator(t *testing.T) {
 	var buf bytes.Buffer
 
-	store := newTraceKVStore(&buf)
+	store := newStore(&buf)
 	iterator := store.Iterator(nil, nil)
 
 	s, e := iterator.Domain()
@@ -207,10 +209,10 @@ func TestTestTraceKVStoreIterator(t *testing.T) {
 	require.NotPanics(t, iterator.Close)
 }
 
-func TestTestTraceKVStoreReverseIterator(t *testing.T) {
+func TestTestStoreReverseIterator(t *testing.T) {
 	var buf bytes.Buffer
 
-	store := newTraceKVStore(&buf)
+	store := newStore(&buf)
 	iterator := store.ReverseIterator(nil, nil)
 
 	s, e := iterator.Domain()
@@ -263,23 +265,17 @@ func TestTestTraceKVStoreReverseIterator(t *testing.T) {
 	require.NotPanics(t, iterator.Close)
 }
 
-func TestTraceKVStorePrefix(t *testing.T) {
-	store := newEmptyTraceKVStore(nil)
-	pStore := prefix.NewStore(store, []byte("trace_prefix"))
-	require.IsType(t, prefix.Store{}, pStore)
-}
-
-func TestTraceKVStoreGetStoreType(t *testing.T) {
+func TestStoreGetStoreType(t *testing.T) {
 	memDB := dbStoreAdapter{dbm.NewMemDB()}
 	store := NewEmptyStore(nil)
 	require.Equal(t, memDB.GetStoreType(), store.GetStoreType())
 }
 
-func TestTraceKVStoreCacheWrap(t *testing.T) {
-	store := newEmptyTraceKVStore(nil)
+func TestStoreCacheWrap(t *testing.T) {
+	store := newEmptyStore(nil)
 	require.Panics(t, func() { store.CacheWrap() })
 }
-func TestTraceKVStoreCacheWrapWithTrace(t *testing.T) {
-	store := newEmptyTraceKVStore(nil)
+func TestStoreCacheWrapWithTrace(t *testing.T) {
+	store := newEmptyStore(nil)
 	require.Panics(t, func() { store.CacheWrapWithTrace(nil, nil) })
 }

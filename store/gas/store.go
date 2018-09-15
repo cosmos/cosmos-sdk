@@ -1,8 +1,6 @@
 package gas
 
 import (
-	"io"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,70 +9,58 @@ var _ sdk.KVStore = &gasKVStore{}
 // gasKVStore applies gas tracking to an underlying KVStore. It implements the
 // KVStore interface.
 type gasKVStore struct {
-	gasMeter  sdk.GasMeter
-	gasConfig sdk.GasConfig
-	parent    sdk.KVStore
+	tank   *sdk.GasTank
+	parent sdk.KVStore
 }
 
 // NewGasKVStore returns a reference to a new GasKVStore.
 // nolint
-func NewGasKVStore(gasMeter sdk.GasMeter, gasConfig sdk.GasConfig, parent sdk.KVStore) *gasKVStore {
+func NewStore(tank *sdk.GasTank, parent sdk.KVStore) *gasKVStore {
 	kvs := &gasKVStore{
-		gasMeter:  gasMeter,
-		gasConfig: gasConfig,
-		parent:    parent,
+		tank:   tank,
+		parent: parent,
 	}
 	return kvs
 }
 
 // Implements sdk.KVStore.
-func (gi *gasKVStore) Get(key []byte) (value []byte) {
-	gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostFlat, sdk.GasReadCostFlatDesc)
-	value = gi.parent.Get(key)
+func (gs *gasKVStore) Get(key []byte) (value []byte) {
+	gs.tank.ReadFlat()
+	value = gs.parent.Get(key)
 	// TODO overflow-safe math?
-	gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*sdk.Gas(len(value)), sdk.GasReadPerByteDesc)
+	gs.tank.ReadBytes(len(value))
 
 	return value
 }
 
 // Implements sdk.KVStore.
-func (gi *gasKVStore) Set(key []byte, value []byte) {
-	gi.gasMeter.ConsumeGas(gi.gasConfig.WriteCostFlat, sdk.GasWriteCostFlatDesc)
+func (gs *gasKVStore) Set(key []byte, value []byte) {
+	gs.tank.WriteFlat()
 	// TODO overflow-safe math?
-	gi.gasMeter.ConsumeGas(gi.gasConfig.WriteCostPerByte*sdk.Gas(len(value)), sdk.GasWritePerByteDesc)
-	gi.parent.Set(key, value)
+	gs.tank.WriteBytes(len(value))
+	gs.parent.Set(key, value)
 }
 
 // Implements sdk.KVStore.
-func (gi *gasKVStore) Has(key []byte) bool {
-	gi.gasMeter.ConsumeGas(gi.gasConfig.HasCost, sdk.GasHasDesc)
-	return gi.parent.Has(key)
+func (gs *gasKVStore) Has(key []byte) bool {
+	gs.tank.HasFlat()
+	return gs.parent.Has(key)
 }
 
 // Implements sdk.KVStore.
-func (gi *gasKVStore) Delete(key []byte) {
-	gi.gasMeter.ConsumeGas(gi.gasConfig.DeleteCost, sdk.GasDeleteDesc)
-	gi.parent.Delete(key)
+func (gs *gasKVStore) Delete(key []byte) {
+	gs.tank.DeleteFlat()
+	gs.parent.Delete(key)
 }
 
 // Implements sdk.KVStore.
-func (gi *gasKVStore) Iterator(start, end []byte) sdk.Iterator {
-	return gi.iterator(start, end, true)
+func (gs *gasKVStore) Iterator(start, end []byte) sdk.Iterator {
+	return gs.iterator(start, end, true)
 }
 
 // Implements sdk.KVStore.
-func (gi *gasKVStore) ReverseIterator(start, end []byte) sdk.Iterator {
-	return gi.iterator(start, end, false)
-}
-
-// Implements sdk.KVStore.
-func (gi *gasKVStore) CacheWrap() sdk.CacheWrap {
-	panic("cannot CacheWrap a GasKVStore")
-}
-
-// CacheWrapWithTrace implements the sdk.KVStore interface.
-func (gi *gasKVStore) CacheWrapWithTrace(_ io.Writer, _ sdk.TraceContext) sdk.CacheWrap {
-	panic("cannot CacheWrapWithTrace a GasKVStore")
+func (gs *gasKVStore) ReverseIterator(start, end []byte) sdk.Iterator {
+	return gs.iterator(start, end, false)
 }
 
 func (gs *gasKVStore) iterator(start, end []byte, ascending bool) sdk.Iterator {
@@ -85,7 +71,7 @@ func (gs *gasKVStore) iterator(start, end []byte, ascending bool) sdk.Iterator {
 		parent = gs.parent.ReverseIterator(start, end)
 	}
 
-	gi := newGasIterator(gs.gasMeter, gs.gasConfig, parent)
+	gi := newGasIterator(gs.tank, parent)
 	if gi.Valid() {
 		gi.(*gasIterator).consumeSeekGas()
 	}
@@ -94,16 +80,14 @@ func (gs *gasKVStore) iterator(start, end []byte, ascending bool) sdk.Iterator {
 }
 
 type gasIterator struct {
-	gasMeter  sdk.GasMeter
-	gasConfig sdk.GasConfig
-	parent    sdk.Iterator
+	tank   *sdk.GasTank
+	parent sdk.Iterator
 }
 
-func newGasIterator(gasMeter sdk.GasMeter, gasConfig sdk.GasConfig, parent sdk.Iterator) sdk.Iterator {
+func newGasIterator(tank *sdk.GasTank, parent sdk.Iterator) sdk.Iterator {
 	return &gasIterator{
-		gasMeter:  gasMeter,
-		gasConfig: gasConfig,
-		parent:    parent,
+		tank:   tank,
+		parent: parent,
 	}
 }
 
@@ -152,6 +136,6 @@ func (gi *gasIterator) Close() {
 func (gi *gasIterator) consumeSeekGas() {
 	value := gi.Value()
 
-	gi.gasMeter.ConsumeGas(gi.gasConfig.ValueCostPerByte*sdk.Gas(len(value)), sdk.GasValuePerByteDesc)
-	gi.gasMeter.ConsumeGas(gi.gasConfig.IterNextCostFlat, sdk.GasIterNextCostFlatDesc)
+	gi.tank.ValueBytes(len(value))
+	gi.tank.IterNextFlat()
 }

@@ -2,15 +2,12 @@ package cache
 
 import (
 	"bytes"
-	"io"
 	"sort"
 	"sync"
 
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/cosmos/cosmos-sdk/store/trace"
 )
 
 // If value is nil but deleted is false, it means the parent doesn't have the
@@ -112,17 +109,8 @@ func (ci *Store) Write() {
 	ci.cache = make(map[string]cValue)
 }
 
-//----------------------------------------
-// To cache-wrap this Store further.
-
-// Implements CacheWrapper.
-func (ci *Store) CacheWrap() sdk.CacheWrap {
+func (ci *Store) CacheWrap() sdk.CacheKVStore {
 	return NewStore(ci)
-}
-
-// CacheWrapWithTrace implements the CacheWrapper interface.
-func (ci *Store) CacheWrapWithTrace(w io.Writer, tc sdk.TraceContext) sdk.CacheWrap {
-	return NewStore(trace.NewStore(ci, w, tc))
 }
 
 //----------------------------------------

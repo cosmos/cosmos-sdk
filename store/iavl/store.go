@@ -2,7 +2,6 @@ package iavl
 
 import (
 	"fmt"
-	"io"
 	"sync"
 
 	"github.com/tendermint/go-amino"
@@ -12,9 +11,6 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/cosmos/cosmos-sdk/store/cache"
-	"github.com/cosmos/cosmos-sdk/store/trace"
 )
 
 const (
@@ -22,14 +18,13 @@ const (
 )
 
 // load the iavl store
-func LoadIAVLStore(db dbm.DB, id sdk.CommitID, pruning sdk.PruningStrategy) (sdk.CommitStore, error) {
+func (*iavlStore) LoadVersion(db dbm.DB, id sdk.CommitID) (sdk.CommitStore, error) {
 	tree := iavl.NewMutableTree(db, defaultIAVLCacheSize)
 	_, err := tree.LoadVersion(id.Version)
 	if err != nil {
 		return nil, err
 	}
 	iavl := newIAVLStore(tree, int64(0), int64(0))
-	iavl.SetPruning(pruning)
 	return iavl, nil
 }
 
@@ -121,16 +116,6 @@ func (st *iavlStore) SetPruning(pruning sdk.PruningStrategy) {
 // VersionExists returns whether or not a given version is stored.
 func (st *iavlStore) VersionExists(version int64) bool {
 	return st.tree.VersionExists(version)
-}
-
-// Implements Store.
-func (st *iavlStore) CacheWrap() sdk.CacheWrap {
-	return cache.NewStore(st)
-}
-
-// CacheWrapWithTrace implements the Store interface.
-func (st *iavlStore) CacheWrapWithTrace(w io.Writer, tc sdk.TraceContext) sdk.CacheWrap {
-	return cache.NewStore(trace.NewStore(st, w, tc))
 }
 
 // Implements sdk.KVStore.

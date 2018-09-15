@@ -16,8 +16,7 @@ const useDebugDB = false
 func TestStoreType(t *testing.T) {
 	db := dbm.NewMemDB()
 	store := NewCommitMultiStore(db)
-	store.MountStoreWithDB(
-		sdk.NewKVStoreKey("store1"), sdk.StoreTypeIAVL, db)
+	store.MountStoreWithDB(sdk.NewKVStoreKey("store1"), db)
 
 }
 
@@ -29,11 +28,11 @@ func TestStoreMount(t *testing.T) {
 	key2 := sdk.NewKVStoreKey("store2")
 	dup1 := sdk.NewKVStoreKey("store1")
 
-	require.NotPanics(t, func() { store.MountStoreWithDB(key1, sdk.StoreTypeIAVL, db) })
-	require.NotPanics(t, func() { store.MountStoreWithDB(key2, sdk.StoreTypeIAVL, db) })
+	require.NotPanics(t, func() { store.MountStoreWithDB(key1, db) })
+	require.NotPanics(t, func() { store.MountStoreWithDB(key2, db) })
 
-	require.Panics(t, func() { store.MountStoreWithDB(key1, sdk.StoreTypeIAVL, db) })
-	require.Panics(t, func() { store.MountStoreWithDB(dup1, sdk.StoreTypeIAVL, db) })
+	require.Panics(t, func() { store.MountStoreWithDB(key1, db) })
+	require.Panics(t, func() { store.MountStoreWithDB(dup1, db) })
 }
 
 func TestMultistoreCommitLoad(t *testing.T) {
@@ -80,7 +79,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	// Load an older multistore and check version.
 	ver := nCommits - 1
 	store = newMultiStoreWithMounts(db)
-	err = store.LoadVersion(ver)
+	err = store.LoadMultiStoreVersion(ver)
 	require.Nil(t, err)
 	commitID = getExpectedCommitID(store, ver)
 	checkStore(t, store, commitID, commitID)
@@ -190,31 +189,28 @@ func TestMultiStoreQuery(t *testing.T) {
 //-----------------------------------------------------------------------
 // utils
 
-func newMultiStoreWithMounts(db dbm.DB) *rootMultiStore {
+func newMultiStoreWithMounts(db dbm.DB) *Store {
 	store := NewCommitMultiStore(db)
-	store.MountStoreWithDB(
-		sdk.NewKVStoreKey("store1"), sdk.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(
-		sdk.NewKVStoreKey("store2"), sdk.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(
-		sdk.NewKVStoreKey("store3"), sdk.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(sdk.NewKVStoreKey("store1"), nil)
+	store.MountStoreWithDB(sdk.NewKVStoreKey("store2"), nil)
+	store.MountStoreWithDB(sdk.NewKVStoreKey("store3"), nil)
 	return store
 }
 
-func checkStore(t *testing.T, store *rootMultiStore, expect, got sdk.CommitID) {
+func checkStore(t *testing.T, store *Store, expect, got sdk.CommitID) {
 	require.Equal(t, expect, got)
 	require.Equal(t, expect, store.LastCommitID())
 
 }
 
-func getExpectedCommitID(store *rootMultiStore, ver int64) sdk.CommitID {
+func getExpectedCommitID(store *Store, ver int64) sdk.CommitID {
 	return sdk.CommitID{
 		Version: ver,
 		Hash:    hashStores(store.stores),
 	}
 }
 
-func hashStores(stores map[sdk.StoreKey]sdk.CommitStore) []byte {
+func hashStores(stores map[sdk.StoreKey]sdk.CommitKVStore) []byte {
 	m := make(map[string]merkle.Hasher, len(stores))
 	for key, store := range stores {
 		name := key.Name()

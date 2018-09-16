@@ -25,7 +25,7 @@ func (store *Store) LoadKVStoreVersion(db dbm.DB, id types.CommitID) error {
 		return err
 	}
 	iavl := newIAVLStore(tree, int64(0), int64(0))
-	store = iavl
+	*store = *iavl
 	return nil
 }
 

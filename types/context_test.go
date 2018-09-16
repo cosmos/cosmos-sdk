@@ -8,7 +8,7 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -54,8 +54,8 @@ func TestContextGetOpShouldNeverPanic(t *testing.T) {
 
 func defaultContext(key types.StoreKey) types.Context {
 	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db)
-	cms.MountStoreWithDB(key, types.StoreTypeIAVL, db)
+	cms := rootmulti.NewStore(db)
+	cms.MountStoreWithDB(key, db)
 	cms.LoadLatestVersion()
 	ctx := types.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 	return ctx

@@ -10,6 +10,8 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/cosmos/cosmos-sdk/store/gas"
 )
 
 /*
@@ -72,13 +74,25 @@ func (c Context) Value(key interface{}) interface{} {
 }
 
 // KVStore fetches a KVStore from the MultiStore.
-func (c Context) KVStore(key StoreKey) KVStore {
-	return c.multiStore().GetKVStore(key)
+func (c Context) KVStore(key *KVStoreKey) KVStore {
+	return gas.NewStore(
+		&GasTank{
+			GasMeter: c.GasMeter(),
+			Config:   cachedKVGasConfig,
+		},
+		c.multiStore().GetKVStore(key),
+	)
 }
 
-// TransientStore fetches a TransientStore from the MultiStore.
-func (c Context) TransientStore(key StoreKey) KVStore {
-	return c.multiStore().GetKVStore(key)
+// TransientStore fetches a TransientStore from the MultiStore
+func (c Context) TransientStore(key *TransientStoreKey) KVStore {
+	return gas.NewStore(
+		&GasTank{
+			GasMeter: c.GasMeter(),
+			Config:   cachedTransientGasConfig,
+		},
+		c.multiStore().GetKVStore(key),
+	)
 }
 
 //----------------------------------------

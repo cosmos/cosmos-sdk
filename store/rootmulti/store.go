@@ -280,9 +280,10 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 	store = key.NewStore().(types.CommitKVStore)
 	err = store.LoadKVStoreVersion(db, id)
 	if err != nil {
-		store.SetPruning(rs.pruning)
+		return
 	}
 
+	store.SetPruning(rs.pruning)
 	return
 
 	// XXX: move to store subdirectories LoadKVStoreVersion

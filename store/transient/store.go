@@ -12,11 +12,13 @@ var _ types.KVStore = (*Store)(nil)
 // transientStore is a wrapper for a MemDB with Commiter implementation
 type Store struct {
 	dbadapter.Store
+
+	tank *types.GasTank
 }
 
 // Constructs new MemDB adapter
 func NewStore() *Store {
-	return &Store{dbadapter.Store{dbm.NewMemDB()}}
+	return &Store{dbadapter.Store{dbm.NewMemDB()}, new(types.GasTank)}
 }
 
 // Implements CommitStore

@@ -50,15 +50,13 @@ type MultiStore interface { //nolint
 	// TODO: recursive multistore not yet supported
 	// GetMultiStore(StoreKey) MultiStore
 
-	GetTracer() *Tracer
-
-	GetGasTank() *GasTank
-
 	// CacheWrap cache wraps
 	// Having this method here because there is currently no
 	// implementation of MultiStore that panics on CacheWrap().
 	// Move this method to CacheWrapperMultiStore when needed
 	CacheWrap() CacheMultiStore
+
+	GetTracer() *Tracer
 }
 
 // From MultiStore.CacheMultiStore()....

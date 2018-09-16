@@ -1,39 +1,49 @@
-package store
+package queue
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/store/list"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
+
+func ListKey() []byte {
+	return []byte{0x00}
+}
 
 // Key for the top element position in the queue
 func TopKey() []byte {
-	return []byte{0x02}
+	return []byte{0x01}
 }
 
 // Queue is a List wrapper that provides queue-like functions
 // It panics when the element type cannot be (un/)marshalled by the codec
 type Queue struct {
-	List List
+	cdc   *codec.Codec
+	store types.KVStore
+
+	List list.List
 }
 
-// NewQueue constructs new Queue
-func NewQueue(cdc *codec.Codec, store sdk.KVStore) Queue {
-	return Queue{NewList(cdc, store)}
+// New constructs new Queue
+func New(cdc *codec.Codec, store types.KVStore) Queue {
+	return Queue{cdc, store, list.New(cdc, prefix.NewStore(store, ListKey()))}
 }
 
 func (m Queue) getTop() (res uint64) {
-	bz := m.List.store.Get(TopKey())
+	bz := m.store.Get(TopKey())
 	if bz == nil {
 		return 0
 	}
 
-	m.List.cdc.MustUnmarshalBinary(bz, &res)
+	m.cdc.MustUnmarshalBinary(bz, &res)
 	return
 }
 
 func (m Queue) setTop(top uint64) {
-	bz := m.List.cdc.MustMarshalBinary(top)
-	m.List.store.Set(TopKey(), bz)
+	bz := m.cdc.MustMarshalBinary(top)
+	m.store.Set(TopKey(), bz)
 }
 
 // Push() inserts the elements to the rear of the queue

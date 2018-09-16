@@ -1,18 +1,40 @@
-package store
+package list
 
 import (
 	"math/rand"
 	"testing"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 )
+
+type S struct {
+	I uint64
+	B bool
+}
+
+func defaultComponents(key sdk.StoreKey) (sdk.Context, *codec.Codec) {
+	db := dbm.NewMemDB()
+	cms := rootmulti.NewStore(db)
+	cms.MountStoreWithDB(key, db)
+	cms.LoadLatestVersion()
+	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
+	cdc := codec.New()
+	return ctx, cdc
+}
 
 func TestList(t *testing.T) {
 	key := sdk.NewKVStoreKey("test")
 	ctx, cdc := defaultComponents(key)
 	store := ctx.KVStore(key)
-	lm := NewList(cdc, store)
+	lm := New(cdc, store)
 
 	val := S{1, true}
 	var res S
@@ -54,11 +76,11 @@ func TestList(t *testing.T) {
 	require.Equal(t, S{3, true}, res)
 }
 
-func TestListRandom(t *testing.T) {
+func TestRandom(t *testing.T) {
 	key := sdk.NewKVStoreKey("test")
 	ctx, cdc := defaultComponents(key)
 	store := ctx.KVStore(key)
-	list := NewList(cdc, store)
+	list := New(cdc, store)
 	mocklist := []uint32{}
 
 	for i := 0; i < 100; i++ {

@@ -1,4 +1,4 @@
-package store
+package list
 
 import (
 	"fmt"
@@ -25,8 +25,8 @@ type List struct {
 	store sdk.KVStore
 }
 
-// NewList constructs new List
-func NewList(cdc *codec.Codec, store sdk.KVStore) List {
+// New constructs new List
+func New(cdc *codec.Codec, store sdk.KVStore) List {
 	return List{
 		cdc:   cdc,
 		store: store,

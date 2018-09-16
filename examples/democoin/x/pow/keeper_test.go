@@ -21,7 +21,7 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
 	db := dbm.NewMemDB()
 	capKey := sdk.NewKVStoreKey("capkey")
 	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(capKey, db)
 	ms.LoadLatestVersion()
 
 	return ms, capKey

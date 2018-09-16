@@ -12,13 +12,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/mock"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func defaultContext(key sdk.StoreKey) sdk.Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
-	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
+	cms.MountStoreWithDB(key, db)
 	cms.LoadLatestVersion()
 	ctx := sdk.NewContext(cms, abci.Header{}, false, nil)
 	return ctx
@@ -36,7 +37,7 @@ func TestValidatorSet(t *testing.T) {
 		{addr2, sdk.NewDec(2)},
 	}}
 
-	valset := NewValidatorSet(codec.New(), ctx.KVStore(key).Prefix([]byte("assoc")), base, 1, 5)
+	valset := NewValidatorSet(codec.New(), prefix.NewStore(ctx.KVStore(key), []byte("assoc")), base, 1, 5)
 
 	require.Equal(t, base.Validator(ctx, addr1), valset.Validator(ctx, addr1))
 	require.Equal(t, base.Validator(ctx, addr2), valset.Validator(ctx, addr2))

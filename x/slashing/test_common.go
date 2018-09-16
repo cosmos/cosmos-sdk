@@ -58,20 +58,12 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	tkeyParams := sdk.NewTransientStoreKey("transient_params")
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
-<<<<<<< HEAD
-	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(tkeyStake, sdk.StoreTypeTransient, nil)
-	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keySlashing, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
-=======
 	ms.MountStoreWithDB(keyAcc, db)
 	ms.MountStoreWithDB(tkeyStake, nil)
 	ms.MountStoreWithDB(keyStake, db)
 	ms.MountStoreWithDB(keySlashing, db)
 	ms.MountStoreWithDB(keyParams, db)
->>>>>>> eb1d017... now compiles
+	ms.MountStoreWithDB(tkeyParams, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))

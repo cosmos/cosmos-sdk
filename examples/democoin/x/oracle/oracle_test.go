@@ -19,7 +19,7 @@ func defaultContext(keys ...sdk.StoreKey) sdk.Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
 	for _, key := range keys {
-		cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
+		cms.MountStoreWithDB(key, db)
 	}
 	cms.LoadLatestVersion()
 	ctx := sdk.NewContext(cms, abci.Header{}, false, nil)

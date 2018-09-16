@@ -1,4 +1,4 @@
-package store
+package queue
 
 import (
 	"testing"
@@ -11,6 +11,9 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/list"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -21,8 +24,8 @@ type S struct {
 
 func defaultComponents(key sdk.StoreKey) (sdk.Context, *codec.Codec) {
 	db := dbm.NewMemDB()
-	cms := NewCommitMultiStore(db)
-	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
+	cms := rootmulti.NewStore(db)
+	cms.MountStoreWithDB(key, db)
 	cms.LoadLatestVersion()
 	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 	cdc := codec.New()
@@ -34,7 +37,7 @@ func TestQueue(t *testing.T) {
 	ctx, cdc := defaultComponents(key)
 	store := ctx.KVStore(key)
 
-	qm := NewQueue(cdc, store)
+	qm := New(cdc, store)
 
 	val := S{1, true}
 	var res S
@@ -69,7 +72,8 @@ func TestKeys(t *testing.T) {
 	key := sdk.NewKVStoreKey("test")
 	ctx, cdc := defaultComponents(key)
 	store := ctx.KVStore(key)
-	queue := NewQueue(cdc, store)
+	listStore := prefix.NewStore(store, ListKey())
+	queue := New(cdc, store)
 
 	for i := 0; i < 10; i++ {
 		queue.Push(i)
@@ -81,14 +85,14 @@ func TestKeys(t *testing.T) {
 	var actual int
 
 	// Checking keys.LengthKey
-	err := cdc.UnmarshalBinary(store.Get(LengthKey()), &len)
+	err := cdc.UnmarshalBinary(listStore.Get(list.LengthKey()), &len)
 	require.Nil(t, err)
 	require.Equal(t, len, queue.List.Len())
 
 	// Checking keys.ElemKey
 	for i := 0; i < 10; i++ {
 		queue.List.Get(uint64(i), &expected)
-		bz := store.Get(ElemKey(uint64(i)))
+		bz := listStore.Get(list.ElemKey(uint64(i)))
 		err = cdc.UnmarshalBinary(bz, &actual)
 		require.Nil(t, err)
 		require.Equal(t, expected, actual)

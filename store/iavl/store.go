@@ -18,14 +18,14 @@ const (
 )
 
 // load the iavl store
-func (store *Store) LoadKVStoreVersion(db dbm.DB, id types.CommitID) error {
+func (st *Store) LoadKVStoreVersion(db dbm.DB, id types.CommitID) error {
 	tree := iavl.NewMutableTree(db, defaultIAVLCacheSize)
 	_, err := tree.LoadVersion(id.Version)
 	if err != nil {
 		return err
 	}
 	iavl := newIAVLStore(tree, int64(0), int64(0))
-	*store = *iavl
+	*st = *iavl
 	return nil
 }
 

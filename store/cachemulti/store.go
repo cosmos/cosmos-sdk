@@ -68,6 +68,7 @@ func (cms Store) GetTracer() *types.Tracer {
 	return cms.tracer
 }
 
+// Implements MultiStore
 func (cms Store) GetGasTank() *types.GasTank {
 	return cms.tank
 }

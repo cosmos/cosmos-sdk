@@ -109,6 +109,7 @@ func (ci *Store) Write() {
 	ci.cache = make(map[string]cValue)
 }
 
+// Implements types.KVStore
 func (ci *Store) CacheWrap() types.CacheKVStore {
 	return NewStore(ci)
 }

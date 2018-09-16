@@ -10,12 +10,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
+// ABCICodeType - combined codetype / codespace
 type ABCICodeType uint32
 
+// CodeType - code identifier within codespace
 type CodeType uint16
 
+// CodespaceType - codespace identifier
 type CodespaceType uint16
 
+// get the abci code from the local code and codespace
 func ToABCICode(code CodeType) ABCICodeType {
 	if code == CodeOK {
 		return ABCICodeOK
@@ -23,10 +27,14 @@ func ToABCICode(code CodeType) ABCICodeType {
 	return ABCICodeType((uint32(CodespaceRoot) << 16) | uint32(code))
 }
 
+// SDK error codes
 const (
 	// Using same code with sdk/errors.go to reduce confusion
+
+	// ABCI error codes
 	ABCICodeOK ABCICodeType = 0
 
+	// Base error codes
 	CodeOK             CodeType = 0
 	CodeInternal       CodeType = 1
 	CodeTxDecode       CodeType = 2
@@ -39,6 +47,7 @@ func unknownCodeMsg(code CodeType) string {
 	return fmt.Sprintf("unknown code %d", code)
 }
 
+// nolint: gocyclo
 func CodeToDefaultMsg(code CodeType) string {
 	switch code {
 	case CodeInternal:
@@ -69,6 +78,7 @@ func ErrUnknownRequest(msg string) Error {
 
 type cmnError = cmn.Error
 
+// Query error type
 type Error interface {
 	cmnError
 
@@ -99,6 +109,7 @@ func parseCmnError(err string) string {
 }
 
 // Copied from types/errors.go
+// Implements Error
 func (err *queryError) ABCILog() string {
 	cdc := codec.New()
 	parsedErrMsg := parseCmnError(err.cmnError.Error())
@@ -114,6 +125,7 @@ func (err *queryError) ABCILog() string {
 	return stringifiedJSON
 }
 
+// Implements Error
 func (err *queryError) QueryResult() abci.ResponseQuery {
 	return abci.ResponseQuery{
 		Code: uint32(ToABCICode(err.code)),
@@ -121,9 +133,10 @@ func (err *queryError) QueryResult() abci.ResponseQuery {
 	}
 }
 
+// TODO: Do we need Codespace/ABCICode here?
 type humanReadableError struct {
 	Codespace CodespaceType `json:"codespace"`
 	Code      CodeType      `json:"code"`
 	ABCICode  ABCICodeType  `json:"abci_code"`
-	Message   string        `json:message`
+	Message   string        `json:"message"`
 }

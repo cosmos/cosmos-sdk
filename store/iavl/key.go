@@ -22,14 +22,17 @@ func NewKey(name string) *KVStoreKey {
 	}
 }
 
+// Implements StoreKey
 func (key *KVStoreKey) Name() string {
 	return key.name
 }
 
+// Implements StoreKey
 func (key *KVStoreKey) String() string {
 	return fmt.Sprintf("KVStoreKey{%p, %s}", key, key.name)
 }
 
+// Implements StoreKey
 func (key *KVStoreKey) NewStore() types.CommitStore {
 	return &Store{}
 }

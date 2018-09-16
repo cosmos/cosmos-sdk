@@ -6,8 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cmn "github.com/tendermint/tendermint/libs/common"
-
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // ABCICodeType - combined codetype / codespace
@@ -181,7 +179,6 @@ type Error interface {
 	ABCILog() string
 	ABCICode() ABCICodeType
 	Result() Result
-	QueryResult() abci.ResponseQuery
 }
 
 // NewError - create an error.
@@ -279,12 +276,11 @@ func (err *sdkError) Result() Result {
 	}
 }
 
-// QueryResult allows us to return sdk.Error.QueryResult() in query responses
-func (err *sdkError) QueryResult() abci.ResponseQuery {
-	return abci.ResponseQuery{
-		Code: uint32(err.ABCICode()),
-		Log:  err.ABCILog(),
+func parseCmnError(err string) string {
+	if idx := strings.Index(err, "{"); idx != -1 {
+		err = err[idx+1 : len(err)-1]
 	}
+	return err
 }
 
 //----------------------------------------

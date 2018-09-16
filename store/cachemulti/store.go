@@ -20,16 +20,18 @@ type Store struct {
 	keysByName map[string]types.StoreKey
 
 	tracer *types.Tracer
+	tank   *types.GasTank
 }
 
 var _ types.CacheMultiStore = Store{}
 
-func NewStore(db dbm.DB, keysByName map[string]types.StoreKey, stores map[types.StoreKey]types.CommitKVStore, tracer *types.Tracer) Store {
+func NewStore(db dbm.DB, keysByName map[string]types.StoreKey, stores map[types.StoreKey]types.CommitKVStore, tracer *types.Tracer, tank *types.GasTank) Store {
 	cms := Store{
 		db:         cache.NewStore(dbadapter.NewStore(db)),
 		stores:     make(map[types.StoreKey]types.CacheKVStore, len(stores)),
 		keysByName: keysByName,
 		tracer:     tracer,
+		tank:       tank,
 	}
 
 	for key, store := range stores {
@@ -64,6 +66,10 @@ func newCacheMultiStoreFromCMS(cms Store) Store {
 // Implements MultiStore
 func (cms Store) GetTracer() *types.Tracer {
 	return cms.tracer
+}
+
+func (cms Store) GetGasTank() *types.GasTank {
+	return cms.tank
 }
 
 // Implements CacheMultiStore.

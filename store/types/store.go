@@ -52,6 +52,8 @@ type MultiStore interface { //nolint
 
 	GetTracer() *Tracer
 
+	GetGasTank() *GasTank
+
 	// CacheWrap cache wraps
 	// Having this method here because there is currently no
 	// implementation of MultiStore that panics on CacheWrap().
@@ -203,28 +205,6 @@ type StoreKey interface {
 	NewStore() CommitStore
 }
 
-// KVStoreKey is used for accessing substores.
-// Only the pointer value should ever be used - it functions as a capabilities key.
-type KVStoreKey struct {
-	name string
-}
-
-// NewKVStoreKey returns a new pointer to a KVStoreKey.
-// Use a pointer so keys don't collide.
-func NewKVStoreKey(name string) *KVStoreKey {
-	return &KVStoreKey{
-		name: name,
-	}
-}
-
-func (key *KVStoreKey) Name() string {
-	return key.name
-}
-
-func (key *KVStoreKey) String() string {
-	return fmt.Sprintf("KVStoreKey{%p, %s}", key, key.name)
-}
-
 // PrefixEndBytes returns the []byte that would end a
 // range query for all []byte with a certain prefix
 // Deals with last byte of prefix being FF without overflowing
@@ -249,29 +229,6 @@ func PrefixEndBytes(prefix []byte) []byte {
 		}
 	}
 	return end
-}
-
-// TransientStoreKey is used for indexing transient stores in a MultiStore
-type TransientStoreKey struct {
-	name string
-}
-
-// Constructs new TransientStoreKey
-// Must return a pointer according to the ocap principle
-func NewTransientStoreKey(name string) *TransientStoreKey {
-	return &TransientStoreKey{
-		name: name,
-	}
-}
-
-// Implements StoreKey
-func (key *TransientStoreKey) Name() string {
-	return key.name
-}
-
-// Implements StoreKey
-func (key *TransientStoreKey) String() string {
-	return fmt.Sprintf("TransientStoreKey{%p, %s}", key, key.name)
 }
 
 //----------------------------------------

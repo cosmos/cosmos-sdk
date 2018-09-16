@@ -13,7 +13,7 @@ import (
 )
 
 func newGasTank(limit types.Gas) *types.GasTank {
-	return types.NewGasTank(types.NewGasMeter(limit), types.KVGasConfig())
+	return types.NewGasTank(limit, types.KVGasConfig())
 }
 
 func newGasKVStore() types.KVStore {
@@ -76,20 +76,19 @@ func TestGasKVStoreOutOfGasIterator(t *testing.T) {
 }
 
 func testGasKVStoreWrap(t *testing.T, store types.KVStore) {
-	meter := types.NewGasMeter(10000)
-	tank := types.NewGasTank(meter, types.GasConfig{HasCostFlat: 10})
+	tank := types.NewGasTank(10000, types.GasConfig{HasCostFlat: 10})
 
 	store = NewStore(tank, store)
-	require.Equal(t, int64(0), meter.GasConsumed())
+	require.Equal(t, int64(0), tank.GasConsumed())
 
 	store.Has([]byte("key"))
-	require.Equal(t, int64(10), meter.GasConsumed())
+	require.Equal(t, int64(10), tank.GasConsumed())
 
-	tank = types.NewGasTank(meter, types.GasConfig{HasCostFlat: 20})
+	tank.SetConfig(types.GasConfig{HasCostFlat: 20})
 	store = NewStore(tank, store)
 
 	store.Has([]byte("key"))
-	require.Equal(t, int64(40), meter.GasConsumed())
+	require.Equal(t, int64(40), tank.GasConsumed())
 }
 
 // XXX: make it stop using iavl or move it to iavl

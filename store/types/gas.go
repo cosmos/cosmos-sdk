@@ -111,11 +111,26 @@ type GasTank struct {
 	Config GasConfig
 }
 
-func NewGasTank(meter GasMeter, config GasConfig) *GasTank {
+func NewGasTank(limit Gas, config GasConfig) *GasTank {
 	return &GasTank{
-		GasMeter: meter,
+		GasMeter: NewGasMeter(limit),
 		Config:   config,
 	}
+}
+
+func NewInfiniteGasTank(config GasConfig) *GasTank {
+	return &GasTank{
+		GasMeter: NewInfiniteGasMeter(),
+		Config:   config,
+	}
+}
+
+func (tank *GasTank) SetMeter(meter GasMeter) {
+	tank.GasMeter = meter
+}
+
+func (tank *GasTank) SetConfig(config GasConfig) {
+	tank.Config = config
 }
 
 func (tank *GasTank) HasFlat() {

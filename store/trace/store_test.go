@@ -264,18 +264,3 @@ func TestTestStoreReverseIterator(t *testing.T) {
 	require.Panics(t, iterator.Next)
 	require.NotPanics(t, iterator.Close)
 }
-
-func TestStoreGetStoreType(t *testing.T) {
-	memDB := dbadapter.NewStore(dbm.NewMemDB())
-	store := NewEmptyStore(nil)
-	require.Equal(t, memDB.GetStoreType(), store.GetStoreType())
-}
-
-func TestStoreCacheWrap(t *testing.T) {
-	store := newEmptyStore(nil)
-	require.Panics(t, func() { store.CacheWrap() })
-}
-func TestStoreCacheWrapWithTrace(t *testing.T) {
-	store := newEmptyStore(nil)
-	require.Panics(t, func() { store.CacheWrapWithTrace(nil, nil) })
-}

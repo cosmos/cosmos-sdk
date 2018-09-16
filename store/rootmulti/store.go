@@ -32,24 +32,33 @@ type Store struct {
 	keysByName   map[string]types.StoreKey
 
 	tracer *types.Tracer
+	tank   *types.GasTank
 }
 
 var _ types.CommitMultiStore = (*Store)(nil)
 var _ types.Queryable = (*Store)(nil)
 
 // nolint
-func NewCommitMultiStore(db dbm.DB) *Store {
+func NewStore(db dbm.DB) *Store {
 	return &Store{
 		db:           db,
 		storesParams: make(map[types.StoreKey]storeParams),
 		stores:       make(map[types.StoreKey]types.CommitKVStore),
 		keysByName:   make(map[string]types.StoreKey),
+
+		tracer: new(types.Tracer),
+		tank:   new(types.GasTank),
 	}
 }
 
 // Implements MultiStore
 func (rs *Store) GetTracer() *types.Tracer {
 	return rs.tracer
+}
+
+// Implements MultiStore
+func (rs *Store) GetGasTank() *types.GasTank {
+	return rs.tank
 }
 
 // Implements CommitMultiStore
@@ -168,7 +177,7 @@ func (rs *Store) Commit() types.CommitID {
 
 // Implements types.MultiStore.
 func (rs *Store) CacheWrap() types.CacheMultiStore {
-	return cachemulti.NewStore(rs.db, rs.keysByName, rs.stores, rs.tracer)
+	return cachemulti.NewStore(rs.db, rs.keysByName, rs.stores, rs.tracer, rs.tank)
 }
 
 // GetKVStore implements the types.MultiStore interface. If tracing is enabled on the
@@ -268,7 +277,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		db = dbm.NewPrefixDB(rs.db, []byte("s/k:"+params.key.Name()+"/"))
 	}
 
-	store = reflect.Zero(params.typ).Interface().(types.CommitKVStore)
+	store = key.NewStore().(types.CommitKVStore)
 	err = store.LoadKVStoreVersion(db, id)
 	if err != nil {
 		store.SetPruning(rs.pruning)

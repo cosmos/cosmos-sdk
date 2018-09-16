@@ -8,25 +8,25 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/iavl"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 const useDebugDB = false
 
 func TestStoreType(t *testing.T) {
 	db := dbm.NewMemDB()
-	store := NewCommitMultiStore(db)
-	store.MountStoreWithDB(sdk.NewKVStoreKey("store1"), db)
-
+	store := NewStore(db)
+	store.MountStoreWithDB(iavl.NewKey("store1"), db)
 }
 
 func TestStoreMount(t *testing.T) {
 	db := dbm.NewMemDB()
-	store := NewCommitMultiStore(db)
+	store := NewStore(db)
 
-	key1 := sdk.NewKVStoreKey("store1")
-	key2 := sdk.NewKVStoreKey("store2")
-	dup1 := sdk.NewKVStoreKey("store1")
+	key1 := iavl.NewKey("store1")
+	key2 := iavl.NewKey("store2")
+	dup1 := iavl.NewKey("store1")
 
 	require.NotPanics(t, func() { store.MountStoreWithDB(key1, db) })
 	require.NotPanics(t, func() { store.MountStoreWithDB(key2, db) })
@@ -45,7 +45,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	require.Nil(t, err)
 
 	// New store has empty last commit.
-	commitID := sdk.CommitID{}
+	commitID := types.CommitID{}
 	checkStore(t, store, commitID, commitID)
 
 	// Make sure we can get stores by name.
@@ -136,11 +136,11 @@ func TestMultiStoreQuery(t *testing.T) {
 	require.Nil(t, garbage)
 
 	// Set and commit data in one store.
-	store1 := multi.getStoreByName("store1").(sdk.KVStore)
+	store1 := multi.getStoreByName("store1").(types.KVStore)
 	store1.Set(k, v)
 
 	// ... and another.
-	store2 := multi.getStoreByName("store2").(sdk.KVStore)
+	store2 := multi.getStoreByName("store2").(types.KVStore)
 	store2.Set(k2, v2)
 
 	// Commit the multistore.
@@ -155,34 +155,34 @@ func TestMultiStoreQuery(t *testing.T) {
 	// Test bad path.
 	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
 	qres := multi.Query(query)
-	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), sdk.ABCICodeType(qres.Code))
+	require.Equal(t, types.ToABCICode(types.CodeUnknownRequest), types.ABCICodeType(qres.Code))
 
 	query.Path = "h897fy32890rf63296r92"
 	qres = multi.Query(query)
-	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), sdk.ABCICodeType(qres.Code))
+	require.Equal(t, types.ToABCICode(types.CodeUnknownRequest), types.ABCICodeType(qres.Code))
 
 	// Test invalid store name.
 	query.Path = "/garbage/key"
 	qres = multi.Query(query)
-	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), sdk.ABCICodeType(qres.Code))
+	require.Equal(t, types.ToABCICode(types.CodeUnknownRequest), types.ABCICodeType(qres.Code))
 
 	// Test valid query with data.
 	query.Path = "/store1/key"
 	qres = multi.Query(query)
-	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), sdk.ABCICodeType(qres.Code))
+	require.Equal(t, types.ToABCICode(types.CodeOK), types.ABCICodeType(qres.Code))
 	require.Equal(t, v, qres.Value)
 
 	// Test valid but empty query.
 	query.Path = "/store2/key"
 	query.Prove = true
 	qres = multi.Query(query)
-	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), sdk.ABCICodeType(qres.Code))
+	require.Equal(t, types.ToABCICode(types.CodeOK), types.ABCICodeType(qres.Code))
 	require.Nil(t, qres.Value)
 
 	// Test store2 data.
 	query.Data = k2
 	qres = multi.Query(query)
-	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), sdk.ABCICodeType(qres.Code))
+	require.Equal(t, types.ToABCICode(types.CodeOK), types.ABCICodeType(qres.Code))
 	require.Equal(t, v2, qres.Value)
 }
 
@@ -190,27 +190,27 @@ func TestMultiStoreQuery(t *testing.T) {
 // utils
 
 func newMultiStoreWithMounts(db dbm.DB) *Store {
-	store := NewCommitMultiStore(db)
-	store.MountStoreWithDB(sdk.NewKVStoreKey("store1"), nil)
-	store.MountStoreWithDB(sdk.NewKVStoreKey("store2"), nil)
-	store.MountStoreWithDB(sdk.NewKVStoreKey("store3"), nil)
+	store := NewStore(db)
+	store.MountStoreWithDB(iavl.NewKey("store1"), nil)
+	store.MountStoreWithDB(iavl.NewKey("store2"), nil)
+	store.MountStoreWithDB(iavl.NewKey("store3"), nil)
 	return store
 }
 
-func checkStore(t *testing.T, store *Store, expect, got sdk.CommitID) {
+func checkStore(t *testing.T, store *Store, expect, got types.CommitID) {
 	require.Equal(t, expect, got)
 	require.Equal(t, expect, store.LastCommitID())
 
 }
 
-func getExpectedCommitID(store *Store, ver int64) sdk.CommitID {
-	return sdk.CommitID{
+func getExpectedCommitID(store *Store, ver int64) types.CommitID {
+	return types.CommitID{
 		Version: ver,
 		Hash:    hashStores(store.stores),
 	}
 }
 
-func hashStores(stores map[sdk.StoreKey]sdk.CommitKVStore) []byte {
+func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
 	m := make(map[string]merkle.Hasher, len(stores))
 	for key, store := range stores {
 		name := key.Name()

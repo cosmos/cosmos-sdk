@@ -18,24 +18,26 @@ const (
 )
 
 // load the iavl store
-func (*iavlStore) LoadVersion(db dbm.DB, id types.CommitID) (types.CommitStore, error) {
+func (store *Store) LoadKVStoreVersion(db dbm.DB, id types.CommitID) error {
 	tree := iavl.NewMutableTree(db, defaultIAVLCacheSize)
 	_, err := tree.LoadVersion(id.Version)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	iavl := newIAVLStore(tree, int64(0), int64(0))
-	return iavl, nil
+	store = iavl
+	return nil
 }
 
 //----------------------------------------
 
-var _ types.KVStore = (*iavlStore)(nil)
-var _ types.CommitStore = (*iavlStore)(nil)
-var _ types.Queryable = (*iavlStore)(nil)
+var _ types.KVStore = (*Store)(nil)
+var _ types.CommitStore = (*Store)(nil)
+var _ types.Queryable = (*Store)(nil)
+var _ types.CommitKVStore = (*Store)(nil)
 
-// iavlStore Implements types.KVStore and types.CommitStore.
-type iavlStore struct {
+// Store Implements types.KVStore and types.CommitStore.
+type Store struct {
 
 	// The underlying tree.
 	tree *iavl.MutableTree
@@ -55,8 +57,8 @@ type iavlStore struct {
 
 // CONTRACT: tree should be fully loaded.
 // nolint: unparam
-func newIAVLStore(tree *iavl.MutableTree, numRecent int64, storeEvery int64) *iavlStore {
-	st := &iavlStore{
+func newIAVLStore(tree *iavl.MutableTree, numRecent int64, storeEvery int64) *Store {
+	st := &Store{
 		tree:       tree,
 		numRecent:  numRecent,
 		storeEvery: storeEvery,
@@ -65,7 +67,7 @@ func newIAVLStore(tree *iavl.MutableTree, numRecent int64, storeEvery int64) *ia
 }
 
 // Implements Committer.
-func (st *iavlStore) Commit() types.CommitID {
+func (st *Store) Commit() types.CommitID {
 	// Save a new version.
 	hash, version, err := st.tree.SaveVersion()
 	if err != nil {
@@ -92,7 +94,7 @@ func (st *iavlStore) Commit() types.CommitID {
 }
 
 // Implements Committer.
-func (st *iavlStore) LastCommitID() types.CommitID {
+func (st *Store) LastCommitID() types.CommitID {
 	return types.CommitID{
 		Version: st.tree.Version(),
 		Hash:    st.tree.Hash(),
@@ -100,7 +102,7 @@ func (st *iavlStore) LastCommitID() types.CommitID {
 }
 
 // Implements Committer.
-func (st *iavlStore) SetPruning(pruning types.PruningStrategy) {
+func (st *Store) SetPruning(pruning types.PruningStrategy) {
 	switch pruning {
 	case types.PruneEverything:
 		st.numRecent = 0
@@ -114,38 +116,38 @@ func (st *iavlStore) SetPruning(pruning types.PruningStrategy) {
 }
 
 // VersionExists returns whether or not a given version is stored.
-func (st *iavlStore) VersionExists(version int64) bool {
+func (st *Store) VersionExists(version int64) bool {
 	return st.tree.VersionExists(version)
 }
 
 // Implements types.KVStore.
-func (st *iavlStore) Set(key, value []byte) {
+func (st *Store) Set(key, value []byte) {
 	st.tree.Set(key, value)
 }
 
 // Implements types.KVStore.
-func (st *iavlStore) Get(key []byte) (value []byte) {
+func (st *Store) Get(key []byte) (value []byte) {
 	_, v := st.tree.Get(key)
 	return v
 }
 
 // Implements types.KVStore.
-func (st *iavlStore) Has(key []byte) (exists bool) {
+func (st *Store) Has(key []byte) (exists bool) {
 	return st.tree.Has(key)
 }
 
 // Implements types.KVStore.
-func (st *iavlStore) Delete(key []byte) {
+func (st *Store) Delete(key []byte) {
 	st.tree.Remove(key)
 }
 
 // Implements types.KVStore.
-func (st *iavlStore) Iterator(start, end []byte) types.Iterator {
+func (st *Store) Iterator(start, end []byte) types.Iterator {
 	return newIAVLIterator(st.tree.ImmutableTree, start, end, true)
 }
 
 // Implements types.KVStore.
-func (st *iavlStore) ReverseIterator(start, end []byte) types.Iterator {
+func (st *Store) ReverseIterator(start, end []byte) types.Iterator {
 	return newIAVLIterator(st.tree.ImmutableTree, start, end, false)
 }
 
@@ -170,7 +172,7 @@ func getHeight(tree *iavl.MutableTree, req abci.RequestQuery) int64 {
 // If latest-1 is not present, use latest (which must be present)
 // if you care to have the latest data to see a tx results, you must
 // explicitly set the height you want to see
-func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
+func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	if len(req.Data) == 0 {
 		msg := "Query cannot be zero length"
 		return types.ErrTxDecode(msg).QueryResult()

@@ -147,12 +147,6 @@ func (ti *traceIterator) Close() {
 	ti.parent.Close()
 }
 
-// CacheWrap implements the KVStore interface. It panics as a Store
-// cannot be cache wrapped.
-func (tkv *Store) CacheWrap() types.CacheKVStore {
-	panic("cannot CacheWrap a Store")
-}
-
 // writeOperation writes a KVStore operation to the underlying io.Writer as
 // JSON-encoded data where the key/value pair is base64 encoded.
 // nolint: errcheck

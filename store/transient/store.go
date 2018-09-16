@@ -8,6 +8,7 @@ import (
 )
 
 var _ types.KVStore = (*Store)(nil)
+var _ types.CommitKVStore = (*Store)(nil)
 
 // transientStore is a wrapper for a MemDB with Commiter implementation
 type Store struct {
@@ -26,6 +27,12 @@ func NewStore() *Store {
 func (ts *Store) Commit() (id types.CommitID) {
 	ts.Store = dbadapter.Store{dbm.NewMemDB()}
 	return
+}
+
+// Implements LoadKVStore
+func (ts *Store) LoadKVStoreVersion(db dbm.DB, id types.CommitID) error {
+	*ts = *NewStore()
+	return nil
 }
 
 // Implements CommitStore

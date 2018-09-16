@@ -115,7 +115,7 @@ func (app *BaseApp) Name() string {
 // SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
 // CommitMultiStore.
 func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
-	app.cms.WithTracer(w)
+	app.cms.GetTracer().Writer = w
 }
 
 // Register the next available codespace through the baseapp's codespacer, starting from a default
@@ -126,25 +126,25 @@ func (app *BaseApp) RegisterCodespace(codespace sdk.CodespaceType) sdk.Codespace
 // Mount IAVL stores to the provided keys in the BaseApp multistore
 func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
 	for _, key := range keys {
-		app.MountStore(key, sdk.StoreTypeIAVL)
+		app.MountStore(key)
 	}
 }
 
 // Mount stores to the provided keys in the BaseApp multistore
 func (app *BaseApp) MountStoresTransient(keys ...*sdk.TransientStoreKey) {
 	for _, key := range keys {
-		app.MountStore(key, sdk.StoreTypeTransient)
+		app.MountStore(key)
 	}
 }
 
 // Mount a store to the provided key in the BaseApp multistore, using a specified DB
-func (app *BaseApp) MountStoreWithDB(key sdk.StoreKey, typ sdk.StoreType, db dbm.DB) {
-	app.cms.MountStoreWithDB(key, typ, db)
+func (app *BaseApp) MountStoreWithDB(key sdk.StoreKey, db dbm.DB) {
+	app.cms.MountStoreWithDB(key, db)
 }
 
 // Mount a store to the provided key in the BaseApp multistore, using the default DB
-func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
-	app.cms.MountStoreWithDB(key, typ, nil)
+func (app *BaseApp) MountStore(key sdk.StoreKey) {
+	app.cms.MountStoreWithDB(key, nil)
 }
 
 // load latest application version
@@ -158,7 +158,7 @@ func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
 
 // load application version
 func (app *BaseApp) LoadVersion(version int64, mainKey sdk.StoreKey) error {
-	err := app.cms.LoadVersion(version)
+	err := app.cms.LoadMultiStoreVersion(version)
 	if err != nil {
 		return err
 	}
@@ -208,11 +208,11 @@ type state struct {
 }
 
 func (st *state) CacheMultiStore() sdk.CacheMultiStore {
-	return st.ms.CacheMultiStore()
+	return st.ms.CacheWrap()
 }
 
 func (app *BaseApp) setCheckState(header abci.Header) {
-	ms := app.cms.CacheMultiStore()
+	ms := app.cms.CacheWrap()
 	app.checkState = &state{
 		ms:  ms,
 		ctx: sdk.NewContext(ms, header, true, app.Logger).WithMinimumFees(app.minimumFees),
@@ -220,7 +220,7 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 }
 
 func (app *BaseApp) setDeliverState(header abci.Header) {
-	ms := app.cms.CacheMultiStore()
+	ms := app.cms.CacheWrap()
 	app.deliverState = &state{
 		ms:  ms,
 		ctx: sdk.NewContext(ms, header, false, app.Logger),
@@ -297,7 +297,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	path := splitPath(req.Path)
 	if len(path) == 0 {
 		msg := "no query path provided"
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		return store.ErrUnknownRequest(msg).QueryResult()
 	}
 	switch path[0] {
 	// "/app" prefix for special application queries
@@ -312,7 +312,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	}
 
 	msg := "unknown query path"
-	return sdk.ErrUnknownRequest(msg).QueryResult()
+	return store.ErrUnknownRequest(msg).QueryResult()
 }
 
 func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
@@ -344,7 +344,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 		}
 	}
 	msg := "Expected second parameter to be either simulate or version, neither was present"
-	return sdk.ErrUnknownRequest(msg).QueryResult()
+	return store.ErrUnknownRequest(msg).QueryResult()
 }
 
 func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
@@ -352,7 +352,7 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) (res a
 	queryable, ok := app.cms.(sdk.Queryable)
 	if !ok {
 		msg := "multistore doesn't support queries"
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		return store.ErrUnknownRequest(msg).QueryResult()
 	}
 	req.Path = "/" + strings.Join(path[1:], "/")
 	return queryable.Query(req)
@@ -373,26 +373,26 @@ func handleQueryP2P(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 			}
 		} else {
 			msg := "Expected second parameter to be filter"
-			return sdk.ErrUnknownRequest(msg).QueryResult()
+			return store.ErrUnknownRequest(msg).QueryResult()
 		}
 	}
 
 	msg := "Expected path is p2p filter <addr|pubkey> <parameter>"
-	return sdk.ErrUnknownRequest(msg).QueryResult()
+	return store.ErrUnknownRequest(msg).QueryResult()
 }
 
 func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
 	// path[0] should be "custom" because "/custom" prefix is required for keeper queries.
 	// the queryRouter routes using path[1]. For example, in the path "custom/gov/proposal", queryRouter routes using "gov"
 	if len(path) < 2 || path[1] == "" {
-		return sdk.ErrUnknownRequest("No route for custom query specified").QueryResult()
+		return store.ErrUnknownRequest("No route for custom query specified").QueryResult()
 	}
 	querier := app.queryRouter.Route(path[1])
 	if querier == nil {
-		return sdk.ErrUnknownRequest(fmt.Sprintf("no custom querier found for route %s", path[1])).QueryResult()
+		return store.ErrUnknownRequest(fmt.Sprintf("no custom querier found for route %s", path[1])).QueryResult()
 	}
 
-	ctx := sdk.NewContext(app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.Logger).
+	ctx := sdk.NewContext(app.cms.CacheWrap(), app.checkState.ctx.BlockHeader(), true, app.Logger).
 		WithMinimumFees(app.minimumFees)
 	// Passes the rest of the path as an argument to the querier.
 	// For example, in the path "custom/gov/proposal/test", the gov querier gets []string{"proposal", "test"} as the path
@@ -411,9 +411,10 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
-	if app.cms.TracingEnabled() {
-		app.cms.ResetTraceContext()
-		app.cms.WithTracingContext(sdk.TraceContext(
+	tracer := app.cms.GetTracer()
+	if tracer.Enabled() {
+		tracer.ResetContext()
+		tracer.SetContext(sdk.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
 		))
 	}
@@ -644,10 +645,11 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// Keep the state in a transient CacheWrap in case processing the messages
 	// fails.
 	msCache = getState(app, mode).CacheMultiStore()
-	if msCache.TracingEnabled() {
-		msCache = msCache.WithTracingContext(sdk.TraceContext(
+	tracer := msCache.GetTracer()
+	if tracer.Enabled() {
+		tracer.SetContext(sdk.TraceContext(
 			map[string]interface{}{"txHash": cmn.HexBytes(tmhash.Sum(txBytes)).String()},
-		)).(sdk.CacheMultiStore)
+		))
 	}
 
 	ctx = ctx.WithMultiStore(msCache)
@@ -664,8 +666,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 // EndBlock implements the ABCI application interface.
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-	if app.deliverState.ms.TracingEnabled() {
-		app.deliverState.ms = app.deliverState.ms.ResetTraceContext().(sdk.CacheMultiStore)
+	tracer := app.deliverState.ms.GetTracer()
+	if tracer.Enabled() {
+		tracer.ResetContext()
 	}
 
 	if app.endBlocker != nil {

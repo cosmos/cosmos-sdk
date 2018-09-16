@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	tmliteErr "github.com/tendermint/tendermint/lite/errors"
@@ -209,7 +209,7 @@ func (ctx CLIContext) verifyProof(_ string, resp abci.ResponseQuery) error {
 		return err
 	}
 
-	var multiStoreProof store.MultiStoreProof
+	var multiStoreProof rootmulti.Proof
 	cdc := codec.New()
 
 	err = cdc.UnmarshalBinary(resp.Proof, &multiStoreProof)
@@ -217,15 +217,15 @@ func (ctx CLIContext) verifyProof(_ string, resp abci.ResponseQuery) error {
 		return errors.Wrap(err, "failed to unmarshalBinary rangeProof")
 	}
 
-	// verify the substore commit hash against trusted appHash
-	substoreCommitHash, err := store.VerifyMultiStoreCommitInfo(
+	// Verify the substore commit hash against trusted appHash
+	substoreCommitHash, err := rootmulti.VerifyMultiStoreCommitInfo(
 		multiStoreProof.StoreName, multiStoreProof.StoreInfos, commit.Header.AppHash,
 	)
 	if err != nil {
 		return errors.Wrap(err, "failed in verifying the proof against appHash")
 	}
 
-	err = store.VerifyRangeProof(resp.Key, resp.Value, substoreCommitHash, &multiStoreProof.RangeProof)
+	err = rootmulti.VerifyRangeProof(resp.Key, resp.Value, substoreCommitHash, &multiStoreProof.RangeProof)
 	if err != nil {
 		return errors.Wrap(err, "failed in the range proof verification")
 	}
@@ -252,7 +252,7 @@ func isQueryStoreWithProof(path string) bool {
 		return false
 	}
 
-	if store.RequireProof("/" + paths[2]) {
+	if rootmulti.RequireProof("/" + paths[2]) {
 		return true
 	}
 

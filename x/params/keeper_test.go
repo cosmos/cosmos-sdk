@@ -12,14 +12,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
-	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
-	cms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db)
+	cms.MountStoreWithDB(key, db)
+	cms.MountStoreWithDB(tkey, db)
 	cms.LoadLatestVersion()
 	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 	return ctx
@@ -71,7 +72,7 @@ func TestKeeper(t *testing.T) {
 	ctx := defaultContext(skey, tkey)
 	keeper := NewKeeper(cdc, skey, tkey)
 	space := keeper.Subspace("test").WithTypeTable(table)
-	store := ctx.KVStore(skey).Prefix([]byte("test/"))
+	store := prefix.NewStore(ctx.KVStore(skey), []byte("test/"))
 
 	// Set params
 	for i, kv := range kvs {
@@ -177,7 +178,7 @@ func TestSubspace(t *testing.T) {
 		[]byte("struct"), s{},
 	)
 
-	store := ctx.KVStore(key).Prefix([]byte("test/"))
+	store := prefix.NewStore(ctx.KVStore(key), []byte("test/"))
 	space := keeper.Subspace("test").WithTypeTable(table)
 
 	// Test space.Set, space.Modified

@@ -29,7 +29,7 @@ func (t *Tracer) SetWriter(w io.Writer) {
 // WithContext sets the tracing context for a Tracer. It is implied that
 // the caller should update the context when necessary between tracing
 // operations.
-func (t *Tracer) WithContext(tc TraceContext) {
+func (t *Tracer) SetContext(tc TraceContext) {
 	if t.Context != nil {
 		for k, v := range tc {
 			t.Context[k] = v

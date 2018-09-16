@@ -8,19 +8,19 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
-// MultiStoreProof defines a collection of store proofs in a multi-store
-type MultiStoreProof struct {
+// Proof defines a collection of store proofs in a multi-store
+type Proof struct {
 	StoreInfos []storeInfo
 	StoreName  string
 	RangeProof iavl.RangeProof
 }
 
-// buildMultiStoreProof build MultiStoreProof based on iavl proof and storeInfos
-func buildMultiStoreProof(iavlProof []byte, storeName string, storeInfos []storeInfo) []byte {
+// buildProof build Proof based on iavl proof and storeInfos
+func buildProof(iavlProof []byte, storeName string, storeInfos []storeInfo) []byte {
 	var rangeProof iavl.RangeProof
 	cdc.MustUnmarshalBinary(iavlProof, &rangeProof)
 
-	msp := MultiStoreProof{
+	msp := Proof{
 		StoreInfos: storeInfos,
 		StoreName:  storeName,
 		RangeProof: rangeProof,

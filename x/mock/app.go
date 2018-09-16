@@ -1,7 +1,6 @@
 package mock
 
 import (
-	"fmt"
 	"math/rand"
 	"os"
 
@@ -81,14 +80,7 @@ func (app *App) CompleteSetup(newKeys ...sdk.StoreKey) error {
 	newKeys = append(newKeys, app.KeyAccount)
 
 	for _, key := range newKeys {
-		switch key.(type) {
-		case *sdk.KVStoreKey:
-			app.MountStore(key, sdk.StoreTypeIAVL)
-		case *sdk.TransientStoreKey:
-			app.MountStore(key, sdk.StoreTypeTransient)
-		default:
-			return fmt.Errorf("unsupported StoreKey: %+v", key)
-		}
+		app.MountStore(key)
 	}
 
 	err := app.LoadLatestVersion(app.KeyMain)

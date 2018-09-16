@@ -246,7 +246,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 		return types.ErrInternal(errMsg.Error()).QueryResult()
 	}
 
-	res.Proof = buildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
+	res.Proof = buildProof(res.Proof, storeName, commitInfo.StoreInfos)
 
 	return res
 }

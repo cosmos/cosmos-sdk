@@ -7,10 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 
@@ -20,12 +20,12 @@ import (
 )
 
 // GetCmdCreateValidator implements the create validator command handler.
-func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
+func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator",
 		Short: "create new validator initialized with a self-delegation to it",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
@@ -40,7 +40,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			validatorAddr, err := cliCtx.GetFromAddress()
+			valAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -50,7 +50,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 				return fmt.Errorf("must use --pubkey flag")
 			}
 
-			pk, err := sdk.GetValPubKeyBech32(pkStr)
+			pk, err := sdk.GetConsPubKeyBech32(pkStr)
 			if err != nil {
 				return err
 			}
@@ -68,18 +68,20 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 
 			var msg sdk.Msg
 			if viper.GetString(FlagAddressDelegator) != "" {
-				delegatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
+				delAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
 				if err != nil {
 					return err
 				}
 
-				msg = stake.NewMsgCreateValidatorOnBehalfOf(delegatorAddr, validatorAddr, pk, amount, description)
+				msg = stake.NewMsgCreateValidatorOnBehalfOf(delAddr, sdk.ValAddress(valAddr), pk, amount, description)
 			} else {
-				msg = stake.NewMsgCreateValidator(validatorAddr, pk, amount, description)
+				msg = stake.NewMsgCreateValidator(sdk.ValAddress(valAddr), pk, amount, description)
 			}
-
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
+			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
+			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -92,18 +94,18 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdEditValidator implements the create edit validator command.
-func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
+func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
 		Short: "edit and existing validator account",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			validatorAddr, err := cliCtx.GetFromAddress()
+			valAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -114,10 +116,14 @@ func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
 				Website:  viper.GetString(FlagWebsite),
 				Details:  viper.GetString(FlagDetails),
 			}
-			msg := stake.NewMsgEditValidator(validatorAddr, description)
 
+			msg := stake.NewMsgEditValidator(sdk.ValAddress(valAddr), description)
+
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
+			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
+			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -127,12 +133,12 @@ func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdDelegate implements the delegate command.
-func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
+func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegate",
 		Short: "delegate liquid tokens to an validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
@@ -143,20 +149,23 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			delegatorAddr, err := cliCtx.GetFromAddress()
+			delAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
 
-			validatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidator))
+			valAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
 
-			msg := stake.NewMsgDelegate(delegatorAddr, validatorAddr, amount)
+			msg := stake.NewMsgDelegate(delAddr, valAddr, amount)
 
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
+			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
+			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -167,7 +176,7 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdRedelegate implements the redelegate validator command.
-func GetCmdRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegate",
 		Short: "redelegate illiquid tokens from one validator to another",
@@ -183,29 +192,30 @@ func GetCmdRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdBeginRedelegate the begin redelegation command.
-func GetCmdBeginRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdBeginRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "begin",
 		Short: "begin redelegation",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
 			var err error
-			delegatorAddr, err := cliCtx.GetFromAddress()
+
+			delAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
 
-			validatorSrcAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorSrc))
+			valSrcAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidatorSrc))
 			if err != nil {
 				return err
 			}
 
-			validatorDstAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorDst))
+			valDstAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidatorDst))
 			if err != nil {
 				return err
 			}
@@ -215,16 +225,19 @@ func GetCmdBeginRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
 			sharesPercentStr := viper.GetString(FlagSharesPercent)
 			sharesAmount, err := getShares(
 				storeName, cdc, sharesAmountStr, sharesPercentStr,
-				delegatorAddr, validatorSrcAddr,
+				delAddr, valSrcAddr,
 			)
 			if err != nil {
 				return err
 			}
 
-			msg := stake.NewMsgBeginRedelegate(delegatorAddr, validatorSrcAddr, validatorDstAddr, sharesAmount)
+			msg := stake.NewMsgBeginRedelegate(delAddr, valSrcAddr, valDstAddr, sharesAmount)
 
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
+			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
+			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -237,8 +250,8 @@ func GetCmdBeginRedelegate(storeName string, cdc *wire.Codec) *cobra.Command {
 // nolint: gocyclo
 // TODO: Make this pass gocyclo linting
 func getShares(
-	storeName string, cdc *wire.Codec, sharesAmountStr,
-	sharesPercentStr string, delegatorAddr, validatorAddr sdk.AccAddress,
+	storeName string, cdc *codec.Codec, sharesAmountStr,
+	sharesPercentStr string, delAddr sdk.AccAddress, valAddr sdk.ValAddress,
 ) (sharesAmount sdk.Dec, err error) {
 	switch {
 	case sharesAmountStr != "" && sharesPercentStr != "":
@@ -264,7 +277,7 @@ func getShares(
 		}
 
 		// make a query to get the existing delegation shares
-		key := stake.GetDelegationKey(delegatorAddr, validatorAddr)
+		key := stake.GetDelegationKey(delAddr, valAddr)
 		cliCtx := context.NewCLIContext().
 			WithCodec(cdc).
 			WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
@@ -283,36 +296,39 @@ func getShares(
 }
 
 // GetCmdCompleteRedelegate implements the complete redelegation command.
-func GetCmdCompleteRedelegate(cdc *wire.Codec) *cobra.Command {
+func GetCmdCompleteRedelegate(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "complete",
 		Short: "complete redelegation",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			delegatorAddr, err := cliCtx.GetFromAddress()
+			delAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
 
-			validatorSrcAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorSrc))
+			valSrcAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidatorSrc))
 			if err != nil {
 				return err
 			}
 
-			validatorDstAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidatorDst))
+			valDstAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidatorDst))
 			if err != nil {
 				return err
 			}
 
-			msg := stake.NewMsgCompleteRedelegate(delegatorAddr, validatorSrcAddr, validatorDstAddr)
+			msg := stake.NewMsgCompleteRedelegate(delAddr, valSrcAddr, valDstAddr)
 
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
+			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
+			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -322,7 +338,7 @@ func GetCmdCompleteRedelegate(cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdUnbond implements the unbond validator command.
-func GetCmdUnbond(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbond",
 		Short: "begin or complete unbonding shares from a validator",
@@ -338,23 +354,23 @@ func GetCmdUnbond(storeName string, cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdBeginUnbonding implements the begin unbonding validator command.
-func GetCmdBeginUnbonding(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdBeginUnbonding(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "begin",
 		Short: "begin unbonding",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			delegatorAddr, err := cliCtx.GetFromAddress()
+			delAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
 
-			validatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidator))
+			valAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -364,16 +380,19 @@ func GetCmdBeginUnbonding(storeName string, cdc *wire.Codec) *cobra.Command {
 			sharesPercentStr := viper.GetString(FlagSharesPercent)
 			sharesAmount, err := getShares(
 				storeName, cdc, sharesAmountStr, sharesPercentStr,
-				delegatorAddr, validatorAddr,
+				delAddr, valAddr,
 			)
 			if err != nil {
 				return err
 			}
 
-			msg := stake.NewMsgBeginUnbonding(delegatorAddr, validatorAddr, sharesAmount)
+			msg := stake.NewMsgBeginUnbonding(delAddr, valAddr, sharesAmount)
 
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
+			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
+			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -384,31 +403,34 @@ func GetCmdBeginUnbonding(storeName string, cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdCompleteUnbonding implements the complete unbonding validator command.
-func GetCmdCompleteUnbonding(cdc *wire.Codec) *cobra.Command {
+func GetCmdCompleteUnbonding(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "complete",
 		Short: "complete unbonding",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			delegatorAddr, err := cliCtx.GetFromAddress()
+			delAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
 
-			validatorAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressValidator))
+			valAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
 
-			msg := stake.NewMsgCompleteUnbonding(delegatorAddr, validatorAddr)
+			msg := stake.NewMsgCompleteUnbonding(delAddr, valAddr)
 
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
+			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
+			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 

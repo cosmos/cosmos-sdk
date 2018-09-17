@@ -6,8 +6,8 @@ import (
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -16,7 +16,7 @@ import (
 // Keeper of the slashing store
 type Keeper struct {
 	storeKey     sdk.StoreKey
-	cdc          *wire.Codec
+	cdc          *codec.Codec
 	validatorSet sdk.ValidatorSet
 	params       params.Getter
 	// codespace
@@ -24,7 +24,7 @@ type Keeper struct {
 }
 
 // NewKeeper creates a slashing keeper
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, params params.Getter, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, params params.Getter, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:     key,
 		cdc:          cdc,
@@ -40,7 +40,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	logger := ctx.Logger().With("module", "x/slashing")
 	time := ctx.BlockHeader().Time
 	age := time.Sub(timestamp)
-	address := sdk.ValAddress(addr)
+	address := sdk.ConsAddress(addr)
 	pubkey, err := k.getPubkey(ctx, addr)
 	if err != nil {
 		panic(fmt.Sprintf("Validator address %v not found", addr))
@@ -56,8 +56,14 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Double sign confirmed
 	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d less than max age of %d", pubkey.Address(), infractionHeight, age, maxEvidenceAge))
 
+	// Cap the amount slashed to the penalty for the worst infraction
+	// within the slashing period when this infraction was committed
+	fraction := k.SlashFractionDoubleSign(ctx)
+	revisedFraction := k.capBySlashingPeriod(ctx, address, fraction, infractionHeight)
+	logger.Info(fmt.Sprintf("Fraction slashed capped by slashing period from %v to %v", fraction, revisedFraction))
+
 	// Slash validator
-	k.validatorSet.Slash(ctx, pubkey, infractionHeight, power, k.SlashFractionDoubleSign(ctx))
+	k.validatorSet.Slash(ctx, pubkey, infractionHeight, power, revisedFraction)
 
 	// Jail validator
 	k.validatorSet.Jail(ctx, pubkey)
@@ -76,7 +82,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, power int64, signed bool) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	height := ctx.BlockHeight()
-	address := sdk.ValAddress(addr)
+	address := sdk.ConsAddress(addr)
 	pubkey, err := k.getPubkey(ctx, addr)
 	if err != nil {
 		panic(fmt.Sprintf("Validator address %v not found", addr))
@@ -168,8 +174,4 @@ func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address, pubk
 func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(getAddrPubkeyRelationKey(addr))
-}
-
-func getAddrPubkeyRelationKey(address []byte) []byte {
-	return append([]byte{0x03}, address...)
 }

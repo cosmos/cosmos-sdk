@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -261,11 +261,11 @@ func (vacc *DelayTransferAccount) TrackTransfers(coins sdk.Coins) {
 // Wire
 
 // Most users shouldn't use this, but this comes handy for tests.
-func RegisterAccount(cdc *wire.Codec) {
+func RegisterBaseAccount(cdc *codec.Codec) {
 	cdc.RegisterInterface((*Account)(nil), nil)
 	cdc.RegisterInterface((*VestingAccount)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
 	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)
 	cdc.RegisterConcrete(&DelayTransferAccount{}, "cosmos-sdk/DelayTransferAccount", nil)
-	wire.RegisterCrypto(cdc)
+	codec.RegisterCrypto(cdc)
 }

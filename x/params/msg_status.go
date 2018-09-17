@@ -15,6 +15,7 @@ func ActivatedParamKey(ty string) string {
 }
 
 // InitGenesis stores activated type to param store
+// nolint: errcheck
 func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	for _, ty := range data.ActivatedTypes {
 		k.set(ctx, ActivatedParamKey(ty), true)
@@ -24,7 +25,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 // NewAnteHandler returns an AnteHandler that checks
 // whether msg type is activate or not
 func NewAnteHandler(k Keeper) sdk.AnteHandler {
-	return func(ctx sdk.Context, tx sdk.Tx) (sdk.Context, sdk.Result, bool) {
+	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, sdk.Result, bool) {
 		for _, msg := range tx.GetMsgs() {
 			ok := k.Getter().GetBoolWithDefault(ctx, ActivatedParamKey(msg.Type()), false)
 			if !ok {

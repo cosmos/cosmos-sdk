@@ -71,13 +71,13 @@ func CheckGenTx(
 // returned.
 func SignCheckDeliver(
 	t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accNums []int64,
-	seq []int64, expPass bool, priv ...crypto.PrivKey,
+	seq []int64, expSimPass, expPass bool, priv ...crypto.PrivKey,
 ) sdk.Result {
 	tx := GenTx(msgs, accNums, seq, priv...)
 	// Must simulate now as CheckTx doesn't run Msgs anymore
 	res := app.Simulate(tx)
 
-	if expPass {
+	if expSimPass {
 		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
 	} else {
 		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)

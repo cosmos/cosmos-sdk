@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"testing"
 
-	wire "github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/stretchr/testify/require"
 )
 
@@ -220,7 +220,7 @@ func TestToLeftPadded(t *testing.T) {
 	}
 }
 
-var cdc = wire.NewCodec()
+var cdc = codec.New()
 
 func TestZeroDeserializationJSON(t *testing.T) {
 	d := Dec{new(big.Int)}
@@ -242,7 +242,7 @@ func TestSerializationText(t *testing.T) {
 	require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
 }
 
-func TestSerializationGoWireJSON(t *testing.T) {
+func TestSerializationGocodecJSON(t *testing.T) {
 	d := mustNewDecFromStr(t, "0.333")
 
 	bz, err := cdc.MarshalJSON(d)
@@ -254,7 +254,7 @@ func TestSerializationGoWireJSON(t *testing.T) {
 	require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
 }
 
-func TestSerializationGoWireBinary(t *testing.T) {
+func TestSerializationGocodecBinary(t *testing.T) {
 	d := mustNewDecFromStr(t, "0.333")
 
 	bz, err := cdc.MarshalBinary(d)
@@ -273,7 +273,7 @@ type testDEmbedStruct struct {
 }
 
 // TODO make work for UnmarshalJSON
-func TestEmbeddedStructSerializationGoWire(t *testing.T) {
+func TestEmbeddedStructSerializationGocodec(t *testing.T) {
 	obj := testDEmbedStruct{"foo", 10, NewDecWithPrec(1, 3)}
 	bz, err := cdc.MarshalBinary(obj)
 	require.Nil(t, err)

@@ -2,7 +2,7 @@ module.exports = {
   title: "Cosmos Network",
   description: "Documentation for the Cosmos Network.",
   dest: "./dist/docs",
-  base: "/",
+  base: "/docs/",
   markdown: {
     lineNumbers: true
   },
@@ -57,7 +57,9 @@ module.exports = {
       {
         title: "Lotion JS",
         collapsable: false,
-        children: [["/lotion/overview", "Overview"], "/lotion/building-an-app"]
+        children: [
+	  ["/lotion/overview", "Overview"]
+	]
       },
       {
         title: "Validators",

@@ -8,24 +8,24 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec" // XXX fix
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire" // XXX fix
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 )
 
 // GetCmdQuerySigningInfo implements the command to query signing info.
-func GetCmdQuerySigningInfo(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQuerySigningInfo(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "signing-info [validator-pubkey]",
 		Short: "Query a validator's signing information",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pk, err := sdk.GetValPubKeyBech32(args[0])
+			pk, err := sdk.GetConsPubKeyBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			key := slashing.GetValidatorSigningInfoKey(sdk.ValAddress(pk.Address()))
+			key := slashing.GetValidatorSigningInfoKey(sdk.ConsAddress(pk.Address()))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			res, err := cliCtx.QueryStore(key, storeName)
@@ -44,7 +44,7 @@ func GetCmdQuerySigningInfo(storeName string, cdc *wire.Codec) *cobra.Command {
 
 			case "json":
 				// parse out the signing info
-				output, err := wire.MarshalJSONIndent(cdc, signingInfo)
+				output, err := codec.MarshalJSONIndent(cdc, signingInfo)
 				if err != nil {
 					return err
 				}

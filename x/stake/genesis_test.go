@@ -23,8 +23,8 @@ func TestInitGenesis(t *testing.T) {
 	var delegations []Delegation
 
 	validators := []Validator{
-		NewValidator(keep.Addrs[0], keep.PKs[0], Description{Moniker: "hoop"}),
-		NewValidator(keep.Addrs[1], keep.PKs[1], Description{Moniker: "bloop"}),
+		NewValidator(sdk.ValAddress(keep.Addrs[0]), keep.PKs[0], Description{Moniker: "hoop"}),
+		NewValidator(sdk.ValAddress(keep.Addrs[1]), keep.PKs[1], Description{Moniker: "bloop"}),
 	}
 	genesisState := types.NewGenesisState(pool, params, validators, delegations)
 	_, err := InitGenesis(ctx, keeper, genesisState)
@@ -42,13 +42,19 @@ func TestInitGenesis(t *testing.T) {
 	vals, err := InitGenesis(ctx, keeper, genesisState)
 	require.NoError(t, err)
 
+	actualGenesis := WriteGenesis(ctx, keeper)
+	require.Equal(t, genesisState.Pool, actualGenesis.Pool)
+	require.Equal(t, genesisState.Params, actualGenesis.Params)
+	require.Equal(t, genesisState.Bonds, actualGenesis.Bonds)
+	require.EqualValues(t, keeper.GetAllValidators(ctx), actualGenesis.Validators)
+
 	// now make sure the validators are bonded and intra-tx counters are correct
-	resVal, found := keeper.GetValidator(ctx, keep.Addrs[0])
+	resVal, found := keeper.GetValidator(ctx, sdk.ValAddress(keep.Addrs[0]))
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, resVal.Status)
 	require.Equal(t, int16(0), resVal.BondIntraTxCounter)
 
-	resVal, found = keeper.GetValidator(ctx, keep.Addrs[1])
+	resVal, found = keeper.GetValidator(ctx, sdk.ValAddress(keep.Addrs[1]))
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, resVal.Status)
 	require.Equal(t, int16(1), resVal.BondIntraTxCounter)
@@ -76,7 +82,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	validators := make([]Validator, size)
 
 	for i := range validators {
-		validators[i] = NewValidator(keep.Addrs[i], keep.PKs[i], Description{Moniker: fmt.Sprintf("#%d", i)})
+		validators[i] = NewValidator(sdk.ValAddress(keep.Addrs[i]), keep.PKs[i], Description{Moniker: fmt.Sprintf("#%d", i)})
 
 		validators[i].Status = sdk.Bonded
 		if i < 100 {

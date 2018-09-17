@@ -14,7 +14,7 @@ The CLI builds on top of [Cobra](https://github.com/spf13/cobra). Here is the sc
     )
 
     // Main command function. One function for each command.
-    func Command(codec *wire.Codec) *cobra.Command {
+    func Command(codec *codec.Codec) *cobra.Command {
         // Create the command to return
         command := &cobra.Command{
             Use: "actual command",

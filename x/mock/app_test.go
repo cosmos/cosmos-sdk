@@ -24,6 +24,7 @@ type testMsg struct {
 }
 
 func (tx testMsg) Type() string                       { return msgType }
+func (tx testMsg) Name() string                       { return "test" }
 func (tx testMsg) GetMsg() sdk.Msg                    { return tx }
 func (tx testMsg) GetMemo() string                    { return "" }
 func (tx testMsg) GetSignBytes() []byte               { return nil }
@@ -41,7 +42,7 @@ func getMockApp(t *testing.T) *App {
 	mApp := NewApp()
 
 	mApp.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
-	require.NoError(t, mApp.CompleteSetup([]*sdk.KVStoreKey{}))
+	require.NoError(t, mApp.CompleteSetup())
 
 	return mApp
 }
@@ -61,14 +62,14 @@ func TestCheckAndDeliverGenTx(t *testing.T) {
 	SignCheckDeliver(
 		t, mApp.BaseApp, []sdk.Msg{msg},
 		[]int64{accs[0].GetAccountNumber()}, []int64{accs[0].GetSequence()},
-		true, privKeys[0],
+		true, true, privKeys[0],
 	)
 
 	// Signing a tx with the wrong privKey should result in an auth error
 	res := SignCheckDeliver(
 		t, mApp.BaseApp, []sdk.Msg{msg},
 		[]int64{accs[1].GetAccountNumber()}, []int64{accs[1].GetSequence() + 1},
-		false, privKeys[1],
+		true, false, privKeys[1],
 	)
 	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
 
@@ -76,7 +77,7 @@ func TestCheckAndDeliverGenTx(t *testing.T) {
 	SignCheckDeliver(
 		t, mApp.BaseApp, []sdk.Msg{msg},
 		[]int64{accs[0].GetAccountNumber()}, []int64{accs[0].GetSequence() + 1},
-		true, privKeys[0],
+		true, true, privKeys[0],
 	)
 }
 

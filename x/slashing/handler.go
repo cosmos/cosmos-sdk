@@ -19,35 +19,38 @@ func NewHandler(k Keeper) sdk.Handler {
 // Validators must submit a transaction to unjail itself after
 // having been jailed (and thus unbonded) for downtime
 func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
-
-	// Validator must exist
 	validator := k.validatorSet.Validator(ctx, msg.ValidatorAddr)
 	if validator == nil {
 		return ErrNoValidatorForAddress(k.codespace).Result()
+	}
+
+	// cannot be unjailed if no self-delegation exists
+	selfDel := k.validatorSet.Delegation(ctx, sdk.AccAddress(msg.ValidatorAddr), msg.ValidatorAddr)
+	if selfDel == nil {
+		return ErrMissingSelfDelegation(k.codespace).Result()
 	}
 
 	if !validator.GetJailed() {
 		return ErrValidatorNotJailed(k.codespace).Result()
 	}
 
-	addr := sdk.ValAddress(validator.GetPubKey().Address())
+	addr := sdk.ConsAddress(validator.GetPubKey().Address())
 
-	// Signing info must exist
 	info, found := k.getValidatorSigningInfo(ctx, addr)
 	if !found {
 		return ErrNoValidatorForAddress(k.codespace).Result()
 	}
 
-	// Cannot be unjailed until out of jail
+	// cannot be unjailed until out of jail
 	if ctx.BlockHeader().Time.Before(info.JailedUntil) {
 		return ErrValidatorJailed(k.codespace).Result()
 	}
 
-	// Update the starting height (so the validator can't be immediately jailed again)
+	// update the starting height so the validator can't be immediately jailed
+	// again
 	info.StartHeight = ctx.BlockHeight()
 	k.setValidatorSigningInfo(ctx, addr, info)
 
-	// Unjail the validator
 	k.validatorSet.Unjail(ctx, validator.GetPubKey())
 
 	tags := sdk.NewTags("action", []byte("unjail"), "validator", []byte(msg.ValidatorAddr.String()))

@@ -9,14 +9,16 @@ import (
 // name to idetify transaction types
 const MsgType = "gov"
 
+var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
+
 //-----------------------------------------------------------
 // MsgSubmitProposal
 type MsgSubmitProposal struct {
-	Title          string         //  Title of the proposal
-	Description    string         //  Description of the proposal
-	ProposalType   ProposalKind   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-	Proposer       sdk.AccAddress //  Address of the proposer
-	InitialDeposit sdk.Coins      //  Initial deposit paid by sender. Must be strictly positive.
+	Title          string         `json:"title"`           //  Title of the proposal
+	Description    string         `json:"description"`     //  Description of the proposal
+	ProposalType   ProposalKind   `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	Proposer       sdk.AccAddress `json:"proposer"`        //  Address of the proposer
+	InitialDeposit sdk.Coins      `json:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive.
 }
 
 func NewMsgSubmitProposal(title string, description string, proposalType ProposalKind, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
@@ -31,6 +33,7 @@ func NewMsgSubmitProposal(title string, description string, proposalType Proposa
 
 // Implements Msg.
 func (msg MsgSubmitProposal) Type() string { return MsgType }
+func (msg MsgSubmitProposal) Name() string { return "submit_proposal" }
 
 // Implements Msg.
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
@@ -95,7 +98,9 @@ func NewMsgDeposit(depositer sdk.AccAddress, proposalID int64, amount sdk.Coins)
 }
 
 // Implements Msg.
+// nolint
 func (msg MsgDeposit) Type() string { return MsgType }
+func (msg MsgDeposit) Name() string { return "deposit" }
 
 // Implements Msg.
 func (msg MsgDeposit) ValidateBasic() sdk.Error {
@@ -154,7 +159,9 @@ func NewMsgVote(voter sdk.AccAddress, proposalID int64, option VoteOption) MsgVo
 }
 
 // Implements Msg.
+// nolint
 func (msg MsgVote) Type() string { return MsgType }
+func (msg MsgVote) Name() string { return "vote" }
 
 // Implements Msg.
 func (msg MsgVote) ValidateBasic() sdk.Error {

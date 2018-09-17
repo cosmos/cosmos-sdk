@@ -17,7 +17,7 @@ Once you have the Cosmos app installed on your Ledger, and the Ledger is accessi
 ```bash
 $ gaiacli keys add {{ .Key.Name }} --ledger
 NAME:	          TYPE:	  ADDRESS:						                                  PUBKEY:
-{{ .Key.Name }}	ledger	cosmosaccaddr1aw64xxr80lwqqdk8u2xhlrkxqaxamkr3e2g943	cosmosaccpub1addwnpepqvhs678gh9aqrjc2tg2vezw86csnvgzqq530ujkunt5tkuc7lhjkz5mj629
+{{ .Key.Name }}	ledger	cosmos1aw64xxr80lwqqdk8u2xhlrkxqaxamkr3e2g943	cosmospub1addwnpepqvhs678gh9aqrjc2tg2vezw86csnvgzqq530ujkunt5tkuc7lhjkz5mj629
 ```
 
 This key will only be accessible while the Ledger is plugged in and unlocked. To send some coins with this key, run the following:

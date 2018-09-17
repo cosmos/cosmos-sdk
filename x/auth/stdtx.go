@@ -3,8 +3,8 @@ package auth
 import (
 	"encoding/json"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -143,12 +143,12 @@ func StdSignBytes(chainID string, accnum int64, sequence int64, fee StdFee, msgs
 // a Msg with the other requirements for a StdSignDoc before
 // it is signed. For use in the CLI.
 type StdSignMsg struct {
-	ChainID       string
-	AccountNumber int64
-	Sequence      int64
-	Fee           StdFee
-	Msgs          []sdk.Msg
-	Memo          string
+	ChainID       string    `json:"chain_id"`
+	AccountNumber int64     `json:"account_number"`
+	Sequence      int64     `json:"sequence"`
+	Fee           StdFee    `json:"fee"`
+	Msgs          []sdk.Msg `json:"msgs"`
+	Memo          string    `json:"memo"`
 }
 
 // get message bytes
@@ -165,7 +165,7 @@ type StdSignature struct {
 }
 
 // logic for standard transaction decoding
-func DefaultTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
+func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var tx = StdTx{}
 

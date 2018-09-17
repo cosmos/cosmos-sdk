@@ -71,13 +71,13 @@ This API exposes all functionality needed for key creation, signing and manageme
         "account":[
            {
                 "name":"monkey",
-                "address":"cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
-                "pub_key":"cosmosaccpub1zcjduc3q8s8ha96ry4xc5xvjp9tr9w9p0e5lk5y0rpjs5epsfxs4wmf72x3shvus0t"
+                "address":"cosmos1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
+                "pub_key":"cosmospub1zcjduc3q8s8ha96ry4xc5xvjp9tr9w9p0e5lk5y0rpjs5epsfxs4wmf72x3shvus0t"
             },
             {
                 "name":"test",
-                "address":"cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-                "pub_key":"cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
+                "address":"cosmos1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
+                "pub_key":"cosmospub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
             }
         ],
         "block_height":5241
@@ -125,8 +125,8 @@ Returns on success:
     "error":"",
     "result":{
         "name":"test",
-            "address":"cosmosaccaddr1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
-            "pub_key":"cosmosaccpub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
+            "address":"cosmos1thlqhjqw78zvcy0ua4ldj9gnazqzavyw4eske2",
+            "pub_key":"cosmospub1zcjduc3qyx6hlf825jcnj39adpkaxjer95q7yvy25yhfj3dmqy2ctev0rxmse9cuak"
     }
 }
 ```
@@ -226,6 +226,113 @@ Returns on success:
         "sequence": 7
     }
 }
+```
+
+### POST /auth/tx/sign
+
+- **URL**: `/auth/tx/sign`
+- **Functionality**: Sign a transaction without broadcasting it.
+- Returns on success:
+
+```json
+{
+    "rest api": "1.0",
+    "code": 200,
+    "error": "",
+    "result": {
+        "type": "auth/StdTx",
+        "value": {
+            "msg": [
+                {
+                    "type": "cosmos-sdk/Send",
+                    "value": {
+                        "inputs": [
+                            {
+                                "address": "cosmos1ql4ekxkujf3xllk8h5ldhhgh4ylpu7kwec6q3d",
+                                "coins": [
+                                    {
+                                        "denom": "steak",
+                                        "amount": "1"
+                                    }
+                                ]
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "address": "cosmos1dhyqhg4px33ed3erqymls0hc7q2lxw9hhfwklj",
+                                "coins": [
+                                    {
+                                        "denom": "steak",
+                                        "amount": "1"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ],
+            "fee": {
+                "amount": [
+                    {
+                        "denom": "",
+                        "amount": "0"
+                    }
+                ],
+                "gas": "2742"
+            },
+            "signatures": [
+                {
+                    "pub_key": {
+                        "type": "tendermint/PubKeySecp256k1",
+                        "value": "A2A/f2IYnrPUMTMqhwN81oas9jurtfcsvxdeLlNw3gGy"
+                    },
+                    "signature": "MEQCIGVn73y9QLwBa3vmsAD1bs3ygX75Wo+lAFSAUDs431ZPAiBWAf2amyqTCDXE9J87rL9QF9sd5JvVMt7goGSuamPJwg==",
+                    "account_number": "1",
+                    "sequence": "0"
+                }
+            ],
+            "memo": ""
+        }
+    }
+}
+```
+
+### POST /auth/tx/broadcast
+
+- **URL**: `/auth/broadcast`
+- **Functionality**: Broadcast a transaction.
+- Returns on success:
+
+```json
+{
+    "rest api": "1.0",
+    "code": 200,
+    "error": "",
+    "result":
+    {
+        "check_tx": {
+            "log": "Msg 0: ",
+            "gasWanted": "2742",
+            "gasUsed": "1002"
+        },
+        "deliver_tx": {
+            "log": "Msg 0: ",
+            "gasWanted": "2742",
+            "gasUsed": "2742",
+            "tags": [
+                {
+                    "key": "c2VuZGVy",
+                    "value": "Y29zbW9zMXdjNTl6ZXU3MmNjdnp5ZWR6ZGE1N3pzcXh2eXZ2Y3poaHBhdDI4"
+                },
+                {
+                    "key": "cmVjaXBpZW50",
+                    "value": "Y29zbW9zMTJ4OTNmY3V2azg3M3o1ejZnejRlNTl2dnlxcXp1eDdzdDcwNWd5"
+                }
+            ]
+        },
+        "hash": "784314784503582AC885BD6FB0D2A5B79FF703A7",
+        "height": "5"
+    }
 }
 ```
 
@@ -588,7 +695,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     "description": "string",
   	// PlainTextProposal supported now. SoftwareUpgradeProposal and other types may be supported soon
   	"proposal_type": "string",
-  	// A cosmosaccaddr address
+  	// A cosmos address
   	"proposer": "string",
   	"initial_deposit": [
         {
@@ -656,7 +763,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     	"chain_id": "string",
         "account_number": 0,
     	"sequence": 0,
-    	"gas": 0
+    	"gas": "simulate"
   },
   "depositer": "string",
   "amount": 0,
@@ -689,7 +796,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     "error":"",
     "result":{
         "amount": {"atom": 150},
-        "depositer": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
+        "depositer": "cosmos1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
         "proposal-id": 16
     }
 }
@@ -731,12 +838,12 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     "result": [
         {
             "proposal-id": 1,
-        	"voter": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
+        	"voter": "cosmos1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
         	"option": "no_with_veto"
     	},
         {
             "proposal-id": 1,
-        	"voter": "cosmosaccaddr1849m9wncrqp6v4tkss6a3j8uzvuv0cp7f75lrq",
+        	"voter": "cosmos1849m9wncrqp6v4tkss6a3j8uzvuv0cp7f75lrq",
         	"option": "yes"
     	},
     ]
@@ -759,9 +866,9 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     	"chain_id": "string",
     	"account_number": 0,
     	"sequence": 0,
-    	"gas": 0
+    	"gas": "simulate"
   	},
-    // A cosmosaccaddr address
+    // A cosmos address
   	"voter": "string",
   	// Value of the vote option `Yes`, `No` `Abstain`, `NoWithVeto`
   	"option": "string",
@@ -794,7 +901,7 @@ The GovernanceAPI exposes all functionality needed for casting votes on plain te
     "error":"",
     "result":{
         "proposal-id": 1,
-        "voter": "cosmosaccaddr1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
+        "voter": "cosmos1fedh326uxqlxs8ph9ej7cf854gz7fd5zlym5pd",
         "option": "no_with_veto"
     }
 }

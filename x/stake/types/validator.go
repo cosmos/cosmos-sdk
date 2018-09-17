@@ -3,13 +3,14 @@ package types
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Validator defines the total amount of bond shares and their exchange rate to
@@ -20,9 +21,9 @@ import (
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
 type Validator struct {
-	Operator sdk.AccAddress `json:"operator"` // sender of BondTx - UnbondTx returns here
-	PubKey   crypto.PubKey  `json:"pub_key"`  // pubkey of validator
-	Jailed   bool           `json:"jailed"`   // has the validator been jailed from bonded status?
+	OperatorAddr sdk.ValAddress `json:"operator_address"` // address of the validator's operator; bech encoded in JSON
+	ConsPubKey   crypto.PubKey  `json:"consensus_pubkey"` // the consensus public key of the validator; bech encoded in JSON
+	Jailed       bool           `json:"jailed"`           // has the validator been jailed from bonded status?
 
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
 	Tokens          sdk.Dec        `json:"tokens"`           // delegated tokens (incl. self-delegation)
@@ -31,22 +32,21 @@ type Validator struct {
 	Description        Description `json:"description"`           // description terms for the validator
 	BondHeight         int64       `json:"bond_height"`           // earliest height as a bonded validator
 	BondIntraTxCounter int16       `json:"bond_intra_tx_counter"` // block-local tx index of validator change
-	ProposerRewardPool sdk.Coins   `json:"proposer_reward_pool"`  // XXX reward pool collected from being the proposer
+
+	UnbondingHeight  int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
+	UnbondingMinTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
 
 	Commission            sdk.Dec `json:"commission"`              // XXX the commission rate of fees charged to any delegators
 	CommissionMax         sdk.Dec `json:"commission_max"`          // XXX maximum commission rate which this validator can ever charge
 	CommissionChangeRate  sdk.Dec `json:"commission_change_rate"`  // XXX maximum daily increase of the validator commission
 	CommissionChangeToday sdk.Dec `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
-
-	// fee related
-	LastBondedTokens sdk.Dec `json:"prev_bonded_tokens"` // Previous bonded tokens held
 }
 
 // NewValidator - initialize a new validator
-func NewValidator(operator sdk.AccAddress, pubKey crypto.PubKey, description Description) Validator {
+func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description) Validator {
 	return Validator{
-		Operator:              operator,
-		PubKey:                pubKey,
+		OperatorAddr:          operator,
+		ConsPubKey:            pubKey,
 		Jailed:                false,
 		Status:                sdk.Unbonded,
 		Tokens:                sdk.ZeroDec(),
@@ -54,18 +54,18 @@ func NewValidator(operator sdk.AccAddress, pubKey crypto.PubKey, description Des
 		Description:           description,
 		BondHeight:            int64(0),
 		BondIntraTxCounter:    int16(0),
-		ProposerRewardPool:    sdk.Coins{},
+		UnbondingHeight:       int64(0),
+		UnbondingMinTime:      time.Unix(0, 0).UTC(),
 		Commission:            sdk.ZeroDec(),
 		CommissionMax:         sdk.ZeroDec(),
 		CommissionChangeRate:  sdk.ZeroDec(),
 		CommissionChangeToday: sdk.ZeroDec(),
-		LastBondedTokens:      sdk.ZeroDec(),
 	}
 }
 
 // what's kept in the store value
 type validatorValue struct {
-	PubKey                crypto.PubKey
+	ConsPubKey            crypto.PubKey
 	Jailed                bool
 	Status                sdk.BondStatus
 	Tokens                sdk.Dec
@@ -73,18 +73,18 @@ type validatorValue struct {
 	Description           Description
 	BondHeight            int64
 	BondIntraTxCounter    int16
-	ProposerRewardPool    sdk.Coins
+	UnbondingHeight       int64
+	UnbondingMinTime      time.Time
 	Commission            sdk.Dec
 	CommissionMax         sdk.Dec
 	CommissionChangeRate  sdk.Dec
 	CommissionChangeToday sdk.Dec
-	LastBondedTokens      sdk.Dec
 }
 
 // return the redelegation without fields contained within the key for the store
-func MustMarshalValidator(cdc *wire.Codec, validator Validator) []byte {
+func MustMarshalValidator(cdc *codec.Codec, validator Validator) []byte {
 	val := validatorValue{
-		PubKey:                validator.PubKey,
+		ConsPubKey:            validator.ConsPubKey,
 		Jailed:                validator.Jailed,
 		Status:                validator.Status,
 		Tokens:                validator.Tokens,
@@ -92,28 +92,27 @@ func MustMarshalValidator(cdc *wire.Codec, validator Validator) []byte {
 		Description:           validator.Description,
 		BondHeight:            validator.BondHeight,
 		BondIntraTxCounter:    validator.BondIntraTxCounter,
-		ProposerRewardPool:    validator.ProposerRewardPool,
+		UnbondingHeight:       validator.UnbondingHeight,
+		UnbondingMinTime:      validator.UnbondingMinTime,
 		Commission:            validator.Commission,
 		CommissionMax:         validator.CommissionMax,
 		CommissionChangeRate:  validator.CommissionChangeRate,
 		CommissionChangeToday: validator.CommissionChangeToday,
-		LastBondedTokens:      validator.LastBondedTokens,
 	}
 	return cdc.MustMarshalBinary(val)
 }
 
 // unmarshal a redelegation from a store key and value
-func MustUnmarshalValidator(cdc *wire.Codec, operatorAddr, value []byte) Validator {
+func MustUnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) Validator {
 	validator, err := UnmarshalValidator(cdc, operatorAddr, value)
 	if err != nil {
 		panic(err)
 	}
-
 	return validator
 }
 
 // unmarshal a redelegation from a store key and value
-func UnmarshalValidator(cdc *wire.Codec, operatorAddr, value []byte) (validator Validator, err error) {
+func UnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) (validator Validator, err error) {
 	if len(operatorAddr) != sdk.AddrLen {
 		err = fmt.Errorf("%v", ErrBadValidatorAddr(DefaultCodespace).Data())
 		return
@@ -125,8 +124,8 @@ func UnmarshalValidator(cdc *wire.Codec, operatorAddr, value []byte) (validator 
 	}
 
 	return Validator{
-		Operator:              operatorAddr,
-		PubKey:                storeValue.PubKey,
+		OperatorAddr:          operatorAddr,
+		ConsPubKey:            storeValue.ConsPubKey,
 		Jailed:                storeValue.Jailed,
 		Tokens:                storeValue.Tokens,
 		Status:                storeValue.Status,
@@ -134,12 +133,12 @@ func UnmarshalValidator(cdc *wire.Codec, operatorAddr, value []byte) (validator 
 		Description:           storeValue.Description,
 		BondHeight:            storeValue.BondHeight,
 		BondIntraTxCounter:    storeValue.BondIntraTxCounter,
-		ProposerRewardPool:    storeValue.ProposerRewardPool,
+		UnbondingHeight:       storeValue.UnbondingHeight,
+		UnbondingMinTime:      storeValue.UnbondingMinTime,
 		Commission:            storeValue.Commission,
 		CommissionMax:         storeValue.CommissionMax,
 		CommissionChangeRate:  storeValue.CommissionChangeRate,
 		CommissionChangeToday: storeValue.CommissionChangeToday,
-		LastBondedTokens:      storeValue.LastBondedTokens,
 	}, nil
 }
 
@@ -147,37 +146,37 @@ func UnmarshalValidator(cdc *wire.Codec, operatorAddr, value []byte) (validator 
 // validator. An error is returned if the operator or the operator's public key
 // cannot be converted to Bech32 format.
 func (v Validator) HumanReadableString() (string, error) {
-	bechVal, err := sdk.Bech32ifyValPub(v.PubKey)
+	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.ConsPubKey)
 	if err != nil {
 		return "", err
 	}
 
 	resp := "Validator \n"
-	resp += fmt.Sprintf("Operator: %s\n", v.Operator)
-	resp += fmt.Sprintf("Validator: %s\n", bechVal)
+	resp += fmt.Sprintf("Operator Address: %s\n", v.OperatorAddr)
+	resp += fmt.Sprintf("Validator Consensus Pubkey: %s\n", bechConsPubKey)
 	resp += fmt.Sprintf("Jailed: %v\n", v.Jailed)
 	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
 	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens.String())
 	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.String())
 	resp += fmt.Sprintf("Description: %s\n", v.Description)
 	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
-	resp += fmt.Sprintf("Proposer Reward Pool: %s\n", v.ProposerRewardPool.String())
+	resp += fmt.Sprintf("Unbonding Height: %d\n", v.UnbondingHeight)
+	resp += fmt.Sprintf("Minimum Unbonding Time: %v\n", v.UnbondingMinTime)
 	resp += fmt.Sprintf("Commission: %s\n", v.Commission.String())
 	resp += fmt.Sprintf("Max Commission Rate: %s\n", v.CommissionMax.String())
 	resp += fmt.Sprintf("Commission Change Rate: %s\n", v.CommissionChangeRate.String())
 	resp += fmt.Sprintf("Commission Change Today: %s\n", v.CommissionChangeToday.String())
-	resp += fmt.Sprintf("Previous Bonded Tokens: %s\n", v.LastBondedTokens.String())
 
 	return resp, nil
 }
 
 //___________________________________________________________________
 
-// validator struct for bech output
-type BechValidator struct {
-	Operator sdk.AccAddress `json:"operator"` // in bech32
-	PubKey   string         `json:"pub_key"`  // in bech32
-	Jailed   bool           `json:"jailed"`   // has the validator been jailed from bonded status?
+// this is a helper struct used for JSON de- and encoding only
+type bechValidator struct {
+	OperatorAddr sdk.ValAddress `json:"operator_address"` // the bech32 address of the validator's operator
+	ConsPubKey   string         `json:"consensus_pubkey"` // the bech32 consensus public key of the validator
+	Jailed       bool           `json:"jailed"`           // has the validator been jailed from bonded status?
 
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
 	Tokens          sdk.Dec        `json:"tokens"`           // delegated tokens (incl. self-delegation)
@@ -186,45 +185,70 @@ type BechValidator struct {
 	Description        Description `json:"description"`           // description terms for the validator
 	BondHeight         int64       `json:"bond_height"`           // earliest height as a bonded validator
 	BondIntraTxCounter int16       `json:"bond_intra_tx_counter"` // block-local tx index of validator change
-	ProposerRewardPool sdk.Coins   `json:"proposer_reward_pool"`  // XXX reward pool collected from being the proposer
+
+	UnbondingHeight  int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
+	UnbondingMinTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
 
 	Commission            sdk.Dec `json:"commission"`              // XXX the commission rate of fees charged to any delegators
 	CommissionMax         sdk.Dec `json:"commission_max"`          // XXX maximum commission rate which this validator can ever charge
 	CommissionChangeRate  sdk.Dec `json:"commission_change_rate"`  // XXX maximum daily increase of the validator commission
 	CommissionChangeToday sdk.Dec `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
-
-	// fee related
-	LastBondedTokens sdk.Dec `json:"prev_bonded_shares"` // last bonded token amount
 }
 
-// get the bech validator from the the regular validator
-func (v Validator) Bech32Validator() (BechValidator, error) {
-	bechValPubkey, err := sdk.Bech32ifyValPub(v.PubKey)
+// MarshalJSON marshals the validator to JSON using Bech32
+func (v Validator) MarshalJSON() ([]byte, error) {
+	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.ConsPubKey)
 	if err != nil {
-		return BechValidator{}, err
+		return nil, err
 	}
 
-	return BechValidator{
-		Operator: v.Operator,
-		PubKey:   bechValPubkey,
-		Jailed:   v.Jailed,
-
-		Status:          v.Status,
-		Tokens:          v.Tokens,
-		DelegatorShares: v.DelegatorShares,
-
-		Description:        v.Description,
-		BondHeight:         v.BondHeight,
-		BondIntraTxCounter: v.BondIntraTxCounter,
-		ProposerRewardPool: v.ProposerRewardPool,
-
+	return codec.Cdc.MarshalJSON(bechValidator{
+		OperatorAddr:          v.OperatorAddr,
+		ConsPubKey:            bechConsPubKey,
+		Jailed:                v.Jailed,
+		Status:                v.Status,
+		Tokens:                v.Tokens,
+		DelegatorShares:       v.DelegatorShares,
+		Description:           v.Description,
+		BondHeight:            v.BondHeight,
+		BondIntraTxCounter:    v.BondIntraTxCounter,
+		UnbondingHeight:       v.UnbondingHeight,
+		UnbondingMinTime:      v.UnbondingMinTime,
 		Commission:            v.Commission,
 		CommissionMax:         v.CommissionMax,
 		CommissionChangeRate:  v.CommissionChangeRate,
 		CommissionChangeToday: v.CommissionChangeToday,
+	})
+}
 
-		LastBondedTokens: v.LastBondedTokens,
-	}, nil
+// UnmarshalJSON unmarshals the validator from JSON using Bech32
+func (v *Validator) UnmarshalJSON(data []byte) error {
+	bv := &bechValidator{}
+	if err := codec.Cdc.UnmarshalJSON(data, bv); err != nil {
+		return err
+	}
+	consPubKey, err := sdk.GetConsPubKeyBech32(bv.ConsPubKey)
+	if err != nil {
+		return err
+	}
+	*v = Validator{
+		OperatorAddr:          bv.OperatorAddr,
+		ConsPubKey:            consPubKey,
+		Jailed:                bv.Jailed,
+		Tokens:                bv.Tokens,
+		Status:                bv.Status,
+		DelegatorShares:       bv.DelegatorShares,
+		Description:           bv.Description,
+		BondHeight:            bv.BondHeight,
+		BondIntraTxCounter:    bv.BondIntraTxCounter,
+		UnbondingHeight:       bv.UnbondingHeight,
+		UnbondingMinTime:      bv.UnbondingMinTime,
+		Commission:            bv.Commission,
+		CommissionMax:         bv.CommissionMax,
+		CommissionChangeRate:  bv.CommissionChangeRate,
+		CommissionChangeToday: bv.CommissionChangeToday,
+	}
+	return nil
 }
 
 //___________________________________________________________________
@@ -232,18 +256,21 @@ func (v Validator) Bech32Validator() (BechValidator, error) {
 // only the vitals - does not check bond height of IntraTxCounter
 // nolint gocyclo - why dis fail?
 func (v Validator) Equal(c2 Validator) bool {
-	return v.PubKey.Equals(c2.PubKey) &&
-		bytes.Equal(v.Operator, c2.Operator) &&
+	return v.ConsPubKey.Equals(c2.ConsPubKey) &&
+		bytes.Equal(v.OperatorAddr, c2.OperatorAddr) &&
 		v.Status.Equal(c2.Status) &&
 		v.Tokens.Equal(c2.Tokens) &&
 		v.DelegatorShares.Equal(c2.DelegatorShares) &&
 		v.Description == c2.Description &&
-		v.ProposerRewardPool.IsEqual(c2.ProposerRewardPool) &&
 		v.Commission.Equal(c2.Commission) &&
 		v.CommissionMax.Equal(c2.CommissionMax) &&
 		v.CommissionChangeRate.Equal(c2.CommissionChangeRate) &&
-		v.CommissionChangeToday.Equal(c2.CommissionChangeToday) &&
-		v.LastBondedTokens.Equal(c2.LastBondedTokens)
+		v.CommissionChangeToday.Equal(c2.CommissionChangeToday)
+}
+
+// return the TM validator address
+func (v Validator) ConsAddress() sdk.ConsAddress {
+	return sdk.ConsAddress(v.ConsPubKey.Address())
 }
 
 // constant used in flags to indicate that description field should not be updated
@@ -312,8 +339,8 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 // ABCIValidator returns an abci.Validator from a staked validator type.
 func (v Validator) ABCIValidator() abci.Validator {
 	return abci.Validator{
-		PubKey:  tmtypes.TM2PB.PubKey(v.PubKey),
-		Address: v.PubKey.Address(),
+		PubKey:  tmtypes.TM2PB.PubKey(v.ConsPubKey),
+		Address: v.ConsPubKey.Address(),
 		Power:   v.BondedTokens().RoundInt64(),
 	}
 }
@@ -322,8 +349,8 @@ func (v Validator) ABCIValidator() abci.Validator {
 // with with zero power used for validator updates.
 func (v Validator) ABCIValidatorZero() abci.Validator {
 	return abci.Validator{
-		PubKey:  tmtypes.TM2PB.PubKey(v.PubKey),
-		Address: v.PubKey.Address(),
+		PubKey:  tmtypes.TM2PB.PubKey(v.ConsPubKey),
+		Address: v.ConsPubKey.Address(),
 		Power:   0,
 	}
 }
@@ -423,6 +450,20 @@ func (v Validator) BondedTokens() sdk.Dec {
 	return sdk.ZeroDec()
 }
 
+// Returns if the validator should be considered unbonded
+func (v Validator) IsUnbonded(ctx sdk.Context) bool {
+	switch v.Status {
+	case sdk.Unbonded:
+		return true
+	case sdk.Unbonding:
+		ctxTime := ctx.BlockHeader().Time
+		if ctxTime.After(v.UnbondingMinTime) {
+			return true
+		}
+	}
+	return false
+}
+
 //______________________________________________________________________
 
 // ensure fulfills the sdk validator types
@@ -432,8 +473,8 @@ var _ sdk.Validator = Validator{}
 func (v Validator) GetJailed() bool             { return v.Jailed }
 func (v Validator) GetMoniker() string          { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus   { return v.Status }
-func (v Validator) GetOperator() sdk.AccAddress { return v.Operator }
-func (v Validator) GetPubKey() crypto.PubKey    { return v.PubKey }
+func (v Validator) GetOperator() sdk.ValAddress { return v.OperatorAddr }
+func (v Validator) GetPubKey() crypto.PubKey    { return v.ConsPubKey }
 func (v Validator) GetPower() sdk.Dec           { return v.BondedTokens() }
 func (v Validator) GetTokens() sdk.Dec          { return v.Tokens }
 func (v Validator) GetDelegatorShares() sdk.Dec { return v.DelegatorShares }

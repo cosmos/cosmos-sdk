@@ -14,10 +14,10 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Key to store the header in the DB itself.
@@ -120,10 +120,17 @@ func (app *BaseApp) RegisterCodespace(codespace sdk.CodespaceType) sdk.Codespace
 	return app.codespacer.RegisterNext(codespace)
 }
 
-// Mount a store to the provided key in the BaseApp multistore
+// Mount IAVL stores to the provided keys in the BaseApp multistore
 func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
 	for _, key := range keys {
 		app.MountStore(key, sdk.StoreTypeIAVL)
+	}
+}
+
+// Mount stores to the provided keys in the BaseApp multistore
+func (app *BaseApp) MountStoresTransient(keys ...*sdk.TransientStoreKey) {
+	for _, key := range keys {
+		app.MountStore(key, sdk.StoreTypeTransient)
 	}
 }
 
@@ -324,7 +331,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 		}
 
 		// Encode with json
-		value := wire.Cdc.MustMarshalBinary(result)
+		value := codec.Cdc.MustMarshalBinary(result)
 		return abci.ResponseQuery{
 			Code:  uint32(sdk.ABCICodeOK),
 			Value: value,
@@ -345,6 +352,7 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) (res a
 	return queryable.Query(req)
 }
 
+// nolint: unparam
 func handleQueryP2P(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
 	// "/p2p" prefix for p2p queries
 	if len(path) >= 4 {
@@ -493,15 +501,14 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 	return nil
 }
 
+// retrieve the context for the ante handler and store the tx bytes; store
+// the signing validators if the tx runs within the deliverTx() state.
 func (app *BaseApp) getContextForAnte(mode runTxMode, txBytes []byte) (ctx sdk.Context) {
 	// Get the context
-	if mode == runTxModeCheck || mode == runTxModeSimulate {
-		ctx = app.checkState.ctx.WithTxBytes(txBytes)
-	} else {
-		ctx = app.deliverState.ctx.WithTxBytes(txBytes)
+	ctx = getState(app, mode).ctx.WithTxBytes(txBytes)
+	if mode == runTxModeDeliver {
 		ctx = ctx.WithSigningValidators(app.signedValidators)
 	}
-
 	return
 }
 
@@ -567,6 +574,13 @@ func getState(app *BaseApp, mode runTxMode) *state {
 	return app.deliverState
 }
 
+func (app *BaseApp) initializeContext(ctx sdk.Context, mode runTxMode) sdk.Context {
+	if mode == runTxModeSimulate {
+		ctx = ctx.WithMultiStore(getState(app, runTxModeSimulate).CacheMultiStore())
+	}
+	return ctx
+}
+
 // runTx processes a transaction. The transactions is proccessed via an
 // anteHandler. txBytes may be nil in some cases, eg. in tests. Also, in the
 // future we may support "internal" transactions.
@@ -575,7 +589,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter so we initialize upfront.
 	var gasWanted int64
+	var msCache sdk.CacheMultiStore
 	ctx := app.getContextForAnte(mode, txBytes)
+	ctx = app.initializeContext(ctx, mode)
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -594,15 +610,13 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	}()
 
 	var msgs = tx.GetMsgs()
-
-	err := validateBasicTxMsgs(msgs)
-	if err != nil {
+	if err := validateBasicTxMsgs(msgs); err != nil {
 		return err.Result()
 	}
 
 	// run the ante handler
 	if app.anteHandler != nil {
-		newCtx, result, abort := app.anteHandler(ctx, tx)
+		newCtx, result, abort := app.anteHandler(ctx, tx, (mode == runTxModeSimulate))
 		if abort {
 			return result
 		}
@@ -613,9 +627,15 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		gasWanted = result.GasWanted
 	}
 
+	if mode == runTxModeSimulate {
+		result = app.runMsgs(ctx, msgs, mode)
+		result.GasWanted = gasWanted
+		return
+	}
+
 	// Keep the state in a transient CacheWrap in case processing the messages
 	// fails.
-	msCache := getState(app, mode).CacheMultiStore()
+	msCache = getState(app, mode).CacheMultiStore()
 	if msCache.TracingEnabled() {
 		msCache = msCache.WithTracingContext(sdk.TraceContext(
 			map[string]interface{}{"txHash": cmn.HexBytes(tmhash.Sum(txBytes)).String()},
@@ -626,8 +646,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	result = app.runMsgs(ctx, msgs, mode)
 	result.GasWanted = gasWanted
 
-	// only update state if all messages pass and we're not in a simulation
-	if result.IsOK() && mode != runTxModeSimulate {
+	// only update state if all messages pass
+	if result.IsOK() {
 		msCache.Write()
 	}
 

@@ -3,6 +3,7 @@ package stake
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
+	"github.com/cosmos/cosmos-sdk/x/stake/querier"
 	"github.com/cosmos/cosmos-sdk/x/stake/tags"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
@@ -10,9 +11,9 @@ import (
 type (
 	Keeper                = keeper.Keeper
 	Validator             = types.Validator
-	BechValidator         = types.BechValidator
 	Description           = types.Description
 	Delegation            = types.Delegation
+	DelegationSummary     = types.DelegationSummary
 	UnbondingDelegation   = types.UnbondingDelegation
 	Redelegation          = types.Redelegation
 	Params                = types.Params
@@ -25,6 +26,9 @@ type (
 	MsgBeginRedelegate    = types.MsgBeginRedelegate
 	MsgCompleteRedelegate = types.MsgCompleteRedelegate
 	GenesisState          = types.GenesisState
+	QueryDelegatorParams  = querier.QueryDelegatorParams
+	QueryValidatorParams  = querier.QueryValidatorParams
+	QueryBondsParams      = querier.QueryBondsParams
 )
 
 var (
@@ -34,7 +38,7 @@ var (
 	GetValidatorByPubKeyIndexKey = keeper.GetValidatorByPubKeyIndexKey
 	GetValidatorsBondedIndexKey  = keeper.GetValidatorsBondedIndexKey
 	GetValidatorsByPowerIndexKey = keeper.GetValidatorsByPowerIndexKey
-	GetTendermintUpdatesKey      = keeper.GetTendermintUpdatesKey
+	GetTendermintUpdatesTKey     = keeper.GetTendermintUpdatesTKey
 	GetDelegationKey             = keeper.GetDelegationKey
 	GetDelegationsKey            = keeper.GetDelegationsKey
 	ParamKey                     = keeper.ParamKey
@@ -45,7 +49,7 @@ var (
 	ValidatorsByPowerIndexKey    = keeper.ValidatorsByPowerIndexKey
 	ValidatorCliffIndexKey       = keeper.ValidatorCliffIndexKey
 	ValidatorPowerCliffKey       = keeper.ValidatorPowerCliffKey
-	TendermintUpdatesKey         = keeper.TendermintUpdatesKey
+	TendermintUpdatesTKey        = keeper.TendermintUpdatesTKey
 	DelegationKey                = keeper.DelegationKey
 	IntraTxCounterKey            = keeper.IntraTxCounterKey
 	GetUBDKey                    = keeper.GetUBDKey
@@ -66,7 +70,7 @@ var (
 	NewDescription      = types.NewDescription
 	NewGenesisState     = types.NewGenesisState
 	DefaultGenesisState = types.DefaultGenesisState
-	RegisterWire        = types.RegisterWire
+	RegisterCodec       = types.RegisterCodec
 
 	NewMsgCreateValidator           = types.NewMsgCreateValidator
 	NewMsgCreateValidatorOnBehalfOf = types.NewMsgCreateValidatorOnBehalfOf
@@ -76,6 +80,8 @@ var (
 	NewMsgCompleteUnbonding         = types.NewMsgCompleteUnbonding
 	NewMsgBeginRedelegate           = types.NewMsgBeginRedelegate
 	NewMsgCompleteRedelegate        = types.NewMsgCompleteRedelegate
+
+	NewQuerier = querier.NewQuerier
 )
 
 const (

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	cmn "github.com/tendermint/tendermint/libs/common"
 
-	"github.com/cosmos/cosmos-sdk/wire"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -219,6 +219,7 @@ func (err *sdkError) WithDefaultCodespace(cs CodespaceType) Error {
 }
 
 // Implements ABCIError.
+// nolint: errcheck
 func (err *sdkError) TraceSDK(format string, args ...interface{}) Error {
 	err.Trace(1, format, args...)
 	return err
@@ -251,7 +252,7 @@ func (err *sdkError) Code() CodeType {
 
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	parsedErrMsg := parseCmnError(err.cmnError.Error())
 	jsonErr := humanReadableError{
 		Codespace: err.codespace,

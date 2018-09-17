@@ -29,5 +29,6 @@ func (msg Msg) GetSigners() []sdk.AccAddress {
 // Payload defines inner data for actual execution
 type Payload interface {
 	Type() string
+	Name() string
 	ValidateBasic() sdk.Error
 }

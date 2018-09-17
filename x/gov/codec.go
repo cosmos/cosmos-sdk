@@ -1,11 +1,11 @@
 package gov
 
 import (
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// Register concrete types on wire codec
-func RegisterWire(cdc *wire.Codec) {
+// Register concrete types on codec codec
+func RegisterCodec(cdc *codec.Codec) {
 
 	cdc.RegisterConcrete(MsgSubmitProposal{}, "cosmos-sdk/MsgSubmitProposal", nil)
 	cdc.RegisterConcrete(MsgDeposit{}, "cosmos-sdk/MsgDeposit", nil)
@@ -15,4 +15,4 @@ func RegisterWire(cdc *wire.Codec) {
 	cdc.RegisterConcrete(&TextProposal{}, "gov/TextProposal", nil)
 }
 
-var msgCdc = wire.NewCodec()
+var msgCdc = codec.New()

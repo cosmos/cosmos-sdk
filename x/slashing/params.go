@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 // Default parameter namespace
@@ -31,6 +32,18 @@ type Params struct {
 	DowntimeUnbondDuration   time.Duration `json:"downtime-unbond-duration"`
 	SlashFractionDoubleSign  sdk.Dec       `json:"slash-fraction-doublesign"`
 	SlashFractionDowntime    sdk.Dec       `json:"slash-fraction-downtime"`
+}
+
+func (p *Params) KeyFieldPairs() params.KeyFieldPairs {
+	return params.KeyFieldPairs{
+		{KeyMaxEvidenceAge, &p.MaxEvidenceAge},
+		{KeySignedBlocksWindow, &p.SignedBlocksWindow},
+		{KeyMinSignedPerWindow, &p.MinSignedPerWindow},
+		{KeyDoubleSignUnbondDuration, &p.DoubleSignUnbondDuration},
+		{KeyDowntimeUnbondDuration, &p.DowntimeUnbondDuration},
+		{KeySlashFractionDoubleSign, &p.SlashFractionDoubleSign},
+		{KeySlashFractionDowntime, &p.SlashFractionDowntime},
+	}
 }
 
 // Default parameters used by Cosmos Hub

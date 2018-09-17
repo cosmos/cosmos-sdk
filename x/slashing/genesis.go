@@ -21,8 +21,8 @@ func DefaultGenesisState() GenesisState {
 // and the keeper's address to pubkey map
 func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState, sdata types.GenesisState) {
 	for _, validator := range sdata.Validators {
-		keeper.addPubkey(ctx, validator.KeyGetPub())
+		keeper.addPubkey(ctx, validator.GetPubKey())
 	}
 
-	keeper.paramstore.SetFromParamStruct(data.Params)
+	keeper.paramstore.SetFromParamStruct(ctx, &data.Params)
 }

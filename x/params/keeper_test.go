@@ -28,8 +28,8 @@ func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
 type s struct{}
 
 func createTestCodec() *codec.Codec {
-	cdc := codec.NewCodec()
-	sdk.RegisterWire(cdc)
+	cdc := codec.New()
+	sdk.RegisterCodec(cdc)
 	cdc.RegisterConcrete(s{}, "test/s", nil)
 	return cdc
 }
@@ -51,7 +51,7 @@ func TestKeeper(t *testing.T) {
 	skey := sdk.NewKVStoreKey("test")
 	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := defaultContext(skey, tkey)
-	space := NewKeeper(codec.NewCodec(), skey, tkey).Subspace("test")
+	space := NewKeeper(codec.New(), skey, tkey).Subspace("test")
 
 	for _, kv := range kvs {
 		require.NotPanics(t, func() { space.Set(ctx, kv.key, kv.param) })

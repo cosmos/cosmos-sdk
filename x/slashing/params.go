@@ -4,8 +4,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 // Default parameter namespace
@@ -13,26 +11,15 @@ const (
 	DefaultParamSpace = "slashing"
 )
 
-// nolint - Key generators for parameter access
-func MaxEvidenceAgeKey() params.Key     { return params.NewKey([]byte("MaxEvidenceAge")) }
-func SignedBlocksWindowKey() params.Key { return params.NewKey([]byte("SignedBlocksWindow")) }
-func MinSignedPerWindowKey() params.Key { return params.NewKey([]byte("MinSignedPerWindow")) }
-func DoubleSignUnbondDurationKey() params.Key {
-	return params.NewKey([]byte("DoubleSignUnbondDuration"))
-}
-func DowntimeUnbondDurationKey() params.Key  { return params.NewKey([]byte("DowntimeUnbondDuration")) }
-func SlashFractionDoubleSignKey() params.Key { return params.NewKey([]byte("SlashFractionDoubleSign")) }
-func SlashFractionDowntimeKey() params.Key   { return params.NewKey([]byte("SlashFractionDowntime")) }
-
-// Cached parameter keys
-var (
-	maxEvidenceAgeKey           = MaxEvidenceAgeKey()
-	signedBlocksWindowKey       = SignedBlocksWindowKey()
-	minSignedPerWindowKey       = MinSignedPerWindowKey()
-	doubleSignUnbondDurationKey = DoubleSignUnbondDurationKey()
-	downtimeUnbondDurationKey   = DowntimeUnbondDurationKey()
-	slashFractionDoubleSignKey  = SlashFractionDoubleSignKey()
-	slashFractionDowntimeKey    = SlashFractionDowntimeKey()
+// Parameter store key
+const (
+	KeyMaxEvidenceAge           = "MaxEvidenceAge"
+	KeySignedBlocksWindow       = "SignedBlocksWindow"
+	KeyMinSignedPerWindow       = "MinSignedPerWindow"
+	KeyDoubleSignUnbondDuration = "DoubleSignUnbondDuration"
+	KeyDowntimeUnbondDuration   = "DowntimeUnbondDuration"
+	KeySlashFractionDoubleSign  = "SlashFractionDoubleSign"
+	KeySlashFractionDowntime    = "SlashFractionDowntime"
 )
 
 // Params - used for initializing default parameter for slashing at genesis
@@ -73,44 +60,44 @@ func DefaultParams() Params {
 // MaxEvidenceAge - Max age for evidence - 21 days (3 weeks)
 // MaxEvidenceAge = 60 * 60 * 24 * 7 * 3
 func (k Keeper) MaxEvidenceAge(ctx sdk.Context) (res time.Duration) {
-	k.paramstore.Get(ctx, maxEvidenceAgeKey, &res)
+	k.paramstore.Get(ctx, KeyMaxEvidenceAge, &res)
 	return
 }
 
 // SignedBlocksWindow - sliding window for downtime slashing
 func (k Keeper) SignedBlocksWindow(ctx sdk.Context) (res int64) {
-	k.paramstore.Get(ctx, signedBlocksWindowKey, &res)
+	k.paramstore.Get(ctx, KeySignedBlocksWindow, &res)
 	return
 }
 
 // Downtime slashing thershold - default 50% of the SignedBlocksWindow
 func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 	var minSignedPerWindow sdk.Dec
-	k.paramstore.Get(ctx, minSignedPerWindowKey, &minSignedPerWindow)
+	k.paramstore.Get(ctx, KeyMinSignedPerWindow, &minSignedPerWindow)
 	signedBlocksWindow := k.SignedBlocksWindow(ctx)
 	return sdk.NewDec(signedBlocksWindow).Mul(minSignedPerWindow).RoundInt64()
 }
 
 // Double-sign unbond duration
 func (k Keeper) DoubleSignUnbondDuration(ctx sdk.Context) (res time.Duration) {
-	k.paramstore.Get(ctx, doubleSignUnbondDurationKey, &res)
+	k.paramstore.Get(ctx, KeyDoubleSignUnbondDuration, &res)
 	return
 }
 
 // Downtime unbond duration
 func (k Keeper) DowntimeUnbondDuration(ctx sdk.Context) (res time.Duration) {
-	k.paramstore.Get(ctx, downtimeUnbondDurationKey, &res)
+	k.paramstore.Get(ctx, KeyDowntimeUnbondDuration, &res)
 	return
 }
 
 // SlashFractionDoubleSign - currently default 5%
 func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) (res sdk.Dec) {
-	k.paramstore.Get(ctx, slashFractionDoubleSignKey, &res)
+	k.paramstore.Get(ctx, KeySlashFractionDoubleSign, &res)
 	return
 }
 
 // SlashFractionDowntime - currently default 1%
 func (k Keeper) SlashFractionDowntime(ctx sdk.Context) (res sdk.Dec) {
-	k.paramstore.Get(ctx, slashFractionDowntimeKey, &res)
+	k.paramstore.Get(ctx, KeySlashFractionDowntime, &res)
 	return
 }

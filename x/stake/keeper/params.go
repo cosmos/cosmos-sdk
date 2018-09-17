@@ -12,56 +12,45 @@ const (
 	DefaultParamSpace = "stake"
 )
 
-// Cached parameter keys
-var (
-	keyInflationRateChange = types.KeyInflationRateChange()
-	keyInflationMax        = types.KeyInflationMax()
-	keyInflationMin        = types.KeyInflationMin()
-	keyGoalBonded          = types.KeyGoalBonded()
-	keyUnbondingTime       = types.KeyUnbondingTime()
-	keyMaxValidators       = types.KeyMaxValidators()
-	keyBondDenom           = types.KeyBondDenom()
-)
-
 // InflationRateChange - Maximum annual change in inflation rate
 func (k Keeper) InflationRateChange(ctx sdk.Context) (res sdk.Dec) {
-	k.paramstore.Get(ctx, keyInflationRateChange, &res)
+	k.paramstore.Get(ctx, types.KeyInflationRateChange, &res)
 	return
 }
 
 // InflationMax - Maximum inflation rate
 func (k Keeper) InflationMax(ctx sdk.Context) (res sdk.Dec) {
-	k.paramstore.Get(ctx, keyInflationMax, &res)
+	k.paramstore.Get(ctx, types.KeyInflationMax, &res)
 	return
 }
 
 // InflationMin - Minimum inflation rate
 func (k Keeper) InflationMin(ctx sdk.Context) (res sdk.Dec) {
-	k.paramstore.Get(ctx, keyInflationMin, &res)
+	k.paramstore.Get(ctx, types.KeyInflationMin, &res)
 	return
 }
 
 // GoalBonded - Goal of percent bonded atoms
 func (k Keeper) GoalBonded(ctx sdk.Context) (res sdk.Dec) {
-	k.paramstore.Get(ctx, keyGoalBonded, &res)
+	k.paramstore.Get(ctx, types.KeyGoalBonded, &res)
 	return
 }
 
 // UnbondingTime
 func (k Keeper) UnbondingTime(ctx sdk.Context) (res time.Duration) {
-	k.paramstore.Get(ctx, keyUnbondingTime, &res)
+	k.paramstore.Get(ctx, types.KeyUnbondingTime, &res)
 	return
 }
 
 // MaxValidators - Maximum number of validators
 func (k Keeper) MaxValidators(ctx sdk.Context) (res uint16) {
-	k.paramstore.Get(ctx, keyMaxValidators, &res)
+	k.paramstore.Get(ctx, types.KeyMaxValidators, &res)
 	return
 }
 
 // BondDenom - Bondable coin denomination
 func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
-	k.paramstore.Get(ctx, keyBondDenom, &res)
+	k.paramstore.Get(ctx, types.KeyBondDenom, &res)
 	return
 }
 
@@ -90,11 +79,11 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 
 // set the params without updating validator set
 func (k Keeper) SetNewParams(ctx sdk.Context, params types.Params) {
-	k.paramstore.Set(ctx, keyInflationRateChange, params.InflationRateChange)
-	k.paramstore.Set(ctx, keyInflationMax, params.InflationMax)
-	k.paramstore.Set(ctx, keyInflationMin, params.InflationMin)
-	k.paramstore.Set(ctx, keyGoalBonded, params.GoalBonded)
-	k.paramstore.Set(ctx, keyUnbondingTime, params.UnbondingTime)
-	k.paramstore.Set(ctx, keyMaxValidators, params.MaxValidators)
-	k.paramstore.Set(ctx, keyBondDenom, params.BondDenom)
+	k.paramstore.Set(ctx, types.KeyInflationRateChange, params.InflationRateChange)
+	k.paramstore.Set(ctx, types.KeyInflationMax, params.InflationMax)
+	k.paramstore.Set(ctx, types.KeyInflationMin, params.InflationMin)
+	k.paramstore.Set(ctx, types.KeyGoalBonded, params.GoalBonded)
+	k.paramstore.Set(ctx, types.KeyUnbondingTime, params.UnbondingTime)
+	k.paramstore.Set(ctx, types.KeyMaxValidators, params.MaxValidators)
+	k.paramstore.Set(ctx, types.KeyBondDenom, params.BondDenom)
 }

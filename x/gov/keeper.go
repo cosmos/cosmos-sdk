@@ -7,21 +7,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-// nolint
+// Parameter store default namespace
 const (
 	DefaultParamSpace = "gov"
 )
 
-// nolint - Paramstore key constructor
-func ParamStoreKeyDepositProcedure() params.Key  { return params.NewKey([]byte("depositprocedure")) }
-func ParamStoreKeyVotingProcedure() params.Key   { return params.NewKey([]byte("votingprocedure")) }
-func ParamStoreKeyTallyingProcedure() params.Key { return params.NewKey([]byte("tallyingprocedure")) }
-
-// Cached parameter store keys
-var (
-	paramStoreKeyDepositProcedure  = ParamStoreKeyDepositProcedure()
-	paramStoreKeyVotingProcedure   = ParamStoreKeyVotingProcedure()
-	paramStoreKeyTallyingProcedure = ParamStoreKeyTallyingProcedure()
+// Parameter store key
+const (
+	ParamStoreKeyDepositProcedure  = "depositprocedure"
+	ParamStoreKeyVotingProcedure   = "votingprocedure"
+	ParamStoreKeyTallyingProcedure = "tallyingprocedure"
 )
 
 // Governance Keeper
@@ -224,7 +219,7 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 // nolint: errcheck
 func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) DepositProcedure {
 	var depositProcedure DepositProcedure
-	keeper.ps.Get(ctx, paramStoreKeyDepositProcedure, &depositProcedure)
+	keeper.ps.Get(ctx, ParamStoreKeyDepositProcedure, &depositProcedure)
 	return depositProcedure
 }
 
@@ -232,7 +227,7 @@ func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) DepositProcedure {
 // nolint: errcheck
 func (keeper Keeper) GetVotingProcedure(ctx sdk.Context) VotingProcedure {
 	var votingProcedure VotingProcedure
-	keeper.ps.Get(ctx, paramStoreKeyVotingProcedure, &votingProcedure)
+	keeper.ps.Get(ctx, ParamStoreKeyVotingProcedure, &votingProcedure)
 	return votingProcedure
 }
 
@@ -240,23 +235,23 @@ func (keeper Keeper) GetVotingProcedure(ctx sdk.Context) VotingProcedure {
 // nolint: errcheck
 func (keeper Keeper) GetTallyingProcedure(ctx sdk.Context) TallyingProcedure {
 	var tallyingProcedure TallyingProcedure
-	keeper.ps.Get(ctx, paramStoreKeyTallyingProcedure, &tallyingProcedure)
+	keeper.ps.Get(ctx, ParamStoreKeyTallyingProcedure, &tallyingProcedure)
 	return tallyingProcedure
 }
 
 // nolint: errcheck
 func (keeper Keeper) setDepositProcedure(ctx sdk.Context, depositProcedure DepositProcedure) {
-	keeper.ps.Set(ctx, paramStoreKeyDepositProcedure, &depositProcedure)
+	keeper.ps.Set(ctx, ParamStoreKeyDepositProcedure, &depositProcedure)
 }
 
 // nolint: errcheck
 func (keeper Keeper) setVotingProcedure(ctx sdk.Context, votingProcedure VotingProcedure) {
-	keeper.ps.Set(ctx, paramStoreKeyVotingProcedure, &votingProcedure)
+	keeper.ps.Set(ctx, ParamStoreKeyVotingProcedure, &votingProcedure)
 }
 
 // nolint: errcheck
 func (keeper Keeper) setTallyingProcedure(ctx sdk.Context, tallyingProcedure TallyingProcedure) {
-	keeper.ps.Set(ctx, paramStoreKeyTallyingProcedure, &tallyingProcedure)
+	keeper.ps.Set(ctx, ParamStoreKeyTallyingProcedure, &tallyingProcedure)
 }
 
 // =====================================================

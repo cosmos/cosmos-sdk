@@ -13,7 +13,7 @@ func QueryParams(cliCtx context.CLIContext, subStoreName string, ps params.Param
 	m := make(map[string][]byte)
 
 	for _, p := range ps.KeyFieldPairs() {
-		key := p.Key.String()
+		key := p.Key
 		bz, err := cliCtx.QueryStore([]byte(subStoreName+"/"+key), storeName)
 		if err != nil {
 			return err

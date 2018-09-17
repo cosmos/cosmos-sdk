@@ -14,14 +14,16 @@ import (
 // unbonding time.
 const defaultUnbondingTime time.Duration = 60 * 60 * 24 * 3 * time.Second
 
-// nolint - Key generators for parameter access
-func KeyInflationRateChange() params.Key { return params.NewKey([]byte("InflationRateChange")) }
-func KeyInflationMax() params.Key        { return params.NewKey([]byte("InflationMax")) }
-func KeyInflationMin() params.Key        { return params.NewKey([]byte("InflationMin")) }
-func KeyGoalBonded() params.Key          { return params.NewKey([]byte("GoalBonded")) }
-func KeyUnbondingTime() params.Key       { return params.NewKey([]byte("UnbondingTime")) }
-func KeyMaxValidators() params.Key       { return params.NewKey([]byte("MaxValidators")) }
-func KeyBondDenom() params.Key           { return params.NewKey([]byte("BondDenom")) }
+// nolint - Keys for parameter access
+const (
+	KeyInflationRateChange = "InflationRateChange"
+	KeyInflationMax        = "InflationMax"
+	KeyInflationMin        = "InflationMin"
+	KeyGoalBonded          = "GoalBonded"
+	KeyUnbondingTime       = "UnbondingTime"
+	KeyMaxValidators       = "MaxValidators"
+	KeyBondDenom           = "BondDenom"
+)
 
 // Params defines the high level settings for staking
 type Params struct {
@@ -39,13 +41,13 @@ type Params struct {
 // Implements params.ParamStruct
 func (p *Params) KeyFieldPairs() params.KeyFieldPairs {
 	return params.KeyFieldPairs{
-		{KeyInflationRateChange(), &p.InflationRateChange},
-		{KeyInflationMax(), &p.InflationMax},
-		{KeyInflationMin(), &p.InflationMin},
-		{KeyGoalBonded(), &p.GoalBonded},
-		{KeyUnbondingTime(), &p.UnbondingTime},
-		{KeyMaxValidators(), &p.MaxValidators},
-		{KeyBondDenom(), &p.BondDenom},
+		{KeyInflationRateChange, &p.InflationRateChange},
+		{KeyInflationMax, &p.InflationMax},
+		{KeyInflationMin, &p.InflationMin},
+		{KeyGoalBonded, &p.GoalBonded},
+		{KeyUnbondingTime, &p.UnbondingTime},
+		{KeyMaxValidators, &p.MaxValidators},
+		{KeyBondDenom, &p.BondDenom},
 	}
 }
 

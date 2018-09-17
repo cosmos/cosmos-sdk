@@ -26,6 +26,7 @@ func NewMsgUnjail(validatorAddr sdk.ValAddress) MsgUnjail {
 
 //nolint
 func (msg MsgUnjail) Type() string { return MsgType }
+func (msg MsgUnjail) Name() string { return "unjail" }
 func (msg MsgUnjail) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.AccAddress(msg.ValidatorAddr)}
 }

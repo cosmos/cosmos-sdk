@@ -34,6 +34,9 @@ type seqOracle struct {
 func (o seqOracle) Type() string {
 	return "seq"
 }
+func (o seqOracle) Name() string {
+	return "seq"
+}
 
 func (o seqOracle) ValidateBasic() sdk.Error {
 	return nil

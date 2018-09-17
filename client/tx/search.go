@@ -102,7 +102,7 @@ func searchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string) ([]In
 		}
 	}
 
-	info, err := FormatTxResults(cdc, cliCtx, res.Txs)
+	info, err := FormatTxResults(cdc, res.Txs)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func searchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string) ([]In
 }
 
 // parse the indexed txs into an array of Info
-func FormatTxResults(cdc *codec.Codec, cliCtx context.CLIContext, res []*ctypes.ResultTx) ([]Info, error) {
+func FormatTxResults(cdc *codec.Codec, res []*ctypes.ResultTx) ([]Info, error) {
 	var err error
 	out := make([]Info, len(res))
 	for i := range res {

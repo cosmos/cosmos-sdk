@@ -40,5 +40,5 @@ func queryTxs(node rpcclient.Client, cliCtx context.CLIContext, cdc *codec.Codec
 		}
 	}
 
-	return tx.FormatTxResults(cdc, cliCtx, res.Txs)
+	return tx.FormatTxResults(cdc, res.Txs)
 }

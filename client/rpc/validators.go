@@ -73,7 +73,7 @@ func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	}
 
 	if !cliCtx.TrustNode {
-		check, err := cliCtx.Certify(*height)
+		check, err := cliCtx.Certify(validatorsRes.BlockHeight)
 		if err != nil {
 			return nil, err
 		}

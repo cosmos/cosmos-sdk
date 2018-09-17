@@ -18,7 +18,7 @@ import (
 func getMockApp(t *testing.T) *mock.App {
 	mapp := mock.NewApp()
 
-	RegisterWire(mapp.Cdc)
+	RegisterCodec(mapp.Cdc)
 	keyIBC := sdk.NewKVStoreKey("ibc")
 	ibcMapper := NewMapper(mapp.Cdc, keyIBC, mapp.RegisterCodespace(DefaultCodespace))
 	bankKeeper := bank.NewBaseKeeper(mapp.AccountMapper)

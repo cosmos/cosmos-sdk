@@ -14,9 +14,9 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -52,8 +52,8 @@ func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, ty
 //_______________________________________________________________________________________
 
 // create a codec used only for testing
-func MakeTestCodec() *wire.Codec {
-	var cdc = wire.NewCodec()
+func MakeTestCodec() *codec.Codec {
+	var cdc = codec.New()
 
 	// Register Msgs
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
@@ -69,7 +69,7 @@ func MakeTestCodec() *wire.Codec {
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/stake/Account", nil)
-	wire.RegisterCrypto(cdc)
+	codec.RegisterCrypto(cdc)
 
 	return cdc
 }

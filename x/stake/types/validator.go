@@ -9,8 +9,8 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Validator defines the total amount of bond shares and their exchange rate to
@@ -82,7 +82,7 @@ type validatorValue struct {
 }
 
 // return the redelegation without fields contained within the key for the store
-func MustMarshalValidator(cdc *wire.Codec, validator Validator) []byte {
+func MustMarshalValidator(cdc *codec.Codec, validator Validator) []byte {
 	val := validatorValue{
 		ConsPubKey:            validator.ConsPubKey,
 		Jailed:                validator.Jailed,
@@ -103,7 +103,7 @@ func MustMarshalValidator(cdc *wire.Codec, validator Validator) []byte {
 }
 
 // unmarshal a redelegation from a store key and value
-func MustUnmarshalValidator(cdc *wire.Codec, operatorAddr, value []byte) Validator {
+func MustUnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) Validator {
 	validator, err := UnmarshalValidator(cdc, operatorAddr, value)
 	if err != nil {
 		panic(err)
@@ -112,7 +112,7 @@ func MustUnmarshalValidator(cdc *wire.Codec, operatorAddr, value []byte) Validat
 }
 
 // unmarshal a redelegation from a store key and value
-func UnmarshalValidator(cdc *wire.Codec, operatorAddr, value []byte) (validator Validator, err error) {
+func UnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) (validator Validator, err error) {
 	if len(operatorAddr) != sdk.AddrLen {
 		err = fmt.Errorf("%v", ErrBadValidatorAddr(DefaultCodespace).Data())
 		return
@@ -202,7 +202,7 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
-	return wire.Cdc.MarshalJSON(bechValidator{
+	return codec.Cdc.MarshalJSON(bechValidator{
 		OperatorAddr:          v.OperatorAddr,
 		ConsPubKey:            bechConsPubKey,
 		Jailed:                v.Jailed,
@@ -224,7 +224,7 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals the validator from JSON using Bech32
 func (v *Validator) UnmarshalJSON(data []byte) error {
 	bv := &bechValidator{}
-	if err := wire.Cdc.UnmarshalJSON(data, bv); err != nil {
+	if err := codec.Cdc.UnmarshalJSON(data, bv); err != nil {
 		return err
 	}
 	consPubKey, err := sdk.GetConsPubKeyBech32(bv.ConsPubKey)

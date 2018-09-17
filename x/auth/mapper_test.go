@@ -9,9 +9,9 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
 func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
@@ -27,7 +27,7 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
 
 func TestAccountMapperGetSet(t *testing.T) {
 	ms, capKey, _ := setupMultiStore()
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	RegisterBaseAccount(cdc)
 
 	// make context and mapper

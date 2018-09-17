@@ -100,7 +100,7 @@ type TxDelegate struct {
 
 delegate(tx TxDelegate):
     pool = getPool()
-    if validator.Status == Revoked return
+    if validator.Status == Jailed return
 
     delegation = getDelegatorBond(DelegatorAddr, ValidatorAddr)
     if delegation == nil then delegation = NewDelegation(DelegatorAddr, ValidatorAddr)
@@ -141,7 +141,7 @@ startUnbonding(tx TxStartUnbonding):
 	revokeCandidacy = false
 	if bond.Shares.IsZero() {
 
-		if bond.DelegatorAddr == validator.Operator && validator.Revoked == false
+		if bond.DelegatorAddr == validator.Operator && validator.Jailed == false
 			revokeCandidacy = true
 
 		removeDelegation( bond)
@@ -157,7 +157,7 @@ startUnbonding(tx TxStartUnbonding):
     setUnbondingDelegation(unbondingDelegation)
 
 	if revokeCandidacy
-		validator.Revoked = true
+		validator.Jailed = true
 
 	validator = updateValidator(validator)
 
@@ -279,9 +279,9 @@ updateBondedValidators(newValidator Validator) (updatedVal Validator)
         else
 			validator = getValidator(operatorAddr)
 
-		// if not previously a validator (and unrevoked),
+		// if not previously a validator (and unjailed),
 		// kick the cliff validator / bond this new validator
-		if validator.Status() != Bonded && !validator.Revoked {
+		if validator.Status() != Bonded && !validator.Jailed {
 			kickCliffValidator = true
 
 			validator = bondValidator(ctx, store, validator)

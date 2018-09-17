@@ -133,6 +133,7 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 	return txBldr.SignStdTx(name, passphrase, stdTx, appendSig)
 }
 
+// nolint
 // SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
 func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (estimated, adjusted int64, err error) {
 	txBytes, err := txBldr.BuildWithPubKey(name, msgs)

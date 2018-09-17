@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
+	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 )
 
 //BlockCommand returns the verified block data for a given heights
@@ -21,8 +22,8 @@ func BlockCommand() *cobra.Command {
 		RunE:  printBlock,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	// TODO: change this to false when we can
-	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
+	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
 	return cmd
 }
 
@@ -41,8 +42,25 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
+	if !cliCtx.TrustNode {
+		check, err := cliCtx.Certify(res.Block.Height)
+		if err != nil {
+			return nil, err
+		}
+
+		err = tmliteProxy.ValidateBlockMeta(res.BlockMeta, check)
+		if err != nil {
+			return nil, err
+		}
+
+		err = tmliteProxy.ValidateBlock(res.Block, check)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// TODO move maarshalling into cmd/rest functions
-	// output, err := tmwire.MarshalJSON(res)
+	// output, err := tmcodec.MarshalJSON(res)
 	output, err := cdc.MarshalJSON(res)
 	if err != nil {
 		return nil, err

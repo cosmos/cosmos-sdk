@@ -1,8 +1,8 @@
 package auth
 
 import (
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
 var (
@@ -16,11 +16,11 @@ type FeeCollectionKeeper struct {
 	// The (unexposed) key used to access the fee store from the Context.
 	key sdk.StoreKey
 
-	// The wire codec for binary encoding/decoding of accounts.
-	cdc *wire.Codec
+	// The codec codec for binary encoding/decoding of accounts.
+	cdc *codec.Codec
 }
 
-func NewFeeCollectionKeeper(cdc *wire.Codec, key sdk.StoreKey) FeeCollectionKeeper {
+func NewFeeCollectionKeeper(cdc *codec.Codec, key sdk.StoreKey) FeeCollectionKeeper {
 	return FeeCollectionKeeper{
 		key: key,
 		cdc: cdc,

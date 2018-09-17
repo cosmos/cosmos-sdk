@@ -139,8 +139,8 @@ Amino can also be used for persistent storage of interfaces.
 To use Amino, simply create a codec, and then register types:
 
 ```
-func NewCodec() *wire.Codec {
-	cdc := wire.NewCodec()
+func NewCodec() *codec.Codec {
+	cdc := codec.New()
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(MsgSend{}, "example/MsgSend", nil)
 	cdc.RegisterConcrete(MsgIssue{}, "example/MsgIssue", nil)
@@ -175,7 +175,7 @@ func (tx app2Tx) GetMsgs() []sdk.Msg {
 }
 
 // Amino decode app2Tx. Capable of decoding both MsgSend and MsgIssue
-func tx2Decoder(cdc *wire.Codec) sdk.TxDecoder {
+func tx2Decoder(cdc *codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var tx app2Tx
 		err := cdc.UnmarshalBinary(txBytes, &tx)

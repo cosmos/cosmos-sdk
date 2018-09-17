@@ -1,14 +1,14 @@
 package keys
 
 import (
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-var cdc *wire.Codec
+var cdc *codec.Codec
 
 func init() {
-	cdc = wire.NewCodec()
-	wire.RegisterCrypto(cdc)
+	cdc = codec.New()
+	codec.RegisterCrypto(cdc)
 }
 
 // marshal keys

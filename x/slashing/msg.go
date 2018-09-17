@@ -1,11 +1,11 @@
 package slashing
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
-var cdc = wire.NewCodec()
+var cdc = codec.New()
 
 // name to identify transaction types
 const MsgType = "slashing"
@@ -26,6 +26,7 @@ func NewMsgUnjail(validatorAddr sdk.ValAddress) MsgUnjail {
 
 //nolint
 func (msg MsgUnjail) Type() string { return MsgType }
+func (msg MsgUnjail) Name() string { return "unjail" }
 func (msg MsgUnjail) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.AccAddress(msg.ValidatorAddr)}
 }

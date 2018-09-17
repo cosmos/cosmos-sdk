@@ -7,8 +7,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
@@ -76,7 +76,7 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount, err error) {
 
 // InitChainer will set initial balances for accounts as well as initial coin metadata
 // MsgIssue can no longer be used to create new coin
-func NewInitChainer(cdc *wire.Codec, accountMapper auth.AccountMapper) sdk.InitChainer {
+func NewInitChainer(cdc *codec.Codec, accountMapper auth.AccountMapper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		stateJSON := req.AppStateBytes
 

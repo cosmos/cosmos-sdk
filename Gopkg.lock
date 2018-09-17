@@ -34,7 +34,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6aabc1566d6351115d561d038da82a4c19b46c3b6e17f4a0a2fa60260663dc79"
+  digest = "1:2c00f064ba355903866cbfbf3f7f4c0fe64af6638cc7d1b8bdcf3181bc67f1d8"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
   pruneopts = "UT"
@@ -71,7 +71,7 @@
   version = "v1.4.7"
 
 [[projects]]
-  digest = "1:fa30c0652956e159cdb97dcb2ef8b8db63ed668c02a5c3a40961c8f0641252fe"
+  digest = "1:fdf5169073fb0ad6dc12a70c249145e30f4058647bea25f0abd48b6d9f228a11"
   name = "github.com/go-kit/kit"
   packages = [
     "log",
@@ -103,7 +103,7 @@
   version = "v1.7.0"
 
 [[projects]]
-  digest = "1:212285efb97b9ec2e20550d81f0446cb7897e57cbdfd7301b1363ab113d8be45"
+  digest = "1:35621fe20f140f05a0c4ef662c26c0ab4ee50bca78aa30fe87d33120bd28165e"
   name = "github.com/gogo/protobuf"
   packages = [
     "gogoproto",
@@ -118,7 +118,7 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:cb22af0ed7c72d495d8be1106233ee553898950f15fd3f5404406d44c2e86888"
+  digest = "1:17fe264ee908afc795734e8c4e63db2accabaf57326dbf21763a7d6b86096260"
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
@@ -165,7 +165,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8951fe6e358876736d8fa1f3992624fdbb2dec6bc49401c1381d1ef8abbb544f"
+  digest = "1:12247a2e99a060cc692f6680e5272c8adf0b8f572e6bce0d7095e624c958a240"
   name = "github.com/hashicorp/hcl"
   packages = [
     ".",
@@ -262,7 +262,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:98225904b7abff96c052b669b25788f18225a36673fba022fb93514bb9a2a64e"
+  digest = "1:c1a04665f9613e082e1209cf288bf64f4068dcd6c87a64bf1c4ff006ad422ba0"
   name = "github.com/prometheus/client_golang"
   packages = [
     "prometheus",
@@ -273,7 +273,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:0f37e09b3e92aaeda5991581311f8dbf38944b36a3edec61cc2d1991f527554a"
+  digest = "1:2d5cd61daa5565187e1d96bae64dbbc6080dacf741448e9629c64fd93203b0d4"
   name = "github.com/prometheus/client_model"
   packages = ["go"]
   pruneopts = "UT"
@@ -281,7 +281,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:dad2e5a2153ee7a6c9ab8fc13673a16ee4fb64434a7da980965a3741b0c981a3"
+  digest = "1:63b68062b8968092eb86bedc4e68894bd096ea6b24920faca8b9dcf451f54bb5"
   name = "github.com/prometheus/common"
   packages = [
     "expfmt",
@@ -293,7 +293,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a37c98f4b7a66bb5c539c0539f0915a74ef1c8e0b3b6f45735289d94cae92bfd"
+  digest = "1:8c49953a1414305f2ff5465147ee576dd705487c35b15918fcd4efdc0cb7a290"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
@@ -312,7 +312,7 @@
   revision = "e2704e165165ec55d062f5919b4b29494e9fa790"
 
 [[projects]]
-  digest = "1:37ace7f35375adec11634126944bdc45a673415e2fcc07382d03b75ec76ea94c"
+  digest = "1:bd1ae00087d17c5a748660b8e89e1043e1e5479d0fea743352cda2f8dd8c4f84"
   name = "github.com/spf13/afero"
   packages = [
     ".",
@@ -331,7 +331,7 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:627ab2f549a6a55c44f46fa24a4307f4d0da81bfc7934ed0473bf38b24051d26"
+  digest = "1:7ffc0983035bc7e297da3688d9fe19d60a420e9c38bef23f845c53788ed6a05e"
   name = "github.com/spf13/cobra"
   packages = ["."]
   pruneopts = "UT"
@@ -363,7 +363,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:73697231b93fb74a73ebd8384b68b9a60c57ea6b13c56d2425414566a72c8e6d"
+  digest = "1:7e8d267900c7fa7f35129a2a37596e38ed0f11ca746d6d9ba727980ee138f9f6"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
@@ -375,7 +375,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:442d2ffa75ffae302ce8800bf4144696b92bef02917923ea132ce2d39efe7d65"
+  digest = "1:f2ffd421680b0a3f7887501b3c6974bcf19217ecd301d0e2c9b681940ec363d5"
   name = "github.com/syndtr/goleveldb"
   packages = [
     "leveldb",
@@ -396,7 +396,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:203b409c21115233a576f99e8f13d8e07ad82b25500491f7e1cca12588fb3232"
+  digest = "1:087aaa7920e5d0bf79586feb57ce01c35c830396ab4392798112e8aae8c47722"
   name = "github.com/tendermint/ed25519"
   packages = [
     ".",
@@ -423,7 +423,7 @@
   version = "v0.11.0"
 
 [[projects]]
-  digest = "1:963f6c04345ce36f900c1d6367200eebc3cc2db6ee632ff865ea8dcf64b748a0"
+  digest = "1:4f15e95fe3888cc75dd34f407d6394cbc7fd3ff24920851b92b295f6a8b556e6"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -490,7 +490,7 @@
   version = "v0.23.1-rc0"
 
 [[projects]]
-  digest = "1:ad879bb8c71020a3f92f0c61f414d93eae1d5dc2f37023b6abaa3cc84b00165e"
+  digest = "1:bf6d9a827ea3cad964c2f863302e4f6823170d0b5ed16f72cf1184a7c615067e"
   name = "github.com/tendermint/tmlibs"
   packages = ["cli"]
   pruneopts = "UT"
@@ -507,7 +507,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2a3ce1f08dcae8bac666deb6e4c88b5d7170c510da38fd746231144cac351704"
+  digest = "1:27507554c6d4f060d8d700c31c624a43d3a92baa634e178ddc044bdf7d13b44a"
   name = "golang.org/x/crypto"
   packages = [
     "blowfish",
@@ -529,7 +529,7 @@
   revision = "614d502a4dac94afa3a6ce146bd1736da82514c6"
 
 [[projects]]
-  digest = "1:04dda8391c3e2397daf254ac68003f30141c069b228d06baec8324a5f81dc1e9"
+  digest = "1:d36f55a999540d29b6ea3c2ea29d71c76b1d9853fdcd3e5c5cb4836f2ba118f1"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -546,7 +546,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9d9e5fc87553258c36ee18d38023587edd61e4b2521f4473da34b47a83a492e5"
+  digest = "1:ead82e3e398388679f3ad77633a087ac31a47a6be59ae20841e1d1b3a3fbbd22"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
@@ -556,7 +556,7 @@
   revision = "4ea2f632f6e912459fe60b26b1749377f0d889d5"
 
 [[projects]]
-  digest = "1:7509ba4347d1f8de6ae9be8818b0cd1abc3deeffe28aeaf4be6d4b6b5178d9ca"
+  digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"
   name = "golang.org/x/text"
   packages = [
     "collate",
@@ -587,7 +587,7 @@
   revision = "c66870c02cf823ceb633bcd05be3c7cda29976f4"
 
 [[projects]]
-  digest = "1:4515e3030c440845b046354fd5d57671238428b820deebce2e9dabb5cd3c51ac"
+  digest = "1:2dab32a43451e320e49608ff4542fdfc653c95dcc35d0065ec9c6c3dd540ed74"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -665,6 +665,7 @@
     "github.com/tendermint/tendermint/libs/db",
     "github.com/tendermint/tendermint/libs/log",
     "github.com/tendermint/tendermint/lite",
+    "github.com/tendermint/tendermint/lite/errors",
     "github.com/tendermint/tendermint/lite/proxy",
     "github.com/tendermint/tendermint/node",
     "github.com/tendermint/tendermint/p2p",

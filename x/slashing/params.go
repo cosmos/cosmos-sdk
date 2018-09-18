@@ -34,6 +34,7 @@ type Params struct {
 	SlashFractionDowntime    sdk.Dec       `json:"slash-fraction-downtime"`
 }
 
+// Implements params.ParamStruct
 func (p *Params) KeyFieldPairs() params.KeyFieldPairs {
 	return params.KeyFieldPairs{
 		{KeyMaxEvidenceAge, &p.MaxEvidenceAge},

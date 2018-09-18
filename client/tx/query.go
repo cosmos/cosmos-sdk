@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
-		"github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/libs/common"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"

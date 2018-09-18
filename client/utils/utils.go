@@ -50,16 +50,6 @@ func SendTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg)
 	return cliCtx.EnsureBroadcastTx(txBytes)
 }
 
-// SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
-func SimulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg, gas int64) (estimated, adjusted int64, err error) {
-	txBytes, err := txBldr.WithGas(gas).BuildWithPubKey(name, msgs)
-	if err != nil {
-		return
-}
-	estimated, adjusted, err = CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, cliCtx.GasAdjustment)
-	return
-}
-
 // EnrichCtxWithGas calculates the gas estimate that would be consumed by the
 // transaction and set the transaction's respective value accordingly.
 func EnrichCtxWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (authtxb.TxBuilder, error) {
@@ -152,25 +142,6 @@ func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name stri
 	}
 	estimated, adjusted, err = CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, txBldr.GasAdjustment)
 	return
-}
-
-// DefaultChainID returns the chain ID from the genesis file if present. An
-// error is returned if the file cannot be read or parsed.
-//
-// TODO: This should be removed and the chainID should always be provided by
-// the end user.
-func DefaultChainID() (string, error) {
-	cfg, err := tcmd.ParseConfig()
-	if err != nil {
-		return "", err
-	}
-
-	doc, err := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
-	if err != nil {
-		return "", err
-	}
-
-	return doc.ChainID, nil
 }
 
 func adjustGasEstimate(estimate int64, adjustment float64) int64 {

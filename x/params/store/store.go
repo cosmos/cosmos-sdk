@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"reflect"
 
-	tmlibs "github.com/tendermint/tendermint/libs/common"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -16,27 +14,33 @@ type Store struct {
 	key  sdk.StoreKey
 	tkey sdk.StoreKey
 
-	store []byte
+	space []byte
 }
 
 // NewStore constructs a store with namestore
-func NewStore(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, store string) Store {
-	if !tmlibs.IsASCIIText(store) {
-		panic("paramstore store expressions can only contain alphanumeric characters")
-	}
-
+func NewStore(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, space string) Store {
 	return Store{
 		cdc:  cdc,
 		key:  key,
 		tkey: tkey,
 
-		store: append([]byte(store), '/'),
+		space: []byte(space),
 	}
+}
+
+// Returns a KVStore identical with ctx,TransientStore(s.key).Prefix()
+func (s Store) kvStore(ctx sdk.Context) sdk.KVStore {
+	return ctx.KVStore(s.key).Prefix(append([]byte(s.space), '/'))
+}
+
+// Returns a KVStore identical with ctx.TransientStore(s.tkey).Prefix()
+func (s Store) transientStore(ctx sdk.Context) sdk.KVStore {
+	return ctx.TransientStore(s.tkey).Prefix(append([]byte(s.space), '/'))
 }
 
 // Get parameter from store
 func (s Store) Get(ctx sdk.Context, key string, ptr interface{}) {
-	store := ctx.KVStore(s.key).Prefix(s.store)
+	store := s.kvStore(ctx)
 	bz := store.Get([]byte(key))
 	err := s.cdc.UnmarshalJSON(bz, ptr)
 	if err != nil {
@@ -46,7 +50,7 @@ func (s Store) Get(ctx sdk.Context, key string, ptr interface{}) {
 
 // GetIfExists do not modify ptr if the stored parameter is nil
 func (s Store) GetIfExists(ctx sdk.Context, key string, ptr interface{}) {
-	store := ctx.KVStore(s.key).Prefix(s.store)
+	store := s.kvStore(ctx)
 	bz := store.Get([]byte(key))
 	if bz == nil {
 		return
@@ -59,26 +63,26 @@ func (s Store) GetIfExists(ctx sdk.Context, key string, ptr interface{}) {
 
 // Get raw bytes of parameter from store
 func (s Store) GetRaw(ctx sdk.Context, key string) []byte {
-	store := ctx.KVStore(s.key).Prefix(s.store)
+	store := s.kvStore(ctx)
 	res := store.Get([]byte(key))
 	return res
 }
 
 // Check if the parameter is set in the store
 func (s Store) Has(ctx sdk.Context, key string) bool {
-	store := ctx.KVStore(s.key).Prefix(s.store)
+	store := s.kvStore(ctx)
 	return store.Has([]byte(key))
 }
 
 // Returns true if the parameter is set in the block
 func (s Store) Modified(ctx sdk.Context, key string) bool {
-	tstore := ctx.KVStore(s.tkey).Prefix(s.store)
+	tstore := s.transientStore(ctx)
 	return tstore.Has([]byte(key))
 }
 
 // Set parameter, return error if stored parameter has different type from input
 func (s Store) Set(ctx sdk.Context, key string, param interface{}) {
-	store := ctx.KVStore(s.key).Prefix(s.store)
+	store := s.kvStore(ctx)
 	keybz := []byte(key)
 
 	bz := store.Get(keybz)
@@ -97,7 +101,7 @@ func (s Store) Set(ctx sdk.Context, key string, param interface{}) {
 	}
 	store.Set(keybz, bz)
 
-	tstore := ctx.KVStore(s.tkey).Prefix(s.store)
+	tstore := s.transientStore(ctx)
 	tstore.Set(keybz, []byte{})
 }
 
@@ -105,10 +109,10 @@ func (s Store) Set(ctx sdk.Context, key string, param interface{}) {
 func (s Store) SetRaw(ctx sdk.Context, key string, param []byte) {
 	keybz := []byte(key)
 
-	store := ctx.KVStore(s.key).Prefix(s.store)
+	store := s.kvStore(ctx)
 	store.Set(keybz, param)
 
-	tstore := ctx.KVStore(s.tkey).Prefix(s.store)
+	tstore := s.transientStore(ctx)
 	tstore.Set(keybz, []byte{})
 }
 
@@ -122,13 +126,18 @@ func (s Store) GetStruct(ctx sdk.Context, ps ParamStruct) {
 // Set from ParamStruct
 func (s Store) SetStruct(ctx sdk.Context, ps ParamStruct) {
 	for _, pair := range ps.KeyFieldPairs() {
-		s.Set(ctx, pair.Key, pair.Field)
+		// pair.Field is a pointer to the field, so indirecting the ptr.
+		// go-amino automatically handles it but just for sure,
+		// since SetStruct is meant to be used in InitGenesis
+		// so this method will not be called frequently
+		v := reflect.Indirect(reflect.ValueOf(pair.Field)).Interface()
+		s.Set(ctx, pair.Key, v)
 	}
 }
 
-// Returns a KVStore identical with the paramstore
-func (s Store) KVStore(ctx sdk.Context) sdk.KVStore {
-	return ctx.KVStore(s.key).Prefix(s.store)
+// Returns internal namespace
+func (s Store) Space() string {
+	return string(s.space)
 }
 
 // Wrapper of Store, provides immutable functions only
@@ -154,4 +163,9 @@ func (ros ReadOnlyStore) Has(ctx sdk.Context, key string) bool {
 // Exposes Modified
 func (ros ReadOnlyStore) Modified(ctx sdk.Context, key string) bool {
 	return ros.s.Modified(ctx, key)
+}
+
+// Exposes Space
+func (ros ReadOnlyStore) Space() string {
+	return ros.s.Space()
 }

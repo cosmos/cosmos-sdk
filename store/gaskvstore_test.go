@@ -16,7 +16,7 @@ func newGasKVStore() KVStore {
 	return NewGasKVStore(meter, sdk.DefaultKVGasConfig(), mem)
 }
 
-func TestKVGasKVStoreBasic(t *testing.T) {
+func TestGasKVStoreBasic(t *testing.T) {
 	mem := dbStoreAdapter{dbm.NewMemDB()}
 	meter := sdk.NewGasMeter(1000)
 	st := NewGasKVStore(meter, sdk.DefaultKVGasConfig(), mem)
@@ -28,7 +28,7 @@ func TestKVGasKVStoreBasic(t *testing.T) {
 	require.Equal(t, meter.GasConsumed(), sdk.Gas(193))
 }
 
-func TestKVGasKVStoreIterator(t *testing.T) {
+func TestGasKVStoreIterator(t *testing.T) {
 	mem := dbStoreAdapter{dbm.NewMemDB()}
 	meter := sdk.NewGasMeter(1000)
 	st := NewGasKVStore(meter, sdk.DefaultKVGasConfig(), mem)
@@ -52,14 +52,14 @@ func TestKVGasKVStoreIterator(t *testing.T) {
 	require.Equal(t, meter.GasConsumed(), sdk.Gas(384))
 }
 
-func TestKVGasKVStoreOutOfGasSet(t *testing.T) {
+func TestGasKVStoreOutOfGasSet(t *testing.T) {
 	mem := dbStoreAdapter{dbm.NewMemDB()}
 	meter := sdk.NewGasMeter(0)
 	st := NewGasKVStore(meter, sdk.DefaultKVGasConfig(), mem)
 	require.Panics(t, func() { st.Set(keyFmt(1), valFmt(1)) }, "Expected out-of-gas")
 }
 
-func TestKVGasKVStoreOutOfGasIterator(t *testing.T) {
+func TestGasKVStoreOutOfGasIterator(t *testing.T) {
 	mem := dbStoreAdapter{dbm.NewMemDB()}
 	meter := sdk.NewGasMeter(200)
 	st := NewGasKVStore(meter, sdk.DefaultKVGasConfig(), mem)
@@ -69,7 +69,7 @@ func TestKVGasKVStoreOutOfGasIterator(t *testing.T) {
 	require.Panics(t, func() { iterator.Value() }, "Expected out-of-gas")
 }
 
-func testKVGasKVStoreWrap(t *testing.T, store KVStore) {
+func testGasKVStoreWrap(t *testing.T, store KVStore) {
 	meter := sdk.NewGasMeter(10000)
 
 	store = store.Gas(meter, sdk.GasConfig{HasCost: 10})
@@ -84,22 +84,22 @@ func testKVGasKVStoreWrap(t *testing.T, store KVStore) {
 	require.Equal(t, int64(40), meter.GasConsumed())
 }
 
-func TestKVGasKVStoreWrap(t *testing.T) {
+func TestGasKVStoreWrap(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newTree(t, db)
 	iavl := newIAVLStore(tree, numRecent, storeEvery)
-	testKVGasKVStoreWrap(t, iavl)
+	testGasKVStoreWrap(t, iavl)
 
 	st := NewCacheKVStore(iavl)
-	testKVGasKVStoreWrap(t, st)
+	testGasKVStoreWrap(t, st)
 
 	pref := st.Prefix([]byte("prefix"))
-	testKVGasKVStoreWrap(t, pref)
+	testGasKVStoreWrap(t, pref)
 
 	dsa := dbStoreAdapter{dbm.NewMemDB()}
-	testKVGasKVStoreWrap(t, dsa)
+	testGasKVStoreWrap(t, dsa)
 
 	ts := newTransientStore()
-	testKVGasKVStoreWrap(t, ts)
+	testGasKVStoreWrap(t, ts)
 
 }

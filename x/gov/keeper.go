@@ -42,8 +42,8 @@ type Keeper struct {
 	// The codec codec for binary encoding/decoding.
 	cdc *codec.Codec
 
-	// Reserved codestore
-	codestore sdk.CodespaceType
+	// Reserved codespace
+	codespace sdk.CodespaceType
 }
 
 // NewKeeper returns a governance keeper. It handles:
@@ -51,7 +51,7 @@ type Keeper struct {
 // - depositing funds into proposals, and activating upon sufficient funds being deposited
 // - users voting on proposals, with weight proportional to stake in the system
 // - and tallying the result of the vote.
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, pk params.Keeper, ps params.Store, ck bank.Keeper, ds sdk.DelegationSet, codestore sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, pk params.Keeper, ps params.Store, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
 		storeKey:  key,
 		pk:        pk,
@@ -60,7 +60,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, pk params.Keeper, ps params.S
 		ds:        ds,
 		vs:        ds.GetValidatorSet(),
 		cdc:       cdc,
-		codestore: codestore,
+		codespace: codespace,
 	}
 }
 
@@ -164,7 +164,7 @@ func (keeper Keeper) setInitialProposalID(ctx sdk.Context, proposalID int64) sdk
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyNextProposalID)
 	if bz != nil {
-		return ErrInvalidGenesis(keeper.codestore, "Initial ProposalID already set")
+		return ErrInvalidGenesis(keeper.codespace, "Initial ProposalID already set")
 	}
 	bz = keeper.cdc.MustMarshalBinary(proposalID)
 	store.Set(KeyNextProposalID, bz)
@@ -186,7 +186,7 @@ func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID int64, err sd
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyNextProposalID)
 	if bz == nil {
-		return -1, ErrInvalidGenesis(keeper.codestore, "InitialProposalID never set")
+		return -1, ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
 	}
 	keeper.cdc.MustUnmarshalBinary(bz, &proposalID)
 	bz = keeper.cdc.MustMarshalBinary(proposalID + 1)
@@ -199,7 +199,7 @@ func (keeper Keeper) peekCurrentProposalID(ctx sdk.Context) (proposalID int64, e
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyNextProposalID)
 	if bz == nil {
-		return -1, ErrInvalidGenesis(keeper.codestore, "InitialProposalID never set")
+		return -1, ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
 	}
 	keeper.cdc.MustUnmarshalBinary(bz, &proposalID)
 	return proposalID, nil
@@ -261,14 +261,14 @@ func (keeper Keeper) setTallyingProcedure(ctx sdk.Context, tallyingProcedure Tal
 func (keeper Keeper) AddVote(ctx sdk.Context, proposalID int64, voterAddr sdk.AccAddress, option VoteOption) sdk.Error {
 	proposal := keeper.GetProposal(ctx, proposalID)
 	if proposal == nil {
-		return ErrUnknownProposal(keeper.codestore, proposalID)
+		return ErrUnknownProposal(keeper.codespace, proposalID)
 	}
 	if proposal.GetStatus() != StatusVotingPeriod {
-		return ErrInactiveProposal(keeper.codestore, proposalID)
+		return ErrInactiveProposal(keeper.codespace, proposalID)
 	}
 
 	if !validVoteOption(option) {
-		return ErrInvalidVote(keeper.codestore, option)
+		return ErrInvalidVote(keeper.codespace, option)
 	}
 
 	vote := Vote{
@@ -337,12 +337,12 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 	// Checks to see if proposal exists
 	proposal := keeper.GetProposal(ctx, proposalID)
 	if proposal == nil {
-		return ErrUnknownProposal(keeper.codestore, proposalID), false
+		return ErrUnknownProposal(keeper.codespace, proposalID), false
 	}
 
 	// Check if proposal is still depositable
 	if (proposal.GetStatus() != StatusDepositPeriod) && (proposal.GetStatus() != StatusVotingPeriod) {
-		return ErrAlreadyFinishedProposal(keeper.codestore, proposalID), false
+		return ErrAlreadyFinishedProposal(keeper.codespace, proposalID), false
 	}
 
 	// Subtract coins from depositer's account

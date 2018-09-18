@@ -22,25 +22,24 @@ func (k Keeper) onValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddre
 	k.addOrUpdateValidatorSlashingPeriod(ctx, slashingPeriod)
 }
 
-// Wrapper struct for sdk.ValidatorHooks
-type ValidatorHooks struct {
+//_________________________________________________________________________________________
+
+// Wrapper struct
+type Hooks struct {
 	k Keeper
 }
 
-// Assert implementation
-var _ sdk.ValidatorHooks = ValidatorHooks{}
-
-// Return a sdk.ValidatorHooks interface over the wrapper struct
-func (k Keeper) ValidatorHooks() sdk.ValidatorHooks {
-	return ValidatorHooks{k}
+// Return the wrapper struct
+func (k Keeper) Hooks() Hooks {
+	return Hooks{k}
 }
 
 // Implements sdk.ValidatorHooks
-func (v ValidatorHooks) OnValidatorBonded(ctx sdk.Context, address sdk.ConsAddress) {
-	v.k.onValidatorBonded(ctx, address)
+func (h Hooks) OnValidatorBonded(ctx sdk.Context, address sdk.ConsAddress) {
+	h.k.onValidatorBonded(ctx, address)
 }
 
 // Implements sdk.ValidatorHooks
-func (v ValidatorHooks) OnValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddress) {
-	v.k.onValidatorBeginUnbonding(ctx, address)
+func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddress) {
+	h.k.onValidatorBeginUnbonding(ctx, address)
 }

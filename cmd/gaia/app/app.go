@@ -96,16 +96,18 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		auth.ProtoBaseAccount, // prototype
 	)
 
-	// add handlers and hooks
+	// add handlers
 	app.bankKeeper = bank.NewBaseKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams)
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.tkeyStake, app.bankKeeper, app.RegisterCodespace(stake.DefaultCodespace))
 	app.distrKeeper = distr.NewKeeper(app.cdc, app.keyDistr, app.tkeyStake, app.bankKeeper, app.RegisterCodespace(stake.DefaultCodespace))
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.paramsKeeper.Getter(), app.RegisterCodespace(slashing.DefaultCodespace))
-	app.stakeKeeper = app.stakeKeeper.WithValidatorHooks(app.slashingKeeper.ValidatorHooks())
 	app.govKeeper = gov.NewKeeper(app.cdc, app.keyGov, app.paramsKeeper.Setter(), app.bankKeeper, app.stakeKeeper, app.RegisterCodespace(gov.DefaultCodespace))
 	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(app.cdc, app.keyFeeCollection)
+
+	// register the staking hooks
+	app.stakeKeeper = app.stakeKeeper.WithValidatorHooks(NewHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()))
 
 	// register message routes
 	app.Router().
@@ -249,10 +251,14 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 
 //______________________________________________________________________________________________
 
-// Combine Staking Hooks
+// Combined Staking Hooks
 type Hooks struct {
 	dh distr.Hooks
-	sh slashing.Hooks
+	sh slashing.ValidatorHooks
+}
+
+func NewHooks(dh distr.Hooks, sh slashing.ValidatorHooks) Hooks {
+	return Hooks{dh, sh}
 }
 
 var _ sdk.StakingHooks = Hooks{}

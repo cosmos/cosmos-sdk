@@ -669,6 +669,11 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 // remove the validator record and associated indexes
 func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 
+	// call the hook if present
+	if k.validatorHooks != nil {
+		k.validatorHooks.OnValidatorRemoved(ctx, validator.OperatorAddr)
+	}
+
 	// first retrieve the old validator record
 	validator, found := k.GetValidator(ctx, address)
 	if !found {
@@ -727,4 +732,39 @@ func ensureValidatorFound(found bool, ownerAddr []byte) {
 	if !found {
 		panic(fmt.Sprintf("validator record not found for address: %X\n", ownerAddr))
 	}
+}
+
+//__________________________________________________________________________
+
+// get a single validator
+func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, addr sdk.ValAddress, newCommission sdk.Dec) sdk.Error {
+	store := ctx.KVStore(k.storeKey)
+
+	// call the hook if present
+	if k.validatorHooks != nil {
+		k.validatorHooks.OnValidatorCommissionChange(ctx, validator.OperatorAddr)
+	}
+
+	validator, found := k.GetValidator(addr)
+
+	// check for errors
+	switch {
+	case !found:
+		return types.ErrNoValidatorFound(k.Codespace())
+	case newCommission.LT(sdk.ZeroDec()):
+		return types.ErrCommissionNegative(k.Codespace())
+	case newCommission.GT(sdk.OnedDec()):
+		return types.ErrCommissionHuge(k.Codespace())
+	case newCommission.GT(validator.CommissionMax):
+		return types.ErrCommissionBeyondMax(k.Codespace())
+		//case rateChange(Commission) > CommissionMaxChange:    // XXX XXX XXX TODO implementation
+		//return types.ErrCommissionPastRate(k.Codespace())
+	}
+
+	// TODO adjust all the commission terms appropriately
+
+	validator.Commission = newCommission
+
+	k.SetValidator(addr, validator)
+	return nil
 }

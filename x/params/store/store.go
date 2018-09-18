@@ -30,12 +30,12 @@ func NewStore(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, space strin
 
 // Returns a KVStore identical with ctx,TransientStore(s.key).Prefix()
 func (s Store) kvStore(ctx sdk.Context) sdk.KVStore {
-	return ctx.KVStore(s.key).Prefix(append([]byte(s.space), '/'))
+	return ctx.KVStore(s.key).Prefix(append(s.space, '/'))
 }
 
 // Returns a KVStore identical with ctx.TransientStore(s.tkey).Prefix()
 func (s Store) transientStore(ctx sdk.Context) sdk.KVStore {
-	return ctx.TransientStore(s.tkey).Prefix(append([]byte(s.space), '/'))
+	return ctx.TransientStore(s.tkey).Prefix(append(s.space, '/'))
 }
 
 // Get parameter from store

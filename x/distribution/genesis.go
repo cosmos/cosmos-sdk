@@ -1,8 +1,6 @@
 package distribution
 
 import (
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
@@ -13,7 +11,7 @@ import (
 // addition, it also sets any delegations found in data. Finally, it updates
 // the bonded validators.
 // Returns final validator set after applying all declaration and delegations
-func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res []abci.Validator, err error) {
+func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	keeper.SetFeePool(ctx, data.FeePool)
 
 	for _, vdi := range data.ValidatorDistInfos {
@@ -25,8 +23,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	for _, dw := range data.DelegatorWithdrawAddrs {
 		keeper.SetDelegatorWithdrawAddr(ctx, dw.DelegatorAddr, dw.WithdrawAddr)
 	}
-
-	return
 }
 
 // WriteGenesis returns a GenesisState for a given context and keeper. The

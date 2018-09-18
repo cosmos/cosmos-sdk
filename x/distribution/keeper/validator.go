@@ -35,12 +35,13 @@ func (k Keeper) RemoveValidatorDistInfo(ctx sdk.Context, valAddr sdk.ValAddress)
 
 // withdrawal all the validator rewards including the commission
 func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context,
-	operatorAddr sdk.ValAddress, withdrawAddr sdk.AccAddress) {
+	operatorAddr sdk.ValAddress) {
 
 	// withdraw self-delegation
 	height := ctx.BlockHeight()
 	validator := k.GetValidator(ctx, operatorAddr)
-	withdraw := k.GetDelegatorRewardsAll(ctx, validator.OperatorAddr, height)
+	accAddr := sdk.AccAddress{operatorAddr.Bytes()}
+	withdraw := k.GetDelegatorRewardsAll(ctx, accAddr, height)
 
 	// withdrawal validator commission rewards
 	pool := k.stakeKeeper.GetPool(ctx)
@@ -51,5 +52,6 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context,
 	withdraw = withdraw.Add(commission)
 	k.SetFeePool(feePool)
 
+	withdrawAddr := k.GetDelegatorWithdrawAddr(accAddr)
 	k.coinKeeper.AddCoins(withdrawAddr, withdraw.TruncateDecimal())
 }

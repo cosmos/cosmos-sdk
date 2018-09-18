@@ -10,11 +10,11 @@ import (
 
 // keeper of the stake store
 type Keeper struct {
-	storeKey       sdk.StoreKey
-	storeTKey      sdk.StoreKey
-	cdc            *codec.Codec
-	bankKeeper     bank.Keeper
-	validatorHooks sdk.ValidatorHooks
+	storeKey   sdk.StoreKey
+	storeTKey  sdk.StoreKey
+	cdc        *codec.Codec
+	bankKeeper bank.Keeper
+	hooks      sdk.StakingHooks
 
 	// codespace
 	codespace sdk.CodespaceType
@@ -33,11 +33,11 @@ func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, codespa
 }
 
 // Set the validator hooks
-func (k Keeper) WithValidatorHooks(v sdk.ValidatorHooks) Keeper {
-	if k.validatorHooks != nil {
+func (k Keeper) WithHooks(sh sdk.StakingHooks) Keeper {
+	if k.stakingHooks != nil {
 		panic("cannot set validator hooks twice")
 	}
-	k.validatorHooks = v
+	k.validatorHooks = sh
 	return k
 }
 

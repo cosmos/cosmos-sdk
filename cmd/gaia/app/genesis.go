@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	distr "github.com/cosmos/cosmos-sdk/x/stake"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 
 	"github.com/spf13/pflag"
@@ -34,6 +35,7 @@ var (
 type GenesisState struct {
 	Accounts  []GenesisAccount   `json:"accounts"`
 	StakeData stake.GenesisState `json:"stake"`
+	DistrData distr.GenesisState `json:"distr_data"`
 	GovData   gov.GenesisState   `json:"gov"`
 }
 
@@ -194,6 +196,7 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 	genesisState = GenesisState{
 		Accounts:  genaccs,
 		StakeData: stakeData,
+		DistrData: distr.DefaultGenesisState(),
 		GovData:   gov.DefaultGenesisState(),
 	}
 	return

@@ -1,6 +1,9 @@
 package distribution
 
-import "github.com/cosmos/cosmos-sdk/x/distribution/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+)
 
 /*
 ## Create or modify delegation distribution
@@ -43,15 +46,9 @@ func (k Keeper) onValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
 	k.SetValidatorDistInfo(ctx, vdi)
 }
 
-// Withdrawal all distubution rewards // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX XXX
-func (k Keeper) onValidatorBondModified(ctx sdk.Context, addr sdk.ValAddress) {
-	slashingPeriod := ValidatorSlashingPeriod{
-		ValidatorAddr: address,
-		StartHeight:   ctx.BlockHeight(),
-		EndHeight:     0,
-		SlashedSoFar:  sdk.ZeroDec(),
-	}
-	k.addOrUpdateValidatorSlashingPeriod(ctx, slashingPeriod)
+// Withdrawal all validator rewards
+func (k Keeper) onValidatorCommissionChange(ctx sdk.Context, addr sdk.ValAddress) {
+	k.WithdrawValidatorRewardsAll(ctx, addr)
 }
 
 // Withdrawal all validator distribution rewards and cleanup the distribution record
@@ -61,60 +58,56 @@ func (k Keeper) onValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {
 
 //_________________________________________________________________________________________
 
-// Create a new validator distribution record
-func (k Keeper) onDelegationCreated(ctx sdk.Context, address sdk.ConsAddress) {
-	slashingPeriod := ValidatorSlashingPeriod{
-		ValidatorAddr: address,
-		StartHeight:   ctx.BlockHeight(),
-		EndHeight:     0,
-		SlashedSoFar:  sdk.ZeroDec(),
+// Create a new delegator distribution record
+func (k Keeper) onDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress,
+	valAddr sdk.ValAddress) {
+
+	ddi := types.DelegatorDistInfo{
+		DelegatorAddr:    delAddr,
+		ValOperatorAddr:  valAddr,
+		WithdrawalHeight: ctx.BlockHeight(),
 	}
-	k.addOrUpdateValidatorSlashingPeriod(ctx, slashingPeriod)
+	k.SetDelegatorDistInfo(ctx, ddi)
+}
+
+// Withdrawal all validator rewards
+func (k Keeper) onDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress,
+	valAddr sdk.ValAddress) {
+
+	k.WithdrawDelegationReward(ctx, delAddr, valAddr)
+}
+
+// Withdrawal all validator distribution rewards and cleanup the distribution record
+func (k Keeper) onDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress,
+	valAddr sdk.ValAddress) {
+
+	k.RemoveDelegatorDistInfo(ctx, delAddr, valAddr)
 }
 
 //_________________________________________________________________________________________
 
-// Wrapper struct for sdk.ValidatorHooks
-type ValidatorHooks struct {
+// Wrapper struct
+type Hooks struct {
 	k Keeper
 }
-
-var _ sdk.ValidatorHooks = ValidatorHooks{}
 
 // nolint
 func (k Keeper) ValidatorHooks() sdk.ValidatorHooks { return ValidatorHooks{k} }
-func (v ValidatorHooks) OnValidatorCreated(ctx sdk.Context, addr sdk.VlAddress) {
-	v.k.OnValidatorCreated(ctx, address)
+func (h Hooks) OnValidatorCreated(ctx sdk.Context, addr sdk.VlAddress) {
+	v.k.onValidatorCreated(ctx, address)
 }
-func (v ValidatorHooks) OnValidatorBondModified(ctx sdk.Context, addr sdk.ValAddress) {
-	v.k.OnValidatorBondModified(ctx, address)
+func (h Hooks) OnValidatorCommissionChange(ctx sdk.Context, addr sdk.ValAddress) {
+	v.k.onValidatorCommissionChange(ctx, address)
 }
-func (v ValidatorHooks) OnValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {
-	v.k.OnValidatorRemoved(ctx, address)
+func (h Hooks) OnValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {
+	v.k.onValidatorRemoved(ctx, address)
 }
-func (v ValidatorHooks) OnValidatorBonded(_ sdk.Context, _ sdk.ConsAddress)      {}
-func (v ValidatorHooks) OnValidatorBeginBonded(_ sdk.Context, _ sdk.ConsAddress) {}
-
-//_________________________________________________________________________________________
-
-// Wrapper struct for sdk.DelegationHooks
-type DelegationHooks struct {
-	k Keeper
+func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	h.k.onDelegationCreated(ctx, delAddr, valAddr)
 }
-
-var _ sdk.DelegationHooks = DelegationHooks{}
-
-// nolint
-func (k Keeper) DelegationHooks() sdk.DelegationHooks { return DelegationHooks{k} }
-func (d DelegationHooks) OnDelegatoinCreated(ctx sdk.Context,
-	delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	d.k.OnDelegatoinCreated(ctx, address)
+func (h Hooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	d.k.onDelegationSharesModified(ctx, delAddr, valAddr)
 }
-func (d DelegationHooks) OnDelegationSharesModified(ctx sdk.Context,
-	delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	d.k.OnDelegationSharesModified(ctx, address)
-}
-func (d DelegationHooks) OnDelegationRemoved(ctx sdk.Context,
-	delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	d.k.OnDelegationRemoved(ctx, address)
+func (h Hooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	h.k.onDelegationRemoved(ctx, delAddr, valAddr)
 }

@@ -96,7 +96,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		auth.ProtoBaseAccount, // prototype
 	)
 
-	// add handlers
+	// add handlers and hooks
 	app.bankKeeper = bank.NewBaseKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams)
@@ -208,6 +208,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.StakeData)
 
 	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
+	distr.InitGenesis(ctx, app.distrKeeper, genesisState.DistrData)
 	err = GaiaValidateGenesisState(genesisState)
 	if err != nil {
 		// TODO find a way to do this w/o panics
@@ -235,6 +236,7 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 	genState := GenesisState{
 		Accounts:  accounts,
 		StakeData: stake.WriteGenesis(ctx, app.stakeKeeper),
+		DistrData: distr.WriteGenesis(ctx, app.distrKeeper),
 		GovData:   gov.WriteGenesis(ctx, app.govKeeper),
 	}
 	appState, err = codec.MarshalJSONIndent(app.cdc, genState)
@@ -243,4 +245,40 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 	}
 	validators = stake.WriteValidators(ctx, app.stakeKeeper)
 	return appState, validators, nil
+}
+
+//______________________________________________________________________________________________
+
+// Combine Staking Hooks
+type Hooks struct {
+	dh distr.Hooks
+	sh slashing.Hooks
+}
+
+var _ sdk.StakingHooks = Hooks{}
+
+// nolint
+func (h Hooks) OnValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
+	h.dh.OnValidatorCreated(ctx, addr)
+}
+func (h Hooks) OnValidatorCommissionChange(ctx sdk.Context, addr sdk.ValAddress) {
+	h.dh.OnValidatorCommissionChange(ctx, addr)
+}
+func (h Hooks) OnValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {
+	h.dh.OnValidatorRemoved(ctx, addr)
+}
+func (h Hooks) OnValidatorBonded(ctx sdk.Context, addr sdk.ConsAddress) {
+	h.sh.OnValidatorBonded(ctx, addr)
+}
+func (h Hooks) OnValidatorBeginBonded(ctx sdk.Context, addr sdk.ConsAddress) {
+	h.sh.OnValidatorBeginBonding(ctx, addr)
+}
+func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	h.dh.OnDelegationCreated(ctx, delAddr, valAddr)
+}
+func (h Hooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	h.dh.OnDelegationSharesModified(ctx, delAddr, valAddr)
+}
+func (h Hooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	h.dh.OnDelegationRemoved(ctx, delAddr, valAddr)
 }

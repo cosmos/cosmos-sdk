@@ -140,9 +140,8 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 		// Run queued operations. Ignores blocksize if blocksize is too small
 		numQueuedOpsRan := runQueuedOperations(operationQueue, int(header.Height), tb, r, app, ctx, keys, logWriter, displayLogs, event)
-		thisBlockSize -= numQueuedOpsRan
 		numQueuedTimeOpsRan := runQueuedTimeOperations(timeOperationQueue, header.Time, tb, r, app, ctx, keys, logWriter, displayLogs, event)
-		thisBlockSize -= numQueuedTimeOpsRan
+		thisBlockSize = thisBlockSize - numQueuedOpsRan - numQueuedTimeOpsRan
 		operations := blockSimulator(thisBlockSize, r, app, ctx, keys, header, logWriter)
 		opCount += operations + numQueuedOpsRan + numQueuedTimeOpsRan
 
@@ -254,6 +253,7 @@ func queueOperations(queuedOperations map[int][]Operation, queuedTimeOperations 
 				queuedOperations[futureOp.BlockHeight] = []Operation{futureOp.Op}
 			}
 		} else {
+			// TODO: Replace with proper sorted data structure, so don't have the copy entire slice
 			index := sort.Search(len(queuedTimeOperations), func(i int) bool { return queuedTimeOperations[i].BlockTime.After(futureOp.BlockTime) })
 			queuedTimeOperations = append(queuedTimeOperations, FutureOperation{})
 			copy(queuedTimeOperations[index+1:], queuedTimeOperations[index:])
@@ -284,7 +284,6 @@ func runQueuedOperations(queueOperations map[int][]Operation, height int, tb tes
 	return 0
 }
 
-// nolint: errcheck
 func runQueuedTimeOperations(queueOperations []FutureOperation, currentTime time.Time, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 	privKeys []crypto.PrivKey, logWriter func(string), displayLogs func(), event func(string)) (numOpsRan int) {
 

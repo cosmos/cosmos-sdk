@@ -8,6 +8,13 @@ type TotalAccum struct {
 	Accum        sdk.Dec `json:"accum"`
 }
 
+func NewTotalAccum(height int64) TotalAccum {
+	return TotalAccum{
+		UpdateHeight: height,
+		Accum:        sdk.ZeroDec(),
+	}
+}
+
 // update total validator accumulation factor
 func (ta TotalAccum) Update(height int64, accumCreatedPerBlock sdk.Dec) TotalAccum {
 	blocks := height - ta.UpdateHeight
@@ -29,4 +36,13 @@ type FeePool struct {
 func (f FeePool) UpdateTotalValAccum(height int64, totalBondedTokens Dec) FeePool {
 	f.ValAccum = f.ValAccum.Update(height, totalBondedTokens)
 	return f
+}
+
+// zero fee pool
+func InitialFeePool() FeePool {
+	return FeePool{
+		ValAccum:      NewwTotalAccum(0),
+		Pool:          DecCoins{},
+		CommunityPool: DecCoins{},
+	}
 }

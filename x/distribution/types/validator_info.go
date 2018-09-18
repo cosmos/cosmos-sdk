@@ -4,13 +4,13 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 
 // distribution info for a particular validator
 type ValidatorDistInfo struct {
-	OperatorAddr sdk.ValAddress
+	OperatorAddr sdk.ValAddress `json:"operator_addr"`
 
-	GlobalWithdrawalHeight int64    // last height this validator withdrew from the global pool
-	Pool                   DecCoins // rewards owed to delegators, commission has already been charged (includes proposer reward)
-	PoolCommission         DecCoins // commission collected by this validator (pending withdrawal)
+	GlobalWithdrawalHeight int64    `json:"global_withdrawal_height"` // last height this validator withdrew from the global pool
+	Pool                   DecCoins `json:"pool"`                     // rewards owed to delegators, commission has already been charged (includes proposer reward)
+	PoolCommission         DecCoins `json:"pool_commission"`          // commission collected by this validator (pending withdrawal)
 
-	DelAccum TotalAccum `json:"dek_accum"` // total proposer pool accumulation factor held by delegators
+	DelAccum TotalAccum `json:"del_accum"` // total proposer pool accumulation factor held by delegators
 }
 
 // update total delegator accumululation

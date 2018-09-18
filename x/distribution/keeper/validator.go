@@ -27,7 +27,13 @@ func (k Keeper) SetValidatorDistInfo(ctx sdk.Context, vdi types.ValidatorDistInf
 	store.Set(GetValidatorDistInfoKey(ctx, vdi.OperatorAddr), b)
 }
 
-// XXX TODO
+// remove a validator distribution info
+func (k Keeper) RemoveValidatorDistInfo(ctx sdk.Context, valAddr sdk.ValAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(GetValidatorDistInfoKey(ctx, vdi.OperatorAddr))
+}
+
+// withdrawal all the validator rewards including the commission
 func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context,
 	operatorAddr sdk.ValAddress, withdrawAddr sdk.AccAddress) {
 

@@ -4,9 +4,9 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 
 // distribution info for a delegation
 type DelegatorDistInfo struct {
-	DelegatorAddr    sdk.AccAddress
-	ValOperatorAddr  sdk.ValAddress
-	WithdrawalHeight int64 // last time this delegation withdrew rewards
+	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`
+	ValOperatorAddr  sdk.ValAddress `json:"val_operator_addr"`
+	WithdrawalHeight int64          `json:"withdrawal_height"` // last time this delegation withdrew rewards
 }
 
 // withdraw rewards from delegator
@@ -26,4 +26,12 @@ func (di DelegatorDistInfo) WithdrawRewards(g Global, vi ValidatorDistInfo,
 	vi.TotalDelAccum = vi.TotalDelAccum.sub(accum)
 
 	return di, g, withdrawalTokens
+}
+
+//_____________________________________________________________________
+
+// withdraw address for the delegation rewards
+type DelegatorWithdrawInfo struct {
+	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
+	WithdrawAddr  sdk.AccAddress `json:"withdraw_addr"`
 }

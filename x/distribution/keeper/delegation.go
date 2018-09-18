@@ -27,11 +27,44 @@ func (k Keeper) SetDelegatorDistInfo(ctx sdk.Context, ddi types.DelegatorDistInf
 	store.Set(GetDelegationDistInfoKey(ddi.DelegatorAddr, ddi.ValOperatorAddr), b)
 }
 
+// remove a delegator distribution info
+func (k Keeper) RemoveDelegatorDistInfo(ctx sdk.Context, delAddr sdk.AccAddress,
+	valOperatorAddr sdk.ValAddress) {
+
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(GetDelegationDistInfoKey(DelegatorAddr, ValOperatorAddr))
+}
+
+//___________________________________________________________________________________________
+
+// get the delegator withdraw address, return the delegator address if not set
+func (k Keeper) GetDelegatorWithdrawAddr(ctx sdk.Context, delAddr sdk.AccAddress) sdk.AccAddress {
+	store := ctx.KVStore(k.storeKey)
+
+	b := store.Get(GetDelegatorWithdrawAddrKey(delAddr))
+	if b == nil {
+		return delAddr
+	}
+	return sdk.AccAddress{b}
+}
+
+// set the delegator withdraw address
+func (k Keeper) SetDelegatorWithdrawAddr(ctx sdk.Context, delAddr, withdrawAddr sdk.AccAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(GetDelegatorWithdrawAddrKey(ddi.DelegatorAddr), withdrawAddr.Bytes())
+}
+
+// remove a delegator withdraw info
+func (k Keeper) RemoveDelegatorWithdrawAddr(ctx sdk.Context, delAddr, withdrawAddr sdk.AccAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(GetDelegatorWithdrawAddrKey(delAddr))
+}
+
 //___________________________________________________________________________________________
 
 // withdraw all the rewards for a single delegation
-func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr,
-	withdrawAddr sdk.AccAddress, validatorAddr sdk.ValAddress) {
+func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccAddress,
+	validatorAddr sdk.ValAddress) {
 
 	height := ctx.BlockHeight()
 	pool := k.sk.GetPool(ctx)
@@ -44,15 +77,17 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr,
 		validator.Tokens, validator.DelegatorShares, validator.Commission)
 
 	k.SetFeePool(ctx, feePool)
+	withdrawAddr := k.GetDelegatorWithdrawAddr(delegatorAddr)
 	k.ck.AddCoins(ctx, withdrawAddr, withdraw.TruncateDecimal())
 }
 
-///////////////////////////////////////////////////////////////////////////////////////
+//___________________________________________________________________________________________
 
 // return all rewards for all delegations of a delegator
-func (k Keeper) WithdrawDelegationRewardsAll(ctx sdk.Context, delegatorAddr, withdrawAddr sdk.AccAddress) {
+func (k Keeper) WithdrawDelegationRewardsAll(ctx sdk.Context, delegatorAddr sdk.AccAddress) {
 	height := ctx.BlockHeight()
-	withdraw = GetDelegatorRewardsAll(ctx, delegatorAddr, height)
+	withdraw = k.GetDelegatorRewardsAll(ctx, delegatorAddr, height)
+	withdrawAddr := k.GetDelegatorWithdrawAddr(delegatorAddr)
 	k.coinsKeeper.AddCoins(withdrawAddr, withdraw.Amount.TruncateDecimal())
 }
 

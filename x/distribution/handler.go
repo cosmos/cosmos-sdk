@@ -1,1 +1,1 @@
-package stake
+package distribution

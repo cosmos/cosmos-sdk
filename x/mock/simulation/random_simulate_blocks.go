@@ -98,13 +98,14 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	request := RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastSigningValidators, event, header)
 	// These are operations which have been queued by previous operations
 	operationQueue := make(map[int][]Operation)
+	timeOperationQueue := []FutureTimeOperation{}
 	var blockLogBuilders []*strings.Builder
 
 	if testingMode {
 		blockLogBuilders = make([]*strings.Builder, numBlocks)
 	}
 	displayLogs := logPrinter(testingMode, blockLogBuilders)
-	blockSimulator := createBlockSimulator(testingMode, tb, t, event, invariants, ops, operationQueue, numBlocks, displayLogs)
+	blockSimulator := createBlockSimulator(testingMode, tb, t, event, invariants, ops, operationQueue, timeOperationQueue, numBlocks, displayLogs)
 	if !testingMode {
 		b.ResetTimer()
 	} else {
@@ -140,8 +141,10 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		// Run queued operations. Ignores blocksize if blocksize is too small
 		numQueuedOpsRan := runQueuedOperations(operationQueue, int(header.Height), tb, r, app, ctx, keys, logWriter, displayLogs, event)
 		thisBlockSize -= numQueuedOpsRan
+		numQueuedTimeOpsRan := runQueuedTimeOperations(timeOperationQueue, header.Time, tb, r, app, ctx, keys, logWriter, displayLogs, event)
+		thisBlockSize -= numQueuedTimeOpsRan
 		operations := blockSimulator(thisBlockSize, r, app, ctx, keys, header, logWriter)
-		opCount += operations + numQueuedOpsRan
+		opCount += operations + numQueuedOpsRan + numQueuedTimeOpsRan
 
 		res := app.EndBlock(abci.RequestEndBlock{})
 		header.Height++
@@ -173,7 +176,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 // Returns a function to simulate blocks. Written like this to avoid constant parameters being passed everytime, to minimize
 // memory overhead
-func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event func(string), invariants []Invariant, ops []WeightedOperation, operationQueue map[int][]Operation, totalNumBlocks int, displayLogs func()) func(
+func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event func(string), invariants []Invariant, ops []WeightedOperation, operationQueue map[int][]Operation, timeOperationQueue []FutureTimeOperation, totalNumBlocks int, displayLogs func()) func(
 	blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, privKeys []crypto.PrivKey, header abci.Header, logWriter func(string)) (opCount int) {
 	totalOpWeight := 0
 	for i := 0; i < len(ops); i++ {
@@ -193,7 +196,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event f
 	return func(blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		keys []crypto.PrivKey, header abci.Header, logWriter func(string)) (opCount int) {
 		for j := 0; j < blocksize; j++ {
-			logUpdate, futureOps, err := selectOp(r)(r, app, ctx, keys, event)
+			logUpdate, futureOps, futureTimeOps, err := selectOp(r)(r, app, ctx, keys, event)
 			if err != nil {
 				displayLogs()
 				tb.Fatalf("error on operation %d within block %d, %v", header.Height, opCount, err)
@@ -201,6 +204,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event f
 			logWriter(logUpdate)
 
 			queueOperations(operationQueue, futureOps)
+			queueTimeOperations(timeOperationQueue, futureTimeOps)
 			if testingMode {
 				if onOperation {
 					assertAllInvariants(t, app, invariants, displayLogs)
@@ -238,7 +242,7 @@ func getBlockSize(r *rand.Rand, blockSize int) int {
 	}
 }
 
-// adds all future operations into the operation queue.
+// adds all future Height based operations into the operation queue.
 func queueOperations(queuedOperations map[int][]Operation, futureOperations []FutureOperation) {
 	if futureOperations == nil {
 		return
@@ -261,7 +265,7 @@ func runQueuedOperations(queueOperations map[int][]Operation, height int, tb tes
 			// For now, queued operations cannot queue more operations.
 			// If a need arises for us to support queued messages to queue more messages, this can
 			// be changed.
-			logUpdate, _, err := queuedOps[i](r, app, ctx, privKeys, event)
+			logUpdate, _, _, err := queuedOps[i](r, app, ctx, privKeys, event)
 			logWriter(logUpdate)
 			if err != nil {
 				displayLogs()
@@ -272,6 +276,40 @@ func runQueuedOperations(queueOperations map[int][]Operation, height int, tb tes
 		return numOps
 	}
 	return 0
+}
+
+// adds all future Time-based operations into the operation queue.
+func queueTimeOperations(queuedTimeOperations []FutureTimeOperation, futureTimeOperations []FutureTimeOperation) {
+	if queuedTimeOperations == nil {
+		return
+	}
+	for _, futureOp := range futureTimeOperations {
+		index := sort.Search(len(queuedTimeOperations), func(i int) bool { return queuedTimeOperations[i].BlockTime.After(futureOp.BlockTime) })
+		queuedTimeOperations = append(queuedTimeOperations, FutureTimeOperation{})
+		copy(queuedTimeOperations[index+1:], queuedTimeOperations[index:])
+		queuedTimeOperations[index] = futureOp
+	}
+}
+
+// nolint: errcheck
+func runQueuedTimeOperations(queueOperations []FutureTimeOperation, currentTime time.Time, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+	privKeys []crypto.PrivKey, logWriter func(string), displayLogs func(), event func(string)) (numOpsRan int) {
+
+	numOpsRan = 0
+	for len(queueOperations) > 0 && currentTime.After(queueOperations[0].BlockTime) {
+		// For now, queued operations cannot queue more operations.
+		// If a need arises for us to support queued messages to queue more messages, this can
+		// be changed.
+		logUpdate, _, _, err := queueOperations[0].Op(r, app, ctx, privKeys, event)
+		logWriter(logUpdate)
+		if err != nil {
+			displayLogs()
+			tb.FailNow()
+		}
+		queueOperations = queueOperations[1:]
+		numOpsRan++
+	}
+	return numOpsRan
 }
 
 func getKeys(validators map[string]mockValidator) []string {

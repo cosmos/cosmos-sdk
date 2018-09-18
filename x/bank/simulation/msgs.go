@@ -18,7 +18,7 @@ import (
 // SimulateSingleInputMsgSend tests and runs a single msg send, with one input and one output, where both
 // accounts already exist.
 func SimulateSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOps []simulation.FutureOperation, fTOps []simulation.FutureTimeOperation, err error) {
 		fromKey := simulation.RandomKey(r, keys)
 		fromAddr := sdk.AccAddress(fromKey.PubKey().Address())
 		toKey := simulation.RandomKey(r, keys)
@@ -33,13 +33,13 @@ func SimulateSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation 
 		initFromCoins := mapper.GetAccount(ctx, fromAddr).GetCoins()
 
 		if len(initFromCoins) == 0 {
-			return "skipping, no coins at all", nil, nil
+			return "skipping, no coins at all", nil, nil, nil
 		}
 
 		denomIndex := r.Intn(len(initFromCoins))
 		amt, goErr := randPositiveInt(r, initFromCoins[denomIndex].Amount)
 		if goErr != nil {
-			return "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, nil, nil
+			return "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, nil, nil, nil
 		}
 
 		action = fmt.Sprintf("%s is sending %s %s to %s",
@@ -56,11 +56,11 @@ func SimulateSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation 
 		}
 		goErr = sendAndVerifyMsgSend(app, mapper, msg, ctx, []crypto.PrivKey{fromKey})
 		if goErr != nil {
-			return "", nil, goErr
+			return "", nil, nil, goErr
 		}
 		event("bank/sendAndVerifyMsgSend/ok")
 
-		return action, nil, nil
+		return action, nil, nil, nil
 	}
 }
 

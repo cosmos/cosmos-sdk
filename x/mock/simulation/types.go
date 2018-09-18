@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"math/rand"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,7 +24,7 @@ type (
 	// These will be ran at the beginning of the corresponding block.
 	Operation func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		privKeys []crypto.PrivKey, event func(string),
-	) (action string, futureOperations []FutureOperation, err error)
+	) (action string, futureOperations []FutureOperation, FutureTimeOperations []FutureTimeOperation, err error)
 
 	// RandSetup performs the random setup the mock module needs.
 	RandSetup func(r *rand.Rand, privKeys []crypto.PrivKey)
@@ -46,6 +47,13 @@ type (
 	FutureOperation struct {
 		BlockHeight int
 		Op          Operation
+	}
+
+	// FutureTimeOperation is an operation which will be ran at the
+	// first block after the provided BlockTime.
+	FutureTimeOperation struct {
+		BlockTime time.Time
+		Op        Operation
 	}
 
 	// WeightedOperation is an operation with associated weight.

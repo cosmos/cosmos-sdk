@@ -24,7 +24,7 @@ type (
 	// These will be ran at the beginning of the corresponding block.
 	Operation func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		privKeys []crypto.PrivKey, event func(string),
-	) (action string, futureOperations []FutureOperation, FutureTimeOperations []FutureTimeOperation, err error)
+	) (action string, futureOperations []FutureOperation, err error)
 
 	// RandSetup performs the random setup the mock module needs.
 	RandSetup func(r *rand.Rand, privKeys []crypto.PrivKey)
@@ -42,18 +42,13 @@ type (
 
 	// FutureOperation is an operation which will be ran at the
 	// beginning of the provided BlockHeight.
+	// If both a BlockHeight and BlockTime are specified, it will use the BlockHeight.
 	// In the (likely) event that multiple operations are queued at the same
 	// block height, they will execute in a FIFO pattern.
 	FutureOperation struct {
 		BlockHeight int
+		BlockTime   time.Time
 		Op          Operation
-	}
-
-	// FutureTimeOperation is an operation which will be ran at the
-	// first block after the provided BlockTime.
-	FutureTimeOperation struct {
-		BlockTime time.Time
-		Op        Operation
 	}
 
 	// WeightedOperation is an operation with associated weight.

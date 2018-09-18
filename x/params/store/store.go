@@ -112,8 +112,15 @@ func (s Store) SetRaw(ctx sdk.Context, key string, param []byte) {
 	tstore.Set(keybz, []byte{})
 }
 
+// Get to ParamStruct
+func (s Store) GetStruct(ctx sdk.Context, ps ParamStruct) {
+	for _, pair := range ps.KeyFieldPairs() {
+		s.Get(ctx, pair.Key, pair.Field)
+	}
+}
+
 // Set from ParamStruct
-func (s Store) SetFromParamStruct(ctx sdk.Context, ps ParamStruct) {
+func (s Store) SetStruct(ctx sdk.Context, ps ParamStruct) {
 	for _, pair := range ps.KeyFieldPairs() {
 		s.Set(ctx, pair.Key, pair.Field)
 	}

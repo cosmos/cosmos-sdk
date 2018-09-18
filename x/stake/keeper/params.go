@@ -79,11 +79,5 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 
 // set the params without updating validator set
 func (k Keeper) SetNewParams(ctx sdk.Context, params types.Params) {
-	k.paramstore.Set(ctx, types.KeyInflationRateChange, params.InflationRateChange)
-	k.paramstore.Set(ctx, types.KeyInflationMax, params.InflationMax)
-	k.paramstore.Set(ctx, types.KeyInflationMin, params.InflationMin)
-	k.paramstore.Set(ctx, types.KeyGoalBonded, params.GoalBonded)
-	k.paramstore.Set(ctx, types.KeyUnbondingTime, params.UnbondingTime)
-	k.paramstore.Set(ctx, types.KeyMaxValidators, params.MaxValidators)
-	k.paramstore.Set(ctx, types.KeyBondDenom, params.BondDenom)
+	k.paramstore.SetStruct(ctx, &params)
 }

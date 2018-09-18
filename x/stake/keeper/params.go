@@ -9,7 +9,7 @@ import (
 
 // Default parameter namespace
 const (
-	DefaultParamSpace = "stake"
+	DefaultParamspace = "stake"
 )
 
 // InflationRateChange - Maximum annual change in inflation rate

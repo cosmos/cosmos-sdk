@@ -49,7 +49,7 @@ func createTestCodec() *codec.Codec {
 	return cdc
 }
 
-func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, stake.Keeper, params.Space, Keeper) {
+func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, stake.Keeper, params.Store, Keeper) {
 	keyAcc := sdk.NewKVStoreKey("acc")
 	keyStake := sdk.NewKVStoreKey("stake")
 	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
@@ -71,7 +71,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	accountMapper := auth.NewAccountMapper(cdc, keyAcc, auth.ProtoBaseAccount)
 
 	ck := bank.NewBaseKeeper(accountMapper)
-	paramstore := params.NewKeeper(cdc, keyParams, tkeyParams).Subspace(DefaultParamSpace)
+	paramstore := params.NewKeeper(cdc, keyParams, tkeyParams).Substore(DefaultParamspace)
 	sk := stake.NewKeeper(cdc, keyStake, tkeyStake, ck, paramstore, stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
 

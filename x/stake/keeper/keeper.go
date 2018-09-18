@@ -16,13 +16,13 @@ type Keeper struct {
 	cdc        *codec.Codec
 	bankKeeper bank.Keeper
 	hooks      sdk.StakingHooks
-	paramstore params.Space
+	paramstore params.Store
 
-	// codespace
-	codespace sdk.CodespaceType
+	// codestore
+	codestore sdk.CodespaceType
 }
 
-func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, paramstore params.Space, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, paramstore params.Store, codestore sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:   key,
 		storeTKey:  tkey,
@@ -30,7 +30,7 @@ func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, paramst
 		bankKeeper: ck,
 		paramstore: paramstore,
 		hooks:      nil,
-		codespace:  codespace,
+		codestore:  codestore,
 	}
 	return keeper
 }
@@ -46,9 +46,9 @@ func (k Keeper) WithHooks(sh sdk.StakingHooks) Keeper {
 
 //_________________________________________________________________________
 
-// return the codespace
+// return the codestore
 func (k Keeper) Codespace() sdk.CodespaceType {
-	return k.codespace
+	return k.codestore
 }
 
 //_______________________________________________________________________

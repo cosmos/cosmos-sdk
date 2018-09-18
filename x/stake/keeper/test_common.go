@@ -117,7 +117,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	ck := bank.NewBaseKeeper(accountMapper)
 
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
-	keeper := NewKeeper(cdc, keyStake, tkeyStake, ck, pk.Subspace("stake"), types.DefaultCodespace)
+	keeper := NewKeeper(cdc, keyStake, tkeyStake, ck, pk.Substore("stake"), types.DefaultCodespace)
 	keeper.SetPool(ctx, types.InitialPool())
 	keeper.SetParams(ctx, types.DefaultParams())
 	keeper.InitIntraTxCounter(ctx)

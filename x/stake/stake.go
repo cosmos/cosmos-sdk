@@ -59,7 +59,7 @@ var (
 	GetREDsToValDstIndexKey      = keeper.GetREDsToValDstIndexKey
 	GetREDsByDelToValDstIndexKey = keeper.GetREDsByDelToValDstIndexKey
 
-	DefaultParamSpace      = keeper.DefaultParamSpace
+	DefaultParamspace      = keeper.DefaultParamspace
 	KeyInflationRateChange = types.KeyInflationRateChange
 	KeyInflationMax        = types.KeyInflationMax
 	KeyGoalBonded          = types.KeyGoalBonded

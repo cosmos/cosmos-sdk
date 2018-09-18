@@ -1,4 +1,4 @@
-package space
+package store
 
 /*
 To prevent namespace collision between comsumer modules, we define type

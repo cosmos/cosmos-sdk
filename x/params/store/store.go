@@ -1,4 +1,4 @@
-package space
+package store
 
 import (
 	"fmt"
@@ -11,32 +11,32 @@ import (
 )
 
 // Individual parameter store for each keeper
-type Space struct {
+type Store struct {
 	cdc  *codec.Codec
 	key  sdk.StoreKey
 	tkey sdk.StoreKey
 
-	space []byte
+	store []byte
 }
 
-// NewSpace constructs a store with namespace
-func NewSpace(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, space string) Space {
-	if !tmlibs.IsASCIIText(space) {
-		panic("paramstore space expressions can only contain alphanumeric characters")
+// NewStore constructs a store with namestore
+func NewStore(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, store string) Store {
+	if !tmlibs.IsASCIIText(store) {
+		panic("paramstore store expressions can only contain alphanumeric characters")
 	}
 
-	return Space{
+	return Store{
 		cdc:  cdc,
 		key:  key,
 		tkey: tkey,
 
-		space: append([]byte(space), '/'),
+		store: append([]byte(store), '/'),
 	}
 }
 
 // Get parameter from store
-func (s Space) Get(ctx sdk.Context, key string, ptr interface{}) {
-	store := ctx.KVStore(s.key).Prefix(s.space)
+func (s Store) Get(ctx sdk.Context, key string, ptr interface{}) {
+	store := ctx.KVStore(s.key).Prefix(s.store)
 	bz := store.Get([]byte(key))
 	err := s.cdc.UnmarshalJSON(bz, ptr)
 	if err != nil {
@@ -45,8 +45,8 @@ func (s Space) Get(ctx sdk.Context, key string, ptr interface{}) {
 }
 
 // GetIfExists do not modify ptr if the stored parameter is nil
-func (s Space) GetIfExists(ctx sdk.Context, key string, ptr interface{}) {
-	store := ctx.KVStore(s.key).Prefix(s.space)
+func (s Store) GetIfExists(ctx sdk.Context, key string, ptr interface{}) {
+	store := ctx.KVStore(s.key).Prefix(s.store)
 	bz := store.Get([]byte(key))
 	if bz == nil {
 		return
@@ -58,27 +58,27 @@ func (s Space) GetIfExists(ctx sdk.Context, key string, ptr interface{}) {
 }
 
 // Get raw bytes of parameter from store
-func (s Space) GetRaw(ctx sdk.Context, key string) []byte {
-	store := ctx.KVStore(s.key).Prefix(s.space)
+func (s Store) GetRaw(ctx sdk.Context, key string) []byte {
+	store := ctx.KVStore(s.key).Prefix(s.store)
 	res := store.Get([]byte(key))
 	return res
 }
 
 // Check if the parameter is set in the store
-func (s Space) Has(ctx sdk.Context, key string) bool {
-	store := ctx.KVStore(s.key).Prefix(s.space)
+func (s Store) Has(ctx sdk.Context, key string) bool {
+	store := ctx.KVStore(s.key).Prefix(s.store)
 	return store.Has([]byte(key))
 }
 
 // Returns true if the parameter is set in the block
-func (s Space) Modified(ctx sdk.Context, key string) bool {
-	tstore := ctx.KVStore(s.tkey).Prefix(s.space)
+func (s Store) Modified(ctx sdk.Context, key string) bool {
+	tstore := ctx.KVStore(s.tkey).Prefix(s.store)
 	return tstore.Has([]byte(key))
 }
 
 // Set parameter, return error if stored parameter has different type from input
-func (s Space) Set(ctx sdk.Context, key string, param interface{}) {
-	store := ctx.KVStore(s.key).Prefix(s.space)
+func (s Store) Set(ctx sdk.Context, key string, param interface{}) {
+	store := ctx.KVStore(s.key).Prefix(s.store)
 	keybz := []byte(key)
 
 	bz := store.Get(keybz)
@@ -97,54 +97,54 @@ func (s Space) Set(ctx sdk.Context, key string, param interface{}) {
 	}
 	store.Set(keybz, bz)
 
-	tstore := ctx.KVStore(s.tkey).Prefix(s.space)
+	tstore := ctx.KVStore(s.tkey).Prefix(s.store)
 	tstore.Set(keybz, []byte{})
 }
 
 // Set raw bytes of parameter
-func (s Space) SetRaw(ctx sdk.Context, key string, param []byte) {
+func (s Store) SetRaw(ctx sdk.Context, key string, param []byte) {
 	keybz := []byte(key)
 
-	store := ctx.KVStore(s.key).Prefix(s.space)
+	store := ctx.KVStore(s.key).Prefix(s.store)
 	store.Set(keybz, param)
 
-	tstore := ctx.KVStore(s.tkey).Prefix(s.space)
+	tstore := ctx.KVStore(s.tkey).Prefix(s.store)
 	tstore.Set(keybz, []byte{})
 }
 
 // Set from ParamStruct
-func (s Space) SetFromParamStruct(ctx sdk.Context, ps ParamStruct) {
+func (s Store) SetFromParamStruct(ctx sdk.Context, ps ParamStruct) {
 	for _, pair := range ps.KeyFieldPairs() {
 		s.Set(ctx, pair.Key, pair.Field)
 	}
 }
 
-// Returns a KVStore identical with the paramspace
-func (s Space) KVStore(ctx sdk.Context) sdk.KVStore {
-	return ctx.KVStore(s.key).Prefix(s.space)
+// Returns a KVStore identical with the paramstore
+func (s Store) KVStore(ctx sdk.Context) sdk.KVStore {
+	return ctx.KVStore(s.key).Prefix(s.store)
 }
 
-// Wrapper of Space, provides immutable functions only
-type ReadOnlySpace struct {
-	s Space
+// Wrapper of Store, provides immutable functions only
+type ReadOnlyStore struct {
+	s Store
 }
 
 // Exposes Get
-func (ros ReadOnlySpace) Get(ctx sdk.Context, key string, ptr interface{}) {
+func (ros ReadOnlyStore) Get(ctx sdk.Context, key string, ptr interface{}) {
 	ros.s.Get(ctx, key, ptr)
 }
 
 // Exposes GetRaw
-func (ros ReadOnlySpace) GetRaw(ctx sdk.Context, key string) []byte {
+func (ros ReadOnlyStore) GetRaw(ctx sdk.Context, key string) []byte {
 	return ros.s.GetRaw(ctx, key)
 }
 
 // Exposes Has
-func (ros ReadOnlySpace) Has(ctx sdk.Context, key string) bool {
+func (ros ReadOnlyStore) Has(ctx sdk.Context, key string) bool {
 	return ros.s.Has(ctx, key)
 }
 
 // Exposes Modified
-func (ros ReadOnlySpace) Modified(ctx sdk.Context, key string) bool {
+func (ros ReadOnlyStore) Modified(ctx sdk.Context, key string) bool {
 	return ros.s.Modified(ctx, key)
 }

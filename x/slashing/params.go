@@ -9,7 +9,7 @@ import (
 
 // Default parameter namespace
 const (
-	DefaultParamSpace = "slashing"
+	DefaultParamspace = "slashing"
 )
 
 // Parameter store key

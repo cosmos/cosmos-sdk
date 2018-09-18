@@ -192,16 +192,16 @@ func TestAppStateDeterminism(t *testing.T) {
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
-	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	for i := 0; i < numSeeds; i++ {
+		var prevAppHash []byte
 		seed := rand.Int63()
+
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			logger := log.NewNopLogger()
 			db := dbm.NewMemDB()
 			app := NewGaiaApp(logger, db, nil)
 
-			// Run randomized simulation
 			simulation.SimulateFromSeed(
 				t, app.BaseApp, appStateFn, seed,
 				testAndRunTxs(app),
@@ -211,12 +211,16 @@ func TestAppStateDeterminism(t *testing.T) {
 				100,
 				true,
 			)
-			//app.Commit()
+
 			appHash := app.LastCommitID().Hash
-			appHashList[j] = appHash
-		}
-		for k := 1; k < numTimesToRunPerSeed; k++ {
-			require.Equal(t, appHashList[0], appHashList[k], "appHash list: %v", appHashList)
+
+			if prevAppHash != nil {
+				require.Equal(t, prevAppHash, appHash,
+					"appHash mismatch on run #%d with seed %d; got: %X, want: %X",
+					j+1, seed, appHash, prevAppHash)
+			}
+
+			prevAppHash = appHash
 		}
 	}
 }

@@ -79,7 +79,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 	validators := initChain(r, keys, accs, setups, app, appStateFn)
 
-	header := abci.Header{Height: 0, Time: timestamp}
+	header := abci.Header{Height: 0, Time: timestamp.UTC()}
 	opCount := 0
 
 	// Setup code to catch SIGTERM's
@@ -145,7 +145,10 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 		res := app.EndBlock(abci.RequestEndBlock{})
 		header.Height++
-		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
+		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).
+			Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second).
+			UTC()
+
 		logWriter("EndBlock")
 
 		if testingMode {

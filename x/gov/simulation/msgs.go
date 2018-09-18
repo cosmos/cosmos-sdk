@@ -44,6 +44,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, sk stake.Keepe
 	})
 	statePercentageArray := []float64{1, .9, .75, .4, .15, 0}
 	curNumVotesState := 1
+
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
 		// 1) submit proposal now
 		sender := simulation.RandomKey(r, keys)
@@ -51,26 +52,33 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, sk stake.Keepe
 		if err != nil {
 			return "", nil, err
 		}
+
 		action, ok := simulateHandleMsgSubmitProposal(msg, sk, handler, ctx, event)
-		// don't schedule votes if proposal failed
 		if !ok {
+			// don't schedule votes if proposal failed
 			return action, nil, nil
 		}
+
 		proposalID := k.GetLastProposalID(ctx)
+
 		// 2) Schedule operations for votes
 		// 2.1) first pick a number of people to vote.
 		curNumVotesState = numVotesTransitionMatrix.NextState(r, curNumVotesState)
 		numVotes := int(math.Ceil(float64(len(keys)) * statePercentageArray[curNumVotesState]))
+
 		// 2.2) select who votes and when
 		whoVotes := r.Perm(len(keys))
+
 		// didntVote := whoVotes[numVotes:]
 		whoVotes = whoVotes[:numVotes]
 		votingPeriod := k.GetVotingProcedure(ctx).VotingPeriod
+
 		fops := make([]simulation.FutureOperation, numVotes+1)
 		for i := 0; i < numVotes; i++ {
-			whenVote := ctx.BlockHeight() + r.Int63n(votingPeriod)
+			whenVote := ctx.BlockHeight() + r.Int63n(votingPeriod.Nanoseconds())
 			fops[i] = simulation.FutureOperation{int(whenVote), operationSimulateMsgVote(k, sk, keys[whoVotes[i]], proposalID)}
 		}
+
 		// 3) Make an operation to ensure slashes were done correctly. (Really should be a future invariant)
 		// TODO: Find a way to check if a validator was slashed other than just checking their balance a block
 		// before and after.

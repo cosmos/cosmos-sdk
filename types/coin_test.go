@@ -76,6 +76,24 @@ func TestIsGTECoin(t *testing.T) {
 	}
 }
 
+func TestIsLTCoin(t *testing.T) {
+	cases := []struct {
+		inputOne Coin
+		inputTwo Coin
+		expected bool
+	}{
+		{NewInt64Coin("A", 1), NewInt64Coin("A", 1), false},
+		{NewInt64Coin("A", 2), NewInt64Coin("A", 1), false},
+		{NewInt64Coin("A", -1), NewInt64Coin("A", 5), true},
+		{NewInt64Coin("a", 0), NewInt64Coin("b", 1), true},
+	}
+
+	for tcIndex, tc := range cases {
+		res := tc.inputOne.IsLT(tc.inputTwo)
+		require.Equal(t, tc.expected, res, "coin LT relation is incorrect, tc #%d", tcIndex)
+	}
+}
+
 func TestIsEqualCoin(t *testing.T) {
 	cases := []struct {
 		inputOne Coin
@@ -227,6 +245,8 @@ func TestCoins(t *testing.T) {
 	assert.True(t, good.IsPositive(), "Expected coins to be positive: %v", good)
 	assert.False(t, null.IsPositive(), "Expected coins to not be positive: %v", null)
 	assert.True(t, good.IsGTE(empty), "Expected %v to be >= %v", good, empty)
+	assert.False(t, good.IsLT(empty), "Expected %v to be < %v", good, empty)
+	assert.True(t, empty.IsLT(good), "Expected %v to be < %v", empty, good)
 	assert.False(t, neg.IsPositive(), "Expected neg coins to not be positive: %v", neg)
 	assert.Zero(t, len(sum), "Expected 0 coins")
 	assert.False(t, badSort1.IsValid(), "Coins are not sorted")

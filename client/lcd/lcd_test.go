@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"regexp"
 	"testing"
 	"time"
@@ -25,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	tests "github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	version "github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -34,6 +36,7 @@ import (
 
 func init() {
 	cryptoKeys.BcryptSecurityParameter = 1
+	version.Version = os.Getenv("VERSION")
 }
 
 func TestKeys(t *testing.T) {
@@ -124,16 +127,16 @@ func TestVersion(t *testing.T) {
 	res, body := Request(t, port, "GET", "/version", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	reg, err := regexp.Compile(`\d+\.\d+\.\d+(-dev)?`)
+	reg, err := regexp.Compile(`\d+\.\d+\.\d+.*`)
 	require.Nil(t, err)
 	match := reg.MatchString(body)
-	require.True(t, match, body)
+	require.True(t, match, body, fmt.Sprintf("%s", body))
 
 	// node info
 	res, body = Request(t, port, "GET", "/node_version", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	reg, err = regexp.Compile(`\d+\.\d+\.\d+(-dev)?`)
+	reg, err = regexp.Compile(`\d+\.\d+\.\d+.*`)
 	require.Nil(t, err)
 	match = reg.MatchString(body)
 	require.True(t, match, body)

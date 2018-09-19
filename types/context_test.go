@@ -162,20 +162,23 @@ func TestContextWithCustom(t *testing.T) {
 	logger := NewMockLogger()
 	signvals := []abci.SigningValidator{{}}
 	meter := types.NewGasMeter(10000)
+	minFees := types.Coins{types.NewInt64Coin("feeCoin", 1)}
 
 	ctx = types.NewContext(nil, header, ischeck, logger).
 		WithBlockHeight(height).
 		WithChainID(chainid).
 		WithTxBytes(txbytes).
 		WithSigningValidators(signvals).
-		WithGasMeter(meter)
+		WithGasMeter(meter).
+		WithMinimumFees(minFees)
 
 	require.Equal(t, header, ctx.BlockHeader())
 	require.Equal(t, height, ctx.BlockHeight())
 	require.Equal(t, chainid, ctx.ChainID())
+	require.Equal(t, ischeck, ctx.IsCheckTx())
 	require.Equal(t, txbytes, ctx.TxBytes())
 	require.Equal(t, logger, ctx.Logger())
 	require.Equal(t, signvals, ctx.SigningValidators())
 	require.Equal(t, meter, ctx.GasMeter())
-
+	require.Equal(t, minFees, types.Coins{types.NewInt64Coin("feeCoin", 1)})
 }

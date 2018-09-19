@@ -69,7 +69,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, sk stake.Keepe
 		fops := make([]simulation.FutureOperation, numVotes+1)
 		for i := 0; i < numVotes; i++ {
 			whenVote := ctx.BlockHeight() + r.Int63n(votingPeriod)
-			fops[i] = simulation.FutureOperation{int(whenVote), operationSimulateMsgVote(k, sk, keys[whoVotes[i]], proposalID)}
+			fops[i] = simulation.FutureOperation{BlockHeight: int(whenVote), Op: operationSimulateMsgVote(k, sk, keys[whoVotes[i]], proposalID)}
 		}
 		// 3) Make an operation to ensure slashes were done correctly. (Really should be a future invariant)
 		// TODO: Find a way to check if a validator was slashed other than just checking their balance a block

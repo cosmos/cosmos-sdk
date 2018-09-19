@@ -44,6 +44,7 @@ BREAKING CHANGES
     * [simulation] Remove log and testing.TB from Operation and Invariants, in favor of using errors \#2282
     * [tools] Removed gocyclo [#2211](https://github.com/cosmos/cosmos-sdk/issues/2211)
     * [baseapp] Remove `SetTxDecoder` in favor of requiring the decoder be set in baseapp initialization. [#1441](https://github.com/cosmos/cosmos-sdk/issues/1441)
+    * [baseapp] [\#1921](https://github.com/cosmos/cosmos-sdk/issues/1921) Add minimumFees field to BaseApp.
     * [store] Change storeInfo within the root multistore to use tmhash instead of ripemd160 \#2308
     * [codec] \#2324 All referrences to wire have been renamed to codec. Additionally, wire.NewCodec is now codec.New().
     * [types] \#2343 Make sdk.Msg have a names field, to facilitate automatic tagging.
@@ -75,6 +76,9 @@ FEATURES
 
 * Gaia
   * [cli] #2170 added ability to show the node's address via `gaiad tendermint show-address`
+  * [cli] [\#1921] (https://github.com/cosmos/cosmos-sdk/issues/1921)
+    * New configuration file `gaiad.toml` is now created to host Gaia-specific configuration.
+    * New --minimum_fees/minimum_fees flag/config option to set a minimum fee.
 
 * SDK
   * [querier] added custom querier functionality, so ABCI query requests can be handled by keepers

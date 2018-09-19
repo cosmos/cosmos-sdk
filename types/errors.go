@@ -56,6 +56,7 @@ const (
 	CodeInvalidCoins      CodeType = 11
 	CodeOutOfGas          CodeType = 12
 	CodeMemoTooLarge      CodeType = 13
+	CodeInsufficientFee   CodeType = 14
 
 	// CodespaceRoot is a codespace for error codes in this file only.
 	// Notice that 0 is an "unset" codespace, which can be overridden with
@@ -101,6 +102,8 @@ func CodeToDefaultMsg(code CodeType) string {
 		return "out of gas"
 	case CodeMemoTooLarge:
 		return "memo too large"
+	case CodeInsufficientFee:
+		return "insufficient fee"
 	default:
 		return unknownCodeMsg(code)
 	}
@@ -149,6 +152,9 @@ func ErrOutOfGas(msg string) Error {
 }
 func ErrMemoTooLarge(msg string) Error {
 	return newErrorWithRootCodespace(CodeMemoTooLarge, msg)
+}
+func ErrInsufficientFee(msg string) Error {
+	return newErrorWithRootCodespace(CodeInsufficientFee, msg)
 }
 
 //----------------------------------------

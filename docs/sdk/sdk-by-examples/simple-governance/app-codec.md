@@ -5,13 +5,13 @@
 Finally, we need to define the `MakeCodec()` function and register the concrete types and interface from the various modules.
 
 ```go
-func MakeCodec() *wire.Codec {
-    var cdc = wire.NewCodec()
-    wire.RegisterCrypto(cdc) // Register crypto.
-    sdk.RegisterWire(cdc)    // Register Msgs
-    bank.RegisterWire(cdc)
-    simplestake.RegisterWire(cdc)
-    simpleGov.RegisterWire(cdc)
+func MakeCodec() *codec.Codec {
+    var cdc = codec.New()
+    codec.RegisterCrypto(cdc) // Register crypto.
+    sdk.RegisterCodec(cdc)    // Register Msgs
+    bank.RegisterCodec(cdc)
+    simplestake.RegisterCodec(cdc)
+    simpleGov.RegisterCodec(cdc)
 
     // Register AppAccount
     cdc.RegisterInterface((*auth.Account)(nil), nil)

@@ -28,7 +28,7 @@ Every transaction on the same chain already has a well-defined causality relatio
 
 For example, an application may wish to allow a single tokenized asset to be transferred between and held on multiple blockchains while preserving fungibility and conservation of supply. The application can mint asset vouchers on chain `B` when a particular IBC packet is committed to chain `B`, and require outgoing sends of that packet on chain `A` to escrow an equal amount of the asset on chain `A` until the vouchers are later redeemed back to chain `A` with an IBC packet in the reverse direction. This ordering guarantee along with correct application logic can ensure that total supply is preserved across both chains and that any vouchers minted on chain `B` can later be redeemed back to chain `A`.
 
-This section provides definitions for packets and channels, a high-level specification of the queue interface, and a list of the necessary proofs. To implement wire-compatible IBC, chain `A` and chain `B` must also use a common encoding format. An example binary encoding format can be found in [Appendix C](appendices.md#appendix-c-merkle-proof-formats).
+This section provides definitions for packets and channels, a high-level specification of the queue interface, and a list of the necessary proofs. To implement amino-compatible IBC, chain `A` and chain `B` must also use a common encoding format. An example binary encoding format can be found in [Appendix C](appendices.md#appendix-c-merkle-proof-formats).
 
 ### 3.2 Definitions
 

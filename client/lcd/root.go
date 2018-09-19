@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
@@ -27,7 +27,7 @@ import (
 // ServeCommand will generate a long-running rest server
 // (aka Light Client Daemon) that exposes functionality similar
 // to the cli, but over rest
-func ServeCommand(cdc *wire.Codec) *cobra.Command {
+func ServeCommand(cdc *codec.Codec) *cobra.Command {
 	flagListenAddr := "laddr"
 	flagCORS := "cors"
 	flagMaxOpenConnections := "max-open"
@@ -63,15 +63,15 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 
 	cmd.Flags().String(flagListenAddr, "tcp://localhost:1317", "The address for the server to listen on")
 	cmd.Flags().String(flagCORS, "", "Set the domains that can make CORS requests (* for all)")
-	cmd.Flags().String(client.FlagChainID, "", "The chain ID to connect to")
+	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
 	cmd.Flags().String(client.FlagNode, "tcp://localhost:26657", "Address of the node to connect to")
 	cmd.Flags().Int(flagMaxOpenConnections, 1000, "The number of maximum open connections")
-	cmd.Flags().Bool(client.FlagTrustNode, false, "Whether trust connected full node")
+	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 
 	return cmd
 }
 
-func createHandler(cdc *wire.Codec) http.Handler {
+func createHandler(cdc *codec.Codec) http.Handler {
 	r := mux.NewRouter()
 
 	kb, err := keys.GetKeyBase() //XXX

@@ -26,7 +26,7 @@ func SendTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg)
 	}
 
 	name, err := cliCtx.GetFromName()
-	if err != nil {
+	if txBldr.SimulateGas || cliCtx.DryRun {
 		return err
 	}
 
@@ -56,20 +56,10 @@ func SendTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg)
 	return cliCtx.EnsureBroadcastTx(txBytes)
 }
 
-// SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
-func SimulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg, gas int64) (estimated, adjusted int64, err error) {
-	txBytes, err := txBldr.WithGas(gas).BuildWithPubKey(name, msgs)
-	if err != nil {
-		return
-	}
-	estimated, adjusted, err = CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, cliCtx.GasAdjustment)
-	return
-}
-
 // EnrichCtxWithGas calculates the gas estimate that would be consumed by the
 // transaction and set the transaction's respective value accordingly.
 func EnrichCtxWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (authtxb.TxBuilder, error) {
-	_, adjusted, err := SimulateMsgs(txBldr, cliCtx, name, msgs, 0)
+	_, adjusted, err := simulateMsgs(txBldr, cliCtx, name, msgs)
 	if err != nil {
 		return txBldr, err
 	}
@@ -149,6 +139,17 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 	return txBldr.SignStdTx(name, passphrase, stdTx, appendSig)
 }
 
+// nolint
+// SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
+func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (estimated, adjusted int64, err error) {
+	txBytes, err := txBldr.BuildWithPubKey(name, msgs)
+	if err != nil {
+		return
+	}
+	estimated, adjusted, err = CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, txBldr.GasAdjustment)
+	return
+}
+
 func adjustGasEstimate(estimate int64, adjustment float64) int64 {
 	return int64(adjustment * float64(estimate))
 }
@@ -200,7 +201,7 @@ func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 	if err != nil {
 		return
 	}
-	if txBldr.Gas == 0 {
+	if txBldr.SimulateGas {
 		var name string
 		name, err = cliCtx.GetFromName()
 		if err != nil {

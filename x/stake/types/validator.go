@@ -9,8 +9,8 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Validator defines the total amount of bond shares and their exchange rate to
@@ -21,8 +21,8 @@ import (
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
 type Validator struct {
-	OperatorAddr sdk.ValAddress `json:"operator_address"` // address of the validator's operator
-	ConsPubKey   crypto.PubKey  `json:"consensus_pubkey"` // the consensus public key of the validator
+	OperatorAddr sdk.ValAddress `json:"operator_address"` // address of the validator's operator; bech encoded in JSON
+	ConsPubKey   crypto.PubKey  `json:"consensus_pubkey"` // the consensus public key of the validator; bech encoded in JSON
 	Jailed       bool           `json:"jailed"`           // has the validator been jailed from bonded status?
 
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
@@ -55,7 +55,7 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Des
 		BondHeight:            int64(0),
 		BondIntraTxCounter:    int16(0),
 		UnbondingHeight:       int64(0),
-		UnbondingMinTime:      time.Unix(0, 0),
+		UnbondingMinTime:      time.Unix(0, 0).UTC(),
 		Commission:            sdk.ZeroDec(),
 		CommissionMax:         sdk.ZeroDec(),
 		CommissionChangeRate:  sdk.ZeroDec(),
@@ -82,7 +82,7 @@ type validatorValue struct {
 }
 
 // return the redelegation without fields contained within the key for the store
-func MustMarshalValidator(cdc *wire.Codec, validator Validator) []byte {
+func MustMarshalValidator(cdc *codec.Codec, validator Validator) []byte {
 	val := validatorValue{
 		ConsPubKey:            validator.ConsPubKey,
 		Jailed:                validator.Jailed,
@@ -103,7 +103,7 @@ func MustMarshalValidator(cdc *wire.Codec, validator Validator) []byte {
 }
 
 // unmarshal a redelegation from a store key and value
-func MustUnmarshalValidator(cdc *wire.Codec, operatorAddr, value []byte) Validator {
+func MustUnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) Validator {
 	validator, err := UnmarshalValidator(cdc, operatorAddr, value)
 	if err != nil {
 		panic(err)
@@ -112,7 +112,7 @@ func MustUnmarshalValidator(cdc *wire.Codec, operatorAddr, value []byte) Validat
 }
 
 // unmarshal a redelegation from a store key and value
-func UnmarshalValidator(cdc *wire.Codec, operatorAddr, value []byte) (validator Validator, err error) {
+func UnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) (validator Validator, err error) {
 	if len(operatorAddr) != sdk.AddrLen {
 		err = fmt.Errorf("%v", ErrBadValidatorAddr(DefaultCodespace).Data())
 		return
@@ -172,8 +172,8 @@ func (v Validator) HumanReadableString() (string, error) {
 
 //___________________________________________________________________
 
-// validator struct for bech output
-type BechValidator struct {
+// this is a helper struct used for JSON de- and encoding only
+type bechValidator struct {
 	OperatorAddr sdk.ValAddress `json:"operator_address"` // the bech32 address of the validator's operator
 	ConsPubKey   string         `json:"consensus_pubkey"` // the bech32 consensus public key of the validator
 	Jailed       bool           `json:"jailed"`           // has the validator been jailed from bonded status?
@@ -195,33 +195,60 @@ type BechValidator struct {
 	CommissionChangeToday sdk.Dec `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
 }
 
-// get the bech validator from the the regular validator
-func (v Validator) Bech32Validator() (BechValidator, error) {
+// MarshalJSON marshals the validator to JSON using Bech32
+func (v Validator) MarshalJSON() ([]byte, error) {
 	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.ConsPubKey)
 	if err != nil {
-		return BechValidator{}, err
+		return nil, err
 	}
 
-	return BechValidator{
-		OperatorAddr: v.OperatorAddr,
-		ConsPubKey:   bechConsPubKey,
-		Jailed:       v.Jailed,
-
-		Status:          v.Status,
-		Tokens:          v.Tokens,
-		DelegatorShares: v.DelegatorShares,
-
-		Description:        v.Description,
-		BondHeight:         v.BondHeight,
-		BondIntraTxCounter: v.BondIntraTxCounter,
-		UnbondingHeight:    v.UnbondingHeight,
-		UnbondingMinTime:   v.UnbondingMinTime,
-
+	return codec.Cdc.MarshalJSON(bechValidator{
+		OperatorAddr:          v.OperatorAddr,
+		ConsPubKey:            bechConsPubKey,
+		Jailed:                v.Jailed,
+		Status:                v.Status,
+		Tokens:                v.Tokens,
+		DelegatorShares:       v.DelegatorShares,
+		Description:           v.Description,
+		BondHeight:            v.BondHeight,
+		BondIntraTxCounter:    v.BondIntraTxCounter,
+		UnbondingHeight:       v.UnbondingHeight,
+		UnbondingMinTime:      v.UnbondingMinTime,
 		Commission:            v.Commission,
 		CommissionMax:         v.CommissionMax,
 		CommissionChangeRate:  v.CommissionChangeRate,
 		CommissionChangeToday: v.CommissionChangeToday,
-	}, nil
+	})
+}
+
+// UnmarshalJSON unmarshals the validator from JSON using Bech32
+func (v *Validator) UnmarshalJSON(data []byte) error {
+	bv := &bechValidator{}
+	if err := codec.Cdc.UnmarshalJSON(data, bv); err != nil {
+		return err
+	}
+	consPubKey, err := sdk.GetConsPubKeyBech32(bv.ConsPubKey)
+	if err != nil {
+		return err
+	}
+	*v = Validator{
+		OperatorAddr:          bv.OperatorAddr,
+		ConsPubKey:            consPubKey,
+		Jailed:                bv.Jailed,
+		Tokens:                bv.Tokens,
+		Status:                bv.Status,
+		DelegatorShares:       bv.DelegatorShares,
+		Description:           bv.Description,
+		BondHeight:            bv.BondHeight,
+		BondIntraTxCounter:    bv.BondIntraTxCounter,
+		UnbondingHeight:       bv.UnbondingHeight,
+		UnbondingMinTime:      bv.UnbondingMinTime,
+		Commission:            bv.Commission,
+		CommissionMax:         bv.CommissionMax,
+		CommissionChangeRate:  bv.CommissionChangeRate,
+		CommissionChangeToday: bv.CommissionChangeToday,
+	}
+	return nil
 }
 
 //___________________________________________________________________

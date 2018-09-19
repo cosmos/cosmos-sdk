@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
@@ -15,7 +15,7 @@ type broadcastBody struct {
 }
 
 // BroadcastTxRequestHandlerFn returns the broadcast tx REST handler
-func BroadcastTxRequestHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func BroadcastTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m broadcastBody
 		if ok := unmarshalBodyOrReturnBadRequest(cliCtx, w, r, &m); !ok {
@@ -33,7 +33,7 @@ func BroadcastTxRequestHandlerFn(cdc *wire.Codec, cliCtx context.CLIContext) htt
 			return
 		}
 
-		output, err := wire.MarshalJSONIndent(cdc, res)
+		output, err := codec.MarshalJSONIndent(cdc, res)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

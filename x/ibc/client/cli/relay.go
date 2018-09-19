@@ -6,8 +6,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
@@ -28,7 +28,7 @@ const (
 )
 
 type relayCommander struct {
-	cdc       *wire.Codec
+	cdc       *codec.Codec
 	address   sdk.AccAddress
 	decoder   auth.AccountDecoder
 	mainStore string
@@ -39,7 +39,7 @@ type relayCommander struct {
 }
 
 // IBCRelayCmd implements the IBC relay command.
-func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
+func IBCRelayCmd(cdc *codec.Codec) *cobra.Command {
 	cmdr := relayCommander{
 		cdc:       cdc,
 		decoder:   authcmd.GetAccountDecoder(cdc),

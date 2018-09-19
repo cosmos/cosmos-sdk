@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Linear defines a primitive mapper type
 type Linear struct {
-	cdc   *wire.Codec
+	cdc   *codec.Codec
 	store sdk.KVStore
 	keys  *LinearKeys
 }
@@ -36,7 +36,7 @@ func DefaultLinearKeys() *LinearKeys {
 }
 
 // NewLinear constructs new Linear
-func NewLinear(cdc *wire.Codec, store sdk.KVStore, keys *LinearKeys) Linear {
+func NewLinear(cdc *codec.Codec, store sdk.KVStore, keys *LinearKeys) Linear {
 	if keys == nil {
 		keys = cachedDefaultLinearKeys
 	}
@@ -87,7 +87,7 @@ type List interface {
 }
 
 // NewList constructs new List
-func NewList(cdc *wire.Codec, store sdk.KVStore, keys *LinearKeys) List {
+func NewList(cdc *codec.Codec, store sdk.KVStore, keys *LinearKeys) List {
 	return NewLinear(cdc, store, keys)
 }
 
@@ -182,7 +182,7 @@ type Queue interface {
 }
 
 // NewQueue constructs new Queue
-func NewQueue(cdc *wire.Codec, store sdk.KVStore, keys *LinearKeys) Queue {
+func NewQueue(cdc *codec.Codec, store sdk.KVStore, keys *LinearKeys) Queue {
 	return NewLinear(cdc, store, keys)
 }
 

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Pool - dynamic parameters of the current state
@@ -142,7 +142,7 @@ func (p Pool) HumanReadableString() string {
 }
 
 // unmarshal the current pool value from store key or panics
-func MustUnmarshalPool(cdc *wire.Codec, value []byte) Pool {
+func MustUnmarshalPool(cdc *codec.Codec, value []byte) Pool {
 	pool, err := UnmarshalPool(cdc, value)
 	if err != nil {
 		panic(err)
@@ -151,7 +151,7 @@ func MustUnmarshalPool(cdc *wire.Codec, value []byte) Pool {
 }
 
 // unmarshal the current pool value from store key
-func UnmarshalPool(cdc *wire.Codec, value []byte) (pool Pool, err error) {
+func UnmarshalPool(cdc *codec.Codec, value []byte) (pool Pool, err error) {
 	err = cdc.UnmarshalBinary(value, &pool)
 	if err != nil {
 		return

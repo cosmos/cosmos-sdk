@@ -20,9 +20,9 @@ var (
 	addr3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	priv4 = ed25519.GenPrivKey()
 	addr4 = sdk.AccAddress(priv4.PubKey().Address())
-	coins = sdk.Coins{{"foocoin", sdk.NewInt(10)}}
+	coins = sdk.Coins{sdk.NewCoin("foocoin", sdk.NewInt(10))}
 	fee   = auth.StdFee{
-		sdk.Coins{{"foocoin", sdk.NewInt(0)}},
+		sdk.Coins{sdk.NewCoin("foocoin", sdk.NewInt(0))},
 		100000,
 	}
 )
@@ -31,17 +31,18 @@ var (
 func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	mApp := mock.NewApp()
 
-	RegisterWire(mApp.Cdc)
+	RegisterCodec(mApp.Cdc)
 
 	keyStake := sdk.NewKVStoreKey("stake")
-	bankKeeper := bank.NewKeeper(mApp.AccountMapper)
-	keeper := NewKeeper(mApp.Cdc, keyStake, bankKeeper, mApp.RegisterCodespace(DefaultCodespace))
+	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
+	bankKeeper := bank.NewBaseKeeper(mApp.AccountMapper)
+	keeper := NewKeeper(mApp.Cdc, keyStake, tkeyStake, bankKeeper, mApp.RegisterCodespace(DefaultCodespace))
 
 	mApp.Router().AddRoute("stake", NewHandler(keeper))
 	mApp.SetEndBlocker(getEndBlocker(keeper))
 	mApp.SetInitChainer(getInitChainer(mApp, keeper))
 
-	require.NoError(t, mApp.CompleteSetup([]*sdk.KVStoreKey{keyStake}))
+	require.NoError(t, mApp.CompleteSetup(keyStake, tkeyStake))
 	return mApp, keeper
 }
 

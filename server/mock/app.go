@@ -12,9 +12,9 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	gc "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // NewApp creates a simple mock kvstore app for testing. It should work
@@ -105,7 +105,7 @@ func InitChainer(key sdk.StoreKey) func(sdk.Context, abci.RequestInitChain) abci
 
 // AppGenState can be passed into InitCmd, returns a static string of a few
 // key-values that can be parsed by InitChainer
-func AppGenState(_ *wire.Codec, _ []json.RawMessage) (appState json.RawMessage, err error) {
+func AppGenState(_ *codec.Codec, _ []json.RawMessage) (appState json.RawMessage, err error) {
 	appState = json.RawMessage(`{
   "values": [
     {
@@ -122,13 +122,13 @@ func AppGenState(_ *wire.Codec, _ []json.RawMessage) (appState json.RawMessage, 
 }
 
 // AppGenStateEmpty returns an empty transaction state for mocking.
-func AppGenStateEmpty(_ *wire.Codec, _ []json.RawMessage) (appState json.RawMessage, err error) {
+func AppGenStateEmpty(_ *codec.Codec, _ []json.RawMessage) (appState json.RawMessage, err error) {
 	appState = json.RawMessage(``)
 	return
 }
 
 // Return a validator, not much else
-func AppGenTx(_ *wire.Codec, pk crypto.PubKey, genTxConfig gc.GenTx) (
+func AppGenTx(_ *codec.Codec, pk crypto.PubKey, genTxConfig gc.GenTx) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
 	validator = tmtypes.GenesisValidator{

@@ -15,11 +15,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/codec"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/spf13/viper"
@@ -176,7 +176,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		genesisState.StakeData.Pool.LooseTokens = genesisState.StakeData.Pool.LooseTokens.Add(sdk.NewDec(100))
 	}
 
-	appState, err := wire.MarshalJSONIndent(cdc, genesisState)
+	appState, err := codec.MarshalJSONIndent(cdc, genesisState)
 	require.NoError(t, err)
 	genDoc.AppState = appState
 
@@ -186,6 +186,10 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	// XXX: Need to set this so LCD knows the tendermint node address!
 	viper.Set(client.FlagNode, config.RPC.ListenAddress)
 	viper.Set(client.FlagChainID, genDoc.ChainID)
+	viper.Set(client.FlagTrustNode, false)
+	dir, err := ioutil.TempDir("", "lcd_test")
+	require.NoError(t, err)
+	viper.Set(cli.HomeFlag, dir)
 
 	node, err := startTM(config, logger, genDoc, privVal, app)
 	require.NoError(t, err)
@@ -245,7 +249,7 @@ func startTM(
 // startLCD starts the LCD.
 //
 // NOTE: This causes the thread to block.
-func startLCD(logger log.Logger, listenAddr string, cdc *wire.Codec) (net.Listener, error) {
+func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec) (net.Listener, error) {
 	return tmrpc.StartHTTPServer(listenAddr, createHandler(cdc), logger, tmrpc.Config{})
 }
 

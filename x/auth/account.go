@@ -3,8 +3,8 @@ package auth
 import (
 	"errors"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -119,8 +119,8 @@ func (acc *BaseAccount) SetSequence(seq int64) error {
 // Wire
 
 // Most users shouldn't use this, but this comes handy for tests.
-func RegisterBaseAccount(cdc *wire.Codec) {
+func RegisterBaseAccount(cdc *codec.Codec) {
 	cdc.RegisterInterface((*Account)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
-	wire.RegisterCrypto(cdc)
+	codec.RegisterCrypto(cdc)
 }

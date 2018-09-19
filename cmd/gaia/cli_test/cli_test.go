@@ -18,10 +18,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -112,8 +112,16 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
 
+	// Test failure with negative gas
+	success = executeWrite(t, fmt.Sprintf("gaiacli send %v --gas=-100 --amount=10steak --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
+	require.False(t, success)
+
+	// Test failure with 0 gas
+	success = executeWrite(t, fmt.Sprintf("gaiacli send %v --gas=0 --amount=10steak --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
+	require.False(t, success)
+
 	// Enable auto gas
-	success, stdout, _ := executeWriteRetStdStreams(t, fmt.Sprintf("gaiacli send %v --json --gas=0 --amount=10steak --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
+	success, stdout, _ := executeWriteRetStdStreams(t, fmt.Sprintf("gaiacli send %v --json --gas=simulate --amount=10steak --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
 	require.True(t, success)
 	// check that gas wanted == gas used
 	cdc := app.MakeCodec()
@@ -381,7 +389,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 
 	// Test generate sendTx, estimate gas
 	success, stdout, stderr = executeWriteRetStdStreams(t, fmt.Sprintf(
-		"gaiacli send %v --amount=10steak --to=%s --from=foo --gas=0 --generate-only",
+		"gaiacli send %v --amount=10steak --to=%s --from=foo --gas=simulate --generate-only",
 		flags, barAddr), []string{}...)
 	require.True(t, success)
 	require.NotEmpty(t, stderr)
@@ -541,8 +549,8 @@ func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {
 	require.NoError(t, err, "out %v, err %v", out, err)
 	value := initRes["value"]
 	var acc auth.BaseAccount
-	cdc := wire.NewCodec()
-	wire.RegisterCrypto(cdc)
+	cdc := codec.New()
+	codec.RegisterCrypto(cdc)
 	err = cdc.UnmarshalJSON(value, &acc)
 	require.NoError(t, err, "value %v, err %v", string(value), err)
 	return acc

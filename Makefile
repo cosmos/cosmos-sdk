@@ -142,10 +142,10 @@ test_examples:
 	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/examples/democoin/cli_test` -tags=cli_test
 
 test_unit:
-	@go test $(PACKAGES_NOSIMULATION)
+	@VERSION=$(VERSION) go test $(PACKAGES_NOSIMULATION)
 
 test_race:
-	@go test -race $(PACKAGES_NOSIMULATION)
+	@VERSION=$(VERSION) go test -race $(PACKAGES_NOSIMULATION)
 
 test_sim_modules:
 	@echo "Running individual module simulations..."

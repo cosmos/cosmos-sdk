@@ -33,7 +33,7 @@ func (gs *gasKVStore) GetStoreType() sdk.StoreType {
 
 // Implements KVStore.
 func (gs *gasKVStore) Get(key []byte) (value []byte) {
-	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostFlat, sdk.GasReadFlatDesc)
+	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostFlat, sdk.GasReadCostFlatDesc)
 	value = gs.parent.Get(key)
 
 	// TODO overflow-safe math?
@@ -44,7 +44,7 @@ func (gs *gasKVStore) Get(key []byte) (value []byte) {
 
 // Implements KVStore.
 func (gs *gasKVStore) Set(key []byte, value []byte) {
-	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, sdk.GasWriteFlatDesc)
+	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, sdk.GasWriteCostFlatDesc)
 	// TODO overflow-safe math?
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*sdk.Gas(len(value)), sdk.GasWritePerByteDesc)
 	gs.parent.Set(key, value)
@@ -77,12 +77,14 @@ func (gs *gasKVStore) Gas(meter GasMeter, config GasConfig) KVStore {
 	return NewGasKVStore(meter, config, gs)
 }
 
-// Implements KVStore.
+// Iterator implements the KVStore interface. It returns an iterator which
+// incurs a flat gas cost of iterator initialization.
 func (gs *gasKVStore) Iterator(start, end []byte) sdk.Iterator {
 	return gs.iterator(start, end, true)
 }
 
-// Implements KVStore.
+// ReverseIterator implements the KVStore interface. It returns a reverse
+// iterator which incurs a flat gas cost of iterator initialization.
 func (gs *gasKVStore) ReverseIterator(start, end []byte) sdk.Iterator {
 	return gs.iterator(start, end, false)
 }
@@ -105,7 +107,7 @@ func (gs *gasKVStore) iterator(start, end []byte, ascending bool) sdk.Iterator {
 		parent = gs.parent.ReverseIterator(start, end)
 	}
 
-	gs.gasMeter.ConsumeGas(gs.gasConfig.IterInitFlat, sdk.GasIterInitFlatDesc)
+	gs.gasMeter.ConsumeGas(gs.gasConfig.IterInitCostFlat, sdk.GasIterInitCostFlatDesc)
 	return newGasIterator(gs.gasMeter, gs.gasConfig, parent)
 }
 
@@ -133,22 +135,29 @@ func (gi *gasIterator) Valid() bool {
 	return gi.parent.Valid()
 }
 
-// Implements Iterator.
+// Next implements the Iterator interface. It iterates to the next key/value
+// pair in the iterator. It incurs a flat cost for iteration and a variable cost
+// based on the current value's length.
 func (gi *gasIterator) Next() {
-	gi.gasMeter.ConsumeGas(gi.gasConfig.IterNextFlat, sdk.GasIterNextFlatDesc)
+	value := gi.Value()
+
+	gi.gasMeter.ConsumeGas(gi.gasConfig.ValueCostPerByte*sdk.Gas(len(value)), sdk.GasValuePerByteDesc)
+	gi.gasMeter.ConsumeGas(gi.gasConfig.IterNextCostFlat, sdk.GasIterNextCostFlatDesc)
+
 	gi.parent.Next()
 }
 
-// Implements Iterator.
+// Key implements the Iterator interface. It returns the current key and it does
+// not incur any gas cost.
 func (gi *gasIterator) Key() (key []byte) {
 	key = gi.parent.Key()
 	return key
 }
 
-// Implements Iterator.
+// Value implements the Iterator interface. It returns the current value and it
+// does not incur any gas cost.
 func (gi *gasIterator) Value() (value []byte) {
 	value = gi.parent.Value()
-	gi.gasMeter.ConsumeGas(gi.gasConfig.ValueCostPerByte*sdk.Gas(len(value)), sdk.GasValuePerByteDesc)
 	return value
 }
 

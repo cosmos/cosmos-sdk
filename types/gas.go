@@ -2,14 +2,14 @@ package types
 
 // Gas consumption descriptors.
 const (
-	GasIterInitFlatDesc = "IterInitFlat"
-	GasIterNextFlatDesc = "IterNextFlat"
-	GasValuePerByteDesc = "ValuePerByte"
-	GasWritePerByteDesc = "WritePerByte"
-	GasReadPerByteDesc  = "ReadPerByte"
-	GasWriteFlatDesc    = "WriteFlat"
-	GasReadFlatDesc     = "ReadFlat"
-	GasHasDesc          = "Has"
+	GasIterInitCostFlatDesc = "IterInitFlat"
+	GasIterNextCostFlatDesc = "IterNextFlat"
+	GasValuePerByteDesc     = "ValuePerByte"
+	GasWritePerByteDesc     = "WritePerByte"
+	GasReadPerByteDesc      = "ReadPerByte"
+	GasWriteCostFlatDesc    = "WriteFlat"
+	GasReadCostFlatDesc     = "ReadFlat"
+	GasHasDesc              = "Has"
 )
 
 var (
@@ -82,8 +82,8 @@ type GasConfig struct {
 	WriteCostFlat    Gas
 	WriteCostPerByte Gas
 	ValueCostPerByte Gas
-	IterInitFlat     Gas
-	IterNextFlat     Gas
+	IterInitCostFlat Gas
+	IterNextCostFlat Gas
 }
 
 // DefaultGasConfig returns a default gas config for KVStores.
@@ -94,9 +94,9 @@ func DefaultGasConfig() GasConfig {
 		ReadCostPerByte:  1,
 		WriteCostFlat:    10,
 		WriteCostPerByte: 10,
-		IterInitFlat:     5,
-		IterNextFlat:     10,
 		ValueCostPerByte: 1,
+		IterInitCostFlat: 5,
+		IterNextCostFlat: 15,
 	}
 }
 

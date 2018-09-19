@@ -20,9 +20,9 @@ var (
 	addr3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	priv4 = ed25519.GenPrivKey()
 	addr4 = sdk.AccAddress(priv4.PubKey().Address())
-	coins = sdk.Coins{{"foocoin", sdk.NewInt(10)}}
+	coins = sdk.Coins{sdk.NewCoin("foocoin", sdk.NewInt(10))}
 	fee   = auth.StdFee{
-		sdk.Coins{{"foocoin", sdk.NewInt(0)}},
+		sdk.Coins{sdk.NewCoin("foocoin", sdk.NewInt(0))},
 		100000,
 	}
 )
@@ -31,17 +31,18 @@ var (
 func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	mApp := mock.NewApp()
 
-	RegisterWire(mApp.Cdc)
+	RegisterCodec(mApp.Cdc)
 
 	keyStake := sdk.NewKVStoreKey("stake")
-	coinKeeper := bank.NewKeeper(mApp.AccountMapper)
-	keeper := NewKeeper(mApp.Cdc, keyStake, coinKeeper, mApp.RegisterCodespace(DefaultCodespace))
+	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
+	bankKeeper := bank.NewBaseKeeper(mApp.AccountMapper)
+	keeper := NewKeeper(mApp.Cdc, keyStake, tkeyStake, bankKeeper, mApp.RegisterCodespace(DefaultCodespace))
 
 	mApp.Router().AddRoute("stake", NewHandler(keeper))
 	mApp.SetEndBlocker(getEndBlocker(keeper))
 	mApp.SetInitChainer(getInitChainer(mApp, keeper))
 
-	require.NoError(t, mApp.CompleteSetup([]*sdk.KVStoreKey{keyStake}))
+	require.NoError(t, mApp.CompleteSetup(keyStake, tkeyStake))
 	return mApp, keeper
 }
 
@@ -136,7 +137,7 @@ func TestStakeMsgs(t *testing.T) {
 	mApp.BeginBlock(abci.RequestBeginBlock{})
 
 	validator := checkValidator(t, mApp, keeper, sdk.ValAddress(addr1), true)
-	require.Equal(t, sdk.ValAddress(addr1), validator.Operator)
+	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddr)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.DecEq(t, sdk.NewDec(10), validator.BondedTokens()))
 
@@ -150,7 +151,7 @@ func TestStakeMsgs(t *testing.T) {
 	mApp.BeginBlock(abci.RequestBeginBlock{})
 
 	validator = checkValidator(t, mApp, keeper, sdk.ValAddress(addr2), true)
-	require.Equal(t, sdk.ValAddress(addr2), validator.Operator)
+	require.Equal(t, sdk.ValAddress(addr2), validator.OperatorAddr)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
 

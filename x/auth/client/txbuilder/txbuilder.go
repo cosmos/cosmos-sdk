@@ -3,8 +3,8 @@ package context
 import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/pkg/errors"
@@ -13,10 +13,12 @@ import (
 
 // TxBuilder implements a transaction context created in SDK modules.
 type TxBuilder struct {
-	Codec         *wire.Codec
+	Codec         *codec.Codec
 	AccountNumber int64
 	Sequence      int64
-	Gas           int64
+	Gas           int64 // TODO: should this turn into uint64? requires further discussion - see #2173
+	GasAdjustment float64
+	SimulateGas   bool
 	ChainID       string
 	Memo          string
 	Fee           string
@@ -36,16 +38,18 @@ func NewTxBuilderFromCLI() TxBuilder {
 
 	return TxBuilder{
 		ChainID:       chainID,
-		Gas:           viper.GetInt64(client.FlagGas),
 		AccountNumber: viper.GetInt64(client.FlagAccountNumber),
+		Gas:           client.GasFlagVar.Gas,
+		GasAdjustment: viper.GetFloat64(client.FlagGasAdjustment),
 		Sequence:      viper.GetInt64(client.FlagSequence),
+		SimulateGas:   client.GasFlagVar.Simulate,
 		Fee:           viper.GetString(client.FlagFee),
 		Memo:          viper.GetString(client.FlagMemo),
 	}
 }
 
 // WithCodec returns a copy of the context with an updated codec.
-func (bldr TxBuilder) WithCodec(cdc *wire.Codec) TxBuilder {
+func (bldr TxBuilder) WithCodec(cdc *codec.Codec) TxBuilder {
 	bldr.Codec = cdc
 	return bldr
 }

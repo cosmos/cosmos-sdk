@@ -1,8 +1,8 @@
 package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -11,19 +11,21 @@ import (
 // keeper of the stake store
 type Keeper struct {
 	storeKey       sdk.StoreKey
-	cdc            *wire.Codec
-	coinKeeper     bank.Keeper
+	storeTKey      sdk.StoreKey
+	cdc            *codec.Codec
+	bankKeeper     bank.Keeper
 	validatorHooks sdk.ValidatorHooks
 
 	// codespace
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:       key,
+		storeTKey:      tkey,
 		cdc:            cdc,
-		coinKeeper:     ck,
+		bankKeeper:     ck,
 		validatorHooks: nil,
 		codespace:      codespace,
 	}

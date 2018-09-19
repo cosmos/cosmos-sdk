@@ -11,16 +11,17 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -33,6 +34,72 @@ var (
 
 func init() {
 	gaiadHome, gaiacliHome = getTestingHomeDirs()
+}
+
+func TestGaiaCLIMinimumFees(t *testing.T) {
+	chainID, servAddr, port := initializeFixtures(t)
+	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
+
+	// start gaiad server with minimum fees
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --minimum_fees=2feeToken", gaiadHome, servAddr))
+
+	defer proc.Stop(false)
+	tests.WaitForTMStart(port)
+	tests.WaitForNextNBlocksTM(2, port)
+
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
+	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
+
+	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
+	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
+
+	success := executeWrite(t, fmt.Sprintf(
+		"gaiacli send %v --amount=10steak --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
+	require.False(t, success)
+	tests.WaitForNextNBlocksTM(2, port)
+
+}
+
+func TestGaiaCLIFeesDeduction(t *testing.T) {
+	chainID, servAddr, port := initializeFixtures(t)
+	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
+
+	// start gaiad server with minimum fees
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --minimum_fees=1fooToken", gaiadHome, servAddr))
+
+	defer proc.Stop(false)
+	tests.WaitForTMStart(port)
+	tests.WaitForNextNBlocksTM(2, port)
+
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
+	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
+
+	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
+	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("fooToken").Int64())
+
+	// test simulation
+	success := executeWrite(t, fmt.Sprintf(
+		"gaiacli send %v --amount=1000fooToken --to=%s --from=foo --fee=1fooToken --dry-run", flags, barAddr), app.DefaultKeyPass)
+	require.True(t, success)
+	tests.WaitForNextNBlocksTM(2, port)
+	// ensure state didn't change
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
+	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("fooToken").Int64())
+
+	// insufficient funds (coins + fees)
+	success = executeWrite(t, fmt.Sprintf(
+		"gaiacli send %v --amount=1000fooToken --to=%s --from=foo --fee=1fooToken", flags, barAddr), app.DefaultKeyPass)
+	require.False(t, success)
+	tests.WaitForNextNBlocksTM(2, port)
+	// ensure state didn't change
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
+	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("fooToken").Int64())
+
+	// test success (transfer = coins + fees)
+	success = executeWrite(t, fmt.Sprintf(
+		"gaiacli send %v --fee=300fooToken --amount=500fooToken --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
+	require.True(t, success)
+	tests.WaitForNextNBlocksTM(2, port)
 }
 
 func TestGaiaCLISend(t *testing.T) {
@@ -111,9 +178,26 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
 
-	// Enable auto gas
+	// Test failure with negative gas
+	success = executeWrite(t, fmt.Sprintf("gaiacli send %v --gas=-100 --amount=10steak --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
+	require.False(t, success)
+
+	// Test failure with 0 gas
 	success = executeWrite(t, fmt.Sprintf("gaiacli send %v --gas=0 --amount=10steak --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
+	require.False(t, success)
+
+	// Enable auto gas
+	success, stdout, _ := executeWriteRetStdStreams(t, fmt.Sprintf("gaiacli send %v --json --gas=simulate --amount=10steak --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
 	require.True(t, success)
+	// check that gas wanted == gas used
+	cdc := app.MakeCodec()
+	jsonOutput := struct {
+		Height   int64
+		TxHash   string
+		Response abci.ResponseDeliverTx
+	}{}
+	require.Nil(t, cdc.UnmarshalJSON([]byte(stdout), &jsonOutput))
+	require.Equal(t, jsonOutput.Response.GasWanted, jsonOutput.Response.GasUsed)
 	tests.WaitForNextNBlocksTM(2, port)
 	// Check state has changed accordingly
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
@@ -178,7 +262,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.Equal(t, int64(8), barAcc.GetCoins().AmountOf("steak").Int64(), "%v", barAcc)
 
 	validator := executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %s --output=json %v", sdk.ValAddress(barAddr), flags))
-	require.Equal(t, validator.Operator, sdk.ValAddress(barAddr))
+	require.Equal(t, validator.OperatorAddr, sdk.ValAddress(barAddr))
 	require.True(sdk.DecEq(t, sdk.NewDec(2), validator.Tokens))
 
 	// unbond a single share
@@ -333,7 +417,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, "  2 - Apples", proposalsQuery)
 }
 
-func TestGaiaCLISendGenerateAndSign(t *testing.T) {
+func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	chainID, servAddr, port := initializeFixtures(t)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
@@ -358,16 +442,6 @@ func TestGaiaCLISendGenerateAndSign(t *testing.T) {
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
-	// Test generate sendTx, estimate gas
-	success, stdout, stderr = executeWriteRetStdStreams(t, fmt.Sprintf(
-		"gaiacli send %v --amount=10steak --to=%s --from=foo --gas=0 --generate-only",
-		flags, barAddr), []string{}...)
-	require.True(t, success)
-	require.NotEmpty(t, stderr)
-	msg = unmarshalStdTx(t, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Equal(t, len(msg.Msgs), 1)
-
 	// Test generate sendTx with --gas=$amount
 	success, stdout, stderr = executeWriteRetStdStreams(t, fmt.Sprintf(
 		"gaiacli send %v --amount=10steak --to=%s --from=foo --gas=100 --generate-only",
@@ -378,6 +452,16 @@ func TestGaiaCLISendGenerateAndSign(t *testing.T) {
 	require.Equal(t, msg.Fee.Gas, int64(100))
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
+
+	// Test generate sendTx, estimate gas
+	success, stdout, stderr = executeWriteRetStdStreams(t, fmt.Sprintf(
+		"gaiacli send %v --amount=10steak --to=%s --from=foo --gas=simulate --generate-only",
+		flags, barAddr), []string{}...)
+	require.True(t, success)
+	require.NotEmpty(t, stderr)
+	msg = unmarshalStdTx(t, stdout)
+	require.True(t, msg.Fee.Gas > 0)
+	require.Equal(t, len(msg.Msgs), 1)
 
 	// Write the output to disk
 	unsignedTxFile := writeToNewTempFile(t, stdout)
@@ -407,6 +491,25 @@ func TestGaiaCLISendGenerateAndSign(t *testing.T) {
 		"gaiacli sign %v --print-sigs %v", flags, signedTxFile.Name()))
 	require.True(t, success)
 	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n 0: %v\n", fooAddr.String(), fooAddr.String()), stdout)
+
+	// Test broadcast
+	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
+	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
+
+	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf("gaiacli broadcast %v --json %v", flags, signedTxFile.Name()))
+	require.True(t, success)
+	var result struct {
+		Response abci.ResponseDeliverTx
+	}
+	require.Nil(t, app.MakeCodec().UnmarshalJSON([]byte(stdout), &result))
+	require.Equal(t, msg.Fee.Gas, result.Response.GasUsed)
+	require.Equal(t, msg.Fee.Gas, result.Response.GasWanted)
+	tests.WaitForNextNBlocksTM(2, port)
+
+	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", barAddr, flags))
+	require.Equal(t, int64(10), barAcc.GetCoins().AmountOf("steak").Int64())
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
+	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("steak").Int64())
 }
 
 //___________________________________________________________________________________
@@ -512,8 +615,8 @@ func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {
 	require.NoError(t, err, "out %v, err %v", out, err)
 	value := initRes["value"]
 	var acc auth.BaseAccount
-	cdc := wire.NewCodec()
-	wire.RegisterCrypto(cdc)
+	cdc := codec.New()
+	codec.RegisterCrypto(cdc)
 	err = cdc.UnmarshalJSON(value, &acc)
 	require.NoError(t, err, "value %v, err %v", string(value), err)
 	return acc

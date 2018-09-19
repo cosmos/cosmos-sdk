@@ -9,9 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
@@ -20,7 +20,7 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
-func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
+func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, kb keys.Keybase) {
 	r.HandleFunc(
 		"/stake/delegators/{delegatorAddr}/delegations",
 		delegationsRequestHandlerFn(cdc, kb, cliCtx),
@@ -60,7 +60,7 @@ type EditDelegationsBody struct {
 	ChainID             string                       `json:"chain_id"`
 	AccountNumber       int64                        `json:"account_number"`
 	Sequence            int64                        `json:"sequence"`
-	Gas                 int64                        `json:"gas"`
+	Gas                 string                       `json:"gas"`
 	GasAdjustment       string                       `json:"gas_adjustment"`
 	Delegations         []msgDelegationsInput        `json:"delegations"`
 	BeginUnbondings     []msgBeginUnbondingInput     `json:"begin_unbondings"`
@@ -72,7 +72,7 @@ type EditDelegationsBody struct {
 // nolint: gocyclo
 // TODO: Split this up into several smaller functions, and remove the above nolint
 // TODO: use sdk.ValAddress instead of sdk.AccAddress for validators in messages
-func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
+func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m EditDelegationsBody
 
@@ -263,10 +263,21 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 			i++
 		}
 
+		simulateGas, gas, err := client.ReadGasFlag(m.Gas)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, client.DefaultGasAdjustment)
+		if !ok {
+			return
+		}
 		txBldr := authtxb.TxBuilder{
-			Codec:   cdc,
-			ChainID: m.ChainID,
-			Gas:     m.Gas,
+			Codec:         cdc,
+			Gas:           gas,
+			GasAdjustment: adjustment,
+			SimulateGas:   simulateGas,
+			ChainID:       m.ChainID,
 		}
 
 		// sign messages
@@ -275,26 +286,19 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 			// increment sequence for each message
 			txBldr = txBldr.WithAccountNumber(m.AccountNumber)
 			txBldr = txBldr.WithSequence(m.Sequence)
-
 			m.Sequence++
 
-			adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, m.GasAdjustment, client.DefaultGasAdjustment)
-			if !ok {
-				return
-			}
-			cliCtx = cliCtx.WithGasAdjustment(adjustment)
-
-			if utils.HasDryRunArg(r) || m.Gas == 0 {
-				newCtx, err := utils.EnrichCtxWithGas(txBldr, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
+			if utils.HasDryRunArg(r) || txBldr.SimulateGas {
+				newBldr, err := utils.EnrichCtxWithGas(txBldr, cliCtx, m.LocalAccountName, []sdk.Msg{msg})
 				if err != nil {
 					utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 					return
 				}
 				if utils.HasDryRunArg(r) {
-					utils.WriteSimulationResponse(w, txBldr.Gas)
+					utils.WriteSimulationResponse(w, newBldr.Gas)
 					return
 				}
-				txBldr = newCtx
+				txBldr = newBldr
 			}
 
 			if utils.HasGenerateOnlyArg(r) {
@@ -325,7 +329,7 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 			results[i] = res
 		}
 
-		output, err := wire.MarshalJSONIndent(cdc, results[:])
+		output, err := codec.MarshalJSONIndent(cdc, results[:])
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

@@ -17,14 +17,14 @@ import (
 //______________________________________________________________________
 
 func newTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt int64) MsgCreateValidator {
-	return types.NewMsgCreateValidator(address, pubKey, sdk.Coin{"steak", sdk.NewInt(amt)}, Description{})
+	return types.NewMsgCreateValidator(address, pubKey, sdk.NewCoin("steak", sdk.NewInt(amt)), Description{})
 }
 
 func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt int64) MsgDelegate {
 	return MsgDelegate{
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
-		Delegation:    sdk.Coin{"steak", sdk.NewInt(amt)},
+		Delegation:    sdk.NewCoin("steak", sdk.NewInt(amt)),
 	}
 }
 
@@ -34,7 +34,7 @@ func newTestMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.Val
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
 		PubKey:        valPubKey,
-		Delegation:    sdk.Coin{"steak", sdk.NewInt(amt)},
+		Delegation:    sdk.NewCoin("steak", sdk.NewInt(amt)),
 	}
 }
 
@@ -136,8 +136,8 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
-	assert.Equal(t, addr1, validator.Operator)
-	assert.Equal(t, pk1, validator.PubKey)
+	assert.Equal(t, addr1, validator.OperatorAddr)
+	assert.Equal(t, pk1, validator.ConsPubKey)
 	assert.Equal(t, sdk.NewDec(10), validator.BondedTokens())
 	assert.Equal(t, sdk.NewDec(10), validator.DelegatorShares)
 	assert.Equal(t, Description{}, validator.Description)
@@ -160,8 +160,8 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
-	assert.Equal(t, addr2, validator.Operator)
-	assert.Equal(t, pk2, validator.PubKey)
+	assert.Equal(t, addr2, validator.OperatorAddr)
+	assert.Equal(t, pk2, validator.ConsPubKey)
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 	assert.Equal(t, Description{}, validator.Description)
@@ -180,8 +180,8 @@ func TestDuplicatesMsgCreateValidatorOnBehalfOf(t *testing.T) {
 
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
-	assert.Equal(t, validatorAddr, validator.Operator)
-	assert.Equal(t, pk, validator.PubKey)
+	assert.Equal(t, validatorAddr, validator.OperatorAddr)
+	assert.Equal(t, pk, validator.ConsPubKey)
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 	assert.Equal(t, Description{}, validator.Description)

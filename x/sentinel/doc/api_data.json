@@ -61,7 +61,7 @@
             "group": "Parameter",
             "type": "string",
             "optional": false,
-            "field": "signature",
+            "field": "sign",
             "description": "<p>signature of the client.</p>"
           }
         ]
@@ -424,6 +424,25 @@
         {
           "title": "Response:",
           "content": "{\ngarden sunset night final child popular fall ostrich amused diamond lift stool useful brisk very half rice evil any behave merge shift ring chronic\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "rest/service.go",
+    "groupTitle": "Sentinel_Tendermint"
+  },
+  {
+    "type": "post",
+    "url": "/session/{sessionId}",
+    "title": "To get session data.",
+    "name": "getSessionData",
+    "group": "Sentinel_Tendermint",
+    "success": {
+      "examples": [
+        {
+          "title": "Response:",
+          "content": "{\n   \"name\": \"vpn\",{\n   \"TotalLockedCoins\": [\n       {\n           \"denom\": \"sentinel\",\n           \"amount\": \"10000000000\"\n       }\n   ],\n   \"ReleasedCoins\": [\n       {\n           \"denom\": \"sentinel\",\n           \"amount\": \"5000000000\"\n       }\n   ],\n   \"Counter\": 1,\n   \"Timestamp\": 1537361017,\n   \"VpnPubKey\": [2,97,15,10,206,154,217,19,35,137,55,116,142,249,18,94,82,184,186,222,255,183,15,37,229,108,32,62,209,252,247,182,145],\n   \"CPubKey\": [3,157,182,213,107,56,95,22,24,197,116,75,236,23,60,131,180,160,198,244,216,103,74,189,19,147,141,25,242,109,176,252,39],\n   \"CAddress\": \"cosmosaccaddr130q3n8kkpa9flav0sa5lefjunmruhchg5z6pzd\",\n\t    \"Status\": 1\n\n}",
           "type": "json"
         }
       ]

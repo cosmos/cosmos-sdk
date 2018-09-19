@@ -60,6 +60,34 @@ import (
 *}
  */
 /**
+* @api {post} /session/{sessionId} To get session data.
+* @apiName getSessionData
+* @apiGroup Sentinel-Tendermint
+* @apiSuccessExample Response:
+*{
+*    "name": "vpn",{
+*    "TotalLockedCoins": [
+*        {
+*            "denom": "sentinel",
+*            "amount": "10000000000"
+*        }
+*    ],
+*    "ReleasedCoins": [
+*        {
+*            "denom": "sentinel",
+*            "amount": "5000000000"
+*        }
+*    ],
+*    "Counter": 1,
+*    "Timestamp": 1537361017,
+*    "VpnPubKey": [2,97,15,10,206,154,217,19,35,137,55,116,142,249,18,94,82,184,186,222,255,183,15,37,229,108,32,62,209,252,247,182,145],
+*    "CPubKey": [3,157,182,213,107,56,95,22,24,197,116,75,236,23,60,131,180,160,198,244,216,103,74,189,19,147,141,25,242,109,176,252,39],
+*    "CAddress": "cosmosaccaddr130q3n8kkpa9flav0sa5lefjunmruhchg5z6pzd",
+*	    "Status": 1
+*
+*}
+ */
+/**
 * @api {post} /register/vpn To register VPN service provider.
 * @apiName registerVPN
 * @apiGroup Sentinel-Tendermint
@@ -849,7 +877,7 @@ func RefundHandleFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 * @apiParam {Number} gas gas value.
 * @apiParam {Boolean} isfinal is this final signature or not.
 * @apiParam {string} password password of account.
-* @apiParam {string} signature signature of the client.
+* @apiParam {string} sign signature of the client.
 * @apiError InvalidSessionId  SessionId is invalid
 * @apiError SignatureVerificationFailed  Invalid signature
 * @apiErrorExample InvalidSessionId-Response:
@@ -947,7 +975,7 @@ func GetVpnPaymentHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.Handl
 		if err != nil {
 			w.Write([]byte("Signature from string conversion failed"))
 		}
-		
+
 		ctx = ctx.WithFromAddressName(msg.Localaccount)
 		ctx = ctx.WithGas(msg.Gas)
 		ctx = ctx.WithDecoder(authcmd.GetAccountDecoder(cdc))

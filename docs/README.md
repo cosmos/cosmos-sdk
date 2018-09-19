@@ -7,3 +7,8 @@ Cosmos is a decentralized network of independent parallel blockchains, each powe
 The first blockchain in the Cosmos Network is the Cosmos Hub, whose native token is the Atom. Cosmos is a permission-less network, meaning that anybody can build a blockchain on it.
 
 Cosmos can interoperate with multiple other applications and cryptocurrencies. By creating a new zone, you can plug any blockchain system into the Cosmos hub and pass tokens back and forth between those zones, without the need for an intermediary.
+
+## Edit the Documentation
+
+See [this file](./DOCS_README.md) for details of the build process and
+considerations when making changes.

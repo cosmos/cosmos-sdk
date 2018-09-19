@@ -97,7 +97,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 			requiredFees := adjustFeesByGas(ctx.MinimumFees(), fee.Gas)
 			// fees must be greater than the minimum set by the validator adjusted by gas
-			if ctx.IsCheckTx() && !simulate && !ctx.MinimumFees().IsZero() && !fee.Amount.IsGTE(requiredFees) {
+			if ctx.IsCheckTx() && !simulate && !ctx.MinimumFees().IsZero() && fee.Amount.IsLT(requiredFees) {
 				// validators reject any tx from the mempool with less than the minimum fee per gas * gas factor
 				return newCtx, sdk.ErrInsufficientFee(fmt.Sprintf(
 					"insufficient fee, got: %q required: %q", fee.Amount, requiredFees)).Result(), true

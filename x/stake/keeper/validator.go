@@ -77,7 +77,7 @@ func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 // validator index
 func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	consAddr := sdk.ConsAddress{validator.OperatorAddr.Bytes()}
+	consAddr := sdk.ConsAddress(validator.OperatorAddr.Bytes())
 	store.Set(GetValidatorByConsAddrKey(consAddr), validator.OperatorAddr)
 }
 
@@ -683,7 +683,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
 	store.Delete(GetValidatorKey(address))
-	store.Delete(GetValidatorByConsAddrKey(sdk.ConsAddr{validator.ConsPubKey.Address()}))
+	store.Delete(GetValidatorByConsAddrKey(sdk.ConsAddress(validator.ConsPubKey.Address())))
 	store.Delete(GetValidatorsByPowerIndexKey(validator, pool))
 
 	// delete from the current and power weighted validator groups if the validator
@@ -738,14 +738,13 @@ func ensureValidatorFound(found bool, ownerAddr []byte) {
 // XXX remove this code - this is should be superceded by commission work that bez is doing
 // get a single validator
 func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, addr sdk.ValAddress, newCommission sdk.Dec) sdk.Error {
-	store := ctx.KVStore(k.storeKey)
 
 	// call the hook if present
 	if k.hooks != nil {
-		k.hooks.OnValidatorCommissionChange(ctx, validator.OperatorAddr)
+		k.hooks.OnValidatorCommissionChange(ctx, addr)
 	}
 
-	validator, found := k.GetValidator(addr)
+	validator, found := k.GetValidator(ctx, addr)
 
 	// check for errors
 	switch {
@@ -763,6 +762,6 @@ func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, addr sdk.ValAddress, 
 
 	validator.Commission = newCommission
 
-	k.SetValidator(addr, validator)
+	k.SetValidator(ctx, validator)
 	return nil
 }

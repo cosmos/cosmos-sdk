@@ -24,19 +24,20 @@ func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares sdk
 func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBonded, vdTokens,
 	commissionRate sdk.Dec) (ValidatorDistInfo, FeePool) {
 
-	fp.UpdateTotalValAccum(height, totalBondedShares)
+	fp.UpdateTotalValAccum(height, totalBonded)
 
 	// update the validators pool
-	blocks = height - vi.FeePoolWithdrawalHeight
+	blocks := height - vi.FeePoolWithdrawalHeight
 	vi.FeePoolWithdrawalHeight = height
-	accum = sdk.NewDec(blocks).Mul(vdTokens)
-	withdrawalTokens := fp.Pool.Mul(accum).Quo(fp.TotalValAccum)
+	accum := sdk.NewDec(blocks).Mul(vdTokens)
+	withdrawalTokens := fp.Pool.Mul(accum.Quo(fp.ValAccum.Accum))
 	commission := withdrawalTokens.Mul(commissionRate)
+	afterCommission := withdrawalTokens.Sub(commission)
 
-	fp.TotalValAccum = fp.TotalValAccum.Sub(accum)
+	fp.ValAccum.Accum = fp.ValAccum.Accum.Sub(accum)
 	fp.Pool = fp.Pool.Sub(withdrawalTokens)
 	vi.PoolCommission = vi.PoolCommission.Add(commission)
-	vi.PoolCommissionFree = vi.PoolCommissionFree.Add(withdrawalTokens.Sub(commission))
+	vi.Pool = vi.Pool.Add(afterCommission)
 
 	return vi, fp
 }
@@ -45,10 +46,10 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBo
 func (vi ValidatorDistInfo) WithdrawCommission(fp FeePool, height int64,
 	totalBonded, vdTokens, commissionRate sdk.Dec) (vio ValidatorDistInfo, fpo FeePool, withdrawn DecCoins) {
 
-	fp = vi.TakeFeePoolRewards(fp, height, totalBonded, vdTokens, commissionRate)
+	vi, fp = vi.TakeFeePoolRewards(fp, height, totalBonded, vdTokens, commissionRate)
 
 	withdrawalTokens := vi.PoolCommission
-	vi.PoolCommission = 0
+	vi.PoolCommission = DecCoins{} // zero
 
 	return vi, fp, withdrawalTokens
 }

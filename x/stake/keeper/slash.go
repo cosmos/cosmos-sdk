@@ -36,7 +36,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, infractionHeight in
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1348
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1471
 
-	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
+	validator, found := k.GetValidatorByConsAddr(ctx, sdk.ConsAddress(pubkey.Address()))
 	if !found {
 		// If not found, the validator must have been overslashed and removed - so we don't need to do anything
 		// NOTE:  Correctness dependent on invariant that unbonding delegations / redelegations must also have been completely
@@ -152,7 +152,7 @@ func (k Keeper) Unjail(ctx sdk.Context, pubkey crypto.PubKey) {
 
 // set the jailed flag on a validator
 func (k Keeper) setJailed(ctx sdk.Context, pubkey crypto.PubKey, isJailed bool) {
-	validator, found := k.GetValidatorByPubKey(ctx, pubkey)
+	validator, found := k.GetValidatorByConsAddr(ctx, sdk.ConsAddress(pubkey.Address()))
 	if !found {
 		panic(fmt.Errorf("validator with pubkey %s not found, cannot set jailed to %v", pubkey, isJailed))
 	}

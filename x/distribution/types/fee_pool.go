@@ -18,7 +18,7 @@ func NewTotalAccum(height int64) TotalAccum {
 // update total validator accumulation factor
 func (ta TotalAccum) Update(height int64, accumCreatedPerBlock sdk.Dec) TotalAccum {
 	blocks := height - ta.UpdateHeight
-	f.Accum = f.Accum.Add(accumCreatedPerBlock.Mul(sdk.NewDec(blocks)))
+	ta.Accum = ta.Accum.Add(accumCreatedPerBlock.Mul(sdk.NewDec(blocks)))
 	ta.UpdateHeight = height
 	return ta
 }
@@ -41,7 +41,7 @@ func (f FeePool) UpdateTotalValAccum(height int64, totalBondedTokens sdk.Dec) Fe
 // zero fee pool
 func InitialFeePool() FeePool {
 	return FeePool{
-		ValAccum:      NewwTotalAccum(0),
+		ValAccum:      NewTotalAccum(0),
 		Pool:          DecCoins{},
 		CommunityPool: DecCoins{},
 	}

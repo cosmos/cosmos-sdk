@@ -92,3 +92,21 @@ func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.
 
 	return bond
 }
+
+// iterate through all of the delegations from a delegator
+func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress,
+	fn func(index int64, del sdk.Delegation) (stop bool)) {
+
+	store := ctx.KVStore(k.storeKey)
+	delegatorPrefixKey := GetDelegationsKey(delAddr)
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+	for i := int64(0); iterator.Valid(); iterator.Next() {
+		del := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
+		stop := fn(i, del)
+		if stop {
+			break
+		}
+		i++
+	}
+	iterator.Close()
+}

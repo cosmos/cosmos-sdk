@@ -68,7 +68,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	if found {
 		return ErrValidatorOwnerExists(k.Codespace()).Result()
 	}
-	_, found = k.GetValidatorByPubKey(ctx, msg.PubKey)
+	_, found = k.GetValidatorByConsAddr(ctx, sdk.ConsAddress(msg.PubKey.Address()))
 	if found {
 		return ErrValidatorPubKeyExists(k.Codespace()).Result()
 	}
@@ -78,7 +78,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
 	k.SetValidator(ctx, validator)
-	k.SetValidatorByPubKeyIndex(ctx, validator)
+	k.SetValidatorByConsAddr(ctx, validator)
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
@@ -88,10 +88,10 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	}
 
 	// call the hook if present
-	if k.validatorHooks != nil {
-		k.validatorHooks.OnValidatorCreated(ctx, validator.OperatorAddr)
-		accAddr := sdk.AccAddress{validator.OperatorAddr}
-		k.validatorHooks.OnDelegationCreated(ctx, accAddr, validator.OperatorAddr)
+	if k.hooks != nil {
+		k.hooks.OnValidatorCreated(ctx, validator.OperatorAddr)
+		accAddr := sdk.AccAddress(validator.OperatorAddr)
+		k.hooks.OnDelegationCreated(ctx, accAddr, validator.OperatorAddr)
 	}
 
 	tags := sdk.NewTags(
@@ -154,8 +154,8 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	}
 
 	// call the hook if present
-	if k.validatorHooks != nil {
-		k.validatorHooks.OnDelegationCreated(ctx, msg.DelegatorAddr, validator.OperatorAddr)
+	if k.hooks != nil {
+		k.hooks.OnDelegationCreated(ctx, msg.DelegatorAddr, validator.OperatorAddr)
 	}
 
 	tags := sdk.NewTags(

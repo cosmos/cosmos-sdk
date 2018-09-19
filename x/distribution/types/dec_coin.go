@@ -93,7 +93,7 @@ func (coins DecCoins) Plus(coinsB DecCoins) DecCoins {
 func (coins DecCoins) Mul(multiple sdk.Dec) DecCoins {
 	products := make([]DecCoin, len(coins))
 	for i, coin := range coins {
-		product := DecCoins{
+		product := DecCoin{
 			Denom:  coin.Denom,
 			Amount: coin.Amount.Mul(multiple),
 		}

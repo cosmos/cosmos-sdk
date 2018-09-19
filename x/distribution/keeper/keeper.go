@@ -1,8 +1,7 @@
 package keeper
 
 import (
-	wire "github.com/tendermint/go-wire"
-
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -17,7 +16,7 @@ const (
 type Keeper struct {
 	storeKey    sdk.StoreKey
 	storeTKey   sdk.StoreKey
-	cdc         *wire.Codec
+	cdc         *codec.Codec
 	ps          params.Setter
 	coinKeeper  types.CoinKeeper
 	stakeKeeper types.StakeKeeper
@@ -26,7 +25,7 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *wire.Codec, key, tkey sdk.StoreKey, ps params.Setter, ck types.CoinKeeper,
+func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ps params.Setter, ck types.CoinKeeper,
 	sk types.StakeKeeper, codespace sdk.CodespaceType) Keeper {
 
 	keeper := Keeper{

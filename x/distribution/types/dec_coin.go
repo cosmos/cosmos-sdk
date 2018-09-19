@@ -13,9 +13,9 @@ type DecCoin struct {
 }
 
 func NewDecCoin(coin sdk.Coin) DecCoin {
-	return DecCoins{
+	return DecCoin{
 		Denom:  coin.Denom,
-		Amount: sdk.NewDec(coin.Amount),
+		Amount: sdk.NewDecFromInt(coin.Amount),
 	}
 }
 
@@ -24,7 +24,7 @@ func (coin DecCoin) Plus(coinB DecCoin) DecCoin {
 	if !(coin.Denom == coinB.Denom) {
 		return coin
 	}
-	return Coin{coin.Denom, coin.Amount.Add(coinB.Amount)}
+	return DecCoin{coin.Denom, coin.Amount.Add(coinB.Amount)}
 }
 
 // return the decimal coins with trunctated decimals
@@ -38,19 +38,20 @@ func (coin DecCoin) TruncateDecimal() sdk.Coin {
 type DecCoins []DecCoin
 
 func NewDecCoins(coins sdk.Coins) DecCoins {
-
 	dcs := make(DecCoins, len(coins))
 	for i, coin := range coins {
 		dcs[i] = NewDecCoin(coin)
 	}
+	return dcs
 }
 
-// return the decimal coins with trunctated decimals
+// return the coins with trunctated decimals
 func (coins DecCoins) TruncateDecimal() sdk.Coins {
-	out := make(DecCoins, len(coins))
+	out := make(sdk.Coins, len(coins))
 	for i, coin := range coins {
 		out[i] = coin.TruncateDecimal()
 	}
+	return out
 }
 
 // Plus combines two sets of coins

@@ -10,7 +10,7 @@ const MsgType = "distr"
 
 // Verify interface at compile time
 var _, _ sdk.Msg = &MsgSetWithdrawAddress{}, &MsgWithdrawDelegatorRewardsAll{}
-var _, _ sdk.Msg = &MsgWithdrawDelegationReward{}, &MsgWithdrawValidatorRewardsAll{}
+var _, _ sdk.Msg = &MsgWithdrawDelegatorReward{}, &MsgWithdrawValidatorRewardsAll{}
 
 //______________________________________________________________________
 
@@ -96,28 +96,28 @@ func (msg MsgWithdrawDelegatorRewardsAll) ValidateBasic() sdk.Error {
 //______________________________________________________________________
 
 // msg struct for delegation withdraw from a single validator
-type MsgWithdrawDelegationReward struct {
+type MsgWithdrawDelegatorReward struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
 	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
 }
 
-func NewMsgWithdrawDelegationReward(delAddr sdk.AccAddress, valAddr sdk.ValAddress) MsgWithdrawDelegationReward {
-	return MsgWithdrawDelegationReward{
+func NewMsgWithdrawDelegationReward(delAddr sdk.AccAddress, valAddr sdk.ValAddress) MsgWithdrawDelegatorReward {
+	return MsgWithdrawDelegatorReward{
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
 	}
 }
 
-func (msg MsgWithdrawDelegationReward) Type() string { return MsgType }
-func (msg MsgWithdrawDelegationReward) Name() string { return "withdraw_delegation_reward" }
+func (msg MsgWithdrawDelegatorReward) Type() string { return MsgType }
+func (msg MsgWithdrawDelegatorReward) Name() string { return "withdraw_delegation_reward" }
 
 // Return address that must sign over msg.GetSignBytes()
-func (msg MsgWithdrawDelegationReward) GetSigners() []sdk.AccAddress {
+func (msg MsgWithdrawDelegatorReward) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.AccAddress(msg.DelegatorAddr)}
 }
 
 // get the bytes for the message signer to sign on
-func (msg MsgWithdrawDelegationReward) GetSignBytes() []byte {
+func (msg MsgWithdrawDelegatorReward) GetSignBytes() []byte {
 	b, err := MsgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
@@ -126,7 +126,7 @@ func (msg MsgWithdrawDelegationReward) GetSignBytes() []byte {
 }
 
 // quick validity check
-func (msg MsgWithdrawDelegationReward) ValidateBasic() sdk.Error {
+func (msg MsgWithdrawDelegatorReward) ValidateBasic() sdk.Error {
 	if msg.DelegatorAddr == nil {
 		return ErrNilDelegatorAddr(DefaultCodespace)
 	}

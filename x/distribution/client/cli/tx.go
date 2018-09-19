@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	wire "github.com/tendermint/go-wire"
+
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 )
 
 var (
@@ -20,7 +21,7 @@ var (
 )
 
 // command to withdraw rewards
-func GetCmdWithdrawDelegationRewardsAll(cdc *wire.Codec) *cobra.Command {
+func GetCmdWithdrawDelegationRewardsAll(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-rewards",
 		Short: "withdraw rewards for either: all-delegations, a delegation, or a validator",
@@ -80,7 +81,7 @@ func GetCmdWithdrawDelegationRewardsAll(cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdDelegate implements the delegate command.
-func GetCmdSetWithdrawAddr(cdc *wire.Codec) *cobra.Command {
+func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-withdraw-addr [withdraw-addr]",
 		Short: "change the default withdraw address for rewards associated with an address",

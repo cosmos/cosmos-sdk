@@ -33,7 +33,7 @@ type FeePool struct {
 }
 
 // update total validator accumulation factor
-func (f FeePool) UpdateTotalValAccum(height int64, totalBondedTokens Dec) FeePool {
+func (f FeePool) UpdateTotalValAccum(height int64, totalBondedTokens sdk.Dec) FeePool {
 	f.ValAccum = f.ValAccum.Update(height, totalBondedTokens)
 	return f
 }

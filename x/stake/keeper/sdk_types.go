@@ -3,8 +3,6 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
@@ -60,8 +58,8 @@ func (k Keeper) Validator(ctx sdk.Context, address sdk.ValAddress) sdk.Validator
 }
 
 // get the sdk.validator for a particular pubkey
-func (k Keeper) ValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) sdk.Validator {
-	val, found := k.GetValidatorByPubKey(ctx, pubkey)
+func (k Keeper) ValidatorByConsAddr(ctx sdk.Context, addr sdk.ConsAddress) sdk.Validator {
+	val, found := k.GetValidatorByConsAddr(ctx, addr)
 	if !found {
 		return nil
 	}
@@ -93,21 +91,4 @@ func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.
 	}
 
 	return bond
-}
-
-// iterate through the active validator set and perform the provided function
-func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress, fn func(index int64, delegation sdk.Delegation) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-	key := GetDelegationsKey(delAddr)
-	iterator := sdk.KVStorePrefixIterator(store, key)
-	i := int64(0)
-	for ; iterator.Valid(); iterator.Next() {
-		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
-		stop := fn(i, delegation) // XXX is this safe will the fields be able to get written to?
-		if stop {
-			break
-		}
-		i++
-	}
-	iterator.Close()
 }

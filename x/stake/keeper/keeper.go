@@ -34,7 +34,7 @@ func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, codespa
 
 // Set the validator hooks
 func (k Keeper) WithHooks(sh sdk.StakingHooks) Keeper {
-	if k.stakingHooks != nil {
+	if k.hooks != nil {
 		panic("cannot set validator hooks twice")
 	}
 	k.hooks = sh

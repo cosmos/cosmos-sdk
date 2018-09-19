@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -59,13 +58,13 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 }
 
 // get a single validator by pubkey
-func (k Keeper) GetValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) (validator types.Validator, found bool) {
+func (k Keeper) GetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	addr := store.Get(GetValidatorByPubKeyIndexKey(pubkey))
-	if addr == nil {
+	opAddr := store.Get(GetValidatorByConsAddrKey(consAddr))
+	if opAddr == nil {
 		return validator, false
 	}
-	return k.GetValidator(ctx, addr)
+	return k.GetValidator(ctx, opAddr)
 }
 
 // set the main record holding validator details
@@ -78,8 +77,8 @@ func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 // validator index
 func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	consAddr := sdk.consAddress{validator.Address()}
-	store.Set(GetValidatorByPubKeyIndexKey(consAddr), validator.OperatorAddr)
+	consAddr := sdk.ConsAddress{validator.OperatorAddr.Bytes()}
+	store.Set(GetValidatorByConsAddrKey(consAddr), validator.OperatorAddr)
 }
 
 // validator index
@@ -671,7 +670,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 
 	// call the hook if present
 	if k.hooks != nil {
-		k.hooks.OnValidatorRemoved(ctx, validator.OperatorAddr)
+		k.hooks.OnValidatorRemoved(ctx, address)
 	}
 
 	// first retrieve the old validator record
@@ -684,7 +683,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
 	store.Delete(GetValidatorKey(address))
-	store.Delete(GetValidatorByPubKeyIndexKey(validator.ConsPubKey))
+	store.Delete(GetValidatorByConsAddrKey(sdk.ConsAddr{validator.ConsPubKey.Address()}))
 	store.Delete(GetValidatorsByPowerIndexKey(validator, pool))
 
 	// delete from the current and power weighted validator groups if the validator

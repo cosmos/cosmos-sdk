@@ -80,7 +80,7 @@ func GetCmdWithdrawDelegationRewardsAll(cdc *wire.Codec) *cobra.Command {
 }
 
 // GetCmdDelegate implements the delegate command.
-func GetCmdWithdrawDelegationRewardsAll(cdc *wire.Codec) *cobra.Command {
+func GetCmdSetWithdrawAddr(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-withdraw-addr [withdraw-addr]",
 		Short: "change the default withdraw address for rewards associated with an address",
@@ -103,7 +103,7 @@ func GetCmdWithdrawDelegationRewardsAll(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := distr.NewMsgModifyWithdrawAddress(delAddr, withdrawAddr)
+			msg := distr.NewMsgSetWithdrawAddress(delAddr, withdrawAddr)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})

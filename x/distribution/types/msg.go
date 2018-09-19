@@ -9,34 +9,34 @@ import (
 const MsgType = "distr"
 
 // Verify interface at compile time
-var _, _ sdk.Msg = &MsgModifyWithdrawAddress{}, &MsgWithdrawDelegatorRewardsAll{}
+var _, _ sdk.Msg = &MsgSetWithdrawAddress{}, &MsgWithdrawDelegatorRewardsAll{}
 var _, _ sdk.Msg = &MsgWithdrawDelegationReward{}, &MsgWithdrawValidatorRewardsAll{}
 
 //______________________________________________________________________
 
 // msg struct for changing the withdraw address for a delegator (or validator self-delegation)
-type MsgModifyWithdrawAddress struct {
+type MsgSetWithdrawAddress struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
 	WithdrawAddr  sdk.AccAddress `json:"delegator_addr"`
 }
 
-func NewMsgModifyWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) MsgModifyWithdrawAddress {
-	return MsgModifyWithdrawAddress{
+func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) MsgSetWithdrawAddress {
+	return MsgSetWithdrawAddress{
 		DelegatorAddr: delAddr,
 		WithdrawAddr:  withdrawAddr,
 	}
 }
 
-func (msg MsgModifyWithdrawAddress) Type() string { return MsgType }
-func (msg MsgModifyWithdrawAddress) Name() string { return "withdraw_delegation_rewards_all" }
+func (msg MsgSetWithdrawAddress) Type() string { return MsgType }
+func (msg MsgSetWithdrawAddress) Name() string { return "withdraw_delegation_rewards_all" }
 
 // Return address that must sign over msg.GetSignBytes()
-func (msg MsgModifyWithdrawAddress) GetSigners() []sdk.AccAddress {
+func (msg MsgSetWithdrawAddress) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.AccAddress(msg.DelegatorAddr)}
 }
 
 // get the bytes for the message signer to sign on
-func (msg MsgModifyWithdrawAddress) GetSignBytes() []byte {
+func (msg MsgSetWithdrawAddress) GetSignBytes() []byte {
 	b, err := MsgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
@@ -45,7 +45,7 @@ func (msg MsgModifyWithdrawAddress) GetSignBytes() []byte {
 }
 
 // quick validity check
-func (msg MsgModifyWithdrawAddress) ValidateBasic() sdk.Error {
+func (msg MsgSetWithdrawAddress) ValidateBasic() sdk.Error {
 	if msg.DelegatorAddr == nil {
 		return ErrNilDelegatorAddr(DefaultCodespace)
 	}

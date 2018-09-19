@@ -101,6 +101,20 @@ func main() {
 		stakeCmd,
 	)
 
+	//Add distribution commands
+	distrCmd := &cobra.Command{
+		Use:   "distribution",
+		Short: "withdraw rewards for delegation and validation",
+	}
+	distrCmd.AddCommand(
+		client.PostCommands(
+			stakecmd.GetCmdWithdrawDelegationRewardsAll(cdc),
+			stakecmd.GetCmdSetWithdrawAddr(cdc),
+		)...)
+	rootCmd.AddCommand(
+		distrCmd,
+	)
+
 	//Add stake commands
 	govCmd := &cobra.Command{
 		Use:   "gov",

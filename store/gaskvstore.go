@@ -17,6 +17,7 @@ type gasKVStore struct {
 }
 
 // NewGasKVStore returns a reference to a new GasKVStore.
+// nolint
 func NewGasKVStore(gasMeter sdk.GasMeter, gasConfig sdk.GasConfig, parent sdk.KVStore) *gasKVStore {
 	kvs := &gasKVStore{
 		gasMeter:  gasMeter,

@@ -736,6 +736,7 @@ func ensureValidatorFound(found bool, ownerAddr []byte) {
 
 //__________________________________________________________________________
 
+// XXX remove this code - this is should be superceded by commission work that bez is doing
 // get a single validator
 func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, addr sdk.ValAddress, newCommission sdk.Dec) sdk.Error {
 	store := ctx.KVStore(k.storeKey)
@@ -753,8 +754,6 @@ func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, addr sdk.ValAddress, 
 		return types.ErrNoValidatorFound(k.Codespace())
 	case newCommission.LT(sdk.ZeroDec()):
 		return types.ErrCommissionNegative(k.Codespace())
-	case newCommission.GT(sdk.OnedDec()):
-		return types.ErrCommissionHuge(k.Codespace())
 	case newCommission.GT(validator.CommissionMax):
 		return types.ErrCommissionBeyondMax(k.Codespace())
 		//case rateChange(Commission) > CommissionMaxChange:    // XXX XXX XXX TODO implementation

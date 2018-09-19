@@ -14,41 +14,41 @@ type ValidatorDistInfo struct {
 }
 
 // update total delegator accumululation
-func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares Dec) ValidatorDistInfo {
+func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares sdk.Dec) ValidatorDistInfo {
 	vi.DelAccum = vi.DelAccum.Update(height, totalDelShares)
 	return vi
 }
 
+// XXX TODO Update dec logic
 // move any available accumulated fees in the Global to the validator's pool
-func (vi ValidatorDistInfo) TakeGlobalRewards(g Global, height int64, totalBonded, vdTokens, commissionRate Dec) (
-	vi ValidatorDistInfo, g Global) {
+func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBonded, vdTokens,
+	commissionRate sdk.Dec) (ValidatorDistInfo, FeePool) {
 
-	g.UpdateTotalValAccum(height, totalBondedShares)
+	fp.UpdateTotalValAccum(height, totalBondedShares)
 
 	// update the validators pool
 	blocks = height - vi.GlobalWithdrawalHeight
 	vi.GlobalWithdrawalHeight = height
-	accum = blocks * vdTokens
-	withdrawalTokens := g.Pool * accum / g.TotalValAccum
-	commission := withdrawalTokens * commissionRate
+	accum = sdk.NewDec(blocks).Mul(vdTokens)
+	withdrawalTokens := fp.Pool.Mul(accum).Quo(fp.TotalValAccum)
+	commission := withdrawalTokens.Mul(commissionRate)
 
-	g.TotalValAccum -= accumm
-	g.Pool -= withdrawalTokens
-	vi.PoolCommission += commission
-	vi.PoolCommissionFree += withdrawalTokens - commission
+	fp.TotalValAccum = fp.TotalValAccum.Sub(accum)
+	fp.Pool = fp.Pool.Sub(withdrawalTokens)
+	vi.PoolCommission = vi.PoolCommission.Add(commission)
+	vi.PoolCommissionFree = vi.PoolCommissionFree.Add(withdrawalTokens.Sub(commission))
 
-	return vi, g
+	return vi, fp
 }
 
 // withdraw commission rewards
 func (vi ValidatorDistInfo) WithdrawCommission(g Global, height int64,
-	totalBonded, vdTokens, commissionRate Dec) (
-	vi ValidatorDistInfo, g Global, withdrawn DecCoins) {
+	totalBonded, vdTokens, commissionRate Dec) (vio ValidatorDistInfo, fpo FeePool, withdrawn DecCoins) {
 
-	g = vi.TakeGlobalRewards(g, height, totalBonded, vdTokens, commissionRate)
+	fp = vi.TakeFeePoolRewards(fp, height, totalBonded, vdTokens, commissionRate)
 
 	withdrawalTokens := vi.PoolCommission
 	vi.PoolCommission = 0
 
-	return vi, g, withdrawalTokens
+	return vi, fp, withdrawalTokens
 }

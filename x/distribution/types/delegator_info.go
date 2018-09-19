@@ -10,12 +10,12 @@ type DelegatorDistInfo struct {
 }
 
 // withdraw rewards from delegator
-func (di DelegatorDistInfo) WithdrawRewards(g Global, vi ValidatorDistInfo,
+func (di DelegatorDistInfo) WithdrawRewards(fp FeePool, vi ValidatorDistInfo,
 	height int64, totalBonded, vdTokens, totalDelShares, delegatorShares,
-	commissionRate Dec) (di DelegatorDistInfo, g Global, withdrawn DecCoins) {
+	commissionRate sdk.Dec) (DelegatorDistInfo, FeePool, DecCoins) {
 
 	vi.UpdateTotalDelAccum(height, totalDelShares)
-	g = vi.TakeGlobalRewards(g, height, totalBonded, vdTokens, commissionRate)
+	fp = vi.TakeFeePoolRewards(fp, height, totalBonded, vdTokens, commissionRate)
 
 	blocks = height - di.WithdrawalHeight
 	di.WithdrawalHeight = height
@@ -25,7 +25,7 @@ func (di DelegatorDistInfo) WithdrawRewards(g Global, vi ValidatorDistInfo,
 	vi.Pool = vi.Pool.Sub(withdrawalTokens)
 	vi.TotalDelAccum = vi.TotalDelAccum.sub(accum)
 
-	return di, g, withdrawalTokens
+	return di, fp, withdrawalTokens
 }
 
 //_____________________________________________________________________

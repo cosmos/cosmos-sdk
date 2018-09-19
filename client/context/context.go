@@ -119,8 +119,7 @@ func createCertifier() tmlite.Certifier {
 // NOTE: mutates state so must be pointer receiver
 func fromFields(from string) (types.AccAddress, string) {
 	if from == "" {
-		fmt.Println("must provide a from address or name")
-		os.Exit(1)
+		return nil, ""
 	}
 
 	keybase, err := keys.GetKeyBase()

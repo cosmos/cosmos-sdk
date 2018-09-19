@@ -175,7 +175,7 @@ test_sim_gaia_profile:
 	@go test -benchmem -run=^$$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$$ -SimulationEnabled=true -SimulationNumBlocks=$(SIM_NUM_BLOCKS) -SimulationBlockSize=$(SIM_BLOCK_SIZE) -SimulationCommit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
 
 test_cover:
-	@bash tests/test_cover.sh
+	@export VERSION=$(VERSION); bash tests/test_cover.sh
 
 test_lint:
 	gometalinter.v2 --config=tools/gometalinter.json ./...

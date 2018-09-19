@@ -136,8 +136,8 @@ func (gi *gasIterator) Valid() bool {
 }
 
 // Next implements the Iterator interface. It iterates to the next key/value
-// pair in the iterator. It incurs a flat cost for iteration and a variable cost
-// based on the current value's length.
+// pair in the iterator. It incurs a flat gas cost for iteration and a variable
+// gas cost based on the current value's length.
 func (gi *gasIterator) Next() {
 	value := gi.Value()
 

@@ -77,7 +77,7 @@ FEATURES
 * Gaia
   * [cli] #2170 added ability to show the node's address via `gaiad tendermint show-address`
   * [cli] [\#1921] (https://github.com/cosmos/cosmos-sdk/issues/1921)
-    * New configuration file `cosmos.config` is now created to host Gaia-specific configuration.
+    * New configuration file `gaiad.toml` is now created to host Gaia-specific configuration.
     * New --minimum_fees/minimum_fees flag/config option to set a minimum fee.
 
 * SDK

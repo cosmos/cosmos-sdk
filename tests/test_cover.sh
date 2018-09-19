@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
+export VERSION=$(git describe --tags --long | sed 's/v\(.*\)/\1/')
 PKGS=$(go list ./... | grep -v /vendor/ | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test | grep -v '/simulation')
 
 set -e

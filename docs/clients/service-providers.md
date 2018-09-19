@@ -57,7 +57,7 @@ gaiacli account <YOUR_ADDRESS>
 
 *Note: When you query an account balance with zero tokens, you will get this error: No account with address <YOUR_ADDRESS> was found in the state. This is expected! We're working on improving our error messages.*
 
-#### Sending coins
+#### Sending coins via the CLI
 
 Here is the command to send coins via the CLI:
 
@@ -94,10 +94,10 @@ The current recommended way to listen for incoming transaction is to periodicall
 
 [`/bank/balance/{account}`](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/light/api.md#bankbalanceaccount---get)
 
-## Rest Token API
+## Rest API
 
-Link to Token API when merged: https://github.com/cosmos/cosmos-sdk/pull/1092
+The Rest API documents all the available endpoints that you can use to interract with your full node. It can be found [here](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/light/api.md). 
 
-## Multisig
+The API is divided into ICS standards for each category of endpoints. For example, the [ICS20](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/light/api.md#ics20---tokenapi) describes the API to interact with tokens. 
 
-TODO
+To give more flexibility to implementers, we have separated the different steps that are involved in the process of sending transactions. You will be able to generate unsigned transactions (example with [coin transfer](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/light/api.md#post-banktransfers)), [sign](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/light/api.md#post-authtxsign) and [broadcast](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/light/api.md#post-authtxbroadcast) them with different API endpoints. This allows service providers to use their own signing mechanism for instance. 

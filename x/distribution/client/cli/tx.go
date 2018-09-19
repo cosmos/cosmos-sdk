@@ -2,6 +2,7 @@
 package cli
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -13,64 +14,100 @@ import (
 	wire "github.com/tendermint/go-wire"
 )
 
-type TxWithdrawDelegationRewardsAll struct {
-	delegatorAddr sdk.AccAddress
-	withdrawAddr  sdk.AccAddress // address to make the withdrawal to
-}
-
-type TxWithdrawDelegationReward struct {
-	delegatorAddr sdk.AccAddress
-	validatorAddr sdk.AccAddress
-	withdrawAddr  sdk.AccAddress // address to make the withdrawal to
-}
-
-type TxWithdrawValidatorRewardsAll struct {
-	operatorAddr sdk.AccAddress // validator address to withdraw from
-	withdrawAddr sdk.AccAddress // address to make the withdrawal to
-}
-
 var (
 	flagOnlyFromValidator = "only-from-validator"
 	flagIsValidator       = "is-validator"
 )
 
-// GetCmdDelegate implements the delegate command.
+// command to withdraw rewards
 func GetCmdWithdrawDelegationRewardsAll(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "withdraw-rewards [delegator]",
-		Short: "withdraw rewards for all delegations",
+		Use:   "withdraw-rewards",
+		Short: "withdraw rewards for either: all-delegations, a delegation, or a validator",
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
+
+			onlyFromVal := viper.GetString(flagOnlyFromValidator)
+			isVal := viper.GetBool(flagIsValidator)
+
+			if onlyFromVal != "" && isVal {
+				return fmt.Errorf("cannot use --%v, and --%v flags together",
+					flagOnlyFromValidator, flagIsValidator)
+			}
+
 			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			amount, err := sdk.ParseCoin(viper.GetString(FlagAmount))
-			if err != nil {
-				return err
+			var msg sdk.Msg
+			switch {
+			case isVal:
+				addr, err := cliCtx.GetFromAddress()
+				if err != nil {
+					return err
+				}
+				valAddr := sdk.ValAddress{addr.Bytes()}
+				msg := distr.NewMsgWithdrawValidatorRewardsAll(valAddr)
+			case onlyFromVal != "":
+				delAddr, err := cliCtx.GetFromAddress()
+				if err != nil {
+					return err
+				}
+
+				valAddr, err := sdk.ValAddressFromBech32(onlyFromVal)
+				if err != nil {
+					return err
+				}
+
+				msg := distr.NewMsgWithdrawDelegationReward(delAddr, valAddr)
+			default:
+				delAddr, err := cliCtx.GetFromAddress()
+				if err != nil {
+					return err
+				}
+				msg := distr.NewMsgWithdrawDelegationRewardsAll(delAddr)
 			}
+
+			// build and sign the transaction, then broadcast to Tendermint
+			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
+		},
+	}
+	cmd.Flags().String(flagOnlyFromValidator, "", "only withdraw from this validator address (in bech)")
+	cmd.Flags().Bool(flagIsValidator, false, "also withdraw validator's commission")
+	return cmd
+}
+
+// GetCmdDelegate implements the delegate command.
+func GetCmdWithdrawDelegationRewardsAll(cdc *wire.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "set-withdraw-addr [withdraw-addr]",
+		Short: "change the default withdraw address for rewards associated with an address",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().
+				WithCodec(cdc).
+				WithLogger(os.Stdout).
+				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
 			delAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
 
-			valAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidator))
+			withdrawAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			msg := distr.NewMsgDelegate(delAddr, valAddr, amount)
+			msg := distr.NewMsgModifyWithdrawAddress(delAddr, withdrawAddr)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
 		},
 	}
-
-	// TODO add flags for "is-validator", "only-for-validator"
-	cmd.Flags().String(flagOnlyFromValidator, "", "Only withdraw from this validator address")
-	cmd.Flags().Bool(flagIsValidator, false, "Also withdraw validator's commission")
-
 	return cmd
 }

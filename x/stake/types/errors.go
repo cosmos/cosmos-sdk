@@ -136,7 +136,7 @@ func ErrNoRedelegation(codespace sdk.CodespaceType) sdk.Error {
 }
 
 func ErrBadRedelegationDst(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "redelegation validator not found")
+	return sdk.NewError(codespace, CodeInvalidDelegation, "redelegation destination validator not found")
 }
 
 func ErrTransitiveRedelegation(codespace sdk.CodespaceType) sdk.Error {

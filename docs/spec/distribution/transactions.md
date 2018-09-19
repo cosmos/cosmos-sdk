@@ -1,16 +1,15 @@
 # Transactions
 
-## TxWithdrawDelegationRewardsAll
+## MsgWithdrawDelegationRewardsAll
 
 When a delegator wishes to withdraw their rewards it must send
-`TxWithdrawDelegationRewardsAll`. Note that parts of this transaction logic are also
+`MsgWithdrawDelegationRewardsAll`. Note that parts of this transaction logic are also
 triggered each with any change in individual delegations, such as an unbond,
 redelegation, or delegation of additional tokens to a specific validator.  
 
 ```golang
-type TxWithdrawDelegationRewardsAll struct {
-    delegatorAddr sdk.AccAddress
-    withdrawAddr  sdk.AccAddress // address to make the withdrawal to
+type MsgWithdrawDelegationRewardsAll struct {
+    DelegatorAddr sdk.AccAddress
 }
 
 func WithdrawDelegationRewardsAll(delegatorAddr, withdrawAddr sdk.AccAddress) 
@@ -41,16 +40,15 @@ func GetDelegatorRewardsAll(delegatorAddr sdk.AccAddress, height int64) DecCoins
     return withdraw
 ```
 
-## TxWithdrawDelegationReward
+## MsgWithdrawDelegationReward
 
 under special circumstances a delegator may wish to withdraw rewards from only
 a single validator. 
 
 ```golang
-type TxWithdrawDelegationReward struct {
-    delegatorAddr sdk.AccAddress
-    validatorAddr sdk.AccAddress
-    withdrawAddr  sdk.AccAddress // address to make the withdrawal to
+type MsgWithdrawDelegationReward struct {
+    DelegatorAddr sdk.AccAddress
+    ValidatorAddr sdk.ValAddress
 }
 
 func WithdrawDelegationReward(delegatorAddr, validatorAddr, withdrawAddr sdk.AccAddress) 
@@ -72,19 +70,18 @@ func WithdrawDelegationReward(delegatorAddr, validatorAddr, withdrawAddr sdk.Acc
 ```
 
 
-## TxWithdrawValidatorRewardsAll
+## MsgWithdrawValidatorRewardsAll
 
 When a validator wishes to withdraw their rewards it must send
-`TxWithdrawValidatorRewardsAll`. Note that parts of this transaction logic are also
+`MsgWithdrawValidatorRewardsAll`. Note that parts of this transaction logic are also
 triggered each with any change in individual delegations, such as an unbond,
 redelegation, or delegation of additional tokens to a specific validator. This
 transaction withdraws the validators commission fee, as well as any rewards
 earning on their self-delegation. 
 
 ```
-type TxWithdrawValidatorRewardsAll struct {
-    operatorAddr sdk.AccAddress // validator address to withdraw from 
-    withdrawAddr sdk.AccAddress // address to make the withdrawal to
+type MsgWithdrawValidatorRewardsAll struct {
+    OperatorAddr sdk.ValAddress // validator address to withdraw from 
 }
 
 func WithdrawValidatorRewardsAll(operatorAddr, withdrawAddr sdk.AccAddress)

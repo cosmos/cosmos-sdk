@@ -34,8 +34,7 @@ func (k Keeper) RemoveValidatorDistInfo(ctx sdk.Context, valAddr sdk.ValAddress)
 }
 
 // withdrawal all the validator rewards including the commission
-func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context,
-	operatorAddr sdk.ValAddress) {
+func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) {
 
 	// withdraw self-delegation
 	height := ctx.BlockHeight()

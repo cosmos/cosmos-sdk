@@ -22,12 +22,12 @@ type Keeper struct {
 
 func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
-		storeKey:       key,
-		storeTKey:      tkey,
-		cdc:            cdc,
-		bankKeeper:     ck,
-		validatorHooks: nil,
-		codespace:      codespace,
+		storeKey:   key,
+		storeTKey:  tkey,
+		cdc:        cdc,
+		bankKeeper: ck,
+		hooks:      nil,
+		codespace:  codespace,
 	}
 	return keeper
 }
@@ -37,7 +37,7 @@ func (k Keeper) WithHooks(sh sdk.StakingHooks) Keeper {
 	if k.stakingHooks != nil {
 		panic("cannot set validator hooks twice")
 	}
-	k.validatorHooks = sh
+	k.hooks = sh
 	return k
 }
 

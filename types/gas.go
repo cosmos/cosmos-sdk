@@ -1,9 +1,26 @@
 package types
 
+// Gas consumption descriptors.
+const (
+	GasIterInitFlatDesc = "IterInitFlat"
+	GasIterNextFlatDesc = "IterNextFlat"
+	GasValuePerByteDesc = "ValuePerByte"
+	GasWritePerByteDesc = "WritePerByte"
+	GasReadPerByteDesc  = "ReadPerByte"
+	GasWriteFlatDesc    = "WriteFlat"
+	GasReadFlatDesc     = "ReadFlat"
+	GasHasDesc          = "Has"
+)
+
+var (
+	cachedDefaultGasConfig   = DefaultGasConfig()
+	cachedTransientGasConfig = TransientGasConfig()
+)
+
 // Gas measured by the SDK
 type Gas = int64
 
-// Error thrown when out of gas
+// ErrorOutOfGas defines an error thrown when an action results in out of gas.
 type ErrorOutOfGas struct {
 	Descriptor string
 }
@@ -19,6 +36,7 @@ type basicGasMeter struct {
 	consumed Gas
 }
 
+// NewGasMeter returns a reference to a new basicGasMeter.
 func NewGasMeter(limit Gas) GasMeter {
 	return &basicGasMeter{
 		limit:    limit,
@@ -41,6 +59,7 @@ type infiniteGasMeter struct {
 	consumed Gas
 }
 
+// NewInfiniteGasMeter returns a reference to a new infiniteGasMeter.
 func NewInfiniteGasMeter() GasMeter {
 	return &infiniteGasMeter{
 		consumed: 0,
@@ -62,17 +81,12 @@ type GasConfig struct {
 	ReadCostPerByte  Gas
 	WriteCostFlat    Gas
 	WriteCostPerByte Gas
-	KeyCostFlat      Gas
-	ValueCostFlat    Gas
 	ValueCostPerByte Gas
+	IterInitFlat     Gas
+	IterNextFlat     Gas
 }
 
-var (
-	cachedDefaultGasConfig   = DefaultGasConfig()
-	cachedTransientGasConfig = TransientGasConfig()
-)
-
-// Default gas config for KVStores
+// DefaultGasConfig returns a default gas config for KVStores.
 func DefaultGasConfig() GasConfig {
 	return GasConfig{
 		HasCost:          10,
@@ -80,13 +94,13 @@ func DefaultGasConfig() GasConfig {
 		ReadCostPerByte:  1,
 		WriteCostFlat:    10,
 		WriteCostPerByte: 10,
-		KeyCostFlat:      5,
-		ValueCostFlat:    10,
+		IterInitFlat:     5,
+		IterNextFlat:     10,
 		ValueCostPerByte: 1,
 	}
 }
 
-// Default gas config for TransientStores
+// TransientGasConfig returns a default gas config for TransientStores.
 func TransientGasConfig() GasConfig {
 	// TODO: define gasconfig for transient stores
 	return DefaultGasConfig()

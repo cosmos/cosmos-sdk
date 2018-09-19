@@ -154,6 +154,7 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make install
+            export VERSION="$(git describe --tags --long | sed 's/v\(.*\)/\1/')"
             for pkg in $(go list github.com/cosmos/cosmos-sdk/... | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test | grep -v '/simulation' | circleci tests split --split-by=timings); do
               id=$(basename "$pkg")
               GOCACHE=off go test -timeout 8m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic "$pkg" | tee "/tmp/logs/$id-$RANDOM.log"

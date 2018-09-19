@@ -5,12 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
-// InitGenesis sets the pool and parameters for the provided keeper and
-// initializes the IntraTxCounter. For each validator in data, it sets that
-// validator in the keeper along with manually setting the indexes. In
-// addition, it also sets any delegations found in data. Finally, it updates
-// the bonded validators.
-// Returns final validator set after applying all declaration and delegations
+// InitGenesis sets distribution information for genesis
 func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	keeper.SetFeePool(ctx, data.FeePool)
 

@@ -11,9 +11,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	distr "github.com/cosmos/cosmos-sdk/x/stake"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 
 	"github.com/spf13/pflag"

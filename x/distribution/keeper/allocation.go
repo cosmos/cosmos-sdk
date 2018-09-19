@@ -30,7 +30,7 @@ func (k Keeper) AllocateFees(ctx sdk.Context) {
 	proposerDist.Pool = proposerDist.Pool.Add(proposerReward.Sub(commission))
 
 	// allocate community funding
-	communityTax := sdk.NewDecWithPrec(1, 2) // XXX TODO get from global params store
+	communityTax := k.GetCommunityTax(ctx)
 	communityFunding := feesCollectedDec.Mul(communityTax)
 	feePool := k.GetFeePool(ctx)
 	feePool.CommunityFund = feePool.CommunityFund.Add(communityFunding)

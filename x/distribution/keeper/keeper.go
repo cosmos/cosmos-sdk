@@ -5,6 +5,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
+)
+
+// nolint
+const (
+	ParamStoreKeyCommunityTax = "distr/community-tax"
 )
 
 // keeper of the stake store
@@ -12,6 +18,7 @@ type Keeper struct {
 	storeKey    sdk.StoreKey
 	storeTKey   sdk.StoreKey
 	cdc         *wire.Codec
+	ps          params.Setter
 	coinKeeper  types.CoinKeeper
 	stakeKeeper types.StakeKeeper
 
@@ -19,7 +26,7 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *wire.Codec, key, tkey sdk.StoreKey, ck types.CoinKeeper,
+func NewKeeper(cdc *wire.Codec, key, tkey sdk.StoreKey, ps params.Setter, ck types.CoinKeeper,
 	sk types.StakeKeeper, codespace sdk.CodespaceType) Keeper {
 
 	keeper := Keeper{
@@ -74,4 +81,19 @@ func (k Keeper) SetProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(consAddr)
 	store.Set(ProposerKey, b)
+}
+
+//______________________________________________________________________
+
+// Returns the current Deposit Procedure from the global param store
+// nolint: errcheck
+func (k Keeper) GetCommunityTax(ctx sdk.Context) sdk.Dec {
+	var communityTax sdk.Dec
+	keeper.ps.Get(ctx, ParamStoreKeyCommunityTax, &communityTax)
+	return communityTax
+}
+
+// nolint: errcheck
+func (k Keeper) setCommunityTax(ctx sdk.Context, communityTax sdk.Dec) {
+	keeper.ps.Set(ctx, ParamStoreKeyCommunityTax, &communityTax)
 }

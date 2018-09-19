@@ -16,6 +16,9 @@ import (
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"os"
+	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/client/keys"
+	cskeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 const ctxAccStoreName = "acc"
@@ -23,15 +26,13 @@ const ctxAccStoreName = "acc"
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
 type CLIContext struct {
-	Codec           *codec.Codec
-	AccDecoder      auth.AccountDecoder
-	Client          rpcclient.Client
-	Logger          io.Writer
-	Height          int64
-	NodeURI         string
-	FromAddressName string
-	AccountStore    string
-	TrustNode       bool
+	Codec         *codec.Codec
+	AccDecoder    auth.AccountDecoder
+	Client        rpcclient.Client
+	Logger        io.Writer
+	Height        int64
+	NodeURI       string
+	From          string
 	AccountStore  string
 	TrustNode     bool
 	UseLedger     bool
@@ -55,6 +56,9 @@ func NewCLIContext() CLIContext {
 		rpc = rpcclient.NewHTTP(nodeURI, "/websocket")
 	}
 
+	from := viper.GetString(client.FlagFrom)
+	fromAddress, fromName := fromFields(from)
+
 	return CLIContext{
 		Client:        rpc,
 		NodeURI:       nodeURI,
@@ -69,6 +73,8 @@ func NewCLIContext() CLIContext {
 		Certifier:     createCertifier(),
 		DryRun:        viper.GetBool(client.FlagDryRun),
 		GenerateOnly:  viper.GetBool(client.FlagGenerateOnly),
+		fromAddress:   fromAddress,
+		fromName:      fromName,
 	}
 }
 
@@ -108,6 +114,37 @@ func createCertifier() tmlite.Certifier {
 	}
 
 	return certifier
+}
+
+// NOTE: mutates state so must be pointer receiver
+func fromFields(from string) (types.AccAddress, string) {
+	if from == "" {
+		fmt.Println("must provide a from address or name")
+		os.Exit(1)
+	}
+
+	keybase, err := keys.GetKeyBase()
+	if err != nil {
+		fmt.Println("No keybase found.")
+		os.Exit(1)
+	}
+
+	var info cskeys.Info
+	if addr, err := types.AccAddressFromBech32(from); err == nil {
+		info, err = keybase.GetByAddress(addr)
+		if err != nil {
+			fmt.Printf("could not find key %s\n", from)
+			os.Exit(1)
+		}
+	} else {
+		info, err = keybase.Get(from)
+		if err != nil {
+			fmt.Printf("could not find key %s\n", from)
+			os.Exit(1)
+		}
+	}
+
+	return info.GetAddress(), info.GetName()
 }
 
 // WithCodec returns a copy of the context with an updated codec.

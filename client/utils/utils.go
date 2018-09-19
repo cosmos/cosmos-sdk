@@ -26,12 +26,11 @@ func SendTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg)
 	}
 
 	name, err := cliCtx.GetFromName()
-	if txBldr.SimulateGas || cliCtx.DryRun {
+	if err != nil {
 		return err
 	}
 
-	autogas := cliCtx.DryRun || (cliCtx.Gas == 0)
-	if autogas {
+	if txBldr.SimulateGas || cliCtx.DryRun {
 		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, name, msgs)
 		if err != nil {
 			return err

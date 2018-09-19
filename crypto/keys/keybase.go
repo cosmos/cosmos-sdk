@@ -208,7 +208,7 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 func (kb dbKeybase) GetByAddress(address types.AccAddress) (Info, error) {
 	ik := kb.db.Get(addrKey(address))
 	if len(ik) == 0 {
-		return nil, fmt.Errorf("key with address %s not found", address.String())
+		return nil, fmt.Errorf("key with address %s not found", address)
 	}
 	bs := kb.db.Get(ik)
 	return readInfo(bs)

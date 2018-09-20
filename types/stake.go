@@ -42,6 +42,7 @@ type Validator interface {
 	GetStatus() BondStatus    // status of the validator
 	GetOperator() ValAddress  // operator address to receive/return validators coins
 	GetPubKey() crypto.PubKey // validation pubkey
+	GetConsAddr() ConsAddress // validation consensus address
 	GetPower() Dec            // validation power
 	GetTokens() Dec           // validation tokens
 	GetCommission() Dec       // validator commission rate
@@ -73,9 +74,9 @@ type ValidatorSet interface {
 	TotalPower(Context) Dec                             // total power of the validator set
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
-	Slash(Context, crypto.PubKey, int64, int64, Dec)
-	Jail(Context, crypto.PubKey)   // jail a validator
-	Unjail(Context, crypto.PubKey) // unjail a validator
+	Slash(Context, ConsAddress, int64, int64, Dec)
+	Jail(Context, ConsAddress)   // jail a validator
+	Unjail(Context, ConsAddress) // unjail a validator
 
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.

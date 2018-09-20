@@ -27,7 +27,7 @@ func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params) {
 		validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(amt))
 		keeper.SetPool(ctx, pool)
 		validator = keeper.UpdateValidator(ctx, validator)
-		keeper.SetValidatorByPubKeyIndex(ctx, validator)
+		keeper.SetValidatorByConsAddr(ctx, validator)
 	}
 	pool = keeper.GetPool(ctx)
 
@@ -191,12 +191,12 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	fraction := sdk.NewDecWithPrec(5, 1)
 
 	oldPool := keeper.GetPool(ctx)
-	validator, found := keeper.GetValidatorByPubKey(ctx, pk)
+	validator, found := keeper.GetValidatorByConsPubKey(ctx, pk)
 	require.True(t, found)
 	keeper.Slash(ctx, pk, ctx.BlockHeight(), 10, fraction)
 
 	// read updated state
-	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
+	validator, found = keeper.GetValidatorByConsPubKey(ctx, pk)
 	require.True(t, found)
 	newPool := keeper.GetPool(ctx)
 
@@ -227,7 +227,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// slash validator for the first time
 	ctx = ctx.WithBlockHeight(12)
 	oldPool := keeper.GetPool(ctx)
-	validator, found := keeper.GetValidatorByPubKey(ctx, pk)
+	validator, found := keeper.GetValidatorByConsPubKey(ctx, pk)
 	require.True(t, found)
 	keeper.Slash(ctx, pk, 10, 10, fraction)
 
@@ -241,7 +241,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// bonded tokens burned
 	require.Equal(t, int64(3), oldPool.BondedTokens.Sub(newPool.BondedTokens).RoundInt64())
 	// read updated validator
-	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
+	validator, found = keeper.GetValidatorByConsPubKey(ctx, pk)
 	require.True(t, found)
 	// power decreased by 3 - 6 stake originally bonded at the time of infraction
 	// was still bonded at the time of discovery and was slashed by half, 4 stake
@@ -261,7 +261,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// bonded tokens burned again
 	require.Equal(t, int64(6), oldPool.BondedTokens.Sub(newPool.BondedTokens).RoundInt64())
 	// read updated validator
-	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
+	validator, found = keeper.GetValidatorByConsPubKey(ctx, pk)
 	require.True(t, found)
 	// power decreased by 3 again
 	require.Equal(t, sdk.NewDec(4), validator.GetPower())
@@ -281,7 +281,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// bonded tokens burned again
 	require.Equal(t, int64(9), oldPool.BondedTokens.Sub(newPool.BondedTokens).RoundInt64())
 	// read updated validator
-	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
+	validator, found = keeper.GetValidatorByConsPubKey(ctx, pk)
 	require.True(t, found)
 	// power decreased by 3 again
 	require.Equal(t, sdk.NewDec(1), validator.GetPower())
@@ -303,7 +303,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// read updated validator
 	// power decreased by 1 again, validator is out of stake
 	// ergo validator should have been removed from the store
-	_, found = keeper.GetValidatorByPubKey(ctx, pk)
+	_, found = keeper.GetValidatorByConsPubKey(ctx, pk)
 	require.False(t, found)
 }
 
@@ -343,7 +343,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// slash validator
 	ctx = ctx.WithBlockHeight(12)
 	oldPool := keeper.GetPool(ctx)
-	validator, found := keeper.GetValidatorByPubKey(ctx, pk)
+	validator, found := keeper.GetValidatorByConsPubKey(ctx, pk)
 	require.True(t, found)
 	keeper.Slash(ctx, pk, 10, 10, fraction)
 
@@ -357,7 +357,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// bonded tokens burned
 	require.Equal(t, int64(5), oldPool.BondedTokens.Sub(newPool.BondedTokens).RoundInt64())
 	// read updated validator
-	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
+	validator, found = keeper.GetValidatorByConsPubKey(ctx, pk)
 	require.True(t, found)
 	// power decreased by 2 - 4 stake originally bonded at the time of infraction
 	// was still bonded at the time of discovery and was slashed by half, 4 stake
@@ -367,7 +367,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 
 	// slash the validator again
 	ctx = ctx.WithBlockHeight(12)
-	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
+	validator, found = keeper.GetValidatorByConsPubKey(ctx, pk)
 	require.True(t, found)
 	require.NotPanics(t, func() { keeper.Slash(ctx, pk, 10, 10, sdk.OneDec()) })
 
@@ -381,14 +381,14 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// seven bonded tokens burned
 	require.Equal(t, int64(12), oldPool.BondedTokens.Sub(newPool.BondedTokens).RoundInt64())
 	// read updated validator
-	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
+	validator, found = keeper.GetValidatorByConsPubKey(ctx, pk)
 	require.True(t, found)
 	// power decreased by 4
 	require.Equal(t, sdk.NewDec(4), validator.GetPower())
 
 	// slash the validator again, by 100%
 	ctx = ctx.WithBlockHeight(12)
-	validator, found = keeper.GetValidatorByPubKey(ctx, pk)
+	validator, found = keeper.GetValidatorByConsPubKey(ctx, pk)
 	require.True(t, found)
 	keeper.Slash(ctx, pk, 10, 10, sdk.OneDec())
 
@@ -403,14 +403,14 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.Equal(t, int64(16), oldPool.BondedTokens.Sub(newPool.BondedTokens).RoundInt64())
 	// read updated validator
 	// validator decreased to zero power, should have been removed from the store
-	_, found = keeper.GetValidatorByPubKey(ctx, pk)
+	_, found = keeper.GetValidatorByConsPubKey(ctx, pk)
 	require.False(t, found)
 
 	// slash the validator again, by 100%
 	// no stake remains to be slashed
 	ctx = ctx.WithBlockHeight(12)
 	// validator no longer in the store
-	_, found = keeper.GetValidatorByPubKey(ctx, pk)
+	_, found = keeper.GetValidatorByConsPubKey(ctx, pk)
 	require.False(t, found)
 	keeper.Slash(ctx, pk, 10, 10, sdk.OneDec())
 
@@ -425,7 +425,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.Equal(t, int64(16), oldPool.BondedTokens.Sub(newPool.BondedTokens).RoundInt64())
 	// read updated validator
 	// power still zero, still not in the store
-	_, found = keeper.GetValidatorByPubKey(ctx, pk)
+	_, found = keeper.GetValidatorByConsPubKey(ctx, pk)
 	require.False(t, found)
 }
 
@@ -472,7 +472,7 @@ func TestSlashBoth(t *testing.T) {
 	// slash validator
 	ctx = ctx.WithBlockHeight(12)
 	oldPool := keeper.GetPool(ctx)
-	validator, found := keeper.GetValidatorByPubKey(ctx, PKs[0])
+	validator, found := keeper.GetValidatorByConsPubkey(ctx, PKs[0])
 	require.True(t, found)
 	keeper.Slash(ctx, PKs[0], 10, 10, fraction)
 
@@ -488,7 +488,7 @@ func TestSlashBoth(t *testing.T) {
 	// bonded tokens burned
 	require.Equal(t, int64(3), oldPool.BondedTokens.Sub(newPool.BondedTokens).RoundInt64())
 	// read updated validator
-	validator, found = keeper.GetValidatorByPubKey(ctx, PKs[0])
+	validator, found = keeper.GetValidatorByConsPubKey(ctx, PKs[0])
 	require.True(t, found)
 	// power not decreased, all stake was bonded since
 	require.Equal(t, sdk.NewDec(10), validator.GetPower())

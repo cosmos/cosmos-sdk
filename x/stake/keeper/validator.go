@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -57,9 +58,20 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 	return validator, true
 }
 
-// get a single validator by pubkey
+// get a single validator by consensus address
 func (k Keeper) GetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
+	opAddr := store.Get(GetValidatorByConsAddrKey(consAddr))
+	if opAddr == nil {
+		return validator, false
+	}
+	return k.GetValidator(ctx, opAddr)
+}
+
+// get a single validator by pubkey
+func (k Keeper) GetValidatorByConsPubKey(ctx sdk.Context, consPubKey crypto.PubKey) (validator types.Validator, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	consAddr := sdk.ConsAddress(consPubKey.Address())
 	opAddr := store.Get(GetValidatorByConsAddrKey(consAddr))
 	if opAddr == nil {
 		return validator, false
@@ -75,6 +87,7 @@ func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 }
 
 // validator index
+// TODO change to SetValidatorByConsAddr? used for retrieving from ConsPubkey as well- kinda confusing
 func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	consAddr := sdk.ConsAddress(validator.OperatorAddr.Bytes())

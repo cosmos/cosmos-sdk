@@ -40,3 +40,35 @@ func (c Commission) String() string {
 		c.Rate, c.MaxRate, c.MaxChangeRate, c.LastChangeTime,
 	)
 }
+
+// Validate performs basic sanity validation checks of initial commission
+// parameters. If validation fails, an SDK error is returned.
+func (c Commission) Validate() sdk.Error {
+	switch {
+	case c.MaxRate.LT(sdk.ZeroDec()):
+		// max rate cannot be negative
+		return ErrCommissionNegative(DefaultCodespace)
+
+	case c.MaxRate.GT(sdk.OneDec()):
+		// max rate cannot be greater than 100%
+		return ErrCommissionHuge(DefaultCodespace)
+
+	case c.Rate.LT(sdk.ZeroDec()):
+		// rate cannot be negative
+		return ErrCommissionNegative(DefaultCodespace)
+
+	case c.Rate.GT(c.MaxRate):
+		// rate cannot be greater than the max rate
+		return ErrCommissionGTMaxRate(DefaultCodespace)
+
+	case c.MaxChangeRate.LT(sdk.ZeroDec()):
+		// change rate cannot be negative
+		return ErrCommissionChangeRateNegative(DefaultCodespace)
+
+	case c.MaxChangeRate.GT(c.MaxRate):
+		// change rate cannot be greater than the max rate
+		return ErrCommissionChangeRateGTMaxRate(DefaultCodespace)
+	}
+
+	return nil
+}

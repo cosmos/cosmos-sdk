@@ -696,6 +696,8 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 // UpdateValidatorCommission attempts to update a validator's commission rate.
 // It may also be used to initially set the validator's commission parameters.
 // An error is returned if the new (or initial) commission is invalid.
+//
+// TODO: Do not use this for initially setting the commission
 func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Validator, newCommission types.Commission) sdk.Error {
 	oldCommission := validator.Commission
 	blockTime := ctx.BlockHeader().Time

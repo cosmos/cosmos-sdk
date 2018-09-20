@@ -91,11 +91,11 @@ func (k Keeper) SetProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) {
 // nolint: errcheck
 func (k Keeper) GetCommunityTax(ctx sdk.Context) sdk.Dec {
 	var communityTax sdk.Dec
-	keeper.ps.Get(ctx, ParamStoreKeyCommunityTax, &communityTax)
+	k.ps.Get(ctx, ParamStoreKeyCommunityTax, &communityTax)
 	return communityTax
 }
 
 // nolint: errcheck
 func (k Keeper) setCommunityTax(ctx sdk.Context, communityTax sdk.Dec) {
-	keeper.ps.Set(ctx, ParamStoreKeyCommunityTax, &communityTax)
+	k.ps.Set(ctx, ParamStoreKeyCommunityTax, &communityTax)
 }

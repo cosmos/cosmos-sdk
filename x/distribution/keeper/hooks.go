@@ -1,4 +1,4 @@
-package distribution
+package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,11 +10,11 @@ func (k Keeper) onValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
 
 	height := ctx.BlockHeight()
 	vdi := types.ValidatorDistInfo{
-		OperatorAddr:           addr,
-		GlobalWithdrawalHeight: height,
-		Pool:           DecCoins{},
-		PoolCommission: DecCoins{},
-		DelAccum:       NewTotalAccum(height),
+		OperatorAddr:            addr,
+		FeePoolWithdrawalHeight: height,
+		Pool:           types.DecCoins{},
+		PoolCommission: types.DecCoins{},
+		DelAccum:       types.NewTotalAccum(height),
 	}
 	k.SetValidatorDistInfo(ctx, vdi)
 }
@@ -68,20 +68,20 @@ type Hooks struct {
 func (k Keeper) ValidatorHooks() Hooks { return Hooks{k} }
 
 // nolint
-func (h Hooks) OnValidatorCreated(ctx sdk.Context, addr sdk.VlAddress) {
-	v.k.onValidatorCreated(ctx, address)
+func (h Hooks) OnValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
+	h.k.onValidatorCreated(ctx, addr)
 }
 func (h Hooks) OnValidatorCommissionChange(ctx sdk.Context, addr sdk.ValAddress) {
-	v.k.onValidatorCommissionChange(ctx, address)
+	h.k.onValidatorCommissionChange(ctx, addr)
 }
 func (h Hooks) OnValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {
-	v.k.onValidatorRemoved(ctx, address)
+	h.k.onValidatorRemoved(ctx, addr)
 }
 func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.k.onDelegationCreated(ctx, delAddr, valAddr)
 }
 func (h Hooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	d.k.onDelegationSharesModified(ctx, delAddr, valAddr)
+	h.k.onDelegationSharesModified(ctx, delAddr, valAddr)
 }
 func (h Hooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.k.onDelegationRemoved(ctx, delAddr, valAddr)

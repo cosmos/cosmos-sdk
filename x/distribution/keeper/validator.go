@@ -11,7 +11,7 @@ func (k Keeper) GetValidatorDistInfo(ctx sdk.Context,
 
 	store := ctx.KVStore(k.storeKey)
 
-	b := store.Get(GetValidatorDistInfoKey(ctx, operatorAddr))
+	b := store.Get(GetValidatorDistInfoKey(operatorAddr))
 	if b == nil {
 		panic("Stored delegation-distribution info should not have been nil")
 	}
@@ -24,13 +24,13 @@ func (k Keeper) GetValidatorDistInfo(ctx sdk.Context,
 func (k Keeper) SetValidatorDistInfo(ctx sdk.Context, vdi types.ValidatorDistInfo) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(vdi)
-	store.Set(GetValidatorDistInfoKey(ctx, vdi.OperatorAddr), b)
+	store.Set(GetValidatorDistInfoKey(vdi.OperatorAddr), b)
 }
 
 // remove a validator distribution info
 func (k Keeper) RemoveValidatorDistInfo(ctx sdk.Context, valAddr sdk.ValAddress) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(GetValidatorDistInfoKey(ctx, vdi.OperatorAddr))
+	store.Delete(GetValidatorDistInfoKey(valAddr))
 }
 
 // withdrawal all the validator rewards including the commission
@@ -38,19 +38,20 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 
 	// withdraw self-delegation
 	height := ctx.BlockHeight()
-	validator := k.GetValidator(ctx, operatorAddr)
-	accAddr := sdk.AccAddress{operatorAddr.Bytes()}
+	validator := k.stakeKeeper.GetValidator(ctx, operatorAddr)
+	accAddr := sdk.AccAddress(operatorAddr.Bytes())
 	withdraw := k.GetDelegatorRewardsAll(ctx, accAddr, height)
 
 	// withdrawal validator commission rewards
-	pool := k.stakeKeeper.GetPool(ctx)
+	bondedTokens := k.stakeKeeper.TotalPower(ctx)
 	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
 	feePool := k.GetFeePool(ctx)
-	feePool, commission := valInfo.WithdrawCommission(feePool, valInfo, height, pool.BondedTokens,
-		validator.Tokens, validator.Commission)
-	withdraw = withdraw.Add(commission)
-	k.SetFeePool(feePool)
+	valInfo, feePool, commission := valInfo.WithdrawCommission(feePool, height, bondedTokens,
+		validator.GetTokens(), validator.GetCommission())
+	withdraw = withdraw.Plus(commission)
+	k.SetValidatorDistInfo(ctx, valInfo)
+	k.SetFeePool(ctx, feePool)
 
-	withdrawAddr := k.GetDelegatorWithdrawAddr(accAddr)
-	k.coinKeeper.AddCoins(withdrawAddr, withdraw.TruncateDecimal())
+	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)
+	k.bankKeeper.AddCoins(ctx, withdrawAddr, withdraw.TruncateDecimal())
 }

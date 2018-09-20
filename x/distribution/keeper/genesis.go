@@ -40,10 +40,9 @@ func (k Keeper) GetAllDWs(ctx sdk.Context) (dws []types.DelegatorWithdrawInfo) {
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		addr := iterator.Key()[1:]
 		dw := types.DelegatorWithdrawInfo{
-			DelegatorAddr: sdk.AccAddress{iterator.Key()},
-			WithdrawAddr:  sdk.AccAddress{iterator.Value()},
+			DelegatorAddr: sdk.AccAddress(iterator.Key()),
+			WithdrawAddr:  sdk.AccAddress(iterator.Value()),
 		}
 		dws = append(dws, dw)
 	}

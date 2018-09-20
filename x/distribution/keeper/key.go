@@ -23,7 +23,7 @@ func GetValidatorDistInfoKey(operatorAddr sdk.ValAddress) []byte {
 
 // gets the key for delegator distribution for a validator
 // VALUE: distribution/types.DelegatorDistInfo
-func GetDelegationDistInfoKey(delAddr sdk.AccAddress, valOperatorAddr sdk.ValAddress) []byte {
+func GetDelegationDistInfoKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(GetDelegationDistInfosKey(delAddr), valAddr.Bytes()...)
 }
 

@@ -27,14 +27,15 @@ func (k Keeper) AllocateFees(ctx sdk.Context) {
 
 	// apply commission
 	commission := proposerReward.Mul(proserValidator.GetCommission())
-	proposerDist.PoolCommission = proposerDist.PoolCommission.Add(commission)
-	proposerDist.Pool = proposerDist.Pool.Add(proposerReward.Sub(commission))
+	remaining := proposerReward.Mul(sdk.OneDec().Sub(proserValidator.GetCommission()))
+	proposerDist.PoolCommission = proposerDist.PoolCommission.Plus(commission)
+	proposerDist.Pool = proposerDist.Pool.Plus(remaining)
 
 	// allocate community funding
 	communityTax := k.GetCommunityTax(ctx)
 	communityFunding := feesCollectedDec.Mul(communityTax)
 	feePool := k.GetFeePool(ctx)
-	feePool.CommunityPool = feePool.CommunityPool.Add(communityFunding)
+	feePool.CommunityPool = feePool.CommunityPool.Plus(communityFunding)
 
 	// set the global pool within the distribution module
 	poolReceived := feesCollectedDec.Mul(sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax))

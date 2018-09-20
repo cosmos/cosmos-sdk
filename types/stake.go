@@ -45,7 +45,7 @@ type Validator interface {
 	GetPower() Dec            // validation power
 	GetTokens() Dec           // validation tokens
 	GetCommission() Dec       // validator commission rate
-	GetDelegatorShares() Dec  // Total out standing delegator shares
+	GetDelegatorShares() Dec  // Total delegator shares
 	GetBondHeight() int64     // height in which the validator became active
 }
 
@@ -87,8 +87,8 @@ type ValidatorSet interface {
 // delegation bond for a delegated proof of stake system
 type Delegation interface {
 	GetDelegator() AccAddress // delegator AccAddress for the bond
-	GetValidator() ValAddress // validator operator address
-	GetBondShares() Dec       // amount of validator's shares
+	GetValidator() ValAddress // validator operator address TODO change to GetValAddr
+	GetShares() Dec           // amount of validator's shares
 }
 
 // properties for the set of all delegations for a particular

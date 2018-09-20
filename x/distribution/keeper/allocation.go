@@ -10,7 +10,7 @@ func (k Keeper) AllocateFees(ctx sdk.Context) {
 
 	// get the proposer of this block
 	proposerConsAddr := k.GetProposerConsAddr(ctx)
-	proserValidator := k.stakeKeeper.GetValidatorFromConsAddr(ctx, proposerConsAddr)
+	proserValidator := k.stakeKeeper.ValidatorByConsAddr(ctx, proposerConsAddr)
 	proposerDist := k.GetValidatorDistInfo(ctx, proserValidator.GetOperator())
 
 	// get the fees which have been getting collected through all the

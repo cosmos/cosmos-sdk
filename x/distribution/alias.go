@@ -2,10 +2,10 @@
 package distribution
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/tags"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/stake/querier"
 )
 
 type (
@@ -27,8 +27,7 @@ type (
 )
 
 var (
-	NewKeeper  = keeper.NewKeeper
-	NewQuerier = querier.NewQuerier
+	NewKeeper = keeper.NewKeeper
 
 	GetValidatorDistInfoKey     = keeper.GetValidatorDistInfoKey
 	GetDelegationDistInfoKey    = keeper.GetDelegationDistInfoKey
@@ -51,6 +50,9 @@ var (
 	NewMsgWithdrawDelegatorRewardsAll = types.NewMsgWithdrawDelegatorRewardsAll
 	NewMsgWithdrawDelegationReward    = types.NewMsgWithdrawDelegatorReward
 	NewMsgWithdrawValidatorRewardsAll = types.NewMsgWithdrawValidatorRewardsAll
+
+	GetCmdWithdrawRewards = cli.GetCmdWithdrawRewards
+	GetCmdSetWithdrawAddr = cli.GetCmdSetWithdrawAddr
 )
 
 const (

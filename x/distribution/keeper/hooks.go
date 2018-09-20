@@ -65,7 +65,7 @@ type Hooks struct {
 }
 
 // New Validator Hooks
-func (k Keeper) ValidatorHooks() Hooks { return Hooks{k} }
+func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
 // nolint
 func (h Hooks) OnValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {

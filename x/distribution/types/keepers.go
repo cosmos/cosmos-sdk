@@ -6,9 +6,9 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 type StakeKeeper interface {
 	IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 		fn func(index int64, delegation sdk.Delegation) (stop bool))
-	GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) sdk.Delegation
-	GetValidator(ctx sdk.Context, valAddr sdk.ValAddress) sdk.Validator
-	GetValidatorFromConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) sdk.Validator
+	Delegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) sdk.Delegation
+	Validator(ctx sdk.Context, valAddr sdk.ValAddress) sdk.Validator
+	ValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) sdk.Validator
 	TotalPower(ctx sdk.Context) sdk.Dec
 }
 

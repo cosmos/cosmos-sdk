@@ -97,24 +97,29 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	)
 
 	// add handlers
+	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(app.cdc, app.keyFeeCollection)
 	app.bankKeeper = bank.NewBaseKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams)
-	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.tkeyStake, app.bankKeeper, app.RegisterCodespace(stake.DefaultCodespace))
-	app.distrKeeper = distr.NewKeeper(app.cdc, app.keyDistr, app.tkeyStake, app.bankKeeper, app.RegisterCodespace(stake.DefaultCodespace))
-	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.paramsKeeper.Getter(), app.RegisterCodespace(slashing.DefaultCodespace))
-	app.govKeeper = gov.NewKeeper(app.cdc, app.keyGov, app.paramsKeeper.Setter(), app.bankKeeper, app.stakeKeeper, app.RegisterCodespace(gov.DefaultCodespace))
-	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(app.cdc, app.keyFeeCollection)
+	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.tkeyStake,
+		app.bankKeeper, app.RegisterCodespace(stake.DefaultCodespace))
+	app.distrKeeper = distr.NewKeeper(app.cdc, app.keyDistr, app.tkeyStake,
+		app.paramsKeeper.Setter(), app.bankKeeper, app.stakeKeeper,
+		app.feeCollectionKeeper, app.RegisterCodespace(stake.DefaultCodespace))
+	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper,
+		app.paramsKeeper.Getter(), app.RegisterCodespace(slashing.DefaultCodespace))
+	app.govKeeper = gov.NewKeeper(app.cdc, app.keyGov, app.paramsKeeper.Setter(),
+		app.bankKeeper, app.stakeKeeper, app.RegisterCodespace(gov.DefaultCodespace))
 
 	// register the staking hooks
-	app.stakeKeeper = app.stakeKeeper.WithValidatorHooks(NewHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()))
+	app.stakeKeeper = app.stakeKeeper.WithHooks(NewHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()))
 
 	// register message routes
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.bankKeeper)).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.bankKeeper)).
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
-		AddRoute("distr", stake.NewHandler(app.distrKeeper)).
+		AddRoute("distr", distr.NewHandler(app.distrKeeper)).
 		AddRoute("slashing", slashing.NewHandler(app.slashingKeeper)).
 		AddRoute("gov", gov.NewHandler(app.govKeeper))
 
@@ -257,7 +262,7 @@ type Hooks struct {
 	sh slashing.Hooks
 }
 
-func NewHooks(dh distr.Hooks, sh slashing.ValidatorHooks) Hooks {
+func NewHooks(dh distr.Hooks, sh slashing.Hooks) Hooks {
 	return Hooks{dh, sh}
 }
 
@@ -276,8 +281,8 @@ func (h Hooks) OnValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {
 func (h Hooks) OnValidatorBonded(ctx sdk.Context, addr sdk.ConsAddress) {
 	h.sh.OnValidatorBonded(ctx, addr)
 }
-func (h Hooks) OnValidatorBeginBonded(ctx sdk.Context, addr sdk.ConsAddress) {
-	h.sh.OnValidatorBeginBonding(ctx, addr)
+func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, addr sdk.ConsAddress) {
+	h.sh.OnValidatorBeginUnbonding(ctx, addr)
 }
 func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.dh.OnDelegationCreated(ctx, delAddr, valAddr)

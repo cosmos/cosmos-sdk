@@ -295,7 +295,7 @@ func TestCoinSend(t *testing.T) {
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 }
 
-func TestIBCTransfer(t *testing.T) {
+func DisabledTestIBCTransfer(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})

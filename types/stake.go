@@ -44,6 +44,7 @@ type Validator interface {
 	GetPubKey() crypto.PubKey // validation pubkey
 	GetPower() Dec            // validation power
 	GetTokens() Dec           // validation tokens
+	GetCommission() Dec       // validator commission rate
 	GetDelegatorShares() Dec  // Total out standing delegator shares
 	GetBondHeight() int64     // height in which the validator became active
 }

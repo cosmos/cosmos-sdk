@@ -477,5 +477,6 @@ func (v Validator) GetOperator() sdk.ValAddress { return v.OperatorAddr }
 func (v Validator) GetPubKey() crypto.PubKey    { return v.ConsPubKey }
 func (v Validator) GetPower() sdk.Dec           { return v.BondedTokens() }
 func (v Validator) GetTokens() sdk.Dec          { return v.Tokens }
+func (v Validator) GetCommission() sdk.Dec      { return v.Commission }
 func (v Validator) GetDelegatorShares() sdk.Dec { return v.DelegatorShares }
 func (v Validator) GetBondHeight() int64        { return v.BondHeight }

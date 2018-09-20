@@ -32,7 +32,7 @@ func (k Keeper) RemoveDelegatorDistInfo(ctx sdk.Context, delAddr sdk.AccAddress,
 	valOperatorAddr sdk.ValAddress) {
 
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(GetDelegationDistInfoKey(DelegatorAddr, ValOperatorAddr))
+	store.Delete(GetDelegationDistInfoKey(delAddr, valOperatorAddr))
 }
 
 //___________________________________________________________________________________________
@@ -45,13 +45,13 @@ func (k Keeper) GetDelegatorWithdrawAddr(ctx sdk.Context, delAddr sdk.AccAddress
 	if b == nil {
 		return delAddr
 	}
-	return sdk.AccAddress{b}
+	return sdk.AccAddress(b)
 }
 
 // set the delegator withdraw address
 func (k Keeper) SetDelegatorWithdrawAddr(ctx sdk.Context, delAddr, withdrawAddr sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(GetDelegatorWithdrawAddrKey(ddi.DelegatorAddr), withdrawAddr.Bytes())
+	store.Set(GetDelegatorWithdrawAddrKey(delAddr), withdrawAddr.Bytes())
 }
 
 // remove a delegator withdraw info
@@ -67,18 +67,18 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccA
 	validatorAddr sdk.ValAddress) {
 
 	height := ctx.BlockHeight()
-	pool := k.sk.GetPool(ctx)
+	bondedTokens := k.stakeKeeper.TotalPower(ctx)
 	feePool := k.GetFeePool(ctx)
-	delInfo := k.GetDelegationDistInfo(ctx, delegatorAddr, validatorAddr)
+	delInfo := k.GetDelegatorDistInfo(ctx, delegatorAddr, validatorAddr)
 	valInfo := k.GetValidatorDistInfo(ctx, validatorAddr)
-	validator := k.GetValidator(ctx, validatorAddr)
+	validator := k.stakeKeeper.GetValidator(ctx, validatorAddr)
 
-	feePool, withdraw := delInfo.WithdrawRewards(feePool, valInfo, height, pool.BondedTokens,
+	delInfo, feePool, withdraw := delInfo.WithdrawRewards(ctx, feePool, valInfo, height, bondedTokens,
 		validator.Tokens, validator.DelegatorShares, validator.Commission)
 
 	k.SetFeePool(ctx, feePool)
-	withdrawAddr := k.GetDelegatorWithdrawAddr(delegatorAddr)
-	k.ck.AddCoins(ctx, withdrawAddr, withdraw.TruncateDecimal())
+	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, delegatorAddr)
+	k.bankKeeper.AddCoins(ctx, withdrawAddr, withdraw.TruncateDecimal())
 }
 
 //___________________________________________________________________________________________
@@ -92,7 +92,7 @@ func (k Keeper) WithdrawDelegationRewardsAll(ctx sdk.Context, delegatorAddr sdk.
 }
 
 // return all rewards for all delegations of a delegator
-func (k Keeper) GetDelegatorRewardsAll(ctx sdk.Context, delAddr sdk.AccAddress, height int64) DecCoins {
+func (k Keeper) GetDelegatorRewardsAll(ctx sdk.Context, delAddr sdk.AccAddress, height int64) types.DecCoins {
 
 	withdraw := sdk.NewDec(0)
 	pool := k.sk.GetPool(ctx)

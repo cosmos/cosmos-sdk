@@ -31,13 +31,15 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBo
 	vi.FeePoolWithdrawalHeight = height
 	accum := sdk.NewDec(blocks).Mul(vdTokens)
 	withdrawalTokens := fp.Pool.Mul(accum.Quo(fp.ValAccum.Accum))
+	remainingTokens := fp.Pool.Mul(sdk.OneDec().Sub(accum.Quo(fp.ValAccum.Accum)))
+
 	commission := withdrawalTokens.Mul(commissionRate)
-	afterCommission := withdrawalTokens.Sub(commission)
+	afterCommission := withdrawalTokens.Mul(sdk.OneDec().Sub(commissionRate))
 
 	fp.ValAccum.Accum = fp.ValAccum.Accum.Sub(accum)
-	fp.Pool = fp.Pool.Sub(withdrawalTokens)
-	vi.PoolCommission = vi.PoolCommission.Add(commission)
-	vi.Pool = vi.Pool.Add(afterCommission)
+	fp.Pool = remainingTokens
+	vi.PoolCommission = vi.PoolCommission.Plus(commission)
+	vi.Pool = vi.Pool.Plus(afterCommission)
 
 	return vi, fp
 }

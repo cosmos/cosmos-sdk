@@ -14,26 +14,29 @@ const (
 
 // keeper of the stake store
 type Keeper struct {
-	storeKey    sdk.StoreKey
-	storeTKey   sdk.StoreKey
-	cdc         *codec.Codec
-	ps          params.Setter
-	coinKeeper  types.CoinKeeper
-	stakeKeeper types.StakeKeeper
+	storeKey            sdk.StoreKey
+	storeTKey           sdk.StoreKey
+	cdc                 *codec.Codec
+	ps                  params.Setter
+	bankKeeper          types.BankKeeper
+	stakeKeeper         types.StakeKeeper
+	feeCollectionKeeper types.FeeCollectionKeeper
 
 	// codespace
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ps params.Setter, ck types.CoinKeeper,
-	sk types.StakeKeeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ps params.Setter, ck types.BankKeeper,
+	sk types.StakeKeeper, fck types.FeeCollectionKeeper, codespace sdk.CodespaceType) Keeper {
 
 	keeper := Keeper{
-		storeKey:   key,
-		storeTKey:  tkey,
-		cdc:        cdc,
-		coinKeeper: ck,
-		codespace:  codespace,
+		storeKey:            key,
+		storeTKey:           tkey,
+		cdc:                 cdc,
+		bankKeeper:          ck,
+		stakeKeeper:         sk,
+		feeCollectionKeeper: fck,
+		codespace:           codespace,
 	}
 	return keeper
 }

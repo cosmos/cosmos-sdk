@@ -79,6 +79,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
 	k.SetValidator(ctx, validator)
+	k.UpdateValidatorCommission(ctx, validator, msg.Commission)
 	k.SetValidatorByPubKeyIndex(ctx, validator)
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account

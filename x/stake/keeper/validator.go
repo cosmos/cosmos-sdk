@@ -693,6 +693,34 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	tstore.Set(GetTendermintUpdatesTKey(address), bz)
 }
 
+// UpdateValidatorCommission attempts to update a validator's commission rate.
+// It may also be used to initially set the validator's commission parameters.
+// An error is returned if the new (or initial) commission is invalid.
+func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Validator, newCommission types.Commission) sdk.Error {
+	oldCommission := validator.Commission
+	blockTime := ctx.BlockHeader().Time
+
+	switch {
+	case blockTime.Sub(oldCommission.LastChangeTime).Hours() < 24:
+		// only allow validators to update their commission once every 24 hours
+		return types.ErrCommissionUpdateTime(k.Codespace())
+	case newCommission.MaxRate.LT(sdk.ZeroDec()):
+		return types.ErrCommissionNegative(k.Codespace())
+	case newCommission.MaxRate.GT(sdk.OneDec()):
+		return types.ErrCommissionHuge(k.Codespace())
+	case newCommission.Rate.GT(newCommission.MaxRate):
+		return types.ErrCommissionGTMax(k.Codespace())
+	case newCommission.Rate.LT(sdk.ZeroDec()):
+		return types.ErrCommissionNegative(k.Codespace())
+	}
+
+	newCommission.LastChangeTime = blockTime
+	validator.Commission = newCommission
+
+	k.SetValidator(ctx, validator)
+	return nil
+}
+
 //__________________________________________________________________________
 
 // get the current validator on the cliff

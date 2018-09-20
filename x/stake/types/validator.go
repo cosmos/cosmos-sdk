@@ -39,7 +39,6 @@ type Validator struct {
 	Commission              sdk.Dec   `json:"commission"`                 // the commission rate charged to delegators
 	CommissionMax           sdk.Dec   `json:"commission_max"`             // maximum commission rate which validator can ever charge
 	CommissionMaxChangeRate sdk.Dec   `json:"commission_max_change_rate"` // maximum daily increase of the validator commission
-	CommissionChangeToday   sdk.Dec   `json:"commission_change_today"`    // total commission rate change today (reset each day)
 	CommissionChangeTime    time.Time `json:"commission_change_time"`     // the last time the commission rate was changed
 }
 
@@ -60,7 +59,7 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Des
 		Commission:              sdk.ZeroDec(),
 		CommissionMax:           sdk.ZeroDec(),
 		CommissionMaxChangeRate: sdk.ZeroDec(),
-		CommissionChangeToday:   sdk.ZeroDec(),
+		CommissionChangeTime:    time.Unix(0, 0).UTC(),
 	}
 }
 
@@ -79,7 +78,7 @@ type validatorValue struct {
 	Commission              sdk.Dec
 	CommissionMax           sdk.Dec
 	CommissionMaxChangeRate sdk.Dec
-	CommissionChangeToday   sdk.Dec
+	CommissionChangeTime    time.Time
 }
 
 // return the redelegation without fields contained within the key for the store
@@ -98,7 +97,7 @@ func MustMarshalValidator(cdc *codec.Codec, validator Validator) []byte {
 		Commission:              validator.Commission,
 		CommissionMax:           validator.CommissionMax,
 		CommissionMaxChangeRate: validator.CommissionMaxChangeRate,
-		CommissionChangeToday:   validator.CommissionChangeToday,
+		CommissionChangeTime:    validator.CommissionChangeTime,
 	}
 	return cdc.MustMarshalBinary(val)
 }
@@ -139,7 +138,7 @@ func UnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) (validator
 		Commission:              storeValue.Commission,
 		CommissionMax:           storeValue.CommissionMax,
 		CommissionMaxChangeRate: storeValue.CommissionMaxChangeRate,
-		CommissionChangeToday:   storeValue.CommissionChangeToday,
+		CommissionChangeTime:    storeValue.CommissionChangeTime,
 	}, nil
 }
 
@@ -157,16 +156,16 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Validator Consensus Pubkey: %s\n", bechConsPubKey)
 	resp += fmt.Sprintf("Jailed: %v\n", v.Jailed)
 	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
-	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens.String())
-	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.String())
+	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens)
+	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares)
 	resp += fmt.Sprintf("Description: %s\n", v.Description)
 	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
 	resp += fmt.Sprintf("Unbonding Height: %d\n", v.UnbondingHeight)
 	resp += fmt.Sprintf("Minimum Unbonding Time: %v\n", v.UnbondingMinTime)
-	resp += fmt.Sprintf("Commission: %s\n", v.Commission.String())
-	resp += fmt.Sprintf("Max Commission Rate: %s\n", v.CommissionMax.String())
-	resp += fmt.Sprintf("Commission Change Rate: %s\n", v.CommissionMaxChangeRate.String())
-	resp += fmt.Sprintf("Commission Change Today: %s\n", v.CommissionChangeToday.String())
+	resp += fmt.Sprintf("Commission: %s\n", v.Commission)
+	resp += fmt.Sprintf("Max Commission Rate: %s\n", v.CommissionMax)
+	resp += fmt.Sprintf("Max Commission Change Rate: %s\n", v.CommissionMaxChangeRate)
+	resp += fmt.Sprintf("Last Commission Change Time: %s\n", v.CommissionChangeTime)
 
 	return resp, nil
 }
@@ -193,7 +192,6 @@ type bechValidator struct {
 	Commission              sdk.Dec   `json:"commission"`                 // the commission rate charged to delegators
 	CommissionMax           sdk.Dec   `json:"commission_max"`             // maximum commission rate which validator can ever charge
 	CommissionMaxChangeRate sdk.Dec   `json:"commission_max_change_rate"` // maximum daily increase of the validator commission
-	CommissionChangeToday   sdk.Dec   `json:"commission_change_today"`    // total commission rate change today (reset each day)
 	CommissionChangeTime    time.Time `json:"commission_change_time"`     // the last time the commission rate was changed
 }
 
@@ -219,7 +217,7 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 		Commission:              v.Commission,
 		CommissionMax:           v.CommissionMax,
 		CommissionMaxChangeRate: v.CommissionMaxChangeRate,
-		CommissionChangeToday:   v.CommissionChangeToday,
+		CommissionChangeTime:    v.CommissionChangeTime,
 	})
 }
 
@@ -248,7 +246,7 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 		Commission:              bv.Commission,
 		CommissionMax:           bv.CommissionMax,
 		CommissionMaxChangeRate: bv.CommissionMaxChangeRate,
-		CommissionChangeToday:   bv.CommissionChangeToday,
+		CommissionChangeTime:    bv.CommissionChangeTime,
 	}
 	return nil
 }
@@ -267,7 +265,7 @@ func (v Validator) Equal(c2 Validator) bool {
 		v.Commission.Equal(c2.Commission) &&
 		v.CommissionMax.Equal(c2.CommissionMax) &&
 		v.CommissionMaxChangeRate.Equal(c2.CommissionMaxChangeRate) &&
-		v.CommissionChangeToday.Equal(c2.CommissionChangeToday)
+		v.CommissionChangeTime.Equal(c2.CommissionChangeTime)
 }
 
 // return the TM validator address

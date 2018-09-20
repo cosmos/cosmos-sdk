@@ -693,31 +693,60 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	tstore.Set(GetTendermintUpdatesTKey(address), bz)
 }
 
+// SetValidatorCommission attempts to set a validator's initial commission. An
+// error is returned if the commission is invalid.
+func (k Keeper) SetValidatorCommission(ctx sdk.Context, validator types.Validator, commission types.Commission) sdk.Error {
+	switch {
+	case commission.MaxRate.LT(sdk.ZeroDec()):
+		// max rate cannot be negative
+		return types.ErrCommissionNegative(k.Codespace())
+
+	case commission.MaxRate.GT(sdk.OneDec()):
+		// max rate cannot be greater than 100%
+		return types.ErrCommissionHuge(k.Codespace())
+
+	case commission.Rate.LT(sdk.ZeroDec()):
+		// rate cannot be negative
+		return types.ErrCommissionNegative(k.Codespace())
+
+	case commission.Rate.GT(commission.MaxRate):
+		// rate cannot be greater than the max rate
+		return types.ErrCommissionGTMaxRate(k.Codespace())
+	}
+
+	validator.Commission = commission
+	validator.Commission.LastChangeTime = ctx.BlockHeader().Time
+
+	k.SetValidator(ctx, validator)
+	return nil
+}
+
 // UpdateValidatorCommission attempts to update a validator's commission rate.
-// It may also be used to initially set the validator's commission parameters.
-// An error is returned if the new (or initial) commission is invalid.
-//
-// TODO: Do not use this for initially setting the commission
-func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Validator, newCommission types.Commission) sdk.Error {
-	oldCommission := validator.Commission
+// An error is returned if the new commission rate is invalid.
+func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Validator, newRate sdk.Dec) sdk.Error {
+	commission := validator.Commission
 	blockTime := ctx.BlockHeader().Time
 
 	switch {
-	case blockTime.Sub(oldCommission.LastChangeTime).Hours() < 24:
-		// only allow validators to update their commission once every 24 hours
+	case blockTime.Sub(commission.LastChangeTime).Hours() < 24:
+		// new rate cannot be changed more than once within 24 hours
 		return types.ErrCommissionUpdateTime(k.Codespace())
-	case newCommission.MaxRate.LT(sdk.ZeroDec()):
+
+	case newRate.LT(sdk.ZeroDec()):
+		// new rate cannot be negative
 		return types.ErrCommissionNegative(k.Codespace())
-	case newCommission.MaxRate.GT(sdk.OneDec()):
-		return types.ErrCommissionHuge(k.Codespace())
-	case newCommission.Rate.GT(newCommission.MaxRate):
-		return types.ErrCommissionGTMax(k.Codespace())
-	case newCommission.Rate.LT(sdk.ZeroDec()):
-		return types.ErrCommissionNegative(k.Codespace())
+
+	case newRate.GT(commission.MaxRate):
+		// new rate cannot be greater than the max rate
+		return types.ErrCommissionGTMaxRate(k.Codespace())
+
+	case newRate.Sub(commission.Rate).Abs().GT(commission.MaxChangeRate):
+		// new rate % change cannot be greater than the max change rate
+		return types.ErrCommissionGTMaxChangeRate(k.Codespace())
 	}
 
-	newCommission.LastChangeTime = blockTime
-	validator.Commission = newCommission
+	validator.Commission.Rate = newRate
+	validator.Commission.LastChangeTime = blockTime
 
 	k.SetValidator(ctx, validator)
 	return nil

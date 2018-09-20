@@ -79,13 +79,16 @@ func (gs *gasKVStore) Gas(meter GasMeter, config GasConfig) KVStore {
 }
 
 // Iterator implements the KVStore interface. It returns an iterator which
-// incurs a flat gas cost of iterator initialization.
+// incurs a flat gas cost for seeking to the first key/value pair and a variable
+// gas cost based on the current value's length if the iterator is valid.
 func (gs *gasKVStore) Iterator(start, end []byte) sdk.Iterator {
 	return gs.iterator(start, end, true)
 }
 
 // ReverseIterator implements the KVStore interface. It returns a reverse
-// iterator which incurs a flat gas cost of iterator initialization.
+// iterator which incurs a flat gas cost for seeking to the first key/value pair
+// and a variable gas cost based on the current value's length if the iterator
+// is valid.
 func (gs *gasKVStore) ReverseIterator(start, end []byte) sdk.Iterator {
 	return gs.iterator(start, end, false)
 }
@@ -108,8 +111,12 @@ func (gs *gasKVStore) iterator(start, end []byte, ascending bool) sdk.Iterator {
 		parent = gs.parent.ReverseIterator(start, end)
 	}
 
-	gs.gasMeter.ConsumeGas(gs.gasConfig.IterInitCostFlat, sdk.GasIterInitCostFlatDesc)
-	return newGasIterator(gs.gasMeter, gs.gasConfig, parent)
+	gi := newGasIterator(gs.gasMeter, gs.gasConfig, parent)
+	if gi.Valid() {
+		gi.(*gasIterator).consumeSeekGas()
+	}
+
+	return gi
 }
 
 type gasIterator struct {
@@ -136,14 +143,13 @@ func (gi *gasIterator) Valid() bool {
 	return gi.parent.Valid()
 }
 
-// Next implements the Iterator interface. It iterates to the next key/value
-// pair in the iterator. It incurs a flat gas cost for iteration and a variable
-// gas cost based on the current value's length.
+// Next implements the Iterator interface. It seeks to the next key/value pair
+// in the iterator. It incurs a flat gas cost for seeking and a variable gas
+// cost based on the current value's length if the iterator is valid.
 func (gi *gasIterator) Next() {
-	value := gi.Value()
-
-	gi.gasMeter.ConsumeGas(gi.gasConfig.ValueCostPerByte*sdk.Gas(len(value)), sdk.GasValuePerByteDesc)
-	gi.gasMeter.ConsumeGas(gi.gasConfig.IterNextCostFlat, sdk.GasIterNextCostFlatDesc)
+	if gi.Valid() {
+		gi.consumeSeekGas()
+	}
 
 	gi.parent.Next()
 }
@@ -165,4 +171,13 @@ func (gi *gasIterator) Value() (value []byte) {
 // Implements Iterator.
 func (gi *gasIterator) Close() {
 	gi.parent.Close()
+}
+
+// consumeSeekGas consumes a flat gas cost for seeking and a variable gas cost
+// based on the current value's length.
+func (gi *gasIterator) consumeSeekGas() {
+	value := gi.Value()
+
+	gi.gasMeter.ConsumeGas(gi.gasConfig.ValueCostPerByte*sdk.Gas(len(value)), sdk.GasValuePerByteDesc)
+	gi.gasMeter.ConsumeGas(gi.gasConfig.IterNextCostFlat, sdk.GasIterNextCostFlatDesc)
 }

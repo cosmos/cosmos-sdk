@@ -2,7 +2,6 @@ package types
 
 // Gas consumption descriptors.
 const (
-	GasIterInitCostFlatDesc = "IterInitFlat"
 	GasIterNextCostFlatDesc = "IterNextFlat"
 	GasValuePerByteDesc     = "ValuePerByte"
 	GasWritePerByteDesc     = "WritePerByte"
@@ -82,7 +81,6 @@ type GasConfig struct {
 	WriteCostFlat    Gas
 	WriteCostPerByte Gas
 	ValueCostPerByte Gas
-	IterInitCostFlat Gas
 	IterNextCostFlat Gas
 }
 
@@ -95,7 +93,6 @@ func DefaultGasConfig() GasConfig {
 		WriteCostFlat:    10,
 		WriteCostPerByte: 10,
 		ValueCostPerByte: 1,
-		IterInitCostFlat: 5,
 		IterNextCostFlat: 15,
 	}
 }

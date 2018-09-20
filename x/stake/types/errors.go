@@ -65,6 +65,14 @@ func ErrCommissionHuge(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidValidator, "commission cannot be more than 100%")
 }
 
+func ErrCommissionGTMax(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "commission cannot be more than the max rate")
+}
+
+func ErrCommissionUpdateTime(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "commission cannot be changed more than once in 24h")
+}
+
 func ErrNilDelegatorAddr(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidInput, "delegator address is nil")
 }

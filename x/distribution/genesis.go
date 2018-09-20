@@ -2,7 +2,7 @@ package distribution
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // InitGenesis sets distribution information for genesis
@@ -15,7 +15,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	for _, ddi := range data.DelegatorDistInfos {
 		keeper.SetDelegatorDistInfo(ctx, ddi)
 	}
-	for _, dw := range data.DelegatorWithdrawAddrs {
+	for _, dw := range data.DelegatorWithdrawInfos {
 		keeper.SetDelegatorWithdrawAddr(ctx, dw.DelegatorAddr, dw.WithdrawAddr)
 	}
 }
@@ -32,6 +32,6 @@ func WriteGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 		FeePool:                feePool,
 		ValidatorDistInfos:     vdis,
 		DelegatorDistInfos:     ddis,
-		DelegatorWithdrawAddrs: dws,
+		DelegatorWithdrawInfos: dws,
 	}
 }

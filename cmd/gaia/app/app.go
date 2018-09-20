@@ -254,7 +254,7 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 // Combined Staking Hooks
 type Hooks struct {
 	dh distr.Hooks
-	sh slashing.ValidatorHooks
+	sh slashing.Hooks
 }
 
 func NewHooks(dh distr.Hooks, sh slashing.ValidatorHooks) Hooks {

@@ -9,7 +9,9 @@ import (
 )
 
 type (
-	Keeper                = keeper.Keeper
+	Keeper = keeper.Keeper
+	Hooks  = keeper.Hooks
+
 	DelegatorWithdrawInfo = types.DelegatorWithdrawInfo
 	DelegatorDistInfo     = types.DelegatorDistInfo
 	ValidatorDistInfo     = types.ValidatorDistInfo
@@ -18,7 +20,7 @@ type (
 
 	MsgSetWithdrawAddress          = types.MsgSetWithdrawAddress
 	MsgWithdrawDelegatorRewardsAll = types.MsgWithdrawDelegatorRewardsAll
-	MsgWithdrawDelegationReward    = types.MsgWithdrawDelegationReward
+	MsgWithdrawDelegatorReward     = types.MsgWithdrawDelegatorReward
 	MsgWithdrawValidatorRewardsAll = types.MsgWithdrawValidatorRewardsAll
 
 	GenesisState = types.GenesisState
@@ -47,7 +49,7 @@ var (
 
 	NewMsgSetWithdrawAddress          = types.NewMsgSetWithdrawAddress
 	NewMsgWithdrawDelegatorRewardsAll = types.NewMsgWithdrawDelegatorRewardsAll
-	NewMsgWithdrawDelegationReward    = types.NewMsgWithdrawDelegationReward
+	NewMsgWithdrawDelegationReward    = types.NewMsgWithdrawDelegatorReward
 	NewMsgWithdrawValidatorRewardsAll = types.NewMsgWithdrawValidatorRewardsAll
 )
 
@@ -69,6 +71,6 @@ var (
 	ActionWithdrawValidatorRewardsAll = tags.ActionWithdrawValidatorRewardsAll
 
 	TagAction    = tags.Action
-	TagValidator = tags.SrcValidator
+	TagValidator = tags.Validator
 	TagDelegator = tags.Delegator
 )

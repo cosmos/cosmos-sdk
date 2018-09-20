@@ -62,7 +62,7 @@ type MsgWithdrawDelegatorRewardsAll struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
 }
 
-func NewMsgWithdrawDelegationRewardsAll(delAddr sdk.AccAddress) MsgWithdrawDelegatorRewardsAll {
+func NewMsgWithdrawDelegatorRewardsAll(delAddr sdk.AccAddress) MsgWithdrawDelegatorRewardsAll {
 	return MsgWithdrawDelegatorRewardsAll{
 		DelegatorAddr: delAddr,
 	}
@@ -101,7 +101,7 @@ type MsgWithdrawDelegatorReward struct {
 	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
 }
 
-func NewMsgWithdrawDelegationReward(delAddr sdk.AccAddress, valAddr sdk.ValAddress) MsgWithdrawDelegatorReward {
+func NewMsgWithdrawDelegatorReward(delAddr sdk.AccAddress, valAddr sdk.ValAddress) MsgWithdrawDelegatorReward {
 	return MsgWithdrawDelegatorReward{
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,

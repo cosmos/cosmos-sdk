@@ -2,7 +2,7 @@
 
 We define 'service providers' as entities providing services for end-users that involve some form of interaction with a Cosmos-SDK based blockchain (this includes the Cosmos Hub). More specifically, this document will be focused around interactions with tokens.
 
-This section does not concern wallet builders that want to provide Light-Client functionalities. Service providers are expected to act as trusted point of contact to the blockchain for their end-users. 
+This section does not concern wallet builders that want to provide [Light-Client](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/light) functionalities. Service providers are expected to act as trusted point of contact to the blockchain for their end-users. 
 
 ## High-level description of the architecture
 
@@ -71,7 +71,15 @@ Flags:
 - `--name`: Name of the key of the sending account.
 - `--to`: Address of the recipient.
 
+#### Help
 
+If you need to do something else, the best command you can run is:
+
+```bash
+gaiacli 
+```
+
+It will display all the available commands. For each command, you can use the `--help` flag to get further information. 
 
 ## Setting up the Rest Server
 
@@ -90,7 +98,7 @@ Flags:
 
 ### Listening for incoming transaction
 
-The current recommended way to listen for incoming transaction is to periodically query the blockchain through the following endpoint of the LCD:
+The recommended way to listen for incoming transaction is to periodically query the blockchain through the following endpoint of the LCD:
 
 [`/bank/balance/{account}`](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/light/api.md#bankbalanceaccount---get)
 

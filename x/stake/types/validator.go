@@ -369,6 +369,33 @@ func (v Validator) RemoveTokens(pool Pool, tokens sdk.Dec) (Validator, Pool) {
 	return v, pool
 }
 
+// SetInitialCommission attempts to set a validator's initial commission. An
+// error is returned if the commission is invalid.
+func (v Validator) SetInitialCommission(commission Commission, blockTime time.Time) sdk.Error {
+	switch {
+	case commission.MaxRate.LT(sdk.ZeroDec()):
+		// max rate cannot be negative
+		return ErrCommissionNegative(DefaultCodespace)
+
+	case commission.MaxRate.GT(sdk.OneDec()):
+		// max rate cannot be greater than 100%
+		return ErrCommissionHuge(DefaultCodespace)
+
+	case commission.Rate.LT(sdk.ZeroDec()):
+		// rate cannot be negative
+		return ErrCommissionNegative(DefaultCodespace)
+
+	case commission.Rate.GT(commission.MaxRate):
+		// rate cannot be greater than the max rate
+		return ErrCommissionGTMaxRate(DefaultCodespace)
+	}
+
+	v.Commission = commission
+	v.Commission.LastChangeTime = blockTime
+
+	return nil
+}
+
 //_________________________________________________________________________________________________________
 
 // AddTokensFromDel adds tokens to a validator

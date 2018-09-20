@@ -147,7 +147,7 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
 	resp += fmt.Sprintf("Unbonding Height: %d\n", v.UnbondingHeight)
 	resp += fmt.Sprintf("Minimum Unbonding Time: %v\n", v.UnbondingMinTime)
-	resp += fmt.Sprintf("Commission: %s\n", v.Commission)
+	resp += fmt.Sprintf("Commission: {%s}\n", v.Commission)
 
 	return resp, nil
 }
@@ -267,6 +267,13 @@ func (c Commission) Equal(c2 Commission) bool {
 		c.MaxRate.Equal(c2.MaxRate) &&
 		c.MaxChangeRate.Equal(c2.MaxChangeRate) &&
 		c.LastChangeTime.Equal(c2.LastChangeTime)
+}
+
+// String implements the Stringer interface for a Comission.
+func (c Commission) String() string {
+	return fmt.Sprintf("rate: %s, maxRate: %s, maxChangeRate: %s, lastChangeTime: %s",
+		c.Rate, c.MaxRate, c.MaxChangeRate, c.LastChangeTime,
+	)
 }
 
 // constant used in flags to indicate that description field should not be updated

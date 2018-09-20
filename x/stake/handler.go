@@ -62,16 +62,17 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 // now we just perform action and save
 
 func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k keeper.Keeper) sdk.Result {
-
 	// check to see if the pubkey or sender has been registered before
 	_, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if found {
 		return ErrValidatorOwnerExists(k.Codespace()).Result()
 	}
+
 	_, found = k.GetValidatorByPubKey(ctx, msg.PubKey)
 	if found {
 		return ErrValidatorPubKeyExists(k.Codespace()).Result()
 	}
+
 	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
@@ -93,6 +94,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		tags.Moniker, []byte(msg.Description.Moniker),
 		tags.Identity, []byte(msg.Description.Identity),
 	)
+
 	return sdk.Result{
 		Tags: tags,
 	}

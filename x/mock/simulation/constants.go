@@ -5,10 +5,10 @@ const (
 	pastEvidenceFraction float64 = 0.5
 
 	// Minimum time per block
-	minTimePerBlock int64 = 1000 / 2
+	minTimePerBlock int64 = 86400 / 2
 
 	// Maximum time per block
-	maxTimePerBlock int64 = 1000
+	maxTimePerBlock int64 = 86400
 
 	// Number of keys
 	numKeys int = 250

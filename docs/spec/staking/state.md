@@ -43,12 +43,13 @@ type Params struct {
 Validators are identified according to the `OperatorAddr`, an SDK validator
 address for the operator of the validator.
 
-Validators also have a `ConsPubKey`, the public key of the validator.
-
-Validators are indexed in the store using the following maps:
+Validators also have a `ConsPubKey`, the public key of the validator. The
+validator can be retrieved from it's `ConsPubKey` once it can be converted into
+the corresponding `ConsAddr`. Validators are indexed in the store using the
+following maps:
 
 - Validators: `0x02 | OperatorAddr -> amino(validator)`
-- ValidatorsByPubKey: `0x03 | ConsPubKey -> OperatorAddr`
+- ValidatorsByConsAddr: `0x03 | ConsAddr -> OperatorAddr`
 - ValidatorsByPower: `0x05 | power | blockHeight | blockTx  -> OperatorAddr`
 
 `Validators` is the primary index - it ensures that each operator can have only one
@@ -69,7 +70,7 @@ validator.
 
 ```golang
 type Validator struct {
-    ConsensusPubKey crypto.PubKey  // Tendermint consensus pubkey of validator
+    ConsPubKey      crypto.PubKey  // Tendermint consensus pubkey of validator
     Jailed          bool           // has the validator been jailed?
 
     Status          sdk.BondStatus // validator status (bonded/unbonding/unbonded)

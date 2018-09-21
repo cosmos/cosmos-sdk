@@ -474,7 +474,7 @@ func TestSlashBoth(t *testing.T) {
 	oldPool := keeper.GetPool(ctx)
 	validator, found := keeper.GetValidatorByConsPubKey(ctx, PKs[0])
 	require.True(t, found)
-	consAddr0 := sdk.ConsAddres(PKs[0].Address())
+	consAddr0 := sdk.ConsAddress(PKs[0].Address())
 	keeper.Slash(ctx, consAddr0, 10, 10, fraction)
 
 	// read updating redelegation

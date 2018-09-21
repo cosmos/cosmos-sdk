@@ -700,7 +700,7 @@ func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Valid
 	blockTime := ctx.BlockHeader().Time
 
 	switch {
-	case blockTime.Sub(commission.LastChangeTime).Hours() < 24:
+	case blockTime.Sub(commission.UpdatedAt).Hours() < 24:
 		// new rate cannot be changed more than once within 24 hours
 		return types.ErrCommissionUpdateTime(k.Codespace())
 
@@ -718,7 +718,7 @@ func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Valid
 	}
 
 	validator.Commission.Rate = newRate
-	validator.Commission.LastChangeTime = blockTime
+	validator.Commission.UpdatedAt = blockTime
 
 	k.SetValidator(ctx, validator)
 	return nil

@@ -371,15 +371,15 @@ func (v Validator) RemoveTokens(pool Pool, tokens sdk.Dec) (Validator, Pool) {
 
 // SetInitialCommission attempts to set a validator's initial commission. An
 // error is returned if the commission is invalid.
-func (v Validator) SetInitialCommission(commission Commission, blockTime time.Time) sdk.Error {
+func (v Validator) SetInitialCommission(commission Commission, blockTime time.Time) (Validator, sdk.Error) {
 	if err := commission.Validate(); err != nil {
-		return err
+		return v, err
 	}
 
 	v.Commission = commission
-	v.Commission.LastChangeTime = blockTime
+	v.Commission.UpdatedAt = blockTime
 
-	return nil
+	return v, nil
 }
 
 //_________________________________________________________________________________________________________

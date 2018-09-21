@@ -274,3 +274,76 @@ func TestValidatorMarshalUnmarshalJSON(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, validator, *got)
 }
+
+func TestValidatorSetInitialCommission(t *testing.T) {
+	val := NewValidator(addr1, pk1, Description{})
+	testCases := []struct {
+		validator   Validator
+		commission  Commission
+		blockTime   time.Time
+		expectedErr bool
+	}{
+		{
+			validator:   val,
+			commission:  NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+			blockTime:   time.Now().UTC(),
+			expectedErr: false,
+		},
+		{
+			validator:   val,
+			commission:  NewCommission(sdk.ZeroDec(), sdk.NewDecWithPrec(-1, 1), sdk.ZeroDec()),
+			blockTime:   time.Now().UTC(),
+			expectedErr: true,
+		},
+		{
+			validator:   val,
+			commission:  NewCommission(sdk.ZeroDec(), sdk.NewDec(15000000000), sdk.ZeroDec()),
+			blockTime:   time.Now().UTC(),
+			expectedErr: true,
+		},
+		{
+			validator:   val,
+			commission:  NewCommission(sdk.NewDecWithPrec(-1, 1), sdk.ZeroDec(), sdk.ZeroDec()),
+			blockTime:   time.Now().UTC(),
+			expectedErr: true,
+		},
+		{
+			validator:   val,
+			commission:  NewCommission(sdk.NewDecWithPrec(2, 1), sdk.NewDecWithPrec(1, 1), sdk.ZeroDec()),
+			blockTime:   time.Now().UTC(),
+			expectedErr: true,
+		},
+		{
+			validator:   val,
+			commission:  NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.NewDecWithPrec(-1, 1)),
+			blockTime:   time.Now().UTC(),
+			expectedErr: true,
+		},
+		{
+			validator:   val,
+			commission:  NewCommission(sdk.ZeroDec(), sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(2, 1)),
+			blockTime:   time.Now().UTC(),
+			expectedErr: true,
+		},
+	}
+
+	for i, tc := range testCases {
+		val, err := tc.validator.SetInitialCommission(tc.commission, tc.blockTime)
+
+		if tc.expectedErr {
+			require.Error(t, err,
+				"expected error for test case #%d with commission: %s", i, tc.commission,
+			)
+		} else {
+			expectedCommission := tc.commission
+			expectedCommission.UpdatedAt = tc.blockTime
+
+			require.NoError(t, err,
+				"unexpected error for test case #%d with commission: %s", i, tc.commission,
+			)
+			require.Equal(t, expectedCommission, val.Commission,
+				"expected validators to be equal for test case #%d with commission: %s", i, tc.commission,
+			)
+		}
+	}
+}

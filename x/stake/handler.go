@@ -78,7 +78,11 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	}
 
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
-	validator.SetInitialCommission(msg.Commission, ctx.BlockHeader().Time)
+
+	validator, sdkErr := validator.SetInitialCommission(msg.Commission, ctx.BlockHeader().Time)
+	if sdkErr != nil {
+		return sdkErr.Result()
+	}
 
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPubKeyIndex(ctx, validator)

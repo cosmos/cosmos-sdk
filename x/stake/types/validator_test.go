@@ -335,14 +335,14 @@ func TestValidatorSetInitialCommission(t *testing.T) {
 				"expected error for test case #%d with commission: %s", i, tc.commission,
 			)
 		} else {
-			expectedCommission := tc.commission
-			expectedCommission.UpdatedAt = tc.blockTime
-
 			require.NoError(t, err,
 				"unexpected error for test case #%d with commission: %s", i, tc.commission,
 			)
-			require.Equal(t, expectedCommission, val.Commission,
-				"expected validators to be equal for test case #%d with commission: %s", i, tc.commission,
+			require.Equal(t, tc.commission, val.Commission,
+				"invalid validator commission for test case #%d with commission: %s", i, tc.commission,
+			)
+			require.Equal(t, tc.blockTime, val.CommissionUpdateTime,
+				"invalid validator commission update time for test case #%d with commission: %s", i, tc.commission,
 			)
 		}
 	}

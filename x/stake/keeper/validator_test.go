@@ -305,7 +305,16 @@ func TestValidatorBasics(t *testing.T) {
 
 	// set and retrieve a record
 	validators[0] = keeper.UpdateValidator(ctx, validators[0])
+	keeper.SetValidatorByConsAddr(ctx, validators[0])
 	resVal, found := keeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	assert.True(ValEq(t, validators[0], resVal))
+
+	// retrieve from consensus
+	resVal, found = keeper.GetValidatorByConsAddr(ctx, sdk.ConsAddress(PKs[0].Address()))
+	require.True(t, found)
+	assert.True(ValEq(t, validators[0], resVal))
+	resVal, found = keeper.GetValidatorByConsPubKey(ctx, PKs[0])
 	require.True(t, found)
 	assert.True(ValEq(t, validators[0], resVal))
 

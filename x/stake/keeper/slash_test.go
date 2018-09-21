@@ -14,6 +14,7 @@ import (
 // TODO integrate with test_common.go helper (CreateTestInput)
 // setup helper function - creates two validators
 func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params) {
+
 	// setup
 	ctx, _, keeper := CreateTestInput(t, false, amt)
 	params := keeper.GetParams(ctx)

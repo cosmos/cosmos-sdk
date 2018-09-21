@@ -143,7 +143,7 @@ func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 
 // set the jailed flag on a validator
 func (k Keeper) setJailed(ctx sdk.Context, consAddr sdk.ConsAddress, isJailed bool) {
-	validator, found := k.GetValidatorByConsAddr(ctx, sdk.ConsAddress(consAddr))
+	validator, found := k.GetValidatorByConsAddr(ctx, consAddr)
 	if !found {
 		panic(fmt.Errorf("validator with consensus-Address %s not found, cannot set jailed to %v", consAddr, isJailed))
 	}

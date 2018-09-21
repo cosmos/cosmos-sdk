@@ -90,7 +90,7 @@ func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 // TODO change to SetValidatorByConsAddr? used for retrieving from ConsPubkey as well- kinda confusing
 func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	consAddr := sdk.ConsAddress(validator.OperatorAddr.Bytes())
+	consAddr := sdk.ConsAddress(validator.ConsPubKey.Address())
 	store.Set(GetValidatorByConsAddrKey(consAddr), validator.OperatorAddr)
 }
 

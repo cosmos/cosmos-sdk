@@ -20,7 +20,7 @@ import (
 )
 
 // default: 10 years
-const defaultValidFor = 365 * 24 * time.Hour
+const defaultValidFor = 30 * 24 * time.Hour
 
 func generateSelfSignedCert(host string) (certBytes []byte, priv *ecdsa.PrivateKey, err error) {
 	priv, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)

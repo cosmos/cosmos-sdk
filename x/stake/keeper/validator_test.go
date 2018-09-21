@@ -1056,7 +1056,7 @@ func TestUpdateValidatorCommission(t *testing.T) {
 	val2 := types.NewValidator(addrVals[1], PKs[1], types.Description{})
 
 	val1, _ = val1.SetInitialCommission(commission, time.Now().UTC().Add(time.Duration(-1)*time.Hour))
-	val2, _ = val1.SetInitialCommission(commission, time.Unix(0, 0).UTC())
+	val2, _ = val2.SetInitialCommission(commission, time.Unix(0, 0).UTC())
 
 	testCases := []struct {
 		validator   types.Validator

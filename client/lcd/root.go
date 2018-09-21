@@ -53,10 +53,6 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 			keyFile := viper.GetString(flagSSLKeyFile)
 			cleanupFunc := func() {}
 
-			if (certFile != "") && (keyFile == "") {
-				return errors.New("key file wasn't supplied")
-			}
-
 			var listener net.Listener
 			var fingerprint string
 			switch viper.GetBool(flagInsecure) {
@@ -69,13 +65,18 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 					return
 				}
 			default:
-				// if certificate is not supplied, generate a self-signed one
 				if certFile != "" {
+					err = validateCertKeyFiles(certFile, keyFile)
+					if err != nil {
+						return err
+					}
+					//  cert/key pair is provided, read the fingerprint
 					fingerprint, err = fingerprintFromFile(certFile)
 					if err != nil {
 						return err
 					}
 				} else {
+					// if certificate is not supplied, generate a self-signed one
 					certFile, keyFile, fingerprint, err = genCertKeyFilesAndReturnFingerprint(sslHosts)
 					if err != nil {
 						return err
@@ -148,4 +149,17 @@ func createHandler(cdc *codec.Codec) http.Handler {
 	gov.RegisterRoutes(cliCtx, r, cdc)
 
 	return r
+}
+
+func validateCertKeyFiles(certFile, keyFile string) error {
+	if keyFile == "" {
+		return errors.New("a key file is required")
+	}
+	if _, err := os.Stat(certFile); err != nil {
+		return err
+	}
+	if _, err := os.Stat(keyFile); err != nil {
+		return err
+	}
+	return nil
 }

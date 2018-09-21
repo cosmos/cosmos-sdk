@@ -18,13 +18,16 @@ func init() {
 	defaultDoubleSignUnbondDuration = 60 * 60
 }
 
+// ______________________________________________________________
+
 // Test that a validator is slashed correctly
 // when we discover evidence of infraction
+// TODO fix this test to not be using the same pubkey/address for signing and operating, it's confusing
 func TestHandleDoubleSign(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t)
-	sk = sk.WithValidatorHooks(keeper.ValidatorHooks())
+	sk = sk.WithHooks(keeper.Hooks())
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, val, amt))
@@ -43,7 +46,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	// should be jailed
 	require.True(t, sk.Validator(ctx, addr).GetJailed())
 	// unjail to measure power
-	sk.Unjail(ctx, val)
+	sk.Unjail(ctx, sdk.ConsAddress(addr)) // TODO distinguish cons address
 	// power should be reduced
 	require.Equal(
 		t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))),
@@ -61,14 +64,16 @@ func TestHandleDoubleSign(t *testing.T) {
 
 // Test that the amount a validator is slashed for multiple double signs
 // is correctly capped by the slashing period in which they were committed
+// TODO properly distinguish between consensus and operator address is variable names
 func TestSlashingPeriodCap(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t)
-	sk = sk.WithValidatorHooks(keeper.ValidatorHooks())
+	sk = sk.WithHooks(keeper.Hooks())
 	amtInt := int64(100)
-	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
-	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, val, amt))
+	addr, amt := addrs[0], sdk.NewInt(amtInt)
+	valConsPubKey, valConsAddr := pks[0], sdk.ConsAddress(pks[0].Address())
+	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, valConsPubKey, amt))
 	require.True(t, got.IsOK())
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
@@ -76,39 +81,39 @@ func TestSlashingPeriodCap(t *testing.T) {
 	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
 
 	// handle a signature to set signing info
-	keeper.handleValidatorSignature(ctx, val.Address(), amtInt, true)
+	keeper.handleValidatorSignature(ctx, valConsPubKey.Address(), amtInt, true)
 
 	// double sign less than max age
-	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
+	keeper.handleDoubleSign(ctx, valConsPubKey.Address(), 0, time.Unix(0, 0), amtInt)
 
 	// should be jailed
 	require.True(t, sk.Validator(ctx, addr).GetJailed())
 	// update block height
 	ctx = ctx.WithBlockHeight(int64(1))
 	// unjail to measure power
-	sk.Unjail(ctx, val)
+	sk.Unjail(ctx, valConsAddr)
 	// power should be reduced
 	expectedPower := sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20)))
 	require.Equal(t, expectedPower, sk.Validator(ctx, addr).GetPower())
 
 	// double sign again, same slashing period
-	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
+	keeper.handleDoubleSign(ctx, valConsPubKey.Address(), 0, time.Unix(0, 0), amtInt)
 	// should be jailed
 	require.True(t, sk.Validator(ctx, addr).GetJailed())
 	// update block height
 	ctx = ctx.WithBlockHeight(int64(2))
 	// unjail to measure power
-	sk.Unjail(ctx, val)
+	sk.Unjail(ctx, valConsAddr)
 	// power should be equal, no more should have been slashed
 	expectedPower = sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20)))
 	require.Equal(t, expectedPower, sk.Validator(ctx, addr).GetPower())
 
 	// double sign again, new slashing period
-	keeper.handleDoubleSign(ctx, val.Address(), 2, time.Unix(0, 0), amtInt)
+	keeper.handleDoubleSign(ctx, valConsPubKey.Address(), 2, time.Unix(0, 0), amtInt)
 	// should be jailed
 	require.True(t, sk.Validator(ctx, addr).GetJailed())
 	// unjail to measure power
-	sk.Unjail(ctx, val)
+	sk.Unjail(ctx, valConsAddr)
 	// power should be reduced
 	expectedPower = sdk.NewDecFromInt(amt).Mul(sdk.NewDec(18).Quo(sdk.NewDec(20)))
 	require.Equal(t, expectedPower, sk.Validator(ctx, addr).GetPower())
@@ -120,7 +125,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t)
-	sk = sk.WithValidatorHooks(keeper.ValidatorHooks())
+	sk = sk.WithHooks(keeper.Hooks())
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	sh := stake.NewHandler(sk)
@@ -162,7 +167,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx), info.SignedBlocksCounter)
 
 	// validator should be bonded still
-	validator, _ := sk.GetValidatorByPubKey(ctx, val)
+	validator, _ := sk.GetValidatorByConsPubKey(ctx, val)
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 	pool := sk.GetPool(ctx)
 	require.Equal(t, amtInt, pool.BondedTokens.RoundInt64())
@@ -176,7 +181,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)-1, info.SignedBlocksCounter)
 
 	// validator should have been jailed
-	validator, _ = sk.GetValidatorByPubKey(ctx, val)
+	validator, _ = sk.GetValidatorByConsPubKey(ctx, val)
 	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 
 	// unrevocation should fail prior to jail expiration
@@ -189,7 +194,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.True(t, got.IsOK())
 
 	// validator should be rebonded now
-	validator, _ = sk.GetValidatorByPubKey(ctx, val)
+	validator, _ = sk.GetValidatorByConsPubKey(ctx, val)
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 
 	// validator should have been slashed
@@ -207,7 +212,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	height++
 	ctx = ctx.WithBlockHeight(height)
 	keeper.handleValidatorSignature(ctx, val.Address(), amtInt, false)
-	validator, _ = sk.GetValidatorByPubKey(ctx, val)
+	validator, _ = sk.GetValidatorByConsPubKey(ctx, val)
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 
 	// 500 signed blocks
@@ -223,7 +228,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 		ctx = ctx.WithBlockHeight(height)
 		keeper.handleValidatorSignature(ctx, val.Address(), amtInt, false)
 	}
-	validator, _ = sk.GetValidatorByPubKey(ctx, val)
+	validator, _ = sk.GetValidatorByConsPubKey(ctx, val)
 	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 }
 
@@ -258,7 +263,7 @@ func TestHandleNewValidator(t *testing.T) {
 	require.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
 
 	// validator should be bonded still, should not have been jailed or slashed
-	validator, _ := sk.GetValidatorByPubKey(ctx, val)
+	validator, _ := sk.GetValidatorByConsPubKey(ctx, val)
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 	pool := sk.GetPool(ctx)
 	require.Equal(t, int64(100), pool.BondedTokens.RoundInt64())
@@ -292,7 +297,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	}
 
 	// validator should have been jailed and slashed
-	validator, _ := sk.GetValidatorByPubKey(ctx, val)
+	validator, _ := sk.GetValidatorByConsPubKey(ctx, val)
 	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 
 	// validator should have been slashed
@@ -303,7 +308,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	keeper.handleValidatorSignature(ctx, val.Address(), amtInt, false)
 
 	// validator should not have been slashed twice
-	validator, _ = sk.GetValidatorByPubKey(ctx, val)
+	validator, _ = sk.GetValidatorByConsPubKey(ctx, val)
 	require.Equal(t, amtInt-1, validator.GetTokens().RoundInt64())
 
 }

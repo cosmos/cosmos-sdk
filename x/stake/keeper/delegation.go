@@ -66,6 +66,12 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 
 // remove a delegation from store
 func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
+
+	// call the hook if present
+	if k.hooks != nil {
+		k.hooks.OnDelegationRemoved(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
+	}
+
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr))
 }
@@ -275,6 +281,11 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 	k.SetDelegation(ctx, delegation)
 	k.UpdateValidator(ctx, validator)
 
+	// call the hook if present
+	if k.hooks != nil {
+		k.hooks.OnDelegationSharesModified(ctx, delegation.DelegatorAddr, validator.OperatorAddr)
+	}
+
 	return
 }
 
@@ -331,6 +342,11 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 	validator = k.UpdateValidator(ctx, validator)
 	if validator.DelegatorShares.IsZero() {
 		k.RemoveValidator(ctx, validator.OperatorAddr)
+	}
+
+	// call the hook if present
+	if k.hooks != nil {
+		k.hooks.OnDelegationSharesModified(ctx, delegation.DelegatorAddr, validator.OperatorAddr)
 	}
 
 	return amount, nil

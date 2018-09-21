@@ -81,4 +81,13 @@ stMN+IqMCKWlZyGqxGIiyksMLMEU3lRqKNQn2EoAZJY=
 	fingerprint, err := fingerprintFromFile(certFile.Name())
 	require.Nil(t, err)
 	require.Equal(t, wantFingerprint, fingerprint)
+
+	// test failure
+	emptyFile, err := ioutil.TempFile("", "test_cert_")
+	require.Nil(t, err)
+	err = emptyFile.Close()
+	require.Nil(t, err)
+	defer os.Remove(emptyFile.Name())
+	_, err = fingerprintFromFile(emptyFile.Name())
+	require.NotNil(t, err)
 }

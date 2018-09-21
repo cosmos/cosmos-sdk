@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-// default: 10 years
+// default: 30 days
 const defaultValidFor = 30 * 24 * time.Hour
 
 func generateSelfSignedCert(host string) (certBytes []byte, priv *ecdsa.PrivateKey, err error) {
@@ -36,7 +36,7 @@ func generateSelfSignedCert(host string) (certBytes []byte, priv *ecdsa.PrivateK
 	template := x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
-			Organization: []string{"Acme Co"},
+			Organization: []string{"Gaia Lite"},
 		},
 		NotBefore:             notBefore,
 		NotAfter:              notAfter,
@@ -167,5 +167,8 @@ func fingerprintFromFile(certFile string) (string, error) {
 		return "", err
 	}
 	block, _ := pem.Decode(data)
+	if block == nil {
+		return "", fmt.Errorf("couldn't find PEM data in %s", certFile)
+	}
 	return fingerprintForCertificate(block.Bytes)
 }

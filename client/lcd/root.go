@@ -55,8 +55,7 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 
 			var listener net.Listener
 			var fingerprint string
-			switch viper.GetBool(flagInsecure) {
-			case true:
+			if viper.GetBool(flagInsecure) {
 				listener, err = tmserver.StartHTTPServer(
 					listenAddr, handler, logger,
 					tmserver.Config{MaxOpenConnections: maxOpen},
@@ -64,7 +63,7 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 				if err != nil {
 					return
 				}
-			default:
+			} else {
 				if certFile != "" {
 					// validateCertKeyFiles() is needed to work around tendermint/tendermint#2460
 					err = validateCertKeyFiles(certFile, keyFile)

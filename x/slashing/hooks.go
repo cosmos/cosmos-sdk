@@ -29,6 +29,8 @@ type Hooks struct {
 	k Keeper
 }
 
+var _ sdk.StakingHooks = Hooks{}
+
 // Return the wrapper struct
 func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
@@ -43,3 +45,11 @@ func (h Hooks) OnValidatorBonded(ctx sdk.Context, address sdk.ConsAddress) {
 func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddress) {
 	h.k.onValidatorBeginUnbonding(ctx, address)
 }
+
+// nolint - unused hooks
+func (h Hooks) OnValidatorCreated(_ sdk.Context, _ sdk.ValAddress)                           {}
+func (h Hooks) OnValidatorCommissionChange(_ sdk.Context, _ sdk.ValAddress)                  {}
+func (h Hooks) OnValidatorRemoved(_ sdk.Context, _ sdk.ValAddress)                           {}
+func (h Hooks) OnDelegationCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}
+func (h Hooks) OnDelegationSharesModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) {}
+func (h Hooks) OnDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}

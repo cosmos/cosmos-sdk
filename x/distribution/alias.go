@@ -2,7 +2,6 @@
 package distribution
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/tags"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -50,9 +49,6 @@ var (
 	NewMsgWithdrawDelegatorRewardsAll = types.NewMsgWithdrawDelegatorRewardsAll
 	NewMsgWithdrawDelegationReward    = types.NewMsgWithdrawDelegatorReward
 	NewMsgWithdrawValidatorRewardsAll = types.NewMsgWithdrawValidatorRewardsAll
-
-	GetCmdWithdrawRewards = cli.GetCmdWithdrawRewards
-	GetCmdSetWithdrawAddr = cli.GetCmdSetWithdrawAddr
 )
 
 const (

@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	distrcmd "github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	govcmd "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	slashingcmd "github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
@@ -109,8 +109,8 @@ func main() {
 	}
 	distrCmd.AddCommand(
 		client.PostCommands(
-			distr.GetCmdWithdrawRewards(cdc),
-			distr.GetCmdSetWithdrawAddr(cdc),
+			distrcmd.GetCmdWithdrawRewards(cdc),
+			distrcmd.GetCmdSetWithdrawAddr(cdc),
 		)...)
 	rootCmd.AddCommand(
 		distrCmd,

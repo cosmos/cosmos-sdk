@@ -78,6 +78,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 }
 
 // handle a validator signature, must be called once per validator per block
+// TODO refactor to take in a consensus address, additionally should maybe just take in the pubkey too
 // nolint gocyclo
 func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, power int64, signed bool) {
 	logger := ctx.Logger().With("module", "x/slashing")

@@ -260,12 +260,13 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	require.Equal(t, sdk.Unbonded, validator.Status)
 	require.Equal(t, int64(100), validator.Tokens.RoundInt64())
 	keeper.SetPool(ctx, pool)
-	keeper.SetValidatorByPubKeyIndex(ctx, validator)
+	keeper.SetValidatorByConsAddr(ctx, validator)
 	validator = keeper.UpdateValidator(ctx, validator)
 	require.Equal(t, int64(100), validator.Tokens.RoundInt64(), "\nvalidator %v\npool %v", validator, pool)
 
 	// slash the validator by 100%
-	keeper.Slash(ctx, PKs[0], 0, 100, sdk.OneDec())
+	consAddr0 := sdk.ConsAddress(PKs[0].Address())
+	keeper.Slash(ctx, consAddr0, 0, 100, sdk.OneDec())
 	// validator should have been deleted
 	_, found := keeper.GetValidator(ctx, addrVals[0])
 	require.False(t, found)

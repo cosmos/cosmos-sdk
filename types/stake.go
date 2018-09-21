@@ -41,8 +41,8 @@ type Validator interface {
 	GetMoniker() string           // moniker of the validator
 	GetStatus() BondStatus        // status of the validator
 	GetOperator() ValAddress      // operator address to receive/return validators coins
-	GetConsPubKey() crypto.PubKey // validation pubkey
-	GetConsAddr() ConsAddress     // validation pubkey
+	GetConsPubKey() crypto.PubKey // validation consensus pubkey
+	GetConsAddr() ConsAddress     // validation consensus address
 	GetPower() Dec                // validation power
 	GetTokens() Dec               // validation tokens
 	GetDelegatorShares() Dec      // Total out standing delegator shares

@@ -43,18 +43,19 @@ type Validator struct {
 // NewValidator - initialize a new validator
 func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description) Validator {
 	return Validator{
-		OperatorAddr:       operator,
-		ConsPubKey:         pubKey,
-		Jailed:             false,
-		Status:             sdk.Unbonded,
-		Tokens:             sdk.ZeroDec(),
-		DelegatorShares:    sdk.ZeroDec(),
-		Description:        description,
-		BondHeight:         int64(0),
-		BondIntraTxCounter: int16(0),
-		UnbondingHeight:    int64(0),
-		UnbondingMinTime:   time.Unix(0, 0).UTC(),
-		Commission:         NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+		OperatorAddr:         operator,
+		ConsPubKey:           pubKey,
+		Jailed:               false,
+		Status:               sdk.Unbonded,
+		Tokens:               sdk.ZeroDec(),
+		DelegatorShares:      sdk.ZeroDec(),
+		Description:          description,
+		BondHeight:           int64(0),
+		BondIntraTxCounter:   int16(0),
+		UnbondingHeight:      int64(0),
+		UnbondingMinTime:     time.Unix(0, 0).UTC(),
+		Commission:           NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+		CommissionUpdateTime: time.Unix(0, 0).UTC(),
 	}
 }
 

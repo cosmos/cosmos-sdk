@@ -115,7 +115,7 @@ type MsgEditValidator struct {
 	ValidatorAddr sdk.ValAddress `json:"address"`
 
 	// We pass a reference to the new commission rate as it's not mandatory to
-	// update. If updated, the deserialized rate will be zero with no way to
+	// update. If not updated, the deserialized rate will be zero with no way to
 	// distinguish if an update was intended.
 	//
 	// REF: #2373

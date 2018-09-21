@@ -1,6 +1,6 @@
 # Getting Started
 
-To start a rest server, we need to specify the following parameters:
+To start a REST server, we need to specify the following parameters:
 | Parameter   | Type      | Default                 | Required | Description                                          |
 | ----------- | --------- | ----------------------- | -------- | ---------------------------------------------------- |
 | chain-id    | string    | null                    | true     | chain id of the full node to connect                 |
@@ -12,8 +12,24 @@ To start a rest server, we need to specify the following parameters:
 Sample command:
 
 ```bash
-gaiacli light-client --chain-id=test --laddr=tcp://localhost:1317  --node tcp://localhost:46657 --trust-node=false
+gaiacli rest-server --chain-id=test \
+    --laddr=tcp://localhost:1317 \
+    --node tcp://localhost:46657 \
+    --trust-node=false
 ```
+
+The server listens on HTTPS by default. You can set the SSL certificate to be used by the server with these additional flags:
+
+```bash
+gaiacli rest-server --chain-id=test \
+    --laddr=tcp://localhost:1317 \
+    --node tcp://localhost:46657 \
+    --trust-node=false \
+    --certfile=mycert.pem --keyfile=mykey.key
+```
+
+If no certificate/keyfile pair is supplied, a self-signed certificate will be generated and its fingerprint printed out.
+Append `--insecure` to the command line if you want to disable the secure layer and listen on an insecure HTTP port.
 
 ## Gaia Light Use Cases
 

@@ -128,8 +128,9 @@ func TestStakeMsgs(t *testing.T) {
 
 	// create validator
 	description := NewDescription("foo_moniker", "", "", "")
+	commission := NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	createValidatorMsg := NewMsgCreateValidator(
-		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description,
+		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commission,
 	)
 
 	mock.SignCheckDeliver(t, mApp.BaseApp, []sdk.Msg{createValidatorMsg}, []int64{0}, []int64{0}, true, true, priv1)
@@ -143,7 +144,7 @@ func TestStakeMsgs(t *testing.T) {
 
 	// addr1 create validator on behalf of addr2
 	createValidatorMsgOnBehalfOf := NewMsgCreateValidatorOnBehalfOf(
-		addr1, sdk.ValAddress(addr2), priv2.PubKey(), bondCoin, description,
+		addr1, sdk.ValAddress(addr2), priv2.PubKey(), bondCoin, description, commission,
 	)
 
 	mock.SignCheckDeliver(t, mApp.BaseApp, []sdk.Msg{createValidatorMsgOnBehalfOf}, []int64{0, 1}, []int64{1, 0}, true, true, priv1, priv2)

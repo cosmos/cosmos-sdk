@@ -17,7 +17,10 @@ import (
 //______________________________________________________________________
 
 func newTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt int64) MsgCreateValidator {
-	return types.NewMsgCreateValidator(address, pubKey, sdk.NewCoin("steak", sdk.NewInt(amt)), Description{})
+	commission := NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	return types.NewMsgCreateValidator(
+		address, pubKey, sdk.NewCoin("steak", sdk.NewInt(amt)), Description{}, commission,
+	)
 }
 
 func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt int64) MsgDelegate {
@@ -29,8 +32,10 @@ func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt int6
 }
 
 func newTestMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.ValAddress, valPubKey crypto.PubKey, amt int64) MsgCreateValidator {
+	commission := NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	return MsgCreateValidator{
 		Description:   Description{},
+		Commission:    commission,
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
 		PubKey:        valPubKey,

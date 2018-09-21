@@ -94,13 +94,15 @@ func createCertifier() tmlite.Certifier {
 		errMsg.WriteString("--node ")
 	}
 	if errMsg.Len() != 0 {
-		fmt.Printf("must specify these options: %s when --trust-node is false\n", errMsg.String())
+		fmt.Printf("Must specify these options: %s when --trust-node is false\n", errMsg.String())
 		os.Exit(1)
 	}
 
 	certifier, err := tmliteProxy.GetCertifier(chainID, home, nodeURI)
 	if err != nil {
-		panic(err)
+		fmt.Printf("Create certifier failed: %s\n", err.Error())
+		fmt.Printf("Please check network connection and verify the address of the node to connect to\n")
+		os.Exit(1)
 	}
 
 	return certifier

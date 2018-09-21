@@ -49,6 +49,7 @@ BREAKING CHANGES
     * [store] Change storeInfo within the root multistore to use tmhash instead of ripemd160 \#2308
     * [codec] \#2324 All referrences to wire have been renamed to codec. Additionally, wire.NewCodec is now codec.New().
     * [types] \#2343 Make sdk.Msg have a names field, to facilitate automatic tagging.
+    * [x/staking] \#2244 staking now holds a consensus-address-index instead of a consensus-pubkey-index
 
 * Tendermint
 

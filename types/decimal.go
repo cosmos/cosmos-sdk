@@ -174,6 +174,7 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 
 //______________________________________________________________________________________________
 //nolint
+func (d Dec) IsNil() bool       { return d.Int == nil }                 // is decimal nil
 func (d Dec) IsZero() bool      { return (d.Int).Sign() == 0 }          // is equal to zero
 func (d Dec) Equal(d2 Dec) bool { return (d.Int).Cmp(d2.Int) == 0 }     // equal decimals
 func (d Dec) GT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) > 0 }      // greater than

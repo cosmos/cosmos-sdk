@@ -107,7 +107,6 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 }
 
 func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keeper.Keeper) sdk.Result {
-
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if !found {
@@ -119,17 +118,26 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	if err != nil {
 		return err.Result()
 	}
+
 	validator.Description = description
+
+	if msg.CommissionRate != nil {
+		if err := k.UpdateValidatorCommission(ctx, validator, *msg.CommissionRate); err != nil {
+			return err.Result()
+		}
+	}
 
 	// We don't need to run through all the power update logic within k.UpdateValidator
 	// We just need to override the entry in state, since only the description has changed.
 	k.SetValidator(ctx, validator)
+
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionEditValidator,
 		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
 		tags.Moniker, []byte(description.Moniker),
 		tags.Identity, []byte(description.Identity),
 	)
+
 	return sdk.Result{
 		Tags: tags,
 	}

@@ -113,12 +113,20 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 type MsgEditValidator struct {
 	Description
 	ValidatorAddr sdk.ValAddress `json:"address"`
+
+	// We pass a reference to the new commission rate as it's not mandatory to
+	// update. If updated, the deserialized rate will be zero with no way to
+	// distinguish if an update was intended.
+	//
+	// REF: #2373
+	CommissionRate *sdk.Dec `json:"commission_rate"`
 }
 
-func NewMsgEditValidator(valAddr sdk.ValAddress, description Description) MsgEditValidator {
+func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec) MsgEditValidator {
 	return MsgEditValidator{
-		Description:   description,
-		ValidatorAddr: valAddr,
+		Description:    description,
+		CommissionRate: newRate,
+		ValidatorAddr:  valAddr,
 	}
 }
 
@@ -149,10 +157,11 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "nil validator address")
 	}
-	empty := Description{}
-	if msg.Description == empty {
+
+	if msg.Description == (Description{}) {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
 	}
+
 	return nil
 }
 

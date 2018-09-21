@@ -131,17 +131,31 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 				Details:  viper.GetString(FlagDetails),
 			}
 
-			msg := stake.NewMsgEditValidator(sdk.ValAddress(valAddr), description)
+			var newRate *sdk.Dec
+
+			commissionRate := viper.GetString(FlagCommissionRate)
+			if commissionRate != "" {
+				rate, err := sdk.NewDecFromStr(commissionRate)
+				if err != nil {
+					return fmt.Errorf("invalid new commission rate: %v", err)
+				}
+
+				newRate = &rate
+			}
+
+			msg := stake.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate)
 
 			if cliCtx.GenerateOnly {
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
+
 			// build and sign the transaction, then broadcast to Tendermint
 			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
 	cmd.Flags().AddFlagSet(fsDescriptionEdit)
+	cmd.Flags().AddFlagSet(fsCommissionUpdate)
 
 	return cmd
 }

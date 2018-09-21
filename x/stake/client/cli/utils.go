@@ -67,7 +67,7 @@ func getShares(
 
 func getCommission(cRate, cMaxRate, cMaxChangeRate string) (commission types.Commission, err error) {
 	if cRate == "" || cMaxRate == "" || cMaxChangeRate == "" {
-		return commission, errors.Errorf("must specify all validator comission parameters")
+		return commission, errors.Errorf("must specify all validator commission parameters")
 	}
 
 	rate, err := sdk.NewDecFromStr(cRate)

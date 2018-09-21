@@ -30,7 +30,7 @@ func (c Commission) Equal(c2 Commission) bool {
 		c.MaxChangeRate.Equal(c2.MaxChangeRate)
 }
 
-// String implements the Stringer interface for a Comission.
+// String implements the Stringer interface for a Commission.
 func (c Commission) String() string {
 	return fmt.Sprintf("rate: %s, maxRate: %s, maxChangeRate: %s",
 		c.Rate, c.MaxRate, c.MaxChangeRate,

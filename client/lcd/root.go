@@ -66,6 +66,7 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 				}
 			default:
 				if certFile != "" {
+					// validateCertKeyFiles() is needed to work around tendermint/tendermint#2460
 					err = validateCertKeyFiles(certFile, keyFile)
 					if err != nil {
 						return err

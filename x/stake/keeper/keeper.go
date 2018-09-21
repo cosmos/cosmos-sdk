@@ -14,7 +14,7 @@ type Keeper struct {
 	storeTKey  sdk.StoreKey
 	cdc        *codec.Codec
 	bankKeeper bank.Keeper
-	hooks      sdk.StakingHooks
+	hooks      sdk.ValidatorHooks
 
 	// codespace
 	codespace sdk.CodespaceType
@@ -33,7 +33,7 @@ func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, codespa
 }
 
 // Set the validator hooks
-func (k Keeper) WithHooks(sh sdk.StakingHooks) Keeper {
+func (k Keeper) WithValidatorHooks(sh sdk.ValidatorHooks) Keeper {
 	if k.hooks != nil {
 		panic("cannot set validator hooks twice")
 	}

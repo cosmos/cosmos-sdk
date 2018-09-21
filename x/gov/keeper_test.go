@@ -2,7 +2,6 @@ package gov
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -46,12 +45,12 @@ func TestActivateVotingPeriod(t *testing.T) {
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 
-	require.True(t, proposal.GetVotingStartTime().Equal(time.Time{}))
+	require.Equal(t, int64(-1), proposal.GetVotingStartBlock())
 	require.Nil(t, keeper.ActiveProposalQueuePeek(ctx))
 
 	keeper.activateVotingPeriod(ctx, proposal)
 
-	require.True(t, proposal.GetVotingStartTime().Equal(ctx.BlockHeader().Time))
+	require.Equal(t, proposal.GetVotingStartBlock(), ctx.BlockHeight())
 	require.Equal(t, proposal.GetProposalID(), keeper.ActiveProposalQueuePeek(ctx).GetProposalID())
 }
 
@@ -78,7 +77,7 @@ func TestDeposits(t *testing.T) {
 	// Check no deposits at beginning
 	deposit, found := keeper.GetDeposit(ctx, proposalID, addrs[1])
 	require.False(t, found)
-	require.True(t, keeper.GetProposal(ctx, proposalID).GetVotingStartTime().Equal(time.Time{}))
+	require.Equal(t, keeper.GetProposal(ctx, proposalID).GetVotingStartBlock(), int64(-1))
 	require.Nil(t, keeper.ActiveProposalQueuePeek(ctx))
 
 	// Check first deposit
@@ -115,7 +114,7 @@ func TestDeposits(t *testing.T) {
 	require.Equal(t, addr1Initial.Minus(fourSteak), keeper.ck.GetCoins(ctx, addrs[1]))
 
 	// Check that proposal moved to voting period
-	require.True(t, keeper.GetProposal(ctx, proposalID).GetVotingStartTime().Equal(ctx.BlockHeader().Time))
+	require.Equal(t, ctx.BlockHeight(), keeper.GetProposal(ctx, proposalID).GetVotingStartBlock())
 	require.NotNil(t, keeper.ActiveProposalQueuePeek(ctx))
 	require.Equal(t, proposalID, keeper.ActiveProposalQueuePeek(ctx).GetProposalID())
 

@@ -128,9 +128,9 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 	for shouldPopActiveProposalQueue(ctx, keeper) {
 		activeProposal := keeper.ActiveProposalQueuePop(ctx)
 
-		proposalStartTime := activeProposal.GetVotingStartTime()
+		proposalStartBlock := activeProposal.GetVotingStartBlock()
 		votingPeriod := keeper.GetVotingProcedure(ctx).VotingPeriod
-		if ctx.BlockHeader().Time.Before(proposalStartTime.Add(votingPeriod)) {
+		if ctx.BlockHeight() < proposalStartBlock+votingPeriod {
 			continue
 		}
 
@@ -155,7 +155,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		for _, valAddr := range nonVotingVals {
 			val := keeper.ds.GetValidatorSet().Validator(ctx, valAddr)
 			keeper.ds.GetValidatorSet().Slash(ctx,
-				val.GetPubKey(),
+				val.GetConsAddr(),
 				ctx.BlockHeight(),
 				val.GetPower().RoundInt64(),
 				keeper.GetTallyingProcedure(ctx).GovernancePenalty)
@@ -178,7 +178,7 @@ func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 		return false
 	} else if peekProposal.GetStatus() != StatusDepositPeriod {
 		return true
-	} else if !ctx.BlockHeader().Time.Before(peekProposal.GetSubmitTime().Add(depositProcedure.MaxDepositPeriod)) {
+	} else if ctx.BlockHeight() >= peekProposal.GetSubmitBlock()+depositProcedure.MaxDepositPeriod {
 		return true
 	}
 	return false
@@ -190,7 +190,7 @@ func shouldPopActiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 
 	if peekProposal == nil {
 		return false
-	} else if !ctx.BlockHeader().Time.Before(peekProposal.GetVotingStartTime().Add(votingProcedure.VotingPeriod)) {
+	} else if ctx.BlockHeight() >= peekProposal.GetVotingStartBlock()+votingProcedure.VotingPeriod {
 		return true
 	}
 	return false

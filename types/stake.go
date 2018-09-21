@@ -37,22 +37,23 @@ func (b BondStatus) Equal(b2 BondStatus) bool {
 
 // validator for a delegated proof of stake system
 type Validator interface {
-	GetJailed() bool          // whether the validator is jailed
-	GetMoniker() string       // moniker of the validator
-	GetStatus() BondStatus    // status of the validator
-	GetOperator() ValAddress  // operator address to receive/return validators coins
-	GetPubKey() crypto.PubKey // validation pubkey
-	GetPower() Dec            // validation power
-	GetTokens() Dec           // validation tokens
-	GetDelegatorShares() Dec  // Total out standing delegator shares
-	GetBondHeight() int64     // height in which the validator became active
+	GetJailed() bool              // whether the validator is jailed
+	GetMoniker() string           // moniker of the validator
+	GetStatus() BondStatus        // status of the validator
+	GetOperator() ValAddress      // operator address to receive/return validators coins
+	GetConsPubKey() crypto.PubKey // validation pubkey
+	GetConsAddr() ConsAddress     // validation pubkey
+	GetPower() Dec                // validation power
+	GetTokens() Dec               // validation tokens
+	GetDelegatorShares() Dec      // Total out standing delegator shares
+	GetBondHeight() int64         // height in which the validator became active
 }
 
 // validator which fulfills abci validator interface for use in Tendermint
 func ABCIValidator(v Validator) abci.Validator {
 	return abci.Validator{
-		PubKey:  tmtypes.TM2PB.PubKey(v.GetPubKey()),
-		Address: v.GetPubKey().Address(),
+		PubKey:  tmtypes.TM2PB.PubKey(v.GetConsPubKey()),
+		Address: v.GetConsPubKey().Address(),
 		Power:   v.GetPower().RoundInt64(),
 	}
 }
@@ -67,14 +68,15 @@ type ValidatorSet interface {
 	IterateValidatorsBonded(Context,
 		func(index int64, validator Validator) (stop bool))
 
-	Validator(Context, ValAddress) Validator            // get a particular validator by operator
-	ValidatorByPubKey(Context, crypto.PubKey) Validator // get a particular validator by signing PubKey
-	TotalPower(Context) Dec                             // total power of the validator set
+	Validator(Context, ValAddress) Validator                // get a particular validator by operator address
+	ValidatorByConsPubKey(Context, crypto.PubKey) Validator // get a particular validator by consensus PubKey
+	ValidatorByConsAddr(Context, ConsAddress) Validator     // get a particular validator by consensus address
+	TotalPower(Context) Dec                                 // total power of the validator set
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
-	Slash(Context, crypto.PubKey, int64, int64, Dec)
-	Jail(Context, crypto.PubKey)   // jail a validator
-	Unjail(Context, crypto.PubKey) // unjail a validator
+	Slash(Context, ConsAddress, int64, int64, Dec)
+	Jail(Context, ConsAddress)   // jail a validator
+	Unjail(Context, ConsAddress) // unjail a validator
 
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.
@@ -87,7 +89,7 @@ type ValidatorSet interface {
 type Delegation interface {
 	GetDelegator() AccAddress // delegator AccAddress for the bond
 	GetValidator() ValAddress // validator operator address
-	GetBondShares() Dec       // amount of validator's shares
+	GetShares() Dec           // amount of validator's shares held in this delegation
 }
 
 // properties for the set of all delegations for a particular

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-	"time"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -69,8 +68,8 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, sk stake.Keepe
 		votingPeriod := k.GetVotingProcedure(ctx).VotingPeriod
 		fops := make([]simulation.FutureOperation, numVotes+1)
 		for i := 0; i < numVotes; i++ {
-			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
-			fops[i] = simulation.FutureOperation{BlockTime: whenVote, Op: operationSimulateMsgVote(k, sk, keys[whoVotes[i]], proposalID)}
+			whenVote := ctx.BlockHeight() + r.Int63n(votingPeriod)
+			fops[i] = simulation.FutureOperation{BlockHeight: int(whenVote), Op: operationSimulateMsgVote(k, sk, keys[whoVotes[i]], proposalID)}
 		}
 		// 3) Make an operation to ensure slashes were done correctly. (Really should be a future invariant)
 		// TODO: Find a way to check if a validator was slashed other than just checking their balance a block

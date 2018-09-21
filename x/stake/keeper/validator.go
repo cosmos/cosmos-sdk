@@ -681,11 +681,6 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 // remove the validator record and associated indexes
 func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 
-	// call the hook if present
-	if k.hooks != nil {
-		k.hooks.OnValidatorRemoved(ctx, address)
-	}
-
 	// first retrieve the old validator record
 	validator, found := k.GetValidator(ctx, address)
 	if !found {
@@ -744,37 +739,4 @@ func ensureValidatorFound(found bool, ownerAddr []byte) {
 	if !found {
 		panic(fmt.Sprintf("validator record not found for address: %X\n", ownerAddr))
 	}
-}
-
-//__________________________________________________________________________
-
-// XXX remove this code - this is should be superceded by commission work that bez is doing
-// get a single validator
-func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, addr sdk.ValAddress, newCommission sdk.Dec) sdk.Error {
-
-	// call the hook if present
-	if k.hooks != nil {
-		k.hooks.OnValidatorCommissionChange(ctx, addr)
-	}
-
-	validator, found := k.GetValidator(ctx, addr)
-
-	// check for errors
-	switch {
-	case !found:
-		return types.ErrNoValidatorFound(k.Codespace())
-	case newCommission.LT(sdk.ZeroDec()):
-		return types.ErrCommissionNegative(k.Codespace())
-	case newCommission.GT(validator.CommissionMax):
-		return types.ErrCommissionBeyondMax(k.Codespace())
-		//case rateChange(Commission) > CommissionMaxChange:    // XXX XXX XXX TODO implementation
-		//return types.ErrCommissionPastRate(k.Codespace())
-	}
-
-	// TODO adjust all the commission terms appropriately
-
-	validator.Commission = newCommission
-
-	k.SetValidator(ctx, validator)
-	return nil
 }

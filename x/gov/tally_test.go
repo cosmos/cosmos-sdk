@@ -440,7 +440,7 @@ func TestTallyJailedValidator(t *testing.T) {
 
 	val2, found := sk.GetValidator(ctx, sdk.ValAddress(addrs[1]))
 	require.True(t, found)
-	sk.Jail(ctx, val2.ConsPubKey)
+	sk.Jail(ctx, sdk.ConsAddress(val2.ConsPubKey.Address()))
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()

@@ -34,7 +34,7 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 		return ErrValidatorNotJailed(k.codespace).Result()
 	}
 
-	consAddr := sdk.ConsAddress(validator.GetPubKey().Address())
+	consAddr := sdk.ConsAddress(validator.GetConsPubKey().Address())
 
 	info, found := k.getValidatorSigningInfo(ctx, consAddr)
 	if !found {

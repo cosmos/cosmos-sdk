@@ -474,7 +474,7 @@ func (v Validator) GetJailed() bool              { return v.Jailed }
 func (v Validator) GetMoniker() string           { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus    { return v.Status }
 func (v Validator) GetOperator() sdk.ValAddress  { return v.OperatorAddr }
-func (v Validator) GetPubKey() crypto.PubKey     { return v.ConsPubKey }
+func (v Validator) GetConsPubKey() crypto.PubKey { return v.ConsPubKey }
 func (v Validator) GetConsAddr() sdk.ConsAddress { return sdk.ConsAddress(v.ConsPubKey.Address()) }
 func (v Validator) GetPower() sdk.Dec            { return v.BondedTokens() }
 func (v Validator) GetTokens() sdk.Dec           { return v.Tokens }

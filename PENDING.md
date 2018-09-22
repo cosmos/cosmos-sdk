@@ -51,6 +51,7 @@ BREAKING CHANGES
     * [codec] \#2324 All referrences to wire have been renamed to codec. Additionally, wire.NewCodec is now codec.New().
     * [types] \#2343 Make sdk.Msg have a names field, to facilitate automatic tagging.
     * [baseapp] \#2366 Automatically add action tags to all messages
+    * [x/auth] \#2377 auth.StdSignMsg -> txbuilder.StdSignMsg
 
 * Tendermint
 

@@ -16,12 +16,12 @@ import (
 func TestBankWithRandomMessages(t *testing.T) {
 	mapp := mock.NewApp()
 
-	bank.RegisterWire(mapp.Cdc)
+	bank.RegisterCodec(mapp.Cdc)
 	mapper := mapp.AccountMapper
-	coinKeeper := bank.NewKeeper(mapper)
-	mapp.Router().AddRoute("bank", bank.NewHandler(coinKeeper))
+	bankKeeper := bank.NewBaseKeeper(mapper)
+	mapp.Router().AddRoute("bank", bank.NewHandler(bankKeeper))
 
-	err := mapp.CompleteSetup([]*sdk.KVStoreKey{})
+	err := mapp.CompleteSetup()
 	if err != nil {
 		panic(err)
 	}
@@ -33,8 +33,8 @@ func TestBankWithRandomMessages(t *testing.T) {
 
 	simulation.Simulate(
 		t, mapp.BaseApp, appStateFn,
-		[]simulation.TestAndRunTx{
-			TestAndRunSingleInputMsgSend(mapper),
+		[]simulation.WeightedOperation{
+			{1, SimulateSingleInputMsgSend(mapper)},
 		},
 		[]simulation.RandSetup{},
 		[]simulation.Invariant{

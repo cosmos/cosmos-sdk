@@ -22,7 +22,7 @@ INEFFASSIGN_CHECK := $(shell command -v ineffassign 2> /dev/null)
 MISSPELL_CHECK := $(shell command -v misspell 2> /dev/null)
 ERRCHECK_CHECK := $(shell command -v errcheck 2> /dev/null)
 UNPARAM_CHECK := $(shell command -v unparam 2> /dev/null)
-GOCYCLO_CHECK := $(shell command -v gocyclo 2> /dev/null)
+# GOCYCLO_CHECK := $(shell command -v gocyclo 2> /dev/null)
 
 check_tools:
 ifndef DEP_CHECK
@@ -126,12 +126,12 @@ else
 	@echo "Installing unparam"
 	go get -v $(UNPARAM)
 endif
-ifdef GOCYCLO_CHECK
-	@echo "gocyclo is already installed.  Run 'make update_tools' to update."
-else
-	@echo "Installing gocyclo"
-	go get -v $(GOCYCLO)
-endif
+# ifdef GOCYCLO_CHECK
+# 	@echo "gocyclo is already installed.  Run 'make update_tools' to update."
+# else
+# 	@echo "Installing gocyclo"
+# 	go get -v $(GOCYCLO)
+# endif
 
 update_tools:
 	@echo "Updating dep"
@@ -153,8 +153,8 @@ update_dev_tools:
 	go get -u -v $(ERRCHECK)
 	@echo "Updating unparam"
 	go get -u -v $(UNPARAM)
-	@echo "Updating goyclo"
-	go get -u -v $(GOCYCLO)
+	# @echo "Updating goyclo"
+	# go get -u -v $(GOCYCLO)
 
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.

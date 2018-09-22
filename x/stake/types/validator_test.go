@@ -5,7 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -57,7 +59,7 @@ func TestABCIValidator(t *testing.T) {
 	validator := NewValidator(addr1, pk1, Description{})
 
 	abciVal := validator.ABCIValidator()
-	require.Equal(t, tmtypes.TM2PB.PubKey(validator.PubKey), abciVal.PubKey)
+	require.Equal(t, tmtypes.TM2PB.PubKey(validator.ConsPubKey), abciVal.PubKey)
 	require.Equal(t, validator.BondedTokens().RoundInt64(), abciVal.Power)
 }
 
@@ -65,15 +67,15 @@ func TestABCIValidatorZero(t *testing.T) {
 	validator := NewValidator(addr1, pk1, Description{})
 
 	abciVal := validator.ABCIValidatorZero()
-	require.Equal(t, tmtypes.TM2PB.PubKey(validator.PubKey), abciVal.PubKey)
+	require.Equal(t, tmtypes.TM2PB.PubKey(validator.ConsPubKey), abciVal.PubKey)
 	require.Equal(t, int64(0), abciVal.Power)
 }
 
 func TestRemoveTokens(t *testing.T) {
 
 	validator := Validator{
-		Operator:        addr1,
-		PubKey:          pk1,
+		OperatorAddr:    addr1,
+		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          sdk.NewDec(100),
 		DelegatorShares: sdk.NewDec(100),
@@ -109,7 +111,7 @@ func TestAddTokensValidatorBonded(t *testing.T) {
 	pool.LooseTokens = sdk.NewDec(10)
 	validator := NewValidator(addr1, pk1, Description{})
 	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
-	validator, pool, delShares := validator.AddTokensFromDel(pool, 10)
+	validator, pool, delShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
 
 	require.Equal(t, sdk.OneDec(), validator.DelegatorShareExRate())
 
@@ -122,7 +124,7 @@ func TestAddTokensValidatorUnbonding(t *testing.T) {
 	pool.LooseTokens = sdk.NewDec(10)
 	validator := NewValidator(addr1, pk1, Description{})
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonding)
-	validator, pool, delShares := validator.AddTokensFromDel(pool, 10)
+	validator, pool, delShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
 
 	require.Equal(t, sdk.OneDec(), validator.DelegatorShareExRate())
 
@@ -136,7 +138,7 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 	pool.LooseTokens = sdk.NewDec(10)
 	validator := NewValidator(addr1, pk1, Description{})
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
-	validator, pool, delShares := validator.AddTokensFromDel(pool, 10)
+	validator, pool, delShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
 
 	require.Equal(t, sdk.OneDec(), validator.DelegatorShareExRate())
 
@@ -148,8 +150,8 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 // TODO refactor to make simpler like the AddToken tests above
 func TestRemoveDelShares(t *testing.T) {
 	valA := Validator{
-		Operator:        addr1,
-		PubKey:          pk1,
+		OperatorAddr:    addr1,
+		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          sdk.NewDec(100),
 		DelegatorShares: sdk.NewDec(100),
@@ -176,8 +178,8 @@ func TestRemoveDelShares(t *testing.T) {
 	poolTokens := sdk.NewDec(5102)
 	delShares := sdk.NewDec(115)
 	validator := Validator{
-		Operator:        addr1,
-		PubKey:          pk1,
+		OperatorAddr:    addr1,
+		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          poolTokens,
 		DelegatorShares: delShares,
@@ -206,7 +208,7 @@ func TestUpdateStatus(t *testing.T) {
 	pool.LooseTokens = sdk.NewDec(100)
 
 	validator := NewValidator(addr1, pk1, Description{})
-	validator, pool, _ = validator.AddTokensFromDel(pool, 100)
+	validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(100))
 	require.Equal(t, sdk.Unbonded, validator.Status)
 	require.Equal(t, int64(100), validator.Tokens.RoundInt64())
 	require.Equal(t, int64(0), pool.BondedTokens.RoundInt64())
@@ -229,8 +231,8 @@ func TestPossibleOverflow(t *testing.T) {
 	poolTokens := sdk.NewDec(2159)
 	delShares := sdk.NewDec(391432570689183511).Quo(sdk.NewDec(40113011844664))
 	validator := Validator{
-		Operator:        addr1,
-		PubKey:          pk1,
+		OperatorAddr:    addr1,
+		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
 		Tokens:          poolTokens,
 		DelegatorShares: delShares,
@@ -243,7 +245,7 @@ func TestPossibleOverflow(t *testing.T) {
 	}
 	tokens := int64(71)
 	msg := fmt.Sprintf("validator %#v", validator)
-	newValidator, _, _ := validator.AddTokensFromDel(pool, tokens)
+	newValidator, _, _ := validator.AddTokensFromDel(pool, sdk.NewInt(tokens))
 
 	msg = fmt.Sprintf("Added %d tokens to %s", tokens, msg)
 	require.False(t, newValidator.DelegatorShareExRate().LT(sdk.ZeroDec()),
@@ -259,4 +261,16 @@ func TestHumanReadableString(t *testing.T) {
 	valStr, err := validator.HumanReadableString()
 	require.Nil(t, err)
 	require.NotEmpty(t, valStr)
+}
+
+func TestValidatorMarshalUnmarshalJSON(t *testing.T) {
+	validator := NewValidator(addr1, pk1, Description{})
+	js, err := codec.Cdc.MarshalJSON(validator)
+	require.NoError(t, err)
+	require.NotEmpty(t, js)
+	require.Contains(t, string(js), "\"consensus_pubkey\":\"cosmosvalconspu")
+	got := &Validator{}
+	err = codec.Cdc.UnmarshalJSON(js, got)
+	assert.NoError(t, err)
+	assert.Equal(t, validator, *got)
 }

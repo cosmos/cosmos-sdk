@@ -16,7 +16,7 @@ If you want to become a validator for the Hub's `mainnet`, you should [research 
 
 ### Create Your Validator
 
-Your `cosmosvalpub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
+Your `cosmosvalconspub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
 
 ```bash
 gaiad tendermint show-validator
@@ -32,7 +32,7 @@ Don't use more `steak` thank you have! You can always get more by using the [Fau
 gaiacli stake create-validator \
   --amount=5steak \
   --pubkey=$(gaiad tendermint show-validator) \
-  --address-validator=<account_cosmosaccaddr>
+  --address-validator=<account_cosmosval>
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \
   --name=<key_name>
@@ -46,7 +46,7 @@ The `--identity` can be used as to verify identity with systems like Keybase or 
 
 ```bash
 gaiacli stake edit-validator
-  --validator=<account_cosmosaccaddr>
+  --validator=<account_cosmos>
   --moniker="choose a moniker" \
   --website="https://cosmos.network" \
   --identity=6A0D65E29A4CBC8E
@@ -60,7 +60,7 @@ gaiacli stake edit-validator
 View the validator's information with this command:
 
 ```bash
-gaiacli stake validator <account_cosmosaccaddr>
+gaiacli stake validator <account_cosmos>
 ```
 
 ### Track Validator Signing Information
@@ -72,15 +72,15 @@ gaiacli stake signing-information <validator-pubkey>\
   --chain-id=<chain_id>
 ```
 
-### Unrevoke Validator
+### Unjail Validator
 
-When a validator is `Revoked` for downtime, you must submit an `Unrevoke` transaction in order to be able to get block proposer rewards again (depends on the zone fee distribution).
+When a validator is "jailed" for downtime, you must submit an `Unjail` transaction in order to be able to get block proposer rewards again (depends on the zone fee distribution).
 
 ```bash
-gaiacli stake unrevoke \
+gaiacli stake unjail \
 	--from=<key_name> \
 	--chain-id=<chain_id>
-  --validator=<account_cosmosaccaddr> \
+  --validator=<account_cosmosval> \
   --chain-id=gaia-6002
 ```
 
@@ -110,14 +110,14 @@ Here's how you can return the voting power back to your validator. First, if `ga
 gaiad start
 ```
 
-Wait for your full node to catch up to the latest block. Next, run the following command. Note that `<cosmosaccaddr>` is the address of your validator account, and `<name>` is the name of the validator account. You can find this info by running `gaiacli keys list`.
+Wait for your full node to catch up to the latest block. Next, run the following command. Note that `<cosmos>` is the address of your validator account, and `<name>` is the name of the validator account. You can find this info by running `gaiacli keys list`.
 
 ```bash
-gaiacli stake unrevoke <cosmosaccaddr> --chain-id=<chain_id> --name=<name>
+gaiacli stake unjail <cosmos> --chain-id=<chain_id> --name=<name>
 ```
 
 ::: danger Warning
-If you don't wait for `gaiad` to sync before running `unrevoke`, you will receive an error message telling you your validator is still jailed.
+If you don't wait for `gaiad` to sync before running `unjail`, you will receive an error message telling you your validator is still jailed.
 :::
 
 Lastly, check your validator again to see if your voting power is back.

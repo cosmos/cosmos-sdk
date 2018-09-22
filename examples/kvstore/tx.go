@@ -18,6 +18,10 @@ func (tx kvstoreTx) Type() string {
 	return "kvstore"
 }
 
+func (tx kvstoreTx) Name() string {
+	return "kvstore"
+}
+
 func (tx kvstoreTx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{tx}
 }

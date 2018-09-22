@@ -11,8 +11,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// setup helper function
-// creates two validators
+// TODO integrate with test_common.go helper (CreateTestInput)
+// setup helper function - creates two validators
 func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params) {
 	// setup
 	ctx, _, keeper := CreateTestInput(t, false, amt)
@@ -24,7 +24,7 @@ func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params) {
 	// add numVals validators
 	for i := 0; i < numVals; i++ {
 		validator := types.NewValidator(addrVals[i], PKs[i], types.Description{})
-		validator, pool, _ = validator.AddTokensFromDel(pool, amt)
+		validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(amt))
 		keeper.SetPool(ctx, pool)
 		validator = keeper.UpdateValidator(ctx, validator)
 		keeper.SetValidatorByPubKeyIndex(ctx, validator)
@@ -34,8 +34,11 @@ func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params) {
 	return ctx, keeper, params
 }
 
-// tests Revoke, Unrevoke
+//_________________________________________________________________________________
+
+// tests Jail, Unjail
 func TestRevocation(t *testing.T) {
+
 	// setup
 	ctx, keeper, _ := setupHelper(t, 10)
 	addr := addrVals[0]
@@ -44,20 +47,19 @@ func TestRevocation(t *testing.T) {
 	// initial state
 	val, found := keeper.GetValidator(ctx, addr)
 	require.True(t, found)
-	require.False(t, val.GetRevoked())
+	require.False(t, val.GetJailed())
 
-	// test revoke
-	keeper.Revoke(ctx, pk)
+	// test jail
+	keeper.Jail(ctx, pk)
 	val, found = keeper.GetValidator(ctx, addr)
 	require.True(t, found)
-	require.True(t, val.GetRevoked())
+	require.True(t, val.GetJailed())
 
-	// test unrevoke
-	keeper.Unrevoke(ctx, pk)
+	// test unjail
+	keeper.Unjail(ctx, pk)
 	val, found = keeper.GetValidator(ctx, addr)
 	require.True(t, found)
-	require.False(t, val.GetRevoked())
-
+	require.False(t, val.GetJailed())
 }
 
 // tests slashUnbondingDelegation
@@ -95,8 +97,10 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	require.Equal(t, int64(5), slashAmount.RoundInt64())
 	ubd, found := keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
+
 	// initialbalance unchanged
 	require.Equal(t, sdk.NewInt64Coin(params.BondDenom, 10), ubd.InitialBalance)
+
 	// balance decreased
 	require.Equal(t, sdk.NewInt64Coin(params.BondDenom, 5), ubd.Balance)
 	newPool := keeper.GetPool(ctx)
@@ -155,14 +159,18 @@ func TestSlashRedelegation(t *testing.T) {
 	require.Equal(t, int64(5), slashAmount.RoundInt64())
 	rd, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
+
 	// initialbalance unchanged
 	require.Equal(t, sdk.NewInt64Coin(params.BondDenom, 10), rd.InitialBalance)
+
 	// balance decreased
 	require.Equal(t, sdk.NewInt64Coin(params.BondDenom, 5), rd.Balance)
+
 	// shares decreased
 	del, found = keeper.GetDelegation(ctx, addrDels[0], addrVals[1])
 	require.True(t, found)
 	require.Equal(t, int64(5), del.Shares.RoundInt64())
+
 	// pool bonded tokens decreased
 	newPool := keeper.GetPool(ctx)
 	require.Equal(t, int64(5), oldPool.BondedTokens.Sub(newPool.BondedTokens).RoundInt64())
@@ -177,7 +185,7 @@ func TestSlashAtFutureHeight(t *testing.T) {
 }
 
 // tests Slash at the current height
-func TestSlashAtCurrentHeight(t *testing.T) {
+func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	ctx, keeper, _ := setupHelper(t, 10)
 	pk := PKs[0]
 	fraction := sdk.NewDecWithPrec(5, 1)

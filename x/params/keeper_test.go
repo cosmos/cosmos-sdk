@@ -9,9 +9,9 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 func defaultContext(key sdk.StoreKey) sdk.Context {
@@ -37,7 +37,7 @@ func TestKeeper(t *testing.T) {
 
 	skey := sdk.NewKVStoreKey("test")
 	ctx := defaultContext(skey)
-	setter := NewKeeper(wire.NewCodec(), skey).Setter()
+	setter := NewKeeper(codec.New(), skey).Setter()
 
 	for _, kv := range kvs {
 		err := setter.Set(ctx, kv.key, kv.param)
@@ -51,7 +51,7 @@ func TestKeeper(t *testing.T) {
 		assert.Equal(t, kv.param, param)
 	}
 
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	for _, kv := range kvs {
 		var param int64
 		bz := setter.GetRaw(ctx, kv.key)
@@ -75,7 +75,7 @@ func TestKeeper(t *testing.T) {
 func TestGetter(t *testing.T) {
 	key := sdk.NewKVStoreKey("test")
 	ctx := defaultContext(key)
-	keeper := NewKeeper(wire.NewCodec(), key)
+	keeper := NewKeeper(codec.New(), key)
 
 	g := keeper.Getter()
 	s := keeper.Setter()

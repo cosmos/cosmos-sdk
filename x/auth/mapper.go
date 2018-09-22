@@ -1,8 +1,8 @@
 package auth
 
 import (
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -18,14 +18,14 @@ type AccountMapper struct {
 	// The prototypical Account constructor.
 	proto func() Account
 
-	// The wire codec for binary encoding/decoding of accounts.
-	cdc *wire.Codec
+	// The codec codec for binary encoding/decoding of accounts.
+	cdc *codec.Codec
 }
 
 // NewAccountMapper returns a new sdk.AccountMapper that
 // uses go-amino to (binary) encode and decode concrete sdk.Accounts.
 // nolint
-func NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto func() Account) AccountMapper {
+func NewAccountMapper(cdc *codec.Codec, key sdk.StoreKey, proto func() Account) AccountMapper {
 	return AccountMapper{
 		key:   key,
 		proto: proto,
@@ -87,6 +87,7 @@ func (am AccountMapper) SetAccount(ctx sdk.Context, acc Account) {
 func (am AccountMapper) IterateAccounts(ctx sdk.Context, process func(Account) (stop bool)) {
 	store := ctx.KVStore(am.key)
 	iter := sdk.KVStorePrefixIterator(store, []byte("account:"))
+	defer iter.Close()
 	for {
 		if !iter.Valid() {
 			return

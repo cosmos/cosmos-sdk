@@ -51,7 +51,7 @@ func (k Keeper) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, va
 }
 
 // get the sdk.validator for a particular address
-func (k Keeper) Validator(ctx sdk.Context, address sdk.AccAddress) sdk.Validator {
+func (k Keeper) Validator(ctx sdk.Context, address sdk.ValAddress) sdk.Validator {
 	val, found := k.GetValidator(ctx, address)
 	if !found {
 		return nil
@@ -86,11 +86,12 @@ func (k Keeper) GetValidatorSet() sdk.ValidatorSet {
 }
 
 // get the delegation for a particular set of delegator and validator addresses
-func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.AccAddress) sdk.Delegation {
+func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.ValAddress) sdk.Delegation {
 	bond, ok := k.GetDelegation(ctx, addrDel, addrVal)
 	if !ok {
 		return nil
 	}
+
 	return bond
 }
 

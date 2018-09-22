@@ -1,6 +1,7 @@
 package stake
 
 import (
+	"bytes"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -51,8 +52,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 	k.SetIntraTxCounter(ctx, 0)
 
 	// calculate validator set changes
-	ValidatorUpdates = k.GetTendermintUpdates(ctx)
-	k.ClearTendermintUpdates(ctx)
+	ValidatorUpdates = k.GetValidTendermintUpdates(ctx)
 	return
 }
 
@@ -128,17 +128,19 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 }
 
 func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) sdk.Result {
-
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if !found {
 		return ErrNoValidatorFound(k.Codespace()).Result()
 	}
+
 	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
-	if validator.Revoked == true {
-		return ErrValidatorRevoked(k.Codespace()).Result()
+
+	if validator.Jailed && !bytes.Equal(validator.OperatorAddr, msg.DelegatorAddr) {
+		return ErrValidatorJailed(k.Codespace()).Result()
 	}
+
 	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator, true)
 	if err != nil {
 		return err.Result()
@@ -149,6 +151,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
 		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
 	)
+
 	return sdk.Result{
 		Tags: tags,
 	}

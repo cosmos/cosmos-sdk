@@ -37,10 +37,10 @@ func (b BondStatus) Equal(b2 BondStatus) bool {
 
 // validator for a delegated proof of stake system
 type Validator interface {
-	GetRevoked() bool         // whether the validator is revoked
+	GetJailed() bool          // whether the validator is jailed
 	GetMoniker() string       // moniker of the validator
 	GetStatus() BondStatus    // status of the validator
-	GetOperator() AccAddress  // owner AccAddress to receive/return validators coins
+	GetOperator() ValAddress  // operator address to receive/return validators coins
 	GetPubKey() crypto.PubKey // validation pubkey
 	GetPower() Dec            // validation power
 	GetTokens() Dec           // validation tokens
@@ -59,22 +59,26 @@ func ABCIValidator(v Validator) abci.Validator {
 
 // properties for the set of all validators
 type ValidatorSet interface {
-	// iterate through validator by owner-AccAddress, execute func for each validator
+	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(Context,
 		func(index int64, validator Validator) (stop bool))
 
-	// iterate through bonded validator by pubkey-AccAddress, execute func for each validator
+	// iterate through bonded validators by operator address, execute func for each validator
 	IterateValidatorsBonded(Context,
 		func(index int64, validator Validator) (stop bool))
 
-	Validator(Context, AccAddress) Validator            // get a particular validator by owner AccAddress
+	Validator(Context, ValAddress) Validator            // get a particular validator by operator
 	ValidatorByPubKey(Context, crypto.PubKey) Validator // get a particular validator by signing PubKey
 	TotalPower(Context) Dec                             // total power of the validator set
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
 	Slash(Context, crypto.PubKey, int64, int64, Dec)
-	Revoke(Context, crypto.PubKey)   // revoke a validator
-	Unrevoke(Context, crypto.PubKey) // unrevoke a validator
+	Jail(Context, crypto.PubKey)   // jail a validator
+	Unjail(Context, crypto.PubKey) // unjail a validator
+
+	// Delegation allows for getting a particular delegation for a given validator
+	// and delegator outside the scope of the staking module.
+	Delegation(Context, AccAddress, ValAddress) Delegation
 }
 
 //_______________________________________________________________________________
@@ -82,7 +86,7 @@ type ValidatorSet interface {
 // delegation bond for a delegated proof of stake system
 type Delegation interface {
 	GetDelegator() AccAddress // delegator AccAddress for the bond
-	GetValidator() AccAddress // validator owner AccAddress for the bond
+	GetValidator() ValAddress // validator operator address
 	GetBondShares() Dec       // amount of validator's shares
 }
 
@@ -94,4 +98,14 @@ type DelegationSet interface {
 	//   execute func for each validator
 	IterateDelegations(ctx Context, delegator AccAddress,
 		fn func(index int64, delegation Delegation) (stop bool))
+}
+
+// validator event hooks
+// These can be utilized to communicate between a staking keeper
+// and another keeper which must take particular actions when
+// validators are bonded and unbonded. The second keeper must implement
+// this interface, which then the staking keeper can call.
+type ValidatorHooks interface {
+	OnValidatorBonded(ctx Context, address ConsAddress)         // Must be called when a validator is bonded
+	OnValidatorBeginUnbonding(ctx Context, address ConsAddress) // Must be called when a validator begins unbonding
 }

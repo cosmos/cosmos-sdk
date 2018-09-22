@@ -6,10 +6,16 @@
 
 #Instance Attachment (autoscaling is the future)
 resource "aws_lb_target_group_attachment" "lb_attach" {
-  count = "${var.SERVERS*length(data.aws_availability_zones.zones.names)}"
+  count = "${var.SERVERS*min(length(data.aws_availability_zones.zones.names),var.max_zones)}"
   target_group_arn = "${aws_lb_target_group.lb_target_group.arn}"
   target_id        = "${element(aws_instance.node.*.id,count.index)}"
-  port             = 80
+  port             = 26657
 }
 
+resource "aws_lb_target_group_attachment" "lb_attach_lcd" {
+  count = "${var.SERVERS*min(length(data.aws_availability_zones.zones.names),var.max_zones)}"
+  target_group_arn = "${aws_lb_target_group.lb_target_group_lcd.arn}"
+  target_id        = "${element(aws_instance.node.*.id,count.index)}"
+  port             = 1317
+}
 

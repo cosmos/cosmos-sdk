@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
+	"bytes"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,8 +26,8 @@ func ValidatorCommand() *cobra.Command {
 		RunE:  printValidators,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	// TODO: change this to false when we can
-	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
+	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
 	return cmd
 }
 
@@ -45,7 +46,7 @@ type ResultValidatorsOutput struct {
 }
 
 func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
-	bechValPubkey, err := sdk.Bech32ifyValPub(validator.PubKey)
+	bechValPubkey, err := sdk.Bech32ifyConsPub(validator.PubKey)
 	if err != nil {
 		return ValidatorOutput{}, err
 	}
@@ -68,6 +69,17 @@ func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	validatorsRes, err := node.Validators(height)
 	if err != nil {
 		return nil, err
+	}
+
+	if !cliCtx.TrustNode {
+		check, err := cliCtx.Certify(validatorsRes.BlockHeight)
+		if err != nil {
+			return nil, err
+		}
+
+		if !bytes.Equal(check.ValidatorsHash(), tmtypes.NewValidatorSet(validatorsRes.Validators).Hash()) {
+			return nil, fmt.Errorf("got invalid validatorset")
+		}
 	}
 
 	outputValidatorsRes := ResultValidatorsOutput{

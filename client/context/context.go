@@ -1,15 +1,21 @@
 package context
 
 import (
+	"bytes"
+	"fmt"
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/spf13/viper"
 
+	"github.com/tendermint/tendermint/libs/cli"
+	tmlite "github.com/tendermint/tendermint/lite"
+	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	"os"
 )
 
 const ctxAccStoreName = "acc"
@@ -17,7 +23,7 @@ const ctxAccStoreName = "acc"
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
 type CLIContext struct {
-	Codec           *wire.Codec
+	Codec           *codec.Codec
 	AccDecoder      auth.AccountDecoder
 	Client          rpcclient.Client
 	Logger          io.Writer
@@ -30,6 +36,9 @@ type CLIContext struct {
 	Async           bool
 	JSON            bool
 	PrintResponse   bool
+	Certifier       tmlite.Certifier
+	DryRun          bool
+	GenerateOnly    bool
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
@@ -53,11 +62,54 @@ func NewCLIContext() CLIContext {
 		Async:           viper.GetBool(client.FlagAsync),
 		JSON:            viper.GetBool(client.FlagJson),
 		PrintResponse:   viper.GetBool(client.FlagPrintResponse),
+		Certifier:       createCertifier(),
+		DryRun:          viper.GetBool(client.FlagDryRun),
+		GenerateOnly:    viper.GetBool(client.FlagGenerateOnly),
 	}
 }
 
+func createCertifier() tmlite.Certifier {
+	trustNodeDefined := viper.IsSet(client.FlagTrustNode)
+	if !trustNodeDefined {
+		return nil
+	}
+
+	trustNode := viper.GetBool(client.FlagTrustNode)
+	if trustNode {
+		return nil
+	}
+
+	chainID := viper.GetString(client.FlagChainID)
+	home := viper.GetString(cli.HomeFlag)
+	nodeURI := viper.GetString(client.FlagNode)
+
+	var errMsg bytes.Buffer
+	if chainID == "" {
+		errMsg.WriteString("--chain-id ")
+	}
+	if home == "" {
+		errMsg.WriteString("--home ")
+	}
+	if nodeURI == "" {
+		errMsg.WriteString("--node ")
+	}
+	if errMsg.Len() != 0 {
+		fmt.Printf("Must specify these options: %s when --trust-node is false\n", errMsg.String())
+		os.Exit(1)
+	}
+
+	certifier, err := tmliteProxy.GetCertifier(chainID, home, nodeURI)
+	if err != nil {
+		fmt.Printf("Create certifier failed: %s\n", err.Error())
+		fmt.Printf("Please check network connection and verify the address of the node to connect to\n")
+		os.Exit(1)
+	}
+
+	return certifier
+}
+
 // WithCodec returns a copy of the context with an updated codec.
-func (ctx CLIContext) WithCodec(cdc *wire.Codec) CLIContext {
+func (ctx CLIContext) WithCodec(cdc *codec.Codec) CLIContext {
 	ctx.Codec = cdc
 	return ctx
 }
@@ -111,5 +163,11 @@ func (ctx CLIContext) WithClient(client rpcclient.Client) CLIContext {
 // WithUseLedger returns a copy of the context with an updated UseLedger flag.
 func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 	ctx.UseLedger = useLedger
+	return ctx
+}
+
+// WithCertifier - return a copy of the context with an updated Certifier
+func (ctx CLIContext) WithCertifier(certifier tmlite.Certifier) CLIContext {
+	ctx.Certifier = certifier
 	return ctx
 }

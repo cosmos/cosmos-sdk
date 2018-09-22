@@ -141,12 +141,12 @@ func (kb dbKeybase) CreateFundraiserKey(name, mnemonic, passwd string) (info Inf
 	return
 }
 
-func (kb dbKeybase) Derive(name, mnemonic, passphrase, passwd string, params hd.BIP44Params) (info Info, err error) {
-	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, passphrase)
+func (kb dbKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params) (info Info, err error) {
+	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
 	if err != nil {
 		return
 	}
-	info, err = kb.persistDerivedKey(seed, passwd, name, params.String())
+	info, err = kb.persistDerivedKey(seed, encryptPasswd, name, params.String())
 
 	return
 }

@@ -4,7 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-		"github.com/bartekn/go-bip39"
+
+	"github.com/bartekn/go-bip39"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -23,8 +24,8 @@ func newKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "new",
 		Short: "Interactive command to derive a new private key, encrypt it, and save to disk",
-		Long: `Derive a new private key using an interactive command that will prompt you for each inputs.
-Optionally specify a bip39 mnemonic, a bip39 passphrase to further secure the mnemonic, 
+		Long: `Derive a new private key using an interactive command that will prompt you for each input.
+Optionally specify a bip39 mnemonic, a bip39 passphrase to further secure the mnemonic,
 and a bip32 HD path to derive a specific account. The key will be stored under the given name 
 and encrypted with the given password. The only input that is required is the encryption password.`,
 		RunE: runNewCmd,
@@ -93,8 +94,7 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 	// get the mnemonic
 	var mnemonic string
 	if !useDefaults {
-		printPrefixed("Enter your bip39 mnemonic.")
-		mnemonic, err = client.GetString("> If you don't have one, just hit enter, and one will be generated for you.", buf)
+		mnemonic, err = client.GetString("> Enter your bip39 mnemonic, or hit enter to generate one.", buf)
 		if err != nil {
 			return err
 		}
@@ -113,26 +113,37 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	// get bip39 passphrase
-	var mnemonicPassphrase string
+	var bip39Passphrase string
 	if !useDefaults {
 		printStep()
-		printPrefixed("Enter your bip39 passphrase.")
-		mnemonicPassphrase, err = client.GetString("> If you don't have one, just hit enter, and the default \"\" will be used", buf)
+		printPrefixed("Enter your bip39 passphrase. This is combined with the mnemonic to derive the seed")
+		bip39Passphrase, err = client.GetString("> Most users should just hit enter to use the default, \"\"", buf)
 		if err != nil {
 			return err
+		}
+
+		// if they use one, make them re-enter it
+		if len(bip39Passphrase) != 0 {
+			p2, err := client.GetString("Repeat the passphrase:", buf)
+			if err != nil {
+				return err
+			}
+			if bip39Passphrase != p2 {
+				return errors.New("passphrases don't match")
+			}
 		}
 	}
 
 	// get the encryption password
 	printStep()
 	encryptPassword, err := client.GetCheckPassword(
-		"> Enter a passphrase to encrypt your key:",
+		"> Enter a passphrase to encrypt your key to disk:",
 		"> Repeat the passphrase:", buf)
 	if err != nil {
 		return err
 	}
 
-	info, err := kb.Derive(name, mnemonic, mnemonicPassphrase, encryptPassword, *bip44Params)
+	info, err := kb.Derive(name, mnemonic, bip39Passphrase, encryptPassword, *bip44Params)
 	if err != nil {
 		return err
 	}
@@ -148,7 +159,7 @@ func getBIP44ParamsAndPath(path string, flagSet bool) (*hd.BIP44Params, error) {
 	// if it wasnt set in the flag, give it a chance to overide interactively
 	if !flagSet {
 		printStep()
-		
+
 		var err error
 		bip44Path, err = client.GetString(fmt.Sprintf("> Enter your bip44 path. Default is %s\n", path), buf)
 		if err != nil {

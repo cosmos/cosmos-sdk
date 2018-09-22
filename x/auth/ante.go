@@ -96,7 +96,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 		for i := 0; i < len(stdSigs); i++ {
 			// check signature, return account with incremented nonce
-			res = processSig(newCtx, signerAccs[i], stdSigs[i], signBytesList[i], simulate)
+			signerAccs[i], res = processSig(newCtx, signerAccs[i], stdSigs[i], signBytesList[i], simulate)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
@@ -168,31 +168,30 @@ func validateAccNumAndSequence(accs []Account, sigs []StdSignature) sdk.Result {
 
 // verify the signature and increment the sequence.
 // if the account doesn't have a pubkey, set it.
-// TODO: Change this function to already take in the account
 func processSig(ctx sdk.Context,
-	acc Account, sig StdSignature, signBytes []byte, simulate bool) (res sdk.Result) {
-	seq := acc.GetSequence()
-
-	err := acc.SetSequence(seq + 1)
-	if err != nil {
-		// Handle w/ #870
-		panic(err)
-	}
+	acc Account, sig StdSignature, signBytes []byte, simulate bool) (updatedAcc Account, res sdk.Result) {
 	pubKey, res := processPubKey(acc, sig, simulate)
 	if !res.IsOK() {
-		return res
+		return nil, res
 	}
-	err = acc.SetPubKey(pubKey)
+	err := acc.SetPubKey(pubKey)
 	if err != nil {
-		return sdk.ErrInternal("setting PubKey on signer's account").Result()
+		return nil, sdk.ErrInternal("setting PubKey on signer's account").Result()
 	}
 
 	consumeSignatureVerificationGas(ctx.GasMeter(), pubKey)
 	if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature) {
-		return sdk.ErrUnauthorized("signature verification failed").Result()
+		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
 
-	return
+	// increment the sequence number
+	err = acc.SetSequence(acc.GetSequence() + 1)
+	if err != nil {
+		// Handle w/ #870
+		panic(err)
+	}
+
+	return acc, res
 }
 
 var dummySecp256k1Pubkey secp256k1.PubKeySecp256k1

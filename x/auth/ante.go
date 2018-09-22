@@ -77,33 +77,30 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 		// create the list of all sign bytes
 		signBytesList := getSignBytesList(newCtx.ChainID(), stdTx, stdSigs)
+		signerAccs, res := getSignerAccs(newCtx, am, signerAddrs)
+		if !res.IsOK() {
+			return newCtx, res, true
+		}
 
-		// Get the sign bytes (requires all account & sequence numbers and the fee)
-		// Check sig and nonce and collect signer accounts.
-		var signerAccs = make([]Account, len(signerAddrs))
+		// first sig pays the fees
+		if !stdTx.Fee.Amount.IsZero() {
+			newCtx.GasMeter().ConsumeGas(deductFeesCost, "deductFees")
+			signerAccs[0], res = deductFees(signerAccs[0], stdTx.Fee)
+			if !res.IsOK() {
+				return newCtx, res, true
+			}
+			fck.addCollectedFees(newCtx, stdTx.Fee.Amount)
+		}
+
 		for i := 0; i < len(stdSigs); i++ {
-			signerAddr, sig := signerAddrs[i], stdSigs[i]
-
 			// check signature, return account with incremented nonce
-			signerAcc, res := processSig(newCtx, am, signerAddr, sig, signBytesList[i], simulate)
+			res = processSig(newCtx, signerAccs[i], stdSigs[i], signBytesList[i], simulate)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
 
-			// first sig pays the fees
-			// TODO: move outside of the loop
-			if i == 0 && !stdTx.Fee.Amount.IsZero() {
-				newCtx.GasMeter().ConsumeGas(deductFeesCost, "deductFees")
-				signerAcc, res = deductFees(signerAcc, stdTx.Fee)
-				if !res.IsOK() {
-					return newCtx, res, true
-				}
-				fck.addCollectedFees(newCtx, stdTx.Fee.Amount)
-			}
-
 			// Save the account.
-			am.SetAccount(newCtx, signerAcc)
-			signerAccs[i] = signerAcc
+			am.SetAccount(newCtx, signerAccs[i])
 		}
 
 		// cache the signer accounts in the context
@@ -138,31 +135,36 @@ func validateBasic(tx StdTx) (err sdk.Error) {
 	return nil
 }
 
+func getSignerAccs(ctx sdk.Context, am AccountMapper, addrs []sdk.AccAddress) (accs []Account, res sdk.Result) {
+	accs = make([]Account, len(addrs))
+	for i := 0; i < len(accs); i++ {
+		accs[i] = am.GetAccount(ctx, addrs[i])
+		if accs[i] == nil {
+			return nil, sdk.ErrUnknownAddress(addrs[i].String()).Result()
+		}
+	}
+	return
+}
+
 // verify the signature and increment the sequence.
 // if the account doesn't have a pubkey, set it.
 // TODO: Change this function to already take in the account
-func processSig(
-	ctx sdk.Context, am AccountMapper,
-	addr sdk.AccAddress, sig StdSignature, signBytes []byte, simulate bool) (
-	acc Account, res sdk.Result) {
+func processSig(ctx sdk.Context,
+	acc Account, sig StdSignature, signBytes []byte, simulate bool) (res sdk.Result) {
 	// Get the account.
-	acc = am.GetAccount(ctx, addr)
-	if acc == nil {
-		return nil, sdk.ErrUnknownAddress(addr.String()).Result()
-	}
 
 	accnum := acc.GetAccountNumber()
 	seq := acc.GetSequence()
 
 	// Check account number.
 	if accnum != sig.AccountNumber {
-		return nil, sdk.ErrInvalidSequence(
+		return sdk.ErrInvalidSequence(
 			fmt.Sprintf("Invalid account number. Got %d, expected %d", sig.AccountNumber, accnum)).Result()
 	}
 
 	// Check sequence number.
 	if seq != sig.Sequence {
-		return nil, sdk.ErrInvalidSequence(
+		return sdk.ErrInvalidSequence(
 			fmt.Sprintf("Invalid sequence. Got %d, expected %d", sig.Sequence, seq)).Result()
 	}
 	err := acc.SetSequence(seq + 1)
@@ -172,16 +174,16 @@ func processSig(
 	}
 	pubKey, res := processPubKey(acc, sig, simulate)
 	if !res.IsOK() {
-		return nil, res
+		return res
 	}
 	err = acc.SetPubKey(pubKey)
 	if err != nil {
-		return nil, sdk.ErrInternal("setting PubKey on signer's account").Result()
+		return sdk.ErrInternal("setting PubKey on signer's account").Result()
 	}
 
 	consumeSignatureVerificationGas(ctx.GasMeter(), pubKey)
 	if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature) {
-		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
+		return sdk.ErrUnauthorized("signature verification failed").Result()
 	}
 
 	return

@@ -13,11 +13,12 @@ import (
 // This will fail half the time with the second output being 173
 // This is due to secp256k1 signatures not being constant size.
 // This will be resolved when updating to tendermint v0.24.0
+// nolint: vet
 func ExampleTxSendSize() {
 	cdc := app.MakeCodec()
 	priv1 := secp256k1.GenPrivKeySecp256k1([]byte{0})
 	addr1 := sdk.AccAddress(priv1.PubKey().Address())
-	priv2 := secp256k1.GenPrivKey()
+	priv2 := secp256k1.GenPrivKeySecp256k1([]byte{1})
 	addr2 := sdk.AccAddress(priv2.PubKey().Address())
 	coins := []sdk.Coin{sdk.NewCoin("denom", sdk.NewInt(10))}
 	msg1 := bank.MsgSend{

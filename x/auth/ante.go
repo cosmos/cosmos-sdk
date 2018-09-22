@@ -81,6 +81,10 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		if !res.IsOK() {
 			return newCtx, res, true
 		}
+		res = validateAccNumAndSequence(signerAccs, stdSigs)
+		if !res.IsOK() {
+			return newCtx, res, true
+		}
 
 		// first sig pays the fees
 		if !stdTx.Fee.Amount.IsZero() {
@@ -107,7 +111,6 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		newCtx = WithSigners(newCtx, signerAccs)
 
 		// TODO: tx tags (?)
-
 		return newCtx, sdk.Result{GasWanted: stdTx.Fee.Gas}, false // continue...
 	}
 }
@@ -146,27 +149,32 @@ func getSignerAccs(ctx sdk.Context, am AccountMapper, addrs []sdk.AccAddress) (a
 	return
 }
 
+func validateAccNumAndSequence(accs []Account, sigs []StdSignature) sdk.Result {
+	for i := 0; i < len(accs); i++ {
+		accnum := accs[i].GetAccountNumber()
+		seq := accs[i].GetSequence()
+		// Check account number.
+		if accnum != sigs[i].AccountNumber {
+			return sdk.ErrInvalidSequence(
+				fmt.Sprintf("Invalid account number. Got %d, expected %d", sigs[i].AccountNumber, accnum)).Result()
+		}
+
+		// Check sequence number.
+		if seq != sigs[i].Sequence {
+			return sdk.ErrInvalidSequence(
+				fmt.Sprintf("Invalid sequence. Got %d, expected %d", sigs[i].Sequence, seq)).Result()
+		}
+	}
+	return sdk.Result{}
+}
+
 // verify the signature and increment the sequence.
 // if the account doesn't have a pubkey, set it.
 // TODO: Change this function to already take in the account
 func processSig(ctx sdk.Context,
 	acc Account, sig StdSignature, signBytes []byte, simulate bool) (res sdk.Result) {
-	// Get the account.
-
-	accnum := acc.GetAccountNumber()
 	seq := acc.GetSequence()
 
-	// Check account number.
-	if accnum != sig.AccountNumber {
-		return sdk.ErrInvalidSequence(
-			fmt.Sprintf("Invalid account number. Got %d, expected %d", sig.AccountNumber, accnum)).Result()
-	}
-
-	// Check sequence number.
-	if seq != sig.Sequence {
-		return sdk.ErrInvalidSequence(
-			fmt.Sprintf("Invalid sequence. Got %d, expected %d", sig.Sequence, seq)).Result()
-	}
 	err := acc.SetSequence(seq + 1)
 	if err != nil {
 		// Handle w/ #870

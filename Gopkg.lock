@@ -552,15 +552,14 @@
   revision = "292b43bbf7cb8d35ddf40f8d5100ef3837cced3f"
 
 [[projects]]
-  branch = "master"
-  digest = "1:ead82e3e398388679f3ad77633a087ac31a47a6be59ae20841e1d1b3a3fbbd22"
+  digest = "1:4bd75b1a219bc590b05c976bbebf47f4e993314ebb5c7cbf2efe05a09a184d54"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "UT"
-  revision = "4ea2f632f6e912459fe60b26b1749377f0d889d5"
+  revision = "4e1fef5609515ec7a2cee7b5de30ba6d9b438cbf"
 
 [[projects]]
   digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"
@@ -687,8 +686,6 @@
     "github.com/tendermint/tmlibs/cli",
     "github.com/zondax/ledger-goclient",
     "golang.org/x/crypto/bcrypt",
-    "golang.org/x/crypto/ripemd160",
-    "golang.org/x/crypto/blowfish",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

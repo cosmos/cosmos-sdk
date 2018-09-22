@@ -1,18 +1,17 @@
 package keys
 
 import (
-	"bufio"
 	"crypto/sha256"
 	"fmt"
-	"os"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 
 	bip39 "github.com/bartekn/go-bip39"
 )
 
 const (
-	flagUserEntropy = "user"
+	flagUserEntropy = "unsafe-entropy"
 )
 
 const (
@@ -23,7 +22,7 @@ func mnemonicKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "mnemonic",
 		Short: "Compute the bip39 mnemonic for some input entropy",
-		Long:  "Create a bip39 mnemonic, sometimes called a seed phrase, by reading from the system entropy. To pass your own entropy, use --user",
+		Long:  "Create a bip39 mnemonic, sometimes called a seed phrase, by reading from the system entropy. To pass your own entropy, use --unsafe-entropy",
 		RunE:  runMnemonicCmd,
 	}
 	cmd.Flags().Bool(flagUserEntropy, false, "Prompt the user to supply their own entropy, instead of relying on the system")
@@ -39,21 +38,26 @@ func runMnemonicCmd(cmd *cobra.Command, args []string) error {
 
 	if userEntropy {
 		// prompt the user to enter some entropy
-		fmt.Println("> Roll 256-bits of dice entropy and enter the results here:")
-		reader := bufio.NewReader(os.Stdin)
-		inputEntropy, err := reader.ReadString('\n')
+		buf := client.BufferStdin()
+		inputEntropy, err := client.GetString("> WARNING: Generate at least 256-bits of entropy and enter the results here:", buf)
+
+		if len(inputEntropy) < 43 {
+			return fmt.Errorf("256-bits is 43 characters in Base-64, and 100 in Base-6. You entered %v, and probably want more", len(inputEntropy))
+		}
+		conf, err := client.GetConfirmation(
+			fmt.Sprintf("> Input length: %d", len(inputEntropy)),
+			buf)
 		if err != nil {
 			return err
 		}
-		fmt.Println("> Input length:", len(inputEntropy))
-		if len(inputEntropy) < 99 {
-			fmt.Println("> WARNING! 256-bits of entropy is ~99 rolls of a 6-sided die")
+		if !conf {
+			return nil
 		}
 
 		// hash input entropy to get entropy seed
 		hashedEntropy := sha256.Sum256([]byte(inputEntropy))
 		entropySeed = hashedEntropy[:]
-		fmt.Println("-------------------------------------------------------")
+		printStep()
 	} else {
 		// read entropy seed straight from crypto.Rand
 		var err error

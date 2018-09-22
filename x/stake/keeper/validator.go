@@ -633,10 +633,8 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	// also remove from the Bonded types.Validators Store
 	store.Delete(GetValidatorsBondedIndexKey(validator.OperatorAddr))
 
-	// call the unbond hook if present
-	if k.hooks != nil {
-		k.hooks.OnValidatorBeginUnbonding(ctx, validator.ConsAddress())
-	}
+	// call hook
+	k.OnValidatorBeginUnbonding(ctx, validator.ConsAddress())
 
 	// return updated validator
 	return validator
@@ -668,10 +666,8 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	tstore := ctx.TransientStore(k.storeTKey)
 	tstore.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bzABCI)
 
-	// call the bond hook if present
-	if k.hooks != nil {
-		k.hooks.OnValidatorBonded(ctx, validator.ConsAddress())
-	}
+	// call hook
+	k.OnValidatorBonded(ctx, validator.ConsAddress())
 
 	// return updated validator
 	return validator
@@ -679,6 +675,9 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 
 // remove the validator record and associated indexes
 func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
+
+	// call hook
+	k.OnValidatorRemoved(ctx, address)
 
 	// first retrieve the old validator record
 	validator, found := k.GetValidator(ctx, address)
@@ -738,4 +737,19 @@ func ensureValidatorFound(found bool, ownerAddr []byte) {
 	if !found {
 		panic(fmt.Sprintf("validator record not found for address: %X\n", ownerAddr))
 	}
+}
+
+//__________________________________________________________________________
+
+// XXX remove this code - this is should be superceded by commission work that bez is doing
+// get a single validator
+func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, addr sdk.ValAddress, newCommission sdk.Dec) sdk.Error {
+
+	// call hook
+	k.OnValidatorCommissionChange(ctx, addr)
+
+	validator, _ := k.GetValidator(ctx, addr)
+	validator.Commission = newCommission
+	k.SetValidator(ctx, validator)
+	return nil
 }

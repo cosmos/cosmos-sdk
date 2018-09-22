@@ -12,7 +12,6 @@ import (
 )
 
 const (
-	deductFeesCost      sdk.Gas = 10
 	memoCostPerByte     sdk.Gas = 1
 	ed25519VerifyCost           = 59
 	secp256k1VerifyCost         = 100
@@ -88,7 +87,6 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 		// first sig pays the fees
 		if !stdTx.Fee.Amount.IsZero() {
-			newCtx.GasMeter().ConsumeGas(deductFeesCost, "deductFees")
 			signerAccs[0], res = deductFees(signerAccs[0], stdTx.Fee)
 			if !res.IsOK() {
 				return newCtx, res, true

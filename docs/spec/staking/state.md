@@ -43,10 +43,10 @@ type Params struct {
 Validators are identified according to the `OperatorAddr`, an SDK validator
 address for the operator of the validator.
 
-Validators also have a `ConsPubKey`, the public key of the validator. The
-validator can be retrieved from it's `ConsPubKey` once it can be converted into
-the corresponding `ConsAddr`. Validators are indexed in the store using the
-following maps:
+Validators also have a `ConsPubKey`, the public key of the validator used in
+Tendermint consensus. The validator can be retrieved from it's `ConsPubKey`
+once it can be converted into the corresponding `ConsAddr`. Validators are
+indexed in the store using the following maps:
 
 - Validators: `0x02 | OperatorAddr -> amino(validator)`
 - ValidatorsByConsAddr: `0x03 | ConsAddr -> OperatorAddr`

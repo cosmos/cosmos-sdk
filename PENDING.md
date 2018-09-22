@@ -4,6 +4,7 @@ BREAKING CHANGES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
     * [x/stake] Validator.Owner renamed to Validator.Operator
+    * [\#595](https://github.com/cosmos/cosmos-sdk/issues/595) Connections to the REST server are now secured using Transport Layer Security by default. The --insecure flag is provided to switch back to insecure HTTP.
 
 * Gaia CLI  (`gaiacli`)
     * [x/stake] Validator.Owner renamed to Validator.Operator
@@ -49,6 +50,7 @@ BREAKING CHANGES
     * [store] Change storeInfo within the root multistore to use tmhash instead of ripemd160 \#2308
     * [codec] \#2324 All referrences to wire have been renamed to codec. Additionally, wire.NewCodec is now codec.New().
     * [types] \#2343 Make sdk.Msg have a names field, to facilitate automatic tagging.
+    * [baseapp] \#2366 Automatically add action tags to all messages
     * [x/staking] \#2244 staking now holds a consensus-address-index instead of a consensus-pubkey-index
 
 * Tendermint

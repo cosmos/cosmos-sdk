@@ -24,7 +24,7 @@ on the website.
 
 ## Config.js
 
-The [config.js](./config.js) generates the sidebar and Table of Contents
+The [config.js](./.vuepress/config.js) generates the sidebar and Table of Contents
 on the website docs. Note the use of relative links and the omission of
 file extensions. Additional features are available to improve the look
 of the sidebar.
@@ -59,9 +59,34 @@ to send users to the GitHub.
 
 ## Building Locally
 
-Not currently possible but coming soon! Doing so requires
-assets held in the (private) website repo, installing
-[VuePress](https://vuepress.vuejs.org/), and modifying the `config.js`.
+To build and serve the documentation locally, run:
+
+```
+npm install -g vuepress
+```
+
+then change the following line in the `config.js`:
+
+```
+base: "/docs/",
+```
+
+to:
+
+```
+base: "/",
+```
+
+Finally, go up one directory to the root of the repo and run:
+
+```
+# from root of repo
+vuepress build docs
+cd dist/docs
+python -m SimpleHTTPServer 8080
+```
+
+then navigate to localhost:8080 in your browser.
 
 ## Consistency
 

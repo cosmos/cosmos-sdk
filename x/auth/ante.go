@@ -12,20 +12,18 @@ import (
 )
 
 const (
-	deductFeesCost        sdk.Gas = 10
-	memoCostPerByte       sdk.Gas = 1
-	ed25519VerifyCost             = 59
-	secp256k1VerifyCost           = 100
-	maxMemoCharacters             = 100
-	feeDeductionGasFactor         = 0.001
+	deductFeesCost      sdk.Gas = 10
+	memoCostPerByte     sdk.Gas = 1
+	ed25519VerifyCost           = 59
+	secp256k1VerifyCost         = 100
+	maxMemoCharacters           = 100
+	gasPrice                    = 0.001
 )
 
 // NewAnteHandler returns an AnteHandler that checks
 // and increments sequence numbers, checks signatures & account numbers,
 // and deducts fees from the first signer.
-// nolint: gocyclo
 func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
-
 	return func(
 		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
@@ -36,12 +34,16 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			return ctx, sdk.ErrInternal("tx must be StdTx").Result(), true
 		}
 
-		// set the gas meter
-		if simulate {
-			newCtx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
-		} else {
-			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
+		// Ensure that the provided fees meet a minimum threshold for the validator, if this is a CheckTx.
+		// This is for mempool purposes, and thus is only ran on check tx.
+		if ctx.IsCheckTx() && !simulate {
+			res := ensureSufficientMempoolFees(ctx, stdTx)
+			if !res.IsOK() {
+				return newCtx, res, true
+			}
 		}
+
+		newCtx = setGasMeter(simulate, ctx, stdTx)
 
 		// AnteHandlers must have their own defer/recover in order
 		// for the BaseApp to know how much gas was used!
@@ -66,52 +68,37 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		if err != nil {
 			return newCtx, err.Result(), true
 		}
-
-		sigs := stdTx.GetSignatures() // When simulating, this would just be a 0-length slice.
-		signerAddrs := stdTx.GetSigners()
-		msgs := tx.GetMsgs()
-
 		// charge gas for the memo
 		newCtx.GasMeter().ConsumeGas(memoCostPerByte*sdk.Gas(len(stdTx.GetMemo())), "memo")
 
-		// Get the sign bytes (requires all account & sequence numbers and the fee)
-		sequences := make([]int64, len(sigs))
-		accNums := make([]int64, len(sigs))
-		for i := 0; i < len(sigs); i++ {
-			sequences[i] = sigs[i].Sequence
-			accNums[i] = sigs[i].AccountNumber
-		}
-		fee := stdTx.Fee
+		// stdSigs contains the sequence number, account number, and signatures
+		stdSigs := stdTx.GetSignatures() // When simulating, this would just be a 0-length slice.
+		signerAddrs := stdTx.GetSigners()
 
+		// create the list of all sign bytes
+		signBytesList := getSignBytesList(newCtx.ChainID(), stdTx, stdSigs)
+
+		// Get the sign bytes (requires all account & sequence numbers and the fee)
 		// Check sig and nonce and collect signer accounts.
 		var signerAccs = make([]Account, len(signerAddrs))
-		for i := 0; i < len(sigs); i++ {
-			signerAddr, sig := signerAddrs[i], sigs[i]
+		for i := 0; i < len(stdSigs); i++ {
+			signerAddr, sig := signerAddrs[i], stdSigs[i]
 
 			// check signature, return account with incremented nonce
-			signBytes := StdSignBytes(newCtx.ChainID(), accNums[i], sequences[i], fee, msgs, stdTx.GetMemo())
-			signerAcc, res := processSig(newCtx, am, signerAddr, sig, signBytes, simulate)
+			signerAcc, res := processSig(newCtx, am, signerAddr, sig, signBytesList[i], simulate)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
 
-			requiredFees := adjustFeesByGas(ctx.MinimumFees(), fee.Gas)
-			// fees must be greater than the minimum set by the validator adjusted by gas
-			if ctx.IsCheckTx() && !simulate && !ctx.MinimumFees().IsZero() && fee.Amount.IsLT(requiredFees) {
-				// validators reject any tx from the mempool with less than the minimum fee per gas * gas factor
-				return newCtx, sdk.ErrInsufficientFee(fmt.Sprintf(
-					"insufficient fee, got: %q required: %q", fee.Amount, requiredFees)).Result(), true
-			}
-
 			// first sig pays the fees
-			// Can this function be moved outside of the loop?
-			if i == 0 && !fee.Amount.IsZero() {
+			// TODO: move outside of the loop
+			if i == 0 && !stdTx.Fee.Amount.IsZero() {
 				newCtx.GasMeter().ConsumeGas(deductFeesCost, "deductFees")
-				signerAcc, res = deductFees(signerAcc, fee)
+				signerAcc, res = deductFees(signerAcc, stdTx.Fee)
 				if !res.IsOK() {
 					return newCtx, res, true
 				}
-				fck.addCollectedFees(newCtx, fee.Amount)
+				fck.addCollectedFees(newCtx, stdTx.Fee.Amount)
 			}
 
 			// Save the account.
@@ -153,6 +140,7 @@ func validateBasic(tx StdTx) (err sdk.Error) {
 
 // verify the signature and increment the sequence.
 // if the account doesn't have a pubkey, set it.
+// TODO: Change this function to already take in the account
 func processSig(
 	ctx sdk.Context, am AccountMapper,
 	addr sdk.AccAddress, sig StdSignature, signBytes []byte, simulate bool) (
@@ -245,8 +233,9 @@ func consumeSignatureVerificationGas(meter sdk.GasMeter, pubkey crypto.PubKey) {
 }
 
 func adjustFeesByGas(fees sdk.Coins, gas int64) sdk.Coins {
-	gasCost := int64(float64(gas) * feeDeductionGasFactor)
+	gasCost := int64(float64(gas) * gasPrice)
 	gasFees := make(sdk.Coins, len(fees))
+	// TODO: Make this not price all coins in the same way
 	for i := 0; i < len(fees); i++ {
 		gasFees[i] = sdk.NewInt64Coin(fees[i].Denom, gasCost)
 	}
@@ -271,6 +260,39 @@ func deductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 		panic(err)
 	}
 	return acc, sdk.Result{}
+}
+
+func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
+	// currently we use a very primitive gas pricing model with a constant gasPrice.
+	// adjustFeesByGas handles calculating the amount of fees required based on the provided gas.
+	// TODO: Make the gasPrice not a constant, and account for tx size.
+	requiredFees := adjustFeesByGas(ctx.MinimumFees(), stdTx.Fee.Gas)
+
+	if !ctx.MinimumFees().IsZero() && stdTx.Fee.Amount.IsLT(requiredFees) {
+		// validators reject any tx from the mempool with less than the minimum fee per gas * gas factor
+		return sdk.ErrInsufficientFee(fmt.Sprintf(
+			"insufficient fee, got: %q required: %q", stdTx.Fee.Amount, requiredFees)).Result()
+	}
+	return sdk.Result{}
+}
+
+func setGasMeter(simulate bool, ctx sdk.Context, stdTx StdTx) sdk.Context {
+	// set the gas meter
+	if simulate {
+		return ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	}
+	return ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
+}
+
+func getSignBytesList(chainID string, stdTx StdTx, stdSigs []StdSignature) (
+	signatureBytesList [][]byte) {
+	signatureBytesList = make([][]byte, len(stdSigs))
+	for i := 0; i < len(stdSigs); i++ {
+		signatureBytesList[i] = StdSignBytes(chainID,
+			stdSigs[i].AccountNumber, stdSigs[i].Sequence,
+			stdTx.Fee, stdTx.Msgs, stdTx.Memo)
+	}
+	return
 }
 
 // BurnFeeHandler burns all fees (decreasing total supply)

@@ -57,7 +57,7 @@ func BroadcastTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) ht
 			}
 		default:
 			utils.WriteErrorResponse(w, http.StatusInternalServerError,
-				"unsupported return type. supported types: block, sync, async")
+				"Unsupported return type. Supported types: block, sync, async")
 			return
 		}
 

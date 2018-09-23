@@ -23,12 +23,6 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, 
 	r.HandleFunc("/tx/broadcast", BroadcastTxRequestHandlerFn(cdc, cliCtx)).Methods("POST")
 }
 
-// RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterLiteRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, kb keys.Keybase) {
-	r.HandleFunc("/bank/{address}/transfers", SendRequestHandlerFn(cdc, kb, cliCtx)).Methods("POST")
-	r.HandleFunc("/txs", BroadcastTxRequestHandlerFn(cdc, cliCtx)).Methods("POST")
-}
-
 type sendBody struct {
 	// fees is not used currently
 	// Fees             sdk.Coin  `json="fees"`

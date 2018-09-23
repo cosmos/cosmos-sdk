@@ -21,10 +21,9 @@ import (
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -65,7 +64,7 @@ func runHackCmd(cmd *cobra.Command, args []string) error {
 	// The following powerKey was there, but the corresponding "trouble" validator did not exist.
 	// So here we do a binary search on the past states to find when the powerKey first showed up ...
 
-	// operator of the validator the bonds, gets revoked, later unbonds, and then later is still found in the bypower store
+	// operator of the validator the bonds, gets jailed, later unbonds, and then later is still found in the bypower store
 	trouble := hexToBytes("D3DC0FF59F7C3B548B7AFA365561B87FD0208AF8")
 	// this is his "bypower" key
 	powerKey := hexToBytes("05303030303030303030303033FFFFFFFFFFFF4C0C0000FFFED3DC0FF59F7C3B548B7AFA365561B87FD0208AF8")
@@ -127,12 +126,11 @@ var (
 // Extended ABCI application
 type GaiaApp struct {
 	*bam.BaseApp
-	cdc *wire.Codec
+	cdc *codec.Codec
 
 	// keys to access the substores
 	keyMain     *sdk.KVStoreKey
 	keyAccount  *sdk.KVStoreKey
-	keyIBC      *sdk.KVStoreKey
 	keyStake    *sdk.KVStoreKey
 	tkeyStake   *sdk.TransientStoreKey
 	keySlashing *sdk.KVStoreKey
@@ -142,7 +140,6 @@ type GaiaApp struct {
 	accountMapper       auth.AccountMapper
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	bankKeeper          bank.Keeper
-	ibcMapper           ibc.Mapper
 	stakeKeeper         stake.Keeper
 	slashingKeeper      slashing.Keeper
 	paramsKeeper        params.Keeper
@@ -160,7 +157,6 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 		cdc:         cdc,
 		keyMain:     sdk.NewKVStoreKey("main"),
 		keyAccount:  sdk.NewKVStoreKey("acc"),
-		keyIBC:      sdk.NewKVStoreKey("ibc"),
 		keyStake:    sdk.NewKVStoreKey("stake"),
 		tkeyStake:   sdk.NewTransientStoreKey("transient_stake"),
 		keySlashing: sdk.NewKVStoreKey("slashing"),
@@ -176,7 +172,6 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 
 	// add handlers
 	app.bankKeeper = bank.NewBaseKeeper(app.accountMapper)
-	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams)
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.tkeyStake, app.bankKeeper, app.RegisterCodespace(stake.DefaultCodespace))
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.paramsKeeper.Getter(), app.RegisterCodespace(slashing.DefaultCodespace))
@@ -184,7 +179,6 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 	// register message routes
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.bankKeeper)).
-		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.bankKeeper)).
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
 
 	// initialize BaseApp
@@ -192,7 +186,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
-	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake, app.keySlashing)
+	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyStake, app.keySlashing)
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
 		cmn.Exit(err.Error())
@@ -204,15 +198,14 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 }
 
 // custom tx codec
-func MakeCodec() *wire.Codec {
-	var cdc = wire.NewCodec()
-	ibc.RegisterWire(cdc)
-	bank.RegisterWire(cdc)
-	stake.RegisterWire(cdc)
-	slashing.RegisterWire(cdc)
-	auth.RegisterWire(cdc)
-	sdk.RegisterWire(cdc)
-	wire.RegisterCrypto(cdc)
+func MakeCodec() *codec.Codec {
+	var cdc = codec.New()
+	bank.RegisterCodec(cdc)
+	stake.RegisterCodec(cdc)
+	slashing.RegisterCodec(cdc)
+	auth.RegisterCodec(cdc)
+	sdk.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
 	cdc.Seal()
 	return cdc
 }

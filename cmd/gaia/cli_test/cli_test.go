@@ -18,10 +18,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -34,6 +34,72 @@ var (
 
 func init() {
 	gaiadHome, gaiacliHome = getTestingHomeDirs()
+}
+
+func TestGaiaCLIMinimumFees(t *testing.T) {
+	chainID, servAddr, port := initializeFixtures(t)
+	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
+
+	// start gaiad server with minimum fees
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --minimum_fees=2feeToken", gaiadHome, servAddr))
+
+	defer proc.Stop(false)
+	tests.WaitForTMStart(port)
+	tests.WaitForNextNBlocksTM(2, port)
+
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
+	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
+
+	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
+	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
+
+	success := executeWrite(t, fmt.Sprintf(
+		"gaiacli send %v --amount=10steak --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
+	require.False(t, success)
+	tests.WaitForNextNBlocksTM(2, port)
+
+}
+
+func TestGaiaCLIFeesDeduction(t *testing.T) {
+	chainID, servAddr, port := initializeFixtures(t)
+	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
+
+	// start gaiad server with minimum fees
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --minimum_fees=1fooToken", gaiadHome, servAddr))
+
+	defer proc.Stop(false)
+	tests.WaitForTMStart(port)
+	tests.WaitForNextNBlocksTM(2, port)
+
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
+	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
+
+	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
+	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("fooToken").Int64())
+
+	// test simulation
+	success := executeWrite(t, fmt.Sprintf(
+		"gaiacli send %v --amount=1000fooToken --to=%s --from=foo --fee=1fooToken --dry-run", flags, barAddr), app.DefaultKeyPass)
+	require.True(t, success)
+	tests.WaitForNextNBlocksTM(2, port)
+	// ensure state didn't change
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
+	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("fooToken").Int64())
+
+	// insufficient funds (coins + fees)
+	success = executeWrite(t, fmt.Sprintf(
+		"gaiacli send %v --amount=1000fooToken --to=%s --from=foo --fee=1fooToken", flags, barAddr), app.DefaultKeyPass)
+	require.False(t, success)
+	tests.WaitForNextNBlocksTM(2, port)
+	// ensure state didn't change
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
+	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("fooToken").Int64())
+
+	// test success (transfer = coins + fees)
+	success = executeWrite(t, fmt.Sprintf(
+		"gaiacli send %v --fee=300fooToken --amount=500fooToken --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
+	require.True(t, success)
+	tests.WaitForNextNBlocksTM(2, port)
 }
 
 func TestGaiaCLISend(t *testing.T) {
@@ -549,8 +615,8 @@ func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {
 	require.NoError(t, err, "out %v, err %v", out, err)
 	value := initRes["value"]
 	var acc auth.BaseAccount
-	cdc := wire.NewCodec()
-	wire.RegisterCrypto(cdc)
+	cdc := codec.New()
+	codec.RegisterCrypto(cdc)
 	err = cdc.UnmarshalJSON(value, &acc)
 	require.NoError(t, err, "value %v, err %v", string(value), err)
 	return acc

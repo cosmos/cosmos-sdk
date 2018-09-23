@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"math/rand"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,10 +42,12 @@ type (
 
 	// FutureOperation is an operation which will be ran at the
 	// beginning of the provided BlockHeight.
+	// If both a BlockHeight and BlockTime are specified, it will use the BlockHeight.
 	// In the (likely) event that multiple operations are queued at the same
 	// block height, they will execute in a FIFO pattern.
 	FutureOperation struct {
 		BlockHeight int
+		BlockTime   time.Time
 		Op          Operation
 	}
 

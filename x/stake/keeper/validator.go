@@ -103,39 +103,32 @@ func (k Keeper) validatorByPowerIndexExists(ctx sdk.Context, power []byte) bool 
 func (k Keeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
+	defer iterator.Close()
 
-	i := 0
-	for ; ; i++ {
-		if !iterator.Valid() {
-			break
-		}
+	for ; iterator.Valid(); iterator.Next() {
 		addr := iterator.Key()[1:]
 		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
 		validators = append(validators, validator)
-		iterator.Next()
 	}
-	iterator.Close()
 	return validators
 }
 
-// Get the set of all validators, retrieve a maxRetrieve number of records
-func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve int16) (validators []types.Validator) {
+// return a given amount of all the validators
+func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint16) (validators []types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
-
 	validators = make([]types.Validator, maxRetrieve)
+
+	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
+	defer iterator.Close()
+
 	i := 0
-	for ; ; i++ {
-		if !iterator.Valid() || i > int(maxRetrieve-1) {
-			break
-		}
+	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
 		addr := iterator.Key()[1:]
 		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
 		validators[i] = validator
-		iterator.Next()
+		i++
 	}
-	iterator.Close()
-	return validators[:i] // trim
+	return validators[:i] // trim if the array length < maxRetrieve
 }
 
 //___________________________________________________________________________
@@ -149,6 +142,8 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validat
 	validators = make([]types.Validator, maxValidators)
 
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedIndexKey)
+	defer iterator.Close()
+
 	i := 0
 	for ; iterator.Valid(); iterator.Next() {
 
@@ -163,7 +158,6 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validat
 		validators[i] = validator
 		i++
 	}
-	iterator.Close()
 	return validators[:i] // trim
 }
 
@@ -174,12 +168,12 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
 	validators := make([]types.Validator, maxValidators)
-	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey) // largest to smallest
+
+	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
+	defer iterator.Close()
+
 	i := 0
-	for {
-		if !iterator.Valid() || i > int(maxValidators-1) {
-			break
-		}
+	for ; iterator.Valid() && i < int(maxValidators); iterator.Next() {
 		address := iterator.Value()
 		validator, found := k.GetValidator(ctx, address)
 		ensureValidatorFound(found, address)
@@ -188,9 +182,7 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 			validators[i] = validator
 			i++
 		}
-		iterator.Next()
 	}
-	iterator.Close()
 	return validators[:i] // trim
 }
 
@@ -206,6 +198,8 @@ func (k Keeper) GetValidTendermintUpdates(ctx sdk.Context) (updates []abci.Valid
 	tstore := ctx.TransientStore(k.storeTKey)
 
 	iterator := sdk.KVStorePrefixIterator(tstore, TendermintUpdatesTKey)
+	defer iterator.Close()
+
 	for ; iterator.Valid(); iterator.Next() {
 		var abciVal abci.Validator
 
@@ -228,8 +222,6 @@ func (k Keeper) GetValidTendermintUpdates(ctx sdk.Context) (updates []abci.Valid
 			updates = append(updates, abciVal)
 		}
 	}
-
-	iterator.Close()
 	return
 }
 
@@ -447,10 +439,7 @@ func (k Keeper) UpdateBondedValidators(
 
 	// create a validator iterator ranging from largest to smallest by power
 	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
-	for {
-		if !iterator.Valid() || bondedValidatorsCount > int(maxValidators-1) {
-			break
-		}
+	for ; iterator.Valid() && bondedValidatorsCount < int(maxValidators); iterator.Next() {
 
 		// either retrieve the original validator from the store, or under the
 		// situation that this is the "affected validator" just use the
@@ -484,7 +473,6 @@ func (k Keeper) UpdateBondedValidators(
 		}
 
 		bondedValidatorsCount++
-		iterator.Next()
 	}
 
 	iterator.Close()
@@ -551,11 +539,7 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 	bondedValidatorsCount := 0
 
 	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
-	for {
-		if !iterator.Valid() || bondedValidatorsCount > int(maxValidators-1) {
-			break
-		}
-
+	for ; iterator.Valid() && bondedValidatorsCount < int(maxValidators); iterator.Next() {
 		var found bool
 
 		ownerAddr := iterator.Value()
@@ -578,12 +562,10 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 			if validator.Status == sdk.Bonded {
 				panic(fmt.Sprintf("jailed validator cannot be bonded for address: %s\n", ownerAddr))
 			}
-
 			break
 		}
 
 		bondedValidatorsCount++
-		iterator.Next()
 	}
 
 	iterator.Close()

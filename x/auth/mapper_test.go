@@ -9,9 +9,9 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
 func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
@@ -27,7 +27,7 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
 
 func TestAccountMapperGetSet(t *testing.T) {
 	ms, capKey, _ := setupMultiStore()
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	RegisterBaseAccount(cdc)
 
 	// make context and mapper
@@ -59,4 +59,27 @@ func TestAccountMapperGetSet(t *testing.T) {
 	acc = mapper.GetAccount(ctx, addr)
 	require.NotNil(t, acc)
 	require.Equal(t, newSequence, acc.GetSequence())
+}
+
+func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
+	ms, capKey, _ := setupMultiStore()
+	cdc := codec.New()
+	RegisterBaseAccount(cdc)
+
+	// make context and mapper
+	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
+	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
+
+	// assumes b.N < 2**24
+	for i := 0; i < b.N; i++ {
+		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
+		addr := sdk.AccAddress(arr)
+		acc := mapper.NewAccountWithAddress(ctx, addr)
+		mapper.SetAccount(ctx, acc)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
+		mapper.GetAccount(ctx, sdk.AccAddress(arr))
+	}
 }

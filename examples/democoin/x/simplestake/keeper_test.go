@@ -12,9 +12,9 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
@@ -32,7 +32,7 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
 
 func TestKeeperGetSet(t *testing.T) {
 	ms, authKey, capKey := setupMultiStore()
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
@@ -60,7 +60,7 @@ func TestKeeperGetSet(t *testing.T) {
 
 func TestBonding(t *testing.T) {
 	ms, authKey, capKey := setupMultiStore()
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())

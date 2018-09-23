@@ -6,7 +6,7 @@ import (
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/spf13/viper"
@@ -15,6 +15,7 @@ import (
 	tmlite "github.com/tendermint/tendermint/lite"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	"os"
 )
 
 const ctxAccStoreName = "acc"
@@ -22,7 +23,7 @@ const ctxAccStoreName = "acc"
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
 type CLIContext struct {
-	Codec           *wire.Codec
+	Codec           *codec.Codec
 	AccDecoder      auth.AccountDecoder
 	Client          rpcclient.Client
 	Logger          io.Writer
@@ -68,37 +69,47 @@ func NewCLIContext() CLIContext {
 }
 
 func createCertifier() tmlite.Certifier {
+	trustNodeDefined := viper.IsSet(client.FlagTrustNode)
+	if !trustNodeDefined {
+		return nil
+	}
+
 	trustNode := viper.GetBool(client.FlagTrustNode)
 	if trustNode {
 		return nil
 	}
+
 	chainID := viper.GetString(client.FlagChainID)
 	home := viper.GetString(cli.HomeFlag)
 	nodeURI := viper.GetString(client.FlagNode)
 
 	var errMsg bytes.Buffer
 	if chainID == "" {
-		errMsg.WriteString("chain-id ")
+		errMsg.WriteString("--chain-id ")
 	}
 	if home == "" {
-		errMsg.WriteString("home ")
+		errMsg.WriteString("--home ")
 	}
 	if nodeURI == "" {
-		errMsg.WriteString("node ")
+		errMsg.WriteString("--node ")
 	}
-	// errMsg is not empty
 	if errMsg.Len() != 0 {
-		panic(fmt.Errorf("can't create certifier for distrust mode, empty values from these options: %s", errMsg.String()))
+		fmt.Printf("Must specify these options: %s when --trust-node is false\n", errMsg.String())
+		os.Exit(1)
 	}
+
 	certifier, err := tmliteProxy.GetCertifier(chainID, home, nodeURI)
 	if err != nil {
-		panic(err)
+		fmt.Printf("Create certifier failed: %s\n", err.Error())
+		fmt.Printf("Please check network connection and verify the address of the node to connect to\n")
+		os.Exit(1)
 	}
+
 	return certifier
 }
 
 // WithCodec returns a copy of the context with an updated codec.
-func (ctx CLIContext) WithCodec(cdc *wire.Codec) CLIContext {
+func (ctx CLIContext) WithCodec(cdc *codec.Codec) CLIContext {
 	ctx.Codec = cdc
 	return ctx
 }

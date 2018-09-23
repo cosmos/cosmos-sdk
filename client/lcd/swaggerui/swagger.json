@@ -1,14 +1,13 @@
 {
   "swagger": "2.0",
   "info": {
-    "description": "All Gaia-lite supported APIs will be shown by this swagger-ui page. You can access these APIs through this page.",
+    "description": "All Gaia-lite supported APIs will be shown by this swagger-ui page. You can access these APIs on this page.",
     "version": "1.0",
     "title": "Gaia-lite Swagger-UI",
-    "termsOfService": "http://swagger.io/terms/",
+    "termsOfService": "https://explorecosmos.network/",
     "contact": {
-      "name": "API Support",
-      "url": "http://www.swagger.io/support",
-      "email": "support@swagger.io"
+      "name": "Cosmos",
+      "url": "https://cosmos.network/"
     },
     "license": {
       "name": "Apache 2.0",

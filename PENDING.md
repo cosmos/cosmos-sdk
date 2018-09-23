@@ -4,6 +4,7 @@ BREAKING CHANGES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
     * [x/stake] Validator.Owner renamed to Validator.Operator
+    * [\#595](https://github.com/cosmos/cosmos-sdk/issues/595) Connections to the REST server are now secured using Transport Layer Security by default. The --insecure flag is provided to switch back to insecure HTTP.
 
 * Gaia CLI  (`gaiacli`)
     * [x/stake] Validator.Owner renamed to Validator.Operator
@@ -34,6 +35,7 @@ BREAKING CHANGES
       * `cosmosaccaddr` / `cosmosaccpub` => `cosmos` / `cosmospub`
       * `cosmosvaladdr` / `cosmosvalpub` => `cosmosvaloper` / `cosmosvaloperpub`
     * [x/stake] [#1013] TendermintUpdates now uses transient store
+    * [x/gov] [#2195] Governance uses BFT Time
     
 * SDK
     * [core] [\#1807](https://github.com/cosmos/cosmos-sdk/issues/1807) Switch from use of rational to decimal
@@ -44,7 +46,11 @@ BREAKING CHANGES
     * [simulation] Remove log and testing.TB from Operation and Invariants, in favor of using errors \#2282
     * [tools] Removed gocyclo [#2211](https://github.com/cosmos/cosmos-sdk/issues/2211)
     * [baseapp] Remove `SetTxDecoder` in favor of requiring the decoder be set in baseapp initialization. [#1441](https://github.com/cosmos/cosmos-sdk/issues/1441)
+    * [baseapp] [\#1921](https://github.com/cosmos/cosmos-sdk/issues/1921) Add minimumFees field to BaseApp.
     * [store] Change storeInfo within the root multistore to use tmhash instead of ripemd160 \#2308
+    * [codec] \#2324 All referrences to wire have been renamed to codec. Additionally, wire.NewCodec is now codec.New().
+    * [types] \#2343 Make sdk.Msg have a names field, to facilitate automatic tagging.
+    * [baseapp] \#2366 Automatically add action tags to all messages
 
 * Tendermint
 
@@ -73,11 +79,15 @@ FEATURES
 
 * Gaia
   * [cli] #2170 added ability to show the node's address via `gaiad tendermint show-address`
+  * [cli] [\#1921] (https://github.com/cosmos/cosmos-sdk/issues/1921)
+    * New configuration file `gaiad.toml` is now created to host Gaia-specific configuration.
+    * New --minimum_fees/minimum_fees flag/config option to set a minimum fee.
 
 * SDK
   * [querier] added custom querier functionality, so ABCI query requests can be handled by keepers
   * [simulation] [\#1924](https://github.com/cosmos/cosmos-sdk/issues/1924) allow operations to specify future operations
   * [simulation] [\#1924](https://github.com/cosmos/cosmos-sdk/issues/1924) Add benchmarking capabilities, with makefile commands "test_sim_gaia_benchmark, test_sim_gaia_profile"
+  * [simulation] [\#2349](https://github.com/cosmos/cosmos-sdk/issues/2349) Add time-based future scheduled operations to simulator
 
 * Tendermint
 
@@ -100,7 +110,8 @@ IMPROVEMENTS
     * [x/stake] Improve speed of GetValidator, which was shown to be a performance bottleneck. [#2046](https://github.com/tendermint/tendermint/pull/2200)
     * [genesis] \#2229 Ensure that there are no duplicate accounts or validators in the genesis state.
     * Add SDK validation to `config.toml` (namely disabling `create_empty_blocks`) \#1571
-    
+    * \#1941(https://github.com/cosmos/cosmos-sdk/issues/1941) Version is now inferred via `git describe --tags`.
+
 * SDK
     * [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.
     * [spec] Added simple piggy bank distribution spec
@@ -112,6 +123,7 @@ IMPROVEMENTS
     * [simulation] Add a concept of weighting the operations \#2303
     * [simulation] Logs get written to file if large, and also get printed on panics \#2285
     * [gaiad] \#1992 Add optional flag to `gaiad testnet` to make config directory of daemon (default `gaiad`) and cli (default `gaiacli`) configurable
+    * [x/stake] Add stake `Queriers` for Gaia-lite endpoints. This increases the staking endpoints performance by reusing the staking `keeper` logic for queries. [#2249](https://github.com/cosmos/cosmos-sdk/pull/2149)
 
 * Tendermint
 

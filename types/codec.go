@@ -1,9 +1,9 @@
 package types
 
-import wire "github.com/cosmos/cosmos-sdk/wire"
+import "github.com/cosmos/cosmos-sdk/codec"
 
 // Register the sdk message type
-func RegisterWire(cdc *wire.Codec) {
+func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*Msg)(nil), nil)
 	cdc.RegisterInterface((*Tx)(nil), nil)
 }

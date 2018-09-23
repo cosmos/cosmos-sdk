@@ -674,6 +674,7 @@
     "github.com/tendermint/tendermint/libs/db",
     "github.com/tendermint/tendermint/libs/log",
     "github.com/tendermint/tendermint/lite",
+    "github.com/tendermint/tendermint/lite/errors",
     "github.com/tendermint/tendermint/lite/proxy",
     "github.com/tendermint/tendermint/node",
     "github.com/tendermint/tendermint/p2p",

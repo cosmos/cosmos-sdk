@@ -8,15 +8,15 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 	auth "github.com/cosmos/cosmos-sdk/x/auth"
 	bank "github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 func TestPowHandler(t *testing.T) {
 	ms, capKey := setupMultiStore()
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
 	am := auth.NewAccountMapper(cdc, capKey, auth.ProtoBaseAccount)

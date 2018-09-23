@@ -9,9 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
@@ -20,7 +20,7 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
-func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
+func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, kb keys.Keybase) {
 	r.HandleFunc(
 		"/stake/delegators/{delegatorAddr}/delegations",
 		delegationsRequestHandlerFn(cdc, kb, cliCtx),
@@ -72,7 +72,7 @@ type EditDelegationsBody struct {
 // nolint: gocyclo
 // TODO: Split this up into several smaller functions, and remove the above nolint
 // TODO: use sdk.ValAddress instead of sdk.AccAddress for validators in messages
-func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
+func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m EditDelegationsBody
 
@@ -329,7 +329,7 @@ func delegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, cliCtx contex
 			results[i] = res
 		}
 
-		output, err := wire.MarshalJSONIndent(cdc, results[:])
+		output, err := codec.MarshalJSONIndent(cdc, results[:])
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

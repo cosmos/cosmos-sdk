@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"time"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -51,7 +52,11 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, sk stake.Keepe
 		if err != nil {
 			return "", nil, err
 		}
-		action = simulateHandleMsgSubmitProposal(msg, sk, handler, ctx, event)
+		action, ok := simulateHandleMsgSubmitProposal(msg, sk, handler, ctx, event)
+		// don't schedule votes if proposal failed
+		if !ok {
+			return action, nil, nil
+		}
 		proposalID := k.GetLastProposalID(ctx)
 		// 2) Schedule operations for votes
 		// 2.1) first pick a number of people to vote.
@@ -64,8 +69,8 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, sk stake.Keepe
 		votingPeriod := k.GetVotingProcedure(ctx).VotingPeriod
 		fops := make([]simulation.FutureOperation, numVotes+1)
 		for i := 0; i < numVotes; i++ {
-			whenVote := ctx.BlockHeight() + r.Int63n(votingPeriod)
-			fops[i] = simulation.FutureOperation{int(whenVote), operationSimulateMsgVote(k, sk, keys[whoVotes[i]], proposalID)}
+			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
+			fops[i] = simulation.FutureOperation{BlockTime: whenVote, Op: operationSimulateMsgVote(k, sk, keys[whoVotes[i]], proposalID)}
 		}
 		// 3) Make an operation to ensure slashes were done correctly. (Really should be a future invariant)
 		// TODO: Find a way to check if a validator was slashed other than just checking their balance a block
@@ -85,24 +90,25 @@ func SimulateMsgSubmitProposal(k gov.Keeper, sk stake.Keeper) simulation.Operati
 		if err != nil {
 			return "", nil, err
 		}
-		action = simulateHandleMsgSubmitProposal(msg, sk, handler, ctx, event)
+		action, _ = simulateHandleMsgSubmitProposal(msg, sk, handler, ctx, event)
 		return action, nil, nil
 	}
 }
 
-func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, sk stake.Keeper, handler sdk.Handler, ctx sdk.Context, event func(string)) (action string) {
+func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, sk stake.Keeper, handler sdk.Handler, ctx sdk.Context, event func(string)) (action string, ok bool) {
 	ctx, write := ctx.CacheContext()
 	result := handler(ctx, msg)
-	if result.IsOK() {
+	ok = result.IsOK()
+	if ok {
 		// Update pool to keep invariants
 		pool := sk.GetPool(ctx)
 		pool.LooseTokens = pool.LooseTokens.Sub(sdk.NewDecFromInt(msg.InitialDeposit.AmountOf(denom)))
 		sk.SetPool(ctx, pool)
 		write()
 	}
-	event(fmt.Sprintf("gov/MsgSubmitProposal/%v", result.IsOK()))
-	action = fmt.Sprintf("TestMsgSubmitProposal: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
-	return action
+	event(fmt.Sprintf("gov/MsgSubmitProposal/%v", ok))
+	action = fmt.Sprintf("TestMsgSubmitProposal: ok %v, msg %s", ok, msg.GetSignBytes())
+	return
 }
 
 func simulationCreateMsgSubmitProposal(r *rand.Rand, sender crypto.PrivKey) (msg gov.MsgSubmitProposal, err error) {
@@ -155,7 +161,6 @@ func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 func SimulateMsgVote(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 	return operationSimulateMsgVote(k, sk, nil, -1)
 }
-
 
 // nolint: unparam
 func operationSimulateMsgVote(k gov.Keeper, sk stake.Keeper, key crypto.PrivKey, proposalID int64) simulation.Operation {

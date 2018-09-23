@@ -13,7 +13,7 @@ var SimpleGovAppInit = server.AppInit{
 }
 
 // SimpleGovAppGenState sets up the app_state and appends the simpleGov app state
-func SimpleGovAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
+func SimpleGovAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
 	appState, err = server.SimpleAppGenState(cdc, appGenTxs)
 	if err != nil {
 		return

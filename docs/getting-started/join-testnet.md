@@ -29,6 +29,19 @@ You can edit this `name` later, in the `~/.gaiad/config/config.toml` file:
 moniker = "<your_custom_name>"
 ```
 
+You can edit the `~/.gaiad/config/gaiad.toml` file in order to enable the anti spam mechanism and reject incoming transactions with less than a minimum fee:
+
+```
+# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+##### main base config options #####
+
+# Validators reject any tx from the mempool with less than the minimum fee per gas.
+minimum_fees = ""
+```
+
+
 Your full node has been initialized! Please skip to [Genesis & Seeds](#genesis-seeds).
 
 ## Upgrading From Previous Testnet

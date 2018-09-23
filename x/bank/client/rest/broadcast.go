@@ -11,8 +11,11 @@ import (
 )
 
 const (
+	// Returns with the response from CheckTx.
 	flagSync  = "sync"
+	// Returns right away, with no response
 	flagAsync = "async"
+	// Only returns error if mempool.BroadcastTx errs (ie. problem with the app) or if we timeout waiting for tx to commit.
 	flagBlock = "block"
 )
 

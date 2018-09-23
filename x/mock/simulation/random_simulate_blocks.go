@@ -15,17 +15,15 @@ import (
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/mock"
 )
 
 // Simulate tests application by sending random messages.
 func Simulate(t *testing.T, app *baseapp.BaseApp,
-	appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage,
+	appStateFn func(r *rand.Rand, accs []Account) json.RawMessage,
 	ops []WeightedOperation, setups []RandSetup,
 	invariants []Invariant, numBlocks int, blockSize int, commit bool) error {
 
@@ -33,16 +31,16 @@ func Simulate(t *testing.T, app *baseapp.BaseApp,
 	return SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numBlocks, blockSize, commit)
 }
 
-func initChain(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress, setups []RandSetup, app *baseapp.BaseApp,
-	appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage) (validators map[string]mockValidator) {
-	res := app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, keys, accs)})
+func initChain(r *rand.Rand, accounts []Account, setups []RandSetup, app *baseapp.BaseApp,
+	appStateFn func(r *rand.Rand, accounts []Account) json.RawMessage) (validators map[string]mockValidator) {
+	res := app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, accounts)})
 	validators = make(map[string]mockValidator)
 	for _, validator := range res.Validators {
 		validators[string(validator.Address)] = mockValidator{validator, GetMemberOfInitialState(r, initialLivenessWeightings)}
 	}
 
 	for i := 0; i < len(setups); i++ {
-		setups[i](r, keys)
+		setups[i](r, accounts)
 	}
 
 	return
@@ -56,7 +54,7 @@ func randTimestamp(r *rand.Rand) time.Time {
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
 func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
-	appStateFn func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage,
+	appStateFn func(r *rand.Rand, accs []Account) json.RawMessage,
 	seed int64, ops []WeightedOperation, setups []RandSetup, invariants []Invariant,
 	numBlocks int, blockSize int, commit bool) (simError error) {
 
@@ -69,7 +67,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	fmt.Printf("Starting the simulation from time %v, unixtime %v\n", timestamp.UTC().Format(time.UnixDate), timestamp.Unix())
 	timeDiff := maxTimePerBlock - minTimePerBlock
 
-	keys, accs := mock.GeneratePrivKeyAddressPairsFromRand(r, numKeys)
+	accs := RandomAccounts(r, numKeys)
 
 	// Setup event stats
 	events := make(map[string]uint)
@@ -77,7 +75,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		events[what]++
 	}
 
-	validators := initChain(r, keys, accs, setups, app, appStateFn)
+	validators := initChain(r, accs, setups, app, appStateFn)
 
 	header := abci.Header{Height: 0, Time: timestamp}
 	opCount := 0
@@ -139,10 +137,10 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		thisBlockSize := getBlockSize(r, blockSize)
 
 		// Run queued operations. Ignores blocksize if blocksize is too small
-		numQueuedOpsRan := runQueuedOperations(operationQueue, int(header.Height), tb, r, app, ctx, keys, logWriter, displayLogs, event)
-		numQueuedTimeOpsRan := runQueuedTimeOperations(timeOperationQueue, header.Time, tb, r, app, ctx, keys, logWriter, displayLogs, event)
+		numQueuedOpsRan := runQueuedOperations(operationQueue, int(header.Height), tb, r, app, ctx, accs, logWriter, displayLogs, event)
+		numQueuedTimeOpsRan := runQueuedTimeOperations(timeOperationQueue, header.Time, tb, r, app, ctx, accs, logWriter, displayLogs, event)
 		thisBlockSize = thisBlockSize - numQueuedOpsRan - numQueuedTimeOpsRan
-		operations := blockSimulator(thisBlockSize, r, app, ctx, keys, header, logWriter)
+		operations := blockSimulator(thisBlockSize, r, app, ctx, accs, header, logWriter)
 		opCount += operations + numQueuedOpsRan + numQueuedTimeOpsRan
 
 		res := app.EndBlock(abci.RequestEndBlock{})
@@ -176,7 +174,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 // Returns a function to simulate blocks. Written like this to avoid constant parameters being passed everytime, to minimize
 // memory overhead
 func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event func(string), invariants []Invariant, ops []WeightedOperation, operationQueue map[int][]Operation, timeOperationQueue []FutureOperation, totalNumBlocks int, displayLogs func()) func(
-	blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, privKeys []crypto.PrivKey, header abci.Header, logWriter func(string)) (opCount int) {
+	blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []Account, header abci.Header, logWriter func(string)) (opCount int) {
 	totalOpWeight := 0
 	for i := 0; i < len(ops); i++ {
 		totalOpWeight += ops[i].Weight
@@ -193,9 +191,9 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event f
 		return ops[0].Op
 	}
 	return func(blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		keys []crypto.PrivKey, header abci.Header, logWriter func(string)) (opCount int) {
+		accounts []Account, header abci.Header, logWriter func(string)) (opCount int) {
 		for j := 0; j < blocksize; j++ {
-			logUpdate, futureOps, err := selectOp(r)(r, app, ctx, keys, event)
+			logUpdate, futureOps, err := selectOp(r)(r, app, ctx, accounts, event)
 			if err != nil {
 				displayLogs()
 				tb.Fatalf("error on operation %d within block %d, %v", header.Height, opCount, err)
@@ -264,14 +262,14 @@ func queueOperations(queuedOperations map[int][]Operation, queuedTimeOperations 
 
 // nolint: errcheck
 func runQueuedOperations(queueOperations map[int][]Operation, height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-	privKeys []crypto.PrivKey, logWriter func(string), displayLogs func(), event func(string)) (numOpsRan int) {
+	accounts []Account, logWriter func(string), displayLogs func(), event func(string)) (numOpsRan int) {
 	if queuedOps, ok := queueOperations[height]; ok {
 		numOps := len(queuedOps)
 		for i := 0; i < numOps; i++ {
 			// For now, queued operations cannot queue more operations.
 			// If a need arises for us to support queued messages to queue more messages, this can
 			// be changed.
-			logUpdate, _, err := queuedOps[i](r, app, ctx, privKeys, event)
+			logUpdate, _, err := queuedOps[i](r, app, ctx, accounts, event)
 			logWriter(logUpdate)
 			if err != nil {
 				displayLogs()
@@ -285,14 +283,14 @@ func runQueuedOperations(queueOperations map[int][]Operation, height int, tb tes
 }
 
 func runQueuedTimeOperations(queueOperations []FutureOperation, currentTime time.Time, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-	privKeys []crypto.PrivKey, logWriter func(string), displayLogs func(), event func(string)) (numOpsRan int) {
+	accounts []Account, logWriter func(string), displayLogs func(), event func(string)) (numOpsRan int) {
 
 	numOpsRan = 0
 	for len(queueOperations) > 0 && currentTime.After(queueOperations[0].BlockTime) {
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
-		logUpdate, _, err := queueOperations[0].Op(r, app, ctx, privKeys, event)
+		logUpdate, _, err := queueOperations[0].Op(r, app, ctx, accounts, event)
 		logWriter(logUpdate)
 		if err != nil {
 			displayLogs()

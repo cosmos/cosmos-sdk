@@ -16,167 +16,6 @@
   },
   "basePath": "/",
   "paths": {
-    "/txs": {
-      "post": {
-        "tags": [
-          "ICS0: Transaction"
-        ],
-        "summary": "Broadcast transaction",
-        "description": "Broadcast transaction in user specified broadcast type. The supported broadcast types are: block, sync and async. \nblock: return after the transaction is included in a block. \n sync: return after checkTx is finished. \n async: return immediately only with transaction hash",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "txBroadcast",
-            "description": "tx byte array and return type",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/tx.Broadcast"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/BroadcastTxCommitResult"
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "schema": {
-              "$ref": "#/definitions/HTTPError"
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "schema": {
-              "$ref": "#/definitions/HTTPError"
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "$ref": "#/definitions/HTTPError"
-            }
-          }
-        }
-      }
-    },
-    "/bank/balances/{address}": {
-      "get": {
-        "tags": [
-          "ICS20: Bank"
-        ],
-        "summary": "Get token information",
-        "description": "Get token information of user specific address",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "address",
-            "in": "path",
-            "description": "address",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/sdk.Coins"
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "schema": {
-              "$ref": "#/definitions/HTTPError"
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "schema": {
-              "$ref": "#/definitions/HTTPError"
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "$ref": "#/definitions/HTTPError"
-            }
-          }
-        }
-      }
-    },
-    "/bank/{address}/transfers": {
-      "post": {
-        "tags": [
-          "ICS20: Bank"
-        ],
-        "summary": "Transfer tokens",
-        "description": "This API can be used to transfer tokens to specific address",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "address",
-            "description": "address to send token",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "transferToken",
-            "description": "transfer asset",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/bank.Transfer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/BroadcastTxCommitResult"
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "schema": {
-              "$ref": "#/definitions/HTTPError"
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "schema": {
-              "$ref": "#/definitions/HTTPError"
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "$ref": "#/definitions/HTTPError"
-            }
-          }
-        }
-      }
-    },
     "/node_version": {
       "get": {
         "tags": [
@@ -200,19 +39,19 @@
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/HTTPError"
+              "$ref": "#/definitions/common.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
-              "$ref": "#/definitions/HTTPError"
+              "$ref": "#/definitions/common.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/HTTPError"
+              "$ref": "#/definitions/common.HTTPError"
             }
           }
         }
@@ -241,19 +80,19 @@
           "400": {
             "description": "Bad Request",
             "schema": {
-              "$ref": "#/definitions/HTTPError"
+              "$ref": "#/definitions/common.HTTPError"
             }
           },
           "404": {
             "description": "Not Found",
             "schema": {
-              "$ref": "#/definitions/HTTPError"
+              "$ref": "#/definitions/common.HTTPError"
             }
           },
           "500": {
             "description": "Internal Server Error",
             "schema": {
-              "$ref": "#/definitions/HTTPError"
+              "$ref": "#/definitions/common.HTTPError"
             }
           }
         }
@@ -261,208 +100,7 @@
     }
   },
   "definitions": {
-    "sdk.Coin": {
-      "type": "object",
-      "properties": {
-        "denom": {
-          "type": "string"
-        },
-        "amount": {
-          "type": "string"
-        }
-      }
-    },
-    "sdk.Coins": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/sdk.Coin"
-      }
-    },
-    "bank.Transfer": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "amount": {
-          "$ref": "#/definitions/sdk.Coins"
-        },
-        "password": {
-          "type": "string"
-        },
-        "chain_id": {
-          "type": "string"
-        },
-        "account_number": {
-          "type": "string"
-        },
-        "gas": {
-          "type": "string"
-        },
-        "fee": {
-          "type": "string"
-        },
-        "sequence": {
-          "type": "string"
-        }
-      }
-    },
-    "tx.Broadcast": {
-      "type": "object",
-      "properties": {
-        "transaction": {
-          "type": "string"
-        },
-        "return": {
-          "type": "string"
-        }
-      }
-    },
-    "common.KVPair": {
-      "type": "object",
-      "properties": {
-        "key": {
-          "type": "string"
-        },
-        "value": {
-          "type": "integer"
-        }
-      }
-    },
-    "common.KVPairs": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/common.KVPair"
-      }
-    },
-    "CheckTxResult": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer"
-        },
-        "data": {
-          "type": "string"
-        },
-        "gas_used": {
-          "type": "integer"
-        },
-        "gas_wanted": {
-          "type": "integer"
-        },
-        "info": {
-          "type": "string"
-        },
-        "log": {
-          "type": "string"
-        },
-        "tags": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/common.KVPairs"
-          }
-        }
-      },
-      "example": {
-        "code": 0,
-        "data": "data",
-        "log": "log",
-        "gas_used": 6,
-        "gas_wanted": 1,
-        "info": "info",
-        "tags": [
-          "",
-          ""
-        ]
-      }
-    },
-    "DeliverTxResult": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer"
-        },
-        "data": {
-          "type": "string"
-        },
-        "gas_used": {
-          "type": "integer"
-        },
-        "gas_wanted": {
-          "type": "integer"
-        },
-        "info": {
-          "type": "string"
-        },
-        "log": {
-          "type": "string"
-        },
-        "tags": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/common.KVPairs"
-          }
-        }
-      },
-      "example": {
-        "code": 5,
-        "data": "data",
-        "log": "log",
-        "gas_used": 5,
-        "gas_wanted": 2,
-        "info": "info",
-        "tags": [
-          "",
-          ""
-        ]
-      }
-    },
-    "BroadcastTxCommitResult": {
-      "type": "object",
-      "properties": {
-        "check_tx": {
-          "$ref": "#/definitions/CheckTxResult"
-        },
-        "deliver_tx": {
-          "$ref": "#/definitions/DeliverTxResult"
-        },
-        "hash": {
-          "type": "string"
-        },
-        "height": {
-          "type": "integer"
-        }
-      },
-      "example": {
-        "check_tx": {
-          "code": 0,
-          "data": "data",
-          "log": "log",
-          "gas_used": 6,
-          "gas_wanted": 1,
-          "info": "info",
-          "tags": [
-            "",
-            ""
-          ]
-        },
-        "deliver_tx": {
-          "code": 5,
-          "data": "data",
-          "log": "log",
-          "gas_used": 5,
-          "gas_wanted": 2,
-          "info": "info",
-          "tags": [
-            "",
-            ""
-          ]
-        },
-        "hash": "hash",
-        "height": 7
-      }
-    },
-    "HTTPError": {
+    "common.HTTPError": {
       "type": "object",
       "properties": {
         "rest api": {

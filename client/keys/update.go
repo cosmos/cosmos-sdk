@@ -1,15 +1,15 @@
 package keys
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/gorilla/mux"
 
 	"github.com/spf13/cobra"
-	"io/ioutil"
 )
 
 func updateKeyCommand() *cobra.Command {
@@ -66,23 +66,17 @@ func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	var kb keys.Keybase
 	var m UpdateKeyBody
 
-	body, err := ioutil.ReadAll(r.Body)
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&m)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	err = cdc.UnmarshalJSON(body, &m)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(400)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
 	kb, err = GetKeyBase()
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
 		return
 	}
@@ -92,10 +86,10 @@ func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO check if account exists and if password is correct
 	err = kb.Update(name, m.OldPassword, getNewpass)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(401)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(200)
 }

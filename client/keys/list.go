@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/spf13/cobra"
@@ -37,13 +38,13 @@ func runListCmd(cmd *cobra.Command, args []string) error {
 func QueryKeysRequestHandler(w http.ResponseWriter, r *http.Request) {
 	kb, err := GetKeyBase()
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
 		return
 	}
 	infos, err := kb.List()
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
 		return
 	}
@@ -54,13 +55,13 @@ func QueryKeysRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	keysOutput, err := Bech32KeysOutput(infos)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
 		return
 	}
-	output, err := cdc.MarshalJSONIndent(keysOutput, "", "  ")
+	output, err := json.MarshalIndent(keysOutput, "", "  ")
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
 		return
 	}

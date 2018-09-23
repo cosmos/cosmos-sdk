@@ -33,7 +33,7 @@ func Commands() *cobra.Command {
 func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/keys", QueryKeysRequestHandler).Methods("GET")
 	r.HandleFunc("/keys", AddNewKeyRequestHandler).Methods("POST")
-	r.HandleFunc("/keys/{name}/recover", RecoverKeyRequestHandler).Methods("POST")
+	r.HandleFunc("/keys/seed", SeedRequestHandler).Methods("GET")
 	r.HandleFunc("/keys/{name}", GetKeyRequestHandler).Methods("GET")
 	r.HandleFunc("/keys/{name}", UpdateKeyRequestHandler).Methods("PUT")
 	r.HandleFunc("/keys/{name}", DeleteKeyRequestHandler).Methods("DELETE")

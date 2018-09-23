@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -164,59 +165,47 @@ type NewKeyBody struct {
 	Seed     string `json:"seed"`
 }
 
-func paramCheck(name, password string, kb keys.Keybase) (int, string) {
-	if name == "" {
-		return http.StatusBadRequest, "You have to specify a name for the locally stored account."
-	}
-	if password == "" {
-		return http.StatusBadRequest, "You have to specify a password for the locally stored account."
-	}
-
-	// check if already exists
-	infos, err := kb.List()
-	if err != nil {
-		return http.StatusInternalServerError, err.Error()
-	}
-	for _, i := range infos {
-		if i.GetName() == name {
-			return http.StatusConflict, fmt.Sprintf("Account with name %s already exists.", name)
-		}
-	}
-	return http.StatusOK, ""
-}
-
-// AddNewKeyRequestHandler add new key REST handler
+// add new key REST handler
 func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	var kb keys.Keybase
 	var m NewKeyBody
 
 	kb, err := GetKeyBase()
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
+	err = json.Unmarshal(body, &m)
+
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
 	}
-
-	err = cdc.UnmarshalJSON(body, &m)
-	if err != nil {
+	if m.Name == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
+		w.Write([]byte("You have to specify a name for the locally stored account."))
+		return
+	}
+	if m.Password == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("You have to specify a password for the locally stored account."))
 		return
 	}
 
-	code, errMsg := paramCheck(m.Name, m.Password, kb)
-	if code != http.StatusOK {
-		w.WriteHeader(code)
-		w.Write([]byte(errMsg))
-		return
+	// check if already exists
+	infos, err := kb.List()
+	for _, i := range infos {
+		if i.GetName() == m.Name {
+			w.WriteHeader(http.StatusConflict)
+			w.Write([]byte(fmt.Sprintf("Account with name %s already exists.", m.Name)))
+			return
+		}
 	}
+
 	// create account
 	seed := m.Seed
 	if seed == "" {
@@ -238,7 +227,7 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	keyOutput.Seed = seed
 
-	bz, err := cdc.MarshalJSON(keyOutput)
+	bz, err := json.Marshal(keyOutput)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -269,68 +258,4 @@ func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	seed := getSeed(algo)
 	w.Write([]byte(seed))
-}
-
-// RecoverKeyBody is recover key request REST body
-type RecoverKeyBody struct {
-	Password string `json:"password"`
-	Seed     string `json:"seed"`
-}
-
-// RecoverKeyResuestHandler is the handler of creating seed in swagger rest server
-func RecoverKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	name := vars["name"]
-	var m RecoverKeyBody
-
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	err = cdc.UnmarshalJSON(body, &m)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	kb, err := GetKeyBase()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	code, errMsg := paramCheck(name, m.Password, kb)
-	if code != http.StatusOK {
-		w.WriteHeader(code)
-		w.Write([]byte(errMsg))
-		return
-	}
-
-	info, err := kb.CreateKey(name, m.Seed, m.Password)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	keyOutput, err := Bech32KeyOutput(info)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	bz, err := cdc.MarshalJSON(keyOutput)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	w.Write(bz)
 }

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,11 +12,12 @@ import (
 )
 
 const (
-	deductFeesCost      sdk.Gas = 10
-	memoCostPerByte     sdk.Gas = 1
-	ed25519VerifyCost           = 59
-	secp256k1VerifyCost         = 100
-	maxMemoCharacters           = 100
+	deductFeesCost        sdk.Gas = 10
+	memoCostPerByte       sdk.Gas = 1
+	ed25519VerifyCost             = 59
+	secp256k1VerifyCost           = 100
+	maxMemoCharacters             = 100
+	feeDeductionGasFactor         = 0.001
 )
 
 // NewAnteHandler returns an AnteHandler that checks
@@ -93,8 +95,15 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 				return newCtx, res, true
 			}
 
+			requiredFees := adjustFeesByGas(ctx.MinimumFees(), fee.Gas)
+			// fees must be greater than the minimum set by the validator adjusted by gas
+			if ctx.IsCheckTx() && !simulate && !ctx.MinimumFees().IsZero() && fee.Amount.IsLT(requiredFees) {
+				// validators reject any tx from the mempool with less than the minimum fee per gas * gas factor
+				return newCtx, sdk.ErrInsufficientFee(fmt.Sprintf(
+					"insufficient fee, got: %q required: %q", fee.Amount, requiredFees)).Result(), true
+			}
+
 			// first sig pays the fees
-			// TODO: Add min fees
 			// Can this function be moved outside of the loop?
 			if i == 0 && !fee.Amount.IsZero() {
 				newCtx.GasMeter().ConsumeGas(deductFeesCost, "deductFees")
@@ -190,6 +199,13 @@ func processSig(
 	return
 }
 
+var dummySecp256k1Pubkey secp256k1.PubKeySecp256k1
+
+func init() {
+	bz, _ := hex.DecodeString("035AD6810A47F073553FF30D2FCC7E0D3B1C0B74B61A1AAA2582344037151E143A")
+	copy(dummySecp256k1Pubkey[:], bz)
+}
+
 func processPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey, sdk.Result) {
 	// If pubkey is not known for account,
 	// set it from the StdSignature.
@@ -200,7 +216,7 @@ func processPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 		// and gasKVStore.Set() shall consume the largest amount, i.e.
 		// it takes more gas to verifiy secp256k1 keys than ed25519 ones.
 		if pubKey == nil {
-			return secp256k1.GenPrivKey().PubKey(), sdk.Result{}
+			return dummySecp256k1Pubkey, sdk.Result{}
 		}
 		return pubKey, sdk.Result{}
 	}
@@ -226,6 +242,15 @@ func consumeSignatureVerificationGas(meter sdk.GasMeter, pubkey crypto.PubKey) {
 	default:
 		panic("Unrecognized signature type")
 	}
+}
+
+func adjustFeesByGas(fees sdk.Coins, gas int64) sdk.Coins {
+	gasCost := int64(float64(gas) * feeDeductionGasFactor)
+	gasFees := make(sdk.Coins, len(fees))
+	for i := 0; i < len(fees); i++ {
+		gasFees[i] = sdk.NewInt64Coin(fees[i].Denom, gasCost)
+	}
+	return fees.Plus(gasFees)
 }
 
 // Deduct the fee from the account.

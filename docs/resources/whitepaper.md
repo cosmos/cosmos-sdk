@@ -1003,7 +1003,7 @@ where the processes that caused the consensus to fail (ie. caused clients of
 the protocol to accept different values - a fork) can be identified and punished
 according to the rules of the protocol, or, possibly, the legal system. When
 the legal system is unreliable or excessively expensive to invoke, validators can be forced to make security
-deposits in order to participate, and those deposits can be revoked, or slashed,
+deposits in order to participate, and those deposits can be jailed, or slashed,
 when malicious behaviour is detected [\[10\]][10].
 
 Note this is unlike Bitcoin, where forking is a regular occurence due to

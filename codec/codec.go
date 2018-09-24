@@ -1,4 +1,4 @@
-package wire
+package codec
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 // amino codec to marshal/unmarshal
 type Codec = amino.Codec
 
-func NewCodec() *Codec {
+func New() *Codec {
 	cdc := amino.NewCodec()
 	return cdc
 }
@@ -42,7 +42,7 @@ func MarshalJSONIndent(cdc *Codec, obj interface{}) ([]byte, error) {
 var Cdc *Codec
 
 func init() {
-	cdc := NewCodec()
+	cdc := New()
 	RegisterCrypto(cdc)
 	Cdc = cdc.Seal()
 }

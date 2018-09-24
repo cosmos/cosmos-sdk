@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 
@@ -26,8 +27,8 @@ func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 	if err != nil {
 		return err
 	}
-	autogas := cliCtx.DryRun || (cliCtx.Gas == 0)
-	if autogas {
+
+	if txBldr.SimulateGas || cliCtx.DryRun {
 		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, cliCtx.FromAddressName, msgs)
 		if err != nil {
 			return err
@@ -53,20 +54,10 @@ func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 	return err
 }
 
-// SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
-func SimulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg, gas int64) (estimated, adjusted int64, err error) {
-	txBytes, err := txBldr.WithGas(gas).BuildWithPubKey(name, msgs)
-	if err != nil {
-		return
-	}
-	estimated, adjusted, err = CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, cliCtx.GasAdjustment)
-	return
-}
-
 // EnrichCtxWithGas calculates the gas estimate that would be consumed by the
 // transaction and set the transaction's respective value accordingly.
 func EnrichCtxWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (authtxb.TxBuilder, error) {
-	_, adjusted, err := SimulateMsgs(txBldr, cliCtx, name, msgs, 0)
+	_, adjusted, err := simulateMsgs(txBldr, cliCtx, name, msgs)
 	if err != nil {
 		return txBldr, err
 	}
@@ -100,6 +91,60 @@ func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 	if err == nil {
 		fmt.Printf("%s\n", json)
 	}
+	return
+}
+
+// SignStdTx appends a signature to a StdTx and returns a copy of a it. If appendSig
+// is false, it replaces the signatures already attached with the new signature.
+func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, stdTx auth.StdTx, appendSig bool) (auth.StdTx, error) {
+	var signedStdTx auth.StdTx
+
+	keybase, err := keys.GetKeyBase()
+	if err != nil {
+		return signedStdTx, err
+	}
+	info, err := keybase.Get(name)
+	if err != nil {
+		return signedStdTx, err
+	}
+	addr := info.GetPubKey().Address()
+
+	// Check whether the address is a signer
+	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
+		fmt.Fprintf(os.Stderr, "WARNING: The generated transaction's intended signer does not match the given signer: '%v'", name)
+	}
+
+	if txBldr.AccountNumber == 0 {
+		accNum, err := cliCtx.GetAccountNumber(addr)
+		if err != nil {
+			return signedStdTx, err
+		}
+		txBldr = txBldr.WithAccountNumber(accNum)
+	}
+
+	if txBldr.Sequence == 0 {
+		accSeq, err := cliCtx.GetAccountSequence(addr)
+		if err != nil {
+			return signedStdTx, err
+		}
+		txBldr = txBldr.WithSequence(accSeq)
+	}
+
+	passphrase, err := keys.GetPassphrase(name)
+	if err != nil {
+		return signedStdTx, err
+	}
+	return txBldr.SignStdTx(name, passphrase, stdTx, appendSig)
+}
+
+// nolint
+// SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
+func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (estimated, adjusted int64, err error) {
+	txBytes, err := txBldr.BuildWithPubKey(name, msgs)
+	if err != nil {
+		return
+	}
+	estimated, adjusted, err = CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, txBldr.GasAdjustment)
 	return
 }
 
@@ -154,7 +199,7 @@ func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 	if err != nil {
 		return
 	}
-	if txBldr.Gas == 0 {
+	if txBldr.SimulateGas {
 		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, cliCtx.FromAddressName, msgs)
 		if err != nil {
 			return
@@ -166,4 +211,13 @@ func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 		return
 	}
 	return auth.NewStdTx(stdSignMsg.Msgs, stdSignMsg.Fee, nil, stdSignMsg.Memo), nil
+}
+
+func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {
+	for _, s := range signers {
+		if bytes.Equal(user.Bytes(), s.Bytes()) {
+			return true
+		}
+	}
+	return false
 }

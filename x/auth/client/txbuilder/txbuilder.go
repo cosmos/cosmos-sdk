@@ -3,8 +3,8 @@ package context
 import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/pkg/errors"
@@ -13,10 +13,12 @@ import (
 
 // TxBuilder implements a transaction context created in SDK modules.
 type TxBuilder struct {
-	Codec         *wire.Codec
+	Codec         *codec.Codec
 	AccountNumber int64
 	Sequence      int64
-	Gas           int64
+	Gas           int64 // TODO: should this turn into uint64? requires further discussion - see #2173
+	GasAdjustment float64
+	SimulateGas   bool
 	ChainID       string
 	Memo          string
 	Fee           string
@@ -36,16 +38,18 @@ func NewTxBuilderFromCLI() TxBuilder {
 
 	return TxBuilder{
 		ChainID:       chainID,
-		Gas:           viper.GetInt64(client.FlagGas),
 		AccountNumber: viper.GetInt64(client.FlagAccountNumber),
+		Gas:           client.GasFlagVar.Gas,
+		GasAdjustment: viper.GetFloat64(client.FlagGasAdjustment),
 		Sequence:      viper.GetInt64(client.FlagSequence),
+		SimulateGas:   client.GasFlagVar.Simulate,
 		Fee:           viper.GetString(client.FlagFee),
 		Memo:          viper.GetString(client.FlagMemo),
 	}
 }
 
 // WithCodec returns a copy of the context with an updated codec.
-func (bldr TxBuilder) WithCodec(cdc *wire.Codec) TxBuilder {
+func (bldr TxBuilder) WithCodec(cdc *codec.Codec) TxBuilder {
 	bldr.Codec = cdc
 	return bldr
 }
@@ -117,24 +121,11 @@ func (bldr TxBuilder) Build(msgs []sdk.Msg) (auth.StdSignMsg, error) {
 // Sign signs a transaction given a name, passphrase, and a single message to
 // signed. An error is returned if signing fails.
 func (bldr TxBuilder) Sign(name, passphrase string, msg auth.StdSignMsg) ([]byte, error) {
-	keybase, err := keys.GetKeyBase()
+	sig, err := MakeSignature(name, passphrase, msg)
 	if err != nil {
 		return nil, err
 	}
-
-	sig, pubkey, err := keybase.Sign(name, passphrase, msg.Bytes())
-	if err != nil {
-		return nil, err
-	}
-
-	sigs := []auth.StdSignature{{
-		AccountNumber: msg.AccountNumber,
-		Sequence:      msg.Sequence,
-		PubKey:        pubkey,
-		Signature:     sig,
-	}}
-
-	return bldr.Codec.MarshalBinary(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
+	return bldr.Codec.MarshalBinary(auth.NewStdTx(msg.Msgs, msg.Fee, []auth.StdSignature{sig}, msg.Memo))
 }
 
 // BuildAndSign builds a single message to be signed, and signs a transaction
@@ -176,4 +167,47 @@ func (bldr TxBuilder) BuildWithPubKey(name string, msgs []sdk.Msg) ([]byte, erro
 	}}
 
 	return bldr.Codec.MarshalBinary(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
+}
+
+// SignStdTx appends a signature to a StdTx and returns a copy of a it. If append
+// is false, it replaces the signatures already attached with the new signature.
+func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx auth.StdTx, appendSig bool) (signedStdTx auth.StdTx, err error) {
+	stdSignature, err := MakeSignature(name, passphrase, auth.StdSignMsg{
+		ChainID:       bldr.ChainID,
+		AccountNumber: bldr.AccountNumber,
+		Sequence:      bldr.Sequence,
+		Fee:           stdTx.Fee,
+		Msgs:          stdTx.GetMsgs(),
+		Memo:          stdTx.GetMemo(),
+	})
+	if err != nil {
+		return
+	}
+
+	sigs := stdTx.GetSignatures()
+	if len(sigs) == 0 || !appendSig {
+		sigs = []auth.StdSignature{stdSignature}
+	} else {
+		sigs = append(sigs, stdSignature)
+	}
+	signedStdTx = auth.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, sigs, stdTx.GetMemo())
+	return
+}
+
+// MakeSignature builds a StdSignature given key name, passphrase, and a StdSignMsg.
+func MakeSignature(name, passphrase string, msg auth.StdSignMsg) (sig auth.StdSignature, err error) {
+	keybase, err := keys.GetKeyBase()
+	if err != nil {
+		return
+	}
+	sigBytes, pubkey, err := keybase.Sign(name, passphrase, msg.Bytes())
+	if err != nil {
+		return
+	}
+	return auth.StdSignature{
+		AccountNumber: msg.AccountNumber,
+		Sequence:      msg.Sequence,
+		PubKey:        pubkey,
+		Signature:     sigBytes,
+	}, nil
 }

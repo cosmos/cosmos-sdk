@@ -24,8 +24,8 @@ module.exports = {
         children: [
           "/getting-started/voyager",
           "/getting-started/installation",
-          "/getting-started/full-node",
-          "/getting-started/create-testnet"
+          "/getting-started/join-testnet",
+          "/getting-started/networks"
         ]
       },
       {
@@ -57,7 +57,9 @@ module.exports = {
       {
         title: "Lotion JS",
         collapsable: false,
-        children: [["/lotion/overview", "Overview"], "/lotion/building-an-app"]
+        children: [
+	  ["/lotion/overview", "Overview"]
+	]
       },
       {
         title: "Validators",

@@ -7,10 +7,10 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	client "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	auth "github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
@@ -56,17 +56,19 @@ func ParseInt64OrReturnBadRequest(w http.ResponseWriter, s string) (n int64, ok 
 	return n, true
 }
 
-// ParseFloat64OrReturnBadRequest converts s to a float64 value.
-// It returns a default value if the string is empty.
-func ParseFloat64OrReturnBadRequestDefault(w http.ResponseWriter, s string, defaultIfEmpty float64) (n float64, ok bool) {
+// ParseFloat64OrReturnBadRequest converts s to a float64 value. It returns a
+// default value, defaultIfEmpty, if the string is empty.
+func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEmpty float64) (n float64, ok bool) {
 	if len(s) == 0 {
 		return defaultIfEmpty, true
 	}
+
 	n, err := strconv.ParseFloat(s, 64)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return n, false
 	}
+
 	return n, true
 }
 
@@ -97,7 +99,7 @@ type BaseReq struct {
 	ChainID       string `json:"chain_id"`
 	AccountNumber int64  `json:"account_number"`
 	Sequence      int64  `json:"sequence"`
-	Gas           int64  `json:"gas"`
+	Gas           string `json:"gas"`
 	GasAdjustment string `json:"gas_adjustment"`
 }
 
@@ -113,7 +115,7 @@ unmarshals to the req interface.
     req := new(SomeReq)
     err := ReadRESTReq(w, r, cdc, req)
 */
-func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *wire.Codec, req interface{}) error {
+func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req interface{}) error {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -152,45 +154,53 @@ func (req BaseReq) BaseReqValidate(w http.ResponseWriter) bool {
 		WriteErrorResponse(w, http.StatusUnauthorized, "Sequence required but not specified")
 		return false
 	}
+
 	return true
 }
 
-// CompleteAndBroadcastTxREST implements a utility function that
-// facilitates sending a series of messages in a signed
-// transaction given a TxBuilder and a QueryContext. It ensures
-// that the account exists, has a proper number and sequence
-// set. In addition, it builds and signs a transaction with the
-// supplied messages.  Finally, it broadcasts the signed
-// transaction to a node.
+// CompleteAndBroadcastTxREST implements a utility function that facilitates
+// sending a series of messages in a signed transaction given a TxBuilder and a
+// QueryContext. It ensures that the account exists, has a proper number and
+// sequence set. In addition, it builds and signs a transaction with the
+// supplied messages. Finally, it broadcasts the signed transaction to a node.
+//
 // NOTE: Also see CompleteAndBroadcastTxCli.
 // NOTE: Also see x/stake/client/rest/tx.go delegationsRequestHandlerFn.
-func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext, baseReq BaseReq, msgs []sdk.Msg, cdc *wire.Codec) {
-	var err error
-	txBldr := authtxb.TxBuilder{
-		Codec:         cdc,
-		AccountNumber: baseReq.AccountNumber,
-		Sequence:      baseReq.Sequence,
-		ChainID:       baseReq.ChainID,
-		Gas:           baseReq.Gas,
+func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext, baseReq BaseReq, msgs []sdk.Msg, cdc *codec.Codec) {
+	simulateGas, gas, err := client.ReadGasFlag(baseReq.Gas)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
 	}
 
-	adjustment, ok := ParseFloat64OrReturnBadRequestDefault(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
+	adjustment, ok := ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
 	if !ok {
 		return
 	}
-	cliCtx = cliCtx.WithGasAdjustment(adjustment)
 
-	if HasDryRunArg(r) || baseReq.Gas == 0 {
-		newCtx, err := EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, msgs)
+	txBldr := authtxb.TxBuilder{
+		Codec:         cdc,
+		Gas:           gas,
+		GasAdjustment: adjustment,
+		SimulateGas:   simulateGas,
+		ChainID:       baseReq.ChainID,
+		AccountNumber: baseReq.AccountNumber,
+		Sequence:      baseReq.Sequence,
+	}
+
+	if HasDryRunArg(r) || txBldr.SimulateGas {
+		newBldr, err := EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, msgs)
 		if err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+
 		if HasDryRunArg(r) {
-			WriteSimulationResponse(w, txBldr.Gas)
+			WriteSimulationResponse(w, newBldr.Gas)
 			return
 		}
-		txBldr = newCtx
+
+		txBldr = newBldr
 	}
 
 	if HasGenerateOnlyArg(r) {
@@ -210,7 +220,7 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 		return
 	}
 
-	output, err := wire.MarshalJSONIndent(cdc, res)
+	output, err := codec.MarshalJSONIndent(cdc, res)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return

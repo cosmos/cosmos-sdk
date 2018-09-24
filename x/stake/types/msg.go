@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-// name to idetify transaction types
+// name to identify transaction types
 const MsgType = "stake"
 
 // Verify interface at compile time
@@ -49,6 +49,7 @@ func NewMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.ValAddr
 
 //nolint
 func (msg MsgCreateValidator) Type() string { return MsgType }
+func (msg MsgCreateValidator) Name() string { return "create_validator" }
 
 // Return address(es) that must sign over msg.GetSignBytes()
 func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
@@ -118,6 +119,7 @@ func NewMsgEditValidator(valAddr sdk.ValAddress, description Description) MsgEdi
 
 //nolint
 func (msg MsgEditValidator) Type() string { return MsgType }
+func (msg MsgEditValidator) Name() string { return "edit_validator" }
 func (msg MsgEditValidator) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.AccAddress(msg.ValidatorAddr)}
 }
@@ -168,6 +170,7 @@ func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delegation s
 
 //nolint
 func (msg MsgDelegate) Type() string { return MsgType }
+func (msg MsgDelegate) Name() string { return "delegate" }
 func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.DelegatorAddr}
 }
@@ -218,6 +221,7 @@ func NewMsgBeginRedelegate(delAddr sdk.AccAddress, valSrcAddr,
 
 //nolint
 func (msg MsgBeginRedelegate) Type() string { return MsgType }
+func (msg MsgBeginRedelegate) Name() string { return "begin_redelegate" }
 func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.DelegatorAddr}
 }
@@ -275,6 +279,7 @@ func NewMsgCompleteRedelegate(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk
 
 //nolint
 func (msg MsgCompleteRedelegate) Type() string { return MsgType }
+func (msg MsgCompleteRedelegate) Name() string { return "complete_redelegate" }
 func (msg MsgCompleteRedelegate) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.DelegatorAddr}
 }
@@ -321,6 +326,7 @@ func NewMsgBeginUnbonding(delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares
 
 //nolint
 func (msg MsgBeginUnbonding) Type() string                 { return MsgType }
+func (msg MsgBeginUnbonding) Name() string                 { return "begin_unbonding" }
 func (msg MsgBeginUnbonding) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.DelegatorAddr} }
 
 // get the bytes for the message signer to sign on
@@ -369,6 +375,7 @@ func NewMsgCompleteUnbonding(delAddr sdk.AccAddress, valAddr sdk.ValAddress) Msg
 
 //nolint
 func (msg MsgCompleteUnbonding) Type() string { return MsgType }
+func (msg MsgCompleteUnbonding) Name() string { return "complete_unbonding" }
 func (msg MsgCompleteUnbonding) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.DelegatorAddr}
 }

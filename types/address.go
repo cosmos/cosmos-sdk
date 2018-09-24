@@ -22,13 +22,13 @@ const (
 	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
 	Bech32PrefixAccPub = "cosmospub"
 	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
-	Bech32PrefixValAddr = "cosmosval"
+	Bech32PrefixValAddr = "cosmosvaloper"
 	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
-	Bech32PrefixValPub = "cosmosvalpub"
+	Bech32PrefixValPub = "cosmosvaloperpub"
 	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
-	Bech32PrefixConsAddr = "cosmoscons"
+	Bech32PrefixConsAddr = "cosmosvalcons"
 	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
-	Bech32PrefixConsPub = "cosmosconspub"
+	Bech32PrefixConsPub = "cosmosvalconspub"
 )
 
 // ----------------------------------------------------------------------------
@@ -146,7 +146,7 @@ func (aa AccAddress) Format(s fmt.State, verb rune) {
 }
 
 // ----------------------------------------------------------------------------
-// validator owner
+// validator operator
 // ----------------------------------------------------------------------------
 
 // ValAddress defines a wrapper around bytes meant to present a validator's

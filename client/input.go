@@ -24,7 +24,7 @@ func BufferStdin() *bufio.Reader {
 // It enforces the password length
 func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {
 	if inputIsTty() {
-		pass, err = speakeasy.Ask(prompt)
+		pass, err = speakeasy.FAsk(os.Stderr, prompt)
 	} else {
 		pass, err = readLineFromBuf(buf)
 	}

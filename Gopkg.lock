@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  branch = "master"
+  digest = "1:7736fc6da04620727f8f3aa2ced8d77be8e074a302820937aa5993848c769b27"
+  name = "github.com/ZondaX/hid-go"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "48b08affede2cea076a3cf13b2e3f72ed262b743"
+
+[[projects]]
   digest = "1:09a7f74eb6bb3c0f14d8926610c87f569c5cff68e978d30e9a3540aeb626fdf0"
   name = "github.com/bartekn/go-bip39"
   packages = ["."]
@@ -23,14 +31,6 @@
   pruneopts = "UT"
   revision = "4aabc24848ce5fd31929f7d1e4ea74d3709c14cd"
   version = "v0.1.0"
-
-[[projects]]
-  branch = "master"
-  digest = "1:70f6b224a59b2fa453debffa85c77f71063d8754b90c8c4fbad5794e2c382b0f"
-  name = "github.com/brejski/hid"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "06112dcfcc50a7e0e4fd06e17f9791e788fdaafc"
 
 [[projects]]
   branch = "master"
@@ -415,12 +415,12 @@
   version = "v0.12.0-rc0"
 
 [[projects]]
-  digest = "1:e99ef92d64f2391efbbfb15310df635f96247532bbac2676ea43e466d706401d"
+  digest = "1:53397098d6acb7613358683cc84ae59281a60c6033f0bff62fa8d3f279c6c430"
   name = "github.com/tendermint/iavl"
   packages = ["."]
   pruneopts = "UT"
-  revision = "e5726c0066ccdd299a2ec9262f93c7896cdfcd87"
-  version = "v0.10.0"
+  revision = "3acc91fb8811db2c5409a855ae1f8e441fe98e2d"
+  version = "v0.11.0"
 
 [[projects]]
   digest = "1:4f15e95fe3888cc75dd34f407d6394cbc7fd3ff24920851b92b295f6a8b556e6"
@@ -490,19 +490,12 @@
   version = "v0.23.1-rc0"
 
 [[projects]]
-  digest = "1:bf6d9a827ea3cad964c2f863302e4f6823170d0b5ed16f72cf1184a7c615067e"
-  name = "github.com/tendermint/tmlibs"
-  packages = ["cli"]
-  pruneopts = "UT"
-  revision = "49596e0a1f48866603813df843c9409fc19805c6"
-  version = "v0.9.0"
-
-[[projects]]
-  digest = "1:4dcb0dd65feecb068ce23a234d1a07c7868a1e39f52a6defcae0bb371d03abf6"
+  digest = "1:7886f86064faff6f8d08a3eb0e8c773648ff5a2e27730831e2bfbf07467f6666"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
   pruneopts = "UT"
-  revision = "4296ee5701e945f9b3a7dbe51f402e0b9be57259"
+  revision = "58598458c11bc0ad1c1b8dac3dc3e11eaf270b79"
+  version = "v0.1.0"
 
 [[projects]]
   branch = "master"
@@ -545,7 +538,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:86171d21d59449dcf7cee0b7d2da83dff989dab9b9b69bfe0a3d59c3c1ca6081"
+  digest = "1:ead82e3e398388679f3ad77633a087ac31a47a6be59ae20841e1d1b3a3fbbd22"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
@@ -664,6 +657,7 @@
     "github.com/tendermint/tendermint/libs/db",
     "github.com/tendermint/tendermint/libs/log",
     "github.com/tendermint/tendermint/lite",
+    "github.com/tendermint/tendermint/lite/errors",
     "github.com/tendermint/tendermint/lite/proxy",
     "github.com/tendermint/tendermint/node",
     "github.com/tendermint/tendermint/p2p",
@@ -675,10 +669,8 @@
     "github.com/tendermint/tendermint/rpc/lib/server",
     "github.com/tendermint/tendermint/types",
     "github.com/tendermint/tendermint/version",
-    "github.com/tendermint/tmlibs/cli",
     "github.com/zondax/ledger-goclient",
     "golang.org/x/crypto/blowfish",
-    "golang.org/x/crypto/ripemd160",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

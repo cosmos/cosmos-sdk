@@ -11,7 +11,7 @@ import (
 var _ sdk.Tx = (*StdTx)(nil)
 
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
-// NOTE: the first signature is the FeePayer (Signatures must not be nil).
+// NOTE: the first signature is the fee payer (Signatures must not be nil).
 type StdTx struct {
 	Msgs       []sdk.Msg      `json:"msg"`
 	Fee        StdFee         `json:"fee"`
@@ -62,13 +62,6 @@ func (tx StdTx) GetMemo() string { return tx.Memo }
 // invalid), then the corresponding signature is
 // .Empty().
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
-
-// FeePayer returns the address responsible for paying the fees
-// for the transactions. It's the first address returned by msg.GetSigners().
-// If GetSigners() is empty, this panics.
-func FeePayer(tx sdk.Tx) sdk.AccAddress {
-	return tx.GetMsgs()[0].GetSigners()[0]
-}
 
 //__________________________________________________________
 

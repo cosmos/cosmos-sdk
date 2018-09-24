@@ -87,6 +87,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 		// first sig pays the fees
 		if !stdTx.Fee.Amount.IsZero() {
+			// signerAccs[0] is the fee payer
 			signerAccs[0], res = deductFees(signerAccs[0], stdTx.Fee)
 			if !res.IsOK() {
 				return newCtx, res, true

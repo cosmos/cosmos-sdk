@@ -43,88 +43,71 @@ func main() {
 	// add standard rpc commands
 	rpc.AddCommands(rootCmd)
 
-	//Add state commands
-	tendermintCmd := &cobra.Command{
-		Use:   "tendermint",
-		Short: "Tendermint state querying subcommands",
+	//Add query commands
+	queryCmd := &cobra.Command{
+		Use:   "query",
+		Short: "Querying subcommands",
 	}
-	tendermintCmd.AddCommand(
+	queryCmd.AddCommand(
 		rpc.BlockCommand(),
 		rpc.ValidatorCommand(),
 	)
-	tx.AddCommands(tendermintCmd, cdc)
+	tx.AddCommands(queryCmd, cdc)
+	queryCmd.AddCommand(client.LineBreak)
+	queryCmd.AddCommand(client.GetCommands(
+		authcmd.GetAccountCmd("acc", cdc, authcmd.GetAccountDecoder(cdc)),
+		stakecmd.GetCmdQueryDelegation("stake", cdc),
+		stakecmd.GetCmdQueryDelegations("stake", cdc),
+		stakecmd.GetCmdQueryParams("stake", cdc),
+		stakecmd.GetCmdQueryPool("stake", cdc),
+		govcmd.GetCmdQueryProposal("gov", cdc),
+		govcmd.GetCmdQueryProposals("gov", cdc),
+		stakecmd.GetCmdQueryRedelegation("stake", cdc),
+		stakecmd.GetCmdQueryRedelegations("stake", cdc),
+		slashingcmd.GetCmdQuerySigningInfo("slashing", cdc),
+		stakecmd.GetCmdQueryUnbondingDelegation("stake", cdc),
+		stakecmd.GetCmdQueryUnbondingDelegations("stake", cdc),
+		stakecmd.GetCmdQueryValidator("stake", cdc),
+		stakecmd.GetCmdQueryValidators("stake", cdc),
+		govcmd.GetCmdQueryVote("gov", cdc),
+		govcmd.GetCmdQueryVotes("gov", cdc),
+	)...)
 
-	rootCmd.AddCommand(
-		tendermintCmd,
-		lcd.ServeCommand(cdc),
-		client.LineBreak,
-	)
-
-	//Add stake commands
-	stakeCmd := &cobra.Command{
-		Use:   "stake",
-		Short: "Stake and validation subcommands",
+	//Add query commands
+	txCmd := &cobra.Command{
+		Use:   "tx",
+		Short: "Transactions subcommands",
 	}
-	stakeCmd.AddCommand(
-		client.GetCommands(
-			stakecmd.GetCmdQueryValidator("stake", cdc),
-			stakecmd.GetCmdQueryValidators("stake", cdc),
-			stakecmd.GetCmdQueryDelegation("stake", cdc),
-			stakecmd.GetCmdQueryDelegations("stake", cdc),
-			stakecmd.GetCmdQueryParams("stake", cdc),
-			stakecmd.GetCmdQueryPool("stake", cdc),
-			stakecmd.GetCmdQueryUnbondingDelegation("stake", cdc),
-			stakecmd.GetCmdQueryUnbondingDelegations("stake", cdc),
-			stakecmd.GetCmdQueryRedelegation("stake", cdc),
-			stakecmd.GetCmdQueryRedelegations("stake", cdc),
-			slashingcmd.GetCmdQuerySigningInfo("slashing", cdc),
+
+	//Add auth and bank commands
+	txCmd.AddCommand(
+		client.PostCommands(
+			bankcmd.GetBroadcastCommand(cdc),
 		)...)
-	stakeCmd.AddCommand(
+	txCmd.AddCommand(
+		authcmd.GetSignCommand(cdc, authcmd.GetAccountDecoder(cdc)),
+	)
+	txCmd.AddCommand(client.LineBreak)
+
+	txCmd.AddCommand(
 		client.PostCommands(
 			stakecmd.GetCmdCreateValidator(cdc),
 			stakecmd.GetCmdEditValidator(cdc),
 			stakecmd.GetCmdDelegate(cdc),
-			stakecmd.GetCmdUnbond("stake", cdc),
-			stakecmd.GetCmdRedelegate("stake", cdc),
-			slashingcmd.GetCmdUnjail(cdc),
-		)...)
-	rootCmd.AddCommand(
-		stakeCmd,
-	)
-
-	//Add stake commands
-	govCmd := &cobra.Command{
-		Use:   "gov",
-		Short: "Governance and voting subcommands",
-	}
-	govCmd.AddCommand(
-		client.GetCommands(
-			govcmd.GetCmdQueryProposal("gov", cdc),
-			govcmd.GetCmdQueryVote("gov", cdc),
-			govcmd.GetCmdQueryVotes("gov", cdc),
-			govcmd.GetCmdQueryProposals("gov", cdc),
-		)...)
-	govCmd.AddCommand(
-		client.PostCommands(
-			govcmd.GetCmdSubmitProposal(cdc),
 			govcmd.GetCmdDeposit(cdc),
+			stakecmd.GetCmdRedelegate("stake", cdc),
+			bankcmd.SendTxCmd(cdc),
+			govcmd.GetCmdSubmitProposal(cdc),
+			stakecmd.GetCmdUnbond("stake", cdc),
+			slashingcmd.GetCmdUnjail(cdc),
 			govcmd.GetCmdVote(cdc),
 		)...)
 	rootCmd.AddCommand(
-		govCmd,
+		queryCmd,
+		txCmd,
+		lcd.ServeCommand(cdc),
+		client.LineBreak,
 	)
-
-	//Add auth and bank commands
-	rootCmd.AddCommand(
-		client.GetCommands(
-			authcmd.GetAccountCmd("acc", cdc, authcmd.GetAccountDecoder(cdc)),
-			authcmd.GetSignCommand(cdc, authcmd.GetAccountDecoder(cdc)),
-		)...)
-	rootCmd.AddCommand(
-		client.PostCommands(
-			bankcmd.SendTxCmd(cdc),
-			bankcmd.GetBroadcastCommand(cdc),
-		)...)
 
 	// add proxy, version and key info
 	rootCmd.AddCommand(

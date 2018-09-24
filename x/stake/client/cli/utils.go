@@ -10,8 +10,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// nolint: gocyclo
-// TODO: Make this pass gocyclo linting
 func getShares(
 	storeName string, cdc *codec.Codec, sharesAmountStr,
 	sharesPercentStr string, delAddr sdk.AccAddress, valAddr sdk.ValAddress,
@@ -65,22 +63,22 @@ func getShares(
 	return
 }
 
-func getCommission(cRate, cMaxRate, cMaxChangeRate string) (commission types.Commission, err error) {
-	if cRate == "" || cMaxRate == "" || cMaxChangeRate == "" {
+func getCommission(rateStr, maxRateStr, maxChangeRateStr string) (commission types.Commission, err error) {
+	if rateStr == "" || maxRateStr == "" || maxChangeRateStr == "" {
 		return commission, errors.Errorf("must specify all validator commission parameters")
 	}
 
-	rate, err := sdk.NewDecFromStr(cRate)
+	rate, err := sdk.NewDecFromStr(rateStr)
 	if err != nil {
 		return commission, err
 	}
 
-	maxRate, err := sdk.NewDecFromStr(cMaxRate)
+	maxRate, err := sdk.NewDecFromStr(maxRateStr)
 	if err != nil {
 		return commission, err
 	}
 
-	maxChangeRate, err := sdk.NewDecFromStr(cMaxChangeRate)
+	maxChangeRate, err := sdk.NewDecFromStr(maxChangeRateStr)
 	if err != nil {
 		return commission, err
 	}

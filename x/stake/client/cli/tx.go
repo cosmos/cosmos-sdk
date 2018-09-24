@@ -65,10 +65,10 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// get the initial validator commission parameters
-			cRate := viper.GetString(FlagCommissionRate)
-			cMaxRate := viper.GetString(FlagCommissionMaxRate)
-			cMaxChangeRate := viper.GetString(FlagCommissionMaxChangeRate)
-			commission, err := getCommission(cRate, cMaxRate, cMaxChangeRate)
+			rateStr := viper.GetString(FlagCommissionRate)
+			maxRateStr := viper.GetString(FlagCommissionMaxRate)
+			maxChangeRateStr := viper.GetString(FlagCommissionMaxChangeRate)
+			commission, err := getCommission(rateStr, maxRateStr, maxChangeRateStr)
 			if err != nil {
 				return err
 			}

@@ -35,7 +35,10 @@ gaiacli stake create-validator \
   --address-validator=<account_cosmosval>
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \
-  --name=<key_name>
+  --name=<key_name> \
+  --commission-rate="0.10" \
+  --commission-max-rate="0.20" \
+  --commission-max-change-rate="0.01"
 ```
 
 ### Edit Validator Description

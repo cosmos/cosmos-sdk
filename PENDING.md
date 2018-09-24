@@ -146,5 +146,6 @@ BUG FIXES
     loading a Ledger device at runtime.
     * [\#2158](https://github.com/cosmos/cosmos-sdk/issues/2158) Fix non-deterministic ordering of validator iteration when slashing in `gov EndBlocker`
     * [simulation] \#1924 Make simulation stop on SIGTERM
+    * [\#2388](https://github.com/cosmos/cosmos-sdk/issues/2388) Remove dependency on deprecated tendermint/tmlibs repository.
 
 * Tendermint

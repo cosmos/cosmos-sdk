@@ -1050,44 +1050,28 @@ func TestUpdateValidatorCommission(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 1000)
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Now().UTC()})
 
-	commission := types.NewCommission(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(3, 1), sdk.NewDecWithPrec(1, 1))
+	commission1 := types.NewCommissionWithTime(
+		sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(3, 1),
+		sdk.NewDecWithPrec(1, 1), time.Now().UTC().Add(time.Duration(-1)*time.Hour),
+	)
+	commission2 := types.NewCommission(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(3, 1), sdk.NewDecWithPrec(1, 1))
 
 	val1 := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 	val2 := types.NewValidator(addrVals[1], PKs[1], types.Description{})
 
-	val1, _ = val1.SetInitialCommission(commission, time.Now().UTC().Add(time.Duration(-1)*time.Hour))
-	val2, _ = val2.SetInitialCommission(commission, time.Unix(0, 0).UTC())
+	val1, _ = val1.SetInitialCommission(commission1)
+	val2, _ = val2.SetInitialCommission(commission2)
 
 	testCases := []struct {
 		validator   types.Validator
 		newRate     sdk.Dec
 		expectedErr bool
 	}{
-		{
-			validator:   val1,
-			newRate:     sdk.ZeroDec(),
-			expectedErr: true,
-		},
-		{
-			validator:   val2,
-			newRate:     sdk.NewDecWithPrec(-1, 1),
-			expectedErr: true,
-		},
-		{
-			validator:   val2,
-			newRate:     sdk.NewDecWithPrec(4, 1),
-			expectedErr: true,
-		},
-		{
-			validator:   val2,
-			newRate:     sdk.NewDecWithPrec(3, 1),
-			expectedErr: true,
-		},
-		{
-			validator:   val2,
-			newRate:     sdk.NewDecWithPrec(2, 1),
-			expectedErr: false,
-		},
+		{val1, sdk.ZeroDec(), true},
+		{val2, sdk.NewDecWithPrec(-1, 1), true},
+		{val2, sdk.NewDecWithPrec(4, 1), true},
+		{val2, sdk.NewDecWithPrec(3, 1), true},
+		{val2, sdk.NewDecWithPrec(2, 1), false},
 	}
 
 	for i, tc := range testCases {
@@ -1107,7 +1091,7 @@ func TestUpdateValidatorCommission(t *testing.T) {
 			require.Equal(t, tc.newRate, val.Commission.Rate,
 				"expected new validator commission rate for test case #%d with rate: %s", i, tc.newRate,
 			)
-			require.Equal(t, ctx.BlockHeader().Time, val.CommissionUpdateTime,
+			require.Equal(t, ctx.BlockHeader().Time, val.Commission.UpdateTime,
 				"expected new validator commission update time for test case #%d with rate: %s", i, tc.newRate,
 			)
 		}

@@ -65,14 +65,16 @@ var (
 	GetREDsToValDstIndexKey      = keeper.GetREDsToValDstIndexKey
 	GetREDsByDelToValDstIndexKey = keeper.GetREDsByDelToValDstIndexKey
 
-	DefaultParams       = types.DefaultParams
-	InitialPool         = types.InitialPool
-	NewValidator        = types.NewValidator
-	NewDescription      = types.NewDescription
-	NewCommission       = types.NewCommission
-	NewGenesisState     = types.NewGenesisState
-	DefaultGenesisState = types.DefaultGenesisState
-	RegisterCodec       = types.RegisterCodec
+	DefaultParams         = types.DefaultParams
+	InitialPool           = types.InitialPool
+	NewValidator          = types.NewValidator
+	NewDescription        = types.NewDescription
+	NewCommission         = types.NewCommission
+	NewCommissionMsg      = types.NewCommissionMsg
+	NewCommissionWithTime = types.NewCommissionWithTime
+	NewGenesisState       = types.NewGenesisState
+	DefaultGenesisState   = types.DefaultGenesisState
+	RegisterCodec         = types.RegisterCodec
 
 	NewMsgCreateValidator           = types.NewMsgCreateValidator
 	NewMsgCreateValidatorOnBehalfOf = types.NewMsgCreateValidatorOnBehalfOf

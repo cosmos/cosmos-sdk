@@ -78,8 +78,12 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	}
 
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
+	commission := NewCommissionWithTime(
+		msg.Commission.Rate, msg.Commission.MaxChangeRate,
+		msg.Commission.MaxChangeRate, ctx.BlockHeader().Time,
+	)
 
-	validator, err := validator.SetInitialCommission(msg.Commission, ctx.BlockHeader().Time)
+	validator, err := validator.SetInitialCommission(commission)
 	if err != nil {
 		return err.Result()
 	}

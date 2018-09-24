@@ -280,55 +280,19 @@ func TestValidatorSetInitialCommission(t *testing.T) {
 	testCases := []struct {
 		validator   Validator
 		commission  Commission
-		blockTime   time.Time
 		expectedErr bool
 	}{
-		{
-			validator:   val,
-			commission:  NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-			blockTime:   time.Now().UTC(),
-			expectedErr: false,
-		},
-		{
-			validator:   val,
-			commission:  NewCommission(sdk.ZeroDec(), sdk.NewDecWithPrec(-1, 1), sdk.ZeroDec()),
-			blockTime:   time.Now().UTC(),
-			expectedErr: true,
-		},
-		{
-			validator:   val,
-			commission:  NewCommission(sdk.ZeroDec(), sdk.NewDec(15000000000), sdk.ZeroDec()),
-			blockTime:   time.Now().UTC(),
-			expectedErr: true,
-		},
-		{
-			validator:   val,
-			commission:  NewCommission(sdk.NewDecWithPrec(-1, 1), sdk.ZeroDec(), sdk.ZeroDec()),
-			blockTime:   time.Now().UTC(),
-			expectedErr: true,
-		},
-		{
-			validator:   val,
-			commission:  NewCommission(sdk.NewDecWithPrec(2, 1), sdk.NewDecWithPrec(1, 1), sdk.ZeroDec()),
-			blockTime:   time.Now().UTC(),
-			expectedErr: true,
-		},
-		{
-			validator:   val,
-			commission:  NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.NewDecWithPrec(-1, 1)),
-			blockTime:   time.Now().UTC(),
-			expectedErr: true,
-		},
-		{
-			validator:   val,
-			commission:  NewCommission(sdk.ZeroDec(), sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(2, 1)),
-			blockTime:   time.Now().UTC(),
-			expectedErr: true,
-		},
+		{val, NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()), false},
+		{val, NewCommission(sdk.ZeroDec(), sdk.NewDecWithPrec(-1, 1), sdk.ZeroDec()), true},
+		{val, NewCommission(sdk.ZeroDec(), sdk.NewDec(15000000000), sdk.ZeroDec()), true},
+		{val, NewCommission(sdk.NewDecWithPrec(-1, 1), sdk.ZeroDec(), sdk.ZeroDec()), true},
+		{val, NewCommission(sdk.NewDecWithPrec(2, 1), sdk.NewDecWithPrec(1, 1), sdk.ZeroDec()), true},
+		{val, NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.NewDecWithPrec(-1, 1)), true},
+		{val, NewCommission(sdk.ZeroDec(), sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(2, 1)), true},
 	}
 
 	for i, tc := range testCases {
-		val, err := tc.validator.SetInitialCommission(tc.commission, tc.blockTime)
+		val, err := tc.validator.SetInitialCommission(tc.commission)
 
 		if tc.expectedErr {
 			require.Error(t, err,
@@ -340,9 +304,6 @@ func TestValidatorSetInitialCommission(t *testing.T) {
 			)
 			require.Equal(t, tc.commission, val.Commission,
 				"invalid validator commission for test case #%d with commission: %s", i, tc.commission,
-			)
-			require.Equal(t, tc.blockTime, val.CommissionUpdateTime,
-				"invalid validator commission update time for test case #%d with commission: %s", i, tc.commission,
 			)
 		}
 	}

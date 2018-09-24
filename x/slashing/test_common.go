@@ -103,7 +103,7 @@ func testAddr(addr string) sdk.AccAddress {
 }
 
 func newTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
-	commission := stake.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	commission := stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	return stake.MsgCreateValidator{
 		Description:   stake.Description{},
 		Commission:    commission,

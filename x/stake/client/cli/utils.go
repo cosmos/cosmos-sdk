@@ -63,7 +63,7 @@ func getShares(
 	return
 }
 
-func getCommission(rateStr, maxRateStr, maxChangeRateStr string) (commission types.Commission, err error) {
+func buildCommissionMsg(rateStr, maxRateStr, maxChangeRateStr string) (commission types.CommissionMsg, err error) {
 	if rateStr == "" || maxRateStr == "" || maxChangeRateStr == "" {
 		return commission, errors.Errorf("must specify all validator commission parameters")
 	}
@@ -83,6 +83,6 @@ func getCommission(rateStr, maxRateStr, maxChangeRateStr string) (commission typ
 		return commission, err
 	}
 
-	commission = types.NewCommission(rate, maxRate, maxChangeRate)
+	commission = types.NewCommissionMsg(rate, maxRate, maxChangeRate)
 	return commission, nil
 }

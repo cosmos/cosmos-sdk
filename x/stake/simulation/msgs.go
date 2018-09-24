@@ -25,7 +25,7 @@ func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation
 		}
 
 		maxCommission := sdk.NewInt(10)
-		commission := stake.NewCommission(
+		commission := stake.NewCommissionMsg(
 			sdk.NewDecWithPrec(simulation.RandomAmount(r, maxCommission).Int64(), 1),
 			sdk.NewDecWithPrec(simulation.RandomAmount(r, maxCommission).Int64(), 1),
 			sdk.NewDecWithPrec(simulation.RandomAmount(r, maxCommission).Int64(), 1),

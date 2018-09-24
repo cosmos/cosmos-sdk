@@ -68,7 +68,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 			rateStr := viper.GetString(FlagCommissionRate)
 			maxRateStr := viper.GetString(FlagCommissionMaxRate)
 			maxChangeRateStr := viper.GetString(FlagCommissionMaxChangeRate)
-			commission, err := getCommission(rateStr, maxRateStr, maxChangeRateStr)
+			commissionMsg, err := buildCommissionMsg(rateStr, maxRateStr, maxChangeRateStr)
 			if err != nil {
 				return err
 			}
@@ -81,11 +81,11 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 				}
 
 				msg = stake.NewMsgCreateValidatorOnBehalfOf(
-					delAddr, sdk.ValAddress(valAddr), pk, amount, description, commission,
+					delAddr, sdk.ValAddress(valAddr), pk, amount, description, commissionMsg,
 				)
 			} else {
 				msg = stake.NewMsgCreateValidator(
-					sdk.ValAddress(valAddr), pk, amount, description, commission,
+					sdk.ValAddress(valAddr), pk, amount, description, commissionMsg,
 				)
 			}
 

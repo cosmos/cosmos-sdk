@@ -101,7 +101,7 @@ func TestSlashingMsgs(t *testing.T) {
 	mock.SetGenesis(mapp, accs)
 
 	description := stake.NewDescription("foo_moniker", "", "", "")
-	commission := stake.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	commission := stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 
 	createValidatorMsg := stake.NewMsgCreateValidator(
 		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commission,

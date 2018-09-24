@@ -699,26 +699,12 @@ func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Valid
 	commission := validator.Commission
 	blockTime := ctx.BlockHeader().Time
 
-	switch {
-	case blockTime.Sub(validator.CommissionUpdateTime).Hours() < 24:
-		// new rate cannot be changed more than once within 24 hours
-		return types.ErrCommissionUpdateTime(k.Codespace())
-
-	case newRate.LT(sdk.ZeroDec()):
-		// new rate cannot be negative
-		return types.ErrCommissionNegative(k.Codespace())
-
-	case newRate.GT(commission.MaxRate):
-		// new rate cannot be greater than the max rate
-		return types.ErrCommissionGTMaxRate(k.Codespace())
-
-	case newRate.Sub(commission.Rate).Abs().GT(commission.MaxChangeRate):
-		// new rate % change cannot be greater than the max change rate
-		return types.ErrCommissionGTMaxChangeRate(k.Codespace())
+	if err := commission.ValidateNewRate(newRate, blockTime); err != nil {
+		return err
 	}
 
 	validator.Commission.Rate = newRate
-	validator.CommissionUpdateTime = blockTime
+	validator.Commission.UpdateTime = blockTime
 
 	k.SetValidator(ctx, validator)
 	return nil

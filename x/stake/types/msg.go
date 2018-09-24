@@ -20,7 +20,7 @@ var _, _ sdk.Msg = &MsgBeginRedelegate{}, &MsgCompleteRedelegate{}
 // MsgCreateValidator - struct for unbonding transactions
 type MsgCreateValidator struct {
 	Description
-	Commission
+	Commission    CommissionMsg
 	DelegatorAddr sdk.AccAddress `json:"delegator_address"`
 	ValidatorAddr sdk.ValAddress `json:"validator_address"`
 	PubKey        crypto.PubKey  `json:"pubkey"`
@@ -29,7 +29,7 @@ type MsgCreateValidator struct {
 
 // Default way to create validator. Delegator address and validator address are the same
 func NewMsgCreateValidator(valAddr sdk.ValAddress, pubkey crypto.PubKey,
-	selfDelegation sdk.Coin, description Description, commission Commission) MsgCreateValidator {
+	selfDelegation sdk.Coin, description Description, commission CommissionMsg) MsgCreateValidator {
 
 	return NewMsgCreateValidatorOnBehalfOf(
 		sdk.AccAddress(valAddr), valAddr, pubkey, selfDelegation, description, commission,
@@ -38,7 +38,7 @@ func NewMsgCreateValidator(valAddr sdk.ValAddress, pubkey crypto.PubKey,
 
 // Creates validator msg by delegator address on behalf of validator address
 func NewMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.ValAddress,
-	pubkey crypto.PubKey, delegation sdk.Coin, description Description, commission Commission) MsgCreateValidator {
+	pubkey crypto.PubKey, delegation sdk.Coin, description Description, commission CommissionMsg) MsgCreateValidator {
 	return MsgCreateValidator{
 		Description:   description,
 		DelegatorAddr: delAddr,
@@ -100,7 +100,7 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if msg.Description == (Description{}) {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "description must be included")
 	}
-	if msg.Commission == (Commission{}) {
+	if msg.Commission == (CommissionMsg{}) {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "commission must be included")
 	}
 

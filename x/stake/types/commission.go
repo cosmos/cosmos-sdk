@@ -120,7 +120,7 @@ func (c Commission) ValidateNewRate(newRate sdk.Dec, blockTime time.Time) sdk.Er
 		return ErrCommissionGTMaxRate(DefaultCodespace)
 
 	case newRate.Sub(c.Rate).Abs().GT(c.MaxChangeRate):
-		// new rate % change cannot be greater than the max change rate
+		// new rate % points change cannot be greater than the max change rate
 		return ErrCommissionGTMaxChangeRate(DefaultCodespace)
 	}
 

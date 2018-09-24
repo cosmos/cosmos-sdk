@@ -201,6 +201,19 @@ func subtractCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, 
 	if !newCoins.IsNotNegative() {
 		return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
 	}
+	// check if sender is vesting account
+	blockTime := ctx.BlockHeader().Time
+	vacc, ok := am.GetAccount(ctx, addr).(auth.VestingAccount)
+	if ok && vacc.IsVesting(blockTime) {
+		// check if account has enough unlocked coins
+		sendableCoins := vacc.SendableCoins(blockTime)
+		if !sendableCoins.IsGTE(amt) {
+			return amt, nil, sdk.ErrInsufficientCoins("Not enough sendable coins in vesting account")
+		}
+		// track transfers
+		vacc.TrackTransfers(amt.Negative())
+        am.SetAccount(ctx, vacc)
+	}
 	err := setCoins(ctx, am, addr, newCoins)
 	tags := sdk.NewTags("sender", []byte(addr.String()))
 	return newCoins, tags, err
@@ -214,6 +227,14 @@ func addCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, amt s
 	if !newCoins.IsNotNegative() {
 		return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
 	}
+	// Update transferred coins for Vesting accounts
+	blockTime := ctx.BlockHeader().Time
+	vacc, ok := am.GetAccount(ctx, addr).(auth.VestingAccount)
+	if ok && vacc.IsVesting(blockTime) {
+		// track transfers
+		vacc.TrackTransfers(amt)
+        am.SetAccount(ctx, vacc)
+	}
 	err := setCoins(ctx, am, addr, newCoins)
 	tags := sdk.NewTags("recipient", []byte(addr.String()))
 	return newCoins, tags, err
@@ -222,20 +243,6 @@ func addCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, amt s
 // SendCoins moves coins from one account to another
 // NOTE: Make sure to revert state changes from tx on error
 func sendCoins(ctx sdk.Context, am auth.AccountMapper, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
-	// check if sender is vesting account
-	blockTime := ctx.BlockHeader().Time
-	vacc, ok := am.GetAccount(ctx, fromAddr).(auth.VestingAccount)
-	if ok && vacc.IsVesting(blockTime) {
-		// check if account has enough unlocked coins
-		sendableCoins := vacc.SendableCoins(blockTime)
-		if !sendableCoins.IsGTE(amt) {
-			return nil, sdk.ErrInsufficientCoins(fmt.Sprintf("Vesting account does not have enough unlocked coins: %s < %s", sendableCoins, amt))
-		}
-		// Track the transfer amount (send negated)
-		vacc.TrackTransfers(amt.Negative())
-		am.SetAccount(ctx, vacc)
-	}
-
 	_, subTags, err := subtractCoins(ctx, am, fromAddr, amt)
 	if err != nil {
 		return nil, err
@@ -245,13 +252,6 @@ func sendCoins(ctx sdk.Context, am auth.AccountMapper, fromAddr sdk.AccAddress, 
 	if err != nil {
 		return nil, err
 	}
-	// check if receiver is a vesting account
-	vacc2, ok := am.GetAccount(ctx, toAddr).(auth.VestingAccount)
-	if ok && vacc2.IsVesting(blockTime) {
-		// Track the transfer amount
-		vacc2.TrackTransfers(amt)
-		am.SetAccount(ctx, vacc2)
-	}
 
 	return subTags.AppendTags(addTags), nil
 }
@@ -259,23 +259,9 @@ func sendCoins(ctx sdk.Context, am auth.AccountMapper, fromAddr sdk.AccAddress, 
 // InputOutputCoins handles a list of inputs and outputs
 // NOTE: Make sure to revert state changes from tx on error
 func inputOutputCoins(ctx sdk.Context, am auth.AccountMapper, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error) {
-	blockTime := ctx.BlockHeader().Time
 	allTags := sdk.EmptyTags()
 
 	for _, in := range inputs {
-		// Check if sender is vesting account
-		vacc, ok := am.GetAccount(ctx, in.Address).(auth.VestingAccount)
-		if ok && vacc.IsVesting(blockTime) {
-			// check if vesting account has enough unlocked coins
-			sendableCoins := vacc.SendableCoins(blockTime)
-			if !sendableCoins.IsGTE(in.Coins) {
-				return nil, sdk.ErrInsufficientCoins(fmt.Sprintf("Vesting account does not have enough unlocked coins: %s < %s", sendableCoins, in.Coins))
-			}
-			// Track the transfer amount (send negated)
-			vacc.TrackTransfers(in.Coins.Negative())
-			am.SetAccount(ctx, vacc)
-		}
-
 		_, tags, err := subtractCoins(ctx, am, in.Address, in.Coins)
 		if err != nil {
 			return nil, err
@@ -288,17 +274,53 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountMapper, inputs []Input, ou
 		if err != nil {
 			return nil, err
 		}
-
-		// check if receiver is a vesting account
-		vacc, ok := am.GetAccount(ctx, out.Address).(auth.VestingAccount)
-		if ok && vacc.IsVesting(blockTime) {
-			// Track the transfer amount
-			vacc.TrackTransfers(out.Coins)
-			am.SetAccount(ctx, vacc)
-		}
-
 		allTags = allTags.AppendTags(tags)
 	}
 
 	return allTags, nil
+}
+
+// DelegateCoins will remove coins from account without updating tranfer
+// Thus, delegateCoins will subtract vesting coins first before subtracting vested coins
+func delegateCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
+	ctx.GasMeter().ConsumeGas(costSubtractCoins, "subtractCoins")
+	oldCoins := getCoins(ctx, am, addr)
+	newCoins := oldCoins.Minus(amt)
+	if !newCoins.IsNotNegative() {
+		return nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
+	}
+	err := setCoins(ctx, am, addr, newCoins)
+	tags := sdk.NewTags("sender", []byte(addr.String()))
+	return tags, err
+}
+
+// DeductFees will remove vested coins before subtracting vesting coins
+func deductFees(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
+	ctx.GasMeter().ConsumeGas(costSubtractCoins, "subtractCoins")
+	oldCoins := getCoins(ctx, am, addr)
+	newCoins := []sdk.Coin{}
+	for _, c := range amt {
+		blockTime := ctx.BlockHeader().Time
+		vacc, ok := am.GetAccount(ctx, addr).(auth.VestingAccount)
+		if ok && vacc.IsVesting(blockTime) {
+			spendableCoins := vacc.SendableCoins(blockTime)
+			spendableAmount := spendableCoins.AmountOf(c.Denom)
+			if spendableAmount.GT(c.Amount) || spendableAmount.Equal(c.Amount) {
+				vacc.TrackTransfers([]sdk.Coin{c})
+			} else {
+				vacc.TrackTransfers([]sdk.Coin{{c.Denom, spendableAmount}})
+			}
+			am.SetAccount(ctx, vacc)
+		}
+		accountAmount := oldCoins.AmountOf(c.Denom) 
+		if accountAmount.LT(c.Amount) {
+			return nil, sdk.ErrInsufficientCoins("Not enough coins for fee")
+		}
+		if accountAmount.GT(c.Amount) {
+			newCoins = append(newCoins, sdk.Coin{c.Denom, accountAmount.Sub(c.Amount)})
+		}
+	}
+	setCoins(ctx, am, addr, newCoins)
+	tags := sdk.NewTags("sender", []byte(addr.String()))
+	return tags, nil
 }

@@ -87,7 +87,6 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		return err.Result()
 	}
 
-	// call hooks
 	k.OnValidatorCreated(ctx, validator.OperatorAddr)
 	accAddr := sdk.AccAddress(validator.OperatorAddr)
 	k.OnDelegationCreated(ctx, accAddr, validator.OperatorAddr)

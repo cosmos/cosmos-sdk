@@ -291,8 +291,7 @@ func setGasMeter(simulate bool, ctx sdk.Context, stdTx StdTx) sdk.Context {
 	return ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
 }
 
-func getSignBytesList(chainID string, stdTx StdTx, stdSigs []StdSignature) (
-	signatureBytesList [][]byte) {
+func getSignBytesList(chainID string, stdTx StdTx, stdSigs []StdSignature) (signatureBytesList [][]byte) {
 	signatureBytesList = make([][]byte, len(stdSigs))
 	for i := 0; i < len(stdSigs); i++ {
 		signatureBytesList[i] = StdSignBytes(chainID,

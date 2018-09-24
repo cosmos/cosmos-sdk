@@ -238,6 +238,9 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	cvStr += fmt.Sprintf(" --pubkey=%s", barCeshPubKey)
 	cvStr += fmt.Sprintf(" --amount=%v", "2steak")
 	cvStr += fmt.Sprintf(" --moniker=%v", "bar-vally")
+	cvStr += fmt.Sprintf(" --commission-rate=%v", "0.05")
+	cvStr += fmt.Sprintf(" --commission-max-rate=%v", "0.20")
+	cvStr += fmt.Sprintf(" --commission-max-change-rate=%v", "0.10")
 
 	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewDec(1))
 

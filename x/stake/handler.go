@@ -62,27 +62,38 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 // now we just perform action and save
 
 func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k keeper.Keeper) sdk.Result {
-
 	// check to see if the pubkey or sender has been registered before
 	_, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if found {
 		return ErrValidatorOwnerExists(k.Codespace()).Result()
 	}
+
 	_, found = k.GetValidatorByPubKey(ctx, msg.PubKey)
 	if found {
 		return ErrValidatorPubKeyExists(k.Codespace()).Result()
 	}
+
 	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
+	commission := NewCommissionWithTime(
+		msg.Commission.Rate, msg.Commission.MaxChangeRate,
+		msg.Commission.MaxChangeRate, ctx.BlockHeader().Time,
+	)
+
+	validator, err := validator.SetInitialCommission(commission)
+	if err != nil {
+		return err.Result()
+	}
+
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPubKeyIndex(ctx, validator)
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
-	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator, true)
+	_, err = k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator, true)
 	if err != nil {
 		return err.Result()
 	}
@@ -93,13 +104,13 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		tags.Moniker, []byte(msg.Description.Moniker),
 		tags.Identity, []byte(msg.Description.Identity),
 	)
+
 	return sdk.Result{
 		Tags: tags,
 	}
 }
 
 func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keeper.Keeper) sdk.Result {
-
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if !found {
@@ -111,17 +122,26 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	if err != nil {
 		return err.Result()
 	}
+
 	validator.Description = description
+
+	if msg.CommissionRate != nil {
+		if err := k.UpdateValidatorCommission(ctx, validator, *msg.CommissionRate); err != nil {
+			return err.Result()
+		}
+	}
 
 	// We don't need to run through all the power update logic within k.UpdateValidator
 	// We just need to override the entry in state, since only the description has changed.
 	k.SetValidator(ctx, validator)
+
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionEditValidator,
 		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
 		tags.Moniker, []byte(description.Moniker),
 		tags.Identity, []byte(description.Identity),
 	)
+
 	return sdk.Result{
 		Tags: tags,
 	}

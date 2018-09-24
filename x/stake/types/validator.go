@@ -36,68 +36,56 @@ type Validator struct {
 	UnbondingHeight  int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
 	UnbondingMinTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
 
-	Commission            sdk.Dec `json:"commission"`              // XXX the commission rate of fees charged to any delegators
-	CommissionMax         sdk.Dec `json:"commission_max"`          // XXX maximum commission rate which this validator can ever charge
-	CommissionChangeRate  sdk.Dec `json:"commission_change_rate"`  // XXX maximum daily increase of the validator commission
-	CommissionChangeToday sdk.Dec `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
+	Commission Commission `json:"commission"` // commission parameters
 }
 
 // NewValidator - initialize a new validator
 func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description) Validator {
 	return Validator{
-		OperatorAddr:          operator,
-		ConsPubKey:            pubKey,
-		Jailed:                false,
-		Status:                sdk.Unbonded,
-		Tokens:                sdk.ZeroDec(),
-		DelegatorShares:       sdk.ZeroDec(),
-		Description:           description,
-		BondHeight:            int64(0),
-		BondIntraTxCounter:    int16(0),
-		UnbondingHeight:       int64(0),
-		UnbondingMinTime:      time.Unix(0, 0).UTC(),
-		Commission:            sdk.ZeroDec(),
-		CommissionMax:         sdk.ZeroDec(),
-		CommissionChangeRate:  sdk.ZeroDec(),
-		CommissionChangeToday: sdk.ZeroDec(),
+		OperatorAddr:       operator,
+		ConsPubKey:         pubKey,
+		Jailed:             false,
+		Status:             sdk.Unbonded,
+		Tokens:             sdk.ZeroDec(),
+		DelegatorShares:    sdk.ZeroDec(),
+		Description:        description,
+		BondHeight:         int64(0),
+		BondIntraTxCounter: int16(0),
+		UnbondingHeight:    int64(0),
+		UnbondingMinTime:   time.Unix(0, 0).UTC(),
+		Commission:         NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 	}
 }
 
 // what's kept in the store value
 type validatorValue struct {
-	ConsPubKey            crypto.PubKey
-	Jailed                bool
-	Status                sdk.BondStatus
-	Tokens                sdk.Dec
-	DelegatorShares       sdk.Dec
-	Description           Description
-	BondHeight            int64
-	BondIntraTxCounter    int16
-	UnbondingHeight       int64
-	UnbondingMinTime      time.Time
-	Commission            sdk.Dec
-	CommissionMax         sdk.Dec
-	CommissionChangeRate  sdk.Dec
-	CommissionChangeToday sdk.Dec
+	ConsPubKey         crypto.PubKey
+	Jailed             bool
+	Status             sdk.BondStatus
+	Tokens             sdk.Dec
+	DelegatorShares    sdk.Dec
+	Description        Description
+	BondHeight         int64
+	BondIntraTxCounter int16
+	UnbondingHeight    int64
+	UnbondingMinTime   time.Time
+	Commission         Commission
 }
 
 // return the redelegation without fields contained within the key for the store
 func MustMarshalValidator(cdc *codec.Codec, validator Validator) []byte {
 	val := validatorValue{
-		ConsPubKey:            validator.ConsPubKey,
-		Jailed:                validator.Jailed,
-		Status:                validator.Status,
-		Tokens:                validator.Tokens,
-		DelegatorShares:       validator.DelegatorShares,
-		Description:           validator.Description,
-		BondHeight:            validator.BondHeight,
-		BondIntraTxCounter:    validator.BondIntraTxCounter,
-		UnbondingHeight:       validator.UnbondingHeight,
-		UnbondingMinTime:      validator.UnbondingMinTime,
-		Commission:            validator.Commission,
-		CommissionMax:         validator.CommissionMax,
-		CommissionChangeRate:  validator.CommissionChangeRate,
-		CommissionChangeToday: validator.CommissionChangeToday,
+		ConsPubKey:         validator.ConsPubKey,
+		Jailed:             validator.Jailed,
+		Status:             validator.Status,
+		Tokens:             validator.Tokens,
+		DelegatorShares:    validator.DelegatorShares,
+		Description:        validator.Description,
+		BondHeight:         validator.BondHeight,
+		BondIntraTxCounter: validator.BondIntraTxCounter,
+		UnbondingHeight:    validator.UnbondingHeight,
+		UnbondingMinTime:   validator.UnbondingMinTime,
+		Commission:         validator.Commission,
 	}
 	return cdc.MustMarshalBinary(val)
 }
@@ -124,21 +112,18 @@ func UnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) (validator
 	}
 
 	return Validator{
-		OperatorAddr:          operatorAddr,
-		ConsPubKey:            storeValue.ConsPubKey,
-		Jailed:                storeValue.Jailed,
-		Tokens:                storeValue.Tokens,
-		Status:                storeValue.Status,
-		DelegatorShares:       storeValue.DelegatorShares,
-		Description:           storeValue.Description,
-		BondHeight:            storeValue.BondHeight,
-		BondIntraTxCounter:    storeValue.BondIntraTxCounter,
-		UnbondingHeight:       storeValue.UnbondingHeight,
-		UnbondingMinTime:      storeValue.UnbondingMinTime,
-		Commission:            storeValue.Commission,
-		CommissionMax:         storeValue.CommissionMax,
-		CommissionChangeRate:  storeValue.CommissionChangeRate,
-		CommissionChangeToday: storeValue.CommissionChangeToday,
+		OperatorAddr:       operatorAddr,
+		ConsPubKey:         storeValue.ConsPubKey,
+		Jailed:             storeValue.Jailed,
+		Tokens:             storeValue.Tokens,
+		Status:             storeValue.Status,
+		DelegatorShares:    storeValue.DelegatorShares,
+		Description:        storeValue.Description,
+		BondHeight:         storeValue.BondHeight,
+		BondIntraTxCounter: storeValue.BondIntraTxCounter,
+		UnbondingHeight:    storeValue.UnbondingHeight,
+		UnbondingMinTime:   storeValue.UnbondingMinTime,
+		Commission:         storeValue.Commission,
 	}, nil
 }
 
@@ -156,16 +141,13 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Validator Consensus Pubkey: %s\n", bechConsPubKey)
 	resp += fmt.Sprintf("Jailed: %v\n", v.Jailed)
 	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
-	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens.String())
-	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.String())
+	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens)
+	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares)
 	resp += fmt.Sprintf("Description: %s\n", v.Description)
 	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
 	resp += fmt.Sprintf("Unbonding Height: %d\n", v.UnbondingHeight)
 	resp += fmt.Sprintf("Minimum Unbonding Time: %v\n", v.UnbondingMinTime)
-	resp += fmt.Sprintf("Commission: %s\n", v.Commission.String())
-	resp += fmt.Sprintf("Max Commission Rate: %s\n", v.CommissionMax.String())
-	resp += fmt.Sprintf("Commission Change Rate: %s\n", v.CommissionChangeRate.String())
-	resp += fmt.Sprintf("Commission Change Today: %s\n", v.CommissionChangeToday.String())
+	resp += fmt.Sprintf("Commission: {%s}\n", v.Commission)
 
 	return resp, nil
 }
@@ -189,10 +171,7 @@ type bechValidator struct {
 	UnbondingHeight  int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
 	UnbondingMinTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
 
-	Commission            sdk.Dec `json:"commission"`              // XXX the commission rate of fees charged to any delegators
-	CommissionMax         sdk.Dec `json:"commission_max"`          // XXX maximum commission rate which this validator can ever charge
-	CommissionChangeRate  sdk.Dec `json:"commission_change_rate"`  // XXX maximum daily increase of the validator commission
-	CommissionChangeToday sdk.Dec `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
+	Commission Commission `json:"commission"` // commission parameters
 }
 
 // MarshalJSON marshals the validator to JSON using Bech32
@@ -203,21 +182,18 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 	}
 
 	return codec.Cdc.MarshalJSON(bechValidator{
-		OperatorAddr:          v.OperatorAddr,
-		ConsPubKey:            bechConsPubKey,
-		Jailed:                v.Jailed,
-		Status:                v.Status,
-		Tokens:                v.Tokens,
-		DelegatorShares:       v.DelegatorShares,
-		Description:           v.Description,
-		BondHeight:            v.BondHeight,
-		BondIntraTxCounter:    v.BondIntraTxCounter,
-		UnbondingHeight:       v.UnbondingHeight,
-		UnbondingMinTime:      v.UnbondingMinTime,
-		Commission:            v.Commission,
-		CommissionMax:         v.CommissionMax,
-		CommissionChangeRate:  v.CommissionChangeRate,
-		CommissionChangeToday: v.CommissionChangeToday,
+		OperatorAddr:       v.OperatorAddr,
+		ConsPubKey:         bechConsPubKey,
+		Jailed:             v.Jailed,
+		Status:             v.Status,
+		Tokens:             v.Tokens,
+		DelegatorShares:    v.DelegatorShares,
+		Description:        v.Description,
+		BondHeight:         v.BondHeight,
+		BondIntraTxCounter: v.BondIntraTxCounter,
+		UnbondingHeight:    v.UnbondingHeight,
+		UnbondingMinTime:   v.UnbondingMinTime,
+		Commission:         v.Commission,
 	})
 }
 
@@ -232,21 +208,18 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*v = Validator{
-		OperatorAddr:          bv.OperatorAddr,
-		ConsPubKey:            consPubKey,
-		Jailed:                bv.Jailed,
-		Tokens:                bv.Tokens,
-		Status:                bv.Status,
-		DelegatorShares:       bv.DelegatorShares,
-		Description:           bv.Description,
-		BondHeight:            bv.BondHeight,
-		BondIntraTxCounter:    bv.BondIntraTxCounter,
-		UnbondingHeight:       bv.UnbondingHeight,
-		UnbondingMinTime:      bv.UnbondingMinTime,
-		Commission:            bv.Commission,
-		CommissionMax:         bv.CommissionMax,
-		CommissionChangeRate:  bv.CommissionChangeRate,
-		CommissionChangeToday: bv.CommissionChangeToday,
+		OperatorAddr:       bv.OperatorAddr,
+		ConsPubKey:         consPubKey,
+		Jailed:             bv.Jailed,
+		Tokens:             bv.Tokens,
+		Status:             bv.Status,
+		DelegatorShares:    bv.DelegatorShares,
+		Description:        bv.Description,
+		BondHeight:         bv.BondHeight,
+		BondIntraTxCounter: bv.BondIntraTxCounter,
+		UnbondingHeight:    bv.UnbondingHeight,
+		UnbondingMinTime:   bv.UnbondingMinTime,
+		Commission:         bv.Commission,
 	}
 	return nil
 }
@@ -254,18 +227,14 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 //___________________________________________________________________
 
 // only the vitals - does not check bond height of IntraTxCounter
-// nolint gocyclo - why dis fail?
-func (v Validator) Equal(c2 Validator) bool {
-	return v.ConsPubKey.Equals(c2.ConsPubKey) &&
-		bytes.Equal(v.OperatorAddr, c2.OperatorAddr) &&
-		v.Status.Equal(c2.Status) &&
-		v.Tokens.Equal(c2.Tokens) &&
-		v.DelegatorShares.Equal(c2.DelegatorShares) &&
-		v.Description == c2.Description &&
-		v.Commission.Equal(c2.Commission) &&
-		v.CommissionMax.Equal(c2.CommissionMax) &&
-		v.CommissionChangeRate.Equal(c2.CommissionChangeRate) &&
-		v.CommissionChangeToday.Equal(c2.CommissionChangeToday)
+func (v Validator) Equal(v2 Validator) bool {
+	return v.ConsPubKey.Equals(v2.ConsPubKey) &&
+		bytes.Equal(v.OperatorAddr, v2.OperatorAddr) &&
+		v.Status.Equal(v2.Status) &&
+		v.Tokens.Equal(v2.Tokens) &&
+		v.DelegatorShares.Equal(v2.DelegatorShares) &&
+		v.Description == v2.Description &&
+		v.Commission.Equal(v2.Commission)
 }
 
 // return the TM validator address
@@ -398,6 +367,17 @@ func (v Validator) RemoveTokens(pool Pool, tokens sdk.Dec) (Validator, Pool) {
 
 	v.Tokens = v.Tokens.Sub(tokens)
 	return v, pool
+}
+
+// SetInitialCommission attempts to set a validator's initial commission. An
+// error is returned if the commission is invalid.
+func (v Validator) SetInitialCommission(commission Commission) (Validator, sdk.Error) {
+	if err := commission.Validate(); err != nil {
+		return v, err
+	}
+
+	v.Commission = commission
+	return v, nil
 }
 
 //_________________________________________________________________________________________________________

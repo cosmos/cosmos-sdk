@@ -35,8 +35,15 @@ gaiacli stake create-validator \
   --address-validator=<account_cosmosval>
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \
-  --name=<key_name>
+  --name=<key_name> \
+  --commission-rate="0.10" \
+  --commission-max-rate="0.20" \
+  --commission-max-change-rate="0.01"
 ```
+
+__Note__: When specifying commission parameters, the `commission-max-change-rate`
+is used to measure % _point_ change over the `commission-rate`. E.g. 1% to 2% is
+a 100% rate increase, but only 1 percentage point.
 
 ### Edit Validator Description
 
@@ -52,8 +59,16 @@ gaiacli stake edit-validator
   --identity=6A0D65E29A4CBC8E
   --details="To infinity and beyond!"
   --chain-id=<chain_id> \
-  --name=<key_name>
+  --name=<key_name> \
+  --commission-rate="0.10"
 ```
+
+__Note__: The `commission-rate` value must adhere to the following invariants:
+
+- Must be between 0 and the validator's `commission-max-rate`
+- Must not exceed the validator's `commission-max-change-rate` which is maximum
+  % point change rate **per day**. In other words, a validator can only change
+  its commission once per day and within `commission-max-change-rate` bounds.
 
 ### View Validator Description
 

@@ -15,13 +15,19 @@ import (
 
 var (
 	pubkeys = []crypto.PubKey{ed25519.GenPrivKey().PubKey(), ed25519.GenPrivKey().PubKey(), ed25519.GenPrivKey().PubKey()}
+
+	testDescription   = stake.NewDescription("T", "E", "S", "T")
+	testCommissionMsg = stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )
 
 func createValidators(t *testing.T, stakeHandler sdk.Handler, ctx sdk.Context, addrs []sdk.ValAddress, coinAmt []int64) {
 	require.True(t, len(addrs) <= len(pubkeys), "Not enough pubkeys specified at top of file.")
-	dummyDescription := stake.NewDescription("T", "E", "S", "T")
+
 	for i := 0; i < len(addrs); i++ {
-		valCreateMsg := stake.NewMsgCreateValidator(addrs[i], pubkeys[i], sdk.NewInt64Coin("steak", coinAmt[i]), dummyDescription)
+		valCreateMsg := stake.NewMsgCreateValidator(
+			addrs[i], pubkeys[i], sdk.NewInt64Coin("steak", coinAmt[i]), testDescription, testCommissionMsg,
+		)
+
 		res := stakeHandler(ctx, valCreateMsg)
 		require.True(t, res.IsOK())
 	}
@@ -378,20 +384,18 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	stakeHandler := stake.NewHandler(sk)
 
-	dummyDescription := stake.NewDescription("T", "E", "S", "T")
-
 	val1CreateMsg := stake.NewMsgCreateValidator(
-		sdk.ValAddress(addrs[0]), ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin("steak", 25), dummyDescription,
+		sdk.ValAddress(addrs[0]), ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin("steak", 25), testDescription, testCommissionMsg,
 	)
 	stakeHandler(ctx, val1CreateMsg)
 
 	val2CreateMsg := stake.NewMsgCreateValidator(
-		sdk.ValAddress(addrs[1]), ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin("steak", 6), dummyDescription,
+		sdk.ValAddress(addrs[1]), ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin("steak", 6), testDescription, testCommissionMsg,
 	)
 	stakeHandler(ctx, val2CreateMsg)
 
 	val3CreateMsg := stake.NewMsgCreateValidator(
-		sdk.ValAddress(addrs[2]), ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin("steak", 7), dummyDescription,
+		sdk.ValAddress(addrs[2]), ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin("steak", 7), testDescription, testCommissionMsg,
 	)
 	stakeHandler(ctx, val3CreateMsg)
 

@@ -12,6 +12,7 @@ type (
 	Keeper                = keeper.Keeper
 	Validator             = types.Validator
 	Description           = types.Description
+	Commission            = types.Commission
 	Delegation            = types.Delegation
 	DelegationSummary     = types.DelegationSummary
 	UnbondingDelegation   = types.UnbondingDelegation
@@ -64,13 +65,16 @@ var (
 	GetREDsToValDstIndexKey      = keeper.GetREDsToValDstIndexKey
 	GetREDsByDelToValDstIndexKey = keeper.GetREDsByDelToValDstIndexKey
 
-	DefaultParams       = types.DefaultParams
-	InitialPool         = types.InitialPool
-	NewValidator        = types.NewValidator
-	NewDescription      = types.NewDescription
-	NewGenesisState     = types.NewGenesisState
-	DefaultGenesisState = types.DefaultGenesisState
-	RegisterCodec       = types.RegisterCodec
+	DefaultParams         = types.DefaultParams
+	InitialPool           = types.InitialPool
+	NewValidator          = types.NewValidator
+	NewDescription        = types.NewDescription
+	NewCommission         = types.NewCommission
+	NewCommissionMsg      = types.NewCommissionMsg
+	NewCommissionWithTime = types.NewCommissionWithTime
+	NewGenesisState       = types.NewGenesisState
+	DefaultGenesisState   = types.DefaultGenesisState
+	RegisterCodec         = types.RegisterCodec
 
 	NewMsgCreateValidator           = types.NewMsgCreateValidator
 	NewMsgCreateValidatorOnBehalfOf = types.NewMsgCreateValidatorOnBehalfOf

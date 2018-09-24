@@ -77,6 +77,8 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req EditDelegationsReq
 
+		baseReq := req.BaseReq.Sanitize()
+
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -91,7 +93,7 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 			return
 		}
 
-		info, err := kb.Get(req.BaseReq.Name)
+		info, err := kb.Get(baseReq.Name)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(err.Error()))
@@ -264,13 +266,13 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 			i++
 		}
 
-		simulateGas, gas, err := client.ReadGasFlag(req.BaseReq.Gas)
+		simulateGas, gas, err := client.ReadGasFlag(baseReq.Gas)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, req.BaseReq.GasAdjustment, client.DefaultGasAdjustment)
+		adjustment, ok := utils.ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
 		if !ok {
 			return
 		}
@@ -280,20 +282,20 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 			Gas:           gas,
 			GasAdjustment: adjustment,
 			SimulateGas:   simulateGas,
-			ChainID:       req.BaseReq.ChainID,
+			ChainID:       baseReq.ChainID,
 		}
 
 		// sign messages
 		signedTxs := make([][]byte, len(messages[:]))
 		for i, msg := range messages {
 			// increment sequence for each message
-			txBldr = txBldr.WithAccountNumber(req.BaseReq.AccountNumber)
-			txBldr = txBldr.WithSequence(req.BaseReq.Sequence)
+			txBldr = txBldr.WithAccountNumber(baseReq.AccountNumber)
+			txBldr = txBldr.WithSequence(baseReq.Sequence)
 
-			req.BaseReq.Sequence++
+			baseReq.Sequence++
 
 			if utils.HasDryRunArg(r) || txBldr.SimulateGas {
-				newBldr, err := utils.EnrichCtxWithGas(txBldr, cliCtx, req.BaseReq.Name, []sdk.Msg{msg})
+				newBldr, err := utils.EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, []sdk.Msg{msg})
 				if err != nil {
 					utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 					return
@@ -312,7 +314,7 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 				return
 			}
 
-			txBytes, err := txBldr.BuildAndSign(req.BaseReq.Name, req.BaseReq.Password, []sdk.Msg{msg})
+			txBytes, err := txBldr.BuildAndSign(baseReq.Name, baseReq.Password, []sdk.Msg{msg})
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 				return

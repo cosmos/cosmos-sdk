@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	client "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -93,6 +94,8 @@ func urlQueryHasArg(url *url.URL, arg string) bool { return url.Query().Get(arg)
 //----------------------------------------
 // Building / Sending utilities
 
+// BaseReq defines a structure that can be embedded in other request structures
+// that all share common "base" fields.
 type BaseReq struct {
 	Name          string `json:"name"`
 	Password      string `json:"password"`
@@ -103,6 +106,17 @@ type BaseReq struct {
 	GasAdjustment string `json:"gas_adjustment"`
 }
 
+// Sanitize performs basic sanitization on a BaseReq object.
+func (br BaseReq) Sanitize() BaseReq {
+	return BaseReq{
+		Name:          strings.TrimSpace(br.Name),
+		Password:      strings.TrimSpace(br.Password),
+		ChainID:       strings.TrimSpace(br.ChainID),
+		Gas:           strings.TrimSpace(br.Gas),
+		GasAdjustment: strings.TrimSpace(br.GasAdjustment),
+	}
+}
+
 /*
 ReadRESTReq is a simple convenience wrapper that reads the body and
 unmarshals to the req interface.
@@ -111,7 +125,8 @@ unmarshals to the req interface.
     type SomeReq struct {
       BaseReq            `json:"base_req"`
       CustomField string `json:"custom_field"`
-    }
+		}
+
     req := new(SomeReq)
     err := ReadRESTReq(w, r, cdc, req)
 */
@@ -121,37 +136,37 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return err
 	}
+
 	err = cdc.UnmarshalJSON(body, req)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return err
 	}
+
 	return nil
 }
 
-func (req BaseReq) BaseReqValidate(w http.ResponseWriter) bool {
-	if len(req.Name) == 0 {
-		WriteErrorResponse(w, http.StatusUnauthorized, "Name required but not specified")
+// FullValidate fully validates a BaseReq. It ensures all fields are valid.
+func (br BaseReq) FullValidate(w http.ResponseWriter) bool {
+	switch {
+	case len(br.Name) == 0:
+		WriteErrorResponse(w, http.StatusUnauthorized, "name required but not specified")
 		return false
-	}
 
-	if len(req.Password) == 0 {
-		WriteErrorResponse(w, http.StatusUnauthorized, "Password required but not specified")
+	case len(br.Password) == 0:
+		WriteErrorResponse(w, http.StatusUnauthorized, "password required but not specified")
 		return false
-	}
 
-	if len(req.ChainID) == 0 {
-		WriteErrorResponse(w, http.StatusUnauthorized, "ChainID required but not specified")
+	case len(br.ChainID) == 0:
+		WriteErrorResponse(w, http.StatusUnauthorized, "chainID required but not specified")
 		return false
-	}
 
-	if req.AccountNumber < 0 {
-		WriteErrorResponse(w, http.StatusUnauthorized, "Account Number required but not specified")
+	case br.AccountNumber < 0:
+		WriteErrorResponse(w, http.StatusUnauthorized, "account number required but not specified")
 		return false
-	}
 
-	if req.Sequence < 0 {
-		WriteErrorResponse(w, http.StatusUnauthorized, "Sequence required but not specified")
+	case br.Sequence < 0:
+		WriteErrorResponse(w, http.StatusUnauthorized, "sequence required but not specified")
 		return false
 	}
 
@@ -167,6 +182,8 @@ func (req BaseReq) BaseReqValidate(w http.ResponseWriter) bool {
 // NOTE: Also see CompleteAndBroadcastTxCli.
 // NOTE: Also see x/stake/client/rest/tx.go delegationsRequestHandlerFn.
 func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext, baseReq BaseReq, msgs []sdk.Msg, cdc *codec.Codec) {
+	baseReq = baseReq.Sanitize()
+
 	simulateGas, gas, err := client.ReadGasFlag(baseReq.Gas)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())

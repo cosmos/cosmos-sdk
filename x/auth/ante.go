@@ -16,7 +16,8 @@ const (
 	ed25519VerifyCost           = 59
 	secp256k1VerifyCost         = 100
 	maxMemoCharacters           = 100
-	gasPrice                    = 0.001
+	// how much gas = 1 atom
+	gasPrice = 1000
 )
 
 // NewAnteHandler returns an AnteHandler that checks
@@ -241,7 +242,7 @@ func consumeSignatureVerificationGas(meter sdk.GasMeter, pubkey crypto.PubKey) {
 }
 
 func adjustFeesByGas(fees sdk.Coins, gas int64) sdk.Coins {
-	gasCost := int64(float64(gas) * gasPrice)
+	gasCost := gas / gasPrice
 	gasFees := make(sdk.Coins, len(fees))
 	// TODO: Make this not price all coins in the same way
 	for i := 0; i < len(fees); i++ {

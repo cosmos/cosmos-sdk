@@ -36,6 +36,7 @@ BREAKING CHANGES
       * `cosmosvaladdr` / `cosmosvalpub` => `cosmosvaloper` / `cosmosvaloperpub`
     * [x/stake] [#1013] TendermintUpdates now uses transient store
     * [x/gov] [#2195] Governance uses BFT Time
+    * [x/gov] \#2256 Removed slashing for governance non-voting validators
     
 * SDK
     * [core] [\#1807](https://github.com/cosmos/cosmos-sdk/issues/1807) Switch from use of rational to decimal

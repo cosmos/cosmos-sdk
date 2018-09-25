@@ -116,15 +116,14 @@ func createCertifier() tmlite.Certifier {
 	return certifier
 }
 
-// NOTE: mutates state so must be pointer receiver
-func fromFields(from string) (types.AccAddress, string) {
+func fromFields(from string) (fromAddr types.AccAddress, fromName string) {
 	if from == "" {
 		return nil, ""
 	}
 
 	keybase, err := keys.GetKeyBase()
 	if err != nil {
-		fmt.Println("No keybase found.")
+		fmt.Println("no keybase found")
 		os.Exit(1)
 	}
 
@@ -143,7 +142,9 @@ func fromFields(from string) (types.AccAddress, string) {
 		}
 	}
 
-	return info.GetAddress(), info.GetName()
+	fromAddr = info.GetAddress()
+	fromName = info.GetName()
+	return
 }
 
 // WithCodec returns a copy of the context with an updated codec.

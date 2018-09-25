@@ -34,7 +34,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		}
 
 		// Ensure that the provided fees meet a minimum threshold for the validator, if this is a CheckTx.
-		// This is for mempool purposes, and thus is only ran on check tx.
+		// This is only for local mempool purposes, and thus is only ran on check tx.
 		if ctx.IsCheckTx() && !simulate {
 			res := ensureSufficientMempoolFees(ctx, stdTx)
 			if !res.IsOK() {

@@ -35,9 +35,9 @@ func init() {
 func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		bech32addr := vars["address"]
+		bech32Addr := vars["address"]
 
-		to, err := sdk.AccAddressFromBech32(bech32addr)
+		to, err := sdk.AccAddressFromBech32(bech32Addr)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -48,17 +48,19 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 		if err != nil {
 			return
 		}
-		if !req.BaseReq.BaseReqValidate(w) {
+
+		baseReq := req.BaseReq.Sanitize()
+		if !baseReq.ValidateBasic(w) {
 			return
 		}
 
-		info, err := kb.Get(req.BaseReq.Name)
+		info, err := kb.Get(baseReq.Name)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 
 		msg := client.CreateMsg(sdk.AccAddress(info.GetPubKey().Address()), to, req.Amount)
-		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, baseReq, []sdk.Msg{msg}, cdc)
 	}
 }

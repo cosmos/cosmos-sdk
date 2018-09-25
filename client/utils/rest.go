@@ -155,8 +155,10 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 	return nil
 }
 
-// FullValidate fully validates a BaseReq. It ensures all fields are valid.
-func (br BaseReq) FullValidate(w http.ResponseWriter) bool {
+// ValidateBasic performs basic validation of a BaseReq. If custom validation
+// logic is needed, the implementing request handler should perform those
+// checks manually.
+func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 	switch {
 	case len(br.Name) == 0:
 		WriteErrorResponse(w, http.StatusUnauthorized, "name required but not specified")
@@ -168,14 +170,6 @@ func (br BaseReq) FullValidate(w http.ResponseWriter) bool {
 
 	case len(br.ChainID) == 0:
 		WriteErrorResponse(w, http.StatusUnauthorized, "chainID required but not specified")
-		return false
-
-	case br.AccountNumber < 0:
-		WriteErrorResponse(w, http.StatusUnauthorized, "account number required but not specified")
-		return false
-
-	case br.Sequence < 0:
-		WriteErrorResponse(w, http.StatusUnauthorized, "sequence required but not specified")
 		return false
 	}
 

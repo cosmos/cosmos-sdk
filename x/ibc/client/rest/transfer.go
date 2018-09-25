@@ -29,9 +29,9 @@ func TransferRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		destChainID := vars["destchain"]
-		bech32addr := vars["address"]
+		bech32Addr := vars["address"]
 
-		to, err := sdk.AccAddressFromBech32(bech32addr)
+		to, err := sdk.AccAddressFromBech32(bech32Addr)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -42,11 +42,13 @@ func TransferRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 		if err != nil {
 			return
 		}
-		if !req.BaseReq.BaseReqValidate(w) {
+
+		baseReq := req.BaseReq.Sanitize()
+		if !baseReq.ValidateBasic(w) {
 			return
 		}
 
-		info, err := kb.Get(req.BaseReq.Name)
+		info, err := kb.Get(baseReq.Name)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return
@@ -54,10 +56,10 @@ func TransferRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 
 		packet := ibc.NewIBCPacket(
 			sdk.AccAddress(info.GetPubKey().Address()), to,
-			req.Amount, req.BaseReq.ChainID, destChainID,
+			req.Amount, baseReq.ChainID, destChainID,
 		)
-		msg := ibc.IBCTransferMsg{packet}
+		msg := ibc.IBCTransferMsg{IBCPacket: packet}
 
-		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, baseReq, []sdk.Msg{msg}, cdc)
 	}
 }

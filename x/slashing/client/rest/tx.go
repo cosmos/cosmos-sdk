@@ -35,11 +35,13 @@ func unjailRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CL
 		if err != nil {
 			return
 		}
-		if !req.BaseReq.BaseReqValidate(w) {
+
+		baseReq := req.BaseReq.Sanitize()
+		if !baseReq.ValidateBasic(w) {
 			return
 		}
 
-		info, err := kb.Get(req.BaseReq.Name)
+		info, err := kb.Get(baseReq.Name)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return
@@ -47,16 +49,19 @@ func unjailRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CL
 
 		valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error()))
+			utils.WriteErrorResponse(
+				w, http.StatusInternalServerError,
+				fmt.Sprintf("failed to decode validator; error: %s", err.Error()),
+			)
 			return
 		}
 
 		if !bytes.Equal(info.GetPubKey().Address(), valAddr) {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, "Must use own validator address")
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, "must use own validator address")
 			return
 		}
 
 		msg := slashing.NewMsgUnjail(valAddr)
-		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, baseReq, []sdk.Msg{msg}, cdc)
 	}
 }

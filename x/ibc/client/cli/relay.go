@@ -91,7 +91,6 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 }
 
 // This is nolinted as someone is in the process of refactoring this to remove the goto
-// nolint: gocyclo
 func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
 	cliCtx := context.NewCLIContext()
 

@@ -25,28 +25,42 @@ func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation
 		acc := simulation.RandomAcc(r, accs)
 		address := sdk.ValAddress(acc.Address)
 		amount := m.GetAccount(ctx, acc.Address).GetCoins().AmountOf(denom)
+    maxCommission := sdk.NewInt(10)
+		commission := stake.NewCommissionMsg(
+			sdk.NewDecWithPrec(simulation.RandomAmount(r, maxCommission).Int64(), 1),
+			sdk.NewDecWithPrec(simulation.RandomAmount(r, maxCommission).Int64(), 1),
+			sdk.NewDecWithPrec(simulation.RandomAmount(r, maxCommission).Int64(), 1),
+		)
+
 		if amount.GT(sdk.ZeroInt()) {
 			amount = simulation.RandomAmount(r, amount)
 		}
+
 		if amount.Equal(sdk.ZeroInt()) {
 			return "no-operation", nil, nil
 		}
+
 		msg := stake.MsgCreateValidator{
 			Description:   description,
+			Commission:    commission,
 			ValidatorAddr: address,
 			DelegatorAddr: acc.Address,
 			PubKey:        acc.PubKey,
 			Delegation:    sdk.NewCoin(denom, amount),
 		}
+
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
+
 		ctx, write := ctx.CacheContext()
 		result := handler(ctx, msg)
 		if result.IsOK() {
 			write()
 		}
+
 		event(fmt.Sprintf("stake/MsgCreateValidator/%v", result.IsOK()))
+
 		// require.True(t, result.IsOK(), "expected OK result but instead got %v", result)
 		action = fmt.Sprintf("TestMsgCreateValidator: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
@@ -66,13 +80,19 @@ func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
 		}
 		acc := simulation.RandomAcc(r, accs)
 		address := sdk.ValAddress(acc.Address)
+    maxCommission := sdk.NewInt(10)
+		newCommissionRate := sdk.NewDecWithPrec(simulation.RandomAmount(r, maxCommission).Int64(), 1)
+
 		msg := stake.MsgEditValidator{
-			Description:   description,
-			ValidatorAddr: address,
+			Description:    description,
+			ValidatorAddr:  address,
+			CommissionRate: &newCommissionRate,
 		}
+
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
+
 		ctx, write := ctx.CacheContext()
 		result := handler(ctx, msg)
 		if result.IsOK() {

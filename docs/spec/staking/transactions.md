@@ -1,86 +1,107 @@
-## Transaction Overview
+# Transaction Overview
 
 In this section we describe the processing of the transactions and the
 corresponding updates to the state. Transactions:
- - TxCreateValidator
- - TxEditValidator
- - TxDelegation
- - TxStartUnbonding
- - TxCompleteUnbonding
- - TxRedelegate
- - TxCompleteRedelegation
+
+* TxCreateValidator
+* TxEditValidator
+* TxDelegation
+* TxStartUnbonding
+* TxCompleteUnbonding
+* TxRedelegate
+* TxCompleteRedelegation
 
 Other important state changes:
- - Update Validators
+
+* Update Validators
 
 Other notes:
- - `tx` denotes a reference to the transaction being processed
- - `sender` denotes the address of the sender of the transaction
- - `getXxx`, `setXxx`, and `removeXxx` functions are used to retrieve and
-    modify objects from the store
- - `sdk.Dec` refers to a decimal type specified by the SDK.
 
-### TxCreateValidator
+* `tx` denotes a reference to the transaction being processed
+* `sender` denotes the address of the sender of the transaction
+* `getXxx`, `setXxx`, and `removeXxx` functions are used to retrieve and
+  modify objects from the store
+* `sdk.Dec` refers to a decimal type specified by the SDK.
 
- - triggers: `distribution.CreateValidatorDistribution`
+## TxCreateValidator
+
+* triggers: `distribution.CreateValidatorDistribution`
 
 A validator is created using the `TxCreateValidator` transaction.
 
 ```golang
 type TxCreateValidator struct {
-	Operator            sdk.Address
-    ConsensusPubKey     crypto.PubKey
-    GovernancePubKey    crypto.PubKey
-    SelfDelegation      coin.Coin
+    Description    Description
+    Commission     Commission
 
-    Description         Description
-    Commission          sdk.Dec
-    CommissionMax       sdk.Dec 
-    CommissionMaxChange sdk.Dec 
+    DelegatorAddr  sdk.AccAddress
+    ValidatorAddr  sdk.ValAddress
+    PubKey         crypto.PubKey
+    Delegation     sdk.Coin
 }
 
-
 createValidator(tx TxCreateValidator):
-    validator = getValidator(tx.Operator)
-    if validator != nil return // only one validator per address
+    ok := validatorExists(tx.ValidatorAddr)
+    if ok return err // only one validator per address
 
-    validator = NewValidator(operatorAddr, ConsensusPubKey, GovernancePubKey, Description)
-    init validator poolShares, delegatorShares set to 0
-    init validator commision fields from tx
-    validator.PoolShares = 0
+    ok := validatorByPubKeyExists(tx.PubKey)
+    if ok return err // only one validator per public key
 
+    err := validateDenom(tx.Delegation.Denom)
+    if err != nil return err // denomination must be valid
+
+    validator := NewValidator(tx.ValidatorAddr, tx.PubKey, tx.Description)
+
+    err := setInitialCommission(validator, tx.Commission, blockTime)
+    if err != nil return err // must be able to set initial commission correctly
+
+    // set the validator and public key
     setValidator(validator)
+    setValidatorByPubKeyIndex(validator)
 
-    txDelegate = TxDelegate(tx.Operator, tx.Operator, tx.SelfDelegation)
-    delegate(txDelegate, validator) // see delegate function in [TxDelegate](TxDelegate)
-    return
+    // delegate coins from tx.DelegatorAddr to the validator
+    err := delegate(tx.DelegatorAddr, tx.Delegation, validator)
+    if err != nil return err // must be able to set delegation correctly
+
+    tags := createTags(tx)
+    return tags
 ```
 
-### TxEditValidator
+## TxEditValidator
 
-If either the `Description` (excluding `DateBonded` which is constant),
-`Commission`, or the `GovernancePubKey` need to be updated, the
-`TxEditCandidacy` transaction should be sent from the operator account:
+If either the `Description`, `Commission`, or the `ValidatorAddr` need to be
+updated, the `TxEditCandidacy` transaction should be sent from the operator
+account:
 
 ```golang
 type TxEditCandidacy struct {
-    GovernancePubKey    crypto.PubKey
-    Commission          sdk.Dec
-    Description         Description
+    Description     Description
+    ValidatorAddr   sdk.ValAddress
+    CommissionRate  sdk.Dec
 }
 
 editCandidacy(tx TxEditCandidacy):
-    validator = getValidator(tx.ValidatorAddr)
+    validator, ok := getValidator(tx.ValidatorAddr)
+    if !ok return err // validator must exist
 
-    if tx.Commission > CommissionMax ||  tx.Commission < 0 then fail
-    if rateChange(tx.Commission) > CommissionMaxChange then fail
-    validator.Commission = tx.Commission
+    // Attempt to update the validator's description. The description provided
+    // must be valid.
+    description, err := updateDescription(validator, tx.Description)
+    if err != nil return err
 
-    if tx.GovernancePubKey != nil validator.GovernancePubKey = tx.GovernancePubKey
-    if tx.Description != nil validator.Description = tx.Description
+    // a validator is not required to update it's commission rate
+    if tx.CommissionRate != nil {
+        // Attempt to update a validator's commission rate. The rate provided
+        // must be valid. It's rate can only be updated once a day.
+        err := updateValidatorCommission(validator, tx.CommissionRate)
+        if err != nil return err
+    }
 
-    setValidator(store, validator)
-    return
+    // set the validator and public key
+    setValidator(validator)
+
+    tags := createTags(tx)
+    return tags
 ```
 
 ### TxDelegate

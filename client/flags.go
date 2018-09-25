@@ -58,7 +58,7 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 // PostCommands adds common flags for commands to post tx
 func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {
-		c.Flags().String(FlagFrom, "", "Name of private key with which to sign")
+		c.Flags().String(FlagFrom, "", "Name or address of private key with which to sign")
 		c.Flags().Int64(FlagAccountNumber, 0, "AccountNumber number to sign the tx")
 		c.Flags().Int64(FlagSequence, 0, "Sequence number to sign the tx")
 		c.Flags().String(FlagMemo, "", "Memo to send along with transaction")

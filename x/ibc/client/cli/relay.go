@@ -94,7 +94,11 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
 	cliCtx := context.NewCLIContext()
 
-	passphrase, err := keys.ReadPassphraseFromStdin(cliCtx.FromAddressName)
+	name, err := cliCtx.GetFromName()
+	if err != nil {
+		panic(err)
+	}
+	passphrase, err := keys.ReadPassphraseFromStdin(name)
 	if err != nil {
 		panic(err)
 	}
@@ -201,7 +205,12 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 	txBldr := authtxb.NewTxBuilderFromCLI().WithSequence(sequence).WithCodec(c.cdc)
 	cliCtx := context.NewCLIContext()
 
-	res, err := txBldr.BuildAndSign(cliCtx.FromAddressName, passphrase, []sdk.Msg{msg})
+	name, err := cliCtx.GetFromName()
+	if err != nil {
+		panic(err)
+	}
+
+	res, err := txBldr.BuildAndSign(name, passphrase, []sdk.Msg{msg})
 	if err != nil {
 		panic(err)
 	}

@@ -1,4 +1,5 @@
 WORK IN PROGRESS 
+See PR comments here https://github.com/cosmos/cosmos-sdk/pull/2072
 
 # Keeper
 
